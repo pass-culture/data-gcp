@@ -62,6 +62,7 @@ DBT_MODELS = [
     ("collective_booking", "overwrite", "update_date"),
     ("native_event", "incremental", "partition_date"),
     ("venue_offer_statistic", "overwrite", None),
+    ("native_log", "incremental", "partition_date"),
 ]
 # List of aggreated tables names to be refreshed with compressed config: (clickhouse_dataset_name, clickhouse_table_name, optionally depends_list)
 CLICKHOUSE_TABLES = [

@@ -8,7 +8,12 @@
 }}
 
 select
-    * except (offer_updated_date),
-    cast(offer_updated_date as datetime) as offer_updated_date
+    * except (offer_updated_date, offer_is_active),
+    cast(offer_updated_date as datetime) as offer_updated_date,
+    case
+        when dbt_valid_to is null
+        then offer_is_active
+        else false
+    end as offer_is_active
 from {{ ref("snapshot_raw__offer") }}
-where {{ var("snapshot_filter") }}
+qualify row_number() over (partition by offer_id order by dbt_valid_from desc) = 1

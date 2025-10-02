@@ -13,6 +13,7 @@ import pandas as pd
 import torch
 from torch_geometric.data import Data
 
+ID_COLUMN = "item_id"
 DEFAULT_METADATA_COLUMNS: Sequence[str] = (
     "rayon",
     "gtl_label_level_1",
@@ -57,20 +58,20 @@ def _normalise_value(value: object) -> str | None:
 def build_book_metadata_graph_from_dataframe(
     dataframe: pd.DataFrame,
     *,
-    metadata_columns: Sequence[str] = DEFAULT_METADATA_COLUMNS,
-    book_id_column: str = "item_id",
+    metadata_columns: Sequence[str],
+    id_column: str,
 ) -> BookMetadataGraph:
     """Construct a bipartite book-to-metadata graph from a dataframe."""
 
     missing_columns = [
         column
-        for column in (book_id_column, *metadata_columns)
+        for column in (id_column, *metadata_columns)
         if column not in dataframe.columns
     ]
     if missing_columns:
         raise KeyError(f"Missing required columns: {', '.join(missing_columns)}")
 
-    unique_books = dataframe[book_id_column].dropna().astype(str).drop_duplicates()
+    unique_books = dataframe[id_column].dropna().astype(str).drop_duplicates()
     book_ids = unique_books.tolist()
     book_index = {book_id: idx for idx, book_id in enumerate(book_ids)}
     metadata_keys: list[MetadataKey] = []
@@ -85,10 +86,10 @@ def build_book_metadata_graph_from_dataframe(
 
     edges: set[tuple[int, int]] = set()
 
-    relevant_columns = [book_id_column, *metadata_columns]
+    relevant_columns = [id_column, *metadata_columns]
     for record in dataframe[relevant_columns].itertuples(index=False):
         record_dict = record._asdict()
-        raw_book_id = record_dict[book_id_column]
+        raw_book_id = record_dict[id_column]
         book_id = _normalise_value(raw_book_id)
         if book_id is None or book_id not in book_index:
             continue
@@ -142,8 +143,6 @@ def build_book_metadata_graph_from_dataframe(
 def build_book_metadata_graph(
     parquet_path: Path | str,
     *,
-    metadata_columns: Sequence[str] = DEFAULT_METADATA_COLUMNS,
-    book_id_column: str = "item_id",
     nrows: int | None = None,
     filters: Sequence[tuple[str, str, Iterable[object]]] | None = None,
 ) -> BookMetadataGraph:
@@ -154,14 +153,10 @@ def build_book_metadata_graph(
         raise FileNotFoundError(f"Parquet file not found: {path}")
 
     read_kwargs: dict[str, object] = {}
-    if nrows is not None:
-        read_kwargs["nrows"] = nrows
     if filters is not None:
         read_kwargs["filters"] = list(filters)
 
-    dataframe = pd.read_parquet(path, **read_kwargs)
+    dataframe = pd.read_parquet(path, **read_kwargs).sample(n=nrows, random_state=42)
     return build_book_metadata_graph_from_dataframe(
-        dataframe,
-        metadata_columns=metadata_columns,
-        book_id_column=book_id_column,
+        dataframe, id_column=ID_COLUMN, metadata_columns=DEFAULT_METADATA_COLUMNS
     )

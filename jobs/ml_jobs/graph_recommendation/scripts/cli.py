@@ -7,7 +7,6 @@ from pathlib import Path
 import typer
 
 from src.graph_recommendation.graph_builder import (
-    DEFAULT_METADATA_COLUMNS,
     build_book_metadata_graph,
 )
 
@@ -31,17 +30,6 @@ OUTPUT_OPTION = typer.Option(
     dir_okay=False,
 )
 
-METADATA_OPTION = typer.Option(
-    None,
-    "--metadata-column",
-    "-m",
-    help=(
-        "Column name to include as metadata. Repeat for multiple. "
-        "Defaults to rayon and the GTL label levels."
-    ),
-    multiple=True,
-)
-
 NROWS_OPTION = typer.Option(
     None,
     "--nrows",
@@ -55,25 +43,16 @@ SUMMARY_NROWS_OPTION = typer.Option(
 )
 
 
-def _resolve_metadata_columns(columns: tuple[str, ...] | None) -> list[str]:
-    if columns:
-        return list(columns)
-    return list(DEFAULT_METADATA_COLUMNS)
-
-
 @app.command("build-graph")
 def build_graph_command(
     parquet_path: Path = PARQUET_ARGUMENT,
     output_path: Path = OUTPUT_OPTION,
-    metadata_column: tuple[str, ...] | None = METADATA_OPTION,
     nrows: int | None = NROWS_OPTION,
 ) -> None:
     """Build the book-to-metadata graph and save it to disk."""
 
-    metadata_columns = _resolve_metadata_columns(metadata_column)
     graph = build_book_metadata_graph(
         parquet_path,
-        metadata_columns=metadata_columns,
         nrows=nrows,
     )
     graph.save(output_path)
@@ -91,15 +70,12 @@ def build_graph_command(
 @app.command("summary")
 def summarize_command(
     parquet_path: Path = PARQUET_ARGUMENT,
-    metadata_column: tuple[str, ...] | None = METADATA_OPTION,
     nrows: int | None = SUMMARY_NROWS_OPTION,
 ) -> None:
     """Print a quick summary of the graph that would be created."""
 
-    metadata_columns = _resolve_metadata_columns(metadata_column)
     graph = build_book_metadata_graph(
         parquet_path,
-        metadata_columns=metadata_columns,
         nrows=nrows,
     )
     typer.secho(
@@ -108,7 +84,6 @@ def summarize_command(
             f"nodes={graph.data.num_nodes} (books={len(graph.book_ids)}, "
             f"metadata={len(graph.metadata_keys)}), "
             f"edges={graph.data.num_edges}, "
-            f"metadata columns={', '.join(metadata_columns)}"
         ),
         fg=typer.colors.BLUE,
     )

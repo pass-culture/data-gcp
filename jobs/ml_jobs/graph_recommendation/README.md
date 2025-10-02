@@ -1,5 +1,53 @@
 # Graph Recommendation
 
+## Build the book metadata graph
+
+The `graph_recommendation.graph_builder` module turns the parquet export into a
+PyTorch Geometric `Data` object where:
+
+* Book nodes are indexed by the `item_id` column.
+* Metadata nodes are created for every distinct value of the following
+    columns: `rayon`, `gtl_label_level_1`, `gtl_label_level_2`, `gtl_label_level_3`
+    and `gtl_label_level_4` (you can pass additional columns at runtime).
+* An undirected edge connects each book to every non-empty metadata value it
+    uses; the resulting graph is ready for algorithms such as
+    [`torch_geometric.nn.models.Node2Vec`](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.models.Node2Vec.html).
+
+### Command line usage
+
+Install the project in editable mode (for example with `uv pip install -e .`)
+and run:
+
+```bash
+python -m scripts.cli build-graph \
+    data/book_item_for_graph_recommendation.parquet \
+    --output data/book_metadata_graph.pt
+```
+
+* Use `--metadata-column` repeatedly to add more metadata columns.
+* Pass `--nrows` to load only a subset while experimenting.
+* Swap `build-graph` with `summary` to print a quick overview instead of
+    writing a file.
+
+### Programmatic usage
+
+```python
+from pathlib import Path
+
+from graph_recommendation.graph_builder import build_book_metadata_graph
+
+graph = build_book_metadata_graph(
+        Path("data/book_item_for_graph_recommendation.parquet"),
+)
+
+graph.save(Path("data/book_metadata_graph.pt"))
+```
+
+The returned `BookMetadataGraph` object exposes the raw PyG `Data`, the ordered
+list of book ids, metadata keys `(column, value)` and helper masks to separate
+book and metadata nodes. Persist the graph with `BookMetadataGraph.save()` and
+feed it to downstream embedding pipelines.
+
 ## Resources
 
 ###  Queries to get the training data
@@ -85,51 +133,3 @@ Get products for books with metadata and artists.
     ```bash
     gsutil cp gs://data-bucket-prod/sandbox_prod/lmontier/graph_recommendation/book_item_for_graph_recommendation.parquet ./data/
     ```
-
-## Build the book metadata graph
-
-The `graph_recommendation.graph_builder` module turns the parquet export into a
-PyTorch Geometric `Data` object where:
-
-* Book nodes are indexed by the `item_id` column.
-* Metadata nodes are created for every distinct value of the following
-    columns: `rayon`, `gtl_label_level_1`, `gtl_label_level_2`, `gtl_label_level_3`
-    and `gtl_label_level_4` (you can pass additional columns at runtime).
-* An undirected edge connects each book to every non-empty metadata value it
-    uses; the resulting graph is ready for algorithms such as
-    [`torch_geometric.nn.models.Node2Vec`](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.models.Node2Vec.html).
-
-### Command line usage
-
-Install the project in editable mode (for example with `uv pip install -e .`)
-and run:
-
-```bash
-python -m graph_recommendation.cli build-graph \
-    data/book_item_for_graph_recommendation.parquet \
-    --output data/book_metadata_graph.pt
-```
-
-* Use `--metadata-column` repeatedly to add more metadata columns.
-* Pass `--nrows` to load only a subset while experimenting.
-* Swap `build-graph` with `summary` to print a quick overview instead of
-    writing a file.
-
-### Programmatic usage
-
-```python
-from pathlib import Path
-
-from graph_recommendation.graph_builder import build_book_metadata_graph
-
-graph = build_book_metadata_graph(
-        Path("data/book_item_for_graph_recommendation.parquet"),
-)
-
-graph.save(Path("data/book_metadata_graph.pt"))
-```
-
-The returned `BookMetadataGraph` object exposes the raw PyG `Data`, the ordered
-list of book ids, metadata keys `(column, value)` and helper masks to separate
-book and metadata nodes. Persist the graph with `BookMetadataGraph.save()` and
-feed it to downstream embedding pipelines.

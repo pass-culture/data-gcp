@@ -1,6 +1,6 @@
 """Graph recommendation utilities."""
 
-from graph_recommendation.graph_builder import (
+from src.graph_recommendation.graph_builder import (
     DEFAULT_METADATA_COLUMNS,
     BookMetadataGraph,
     build_book_metadata_graph,

@@ -5,7 +5,7 @@ from collections import Counter
 import pandas as pd
 import pytest
 
-from graph_recommendation.graph_builder import (
+from src.graph_recommendation.graph_builder import (
     DEFAULT_METADATA_COLUMNS,
     BookMetadataGraph,
     build_book_metadata_graph_from_dataframe,

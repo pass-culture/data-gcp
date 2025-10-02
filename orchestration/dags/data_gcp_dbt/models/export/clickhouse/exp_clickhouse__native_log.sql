@@ -1,1 +1,31 @@
-select * from {{ ref("int_pcapi__native_log") }} where true
+-- select * from {{ ref("int_pcapi__native_log") }} where true
+select
+    partition_date,
+    log_timestamp,
+    environement,
+    user_id,
+    extra_user_id,
+    url_path,
+    status_code,
+    device_id,
+    source_ip,
+    app_version,
+    platform,
+    trace,
+    technical_message_id,
+    choice_datetime,
+    analytics_source,
+    cookies_consent_mandatory,
+    cookies_consent_accepted,
+    cookies_consent_refused,
+    source,
+    newly_subscribed_themes,
+    newly_subscribed_email,
+    newly_subscribed_push,
+    currently_subscribed_themes,
+    currently_subscribed_marketing_push,
+    currently_subscribed_marketing_email,
+    newly_unsubscribed_themes,
+    newly_unsubscribed_email,
+    newly_unsubscribed_push
+from `passculture-data-prod.int_pcapi_prod.native_log`

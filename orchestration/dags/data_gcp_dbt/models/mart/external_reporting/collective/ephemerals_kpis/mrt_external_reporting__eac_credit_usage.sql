@@ -211,10 +211,10 @@ with
                 {{ dim.value_expr }} as dimension_value,
                 'taux_d_utilisation_du_credit' as kpi_name,
                 coalesce(sum(cumulative_amount_spent), 0) as numerator,
-                coalesce(sum(total_institution_deposit_amount), 0) as denominator,
+                coalesce(sum(distinct total_institution_deposit_amount), 0) as denominator,
                 safe_divide(
                     coalesce(sum(cumulative_amount_spent), 0),
-                    coalesce(sum(total_institution_deposit_amount), 0)
+                    coalesce(sum(distinct total_institution_deposit_amount), 0)
                 ) as kpi
             from base_data
             {% if is_incremental() %}

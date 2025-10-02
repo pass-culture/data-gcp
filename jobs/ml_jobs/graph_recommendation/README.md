@@ -7,8 +7,8 @@ PyTorch Geometric `Data` object where:
 
 * Book nodes are indexed by the `item_id` column.
 * Metadata nodes are created for every distinct value of the following
-    columns: `rayon`, `gtl_label_level_1`, `gtl_label_level_2`, `gtl_label_level_3`
-    and `gtl_label_level_4` (you can pass additional columns at runtime).
+    columns: `rayon`, `gtl_label_level_1`, `gtl_label_level_2`, `gtl_label_level_3`,
+    `gtl_label_level_4` and `artist_id` (you can pass additional columns at runtime).
 * An undirected edge connects each book to every non-empty metadata value it
     uses; the resulting graph is ready for algorithms such as
     [`torch_geometric.nn.models.Node2Vec`](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.models.Node2Vec.html).
@@ -47,6 +47,18 @@ The returned `BookMetadataGraph` object exposes the raw PyG `Data`, the ordered
 list of book ids, metadata keys `(column, value)` and helper masks to separate
 book and metadata nodes. Persist the graph with `BookMetadataGraph.save()` and
 feed it to downstream embedding pipelines.
+
+Both the container and the underlying `Data` object ship with the identifier
+lookups you need to reconnect embeddings back to source data:
+
+* `data.book_ids` / `graph.book_ids` — ordered list of `item_id`s (book nodes).
+* `data.metadata_keys` / `graph.metadata_keys` — ordered list of
+    `(metadata_column, value)` pairs.
+* `data.book_id_to_index` and `data.metadata_key_to_index` — direct mappings
+    from identifiers to node indices.
+
+When loading a saved graph with `torch.load`, these attributes let you resolve
+any node embedding to the original book or metadata value immediately.
 
 ## Resources
 

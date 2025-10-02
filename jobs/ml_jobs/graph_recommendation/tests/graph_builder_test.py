@@ -21,6 +21,7 @@ def _build_sample_dataframe() -> pd.DataFrame:
             "gtl_label_level_2": ["Painting", "Drawing", "Painting"],
             "gtl_label_level_3": ["Watercolor", None, "Watercolor"],
             "gtl_label_level_4": [None, None, None],
+            "artist_id": ["artist-1", "artist-2", "artist-1"],
         }
     )
 
@@ -28,7 +29,11 @@ def _build_sample_dataframe() -> pd.DataFrame:
 def test_build_graph_from_dataframe_creates_bipartite_structure() -> None:
     dataframe = _build_sample_dataframe()
 
-    graph = build_book_metadata_graph_from_dataframe(dataframe)
+    graph = build_book_metadata_graph_from_dataframe(
+        dataframe,
+        metadata_columns=DEFAULT_METADATA_COLUMNS,
+        id_column="item_id",
+    )
     data = graph.data
 
     assert isinstance(graph, BookMetadataGraph)
@@ -56,6 +61,14 @@ def test_build_graph_from_dataframe_creates_bipartite_structure() -> None:
     assert data.node_type[: len(graph.book_ids)].tolist() == [0] * len(graph.book_ids)
     assert all(value >= 1 for value in data.node_type[len(graph.book_ids) :].tolist())
 
+    # identifier mappings are stored on both the graph container and the PyG data object
+    assert graph.book_id_to_index == {"book-1": 0, "book-2": 1}
+    assert set(graph.metadata_key_to_index) == set(graph.metadata_keys)
+    assert data.book_ids == graph.book_ids
+    assert data.metadata_keys == graph.metadata_keys
+    assert data.book_id_to_index == graph.book_id_to_index
+    assert data.metadata_key_to_index == graph.metadata_key_to_index
+
 
 def test_missing_metadata_raises_value_error() -> None:
     dataframe = pd.DataFrame(
@@ -66,6 +79,7 @@ def test_missing_metadata_raises_value_error() -> None:
             "gtl_label_level_2": [None],
             "gtl_label_level_3": [None],
             "gtl_label_level_4": [None],
+            "artist_id": [None],
         }
     )
 
@@ -73,4 +87,5 @@ def test_missing_metadata_raises_value_error() -> None:
         build_book_metadata_graph_from_dataframe(
             dataframe,
             metadata_columns=DEFAULT_METADATA_COLUMNS,
+            id_column="item_id",
         )

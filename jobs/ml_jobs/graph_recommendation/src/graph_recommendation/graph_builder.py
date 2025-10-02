@@ -35,6 +35,8 @@ class BookMetadataGraph:
     metadata_keys: list[MetadataKey]
     metadata_type_to_id: Mapping[str, int]
     metadata_column_names: Sequence[str]
+    book_id_to_index: Mapping[str, int]
+    metadata_key_to_index: Mapping[MetadataKey, int]
 
     def save(self, output_path: Path) -> None:
         """Persist the graph ``Data`` object to disk using ``torch.save``.
@@ -131,6 +133,10 @@ def build_book_metadata_graph_from_dataframe(
     data.metadata_mask = ~book_mask
     data.metadata_type_to_id = metadata_type_to_id
     data.metadata_columns = list(metadata_columns)
+    data.book_ids = list(book_ids)
+    data.metadata_keys = list(metadata_keys)
+    data.book_id_to_index = dict(book_index)
+    data.metadata_key_to_index = dict(metadata_index)
 
     return BookMetadataGraph(
         data=data,
@@ -138,6 +144,8 @@ def build_book_metadata_graph_from_dataframe(
         metadata_keys=metadata_keys,
         metadata_type_to_id=metadata_type_to_id,
         metadata_column_names=list(metadata_columns),
+        book_id_to_index=book_index,
+        metadata_key_to_index=metadata_index,
     )
 
 

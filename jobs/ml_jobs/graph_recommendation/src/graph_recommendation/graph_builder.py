@@ -20,6 +20,7 @@ DEFAULT_METADATA_COLUMNS: Sequence[str] = (
     "gtl_label_level_2",
     "gtl_label_level_3",
     "gtl_label_level_4",
+    "artist_id",
 )
 
 MetadataKey = tuple[str, str]
@@ -156,7 +157,9 @@ def build_book_metadata_graph(
     if filters is not None:
         read_kwargs["filters"] = list(filters)
 
-    dataframe = pd.read_parquet(path, **read_kwargs).sample(n=nrows, random_state=42)
+    dataframe = pd.read_parquet(path, **read_kwargs)
+    if nrows is not None:
+        dataframe = dataframe.sample(nrows, random_state=42)
     return build_book_metadata_graph_from_dataframe(
         dataframe, id_column=ID_COLUMN, metadata_columns=DEFAULT_METADATA_COLUMNS
     )

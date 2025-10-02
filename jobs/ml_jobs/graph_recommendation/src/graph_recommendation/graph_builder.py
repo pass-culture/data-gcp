@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import tqdm
+
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
 
@@ -35,8 +37,6 @@ class BookMetadataGraph:
     metadata_keys: list[MetadataKey]
     metadata_type_to_id: Mapping[str, int]
     metadata_column_names: Sequence[str]
-    book_id_to_index: Mapping[str, int]
-    metadata_key_to_index: Mapping[MetadataKey, int]
 
     def save(self, output_path: Path) -> None:
         """Persist the graph ``Data`` object to disk using ``torch.save``.
@@ -63,7 +63,7 @@ def build_book_metadata_graph_from_dataframe(
     *,
     metadata_columns: Sequence[str],
     id_column: str,
-) -> BookMetadataGraph:
+) -> Data:
     """Construct a bipartite book-to-metadata graph from a dataframe."""
 
     missing_columns = [
@@ -74,6 +74,7 @@ def build_book_metadata_graph_from_dataframe(
     if missing_columns:
         raise KeyError(f"Missing required columns: {', '.join(missing_columns)}")
 
+    # Prepare book ids and their corresponding node indices
     unique_books = dataframe[id_column].dropna().astype(str).drop_duplicates()
     book_ids = unique_books.tolist()
     book_index = {book_id: idx for idx, book_id in enumerate(book_ids)}
@@ -84,13 +85,12 @@ def build_book_metadata_graph_from_dataframe(
     metadata_type_to_id = {"book": 0}
     for offset, column_name in enumerate(metadata_columns, start=1):
         metadata_type_to_id[column_name] = offset
-
     node_types: list[int] = [metadata_type_to_id["book"]] * len(book_ids)
 
+    # Go through each row and create edges between books and metadata values
     edges: set[tuple[int, int]] = set()
-
     relevant_columns = [id_column, *metadata_columns]
-    for record in dataframe[relevant_columns].itertuples(index=False):
+    for record in tqdm.tqdm(dataframe[relevant_columns].itertuples(index=False)):
         record_dict = record._asdict()
         raw_book_id = record_dict[id_column]
         book_id = _normalise_value(raw_book_id)
@@ -122,31 +122,24 @@ def build_book_metadata_graph_from_dataframe(
             "No edges were created; check that metadata columns contain values."
         )
 
+    # Create the PyG Data object
     sorted_edges = sorted(edges)
     edge_index = torch.tensor(sorted_edges, dtype=torch.long).t().contiguous()
+    graph_data = Data(edge_index=edge_index, num_nodes=len(node_types))
 
-    data = Data(edge_index=edge_index, num_nodes=len(node_types))
-    data.node_type = torch.tensor(node_types, dtype=torch.long)
+    # Populate the PyG Data object with relevant attributes
+    graph_data.node_type = torch.tensor(node_types, dtype=torch.long)
     book_mask = torch.zeros(len(node_types), dtype=torch.bool)
     book_mask[: len(book_ids)] = True
-    data.book_mask = book_mask
-    data.metadata_mask = ~book_mask
-    data.metadata_type_to_id = metadata_type_to_id
-    data.metadata_columns = list(metadata_columns)
-    data.book_ids = list(book_ids)
-    data.metadata_keys = list(metadata_keys)
-    data.book_id_to_index = dict(book_index)
-    data.metadata_key_to_index = dict(metadata_index)
+    graph_data.book_mask = book_mask
+    graph_data.metadata_mask = ~book_mask
+    graph_data.metadata_type_to_id = metadata_type_to_id
+    graph_data.metadata_columns = list(metadata_columns)
+    graph_data.book_ids = list(book_ids)
+    graph_data.metadata_ids = list(metadata_keys)
+    graph_data.node_ids = graph_data.book_ids + graph_data.metadata_ids
 
-    return BookMetadataGraph(
-        data=data,
-        book_ids=book_ids,
-        metadata_keys=metadata_keys,
-        metadata_type_to_id=metadata_type_to_id,
-        metadata_column_names=list(metadata_columns),
-        book_id_to_index=book_index,
-        metadata_key_to_index=metadata_index,
-    )
+    return graph_data
 
 
 def build_book_metadata_graph(
@@ -154,7 +147,7 @@ def build_book_metadata_graph(
     *,
     nrows: int | None = None,
     filters: Sequence[tuple[str, str, Iterable[object]]] | None = None,
-) -> BookMetadataGraph:
+) -> Data:
     """Load a parquet file and build the corresponding book-metadata graph."""
 
     path = Path(parquet_path)
@@ -165,9 +158,10 @@ def build_book_metadata_graph(
     if filters is not None:
         read_kwargs["filters"] = list(filters)
 
-    dataframe = pd.read_parquet(path, **read_kwargs)
+    df = pd.read_parquet(path, **read_kwargs)
     if nrows is not None:
-        dataframe = dataframe.sample(nrows, random_state=42)
+        df = df.sample(nrows, random_state=42)
+
     return build_book_metadata_graph_from_dataframe(
-        dataframe, id_column=ID_COLUMN, metadata_columns=DEFAULT_METADATA_COLUMNS
+        df, id_column=ID_COLUMN, metadata_columns=DEFAULT_METADATA_COLUMNS
     )

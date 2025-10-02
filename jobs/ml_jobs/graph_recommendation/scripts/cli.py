@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import torch
 import typer
 
 from src.graph_recommendation.graph_builder import (
@@ -51,17 +52,19 @@ def build_graph_command(
 ) -> None:
     """Build the book-to-metadata graph and save it to disk."""
 
-    graph = build_book_metadata_graph(
+    graph_data = build_book_metadata_graph(
         parquet_path,
         nrows=nrows,
     )
-    graph.save(output_path)
+    torch.save(graph_data, output_path)
 
     typer.secho(
         (
             f"Graph saved to {output_path} "
-            f"(nodes={graph.data.num_nodes}, edges={graph.data.num_edges}, "
-            f"books={len(graph.book_ids)}, metadata={len(graph.metadata_keys)})"
+            f"(nodes={graph_data.num_nodes}, "
+            f"edges={graph_data.num_edges}, "
+            f"books={len(graph_data.book_ids)}, "
+            f"metadata={len(graph_data.metadata_ids)})"
         ),
         fg=typer.colors.GREEN,
     )

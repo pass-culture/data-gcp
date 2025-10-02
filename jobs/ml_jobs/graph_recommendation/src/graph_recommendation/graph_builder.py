@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import tqdm
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping, Sequence
+    from collections.abc import Iterable, Sequence
 
 import pandas as pd
 import torch
@@ -26,27 +25,6 @@ DEFAULT_METADATA_COLUMNS: Sequence[str] = (
 )
 
 MetadataKey = tuple[str, str]
-
-
-@dataclass(slots=True)
-class BookMetadataGraph:
-    """Container holding the PyG graph and the supporting lookups."""
-
-    data: Data
-    book_ids: list[str]
-    metadata_keys: list[MetadataKey]
-    metadata_type_to_id: Mapping[str, int]
-    metadata_column_names: Sequence[str]
-
-    def save(self, output_path: Path) -> None:
-        """Persist the graph ``Data`` object to disk using ``torch.save``.
-
-        Args:
-            output_path: Location of the serialized PyG ``Data`` object.
-        """
-
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        torch.save(self.data, output_path)
 
 
 def _normalise_value(value: object) -> str | None:

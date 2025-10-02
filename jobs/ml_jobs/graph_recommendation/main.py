@@ -1,4 +1,4 @@
-from graph_recommendation.cli import app
+from scripts.cli import app
 
 
 def main() -> None:

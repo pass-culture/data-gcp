@@ -6,7 +6,7 @@ from pathlib import Path
 
 import typer
 
-from graph_recommendation.graph_builder import (
+from src.graph_recommendation.graph_builder import (
     DEFAULT_METADATA_COLUMNS,
     build_book_metadata_graph,
 )

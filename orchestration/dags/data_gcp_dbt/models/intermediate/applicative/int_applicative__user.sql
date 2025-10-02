@@ -49,10 +49,14 @@ with
                     u.user_validated_birth_date is not null
                     and u.user_birth_date >= date("2000-04-30")
                     and u.user_birth_date <= date_sub(current_date, interval 15 year)
+                    and u.user_role is not null
                 then u.user_validated_birth_date
                 when
                     u.user_birth_date >= date("2000-04-30")
                     and u.user_birth_date <= date_sub(current_date, interval 15 year)
+                    and u.user_role is not null
+                then u.user_birth_date
+                when u.user_role is null
                 then u.user_birth_date
                 else null
             end as user_birth_date,
@@ -69,7 +73,9 @@ with
             u.user_subscribed_themes is not null as is_theme_subscribed,
             current_date as reference_date
         from {{ source("raw", "applicative_database_user") }} as u
-        where u.user_role in ("UNDERAGE_BENEFICIARY", "BENEFICIARY", "FREE_BENEFICIARY")
+        where
+            u.user_role in ("UNDERAGE_BENEFICIARY", "BENEFICIARY", "FREE_BENEFICIARY")
+            or u.user_role is null  -- to include general public users (no role)
     )
 
 select

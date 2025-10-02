@@ -44,7 +44,7 @@ select
     safe_cast(r.answer as int64) as response_rating,
     date_diff(r.end_date, u.user_activation_date, day) as user_seniority
 from {{ ref("int_qualtrics__nps_beneficiary_answer") }} as r
-inner join {{ ref("mrt_global__user") }} as u on r.user_id = u.user_id
+inner join {{ ref("mrt_global__user_beneficiary") }} as u on r.user_id = u.user_id
 left join
     active_deposit_at_end_date as d
     on r.user_id = d.user_id

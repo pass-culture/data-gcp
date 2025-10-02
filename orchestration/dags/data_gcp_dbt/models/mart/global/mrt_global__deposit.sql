@@ -45,7 +45,7 @@ select
         cast(d.deposit_creation_date as date), cast(u.user_creation_date as date), day
     ) as days_between_user_creation_and_deposit_creation
 from {{ ref("int_global__deposit") }} as d
-inner join {{ ref("int_global__user") }} as u on d.user_id = u.user_id
+inner join {{ ref("int_global__user_beneficiary") }} as u on d.user_id = u.user_id
 left join
     {{ ref("int_applicative__action_history") }} as ah
     on d.user_id = ah.user_id

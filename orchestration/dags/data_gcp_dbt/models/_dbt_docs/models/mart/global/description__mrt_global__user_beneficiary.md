@@ -1,11 +1,11 @@
 ---
 title: User
-description: Description of the `mrt_global__user` table.
+description: Description of the `mrt_global__user_beneficiary` table.
 ---
 
-{% docs description__mrt_global__user %}
+{% docs description__mrt_global__user_beneficiary %}
 
-The `mrt_global__user` table provides a comprehensive view of individual beneficiaries data, including demographic information, activity status, and engagement metrics. It is designed to support analysis of user behavior and trends over time.
+The `mrt_global__user_beneficiary` table provides a comprehensive view of individual beneficiaries data, including demographic information, activity status, and engagement metrics. It is designed to support analysis of user behavior and trends over time.
 
 
 {% enddocs %}
@@ -15,4 +15,4 @@ Demographic information (address, activity) are purely declarative. They are reg
 
 ## Table description
 
-{% docs table__mrt_global__user  %}{% enddocs %}
+{% docs table__mrt_global__user_beneficiary  %}{% enddocs %}

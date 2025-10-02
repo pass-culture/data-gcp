@@ -1,64 +1,89 @@
 # Graph Recommendation
 
-## Build the book metadata graph
+Utilities to turn parquet exports of book offers into a PyTorch Geometric graph
+that can be consumed by embedding pipelines (for example
+[`torch_geometric.nn.models.Node2Vec`](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.models.Node2Vec.html)).
 
-The `graph_recommendation.graph_builder` module turns the parquet export into a
-PyTorch Geometric `Data` object where:
+## Installation
+
+This project is managed with [uv](https://github.com/astral-sh/uv). Install the
+package in editable mode to expose the CLI and Python modules:
+
+```bash
+uv pip install -e .
+```
+
+## Building the book → metadata graph
+
+The entry point lives in `src/graph_recommendation/graph_builder.py`. It
+produces a bipartite `torch_geometric.data.Data` object with the following
+characteristics:
 
 * Book nodes are indexed by the `item_id` column.
-* Metadata nodes are created for every distinct value of the following
-    columns: `rayon`, `gtl_label_level_1`, `gtl_label_level_2`, `gtl_label_level_3`,
-    `gtl_label_level_4` and `artist_id` (you can pass additional columns at runtime).
-* An undirected edge connects each book to every non-empty metadata value it
-    uses; the resulting graph is ready for algorithms such as
-    [`torch_geometric.nn.models.Node2Vec`](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.models.Node2Vec.html).
+* Metadata nodes are created for each distinct value in `DEFAULT_METADATA_COLUMNS`
+  (`rayon`, `gtl_label_level_1` → `_level_4`, `artist_id`).
+* Empty values are skipped; every remaining `(book, metadata)` pair contributes
+  a bidirectional edge.
 
-### Command line usage
-
-Install the project in editable mode (for example with `uv pip install -e .`)
-and run:
+### CLI
 
 ```bash
 python -m scripts.cli build-graph \
-    data/book_item_for_graph_recommendation.parquet \
-    --output data/book_metadata_graph.pt
+  data/book_item_for_graph_recommendation.parquet \
+  --output data/book_metadata_graph.pt \
+  --nrows 5000  # optional sampling for quick iterations
 ```
 
-* Use `--metadata-column` repeatedly to add more metadata columns.
-* Pass `--nrows` to load only a subset while experimenting.
-* Swap `build-graph` with `summary` to print a quick overview instead of
-    writing a file.
+* `build-graph` materialises the graph and serialises it with `torch.save`.
+* `summary` runs the same pipeline but only prints node/edge counts.
 
-### Programmatic usage
+### Python API
 
 ```python
 from pathlib import Path
+import torch
 
-from graph_recommendation.graph_builder import build_book_metadata_graph
-
-graph = build_book_metadata_graph(
-        Path("data/book_item_for_graph_recommendation.parquet"),
+from graph_recommendation.graph_builder import (
+    build_book_metadata_graph,
+    build_book_metadata_graph_from_dataframe,
+    DEFAULT_METADATA_COLUMNS,
 )
 
-graph.save(Path("data/book_metadata_graph.pt"))
+graph_data = build_book_metadata_graph(
+    Path("data/book_item_for_graph_recommendation.parquet"),
+    nrows=10_000,
+)
+torch.save(graph_data, Path("data/book_metadata_graph.pt"))
+
+# Or reuse a dataframe if it is already in memory
+graph_data = build_book_metadata_graph_from_dataframe(
+    dataframe,
+    metadata_columns=DEFAULT_METADATA_COLUMNS,
+    id_column="item_id",
+)
 ```
 
-The returned `BookMetadataGraph` object exposes the raw PyG `Data`, the ordered
-list of book ids, metadata keys `(column, value)` and helper masks to separate
-book and metadata nodes. Persist the graph with `BookMetadataGraph.save()` and
-feed it to downstream embedding pipelines.
+The returned `Data` instance carries helper attributes to reconnect embeddings
+to the raw identifiers:
 
-Both the container and the underlying `Data` object ship with the identifier
-lookups you need to reconnect embeddings back to source data:
+* `book_ids` / `metadata_ids` / `node_ids`
+* `book_mask` / `metadata_mask`
+* `metadata_type_to_id` and the ordered `metadata_columns`
+* `node_type` marking the type id of every node (0 for books)
 
-* `data.book_ids` / `graph.book_ids` — ordered list of `item_id`s (book nodes).
-* `data.metadata_keys` / `graph.metadata_keys` — ordered list of
-    `(metadata_column, value)` pairs.
-* `data.book_id_to_index` and `data.metadata_key_to_index` — direct mappings
-    from identifiers to node indices.
+Access `graph_data.edge_index` for the COO representation expected by PyG
+models.
 
-When loading a saved graph with `torch.load`, these attributes let you resolve
-any node embedding to the original book or metadata value immediately.
+## Development
+
+Run the test suite with:
+
+```bash
+pytest
+```
+
+The `tests/graph_builder_test.py` module covers the main invariants: undirected
+edges, node masks, and the behaviour when no metadata values are present.
 
 ## Resources
 

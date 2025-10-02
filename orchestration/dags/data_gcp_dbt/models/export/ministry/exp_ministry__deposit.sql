@@ -9,4 +9,4 @@ select
     deposit_type,
     total_recredit,
     total_recredit_amount
-from {{ ref("int_global__deposit") }}
+from {{ ref("mrt_global__deposit") }}

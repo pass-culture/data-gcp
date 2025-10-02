@@ -1,12 +1,46 @@
 with
     display_data as (  -- Séparer les données de display et de conversion
-        select *
+        select
+            user_id,
+            session_id,
+            unique_session_id,
+            event_date,
+            event_timestamp,
+            app_version,
+            similar_offer_playlist_type,
+            is_algolia_recommend,
+            reco_call_id,
+            offer_id,
+            item_id,
+            similar_offer_id,
+            similar_item_id,
+            booking_id,
+            event_name,
+            user_location_type,
+            event_type
         from {{ ref("firebase_similar_offer_events") }}
         where event_type = 'display' and user_id is not null and session_id is not null
     ),
 
     convert_data as (
-        select *
+        select
+            user_id,
+            session_id,
+            unique_session_id,
+            event_date,
+            event_timestamp,
+            app_version,
+            similar_offer_playlist_type,
+            is_algolia_recommend,
+            reco_call_id,
+            offer_id,
+            item_id,
+            similar_offer_id,
+            similar_item_id,
+            booking_id,
+            event_name,
+            user_location_type,
+            event_type
         from {{ ref("firebase_similar_offer_events") }}
         where event_type = 'convert' and user_id is not null and session_id is not null
     ),

@@ -18,16 +18,17 @@
                     "venue_motordisabilitycompliant",
                     "venue_visualdisabilitycompliant",
                     "venue_withdrawal_details",
+                    "dbt_test_field",
                 ],
             )
         )
     }}
 
-    select *
+    select *, "test" as dbt_test_field
     from
         external_query(
-            "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",
-            '''SELECT
+            """{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}""",
+            """SELECT
             "thumbCount" AS venue_thumb_count
             , "street" as venue_street
             , "postalCode" as venue_postal_code
@@ -90,7 +91,7 @@
             , "withdrawalDetails" AS venue_withdrawal_details
             , "offererAddressId" AS offerer_address_id
         FROM public.venue
-    '''
+    """
         )
 
 {% endsnapshot %}

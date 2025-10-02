@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS {{ dataset }}.{{ tmp_table_name }} ON cluster default
     ENGINE = MergeTree
     PARTITION BY cast(partition_date as Date)
-    ORDER BY (user_id, log_timestamp)
+    ORDER BY (IFNULL(user_id, -1), log_timestamp)
     SETTINGS storage_policy='gcs_main'
 
 AS

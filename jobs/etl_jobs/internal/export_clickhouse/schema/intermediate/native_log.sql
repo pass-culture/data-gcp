@@ -31,6 +31,6 @@ CREATE TABLE IF NOT EXISTS intermediate.native_log ON CLUSTER default
 )
 ENGINE = MergeTree
 PARTITION BY partition_date
-ORDER BY (user_id, log_timestamp)
+ORDER BY (IFNULL(user_id, -1), log_timestamp)
 SETTINGS storage_policy='gcs_main'
 COMMENT 'native logs'

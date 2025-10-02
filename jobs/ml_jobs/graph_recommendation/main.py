@@ -1,5 +1,8 @@
-def main():
-    print("Hello from graph-recommendation!")
+from graph_recommendation.cli import app
+
+
+def main() -> None:
+    app()
 
 
 if __name__ == "__main__":

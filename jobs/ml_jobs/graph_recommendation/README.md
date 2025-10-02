@@ -10,7 +10,7 @@ This project is managed with [uv](https://github.com/astral-sh/uv). Install the
 package in editable mode to expose the CLI and Python modules:
 
 ```bash
-uv pip install -e .
+make install
 ```
 
 ## Building the book → metadata graph

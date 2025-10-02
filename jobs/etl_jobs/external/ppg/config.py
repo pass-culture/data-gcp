@@ -232,7 +232,7 @@ SHEET_DEFINITIONS = {
     },
     "top_offer": {
         "type": SheetType.TOP,
-        "template_tab": "Top 50 offres",
+        "template_tab": "Top offres - Individuel",
         "source_table": "top_offer",
         "top_n": 50,
         "select_fields": [
@@ -247,7 +247,7 @@ SHEET_DEFINITIONS = {
     },
     "top_offer_category": {
         "type": SheetType.TOP,
-        "template_tab": "Top 50 par catégorie",
+        "template_tab": "Top par catégorie - Individuel",
         "source_table": "top_offer_category",
         "top_n": 50,
         "select_fields": [
@@ -262,7 +262,7 @@ SHEET_DEFINITIONS = {
     },
     "top_offer_label": {
         "type": SheetType.TOP,
-        "template_tab": "Top 50 offres lieux labellisés",
+        "template_tab": "Top offres lieux labellisés - Individuel",
         "source_table": "top_offer_label",
         "top_n": 50,
         "select_fields": [
@@ -278,7 +278,7 @@ SHEET_DEFINITIONS = {
     },
     "top_venue": {
         "type": SheetType.TOP,
-        "template_tab": "Top 50 lieux",
+        "template_tab": "Top lieux - Individuel",
         "source_table": "top_venue",
         "top_n": 50,
         "select_fields": ["partition_month", "venue_name", "offerer_name"],
@@ -286,7 +286,7 @@ SHEET_DEFINITIONS = {
     },
     "top_labeled_venue": {
         "type": SheetType.TOP,
-        "template_tab": "Top 50 lieux labellisés",
+        "template_tab": "Top lieux labellisés - Individuel",
         "source_table": "top_labeled_venue",
         "top_n": 50,
         "select_fields": [
@@ -299,7 +299,7 @@ SHEET_DEFINITIONS = {
     },
     "top_ac": {
         "type": SheetType.TOP,
-        "template_tab": "Top 50 acteurs culturels",
+        "template_tab": "Top acteurs culturels - Collectif",
         "source_table": "top_ac",
         "top_n": 50,
         "select_fields": ["partition_month", "offerer_name", "total_number_of_tickets"],
@@ -307,7 +307,7 @@ SHEET_DEFINITIONS = {
     },
     "top_format": {
         "type": SheetType.TOP,
-        "template_tab": "Top 5 formats",
+        "template_tab": "Top formats - Collectif",
         "source_table": "top_format",
         "top_n": 5,
         "select_fields": [

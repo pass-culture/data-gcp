@@ -1,12 +1,11 @@
+import os
 from collections import defaultdict
 from enum import Enum
 from pathlib import Path
 
 ######## base configs
-GCP_PROJECT = (
-    "passculture-data-prod"  # os.environ.get("PROJECT_NAME", "passculture-data-ehp")
-)
-ENV_SHORT_NAME = "prod"  # os.environ.get("ENV_SHORT_NAME", "dev")
+GCP_PROJECT = os.environ.get("PROJECT_NAME", "passculture-data-ehp")
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
 EXPORT_BUCKET = f"de-bigquery-data-export-{ENV_SHORT_NAME}"
 REGION_HIERARCHY_TABLE = "region_department"

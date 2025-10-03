@@ -5,6 +5,8 @@ import pandas as pd
 from dateutil.relativedelta import relativedelta
 from duckdb import DuckDBPyConnection
 
+from config import KPI_MONTHS_SHIFT_DISPLAYED
+
 
 # --- Exceptions ---
 class QueryError(Exception):
@@ -144,18 +146,24 @@ def query_monthly_kpi(
         ref_date = date.today()
     last_month = ref_date.replace(day=1) - relativedelta(months=1)
 
+    # periods = [
+    #     last_month - relativedelta(months=1),  # prev-2
+    #     last_month,  # prev-1
+    #     last_month - relativedelta(months=12),  # prev-13
+    # ]
+
     periods = [
-        last_month - relativedelta(months=1),  # prev-2
-        last_month,  # prev-1
-        last_month - relativedelta(months=12),  # prev-13
+        last_month + relativedelta(months=shift + 1)
+        for shift in KPI_MONTHS_SHIFT_DISPLAYED
     ]
 
     where = [
         "kpi_name = ?",
         "dimension_name = ?",
         "dimension_value = ?",
-        "partition_month IN (?, ?, ?)",
+        f"partition_month IN ({', '.join(['?'] * len(periods))})",
     ]
+
     params = [kpi_name, dimension_name, dimension_value] + [
         p.strftime("%Y-%m-%d") for p in periods
     ]

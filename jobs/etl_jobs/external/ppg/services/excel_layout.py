@@ -6,7 +6,12 @@ from typing import Any, Dict, Optional
 from dateutil.relativedelta import relativedelta
 from openpyxl.utils import get_column_letter
 
-from config import SHEET_LAYOUT
+from config import (
+    KPI_MONTHS_SHIFT_DISPLAYED,
+    MAX_COLUMNS,
+    SHEET_DEFINITIONS,
+    SHEET_LAYOUT,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +84,7 @@ class ExcelLayoutService:
 
         # Locate template "YYYY" column
         template_col_idx = None
-        for idx, cell in enumerate(header_row[:10], start=1):
+        for idx, cell in enumerate(header_row[:MAX_COLUMNS], start=1):
             if cell.value == "YYYY":
                 template_col_idx = idx
                 break
@@ -88,7 +93,7 @@ class ExcelLayoutService:
                 "No 'YYYY' template column found in first 10 columns of the KPI sheet."
             )
 
-        month_shifts = [-2, -1, -13]
+        month_shifts = KPI_MONTHS_SHIFT_DISPLAYED
         insert_idx = template_col_idx + nblank_cols + len(month_shifts) + 1
 
         # Build mappings
@@ -165,7 +170,7 @@ class ExcelLayoutService:
 
         # Locate template "YYYY" column
         template_col_idx = None
-        for idx, cell in enumerate(header_row[:10], start=1):
+        for idx, cell in enumerate(header_row[:MAX_COLUMNS], start=1):
             if cell.value == "YYYY":
                 template_col_idx = idx
                 break
@@ -176,7 +181,7 @@ class ExcelLayoutService:
 
         # 1) Insert past years until ds_year-1
         ds_year_scholar = ds_year if ds_month >= 9 else ds_year - 1
-        month_shifts = [-2, -1, -13]
+        month_shifts = KPI_MONTHS_SHIFT_DISPLAYED
         insert_idx = template_col_idx + nblank_cols + len(month_shifts) + 1
 
         # Build mappings
@@ -261,8 +266,13 @@ class ExcelLayoutService:
             title = title_base
             if layout_type in ["kpis", "top"]:
                 scale = filters.get("scale", "")
-                node_tag = context.get(scale)
-                if node_tag:
+                if (
+                    scope_suffix := SHEET_DEFINITIONS[sheet_definition].get(
+                        "title_suffix"
+                    )
+                ) is not None:
+                    title += f" - {scope_suffix.capitalize()}"
+                if (node_tag := context.get(scale)) is not None:
                     title += "\n" + node_tag
 
             # Layout configuration for title placement

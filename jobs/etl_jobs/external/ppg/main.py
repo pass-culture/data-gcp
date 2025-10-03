@@ -6,6 +6,7 @@ import typer
 
 from config import REPORT_BASE_DIR_DEFAULT
 from core import ExportSession, Stakeholder, StakeholderType
+from services.tracking import GlobalStats
 from utils.data_utils import drac_selector, get_available_regions, upload_zip_to_gcs
 from utils.file_utils import (
     compress_directory,
@@ -33,6 +34,9 @@ def generate(
         help="Consolidation date in YYYY-MM-DD format",
     ),
     target: str = typer.Option(None, "--target", "-t", help="Target name"),
+    show_failures: bool = typer.Option(
+        False, "--show-failures", "-f", help="Show detailed failure analysis"
+    ),
 ):
     """Generate reports for specified stakeholder."""
 
@@ -67,26 +71,40 @@ def generate(
 
     base_dir = get_dated_base_dir(REPORT_BASE_DIR_DEFAULT, ds)
 
+    # ===== NEW: Create global statistics tracker =====
+    global_stats = GlobalStats()
+
     # Generate reports
     try:
         with ExportSession(ds) as session:
             session.load_data()
 
             if national:
-                stakeholder = Stakeholder(
+                stakeholder_obj = Stakeholder(
                     name="Ministère", type=StakeholderType.MINISTERE
                 )
-                session.process_stakeholder(
-                    "ministere", stakeholder, base_dir / "NATIONAL", ds
+                # ===== MODIFIED: Capture returned stats =====
+                stakeholder_stats = session.process_stakeholder(
+                    "ministere", stakeholder_obj, base_dir / "NATIONAL", ds
                 )
+                global_stats.add_stakeholder_stats(stakeholder_stats)
 
             if selected_regions:
                 for region in selected_regions:
-                    session.process_stakeholder(
+                    # ===== MODIFIED: Capture returned stats =====
+                    stakeholder_stats = session.process_stakeholder(
                         "drac", region, base_dir / "REGIONAL" / region, ds
                     )
+                    global_stats.add_stakeholder_stats(stakeholder_stats)
 
         typer.secho(f"✅ Reports generated successfully in {base_dir}", fg="green")
+
+        # ===== NEW: Display comprehensive statistics =====
+        global_stats.print_detailed_summary()
+
+        # ===== NEW: Optionally show detailed failure analysis =====
+        if show_failures:
+            global_stats.print_failed_kpis_detail()
 
     except Exception as e:
         logger.error(f"❌ Export session failed: {e}")

@@ -1,11 +1,12 @@
-import os
 from collections import defaultdict
 from enum import Enum
 from pathlib import Path
 
 ######## base configs
-GCP_PROJECT = os.environ.get("PROJECT_NAME", "passculture-data-ehp")
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
+GCP_PROJECT = (
+    "passculture-data-prod"  # os.environ.get("PROJECT_NAME", "passculture-data-ehp")
+)
+ENV_SHORT_NAME = "prod"  # os.environ.get("ENV_SHORT_NAME", "dev")
 BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
 EXPORT_BUCKET = f"de-bigquery-data-export-{ENV_SHORT_NAME}"
 REGION_HIERARCHY_TABLE = "region_department"
@@ -232,7 +233,8 @@ SHEET_DEFINITIONS = {
     },
     "top_offer": {
         "type": SheetType.TOP,
-        "template_tab": "Top offres - Individuel",
+        "title_suffix": "Part Individuelle",
+        "template_tab": "Top offres",
         "source_table": "top_offer",
         "top_n": 50,
         "select_fields": [
@@ -247,7 +249,8 @@ SHEET_DEFINITIONS = {
     },
     "top_offer_category": {
         "type": SheetType.TOP,
-        "template_tab": "Top par catégorie - Individuel",
+        "title_suffix": "Part Individuelle",
+        "template_tab": "Top par catégorie",
         "source_table": "top_offer_category",
         "top_n": 50,
         "select_fields": [
@@ -262,7 +265,8 @@ SHEET_DEFINITIONS = {
     },
     "top_offer_label": {
         "type": SheetType.TOP,
-        "template_tab": "Top offres lieux labellisés - Individuel",
+        "title_suffix": "Part Individuelle",
+        "template_tab": "Top offres lieux labellisés",
         "source_table": "top_offer_label",
         "top_n": 50,
         "select_fields": [
@@ -278,7 +282,8 @@ SHEET_DEFINITIONS = {
     },
     "top_venue": {
         "type": SheetType.TOP,
-        "template_tab": "Top lieux - Individuel",
+        "title_suffix": "Part Individuelle",
+        "template_tab": "Top lieux",
         "source_table": "top_venue",
         "top_n": 50,
         "select_fields": ["partition_month", "venue_name", "offerer_name"],
@@ -286,7 +291,8 @@ SHEET_DEFINITIONS = {
     },
     "top_labeled_venue": {
         "type": SheetType.TOP,
-        "template_tab": "Top lieux labellisés - Individuel",
+        "title_suffix": "Part Individuelle",
+        "template_tab": "Top lieux labellisés",
         "source_table": "top_labeled_venue",
         "top_n": 50,
         "select_fields": [
@@ -299,7 +305,8 @@ SHEET_DEFINITIONS = {
     },
     "top_ac": {
         "type": SheetType.TOP,
-        "template_tab": "Top acteurs culturels - Collectif",
+        "title_suffix": "Part Collective",
+        "template_tab": "Top acteurs culturels",
         "source_table": "top_ac",
         "top_n": 50,
         "select_fields": ["partition_month", "offerer_name", "total_number_of_tickets"],
@@ -307,7 +314,8 @@ SHEET_DEFINITIONS = {
     },
     "top_format": {
         "type": SheetType.TOP,
-        "template_tab": "Top formats - Collectif",
+        "title_suffix": "Part Collective",
+        "template_tab": "Top formats",
         "source_table": "top_format",
         "top_n": 5,
         "select_fields": [
@@ -340,6 +348,8 @@ def default_title_layout():
     }
 
 
+MAX_COLUMNS = 30  # Maximum number of columns to consider in the template
+
 SHEET_LAYOUT = defaultdict(
     default_title_layout,
     {
@@ -371,3 +381,6 @@ AGG_TYPE_MAPPING = {
 
 # Default aggregation if not found or invalid
 DEFAULT_AGG_TYPE = "sum"
+
+# Months to display in KPI sheets (shift relative to the consolidation month)
+KPI_MONTHS_SHIFT_DISPLAYED = [-3, -2, -1, -13]

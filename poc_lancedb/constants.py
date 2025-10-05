@@ -24,9 +24,10 @@ if not OPENAI_API_KEY:
 
 # --- Configuration ---
 # Path where LanceDB will store its data. This will create a directory.
-DB_PATH = "lancedb_parquet_rag.db" # Adjusted DB path for parquet-only setup
+# Adjusted DB path for parquet-only setup
 # Name of the table within the LanceDB database
 TABLE_NAME = "my_rag_data" # Adjusted table name for parquet-only setup
+DB_PATH = "." 
 # Dummy parquet file path for demonstration purposes when importing from parquet.
 PARQUET_FILE = "chatbot_test_dataset_enriched.parquet" # Keeping existing dummy file name
 DUMMY_PARQUET = "dummy_data.parquet" # Keeping existing dummy file name
@@ -34,4 +35,4 @@ BUCKET_NAME = f"data-bucket-ml-temp-{ENV_SHORT_NAME}"
 GCS_VECTOR_DB_PATH="chatbot_edito"
 # Global variables for models and API keys
 SENTENCE_TRANSFORMER_MODEL = 'all-MiniLM-L6-v2' # Model for embeddings
-OPENAI_LLM_MODEL = "gpt-3.5-turbo" # Or "gpt-4" for higher quality
+OPENAI_LLM_MODEL = "gpt-5-nano" # Or "gpt-4" for higher quality

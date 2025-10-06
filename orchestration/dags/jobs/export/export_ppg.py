@@ -47,7 +47,7 @@ DBT_REPORTING_MODELS_PATH = f"{DAG_FOLDER}/data_gcp_dbt/models/mart/external_rep
 
 
 dag_config = {
-    "PROJECT_NAME": GCP_PROJECT_ID,
+    "GCP_PROJECT": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
 }
 

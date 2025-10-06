@@ -213,7 +213,7 @@ class DataService:
                     FROM {table_name}
                     WHERE dimension_name = ? AND dimension_value = ? AND partition_month = ?
                 )
-                WHERE rank <
+                WHERE rank < ?
                 ORDER BY {', '.join(reorder_by)} ASC
             """
             params = [dimension_name, dimension_value, previous_month_str, top_n]

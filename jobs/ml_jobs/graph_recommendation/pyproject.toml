@@ -3,7 +3,7 @@ name = "graph-recommendation"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "google-cloud-storage>=2.16.0",
     "ipykernel>=6.30.1",
@@ -15,10 +15,22 @@ dependencies = [
     "ruff>=0.13.2",
     "scipy>=1.16.2",
     "streamlit>=1.35.0",
-    "torch>=2.3.0",
+    "torch==2.8.0",
+    "torch-cluster==1.6.3",
     "torch-geometric>=2.6.1",
     "tornado>=6.4.2",
     "typer>=0.12.3",
+]
+
+
+[tool.uv]
+extra-build-dependencies = { torch-cluster = ["torch"] }
+
+[tool.uv.sources]
+# See here https://github.com/rusty1s/pytorch_cluster for the correct URLs if you want to update torch, cuda or torch-cluster versions.
+torch-cluster = [
+    { url = "https://data.pyg.org/whl/torch-2.8.0%2Bcu128/torch_cluster-1.6.3%2Bpt28cu128-cp312-cp312-linux_x86_64.whl", marker = "sys_platform == 'linux'" },
+    { url = "https://data.pyg.org/whl/torch-2.8.0%2Bcpu/torch_cluster-1.6.3-cp312-cp312-macosx_10_13_universal2.whl", marker = "sys_platform == 'darwin'" },
 ]
 
 ## ruff

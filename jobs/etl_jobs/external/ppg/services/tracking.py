@@ -1,8 +1,16 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional
+from pathlib import Path
+from typing import List, Optional, TextIO
 
 import typer
+
+
+def _print_to_both(msg: str, file_handle: Optional[TextIO] = None, **style_kwargs):
+    """Print to console with colors and to file without colors."""
+    typer.secho(msg, **style_kwargs)
+    if file_handle:
+        file_handle.write(msg + "\n")
 
 
 class KPIStatus(Enum):
@@ -193,56 +201,77 @@ class StakeholderStats:
     def tops_no_data(self) -> int:
         return sum(r.tops_no_data for r in self.report_stats)
 
-    def print_summary(self):
+    def print_summary(self, file_handle: Optional[TextIO] = None):
         """Print detailed summary for this stakeholder."""
-        typer.secho(f"\n{'='*80}", fg="cyan")
-        typer.secho(
+        _print_to_both(f"\n{'='*80}", file_handle, fg="cyan")
+        _print_to_both(
             f"📊 STAKEHOLDER SUMMARY: {self.stakeholder_name} ({self.stakeholder_type})",
+            file_handle,
             fg="cyan",
             bold=True,
         )
-        typer.secho(f"{'='*80}", fg="cyan")
+        _print_to_both(f"{'='*80}", file_handle, fg="cyan")
 
         # Overall stats
-        typer.secho(f"\n📁 Reports: {self.total_reports}", fg="white")
+        _print_to_both(f"\n📁 Reports: {self.total_reports}", file_handle, fg="white")
 
         # KPI Stats
         if self.total_kpis > 0:
             kpi_success_rate = (self.kpis_successful / self.total_kpis) * 100
-            typer.secho("\n📈 KPI Statistics:", fg="yellow", bold=True)
-            typer.secho(f"  Total KPIs:      {self.total_kpis}", fg="white")
-            typer.secho(
+            _print_to_both("\n📈 KPI Statistics:", file_handle, fg="yellow", bold=True)
+            _print_to_both(
+                f"  Total KPIs:      {self.total_kpis}", file_handle, fg="white"
+            )
+            _print_to_both(
                 f"  ✅ Successful:   {self.kpis_successful} ({kpi_success_rate:.1f}%)",
+                file_handle,
                 fg="green",
             )
-            typer.secho(f"  ❌ Failed:       {self.kpis_failed}", fg="red")
-            typer.secho(f"  ⚠️  No Data:      {self.kpis_no_data}", fg="yellow")
+            _print_to_both(
+                f"  ❌ Failed:       {self.kpis_failed}", file_handle, fg="red"
+            )
+            _print_to_both(
+                f"  ⚠️  No Data:      {self.kpis_no_data}", file_handle, fg="yellow"
+            )
 
         # Top Stats
         if self.total_tops > 0:
             top_success_rate = (self.tops_successful / self.total_tops) * 100
-            typer.secho("\n🏆 Top Rankings Statistics:", fg="yellow", bold=True)
-            typer.secho(f"  Total Tops:      {self.total_tops}", fg="white")
-            typer.secho(
+            _print_to_both(
+                "\n🏆 Top Rankings Statistics:", file_handle, fg="yellow", bold=True
+            )
+            _print_to_both(
+                f"  Total Tops:      {self.total_tops}", file_handle, fg="white"
+            )
+            _print_to_both(
                 f"  ✅ Successful:   {self.tops_successful} ({top_success_rate:.1f}%)",
+                file_handle,
                 fg="green",
             )
-            typer.secho(f"  ❌ Failed:       {self.tops_failed}", fg="red")
-            typer.secho(f"  ⚠️  No Data:      {self.tops_no_data}", fg="yellow")
+            _print_to_both(
+                f"  ❌ Failed:       {self.tops_failed}", file_handle, fg="red"
+            )
+            _print_to_both(
+                f"  ⚠️  No Data:      {self.tops_no_data}", file_handle, fg="yellow"
+            )
 
         # Per-report breakdown
         if len(self.report_stats) > 1:  # Only show breakdown if multiple reports
-            typer.secho("\n📄 Per-Report Breakdown:", fg="yellow", bold=True)
+            _print_to_both(
+                "\n📄 Per-Report Breakdown:", file_handle, fg="yellow", bold=True
+            )
             for report in self.report_stats:
-                typer.secho(f"  • {report.report_name}:", fg="cyan")
+                _print_to_both(f"  • {report.report_name}:", file_handle, fg="cyan")
                 if report.total_kpis > 0:
-                    typer.secho(
+                    _print_to_both(
                         f"    KPIs: {report.kpis_successful}/{report.total_kpis} successful",
+                        file_handle,
                         fg="white",
                     )
                 if report.total_tops > 0:
-                    typer.secho(
+                    _print_to_both(
                         f"    Tops: {report.tops_successful}/{report.total_tops} successful",
+                        file_handle,
                         fg="white",
                     )
 
@@ -297,112 +326,174 @@ class GlobalStats:
     def tops_no_data(self) -> int:
         return sum(s.tops_no_data for s in self.stakeholder_stats)
 
-    def print_detailed_summary(self):
+    def print_detailed_summary(self, file_handle: Optional[TextIO] = None):
         """Print comprehensive summary of all processing."""
-        typer.secho(f"\n{'='*80}", fg="magenta")
-        typer.secho("🎯 GLOBAL EXECUTION SUMMARY", fg="magenta", bold=True)
-        typer.secho(f"{'='*80}", fg="magenta")
+        _print_to_both(f"\n{'='*80}", file_handle, fg="magenta")
+        _print_to_both(
+            "🎯 GLOBAL EXECUTION SUMMARY", file_handle, fg="magenta", bold=True
+        )
+        _print_to_both(f"{'='*80}", file_handle, fg="magenta")
 
         # High-level stats
-        typer.secho("\n📊 Overview:", fg="yellow", bold=True)
-        typer.secho(f"  Stakeholders: {self.total_stakeholders}", fg="white")
-        typer.secho(f"  Total Reports: {self.total_reports}", fg="white")
+        _print_to_both("\n📊 Overview:", file_handle, fg="yellow", bold=True)
+        _print_to_both(
+            f"  Stakeholders: {self.total_stakeholders}", file_handle, fg="white"
+        )
+        _print_to_both(
+            f"  Total Reports: {self.total_reports}", file_handle, fg="white"
+        )
 
         # KPI Summary
         if self.total_kpis > 0:
             kpi_success_rate = (self.kpis_successful / self.total_kpis) * 100
-            typer.secho("\n📈 Overall KPI Statistics:", fg="yellow", bold=True)
-            typer.secho(f"  Total KPIs Processed:  {self.total_kpis}", fg="white")
-            typer.secho(
+            _print_to_both(
+                "\n📈 Overall KPI Statistics:", file_handle, fg="yellow", bold=True
+            )
+            _print_to_both(
+                f"  Total KPIs Processed:  {self.total_kpis}", file_handle, fg="white"
+            )
+            _print_to_both(
                 f"  ✅ Successful:         {self.kpis_successful} ({kpi_success_rate:.1f}%)",
+                file_handle,
                 fg="green",
             )
-            typer.secho(f"  ❌ Failed:             {self.kpis_failed}", fg="red")
-            typer.secho(f"  ⚠️  No Data/Missing:    {self.kpis_no_data}", fg="yellow")
+            _print_to_both(
+                f"  ❌ Failed:             {self.kpis_failed}", file_handle, fg="red"
+            )
+            _print_to_both(
+                f"  ⚠️  No Data/Missing:    {self.kpis_no_data}",
+                file_handle,
+                fg="yellow",
+            )
 
         # Top Summary
         if self.total_tops > 0:
             top_success_rate = (self.tops_successful / self.total_tops) * 100
-            typer.secho("\n🏆 Overall Top Rankings Statistics:", fg="yellow", bold=True)
-            typer.secho(f"  Total Tops Processed:  {self.total_tops}", fg="white")
-            typer.secho(
+            _print_to_both(
+                "\n🏆 Overall Top Rankings Statistics:",
+                file_handle,
+                fg="yellow",
+                bold=True,
+            )
+            _print_to_both(
+                f"  Total Tops Processed:  {self.total_tops}", file_handle, fg="white"
+            )
+            _print_to_both(
                 f"  ✅ Successful:         {self.tops_successful} ({top_success_rate:.1f}%)",
+                file_handle,
                 fg="green",
             )
-            typer.secho(f"  ❌ Failed:             {self.tops_failed}", fg="red")
-            typer.secho(f"  ⚠️  No Data/Missing:    {self.tops_no_data}", fg="yellow")
+            _print_to_both(
+                f"  ❌ Failed:             {self.tops_failed}", file_handle, fg="red"
+            )
+            _print_to_both(
+                f"  ⚠️  No Data/Missing:    {self.tops_no_data}",
+                file_handle,
+                fg="yellow",
+            )
 
         # NEW: Condensed per-stakeholder execution summary
-        typer.secho(f"\n{'='*80}", fg="cyan")
-        typer.secho("📊 DETAILED EXECUTION SUMMARY", fg="cyan", bold=True)
-        typer.secho(f"{'='*80}", fg="cyan")
+        _print_to_both(f"\n{'='*80}", file_handle, fg="cyan")
+        _print_to_both(
+            "📊 DETAILED EXECUTION SUMMARY", file_handle, fg="cyan", bold=True
+        )
+        _print_to_both(f"{'='*80}", file_handle, fg="cyan")
 
         for stakeholder in self.stakeholder_stats:
-            typer.secho(
+            _print_to_both(
                 f"\n🏢 {stakeholder.stakeholder_name} ({stakeholder.stakeholder_type})",
+                file_handle,
                 fg="white",
                 bold=True,
             )
-            typer.secho(f"  Reports: {stakeholder.total_reports}", fg="white")
+            _print_to_both(
+                f"  Reports: {stakeholder.total_reports}", file_handle, fg="white"
+            )
 
             if stakeholder.total_kpis > 0:
                 kpi_success_rate = (
                     stakeholder.kpis_successful / stakeholder.total_kpis
                 ) * 100
-                typer.secho(
-                    f"  Total KPIs Processed:  {stakeholder.total_kpis}", fg="white"
+                _print_to_both(
+                    f"  Total KPIs Processed:  {stakeholder.total_kpis}",
+                    file_handle,
+                    fg="white",
                 )
-                typer.secho(
+                _print_to_both(
                     f"  ✅ Successful:         {stakeholder.kpis_successful} ({kpi_success_rate:.1f}%)",
+                    file_handle,
                     fg="green",
                 )
-                typer.secho(
-                    f"  ❌ Failed:             {stakeholder.kpis_failed}", fg="red"
+                _print_to_both(
+                    f"  ❌ Failed:             {stakeholder.kpis_failed}",
+                    file_handle,
+                    fg="red",
                 )
-                typer.secho(
-                    f"  ⚠️  No Data/Missing:    {stakeholder.kpis_no_data}", fg="yellow"
+                _print_to_both(
+                    f"  ⚠️  No Data/Missing:    {stakeholder.kpis_no_data}",
+                    file_handle,
+                    fg="yellow",
                 )
 
             if stakeholder.total_tops > 0:
                 top_success_rate = (
                     stakeholder.tops_successful / stakeholder.total_tops
                 ) * 100
-                typer.secho(
-                    f"  Total Tops Processed:  {stakeholder.total_tops}", fg="white"
+                _print_to_both(
+                    f"  Total Tops Processed:  {stakeholder.total_tops}",
+                    file_handle,
+                    fg="white",
                 )
-                typer.secho(
+                _print_to_both(
                     f"  ✅ Successful:         {stakeholder.tops_successful} ({top_success_rate:.1f}%)",
+                    file_handle,
                     fg="green",
                 )
-                typer.secho(
-                    f"  ❌ Failed:             {stakeholder.tops_failed}", fg="red"
+                _print_to_both(
+                    f"  ❌ Failed:             {stakeholder.tops_failed}",
+                    file_handle,
+                    fg="red",
                 )
-                typer.secho(
-                    f"  ⚠️  No Data/Missing:    {stakeholder.tops_no_data}", fg="yellow"
+                _print_to_both(
+                    f"  ⚠️  No Data/Missing:    {stakeholder.tops_no_data}",
+                    file_handle,
+                    fg="yellow",
                 )
 
         # Per-stakeholder detailed breakdown
-        typer.secho(f"\n{'─'*80}", fg="cyan")
-        typer.secho("📋 Per-Stakeholder Detailed Breakdown:", fg="cyan", bold=True)
-        typer.secho(f"{'─'*80}", fg="cyan")
+        _print_to_both(f"\n{'─'*80}", file_handle, fg="cyan")
+        _print_to_both(
+            "📋 Per-Stakeholder Detailed Breakdown:", file_handle, fg="cyan", bold=True
+        )
+        _print_to_both(f"{'─'*80}", file_handle, fg="cyan")
 
         for stakeholder in self.stakeholder_stats:
-            stakeholder.print_summary()
+            stakeholder.print_summary(file_handle)
 
         # Final summary
-        typer.secho(f"\n{'='*80}", fg="magenta")
+        _print_to_both(f"\n{'='*80}", file_handle, fg="magenta")
         if (
             self.kpis_successful == self.total_kpis
             and self.tops_successful == self.total_tops
         ):
-            typer.secho(
-                "✅ ALL PROCESSING COMPLETED SUCCESSFULLY!", fg="green", bold=True
+            _print_to_both(
+                "✅ ALL PROCESSING COMPLETED SUCCESSFULLY!",
+                file_handle,
+                fg="green",
+                bold=True,
             )
         elif self.kpis_failed > 0 or self.tops_failed > 0:
-            typer.secho("⚠️  PROCESSING COMPLETED WITH ERRORS", fg="yellow", bold=True)
+            _print_to_both(
+                "⚠️  PROCESSING COMPLETED WITH ERRORS",
+                file_handle,
+                fg="yellow",
+                bold=True,
+            )
         else:
-            typer.secho("✅ PROCESSING COMPLETED", fg="green", bold=True)
-        typer.secho(f"{'='*80}\n", fg="magenta")
+            _print_to_both(
+                "✅ PROCESSING COMPLETED", file_handle, fg="green", bold=True
+            )
+        _print_to_both(f"{'='*80}\n", file_handle, fg="magenta")
 
     def get_failed_kpis(self) -> List[KPIResult]:
         """Get all failed KPIs across all stakeholders."""
@@ -424,26 +515,41 @@ class GlobalStats:
                     )
         return failed
 
-    def print_failed_kpis_detail(self):
+    def print_failed_kpis_detail(self, file_handle: Optional[TextIO] = None):
         """Print detailed information about failed KPIs."""
         failed = self.get_failed_kpis()
         if not failed:
             return
 
-        typer.secho("\n🔍 DETAILED FAILURE ANALYSIS:", fg="red", bold=True)
-        typer.secho(f"{'─'*80}", fg="red")
+        _print_to_both(
+            "\n🔍 DETAILED FAILURE ANALYSIS:", file_handle, fg="red", bold=True
+        )
+        _print_to_both(f"{'─'*80}", file_handle, fg="red")
 
         for result in failed:
             status_emoji = "❌" if result.status == KPIStatus.FAILED else "⚠️"
-            typer.secho(
-                f"\n{status_emoji} KPI: {result.kpi_name}", fg="white", bold=True
+            _print_to_both(
+                f"\n{status_emoji} KPI: {result.kpi_name}",
+                file_handle,
+                fg="white",
+                bold=True,
             )
-            typer.secho(f"  Sheet: {result.sheet_name}", fg="cyan")
-            typer.secho(f"  Status: {result.status.value}", fg="yellow")
+            _print_to_both(f"  Sheet: {result.sheet_name}", file_handle, fg="cyan")
+            _print_to_both(f"  Status: {result.status.value}", file_handle, fg="yellow")
             if result.error_message:
-                typer.secho(f"  Error: {result.error_message}", fg="red")
+                _print_to_both(
+                    f"  Error: {result.error_message}", file_handle, fg="red"
+                )
             if result.total_cells > 0:
-                typer.secho(
+                _print_to_both(
                     f"  Values written: {result.values_written}/{result.total_cells} ({result.success_rate:.1f}%)",
+                    file_handle,
                     fg="white",
                 )
+
+    def save_to_file(self, filepath: Path, show_failures: bool = False):
+        """Save statistics to a file."""
+        with open(filepath, "w", encoding="utf-8") as f:
+            self.print_detailed_summary(file_handle=f)
+            if show_failures:
+                self.print_failed_kpis_detail(file_handle=f)

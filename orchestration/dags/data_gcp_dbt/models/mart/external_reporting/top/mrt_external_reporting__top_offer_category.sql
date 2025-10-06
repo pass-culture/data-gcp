@@ -30,6 +30,7 @@ with
         from {{ ref("mrt_global__booking") }}
         where
             booking_is_used
+            and offer_category_id <> "JEU"
             {% if is_incremental() %}
                 and date_trunc(date(booking_used_date), month)
                 = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)

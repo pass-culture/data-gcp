@@ -274,7 +274,7 @@ SHEET_DEFINITIONS = {
         "order_by": [
             "offer_category_id",
             "total_booking_amount",
-        ],  # rank will be computed over partition order_by_list[0] with ORDER BY {order_by_list[0]}, DESC {order_by_list[-1]} DESC,
+        ],  # rank will be computed over partition order_by_list[0] with ORDER BY {order_by_list[0]} DESC, {order_by_list[-1]} DESC
     },
     "top_offer_label": {
         "type": SheetType.TOP,

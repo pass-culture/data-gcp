@@ -198,7 +198,9 @@ class DataService:
         full_select = select_fields + [
             field for field in order_by if field not in select_fields
         ]
-        reorder_by = [order_by[0], "rank"] if len(order_by) > 1 else ["rank"]
+        reorder_by = (
+            [f"{order_by[0]} DESC", "rank ASC"] if len(order_by) > 1 else ["rank ASC"]
+        )  # this is a trick , TO DO: add order mapping
         partition = f"PARTITION BY {order_by[0]}" if len(order_by) == 2 else ""
 
         ds_date = datetime.strptime(ds, "%Y-%m-%d").date()
@@ -214,7 +216,7 @@ class DataService:
                     WHERE dimension_name = ? AND dimension_value = ? AND partition_month = ?
                 )
                 WHERE rank < ?
-                ORDER BY {', '.join(reorder_by)} ASC
+                ORDER BY {', '.join(reorder_by)}
             """
             params = [dimension_name, dimension_value, previous_month_str, top_n]
             log_print.debug(

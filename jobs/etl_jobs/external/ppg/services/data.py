@@ -209,11 +209,11 @@ class DataService:
                 SELECT {', '.join(select_fields)}, rank
                 FROM (
                     SELECT {', '.join(full_select)},
-                        ROw_NUMBER() OVER ({partition} ORDER BY {order_by[-1]} DESC) as rank
+                        ROW_NUMBER() OVER ({partition} ORDER BY {order_by[-1]} {'ASC' if order_by[-1].endswith('_ranked') else 'DESC'}) as rank
                     FROM {table_name}
                     WHERE dimension_name = ? AND dimension_value = ? AND partition_month = ?
                 )
-                WHERE rank <= ?
+                WHERE rank <
                 ORDER BY {', '.join(reorder_by)} ASC
             """
             params = [dimension_name, dimension_value, previous_month_str, top_n]

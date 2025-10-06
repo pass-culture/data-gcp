@@ -253,7 +253,9 @@ SHEET_DEFINITIONS = {
             "total_booking_amount",
             "total_booking_quantity",
         ],
-        "order_by": ["total_booking_amount"],
+        "order_by": [
+            "total_booking_amount"
+        ],  # rank will be computed with ORDER BY {order_by_list[-1]} DESC
     },
     "top_offer_category": {
         "type": SheetType.TOP,
@@ -269,7 +271,10 @@ SHEET_DEFINITIONS = {
             "total_booking_amount",
             "total_booking_quantity",
         ],
-        "order_by": ["offer_category_id", "total_booking_amount"],
+        "order_by": [
+            "offer_category_id",
+            "total_booking_amount",
+        ],  # rank will be computed over partition order_by_list[0] with ORDER BY {order_by_list[0]}, DESC {order_by_list[-1]} DESC,
     },
     "top_offer_label": {
         "type": SheetType.TOP,
@@ -295,7 +300,9 @@ SHEET_DEFINITIONS = {
         "source_table": "top_venue",
         "top_n": 50,
         "select_fields": ["partition_month", "venue_name", "offerer_name"],
-        "order_by": ["total_venue_booking_amount_ranked"],
+        "order_by": [
+            "total_venue_booking_amount_ranked"
+        ],  # SPECIAL CASE for confidential data, make sure to use _ranked suffix ordering is ASC
     },
     "top_labeled_venue": {
         "type": SheetType.TOP,

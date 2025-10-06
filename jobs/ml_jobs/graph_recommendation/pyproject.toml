@@ -27,11 +27,26 @@ dependencies = [
 extra-build-dependencies = { torch-cluster = ["torch"] }
 
 [tool.uv.sources]
+torch = [
 # See here https://github.com/rusty1s/pytorch_cluster for the correct URLs if you want to update torch, cuda or torch-cluster versions.
+  { index = "pytorch-cpu", marker = "sys_platform != 'linux'" },
+  { index = "pytorch-cu128", marker = "sys_platform == 'linux'" },
+]
 torch-cluster = [
     { url = "https://data.pyg.org/whl/torch-2.8.0%2Bcu128/torch_cluster-1.6.3%2Bpt28cu128-cp312-cp312-linux_x86_64.whl", marker = "sys_platform == 'linux'" },
     { url = "https://data.pyg.org/whl/torch-2.8.0%2Bcpu/torch_cluster-1.6.3-cp312-cp312-macosx_10_13_universal2.whl", marker = "sys_platform == 'darwin'" },
 ]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
 
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.

@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 from typing import Dict, List, Optional, Union
 
@@ -7,8 +6,7 @@ from dateutil.relativedelta import relativedelta
 from duckdb import DuckDBPyConnection
 
 from utils.duckdb_utils import aggregate_kpi_data, query_monthly_kpi, query_yearly_kpi
-
-logger = logging.getLogger(__name__)
+from utils.verbose_logger import log_print
 
 
 class DataService:
@@ -63,7 +61,7 @@ class DataService:
             return {"yearly": yearly_agg, "monthly": monthly_formatted}
 
         except Exception as e:
-            logger.warning(f"Unexpected error retrieving KPI '{kpi_name}': {e}")
+            log_print.warning(f"Unexpected error retrieving KPI '{kpi_name}': {e}")
             return None
 
     def _get_yearly_kpi_data(
@@ -219,7 +217,7 @@ class DataService:
                 ORDER BY {', '.join(reorder_by)} ASC
             """
             params = [dimension_name, dimension_value, previous_month_str, top_n]
-            logger.debug(
+            log_print.debug(
                 f"""Executing top rankings query: {query.replace('?', '{}').format(*[f"'{p}'" if isinstance(p, str) else str(p) for p in params])}"""
             )
 
@@ -227,7 +225,7 @@ class DataService:
 
             return result
         except Exception as e:
-            logger.warning(
+            log_print.warning(
                 f"Failed to retrieve top rankings for {dimension_name}={dimension_value}: {e}"
             )
             return None

@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 from duckdb import DuckDBPyConnection
 
 from config import KPI_MONTHS_SHIFT_DISPLAYED
+from utils.verbose_logger import log_print
 
 
 # --- Exceptions ---
@@ -50,7 +51,7 @@ def query_kpi_data(
             WHERE {" AND ".join(where)}
             ORDER BY partition_month
         """
-
+        log_print.debug(f"Executing query: {query} with params {params}")
         return conn.execute(query, params).df()
 
     except Exception as e:
@@ -109,6 +110,7 @@ def query_yearly_kpi(
                 WHERE {" AND ".join(where)}
                 ORDER BY partition_month
             """
+            log_print.debug(f"Executing query: {query} with params {params}")
             df = conn.execute(query, params).df()
             df["year_label"] = year_label
             all_data.append(df)
@@ -174,6 +176,7 @@ def query_monthly_kpi(
         WHERE {" AND ".join(where)}
         ORDER BY partition_month
     """
+    log_print.debug(f"Executing query: {query} with params {params}")
     try:
         return conn.execute(query, params).df()
     except Exception as e:
@@ -194,6 +197,7 @@ def aggregate_kpi_data(
     - 'collective': scholar year (Sep-Aug)
     """
     if data.empty:
+        log_print.warning("No data available for aggregation.")
         return {}
 
     data = data.copy()

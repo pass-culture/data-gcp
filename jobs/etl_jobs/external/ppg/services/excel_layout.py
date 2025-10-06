@@ -1,4 +1,3 @@
-import logging
 from copy import copy
 from datetime import datetime
 from typing import Any, Dict, Optional
@@ -12,8 +11,7 @@ from config import (
     SHEET_DEFINITIONS,
     SHEET_LAYOUT,
 )
-
-logger = logging.getLogger(__name__)
+from utils.verbose_logger import log_print
 
 
 class ExcelLayoutService:
@@ -56,13 +54,15 @@ class ExcelLayoutService:
                     worksheet, ds, min_year, nblank_cols
                 )
             else:
-                logger.warning(
+                log_print.warning(
                     f"Unknown sheet definition for date expansion: {sheet_definition}"
                 )
                 return None
 
         except Exception as e:
-            logger.warning(f"Failed to expand date columns for {sheet_definition}: {e}")
+            log_print.warning(
+                f"Failed to expand date columns for {sheet_definition}: {e}"
+            )
             return None
 
     @staticmethod
@@ -308,9 +308,9 @@ class ExcelLayoutService:
 
                 try:
                     worksheet.merge_cells(merge_range)
-                    logger.debug(f"Merged cells {merge_range} for title")
+                    log_print.debug(f"Merged cells {merge_range} for title")
                 except Exception as merge_error:
-                    logger.warning(
+                    log_print.warning(
                         f"Failed to merge cells {merge_range}: {merge_error}"
                     )
 
@@ -318,7 +318,7 @@ class ExcelLayoutService:
             worksheet.cell(row=start_row, column=start_col, value=title)
 
         except Exception as e:
-            logger.warning(f"Failed to set sheet title '{title_base}': {e}")
+            log_print.warning(f"Failed to set sheet title '{title_base}': {e}")
 
     @staticmethod
     def cleanup_template_columns(worksheet, layout_type: str):
@@ -330,16 +330,18 @@ class ExcelLayoutService:
             if title_col_offset > 0:
                 # Delete columns 1 through title_col_offset
                 worksheet.delete_cols(1, title_col_offset)
-                logger.debug(
+                log_print.debug(
                     f"Deleted {title_col_offset} template columns for {layout_type} sheet"
                 )
             else:
-                logger.debug(
+                log_print.debug(
                     f"No template columns to delete for {layout_type} sheet (offset: {title_col_offset})"
                 )
 
         except Exception as e:
-            logger.warning(f"Failed to cleanup template columns for {layout_type}: {e}")
+            log_print.warning(
+                f"Failed to cleanup template columns for {layout_type}: {e}"
+            )
 
     @staticmethod
     def freeze_panes(worksheet, layout_type: str):
@@ -353,9 +355,9 @@ class ExcelLayoutService:
             if row > 0 or col > 0:
                 cell = f"{get_column_letter(col + 1)}{row + 1}"  # everything will be frozen above and left of this cell
                 worksheet.freeze_panes = cell
-                logger.debug(f"Set freeze panes at {cell} for {layout_type} sheet")
+                log_print.debug(f"Set freeze panes at {cell} for {layout_type} sheet")
             else:
-                logger.debug(f"No freeze panes to set for {layout_type} sheet")
+                log_print.debug(f"No freeze panes to set for {layout_type} sheet")
 
         except Exception as e:
-            logger.warning(f"Failed to set freeze panes for {layout_type}: {e}")
+            log_print.warning(f"Failed to set freeze panes for {layout_type}: {e}")

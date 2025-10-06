@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 from typing import Optional
 
@@ -14,11 +13,24 @@ from utils.file_utils import (
     start_of_current_month,
     to_first_of_month,
 )
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+from utils.verbose_logger import log_print, state
 
 app = typer.Typer()
+
+
+@app.callback()
+def main(
+    v: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose output"),
+):
+    """
+    Global CLI callback. Sets verbose flag for all subcommands.
+    """
+    # Set global verbose state
+    state.verbose = v
+    log_print.set_verbose(v)
+
+    if v:
+        log_print.info("🔹 Verbose mode enabled")
 
 
 @app.command()
@@ -45,26 +57,26 @@ def generate(
     stakeholder = stakeholder.lower()
 
     if stakeholder not in ["all", "ministere", "drac"]:
-        typer.secho(
+        log_print.error(
             "❌ Invalid stakeholder. Choose from [all, ministere, drac]", fg="red"
         )
         raise typer.Exit(code=1)
 
-    typer.secho(f"➡️ Stakeholder: {stakeholder}", fg="cyan")
+    log_print.info(f"➡️  Stakeholder: {stakeholder}", fg="cyan")
     if target:
-        typer.secho(f"➡️ Target: {target}", fg="cyan")
+        log_print.info(f"➡️  Target: {target}", fg="cyan")
     if ds:
-        typer.secho(f"➡️ DS: {ds}", fg="cyan")
+        log_print.info(f"➡️  DS: {ds}", fg="cyan")
 
     # Set up regions and national flags
     if stakeholder == "all":
         selected_regions = get_available_regions()
         national = True
-        typer.secho("➡️ Generating reports for ministère and all regions", fg="cyan")
+        log_print.info("➡️  Generating reports for ministère and all regions", fg="cyan")
     elif stakeholder == "ministere":
         national = True
         selected_regions = None
-        typer.secho("➡️ Generating reports for ministère", fg="cyan")
+        log_print.info("➡️  Generating reports for ministère", fg="cyan")
     elif stakeholder == "drac":
         national = False
         selected_regions = drac_selector(target)
@@ -97,7 +109,7 @@ def generate(
                     )
                     global_stats.add_stakeholder_stats(stakeholder_stats)
 
-        typer.secho(f"✅ Reports generated successfully in {base_dir}", fg="green")
+        log_print.info(f"✅ Reports generated successfully in {base_dir}", fg="green")
 
         # ===== NEW: Display comprehensive statistics =====
         global_stats.print_detailed_summary()
@@ -107,7 +119,7 @@ def generate(
             global_stats.print_failed_kpis_detail()
 
     except Exception as e:
-        logger.error(f"❌ Export session failed: {e}")
+        log_print.error(f"❌ Export session failed: {e}")
         raise typer.Exit(code=1)
 
 
@@ -136,22 +148,22 @@ def compress(
         source_dir = get_dated_base_dir(REPORT_BASE_DIR_DEFAULT, ds)
 
     if not source_dir.exists():
-        typer.secho(f"❌ Directory not found: {source_dir}", fg="red")
+        log_print.error(f"❌ Directory not found: {source_dir}", fg="red")
         raise typer.Exit(code=1)
 
-    typer.secho(f"➡️ Compressing: {source_dir}", fg="cyan")
+    log_print.info(f"➡️  Compressing: {source_dir}", fg="cyan")
 
     try:
         zip_path = compress_directory(
             source_dir, REPORT_BASE_DIR_DEFAULT, clean_after_compression=clean
         )
-        typer.secho(f"✅ Compressed to: {zip_path}", fg="green")
+        log_print.info(f"✅ Compressed to: {zip_path}", fg="green")
 
         if clean:
-            typer.secho(f"🗑️ Cleaned source directory: {source_dir}", fg="yellow")
+            log_print.info(f"🗑️ Cleaned source directory: {source_dir}", fg="yellow")
 
     except Exception as e:
-        logger.error(f"❌ Compression failed: {e}")
+        log_print.error(f"❌ Compression failed: {e}")
         raise typer.Exit(code=1)
 
 
@@ -176,19 +188,19 @@ def upload(
     ds = to_first_of_month(ds)
     base_dir = get_dated_base_dir(REPORT_BASE_DIR_DEFAULT, ds)
     zip_file = base_dir.with_suffix(".zip")
-    typer.secho(f"➡️ Auto-detected zip file: {zip_file}", fg="cyan")
+    log_print.info(f"➡️ Auto-detected zip file: {zip_file}", fg="cyan")
 
     if not zip_file.exists():
-        typer.secho(f"❌ ZIP file not found: {zip_file}", fg="red")
+        log_print.error(f"❌ ZIP file not found: {zip_file}", fg="red")
         raise typer.Exit(code=1)
 
     if zip_file.suffix.lower() != ".zip":
-        typer.secho("⚠️ Warning: File doesn't have .zip extension", fg="yellow")
+        log_print.warning("⚠️ Warning: File doesn't have .zip extension", fg="yellow")
 
-    typer.secho(f"➡️ Uploading: {zip_file}", fg="cyan")
+    log_print.info(f"➡️ Uploading: {zip_file}", fg="cyan")
 
     if destination:
-        typer.secho(f"➡️ Destination: {destination}", fg="cyan")
+        log_print.info(f"➡️ Destination: {destination}", fg="cyan")
 
     try:
         success = upload_zip_to_gcs(
@@ -196,13 +208,13 @@ def upload(
         )
 
         if success:
-            typer.secho("✅ Upload completed successfully!", fg="green")
+            log_print.info("✅ Upload completed successfully!", fg="green")
         else:
-            typer.secho("❌ Upload failed", fg="red")
+            log_print.error("❌ Upload failed", fg="red")
             raise typer.Exit(code=1)
 
     except Exception as e:
-        logger.error(f"❌ Upload failed: {e}")
+        log_print.error(f"❌ Upload failed: {e}")
         raise typer.Exit(code=1)
 
 

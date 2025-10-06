@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 from typing import Dict, Iterable, Optional, Union
 
@@ -13,9 +12,7 @@ from config import (
     REGION_HIERARCHY_TABLE,
 )
 from utils.file_utils import slugify
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+from utils.verbose_logger import log_print
 
 
 def build_region_hierarchy(
@@ -60,7 +57,7 @@ def build_region_hierarchy(
         ORDER BY region_name, academy_name, dep_name
         """
 
-        typer.echo(f"🌍 Querying region hierarchy: {project_id}.{dataset}.{table}")
+        log_print.debug(f"🌍 Querying region hierarchy: {project_id}.{dataset}.{table}")
 
         rows = client.query(query).result()
         row_count = 0
@@ -114,14 +111,15 @@ def build_region_hierarchy(
             len(r["departements"]) for r in sorted_by_region.values()
         )
 
-        typer.echo(
+        log_print.debug(
             f"✅ Loaded hierarchy: {total_regions} regions, {total_academies} academies, {total_departments} departments"
         )
-        typer.echo(f"   📊 Total records processed: {row_count:,}")
+
+        log_print.debug(f"   📊 Total records processed: {row_count:,}")
 
         return sorted_by_region
     except Exception as e:
-        typer.secho(f"❌ Failed to build region hierarchy: {e}", fg="red")
+        log_print.error(f"Failed to build region hierarchy: {e}")
         raise
 
 
@@ -142,7 +140,7 @@ def drac_selector(target: Optional[str]):
             r for r in input_slug_regions if r not in slug_regions.keys()
         ]
         if invalid_regions:
-            typer.secho(
+            log_print.error(
                 f"❌ Invalid region(s): {', '.join(invalid_regions)}. "
                 f"Allowed regions: {', '.join(slug_regions.keys())}",
                 fg="red",
@@ -169,7 +167,7 @@ def drac_selector(target: Optional[str]):
             else:
                 selected_regions = [regions[i - 1] for i in indices]
         except (ValueError, IndexError):
-            typer.secho("❌ Invalid choice", fg="red")
+            log_print.error("❌ Invalid choice")
             raise typer.Exit(code=1)
 
         typer.secho(
@@ -190,7 +188,9 @@ def sanitize_date_fields(
 
     for col in fields:
         if col not in out.columns:
-            logger.warning("sanitize_date_field: column '%s' not found; skipping.", col)
+            log_print.warning(
+                "sanitize_date_field: column '%s' not found; skipping.", col
+            )
             continue
         try:
             s = out[col]
@@ -200,7 +200,7 @@ def sanitize_date_fields(
             out[col] = pd.to_datetime(s, errors="coerce").dt.date
             s = out[col]
         except Exception as e:
-            logger.warning(
+            log_print.warning(
                 "sanitize_date_fields: failed to convert '%s' to date: %s", col, e
             )
 
@@ -235,7 +235,7 @@ def upload_zip_to_gcs(local_zip_path, bucket_name=None, destination_name=None):
     """
     if not bucket_name:
         bucket_name = EXPORT_BUCKET
-        typer.secho(f"➡️ Using default export bucket: {bucket_name}", fg="cyan")
+        log_print.info(f"➡️ Using default export bucket: {bucket_name}")
 
     local_path = Path(local_zip_path)
 
@@ -251,6 +251,7 @@ def upload_zip_to_gcs(local_zip_path, bucket_name=None, destination_name=None):
 
     with open(local_zip_path, "rb") as f:
         blob.upload_from_file(f, content_type="application/zip")
-
-    print(f"✓ Uploaded {local_zip_path} to gs://{bucket_name}/{destination_blob}")
+    log_print.info(
+        f"✓ Uploaded {local_zip_path} to gs://{bucket_name}/{destination_blob}"
+    )
     return True

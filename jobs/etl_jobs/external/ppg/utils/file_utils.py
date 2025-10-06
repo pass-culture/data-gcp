@@ -1,4 +1,3 @@
-import logging
 import re
 import shutil
 import unicodedata
@@ -6,10 +5,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Dict, List
 
-import typer
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+from utils.verbose_logger import log_print
 
 
 class FileUtilsError(Exception):
@@ -29,7 +25,7 @@ def to_first_of_month(ds: str) -> str:
         return ds
 
     first_of_month = ds[:8] + "01"  # YYYY-MM-DD -> YYYY-MM-01
-    logger.info(
+    log_print.info(
         f"📅 Converting consolidation date {ds} -> {first_of_month} (first of month)"
     )
     return first_of_month
@@ -135,7 +131,7 @@ def create_directory_structure(
                 else:
                     stats["directories_existing"] += 1
 
-        typer.echo(
+        log_print.info(
             f"📁 Directory structure created: {stats['directories_created']} new, {stats['directories_existing']} existing"
         )
         return stats
@@ -163,11 +159,11 @@ def compress_directory(
         shutil.make_archive(f"{target_dir}", "zip", output_dir)
     except Exception as e:
         raise FileUtilsError(f"Failed to compress target_directory {target_dir}: {e}")
-    typer.echo(f"🗜️ Compressed target_directory {target_dir} to {target_dir}.zip")
+    log_print.info(f"🗜️ Compressed target_directory {target_dir} to {target_dir}.zip")
     if clean_after_compression:
         try:
             shutil.rmtree(target_dir)
-            typer.echo(f"🧹 Cleaned up original directory {target_dir}")
+            log_print.info(f"🧹 Cleaned up original directory {target_dir}")
         except Exception as e:
             raise FileUtilsError(
                 f"Failed to clean original directory {target_dir}: {e}"

@@ -1,7 +1,5 @@
-import logging
 from typing import Any, Dict, List, Optional
 
-import typer
 from duckdb import DuckDBPyConnection
 
 from config import (
@@ -15,8 +13,7 @@ from services.data import DataService
 from services.excel_layout import ExcelLayoutService
 from services.excel_writer import ExcelWriterService
 from services.tracking import KPIResult, KPIStatus, SheetStats, TopResult, TopStatus
-
-logger = logging.getLogger(__name__)
+from utils.verbose_logger import log_print
 
 
 class ReportOrchestrationService:
@@ -48,7 +45,7 @@ class ReportOrchestrationService:
         """
         all_sheet_stats = []
 
-        typer.secho(f"➡️ Processing {len(sheets)} sheets", fg="cyan")
+        log_print.info(f"➡️  Processing {len(sheets)} sheets")
 
         for sheet in sheets:
             try:
@@ -56,7 +53,7 @@ class ReportOrchestrationService:
                 all_sheet_stats.append(sheet_stats)
 
             except Exception as e:
-                logger.warning(
+                log_print.warning(
                     f"Unexpected error processing sheet {sheet.tab_name}: {e}"
                 )
                 # Create failed sheet stats
@@ -77,9 +74,8 @@ class ReportOrchestrationService:
             )
         )
 
-        typer.secho(
-            f"✅ Processing complete: {successful_sheets}/{total_sheets} sheets successful",
-            fg="green",
+        log_print.info(
+            f"✅ Processing complete: {successful_sheets}/{total_sheets} sheets successful"
         )
 
         return all_sheet_stats
@@ -98,12 +94,12 @@ class ReportOrchestrationService:
         sheet_stats = SheetStats(sheet_name=sheet.tab_name, sheet_type=sheet.definition)
 
         try:
-            typer.echo(f"📊 Processing sheet: {sheet.tab_name}")
+            log_print.debug(f"📊 Processing sheet: {sheet.tab_name}")
 
             # Step 1: Layout preprocessing (date column expansion)
             expansion_result = self._handle_layout_preprocessing(sheet, ds)
             if not expansion_result and sheet.definition.endswith("kpis"):
-                logger.warning(f"Failed to expand date columns for {sheet.tab_name}")
+                log_print.warning(f"Failed to expand date columns for {sheet.tab_name}")
                 return sheet_stats
 
             # Extract date_mappings from expansion_result
@@ -120,24 +116,24 @@ class ReportOrchestrationService:
                 # Lexique sheets need no data processing
                 pass
             else:
-                logger.warning(f"Unknown sheet definition: {sheet.definition}")
+                log_print.warning(f"Unknown sheet definition: {sheet.definition}")
 
             # Log completion
             if sheet.definition in ("individual_kpis", "collective_kpis"):
-                typer.echo(
+                log_print.debug(
                     f"✅ Completed sheet {sheet.tab_name}: "
                     f"{sheet_stats.kpis_successful} KPIs successful, "
                     f"{sheet_stats.kpis_failed} KPIs failed, "
                     f"{sheet_stats.kpis_no_data} KPIs with no data"
                 )
             elif sheet.definition.startswith("top"):
-                typer.echo(
+                log_print.debug(
                     f"✅ Completed sheet {sheet.tab_name}: "
                     f"{sheet_stats.tops_successful} tops successful, "
                     f"{sheet_stats.tops_failed} tops failed"
                 )
             elif sheet.definition == "lexique":
-                typer.echo(f"✅ Completed sheet {sheet.tab_name}")
+                log_print.debug(f"✅ Completed sheet {sheet.tab_name}")
 
             # Step 3: Delete template columns and Set title
             layout_type = self._get_layout_type(sheet)
@@ -148,7 +144,7 @@ class ReportOrchestrationService:
             return sheet_stats
 
         except Exception as e:
-            logger.warning(f"Failed to process sheet {sheet.tab_name}: {e}")
+            log_print.warning(f"Failed to process sheet {sheet.tab_name}: {e}")
             return sheet_stats
 
     def _handle_layout_preprocessing(self, sheet, ds: str) -> Optional[Dict[str, Any]]:
@@ -162,7 +158,7 @@ class ReportOrchestrationService:
             return {}  # No date mappings needed for non-KPI sheets
 
         except Exception as e:
-            logger.warning(f"Layout preprocessing failed for {sheet.tab_name}: {e}")
+            log_print.warning(f"Layout preprocessing failed for {sheet.tab_name}: {e}")
             return None
 
     def _handle_title_setting(self, sheet, expansion_result: Dict[str, Any] = None):
@@ -185,14 +181,14 @@ class ReportOrchestrationService:
             )
 
         except Exception as e:
-            logger.warning(f"Failed to set title for {sheet.tab_name}: {e}")
+            log_print.warning(f"Failed to set title for {sheet.tab_name}: {e}")
 
     def _handle_top_data_filling(self, sheet, ds: str, sheet_stats: SheetStats):
         """Handle top data filling for top sheets."""
         try:
             source_table_key = SHEET_DEFINITIONS[sheet.definition].get("source_table")
             if not source_table_key or source_table_key not in SOURCE_TABLES:
-                logger.warning(
+                log_print.warning(
                     f"No source table found for sheet definition: {sheet.definition}"
                 )
                 top_result = TopResult(
@@ -208,7 +204,7 @@ class ReportOrchestrationService:
 
             dimension_context = sheet.get_dimension_context()
             if not dimension_context:
-                logger.warning(
+                log_print.warning(
                     f"Could not resolve dimension context for {sheet.tab_name}"
                 )
                 top_result = TopResult(
@@ -265,7 +261,7 @@ class ReportOrchestrationService:
                 sheet_stats.add_top_result(top_result)
 
         except Exception as e:
-            logger.warning(f"Top data filling failed for {sheet.tab_name}: {e}")
+            log_print.warning(f"Top data filling failed for {sheet.tab_name}: {e}")
             top_result = TopResult(
                 top_name=sheet.definition, status=TopStatus.FAILED, error_message=str(e)
             )
@@ -279,7 +275,7 @@ class ReportOrchestrationService:
             # Get data source table
             source_table_key = SHEET_DEFINITIONS[sheet.definition].get("source_table")
             if not source_table_key or source_table_key not in SOURCE_TABLES:
-                logger.warning(
+                log_print.warning(
                     f"No source table found for sheet definition: {sheet.definition}"
                 )
                 return
@@ -293,7 +289,7 @@ class ReportOrchestrationService:
             # Get dimension context
             dimension_context = sheet.get_dimension_context()
             if not dimension_context:
-                logger.warning(
+                log_print.warning(
                     f"Could not resolve dimension context for {sheet.tab_name}"
                 )
                 return
@@ -363,7 +359,7 @@ class ReportOrchestrationService:
                             total_cells=total_cells_per_kpi,
                             error_message="Failed to write to Excel",
                         )
-                        logger.warning(
+                        log_print.warning(
                             f"Failed to write KPI '{kpi_name}' to sheet {sheet.tab_name}"
                         )
 
@@ -377,12 +373,12 @@ class ReportOrchestrationService:
                         error_message="No data returned from query",
                     )
                     sheet_stats.add_kpi_result(kpi_result)
-                    logger.warning(
+                    log_print.warning(
                         f"No data found for KPI '{kpi_name}' in sheet {sheet.tab_name}"
                     )
 
         except Exception as e:
-            logger.warning(f"KPI data filling failed for {sheet.tab_name}: {e}")
+            log_print.warning(f"KPI data filling failed for {sheet.tab_name}: {e}")
 
     def _parse_kpi_row(self, row, row_idx: int) -> Optional[Dict[str, Any]]:
         """
@@ -426,7 +422,7 @@ class ReportOrchestrationService:
             }
 
         except Exception as e:
-            logger.debug(f"Failed to parse KPI row at index {row_idx}: {e}")
+            log_print.debug(f"Failed to parse KPI row at index {row_idx}: {e}")
             return None
 
     def _map_aggregation_type(self, excel_agg_type: str) -> str:
@@ -445,7 +441,7 @@ class ReportOrchestrationService:
             clean_agg_type, DEFAULT_AGG_TYPE
         )
         if technical_agg_type != clean_agg_type:
-            logger.debug(
+            log_print.debug(
                 f"Mapped aggregation type: '{excel_agg_type}' -> '{technical_agg_type}'"
             )
 

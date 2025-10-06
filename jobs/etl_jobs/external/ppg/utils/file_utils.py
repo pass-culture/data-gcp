@@ -150,16 +150,25 @@ def compress_directory(
         directory: Directory to compress
         clean_after_compression: If True, delete original files after compression
     """
+
     if not target_dir.exists() or not target_dir.is_dir():
         raise FileUtilsError(
             f"Directory {target_dir} does not exist or is not a directory."
         )
 
+    output_dir.mkdir(parents=True, exist_ok=True)
+    zip_path = output_dir / f"{target_dir.name}.zip"
+
     try:
-        shutil.make_archive(f"{target_dir}", "zip", output_dir)
+        shutil.make_archive(
+            base_name=str(zip_path.with_suffix("")),  # strip .zip, shutil adds it
+            format="zip",
+            root_dir=str(target_dir),  # compress contents of this dir
+        )
+        log_print.info(f"🗜️ Compressed {target_dir} to {zip_path}")
     except Exception as e:
         raise FileUtilsError(f"Failed to compress target_directory {target_dir}: {e}")
-    log_print.info(f"🗜️ Compressed target_directory {target_dir} to {target_dir}.zip")
+
     if clean_after_compression:
         try:
             shutil.rmtree(target_dir)

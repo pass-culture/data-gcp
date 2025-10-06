@@ -49,6 +49,9 @@ def generate(
     show_failures: bool = typer.Option(
         False, "--show-failures", "-f", help="Show detailed failure analysis"
     ),
+    store_stats: bool = typer.Option(
+        False, "--store-stats", help="Save statistics to report_stats.txt"
+    ),
 ):
     """Generate reports for specified stakeholder."""
 
@@ -117,6 +120,13 @@ def generate(
         # ===== NEW: Optionally show detailed failure analysis =====
         if show_failures:
             global_stats.print_failed_kpis_detail()
+
+        if store_stats:
+            stats_file = (
+                REPORT_BASE_DIR_DEFAULT / f"report_stats_{ds.replace('-', '')}.txt"
+            )
+            global_stats.save_to_file(stats_file, show_failures=show_failures)
+            log_print.info(f"📝 Statistics saved to {stats_file}", fg="cyan")
 
     except Exception as e:
         log_print.error(f"❌ Export session failed: {e}")

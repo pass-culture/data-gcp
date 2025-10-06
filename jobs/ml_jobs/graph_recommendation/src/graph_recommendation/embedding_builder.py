@@ -1,10 +1,12 @@
 import sys
 import time
+from pathlib import Path
 
 import pandas as pd
 import torch
 from loguru import logger
 from torch.optim import Optimizer
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torch_geometric.nn import Node2Vec
 
@@ -15,7 +17,7 @@ WALKS_PER_NODE = 10
 NUM_NEGATIVE_SAMPLES = 1
 P = 1.0
 Q = 1.0
-NUM_EPOCHS = 10
+NUM_EPOCHS = 15
 NUM_WORKERS = 6 if sys.platform == "linux" else 0
 
 
@@ -57,11 +59,51 @@ def build_node_embeddings(graph_data_path, num_workers=NUM_WORKERS):
     loader = model.loader(batch_size=128, shuffle=True, num_workers=num_workers)
     optimizer = torch.optim.SparseAdam(list(model.parameters()), lr=0.01)
 
+    # Setup callbacks
+    scheduler = ReduceLROnPlateau(
+        optimizer, mode="min", factor=0.5, patience=3, verbose=True, min_lr=1e-6
+    )
+
+    # Model checkpoint setup
+    checkpoint_dir = Path("checkpoints")
+    checkpoint_dir.mkdir(exist_ok=True)
+    checkpoint_path = checkpoint_dir / "best_node2vec_model.pt"
+    best_loss = float("inf")
+
     # Train Node2Vec (unsupervised - no labels needed)
-    for epoch in range(1, NUM_EPOCHS):
+    for epoch in range(1, NUM_EPOCHS + 1):
         t0 = time.time()
         loss = _train(model, loader, optimizer, device)
-        print(f"Epoch: {epoch:03d}, Loss: {loss:.4f}, Time: {time.time() - t0:.2f}s")
+        logger.info(
+            f"Epoch: {epoch:03d}, Loss: {loss:.4f}, "
+            f"LR: {optimizer.param_groups[0]['lr']:.6f}, Time: {time.time() - t0:.2f}s"
+        )
+
+        # ReduceLROnPlateau step
+        scheduler.step(loss)
+
+        # Model checkpoint: save best model
+        if loss < best_loss:
+            best_loss = loss
+            torch.save(
+                {
+                    "epoch": epoch,
+                    "model_state_dict": model.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
+                    "loss": loss,
+                },
+                checkpoint_path,
+            )
+            logger.info(f"Saved best model with loss: {loss:.4f}")
+
+    # Load best model weights
+    logger.info(f"Loading best model from {checkpoint_path}")
+    checkpoint = torch.load(checkpoint_path, weights_only=False)
+    model.load_state_dict(checkpoint["model_state_dict"])
+    logger.info(
+        f"Best model from epoch {checkpoint['epoch']} "
+        f"with loss {checkpoint['loss']:.4f}"
+    )
 
     # Get embeddings for all nodes
     model.eval()

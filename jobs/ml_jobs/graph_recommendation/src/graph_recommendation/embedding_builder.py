@@ -1,6 +1,7 @@
 import sys
 import time
 
+import pandas as pd
 import torch
 from loguru import logger
 from torch.optim import Optimizer
@@ -18,7 +19,7 @@ NUM_EPOCHS = 10
 NUM_WORKERS = 6 if sys.platform == "linux" else 0
 
 
-def train(model: Node2Vec, loader: DataLoader, optimizer: Optimizer, device):
+def _train(model: Node2Vec, loader: DataLoader, optimizer: Optimizer, device):
     model.train()
     total_loss = 0
     for pos_rw, neg_rw in loader:
@@ -59,7 +60,7 @@ def build_node_embeddings(graph_data_path, num_workers=NUM_WORKERS):
     # Train Node2Vec (unsupervised - no labels needed)
     for epoch in range(1, NUM_EPOCHS):
         t0 = time.time()
-        loss = train(model, loader, optimizer, device)
+        loss = _train(model, loader, optimizer, device)
         print(f"Epoch: {epoch:03d}, Loss: {loss:.4f}, Time: {time.time() - t0:.2f}s")
 
     # Get embeddings for all nodes
@@ -67,6 +68,23 @@ def build_node_embeddings(graph_data_path, num_workers=NUM_WORKERS):
     with torch.no_grad():
         embeddings = model()
 
-    # Extract book embeddings (for recommendations)
-    book_embeddings = embeddings[graph_data.book_mask]
-    return book_embeddings, graph_data
+    # Format resuts in a DataFrame
+    return (
+        pd.DataFrame(
+            {
+                "node_ids": graph_data.node_ids,
+                "embeddings": list(embeddings.cpu().detach().numpy()),
+                "node_type_id": graph_data.node_type.numpy().tolist(),
+            }
+        )
+        .assign(
+            node_type=lambda df: df["node_type_id"].map(
+                {value: key for key, value in graph_data.metadata_type_to_id.items()}
+            )
+        )
+        .astype(
+            {
+                "node_ids": str,
+            }
+        )
+    )

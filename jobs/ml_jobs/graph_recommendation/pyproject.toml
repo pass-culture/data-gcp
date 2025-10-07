@@ -17,6 +17,7 @@ dependencies = [
     "scipy>=1.15.0",
     "streamlit>=1.35.0",
     "torch==2.1.2", # We use old torch version because of compatibility with pyg-lib
+    "torch-cluster==1.6.3", # We use old torch-cluster version to avoid `GLIBC_2.32' not found` error (see [here](https://github.com/rusty1s/pytorch_sparse/issues/377))
     "torch-geometric>=2.6.1",
     "tornado>=6.4.2",
     "typer>=0.12.3",
@@ -35,7 +36,10 @@ pyg-lib = [
     { url = "https://data.pyg.org/whl/torch-2.1.0%2Bcu121/pyg_lib-0.3.1%2Bpt21cu121-cp311-cp311-linux_x86_64.whl", marker = "sys_platform == 'linux'" },
     { url = "https://data.pyg.org/whl/torch-2.1.0%2Bcpu/pyg_lib-0.3.1%2Bpt21-cp311-cp311-macosx_11_0_universal2.whl", marker = "sys_platform != 'linux'" },
 ]
-
+torch-cluster = [
+    { url = "https://data.pyg.org/whl/torch-2.1.0%2Bcu121/torch_cluster-1.6.3%2Bpt21cu121-cp311-cp311-linux_x86_64.whl", marker = "sys_platform == 'linux'" },
+    { url = "https://data.pyg.org/whl/torch-2.1.0%2Bcpu/torch_cluster-1.6.3-cp311-cp311-macosx_10_9_universal2.whl", marker = "sys_platform != 'linux'" },
+]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"

@@ -501,6 +501,8 @@ dependencies = [
     { name = "torch", version = "2.1.2", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform == 'darwin'" },
     { name = "torch", version = "2.1.2+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform != 'darwin' and sys_platform != 'linux'" },
     { name = "torch", version = "2.1.2+cu121", source = { registry = "https://download.pytorch.org/whl/cu121" }, marker = "sys_platform == 'linux'" },
+    { name = "torch-cluster", version = "1.6.3", source = { url = "https://data.pyg.org/whl/torch-2.1.0%2Bcpu/torch_cluster-1.6.3-cp311-cp311-macosx_10_9_universal2.whl" }, marker = "sys_platform != 'linux'" },
+    { name = "torch-cluster", version = "1.6.3+pt21cu121", source = { url = "https://data.pyg.org/whl/torch-2.1.0%2Bcu121/torch_cluster-1.6.3%2Bpt21cu121-cp311-cp311-linux_x86_64.whl" }, marker = "sys_platform == 'linux'" },
     { name = "torch-geometric" },
     { name = "tornado" },
     { name = "typer" },
@@ -525,6 +527,8 @@ requires-dist = [
     { name = "streamlit", specifier = ">=1.35.0" },
     { name = "torch", marker = "sys_platform != 'linux'", specifier = "==2.1.2", index = "https://download.pytorch.org/whl/cpu" },
     { name = "torch", marker = "sys_platform == 'linux'", specifier = "==2.1.2", index = "https://download.pytorch.org/whl/cu121" },
+    { name = "torch-cluster", marker = "sys_platform != 'linux'", url = "https://data.pyg.org/whl/torch-2.1.0%2Bcpu/torch_cluster-1.6.3-cp311-cp311-macosx_10_9_universal2.whl" },
+    { name = "torch-cluster", marker = "sys_platform == 'linux'", url = "https://data.pyg.org/whl/torch-2.1.0%2Bcu121/torch_cluster-1.6.3%2Bpt21cu121-cp311-cp311-linux_x86_64.whl" },
     { name = "torch-geometric", specifier = ">=2.6.1" },
     { name = "tornado", specifier = ">=6.4.2" },
     { name = "typer", specifier = ">=0.12.3" },
@@ -1724,6 +1728,51 @@ dependencies = [
 wheels = [
     { url = "https://download.pytorch.org/whl/cu121/torch-2.1.2%2Bcu121-cp311-cp311-linux_x86_64.whl", hash = "sha256:ca05cae9334504d1903e16c50ddf045329a859d5b1a27ed2dc1d58ed066df6fa" },
 ]
+
+[[package]]
+name = "torch-cluster"
+version = "1.6.3"
+source = { url = "https://data.pyg.org/whl/torch-2.1.0%2Bcpu/torch_cluster-1.6.3-cp311-cp311-macosx_10_9_universal2.whl" }
+resolution-markers = [
+    "sys_platform != 'darwin' and sys_platform != 'linux'",
+    "sys_platform == 'darwin'",
+]
+dependencies = [
+    { name = "scipy", marker = "sys_platform != 'linux'" },
+]
+wheels = [
+    { url = "https://data.pyg.org/whl/torch-2.1.0%2Bcpu/torch_cluster-1.6.3-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:e6641df515c4aaf57fdba092cc123f9ba02073e1ae6a1f6da7d2926b23df4558" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pytest", marker = "extra == 'test'" },
+    { name = "pytest-cov", marker = "extra == 'test'" },
+    { name = "scipy" },
+]
+provides-extras = ["test"]
+
+[[package]]
+name = "torch-cluster"
+version = "1.6.3+pt21cu121"
+source = { url = "https://data.pyg.org/whl/torch-2.1.0%2Bcu121/torch_cluster-1.6.3%2Bpt21cu121-cp311-cp311-linux_x86_64.whl" }
+resolution-markers = [
+    "sys_platform == 'linux'",
+]
+dependencies = [
+    { name = "scipy", marker = "sys_platform == 'linux'" },
+]
+wheels = [
+    { url = "https://data.pyg.org/whl/torch-2.1.0%2Bcu121/torch_cluster-1.6.3%2Bpt21cu121-cp311-cp311-linux_x86_64.whl", hash = "sha256:860765e2f7054ce5d781c38ec957d345fd63612c3ef97b95c2d29cb40b282600" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pytest", marker = "extra == 'test'" },
+    { name = "pytest-cov", marker = "extra == 'test'" },
+    { name = "scipy" },
+]
+provides-extras = ["test"]
 
 [[package]]
 name = "torch-geometric"

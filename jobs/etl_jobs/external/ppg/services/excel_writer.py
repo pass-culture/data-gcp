@@ -1,10 +1,9 @@
-import logging
 import math
 from typing import Any, Dict, Optional
 
 import pandas as pd
 
-logger = logging.getLogger(__name__)
+from utils.verbose_logger import log_print
 
 
 class ExcelWriterService:
@@ -20,7 +19,7 @@ class ExcelWriterService:
         """Write KPI data to Excel sheet using date mappings."""
         try:
             if not kpi_data:
-                logger.warning(f"No KPI data to write for row {row_idx}")
+                log_print.warning(f"No KPI data to write for row {row_idx}")
                 return False
 
             success_count = 0
@@ -62,14 +61,11 @@ class ExcelWriterService:
                     if success:
                         success_count += 1
 
-            logger.debug(f"Wrote {success_count} values to row {row_idx}")
+            log_print.debug(f"Wrote {success_count} values to row {row_idx}")
             return success_count > 0
 
         except Exception as e:
-            logger.warning(f"Failed to write KPI data to row {row_idx}: {e}")
-            import traceback
-
-            traceback.print_exc()
+            log_print.warning(f"Failed to write KPI data to row {row_idx}: {e}")
             return False
 
     @staticmethod
@@ -108,7 +104,7 @@ class ExcelWriterService:
             return yearly_data.get(year_label)
 
         except Exception as e:
-            logger.debug(f"Failed to get yearly value for '{year_label}': {e}")
+            log_print.debug(f"Failed to get yearly value for '{year_label}': {e}")
             return None
 
     @staticmethod
@@ -130,7 +126,9 @@ class ExcelWriterService:
             return True
 
         except Exception as e:
-            logger.debug(f"Failed to write value {value} to cell ({row}, {col}): {e}")
+            log_print.debug(
+                f"Failed to write value {value} to cell ({row}, {col}): {e}"
+            )
             return False
 
     @staticmethod
@@ -152,7 +150,7 @@ class ExcelWriterService:
         """
         try:
             if top_data is None or top_data.empty:
-                logger.warning("No top data to write")
+                log_print.warning("No top data to write")
                 return False
 
             success_count = 0
@@ -183,7 +181,7 @@ class ExcelWriterService:
                         success_count += 1
 
             success_rate = (success_count / total_cells * 100) if total_cells > 0 else 0
-            logger.debug(
+            log_print.debug(
                 f"Wrote top data: {success_count}/{total_cells} cells successful ({success_rate:.1f}%)"
             )
 
@@ -191,5 +189,5 @@ class ExcelWriterService:
             return success_count > 0
 
         except Exception as e:
-            logger.warning(f"Failed to write top data: {e}")
+            log_print.warning(f"Failed to write top data: {e}")
             return False

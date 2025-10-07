@@ -1,12 +1,13 @@
 select
-    deposit_id,
-    deposit_amount,
-    user_id,
-    deposit_source,
-    deposit_creation_date,
-    deposit_update_date,
-    deposit_expiration_date,
-    deposit_type,
-    total_recredit,
-    total_recredit_amount
-from {{ ref("int_global__deposit") }}
+    d.deposit_id,
+    d.deposit_amount,
+    d.user_id,
+    d.deposit_source,
+    d.deposit_creation_date,
+    d.deposit_update_date,
+    d.deposit_expiration_date,
+    d.deposit_type,
+    d.total_recredit,
+    d.total_recredit_amount
+from {{ ref("int_global__deposit") }} as d
+inner join {{ ref("int_global__user") }} as u on d.user_id = u.user_id

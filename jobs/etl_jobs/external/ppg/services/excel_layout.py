@@ -1,4 +1,3 @@
-import logging
 from copy import copy
 from datetime import datetime
 from typing import Any, Dict, Optional
@@ -6,9 +5,13 @@ from typing import Any, Dict, Optional
 from dateutil.relativedelta import relativedelta
 from openpyxl.utils import get_column_letter
 
-from config import SHEET_LAYOUT
-
-logger = logging.getLogger(__name__)
+from config import (
+    KPI_MONTHS_SHIFT_DISPLAYED,
+    MAX_COLUMNS,
+    SHEET_DEFINITIONS,
+    SHEET_LAYOUT,
+)
+from utils.verbose_logger import log_print
 
 
 class ExcelLayoutService:
@@ -51,13 +54,15 @@ class ExcelLayoutService:
                     worksheet, ds, min_year, nblank_cols
                 )
             else:
-                logger.warning(
+                log_print.warning(
                     f"Unknown sheet definition for date expansion: {sheet_definition}"
                 )
                 return None
 
         except Exception as e:
-            logger.warning(f"Failed to expand date columns for {sheet_definition}: {e}")
+            log_print.warning(
+                f"Failed to expand date columns for {sheet_definition}: {e}"
+            )
             return None
 
     @staticmethod
@@ -79,7 +84,7 @@ class ExcelLayoutService:
 
         # Locate template "YYYY" column
         template_col_idx = None
-        for idx, cell in enumerate(header_row[:10], start=1):
+        for idx, cell in enumerate(header_row[:MAX_COLUMNS], start=1):
             if cell.value == "YYYY":
                 template_col_idx = idx
                 break
@@ -88,7 +93,7 @@ class ExcelLayoutService:
                 "No 'YYYY' template column found in first 10 columns of the KPI sheet."
             )
 
-        month_shifts = [-2, -1, -13]
+        month_shifts = KPI_MONTHS_SHIFT_DISPLAYED
         insert_idx = template_col_idx + nblank_cols + len(month_shifts) + 1
 
         # Build mappings
@@ -165,7 +170,7 @@ class ExcelLayoutService:
 
         # Locate template "YYYY" column
         template_col_idx = None
-        for idx, cell in enumerate(header_row[:10], start=1):
+        for idx, cell in enumerate(header_row[:MAX_COLUMNS], start=1):
             if cell.value == "YYYY":
                 template_col_idx = idx
                 break
@@ -176,7 +181,7 @@ class ExcelLayoutService:
 
         # 1) Insert past years until ds_year-1
         ds_year_scholar = ds_year if ds_month >= 9 else ds_year - 1
-        month_shifts = [-2, -1, -13]
+        month_shifts = KPI_MONTHS_SHIFT_DISPLAYED
         insert_idx = template_col_idx + nblank_cols + len(month_shifts) + 1
 
         # Build mappings
@@ -261,8 +266,13 @@ class ExcelLayoutService:
             title = title_base
             if layout_type in ["kpis", "top"]:
                 scale = filters.get("scale", "")
-                node_tag = context.get(scale)
-                if node_tag:
+                if (
+                    scope_suffix := SHEET_DEFINITIONS[sheet_definition].get(
+                        "title_suffix"
+                    )
+                ) is not None:
+                    title += f" - {scope_suffix.capitalize()}"
+                if (node_tag := context.get(scale)) is not None:
                     title += "\n" + node_tag
 
             # Layout configuration for title placement
@@ -298,9 +308,9 @@ class ExcelLayoutService:
 
                 try:
                     worksheet.merge_cells(merge_range)
-                    logger.debug(f"Merged cells {merge_range} for title")
+                    log_print.debug(f"Merged cells {merge_range} for title")
                 except Exception as merge_error:
-                    logger.warning(
+                    log_print.warning(
                         f"Failed to merge cells {merge_range}: {merge_error}"
                     )
 
@@ -308,7 +318,7 @@ class ExcelLayoutService:
             worksheet.cell(row=start_row, column=start_col, value=title)
 
         except Exception as e:
-            logger.warning(f"Failed to set sheet title '{title_base}': {e}")
+            log_print.warning(f"Failed to set sheet title '{title_base}': {e}")
 
     @staticmethod
     def cleanup_template_columns(worksheet, layout_type: str):
@@ -320,16 +330,18 @@ class ExcelLayoutService:
             if title_col_offset > 0:
                 # Delete columns 1 through title_col_offset
                 worksheet.delete_cols(1, title_col_offset)
-                logger.debug(
+                log_print.debug(
                     f"Deleted {title_col_offset} template columns for {layout_type} sheet"
                 )
             else:
-                logger.debug(
+                log_print.debug(
                     f"No template columns to delete for {layout_type} sheet (offset: {title_col_offset})"
                 )
 
         except Exception as e:
-            logger.warning(f"Failed to cleanup template columns for {layout_type}: {e}")
+            log_print.warning(
+                f"Failed to cleanup template columns for {layout_type}: {e}"
+            )
 
     @staticmethod
     def freeze_panes(worksheet, layout_type: str):
@@ -343,9 +355,9 @@ class ExcelLayoutService:
             if row > 0 or col > 0:
                 cell = f"{get_column_letter(col + 1)}{row + 1}"  # everything will be frozen above and left of this cell
                 worksheet.freeze_panes = cell
-                logger.debug(f"Set freeze panes at {cell} for {layout_type} sheet")
+                log_print.debug(f"Set freeze panes at {cell} for {layout_type} sheet")
             else:
-                logger.debug(f"No freeze panes to set for {layout_type} sheet")
+                log_print.debug(f"No freeze panes to set for {layout_type} sheet")
 
         except Exception as e:
-            logger.warning(f"Failed to set freeze panes for {layout_type}: {e}")
+            log_print.warning(f"Failed to set freeze panes for {layout_type}: {e}")

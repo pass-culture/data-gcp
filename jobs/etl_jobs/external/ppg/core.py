@@ -1,4 +1,3 @@
-import logging
 import warnings
 from dataclasses import dataclass, field
 from enum import Enum
@@ -7,7 +6,6 @@ from typing import Any, Dict, List, Optional
 
 import duckdb
 import openpyxl
-import typer
 from google.cloud import bigquery
 from treelib import Tree
 
@@ -20,14 +18,16 @@ from config import (
     SOURCE_TABLES,
     STAKEHOLDER_REPORTS,
 )
+from services.tracking import ReportStats, StakeholderStats
 from utils.data_utils import (
     build_region_hierarchy,
     sanitize_date_fields,
     sanitize_numeric_types,
 )
+from utils.verbose_logger import log_print
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+# log_print = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO)
 
 
 class StakeholderType(Enum):
@@ -122,7 +122,7 @@ class Sheet:
                 dimension_value = self.context.get(scale) if self.context else None
 
             if not dimension_value and scale != "national":
-                logger.warning(
+                log_print.warning(
                     f"Could not resolve dimension value for scale '{scale}' in context {self.context}"
                 )
                 return None
@@ -130,7 +130,7 @@ class Sheet:
             return {"name": dimension_name, "value": dimension_value}
 
         except Exception as e:
-            logger.warning(f"Failed to resolve dimension context: {e}")
+            log_print.warning(f"Failed to resolve dimension context: {e}")
             return None
 
 
@@ -211,7 +211,7 @@ class Report:
                 ws = self.workbook.copy_worksheet(template_ws)
 
             if len(tab_name) > 31:
-                typer.secho(
+                log_print.warning(
                     f"⚠️ Tab name '{tab_name}' exceeds 31 characters, truncating.",
                     fg="yellow",
                 )
@@ -243,19 +243,27 @@ class Report:
             self.workbook._sheets.remove(ws)
             self.workbook._sheets.insert(idx, ws)
 
-    def build(self, ds: str, duckdb_conn: duckdb.DuckDBPyConnection):
+    def build(self, ds: str, duckdb_conn: duckdb.DuckDBPyConnection) -> ReportStats:
         """
         Build the report workbook using the new service architecture.
 
         Args:
             ds: Consolidation date in YYYY-MM-DD format
             duckdb_conn: DuckDB connection for data queries
+
+        Returns:
+            ReportStats with detailed processing statistics
         """
         from services.orchestration import ReportOrchestrationService
 
-        typer.secho(
-            f"➡️ Building report: {self.report_type} for {self.stakeholder.name}",
+        log_print.info(
+            f"⚙️  Building report: {self.report_type} for {self.stakeholder.name}",
             fg="cyan",
+        )
+
+        # Create report stats object
+        report_stats = ReportStats(
+            report_name=self.output_path.name, report_type=self.report_type
         )
 
         # Step 1: Load template and create sheets
@@ -265,20 +273,33 @@ class Report:
 
         # Step 2: Use ReportOrchestrationService for complex processing
         orchestrator = ReportOrchestrationService(duckdb_conn)
-        stats = orchestrator.process_all_sheets(self.sheets, ds)
+        sheet_stats_list = orchestrator.process_all_sheets(self.sheets, ds)
+
+        # Add all sheet stats to report stats
+        for sheet_stats in sheet_stats_list:
+            report_stats.add_sheet_stats(sheet_stats)
 
         # Step 3: Log final statistics
-        if stats["sheets_successful"] == len(self.sheets):
-            typer.secho(
+        if (
+            report_stats.kpis_successful == report_stats.total_kpis
+            and report_stats.tops_successful == report_stats.total_tops
+        ):
+            log_print.info(
                 f"✅ Report completed successfully: {self.output_path.name}", fg="green"
             )
-        elif stats["sheets_successful"] > 0:
-            typer.secho(
-                f"⚠️ Report completed with warnings: {stats['sheets_successful']}/{len(self.sheets)} sheets successful",
+        elif report_stats.kpis_successful > 0 or report_stats.tops_successful > 0:
+            log_print.warning(
+                f"⚠️ Report completed with warnings: "
+                f"KPIs: {report_stats.kpis_successful}/{report_stats.total_kpis}, "
+                f"Tops: {report_stats.tops_successful}/{report_stats.total_tops}",
                 fg="yellow",
             )
         else:
-            typer.secho("❌ Report failed: No sheets processed successfully", fg="red")
+            log_print.error(
+                "❌ Report failed: No data processed successfully", fg="red"
+            )
+
+        return report_stats
 
     def save(self):
         """Save the workbook to the output path."""
@@ -286,7 +307,7 @@ class Report:
             self.output_path = self.output_path.with_suffix(".xlsx")
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
         self.workbook.save(self.output_path)
-        typer.echo(f"💾 Saved report: {self.output_path}")
+        log_print.info(f"💾 Saved report: {self.output_path}")
 
 
 class ReportPlanner:
@@ -385,22 +406,22 @@ class ExportSession:
         table_name = config["table"]
         dataset = config.get("dataset", BIGQUERY_ANALYTICS_DATASET)
         project_id = config.get("project", GCP_PROJECT)
-        typer.echo(f"Loading {table_name} from BigQuery...")
+        log_print.info(f"⏳ Loading {table_name} from BigQuery...")
         query = f"SELECT * FROM `{project_id}.{dataset}.{table_name}`"
         with warnings.catch_warnings():
             warnings.filterwarnings(
                 "ignore", message=".*BigQuery Storage module not found.*"
             )
             df = client.query(query).to_dataframe()
-            typer.echo(f"{table_name} dtypes: {df.dtypes}")
+            log_print.debug(f"{table_name} dtypes: {df.dtypes}")
         if df.empty:
-            typer.echo(f"Warning: {table_name} returned no data")
+            log_print.warning(f"Warning: {table_name} returned no data")
             return
 
         df = sanitize_date_fields(df, "partition_month")
         df = sanitize_numeric_types(df)
 
-        typer.echo(f"Loaded {len(df):,} records for {table_name}")
+        log_print.info(f"✅ Loaded {len(df):,} records for {table_name}")
 
         # Register and create table
         self.conn.register(f"{table_name}_tmp", df)
@@ -410,14 +431,14 @@ class ExportSession:
 
         # Create indexes based on available columns
         self._create_indexes(table_name, df.columns.tolist())
-        typer.echo(f"Created {table_name} table with indexes")
+        log_print.info(f"✅ Created {table_name} table")
 
     def _create_indexes(self, table_name: str, columns: List[str]):
         """Create indexes on commonly queried columns with error recovery."""
         indexes_created = []
         indexes_failed = []
 
-        typer.secho(f"🔍 Creating indexes for table: {table_name}", fg="cyan")
+        log_print.info(f"🔍 Creating indexes for table: {table_name}")
 
         # List of indexes to attempt
         index_operations = []
@@ -460,55 +481,63 @@ class ExportSession:
             try:
                 self.conn.execute(idx_op["sql"])
                 indexes_created.append(idx_op["name"])
-                typer.echo(f"   ✓ {idx_op['description']}")
+                log_print.debug(f"   ✓ {idx_op['description']}")
             except Exception as e:
                 indexes_failed.append(idx_op["name"])
                 if "INTERNAL Error" in str(e):
-                    typer.secho(
+                    log_print.warning(
                         f"   ⚠ {idx_op['description']} - skipped (DuckDB internal error)",
                         fg="yellow",
                     )
                 else:
-                    typer.secho(
+                    log_print.error(
                         f"   ❌ {idx_op['description']} - failed: {str(e)[:50]}...",
                         fg="red",
                     )
 
         # Summary
         if indexes_created:
-            typer.secho(
+            log_print.debug(
                 f"📊 {table_name}: Created {len(indexes_created)} indexes successfully",
                 fg="green",
             )
         if indexes_failed:
-            typer.secho(
+            log_print.warning(
                 f"⚠ {table_name}: {len(indexes_failed)} indexes failed (table will still work)",
                 fg="yellow",
             )
 
     def process_stakeholder(
         self, stakeholder_type: str, name: str, output_path: Path, ds: str
-    ):
-        """Process reports for a given stakeholder using new service architecture."""
+    ) -> StakeholderStats:
+        """
+        Process reports for a given stakeholder using new service architecture.
+
+        Returns:
+            StakeholderStats with detailed processing statistics
+        """
         stakeholder = Stakeholder(
             type=StakeholderType.MINISTERE
             if stakeholder_type == "ministere"
             else StakeholderType.DRAC,
             name="Ministère" if stakeholder_type == "ministere" else name,
         )
-        typer.secho(
-            f"➡️ Processing reports for {stakeholder.type.value} - {stakeholder.name}",
+        log_print.info(
+            f"⏳  Processing reports for {stakeholder.type.value} - {stakeholder.name}",
             fg="cyan",
+        )
+
+        # Create stakeholder stats object
+        stakeholder_stats = StakeholderStats(
+            stakeholder_name=stakeholder.name, stakeholder_type=stakeholder.type.value
         )
 
         # Generate reports based on stakeholder's desired reports
         planner = ReportPlanner(stakeholder)
         report_jobs = planner.plan_reports()
 
-        successful_reports = 0
         total_reports = len(report_jobs)
-
-        typer.secho(f"📋 Planning to generate {total_reports} reports", fg="cyan")
+        log_print.info(f"📋 Planning to generate {total_reports} reports", fg="cyan")
 
         for job in report_jobs:
             try:
@@ -522,30 +551,63 @@ class ExportSession:
                 )
 
                 # Build and save report using new architecture
-                report.build(ds, self.conn)
+                report_stats = report.build(ds, self.conn)
                 report.save()
 
-                successful_reports += 1
+                # Add report stats to stakeholder stats
+                stakeholder_stats.add_report_stats(report_stats)
 
             except Exception as e:
-                typer.secho(
+                log_print.error(
                     f"❌ Failed to generate report {job['output_path']}: {e}", fg="red"
                 )
-                logger.error(f"Report generation failed for {job['output_path']}: {e}")
-                # Continue with next report instead of failing completely
+                # Create empty report stats for failed report
+                from services.tracking import ReportStats
 
-        # Final summary
-        if successful_reports == total_reports:
-            typer.secho(
-                f"✅ All {total_reports} reports generated successfully for {stakeholder.name}",
+                failed_report_stats = ReportStats(
+                    report_name=job["output_path"], report_type=job["report_type"]
+                )
+                stakeholder_stats.add_report_stats(failed_report_stats)
+
+        # Final summary for this stakeholder
+        if stakeholder_stats.total_kpis > 0 or stakeholder_stats.total_tops > 0:
+            success_msg = []
+            if stakeholder_stats.total_kpis > 0:
+                success_msg.append(
+                    f"{stakeholder_stats.kpis_successful}/{stakeholder_stats.total_kpis} KPIs"
+                )
+            if stakeholder_stats.total_tops > 0:
+                success_msg.append(
+                    f"{stakeholder_stats.tops_successful}/{stakeholder_stats.total_tops} tops"
+                )
+
+            if (
+                stakeholder_stats.kpis_failed == 0
+                and stakeholder_stats.tops_failed == 0
+            ):
+                log_print.info(
+                    f"✅ All {total_reports} reports generated successfully for {stakeholder.name}: "
+                    f"{', '.join(success_msg)}",
+                    fg="green",
+                )
+            elif (
+                stakeholder_stats.kpis_successful > 0
+                or stakeholder_stats.tops_successful > 0
+            ):
+                log_print.warning(
+                    f"⚠️ {total_reports} reports completed with warnings for {stakeholder.name}: "
+                    f"{', '.join(success_msg)}",
+                    fg="yellow",
+                )
+            else:
+                log_print.error(
+                    f"❌ No data processed successfully for {stakeholder.name}",
+                    fg="red",
+                )
+        else:
+            log_print.info(
+                f"✅ {total_reports} reports generated for {stakeholder.name}",
                 fg="green",
             )
-        elif successful_reports > 0:
-            typer.secho(
-                f"⚠️ {successful_reports}/{total_reports} reports generated successfully for {stakeholder.name}",
-                fg="yellow",
-            )
-        else:
-            typer.secho(
-                f"❌ No reports generated successfully for {stakeholder.name}", fg="red"
-            )
+
+        return stakeholder_stats

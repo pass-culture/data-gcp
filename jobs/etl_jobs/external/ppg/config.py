@@ -3,9 +3,18 @@ from collections import defaultdict
 from enum import Enum
 from pathlib import Path
 
+from utils.verbose_logger import log_print
+
 ######## base configs
-GCP_PROJECT = os.environ.get("PROJECT_NAME", "passculture-data-ehp")
+GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
+if GCP_PROJECT != "passculture-data-prod" or ENV_SHORT_NAME != "prod":
+    log_print.warning(
+        f"Using {GCP_PROJECT=} & {ENV_SHORT_NAME=} -> REPORTS DATA WILL BE PARTIAL OR WRONG",
+        fg="red",
+        bold=True,
+    )
+
 BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
 EXPORT_BUCKET = f"de-bigquery-data-export-{ENV_SHORT_NAME}"
 REGION_HIERARCHY_TABLE = "region_department"
@@ -232,7 +241,8 @@ SHEET_DEFINITIONS = {
     },
     "top_offer": {
         "type": SheetType.TOP,
-        "template_tab": "Top 50 offres",
+        "title_suffix": "Part Individuelle",
+        "template_tab": "Top offres",
         "source_table": "top_offer",
         "top_n": 50,
         "select_fields": [
@@ -243,11 +253,16 @@ SHEET_DEFINITIONS = {
             "total_booking_amount",
             "total_booking_quantity",
         ],
-        "order_by": ["total_booking_amount"],
+        "ranking": {
+            "order_by": [
+                {"field": "total_booking_amount", "direction": "DESC"},
+            ],
+        },
     },
     "top_offer_category": {
         "type": SheetType.TOP,
-        "template_tab": "Top 50 par catégorie",
+        "title_suffix": "Part Individuelle",
+        "template_tab": "Top par catégorie",
         "source_table": "top_offer_category",
         "top_n": 50,
         "select_fields": [
@@ -258,11 +273,18 @@ SHEET_DEFINITIONS = {
             "total_booking_amount",
             "total_booking_quantity",
         ],
-        "order_by": ["offer_category_id", "total_booking_amount"],
+        "ranking": {
+            "partition_by": ["offer_category_id"],
+            "order_by": [
+                {"field": "offer_category_id", "direction": "DESC"},
+                {"field": "total_booking_amount", "direction": "DESC"},
+            ],
+        },
     },
     "top_offer_label": {
         "type": SheetType.TOP,
-        "template_tab": "Top 50 offres lieux labellisés",
+        "title_suffix": "Part Individuelle",
+        "template_tab": "Top offres lieux labellisés",
         "source_table": "top_offer_label",
         "top_n": 50,
         "select_fields": [
@@ -274,19 +296,31 @@ SHEET_DEFINITIONS = {
             "total_booking_amount",
             "total_booking_quantity",
         ],
-        "order_by": ["venue_tag_name", "total_booking_amount"],
+        "ranking": {
+            "partition_by": ["venue_tag_name"],
+            "order_by": [
+                {"field": "venue_tag_name", "direction": "DESC"},
+                {"field": "total_booking_amount", "direction": "DESC"},
+            ],
+        },
     },
     "top_venue": {
         "type": SheetType.TOP,
-        "template_tab": "Top 50 lieux",
+        "title_suffix": "Part Individuelle",
+        "template_tab": "Top lieux",
         "source_table": "top_venue",
         "top_n": 50,
         "select_fields": ["partition_month", "venue_name", "offerer_name"],
-        "order_by": ["total_venue_booking_amount_ranked"],
+        "ranking": {
+            "order_by": [
+                {"field": "total_venue_booking_amount_ranked", "direction": "ASC"},
+            ],
+        },
     },
     "top_labeled_venue": {
         "type": SheetType.TOP,
-        "template_tab": "Top 50 lieux labellisés",
+        "title_suffix": "Part Individuelle",
+        "template_tab": "Top lieux labellisés",
         "source_table": "top_labeled_venue",
         "top_n": 50,
         "select_fields": [
@@ -295,19 +329,27 @@ SHEET_DEFINITIONS = {
             "offerer_name",
             "venue_tag_name",
         ],
-        "order_by": ["total_venue_booking_amount_ranked"],
+        "ranking": {
+            "order_by": [
+                {"field": "total_venue_booking_amount_ranked", "direction": "ASC"}
+            ],
+        },
     },
     "top_ac": {
         "type": SheetType.TOP,
-        "template_tab": "Top 50 acteurs culturels",
+        "title_suffix": "Part Collective",
+        "template_tab": "Top acteurs culturels",
         "source_table": "top_ac",
         "top_n": 50,
         "select_fields": ["partition_month", "offerer_name", "total_number_of_tickets"],
-        "order_by": ["total_booking_amount"],
+        "ranking": {
+            "order_by": [{"field": "total_booking_amount", "direction": "DESC"}],
+        },
     },
     "top_format": {
         "type": SheetType.TOP,
-        "template_tab": "Top 5 formats",
+        "title_suffix": "Part Collective",
+        "template_tab": "Top formats",
         "source_table": "top_format",
         "top_n": 5,
         "select_fields": [
@@ -316,7 +358,9 @@ SHEET_DEFINITIONS = {
             "total_booking_amount",
             "total_number_of_tickets",
         ],
-        "order_by": ["total_booking_amount"],
+        "ranking": {
+            "order_by": [{"field": "total_booking_amount", "direction": "DESC"}],
+        },
     },
 }
 
@@ -339,6 +383,8 @@ def default_title_layout():
         "title_width": 1,
     }
 
+
+MAX_COLUMNS = 30  # Maximum number of columns to consider in the template
 
 SHEET_LAYOUT = defaultdict(
     default_title_layout,
@@ -371,3 +417,6 @@ AGG_TYPE_MAPPING = {
 
 # Default aggregation if not found or invalid
 DEFAULT_AGG_TYPE = "sum"
+
+# Months to display in KPI sheets (shift relative to the consolidation month)
+KPI_MONTHS_SHIFT_DISPLAYED = [-3, -2, -1, -13]

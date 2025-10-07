@@ -160,7 +160,9 @@ with
                 generate_array(
                     0,
                     date_diff(
-                        date_trunc(date_sub(date("{{ ds() }}"), interval 1 month) , month),
+                        date_trunc(
+                            date_sub(date("{{ ds() }}"), interval 1 month), month
+                        ),
                         (select min(partition_month) from epn_details),
                         month
                     )

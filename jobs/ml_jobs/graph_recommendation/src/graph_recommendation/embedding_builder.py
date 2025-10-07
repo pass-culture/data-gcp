@@ -17,25 +17,74 @@ WALKS_PER_NODE = 10
 NUM_NEGATIVE_SAMPLES = 1
 P = 1.0
 Q = 1.0
-NUM_EPOCHS = 15
-NUM_WORKERS = 6 if sys.platform == "linux" else 0
+NUM_EPOCHS = 100
+NUM_WORKERS = 4 if sys.platform == "linux" else 0
 
 
-def _train(model: Node2Vec, loader: DataLoader, optimizer: Optimizer, device):
+def _train(
+    model: Node2Vec, loader: DataLoader, optimizer: Optimizer, device, *, profile: bool
+):
     model.train()
     total_loss = 0
+    timings = {
+        "data_load": 0,
+        "to_device": 0,
+        "forward": 0,
+        "backward": 0,
+        "optimizer": 0,
+    }
+
+    batch_start = time.time()
     for pos_rw, neg_rw in loader:
+        if profile:
+            data_time = time.time() - batch_start
+            timings["data_load"] += data_time
+
+            t0 = time.time()
+
         optimizer.zero_grad()
-        loss = model.loss(pos_rw.to(device), neg_rw.to(device))
+        pos_rw_device = pos_rw.to(device)
+        neg_rw_device = neg_rw.to(device)
+
+        if profile:
+            timings["to_device"] += time.time() - t0
+            t0 = time.time()
+
+        loss = model.loss(pos_rw_device, neg_rw_device)
+
+        if profile:
+            timings["forward"] += time.time() - t0
+            t0 = time.time()
+
         loss.backward()
+
+        if profile:
+            timings["backward"] += time.time() - t0
+            t0 = time.time()
+
         optimizer.step()
+
+        if profile:
+            timings["optimizer"] += time.time() - t0
+            batch_start = time.time()
+
         total_loss += loss.item()
+
+    if profile:
+        total_time = sum(timings.values())
+        logger.info("Profiling breakdown:")
+        for key, val in timings.items():
+            logger.info(f"  {key}: {val:.2f}s ({val / total_time * 100:.1f}%)")
 
     return total_loss / len(loader)
 
 
-def build_node_embeddings(graph_data_path, num_workers=NUM_WORKERS):
-    graph_data = torch.load(graph_data_path, weights_only=False)
+def train_node2vec(
+    graph_data,
+    checkpoint_path: Path = Path("checkpoints/best_node2vec_model.pt"),
+    num_workers=NUM_WORKERS,
+    profile=False,
+) -> None:
     logger.info("Graph info:")
     logger.info(f"  Total nodes: {graph_data.num_nodes}")
     logger.info(f"  Total edges: {graph_data.edge_index.shape[1]}")
@@ -65,15 +114,14 @@ def build_node_embeddings(graph_data_path, num_workers=NUM_WORKERS):
     )
 
     # Model checkpoint setup
-    checkpoint_dir = Path("checkpoints")
+    checkpoint_dir = checkpoint_path.parent
     checkpoint_dir.mkdir(exist_ok=True)
-    checkpoint_path = checkpoint_dir / "best_node2vec_model.pt"
     best_loss = float("inf")
 
     # Train Node2Vec (unsupervised - no labels needed)
     for epoch in range(1, NUM_EPOCHS + 1):
         t0 = time.time()
-        loss = _train(model, loader, optimizer, device)
+        loss = _train(model, loader, optimizer, device, profile=profile)
         logger.info(
             f"Epoch: {epoch:03d}, Loss: {loss:.4f}, "
             f"LR: {optimizer.param_groups[0]['lr']:.6f}, Time: {time.time() - t0:.2f}s"
@@ -95,6 +143,22 @@ def build_node_embeddings(graph_data_path, num_workers=NUM_WORKERS):
                 checkpoint_path,
             )
             logger.info(f"Saved best model with loss: {loss:.4f}")
+
+
+def build_node_embeddings(
+    graph_data, checkpoint_path="checkpoints/best_node2vec_model.pt"
+) -> pd.DataFrame:
+    model = Node2Vec(
+        graph_data.edge_index,
+        embedding_dim=EMBEDDING_DIM,
+        walk_length=WALK_LENGTH,
+        context_size=CONTEXT_SIZE,
+        walks_per_node=WALKS_PER_NODE,
+        num_negative_samples=NUM_NEGATIVE_SAMPLES,
+        p=P,
+        q=Q,
+        sparse=True,
+    ).to("cpu")  # Use CPU to avoid GPU memory issues
 
     # Load best model weights
     logger.info(f"Loading best model from {checkpoint_path}")

@@ -5,6 +5,9 @@ import pandas as pd
 from dateutil.relativedelta import relativedelta
 from duckdb import DuckDBPyConnection
 
+from config import KPI_MONTHS_SHIFT_DISPLAYED
+from utils.verbose_logger import log_print
+
 
 # --- Exceptions ---
 class QueryError(Exception):
@@ -48,7 +51,7 @@ def query_kpi_data(
             WHERE {" AND ".join(where)}
             ORDER BY partition_month
         """
-
+        log_print.debug(f"Executing query: {query} with params {params}")
         return conn.execute(query, params).df()
 
     except Exception as e:
@@ -107,6 +110,7 @@ def query_yearly_kpi(
                 WHERE {" AND ".join(where)}
                 ORDER BY partition_month
             """
+            log_print.debug(f"Executing query: {query} with params {params}")
             df = conn.execute(query, params).df()
             df["year_label"] = year_label
             all_data.append(df)
@@ -144,18 +148,24 @@ def query_monthly_kpi(
         ref_date = date.today()
     last_month = ref_date.replace(day=1) - relativedelta(months=1)
 
+    # periods = [
+    #     last_month - relativedelta(months=1),  # prev-2
+    #     last_month,  # prev-1
+    #     last_month - relativedelta(months=12),  # prev-13
+    # ]
+
     periods = [
-        last_month - relativedelta(months=1),  # prev-2
-        last_month,  # prev-1
-        last_month - relativedelta(months=12),  # prev-13
+        last_month + relativedelta(months=shift + 1)
+        for shift in KPI_MONTHS_SHIFT_DISPLAYED
     ]
 
     where = [
         "kpi_name = ?",
         "dimension_name = ?",
         "dimension_value = ?",
-        "partition_month IN (?, ?, ?)",
+        f"partition_month IN ({', '.join(['?'] * len(periods))})",
     ]
+
     params = [kpi_name, dimension_name, dimension_value] + [
         p.strftime("%Y-%m-%d") for p in periods
     ]
@@ -166,6 +176,7 @@ def query_monthly_kpi(
         WHERE {" AND ".join(where)}
         ORDER BY partition_month
     """
+    log_print.debug(f"Executing query: {query} with params {params}")
     try:
         return conn.execute(query, params).df()
     except Exception as e:
@@ -186,6 +197,7 @@ def aggregate_kpi_data(
     - 'collective': scholar year (Sep-Aug)
     """
     if data.empty:
+        log_print.warning("No data available for aggregation.")
         return {}
 
     data = data.copy()

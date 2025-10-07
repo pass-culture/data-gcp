@@ -211,10 +211,19 @@ with
                 {{ dim.value_expr }} as dimension_value,
                 'taux_d_utilisation_du_credit' as kpi_name,
                 coalesce(sum(cumulative_amount_spent), 0) as numerator,
-                coalesce(sum(total_institution_deposit_amount), 0) as denominator,
+                coalesce(
+                    sum(distinct total_institution_deposit_amount), 0
+                ) as denominator,
+                -- On prend ici sum sur les distinct total_institution_deposit_amount
+                -- le total_institution_deposit_amount de chaque institution est
+                -- duppliqué pour chaque combinaison de (venue_region_name,
+                -- venue_academy_name et partition_month)
+                -- Ce fix fonctionne car chaque institution a un deposit amount
+                -- différent
+                -- Dette technique à corriger lors de l'amélioration du projet
                 safe_divide(
                     coalesce(sum(cumulative_amount_spent), 0),
-                    coalesce(sum(total_institution_deposit_amount), 0)
+                    coalesce(sum(distinct total_institution_deposit_amount), 0)
                 ) as kpi
             from base_data
             {% if is_incremental() %}

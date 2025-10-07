@@ -1,7 +1,5 @@
-import logging
 from typing import Any, Dict, List, Optional
 
-import typer
 from duckdb import DuckDBPyConnection
 
 from config import (
@@ -14,8 +12,8 @@ from config import (
 from services.data import DataService
 from services.excel_layout import ExcelLayoutService
 from services.excel_writer import ExcelWriterService
-
-logger = logging.getLogger(__name__)
+from services.tracking import KPIResult, KPIStatus, SheetStats, TopResult, TopStatus
+from utils.verbose_logger import log_print
 
 
 class ReportOrchestrationService:
@@ -34,7 +32,7 @@ class ReportOrchestrationService:
         else:
             return "other"
 
-    def process_all_sheets(self, sheets: List, ds: str) -> Dict[str, Any]:
+    def process_all_sheets(self, sheets: List, ds: str) -> List[SheetStats]:
         """
         Process all sheets in a report with comprehensive error handling.
 
@@ -43,57 +41,46 @@ class ReportOrchestrationService:
             ds: Consolidation date in YYYY-MM-DD format
 
         Returns:
-            Processing statistics dict
+            List of SheetStats with detailed results
         """
-        stats = {
-            "sheets_processed": 0,
-            "sheets_successful": 0,
-            "sheets_failed": 0,
-            "kpis_successful": 0,
-            "kpis_failed": 0,
-        }
+        all_sheet_stats = []
 
-        typer.secho(f"➡️ Processing {len(sheets)} sheets", fg="cyan")
+        log_print.info(f"➡️  Processing {len(sheets)} sheets")
 
         for sheet in sheets:
             try:
-                sheet_success = self._process_single_sheet(sheet, ds)
-                stats["sheets_processed"] += 1
-
-                if sheet_success["success"]:
-                    stats["sheets_successful"] += 1
-                    stats["kpis_successful"] += sheet_success.get("kpis_successful", 0)
-                else:
-                    stats["sheets_failed"] += 1
-
-                stats["kpis_failed"] += sheet_success.get("kpis_failed", 0)
+                sheet_stats = self._process_single_sheet(sheet, ds)
+                all_sheet_stats.append(sheet_stats)
 
             except Exception as e:
-                logger.warning(
+                log_print.warning(
                     f"Unexpected error processing sheet {sheet.tab_name}: {e}"
                 )
-                stats["sheets_processed"] += 1
-                stats["sheets_failed"] += 1
+                # Create failed sheet stats
+                sheet_stats = SheetStats(
+                    sheet_name=sheet.tab_name, sheet_type=sheet.definition
+                )
+                all_sheet_stats.append(sheet_stats)
 
-        # Final report logging
-        success_rate = (
-            (stats["sheets_successful"] / stats["sheets_processed"]) * 100
-            if stats["sheets_processed"] > 0
-            else 0
-        )
-        typer.secho(
-            f"✅ Processing complete: {stats['sheets_successful']}/{stats['sheets_processed']} sheets successful ({success_rate:.1f}%)",
-            fg="green",
-        )
-
-        if stats["kpis_failed"] > 0:
-            typer.secho(
-                f"⚠️  {stats['kpis_failed']} KPIs failed to process", fg="yellow"
+        # Summary logging
+        total_sheets = len(all_sheet_stats)
+        successful_sheets = sum(
+            1
+            for s in all_sheet_stats
+            if (
+                s.kpis_successful > 0
+                or s.tops_successful > 0
+                or (len(s.kpi_results) == 0 and len(s.top_results) == 0)
             )
+        )
 
-        return stats
+        log_print.info(
+            f"✅ Processing complete: {successful_sheets}/{total_sheets} sheets successful"
+        )
 
-    def _process_single_sheet(self, sheet, ds: str) -> Dict[str, Any]:
+        return all_sheet_stats
+
+    def _process_single_sheet(self, sheet, ds: str) -> SheetStats:
         """
         Process a single sheet with error recovery.
 
@@ -102,18 +89,18 @@ class ReportOrchestrationService:
             ds: Consolidation date
 
         Returns:
-            Dict with processing results and statistics
+            SheetStats with detailed results
         """
-        result = {"success": False, "kpis_successful": 0, "kpis_failed": 0}
+        sheet_stats = SheetStats(sheet_name=sheet.tab_name, sheet_type=sheet.definition)
 
         try:
-            typer.echo(f"📊 Processing sheet: {sheet.tab_name}")
+            log_print.debug(f"📊 Processing sheet: {sheet.tab_name}")
 
             # Step 1: Layout preprocessing (date column expansion)
             expansion_result = self._handle_layout_preprocessing(sheet, ds)
             if not expansion_result and sheet.definition.endswith("kpis"):
-                logger.warning(f"Failed to expand date columns for {sheet.tab_name}")
-                return result
+                log_print.warning(f"Failed to expand date columns for {sheet.tab_name}")
+                return sheet_stats
 
             # Extract date_mappings from expansion_result
             date_mappings = (
@@ -122,46 +109,43 @@ class ReportOrchestrationService:
 
             # Step 2: Fill data based on sheet type
             if sheet.definition in ("individual_kpis", "collective_kpis"):
-                kpi_result = self._handle_kpi_data_filling(
-                    sheet, ds, date_mappings
-                )  # Use extracted date_mappings
-                result.update(kpi_result)
+                self._handle_kpi_data_filling(sheet, ds, date_mappings, sheet_stats)
             elif sheet.definition.startswith("top"):
-                top_result = self._handle_top_data_filling(sheet, ds)
-                result.update(top_result)
-                result["success"] = True
+                self._handle_top_data_filling(sheet, ds, sheet_stats)
             elif sheet.definition == "lexique":
                 # Lexique sheets need no data processing
-                result["success"] = True
+                pass
             else:
-                logger.warning(f"Unknown sheet definition: {sheet.definition}")
+                log_print.warning(f"Unknown sheet definition: {sheet.definition}")
 
+            # Log completion
             if sheet.definition in ("individual_kpis", "collective_kpis"):
-                n_success = result.get("kpis_successful", 0)
-                n_failed = result.get("kpis_failed", 0)
-                typer.echo(
-                    f"✅ Completed sheet {sheet.tab_name}: {n_success} KPIs successful, {n_failed} KPIs failed"
+                log_print.debug(
+                    f"✅ Completed sheet {sheet.tab_name}: "
+                    f"{sheet_stats.kpis_successful} KPIs successful, "
+                    f"{sheet_stats.kpis_failed} KPIs failed, "
+                    f"{sheet_stats.kpis_no_data} KPIs with no data"
                 )
             elif sheet.definition.startswith("top"):
-                n_success = result.get("tops_successful", 0)
-                n_failed = result.get("tops_failed", 0)
-                typer.echo(
-                    f"✅ Completed sheet {sheet.tab_name}: {n_success} tops successful, {n_failed} tops failed"
+                log_print.debug(
+                    f"✅ Completed sheet {sheet.tab_name}: "
+                    f"{sheet_stats.tops_successful} tops successful, "
+                    f"{sheet_stats.tops_failed} tops failed"
                 )
             elif sheet.definition == "lexique":
-                typer.echo(f"✅ Completed sheet {sheet.tab_name}")
+                log_print.debug(f"✅ Completed sheet {sheet.tab_name}")
 
-            # Step 3: Delete template columns and Set title (pass the full expansion_result for width calculation)
+            # Step 3: Delete template columns and Set title
             layout_type = self._get_layout_type(sheet)
             ExcelLayoutService.cleanup_template_columns(sheet.worksheet, layout_type)
             self._handle_title_setting(sheet, expansion_result)
             ExcelLayoutService.freeze_panes(sheet.worksheet, layout_type)
 
-            return result
+            return sheet_stats
 
         except Exception as e:
-            logger.warning(f"Failed to process sheet {sheet.tab_name}: {e}")
-            return result
+            log_print.warning(f"Failed to process sheet {sheet.tab_name}: {e}")
+            return sheet_stats
 
     def _handle_layout_preprocessing(self, sheet, ds: str) -> Optional[Dict[str, Any]]:
         """Handle Excel layout preprocessing (date column expansion)."""
@@ -174,7 +158,7 @@ class ReportOrchestrationService:
             return {}  # No date mappings needed for non-KPI sheets
 
         except Exception as e:
-            logger.warning(f"Layout preprocessing failed for {sheet.tab_name}: {e}")
+            log_print.warning(f"Layout preprocessing failed for {sheet.tab_name}: {e}")
             return None
 
     def _handle_title_setting(self, sheet, expansion_result: Dict[str, Any] = None):
@@ -197,30 +181,39 @@ class ReportOrchestrationService:
             )
 
         except Exception as e:
-            logger.warning(f"Failed to set title for {sheet.tab_name}: {e}")
+            log_print.warning(f"Failed to set title for {sheet.tab_name}: {e}")
 
-    def _handle_top_data_filling(self, sheet, ds: str) -> Dict[str, Any]:
+    def _handle_top_data_filling(self, sheet, ds: str, sheet_stats: SheetStats):
         """Handle top data filling for top sheets."""
-        result = {"success": True, "tops_successful": 0, "tops_failed": 0}
         try:
             source_table_key = SHEET_DEFINITIONS[sheet.definition].get("source_table")
             if not source_table_key or source_table_key not in SOURCE_TABLES:
-                logger.warning(
+                log_print.warning(
                     f"No source table found for sheet definition: {sheet.definition}"
                 )
-                result["success"] = False
-                return result
+                top_result = TopResult(
+                    top_name=sheet.definition,
+                    status=TopStatus.FAILED,
+                    error_message="No source table configured",
+                )
+                sheet_stats.add_top_result(top_result)
+                return
 
             table_config = SOURCE_TABLES[source_table_key]
             table_name = table_config["table"]
 
             dimension_context = sheet.get_dimension_context()
             if not dimension_context:
-                logger.warning(
+                log_print.warning(
                     f"Could not resolve dimension context for {sheet.tab_name}"
                 )
-                result["success"] = False
-                return result
+                top_result = TopResult(
+                    top_name=sheet.definition,
+                    status=TopStatus.FAILED,
+                    error_message="Could not resolve dimension context",
+                )
+                sheet_stats.add_top_result(top_result)
+                return
 
             min_row = (
                 SHEET_LAYOUT["top"]["title_row_offset"]
@@ -237,44 +230,55 @@ class ReportOrchestrationService:
                 select_fields=SHEET_DEFINITIONS[sheet.definition].get(
                     "select_fields", []
                 ),
-                order_by=SHEET_DEFINITIONS[sheet.definition].get("order_by", []),
+                ranking=SHEET_DEFINITIONS[sheet.definition].get("ranking", {}),
             )
 
-            if len(top_data) > 0:
+            if top_data is not None and len(top_data) > 0:
                 # Write data to Excel
                 write_success = ExcelWriterService.write_top_data_to_sheet(
                     worksheet=sheet.worksheet, top_data=top_data, start_row=min_row
                 )
 
                 if write_success:
-                    result["tops_successful"] += 1
+                    top_result = TopResult(
+                        top_name=sheet.definition,
+                        status=TopStatus.SUCCESS,
+                        rows_written=len(top_data),
+                    )
                 else:
-                    result["tops_failed"] += 1
+                    top_result = TopResult(
+                        top_name=sheet.definition,
+                        status=TopStatus.FAILED,
+                        error_message="Failed to write data to Excel",
+                    )
+                sheet_stats.add_top_result(top_result)
             else:
-                result["tops_failed"] += 1
-
-            return result
+                top_result = TopResult(
+                    top_name=sheet.definition,
+                    status=TopStatus.NO_DATA,
+                    error_message="No data returned from query",
+                )
+                sheet_stats.add_top_result(top_result)
 
         except Exception as e:
-            logger.warning(f"Top data filling failed for {sheet.tab_name}: {e}")
-            result["success"] = False
-            return result
+            log_print.warning(f"Top data filling failed for {sheet.tab_name}: {e}")
+            top_result = TopResult(
+                top_name=sheet.definition, status=TopStatus.FAILED, error_message=str(e)
+            )
+            sheet_stats.add_top_result(top_result)
 
     def _handle_kpi_data_filling(
-        self, sheet, ds: str, date_mappings: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, sheet, ds: str, date_mappings: Dict[str, Any], sheet_stats: SheetStats
+    ):
         """Handle KPI data filling for KPI sheets."""
-        result = {"success": True, "kpis_successful": 0, "kpis_failed": 0}
-
         try:
             # Get data source table
             source_table_key = SHEET_DEFINITIONS[sheet.definition].get("source_table")
             if not source_table_key or source_table_key not in SOURCE_TABLES:
-                logger.warning(
+                log_print.warning(
                     f"No source table found for sheet definition: {sheet.definition}"
                 )
-                result["success"] = False
-                return result
+                return
 
             table_config = SOURCE_TABLES[source_table_key]
             table_name = table_config["table"]
@@ -285,11 +289,10 @@ class ReportOrchestrationService:
             # Get dimension context
             dimension_context = sheet.get_dimension_context()
             if not dimension_context:
-                logger.warning(
+                log_print.warning(
                     f"Could not resolve dimension context for {sheet.tab_name}"
                 )
-                result["success"] = False
-                return result
+                return
 
             # Process each KPI row
             min_row = (
@@ -297,6 +300,12 @@ class ReportOrchestrationService:
                 + SHEET_LAYOUT["kpis"]["title_height"]
                 + 2
             )
+
+            # Calculate total cells for tracking
+            total_years = len(date_mappings.get("years", []))
+            total_months = len(date_mappings.get("months", []))
+            total_cells_per_kpi = total_years + total_months
+
             for row_idx, row in enumerate(
                 sheet.worksheet.iter_rows(
                     min_row=min_row, max_row=sheet.worksheet.max_row
@@ -306,9 +315,13 @@ class ReportOrchestrationService:
                 if not kpi_config:
                     continue
 
+                kpi_name = kpi_config["kpi_name"]
+
                 # Get KPI data
+                writting_fail_count = 0
+                no_data_count = 0
                 kpi_data = self.data_service.get_kpi_data(
-                    kpi_name=kpi_config["kpi_name"],
+                    kpi_name=kpi_name,
                     dimension_name=dimension_context["name"],
                     dimension_value=dimension_context["value"],
                     ds=ds,
@@ -328,24 +341,49 @@ class ReportOrchestrationService:
                     )
 
                     if write_success:
-                        result["kpis_successful"] += 1
-                    else:
-                        result["kpis_failed"] += 1
-                        logger.warning(
-                            f"Failed to write KPI '{kpi_config['kpi_name']}' to sheet {sheet.tab_name}"
+                        # Count how many values were actually written
+                        values_written = 0
+                        yearly_data = kpi_data.get("yearly", {})
+                        monthly_data = kpi_data.get("monthly", {})
+                        values_written = len(yearly_data) + len(monthly_data)
+
+                        kpi_result = KPIResult(
+                            kpi_name=kpi_name,
+                            status=KPIStatus.SUCCESS,
+                            values_written=values_written,
+                            total_cells=total_cells_per_kpi,
                         )
+                    else:
+                        kpi_result = KPIResult(
+                            kpi_name=kpi_name,
+                            status=KPIStatus.WRITE_FAILED,
+                            values_written=0,
+                            total_cells=total_cells_per_kpi,
+                            error_message="Failed to write to Excel",
+                        )
+                        writting_fail_count += 1
+
+                    sheet_stats.add_kpi_result(kpi_result)
+
                 else:
-                    result["kpis_failed"] += 1
-                    logger.warning(
-                        f"No data found for KPI '{kpi_config['kpi_name']}' in sheet {sheet.tab_name}"
+                    kpi_result = KPIResult(
+                        kpi_name=kpi_name,
+                        status=KPIStatus.NO_DATA,
+                        values_written=0,
+                        total_cells=total_cells_per_kpi,
+                        error_message="No data returned from query",
+                    )
+                    sheet_stats.add_kpi_result(kpi_result)
+                    no_data_count += 1
+
+                if writting_fail_count + no_data_count > 0:
+                    log_print.warning(
+                        f"KPI data filling failed for '{kpi_name}' to sheet {sheet.tab_name}:\n"
+                        f"{writting_fail_count} write failures, {no_data_count} no data"
                     )
 
-            return result
-
         except Exception as e:
-            logger.warning(f"KPI data filling failed for {sheet.tab_name}: {e}")
-            result["success"] = False
-            return result
+            log_print.warning(f"KPI data filling failed for {sheet.tab_name}: {e}")
 
     def _parse_kpi_row(self, row, row_idx: int) -> Optional[Dict[str, Any]]:
         """
@@ -389,7 +427,7 @@ class ReportOrchestrationService:
             }
 
         except Exception as e:
-            logger.debug(f"Failed to parse KPI row at index {row_idx}: {e}")
+            log_print.debug(f"Failed to parse KPI row at index {row_idx}: {e}")
             return None
 
     def _map_aggregation_type(self, excel_agg_type: str) -> str:
@@ -408,7 +446,7 @@ class ReportOrchestrationService:
             clean_agg_type, DEFAULT_AGG_TYPE
         )
         if technical_agg_type != clean_agg_type:
-            logger.debug(
+            log_print.debug(
                 f"Mapped aggregation type: '{excel_agg_type}' -> '{technical_agg_type}'"
             )
 

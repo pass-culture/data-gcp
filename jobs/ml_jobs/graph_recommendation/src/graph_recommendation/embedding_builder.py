@@ -10,15 +10,15 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torch_geometric.nn import Node2Vec
 
-EMBEDDING_DIM = 128
+EMBEDDING_DIM = 32
 WALK_LENGTH = 20
 CONTEXT_SIZE = 10
 WALKS_PER_NODE = 10
 NUM_NEGATIVE_SAMPLES = 1
 P = 1.0
 Q = 1.0
-NUM_EPOCHS = 100
-NUM_WORKERS = 4 if sys.platform == "linux" else 0
+NUM_EPOCHS = 15
+NUM_WORKERS = 12 if sys.platform == "linux" else 0  # Increased from 4
 
 
 def _train(
@@ -43,8 +43,8 @@ def _train(
             t0 = time.time()
 
         optimizer.zero_grad()
-        pos_rw_device = pos_rw.to(device)
-        neg_rw_device = neg_rw.to(device)
+        pos_rw_device = pos_rw.to(device, non_blocking=True)
+        neg_rw_device = neg_rw.to(device, non_blocking=True)
 
         if profile:
             timings["to_device"] += time.time() - t0
@@ -105,7 +105,13 @@ def train_node2vec(
         sparse=True,
     ).to(device)
 
-    loader = model.loader(batch_size=128, shuffle=True, num_workers=num_workers)
+    loader = model.loader(
+        batch_size=256,
+        shuffle=True,
+        num_workers=num_workers,
+        pin_memory=True,
+        persistent_workers=True,
+    )
     optimizer = torch.optim.SparseAdam(list(model.parameters()), lr=0.01)
 
     # Setup callbacks

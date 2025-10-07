@@ -11,14 +11,14 @@ from torch.utils.data import DataLoader
 from torch_geometric.nn import Node2Vec
 
 EMBEDDING_DIM = 32
-WALK_LENGTH = 20
+WALK_LENGTH = 50
 CONTEXT_SIZE = 10
 WALKS_PER_NODE = 10
 NUM_NEGATIVE_SAMPLES = 1
 P = 1.0
 Q = 1.0
 NUM_EPOCHS = 15
-NUM_WORKERS = 12 if sys.platform == "linux" else 0  # Increased from 4
+NUM_WORKERS = 12 if sys.platform == "linux" else 0
 
 
 def _train(
@@ -102,18 +102,24 @@ def train_node2vec(
         num_negative_samples=NUM_NEGATIVE_SAMPLES,
         p=P,
         q=Q,
-        sparse=True,
+        sparse=True,  # Keep True for memory efficiency with 4M nodes
     ).to(device)
 
     loader = model.loader(
-        batch_size=256,
+        batch_size=512,  # Increased from 256 for better GPU utilization
         shuffle=True,
         num_workers=num_workers,
         pin_memory=True,
         persistent_workers=True,
     )
-    optimizer = torch.optim.SparseAdam(list(model.parameters()), lr=0.01)
+    optimizer = torch.optim.SparseAdam(
+        list(model.parameters()),
+        lr=0.01,
+        eps=1e-4,
+        betas=(0.9, 0.999),
+    )
 
+    # Alternative: Adagrad (also supports sparse, sometimes faster)
     # Setup callbacks
     scheduler = ReduceLROnPlateau(
         optimizer, mode="min", factor=0.5, patience=3, verbose=True, min_lr=1e-6
@@ -163,7 +169,7 @@ def build_node_embeddings(
         num_negative_samples=NUM_NEGATIVE_SAMPLES,
         p=P,
         q=Q,
-        sparse=True,
+        sparse=True,  # Keep True for memory efficiency
     ).to("cpu")  # Use CPU to avoid GPU memory issues
 
     # Load best model weights

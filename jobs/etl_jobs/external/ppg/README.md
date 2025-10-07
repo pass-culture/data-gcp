@@ -34,10 +34,14 @@ The CLI provides three main commands: generate, compress, and upload.
 make sure you have activated the virtual env and are authenticated (see previous section)
 
 Generate Reports
+
 ```bash
 python main.py generate [OPTIONS]
 ```
+
 Optional Arguments:
+
+- -v, --verbose: Enable verbose output with detailed logging, MUST be passed after main.py
 - -s, --stakeholder [all|ministere|drac]: Target stakeholder type default all
   - all: Generate reports for ministry + all regions
   - ministere: Generate only national summary
@@ -46,30 +50,36 @@ Optional Arguments:
 - -t, --target "region names": Space-separated region names (required when --stakeholder drac)
 - -f, --show-failures: Display detailed failure analysis for failed KPIs/tops
 - --store-stats: Save execution statistics to reports/report_stats_YYYYMMDD.txt
-- -v, --verbose: Enable verbose output with detailed logging
 
 Compress Reports
+
 ```bash
 python main.py compress [OPTIONS]
 ```
+
 Optional Arguments:
 
+- -v, --verbose: Enable verbose output with detailed logging, MUST be passed after main.py
 - --ds YYYY-MM-DD: Consolidation date to locate directory (default: current month)
 - -d, --base-dir PATH: Base directory to compress (if different from default)
 - -C, --clean: Remove source directory after compression
 
 Upload to GCS
+
 ```bash
 python main.py upload [OPTIONS]
 ```
+
 Optional Arguments:
 
+- -v, --verbose: Enable verbose output with detailed logging, MUST be passed after main.py
 - --ds YYYY-MM-DD: Consolidation date to find zip file (default: current month)
 - -b, --bucket NAME: GCS bucket name (uses default if not specified)
 - -d, --destination PATH: Destination path in bucket (default: ppg_reports)
 
 Usage Examples
 Generate Command
+
 ```bash
 # Generate all reports with default date
 python main.py generate -s all
@@ -78,7 +88,7 @@ python main.py generate -s all
 python main.py generate -s ministere --ds 2024-03-01
 
 # Generate regional reports with detailed output
-python main.py generate -s drac -t "ile-de-france normandie" --ds 2024-03-01 -v
+python main.py --verbose generate -s drac -t "ile-de-france normandie" --ds 2024-03-01
 
 # Generate with failure analysis and save statistics
 python main.py generate -s all --show-failures --store-stats
@@ -88,6 +98,7 @@ python main.py generate -s ministere
 ```
 
 Compress Command
+
 ```bash
 # Compress current month's reports
 python main.py compress
@@ -103,6 +114,7 @@ python main.py compress --base-dir /path/to/reports
 ```
 
 Upload Command
+
 ```bash
 # Upload reports to default bucket
 python main.py upload
@@ -114,25 +126,12 @@ python main.py upload --ds 2024-03-01 --bucket my-gcs-bucket
 python main.py upload --destination custom_folder/reports
 ```
 
-Common Workflows
-Full workflow for monthly reports:
-```bash
-# 1. Generate all reports
-python main.py generate -s all --store-stats -v
-
-# 2. Compress the output
-python main.py compress --clean
-
-# 3. Upload to GCS
-python main.py upload
-```
-
 Debug reports:
+
 ```bash
 # Generate with verbose output and failure details
-python main.py generate -s drac -t "normandie" -v --show-failures --store-stats
+python main.py --verbose generate -s drac -t "normandie" -v --show-failures --store-stats
 ```
-
 
 ### Configuration (`config.py`)
 
@@ -143,7 +142,6 @@ Centralized configuration including:
 - **Sheet Definitions**: Maps sheet types to templates and data sources
 - **Layout Configuration**: Excel positioning and styling rules
 - **Aggregation Mappings**: Maps Excel labels to technical aggregation types
-
 
 ## Architecture
 
@@ -322,8 +320,8 @@ Centralized configuration including:
    - Save final Excel file
 5. **Report Statistics**
 
-  - Track success & failures
-  - Optionnally saves it on .txt file for debugging
+- Track success & failures
+- Optionnally saves it on .txt file for debugging
 
 ### Data Flow
 
@@ -358,11 +356,10 @@ graph TD
     REP --> |saves| EXCEL[Excel File]
 ```
 
-
-
 ## Configuration
 
 ### Environment Variables
+
 The virtual environment automatically sets:
 
 - GCP_PROJECT="passculture-data-prod"

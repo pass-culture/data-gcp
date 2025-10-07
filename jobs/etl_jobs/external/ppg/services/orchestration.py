@@ -230,7 +230,7 @@ class ReportOrchestrationService:
                 select_fields=SHEET_DEFINITIONS[sheet.definition].get(
                     "select_fields", []
                 ),
-                order_by=SHEET_DEFINITIONS[sheet.definition].get("order_by", []),
+                ranking=SHEET_DEFINITIONS[sheet.definition].get("ranking", {}),
             )
 
             if top_data is not None and len(top_data) > 0:
@@ -318,6 +318,8 @@ class ReportOrchestrationService:
                 kpi_name = kpi_config["kpi_name"]
 
                 # Get KPI data
+                writting_fail_count = 0
+                no_data_count = 0
                 kpi_data = self.data_service.get_kpi_data(
                     kpi_name=kpi_name,
                     dimension_name=dimension_context["name"],
@@ -359,11 +361,10 @@ class ReportOrchestrationService:
                             total_cells=total_cells_per_kpi,
                             error_message="Failed to write to Excel",
                         )
-                        log_print.warning(
-                            f"Failed to write KPI '{kpi_name}' to sheet {sheet.tab_name}"
-                        )
+                        writting_fail_count += 1
 
                     sheet_stats.add_kpi_result(kpi_result)
+
                 else:
                     kpi_result = KPIResult(
                         kpi_name=kpi_name,
@@ -373,8 +374,12 @@ class ReportOrchestrationService:
                         error_message="No data returned from query",
                     )
                     sheet_stats.add_kpi_result(kpi_result)
+                    no_data_count += 1
+
+                if writting_fail_count + no_data_count > 0:
                     log_print.warning(
-                        f"No data found for KPI '{kpi_name}' in sheet {sheet.tab_name}"
+                        f"KPI data filling failed for '{kpi_name}' to sheet {sheet.tab_name}:\n"
+                        f"{writting_fail_count} write failures, {no_data_count} no data"
                     )
 
         except Exception as e:

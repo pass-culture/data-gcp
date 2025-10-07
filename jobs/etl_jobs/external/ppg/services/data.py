@@ -176,7 +176,7 @@ class DataService:
         table_name: str,
         top_n: int = 50,
         select_fields: List[str] = [],
-        order_by: List[str] = [],
+        ranking: Optional[Dict] = None,
     ) -> Optional[pd.DataFrame]:
         """
         Get top N rankings for a given dimension.
@@ -187,45 +187,91 @@ class DataService:
             ds: Consolidation date in YYYY-MM-DD format
             table_name: DuckDB table name
             top_n: Number of top entries to retrieve
-            order_by: List of fields to order by (descending)
+            ranking: Dict with ranking configuration, e.g.:
+                {
+                    "partition_by": ["field_a", "field_b"],
+                    "order_by": [
+                        {"field": "field_1", "direction": "DESC"},
+                        {"field": "field_2", "direction": "ASC"},
+                    ],
+                }
 
         Returns:
             DataFrame with top rankings, None if failed
         """
-        assert order_by, "order_by list cannot be empty"
-        assert len(order_by) <= 2, "order_by can have at most 2 fields"
         assert select_fields, "select_fields list cannot be empty"
-        full_select = select_fields + [
-            field for field in order_by if field not in select_fields
-        ]
-        reorder_by = (
-            [f"{order_by[0]} DESC", "rank ASC"] if len(order_by) > 1 else ["rank ASC"]
-        )  # this is a trick , TO DO: add order mapping
-        partition = f"PARTITION BY {order_by[0]}" if len(order_by) == 2 else ""
+        assert ranking and "order_by" in ranking, "ranking.order_by cannot be empty"
 
+        partition_fields = ranking.get("partition_by", []) or []
+        assert isinstance(partition_fields, list), "partition_by must be a list"
+        order_by_items = ranking.get("order_by", [])
+        assert isinstance(order_by_items, list), "order_by must be a list"
+        assert all(
+            isinstance(item, dict) for item in order_by_items
+        ), "Each order_by item must be a dict"
+
+        assert all(
+            "field" in item for item in order_by_items
+        ), "Each order_by item must define a 'field'"
+        assert all(
+            item.get("direction", "DESC").upper() in ("ASC", "DESC")
+            for item in order_by_items
+        ), "Each order_by direction must be 'ASC' or 'DESC'"
+
+        assert all(
+            partition_field in [order_item["field"] for order_item in order_by_items]
+            for partition_field in partition_fields
+        ), "All partition_by fields must be in order_by"
+
+        # Build SQL components
+        partition_clause = (
+            f"PARTITION BY {', '.join(partition_fields)}" if partition_fields else ""
+        )
+        order_clause = (
+            ", ".join(
+                f"{item['field']} {item.get('direction', 'DESC')}"
+                for item in order_by_items
+            )
+            + ", rank ASC"
+        )
+        partition_clause_order = ", ".join(
+            f"{item['field']} {item.get('direction', 'DESC')}"
+            for item in order_by_items
+            if item["field"] not in partition_fields
+        )
+
+        full_select = select_fields + [
+            item["field"]
+            for item in order_by_items
+            if item["field"] not in select_fields
+        ]
+
+        # Compute previous month
         ds_date = datetime.strptime(ds, "%Y-%m-%d").date()
         previous_month = ds_date - relativedelta(months=1)
         previous_month_str = previous_month.strftime("%Y-%m-%d")
+
         try:
             query = f"""
                 SELECT {', '.join(select_fields)}, rank
                 FROM (
                     SELECT {', '.join(full_select)},
-                        ROW_NUMBER() OVER ({partition} ORDER BY {order_by[-1]} {'ASC' if order_by[-1].endswith('_ranked') else 'DESC'}) as rank
+                        ROW_NUMBER() OVER ({partition_clause} ORDER BY {partition_clause_order}) AS rank
                     FROM {table_name}
                     WHERE dimension_name = ? AND dimension_value = ? AND partition_month = ?
                 )
-                WHERE rank < ?
-                ORDER BY {', '.join(reorder_by)}
+                WHERE rank <= ?
+                ORDER BY {order_clause}
             """
             params = [dimension_name, dimension_value, previous_month_str, top_n]
+
             log_print.debug(
                 f"""Executing top rankings query: {query.replace('?', '{}').format(*[f"'{p}'" if isinstance(p, str) else str(p) for p in params])}"""
             )
 
             result = self.conn.execute(query, params).df()
-
             return result
+
         except Exception as e:
             log_print.warning(
                 f"Failed to retrieve top rankings for {dimension_name}={dimension_value}: {e}"

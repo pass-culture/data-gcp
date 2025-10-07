@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from torch_geometric.nn import Node2Vec
 
 EMBEDDING_DIM = 32
-WALK_LENGTH = 50
+WALK_LENGTH = 30
 CONTEXT_SIZE = 10
 WALKS_PER_NODE = 10
 NUM_NEGATIVE_SAMPLES = 1
@@ -19,6 +19,7 @@ P = 1.0
 Q = 1.0
 NUM_EPOCHS = 15
 NUM_WORKERS = 12 if sys.platform == "linux" else 0
+BATCH_SIZE = 32
 
 
 def _train(
@@ -106,7 +107,7 @@ def train_node2vec(
     ).to(device)
 
     loader = model.loader(
-        batch_size=512,  # Increased from 256 for better GPU utilization
+        batch_size=BATCH_SIZE,
         shuffle=True,
         num_workers=num_workers,
         pin_memory=True,

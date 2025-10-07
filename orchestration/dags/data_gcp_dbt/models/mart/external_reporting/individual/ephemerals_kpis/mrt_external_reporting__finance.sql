@@ -122,9 +122,9 @@ with
                     dimension_name,
                     dimension_value,
                     '{{ kpi.name }}_{{ category.value_expr }}' as kpi_name,
-                    sum({{ kpi.value_expr }}) as numerator,
+                    coalesce(sum({{ kpi.value_expr }}),0) as numerator,
                     cast(1 as numeric) as denominator,
-                    safe_divide(sum({{ kpi.value_expr }}), 1) as kpi
+                    safe_divide(coalesce(sum({{ kpi.value_expr }}),0), 1) as kpi
                 from dimension_cross
                 where offer_category_id = '{{ category.name }}'
                 group by partition_month, updated_at, dimension_name, dimension_value
@@ -139,10 +139,10 @@ with
                 dimension_name,
                 dimension_value,
                 'pct_montant_contribution_{{ category.value_expr }}' as kpi_name,
-                sum(total_contribution_amount) as numerator,
-                sum(total_revenue_amount) as denominator,
+                coalesce(sum(total_contribution_amount),0) as numerator,
+                coalesce(sum(total_revenue_amount),0) as denominator,
                 safe_divide(
-                    sum(total_contribution_amount), sum(total_revenue_amount)
+                    coalesce(sum(total_contribution_amount),0), coalesce(sum(total_revenue_amount),0)
                 ) as kpi
             from dimension_cross
             where offer_category_id = '{{ category.name }}'
@@ -161,9 +161,9 @@ with
                 dimension_name,
                 dimension_value,
                 '{{ kpi.name }}_epn' as kpi_name,
-                sum({{ kpi.value_expr }}) as numerator,
+                coalesce(sum({{ kpi.value_expr }}),0) as numerator,
                 cast(1 as numeric) as denominator,
-                safe_divide(sum({{ kpi.value_expr }}), 1) as kpi
+                safe_divide(coalesce(sum({{ kpi.value_expr }}),0), 1) as kpi
             from dimension_cross
             where offerer_is_epn = true
             group by partition_month, updated_at, dimension_name, dimension_value
@@ -178,10 +178,10 @@ with
             dimension_name,
             dimension_value,
             "pct_montant_contribution_epn" as kpi_name,
-            sum(total_contribution_amount) as numerator,
-            sum(total_revenue_amount) as denominator,
+            coalesce(sum(total_contribution_amount),0) as numerator,
+            coalesce(sum(total_revenue_amount),0) as denominator,
             safe_divide(
-                sum(total_contribution_amount), sum(total_revenue_amount)
+                coalesce(sum(total_contribution_amount),0), coalesce(sum(total_revenue_amount),0)
             ) as kpi
         from dimension_cross
         where offerer_is_epn = true

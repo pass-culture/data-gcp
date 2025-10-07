@@ -87,7 +87,10 @@ python main.py generate -s all
 # Generate ministry report for specific date
 python main.py generate -s ministere --ds 2024-03-01
 
-# Generate regional reports with detailed output
+# Manually choose regions to generate reports for
+python main.py generate -s drac
+
+# Generate specific regional reports with detailed output
 python main.py --verbose generate -s drac -t "ile-de-france normandie" --ds 2024-03-01
 
 # Generate with failure analysis and save statistics

@@ -140,7 +140,6 @@ def download_embeddings_and_reduce_dimensions(
     logger.info("Embeddings downloaded.")
 
     logger.info(f"Reducing embeddings dimensions to {reduced_dimension} with HNNE...")
-    hnne = HNNE(dim=reduced_dimension)
     ldf = pl.scan_pyarrow_dataset(dataset)
     item_list = ldf.select("item_id").collect().to_numpy().flatten()
     item_weights = np.vstack(np.vstack(ldf.select("embedding").collect())[0]).astype(
@@ -148,12 +147,12 @@ def download_embeddings_and_reduce_dimensions(
     )
     REDUCED = False
     if REDUCED:
+        hnne = HNNE(dim=reduced_dimension)
         item_weights = hnne.fit_transform(item_weights, dim=reduced_dimension).astype(
             np.float32
         )
+        joblib.dump(hnne, reducer_output_path)
     logger.info("Embedding dimensions reduced.")
-
-    joblib.dump(hnne, reducer_output_path)
 
     return {x: y for x, y in zip(item_list, item_weights)}
 

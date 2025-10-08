@@ -75,7 +75,6 @@ select
     co.national_program_id,
     national_program.national_program_name,
     co.template_id,
-    co.collective_offer_address_type,
     co.collective_offer_contact_url,
     co.collective_offer_contact_form,
     co.collective_offer_contact_email,

@@ -40,7 +40,6 @@ select
     national_program_id,
     national_program_name,
     template_id,
-    collective_offer_address_type,
     collective_offer_location_type,
     collective_offer_contact_url,
     collective_offer_contact_form,

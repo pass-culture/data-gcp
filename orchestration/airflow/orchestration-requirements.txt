@@ -104,6 +104,7 @@ google-cloud-automl==2.16.4
 google-cloud-batch==0.17.36
 google-cloud-bigquery==3.34.0
 google-cloud-bigquery-datatransfer==3.19.2
+google-cloud-bigquery-storage==2.33.1
 google-cloud-bigtable==2.31.0
 google-cloud-build==3.31.2
 google-cloud-compute==1.31.0

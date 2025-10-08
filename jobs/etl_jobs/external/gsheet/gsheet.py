@@ -59,6 +59,7 @@ SHEETS = {
             "micro_objective": "micro_objective",
             "offer_category": "offer_category",
             "region": "region",
+            "event": "event",
         },
     },
     "gsheet_instagram_campaign_tag": {
@@ -72,6 +73,7 @@ SHEETS = {
             "micro_objective": "micro_objective",
             "offer_category": "offer_category",
             "region": "region",
+            "event": "event",
         },
     },
     "gsheet_institution_meg_scholar_group": {

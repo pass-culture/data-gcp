@@ -70,7 +70,7 @@ def _normalize_dataframe(
     return df
 
 
-def build_book_metadata_graph_from_dataframe(
+def build_book_metadata_heterograph_from_dataframe(
     dataframe: pd.DataFrame,
     *,
     metadata_columns: Sequence[str],
@@ -82,7 +82,7 @@ def build_book_metadata_graph_from_dataframe(
     - "book" node type for all books
     - One node type for each metadata column (e.g., "rayon", "artist_id")
     - "is_{metadata}" edge types from books to metadata
-    - "has_{metadata}" edge types from metadata back to books
+    - "{metadata}_of" edge types from metadata back to books
 
     Args:
         dataframe: Input data with book IDs and metadata columns.
@@ -138,8 +138,8 @@ def build_book_metadata_graph_from_dataframe(
         if column in metadata_nodes_by_column:
             # "book" -> "is_{column}" -> "{column}"
             edge_indices[("book", f"is_{column}", column)] = set()
-            # "{column}" -> "has_{column}" -> "book"
-            edge_indices[(column, f"has_{column}", "book")] = set()
+            # "{column}" -> "{column}_of" -> "book"
+            edge_indices[(column, f"{column}_of", "book")] = set()
 
     # Step 5: Build edges by iterating through dataframe
     relevant_columns = [id_column, *metadata_columns]
@@ -172,7 +172,7 @@ def build_book_metadata_graph_from_dataframe(
 
                 # Add edges in both directions
                 edge_key_forward = ("book", f"is_{column}", column)
-                edge_key_backward = (column, f"has_{column}", "book")
+                edge_key_backward = (column, f"{column}_of", "book")
                 edge_indices[edge_key_forward].add((book_idx, metadata_idx))
                 edge_indices[edge_key_backward].add((metadata_idx, book_idx))
 
@@ -217,7 +217,7 @@ def build_book_metadata_graph_from_dataframe(
     return graph_data
 
 
-def build_book_metadata_graph(
+def build_book_metadata_heterograph(
     parquet_path: Path | str,
     *,
     nrows: int | None = None,
@@ -237,6 +237,6 @@ def build_book_metadata_graph(
     if nrows is not None:
         df = df.sample(nrows, random_state=42)
 
-    return build_book_metadata_graph_from_dataframe(
+    return build_book_metadata_heterograph_from_dataframe(
         df, id_column=ID_COLUMN, metadata_columns=DEFAULT_METADATA_COLUMNS
     )

@@ -20,6 +20,7 @@ dependencies = [
     "sentence-transformers>=2.2.2",
     "torch>=2.6.0",
     "torchvision>=0.21.0",
+    "google-cloud-storage>=2.0.0"
 ]
 
 

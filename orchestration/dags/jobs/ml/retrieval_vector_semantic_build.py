@@ -122,7 +122,7 @@ with DAG(
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
                     "datasetId": BIGQUERY_ML_RETRIEVAL_DATASET,
-                    "tableId": "semantic_vector_item_embedding",
+                    "tableId": "semantic_vector_item_full_embedding",
                 },
                 "compression": None,
                 "destinationUris": f"{dag_config['STORAGE_PATH']}/data-*.parquet",

@@ -1,9 +1,14 @@
+import mimetypes
+import os
+import posixpath
+
 import joblib
 import numpy as np
 import polars as pl
 import pyarrow.dataset as ds
 import tensorflow as tf
 import typer
+from google.cloud import storage
 from hnne import HNNE
 from loguru import logger
 
@@ -22,6 +27,41 @@ from utils import (
 )
 
 app = typer.Typer(help="Create lanceDB table and documents")
+
+
+def upload_directory_to_gcs(
+    local_dir: str, bucket_name: str, destination_prefix: str = ""
+) -> None:
+    """
+    Recursively uploads a local directory to a GCS bucket, preserving relative paths.
+    Example:
+      upload_directory_to_gcs("/tmp/data", "my-bucket", "backups/2025-10-08")
+    will upload /tmp/data/a/b.txt -> gs://my-bucket/backups/2025-10-08/a/b.txt
+    """
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+
+    local_dir = os.path.abspath(local_dir)
+    destination_prefix = destination_prefix.strip("/")
+
+    for root, _, files in os.walk(local_dir):
+        for filename in files:
+            local_path = os.path.join(root, filename)
+            rel_path = os.path.relpath(local_path, local_dir)
+            # GCS uses '/' as separator
+            gcs_path = (
+                posixpath.join(destination_prefix, rel_path.replace(os.sep, "/"))
+                if destination_prefix
+                else rel_path.replace(os.sep, "/")
+            )
+
+            content_type, _ = mimetypes.guess_type(local_path)
+            blob = bucket.blob(gcs_path)
+            blob.cache_control = "no-cache"  # adjust as needed
+            blob.content_type = content_type or "application/octet-stream"
+            blob.upload_from_filename(local_path)
+
+            print(f"Uploaded {local_path} -> gs://{bucket_name}/{gcs_path}")
 
 
 def prepare_docs(embedding_dimension: int) -> None:
@@ -106,9 +146,11 @@ def download_embeddings_and_reduce_dimensions(
     item_weights = np.vstack(np.vstack(ldf.select("embedding").collect())[0]).astype(
         np.float32
     )
-    item_weights = hnne.fit_transform(item_weights, dim=reduced_dimension).astype(
-        np.float32
-    )
+    REDUCED = False
+    if REDUCED:
+        item_weights = hnne.fit_transform(item_weights, dim=reduced_dimension).astype(
+            np.float32
+        )
     logger.info("Embedding dimensions reduced.")
 
     joblib.dump(hnne, reducer_output_path)
@@ -144,6 +186,11 @@ def prepare_semantic_docs(
         uri=f"{OUTPUT_DATA_PATH}/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,
     )
+    upload_directory_to_gcs(
+        local_dir=f"{OUTPUT_DATA_PATH}/vector",
+        bucket_name="mlflow_bucket_prod",
+        destination_prefix="streamlit_data/chatbot_edito/vector_db",  # or "" for bucket root
+    )
     logger.info("Items lancedb table created.")
 
 
@@ -160,7 +207,7 @@ def semantic_database(
         "transformer": "sentence-transformers/all-MiniLM-L6-v2",
         "reducer": f"{OUTPUT_DATA_PATH}/reducer.pkl",
     }
-    EMBEDDING_DIMENSION = 32
+    EMBEDDING_DIMENSION = 384
 
     prepare_semantic_docs(
         source_gs_path,

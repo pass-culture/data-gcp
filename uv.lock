@@ -1086,6 +1086,7 @@ airflow = [
     { name = "elementary-data", extra = ["bigquery"] },
     { name = "flask-oidc" },
     { name = "flask-openid" },
+    { name = "google-cloud-bigquery-storage" },
     { name = "typer" },
 ]
 dbt = [
@@ -1126,6 +1127,7 @@ airflow = [
     { name = "elementary-data", extras = ["bigquery"], specifier = "==0.18.1" },
     { name = "flask-oidc", specifier = ">=2.2.2" },
     { name = "flask-openid", specifier = ">=1.3.1" },
+    { name = "google-cloud-bigquery-storage", specifier = "==2.33.1" },
     { name = "typer" },
 ]
 dbt = [
@@ -2067,6 +2069,21 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a7/1f/1824d929bf555926e90df241f237dd7f9a143619df30cd410474d9ccf129/google_cloud_bigquery_datatransfer-3.19.2.tar.gz", hash = "sha256:97ff60ed273aba6a1574f7fa933134f204662c7e9ca3674b27c99d2cf2d7b4df", size = 110185 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b8/5e/cad9fcfb6aad6fde917d7dc44367b821c0621e09c80c0cf848afd1242b0c/google_cloud_bigquery_datatransfer-3.19.2-py3-none-any.whl", hash = "sha256:8efe3b928cdca4fdc77ad21ff1dd0720294cbaacb0b360706f43e73ac42d854a", size = 86810 },
+]
+
+[[package]]
+name = "google-cloud-bigquery-storage"
+version = "2.33.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-api-core", extra = ["grpc"] },
+    { name = "google-auth" },
+    { name = "proto-plus" },
+    { name = "protobuf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/75/5e/85869233deabd369b076486836f5d8389ac95a8ce692dd27cde767f89e2b/google_cloud_bigquery_storage-2.33.1.tar.gz", hash = "sha256:3fd25bef364ac5fb9bbd6560f0dd11b90b1845883df8e0a8c706ad53d00fc23b", size = 292622 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/55/80/f4bb233912ab62b46b30618adbc840a02322a47c4f4f8a1e9f0494dac7db/google_cloud_bigquery_storage-2.33.1-py3-none-any.whl", hash = "sha256:24952aba0d69acc4d6bfbdc7a09dddbb728496b1780bd224f1056361a1b51044", size = 293619 },
 ]
 
 [[package]]

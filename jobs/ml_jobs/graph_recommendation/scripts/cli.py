@@ -10,6 +10,7 @@ import typer
 from src.graph_recommendation.graph_builder import (
     build_book_metadata_graph,
 )
+from src.graph_recommendation.heterograph_builder import build_book_metadata_heterograph
 
 APP_DESCRIPTION = (
     "Utilities to build PyTorch Geometric graphs for book recommendations."
@@ -53,6 +54,32 @@ def build_graph_command(
     """Build the book-to-metadata graph and save it to disk."""
 
     graph_data = build_book_metadata_graph(
+        parquet_path,
+        nrows=nrows,
+    )
+    torch.save(graph_data, output_path)
+
+    typer.secho(
+        (
+            f"Graph saved to {output_path} "
+            f"(nodes={graph_data.num_nodes}, "
+            f"edges={graph_data.num_edges}, "
+            f"books={len(graph_data.book_ids)}, "
+            f"metadata={len(graph_data.metadata_ids)})"
+        ),
+        fg=typer.colors.GREEN,
+    )
+
+
+@app.command("build-heterograph")
+def build_heterograph_command(
+    parquet_path: Path = PARQUET_ARGUMENT,
+    output_path: Path = OUTPUT_OPTION,
+    nrows: int | None = NROWS_OPTION,
+) -> None:
+    """Build the book-to-metadata graph and save it to disk."""
+
+    graph_data = build_book_metadata_heterograph(
         parquet_path,
         nrows=nrows,
     )

@@ -8,37 +8,53 @@ from loguru import logger
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
-from torch_geometric.nn import Node2Vec
+from torch_geometric.data import HeteroData
+from torch_geometric.nn import MetaPath2Vec
 
-EMBEDDING_DIM = 64
-WALK_LENGTH = 50
+EMBEDDING_DIM = 128
+WALK_LENGTH = 14 * 4
 CONTEXT_SIZE = 10
-WALKS_PER_NODE = 10
-NUM_NEGATIVE_SAMPLES = 10
-P = 1
-Q = 1
+WALKS_PER_NODE = 5
+NUM_NEGATIVE_SAMPLES = 5
 NUM_EPOCHS = 15
 NUM_WORKERS = 12 if sys.platform == "linux" else 0
-BATCH_SIZE = 32
+BATCH_SIZE = 256
 LEARNING_RATE = 0.01
-
-
-# The parameter settings used for node2vec are in line with typical
-# values used for DeepWalk and LINE. Specifically, we set
-# d = 128 (dimensions),
-# r = 10 (walks per node),
-# l = 80 (walk length),
-# k = 10 (context size),
-# and the optimization is run for a single epoch.
-# We repeat our experiments for 10 random seed initializations,
-# and our results are statistically significant with a p-value
-# of less than 0.01.The best in-out and return hyperparameters were
-# learned using 10-fold cross-validation on 10% labeled data with a
-# grid search over p, q ∈ {0.25, 0.50, 1, 2, 4}.
+METAPATH = (
+    4
+    * [
+        ("book", "is_artist_id", "artist_id"),
+        ("artist_id", "artist_id_of", "book"),
+    ]
+    + 4
+    * [
+        ("book", "is_gtl_label_level_4", "gtl_label_level_4"),
+        ("gtl_label_level_4", "gtl_label_level_4_of", "book"),
+    ]
+    + 3
+    * [
+        ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
+        ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
+    ]
+    + 2
+    * [
+        ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
+        ("gtl_label_level_2", "gtl_label_level_2_of", "book"),
+    ]
+    + [
+        ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
+        ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
+    ]
+)
 
 
 def _train(
-    model: Node2Vec, loader: DataLoader, optimizer: Optimizer, device, *, profile: bool
+    model: torch.nn.Module,
+    loader: DataLoader,
+    optimizer: Optimizer,
+    device,
+    *,
+    profile: bool,
 ):
     model.train()
     total_loss = 0
@@ -95,56 +111,51 @@ def _train(
     return total_loss / len(loader)
 
 
-def train_node2vec(
-    graph_data,
-    checkpoint_path: Path = Path("checkpoints/best_node2vec_model.pt"),
+def train_metapath2vec(
+    graph_data: HeteroData,
+    checkpoint_path: Path = Path("checkpoints/best_metapath2vec_model.pt"),
     num_workers=NUM_WORKERS,
     profile=False,
 ) -> None:
     logger.info("Graph info:")
-    logger.info(f"  Total nodes: {graph_data.num_nodes}")
-    logger.info(f"  Total edges: {graph_data.edge_index.shape[1]}")
-    logger.info(f"  Book nodes: {graph_data.book_mask.sum().item()}")
-    logger.info(f"  Metadata nodes: {graph_data.metadata_mask.sum().item()}")
+    logger.info(f"  Node types: {graph_data.node_types}")
+    logger.info(f"  Edge types: {graph_data.edge_types}")
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logger.info(f"Using device: {device}")
-    model = Node2Vec(
-        graph_data.edge_index,
+
+    model = MetaPath2Vec(
+        graph_data.edge_index_dict,
         embedding_dim=EMBEDDING_DIM,
+        metapath=METAPATH,
         walk_length=WALK_LENGTH,
         context_size=CONTEXT_SIZE,
         walks_per_node=WALKS_PER_NODE,
         num_negative_samples=NUM_NEGATIVE_SAMPLES,
-        p=P,
-        q=Q,
-        sparse=True,  # Keep True for memory efficiency with 4M nodes
+        sparse=True,
     ).to(device)
 
+    # The loader and optimizer setup remains the same
     loader = model.loader(
         batch_size=BATCH_SIZE,
         shuffle=True,
         num_workers=num_workers,
         pin_memory=True,
-        persistent_workers=True,
+        persistent_workers=num_workers > 0,
     )
     optimizer = torch.optim.SparseAdam(
         list(model.parameters()),
         lr=LEARNING_RATE,
     )
-
-    # Alternative: Adagrad (also supports sparse, sometimes faster)
-    # Setup callbacks
     scheduler = ReduceLROnPlateau(
         optimizer, mode="min", factor=0.5, patience=3, verbose=True, min_lr=1e-6
     )
 
-    # Model checkpoint setup
+    # Start training
+    logger.info("Starting training...")
     checkpoint_dir = checkpoint_path.parent
     checkpoint_dir.mkdir(exist_ok=True)
     best_loss = float("inf")
-
-    # Train Node2Vec (unsupervised - no labels needed)
     for epoch in range(1, NUM_EPOCHS + 1):
         t0 = time.time()
         loss = _train(model, loader, optimizer, device, profile=profile)
@@ -152,71 +163,56 @@ def train_node2vec(
             f"Epoch: {epoch:03d}, Loss: {loss:.4f}, "
             f"LR: {optimizer.param_groups[0]['lr']:.6f}, Time: {time.time() - t0:.2f}s"
         )
-
-        # ReduceLROnPlateau step
         scheduler.step(loss)
-
-        # Model checkpoint: save best model
         if loss < best_loss:
             best_loss = loss
-            torch.save(
-                {
-                    "epoch": epoch,
-                    "model_state_dict": model.state_dict(),
-                    "optimizer_state_dict": optimizer.state_dict(),
-                    "loss": loss,
-                },
-                checkpoint_path,
-            )
+            torch.save(model.state_dict(), checkpoint_path)
             logger.info(f"Saved best model with loss: {loss:.4f}")
+    logger.info("Training completed.")
+
+    # Extract and save embeddings for book nodes
+    logger.info("Extracting book embeddings...")
+    checkpoint = torch.load(checkpoint_path, weights_only=False)
+    embedding = checkpoint["embedding.weight"].detach().cpu().numpy()
+    book_embeddings = embedding[
+        model.start["book"] : model.start["book"] + graph_data["book"].num_nodes, :
+    ]
+    logger.info("Book embeddings extracted.")
+    return pd.DataFrame(
+        {
+            "node_ids": graph_data.book_ids,
+            "embeddings": list(book_embeddings),
+        }
+    )
 
 
-def build_node_embeddings(
-    graph_data, checkpoint_path="checkpoints/best_node2vec_model.pt"
-) -> pd.DataFrame:
-    model = Node2Vec(
-        graph_data.edge_index,
+def build_embeddings_from_checkpoint(
+    graph_data: HeteroData,
+    checkpoint_path: Path,
+):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    logger.info(f"Using device: {device}")
+
+    model = MetaPath2Vec(
+        graph_data.edge_index_dict,
         embedding_dim=EMBEDDING_DIM,
+        metapath=METAPATH,
         walk_length=WALK_LENGTH,
         context_size=CONTEXT_SIZE,
         walks_per_node=WALKS_PER_NODE,
         num_negative_samples=NUM_NEGATIVE_SAMPLES,
-        p=P,
-        q=Q,
-        sparse=True,  # Keep True for memory efficiency
-    ).to("cpu")  # Use CPU to avoid GPU memory issues
+        sparse=True,
+    ).to(device)
 
-    # Load best model weights
-    logger.info(f"Loading best model from {checkpoint_path}")
     checkpoint = torch.load(checkpoint_path, weights_only=False)
-    model.load_state_dict(checkpoint["model_state_dict"])
-    logger.info(
-        f"Best model from epoch {checkpoint['epoch']} "
-        f"with loss {checkpoint['loss']:.4f}"
-    )
-
-    # Get embeddings for all nodes
-    model.eval()
-    with torch.no_grad():
-        embeddings = model()
-
-    # Format resuts in a DataFrame
-    return (
-        pd.DataFrame(
-            {
-                "node_ids": graph_data.node_ids,
-                "embeddings": list(embeddings.cpu().detach().numpy()),
-                "node_type_id": graph_data.node_type.numpy().tolist(),
-            }
-        )
-        .assign(
-            node_type=lambda df: df["node_type_id"].map(
-                {value: key for key, value in graph_data.metadata_type_to_id.items()}
-            )
-        )
-        .astype(
-            {
-                "node_ids": str,
-            }
-        )
+    embedding = checkpoint["embedding.weight"].detach().cpu().numpy()
+    book_embeddings = embedding[
+        model.start["book"] : model.start["book"] + graph_data["book"].num_nodes, :
+    ]
+    logger.info("Book embeddings extracted.")
+    return pd.DataFrame(
+        {
+            "node_ids": graph_data.book_ids,
+            "embeddings": list(book_embeddings),
+        }
     )

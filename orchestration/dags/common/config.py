@@ -1,11 +1,9 @@
 import os
+import re
 from enum import Enum
 
-import re
-
-from common.access_gcp_secrets import access_secret_data
-
 from airflow import configuration
+from common.access_gcp_secrets import access_secret_data
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
@@ -39,7 +37,6 @@ DEPLOYMENT_TAG = os.environ.get(
 
 GCE_BASE_PREFIX = f"{DEPLOYMENT_TAG}-{ENV_SHORT_NAME}"
 
-BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js"
 GCE_TRAINING_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
 MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
 ML_BUCKET_TEMP = os.environ.get(
@@ -55,9 +52,28 @@ APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
     "passculture-metier-ehp.europe-west1.metier-pcapi-testing-connection",
 )
 METABASE_EXTERNAL_CONNECTION_ID = os.environ.get("METABASE_EXTERNAL_CONNECTION_ID", "")
+
 DATA_GCS_BUCKET_NAME = os.environ.get(
     "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
 )
+DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME = os.environ.get(
+    "DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME", f"de-bigquery-data-archive-{ENV_SHORT_NAME}"
+)
+DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME = os.environ.get(
+    "DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME", f"de-bigquery-data-import-{ENV_SHORT_NAME}"
+)
+DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME = os.environ.get(
+    "DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME", f"de-bigquery-data-export-{ENV_SHORT_NAME}"
+)
+DS_DATA_ARCHIVE_BUCKET_NAME = os.environ.get(
+    "DS_DATA_ARCHIVE_BUCKET_NAME", f"ds-data-archive-{ENV_SHORT_NAME}"
+)
+DE_TOOLS_BUCKET_NAME = os.environ.get(
+    "DE_TOOLS_BUCKET_NAME", f"de-tools-{ENV_SHORT_NAME}"
+)
+
+BASE32_JS_LIB_PATH = f"gs://{DE_TOOLS_BUCKET_NAME}/base32-encode/base32.js"
+
 if ENV_SHORT_NAME == "prod":
     ELEMENTARY_REPORT_URL = "https://dataquality.data.passculture.team/#/"
 else:
@@ -199,6 +215,7 @@ class DAG_TAGS(Enum):
     VM = "VM"
     DBT = "DBT"
     INCREMENTAL = "INCREMENTAL"
+    POC = "POC"
 
 
 # UV Version

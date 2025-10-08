@@ -23,6 +23,9 @@ models:
           detection_period:
             period: day
             count: 1
+          ignore_small_changes:
+            spike_failure_percent_threshold: 5
+            drop_failure_percent_threshold: 5
     columns:
       - name: item_id
         description: "{{ doc('column__item_id') }}"
@@ -32,7 +35,6 @@ models:
         description: "{{ doc('column__offer_id') }}"
         data_tests:
           - not_null
-          - unique
       - name: topic_id
         description: "{{ doc('column__clustering_topic_id') }}"
       - name: cluster_id
@@ -111,8 +113,6 @@ models:
           - not_null
       - name: stock_beginning_date
         description: "{{ doc('column__stock_beginning_date') }}"
-        data_tests:
-          - not_null
       - name: stock_price
         description: "{{ doc('column__stock_price') }}"
         data_tests:

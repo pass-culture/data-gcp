@@ -44,7 +44,6 @@ ITEM_COLUMNS = [
     "gtl_l3",
     "gtl_l4",
     "is_numerical",
-    "is_national",
     "is_geolocated",
     "is_underage_recommendable",
     "is_restrained",
@@ -74,12 +73,19 @@ def download_model(artifact_uri: str) -> None:
         artifact_uri (str): GCS bucket path
     """
     command = f"gsutil -m cp -r {artifact_uri} ."
-    results = subprocess.Popen(
-        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-    )
-    # TODO handle errors
-    for line in results.stdout:
-        logger.info(line.rstrip().decode("utf-8"))
+    try:
+        result = subprocess.run(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            check=True,
+        )
+        logger.info(result.stdout)
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Command failed with return code {e.returncode}: {e.output}")
+        raise
 
 
 def save_experiment(experiment_name, model_name, serving_container, run_id):
@@ -121,12 +127,19 @@ def save_experiment(experiment_name, model_name, serving_container, run_id):
 
 def deploy_container(serving_container, workers):
     command = f"sh ./deploy_to_docker_registery.sh {serving_container} {workers}"
-    results = subprocess.Popen(
-        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-    )
-    # TODO handle errors
-    for line in results.stdout:
-        print(line.rstrip().decode("utf-8"))
+    try:
+        result = subprocess.run(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            check=True,
+        )
+        print(result.stdout)
+    except subprocess.CalledProcessError as e:
+        print(f"Command failed with return code {e.returncode}: {e.output}")
+        raise
 
 
 def get_items_metadata():
@@ -237,7 +250,6 @@ def get_table_batches(
                     pa.array([str(row.gtl_l3)], pa.utf8()),
                     pa.array([str(row.gtl_l4)], pa.utf8()),
                     pa.array([to_float(row.is_numerical)], pa.float32()),
-                    pa.array([to_float(row.is_national)], pa.float32()),
                     pa.array([to_float(row.is_geolocated)], pa.float32()),
                     pa.array([to_float(row.is_underage_recommendable)], pa.float32()),
                     pa.array([to_float(row.is_restrained)], pa.float32()),

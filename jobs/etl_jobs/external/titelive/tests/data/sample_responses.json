@@ -1,0 +1,98 @@
+{
+    "sample_titelive_response": {
+        "result": [
+            {
+                "id": "9782070360123",
+                "titre": "Le Petit Prince",
+                "auteurs_multi": [
+                    {
+                        "nom": "Saint-Exupéry",
+                        "prenom": "Antoine de",
+                        "role": "Auteur"
+                    }
+                ],
+                "editeur": "Gallimard",
+                "collection": "Folio",
+                "article": {
+                    "art_123": {
+                        "ean": "9782070360123",
+                        "prix": 6.60,
+                        "datemodification": "15/01/2024",
+                        "taux_tva": 5.5,
+                        "image": 1,
+                        "iad": 0,
+                        "typeproduit": 1,
+                        "dispo": "D",
+                        "stock": 50
+                    }
+                },
+                "genre": "Littérature générale",
+                "theme": "Roman",
+                "support": "Livre",
+                "langue": "français"
+            },
+            {
+                "id": "9782253006329",
+                "titre": "Les Misérables",
+                "auteurs_multi": [
+                    {
+                        "nom": "Hugo",
+                        "prenom": "Victor",
+                        "role": "Auteur"
+                    }
+                ],
+                "editeur": "Le Livre de Poche",
+                "collection": "Classiques",
+                "article": {
+                    "art_456": {
+                        "ean": "9782253006329",
+                        "prix": 8.90,
+                        "datemodification": "20/01/2024",
+                        "taux_tva": 5.5,
+                        "image": 1,
+                        "iad": 1,
+                        "typeproduit": 1,
+                        "dispo": "D",
+                        "stock": 25
+                    }
+                },
+                "genre": "Littérature générale",
+                "theme": "Roman historique",
+                "support": "Livre",
+                "langue": "français"
+            }
+        ]
+    },
+    "sample_music_response": {
+        "result": [
+            {
+                "id": "3596973568748",
+                "titre": "The Dark Side of the Moon",
+                "auteurs_multi": [
+                    {
+                        "nom": "Pink Floyd",
+                        "role": "Interprète"
+                    }
+                ],
+                "editeur": "Harvest Records",
+                "article": {
+                    "mus_789": {
+                        "ean": "3596973568748",
+                        "prix": 12.99,
+                        "datemodification": "10/01/2024",
+                        "taux_tva": 20.0,
+                        "image": 1,
+                        "iad": 0,
+                        "typeproduit": 2,
+                        "support": "CD",
+                        "duree": "42:59"
+                    }
+                },
+                "genre": "Rock progressif",
+                "theme": "Musique",
+                "support": "CD",
+                "annee": "1973"
+            }
+        ]
+    }
+}

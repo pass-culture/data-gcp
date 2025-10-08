@@ -26,7 +26,9 @@ unittests.cfg
 credentials/
 apps/recommendation/api/src/locustfile.py
 *.cb
+.cache_ggshield
 # venv
 data-gcp-api
 logs/dbt.log
 site
+package_versions.diff

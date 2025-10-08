@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e  # Exit immediately if a command exits with a non-zero status
+
 API_DOCKER_IMAGE=$1
 WORKERS=$2
 

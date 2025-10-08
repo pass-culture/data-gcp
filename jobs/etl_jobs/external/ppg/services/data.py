@@ -1,0 +1,279 @@
+from datetime import datetime
+from typing import Dict, List, Optional, Union
+
+import pandas as pd
+from dateutil.relativedelta import relativedelta
+from duckdb import DuckDBPyConnection
+
+from utils.duckdb_utils import aggregate_kpi_data, query_monthly_kpi, query_yearly_kpi
+from utils.verbose_logger import log_print
+
+
+class DataService:
+    """Handles KPI data retrieval and aggregation from DuckDB."""
+
+    def __init__(self, conn: DuckDBPyConnection):
+        self.conn = conn
+
+    def get_kpi_data(
+        self,
+        kpi_name: str,
+        dimension_name: str,
+        dimension_value: str,
+        ds: str,
+        scope: str,
+        table_name: str,
+        select_field: str = "kpi",
+        agg_type: str = "sum",
+    ) -> Optional[Dict[str, Dict[str, float]]]:
+        """
+        Get complete KPI data (yearly and monthly aggregations).
+
+        Args:
+            kpi_name: KPI identifier
+            dimension_name: NAT, REG, ACAD, DEP
+            dimension_value: Specific value for dimension
+            ds: Consolidation date in YYYY-MM-DD format
+            scope: individual or collective
+            table_name: DuckDB table name
+            select_field: Field to select (kpi, numerator, denominator)
+            agg_type: Aggregation type (sum, max, december, august, avg ,wavg)
+
+        Returns:
+            Dict with yearly and monthly aggregated data, None if failed
+        """
+        try:
+            # Get yearly data
+            yearly_data = self._get_yearly_kpi_data(
+                kpi_name, dimension_name, dimension_value, ds, scope, table_name
+            )
+            yearly_agg = self._aggregate_yearly_data(
+                yearly_data, agg_type, select_field, scope
+            )
+
+            # Get monthly data
+            monthly_data = self._get_monthly_kpi_data(
+                kpi_name, dimension_name, dimension_value, ds, table_name
+            )
+
+            monthly_formatted = self._format_monthly_data(monthly_data, select_field)
+
+            return {"yearly": yearly_agg, "monthly": monthly_formatted}
+
+        except Exception as e:
+            log_print.warning(f"Unexpected error retrieving KPI '{kpi_name}': {e}")
+            return None
+
+    def _get_yearly_kpi_data(
+        self,
+        kpi_name: str,
+        dimension_name: str,
+        dimension_value: str,
+        ds: str,
+        scope: str,
+        table_name: str,
+        start_year: int = 2021,
+    ) -> pd.DataFrame:
+        """Get yearly KPI data using existing duckdb_utils function."""
+        from datetime import datetime
+
+        # Determine end year from ds
+        ds_date = datetime.strptime(ds, "%Y-%m-%d")
+        end_year = ds_date.year
+
+        # For collective scope, adjust for scholar year
+        if scope == "collective" and ds_date.month < 9:
+            end_year -= 1
+
+        return query_yearly_kpi(
+            conn=self.conn,
+            ds=ds,
+            table_name=table_name,
+            kpi_name=kpi_name,
+            dimension_name=dimension_name,
+            dimension_value=dimension_value,
+            start_year=start_year,
+            end_year=end_year,
+            scope=scope,
+        )
+
+    def _get_monthly_kpi_data(
+        self,
+        kpi_name: str,
+        dimension_name: str,
+        dimension_value: str,
+        ds: str,
+        table_name: str,
+    ) -> pd.DataFrame:
+        """Get monthly KPI data using existing duckdb_utils function."""
+        return query_monthly_kpi(
+            conn=self.conn,
+            table_name=table_name,
+            kpi_name=kpi_name,
+            dimension_name=dimension_name,
+            dimension_value=dimension_value,
+            ds=ds,
+        )
+
+    def _aggregate_yearly_data(
+        self, data: pd.DataFrame, agg_type: str, select_field: str, scope: str
+    ) -> Dict[Union[int, str], float]:
+        """Aggregate yearly data using existing duckdb_utils function."""
+        return aggregate_kpi_data(
+            data=data,
+            agg_type=agg_type,
+            time_grouping="yearly",
+            select_field=select_field,
+            scope=scope,
+        )
+
+    def _aggregate_monthly_data(
+        self, data: pd.DataFrame, agg_type: str, select_field: str, scope: str
+    ) -> Dict[Union[str, pd.Timestamp], float]:
+        """Aggregate monthly data using existing duckdb_utils function."""
+        return aggregate_kpi_data(
+            data=data,
+            agg_type=agg_type,
+            time_grouping="monthly",
+            select_field=select_field,
+            scope=scope,
+        )
+
+    def _format_monthly_data(
+        self, data: pd.DataFrame, select_field: str
+    ) -> Dict[str, float]:
+        """
+        Format monthly data into dict with MM/YYYY keys (no aggregation).
+        Similar to yearly aggregation but just formatting.
+        """
+        if data.empty:
+            return {}
+
+        if select_field not in ["kpi", "numerator", "denominator"]:
+            select_field = "kpi"
+
+        data = data.copy()
+        data["partition_month"] = pd.to_datetime(
+            data["partition_month"], errors="coerce"
+        )
+        data = data.dropna(subset=["partition_month"])
+
+        # Format to MM/YYYY and return as dict (no aggregation, just direct mapping)
+        result = {}
+        for _, row in data.iterrows():
+            month_key = row["partition_month"].strftime("%m/%Y")
+            value = row[select_field]
+            if pd.notna(value):
+                result[month_key] = float(value)
+
+        return result
+
+    def get_top_rankings(
+        self,
+        dimension_name: str,
+        dimension_value: str,
+        ds: str,
+        table_name: str,
+        top_n: int = 50,
+        select_fields: List[str] = [],
+        ranking: Optional[Dict] = None,
+    ) -> Optional[pd.DataFrame]:
+        """
+        Get top N rankings for a given dimension.
+
+        Args:
+            dimension_name: NAT, REG, ACAD, DEP
+            dimension_value: Specific value for dimension
+            ds: Consolidation date in YYYY-MM-DD format
+            table_name: DuckDB table name
+            top_n: Number of top entries to retrieve
+            ranking: Dict with ranking configuration, e.g.:
+                {
+                    "partition_by": ["field_a", "field_b"],
+                    "order_by": [
+                        {"field": "field_1", "direction": "DESC"},
+                        {"field": "field_2", "direction": "ASC"},
+                    ],
+                }
+
+        Returns:
+            DataFrame with top rankings, None if failed
+        """
+        assert select_fields, "select_fields list cannot be empty"
+        assert ranking and "order_by" in ranking, "ranking.order_by cannot be empty"
+
+        partition_fields = ranking.get("partition_by", []) or []
+        assert isinstance(partition_fields, list), "partition_by must be a list"
+        order_by_items = ranking.get("order_by", [])
+        assert isinstance(order_by_items, list), "order_by must be a list"
+        assert all(
+            isinstance(item, dict) for item in order_by_items
+        ), "Each order_by item must be a dict"
+
+        assert all(
+            "field" in item for item in order_by_items
+        ), "Each order_by item must define a 'field'"
+        assert all(
+            item.get("direction", "DESC").upper() in ("ASC", "DESC")
+            for item in order_by_items
+        ), "Each order_by direction must be 'ASC' or 'DESC'"
+
+        assert all(
+            partition_field in [order_item["field"] for order_item in order_by_items]
+            for partition_field in partition_fields
+        ), "All partition_by fields must be in order_by"
+
+        # Build SQL components
+        partition_clause = (
+            f"PARTITION BY {', '.join(partition_fields)}" if partition_fields else ""
+        )
+        order_clause = (
+            ", ".join(
+                f"{item['field']} {item.get('direction', 'DESC')}"
+                for item in order_by_items
+            )
+            + ", rank ASC"
+        )
+        partition_clause_order = ", ".join(
+            f"{item['field']} {item.get('direction', 'DESC')}"
+            for item in order_by_items
+            if item["field"] not in partition_fields
+        )
+
+        full_select = select_fields + [
+            item["field"]
+            for item in order_by_items
+            if item["field"] not in select_fields
+        ]
+
+        # Compute previous month
+        ds_date = datetime.strptime(ds, "%Y-%m-%d").date()
+        previous_month = ds_date - relativedelta(months=1)
+        previous_month_str = previous_month.strftime("%Y-%m-%d")
+
+        try:
+            query = f"""
+                SELECT {', '.join(select_fields)}, rank
+                FROM (
+                    SELECT {', '.join(full_select)},
+                        ROW_NUMBER() OVER ({partition_clause} ORDER BY {partition_clause_order}) AS rank
+                    FROM {table_name}
+                    WHERE dimension_name = ? AND dimension_value = ? AND partition_month = ?
+                )
+                WHERE rank <= ?
+                ORDER BY {order_clause}
+            """
+            params = [dimension_name, dimension_value, previous_month_str, top_n]
+
+            log_print.debug(
+                f"""Executing top rankings query: {query.replace('?', '{}').format(*[f"'{p}'" if isinstance(p, str) else str(p) for p in params])}"""
+            )
+
+            result = self.conn.execute(query, params).df()
+            return result
+
+        except Exception as e:
+            log_print.warning(
+                f"Failed to retrieve top rankings for {dimension_name}={dimension_value}: {e}"
+            )
+            return None

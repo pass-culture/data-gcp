@@ -165,7 +165,10 @@ select
         )
         and u.user_is_active,
         false
-    ) as user_is_current_beneficiary
+    ) as user_is_current_beneficiary,
+    date_diff(
+        date('{{ ds() }}'), cast(user_activation_date as date), day
+    ) as user_seniority
 from {{ ref("int_applicative__user") }} as u
 left join
     {{ ref("int_applicative__action_history") }} as ah

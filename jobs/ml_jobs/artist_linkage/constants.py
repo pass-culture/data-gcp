@@ -57,7 +57,6 @@ class Action:
 
 class Comment:
     linked_to_existing_artist: ClassVar[str] = "linked to existing artist"
-    linked_to_existing_artist_raw: ClassVar[str] = "linked to existing artist (raw)"
     removed_linked: ClassVar[str] = "removed linked"
     linked_to_new_artist: ClassVar[str] = "linked to new artist"
     new_artist: ClassVar[str] = "new artist"

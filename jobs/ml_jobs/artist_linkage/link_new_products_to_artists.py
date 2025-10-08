@@ -25,6 +25,13 @@ from utils.matching import (
 )
 from utils.preprocessing_utils import filter_products
 
+ALIAS_MERGE_COLUMNS = [
+    ARTIST_ID_KEY,
+    ARTIST_NAME_KEY,
+    ARTIST_TYPE_KEY,
+    OFFER_CATEGORY_ID_KEY,
+]
+
 
 def get_products_to_remove_and_link_df(
     products_df: pd.DataFrame,
@@ -125,13 +132,9 @@ def build_artist_alias(
     )
 
     return (
-        product_with_names_df.loc[
-            :, [ARTIST_ID_KEY, ARTIST_NAME_KEY, ARTIST_TYPE_KEY, OFFER_CATEGORY_ID_KEY]
-        ]
+        product_with_names_df.loc[:, ALIAS_MERGE_COLUMNS]
         .drop_duplicates()
-        .sort_values(
-            by=[ARTIST_ID_KEY, ARTIST_NAME_KEY, ARTIST_TYPE_KEY, OFFER_CATEGORY_ID_KEY]
-        )
+        .sort_values(by=ALIAS_MERGE_COLUMNS)
     )
 
 
@@ -195,7 +198,7 @@ def sanity_checks(
     already_existing_artist_aliases = delta_artist_alias_df.merge(
         artist_alias_df,
         how="outer",
-        on=[ARTIST_ID_KEY, ARTIST_NAME_KEY, ARTIST_TYPE_KEY],
+        on=ALIAS_MERGE_COLUMNS,
         indicator=True,
     ).loc[lambda df: df._merge == "both"]
     if len(already_existing_artist_aliases) > 0:
@@ -253,16 +256,11 @@ def main(
     )
 
     # 3. Match products to link with artists on both raw and preprocessed offer names
-    raw_linked_products_df, preproc_linked_products_df, preproc_unlinked_products_df = (
+    preproc_linked_products_df, preproc_unlinked_products_df = (
         match_artist_on_offer_names(
             products_to_link_df=products_to_link_df, artist_alias_df=artist_alias_df
         )
     )
-    preproc_linked_products_df.loc[
-        lambda df: df[["offer_product_id", "artist_type", "artist_type"]].duplicated(
-            keep=False
-        )
-    ]
 
     # 4. Create new artist clusters by offer_category and artist type
     new_artist_clusters_df = (
@@ -277,6 +275,9 @@ def main(
         )
         .reset_index()
     )
+    logger.info(
+        f"Created {len(new_artist_clusters_df)} new artist clusters from {len(preproc_unlinked_products_df)} unlinked products."
+    )
 
     # 5. Match new artist clusters with existing artists on Wikidata
     exploded_artist_alias_df = match_artists_with_wikidata(
@@ -290,7 +291,6 @@ def main(
         preproc_unlinked_products_df=preproc_unlinked_products_df,
         exploded_artist_alias_df=exploded_artist_alias_df,
         products_to_remove_df=products_to_remove_df,
-        raw_linked_products_df=raw_linked_products_df,
         preproc_linked_products_df=preproc_linked_products_df,
         artist_df=artist_df,
     )

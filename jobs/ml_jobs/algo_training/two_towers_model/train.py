@@ -351,7 +351,7 @@ def train(
     )
 
     logger.info("Training Model")
-    training_steps = max((len(train_data) / EPOCH_COUNT_PER_SHUFFLE) // batch_size, 1)
+    training_steps = max((len(train_data) // EPOCH_COUNT_PER_SHUFFLE) // batch_size, 1)
     validation_steps = max(len(validation_data) // batch_size, 1)
     train_two_tower_model(
         train_dataset,

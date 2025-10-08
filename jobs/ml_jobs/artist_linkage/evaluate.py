@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import mlflow
 import pandas as pd
 import typer
+from loguru import logger
 
 from constants import (
     ARTIST_ID_KEY,
@@ -13,6 +14,7 @@ from constants import (
     PRODUCT_ID_KEY,
     WIKI_ID_KEY,
 )
+from utils.constants import ENV_SHORT_NAME
 from utils.mlflow import (
     connect_remote_mlflow,
     get_mlflow_experiment,
@@ -318,6 +320,17 @@ def main(
     linked_products_on_test_sets_df = project_linked_artists_on_test_sets(
         linked_products_df=linked_products_df, test_sets_df=test_sets_df
     )
+
+    if linked_products_on_test_sets_df.empty:
+        if ENV_SHORT_NAME == "dev":
+            logger.info(
+                "No linked products found on test sets. This is normal for dev Environment."
+            )
+        else:
+            raise ValueError(
+                "No linked products found on test sets. Is normal for dev Environment but should not happen in production."
+            )
+        return
 
     main_artist_per_dataset = get_main_artist_per_dataset(
         linked_products_on_test_sets_df

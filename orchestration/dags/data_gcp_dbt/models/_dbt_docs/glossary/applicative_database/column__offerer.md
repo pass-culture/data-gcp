@@ -4,6 +4,7 @@
 {% docs column__offerer_validation_date %} Date when the offerer was validated (validation_status = ‘VALIDATED’). {% enddocs %}
 {% docs column__offerer_postal_code %} Postal code of the offerer. {% enddocs %}
 {% docs column__offerer_department_code %} Department code of the offerer. {% enddocs %}
+{% docs column__offerer_department_name %} Department name of the offerer. {% enddocs %}
 {% docs column__offerer_academy_name %} Academy name of the offerer. {% enddocs %}
 {% docs column__offerer_siren %} SIREN number of the offerer. {% enddocs %}
 {% docs column__offerer_region_name %} Region name of the offerer. {% enddocs %}

@@ -30,10 +30,12 @@ auth:
 
 install_ubuntu_libs:
 	sudo apt-get update -y
-	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev libmariadb-dev clang
+	curl -1sLf 'https://dl.cloudsmith.io/public/gitguardian/ggshield/setup.deb.sh' | sudo -E bash
+	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev libmariadb-dev clang ggshield
+
 
 install_macos_libs:
-	brew install mysql-client@8.4 pkg-config
+	brew install mysql-client@8.4 pkg-config ggshield
 
 _get_gcp_credentials:
 ifeq (,$(wildcard ${HOME}/.config/gcloud/application_default_credentials.json))
@@ -100,7 +102,7 @@ _base_install:
 #######################################################################################
 
 create_microservice:
-	python automations/create_microservice.py --ms-name $(MS_NAME) --ms-type $(MS_TYPE)
+	uv run python automations/create_microservice.py --ms-name $(MS_NAME) --ms-type $(MS_TYPE)
 	cd $(MS_BASE_PATH)/$(MS_NAME) && uv init --no-workspace -p 3.12 && uv add -r requirements.in && uv sync
 	cd $(MS_BASE_PATH)/$(MS_NAME) && cat pyproject.toml.template >> pyproject.toml && rm requirements.in pyproject.toml.template
 	git add . && git commit -am "auto: Add $(MS_NAME) as $(MS_TYPE) microservice"

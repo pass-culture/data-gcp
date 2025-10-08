@@ -4,6 +4,7 @@ select
     artist_id,
     artist_name,
     description as artist_description,
+    wiki_id as wikidata_id,
     image_file_url as wikidata_image_file_url,
     image_page_url as wikidata_image_page_url,
     image_author as wikidata_image_author,

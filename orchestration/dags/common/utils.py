@@ -2,7 +2,8 @@ import json
 import logging
 import os
 import time
-from datetime import timedelta
+from datetime import timedelta, datetime
+
 
 import requests
 from common.access_gcp_secrets import create_key_if_not_exists
@@ -20,6 +21,7 @@ from airflow.operators.python import PythonOperator
 from airflow.sensors.external_task import ExternalTaskSensor
 from airflow.utils.db import provide_session
 from airflow.utils.types import DagRunType
+from common.dbt.dag_utils import load_manifest
 
 
 @provide_session
@@ -123,6 +125,17 @@ def waiting_operator(
     allowed_states=["success"],
     failed_states=["failed", "upstream_failed", "skipped"],
 ):
+    """
+    A simple dependency operator.
+
+    Creates an ExternalTaskSensor that pauses the current DAG
+    until a specific task in another DAG finishes (default "end"). This assumes
+    that both DAGs are scheduled in lockstep (e.g., both run daily
+    at midnight), so the sensor can directly wait for the run with
+    the same execution date.
+
+    Use this when DAG schedules are perfectly aligned.
+    """
     return ExternalTaskSensor(
         task_id=f"wait_for_{dag_id}_{external_task_id}",
         external_dag_id=dag_id,
@@ -142,62 +155,99 @@ def delayed_waiting_operator(
     external_task_id: str = "end",
     allowed_states: list = ["success"],
     failed_states: list = ["failed", "upstream_failed", "skipped"],
-    lower_date_limit=None,
+    offset_days: int = 0,
+    window_days: int = 1,
+    offset_hours: int = 0,
+    window_hours: int = 0,
     skip_manually_triggered: bool = False,
     pool: str = "default_pool",
     **kwargs,
 ):
     """
-    Creates an ExternalTaskSensor that waits for a task in another DAG to finish,
-    with two key features:
-    1. Uses execution_date_fn to dynamically determine the last execution date of the external DAG.
-    2. Skips waiting for manually triggered DAG runs.
+    Creates a cross-DAG dependency sensor with a flexible time window.
+
+    Purpose:
+        - Waits for a task in another DAG to finish.
+        - Handles DAGs with misaligned schedules or different execution intervals.
+        - Skips waiting for manual DAG runs if `skip_manually_triggered=True`.
+
+    Window logic:
+        - upper_bound = DAG2 logical_date - offset_days/hours
+        - lower_bound = upper_bound - window_days/hours
+        This ensures we wait for the latest valid run of the external DAG
+        **before** DAG2's current logical_date, optionally shifted by offsets.
+
+        ASCII example:
+            DAG2 logical_date = 2025-09-12 01:00
+            offset_days=0, window_days=1
+            -------------------------------
+            |  2025-09-11 01:00  |  upper_bound = 2025-09-12 01:00
+            |  2025-09-11 00:00  |  lower_bound = upper_bound - window
+            -------------------------------
+            External DAG runs between lower and upper bounds will be considered.
+
+    Guarantees:
+        - Only scheduled DAG runs are considered.
+        - Manual triggers are skipped if `skip_manually_triggered=True`.
+        - The sensor always waits for the latest external DAG run in the defined window.
 
     Args:
         dag: The DAG where this task will be added.
-        external_dag_id (str): The ID of the external DAG.
-        external_task_id (str): Task ID within the external DAG to wait for.
-        allowed_states (list): List of states considered as successful.
-        failed_states (list): List of states considered as failed.
-        lower_date_limit (datetime, optional): Lower bound for execution date filtering.
-        skip_manually_triggered (bool, optional): If True, skips waiting when DAG is manually triggered.
-        **kwargs: Additional arguments for the Airflow task.
-
-    Returns:
-        ExternalTaskSensor or PythonOperator: The sensor for scheduled DAG runs or a PythonOperator that skips waiting for manual DAG runs.
+        external_dag_id (str): ID of the external DAG.
+        external_task_id (str): Task ID in the external DAG to wait for.
+        allowed_states (list): States considered successful. Defaults to ["success"].
+        failed_states (list): States considered failed. Defaults to ["failed", "upstream_failed", "skipped"].
+        offset_days (int): Shift the window back in days.
+        window_days (int): Width of the window in days.
+        offset_hours (int): Shift the window back in hours.
+        window_hours (int): Width of the window in hours.
+        skip_manually_triggered (bool): Skip waiting for manual DAG runs if True.
+        pool (str): Airflow pool to use.
+        **kwargs: Additional arguments passed to the ExternalTaskSensor or PythonOperator.
     """
+    if allowed_states is None:
+        allowed_states = ["success"]
+    if failed_states is None:
+        failed_states = ["failed", "upstream_failed", "skipped"]
 
     task_id = f"wait_for_{external_dag_id}_{external_task_id}"
 
-    # Function to compute the last execution date of the external DAG
-    def compute_execution_date_fn(logical_date, **context):
+    def compute_execution_date_fn(logical_date: datetime, **context):
         """
-        Compute the execution date for the ExternalTaskSensor using Airflow's context.
+        Determine the external DAG run to wait for based on a flexible window.
+
+        - Aligns with the current DAG run (logical_date).
+        - Calculates a window using offset_days/hours and window_days/hours.
+        - Returns the most recent external DAG run within this window.
+
+        This allows robust cross-DAG dependencies even when DAG schedules
+        differ (e.g., hourly DAG waits for daily DAG).
+
+        Raises:
+            ValueError if window parameters are invalid (zero or negative).
         """
         if logical_date is None:
             raise ValueError("The 'logical_date' is missing in the context.")
-
-        data_interval_end = context.get("data_interval_end")
-        if data_interval_end is None:
-            data_interval_end = logical_date + timedelta(days=1)
-
-        # Compute lower date limit (defaults to start of the same day if None)
-        local_lower = lower_date_limit or logical_date.replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        if window_days == 0 and window_hours == 0:
+            raise ValueError("The window cannot be zero")
+        if window_days < 0 or window_hours < 0:
+            raise ValueError("The window parameters cannot be negative")
+        # Compute upper date limit for external DAG (defaults to logical_date minus offsets)
+        upper_bound = logical_date - timedelta(days=offset_days, hours=offset_hours)
+        # Compute lower date limit (defaults to window_days=1 day before DAG's logical_date)
+        lower_bound = upper_bound - timedelta(days=window_days, hours=window_hours)
 
         logging.info(
             "Looking for external DAG '%s' runs between lower=%s and upper=%s",
             external_dag_id,
-            local_lower,
-            data_interval_end,
+            lower_bound,
+            upper_bound,
         )
 
-        # Fetch last execution date of the external DAG before the current execution date
         return get_last_execution_date(
             external_dag_id,
-            upper_date_limit=data_interval_end,
-            lower_date_limit=local_lower,
+            lower_date_limit=lower_bound,
+            upper_date_limit=upper_bound,
         )
 
     # If manual triggers should be skipped, create a PythonOperator instead
@@ -205,7 +255,11 @@ def delayed_waiting_operator(
 
         def handle_manual_trigger(**context):
             """
-            Skips waiting for manually triggered DAG runs, but waits for scheduled DAGs.
+            Skip waiting for manually triggered DAG runs.
+
+            - Manual DAG runs are typically ad-hoc or test runs.
+            - Scheduled runs still enforce the cross-DAG dependency.
+            - Creates a sensor dynamically at runtime and checks external task status.
             """
             dag_run = context.get("dag_run")
             if dag_run and dag_run.run_id.startswith("manual__"):
@@ -243,10 +297,10 @@ def delayed_waiting_operator(
         external_dag_id=external_dag_id,
         external_task_id=external_task_id,
         execution_date_fn=compute_execution_date_fn,
-        check_existence=True,
-        mode="reschedule",
         allowed_states=allowed_states,
         failed_states=failed_states,
+        check_existence=True,
+        mode="reschedule",
         dag=dag,
         pool=pool,
         **kwargs,
@@ -366,7 +420,6 @@ def get_tables_config_dict(PATH, BQ_DATASET, is_source=False, dbt_alias=False):
         PATH (str): The path to the directory containing SQL files.
         BQ_DATASET (str): The BigQuery dataset where the tables will be stored or loaded from.
         is_source (bool): If True, use 'source_dataset' and 'source_table' keys instead of 'destination_dataset' and 'destination_table'.
-
     Returns:
         dict: A dictionary where each key is a table name (derived from the SQL file name) and each value is a dictionary containing:
             - 'sql': The path to the SQL file.

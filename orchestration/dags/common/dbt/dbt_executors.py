@@ -98,11 +98,14 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
         # Initialize dbt runner
         dbt = dbtRunner()
 
+        # Set dbt variables
+        dbt_vars = f"{{ENV_SHORT_NAME: {ENV_SHORT_NAME},'scheduled_date': {context.get('ds')}}}"
+
         # Build the CLI args
         cli_args = command.copy()
         cli_args.extend(["--target", target])
         cli_args.extend(["--target-path", temp_target_dir])
-        cli_args.extend(["--vars", f"{{ENV_SHORT_NAME: {ENV_SHORT_NAME}}}"])
+        cli_args.extend(["--vars", dbt_vars])
         cli_args.extend(["--project-dir", PATH_TO_DBT_PROJECT])
         cli_args.extend(["--profiles-dir", PATH_TO_DBT_PROJECT])
 
@@ -206,6 +209,9 @@ def run_dbt_model(
     """Run a specific dbt model."""
     # Check if we should skip based on schedule
     ds = context.get("ds")
+    logging.info(
+        f"context ds: {ds}, node_tags: {node_tags}, exclude_tags: {exclude_tags}"
+    )
     skip_schedule = should_skip_scheduled_node(node_tags or [], ds)
     if skip_schedule:
         logging.info(f"Skipping node scheduled {skip_schedule}")

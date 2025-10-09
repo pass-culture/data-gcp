@@ -71,7 +71,7 @@ python -m scripts.cli train-metapath2vec data/book_item_for_graph_recommendation
 
 ### Data Normalization
 
-- Empty/NaN/whitespace-only values are normalized to `None` via `_normalise_value()`
+- Empty/NaN/whitespace-only values are normalized to `None` via `_normalize_dataframe()`
 - This prevents creating nodes for meaningless metadata
 
 ## Key Data Structures

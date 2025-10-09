@@ -43,8 +43,9 @@ python -m scripts.cli build-graph data/book_item_for_graph_recommendation.parque
 python -m scripts.cli build-heterograph data/book_item_for_graph_recommendation.parquet \
   --output data/book_metadata_heterograph.pt --nrows 5000
 
-# Quick summary without saving
-python -m scripts.cli summary data/book_item_for_graph_recommendation.parquet
+# Train MetaPath2Vec model on heterogeneous graph
+python -m scripts.cli train-metapath2vec data/book_item_for_graph_recommendation.parquet \
+  --output-embeddings data/book_metadata_embeddings.parquet --num-workers 8 --nrows 5000
 ```
 
 ## Code Conventions

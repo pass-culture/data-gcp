@@ -16,7 +16,6 @@ from torch_geometric.data import HeteroData
 
 ID_COLUMN = "item_id"
 DEFAULT_METADATA_COLUMNS: Sequence[str] = (
-    "rayon",
     "gtl_label_level_1",
     "gtl_label_level_2",
     "gtl_label_level_3",

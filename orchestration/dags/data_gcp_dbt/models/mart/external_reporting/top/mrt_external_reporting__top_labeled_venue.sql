@@ -2,7 +2,7 @@
     config(
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
-            partition_by={"field": "partition_month", "data_type": "date"},
+            partition_by={"field": "partition_quarter", "data_type": "date"},
             on_schema_change="append_new_columns",
         )
     )
@@ -17,7 +17,7 @@
 with
     base_aggregation as (
         select
-            date_trunc(date(bo.booking_used_date), month) as partition_month,
+            date_trunc(date(bo.booking_used_date), quarter) as partition_quarter,
             timestamp("{{ ts() }}") as updated_at,
             bo.venue_id,
             bo.venue_name,
@@ -35,11 +35,11 @@ with
         where
             bo.booking_is_used
             {% if is_incremental() %}
-                and date_trunc(date(bo.booking_used_date), month)
-                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+                and date_trunc(date(bo.booking_used_date), quarter)
+                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 quarter), quarter)
             {% endif %}
         group by
-            partition_month,
+            partition_quarter,
             updated_at,
             bo.venue_id,
             bo.venue_name,
@@ -55,7 +55,7 @@ with
                 union all
             {% endif %}
             select
-                partition_month,
+                partition_quarter,
                 updated_at,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
@@ -66,13 +66,13 @@ with
                 sum(total_venue_booking_amount) as total_venue_booking_amount,
                 row_number() over (
                     partition by
-                        partition_month
+                        partition_quarter
                         {% if not dim.name == "NAT" %},{{ dim.value_expr }} {% endif %}
                     order by sum(total_venue_booking_amount) desc
                 ) as total_venue_booking_amount_ranked
             from base_aggregation
             group by
-                partition_month,
+                partition_quarter,
                 updated_at,
                 dimension_name,
                 dimension_value,
@@ -83,7 +83,7 @@ with
             qualify
                 row_number() over (
                     partition by
-                        partition_month
+                        partition_quarter
                         {% if not dim.name == "NAT" %},{{ dim.value_expr }} {% endif %}
                     order by total_venue_booking_amount desc
                 )
@@ -92,7 +92,7 @@ with
     )
 
 select
-    partition_month,
+    partition_quarter,
     updated_at,
     dimension_name,
     dimension_value,

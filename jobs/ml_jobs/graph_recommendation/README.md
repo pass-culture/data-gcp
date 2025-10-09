@@ -53,13 +53,21 @@ python -m scripts.cli build-heterograph \
   data/book_item_for_graph_recommendation.parquet \
   --output data/book_metadata_heterograph.pt \
   --nrows 5000  # optional sampling for quick iterations
+
+# Train MetaPath2Vec model on heterogeneous graph
+python -m scripts.cli train-metapath2vec \
+  data/book_item_for_graph_recommendation.parquet \
+  --output-embeddings data/book_metadata_embeddings.parquet \
+  --num-workers 8 \
+  --nrows 5000  # optional sampling for quick iterations
 ```
 
 * `build-graph` materialises the standard bipartite graph and serialises it
   with `torch.save`.
 * `build-heterograph` materialises the heterogeneous graph and serialises it
   with `torch.save`.
-* `summary` runs the standard graph pipeline but only prints node/edge counts.
+* `train-metapath2vec` builds a heterogeneous graph and trains a MetaPath2Vec
+  model on it, saving the resulting node embeddings as a parquet file.
 
 ### Python API
 
@@ -67,12 +75,12 @@ python -m scripts.cli build-heterograph \
 from pathlib import Path
 import torch
 
-from graph_recommendation.graph_builder import (
+from src.graph_recommendation.graph_builder import (
     build_book_metadata_graph,
     build_book_metadata_graph_from_dataframe,
     DEFAULT_METADATA_COLUMNS,
 )
-from graph_recommendation.heterograph_builder import (
+from src.graph_recommendation.heterograph_builder import (
     build_book_metadata_heterograph,
     build_book_metadata_heterograph_from_dataframe,
 )
@@ -131,7 +139,7 @@ identifiers:
 Run the test suite with:
 
 ```bash
-pytest
+make test
 ```
 
 The `tests/graph_builder_test.py` module covers the main invariants: undirected

@@ -1,3 +1,4 @@
+-- noqa: disable=all
 with
     user_visits as (
         select
@@ -35,7 +36,7 @@ with
             user_data.user_seniority,
             user_data.user_current_deposit_reform_category
 
-        from {{ ref("mrt_global__user") }} as user_data
+        from {{ ref("mrt_global__user_beneficiary") }} as user_data
         left join
             {{ ref("int_geo__user_location") }} as user_location
             on user_data.user_id = user_location.user_id

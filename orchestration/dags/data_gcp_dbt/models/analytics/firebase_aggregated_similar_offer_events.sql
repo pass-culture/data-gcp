@@ -55,7 +55,7 @@ with
             {{ ref("mrt_global__booking") }} as booking
             on convert_data.booking_id = booking.booking_id
         inner join
-            {{ ref("mrt_global__user") }} as mrt_global__user
+            {{ ref("mrt_global__user_beneficiary") }} as mrt_global__user
             on display_data.user_id = mrt_global__user.user_id
         group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
     ),

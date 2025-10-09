@@ -47,7 +47,7 @@ left join
     {{ ref("int_contentful__algolia_modules_criterion") }} as c
     on fe.module_id = c.module_id
     and fe.offer_id = c.offer_id
-left join {{ ref("mrt_global__user") }} as eud on fe.user_id = eud.user_id
+left join {{ ref("mrt_global__user_beneficiary") }} as eud on fe.user_id = eud.user_id
 where
     true
     {% if is_incremental() %}

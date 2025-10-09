@@ -148,7 +148,7 @@ def train_metapath2vec(
         lr=LEARNING_RATE,
     )
     scheduler = ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=3, verbose=True, min_lr=1e-6
+        optimizer, mode="min", factor=0.5, patience=3, min_lr=1e-6
     )
 
     # Start training
@@ -172,38 +172,6 @@ def train_metapath2vec(
 
     # Extract and save embeddings for book nodes
     logger.info("Extracting book embeddings...")
-    checkpoint = torch.load(checkpoint_path, weights_only=False)
-    embedding = checkpoint["embedding.weight"].detach().cpu().numpy()
-    book_embeddings = embedding[
-        model.start["book"] : model.start["book"] + graph_data["book"].num_nodes, :
-    ]
-    logger.info("Book embeddings extracted.")
-    return pd.DataFrame(
-        {
-            "node_ids": graph_data.book_ids,
-            "embeddings": list(book_embeddings),
-        }
-    )
-
-
-def build_embeddings_from_checkpoint(
-    graph_data: HeteroData,
-    checkpoint_path: Path,
-):
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    logger.info(f"Using device: {device}")
-
-    model = MetaPath2Vec(
-        graph_data.edge_index_dict,
-        embedding_dim=EMBEDDING_DIM,
-        metapath=METAPATH,
-        walk_length=WALK_LENGTH,
-        context_size=CONTEXT_SIZE,
-        walks_per_node=WALKS_PER_NODE,
-        num_negative_samples=NUM_NEGATIVE_SAMPLES,
-        sparse=True,
-    ).to(device)
-
     checkpoint = torch.load(checkpoint_path, weights_only=False)
     embedding = checkpoint["embedding.weight"].detach().cpu().numpy()
     book_embeddings = embedding[

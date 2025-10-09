@@ -16,6 +16,7 @@ activate:
 install:
 	make _base_install
 	make _dbt_install
+	make _add_shell_aliases
 	echo "Please setup the current venv in your IDE to make it run permanently : https://www.notion.so/passcultureapp/Comment-installer-DBT-e25f7e24813c4d48baa43d641651caf8"
 
 
@@ -25,6 +26,27 @@ auth:
 #######################################################################################
 ########                                 Utils                                 ########
 #######################################################################################
+
+_add_shell_aliases:
+	@echo "Configuring dbt-whereis shell alias..."
+	@if echo "$$SHELL" | grep -q "zsh"; then \
+	    shell_file="$$HOME/.zshrc"; \
+	elif echo "$$SHELL" | grep -q "bash"; then \
+	    shell_file="$$HOME/.bashrc"; \
+	else \
+	    echo "Unable to detect active shell. Defaulting to ~/.bashrc."; \
+	    shell_file="$$HOME/.bashrc"; \
+	fi; \
+	echo "Using shell file: $$shell_file"; \
+	touch "$$shell_file"; \
+	sed -i.bak '/^alias dbt-whereis=/d' "$$shell_file" || true; \
+	alias_line="alias dbt-whereis='bash $$(pwd)/orchestration/dags/data_gcp_dbt/scripts/dbt_whereis.sh'"; \
+	echo "$$alias_line" >> "$$shell_file"; \
+	echo "Added dbt-whereis alias to $$shell_file. Run 'source $$shell_file' or restart your terminal."
+
+
+
+
 
 
 

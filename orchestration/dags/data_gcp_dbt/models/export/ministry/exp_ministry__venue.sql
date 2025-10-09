@@ -11,4 +11,5 @@ select
     v.venue_creation_date,
     v.venue_type_code as venue_type_label
 from {{ source("raw", "applicative_database_venue") }} as v
-left join {{ ref("int_global__offerer") }} as o on v.venue_managing_offerer_id = o.offerer_id
+left join
+    {{ ref("int_global__offerer") }} as o on v.venue_managing_offerer_id = o.offerer_id

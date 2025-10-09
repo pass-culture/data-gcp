@@ -17,7 +17,9 @@
 with
     base_aggregation as (
         select
-            date_trunc(date(collective_booking_used_date), quarter) as partition_quarter,
+            date_trunc(
+                date(collective_booking_used_date), quarter
+            ) as partition_quarter,
             timestamp("{{ ts() }}") as updated_at,
             offerer_id,
             offerer_name,

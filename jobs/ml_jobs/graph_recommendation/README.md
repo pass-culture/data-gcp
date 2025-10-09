@@ -15,27 +15,51 @@ make install
 
 ## Building the book → metadata graph
 
+### Standard Bipartite Graph
+
 The entry point lives in `src/graph_recommendation/graph_builder.py`. It
 produces a bipartite `torch_geometric.data.Data` object with the following
 characteristics:
 
 * Book nodes are indexed by the `item_id` column.
 * Metadata nodes are created for each distinct value in `DEFAULT_METADATA_COLUMNS`
-  (`rayon`, `gtl_label_level_1` → `_level_4`, `artist_id`).
+  (`gtl_label_level_1` → `_level_4`, `artist_id`).
 * Empty values are skipped; every remaining `(book, metadata)` pair contributes
   a bidirectional edge.
+
+### Heterogeneous Graph
+
+The heterograph builder in `src/graph_recommendation/heterograph_builder.py` creates
+a `torch_geometric.data.HeteroData` object with typed nodes and edges:
+
+* **Node types**: `"book"` for books, plus one type per metadata column
+  (e.g., `"artist_id"`, `"gtl_label_level_1"`)
+* **Edge types**: `("book", "is_{metadata}", "{metadata}")` and
+  `("{metadata}", "{metadata}_of", "book")`
+* This structure enables heterogeneous graph neural networks and metapath-based
+  algorithms like MetaPath2Vec
 
 ### CLI
 
 ```bash
+# Build and save standard bipartite graph
 python -m scripts.cli build-graph \
   data/book_item_for_graph_recommendation.parquet \
   --output data/book_metadata_graph.pt \
   --nrows 5000  # optional sampling for quick iterations
+
+# Build and save heterogeneous graph
+python -m scripts.cli build-heterograph \
+  data/book_item_for_graph_recommendation.parquet \
+  --output data/book_metadata_heterograph.pt \
+  --nrows 5000  # optional sampling for quick iterations
 ```
 
-* `build-graph` materialises the graph and serialises it with `torch.save`.
-* `summary` runs the same pipeline but only prints node/edge counts.
+* `build-graph` materialises the standard bipartite graph and serialises it
+  with `torch.save`.
+* `build-heterograph` materialises the heterogeneous graph and serialises it
+  with `torch.save`.
+* `summary` runs the standard graph pipeline but only prints node/edge counts.
 
 ### Python API
 
@@ -48,12 +72,24 @@ from graph_recommendation.graph_builder import (
     build_book_metadata_graph_from_dataframe,
     DEFAULT_METADATA_COLUMNS,
 )
+from graph_recommendation.heterograph_builder import (
+    build_book_metadata_heterograph,
+    build_book_metadata_heterograph_from_dataframe,
+)
 
+# Standard bipartite graph
 graph_data = build_book_metadata_graph(
     Path("data/book_item_for_graph_recommendation.parquet"),
     nrows=10_000,
 )
 torch.save(graph_data, Path("data/book_metadata_graph.pt"))
+
+# Heterogeneous graph
+hetero_graph_data = build_book_metadata_heterograph(
+    Path("data/book_item_for_graph_recommendation.parquet"),
+    nrows=10_000,
+)
+torch.save(hetero_graph_data, Path("data/book_metadata_heterograph.pt"))
 
 # Or reuse a dataframe if it is already in memory
 graph_data = build_book_metadata_graph_from_dataframe(
@@ -61,18 +97,34 @@ graph_data = build_book_metadata_graph_from_dataframe(
     metadata_columns=DEFAULT_METADATA_COLUMNS,
     id_column="item_id",
 )
+
+hetero_graph_data = build_book_metadata_heterograph_from_dataframe(
+    dataframe,
+    metadata_columns=DEFAULT_METADATA_COLUMNS,
+    id_column="item_id",
+)
 ```
 
-The returned `Data` instance carries helper attributes to reconnect embeddings
-to the raw identifiers:
+### Graph Attributes
+
+Both graph types carry helper attributes to reconnect embeddings to the raw
+identifiers:
+
+**Standard bipartite graph (`Data`):**
 
 * `book_ids` / `metadata_ids` / `node_ids`
 * `book_mask` / `metadata_mask`
 * `metadata_type_to_id` and the ordered `metadata_columns`
 * `node_type` marking the type id of every node (0 for books)
+* Access `graph_data.edge_index` for the COO representation expected by PyG
+  models.
 
-Access `graph_data.edge_index` for the COO representation expected by PyG
-models.
+**Heterogeneous graph (`HeteroData`):**
+
+* `book_ids` / `metadata_ids` / `metadata_ids_by_column`
+* `metadata_columns` listing active metadata types
+* Access `graph_data[src_type, edge_type, dst_type].edge_index` for typed edges
+* Node types accessible via `graph_data.node_types` and `graph_data.edge_types`
 
 ## Development
 

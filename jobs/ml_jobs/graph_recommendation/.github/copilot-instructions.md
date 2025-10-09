@@ -2,9 +2,17 @@
 
 ## Project Overview
 
-This is a **PyTorch Geometric (PyG) graph builder** for book recommendations at pass-culture. It transforms book offer data from parquet exports into bipartite graphs connecting books to metadata (rayon, GTL levels, artists) for downstream embedding pipelines like Node2Vec.
+This is a **PyTorch Geometric (PyG) graph builder** for book recommendations at
+pass-culture. It transforms book offer data from parquet exports into graphs
+connecting books to metadata (rayon, GTL levels, artists) for downstream
+embedding pipelines like Node2Vec.
 
-**Key Architecture Decision**: The graph is bipartite by design - books connect to metadata nodes but not to other books directly. This structure enables metadata-based similarity learning.
+**Key Architecture Options**:
+
+1. **Bipartite graphs** (`graph_builder.py`) - books connect to metadata nodes
+   but not to other books directly
+2. **Heterogeneous graphs** (`heterograph_builder.py`) - typed nodes and edges
+   enabling heterogeneous GNNs and MetaPath2Vec
 
 ## Development Workflow
 
@@ -27,9 +35,13 @@ This is a **PyTorch Geometric (PyG) graph builder** for book recommendations at 
 ### CLI Usage
 
 ```bash
-# Build and save graph
+# Build and save bipartite graph
 python -m scripts.cli build-graph data/book_item_for_graph_recommendation.parquet \
   --output data/book_metadata_graph.pt --nrows 5000
+
+# Build and save heterogeneous graph
+python -m scripts.cli build-heterograph data/book_item_for_graph_recommendation.parquet \
+  --output data/book_metadata_heterograph.pt --nrows 5000
 
 # Quick summary without saving
 python -m scripts.cli summary data/book_item_for_graph_recommendation.parquet
@@ -63,7 +75,7 @@ python -m scripts.cli summary data/book_item_for_graph_recommendation.parquet
 
 ## Key Data Structures
 
-### PyG Data Object Attributes
+### Standard Bipartite Graph (PyG Data Object)
 
 The returned `torch_geometric.data.Data` instance includes custom attributes for mapping embeddings back to identifiers:
 
@@ -74,11 +86,22 @@ The returned `torch_geometric.data.Data` instance includes custom attributes for
 - `metadata_type_to_id`: Dict mapping column names to type IDs
 - `metadata_columns`: Ordered list of metadata column names used
 
+### Heterogeneous Graph (PyG HeteroData Object)
+
+The returned `torch_geometric.data.HeteroData` instance includes:
+
+- `book_ids`: Ordered list of book identifiers
+- `metadata_ids`: Flattened list of (column, value) tuples
+- `metadata_ids_by_column`: Dict mapping column names to value lists
+- `metadata_columns`: Ordered list of active metadata column names
+- `node_types` / `edge_types`: PyG properties listing all node/edge type names
+- `[src_type, edge_type, dst_type].edge_index`: Typed edge indices
+
 ### Metadata Columns
 
 Default columns from `DEFAULT_METADATA_COLUMNS`:
 
-- `rayon`, `gtl_label_level_1` through `gtl_label_level_4`, `artist_id`
+- `gtl_label_level_1` through `gtl_label_level_4`, `artist_id`
 
 Metadata nodes use composite keys: `(column_name, value)` tuples stored in `metadata_ids`.
 
@@ -111,6 +134,9 @@ Metadata nodes use composite keys: `(column_name, value)` tuples stored in `meta
 When adding features:
 
 - New metadata columns: Update `DEFAULT_METADATA_COLUMNS` and document in README
-- Alternative node types: Modify `metadata_type_to_id` logic in `build_book_metadata_graph_from_dataframe`
-- Custom edge weights: Extend the `edges` set to include weight tuples
-- Filters: Use `filters` parameter in `build_book_metadata_graph()` for parquet row filtering
+- Alternative node types: Modify `metadata_type_to_id` logic in bipartite
+  graph builder or the metadata type creation in heterograph builder
+- Custom edge weights: Extend the `edges` set to include weight tuples in
+  bipartite graphs, or add edge attributes in heterogeneous graphs
+- Filters: Use `filters` parameter in both `build_book_metadata_graph()` and
+  `build_book_metadata_heterograph()` for parquet row filtering

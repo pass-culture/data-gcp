@@ -26,23 +26,6 @@ DEFAULT_METADATA_COLUMNS: Sequence[str] = (
 MetadataKey = tuple[str, str]
 
 
-def _normalise_value(value: object) -> str | None:
-    """Normalize a single value to string or None.
-
-    Args:
-        value: The value to normalize.
-
-    Returns:
-        Normalized string value or None if empty/NaN.
-    """
-    if value is None:
-        return None
-    if isinstance(value, float) and pd.isna(value):
-        return None
-    result = str(value).strip()
-    return result or None
-
-
 def _normalize_dataframe(
     df: pd.DataFrame,
     columns: Sequence[str],

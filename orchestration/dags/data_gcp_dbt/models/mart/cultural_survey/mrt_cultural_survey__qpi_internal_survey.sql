@@ -39,29 +39,28 @@ with
             question_id,
             answer_id,
             array_agg(distinct category_id) as category_ids,
-            array_agg(distinct subcategory_id) as subcategory_ids
+            array_agg(distinct subcategory_id) as subcategory_ids,
+            '4' as qpi_version
         from with_categories
         group by user_id, submitted_at, question_id, answer_id
+    ),
+
+    historical_aggregated as (
+        select
+            user_id,
+            submitted_at,
+            mapped_question_id as question_id,
+            mapped_answer_id as answer_id,
+            array_agg(distinct category_id) as category_ids,
+            array_agg(distinct subcategory_id) as subcategory_ids,
+            'historical' as qpi_version
+        from {{ ref("int_seed__qpi_answer_historical") }}
+        where mapped_question_id is not null and mapped_answer_id is not null
+        group by user_id, submitted_at, mapped_question_id, mapped_answer_id
     )
 
-select
-    user_id,
-    submitted_at,
-    question_id,
-    answer_id,
-    category_ids,
-    subcategory_ids,
-    '4' as qpi_version
+select *
 from v4_with_category_arrays
-
 union all
-
-select
-    user_id,
-    submitted_at,
-    mapped_question_id as question_id,
-    mapped_answer_id as answer_id,
-    [category_id] as category_ids,
-    [subcategory_id] as subcategory_ids,
-    'historical' as qpi_version
-from {{ ref("int_seed__qpi_answer_historical") }}
+select *
+from historical_aggregated

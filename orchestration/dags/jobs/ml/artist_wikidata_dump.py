@@ -23,7 +23,7 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
 
 DEFAULT_REGION = "europe-west1"
-GCE_INSTANCE = f"artist-wikidata-dump-{ENV_SHORT_NAME}"
+GCE_INSTANCE = "artist-wikidata-dump"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
 SCHEDULE_CRON = "0 3 1 * *"
 DAG_NAME = "artist_wikidata_dump"

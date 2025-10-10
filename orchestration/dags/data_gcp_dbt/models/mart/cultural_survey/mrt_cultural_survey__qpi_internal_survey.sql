@@ -7,7 +7,6 @@ with
             {{ source("seed", "qpi_mapping") }} as map on ra.answer_id = map.answer_id
     ),
 
-    -- Unnest the subcategories array
     unnested_subcategories as (
         select
             user_id,
@@ -19,8 +18,7 @@ with
         cross join unnest(subcategories.list) as unnested
     ),
 
-    -- Join with subcategories table to get category_id
-    v4_with_categories as (
+    with_categories as (
         select
             us.user_id,
             us.submitted_at,
@@ -32,6 +30,18 @@ with
         inner join
             {{ source("raw", "subcategories") }} as subcat
             on us.subcategory_id = subcat.id
+    ),
+
+    v4_with_category_arrays as (
+        select
+            user_id,
+            submitted_at,
+            question_id,
+            answer_id,
+            array_agg(distinct category_id) as category_ids,
+            array_agg(distinct subcategory_id) as subcategory_ids
+        from with_categories
+        group by user_id, submitted_at, question_id, answer_id
     )
 
 select
@@ -39,10 +49,10 @@ select
     submitted_at,
     question_id,
     answer_id,
-    category_id,
-    subcategory_id,
+    category_ids,
+    subcategory_ids,
     '4' as qpi_version
-from v4_with_categories
+from v4_with_category_arrays
 
 union all
 
@@ -51,7 +61,7 @@ select
     submitted_at,
     mapped_question_id as question_id,
     mapped_answer_id as answer_id,
-    category_id,
-    subcategory_id,
+    [category_id] as category_ids,
+    [subcategory_id] as subcategory_ids,
     'historical' as qpi_version
 from {{ ref("int_seed__qpi_answer_historical") }}

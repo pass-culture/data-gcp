@@ -26,7 +26,7 @@ with
     add_representation_venue as (
         select
             o.*,
-            offerer_address_id,
+            oa.offerer_address_id,
             oa.address_latitude as offerer_address_latitude,
             oa.address_longitude as offerer_address_longitude
         from offerer_offer_info as o

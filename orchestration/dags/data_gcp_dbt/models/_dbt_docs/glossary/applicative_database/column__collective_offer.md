@@ -25,7 +25,7 @@
 {% docs column__collective_offer_template_ending_date %} Ending publication date for template offer (if null : permanent). {% enddocs %}
 {% docs column__collective_offer_rejection_reason %} For offers rejected by pass Culture team, rejection's reason (ineligble offers, missing information etc). {% enddocs %}
 {% docs column__collective_offer_location_type %} Specify where the collective offer takes place ('school' : at school, 'offerer' : at the offerer's place, 'other' : in another place specified by the offerer) - replace 'collective_offer_address_type. {% enddocs %}
-{% docs column__collective_offer_location_type %}  Address of the booking. {% enddocs %}
+{% docs column__offerer_address_type %}  Address of the booking. {% enddocs %}
 
 
 * To migrate to more specific files *

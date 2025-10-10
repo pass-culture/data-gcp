@@ -103,7 +103,8 @@ with
                 when co.collective_offer_location_type = "SCHOOL"
                 then "school"
             end as collective_offer_location_type,
-            false as collective_offer_is_template
+            false as collective_offer_is_template,
+            co.offerer_address_id
         from {{ source("raw", "applicative_database_collective_offer") }} as co
         left join
             collective_stocks_grouped_by_collective_offers as cs
@@ -181,6 +182,7 @@ union all
             when collective_offer_location_type = "SCHOOL"
             then "school"
         end as collective_offer_location_type,
-        true as collective_offer_is_template
+        true as collective_offer_is_template,
+        offerer_address_id
     from {{ source("raw", "applicative_database_collective_offer_template") }}
 )

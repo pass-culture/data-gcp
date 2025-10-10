@@ -8,8 +8,8 @@ with
             v.venue_creation_date,
             o.collective_offer_id,
             o.collective_offer_creation_date
-        from {{ ref("mrt_global__collective_offer") }} o
-        left join {{ ref("int_global__venue") }} v on v.venue_id = o.venue_id
+        from {{ ref("mrt_global__collective_offer") }} as o
+        left join {{ ref("int_global__venue") }} as v on o.venue_id = v.venue_id
         where
             collective_offer_is_template is true
             and v.venue_is_open_to_public
@@ -26,18 +26,17 @@ with
     add_representation_venue as (
         select
             o.*,
-            collective_offer_venue_humanized_id as venue_v2_id,
-            v.venue_latitude as venue_v2_latitude,
-            v.venue_longitude as venue_v2_longitude
-        from offerer_offer_info o
+            oa.offerer_address_id,
+            oa.address_latitude as offerer_address_latitude,
+            oa.address_longitude as offerer_address_longitude
+        from offerer_offer_info as o
         left join
-            {{ source("raw", "applicative_database_collective_offer_template") }} a
+            {{ source("raw", "applicative_database_collective_offer_template") }} as a
             on o.collective_offer_id = a.collective_offer_id
-            and collective_offer_venue_humanized_id is not null
-            and collective_offer_venue_humanized_id != a.venue_id
+            and a.offerer_address_id is not null
         left join
-            {{ ref("int_global__venue") }} v
-            on v.venue_id = a.collective_offer_venue_humanized_id
+            {{ ref("int_applicative__offerer_address") }} as oa
+            on a.offerer_address_id = oa.offerer_address_id
     ),
 
     -- Get institutions
@@ -47,7 +46,7 @@ with
             institution_density_label as institution_rural_level,
             institution_latitude,
             institution_longitude
-        from {{ ref("mrt_global__educational_institution") }} id
+        from {{ ref("mrt_global__educational_institution") }}
     ),
 
     -- CROSS JOIN
@@ -58,7 +57,7 @@ with
             o.offerer_id,
             o.venue_id,
             o.venue_creation_date,
-            o.venue_v2_id,
+            o.offerer_address_id,
             o.collective_offer_id,
             o.collective_offer_creation_date,
             st_distance(
@@ -66,11 +65,11 @@ with
                 st_geogpoint(institution_longitude, institution_latitude)
             ) as distance,
             st_distance(
-                st_geogpoint(venue_v2_longitude, venue_v2_latitude),
+                st_geogpoint(offerer_address_longitude, offerer_address_latitude),
                 st_geogpoint(institution_longitude, institution_latitude)
             ) as distance_v2
-        from institution_info i
-        cross join add_representation_venue o
+        from institution_info as i
+        cross join add_representation_venue as o
     )
 
 -- Filter < 300km

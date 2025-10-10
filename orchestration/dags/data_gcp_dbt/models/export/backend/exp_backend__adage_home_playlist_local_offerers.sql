@@ -7,14 +7,15 @@ with
             v.venue_latitude,
             v.venue_longitude,
             o.collective_offer_id
-        from {{ ref("mrt_global__collective_offer") }} o
-        join
-            {{ ref("int_global__venue") }}
-            v on v.venue_id = o.venue_id and v.venue_is_open_to_public is true
-        join
-            {{ source("raw", "applicative_database_collective_offer_template") }} t
-            on t.collective_offer_id = o.collective_offer_id
-            and collective_offer_venue_address_type != "school"
+        from {{ ref("mrt_global__collective_offer") }} as o
+        inner join
+            {{ ref("int_global__venue") }} as v
+            on o.venue_id = v.venue_id
+            and v.venue_is_open_to_public is true
+        inner join
+            {{ source("raw", "applicative_database_collective_offer_template") }} as t
+            on o.collective_offer_id = t.collective_offer_id
+            and t.collective_offer_location_type != "school"
         where collective_offer_is_template is true and o.collective_offer_is_active
     ),
 
@@ -40,8 +41,8 @@ with
                 st_geogpoint(venue_longitude, venue_latitude),
                 st_geogpoint(institution_longitude, institution_latitude)
             ) as distance
-        from institution_info i
-        cross join offerer_offer_info o
+        from institution_info as i
+        cross join offerer_offer_info as o
     )
 
 -- Filter < 300km

@@ -7,8 +7,8 @@ description: Description of the `exp_ministry__venue_removed` table.
 
 # Table: Venue Removed
 
-This model exports venues removed data for ministry use. It contains only removed venues not longer available for booking in pass Culture apps.
-These venues are actually "useless" venues, they did not have any active or bookable offer.
+This model exports venues removed data for ministry use. It contains only removed venues not longer available for booking in pass Culture apps. Non-permanent venues have been switched to permanent ones in August 2025.
+At the time they were deleted, these venues did not have any active or bookable offer.
 
 {% enddocs %}
 

@@ -99,8 +99,6 @@ models:
         description: "{{ doc('column__venue_density_level') }}"
       - name: venue_postal_code
         description: "{{ doc('column__venue_postal_code') }}"
-      - name: collective_offer_address_type
-        description: "{{ doc('column__collective_offer_address_type') }}"
       - name: collective_booking_creation_date
         description: "{{ doc('column__collective_booking_creation_date') }}"
       - name: collective_booking_cancellation_date

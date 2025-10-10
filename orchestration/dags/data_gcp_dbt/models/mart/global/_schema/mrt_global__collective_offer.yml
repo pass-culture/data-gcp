@@ -89,8 +89,6 @@ models:
         description: "{{ doc('column__national_program_name') }}"
       - name: template_id
         description: "{{ doc('column__template_id') }}"
-      - name: collective_offer_address_type
-        description: "{{ doc('column__collective_offer_address_type') }}"
       - name: collective_offer_contact_url
         description: "{{ doc('column__collective_offer_contact_url') }}"
       - name: collective_offer_contact_form

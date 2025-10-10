@@ -45,7 +45,6 @@ select
     co.is_local_authority,
     co.venue_type_label,
     co.venue_is_permanent,
-    co.collective_offer_address_type,
     cb.collective_booking_creation_date,
     cb.collective_booking_cancellation_date,
     cb.collective_booking_is_cancelled,

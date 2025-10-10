@@ -16,7 +16,7 @@ select
     collective_offer_students,
     collective_offer_contact_email,
     collective_offer_contact_phone,
-    CAST(NULL AS STRING) as collective_offer_offer_venue,
+    cast(null as string) as collective_offer_offer_venue,
     collective_offer_last_validation_type,
     date_add(current_date(), interval -1 day) as partition_date
 from `{{ bigquery_raw_dataset }}`.`applicative_database_collective_offer`

@@ -123,3 +123,6 @@ models:
       - name: collective_offer_location_type
         description: "{{ doc('column__collective_offer_location_type') }}"
         data_type: STRING
+      - name: offerer_address_id
+        description: "{{ doc('column__offerer_address_id') }}"
+        data_type: STRING

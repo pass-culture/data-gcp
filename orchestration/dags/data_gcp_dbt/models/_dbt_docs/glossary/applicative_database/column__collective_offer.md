@@ -13,7 +13,6 @@
 {% docs column__collective_offer_is_bookable %} Indicates if the collective offer is bookable (is visible in-app and can be booked by users). {% enddocs %}
 {% docs column__collective_offer_is_template %} Indicates if the collective offer is a template offer. {% enddocs %}
 {% docs column__collective_offer_image_id %} Image identifier for the collective offer. {% enddocs %}
-{% docs column__collective_offer_address_type %} Type of address where the collective offer takes place (at school, at the offerer's venue or elsewhere ). {% enddocs %}
 {% docs column__collective_offer_contact_url %} Contact URL for the collective offer. {% enddocs %}
 {% docs column__collective_offer_contact_form %} Contact form for the collective offer. {% enddocs %}
 {% docs column__collective_offer_contact_email %} Contact email for the collective offer's owner. {% enddocs %}

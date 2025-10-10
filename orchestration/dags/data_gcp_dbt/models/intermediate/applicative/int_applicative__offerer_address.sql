@@ -7,8 +7,8 @@ select
     a.address_postal_code,
     a.address_city,
     a.address_department_code,
-    a.latitude as address_latitude,
-    a.longitude as address_longitude
+    a.address_latitude,
+    a.address_longitude
 from {{ source("raw", "applicative_database_offerer_address") }} as oa
 left join
     {{ source("raw", "applicative_database_address") }} as a

@@ -43,7 +43,7 @@
     "PROJECTION_SPECTACLE": "PROJECTIONS",
     "PROJECTION_VISITE": "PROJECTIONS",
 } %}
--- "PROJECTION_MUSEE": "PROJECTIONS",
+
 {% set answer_mapping = {"--- IGNORE ---": "--- IGNORE ---"} %}
 
 

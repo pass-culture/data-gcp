@@ -9,8 +9,9 @@ with
             o.collective_offer_id
         from {{ ref("mrt_global__collective_offer") }} as o
         inner join
-            {{ ref("int_global__venue") }}
-            as v on o.venue_id = v.venue_id and v.venue_is_open_to_public is true
+            {{ ref("int_global__venue") }} as v
+            on o.venue_id = v.venue_id
+            and v.venue_is_open_to_public is true
         inner join
             {{ source("raw", "applicative_database_collective_offer_template") }} as t
             on o.collective_offer_id = t.collective_offer_id

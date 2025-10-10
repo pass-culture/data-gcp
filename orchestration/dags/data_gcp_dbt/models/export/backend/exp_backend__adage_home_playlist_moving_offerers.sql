@@ -3,9 +3,7 @@ with
     random_template_offer_per_venue as (
         select collective_offer_id, collective_offer_creation_date, venue_id
         from {{ source("raw", "applicative_database_collective_offer_template") }} as o
-        where
-                o.collective_offer_location_type = 'school'
-            and collective_offer_is_active
+        where o.collective_offer_location_type = 'school' and collective_offer_is_active
         qualify row_number() over (partition by venue_id order by rand()) = 1
     ),
 

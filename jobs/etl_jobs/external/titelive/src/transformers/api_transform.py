@@ -21,7 +21,10 @@ def transform_api_response(api_response: dict) -> pd.DataFrame:
 
     Args:
         api_response: Raw API response dictionary with structure:
-            {"result": {"1": {..., "article": [...]}, "2": {...}}}
+            {"result": [
+                {"id": 123, "article": {"1": {...}, "2": {...}}},
+                {"id": 456, "article": {"1": {...}}}
+            ]}
 
     Returns:
         DataFrame with columns: ean, datemodification, json_raw
@@ -34,21 +37,37 @@ def transform_api_response(api_response: dict) -> pd.DataFrame:
         raise ValueError(msg)
 
     results = api_response["result"]
-    if not isinstance(results, dict):
-        msg = "Invalid API response format: 'result' must be a dictionary"
+
+    # Handle both result formats: list or dict
+    if isinstance(results, dict):
+        # Convert dict values to list (format 2)
+        results = list(results.values())
+    elif not isinstance(results, list):
+        msg = "Invalid API response format: 'result' must be a list or dict"
         raise ValueError(msg)
 
-    # Flatten nested structure: result.{number}.article[]
+    # Flatten nested structure: result[].article.{number}
     rows = []
-    for product_key, product_data in results.items():
-        if not isinstance(product_data, dict):
+    for result_item in results:
+        if not isinstance(result_item, dict):
             continue
 
-        articles = product_data.get("article", [])
-        if not isinstance(articles, list):
+        articles_data = result_item.get("article", {})
+
+        # Handle both article formats: dict with numbered keys or list
+        if isinstance(articles_data, dict):
+            # Format 1: dict with numbered keys {"1": {...}, "2": {...}}
+            articles_list = list(articles_data.items())
+        elif isinstance(articles_data, list):
+            # Format 2: list of articles [{...}, {...}]
+            articles_list = [
+                (str(idx), article) for idx, article in enumerate(articles_data)
+            ]
+        else:
             continue
 
-        for article in articles:
+        # Iterate over articles
+        for article_key, article in articles_list:
             if not isinstance(article, dict):
                 continue
 
@@ -58,8 +77,10 @@ def transform_api_response(api_response: dict) -> pd.DataFrame:
 
             # Skip if missing required fields
             if not ean or not date_str:
+                result_id = result_item.get("id", "unknown")
                 logger.warning(
-                    f"Skipping article in product {product_key}: "
+                    "Skipping article in result item "
+                    f"{result_id} (article key {article_key}): "
                     f"missing ean or datemodification"
                 )
                 continue

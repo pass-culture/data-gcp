@@ -1,13 +1,8 @@
 """Airflow DAG for Titelive ETL Pipeline with multiple execution modes."""
 
+import datetime
 import os
-from datetime import datetime, timedelta
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import BranchPythonOperator, PythonOperator
-from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import DAG_FOLDER, DAG_TAGS, ENV_SHORT_NAME
@@ -20,14 +15,18 @@ from common.operators.gce import (
 from common.utils import get_airflow_schedule
 from jobs.crons import SCHEDULE_DICT
 
-# Basic settings
-BASE_DIR = "data-gcp/jobs/etl_jobs/external/titelive"
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import BranchPythonOperator
+
 DAG_NAME = "import_titelive"
-DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"import-titelive-{ENV_SHORT_NAME}"
+BASE_DIR = "data-gcp/jobs/etl_jobs/external/titelive"
+HTTP_TOOLS_RELATIVE_DIR = "../../"
 
 # Environment Configuration
-PROJECT_NAME = os.environ.get("PROJECT_NAME", "passculture-data-dev")
+PROJECT_NAME = os.environ.get("PROJECT_NAME", "passculture-data-ehp")
 BIGQUERY_DATASET = os.getenv("BIGQUERY_DATASET", "tmp_cdarnis_dev")
 
 # Table names (variabilized by environment)
@@ -38,18 +37,22 @@ SOURCE_TABLE_DEFAULT = (
     f"{PROJECT_NAME}.raw_{ENV_SHORT_NAME}.applicative_database_product"
 )
 
+dag_config = {
+    "PROJECT_NAME": PROJECT_NAME,
+    "ENV_SHORT_NAME": ENV_SHORT_NAME,
+}
 
-default_args = {
-    "owner": "data-team",
-    "start_date": datetime(2025, 1, 1),
-    "on_failure_callback": on_failure_vm_callback,
+
+default_dag_args = {
+    "start_date": datetime.datetime(2025, 1, 1),
     "retries": 2,
-    "retry_delay": timedelta(minutes=5),
+    "on_failure_callback": on_failure_vm_callback,
+    "retry_delay": datetime.timedelta(minutes=5),
 }
 
 with DAG(
     DAG_NAME,
-    default_args=default_args,
+    default_args=default_dag_args,
     description="Titelive ETL pipeline with multiple execution modes",
     schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME]),
     catchup=False,
@@ -89,6 +92,11 @@ with DAG(
             type=["null", "string"],
             description="Max modification date (YYYY-MM-DD) - defaults to today",
         ),
+        "results_per_page": Param(
+            default=120,
+            type="integer",
+            description="Number of results per page for pagination (run mode)",
+        ),
         # Mode 1 (init-bq) params
         "source_table": Param(
             default=None,
@@ -100,6 +108,11 @@ with DAG(
             type="integer",
             description="Batch size for EAN processing (init-bq mode)",
         ),
+        "resume": Param(
+            default=False,
+            type="boolean",
+            description="Resume from existing tracking table (init-bq mode)",
+        ),
         # Mode 2 (init-gcs) params
         "gcs_path": Param(
             default=None,
@@ -108,39 +121,22 @@ with DAG(
         ),
     },
 ) as dag:
-    # Task Group: DAG initialization
-    with TaskGroup("dag_init") as dag_init:
-        logging_task = PythonOperator(
-            task_id="logging_task",
-            python_callable=lambda: print(
-                f"Executing Titelive ETL - Mode: {dag.params.get('execution_mode')}, "
-                f"Branch: {dag.params.get('branch')}, "
-                f"Instance: {dag.params.get('instance_type')}, "
-                f"Env: {ENV_SHORT_NAME}"
-            ),
-            dag=dag,
-        )
+    gce_instance_start = StartGCEOperator(
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        instance_type="{{ params.instance_type }}",
+        preemptible=False,
+        labels={"job_type": "long_task", "dag_name": DAG_NAME},
+    )
 
-    # Task Group: VM initialization
-    with TaskGroup("vm_init") as vm_init:
-        gce_instance_start = StartGCEOperator(
-            task_id="gce_start_task",
-            instance_name=GCE_INSTANCE,
-            instance_type="{{ params.instance_type }}",
-            preemptible=False,
-            labels={"job_type": "etl_task", "dag_name": DAG_NAME},
-        )
-
-        fetch_install_code = InstallDependenciesOperator(
-            task_id="fetch_install_code",
-            instance_name=GCE_INSTANCE,
-            branch="{{ params.branch }}",
-            python_version="3.12",
-            base_dir=BASE_DIR,
-            retries=2,
-        )
-
-        gce_instance_start >> fetch_install_code
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
+        instance_name=GCE_INSTANCE,
+        branch="{{ params.branch }}",
+        python_version="3.12",
+        base_dir=BASE_DIR,
+        retries=2,
+    )
 
     # Branch decision based on execution mode
     def decide_execution_mode(**context):
@@ -163,15 +159,13 @@ with DAG(
         task_id="run_init_bq_task",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
-        command=f"""
-            export PROJECT_NAME={PROJECT_NAME}
-            export ENV_SHORT_NAME={ENV_SHORT_NAME}
-            PYTHONPATH=. python main.py init-bq \
-                --source-table {{{{ params.source_table or '{SOURCE_TABLE_DEFAULT}' }}}} \
-                --tracking-table {TRACKING_TABLE} \
-                --target-table {TARGET_TABLE} \
-                --batch-size {{{{ params.batch_size }}}}
-        """,
+        environment=dag_config,
+        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py init-bq "
+        f"--source-table {{{{ params.source_table or '{SOURCE_TABLE_DEFAULT}' }}}} "
+        f"--tracking-table {TRACKING_TABLE} "
+        f"--target-table {TARGET_TABLE} "
+        f"--batch-size {{{{ params.batch_size }}}} "
+        f"{{{{ '--resume' if params.resume else '' }}}}",
     )
 
     # Mode 2: Init GCS - Load GCS file to BigQuery and transform
@@ -179,14 +173,11 @@ with DAG(
         task_id="run_init_gcs_task",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
-        command=f"""
-            export PROJECT_NAME={PROJECT_NAME}
-            export ENV_SHORT_NAME={ENV_SHORT_NAME}
-            PYTHONPATH=. python main.py init-gcs \
-                --gcs-path {{{{ params.gcs_path }}}} \
-                --temp-table {TEMP_TABLE} \
-                --target-table {TARGET_TABLE}
-        """,
+        environment=dag_config,
+        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py init-gcs "
+        f"--gcs-path {{{{ params.gcs_path }}}} "
+        f"--temp-table {TEMP_TABLE} "
+        f"--target-table {TARGET_TABLE}",
     )
 
     # Mode 3: Run - Incremental date range search
@@ -194,15 +185,13 @@ with DAG(
         task_id="run_incremental_task",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
-        command=f"""
-            export PROJECT_NAME={PROJECT_NAME}
-            export ENV_SHORT_NAME={ENV_SHORT_NAME}
-            PYTHONPATH=. python main.py run \
-                --min-modified-date {{{{ params.min_modified_date or macros.ds_add(ds, -1) }}}} \
-                --max-modified-date {{{{ params.max_modified_date or ds }}}} \
-                --base {{{{ params.base }}}} \
-                --target-table {TARGET_TABLE}
-        """,
+        environment=dag_config,
+        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py run "
+        f"--min-modified-date {{{{ params.min_modified_date or macros.ds_add(ds, -1) }}}} "
+        f"--max-modified-date {{{{ params.max_modified_date or ds }}}} "
+        f"--base {{{{ params.base }}}} "
+        f"--target-table {TARGET_TABLE} "
+        f"--results-per-page {{{{ params.results_per_page }}}}",
     )
 
     # Completion task to merge branches
@@ -219,12 +208,8 @@ with DAG(
     )
 
     # Task dependencies
-    dag_init >> vm_init >> execution_mode_branch
-
-    # Branch paths
-    execution_mode_branch >> run_init_bq_task >> completion_task
-    execution_mode_branch >> run_init_gcs_task >> completion_task
-    execution_mode_branch >> run_incremental_task >> completion_task
-
-    # Cleanup
-    completion_task >> gce_instance_stop
+    (gce_instance_start >> fetch_install_code >> execution_mode_branch)
+    (execution_mode_branch >> run_init_bq_task >> completion_task)
+    (execution_mode_branch >> run_init_gcs_task >> completion_task)
+    (execution_mode_branch >> run_incremental_task >> completion_task)
+    (completion_task >> gce_instance_stop)

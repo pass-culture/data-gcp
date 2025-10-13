@@ -25,6 +25,8 @@ class TiteliveClient:
         token_manager: TokenManager,
         rate_limit_calls: int = 1,
         rate_limit_period: int = 1,
+        max_token_refresh_retries: int = 2,
+        max_rate_limit_retries: int = 3,
     ):
         """
         Initialize Titelive API client.
@@ -33,13 +35,19 @@ class TiteliveClient:
             token_manager: Token manager for authentication
             rate_limit_calls: Number of calls allowed per period
             rate_limit_period: Time period in seconds for rate limiting
+            max_token_refresh_retries: Maximum number of token refresh attempts
+            max_rate_limit_retries: Maximum number of rate limit retries
         """
         self.token_manager = token_manager
+        self.max_token_refresh_retries = max_token_refresh_retries
         self.rate_limiter = SyncTokenBucketRateLimiter(
             calls=rate_limit_calls,
             period=rate_limit_period,
         )
-        self.http_client = SyncHttpClient(rate_limiter=self.rate_limiter)
+        self.http_client = SyncHttpClient(
+            rate_limiter=self.rate_limiter,
+            max_retries=max_rate_limit_retries,
+        )
 
     def _get_headers(self) -> dict[str, str]:
         """
@@ -67,27 +75,56 @@ class TiteliveClient:
 
         Raises:
             requests.exceptions.RequestException: If request fails after retry
+            ValueError: If max token refresh retries exceeded
         """
         headers = self._get_headers()
 
+        # Initial request
         response = self.http_client.request(method, url, headers=headers, params=params)
 
         if response is None:
             msg = f"Request failed for {url}"
             raise requests.exceptions.RequestException(msg)
 
-        # Handle token expiration
-        if response.status_code == 401:
-            logger.warning("Token expired, refreshing and retrying")
-            self.token_manager.refresh_token()
+        # Handle token expiration with retry limit
+        retry_count = 0
+        while (
+            response.status_code == 401 and retry_count < self.max_token_refresh_retries
+        ):
+            retry_count += 1
+            logger.warning(
+                "Token expired "
+                f"attempt {retry_count}/{self.max_token_refresh_retries} "
+                "refreshing and retrying"
+            )
+
+            try:
+                self.token_manager.refresh_token()
+            except Exception as e:
+                logger.error(f"Failed to refresh token: {e}")
+                raise
+
             headers = self._get_headers()
             response = self.http_client.request(
                 method, url, headers=headers, params=params
             )
 
             if response is None:
-                msg = f"Request failed after token refresh for {url}"
+                msg = f"Request failed after token refresh \
+                    (attempt {retry_count}) for {url}"
                 raise requests.exceptions.RequestException(msg)
+
+        # Check if we exceeded retry limit
+        if response.status_code == 401:
+            msg = (
+                "Max token refresh "
+                f"retries ({self.max_token_refresh_retries}) exceeded. "
+                "Still receiving 401 Unauthorized"
+            )
+            raise ValueError(msg)
+
+        # Raise for other HTTP errors (429 should already be handled by SyncHttpClient)
+        response.raise_for_status()
 
         response.encoding = RESPONSE_ENCODING
         return response.json()

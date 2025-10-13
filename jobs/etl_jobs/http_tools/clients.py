@@ -1,6 +1,5 @@
 import logging
 from abc import ABC, abstractmethod
-from collections import deque
 from typing import Optional
 
 import requests
@@ -43,16 +42,75 @@ class SyncHttpClient(BaseHttpClient):
     Synchronous HTTP client with optional rate limiting and error handling.
     """
 
-    def request(self, method: str, url: str, **kwargs):
+    def __init__(
+        self, rate_limiter: Optional[BaseRateLimiter] = None, max_retries: int = 3
+    ):
+        """
+        Initialize synchronous HTTP client.
+
+        Args:
+            rate_limiter: Optional rate limiter instance
+            max_retries: Maximum number of retries for rate limit (429) responses
+        """
+        super().__init__(rate_limiter)
+        self.max_retries = max_retries
+
+    def request(
+        self,
+        method: str,
+        url: str,
+        skip_rate_limit: bool = False,
+        _retry_count: int = 0,
+        **kwargs,
+    ):
+        """
+        Perform HTTP request with rate limiting and retry logic.
+
+        Args:
+            method: HTTP method (GET, POST, etc.)
+            url: Request URL
+            skip_rate_limit: If True, skip rate limiter acquire (used after backoff)
+            _retry_count: Internal retry counter for rate limit retries
+            **kwargs: Additional arguments passed to requests.request
+
+        Returns:
+            Response object or None on failure
+        """
         try:
-            if self.rate_limiter:
+            # Only acquire rate limit token if not skipping (i.e., not retrying after backoff)
+            if self.rate_limiter and not skip_rate_limit:
                 self.rate_limiter.acquire()
 
             response = requests.request(method, url, **kwargs)
 
-            if response.status_code == 429 and self.rate_limiter:
-                self.rate_limiter.backoff(response)
-                return self.request(method, url, **kwargs)  # Retry
+            # Handle 429 rate limit with backoff and retry
+            if response.status_code == 429:
+                if _retry_count >= self.max_retries:
+                    logger.error(
+                        f"Max retries ({self.max_retries}) reached for 429 response"
+                    )
+                    response.raise_for_status()  # Will raise HTTPError
+                    return response
+
+                if self.rate_limiter:
+                    self.rate_limiter.backoff(response)
+                    # Retry with skip_rate_limit=True to avoid double-waiting
+                    return self.request(
+                        method,
+                        url,
+                        skip_rate_limit=True,
+                        _retry_count=_retry_count + 1,
+                        **kwargs,
+                    )
+                else:
+                    logger.error("Received 429 but no rate limiter configured")
+                    response.raise_for_status()
+                    return response
+
+            # Handle 401 (let caller handle token refresh)
+            if response.status_code == 401:
+                logger.warning("Received 401 Unauthorized")
+                return response
 
             response.raise_for_status()
             return response

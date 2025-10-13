@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -16,6 +18,9 @@ from src.graph_recommendation.embedding_builder import (
     _train,
     train_metapath2vec,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 
 def _build_sample_heterograph() -> HeteroData:
@@ -55,6 +60,57 @@ def _build_sample_heterograph() -> HeteroData:
     data.metadata_columns = ["artist_id", "gtl_label_level_1"]
 
     return data
+
+
+@contextmanager
+def _mock_training_components(
+    graph_data: HeteroData,
+) -> Generator[tuple[MagicMock, MagicMock], None, None]:
+    """Context manager to mock heavy ML training components.
+
+    Args:
+        graph_data: The heterograph data containing book nodes
+
+    Yields:
+        Tuple of (mock_metapath2vec, mock_train) for additional assertions
+    """
+    with (
+        patch(
+            "src.graph_recommendation.embedding_builder.MetaPath2Vec"
+        ) as mock_metapath2vec,
+        patch("src.graph_recommendation.embedding_builder.torch.save"),
+        patch("src.graph_recommendation.embedding_builder.torch.load") as mock_load,
+        patch("torch.optim.SparseAdam") as mock_optimizer_cls,
+        patch("src.graph_recommendation.embedding_builder.ReduceLROnPlateau"),
+        patch("src.graph_recommendation.embedding_builder._train") as mock_train,
+        patch("src.graph_recommendation.embedding_builder.logger"),
+    ):
+        # Set up minimal model mock
+        mock_model = MagicMock()
+        mock_model.to.return_value.start = {"book": 0}
+        mock_metapath2vec.return_value = mock_model
+
+        # Mock optimizer to have param_groups
+        mock_optimizer = MagicMock()
+        mock_optimizer.param_groups = [{"lr": LEARNING_RATE}]
+        mock_optimizer_cls.return_value = mock_optimizer
+
+        # Mock the embedding tensor that would be loaded from checkpoint
+        # Need to match the number of book nodes (3 in our test graph)
+        num_book_nodes = len(graph_data.book_ids)
+        # Create embeddings as a proper tensor that can be sliced
+        mock_embeddings = torch.rand(num_book_nodes, EMBEDDING_DIM)
+
+        # Mock torch.load to return checkpoint with proper structure
+        def mock_load_fn(path, weights_only=False):
+            return {"embedding.weight": mock_embeddings}
+
+        mock_load.side_effect = mock_load_fn
+
+        # Mock _train to return a loss value
+        mock_train.return_value = 0.5
+
+        yield mock_metapath2vec, mock_train
 
 
 def test_metapath_structure() -> None:
@@ -102,46 +158,11 @@ def test_train_metapath2vec_with_minimal_mocking() -> None:
     """Test train_metapath2vec with minimal mocking - just prevent actual training."""
     graph_data = _build_sample_heterograph()
 
-    # Mock only the heavy components to prevent actual ML training
     with (
-        patch(
-            "src.graph_recommendation.embedding_builder.MetaPath2Vec"
-        ) as mock_metapath2vec,
-        patch("src.graph_recommendation.embedding_builder.torch.save"),
-        patch("src.graph_recommendation.embedding_builder.torch.load") as mock_load,
-        patch("torch.optim.SparseAdam") as mock_optimizer_cls,
-        patch("src.graph_recommendation.embedding_builder.ReduceLROnPlateau"),
-        patch("src.graph_recommendation.embedding_builder._train") as mock_train,
-        patch("src.graph_recommendation.embedding_builder.logger"),
+        _mock_training_components(graph_data),
+        patch("src.graph_recommendation.embedding_builder.NUM_EPOCHS", 1),
     ):
-        # Set up minimal model mock
-        mock_model = MagicMock()
-        mock_model.to.return_value.start = {"book": 0}
-        mock_metapath2vec.return_value = mock_model
-
-        # Mock optimizer to have param_groups
-        mock_optimizer = MagicMock()
-        mock_optimizer.param_groups = [{"lr": LEARNING_RATE}]
-        mock_optimizer_cls.return_value = mock_optimizer
-
-        # Mock the embedding tensor that would be loaded from checkpoint
-        # Need to match the number of book nodes (3 in our test graph)
-        num_book_nodes = len(graph_data.book_ids)
-        # Create embeddings as a proper tensor that can be sliced
-        mock_embeddings = torch.rand(num_book_nodes, EMBEDDING_DIM)
-
-        # Mock torch.load to return checkpoint with proper structure
-        def mock_load_fn(path, weights_only=False):
-            return {"embedding.weight": mock_embeddings}
-
-        mock_load.side_effect = mock_load_fn
-
-        # Mock _train to return a loss value
-        mock_train.return_value = 0.5
-
-        # Run with minimal epochs
-        with patch("src.graph_recommendation.embedding_builder.NUM_EPOCHS", 1):
-            result = train_metapath2vec(graph_data=graph_data, num_workers=0)
+        result = train_metapath2vec(graph_data=graph_data, num_workers=0)
 
         # Verify we get a DataFrame result
         assert isinstance(result, pd.DataFrame)
@@ -156,47 +177,16 @@ def test_train_metapath2vec_parameter_acceptance() -> None:
     graph_data = _build_sample_heterograph()
 
     with (
-        patch(
-            "src.graph_recommendation.embedding_builder.MetaPath2Vec"
-        ) as mock_metapath2vec,
-        patch("src.graph_recommendation.embedding_builder.torch.save"),
-        patch("src.graph_recommendation.embedding_builder.torch.load") as mock_load,
-        patch("torch.optim.SparseAdam") as mock_optimizer_cls,
-        patch("src.graph_recommendation.embedding_builder.ReduceLROnPlateau"),
-        patch("src.graph_recommendation.embedding_builder._train") as mock_train,
-        patch("src.graph_recommendation.embedding_builder.logger"),
+        _mock_training_components(graph_data),
+        patch("src.graph_recommendation.embedding_builder.NUM_EPOCHS", 1),
     ):
-        mock_model = MagicMock()
-        mock_model.to.return_value.start = {"book": 0}
-        mock_metapath2vec.return_value = mock_model
+        # Test with checkpoint path
+        result = train_metapath2vec(
+            graph_data=graph_data,
+            checkpoint_path=Path("test.pt"),
+            num_workers=2,
+            profile=False,  # Avoid profiling division by zero in tests
+        )
 
-        # Mock optimizer to have param_groups
-        mock_optimizer = MagicMock()
-        mock_optimizer.param_groups = [{"lr": LEARNING_RATE}]
-        mock_optimizer_cls.return_value = mock_optimizer
-
-        # Need to match the number of book nodes (3 in our test graph)
-        num_book_nodes = len(graph_data.book_ids)
-        # Create embeddings as a proper tensor that can be sliced
-        mock_embeddings = torch.rand(num_book_nodes, EMBEDDING_DIM)
-
-        # Mock torch.load to return checkpoint with proper structure
-        def mock_load_fn(path, weights_only=False):
-            return {"embedding.weight": mock_embeddings}
-
-        mock_load.side_effect = mock_load_fn
-
-        # Mock _train to return a loss value
-        mock_train.return_value = 0.5
-
-        with patch("src.graph_recommendation.embedding_builder.NUM_EPOCHS", 1):
-            # Test with checkpoint path
-            result = train_metapath2vec(
-                graph_data=graph_data,
-                checkpoint_path=Path("test.pt"),
-                num_workers=2,
-                profile=False,  # Avoid profiling division by zero in tests
-            )
-
-            assert isinstance(result, pd.DataFrame)
-            assert len(result) > 0
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) > 0

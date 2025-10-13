@@ -3,12 +3,7 @@ with
     random_template_offer_per_venue as (
         select collective_offer_id, collective_offer_creation_date, venue_id
         from {{ source("raw", "applicative_database_collective_offer_template") }} as o
-        where
-            (
-                o.collective_offer_location_type = 'school'
-                or o.collective_offer_venue_address_type = 'school'
-            )
-            and collective_offer_is_active
+        where o.collective_offer_location_type = 'school' and collective_offer_is_active
         qualify row_number() over (partition by venue_id order by rand()) = 1
     ),
 
@@ -28,10 +23,7 @@ with
         inner join
             {{ source("raw", "applicative_database_collective_offer") }} as o
             on b.collective_offer_id = o.collective_offer_id
-            and (
-                o.collective_offer_location_type = 'school'
-                or o.collective_offer_venue_address_type = 'school'
-            )
+            and o.collective_offer_location_type = 'school'
         inner join random_template_offer_per_venue as v on b.venue_id = v.venue_id  -- JOIN because we only keep venues that have bookings AND template offer
         left join
             {{ ref("mrt_global__educational_institution") }} as id

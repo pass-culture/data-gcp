@@ -56,7 +56,7 @@ python -m scripts.cli train-metapath2vec data/book_item_for_graph_recommendation
 ### Import Handling
 
 - **Absolute imports only**: `ban-relative-imports = "all"` in ruff config
-- Always use `from src.graph_recommendation.graph_builder import ...`
+- Always use `from src.graph_builder import ...`
 - Never use relative imports like `from ..graph_builder import ...`
 
 ### Type Annotations

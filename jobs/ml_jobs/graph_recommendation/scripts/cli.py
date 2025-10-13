@@ -20,9 +20,7 @@ app = typer.Typer(help=APP_DESCRIPTION)
 
 PARQUET_ARGUMENT = typer.Argument(
     ...,
-    exists=True,
-    readable=True,
-    help="Input parquet file.",
+    help="Input parquet file. Can be a local path or a GCS path (gs://...).",
 )
 
 GRAPH_OUTPUT_OPTION = typer.Option(
@@ -34,10 +32,11 @@ GRAPH_OUTPUT_OPTION = typer.Option(
 )
 
 EMBEDDING_OUTPUT_OPTION = typer.Option(
-    Path("data/book_metadata_embeddings.parquet"),
+    "data/book_metadata_embeddings.parquet",
     "--output-embeddings",
     "-e",
-    help="Where to save the node embeddings as a parquet file.",
+    help="Where to save the node embeddings as a parquet file. "
+    "Can be a local path or a GCS path (gs://...).",
     dir_okay=False,
 )
 
@@ -109,8 +108,8 @@ def build_heterograph_command(
 
 @app.command("train-metapath2vec")
 def train_metapath2vec_command(
-    parquet_path: Path = PARQUET_ARGUMENT,
-    embedding_output_path: Path = EMBEDDING_OUTPUT_OPTION,
+    parquet_path: str = PARQUET_ARGUMENT,
+    embedding_output_path: str = EMBEDDING_OUTPUT_OPTION,
     num_workers: int = NUM_WORKERS_OPTION,
     nrows: int | None = NROWS_OPTION,
 ) -> None:

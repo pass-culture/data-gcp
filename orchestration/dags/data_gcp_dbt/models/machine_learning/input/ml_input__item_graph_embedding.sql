@@ -1,7 +1,6 @@
 with
     offers as (
-        select
-            offer_id, offer_product_id, item_id, offer_name, offer_subcategory_id, rayon
+        select offer_id, offer_product_id, item_id, offer_name, offer_subcategory_id
         from {{ ref("mrt_global__offer") }}
         where offer_category_id = "LIVRE"
     ),
@@ -13,7 +12,6 @@ with
             offers.item_id,
             offers.offer_name,
             offers.offer_subcategory_id,
-            offers.rayon,
             offer_metadata.gtl_type,
             offer_metadata.gtl_label_level_1,
             offer_metadata.gtl_label_level_2,
@@ -35,7 +33,7 @@ with
     artist_link_prepared as (
         select
             artist_id, artist_type, cast(offer_product_id as string) as offer_product_id
-        from {{ source("ml_preproc", "product_artist_link") }}
+        from {{ source("raw", "applicative_database_product_artist_link") }}
     )
 
 select
@@ -44,7 +42,6 @@ select
     omd.item_id,
     omd.offer_name,
     omd.offer_subcategory_id,
-    omd.rayon,
     omd.gtl_type,
     omd.gtl_label_level_1,
     omd.gtl_label_level_2,

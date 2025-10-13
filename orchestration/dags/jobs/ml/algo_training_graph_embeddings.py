@@ -13,8 +13,8 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
+    BIGQUERY_ML_GRAPH_RECOMMENDATION_DATASET,
     BIGQUERY_ML_PREPROCESSING_DATASET,
-    BIGQUERY_SANDBOX_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -57,8 +57,8 @@ BASE_DIR = "data-gcp/jobs/ml_jobs/graph_recommendation"
 EMBEDDINGS_FILENAME = "embeddings.parquet"
 
 # BQ Tables
-INPUT_TABLE_NAME = "book_item_for_graph_recommendation"
-EMBEDDING_TABLE_NAME = "graph_embeddings"
+INPUT_TABLE_NAME = "item_with_metadata_to_embed"
+EMBEDDING_TABLE_NAME = "graph_embedding"
 
 with DAG(
     DAG_NAME,
@@ -96,7 +96,7 @@ with DAG(
             "extract": {
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "datasetId": BIGQUERY_SANDBOX_DATASET,
+                    "datasetId": BIGQUERY_ML_GRAPH_RECOMMENDATION_DATASET,
                     "tableId": INPUT_TABLE_NAME,
                 },
                 "compression": None,
@@ -141,7 +141,7 @@ with DAG(
         project_id=GCP_PROJECT_ID,
         bucket=ML_BUCKET_TEMP,
         source_objects=os.path.join(GCS_FOLDER_PATH, EMBEDDINGS_FILENAME),
-        destination_project_dataset_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.{EMBEDDING_TABLE_NAME}",
+        destination_project_dataset_table=f"{BIGQUERY_ML_GRAPH_RECOMMENDATION_DATASET}.{EMBEDDING_TABLE_NAME}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,

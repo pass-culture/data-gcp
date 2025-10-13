@@ -267,14 +267,14 @@ def get_unprocessed_eans(
 
 def get_tracking_table_count(client: bigquery.Client, tracking_table: str) -> int:
     """
-    Get total count of EANs in tracking table.
+    Get count of unprocessed EANs in tracking table.
 
     Args:
         client: BigQuery client
         tracking_table: Full tracking table ID (project.dataset.table)
 
     Returns:
-        Total number of EANs in tracking table
+        Number of unprocessed EANs in tracking table
 
     Raises:
         google.cloud.exceptions.GoogleCloudError: If query fails
@@ -282,13 +282,14 @@ def get_tracking_table_count(client: bigquery.Client, tracking_table: str) -> in
     query = f"""
         SELECT COUNT(*) as total
         FROM `{tracking_table}`
+        WHERE processed = FALSE AND deleted_in_titelive = FALSE
     """
 
     query_job = client.query(query)
     result = query_job.result()
     total = next(iter(result)).total
 
-    logger.info(f"Total EANs in tracking table: {total}")
+    logger.info(f"Unprocessed EANs in tracking table: {total}")
     return total
 
 

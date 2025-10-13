@@ -47,7 +47,6 @@ dev = [
 default-groups = ["airflow", "dbt", 'dev', 'docs']
 
 
-
 ## ruff
 [tool.ruff]
 target-version = 'py312'

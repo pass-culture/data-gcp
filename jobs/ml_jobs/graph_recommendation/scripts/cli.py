@@ -7,11 +7,11 @@ from pathlib import Path
 import torch
 import typer
 
-from src.graph_recommendation.embedding_builder import train_metapath2vec
-from src.graph_recommendation.graph_builder import (
+from src.embedding_builder import train_metapath2vec
+from src.graph_builder import (
     build_book_metadata_graph,
 )
-from src.graph_recommendation.heterograph_builder import build_book_metadata_heterograph
+from src.heterograph_builder import build_book_metadata_heterograph
 
 APP_DESCRIPTION = (
     "Utilities to build PyTorch Geometric graphs for book recommendations."

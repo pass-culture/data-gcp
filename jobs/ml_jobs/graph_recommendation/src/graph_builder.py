@@ -7,49 +7,17 @@ from typing import TYPE_CHECKING
 
 import tqdm
 
+from src.constants import DEFAULT_METADATA_COLUMNS, ID_COLUMN
+from src.utils.preprocessing import normalize_dataframe
+
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
+
+    from src.constants import MetadataKey
 
 import pandas as pd
 import torch
 from torch_geometric.data import Data
-
-ID_COLUMN = "item_id"
-DEFAULT_METADATA_COLUMNS: Sequence[str] = (
-    "gtl_label_level_1",
-    "gtl_label_level_2",
-    "gtl_label_level_3",
-    "gtl_label_level_4",
-    "artist_id",
-)
-
-MetadataKey = tuple[str, str]
-
-
-def _normalize_dataframe(
-    df: pd.DataFrame,
-    columns: Sequence[str],
-) -> pd.DataFrame:
-    """Normalize specified columns in dataframe using vectorized operations.
-
-    Converts all values to strings, strips whitespace, and replaces empty/NaN
-    values with None. This is more efficient than row-by-row normalization.
-
-    Args:
-        df: The input dataframe.
-        columns: List of column names to normalize.
-
-    Returns:
-        A new dataframe with normalized columns.
-    """
-    df = df.copy()
-    for col in columns:
-        if col in df.columns:
-            # Convert to string and strip whitespace
-            df[col] = df[col].astype(str).str.strip()
-            # Replace empty/missing value representations with None
-            df[col] = df[col].replace(["", "nan", "None", "<NA>"], None)
-    return df
 
 
 def _build_metadata_index(
@@ -133,7 +101,7 @@ def build_book_metadata_graph_from_dataframe(
 
     # Step 1: Normalize all relevant columns using vectorized operations
     all_columns = [id_column, *metadata_columns]
-    df_normalized = _normalize_dataframe(dataframe, all_columns)
+    df_normalized = normalize_dataframe(dataframe, all_columns)
 
     # Step 2: Prepare book nodes (indexed 0 to num_books - 1)
     unique_books = df_normalized[id_column].dropna().drop_duplicates()

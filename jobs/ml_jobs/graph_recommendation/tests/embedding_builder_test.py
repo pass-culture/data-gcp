@@ -11,7 +11,7 @@ import pandas as pd
 import torch
 from torch_geometric.data import HeteroData
 
-from src.graph_recommendation.embedding_builder import (
+from src.embedding_builder import (
     EMBEDDING_DIM,
     LEARNING_RATE,
     METAPATH,
@@ -75,15 +75,13 @@ def _mock_training_components(
         Tuple of (mock_metapath2vec, mock_train) for additional assertions
     """
     with (
-        patch(
-            "src.graph_recommendation.embedding_builder.MetaPath2Vec"
-        ) as mock_metapath2vec,
-        patch("src.graph_recommendation.embedding_builder.torch.save"),
-        patch("src.graph_recommendation.embedding_builder.torch.load") as mock_load,
+        patch("src.embedding_builder.MetaPath2Vec") as mock_metapath2vec,
+        patch("src.embedding_builder.torch.save"),
+        patch("src.embedding_builder.torch.load") as mock_load,
         patch("torch.optim.SparseAdam") as mock_optimizer_cls,
-        patch("src.graph_recommendation.embedding_builder.ReduceLROnPlateau"),
-        patch("src.graph_recommendation.embedding_builder._train") as mock_train,
-        patch("src.graph_recommendation.embedding_builder.logger"),
+        patch("src.embedding_builder.ReduceLROnPlateau"),
+        patch("src.embedding_builder._train") as mock_train,
+        patch("src.embedding_builder.logger"),
     ):
         # Set up minimal model mock
         mock_model = MagicMock()
@@ -160,7 +158,7 @@ def test_train_metapath2vec_with_minimal_mocking() -> None:
 
     with (
         _mock_training_components(graph_data),
-        patch("src.graph_recommendation.embedding_builder.NUM_EPOCHS", 1),
+        patch("src.embedding_builder.NUM_EPOCHS", 1),
     ):
         result = train_metapath2vec(graph_data=graph_data, num_workers=0)
 
@@ -178,7 +176,7 @@ def test_train_metapath2vec_parameter_acceptance() -> None:
 
     with (
         _mock_training_components(graph_data),
-        patch("src.graph_recommendation.embedding_builder.NUM_EPOCHS", 1),
+        patch("src.embedding_builder.NUM_EPOCHS", 1),
     ):
         # Test with checkpoint path
         result = train_metapath2vec(

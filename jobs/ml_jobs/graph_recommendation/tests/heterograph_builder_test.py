@@ -5,11 +5,11 @@ import pytest
 import torch
 from torch_geometric.data import HeteroData
 
-from src.graph_recommendation.heterograph_builder import (
+from src.heterograph_builder import (
     DEFAULT_METADATA_COLUMNS,
-    _normalize_dataframe,
     build_book_metadata_heterograph_from_dataframe,
 )
+from src.utils.preprocessing import normalize_dataframe
 
 
 def _build_sample_dataframe() -> pd.DataFrame:
@@ -243,7 +243,7 @@ def test_heterograph_handles_duplicate_books() -> None:
 
 
 def test_normalize_dataframe_function() -> None:
-    """Test the _normalize_dataframe helper function."""
+    """Test the normalize_dataframe helper function."""
     df = pd.DataFrame(
         {
             "item_id": ["book-1", "book-2"],
@@ -253,7 +253,7 @@ def test_normalize_dataframe_function() -> None:
         }
     )
 
-    normalized_df = _normalize_dataframe(df, ["item_id", "metadata_col", "other_col"])
+    normalized_df = normalize_dataframe(df, ["item_id", "metadata_col", "other_col"])
 
     # Check that specified columns are normalized
     assert normalized_df["metadata_col"].tolist() == ["value1", None]

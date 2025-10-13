@@ -89,16 +89,16 @@ python -m scripts.cli train-metapath2vec \
 from pathlib import Path
 import torch
 
-from src.graph_recommendation.graph_builder import (
+from src.graph_builder import (
     build_book_metadata_graph,
     build_book_metadata_graph_from_dataframe,
     DEFAULT_METADATA_COLUMNS,
 )
-from src.graph_recommendation.heterograph_builder import (
+from src.heterograph_builder import (
     build_book_metadata_heterograph,
     build_book_metadata_heterograph_from_dataframe,
 )
-from src.graph_recommendation.embedding_builder import train_metapath2vec
+from src.embedding_builder import train_metapath2vec
 
 # Standard bipartite graph
 graph_data = build_book_metadata_graph(

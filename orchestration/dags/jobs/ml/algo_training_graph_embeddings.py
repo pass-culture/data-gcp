@@ -69,6 +69,7 @@ with DAG(
     dagrun_timeout=timedelta(minutes=1200),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
+    render_template_as_native_obj=True,
     tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
     params={
         "branch": Param(
@@ -111,6 +112,8 @@ with DAG(
         preemptible=False,
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
+        gpu_type="{{ params.gpu_type }}",
+        gpu_count="{{ params.gpu_count }}",
         labels={"job_type": "long_ml", "dag_name": DAG_NAME},
     )
 

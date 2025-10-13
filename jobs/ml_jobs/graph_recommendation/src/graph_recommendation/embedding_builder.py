@@ -172,7 +172,7 @@ def train_metapath2vec(
 
     # Extract and save embeddings for book nodes
     logger.info("Extracting book embeddings...")
-    checkpoint = torch.load(checkpoint_path, weights_only=False)
+    checkpoint = torch.load(checkpoint_path, weights_only=True)
     embedding = checkpoint["embedding.weight"].detach().cpu().numpy()
     book_embeddings = embedding[
         model.start["book"] : model.start["book"] + graph_data["book"].num_nodes, :

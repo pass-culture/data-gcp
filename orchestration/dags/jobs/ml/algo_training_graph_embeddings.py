@@ -34,13 +34,12 @@ from jobs.crons import SCHEDULE_DICT
 # Airflow DAG definition
 DATE = "{{ ts_nodash }}"
 DAG_NAME = "algo_training_graph_embeddings"
-default_args = {
+DEFAULT_ARGS = {
     "start_date": datetime(2023, 5, 9),
     "on_failure_callback": on_failure_vm_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
-schedule_dict = {"prod": "0 12 * * 5", "dev": None, "stg": "0 12 * * 3"}
 
 # GCE
 INSTANCE_NAME = f"algo-training-graph-embeddings-{ENV_SHORT_NAME}"
@@ -62,9 +61,11 @@ EMBEDDING_TABLE_NAME = "graph_embedding"
 
 with DAG(
     DAG_NAME,
-    default_args=default_args,
+    default_args=DEFAULT_ARGS,
     description="Training job for building embeddings based on the metadatas graph",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT.get(DAG_NAME, None)),
+    schedule_interval=get_airflow_schedule(
+        SCHEDULE_DICT.get(DAG_NAME).get(ENV_SHORT_NAME)
+    ),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1200),
     user_defined_macros=macros.default,

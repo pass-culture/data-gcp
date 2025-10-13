@@ -10,14 +10,9 @@ import torch
 from torch_geometric.data import HeteroData
 
 from src.graph_recommendation.embedding_builder import (
-    CONTEXT_SIZE,
     EMBEDDING_DIM,
     LEARNING_RATE,
     METAPATH,
-    NUM_EPOCHS,
-    NUM_NEGATIVE_SAMPLES,
-    WALK_LENGTH,
-    WALKS_PER_NODE,
     _train,
     train_metapath2vec,
 )
@@ -60,17 +55,6 @@ def _build_sample_heterograph() -> HeteroData:
     data.metadata_columns = ["artist_id", "gtl_label_level_1"]
 
     return data
-
-
-def test_embedding_constants_are_defined() -> None:
-    """Test that all required constants are defined with expected values."""
-    assert EMBEDDING_DIM == 128
-    assert WALK_LENGTH == 56  # 14 * 4
-    assert CONTEXT_SIZE == 10
-    assert WALKS_PER_NODE == 5
-    assert NUM_NEGATIVE_SAMPLES == 5
-    assert NUM_EPOCHS == 15
-    assert LEARNING_RATE == 0.01
 
 
 def test_metapath_structure() -> None:

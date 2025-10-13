@@ -19,6 +19,7 @@ from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+    INSTANCES_TYPES,
     ML_BUCKET_TEMP,
 )
 from common.operators.gce import (
@@ -45,8 +46,8 @@ schedule_dict = {"prod": "0 12 * * 5", "dev": None, "stg": "0 12 * * 3"}
 INSTANCE_NAME = f"algo-training-graph-embeddings-{ENV_SHORT_NAME}"
 INSTANCE_TYPE = {
     "dev": "n1-standard-2",
-    "stg": "n1-highmem-16",
-    "prod": "n1-highmem-16",
+    "stg": "n1-standard-16",
+    "prod": "n1-standard-16",
 }[ENV_SHORT_NAME]
 
 # Path and filenames
@@ -74,8 +75,14 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "instance_type": Param(default=INSTANCE_TYPE, type="string"),
+        "instance_type": Param(
+            default=INSTANCE_TYPE, enum=INSTANCES_TYPES["cpu"]["standard"]
+        ),
         "instance_name": Param(default=INSTANCE_NAME, type="string"),
+        "gpu_type": Param(
+            default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
+        ),
+        "gpu_count": Param(default=1, enum=INSTANCES_TYPES["gpu"]["count"]),
         "run_name": Param(default="default", type=["string", "null"]),
     },
 ) as dag:
@@ -111,7 +118,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
-        python_version="3.10",
+        python_version="3.13",
         base_dir=BASE_DIR,
         retries=2,
     )
@@ -120,8 +127,8 @@ with DAG(
         task_id="train",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
-        command="PYTHONPATH=. -m scripts.cli train-metapath2vec "
-        f"{STORAGE_BASE_PATH}/raw_input/data-*.parquet "
+        command="PYTHONPATH=. python -m scripts.cli train-metapath2vec "
+        f"{STORAGE_BASE_PATH}/raw_input "
         f"--output-embeddings {STORAGE_BASE_PATH}/{EMBEDDINGS_FILENAME}",
         dag=dag,
     )
@@ -147,5 +154,6 @@ with DAG(
         >> gce_instance_start
         >> fetch_install_code
         >> train
+        >> upload_embeddings_to_bigquery
         >> gce_instance_stop
     )

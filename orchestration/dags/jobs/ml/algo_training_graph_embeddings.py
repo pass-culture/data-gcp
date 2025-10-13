@@ -4,31 +4,22 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
-from airflow.utils.task_group import TaskGroup
 from common import macros
-from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
-from common.alerts.ml_training import create_algo_training_slack_block
 from common.callback import on_failure_vm_callback
 from common.config import (
-    BIGQUERY_ML_COMPLIANCE_DATASET,
     BIGQUERY_ML_PREPROCESSING_DATASET,
-    BIGQUERY_ML_RECOMMENDATION_DATASET,
     BIGQUERY_SANDBOX_DATASET,
-    BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    INSTANCES_TYPES,
     ML_BUCKET_TEMP,
-    MLFLOW_URL,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -36,10 +27,8 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from common.operators.slack import SendSlackMessageOperator
 from common.utils import get_airflow_schedule
 from jobs.crons import SCHEDULE_DICT
-from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 # Airflow DAG definition
 DATE = "{{ ts_nodash }}"

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import tqdm
@@ -168,22 +167,18 @@ def build_book_metadata_heterograph_from_dataframe(
 
 
 def build_book_metadata_heterograph(
-    parquet_path: Path | str,
+    parquet_path: str,
     *,
     nrows: int | None = None,
     filters: Sequence[tuple[str, str, Iterable[object]]] | None = None,
 ) -> HeteroData:
     """Load a parquet file and build the corresponding book-metadata graph."""
 
-    path = Path(parquet_path)
-    if not path.exists():
-        raise FileNotFoundError(f"Parquet file not found: {path}")
-
     read_kwargs: dict[str, object] = {}
     if filters is not None:
         read_kwargs["filters"] = list(filters)
 
-    df = pd.read_parquet(path, **read_kwargs)
+    df = pd.read_parquet(parquet_path, **read_kwargs)
     if nrows is not None:
         df = df.sample(nrows, random_state=42)
 

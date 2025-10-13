@@ -1,8 +1,7 @@
 # Graph Recommendation
 
 Utilities to turn parquet exports of book offers into a PyTorch Geometric graph
-that can be consumed by embedding pipelines (for example
-[`torch_geometric.nn.models.Node2Vec`](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.models.Node2Vec.html)).
+that can be consumed by embedding pipelines such as Node2Vec and MetaPath2Vec.
 
 ## Installation
 
@@ -39,6 +38,20 @@ a `torch_geometric.data.HeteroData` object with typed nodes and edges:
 * This structure enables heterogeneous graph neural networks and metapath-based
   algorithms like MetaPath2Vec
 
+## Training Embeddings
+
+### MetaPath2Vec
+
+The `embedding_builder.py` module provides training functionality for MetaPath2Vec
+models on heterogeneous graphs. The training pipeline:
+
+* Uses a predefined metapath that traverses book-artist and book-GTL relationships
+* Generates random walks following the metapath structure
+* Trains embeddings using skip-gram with negative sampling
+* Supports GPU acceleration when available
+* Implements learning rate scheduling and early stopping
+* Saves checkpoints and extracts book embeddings
+
 ### CLI
 
 ```bash
@@ -66,8 +79,9 @@ python -m scripts.cli train-metapath2vec \
   with `torch.save`.
 * `build-heterograph` materialises the heterogeneous graph and serialises it
   with `torch.save`.
-* `train-metapath2vec` builds a heterogeneous graph and trains a MetaPath2Vec
-  model on it, saving the resulting node embeddings as a parquet file.
+* `train-metapath2vec` builds a heterogeneous graph, trains a MetaPath2Vec
+  model, and saves the resulting book embeddings as a parquet file with columns
+  `node_ids` (book identifiers) and `embeddings` (embedding vectors).
 
 ### Python API
 
@@ -84,6 +98,7 @@ from src.graph_recommendation.heterograph_builder import (
     build_book_metadata_heterograph,
     build_book_metadata_heterograph_from_dataframe,
 )
+from src.graph_recommendation.embedding_builder import train_metapath2vec
 
 # Standard bipartite graph
 graph_data = build_book_metadata_graph(
@@ -98,6 +113,13 @@ hetero_graph_data = build_book_metadata_heterograph(
     nrows=10_000,
 )
 torch.save(hetero_graph_data, Path("data/book_metadata_heterograph.pt"))
+
+# Train MetaPath2Vec embeddings
+embeddings_df = train_metapath2vec(
+    graph_data=hetero_graph_data,
+    num_workers=8,
+)
+embeddings_df.to_parquet("data/book_embeddings.parquet", index=False)
 
 # Or reuse a dataframe if it is already in memory
 graph_data = build_book_metadata_graph_from_dataframe(
@@ -142,8 +164,15 @@ Run the test suite with:
 make test
 ```
 
-The `tests/graph_builder_test.py` module covers the main invariants: undirected
-edges, node masks, and the behaviour when no metadata values are present.
+The test suite includes:
+
+* `tests/graph_builder_test.py` - Tests for standard bipartite graph construction
+  covering undirected edges, node masks, and error handling when no metadata
+  values are present
+* `tests/heterograph_builder_test.py` - Tests for heterogeneous graph construction
+  validating node/edge types and metadata mappings
+* `tests/embedding_builder_test.py` - Tests for MetaPath2Vec training pipeline
+  including model initialization, training loop, and embedding extraction
 
 ## Resources
 

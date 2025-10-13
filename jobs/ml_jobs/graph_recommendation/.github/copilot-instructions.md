@@ -13,6 +13,8 @@ embedding pipelines like Node2Vec.
    but not to other books directly
 2. **Heterogeneous graphs** (`heterograph_builder.py`) - typed nodes and edges
    enabling heterogeneous GNNs and MetaPath2Vec
+3. **Embedding training** (`embedding_builder.py`) - MetaPath2Vec model training
+   on heterogeneous graphs with GPU support and checkpointing
 
 ## Development Workflow
 
@@ -27,10 +29,11 @@ embedding pipelines like Node2Vec.
 
 - Tests live in `tests/` with the pattern `*_test.py`
 - Pytest is configured via `.vscode/settings.json`
-- Key test invariants in `tests/graph_builder_test.py`:
-  - Undirected edges (bidirectional symmetry)
-  - Node masks (`book_mask` / `metadata_mask`)
-  - Error handling when no metadata values present
+- Key test coverage:
+  - `graph_builder_test.py`: Undirected edges, node masks, error handling
+  - `heterograph_builder_test.py`: Node/edge types, metadata mappings
+  - `embedding_builder_test.py`: MetaPath2Vec training, model initialization,
+    embedding extraction
 
 ### CLI Usage
 
@@ -104,7 +107,36 @@ Default columns from `DEFAULT_METADATA_COLUMNS`:
 
 - `gtl_label_level_1` through `gtl_label_level_4`, `artist_id`
 
-Metadata nodes use composite keys: `(column_name, value)` tuples stored in `metadata_ids`.
+Metadata nodes use composite keys: `(column_name, value)` tuples stored in
+`metadata_ids`.
+
+## Embedding Training
+
+### MetaPath2Vec Configuration
+
+The `embedding_builder.py` module trains MetaPath2Vec models with:
+
+- **Embedding dimension**: 128
+- **Walk length**: 56 (14 × 4 metapath repetitions)
+- **Context size**: 10
+- **Walks per node**: 5
+- **Negative samples**: 5
+- **Epochs**: 15
+- **Batch size**: 256
+- **Learning rate**: 0.01 with ReduceLROnPlateau scheduler
+
+The metapath prioritizes artist and GTL level 4 relationships (4× weight),
+decreasing through GTL levels 3 (3×), 2 (2×), and 1 (1×).
+
+### Training Pipeline
+
+1. Builds heterogeneous graph from parquet data
+2. Initializes MetaPath2Vec model on GPU if available
+3. Generates random walks following the predefined metapath
+4. Trains using skip-gram with negative sampling
+5. Implements learning rate scheduling and checkpointing
+6. Extracts book embeddings and returns as DataFrame with `node_ids` and
+   `embeddings` columns
 
 ## Data Pipeline Context
 
@@ -141,3 +173,7 @@ When adding features:
   bipartite graphs, or add edge attributes in heterogeneous graphs
 - Filters: Use `filters` parameter in both `build_book_metadata_graph()` and
   `build_book_metadata_heterograph()` for parquet row filtering
+- Metapath customization: Modify the `METAPATH` constant in `embedding_builder.py`
+  to adjust relationship weights or add new edge types
+- Training hyperparameters: Update constants at the top of `embedding_builder.py`
+  for embedding dimension, walk length, learning rate, etc.

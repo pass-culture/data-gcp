@@ -86,8 +86,9 @@ with DAG(
         ),
         "gpu_count": Param(default=1, enum=INSTANCES_TYPES["gpu"]["count"]),
         "run_name": Param(default="default", type=["string", "null"]),
+        "train_only_on_10k_rows": Param(default=True, type="boolean"),
     },
-):
+) as _dag:
     start = DummyOperator(task_id="start")
 
     import_offer_as_parquet = BigQueryInsertJobOperator(
@@ -132,7 +133,8 @@ with DAG(
         base_dir=BASE_DIR,
         command="PYTHONPATH=. python -m scripts.cli train-metapath2vec "
         f"{STORAGE_BASE_PATH}/raw_input "
-        f"--output-embeddings {STORAGE_BASE_PATH}/{EMBEDDINGS_FILENAME}",
+        f"--output-embeddings {STORAGE_BASE_PATH}/{EMBEDDINGS_FILENAME} "
+        "{% if params['train_only_on_10k_rows'] %} --nrows 10000 {% endif %}",
         deferrable=True,
     )
 

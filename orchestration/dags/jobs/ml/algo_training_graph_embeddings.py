@@ -87,8 +87,8 @@ with DAG(
         "gpu_count": Param(default=1, enum=INSTANCES_TYPES["gpu"]["count"]),
         "run_name": Param(default="default", type=["string", "null"]),
     },
-) as dag:
-    start = DummyOperator(task_id="start", dag=dag)
+):
+    start = DummyOperator(task_id="start")
 
     import_offer_as_parquet = BigQueryInsertJobOperator(
         project_id=GCP_PROJECT_ID,
@@ -105,7 +105,6 @@ with DAG(
                 "destinationFormat": "PARQUET",
             }
         },
-        dag=dag,
     )
 
     gce_instance_start = StartGCEOperator(
@@ -134,7 +133,7 @@ with DAG(
         command="PYTHONPATH=. python -m scripts.cli train-metapath2vec "
         f"{STORAGE_BASE_PATH}/raw_input "
         f"--output-embeddings {STORAGE_BASE_PATH}/{EMBEDDINGS_FILENAME}",
-        dag=dag,
+        deferrable=True,
     )
 
     upload_embeddings_to_bigquery = GCSToBigQueryOperator(

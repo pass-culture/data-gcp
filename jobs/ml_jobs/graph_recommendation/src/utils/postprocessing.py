@@ -8,6 +8,8 @@ from torch_geometric.data import Data, HeteroData
 from torch_geometric.utils import to_networkx, to_undirected
 
 from src.utils.graph_indexing import (
+    compute_old_to_new_index_mapping,
+    remap_edge_indices,
     update_graph_identifiers_after_filtering,
 )
 
@@ -165,42 +167,51 @@ def _filter_graph_by_nodes(
 ) -> HeteroData:
     """Return a filtered copy of the graph keeping only given global node IDs.
 
-    This properly remaps node indices in edges to account for the new contiguous numbering.
+    This function:
+    1. Filters nodes to keep only those in keep_nodes
+    2. Renumbers nodes to be contiguous (0, 1, 2, ...)
+    3. Filters edges to keep only those connecting kept nodes
+    4. Remaps edge indices to use the new node numbering
+    5. Updates custom attributes (book_ids, metadata mappings, etc.)
     """
     filtered = HeteroData()
 
-    # Track the mapping from old local indices to new local indices for each node type
-    old_to_new_local_idx: dict[str, dict[int, int]] = {}
+    # Track old->new index mappings for each node type
+    old_to_new_mappings: dict[str, dict[int, int]] = {}
 
-    # Filter nodes
+    # Step 1: Filter nodes and build index remapping
     for node_type in graph.node_types:
         offset = node_type_offsets[node_type]
         n_nodes = graph[node_type].num_nodes
-        local_idx = torch.arange(offset, offset + n_nodes)
-        keep_mask = torch.tensor([idx.item() in keep_nodes for idx in local_idx])
-        keep_indices = torch.nonzero(keep_mask, as_tuple=True)[0]
 
-        # Build mapping from old local index -> new local index
-        old_to_new_local_idx[node_type] = {
-            old_idx.item(): new_idx for new_idx, old_idx in enumerate(keep_indices)
-        }
+        # Find which local indices to keep
+        keep_local_indices = [i for i in range(n_nodes) if (offset + i) in keep_nodes]
 
+        # Build old->new index mapping using utility
+        old_to_new_mappings[node_type] = compute_old_to_new_index_mapping(
+            n_original=n_nodes,
+            keep_indices=keep_local_indices,
+        )
+
+        # Filter node features
+        keep_mask = torch.tensor(keep_local_indices, dtype=torch.long)
         for key, value in graph[node_type].items():
             if torch.is_tensor(value) and value.size(0) == n_nodes:
-                filtered[node_type][key] = value[keep_indices]
-        filtered[node_type].num_nodes = len(keep_indices)
+                filtered[node_type][key] = value[keep_mask]
+        filtered[node_type].num_nodes = len(keep_local_indices)
 
-    # Filter edges and remap indices
+    # Step 2: Filter and remap edges
     for edge_type in graph.edge_types:
-        src, rel, dst = edge_type
+        src_type, rel, dst_type = edge_type
         edge_index = graph[edge_type].edge_index
-        src_offset = node_type_offsets[src]
-        dst_offset = node_type_offsets[dst]
+        src_offset = node_type_offsets[src_type]
+        dst_offset = node_type_offsets[dst_type]
 
+        # Convert to global indices to check if edges should be kept
         global_src = edge_index[0] + src_offset
         global_dst = edge_index[1] + dst_offset
 
-        # Find edges where both endpoints are kept
+        # Keep only edges where both endpoints are in keep_nodes
         keep_edge_mask = torch.tensor(
             [
                 int(s.item()) in keep_nodes and int(d.item()) in keep_nodes
@@ -208,27 +219,20 @@ def _filter_graph_by_nodes(
             ]
         )
 
-        # Get the kept edges with old indices
-        kept_edges = edge_index[:, keep_edge_mask]
+        if keep_edge_mask.any():
+            # Get edges with old local indices
+            kept_edges = edge_index[:, keep_edge_mask]
 
-        # Remap to new local indices
-        old_src_local = kept_edges[0]
-        old_dst_local = kept_edges[1]
+            # Remap to new local indices using utility
+            remapped_edges = remap_edge_indices(
+                edge_index=kept_edges,
+                src_mapping=old_to_new_mappings[src_type],
+                dst_mapping=old_to_new_mappings[dst_type],
+            )
 
-        src_mapping = old_to_new_local_idx[src]
-        dst_mapping = old_to_new_local_idx[dst]
+            filtered[edge_type].edge_index = remapped_edges
 
-        new_src_local = torch.tensor(
-            [src_mapping[idx.item()] for idx in old_src_local], dtype=torch.long
-        )
-        new_dst_local = torch.tensor(
-            [dst_mapping[idx.item()] for idx in old_dst_local], dtype=torch.long
-        )
-
-        remapped_edges = torch.stack([new_src_local, new_dst_local], dim=0)
-        filtered[edge_type].edge_index = remapped_edges
-
-    # Preserve custom attributes (book_ids, metadata_ids_by_column, etc.)
+    # Step 3: Update custom attributes (book_ids, metadata mappings, etc.)
     update_graph_identifiers_after_filtering(
         original_graph=graph,
         filtered_graph=filtered,

@@ -91,7 +91,7 @@ compute_metrics_elementary = PythonOperator(
     task_id="compute_metrics_elementary",
     python_callable=partial(run_dbt_with_selector, "package:elementary"),
     dag=dag,
-    trigger_rule="one_success",
+    trigger_rule="none_failed",
 )
 
 # Convert to Python operator

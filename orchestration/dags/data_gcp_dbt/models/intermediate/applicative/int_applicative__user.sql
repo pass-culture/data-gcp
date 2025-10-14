@@ -62,7 +62,7 @@ with
             end as user_birth_date,
             u.user_school_type,
             u.user_is_active,
-            coalesce(u.user_role, "GENERAL_PUBLIC") as user_role,
+            u.user_role,
             u.user_last_connection_date,
             u.user_is_email_validated,
             u.user_has_seen_pro_tutorials,

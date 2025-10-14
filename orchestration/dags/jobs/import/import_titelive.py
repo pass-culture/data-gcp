@@ -32,6 +32,7 @@ BIGQUERY_DATASET = os.getenv("BIGQUERY_DATASET", "tmp_cdarnis_dev")
 # Table names (variabilized by environment)
 TARGET_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__products"
 TRACKING_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__tracking"
+PROCESSED_EANS_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__processed_eans"
 TEMP_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__gcs_raw"
 SOURCE_TABLE_DEFAULT = (
     f"{PROJECT_NAME}.raw_{ENV_SHORT_NAME}.applicative_database_product"
@@ -103,10 +104,30 @@ with DAG(
             type=["null", "string"],
             description="Source BigQuery table for EAN extraction (init-bq mode)",
         ),
+        "tracking_table": Param(
+            default=None,
+            type=["null", "string"],
+            description="Tracking BigQuery table (init-bq mode)",
+        ),
+        "processed_eans_table": Param(
+            default=None,
+            type=["null", "string"],
+            description="Processed EANs BigQuery table (init-bq mode)",
+        ),
+        "target_table": Param(
+            default=None,
+            type=["null", "string"],
+            description="Target BigQuery table (init-bq mode)",
+        ),
         "batch_size": Param(
-            default=50,
+            default=250,
             type="integer",
-            description="Batch size for EAN processing (init-bq mode)",
+            description="Batch size for EAN processing (init-bq mode, max 250)",
+        ),
+        "flush_threshold": Param(
+            default=20000,
+            type="integer",
+            description="Flush to BigQuery every N EANs (init-bq mode, default 20000)",
         ),
         "resume": Param(
             default=False,
@@ -162,9 +183,11 @@ with DAG(
         environment=dag_config,
         command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py init-bq "
         f"--source-table {{{{ params.source_table or '{SOURCE_TABLE_DEFAULT}' }}}} "
-        f"--tracking-table {TRACKING_TABLE} "
-        f"--target-table {TARGET_TABLE} "
+        f"--tracking-table {{{{ params.tracking_table or '{TRACKING_TABLE}' }}}} "
+        f"--processed-eans-table {{{{ params.processed_eans_table or '{PROCESSED_EANS_TABLE}' }}}} "
+        f"--target-table {{{{ params.target_table or '{TARGET_TABLE}' }}}} "
         f"--batch-size {{{{ params.batch_size }}}} "
+        f"--flush-threshold {{{{ params.flush_threshold }}}} "
         f"{{{{ '--resume' if params.resume else '' }}}}",
     )
 

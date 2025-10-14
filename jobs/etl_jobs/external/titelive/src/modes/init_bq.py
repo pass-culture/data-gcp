@@ -1,5 +1,6 @@
 """Mode 1: Extract EANs from BigQuery and batch process via /ean endpoint."""
 
+from collections import deque
 from datetime import datetime
 
 import pandas as pd
@@ -119,19 +120,23 @@ def run_init_bq(
     processed_buffer = []  # Accumulate processed EAN records
     results_buffer = []  # Accumulate API response dataframes
     already_fetched = set()  # Track EANs in current buffer
+    ean_history = deque(maxlen=2)  # Sliding window: keep last 2 flush cycles
 
     total_processed = 0
     batch_num = 0
     flush_count = 0
 
     while True:
-        # Get next batch of unprocessed EANs (excluding in-memory buffer)
+        # Get next batch of unprocessed EANs (excluding in-memory buffer + history)
+        exclude_eans = (
+            already_fetched.union(*ean_history) if ean_history else already_fetched
+        )
         batch_eans = get_unprocessed_eans(
             bq_client,
             tracking_table,
             processed_eans_table,
             batch_size,
-            exclude_eans=already_fetched,
+            exclude_eans=exclude_eans,
         )
 
         if not batch_eans:
@@ -230,9 +235,10 @@ def run_init_bq(
                         f"Flush {flush_count}: Wrote {len(combined_df)} rows to target"
                     )
 
-                # Clear buffers
+                # Clear buffers (save history for sliding window protection)
                 processed_buffer = []
                 results_buffer = []
+                ean_history.append(already_fetched.copy())
                 already_fetched.clear()
 
                 logger.info(

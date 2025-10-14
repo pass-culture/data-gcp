@@ -8,7 +8,12 @@ from config import (
     DEFAULT_TARGET_TABLE,
     DEFAULT_TRACKING_TABLE,
 )
-from src.constants import DEFAULT_BATCH_SIZE, GCP_PROJECT_ID, RESULTS_PER_PAGE
+from src.constants import (
+    DEFAULT_BATCH_SIZE,
+    FLUSH_THRESHOLD,
+    GCP_PROJECT_ID,
+    RESULTS_PER_PAGE,
+)
 from src.modes.init_bq import run_init_bq
 from src.modes.init_gcs import run_init_gcs
 from src.modes.run_incremental import run_incremental
@@ -48,6 +53,11 @@ def init_bq(
         DEFAULT_BATCH_SIZE,
         "--batch-size",
         help="Number of EANs to process per API batch (max 250)",
+    ),
+    flush_threshold: int = typer.Option(
+        FLUSH_THRESHOLD,
+        "--flush-threshold",
+        help="Flush to BigQuery every N EANs (default 20000)",
     ),
     project_id: str = typer.Option(
         GCP_PROJECT_ID,
@@ -101,6 +111,7 @@ def init_bq(
             processed_eans_table=processed_eans_table,
             target_table=target_table,
             batch_size=batch_size,
+            flush_threshold=flush_threshold,
             project_id=project_id,
             resume=resume,
         )

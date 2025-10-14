@@ -52,14 +52,8 @@ def create_target_table(
     # Define schema
     schema = get_target_table_schema()
 
-    # Configure table with clustering and partitioning
+    # Configure table with clustering (no partitioning to avoid quota issues)
     table = bigquery.Table(table_id, schema=schema)
-
-    # Partition by datemodification
-    table.time_partitioning = bigquery.TimePartitioning(
-        type_=bigquery.TimePartitioningType.DAY,
-        field="datemodification",
-    )
 
     # Cluster by ean
     table.clustering_fields = ["ean"]
@@ -70,7 +64,6 @@ def create_target_table(
 
     logger.info(f"Created table: {table_id}")
     logger.info(f"  - Clustered by: {table.clustering_fields}")
-    logger.info(f"  - Partitioned by: {table.time_partitioning.field}")
 
 
 def create_processed_eans_table(

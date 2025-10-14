@@ -30,7 +30,7 @@ def normalize_dataframe(
 
 
 def remove_rows_with_no_metadata(
-    df: pd.DataFrame, metadata_list: list = []
+    df: pd.DataFrame, metadata_list: list | None = None
 ) -> pd.DataFrame:
     """Filter out rows where all specified feature_link columns are null.
 
@@ -47,5 +47,4 @@ def remove_rows_with_no_metadata(
 
     df = df.copy()
     # Keep only rows where at least one of the feature_link columns is not null
-    mask = df[metadata_list].isna().all(axis=1)
-    return df[~mask]
+    return df.loc[lambda _df: ~_df[metadata_list].isna().all(axis=1)]

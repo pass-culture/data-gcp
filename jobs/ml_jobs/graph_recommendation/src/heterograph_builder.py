@@ -177,7 +177,6 @@ def build_book_metadata_heterograph(
     *,
     nrows: int | None = None,
     filters: Sequence[tuple[str, str, Iterable[object]]] | None = None,
-    diagnose_components=True,
     pruning_params: dict | None = DEFAULT_PRUNING,
 ) -> HeteroData:
     """Load a parquet file and build the corresponding book-metadata graph."""
@@ -194,9 +193,7 @@ def build_book_metadata_heterograph(
         df, id_column=ID_COLUMN, metadata_columns=DEFAULT_METADATA_COLUMNS
     )
 
-    components_data = None
-    if diagnose_components:
-        components_data = diagnose_component_sizes(graph=data_graph)
+    components_data = diagnose_component_sizes(graph=data_graph)
 
     if pruning_params is not None:
         validate_pruning_params(pruning_params)

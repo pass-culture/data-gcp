@@ -2,7 +2,12 @@
 
 import typer
 
-from config import DEFAULT_SOURCE_TABLE
+from config import (
+    DEFAULT_PROCESSED_EANS_TABLE,
+    DEFAULT_SOURCE_TABLE,
+    DEFAULT_TARGET_TABLE,
+    DEFAULT_TRACKING_TABLE,
+)
 from src.constants import DEFAULT_BATCH_SIZE, GCP_PROJECT_ID, RESULTS_PER_PAGE
 from src.modes.init_bq import run_init_bq
 from src.modes.init_gcs import run_init_gcs
@@ -25,19 +30,24 @@ def init_bq(
         help="Source BigQuery table ID (project.dataset.table)",
     ),
     tracking_table: str = typer.Option(
-        ...,
+        DEFAULT_TRACKING_TABLE,
         "--tracking-table",
         help="Tracking BigQuery table ID (project.dataset.table)",
     ),
+    processed_eans_table: str = typer.Option(
+        DEFAULT_PROCESSED_EANS_TABLE,
+        "--processed-eans-table",
+        help="Processed EANs BigQuery table ID (project.dataset.table)",
+    ),
     target_table: str = typer.Option(
-        ...,
+        DEFAULT_TARGET_TABLE,
         "--target-table",
         help="Target BigQuery table ID (project.dataset.table)",
     ),
     batch_size: int = typer.Option(
         DEFAULT_BATCH_SIZE,
         "--batch-size",
-        help="Number of EANs to process per batch",
+        help="Number of EANs to process per API batch (max 250)",
     ),
     project_id: str = typer.Option(
         GCP_PROJECT_ID,
@@ -47,39 +57,48 @@ def init_bq(
     resume: bool = typer.Option(
         False,
         "--resume",
-        help="Resume from existing tracking table (skip table creation)",
+        help="Resume from existing tables (skip table creation)",
     ),
 ) -> None:
     """
-    Mode 1: Extract EANs from BigQuery and batch process via /ean endpoint.
+    Mode 1: Extract EANs from BigQuery and batch process via /ean endpoint (optimized).
 
-    This mode:
+    This mode uses buffered inserts to avoid BigQuery UPDATE quota limits:
     1. Extracts EANs from source table
-    2. Creates a tracking table to monitor progress
-    3. Fetches product data in batches via API
-    4. Transforms and loads to target table
-    5. Supports resume from interruption
+    2. Creates tracking table (immutable, EANs only)
+    3. Creates processed_eans table (append-only)
+    4. Fetches product data in batches via API
+    5. Accumulates results in memory
+    6. Flushes to BigQuery every 20K EANs
+    7. Supports resume from interruption
 
-    Example:
+    Default table names (from config.py):
+    - Source: {PROJECT}.raw_{ENV}.applicative_database_product
+    - Tracking: {PROJECT}.{DATASET}.tmp_titelive__tracking
+    - Processed EANs: {PROJECT}.{DATASET}.tmp_titelive__processed_eans
+    - Target: {PROJECT}.{DATASET}.tmp_titelive__products
 
+    Example (using defaults):
+
+        # Initial run (creates tables)
+        python main.py init-bq
+
+        # Resume from interruption (uses existing tables)
+        python main.py init-bq --resume
+
+        # Custom table names
         python main.py init-bq \\
-            --source-table "project.dataset.source" \\
-            --tracking-table "project.dataset.tracking" \\
-            --target-table "project.dataset.tmp_titelive__products" \\
-            --batch-size 50
-
-        # Resume from interruption:
-        python main.py init-bq \\
-            --tracking-table "project.dataset.tracking" \\
-            --target-table "project.dataset.tmp_titelive__products" \\
-            --resume
+            --tracking-table "project.dataset.custom_tracking" \\
+            --processed-eans-table "project.dataset.custom_processed" \\
+            --target-table "project.dataset.custom_target"
     """
-    logger.info("Executing Mode 1: BigQuery batch processing")
+    logger.info("Executing Mode 1: BigQuery batch processing (optimized)")
 
     try:
         run_init_bq(
             source_table=source_table,
             tracking_table=tracking_table,
+            processed_eans_table=processed_eans_table,
             target_table=target_table,
             batch_size=batch_size,
             project_id=project_id,
@@ -189,11 +208,11 @@ def run(
     Example:
 
         python main.py run \\
-            --min-modified-date "2024-01-01" \\
-            --max-modified-date "2024-12-31" \\
-            --base "paper" \\
-            --target-table "project.dataset.tmp_titelive__products" \\
-            --results-per-page 120
+        --min-modified-date "2025-10-08" \\
+        --max-modified-date "2025-10-08" \\
+        --base "paper" \\
+        --target-table "passculture-data-ehp.tmp_cdarnis_dev.tmp_titelive__products" \\
+        --results-per-page 120
     """
     logger.info("Executing Mode 3: Incremental date range search")
 

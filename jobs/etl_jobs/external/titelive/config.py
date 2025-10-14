@@ -17,6 +17,9 @@ DEFAULT_SOURCE_TABLE = (
 # Default Table Names (can be overridden via CLI)
 DEFAULT_TARGET_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__products"
 DEFAULT_TRACKING_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__tracking"
+DEFAULT_PROCESSED_EANS_TABLE = (
+    f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__processed_eans"
+)
 DEFAULT_TEMP_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__gcs_raw"
 
 # API Configuration

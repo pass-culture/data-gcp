@@ -71,7 +71,7 @@ def run_incremental(
         results_per_page=0,  # Get metadata only
     )
 
-    total_results = initial_response.get("nbresults", 0)
+    total_results = initial_response.get("nbreponses", 0)
     logger.info(f"Total results: {total_results}")
 
     # Step 2: Validate against API limit

@@ -73,6 +73,53 @@ def create_target_table(
     logger.info(f"  - Partitioned by: {table.time_partitioning.field}")
 
 
+def create_processed_eans_table(
+    client: bigquery.Client,
+    table_id: str,
+    drop_if_exists: bool = False,
+) -> None:
+    """
+    Create processed_eans tracking table (append-only).
+
+    This table tracks which EANs have been processed without using UPDATEs.
+    Uses LEFT JOIN pattern to find unprocessed EANs, avoiding UPDATE quota limits.
+
+    Schema:
+        - ean (STRING): Product EAN, used for clustering
+        - processed_at (TIMESTAMP): When the EAN was processed
+        - status (STRING): 'success' or 'deleted_in_titelive'
+
+    Args:
+        client: BigQuery client
+        table_id: Full table ID (project.dataset.table)
+        drop_if_exists: Whether to drop existing table first
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If table creation fails
+    """
+    if drop_if_exists:
+        logger.info(f"Dropping table if exists: {table_id}")
+        client.delete_table(table_id, not_found_ok=True)
+
+    # Define schema
+    schema = [
+        bigquery.SchemaField("ean", "STRING", mode="REQUIRED"),
+        bigquery.SchemaField("processed_at", "TIMESTAMP", mode="REQUIRED"),
+        bigquery.SchemaField("status", "STRING", mode="REQUIRED"),
+    ]
+
+    # Configure table with clustering
+    table = bigquery.Table(table_id, schema=schema)
+    table.clustering_fields = ["ean"]
+
+    # Create table
+    logger.info(f"Creating processed_eans table: {table_id}")
+    table = client.create_table(table)
+
+    logger.info(f"Created processed_eans table: {table_id}")
+    logger.info(f"  - Clustered by: {table.clustering_fields}")
+
+
 def create_tracking_table_from_source(
     client: bigquery.Client,
     tracking_table: str,
@@ -81,6 +128,9 @@ def create_tracking_table_from_source(
 ) -> int:
     """
     Create a tracking table directly from source table using SQL.
+
+    Creates an immutable table containing only EANs to be processed.
+    Processing status is tracked separately in processed_eans table.
 
     Args:
         client: BigQuery client
@@ -98,15 +148,13 @@ def create_tracking_table_from_source(
         logger.info(f"Dropping tracking table if exists: {tracking_table}")
         client.delete_table(tracking_table, not_found_ok=True)
 
-    # Create tracking table with SQL SELECT
+    # Create tracking table with SQL SELECT (immutable, only EANs)
     query = f"""
         CREATE TABLE `{tracking_table}`
         CLUSTER BY ean
         AS
         SELECT DISTINCT
-            JSON_VALUE(jsondata, '$.ean') AS ean,
-            FALSE AS processed,
-            FALSE AS deleted_in_titelive
+            JSON_VALUE(jsondata, '$.ean') AS ean
         FROM `{source_table}`
         WHERE JSON_VALUE(jsondata, '$.ean') IS NOT NULL
     """
@@ -170,78 +218,25 @@ def insert_dataframe(
     logger.info(f"Successfully inserted {len(dataframe)} rows to {table_id}")
 
 
-def update_ean_statuses(
+def get_unprocessed_eans(
     client: bigquery.Client,
     tracking_table: str,
-    processed_eans: list[str] | None = None,
-    deleted_eans: list[str] | None = None,
-) -> None:
-    """
-    Update status for EANs in tracking table.
-
-    Handles two types of updates:
-    - Processed EANs: Sets processed=TRUE (successfully retrieved from API)
-    - Deleted EANs: Sets processed=TRUE and deleted_in_titelive=TRUE (not found in API)
-
-    Args:
-        client: BigQuery client
-        tracking_table: Full tracking table ID (project.dataset.table)
-        processed_eans: List of EANs to mark as processed (optional)
-        deleted_eans: List of EANs to mark as deleted in Titelive (optional)
-
-    Raises:
-        google.cloud.exceptions.GoogleCloudError: If update fails
-    """
-    if not processed_eans and not deleted_eans:
-        logger.warning("No EANs provided for status update")
-        return
-
-    # Combine all EANs for single UPDATE statement
-    all_eans = (list(processed_eans) if processed_eans else []) + (
-        list(deleted_eans) if deleted_eans else []
-    )
-    eans_str = ", ".join(f"'{ean}'" for ean in all_eans)
-
-    # Build CASE statement for deleted_in_titelive
-    if deleted_eans:
-        deleted_eans_str = ", ".join(f"'{ean}'" for ean in deleted_eans)
-        deleted_case = f"WHEN ean IN ({deleted_eans_str}) THEN TRUE"
-    else:
-        deleted_case = "WHEN FALSE THEN TRUE"  # Never matches
-
-    query = f"""
-        UPDATE `{tracking_table}`
-        SET
-            processed = TRUE,
-            deleted_in_titelive = CASE
-                {deleted_case}
-                ELSE deleted_in_titelive
-            END
-        WHERE ean IN ({eans_str})
-    """
-
-    num_processed = len(processed_eans) if processed_eans else 0
-    num_deleted = len(deleted_eans) if deleted_eans else 0
-
-    logger.info(
-        f"""Updating {len(all_eans)} EANs in {tracking_table}
-        ({num_processed} processed, {num_deleted} deleted)"""
-    )
-    job = client.query(query)
-    job.result()  # Wait for completion
-    logger.info(f"Successfully updated {len(all_eans)} EANs")
-
-
-def get_unprocessed_eans(
-    client: bigquery.Client, tracking_table: str, batch_size: int
+    processed_eans_table: str,
+    batch_size: int,
+    exclude_eans: set[str] | None = None,
 ) -> list[str]:
     """
-    Fetch unprocessed EANs from tracking table.
+    Fetch unprocessed EANs using LEFT JOIN with processed_eans table.
+
+    Uses LEFT JOIN pattern to find EANs in tracking table that don't exist
+    in processed_eans table, avoiding UPDATE quota limits.
 
     Args:
         client: BigQuery client
         tracking_table: Full tracking table ID (project.dataset.table)
+        processed_eans_table: Full processed_eans table ID (project.dataset.table)
         batch_size: Number of EANs to fetch
+        exclude_eans: Optional set of EANs to exclude (in-memory buffer)
 
     Returns:
         List of unprocessed EANs
@@ -249,14 +244,25 @@ def get_unprocessed_eans(
     Raises:
         google.cloud.exceptions.GoogleCloudError: If query fails
     """
+    # Build exclude clause for in-memory buffer
+    exclude_clause = ""
+    if exclude_eans and len(exclude_eans) > 0:
+        eans_list = "', '".join(exclude_eans)
+        exclude_clause = f"AND t.ean NOT IN ('{eans_list}')"
+
     query = f"""
-        SELECT ean
-        FROM `{tracking_table}`
-        WHERE processed = FALSE AND deleted_in_titelive = FALSE
+        SELECT t.ean
+        FROM `{tracking_table}` t
+        LEFT JOIN `{processed_eans_table}` p ON t.ean = p.ean
+        WHERE p.ean IS NULL
+        {exclude_clause}
         LIMIT {batch_size}
     """
 
-    logger.debug(f"Fetching up to {batch_size} unprocessed EANs from {tracking_table}")
+    logger.debug(
+        f"Fetching up to {batch_size} unprocessed EANs from {tracking_table} "
+        f"(excluding {len(exclude_eans) if exclude_eans else 0} in-memory EANs)"
+    )
     query_job = client.query(query)
     results = query_job.result()
 
@@ -265,24 +271,28 @@ def get_unprocessed_eans(
     return eans
 
 
-def get_tracking_table_count(client: bigquery.Client, tracking_table: str) -> int:
+def get_tracking_table_count(
+    client: bigquery.Client, tracking_table: str, processed_eans_table: str
+) -> int:
     """
-    Get count of unprocessed EANs in tracking table.
+    Get count of unprocessed EANs using LEFT JOIN with processed_eans table.
 
     Args:
         client: BigQuery client
         tracking_table: Full tracking table ID (project.dataset.table)
+        processed_eans_table: Full processed_eans table ID (project.dataset.table)
 
     Returns:
-        Number of unprocessed EANs in tracking table
+        Number of unprocessed EANs
 
     Raises:
         google.cloud.exceptions.GoogleCloudError: If query fails
     """
     query = f"""
         SELECT COUNT(*) as total
-        FROM `{tracking_table}`
-        WHERE processed = FALSE AND deleted_in_titelive = FALSE
+        FROM `{tracking_table}` t
+        LEFT JOIN `{processed_eans_table}` p ON t.ean = p.ean
+        WHERE p.ean IS NULL
     """
 
     query_job = client.query(query)

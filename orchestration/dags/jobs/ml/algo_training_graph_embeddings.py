@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
@@ -64,7 +64,7 @@ with DAG(
     default_args=DEFAULT_ARGS,
     description="Training job for building embeddings based on the metadatas graph",
     schedule_interval=get_airflow_schedule(
-        SCHEDULE_DICT.get(DAG_NAME).get(ENV_SHORT_NAME)
+        SCHEDULE_DICT.get(DAG_NAME, {}).get(ENV_SHORT_NAME)
     ),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1200),
@@ -89,7 +89,7 @@ with DAG(
         "train_only_on_10k_rows": Param(default=True, type="boolean"),
     },
 ) as _dag:
-    start = DummyOperator(task_id="start")
+    start = EmptyOperator(task_id="start")
 
     import_offer_as_parquet = BigQueryInsertJobOperator(
         project_id=GCP_PROJECT_ID,

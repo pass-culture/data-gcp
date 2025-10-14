@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 
 import tqdm
 
-from src.constants import DEFAULT_METADATA_COLUMNS, ID_COLUMN
-from src.utils.preprocessing import normalize_dataframe
+from src.constants import DEFAULT_METADATA_COLUMNS, ID_COLUMN, METADATA_MINIMAL_LINKS
+from src.utils.preprocessing import filter_out_isolated_items, normalize_dataframe
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -49,10 +49,13 @@ def build_book_metadata_heterograph_from_dataframe(
     if missing_columns:
         raise KeyError(f"Missing required columns: {', '.join(missing_columns)}")
 
-    # Step 1: Normalize all relevant columns using vectorized operations
+    # Step 1: Preprocess dataframe
     all_columns = [id_column, *metadata_columns]
     df_normalized = normalize_dataframe(dataframe, all_columns)
-
+    df_normalized = filter_out_isolated_items(
+        df_normalized,
+        features_link=METADATA_MINIMAL_LINKS,
+    )
     # Step 2: Prepare book nodes
     unique_books = df_normalized[id_column].dropna().drop_duplicates()
     book_ids = unique_books.tolist()

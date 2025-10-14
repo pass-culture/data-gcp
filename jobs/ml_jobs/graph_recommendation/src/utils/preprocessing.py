@@ -27,3 +27,25 @@ def normalize_dataframe(
             # Replace empty/missing value representations with None
             df[col] = df[col].replace(["", "nan", "None", "<NA>"], None)
     return df
+
+
+def filter_out_isolated_items(
+    df: pd.DataFrame, features_link: list | None = None
+) -> pd.DataFrame:
+    """Filter out rows where all specified feature_link columns are null.
+
+    Args:
+        df (pd.DataFrame): Input dataframe.
+        features_link (list): List of column names to check for isolation.
+
+    Returns:
+        pd.DataFrame: Filtered dataframe
+        (rows with at least one non-null in features_link remain).
+    """
+    if not features_link:
+        return df
+
+    df = df.copy()
+    # Keep only rows where at least one of the feature_link columns is not null
+    mask = df[features_link].notna().any(axis=1)
+    return df[mask]

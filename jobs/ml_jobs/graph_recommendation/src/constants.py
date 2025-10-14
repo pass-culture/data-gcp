@@ -9,4 +9,9 @@ DEFAULT_METADATA_COLUMNS: Sequence[str] = (
     "artist_id",
 )
 
+METADATA_MINIMAL_LINKS: list[str] = [
+    "gtl_label_level_1",
+    "artist_id",
+]
+
 MetadataKey = tuple[str, str]

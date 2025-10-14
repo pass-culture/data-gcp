@@ -6,7 +6,13 @@ from typing import TYPE_CHECKING
 
 import tqdm
 
-from src.constants import DEFAULT_METADATA_COLUMNS, ID_COLUMN, METADATA_MINIMAL_LINKS
+from src.constants import DEFAULT_METADATA_COLUMNS, ID_COLUMN
+from src.utils.postprocessing import (
+    DEFAULT_PRUNING,
+    diagnose_component_sizes,
+    prune_graph_components,
+    validate_pruning_params,
+)
 from src.utils.preprocessing import filter_out_isolated_items, normalize_dataframe
 
 if TYPE_CHECKING:
@@ -54,7 +60,7 @@ def build_book_metadata_heterograph_from_dataframe(
     df_normalized = normalize_dataframe(dataframe, all_columns)
     df_normalized = filter_out_isolated_items(
         df_normalized,
-        features_link=METADATA_MINIMAL_LINKS,
+        features_link=metadata_columns,
     )
     # Step 2: Prepare book nodes
     unique_books = df_normalized[id_column].dropna().drop_duplicates()
@@ -174,6 +180,8 @@ def build_book_metadata_heterograph(
     *,
     nrows: int | None = None,
     filters: Sequence[tuple[str, str, Iterable[object]]] | None = None,
+    diagnose_components=True,
+    pruning_params: dict | None = DEFAULT_PRUNING,
 ) -> HeteroData:
     """Load a parquet file and build the corresponding book-metadata graph."""
 
@@ -185,6 +193,18 @@ def build_book_metadata_heterograph(
     if nrows is not None:
         df = df.sample(nrows, random_state=42)
 
-    return build_book_metadata_heterograph_from_dataframe(
+    data_graph = build_book_metadata_heterograph_from_dataframe(
         df, id_column=ID_COLUMN, metadata_columns=DEFAULT_METADATA_COLUMNS
     )
+
+    components_data = None
+    if diagnose_components:
+        components_data = diagnose_component_sizes(graph=data_graph)
+
+    if pruning_params is not None:
+        validate_pruning_params(pruning_params)
+        data_graph = prune_graph_components(
+            graph=data_graph, components_data=components_data, **pruning_params
+        )
+
+    return data_graph

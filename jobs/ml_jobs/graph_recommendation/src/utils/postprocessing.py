@@ -1,5 +1,3 @@
-from enum import Enum
-from typing import Any
 
 import networkx as nx
 import torch
@@ -13,33 +11,7 @@ from src.utils.graph_indexing import (
     update_graph_identifiers_after_filtering,
 )
 
-
-class PruningStrategy(Enum):
-    """Enumeration of supported graph pruning strategies."""
-
-    REMOVE_SMALL = "remove_small"  # Remove components smaller than threshold
-    KEEP_LARGEST = "keep_largest"  # Keep only K largest components
-
-    @classmethod
-    def default(cls):
-        """Return the default pruning strategy."""
-        return cls.REMOVE_SMALL
-
-
-def validate_pruning_params(params: dict[str, Any]) -> None:
-    """Validate pruning parameters match the selected strategy."""
-    strategy = params.get("strategy")
-
-    if strategy == PruningStrategy.REMOVE_SMALL and "min_size" not in params:
-        raise ValueError("REMOVE_SMALL strategy requires 'min_size'")
-
-    if strategy == PruningStrategy.KEEP_LARGEST and "k" not in params:
-        raise ValueError("KEEP_LARGEST strategy requires 'k'")
-
-
-# Default configurations
-DEFAULT_PRUNING = {"strategy": PruningStrategy.REMOVE_SMALL, "min_size": 2}
-
+GRAPH_PRUNING_MIN_SIZE = 2
 
 # ======================================================
 #  CONNECTED COMPONENTS UTILITIES
@@ -249,7 +221,9 @@ def _filter_graph_by_nodes(
 
 
 def prune_small_components(
-    graph: HeteroData, min_size: int, components_data: tuple | None = None
+    graph: HeteroData,
+    min_size: int = GRAPH_PRUNING_MIN_SIZE,
+    components_data: tuple | None = None,
 ) -> HeteroData:
     """Remove all nodes in components of size ≤ min_size.
 
@@ -283,94 +257,3 @@ def prune_small_components(
     pruned_graph = _filter_graph_by_nodes(graph, keep_nodes, node_type_offsets)
     logger.info("✅ Pruning complete.")
     return pruned_graph
-
-
-# ======================================================
-#  KEEP LARGEST COMPONENTS
-# ======================================================
-
-
-def keep_largest_components(
-    graph: HeteroData, k: int, components_data: tuple | None = None
-) -> HeteroData:
-    """Keep only the nodes and edges belonging to the `k` largest connected components.
-
-    Args:
-        graph (HeteroData): Input heterogeneous graph.
-        k (int): Number of largest connected components to keep.
-        components_data (tuple, optional): Precomputed output from `get_connected_components()`.
-            If None, it will be computed internally.
-
-    Returns:
-        HeteroData: Filtered graph containing only the `k` largest components.
-    """
-    if components_data is None:
-        components_data = get_connected_components(graph)
-
-    components, component_sizes, total_nodes, node_type_offsets = components_data
-    sorted_components = sorted(
-        zip(components, component_sizes, strict=False), key=lambda x: x[1], reverse=True
-    )
-    kept_components = sorted_components[:k]
-
-    keep_nodes = set().union(*[c for c, _ in kept_components])
-    logger.info(
-        f"Keeping {k} largest components: {len(keep_nodes):,}/{total_nodes:,} "
-        f"nodes ({len(keep_nodes) / total_nodes * 100:.1f}%)"
-    )
-
-    kept_graph = _filter_graph_by_nodes(graph, keep_nodes, node_type_offsets)
-    logger.info(f"✅ Retained {k} largest components successfully.")
-    return kept_graph
-
-
-# ======================================================
-#  AGNOSTIC PRUNING
-# ======================================================
-
-
-def prune_graph_components(
-    graph: HeteroData | Data,
-    *,
-    strategy: PruningStrategy,
-    min_size: int | None = None,
-    k: int | None = None,
-    components_data: tuple | None = None,
-) -> HeteroData:
-    """Prune or keep connected components in a heterogeneous graph
-    based on the selected pruning strategy.
-
-    Args:
-        graph (HeteroData | Data): Input graph.
-        strategy (PruningStrategy): Pruning strategy to apply.
-            - PruningStrategy.REMOVE_SMALL → remove all components ≤ `min_size`
-            - PruningStrategy.KEEP_LARGEST → keep only `k` largest components
-        min_size (int, optional): Minimum component size to keep (required for REMOVE_SMALL).
-        k (int, optional): Number of largest components to keep (required for KEEP_LARGEST).
-        components_data (tuple, optional): Precomputed connected component data
-            from `get_connected_components()`. If None, computed internally.
-
-    Returns:
-        HeteroData: The pruned graph according to the selected strategy.
-
-    Raises:
-        ValueError: If required parameters are missing for the chosen strategy.
-    """
-    if strategy == PruningStrategy.REMOVE_SMALL:
-        if min_size is None:
-            raise ValueError(
-                "`min_size` must be provided when strategy=PruningStrategy.REMOVE_SMALL"
-            )
-        logger.info(f"🧹 Pruning components with size ≤ {min_size} ...")
-        return prune_small_components(graph, min_size, components_data)
-
-    elif strategy == PruningStrategy.KEEP_LARGEST:
-        if k is None:
-            raise ValueError(
-                "`k` must be provided when strategy=PruningStrategy.KEEP_LARGEST"
-            )
-        logger.info(f"🏗️ Keeping top {k} largest connected components ...")
-        return keep_largest_components(graph, k, components_data)
-
-    else:
-        raise ValueError(f"Unknown pruning strategy: {strategy}")

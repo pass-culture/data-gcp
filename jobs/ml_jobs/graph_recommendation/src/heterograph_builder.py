@@ -9,10 +9,9 @@ import tqdm
 from src.constants import DEFAULT_METADATA_COLUMNS, ID_COLUMN
 from src.utils.graph_indexing import build_id_to_index_map, set_graph_identifiers
 from src.utils.postprocessing import (
-    DEFAULT_PRUNING,
+    GRAPH_PRUNING_MIN_SIZE,
     diagnose_component_sizes,
-    prune_graph_components,
-    validate_pruning_params,
+    prune_small_components,
 )
 from src.utils.preprocessing import normalize_dataframe, remove_rows_with_no_metadata
 
@@ -177,7 +176,7 @@ def build_book_metadata_heterograph(
     *,
     nrows: int | None = None,
     filters: Sequence[tuple[str, str, Iterable[object]]] | None = None,
-    pruning_params: dict | None = DEFAULT_PRUNING,
+    min_component_size: int | None = GRAPH_PRUNING_MIN_SIZE,
 ) -> HeteroData:
     """Load a parquet file and build the corresponding book-metadata graph."""
 
@@ -195,10 +194,11 @@ def build_book_metadata_heterograph(
 
     components_data = diagnose_component_sizes(graph=data_graph)
 
-    if pruning_params is not None:
-        validate_pruning_params(pruning_params)
-        data_graph = prune_graph_components(
-            graph=data_graph, components_data=components_data, **pruning_params
+    if min_component_size:
+        data_graph = prune_small_components(
+            graph=data_graph,
+            min_size=min_component_size,
+            components_data=components_data,
         )
 
     return data_graph

@@ -14,7 +14,7 @@ from src.utils.postprocessing import (
     prune_graph_components,
     validate_pruning_params,
 )
-from src.utils.preprocessing import filter_out_isolated_items, normalize_dataframe
+from src.utils.preprocessing import normalize_dataframe, remove_rows_with_no_metadata
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -109,9 +109,9 @@ def build_book_metadata_graph_from_dataframe(
     all_columns = [id_column, *metadata_columns]
     df_normalized = normalize_dataframe(dataframe, all_columns)
 
-    df_normalized = filter_out_isolated_items(
+    df_normalized = remove_rows_with_no_metadata(
         df_normalized,
-        features_link=metadata_columns,
+        metadata_list=list(metadata_columns),
     )
     # Step 2: Prepare book nodes (indexed 0 to num_books - 1)
     unique_books = df_normalized[id_column].dropna().drop_duplicates()

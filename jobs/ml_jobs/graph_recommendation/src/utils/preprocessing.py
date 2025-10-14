@@ -2,8 +2,6 @@ from collections.abc import Sequence
 
 import pandas as pd
 
-from src.constants import DEFAULT_METADATA_COLUMNS
-
 
 def normalize_dataframe(
     df: pd.DataFrame,
@@ -31,8 +29,8 @@ def normalize_dataframe(
     return df
 
 
-def filter_out_isolated_items(
-    df: pd.DataFrame, features_link: list | None = DEFAULT_METADATA_COLUMNS
+def remove_rows_with_no_metadata(
+    df: pd.DataFrame, metadata_list: list = []
 ) -> pd.DataFrame:
     """Filter out rows where all specified feature_link columns are null.
 
@@ -44,12 +42,10 @@ def filter_out_isolated_items(
         pd.DataFrame: Filtered dataframe
         (rows with at least one non-null in features_link remain).
     """
-    if not features_link:
+    if not metadata_list:
         return df
-
-    features_link = list(features_link)
 
     df = df.copy()
     # Keep only rows where at least one of the feature_link columns is not null
-    mask = df[features_link].isna().all(axis=1)
+    mask = df[metadata_list].isna().all(axis=1)
     return df[~mask]

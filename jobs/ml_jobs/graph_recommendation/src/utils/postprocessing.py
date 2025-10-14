@@ -7,6 +7,10 @@ from loguru import logger
 from torch_geometric.data import Data, HeteroData
 from torch_geometric.utils import to_networkx, to_undirected
 
+from src.utils.graph_indexing import (
+    update_graph_identifiers_after_filtering,
+)
+
 
 class PruningStrategy(Enum):
     """Enumeration of supported graph pruning strategies."""
@@ -159,8 +163,14 @@ def diagnose_component_sizes(graph: Data | HeteroData) -> tuple:
 def _filter_graph_by_nodes(
     graph: HeteroData, keep_nodes: set[int], node_type_offsets: dict[str, int]
 ) -> HeteroData:
-    """Return a filtered copy of the graph keeping only given global node IDs."""
+    """Return a filtered copy of the graph keeping only given global node IDs.
+
+    This properly remaps node indices in edges to account for the new contiguous numbering.
+    """
     filtered = HeteroData()
+
+    # Track the mapping from old local indices to new local indices for each node type
+    old_to_new_local_idx: dict[str, dict[int, int]] = {}
 
     # Filter nodes
     for node_type in graph.node_types:
@@ -170,12 +180,17 @@ def _filter_graph_by_nodes(
         keep_mask = torch.tensor([idx.item() in keep_nodes for idx in local_idx])
         keep_indices = torch.nonzero(keep_mask, as_tuple=True)[0]
 
+        # Build mapping from old local index -> new local index
+        old_to_new_local_idx[node_type] = {
+            old_idx.item(): new_idx for new_idx, old_idx in enumerate(keep_indices)
+        }
+
         for key, value in graph[node_type].items():
             if torch.is_tensor(value) and value.size(0) == n_nodes:
                 filtered[node_type][key] = value[keep_indices]
         filtered[node_type].num_nodes = len(keep_indices)
 
-    # Filter edges
+    # Filter edges and remap indices
     for edge_type in graph.edge_types:
         src, rel, dst = edge_type
         edge_index = graph[edge_type].edge_index
@@ -185,14 +200,41 @@ def _filter_graph_by_nodes(
         global_src = edge_index[0] + src_offset
         global_dst = edge_index[1] + dst_offset
 
-        keep_edge_mask = [
-            int(s.item()) in keep_nodes and int(d.item()) in keep_nodes
-            for s, d in zip(global_src, global_dst, strict=False)
-        ]
-        keep_edge_mask = torch.tensor(keep_edge_mask)
-        filtered_edges = edge_index[:, keep_edge_mask]
+        # Find edges where both endpoints are kept
+        keep_edge_mask = torch.tensor(
+            [
+                int(s.item()) in keep_nodes and int(d.item()) in keep_nodes
+                for s, d in zip(global_src, global_dst, strict=False)
+            ]
+        )
 
-        filtered[edge_type].edge_index = filtered_edges
+        # Get the kept edges with old indices
+        kept_edges = edge_index[:, keep_edge_mask]
+
+        # Remap to new local indices
+        old_src_local = kept_edges[0]
+        old_dst_local = kept_edges[1]
+
+        src_mapping = old_to_new_local_idx[src]
+        dst_mapping = old_to_new_local_idx[dst]
+
+        new_src_local = torch.tensor(
+            [src_mapping[idx.item()] for idx in old_src_local], dtype=torch.long
+        )
+        new_dst_local = torch.tensor(
+            [dst_mapping[idx.item()] for idx in old_dst_local], dtype=torch.long
+        )
+
+        remapped_edges = torch.stack([new_src_local, new_dst_local], dim=0)
+        filtered[edge_type].edge_index = remapped_edges
+
+    # Preserve custom attributes (book_ids, metadata_ids_by_column, etc.)
+    update_graph_identifiers_after_filtering(
+        original_graph=graph,
+        filtered_graph=filtered,
+        keep_nodes=keep_nodes,
+        node_type_offsets=node_type_offsets,
+    )
 
     return filtered
 

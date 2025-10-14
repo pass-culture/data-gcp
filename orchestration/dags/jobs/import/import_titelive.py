@@ -30,9 +30,8 @@ PROJECT_NAME = os.environ.get("PROJECT_NAME", "passculture-data-ehp")
 BIGQUERY_DATASET = os.getenv("BIGQUERY_DATASET", "tmp_cdarnis_dev")
 
 # Table names (variabilized by environment)
+DESTINATION_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__products"
 TARGET_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__products"
-TRACKING_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__tracking"
-PROCESSED_EANS_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__processed_eans"
 TEMP_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__gcs_raw"
 SOURCE_TABLE_DEFAULT = (
     f"{PROJECT_NAME}.raw_{ENV_SHORT_NAME}.applicative_database_product"
@@ -104,35 +103,35 @@ with DAG(
             type=["null", "string"],
             description="Source BigQuery table for EAN extraction (init-bq mode)",
         ),
-        "tracking_table": Param(
+        "destination_table": Param(
             default=None,
             type=["null", "string"],
-            description="Tracking BigQuery table (init-bq mode)",
+            description="Destination BigQuery table with batch tracking (init-bq mode)",
         ),
-        "processed_eans_table": Param(
-            default=None,
-            type=["null", "string"],
-            description="Processed EANs BigQuery table (init-bq mode)",
-        ),
-        "target_table": Param(
-            default=None,
-            type=["null", "string"],
-            description="Target BigQuery table (init-bq mode)",
-        ),
-        "batch_size": Param(
-            default=250,
-            type="integer",
-            description="Batch size for EAN processing (init-bq mode, max 250)",
-        ),
-        "flush_threshold": Param(
+        "main_batch_size": Param(
             default=20000,
             type="integer",
-            description="Flush to BigQuery every N EANs (init-bq mode, default 20000)",
+            description="Number of EANs per batch (init-bq mode, default 20,000)",
+        ),
+        "sub_batch_size": Param(
+            default=250,
+            type="integer",
+            description="Number of EANs per API call (init-bq mode, max 250)",
         ),
         "resume": Param(
             default=False,
             type="boolean",
-            description="Resume from existing tracking table (init-bq mode)",
+            description="Resume from last batch_number (init-bq mode)",
+        ),
+        "skip_already_processed_table": Param(
+            default=None,
+            type=["null", "string"],
+            description="Table containing already-processed EANs to skip (init-bq mode, optional)",
+        ),
+        "skip_count": Param(
+            default=0,
+            type="integer",
+            description="Number of already-processed EANs to skip (init-bq mode, use with skip_already_processed_table)",
         ),
         # Mode 2 (init-gcs) params
         "gcs_path": Param(
@@ -183,12 +182,12 @@ with DAG(
         environment=dag_config,
         command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py init-bq "
         f"--source-table {{{{ params.source_table or '{SOURCE_TABLE_DEFAULT}' }}}} "
-        f"--tracking-table {{{{ params.tracking_table or '{TRACKING_TABLE}' }}}} "
-        f"--processed-eans-table {{{{ params.processed_eans_table or '{PROCESSED_EANS_TABLE}' }}}} "
-        f"--target-table {{{{ params.target_table or '{TARGET_TABLE}' }}}} "
-        f"--batch-size {{{{ params.batch_size }}}} "
-        f"--flush-threshold {{{{ params.flush_threshold }}}} "
-        f"{{{{ '--resume' if params.resume else '' }}}}",
+        f"--destination-table {{{{ params.destination_table or '{DESTINATION_TABLE}' }}}} "
+        f"--main-batch-size {{{{ params.main_batch_size }}}} "
+        f"--sub-batch-size {{{{ params.sub_batch_size }}}} "
+        f"{{{{ '--resume' if params.resume else '' }}}} "
+        f"{{{{ '--skip-already-processed-table ' + params.skip_already_processed_table if params.skip_already_processed_table else '' }}}} "
+        f"{{{{ '--skip-count ' + params.skip_count|string if params.skip_already_processed_table else '' }}}}",
     )
 
     # Mode 2: Init GCS - Load GCS file to BigQuery and transform

@@ -19,7 +19,9 @@ MAX_SEARCH_RESULTS = 20_000  # API limit for /search endpoint
 
 # Batch Configuration
 DEFAULT_BATCH_SIZE = 250  # For Mode 1: /ean batch processing (API limit)
+MAIN_BATCH_SIZE = 20_000  # Main batch size: process 20k EANs per batch
 FLUSH_THRESHOLD = 20_000  # Flush to BigQuery every N EANs (reduces BQ operations)
+BUFFER_WAIT_SECONDS = 90  # Wait for BigQuery streaming buffer to clear after flush
 EAN_SEPARATOR = "|"  # Separator for multiple EANs in API request
 
 

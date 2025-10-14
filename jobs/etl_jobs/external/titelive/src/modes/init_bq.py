@@ -1,6 +1,5 @@
 """Mode 1: Extract EANs from BigQuery and batch process via /ean endpoint."""
 
-from collections import deque
 from datetime import datetime
 
 import pandas as pd
@@ -8,15 +7,17 @@ from google.cloud import bigquery
 
 from src.api.auth import TokenManager
 from src.api.client import TiteliveClient
-from src.constants import DEFAULT_BATCH_SIZE, FLUSH_THRESHOLD, GCP_PROJECT_ID
+from src.constants import (
+    DEFAULT_BATCH_SIZE,
+    GCP_PROJECT_ID,
+    MAIN_BATCH_SIZE,
+)
 from src.transformers.api_transform import transform_api_response
 from src.utils.bigquery import (
-    create_processed_eans_table,
-    create_target_table,
-    create_tracking_table_from_source,
-    get_target_table_schema,
-    get_tracking_table_count,
-    get_unprocessed_eans,
+    create_destination_table,
+    fetch_batch_eans,
+    get_destination_table_schema,
+    get_last_batch_number,
     insert_dataframe,
 )
 from src.utils.logging import get_logger
@@ -24,261 +25,259 @@ from src.utils.logging import get_logger
 logger = get_logger(__name__)
 
 
+def process_eans_batch(
+    api_client: TiteliveClient,
+    eans: list[str],
+    sub_batch_size: int = DEFAULT_BATCH_SIZE,
+) -> list[dict]:
+    """
+    Process a batch of EANs by calling the API in sub-batches.
+
+    Processes EANs in sub-batches of sub_batch_size (default 250).
+    For each sub-batch:
+    - Call API with EANs
+    - Mark returned EANs as 'processed'
+    - Mark missing EANs as 'deleted_in_titelive'
+    - Mark failed API calls as 'fail'
+
+    Args:
+        api_client: Titelive API client
+        eans: List of EANs to process
+        sub_batch_size: Number of EANs per API call (default 250)
+
+    Returns:
+        List of dicts with keys: ean, status, datemodification, json_raw
+        Status values: 'processed' | 'deleted_in_titelive' | 'fail'
+    """
+    results = []
+    total_eans = len(eans)
+    total_sub_batches = (total_eans + sub_batch_size - 1) // sub_batch_size
+
+    logger.info(
+        f"Processing {total_eans} EANs in {total_sub_batches} sub-batches "
+        f"of {sub_batch_size} EANs each"
+    )
+
+    for i in range(0, len(eans), sub_batch_size):
+        sub_batch = eans[i : i + sub_batch_size]
+        current_sub_batch = (i // sub_batch_size) + 1
+        eans_processed_so_far = i
+        eans_in_this_batch = len(sub_batch)
+
+        logger.info(
+            f"Sub-batch {current_sub_batch}/{total_sub_batches}: "
+            f"Processing EANs {eans_processed_so_far + 1}-"
+            f"{eans_processed_so_far + eans_in_this_batch} "
+            f"of {total_eans}"
+        )
+
+        try:
+            # Call API
+            api_response = api_client.get_by_eans(sub_batch)
+
+            # Transform response
+            transformed_df = transform_api_response(api_response)
+
+            # Identify returned vs missing EANs
+            returned_eans = (
+                set(transformed_df["ean"].tolist())
+                if not transformed_df.empty
+                else set()
+            )
+            missing_eans = set(sub_batch) - returned_eans
+
+            # Add processed results
+            for _, row in transformed_df.iterrows():
+                results.append(
+                    {
+                        "ean": row["ean"],
+                        "status": "processed",
+                        "datemodification": row["datemodification"],
+                        "json_raw": row["json_raw"],
+                    }
+                )
+
+            # Add deleted results
+            for ean in missing_eans:
+                results.append(
+                    {
+                        "ean": ean,
+                        "status": "deleted_in_titelive",
+                        "datemodification": None,
+                        "json_raw": None,
+                    }
+                )
+
+            logger.info(
+                f"Sub-batch {current_sub_batch}/{total_sub_batches} complete: "
+                f"{len(returned_eans)} processed, "
+                f"{len(missing_eans)} deleted | "
+                "Progress: "
+                f"{eans_processed_so_far + eans_in_this_batch}/{total_eans} EANs"
+            )
+
+        except Exception as e:
+            # Mark all EANs in sub-batch as failed
+            logger.error(
+                "API call failed for sub-batch "
+                f"{current_sub_batch}/{total_sub_batches}: {e}"
+            )
+            for ean in sub_batch:
+                results.append(
+                    {
+                        "ean": ean,
+                        "status": "fail",
+                        "datemodification": None,
+                        "json_raw": None,
+                    }
+                )
+            logger.warning(
+                f"Marked {len(sub_batch)} EANs as failed | "
+                "Progress: "
+                f"{eans_processed_so_far + eans_in_this_batch}/{total_eans} EANs"
+            )
+
+    return results
+
+
 def run_init_bq(
     source_table: str,
-    tracking_table: str,
-    processed_eans_table: str,
-    target_table: str,
-    batch_size: int = DEFAULT_BATCH_SIZE,
-    flush_threshold: int = FLUSH_THRESHOLD,
+    destination_table: str,
+    main_batch_size: int = MAIN_BATCH_SIZE,
+    sub_batch_size: int = DEFAULT_BATCH_SIZE,
     project_id: str = GCP_PROJECT_ID,
     resume: bool = False,
+    skip_already_processed_table: str | None = None,
+    skip_count: int = 0,
 ) -> None:
     """
-    Execute Mode 1: BigQuery batch processing with buffered inserts.
+    Execute Mode 1: BigQuery batch processing with batch_number tracking.
 
-    Optimized workflow to avoid UPDATE quota limits:
-    1. Extract EANs from source BigQuery table
-    2. Create tracking table (immutable, EANs only)
-    3. Create processed_eans table (append-only)
-    4. Loop: Fetch unprocessed EANs using LEFT JOIN
-    5. Call /ean endpoint with pipe-separated EANs
-    6. Accumulate results in memory buffers
-    7. Flush to BigQuery every flush_threshold EANs
-    8. Final flush for remaining EANs
+    New architecture using single destination table with batch tracking:
+    1. Query destination_table ONCE to get last batch_number
+    2. For each batch N:
+       - Fetch 20k EANs from source_table using OFFSET pagination
+       - Process in sub-batches of 250 EANs (API limit)
+       - Handle 3 statuses: processed | deleted_in_titelive | fail
+       - Write all results with batch_number = N
+    3. Increment batch_number in memory (no re-query)
+
+    This eliminates BigQuery buffer issues by querying destination_table only once.
+
+    Optional: Skip already-processed EANs from a previous run
+    - If skip_already_processed_table is provided, uses ORDER BY to sort
+      already-processed EANs first, then applies OFFSET to skip them
+    - skip_count should equal the number of EANs in skip_already_processed_table
+    - Example: skip_count=861488 means batch 0 starts at OFFSET 861488
 
     Args:
         source_table: Full table ID for source (project.dataset.table)
-        tracking_table: Full table ID for tracking (project.dataset.table)
-        processed_eans_table: Full table ID for processed_eans (project.dataset.table)
-        target_table: Full table ID for target (project.dataset.table)
-        batch_size: Number of EANs to process per API batch (max 250)
-        flush_threshold: Flush to BigQuery every N EANs (default 20,000)
+        destination_table: Full table ID for destination (project.dataset.table)
+        main_batch_size: Number of EANs per batch (default 20,000)
+        sub_batch_size: Number of EANs per API call (default 250)
         project_id: GCP project ID
-        resume: If True, skip table creation and resume from existing tables.
-                Used to recover from service interruptions.
+        resume: If True, skip table creation and resume from last batch_number
+        skip_already_processed_table: Optional table containing \
+            already-processed EANs to skip
+        skip_count: Number of already-processed EANs to skip \
+            (required if skip_already_processed_table is set)
 
     Raises:
         Exception: If any step fails
     """
-    logger.info("Starting Mode 1: BigQuery batch processing (optimized)")
-    logger.info(
-        f"Source: {source_table}, Tracking: {tracking_table}, "
-        f"Processed: {processed_eans_table}, Target: {target_table}"
-    )
-    logger.info(f"Batch size: {batch_size}, Flush threshold: {flush_threshold}")
+    logger.info("Starting Mode 1: BigQuery batch processing (batch_number tracking)")
+    logger.info(f"Source: {source_table}, Destination: {destination_table}")
+    logger.info(f"Main batch size: {main_batch_size}, Sub-batch size: {sub_batch_size}")
+
+    if skip_already_processed_table:
+        logger.info(
+            f"Skip mode: Will skip {skip_count} already-processed EANs from "
+            f"{skip_already_processed_table}"
+        )
 
     # Initialize clients
     bq_client = bigquery.Client(project=project_id)
     token_manager = TokenManager(project_id)
     api_client = TiteliveClient(token_manager)
 
-    if resume:
-        # Resume mode: skip table creation, use existing tables
-        logger.info("Resume mode: Using existing tables")
-        logger.info(f"Tracking table: {tracking_table}")
-        logger.info(f"Processed EANs table: {processed_eans_table}")
-        logger.info(f"Target table: {target_table}")
+    if not resume:
+        # Create destination table if not resuming
+        logger.info("Step 1: Creating destination table")
+        create_destination_table(bq_client, destination_table, drop_if_exists=True)
 
-        # Get count from existing tracking table
-        total_eans = get_tracking_table_count(
-            bq_client, tracking_table, processed_eans_table
-        )
+    # Step 2: Get last batch number (ONCE - critical for avoiding buffer issues)
+    logger.info("Step 2: Getting last batch number from destination table")
+    last_batch_number = get_last_batch_number(bq_client, destination_table)
+    current_batch = last_batch_number + 1
 
-        if total_eans == 0:
-            logger.warning("No unprocessed EANs found. Exiting.")
-            return
-    else:
-        # Normal mode: create tables from scratch
-        # Step 1: Create target table with proper schema
-        logger.info("Step 1: Creating target table")
-        create_target_table(bq_client, target_table, drop_if_exists=True)
+    logger.info(f"Starting from batch {current_batch}")
 
-        # Step 2: Create tracking table directly from source using SQL
-        logger.info("Step 2: Creating tracking table from source (SQL)")
-        total_eans = create_tracking_table_from_source(
-            bq_client, tracking_table, source_table, drop_if_exists=True
-        )
-
-        if total_eans == 0:
-            logger.warning("No EANs found in source table. Exiting.")
-            return
-
-        # Step 3: Create processed_eans table
-        logger.info("Step 3: Creating processed_eans table")
-        create_processed_eans_table(
-            bq_client, processed_eans_table, drop_if_exists=True
-        )
-
-    # Step 4: Process batches with memory buffering
-    logger.info(
-        f"Step 4: Processing {total_eans} EANs in batches of {batch_size} "
-        f"(flush every {flush_threshold} EANs)"
-    )
-
-    # Initialize memory buffers
-    processed_buffer = []  # Accumulate processed EAN records
-    results_buffer = []  # Accumulate API response dataframes
-    already_fetched = set()  # Track EANs in current buffer
-    ean_history = deque(maxlen=2)  # Sliding window: keep last 2 flush cycles
-
+    # Step 3: Process batches
     total_processed = 0
-    batch_num = 0
-    flush_count = 0
 
     while True:
-        # Get next batch of unprocessed EANs (excluding in-memory buffer + history)
-        exclude_eans = (
-            already_fetched.union(*ean_history) if ean_history else already_fetched
-        )
-        batch_eans = get_unprocessed_eans(
+        # Fetch EANs for this batch using OFFSET pagination
+        batch_eans = fetch_batch_eans(
             bq_client,
-            tracking_table,
-            processed_eans_table,
-            batch_size,
-            exclude_eans=exclude_eans,
+            source_table,
+            current_batch,
+            main_batch_size,
+            skip_already_processed_table=skip_already_processed_table,
+            skip_count=skip_count,
         )
 
         if not batch_eans:
-            logger.info("No more unprocessed EANs.")
+            logger.info("No more EANs to process. Exiting.")
             break
 
-        batch_num += 1
-        logger.info(f"Processing batch {batch_num}: {len(batch_eans)} EANs")
-
-        try:
-            # Call API
-            api_response = api_client.get_by_eans(batch_eans)
-
-            # Transform response to 3-column format
-            transformed_df = transform_api_response(api_response)
-
-            # Identify EANs that were returned vs missing (deleted in Titelive)
-            returned_eans = (
-                set(transformed_df["ean"].tolist())
-                if not transformed_df.empty
-                else set()
-            )
-            missing_eans = set(batch_eans) - returned_eans
-
-            # Accumulate in memory buffers
-            current_time = datetime.now()
-
-            # Add returned EANs to processed buffer
-            processed_buffer.extend(
-                [
-                    {
-                        "ean": ean,
-                        "processed_at": current_time,
-                        "status": "processed",
-                    }
-                    for ean in returned_eans
-                ]
-            )
-
-            # Add missing EANs to processed buffer
-            processed_buffer.extend(
-                [
-                    {
-                        "ean": ean,
-                        "processed_at": current_time,
-                        "status": "deleted_in_titelive",
-                    }
-                    for ean in missing_eans
-                ]
-            )
-
-            # Add results to buffer
-            if not transformed_df.empty:
-                results_buffer.append(transformed_df)
-
-            # Track fetched EANs
-            already_fetched.update(batch_eans)
-
-            total_processed += len(batch_eans)
-
-            logger.info(
-                f"Batch {batch_num}: {len(returned_eans)} returned, "
-                f"{len(missing_eans)} deleted. "
-                f"Buffer: {len(processed_buffer)} EANs"
-            )
-
-            # Flush to BigQuery when threshold reached
-            if len(processed_buffer) >= flush_threshold:
-                flush_count += 1
-                logger.info(
-                    f"Flush {flush_count}: Writing {len(processed_buffer)}"
-                    "EANs to BigQuery"
-                )
-
-                # Flush processed_eans
-                processed_df = pd.DataFrame(processed_buffer)
-                insert_dataframe(
-                    bq_client,
-                    processed_eans_table,
-                    processed_df,
-                    mode="append",
-                )
-
-                # Flush target table results
-                if results_buffer:
-                    combined_df = pd.concat(results_buffer, ignore_index=True)
-                    schema = get_target_table_schema()
-                    insert_dataframe(
-                        bq_client,
-                        target_table,
-                        combined_df,
-                        mode="append",
-                        schema=schema,
-                    )
-                    logger.info(
-                        f"Flush {flush_count}: Wrote {len(combined_df)} rows to target"
-                    )
-
-                # Clear buffers (save history for sliding window protection)
-                processed_buffer = []
-                results_buffer = []
-                ean_history.append(already_fetched.copy())
-                already_fetched.clear()
-
-                logger.info(
-                    f"Flush {flush_count} complete. "
-                    f"Progress: {total_processed}/{total_eans}"
-                )
-
-        except Exception as e:
-            logger.error(f"Error processing batch {batch_num}: {e}")
-            logger.error("Batch will remain unprocessed for retry. Continuing...")
-            continue
-
-    # Final flush for remaining EANs in buffer
-    if processed_buffer:
-        flush_count += 1
         logger.info(
-            f"Final flush {flush_count}: Writing {len(processed_buffer)} remaining EANs"
+            f"Batch {current_batch}: Processing {len(batch_eans)} EANs "
+            f"in sub-batches of {sub_batch_size}"
         )
 
-        processed_df = pd.DataFrame(processed_buffer)
+        # Process EANs in sub-batches of 250
+        results = process_eans_batch(api_client, batch_eans, sub_batch_size)
+
+        # Count statuses
+        status_counts = {}
+        for result in results:
+            status = result["status"]
+            status_counts[status] = status_counts.get(status, 0) + 1
+
+        logger.info(
+            f"Batch {current_batch} processed: "
+            f"{status_counts.get('processed', 0)} processed, "
+            f"{status_counts.get('deleted_in_titelive', 0)} deleted, "
+            f"{status_counts.get('fail', 0)} failed"
+        )
+
+        # Add processed_at and batch_number to all results
+        current_time = datetime.now()
+        for result in results:
+            result["processed_at"] = current_time
+            result["batch_number"] = current_batch
+
+        # Write results to destination table
+        logger.info(f"Batch {current_batch}: Writing {len(results)} rows to BigQuery")
+        df = pd.DataFrame(results)
+        schema = get_destination_table_schema()
         insert_dataframe(
             bq_client,
-            processed_eans_table,
-            processed_df,
+            destination_table,
+            df,
             mode="append",
+            schema=schema,
         )
 
-        if results_buffer:
-            combined_df = pd.concat(results_buffer, ignore_index=True)
-            schema = get_target_table_schema()
-            insert_dataframe(
-                bq_client,
-                target_table,
-                combined_df,
-                mode="append",
-                schema=schema,
-            )
-            logger.info(f"Final flush: Wrote {len(combined_df)} rows to target")
+        total_processed += len(batch_eans)
+        logger.info(
+            f"Batch {current_batch} complete. Total processed: {total_processed}"
+        )
+
+        # Increment batch number in memory (NO re-query - critical!)
+        current_batch += 1
 
     logger.info(
         f"Mode 1 complete. Processed {total_processed} EANs total "
-        f"with {flush_count} BigQuery flushes."
+        f"in {current_batch - last_batch_number - 1} batches."
     )

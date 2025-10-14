@@ -3,15 +3,13 @@
 import typer
 
 from config import (
-    DEFAULT_PROCESSED_EANS_TABLE,
     DEFAULT_SOURCE_TABLE,
     DEFAULT_TARGET_TABLE,
-    DEFAULT_TRACKING_TABLE,
 )
 from src.constants import (
     DEFAULT_BATCH_SIZE,
-    FLUSH_THRESHOLD,
     GCP_PROJECT_ID,
+    MAIN_BATCH_SIZE,
     RESULTS_PER_PAGE,
 )
 from src.modes.init_bq import run_init_bq
@@ -34,30 +32,20 @@ def init_bq(
         "--source-table",
         help="Source BigQuery table ID (project.dataset.table)",
     ),
-    tracking_table: str = typer.Option(
-        DEFAULT_TRACKING_TABLE,
-        "--tracking-table",
-        help="Tracking BigQuery table ID (project.dataset.table)",
-    ),
-    processed_eans_table: str = typer.Option(
-        DEFAULT_PROCESSED_EANS_TABLE,
-        "--processed-eans-table",
-        help="Processed EANs BigQuery table ID (project.dataset.table)",
-    ),
-    target_table: str = typer.Option(
+    destination_table: str = typer.Option(
         DEFAULT_TARGET_TABLE,
-        "--target-table",
-        help="Target BigQuery table ID (project.dataset.table)",
+        "--destination-table",
+        help="Destination BigQuery table ID (project.dataset.table)",
     ),
-    batch_size: int = typer.Option(
+    main_batch_size: int = typer.Option(
+        MAIN_BATCH_SIZE,
+        "--main-batch-size",
+        help="Number of EANs per batch (default 20,000)",
+    ),
+    sub_batch_size: int = typer.Option(
         DEFAULT_BATCH_SIZE,
-        "--batch-size",
-        help="Number of EANs to process per API batch (max 250)",
-    ),
-    flush_threshold: int = typer.Option(
-        FLUSH_THRESHOLD,
-        "--flush-threshold",
-        help="Flush to BigQuery every N EANs (default 20000)",
+        "--sub-batch-size",
+        help="Number of EANs per API call (max 250)",
     ),
     project_id: str = typer.Option(
         GCP_PROJECT_ID,
@@ -67,53 +55,69 @@ def init_bq(
     resume: bool = typer.Option(
         False,
         "--resume",
-        help="Resume from existing tables (skip table creation)",
+        help="Resume from last batch_number (skip table creation)",
+    ),
+    skip_already_processed_table: str = typer.Option(
+        None,
+        "--skip-already-processed-table",
+        help="Table containing already-processed EANs to skip (optional)",
+    ),
+    skip_count: int = typer.Option(
+        0,
+        "--skip-count",
+        help="Number of already-processed EANs to skip \
+            (required with --skip-already-processed-table)",
     ),
 ) -> None:
     """
-    Mode 1: Extract EANs from BigQuery and batch process via /ean endpoint (optimized).
+    Mode 1: Extract EANs from BigQuery and batch process via /ean endpoint.
 
-    This mode uses buffered inserts to avoid BigQuery UPDATE quota limits:
-    1. Extracts EANs from source table
-    2. Creates tracking table (immutable, EANs only)
-    3. Creates processed_eans table (append-only)
-    4. Fetches product data in batches via API
-    5. Accumulates results in memory
-    6. Flushes to BigQuery every 20K EANs
-    7. Supports resume from interruption
+    New architecture using single destination table with batch_number tracking:
+    1. Query destination_table ONCE to get last batch_number
+    2. For each batch N:
+       - Fetch 20k EANs from source_table using OFFSET pagination
+       - Process in sub-batches of 250 EANs (API limit)
+       - Handle 3 statuses: processed | deleted_in_titelive | fail
+       - Write all results with batch_number = N
+    3. Increment batch_number in memory (no re-query)
+
+    This eliminates BigQuery buffer issues by querying destination_table only once.
 
     Default table names (from config.py):
     - Source: {PROJECT}.raw_{ENV}.applicative_database_product
-    - Tracking: {PROJECT}.{DATASET}.tmp_titelive__tracking
-    - Processed EANs: {PROJECT}.{DATASET}.tmp_titelive__processed_eans
-    - Target: {PROJECT}.{DATASET}.tmp_titelive__products
+    - Destination: {PROJECT}.{DATASET}.tmp_titelive__products
 
     Example (using defaults):
 
-        # Initial run (creates tables)
+        # Initial run (creates table)
         python main.py init-bq
 
-        # Resume from interruption (uses existing tables)
+        # Resume from interruption
         python main.py init-bq --resume
 
-        # Custom table names
+        # Skip already-processed EANs (e.g., from old run)
         python main.py init-bq \\
-            --tracking-table "project.dataset.custom_tracking" \\
-            --processed-eans-table "project.dataset.custom_processed" \\
-            --target-table "project.dataset.custom_target"
+            --skip-already-processed-table "project.dataset.old_table" \\
+            --skip-count 861488
+
+        # Custom parameters
+        python main.py init-bq \\
+            --destination-table "project.dataset.custom_destination" \\
+            --main-batch-size 10000 \\
+            --sub-batch-size 250
     """
-    logger.info("Executing Mode 1: BigQuery batch processing (optimized)")
+    logger.info("Executing Mode 1: BigQuery batch processing (batch_number tracking)")
 
     try:
         run_init_bq(
             source_table=source_table,
-            tracking_table=tracking_table,
-            processed_eans_table=processed_eans_table,
-            target_table=target_table,
-            batch_size=batch_size,
-            flush_threshold=flush_threshold,
+            destination_table=destination_table,
+            main_batch_size=main_batch_size,
+            sub_batch_size=sub_batch_size,
             project_id=project_id,
             resume=resume,
+            skip_already_processed_table=skip_already_processed_table,
+            skip_count=skip_count,
         )
         logger.info("Mode 1 execution completed successfully")
     except Exception as e:

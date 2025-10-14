@@ -24,6 +24,74 @@ def get_target_table_schema() -> list[bigquery.SchemaField]:
     ]
 
 
+def get_destination_table_schema() -> list[bigquery.SchemaField]:
+    """
+    Get the schema for Titelive destination table with batch tracking.
+
+    Schema includes:
+        - ean: Product EAN
+        - status: Processing status (processed|deleted_in_titelive|fail)
+        - processed_at: Processing timestamp
+        - datemodification: Modification date (NULL for deleted/failed)
+        - json_raw: Full article JSON (NULL for deleted/failed)
+        - batch_number: Batch number for progress tracking
+
+    Returns:
+        List of BigQuery SchemaField objects
+    """
+    return [
+        bigquery.SchemaField("ean", "STRING", mode="REQUIRED"),
+        bigquery.SchemaField("status", "STRING", mode="REQUIRED"),
+        bigquery.SchemaField("processed_at", "TIMESTAMP", mode="REQUIRED"),
+        bigquery.SchemaField("datemodification", "DATE", mode="NULLABLE"),
+        bigquery.SchemaField("json_raw", "STRING", mode="NULLABLE"),
+        bigquery.SchemaField("batch_number", "INTEGER", mode="REQUIRED"),
+    ]
+
+
+def create_destination_table(
+    client: bigquery.Client,
+    table_id: str,
+    drop_if_exists: bool = False,
+) -> None:
+    """
+    Create destination table with batch tracking schema.
+
+    Schema:
+        - ean (STRING): Product EAN, used for clustering
+        - status (STRING): Processing status (processed|deleted_in_titelive|fail)
+        - processed_at (TIMESTAMP): Processing timestamp
+        - datemodification (DATE): Modification date (NULL for deleted/failed)
+        - json_raw (STRING): Full article data as JSON (NULL for deleted/failed)
+        - batch_number (INTEGER): Batch number for progress tracking
+
+    Args:
+        client: BigQuery client
+        table_id: Full table ID (project.dataset.table)
+        drop_if_exists: Whether to drop existing table first
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If table creation fails
+    """
+    if drop_if_exists:
+        logger.info(f"Dropping table if exists: {table_id}")
+        client.delete_table(table_id, not_found_ok=True)
+
+    # Define schema
+    schema = get_destination_table_schema()
+
+    # Configure table with clustering
+    table = bigquery.Table(table_id, schema=schema)
+    table.clustering_fields = ["ean"]
+
+    # Create table
+    logger.info(f"Creating destination table: {table_id}")
+    table = client.create_table(table)
+
+    logger.info(f"Created destination table: {table_id}")
+    logger.info(f"  - Clustered by: {table.clustering_fields}")
+
+
 def create_target_table(
     client: bigquery.Client,
     table_id: str,
@@ -246,8 +314,9 @@ def get_unprocessed_eans(
     query = f"""
         SELECT t.ean
         FROM `{tracking_table}` t
-        LEFT JOIN `{processed_eans_table}` p ON t.ean = p.ean
-        WHERE p.ean IS NULL
+        WHERE NOT EXISTS (
+            SELECT 1 FROM `{processed_eans_table}` p WHERE p.ean = t.ean
+        )
         {exclude_clause}
         LIMIT {batch_size}
     """
@@ -284,8 +353,9 @@ def get_tracking_table_count(
     query = f"""
         SELECT COUNT(*) as total
         FROM `{tracking_table}` t
-        LEFT JOIN `{processed_eans_table}` p ON t.ean = p.ean
-        WHERE p.ean IS NULL
+        WHERE NOT EXISTS (
+            SELECT 1 FROM `{processed_eans_table}` p WHERE p.ean = t.ean
+        )
     """
 
     query_job = client.query(query)
@@ -294,6 +364,111 @@ def get_tracking_table_count(
 
     logger.info(f"Unprocessed EANs in tracking table: {total}")
     return total
+
+
+def get_last_batch_number(client: bigquery.Client, destination_table: str) -> int:
+    """
+    Get the last batch number from destination table.
+
+    This function queries the destination table ONCE at the start to determine
+    which batch to resume from. Returns -1 if table is empty (start at batch 0).
+
+    Args:
+        client: BigQuery client
+        destination_table: Full destination table ID (project.dataset.table)
+
+    Returns:
+        Last batch number, or -1 if table is empty
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If query fails
+    """
+    query = f"""
+        SELECT COALESCE(MAX(batch_number), -1) as last_batch
+        FROM `{destination_table}`
+    """
+
+    logger.info(f"Querying last batch number from {destination_table}")
+    query_job = client.query(query)
+    result = query_job.result()
+    last_batch = next(iter(result)).last_batch
+
+    logger.info(f"Last batch number: {last_batch} (next batch: {last_batch + 1})")
+    return last_batch
+
+
+def fetch_batch_eans(
+    client: bigquery.Client,
+    source_table: str,
+    batch_number: int,
+    batch_size: int = 20_000,
+    skip_already_processed_table: str | None = None,
+    skip_count: int = 0,
+) -> list[str]:
+    """
+    Fetch EANs for a specific batch using OFFSET pagination.
+
+    Uses OFFSET + LIMIT + ORDER BY to deterministically fetch batch N.
+    OFFSET = skip_count + (batch_number * batch_size)
+
+    When skip_already_processed_table is provided, uses ORDER BY with CASE WHEN
+    to sort already-processed EANs first, then applies OFFSET to skip them.
+
+    Args:
+        client: BigQuery client
+        source_table: Full source table ID (project.dataset.table)
+        batch_number: Batch number to fetch (0-indexed)
+        batch_size: Number of EANs per batch (default 20,000)
+        skip_already_processed_table: Optional table containing already-processed EANs
+        skip_count: Number of already-processed EANs \
+            to skip (used with skip_already_processed_table)
+
+    Returns:
+        List of EANs for this batch (up to batch_size)
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If query fails
+    """
+    offset = skip_count + (batch_number * batch_size)
+
+    # Build ORDER BY clause
+    if skip_already_processed_table:
+        # Sort already-processed EANs first, then unprocessed EANs
+        order_by_clause = f"""
+            CASE
+                WHEN ean IN (SELECT ean FROM `{skip_already_processed_table}`)
+                THEN 0
+                ELSE 1
+            END,
+            ean
+        """
+        logger.info(
+            "Using skip logic: already-processed EANs from "
+            f"{skip_already_processed_table} will be sorted first and skipped"
+        )
+    else:
+        order_by_clause = "ean"
+
+    query = f"""
+        SELECT DISTINCT JSON_VALUE(jsondata, '$.ean') AS ean
+        FROM `{source_table}`
+        WHERE JSON_VALUE(jsondata, '$.ean') IS NOT NULL
+        ORDER BY {order_by_clause}
+        LIMIT {batch_size}
+        OFFSET {offset}
+    """
+
+    logger.info(
+        f"Fetching batch {batch_number}: OFFSET {offset} "
+        f"(skip_count={skip_count}, batch_offset={batch_number * batch_size}), "
+        f"LIMIT {batch_size}"
+    )
+    query_job = client.query(query)
+    results = query_job.result()
+
+    eans = [row.ean for row in results]
+    logger.info(f"Fetched {len(eans)} EANs for batch {batch_number}")
+    return eans
 
 
 def load_gcs_to_bq(

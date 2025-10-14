@@ -12,8 +12,8 @@ from common.config import (
     GCE_ZONE,
     GCP_PROJECT_ID,
     SSH_USER,
-    UV_VERSION,
     USE_INTERNAL_IP,
+    UV_VERSION,
 )
 from common.hooks.gce import DeferrableSSHGCEJobManager, GCEHook, SSHGCEJobManager
 from common.hooks.image import MACHINE_TYPE
@@ -283,7 +283,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         base_dir: str = None,
         environment: t.Dict[str, str] = {},
         deferrable: bool = False,
-        poll_interval: int = 60,
+        poll_interval: int = 300,
         *args,
         **kwargs,
     ):

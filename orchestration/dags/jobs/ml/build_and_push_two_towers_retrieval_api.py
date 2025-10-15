@@ -25,7 +25,7 @@ default_args = {
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
-DAG_NAME = "retrieval_vector_build"
+DAG_NAME = "build_and_push_two_towers_retrieval_api"
 
 
 # Params

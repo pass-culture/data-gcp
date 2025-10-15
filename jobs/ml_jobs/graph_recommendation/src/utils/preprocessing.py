@@ -35,6 +35,39 @@ def normalize_dataframe(
     return df
 
 
+def detach_single_occuring_metadata(
+    df: pd.DataFrame,
+    columns: Sequence[str],
+) -> pd.DataFrame:
+    """Set single occurence of Metadata to None so it doen't biases the RW.
+
+    Args:
+        df: The input dataframe.
+        columns: List of column names to check.
+
+    Returns:
+        A new dataframe with cleaned Metadata columns.
+    """
+    df = df.copy()
+
+    for col in columns:
+        if col not in df.columns:
+            continue
+
+        # Count occurrences (faster with groupby for large data)
+        value_counts = df[col].value_counts()
+
+        # Find singleton values
+        singleton_values = value_counts[value_counts == 1].index
+
+        if len(singleton_values) > 0:
+            # Create boolean mask (vectorized)
+            mask = df[col].isin(singleton_values)
+            df.loc[mask, col] = None
+
+    return df
+
+
 def remove_rows_with_no_metadata(
     df: pd.DataFrame, metadata_list: list | None = None
 ) -> pd.DataFrame:

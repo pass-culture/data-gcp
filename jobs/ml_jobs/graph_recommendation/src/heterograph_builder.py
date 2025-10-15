@@ -7,20 +7,22 @@ from typing import TYPE_CHECKING
 import tqdm
 
 from src.constants import DEFAULT_METADATA_COLUMNS, ID_COLUMN
-from src.utils.graph_indexing import build_id_to_index_map, set_graph_identifiers
-from src.utils.postprocessing import (
-    GRAPH_PRUNING_MIN_SIZE,
-    diagnose_component_sizes,
-    prune_small_components,
+from src.utils.logging import diagnose_component_sizes
+from src.utils.preprocessing import (
+    detach_single_occuring_metadata,
+    normalize_dataframe,
+    remove_rows_with_no_metadata,
 )
-from src.utils.preprocessing import normalize_dataframe, remove_rows_with_no_metadata
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
+    from src.constants import MetadataKey
+
 
 import pandas as pd
 import torch
+from loguru import logger
 from torch_geometric.data import HeteroData
 
 
@@ -57,6 +59,7 @@ def build_book_metadata_heterograph_from_dataframe(
     # Step 1: Preprocess dataframe
     all_columns = [id_column, *metadata_columns]
     df_normalized = normalize_dataframe(dataframe, all_columns)
+    df_normalized = detach_single_occuring_metadata(df_normalized, metadata_columns)
     df_normalized = remove_rows_with_no_metadata(
         df_normalized,
         metadata_list=list(metadata_columns),
@@ -65,9 +68,9 @@ def build_book_metadata_heterograph_from_dataframe(
     # Step 2: Prepare book nodes
     unique_books = df_normalized[id_column].dropna().drop_duplicates()
     book_ids = unique_books.tolist()
-    book_index = build_id_to_index_map(book_ids)
+    book_index = {book_id: idx for idx, book_id in enumerate(book_ids)}
 
-    # Step 3: Build metadata nodes by column (OPTIMIZED)
+    # Step 3: Build metadata nodes by column
     metadata_nodes_by_column: dict[str, dict[str, int]] = {}
     metadata_ids_by_column: dict[str, list[str]] = {}
 
@@ -76,57 +79,63 @@ def build_book_metadata_heterograph_from_dataframe(
             continue
 
         unique_values = df_normalized[column].dropna().unique()
-        # invalid values are already converted to None type in prepocessing step
-        valid_values = unique_values.astype(str).tolist()
+        valid_values = [
+            str(value)
+            for value in unique_values
+            if value is not None and str(value).strip() != "None"
+        ]
 
         if valid_values:
+            metadata_nodes_by_column[column] = {
+                value: idx for idx, value in enumerate(valid_values)
+            }
             metadata_ids_by_column[column] = valid_values
-            metadata_nodes_by_column[column] = build_id_to_index_map(valid_values)
 
-    # Step 4-5: OPTIMIZED edge building
+    # Step 4: Create edge indices for each relation type
     edge_indices: dict[tuple[str, str, str], set[tuple[int, int]]] = {}
 
-    # Pre-convert book IDs to indices once (avoid repeated lookups)
-    df_normalized["_book_idx"] = df_normalized[id_column].map(book_index)
+    # Initialize edge sets for each metadata column
+    for column in metadata_columns:
+        if column in metadata_nodes_by_column:
+            # "book" -> "is_{column}" -> "{column}"
+            edge_indices[("book", f"is_{column}", column)] = set()
+            # "{column}" -> "{column}_of" -> "book"
+            edge_indices[(column, f"{column}_of", "book")] = set()
 
-    for column in tqdm.tqdm(
-        metadata_columns, desc="Building edges (optimized)", unit="column"
+    # Step 5: Build edges by iterating through dataframe
+    relevant_columns = [id_column, *metadata_columns]
+
+    for record in tqdm.tqdm(
+        df_normalized[relevant_columns].itertuples(index=False),
+        desc="Building edges",
     ):
-        if column not in metadata_nodes_by_column:
+        record_dict = record._asdict()
+        book_id = record_dict[id_column]
+
+        # Skip rows with missing book IDs
+        if book_id is None or book_id not in book_index:
             continue
 
-        edge_key_forward = ("book", f"is_{column}", column)
-        edge_key_backward = (column, f"{column}_of", "book")
-        edge_indices[edge_key_forward] = set()
-        edge_indices[edge_key_backward] = set()
+        book_idx = book_index[book_id]
 
-        # Get only valid rows (both book and metadata exist)
-        valid_mask = df_normalized["_book_idx"].notna() & df_normalized[column].notna()
+        # Create edges to all metadata values in this row
+        for column in metadata_columns:
+            if column not in metadata_nodes_by_column:
+                continue
 
-        # Extract arrays directly (no copying DataFrame)
-        book_idx_array = df_normalized.loc[valid_mask, "_book_idx"].values.astype(int)
+            value = record_dict[column]
+            if value is None or str(value).strip() == "None":
+                continue
 
-        # Map metadata values to indices (vectorized)
-        metadata_series = df_normalized.loc[valid_mask, column].astype(str)
-        metadata_idx_array = metadata_series.map(
-            metadata_nodes_by_column[column]
-        ).values
+            value_str = str(value)
+            if value_str in metadata_nodes_by_column[column]:
+                metadata_idx = metadata_nodes_by_column[column][value_str]
 
-        # Remove NaNs from failed mappings
-        valid_mapping = ~pd.isna(metadata_idx_array)
-        book_idx_array = book_idx_array[valid_mapping]
-        metadata_idx_array = metadata_idx_array[valid_mapping].astype(int)
-
-        # Use set comprehension (faster than np.unique for this use case)
-        edge_indices[edge_key_forward].update(
-            zip(book_idx_array, metadata_idx_array, strict=False)
-        )
-        edge_indices[edge_key_backward].update(
-            zip(metadata_idx_array, book_idx_array, strict=False)
-        )
-
-    # Clean up temporary column
-    df_normalized.drop("_book_idx", axis=1, inplace=True)
+                # Add edges in both directions
+                edge_key_forward = ("book", f"is_{column}", column)
+                edge_key_backward = (column, f"{column}_of", "book")
+                edge_indices[edge_key_forward].add((book_idx, metadata_idx))
+                edge_indices[edge_key_backward].add((metadata_idx, book_idx))
 
     # Check if any edges were created
     total_edges = sum(len(edges) for edges in edge_indices.values())
@@ -153,16 +162,18 @@ def build_book_metadata_heterograph_from_dataframe(
             graph_data[src_type, edge_type, dst_type].edge_index = edge_index
 
     # Step 7: Add custom attributes for identifier mapping
-    set_graph_identifiers(
-        graph=graph_data,
-        book_ids=book_ids,
-        metadata_ids_by_column=metadata_ids_by_column,
-        metadata_columns=[
-            col for col in metadata_columns if col in metadata_nodes_by_column
-        ],
-        book_index=book_index,
-        metadata_nodes_by_column=metadata_nodes_by_column,
-    )
+    graph_data.book_ids = list(book_ids)
+    graph_data.metadata_ids_by_column = metadata_ids_by_column
+    graph_data.metadata_columns = [
+        col for col in metadata_columns if col in metadata_nodes_by_column
+    ]
+
+    # Create a flattened metadata_ids list for backward compatibility
+    metadata_keys: list[MetadataKey] = []
+    for column in graph_data.metadata_columns:
+        for value in metadata_ids_by_column[column]:
+            metadata_keys.append((column, value))
+    graph_data.metadata_ids = metadata_keys
 
     return graph_data
 
@@ -172,7 +183,6 @@ def build_book_metadata_heterograph(
     *,
     nrows: int | None = None,
     filters: Sequence[tuple[str, str, Iterable[object]]] | None = None,
-    min_component_size: int | None = GRAPH_PRUNING_MIN_SIZE,
 ) -> HeteroData:
     """Load a parquet file and build the corresponding book-metadata graph."""
 
@@ -188,13 +198,10 @@ def build_book_metadata_heterograph(
         df, id_column=ID_COLUMN, metadata_columns=DEFAULT_METADATA_COLUMNS
     )
 
-    components_data = diagnose_component_sizes(graph=data_graph)
-
-    if min_component_size:
-        data_graph = prune_small_components(
-            graph=data_graph,
-            min_size=min_component_size,
-            components_data=components_data,
-        )
+    try:
+        _ = diagnose_component_sizes(graph=data_graph)
+    except Exception:
+        logger.info("Connected components diagnostics skipped due to error")
+        logger.info("Error details:", exc_info=True)
 
     return data_graph

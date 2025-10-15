@@ -8,11 +8,12 @@ from typing import TYPE_CHECKING
 import tqdm
 
 from src.constants import DEFAULT_METADATA_COLUMNS, ID_COLUMN
-from src.utils.graph_indexing import build_id_to_index_map
-from src.utils.postprocessing import (
-    diagnose_component_sizes,
+from src.utils.logging import diagnose_component_sizes
+from src.utils.preprocessing import (
+    detach_single_occuring_metadata,
+    normalize_dataframe,
+    remove_rows_with_no_metadata,
 )
-from src.utils.preprocessing import normalize_dataframe, remove_rows_with_no_metadata
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -107,6 +108,7 @@ def build_book_metadata_graph_from_dataframe(
     # Step 1: Preprocessing
     all_columns = [id_column, *metadata_columns]
     df_normalized = normalize_dataframe(dataframe, all_columns)
+    df_normalized = detach_single_occuring_metadata(df_normalized, metadata_columns)
     df_normalized = remove_rows_with_no_metadata(
         df_normalized,
         metadata_list=list(metadata_columns),
@@ -115,7 +117,7 @@ def build_book_metadata_graph_from_dataframe(
     # Step 2: Prepare book nodes (indexed 0 to num_books - 1)
     unique_books = df_normalized[id_column].dropna().drop_duplicates()
     book_ids = unique_books.tolist()
-    book_index = build_id_to_index_map(book_ids)
+    book_index = {book_id: idx for idx, book_id in enumerate(book_ids)}
 
     # Step 3: Prepare metadata type mapping (0 reserved for books)
     metadata_type_to_id = {"book": 0}
@@ -178,8 +180,6 @@ def build_book_metadata_graph_from_dataframe(
     graph_data = Data(edge_index=edge_index, num_nodes=len(node_types))
 
     # Step 8: Add custom attributes for identifier mapping
-    # Note: This is a homogeneous graph (Data), not heterogeneous (HeteroData),
-    # so we manually set attributes instead of using set_graph_identifiers
     graph_data.node_type = torch.tensor(node_types, dtype=torch.long)
     book_mask = torch.zeros(len(node_types), dtype=torch.bool)
     book_mask[: len(book_ids)] = True
@@ -218,8 +218,10 @@ def build_book_metadata_graph(
         df, id_column=ID_COLUMN, metadata_columns=DEFAULT_METADATA_COLUMNS
     )
 
-    _ = diagnose_component_sizes(graph=data_graph)
-
-    logger.warning("Pruning not available on homogeneous Graph!")
+    try:
+        _ = diagnose_component_sizes(graph=data_graph)
+    except Exception:
+        logger.info("Connected components diagnostics skipped due to error")
+        logger.info("Error details:", exc_info=True)
 
     return data_graph

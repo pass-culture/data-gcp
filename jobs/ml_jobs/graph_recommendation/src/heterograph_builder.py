@@ -7,15 +7,22 @@ from typing import TYPE_CHECKING
 import tqdm
 
 from src.constants import DEFAULT_METADATA_COLUMNS, ID_COLUMN
-from src.utils.preprocessing import normalize_dataframe
+from src.utils.logging import diagnose_component_sizes
+from src.utils.preprocessing import (
+    detach_single_occuring_metadata,
+    normalize_dataframe,
+    remove_rows_with_no_metadata,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
     from src.constants import MetadataKey
 
+
 import pandas as pd
 import torch
+from loguru import logger
 from torch_geometric.data import HeteroData
 
 
@@ -49,9 +56,13 @@ def build_book_metadata_heterograph_from_dataframe(
     if missing_columns:
         raise KeyError(f"Missing required columns: {', '.join(missing_columns)}")
 
-    # Step 1: Normalize all relevant columns using vectorized operations
+    # Step 1: Preprocess dataframe
     all_columns = [id_column, *metadata_columns]
-    df_normalized = normalize_dataframe(dataframe, all_columns)
+    df_normalized = (
+        dataframe.pipe(normalize_dataframe, columns=all_columns)
+        .pipe(detach_single_occuring_metadata, columns=metadata_columns)
+        .pipe(remove_rows_with_no_metadata, metadata_list=list(metadata_columns))
+    )
 
     # Step 2: Prepare book nodes
     unique_books = df_normalized[id_column].dropna().drop_duplicates()
@@ -182,6 +193,14 @@ def build_book_metadata_heterograph(
     if nrows is not None:
         df = df.sample(nrows, random_state=42)
 
-    return build_book_metadata_heterograph_from_dataframe(
+    data_graph = build_book_metadata_heterograph_from_dataframe(
         df, id_column=ID_COLUMN, metadata_columns=DEFAULT_METADATA_COLUMNS
     )
+
+    try:
+        _ = diagnose_component_sizes(graph=data_graph)
+    except Exception:
+        logger.info("Connected components diagnostics skipped due to error")
+        logger.info("Error details:", exc_info=True)
+
+    return data_graph

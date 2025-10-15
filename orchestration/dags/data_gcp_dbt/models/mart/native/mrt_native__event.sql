@@ -11,11 +11,6 @@
 
 select
     e.event_date,
-    case
-        when e.event_name = "screen_view"
-        then concat(e.event_name, "_", e.firebase_screen)
-        else e.event_name
-    end as event_name,
     e.event_timestamp,
     e.user_id,
     e.user_pseudo_id,
@@ -48,20 +43,25 @@ select
     d.deposit_type as user_current_deposit_type,
     u.last_deposit_amount as user_last_deposit_amount,
     u.first_deposit_type as user_first_deposit_type,
-    u.first_deposit_amount as user_first_deposit_amount
+    u.first_deposit_amount as user_first_deposit_amount,
+    case
+        when e.event_name = "screen_view"
+        then concat(e.event_name, "_", e.firebase_screen)
+        else e.event_name
+    end as event_name
 from {{ ref("int_firebase__native_event") }} as e
-left join {{ ref("mrt_global__user") }} as u on e.user_id = u.user_id
+left join {{ ref("mrt_global__user_beneficiary") }} as u on e.user_id = u.user_id
 left join {{ ref("mrt_global__offer") }} as o on e.offer_id = o.offer_id
 left join
     {{ ref("mrt_global__venue") }} as v on v.venue_id = coalesce(e.venue_id, o.venue_id)
-left join {{ ref("int_contentful__entry") }} as c on c.id = e.module_id
+left join {{ ref("int_contentful__entry") }} as c on e.module_id = c.id
 left join
     {{ ref("int_applicative__deposit") }} as d
-    on d.user_id = e.user_id
+    on e.user_id = d.user_id
     and e.event_date between d.deposit_creation_date and d.deposit_expiration_date
 where
     (
-        event_name in (
+        e.event_name in (
             "ConsultOffer",
             "BookingConfirmation",
             "StepperDisplayed",
@@ -111,6 +111,6 @@ where
         )
     )
     {% if is_incremental() %}
-        and event_date
+        and e.event_date
         between date_sub(date("{{ ds() }}"), interval 3 day) and date("{{ ds() }}")
     {% endif %}

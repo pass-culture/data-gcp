@@ -12,4 +12,4 @@ select
     ul.user_postal_code,
     ul.user_iris_internal_id
 from {{ ref("int_geo__user_location") }} as ul
-inner join {{ ref("int_global__user") }} as u on ul.user_id = u.user_id
+inner join {{ ref("int_global__user_beneficiary") }} as u on ul.user_id = u.user_id

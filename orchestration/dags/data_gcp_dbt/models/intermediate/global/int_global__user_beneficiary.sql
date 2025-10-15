@@ -167,7 +167,7 @@ select
         false
     ) as user_is_current_beneficiary,
     date_diff(
-        date('{{ ds() }}'), cast(user_activation_date as date), day
+        date("{{ ds() }}"), cast(dgu.user_activation_date as date), day
     ) as user_seniority
 from {{ ref("int_applicative__user") }} as u
 left join
@@ -176,3 +176,4 @@ left join
     and ah.action_history_rk = 1
 left join {{ ref("int_geo__user_location") }} as ui on u.user_id = ui.user_id
 left join deposit_grouped_by_user as dgu on u.user_id = dgu.user_id
+where u.user_role in ("UNDERAGE_BENEFICIARY", "BENEFICIARY", "FREE_BENEFICIARY")

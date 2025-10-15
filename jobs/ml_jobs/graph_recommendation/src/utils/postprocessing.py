@@ -4,9 +4,7 @@ from scipy.sparse.csgraph import connected_components
 from torch_geometric.data import Data, HeteroData
 from torch_geometric.utils import to_scipy_sparse_matrix, to_undirected
 
-from src.utils.graph_indexing import (
-    update_graph_identifiers_after_filtering,
-)
+from src.utils.graph_indexing import update_graph_identifiers_after_filtering
 
 GRAPH_PRUNING_MIN_SIZE = 2
 
@@ -106,7 +104,18 @@ def log_pruning_summary(before: dict, after: dict, min_size: int) -> None:
 
 
 def get_connected_components(graph: Data | HeteroData):
-    """Compute connected components using scipy (more efficient)."""
+    """Compute connected components using scipy (more efficient).
+
+    Args:
+        graph: Input graph (Data or HeteroData).
+
+    Returns:
+        tuple: (components, component_sizes, total_nodes, node_type_offsets)
+            - components: List of sets, each containing node indices in a component
+            - component_sizes: List of component sizes
+            - total_nodes: Total number of nodes
+            - node_type_offsets: Dict mapping node types to global index offsets
+    """
     # Map to global node index offsets
     node_type_offsets = {}
     current_offset = 0
@@ -129,6 +138,8 @@ def get_connected_components(graph: Data | HeteroData):
     combined_edges = to_undirected(combined_edges)
 
     total_nodes = sum(graph[nt].num_nodes for nt in graph.node_types)
+
+    # Use scipy for connected components
     adj_matrix = to_scipy_sparse_matrix(combined_edges, num_nodes=total_nodes)
     n_components, labels = connected_components(adj_matrix, directed=False)
 
@@ -222,59 +233,39 @@ def diagnose_component_sizes(graph: Data | HeteroData) -> tuple:
 def _filter_graph_by_nodes(
     graph: HeteroData, keep_nodes: set[int], node_type_offsets: dict[str, int]
 ) -> HeteroData:
-    """Vectorized version using PyTorch operations."""
-    filtered = HeteroData()
-    keep_nodes_tensor = torch.tensor(sorted(keep_nodes), dtype=torch.long)
+    """Filter graph using PyG's built-in subgraph method.
 
-    old_to_new_mappings: dict[str, torch.Tensor] = {}
+    PyG's subgraph() automatically handles:
+    - Node filtering and reindexing (makes indices contiguous)
+    - Edge filtering (removes edges with deleted endpoints)
+    - Edge reindexing (updates edge_index to new node numbers)
+    - Feature filtering (node and edge attributes)
 
-    # Step 1: Filter nodes with vectorized operations
+    We only need to handle custom attributes (book_ids, metadata mappings).
+
+    Args:
+        graph: Input heterogeneous graph
+        keep_nodes: Set of global node indices to keep
+        node_type_offsets: Mapping of node types to their global index offsets
+
+    Returns:
+        Filtered graph with updated attributes
+    """
+    # Convert global keep_nodes to per-type local indices for PyG
+    subset_dict = {}
     for node_type in graph.node_types:
         offset = node_type_offsets[node_type]
         n_nodes = graph[node_type].num_nodes
 
-        # Vectorized membership test
-        global_indices = torch.arange(offset, offset + n_nodes, dtype=torch.long)
-        keep_mask = torch.isin(global_indices, keep_nodes_tensor)
-        keep_local_indices = torch.where(keep_mask)[0]
+        # Find which local indices to keep for this node type
+        local_indices = [i for i in range(n_nodes) if (offset + i) in keep_nodes]
+        subset_dict[node_type] = torch.tensor(local_indices, dtype=torch.long)
 
-        # Create mapping tensor: old_idx -> new_idx
-        mapping = torch.full((n_nodes,), -1, dtype=torch.long)
-        mapping[keep_local_indices] = torch.arange(len(keep_local_indices))
-        old_to_new_mappings[node_type] = mapping
+    # PyG does ALL the filtering and reindexing!
+    filtered = graph.subgraph(subset_dict)
 
-        # Filter node features
-        for key, value in graph[node_type].items():
-            if torch.is_tensor(value) and value.size(0) == n_nodes:
-                filtered[node_type][key] = value[keep_local_indices]
-        filtered[node_type].num_nodes = len(keep_local_indices)
-
-    # Step 2: Filter and remap edges (vectorized)
-    for edge_type in graph.edge_types:
-        src_type, _rel, dst_type = edge_type
-        edge_index = graph[edge_type].edge_index
-
-        # Get global indices
-        src_offset = node_type_offsets[src_type]
-        dst_offset = node_type_offsets[dst_type]
-        global_src = edge_index[0] + src_offset
-        global_dst = edge_index[1] + dst_offset
-
-        # Vectorized edge filtering
-        src_valid = torch.isin(global_src, keep_nodes_tensor)
-        dst_valid = torch.isin(global_dst, keep_nodes_tensor)
-        keep_edge_mask = src_valid & dst_valid
-
-        if keep_edge_mask.any():
-            kept_edges = edge_index[:, keep_edge_mask]
-
-            # Vectorized remapping using lookup tensors
-            new_src = old_to_new_mappings[src_type][kept_edges[0]]
-            new_dst = old_to_new_mappings[dst_type][kept_edges[1]]
-
-            filtered[edge_type].edge_index = torch.stack([new_src, new_dst], dim=0)
-
-    # Step 3: Update custom attributes
+    # Update our custom attributes (book_ids, metadata_ids_by_column, etc.)
+    # PyG doesn't know about these, so we handle them ourselves
     update_graph_identifiers_after_filtering(
         original_graph=graph,
         filtered_graph=filtered,
@@ -298,13 +289,13 @@ def prune_small_components(
     """Remove all nodes in components of size ≤ min_size.
 
     Args:
-        graph (HeteroData): Input heterogeneous graph.
-        min_size (int): Minimum component size to keep.
-        components_data (tuple, optional): Precomputed output
-            from `get_connected_components()`. If None, it will be computed internally.
+        graph: Input heterogeneous graph.
+        min_size: Minimum component size to keep.
+        components_data: Precomputed output from `get_connected_components()`.
+            If None, it will be computed internally.
 
     Returns:
-        HeteroData: Pruned graph.
+        Pruned graph.
     """
     # Capture statistics before pruning
     stats_before = get_graph_statistics(graph)
@@ -326,6 +317,7 @@ def prune_small_components(
         f"Keeping {len(keep_nodes):,}/{total_nodes:,} nodes "
         f"({len(keep_nodes) / total_nodes * 100:.1f}%)"
     )
+
     if len(keep_nodes) == total_nodes:
         logger.info("Early exit, pruning not needed")
         return graph

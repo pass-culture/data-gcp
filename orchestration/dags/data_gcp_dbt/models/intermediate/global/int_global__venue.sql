@@ -37,7 +37,7 @@ with
         inner join
             {{ source("raw", "applicative_database_criterion") }} as c
             on ccm.criterion_id = c.id
-        group by 1 
+        group by 1
     )
 
 select

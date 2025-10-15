@@ -21,9 +21,6 @@ def normalize_dataframe(
     """
 
     missing_values = ["", "nan", "None", "<NA>"]
-    # depending on input data, a more comphensive list might include:
-    # missing_values = ["", "nan", "NaN", "NAN", "None", "none", "NONE",
-    #                   "null", "Null", "NULL", "NA", "N/A", "n/a", "<NA>", "#N/A"]
     df = df.copy()
     for col in columns:
         if col in df.columns:
@@ -61,9 +58,7 @@ def detach_single_occuring_metadata(
         singleton_values = value_counts[value_counts == 1].index
 
         if len(singleton_values) > 0:
-            # Create boolean mask (vectorized)
-            mask = df[col].isin(singleton_values)
-            df.loc[mask, col] = None
+            df.loc[df[col].isin(singleton_values), col] = None
 
     return df
 

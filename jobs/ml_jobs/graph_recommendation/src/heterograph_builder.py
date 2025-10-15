@@ -58,11 +58,10 @@ def build_book_metadata_heterograph_from_dataframe(
 
     # Step 1: Preprocess dataframe
     all_columns = [id_column, *metadata_columns]
-    df_normalized = normalize_dataframe(dataframe, all_columns)
-    df_normalized = detach_single_occuring_metadata(df_normalized, metadata_columns)
-    df_normalized = remove_rows_with_no_metadata(
-        df_normalized,
-        metadata_list=list(metadata_columns),
+    df_normalized = (
+        dataframe.pipe(normalize_dataframe, columns=all_columns)
+        .pipe(detach_single_occuring_metadata, columns=metadata_columns)
+        .pipe(remove_rows_with_no_metadata, metadata_list=list(metadata_columns))
     )
 
     # Step 2: Prepare book nodes

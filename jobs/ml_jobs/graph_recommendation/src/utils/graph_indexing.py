@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 import torch
 
 if TYPE_CHECKING:
-    from src.constants import MetadataKey
+    from torch_geometric.data import HeteroData
 
-from torch_geometric.data import HeteroData
+    from src.constants import MetadataKey
 
 
 def build_id_to_index_map(ids: list[str]) -> dict[str, int]:
@@ -39,7 +39,8 @@ def compute_old_to_new_index_mapping(
 
     Args:
         n_original: Total number of items before filtering.
-        keep_indices: List of old indices that are being kept (must be sorted or will be sorted).
+        keep_indices: List of old indices that are being kept
+            (must be sorted or will be sorted).
 
     Returns:
         Dictionary mapping old_index -> new_index for kept indices only.
@@ -104,10 +105,14 @@ def set_graph_identifiers(
     Args:
         graph: The graph to add attributes to.
         book_ids: List of book IDs in order corresponding to book nodes.
-        metadata_ids_by_column: Dictionary mapping column names to lists of metadata values.
-        metadata_columns: List of metadata column names that have nodes in the graph.
-        book_index: Optional dict mapping book_id -> node_index. If None, will be computed.
-        metadata_nodes_by_column: Optional dict mapping column -> {value: node_index}. If None, will be computed.
+        metadata_ids_by_column:
+            Dictionary mapping column names to lists of metadata values.
+        metadata_columns:
+            List of metadata column names that have nodes in the graph.
+        book_index: Optional dict mapping book_id -> node_index.
+            If None, will be computed.
+        metadata_nodes_by_column: Optional dict mapping column -> {value: node_index}.
+            If None, will be computed.
     """
     graph.book_ids = list(book_ids)
     graph.metadata_ids_by_column = dict(metadata_ids_by_column)

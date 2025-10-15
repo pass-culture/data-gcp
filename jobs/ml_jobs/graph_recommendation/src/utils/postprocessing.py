@@ -130,7 +130,7 @@ def get_connected_components(graph: Data | HeteroData):
     # Collect all edges into a unified graph
     all_edges = []
     for edge_type in graph.edge_types:
-        src_type, rel, dst_type = edge_type
+        src_type, _rel, dst_type = edge_type
         edge_index = graph[edge_type].edge_index
         src_offset = node_type_offsets[src_type]
         dst_offset = node_type_offsets[dst_type]
@@ -165,7 +165,7 @@ def diagnose_component_sizes(graph: Data | HeteroData) -> tuple:
     Returns:
         list[set[int]]: Connected components (each a set of node indices).
     """
-    components_data = (components, component_sizes, total_nodes, node_type_offsets) = (
+    components_data = (components, component_sizes, total_nodes, _node_type_offsets) = (
         get_connected_components(graph)
     )
 
@@ -212,7 +212,8 @@ def diagnose_component_sizes(graph: Data | HeteroData) -> tuple:
         f"({isolated_nodes / total_nodes * 100:.1f}%)"
     )
     logger.info(
-        f"   Main component coverage: {component_sizes_sorted[0] / total_nodes * 100:.1f}%"
+        f"   Main component coverage: "
+        f"{component_sizes_sorted[0] / total_nodes * 100:.1f}%"
     )
 
     return components_data
@@ -263,7 +264,7 @@ def _filter_graph_by_nodes(
 
     # Step 2: Filter and remap edges
     for edge_type in graph.edge_types:
-        src_type, rel, dst_type = edge_type
+        src_type, _rel, dst_type = edge_type
         edge_index = graph[edge_type].edge_index
         src_offset = node_type_offsets[src_type]
         dst_offset = node_type_offsets[dst_type]
@@ -319,8 +320,8 @@ def prune_small_components(
     Args:
         graph (HeteroData): Input heterogeneous graph.
         min_size (int): Minimum component size to keep.
-        components_data (tuple, optional): Precomputed output from `get_connected_components()`.
-            If None, it will be computed internally.
+        components_data (tuple, optional): Precomputed output
+            from `get_connected_components()`. If None, it will be computed internally.
 
     Returns:
         HeteroData: Pruned graph.

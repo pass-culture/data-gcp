@@ -4,6 +4,11 @@ SCHEDULE_DICT = {
         "dev": "0 12 * * 2",  # every Tuesday at 12:00 PM
         "stg": "0 12 * * 3",  # every Wednesday at 12:00 PM
     },
+    "algo_training_graph_embeddings": {
+        "prod": None,
+        "stg": None,
+        "dev": None,
+    },
     "algo_default_deployment": "0 9 * * *",
     "artist_linkage": "0 12 * * 0",
     "bigquery_archive_partition": "0 7 * * *",

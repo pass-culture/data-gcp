@@ -99,6 +99,7 @@ sources:
       - name: applicative_database_pricing_line
       - name: applicative_database_pricing_log
       - name: applicative_database_product
+      - name: applicative_database_product_artist_link
       - name: applicative_database_product_mediation
       - name: applicative_database_product_whitelist
       - name: applicative_database_provider

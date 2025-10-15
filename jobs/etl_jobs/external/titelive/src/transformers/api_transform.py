@@ -23,8 +23,10 @@ def transform_api_response(api_response: dict) -> pd.DataFrame:
         api_response: Raw API response dictionary with structure:
             {"result": [
                 {"id": 123, "article": {"1": {...}, "2": {...}}},
-                {"id": 456, "article": {"1": {...}}}
+                {"id": 456, "article": [{...}, {...}]}
             ]}
+            OR
+            {"result": {"0": {...}, "1": {...}}}
 
     Returns:
         DataFrame with columns: ean, datemodification, json_raw
@@ -57,17 +59,17 @@ def transform_api_response(api_response: dict) -> pd.DataFrame:
         # Handle both article formats: dict with numbered keys or list
         if isinstance(articles_data, dict):
             # Format 1: dict with numbered keys {"1": {...}, "2": {...}}
-            articles_list = list(articles_data.items())
+            articles_list = list(articles_data.values())
         elif isinstance(articles_data, list):
             # Format 2: list of articles [{...}, {...}]
-            articles_list = [
-                (str(idx), article) for idx, article in enumerate(articles_data)
-            ]
+            articles_list = articles_data
         else:
             continue
 
-        # Iterate over articles
-        for article_key, article in articles_list:
+        # Find first valid article with ean and datemodification
+        ean = None
+        date_str = None
+        for article in articles_list:
             if not isinstance(article, dict):
                 continue
 
@@ -75,35 +77,30 @@ def transform_api_response(api_response: dict) -> pd.DataFrame:
             ean = article.get("gencod")
             date_str = article.get("datemodification")
 
-            # Skip if missing required fields
-            if not ean or not date_str:
-                result_id = result_item.get("id", "unknown")
-                logger.warning(
-                    "Skipping article in result item "
-                    f"{result_id} (article key {article_key}): "
-                    f"missing ean or datemodification"
-                )
-                continue
+            if ean and date_str:
+                break
 
-            # Convert date from DD/MM/YYYY to DATE
-            try:
-                date_obj = datetime.strptime(date_str, "%d/%m/%Y").date()
-            except ValueError:
-                logger.warning(
-                    f"Skipping article {ean}: invalid date format '{date_str}'"
-                )
-                continue
+        # Skip result_item if no valid article found
+        if not ean or not date_str:
+            continue
 
-            # Store entire article as JSON
-            json_raw = json.dumps(article, ensure_ascii=False)
+        # Convert date from DD/MM/YYYY to DATE
+        try:
+            date_obj = datetime.strptime(date_str, "%d/%m/%Y").date()
+        except ValueError:
+            logger.warning(f"Skipping article {ean}: invalid date format '{date_str}'")
+            continue
 
-            rows.append(
-                {
-                    "ean": str(ean),
-                    "datemodification": date_obj,
-                    "json_raw": json_raw,
-                }
-            )
+        # Store entire result_item as JSON
+        json_raw = json.dumps(result_item, ensure_ascii=False)
+
+        rows.append(
+            {
+                "ean": str(ean),
+                "datemodification": date_obj,
+                "json_raw": json_raw,
+            }
+        )
 
     if not rows:
         logger.warning("API response contains no valid articles")

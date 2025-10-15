@@ -68,6 +68,11 @@ def init_bq(
         help="Number of already-processed EANs to skip \
             (required with --skip-already-processed-table)",
     ),
+    reprocess_failed: bool = typer.Option(
+        False,
+        "--reprocess-failed",
+        help="Reprocess EANs with status='fail' from destination table",
+    ),
 ) -> None:
     """
     Mode 1: Extract EANs from BigQuery and batch process via /ean endpoint.
@@ -105,6 +110,9 @@ def init_bq(
             --destination-table "project.dataset.custom_destination" \\
             --main-batch-size 10000 \\
             --sub-batch-size 250
+
+        # Reprocess failed EANs
+        python main.py init-bq --reprocess-failed
     """
     logger.info("Executing Mode 1: BigQuery batch processing (batch_number tracking)")
 
@@ -118,6 +126,7 @@ def init_bq(
             resume=resume,
             skip_already_processed_table=skip_already_processed_table,
             skip_count=skip_count,
+            reprocess_failed=reprocess_failed,
         )
         logger.info("Mode 1 execution completed successfully")
     except Exception as e:

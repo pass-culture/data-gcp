@@ -471,6 +471,110 @@ def fetch_batch_eans(
     return eans
 
 
+def count_failed_eans(client: bigquery.Client, destination_table: str) -> int:
+    """
+    Count the number of EANs with status='fail' in destination table.
+
+    Args:
+        client: BigQuery client
+        destination_table: Full destination table ID (project.dataset.table)
+
+    Returns:
+        Number of failed EANs
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If query fails
+    """
+    query = f"""
+        SELECT COUNT(*) as total
+        FROM `{destination_table}`
+        WHERE status = 'fail'
+    """
+
+    logger.info(f"Counting failed EANs in {destination_table}")
+    query_job = client.query(query)
+    result = query_job.result()
+    total = next(iter(result)).total
+
+    logger.info(f"Found {total} failed EANs in destination table")
+    return total
+
+
+def fetch_failed_eans(
+    client: bigquery.Client,
+    destination_table: str,
+    batch_size: int = 20_000,
+) -> list[str]:
+    """
+    Fetch EANs with status='fail' from destination table.
+
+    Used for reprocessing failed EANs from previous runs.
+
+    Args:
+        client: BigQuery client
+        destination_table: Full destination table ID (project.dataset.table)
+        batch_size: Number of failed EANs to fetch (default 20,000)
+
+    Returns:
+        List of failed EANs (up to batch_size)
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If query fails
+    """
+    query = f"""
+        SELECT ean
+        FROM `{destination_table}`
+        WHERE status = 'fail'
+        ORDER BY ean
+        LIMIT {batch_size}
+    """
+
+    logger.info(f"Fetching up to {batch_size} failed EANs from {destination_table}")
+    query_job = client.query(query)
+    results = query_job.result()
+
+    eans = [row.ean for row in results]
+    logger.info(f"Fetched {len(eans)} failed EANs for reprocessing")
+    return eans
+
+
+def delete_failed_eans(
+    client: bigquery.Client,
+    destination_table: str,
+    eans: list[str],
+) -> None:
+    """
+    Delete specific EANs with status='fail' from destination table.
+
+    Used before reprocessing to remove old failed records.
+
+    Args:
+        client: BigQuery client
+        destination_table: Full destination table ID (project.dataset.table)
+        eans: List of EANs to delete
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If delete fails
+    """
+    if not eans:
+        logger.warning("No EANs provided for deletion")
+        return
+
+    # Build IN clause
+    eans_list = "', '".join(eans)
+    query = f"""
+        DELETE FROM `{destination_table}`
+        WHERE ean IN ('{eans_list}')
+        AND status = 'fail'
+    """
+
+    logger.info(f"Deleting {len(eans)} failed EANs from {destination_table}")
+    query_job = client.query(query)
+    query_job.result()  # Wait for completion
+
+    logger.info(f"Successfully deleted {len(eans)} failed EANs")
+
+
 def load_gcs_to_bq(
     client: bigquery.Client,
     gcs_path: str,

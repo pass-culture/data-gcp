@@ -133,6 +133,11 @@ with DAG(
             type="integer",
             description="Number of already-processed EANs to skip (init-bq mode, use with skip_already_processed_table)",
         ),
+        "reprocess_failed": Param(
+            default=False,
+            type="boolean",
+            description="Reprocess EANs with status='fail' from destination table (init-bq mode)",
+        ),
         # Mode 2 (init-gcs) params
         "gcs_path": Param(
             default=None,
@@ -187,7 +192,8 @@ with DAG(
         f"--sub-batch-size {{{{ params.sub_batch_size }}}} "
         f"{{{{ '--resume' if params.resume else '' }}}} "
         f"{{{{ '--skip-already-processed-table ' + params.skip_already_processed_table if params.skip_already_processed_table else '' }}}} "
-        f"{{{{ '--skip-count ' + params.skip_count|string if params.skip_already_processed_table else '' }}}}",
+        f"{{{{ '--skip-count ' + params.skip_count|string if params.skip_already_processed_table else '' }}}} "
+        f"{{{{ '--reprocess-failed' if params.reprocess_failed else '' }}}}",
     )
 
     # Mode 2: Init GCS - Load GCS file to BigQuery and transform

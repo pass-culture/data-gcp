@@ -14,8 +14,11 @@ from src.constants import (
 )
 from src.transformers.api_transform import transform_api_response
 from src.utils.bigquery import (
+    count_failed_eans,
     create_destination_table,
+    delete_failed_eans,
     fetch_batch_eans,
+    fetch_failed_eans,
     get_destination_table_schema,
     get_last_batch_number,
     insert_dataframe,
@@ -149,6 +152,7 @@ def run_init_bq(
     resume: bool = False,
     skip_already_processed_table: str | None = None,
     skip_count: int = 0,
+    reprocess_failed: bool = False,
 ) -> None:
     """
     Execute Mode 1: BigQuery batch processing with batch_number tracking.
@@ -170,6 +174,11 @@ def run_init_bq(
     - skip_count should equal the number of EANs in skip_already_processed_table
     - Example: skip_count=861488 means batch 0 starts at OFFSET 861488
 
+    Optional: Reprocess failed EANs
+    - If reprocess_failed=True, fetches EANs with status='fail' from destination_table
+    - Deletes failed records, processes via API, inserts with new batch_number
+    - Ignores source_table and skip parameters in this mode
+
     Args:
         source_table: Full table ID for source (project.dataset.table)
         destination_table: Full table ID for destination (project.dataset.table)
@@ -181,6 +190,7 @@ def run_init_bq(
             already-processed EANs to skip
         skip_count: Number of already-processed EANs to skip \
             (required if skip_already_processed_table is set)
+        reprocess_failed: If True, reprocess EANs with status='fail'
 
     Raises:
         Exception: If any step fails
@@ -189,7 +199,9 @@ def run_init_bq(
     logger.info(f"Source: {source_table}, Destination: {destination_table}")
     logger.info(f"Main batch size: {main_batch_size}, Sub-batch size: {sub_batch_size}")
 
-    if skip_already_processed_table:
+    if reprocess_failed:
+        logger.info("Reprocess failed mode: Will fetch and reprocess failed EANs")
+    elif skip_already_processed_table:
         logger.info(
             f"Skip mode: Will skip {skip_count} already-processed EANs from "
             f"{skip_already_processed_table}"
@@ -200,8 +212,8 @@ def run_init_bq(
     token_manager = TokenManager(project_id)
     api_client = TiteliveClient(token_manager)
 
-    if not resume:
-        # Create destination table if not resuming
+    if not resume and not reprocess_failed:
+        # Create destination table if not resuming or reprocessing
         logger.info("Step 1: Creating destination table")
         create_destination_table(bq_client, destination_table, drop_if_exists=True)
 
@@ -212,23 +224,46 @@ def run_init_bq(
 
     logger.info(f"Starting from batch {current_batch}")
 
-    # Step 3: Process batches
+    # Step 3: If reprocessing, count total failed EANs
+    if reprocess_failed:
+        total_failed = count_failed_eans(bq_client, destination_table)
+        logger.info(f"Total failed EANs to reprocess: {total_failed}")
+
+        if total_failed == 0:
+            logger.info("No failed EANs to reprocess. Exiting.")
+            return
+
+    # Step 4: Process batches
     total_processed = 0
 
     while True:
-        # Fetch EANs for this batch using OFFSET pagination
-        batch_eans = fetch_batch_eans(
-            bq_client,
-            source_table,
-            current_batch,
-            main_batch_size,
-            skip_already_processed_table=skip_already_processed_table,
-            skip_count=skip_count,
-        )
+        # Fetch EANs for this batch
+        if reprocess_failed:
+            # Fetch failed EANs from destination table
+            batch_eans = fetch_failed_eans(
+                bq_client, destination_table, main_batch_size
+            )
 
-        if not batch_eans:
-            logger.info("No more EANs to process. Exiting.")
-            break
+            if not batch_eans:
+                logger.info("No more failed EANs to reprocess. Exiting.")
+                break
+
+            # Delete failed records before reprocessing
+            delete_failed_eans(bq_client, destination_table, batch_eans)
+        else:
+            # Fetch EANs from source table using OFFSET pagination
+            batch_eans = fetch_batch_eans(
+                bq_client,
+                source_table,
+                current_batch,
+                main_batch_size,
+                skip_already_processed_table=skip_already_processed_table,
+                skip_count=skip_count,
+            )
+
+            if not batch_eans:
+                logger.info("No more EANs to process. Exiting.")
+                break
 
         logger.info(
             f"Batch {current_batch}: Processing {len(batch_eans)} EANs "

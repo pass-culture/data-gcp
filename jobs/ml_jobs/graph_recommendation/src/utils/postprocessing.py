@@ -129,17 +129,21 @@ def get_connected_components(graph: Data | HeteroData):
     combined_edges = to_undirected(combined_edges)
 
     total_nodes = sum(graph[nt].num_nodes for nt in graph.node_types)
-
-    # Use scipy for connected components (faster than networkx)
     adj_matrix = to_scipy_sparse_matrix(combined_edges, num_nodes=total_nodes)
     n_components, labels = connected_components(adj_matrix, directed=False)
 
-    # Group nodes by component
-    components = [set() for _ in range(n_components)]
-    for node_idx, comp_idx in enumerate(labels):
-        components[comp_idx].add(node_idx)
+    # Vectorized component grouping
+    labels_tensor = torch.from_numpy(labels)
 
-    component_sizes = [len(c) for c in components]
+    # Get component sizes using bincount
+    component_sizes = torch.bincount(labels_tensor).tolist()
+
+    # Group nodes by component (vectorized)
+    components = []
+    for comp_idx in range(n_components):
+        node_indices = torch.where(labels_tensor == comp_idx)[0]
+        components.append(set(node_indices.tolist()))
+
     return components, component_sizes, total_nodes, node_type_offsets
 
 

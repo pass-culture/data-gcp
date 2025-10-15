@@ -67,7 +67,7 @@ def build_book_metadata_heterograph_from_dataframe(
     book_ids = unique_books.tolist()
     book_index = build_id_to_index_map(book_ids)
 
-    # Step 3: Build metadata nodes by column
+    # Step 3: Build metadata nodes by column (OPTIMIZED)
     metadata_nodes_by_column: dict[str, dict[str, int]] = {}
     metadata_ids_by_column: dict[str, list[str]] = {}
 
@@ -76,61 +76,57 @@ def build_book_metadata_heterograph_from_dataframe(
             continue
 
         unique_values = df_normalized[column].dropna().unique()
-        valid_values = [
-            str(value)
-            for value in unique_values
-            if value is not None and str(value).strip() != "None"
-        ]
+        # invalid values are already converted to None type in prepocessing step
+        valid_values = unique_values.astype(str).tolist()
 
         if valid_values:
             metadata_ids_by_column[column] = valid_values
             metadata_nodes_by_column[column] = build_id_to_index_map(valid_values)
 
-    # Step 4: Create edge indices for each relation type
+    # Step 4-5: OPTIMIZED edge building
     edge_indices: dict[tuple[str, str, str], set[tuple[int, int]]] = {}
 
-    # Initialize edge sets for each metadata column
-    for column in metadata_columns:
-        if column in metadata_nodes_by_column:
-            # "book" -> "is_{column}" -> "{column}"
-            edge_indices[("book", f"is_{column}", column)] = set()
-            # "{column}" -> "{column}_of" -> "book"
-            edge_indices[(column, f"{column}_of", "book")] = set()
+    # Pre-convert book IDs to indices once (avoid repeated lookups)
+    df_normalized["_book_idx"] = df_normalized[id_column].map(book_index)
 
-    # Step 5: Build edges by iterating through dataframe
-    relevant_columns = [id_column, *metadata_columns]
-
-    for record in tqdm.tqdm(
-        df_normalized[relevant_columns].itertuples(index=False),
-        desc="Building edges",
+    for column in tqdm.tqdm(
+        metadata_columns, desc="Building edges (optimized)", unit="column"
     ):
-        record_dict = record._asdict()
-        book_id = record_dict[id_column]
-
-        # Skip rows with missing book IDs
-        if book_id is None or book_id not in book_index:
+        if column not in metadata_nodes_by_column:
             continue
 
-        book_idx = book_index[book_id]
+        edge_key_forward = ("book", f"is_{column}", column)
+        edge_key_backward = (column, f"{column}_of", "book")
+        edge_indices[edge_key_forward] = set()
+        edge_indices[edge_key_backward] = set()
 
-        # Create edges to all metadata values in this row
-        for column in metadata_columns:
-            if column not in metadata_nodes_by_column:
-                continue
+        # Get only valid rows (both book and metadata exist)
+        valid_mask = df_normalized["_book_idx"].notna() & df_normalized[column].notna()
 
-            value = record_dict[column]
-            if value is None or str(value).strip() == "None":
-                continue
+        # Extract arrays directly (no copying DataFrame)
+        book_idx_array = df_normalized.loc[valid_mask, "_book_idx"].values.astype(int)
 
-            value_str = str(value)
-            if value_str in metadata_nodes_by_column[column]:
-                metadata_idx = metadata_nodes_by_column[column][value_str]
+        # Map metadata values to indices (vectorized)
+        metadata_series = df_normalized.loc[valid_mask, column].astype(str)
+        metadata_idx_array = metadata_series.map(
+            metadata_nodes_by_column[column]
+        ).values
 
-                # Add edges in both directions
-                edge_key_forward = ("book", f"is_{column}", column)
-                edge_key_backward = (column, f"{column}_of", "book")
-                edge_indices[edge_key_forward].add((book_idx, metadata_idx))
-                edge_indices[edge_key_backward].add((metadata_idx, book_idx))
+        # Remove NaNs from failed mappings
+        valid_mapping = ~pd.isna(metadata_idx_array)
+        book_idx_array = book_idx_array[valid_mapping]
+        metadata_idx_array = metadata_idx_array[valid_mapping].astype(int)
+
+        # Use set comprehension (faster than np.unique for this use case)
+        edge_indices[edge_key_forward].update(
+            zip(book_idx_array, metadata_idx_array, strict=False)
+        )
+        edge_indices[edge_key_backward].update(
+            zip(metadata_idx_array, book_idx_array, strict=False)
+        )
+
+    # Clean up temporary column
+    df_normalized.drop("_book_idx", axis=1, inplace=True)
 
     # Check if any edges were created
     total_edges = sum(len(edges) for edges in edge_indices.values())

@@ -23,17 +23,45 @@ with
     venue_tags as (
         select
             vc.venue_id,
-            string_agg(case when cc.criterion_category_label="Comptage Réseaux pro" then c.name else null end," - ") as venue_network_tags,
-            string_agg(case when cc.criterion_category_label="Comptage partenaire label et appellation du MC" then c.name else null end," - ") as venue_label_tags,
-            string_agg(case when cc.criterion_category_label="Comptage partenaire sectoriel" then c.name else null end," - ") as venue_sector_tags
+            string_agg(
+                case
+                    when cc.criterion_category_label = "Comptage Réseaux pro"
+                    then c.name
+                    else null
+                end,
+                " - "
+            ) as venue_network_tags,
+            string_agg(
+                case
+                    when
+                        cc.criterion_category_label
+                        = "Comptage partenaire label et appellation du MC"
+                    then c.name
+                    else null
+                end,
+                " - "
+            ) as venue_label_tags,
+            string_agg(
+                case
+                    when cc.criterion_category_label = "Comptage partenaire sectoriel"
+                    then c.name
+                    else null
+                end,
+                " - "
+            ) as venue_sector_tags
         from {{ source("raw", "applicative_database_venue_criterion") }} as vc
         inner join
-            {{ source("raw", "applicative_database_criterion_category_mapping") }} as ccm
+            {{ source("raw", "applicative_database_criterion_category_mapping") }}
+            as ccm
             on ccm.criterion_id = vc.criterion_id
         inner join
             {{ source("raw", "applicative_database_criterion_category") }} as cc
             on cc.criterion_category_id = ccm.criterion_category_id
-            and cc.criterion_category_label IN ("Comptage Réseaux pro","Comptage partenaire label et appellation du MC","Comptage partenaire sectoriel")
+            and cc.criterion_category_label in (
+                "Comptage Réseaux pro",
+                "Comptage partenaire label et appellation du MC",
+                "Comptage partenaire sectoriel"
+            )
         inner join
             {{ source("raw", "applicative_database_criterion") }} as c
             on ccm.criterion_id = c.id

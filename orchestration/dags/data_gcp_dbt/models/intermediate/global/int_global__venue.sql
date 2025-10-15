@@ -18,6 +18,26 @@ with
             ) as last_collective_bookable_offer_date
         from {{ ref("int_history__bookable_venue") }}
         group by venue_id
+    ),
+
+    venue_tags as (
+        select
+            vc.venue_id,
+            string_agg(case when cc.criterion_category_label="Comptage Réseaux pro" then c.name else null end," - ") as venue_network_tags,
+            string_agg(case when cc.criterion_category_label="Comptage partenaire label et appellation du MC" then c.name else null end," - ") as venue_label_tags,
+            string_agg(case when cc.criterion_category_label="Comptage partenaire sectoriel" then c.name else null end," - ") as venue_sector_tags
+        from {{ source("raw", "applicative_database_venue_criterion") }} as vc
+        inner join
+            {{ source("raw", "applicative_database_criterion_category_mapping") }} as ccm
+            on ccm.criterion_id = vc.criterion_id
+        inner join
+            {{ source("raw", "applicative_database_criterion_category") }} as cc
+            on cc.criterion_category_id = ccm.criterion_category_id
+            and cc.criterion_category_label IN ("Comptage Réseaux pro","Comptage partenaire label et appellation du MC","Comptage partenaire sectoriel")
+        inner join
+            {{ source("raw", "applicative_database_criterion") }} as c
+            on ccm.criterion_id = c.id
+        group by 1 
     )
 
 select
@@ -162,9 +182,13 @@ select
             v.total_created_offers desc,
             v.venue_name asc
     ) as offerer_rank_asc,
-    offerer_is_epn
+    offerer_is_epn,
+    venue_network_tags,
+    venue_label_tags,
+    venue_sector_tags
 from {{ ref("int_applicative__venue") }} as v
 left join
     {{ ref("int_global__offerer") }} as ofr
     on v.venue_managing_offerer_id = ofr.offerer_id
 left join bookable_offer_history as boh on v.venue_id = boh.venue_id
+left join venue_tags as vt on vt.venue_id = v.venue_id

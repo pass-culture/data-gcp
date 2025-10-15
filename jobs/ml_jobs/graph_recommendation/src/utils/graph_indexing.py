@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import torch
-
 if TYPE_CHECKING:
     from torch_geometric.data import HeteroData
 
@@ -50,43 +48,6 @@ def compute_old_to_new_index_mapping(
         {1: 0, 3: 1, 4: 2}
     """
     return {old_idx: new_idx for new_idx, old_idx in enumerate(keep_indices)}
-
-
-def remap_edge_indices(
-    edge_index: torch.Tensor,
-    src_mapping: dict[int, int],
-    dst_mapping: dict[int, int],
-) -> torch.Tensor:
-    """Remap edge indices using old->new index mappings.
-
-    Args:
-        edge_index: Tensor of shape [2, num_edges] with [source_indices, dest_indices].
-        src_mapping: Dictionary mapping old source indices to new source indices.
-        dst_mapping: Dictionary mapping old dest indices to new dest indices.
-
-    Returns:
-        Remapped edge_index tensor with new indices.
-
-    Example:
-        >>> edge_index = torch.tensor([[0, 2], [1, 3]])  # 2 edges
-        >>> src_map = {0: 0, 2: 1}  # node 0->0, node 2->1
-        >>> dst_map = {1: 0, 3: 1}  # node 1->0, node 3->1
-        >>> remap_edge_indices(edge_index, src_map, dst_map)
-        tensor([[0, 1], [0, 1]])
-    """
-    old_src = edge_index[0]
-    old_dst = edge_index[1]
-
-    new_src = torch.tensor(
-        [src_mapping[idx.item()] for idx in old_src],
-        dtype=torch.long,
-    )
-    new_dst = torch.tensor(
-        [dst_mapping[idx.item()] for idx in old_dst],
-        dtype=torch.long,
-    )
-
-    return torch.stack([new_src, new_dst], dim=0)
 
 
 def set_graph_identifiers(

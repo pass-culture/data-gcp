@@ -1,12 +1,10 @@
-import networkx as nx
 import torch
 from loguru import logger
+from scipy.sparse.csgraph import connected_components
 from torch_geometric.data import Data, HeteroData
-from torch_geometric.utils import to_networkx, to_undirected
+from torch_geometric.utils import to_scipy_sparse_matrix, to_undirected
 
 from src.utils.graph_indexing import (
-    compute_old_to_new_index_mapping,
-    remap_edge_indices,
     update_graph_identifiers_after_filtering,
 )
 
@@ -52,7 +50,7 @@ def log_pruning_summary(before: dict, after: dict, min_size: int) -> None:
         after: Statistics after pruning.
         min_size: The minimum component size threshold used.
     """
-    logger.info("\n" + "=" * 60)
+    logger.info("=" * 60)
     logger.info(f"PRUNING SUMMARY (min_size={min_size})")
     logger.info("=" * 60)
 
@@ -108,18 +106,7 @@ def log_pruning_summary(before: dict, after: dict, min_size: int) -> None:
 
 
 def get_connected_components(graph: Data | HeteroData):
-    """Compute connected components for a (heterogeneous) PyG graph.
-
-    Args:
-        graph (Data | HeteroData): Input graph.
-
-    Returns:
-        tuple:
-            components (list[set[int]]): List of node sets, one per connected component.
-            component_sizes (list[int]): Size of each component.
-            total_nodes (int): Total number of nodes across all types.
-            node_type_offsets (dict[str, int]): Global index offset for each node type.
-    """
+    """Compute connected components using scipy (more efficient)."""
     # Map to global node index offsets
     node_type_offsets = {}
     current_offset = 0
@@ -127,7 +114,7 @@ def get_connected_components(graph: Data | HeteroData):
         node_type_offsets[node_type] = current_offset
         current_offset += graph[node_type].num_nodes
 
-    # Collect all edges into a unified graph
+    # Collect all edges
     all_edges = []
     for edge_type in graph.edge_types:
         src_type, _rel, dst_type = edge_type
@@ -142,11 +129,16 @@ def get_connected_components(graph: Data | HeteroData):
     combined_edges = to_undirected(combined_edges)
 
     total_nodes = sum(graph[nt].num_nodes for nt in graph.node_types)
-    G = to_networkx(
-        Data(edge_index=combined_edges, num_nodes=total_nodes), to_undirected=True
-    )
 
-    components = list(nx.connected_components(G))
+    # Use scipy for connected components (faster than networkx)
+    adj_matrix = to_scipy_sparse_matrix(combined_edges, num_nodes=total_nodes)
+    n_components, labels = connected_components(adj_matrix, directed=False)
+
+    # Group nodes by component
+    components = [set() for _ in range(n_components)]
+    for node_idx, comp_idx in enumerate(labels):
+        components[comp_idx].add(node_idx)
+
     component_sizes = [len(c) for c in components]
     return components, component_sizes, total_nodes, node_type_offsets
 
@@ -169,7 +161,7 @@ def diagnose_component_sizes(graph: Data | HeteroData) -> tuple:
         get_connected_components(graph)
     )
 
-    logger.info("\n" + "=" * 60)
+    logger.info("=" * 60)
     logger.info("CONNECTED COMPONENTS DETAILED ANALYSIS")
     logger.info("=" * 60)
     logger.info(f"Total connected components: {len(components):,}")
@@ -212,8 +204,7 @@ def diagnose_component_sizes(graph: Data | HeteroData) -> tuple:
         f"({isolated_nodes / total_nodes * 100:.1f}%)"
     )
     logger.info(
-        f"   Main component coverage: "
-        f"{component_sizes_sorted[0] / total_nodes * 100:.1f}%"
+        f"Main component coverage: {component_sizes_sorted[0] / total_nodes * 100:.1f}%"
     )
 
     return components_data
@@ -227,74 +218,59 @@ def diagnose_component_sizes(graph: Data | HeteroData) -> tuple:
 def _filter_graph_by_nodes(
     graph: HeteroData, keep_nodes: set[int], node_type_offsets: dict[str, int]
 ) -> HeteroData:
-    """Return a filtered copy of the graph keeping only given global node IDs.
-
-    This function:
-    1. Filters nodes to keep only those in keep_nodes
-    2. Renumbers nodes to be contiguous (0, 1, 2, ...)
-    3. Filters edges to keep only those connecting kept nodes
-    4. Remaps edge indices to use the new node numbering
-    5. Updates custom attributes (book_ids, metadata mappings, etc.)
-    """
+    """Vectorized version using PyTorch operations."""
     filtered = HeteroData()
+    keep_nodes_tensor = torch.tensor(sorted(keep_nodes), dtype=torch.long)
 
-    # Track old->new index mappings for each node type
-    old_to_new_mappings: dict[str, dict[int, int]] = {}
+    old_to_new_mappings: dict[str, torch.Tensor] = {}
 
-    # Step 1: Filter nodes and build index remapping
+    # Step 1: Filter nodes with vectorized operations
     for node_type in graph.node_types:
         offset = node_type_offsets[node_type]
         n_nodes = graph[node_type].num_nodes
 
-        # Find which local indices to keep
-        keep_local_indices = [i for i in range(n_nodes) if (offset + i) in keep_nodes]
+        # Vectorized membership test
+        global_indices = torch.arange(offset, offset + n_nodes, dtype=torch.long)
+        keep_mask = torch.isin(global_indices, keep_nodes_tensor)
+        keep_local_indices = torch.where(keep_mask)[0]
 
-        # Build old->new index mapping using utility
-        old_to_new_mappings[node_type] = compute_old_to_new_index_mapping(
-            n_original=n_nodes,
-            keep_indices=keep_local_indices,
-        )
+        # Create mapping tensor: old_idx -> new_idx
+        mapping = torch.full((n_nodes,), -1, dtype=torch.long)
+        mapping[keep_local_indices] = torch.arange(len(keep_local_indices))
+        old_to_new_mappings[node_type] = mapping
 
         # Filter node features
-        keep_mask = torch.tensor(keep_local_indices, dtype=torch.long)
         for key, value in graph[node_type].items():
             if torch.is_tensor(value) and value.size(0) == n_nodes:
-                filtered[node_type][key] = value[keep_mask]
+                filtered[node_type][key] = value[keep_local_indices]
         filtered[node_type].num_nodes = len(keep_local_indices)
 
-    # Step 2: Filter and remap edges
+    # Step 2: Filter and remap edges (vectorized)
     for edge_type in graph.edge_types:
         src_type, _rel, dst_type = edge_type
         edge_index = graph[edge_type].edge_index
+
+        # Get global indices
         src_offset = node_type_offsets[src_type]
         dst_offset = node_type_offsets[dst_type]
-
-        # Convert to global indices to check if edges should be kept
         global_src = edge_index[0] + src_offset
         global_dst = edge_index[1] + dst_offset
 
-        # Keep only edges where both endpoints are in keep_nodes
-        keep_edge_mask = torch.tensor(
-            [
-                int(s.item()) in keep_nodes and int(d.item()) in keep_nodes
-                for s, d in zip(global_src, global_dst, strict=False)
-            ]
-        )
+        # Vectorized edge filtering
+        src_valid = torch.isin(global_src, keep_nodes_tensor)
+        dst_valid = torch.isin(global_dst, keep_nodes_tensor)
+        keep_edge_mask = src_valid & dst_valid
 
         if keep_edge_mask.any():
-            # Get edges with old local indices
             kept_edges = edge_index[:, keep_edge_mask]
 
-            # Remap to new local indices using utility
-            remapped_edges = remap_edge_indices(
-                edge_index=kept_edges,
-                src_mapping=old_to_new_mappings[src_type],
-                dst_mapping=old_to_new_mappings[dst_type],
-            )
+            # Vectorized remapping using lookup tensors
+            new_src = old_to_new_mappings[src_type][kept_edges[0]]
+            new_dst = old_to_new_mappings[dst_type][kept_edges[1]]
 
-            filtered[edge_type].edge_index = remapped_edges
+            filtered[edge_type].edge_index = torch.stack([new_src, new_dst], dim=0)
 
-    # Step 3: Update custom attributes (book_ids, metadata mappings, etc.)
+    # Step 3: Update custom attributes
     update_graph_identifiers_after_filtering(
         original_graph=graph,
         filtered_graph=filtered,

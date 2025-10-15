@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 
 import pandas as pd
 import torch
+from loguru import logger
 from torch_geometric.data import Data
 
 
@@ -218,5 +219,7 @@ def build_book_metadata_graph(
     )
 
     _ = diagnose_component_sizes(graph=data_graph)
+
+    logger.warning("Pruning not available on homogeneous Graph!")
 
     return data_graph

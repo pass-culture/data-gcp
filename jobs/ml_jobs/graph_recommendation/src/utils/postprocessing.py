@@ -1,4 +1,3 @@
-
 import networkx as nx
 import torch
 from loguru import logger
@@ -12,6 +11,96 @@ from src.utils.graph_indexing import (
 )
 
 GRAPH_PRUNING_MIN_SIZE = 2
+
+# ======================================================
+#  GRAPH STATISTICS UTILITIES
+# ======================================================
+
+
+def get_graph_statistics(graph: HeteroData) -> dict:
+    """Extract key statistics from a heterogeneous graph.
+
+    Args:
+        graph: The heterogeneous graph to analyze.
+
+    Returns:
+        Dictionary with counts for total nodes, nodes by type, and edges.
+    """
+    stats = {}
+
+    # Count total nodes
+    stats["total_nodes"] = sum(graph[nt].num_nodes for nt in graph.node_types)
+
+    # Count nodes by type
+    stats["nodes_by_type"] = {
+        node_type: graph[node_type].num_nodes for node_type in graph.node_types
+    }
+
+    # Count total edges
+    stats["total_edges"] = sum(graph[et].edge_index.size(1) for et in graph.edge_types)
+
+    return stats
+
+
+def log_pruning_summary(before: dict, after: dict, min_size: int) -> None:
+    """Log a detailed summary of pruning results.
+
+    Works with any heterogeneous graph structure without hardcoded node type names.
+
+    Args:
+        before: Statistics before pruning.
+        after: Statistics after pruning.
+        min_size: The minimum component size threshold used.
+    """
+    logger.info("\n" + "=" * 60)
+    logger.info(f"PRUNING SUMMARY (min_size={min_size})")
+    logger.info("=" * 60)
+
+    # Total nodes summary
+    node_reduction = before["total_nodes"] - after["total_nodes"]
+    node_pct = (
+        (node_reduction / before["total_nodes"] * 100)
+        if before["total_nodes"] > 0
+        else 0
+    )
+    logger.info(
+        f"Total Nodes: {before['total_nodes']:,} → {after['total_nodes']:,} "
+        f"(-{node_reduction:,}, -{node_pct:.1f}%)"
+    )
+
+    # Nodes by type breakdown
+    if before["nodes_by_type"]:
+        logger.info("\n  Nodes by Type:")
+        # Get all node types (union of before and after)
+        all_node_types = sorted(
+            set(before["nodes_by_type"].keys()) | set(after["nodes_by_type"].keys())
+        )
+
+        for node_type in all_node_types:
+            before_count = before["nodes_by_type"].get(node_type, 0)
+            after_count = after["nodes_by_type"].get(node_type, 0)
+            reduction = before_count - after_count
+            pct = (reduction / before_count * 100) if before_count > 0 else 0
+
+            logger.info(
+                f"    {node_type}: {before_count:,} → {after_count:,} "
+                f"(-{reduction:,}, -{pct:.1f}%)"
+            )
+
+    # Total edges summary
+    edge_reduction = before["total_edges"] - after["total_edges"]
+    edge_pct = (
+        (edge_reduction / before["total_edges"] * 100)
+        if before["total_edges"] > 0
+        else 0
+    )
+    logger.info(
+        f"\nTotal Edges: {before['total_edges']:,} → {after['total_edges']:,} "
+        f"(-{edge_reduction:,}, -{edge_pct:.1f}%)"
+    )
+
+    logger.info("=" * 60)
+
 
 # ======================================================
 #  CONNECTED COMPONENTS UTILITIES
@@ -236,6 +325,9 @@ def prune_small_components(
     Returns:
         HeteroData: Pruned graph.
     """
+    # Capture statistics before pruning
+    stats_before = get_graph_statistics(graph)
+
     if components_data is None:
         components_data = get_connected_components(graph)
 
@@ -253,7 +345,16 @@ def prune_small_components(
         f"Keeping {len(keep_nodes):,}/{total_nodes:,} nodes "
         f"({len(keep_nodes) / total_nodes * 100:.1f}%)"
     )
+    if len(keep_nodes) == total_nodes:
+        logger.info("Early exit, pruning not needed")
+        return graph
 
     pruned_graph = _filter_graph_by_nodes(graph, keep_nodes, node_type_offsets)
-    logger.info("✅ Pruning complete.")
+
+    # Capture statistics after pruning
+    stats_after = get_graph_statistics(pruned_graph)
+
+    # Log detailed summary
+    log_pruning_summary(stats_before, stats_after, min_size)
+
     return pruned_graph

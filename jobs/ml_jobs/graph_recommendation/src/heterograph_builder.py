@@ -7,12 +7,17 @@ from typing import TYPE_CHECKING
 import tqdm
 
 from src.constants import DEFAULT_METADATA_COLUMNS, ID_COLUMN
-from src.utils.preprocessing import normalize_dataframe
+from src.utils.graph_indexing import build_id_to_index_map, set_graph_identifiers
+from src.utils.postprocessing import (
+    GRAPH_PRUNING_MIN_SIZE,
+    diagnose_component_sizes,
+    prune_small_components,
+)
+from src.utils.preprocessing import normalize_dataframe, remove_rows_with_no_metadata
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
-    from src.constants import MetadataKey
 
 import pandas as pd
 import torch
@@ -49,14 +54,18 @@ def build_book_metadata_heterograph_from_dataframe(
     if missing_columns:
         raise KeyError(f"Missing required columns: {', '.join(missing_columns)}")
 
-    # Step 1: Normalize all relevant columns using vectorized operations
+    # Step 1: Preprocess dataframe
     all_columns = [id_column, *metadata_columns]
     df_normalized = normalize_dataframe(dataframe, all_columns)
+    df_normalized = remove_rows_with_no_metadata(
+        df_normalized,
+        metadata_list=list(metadata_columns),
+    )
 
     # Step 2: Prepare book nodes
     unique_books = df_normalized[id_column].dropna().drop_duplicates()
     book_ids = unique_books.tolist()
-    book_index = {book_id: idx for idx, book_id in enumerate(book_ids)}
+    book_index = build_id_to_index_map(book_ids)
 
     # Step 3: Build metadata nodes by column
     metadata_nodes_by_column: dict[str, dict[str, int]] = {}
@@ -74,10 +83,8 @@ def build_book_metadata_heterograph_from_dataframe(
         ]
 
         if valid_values:
-            metadata_nodes_by_column[column] = {
-                value: idx for idx, value in enumerate(valid_values)
-            }
             metadata_ids_by_column[column] = valid_values
+            metadata_nodes_by_column[column] = build_id_to_index_map(valid_values)
 
     # Step 4: Create edge indices for each relation type
     edge_indices: dict[tuple[str, str, str], set[tuple[int, int]]] = {}
@@ -150,18 +157,16 @@ def build_book_metadata_heterograph_from_dataframe(
             graph_data[src_type, edge_type, dst_type].edge_index = edge_index
 
     # Step 7: Add custom attributes for identifier mapping
-    graph_data.book_ids = list(book_ids)
-    graph_data.metadata_ids_by_column = metadata_ids_by_column
-    graph_data.metadata_columns = [
-        col for col in metadata_columns if col in metadata_nodes_by_column
-    ]
-
-    # Create a flattened metadata_ids list for backward compatibility
-    metadata_keys: list[MetadataKey] = []
-    for column in graph_data.metadata_columns:
-        for value in metadata_ids_by_column[column]:
-            metadata_keys.append((column, value))
-    graph_data.metadata_ids = metadata_keys
+    set_graph_identifiers(
+        graph=graph_data,
+        book_ids=book_ids,
+        metadata_ids_by_column=metadata_ids_by_column,
+        metadata_columns=[
+            col for col in metadata_columns if col in metadata_nodes_by_column
+        ],
+        book_index=book_index,
+        metadata_nodes_by_column=metadata_nodes_by_column,
+    )
 
     return graph_data
 
@@ -171,6 +176,7 @@ def build_book_metadata_heterograph(
     *,
     nrows: int | None = None,
     filters: Sequence[tuple[str, str, Iterable[object]]] | None = None,
+    min_component_size: int | None = GRAPH_PRUNING_MIN_SIZE,
 ) -> HeteroData:
     """Load a parquet file and build the corresponding book-metadata graph."""
 
@@ -182,6 +188,17 @@ def build_book_metadata_heterograph(
     if nrows is not None:
         df = df.sample(nrows, random_state=42)
 
-    return build_book_metadata_heterograph_from_dataframe(
+    data_graph = build_book_metadata_heterograph_from_dataframe(
         df, id_column=ID_COLUMN, metadata_columns=DEFAULT_METADATA_COLUMNS
     )
+
+    components_data = diagnose_component_sizes(graph=data_graph)
+
+    if min_component_size:
+        data_graph = prune_small_components(
+            graph=data_graph,
+            min_size=min_component_size,
+            components_data=components_data,
+        )
+
+    return data_graph

@@ -27,3 +27,24 @@ def normalize_dataframe(
             # Replace empty/missing value representations with None
             df[col] = df[col].replace(["", "nan", "None", "<NA>"], None)
     return df
+
+
+def remove_rows_with_no_metadata(
+    df: pd.DataFrame, metadata_list: list | None = None
+) -> pd.DataFrame:
+    """Filter out rows where all specified feature_link columns are null.
+
+    Args:
+        df (pd.DataFrame): Input dataframe.
+        features_link (list): List of column names to check for isolation.
+
+    Returns:
+        pd.DataFrame: Filtered dataframe
+        (rows with at least one non-null in features_link remain).
+    """
+    if not metadata_list:
+        return df
+
+    df = df.copy()
+    # Keep only rows where at least one of the feature_link columns is not null
+    return df.loc[lambda _df: ~_df[metadata_list].isna().all(axis=1)]

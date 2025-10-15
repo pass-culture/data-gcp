@@ -1,5 +1,4 @@
 -- noqa: disable=all
--- noqa: disable=all
 {{ config(**custom_table_config(materialized="view")) }}
 
 with
@@ -18,9 +17,7 @@ with
             and user_id is not null
             and offer_id is not null
             and offer_id != "NaN"
-            and offer_id != "NaN"
     )
-
 
 select
     events.user_id,
@@ -33,14 +30,10 @@ select
     offer.item_id,
     offer.offer_subcategory_id,
     offer.offer_category_id,
-    offer.item_id,
-    offer.offer_subcategory_id,
-    offer.offer_category_id,
     offer.genres,
     offer.rayon,
     offer.type,
     offer.venue_id,
-    offer.venue_name
     offer.venue_name
 from events
 inner join {{ ref("int_global__offer") }} as offer on events.offer_id = offer.offer_id

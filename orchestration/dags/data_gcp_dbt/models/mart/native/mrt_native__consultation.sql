@@ -1,5 +1,4 @@
 -- noqa: disable=all
--- noqa: disable=all
 {{
     config(
         **custom_incremental_config(

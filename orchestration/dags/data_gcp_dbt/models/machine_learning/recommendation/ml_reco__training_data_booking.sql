@@ -1,13 +1,9 @@
 -- noqa: disable=all
--- noqa: disable=all
 select
     booking.user_id,
     cast(user.user_age as int64) as user_age,
     "BOOKING" as event_type,
     booking.booking_creation_date as event_date,
-    offer.item_id,
-    offer.offer_subcategory_id,
-    offer.offer_category_id,
     offer.item_id,
     offer.offer_subcategory_id,
     offer.offer_category_id,

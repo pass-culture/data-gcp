@@ -1,7 +1,7 @@
 select
     v.venue_id,
     v.offerer_id,
-    v.venue_id as v.partner_id,
+    v.venue_id as partner_id,
     v.venue_creation_date as partner_creation_date,
     v.venue_siret,
     v.venue_is_open_to_public,

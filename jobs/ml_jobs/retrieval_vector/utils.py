@@ -355,10 +355,10 @@ def create_items_table(
 def get_item_docs(item_embedding_dict: dict, items_df: pd.DataFrame) -> DocumentArray:
     docs = DocumentArray()
     for row in items_df.itertuples():
-        embedding_id = item_embedding_dict.get(row.item_id, None)
+        item_id = row.item_id
+        embedding_id = item_embedding_dict.get(row.item_id)
         if embedding_id is not None:
-            _item_id = row.item_id
-            docs.append(Document(id=str(_item_id), embedding=embedding_id))
+            docs.append(Document(id=str(item_id), embedding=embedding_id))
 
     if len(docs) == 0:
         raise Exception("Item Document is empty. Does the model match the query ?")

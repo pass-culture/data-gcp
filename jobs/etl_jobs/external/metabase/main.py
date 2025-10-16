@@ -97,14 +97,14 @@ def run(
             transition_log["timestamp"] = datetime.datetime.now()
             try:
                 native_card = NativeCard(card_id, metabase)
-                native_card.replace_schema_name(
-                    legacy_schema_name,
-                    new_schema_name,
-                    legacy_table_name,
-                    new_table_name,
-                )
-                native_card.replace_table_name(legacy_table_name, new_table_name)
-                native_card.replace_column_names(table_columns_mappings)
+                # native_card.replace_schema_name(
+                #     legacy_schema_name,
+                #     new_schema_name,
+                #     legacy_table_name,
+                #     new_table_name,
+                # )
+                # native_card.replace_table_name(legacy_table_name, new_table_name)
+                # native_card.replace_column_names(table_columns_mappings)
                 native_card.update_filters(metabase_field_mapping)
                 native_card.update_query()
                 transition_log["success"] = True

@@ -89,6 +89,15 @@ def download_model(artifact_uri: str) -> None:
 
 
 def save_experiment(experiment_name, model_name, serving_container, run_id):
+    """
+    Save experiment results to BigQuery.
+
+    Args:
+        experiment_name (str): Name of the MLflow experiment
+        model_name (str): Name of the model
+        serving_container (str): Container image for serving
+        run_id (str): MLflow run ID
+    """
     log_results = {
         "execution_date": datetime.now().isoformat(),
         "experiment_name": experiment_name,
@@ -126,6 +135,16 @@ def save_experiment(experiment_name, model_name, serving_container, run_id):
 
 
 def deploy_container(serving_container, workers):
+    """
+    Deploy container to Docker registry.
+
+    Args:
+        serving_container (str): Container image to deploy
+        workers (int): Number of workers for the container
+
+    Raises:
+        subprocess.CalledProcessError: If deployment fails
+    """
     command = f"sh ./deploy_to_docker_registery.sh {serving_container} {workers}"
     try:
         result = subprocess.run(
@@ -143,6 +162,16 @@ def deploy_container(serving_container, workers):
 
 
 def get_items_metadata():
+    """
+    Retrieve item metadata from BigQuery.
+
+    Fetches comprehensive item information including categories, bookings,
+    embeddings, and venue details from the recommendable_item table.
+
+    Returns:
+        pd.DataFrame: DataFrame containing item metadata with columns for
+            item_id, categories, booking statistics, embeddings, and venue information
+    """
     client = bigquery.Client()
 
     sql = f"""
@@ -195,6 +224,12 @@ def get_items_metadata():
 
 
 def get_users_dummy_metadata():
+    """
+    Retrieve user IDs from BigQuery for dummy metadata generation.
+
+    Returns:
+        pd.DataFrame: DataFrame containing user_id column
+    """
     client = bigquery.Client()
 
     sql = f"""
@@ -206,6 +241,15 @@ def get_users_dummy_metadata():
 
 
 def to_ts(f):
+    """
+    Convert datetime to timestamp.
+
+    Args:
+        f: Datetime object to convert
+
+    Returns:
+        float: Unix timestamp or 0.0 if conversion fails
+    """
     try:
         return float(f.timestamp())
     except Exception:
@@ -213,6 +257,15 @@ def to_ts(f):
 
 
 def to_float(f):
+    """
+    Safely convert value to float.
+
+    Args:
+        f: Value to convert to float
+
+    Returns:
+        float or None: Converted float value or None if conversion fails
+    """
     try:
         return float(f)
     except Exception:
@@ -220,6 +273,13 @@ def to_float(f):
 
 
 def save_model_type(model_type: dict, output_dir: str):
+    """
+    Save model type configuration to JSON file.
+
+    Args:
+        model_type (dict): Dictionary containing model type configuration
+        output_dir (str): Directory path where the JSON file will be saved
+    """
     with open(f"{output_dir}/model_type.json", "w") as file:
         json.dump(model_type, file)
 
@@ -227,6 +287,22 @@ def save_model_type(model_type: dict, output_dir: str):
 def get_table_batches(
     item_embedding_dict: dict, items_df: pd.DataFrame, emb_size: int, total_size: int
 ):
+    """
+    Generate PyArrow RecordBatch objects for LanceDB table creation.
+
+    Yields batches of item data with embeddings and metadata formatted as
+    PyArrow RecordBatches for efficient table insertion.
+
+    Args:
+        item_embedding_dict (dict): Mapping of item_id to embedding vectors
+        items_df (pd.DataFrame): DataFrame containing item metadata
+        emb_size (int): Dimensionality of embeddings
+        total_size (int): Total number of items
+
+    Yields:
+        pa.RecordBatch: PyArrow RecordBatch containing item data with embeddings
+            and metadata fields defined in ITEM_COLUMNS
+    """
     preprocessed_items_df = items_df.fillna(
         {
             "topic_id": "",
@@ -320,6 +396,28 @@ def create_items_table(
     batch_size: int = LANCE_DB_BATCH_SIZE,
     create_index: bool = True,
 ) -> None:
+    """
+    Create a LanceDB table with item embeddings and metadata.
+
+    Processes items in batches to create a LanceDB table with vector embeddings
+    and associated metadata. Optionally creates indexes for efficient similarity
+    search and filtering.
+
+    Args:
+        item_embedding_dict (dict): Mapping of item_id to embedding vectors
+        items_df (pd.DataFrame): DataFrame containing item metadata
+        emb_size (int): Dimensionality of the embedding vectors
+        uri (str): LanceDB database URI/path
+        batch_size (int, optional): Number of items per batch. Defaults to LANCE_DB_BATCH_SIZE
+        create_index (bool, optional): Whether to create indexes after table creation.
+            Defaults to True
+
+    Returns:
+        None
+
+    TODO: refacto to have only a dataframe containing items and vectors
+    """
+
     num_batches = ceil(len(items_df) / batch_size)
     db = lancedb.connect(uri)
     db.drop_database()
@@ -353,6 +451,22 @@ def create_items_table(
 
 
 def get_item_docs(item_embedding_dict: dict, items_df: pd.DataFrame) -> DocumentArray:
+    """
+    Create DocumentArray from item embeddings.
+
+    Builds a DocumentArray containing Documents with item IDs and their
+    corresponding embedding vectors.
+
+    Args:
+        item_embedding_dict (dict): Mapping of item_id to embedding vectors
+        items_df (pd.DataFrame): DataFrame containing item metadata
+
+    Returns:
+        DocumentArray: Collection of Documents with item embeddings
+
+    Raises:
+        Exception: If no valid documents are created (empty DocumentArray)
+    """
     docs = DocumentArray()
     for row in items_df.itertuples():
         item_id = row.item_id
@@ -367,6 +481,15 @@ def get_item_docs(item_embedding_dict: dict, items_df: pd.DataFrame) -> Document
 
 
 def get_user_docs(user_dict: dict) -> DocumentArray:
+    """
+    Create DocumentArray from user embeddings.
+
+    Args:
+        user_dict (dict): Mapping of user_id to embedding vectors
+
+    Returns:
+        DocumentArray: Collection of Documents with user embeddings
+    """
     docs = DocumentArray()
     for k, v in user_dict.items():
         docs.append(Document(id=str(k), embedding=v))
@@ -376,6 +499,24 @@ def get_user_docs(user_dict: dict) -> DocumentArray:
 def get_model_from_mlflow(
     experiment_name: str, run_id: str = None, artifact_uri: str = None
 ):
+    """
+    Retrieve model artifact URI from MLflow via BigQuery.
+
+    Fetches the artifact URI for a model from BigQuery's MLflow results table,
+    either by experiment name (latest run) or by specific run_id.
+
+    Args:
+        experiment_name (str): Name of the MLflow experiment
+        run_id (str, optional): Specific MLflow run ID. Defaults to None
+        artifact_uri (str, optional): Direct artifact URI (returned if valid).
+            Defaults to None
+
+    Returns:
+        str: GCS artifact URI for the model
+
+    Raises:
+        Exception: If model is not found in BigQuery results table
+    """
     client = bigquery.Client()
 
     # get artifact_uri from BQ

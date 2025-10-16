@@ -167,11 +167,30 @@ def create_graph_item_docs(items_with_embeddings_df: pd.DataFrame, output_path: 
     """
     item_docs = DocumentArray(
         [
-            Document(id=row.id, embedding=row.vector)
+            Document(id=row.item_id, embedding=row.vector)
             for row in items_with_embeddings_df.itertuples()
         ]
     )
     item_docs.save(output_path)
+
+
+def load_embeddings_from_parquet(
+    parquet_dir: str, column_renaming_mapping: dict
+) -> dict:
+    lf = pl.scan_parquet(f"{parquet_dir}/*.parquet")
+
+    transformed_lf = (
+        lf.rename(column_renaming_mapping)
+        .with_columns(
+            pl.col("vector")
+            .struct.field("list")
+            .list.eval(pl.element().struct.field("element"))
+        )
+        .drop("vector")
+        .rename({"list": "vector"})
+    )
+
+    return transformed_lf.collect().to_pandas()
 
 
 @app.command()
@@ -209,25 +228,31 @@ def graph_database(
     ),
 ) -> None:
     MODEL_TYPE = {
-        "type": "graph_retrieval",
+        "type": "metadata_graph",
         "default_token": None,
     }
     # Load data
     recommendable_items_df = pd.read_parquet(recommendable_item_gs_path)
-    graph_embeddings_df = pd.read_parquet(graph_embedding_path)
+    graph_embeddings_df = load_embeddings_from_parquet(
+        graph_embedding_path,
+        column_renaming_mapping={"node_ids": "item_id", "embeddings": "vector"},
+    )
     items_with_embeddings_df = recommendable_items_df.merge(
         graph_embeddings_df, on="item_id", how="inner"
-    ).rename(columns={"embedding": "vector"})
+    )
 
     # Create item documents for graph retrieval app
-    create_graph_item_docs(items_with_embeddings_df=items_with_embeddings_df)
+    create_graph_item_docs(
+        items_with_embeddings_df=items_with_embeddings_df,
+        output_path=f"{OUTPUT_DATA_PATH}/item.docs",
+    )
 
     # Create lanceDB table for graph retrieval
     create_items_table(
         item_embedding_dict={
             row.item_id: row.vector for row in items_with_embeddings_df.itertuples()
         },
-        items_df=items_with_embeddings_df.loc[lambda df: df.columns != "vector"],
+        items_df=items_with_embeddings_df.loc[:, lambda df: df.columns != "vector"],
         emb_size=len(items_with_embeddings_df.iloc[0].vector),
         uri=f"{OUTPUT_DATA_PATH}/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,

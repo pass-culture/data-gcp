@@ -154,6 +154,32 @@ class TiteliveClient:
         logger.info(f"Fetching {len(ean_list)} products by EAN")
         return self._make_request("GET", url, params=params)
 
+    def get_by_eans_with_base(self, ean_list: list[str], base: str) -> dict[str, Any]:
+        """
+        Fetch product data by EAN codes with specific base category.
+
+        Args:
+            ean_list: List of EAN codes
+            base: Product category (e.g., "paper", "music")
+
+        Returns:
+            API response as dictionary
+
+        Raises:
+            ValueError: If ean_list is empty
+            requests.exceptions.RequestException: If request fails
+        """
+        if not ean_list:
+            msg = "EAN list cannot be empty"
+            raise ValueError(msg)
+
+        ean_param = EAN_SEPARATOR.join(ean_list)
+        url = f"{TITELIVE_BASE_URL}/ean"
+        params = {"in": f"ean={ean_param}", "base": base}
+
+        logger.info(f"Fetching {len(ean_list)} products by EAN (base={base})")
+        return self._make_request("GET", url, params=params)
+
     def search_by_date(
         self,
         base: str,

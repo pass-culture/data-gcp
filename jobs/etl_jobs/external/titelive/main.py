@@ -71,7 +71,7 @@ def init_bq(
     reprocess_failed: bool = typer.Option(
         False,
         "--reprocess-failed",
-        help="Reprocess EANs with status='fail' from destination table",
+        help="Reprocess EANs with status='failed' from destination table",
     ),
 ) -> None:
     """
@@ -82,7 +82,7 @@ def init_bq(
     2. For each batch N:
        - Fetch 20k EANs from source_table using OFFSET pagination
        - Process in sub-batches of 250 EANs (API limit)
-       - Handle 3 statuses: processed | deleted_in_titelive | fail
+       - Handle 3 statuses: processed | deleted_in_titelive | failed
        - Write all results with batch_number = N
     3. Increment batch_number in memory (no re-query)
 

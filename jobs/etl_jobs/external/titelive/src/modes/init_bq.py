@@ -11,6 +11,8 @@ from src.constants import (
     DEFAULT_BATCH_SIZE,
     GCP_PROJECT_ID,
     MAIN_BATCH_SIZE,
+    MUSIC_SUBCATEGORIES,
+    TiteliveCategory,
 )
 from src.transformers.api_transform import transform_api_response
 from src.utils.bigquery import (
@@ -30,53 +32,113 @@ logger = get_logger(__name__)
 
 def process_eans_batch(
     api_client: TiteliveClient,
-    eans: list[str],
+    ean_pairs: list[tuple[str, str]],
     sub_batch_size: int = DEFAULT_BATCH_SIZE,
 ) -> list[dict]:
     """
-    Process a batch of EANs by calling the API in sub-batches.
+    Process a batch of EANs by calling the API in sub-batches, grouped by base.
 
-    Processes EANs in sub-batches of sub_batch_size (default 250).
+    Groups EANs by base (music vs paper) based on subcategoryid, then processes
+    each group in sub-batches of sub_batch_size (default 250).
     For each sub-batch:
-    - Call API with EANs
+    - Call API with EANs and appropriate base parameter
     - Mark returned EANs as 'processed'
     - Mark missing EANs as 'deleted_in_titelive'
-    - Mark failed API calls as 'fail'
+    - Mark failed API calls as 'failed'
 
     Args:
         api_client: Titelive API client
-        eans: List of EANs to process
+        ean_pairs: List of (ean, subcategoryid) tuples to process
         sub_batch_size: Number of EANs per API call (default 250)
 
     Returns:
-        List of dicts with keys: ean, status, datemodification, json_raw
-        Status values: 'processed' | 'deleted_in_titelive' | 'fail'
+        List of dicts with keys: ean, subcategoryid, status, datemodification, json_raw
+        Status values: 'processed' | 'deleted_in_titelive' | 'failed'
+    """
+    # Group EANs by base category
+    music_eans = []
+    paper_eans = []
+
+    for ean, subcategoryid in ean_pairs:
+        if subcategoryid in MUSIC_SUBCATEGORIES:
+            music_eans.append((ean, subcategoryid))
+        else:
+            # Default to paper for NULL, unknown, or paper subcategories
+            paper_eans.append((ean, subcategoryid))
+
+    total_eans = len(ean_pairs)
+    logger.info(
+        f"Processing {total_eans} EANs: "
+        f"{len(music_eans)} music, {len(paper_eans)} paper"
+    )
+
+    results = []
+
+    # Process music EANs
+    if music_eans:
+        logger.info(f"Processing {len(music_eans)} music EANs")
+        results.extend(
+            _process_eans_by_base(
+                api_client, music_eans, TiteliveCategory.MUSIC, sub_batch_size
+            )
+        )
+
+    # Process paper EANs
+    if paper_eans:
+        logger.info(f"Processing {len(paper_eans)} paper EANs")
+        results.extend(
+            _process_eans_by_base(
+                api_client, paper_eans, TiteliveCategory.PAPER, sub_batch_size
+            )
+        )
+
+    return results
+
+
+def _process_eans_by_base(
+    api_client: TiteliveClient,
+    ean_pairs: list[tuple[str, str]],
+    base: str,
+    sub_batch_size: int,
+) -> list[dict]:
+    """
+    Process EANs for a specific base category in sub-batches.
+
+    Args:
+        api_client: Titelive API client
+        ean_pairs: List of (ean, subcategoryid) tuples
+        base: API base category ('music' or 'paper')
+        sub_batch_size: Number of EANs per API call
+
+    Returns:
+        List of dicts with processing results
     """
     results = []
-    total_eans = len(eans)
+    total_eans = len(ean_pairs)
     total_sub_batches = (total_eans + sub_batch_size - 1) // sub_batch_size
 
     logger.info(
-        f"Processing {total_eans} EANs in {total_sub_batches} sub-batches "
+        f"Processing {total_eans} {base} EANs in {total_sub_batches} sub-batches "
         f"of {sub_batch_size} EANs each"
     )
 
-    for i in range(0, len(eans), sub_batch_size):
-        sub_batch = eans[i : i + sub_batch_size]
+    for i in range(0, len(ean_pairs), sub_batch_size):
+        sub_batch_pairs = ean_pairs[i : i + sub_batch_size]
+        sub_batch_eans = [ean for ean, _ in sub_batch_pairs]
         current_sub_batch = (i // sub_batch_size) + 1
         eans_processed_so_far = i
-        eans_in_this_batch = len(sub_batch)
+        eans_in_this_batch = len(sub_batch_pairs)
 
         logger.info(
-            f"Sub-batch {current_sub_batch}/{total_sub_batches}: "
+            f"Sub-batch {current_sub_batch}/{total_sub_batches} ({base}): "
             f"Processing EANs {eans_processed_so_far + 1}-"
             f"{eans_processed_so_far + eans_in_this_batch} "
             f"of {total_eans}"
         )
 
         try:
-            # Call API
-            api_response = api_client.get_by_eans(sub_batch)
+            # Call API with base parameter
+            api_response = api_client.get_by_eans_with_base(sub_batch_eans, base)
 
             # Transform response
             transformed_df = transform_api_response(api_response)
@@ -87,13 +149,17 @@ def process_eans_batch(
                 if not transformed_df.empty
                 else set()
             )
-            missing_eans = set(sub_batch) - returned_eans
+            missing_eans = set(sub_batch_eans) - returned_eans
+
+            # Create mapping of ean to subcategoryid for this sub-batch
+            ean_to_subcategoryid = dict(sub_batch_pairs)
 
             # Add processed results
             for _, row in transformed_df.iterrows():
                 results.append(
                     {
                         "ean": row["ean"],
+                        "subcategoryid": ean_to_subcategoryid.get(row["ean"]),
                         "status": "processed",
                         "datemodification": row["datemodification"],
                         "json_raw": row["json_raw"],
@@ -105,6 +171,7 @@ def process_eans_batch(
                 results.append(
                     {
                         "ean": ean,
+                        "subcategoryid": ean_to_subcategoryid.get(ean),
                         "status": "deleted_in_titelive",
                         "datemodification": None,
                         "json_raw": None,
@@ -112,7 +179,7 @@ def process_eans_batch(
                 )
 
             logger.info(
-                f"Sub-batch {current_sub_batch}/{total_sub_batches} complete: "
+                f"Sub-batch {current_sub_batch}/{total_sub_batches} ({base}) complete: "
                 f"{len(returned_eans)} processed, "
                 f"{len(missing_eans)} deleted | "
                 "Progress: "
@@ -122,20 +189,21 @@ def process_eans_batch(
         except Exception as e:
             # Mark all EANs in sub-batch as failed
             logger.error(
-                "API call failed for sub-batch "
-                f"{current_sub_batch}/{total_sub_batches}: {e}"
+                f"API call failed for sub-batch "
+                f"{current_sub_batch}/{total_sub_batches} ({base}): {e}"
             )
-            for ean in sub_batch:
+            for ean, subcategoryid in sub_batch_pairs:
                 results.append(
                     {
                         "ean": ean,
+                        "subcategoryid": subcategoryid,
                         "status": "fail",
                         "datemodification": None,
                         "json_raw": None,
                     }
                 )
             logger.warning(
-                f"Marked {len(sub_batch)} EANs as failed | "
+                f"Marked {len(sub_batch_pairs)} EANs as failed | "
                 "Progress: "
                 f"{eans_processed_so_far + eans_in_this_batch}/{total_eans} EANs"
             )
@@ -175,7 +243,7 @@ def run_init_bq(
     - Example: skip_count=861488 means batch 0 starts at OFFSET 861488
 
     Optional: Reprocess failed EANs
-    - If reprocess_failed=True, fetches EANs with status='fail' from destination_table
+    - If reprocess_failed=True, fetches EANs with status='failed' from destination_table
     - Deletes failed records, processes via API, inserts with new batch_number
     - Ignores source_table and skip parameters in this mode
 
@@ -190,7 +258,7 @@ def run_init_bq(
             already-processed EANs to skip
         skip_count: Number of already-processed EANs to skip \
             (required if skip_already_processed_table is set)
-        reprocess_failed: If True, reprocess EANs with status='fail'
+        reprocess_failed: If True, reprocess EANs with status='failed'
 
     Raises:
         Exception: If any step fails
@@ -239,20 +307,21 @@ def run_init_bq(
     while True:
         # Fetch EANs for this batch
         if reprocess_failed:
-            # Fetch failed EANs from destination table
-            batch_eans = fetch_failed_eans(
+            # Fetch failed EANs from destination table (returns tuples)
+            batch_ean_pairs = fetch_failed_eans(
                 bq_client, destination_table, main_batch_size
             )
 
-            if not batch_eans:
+            if not batch_ean_pairs:
                 logger.info("No more failed EANs to reprocess. Exiting.")
                 break
 
-            # Delete failed records before reprocessing
-            delete_failed_eans(bq_client, destination_table, batch_eans)
+            # Delete failed records before reprocessing (extract EANs only)
+            batch_eans_only = [ean for ean, _ in batch_ean_pairs]
+            delete_failed_eans(bq_client, destination_table, batch_eans_only)
         else:
-            # Fetch EANs from source table using OFFSET pagination
-            batch_eans = fetch_batch_eans(
+            # Fetch EANs from source table using OFFSET pagination (returns tuples)
+            batch_ean_pairs = fetch_batch_eans(
                 bq_client,
                 source_table,
                 current_batch,
@@ -261,17 +330,17 @@ def run_init_bq(
                 skip_count=skip_count,
             )
 
-            if not batch_eans:
+            if not batch_ean_pairs:
                 logger.info("No more EANs to process. Exiting.")
                 break
 
         logger.info(
-            f"Batch {current_batch}: Processing {len(batch_eans)} EANs "
+            f"Batch {current_batch}: Processing {len(batch_ean_pairs)} EANs "
             f"in sub-batches of {sub_batch_size}"
         )
 
         # Process EANs in sub-batches of 250
-        results = process_eans_batch(api_client, batch_eans, sub_batch_size)
+        results = process_eans_batch(api_client, batch_ean_pairs, sub_batch_size)
 
         # Count statuses
         status_counts = {}
@@ -283,7 +352,7 @@ def run_init_bq(
             f"Batch {current_batch} processed: "
             f"{status_counts.get('processed', 0)} processed, "
             f"{status_counts.get('deleted_in_titelive', 0)} deleted, "
-            f"{status_counts.get('fail', 0)} failed"
+            f"{status_counts.get('failed', 0)} failed"
         )
 
         # Add processed_at and batch_number to all results
@@ -304,7 +373,7 @@ def run_init_bq(
             schema=schema,
         )
 
-        total_processed += len(batch_eans)
+        total_processed += len(batch_ean_pairs)
         logger.info(
             f"Batch {current_batch} complete. Total processed: {total_processed}"
         )

@@ -136,7 +136,7 @@ with DAG(
         "reprocess_failed": Param(
             default=False,
             type="boolean",
-            description="Reprocess EANs with status='fail' from destination table (init-bq mode)",
+            description="Reprocess EANs with status='failed' from destination table (init-bq mode)",
         ),
         # Mode 2 (init-gcs) params
         "gcs_path": Param(

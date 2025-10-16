@@ -30,3 +30,14 @@ class TiteliveCategory(StrEnum):
 
     PAPER = "paper"
     MUSIC = "music"
+
+
+# Subcategory to API base mapping
+MUSIC_SUBCATEGORIES = {
+    "SUPPORT_PHYSIQUE_MUSIQUE_VINYLE",
+    "SUPPORT_PHYSIQUE_MUSIQUE_CD",
+}
+
+PAPER_SUBCATEGORIES = {
+    "LIVRE_PAPIER",
+}

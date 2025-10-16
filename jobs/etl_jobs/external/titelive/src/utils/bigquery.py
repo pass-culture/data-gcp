@@ -30,6 +30,7 @@ def get_destination_table_schema() -> list[bigquery.SchemaField]:
 
     Schema includes:
         - ean: Product EAN
+        - subcategoryid: Subcategory ID for API base routing (NULL if unknown)
         - status: Processing status (processed|deleted_in_titelive|fail)
         - processed_at: Processing timestamp
         - datemodification: Modification date (NULL for deleted/failed)
@@ -41,6 +42,7 @@ def get_destination_table_schema() -> list[bigquery.SchemaField]:
     """
     return [
         bigquery.SchemaField("ean", "STRING", mode="REQUIRED"),
+        bigquery.SchemaField("subcategoryid", "STRING", mode="NULLABLE"),
         bigquery.SchemaField("status", "STRING", mode="REQUIRED"),
         bigquery.SchemaField("processed_at", "TIMESTAMP", mode="REQUIRED"),
         bigquery.SchemaField("datemodification", "DATE", mode="NULLABLE"),
@@ -59,6 +61,7 @@ def create_destination_table(
 
     Schema:
         - ean (STRING): Product EAN, used for clustering
+        - subcategoryid (STRING): Subcategory ID for API base routing (NULL if unknown)
         - status (STRING): Processing status (processed|deleted_in_titelive|fail)
         - processed_at (TIMESTAMP): Processing timestamp
         - datemodification (DATE): Modification date (NULL for deleted/failed)
@@ -404,9 +407,9 @@ def fetch_batch_eans(
     batch_size: int = 20_000,
     skip_already_processed_table: str | None = None,
     skip_count: int = 0,
-) -> list[str]:
+) -> list[tuple[str, str]]:
     """
-    Fetch EANs for a specific batch using OFFSET pagination.
+    Fetch EANs with subcategoryid for a specific batch using OFFSET pagination.
 
     Uses OFFSET + LIMIT + ORDER BY to deterministically fetch batch N.
     OFFSET = skip_count + (batch_number * batch_size)
@@ -424,7 +427,7 @@ def fetch_batch_eans(
             to skip (used with skip_already_processed_table)
 
     Returns:
-        List of EANs for this batch (up to batch_size)
+        List of tuples (ean, subcategoryid) for this batch (up to batch_size)
 
     Raises:
         google.cloud.exceptions.GoogleCloudError: If query fails
@@ -450,9 +453,11 @@ def fetch_batch_eans(
         order_by_clause = "ean"
 
     query = f"""
-        SELECT DISTINCT JSON_VALUE(jsondata, '$.ean') AS ean
+        SELECT DISTINCT
+            ean,
+            subcategoryid
         FROM `{source_table}`
-        WHERE JSON_VALUE(jsondata, '$.ean') IS NOT NULL
+        WHERE ean IS NOT NULL
         ORDER BY {order_by_clause}
         LIMIT {batch_size}
         OFFSET {offset}
@@ -466,14 +471,14 @@ def fetch_batch_eans(
     query_job = client.query(query)
     results = query_job.result()
 
-    eans = [row.ean for row in results]
-    logger.info(f"Fetched {len(eans)} EANs for batch {batch_number}")
-    return eans
+    ean_pairs = [(row.ean, row.subcategoryid) for row in results]
+    logger.info(f"Fetched {len(ean_pairs)} EANs for batch {batch_number}")
+    return ean_pairs
 
 
 def count_failed_eans(client: bigquery.Client, destination_table: str) -> int:
     """
-    Count the number of EANs with status='fail' in destination table.
+    Count the number of EANs with status='failed' in destination table.
 
     Args:
         client: BigQuery client
@@ -488,7 +493,7 @@ def count_failed_eans(client: bigquery.Client, destination_table: str) -> int:
     query = f"""
         SELECT COUNT(*) as total
         FROM `{destination_table}`
-        WHERE status = 'fail'
+        WHERE status = 'failed'
     """
 
     logger.info(f"Counting failed EANs in {destination_table}")
@@ -504,9 +509,9 @@ def fetch_failed_eans(
     client: bigquery.Client,
     destination_table: str,
     batch_size: int = 20_000,
-) -> list[str]:
+) -> list[tuple[str, str]]:
     """
-    Fetch EANs with status='fail' from destination table.
+    Fetch EANs with subcategoryid with status='failed' from destination table.
 
     Used for reprocessing failed EANs from previous runs.
 
@@ -516,15 +521,15 @@ def fetch_failed_eans(
         batch_size: Number of failed EANs to fetch (default 20,000)
 
     Returns:
-        List of failed EANs (up to batch_size)
+        List of tuples (ean, subcategoryid) for failed EANs (up to batch_size)
 
     Raises:
         google.cloud.exceptions.GoogleCloudError: If query fails
     """
     query = f"""
-        SELECT ean
+        SELECT ean, subcategoryid
         FROM `{destination_table}`
-        WHERE status = 'fail'
+        WHERE status = 'failed'
         ORDER BY ean
         LIMIT {batch_size}
     """
@@ -533,9 +538,9 @@ def fetch_failed_eans(
     query_job = client.query(query)
     results = query_job.result()
 
-    eans = [row.ean for row in results]
-    logger.info(f"Fetched {len(eans)} failed EANs for reprocessing")
-    return eans
+    ean_pairs = [(row.ean, row.subcategoryid) for row in results]
+    logger.info(f"Fetched {len(ean_pairs)} failed EANs for reprocessing")
+    return ean_pairs
 
 
 def delete_failed_eans(
@@ -544,7 +549,7 @@ def delete_failed_eans(
     eans: list[str],
 ) -> None:
     """
-    Delete specific EANs with status='fail' from destination table.
+    Delete specific EANs with status='failed' from destination table.
 
     Used before reprocessing to remove old failed records.
 
@@ -565,7 +570,7 @@ def delete_failed_eans(
     query = f"""
         DELETE FROM `{destination_table}`
         WHERE ean IN ('{eans_list}')
-        AND status = 'fail'
+        AND status = 'failed'
     """
 
     logger.info(f"Deleting {len(eans)} failed EANs from {destination_table}")

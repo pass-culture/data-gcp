@@ -30,7 +30,7 @@ def get_dependant_cards(legacy_table_name, legacy_schema_name):
     query = f"""
         SELECT distinct card_id, card_type
         FROM `{PROJECT_NAME}.{INT_METABASE_DATASET}.card_dependency`
-        WHERE table_name = '{legacy_table_name}'
+        WHERE table_name = 'global_user'
         and lower(card_name) not like '%archive%'
         and table_schema = '{legacy_schema_name}'
     """

@@ -40,5 +40,4 @@ class NativeCard:
                 )
 
     def update_query(self):
-        print(self.card_info)
-        # self.metabase_api.put_card(self.card_id, self.card_info)
+        self.metabase_api.put_card(self.card_id, self.card_info)

@@ -7,7 +7,6 @@ import typer
 
 from metabase_api import MetabaseAPI
 from native import NativeCard
-from query import QueryCard
 from table import MetabaseTable, get_mapped_fields
 from utils import (
     ENVIRONMENT_LONG_NAME,
@@ -16,7 +15,6 @@ from utils import (
     METABASE_API_USERNAME,
     PROJECT_NAME,
     access_secret_data,
-    get_dependant_cards,
 )
 
 MAPPINGS_PATH = Path("data/mappings.json")
@@ -56,9 +54,9 @@ def run(
         help="Nom du nouveau schéma Big Query",
     ),
 ):
-    native_cards, query_cards = get_dependant_cards(
-        legacy_table_name, legacy_schema_name
-    )
+    # native_cards, query_cards = get_dependant_cards(
+    #     legacy_table_name, legacy_schema_name
+    # )
 
     with open(MAPPINGS_PATH, "r") as file:
         data = json.load(file)
@@ -78,8 +76,8 @@ def run(
     legacy_fields_df = legacy_metabase_table.get_fields()
     new_fields_df = new_metabase_table.get_fields()
 
-    legacy_table_id = legacy_metabase_table.get_table_id()
-    new_table_id = new_metabase_table.get_table_id()
+    # legacy_table_id = legacy_metabase_table.get_table_id()
+    # new_table_id = new_metabase_table.get_table_id()
 
     metabase_field_mapping = get_mapped_fields(
         legacy_fields_df, new_fields_df, table_columns_mappings
@@ -87,7 +85,8 @@ def run(
 
     if metabase_card_type == "native":
         transition_logs = []
-        for card_id in native_cards:
+        # for card_id in native_cards:
+        for card_id in [16392]:
             transition_log = {
                 "card_type": "native",
                 "legacy_table_name": legacy_table_name,
@@ -113,29 +112,29 @@ def run(
                 print(e)
             transition_logs.append(transition_log)
 
-    if metabase_card_type == "query":
-        transition_logs = []
+    # if metabase_card_type == "query":
+    #     transition_logs = []
 
-        for card_id in query_cards:
-            transition_log = {
-                "card_type": "query",
-                "legacy_table_name": legacy_table_name,
-                "new_table_name": new_table_name,
-            }
-            transition_log["card_id"] = card_id
-            transition_log["timestamp"] = datetime.datetime.now()
-            try:
-                query_card = QueryCard(card_id, metabase)
-                query_card.update_dataset_query(
-                    metabase_field_mapping, legacy_table_id, new_table_id
-                )
-                query_card.update_table_id(new_table_id)
-                query_card.update_card()
-                transition_log["success"] = True
-            except Exception as e:
-                transition_log["success"] = False
-                print(e)
-            transition_logs.append(transition_log)
+    #     for card_id in query_cards:
+    #         transition_log = {
+    #             "card_type": "query",
+    #             "legacy_table_name": legacy_table_name,
+    #             "new_table_name": new_table_name,
+    #         }
+    #         transition_log["card_id"] = card_id
+    #         transition_log["timestamp"] = datetime.datetime.now()
+    #         try:
+    #             query_card = QueryCard(card_id, metabase)
+    #             query_card.update_dataset_query(
+    #                 metabase_field_mapping, legacy_table_id, new_table_id
+    #             )
+    #             query_card.update_table_id(new_table_id)
+    #             query_card.update_card()
+    #             transition_log["success"] = True
+    #         except Exception as e:
+    #             transition_log["success"] = False
+    #             print(e)
+    #         transition_logs.append(transition_log)
 
     pd.DataFrame(transition_logs).to_gbq(
         (f"{INT_METABASE_DATASET}.migration_log"),

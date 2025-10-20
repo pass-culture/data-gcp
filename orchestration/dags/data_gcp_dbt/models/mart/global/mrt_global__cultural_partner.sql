@@ -18,6 +18,7 @@ select
     v.venue_postal_code as partner_postal_code,
     v.venue_type_label as partner_type,
     "venue_type_label" as partner_type_origin,
+    agg_partner_cultural_sector.cultural_sector, 
     v.dms_accepted_at,
     v.first_dms_adage_status,
     v.is_reference_adage,
@@ -49,4 +50,7 @@ select
     v.total_real_revenue,
     case when v.venue_is_open_to_public then "ERP" else "non ERP" end as partner_status
 from {{ ref("mrt_global__venue") }} as v
+left join
+        {{ source("seed", "agg_partner_cultural_sector") }}
+        on v.venue_type_label = agg_partner_cultural_sector.partner_type
 where v.venue_is_open_to_public or v.venue_siret is not null or v.venue_is_permanent

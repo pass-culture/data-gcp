@@ -1,5 +1,5 @@
 import time
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from docarray import Document
 from loguru import logger
@@ -58,44 +58,22 @@ class MetadataGraphClient(DefaultClient):
         self,
         vector: Document,
         similarity_metric: str = "cosine",
-        n: int = 50,
-        query_filter: Optional[Dict] = None,
-        details: bool = False,
-        excluded_items: List[str] = [],
-        prefilter: bool = True,
-        vector_column_name: str = "vector",
-        re_rank: bool = False,
-        user_id: Optional[str] = None,
-        item_ids: List[str] = [],
+        **kwargs,
     ) -> List[Dict]:
         """
-        Search the vector database for similar items and optionally rerank results.
+        Search the vector database for similar items using cosine similarity by default.
+
+        This method overrides the parent's default similarity metric from 'dot' to 'cosine'
+        for metadata graph-based retrieval.
 
         Args:
             vector (Document): The vector to search.
-            similarity_metric (str): Similarity metric for vector search.
-            n (int): Maximum number of results.
-            query_filter (Optional[Dict]): Optional query filters.
-            details (bool): Whether to include detailed fields in results.
-            excluded_items (List[str]): ID of the item to exclude from results.
-            prefilter (bool): Whether to apply pre-filtering.
-            vector_column_name (str): Column name to search on.
-            re_rank (bool): Whether to apply re-ranking.
-            user_id (str): User ID for re-ranking.
+            similarity_metric (str): Similarity metric for vector search. Defaults to 'cosine'.
+            **kwargs: Additional arguments passed to the parent method.
 
         Returns:
             List[Dict]: A list of search results.
         """
-        return self._perform_search(
-            vector=vector,
-            n=n,
-            query_filter=query_filter,
-            vector_column_name=vector_column_name,
-            similarity_metric=similarity_metric,
-            details=details,
-            excluded_items=excluded_items,
-            prefilter=prefilter,
-            re_rank=re_rank,
-            user_id=user_id,
-            item_ids=item_ids,
+        return super().search_by_vector(
+            vector=vector, similarity_metric=similarity_metric, **kwargs
         )

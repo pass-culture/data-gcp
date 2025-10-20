@@ -238,7 +238,7 @@ def graph_database(
         column_renaming_mapping={"node_ids": "item_id", "embeddings": "vector"},
     )
     items_with_embeddings_df = recommendable_items_df.merge(
-        graph_embeddings_df, on="item_id", how="inner"
+        graph_embeddings_df, on="item_id", how="inner", validate="one_to_one"
     )
 
     # Create item documents for graph retrieval app

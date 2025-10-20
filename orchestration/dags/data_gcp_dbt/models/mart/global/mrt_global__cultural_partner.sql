@@ -3,9 +3,6 @@ select
     v.offerer_id,
     v.venue_id as partner_id,
     v.venue_creation_date as partner_creation_date,
-    v.venue_siret,
-    v.venue_is_open_to_public,
-    v.venue_is_permanent,
     case
         when
             date_trunc(v.venue_creation_date, year)
@@ -49,6 +46,7 @@ select
     v.total_used_collective_bookings,
     v.total_individual_real_revenue,
     v.total_collective_real_revenue,
-    v.total_real_revenue
+    v.total_real_revenue,
+    case v.venue_is_open_to_public then "ERP" else "non ERP" end as partner_status
 from {{ ref("mrt_global__venue") }} as v
 where v.venue_is_open_to_public or v.venue_siret is not null or v.venue_is_permanent

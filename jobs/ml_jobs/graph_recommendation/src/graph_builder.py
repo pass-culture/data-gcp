@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import tqdm
 
-from src.constants import DEFAULT_METADATA_COLUMNS, ID_COLUMN
+from src.constants import DEFAULT_METADATA_COLUMNS, GTL_ID_COLUMN, ID_COLUMN
 from src.utils.logging import diagnose_component_sizes
 from src.utils.preprocessing import (
     detach_single_occuring_metadata,
@@ -80,33 +80,30 @@ def build_book_metadata_graph_from_dataframe(
     *,
     metadata_columns: Sequence[str],
     id_column: str,
+    gtl_id_column: str,  # Fixed typo: was gtl_id_columns
 ) -> Data:
-    """Construct a bipartite book-to-metadata graph from a dataframe.
-
-    The graph structure is:
-    - Book nodes are indexed 0 to (num_books - 1)
-    - Metadata nodes are indexed num_books to (num_total_nodes - 1)
-    - Edges are bidirectional (undirected graph)
+    """
+    Construct a bipartite book-to-metadata graph from a dataframe.
 
     Args:
         dataframe: Input data with book IDs and metadata columns.
         metadata_columns: Column names to use as metadata.
         id_column: Column name containing book IDs.
+        gtl_id_column: Column name containing GTL IDs.
 
     Returns:
-        A PyG Data object with edge_index and custom attributes for mapping
-        embeddings back to identifiers.
+        PyG Data object with gtl_ids stored for later retrieval
     """
     missing_columns = [
         column
-        for column in (id_column, *metadata_columns)
+        for column in (id_column, gtl_id_column, *metadata_columns)
         if column not in dataframe.columns
     ]
     if missing_columns:
         raise KeyError(f"Missing required columns: {', '.join(missing_columns)}")
 
     # Step 1: Preprocessing
-    all_columns = [id_column, *metadata_columns]
+    all_columns = [id_column, gtl_id_column, *metadata_columns]
     df_normalized = (
         dataframe.pipe(normalize_dataframe, columns=all_columns)
         .pipe(detach_single_occuring_metadata, columns=metadata_columns)
@@ -114,8 +111,12 @@ def build_book_metadata_graph_from_dataframe(
     )
 
     # Step 2: Prepare book nodes (indexed 0 to num_books - 1)
-    unique_books = df_normalized[id_column].dropna().drop_duplicates()
-    book_ids = unique_books.tolist()
+    # Keep both item_id and gtl_id
+    unique_books = df_normalized[[id_column, gtl_id_column]].drop_duplicates(
+        subset=[id_column]
+    )
+    book_ids = unique_books[id_column].tolist()
+    gtl_ids = unique_books[gtl_id_column].tolist()  # NEW: Keep GTL IDs
     book_index = {book_id: idx for idx, book_id in enumerate(book_ids)}
 
     # Step 3: Prepare metadata type mapping (0 reserved for books)
@@ -123,7 +124,7 @@ def build_book_metadata_graph_from_dataframe(
     for offset, column_name in enumerate(metadata_columns, start=1):
         metadata_type_to_id[column_name] = offset
 
-    # Step 4: Build metadata index (discovers all unique metadata nodes)
+    # Step 4: Build metadata index
     metadata_keys, metadata_index, metadata_node_types = _build_metadata_index(
         df_normalized,
         metadata_columns,
@@ -131,10 +132,10 @@ def build_book_metadata_graph_from_dataframe(
         num_books=len(book_ids),
     )
 
-    # Step 5: Create node type list (books first, then metadata)
+    # Step 5: Create node type list
     node_types = [metadata_type_to_id["book"]] * len(book_ids) + metadata_node_types
 
-    # Step 6: Create edges by iterating through rows
+    # Step 6: Create edges
     edges: set[tuple[int, int]] = set()
     relevant_columns = [id_column, *metadata_columns]
 
@@ -145,13 +146,11 @@ def build_book_metadata_graph_from_dataframe(
         record_dict = record._asdict()
         book_id = record_dict[id_column]
 
-        # Skip rows with missing book IDs
         if book_id is None or book_id not in book_index:
             continue
 
         source_idx = book_index[book_id]
 
-        # Create edges to all metadata values in this row
         for column in metadata_columns:
             value = record_dict[column]
             if value is None or value == "None":
@@ -162,7 +161,6 @@ def build_book_metadata_graph_from_dataframe(
             if target_idx is None:
                 continue
 
-            # Add bidirectional edges (undirected graph)
             edge = (source_idx, target_idx)
             if edge not in edges:
                 edges.add(edge)
@@ -173,12 +171,12 @@ def build_book_metadata_graph_from_dataframe(
             "No edges were created; check that metadata columns contain values."
         )
 
-    # Step 7: Create PyG Data object with edge_index tensor
+    # Step 7: Create PyG Data object
     sorted_edges = sorted(edges)
     edge_index = torch.tensor(sorted_edges, dtype=torch.long).t().contiguous()
     graph_data = Data(edge_index=edge_index, num_nodes=len(node_types))
 
-    # Step 8: Add custom attributes for identifier mapping
+    # Step 8: Add custom attributes
     graph_data.node_type = torch.tensor(node_types, dtype=torch.long)
     book_mask = torch.zeros(len(node_types), dtype=torch.bool)
     book_mask[: len(book_ids)] = True
@@ -187,6 +185,7 @@ def build_book_metadata_graph_from_dataframe(
     graph_data.metadata_type_to_id = metadata_type_to_id
     graph_data.metadata_columns = list(metadata_columns)
     graph_data.book_ids = list(book_ids)
+    graph_data.gtl_ids = list(gtl_ids)
     graph_data.metadata_ids = list(metadata_keys)
     graph_data.node_ids = graph_data.book_ids + graph_data.metadata_ids
 
@@ -214,7 +213,10 @@ def build_book_metadata_graph(
         df = df.sample(nrows, random_state=42)
 
     data_graph = build_book_metadata_graph_from_dataframe(
-        df, id_column=ID_COLUMN, metadata_columns=DEFAULT_METADATA_COLUMNS
+        df,
+        id_column=ID_COLUMN,
+        gtl_id_column=GTL_ID_COLUMN,  # NEW: Pass gtl_id_column
+        metadata_columns=DEFAULT_METADATA_COLUMNS,
     )
 
     try:

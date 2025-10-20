@@ -12,6 +12,7 @@ with
             offers.item_id,
             offers.offer_name,
             offers.offer_subcategory_id,
+            offer_metadata.titelive_gtl_id as gtl_id,
             offer_metadata.gtl_type,
             offer_metadata.gtl_label_level_1,
             offer_metadata.gtl_label_level_2,
@@ -42,6 +43,7 @@ select
     omd.item_id,
     omd.offer_name,
     omd.offer_subcategory_id,
+    omd.gtl_id,
     omd.gtl_type,
     omd.gtl_label_level_1,
     omd.gtl_label_level_2,
@@ -54,3 +56,4 @@ select
 from offers_with_best_metadata as omd
 left join artist_link_prepared as al on omd.offer_product_id = al.offer_product_id
 left join {{ source("ml_preproc", "artist") }} as a using (artist_id)
+where omd.gtl_type = "BOOK"

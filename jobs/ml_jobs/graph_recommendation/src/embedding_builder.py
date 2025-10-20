@@ -116,7 +116,13 @@ def train_metapath2vec(
     checkpoint_path: Path = Path("checkpoints/best_metapath2vec_model.pt"),
     num_workers=NUM_WORKERS,
     profile=False,
-) -> None:
+) -> pd.DataFrame:
+    """
+    Train MetaPath2Vec and return embeddings with gtl_id.
+
+    Returns:
+        DataFrame with ['item_id', 'gtl_id', 'embeddings']
+    """
     logger.info("Graph info:")
     logger.info(f"  Node types: {graph_data.node_types}")
     logger.info(f"  Edge types: {graph_data.edge_types}")
@@ -135,7 +141,6 @@ def train_metapath2vec(
         sparse=True,
     ).to(device)
 
-    # The loader and optimizer setup remains the same
     loader = model.loader(
         batch_size=BATCH_SIZE,
         shuffle=True,
@@ -151,7 +156,7 @@ def train_metapath2vec(
         optimizer, mode="min", factor=0.5, patience=3, min_lr=1e-6
     )
 
-    # Start training
+    # Training loop
     logger.info("Starting training...")
     checkpoint_dir = checkpoint_path.parent
     checkpoint_dir.mkdir(exist_ok=True)
@@ -177,10 +182,15 @@ def train_metapath2vec(
     book_embeddings = embedding[
         model.start["book"] : model.start["book"] + graph_data["book"].num_nodes, :
     ]
-    logger.info("Book embeddings extracted.")
-    return pd.DataFrame(
+
+    # Create DataFrame with item_id, gtl_id, and embeddings
+    embeddings_df = pd.DataFrame(
         {
-            "node_ids": graph_data.book_ids,
+            "item_id": graph_data.book_ids,
+            "gtl_id": graph_data.gtl_ids,  # NEW: Include GTL IDs
             "embeddings": list(book_embeddings),
         }
     )
+
+    logger.info(f"Book embeddings extracted: {len(embeddings_df)} items with gtl_id")
+    return embeddings_df

@@ -15,7 +15,6 @@ from src.constants import (
 )
 from src.modes.download_images import run_download_images
 from src.modes.init_bq import run_init_bq
-from src.modes.init_gcs import run_init_gcs
 from src.modes.run_incremental import run_incremental
 from src.utils.logging import get_logger
 
@@ -133,59 +132,6 @@ def init_bq(
         logger.info("Mode 1 execution completed successfully")
     except Exception as e:
         logger.error(f"Mode 1 execution failed: {e}")
-        raise typer.Exit(code=1) from e
-
-
-@app.command("init-gcs")
-def init_gcs(
-    gcs_path: str = typer.Option(
-        ...,
-        "--gcs-path",
-        help="GCS path to file (gs://bucket/path/file.parquet)",
-    ),
-    target_table: str = typer.Option(
-        ...,
-        "--target-table",
-        help="Target BigQuery table ID (project.dataset.table)",
-    ),
-    temp_table: str = typer.Option(
-        ...,
-        "--temp-table",
-        help="Temporary BigQuery table ID (project.dataset.table)",
-    ),
-    project_id: str = typer.Option(
-        GCP_PROJECT_ID,
-        "--project-id",
-        help="GCP project ID",
-    ),
-) -> None:
-    """
-    Mode 2: Load GCS file to BigQuery and transform via SQL.
-
-    This mode:
-    1. Loads a file from GCS to temporary BigQuery table
-    2. Transforms data via SQL query
-    3. Inserts transformed data to target table
-
-    Example:
-
-        python main.py init-gcs \\
-            --gcs-path "gs://bucket/data/file.parquet" \\
-            --temp-table "project.dataset.tmp_gcs_load" \\
-            --target-table "project.dataset.tmp_titelive__products"
-    """
-    logger.info("Executing Mode 2: GCS file bulk load")
-
-    try:
-        run_init_gcs(
-            gcs_path=gcs_path,
-            target_table=target_table,
-            temp_table=temp_table,
-            project_id=project_id,
-        )
-        logger.info("Mode 2 execution completed successfully")
-    except Exception as e:
-        logger.error(f"Mode 2 execution failed: {e}")
         raise typer.Exit(code=1) from e
 
 

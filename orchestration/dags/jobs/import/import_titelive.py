@@ -32,7 +32,6 @@ BIGQUERY_DATASET = os.getenv("BIGQUERY_DATASET", "tmp_cdarnis_dev")
 # Table names (variabilized by environment)
 DESTINATION_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__products"
 TARGET_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__products"
-TEMP_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__gcs_raw"
 SOURCE_TABLE_DEFAULT = (
     f"{PROJECT_NAME}.raw_{ENV_SHORT_NAME}.applicative_database_product"
 )
@@ -72,8 +71,8 @@ with DAG(
         ),
         "execution_mode": Param(
             default="run",
-            enum=["init-bq", "init-gcs", "run"],
-            description="Execution mode: init-bq (batch EAN), init-gcs (GCS file), run (date range)",
+            enum=["init-bq", "run"],
+            description="Execution mode: init-bq (batch EAN), run (date range)",
         ),
         # Common params
         "base": Param(
@@ -138,12 +137,6 @@ with DAG(
             type="boolean",
             description="Reprocess EANs with status='failed' from destination table (init-bq mode)",
         ),
-        # Mode 2 (init-gcs) params
-        "gcs_path": Param(
-            default=None,
-            type=["null", "string"],
-            description="GCS file path (gs://bucket/path/file.parquet) for init-gcs mode",
-        ),
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
@@ -169,8 +162,6 @@ with DAG(
         mode = context["params"].get("execution_mode", "run")
         if mode == "init-bq":
             return "run_init_bq_task"
-        elif mode == "init-gcs":
-            return "run_init_gcs_task"
         else:  # "run"
             return "run_incremental_task"
 
@@ -194,18 +185,6 @@ with DAG(
         f"{{{{ '--skip-already-processed-table ' + params.skip_already_processed_table if params.skip_already_processed_table else '' }}}} "
         f"{{{{ '--skip-count ' + params.skip_count|string if params.skip_already_processed_table else '' }}}} "
         f"{{{{ '--reprocess-failed' if params.reprocess_failed else '' }}}}",
-    )
-
-    # Mode 2: Init GCS - Load GCS file to BigQuery and transform
-    run_init_gcs_task = SSHGCEOperator(
-        task_id="run_init_gcs_task",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        environment=dag_config,
-        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py init-gcs "
-        f"--gcs-path {{{{ params.gcs_path }}}} "
-        f"--temp-table {TEMP_TABLE} "
-        f"--target-table {TARGET_TABLE}",
     )
 
     # Mode 3: Run - Incremental date range search
@@ -238,6 +217,5 @@ with DAG(
     # Task dependencies
     (gce_instance_start >> fetch_install_code >> execution_mode_branch)
     (execution_mode_branch >> run_init_bq_task >> completion_task)
-    (execution_mode_branch >> run_init_gcs_task >> completion_task)
     (execution_mode_branch >> run_incremental_task >> completion_task)
     (completion_task >> gce_instance_stop)

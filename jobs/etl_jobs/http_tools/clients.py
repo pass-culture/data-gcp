@@ -115,7 +115,12 @@ class SyncHttpClient(BaseHttpClient):
             response.raise_for_status()
             return response
 
+        except requests.exceptions.HTTPError as e:
+            # Re-raise HTTPError to preserve status code information (e.g., 404, 500)
+            logger.error(f"HTTP error {e.response.status_code}: {e}")
+            raise
         except requests.RequestException as e:
+            # For other request exceptions (network errors, etc.), return None
             logger.error(f"HTTP request failed: {e}")
             return None
 

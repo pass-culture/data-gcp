@@ -3,6 +3,7 @@
 import typer
 
 from config import (
+    DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
     DEFAULT_SOURCE_TABLE,
     DEFAULT_TARGET_TABLE,
 )
@@ -12,6 +13,7 @@ from src.constants import (
     MAIN_BATCH_SIZE,
     RESULTS_PER_PAGE,
 )
+from src.modes.download_images import run_download_images
 from src.modes.init_bq import run_init_bq
 from src.modes.init_gcs import run_init_gcs
 from src.modes.run_incremental import run_incremental
@@ -252,6 +254,97 @@ def run(
         logger.info("Mode 3 execution completed successfully")
     except Exception as e:
         logger.error(f"Mode 3 execution failed: {e}")
+        raise typer.Exit(code=1) from e
+
+
+@app.command("download-images")
+def download_images(
+    source_table: str = typer.Option(
+        DEFAULT_TARGET_TABLE,
+        "--source-table",
+        help="Source BigQuery table with batch_number and \
+        json_raw (project.dataset.table)",
+    ),
+    gcs_bucket: str = typer.Option(
+        DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
+        "--gcs-bucket",
+        help="Target GCS bucket name (without gs://)",
+    ),
+    gcs_prefix: str = typer.Option(
+        "images",
+        "--gcs-prefix",
+        help="Prefix for GCS paths (e.g., 'images/titelive')",
+    ),
+    max_concurrent: int = typer.Option(
+        100,
+        "--max-concurrent",
+        help="Maximum concurrent downloads (default: 100)",
+    ),
+    batch_size: int = typer.Option(
+        1000,
+        "--batch-size",
+        help="Number of EANs per batch for reprocess-failed mode (default: 1000)",
+    ),
+    reprocess_failed: bool = typer.Option(
+        False,
+        "--reprocess-failed",
+        help="Reprocess EANs with images_download_status='failed'",
+    ),
+) -> None:
+    """
+    Mode 4: Download images from BigQuery table and upload to GCS.
+
+    Uses batch_number tracking from source table for progress management:
+    1. Iterates through batches starting from batch 0
+    2. For each batch N:
+       - Fetches EANs WHERE batch_number = N AND images_download_status IS NULL
+       - Extracts recto/verso URLs from json_raw column
+       - Downloads images asynchronously to GCS
+       - Updates images_download_status: 'processed' or 'failed'
+    3. Automatically resumes by filtering WHERE images_download_status IS NULL
+
+    Features:
+    - True async I/O with asyncio + aiohttp (no GIL bottleneck)
+    - Configurable concurrency with semaphore
+    - Connection pooling for HTTP requests
+    - Automatic retry logic with exponential backoff
+    - Batch tracking aligned with init-bq mode
+
+    The query extracts:
+    - recto: $.article[0].imagesUrl.recto
+    - verso: $.article[0].imagesUrl.verso
+
+    Project ID is loaded from GCP_PROJECT_ID constant (env var or default).
+
+    Example:
+
+        # Initial run (processes all pending images)
+        python main.py download-images
+
+        # Custom source table and GCS location
+        python main.py download-images \\
+            --source-table "project.dataset.titelive__products" \\
+            --gcs-bucket "data-team-sandbox-dev" \\
+            --gcs-prefix "images/titelive" \\
+            --max-concurrent 100
+
+        # Reprocess failed downloads
+        python main.py download-images --reprocess-failed
+    """
+    logger.info("Executing Mode 4: Async image download from BigQuery to GCS")
+
+    try:
+        run_download_images(
+            source_table=source_table,
+            gcs_bucket=gcs_bucket,
+            gcs_prefix=gcs_prefix,
+            max_concurrent=max_concurrent,
+            batch_size=batch_size,
+            reprocess_failed=reprocess_failed,
+        )
+        logger.info("Mode 4 execution completed successfully")
+    except Exception as e:
+        logger.error(f"Mode 4 execution failed: {e}")
         raise typer.Exit(code=1) from e
 
 

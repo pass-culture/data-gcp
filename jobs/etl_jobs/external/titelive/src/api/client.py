@@ -82,6 +82,7 @@ class TiteliveClient:
         # Initial request
         response = self.http_client.request(method, url, headers=headers, params=params)
 
+        # Check for network/connection failures (response is None)
         if response is None:
             msg = f"Request failed for {url}"
             raise requests.exceptions.RequestException(msg)
@@ -123,10 +124,10 @@ class TiteliveClient:
             )
             raise ValueError(msg)
 
-        # Raise for other HTTP errors (429 should already be handled by SyncHttpClient)
-        response.raise_for_status()
-
+        # HTTPErrors (404, 500, etc.) are now raised by SyncHttpClient
+        # 401 and 429 are handled above
         response.encoding = RESPONSE_ENCODING
+
         return response.json()
 
     def get_by_eans(self, ean_list: list[str]) -> dict[str, Any]:

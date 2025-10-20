@@ -22,6 +22,8 @@ DEFAULT_PROCESSED_EANS_TABLE = (
 )
 DEFAULT_TEMP_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__gcs_raw"
 
+DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME = f"de-bigquery-data-export-{ENV_SHORT_NAME}"
+
 # API Configuration
 TITELIVE_API_BASE_URL = "https://catsearch.epagine.fr/v1"
 TITELIVE_TOKEN_ENDPOINT = "https://login.epagine.fr/v1/login"

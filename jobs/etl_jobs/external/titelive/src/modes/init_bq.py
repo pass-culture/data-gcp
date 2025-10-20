@@ -3,6 +3,7 @@
 from datetime import datetime
 
 import pandas as pd
+import requests
 from google.cloud import bigquery
 
 from src.api.auth import TokenManager
@@ -142,6 +143,7 @@ def _process_eans_by_base(
 
             # Transform response
             transformed_df = transform_api_response(api_response)
+            # logger.info(f"Transformed {transformed_df.head(1)} rows")
 
             # Identify returned vs missing EANs
             returned_eans = (
@@ -186,8 +188,72 @@ def _process_eans_by_base(
                 f"{eans_processed_so_far + eans_in_this_batch}/{total_eans} EANs"
             )
 
+        except requests.exceptions.HTTPError as e:
+            # Handle 404 errors by processing EANs individually
+            if e.response.status_code == 404:
+                # Check if we're already processing individual EANs (batch size 1)
+                if sub_batch_size == 1:
+                    # Single EAN returned 404 - mark as deleted_in_titelive
+                    logger.info(
+                        f"EAN {sub_batch_pairs[0][0]} not found (404) - \
+                        marking as deleted_in_titelive"
+                    )
+                    for ean, subcategoryid in sub_batch_pairs:
+                        results.append(
+                            {
+                                "ean": ean,
+                                "subcategoryid": subcategoryid,
+                                "status": "deleted_in_titelive",
+                                "datemodification": None,
+                                "json_raw": None,
+                            }
+                        )
+                else:
+                    # Batch of EANs returned 404 - process each individually
+                    # to identify them
+                    logger.warning(
+                        f"404 error for sub-batch "
+                        f"{current_sub_batch}/{total_sub_batches} ({base}). "
+                        f"Processing {len(sub_batch_pairs)} EANs individually "
+                        "to identify problematic EAN(s)"
+                    )
+                    # Process each EAN individually by calling this function
+                    # recursively with batch size 1
+                    individual_results = _process_eans_by_base(
+                        api_client, sub_batch_pairs, base, sub_batch_size=1
+                    )
+                    results.extend(individual_results)
+                    logger.info(
+                        f"Individual processing complete for sub-batch "
+                        f"{current_sub_batch}/{total_sub_batches} ({base}) | "
+                        "Progress: "
+                        f"{eans_processed_so_far + eans_in_this_batch}/{total_eans} "
+                        "EANs"
+                    )
+            else:
+                # Mark all EANs in sub-batch as failed for other HTTP errors
+                logger.error(
+                    f"HTTP {e.response.status_code} error for sub-batch "
+                    f"{current_sub_batch}/{total_sub_batches} ({base}): {e}"
+                )
+                for ean, subcategoryid in sub_batch_pairs:
+                    results.append(
+                        {
+                            "ean": ean,
+                            "subcategoryid": subcategoryid,
+                            "status": "failed",
+                            "datemodification": None,
+                            "json_raw": None,
+                        }
+                    )
+                logger.warning(
+                    f"Marked {len(sub_batch_pairs)} EANs as failed | "
+                    "Progress: "
+                    f"{eans_processed_so_far + eans_in_this_batch}/{total_eans} EANs"
+                )
+
         except Exception as e:
-            # Mark all EANs in sub-batch as failed
+            # Mark all EANs in sub-batch as failed for non-HTTP exceptions
             logger.error(
                 f"API call failed for sub-batch "
                 f"{current_sub_batch}/{total_sub_batches} ({base}): {e}"
@@ -197,7 +263,7 @@ def _process_eans_by_base(
                     {
                         "ean": ean,
                         "subcategoryid": subcategoryid,
-                        "status": "fail",
+                        "status": "failed",
                         "datemodification": None,
                         "json_raw": None,
                     }
@@ -315,10 +381,6 @@ def run_init_bq(
             if not batch_ean_pairs:
                 logger.info("No more failed EANs to reprocess. Exiting.")
                 break
-
-            # Delete failed records before reprocessing (extract EANs only)
-            batch_eans_only = [ean for ean, _ in batch_ean_pairs]
-            delete_failed_eans(bq_client, destination_table, batch_eans_only)
         else:
             # Fetch EANs from source table using OFFSET pagination (returns tuples)
             batch_ean_pairs = fetch_batch_eans(
@@ -360,6 +422,15 @@ def run_init_bq(
         for result in results:
             result["processed_at"] = current_time
             result["batch_number"] = current_batch
+
+        # Delete old failed records before inserting new results (if reprocessing)
+        if reprocess_failed:
+            batch_eans_only = [ean for ean, _ in batch_ean_pairs]
+            logger.info(
+                f"Batch {current_batch}: Deleting {len(batch_eans_only)} "
+                "old failed records"
+            )
+            delete_failed_eans(bq_client, destination_table, batch_eans_only)
 
         # Write results to destination table
         logger.info(f"Batch {current_batch}: Writing {len(results)} rows to BigQuery")

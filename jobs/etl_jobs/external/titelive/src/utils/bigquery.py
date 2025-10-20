@@ -36,6 +36,8 @@ def get_destination_table_schema() -> list[bigquery.SchemaField]:
         - datemodification: Modification date (NULL for deleted/failed)
         - json_raw: Full article JSON (NULL for deleted/failed)
         - batch_number: Batch number for progress tracking
+        - images_download_status: Image download status (processed|failed|NULL)
+        - images_download_processed_at: Image download timestamp (NULL if not attempted)
 
     Returns:
         List of BigQuery SchemaField objects
@@ -48,6 +50,10 @@ def get_destination_table_schema() -> list[bigquery.SchemaField]:
         bigquery.SchemaField("datemodification", "DATE", mode="NULLABLE"),
         bigquery.SchemaField("json_raw", "STRING", mode="NULLABLE"),
         bigquery.SchemaField("batch_number", "INTEGER", mode="REQUIRED"),
+        bigquery.SchemaField("images_download_status", "STRING", mode="NULLABLE"),
+        bigquery.SchemaField(
+            "images_download_processed_at", "TIMESTAMP", mode="NULLABLE"
+        ),
     ]
 
 
@@ -635,3 +641,251 @@ def execute_query(client: bigquery.Client, query: str) -> None:
     query_job.result()  # Wait for completion
 
     logger.info("Query executed successfully")
+
+
+def fetch_batch_for_image_download(
+    client: bigquery.Client,
+    destination_table: str,
+    batch_number: int,
+) -> list[dict]:
+    """
+    Fetch EANs from a specific batch that need image download.
+
+    Fetches rows where:
+    - batch_number = X
+    - status = 'processed'
+    - images_download_status IS NULL
+
+    Args:
+        client: BigQuery client
+        destination_table: Full destination table ID (project.dataset.table)
+        batch_number: Batch number to fetch
+
+    Returns:
+        List of dicts with keys: ean, json_raw
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If query fails
+    """
+    query = f"""
+        SELECT ean, json_raw
+        FROM `{destination_table}`
+        WHERE batch_number = {batch_number}
+        AND status = 'processed'
+        AND images_download_status IS NULL
+        ORDER BY ean
+    """
+
+    logger.info(
+        f"Fetching batch {batch_number} for image download from {destination_table}"
+    )
+    query_job = client.query(query)
+    results = query_job.result()
+
+    rows = [{"ean": row.ean, "json_raw": row.json_raw} for row in results]
+    logger.info(
+        f"Fetched {len(rows)} EANs from batch {batch_number} for image download"
+    )
+    return rows
+
+
+def fetch_failed_image_downloads(
+    client: bigquery.Client,
+    destination_table: str,
+    batch_size: int = 1000,
+) -> list[dict]:
+    """
+    Fetch EANs with failed image downloads for reprocessing.
+
+    Fetches rows where:
+    - status = 'processed'
+    - images_download_status = 'failed'
+
+    Args:
+        client: BigQuery client
+        destination_table: Full destination table ID (project.dataset.table)
+        batch_size: Number of failed records to fetch (default 1000)
+
+    Returns:
+        List of dicts with keys: ean, json_raw
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If query fails
+    """
+    query = f"""
+        SELECT ean, json_raw
+        FROM `{destination_table}`
+        WHERE status = 'processed'
+        AND images_download_status = 'failed'
+        ORDER BY ean
+        LIMIT {batch_size}
+    """
+
+    logger.info(
+        f"Fetching up to {batch_size} failed image downloads from {destination_table}"
+    )
+    query_job = client.query(query)
+    results = query_job.result()
+
+    rows = [{"ean": row.ean, "json_raw": row.json_raw} for row in results]
+    logger.info(f"Fetched {len(rows)} failed image downloads for reprocessing")
+    return rows
+
+
+def count_pending_image_downloads(
+    client: bigquery.Client,
+    destination_table: str,
+) -> int:
+    """
+    Count EANs that need image download.
+
+    Counts rows where:
+    - status = 'processed'
+    - images_download_status IS NULL
+
+    Args:
+        client: BigQuery client
+        destination_table: Full destination table ID (project.dataset.table)
+
+    Returns:
+        Number of pending image downloads
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If query fails
+    """
+    query = f"""
+        SELECT COUNT(*) as total
+        FROM `{destination_table}`
+        WHERE status = 'processed'
+        AND images_download_status IS NULL
+    """
+
+    logger.info(f"Counting pending image downloads in {destination_table}")
+    query_job = client.query(query)
+    result = query_job.result()
+    total = next(iter(result)).total
+
+    logger.info(f"Found {total} pending image downloads")
+    return total
+
+
+def count_failed_image_downloads(
+    client: bigquery.Client,
+    destination_table: str,
+) -> int:
+    """
+    Count EANs with failed image downloads.
+
+    Counts rows where:
+    - status = 'processed'
+    - images_download_status = 'failed'
+
+    Args:
+        client: BigQuery client
+        destination_table: Full destination table ID (project.dataset.table)
+
+    Returns:
+        Number of failed image downloads
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If query fails
+    """
+    query = f"""
+        SELECT COUNT(*) as total
+        FROM `{destination_table}`
+        WHERE status = 'processed'
+        AND images_download_status = 'failed'
+    """
+
+    logger.info(f"Counting failed image downloads in {destination_table}")
+    query_job = client.query(query)
+    result = query_job.result()
+    total = next(iter(result)).total
+
+    logger.info(f"Found {total} failed image downloads")
+    return total
+
+
+def update_image_download_results(
+    client: bigquery.Client,
+    destination_table: str,
+    results: list[dict],
+) -> None:
+    """
+    Update image download status for multiple EANs using temp table + MERGE.
+
+    Uses temporary table strategy to avoid building large CASE statements.
+    Scalable to any batch size.
+
+    Args:
+        client: BigQuery client
+        destination_table: Full destination table ID (project.dataset.table)
+        results: List of dicts with keys: ean, images_download_status,
+        images_download_processed_at
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If update fails
+    """
+    if not results:
+        logger.warning("No results to update")
+        return
+
+    logger.info(f"Updating image download status for {len(results)} EANs using MERGE")
+
+    # Generate unique temp table name
+    import uuid
+
+    temp_table_suffix = str(uuid.uuid4()).replace("-", "_")
+    project, dataset, _ = destination_table.split(".")
+    temp_table_id = f"{project}.{dataset}.temp_image_status_{temp_table_suffix}"
+
+    try:
+        # Convert results to DataFrame
+        df = pd.DataFrame(results)
+
+        # Define temp table schema
+        temp_schema = [
+            bigquery.SchemaField("ean", "STRING", mode="REQUIRED"),
+            bigquery.SchemaField("images_download_status", "STRING", mode="REQUIRED"),
+            bigquery.SchemaField(
+                "images_download_processed_at", "TIMESTAMP", mode="REQUIRED"
+            ),
+        ]
+
+        # Create temp table
+        temp_table = bigquery.Table(temp_table_id, schema=temp_schema)
+        temp_table.expires = None  # Manual cleanup
+        logger.debug(f"Creating temp table: {temp_table_id}")
+        client.create_table(temp_table)
+
+        # Load data to temp table
+        job_config = bigquery.LoadJobConfig(schema=temp_schema)
+        load_job = client.load_table_from_dataframe(
+            df, temp_table_id, job_config=job_config
+        )
+        load_job.result()  # Wait for load
+        logger.debug(f"Loaded {len(results)} rows to temp table")
+
+        # Execute MERGE statement
+        merge_query = f"""
+            MERGE `{destination_table}` AS target
+            USING `{temp_table_id}` AS source
+            ON target.ean = source.ean
+            WHEN MATCHED THEN UPDATE SET
+                images_download_status = source.images_download_status,
+                images_download_processed_at = source.images_download_processed_at
+        """
+
+        logger.debug("Executing MERGE statement")
+        merge_job = client.query(merge_query)
+        merge_job.result()  # Wait for completion
+
+        logger.info(f"Successfully updated {len(results)} EANs via MERGE")
+
+    finally:
+        # Clean up temp table
+        try:
+            logger.debug(f"Deleting temp table: {temp_table_id}")
+            client.delete_table(temp_table_id, not_found_ok=True)
+        except Exception as e:
+            logger.warning(f"Failed to delete temp table {temp_table_id}: {e}")

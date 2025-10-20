@@ -35,8 +35,12 @@ def transform_api_response(api_response: dict) -> pd.DataFrame:
         ValueError: If API response format is invalid
     """
     if "result" not in api_response:
-        msg = "Invalid API response format: missing 'result' key"
-        raise ValueError(msg)
+        if "oeuvre" in api_response:
+            api_response = {"result": api_response["oeuvre"]}
+            # logger.info(api_response)
+        else:
+            msg = "Invalid API response format: missing 'result' key"
+            raise ValueError(msg)
 
     results = api_response["result"]
 

@@ -31,11 +31,11 @@ def _build_sample_heterograph() -> HeteroData:
     data["book"].x = torch.rand(3, 16)
     data["book"].num_nodes = 3  # Explicitly set num_nodes
     data.book_ids = ["book_1", "book_2", "book_3"]
+    data["gtl_ids"] = ["01022000", "01030000", "01022000"]
 
     # Add metadata nodes
     data["artist_id"].x = torch.rand(2, 16)
     data["gtl_label_level_1"].x = torch.rand(2, 16)
-    data["gtl_ids"] = ["01022000", "01030000", "01022000"]
     # Add edges
     data["book", "is_artist_id", "artist_id"].edge_index = torch.tensor(
         [[0, 1], [0, 1]]
@@ -165,6 +165,7 @@ def test_train_metapath2vec_with_minimal_mocking() -> None:
         # Verify we get a DataFrame result
         assert isinstance(result, pd.DataFrame)
         assert "node_ids" in result.columns
+        assert "gtl_id" in result.columns
         assert "embeddings" in result.columns
         # Should have embeddings for all books
         assert len(result) == len(graph_data.book_ids)

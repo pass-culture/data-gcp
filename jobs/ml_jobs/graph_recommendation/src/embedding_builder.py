@@ -183,10 +183,9 @@ def train_metapath2vec(
         model.start["book"] : model.start["book"] + graph_data["book"].num_nodes, :
     ]
 
-    # Create DataFrame with item_id, gtl_id, and embeddings
     embeddings_df = pd.DataFrame(
         {
-            "item_id": graph_data.book_ids,
+            "node_ids": graph_data.book_ids,
             "gtl_id": graph_data.gtl_ids,
             "embeddings": list(book_embeddings),
         }

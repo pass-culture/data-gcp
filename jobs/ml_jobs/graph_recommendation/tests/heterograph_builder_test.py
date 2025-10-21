@@ -43,6 +43,7 @@ def _build_empty_metadata_dataframe() -> pd.DataFrame:
             "gtl_label_level_3": [None, None],
             "gtl_label_level_4": [None, None],
             "artist_id": [None, None],
+            "gtl_id": ["gtl-1", "gtl-2"],
         }
     )
 
@@ -55,6 +56,7 @@ def test_build_heterograph_from_dataframe_creates_correct_structure() -> None:
         dataframe,
         metadata_columns=DEFAULT_METADATA_COLUMNS,
         id_column="item_id",
+        gtl_id_column="gtl_id",
     )
 
     assert isinstance(graph_data, HeteroData)
@@ -87,6 +89,7 @@ def test_heterograph_edge_types_are_correct() -> None:
         dataframe,
         metadata_columns=DEFAULT_METADATA_COLUMNS,
         id_column="item_id",
+        gtl_id_column="gtl_id",
     )
 
     # Check that edge types exist for each metadata column
@@ -113,6 +116,7 @@ def test_heterograph_edges_are_bidirectional() -> None:
         dataframe,
         metadata_columns=DEFAULT_METADATA_COLUMNS,
         id_column="item_id",
+        gtl_id_column="gtl_id",
     )
 
     # For each forward edge, check that reverse edge exists
@@ -146,6 +150,7 @@ def test_heterograph_metadata_organization() -> None:
         dataframe,
         metadata_columns=DEFAULT_METADATA_COLUMNS,
         id_column="item_id",
+        gtl_id_column="gtl_id",
     )
 
     # Check metadata_ids_by_column structure
@@ -191,6 +196,7 @@ def test_heterograph_node_counts_are_correct() -> None:
         dataframe,
         metadata_columns=DEFAULT_METADATA_COLUMNS,
         id_column="item_id",
+        gtl_id_column="gtl_id",
     )
 
     # Check book node count
@@ -212,6 +218,7 @@ def test_heterograph_missing_columns_raises_error() -> None:
             dataframe,
             metadata_columns=["missing_column"],
             id_column="item_id",
+            gtl_id_column="gtl_id",
         )
 
 
@@ -224,6 +231,7 @@ def test_heterograph_no_valid_metadata_raises_error() -> None:
             dataframe,
             metadata_columns=DEFAULT_METADATA_COLUMNS,
             id_column="item_id",
+            gtl_id_column="gtl_id",
         )
 
 
@@ -234,6 +242,7 @@ def test_heterograph_handles_duplicate_books() -> None:
             "item_id": ["book-1", "book-1", "book-2", "book-3", "book-4"],
             "artist_id": ["artist-1", "artist-1", "artist-2", "artist-1", "artist-2"],
             "gtl_label_level_1": ["Arts", "Arts", "Comics", "Arts", "Comics"],
+            "gtl_id": ["gtl-1", "gtl-1", "gtl-2", "gtl-3", "gtl-4"],
         }
     )
 
@@ -241,6 +250,7 @@ def test_heterograph_handles_duplicate_books() -> None:
         dataframe,
         metadata_columns=["artist_id", "gtl_label_level_1"],
         id_column="item_id",
+        gtl_id_column="gtl_id",
     )
 
     # Should have unique books only (book-1 appears twice but deduplicated)
@@ -282,6 +292,7 @@ def test_heterograph_edge_indices_are_valid_tensors() -> None:
         dataframe,
         metadata_columns=DEFAULT_METADATA_COLUMNS,
         id_column="item_id",
+        gtl_id_column="gtl_id",
     )
 
     for src_type, edge_type, dst_type in graph_data.edge_types:
@@ -321,6 +332,7 @@ def test_heterograph_handles_mixed_data_types() -> None:
             "artist_id": [123, "artist-string", 456.789, 123],
             # Category A appears twice
             "gtl_label_level_1": ["Category A", 999, None, "Category A"],
+            "gtl_id": ["gtl-1", "gtl-2", "gtl-3", "gtl-4"],
         }
     )
 
@@ -328,6 +340,7 @@ def test_heterograph_handles_mixed_data_types() -> None:
         dataframe,
         metadata_columns=["artist_id", "gtl_label_level_1"],
         id_column="item_id",
+        gtl_id_column="gtl_id",
     )
 
     # Check that mixed types are converted to strings
@@ -348,6 +361,7 @@ def test_heterograph_with_single_metadata_column() -> None:
         {
             "item_id": ["book-1", "book-2", "book-3", "book-4"],
             "artist_id": ["artist-1", "artist-2", "artist-1", "artist-2"],
+            "gtl_id": ["gtl-1", "gtl-2", "gtl-3", "gtl-4"],
         }
     )
 
@@ -355,6 +369,7 @@ def test_heterograph_with_single_metadata_column() -> None:
         dataframe,
         metadata_columns=["artist_id"],
         id_column="item_id",
+        gtl_id_column="gtl_id",
     )
 
     # Should have book and artist_id node types

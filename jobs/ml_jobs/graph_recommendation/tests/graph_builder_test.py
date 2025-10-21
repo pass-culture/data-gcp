@@ -34,6 +34,7 @@ def test_build_graph_from_dataframe_creates_bipartite_structure() -> None:
         dataframe,
         metadata_columns=DEFAULT_METADATA_COLUMNS,
         id_column="item_id",
+        gtl_id_column="gtl_id",
     )
 
     assert isinstance(graph_data, Data)
@@ -79,6 +80,7 @@ def test_missing_metadata_raises_value_error() -> None:
             "gtl_label_level_3": [None],
             "gtl_label_level_4": [None],
             "artist_id": [None],
+            "gtl_id": [None],
         }
     )
 
@@ -87,4 +89,5 @@ def test_missing_metadata_raises_value_error() -> None:
             dataframe,
             metadata_columns=DEFAULT_METADATA_COLUMNS,
             id_column="item_id",
+            gtl_id_column="gtl_id",
         )

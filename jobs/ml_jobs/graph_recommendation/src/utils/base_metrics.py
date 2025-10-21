@@ -43,7 +43,7 @@ def _get_gtl_depth(gtl_id: str) -> int:
     return MAX_DEPTH - trailing_zero_pairs
 
 
-def _get_gtl_dist(gtl_id_a: str, gtl_id_b: str) -> float:
+def _get_gtl_walk_dist(gtl_id_a: str, gtl_id_b: str) -> float:
     """Compute the shortest path distance between two GTL identifiers in the GTL forest.
 
     Each level-1 GTL is the root of a tree. If the first two characters differ,
@@ -61,7 +61,7 @@ def _get_gtl_dist(gtl_id_a: str, gtl_id_b: str) -> float:
 
     Examples:
         >>> _get_gtl_dist("01020300", "01020400")
-        3.0
+        2.0
         >>> _get_gtl_dist("01000000", "02000000")
         inf
     """
@@ -73,21 +73,18 @@ def _get_gtl_dist(gtl_id_a: str, gtl_id_b: str) -> float:
     chunks2 = [gtl_id_b[i : i + 2] for i in range(0, 8, 2)]
 
     dist = np.inf
-    for idx, (a, b) in enumerate(zip(chunks1, chunks2, strict=True)):
+    for idx, (a, b) in enumerate(zip(chunks1, chunks2, strict=True), start=1):
         if a != b or (a == "00" and b == "00"):
             return dist
         dist = MAX_DEPTH - idx
-    return 1
+    return 0
 
 
-def get_gtl_score(query_gtl_id: str, result_gtl_id: str) -> float:
+def get_gtl_walk_score(query_gtl_id: str, result_gtl_id: str) -> float:
     """Compute a similarity score between two GTL identifiers.
 
     The score is the inverse of their hierarchical distance. Higher values indicate
     greater similarity (closer relationship in the GTL taxonomy).
-
-    If `symetric` is False, the score is normalized by the query GTL depth,
-    giving equal weight across query levels.
 
     Args:
         query_gtl_id (str): The query GTL identifier.
@@ -97,18 +94,18 @@ def get_gtl_score(query_gtl_id: str, result_gtl_id: str) -> float:
         float: Similarity score in the range (0, 1].
 
     Examples:
-        >>> get_gtl_score("01020000", "01020300")
+        >>> get_gtl_walk_score("01020000", "01020300")
         0.33
-        >>> get_gtl_score("01020300", "01020000")
+        >>> get_gtl_walk_score("01020300", "01020000")
         0.33
     """
-    dist = _get_gtl_dist(query_gtl_id, result_gtl_id)
+    dist = _get_gtl_walk_dist(query_gtl_id, result_gtl_id)
     if dist == np.inf:
         return 0.0
-    return 1 / dist
+    return 1 / (1 + dist)
 
 
-def get_gtl_matching_score(query_gtl_id: str, result_gtl_id: str) -> float:
+def get_gtl_retrieval_score(query_gtl_id: str, result_gtl_id: str) -> float:
     """Compute an asymmetric matching score between two GTL identifiers.
 
     This function measures how much of the query hierarchy is correctly matched
@@ -120,12 +117,12 @@ def get_gtl_matching_score(query_gtl_id: str, result_gtl_id: str) -> float:
         result_gtl_id (str): The GTL identifier to compare against.
 
     Returns:
-        float: Asymmetric matching score in the range [0, 1].
+        float: Asymmetric score in the range [0, 1].
 
     Examples:
-        >>> get_gtl_matching_score("01020000", "01020300")
+        >>> get_gtl_retrieval_score("01020000", "01020300")
         1
-        >>> get_gtl_matching_score("01020300", "01020000")
+        >>> get_gtl_retrieval_score("01020300", "01020000")
         0.66
     """
     if query_gtl_id[:2] != result_gtl_id[:2]:

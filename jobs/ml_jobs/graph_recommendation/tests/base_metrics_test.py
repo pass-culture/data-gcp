@@ -7,9 +7,9 @@ import pytest
 
 from src.utils.base_metrics import (
     _get_gtl_depth,
-    _get_gtl_dist,
-    get_gtl_matching_score,
-    get_gtl_score,
+    _get_gtl_walk_dist,
+    get_gtl_retrieval_score,
+    get_gtl_walk_score,
 )
 
 
@@ -31,37 +31,37 @@ def test_get_gtl_depth():
         _get_gtl_depth(1020300)  # not a string
 
 
-def test_get_gtl_dist():
-    assert _get_gtl_dist("01020301", "01020301") == 1
-    assert _get_gtl_dist("01020100", "01020100") == 2
-    assert _get_gtl_dist("01020304", "01020300") == 2
-    assert _get_gtl_dist("01020100", "01020101") == 2
-    assert _get_gtl_dist("01020300", "01020400") == 3
-    assert _get_gtl_dist("01020301", "01020401") == 3
-    assert _get_gtl_dist("01000000", "01103020") == 4
-    assert _get_gtl_dist("01203020", "01103020") == 4
-    assert _get_gtl_dist("01000000", "02000000") == np.inf
+def test_get_gtl_walk_dist():
+    assert _get_gtl_walk_dist("01020301", "01020301") == 0
+    assert _get_gtl_walk_dist("01020100", "01020100") == 1
+    assert _get_gtl_walk_dist("01020304", "01020300") == 1
+    assert _get_gtl_walk_dist("01020100", "01020101") == 1
+    assert _get_gtl_walk_dist("01020300", "01020400") == 2
+    assert _get_gtl_walk_dist("01020301", "01020401") == 2
+    assert _get_gtl_walk_dist("01000000", "01103020") == 3
+    assert _get_gtl_walk_dist("01203020", "01103020") == 3
+    assert _get_gtl_walk_dist("01000000", "02000000") == np.inf
 
 
-def test_get_gtl_score():
-    assert pytest.approx(get_gtl_score("01020301", "01020301"), 1e-3) == 1.0
-    assert pytest.approx(get_gtl_score("01020100", "01020100"), 1e-3) == 1 / 2
-    assert pytest.approx(get_gtl_score("01020304", "01020300"), 1e-3) == 1 / 2
-    assert pytest.approx(get_gtl_score("01020100", "01020101"), 1e-3) == 1 / 2
-    assert pytest.approx(get_gtl_score("01020300", "01020400"), 1e-3) == 1 / 3
-    assert pytest.approx(get_gtl_score("01020301", "01020401"), 1e-3) == 1 / 3
-    assert pytest.approx(get_gtl_score("01000000", "01103020"), 1e-3) == 1 / 4
-    assert pytest.approx(get_gtl_score("01203020", "01103020"), 1e-3) == 1 / 4
-    assert pytest.approx(get_gtl_score("01000000", "02000000"), 1e-3) == 0.0
+def test_get_gtl_walk_score():
+    assert pytest.approx(get_gtl_walk_score("01020301", "01020301"), 1e-3) == 1.0
+    assert pytest.approx(get_gtl_walk_score("01020100", "01020100"), 1e-3) == 1 / 2
+    assert pytest.approx(get_gtl_walk_score("01020304", "01020300"), 1e-3) == 1 / 2
+    assert pytest.approx(get_gtl_walk_score("01020100", "01020101"), 1e-3) == 1 / 2
+    assert pytest.approx(get_gtl_walk_score("01020300", "01020400"), 1e-3) == 1 / 3
+    assert pytest.approx(get_gtl_walk_score("01020301", "01020401"), 1e-3) == 1 / 3
+    assert pytest.approx(get_gtl_walk_score("01000000", "01103020"), 1e-3) == 1 / 4
+    assert pytest.approx(get_gtl_walk_score("01203020", "01103020"), 1e-3) == 1 / 4
+    assert pytest.approx(get_gtl_walk_score("01000000", "02000000"), 1e-3) == 0.0
 
 
-def test_get_gtl_matching_score():
-    assert pytest.approx(get_gtl_matching_score("01020301", "01020301"), 1e-3) == 1.0
-    assert pytest.approx(get_gtl_matching_score("01020100", "01020100"), 1e-3) == 1.0
-    assert pytest.approx(get_gtl_matching_score("01020304", "01020300"), 1e-3) == 3 / 4
-    assert pytest.approx(get_gtl_matching_score("01020100", "01020101"), 1e-3) == 1.0
-    assert pytest.approx(get_gtl_matching_score("01020300", "01020400"), 1e-3) == 2 / 3
-    assert pytest.approx(get_gtl_matching_score("01020301", "01020401"), 1e-3) == 2 / 4
-    assert pytest.approx(get_gtl_matching_score("01000000", "01103020"), 1e-3) == 1.0
-    assert pytest.approx(get_gtl_matching_score("01203020", "01103020"), 1e-3) == 1 / 4
-    assert pytest.approx(get_gtl_matching_score("01000000", "02000000"), 1e-3) == 0.0
+def test_get_gtl_retrieval_score():
+    assert pytest.approx(get_gtl_retrieval_score("01020301", "01020301"), 1e-3) == 1.0
+    assert pytest.approx(get_gtl_retrieval_score("01020100", "01020100"), 1e-3) == 1.0
+    assert pytest.approx(get_gtl_retrieval_score("01020304", "01020300"), 1e-3) == 3 / 4
+    assert pytest.approx(get_gtl_retrieval_score("01020100", "01020101"), 1e-3) == 1.0
+    assert pytest.approx(get_gtl_retrieval_score("01020300", "01020400"), 1e-3) == 2 / 3
+    assert pytest.approx(get_gtl_retrieval_score("01020301", "01020401"), 1e-3) == 2 / 4
+    assert pytest.approx(get_gtl_retrieval_score("01000000", "01103020"), 1e-3) == 1.0
+    assert pytest.approx(get_gtl_retrieval_score("01203020", "01103020"), 1e-3) == 1 / 4
+    assert pytest.approx(get_gtl_retrieval_score("01000000", "02000000"), 1e-3) == 0.0

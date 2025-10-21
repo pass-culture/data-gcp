@@ -56,4 +56,3 @@ select
 from offers_with_best_metadata as omd
 left join artist_link_prepared as al on omd.offer_product_id = al.offer_product_id
 left join {{ source("ml_preproc", "artist") }} as a using (artist_id)
-where omd.gtl_type = "BOOK"

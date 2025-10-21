@@ -219,17 +219,23 @@ with
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         'nombre_total_de_partenaire_actif' as kpi_name,
-        coalesce(count(
-            distinct case
-                when days_since_last_indiv_bookable_date <= 365 then partner_id
-            end
-        ),0) as numerator,
+        coalesce(
+            count(
+                distinct case
+                    when days_since_last_indiv_bookable_date <= 365 then partner_id
+                end
+            ),
+            0
+        ) as numerator,
         1 as denominator,
-        coalesce(count(
-            distinct case
-                when days_since_last_indiv_bookable_date <= 365 then partner_id
-            end
-        ),0) as kpi
+        coalesce(
+            count(
+                distinct case
+                    when days_since_last_indiv_bookable_date <= 365 then partner_id
+                end
+            ),
+            0
+        ) as kpi
     from partner_details
     where
         1 = 1
@@ -249,23 +255,29 @@ with
             '{{ dim.name }}' as dimension_name,
             {{ dim.value_expr }} as dimension_value,
             "nombre_de_partenaire_actif_{{ partner_type.name }}" as kpi_name,
-            coalesce(count(
-                distinct case
-                    when
-                        days_since_last_indiv_bookable_date <= 365
-                        and {{ partner_type.condition }}
-                    then partner_id
-                end
-            ),0) as numerator,
+            coalesce(
+                count(
+                    distinct case
+                        when
+                            days_since_last_indiv_bookable_date <= 365
+                            and {{ partner_type.condition }}
+                        then partner_id
+                    end
+                ),
+                0
+            ) as numerator,
             1 as denominator,
-            coalesce(count(
-                distinct case
-                    when
-                        days_since_last_indiv_bookable_date <= 365
-                        and {{ partner_type.condition }}
-                    then partner_id
-                end
-            ),0) as kpi
+            coalesce(
+                count(
+                    distinct case
+                        when
+                            days_since_last_indiv_bookable_date <= 365
+                            and {{ partner_type.condition }}
+                        then partner_id
+                    end
+                ),
+                0
+            ) as kpi
         from partner_details
         where
             1 = 1
@@ -282,17 +294,23 @@ with
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         'nombre_total_cumule_de_partenaire_actif' as kpi_name,
-        coalesce(count(
-            distinct case
-                when days_since_last_indiv_bookable_date >= 0 then partner_id
-            end
-        ),0) as numerator,
+        coalesce(
+            count(
+                distinct case
+                    when days_since_last_indiv_bookable_date >= 0 then partner_id
+                end
+            ),
+            0
+        ) as numerator,
         1 as denominator,
-        coalesce(count(
-            distinct case
-                when days_since_last_indiv_bookable_date >= 0 then partner_id
-            end
-        ),0) as kpi
+        coalesce(
+            count(
+                distinct case
+                    when days_since_last_indiv_bookable_date >= 0 then partner_id
+                end
+            ),
+            0
+        ) as kpi
     from partner_details
     where
         1 = 1
@@ -308,9 +326,9 @@ with
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         'total_entite_epn' as kpi_name,
-        coalesce(sum(epn.cumul_epn_created),0) as numerator,
+        coalesce(sum(epn.cumul_epn_created), 0) as numerator,
         1 as denominator,
-        coalesce(sum(epn.cumul_epn_created),0) as kpi
+        coalesce(sum(epn.cumul_epn_created), 0) as kpi
     from cumul_epn_details as epn
     where
         1 = 1

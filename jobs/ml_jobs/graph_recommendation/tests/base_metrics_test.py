@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from utils.base_metrics import (
+
+from src.utils.base_metrics import (
     _get_gtl_depth,
     _get_gtl_dist,
     get_gtl_matching_score,

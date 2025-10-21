@@ -5,23 +5,24 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "google-cloud-storage>=2.16.0",
-    "ipykernel>=6.30.1",
-    "matplotlib>=3.10.6",
-    "pandas>=2.2.0",
-    "pyarrow>=16.1.0",
-    "pytest>=8.2.2",
-    "pyvis>=0.3.2",
-    "ruff>=0.13.2",
-    "scipy>=1.15.0",
-    "streamlit>=1.35.0",
-    "torch>=2.8.0",
-    "torch-geometric>=2.6.1",
-    "tornado>=6.4.2",
-    "typer>=0.12.3",
-    "numpy>=2.0.0",
-    "loguru>=0.7.3",
-    "lancedb>=0.25.1",
+  "google-cloud-storage>=2.16.0",
+  "ipykernel>=6.30.1",
+  "matplotlib>=3.10.6",
+  "pandas>=2.2.0",
+  "pyarrow>=16.1.0",
+  "pytest>=8.2.2",
+  "pyvis>=0.3.2",
+  "ruff>=0.13.2",
+  "scipy>=1.15.0",
+  "streamlit>=1.35.0",
+  "torch>=2.8.0",
+  "torch-geometric>=2.6.1",
+  "tornado>=6.4.2",
+  "typer>=0.12.3",
+  "numpy>=2.0.0",
+  "loguru>=0.7.3",
+  "lancedb>=0.25.1",
+  "tensorflow>=2.20.0",
 ]
 
 [tool.uv.sources]
@@ -48,19 +49,19 @@ explicit = true
 target-version = 'py312'
 
 lint.select = [
-    "E",      # pycodestyle
-    "W",      # pycodestyle
-    "F",      # Pyflakes
-    "B",      # flake8-bugbear
-    "C4",     # flake8-comprehensions
-    "I",      # isort
-    "SIM",    # flake8-simplify
-    "TCH",    # flake8-type-checking
-    "TID",    # flake8-tidy-imports
-    "UP",     # pyupgrade
-    "PT",     # flake8-pytest-style
-    "RUF",    # Ruff-specific rules
-    "FBT001", # flake8-boolean-trap
+  "E",      # pycodestyle
+  "W",      # pycodestyle
+  "F",      # Pyflakes
+  "B",      # flake8-bugbear
+  "C4",     # flake8-comprehensions
+  "I",      # isort
+  "SIM",    # flake8-simplify
+  "TCH",    # flake8-type-checking
+  "TID",    # flake8-tidy-imports
+  "UP",     # pyupgrade
+  "PT",     # flake8-pytest-style
+  "RUF",    # Ruff-specific rules
+  "FBT001", # flake8-boolean-trap
 ]
 
 [tool.ruff.lint.pydocstyle]

@@ -27,6 +27,7 @@ def _build_sample_dataframe() -> pd.DataFrame:
             "gtl_label_level_3": ["Watercolor", "Sketching", "Watercolor", "Sketching"],
             "gtl_label_level_4": [None, None, None, None],
             "artist_id": ["artist-1", "artist-2", "artist-1", "artist-2"],
+            "gtl_id": ["01022000", "01030000", "01022000", "01023000"],
         }
     )
 

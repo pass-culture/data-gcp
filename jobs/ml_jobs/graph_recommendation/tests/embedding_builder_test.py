@@ -35,7 +35,7 @@ def _build_sample_heterograph() -> HeteroData:
     # Add metadata nodes
     data["artist_id"].x = torch.rand(2, 16)
     data["gtl_label_level_1"].x = torch.rand(2, 16)
-
+    data["gtl_ids"] = ["01022000", "01030000", "01022000"]
     # Add edges
     data["book", "is_artist_id", "artist_id"].edge_index = torch.tensor(
         [[0, 1], [0, 1]]

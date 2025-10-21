@@ -30,7 +30,7 @@ BASE_PATH = "data-gcp/jobs/ml_jobs/ranking_endpoint"
 DAG_NAME = "ranking_endpoint_build"
 
 gce_params = {
-    "instance_name": f"ranking-endpoint-build-{ENV_SHORT_NAME}",
+    "instance_name": "ranking-endpoint-build",
     "experiment_name": f"ranking_endpoint_v1.1_{ENV_SHORT_NAME}",
     "model_name": f"v0.0_{ENV_SHORT_NAME}",
     "run_name": "default",

@@ -71,7 +71,7 @@ with DAG(
         job_name = cluster_config["name"]
         cluster_config_file_name = cluster_config["cluster_config_file_name"]
         cluster_prefix = cluster_config["cluster_prefix"]
-        gce_instance = f"clusterisation-{job_name}-{ENV_SHORT_NAME}"
+        gce_instance = f"clusterisation-{job_name}"
 
         start = DummyOperator(task_id=f"start_{job_name}", dag=dag)
         end = DummyOperator(task_id=f"end_{job_name}", dag=dag)

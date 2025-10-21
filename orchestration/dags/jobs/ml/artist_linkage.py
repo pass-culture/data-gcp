@@ -34,7 +34,7 @@ from common.utils import get_airflow_schedule
 from jobs.crons import SCHEDULE_DICT
 
 DEFAULT_REGION = "europe-west1"
-GCE_INSTANCE = f"artist-linkage-{ENV_SHORT_NAME}"
+GCE_INSTANCE = "artist-linkage"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
 DAG_NAME = "artist_linkage"
 DAG_VERSION = "2.0"

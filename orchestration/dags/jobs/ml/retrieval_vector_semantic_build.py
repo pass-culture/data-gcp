@@ -35,7 +35,7 @@ dag_config = {
 }
 
 gce_params = {
-    "instance_name": f"retrieval-semantic-vector-{ENV_SHORT_NAME}",
+    "instance_name": "retrieval-semantic-vector",
     "instance_type": {
         "dev": "n1-standard-2",
         "stg": "n1-standard-8",

@@ -29,7 +29,7 @@ dag_config = {
 
 # Params
 gce_params = {
-    "instance_name": f"playground-vm-yourname-{ENV_SHORT_NAME}",
+    "instance_name": "playground-vm-yourname",
     "instance_type": {
         "dev": "n1-standard-2",
         "stg": "n1-standard-2",

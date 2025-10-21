@@ -80,7 +80,7 @@ DAG_CONFIG = {
 }
 
 GCE_PARAMS = {
-    "instance_name": f"linkage-item-{ENV_SHORT_NAME}",
+    "instance_name": "linkage-item",
     "instance_type": {
         "dev": "n1-standard-2",
         "stg": "n1-standard-8",

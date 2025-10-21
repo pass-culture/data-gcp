@@ -156,7 +156,7 @@ def train_metapath2vec(
         optimizer, mode="min", factor=0.5, patience=3, min_lr=1e-6
     )
 
-    # Training loop
+    # Start training
     logger.info("Starting training...")
     checkpoint_dir = checkpoint_path.parent
     checkpoint_dir.mkdir(exist_ok=True)
@@ -187,7 +187,7 @@ def train_metapath2vec(
     embeddings_df = pd.DataFrame(
         {
             "item_id": graph_data.book_ids,
-            "gtl_id": graph_data.gtl_ids,  # NEW: Include GTL IDs
+            "gtl_id": graph_data.gtl_ids,
             "embeddings": list(book_embeddings),
         }
     )

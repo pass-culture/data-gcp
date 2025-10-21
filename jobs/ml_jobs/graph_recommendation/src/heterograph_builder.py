@@ -48,8 +48,7 @@ def build_book_metadata_heterograph_from_dataframe(
         gtl_id_column: Column name containing GTL IDs.
 
     Returns:
-        A PyG HeteroData object with separate node and edge types,
-        plus gtl_ids stored for later retrieval.
+        A PyG HeteroData object with separate node and edge types.
     """
     missing_columns = [
         column
@@ -67,12 +66,12 @@ def build_book_metadata_heterograph_from_dataframe(
         .pipe(remove_rows_with_no_metadata, metadata_list=list(metadata_columns))
     )
 
-    # Step 2: Prepare book nodes (keep both item_id and gtl_id)
+    # Step 2: Prepare book nodes
     unique_books = df_normalized[[id_column, gtl_id_column]].drop_duplicates(
         subset=[id_column]
     )
     book_ids = unique_books[id_column].tolist()
-    gtl_ids = unique_books[gtl_id_column].tolist()  # NEW: Keep GTL IDs
+    gtl_ids = unique_books[gtl_id_column].tolist()
     book_index = {book_id: idx for idx, book_id in enumerate(book_ids)}
 
     # Step 3: Build metadata nodes by column
@@ -168,7 +167,7 @@ def build_book_metadata_heterograph_from_dataframe(
 
     # Step 7: Add custom attributes for identifier mapping
     graph_data.book_ids = list(book_ids)
-    graph_data.gtl_ids = list(gtl_ids)  # NEW: Store GTL IDs
+    graph_data.gtl_ids = list(gtl_ids)
     graph_data.metadata_ids_by_column = metadata_ids_by_column
     graph_data.metadata_columns = [
         col for col in metadata_columns if col in metadata_nodes_by_column

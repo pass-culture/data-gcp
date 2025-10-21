@@ -24,11 +24,11 @@
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         "taux_couverture_18" as kpi_name,
-        sum(total_users_last_12_months) as numerator,
-        sum(total_population_last_12_months) as denominator,
-        safe_divide(
+        coalesce(sum(total_users_last_12_months),0) as numerator,
+        coalesce(sum(total_population_last_12_months),0) as denominator,
+        coalesce(safe_divide(
             sum(total_users_last_12_months), sum(total_population_last_12_months)
-        ) as kpi
+        ),0) as kpi
     from {{ ref("mrt_native__monthly_beneficiary_coverage") }}
     where
         population_decimal_age = "19"
@@ -45,11 +45,11 @@
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         "taux_couverture_17" as kpi_name,
-        sum(total_users_last_12_months) as numerator,
-        sum(total_population_last_12_months) as denominator,
-        safe_divide(
+        coalesce(sum(total_users_last_12_months),0) as numerator,
+        coalesce(sum(total_population_last_12_months),0) as denominator,
+        coalesce(safe_divide(
             sum(total_users_last_12_months), sum(total_population_last_12_months)
-        ) as kpi
+        ),0) as kpi
     from {{ ref("mrt_native__monthly_beneficiary_coverage") }}
     where
         population_decimal_age = "18"
@@ -66,11 +66,11 @@
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         "taux_couverture_16" as kpi_name,
-        sum(total_users_last_12_months) as numerator,
-        sum(total_population_last_12_months) as denominator,
-        safe_divide(
+        coalesce(sum(total_users_last_12_months),0) as numerator,
+        coalesce(sum(total_population_last_12_months),0) as denominator,
+        coalesce(safe_divide(
             sum(total_users_last_12_months), sum(total_population_last_12_months)
-        ) as kpi
+        ),0) as kpi
     from {{ ref("mrt_native__monthly_beneficiary_coverage") }}
     where
         population_decimal_age = "17"
@@ -87,11 +87,11 @@
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         "taux_couverture_15" as kpi_name,
-        sum(total_users_last_12_months) as numerator,
-        sum(total_population_last_12_months) as denominator,
-        safe_divide(
+        coalesce(sum(total_users_last_12_months),0) as numerator,
+        coalesce(sum(total_population_last_12_months),0) as denominator,
+        coalesce(safe_divide(
             sum(total_users_last_12_months), sum(total_population_last_12_months)
-        ) as kpi
+        ),0) as kpi
     from {{ ref("mrt_native__monthly_beneficiary_coverage") }}
     where
         population_decimal_age = "16"

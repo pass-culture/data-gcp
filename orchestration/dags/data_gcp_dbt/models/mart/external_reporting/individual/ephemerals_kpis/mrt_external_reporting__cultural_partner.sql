@@ -9,9 +9,10 @@
 }}
 
 {% set dimensions = [
-    {"name": "NAT", "value_expr": "'NAT'"},
-    {"name": "REG", "value_expr": "partner_region_name"},
-    {"name": "DEP", "value_expr": "partner_department_name"},
+    {"name": "NAT", "value_expr": "'NAT'", "skip_epn": false},
+    {"name": "REG", "value_expr": "partner_region_name", "skip_epn": false},
+    {"name": "DEP", "value_expr": "partner_department_name", "skip_epn": false},
+    {"name": "EPCI", "value_expr": "partner_epci", "skip_epn": true},
 ] %}
 
 -- Définition des types de partenaires culturels avec leurs critères
@@ -121,6 +122,7 @@ with
             bd.days_since_last_indiv_bookable_date,
             gcp.partner_region_name,
             gcp.partner_department_name,
+            gcp.partner_epci,
             gcp.partner_type,
             gcp.offerer_id,
             gvt.venue_tag_name
@@ -319,6 +321,7 @@ with
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
+    {% if not dim.skip_epn %}
     union all
     select
         epn.partition_month,
@@ -337,4 +340,5 @@ with
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
+    {% endif %}
 {% endfor %}

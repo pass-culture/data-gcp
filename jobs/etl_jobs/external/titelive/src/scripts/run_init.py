@@ -53,7 +53,7 @@ def process_eans_batch(
         sub_batch_size: Number of EANs per API call (default 250)
 
     Returns:
-        List of dicts with keys: ean, subcategoryid, status, datemodification, json_raw
+        List of dicts with keys: ean, subcategoryid, status, json_raw
         Status values: 'processed' | 'deleted_in_titelive' | 'failed'
     """
     # Group EANs by base category
@@ -163,7 +163,6 @@ def _process_eans_by_base(
                         "ean": row["ean"],
                         "subcategoryid": ean_to_subcategoryid.get(row["ean"]),
                         "status": "processed",
-                        "datemodification": row["datemodification"],
                         "json_raw": row["json_raw"],
                     }
                 )
@@ -175,7 +174,6 @@ def _process_eans_by_base(
                         "ean": ean,
                         "subcategoryid": ean_to_subcategoryid.get(ean),
                         "status": "deleted_in_titelive",
-                        "datemodification": None,
                         "json_raw": None,
                     }
                 )
@@ -204,7 +202,6 @@ def _process_eans_by_base(
                                 "ean": ean,
                                 "subcategoryid": subcategoryid,
                                 "status": "deleted_in_titelive",
-                                "datemodification": None,
                                 "json_raw": None,
                             }
                         )
@@ -242,7 +239,6 @@ def _process_eans_by_base(
                             "ean": ean,
                             "subcategoryid": subcategoryid,
                             "status": "failed",
-                            "datemodification": None,
                             "json_raw": None,
                         }
                     )
@@ -264,7 +260,6 @@ def _process_eans_by_base(
                         "ean": ean,
                         "subcategoryid": subcategoryid,
                         "status": "failed",
-                        "datemodification": None,
                         "json_raw": None,
                     }
                 )
@@ -432,6 +427,7 @@ def run_init(
 
         # Increment batch number in memory (NO re-query - critical!)
         current_batch += 1
+        break
 
     logger.info(
         f"Mode 1 complete. Processed {total_processed} EANs total "

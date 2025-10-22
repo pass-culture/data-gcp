@@ -1,7 +1,5 @@
 """Tests for API transformation utilities."""
 
-from datetime import date
-
 import pandas as pd
 import pytest
 
@@ -18,18 +16,13 @@ class TestTransformApiResponse:
 
         # Assert
         assert isinstance(result_df, pd.DataFrame)
-        assert list(result_df.columns) == ["ean", "datemodification", "json_raw"]
+        assert list(result_df.columns) == ["ean", "json_raw"]
         assert len(result_df) == 2  # Two unique EANs from the sample data
 
         # Check EANs are present
         eans = result_df["ean"].tolist()
         assert "9781234567890" in eans
         assert "9789876543210" in eans
-
-        # Verify date conversion
-        assert result_df.loc[
-            result_df["ean"] == "9781234567890", "datemodification"
-        ].iloc[0] == date(2024, 10, 15)
 
     def test_transform_api_response_list_format(self, sample_api_response_list_format):
         """Test transformation with article as list instead of dict."""
@@ -39,7 +32,6 @@ class TestTransformApiResponse:
         # Assert
         assert len(result_df) == 1
         assert result_df["ean"].iloc[0] == "9781111111111"
-        assert result_df["datemodification"].iloc[0] == date(2024, 10, 18)
 
     def test_transform_api_response_dict_result(self, sample_api_response_dict_result):
         """Test transformation when result is a dict instead of list."""
@@ -49,7 +41,6 @@ class TestTransformApiResponse:
         # Assert
         assert len(result_df) == 1
         assert result_df["ean"].iloc[0] == "9782222222222"
-        assert result_df["datemodification"].iloc[0] == date(2024, 10, 19)
 
     def test_transform_api_response_oeuvre_key(self):
         """Test transformation when response has 'oeuvre' key instead of 'result'."""
@@ -75,7 +66,6 @@ class TestTransformApiResponse:
         # Assert
         assert len(result_df) == 1
         assert result_df["ean"].iloc[0] == "9783333333333"
-        assert result_df["datemodification"].iloc[0] == date(2024, 10, 20)
 
     def test_transform_api_response_empty_result(self):
         """Test transformation with empty result."""
@@ -88,7 +78,7 @@ class TestTransformApiResponse:
         # Assert
         assert isinstance(result_df, pd.DataFrame)
         assert len(result_df) == 0
-        assert list(result_df.columns) == ["ean", "datemodification", "json_raw"]
+        assert list(result_df.columns) == ["ean", "json_raw"]
 
     def test_transform_api_response_missing_result_key(self):
         """Test error handling when 'result' key is missing."""
@@ -102,7 +92,7 @@ class TestTransformApiResponse:
             transform_api_response(api_response)
 
     def test_transform_api_response_invalid_date_format(self):
-        """Test handling of invalid date formats - should skip articles."""
+        """Test that articles are processed regardless of date format."""
         # Arrange
         api_response = {
             "result": [
@@ -111,7 +101,7 @@ class TestTransformApiResponse:
                     "article": {
                         "1": {
                             "gencod": "9784444444444",
-                            # Invalid format (YYYY-MM-DD instead of DD/MM/YYYY)
+                            # Any date format is fine now since we don't parse it
                             "datemodification": "2024-10-20",
                             "titre": "Test",
                         }
@@ -123,11 +113,12 @@ class TestTransformApiResponse:
         # Act
         result_df = transform_api_response(api_response)
 
-        # Assert - Should skip articles with invalid dates
-        assert len(result_df) == 0
+        # Assert - Should process article since we only need EAN
+        assert len(result_df) == 1
+        assert result_df["ean"].iloc[0] == "9784444444444"
 
     def test_transform_api_response_missing_required_fields(self):
-        """Test handling when article is missing EAN or date."""
+        """Test handling when article is missing EAN."""
         # Arrange
         api_response = {
             "result": [
@@ -139,9 +130,7 @@ class TestTransformApiResponse:
                 },
                 {
                     "id": 2,
-                    "article": {
-                        "1": {"gencod": "9785555555555", "titre": "Missing Date"}
-                    },
+                    "article": {"1": {"gencod": "9785555555555", "titre": "Has EAN"}},
                 },
             ]
         }
@@ -149,5 +138,6 @@ class TestTransformApiResponse:
         # Act
         result_df = transform_api_response(api_response)
 
-        # Assert - Should skip both articles
-        assert len(result_df) == 0
+        # Assert - Should skip article without EAN, but process article with EAN
+        assert len(result_df) == 1
+        assert result_df["ean"].iloc[0] == "9785555555555"

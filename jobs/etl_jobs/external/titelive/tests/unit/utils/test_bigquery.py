@@ -38,7 +38,6 @@ class TestGetDestinationTableSchema:
         assert "subcategoryid" in field_names
         assert "status" in field_names
         assert "processed_at" in field_names
-        assert "datemodification" in field_names
         assert "json_raw" in field_names
         assert "batch_number" in field_names
         assert "images_download_status" in field_names

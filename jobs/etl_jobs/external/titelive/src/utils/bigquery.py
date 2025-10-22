@@ -19,7 +19,6 @@ def get_destination_table_schema() -> list[bigquery.SchemaField]:
         - subcategoryid: Subcategory ID for API base routing (NULL if unknown)
         - status: Processing status (processed|deleted_in_titelive|fail)
         - processed_at: Processing timestamp
-        - datemodification: Modification date (NULL for deleted/failed)
         - json_raw: Full article JSON (NULL for deleted/failed)
         - batch_number: Batch number for progress tracking
         - images_download_status: Image download status (processed|failed|NULL)
@@ -35,7 +34,6 @@ def get_destination_table_schema() -> list[bigquery.SchemaField]:
         bigquery.SchemaField("subcategoryid", "STRING", mode="NULLABLE"),
         bigquery.SchemaField("status", "STRING", mode="REQUIRED"),
         bigquery.SchemaField("processed_at", "TIMESTAMP", mode="REQUIRED"),
-        bigquery.SchemaField("datemodification", "DATE", mode="NULLABLE"),
         bigquery.SchemaField("json_raw", "STRING", mode="NULLABLE"),
         bigquery.SchemaField("batch_number", "INTEGER", mode="REQUIRED"),
         bigquery.SchemaField("images_download_status", "STRING", mode="NULLABLE"),
@@ -60,7 +58,6 @@ def create_destination_table(
         - subcategoryid (STRING): Subcategory ID for API base routing (NULL if unknown)
         - status (STRING): Processing status (processed|deleted_in_titelive|fail)
         - processed_at (TIMESTAMP): Processing timestamp
-        - datemodification (DATE): Modification date (NULL for deleted/failed)
         - json_raw (STRING): Full article data as JSON (NULL for deleted/failed)
         - batch_number (INTEGER): Batch number for progress tracking
 
@@ -266,7 +263,7 @@ def get_last_sync_date(
     Raises:
         google.cloud.exceptions.GoogleCloudError: If query fails
     """
-    # TODO: remove this mock
+
     query = f"""
         SELECT
             MAX(date) AS last_sync_date

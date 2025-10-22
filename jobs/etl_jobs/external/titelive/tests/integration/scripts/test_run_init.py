@@ -163,7 +163,6 @@ class TestProcessEansByBase:
                 mock_transform.return_value = pd.DataFrame(
                     {
                         "ean": eans,
-                        "datemodification": ["15/10/2024", "15/10/2024"],
                         "json_raw": ['{"test": "data"}', '{"test": "data"}'],
                     }
                 )
@@ -196,7 +195,6 @@ class TestProcessEansByBase:
                 mock_transform.return_value = pd.DataFrame(
                     {
                         "ean": returned_eans,
-                        "datemodification": ["15/10/2024"],
                         "json_raw": ['{"test": "data"}'],
                     }
                 )
@@ -216,7 +214,6 @@ class TestProcessEansByBase:
                 assert len(processed) == 1
                 assert len(deleted) == 1
                 assert deleted[0]["ean"] == sample_ean_pairs_paper[1][0]
-                assert deleted[0]["datemodification"] is None
                 assert deleted[0]["json_raw"] is None
 
     def test_handles_404_batch_error(
@@ -308,7 +305,6 @@ class TestProcessEansByBase:
             # All EANs should be marked as failed
             assert len(results) == 2
             assert all(r["status"] == "failed" for r in results)
-            assert all(r["datemodification"] is None for r in results)
 
     def test_handles_general_exceptions(
         self, mock_titelive_client, sample_ean_pairs_paper
@@ -383,7 +379,6 @@ class TestRunInit:
                     "ean": "9781111111111",
                     "subcategoryid": "LIVRE",
                     "status": "processed",
-                    "datemodification": "15/10/2024",
                     "json_raw": '{"test": "data"}',
                 }
             ]
@@ -466,7 +461,6 @@ class TestRunInit:
                     "ean": "9781111111111",
                     "subcategoryid": "LIVRE",
                     "status": "processed",
-                    "datemodification": "15/10/2024",
                     "json_raw": '{"test": "data"}',
                 }
             ]

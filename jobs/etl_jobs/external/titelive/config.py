@@ -6,16 +6,17 @@ from enum import StrEnum
 # Environment & GCP
 GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
-BIGQUERY_DATASET = os.getenv("BIGQUERY_DATASET", "tmp_cdarnis_dev")
 
 # BigQuery Tables
+BIGQUERY_DATASET = "tmp_cdarnis_dev"
+# BIGQUERY_DATASET = f"raw_{ENV_SHORT_NAME}"
 # DEFAULT_SOURCE_TABLE = (f"{GCP_PROJECT_ID}.raw_{ENV_SHORT_NAME}.applicative_database_product" # noqa: E501
-# DEFAULT_TARGET_TABLE = f"{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.tmp_titelive__products"
+# DEFAULT_TARGET_TABLE = f"{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.raw_titelive_products"
 # PROVIDER_EVENT_TABLE = f"{GCP_PROJECT_ID}.raw_{ENV_SHORT_NAME}.applicative_database_local_provider_event" # noqa: E501
 
 
 DEFAULT_SOURCE_TABLE = "passculture-data-prod.raw_prod.applicative_database_product"
-DEFAULT_TARGET_TABLE = f"{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.titelive__products"
+DEFAULT_TARGET_TABLE = f"{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.raw_titelive_products"
 PROVIDER_EVENT_TABLE = (
     "passculture-data-prod.raw_prod." "applicative_database_local_provider_event"
 )

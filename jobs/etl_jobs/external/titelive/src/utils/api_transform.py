@@ -1,7 +1,6 @@
-"""Transform API responses to simplified 3-column format for BigQuery."""
+"""Transform API responses to simplified 2-column format for BigQuery."""
 
 import json
-from datetime import datetime
 
 import pandas as pd
 
@@ -12,11 +11,10 @@ logger = get_logger(__name__)
 
 def transform_api_response(api_response: dict) -> pd.DataFrame:
     """
-    Transform Titelive API response to simplified 3-column DataFrame.
+    Transform Titelive API response to simplified 2-column DataFrame.
 
     Output schema:
         - ean (STRING): Product EAN from article.gencod
-        - datemodification (DATE): Modification date from article.datemodification
         - json_raw (STRING): Full article data as JSON string
 
     Args:
@@ -29,7 +27,7 @@ def transform_api_response(api_response: dict) -> pd.DataFrame:
             {"result": {"0": {...}, "1": {...}}}
 
     Returns:
-        DataFrame with columns: ean, datemodification, json_raw
+        DataFrame with columns: ean, json_raw
 
     Raises:
         ValueError: If API response format is invalid
@@ -70,29 +68,20 @@ def transform_api_response(api_response: dict) -> pd.DataFrame:
         else:
             continue
 
-        # Find first valid article with ean and datemodification
+        # Find first valid article with ean
         ean = None
-        date_str = None
         for article in articles_list:
             if not isinstance(article, dict):
                 continue
 
-            # Extract required fields
+            # Extract required field
             ean = article.get("gencod")
-            date_str = article.get("datemodification")
 
-            if ean and date_str:
+            if ean:
                 break
 
         # Skip result_item if no valid article found
-        if not ean or not date_str:
-            continue
-
-        # Convert date from DD/MM/YYYY to DATE
-        try:
-            date_obj = datetime.strptime(date_str, "%d/%m/%Y").date()
-        except ValueError:
-            logger.warning(f"Skipping article {ean}: invalid date format '{date_str}'")
+        if not ean:
             continue
 
         # Store entire result_item as JSON
@@ -101,14 +90,13 @@ def transform_api_response(api_response: dict) -> pd.DataFrame:
         rows.append(
             {
                 "ean": str(ean),
-                "datemodification": date_obj,
                 "json_raw": json_raw,
             }
         )
 
     if not rows:
         logger.warning("API response contains no valid articles")
-        return pd.DataFrame(columns=["ean", "datemodification", "json_raw"])
+        return pd.DataFrame(columns=["ean", "json_raw"])
 
     df = pd.DataFrame(rows)
 

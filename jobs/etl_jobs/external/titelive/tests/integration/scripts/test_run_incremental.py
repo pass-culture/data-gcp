@@ -99,7 +99,6 @@ class TestRunIncremental:
             mock_transform.return_value = pd.DataFrame(
                 {
                     "ean": ["123"],
-                    "datemodification": ["15/10/2024"],
                     "json_raw": ['{"test": "data"}'],
                 }
             )
@@ -271,7 +270,6 @@ class TestRunIncremental:
             mock_transform.return_value = pd.DataFrame(
                 {
                     "ean": ["123"],
-                    "datemodification": ["15/10/2024"],
                     "json_raw": ['{"test": "data"}'],
                 }
             )
@@ -366,7 +364,6 @@ class TestRunIncremental:
             mock_transform.return_value = pd.DataFrame(
                 {
                     "ean": ["123"],
-                    "datemodification": ["15/10/2024"],
                     "json_raw": ['{"test": "data"}'],
                 }
             )
@@ -457,7 +454,6 @@ class TestRunIncremental:
             mock_transform.return_value = pd.DataFrame(
                 {
                     "ean": ["123"],
-                    "datemodification": ["15/10/2024"],
                     "json_raw": ['{"test": "data"}'],
                 }
             )

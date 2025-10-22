@@ -269,7 +269,7 @@ def get_last_sync_date(
     # TODO: remove this mock
     query = f"""
         SELECT
-            DATE("2025-10-19") AS last_sync_date
+            MAX(date) AS last_sync_date
         FROM `{provider_event_table}`
         WHERE
             providerId = '{provider_id}'

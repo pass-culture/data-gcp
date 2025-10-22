@@ -86,57 +86,6 @@ def run_download_images(
     storage_client = storage.Client(project=GCP_PROJECT_ID)
     session = _get_session(pool_connections, pool_maxsize, timeout)
 
-    # Run unified batch processing
-    _run_unified_batch_processing(
-        bq_client,
-        storage_client,
-        session,
-        source_table,
-        gcs_bucket,
-        gcs_prefix,
-        max_workers,
-        timeout,
-        sub_batch_size,
-        reprocess_failed,
-    )
-
-
-def _run_unified_batch_processing(
-    bq_client: bigquery.Client,
-    storage_client: storage.Client,
-    session,
-    source_table: str,
-    gcs_bucket: str,
-    gcs_prefix: str,
-    max_workers: int,
-    timeout: int,
-    sub_batch_size: int,
-    reprocess_failed: bool,
-) -> None:
-    """
-    Unified batch processing for both normal and reprocess modes.
-
-    Architecture:
-    1. For each batch_number (0, 1, 2, ...):
-       - Fetch ALL EANs for this batch (up to 20k max)
-       - Chunk into sub-batches of sub_batch_size (1000)
-       - Process each sub-batch with threaded download + upload
-       - Accumulate all results
-       - Write ALL results to BigQuery once
-    2. Move to next batch_number until no more data
-
-    Args:
-        bq_client: BigQuery client
-        storage_client: GCS storage client
-        session: requests.Session for connection pooling
-        source_table: Source table with batch_number
-        gcs_bucket: GCS bucket name
-        gcs_prefix: GCS path prefix
-        max_workers: Maximum concurrent workers
-        timeout: HTTP request timeout in seconds
-        sub_batch_size: Number of EANs to process in each sub-batch
-        reprocess_failed: If True, filter on failed; if False, filter on NULL
-    """
     # Get total count based on mode
     if reprocess_failed:
         total_count = count_failed_image_downloads(bq_client, source_table)

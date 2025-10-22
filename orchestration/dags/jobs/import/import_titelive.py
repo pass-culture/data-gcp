@@ -79,6 +79,12 @@ with DAG(
             type="boolean",
             description="Reprocess EANs with status='failed' from destination table (init mode)",
         ),
+        # Download images params
+        "download_images_reprocess_failed": Param(
+            default=False,
+            type="boolean",
+            description="Reprocess EANs with images_download_status='failed' (download-images step)",
+        ),
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
@@ -138,6 +144,16 @@ with DAG(
         trigger_rule="none_failed_min_one_success",
     )
 
+    # Download images: Download images from BigQuery to GCS
+    download_images_task = SSHGCEOperator(
+        task_id="download_images_task",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        environment=dag_config,
+        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py download-images "
+        f"{{{{ '--reprocess-failed' if params.download_images_reprocess_failed else '' }}}}",
+    )
+
     # VM cleanup
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task",
@@ -149,4 +165,4 @@ with DAG(
     (gce_instance_start >> fetch_install_code >> execution_mode_branch)
     (execution_mode_branch >> run_init_task >> completion_task)
     (execution_mode_branch >> run_incremental_task >> completion_task)
-    (completion_task >> gce_instance_stop)
+    (completion_task >> download_images_task >> gce_instance_stop)

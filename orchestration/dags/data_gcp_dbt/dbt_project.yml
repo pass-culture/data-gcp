@@ -94,6 +94,9 @@ models:
         individual:
           ephemerals_kpis:
             +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+        collective:
+          ephemerals_kpis:
+            +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     export:
       +schema: export_{{ target.name }}
       +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"

@@ -11,7 +11,11 @@
 {% set dimensions = [
     {"name": "NAT", "value_expr": "'NAT'", "skip_epn": false},
     {"name": "REG", "value_expr": "partner_region_name", "skip_epn": false},
-    {"name": "DEP", "value_expr": "partner_department_name", "skip_epn": false},
+    {
+        "name": "DEP",
+        "value_expr": "partner_department_name",
+        "skip_epn": false,
+    },
     {"name": "EPCI", "value_expr": "partner_epci", "skip_epn": true},
 ] %}
 
@@ -322,23 +326,23 @@ with
         {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
     {% if not dim.skip_epn %}
-    union all
-    select
-        epn.partition_month,
-        timestamp("{{ ts() }}") as updated_at,
-        '{{ dim.name }}' as dimension_name,
-        {{ dim.value_expr }} as dimension_value,
-        'total_entite_epn' as kpi_name,
-        coalesce(sum(epn.cumul_epn_created), 0) as numerator,
-        1 as denominator,
-        coalesce(sum(epn.cumul_epn_created), 0) as kpi
-    from cumul_epn_details as epn
-    where
-        1 = 1
-        {% if is_incremental() %}
-            and epn.partition_month
-            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-        {% endif %}
-    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
+        union all
+        select
+            epn.partition_month,
+            timestamp("{{ ts() }}") as updated_at,
+            '{{ dim.name }}' as dimension_name,
+            {{ dim.value_expr }} as dimension_value,
+            'total_entite_epn' as kpi_name,
+            coalesce(sum(epn.cumul_epn_created), 0) as numerator,
+            1 as denominator,
+            coalesce(sum(epn.cumul_epn_created), 0) as kpi
+        from cumul_epn_details as epn
+        where
+            1 = 1
+            {% if is_incremental() %}
+                and epn.partition_month
+                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+            {% endif %}
+        group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
     {% endif %}
 {% endfor %}

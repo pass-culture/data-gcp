@@ -1,29 +1,6 @@
 """Utilities for batching and pagination."""
 
 import math
-from collections.abc import Iterator
-
-
-def chunk_list(items: list, chunk_size: int) -> Iterator[list]:
-    """
-    Split a list into chunks of specified size.
-
-    Args:
-        items: List to chunk
-        chunk_size: Size of each chunk
-
-    Yields:
-        Chunks of the original list
-
-    Raises:
-        ValueError: If chunk_size is less than 1
-    """
-    if chunk_size < 1:
-        msg = "Chunk size must be at least 1"
-        raise ValueError(msg)
-
-    for i in range(0, len(items), chunk_size):
-        yield items[i : i + chunk_size]
 
 
 def calculate_total_pages(total_results: int, per_page: int) -> int:

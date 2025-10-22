@@ -6,16 +6,16 @@ import pandas as pd
 import requests
 from google.cloud import bigquery
 
-from src.api.auth import TokenManager
-from src.api.client import TiteliveClient
-from src.constants import (
+from config import (
     DEFAULT_BATCH_SIZE,
     GCP_PROJECT_ID,
     MAIN_BATCH_SIZE,
     MUSIC_SUBCATEGORIES,
     TiteliveCategory,
 )
-from src.transformers.api_transform import transform_api_response
+from src.api.auth import TokenManager
+from src.api.client import TiteliveClient
+from src.utils.api_transform import transform_api_response
 from src.utils.bigquery import (
     count_failed_eans,
     create_destination_table,
@@ -277,15 +277,13 @@ def _process_eans_by_base(
     return results
 
 
-def run_init_bq(
+def run_init(
     source_table: str,
     destination_table: str,
     main_batch_size: int = MAIN_BATCH_SIZE,
     sub_batch_size: int = DEFAULT_BATCH_SIZE,
     project_id: str = GCP_PROJECT_ID,
     resume: bool = False,
-    skip_already_processed_table: str | None = None,
-    skip_count: int = 0,
     reprocess_failed: bool = False,
 ) -> None:
     """
@@ -302,12 +300,6 @@ def run_init_bq(
 
     This eliminates BigQuery buffer issues by querying destination_table only once.
 
-    Optional: Skip already-processed EANs from a previous run
-    - If skip_already_processed_table is provided, uses ORDER BY to sort
-      already-processed EANs first, then applies OFFSET to skip them
-    - skip_count should equal the number of EANs in skip_already_processed_table
-    - Example: skip_count=861488 means batch 0 starts at OFFSET 861488
-
     Optional: Reprocess failed EANs
     - If reprocess_failed=True, fetches EANs with status='failed' from destination_table
     - Deletes failed records, processes via API, inserts with new batch_number
@@ -320,10 +312,6 @@ def run_init_bq(
         sub_batch_size: Number of EANs per API call (default 250)
         project_id: GCP project ID
         resume: If True, skip table creation and resume from last batch_number
-        skip_already_processed_table: Optional table containing \
-            already-processed EANs to skip
-        skip_count: Number of already-processed EANs to skip \
-            (required if skip_already_processed_table is set)
         reprocess_failed: If True, reprocess EANs with status='failed'
 
     Raises:
@@ -335,11 +323,6 @@ def run_init_bq(
 
     if reprocess_failed:
         logger.info("Reprocess failed mode: Will fetch and reprocess failed EANs")
-    elif skip_already_processed_table:
-        logger.info(
-            f"Skip mode: Will skip {skip_count} already-processed EANs from "
-            f"{skip_already_processed_table}"
-        )
 
     # Initialize clients
     bq_client = bigquery.Client(project=project_id)
@@ -388,8 +371,6 @@ def run_init_bq(
                 source_table,
                 current_batch,
                 main_batch_size,
-                skip_already_processed_table=skip_already_processed_table,
-                skip_count=skip_count,
             )
 
             if not batch_ean_pairs:

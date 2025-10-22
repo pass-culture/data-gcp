@@ -10,20 +10,6 @@ from src.utils.logging import get_logger
 logger = get_logger(__name__)
 
 
-def get_target_table_schema() -> list[bigquery.SchemaField]:
-    """
-    Get the standard 3-column schema for Titelive target tables.
-
-    Returns:
-        List of BigQuery SchemaField objects
-    """
-    return [
-        bigquery.SchemaField("ean", "STRING", mode="REQUIRED"),
-        bigquery.SchemaField("datemodification", "DATE", mode="REQUIRED"),
-        bigquery.SchemaField("json_raw", "STRING", mode="REQUIRED"),
-    ]
-
-
 def get_destination_table_schema() -> list[bigquery.SchemaField]:
     """
     Get the schema for Titelive destination table with batch tracking.
@@ -38,6 +24,8 @@ def get_destination_table_schema() -> list[bigquery.SchemaField]:
         - batch_number: Batch number for progress tracking
         - images_download_status: Image download status (processed|failed|NULL)
         - images_download_processed_at: Image download timestamp (NULL if not attempted)
+        - recto_image_uuid: UUID of recto image in GCS (NULL if not downloaded)
+        - verso_image_uuid: UUID of verso image in GCS (NULL if not downloaded)
 
     Returns:
         List of BigQuery SchemaField objects
@@ -54,6 +42,8 @@ def get_destination_table_schema() -> list[bigquery.SchemaField]:
         bigquery.SchemaField(
             "images_download_processed_at", "TIMESTAMP", mode="NULLABLE"
         ),
+        bigquery.SchemaField("recto_image_uuid", "STRING", mode="NULLABLE"),
+        bigquery.SchemaField("verso_image_uuid", "STRING", mode="NULLABLE"),
     ]
 
 
@@ -101,148 +91,6 @@ def create_destination_table(
     logger.info(f"  - Clustered by: {table.clustering_fields}")
 
 
-def create_target_table(
-    client: bigquery.Client,
-    table_id: str,
-    drop_if_exists: bool = False,
-) -> None:
-    """
-    Create target table with 3-column schema optimized for Titelive data.
-
-    Schema:
-        - ean (STRING): Product EAN, used for clustering
-        - datemodification (DATE): Modification date, used for partitioning
-        - json_raw (STRING): Full article data as JSON string
-
-    Args:
-        client: BigQuery client
-        table_id: Full table ID (project.dataset.table)
-        drop_if_exists: Whether to drop existing table first
-
-    Raises:
-        google.cloud.exceptions.GoogleCloudError: If table creation fails
-    """
-    if drop_if_exists:
-        logger.info(f"Dropping table if exists: {table_id}")
-        client.delete_table(table_id, not_found_ok=True)
-
-    # Define schema
-    schema = get_target_table_schema()
-
-    # Configure table with clustering (no partitioning to avoid quota issues)
-    table = bigquery.Table(table_id, schema=schema)
-
-    # Cluster by ean
-    table.clustering_fields = ["ean"]
-
-    # Create table
-    logger.info(f"Creating table: {table_id}")
-    table = client.create_table(table)
-
-    logger.info(f"Created table: {table_id}")
-    logger.info(f"  - Clustered by: {table.clustering_fields}")
-
-
-def create_processed_eans_table(
-    client: bigquery.Client,
-    table_id: str,
-    drop_if_exists: bool = False,
-) -> None:
-    """
-    Create processed_eans tracking table (append-only).
-
-    This table tracks which EANs have been processed without using UPDATEs.
-    Uses LEFT JOIN pattern to find unprocessed EANs, avoiding UPDATE quota limits.
-
-    Schema:
-        - ean (STRING): Product EAN, used for clustering
-        - processed_at (TIMESTAMP): When the EAN was processed
-        - status (STRING): 'success' or 'deleted_in_titelive'
-
-    Args:
-        client: BigQuery client
-        table_id: Full table ID (project.dataset.table)
-        drop_if_exists: Whether to drop existing table first
-
-    Raises:
-        google.cloud.exceptions.GoogleCloudError: If table creation fails
-    """
-    if drop_if_exists:
-        logger.info(f"Dropping table if exists: {table_id}")
-        client.delete_table(table_id, not_found_ok=True)
-
-    # Define schema
-    schema = [
-        bigquery.SchemaField("ean", "STRING", mode="REQUIRED"),
-        bigquery.SchemaField("processed_at", "TIMESTAMP", mode="REQUIRED"),
-        bigquery.SchemaField("status", "STRING", mode="REQUIRED"),
-    ]
-
-    # Configure table with clustering
-    table = bigquery.Table(table_id, schema=schema)
-    table.clustering_fields = ["ean"]
-
-    # Create table
-    logger.info(f"Creating processed_eans table: {table_id}")
-    table = client.create_table(table)
-
-    logger.info(f"Created processed_eans table: {table_id}")
-    logger.info(f"  - Clustered by: {table.clustering_fields}")
-
-
-def create_tracking_table_from_source(
-    client: bigquery.Client,
-    tracking_table: str,
-    source_table: str,
-    drop_if_exists: bool = True,
-) -> int:
-    """
-    Create a tracking table directly from source table using SQL.
-
-    Creates an immutable table containing only EANs to be processed.
-    Processing status is tracked separately in processed_eans table.
-
-    Args:
-        client: BigQuery client
-        tracking_table: Full tracking table ID (project.dataset.table)
-        source_table: Full source table ID (project.dataset.table)
-        drop_if_exists: Whether to drop existing table first
-
-    Returns:
-        Number of EANs inserted into tracking table
-
-    Raises:
-        google.cloud.exceptions.GoogleCloudError: If table creation fails
-    """
-    if drop_if_exists:
-        logger.info(f"Dropping tracking table if exists: {tracking_table}")
-        client.delete_table(tracking_table, not_found_ok=True)
-
-    # Create tracking table with SQL SELECT (immutable, only EANs)
-    query = f"""
-        CREATE TABLE `{tracking_table}`
-        CLUSTER BY ean
-        AS
-        SELECT DISTINCT
-            JSON_VALUE(jsondata, '$.ean') AS ean
-        FROM `{source_table}`
-        WHERE JSON_VALUE(jsondata, '$.ean') IS NOT NULL
-    """
-
-    logger.info(
-        f"Creating tracking table from source (clustered by ean): {source_table}"
-    )
-    query_job = client.query(query)
-    query_job.result()  # Wait for completion
-
-    # Get row count
-    table = client.get_table(tracking_table)
-    row_count = table.num_rows
-
-    logger.info(f"Created tracking table with {row_count} EANs: {tracking_table}")
-    return row_count
-
-
 def insert_dataframe(
     client: bigquery.Client,
     table_id: str,
@@ -288,93 +136,6 @@ def insert_dataframe(
     logger.info(f"Successfully inserted {len(dataframe)} rows to {table_id}")
 
 
-def get_unprocessed_eans(
-    client: bigquery.Client,
-    tracking_table: str,
-    processed_eans_table: str,
-    batch_size: int,
-    exclude_eans: set[str] | None = None,
-) -> list[str]:
-    """
-    Fetch unprocessed EANs using LEFT JOIN with processed_eans table.
-
-    Uses LEFT JOIN pattern to find EANs in tracking table that don't exist
-    in processed_eans table, avoiding UPDATE quota limits.
-
-    Args:
-        client: BigQuery client
-        tracking_table: Full tracking table ID (project.dataset.table)
-        processed_eans_table: Full processed_eans table ID (project.dataset.table)
-        batch_size: Number of EANs to fetch
-        exclude_eans: Optional set of EANs to exclude (in-memory buffer)
-
-    Returns:
-        List of unprocessed EANs
-
-    Raises:
-        google.cloud.exceptions.GoogleCloudError: If query fails
-    """
-    # Build exclude clause for in-memory buffer
-    exclude_clause = ""
-    if exclude_eans and len(exclude_eans) > 0:
-        eans_list = "', '".join(exclude_eans)
-        exclude_clause = f"AND t.ean NOT IN ('{eans_list}')"
-
-    query = f"""
-        SELECT t.ean
-        FROM `{tracking_table}` t
-        WHERE NOT EXISTS (
-            SELECT 1 FROM `{processed_eans_table}` p WHERE p.ean = t.ean
-        )
-        {exclude_clause}
-        LIMIT {batch_size}
-    """
-
-    logger.debug(
-        f"Fetching up to {batch_size} unprocessed EANs from {tracking_table} "
-        f"(excluding {len(exclude_eans) if exclude_eans else 0} in-memory EANs)"
-    )
-    query_job = client.query(query)
-    results = query_job.result()
-
-    eans = [row.ean for row in results]
-    logger.info(f"Found {len(eans)} unprocessed EANs")
-    return eans
-
-
-def get_tracking_table_count(
-    client: bigquery.Client, tracking_table: str, processed_eans_table: str
-) -> int:
-    """
-    Get count of unprocessed EANs using LEFT JOIN with processed_eans table.
-
-    Args:
-        client: BigQuery client
-        tracking_table: Full tracking table ID (project.dataset.table)
-        processed_eans_table: Full processed_eans table ID (project.dataset.table)
-
-    Returns:
-        Number of unprocessed EANs
-
-    Raises:
-        google.cloud.exceptions.GoogleCloudError: If query fails
-    """
-    query = f"""
-        SELECT COUNT(*) as total
-        FROM `{tracking_table}` t
-        WHERE NOT EXISTS (
-            SELECT 1 FROM `{processed_eans_table}` p WHERE p.ean = t.ean
-        )
-    """
-
-    query_job = client.query(query)
-    result = query_job.result()
-    total = next(iter(result)).total
-
-    logger.info(f"Unprocessed EANs in tracking table: {total}")
-    return total
-
-
 def get_last_batch_number(client: bigquery.Client, destination_table: str) -> int:
     """
     Get the last batch number from destination table.
@@ -411,26 +172,18 @@ def fetch_batch_eans(
     source_table: str,
     batch_number: int,
     batch_size: int = 20_000,
-    skip_already_processed_table: str | None = None,
-    skip_count: int = 0,
 ) -> list[tuple[str, str]]:
     """
     Fetch EANs with subcategoryid for a specific batch using OFFSET pagination.
 
     Uses OFFSET + LIMIT + ORDER BY to deterministically fetch batch N.
-    OFFSET = skip_count + (batch_number * batch_size)
-
-    When skip_already_processed_table is provided, uses ORDER BY with CASE WHEN
-    to sort already-processed EANs first, then applies OFFSET to skip them.
+    OFFSET = batch_number * batch_size
 
     Args:
         client: BigQuery client
         source_table: Full source table ID (project.dataset.table)
         batch_number: Batch number to fetch (0-indexed)
         batch_size: Number of EANs per batch (default 20,000)
-        skip_already_processed_table: Optional table containing already-processed EANs
-        skip_count: Number of already-processed EANs \
-            to skip (used with skip_already_processed_table)
 
     Returns:
         List of tuples (ean, subcategoryid) for this batch (up to batch_size)
@@ -438,25 +191,7 @@ def fetch_batch_eans(
     Raises:
         google.cloud.exceptions.GoogleCloudError: If query fails
     """
-    offset = skip_count + (batch_number * batch_size)
-
-    # Build ORDER BY clause
-    if skip_already_processed_table:
-        # Sort already-processed EANs first, then unprocessed EANs
-        order_by_clause = f"""
-            CASE
-                WHEN ean IN (SELECT ean FROM `{skip_already_processed_table}`)
-                THEN 0
-                ELSE 1
-            END,
-            ean
-        """
-        logger.info(
-            "Using skip logic: already-processed EANs from "
-            f"{skip_already_processed_table} will be sorted first and skipped"
-        )
-    else:
-        order_by_clause = "ean"
+    offset = batch_number * batch_size
 
     query = f"""
         SELECT DISTINCT
@@ -464,16 +199,12 @@ def fetch_batch_eans(
             subcategoryid
         FROM `{source_table}`
         WHERE ean IS NOT NULL
-        ORDER BY {order_by_clause}
+        ORDER BY ean
         LIMIT {batch_size}
         OFFSET {offset}
     """
 
-    logger.info(
-        f"Fetching batch {batch_number}: OFFSET {offset} "
-        f"(skip_count={skip_count}, batch_offset={batch_number * batch_size}), "
-        f"LIMIT {batch_size}"
-    )
+    logger.info(f"Fetching batch {batch_number}: OFFSET {offset}, LIMIT {batch_size}")
     query_job = client.query(query)
     results = query_job.result()
 
@@ -509,6 +240,55 @@ def count_failed_eans(client: bigquery.Client, destination_table: str) -> int:
 
     logger.info(f"Found {total} failed EANs in destination table")
     return total
+
+
+def get_last_sync_date(
+    client: bigquery.Client,
+    provider_event_table: str,
+    provider_id: str,
+    base: str,
+) -> str | None:
+    """
+    Get the last sync date for a given base from provider event table.
+
+    Queries the provider event table to find the most recent SyncEnd event
+    for the specified provider and base.
+
+    Args:
+        client: BigQuery client
+        provider_event_table: Full provider event table ID (project.dataset.table)
+        provider_id: Provider ID (e.g., "1082" for Titelive)
+        base: Product base (e.g., "paper" or "music")
+
+    Returns:
+        Last sync date as string (YYYY-MM-DD format), or None if no sync found
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If query fails
+    """
+    # TODO: remove this mock
+    query = f"""
+        SELECT
+            DATE("2025-10-19") AS last_sync_date
+        FROM `{provider_event_table}`
+        WHERE
+            providerId = '{provider_id}'
+            AND payload = '{base}'
+            AND type = 'SyncEnd'
+    """
+
+    logger.info(f"Querying last sync date for base={base}, provider={provider_id}")
+    query_job = client.query(query)
+    result = query_job.result()
+    row = next(iter(result), None)
+
+    if row and row.last_sync_date:
+        last_sync_date = row.last_sync_date.strftime("%Y-%m-%d")
+        logger.info(f"Last sync date for {base}: {last_sync_date}")
+        return last_sync_date
+    else:
+        logger.warning(f"No previous sync found for {base}")
+        return None
 
 
 def fetch_failed_eans(
@@ -586,80 +366,27 @@ def delete_failed_eans(
     logger.info(f"Successfully deleted {len(eans)} failed EANs")
 
 
-def load_gcs_to_bq(
-    client: bigquery.Client,
-    gcs_path: str,
-    table_id: str,
-    source_format: Literal["PARQUET", "CSV"] = "PARQUET",
-    write_disposition: Literal["TRUNCATE", "APPEND"] = "TRUNCATE",
-) -> None:
-    """
-    Load a file from GCS to BigQuery table.
-
-    Args:
-        client: BigQuery client
-        gcs_path: GCS path (gs://bucket/path/file)
-        table_id: Full destination table ID (project.dataset.table)
-        source_format: File format (PARQUET or CSV)
-        write_disposition: TRUNCATE or APPEND
-
-    Raises:
-        google.cloud.exceptions.GoogleCloudError: If load fails
-    """
-    job_config = bigquery.LoadJobConfig(
-        source_format=getattr(bigquery.SourceFormat, source_format),
-        write_disposition=getattr(
-            bigquery.WriteDisposition,
-            f"WRITE_{write_disposition}",
-        ),
-        autodetect=True,
-    )
-
-    logger.info(f"Loading {gcs_path} to {table_id}")
-    load_job = client.load_table_from_uri(gcs_path, table_id, job_config=job_config)
-    load_job.result()  # Wait for completion
-
-    destination_table = client.get_table(table_id)
-    logger.info(f"Loaded {destination_table.num_rows} rows to {table_id}")
-
-
-def execute_query(client: bigquery.Client, query: str) -> None:
-    """
-    Execute a BigQuery SQL query.
-
-    Args:
-        client: BigQuery client
-        query: SQL query to execute
-
-    Raises:
-        google.cloud.exceptions.GoogleCloudError: If query fails
-    """
-    logger.info("Executing BigQuery query")
-    logger.debug(f"Query: {query}")
-
-    query_job = client.query(query)
-    query_job.result()  # Wait for completion
-
-    logger.info("Query executed successfully")
-
-
 def fetch_batch_for_image_download(
     client: bigquery.Client,
     destination_table: str,
     batch_number: int,
+    reprocess_failed: bool = False,
 ) -> list[dict]:
     """
-    Fetch EANs from a specific batch that need image download.
+    Fetch ALL EANs from a specific batch that need image download.
 
     Fetches rows where:
     - batch_number = X
     - status = 'processed'
-    - images_download_status IS NULL
+    - images_download_status filter based on mode:
+      - Normal mode: IS NULL (pending)
+      - Reprocess mode: = 'failed' (retry failed)
 
     Args:
         client: BigQuery client
         destination_table: Full destination table ID (project.dataset.table)
         batch_number: Batch number to fetch
+        reprocess_failed: If True, fetch failed downloads; if False, fetch pending
 
     Returns:
         List of dicts with keys: ean, json_raw
@@ -667,68 +394,34 @@ def fetch_batch_for_image_download(
     Raises:
         google.cloud.exceptions.GoogleCloudError: If query fails
     """
+    status_filter = (
+        "images_download_status = 'failed'"
+        if reprocess_failed
+        else "images_download_status IS NULL"
+    )
+
     query = f"""
         SELECT ean, json_raw
         FROM `{destination_table}`
         WHERE batch_number = {batch_number}
         AND status = 'processed'
-        AND images_download_status IS NULL
+        AND {status_filter}
         ORDER BY ean
     """
 
+    mode_label = "failed" if reprocess_failed else "pending"
     logger.info(
-        f"Fetching batch {batch_number} for image download from {destination_table}"
+        f"Fetching batch {batch_number} ({mode_label}) "
+        f"for image download from {destination_table}"
     )
     query_job = client.query(query)
     results = query_job.result()
 
     rows = [{"ean": row.ean, "json_raw": row.json_raw} for row in results]
     logger.info(
-        f"Fetched {len(rows)} EANs from batch {batch_number} for image download"
+        f"Fetched {len(rows)} {mode_label} EANs "
+        f"from batch {batch_number} for image download"
     )
-    return rows
-
-
-def fetch_failed_image_downloads(
-    client: bigquery.Client,
-    destination_table: str,
-    batch_size: int = 1000,
-) -> list[dict]:
-    """
-    Fetch EANs with failed image downloads for reprocessing.
-
-    Fetches rows where:
-    - status = 'processed'
-    - images_download_status = 'failed'
-
-    Args:
-        client: BigQuery client
-        destination_table: Full destination table ID (project.dataset.table)
-        batch_size: Number of failed records to fetch (default 1000)
-
-    Returns:
-        List of dicts with keys: ean, json_raw
-
-    Raises:
-        google.cloud.exceptions.GoogleCloudError: If query fails
-    """
-    query = f"""
-        SELECT ean, json_raw
-        FROM `{destination_table}`
-        WHERE status = 'processed'
-        AND images_download_status = 'failed'
-        ORDER BY ean
-        LIMIT {batch_size}
-    """
-
-    logger.info(
-        f"Fetching up to {batch_size} failed image downloads from {destination_table}"
-    )
-    query_job = client.query(query)
-    results = query_job.result()
-
-    rows = [{"ean": row.ean, "json_raw": row.json_raw} for row in results]
-    logger.info(f"Fetched {len(rows)} failed image downloads for reprocessing")
     return rows
 
 
@@ -821,7 +514,8 @@ def update_image_download_results(
         client: BigQuery client
         destination_table: Full destination table ID (project.dataset.table)
         results: List of dicts with keys: ean, images_download_status,
-        images_download_processed_at
+        images_download_processed_at, recto_image_uuid (optional),
+        verso_image_uuid (optional)
 
     Raises:
         google.cloud.exceptions.GoogleCloudError: If update fails
@@ -850,6 +544,8 @@ def update_image_download_results(
             bigquery.SchemaField(
                 "images_download_processed_at", "TIMESTAMP", mode="REQUIRED"
             ),
+            bigquery.SchemaField("recto_image_uuid", "STRING", mode="NULLABLE"),
+            bigquery.SchemaField("verso_image_uuid", "STRING", mode="NULLABLE"),
         ]
 
         # Create temp table
@@ -873,7 +569,9 @@ def update_image_download_results(
             ON target.ean = source.ean
             WHEN MATCHED THEN UPDATE SET
                 images_download_status = source.images_download_status,
-                images_download_processed_at = source.images_download_processed_at
+                images_download_processed_at = source.images_download_processed_at,
+                recto_image_uuid = source.recto_image_uuid,
+                verso_image_uuid = source.verso_image_uuid
         """
 
         logger.debug("Executing MERGE statement")

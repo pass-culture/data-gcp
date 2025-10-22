@@ -6,12 +6,8 @@ import requests
 from http_tools.clients import SyncHttpClient
 from http_tools.rate_limiters import SyncTokenBucketRateLimiter
 
+from config import EAN_SEPARATOR, RESPONSE_ENCODING, TITELIVE_BASE_URL
 from src.api.auth import TokenManager
-from src.constants import (
-    EAN_SEPARATOR,
-    RESPONSE_ENCODING,
-    TITELIVE_BASE_URL,
-)
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)

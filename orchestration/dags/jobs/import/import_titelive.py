@@ -26,19 +26,13 @@ BASE_DIR = "data-gcp/jobs/etl_jobs/external/titelive"
 HTTP_TOOLS_RELATIVE_DIR = "../../"
 
 # Environment Configuration
-PROJECT_NAME = os.environ.get("PROJECT_NAME", "passculture-data-ehp")
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 BIGQUERY_DATASET = os.getenv("BIGQUERY_DATASET", "tmp_cdarnis_dev")
 
-# Table names (variabilized by environment)
-DESTINATION_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__products"
-TARGET_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__products"
-SOURCE_TABLE_DEFAULT = (
-    f"{PROJECT_NAME}.raw_{ENV_SHORT_NAME}.applicative_database_product"
-)
-
 dag_config = {
-    "PROJECT_NAME": PROJECT_NAME,
+    "GCP_PROJECT_ID": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
+    "BIGQUERY_DATASET": BIGQUERY_DATASET,
 }
 
 
@@ -69,73 +63,21 @@ with DAG(
             enum=["n1-standard-1", "n1-standard-2", "n1-standard-4", "n1-standard-8"],
             description="GCE instance type",
         ),
-        "execution_mode": Param(
-            default="run",
-            enum=["init-bq", "run"],
-            description="Execution mode: init-bq (batch EAN), run (date range)",
+        "init": Param(
+            default=False,
+            type="boolean",
+            description="If True, run init mode (BigQuery EAN batch). If False, run incremental mode (sync since last sync date)",
         ),
-        # Common params
-        "base": Param(
-            default="paper",
-            enum=["paper", "music"],
-            description="Product category",
-        ),
-        # Mode 3 (run) params
-        "min_modified_date": Param(
-            default=None,
-            type=["null", "string"],
-            description="Min modification date (YYYY-MM-DD) - defaults to yesterday",
-        ),
-        "max_modified_date": Param(
-            default=None,
-            type=["null", "string"],
-            description="Max modification date (YYYY-MM-DD) - defaults to today",
-        ),
-        "results_per_page": Param(
-            default=120,
-            type="integer",
-            description="Number of results per page for pagination (run mode)",
-        ),
-        # Mode 1 (init-bq) params
-        "source_table": Param(
-            default=None,
-            type=["null", "string"],
-            description="Source BigQuery table for EAN extraction (init-bq mode)",
-        ),
-        "destination_table": Param(
-            default=None,
-            type=["null", "string"],
-            description="Destination BigQuery table with batch tracking (init-bq mode)",
-        ),
-        "main_batch_size": Param(
-            default=20000,
-            type="integer",
-            description="Number of EANs per batch (init-bq mode, default 20,000)",
-        ),
-        "sub_batch_size": Param(
-            default=250,
-            type="integer",
-            description="Number of EANs per API call (init-bq mode, max 250)",
-        ),
+        # Init mode params (when init=True)
         "resume": Param(
             default=False,
             type="boolean",
-            description="Resume from last batch_number (init-bq mode)",
-        ),
-        "skip_already_processed_table": Param(
-            default=None,
-            type=["null", "string"],
-            description="Table containing already-processed EANs to skip (init-bq mode, optional)",
-        ),
-        "skip_count": Param(
-            default=0,
-            type="integer",
-            description="Number of already-processed EANs to skip (init-bq mode, use with skip_already_processed_table)",
+            description="Resume from last batch_number (init mode)",
         ),
         "reprocess_failed": Param(
             default=False,
             type="boolean",
-            description="Reprocess EANs with status='failed' from destination table (init-bq mode)",
+            description="Reprocess EANs with status='failed' from destination table (init mode)",
         ),
     },
 ) as dag:
@@ -156,49 +98,38 @@ with DAG(
         retries=2,
     )
 
-    # Branch decision based on execution mode
+    # Decide execution mode based on init parameter
     def decide_execution_mode(**context):
         """Determine which execution mode task to run."""
-        mode = context["params"].get("execution_mode", "run")
-        if mode == "init-bq":
-            return "run_init_bq_task"
-        else:  # "run"
-            return "run_incremental_task"
+        return (
+            "run_init_task"
+            if context["params"].get("init", False)
+            else "run_incremental_task"
+        )
 
     execution_mode_branch = BranchPythonOperator(
         task_id="decide_execution_mode",
         python_callable=decide_execution_mode,
     )
 
-    # Mode 1: Init BQ - Extract EANs from BigQuery and batch process
-    run_init_bq_task = SSHGCEOperator(
-        task_id="run_init_bq_task",
+    # Init mode: Extract EANs from BigQuery and batch process
+    run_init_task = SSHGCEOperator(
+        task_id="run_init_task",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         environment=dag_config,
-        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py init-bq "
-        f"--source-table {{{{ params.source_table or '{SOURCE_TABLE_DEFAULT}' }}}} "
-        f"--destination-table {{{{ params.destination_table or '{DESTINATION_TABLE}' }}}} "
-        f"--main-batch-size {{{{ params.main_batch_size }}}} "
-        f"--sub-batch-size {{{{ params.sub_batch_size }}}} "
+        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py run-init "
         f"{{{{ '--resume' if params.resume else '' }}}} "
-        f"{{{{ '--skip-already-processed-table ' + params.skip_already_processed_table if params.skip_already_processed_table else '' }}}} "
-        f"{{{{ '--skip-count ' + params.skip_count|string if params.skip_already_processed_table else '' }}}} "
         f"{{{{ '--reprocess-failed' if params.reprocess_failed else '' }}}}",
     )
 
-    # Mode 3: Run - Incremental date range search
+    # Incremental mode: Sync since last sync date for both bases
     run_incremental_task = SSHGCEOperator(
         task_id="run_incremental_task",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         environment=dag_config,
-        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py run "
-        f"--min-modified-date {{{{ params.min_modified_date or macros.ds_add(ds, -1) }}}} "
-        f"--max-modified-date {{{{ params.max_modified_date or ds }}}} "
-        f"--base {{{{ params.base }}}} "
-        f"--target-table {TARGET_TABLE} "
-        f"--results-per-page {{{{ params.results_per_page }}}}",
+        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py run-incremental",
     )
 
     # Completion task to merge branches
@@ -216,6 +147,6 @@ with DAG(
 
     # Task dependencies
     (gce_instance_start >> fetch_install_code >> execution_mode_branch)
-    (execution_mode_branch >> run_init_bq_task >> completion_task)
+    (execution_mode_branch >> run_init_task >> completion_task)
     (execution_mode_branch >> run_incremental_task >> completion_task)
     (completion_task >> gce_instance_stop)

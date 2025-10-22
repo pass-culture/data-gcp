@@ -1,42 +1,64 @@
 """Configuration for Titelive ETL pipeline."""
 
 import os
+from enum import StrEnum
 
-# Environment Configuration
-PROJECT_NAME = os.environ.get("PROJECT_NAME", "passculture-data-ehp")
+# Environment & GCP
+GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
-
-# GCP Configuration
 BIGQUERY_DATASET = os.getenv("BIGQUERY_DATASET", "tmp_cdarnis_dev")
 
-# Source Table Configuration (variabilized by environment)
-DEFAULT_SOURCE_TABLE = (
-    f"{PROJECT_NAME}.raw_{ENV_SHORT_NAME}.applicative_database_product"
+# BigQuery Tables
+# DEFAULT_SOURCE_TABLE = (f"{GCP_PROJECT_ID}.raw_{ENV_SHORT_NAME}.applicative_database_product" # noqa: E501
+# DEFAULT_TARGET_TABLE = f"{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.tmp_titelive__products"
+# PROVIDER_EVENT_TABLE = f"{GCP_PROJECT_ID}.raw_{ENV_SHORT_NAME}.applicative_database_local_provider_event" # noqa: E501
+
+
+DEFAULT_SOURCE_TABLE = "passculture-data-prod.raw_prod.applicative_database_product"
+DEFAULT_TARGET_TABLE = f"{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.titelive__products"
+PROVIDER_EVENT_TABLE = (
+    "passculture-data-prod.raw_prod." "applicative_database_local_provider_event"
 )
 
-# Default Table Names (can be overridden via CLI)
-DEFAULT_TARGET_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__products"
-DEFAULT_TRACKING_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__tracking"
-DEFAULT_PROCESSED_EANS_TABLE = (
-    f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__processed_eans"
-)
-DEFAULT_TEMP_TABLE = f"{PROJECT_NAME}.{BIGQUERY_DATASET}.tmp_titelive__gcs_raw"
+# Titelive Provider Configuration
+TITELIVE_PROVIDER_ID = "1082"
 
-DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME = f"de-bigquery-data-export-{ENV_SHORT_NAME}"
-
-# API Configuration
-TITELIVE_API_BASE_URL = "https://catsearch.epagine.fr/v1"
+# Titelive API
+TITELIVE_BASE_URL = "https://catsearch.epagine.fr/v1"
 TITELIVE_TOKEN_ENDPOINT = "https://login.epagine.fr/v1/login"
-
-# Secret Manager Configuration
 TITELIVE_USERNAME_SECRET = "titelive_epagine_api_username"
 TITELIVE_PASSWORD_SECRET = "titelive_epagine_api_password"
 
-# Processing Configuration
-DEFAULT_BATCH_SIZE = 50  # For Mode 1: batch processing
-RESULTS_PER_PAGE = 120  # For Mode 3: pagination
-MAX_SEARCH_RESULTS = 20_000  # API limit
+# API Configuration
+RESULTS_PER_PAGE = 120
+RESPONSE_ENCODING = "utf-8"
+MAX_SEARCH_RESULTS = 20_000
+EAN_SEPARATOR = "|"
 
-# Rate Limiting
-RATE_LIMIT_CALLS = 10  # Number of API calls allowed
-RATE_LIMIT_PERIOD = 1  # Time period in seconds
+# Batch Configuration
+DEFAULT_BATCH_SIZE = 250  # API limit for /ean endpoint
+MAIN_BATCH_SIZE = 20_000
+
+# Image Download Configuration
+IMAGE_DOWNLOAD_SUB_BATCH_SIZE = 1000  # Process images in chunks of 1000 EANs
+IMAGE_DOWNLOAD_MAX_WORKERS = (os.cpu_count() - 1) * 5  # ThreadPoolExecutor max workers
+IMAGE_DOWNLOAD_POOL_CONNECTIONS = 10  # HTTP adapter pool connections
+IMAGE_DOWNLOAD_POOL_MAXSIZE = 20  # HTTP adapter pool max size
+IMAGE_DOWNLOAD_TIMEOUT = 60  # HTTP request timeout in seconds
+IMAGE_DOWNLOAD_GCS_PREFIX = "images/titelive"  # GCS path prefix for image storage
+# DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME = f"de-bigquery-data-export-{ENV_SHORT_NAME}"
+DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME = "data-team-sandbox-dev"
+
+
+# Product Categories
+class TiteliveCategory(StrEnum):
+    """Product categories for Titelive API."""
+
+    PAPER = "paper"
+    MUSIC = "music"
+
+
+MUSIC_SUBCATEGORIES = {
+    "SUPPORT_PHYSIQUE_MUSIQUE_VINYLE",
+    "SUPPORT_PHYSIQUE_MUSIQUE_CD",
+}

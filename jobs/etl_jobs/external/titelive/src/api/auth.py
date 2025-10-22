@@ -2,7 +2,7 @@
 
 import requests
 
-from src.constants import TITELIVE_TOKEN_ENDPOINT
+from config import TITELIVE_TOKEN_ENDPOINT
 from src.utils.gcp import access_secret_data
 from src.utils.logging import get_logger
 

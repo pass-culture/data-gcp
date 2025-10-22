@@ -12,6 +12,7 @@
     {"name": "NAT", "value_expr": "'NAT'"},
     {"name": "REG", "value_expr": "user_region_name"},
     {"name": "DEP", "value_expr": "user_department_name"},
+    {"name": "EPCI", "value_expr": "user_epci"},
 ] %}
 
 {% for dim in dimensions %}

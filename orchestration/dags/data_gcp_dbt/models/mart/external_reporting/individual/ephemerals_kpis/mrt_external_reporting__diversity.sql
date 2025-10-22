@@ -13,6 +13,7 @@
     {"name": "REG", "value_expr": "user_region_name"},
     {"name": "DEP", "value_expr": "user_department_name"},
     {"name": "EPCI", "value_expr": "user_epci"},
+    {"name": "COM", "value_expr": "user_city"},
 ] %}
 
 {% set categories = [

@@ -17,6 +17,7 @@
         "skip_epn": false,
     },
     {"name": "EPCI", "value_expr": "partner_epci", "skip_epn": true},
+    {"name": "COM", "value_expr": "partner_city", "skip_epn": true},
 ] %}
 
 -- Définition des types de partenaires culturels avec leurs critères
@@ -127,6 +128,7 @@ with
             gcp.partner_region_name,
             gcp.partner_department_name,
             gcp.partner_epci,
+            gcp.partner_city,
             gcp.partner_type,
             gcp.offerer_id,
             gvt.venue_tag_name

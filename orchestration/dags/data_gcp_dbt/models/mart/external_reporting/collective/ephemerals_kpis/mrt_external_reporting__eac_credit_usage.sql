@@ -20,6 +20,8 @@
         "value_expr": "institution_academy_name",
         "value_filter": "venue_academy_name",
     },
+    { "name": "COM", "value_expr": "institution_city", "value_filter": "venue_city" },
+    { "name": "EPCI", "value_expr": "institution_epci", "value_filter": "venue_epci" },
 ] %}
 
 with
@@ -30,6 +32,8 @@ with
             ey.educational_year_expiration_date,
             ea.region_name,
             ea.institution_academie,
+            ea.institution_city,
+            ea.institution_epci,
             sum(ea.institution_deposit_amount) as total_institution_deposit_amount
         from {{ ref("eple_aggregated") }} as ea
         left join
@@ -39,8 +43,10 @@ with
             ea.scholar_year,
             ey.educational_year_beginning_date,
             ey.educational_year_expiration_date,
-            region_name,
-            institution_academie
+            ea.region_name,
+            ea.institution_academie,
+            ea.institution_city,
+            ea.institution_epci
     ),
 
     -- 1. Toutes les combinaisons de dimensions qui ont eu des réservations
@@ -49,16 +55,24 @@ with
             scholar_year,
             institution_region_name,
             institution_academy_name,
+            institution_city,
+            institution_epci,
             venue_region_name,
-            venue_academy_name
+            venue_academy_name,
+            venue_city,
+            venue_epci
         from {{ ref("mrt_global__collective_booking") }}
         where
             collective_booking_status = 'REIMBURSED'
             and scholar_year is not null
             and institution_region_name is not null
             and institution_academy_name is not null
+            and institution_city is not null
+            and institution_epci is not null
             and venue_region_name is not null
             and venue_academy_name is not null
+            and venue_city is not null
+            and venue_epci is not null
     ),
 
     -- 2. Tous les mois où il y a eu des réservations pour chaque année scolaire
@@ -83,8 +97,12 @@ with
             ad.scholar_year,
             ad.institution_region_name,
             ad.institution_academy_name,
+            ad.institution_city,
+            ad.institution_epci,
             ad.venue_region_name,
             ad.venue_academy_name,
+            ad.venue_city,
+            ad.venue_epci,
             am.partition_month
         from all_dimensions as ad
         inner join all_months as am on ad.scholar_year = am.scholar_year
@@ -96,8 +114,12 @@ with
             scholar_year,
             institution_region_name,
             institution_academy_name,
+            institution_city,
+            institution_epci,
             venue_region_name,
             venue_academy_name,
+            venue_city,
+            venue_epci,
             date_trunc(date(collective_booking_used_date), month) as partition_month,
             sum(booking_amount) as total_amount_spent_reimbursed,
             count(distinct collective_booking_id) as total_collective_bookings
@@ -107,8 +129,12 @@ with
             scholar_year,
             institution_region_name,
             institution_academy_name,
+            institution_city,
+            institution_epci,
             venue_region_name,
             venue_academy_name,
+            venue_city,
+            venue_epci,
             partition_month
     ),
 
@@ -118,8 +144,12 @@ with
             cg.scholar_year,
             cg.institution_region_name,
             cg.institution_academy_name,
+            cg.institution_city,
+            cg.institution_epci,
             cg.venue_region_name,
             cg.venue_academy_name,
+            cg.venue_city,
+            cg.venue_epci,
             cg.partition_month,
             coalesce(
                 md.total_amount_spent_reimbursed, 0
@@ -131,8 +161,12 @@ with
             on cg.scholar_year = md.scholar_year
             and cg.institution_region_name = md.institution_region_name
             and cg.institution_academy_name = md.institution_academy_name
+            and cg.institution_city = md.institution_city
+            and cg.institution_epci = md.institution_epci
             and cg.venue_region_name = md.venue_region_name
             and cg.venue_academy_name = md.venue_academy_name
+            and cg.venue_city = md.venue_city
+            and cg.venue_epci = md.venue_epci
             and cg.partition_month = md.partition_month
     ),
 
@@ -145,14 +179,22 @@ with
             venue_academy_name,
             institution_region_name,
             institution_academy_name,
+            institution_city,
+            institution_epci,
+            venue_city,
+            venue_epci,
             total_amount_spent_reimbursed,
             sum(total_amount_spent_reimbursed) over (
                 partition by
                     scholar_year,
                     institution_region_name,
                     institution_academy_name,
+                    institution_city,
+                    institution_epci,
                     venue_region_name,
-                    venue_academy_name
+                    venue_academy_name,
+                    venue_city,
+                    venue_epci
                 order by partition_month
                 rows unbounded preceding
             ) as cumulative_amount_spent,
@@ -161,8 +203,12 @@ with
                     scholar_year,
                     institution_region_name,
                     institution_academy_name,
+                    institution_city,
+                    institution_epci,
                     venue_region_name,
-                    venue_academy_name
+                    venue_academy_name,
+                    venue_city,
+                    venue_epci
                 order by partition_month
                 rows unbounded preceding
             ) as cumulative_bookings
@@ -171,8 +217,12 @@ with
             scholar_year,
             institution_region_name,
             institution_academy_name,
+            institution_city,
+            institution_epci,
             venue_region_name,
             venue_academy_name,
+            venue_city,
+            venue_epci,
             partition_month
     ),
 
@@ -180,8 +230,12 @@ with
         select
             ia.institution_academie as institution_academy_name,
             ia.region_name as institution_region_name,
+            ia.institution_city as institution_city,
+            ia.institution_epci as institution_epci,
             cb.venue_academy_name,
             cb.venue_region_name,
+            cb.venue_city,
+            cb.venue_epci,
             ia.scholar_year,
             cb.partition_month,
             ia.total_institution_deposit_amount,
@@ -193,6 +247,8 @@ with
             on ia.scholar_year = cb.scholar_year
             and ia.region_name = cb.institution_region_name
             and ia.institution_academie = cb.institution_academy_name
+            and ia.institution_city = cb.institution_city
+            and ia.institution_epci = cb.institution_epci
         where
             ia.educational_year_beginning_date <= cb.partition_month
             and ia.educational_year_expiration_date >= cb.partition_month

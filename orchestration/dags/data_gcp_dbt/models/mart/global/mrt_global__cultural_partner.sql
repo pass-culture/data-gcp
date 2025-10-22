@@ -71,6 +71,7 @@ with
             o.offerer_department_name as partner_department_name,
             o.offerer_postal_code as partner_postal_code,
             v.venue_epci as partner_epci,
+            v.venue_city as partner_city,
             coalesce(
                 o.partner_type,
                 top_venue_per_offerer.partner_type,
@@ -154,6 +155,7 @@ union all
         v.venue_department_code as partner_department_code,
         v.venue_department_name as partner_department_name,
         v.venue_epci as partner_epci,
+        v.venue_city as partner_city,
         v.venue_postal_code as partner_postal_code,
         coalesce(vt.venue_tag_name, v.venue_type_label) as partner_type,
         case

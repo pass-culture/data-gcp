@@ -12,6 +12,8 @@
     {"name": "NAT", "value_expr": "'NAT'"},
     {"name": "REG", "value_expr": "region_name"},
     {"name": "ACAD", "value_expr": "academy_name"},
+    {"name": "EPCI", "value_expr": "epci_name"},
+    {"name": "COM", "value_expr": "city_name"},
 ] %}
 
 {% set domains = [
@@ -54,6 +56,8 @@ with
         select
             cb.institution_region_name as region_name,
             cb.institution_academy_name as academy_name,
+            cb.institution_epci as epci_name,
+            cb.institution_city as city_name,
             cod.educational_domain_name as domain_name,
             date_trunc(
                 date(cb.collective_booking_creation_date), month
@@ -75,7 +79,7 @@ with
             and venue_tag_category_label
             = 'Comptage partenaire label et appellation du MC'
         where cb.collective_booking_status in ('CONFIRMED', 'USED', 'REIMBURSED')
-        group by partition_month, region_name, academy_name, domain_name, is_labelled_mc
+        group by partition_month, region_name, academy_name, epci_name, city_name, domain_name, is_labelled_mc
     )
 
 {% for dim in dimensions %}

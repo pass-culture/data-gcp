@@ -20,8 +20,16 @@
         "value_expr": "institution_academy_name",
         "value_filter": "venue_academy_name",
     },
-    { "name": "COM", "value_expr": "institution_city", "value_filter": "venue_city" },
-    { "name": "EPCI", "value_expr": "institution_epci", "value_filter": "venue_epci" },
+    {
+        "name": "COM",
+        "value_expr": "institution_city",
+        "value_filter": "venue_city",
+    },
+    {
+        "name": "EPCI",
+        "value_expr": "institution_epci",
+        "value_filter": "venue_epci",
+    },
 ] %}
 
 with

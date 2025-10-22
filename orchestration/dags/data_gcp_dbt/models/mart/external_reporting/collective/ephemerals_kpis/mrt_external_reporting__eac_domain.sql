@@ -79,7 +79,14 @@ with
             and venue_tag_category_label
             = 'Comptage partenaire label et appellation du MC'
         where cb.collective_booking_status in ('CONFIRMED', 'USED', 'REIMBURSED')
-        group by partition_month, region_name, academy_name, epci_name, city_name, domain_name, is_labelled_mc
+        group by
+            partition_month,
+            region_name,
+            academy_name,
+            epci_name,
+            city_name,
+            domain_name,
+            is_labelled_mc
     )
 
 {% for dim in dimensions %}

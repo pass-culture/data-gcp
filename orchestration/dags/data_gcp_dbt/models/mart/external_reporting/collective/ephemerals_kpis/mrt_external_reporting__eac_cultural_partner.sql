@@ -116,7 +116,12 @@ with
             {{ ref("int_global__collective_offer") }} as co
             on gcp.partner_id = co.partner_id
         where co.collective_offer_is_template = true
-        group by partner_id, partner_region_name, partner_academy_name, partner_city, partner_epci
+        group by
+            partner_id,
+            partner_region_name,
+            partner_academy_name,
+            partner_city,
+            partner_epci
     ),
 
     monthly_partner_with_template_offers as (
@@ -128,7 +133,12 @@ with
             date_trunc(first_template_offer_creation_date, month) as partition_month,
             count(distinct partner_id) as monthly_new_partners_with_template_offers
         from partner_with_template_offers
-        group by partition_month, partner_region_name, partner_academy_name, partner_epci, partner_city
+        group by
+            partition_month,
+            partner_region_name,
+            partner_academy_name,
+            partner_epci,
+            partner_city
     ),
 
     cumul_partner_template as (

@@ -24,7 +24,12 @@ with
             date_trunc(date(collective_offer_creation_date), month) as partition_month,
             coalesce(count(distinct collective_offer_id), 0) as total_created_offer
         from {{ ref("int_global__collective_offer") }}
-        group by venue_region_name, venue_academy_name, partition_month, venue_epci, venue_city
+        group by
+            venue_region_name,
+            venue_academy_name,
+            partition_month,
+            venue_epci,
+            venue_city
     ),
 
     ac_booked_collective_offers as (
@@ -40,7 +45,12 @@ with
             coalesce(sum(booking_amount), 0) as total_booking_amount
         from {{ ref("mrt_global__collective_booking") }}
         where collective_booking_status in ('CONFIRMED', 'USED', 'REIMBURSED')
-        group by venue_region_name, venue_academy_name, partition_month, venue_epci, venue_city
+        group by
+            venue_region_name,
+            venue_academy_name,
+            partition_month,
+            venue_epci,
+            venue_city
     )
 
 {% for dim in dimensions %}

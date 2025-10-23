@@ -1,3 +1,6 @@
+import re
+
+
 class NativeCard:
     def __init__(self, card_id, metabase_api):
         self.card_id = card_id
@@ -6,8 +9,12 @@ class NativeCard:
         self.query = self.card_info["dataset_query"]["native"]["query"]
 
     def replace_table_name(self, legacy_table_name, new_table_name):
-        self.query = self.query.replace(legacy_table_name, new_table_name)
+        pattern = re.compile(
+            rf"\b{re.escape(legacy_table_name)}\b"
+        )  # \b ensures legacy_table_name is only replaced when it’s a distinct token—not part of new_table_name.
 
+        # re.escape handles underscores or other special characters safely.
+        self.query = pattern.sub(new_table_name, self.query)
         self.card_info["dataset_query"]["native"]["query"] = self.query
 
     def replace_schema_name(

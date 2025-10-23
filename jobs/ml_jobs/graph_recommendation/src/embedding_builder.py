@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import MetaPath2Vec
 
-EMBEDDING_DIM = 32  # DEBUG: should try 128 for better results once metrics are on
+EMBEDDING_DIM: int = 32  # DEBUG: should try 128 for better results once metrics are on
 WALK_LENGTH = 14 * 2  # DEBUG: should try 14*4 for better results once metrics are on
 CONTEXT_SIZE = 10
 WALKS_PER_NODE = 5

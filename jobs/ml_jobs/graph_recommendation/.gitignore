@@ -1,4 +1,6 @@
 !/data/.gitkeep
+!/data/metadata/vector/.gitkeep
+!/results/.gitkeep
 /data
 /checkpoints
 /results

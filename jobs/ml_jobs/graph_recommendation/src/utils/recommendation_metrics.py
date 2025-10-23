@@ -11,13 +11,36 @@ from recommenders.evaluation.python_evaluation import (
 
 def compute_retrieval_metrics(
     retrieval_results: pd.DataFrame,
-    k_values: list[int] | None = None,
+    k_values: list[int],
+    relevancy_thresholds: list[float] | float,
     score_cols: list[str] | str = "full_score",
-    relevancy_thresholds: list[float] | float = 0.9,
-    training_params: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], pd.DataFrame]:
     """
     Compute retrieval metrics using Microsoft Recommenders framework.
+    Metrics are computed for each query and then averaged
+
+    Evaluation Methods:
+        - NDCG@K (Normalized Discounted Cumulative Gain):
+            * Measures ranking quality by comparing predicted ranking to ideal ranking
+            * Uses raw continuous scores (not binary relevance)
+            * Higher scores = better items should be ranked higher
+            * Score range: [0, 1], where 1 = perfect ranking
+            * Method: relevancy_method=None, score_type="raw"
+
+        - Recall@K:
+            * Measures coverage: what fraction of relevant items are in top-K?
+            * Formula: (# relevant items in top-K) / (# relevant items total)
+            * Uses binary relevance: item is relevant if score >= threshold
+            * Score range: [0, 1], where 1 = all relevant items retrieved
+            * Method: relevancy_method="by_threshold"
+
+        - Precision@K:
+            * Measures accuracy: what fraction of top-K items are relevant?
+            * Formula: (# relevant items in top-K) / K
+            * Uses binary relevance: item is relevant if score >= threshold
+            * Score range: [0, 1], where 1 = all top-K items are relevant
+            * Method: relevancy_method="by_threshold"
+
 
     Args:
         retrieval_results: DataFrame with columns:
@@ -25,26 +48,39 @@ def compute_retrieval_metrics(
             - retrieved_node_id: The retrieved item
             - similarity_score: Predicted relevance from embeddings (0-1)
             - score columns: Ground truth relevance scores (0-1)
-        k_values: List of K values to evaluate (must be ints)
-        score_cols: List of column names for ground truth scores
-        relevancy_thresholds: List of thresholds for recall/precision
-        training_params: Dict of training parameters to include in output
+        k_values: List of K values to evaluate (must be ints).
+        score_cols: Column name(s) for ground truth scores. Can be single string or list
+            Default: "full_score"
+        relevancy_thresholds: Threshold(s) for binary relevance (recall/precision).
+            Items with score >= threshold are considered relevant.
+            Can be single float or list. Default: 0.9
+        training_params: Dict of training parameters to include as columns in output.
+            Useful for tracking experiment configurations. Default: {}
 
     Returns:
-        Tuple of (metrics_dict, augmented_dataframe)
+        Tuple of (metrics_dataframe, augmented_dataframe):
+
+        metrics_dataframe: Tabular metrics with columns:
+            - score_col: Which ground truth score was used
+            - k: K value for top-K metrics
+            - threshold: Relevance threshold (for recall/precision)
+            - ndcg: NDCG@K score [0, 1]
+            - recall: Recall@K score [0, 1]
+            - precision: Precision@K score [0, 1]
+
+        augmented_dataframe: Input dataframe with added columns:
+            - prediction_rank: Rank by similarity score (1 = best)
+            - is_in_top_{k}: Boolean flag for each k value
+            - is_relevant_{score_col}_at_{threshold}: Boolean relevance flag
+
     """
     if isinstance(relevancy_thresholds, float):
         relevancy_thresholds = [relevancy_thresholds]
 
     assert all(threshold <= 1 for threshold in relevancy_thresholds)
 
-    if k_values is None:
-        k_values = [10, 20, 50, 100]
     if isinstance(score_cols, str):
         score_cols = [score_cols]
-
-    if training_params is None:
-        training_params = {}
 
     logger.info(
         f"Computing metrics for {len(score_cols)} score(s), "
@@ -53,8 +89,6 @@ def compute_retrieval_metrics(
 
     # Prepare augmented dataframe
     df = retrieval_results.copy()
-
-    # Add prediction rank (by similarity score)
     df["prediction_rank"] = (
         df.groupby("query_node_id")["similarity_score"]
         .rank(ascending=False, method="first")
@@ -69,18 +103,18 @@ def compute_retrieval_metrics(
     rating_pred = df[["query_node_id", "retrieved_node_id", "similarity_score"]].copy()
     rating_pred.columns = ["userID", "itemID", "prediction"]
 
-    # Initialize metrics structure
-    metrics_output = {
-        "training_params": training_params,
-        "recall": {},
-        "precision": {},
-        "ndcg": {},
-    }
+    # Sort once (reused for all k values)
+    rating_pred_sorted = rating_pred.sort_values(
+        ["userID", "prediction"], ascending=[True, False]
+    )
 
     # Check max retrieved per query
     max_retrieved = df.groupby("query_node_id").size().min()
 
-    # Loop: score_col -> threshold -> k (most efficient for caching)
+    # Collect metrics in list for DataFrame
+    metrics_rows = []
+
+    # Loop: score_col -> k -> threshold
     for score_col in score_cols:
         logger.info(f"Processing score: {score_col}")
 
@@ -88,12 +122,13 @@ def compute_retrieval_metrics(
         rating_true = df[["query_node_id", "retrieved_node_id", score_col]].copy()
         rating_true.columns = ["userID", "itemID", "rating"]
 
-        # Initialize lists for this score
-        metrics_output["recall"][score_col] = []
-        metrics_output["precision"][score_col] = []
+        # Add relevance flags to dataframe (once per score/threshold combo)
+        for threshold in relevancy_thresholds:
+            col_name = f"is_relevant_{score_col}_at_{threshold}"
+            df[col_name] = (df[score_col] >= threshold).astype(bool)
 
-        # NDCG doesn't use threshold - compute once per score
-        ndcg_results = {"K_values": [], "metric_values": []}
+            count_col_name = f"n_relevant_{score_col}_at_{threshold}"
+            df[count_col_name] = df.groupby("query_node_id")[col_name].transform("sum")
 
         for k in k_values:
             if k > max_retrieved:
@@ -102,18 +137,15 @@ def compute_retrieval_metrics(
                 )
                 continue
 
-            # Filter predictions to top-k (cached across thresholds)
+            logger.info(f"  K={k}")
+
+            # Filter predictions to top-k (once per k)
             rating_pred_k = (
-                rating_pred.sort_values(
-                    ["userID", "prediction"], ascending=[True, False]
-                )
-                .groupby("userID")
-                .head(k)
-                .reset_index(drop=True)
+                rating_pred_sorted.groupby("userID").head(k).reset_index(drop=True)
             )
 
+            # Compute NDCG@K (no threshold)
             try:
-                # NDCG@K (no threshold dependency)
                 ndcg = ndcg_at_k(
                     rating_true=rating_true,
                     rating_pred=rating_pred_k,
@@ -125,53 +157,13 @@ def compute_retrieval_metrics(
                     k=k,
                     score_type="raw",
                 )
-                ndcg_results["K_values"].append(k)
-                ndcg_results["metric_values"].append(ndcg)
-                logger.info(f"  {score_col} NDCG@{k}: {ndcg:.4f}")
-
+                logger.info(f"    NDCG@{k}: {ndcg:.4f}")
             except Exception as e:
                 logger.error(f"Error computing NDCG @ K={k}: {e}")
+                ndcg = None
 
-        metrics_output["ndcg"][score_col] = ndcg_results
-
-        # Threshold-based metrics (recall, precision)
-        for threshold in relevancy_thresholds:
-            logger.info(f"  Threshold: {threshold}")
-
-            # Add relevance flags to dataframe
-            col_name = f"is_relevant_{score_col}_at_{threshold}"
-            df[col_name] = (df[score_col] >= threshold).astype(bool)
-
-            # Count relevant items per query
-            count_col_name = f"n_relevant_{score_col}_at_{threshold}"
-            df[count_col_name] = df.groupby("query_node_id")[col_name].transform("sum")
-
-            # Initialize results for this threshold
-            recall_results = {
-                "relevancy_thresh": threshold,
-                "K_values": [],
-                "metric_values": [],
-            }
-            precision_results = {
-                "relevancy_thresh": threshold,
-                "K_values": [],
-                "metric_values": [],
-            }
-
-            for k in k_values:
-                if k > max_retrieved:
-                    continue
-
-                # Filter predictions to top-k
-                rating_pred_k = (
-                    rating_pred.sort_values(
-                        ["userID", "prediction"], ascending=[True, False]
-                    )
-                    .groupby("userID")
-                    .head(k)
-                    .reset_index(drop=True)
-                )
-
+            # Compute threshold-based metrics (recall, precision)
+            for threshold in relevancy_thresholds:
                 try:
                     # Recall@K
                     recall = recall_at_k(
@@ -185,8 +177,6 @@ def compute_retrieval_metrics(
                         threshold=threshold,
                         k=k,
                     )
-                    recall_results["K_values"].append(k)
-                    recall_results["metric_values"].append(recall)
 
                     # Precision@K
                     precision = precision_at_k(
@@ -200,11 +190,23 @@ def compute_retrieval_metrics(
                         threshold=threshold,
                         k=k,
                     )
-                    precision_results["K_values"].append(k)
-                    precision_results["metric_values"].append(precision)
 
                     logger.info(
-                        f"    K={k}: Recall={recall:.4f}, Precision={precision:.4f}"
+                        f"""    Threshold={threshold}:
+                        Recall={recall:.4f},Precision={precision:.4f}
+                        """
+                    )
+
+                    # Add row to metrics
+                    metrics_rows.append(
+                        {
+                            "score_col": score_col,
+                            "k": k,
+                            "threshold": threshold,
+                            "ndcg": ndcg,
+                            "recall": recall,
+                            "precision": precision,
+                        }
                     )
 
                 except Exception as e:
@@ -213,9 +215,10 @@ def compute_retrieval_metrics(
                     )
                     continue
 
-            # Add results for this threshold
-            metrics_output["recall"][score_col].append(recall_results)
-            metrics_output["precision"][score_col].append(precision_results)
+    # Convert to DataFrame
+    metrics_df = pd.DataFrame(metrics_rows)
 
     logger.info("Metrics computation complete")
-    return metrics_output, df
+    logger.info(f"Metrics shape: {metrics_df.shape}")
+
+    return metrics_df, df

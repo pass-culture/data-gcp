@@ -5,13 +5,7 @@ from pathlib import Path
 # Project root directory
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
-LANCEDB_PATH = DATA_DIR / "metadata/vector"
 RESULTS_DIR = PROJECT_ROOT / "results"
-
-# Ensure directories exist
-DATA_DIR.mkdir(exist_ok=True, parents=True)
-RESULTS_DIR.mkdir(exist_ok=True, parents=True)
-LANCEDB_PATH.mkdir(exist_ok=True, parents=True)
 
 ID_COLUMN = "item_id"
 GTL_ID_COLUMN = "gtl_id"

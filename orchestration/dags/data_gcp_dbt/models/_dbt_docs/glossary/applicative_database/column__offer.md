@@ -14,6 +14,7 @@ enddocs %}
 {% docs column__offer_updated_at %} Timestamp when the offer was last updated. {% enddocs %}
 {% docs column__offer_is_duo %} Indicates if the offer can be booked as a duo. {% enddocs %}
 {% docs column__offer_is_underage_selectable %} Indicates if the offer is selectable for underage users. {% enddocs %}
+{% docs column__offer_reminder_id %} Unique identifier for the offer reminder associated with the offer. {% enddocs %}
 
 # Metadata related
 

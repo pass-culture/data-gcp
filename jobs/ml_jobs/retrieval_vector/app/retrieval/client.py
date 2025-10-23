@@ -25,6 +25,8 @@ class DefaultClient:
     on items stored in a LanceDB table.
     """
 
+    EMBEDDING_MODEL_TYPE = None
+
     def __init__(
         self,
         base_columns: List[str] = DEFAULT_COLUMNS,

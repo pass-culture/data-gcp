@@ -93,10 +93,28 @@ with
             ) as creation_date_penalty_factor
         from recommendable_items_raw as ro
         left join offer_details as od on ro.item_id = od.item_id
+    ),
+
+    normalized_trends as (
+        select
+            *,
+            safe_divide(
+                booking_trend, stock_date_penalty_factor
+            ) as booking_release_trend,
+            safe_divide(
+                booking_trend, creation_date_penalty_factor
+            ) as booking_creation_trend
+        from trends
     )
 
 select
     *,
-    safe_divide(booking_trend, stock_date_penalty_factor) as booking_release_trend,
-    safe_divide(booking_trend, creation_date_penalty_factor) as booking_creation_trend
-from trends
+    row_number() over (order by booking_number desc) as booking_number_desc,
+    row_number() over (order by booking_trend desc) as booking_trend_desc,
+    row_number() over (
+        order by booking_creation_trend desc
+    ) as booking_creation_trend_desc,
+    row_number() over (
+        order by booking_release_trend desc
+    ) as booking_release_trend_desc
+from normalized_trends

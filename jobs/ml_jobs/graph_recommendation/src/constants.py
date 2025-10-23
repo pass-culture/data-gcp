@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 
 ID_COLUMN = "item_id"
+GTL_ID_COLUMN = "gtl_id"
 DEFAULT_METADATA_COLUMNS: Sequence[str] = (
     "gtl_label_level_1",
     "gtl_label_level_2",

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import tqdm
 
-from src.constants import DEFAULT_METADATA_COLUMNS, ID_COLUMN
+from src.constants import DEFAULT_METADATA_COLUMNS, GTL_ID_COLUMN, ID_COLUMN
 from src.utils.logging import diagnose_component_sizes
 from src.utils.preprocessing import (
     detach_single_occuring_metadata,
@@ -31,6 +31,7 @@ def build_book_metadata_heterograph_from_dataframe(
     *,
     metadata_columns: Sequence[str],
     id_column: str,
+    gtl_id_column: str,
 ) -> HeteroData:
     """Construct a heterogeneous book-to-metadata graph from a dataframe.
 
@@ -44,20 +45,21 @@ def build_book_metadata_heterograph_from_dataframe(
         dataframe: Input data with book IDs and metadata columns.
         metadata_columns: Column names to use as metadata.
         id_column: Column name containing book IDs.
+        gtl_id_column: Column name containing GTL IDs.
 
     Returns:
         A PyG HeteroData object with separate node and edge types.
     """
     missing_columns = [
         column
-        for column in (id_column, *metadata_columns)
+        for column in (id_column, gtl_id_column, *metadata_columns)
         if column not in dataframe.columns
     ]
     if missing_columns:
         raise KeyError(f"Missing required columns: {', '.join(missing_columns)}")
 
     # Step 1: Preprocess dataframe
-    all_columns = [id_column, *metadata_columns]
+    all_columns = [id_column, gtl_id_column, *metadata_columns]
     df_normalized = (
         dataframe.pipe(normalize_dataframe, columns=all_columns)
         .pipe(detach_single_occuring_metadata, columns=metadata_columns)
@@ -65,8 +67,11 @@ def build_book_metadata_heterograph_from_dataframe(
     )
 
     # Step 2: Prepare book nodes
-    unique_books = df_normalized[id_column].dropna().drop_duplicates()
-    book_ids = unique_books.tolist()
+    unique_books = df_normalized[[id_column, gtl_id_column]].drop_duplicates(
+        subset=[id_column]
+    )
+    book_ids = unique_books[id_column].tolist()
+    gtl_ids = unique_books[gtl_id_column].tolist()
     book_index = {book_id: idx for idx, book_id in enumerate(book_ids)}
 
     # Step 3: Build metadata nodes by column
@@ -162,6 +167,7 @@ def build_book_metadata_heterograph_from_dataframe(
 
     # Step 7: Add custom attributes for identifier mapping
     graph_data.book_ids = list(book_ids)
+    graph_data.gtl_ids = list(gtl_ids)
     graph_data.metadata_ids_by_column = metadata_ids_by_column
     graph_data.metadata_columns = [
         col for col in metadata_columns if col in metadata_nodes_by_column
@@ -194,7 +200,10 @@ def build_book_metadata_heterograph(
         df = df.sample(nrows, random_state=42)
 
     data_graph = build_book_metadata_heterograph_from_dataframe(
-        df, id_column=ID_COLUMN, metadata_columns=DEFAULT_METADATA_COLUMNS
+        df,
+        id_column=ID_COLUMN,
+        gtl_id_column=GTL_ID_COLUMN,
+        metadata_columns=DEFAULT_METADATA_COLUMNS,
     )
 
     try:

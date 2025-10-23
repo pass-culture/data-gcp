@@ -1,0 +1,12 @@
+version: 2
+
+models:
+  - name: mrt_global__offer_reminder
+    description: '{{ doc("description__mrt_global__offer_reminder") }}'
+    columns:
+      - name: offer_reminder_id
+        description: "{{ doc('column__offer_reminder_id') }}"
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"

@@ -3,6 +3,7 @@ from app.factory.recommendation import RecommendationHandler
 from app.factory.semantic import SemanticHandler
 from app.factory.similar_offer import SimilarOfferHandler
 from app.factory.tops import SearchByTopsHandler
+from app.retrieval.constants import EmbeddingModelTypes
 
 
 class PredictionHandlerFactory:
@@ -11,14 +12,27 @@ class PredictionHandlerFactory:
     """
 
     @staticmethod
-    def get_handler(model_type: str) -> PredictionHandler:
-        if model_type == "recommendation":
+    def get_handler(
+        request_type: str, embedding_model_type: EmbeddingModelTypes
+    ) -> PredictionHandler:
+        if request_type == "recommendation":
+            if embedding_model_type != EmbeddingModelTypes.RECOMMENDATION:
+                raise ValueError(
+                    f"Request type '{request_type}' is only supported for {EmbeddingModelTypes.RECOMMENDATION} models. Currently using '{embedding_model_type}' model."
+                )
             return RecommendationHandler()
-        elif model_type == "semantic":
+
+        elif request_type == "semantic":
+            if embedding_model_type != EmbeddingModelTypes.SEMANTIC:
+                raise ValueError(
+                    f"Request type '{request_type}' is only supported for {EmbeddingModelTypes.SEMANTIC} models. Currently using '{embedding_model_type}' model."
+                )
             return SemanticHandler()
-        elif model_type == "similar_offer":
+
+        elif request_type == "similar_offer":
             return SimilarOfferHandler()
-        elif model_type in ("filter", "tops"):
+
+        elif request_type in ("filter", "tops"):
             return SearchByTopsHandler()
         else:
-            raise ValueError(f"Unknown model_type: {model_type}")
+            raise ValueError(f"Unknown request_type: {request_type}")

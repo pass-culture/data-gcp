@@ -92,7 +92,7 @@ def run_incremental(
     start_dates = []
     for base in bases:
         if last_sync_dates[base] is not None:
-            start_date = last_sync_dates[base] + timedelta(days=1)
+            start_date = last_sync_dates[base]
             if start_date <= end_date:
                 start_dates.append(start_date)
 
@@ -147,10 +147,12 @@ def run_incremental(
         min_date_formatted = _format_date_for_api(date_str)
         max_date_formatted = _format_date_for_api(next_day_str)
 
+        logger.info(f"API date range: {min_date_formatted} to {max_date_formatted}")
+
         # Process both bases for this date
         for base in bases:
             # Skip if this base doesn't need this date
-            if last_sync_dates[base] is None or process_date <= last_sync_dates[base]:
+            if last_sync_dates[base] is None or process_date < last_sync_dates[base]:
                 logger.debug(
                     f"Skipping {base} for {date_str} "
                     "(already synced or no sync history)"
@@ -227,6 +229,8 @@ def run_incremental(
                         transformed_df["subcategoryid"] = None
                         transformed_df["images_download_status"] = None
                         transformed_df["images_download_processed_at"] = None
+                        transformed_df["recto_image_uuid"] = None
+                        transformed_df["verso_image_uuid"] = None
                         all_dataframes.append(transformed_df)
                         logger.info(
                             f"{base} page {page} complete: "

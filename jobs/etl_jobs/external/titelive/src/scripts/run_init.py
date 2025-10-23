@@ -398,6 +398,10 @@ def run_init(
         for result in results:
             result["processed_at"] = current_time
             result["batch_number"] = current_batch
+            result["images_download_status"] = None
+            result["images_download_processed_at"] = None
+            result["recto_image_uuid"] = None
+            result["verso_image_uuid"] = None
 
         # Delete old failed records before inserting new results (if reprocessing)
         if reprocess_failed:
@@ -427,7 +431,6 @@ def run_init(
 
         # Increment batch number in memory (NO re-query - critical!)
         current_batch += 1
-        break
 
     logger.info(
         f"Mode 1 complete. Processed {total_processed} EANs total "

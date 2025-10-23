@@ -7,7 +7,6 @@
                 check_cols=["json_raw"],
                 unique_key="ean",
                 hard_deletes="ignore",
-                target_schema="tmp_cdarnis_dev"
             )
         )
     }}

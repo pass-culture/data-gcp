@@ -88,12 +88,18 @@ class TestRunIncremental:
 
             mock_last_sync.side_effect = get_last_sync
 
-            # Mock API responses
+            # Mock API responses - code processes from last_sync_date to yesterday
+            # So 2 days ago means: process 2 days ago AND yesterday = 2 dates
+            # Each date needs: 1 metadata call + 1 page call = 4 total calls
             mock_api_client.search_by_date.side_effect = [
-                {"nbreponses": 5},  # Initial metadata call
+                {"nbreponses": 5},  # Day 1: metadata call
                 {
                     "result": [{"id": 1, "article": {"1": {"gencod": "123"}}}] * 5
-                },  # Page 1
+                },  # Day 1: page 1
+                {"nbreponses": 5},  # Day 2: metadata call
+                {
+                    "result": [{"id": 1, "article": {"1": {"gencod": "123"}}}] * 5
+                },  # Day 2: page 1
             ]
 
             mock_transform.return_value = pd.DataFrame(
@@ -253,6 +259,7 @@ class TestRunIncremental:
             mock_last_sync.side_effect = get_last_sync
 
             # Mock 250 results requiring 3 pages (120 per page)
+            # 2 days to process, each with 1 metadata + 3 pages = 8 total calls
             api_call_count = [0]
 
             def search_by_date_side_effect(*args, **kwargs):
@@ -284,8 +291,9 @@ class TestRunIncremental:
                 project_id="test-project",
             )
 
-            # Should have called search_by_date: 1 metadata + 3 pages = 4 calls
-            assert api_call_count[0] == 4
+            # Should have called search_by_date:
+            # 2 dates x (1 metadata + 3 pages) = 8 calls
+            assert api_call_count[0] == 8
 
     @patch("src.scripts.run_incremental.TiteliveClient")
     @patch("src.scripts.run_incremental.TokenManager")
@@ -300,9 +308,10 @@ class TestRunIncremental:
         mock_client_class.return_value = mock_api_client
 
         with patch("src.scripts.run_incremental.get_last_sync_date") as mock_last_sync:
-            # Mock last sync date as yesterday (so no dates to process)
-            yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-            mock_last_sync.return_value = yesterday
+            # Mock last sync date as today
+            # (so no dates to process since we process up to yesterday)
+            today = datetime.now().strftime("%Y-%m-%d")
+            mock_last_sync.return_value = today
 
             run_incremental(
                 target_table="project.dataset.target", project_id="test-project"
@@ -344,6 +353,8 @@ class TestRunIncremental:
 
             mock_last_sync.side_effect = get_last_sync
 
+            # 2 dates to process, each with metadata + 2 pages
+            # We'll make the first page of day 1 fail
             api_call_count = [0]
 
             def search_by_date_side_effect(*args, **kwargs):
@@ -352,7 +363,7 @@ class TestRunIncremental:
                     # Metadata call
                     return {"nbreponses": 200}
                 elif api_call_count[0] == 2:
-                    # First page fails
+                    # First page of day 1 fails
                     raise Exception("API error")
                 else:
                     # Other pages succeed
@@ -377,8 +388,9 @@ class TestRunIncremental:
                 target_table="project.dataset.target", project_id="test-project"
             )
 
-            # Should have tried both pages despite error
-            assert api_call_count[0] == 3  # 1 metadata + 2 pages
+            # Should have tried all pages across 2 dates despite error
+            # 2 dates x (1 metadata + 2 pages) = 6 calls total
+            assert api_call_count[0] == 6
 
     @patch("src.scripts.run_incremental.TiteliveClient")
     @patch("src.scripts.run_incremental.TokenManager")
@@ -445,10 +457,16 @@ class TestRunIncremental:
 
             mock_last_sync.side_effect = get_last_sync
 
-            # Mock API responses
+            # Mock API responses - 2 dates to process
             mock_api_client.search_by_date.side_effect = [
-                {"nbreponses": 1},
-                {"result": [{"id": 1, "article": {"1": {"gencod": "123"}}}]},
+                {"nbreponses": 1},  # Day 1: metadata
+                {
+                    "result": [{"id": 1, "article": {"1": {"gencod": "123"}}}]
+                },  # Day 1: page 1
+                {"nbreponses": 1},  # Day 2: metadata
+                {
+                    "result": [{"id": 1, "article": {"1": {"gencod": "123"}}}]
+                },  # Day 2: page 1
             ]
 
             mock_transform.return_value = pd.DataFrame(

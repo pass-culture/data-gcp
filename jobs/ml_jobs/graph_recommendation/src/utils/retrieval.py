@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from src.constants import DATA_DIR
 from src.embedding_builder import EMBEDDING_COLUMN_NAME, EMBEDDING_DIM
+from src.utils.commons import BUCKET_PREFIX, is_bucket_path
 
 # Import your existing GTL scoring functions
 from src.utils.metadata_metrics import (
@@ -28,13 +29,13 @@ EMBEDDING_METRIC = "cosine"
 LANCEDB_PATH = DATA_DIR / "metadata/vector"
 
 
-def create_book_model(embedding_dim: int = EMBEDDING_DIM):
-    class BookModel(LanceModel):
+def create_book_embedding_model():
+    class BookEmbeddingModel(LanceModel):
         node_ids: str
         gtl_id: str
 
-    BookModel.__annotations__[EMBEDDING_COLUMN_NAME] = Vector(EMBEDDING_DIM)
-    return BookModel
+    BookEmbeddingModel.__annotations__[EMBEDDING_COLUMN_NAME] = Vector(EMBEDDING_DIM)
+    return BookEmbeddingModel
 
 
 def load_and_index_embeddings(
@@ -92,14 +93,15 @@ def load_and_index_embeddings(
         logger.info(f"Dropping existing table '{table_name}'")
         db.drop_table(table_name)
 
-    # Create BookModel instance
-    BookModel = create_book_model(EMBEDDING_DIM)
+    # Create BookEmbeddingModel instance
+    BookEmbeddingModel = create_book_embedding_model()
+
     # Create new table
     logger.info(f"Creating LanceDB table '{table_name}'")
     table = db.create_table(
         table_name,
         make_batches(df, LANCEDB_BATCH_SIZE),
-        schema=BookModel,
+        schema=BookEmbeddingModel,
     )
     logger.info(f"Table created with {len(table)} items")
 
@@ -121,12 +123,13 @@ def _get_matching_file_paths(parquet_path: str) -> list[str]:
     """Get list of matching file paths from GCS or local filesystem."""
     is_glob = "*" in parquet_path or "?" in parquet_path
 
-    if parquet_path.startswith("gs://"):
+    if is_bucket_path(parquet_path):
         fs = gcsfs.GCSFileSystem()
         if is_glob:
             matching_files = fs.glob(parquet_path)
             matching_files = [
-                f"gs://{f}" if not f.startswith("gs://") else f for f in matching_files
+                f"{BUCKET_PREFIX}{f}" if not is_bucket_path(f) else f
+                for f in matching_files
             ]
         else:
             matching_files = [parquet_path]
@@ -142,7 +145,7 @@ def _load_single_parquet_file(
     """Load a single parquet file from GCS or local filesystem."""
     import pandas as pd
 
-    if file_path.startswith("gs://"):
+    if is_bucket_path(file_path):
         fs = gcsfs.GCSFileSystem()
         with fs.open(file_path, "rb") as f:
             df_chunk = pd.read_parquet(f, columns=columns)
@@ -608,7 +611,7 @@ def compute_all_scores_lazy(
         )
 
     # Log statistics
-    _log_score_statistics(augmented_results, has_artist_cols)
+    _log_score_statistics(augmented_results, has_artist_cols=has_artist_cols)
 
     return augmented_results
 
@@ -644,7 +647,8 @@ def sample_test_items_lazy(
     # Sample random row indices
     np.random.seed(random_state)
     sample_size = min(n_samples, total_count)
-    sampled_indices = np.random.choice(total_count, size=sample_size, replace=False)
+    rng = np.random.default_rng(random_state)
+    sampled_indices = rng.choice(total_count, size=sample_size, replace=False)
 
     # Read sampled rows in one call
     scanner = table.to_lance()

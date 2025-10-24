@@ -1,4 +1,3 @@
-# src/evaluation.py
 """Evaluation utilities for metapath2vec embeddings."""
 
 from __future__ import annotations

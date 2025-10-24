@@ -11,7 +11,8 @@ from torch.utils.data import DataLoader
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import MetaPath2Vec
 
-EMBEDDING_DIM = 32  # DEBUG: should try 128 for better results once metrics are on
+EMBEDDING_COLUMN_NAME = "embeddings"
+EMBEDDING_DIM: int = 32  # DEBUG: should try 128 for better results once metrics are on
 WALK_LENGTH = 14 * 2  # DEBUG: should try 14*4 for better results once metrics are on
 CONTEXT_SIZE = 10
 WALKS_PER_NODE = 5
@@ -187,7 +188,7 @@ def train_metapath2vec(
         {
             "node_ids": graph_data.book_ids,
             "gtl_id": graph_data.gtl_ids,
-            "embeddings": list(book_embeddings),
+            EMBEDDING_COLUMN_NAME: list(book_embeddings),
         }
     )
 

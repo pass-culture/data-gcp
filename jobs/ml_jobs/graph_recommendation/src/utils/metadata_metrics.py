@@ -14,6 +14,17 @@ def _validate_gtl_id(gtl_id: str):
     if gtl_id[:2] == "00":
         raise ValueError("GTL ID must not start with '00'")
 
+    # Ensure that once a "00" pair appears, all subsequent pairs are also "00"
+    pairs = [gtl_id[i : i + 2] for i in range(0, 8, 2)]
+    found_null = False
+    for pair in pairs:
+        if found_null and pair != "00":
+            raise ValueError(
+                "Invalid GTL ID: null branches cannot include additional sublevels."
+            )
+        if pair == "00":
+            found_null = True
+
 
 def _get_gtl_depth(gtl_id: str) -> int:
     """Compute the hierarchical depth level of a GTL identifier.
@@ -106,36 +117,81 @@ def get_gtl_walk_score(query_gtl_id: str, result_gtl_id: str) -> float:
 
 
 def get_gtl_retrieval_score(query_gtl_id: str, result_gtl_id: str) -> float:
-    """Compute an asymmetric matching score between two GTL identifiers.
+    """
+    Compute a depth-normalized asymmetric matching score between two GTL identifiers.
 
-    This function measures how much of the query hierarchy is correctly matched
-    by the result. The score is normalized by the query's depth, ensuring deeper
-    queries are penalized more heavily when mismatches occur.
+    This metric normalizes by the query's depth, which means:
+    - Deeper queries score higher when missing the same absolute number of levels
+    - A result missing 1 level from a depth-4 query scores higher (3/4 = 0.75) than
+      a result missing 1 level from a depth-3 query (2/3 = 0.667)
+    - Penalizes missing deeper (more specific) levels more heavily
+
+    Use this metric when:
+    - You want to emphasize precision in deeper hierarchies
+    - Missing a child node should be penalized less than missing a parent node
+    - Query specificity should influence the scoring
 
     Args:
-        query_gtl_id (str): The query GTL identifier.
-        result_gtl_id (str): The GTL identifier to compare against.
+        query_gtl_id: The query GTL identifier (8 characters, e.g., "01020301")
+        result_gtl_id: The result GTL identifier to score against the query
 
     Returns:
-        float: Asymmetric score in the range [0, 1].
+        float: Asymmetric score in the range [0, 1], where:
+               - 1.0 = result matches or is a descendant of all query levels
+               - 0.0 = result shares no hierarchy with query (different root)
+               - Intermediate = proportion of query levels matched
 
     Examples:
-        >>> get_gtl_retrieval_score("01020000", "01020300")
-        1
-        >>> get_gtl_retrieval_score("01020300", "01020000")
-        0.66
+        >>> get_gtl_depth_normalized_score("01020301", "01020301")
+        1.0  # Exact match
+
+        >>> get_gtl_depth_normalized_score("01020301", "01020302")
+        0.75  # 3 out of 4 query levels match
+
+        >>> get_gtl_depth_normalized_score("01020000", "01020301")
+        1.0  # Result is descendant of query (all query levels match)
+
+        >>> get_gtl_depth_normalized_score("01020301", "01030000")
+        0.25  # Only 1 out of 4 query levels match
     """
+    _validate_gtl_id(query_gtl_id)
+    _validate_gtl_id(result_gtl_id)
+
+    # Early exit if completely independent (different first level)
     if query_gtl_id[:2] != result_gtl_id[:2]:
         return 0.0
 
-    # Split GTL into 2-character hierarchical levels
-    chunks1 = [query_gtl_id[i : i + 2] for i in range(0, 8, 2)]
-    chunks2 = [result_gtl_id[i : i + 2] for i in range(0, 8, 2)]
-    gtl_query_depth = _get_gtl_depth(query_gtl_id)
+    # Split GTL IDs into hierarchical levels
+    q_chunks = [query_gtl_id[i : i + 2] for i in range(0, 8, 2)]
+    r_chunks = [result_gtl_id[i : i + 2] for i in range(0, 8, 2)]
+    query_depth = _get_gtl_depth(query_gtl_id)
 
+    # Check if result fully matches all query levels (subset/descendant case)
+    # Result levels deeper than query depth are not considered
+    if all(q_chunks[i] == r_chunks[i] for i in range(query_depth)):
+        return 1.0
+
+    # Count number of shared hierarchical levels
     matching_parts = 0
-    for a, b in zip(chunks1, chunks2, strict=True):
+    for a, b in zip(q_chunks, r_chunks, strict=True):
         if a != b or (a == "00" and b == "00"):
-            return matching_parts / gtl_query_depth
+            break
         matching_parts += 1
-    return matching_parts / gtl_query_depth
+
+    # Normalize by query depth
+    return matching_parts / query_depth
+
+
+def get_artist_score(
+    query_artist_id: str | None, result_artist_id: str | None
+) -> float:
+    assert isinstance(
+        query_artist_id, str | None
+    ), "Type Error: artist_id must be string or None "
+    assert isinstance(
+        result_artist_id, str | None
+    ), "Type Error: artist_id must be string or None "
+
+    if query_artist_id is None or result_artist_id is None:
+        return 0.0
+    return float(query_artist_id == result_artist_id)

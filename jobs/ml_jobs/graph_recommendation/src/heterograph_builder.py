@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import tqdm
 
 from src.constants import DEFAULT_METADATA_COLUMNS, GTL_ID_COLUMN, ID_COLUMN
-from src.utils.logging import diagnose_component_sizes
+from src.utils.graph_stats import diagnose_component_sizes
 from src.utils.preprocessing import (
     detach_single_occuring_metadata,
     normalize_dataframe,

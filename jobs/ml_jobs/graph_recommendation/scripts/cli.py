@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import torch
 import typer
 
+from src.constants import RESULTS_DIR
 from src.embedding_builder import train_metapath2vec
 from src.graph_builder import (
     build_book_metadata_graph,
 )
 from src.heterograph_builder import build_book_metadata_heterograph
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 APP_DESCRIPTION = (
     "Utilities to build PyTorch Geometric graphs for book recommendations."
@@ -24,7 +28,7 @@ PARQUET_ARGUMENT = typer.Argument(
 )
 
 GRAPH_OUTPUT_OPTION = typer.Option(
-    Path("data/book_metadata_graph.pt"),
+    RESULTS_DIR / "book_metadata_graph.pt",
     "--output",
     "-o",
     help="Where to save the serialized PyG Data object.",
@@ -32,7 +36,7 @@ GRAPH_OUTPUT_OPTION = typer.Option(
 )
 
 EMBEDDING_OUTPUT_OPTION = typer.Option(
-    "data/book_metadata_embeddings.parquet",
+    RESULTS_DIR / "book_metadata_embeddings.parquet",
     "--output-embeddings",
     "-e",
     help="Where to save the node embeddings as a parquet file. "

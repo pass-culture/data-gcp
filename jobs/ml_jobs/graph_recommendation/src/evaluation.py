@@ -6,7 +6,7 @@ from __future__ import annotations
 import pandas as pd
 from loguru import logger
 
-from src.utils.recommendation_metrics import compute_retrieval_metrics
+from src.utils.recommendation_metrics import compute_evaluation_metrics
 from src.utils.retrieval import (
     TABLE_NAME,
     compute_all_scores_lazy,
@@ -154,11 +154,11 @@ def evaluate_embeddings(
     )
 
     # ==================================================================================
-    # Step 6: Compute Recommendation Metrics
+    # Step 6: Compute Embeddings Evaluation Metrics
     # ==================================================================================
-    logger.info("STEP 6: Computing Recommendation Metrics")
+    logger.info("STEP 6: Computing Embeddings Evaluation Metrics")
 
-    metrics_df, df_results = compute_retrieval_metrics(
+    metrics_df, df_results = compute_evaluation_metrics(
         retrieval_results=df_results,
         k_values=k_values,
         score_cols=ground_truth_score,

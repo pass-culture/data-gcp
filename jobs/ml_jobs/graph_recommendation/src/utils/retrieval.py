@@ -95,14 +95,14 @@ def load_and_index_embeddings(
         db.drop_table(table_name)
 
     # Create BookEmbeddingModel instance
-    BookEmbeddingModel = create_book_embedding_model()
+    book_embedding_model = create_book_embedding_model()
 
     # Create new table
     logger.info(f"Creating LanceDB table '{table_name}'")
     table = db.create_table(
         table_name,
         make_batches(df, LANCEDB_BATCH_SIZE),
-        schema=BookEmbeddingModel,
+        schema=book_embedding_model,
     )
     logger.info(f"Table created with {len(table)} items")
 

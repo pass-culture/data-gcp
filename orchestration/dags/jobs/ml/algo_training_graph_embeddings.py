@@ -150,7 +150,7 @@ with DAG(
     )
 
     evaluate = SSHGCEOperator(
-        task_id=f"evaluate",
+        task_id="evaluate",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
         command="cli evaluate-metapath2vec "

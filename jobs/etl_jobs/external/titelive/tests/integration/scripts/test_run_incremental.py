@@ -81,7 +81,7 @@ class TestRunIncremental:
         ):
             two_days_ago = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
 
-            def get_last_sync(client, table, provider, base):
+            def get_last_sync(client, table, base, provider_ids=None):
                 if base == TiteliveCategory.PAPER.value:
                     return two_days_ago
                 return None  # Music has no sync history
@@ -251,7 +251,7 @@ class TestRunIncremental:
         ):
             two_days_ago = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
 
-            def get_last_sync(client, table, provider, base):
+            def get_last_sync(client, table, base, provider_ids=None):
                 if base == TiteliveCategory.PAPER.value:
                     return two_days_ago
                 return None
@@ -346,7 +346,7 @@ class TestRunIncremental:
         ):
             two_days_ago = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
 
-            def get_last_sync(client, table, provider, base):
+            def get_last_sync(client, table, base, provider_ids=None):
                 if base == TiteliveCategory.PAPER.value:
                     return two_days_ago
                 return None
@@ -450,7 +450,7 @@ class TestRunIncremental:
         ):
             two_days_ago = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
 
-            def get_last_sync(client, table, provider, base):
+            def get_last_sync(client, table, base, provider_ids=None):
                 if base == TiteliveCategory.PAPER.value:
                     return two_days_ago
                 return None

@@ -416,7 +416,7 @@ class TestProcessBatchImages:
         )
 
         assert len(results) == 1
-        assert results[0]["images_download_status"] == "processed"
+        assert results[0]["images_download_status"] == "no_change"
         assert results[0]["recto_image_uuid"] is None
         assert results[0]["verso_image_uuid"] is None
 

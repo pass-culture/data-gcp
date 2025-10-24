@@ -6,7 +6,7 @@ from datetime import datetime
 from google.cloud import bigquery, storage
 
 from config import (
-    DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
+    DE_DATALAKE_BUCKET_NAME,
     DEFAULT_TARGET_TABLE,
     GCP_PROJECT_ID,
     IMAGE_DOWNLOAD_GCS_PREFIX,
@@ -55,7 +55,7 @@ def run_download_images(
 
     All configuration loaded from config.py:
     - source_table: DEFAULT_TARGET_TABLE
-    - gcs_bucket: DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME
+    - gcs_bucket: DE_DATALAKE_BUCKET_NAME
     - gcs_prefix: IMAGE_DOWNLOAD_GCS_PREFIX
     - max_workers: IMAGE_DOWNLOAD_MAX_WORKERS
     - pool_connections: IMAGE_DOWNLOAD_POOL_CONNECTIONS
@@ -67,7 +67,7 @@ def run_download_images(
         reprocess_failed: If True, reprocess failed downloads; if False, process pending
     """
     source_table = DEFAULT_TARGET_TABLE
-    gcs_bucket = DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME
+    gcs_bucket = DE_DATALAKE_BUCKET_NAME
     gcs_prefix = IMAGE_DOWNLOAD_GCS_PREFIX
     max_workers = IMAGE_DOWNLOAD_MAX_WORKERS
     pool_connections = IMAGE_DOWNLOAD_POOL_CONNECTIONS

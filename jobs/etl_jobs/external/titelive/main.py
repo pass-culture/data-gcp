@@ -191,7 +191,7 @@ def download_images(
 
     All configuration loaded from config.py:
     - source_table: DEFAULT_TARGET_TABLE
-    - gcs_bucket: DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME
+    - gcs_bucket: DE_DATALAKE_BUCKET_NAME
     - gcs_prefix: IMAGE_DOWNLOAD_GCS_PREFIX
     - max_workers: IMAGE_DOWNLOAD_MAX_WORKERS (default: (cpu_count - 1) * 5)
     - pool_connections: IMAGE_DOWNLOAD_POOL_CONNECTIONS (default: 10)

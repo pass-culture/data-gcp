@@ -264,6 +264,8 @@ class TestFetchBatchForImageDownload:
         mock_row = Mock()
         mock_row.ean = "123"
         mock_row.json_raw = '{"test": "data"}'
+        mock_row.old_recto_image_uuid = "recto-uuid-123"
+        mock_row.old_verso_image_uuid = "verso-uuid-123"
 
         mock_bigquery_client.query.return_value.result.return_value = [mock_row]
 
@@ -276,7 +278,14 @@ class TestFetchBatchForImageDownload:
         )
 
         # Assert
-        assert result == [{"ean": "123", "json_raw": '{"test": "data"}'}]
+        assert result == [
+            {
+                "ean": "123",
+                "json_raw": '{"test": "data"}',
+                "old_recto_image_uuid": "recto-uuid-123",
+                "old_verso_image_uuid": "verso-uuid-123",
+            }
+        ]
         query_call = mock_bigquery_client.query.call_args[0][0]
         assert "images_download_status IS NULL" in query_call
 
@@ -292,6 +301,8 @@ class TestFetchBatchForImageDownload:
         mock_row = Mock()
         mock_row.ean = "456"
         mock_row.json_raw = '{"test": "data2"}'
+        mock_row.old_recto_image_uuid = "recto-uuid-456"
+        mock_row.old_verso_image_uuid = "verso-uuid-456"
 
         mock_bigquery_client.query.return_value.result.return_value = [mock_row]
 
@@ -301,7 +312,14 @@ class TestFetchBatchForImageDownload:
         )
 
         # Assert
-        assert result == [{"ean": "456", "json_raw": '{"test": "data2"}'}]
+        assert result == [
+            {
+                "ean": "456",
+                "json_raw": '{"test": "data2"}',
+                "old_recto_image_uuid": "recto-uuid-456",
+                "old_verso_image_uuid": "verso-uuid-456",
+            }
+        ]
         query_call = mock_bigquery_client.query.call_args[0][0]
         assert "images_download_status = 'failed'" in query_call
 

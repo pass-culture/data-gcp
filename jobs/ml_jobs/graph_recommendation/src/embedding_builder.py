@@ -1,7 +1,9 @@
 import sys
 import time
+from datetime import timedelta
 from pathlib import Path
 
+import mlflow
 import pandas as pd
 import torch
 from loguru import logger
@@ -17,7 +19,7 @@ WALK_LENGTH = 14 * 2  # DEBUG: should try 14*4 for better results once metrics a
 CONTEXT_SIZE = 10
 WALKS_PER_NODE = 5
 NUM_NEGATIVE_SAMPLES = 5
-NUM_EPOCHS = 5  # DEBUG: should try 15 for better results once metrics are on
+NUM_EPOCHS = 15
 NUM_WORKERS = 12 if sys.platform == "linux" else 0
 BATCH_SIZE = 256
 LEARNING_RATE = 0.01
@@ -49,11 +51,92 @@ METAPATH = (
 )
 
 
+params = {
+    "embedding_dim": EMBEDDING_DIM,
+    "walk_length": WALK_LENGTH,
+    "context_size": CONTEXT_SIZE,
+    "walks_per_node": WALKS_PER_NODE,
+    "num_negative_samples": NUM_NEGATIVE_SAMPLES,
+    "num_epochs": NUM_EPOCHS,
+    "batch_size": BATCH_SIZE,
+    "learning_rate": LEARNING_RATE,
+    "metapath": METAPATH,
+}
+
+
+def _get_graph_statistics(graph_data: HeteroData) -> dict:
+    """
+    Build a dictionary of graph statistics to log to MLflow.
+
+    Returns:
+        dict: Dictionary containing graph statistics
+    """
+    graph_stats = {}
+
+    # Total nodes and edges
+    total_nodes = sum(
+        graph_data[node_type].num_nodes for node_type in graph_data.node_types
+    )
+    graph_stats["total_num_nodes"] = total_nodes
+
+    total_edges = sum(
+        graph_data[edge_type].num_edges for edge_type in graph_data.edge_types
+    )
+    graph_stats["total_num_edges"] = total_edges
+
+    # Node and edge type counts
+    graph_stats["num_node_types"] = len(graph_data.node_types)
+    graph_stats["num_edge_types"] = len(graph_data.edge_types)
+
+    # Num nodes per type
+    for node_type in graph_data.node_types:
+        graph_stats[f"num_nodes_{node_type}"] = graph_data[node_type].num_nodes
+
+    # Num edges per type
+    for edge_type in graph_data.edge_types:
+        # edge_type is a tuple like ('book', 'is_artist_id', 'artist_id')
+        edge_name = f"{edge_type[0]}__{edge_type[1]}__{edge_type[2]}"
+        graph_stats[f"num_edges_{edge_name}"] = graph_data[edge_type].num_edges
+
+    return graph_stats
+
+
+def _log_model_parameters(params: dict, graph_data: HeteroData) -> None:
+    """
+    Log model parameters to MLflow.
+
+    Args:
+        params (dict): Dictionary containing model parameters
+    """
+    metadata = params.copy()
+    graph_stats = _get_graph_statistics(graph_data)
+    _metapath = metadata.pop("metapath")
+    metadata["metapath_length"] = len(_metapath)
+    metadata.update(graph_stats)
+    mlflow.log_params(metadata)
+
+    # Log metapath as json artifact
+    metapath_dict = {
+        "metapath": [
+            {"step": i, "edge": f"{step[0]}->{step[1]}->{step[2]}"}
+            for i, step in enumerate(_metapath)
+        ]
+    }
+    mlflow.log_dict(metapath_dict, "config/metapath.json")
+
+    # Log metapath as text artifact
+    metapath_str = "\n".join(
+        f"{m['step']}: {m['edge']}" for m in metapath_dict["metapath"]
+    )
+    mlflow.log_text(metapath_str, "config/metapath.txt")
+
+
 def _train(
     model: torch.nn.Module,
     loader: DataLoader,
     optimizer: Optimizer,
     device,
+    epoch: int,
     *,
     profile: bool,
 ):
@@ -68,7 +151,7 @@ def _train(
     }
 
     batch_start = time.time()
-    for pos_rw, neg_rw in loader:
+    for batch_idx, (pos_rw, neg_rw) in enumerate(loader):
         if profile:
             data_time = time.time() - batch_start
             timings["data_load"] += data_time
@@ -101,7 +184,13 @@ def _train(
             timings["optimizer"] += time.time() - t0
             batch_start = time.time()
 
-        total_loss += loss.item()
+        batch_loss = loss.item()
+        total_loss += batch_loss
+
+        # Log batch loss every 100 batches to MLflow
+        if batch_idx % 100 == 0:
+            global_step = (epoch - 1) * len(loader) + batch_idx
+            mlflow.log_metric("batch_loss", batch_loss, step=global_step)
 
     if profile:
         total_time = sum(timings.values())
@@ -115,6 +204,7 @@ def _train(
 def train_metapath2vec(
     graph_data: HeteroData,
     checkpoint_path: Path = Path("checkpoints/best_metapath2vec_model.pt"),
+    params: dict = params,
     num_workers=NUM_WORKERS,
     profile=False,
 ) -> pd.DataFrame:
@@ -122,7 +212,7 @@ def train_metapath2vec(
     Train MetaPath2Vec and return embeddings with gtl_id.
 
     Returns:
-        DataFrame with ['item_id', 'gtl_id', 'embeddings']
+        DataFrame with ['item_id', 'gtl_id', EMBEDDING_COLUMN_NAME] columns
     """
     logger.info("Graph info:")
     logger.info(f"  Node types: {graph_data.node_types}")
@@ -131,19 +221,30 @@ def train_metapath2vec(
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logger.info(f"Using device: {device}")
 
+    # Retrieve parameters from params dict
+    embedding_dim = params["embedding_dim"]
+    metapath = params["metapath"]
+    walk_length = params["walk_length"]
+    context_size = params["context_size"]
+    walks_per_node = params["walks_per_node"]
+    num_negative_samples = params["num_negative_samples"]
+    batch_size = params["batch_size"]
+    learning_rate = params["learning_rate"]
+    num_epochs = params["num_epochs"]
+
     model = MetaPath2Vec(
         graph_data.edge_index_dict,
-        embedding_dim=EMBEDDING_DIM,
-        metapath=METAPATH,
-        walk_length=WALK_LENGTH,
-        context_size=CONTEXT_SIZE,
-        walks_per_node=WALKS_PER_NODE,
-        num_negative_samples=NUM_NEGATIVE_SAMPLES,
+        embedding_dim=embedding_dim,
+        metapath=metapath,
+        walk_length=walk_length,
+        context_size=context_size,
+        walks_per_node=walks_per_node,
+        num_negative_samples=num_negative_samples,
         sparse=True,
     ).to(device)
 
     loader = model.loader(
-        batch_size=BATCH_SIZE,
+        batch_size=batch_size,
         shuffle=True,
         num_workers=num_workers,
         pin_memory=True,
@@ -151,30 +252,57 @@ def train_metapath2vec(
     )
     optimizer = torch.optim.SparseAdam(
         list(model.parameters()),
-        lr=LEARNING_RATE,
+        lr=learning_rate,
     )
     scheduler = ReduceLROnPlateau(
         optimizer, mode="min", factor=0.5, patience=3, min_lr=1e-6
     )
+
+    # Log model parameters in mlflow
+    _log_model_parameters(params, graph_data)
 
     # Start training
     logger.info("Starting training...")
     checkpoint_dir = checkpoint_path.parent
     checkpoint_dir.mkdir(exist_ok=True)
     best_loss = float("inf")
-    for epoch in range(1, NUM_EPOCHS + 1):
+    training_start = time.time()
+
+    for epoch in range(1, num_epochs + 1):
         t0 = time.time()
-        loss = _train(model, loader, optimizer, device, profile=profile)
+        loss = _train(model, loader, optimizer, device, epoch, profile=profile)
+        epoch_time = time.time() - t0
+
         logger.info(
             f"Epoch: {epoch:03d}, Loss: {loss:.4f}, "
-            f"LR: {optimizer.param_groups[0]['lr']:.6f}, Time: {time.time() - t0:.2f}s"
+            f"LR: {optimizer.param_groups[0]['lr']:.6f}, Time: {epoch_time:.2f}s"
         )
+
+        # Log epoch metrics to MLflow
+        mlflow.log_metrics(
+            {
+                "epoch_loss": loss,
+                "learning_rate": optimizer.param_groups[0]["lr"],
+                "epoch_time": epoch_time,
+            },
+            step=epoch,
+        )
+
         scheduler.step(loss)
+
         if loss < best_loss:
             best_loss = loss
             torch.save(model.state_dict(), checkpoint_path)
             logger.info(f"Saved best model with loss: {loss:.4f}")
-    logger.info("Training completed.")
+            mlflow.log_metric("best_loss", best_loss, step=epoch)
+
+    # Log total training time and final best loss
+    total_training_time = time.time() - training_start
+    mlflow.log_metric("total_training_time", total_training_time)
+    mlflow.log_metric("final_best_loss", best_loss)
+
+    time_formatted = str(timedelta(seconds=int(total_training_time)))
+    logger.info(f"Training completed in {time_formatted}")
 
     # Extract and save embeddings for book nodes
     logger.info("Extracting book embeddings...")

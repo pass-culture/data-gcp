@@ -74,9 +74,7 @@ def run_incremental(
     logger.info("Step 1: Querying last sync dates from provider event table")
     last_sync_dates = {}
     for base in bases:
-        last_sync_date = get_last_sync_date(
-            bq_client, provider_event_table, provider_id, base
-        )
+        last_sync_date = get_last_sync_date(bq_client, provider_event_table, base)
         if last_sync_date:
             last_sync_dates[base] = datetime.strptime(last_sync_date, "%Y-%m-%d").date()
         else:

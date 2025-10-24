@@ -5,6 +5,7 @@ from typing import Literal
 import pandas as pd
 from google.cloud import bigquery
 
+from config import PRODUCT_MEDIATION_TABLE, PRODUCT_TABLE, TITELIVE_PROVIDER_IDS
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -242,20 +243,20 @@ def count_failed_eans(client: bigquery.Client, destination_table: str) -> int:
 def get_last_sync_date(
     client: bigquery.Client,
     provider_event_table: str,
-    provider_id: str,
     base: str,
+    provider_ids: list[int] = TITELIVE_PROVIDER_IDS,
 ) -> str | None:
     """
     Get the last sync date for a given base from provider event table.
 
     Queries the provider event table to find the most recent SyncEnd event
-    for the specified provider and base.
+    across all specified Titelive-related providers for the given base.
 
     Args:
         client: BigQuery client
         provider_event_table: Full provider event table ID (project.dataset.table)
-        provider_id: Provider ID (e.g., "1082" for Titelive)
         base: Product base (e.g., "paper" or "music")
+        provider_ids: List of provider IDs to query (defaults to TITELIVE_PROVIDER_IDS)
 
     Returns:
         Last sync date as string (YYYY-MM-DD format), or None if no sync found
@@ -263,18 +264,22 @@ def get_last_sync_date(
     Raises:
         google.cloud.exceptions.GoogleCloudError: If query fails
     """
+    # Convert provider IDs list to SQL IN clause
+    provider_ids_str = ",".join(map(str, provider_ids))
 
     query = f"""
         SELECT
             MAX(date) AS last_sync_date
         FROM `{provider_event_table}`
         WHERE
-            providerId = '{provider_id}'
+            CAST(providerId AS INT64) IN ({provider_ids_str})
             AND payload = '{base}'
             AND type = 'SyncEnd'
     """
 
-    logger.info(f"Querying last sync date for base={base}, provider={provider_id}")
+    logger.info(
+        f"Querying last sync date for base={base}, " f"providers={provider_ids_str}"
+    )
     query_job = client.query(query)
     result = query_job.result()
     row = next(iter(result), None)
@@ -386,7 +391,8 @@ def fetch_batch_for_image_download(
         reprocess_failed: If True, fetch failed downloads; if False, fetch pending
 
     Returns:
-        List of dicts with keys: ean, json_raw
+        List of dicts with keys: ean, json_raw, old_recto_image_uuid,
+        old_verso_image_uuid
 
     Raises:
         google.cloud.exceptions.GoogleCloudError: If query fails
@@ -397,13 +403,36 @@ def fetch_batch_for_image_download(
         else "images_download_status IS NULL"
     )
 
+    # Convert provider IDs list to SQL IN clause
+    provider_ids_str = ",".join(map(str, TITELIVE_PROVIDER_IDS))
+
     query = f"""
-        SELECT ean, json_raw
-        FROM `{destination_table}`
-        WHERE batch_number = {batch_number}
-        AND status = 'processed'
-        AND {status_filter}
-        ORDER BY ean
+        SELECT
+            dest.ean,
+            dest.json_raw,
+            MAX(IF(
+                pm.imagetype = 'RECTO',
+                pm.uuid,
+                NULL
+            )) as old_recto_image_uuid,
+            MAX(IF(
+                pm.imagetype = 'VERSO',
+                pm.uuid,
+                NULL
+            )) as old_verso_image_uuid
+        FROM `{destination_table}` dest
+        LEFT JOIN `{PRODUCT_TABLE}` p
+            ON dest.ean = p.ean
+        LEFT JOIN `{PRODUCT_MEDIATION_TABLE}` pm
+            ON p.id = pm.productid
+            AND p.lastproviderid = pm.lastproviderid
+        WHERE TRUE
+            AND dest.batch_number = {batch_number}
+            AND p.lastproviderid IN ({provider_ids_str})
+            AND dest.status = 'processed'
+            AND {status_filter}
+        GROUP BY dest.ean, dest.json_raw
+        ORDER BY dest.ean
     """
 
     mode_label = "failed" if reprocess_failed else "pending"
@@ -414,7 +443,15 @@ def fetch_batch_for_image_download(
     query_job = client.query(query)
     results = query_job.result()
 
-    rows = [{"ean": row.ean, "json_raw": row.json_raw} for row in results]
+    rows = [
+        {
+            "ean": row.ean,
+            "json_raw": row.json_raw,
+            "old_recto_image_uuid": row.old_recto_image_uuid,
+            "old_verso_image_uuid": row.old_verso_image_uuid,
+        }
+        for row in results
+    ]
     logger.info(
         f"Fetched {len(rows)} {mode_label} EANs "
         f"from batch {batch_number} for image download"

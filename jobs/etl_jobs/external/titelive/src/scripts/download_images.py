@@ -1,7 +1,6 @@
 """Mode 4: Download images from BigQuery table URLs and upload to GCS."""
 
 import json
-import uuid
 from datetime import datetime
 
 from google.cloud import bigquery, storage
@@ -24,7 +23,11 @@ from src.utils.bigquery import (
     get_last_batch_number,
     update_image_download_results,
 )
-from src.utils.image_download import _get_session, batch_download_and_upload
+from src.utils.image_download import (
+    _get_session,
+    batch_download_and_upload,
+    calculate_url_uuid,
+)
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -252,6 +255,8 @@ def _process_batch_images(
     for row in rows:
         ean = row["ean"]
         json_raw = row["json_raw"]
+        old_recto_uuid = row.get("old_recto_image_uuid")
+        old_verso_uuid = row.get("old_verso_image_uuid")
 
         # Parse JSON to extract image URLs
         try:
@@ -289,9 +294,15 @@ def _process_batch_images(
             recto_uuid = None
             verso_uuid = None
 
-            # Process recto
+            # Process recto with hash comparison
             is_placeholder, image_added, recto_uuid = _process_image_url(
-                recto_url, "recto", gcs_bucket, gcs_prefix, download_tasks, ean_images
+                recto_url,
+                "recto",
+                gcs_bucket,
+                gcs_prefix,
+                download_tasks,
+                ean_images,
+                old_recto_uuid,
             )
             if is_placeholder:
                 ean_has_placeholder = True
@@ -299,9 +310,15 @@ def _process_batch_images(
             if image_added:
                 ean_has_real_image = True
 
-            # Process verso
+            # Process verso with hash comparison
             is_placeholder, image_added, verso_uuid = _process_image_url(
-                verso_url, "verso", gcs_bucket, gcs_prefix, download_tasks, ean_images
+                verso_url,
+                "verso",
+                gcs_bucket,
+                gcs_prefix,
+                download_tasks,
+                ean_images,
+                old_verso_uuid,
             )
             if is_placeholder:
                 ean_has_placeholder = True
@@ -392,11 +409,12 @@ def _process_batch_images(
             continue
 
         if not images:
-            # No images found for this EAN - mark as processed
+            # No images to download (all skipped due to unchanged URLs or no URLs)
+            # Mark as 'no_change' - URLs haven't changed
             results.append(
                 {
                     "ean": ean,
-                    "images_download_status": "processed",
+                    "images_download_status": "no_change",
                     "images_download_processed_at": current_time,
                     "recto_image_uuid": recto_uuid,
                     "verso_image_uuid": verso_uuid,
@@ -438,10 +456,15 @@ def _process_batch_images(
         1 for r in results if r["images_download_status"] == "processed"
     )
     failed_count = sum(1 for r in results if r["images_download_status"] == "failed")
+    no_change_count = sum(
+        1 for r in results if r["images_download_status"] == "no_change"
+    )
 
     logger.info(
-        f"Batch complete: {processed_count} EANs processed "
-        f"({len(no_image_eans)} with placeholders only), {failed_count} failed"
+        f"Batch complete: {processed_count} EANs processed, "
+        f"{no_change_count} no change, "
+        f"{failed_count} failed "
+        f"({len(no_image_eans)} with placeholders only)"
     )
 
     return results
@@ -454,11 +477,17 @@ def _process_image_url(
     gcs_prefix: str,
     download_tasks: list,
     ean_images: list,
+    old_uuid: str | None = None,
 ) -> tuple[bool, bool, str | None]:
     """
-    Process a single image URL (recto or verso) and add to download tasks.
+    Process a single image URL (recto or verso) and add to download tasks if URL changed
 
     Skips placeholder "no_image" URLs (e.g., https://images.epagine.fr/no_image_musique.png)
+
+    Uses UUID5 hash-based change detection:
+    - Calculates new UUID from URL (deterministic)
+    - Compares with old UUID
+    - Only downloads if UUID changed
 
     Args:
         image_url: URL of the image to download (None if not present)
@@ -467,35 +496,57 @@ def _process_image_url(
         gcs_prefix: GCS path prefix
         download_tasks: List to append download task to (modified in place)
         ean_images: List to append image info to (modified in place)
+        old_uuid: Previous UUID from product_mediation (None if first time)
 
     Returns:
         Tuple of (is_placeholder: bool, image_added: bool, uuid: str | None)
         - is_placeholder: True if a "no_image" URL was found
         - image_added: True if a real image was added to download tasks
-        - uuid: UUID of the image if added, None otherwise
+        - uuid: UUID5 of the image URL (None if no URL)
     """
     if image_url:
         # Check if placeholder "no_image" URL
         if "no_image" in image_url.lower():
-            logger.debug(f"Skipping placeholder no_image URL: {image_url}")
+            logger.info(f"Skipping placeholder no_image URL: {image_url}")
             return (
                 True,
                 False,
                 None,
             )  # is_placeholder=True, image_added=False, uuid=None
 
-        # Real image - add to download tasks
-        image_id = str(uuid.uuid4())
-        image_extension = _extract_extension(image_url)
-        gcs_path = f"gs://{gcs_bucket}/{gcs_prefix}/{image_id}{image_extension}"
+        # Calculate deterministic UUID5 from URL
+        new_uuid = calculate_url_uuid(image_url)
 
-        download_tasks.append((image_url, gcs_path))
-        ean_images.append({"url": image_url, "gcs_path": gcs_path, "type": image_type})
-        return (
-            False,
-            True,
-            image_id,
-        )  # is_placeholder=False, image_added=True, uuid=image_id
+        # Compare with old UUID - only download if changed
+        if new_uuid != old_uuid:
+            # URL changed - need to download
+            logger.info(
+                f"Image URL changed ({image_type}): "
+                f"old_uuid={old_uuid}, new_uuid={new_uuid}, url={image_url}"
+            )
+            image_extension = _extract_extension(image_url)
+            gcs_path = f"gs://{gcs_bucket}/{gcs_prefix}/{new_uuid}{image_extension}"
+
+            download_tasks.append((image_url, gcs_path))
+            ean_images.append(
+                {"url": image_url, "gcs_path": gcs_path, "type": image_type}
+            )
+            return (
+                False,
+                True,
+                new_uuid,
+            )  # is_placeholder=False, image_added=True, uuid=new_uuid
+        else:
+            # URL unchanged - skip download but return UUID
+            logger.info(
+                f"Image URL unchanged ({image_type}): "
+                f"uuid={new_uuid}, url={image_url}"
+            )
+            return (
+                False,
+                False,
+                new_uuid,
+            )  # is_placeholder=False, image_added=False, uuid=new_uuid
 
     return (False, False, None)  # No URL present
 

@@ -1,6 +1,7 @@
 """Utilities for downloading images from URLs and uploading
 to GCS using ThreadPoolExecutor."""
 
+import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
@@ -12,6 +13,22 @@ from urllib3.util.retry import Retry
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
+
+
+def calculate_url_uuid(url: str) -> str:
+    """
+    Calculate deterministic UUID5 hash for an image URL.
+
+    Uses UUID5 with NAMESPACE_URL to generate a deterministic UUID
+    based on the URL. Same URL always produces same UUID.
+
+    Args:
+        url: Image URL to hash
+
+    Returns:
+        UUID5 as string (without hyphens for GCS filename compatibility)
+    """
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, url))
 
 
 def _get_session(

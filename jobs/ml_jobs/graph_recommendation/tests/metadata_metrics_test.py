@@ -49,7 +49,7 @@ def test_get_gtl_walk_dist():
 
 
 def test_get_gtl_walk_score():
-    assert pytest.approx(get_gtl_walk_score("01020301", "01020301"), 1e-3) == 1.0
+    assert pytest.approx(get_gtl_walk_score("01020301", "01020301"), 1e-3) == 1
     assert pytest.approx(get_gtl_walk_score("01020100", "01020100"), 1e-3) == 1 / 2
     assert pytest.approx(get_gtl_walk_score("01020304", "01020300"), 1e-3) == 1 / 2
     assert pytest.approx(get_gtl_walk_score("01020100", "01020101"), 1e-3) == 1 / 2
@@ -57,7 +57,7 @@ def test_get_gtl_walk_score():
     assert pytest.approx(get_gtl_walk_score("01020301", "01020401"), 1e-3) == 1 / 3
     assert pytest.approx(get_gtl_walk_score("01000000", "01103020"), 1e-3) == 1 / 4
     assert pytest.approx(get_gtl_walk_score("01203020", "01103020"), 1e-3) == 1 / 4
-    assert pytest.approx(get_gtl_walk_score("01000000", "02000000"), 1e-3) == 0.0
+    assert pytest.approx(get_gtl_walk_score("01000000", "02000000"), 1e-3) == 0
 
 
 def test_gtl_retrieval_score_independent_gtls():
@@ -67,23 +67,23 @@ def test_gtl_retrieval_score_independent_gtls():
     When two GTLs have completely different hierarchies (different first level),
     they share nothing in common, so the score should be 0.
     """
-    assert pytest.approx(get_gtl_retrieval_score("01000000", "02000000"), 1e-3) == 0.0
+    assert pytest.approx(get_gtl_retrieval_score("01000000", "02000000"), 1e-3) == 0
 
 
 def test_gtl_retrieval_score_identical_gtls():
     """
     Test: Identical GTLs should return maximum score regardless of depth.
 
-    When query and result are identical, all query levels match, so score = 1.0
+    When query and result are identical, all query levels match, so score = 1
     """
     # Depth 4 query with identical result
-    assert pytest.approx(get_gtl_retrieval_score("01020301", "01020301"), 1e-3) == 1.0
+    assert pytest.approx(get_gtl_retrieval_score("01020301", "01020301"), 1e-3) == 1
 
     # Depth 3 query with identical result
-    assert pytest.approx(get_gtl_retrieval_score("01020100", "01020100"), 1e-3) == 1.0
+    assert pytest.approx(get_gtl_retrieval_score("01020100", "01020100"), 1e-3) == 1
 
     # Depth 1 query with identical result
-    assert pytest.approx(get_gtl_retrieval_score("01000000", "01000000"), 1e-3) == 1.0
+    assert pytest.approx(get_gtl_retrieval_score("01000000", "01000000"), 1e-3) == 1
 
 
 def test_gtl_retrieval_score_descendant_results():
@@ -94,13 +94,13 @@ def test_gtl_retrieval_score_descendant_results():
     all query requirements are satisfied, so score = 1.0
     """
     # Depth 1 query, result has 3 additional deeper levels
-    assert pytest.approx(get_gtl_retrieval_score("01000000", "01103020"), 1e-3) == 1.0
+    assert pytest.approx(get_gtl_retrieval_score("01000000", "01103020"), 1e-3) == 1
 
     # Depth 3 query, result has 1 additional deeper level
-    assert pytest.approx(get_gtl_retrieval_score("01020100", "01020101"), 1e-3) == 1.0
+    assert pytest.approx(get_gtl_retrieval_score("01020100", "01020101"), 1e-3) == 1
 
     # Depth 2 query, result has 2 additional deeper levels
-    assert pytest.approx(get_gtl_retrieval_score("01020000", "01020304"), 1e-3) == 1.0
+    assert pytest.approx(get_gtl_retrieval_score("01020000", "01020304"), 1e-3) == 1
 
 
 def test_gtl_retrieval_score_deeper_queries_score_higher():
@@ -162,7 +162,7 @@ def test_gtl_retrieval_score_various_depths():
     """
     # Shallow query (depth 1) with partial match
     score_depth_1 = get_gtl_retrieval_score("01000000", "01020000")
-    assert pytest.approx(score_depth_1, 1e-3) == 1.0  # Result is descendant
+    assert pytest.approx(score_depth_1, 1e-3) == 1  # Result is descendant
 
     # Medium query (depth 2) with 1 level matching
     score_depth_2 = get_gtl_retrieval_score("01020000", "01030000")

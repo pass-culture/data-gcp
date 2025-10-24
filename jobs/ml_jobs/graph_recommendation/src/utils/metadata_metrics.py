@@ -11,7 +11,7 @@ def _validate_gtl_id(gtl_id: str):
         raise ValueError("GTL ID must be 8 characters long")
     if not gtl_id.isdigit():
         raise ValueError("GTL ID must contain only digits")
-    if gtl_id[:2] == "00":
+    if gtl_id.startswith("00"):
         raise ValueError("GTL ID must not start with '00'")
 
     # Ensure that once a "00" pair appears, all subsequent pairs are also "00"

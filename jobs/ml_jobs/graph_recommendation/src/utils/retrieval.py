@@ -25,7 +25,8 @@ NUM_PARTITIONS = 128
 NUM_SUB_VECTORS = 16
 INDEX_TYPE = "IVF_PQ"
 EMBEDDING_METRIC = "cosine"
-LANCEDB_PATH = DATA_DIR / "metadata/vector"
+LANCEDB_PATH = f"{DATA_DIR}/metadata/vector"
+TABLE_NAME = "embedding_table"
 
 
 def create_book_model(embedding_dim: int = EMBEDDING_DIM):
@@ -131,9 +132,9 @@ def load_metadata_table(
     columns: list[str] | None = None,
 ) -> pd.DataFrame:
     """Load metadata from parquet file(s) with optional filtering."""
-    import pandas as pd
 
     logger.info(f"Loading metadata from: {parquet_path}")
+    parquet_path = str(parquet_path)
 
     # Get file list
     is_glob = "*" in parquet_path or "?" in parquet_path

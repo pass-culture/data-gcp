@@ -87,9 +87,9 @@ with
                 dimension_name,
                 dimension_value,
                 '{{ kpi.name }}' as kpi_name,
-                sum({{ kpi.value_expr }}) as numerator,
+                coalesce(sum({{ kpi.value_expr }}), 0) as numerator,
                 cast(1 as numeric) as denominator,
-                safe_divide(sum({{ kpi.value_expr }}), 1) as kpi
+                coalesce(safe_divide(sum({{ kpi.value_expr }}), 1), 0) as kpi
             from dimension_cross
             group by partition_month, updated_at, dimension_name, dimension_value
             {% if not loop.last %}
@@ -103,10 +103,11 @@ with
             dimension_name,
             dimension_value,
             "pct_montant_contribution" as kpi_name,
-            sum(total_contribution_amount) as numerator,
-            sum(total_revenue_amount) as denominator,
-            safe_divide(
-                sum(total_contribution_amount), sum(total_revenue_amount)
+            coalesce(sum(total_contribution_amount), 0) as numerator,
+            coalesce(sum(total_revenue_amount), 0) as denominator,
+            coalesce(
+                safe_divide(sum(total_contribution_amount), sum(total_revenue_amount)),
+                0
             ) as kpi
         from dimension_cross
         group by partition_month, updated_at, dimension_name, dimension_value

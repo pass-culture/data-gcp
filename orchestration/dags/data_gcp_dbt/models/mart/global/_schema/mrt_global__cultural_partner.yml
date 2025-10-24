@@ -92,3 +92,7 @@ models:
         description: "{{ doc('column__total_real_revenue') }}"
       - name: partner_status
         description: "{{ doc('column__partner_status') }}"
+      - name: partner_epci
+        description: "{{ doc('column__partner_epci') }}"
+      - name: partner_city
+        description: "{{ doc('column__partner_city') }}"

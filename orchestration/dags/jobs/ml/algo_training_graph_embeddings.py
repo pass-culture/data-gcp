@@ -85,6 +85,7 @@ with DAG(
             default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
         ),
         "gpu_count": Param(default=1, enum=INSTANCES_TYPES["gpu"]["count"]),
+        "experiment_name": Param(default="", type="string"),
         "run_name": Param(default="default", type=["string", "null"]),
         "train_only_on_10k_rows": Param(default=True, type="boolean"),
     },
@@ -131,11 +132,13 @@ with DAG(
         task_id="train",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
-        command="python -m scripts.cli train-metapath2vec "
+        command="cli train-metapath2vec "
+        "{{ params.experiment_name }} "
         f"{STORAGE_BASE_PATH}/raw_input "
         f"--output-embeddings {STORAGE_BASE_PATH}/{EMBEDDINGS_FILENAME} "
         "{% if params['train_only_on_10k_rows'] %} --nrows 10000 {% endif %}",
         deferrable=True,
+        do_xcom_push=True,
     )
 
     upload_embeddings_to_bigquery = GCSToBigQueryOperator(
@@ -154,6 +157,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
         command="cli evaluate-metapath2vec "
+        "{{ ti.xcom_pull(task_ids='train') }} "
         f"{STORAGE_BASE_PATH}/raw_input/data-*.parquet "  # TO DO: accept folder
         f"{STORAGE_BASE_PATH}/{EMBEDDINGS_FILENAME} "
         f"{STORAGE_BASE_PATH}/evaluation_metrics.csv "

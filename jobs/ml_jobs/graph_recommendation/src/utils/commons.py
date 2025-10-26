@@ -1,5 +1,7 @@
 import json
 import os
+from contextlib import contextmanager
+from functools import wraps
 
 import mlflow
 from google.auth import default
@@ -137,3 +139,49 @@ def get_mlflow_experiment(experiment_name: str):
         mlflow.create_experiment(name=experiment_name)
         experiment = mlflow.get_experiment_by_name(experiment_name)
     return experiment
+
+
+@contextmanager
+def optional_mlflow_logging(enabled: bool = True):  # noqa: FBT001
+    """Context manager to conditionally enable/disable MLflow logging."""
+    if not enabled:
+        logger.warning(
+            "MLflow logging is DISABLED - all mlflow.log_* calls will be no-ops"
+        )
+        # Get all log_* methods from mlflow
+        log_methods = [attr for attr in dir(mlflow) if attr.startswith("log_")]
+
+        # Store original functions and replace with no-ops
+        originals = {}
+        for method_name in log_methods:
+            method = getattr(mlflow, method_name)
+            if callable(method):
+                originals[method_name] = method
+                setattr(mlflow, method_name, lambda *args, **kwargs: None)
+
+        # Run function withou
+        try:
+            yield
+        finally:
+            # Restore original functions
+            for method_name, original_method in originals.items():
+                setattr(mlflow, method_name, original_method)
+            logger.info("MLflow logging was disabled and is now re-enabled")
+    else:
+        yield
+
+
+def conditional_mlflow(log_mlflow_arg_name: str = "log_mlflow"):
+    """Decorator factory to conditionally enable MLflow logging."""
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            log_mlflow = kwargs.pop(log_mlflow_arg_name, True)
+
+            with optional_mlflow_logging(log_mlflow):
+                return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

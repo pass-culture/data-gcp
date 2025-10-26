@@ -13,6 +13,8 @@ from torch.utils.data import DataLoader
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import MetaPath2Vec
 
+from src.utils.commons import conditional_mlflow
+
 EMBEDDING_COLUMN_NAME = "embeddings"
 EMBEDDING_DIM: int = 32  # DEBUG: should try 128 for better results once metrics are on
 WALK_LENGTH = 14 * 2  # DEBUG: should try 14*4 for better results once metrics are on
@@ -131,6 +133,7 @@ def _log_model_parameters(params: dict, graph_data: HeteroData) -> None:
     mlflow.log_text(metapath_str, "config/metapath.txt")
 
 
+@conditional_mlflow()
 def _train(
     model: torch.nn.Module,
     loader: DataLoader,
@@ -201,6 +204,7 @@ def _train(
     return total_loss / len(loader)
 
 
+@conditional_mlflow()
 def train_metapath2vec(
     graph_data: HeteroData,
     checkpoint_path: Path = Path("checkpoints/best_metapath2vec_model.pt"),

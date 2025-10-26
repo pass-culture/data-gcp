@@ -199,7 +199,7 @@ def train_metapath2vec_command(
             graph_summary.to_csv(local_graph_path, index=False)
             mlflow.log_artifact(str(local_graph_path), artifact_path=None)
 
-        # Train model
+        # Train model with loss logging to mlflow
         embeddings_df = train_metapath2vec(
             graph_data=graph_data,
             num_workers=num_workers,
@@ -271,41 +271,26 @@ def evaluate_metapath2vec_command(
             eval_config=eval_config,
         )
 
-        # # Log metrics individually on MLflow
-        # for _, row in metrics_df.iterrows():
-        #     score_col = row["score_col"]
-        #     k = row["k"]
-        #     threshold = row["threshold"]
-
-        #     # Log threshold-dependent metrics (recall and precision)
-        #     mlflow.log_metric(f"{score_col}_recall_k{k}_t{threshold}", row["recall"])
-        #     mlflow.log_metric(
-        #         f"{score_col}_precision_k{k}_t{threshold}", row["precision"]
-        #     )
-
-        # # Log ndcg separately (only once per score_col and k combination)
-        # ndcg_metrics = metrics_df.drop_duplicates(subset=["score_col", "k"])
-        # for _, row in ndcg_metrics.iterrows():
-        #     mlflow.log_metric(f"{row['score_col']}_ndcg_k{row['k']}", row["ndcg"])
-
-        # Log metrics individually on MLflow
+        # Log metrics atk with k as x-axis
         # Log threshold-dependent metrics (recall and precision)
         for _, row in metrics_df.iterrows():
-            metric_suffix = f"__thresh_{row['threshold']}__{row['score_col']}"
+            metric_suffix = f"thresh_{row['threshold']}__{row['score_col']}"
             mlflow.log_metric(
-                f"recall_@k{metric_suffix}", row["recall"], step=int(row["k"])
+                f"recall_at_k__{metric_suffix}", row["recall"], step=int(row["k"])
             )
             mlflow.log_metric(
-                f"precision_@k{metric_suffix}", row["precision"], step=int(row["k"])
+                f"precision_at_k__{metric_suffix}",
+                row["precision"],
+                step=int(row["k"]),
             )
 
-        # Log NDCG as a curve with k as x-axis (one curve per score_col)
+        # Log NDCG
         ndcg_metrics = metrics_df.drop_duplicates(subset=["score_col", "k"])
         for _, row in ndcg_metrics.iterrows():
             mlflow.log_metric(
-                f"ndcg_@k__{row['score_col']}",
+                f"ndcg_at_k__{row['score_col']}",
                 row["ndcg"],
-                step=int(row["k"]),  # k becomes the x-coordinate
+                step=int(row["k"]),
             )
 
         # Log metrics artifact for easy lookup

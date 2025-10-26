@@ -82,11 +82,6 @@ def _mock_training_components(
         patch("src.embedding_builder.ReduceLROnPlateau"),
         patch("src.embedding_builder._train") as mock_train,
         patch("src.embedding_builder.logger"),
-        patch("src.embedding_builder.mlflow.log_params"),
-        patch("src.embedding_builder.mlflow.log_metric"),
-        patch("src.embedding_builder.mlflow.log_metrics"),
-        patch("src.embedding_builder.mlflow.log_dict"),
-        patch("src.embedding_builder.mlflow.log_text"),
         patch("pathlib.Path.mkdir"),
     ):
         # Set up minimal model mock
@@ -149,12 +144,16 @@ def test_train_function_basic_execution() -> None:
 
     epoch = 1
 
-    # Mock MLflow to prevent logging
-    with patch("src.embedding_builder.mlflow.log_metric"):
-        # Execute training function
-        loss = _train(
-            mock_model, mock_loader, mock_optimizer, device, epoch, profile=False
-        )
+    # Execute training function
+    loss = _train(
+        mock_model,
+        mock_loader,
+        mock_optimizer,
+        device,
+        epoch,
+        profile=False,
+        log_mlflow=False,
+    )
 
     # Verify basic operations were called
     mock_model.train.assert_called_once()
@@ -172,7 +171,9 @@ def test_train_metapath2vec_with_minimal_mocking() -> None:
         _mock_training_components(graph_data),
         patch("src.embedding_builder.NUM_EPOCHS", 1),
     ):
-        result = train_metapath2vec(graph_data=graph_data, num_workers=0)
+        result = train_metapath2vec(
+            graph_data=graph_data, num_workers=0, log_mlflow=False
+        )
 
         # Verify we get a DataFrame result
         assert isinstance(result, pd.DataFrame)
@@ -197,6 +198,7 @@ def test_train_metapath2vec_parameter_acceptance() -> None:
             checkpoint_path=Path("test.pt"),
             num_workers=2,
             profile=False,
+            log_mlflow=False,
         )
 
         assert isinstance(result, pd.DataFrame)

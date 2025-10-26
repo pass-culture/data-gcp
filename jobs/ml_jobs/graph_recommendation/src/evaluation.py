@@ -10,6 +10,7 @@ import pandas as pd
 from google.cloud import storage
 from loguru import logger
 
+from src.utils.commons import conditional_mlflow
 from src.utils.recommendation_metrics import compute_evaluation_metrics
 from src.utils.retrieval import (
     TABLE_NAME,
@@ -34,6 +35,7 @@ DEFAULT_EVAL_CONFIG = {
 }
 
 
+@conditional_mlflow()
 def log_metrics_at_k_csv(
     metrics_df: pd.DataFrame, order_by: list[str] | None = None
 ) -> None:

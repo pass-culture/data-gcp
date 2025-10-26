@@ -1,4 +1,5 @@
 import glob
+import os
 
 import gcsfs
 import lancedb
@@ -121,21 +122,30 @@ def load_and_index_embeddings(
 
 
 def _get_matching_file_paths(parquet_path: str) -> list[str]:
-    """Get list of matching file paths from GCS or local filesystem."""
-    is_glob = "*" in parquet_path or "?" in parquet_path
-
+    """Get list of Parquet file paths from GCS or local filesystem folder."""
     if is_bucket_path(parquet_path):
         fs = gcsfs.GCSFileSystem()
-        if is_glob:
-            matching_files = fs.glob(parquet_path)
-            matching_files = [
-                f"{BUCKET_PREFIX}{f}" if not is_bucket_path(f) else f
-                for f in matching_files
-            ]
-        else:
-            matching_files = [parquet_path]
+        # Ensure folder path ends with a slash
+        if not parquet_path.endswith("/"):
+            parquet_path += "/"
+        # List all parquet files in the folder
+        matching_files = fs.ls(parquet_path)
+        # Filter only .parquet files
+        matching_files = [f for f in matching_files if f.endswith(".parquet")]
+        # Prepend bucket prefix if missing
+        matching_files = [
+            f"{BUCKET_PREFIX}{f}" if not is_bucket_path(f) else f
+            for f in matching_files
+        ]
     else:
-        matching_files = glob.glob(parquet_path) if is_glob else [parquet_path]
+        # Local folder or glob
+        if os.path.isdir(parquet_path):
+            matching_files = glob.glob(os.path.join(parquet_path, "*.parquet"))
+        else:
+            # Single file or glob pattern
+            matching_files = (
+                glob.glob(parquet_path) if "*" in parquet_path else [parquet_path]
+            )
 
     return matching_files
 

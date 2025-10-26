@@ -134,7 +134,7 @@ with DAG(
         base_dir=BASE_DIR,
         command="cli train-metapath2vec "
         "{{ params.experiment_name }} "
-        f"{STORAGE_BASE_PATH}/raw_input "
+        f"{STORAGE_BASE_PATH}/raw_input/ "
         f"--output-embeddings {STORAGE_BASE_PATH}/{EMBEDDINGS_FILENAME} "
         "{% if params['train_only_on_10k_rows'] %} --nrows 10000 {% endif %}",
         deferrable=True,
@@ -158,10 +158,10 @@ with DAG(
         base_dir=BASE_DIR,
         command="cli evaluate-metapath2vec "
         "{{ ti.xcom_pull(task_ids='train') }} "
-        f"{STORAGE_BASE_PATH}/raw_input/data-*.parquet "  # TO DO: accept folder
+        f"{STORAGE_BASE_PATH}/raw_input/ "
         f"{STORAGE_BASE_PATH}/{EMBEDDINGS_FILENAME} "
         f"{STORAGE_BASE_PATH}/evaluation_metrics.csv "
-        f"--output-scores-path {STORAGE_BASE_PATH}/pairwise_scores.parquet",
+        f"--output-scores-path {STORAGE_BASE_PATH}/evaluation_scores_details.parquet",
         deferrable=True,
     )
 

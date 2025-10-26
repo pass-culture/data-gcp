@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import tempfile
+from pathlib import Path
 
 import mlflow
 import torch
@@ -10,12 +12,17 @@ import typer
 
 from src.constants import RESULTS_DIR
 from src.embedding_builder import train_metapath2vec
-from src.evaluation import DEFAULT_EVAL_CONFIG, evaluate_embeddings
+from src.evaluation import (
+    DEFAULT_EVAL_CONFIG,
+    evaluate_embeddings,
+    log_metrics_at_k_csv,
+)
 from src.graph_builder import (
     build_book_metadata_graph,
 )
 from src.heterograph_builder import build_book_metadata_heterograph
 from src.utils.commons import connect_remote_mlflow, get_mlflow_experiment
+from src.utils.graph_stats import get_graph_analysis
 
 APP_DESCRIPTION = (
     "Utilities to build PyTorch Geometric graphs for book recommendations."
@@ -73,9 +80,11 @@ RAW_DATA_PATH_ARGUMENT = typer.Argument(
     help="Path to raw metadata parquet (can be glob pattern like data-*.parquet).",
 )
 
-EMBEDDING_PATH_ARGUMENT = typer.Argument(
+EMBEDDING_INPUT_ARGUMENT = typer.Argument(
     ...,
-    help="Path to embeddings parquet file.",
+    help="Where to save the node embeddings as a parquet file. "
+    "Can be a local path or a GCS path (gs://...).",
+    dir_okay=False,
 )
 
 METRICS_OUTPUT_ARGUMENT = typer.Argument(
@@ -84,7 +93,7 @@ METRICS_OUTPUT_ARGUMENT = typer.Argument(
     dir_okay=False,
 )
 
-PAIRWISE_SCORE_OUTPUT_OPTION = typer.Option(
+DETAILED_SCORE_OUTPUT_OPTION = typer.Option(
     None,
     "--output-scores-path",
     help="Where to save the pairwise scores parquet file.",
@@ -95,7 +104,7 @@ EVAL_CONFIG_OPTION = typer.Option(
     None,
     "--config",
     "-c",
-    help="Path to JSON config file to override default evaluation parameters.",
+    help="JSON string to override default evaluation parameters.",
 )
 
 
@@ -165,24 +174,32 @@ def train_metapath2vec_command(
     connect_remote_mlflow()
     experiment = get_mlflow_experiment(experiment_name)
 
-    # Build graph
-    graph_data = build_book_metadata_heterograph(
-        parquet_path,
-        nrows=nrows,
-    )
-
     # Start MLflow run
     with mlflow.start_run(experiment_id=experiment.experiment_id) as run:
-        # Log parameters
-        mlflow.log_param("parquet_path", parquet_path)
-        mlflow.log_param("num_workers", num_workers)
-        mlflow.log_param("nrows", nrows)
-        mlflow.log_param("num_nodes", graph_data.num_nodes)
-        mlflow.log_param("num_edges", graph_data.num_edges)
-        mlflow.log_param("num_books", len(graph_data.book_ids))
-        mlflow.log_param("num_metadata", len(graph_data.metadata_ids))
+        run_id = run.info.run_id
+        typer.secho(
+            f"Started MLflow run '{run_id}' in experiment '{experiment.name}'",
+            fg=typer.colors.CYAN,
+            err=True,
+        )
+        # Build graph
+        graph_data = build_book_metadata_heterograph(
+            parquet_path,
+            nrows=nrows,
+        )
 
-        # Train model (cette fonction devra logger les loss via mlflow.log_metric)
+        # Log graph statistics
+        graph_summary, graph_components = get_graph_analysis(graph_data)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            local_graph_path = Path(tmpdir) / "graph_components.csv"
+            graph_components.to_csv(local_graph_path, index=False)
+            mlflow.log_artifact(str(local_graph_path), artifact_path=None)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            local_graph_path = Path(tmpdir) / "graph_summary.csv"
+            graph_summary.to_csv(local_graph_path, index=False)
+            mlflow.log_artifact(str(local_graph_path), artifact_path=None)
+
+        # Train model
         embeddings_df = train_metapath2vec(
             graph_data=graph_data,
             num_workers=num_workers,
@@ -190,11 +207,6 @@ def train_metapath2vec_command(
 
         # Save embeddings
         embeddings_df.to_parquet(embedding_output_path, index=False)
-
-        # Log artifact
-        mlflow.log_artifact(embedding_output_path, "embeddings")
-
-        run_id = run.info.run_id
 
         # Use err=True to send messages to stderr (won't interfere with XCom)
         typer.secho(
@@ -204,18 +216,18 @@ def train_metapath2vec_command(
         )
         typer.echo(f"MLflow run_id: {run_id}", err=True)
 
-        # Return run_id - Typer will print it to stdout (last line)
+        # Return run_id - Typer will print it to stdout for xcom capture
         return run_id
 
 
 @app.command("evaluate-metapath2vec")
 def evaluate_metapath2vec_command(
     run_id: str = RUN_ID_ARGUMENT,
-    raw_data_path: str = RAW_DATA_PATH_ARGUMENT,
-    embedding_path: str = EMBEDDING_PATH_ARGUMENT,
+    raw_data_path: str = PARQUET_ARGUMENT,
+    embedding_path: str = EMBEDDING_INPUT_ARGUMENT,
     output_metrics_path: str = METRICS_OUTPUT_ARGUMENT,
-    output_pairwise_path: str = PAIRWISE_SCORE_OUTPUT_OPTION,
-    config_path: str | None = EVAL_CONFIG_OPTION,
+    output_detailed_scores_path: str = DETAILED_SCORE_OUTPUT_OPTION,
+    config_json: str | None = EVAL_CONFIG_OPTION,
 ) -> None:
     """
     Evaluate metapath2vec embeddings using retrieval metrics.
@@ -231,50 +243,75 @@ def evaluate_metapath2vec_command(
         "relevance_thresholds": [0.5, 0.7, 0.9]
     }
     """
+
     # Connect to MLflow
     connect_remote_mlflow()
 
-    # Load config
-    eval_config = None
-    if config_path is not None:
-        typer.echo(f"Loading config from: {config_path}", err=True)
-        with open(config_path) as f:
-            eval_config = json.load(f)
-        typer.echo(f"Config loaded: {eval_config}", err=True)
-    else:
-        eval_config = DEFAULT_EVAL_CONFIG
-        typer.echo("Using default evaluation config", err=True)
+    # Load default config
+    eval_config = DEFAULT_EVAL_CONFIG.copy()
+    # Override with user config if provided
+    if config_json:
+        try:
+            config_dict = json.loads(config_json)
+        except json.JSONDecodeError as e:
+            raise typer.BadParameter(f"Invalid JSON: {e}") from e
+        eval_config.update(config_dict)
 
-    # Resume the run - run_id is enough!
+    typer.echo(f"Using evaluation config: {eval_config}", err=True)
+
+    # Resume the run
     with mlflow.start_run(run_id=run_id):
         # Log config
         mlflow.log_params({f"eval_{k}": v for k, v in eval_config.items()})
 
-        # Evaluate
+        # Evaluate embeddings
         metrics_df, results_df = evaluate_embeddings(
             raw_data_parquet_path=raw_data_path,
             embedding_parquet_path=embedding_path,
             eval_config=eval_config,
         )
 
-        # Log individual metrics
-        metrics_dict = metrics_df.to_dict(orient="records")
-        for metric_row in metrics_dict:
-            metric_name = (
-                f"{metric_row['metric']}_k{metric_row['k']}_"
-                f"threshold{metric_row['threshold']}"
+        # # Log metrics individually on MLflow
+        # for _, row in metrics_df.iterrows():
+        #     score_col = row["score_col"]
+        #     k = row["k"]
+        #     threshold = row["threshold"]
+
+        #     # Log threshold-dependent metrics (recall and precision)
+        #     mlflow.log_metric(f"{score_col}_recall_k{k}_t{threshold}", row["recall"])
+        #     mlflow.log_metric(
+        #         f"{score_col}_precision_k{k}_t{threshold}", row["precision"]
+        #     )
+
+        # # Log ndcg separately (only once per score_col and k combination)
+        # ndcg_metrics = metrics_df.drop_duplicates(subset=["score_col", "k"])
+        # for _, row in ndcg_metrics.iterrows():
+        #     mlflow.log_metric(f"{row['score_col']}_ndcg_k{row['k']}", row["ndcg"])
+
+        # Log metrics individually on MLflow
+        # Log threshold-dependent metrics (recall and precision)
+        for _, row in metrics_df.iterrows():
+            metric_suffix = f"__thresh_{row['threshold']}__{row['score_col']}"
+            mlflow.log_metric(
+                f"recall_@k{metric_suffix}", row["recall"], step=int(row["k"])
             )
-            mlflow.log_metric(metric_name, metric_row["value"])
+            mlflow.log_metric(
+                f"precision_@k{metric_suffix}", row["precision"], step=int(row["k"])
+            )
 
-        # Log summary metrics
-        for metric_type in metrics_df["metric"].unique():
-            metric_subset = metrics_df[metrics_df["metric"] == metric_type]
-            avg_value = metric_subset["value"].mean()
-            mlflow.log_metric(f"{metric_type}_avg", avg_value)
+        # Log NDCG as a curve with k as x-axis (one curve per score_col)
+        ndcg_metrics = metrics_df.drop_duplicates(subset=["score_col", "k"])
+        for _, row in ndcg_metrics.iterrows():
+            mlflow.log_metric(
+                f"ndcg_@k__{row['score_col']}",
+                row["ndcg"],
+                step=int(row["k"]),  # k becomes the x-coordinate
+            )
 
-        # Save and log artifacts
-        metrics_df.to_csv(output_metrics_path, index=False)
-        mlflow.log_artifact(output_metrics_path, "evaluation")
+        # Log metrics artifact for easy lookup
+        log_metrics_at_k_csv(
+            metrics_df, order_by=["score_col", "threshold", "metric", "k"]
+        )
 
         typer.secho(
             f"Metrics saved to: {output_metrics_path}",
@@ -282,11 +319,20 @@ def evaluate_metapath2vec_command(
             err=True,
         )
 
-        if output_pairwise_path:
-            results_df.to_parquet(output_pairwise_path, index=False)
-            mlflow.log_artifact(output_pairwise_path, "evaluation")
+        # Save detailed scores locally first (mandatory for csv)
+        filename = output_metrics_path.split("/")[-1]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            local_path = Path(tmpdir) / filename
+            metrics_df.to_csv(local_path, index=False)
+
+            # Then log as MLflow artifact
+            mlflow.log_artifact(str(local_path), artifact_path=None)
+
+        # Save detailed scores if requested
+        if output_detailed_scores_path is not None:
+            results_df.to_parquet(output_detailed_scores_path, index=False)
             typer.secho(
-                f"Pairwise scores saved to: {output_pairwise_path}",
+                f"Detailed query scores saved to: {output_detailed_scores_path}",
                 fg=typer.colors.GREEN,
                 err=True,
             )

@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+import tempfile
+from pathlib import Path
+
+import mlflow
 import pandas as pd
+from google.cloud import storage
 from loguru import logger
 
 from src.utils.recommendation_metrics import compute_evaluation_metrics
@@ -29,6 +34,79 @@ DEFAULT_EVAL_CONFIG = {
 }
 
 
+def log_metrics_at_k_csv(
+    metrics_df: pd.DataFrame, order_by: list[str] | None = None
+) -> None:
+    """
+    Converts metrics DataFrame into tidy format and logs as csv artifact to MLflow.
+
+    Args:
+        metrics_df: DataFrame with columns like
+        ['score_col', 'k', 'threshold', 'ndcg', 'recall', 'precision']
+
+    Returns:
+        tidy_df: DataFrame with columns
+        ['score_col', 'k', 'threshold', '{metric}_at_k', 'value']
+    """
+    tidy_rows = []
+
+    metric_cols = [
+        c for c in metrics_df.columns if c not in ["score_col", "k", "threshold"]
+    ]
+
+    for _, row in metrics_df.iterrows():
+        for metric_name in metric_cols:
+            # Only thresholded metrics should vary per threshold
+            threshold_val = (
+                row["threshold"] if metric_name in ["recall", "precision"] else None
+            )
+            tidy_rows.append(
+                {
+                    "score_col": row["score_col"],
+                    "k": row["k"],
+                    "threshold": threshold_val,
+                    "metric": f"{metric_name}_at_k",
+                    "value": float(row[metric_name]),
+                }
+            )
+
+    tidy_df = pd.DataFrame(tidy_rows).sort_values(by=order_by)
+
+    # Log metrics to MLflow
+    with tempfile.TemporaryDirectory() as tmpdir:
+        local_path = Path(tmpdir) / "evaluation_metrics.csv"
+        tidy_df.to_csv(local_path, index=False)
+        mlflow.log_artifact(str(local_path), artifact_path=None)
+
+
+def save_query_score_details_to_gcs(
+    results_df: pd.DataFrame,
+    score_details_bucket_folder: str,
+) -> None:
+    """
+    Save detailed query-scores DataFrame to a Parquet file in GCS,
+    optionally partitioned by columns (Hive-style).
+
+    Args:
+        results_df: DataFrame to save.
+        score_details_bucket_folder: GCS folder path, e.g., "gs://my-bucket/folder".
+        partition_cols: List of columns to partition by.
+    """
+
+    client = storage.Client()
+    # Parse bucket and prefix
+    if not score_details_bucket_folder.startswith("gs://"):
+        raise ValueError("score_details_bucket_folder must start with 'gs://'")
+    bucket_name = score_details_bucket_folder.split("/", 1)
+    _bucket = client.bucket(bucket_name)
+    # Save the full DataFrame as Parquet and publish to GCS
+    with tempfile.TemporaryDirectory() as tmpdir:
+        local_path = Path(tmpdir) / "query_score_details.parquet"
+        results_df.to_parquet(local_path, index=False)
+
+    logger.info(f"Pairwise scores saved to: {score_details_bucket_folder}")
+
+
 def evaluate_embeddings(
     raw_data_parquet_path: str,
     embedding_parquet_path: str,
@@ -47,7 +125,7 @@ def evaluate_embeddings(
 
 
     Args:
-        raw_data_parquet_path: Path to raw metadata parquet (can be glob pattern)
+        raw_data_parquet_path: Path to raw metadata parquet folder
         embedding_parquet_path: Path to embeddings parquet file
         eval_config: Optional evaluation configuration dict. If provided, overrides
             defaults. Can contain keys:
@@ -137,6 +215,7 @@ def evaluate_embeddings(
         metadata_df=metadata_table,
         right_on="item_id",
     )
+    df_results = df_results.where(pd.notna(df_results), None)
 
     # ==================================================================================
     # Step 5: Compute ALL scores

@@ -25,6 +25,10 @@ dependencies = [
   "pydantic>=2.11.10",
   "gcsfs>=2025.9.0",
   "recommenders>=1.2.1",
+  "mlflow>=3.5.1",
+  "google-auth>=2.41.1",
+  "google-cloud>=0.34.0",
+  "google-cloud-secret-manager>=2.25.0",
 ]
 
 [build-system]

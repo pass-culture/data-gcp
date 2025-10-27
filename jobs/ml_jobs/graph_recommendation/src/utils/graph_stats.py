@@ -1,161 +1,282 @@
+"""Graph statistics utilities."""
+
+import pandas as pd
 import torch
-from loguru import logger
 from scipy.sparse.csgraph import connected_components
 from torch_geometric.data import Data, HeteroData
 from torch_geometric.utils import to_scipy_sparse_matrix, to_undirected
 
+GraphType = Data | HeteroData
+
+
 # ======================================================
-#  GRAPH STATISTICS UTILITIES
+# CONNECTED COMPONENTS
 # ======================================================
-
-
-def get_graph_statistics(graph: HeteroData) -> dict:
-    """Extract key statistics from a heterogeneous graph.
-
-    Args:
-        graph: The heterogeneous graph to analyze.
-
-    Returns:
-        Dictionary with counts for total nodes, nodes by type, and edges.
+def get_connected_components(
+    graph: GraphType,
+) -> tuple[list[set[int]], list[int], int, dict[str, int]]:
     """
-    stats = {}
-
-    # Count total nodes
-    stats["total_nodes"] = sum(graph[nt].num_nodes for nt in graph.node_types)
-
-    # Count nodes by type
-    stats["nodes_by_type"] = {
-        node_type: graph[node_type].num_nodes for node_type in graph.node_types
-    }
-
-    # Count total edges
-    stats["total_edges"] = sum(graph[et].edge_index.size(1) for et in graph.edge_types)
-
-    return stats
-
-
-# ======================================================
-#  CONNECTED COMPONENTS UTILITIES
-# ======================================================
-
-
-def get_connected_components(graph: Data | HeteroData):
-    """Compute connected components using scipy (more efficient).
+    Compute connected components of a graph using scipy.
 
     Args:
         graph: Input graph (Data or HeteroData).
 
     Returns:
-        tuple: (components, component_sizes, total_nodes, node_type_offsets)
-            - components: List of sets, each containing node indices in a component
-            - component_sizes: List of component sizes
-            - total_nodes: Total number of nodes
-            - node_type_offsets: Dict mapping node types to global index offsets
+        components: list of sets of global node indices per component.
+        component_sizes: Sizes of each component.
+        total_nodes: Total number of nodes.
+        node_type_offsets: Mapping from node type to starting global index.
     """
     # Map to global node index offsets
-    node_type_offsets = {}
-    current_offset = 0
-    for node_type in graph.node_types:
-        node_type_offsets[node_type] = current_offset
-        current_offset += graph[node_type].num_nodes
+    node_type_offsets: dict[str, int] = {}
+    offset = 0
+    for nt in graph.node_types:
+        node_type_offsets[nt] = offset
+        offset += graph[nt].num_nodes
 
     # Collect all edges
-    all_edges = []
-    for edge_type in graph.edge_types:
-        src_type, _rel, dst_type = edge_type
-        edge_index = graph[edge_type].edge_index
+    all_edges: list[torch.Tensor] = []
+    for et in graph.edge_types:
+        src_type, _, dst_type = et
+        edge_index = graph[et].edge_index
         src_offset = node_type_offsets[src_type]
         dst_offset = node_type_offsets[dst_type]
-        global_src = edge_index[0] + src_offset
-        global_dst = edge_index[1] + dst_offset
-        all_edges.append(torch.stack([global_src, global_dst], dim=0))
+        all_edges.append(
+            torch.stack([edge_index[0] + src_offset, edge_index[1] + dst_offset], dim=0)
+        )
 
     combined_edges = torch.cat(all_edges, dim=1)
     combined_edges = to_undirected(combined_edges)
 
     total_nodes = sum(graph[nt].num_nodes for nt in graph.node_types)
-
-    # Use scipy for connected components
     adj_matrix = to_scipy_sparse_matrix(combined_edges, num_nodes=total_nodes)
     n_components, labels = connected_components(adj_matrix, directed=False)
-
-    # Vectorized component grouping
     labels_tensor = torch.from_numpy(labels)
 
-    # Get component sizes using bincount
     component_sizes = torch.bincount(labels_tensor).tolist()
-
-    # Group nodes by component (vectorized)
-    components = []
-    for comp_idx in range(n_components):
-        node_indices = torch.where(labels_tensor == comp_idx)[0]
-        components.append(set(node_indices.tolist()))
+    components = [
+        set(torch.where(labels_tensor == i)[0].tolist()) for i in range(n_components)
+    ]
 
     return components, component_sizes, total_nodes, node_type_offsets
 
 
 # ======================================================
-#  DIAGNOSTIC FUNCTION
+# GLOBAL-LOCAL NODE MAPPING
 # ======================================================
-
-
-def diagnose_component_sizes(graph: Data | HeteroData) -> tuple:
-    """Analyze connected component sizes and return them.
+def build_global_to_local_mapping(
+    graph: GraphType, node_type_offsets: dict[str, int]
+) -> dict[int, tuple[str, int]]:
+    """
+    Map global node index to (node_type, local_index).
 
     Args:
-        graph (Data | HeteroData): Input graph.
+        graph: Input graph.
+        node_type_offsets: Node type -> global offset.
 
     Returns:
-        list[set[int]]: Connected components (each a set of node indices).
+        Mapping from global index to (node_type, local index)
     """
-    components_data = (components, component_sizes, total_nodes, _node_type_offsets) = (
-        get_connected_components(graph)
+    mapping: dict[int, tuple[str, int]] = {}
+    for nt, offset in node_type_offsets.items():
+        mapping.update({offset + i: (nt, i) for i in range(graph[nt].num_nodes)})
+    return mapping
+
+
+# ======================================================
+# SUMMARY DATAFRAME
+# ======================================================
+def build_summary_df(
+    graph: GraphType,
+    components: list[set[int]],
+    component_sizes: list[int],
+    total_nodes: int,
+    node_type_offsets: dict[str, int],
+    global_to_local: dict[int, tuple[str, int]],
+) -> pd.DataFrame:
+    """
+    Build a summary DataFrame with graph-level statistics.
+
+    Args:
+        graph: Input graph.
+        components: list of connected components.
+        component_sizes: Sizes of components.
+        total_nodes: Total number of nodes.
+        node_type_offsets: Node type -> global index offset.
+        global_to_local: Global index -> (node_type, local index).
+
+    Returns:
+        DataFrame with graph-level measures.
+    """
+    largest_component_idx = (
+        component_sizes.index(max(component_sizes)) if components else -1
+    )
+    largest_component = (
+        components[largest_component_idx] if largest_component_idx >= 0 else set()
     )
 
-    logger.info("=" * 60)
-    logger.info("CONNECTED COMPONENTS DETAILED ANALYSIS")
-    logger.info("=" * 60)
-    logger.info(f"Total connected components: {len(components):,}")
-
-    # Sort for readability (largest first)
-    component_sizes_sorted = sorted(component_sizes, reverse=True)
-    logger.info("\nComponent Size Distribution:")
-    logger.info(
-        f"  Largest: {component_sizes_sorted[0]:,} "
-        f"({component_sizes_sorted[0] / total_nodes * 100:.1f}%)"
-    )
-
-    if len(component_sizes_sorted) > 1:
-        logger.info(
-            f"  2nd largest: {component_sizes_sorted[1]:,} "
-            f"({component_sizes_sorted[1] / total_nodes * 100:.1f}%)"
-        )
-    if len(component_sizes_sorted) > 2:
-        logger.info(
-            f"  3rd largest: {component_sizes_sorted[2]:,} "
-            f"({component_sizes_sorted[2] / total_nodes * 100:.1f}%)"
-        )
-
-    size_buckets = {
-        "Size 2 (isolated)": sum(1 for s in component_sizes_sorted if s < 2),
-        "Size 3-10": sum(1 for s in component_sizes_sorted if 3 <= s <= 10),
-        "Size 11-100": sum(1 for s in component_sizes_sorted if 11 <= s <= 100),
-        "Size 101-1000": sum(1 for s in component_sizes_sorted if 101 <= s <= 1000),
-        "Size 1001-10000": sum(1 for s in component_sizes_sorted if 1001 <= s <= 10000),
-        "Size 10001+": sum(1 for s in component_sizes_sorted if s > 10000),
+    # Node type counts in largest component
+    largest_nodes = torch.tensor(list(largest_component))
+    node_types_tensor = torch.zeros(len(largest_nodes), dtype=torch.int)
+    nt_to_idx = {nt: i for i, nt in enumerate(graph.node_types)}
+    for i, idx in enumerate(largest_nodes):
+        nt, _ = global_to_local[int(idx)]
+        node_types_tensor[i] = nt_to_idx[nt]
+    largest_comp_node_counts = {
+        nt: int((node_types_tensor == i).sum()) for nt, i in nt_to_idx.items()
     }
 
-    logger.info("\nComponents by Size Bucket:")
-    for bucket, count in size_buckets.items():
-        logger.info(f"  {bucket}: {count:,}")
+    # Edge counts in largest component (vectorized)
+    largest_comp_edge_counts: dict[str, int] = {}
+    largest_comp_total_edges = 0
+    for et in graph.edge_types:
+        src_type, rel, dst_type = et
+        edge_index = graph[et].edge_index
+        src_offset = node_type_offsets[src_type]
+        dst_offset = node_type_offsets[dst_type]
+        global_src = edge_index[0] + src_offset
+        global_dst = edge_index[1] + dst_offset
+        mask = torch.isin(global_src, largest_nodes) & torch.isin(
+            global_dst, largest_nodes
+        )
+        count = int(mask.sum())
+        edge_str = f"{src_type}__{rel}__{dst_type}"
+        largest_comp_edge_counts[edge_str] = count
+        largest_comp_total_edges += count
 
-    isolated_nodes = sum(s for s in component_sizes_sorted if s == 1)
-    logger.info(
-        f"\n⚠️  Isolated nodes: {isolated_nodes:,} "
-        f"({isolated_nodes / total_nodes * 100:.1f}%)"
-    )
-    logger.info(
-        f"Main component coverage: {component_sizes_sorted[0] / total_nodes * 100:.1f}%"
+    # Build summary results
+    summary_results = [
+        {"graph_measure": "total_nbr_of_nodes", "value": total_nodes},
+        {
+            "graph_measure": "total_nbr_of_edges",
+            "value": sum(graph[et].edge_index.size(1) for et in graph.edge_types),
+        },
+        *[
+            {"graph_measure": f"total_nbr_of_{nt}_nodes", "value": graph[nt].num_nodes}
+            for nt in graph.node_types
+        ],
+        *[
+            {
+                "graph_measure": f"total_nbr_of_{src}__{rel}__{dst}_edges",
+                "value": graph[et].edge_index.size(1),
+            }
+            for et in graph.edge_types
+            for src, rel, dst in [et]
+        ],
+        {"graph_measure": "nbr_of_connected_components", "value": len(components)},
+        {
+            "graph_measure": "largest_connected_component_size",
+            "value": len(largest_component),
+        },
+        *[
+            {"graph_measure": f"largest_component_{nt}_nodes", "value": count}
+            for nt, count in largest_comp_node_counts.items()
+        ],
+        {
+            "graph_measure": "largest_component_nbr_of_edges",
+            "value": largest_comp_total_edges,
+        },
+        *[
+            {"graph_measure": f"largest_component_{et}_edges", "value": count}
+            for et, count in largest_comp_edge_counts.items()
+        ],
+    ]
+    return pd.DataFrame(summary_results)
+
+
+# ======================================================
+# COMPONENT-LEVEL DATAFRAME
+# ======================================================
+def build_components_df(
+    graph: GraphType,
+    components: list[set[int]],
+    node_type_offsets: dict[str, int],
+    global_to_local: dict[int, tuple[str, int]],
+) -> pd.DataFrame:
+    """
+    Build a DataFrame with per-component statistics.
+
+    Args:
+        graph: Input graph.
+        components: list of connected components.
+        node_type_offsets: Node type -> global offset.
+        global_to_local: Global index -> (node_type, local index).
+
+    Returns:
+        DataFrame with one row per component.
+    """
+    results = []
+
+    for comp_id, nodes in enumerate(components):
+        nodes_tensor = torch.tensor(list(nodes))
+        comp_stats: dict[str, int] = {
+            "component_id": comp_id,
+            "component_size": len(nodes),
+        }
+
+        # Node type counts
+        node_types_tensor = torch.zeros(len(nodes_tensor), dtype=torch.int)
+        nt_to_idx = {nt: i for i, nt in enumerate(graph.node_types)}
+        for i, idx in enumerate(nodes_tensor):
+            nt, _ = global_to_local[int(idx)]
+            node_types_tensor[i] = nt_to_idx[nt]
+        for nt, i in nt_to_idx.items():
+            comp_stats[f"{nt}_count"] = int((node_types_tensor == i).sum())
+
+        # Edge counts (vectorized)
+        total_edges = 0
+        for et in graph.edge_types:
+            src_type, rel, dst_type = et
+            edge_index = graph[et].edge_index
+            src_offset = node_type_offsets[src_type]
+            dst_offset = node_type_offsets[dst_type]
+            global_src = edge_index[0] + src_offset
+            global_dst = edge_index[1] + dst_offset
+            mask = torch.isin(global_src, nodes_tensor) & torch.isin(
+                global_dst, nodes_tensor
+            )
+            count = int(mask.sum())
+            edge_str = f"{src_type}__{rel}__{dst_type}"
+            comp_stats[f"{edge_str}_count"] = count
+            total_edges += count
+
+        comp_stats["num_edges"] = total_edges
+        results.append(comp_stats)
+
+    return (
+        pd.DataFrame(results)
+        .sort_values("component_size", ascending=False)
+        .reset_index(drop=True)
     )
 
-    return components_data
+
+# ======================================================
+# MAIN GRAPH ANALYSIS
+# ======================================================
+def get_graph_analysis(graph: GraphType) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Generate graph-level and per-component statistics.
+
+    Args:
+        graph: Input graph.
+
+    Returns:
+        summary_df: DataFrame with graph-level measures.
+        components_df: DataFrame with per-component statistics.
+    """
+    components, component_sizes, total_nodes, node_type_offsets = (
+        get_connected_components(graph)
+    )
+    global_to_local = build_global_to_local_mapping(graph, node_type_offsets)
+    summary_df = build_summary_df(
+        graph,
+        components,
+        component_sizes,
+        total_nodes,
+        node_type_offsets,
+        global_to_local,
+    )
+    components_df = build_components_df(
+        graph, components, node_type_offsets, global_to_local
+    )
+    return summary_df, components_df

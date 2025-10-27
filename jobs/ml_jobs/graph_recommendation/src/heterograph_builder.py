@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 import tqdm
 
 from src.constants import DEFAULT_METADATA_COLUMNS, GTL_ID_COLUMN, ID_COLUMN
-from src.utils.graph_stats import diagnose_component_sizes
 from src.utils.preprocessing import (
     detach_single_occuring_metadata,
     normalize_dataframe,
@@ -22,7 +21,6 @@ if TYPE_CHECKING:
 
 import pandas as pd
 import torch
-from loguru import logger
 from torch_geometric.data import HeteroData
 
 
@@ -205,11 +203,5 @@ def build_book_metadata_heterograph(
         gtl_id_column=GTL_ID_COLUMN,
         metadata_columns=DEFAULT_METADATA_COLUMNS,
     )
-
-    try:
-        _ = diagnose_component_sizes(graph=data_graph)
-    except Exception:
-        logger.info("Connected components diagnostics skipped due to error")
-        logger.info("Error details:", exc_info=True)
 
     return data_graph

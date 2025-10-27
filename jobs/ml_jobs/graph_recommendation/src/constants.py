@@ -4,8 +4,8 @@ from pathlib import Path
 
 # Project root directory
 PROJECT_ROOT = Path(__file__).parent.parent
-DATA_DIR = PROJECT_ROOT / "data"
-RESULTS_DIR = PROJECT_ROOT / "results"
+DATA_DIR = f"{PROJECT_ROOT!s}/data"
+RESULTS_DIR = f"{PROJECT_ROOT!s}/results"
 
 ID_COLUMN = "item_id"
 GTL_ID_COLUMN = "gtl_id"

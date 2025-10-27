@@ -226,7 +226,7 @@ def evaluate_metapath2vec_command(
     raw_data_path: str = PARQUET_ARGUMENT,
     embedding_path: str = EMBEDDING_INPUT_ARGUMENT,
     output_metrics_path: str = METRICS_OUTPUT_ARGUMENT,
-    output_detailed_scores_path: str = DETAILED_SCORE_OUTPUT_OPTION,
+    output_detailed_scores_path: str | None = DETAILED_SCORE_OUTPUT_OPTION,
     config_json: str | None = EVAL_CONFIG_OPTION,
 ) -> None:
     """
@@ -314,7 +314,7 @@ def evaluate_metapath2vec_command(
             mlflow.log_artifact(str(local_path), artifact_path=None)
 
         # Save detailed scores if requested
-        if output_detailed_scores_path is not None:
+        if output_detailed_scores_path:
             results_df.to_parquet(output_detailed_scores_path, index=False)
             typer.secho(
                 f"Detailed query scores saved to: {output_detailed_scores_path}",

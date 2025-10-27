@@ -227,10 +227,17 @@ def log_evaluation_metrics(
     for _, row in metrics_df.iterrows():
         metric_suffix = f"thresh_{row['threshold']}__{row['score_col']}"
         mlflow.log_metric(
-            f"recall_at_k__{metric_suffix}", row["recall"], step=int(row["k"])
+            f"recall_at_{str(row['k']).zfill(3)}__{metric_suffix}", row["recall"]
         )
         mlflow.log_metric(
-            f"precision_at_k__{metric_suffix}",
+            f"curve_recall_at_k__{metric_suffix}", row["recall"], step=int(row["k"])
+        )
+        mlflow.log_metric(
+            f"precision_at_{str(row['k']).zfill(3)}__{metric_suffix}",
+            row["precision"],
+        )
+        mlflow.log_metric(
+            f"curve_precision_at_k__{metric_suffix}",
             row["precision"],
             step=int(row["k"]),
         )
@@ -239,7 +246,11 @@ def log_evaluation_metrics(
     ndcg_metrics = metrics_df.drop_duplicates(subset=["score_col", "k"])
     for _, row in ndcg_metrics.iterrows():
         mlflow.log_metric(
-            f"ndcg_at_k__{row['score_col']}",
+            f"ndcg_at_{str(row['k']).zfill(3)}__{row['score_col']}",
+            row["ndcg"],
+        )
+        mlflow.log_metric(
+            f"curve_ndcg_at_k__{row['score_col']}",
             row["ndcg"],
             step=int(row["k"]),
         )

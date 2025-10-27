@@ -38,5 +38,9 @@
         {% if is_incremental() %}
             and partition_month
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+        {% else %}
+            and partition_month
+            <= date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+            and partition_month >= date("2022-01-01")
         {% endif %}
 {% endfor %}

@@ -15,6 +15,8 @@ select
     v.venue_region_name as partner_region_name,
     v.venue_department_code as partner_department_code,
     v.venue_department_name as partner_department_name,
+    v.venue_epci as partner_epci,
+    v.venue_city as partner_city,
     v.venue_postal_code as partner_postal_code,
     v.venue_type_label as partner_type,
     "venue_type_label" as partner_type_origin,

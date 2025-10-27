@@ -1,4 +1,7 @@
 from itertools import product
+import hashlib
+import re
+
 from enum import Enum
 from airflow.models import DAG
 from airflow.operators.empty import EmptyOperator
@@ -16,26 +19,6 @@ class ExecutionMode(str, Enum):
     DISPATCH = "dispatch"
 
 
-def generate_unique_suffix(params: dict, idx: int, max_len: int = 200) -> str:
-    """
-    Generate a unique suffix for task IDs based on parameter combinations.
-
-    Raises:
-        ValueError: if the generated suffix exceeds max_len characters.
-    """
-    param_part = "_".join(f"{k}_{str(v).replace('.', '_')}" for k, v in params.items())
-    suffix = f"{idx}_{param_part}" if param_part else str(idx)
-
-    if len(suffix) > max_len:
-        raise ValueError(
-            f"Generated suffix too long ({len(suffix)} chars). "
-            f"Reduce parameter name/value lengths or number of grid parameters.\n"
-            f"Suffix: {suffix}"
-        )
-
-    return suffix
-
-
 class GridDAG(DAG):
     def __init__(
         self,
@@ -45,6 +28,7 @@ class GridDAG(DAG):
         n_vms=1,
         start_vm_kwargs=None,
         install_deps_kwargs=None,
+        max_suffix_len: int = 200,
         *args,
         **kwargs,
     ):
@@ -56,6 +40,10 @@ class GridDAG(DAG):
         self.start_vm_kwargs = start_vm_kwargs or {}
         self.install_deps_kwargs = install_deps_kwargs or {}
         self.chains = []
+        self.max_suffix_len = max_suffix_len
+
+        # Optional remap attribute, can be set externally if needed
+        self.remap: dict[str, dict[str, str]] | None = None
 
     def generate_param_combinations(self):
         keys = self.param_grid.keys()
@@ -66,6 +54,41 @@ class GridDAG(DAG):
         for comb in combinations:
             comb.update(self.common_params)
         return combinations
+
+    def _generate_suffix(self, params: dict, idx: int) -> str:
+        """
+        Generate a unique suffix using only grid parameters (from param_grid keys).
+        Hashes long values automatically, prefixes hash with the param name.
+        """
+        parts = []
+        grid_keys = self.param_grid.keys()  # pick directly from DAG attributes
+
+        for k in grid_keys:
+            if k not in params:
+                continue
+            v = params[k]
+            v_str = str(v)
+
+            # Use remap if available
+            if self.remap and k in self.remap:
+                v_str = self.remap[k].get(v_str, v_str)
+            # Hash long values (>50 chars)
+            elif len(v_str) > 50:
+                hash_part = hashlib.md5(v_str.encode()).hexdigest()[:8]
+                v_str = f"{hash_part}"
+
+            # sanitize: keep only valid chars
+            v_str = re.sub(r"[^a-zA-Z0-9._-]", "_", v_str)
+            parts.append(f"{k}_{v_str}")
+
+        suffix = f"{idx}_{'_'.join(parts)}" if parts else str(idx)
+
+        # fallback truncate if still too long
+        if len(suffix) > self.max_suffix_len:
+            hash_part = hashlib.md5("_".join(parts).encode()).hexdigest()[:8]
+            suffix = f"{idx}_{hash_part}"
+
+        return suffix
 
     def build_grid(self, ml_task_fn):
         combinations = self.generate_param_combinations()
@@ -82,18 +105,15 @@ class GridDAG(DAG):
         start_grid = EmptyOperator(task_id="start_grid")
         end_grid = EmptyOperator(task_id="end_grid", trigger_rule=TriggerRule.ALL_DONE)
 
-        # assign chains to VMs (round-robin)
         instance_names = [f"{self.dag_id}-vm-{i}" for i in range(self.n_vms)]
         vm_to_chains = {i: [] for i in range(self.n_vms)}
         for idx, params in enumerate(combinations):
-            vm_idx = idx % self.n_vms  # assign to VM in round-robin
+            vm_idx = idx % self.n_vms
             vm_to_chains[vm_idx].append((idx, params))
 
-        # create one Start/Stop VM wrapper per VM
         for vm_idx, chains in vm_to_chains.items():
             instance_name = instance_names[vm_idx]
 
-            # Start VM
             start_vm = StartGCEOperator(
                 task_id=f"start_vm_{vm_idx}",
                 instance_name=instance_name,
@@ -101,7 +121,6 @@ class GridDAG(DAG):
             )
             start_grid >> start_vm
 
-            # Install dependencies
             install = InstallDependenciesOperator(
                 task_id=f"install_{vm_idx}",
                 instance_name=instance_name,
@@ -109,28 +128,24 @@ class GridDAG(DAG):
             )
             start_vm >> install
 
-            # Sequential ML tasks inside VM wrapper
             prev_task = install
             for idx, params in chains:
-                suffix_task = generate_unique_suffix(params, idx)
+                suffix_task = self._generate_suffix(params, idx)
                 ml_task_sequence = ml_task_fn(params, instance_name, suffix_task)
 
                 if not isinstance(ml_task_sequence, list):
                     ml_task_sequence = [ml_task_sequence]
 
-                # Chain the tasks sequentially
                 for i, task in enumerate(ml_task_sequence):
-                    # trigger the next chain even if previous failed
                     if prev_task != install and (i % len(ml_task_sequence)) == 0:
                         task.trigger_rule = TriggerRule.ALL_DONE
                     prev_task >> task
                     prev_task = task
 
-            # Delete VM after all tasks
             stop_vm = DeleteGCEOperator(
                 task_id=f"stop_vm_{vm_idx}",
                 instance_name=instance_name,
-                trigger_rule=TriggerRule.NONE_FAILED_MIN_ONE_SUCCESS,  # guarantee deletion with initial empty operator
+                trigger_rule=TriggerRule.NONE_FAILED_MIN_ONE_SUCCESS,
             )
             prev_task >> stop_vm
             stop_vm >> end_grid

@@ -7,8 +7,6 @@ from airflow.operators.empty import EmptyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
-from airflow.models.baseoperator import chain
-
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -21,10 +19,7 @@ from common.config import (
     ML_BUCKET_TEMP,
 )
 from common.operators.gce import (
-    DeleteGCEOperator,
-    InstallDependenciesOperator,
     SSHGCEOperator,
-    StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
 from common.grid_search import GridDAG, ExecutionMode
@@ -94,7 +89,7 @@ def ml_task_chain(params, instance_name, suffix):
         deferrable=True,
     )
 
-    return chain([train, evaluate])
+    return [train, evaluate]
 
 
 # Grid parameters
@@ -169,17 +164,18 @@ metapaths = [
     ),
 ]
 
-PARAM_GRID = {"embedding_dim": [32, 64, 128], "metapath": metapaths}
+PARAM_GRID = {"embedding_dim": [32, 64, 128]}  # , "metapath": metapaths}
 
 SHARED_PARAMS = {
     "base_dir": BASE_DIR,
 }
 with GridDAG(
-    dag_id="grid_search_algo_training_graph_embeddings",
+    dag_id="algo_training_graph_embeddings_grid_search",
     description="Grid search training for graph embeddings",
     param_grid=PARAM_GRID,
     common_params=SHARED_PARAMS,
     execution_mode=ExecutionMode.PARALLEL,
+    n_vms=4,
     start_date=datetime(2023, 1, 1),
     schedule_interval=None,
     dagrun_timeout=timedelta(minutes=1200),
@@ -192,10 +188,7 @@ with GridDAG(
         "instance_type": "{{ params.instance_type }}",
         "gpu_type": "{{ params.gpu_type }}",
         "gpu_count": "{{ params.gpu_count }}",
-        "labels": {
-            "job_type": "long_ml",
-            "dag_name": "grid_search_algo_training_graph_embeddings",
-        },
+        "labels": {"job_type": "long_ml"},
     },
     install_deps_kwargs={
         "python_version": "3.12",
@@ -221,6 +214,8 @@ with GridDAG(
         "train_only_on_10k_rows": Param(default=True, type="boolean"),
     },
 ) as dag:
+    start = EmptyOperator(task_id="start")
+
     import_offer_as_parquet = BigQueryInsertJobOperator(
         project_id=GCP_PROJECT_ID,
         task_id="import_offer_as_parquet",
@@ -240,4 +235,4 @@ with GridDAG(
 
     start_grid, end_grid = dag.build_grid(ml_task_chain)
 
-    import_offer_as_parquet >> start_grid >> end_grid
+    start >> import_offer_as_parquet >> start_grid >> end_grid

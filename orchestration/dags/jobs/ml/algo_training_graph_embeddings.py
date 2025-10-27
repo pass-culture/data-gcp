@@ -131,7 +131,7 @@ with DAG(
         task_id="train",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
-        command="PYTHONPATH=. python -m scripts.cli train-metapath2vec "
+        command="python -m scripts.cli train-metapath2vec "
         f"{STORAGE_BASE_PATH}/raw_input "
         f"--output-embeddings {STORAGE_BASE_PATH}/{EMBEDDINGS_FILENAME} "
         "{% if params['train_only_on_10k_rows'] %} --nrows 10000 {% endif %}",
@@ -149,6 +149,18 @@ with DAG(
         autodetect=True,
     )
 
+    evaluate = SSHGCEOperator(
+        task_id="evaluate",
+        instance_name="{{ params.instance_name }}",
+        base_dir=BASE_DIR,
+        command="cli evaluate-metapath2vec "
+        f"{STORAGE_BASE_PATH}/raw_input/data-*.parquet "  # TO DO: accept folder
+        f"{STORAGE_BASE_PATH}/{EMBEDDINGS_FILENAME} "
+        f"{STORAGE_BASE_PATH}/evaluation_metrics.csv "
+        f"--output-scores-path {STORAGE_BASE_PATH}/pairwise_scores.parquet",
+        deferrable=True,
+    )
+
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
@@ -159,6 +171,6 @@ with DAG(
         >> gce_instance_start
         >> fetch_install_code
         >> train
-        >> upload_embeddings_to_bigquery
+        >> [upload_embeddings_to_bigquery, evaluate]
         >> gce_instance_stop
     )

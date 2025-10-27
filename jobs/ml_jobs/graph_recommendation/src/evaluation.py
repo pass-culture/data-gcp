@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-import tempfile
-from pathlib import Path
+import json
+from dataclasses import asdict, dataclass, field
 
-import mlflow
 import pandas as pd
-from google.cloud import storage
 from loguru import logger
 
-from src.utils.commons import conditional_mlflow
 from src.utils.recommendation_metrics import compute_evaluation_metrics
 from src.utils.retrieval import (
     TABLE_NAME,
@@ -22,97 +19,53 @@ from src.utils.retrieval import (
     sample_test_items_lazy,
 )
 
-# Default evaluation configuration
-DEFAULT_EVAL_CONFIG = {
-    "metadata_columns": ["item_id", "gtl_id", "artist_id"],
-    "n_samples": 100,
-    "n_retrieved": 1000,
-    "k_values": [10, 20, 50, 100],
-    "relevance_thresholds": [0.3, 0.4, 0.5, 0.6, 0.7],
-    "ground_truth_score": "full_score",
-    "force_artist_weight": False,
-    "rebuild_index": False,
-}
 
+# Default evaluation configuration factory
+@dataclass
+class DefaultEvaluationConfig:
+    metadata_columns: list[str] = field(
+        default_factory=lambda: ["item_id", "gtl_id", "artist_id"]
+    )
+    n_samples: int = 100
+    n_retrieved: int = 1000
+    k_values: list[int] = field(default_factory=lambda: [10, 20, 50, 100])
+    relevance_thresholds: list[float] = field(
+        default_factory=lambda: [0.3, 0.4, 0.5, 0.6, 0.7]
+    )
+    ground_truth_score: str = "full_score"
+    force_artist_weight: bool = False
+    rebuild_index: bool = False
 
-@conditional_mlflow()
-def log_metrics_at_k_csv(
-    metrics_df: pd.DataFrame, order_by: list[str] | None = None
-) -> None:
-    """
-    Converts metrics DataFrame into tidy format and logs as csv artifact to MLflow.
+    def update_from_json(self, json_str: str):
+        """Update fields from a JSON string, logging errors instead of raising."""
+        try:
+            updates = json.loads(json_str)
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON: {e}")
+            return
+        for k, v in updates.items():
+            if hasattr(self, k):
+                setattr(self, k, v)
+            else:
+                logger.warning(f"Ignored unknown config field: {k}")
 
-    Args:
-        metrics_df: DataFrame with columns like
-        ['score_col', 'k', 'threshold', 'ndcg', 'recall', 'precision']
+    def update_from_dict(self, config_dict: dict):
+        """Update fields from a dictionary, logging errors instead of raising."""
+        assert isinstance(config_dict, dict), "config_dict must be a dictionary"
+        for k, v in config_dict.items():
+            if hasattr(self, k):
+                setattr(self, k, v)
+            else:
+                logger.warning(f"Ignored unknown config field: {k}")
 
-    Returns:
-        tidy_df: DataFrame with columns
-        ['score_col', 'k', 'threshold', '{metric}_at_k', 'value']
-    """
-    tidy_rows = []
-
-    metric_cols = [
-        c for c in metrics_df.columns if c not in ["score_col", "k", "threshold"]
-    ]
-
-    for _, row in metrics_df.iterrows():
-        for metric_name in metric_cols:
-            # Only thresholded metrics should vary per threshold
-            threshold_val = (
-                row["threshold"] if metric_name in ["recall", "precision"] else None
-            )
-            tidy_rows.append(
-                {
-                    "score_col": row["score_col"],
-                    "k": row["k"],
-                    "threshold": threshold_val,
-                    "metric": f"{metric_name}_at_k",
-                    "value": float(row[metric_name]),
-                }
-            )
-
-    tidy_df = pd.DataFrame(tidy_rows).sort_values(by=order_by)
-
-    # Log metrics to MLflow
-    with tempfile.TemporaryDirectory() as tmpdir:
-        local_path = Path(tmpdir) / "evaluation_metrics.csv"
-        tidy_df.to_csv(local_path, index=False)
-        mlflow.log_artifact(str(local_path), artifact_path=None)
-
-
-def save_query_score_details_to_gcs(
-    results_df: pd.DataFrame,
-    score_details_bucket_folder: str,
-) -> None:
-    """
-    Save detailed query-scores DataFrame to a Parquet file in GCS,
-    optionally partitioned by columns (Hive-style).
-
-    Args:
-        results_df: DataFrame to save.
-        score_details_bucket_folder: GCS folder path, e.g., "gs://my-bucket/folder".
-        partition_cols: List of columns to partition by.
-    """
-
-    client = storage.Client()
-    # Parse bucket and prefix
-    if not score_details_bucket_folder.startswith("gs://"):
-        raise ValueError("score_details_bucket_folder must start with 'gs://'")
-    bucket_name = score_details_bucket_folder.split("/", 1)
-    _bucket = client.bucket(bucket_name)
-    # Save the full DataFrame as Parquet and publish to GCS
-    with tempfile.TemporaryDirectory() as tmpdir:
-        local_path = Path(tmpdir) / "query_score_details.parquet"
-        results_df.to_parquet(local_path, index=False)
-
-    logger.info(f"Pairwise scores saved to: {score_details_bucket_folder}")
+    def to_dict(self):
+        return asdict(self)
 
 
 def evaluate_embeddings(
     raw_data_parquet_path: str,
     embedding_parquet_path: str,
-    eval_config: dict | None = None,
+    eval_config: DefaultEvaluationConfig | dict | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Evaluate embedding quality using retrieval metrics.
@@ -144,21 +97,31 @@ def evaluate_embeddings(
         Tuple of (metrics_df, results_df)
     """
     # Merge config with defaults
-    config = DEFAULT_EVAL_CONFIG.copy()
-    if eval_config is not None:
-        config.update(eval_config)
+    if eval_config is None:
+        config = DefaultEvaluationConfig()
+    elif isinstance(eval_config, DefaultEvaluationConfig):
+        config = eval_config
+    elif isinstance(eval_config, dict):
+        config = DefaultEvaluationConfig()
+        config.update_from_dict(eval_config)
+    else:
+        logger.warning(
+            "eval_config must be DefaultEvaluationConfig, dict, or None; using defaults"
+        )
+        config = DefaultEvaluationConfig()
 
     # Extract config values
-    metadata_columns = config["metadata_columns"]
-    n_samples = config["n_samples"]
-    n_retrieved = config["n_retrieved"]
-    k_values = config["k_values"]
-    relevance_thresholds = config["relevance_thresholds"]
-    ground_truth_score = config["ground_truth_score"]
-    force_artist_weight = config["force_artist_weight"]
+    metadata_columns = config.metadata_columns
+    n_samples = config.n_samples
+    n_retrieved = config.n_retrieved
+    k_values = config.k_values
+    relevance_thresholds = config.relevance_thresholds
+    ground_truth_score = config.ground_truth_score
+    force_artist_weight = config.force_artist_weight
+    rebuild_index = config.rebuild_index
 
-    rebuild_index = config["rebuild_index"]
     table_name = TABLE_NAME
+
     logger.info("=" * 80)
     logger.info("EMBEDDING EVALUATION PIPELINE")
     logger.info("=" * 80)

@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-import json
-import tempfile
-from pathlib import Path
-
 import mlflow
 import torch
 import typer
@@ -13,16 +9,21 @@ import typer
 from src.constants import RESULTS_DIR
 from src.embedding_builder import train_metapath2vec
 from src.evaluation import (
-    DEFAULT_EVAL_CONFIG,
+    DefaultEvaluationConfig,
     evaluate_embeddings,
-    log_metrics_at_k_csv,
 )
 from src.graph_builder import (
     build_book_metadata_graph,
 )
 from src.heterograph_builder import build_book_metadata_heterograph
-from src.utils.commons import connect_remote_mlflow, get_mlflow_experiment
 from src.utils.graph_stats import get_graph_analysis
+from src.utils.mlflow import (
+    connect_remote_mlflow,
+    get_mlflow_experiment,
+    log_detailed_scores,
+    log_evaluation_metrics,
+    log_graph_analysis,
+)
 
 APP_DESCRIPTION = (
     "Utilities to build PyTorch Geometric graphs for book recommendations."
@@ -190,14 +191,10 @@ def train_metapath2vec_command(
 
         # Log graph statistics
         graph_summary, graph_components = get_graph_analysis(graph_data)
-        with tempfile.TemporaryDirectory() as tmpdir:
-            local_graph_path = Path(tmpdir) / "graph_components.csv"
-            graph_components.to_csv(local_graph_path, index=False)
-            mlflow.log_artifact(str(local_graph_path), artifact_path=None)
-        with tempfile.TemporaryDirectory() as tmpdir:
-            local_graph_path = Path(tmpdir) / "graph_summary.csv"
-            graph_summary.to_csv(local_graph_path, index=False)
-            mlflow.log_artifact(str(local_graph_path), artifact_path=None)
+        log_graph_analysis(
+            graph_summary,
+            graph_components,
+        )
 
         # Train model with loss logging to mlflow
         embeddings_df = train_metapath2vec(
@@ -248,21 +245,17 @@ def evaluate_metapath2vec_command(
     connect_remote_mlflow()
 
     # Load default config
-    eval_config = DEFAULT_EVAL_CONFIG.copy()
+    eval_config = DefaultEvaluationConfig()
     # Override with user config if provided
     if config_json:
-        try:
-            config_dict = json.loads(config_json)
-        except json.JSONDecodeError as e:
-            raise typer.BadParameter(f"Invalid JSON: {e}") from e
-        eval_config.update(config_dict)
+        eval_config.update_from_json(config_json)
 
-    typer.echo(f"Using evaluation config: {eval_config}", err=True)
+    typer.echo(f"Using evaluation config: {eval_config.to_dict()}", err=True)
 
     # Resume the run
     with mlflow.start_run(run_id=run_id):
         # Log config
-        mlflow.log_params({f"eval_{k}": v for k, v in eval_config.items()})
+        mlflow.log_params({f"eval_{k}": v for k, v in eval_config.to_dict().items()})
 
         # Evaluate embeddings
         metrics_df, results_df = evaluate_embeddings(
@@ -271,62 +264,25 @@ def evaluate_metapath2vec_command(
             eval_config=eval_config,
         )
 
-        # Log metrics atk with k as x-axis
-        # Log threshold-dependent metrics (recall and precision)
-        for _, row in metrics_df.iterrows():
-            metric_suffix = f"thresh_{row['threshold']}__{row['score_col']}"
-            mlflow.log_metric(
-                f"recall_at_k__{metric_suffix}", row["recall"], step=int(row["k"])
-            )
-            mlflow.log_metric(
-                f"precision_at_k__{metric_suffix}",
-                row["precision"],
-                step=int(row["k"]),
-            )
-
-        # Log NDCG
-        ndcg_metrics = metrics_df.drop_duplicates(subset=["score_col", "k"])
-        for _, row in ndcg_metrics.iterrows():
-            mlflow.log_metric(
-                f"ndcg_at_k__{row['score_col']}",
-                row["ndcg"],
-                step=int(row["k"]),
-            )
-
-        # Log metrics artifact for easy lookup
-        log_metrics_at_k_csv(
-            metrics_df, order_by=["score_col", "threshold", "metric", "k"]
+        # Log metrics to MLflow
+        log_evaluation_metrics(
+            metrics_df,
+            output_metrics_path,
+            store_csv=True,
         )
 
-        typer.secho(
-            f"Metrics saved to: {output_metrics_path}",
-            fg=typer.colors.GREEN,
-            err=True,
-        )
-
-        # Save detailed scores locally first (mandatory for csv)
-        filename = output_metrics_path.split("/")[-1]
-        with tempfile.TemporaryDirectory() as tmpdir:
-            local_path = Path(tmpdir) / filename
-            metrics_df.to_csv(local_path, index=False)
-
-            # Then log as MLflow artifact
-            mlflow.log_artifact(str(local_path), artifact_path=None)
-
-        # Save detailed scores if requested
+        # Log detailed scores if requested
         if output_detailed_scores_path:
-            results_df.to_parquet(output_detailed_scores_path, index=False)
-            typer.secho(
-                f"Detailed query scores saved to: {output_detailed_scores_path}",
-                fg=typer.colors.GREEN,
-                err=True,
+            log_detailed_scores(
+                results_df,
+                output_detailed_scores_path,
             )
 
-        typer.secho(
-            f"✓ Metrics logged to MLflow run: {run_id}",
-            fg=typer.colors.CYAN,
-            err=True,
-        )
+    typer.secho(
+        f"✓ Metrics logged to MLflow run: {run_id}",
+        fg=typer.colors.CYAN,
+        err=True,
+    )
 
 
 if __name__ == "__main__":

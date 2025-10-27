@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import MetaPath2Vec
 
-from src.utils.commons import conditional_mlflow
+from src.utils.mlflow import conditional_mlflow, log_model_parameters
 
 EMBEDDING_COLUMN_NAME = "embeddings"
 EMBEDDING_DIM: int = 32  # DEBUG: should try 128 for better results once metrics are on
@@ -64,73 +64,6 @@ params = {
     "learning_rate": LEARNING_RATE,
     "metapath": METAPATH,
 }
-
-
-def _get_graph_statistics(graph_data: HeteroData) -> dict:
-    """
-    Build a dictionary of graph statistics to log to MLflow.
-
-    Returns:
-        dict: Dictionary containing graph statistics
-    """
-    graph_stats = {}
-
-    # Total nodes and edges
-    total_nodes = sum(
-        graph_data[node_type].num_nodes for node_type in graph_data.node_types
-    )
-    graph_stats["total_num_nodes"] = total_nodes
-
-    total_edges = sum(
-        graph_data[edge_type].num_edges for edge_type in graph_data.edge_types
-    )
-    graph_stats["total_num_edges"] = total_edges
-
-    # Node and edge type counts
-    graph_stats["num_node_types"] = len(graph_data.node_types)
-    graph_stats["num_edge_types"] = len(graph_data.edge_types)
-
-    # Num nodes per type
-    for node_type in graph_data.node_types:
-        graph_stats[f"num_nodes_{node_type}"] = graph_data[node_type].num_nodes
-
-    # Num edges per type
-    for edge_type in graph_data.edge_types:
-        # edge_type is a tuple like ('book', 'is_artist_id', 'artist_id')
-        edge_name = f"{edge_type[0]}__{edge_type[1]}__{edge_type[2]}"
-        graph_stats[f"num_edges_{edge_name}"] = graph_data[edge_type].num_edges
-
-    return graph_stats
-
-
-def _log_model_parameters(params: dict, graph_data: HeteroData) -> None:
-    """
-    Log model parameters to MLflow.
-
-    Args:
-        params (dict): Dictionary containing model parameters
-    """
-    metadata = params.copy()
-    graph_stats = _get_graph_statistics(graph_data)
-    _metapath = metadata.pop("metapath")
-    metadata["metapath_length"] = len(_metapath)
-    metadata.update(graph_stats)
-    mlflow.log_params(metadata)
-
-    # Log metapath as json artifact
-    metapath_dict = {
-        "metapath": [
-            {"step": i, "edge": f"{step[0]}->{step[1]}->{step[2]}"}
-            for i, step in enumerate(_metapath)
-        ]
-    }
-    mlflow.log_dict(metapath_dict, "config/metapath.json")
-
-    # Log metapath as text artifact
-    metapath_str = "\n".join(
-        f"{m['step']}: {m['edge']}" for m in metapath_dict["metapath"]
-    )
-    mlflow.log_text(metapath_str, "config/metapath.txt")
 
 
 @conditional_mlflow()
@@ -263,7 +196,7 @@ def train_metapath2vec(
     )
 
     # Log model parameters in mlflow
-    _log_model_parameters(params, graph_data)
+    log_model_parameters(params, graph_data)
 
     # Start training
     logger.info("Starting training...")

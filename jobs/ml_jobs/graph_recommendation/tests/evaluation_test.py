@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
-from src.evaluation import DEFAULT_EVAL_CONFIG, evaluate_embeddings
+from src.evaluation import DefaultEvaluationConfig, evaluate_embeddings
 
 
 @pytest.fixture()
@@ -240,7 +240,7 @@ def test_evaluate_embeddings_default_config_used(
         mock_join.return_value = mock_augmented_results
         mock_compute_scores.return_value = mock_scored_results
         mock_compute_metrics.return_value = (mock_metrics, mock_scored_results)
-
+        default_config = DefaultEvaluationConfig()
         # Execute with no custom config
         evaluate_embeddings(
             raw_data_parquet_path="fake.parquet",
@@ -249,14 +249,14 @@ def test_evaluate_embeddings_default_config_used(
 
         # Verify default values were used
         mock_sample.assert_called_once_with(
-            mock_table, n_samples=DEFAULT_EVAL_CONFIG["n_samples"]
+            mock_table, n_samples=default_config.n_samples
         )
 
         generate_kwargs = mock_generate.call_args[1]
-        assert generate_kwargs["n_retrieved"] == DEFAULT_EVAL_CONFIG["n_retrieved"]
+        assert generate_kwargs["n_retrieved"] == default_config.n_retrieved
 
         load_kwargs = mock_load_index.call_args[1]
-        assert load_kwargs["rebuild"] == DEFAULT_EVAL_CONFIG["rebuild_index"]
+        assert load_kwargs["rebuild"] == default_config.rebuild_index
 
 
 def test_default_eval_config_structure():
@@ -271,28 +271,26 @@ def test_default_eval_config_structure():
         "force_artist_weight",
         "rebuild_index",
     }
-
-    assert set(DEFAULT_EVAL_CONFIG.keys()) == required_keys
+    default_config = DefaultEvaluationConfig()
+    assert set(default_config.to_dict().keys()) == required_keys
 
     # Type checks
-    assert isinstance(DEFAULT_EVAL_CONFIG["metadata_columns"], list)
-    assert isinstance(DEFAULT_EVAL_CONFIG["n_samples"], int)
-    assert isinstance(DEFAULT_EVAL_CONFIG["n_retrieved"], int)
-    assert isinstance(DEFAULT_EVAL_CONFIG["k_values"], list)
-    assert isinstance(DEFAULT_EVAL_CONFIG["relevance_thresholds"], list)
-    assert isinstance(DEFAULT_EVAL_CONFIG["ground_truth_score"], str)
-    assert isinstance(DEFAULT_EVAL_CONFIG["force_artist_weight"], bool)
-    assert isinstance(DEFAULT_EVAL_CONFIG["rebuild_index"], bool)
+    assert isinstance(default_config.metadata_columns, list)
+    assert isinstance(default_config.n_samples, int)
+    assert isinstance(default_config.n_retrieved, int)
+    assert isinstance(default_config.k_values, list)
+    assert isinstance(default_config.relevance_thresholds, list)
+    assert isinstance(default_config.ground_truth_score, str)
+    assert isinstance(default_config.force_artist_weight, bool)
+    assert isinstance(default_config.rebuild_index, bool)
 
     # Value checks
-    assert DEFAULT_EVAL_CONFIG["n_samples"] > 0
-    assert DEFAULT_EVAL_CONFIG["n_retrieved"] > 0
-    assert len(DEFAULT_EVAL_CONFIG["k_values"]) > 0
-    assert len(DEFAULT_EVAL_CONFIG["relevance_thresholds"]) > 0
-    assert all(isinstance(k, int) for k in DEFAULT_EVAL_CONFIG["k_values"])
-    assert all(
-        isinstance(t, float) for t in DEFAULT_EVAL_CONFIG["relevance_thresholds"]
-    )
+    assert default_config.n_samples > 0
+    assert default_config.n_retrieved > 0
+    assert len(default_config.k_values) > 0
+    assert len(default_config.relevance_thresholds) > 0
+    assert all(isinstance(k, int) for k in default_config.k_values)
+    assert all(isinstance(t, float) for t in default_config.relevance_thresholds)
 
 
 def test_evaluate_embeddings_metadata_filtering(
@@ -334,11 +332,12 @@ def test_evaluate_embeddings_metadata_filtering(
         # Verify load_metadata_table was called with correct parameters
         mock_load_metadata.assert_called_once()
         call_kwargs = mock_load_metadata.call_args[1]
+        default_config = DefaultEvaluationConfig()
 
         assert call_kwargs["parquet_path"] == "fake.parquet"
         assert call_kwargs["filter_field"] == "item_id"
         assert "filter_values" in call_kwargs
-        assert call_kwargs["columns"] == DEFAULT_EVAL_CONFIG["metadata_columns"]
+        assert call_kwargs["columns"] == default_config.metadata_columns
 
         # Verify filter_values contains unique node IDs from retrieval results
         filter_values = call_kwargs["filter_values"]

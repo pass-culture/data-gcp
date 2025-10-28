@@ -184,9 +184,11 @@ PARAM_GRID = {"embedding_dim": [32, 64, 128]}  # , "metapath": metapaths}
 SHARED_PARAMS = {
     "base_dir": BASE_DIR,
 }
+
 with GridDAG(
     dag_id="algo_training_graph_embeddings_grid_search",
     description="Grid search training for graph embeddings",
+    ml_task_fn=ml_task_chain,
     param_grid=PARAM_GRID,
     common_params=SHARED_PARAMS,
     search_mode=ParameterSearchMode.ORTHOGONAL,
@@ -249,6 +251,6 @@ with GridDAG(
         },
     )
 
-    start_grid, end_grid = dag.build_grid(ml_task_chain)
+    start_grid, end_grid = dag.build_grid()
 
     start >> import_offer_as_parquet >> start_grid >> end_grid

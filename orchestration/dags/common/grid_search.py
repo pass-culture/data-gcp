@@ -1,16 +1,22 @@
 from itertools import product
 import hashlib
-import re
 
+from typing import Callable
 from enum import Enum
 from airflow.models import DAG
 from airflow.operators.empty import EmptyOperator
+from airflow.models import BaseOperator
+from airflow.utils.task_group import TaskGroup
 from airflow.utils.trigger_rule import TriggerRule
 from common.operators.gce import (
     StartGCEOperator,
     InstallDependenciesOperator,
     DeleteGCEOperator,
 )
+
+
+class InvalidGridError(Exception):
+    """Raised when a grid DAG cannot generate any valid parameter combinations."""
 
 
 class ExecutionMode(str, Enum):
@@ -20,7 +26,7 @@ class ExecutionMode(str, Enum):
 
 
 class ParameterSearchMode(str, Enum):
-    COMBINATORIC = "combinatoric"
+    COMBINATORIAL = "combinatorial"
     ORTHOGONAL = "orthogonal"
 
 
@@ -30,25 +36,29 @@ class GridDAG(DAG):
 
     Features:
         - Generates combinations of parameters either
-            - all combinations of parameters (combinatorics)
+            - all combinations of parameters (combinatorial)
             - orthogonal basis along each params, other axis are set to default
         - Launches a configurable number of VMs in parallel or sequentially.
         - Installs dependencies on each VM.
-        - Chains ML tasks for each parameter combination with safe Airflow task IDs.
+        - tasks_chains ML tasks for each parameter combination with safe Airflow task IDs.
         - Supports hashing long parameter values to keep task IDs valid.
         - Optional remapping of parameter values for shorter task IDs.
     """
 
+    _DEFAULT_MAX_PARALLEL_VMS = 8  # internal constant, read-only
+
     def __init__(
         self,
+        ml_task_fn: Callable[
+            [dict[str, object], str, str], BaseOperator | list[BaseOperator]
+        ],
         param_grid=None,
         common_params=None,
-        search_mode=ParameterSearchMode.COMBINATORIC,
+        search_mode=ParameterSearchMode.COMBINATORIAL,
         execution_mode=ExecutionMode.PARALLEL,
         n_vms=1,
         start_vm_kwargs=None,
         install_deps_kwargs=None,
-        max_suffix_len: int = 200,
         *args,
         **kwargs,
     ):
@@ -56,18 +66,23 @@ class GridDAG(DAG):
         Initialize the GridDAG.
 
         Args:
+            ml_task_fn: Function accepting (params, vm_name, suffix) returning
+                        BaseOperator or list of BaseOperators.
             param_grid (dict, optional): Dictionary of parameter lists for grid search.
             common_params (dict, optional): Parameters shared across all tasks.
-            search_mode (ParameterSearch_mode): ORTHOGONAL or COMBINATORIC
+            search_mode (ParameterSearch_mode): ORTHOGONAL or COMBINATORIAL
             execution_mode (ExecutionMode): PARALLEL, SEQUENTIAL, or DISPATCH mode.
             n_vms (int): Number of VMs to launch (used in DISPATCH mode).
             start_vm_kwargs (dict, optional): kwargs for StartGCEOperator.
             install_deps_kwargs (dict, optional): kwargs for InstallDependenciesOperator.
-            max_suffix_len (int): Maximum allowed length of generated task suffixes.
             *args: Additional DAG args.
             **kwargs: Additional DAG kwargs.
         """
         super().__init__(*args, **kwargs)
+        if not callable(ml_task_fn):
+            raise ValueError("ml_task_fn must be a callable")
+
+        self.ml_task_fn = ml_task_fn
         self.param_grid = param_grid or {}
         self.common_params = common_params or {}
         self.execution_mode = execution_mode
@@ -75,139 +90,112 @@ class GridDAG(DAG):
         self.n_vms = n_vms
         self.start_vm_kwargs = start_vm_kwargs or {}
         self.install_deps_kwargs = install_deps_kwargs or {}
-        self.chains = []
-        self.max_suffix_len = max_suffix_len
+        self.tasks_chains = []
+        self.max_parallel_vms = self._DEFAULT_MAX_PARALLEL_VMS
 
-        # Optional remap attribute, can be set externally if needed
-        self.remap: dict[str, dict[str, str]] | None = None
+    # ----------------- PROTECTED PROPERTY -----------------
 
-    def generate_param_combinations(self):
+    @property
+    def max_parallel_vms(self):
+        """Read-only max number of parallel VMs to limit cost."""
+        return self._max_parallel_vms
+
+    @max_parallel_vms.setter
+    def max_parallel_vms(self, value):
+        if hasattr(self, "_max_parallel_vms"):
+            raise AttributeError("max_parallel_vms is read-only and cannot be modified")
+        self._max_parallel_vms = value
+
+    # -----------------------------------------------------
+
+    def generate_param_combinations(self) -> list[dict[str, object]]:
         """
-        Generate parameter combinations based on search_mode.
+        Generate all parameter combinations based on search_mode.
 
         Supported modes:
-            - **COMBINATORIC**:
+            - COMBINATORIAL:
                 Generates the full Cartesian product of all parameters in `param_grid`.
                 Example:
                     param_grid = {"lr": [0.01, 0.1], "batch": [32, 64]}
+                    common_params = {"optimizer": "adam"}
                     → 4 combinations:
-                        [{'lr':0.01,'batch':32}, {'lr':0.01,'batch':64},
-                        {'lr':0.1,'batch':32}, {'lr':0.1,'batch':64}]
-            - **ORTHOGONAL**:
+                        [
+                            {'lr':0.01,'batch':32,'optimizer':'adam'},
+                            {'lr':0.01,'batch':64,'optimizer':'adam'},
+                            {'lr':0.1,'batch':32,'optimizer':'adam'},
+                            {'lr':0.1,'batch':64,'optimizer':'adam'}
+                        ]
+            - ORTHOGONAL:
                 Generates one combination per parameter dimension, varying one parameter
-                at a time while keeping all other parameters fixed to their default
-                values from `common_params`.
+                at a time while keeping other parameters fixed to defaults.
                 Example:
                     param_grid = {"lr": [0.01, 0.1], "batch": [32, 64]}
-                    common_params = {"lr": 0.01, "batch": 32}
+                    common_params = {"lr": 0.01, "batch": 32, "optimizer": "adam"}
                     → 2 combinations:
-                        [{'lr':0.1,'batch':32}, {'lr':0.01,'batch':64}]
+                        [
+                            {'lr':0.1,'batch':32,'optimizer':'adam'},
+                            {'lr':0.01,'batch':64,'optimizer':'adam'}
+                        ]
 
         Returns:
-            List[Tuple[dict, str | None]]: Each tuple contains:
-                - param_dict: dictionary of parameters for this combination
-                - varied_key: the key that is actually varied in this combination
-                (None in COMBINATORIC mode)
+            List[Dict[str, object]]: Each dict represents a parameter combination.
 
-        Notes:
-            - If `param_grid` is empty, returns a single combination with `common_params`.
-            - If all grid values equal their defaults in ORTHOGONAL mode, a single
-            default combination is returned.
+        Raises:
+            InvalidGridError: If no valid combinations can be generated.
         """
-        # If no grid parameters, return a single default combination
         if not self.param_grid:
-            return [(self.common_params.copy(), None)]
+            return [self.common_params.copy()]
 
-        combinations = []
+        combinations: list[dict[str, object]] = []
 
-        if self.search_mode == ParameterSearchMode.COMBINATORIC:
-            # Standard Cartesian product
+        if self.search_mode == ParameterSearchMode.COMBINATORIAL:
             keys = list(self.param_grid.keys())
             for values in product(*self.param_grid.values()):
                 comb = dict(zip(keys, values))
-                comb.update(self.common_params)  # merge defaults
-                combinations.append((comb, None))  # None because all keys matter
+                merged = {**self.common_params, **comb}  # grid values override defaults
+                combinations.append(merged)
 
         elif self.search_mode == ParameterSearchMode.ORTHOGONAL:
-            # One parameter varied at a time, others fixed to defaults
             for key, values in self.param_grid.items():
+                default = self.common_params.get(key, values[0])
                 for v in values:
+                    if v == default:
+                        continue
                     comb = self.common_params.copy()
-                    comb[key] = v  # set the varied value
-                    combinations.append((comb, key))  # mark which key was varied
+                    comb[key] = v
+                    combinations.append(comb)
 
-            # If no variations differ from defaults, include the default combination
-            if not combinations:
-                combinations.append((self.common_params.copy(), None))
+        if not combinations:
+            raise InvalidGridError(
+                "No valid parameter combinations could be generated "
+                f"(search_mode={self.search_mode}, param_grid={self.param_grid}, "
+                f"common_params={self.common_params})"
+            )
 
         return combinations
 
-    def _generate_suffix(
-        self, params: dict, idx: int, varied_key: str | None = None
-    ) -> str:
+    def _generate_suffix(self, params: dict[str, object], idx: int) -> str:
         """
-        Generate a unique suffix using only grid parameters (from param_grid keys).
-        Hashes long values automatically, prefixes hash with the param name.
-
-        Optionally, a remap dictionary can provide shorter representations.
+        Generate a unique task suffix using all parameters. Hashes the string if too long.
 
         Args:
-            params (dict): Parameter combination dictionary.
-            idx (int): Index of the combination for uniqueness.
-            varied_key (str | None): Key that is actually varied (ORTHOGONAL mode),
-                                        or None (COMBINATORIC mode).
+            params: Parameter combination dictionary
+            idx: Index for uniqueness
 
         Returns:
-            str: Safe, unique task suffix.
+            str: Safe, unique task suffix
+
+        Example:
+            params = {'lr':0.01,'batch':32,'optimizer':'adam'}
+            idx = 0
+            → "0_5f1d3b9c2a6e7d8f"  # hashed version of all params
         """
-        parts = []
+        combined_str = "_".join(f"{k}={v}" for k, v in sorted(params.items()))
+        hashed = hashlib.md5(combined_str.encode()).hexdigest()[:16]
 
-        # Determine which keys to include in the suffix
-        if self.search_mode == ParameterSearchMode.ORTHOGONAL:
-            if varied_key:
-                # Include the varied key plus any other keys that differ from default
-                keys_to_use = [
-                    k
-                    for k in self.param_grid.keys()
-                    if k == varied_key or params.get(k) != self.common_params.get(k)
-                ]
-            else:
-                # Default combination: include all grid keys that differ from default
-                keys_to_use = [
-                    k
-                    for k in self.param_grid.keys()
-                    if params.get(k) != self.common_params.get(k)
-                ]
-        else:
-            keys_to_use = self.param_grid.keys()
+        return f"{idx}_{hashed}"
 
-        for k in keys_to_use:
-            if k not in params:
-                continue
-            v_str = str(params[k])
-
-            # Apply remap dictionary if defined
-            if self.remap and k in self.remap:
-                v_str = self.remap[k].get(v_str, v_str)
-            # Hash long values to avoid overly long suffixes
-            elif len(v_str) > 50:
-                v_str = hashlib.md5(v_str.encode()).hexdigest()[:8]
-
-            # Sanitize: keep only valid characters for task_id
-            v_str = re.sub(r"[^a-zA-Z0-9._-]", "_", v_str)
-            parts.append(f"{k}_{v_str}")
-
-        # Construct final suffix
-        suffix = f"{idx}_{'_'.join(parts)}" if parts else str(idx)
-
-        # Fallback: truncate further if still too long
-        if len(suffix) > self.max_suffix_len:
-            hash_part = hashlib.md5("_".join(parts).encode()).hexdigest()[:8]
-            suffix = f"{idx}_{hash_part}"
-
-        return suffix
-
-    def build_grid(self, ml_task_fn):
+    def build_grid(self) -> tuple[EmptyOperator, EmptyOperator]:
         """
         Construct the DAG structure for running a parameter grid search workflow.
 
@@ -217,21 +205,18 @@ class GridDAG(DAG):
             - Creates start and stop VM tasks, plus dependency installation tasks per VM.
             - Assigns each parameter combination to a VM (round-robin) and generates
             unique, valid task suffixes for each combination.
-            - Calls `ml_task_fn` for each combination to produce the ML tasks and chains them sequentially.
+            - Calls `ml_task_fn` for each combination to produce the ML tasks and tasks_chains them sequentially.
             - Ensures proper task ordering and safe cleanup of VMs.
             - Returns DAG boundary markers for integration with other tasks.
-
-        Args:
-            ml_task_fn (Callable[[dict, str, str], Union[BaseOperator, list[BaseOperator]]]):
-                A function that accepts a parameter dictionary, VM instance name,
-                and unique suffix, and returns one or more Airflow tasks representing
-                the workflow for that parameter combination.
 
         Returns:
             Tuple[EmptyOperator, EmptyOperator]:
                 A tuple containing the start and end DAG markers (`EmptyOperator` tasks)
-                that enclose the grid workflow. These can be used to chain upstream
+                that enclose the grid workflow. These can be used to tasks_chain upstream
                 or downstream tasks in the DAG.
+
+        Raises:
+            ValueError: If `ml_task_fn` was not provided when initializing the DAG.
 
         Guidelines for `ml_task_fn`:
             1. Must return either a single Airflow task or a list of tasks.
@@ -243,64 +228,72 @@ class GridDAG(DAG):
             6. Use the `suffix` for filenames, logging, or tagging outputs to keep
             each parameter combination traceable.
         """
+
         combinations = self.generate_param_combinations()
         if not combinations:
-            return
+            raise InvalidGridError(
+                f"No valid parameter combinations to build DAG (param_grid={self.param_grid})"
+            )
 
-        # Determine number of VMs
-        if self.execution_mode == ExecutionMode.SEQUENTIAL:
+        if self.execution_mode == "SEQUENTIAL":
             self.n_vms = 1
-        elif self.execution_mode == ExecutionMode.PARALLEL:
-            self.n_vms = len(combinations)
-        # DISPATCH -> use specified n_vms
+        elif self.execution_mode == "DISPATCH":
+            self.n_vms = min(len(combinations), self.max_parallel_vms)
+        elif self.execution_mode == "PARALLEL":
+            if len(combinations) > self.max_parallel_vms:
+                self.execution_mode = "DISPATCH"
+            self.n_vms = min(len(combinations), self.max_parallel_vms)
 
         start_grid = EmptyOperator(task_id="start_grid")
         end_grid = EmptyOperator(task_id="end_grid", trigger_rule=TriggerRule.ALL_DONE)
 
         instance_names = [f"{self.dag_id}_vm_{i}" for i in range(self.n_vms)]
-        vm_to_chains = {i: [] for i in range(self.n_vms)}
-        for idx, (params, varied_key) in enumerate(combinations):
-            vm_idx = idx % self.n_vms
-            vm_to_chains[vm_idx].append((idx, params, varied_key))
+        vm_to_tasks_chains: dict[int, list[tuple[int, dict[str, object]]]] = {
+            vm_idx: [] for vm_idx in range(self.n_vms)
+        }
 
-        for vm_idx, chains in vm_to_chains.items():
-            instance_name = instance_names[vm_idx]
+        # Distribute task chain parameter combinations round-robin across VMs
+        for comb_idx, params in enumerate(combinations):
+            vm_idx = comb_idx % self.n_vms
+            vm_to_tasks_chains[vm_idx].append((comb_idx, params))
 
-            start_vm = StartGCEOperator(
-                task_id=f"start_vm_{vm_idx}",
-                instance_name=instance_name,
-                **self.start_vm_kwargs,
-            )
-            start_grid >> start_vm
+        with TaskGroup(group_id="grid_group") as grid_group:
+            for vm_idx, tasks_chains in vm_to_tasks_chains.items():
+                instance_name = instance_names[vm_idx]
 
-            install = InstallDependenciesOperator(
-                task_id=f"install_{vm_idx}",
-                instance_name=instance_name,
-                **self.install_deps_kwargs,
-            )
-            start_vm >> install
+                start_vm = StartGCEOperator(
+                    task_id=f"start_vm_{vm_idx}",
+                    instance_name=instance_name,
+                    **self.start_vm_kwargs,
+                )
 
-            prev_task = install
-            for idx, params, varied_key in chains:
-                # Generate suffix using the varied_key (or all keys for combinatoric)
-                suffix_task = self._generate_suffix(params, idx, varied_key)
-                ml_task_sequence = ml_task_fn(params, instance_name, suffix_task)
+                install = InstallDependenciesOperator(
+                    task_id=f"install_{vm_idx}",
+                    instance_name=instance_name,
+                    **self.install_deps_kwargs,
+                )
+                start_vm >> install
 
-                if not isinstance(ml_task_sequence, list):
-                    ml_task_sequence = [ml_task_sequence]
+                prev_task = install
+                for comb_idx, params in tasks_chains:
+                    # Generate hashed suffix for uniqueness
+                    suffix = self._generate_suffix(params, comb_idx)
+                    ml_tasks = self.ml_task_fn(params, instance_name, suffix)
+                    if not isinstance(ml_tasks, list):
+                        ml_tasks = [ml_tasks]
 
-                for i, task in enumerate(ml_task_sequence):
-                    if prev_task != install and (i % len(ml_task_sequence)) == 0:
-                        task.trigger_rule = TriggerRule.ALL_DONE
-                    prev_task >> task
-                    prev_task = task
+                    for task_idx, task in enumerate(ml_tasks):
+                        if prev_task != install and task_idx % len(ml_tasks) == 0:
+                            task.trigger_rule = TriggerRule.ALL_DONE
+                        prev_task >> task
+                        prev_task = task
 
-            stop_vm = DeleteGCEOperator(
-                task_id=f"stop_vm_{vm_idx}",
-                instance_name=instance_name,
-                trigger_rule=TriggerRule.NONE_FAILED_MIN_ONE_SUCCESS,
-            )
-            prev_task >> stop_vm
-            stop_vm >> end_grid
+                stop_vm = DeleteGCEOperator(
+                    task_id=f"stop_vm_{vm_idx}",
+                    instance_name=instance_name,
+                    trigger_rule=TriggerRule.NONE_FAILED_MIN_ONE_SUCCESS,
+                )
+                prev_task >> stop_vm
 
+        start_grid >> grid_group >> end_grid
         return start_grid, end_grid

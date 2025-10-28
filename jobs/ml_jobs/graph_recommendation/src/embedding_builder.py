@@ -1,10 +1,6 @@
-import json
-import sys
 import time
-from dataclasses import asdict, dataclass, field
 from datetime import timedelta
 from pathlib import Path
-from typing import Any
 
 import mlflow
 import pandas as pd
@@ -16,80 +12,8 @@ from torch.utils.data import DataLoader
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import MetaPath2Vec
 
+from src.constants import DefaultTrainingConfig, InvalidConfigError
 from src.utils.mlflow import conditional_mlflow, log_model_parameters
-
-
-@dataclass
-class DefaultTrainingConfig:
-    embedding_column_name: str = "embeddings"
-    embedding_dim: int = 32  # DEBUG: can try 128 later
-    metapath_repetitions: int = 2  # walk_len = len(metaphath) * metapath_inter
-    context_size: int = 10
-    walks_per_node: int = 5
-    num_negative_samples: int = 5
-    num_epochs: int = 15
-    num_workers: int = 8 if sys.platform == "linux" else 0
-    batch_size: int = 256
-    learning_rate: float = 0.01
-    metapath: list[tuple[str, str, str]] = field(
-        default_factory=lambda: (
-            4
-            * [
-                ("book", "is_artist_id", "artist_id"),
-                ("artist_id", "artist_id_of", "book"),
-            ]
-            + 4
-            * [
-                ("book", "is_gtl_label_level_4", "gtl_label_level_4"),
-                ("gtl_label_level_4", "gtl_label_level_4_of", "book"),
-            ]
-            + 3
-            * [
-                ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
-                ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
-            ]
-            + 2
-            * [
-                ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
-                ("gtl_label_level_2", "gtl_label_level_2_of", "book"),
-            ]
-            + [
-                ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
-                ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
-            ]
-        )
-    )
-
-    def update_from_json(self, json_str: str):
-        """
-        Update configuration from a JSON string. Logs errors/warnings instead of raising
-
-        Args:
-            json_str: JSON string containing overrides for any config field.
-        """
-        try:
-            updates = json.loads(json_str)
-        except json.JSONDecodeError as e:
-            logger.error(f"Invalid JSON for TrainConfig: {e}")
-            return
-        for k, v in updates.items():
-            if hasattr(self, k):
-                setattr(self, k, v)
-            else:
-                logger.warning(f"Ignored unknown TrainConfig field: {k}")
-
-    def update_from_dict(self, config_dict: dict):
-        """Update fields from a dictionary, logging errors instead of raising."""
-        assert isinstance(config_dict, dict), "config_dict must be a dictionary"
-        for k, v in config_dict.items():
-            if hasattr(self, k):
-                setattr(self, k, v)
-            else:
-                logger.warning(f"Ignored unknown config field: {k}")
-
-    def to_dict(self) -> dict[str, Any]:
-        """Return config as a dictionary."""
-        return asdict(self)
 
 
 @conditional_mlflow()
@@ -186,10 +110,10 @@ def train_metapath2vec(
         config = DefaultTrainingConfig()
         config.update_from_dict(train_params)
     else:
-        logger.warning(
-            "train_params must be DefaultTrainingConfig, dict, or None; using defaults"
+        raise InvalidConfigError(
+            f"train_params must be DefaultTrainingConfig, dict, or None, "
+            f"got {type(train_params).__name__}"
         )
-        config = DefaultTrainingConfig()
 
     logger.info("Graph info:")
     logger.info(f"  Node types: {graph_data.node_types}")

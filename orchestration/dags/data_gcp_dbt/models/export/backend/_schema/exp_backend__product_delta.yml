@@ -13,61 +13,58 @@ models:
           - unique:
               tags: ['critical']
 
-      - name: titre
-        description: "{{ doc('column__titre') }}"
+      - name: name
+        description: "{{ doc('column__name') }}"
         tests:
           - not_null:
               tags: ['critical']
 
-      - name: resume
-        description: "{{ doc('column__resume') }}"
+      - name: description
+        description: "{{ doc('column__description') }}"
 
-      - name: codesupport
-        description: "{{ doc('column__codesupport') }}"
+      - name: support_code
+        description: "{{ doc('column__support_code') }}"
         tests:
           - not_null:
               tags: ['critical']
 
-      - name: dateparution
-        description: "{{ doc('column__dateparution') }}"
+      - name: publication_date
+        description: "{{ doc('column__publication_date') }}"
 
-      - name: editeur
-        description: "{{ doc('column__editeur') }}"
+      - name: publisher
+        description: "{{ doc('column__publisher') }}"
 
-      - name: langueiso
-        description: "{{ doc('column__langueiso') }}"
+      - name: language_iso
+        description: "{{ doc('column__language_iso') }}"
 
-      - name: taux_tva
-        description: "{{ doc('column__taux_tva') }}"
+      - name: vat_rate
+        description: "{{ doc('column__vat_rate') }}"
 
-      - name: prix
-        description: "{{ doc('column__prix') }}"
+      - name: price
+        description: "{{ doc('column__price') }}"
 
-      - name: id_lectorat
-        description: "{{ doc('column__id_lectorat') }}"
+      - name: readership_id
+        description: "{{ doc('column__readership_id') }}"
 
       - name: gtl
         description: "{{ doc('column__gtl') }}"
 
-      - name: auteurs_multi
-        description: "{{ doc('column__auteurs_multi') }}"
+      - name: multiple_authors
+        description: "{{ doc('column__multiple_authors') }}"
 
       - name: recto_uuid
         description: "{{ doc('column__recto_uuid') }}"
 
-      - name: verso_image_uuid
-        description: "{{ doc('column__verso_image_uuid') }}"
+      - name: verso_uuid
+        description: "{{ doc('column__verso_uuid') }}"
 
-      - name: product_modification_date
-        description: "{{ doc('column__product_modification_date') }}"
+      - name: image
+        description: "{{ doc('column__image') }}"
+
+      - name: image_4
+        description: "{{ doc('column__image_4') }}"
+
+      - name: modification_date
+        description: "{{ doc('column__modification_date') }}"
         tests:
           - not_null
-
-      - name: action
-        description: "{{ doc('column__backend_crud_action') }}"
-        tests:
-          - not_null:
-              tags: ['critical']
-          - accepted_values:
-              values: ['add', 'update']
-              tags: ['critical']

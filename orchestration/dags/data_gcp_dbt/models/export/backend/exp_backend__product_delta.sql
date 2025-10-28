@@ -5,7 +5,10 @@ with
     last_successful_sync as (
         select max(date) as last_sync_date
         from {{ source("raw", "applicative_database_local_provider_event") }}
-        where providerid in ('1082', '2190') and payload = 'paper' and type = 'SyncEnd'
+        where
+            providerid in ('9', '16', '17', '19', '20', '1082', '2156', '2190')
+            and payload = 'paper'
+            and type = 'SyncEnd'
     ),
 
     changed_products_snapshot as (
@@ -24,39 +27,24 @@ with
             and regexp_contains(
                 json_value(snap.json_raw, '$.article[0].codesupport'), r'[a-zA-Z]'
             )
-    ),
-
-    existing_backend_products as (
-        select distinct ean
-        from {{ source("raw", "applicative_database_product") }}
-        where
-            ean is not null
-            and lastproviderid in (9, 16, 17, 19, 20, 1082, 2190)
-            and subcategoryid = 'LIVRE_PAPIER'
     )
 
 select
     delta.ean,
-
-    json_value(json_raw, '$.titre') as titre,
-    json_value(json_raw, '$.article[0].resume') as resume,
-    json_value(json_raw, '$.article[0].codesupport') as codesupport,
-    json_value(json_raw, '$.article[0].dateparution') as dateparution,
-    json_value(json_raw, '$.article[0].editeur') as editeur,
-    json_value(json_raw, '$.article[0].langueiso') as langueiso,
-    json_value(json_raw, '$.article[0].taux_tva') as taux_tva,
-    cast(json_value(json_raw, '$.article[0].prix') as numeric) as prix,
-    cast(json_value(json_raw, '$.article[0].id_lectorat') as int64) as id_lectorat,
-
+    json_value(json_raw, '$.titre') as name,
+    json_value(json_raw, '$.article[0].resume') as description,
+    json_value(json_raw, '$.article[0].codesupport') as support_code,
+    json_value(json_raw, '$.article[0].dateparution') as publication_date,
+    json_value(json_raw, '$.article[0].editeur') as publisher,
+    json_value(json_raw, '$.article[0].langueiso') as language_iso,
+    json_value(json_raw, '$.article[0].taux_tva') as vat_rate,
+    cast(json_value(json_raw, '$.article[0].prix') as numeric) as price,
+    cast(json_value(json_raw, '$.article[0].id_lectorat') as int64) as readership_id,
     parse_json(json_query(json_raw, '$.article[0].gtl')) as gtl,
-    parse_json(json_query(json_raw, '$.auteurs_multi')) as auteurs_multi,
-
+    parse_json(json_query(json_raw, '$.auteurs_multi')) as multiple_authors,
     delta.recto_image_uuid as recto_uuid,
-    delta.verso_image_uuid as verso_image_uuid,
-
-    delta.dbt_valid_from as product_modification_date,
-    case
-        when backend.ean is null then 'add' when backend.ean is not null then 'update'
-    end as action
+    delta.verso_image_uuid as verso_uuid,
+    cast(json_value(json_raw, '$.article[0].image') as int64) as image,
+    cast(json_value(json_raw, '$.article[0].image_4') as int64) as image_4,
+    delta.dbt_valid_from as modification_date
 from changed_products_snapshot as delta
-left join existing_backend_products as backend on delta.ean = backend.ean

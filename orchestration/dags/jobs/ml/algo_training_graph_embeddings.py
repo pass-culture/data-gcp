@@ -158,7 +158,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
         command="cli evaluate-metapath2vec "
-        "{{ ti.xcom_pull(task_ids='train') }} "
+        "{{ ti.xcom_pull(task_ids='train', key='stdout') }} "
         f"{STORAGE_BASE_PATH}/raw_input/ "
         f"{STORAGE_BASE_PATH}/{EMBEDDINGS_FILENAME} "
         f"{STORAGE_BASE_PATH}/evaluation_metrics.csv "

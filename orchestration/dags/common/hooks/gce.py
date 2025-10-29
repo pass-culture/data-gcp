@@ -179,8 +179,8 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
             (
                 {self._trap_handlers}
 
-                # Execute the command and capture output
-                {command} > {self._job_dir}/output 2>&1
+                # Execute the command and capture stdout and stderr separately
+                {command} > {self._job_dir}/stdout 2> {self._job_dir}/stderr
 
                 # Mark successful completion
                 echo "completed" > {self._job_dir}/status
@@ -208,16 +208,19 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
                 # Check if process is still running
                 if [ "$status" = "running" ] && ! kill -0 $pid 2>/dev/null; then
                     echo "failed" > $JOB_DIR/status
-                    echo "Process died unexpectedly" >> $JOB_DIR/output
+                    echo "Process died unexpectedly" >> $JOB_DIR/stderr
                 fi
 
-                output=$(cat $JOB_DIR/output 2>/dev/null || echo "No output yet")
-                echo "STATUS:$(cat $JOB_DIR/status)"
-                echo "OUTPUT:$output"
+                stdout=$(cat $JOB_DIR/stdout 2>/dev/null || echo "")
+                stderr=$(cat $JOB_DIR/stderr 2>/dev/null || echo "")
+                echo "STATUS:$status"
+                echo "STDOUT:$stdout"
+                echo "STDERR:$stderr"
                 echo "PID:$pid"
             else
                 echo "STATUS:failed"
-                echo "OUTPUT:Job directory not found"
+                echo "STDOUT:"
+                echo "STDERR:Job directory not found"
                 echo "PID:0"
             fi
         """
@@ -235,7 +238,8 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
                 if [ "$status" != "running" ]; then
                     # Archive the output before cleaning
                     mkdir -p {self._job_base_dir}/archive
-                    cp $JOB_DIR/output {self._job_base_dir}/archive/{self.job_id}_output.log 2>/dev/null || true
+                    cp $JOB_DIR/stdout {self._job_base_dir}/archive/{self.job_id}_stdout.log 2>/dev/null || true
+                    cp $JOB_DIR/stderr {self._job_base_dir}/archive/{self.job_id}_stderr.log 2>/dev/null || true
                     rm -rf $JOB_DIR
                 fi
             fi
@@ -245,7 +249,7 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
 
     def _parse_check_command_output(self, raw: str | bytes) -> DeferrableSSHJobStatus:
         """
-        Extracts STATUS and OUTPUT from raw SSH output.
+        Extracts STATUS, STDOUT, STDERR, PID and raw logs from raw SSH output.
         Returns (status_str or None, output_text).
         """
         # Always ensure we're working with a string
@@ -255,12 +259,16 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
             raw = str(raw)
 
         m_status = re.search(r"STATUS:(\w+)", raw)
-        m_output = re.search(r"OUTPUT:(.*)", raw, re.DOTALL)
+        m_stdout = re.search(r"STDOUT:(.*)", raw, re.DOTALL)
+        m_stderr = re.search(r"STDERR:(.*)", raw, re.DOTALL)
         m_pid = re.search(r"PID:(\d+)", raw)
         status = m_status.group(1).lower() if m_status else None
-        output = m_output.group(1).strip() if m_output else "No output available"
+        stdout = m_stdout.group(1).strip() if m_stdout else ""
+        stderr = m_stderr.group(1).strip() if m_stderr else ""
         pid = m_pid.group(1) if m_pid else None
-        return DeferrableSSHJobStatus(status=status, output=output, pid=pid, logs=raw)
+        return DeferrableSSHJobStatus(
+            status=status, stdout=stdout, stderr=stderr, pid=pid, logs=raw
+        )
 
 
 class GCEHook(GoogleBaseHook):

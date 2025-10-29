@@ -368,7 +368,7 @@ def ml_task_chain(params, instance_name, suffix):
         base_dir=BASE_DIR,
         command=(
             "cli evaluate-metapath2vec "
-            f"{{{{ ti.xcom_pull(task_ids='train_{suffix}') }}}} "
+            f"{{{{ ti.xcom_pull(task_ids='train_{suffix}', key='stdout') }}}} "
             f"{STORAGE_BASE_PATH}/raw_input/ "
             f"{STORAGE_BASE_PATH}/{suffix}_{EMBEDDINGS_FILENAME} "
             f"{STORAGE_BASE_PATH}/{suffix}_evaluation_metrics.csv "

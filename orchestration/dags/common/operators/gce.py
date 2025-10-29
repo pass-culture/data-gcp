@@ -157,6 +157,7 @@ class BaseSSHGCEOperator(BaseOperator):
         environment: t.Dict[str, str] = {},
         gce_zone=GCE_ZONE,
         deferrable: bool = False,
+        do_xcom_push: bool = False,
         poll_interval: int = 300,
         *args,
         **kwargs,
@@ -166,6 +167,7 @@ class BaseSSHGCEOperator(BaseOperator):
         self.environment = environment
         self.gce_zone = gce_zone
         self.deferrable = deferrable
+        self.do_xcom_push = do_xcom_push
         self.poll_interval = poll_interval
         super(BaseSSHGCEOperator, self).__init__(*args, **kwargs)
 
@@ -246,10 +248,15 @@ class BaseSSHGCEOperator(BaseOperator):
 
         if status == "completed":
             self.log.info("Job completed successfully")
+            stdout = event.get("stdout", "")
+            stderr = event.get("stderr", "")
             if logs:
                 self.log.info(f"Job logs: {logs}")
             if message:
                 self.log.info(f"Job message: {message}")
+            if self.do_xcom_push and stdout:
+                context["ti"].xcom_push(key="stdout", value=stdout)
+                context["ti"].xcom_push(key="stderr", value=stderr)
             return
         elif status == "running":
             # This shouldn't happen as we only get here after the trigger is done
@@ -283,6 +290,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         base_dir: str = None,
         environment: t.Dict[str, str] = {},
         deferrable: bool = False,
+        do_xcom_push: bool = False,
         poll_interval: int = 300,
         *args,
         **kwargs,
@@ -292,6 +300,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         self.command = command
         self.instance_name = instance_name
         self.deferrable = deferrable
+        self.do_xcom_push = do_xcom_push
         self.poll_interval = poll_interval
 
         super(SSHGCEOperator, self).__init__(
@@ -299,6 +308,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
             command=self.command,
             environment=self.environment,
             deferrable=self.deferrable,
+            do_xcom_push=self.do_xcom_push,
             poll_interval=self.poll_interval,
             *args,
             **kwargs,

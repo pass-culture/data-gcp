@@ -115,52 +115,44 @@ jobs:
           AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
         run: gsutil cp target/manifest.json gs://$AIRFLOW_DAGS_BUCKET/data/target/manifest.json
 
-      - uses: tj-actions/changed-files@v41
-        id: changed-dags
-        with:
-          files: "orchestration/dags/jobs/**"
-
-      - name: Identify POC DAGs to exclude
-        id: filter_poc
-        working-directory: ./orchestration/dags/jobs/ml/poc
+      # Compute exclusion regex for folders with .rsyncignore
+      - name: "Compute EXCLUDE_REGEX for ignoring folders sync"
+        id: compute_rsyncignore
         run: |
-          # List all POC DAGs in the folder
-          ALL_POC_DAGS=$(ls *.py)
-          echo "All POC DAGs: $ALL_POC_DAGS"
+          readonly source_dir="dags"
 
-          # Extract only filenames of changed DAGs from action output
-          CHANGED_FILES=$(echo "${{ steps.changed-dags.outputs.all_changed_files }}" | tr ' ' '\n' | xargs -n1 basename)
-          echo "Changed DAG files: $CHANGED_FILES"
-
-          # Identify unchanged POC DAGs
-          EXCLUDE_POC_DAGS=""
-          for dag in $ALL_POC_DAGS; do
-            if ! echo "$CHANGED_FILES" | grep -qx "$dag"; then
-              EXCLUDE_POC_DAGS="$EXCLUDE_POC_DAGS $dag"
-            fi
-          done
-          echo "POC DAGs to exclude: $EXCLUDE_POC_DAGS"
+          # Find all subfolders containing a .rsyncignore file
+          EXCLUDE_DIRS=$(find "$source_dir" -type f -name ".rsyncignore" -exec dirname {} \;)
 
           # Build regex for gsutil -x
-          if [ -n "$EXCLUDE_POC_DAGS" ]; then
-            # Replace spaces with | and escape special characters
-            EXCLUDE_REGEX=$(echo $EXCLUDE_POC_DAGS | sed 's/ /|/g')
-          else
-            EXCLUDE_REGEX=""
+          EXCLUDE_REGEX=""
+          if [ -n "$EXCLUDE_DIRS" ]; then
+            for dir in $EXCLUDE_DIRS; do
+              # Escape regex special characters
+              safe_dir=$(printf '%s' "$dir" | sed 's/[.[\*^$(){}+?|]/\\&/g')
+              EXCLUDE_REGEX="${EXCLUDE_REGEX}${safe_dir}/.*|"
+            done
+            # Remove trailing |
+            EXCLUDE_REGEX="${EXCLUDE_REGEX%|}"
           fi
 
-          # Export as environment variable for next steps
+          # Export for next step
           echo "EXCLUDE_REGEX=$EXCLUDE_REGEX" >> $GITHUB_ENV
+          echo "EXCLUDE_REGEX=$EXCLUDE_REGEX"
+        shell: bash
 
-      - name: Deploy Airflow DAGs
+      # Step 2: Deploy DAGs to GCS, using computed EXCLUDE_REGEX
+      - name: "Deploy Airflow (dags)"
         run: |
           readonly bucket="${{ inputs.AIRFLOW_DAGS_BUCKET }}"
-          readonly source_dir="./orchestration/dags/jobs/ml"
+          readonly source_dir="dags"
+
           echo "Deploying DAGs..."
           if [ -z "$EXCLUDE_REGEX" ]; then
-            gsutil -m rsync -r ./orchestration/dags/jobs/ml gs://${bucket}/dags
+            gsutil -m rsync -d -r "$source_dir" "gs://${bucket}/dags"
           else
-            gsutil -m rsync -r -x "$EXCLUDE_REGEX" ./orchestration/dags/jobs/ml gs://${bucket}/dags
+            echo "Excluding folders matching: $EXCLUDE_REGEX"
+            gsutil -m rsync -d -r -x "$EXCLUDE_REGEX" "$source_dir" "gs://${bucket}/dags"
           fi
         shell: bash
 

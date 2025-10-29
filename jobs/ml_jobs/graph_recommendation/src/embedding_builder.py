@@ -1,4 +1,3 @@
-import sys
 import time
 from datetime import timedelta
 from pathlib import Path
@@ -13,57 +12,8 @@ from torch.utils.data import DataLoader
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import MetaPath2Vec
 
+from src.constants import DefaultTrainingConfig, InvalidConfigError
 from src.utils.mlflow import conditional_mlflow, log_model_parameters
-
-EMBEDDING_COLUMN_NAME = "embeddings"
-EMBEDDING_DIM: int = 32  # DEBUG: should try 128 for better results once metrics are on
-WALK_LENGTH = 14 * 2  # DEBUG: should try 14*4 for better results once metrics are on
-CONTEXT_SIZE = 10
-WALKS_PER_NODE = 5
-NUM_NEGATIVE_SAMPLES = 5
-NUM_EPOCHS = 15
-NUM_WORKERS = 12 if sys.platform == "linux" else 0
-BATCH_SIZE = 256
-LEARNING_RATE = 0.01
-METAPATH = (
-    4
-    * [
-        ("book", "is_artist_id", "artist_id"),
-        ("artist_id", "artist_id_of", "book"),
-    ]
-    + 4
-    * [
-        ("book", "is_gtl_label_level_4", "gtl_label_level_4"),
-        ("gtl_label_level_4", "gtl_label_level_4_of", "book"),
-    ]
-    + 3
-    * [
-        ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
-        ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
-    ]
-    + 2
-    * [
-        ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
-        ("gtl_label_level_2", "gtl_label_level_2_of", "book"),
-    ]
-    + [
-        ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
-        ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
-    ]
-)
-
-
-params = {
-    "embedding_dim": EMBEDDING_DIM,
-    "walk_length": WALK_LENGTH,
-    "context_size": CONTEXT_SIZE,
-    "walks_per_node": WALKS_PER_NODE,
-    "num_negative_samples": NUM_NEGATIVE_SAMPLES,
-    "num_epochs": NUM_EPOCHS,
-    "batch_size": BATCH_SIZE,
-    "learning_rate": LEARNING_RATE,
-    "metapath": METAPATH,
-}
 
 
 @conditional_mlflow()
@@ -141,8 +91,7 @@ def _train(
 def train_metapath2vec(
     graph_data: HeteroData,
     checkpoint_path: Path = Path("checkpoints/best_metapath2vec_model.pt"),
-    params: dict = params,
-    num_workers=NUM_WORKERS,
+    train_params: DefaultTrainingConfig | dict | None = None,
     profile=False,
 ) -> pd.DataFrame:
     """
@@ -151,6 +100,21 @@ def train_metapath2vec(
     Returns:
         DataFrame with ['item_id', 'gtl_id', EMBEDDING_COLUMN_NAME] columns
     """
+
+    # Merge config with defaults
+    if train_params is None:
+        params = DefaultTrainingConfig()
+    elif isinstance(train_params, DefaultTrainingConfig):
+        params = train_params
+    elif isinstance(train_params, dict):
+        config = DefaultTrainingConfig()
+        config.update_from_dict(train_params)
+    else:
+        raise InvalidConfigError(
+            f"train_params must be DefaultTrainingConfig, dict, or None, "
+            f"got {type(train_params).__name__}"
+        )
+
     logger.info("Graph info:")
     logger.info(f"  Node types: {graph_data.node_types}")
     logger.info(f"  Edge types: {graph_data.edge_types}")
@@ -159,15 +123,17 @@ def train_metapath2vec(
     logger.info(f"Using device: {device}")
 
     # Retrieve parameters from params dict
-    embedding_dim = params["embedding_dim"]
-    metapath = params["metapath"]
-    walk_length = params["walk_length"]
-    context_size = params["context_size"]
-    walks_per_node = params["walks_per_node"]
-    num_negative_samples = params["num_negative_samples"]
-    batch_size = params["batch_size"]
-    learning_rate = params["learning_rate"]
-    num_epochs = params["num_epochs"]
+    embedding_dim = params.embedding_dim
+    embedding_column_name = params.embedding_column_name
+    metapath = params.metapath
+    context_size = params.context_size
+    walk_length = int(len(params.metapath) * params.metapath_repetitions)
+    walks_per_node = params.walks_per_node
+    num_negative_samples = params.num_negative_samples
+    batch_size = params.batch_size
+    learning_rate = params.learning_rate
+    num_epochs = params.num_epochs
+    num_workers = params.num_workers
 
     model = MetaPath2Vec(
         graph_data.edge_index_dict,
@@ -196,7 +162,10 @@ def train_metapath2vec(
     )
 
     # Log model parameters in mlflow
-    log_model_parameters(params, graph_data)
+
+    log_model_parameters(
+        params.to_dict().update({"walk_length": walk_length}), graph_data
+    )
 
     # Start training
     logger.info("Starting training...")
@@ -253,7 +222,7 @@ def train_metapath2vec(
         {
             "node_ids": graph_data.book_ids,
             "gtl_id": graph_data.gtl_ids,
-            EMBEDDING_COLUMN_NAME: list(book_embeddings),
+            embedding_column_name: list(book_embeddings),
         }
     )
 

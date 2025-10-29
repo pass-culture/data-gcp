@@ -115,8 +115,48 @@ jobs:
           AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
         run: gsutil cp target/manifest.json gs://$AIRFLOW_DAGS_BUCKET/data/target/manifest.json
 
+      # Compute exclusion regex for folders with .rsyncignore
+      - name: "Compute EXCLUDE_REGEX for ignoring folders sync"
+        id: compute_rsyncignore
+        run: |
+          readonly source_dir="dags"
+
+          # Find all subfolders containing a .rsyncignore file
+          EXCLUDE_DIRS=$(find "$source_dir" -type f -name ".rsyncignore" -exec dirname {} \;)
+
+          # Build regex for gsutil -x
+          EXCLUDE_REGEX=""
+          if [ -n "$EXCLUDE_DIRS" ]; then
+            for dir in $EXCLUDE_DIRS; do
+              # Escape regex special characters
+              safe_dir=$(printf '%s' "$dir" | sed 's/[.[\*^$(){}+?|]/\\&/g')
+              EXCLUDE_REGEX="${EXCLUDE_REGEX}${safe_dir}/.*|"
+            done
+            # Remove trailing |
+            EXCLUDE_REGEX="${EXCLUDE_REGEX%|}"
+          fi
+
+          # Export for next step
+          echo "EXCLUDE_REGEX=$EXCLUDE_REGEX" >> $GITHUB_ENV
+          echo "EXCLUDE_REGEX=$EXCLUDE_REGEX"
+        shell: bash
+
+      # Step 2: Deploy DAGs to GCS, using computed EXCLUDE_REGEX
       - name: "Deploy Airflow (dags)"
-        run: gsutil -m rsync -d -r dags gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/dags
+        env:
+          AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
+        run: |
+          readonly bucket="$AIRFLOW_DAGS_BUCKET"
+          readonly source_dir="dags"
+
+          echo "Deploying DAGs..."
+          if [ -z "$EXCLUDE_REGEX" ]; then
+            gsutil -m rsync -d -r "$source_dir" "gs://${bucket}/dags"
+          else
+            echo "Excluding folders matching: $EXCLUDE_REGEX"
+            gsutil -m rsync -d -r -x "$EXCLUDE_REGEX" "$source_dir" "gs://${bucket}/dags"
+          fi
+        shell: bash
 
       - name: "Deploy Airflow (plugins)"
         run: gsutil -m rsync -d -r plugins gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/plugins

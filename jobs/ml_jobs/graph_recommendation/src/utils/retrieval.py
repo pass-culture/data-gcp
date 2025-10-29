@@ -5,12 +5,10 @@ import gcsfs
 import lancedb
 import numpy as np
 import pandas as pd
-from lancedb.pydantic import LanceModel, Vector
 from loguru import logger
 from tqdm import tqdm
 
-from src.constants import DATA_DIR
-from src.embedding_builder import EMBEDDING_COLUMN_NAME, EMBEDDING_DIM
+from src.constants import DATA_DIR, EMBEDDING_COLUMN
 from src.utils.commons import BUCKET_PREFIX, is_bucket_path
 
 # Import your existing GTL scoring functions
@@ -29,15 +27,6 @@ INDEX_TYPE = "IVF_PQ"
 EMBEDDING_METRIC = "cosine"
 LANCEDB_PATH = f"{DATA_DIR}/metadata/vector"
 TABLE_NAME = "embedding_table"
-
-
-def create_book_embedding_model():
-    class BookEmbeddingModel(LanceModel):
-        node_ids: str
-        gtl_id: str
-
-    BookEmbeddingModel.__annotations__[EMBEDDING_COLUMN_NAME] = Vector(EMBEDDING_DIM)
-    return BookEmbeddingModel
 
 
 def load_and_index_embeddings(
@@ -76,7 +65,7 @@ def load_and_index_embeddings(
 
     logger.info(f"Loaded {len(df)} items from parquet")
 
-    non_null_columns = ["node_ids", "gtl_id", EMBEDDING_COLUMN_NAME]
+    non_null_columns = ["node_ids", "gtl_id", EMBEDDING_COLUMN]
     null_rows = df[df[non_null_columns].isnull().any(axis=1)]
     if not null_rows.empty:
         logger.error(
@@ -95,22 +84,18 @@ def load_and_index_embeddings(
         logger.info(f"Dropping existing table '{table_name}'")
         db.drop_table(table_name)
 
-    # Create BookEmbeddingModel instance
-    book_embedding_model = create_book_embedding_model()
-
     # Create new table
     logger.info(f"Creating LanceDB table '{table_name}'")
     table = db.create_table(
         table_name,
         make_batches(df, LANCEDB_BATCH_SIZE),
-        schema=book_embedding_model,
     )
     logger.info(f"Table created with {len(table)} items")
 
     # Create vector index
     logger.info("Creating vector index...")
     table.create_index(
-        vector_column_name=EMBEDDING_COLUMN_NAME,
+        vector_column_name=EMBEDDING_COLUMN,
         index_type=INDEX_TYPE,
         num_partitions=NUM_PARTITIONS,
         num_sub_vectors=NUM_SUB_VECTORS,
@@ -683,7 +668,7 @@ def get_embedding_for_item_lazy(
     if len(results) == 0:
         return None
 
-    return results.iloc[0][EMBEDDING_COLUMN_NAME]
+    return results.iloc[0][EMBEDDING_COLUMN]
 
 
 def generate_predictions_lazy(

@@ -168,7 +168,7 @@ def train_metapath2vec_command(
     embedding_output_path: str = EMBEDDING_OUTPUT_OPTION,
     num_workers: int = NUM_WORKERS_OPTION,
     nrows: int | None = NROWS_OPTION,
-) -> None:
+) -> str:
     """Train a Metapath2Vec model on the book-to-metadata graph and save it to disk."""
 
     # Connect to MLflow

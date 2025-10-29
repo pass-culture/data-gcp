@@ -254,8 +254,6 @@ def train_metapath2vec_command(
             f" Logging run_id to {MLFLOW_RUN_ID_FILEPATH}",
             fg=typer.colors.CYAN,
         )
-        with open(MLFLOW_RUN_ID_FILEPATH, "w") as f:
-            f.write(run_id)
 
         # Graph building
         graph_data = lazy_graph_building(
@@ -281,6 +279,7 @@ def train_metapath2vec_command(
 
 @app.command("evaluate-metapath2vec")
 def evaluate_metapath2vec_command(
+    run_id: str = RUN_ID_ARGUMENT,
     raw_data_path: str = PARQUET_ARGUMENT,
     embedding_path: str = EMBEDDING_INPUT_ARGUMENT,
     output_metrics_path: str = METRICS_OUTPUT_ARGUMENT,

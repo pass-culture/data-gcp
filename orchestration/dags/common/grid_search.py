@@ -1,9 +1,10 @@
 from itertools import product
 import hashlib
+import json
 
 from typing import Callable
 from enum import Enum
-from airflow.models import DAG
+from airflow.models import DAG, Param
 from airflow.operators.empty import EmptyOperator
 from airflow.models import BaseOperator
 from airflow.utils.task_group import TaskGroup
@@ -59,6 +60,7 @@ class GridDAG(DAG):
         n_vms=1,
         start_vm_kwargs=None,
         install_deps_kwargs=None,
+        use_params_for_grid_config=False,
         *args,
         **kwargs,
     ):
@@ -70,24 +72,76 @@ class GridDAG(DAG):
                         BaseOperator or list of BaseOperators.
             param_grid (dict, optional): Dictionary of parameter lists for grid search.
             common_params (dict, optional): Parameters shared across all tasks.
-            search_mode (ParameterSearch_mode): ORTHOGONAL or COMBINATORIAL
+            search_mode (ParameterSearchMode): ORTHOGONAL or COMBINATORIAL
             execution_mode (ExecutionMode): PARALLEL, SEQUENTIAL, or DISPATCH mode.
             n_vms (int): Number of VMs to launch (used in DISPATCH mode).
             start_vm_kwargs (dict, optional): kwargs for StartGCEOperator.
             install_deps_kwargs (dict, optional): kwargs for InstallDependenciesOperator.
+            use_params_for_grid_config (bool): If True, reads grid configuration from
+                                               DAG params instead of constructor args.
             *args: Additional DAG args.
             **kwargs: Additional DAG kwargs.
         """
+        # Add grid configuration params if not already present and use_params_for_grid_config is True
+        if use_params_for_grid_config:
+            default_params = {
+                "param_grid_json": Param(
+                    default=json.dumps(param_grid or {}),
+                    type="string",
+                    description="JSON string of parameter grid for grid search",
+                ),
+                "common_params_json": Param(
+                    default=json.dumps(common_params or {}),
+                    type="string",
+                    description="JSON string of common parameters shared across all tasks",
+                ),
+                "search_mode": Param(
+                    default=search_mode.value
+                    if isinstance(search_mode, ParameterSearchMode)
+                    else search_mode,
+                    enum=[mode.value for mode in ParameterSearchMode],
+                    description="Parameter search mode: combinatorial or orthogonal",
+                ),
+                "execution_mode": Param(
+                    default=execution_mode.value
+                    if isinstance(execution_mode, ExecutionMode)
+                    else execution_mode,
+                    enum=[mode.value for mode in ExecutionMode],
+                    description="Execution mode: parallel, sequential, or dispatch",
+                ),
+                "n_vms": Param(
+                    default=n_vms,
+                    type="integer",
+                    description="Number of VMs to launch",
+                    minimum=1,
+                ),
+            }
+            # Merge with existing params
+            existing_params = kwargs.get("params", {})
+            kwargs["params"] = {**default_params, **existing_params}
+
         super().__init__(*args, **kwargs)
+
         if not callable(ml_task_fn):
             raise ValueError("ml_task_fn must be a callable")
 
         self.ml_task_fn = ml_task_fn
-        self.param_grid = param_grid or {}
-        self.common_params = common_params or {}
-        self.execution_mode = execution_mode
-        self.search_mode = search_mode
-        self.n_vms = n_vms
+        self.use_params_for_grid_config = use_params_for_grid_config
+
+        # Store original values as defaults
+        self._default_param_grid = param_grid or {}
+        self._default_common_params = common_params or {}
+        self._default_search_mode = search_mode
+        self._default_execution_mode = execution_mode
+        self._default_n_vms = n_vms
+
+        # These will be set properly in _resolve_grid_config()
+        self.param_grid = None
+        self.common_params = None
+        self.search_mode = None
+        self.execution_mode = None
+        self.n_vms = None
+
         self.start_vm_kwargs = start_vm_kwargs or {}
         self.install_deps_kwargs = install_deps_kwargs or {}
         self.tasks_chains = []
@@ -105,6 +159,98 @@ class GridDAG(DAG):
         if hasattr(self, "_max_parallel_vms"):
             raise AttributeError("max_parallel_vms is read-only and cannot be modified")
         self._max_parallel_vms = value
+
+    # -----------------------------------------------------
+
+    def _resolve_grid_config(self):
+        """
+        Resolve grid configuration from DAG params or use constructor defaults.
+
+        This method must be called at parse time (in build_grid) to determine the
+        actual configuration to use.
+
+        Note: When use_params_for_grid_config is True, this reads the DEFAULT values
+        from params (not runtime values), since DAG structure must be determined at
+        parse time.
+        """
+        if self.use_params_for_grid_config and hasattr(self, "params"):
+            try:
+                # Get default values from params (parse-time)
+                param_grid_param = self.params.get("param_grid_json")
+                common_params_param = self.params.get("common_params_json")
+                search_mode_param = self.params.get("search_mode")
+                execution_mode_param = self.params.get("execution_mode")
+                n_vms_param = self.params.get("n_vms")
+
+                # Parse JSON strings
+                if param_grid_param:
+                    default_value = (
+                        param_grid_param.value
+                        if hasattr(param_grid_param, "value")
+                        else param_grid_param
+                    )
+                    self.param_grid = (
+                        json.loads(default_value)
+                        if isinstance(default_value, str)
+                        else default_value
+                    )
+                else:
+                    self.param_grid = self._default_param_grid
+
+                if common_params_param:
+                    default_value = (
+                        common_params_param.value
+                        if hasattr(common_params_param, "value")
+                        else common_params_param
+                    )
+                    self.common_params = (
+                        json.loads(default_value)
+                        if isinstance(default_value, str)
+                        else default_value
+                    )
+                else:
+                    self.common_params = self._default_common_params
+
+                # Parse enums
+                if search_mode_param:
+                    default_value = (
+                        search_mode_param.value
+                        if hasattr(search_mode_param, "value")
+                        else search_mode_param
+                    )
+                    self.search_mode = ParameterSearchMode(default_value)
+                else:
+                    self.search_mode = self._default_search_mode
+
+                if execution_mode_param:
+                    default_value = (
+                        execution_mode_param.value
+                        if hasattr(execution_mode_param, "value")
+                        else execution_mode_param
+                    )
+                    self.execution_mode = ExecutionMode(default_value)
+                else:
+                    self.execution_mode = self._default_execution_mode
+
+                if n_vms_param:
+                    default_value = (
+                        n_vms_param.value
+                        if hasattr(n_vms_param, "value")
+                        else n_vms_param
+                    )
+                    self.n_vms = int(default_value)
+                else:
+                    self.n_vms = self._default_n_vms
+
+            except (json.JSONDecodeError, ValueError) as e:
+                raise ValueError(f"Failed to parse grid configuration from params: {e}")
+        else:
+            # Use constructor defaults
+            self.param_grid = self._default_param_grid
+            self.common_params = self._default_common_params
+            self.search_mode = self._default_search_mode
+            self.execution_mode = self._default_execution_mode
+            self.n_vms = self._default_n_vms
 
     # -----------------------------------------------------
 
@@ -200,6 +346,7 @@ class GridDAG(DAG):
         Construct the DAG structure for running a parameter grid search workflow.
 
         This method:
+            - Resolves grid configuration from params or constructor defaults
             - Generates all parameter combinations from `param_grid` and merges with `common_params`.
             - Determines the number of VMs to launch based on `execution_mode`.
             - Creates start and stop VM tasks, plus dependency installation tasks per VM.
@@ -228,6 +375,8 @@ class GridDAG(DAG):
             6. Use the `suffix` for filenames, logging, or tagging outputs to keep
             each parameter combination traceable.
         """
+        # Resolve configuration from params or defaults
+        self._resolve_grid_config()
 
         combinations = self.generate_param_combinations()
         if not combinations:

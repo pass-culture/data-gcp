@@ -10,8 +10,9 @@ from loguru import logger
 
 # Project root directory
 PROJECT_ROOT = Path(__file__).parent.parent
-DATA_DIR = f"{PROJECT_ROOT!s}/data"
-RESULTS_DIR = f"{PROJECT_ROOT!s}/results"
+DATA_DIR = (PROJECT_ROOT / "data").as_posix()
+RESULTS_DIR = (PROJECT_ROOT / "results").as_posix()
+MLFLOW_RUN_ID_FILEPATH = (PROJECT_ROOT / "results" / "latest_run_id.txt").as_posix()
 
 EMBEDDING_COLUMN = "embedding"
 ID_COLUMN = "item_id"

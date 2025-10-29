@@ -143,8 +143,10 @@ jobs:
 
       # Step 2: Deploy DAGs to GCS, using computed EXCLUDE_REGEX
       - name: "Deploy Airflow (dags)"
+        env:
+          AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
         run: |
-          readonly bucket="${{ inputs.AIRFLOW_DAGS_BUCKET }}"
+          readonly bucket="$AIRFLOW_DAGS_BUCKET"
           readonly source_dir="dags"
 
           echo "Deploying DAGs..."

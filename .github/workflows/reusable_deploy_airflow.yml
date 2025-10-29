@@ -143,20 +143,26 @@ jobs:
 
           # Build regex for gsutil -x
           if [ -n "$EXCLUDE_POC_DAGS" ]; then
+            # Replace spaces with | and escape special characters
             EXCLUDE_REGEX=$(echo $EXCLUDE_POC_DAGS | sed 's/ /|/g')
           else
             EXCLUDE_REGEX=""
           fi
+
+          # Export as environment variable for next steps
           echo "EXCLUDE_REGEX=$EXCLUDE_REGEX" >> $GITHUB_ENV
 
       - name: Deploy Airflow DAGs
         run: |
+          readonly bucket="${{ inputs.AIRFLOW_DAGS_BUCKET }}"
+          readonly source_dir="./orchestration/dags/jobs/ml"
           echo "Deploying DAGs..."
           if [ -z "$EXCLUDE_REGEX" ]; then
-            gsutil -m rsync -r ./orchestration/dags/jobs/ml gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/dags
+            gsutil -m rsync -r ./orchestration/dags/jobs/ml gs://${bucket}/dags
           else
-            gsutil -m rsync -r -x "$EXCLUDE_REGEX" ./orchestration/dags/jobs/ml gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/dags
+            gsutil -m rsync -r -x "$EXCLUDE_REGEX" ./orchestration/dags/jobs/ml gs://${bucket}/dags
           fi
+        shell: bash
 
       - name: "Deploy Airflow (plugins)"
         run: gsutil -m rsync -d -r plugins gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/plugins

@@ -13,7 +13,11 @@ from torch_geometric.data import HeteroData
 from torch_geometric.nn import MetaPath2Vec
 
 from src.constants import DefaultTrainingConfig, InvalidConfigError
-from src.utils.mlflow import conditional_mlflow, log_model_parameters
+from src.utils.mlflow import (
+    conditional_mlflow,
+    log_model_parameters,
+    refresh_mlflow_token,
+)
 
 
 @conditional_mlflow()
@@ -175,6 +179,9 @@ def train_metapath2vec(
     training_start = time.time()
 
     for epoch in range(1, num_epochs + 1):
+        # Refresh MLflow token to prevent expiration in long-running jobs
+        refresh_mlflow_token()
+
         t0 = time.time()
         loss = _train(model, loader, optimizer, device, epoch, profile=profile)
         epoch_time = time.time() - t0

@@ -65,7 +65,6 @@ def _get_session(
     )
 
     session.mount("https://", adapter)
-    session.mount("http://", adapter)
 
     return session
 

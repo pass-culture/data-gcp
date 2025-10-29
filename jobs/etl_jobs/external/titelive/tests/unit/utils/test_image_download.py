@@ -37,7 +37,6 @@ class TestGetSession:
         assert result == mock_session
         mock_session_class.assert_called_once()
         mock_session.mount.assert_any_call("https://", mock_adapter)
-        mock_session.mount.assert_any_call("http://", mock_adapter)
 
 
 class TestDownloadAndUploadToGcs:

@@ -196,7 +196,9 @@ class GridDAG(DAG):
         Example:
             {'lr':0.01,'batch':32} → "0_5f1d3b9c2a6e7d8f"
         """
-        combined_str = "_".join(f"{k}={v}" for k, v in sorted(params.items()))
+        combined_str = "_".join(
+            f"{k}={json.dumps(v, sort_keys=True)}" for k, v in sorted(params.items())
+        )
         hashed = hashlib.md5(combined_str.encode()).hexdigest()[:16]
         return f"{idx}_{hashed}"
 
@@ -369,7 +371,7 @@ INPUT_TABLE_NAME = "item_with_metadata_to_embed"
 # =============================================================================
 
 with GridDAG(
-    dag_id="algo_training_graph_embeddings_grid_search",
+    dag_id="algo_training_graph_embeddings_grid_search_poc",
     description="Grid search training for graph embeddings (POC)",
     ml_task_fn=ml_task_chain,
     param_grid=PARAM_GRID,

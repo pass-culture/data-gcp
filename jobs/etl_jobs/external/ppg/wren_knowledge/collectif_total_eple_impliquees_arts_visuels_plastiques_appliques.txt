@@ -1,0 +1,5 @@
+kpi_name: total_eple_impliquees_arts_visuels_plastiques_appliques
+Definition: Nombre EPLE impliqué
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Arts visuels, arts plastiques, arts appliqués

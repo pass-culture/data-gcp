@@ -1,0 +1,5 @@
+kpi_name: total_offres_collectives_creees
+Definition: Nombre d'offres collectives (vitrines et réservables)
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Focus réservations collectives

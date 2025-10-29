@@ -1,0 +1,5 @@
+kpi_name: total_tickets_generes_arts_du_cirque_et_de_la_rue
+Definition: Nombre de tickets générés
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Arts du cirque et arts de la rue

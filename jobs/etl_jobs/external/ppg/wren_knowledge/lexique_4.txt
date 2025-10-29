@@ -1,0 +1,7 @@
+Statut: Information d’activité du jeune (étudiant, lycéen, chômeur etc). Information déclarative parmi une liste finie renseignée par le bénéficiaire à l’octroi du crédit. Information déclarative mise à jour à chaque octroi de crédit (validation par le jeune des informations préalablement renseignées).
+
+Catégorie d'offre: Catégorie telle que renseignée par le partenaire culturel lors de la création de l’offre sur le portail pass Culture.
+
+Partenaire culturel: Partenaires inscrits sur le dispositif pass Culture pour proposer des offres aux utilisateurs (individuel ou collectif).
+    - Un partenaire peut accueillir ou non du public dans son établissement.
+    - Une entité (SIREN) peut avoir un ou plusieurs partenaires culturels (SIRET/sans SIRET).

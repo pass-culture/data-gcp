@@ -1,0 +1,5 @@
+kpi_name: montant_moyen_octroye_a_l_expiration_du_credit
+Definition: Montant moyen octroyé à l'expiration du crédit (15-20 ans)
+Type: kpi
+Calculation: Par an: moyenne sur l'année
+Section: Bénéficiaires sur le pass

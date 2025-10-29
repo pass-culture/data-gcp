@@ -1,0 +1,5 @@
+kpi_name: nombre_de_partenaire_actif_musique_live
+Definition: dont musique live
+Type: numerator
+Calculation: Par an: Décembre
+Section: dont librairies LIR (en attente)

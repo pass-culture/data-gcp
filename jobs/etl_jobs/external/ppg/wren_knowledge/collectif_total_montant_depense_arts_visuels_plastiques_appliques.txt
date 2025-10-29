@@ -1,0 +1,5 @@
+kpi_name: total_montant_depense_arts_visuels_plastiques_appliques
+Definition: CA
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Arts visuels, arts plastiques, arts appliqués

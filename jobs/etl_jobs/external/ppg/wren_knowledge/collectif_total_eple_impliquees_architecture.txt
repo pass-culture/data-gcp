@@ -1,0 +1,5 @@
+kpi_name: total_eple_impliquees_architecture
+Definition: Nombre EPLE impliqué
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Domaines d'éducation

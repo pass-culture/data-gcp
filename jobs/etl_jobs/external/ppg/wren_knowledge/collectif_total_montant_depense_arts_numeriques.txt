@@ -1,0 +1,5 @@
+kpi_name: total_montant_depense_arts_numeriques
+Definition: CA
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Arts du cirque et arts de la rue

@@ -1,0 +1,15 @@
+Chiffre d'affaire: Montant des réservations générées par un partenaire culturel. Ne correspond pas au montant perçu par ces derniers (des barèmes de remboursement s’appliquent en fonction du secteur et du chiffre d’affaires généré par le partenaire).
+
+Labels / appellations du MC des partenaires culturels: Information renseignée manuellement par les équipes internes du pass Culture.
+
+Type de partenaire culturel: Typologie décrivant l’activité du partenaire, renseignée lors de l’inscription ou identifiée via tag apposé par les équipes internes du pass Culture.
+
+Entité: Entité juridique (SIREN)
+
+Unités: Le nombre d'unités vendues ne correspond pas exactement au nombre de places : une carte de 5 places correspond à 1 unité, 2 billets correspondent à 2 unités
+
+Librairies: Librairies et magasins de grande distribution
+
+Spectacle vivant - Labels: CCN, CDCN, CDN, CNAREP, SCIN, Scène nationale, Théâtre lyrique, Théâtres nationaux
+
+Pratiques artistiques: Instruments et beaux arts non inclus

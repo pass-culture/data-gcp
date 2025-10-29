@@ -1,0 +1,9 @@
+Top 50 offres les plus réservées (en montant) - Mois précédent: Offres les plus réservées, en montant des réservations. Réservations validées uniquement.
+
+Top 50 offres labellisés les plus réservées (en montant) - Mois précédent: Offres des lieux labellisés les plus réservées, en montant des réservations. Réservations validées uniquement.
+
+Top 50 offres les plus réservées (en montant) par catégorie d'offre - Mois précédent: Offres les plus réservées, en montant des réservations. Réservations validées uniquement.
+
+Top 50 des lieux ayant généré le plus de réservations (en montant) - Mois précédent: Lieux (physiques ou virtuels) ayant reçu le plus de réservations, en montant des réservations. Réservations validées uniquement.
+
+Top 50 des lieux labellisés ayant généré le plus de réservations (en montant) - Mois précédent: Lieux labellisés (physiques ou virtuels) ayant reçu le plus de réservations, en montant des réservations. Réservations validées uniquement.

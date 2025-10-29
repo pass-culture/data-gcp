@@ -1,0 +1,5 @@
+kpi_name: taux_participation_eac_jeunes
+Definition: Nombre de jeunes éligibles
+Type: denominator
+Calculation: Par an: Août
+Section: Recours au dispositif

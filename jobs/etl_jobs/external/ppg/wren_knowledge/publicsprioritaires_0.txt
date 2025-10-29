@@ -1,0 +1,5 @@
+Nouveaux bénéficiaires: Nombre de bénéficiaires par date d’octroi du premier crédit.
+
+Part des inscrits résidant en QPV: Part des bénéficiaires résidant en QPV (Quartier prioritaire de la politique de la ville) par date d’octroi du premier crédit. Seuls les bénéficiaires ayant renseigné une adresse à leur inscription sont pris en compte.
+
+Part des inscrits résidant en zone rurale: Part des bénéficiaires résidant en zone rurale par date d’octroi du premier crédit et âge à l'octroi du 1er crédit. Seuls les bénéficiaires ayant renseigné une adresse à leur inscription, et avec un âge valide à l'inscription (15-18 ans) sont pris en compte.

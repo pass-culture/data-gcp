@@ -1,0 +1,5 @@
+kpi_name: pct_montant_contribution_pratique_artistique
+Definition: Taux de contribution
+Type: kpi
+Calculation: Par an: moyenne sur l'année
+Section: Usage - Part individuelle - Pratiques artistiques

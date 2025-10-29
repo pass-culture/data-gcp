@@ -1,0 +1,5 @@
+kpi_name: total_montant_rembourse_spectacle_vivant
+Definition: Montant Remboursé
+Type: numerator
+Calculation: Par an: somme sur l'année
+Section: Usage - Part individuelle - Spectacle vivant - hors musique

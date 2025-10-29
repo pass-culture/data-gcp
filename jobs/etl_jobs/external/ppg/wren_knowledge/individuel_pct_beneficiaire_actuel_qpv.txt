@@ -1,0 +1,5 @@
+kpi_name: pct_beneficiaire_actuel_qpv
+Definition: part déclarés résidents QPV
+Type: kpi
+Calculation: Par an: Décembre
+Section: Nombre de bénéficiaires à date (bénéficiaires actuels)

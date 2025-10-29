@@ -1,0 +1,5 @@
+kpi_name: beneficiaire_total
+Definition: Total cumulé bénéficiaires
+Type: kpi
+Calculation: Par an: Décembre
+Section: Bénéficiaires sur le pass

@@ -1,0 +1,9 @@
+Nombre de réservations: Volume des réservations individuelles par catégorie d'offres, par mois de validation de la réservation (y compris les offres duos).
+
+Nombre de places correspondantes: Volume des réservations estimés incluant les offres duo par catégorie d'offres, par mois de validation de la réservation.
+
+Chiffre d'affaire: Montant des réservations
+
+Montant remboursé: Montant remboursé aux partenaires culturels
+
+Contribution: Montant des réservations conservé par le pass Culture et non remboursé aux partenaires culturels après application des barèmes de remboursement

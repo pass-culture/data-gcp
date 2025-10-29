@@ -1,0 +1,5 @@
+Partenaires activés (individuel): Nombre de partenaires ayant déjà publié une offre individuelle validée.
+
+Partenaires actifs (individuel): Nombre de partenaires ayant eu une offre individuelle réservable ces 365 derniers jours.
+
+Chiffre d'affaire (individuel) par région du lieu: Montant des réservations validées, par région du lieu recevant la réservation.

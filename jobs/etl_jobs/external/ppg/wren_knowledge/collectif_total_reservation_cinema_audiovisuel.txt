@@ -1,0 +1,5 @@
+kpi_name: total_reservation_cinema_audiovisuel
+Definition: Nombre de réservations
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Cinéma, audiovisuel

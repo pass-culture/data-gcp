@@ -1,0 +1,5 @@
+kpi_name: pct_beneficiaire_actuel_rural
+Definition: part déclarés résidents zone rurale
+Type: kpi
+Calculation: Par an: Décembre
+Section: Nombre de bénéficiaires à date (bénéficiaires actuels)

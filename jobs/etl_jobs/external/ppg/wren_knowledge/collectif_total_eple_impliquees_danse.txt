@@ -1,0 +1,5 @@
+kpi_name: total_eple_impliquees_danse
+Definition: Nombre EPLE impliqué
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Culture scientifique, technique et industrielle

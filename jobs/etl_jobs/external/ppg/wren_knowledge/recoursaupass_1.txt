@@ -1,0 +1,6 @@
+Part des bénéficiaires ayant eu au moins 3 pratiques différentes à l'expiration du crédit  (15-20 ans): Part des bénéficiaires crédités ayant effectué une réservation validée dans au moins 3 catégories d'offre différentes. Détails sur la notion de catégorie d'offre dans le lexique. Les réservations sur l'ensemble des crédits octroyés (15-20 ans) sont observés. Détail sur les différents types de crédits et exprations correspondantes dans le lexique.
+Indicateur agrégé par date d'expiration du crédit 18-20 ans.
+
+Total cumulé bénéficiaires: Nombre de bénéficiaires total depuis le début du dispositif
+
+Nombre de bénéficiaires à date: Nombre de bénéficiaires actuellement dans le dispositif (crédit non expiré / non épuisé)

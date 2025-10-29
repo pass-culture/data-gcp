@@ -1,0 +1,5 @@
+kpi_name: total_reservation_media_et_information
+Definition: Nombre de réservations
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Média et information

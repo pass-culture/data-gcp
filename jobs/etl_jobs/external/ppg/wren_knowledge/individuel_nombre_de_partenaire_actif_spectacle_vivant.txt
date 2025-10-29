@@ -1,0 +1,5 @@
+kpi_name: nombre_de_partenaire_actif_spectacle_vivant
+Definition: dont spectacle vivant
+Type: numerator
+Calculation: Par an: Décembre
+Section: dont librairies LIR (en attente)

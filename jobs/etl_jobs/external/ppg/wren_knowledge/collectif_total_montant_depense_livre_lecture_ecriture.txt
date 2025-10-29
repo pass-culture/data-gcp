@@ -1,0 +1,5 @@
+kpi_name: total_montant_depense_livre_lecture_ecriture
+Definition: CA
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Univers du livre, de la lecture et des écritures

@@ -1,0 +1,1 @@
+La colonne dimension_name peut prendre ces valeurs: NAT, REG, DEP NAT: national REG: regional DEP: departemental

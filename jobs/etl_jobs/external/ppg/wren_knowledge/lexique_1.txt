@@ -1,0 +1,9 @@
+Taux de couverture: Rapport entre le nombre de jeunes bénéficiaires du Pass Culture et le nombre de jeunes éligibles. Ce taux est calculé par tranche d’âge, et décliné par région et département.
+
+Nombre de jeunes inscrits : il est déterminé à partir de l’adresse renseignée par le jeune lors de son inscription. Cependant, cette adresse peut ne plus être à jour en cas de déménagement. Information déclarative mise à jour à chaque octroi de crédit (validation par le jeune des informations préalablement renseignées).
+
+Nombre de jeunes éligibles : il est estimé à partir des données de recensement annuel de l’INSEE, ajustées mensuellement selon les naissances. Ce recensement repose sur le foyer municipal, généralement celui des parents, même si le jeune a quitté le domicile familial pour ses études. Cela peut entraîner un décalage avec sa situation réelle.
+
+Ces écarts peuvent engendrer :
+- une surestimation du taux de couverture dans les départements universitaires (où les jeunes s’installent pour leurs études),
+- une sous-estimation dans les départements d’origine des jeunes qui partent étudier ailleurs.

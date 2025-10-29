@@ -1,0 +1,8 @@
+Taux de couverture 18+: Taux de couverture du pass Culture à 18 ans révolu. Détails du calcul dans le lexique.
+
+Taux de couverture 17+: Taux de couverture du pass Culture à 17 ans révolu. Détails du calcul dans le lexique.
+
+Taux de couverture 15+: Taux de couverture du pass Culture à 15 ans révolu. Détails du calcul dans le lexique.
+
+Montant moyen dépensé par les usagers à l'expiration du crédit: Montant des réservations validées des bénéficiaires à l'expiration de leur crédit 18-20 ans, quelque soient les montants octroyés durant la vie de l'utilisateur sur le dispositif (variable selon les périodes du dispositif). Les réservations sur l'ensemble des crédits octroyés (15-20 ans) sont observés. Détail sur les différents types de crédits et expirations correspondantes dans le lexique.
+Indicateur agrégé par date d'expiration du crédit 18-20 ans.

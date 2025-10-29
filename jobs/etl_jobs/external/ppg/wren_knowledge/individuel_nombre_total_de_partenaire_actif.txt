@@ -1,0 +1,5 @@
+kpi_name: nombre_total_de_partenaire_actif
+Definition: Partenaires actifs
+Type: numerator
+Calculation: Par an: Décembre
+Section: Partenaires culturels - Individuel

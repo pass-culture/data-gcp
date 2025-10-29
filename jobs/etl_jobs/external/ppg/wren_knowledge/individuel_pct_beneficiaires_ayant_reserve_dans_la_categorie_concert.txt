@@ -1,0 +1,6 @@
+kpi_name: pct_beneficiaires_ayant_reserve_dans_la_categorie_concert
+Definition: Part des bénéficiaires ayant réservé au moins un concert (musique live) à l'expiration du crédit (15-20 ans)
+Type: kpi
+Calculation: Par an: moyenne sur l'année
+Section: Attention : Suite à la réforme le nombre de jeunes dont le crédit expire a changé.
+Pour plus de détail voir le lexique

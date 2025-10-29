@@ -1,0 +1,5 @@
+kpi_name: total_tickets_generes_developpement_durable
+Definition: Nombre de tickets générés
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Développement durable

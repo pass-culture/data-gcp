@@ -1,0 +1,5 @@
+kpi_name: total_quantites_livre
+Definition: Quantité totale de bien ou d'offre culturelle
+Type: numerator
+Calculation: Par an: somme sur l'année
+Section: Usage - Part individuelle - Livres

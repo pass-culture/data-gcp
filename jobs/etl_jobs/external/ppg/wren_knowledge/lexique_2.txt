@@ -1,0 +1,6 @@
+Bénéficiaires: Utilisateurs individuels ayant reçu un crédit, à l’exception de ceux suspendus pour fraude
+
+Crédit: Dotation octroyée à un bénéficiaire. Les crédits octroyés aux utilisateurs ont connu plusieurs évolutions :
+- durant la période d’expérimentation (2019-2021) : 500€ à 18 ans, valable pendant 24 mois.
+- Suite à la généralisation du dispositif (2021/2022-2025) : 300€ à 18 ans, valable pendant 24 mois. 20€ à 15 ans, 30€ à 16 ans et 30€ à 17 ans. Crédits 15-17 ans cumulables et enveloppe réinitialisée au passage à 18 ans.
+- Suite à la réforme des crédits (2025) : 150€ à 18 ans valable jusqu’à la veille du 21ème anniversaire, 50€ à 17 ans. Crédits 17 ans et 18 ans cumulables.

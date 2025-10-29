@@ -1,0 +1,5 @@
+kpi_name: taux_couverture_18
+Definition: Bénéficiaires sur le pass
+Type: numerator
+Calculation: Par an: Décembre
+Section: Bénéficiaires sur le pass

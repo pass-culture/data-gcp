@@ -1,0 +1,5 @@
+kpi_name: total_tickets_generes_livre_lecture_ecriture
+Definition: Nombre de tickets générés
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Univers du livre, de la lecture et des écritures

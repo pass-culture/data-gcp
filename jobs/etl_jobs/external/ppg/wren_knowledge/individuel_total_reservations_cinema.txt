@@ -1,0 +1,5 @@
+kpi_name: total_reservations_cinema
+Definition: Nombre total d'actes de réservations
+Type: numerator
+Calculation: Par an: somme sur l'année
+Section: Usage - Part individuelle - Cinéma

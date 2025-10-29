@@ -1,0 +1,5 @@
+kpi_name: taux_participation_eac_eple
+Definition: Nombre d'établissements éligibles
+Type: denominator
+Calculation: Par an: Août
+Section: Recours au dispositif

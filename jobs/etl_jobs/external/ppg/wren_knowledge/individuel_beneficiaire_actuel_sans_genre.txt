@@ -1,0 +1,5 @@
+kpi_name: beneficiaire_actuel_sans_genre
+Definition: dont pas d'information de genre
+Type: numerator
+Calculation: Par an: Décembre
+Section: Nombre de bénéficiaires à date (bénéficiaires actuels)

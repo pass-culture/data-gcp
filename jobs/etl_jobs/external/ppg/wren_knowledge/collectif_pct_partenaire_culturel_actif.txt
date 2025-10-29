@@ -1,0 +1,5 @@
+kpi_name: pct_partenaire_culturel_actif
+Definition: Nombre d'AC activés (déjà publié une offre collective)
+Type: denominator
+Calculation: Par an: Août
+Section: Recours au dispositif

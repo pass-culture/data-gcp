@@ -1,0 +1,4 @@
+QPV: Quartier Prioritaire de la Politique de la Ville. Localisation d’un jeune en QPV issue de l’adresse fournie par ce dernier lors de l’octroi du crédit. Information déclarative mise à jour à chaque octroi de crédit (validation par le jeune des informations préalablement renseignées).
+La base INSEE de population en QPV qui ont entre 15-24 ans est estimée à 772663 sur une base de 8231109 vivant en France entre 15-24 ans, soit une part de 9,4% de la population.
+
+Zone rurale: Segmentation des territoires par niveaux de ruralité telles que définies par l’INSEE. Localisation d’un jeune en zone rurale issue de l’adresse fournie par ce dernier lors de l’octroi du crédit. Information déclarative mise à jour à chaque octroi de crédit (validation par le jeune des informations préalablement renseignées). En France entre 15 et 18 ans, on estime à 31% la population en zone rurale

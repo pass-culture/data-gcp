@@ -1,0 +1,5 @@
+kpi_name: montant_moyen_par_reservation
+Definition: Montant moyen par réservation
+Type: kpi
+Calculation: Par an: Août
+Section: Recours au dispositif

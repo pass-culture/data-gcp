@@ -1,0 +1,5 @@
+kpi_name: pct_beneficiaire_actuel_inactif
+Definition: part déclarés inactifs (ni en emploi ni au chômage)
+Type: kpi
+Calculation: Par an: Décembre
+Section: Nombre de bénéficiaires à date (bénéficiaires actuels)

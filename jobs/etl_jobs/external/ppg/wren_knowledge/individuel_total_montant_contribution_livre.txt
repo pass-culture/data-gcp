@@ -1,0 +1,5 @@
+kpi_name: total_montant_contribution_livre
+Definition: Contribution
+Type: numerator
+Calculation: Par an: somme sur l'année
+Section: Usage - Part individuelle - Livres

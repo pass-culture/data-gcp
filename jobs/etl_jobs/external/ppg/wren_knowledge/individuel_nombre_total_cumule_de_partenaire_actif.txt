@@ -1,0 +1,5 @@
+kpi_name: nombre_total_cumule_de_partenaire_actif
+Definition: Partenaires activés sur l'individuel (cumulé)
+Type: numerator
+Calculation: Par an: Décembre
+Section: Partenaires culturels - Individuel

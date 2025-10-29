@@ -1,0 +1,5 @@
+kpi_name: total_ca
+Definition: Valeur totale pour les acteurs culturels
+Type: numerator
+Calculation: Par an: somme sur l'année
+Section: Usage - Part individuelle

@@ -1,0 +1,5 @@
+kpi_name: total_montant_rembourse_pratique_artistique
+Definition: Montant remboursé
+Type: numerator
+Calculation: Par an: somme sur l'année
+Section: Usage - Part individuelle - Pratiques artistiques

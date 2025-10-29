@@ -1,0 +1,5 @@
+kpi_name: total_eple_impliquees_culture_scientifique_technique_industrielle
+Definition: Nombre EPLE impliqué
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Culture scientifique, technique et industrielle

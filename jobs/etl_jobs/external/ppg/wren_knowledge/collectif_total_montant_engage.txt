@@ -1,0 +1,5 @@
+kpi_name: total_montant_engage
+Definition: Montant engagé (réservations à minima confirmées)
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Focus réservations collectives

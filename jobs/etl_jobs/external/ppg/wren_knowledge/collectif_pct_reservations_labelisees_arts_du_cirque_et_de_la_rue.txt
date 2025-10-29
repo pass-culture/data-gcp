@@ -1,0 +1,5 @@
+kpi_name: pct_reservations_labelisees_arts_du_cirque_et_de_la_rue
+Definition: % des réservations auprès de lieux labellisés
+Type: kpi
+Calculation: Par an: moyenne sur l'année
+Section: Arts du cirque et arts de la rue

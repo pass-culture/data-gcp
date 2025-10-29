@@ -1,0 +1,5 @@
+kpi_name: montant_moyen_par_reservation_meme_territoire
+Definition: Dont engagé auprès d'AC du territoire
+Type: kpi
+Calculation: Par an: Août
+Section: Recours au dispositif

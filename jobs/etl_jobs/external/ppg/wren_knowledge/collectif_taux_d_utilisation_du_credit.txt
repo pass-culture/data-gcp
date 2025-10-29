@@ -1,0 +1,5 @@
+kpi_name: taux_d_utilisation_du_credit
+Definition: Montant théorique alloué
+Type: denominator
+Calculation: Par an: Août
+Section: Recours au dispositif

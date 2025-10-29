@@ -1,0 +1,5 @@
+kpi_name: total_eple_impliquees_bande_dessinee
+Definition: Nombre EPLE impliqué
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Arts visuels, arts plastiques, arts appliqués

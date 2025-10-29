@@ -1,0 +1,5 @@
+kpi_name: nombre_de_partenaire_actif_cinemas_art_et_essai
+Definition: dont cinémas art et essai
+Type: numerator
+Calculation: Par an: Décembre
+Section: dont librairies LIR (en attente)

@@ -1,0 +1,5 @@
+kpi_name: total_tickets_generes_danse
+Definition: Nombre de tickets générés
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Culture scientifique, technique et industrielle

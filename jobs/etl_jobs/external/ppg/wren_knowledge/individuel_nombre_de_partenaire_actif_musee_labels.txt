@@ -1,0 +1,5 @@
+kpi_name: nombre_de_partenaire_actif_musee_labels
+Definition: dont musées de France
+Type: numerator
+Calculation: Par an: Décembre
+Section: dont musique live - labels (SMAC, Orchestres Nationaux, CNCM + Opéras Nationaux )

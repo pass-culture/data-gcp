@@ -1,0 +1,5 @@
+kpi_name: nombre_de_partenaire_actif_librairies
+Definition: dont librairies
+Type: numerator
+Calculation: Par an: Décembre
+Section: Partenaires culturels - Individuel

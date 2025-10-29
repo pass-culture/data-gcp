@@ -1,0 +1,5 @@
+kpi_name: total_montant_contribution_spectacle_vivant
+Definition: Contribution
+Type: numerator
+Calculation: Par an: somme sur l'année
+Section: Usage - Part individuelle - Spectacle vivant - hors musique

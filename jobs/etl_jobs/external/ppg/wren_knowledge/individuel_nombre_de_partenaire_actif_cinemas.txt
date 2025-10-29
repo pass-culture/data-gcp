@@ -1,0 +1,5 @@
+kpi_name: nombre_de_partenaire_actif_cinemas
+Definition: dont cinémas
+Type: numerator
+Calculation: Par an: Décembre
+Section: dont librairies LIR (en attente)

@@ -1,0 +1,5 @@
+kpi_name: total_partenaire_avec_offre_vitrine
+Definition: Nombre d'AC avec offres vitrines
+Type: kpi
+Calculation: Par an: Août
+Section: Recours au dispositif

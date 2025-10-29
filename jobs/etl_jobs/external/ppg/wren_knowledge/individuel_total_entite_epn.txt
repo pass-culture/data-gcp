@@ -1,0 +1,5 @@
+kpi_name: total_entite_epn
+Definition: Entités inscrites (cumulées)
+Type: kpi
+Calculation: Par an: Décembre
+Section: Grands établissements publics nationaux

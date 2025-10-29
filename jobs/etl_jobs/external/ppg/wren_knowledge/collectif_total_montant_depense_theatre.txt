@@ -1,0 +1,5 @@
+kpi_name: total_montant_depense_theatre
+Definition: CA
+Type: kpi
+Calculation: Par an: somme sur l'année
+Section: Théâtre, expression dramatique, marionnettes

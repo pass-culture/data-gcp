@@ -1,0 +1,5 @@
+kpi_name: beneficiaire_actuel_homme
+Definition: dont hommes
+Type: numerator
+Calculation: Par an: Décembre
+Section: Nombre de bénéficiaires à date (bénéficiaires actuels)

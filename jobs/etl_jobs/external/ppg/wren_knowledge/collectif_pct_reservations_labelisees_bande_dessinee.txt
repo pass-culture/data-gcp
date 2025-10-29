@@ -1,0 +1,5 @@
+kpi_name: pct_reservations_labelisees_bande_dessinee
+Definition: % des réservations auprès de lieux labellisés
+Type: kpi
+Calculation: Par an: moyenne sur l'année
+Section: Arts visuels, arts plastiques, arts appliqués

@@ -27,6 +27,9 @@ MLFLOW_URI = (
     else "https://mlflow.staging.passculture.team/"
 )
 
+# Global variable to store credentials for token refresh
+_mlflow_credentials = None
+
 
 @contextmanager
 def optional_mlflow_logging(enabled: bool = True):  # noqa: FBT001
@@ -91,6 +94,8 @@ def connect_remote_mlflow() -> None:
     Uses service account from Secret Manager if available,
     otherwise falls back to default credentials.
     """
+    global _mlflow_credentials
+
     try:
         # Try to get service account from Secret Manager
         logger.info(
@@ -107,6 +112,7 @@ def connect_remote_mlflow() -> None:
         id_token_credentials.refresh(Request())
 
         os.environ["MLFLOW_TRACKING_TOKEN"] = id_token_credentials.token
+        _mlflow_credentials = id_token_credentials
         logger.info("Successfully authenticated to MLflow with service account")
 
     except Exception as e:
@@ -126,6 +132,7 @@ def connect_remote_mlflow() -> None:
             id_token_credentials.refresh(Request())
 
             os.environ["MLFLOW_TRACKING_TOKEN"] = id_token_credentials.token
+            _mlflow_credentials = id_token_credentials
             logger.info("Successfully authenticated to MLflow with default credentials")
 
         except Exception as e2:
@@ -135,6 +142,27 @@ def connect_remote_mlflow() -> None:
             )
 
     mlflow.set_tracking_uri(MLFLOW_URI)
+
+
+@conditional_mlflow()
+def refresh_mlflow_token() -> None:
+    """
+    Refresh the MLflow authentication token.
+
+    Call this periodically (e.g., every epoch) in long-running training jobs
+    to prevent token expiration.
+    """
+    global _mlflow_credentials
+    if _mlflow_credentials is None:
+        logger.warning("No credentials available for token refresh")
+        return
+
+    try:
+        _mlflow_credentials.refresh(Request())
+        os.environ["MLFLOW_TRACKING_TOKEN"] = _mlflow_credentials.token
+        logger.debug("MLflow token refreshed successfully")
+    except Exception as e:
+        logger.error(f"Failed to refresh MLflow token: {e}")
 
 
 @conditional_mlflow()

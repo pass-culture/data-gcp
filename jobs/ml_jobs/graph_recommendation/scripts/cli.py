@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import os
+
 import mlflow
+import pandas as pd
 import torch
 import typer
 
-from src.constants import RESULTS_DIR
-from src.embedding_builder import train_metapath2vec
+from src.constants import MLFLOW_RUN_ID_FILEPATH, RESULTS_DIR
+from src.embedding_builder import DefaultTrainingConfig, train_metapath2vec
 from src.evaluation import (
     DefaultEvaluationConfig,
     evaluate_embeddings,
@@ -18,6 +21,7 @@ from src.graph_builder import (
 from src.heterograph_builder import build_book_metadata_heterograph
 from src.utils.graph_stats import get_graph_analysis
 from src.utils.mlflow import (
+    conditional_mlflow,
     connect_remote_mlflow,
     get_mlflow_experiment,
     log_detailed_scores,
@@ -47,7 +51,7 @@ PARQUET_ARGUMENT = typer.Argument(
 
 GRAPH_OUTPUT_OPTION = typer.Option(
     f"{RESULTS_DIR}/book_metadata_graph.pt",
-    "--output",
+    "--output-graph",
     "-o",
     help="Where to save the serialized PyG Data object.",
     dir_okay=False,
@@ -68,13 +72,12 @@ NROWS_OPTION = typer.Option(
     help="Optional number of rows to load from the parquet file.",
 )
 
-NUM_WORKERS_OPTION = typer.Option(
-    8,
-    "--num-workers",
-    "-w",
-    help="Number of worker processes to use.",
+TRAIN_CONFIG_OPTION = typer.Option(
+    None,
+    "--config",
+    "-c",
+    help="JSON string to override default training parameters.",
 )
-
 
 RAW_DATA_PATH_ARGUMENT = typer.Argument(
     ...,
@@ -86,6 +89,13 @@ EMBEDDING_INPUT_ARGUMENT = typer.Argument(
     help="Where to save the node embeddings as a parquet file. "
     "Can be a local path or a GCS path (gs://...).",
     dir_okay=False,
+)
+
+REBUILD_GRAPH_OPTION = typer.Option(
+    False,
+    "--rebuild-graph",
+    help="Optional flag to rebuild graph if it already exists",
+    show_default=True,
 )
 
 METRICS_OUTPUT_ARGUMENT = typer.Argument(
@@ -107,6 +117,58 @@ EVAL_CONFIG_OPTION = typer.Option(
     "-c",
     help="JSON string to override default evaluation parameters.",
 )
+
+
+@conditional_mlflow()
+def lazy_graph_building(
+    parquet_path: str,
+    results_dir: str = RESULTS_DIR,
+    nrows: int | None = None,
+    *,
+    rebuild_graph: bool = False,
+) -> tuple[object, pd.DataFrame, pd.DataFrame]:
+    """
+    Lazily builds or loads a graph and its analysis.
+
+    Parameters:
+        parquet_path: Path to the source parquet data
+        results_dir: Directory to save graph and analysis
+        rebuild_graph: Force rebuild if True
+        nrows: Optional number of rows to read from parquet
+
+    Returns:
+        graph_data: The loaded or built graph
+        graph_summary: Summary DataFrame
+        graph_components: Components DataFrame
+    """
+    graph_path = f"{results_dir}/book_metadata_graph.pt"
+    summary_path = f"{results_dir}/graph_summary.csv"
+    components_path = f"{results_dir}/graph_components.csv"
+
+    rebuild_needed = rebuild_graph or not os.path.exists(graph_path)
+
+    if rebuild_needed:
+        # Build graph and save
+        graph_data = build_book_metadata_heterograph(parquet_path, nrows=nrows)
+        torch.save(graph_data, graph_path)
+
+        # Analyze and log
+        graph_summary, graph_components = get_graph_analysis(graph_data)
+        log_graph_analysis(graph_summary, graph_components)
+
+    else:
+        # Load graph
+        graph_data = torch.load(graph_path)
+
+        # Load analysis, regenerate only if missing
+        if os.path.exists(summary_path) and os.path.exists(components_path):
+            graph_summary = pd.read_csv(summary_path)
+            graph_components = pd.read_csv(components_path)
+        else:
+            graph_summary, graph_components = get_graph_analysis(graph_data)
+        log_graph_analysis(graph_summary, graph_components)
+
+    return graph_data
 
 
 @app.command("build-graph")
@@ -166,10 +228,19 @@ def train_metapath2vec_command(
     experiment_name: str = EXPERIMENT_NAME_ARGUMENT,
     parquet_path: str = PARQUET_ARGUMENT,
     embedding_output_path: str = EMBEDDING_OUTPUT_OPTION,
-    num_workers: int = NUM_WORKERS_OPTION,
     nrows: int | None = NROWS_OPTION,
-) -> None:
+    config_json: str | None = TRAIN_CONFIG_OPTION,
+    *,
+    rebuild_graph: bool = REBUILD_GRAPH_OPTION,
+):
     """Train a Metapath2Vec model on the book-to-metadata graph and save it to disk."""
+
+    # Load default config
+    train_config = DefaultTrainingConfig()
+    # Override with user config if provided
+    if config_json:
+        train_config.update_from_json(config_json)
+    typer.echo(f"Using training config: {train_config.to_dict()}", err=True)
 
     # Connect to MLflow
     connect_remote_mlflow()
@@ -179,47 +250,37 @@ def train_metapath2vec_command(
     with mlflow.start_run(experiment_id=experiment.experiment_id) as run:
         run_id = run.info.run_id
         typer.secho(
-            f"Started MLflow run '{run_id}' in experiment '{experiment.name}'",
+            f"Started MLflow run '{run_id}' in experiment '{experiment.name}'."
+            f" Logging run_id to {MLFLOW_RUN_ID_FILEPATH}",
             fg=typer.colors.CYAN,
-            err=True,
         )
-        # Build graph
-        graph_data = build_book_metadata_heterograph(
+        with open(MLFLOW_RUN_ID_FILEPATH, "w") as f:
+            f.write(run_id)
+
+        # Graph building
+        graph_data = lazy_graph_building(
             parquet_path,
             nrows=nrows,
-        )
-
-        # Log graph statistics
-        graph_summary, graph_components = get_graph_analysis(graph_data)
-        log_graph_analysis(
-            graph_summary,
-            graph_components,
+            results_dir=RESULTS_DIR,
+            rebuild_graph=rebuild_graph,
         )
 
         # Train model with loss logging to mlflow
         embeddings_df = train_metapath2vec(
             graph_data=graph_data,
-            num_workers=num_workers,
+            train_params=train_config,
         )
 
         # Save embeddings
         embeddings_df.to_parquet(embedding_output_path, index=False)
-
-        # Use err=True to send messages to stderr (won't interfere with XCom)
         typer.secho(
             f"Embeddings saved to {embedding_output_path}",
             fg=typer.colors.GREEN,
-            err=True,
         )
-        typer.echo(f"MLflow run_id: {run_id}", err=True)
-
-        # Return run_id - Typer will print it to stdout for xcom capture
-        return run_id
 
 
 @app.command("evaluate-metapath2vec")
 def evaluate_metapath2vec_command(
-    run_id: str = RUN_ID_ARGUMENT,
     raw_data_path: str = PARQUET_ARGUMENT,
     embedding_path: str = EMBEDDING_INPUT_ARGUMENT,
     output_metrics_path: str = METRICS_OUTPUT_ARGUMENT,
@@ -251,6 +312,10 @@ def evaluate_metapath2vec_command(
         eval_config.update_from_json(config_json)
 
     typer.echo(f"Using evaluation config: {eval_config.to_dict()}", err=True)
+
+    # Retrieving run_id locally
+    with open(MLFLOW_RUN_ID_FILEPATH) as f:
+        run_id = f.read().strip()
 
     # Resume the run
     with mlflow.start_run(run_id=run_id):

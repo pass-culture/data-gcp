@@ -12,19 +12,19 @@ Notes:
 - Scheduling is forcefully disabled as it's purpose is manual runs.
 """
 
-import json
 import hashlib
+import json
 from datetime import datetime, timedelta
+from enum import Enum
 from itertools import product
 from typing import Callable
-from enum import Enum
 
 from airflow import DAG
-from airflow.models import Param, BaseOperator
-from airflow.utils.task_group import TaskGroup
-from airflow.utils.trigger_rule import TriggerRule
+from airflow.models import BaseOperator, Param
 from airflow.operators.empty import EmptyOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+from airflow.utils.task_group import TaskGroup
+from airflow.utils.trigger_rule import TriggerRule
 
 # Common Airflow imports (internal project modules)
 from common import macros
@@ -39,12 +39,11 @@ from common.config import (
     ML_BUCKET_TEMP,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    InstallDependenciesOperator,
-    DeleteGCEOperator,
 )
-
 
 # =============================================================================
 # Helper Functions & Custom Exceptions
@@ -359,7 +358,6 @@ def ml_task_chain(params, instance_name, suffix):
             f"--config '{config_json}'"
         ),
         deferrable=True,
-        do_xcom_push=True,
     )
 
     evaluate = SSHGCEOperator(

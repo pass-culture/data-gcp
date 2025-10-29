@@ -139,7 +139,6 @@ with DAG(
         f"--output-embeddings {STORAGE_BASE_PATH}/{EMBEDDINGS_FILENAME} "
         "{% if params['train_only_on_10k_rows'] %} --nrows 10000 {% endif %}",
         deferrable=True,
-        do_xcom_push=True,
     )
 
     upload_embeddings_to_bigquery = GCSToBigQueryOperator(

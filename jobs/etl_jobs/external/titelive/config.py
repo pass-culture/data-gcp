@@ -29,8 +29,6 @@ TITELIVE_PROVIDER_IDS = [7, 8, 9, 10, 11, 15, 16, 17, 19, 20, 64, 1082, 1093, 21
 # Titelive API
 TITELIVE_BASE_URL = "https://catsearch.epagine.fr/v1"
 TITELIVE_TOKEN_ENDPOINT = "https://login.epagine.fr/v1/login"
-TITELIVE_USERNAME_SECRET = "titelive_epagine_api_username"
-TITELIVE_PASSWORD_SECRET = "titelive_epagine_api_password"
 
 # API Configuration
 RESULTS_PER_PAGE = 120
@@ -49,7 +47,7 @@ IMAGE_DOWNLOAD_POOL_CONNECTIONS = 10  # HTTP adapter pool connections
 IMAGE_DOWNLOAD_POOL_MAXSIZE = 20  # HTTP adapter pool max size
 IMAGE_DOWNLOAD_TIMEOUT = 60  # HTTP request timeout in seconds
 IMAGE_DOWNLOAD_GCS_PREFIX = "titelive/images"  # GCS path prefix for image storage
-DE_DATALAKE_BUCKET_NAME = f"de-datalake-{ENV_SHORT_NAME}"
+DE_DATALAKE_BUCKET_NAME = f"de-lake-{ENV_SHORT_NAME}"
 
 
 # Product Categories

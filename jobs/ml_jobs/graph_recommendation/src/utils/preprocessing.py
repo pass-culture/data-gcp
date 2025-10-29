@@ -2,6 +2,8 @@ from collections.abc import Sequence
 
 import pandas as pd
 
+from src.constants import GTL_ID_COLUMN
+
 
 def normalize_dataframe(
     df: pd.DataFrame,
@@ -81,4 +83,21 @@ def remove_rows_with_no_metadata(
 
     # Keep rows where at least one metadata column is not null
     mask = df[metadata_list].notna().any(axis=1)
+    return df[mask].copy()
+
+
+def remove_rows_with_gtl_id_starting_with_00(df: pd.DataFrame) -> pd.DataFrame:
+    """Filter out rows where the GTL ID starts with '00'.
+
+    Args:
+        df (pd.DataFrame): Input dataframe.
+        gtl_id_column (str): Name of the column containing GTL IDs.
+
+    Returns:
+        pd.DataFrame: Filtered dataframe
+        (rows with GTL IDs starting with '00' are removed).
+    """
+
+    # Keep rows where GTL ID does not start with '00'
+    mask = ~df[GTL_ID_COLUMN].astype(str).str.startswith("00")
     return df[mask].copy()

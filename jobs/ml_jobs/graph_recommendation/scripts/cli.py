@@ -166,7 +166,7 @@ def lazy_graph_building(
             graph_components = pd.read_csv(components_path)
         else:
             graph_summary, graph_components = get_graph_analysis(graph_data)
-            log_graph_analysis(graph_summary, graph_components)
+        log_graph_analysis(graph_summary, graph_components)
 
     return graph_data
 

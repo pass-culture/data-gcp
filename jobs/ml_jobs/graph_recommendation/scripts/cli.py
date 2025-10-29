@@ -9,7 +9,7 @@ import pandas as pd
 import torch
 import typer
 
-from src.constants import MLFLOW_RUN_ID_FILEPATH, RESULTS_DIR
+from src.constants import RESULTS_DIR
 from src.embedding_builder import DefaultTrainingConfig, train_metapath2vec
 from src.evaluation import (
     DefaultEvaluationConfig,
@@ -194,6 +194,7 @@ def build_graph_command(
             f"metadata={len(graph_data.metadata_ids)})"
         ),
         fg=typer.colors.GREEN,
+        err=True,
     )
 
 
@@ -220,6 +221,7 @@ def build_heterograph_command(
             f"metadata={len(graph_data.metadata_ids)})"
         ),
         fg=typer.colors.GREEN,
+        err=True,
     )
 
 
@@ -250,9 +252,9 @@ def train_metapath2vec_command(
     with mlflow.start_run(experiment_id=experiment.experiment_id) as run:
         run_id = run.info.run_id
         typer.secho(
-            f"Started MLflow run '{run_id}' in experiment '{experiment.name}'."
-            f" Logging run_id to {MLFLOW_RUN_ID_FILEPATH}",
+            f"Started MLflow run '{run_id}' in experiment '{experiment.name}'.",
             fg=typer.colors.CYAN,
+            err=True,
         )
 
         # Graph building
@@ -274,6 +276,7 @@ def train_metapath2vec_command(
         typer.secho(
             f"Embeddings saved to {embedding_output_path}",
             fg=typer.colors.GREEN,
+            err=True,
         )
 
 
@@ -311,10 +314,6 @@ def evaluate_metapath2vec_command(
         eval_config.update_from_json(config_json)
 
     typer.echo(f"Using evaluation config: {eval_config.to_dict()}", err=True)
-
-    # Retrieving run_id locally
-    with open(MLFLOW_RUN_ID_FILEPATH) as f:
-        run_id = f.read().strip()
 
     # Resume the run
     with mlflow.start_run(run_id=run_id):

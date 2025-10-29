@@ -1,29 +1,15 @@
 """
 # Airflow DAG: Graph Embeddings Grid Search (POC)
 
-## Overview
-This DAG runs a **parameter grid search** for graph embedding model training on Google Cloud VMs.
-It supports both **combinatorial** and **orthogonal** parameter search modes via the `GridDAG` abstraction.
+This is a POC:
+- can be used as a template for other grid search upon adapting the ml_task_chain function.
+— future iterations may include UI-controlled grid search and dynamic configuration.
 
-Each parameter combination launches a VM, installs dependencies, trains the embedding model,
-evaluates results, and stores metrics and embeddings to GCS.
-
----
-
-## ⚠️ NOTICE – Proof of Concept (POC)
-
-### Current Limitations:
-- Search parameters **cannot be modified dynamically via Airflow UI**.
-- All grid configurations must be **hardcoded in the DAG file**.
-- Recommended usage:
-  1. Create a **dedicated dev branch** with your desired parameter search configuration.
-  2. Coordinate with your team to avoid parallel modifications or DAG name collisions.
-  3. Upload (`drag & drop`) this DAG file into your Airflow DAGs bucket.
-  4. Trigger the DAG manually in the Airflow UI.
-
-This is a POC — future iterations may include UI-controlled grid search and dynamic configuration.
-
----
+Notes:
+- To prevent Drag&Drop dags such as this one to be deleted during a MEP hence interupting their running tasks.
+    Place this dag in a dedicated subfolder containing a .rsyncignore file to automatically exclude that folder and its contents from deployment.
+    Make sure there are no orchestrated dags in the same folder.
+- Scheduling is forcefully disabled as it's purpose is manual runs.
 """
 
 import json
@@ -70,6 +56,63 @@ def _normalize_instance_name(name: str) -> str:
     return name.replace("_", "-")
 
 
+def format_poc_dag_doc(
+    dag_name: str, search_mode: str, n_vms: int, grid_params: dict, shared_params: dict
+) -> str:
+    """
+    Returns a nicely formatted POC DAG documentation string.
+    """
+    grid_params_str = json.dumps(grid_params, indent=4)
+    shared_params_str = json.dumps(shared_params, indent=4)
+
+    doc = f"""
+    # Airflow DAG: {dag_name} (POC)
+
+    ## ⚠️ NOTICE – Proof of Concept (POC)
+
+    This is a POC — future iterations may include UI-controlled grid search and dynamic configuration.
+
+    ### Current Limitations:
+    - Search parameters **cannot be modified dynamically via Airflow UI**.
+    - All grid configurations must be **hardcoded in the DAG file**.
+
+    ### Recommended Usage:
+    1. Create a **dedicated dev branch** with your desired parameter search configuration.
+    2. Coordinate with your team to avoid parallel modifications or DAG name collisions.
+    3. Upload (`drag & drop`) this DAG file into your Airflow DAGs bucket.
+    4. Trigger the DAG manually in the Airflow UI.
+
+    Notes:
+    - To prevent Drag&Drop dags such as this one to be deleted during a MEP hence interupting their running tasks.
+        Place this dag in a dedicated subfolder containing a .rsyncignore file to automatically exclude that folder and its contents from deployment.
+        Make sure there are no orchestrated dags in the same folder.
+    - Scheduling is forcefully disabled as it's purpose is manual runs.
+
+    ---
+
+    ## Overview
+    This DAG runs a **parameter grid search** for graph embedding model training on Google Cloud VMs.
+    It supports both **combinatorial** and **orthogonal** parameter search modes via the `GridDAG` abstraction.
+
+    The DAG launches up to 10 VM(s), installs dependencies, trains the embedding model,
+    evaluates results, and stores metrics and embeddings to GCS.
+
+    ## Current Setup:
+
+    ### VMs number: {n_vms}
+
+    ### Search mode: {search_mode}
+
+    ### Grid Search Parameters
+    {grid_params_str}
+
+    ### Shared Parameters
+    {shared_params_str}
+
+    """
+    return doc
+
+
 class InvalidGridError(Exception):
     """Raised when no valid parameter combinations can be generated for the grid search."""
 
@@ -89,6 +132,7 @@ class ParameterSearchMode(str, Enum):
 class GridDAG(DAG):
     """
     Specialized DAG subclass for running parameterized ML experiments on Google Cloud VMs.
+    Scheduling is forcefully disabled as it's purpose is manual runs.
 
     Supports:
         - Full combinatorial parameter search (Cartesian product).
@@ -100,7 +144,7 @@ class GridDAG(DAG):
         >>> dag = GridDAG(
         >>>     dag_id="my_grid_dag",
         >>>     ml_task_fn=my_ml_task_chain,
-        >>>     param_grid={"lr": [0.001, 0.01], "batch": [32, 64]},
+        >>>     grid_params={"lr": [0.001, 0.01], "batch": [32, 64]},
         >>>     common_params={"optimizer": "adam"},
         >>>     search_mode=ParameterSearchMode.COMBINATORIAL,
         >>> )
@@ -118,7 +162,7 @@ class GridDAG(DAG):
         ml_task_fn: Callable[
             [dict[str, object], str, str], BaseOperator | list[BaseOperator]
         ],
-        param_grid=None,
+        grid_params=None,
         common_params=None,
         search_mode=ParameterSearchMode.COMBINATORIAL,
         n_vms=1,
@@ -127,12 +171,17 @@ class GridDAG(DAG):
         *args,
         **kwargs,
     ):
+        # Scheduling disabled for drag & drop dags
+        if "schedule_interval" in kwargs:
+            del kwargs["schedule_interval"]
+        kwargs["schedule_interval"] = None
+
         super().__init__(*args, **kwargs)
         if not callable(ml_task_fn):
             raise ValueError("`ml_task_fn` must be a callable returning Airflow tasks.")
 
         self.ml_task_fn = ml_task_fn
-        self.param_grid = param_grid or {}
+        self.grid_params = grid_params or {}
         self.common_params = common_params or {}
         self.search_mode = search_mode
         self.start_vm_kwargs = start_vm_kwargs or {}
@@ -163,26 +212,26 @@ class GridDAG(DAG):
         Raises:
             InvalidGridError: If no valid combinations can be generated.
         """
-        if not self.param_grid:
+        if not self.grid_params:
             return [self.common_params.copy()]
 
         combinations = []
 
         if self.search_mode == ParameterSearchMode.COMBINATORIAL:
-            keys = list(self.param_grid.keys())
-            for values in product(*self.param_grid.values()):
+            keys = list(self.grid_params.keys())
+            for values in product(*self.grid_params.values()):
                 merged = {**self.common_params, **dict(zip(keys, values))}
                 combinations.append(merged)
 
         elif self.search_mode == ParameterSearchMode.ORTHOGONAL:
-            for key, values in self.param_grid.items():
+            for key, values in self.grid_params.items():
                 for v in values:
                     comb = self.common_params.copy()
                     comb[key] = v
                     combinations.append(comb)
 
         if not combinations:
-            raise InvalidGridError(f"Invalid grid configuration: {self.param_grid}")
+            raise InvalidGridError(f"Invalid grid configuration: {self.grid_params}")
 
         return combinations
 
@@ -335,12 +384,6 @@ def ml_task_chain(params, instance_name, suffix):
 # DAG Configuration & Initialization
 # =============================================================================
 
-# Grid Search Parameters
-SEARCH_MODE = ParameterSearchMode.COMBINATORIAL
-N_VMS = 4
-PARAM_GRID = {"embedding_dim": [32, 64, 128], "context_size": [5, 10, 15]}
-SHARED_PARAMS = {"base_dir": "data-gcp/jobs/ml_jobs/graph_recommendation"}
-
 # DAG Metadata
 DATE = "{{ ts_nodash }}"
 DAG_NAME = "algo_training_graph_embeddings_grid"
@@ -366,6 +409,15 @@ BASE_DIR = "data-gcp/jobs/ml_jobs/graph_recommendation"
 EMBEDDINGS_FILENAME = "embeddings.parquet"
 INPUT_TABLE_NAME = "item_with_metadata_to_embed"
 
+# Grid Search Parameters
+SEARCH_MODE = ParameterSearchMode.ORTHOGONAL
+N_VMS = 4
+GRID_PARAMS = {"embedding_dim": [32, 64, 128], "context_size": [5, 10, 15]}
+SHARED_PARAMS = {"base_dir": "data-gcp/jobs/ml_jobs/graph_recommendation"}
+
+DOC_MD = format_poc_dag_doc(
+    DAG_NAME, SEARCH_MODE.value, N_VMS, GRID_PARAMS, SHARED_PARAMS
+)
 # =============================================================================
 # DAG Definition
 # =============================================================================
@@ -374,17 +426,22 @@ with GridDAG(
     dag_id="algo_training_graph_embeddings_grid_search_poc",
     description="Grid search training for graph embeddings (POC)",
     ml_task_fn=ml_task_chain,
-    param_grid=PARAM_GRID,
+    grid_params=GRID_PARAMS,
     common_params=SHARED_PARAMS,
     search_mode=SEARCH_MODE,
     n_vms=N_VMS,
     start_date=datetime(2023, 1, 1),
-    schedule_interval=None,
     dagrun_timeout=timedelta(minutes=1200),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     render_template_as_native_obj=True,
-    tags=[DAG_TAGS.POC.value, DAG_TAGS.DS.value, DAG_TAGS.VM.value],
+    tags=[
+        DAG_TAGS.POC.value,
+        DAG_TAGS.DS.value,
+        DAG_TAGS.VM.value,
+        DAG_TAGS.DRAGNDROP.value,
+    ],
+    doc_md=DOC_MD,
     start_vm_kwargs={
         "preemptible": False,
         "instance_type": "{{ params.instance_type }}",

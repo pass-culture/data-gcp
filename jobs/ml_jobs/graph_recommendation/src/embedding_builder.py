@@ -118,6 +118,8 @@ def train_metapath2vec(
             f"train_params must be DefaultTrainingConfig, dict, or None, "
             f"got {type(train_params).__name__}"
         )
+    logger.info("Training configuration:")
+    logger.info(params.to_dict())
 
     logger.info("Graph info:")
     logger.info(f"  Node types: {graph_data.node_types}")
@@ -165,10 +167,7 @@ def train_metapath2vec(
     )
 
     # Log model parameters in mlflow
-
-    log_model_parameters(
-        params.to_dict().update({"walk_length": walk_length}), graph_data
-    )
+    log_model_parameters(params.to_dict() | {"walk_length": walk_length}, graph_data)
 
     # Start training
     logger.info("Starting training...")

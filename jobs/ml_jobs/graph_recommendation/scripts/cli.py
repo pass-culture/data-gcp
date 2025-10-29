@@ -232,7 +232,7 @@ def train_metapath2vec_command(
     config_json: str | None = TRAIN_CONFIG_OPTION,
     *,
     rebuild_graph: bool = REBUILD_GRAPH_OPTION,
-) -> None:
+) -> str:
     """Train a Metapath2Vec model on the book-to-metadata graph and save it to disk."""
 
     # Load default config

@@ -9,7 +9,7 @@ import pandas as pd
 import torch
 import typer
 
-from src.constants import RESULTS_DIR
+from src.constants import MLFLOW_RUN_ID_FILEPATH, RESULTS_DIR
 from src.embedding_builder import DefaultTrainingConfig, train_metapath2vec
 from src.evaluation import (
     DefaultEvaluationConfig,
@@ -232,7 +232,7 @@ def train_metapath2vec_command(
     config_json: str | None = TRAIN_CONFIG_OPTION,
     *,
     rebuild_graph: bool = REBUILD_GRAPH_OPTION,
-) -> str:
+):
     """Train a Metapath2Vec model on the book-to-metadata graph and save it to disk."""
 
     # Load default config
@@ -250,10 +250,12 @@ def train_metapath2vec_command(
     with mlflow.start_run(experiment_id=experiment.experiment_id) as run:
         run_id = run.info.run_id
         typer.secho(
-            f"Started MLflow run '{run_id}' in experiment '{experiment.name}'",
+            f"Started MLflow run '{run_id}' in experiment '{experiment.name}'."
+            f" Logging run_id to {MLFLOW_RUN_ID_FILEPATH}",
             fg=typer.colors.CYAN,
-            err=True,
         )
+        with open(MLFLOW_RUN_ID_FILEPATH, "w") as f:
+            f.write(run_id)
 
         # Graph building
         graph_data = lazy_graph_building(
@@ -271,22 +273,14 @@ def train_metapath2vec_command(
 
         # Save embeddings
         embeddings_df.to_parquet(embedding_output_path, index=False)
-
-        # Use err=True to send messages to stderr (won't interfere with XCom)
         typer.secho(
             f"Embeddings saved to {embedding_output_path}",
             fg=typer.colors.GREEN,
-            err=True,
         )
-        typer.echo(f"MLflow run_id: {run_id}", err=True)
-
-        # Return run_id - Typer will print it to stdout for xcom capture
-        return run_id
 
 
 @app.command("evaluate-metapath2vec")
 def evaluate_metapath2vec_command(
-    run_id: str = RUN_ID_ARGUMENT,
     raw_data_path: str = PARQUET_ARGUMENT,
     embedding_path: str = EMBEDDING_INPUT_ARGUMENT,
     output_metrics_path: str = METRICS_OUTPUT_ARGUMENT,
@@ -318,6 +312,10 @@ def evaluate_metapath2vec_command(
         eval_config.update_from_json(config_json)
 
     typer.echo(f"Using evaluation config: {eval_config.to_dict()}", err=True)
+
+    # Retrieving run_id locally
+    with open(MLFLOW_RUN_ID_FILEPATH) as f:
+        run_id = f.read().strip()
 
     # Resume the run
     with mlflow.start_run(run_id=run_id):

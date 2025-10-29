@@ -158,7 +158,7 @@ def lazy_graph_building(
 
     else:
         # Load graph
-        graph_data = torch.load(graph_path)
+        graph_data = torch.load(graph_path, weights_only=False)
 
         # Load analysis, regenerate only if missing
         if os.path.exists(summary_path) and os.path.exists(components_path):

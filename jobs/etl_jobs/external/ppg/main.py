@@ -3,7 +3,7 @@ from typing import Optional
 
 import typer
 
-from config import REPORT_BASE_DIR_DEFAULT
+from config import GOOGLE_DRIVE_ROOT_FOLDER_ID, REPORT_BASE_DIR_DEFAULT
 from core import ExportSession, Stakeholder, StakeholderType
 from services.tracking import GlobalStats
 from utils.data_utils import drac_selector, get_available_regions, upload_zip_to_gcs
@@ -225,6 +225,60 @@ def upload(
 
     except Exception as e:
         log_print.error(f"❌ Upload failed: {e}")
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def upload_drive(
+    ds: str = typer.Option(
+        default_factory=start_of_current_month,
+        help="Consolidation date YYYY-MM-DD",
+    ),
+    root_folder_id: Optional[str] = typer.Option(
+        None,
+        "--root-folder",
+        "-r",
+        help="Drive folder ID (uses env var if not set)",
+    ),
+):
+    """Upload generated reports to Google Drive."""
+    from services.google_drive import DriveUploadService
+
+    ds = to_first_of_month(ds)
+    folder_id = root_folder_id or GOOGLE_DRIVE_ROOT_FOLDER_ID
+
+    if not folder_id:
+        log_print.error(
+            "❌ Root folder ID required via --root-folder or PPG_GOOGLE_DRIVE_FOLDER_ID env var",
+            fg="red",
+        )
+        raise typer.Exit(code=1)
+
+    base_dir = get_dated_base_dir(REPORT_BASE_DIR_DEFAULT, ds)
+    if not base_dir.exists():
+        log_print.error(f"❌ Reports directory not found: {base_dir}", fg="red")
+        raise typer.Exit(code=1)
+
+    log_print.info(f"➡️  Uploading from: {base_dir}", fg="cyan")
+    log_print.info(f"➡️  Drive folder: {folder_id}", fg="cyan")
+
+    try:
+        drive_service = DriveUploadService()
+        stats = drive_service.upload_reports_directory(base_dir, ds, folder_id)
+
+        log_print.info("✅ Upload complete!", fg="green")
+        log_print.info(f"   Files uploaded: {stats['files_uploaded']}")
+        log_print.info(f"   Folders created: {stats['folders_created']}")
+        log_print.info(f"   Files skipped: {stats['files_skipped']}")
+
+        if stats["errors"]:
+            log_print.warning(f"⚠️  {len(stats['errors'])} errors occurred", fg="yellow")
+            for error in stats["errors"]:
+                log_print.error(f"   - {error}", fg="red")
+            raise typer.Exit(code=1)
+
+    except Exception as e:
+        log_print.error(f"❌ Drive upload failed: {e}", fg="red")
         raise typer.Exit(code=1)
 
 

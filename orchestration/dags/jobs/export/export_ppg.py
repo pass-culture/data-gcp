@@ -49,6 +49,7 @@ DBT_REPORTING_MODELS_PATH = f"{DAG_FOLDER}/data_gcp_dbt/models/mart/external_rep
 dag_config = {
     "GCP_PROJECT": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
+    "PPG_GOOGLE_DRIVE_FOLDER_ID": os.environ.get("PPG_GOOGLE_DRIVE_FOLDER_ID", ""),
 }
 
 
@@ -136,7 +137,13 @@ with DAG(
         command=f"python main.py upload --ds {{{{ ds }}}} --bucket {DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME} --destination ppg_reports",
     )
 
-    gce_export_to_drive = EmptyOperator(task_id="TO_DO_export_reports_to_google_drive")
+    gce_export_to_drive = SSHGCEOperator(
+        task_id="gce_export_reports_to_drive",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="python main.py upload-drive --ds {{ ds }}",
+    )
 
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE

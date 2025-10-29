@@ -22,6 +22,25 @@ REGION_HIERARCHY_TABLE = "region_department"
 BASE_TEMPLATE = Path("./templates/export_template.xlsx")
 REPORT_BASE_DIR_DEFAULT = Path("./reports")
 
+# Google Drive Configuration
+GOOGLE_DRIVE_ROOT_FOLDER_ID = os.environ.get("PPG_GOOGLE_DRIVE_FOLDER_ID")
+
+# French month names for folder naming
+MONTH_NAMES_FR = {
+    1: "Janvier",
+    2: "Février",
+    3: "Mars",
+    4: "Avril",
+    5: "Mai",
+    6: "Juin",
+    7: "Juillet",
+    8: "Août",
+    9: "Septembre",
+    10: "Octobre",
+    11: "Novembre",
+    12: "Décembre",
+}
+
 # data sources
 table_prefix = "external_reporting"
 

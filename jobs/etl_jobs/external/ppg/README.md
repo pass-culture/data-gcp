@@ -77,6 +77,35 @@ Optional Arguments:
 - -b, --bucket NAME: GCS bucket name (uses default if not specified)
 - -d, --destination PATH: Destination path in bucket (default: ppg_reports)
 
+Upload to Google Drive
+
+```bash
+python main.py upload-drive [OPTIONS]
+```
+
+Optional Arguments:
+
+- -v, --verbose: Enable verbose output with detailed logging, MUST be passed after main.py
+- --ds YYYY-MM-DD: Consolidation date (default: current month)
+- -r, --root-folder ID: Google Drive root folder ID (uses PPG_GOOGLE_DRIVE_FOLDER_ID env var if not set)
+
+Setup Requirements:
+- GCE instance must have Drive API scope enabled (`https://www.googleapis.com/auth/drive`)
+- Set `PPG_GOOGLE_DRIVE_FOLDER_ID` environment variable
+- Service account needs write access to target folder
+
+Folder Structure on Drive:
+```
+Export DRAC - [MONTH] [YEAR]/
+├── NATIONAL/
+│   └── rapport_national.xlsx
+└── REGIONAL/
+    └── [Region]/
+        ├── rapport_regional.xlsx
+        ├── academie_*.xlsx
+        └── departement_*.xlsx
+```
+
 Usage Examples
 Generate Command
 
@@ -127,6 +156,19 @@ python main.py upload --ds 2024-03-01 --bucket my-gcs-bucket
 
 # Upload to custom destination path
 python main.py upload --destination custom_folder/reports
+```
+
+Upload Drive Command
+
+```bash
+# Upload using env var for folder ID
+python main.py upload-drive --ds 2024-03-01
+
+# Specify folder ID directly
+python main.py upload-drive --ds 2024-03-01 --root-folder "1ABC...XYZ"
+
+# Upload with verbose output
+python main.py --verbose upload-drive --ds 2024-03-01
 ```
 
 Debug reports:

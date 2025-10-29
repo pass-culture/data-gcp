@@ -1,16 +1,46 @@
+"""
+# Airflow DAG: Graph Embeddings Grid Search (POC)
+
+## Overview
+This DAG runs a **parameter grid search** for graph embedding model training on Google Cloud VMs.
+It supports both **combinatorial** and **orthogonal** parameter search modes via the `GridDAG` abstraction.
+
+Each parameter combination launches a VM, installs dependencies, trains the embedding model,
+evaluates results, and stores metrics and embeddings to GCS.
+
+---
+
+## ⚠️ NOTICE – Proof of Concept (POC)
+
+### Current Limitations:
+- Search parameters **cannot be modified dynamically via Airflow UI**.
+- All grid configurations must be **hardcoded in the DAG file**.
+- Recommended usage:
+  1. Create a **dedicated dev branch** with your desired parameter search configuration.
+  2. Coordinate with your team to avoid parallel modifications or DAG name collisions.
+  3. Upload (`drag & drop`) this DAG file into your Airflow DAGs bucket.
+  4. Trigger the DAG manually in the Airflow UI.
+
+This is a POC — future iterations may include UI-controlled grid search and dynamic configuration.
+
+---
+"""
+
 import json
+import hashlib
 from datetime import datetime, timedelta
+from itertools import product
+from typing import Callable
+from enum import Enum
 
 from airflow import DAG
-from airflow.models import Param
+from airflow.models import Param, BaseOperator
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.trigger_rule import TriggerRule
 from airflow.operators.empty import EmptyOperator
-from airflow.models import BaseOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
+# Common Airflow imports (internal project modules)
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -29,42 +59,59 @@ from common.operators.gce import (
     DeleteGCEOperator,
 )
 
-from itertools import product
-import hashlib
 
-from typing import Callable
-from enum import Enum
+# =============================================================================
+# Helper Functions & Custom Exceptions
+# =============================================================================
 
 
 def _normalize_instance_name(name: str) -> str:
+    """Normalize GCE instance names by replacing underscores with dashes."""
     return name.replace("_", "-")
 
 
 class InvalidGridError(Exception):
-    """Raised when a grid DAG cannot generate any valid parameter combinations."""
+    """Raised when no valid parameter combinations can be generated for the grid search."""
 
 
 class ParameterSearchMode(str, Enum):
+    """Defines supported parameter search strategies."""
+
     COMBINATORIAL = "combinatorial"
     ORTHOGONAL = "orthogonal"
 
 
+# =============================================================================
+# GridDAG Class — Core Abstraction for Parameterized VM-Based Workflows
+# =============================================================================
+
+
 class GridDAG(DAG):
     """
-    DAG subclass for running parameter grid search workflows on Google Cloud VMs.
+    Specialized DAG subclass for running parameterized ML experiments on Google Cloud VMs.
 
-    Features:
-        - Generates combinations of parameters either
-            - all combinations of parameters (combinatorial)
-            - orthogonal basis along each params, other axis are set to default
-        - Launches a configurable number of VMs in parallel or sequentially.
-        - Installs dependencies on each VM.
-        - tasks_chains ML tasks for each parameter combination with safe Airflow task IDs.
-        - Supports hashing long parameter values to keep task IDs valid.
-        - Optional remapping of parameter values for shorter task IDs.
+    Supports:
+        - Full combinatorial parameter search (Cartesian product).
+        - Orthogonal parameter search (vary one param at a time).
+        - Automated VM lifecycle: start → install dependencies → run ML → delete.
+        - Hash-safe task suffixes to prevent Airflow task ID collisions.
+
+    Example Usage:
+        >>> dag = GridDAG(
+        >>>     dag_id="my_grid_dag",
+        >>>     ml_task_fn=my_ml_task_chain,
+        >>>     param_grid={"lr": [0.001, 0.01], "batch": [32, 64]},
+        >>>     common_params={"optimizer": "adam"},
+        >>>     search_mode=ParameterSearchMode.COMBINATORIAL,
+        >>> )
+
+    Notes:
+        - The `ml_task_fn` defines the actual ML workflow to run for each combination.
+        - The only supported workflows are linear task sequences.
+        - Each VM runs multiple parameter configurations (round-robin distributed).
     """
 
-    _DEFAULT_MAX_PARALLEL_VMS = 10  # Internal Safeguard, read-only
+    _DEFAULT_MAX_PARALLEL_VMS = 10
 
     def __init__(
         self,
@@ -80,25 +127,9 @@ class GridDAG(DAG):
         *args,
         **kwargs,
     ):
-        """
-        Initialize the GridDAG.
-
-        Args:
-            ml_task_fn: Function accepting (params, vm_name, suffix) returning
-                        BaseOperator or list of BaseOperators.
-            param_grid (dict, optional): Dictionary of parameter lists for grid search.
-            common_params (dict, optional): Parameters shared across all tasks.
-            search_mode (ParameterSearch_mode): ORTHOGONAL or COMBINATORIAL
-            execution_mode (ExecutionMode): PARALLEL, SEQUENTIAL, or DISPATCH mode.
-            n_vms (int): Number of VMs to launch (used in DISPATCH mode).
-            start_vm_kwargs (dict, optional): kwargs for StartGCEOperator.
-            install_deps_kwargs (dict, optional): kwargs for InstallDependenciesOperator.
-            *args: Additional DAG args.
-            **kwargs: Additional DAG kwargs.
-        """
         super().__init__(*args, **kwargs)
         if not callable(ml_task_fn):
-            raise ValueError("ml_task_fn must be a callable")
+            raise ValueError("`ml_task_fn` must be a callable returning Airflow tasks.")
 
         self.ml_task_fn = ml_task_fn
         self.param_grid = param_grid or {}
@@ -106,43 +137,28 @@ class GridDAG(DAG):
         self.search_mode = search_mode
         self.start_vm_kwargs = start_vm_kwargs or {}
         self.install_deps_kwargs = install_deps_kwargs or {}
-        self.tasks_chains = []
+
+        # Compute parameter combinations
         self.params_combinations = self._generate_params_combinations()
+
+        # Limit number of VMs for safety
         self.n_vms = min(
             n_vms, self._DEFAULT_MAX_PARALLEL_VMS, len(self.params_combinations or [])
         )
 
+    # -------------------------------------------------------------------------
+    # Parameter Combination Logic
+    # -------------------------------------------------------------------------
     def _generate_params_combinations(self) -> list[dict[str, object]]:
         """
-        Generate all parameter combinations based on search_mode.
+        Generate parameter combinations based on the selected search mode.
 
         Supported modes:
-            - COMBINATORIAL:
-                Generates the full Cartesian product of all parameters in `param_grid`.
-                Example:
-                    param_grid = {"lr": [0.01, 0.1], "batch": [32, 64]}
-                    common_params = {"optimizer": "adam"}
-                    → 4 combinations:
-                        [
-                            {'lr':0.01,'batch':32,'optimizer':'adam'},
-                            {'lr':0.01,'batch':64,'optimizer':'adam'},
-                            {'lr':0.1,'batch':32,'optimizer':'adam'},
-                            {'lr':0.1,'batch':64,'optimizer':'adam'}
-                        ]
-            - ORTHOGONAL:
-                Generates one combination per parameter dimension, varying one parameter
-                at a time while keeping other parameters fixed to defaults.
-                Example:
-                    param_grid = {"lr": [0.01, 0.1], "batch": [32, 64]}
-                    common_params = {"lr": 0.01, "batch": 32, "optimizer": "adam"}
-                    → 2 combinations:
-                        [
-                            {'lr':0.1,'batch':32,'optimizer':'adam'},
-                            {'lr':0.01,'batch':64,'optimizer':'adam'}
-                        ]
+            - COMBINATORIAL → Full Cartesian product of parameters.
+            - ORTHOGONAL → One combination per parameter dimension.
 
         Returns:
-            List[Dict[str, object]]: Each dict represents a parameter combination.
+            list[dict[str, object]]: Parameter combinations merged with common params.
 
         Raises:
             InvalidGridError: If no valid combinations can be generated.
@@ -150,13 +166,12 @@ class GridDAG(DAG):
         if not self.param_grid:
             return [self.common_params.copy()]
 
-        combinations: list[dict[str, object]] = []
+        combinations = []
 
         if self.search_mode == ParameterSearchMode.COMBINATORIAL:
             keys = list(self.param_grid.keys())
             for values in product(*self.param_grid.values()):
-                comb = dict(zip(keys, values))
-                merged = {**self.common_params, **comb}
+                merged = {**self.common_params, **dict(zip(keys, values))}
                 combinations.append(merged)
 
         elif self.search_mode == ParameterSearchMode.ORTHOGONAL:
@@ -167,91 +182,55 @@ class GridDAG(DAG):
                     combinations.append(comb)
 
         if not combinations:
-            raise InvalidGridError(
-                f"No valid parameter combinations could be generated "
-                f"(search_mode={self.search_mode}, param_grid={self.param_grid}, "
-                f"common_params={self.common_params})"
-            )
+            raise InvalidGridError(f"Invalid grid configuration: {self.param_grid}")
 
         return combinations
 
+    # -------------------------------------------------------------------------
+    # Task ID & Suffix Handling
+    # -------------------------------------------------------------------------
     def _generate_suffix(self, params: dict[str, object], idx: int) -> str:
         """
-        Generate a unique task suffix using all parameters. Hashes the string if too long.
-
-        Args:
-            params: Parameter combination dictionary
-            idx: Index for uniqueness
-
-        Returns:
-            str: Safe, unique task suffix
+        Generate unique suffix for task IDs based on parameter content.
 
         Example:
-            params = {'lr':0.01,'batch':32,'optimizer':'adam'}
-            idx = 0
-            → "0_5f1d3b9c2a6e7d8f"  # hashed version of all params
+            {'lr':0.01,'batch':32} → "0_5f1d3b9c2a6e7d8f"
         """
         combined_str = "_".join(f"{k}={v}" for k, v in sorted(params.items()))
         hashed = hashlib.md5(combined_str.encode()).hexdigest()[:16]
-
         return f"{idx}_{hashed}"
 
+    # -------------------------------------------------------------------------
+    # Build the DAG workflow
+    # -------------------------------------------------------------------------
     def build_grid(self) -> tuple[EmptyOperator, EmptyOperator]:
         """
-        Construct the DAG structure for running a parameter grid search workflow.
-
-        This method:
-            - Generates all parameter combinations from `param_grid` and merges with `common_params`.
-            - Determines the number of VMs to launch based on `execution_mode`.
-            - Creates start and stop VM tasks, plus dependency installation tasks per VM.
-            - Assigns each parameter combination to a VM (round-robin) and generates
-            unique, valid task suffixes for each combination.
-            - Calls `ml_task_fn` for each combination to produce the ML tasks and tasks_chains them sequentially.
-            - Ensures proper task ordering and safe cleanup of VMs.
-            - Returns DAG boundary markers for integration with other tasks.
+        Construct the parameter grid workflow:
+            - Spawns N VMs
+            - Runs each parameter combination on a VM (round-robin)
+            - Installs dependencies → runs ML tasks → cleans up VM
 
         Returns:
-            Tuple[EmptyOperator, EmptyOperator]:
-                A tuple containing the start and end DAG markers (`EmptyOperator` tasks)
-                that enclose the grid workflow. These can be used to tasks_chain upstream
-                or downstream tasks in the DAG.
-
-        Raises:
-            ValueError: If `ml_task_fn` was not provided when initializing the DAG.
-
-        Guidelines for `ml_task_fn`:
-            1. Must return either a single Airflow task or a list of tasks.
-            2. Tasks returned should have unique task IDs using the provided suffix.
-            3. Tasks will be executed sequentially on the assigned VM.
-            4. Avoid returning `None` or using `chain()` as the return value.
-            5. Task IDs must only contain valid Airflow characters:
-            alphanumeric, underscore (_), dash (-), or period (.).
-            6. Use the `suffix` for filenames, logging, or tagging outputs to keep
-            each parameter combination traceable.
+            (EmptyOperator, EmptyOperator): Start and end boundary tasks for chaining.
         """
-
         if not self.params_combinations:
-            raise InvalidGridError(
-                f"No valid parameter combinations to build DAG (param_grid={self.param_grid})"
-            )
+            raise InvalidGridError("No valid parameter combinations found.")
 
         start_grid = EmptyOperator(task_id="start_grid")
         end_grid = EmptyOperator(task_id="end_grid", trigger_rule=TriggerRule.ALL_DONE)
 
+        # Distribute parameter combos across VMs (round-robin)
         instance_names = [
             _normalize_instance_name(f"{self.dag_id}-vm-{i}") for i in range(self.n_vms)
         ]
-        vm_to_tasks_chains: dict[int, list[tuple[int, dict[str, object]]]] = {
-            vm_idx: [] for vm_idx in range(self.n_vms)
-        }
+        vm_to_tasks_chains = {i: [] for i in range(self.n_vms)}
 
-        # Distribute task chain parameter combinations round-robin across VMs
         for comb_idx, params in enumerate(self.params_combinations):
             vm_idx = comb_idx % self.n_vms
             vm_to_tasks_chains[vm_idx].append((comb_idx, params))
 
         with TaskGroup(group_id="grid_group") as grid_group:
-            for vm_idx, tasks_chains in vm_to_tasks_chains.items():
+            for vm_idx, task_chains in vm_to_tasks_chains.items():
                 instance_name = instance_names[vm_idx]
 
                 start_vm = StartGCEOperator(
@@ -268,12 +247,12 @@ class GridDAG(DAG):
                 start_vm >> install
 
                 prev_task = install
-                for comb_idx, params in tasks_chains:
-                    # Generate hashed suffix for uniqueness
+                for comb_idx, params in task_chains:
                     suffix = self._generate_suffix(params, comb_idx)
                     ml_tasks = self.ml_task_fn(params, instance_name, suffix)
-                    if not isinstance(ml_tasks, list):
-                        ml_tasks = [ml_tasks]
+                    ml_tasks = (
+                        [ml_tasks] if not isinstance(ml_tasks, list) else ml_tasks
+                    )
 
                     for task_idx, task in enumerate(ml_tasks):
                         if prev_task != install and task_idx % len(ml_tasks) == 0:
@@ -292,51 +271,27 @@ class GridDAG(DAG):
         return start_grid, end_grid
 
 
-# DAG metadata
-DATE = "{{ ts_nodash }}"
-DAG_NAME = "algo_training_graph_embeddings_grid"
-DEFAULT_ARGS = {
-    "start_date": datetime(2023, 5, 9),
-    "on_failure_callback": on_failure_vm_callback,
-    "retries": 0,
-    "retry_delay": timedelta(minutes=2),
-}
-
-# GCE defaults
-INSTANCE_NAME = f"grid-train-graph-embeddings-{ENV_SHORT_NAME}"
-INSTANCE_TYPE = {
-    "dev": "n1-standard-2",
-    "stg": "n1-standard-16",
-    "prod": "n1-standard-16",
-}[ENV_SHORT_NAME]
-
-# Paths
-GCS_FOLDER_PATH = f"algo_training_{ENV_SHORT_NAME}/{DAG_NAME}_{DATE}"
-STORAGE_BASE_PATH = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}"
-BASE_DIR = "data-gcp/jobs/ml_jobs/graph_recommendation"
-EMBEDDINGS_FILENAME = "embeddings.parquet"
-
-# BigQuery tables
-INPUT_TABLE_NAME = "item_with_metadata_to_embed"
-EMBEDDING_TABLE_NAME = "graph_embedding"
+# =============================================================================
+# ML Task Chain Definition
+# =============================================================================
 
 
-# ML task chain
 def ml_task_chain(params, instance_name, suffix):
     """
-    Create Airflow tasks for a single parameter combination in a GridDAG.
+    Defines the ML tasks to run for each parameter combination.
+
+    Each chain typically includes:
+        1. Training the model
+        2. Evaluating embeddings
+        3. Saving results to GCS
 
     Args:
-        params (dict): Parameter values for this combination; merged from the grid and
-                        any common parameters by `build_grid`.
-        instance_name (str): GCE instance where tasks run; assigned by `build_grid`.
-        suffix (str): Unique identifier for task IDs and output files, generated by
-                        `build_grid` to avoid collisions across combinations.
+        params (dict): Parameter set for this run (merged grid + common params).
+        instance_name (str): Assigned GCE instance.
+        suffix (str): Unique hash suffix for task IDs and output paths.
 
     Returns:
-        List[BaseOperator]: Ordered tasks representing this combination’s workflow.
-                            Internal structure (linear, parallel, or branched) is
-                            preserved; `build_grid` handles connecting to VM lifecycle tasks.
+        list[BaseOperator]: Sequential Airflow tasks. `build_grid` handles connecting to VM lifecycle tasks.
     """
     config_json = json.dumps(params)
 
@@ -374,18 +329,48 @@ def ml_task_chain(params, instance_name, suffix):
     return [train, evaluate]
 
 
-# Grid Search parameters
+# =============================================================================
+# DAG Configuration & Initialization
+# =============================================================================
+
+# Grid Search Parameters
 SEARCH_MODE = ParameterSearchMode.COMBINATORIAL
 N_VMS = 4
 PARAM_GRID = {"embedding_dim": [32, 64, 128], "context_size": [5, 10, 15]}
-SHARED_PARAMS = {
-    "base_dir": BASE_DIR,
+SHARED_PARAMS = {"base_dir": "data-gcp/jobs/ml_jobs/graph_recommendation"}
+
+# DAG Metadata
+DATE = "{{ ts_nodash }}"
+DAG_NAME = "algo_training_graph_embeddings_grid"
+DEFAULT_ARGS = {
+    "start_date": datetime(2023, 5, 9),
+    "on_failure_callback": on_failure_vm_callback,
+    "retries": 0,
+    "retry_delay": timedelta(minutes=2),
 }
 
+# GCE Defaults
+INSTANCE_NAME = f"grid-train-graph-embeddings-{ENV_SHORT_NAME}"
+INSTANCE_TYPE = {
+    "dev": "n1-standard-2",
+    "stg": "n1-standard-16",
+    "prod": "n1-standard-16",
+}[ENV_SHORT_NAME]
+
+# Paths and Tables
+GCS_FOLDER_PATH = f"algo_training_{ENV_SHORT_NAME}/{DAG_NAME}_{DATE}"
+STORAGE_BASE_PATH = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}"
+BASE_DIR = "data-gcp/jobs/ml_jobs/graph_recommendation"
+EMBEDDINGS_FILENAME = "embeddings.parquet"
+INPUT_TABLE_NAME = "item_with_metadata_to_embed"
+
+# =============================================================================
+# DAG Definition
+# =============================================================================
 
 with GridDAG(
     dag_id="algo_training_graph_embeddings_grid_search",
-    description="Grid search training for graph embeddings",
+    description="Grid search training for graph embeddings (POC)",
     ml_task_fn=ml_task_chain,
     param_grid=PARAM_GRID,
     common_params=SHARED_PARAMS,
@@ -429,6 +414,7 @@ with GridDAG(
         "train_only_on_10k_rows": Param(default=True, type="boolean"),
     },
 ) as dag:
+    # Initial extraction step: prepare training data from BigQuery
     start = EmptyOperator(task_id="start")
 
     import_offer_as_parquet = BigQueryInsertJobOperator(
@@ -448,6 +434,7 @@ with GridDAG(
         },
     )
 
+    # Build and link the grid workflow
     start_grid, end_grid = dag.build_grid()
 
     start >> import_offer_as_parquet >> start_grid >> end_grid

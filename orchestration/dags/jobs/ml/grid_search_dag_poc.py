@@ -44,12 +44,6 @@ class InvalidGridError(Exception):
     """Raised when a grid DAG cannot generate any valid parameter combinations."""
 
 
-class ExecutionMode(str, Enum):
-    PARALLEL = "parallel"
-    SEQUENTIAL = "sequential"
-    DISPATCH = "dispatch"
-
-
 class ParameterSearchMode(str, Enum):
     COMBINATORIAL = "combinatorial"
     ORTHOGONAL = "orthogonal"
@@ -70,7 +64,7 @@ class GridDAG(DAG):
         - Optional remapping of parameter values for shorter task IDs.
     """
 
-    _DEFAULT_MAX_PARALLEL_VMS = 8  # internal constant, read-only
+    _DEFAULT_MAX_PARALLEL_VMS = 10  # Internal Safeguard, read-only
 
     def __init__(
         self,
@@ -80,7 +74,6 @@ class GridDAG(DAG):
         param_grid=None,
         common_params=None,
         search_mode=ParameterSearchMode.COMBINATORIAL,
-        execution_mode=ExecutionMode.PARALLEL,
         n_vms=1,
         start_vm_kwargs=None,
         install_deps_kwargs=None,
@@ -110,30 +103,16 @@ class GridDAG(DAG):
         self.ml_task_fn = ml_task_fn
         self.param_grid = param_grid or {}
         self.common_params = common_params or {}
-        self.execution_mode = execution_mode
         self.search_mode = search_mode
-        self.n_vms = n_vms
         self.start_vm_kwargs = start_vm_kwargs or {}
         self.install_deps_kwargs = install_deps_kwargs or {}
         self.tasks_chains = []
-        self.max_parallel_vms = self._DEFAULT_MAX_PARALLEL_VMS
+        self.params_combinations = self._generate_params_combinations()
+        self.n_vms = min(
+            n_vms, self._DEFAULT_MAX_PARALLEL_VMS, len(self.params_combinations or [])
+        )
 
-    # ----------------- PROTECTED PROPERTY -----------------
-
-    @property
-    def max_parallel_vms(self):
-        """Read-only max number of parallel VMs to limit cost."""
-        return self._max_parallel_vms
-
-    @max_parallel_vms.setter
-    def max_parallel_vms(self, value):
-        if hasattr(self, "_max_parallel_vms"):
-            raise AttributeError("max_parallel_vms is read-only and cannot be modified")
-        self._max_parallel_vms = value
-
-    # -----------------------------------------------------
-
-    def generate_param_combinations(self) -> list[dict[str, object]]:
+    def _generate_params_combinations(self) -> list[dict[str, object]]:
         """
         Generate all parameter combinations based on search_mode.
 
@@ -177,22 +156,19 @@ class GridDAG(DAG):
             keys = list(self.param_grid.keys())
             for values in product(*self.param_grid.values()):
                 comb = dict(zip(keys, values))
-                merged = {**self.common_params, **comb}  # grid values override defaults
+                merged = {**self.common_params, **comb}
                 combinations.append(merged)
 
         elif self.search_mode == ParameterSearchMode.ORTHOGONAL:
             for key, values in self.param_grid.items():
-                default = self.common_params.get(key, values[0])
                 for v in values:
-                    if v == default:
-                        continue
                     comb = self.common_params.copy()
                     comb[key] = v
                     combinations.append(comb)
 
         if not combinations:
             raise InvalidGridError(
-                "No valid parameter combinations could be generated "
+                f"No valid parameter combinations could be generated "
                 f"(search_mode={self.search_mode}, param_grid={self.param_grid}, "
                 f"common_params={self.common_params})"
             )
@@ -254,20 +230,10 @@ class GridDAG(DAG):
             each parameter combination traceable.
         """
 
-        combinations = self.generate_param_combinations()
-        if not combinations:
+        if not self.params_combinations:
             raise InvalidGridError(
                 f"No valid parameter combinations to build DAG (param_grid={self.param_grid})"
             )
-
-        if self.execution_mode == "SEQUENTIAL":
-            self.n_vms = 1
-        elif self.execution_mode == "DISPATCH":
-            self.n_vms = min(self.n_vms, self.max_parallel_vms)
-        elif self.execution_mode == "PARALLEL":
-            if len(combinations) > self.max_parallel_vms:
-                self.execution_mode = "DISPATCH"
-            self.n_vms = min(len(combinations), self.max_parallel_vms)
 
         start_grid = EmptyOperator(task_id="start_grid")
         end_grid = EmptyOperator(task_id="end_grid", trigger_rule=TriggerRule.ALL_DONE)
@@ -280,7 +246,7 @@ class GridDAG(DAG):
         }
 
         # Distribute task chain parameter combinations round-robin across VMs
-        for comb_idx, params in enumerate(combinations):
+        for comb_idx, params in enumerate(self.params_combinations):
             vm_idx = comb_idx % self.n_vms
             vm_to_tasks_chains[vm_idx].append((comb_idx, params))
 
@@ -408,13 +374,14 @@ def ml_task_chain(params, instance_name, suffix):
     return [train, evaluate]
 
 
-# Grid parameters
-
-PARAM_GRID = {"embedding_dim": [32, 64, 128]}
-
+# Grid Search parameters
+SEARCH_MODE = ParameterSearchMode.COMBINATORIAL
+N_VMS = 4
+PARAM_GRID = {"embedding_dim": [32, 64, 128], "context_size": [5, 10, 15]}
 SHARED_PARAMS = {
     "base_dir": BASE_DIR,
 }
+
 
 with GridDAG(
     dag_id="algo_training_graph_embeddings_grid_search",
@@ -422,16 +389,15 @@ with GridDAG(
     ml_task_fn=ml_task_chain,
     param_grid=PARAM_GRID,
     common_params=SHARED_PARAMS,
-    search_mode=ParameterSearchMode.ORTHOGONAL,
-    execution_mode=ExecutionMode.PARALLEL,
-    n_vms=4,
+    search_mode=SEARCH_MODE,
+    n_vms=N_VMS,
     start_date=datetime(2023, 1, 1),
     schedule_interval=None,
     dagrun_timeout=timedelta(minutes=1200),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     render_template_as_native_obj=True,
-    tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
+    tags=[DAG_TAGS.POC.value, DAG_TAGS.DS.value, DAG_TAGS.VM.value],
     start_vm_kwargs={
         "preemptible": False,
         "instance_type": "{{ params.instance_type }}",

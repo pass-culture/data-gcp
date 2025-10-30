@@ -7,6 +7,11 @@
                 check_cols=["json_raw"],
                 unique_key="ean",
                 hard_deletes="ignore",
+                tags=["external_dependency"],
+                meta={
+                        "external_dag_id": "import_titelive",
+                        "external_task_id": "gce_instance_stop"
+                }
             )
         )
     }}

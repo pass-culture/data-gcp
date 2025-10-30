@@ -372,14 +372,31 @@ def create_snapshot_operator(
     snapshot_node: str, snapshot_data: Dict, dag: DAG
 ) -> PythonOperator:
     """Create a Python operator for running a dbt snapshot."""
+    from common.utils import delayed_waiting_operator
+
     node_tags = snapshot_data.get("tags", [])
-    return PythonOperator(
+    node_meta = snapshot_data["meta"]
+
+    snapshot_op = PythonOperator(
         task_id=snapshot_data["alias"],
         python_callable=partial(run_dbt_snapshot, snapshot_data["name"], node_tags),
         dag=dag,
         pool="dbt",
         trigger_rule="none_failed_min_one_success",  # Run if upstream tasks succeed or skip
     )
+    if (
+        "external_dependency" in node_tags
+        and "external_dag_id" in node_meta
+        and "external_task_id" in node_meta
+    ):
+        sensor = delayed_waiting_operator(
+            dag,
+            external_dag_id=node_meta["external_dag_id"],
+            external_task_id=node_meta["external_task_id"],
+        )
+        sensor >> snapshot_op
+
+    return snapshot_op
 
 
 def create_critical_tests_group(

@@ -254,9 +254,13 @@ class BaseSSHGCEOperator(BaseOperator):
                 self.log.info(f"Job logs: {logs}")
             if message:
                 self.log.info(f"Job message: {message}")
+
+            self.log.info(f"Job {stderr=}")
+            self.log.info(f"Job {stdout=}")
             if self.do_xcom_push and stdout:
                 context["ti"].xcom_push(key="stdout", value=stdout)
                 context["ti"].xcom_push(key="stderr", value=stderr)
+
             return
         elif status == "running":
             # This shouldn't happen as we only get here after the trigger is done

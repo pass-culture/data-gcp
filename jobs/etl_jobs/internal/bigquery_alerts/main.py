@@ -1,13 +1,14 @@
+import os
+
+import pandas as pd
+import typer
 from utils import (
     get_datasets_to_scan,
     get_last_update_date,
+    get_schedule_mapping,
     get_table_schedule,
-    schedule_mapping,
     table_name_contains_partition_date,
 )
-import typer
-import pandas as pd
-import os
 
 # Tables to exclude manually
 TABLES_TO_EXCLUDE = [
@@ -36,7 +37,7 @@ def run():
     )
 
     warning_tables = df[
-        df["last_modified_time"] < df["schedule_tag"].map(schedule_mapping)
+        df["last_modified_time"] < df["schedule_tag"].map(get_schedule_mapping())
     ]
 
     warning_tables = warning_tables[warning_tables.is_partition_table == False]

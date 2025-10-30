@@ -11,6 +11,7 @@ from src.constants import DEFAULT_METADATA_COLUMNS, GTL_ID_COLUMN, ID_COLUMN
 from src.utils.preprocessing import (
     detach_single_occuring_metadata,
     normalize_dataframe,
+    remove_rows_with_bad_gtls,
     remove_rows_with_no_metadata,
 )
 
@@ -109,6 +110,7 @@ def build_book_metadata_graph_from_dataframe(
     df_normalized = (
         dataframe.pipe(normalize_dataframe, columns=all_columns)
         .pipe(detach_single_occuring_metadata, columns=metadata_columns)
+        .pipe(remove_rows_with_bad_gtls)
         .pipe(remove_rows_with_no_metadata, metadata_list=list(metadata_columns))
     )
 

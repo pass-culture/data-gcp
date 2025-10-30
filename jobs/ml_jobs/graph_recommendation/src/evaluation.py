@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import json
-from dataclasses import asdict, dataclass, field
-
 import pandas as pd
 from loguru import logger
 
+from src.constants import DefaultEvaluationConfig
 from src.utils.recommendation_metrics import compute_evaluation_metrics
 from src.utils.retrieval import (
     TABLE_NAME,
@@ -18,48 +16,6 @@ from src.utils.retrieval import (
     load_metadata_table,
     sample_test_items_lazy,
 )
-
-
-# Default evaluation configuration factory
-@dataclass
-class DefaultEvaluationConfig:
-    metadata_columns: list[str] = field(
-        default_factory=lambda: ["item_id", "gtl_id", "artist_id"]
-    )
-    n_samples: int = 100
-    n_retrieved: int = 1000
-    k_values: list[int] = field(default_factory=lambda: [10, 20, 50, 100])
-    relevance_thresholds: list[float] = field(
-        default_factory=lambda: [0.3, 0.4, 0.5, 0.6, 0.7]
-    )
-    ground_truth_score: str = "full_score"
-    force_artist_weight: bool = False
-    rebuild_index: bool = False
-
-    def update_from_json(self, json_str: str):
-        """Update fields from a JSON string, logging errors instead of raising."""
-        try:
-            updates = json.loads(json_str)
-        except json.JSONDecodeError as e:
-            logger.error(f"Invalid JSON: {e}")
-            return
-        for k, v in updates.items():
-            if hasattr(self, k):
-                setattr(self, k, v)
-            else:
-                logger.warning(f"Ignored unknown config field: {k}")
-
-    def update_from_dict(self, config_dict: dict):
-        """Update fields from a dictionary, logging errors instead of raising."""
-        assert isinstance(config_dict, dict), "config_dict must be a dictionary"
-        for k, v in config_dict.items():
-            if hasattr(self, k):
-                setattr(self, k, v)
-            else:
-                logger.warning(f"Ignored unknown config field: {k}")
-
-    def to_dict(self):
-        return asdict(self)
 
 
 def evaluate_embeddings(

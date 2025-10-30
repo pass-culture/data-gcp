@@ -174,8 +174,11 @@ def _load_and_filter_all_parquet_files(
     dfs = []
 
     for file_path in tqdm(matching_files, desc="Loading metadata"):
-        df_chunk = _load_single_parquet_file(file_path, columns)
-        df_chunk = _filter_dataframe_by_field_values(df_chunk, filter_field, filter_set)
+        df_chunk = _load_single_parquet_file(file_path, columns).pipe(
+            _filter_dataframe_by_field_values,
+            filter_field=filter_field,
+            filter_set=filter_set,
+        )
 
         if len(df_chunk) > 0:
             dfs.append(df_chunk)
@@ -191,6 +194,22 @@ def _remove_duplicate_rows_by_field(
         df = df.drop_duplicates(subset=[filter_field], keep="first")
 
     return df
+
+
+def _normalize_gtl_id_lookup(gtl_id: str | int | float | None) -> str | None:
+    """
+    Normalizes a GTL ID to an 8-digit zero-padded string.
+    """
+    if pd.isna(gtl_id):
+        return None
+    if isinstance(gtl_id, str):
+        return gtl_id.zfill(8)
+    if isinstance(gtl_id, (int | float)):
+        return str(int(gtl_id)).zfill(8)
+    logger.warning(
+        f"Unexpected type for GTL ID '{gtl_id}': {type(gtl_id)}. Returning None."
+    )
+    return None
 
 
 def load_metadata_table(
@@ -315,9 +334,14 @@ def _load_gtl_ids_into_lookup(
         batch_results = (
             table.search().where(where_clause).limit(len(batch_ids)).to_pandas()
         )
+        if batch_results.empty:
+            continue
         # Add to lookup
-        for _, row in batch_results.iterrows():
-            gtl_lookup[row["node_ids"]] = row["gtl_id"]
+        normalized_gtls = batch_results["gtl_id"].apply(_normalize_gtl_id_lookup)
+        batch_lookup = dict(
+            zip(batch_results["node_ids"], normalized_gtls, strict=True)
+        )
+        gtl_lookup.update(batch_lookup)
 
     logger.info(f"Loaded {len(gtl_lookup)} GTL mappings")
     return gtl_lookup

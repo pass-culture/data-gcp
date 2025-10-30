@@ -282,6 +282,24 @@ def log_evaluation_metrics(
             row["ndcg"],
             step=int(row["k"]),
         )
+        mlflow.log_metric(
+            f"recall_no_thresh_at_{str(row['k']).zfill(3)}__{row['score_col']}",
+            row["recall_no_thresh"],
+        )
+        mlflow.log_metric(
+            f"curve_recall_no_thresh_at_k__{row['score_col']}",
+            row["recall_no_thresh"],
+            step=int(row["k"]),
+        )
+        mlflow.log_metric(
+            f"precision_no_thresh_at_{str(row['k']).zfill(3)}__{row['score_col']}",
+            row["precision_no_thresh"],
+        )
+        mlflow.log_metric(
+            f"precisionrecall_no_thresh_at_k__{row['score_col']}",
+            row["precision_no_thresh"],
+            step=int(row["k"]),
+        )
 
     # Log metrics artifact for easy lookup
     _log_metrics_at_k_csv(

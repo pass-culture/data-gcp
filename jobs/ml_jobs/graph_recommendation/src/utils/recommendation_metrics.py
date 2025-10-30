@@ -124,6 +124,33 @@ def _compute_metrics_at_k(
         logger.error(f"Error computing NDCG @ K={k}: {e}")
         ndcg = None
 
+    # Compute NDCG@K (uses raw scores)
+    try:
+        # Recall@K without threshold
+        recall_no_thresh = recall_at_k(
+            rating_true=rating_true,
+            rating_pred=rating_pred_sorted,
+            relevancy_method="top_k",
+            k=k,
+        )
+        logger.info(f"    recall_no_thresh@{k}: {recall_no_thresh:.4f}")
+    except Exception as e:
+        logger.error(f"Error computing recall_no_thresh @ K={k}: {e}")
+        recall_no_thresh = None
+
+    try:
+        # precision@K without threshold
+        precision_no_thresh = precision_at_k(
+            rating_true=rating_true,
+            rating_pred=rating_pred_sorted,
+            relevancy_method="top_k",
+            k=k,
+        )
+        logger.info(f"    precision_no_thresh@{k}: {precision_no_thresh:.4f}")
+    except Exception as e:
+        logger.error(f"Error computing precision_no_thresh @ K={k}: {e}")
+        precision_no_thresh = None
+
     # Compute threshold-based metrics (recall, precision)
     rating_pred_k = rating_pred_sorted.groupby("userID").head(k)
 
@@ -152,6 +179,8 @@ def _compute_metrics_at_k(
                     "k": k,
                     "threshold": threshold,
                     "ndcg": ndcg,
+                    "recall_no_thresh": recall_no_thresh,
+                    "precision_no_thresh": precision_no_thresh,
                     "recall": recall,
                     "precision": precision,
                 }

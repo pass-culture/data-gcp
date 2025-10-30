@@ -86,18 +86,18 @@ def remove_rows_with_no_metadata(
     return df[mask].copy()
 
 
-def remove_rows_with_gtl_id_starting_with_00(df: pd.DataFrame) -> pd.DataFrame:
-    """Filter out rows where the GTL ID starts with '00'.
+def remove_rows_with_bad_gtls(df: pd.DataFrame) -> pd.DataFrame:
+    """Remove rows with invalid GTL IDs from the dataframe.
+
+    Filters out rows where the GTL ID starts with "00" (considered invalid)
+    and rows where the GTL ID is null/NaN.
 
     Args:
-        df (pd.DataFrame): Input dataframe.
-        gtl_id_column (str): Name of the column containing GTL IDs.
+        df: The input dataframe containing GTL ID column.
 
     Returns:
-        pd.DataFrame: Filtered dataframe
-        (rows with GTL IDs starting with '00' are removed).
+        A new dataframe with invalid GTL rows removed.
     """
-
-    # Keep rows where GTL ID does not start with '00'
-    mask = ~df[GTL_ID_COLUMN].astype(str).str.startswith("00")
-    return df[mask].copy()
+    return df.loc[~df[GTL_ID_COLUMN].astype(str).str.startswith("00")].loc[
+        lambda df: df.gtl_id.notna()
+    ]

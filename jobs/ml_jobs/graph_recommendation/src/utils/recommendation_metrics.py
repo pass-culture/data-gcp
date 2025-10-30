@@ -115,7 +115,7 @@ def _compute_metrics_at_k(
         ndcg = ndcg_at_k(
             rating_true=rating_true,
             rating_pred=rating_pred_sorted,
-            relevancy_method=None,
+            relevancy_method="top_k",
             k=k,
             score_type="raw",
         )

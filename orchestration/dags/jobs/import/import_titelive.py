@@ -132,6 +132,7 @@ with DAG(
         command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py run-init "
         f"{{{{ '--resume' if params.resume else '' }}}} "
         f"{{{{ '--reprocess-failed' if params.reprocess_failed else '' }}}}",
+        deferrable=True,
     )
 
     # Incremental mode: Sync since last sync date for both bases
@@ -149,14 +150,26 @@ with DAG(
         trigger_rule="none_failed_min_one_success",
     )
 
-    # Download images: Download images from BigQuery to GCS
-    download_images_task = SSHGCEOperator(
-        task_id="download_images_task",
+    # Download images for init mode (deferrable)
+    download_images_init = SSHGCEOperator(
+        task_id="download_images_init",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         environment=dag_config,
         command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py download-images "
         f"{{{{ '--reprocess-failed' if params.download_images_reprocess_failed else '' }}}}",
+        deferrable=True,
+    )
+
+    # Download images for incremental mode (not deferrable)
+    download_images_incremental = SSHGCEOperator(
+        task_id="download_images_incremental",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        environment=dag_config,
+        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py download-images "
+        f"{{{{ '--reprocess-failed' if params.download_images_reprocess_failed else '' }}}}",
+        deferrable=False,
     )
 
     # VM cleanup
@@ -168,6 +181,19 @@ with DAG(
 
     # Task dependencies
     (gce_instance_start >> fetch_install_code >> execution_mode_branch)
-    (execution_mode_branch >> run_init_task >> completion_task)
-    (execution_mode_branch >> wait_for_raw >> run_incremental_task >> completion_task)
-    (completion_task >> download_images_task >> gce_instance_stop)
+
+    (
+        execution_mode_branch
+        >> run_init_task
+        >> completion_task
+        >> download_images_init
+        >> gce_instance_stop
+    )
+    (
+        execution_mode_branch
+        >> wait_for_raw
+        >> run_incremental_task
+        >> completion_task
+        >> download_images_incremental
+        >> gce_instance_stop
+    )

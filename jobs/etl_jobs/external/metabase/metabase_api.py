@@ -65,3 +65,20 @@ class MetabaseAPI:
                 f"{self.host}/api/table/{table_id}/query_metadata", headers=self.headers
             )
         return response.json()
+
+    def get_dashboards(self, dashboard_id=None):
+        if dashboard_id:
+            response = requests.get(
+                f"{self.host}/api/dashboard/{dashboard_id}", headers=self.headers
+            )
+        else:
+            response = requests.get(f"{self.host}/api/dashboard/", headers=self.headers)
+        return response.json()
+
+    def put_dashboard(self, dashboard_id, dashboard_dict):
+        response = requests.put(
+            f"{self.host}/api/dashboard/{dashboard_id}",
+            data=json.dumps(dashboard_dict),
+            headers=self.headers,
+        )
+        return response.json()

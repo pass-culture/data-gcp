@@ -8,7 +8,7 @@ import pandas as pd
 from loguru import logger
 from tqdm import tqdm
 
-from src.constants import DATA_DIR, EMBEDDING_COLUMN
+from src.constants import DATA_DIR, EMBEDDING_COLUMN, GTL_ID_COLUMN, VECTOR_ID
 from src.utils.commons import BUCKET_PREFIX, is_bucket_path
 
 # Import your existing GTL scoring functions
@@ -65,7 +65,7 @@ def load_and_index_embeddings(
 
     logger.info(f"Loaded {len(df)} items from parquet")
 
-    non_null_columns = ["node_ids", "gtl_id", EMBEDDING_COLUMN]
+    non_null_columns = [VECTOR_ID, GTL_ID_COLUMN, EMBEDDING_COLUMN]
     null_rows = df[df[non_null_columns].isnull().any(axis=1)]
     if not null_rows.empty:
         logger.error(
@@ -229,7 +229,7 @@ def load_metadata_table(
 def join_retrieval_with_metadata(
     retrieval_results: pd.DataFrame,
     metadata_df: pd.DataFrame,
-    right_on: str = "node_ids",
+    right_on: str = VECTOR_ID,
 ) -> pd.DataFrame:
     """
     Join retrieval results with metadata for both query and retrieved items.
@@ -252,7 +252,7 @@ def join_retrieval_with_metadata(
             Must contain the column specified in right_on parameter.
         right_on: Column name in metadata_df to join on. This column should contain
             item identifiers that match both query_node_id and retrieved_node_id values.
-            Default: "node_ids"
+            Default: VECTOR_ID
 
     Returns:
         Augmented DataFrame with original columns plus:
@@ -317,7 +317,7 @@ def _load_gtl_ids_into_lookup(
         )
         # Add to lookup
         for _, row in batch_results.iterrows():
-            gtl_lookup[row["node_ids"]] = row["gtl_id"]
+            gtl_lookup[row[VECTOR_ID]] = row["gtl_id"]
 
     logger.info(f"Loaded {len(gtl_lookup)} GTL mappings")
     return gtl_lookup
@@ -649,7 +649,7 @@ def sample_test_items_lazy(
     # Read sampled rows in one call
     scanner = table.to_lance()
     sampled_df = scanner.take(sampled_indices).to_pandas()
-    query_node_ids = sampled_df["node_ids"].tolist()
+    query_node_ids = sampled_df[VECTOR_ID].tolist()
 
     logger.info(f"Sampled {len(query_node_ids)} items")
     return query_node_ids
@@ -707,7 +707,7 @@ def generate_predictions_lazy(
         # Process results
         rank = 0
         for _, row in search_results.iterrows():
-            retrieved_id = row["node_ids"]
+            retrieved_id = row[VECTOR_ID]
 
             # Skip self-match
             if str(retrieved_id) == str(query_item):

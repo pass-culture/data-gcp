@@ -12,7 +12,13 @@ from torch.utils.data import DataLoader
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import MetaPath2Vec
 
-from src.constants import EMBEDDING_COLUMN, DefaultTrainingConfig, InvalidConfigError
+from src.constants import (
+    EMBEDDING_COLUMN,
+    GTL_ID_COLUMN,
+    VECTOR_ID,
+    DefaultTrainingConfig,
+    InvalidConfigError,
+)
 from src.utils.mlflow import (
     conditional_mlflow,
     log_model_parameters,
@@ -225,8 +231,8 @@ def train_metapath2vec(
 
     embeddings_df = pd.DataFrame(
         {
-            "node_ids": graph_data.book_ids,
-            "gtl_id": graph_data.gtl_ids,
+            VECTOR_ID: graph_data.book_ids,
+            GTL_ID_COLUMN: graph_data.gtl_ids,
             EMBEDDING_COLUMN: list(book_embeddings),
         }
     )

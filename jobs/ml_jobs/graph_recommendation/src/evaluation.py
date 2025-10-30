@@ -8,6 +8,7 @@ from dataclasses import asdict, dataclass, field
 import pandas as pd
 from loguru import logger
 
+from src.constants import GTL_ID_COLUMN, ID_COLUMN
 from src.utils.recommendation_metrics import compute_evaluation_metrics
 from src.utils.retrieval import (
     TABLE_NAME,
@@ -24,7 +25,7 @@ from src.utils.retrieval import (
 @dataclass
 class DefaultEvaluationConfig:
     metadata_columns: list[str] = field(
-        default_factory=lambda: ["item_id", "gtl_id", "artist_id"]
+        default_factory=lambda: [ID_COLUMN, GTL_ID_COLUMN, "artist_id"]
     )
     n_samples: int = 100
     n_retrieved: int = 1000
@@ -170,7 +171,7 @@ def evaluate_embeddings(
 
     metadata_table = load_metadata_table(
         parquet_path=raw_data_parquet_path,
-        filter_field="item_id",
+        filter_field=ID_COLUMN,
         filter_values=unique_node_ids,
         columns=metadata_columns,
     )
@@ -178,7 +179,7 @@ def evaluate_embeddings(
     df_results = join_retrieval_with_metadata(
         retrieval_results=df_results,
         metadata_df=metadata_table,
-        right_on="item_id",
+        right_on=ID_COLUMN,
     )
     df_results = df_results.where(pd.notna(df_results), None)
 

@@ -16,6 +16,7 @@ RESULTS_DIR = (PROJECT_ROOT / "results").as_posix()
 EMBEDDING_COLUMN = "embedding"
 ID_COLUMN = "item_id"
 GTL_ID_COLUMN = "gtl_id"
+VECTOR_ID = "node_ids"
 DEFAULT_METADATA_COLUMNS: Sequence[str] = (
     "gtl_label_level_1",
     "gtl_label_level_2",
@@ -102,8 +103,8 @@ class DefaultTrainingConfig(BaseConfig):
     walks_per_node: int = 5
     num_negative_samples: int = 5
     num_epochs: int = 15
-    num_workers: int = 8 if sys.platform == "linux" else 0
-    batch_size: int = 256
+    num_workers: int = 12 if sys.platform == "linux" else 0
+    batch_size: int = 768
     learning_rate: float = 0.01
     metapath: list[tuple[str, str, str]] = field(default_factory=_default_metapath)
 
@@ -111,7 +112,7 @@ class DefaultTrainingConfig(BaseConfig):
 @dataclass
 class DefaultEvaluationConfig(BaseConfig):
     metadata_columns: list[str] = field(
-        default_factory=lambda: ["item_id", "gtl_id", "artist_id"]
+        default_factory=lambda: [ID_COLUMN, GTL_ID_COLUMN, "artist_id"]
     )
     n_samples: int = 100
     n_retrieved: int = 1000

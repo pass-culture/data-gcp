@@ -83,7 +83,7 @@ def remove_rows_with_no_metadata(
 
     # Keep rows where at least one metadata column is not null
     mask = df[metadata_list].notna().any(axis=1)
-    return df[mask].copy()
+    return df[mask]
 
 
 def remove_rows_with_bad_gtls(df: pd.DataFrame) -> pd.DataFrame:

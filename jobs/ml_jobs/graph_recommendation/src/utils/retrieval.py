@@ -61,7 +61,7 @@ def load_and_index_embeddings(
     # Load data from parquet
     logger.info(f"Loading embeddings from: {parquet_path}")
 
-    df = pd.read_parquet(parquet_path)
+    df = pd.read_parquet(parquet_path).loc[lambda df: df.gtl_id.notna()]
 
     logger.info(f"Loaded {len(df)} items from parquet")
 

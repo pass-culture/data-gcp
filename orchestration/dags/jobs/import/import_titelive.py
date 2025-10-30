@@ -144,6 +144,12 @@ with DAG(
         command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py run-incremental",
     )
 
+    # Completion task to merge branches
+    completion_task = EmptyOperator(
+        task_id="completion_task",
+        trigger_rule="none_failed_min_one_success",
+    )
+
     # Download images for init mode (deferrable)
     download_images_init = SSHGCEOperator(
         task_id="download_images_init",
@@ -175,17 +181,17 @@ with DAG(
 
     # Task dependencies
     (gce_instance_start >> fetch_install_code >> execution_mode_branch)
-
     (
         execution_mode_branch
         >> run_init_task
+        >> completion_task
         >> download_images_init
         >> gce_instance_stop
     )
     (
         execution_mode_branch
-        >> wait_for_raw
         >> run_incremental_task
+        >> completion_task
         >> download_images_incremental
         >> gce_instance_stop
     )

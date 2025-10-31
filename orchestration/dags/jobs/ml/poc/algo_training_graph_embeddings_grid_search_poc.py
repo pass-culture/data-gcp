@@ -63,7 +63,7 @@ def format_poc_dag_doc(
     """
     if search_mode == "points":
         grid_params_str = "\n".join([f"{json.dumps(point, indent=2)}\n" for point in grid_params])
-    else:    
+    else:
         grid_params_str = json.dumps(grid_params, indent=2)
     shared_params_str = json.dumps(shared_params, indent=2)
 
@@ -285,19 +285,17 @@ class GridDAG(DAG):
         start_grid = EmptyOperator(task_id="start_grid")
         end_grid = EmptyOperator(task_id="end_grid", trigger_rule=TriggerRule.ALL_DONE)
 
-        # Distribute parameter combos across VMs (round-robin)
-        instance_names = [
-            _normalize_instance_name(f"{self.dag_id}-vm-{i}") for i in range(self.n_vms)
-        ]
+        # # Distribute parameter combos across VMs (round-robin)
         vm_to_tasks_chains = {i: [] for i in range(self.n_vms)}
-
         for comb_idx, params in enumerate(self.params_combinations):
             vm_idx = comb_idx % self.n_vms
             vm_to_tasks_chains[vm_idx].append((comb_idx, params))
 
         with TaskGroup(group_id="grid_group") as grid_group:
             for vm_idx, task_chains in vm_to_tasks_chains.items():
-                instance_name = instance_names[vm_idx]
+                # Merge template instance name with VM index for uniqueness
+                instance_name_template = self.start_vm_kwargs.get("instance_name", self.dag_id)
+                instance_name = _normalize_instance_name(f"{instance_name_template}-vm-{vm_idx}")
 
                 start_vm = StartGCEOperator(
                     task_id=f"start_vm_{vm_idx}",
@@ -399,7 +397,7 @@ def ml_task_chain(params, instance_name, suffix):
 
 # DAG Metadata
 DATE = "{{ ts_nodash }}"
-DAG_NAME = "algo_training_graph_embeddings_grid"
+DAG_NAME = "graph_embeddings_grid"
 DEFAULT_ARGS = {
     "start_date": datetime(2023, 5, 9),
     "on_failure_callback": on_failure_vm_callback,
@@ -449,7 +447,7 @@ DOC_MD = format_poc_dag_doc(
 # =============================================================================
 
 with GridDAG(
-    dag_id="algo_training_graph_embeddings_grid_search_poc",
+    dag_id=DAG_NAME,
     description="Grid search training for graph embeddings (POC)",
     ml_task_fn=ml_task_chain,
     grid_params=GRID_PARAMS[SEARCH_MODE.value],

@@ -100,7 +100,7 @@ def load_and_index_embeddings(
     # Create vector index
     logger.info("Creating vector index...")
     table.create_index(
-        LANCEDB_NODE_ID_COLUMN_name=EMBEDDING_COLUMN,
+        vector_column_name=EMBEDDING_COLUMN,
         index_type=INDEX_TYPE,
         num_partitions=NUM_PARTITIONS,
         num_sub_vectors=NUM_SUB_VECTORS,

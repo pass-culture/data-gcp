@@ -61,8 +61,8 @@ def format_poc_dag_doc(
     """
     Returns a nicely formatted POC DAG documentation string.
     """
-    grid_params_str = json.dumps(grid_params, indent=4)
-    shared_params_str = json.dumps(shared_params, indent=4)
+    grid_params_str = json.dumps(grid_params, indent=2)
+    shared_params_str = json.dumps(shared_params, indent=2)
 
     doc = f"""
     # Airflow DAG: {dag_name} (POC)
@@ -121,6 +121,7 @@ class ParameterSearchMode(str, Enum):
 
     COMBINATORIAL = "combinatorial"
     ORTHOGONAL = "orthogonal"
+    POINTS = "points"
 
 
 # =============================================================================
@@ -229,6 +230,18 @@ class GridDAG(DAG):
                     comb[key] = v
                     combinations.append(comb)
 
+        elif self.search_mode == ParameterSearchMode.POINTS:
+            # Expect grid_params to be a list of dicts
+            if not isinstance(self.grid_params, list):
+                raise InvalidGridError(
+                    "For POINTS mode, `grid_params` must be a list of parameter dictionaries."
+                )
+            for conf in self.grid_params:
+                if not isinstance(conf, dict):
+                    raise InvalidGridError(
+                        f"Invalid config in POINTS mode: expected dict, got {type(conf)}"
+                    )
+                combinations.append({**self.common_params, **conf})
         if not combinations:
             raise InvalidGridError(f"Invalid grid configuration: {self.grid_params}")
 
@@ -407,13 +420,17 @@ EMBEDDINGS_FILENAME = "embeddings.parquet"
 INPUT_TABLE_NAME = "item_with_metadata_to_embed"
 
 # Grid Search Parameters
-SEARCH_MODE = ParameterSearchMode.ORTHOGONAL
 N_VMS = 4
-GRID_PARAMS = {"embedding_dim": [32, 64, 128], "context_size": [5, 10, 15]}
+SEARCH_MODE = ParameterSearchMode.POINTS
+GRID_PARAMS: dict[dict | list[dict]] = {
+    "combinatorial": {"embedding_dim": [32, 64, 128], "context_size": [5, 10, 15]},
+    "orthogonal": {"embedding_dim": [32, 64, 128], "context_size": [5, 10, 15]},
+    "points": [],
+}
 SHARED_PARAMS = {"base_dir": "data-gcp/jobs/ml_jobs/graph_recommendation"}
 
 DOC_MD = format_poc_dag_doc(
-    DAG_NAME, SEARCH_MODE.value, N_VMS, GRID_PARAMS, SHARED_PARAMS
+    DAG_NAME, SEARCH_MODE.value, N_VMS, GRID_PARAMS[SEARCH_MODE.value], SHARED_PARAMS
 )
 # =============================================================================
 # DAG Definition
@@ -423,7 +440,7 @@ with GridDAG(
     dag_id="algo_training_graph_embeddings_grid_search_poc",
     description="Grid search training for graph embeddings (POC)",
     ml_task_fn=ml_task_chain,
-    grid_params=GRID_PARAMS,
+    grid_params=GRID_PARAMS[SEARCH_MODE.value],
     common_params=SHARED_PARAMS,
     search_mode=SEARCH_MODE,
     n_vms=N_VMS,

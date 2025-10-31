@@ -48,10 +48,12 @@ with
             city,
             postal_code
         from raw_data
-        qualify row_number() over (
-            partition by user_id, action_type, date(creation_timestamp)
-            order by creation_timestamp desc
-        ) = 1
+        qualify
+            row_number() over (
+                partition by user_id, action_type, date(creation_timestamp)
+                order by creation_timestamp desc
+            )
+            = 1
     ),
 
     filled_data as (
@@ -69,7 +71,12 @@ with
             last_value(city ignore nulls) over w as current_city,
             last_value(postal_code ignore nulls) over w as current_postal_code
         from filtered_data
-        window w as (partition by user_id order by creation_timestamp rows unbounded preceding)
+        window
+            w as (
+                partition by user_id
+                order by creation_timestamp
+                rows unbounded preceding
+            )
     ),
 
     processed_data as (
@@ -133,9 +140,7 @@ select
     ) as has_modified,
 
     -- Flags spécifiques par champ
-    coalesce(
-        user_activity != user_previous_activity, false
-    ) as has_modified_activity,
+    coalesce(user_activity != user_previous_activity, false) as has_modified_activity,
     coalesce(user_address != user_previous_address, false) as has_modified_address,
     coalesce(user_city != user_previous_city, false) as has_modified_city,
     coalesce(

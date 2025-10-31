@@ -62,8 +62,10 @@ def format_poc_dag_doc(
     Returns a nicely formatted POC DAG documentation string.
     """
     if search_mode == "points":
-        grid_params_str = "\n".join([f"{json.dumps(point, indent=2)}\n" for point in grid_params])
-    else:    
+        grid_params_str = "\n".join(
+            [f"{json.dumps(point, indent=2)}\n" for point in grid_params]
+        )
+    else:
         grid_params_str = json.dumps(grid_params, indent=2)
     shared_params_str = json.dumps(shared_params, indent=2)
 
@@ -374,6 +376,7 @@ def ml_task_chain(params, instance_name, suffix):
             f"--config '{config_json}'"
         ),
         deferrable=True,
+        auto_resume_vm=True,
     )
 
     evaluate = SSHGCEOperator(
@@ -430,13 +433,17 @@ GRID_PARAMS: dict[dict | list[dict]] = {
     "orthogonal": {"embedding_dim": [32, 64, 128], "context_size": [5, 10, 15]},
     "points": [
         {"embedding_dim": 64, "batch_size": 400},
-        {"embedding_dim": 128, "num_negative_samples": 5, "walks_per_node": 5, "batch_size": 200},
+        {
+            "embedding_dim": 128,
+            "num_negative_samples": 5,
+            "walks_per_node": 5,
+            "batch_size": 200,
+        },
         {"embedding_dim": 256, "batch_size": 100},
         {"num_negative_samples": 20, "batch_size": 50},
         {"num_negative_samples": 10, "batch_size": 100},
         {"walks_per_node": 20, "batch_size": 50},
         {"walks_per_node": 10, "batch_size": 100},
-
     ],
 }
 SHARED_PARAMS = {"base_dir": "data-gcp/jobs/ml_jobs/graph_recommendation"}

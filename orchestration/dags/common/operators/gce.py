@@ -147,6 +147,7 @@ class BaseSSHGCEOperator(BaseOperator):
         "gce_zone",
         "deferrable",
         "poll_interval",
+        "auto_resume_vm",
     ]
 
     @apply_defaults
@@ -158,6 +159,7 @@ class BaseSSHGCEOperator(BaseOperator):
         gce_zone=GCE_ZONE,
         deferrable: bool = False,
         poll_interval: int = 300,
+        auto_resume_vm: bool = False,
         *args,
         **kwargs,
     ):
@@ -167,9 +169,70 @@ class BaseSSHGCEOperator(BaseOperator):
         self.gce_zone = gce_zone
         self.deferrable = deferrable
         self.poll_interval = poll_interval
+        self.auto_resume_vm = auto_resume_vm
         super(BaseSSHGCEOperator, self).__init__(*args, **kwargs)
 
+    def _ensure_vm_running(self):
+        """
+        Check if VM exists and is running. If it exists but is stopped,
+        start it. If auto_resume_vm is False, do nothing.
+        """
+        if not self.auto_resume_vm:
+            return
+
+        gce_hook = GCEHook(gce_zone=self.gce_zone)
+        instance = gce_hook.get_instance(self.instance_name)
+
+        if instance is None:
+            self.log.info(
+                f"Instance {self.instance_name} does not exist. "
+                "Skipping auto-start (instance must be created separately)."
+            )
+            return
+
+        status = instance.get("status", "UNKNOWN")
+        self.log.info(f"Instance {self.instance_name} current status: {status}")
+
+        if status == "RUNNING":
+            self.log.info(f"Instance {self.instance_name} is already running.")
+            return
+
+        elif status == "TERMINATED":
+            self.log.warning(
+                f"Instance {self.instance_name} is TERMINATED. "
+                "Cannot start a terminated instance. It must be recreated."
+            )
+            return
+        elif status == "STOPPED":
+            self.log.info(
+                f"Instance {self.instance_name} is STOPPED. Starting instance..."
+            )
+            try:
+                operation = (
+                    gce_hook.get_conn()
+                    .instances()
+                    .start(
+                        project=gce_hook.gcp_project,
+                        zone=gce_hook.gce_zone,
+                        instance=self.instance_name,
+                    )
+                    .execute()
+                )
+                gce_hook.wait_for_operation(operation["name"])
+                self.log.info(f"Instance {self.instance_name} started successfully.")
+            except Exception as e:
+                raise AirflowException(
+                    f"Failed to start instance {self.instance_name}: {str(e)}"
+                )
+        else:
+            self.log.warning(
+                f"Instance {self.instance_name} is in {status} state. "
+                "Waiting for it to become available..."
+            )
+
     def execute(self, context):
+        self._ensure_vm_running()
+
         ssh_hook = ComputeEngineSSHHook(
             instance_name=self.instance_name,
             zone=self.gce_zone,
@@ -284,6 +347,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         environment: t.Dict[str, str] = {},
         deferrable: bool = False,
         poll_interval: int = 300,
+        auto_resume_vm: bool = False,
         *args,
         **kwargs,
     ):
@@ -293,6 +357,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         self.instance_name = instance_name
         self.deferrable = deferrable
         self.poll_interval = poll_interval
+        self.auto_resume_vm = auto_resume_vm
 
         super(SSHGCEOperator, self).__init__(
             instance_name=self.instance_name,
@@ -300,6 +365,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
             environment=self.environment,
             deferrable=self.deferrable,
             poll_interval=self.poll_interval,
+            auto_resume_vm=self.auto_resume_vm,
             *args,
             **kwargs,
         )
@@ -345,6 +411,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
         environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
         base_dir: str = "data-gcp",
+        auto_resume_vm: bool = False,
         *args,
         **kwargs,
     ):
@@ -354,12 +421,14 @@ class InstallDependenciesOperator(SSHGCEOperator):
         self.python_version = python_version
         self.branch = branch
         self.base_dir = base_dir
+        self.auto_resume_vm = auto_resume_vm
         # Call the parent class constructor but do not pass the command yet
         super(InstallDependenciesOperator, self).__init__(
             instance_name=self.instance_name,
             command="",  # Placeholder command
             environment=self.environment,
             base_dir=self.base_dir,  # Pass base_dir to parent class
+            auto_resume_vm=self.auto_resume_vm,
             *args,
             **kwargs,
         )

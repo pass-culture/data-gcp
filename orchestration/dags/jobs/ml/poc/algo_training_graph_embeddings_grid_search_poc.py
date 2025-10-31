@@ -447,7 +447,7 @@ GRID_PARAMS: dict[dict | list[dict]] = {
         {"walks_per_node": 10, "batch_size": 100},
     ],
 }
-SHARED_PARAMS = {"base_dir": "data-gcp/jobs/ml_jobs/graph_recommendation"}
+SHARED_PARAMS = {}
 
 DOC_MD = format_poc_dag_doc(
     DAG_NAME, SEARCH_MODE.value, N_VMS, GRID_PARAMS[SEARCH_MODE.value], SHARED_PARAMS
@@ -479,7 +479,6 @@ with GridDAG(
     start_vm_kwargs={
         "preemptible": False,
         "instance_type": "{{ params.instance_type }}",
-        "instance_name": "{{ params.instance_name }}",
         "gpu_type": "{{ params.gpu_type }}",
         "gpu_count": "{{ params.gpu_count }}",
         "labels": {"job_type": "long_ml"},

@@ -112,8 +112,8 @@ def train_metapath2vec(
     elif isinstance(train_params, DefaultTrainingConfig):
         params = train_params
     elif isinstance(train_params, dict):
-        config = DefaultTrainingConfig()
-        config.update_from_dict(train_params)
+        params = DefaultTrainingConfig()
+        params.update_from_dict(train_params)
     else:
         raise InvalidConfigError(
             f"train_params must be DefaultTrainingConfig, dict, or None, "
@@ -168,7 +168,7 @@ def train_metapath2vec(
         optimizer, mode="min", factor=0.5, patience=3, min_lr=1e-6
     )
 
-    # Log model parameters in mlflow
+    # Log model parameters in mlflowww
     log_model_parameters(params.to_dict() | {"walk_length": walk_length}, graph_data)
 
     # Start training

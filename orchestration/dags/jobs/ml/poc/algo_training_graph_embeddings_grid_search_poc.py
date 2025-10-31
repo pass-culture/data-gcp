@@ -425,7 +425,16 @@ SEARCH_MODE = ParameterSearchMode.POINTS
 GRID_PARAMS: dict[dict | list[dict]] = {
     "combinatorial": {"embedding_dim": [32, 64, 128], "context_size": [5, 10, 15]},
     "orthogonal": {"embedding_dim": [32, 64, 128], "context_size": [5, 10, 15]},
-    "points": [],
+    "points": [
+        {"embedding_dim": 64, "batch_size": 400},           # 0.5 * base memory for gpu
+        {"embedding_dim": 128, "num_negative_samples": 5, "walks_per_node": 5, "batch_size": 200}, # default config: -> base memory gpu & cpu (walk per node)
+        {"embedding_dim": 256, "batch_size": 100},          # 2 * base memory for gpu
+        {"num_negative_samples": 20, "batch_size": 50},    # 4 * base memory for gpu
+        {"num_negative_samples": 10, "batch_size": 100},    # 2 * base memory for gpu
+        {"walks_per_node": 20, "batch_size": 50},           # 4 * base memory for cpus
+        {"walks_per_node": 10, "batch_size": 100},          # 2 * base memory for cpus
+        
+    ],
 }
 SHARED_PARAMS = {"base_dir": "data-gcp/jobs/ml_jobs/graph_recommendation"}
 

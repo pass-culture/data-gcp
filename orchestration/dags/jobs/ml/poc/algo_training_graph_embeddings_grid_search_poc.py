@@ -62,7 +62,9 @@ def format_poc_dag_doc(
     Returns a nicely formatted POC DAG documentation string.
     """
     if search_mode == "points":
-        grid_params_str = "\n".join([f"{json.dumps(point, indent=2)}\n" for point in grid_params])
+        grid_params_str = "\n".join(
+            [f"{json.dumps(point, indent=2)}\n" for point in grid_params]
+        )
     else:
         grid_params_str = json.dumps(grid_params, indent=2)
     shared_params_str = json.dumps(shared_params, indent=2)
@@ -294,8 +296,12 @@ class GridDAG(DAG):
         with TaskGroup(group_id="grid_group") as grid_group:
             for vm_idx, task_chains in vm_to_tasks_chains.items():
                 # Merge template instance name with VM index for uniqueness
-                instance_name_template = self.start_vm_kwargs.get("instance_name", self.dag_id)
-                instance_name = _normalize_instance_name(f"{instance_name_template}-vm-{vm_idx}")
+                instance_name_template = self.start_vm_kwargs.get(
+                    "instance_name", self.dag_id
+                )
+                instance_name = _normalize_instance_name(
+                    f"{instance_name_template}-vm-{vm_idx}"
+                )
 
                 start_vm = StartGCEOperator(
                     task_id=f"start_vm_{vm_idx}",
@@ -428,13 +434,17 @@ GRID_PARAMS: dict[dict | list[dict]] = {
     "orthogonal": {"embedding_dim": [32, 64, 128], "context_size": [5, 10, 15]},
     "points": [
         {"embedding_dim": 64, "batch_size": 400},
-        {"embedding_dim": 128, "num_negative_samples": 5, "walks_per_node": 5, "batch_size": 200},
+        {
+            "embedding_dim": 128,
+            "num_negative_samples": 5,
+            "walks_per_node": 5,
+            "batch_size": 200,
+        },
         {"embedding_dim": 256, "batch_size": 100},
         {"num_negative_samples": 20, "batch_size": 50},
         {"num_negative_samples": 10, "batch_size": 100},
         {"walks_per_node": 20, "batch_size": 50},
         {"walks_per_node": 10, "batch_size": 100},
-
     ],
 }
 SHARED_PARAMS = {"base_dir": "data-gcp/jobs/ml_jobs/graph_recommendation"}
@@ -469,6 +479,7 @@ with GridDAG(
     start_vm_kwargs={
         "preemptible": False,
         "instance_type": "{{ params.instance_type }}",
+        "instance_name": "{{ params.instance_name }}",
         "gpu_type": "{{ params.gpu_type }}",
         "gpu_count": "{{ params.gpu_count }}",
         "labels": {"job_type": "long_ml"},
@@ -476,6 +487,7 @@ with GridDAG(
     install_deps_kwargs={
         "python_version": "3.12",
         "base_dir": BASE_DIR,
+        "branch": "{{ params.branch }}",
         "retries": 2,
     },
     params={

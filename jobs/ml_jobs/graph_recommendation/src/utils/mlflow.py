@@ -11,7 +11,6 @@ import typer
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from loguru import logger
-from torch_geometric.data import HeteroData
 
 from src.utils.gcp import (
     ENV_SHORT_NAME,
@@ -177,7 +176,7 @@ def get_mlflow_experiment(experiment_name: str):
 
 
 @conditional_mlflow()
-def log_model_parameters(params: dict, graph_data: HeteroData) -> None:
+def log_model_parameters(params: dict) -> None:
     """
     Log model parameters to MLflow.
 

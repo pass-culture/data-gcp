@@ -14,9 +14,12 @@ DATA_DIR = (PROJECT_ROOT / "data").as_posix()
 RESULTS_DIR = (PROJECT_ROOT / "results").as_posix()
 MLFLOW_RUN_ID_FILEPATH = (PROJECT_ROOT / "results" / "latest_run_id.txt").as_posix()
 
+
 EMBEDDING_COLUMN = "embedding"
 ID_COLUMN = "item_id"
 GTL_ID_COLUMN = "gtl_id"
+LANCEDB_NODE_ID_COLUMN = "node_ids"
+
 DEFAULT_METADATA_COLUMNS: Sequence[str] = (
     "gtl_label_level_1",
     "gtl_label_level_2",
@@ -97,12 +100,12 @@ def _default_metapath():
 
 @dataclass
 class DefaultTrainingConfig(BaseConfig):
-    embedding_dim: int = 32
-    metapath_repetitions: int = 2
+    embedding_dim: int = 128
+    metapath_repetitions: int = 4
     context_size: int = 10
     walks_per_node: int = 5
     num_negative_samples: int = 5
-    num_epochs: int = 15
+    num_epochs: int = 8
     early_stop: bool = True
     num_workers: int = 8 if sys.platform == "linux" else 0
     batch_size: int = 256
@@ -113,7 +116,7 @@ class DefaultTrainingConfig(BaseConfig):
 @dataclass
 class DefaultEvaluationConfig(BaseConfig):
     metadata_columns: list[str] = field(
-        default_factory=lambda: ["item_id", "gtl_id", "artist_id"]
+        default_factory=lambda: [ID_COLUMN, GTL_ID_COLUMN, "artist_id"]
     )
     n_samples: int = 100
     n_retrieved: int = 1000

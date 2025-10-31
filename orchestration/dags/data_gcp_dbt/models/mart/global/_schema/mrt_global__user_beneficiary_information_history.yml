@@ -1,0 +1,79 @@
+version: 2
+models:
+  - name: mrt_global__user_beneficiary_information_history
+    description: 'History of user beneficiary information changes, tracking modifications from both action history and fraud checks with forward-filled values'
+    columns:
+      - name: user_id
+        description: 'User identifier'
+        data_type: STRING
+        data_tests:
+          - not_null
+      - name: info_history_rank
+        description: 'Chronological rank of information history entry for each user (0-indexed)'
+        data_type: INT64
+        data_tests:
+          - not_null
+      - name: action_type
+        description: 'Type of action (INFO_MODIFIED or PROFILE_COMPLETION)'
+        data_type: STRING
+        data_tests:
+          - not_null
+      - name: creation_timestamp
+        description: 'Timestamp when the information was created or modified'
+        data_type: TIMESTAMP
+        data_tests:
+          - not_null
+      - name: user_activity
+        description: 'Current user activity at this point in history'
+        data_type: STRING
+      - name: user_address
+        description: 'Current user address at this point in history'
+        data_type: STRING
+      - name: user_city
+        description: 'Current user city at this point in history'
+        data_type: STRING
+      - name: user_postal_code
+        description: 'Current user postal code at this point in history'
+        data_type: STRING
+      - name: user_previous_activity
+        description: 'Previous user activity before this change'
+        data_type: STRING
+      - name: user_previous_address
+        description: 'Previous user address before this change'
+        data_type: STRING
+      - name: user_previous_city
+        description: 'Previous user city before this change'
+        data_type: STRING
+      - name: user_previous_postal_code
+        description: 'Previous user postal code before this change'
+        data_type: STRING
+      - name: has_confirmed
+        description: 'Boolean flag indicating if all fields match previous values (no changes)'
+        data_type: BOOLEAN
+        data_tests:
+          - not_null
+      - name: has_modified
+        description: 'Boolean flag indicating if any field was modified compared to previous values'
+        data_type: BOOLEAN
+        data_tests:
+          - not_null
+      - name: has_modified_activity
+        description: 'Boolean flag indicating if activity was modified'
+        data_type: BOOLEAN
+        data_tests:
+          - not_null
+      - name: has_modified_address
+        description: 'Boolean flag indicating if address was modified'
+        data_type: BOOLEAN
+        data_tests:
+          - not_null
+      - name: has_modified_city
+        description: 'Boolean flag indicating if city was modified'
+        data_type: BOOLEAN
+        data_tests:
+          - not_null
+      - name: has_modified_postal_code
+        description: 'Boolean flag indicating if postal code was modified'
+        data_type: BOOLEAN
+        data_tests:
+          - not_null

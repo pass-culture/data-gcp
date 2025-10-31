@@ -100,12 +100,12 @@ def _default_metapath():
 
 @dataclass
 class DefaultTrainingConfig(BaseConfig):
-    embedding_dim: int = 32
-    metapath_repetitions: int = 2
+    embedding_dim: int = 128
+    metapath_repetitions: int = 4
     context_size: int = 10
     walks_per_node: int = 5
     num_negative_samples: int = 5
-    num_epochs: int = 15
+    num_epochs: int = 8
     num_workers: int = 8 if sys.platform == "linux" else 0
     batch_size: int = 256
     learning_rate: float = 0.01

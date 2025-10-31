@@ -54,12 +54,20 @@ with
             generate_top_ranking_by_dimensions(
                 base_cte="base_aggregation",
                 dimensions=dimensions,
-                entity_fields=["venue_id", "venue_name", "offerer_name", "venue_tag_name"],
+                entity_fields=[
+                    "venue_id",
+                    "venue_name",
+                    "offerer_name",
+                    "venue_tag_name",
+                ],
                 aggregated_metrics=[
-                    {"field": "total_venue_booking_amount", "alias": "total_venue_booking_amount"}
+                    {
+                        "field": "total_venue_booking_amount",
+                        "alias": "total_venue_booking_amount",
+                    }
                 ],
                 ranking_metric="total_venue_booking_amount",
-                top_n=50
+                top_n=50,
             )
         }}
     )

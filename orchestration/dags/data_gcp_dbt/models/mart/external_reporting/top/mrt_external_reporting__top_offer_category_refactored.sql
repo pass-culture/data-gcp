@@ -49,14 +49,25 @@ with
             generate_top_ranking_by_dimensions(
                 base_cte="base_aggregation",
                 dimensions=dimensions,
-                entity_fields=["item_id", "offer_category_id", "offer_subcategory_id", "offer_name"],
+                entity_fields=[
+                    "item_id",
+                    "offer_category_id",
+                    "offer_subcategory_id",
+                    "offer_name",
+                ],
                 aggregated_metrics=[
-                    {"field": "total_booking_amount", "alias": "total_booking_amount"},
-                    {"field": "total_booking_quantity", "alias": "total_booking_quantity"}
+                    {
+                        "field": "total_booking_amount",
+                        "alias": "total_booking_amount",
+                    },
+                    {
+                        "field": "total_booking_quantity",
+                        "alias": "total_booking_quantity",
+                    },
                 ],
                 ranking_metric="total_booking_amount",
                 additional_partition_by=["offer_category_id"],
-                top_n=50
+                top_n=50,
             )
         }}
     )

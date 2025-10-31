@@ -136,93 +136,109 @@ with
     -- Agrégation unifiée pour tous les KPIs
     unified_metrics as (
         -- Bénéficiaires actuels
-        {{ generate_metric_by_dimensions(
-            'active_users_base',
-            'beneficiaire_actuel',
-            'count(distinct user_id)',
-            '1',
-            dimensions
-        ) }}
+        {{
+            generate_metric_by_dimensions(
+                "active_users_base",
+                "beneficiaire_actuel",
+                "count(distinct user_id)",
+                "1",
+                dimensions,
+            )
+        }}
 
         union all
 
         -- Bénéficiaires totaux
-        {{ generate_metric_by_dimensions(
-            'total_users_base',
-            'beneficiaire_total',
-            'count(distinct user_id)',
-            '1',
-            dimensions
-        ) }}
+        {{
+            generate_metric_by_dimensions(
+                "total_users_base",
+                "beneficiaire_total",
+                "count(distinct user_id)",
+                "1",
+                dimensions,
+            )
+        }}
 
         union all
 
         -- QPV
-        {{ generate_metric_by_dimensions(
-            'active_users_base',
-            'pct_beneficiaire_actuel_qpv',
-            'count(distinct case when user_is_in_qpv then user_id end)',
-            'count(distinct user_id)',
-            dimensions
-        ) }}
+        {{
+            generate_metric_by_dimensions(
+                "active_users_base",
+                "pct_beneficiaire_actuel_qpv",
+                "count(distinct case when user_is_in_qpv then user_id end)",
+                "count(distinct user_id)",
+                dimensions,
+            )
+        }}
 
         union all
 
         -- Rural
-        {{ generate_metric_by_dimensions(
-            'active_users_base',
-            'pct_beneficiaire_actuel_rural',
-            'count(distinct case when user_macro_density_label = "rural" then user_id end)',
-            'count(distinct user_id)',
-            dimensions
-        ) }}
+        {{
+            generate_metric_by_dimensions(
+                "active_users_base",
+                "pct_beneficiaire_actuel_rural",
+                'count(distinct case when user_macro_density_label = "rural" then user_id end)',
+                "count(distinct user_id)",
+                dimensions,
+            )
+        }}
 
         union all
 
         -- Non scolarisé
-        {{ generate_metric_by_dimensions(
-            'active_users_base',
-            'pct_beneficiaire_actuel_non_scolarise',
-            'count(distinct case when not user_is_in_education then user_id end)',
-            'count(distinct user_id)',
-            dimensions
-        ) }}
+        {{
+            generate_metric_by_dimensions(
+                "active_users_base",
+                "pct_beneficiaire_actuel_non_scolarise",
+                "count(distinct case when not user_is_in_education then user_id end)",
+                "count(distinct user_id)",
+                dimensions,
+            )
+        }}
 
         union all
 
         -- Activités
-        {{ generate_activity_metrics('active_users_base', activity_list, dimensions) }}
+        {{ generate_activity_metrics("active_users_base", activity_list, dimensions) }}
 
         union all
 
         -- Genre
-        {{ generate_metric_by_dimensions(
-            'active_users_base',
-            'beneficiaire_actuel_homme',
-            'count(distinct case when user_civility = "M." then user_id end)',
-            '1',
-            dimensions
-        ) }}
+        {{
+            generate_metric_by_dimensions(
+                "active_users_base",
+                "beneficiaire_actuel_homme",
+                'count(distinct case when user_civility = "M." then user_id end)',
+                "1",
+                dimensions,
+            )
+        }}
 
         union all
 
-        {{ generate_metric_by_dimensions(
-            'active_users_base',
-            'beneficiaire_actuel_femme',
-            'count(distinct case when user_civility = "Mme." then user_id end)',
-            '1',
-            dimensions
-        ) }}
+        {{
+            generate_metric_by_dimensions(
+                "active_users_base",
+                "beneficiaire_actuel_femme",
+                'count(distinct case when user_civility = "Mme." then user_id end)',
+                "1",
+                dimensions,
+            )
+        }}
 
         union all
 
-        {{ generate_metric_by_dimensions(
-            'active_users_base',
-            'beneficiaire_actuel_sans_genre',
-            'count(distinct case when user_civility is null then user_id end)',
-            '1',
-            dimensions
-        ) }}
+        {{
+            generate_metric_by_dimensions(
+                "active_users_base",
+                "beneficiaire_actuel_sans_genre",
+                "count(distinct case when user_civility is null then user_id end)",
+                "1",
+                dimensions,
+            )
+        }}
     )
 
 select

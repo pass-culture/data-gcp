@@ -96,7 +96,8 @@ def train_metapath2vec(
     graph_data: HeteroData,
     checkpoint_path: Path = Path("checkpoints/best_metapath2vec_model.pt"),
     train_params: DefaultTrainingConfig | dict | None = None,
-    profile=False,
+    *,
+    profile: bool = False,
 ) -> pd.DataFrame:
     """
     Train MetaPath2Vec and return embeddings with gtl_id.
@@ -138,6 +139,7 @@ def train_metapath2vec(
     batch_size = params.batch_size
     learning_rate = params.learning_rate
     num_epochs = params.num_epochs
+    early_stop = params.early_stop
     num_workers = params.num_workers
 
     model = MetaPath2Vec(
@@ -175,7 +177,7 @@ def train_metapath2vec(
     checkpoint_dir.mkdir(exist_ok=True)
     best_loss = float("inf")
     training_start = time.time()
-
+    best_loss_epoch = 0
     for epoch in range(1, num_epochs + 1):
         # Refresh MLflow token to prevent expiration in long-running jobs
         refresh_mlflow_token()
@@ -206,11 +208,18 @@ def train_metapath2vec(
             torch.save(model.state_dict(), checkpoint_path)
             logger.info(f"Saved best model with loss: {loss:.4f}")
             mlflow.log_metric("best_loss", best_loss, step=epoch)
+            best_loss_epoch += 1
+        elif early_stop:
+            break
 
     # Log total training time and final best loss
     total_training_time = time.time() - training_start
     mlflow.log_metric("total_training_time", total_training_time)
     mlflow.log_metric("final_best_loss", best_loss)
+    if early_stop:
+        mlflow.log_metric("stop_epoc", best_loss_epoch)
+    else:
+        mlflow.log_metric("stop_epoc", epoch)
 
     time_formatted = str(timedelta(seconds=int(total_training_time)))
     logger.info(f"Training completed in {time_formatted}")

@@ -106,6 +106,7 @@ class DefaultTrainingConfig(BaseConfig):
     walks_per_node: int = 5
     num_negative_samples: int = 5
     num_epochs: int = 8
+    early_stop: bool = True
     num_workers: int = 8 if sys.platform == "linux" else 0
     batch_size: int = 256
     learning_rate: float = 0.01

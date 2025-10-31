@@ -61,7 +61,10 @@ def format_poc_dag_doc(
     """
     Returns a nicely formatted POC DAG documentation string.
     """
-    grid_params_str = json.dumps(grid_params, indent=2)
+    if search_mode == "points":
+        grid_params_str = "\n".join([f"{json.dumps(point, indent=2)}\n" for point in grid_params])
+    else:    
+        grid_params_str = json.dumps(grid_params, indent=2)
     shared_params_str = json.dumps(shared_params, indent=2)
 
     doc = f"""
@@ -102,11 +105,11 @@ def format_poc_dag_doc(
 
     ### Search mode: {search_mode}
 
-    ### Grid Search Parameters
-    {grid_params_str}
+    ### Grid Search {"Parameters" if search_mode != "points" else "Points"}
+    \n{grid_params_str}
 
     ### Shared Parameters
-    {shared_params_str}
+    \n{shared_params_str}
 
     """
     return doc

@@ -108,9 +108,9 @@ with DAG(
     def decide_execution_mode(**context):
         """Determine which execution mode task to run."""
         return (
-            "run_init_task"
+            ["run_init_task"]
             if context["params"].get("init", False)
-            else "run_incremental_task"
+            else ["run_incremental_task"]
         )
 
     execution_mode_branch = BranchPythonOperator(
@@ -142,12 +142,6 @@ with DAG(
         base_dir=BASE_DIR,
         environment=dag_config,
         command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py run-incremental",
-    )
-
-    # Completion task to merge branches
-    completion_task = EmptyOperator(
-        task_id="completion_task",
-        trigger_rule="none_failed_min_one_success",
     )
 
     # Download images for init mode (deferrable)
@@ -185,7 +179,6 @@ with DAG(
     (
         execution_mode_branch
         >> run_init_task
-        >> completion_task
         >> download_images_init
         >> gce_instance_stop
     )
@@ -193,7 +186,6 @@ with DAG(
         execution_mode_branch
         >> wait_for_raw
         >> run_incremental_task
-        >> completion_task
         >> download_images_incremental
         >> gce_instance_stop
     )

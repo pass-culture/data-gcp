@@ -95,6 +95,8 @@ class DeferrableSSHJobMonitorTrigger(BaseTrigger):
                             "run_id": self.run_id,
                             "instance": self.instance_name,
                             "logs": deferrable_status.logs,
+                            "stdout": deferrable_status.stdout,
+                            "stderr": deferrable_status.stderr,
                         }
                     )
 

@@ -5,3 +5,4 @@ orchestration/dags/data_gcp_dbt/analyses/
 orchestration/dags/data_gcp_dbt/models/clean/user_item_discovery.sql
 orchestration/dags/data_gcp_dbt/models/analytics/diversification/diversification_raw.sql
 orchestration/dags/dependencies/applicative_database/sql/raw/
+orchestration/dags/data_gcp_dbt/models/mart/external_reporting/

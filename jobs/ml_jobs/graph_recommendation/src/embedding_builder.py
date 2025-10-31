@@ -169,7 +169,7 @@ def train_metapath2vec(
     )
 
     # Log model parameters in mlflowww
-    log_model_parameters(params.to_dict() | {"walk_length": walk_length}, graph_data)
+    log_model_parameters(params.to_dict() | {"walk_length": walk_length})
 
     # Start training
     logger.info("Starting training...")

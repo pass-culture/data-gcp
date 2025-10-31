@@ -46,11 +46,17 @@ with
                 dimensions=dimensions,
                 entity_fields=["collective_offer_format"],
                 aggregated_metrics=[
-                    {"field": "total_booking_amount", "alias": "total_booking_amount"},
-                    {"field": "total_number_of_tickets", "alias": "total_number_of_tickets"}
+                    {
+                        "field": "total_booking_amount",
+                        "alias": "total_booking_amount",
+                    },
+                    {
+                        "field": "total_number_of_tickets",
+                        "alias": "total_number_of_tickets",
+                    },
                 ],
                 ranking_metric="total_booking_amount",
-                top_n=5
+                top_n=5,
             )
         }}
     )

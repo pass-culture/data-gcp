@@ -16,9 +16,7 @@
             updated_at,
             '{{ dim.name }}' as dimension_name,
             {{ dim.value_expr }} as dimension_value,
-            {% for field in entity_fields %}
-                {{ field }},
-            {% endfor %}
+            {% for field in entity_fields %} {{ field }}, {% endfor %}
             {% for metric in aggregated_metrics %}
                 sum({{ metric.field }}) as {{ metric.alias }},
             {% endfor %}
@@ -37,9 +35,7 @@
             updated_at,
             dimension_name,
             dimension_value
-            {% for field in entity_fields %}
-                , {{ field }}
-            {% endfor %}
+            {% for field in entity_fields %}, {{ field }} {% endfor %}
         qualify
             row_number() over (
                 partition by

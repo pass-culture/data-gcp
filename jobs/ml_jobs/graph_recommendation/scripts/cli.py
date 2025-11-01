@@ -27,6 +27,7 @@ from src.utils.mlflow import (
     log_detailed_scores,
     log_evaluation_metrics,
     log_graph_analysis,
+    mlflow_token_refresher_context,
 )
 
 APP_DESCRIPTION = (
@@ -244,39 +245,42 @@ def train_metapath2vec_command(
 
     # Connect to MLflow
     connect_remote_mlflow()
-    experiment = get_mlflow_experiment(experiment_name)
 
-    # Start MLflow run
-    with mlflow.start_run(experiment_id=experiment.experiment_id) as run:
-        run_id = run.info.run_id
-        typer.secho(
-            f"Started MLflow run '{run_id}' in experiment '{experiment.name}'."
-            f" Logging run_id to {MLFLOW_RUN_ID_FILEPATH}",
-            fg=typer.colors.CYAN,
-        )
-        with open(MLFLOW_RUN_ID_FILEPATH, "w") as f:
-            f.write(run_id)
+    # Patch MLflow calls with a token refresher context
+    with mlflow_token_refresher_context():
+        experiment = get_mlflow_experiment(experiment_name)
 
-        # Graph building
-        graph_data = lazy_graph_building(
-            parquet_path,
-            nrows=nrows,
-            results_dir=RESULTS_DIR,
-            rebuild_graph=rebuild_graph,
-        )
+        # Start MLflow run
+        with mlflow.start_run(experiment_id=experiment.experiment_id) as run:
+            run_id = run.info.run_id
+            typer.secho(
+                f"Started MLflow run '{run_id}' in experiment '{experiment.name}'."
+                f" Logging run_id to {MLFLOW_RUN_ID_FILEPATH}",
+                fg=typer.colors.CYAN,
+            )
+            with open(MLFLOW_RUN_ID_FILEPATH, "w") as f:
+                f.write(run_id)
 
-        # Train model with loss logging to mlflow
-        embeddings_df = train_metapath2vec(
-            graph_data=graph_data,
-            train_params=train_config,
-        )
+            # Graph building
+            graph_data = lazy_graph_building(
+                parquet_path,
+                nrows=nrows,
+                results_dir=RESULTS_DIR,
+                rebuild_graph=rebuild_graph,
+            )
 
-        # Save embeddings
-        embeddings_df.to_parquet(embedding_output_path, index=False)
-        typer.secho(
-            f"Embeddings saved to {embedding_output_path}",
-            fg=typer.colors.GREEN,
-        )
+            # Train model with loss logging to mlflow
+            embeddings_df = train_metapath2vec(
+                graph_data=graph_data,
+                train_params=train_config,
+            )
+
+            # Save embeddings
+            embeddings_df.to_parquet(embedding_output_path, index=False)
+            typer.secho(
+                f"Embeddings saved to {embedding_output_path}",
+                fg=typer.colors.GREEN,
+            )
 
 
 @app.command("evaluate-metapath2vec")
@@ -305,49 +309,53 @@ def evaluate_metapath2vec_command(
     # Connect to MLflow
     connect_remote_mlflow()
 
-    # Load default config
-    eval_config = DefaultEvaluationConfig()
-    # Override with user config if provided
-    if config_json:
-        eval_config.update_from_json(config_json)
+    # Patch MLflow calls with a token refresher context
+    with mlflow_token_refresher_context():
+        # Load default config
+        eval_config = DefaultEvaluationConfig()
+        # Override with user config if provided
+        if config_json:
+            eval_config.update_from_json(config_json)
 
-    typer.echo(f"Using evaluation config: {eval_config.to_dict()}", err=True)
+        typer.echo(f"Using evaluation config: {eval_config.to_dict()}", err=True)
 
-    # Retrieving run_id locally
-    with open(MLFLOW_RUN_ID_FILEPATH) as f:
-        run_id = f.read().strip()
+        # Retrieving run_id locally
+        with open(MLFLOW_RUN_ID_FILEPATH) as f:
+            run_id = f.read().strip()
 
-    # Resume the run
-    with mlflow.start_run(run_id=run_id):
-        # Log config
-        mlflow.log_params({f"eval_{k}": v for k, v in eval_config.to_dict().items()})
-
-        # Evaluate embeddings
-        metrics_df, results_df = evaluate_embeddings(
-            raw_data_parquet_path=raw_data_path,
-            embedding_parquet_path=embedding_path,
-            eval_config=eval_config,
-        )
-
-        # Log metrics to MLflow
-        log_evaluation_metrics(
-            metrics_df,
-            output_metrics_path,
-            store_csv=True,
-        )
-
-        # Log detailed scores if requested
-        if output_detailed_scores_path:
-            log_detailed_scores(
-                results_df,
-                output_detailed_scores_path,
+        # Resume the run
+        with mlflow.start_run(run_id=run_id):
+            # Log config
+            mlflow.log_params(
+                {f"eval_{k}": v for k, v in eval_config.to_dict().items()}
             )
 
-    typer.secho(
-        f"✓ Metrics logged to MLflow run: {run_id}",
-        fg=typer.colors.CYAN,
-        err=True,
-    )
+            # Evaluate embeddings
+            metrics_df, results_df = evaluate_embeddings(
+                raw_data_parquet_path=raw_data_path,
+                embedding_parquet_path=embedding_path,
+                eval_config=eval_config,
+            )
+
+            # Log metrics to MLflow
+            log_evaluation_metrics(
+                metrics_df,
+                output_metrics_path,
+                store_csv=True,
+            )
+
+            # Log detailed scores if requested
+            if output_detailed_scores_path:
+                log_detailed_scores(
+                    results_df,
+                    output_detailed_scores_path,
+                )
+
+        typer.secho(
+            f"✓ Metrics logged to MLflow run: {run_id}",
+            fg=typer.colors.CYAN,
+            err=True,
+        )
 
 
 if __name__ == "__main__":

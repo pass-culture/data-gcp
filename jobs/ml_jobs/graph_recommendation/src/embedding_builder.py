@@ -16,7 +16,6 @@ from src.constants import EMBEDDING_COLUMN, DefaultTrainingConfig, InvalidConfig
 from src.utils.mlflow import (
     conditional_mlflow,
     log_model_parameters,
-    refresh_mlflow_token,
 )
 
 
@@ -112,8 +111,8 @@ def train_metapath2vec(
     elif isinstance(train_params, DefaultTrainingConfig):
         params = train_params
     elif isinstance(train_params, dict):
-        config = DefaultTrainingConfig()
-        config.update_from_dict(train_params)
+        params = DefaultTrainingConfig()
+        params.update_from_dict(train_params)
     else:
         raise InvalidConfigError(
             f"train_params must be DefaultTrainingConfig, dict, or None, "
@@ -168,8 +167,8 @@ def train_metapath2vec(
         optimizer, mode="min", factor=0.5, patience=3, min_lr=1e-6
     )
 
-    # Log model parameters in mlflow
-    log_model_parameters(params.to_dict() | {"walk_length": walk_length}, graph_data)
+    # Log model parameters in mlflowww
+    log_model_parameters(params.to_dict() | {"walk_length": walk_length})
 
     # Start training
     logger.info("Starting training...")
@@ -179,9 +178,6 @@ def train_metapath2vec(
     training_start = time.time()
     best_loss_epoch = 0
     for epoch in range(1, num_epochs + 1):
-        # Refresh MLflow token to prevent expiration in long-running jobs
-        refresh_mlflow_token()
-
         t0 = time.time()
         loss = _train(model, loader, optimizer, device, epoch, profile=profile)
         epoch_time = time.time() - t0

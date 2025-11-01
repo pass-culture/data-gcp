@@ -43,7 +43,7 @@ def optional_mlflow_logging(enabled: bool = True):  # noqa: FBT001
             m
             for m in dir(mlflow)
             if m.startswith("log_")
-            or m in {"set_tracking_uri", "create_experiment", "get_experiment_by_name"}
+            or m in {"create_experiment", "get_experiment_by_name"}
         ]
 
         originals = {}
@@ -159,19 +159,70 @@ def refresh_mlflow_token() -> None:
     try:
         _mlflow_credentials.refresh(Request())
         os.environ["MLFLOW_TRACKING_TOKEN"] = _mlflow_credentials.token
+        mlflow.set_tracking_uri(MLFLOW_URI)
         logger.debug("MLflow token refreshed successfully")
     except Exception as e:
         logger.error(f"Failed to refresh MLflow token: {e}")
 
 
+def mlflow_refresh_token_decorator(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        refresh_mlflow_token()
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+@contextmanager
+def mlflow_token_refresher_context():
+    """
+    Temporarily patch MLflow logging functions to refresh token before every call.
+    """
+    # Choose which functions to patch
+    functions_to_patch = [
+        f
+        for f in dir(mlflow)
+        if callable(getattr(mlflow, f))
+        and f.startswith("log_")
+        or f in ["start_run", "end_run", "set_experiment"]
+    ]
+
+    originals = {}
+    for func_name in functions_to_patch:
+        originals[func_name] = getattr(mlflow, func_name)
+        setattr(mlflow, func_name, mlflow_refresh_token_decorator(originals[func_name]))
+
+    try:
+        yield
+    finally:
+        # Restore original functions after the block
+        for func_name, original_func in originals.items():
+            setattr(mlflow, func_name, original_func)
+
+
 @conditional_mlflow()
 def get_mlflow_experiment(experiment_name: str):
-    """Get or create MLflow experiment by name."""
-    experiment = mlflow.get_experiment_by_name(experiment_name)
+    """
+    Get an MLflow experiment by name.
+    Reactivate if it is deleted, or create if it doesn't exist.
+    """
+    client = mlflow.tracking.MlflowClient()
+    experiment = client.get_experiment_by_name(experiment_name)
+
     if experiment is None:
+        # Experiment doesn't exist → create it
         logger.info(f"Creating new MLflow experiment: {experiment_name}")
-        mlflow.create_experiment(name=experiment_name)
-        experiment = mlflow.get_experiment_by_name(experiment_name)
+        experiment_id = client.create_experiment(name=experiment_name)
+        experiment = client.get_experiment(experiment_id)
+    elif experiment.lifecycle_stage == "deleted":
+        # Experiment is deleted → reactivate it
+        logger.warning(
+            f"MLflow experiment '{experiment_name}' is deleted. Reactivating it."
+        )
+        client.restore_experiment(experiment.experiment_id)
+        experiment = client.get_experiment(experiment.experiment_id)
+
     return experiment
 
 

@@ -11,6 +11,7 @@ import typer
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from loguru import logger
+from mlflow.entities import Experiment
 
 from src.utils.gcp import (
     ENV_SHORT_NAME,
@@ -165,13 +166,24 @@ def refresh_mlflow_token() -> None:
 
 
 @conditional_mlflow()
-def get_mlflow_experiment(experiment_name: str):
-    """Get or create MLflow experiment by name."""
+def get_mlflow_experiment(experiment_name: str) -> Experiment:
+    """Get or create an MLflow experiment, ensuring it is active."""
     experiment = mlflow.get_experiment_by_name(experiment_name)
+
     if experiment is None:
         logger.info(f"Creating new MLflow experiment: {experiment_name}")
         mlflow.create_experiment(name=experiment_name)
         experiment = mlflow.get_experiment_by_name(experiment_name)
+    elif experiment.lifecycle_stage == "deleted":
+        logger.warning(
+            f"MLflow experiment '{experiment_name}' is deleted. "
+            "Creating a new experiment instead."
+        )
+        # Optionally: reactivate instead of creating a new one
+        experiment_name = f"{experiment_name}_recreated"
+        mlflow.create_experiment(name=experiment_name)
+        experiment = mlflow.get_experiment_by_name(experiment_name)
+
     return experiment
 
 

@@ -241,12 +241,18 @@ class GridDAG(DAG):
                 raise InvalidGridError(
                     "For POINTS mode, `grid_params` must be a list of parameter dictionaries."
                 )
+
             for conf in self.grid_params:
                 if not isinstance(conf, dict):
                     raise InvalidGridError(
                         f"Invalid config in POINTS mode: expected dict, got {type(conf)}"
                     )
-                combinations.append({**self.common_params, **conf})
+                merged = {**self.common_params, **conf}
+                combinations.append(merged)
+
+        else:
+            raise InvalidGridError(f"Unsupported search mode: {self.search_mode}")
+
         if not combinations:
             raise InvalidGridError(f"Invalid grid configuration: {self.grid_params}")
 
@@ -333,7 +339,7 @@ class GridDAG(DAG):
                 stop_vm = DeleteGCEOperator(
                     task_id=f"stop_vm_{vm_idx}",
                     instance_name=instance_name,
-                    trigger_rule=TriggerRule.NONE_FAILED_MIN_ONE_SUCCESS,
+                    trigger_rule=TriggerRule.ALL_DONE,
                 )
                 prev_task >> stop_vm
 
@@ -433,18 +439,18 @@ GRID_PARAMS: dict[dict | list[dict]] = {
     "combinatorial": {"embedding_dim": [32, 64, 128], "context_size": [5, 10, 15]},
     "orthogonal": {"embedding_dim": [32, 64, 128], "context_size": [5, 10, 15]},
     "points": [
-        {"embedding_dim": 64, "batch_size": 400},
+        {"embedding_dim": 64, "batch_size": 200},
         {
             "embedding_dim": 128,
             "num_negative_samples": 5,
             "walks_per_node": 5,
-            "batch_size": 200,
+            "batch_size": 100,
         },
-        {"embedding_dim": 256, "batch_size": 100},
-        {"num_negative_samples": 20, "batch_size": 50},
-        {"num_negative_samples": 10, "batch_size": 100},
-        {"walks_per_node": 20, "batch_size": 50},
-        {"walks_per_node": 10, "batch_size": 100},
+        {"embedding_dim": 256, "batch_size": 50},
+        {"num_negative_samples": 20, "batch_size": 25},
+        {"num_negative_samples": 10, "batch_size": 50},
+        {"walks_per_node": 20, "batch_size": 25},
+        {"walks_per_node": 10, "batch_size": 50},
     ],
 }
 SHARED_PARAMS = {}
@@ -503,7 +509,7 @@ with GridDAG(
         ),
         "gpu_count": Param(default=1, enum=INSTANCES_TYPES["gpu"]["count"]),
         "experiment_name": Param(
-            default="algo_training_graph_embeddings_v1", type="string"
+            default="algo_training_graph_embeddings_v1_grid", type="string"
         ),
         "train_only_on_10k_rows": Param(default=True, type="boolean"),
     },

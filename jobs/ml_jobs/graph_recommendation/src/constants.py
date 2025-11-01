@@ -118,8 +118,8 @@ class DefaultEvaluationConfig(BaseConfig):
     metadata_columns: list[str] = field(
         default_factory=lambda: [ID_COLUMN, GTL_ID_COLUMN, "artist_id"]
     )
-    n_samples: int = 100
-    n_retrieved: int = 1000
+    n_samples: int = 1000
+    n_retrieved: int = 10000
     k_values: list[int] = field(default_factory=lambda: [10, 20, 50, 100])
     relevance_thresholds: list[float] = field(
         default_factory=lambda: [0.3, 0.4, 0.5, 0.6, 0.7]

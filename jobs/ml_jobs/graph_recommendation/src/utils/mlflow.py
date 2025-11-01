@@ -166,12 +166,26 @@ def refresh_mlflow_token() -> None:
 
 @conditional_mlflow()
 def get_mlflow_experiment(experiment_name: str):
-    """Get or create MLflow experiment by name."""
-    experiment = mlflow.get_experiment_by_name(experiment_name)
+    """
+    Get an MLflow experiment by name.
+    Reactivate if it is deleted, or create if it doesn't exist.
+    """
+    client = mlflow.tracking.MlflowClient()
+    experiment = client.get_experiment_by_name(experiment_name)
+
     if experiment is None:
+        # Experiment doesn't exist → create it
         logger.info(f"Creating new MLflow experiment: {experiment_name}")
-        mlflow.create_experiment(name=experiment_name)
-        experiment = mlflow.get_experiment_by_name(experiment_name)
+        experiment_id = client.create_experiment(name=experiment_name)
+        experiment = client.get_experiment(experiment_id)
+    elif experiment.lifecycle_stage == "deleted":
+        # Experiment is deleted → reactivate it
+        logger.warning(
+            f"MLflow experiment '{experiment_name}' is deleted. Reactivating it."
+        )
+        client.restore_experiment(experiment.experiment_id)
+        experiment = client.get_experiment(experiment.experiment_id)
+
     return experiment
 
 

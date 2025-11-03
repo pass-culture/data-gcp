@@ -101,7 +101,7 @@ def test_evaluate_embeddings_no_db_creation(
         patch("src.evaluation.load_and_index_embeddings") as mock_load_index,
         patch("src.evaluation.sample_test_items_lazy") as mock_sample,
         patch("src.evaluation.generate_predictions_lazy") as mock_generate,
-        patch("src.evaluation.load_metadata_table") as mock_load_metadata,
+        patch("pandas.read_parquet") as mock_load_parquet,
         patch("src.evaluation.join_retrieval_with_metadata") as mock_join,
         patch("src.evaluation.compute_all_scores_lazy") as mock_compute_scores,
         patch("src.evaluation.compute_evaluation_metrics") as mock_compute_metrics,
@@ -112,7 +112,7 @@ def test_evaluate_embeddings_no_db_creation(
         mock_load_index.return_value = mock_table
         mock_sample.return_value = mock_query_node_ids
         mock_generate.return_value = mock_retrieval_results
-        mock_load_metadata.return_value = mock_metadata
+        mock_load_parquet.return_value = mock_metadata
         mock_join.return_value = mock_augmented_results
         mock_compute_scores.return_value = mock_scored_results
         mock_compute_metrics.return_value = (mock_metrics, mock_scored_results)
@@ -133,9 +133,7 @@ def test_evaluate_embeddings_no_db_creation(
         assert (
             mock_generate.called
         ), "Should have called mocked generate_predictions_lazy"
-        assert (
-            mock_load_metadata.called
-        ), "Should have called mocked load_metadata_table"
+        assert mock_load_parquet.called, "Should have called mocked load_parquet"
 
         # Verify returns are correct
         assert isinstance(metrics_df, pd.DataFrame)
@@ -162,7 +160,7 @@ def test_evaluate_embeddings_config_merging(
         patch("src.evaluation.load_and_index_embeddings") as mock_load_index,
         patch("src.evaluation.sample_test_items_lazy") as mock_sample,
         patch("src.evaluation.generate_predictions_lazy") as mock_generate,
-        patch("src.evaluation.load_metadata_table") as mock_load_metadata,
+        patch("pandas.read_parquet") as mock_load_parquet,
         patch("src.evaluation.join_retrieval_with_metadata") as mock_join,
         patch("src.evaluation.compute_all_scores_lazy") as mock_compute_scores,
         patch("src.evaluation.compute_evaluation_metrics") as mock_compute_metrics,
@@ -173,7 +171,7 @@ def test_evaluate_embeddings_config_merging(
         mock_load_index.return_value = mock_table
         mock_sample.return_value = mock_query_node_ids
         mock_generate.return_value = mock_retrieval_results
-        mock_load_metadata.return_value = mock_metadata
+        mock_load_parquet.return_value = mock_metadata
         mock_join.return_value = mock_augmented_results
         mock_compute_scores.return_value = mock_scored_results
         mock_compute_metrics.return_value = (mock_metrics, mock_scored_results)
@@ -232,7 +230,7 @@ def test_evaluate_embeddings_default_config_used(
         patch("src.evaluation.load_and_index_embeddings") as mock_load_index,
         patch("src.evaluation.sample_test_items_lazy") as mock_sample,
         patch("src.evaluation.generate_predictions_lazy") as mock_generate,
-        patch("src.evaluation.load_metadata_table") as mock_load_metadata,
+        patch("pandas.read_parquet") as mock_load_parquet,
         patch("src.evaluation.join_retrieval_with_metadata") as mock_join,
         patch("src.evaluation.compute_all_scores_lazy") as mock_compute_scores,
         patch("src.evaluation.compute_evaluation_metrics") as mock_compute_metrics,
@@ -243,7 +241,7 @@ def test_evaluate_embeddings_default_config_used(
         mock_load_index.return_value = mock_table
         mock_sample.return_value = mock_query_node_ids
         mock_generate.return_value = mock_retrieval_results
-        mock_load_metadata.return_value = mock_metadata
+        mock_load_parquet.return_value = mock_metadata
         mock_join.return_value = mock_augmented_results
         mock_compute_scores.return_value = mock_scored_results
         mock_compute_metrics.return_value = (mock_metrics, mock_scored_results)
@@ -315,7 +313,7 @@ def test_evaluate_embeddings_metadata_filtering(
         patch("src.evaluation.load_and_index_embeddings") as mock_load_index,
         patch("src.evaluation.sample_test_items_lazy") as mock_sample,
         patch("src.evaluation.generate_predictions_lazy") as mock_generate,
-        patch("src.evaluation.load_metadata_table") as mock_load_metadata,
+        patch("pandas.read_parquet") as mock_load_parquet,
         patch("src.evaluation.join_retrieval_with_metadata") as mock_join,
         patch("src.evaluation.compute_all_scores_lazy") as mock_compute_scores,
         patch("src.evaluation.compute_evaluation_metrics") as mock_compute_metrics,
@@ -326,7 +324,7 @@ def test_evaluate_embeddings_metadata_filtering(
         mock_load_index.return_value = mock_table
         mock_sample.return_value = mock_query_node_ids
         mock_generate.return_value = mock_retrieval_results
-        mock_load_metadata.return_value = mock_metadata
+        mock_load_parquet.return_value = mock_metadata
         mock_join.return_value = mock_augmented_results
         mock_compute_scores.return_value = mock_scored_results
         mock_compute_metrics.return_value = (mock_metrics, mock_scored_results)
@@ -340,15 +338,9 @@ def test_evaluate_embeddings_metadata_filtering(
         )
 
         # Verify load_metadata_table was called with correct parameters
-        mock_load_metadata.assert_called_once()
-        call_kwargs = mock_load_metadata.call_args[1]
+        mock_load_parquet.assert_called_once()
+        call_args = mock_load_parquet.call_args[0]
+        call_kwargs = mock_load_parquet.call_args[1]
 
-        assert call_kwargs["parquet_path"] == "fake.parquet"
-        assert call_kwargs["filter_field"] == "item_id"
-        assert "filter_values" in call_kwargs
+        assert call_args[0] == "fake.parquet"
         assert call_kwargs["columns"] == default_config.metadata_columns
-
-        # Verify filter_values contains unique node IDs from retrieval results
-        filter_values = call_kwargs["filter_values"]
-        assert isinstance(filter_values, list)
-        assert len(filter_values) > 0

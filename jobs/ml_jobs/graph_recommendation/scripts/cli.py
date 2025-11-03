@@ -236,11 +236,12 @@ def train_metapath2vec_command(
     """Train a Metapath2Vec model on the book-to-metadata graph and save it to disk."""
 
     # Load default config
-    train_config = TrainingConfig()
-    # Override with user config if provided
-    if config_json:
-        train_config.update_from_json(config_json)
-    typer.echo(f"Using training config: {train_config.to_dict()}", err=True)
+    training_config = (
+        TrainingConfig().parse_and_update_config(config_json)
+        if config_json
+        else TrainingConfig()
+    )
+    typer.echo(f"Using training config: {training_config.to_dict()}", err=True)
 
     # Connect to MLflow
     connect_remote_mlflow()
@@ -268,7 +269,7 @@ def train_metapath2vec_command(
         # Train model with loss logging to mlflow
         embeddings_df = train_metapath2vec(
             graph_data=graph_data,
-            train_params=train_config,
+            train_params=training_config,
         )
 
         # Save embeddings

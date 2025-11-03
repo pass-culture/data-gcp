@@ -5,7 +5,7 @@ from __future__ import annotations
 import pandas as pd
 from loguru import logger
 
-from src.constants import EvaluationConfig
+from src.config import EvaluationConfig
 from src.utils.recommendation_metrics import compute_evaluation_metrics
 from src.utils.retrieval import (
     TABLE_NAME,

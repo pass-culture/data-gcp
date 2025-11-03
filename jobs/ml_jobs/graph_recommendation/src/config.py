@@ -1,7 +1,6 @@
 import json
 import sys
 from dataclasses import asdict, dataclass, field
-from typing import Any
 
 from loguru import logger
 
@@ -11,22 +10,61 @@ from src.constants import ARTIST_ID_COLUMN, GTL_ID_COLUMN, ID_COLUMN
 class BaseConfig:
     """Base class for configuration objects with JSON/dict update support."""
 
-    def update_from_json(self, json_str: str):
-        """
-        Update configuration from a JSON string. Logs errors/warnings instead of raising
+    def parse_and_update_config(self, json_str: str) -> "BaseConfig":
+        """Parse JSON string and update configuration fields.
+
+        Parses a JSON string containing configuration updates and applies them
+        to the current configuration object. Unknown fields are logged as warnings
+        but do not cause errors.
 
         Args:
-            json_str: JSON string containing overrides for any config field.
+            json_str: JSON string containing configuration field updates.
+                     Must be valid JSON that deserializes to a dictionary.
+
+        Returns:
+            Self: The updated configuration object for method chaining.
+
+        Raises:
+            InvalidConfigError: If json_str is not valid JSON or if the parsed
+                               result is not a dictionary.
+
+        Example:
+            >>> config = TrainingConfig()
+            >>> config.parse_and_update_config('{"embedding_dim": 64, "num_epochs": 5}')
+            >>> config.embedding_dim
+            64
         """
+
         try:
             updates = json.loads(json_str)
         except json.JSONDecodeError as e:
             logger.error(f"Invalid JSON for config: {e}")
             raise InvalidConfigError("Invalid JSON string") from e
-        self.update_from_dict(updates)
+        return self._update_from_dict(updates)
 
-    def update_from_dict(self, config_dict: dict):
-        """Update fields from a dictionary, logging errors instead of raising."""
+    def _update_from_dict(self, config_dict: dict) -> "BaseConfig":
+        """Update configuration fields from a dictionary.
+
+        Updates the current configuration object with values from the provided
+        dictionary. Only updates fields that already exist as attributes on the
+        configuration object. Unknown fields are logged as warnings but ignored.
+
+        Args:
+            config_dict: Dictionary containing configuration field updates.
+                        Keys should match existing attribute names on the config object.
+
+        Returns:
+            Self: The updated configuration object for method chaining.
+
+        Raises:
+            InvalidConfigError: If config_dict is not a dictionary.
+
+        Example:
+            >>> config = TrainingConfig()
+            >>> config._update_from_dict({"embedding_dim": 64, "unkn_field": "value"})
+            # Sets embedding_dim to 64, logs warning about unkn_field
+        """
+
         if not isinstance(config_dict, dict):
             logger.error("config_dict must be a dictionary")
             raise InvalidConfigError("Invalid config_dict")
@@ -35,8 +73,9 @@ class BaseConfig:
                 setattr(self, k, v)
             else:
                 logger.warning(f"Ignored unknown config field: {k}")
+        return self
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict:
         """Return config as a dictionary."""
         return asdict(self)
 

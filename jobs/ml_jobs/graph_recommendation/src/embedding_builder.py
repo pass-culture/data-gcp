@@ -145,8 +145,7 @@ def train_metapath2vec(
 
     # Log model parameters in mlflow
     log_model_parameters(
-        training_config.to_dict() | {"walk_length": training_config.walk_length},
-        graph_data,
+        training_config.to_dict() | {"walk_length": training_config.walk_length}
     )
 
     # Start training

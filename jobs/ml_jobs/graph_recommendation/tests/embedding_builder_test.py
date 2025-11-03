@@ -3,17 +3,22 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+from pathlib import Path
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
+import pandas as pd
+import pytest
 import torch
 from torch_geometric.data import HeteroData
 
 from src.config import (
     TrainingConfig,
 )
+from src.constants import EMBEDDING_COLUMN, GTL_ID_COLUMN, LANCEDB_NODE_ID_COLUMN
 from src.embedding_builder import (
     _train,
+    train_metapath2vec,
 )
 
 if TYPE_CHECKING:
@@ -57,6 +62,21 @@ def _build_sample_heterograph() -> HeteroData:
     data.metadata_columns = ["artist_id", "gtl_label_level_1"]
 
     return data
+
+
+@pytest.fixture()
+def simple_training_config() -> TrainingConfig:
+    """Fixture to provide a simple TrainingConfig for tests."""
+    return TrainingConfig(
+        num_epochs=1,
+        num_workers=0,
+        metapath=[
+            ("book", "is_artist_id", "artist_id"),
+            ("artist_id", "artist_id_of", "book"),
+            ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
+            ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
+        ],
+    )
 
 
 @contextmanager
@@ -162,43 +182,35 @@ def test_train_function_basic_execution() -> None:
     assert loss >= 0
 
 
-# def test_train_metapath2vec_with_minimal_mocking() -> None:
-#     """Test train_metapath2vec with minimal mocking - just prevent actual training."""
-#     graph_data = _build_sample_heterograph()
+def test_train_metapath2vec_with_minimal_mocking(simple_training_config) -> None:
+    """Test train_metapath2vec with minimal mocking - just prevent actual training."""
+    graph_data = _build_sample_heterograph()
 
-#     with (
-#         _mock_training_components(graph_data),
-#         patch("src.embedding_builder.NUM_EPOCHS", 1),
-#     ):
-#         result = train_metapath2vec(
-#             graph_data=graph_data, num_workers=0, log_mlflow=False
-#         )
+    result = train_metapath2vec(
+        graph_data=graph_data,
+        training_config=simple_training_config,
+    )
 
-#         # Verify we get a DataFrame result
-#         assert isinstance(result, pd.DataFrame)
-#         assert ID_COLUMN in result.columns
-#         assert GTL_ID_COLUMN in result.columns
-#         assert EMBEDDING_COLUMN in result.columns
-#         # Should have embeddings for all books
-#         assert len(result) == len(graph_data.book_ids)
+    # Verify we get a DataFrame result
+    assert isinstance(result, pd.DataFrame)
+    assert LANCEDB_NODE_ID_COLUMN in result.columns
+    assert GTL_ID_COLUMN in result.columns
+    assert EMBEDDING_COLUMN in result.columns
+    # Should have embeddings for all books
+    assert len(result) == len(graph_data.book_ids)
 
 
-# def test_train_metapath2vec_parameter_acceptance() -> None:
-#     """Test that train_metapath2vec accepts different parameter combinations."""
-#     graph_data = _build_sample_heterograph()
+def test_train_metapath2vec_parameter_acceptance(simple_training_config) -> None:
+    """Test that train_metapath2vec accepts different parameter combinations."""
+    graph_data = _build_sample_heterograph()
 
-#     with (
-#         _mock_training_components(graph_data),
-#         patch("src.embedding_builder.NUM_EPOCHS", 1),
-#     ):
-#         # Test with checkpoint path
-#         result = train_metapath2vec(
-#             graph_data=graph_data,
-#             checkpoint_path=Path("test.pt"),
-#             num_workers=2,
-#             profile=False,
-#             log_mlflow=False,
-#         )
+    # Test with checkpoint path
+    result = train_metapath2vec(
+        graph_data=graph_data,
+        training_config=simple_training_config,
+        checkpoint_path=Path("test.pt"),
+        profile=False,
+    )
 
-#         assert isinstance(result, pd.DataFrame)
-#         assert len(result) > 0
+    assert isinstance(result, pd.DataFrame)
+    assert len(result) > 0

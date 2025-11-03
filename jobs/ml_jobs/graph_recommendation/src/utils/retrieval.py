@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import lancedb
 import numpy as np
 import pandas as pd
@@ -18,6 +22,9 @@ from src.utils.metadata_metrics import (
     get_gtl_walk_score,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
 # Lance DB configuration
 
 LANCEDB_BATCH_SIZE = 5000
@@ -30,7 +37,9 @@ LANCEDB_TABLE_NAME = "embedding_table"
 NON_NULL_COLUMNS = [LANCEDB_NODE_ID_COLUMN, GTL_ID_COLUMN, EMBEDDING_COLUMN]
 
 
-def chunk_dataframe(df: pd.DataFrame, batch_size: int) -> iter[pd.DataFrame]:
+def chunk_dataframe(
+    df: pd.DataFrame, batch_size: int
+) -> Generator[pd.DataFrame, None, None]:
     """Yield successive batches from DataFrame."""
     for start_index in range(0, len(df), batch_size):
         yield df[start_index : start_index + batch_size]

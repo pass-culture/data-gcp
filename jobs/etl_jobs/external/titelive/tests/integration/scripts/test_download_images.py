@@ -7,60 +7,10 @@ from unittest.mock import Mock, patch
 import pytest
 
 from src.scripts.download_images import (
-    _extract_extension,
     _process_batch_images,
     _process_image_url,
     run_download_images,
 )
-
-
-class TestExtractExtension:
-    """Tests for _extract_extension function."""
-
-    def test_extracts_jpg_extension(self):
-        """Test extraction of .jpg extension."""
-        url = "https://example.com/image.jpg"
-        assert _extract_extension(url) == ".jpg"
-
-    def test_extracts_png_extension(self):
-        """Test extraction of .png extension."""
-        url = "https://example.com/image.png"
-        assert _extract_extension(url) == ".png"
-
-    def test_extracts_jpeg_extension(self):
-        """Test extraction of .jpeg extension."""
-        url = "https://example.com/image.jpeg"
-        assert _extract_extension(url) == ".jpeg"
-
-    def test_extracts_gif_extension(self):
-        """Test extraction of .gif extension."""
-        url = "https://example.com/image.gif"
-        assert _extract_extension(url) == ".gif"
-
-    def test_extracts_webp_extension(self):
-        """Test extraction of .webp extension."""
-        url = "https://example.com/image.webp"
-        assert _extract_extension(url) == ".webp"
-
-    def test_removes_query_parameters(self):
-        """Test that query parameters are removed before extraction."""
-        url = "https://example.com/image.jpg?size=large&format=original"
-        assert _extract_extension(url) == ".jpg"
-
-    def test_handles_uppercase_extension(self):
-        """Test that uppercase extensions are normalized to lowercase."""
-        url = "https://example.com/IMAGE.PNG"
-        assert _extract_extension(url) == ".png"
-
-    def test_returns_default_for_unknown_extension(self):
-        """Test that unknown extensions default to .jpg."""
-        url = "https://example.com/file.xyz"
-        assert _extract_extension(url) == ".jpg"
-
-    def test_returns_default_for_no_extension(self):
-        """Test that URLs without extension default to .jpg."""
-        url = "https://example.com/image"
-        assert _extract_extension(url) == ".jpg"
 
 
 class TestProcessImageUrl:
@@ -181,7 +131,11 @@ class TestProcessImageUrl:
         assert len(download_tasks) == 1
         url, gcs_path = download_tasks[0]
         assert gcs_path.startswith("gs://my-bucket/my-prefix/")
-        assert gcs_path.endswith(".png")
+        # Verify no extension is appended (UUID only)
+        assert not any(
+            gcs_path.endswith(ext)
+            for ext in [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"]
+        )
 
     def test_placeholder_cache_hit(self):
         """Test that cached placeholder UUIDs are returned without GCS calls."""

@@ -533,8 +533,7 @@ def _process_image_url(
             # Check if blob exists in GCS (one call per unique no_image URL)
             if storage_client is not None:
                 bucket = storage_client.bucket(gcs_bucket)
-                image_extension = _extract_extension(image_url)
-                blob_path = f"{gcs_prefix}/{uuid}{image_extension}"
+                blob_path = f"{gcs_prefix}/{uuid}"
                 blob = bucket.blob(blob_path)
 
                 if not blob.exists():
@@ -565,8 +564,7 @@ def _process_image_url(
                 f"Image URL changed ({image_type}): "
                 f"old_uuid={old_uuid}, new_uuid={new_uuid}, url={image_url}"
             )
-            image_extension = _extract_extension(image_url)
-            gcs_path = f"gs://{gcs_bucket}/{gcs_prefix}/{new_uuid}{image_extension}"
+            gcs_path = f"gs://{gcs_bucket}/{gcs_prefix}/{new_uuid}"
 
             download_tasks.append((image_url, gcs_path))
             ean_images.append(
@@ -590,26 +588,3 @@ def _process_image_url(
             )  # is_placeholder=False, image_added=False, uuid=new_uuid
 
     return (False, False, None)  # No URL present
-
-
-def _extract_extension(url: str) -> str:
-    """
-    Extract file extension from URL.
-
-    Args:
-        url: Image URL
-
-    Returns:
-        Extension with dot (e.g., '.jpg') or empty string
-    """
-    # Remove query parameters
-    url_path = url.split("?")[0]
-
-    # Get extension
-    if "." in url_path:
-        extension = url_path.rsplit(".", 1)[-1].lower()
-        # Only keep common image extensions
-        if extension in ["jpg", "jpeg", "png", "gif", "webp", "bmp"]:
-            return f".{extension}"
-
-    return ".jpg"  # Default extension

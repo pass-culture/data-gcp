@@ -127,6 +127,10 @@ class TrainingConfig(BaseConfig):
         )
     )
 
+    @property
+    def walk_length(self) -> int:
+        return int(len(self.metapath) * self.metapath_repetitions)
+
 
 @dataclass
 class EvaluationConfig(BaseConfig):

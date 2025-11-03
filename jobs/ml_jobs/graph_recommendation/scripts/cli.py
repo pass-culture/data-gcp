@@ -9,10 +9,10 @@ import pandas as pd
 import torch
 import typer
 
+from src.config import EvaluationConfig, TrainingConfig
 from src.constants import MLFLOW_RUN_ID_FILEPATH, RESULTS_DIR
-from src.embedding_builder import TrainingConfig, train_metapath2vec
+from src.embedding_builder import train_metapath2vec
 from src.evaluation import (
-    EvaluationConfig,
     evaluate_embeddings,
 )
 from src.graph_builder import (

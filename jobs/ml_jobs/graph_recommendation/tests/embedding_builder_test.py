@@ -10,7 +10,7 @@ import torch
 from torch_geometric.data import HeteroData
 
 from src.constants import (
-    DefaultTrainingConfig,
+    TrainingConfig,
 )
 from src.embedding_builder import (
     _train,
@@ -81,7 +81,7 @@ def _mock_training_components(
         patch("src.embedding_builder.logger"),
         patch("pathlib.Path.mkdir"),
     ):
-        cfg = DefaultTrainingConfig()
+        cfg = TrainingConfig()
         # Set up minimal model mock
         mock_model = MagicMock()
         mock_model.to.return_value.start = {"book": 0}
@@ -112,7 +112,7 @@ def _mock_training_components(
 
 def test_metapath_structure() -> None:
     """Test that METAPATH constant contains expected structure."""
-    cfg = DefaultTrainingConfig()
+    cfg = TrainingConfig()
     # Verify metapath is a list of tuples
     assert isinstance(cfg.metapath, list | tuple)
     assert all(isinstance(path, tuple) for path in cfg.metapath)

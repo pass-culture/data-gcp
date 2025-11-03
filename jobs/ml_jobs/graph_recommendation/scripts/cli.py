@@ -10,9 +10,9 @@ import torch
 import typer
 
 from src.constants import MLFLOW_RUN_ID_FILEPATH, RESULTS_DIR
-from src.embedding_builder import DefaultTrainingConfig, train_metapath2vec
+from src.embedding_builder import TrainingConfig, train_metapath2vec
 from src.evaluation import (
-    DefaultEvaluationConfig,
+    EvaluationConfig,
     evaluate_embeddings,
 )
 from src.graph_builder import (
@@ -236,7 +236,7 @@ def train_metapath2vec_command(
     """Train a Metapath2Vec model on the book-to-metadata graph and save it to disk."""
 
     # Load default config
-    train_config = DefaultTrainingConfig()
+    train_config = TrainingConfig()
     # Override with user config if provided
     if config_json:
         train_config.update_from_json(config_json)
@@ -306,7 +306,7 @@ def evaluate_metapath2vec_command(
     connect_remote_mlflow()
 
     # Load default config
-    eval_config = DefaultEvaluationConfig()
+    eval_config = EvaluationConfig()
     # Override with user config if provided
     if config_json:
         eval_config.update_from_json(config_json)

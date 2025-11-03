@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import MetaPath2Vec
 
-from src.constants import EMBEDDING_COLUMN, DefaultTrainingConfig, InvalidConfigError
+from src.constants import EMBEDDING_COLUMN, InvalidConfigError, TrainingConfig
 from src.utils.mlflow import (
     conditional_mlflow,
     log_model_parameters,
@@ -95,7 +95,7 @@ def _train(
 def train_metapath2vec(
     graph_data: HeteroData,
     checkpoint_path: Path = Path("checkpoints/best_metapath2vec_model.pt"),
-    train_params: DefaultTrainingConfig | dict | None = None,
+    train_params: TrainingConfig | dict | None = None,
     *,
     profile: bool = False,
 ) -> pd.DataFrame:
@@ -108,11 +108,11 @@ def train_metapath2vec(
 
     # Merge config with defaults
     if train_params is None:
-        params = DefaultTrainingConfig()
-    elif isinstance(train_params, DefaultTrainingConfig):
+        params = TrainingConfig()
+    elif isinstance(train_params, TrainingConfig):
         params = train_params
     elif isinstance(train_params, dict):
-        config = DefaultTrainingConfig()
+        config = TrainingConfig()
         config.update_from_dict(train_params)
     else:
         raise InvalidConfigError(

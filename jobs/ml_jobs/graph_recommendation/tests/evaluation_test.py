@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
-from src.evaluation import DefaultEvaluationConfig, evaluate_embeddings
+from src.evaluation import EvaluationConfig, evaluate_embeddings
 
 
 @pytest.fixture()
@@ -240,7 +240,7 @@ def test_evaluate_embeddings_default_config_used(
         mock_join.return_value = mock_augmented_results
         mock_compute_scores.return_value = mock_scored_results
         mock_compute_metrics.return_value = (mock_metrics, mock_scored_results)
-        default_config = DefaultEvaluationConfig()
+        default_config = EvaluationConfig()
         # Execute with no custom config
         evaluate_embeddings(
             raw_data_parquet_path="fake.parquet",
@@ -271,7 +271,7 @@ def test_default_eval_config_structure():
         "force_artist_weight",
         "rebuild_index",
     }
-    default_config = DefaultEvaluationConfig()
+    default_config = EvaluationConfig()
     assert set(default_config.to_dict().keys()) == required_keys
 
     # Type checks
@@ -332,7 +332,7 @@ def test_evaluate_embeddings_metadata_filtering(
         # Verify load_metadata_table was called with correct parameters
         mock_load_metadata.assert_called_once()
         call_kwargs = mock_load_metadata.call_args[1]
-        default_config = DefaultEvaluationConfig()
+        default_config = EvaluationConfig()
 
         assert call_kwargs["parquet_path"] == "fake.parquet"
         assert call_kwargs["filter_field"] == "item_id"

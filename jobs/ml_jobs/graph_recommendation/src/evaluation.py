@@ -5,7 +5,7 @@ from __future__ import annotations
 import pandas as pd
 from loguru import logger
 
-from src.constants import DefaultEvaluationConfig
+from src.constants import EvaluationConfig
 from src.utils.recommendation_metrics import compute_evaluation_metrics
 from src.utils.retrieval import (
     TABLE_NAME,
@@ -21,7 +21,7 @@ from src.utils.retrieval import (
 def evaluate_embeddings(
     raw_data_parquet_path: str,
     embedding_parquet_path: str,
-    eval_config: DefaultEvaluationConfig | dict | None = None,
+    eval_config: EvaluationConfig | dict | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Evaluate embedding quality using retrieval metrics.
@@ -54,17 +54,17 @@ def evaluate_embeddings(
     """
     # Merge config with defaults
     if eval_config is None:
-        config = DefaultEvaluationConfig()
-    elif isinstance(eval_config, DefaultEvaluationConfig):
+        config = EvaluationConfig()
+    elif isinstance(eval_config, EvaluationConfig):
         config = eval_config
     elif isinstance(eval_config, dict):
-        config = DefaultEvaluationConfig()
+        config = EvaluationConfig()
         config.update_from_dict(eval_config)
     else:
         logger.warning(
             "eval_config must be DefaultEvaluationConfig, dict, or None; using defaults"
         )
-        config = DefaultEvaluationConfig()
+        config = EvaluationConfig()
 
     # Extract config values
     metadata_columns = config.metadata_columns

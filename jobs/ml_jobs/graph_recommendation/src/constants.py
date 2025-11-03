@@ -99,7 +99,7 @@ def _default_metapath():
 
 
 @dataclass
-class DefaultTrainingConfig(BaseConfig):
+class TrainingConfig(BaseConfig):
     embedding_dim: int = 128
     metapath_repetitions: int = 4
     context_size: int = 10
@@ -114,7 +114,7 @@ class DefaultTrainingConfig(BaseConfig):
 
 
 @dataclass
-class DefaultEvaluationConfig(BaseConfig):
+class EvaluationConfig(BaseConfig):
     metadata_columns: list[str] = field(
         default_factory=lambda: [ID_COLUMN, GTL_ID_COLUMN, "artist_id"]
     )

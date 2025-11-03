@@ -7,60 +7,10 @@ from unittest.mock import Mock, patch
 import pytest
 
 from src.scripts.download_images import (
-    _extract_extension,
     _process_batch_images,
     _process_image_url,
     run_download_images,
 )
-
-
-class TestExtractExtension:
-    """Tests for _extract_extension function."""
-
-    def test_extracts_jpg_extension(self):
-        """Test extraction of .jpg extension."""
-        url = "https://example.com/image.jpg"
-        assert _extract_extension(url) == ".jpg"
-
-    def test_extracts_png_extension(self):
-        """Test extraction of .png extension."""
-        url = "https://example.com/image.png"
-        assert _extract_extension(url) == ".png"
-
-    def test_extracts_jpeg_extension(self):
-        """Test extraction of .jpeg extension."""
-        url = "https://example.com/image.jpeg"
-        assert _extract_extension(url) == ".jpeg"
-
-    def test_extracts_gif_extension(self):
-        """Test extraction of .gif extension."""
-        url = "https://example.com/image.gif"
-        assert _extract_extension(url) == ".gif"
-
-    def test_extracts_webp_extension(self):
-        """Test extraction of .webp extension."""
-        url = "https://example.com/image.webp"
-        assert _extract_extension(url) == ".webp"
-
-    def test_removes_query_parameters(self):
-        """Test that query parameters are removed before extraction."""
-        url = "https://example.com/image.jpg?size=large&format=original"
-        assert _extract_extension(url) == ".jpg"
-
-    def test_handles_uppercase_extension(self):
-        """Test that uppercase extensions are normalized to lowercase."""
-        url = "https://example.com/IMAGE.PNG"
-        assert _extract_extension(url) == ".png"
-
-    def test_returns_default_for_unknown_extension(self):
-        """Test that unknown extensions default to .jpg."""
-        url = "https://example.com/file.xyz"
-        assert _extract_extension(url) == ".jpg"
-
-    def test_returns_default_for_no_extension(self):
-        """Test that URLs without extension default to .jpg."""
-        url = "https://example.com/image"
-        assert _extract_extension(url) == ".jpg"
 
 
 class TestProcessImageUrl:
@@ -88,9 +38,16 @@ class TestProcessImageUrl:
         assert ean_images[0]["type"] == "recto"
 
     def test_detects_placeholder_no_image_url(self):
-        """Test detection of placeholder 'no_image' URLs."""
+        """Test detection of placeholder 'no_image' URLs with caching."""
         download_tasks = []
         ean_images = []
+        no_image_cache = {}
+        mock_storage_client = Mock()
+        mock_bucket = Mock()
+        mock_blob = Mock()
+        mock_storage_client.bucket.return_value = mock_bucket
+        mock_bucket.blob.return_value = mock_blob
+        mock_blob.exists.return_value = True  # Placeholder already in bucket
 
         is_placeholder, image_added, uuid = _process_image_url(
             image_url="https://images.epagine.fr/no_image_musique.png",
@@ -99,18 +56,29 @@ class TestProcessImageUrl:
             gcs_prefix="images",
             download_tasks=download_tasks,
             ean_images=ean_images,
+            storage_client=mock_storage_client,
+            no_image_cache=no_image_cache,
         )
 
         assert is_placeholder
         assert not image_added
-        assert uuid is None
-        assert len(download_tasks) == 0
+        assert uuid is not None  # Should return UUID
+        assert len(download_tasks) == 0  # No download needed (exists)
         assert len(ean_images) == 0
+        # UUID should be cached
+        assert "https://images.epagine.fr/no_image_musique.png" in no_image_cache
 
     def test_detects_placeholder_with_uppercase(self):
         """Test detection of placeholder URLs with uppercase."""
         download_tasks = []
         ean_images = []
+        no_image_cache = {}
+        mock_storage_client = Mock()
+        mock_bucket = Mock()
+        mock_blob = Mock()
+        mock_storage_client.bucket.return_value = mock_bucket
+        mock_bucket.blob.return_value = mock_blob
+        mock_blob.exists.return_value = True
 
         is_placeholder, image_added, uuid = _process_image_url(
             image_url="https://example.com/NO_IMAGE.png",
@@ -119,10 +87,13 @@ class TestProcessImageUrl:
             gcs_prefix="images",
             download_tasks=download_tasks,
             ean_images=ean_images,
+            storage_client=mock_storage_client,
+            no_image_cache=no_image_cache,
         )
 
         assert is_placeholder
         assert not image_added
+        assert uuid is not None
 
     def test_handles_none_url(self):
         """Test handling of None URL."""
@@ -160,7 +131,129 @@ class TestProcessImageUrl:
         assert len(download_tasks) == 1
         url, gcs_path = download_tasks[0]
         assert gcs_path.startswith("gs://my-bucket/my-prefix/")
-        assert gcs_path.endswith(".png")
+        # Verify no extension is appended (UUID only)
+        assert not any(
+            gcs_path.endswith(ext)
+            for ext in [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"]
+        )
+
+    def test_placeholder_cache_hit(self):
+        """Test that cached placeholder UUIDs are returned without GCS calls."""
+        download_tasks = []
+        ean_images = []
+        no_image_cache = {"https://images.epagine.fr/no_image.png": "cached-uuid-123"}
+        mock_storage_client = Mock()
+
+        is_placeholder, image_added, uuid = _process_image_url(
+            image_url="https://images.epagine.fr/no_image.png",
+            image_type="recto",
+            gcs_bucket="test-bucket",
+            gcs_prefix="images",
+            download_tasks=download_tasks,
+            ean_images=ean_images,
+            storage_client=mock_storage_client,
+            no_image_cache=no_image_cache,
+        )
+
+        assert is_placeholder
+        assert not image_added
+        assert uuid == "cached-uuid-123"
+        # No GCS calls should be made (cache hit)
+        mock_storage_client.bucket.assert_not_called()
+        assert len(download_tasks) == 0
+
+    def test_placeholder_not_in_bucket_downloads(self):
+        """Test that missing placeholder images are added to download tasks."""
+        download_tasks = []
+        ean_images = []
+        no_image_cache = {}
+        mock_storage_client = Mock()
+        mock_bucket = Mock()
+        mock_blob = Mock()
+        mock_storage_client.bucket.return_value = mock_bucket
+        mock_bucket.blob.return_value = mock_blob
+        mock_blob.exists.return_value = False  # Placeholder NOT in bucket
+
+        is_placeholder, image_added, uuid = _process_image_url(
+            image_url="https://images.epagine.fr/no_image_new.png",
+            image_type="recto",
+            gcs_bucket="test-bucket",
+            gcs_prefix="images",
+            download_tasks=download_tasks,
+            ean_images=ean_images,
+            storage_client=mock_storage_client,
+            no_image_cache=no_image_cache,
+        )
+
+        assert is_placeholder
+        assert not image_added
+        assert uuid is not None
+        # Should add to download tasks (doesn't exist in bucket)
+        assert len(download_tasks) == 1
+        assert download_tasks[0][0] == "https://images.epagine.fr/no_image_new.png"
+        # UUID should be cached
+        assert "https://images.epagine.fr/no_image_new.png" in no_image_cache
+
+    def test_multiple_eans_same_placeholder_uses_cache(self):
+        """Test that multiple EANs with same placeholder only check bucket once."""
+        rows = [
+            {
+                "ean": "9781234567890",
+                "json_raw": json.dumps(
+                    {
+                        "article": {
+                            "1": {
+                                "imagesUrl": {
+                                    "recto": "https://images.epagine.fr/no_image.png",
+                                }
+                            }
+                        }
+                    }
+                ),
+                "old_recto_image_uuid": None,
+                "old_verso_image_uuid": None,
+            },
+            {
+                "ean": "9780987654321",
+                "json_raw": json.dumps(
+                    {
+                        "article": {
+                            "1": {
+                                "imagesUrl": {
+                                    "recto": "https://images.epagine.fr/no_image.png",
+                                }
+                            }
+                        }
+                    }
+                ),
+                "old_recto_image_uuid": None,
+                "old_verso_image_uuid": None,
+            },
+        ]
+
+        mock_storage_client = Mock()
+        mock_bucket = Mock()
+        mock_blob = Mock()
+        mock_storage_client.bucket.return_value = mock_bucket
+        mock_bucket.blob.return_value = mock_blob
+        mock_blob.exists.return_value = True
+        mock_session = Mock()
+
+        results = _process_batch_images(
+            rows=rows,
+            storage_client=mock_storage_client,
+            session=mock_session,
+            gcs_bucket="test-bucket",
+            gcs_prefix="images",
+            max_workers=4,
+            timeout=30,
+        )
+
+        assert len(results) == 2
+        # Both should have same UUID (from cache)
+        assert results[0]["recto_image_uuid"] == results[1]["recto_image_uuid"]
+        # Bucket should only be checked once (first EAN), second uses cache
+        assert mock_blob.exists.call_count == 1
 
 
 class TestProcessBatchImages:
@@ -298,8 +391,17 @@ class TestProcessBatchImages:
                         }
                     }
                 ),
+                "old_recto_image_uuid": None,
+                "old_verso_image_uuid": None,
             }
         ]
+
+        # Mock GCS blob existence checks
+        mock_bucket = Mock()
+        mock_storage_client.bucket.return_value = mock_bucket
+        mock_blob = Mock()
+        mock_blob.exists.return_value = True  # Placeholders already exist
+        mock_bucket.blob.return_value = mock_blob
 
         results = _process_batch_images(
             rows=rows,
@@ -313,9 +415,9 @@ class TestProcessBatchImages:
 
         assert len(results) == 1
         assert results[0]["images_download_status"] == "processed"
-        # No downloads should have been attempted
-        assert results[0]["recto_image_uuid"] is None
-        assert results[0]["verso_image_uuid"] is None
+        # Should now have UUIDs for placeholders
+        assert results[0]["recto_image_uuid"] is not None
+        assert results[0]["verso_image_uuid"] is not None
 
     def test_handles_mixed_real_and_placeholder(
         self, mock_storage_client, mock_session
@@ -336,8 +438,17 @@ class TestProcessBatchImages:
                         }
                     }
                 ),
+                "old_recto_image_uuid": None,
+                "old_verso_image_uuid": None,
             }
         ]
+
+        # Mock GCS blob existence checks for placeholder
+        mock_bucket = Mock()
+        mock_storage_client.bucket.return_value = mock_bucket
+        mock_blob = Mock()
+        mock_blob.exists.return_value = True
+        mock_bucket.blob.return_value = mock_blob
 
         with patch(
             "src.scripts.download_images.batch_download_and_upload"
@@ -359,7 +470,9 @@ class TestProcessBatchImages:
             assert len(results) == 1
             assert results[0]["images_download_status"] == "processed"
             assert results[0]["recto_image_uuid"] is not None
-            assert results[0]["verso_image_uuid"] is None
+            assert (
+                results[0]["verso_image_uuid"] is not None
+            )  # Now has placeholder UUID
 
     def test_handles_article_list_format(self, mock_storage_client, mock_session):
         """Test handling of article in list format."""

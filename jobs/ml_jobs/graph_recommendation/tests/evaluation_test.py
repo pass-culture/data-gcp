@@ -1,11 +1,13 @@
 """Minimal tests for evaluation.py - NO database or file I/O"""
 
+import json
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
 
-from src.evaluation import EvaluationConfig, evaluate_embeddings
+from src.config import EvaluationConfig
+from src.evaluation import evaluate_embeddings
 
 
 @pytest.fixture()
@@ -119,6 +121,7 @@ def test_evaluate_embeddings_no_db_creation(
         metrics_df, results_df = evaluate_embeddings(
             raw_data_parquet_path="path/to/raw_data.parquet",
             embedding_parquet_path="path/to/embeddings.parquet",
+            evaluation_config=EvaluationConfig(),
         )
 
         # Verify NO actual database operations happened
@@ -182,12 +185,16 @@ def test_evaluate_embeddings_config_merging(
             "rebuild_index": True,
             "force_artist_weight": True,
         }
+        custom_config_jsons = json.dumps(custom_config)
+        evaluation_config = EvaluationConfig().parse_and_update_config(
+            custom_config_jsons
+        )
 
         # Execute
         metrics_df, results_df = evaluate_embeddings(
             raw_data_parquet_path="fake.parquet",
             embedding_parquet_path="fake.parquet",
-            evaluation_config=custom_config,
+            evaluation_config=evaluation_config,
         )
 
         # Verify custom config was used
@@ -245,6 +252,7 @@ def test_evaluate_embeddings_default_config_used(
         evaluate_embeddings(
             raw_data_parquet_path="fake.parquet",
             embedding_parquet_path="fake.parquet",
+            evaluation_config=default_config,
         )
 
         # Verify default values were used
@@ -324,15 +332,16 @@ def test_evaluate_embeddings_metadata_filtering(
         mock_compute_metrics.return_value = (mock_metrics, mock_scored_results)
 
         # Execute
+        default_config = EvaluationConfig()
         evaluate_embeddings(
             raw_data_parquet_path="fake.parquet",
             embedding_parquet_path="fake.parquet",
+            evaluation_config=default_config,
         )
 
         # Verify load_metadata_table was called with correct parameters
         mock_load_metadata.assert_called_once()
         call_kwargs = mock_load_metadata.call_args[1]
-        default_config = EvaluationConfig()
 
         assert call_kwargs["parquet_path"] == "fake.parquet"
         assert call_kwargs["filter_field"] == "item_id"

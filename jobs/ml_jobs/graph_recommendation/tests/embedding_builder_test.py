@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 import torch
 from torch_geometric.data import HeteroData
 
-from src.constants import (
+from src.config import (
     TrainingConfig,
 )
 from src.embedding_builder import (

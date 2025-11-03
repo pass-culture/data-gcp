@@ -99,7 +99,7 @@ class TrainingConfig(BaseConfig):
     batch_size: int = 256
     learning_rate: float = 0.01
     metapath: list[tuple[str, str, str]] = field(
-        default_factory=(
+        default_factory=lambda: (
             4
             * [
                 ("book", "is_artist_id", "artist_id"),

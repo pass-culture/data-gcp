@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 from loguru import logger
 
+from src.constants import ID_COLUMN
 from src.utils.recommendation_metrics import compute_evaluation_metrics
 from src.utils.retrieval import (
     LANCEDB_TABLE_NAME,
@@ -14,7 +15,6 @@ from src.utils.retrieval import (
     generate_predictions_lazy,
     join_retrieval_with_metadata,
     load_and_index_embeddings,
-    load_metadata_table,
     sample_test_items_lazy,
 )
 
@@ -74,20 +74,18 @@ def evaluate_embeddings(
         .unique()
         .tolist()
     )
-
-    metadata_table = load_metadata_table(
-        parquet_path=raw_data_parquet_path,
-        filter_field="item_id",
-        filter_values=unique_node_ids,
-        columns=evaluation_config.metadata_columns,
+    metadata_df = (
+        pd.read_parquet(
+            raw_data_parquet_path, columns=evaluation_config.metadata_columns
+        )
+        .loc[lambda df: df[ID_COLUMN].isin(unique_node_ids)]
+        .drop_duplicates(subset=[ID_COLUMN])
     )
-
     df_results = join_retrieval_with_metadata(
         retrieval_results=df_results,
-        metadata_df=metadata_table,
-        right_on="item_id",
-    )
-    df_results = df_results.where(pd.notna(df_results), None)
+        metadata_df=metadata_df,
+        right_on=ID_COLUMN,
+    ).where(pd.notna(df_results), None)
 
     # ==================================================================================
     # Step 5: Compute ALL scores

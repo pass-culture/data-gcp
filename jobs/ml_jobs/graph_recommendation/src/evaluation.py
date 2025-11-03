@@ -32,7 +32,7 @@ def evaluate_embeddings(
     logger.info("=" * 80)
     logger.info(f"Raw data: {raw_data_parquet_path}")
     logger.info(f"Embeddings: {embedding_parquet_path}")
-    logger.info(f"Configuration: {evaluation_config}")
+    logger.info(f"Configuration: {evaluation_config.to_dict()}")
     logger.info("=" * 80)
 
     # ==================================================================================

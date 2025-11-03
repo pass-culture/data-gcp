@@ -37,26 +37,7 @@ with
         where type = 'PROFILE_COMPLETION'
     ),
 
-    -- Keep only the most recent row per user_id, action_type, and date
-    filtered_data as (
-        select
-            user_id,
-            creation_timestamp,
-            action_type,
-            activity,
-            address,
-            city,
-            postal_code
-        from raw_data
-        qualify
-            row_number() over (
-                partition by user_id, action_type, date(creation_timestamp)
-                order by creation_timestamp desc
-            )
-            = 1
-    ),
-
-    filled_data as (
+filled_data as (
         select
             user_id,
             creation_timestamp,
@@ -70,42 +51,54 @@ with
             last_value(address ignore nulls) over w as current_address,
             last_value(city ignore nulls) over w as current_city,
             last_value(postal_code ignore nulls) over w as current_postal_code
-        from filtered_data
-        window
-            w as (
-                partition by user_id
-                order by creation_timestamp
-                rows unbounded preceding
-            )
+        from raw_data
+        window w as (partition by user_id order by creation_timestamp rows unbounded preceding)
     ),
 
-    processed_data as (
+filtered_data as (
         select
             user_id,
             creation_timestamp,
             action_type,
-            current_activity as user_activity,
-            current_address as user_address,
-            current_city as user_city,
-            current_postal_code as user_postal_code,
+            current_activity as activity,
+            current_address as address,
+            current_city as city,
+            current_postal_code as postal_code
+        from filled_data
+        -- Keep only the most recent row per user_id, action_type, and date
+        qualify row_number() over (
+            partition by user_id, action_type, date(creation_timestamp)
+            order by creation_timestamp desc
+        ) = 1
+    ),
+
+processed_data as (
+        select
+            user_id,
+            creation_timestamp,
+            action_type,
+            activity as user_activity,
+            address as user_address,
+            city as user_city,
+            postal_code as user_postal_code,
             row_number() over (partition by user_id order by creation_timestamp)
             - 1 as info_history_rank,
 
             -- Valeurs précédentes (sur les valeurs déjà forward-fillées)
-            lag(current_activity) over (
+            lag(activity) over (
                 partition by user_id order by creation_timestamp
             ) as user_previous_activity,
-            lag(current_address) over (
+            lag(address) over (
                 partition by user_id order by creation_timestamp
             ) as user_previous_address,
-            lag(current_city) over (
+            lag(city) over (
                 partition by user_id order by creation_timestamp
             ) as user_previous_city,
-            lag(current_postal_code) over (
+            lag(postal_code) over (
                 partition by user_id order by creation_timestamp
             ) as user_previous_postal_code
 
-        from filled_data
+        from filtered_data
     )
 
 select
@@ -140,7 +133,9 @@ select
     ) as has_modified,
 
     -- Flags spécifiques par champ
-    coalesce(user_activity != user_previous_activity, false) as has_modified_activity,
+    coalesce(
+        user_activity != user_previous_activity, false
+    ) as has_modified_activity,
     coalesce(user_address != user_previous_address, false) as has_modified_address,
     coalesce(user_city != user_previous_city, false) as has_modified_city,
     coalesce(

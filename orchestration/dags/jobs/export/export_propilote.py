@@ -46,4 +46,3 @@ end = DummyOperator(task_id="end", dag=dag)
 table_jobs = depends_loop(
     propilote_tables, table_jobs, start, dag=dag, default_end_operator=end
 )
-table_jobs

@@ -269,7 +269,7 @@ def train_metapath2vec_command(
         # Train model with loss logging to mlflow
         embeddings_df = train_metapath2vec(
             graph_data=graph_data,
-            train_params=training_config,
+            training_config=training_config,
         )
 
         # Save embeddings

@@ -1,6 +1,7 @@
 """Minimal tests for evaluation.py - NO database or file I/O"""
 
 import json
+from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -86,17 +87,12 @@ def mock_metrics():
     )
 
 
-def test_evaluate_embeddings_no_db_creation(
-    mock_query_node_ids,
-    mock_retrieval_results,
-    mock_metadata,
-    mock_augmented_results,
-    mock_scored_results,
-    mock_metrics,
-):
-    """Test evaluate_embeddings without creating any database or loading files."""
+@contextmanager
+def _mock_evaluation_pipeline():
+    """Context manager that patches all evaluation pipeline functions.
 
-    # Mock ALL external functions to prevent any I/O
+    Yields a dictionary of all mock objects for test assertions.
+    """
     with (
         patch("src.evaluation.load_and_index_embeddings") as mock_load_index,
         patch("src.evaluation.sample_test_items_lazy") as mock_sample,
@@ -105,164 +101,178 @@ def test_evaluate_embeddings_no_db_creation(
         patch("src.evaluation.join_retrieval_with_metadata") as mock_join,
         patch("src.evaluation.compute_all_scores_lazy") as mock_compute_scores,
         patch("src.evaluation.compute_evaluation_metrics") as mock_compute_metrics,
-        patch("src.evaluation.logger"),  # Mock logger to reduce noise
+        patch("src.evaluation.logger"),
     ):
-        # Setup all mocks to return our test data
-        mock_table = MagicMock()
-        mock_load_index.return_value = mock_table
-        mock_sample.return_value = mock_query_node_ids
-        mock_generate.return_value = mock_retrieval_results
-        mock_load_parquet.return_value = mock_metadata
-        mock_join.return_value = mock_augmented_results
-        mock_compute_scores.return_value = mock_scored_results
-        mock_compute_metrics.return_value = (mock_metrics, mock_scored_results)
+        yield {
+            "load_and_index_embeddings": mock_load_index,
+            "sample_test_items_lazy": mock_sample,
+            "generate_predictions_lazy": mock_generate,
+            "load_parquet": mock_load_parquet,
+            "join_retrieval_with_metadata": mock_join,
+            "compute_all_scores_lazy": mock_compute_scores,
+            "compute_evaluation_metrics": mock_compute_metrics,
+        }
 
-        # Execute function
-        metrics_df, results_df = evaluate_embeddings(
-            raw_data_parquet_path="path/to/raw_data.parquet",
-            embedding_parquet_path="path/to/embeddings.parquet",
-            evaluation_config=EvaluationConfig(),
+
+def _setup_mock_returns(
+    mocks,
+    query_node_ids,
+    retrieval_results,
+    metadata,
+    augmented_results,
+    scored_results,
+    metrics,
+):
+    """Configure return values for all mocked functions."""
+    mock_table = MagicMock()
+    mocks["load_and_index_embeddings"].return_value = mock_table
+    mocks["sample_test_items_lazy"].return_value = query_node_ids
+    mocks["generate_predictions_lazy"].return_value = retrieval_results
+    mocks["load_parquet"].return_value = metadata
+    mocks["join_retrieval_with_metadata"].return_value = augmented_results
+    mocks["compute_all_scores_lazy"].return_value = scored_results
+    mocks["compute_evaluation_metrics"].return_value = (metrics, scored_results)
+    return mock_table
+
+
+@pytest.fixture()
+def mock_evaluation_pipeline(
+    mock_query_node_ids,
+    mock_retrieval_results,
+    mock_metadata,
+    mock_augmented_results,
+    mock_scored_results,
+    mock_metrics,
+):
+    """Fixture that provides fully configured evaluation pipeline mocks.
+
+    Yields a tuple of (mocks dict, mock_table) for test assertions.
+    """
+    with _mock_evaluation_pipeline() as mocks:
+        mock_table = _setup_mock_returns(
+            mocks,
+            mock_query_node_ids,
+            mock_retrieval_results,
+            mock_metadata,
+            mock_augmented_results,
+            mock_scored_results,
+            mock_metrics,
         )
+        yield mocks, mock_table
 
-        # Verify NO actual database operations happened
-        # by checking mocks were called instead
-        assert (
-            mock_load_index.called
-        ), "Should have called mocked load_and_index_embeddings"
-        assert mock_sample.called, "Should have called mocked sample_test_items_lazy"
-        assert (
-            mock_generate.called
-        ), "Should have called mocked generate_predictions_lazy"
-        assert mock_load_parquet.called, "Should have called mocked load_parquet"
 
-        # Verify returns are correct
-        assert isinstance(metrics_df, pd.DataFrame)
-        assert isinstance(results_df, pd.DataFrame)
-        pd.testing.assert_frame_equal(metrics_df, mock_metrics)
-        pd.testing.assert_frame_equal(results_df, mock_scored_results)
+def test_evaluate_embeddings_no_db_creation(
+    mock_evaluation_pipeline,
+    mock_metrics,
+    mock_scored_results,
+):
+    """Test evaluate_embeddings without creating any database or loading files."""
+    mocks, _ = mock_evaluation_pipeline
 
-        # Verify no rebuild was requested (default is False)
-        _, kwargs = mock_load_index.call_args
-        assert kwargs["rebuild"] is False
+    # Execute function
+    metrics_df, results_df = evaluate_embeddings(
+        raw_data_parquet_path="path/to/raw_data.parquet",
+        embedding_parquet_path="path/to/embeddings.parquet",
+        evaluation_config=EvaluationConfig(),
+    )
+
+    # Verify NO actual database operations happened
+    # by checking mocks were called instead
+    assert mocks[
+        "load_and_index_embeddings"
+    ].called, "Should have called mocked load_and_index_embeddings"
+    assert mocks[
+        "sample_test_items_lazy"
+    ].called, "Should have called mocked sample_test_items_lazy"
+    assert mocks[
+        "generate_predictions_lazy"
+    ].called, "Should have called mocked generate_predictions_lazy"
+    assert mocks["load_parquet"].called, "Should have called mocked load_parquet"
+
+    # Verify returns are correct
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert isinstance(results_df, pd.DataFrame)
+    pd.testing.assert_frame_equal(metrics_df, mock_metrics)
+    pd.testing.assert_frame_equal(results_df, mock_scored_results)
+
+    # Verify no rebuild was requested (default is False)
+    _, kwargs = mocks["load_and_index_embeddings"].call_args
+    assert kwargs["rebuild"] is False
 
 
 def test_evaluate_embeddings_config_merging(
-    mock_query_node_ids,
-    mock_retrieval_results,
-    mock_metadata,
-    mock_augmented_results,
-    mock_scored_results,
+    mock_evaluation_pipeline,
     mock_metrics,
+    mock_scored_results,
 ):
     """Test configuration merging without any I/O."""
+    mocks, _ = mock_evaluation_pipeline
 
-    with (
-        patch("src.evaluation.load_and_index_embeddings") as mock_load_index,
-        patch("src.evaluation.sample_test_items_lazy") as mock_sample,
-        patch("src.evaluation.generate_predictions_lazy") as mock_generate,
-        patch("pandas.read_parquet") as mock_load_parquet,
-        patch("src.evaluation.join_retrieval_with_metadata") as mock_join,
-        patch("src.evaluation.compute_all_scores_lazy") as mock_compute_scores,
-        patch("src.evaluation.compute_evaluation_metrics") as mock_compute_metrics,
-        patch("src.evaluation.logger"),
-    ):
-        # Setup minimal mocks
-        mock_table = MagicMock()
-        mock_load_index.return_value = mock_table
-        mock_sample.return_value = mock_query_node_ids
-        mock_generate.return_value = mock_retrieval_results
-        mock_load_parquet.return_value = mock_metadata
-        mock_join.return_value = mock_augmented_results
-        mock_compute_scores.return_value = mock_scored_results
-        mock_compute_metrics.return_value = (mock_metrics, mock_scored_results)
+    # Custom config with overrides
+    custom_config = {
+        "n_samples": 50,
+        "n_retrieved": 500,
+        "rebuild_index": True,
+        "force_artist_weight": True,
+    }
+    custom_config_jsons = json.dumps(custom_config)
+    evaluation_config = EvaluationConfig().parse_and_update_config(custom_config_jsons)
 
-        # Custom config with overrides
-        custom_config = {
-            "n_samples": 50,
-            "n_retrieved": 500,
-            "rebuild_index": True,
-            "force_artist_weight": True,
-        }
-        custom_config_jsons = json.dumps(custom_config)
-        evaluation_config = EvaluationConfig().parse_and_update_config(
-            custom_config_jsons
-        )
+    # Execute
+    metrics_df, results_df = evaluate_embeddings(
+        raw_data_parquet_path="fake.parquet",
+        embedding_parquet_path="fake.parquet",
+        evaluation_config=evaluation_config,
+    )
 
-        # Execute
-        metrics_df, results_df = evaluate_embeddings(
-            raw_data_parquet_path="fake.parquet",
-            embedding_parquet_path="fake.parquet",
-            evaluation_config=evaluation_config,
-        )
+    # Verify custom config was used
+    mocks["sample_test_items_lazy"].assert_called_once_with(
+        mocks["load_and_index_embeddings"].return_value, n_samples=50
+    )
 
-        # Verify custom config was used
-        mock_sample.assert_called_once_with(mock_table, n_samples=50)
+    # Check generate_predictions_lazy call
+    call_args = mocks["generate_predictions_lazy"].call_args
+    assert call_args[0][0] == ["node_1", "node_2", "node_3"]  # First positional arg
+    assert call_args[1]["n_retrieved"] == 500  # Keyword arg
 
-        # Check generate_predictions_lazy call
-        call_args = mock_generate.call_args
-        assert call_args[0][0] == mock_query_node_ids  # First positional arg
-        assert call_args[1]["n_retrieved"] == 500  # Keyword arg
+    # Check load_and_index_embeddings call
+    load_call_kwargs = mocks["load_and_index_embeddings"].call_args[1]
+    assert load_call_kwargs["rebuild"] is True
 
-        # Check load_and_index_embeddings call
-        load_call_kwargs = mock_load_index.call_args[1]
-        assert load_call_kwargs["rebuild"] is True
+    # Check compute_all_scores_lazy call
+    scores_call_kwargs = mocks["compute_all_scores_lazy"].call_args[1]
+    assert scores_call_kwargs["force_artist_weight"] is True
 
-        # Check compute_all_scores_lazy call
-        scores_call_kwargs = mock_compute_scores.call_args[1]
-        assert scores_call_kwargs["force_artist_weight"] is True
-
-        # Verify returns
-        assert isinstance(metrics_df, pd.DataFrame)
-        assert isinstance(results_df, pd.DataFrame)
+    # Verify returns
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert isinstance(results_df, pd.DataFrame)
 
 
 def test_evaluate_embeddings_default_config_used(
-    mock_query_node_ids,
-    mock_retrieval_results,
-    mock_metadata,
-    mock_augmented_results,
-    mock_scored_results,
-    mock_metrics,
+    mock_evaluation_pipeline,
 ):
     """Test that default config values are used when no custom config provided."""
+    mocks, _ = mock_evaluation_pipeline
+    default_config = EvaluationConfig()
 
-    with (
-        patch("src.evaluation.load_and_index_embeddings") as mock_load_index,
-        patch("src.evaluation.sample_test_items_lazy") as mock_sample,
-        patch("src.evaluation.generate_predictions_lazy") as mock_generate,
-        patch("pandas.read_parquet") as mock_load_parquet,
-        patch("src.evaluation.join_retrieval_with_metadata") as mock_join,
-        patch("src.evaluation.compute_all_scores_lazy") as mock_compute_scores,
-        patch("src.evaluation.compute_evaluation_metrics") as mock_compute_metrics,
-        patch("src.evaluation.logger"),
-    ):
-        # Setup mocks
-        mock_table = MagicMock()
-        mock_load_index.return_value = mock_table
-        mock_sample.return_value = mock_query_node_ids
-        mock_generate.return_value = mock_retrieval_results
-        mock_load_parquet.return_value = mock_metadata
-        mock_join.return_value = mock_augmented_results
-        mock_compute_scores.return_value = mock_scored_results
-        mock_compute_metrics.return_value = (mock_metrics, mock_scored_results)
-        default_config = EvaluationConfig()
-        # Execute with no custom config
-        evaluate_embeddings(
-            raw_data_parquet_path="fake.parquet",
-            embedding_parquet_path="fake.parquet",
-            evaluation_config=default_config,
-        )
+    # Execute with no custom config
+    evaluate_embeddings(
+        raw_data_parquet_path="fake.parquet",
+        embedding_parquet_path="fake.parquet",
+        evaluation_config=default_config,
+    )
 
-        # Verify default values were used
-        mock_sample.assert_called_once_with(
-            mock_table, n_samples=default_config.n_samples
-        )
+    # Verify default values were used
+    mocks["sample_test_items_lazy"].assert_called_once_with(
+        mocks["load_and_index_embeddings"].return_value,
+        n_samples=default_config.n_samples,
+    )
 
-        generate_kwargs = mock_generate.call_args[1]
-        assert generate_kwargs["n_retrieved"] == default_config.n_retrieved
+    generate_kwargs = mocks["generate_predictions_lazy"].call_args[1]
+    assert generate_kwargs["n_retrieved"] == default_config.n_retrieved
 
-        load_kwargs = mock_load_index.call_args[1]
-        assert load_kwargs["rebuild"] == default_config.rebuild_index
+    load_kwargs = mocks["load_and_index_embeddings"].call_args[1]
+    assert load_kwargs["rebuild"] == default_config.rebuild_index
 
 
 def test_default_eval_config_structure():
@@ -300,47 +310,23 @@ def test_default_eval_config_structure():
 
 
 def test_evaluate_embeddings_metadata_filtering(
-    mock_query_node_ids,
-    mock_retrieval_results,
-    mock_metadata,
-    mock_augmented_results,
-    mock_scored_results,
-    mock_metrics,
+    mock_evaluation_pipeline,
 ):
     """Test that metadata is loaded with correct filtering."""
+    mocks, _ = mock_evaluation_pipeline
+    default_config = EvaluationConfig()
 
-    with (
-        patch("src.evaluation.load_and_index_embeddings") as mock_load_index,
-        patch("src.evaluation.sample_test_items_lazy") as mock_sample,
-        patch("src.evaluation.generate_predictions_lazy") as mock_generate,
-        patch("pandas.read_parquet") as mock_load_parquet,
-        patch("src.evaluation.join_retrieval_with_metadata") as mock_join,
-        patch("src.evaluation.compute_all_scores_lazy") as mock_compute_scores,
-        patch("src.evaluation.compute_evaluation_metrics") as mock_compute_metrics,
-        patch("src.evaluation.logger"),
-    ):
-        # Setup mocks
-        mock_table = MagicMock()
-        mock_load_index.return_value = mock_table
-        mock_sample.return_value = mock_query_node_ids
-        mock_generate.return_value = mock_retrieval_results
-        mock_load_parquet.return_value = mock_metadata
-        mock_join.return_value = mock_augmented_results
-        mock_compute_scores.return_value = mock_scored_results
-        mock_compute_metrics.return_value = (mock_metrics, mock_scored_results)
+    # Execute
+    evaluate_embeddings(
+        raw_data_parquet_path="fake.parquet",
+        embedding_parquet_path="fake.parquet",
+        evaluation_config=default_config,
+    )
 
-        # Execute
-        default_config = EvaluationConfig()
-        evaluate_embeddings(
-            raw_data_parquet_path="fake.parquet",
-            embedding_parquet_path="fake.parquet",
-            evaluation_config=default_config,
-        )
+    # Verify load_metadata_table was called with correct parameters
+    mocks["load_parquet"].assert_called_once()
+    call_args = mocks["load_parquet"].call_args[0]
+    call_kwargs = mocks["load_parquet"].call_args[1]
 
-        # Verify load_metadata_table was called with correct parameters
-        mock_load_parquet.assert_called_once()
-        call_args = mock_load_parquet.call_args[0]
-        call_kwargs = mock_load_parquet.call_args[1]
-
-        assert call_args[0] == "fake.parquet"
-        assert call_kwargs["columns"] == default_config.metadata_columns
+    assert call_args[0] == "fake.parquet"
+    assert call_kwargs["columns"] == default_config.metadata_columns

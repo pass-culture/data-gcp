@@ -170,7 +170,7 @@ with DAG(
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name=GCE_INSTANCE,
-        trigger_rule="none_failed_min_one_success",
+        trigger_rule="none_failed",
     )
 
     # Task dependencies

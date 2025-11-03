@@ -110,7 +110,7 @@ with DAG(
         return (
             ["run_init_task"]
             if context["params"].get("init", False)
-            else ["run_incremental_task"]
+            else ["wait_for_raw"]
         )
 
     execution_mode_branch = BranchPythonOperator(

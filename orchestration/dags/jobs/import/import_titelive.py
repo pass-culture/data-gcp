@@ -108,9 +108,9 @@ with DAG(
     def decide_execution_mode(**context):
         """Determine which execution mode task to run."""
         return (
-            ["run_init_task"]
+            [run_init_task.task_id]
             if context["params"].get("init", False)
-            else ["wait_for_raw"]
+            else [wait_for_raw.task_id]
         )
 
     execution_mode_branch = BranchPythonOperator(

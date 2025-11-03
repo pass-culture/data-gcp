@@ -8,7 +8,7 @@ fi
 MODEL_NAME="$1"
 
 # Activate virtual environment if not already active (optional)
-if [ -f "$(pwd)/.venv/bin/activate" ]; then
+if [[ -f "$(pwd)/.venv/bin/activate" ]]; then
     source "$(pwd)/.venv/bin/activate"
 fi
 

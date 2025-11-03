@@ -33,8 +33,8 @@ SHEETS = {
             "19cYAL0apbcPmoLwEIOmR3eqHZePxMyChBtzqytTXr7o",  # MA Final (sept-dec 2025-2026) -
             "12YxzAQdpAdlZS6HAOZqYsA6bPfS1CsbuWcbpfpIX7CI",  # MASA Final (sept-dec 2025-2026) -
             "1EFiRSptEeheoaHyjJogjjClNmzNHgrxG9colYlg1uIY",  # Aix-Marseille Provisional (2025-2026) -
-            "1Gzljf7ZHEgj_5G8A-S6HUQ7H7cZ1qK2T12xBxJ5s8oQ"  # MEN Final (sept-dec 2025-2026) -
-            "1FuEZ7Y1Yk2Tje1_3l-9sQ8W8pCyEz2BkDlXteKuXvw0"  # SEM Final (sept-dev 2025-2026) -
+            "1Gzljf7ZHEgj_5G8A-S6HUQ7H7cZ1qK2T12xBxJ5s8oQ",  # MEN Final (sept-dec 2025-2026) -
+            "1FuEZ7Y1Yk2Tje1_3l-9sQ8W8pCyEz2BkDlXteKuXvw0",  # SEM Final (sept-dev 2025-2026) -
             "1ntswOFC_eG_OCisuTJN8cwKp8dPOms1-MamQQbcLXTg",  # MASA Final (2024-2025) -
             "1fbrPv2mgo09xAtZ4BiQcM5B6ufwunCn6ymtCjJJQaaY",  # MEN Final (2024-2025) -
             "1H8ZH4IWVhtvCS6T0smSMrRu490rrNZIl--7dpRbersc",  # MASA Provisional (2024-2025)

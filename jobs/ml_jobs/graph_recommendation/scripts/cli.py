@@ -306,13 +306,12 @@ def evaluate_metapath2vec_command(
     # Connect to MLflow
     connect_remote_mlflow()
 
-    # Load default config
-    eval_config = EvaluationConfig()
-    # Override with user config if provided
-    if config_json:
-        eval_config.update_from_json(config_json)
-
-    typer.echo(f"Using evaluation config: {eval_config.to_dict()}", err=True)
+    evaluation_config = (
+        EvaluationConfig().parse_and_update_config(config_json)
+        if config_json
+        else EvaluationConfig()
+    )
+    typer.echo(f"Using evaluation config: {evaluation_config.to_dict()}", err=True)
 
     # Retrieving run_id locally
     with open(MLFLOW_RUN_ID_FILEPATH) as f:
@@ -321,13 +320,15 @@ def evaluate_metapath2vec_command(
     # Resume the run
     with mlflow.start_run(run_id=run_id):
         # Log config
-        mlflow.log_params({f"eval_{k}": v for k, v in eval_config.to_dict().items()})
+        mlflow.log_params(
+            {f"eval_{k}": v for k, v in evaluation_config.to_dict().items()}
+        )
 
         # Evaluate embeddings
         metrics_df, results_df = evaluate_embeddings(
             raw_data_parquet_path=raw_data_path,
             embedding_parquet_path=embedding_path,
-            eval_config=eval_config,
+            evaluation_config=evaluation_config,
         )
 
         # Log metrics to MLflow

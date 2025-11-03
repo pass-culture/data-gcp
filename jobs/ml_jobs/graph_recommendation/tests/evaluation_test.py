@@ -187,7 +187,7 @@ def test_evaluate_embeddings_config_merging(
         metrics_df, results_df = evaluate_embeddings(
             raw_data_parquet_path="fake.parquet",
             embedding_parquet_path="fake.parquet",
-            eval_config=custom_config,
+            evaluation_config=custom_config,
         )
 
         # Verify custom config was used

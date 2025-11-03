@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pandas as pd
 from loguru import logger
 
-from src.config import EvaluationConfig
 from src.utils.recommendation_metrics import compute_evaluation_metrics
 from src.utils.retrieval import (
-    TABLE_NAME,
+    LANCEDB_TABLE_NAME,
     compute_all_scores_lazy,
     generate_predictions_lazy,
     join_retrieval_with_metadata,
@@ -17,73 +18,21 @@ from src.utils.retrieval import (
     sample_test_items_lazy,
 )
 
+if TYPE_CHECKING:
+    from src.config import EvaluationConfig
+
 
 def evaluate_embeddings(
     raw_data_parquet_path: str,
     embedding_parquet_path: str,
-    eval_config: EvaluationConfig | dict | None = None,
+    evaluation_config: EvaluationConfig,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Evaluate embedding quality using retrieval metrics.
-
-    This function:
-    1. Loads embeddings into LanceDB
-    2. Samples query items
-    3. Retrieves top-N similar items for each query
-    4. Joins with metadata to compute ground truth scores
-    5. Computes GTL, artist, and combined scores
-    6. Computes retrieval metrics (NDCG, Recall, Precision)
-
-
-    Args:
-        raw_data_parquet_path: Path to raw metadata parquet folder
-        embedding_parquet_path: Path to embeddings parquet file
-        eval_config: Optional evaluation configuration dict. If provided, overrides
-            defaults. Can contain keys:
-                - metadata_columns: list[str]
-                - n_samples: int
-                - n_retrieved: int
-                - k_values: list[int]
-                - relevance_thresholds: list[float]
-                - ground_truth_score: str
-                - table_name: str
-                - rebuild_index: bool
-
-    Returns:
-        Tuple of (metrics_df, results_df)
-    """
-    # Merge config with defaults
-    if eval_config is None:
-        config = EvaluationConfig()
-    elif isinstance(eval_config, EvaluationConfig):
-        config = eval_config
-    elif isinstance(eval_config, dict):
-        config = EvaluationConfig()
-        config.update_from_dict(eval_config)
-    else:
-        logger.warning(
-            "eval_config must be DefaultEvaluationConfig, dict, or None; using defaults"
-        )
-        config = EvaluationConfig()
-
-    # Extract config values
-    metadata_columns = config.metadata_columns
-    n_samples = config.n_samples
-    n_retrieved = config.n_retrieved
-    k_values = config.k_values
-    relevance_thresholds = config.relevance_thresholds
-    ground_truth_score = config.ground_truth_score
-    force_artist_weight = config.force_artist_weight
-    rebuild_index = config.rebuild_index
-
-    table_name = TABLE_NAME
-
     logger.info("=" * 80)
     logger.info("EMBEDDING EVALUATION PIPELINE")
     logger.info("=" * 80)
     logger.info(f"Raw data: {raw_data_parquet_path}")
     logger.info(f"Embeddings: {embedding_parquet_path}")
-    logger.info(f"Configuration: {config}")
+    logger.info(f"Configuration: {evaluation_config}")
     logger.info("=" * 80)
 
     # ==================================================================================
@@ -93,8 +42,8 @@ def evaluate_embeddings(
 
     embedding_table = load_and_index_embeddings(
         parquet_path=embedding_parquet_path,
-        table_name=table_name,
-        rebuild=rebuild_index,
+        table_name=LANCEDB_TABLE_NAME,
+        rebuild=evaluation_config.rebuild_index,
     )
 
     # ==================================================================================
@@ -102,7 +51,9 @@ def evaluate_embeddings(
     # ==================================================================================
     logger.info("STEP 2: Sampling Query Nodes")
 
-    query_node_ids = sample_test_items_lazy(embedding_table, n_samples=n_samples)
+    query_node_ids = sample_test_items_lazy(
+        embedding_table, n_samples=evaluation_config.n_samples
+    )
 
     # ==================================================================================
     # Step 3: Generate predictions
@@ -110,7 +61,7 @@ def evaluate_embeddings(
     logger.info("STEP 3: Generating Predictions")
 
     df_results = generate_predictions_lazy(
-        query_node_ids, table=embedding_table, n_retrieved=n_retrieved
+        query_node_ids, table=embedding_table, n_retrieved=evaluation_config.n_retrieved
     )
 
     # ==================================================================================
@@ -128,7 +79,7 @@ def evaluate_embeddings(
         parquet_path=raw_data_parquet_path,
         filter_field="item_id",
         filter_values=unique_node_ids,
-        columns=metadata_columns,
+        columns=evaluation_config.metadata_columns,
     )
 
     df_results = join_retrieval_with_metadata(
@@ -149,7 +100,7 @@ def evaluate_embeddings(
         query_node_ids=query_node_ids,
         artist_col_query="query_artist_id",
         artist_col_retrieved="retrieved_artist_id",
-        force_artist_weight=force_artist_weight,
+        force_artist_weight=evaluation_config.force_artist_weight,
     )
 
     # ==================================================================================
@@ -159,9 +110,9 @@ def evaluate_embeddings(
 
     metrics_df, df_results = compute_evaluation_metrics(
         retrieval_results=df_results,
-        k_values=k_values,
-        score_cols=ground_truth_score,
-        relevancy_thresholds=relevance_thresholds,
+        k_values=evaluation_config.k_values,
+        score_cols=evaluation_config.ground_truth_score,
+        relevancy_thresholds=evaluation_config.relevance_thresholds,
     )
 
     return metrics_df, df_results

@@ -31,7 +31,7 @@ NUM_SUB_VECTORS = 16
 INDEX_TYPE = "IVF_PQ"
 EMBEDDING_METRIC = "cosine"
 LANCEDB_PATH = f"{DATA_DIR}/metadata/vector"
-TABLE_NAME = "embedding_table"
+LANCEDB_TABLE_NAME = "embedding_table"
 
 
 def load_and_index_embeddings(

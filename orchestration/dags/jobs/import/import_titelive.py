@@ -12,7 +12,7 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from common.utils import get_airflow_schedule
+from common.utils import get_airflow_schedule, delayed_waiting_operator
 from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
@@ -118,6 +118,11 @@ with DAG(
         python_callable=decide_execution_mode,
     )
 
+    wait_for_raw = delayed_waiting_operator(
+        dag=dag,
+        external_dag_id="import_applicative_database",
+    )
+
     # Init mode: Extract EANs from BigQuery and batch process
     run_init_task = SSHGCEOperator(
         task_id="run_init_task",
@@ -164,5 +169,5 @@ with DAG(
     # Task dependencies
     (gce_instance_start >> fetch_install_code >> execution_mode_branch)
     (execution_mode_branch >> run_init_task >> completion_task)
-    (execution_mode_branch >> run_incremental_task >> completion_task)
+    (execution_mode_branch >> wait_for_raw >> run_incremental_task >> completion_task)
     (completion_task >> download_images_task >> gce_instance_stop)

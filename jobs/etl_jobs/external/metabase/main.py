@@ -1,6 +1,7 @@
 import datetime
 import json
 from pathlib import Path
+import logging
 
 import pandas as pd
 import typer
@@ -19,6 +20,9 @@ from utils import (
     access_secret_data,
     get_dependant_cards,
 )
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 MAPPINGS_PATH = Path("data/mappings.json")
 
@@ -81,10 +85,12 @@ def run(
     metabase_field_mapping = get_mapped_fields(
         legacy_fields_df, new_fields_df, table_columns_mappings
     )
-
-    print(f"Field mapping is {metabase_field_mapping}")
+    logger.info(f"Field mapping is {metabase_field_mapping}")
 
     dashboards_to_update = [d["id"] for d in metabase.get_dashboards()]
+    logger.info(
+        f"{len(dashboards_to_update)} Dashboards to update with ids : {dashboards_to_update}"
+    )
 
     native_cards, query_cards = get_dependant_cards(
         legacy_table_name, legacy_schema_name
@@ -149,7 +155,7 @@ def run(
             "legacy_table_name": legacy_table_name,
             "new_table_name": new_table_name,
         }
-        for dashboard_id in [1018]:
+        for dashboard_id in dashboards_to_update:
             try:
                 dashboard = Dashboard(dashboard_id=dashboard_id, metabase_api=metabase)
                 dashboard.update_dashboard_filters(metabase_field_mapping)

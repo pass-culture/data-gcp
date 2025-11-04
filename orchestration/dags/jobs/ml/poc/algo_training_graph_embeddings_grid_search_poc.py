@@ -61,53 +61,44 @@ def format_poc_dag_doc(
     """
     Returns a nicely formatted POC DAG documentation string.
     """
-    grid_params_str = json.dumps(grid_params, indent=4)
-    shared_params_str = json.dumps(shared_params, indent=4)
+    if search_mode == "points":
+        grid_params_str = "\n".join(
+            [f"{json.dumps(point, indent=2)}\n" for point in grid_params]
+        )
+    else:
+        grid_params_str = json.dumps(grid_params, indent=2)
+    shared_params_str = json.dumps(shared_params, indent=2)
 
     doc = f"""
     # Airflow DAG: {dag_name} (POC)
-
     ## ⚠️ NOTICE – Proof of Concept (POC)
-
     This is a POC — future iterations may include UI-controlled grid search and dynamic configuration.
-
     ### Current Limitations:
     - Search parameters **cannot be modified dynamically via Airflow UI**.
     - All grid configurations must be **hardcoded in the DAG file**.
-
     ### Recommended Usage:
     1. Create a **dedicated dev branch** with your desired parameter search configuration.
     2. Coordinate with your team to avoid parallel modifications or DAG name collisions.
     3. Upload (`drag & drop`) this DAG file into your Airflow DAGs bucket.
     4. Trigger the DAG manually in the Airflow UI.
-
     Notes:
     - To prevent Drag&Drop dags such as this one to be deleted during a MEP hence interupting their running tasks.
         Place this dag in a dedicated subfolder containing a .rsyncignore file to automatically exclude that folder and its contents from deployment.
         Make sure there are no orchestrated dags in the same folder.
     - Scheduling is forcefully disabled as it's purpose is manual runs.
-
     ---
-
     ## Overview
     This DAG runs a **parameter grid search** for graph embedding model training on Google Cloud VMs.
     It supports both **combinatorial** and **orthogonal** parameter search modes via the `GridDAG` abstraction.
-
     The DAG launches up to 10 VM(s), installs dependencies, trains the embedding model,
     evaluates results, and stores metrics and embeddings to GCS.
-
     ## Current Setup:
-
     ### VMs number: {n_vms}
-
     ### Search mode: {search_mode}
-
-    ### Grid Search Parameters
-    {grid_params_str}
-
+    ### Grid Search {"Parameters" if search_mode != "points" else "Points"}
+    \n{grid_params_str}
     ### Shared Parameters
-    {shared_params_str}
-
+    \n{shared_params_str}
     """
     return doc
 
@@ -121,6 +112,7 @@ class ParameterSearchMode(str, Enum):
 
     COMBINATORIAL = "combinatorial"
     ORTHOGONAL = "orthogonal"
+    POINTS = "points"
 
 
 # =============================================================================
@@ -229,6 +221,23 @@ class GridDAG(DAG):
                     comb[key] = v
                     combinations.append(comb)
 
+        elif self.search_mode == ParameterSearchMode.POINTS:
+            # Expect grid_params to be a list of dicts
+            if not isinstance(self.grid_params, list):
+                raise InvalidGridError(
+                    "For POINTS mode, `grid_params` must be a list of parameter dictionaries."
+                )
+
+            for conf in self.grid_params:
+                if not isinstance(conf, dict):
+                    raise InvalidGridError(
+                        f"Invalid config in POINTS mode: expected dict, got {type(conf)}"
+                    )
+                merged = {**self.common_params, **conf}
+                combinations.append(merged)
+
+        else:
+            raise InvalidGridError(f"Unsupported search mode: {self.search_mode}")
         if not combinations:
             raise InvalidGridError(f"Invalid grid configuration: {self.grid_params}")
 
@@ -270,18 +279,20 @@ class GridDAG(DAG):
         end_grid = EmptyOperator(task_id="end_grid", trigger_rule=TriggerRule.ALL_DONE)
 
         # Distribute parameter combos across VMs (round-robin)
-        instance_names = [
-            _normalize_instance_name(f"{self.dag_id}-vm-{i}") for i in range(self.n_vms)
-        ]
         vm_to_tasks_chains = {i: [] for i in range(self.n_vms)}
-
         for comb_idx, params in enumerate(self.params_combinations):
             vm_idx = comb_idx % self.n_vms
             vm_to_tasks_chains[vm_idx].append((comb_idx, params))
 
         with TaskGroup(group_id="grid_group") as grid_group:
             for vm_idx, task_chains in vm_to_tasks_chains.items():
-                instance_name = instance_names[vm_idx]
+                # Merge template instance name with VM index for uniqueness
+                instance_name_template = self.start_vm_kwargs.get(
+                    "instance_name", self.dag_id
+                )
+                instance_name = _normalize_instance_name(
+                    f"{instance_name_template}-vm-{vm_idx}"
+                )
 
                 start_vm = StartGCEOperator(
                     task_id=f"start_vm_{vm_idx}",
@@ -313,7 +324,7 @@ class GridDAG(DAG):
                 stop_vm = DeleteGCEOperator(
                     task_id=f"stop_vm_{vm_idx}",
                     instance_name=instance_name,
-                    trigger_rule=TriggerRule.NONE_FAILED_MIN_ONE_SUCCESS,
+                    trigger_rule=TriggerRule.ALL_DONE,
                 )
                 prev_task >> stop_vm
 
@@ -383,7 +394,7 @@ def ml_task_chain(params, instance_name, suffix):
 
 # DAG Metadata
 DATE = "{{ ts_nodash }}"
-DAG_NAME = "algo_training_graph_embeddings_grid"
+DAG_NAME = "graph_embeddings_grid"
 DEFAULT_ARGS = {
     "start_date": datetime(2023, 5, 9),
     "on_failure_callback": on_failure_vm_callback,
@@ -407,23 +418,40 @@ EMBEDDINGS_FILENAME = "embeddings.parquet"
 INPUT_TABLE_NAME = "item_with_metadata_to_embed"
 
 # Grid Search Parameters
-SEARCH_MODE = ParameterSearchMode.ORTHOGONAL
 N_VMS = 4
-GRID_PARAMS = {"embedding_dim": [32, 64, 128], "context_size": [5, 10, 15]}
-SHARED_PARAMS = {"base_dir": "data-gcp/jobs/ml_jobs/graph_recommendation"}
+SEARCH_MODE = ParameterSearchMode.POINTS
+GRID_PARAMS: dict[dict | list[dict]] = {
+    "combinatorial": {"embedding_dim": [32, 64, 128], "context_size": [5, 10, 15]},
+    "orthogonal": {"embedding_dim": [32, 64, 128], "context_size": [5, 10, 15]},
+    "points": [
+        {"embedding_dim": 64, "batch_size": 200},
+        {
+            "embedding_dim": 128,
+            "num_negative_samples": 5,
+            "walks_per_node": 5,
+            "batch_size": 100,
+        },
+        {"embedding_dim": 256, "batch_size": 50},
+        {"num_negative_samples": 20, "batch_size": 25},
+        {"num_negative_samples": 10, "batch_size": 50},
+        {"walks_per_node": 20, "batch_size": 25},
+        {"walks_per_node": 10, "batch_size": 50},
+    ],
+}
+SHARED_PARAMS = {}
 
 DOC_MD = format_poc_dag_doc(
-    DAG_NAME, SEARCH_MODE.value, N_VMS, GRID_PARAMS, SHARED_PARAMS
+    DAG_NAME, SEARCH_MODE.value, N_VMS, GRID_PARAMS[SEARCH_MODE.value], SHARED_PARAMS
 )
 # =============================================================================
 # DAG Definition
 # =============================================================================
 
 with GridDAG(
-    dag_id="algo_training_graph_embeddings_grid_search_poc",
+    dag_id=DAG_NAME,
     description="Grid search training for graph embeddings (POC)",
     ml_task_fn=ml_task_chain,
-    grid_params=GRID_PARAMS,
+    grid_params=GRID_PARAMS[SEARCH_MODE.value],
     common_params=SHARED_PARAMS,
     search_mode=SEARCH_MODE,
     n_vms=N_VMS,
@@ -449,6 +477,7 @@ with GridDAG(
     install_deps_kwargs={
         "python_version": "3.12",
         "base_dir": BASE_DIR,
+        "branch": "{{ params.branch }}",
         "retries": 2,
     },
     params={
@@ -465,9 +494,9 @@ with GridDAG(
         ),
         "gpu_count": Param(default=1, enum=INSTANCES_TYPES["gpu"]["count"]),
         "experiment_name": Param(
-            default="algo_training_graph_embeddings_v1", type="string"
+            default="algo_training_graph_embeddings_v1_grid", type="string"
         ),
-        "train_only_on_10k_rows": Param(default=True, type="boolean"),
+        "train_only_on_10k_rows": Param(default=False, type="boolean"),
     },
 ) as dag:
     # Initial extraction step: prepare training data from BigQuery

@@ -7,6 +7,12 @@ from recommenders.evaluation.python_evaluation import (
     precision_at_k,
     recall_at_k,
 )
+from recommenders.utils.constants import (
+    DEFAULT_ITEM_COL,
+    DEFAULT_PREDICTION_COL,
+    DEFAULT_RATING_COL,
+    DEFAULT_USER_COL,
+)
 
 
 def _convert_thresholds_to_list_and_validate(
@@ -255,3 +261,100 @@ def compute_evaluation_metrics(
     logger.info("Metrics computation complete")
     logger.info(f"Metrics shape: {metrics_df.shape}")
     return metrics_df, df
+
+
+#### Custom Recall at K ####
+
+
+def _get_kth_rating_threshold(
+    df: pd.DataFrame,
+    k: int,
+    col_user: str,
+    col_rating: str,
+) -> pd.DataFrame:
+    """Get the k-th highest rating per user as a threshold."""
+    return (
+        df.sort_values([col_user, col_rating], ascending=[True, False])
+        .groupby(col_user, as_index=False)
+        .nth(k - 1)[[col_user, col_rating]]
+        .rename(columns={col_rating: "kth_rating"})
+    )
+
+
+def _get_true_topk_with_ties(
+    df: pd.DataFrame,
+    k: int,
+    col_user: str,
+    col_item: str,
+    col_rating: str,
+) -> pd.DataFrame:
+    """Get all items with rating >= k-th rating (handles ties)."""
+    kth_rating_per_user = _get_kth_rating_threshold(df, k, col_user, col_rating)
+    df_with_threshold = df.merge(kth_rating_per_user, on=col_user, how="left")
+    return df_with_threshold[
+        df_with_threshold[col_rating] >= df_with_threshold["kth_rating"]
+    ][[col_user, col_item, col_rating]]
+
+
+def _get_predicted_topk(
+    df: pd.DataFrame,
+    k: int,
+    col_user: str,
+    col_prediction: str,
+) -> pd.DataFrame:
+    """Get strict top-k predicted items per user."""
+    return (
+        df.sort_values([col_user, col_prediction], ascending=[True, False])
+        .groupby(col_user)
+        .head(k)
+    )
+
+
+def _calculate_recall(
+    pred_topk: pd.DataFrame,
+    true_topk: pd.DataFrame,
+    all_users: pd.Index,
+    k: int,
+    col_user: str,
+    col_item: str,
+) -> float:
+    """Calculate average recall@k across all users."""
+    merged = pred_topk.merge(true_topk, on=[col_user, col_item])
+    overlap_per_user = merged.groupby(col_user).size()
+    overlap_per_user = overlap_per_user.reindex(all_users, fill_value=0)
+    return (overlap_per_user / k).mean()
+
+
+def custom_recall_at_k(
+    rating_true: pd.DataFrame,
+    rating_pred: pd.DataFrame,
+    k: int,
+    col_user=DEFAULT_USER_COL,
+    col_item=DEFAULT_ITEM_COL,
+    col_prediction=DEFAULT_PREDICTION_COL,
+    col_rating=DEFAULT_RATING_COL,
+) -> float:
+    """
+    Calculate recall@k with proper handling of tied ratings in ground truth.
+
+    When ground truth ratings have ties, all items with rating >= k-th highest rating
+    are included in the relevant set. This prevents arbitrary exclusion of tied items
+    and ensures fair evaluation.
+    """
+    true_topk_with_ties = _get_true_topk_with_ties(
+        df=rating_true,
+        k=k,
+        col_user=col_user,
+        col_item=col_item,
+        col_rating=col_rating,
+    )
+    pred_topk = _get_predicted_topk(
+        df=rating_pred,
+        k=k,
+        col_user=col_user,
+        col_prediction=col_prediction,
+    )
+    all_users = pd.concat([rating_true[col_user], rating_pred[col_user]]).unique()
+    return _calculate_recall(
+        pred_topk, true_topk_with_ties, all_users, k, col_user, col_item
+    )

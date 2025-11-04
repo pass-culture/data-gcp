@@ -289,6 +289,22 @@ def _process_batch_images(
             recto_url = images_url.get("recto")
             verso_url = images_url.get("verso")
 
+            # Validate image availability based on image and image_4 fields
+            image_field = article.get("image")
+            image_4_field = article.get("image_4")
+
+            if image_field != 1:
+                logger.info(
+                    f"Skipping recto for EAN {ean}: image field is {image_field}"
+                )
+                recto_url = None
+
+            if image_4_field != 1:
+                logger.info(
+                    f"Skipping verso for EAN {ean}: image_4 field is {image_4_field}"
+                )
+                verso_url = None
+
             ean_images = []
             ean_has_real_image = False
             ean_has_placeholder = False

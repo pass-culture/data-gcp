@@ -25,6 +25,7 @@ select
     co.institution_program_name,
     co.institution_internal_iris_id,
     educational_institution.institution_name,
+    educational_institution.ministry,
     co.institution_academy_name,
     co.institution_region_name,
     co.institution_department_code,

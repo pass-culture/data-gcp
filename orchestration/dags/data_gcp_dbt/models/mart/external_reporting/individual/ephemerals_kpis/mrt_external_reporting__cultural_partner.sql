@@ -87,7 +87,6 @@ with
         from all_activated_partners_and_days as apd
         left join
             {{ ref("int_history__bookable_venue") }} as bvh
-            -- Remplacer bookable_venue_history
             on apd.venue_id = bvh.venue_id
             and apd.partition_day = bvh.partition_date
     ),

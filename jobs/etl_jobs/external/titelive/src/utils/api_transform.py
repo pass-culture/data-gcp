@@ -1,6 +1,7 @@
 """Transform API responses to simplified 2-column format for BigQuery."""
 
 import json
+from datetime import datetime
 
 import pandas as pd
 
@@ -107,3 +108,114 @@ def transform_api_response(api_response: dict) -> pd.DataFrame:
 
     logger.info(f"Transformed API response to {len(df)} rows")
     return df
+
+
+def extract_gencods_from_search_response(
+    api_response: dict, from_date: str
+) -> list[str]:
+    """
+    Extract unique gencod values from a search API response with date filtering.
+
+    This function is used to extract EANs from /search endpoint results,
+    which are then used to fetch detailed product data via /ean endpoint.
+
+    Filters articles based on their datemodification field:
+    - Articles without datemodification are included
+    - Articles with datemodification >= from_date are included
+    - Articles with datemodification < from_date are excluded
+
+    Args:
+        api_response: Search API response with structure:
+            {"result": [
+                {"article": {"1": {"gencod": "X", "datemodification": "DD/MM/YYYY"}}},
+                ...
+            ]}
+        from_date: Date filter in DD/MM/YYYY format.
+            Only articles with datemodification >= from_date
+            (or missing datemodification)
+            will be included.
+
+    Returns:
+        List of unique EAN strings (gencod values)
+
+    Raises:
+        ValueError: If API response format is invalid or from_date format is invalid
+    """
+    if "result" not in api_response:
+        msg = "Invalid API response format: missing 'result' key"
+        raise ValueError(msg)
+
+    results = api_response["result"]
+
+    # Handle both result formats: list or dict
+    if isinstance(results, dict):
+        results = list(results.values())
+    elif not isinstance(results, list):
+        msg = "Invalid API response format: 'result' must be a list or dict"
+        raise ValueError(msg)
+
+    # Parse from_date (required)
+    try:
+        from_date_obj = datetime.strptime(from_date, "%d/%m/%Y")
+    except ValueError as e:
+        msg = f"Invalid from_date format: {from_date}. Expected DD/MM/YYYY."
+        raise ValueError(msg) from e
+
+    gencods = []
+    total_articles = 0
+    filtered_articles = 0
+
+    for result_item in results:
+        if not isinstance(result_item, dict):
+            continue
+
+        articles_data = result_item.get("article", {})
+
+        # Handle both article formats: dict with numbered keys or list
+        if isinstance(articles_data, dict):
+            # Format: {"1": {...}, "2": {...}}
+            articles_list = list(articles_data.values())
+        elif isinstance(articles_data, list):
+            # Format: [{...}, {...}]
+            articles_list = articles_data
+        else:
+            continue
+
+        # Extract gencod values from articles, applying date filter
+        for article in articles_list:
+            if not isinstance(article, dict):
+                continue
+
+            total_articles += 1
+
+            # Apply date filter
+            datemodification = article.get("datemodification")
+
+            # Include articles without datemodification
+            if datemodification is not None:
+                try:
+                    article_date = datetime.strptime(datemodification, "%d/%m/%Y")
+
+                    # Skip articles modified before from_date
+                    if article_date < from_date_obj:
+                        filtered_articles += 1
+                        continue
+                except ValueError:
+                    # Log warning for invalid date format but include the article
+                    logger.warning(
+                        f"Invalid datemodification format for article with "
+                        f"gencod {article.get('gencod')}: {datemodification}"
+                    )
+
+            gencod = article.get("gencod")
+            if gencod:
+                gencods.append(str(gencod))
+
+    # Return unique gencods
+    unique_gencods = list(set(gencods))
+    logger.info(
+        f"Extracted {len(unique_gencods)} unique gencods from search response "
+        f"(filtered {filtered_articles}/{total_articles} articles by date)"
+    )
+
+    return unique_gencods

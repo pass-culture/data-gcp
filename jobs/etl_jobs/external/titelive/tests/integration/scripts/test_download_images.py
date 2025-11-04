@@ -205,7 +205,8 @@ class TestProcessImageUrl:
                             "1": {
                                 "imagesUrl": {
                                     "recto": "https://images.epagine.fr/no_image.png",
-                                }
+                                },
+                                "image": 1,
                             }
                         }
                     }
@@ -221,7 +222,8 @@ class TestProcessImageUrl:
                             "1": {
                                 "imagesUrl": {
                                     "recto": "https://images.epagine.fr/no_image.png",
-                                }
+                                },
+                                "image": 1,
                             }
                         }
                     }
@@ -281,7 +283,9 @@ class TestProcessBatchImages:
                                 "imagesUrl": {
                                     "recto": "https://example.com/recto.jpg",
                                     "verso": "https://example.com/verso.jpg",
-                                }
+                                },
+                                "image": 1,
+                                "image_4": 1,
                             }
                         }
                     }
@@ -327,7 +331,9 @@ class TestProcessBatchImages:
                                 "imagesUrl": {
                                     "recto": "https://example.com/recto.jpg",
                                     "verso": "https://example.com/verso.jpg",
-                                }
+                                },
+                                "image": 1,
+                                "image_4": 1,
                             }
                         }
                     }
@@ -386,7 +392,9 @@ class TestProcessBatchImages:
                                 "imagesUrl": {
                                     "recto": "https://images.epagine.fr/no_image.png",
                                     "verso": "https://images.epagine.fr/no_image_musique.png",
-                                }
+                                },
+                                "image": 1,
+                                "image_4": 1,
                             }
                         }
                     }
@@ -433,7 +441,9 @@ class TestProcessBatchImages:
                                 "imagesUrl": {
                                     "recto": "https://example.com/recto.jpg",
                                     "verso": "https://images.epagine.fr/no_image.png",
-                                }
+                                },
+                                "image": 1,
+                                "image_4": 1,
                             }
                         }
                     }
@@ -482,7 +492,10 @@ class TestProcessBatchImages:
                 "json_raw": json.dumps(
                     {
                         "article": [
-                            {"imagesUrl": {"recto": "https://example.com/recto.jpg"}}
+                            {
+                                "imagesUrl": {"recto": "https://example.com/recto.jpg"},
+                                "image": 1,
+                            }
                         ]
                     }
                 ),
@@ -532,6 +545,222 @@ class TestProcessBatchImages:
         assert results[0]["images_download_status"] == "no_change"
         assert results[0]["recto_image_uuid"] is None
         assert results[0]["verso_image_uuid"] is None
+
+    def test_skips_recto_when_image_field_is_zero(
+        self, mock_storage_client, mock_session
+    ):
+        """Test that recto is skipped when image field is 0."""
+        rows = [
+            {
+                "ean": "9781234567890",
+                "json_raw": json.dumps(
+                    {
+                        "article": {
+                            "1": {
+                                "imagesUrl": {
+                                    "recto": "https://example.com/recto.jpg",
+                                    "verso": "https://example.com/verso.jpg",
+                                },
+                                "image": 0,  # Recto not valid
+                                "image_4": 1,  # Verso valid
+                            }
+                        }
+                    }
+                ),
+            }
+        ]
+
+        with patch(
+            "src.scripts.download_images.batch_download_and_upload"
+        ) as mock_download:
+            # Only verso should be downloaded
+            mock_download.return_value = [
+                (True, "https://example.com/verso.jpg", "Success")
+            ]
+
+            results = _process_batch_images(
+                rows=rows,
+                storage_client=mock_storage_client,
+                session=mock_session,
+                gcs_bucket="test-bucket",
+                gcs_prefix="images",
+                max_workers=4,
+                timeout=30,
+            )
+
+            assert len(results) == 1
+            assert results[0]["images_download_status"] == "processed"
+            assert results[0]["recto_image_uuid"] is None  # Skipped
+            assert results[0]["verso_image_uuid"] is not None  # Downloaded
+
+    def test_skips_verso_when_image_4_field_is_zero(
+        self, mock_storage_client, mock_session
+    ):
+        """Test that verso is skipped when image_4 field is 0."""
+        rows = [
+            {
+                "ean": "9781234567890",
+                "json_raw": json.dumps(
+                    {
+                        "article": {
+                            "1": {
+                                "imagesUrl": {
+                                    "recto": "https://example.com/recto.jpg",
+                                    "verso": "https://example.com/verso.jpg",
+                                },
+                                "image": 1,  # Recto valid
+                                "image_4": 0,  # Verso not valid
+                            }
+                        }
+                    }
+                ),
+            }
+        ]
+
+        with patch(
+            "src.scripts.download_images.batch_download_and_upload"
+        ) as mock_download:
+            # Only recto should be downloaded
+            mock_download.return_value = [
+                (True, "https://example.com/recto.jpg", "Success")
+            ]
+
+            results = _process_batch_images(
+                rows=rows,
+                storage_client=mock_storage_client,
+                session=mock_session,
+                gcs_bucket="test-bucket",
+                gcs_prefix="images",
+                max_workers=4,
+                timeout=30,
+            )
+
+            assert len(results) == 1
+            assert results[0]["images_download_status"] == "processed"
+            assert results[0]["recto_image_uuid"] is not None  # Downloaded
+            assert results[0]["verso_image_uuid"] is None  # Skipped
+
+    def test_skips_both_when_both_fields_are_zero(
+        self, mock_storage_client, mock_session
+    ):
+        """Test that both images are skipped when both fields are 0."""
+        rows = [
+            {
+                "ean": "9781234567890",
+                "json_raw": json.dumps(
+                    {
+                        "article": {
+                            "1": {
+                                "imagesUrl": {
+                                    "recto": "https://example.com/recto.jpg",
+                                    "verso": "https://example.com/verso.jpg",
+                                },
+                                "image": 0,  # Recto not valid
+                                "image_4": 0,  # Verso not valid
+                            }
+                        }
+                    }
+                ),
+            }
+        ]
+
+        results = _process_batch_images(
+            rows=rows,
+            storage_client=mock_storage_client,
+            session=mock_session,
+            gcs_bucket="test-bucket",
+            gcs_prefix="images",
+            max_workers=4,
+            timeout=30,
+        )
+
+        assert len(results) == 1
+        assert results[0]["images_download_status"] == "no_change"
+        assert results[0]["recto_image_uuid"] is None
+        assert results[0]["verso_image_uuid"] is None
+
+    def test_skips_when_fields_missing(self, mock_storage_client, mock_session):
+        """Test that images are skipped when validation fields are absent."""
+        rows = [
+            {
+                "ean": "9781234567890",
+                "json_raw": json.dumps(
+                    {
+                        "article": {
+                            "1": {
+                                "imagesUrl": {
+                                    "recto": "https://example.com/recto.jpg",
+                                    "verso": "https://example.com/verso.jpg",
+                                }
+                                # No image or image_4 fields
+                            }
+                        }
+                    }
+                ),
+            }
+        ]
+
+        results = _process_batch_images(
+            rows=rows,
+            storage_client=mock_storage_client,
+            session=mock_session,
+            gcs_bucket="test-bucket",
+            gcs_prefix="images",
+            max_workers=4,
+            timeout=30,
+        )
+
+        assert len(results) == 1
+        assert results[0]["images_download_status"] == "no_change"
+        assert results[0]["recto_image_uuid"] is None
+        assert results[0]["verso_image_uuid"] is None
+
+    def test_processes_when_both_fields_are_one(
+        self, mock_storage_client, mock_session
+    ):
+        """Test that both images are processed when both fields are 1."""
+        rows = [
+            {
+                "ean": "9781234567890",
+                "json_raw": json.dumps(
+                    {
+                        "article": {
+                            "1": {
+                                "imagesUrl": {
+                                    "recto": "https://example.com/recto.jpg",
+                                    "verso": "https://example.com/verso.jpg",
+                                },
+                                "image": 1,  # Recto valid
+                                "image_4": 1,  # Verso valid
+                            }
+                        }
+                    }
+                ),
+            }
+        ]
+
+        with patch(
+            "src.scripts.download_images.batch_download_and_upload"
+        ) as mock_download:
+            mock_download.return_value = [
+                (True, "https://example.com/recto.jpg", "Success"),
+                (True, "https://example.com/verso.jpg", "Success"),
+            ]
+
+            results = _process_batch_images(
+                rows=rows,
+                storage_client=mock_storage_client,
+                session=mock_session,
+                gcs_bucket="test-bucket",
+                gcs_prefix="images",
+                max_workers=4,
+                timeout=30,
+            )
+
+            assert len(results) == 1
+            assert results[0]["images_download_status"] == "processed"
+            assert results[0]["recto_image_uuid"] is not None
+            assert results[0]["verso_image_uuid"] is not None
 
 
 class TestRunDownloadImages:

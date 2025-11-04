@@ -6,9 +6,9 @@ This is a POC:
 — future iterations may include UI-controlled grid search and dynamic configuration.
 
 Notes:
-- To prevent Drag&Drop dags such as this one to be deleted during a MEP hence interupting their running tasks.
-    Place this dag in a dedicated subfolder containing a .rsyncignore file to automatically exclude that folder and its contents from deployment.
-    Make sure there are no orchestrated dags in the same folder.
+- To prevent Drag & Drop DAGs (or any manually uploaded DAGs) from being deleted during a MEP deployment,
+    which could interrupt their running tasks,
+    make sure to exclude their folders or files in the main .rsyncignore file located in the dags/ directory.
 - Scheduling is forcefully disabled as it's purpose is manual runs.
 """
 
@@ -82,9 +82,9 @@ def format_poc_dag_doc(
     4. Trigger the DAG manually in the Airflow UI.
 
     Notes:
-    - To prevent Drag&Drop dags such as this one to be deleted during a MEP hence interupting their running tasks.
-        Place this dag in a dedicated subfolder containing a .rsyncignore file to automatically exclude that folder and its contents from deployment.
-        Make sure there are no orchestrated dags in the same folder.
+    - To prevent Drag & Drop DAGs (or any manually uploaded DAGs) from being deleted during a MEP deployment,
+        which could interrupt their running tasks,
+        make sure to exclude their folders or files in the main .rsyncignore file located in the dags/ directory.
     - Scheduling is forcefully disabled as it's purpose is manual runs.
 
     ---

@@ -1,5 +1,7 @@
 """Tests for API transformation utilities."""
 
+import json
+
 import pandas as pd
 import pytest
 
@@ -24,6 +26,11 @@ class TestTransformApiResponse:
         assert "9781234567890" in eans
         assert "9789876543210" in eans
 
+        # Verify article is stored as list in json_raw
+        for _, row in result_df.iterrows():
+            parsed = json.loads(row["json_raw"])
+            assert isinstance(parsed["article"], list)
+
     def test_transform_api_response_list_format(self, sample_api_response_list_format):
         """Test transformation with article as list instead of dict."""
         # Act
@@ -33,6 +40,10 @@ class TestTransformApiResponse:
         assert len(result_df) == 1
         assert result_df["ean"].iloc[0] == "9781111111111"
 
+        # Verify article is stored as list in json_raw
+        parsed = json.loads(result_df["json_raw"].iloc[0])
+        assert isinstance(parsed["article"], list)
+
     def test_transform_api_response_dict_result(self, sample_api_response_dict_result):
         """Test transformation when result is a dict instead of list."""
         # Act
@@ -41,6 +52,10 @@ class TestTransformApiResponse:
         # Assert
         assert len(result_df) == 1
         assert result_df["ean"].iloc[0] == "9782222222222"
+
+        # Verify article is stored as list in json_raw
+        parsed = json.loads(result_df["json_raw"].iloc[0])
+        assert isinstance(parsed["article"], list)
 
     def test_transform_api_response_oeuvre_key(self):
         """Test transformation when response has 'oeuvre' key instead of 'result'."""
@@ -66,6 +81,10 @@ class TestTransformApiResponse:
         # Assert
         assert len(result_df) == 1
         assert result_df["ean"].iloc[0] == "9783333333333"
+
+        # Verify article is stored as list in json_raw
+        parsed = json.loads(result_df["json_raw"].iloc[0])
+        assert isinstance(parsed["article"], list)
 
     def test_transform_api_response_empty_result(self):
         """Test transformation with empty result."""
@@ -141,3 +160,18 @@ class TestTransformApiResponse:
         # Assert - Should skip article without EAN, but process article with EAN
         assert len(result_df) == 1
         assert result_df["ean"].iloc[0] == "9785555555555"
+
+    def test_json_raw_article_format_is_list(self, sample_api_response):
+        """Test that json_raw always contains articles as list, not dict."""
+        # Act
+        result_df = transform_api_response(sample_api_response)
+
+        # Assert - Check that all json_raw entries have article as list
+        for _, row in result_df.iterrows():
+            parsed = json.loads(row["json_raw"])
+            assert "article" in parsed
+            assert isinstance(
+                parsed["article"], list
+            ), "Article should be a list, not a dict"
+            # Verify list contains dict objects
+            assert all(isinstance(item, dict) for item in parsed["article"])

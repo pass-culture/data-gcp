@@ -35,7 +35,6 @@ def transform_api_response(api_response: dict) -> pd.DataFrame:
     if "result" not in api_response:
         if "oeuvre" in api_response:
             api_response = {"result": api_response["oeuvre"]}
-            # logger.info(api_response)
         else:
             msg = "Invalid API response format: missing 'result' key"
             raise ValueError(msg)
@@ -84,7 +83,10 @@ def transform_api_response(api_response: dict) -> pd.DataFrame:
         if not ean:
             continue
 
-        # Store entire result_item as JSON
+        # Normalize result_item to have article as list format
+        result_item["article"] = articles_list
+
+        # Store normalized result_item as JSON
         json_raw = json.dumps(result_item, ensure_ascii=False)
 
         rows.append(

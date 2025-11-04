@@ -82,6 +82,8 @@ def run(
         legacy_fields_df, new_fields_df, table_columns_mappings
     )
 
+    print(f"Field mapping is {metabase_field_mapping}")
+
     dashboards_to_update = [d["id"] for d in metabase.get_dashboards()]
 
     native_cards, query_cards = get_dependant_cards(

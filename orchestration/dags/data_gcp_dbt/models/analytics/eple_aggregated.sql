@@ -11,6 +11,7 @@ with
             eid.ministry,
             eid.institution_type,
             eid.macro_institution_type,
+            eid.institution_macro_density_label
             ey.scholar_year,
             ed.educational_deposit_amount as institution_deposit_amount,
             eid.total_students

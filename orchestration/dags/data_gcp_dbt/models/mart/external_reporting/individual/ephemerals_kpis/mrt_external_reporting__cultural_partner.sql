@@ -60,9 +60,9 @@
 
 with
     all_activated_partners_and_days as (
-        -- Pour chaque partner_id, une ligne par jour depuis la 1ère offre publiée
+        -- Pour chaque venue_id, une ligne par jour depuis la 1ère offre publiée
         select
-            gcp.partner_id,
+            gcp.venue_id,
             gcp.first_individual_offer_creation_date,
             date_add(date('2022-01-01'), interval offset day) as partition_day
         from {{ ref("mrt_global__cultural_partner") }} as gcp
@@ -78,20 +78,22 @@ with
 
     all_days_with_bookability as (
         select
-            apd.partner_id,
+            apd.venue_id,
             apd.first_individual_offer_creation_date,
             apd.partition_day,
-            coalesce(bph.individual_bookable_offers, 0) as total_indiv_bookable_offers
+            coalesce(
+                bvh.total_individual_bookable_offers, 0
+            ) as total_indiv_bookable_offers
         from all_activated_partners_and_days as apd
         left join
-            {{ ref("bookable_partner_history") }} as bph
-            on apd.partner_id = bph.partner_id
-            and apd.partition_day = bph.partition_date
+            {{ ref("int_history__bookable_venue") }} as bvh
+            on apd.venue_id = bvh.venue_id
+            and apd.partition_day = bvh.partition_date
     ),
 
     bookable_dates as (
         select
-            partner_id,
+            venue_id,
             first_individual_offer_creation_date,
             partition_day,
             date_diff(
@@ -102,7 +104,7 @@ with
                             when total_indiv_bookable_offers != 0 then partition_day
                         end
                     ) over (
-                        partition by partner_id
+                        partition by venue_id
                         order by partition_day
                         rows between unbounded preceding and current row
                     ),
@@ -115,7 +117,7 @@ with
 
     partner_details as (
         select
-            bd.partner_id,
+            bd.venue_id,
             bd.partition_day,
             bd.first_individual_offer_creation_date,
             bd.days_since_last_indiv_bookable_date,
@@ -127,9 +129,9 @@ with
         from bookable_dates as bd
         inner join
             {{ ref("mrt_global__cultural_partner") }} as gcp
-            on bd.partner_id = gcp.partner_id
+            on bd.venue_id = gcp.venue_id
         left join
-            {{ ref("mrt_global__venue_tag") }} as gvt on gcp.partner_id = gvt.partner_id
+            {{ ref("mrt_global__venue_tag") }} as gvt on gcp.venue_id = gvt.venue_id
         inner join
             {{ ref("mrt_global__offerer") }} as gof on gcp.offerer_id = gof.offerer_id
     ),
@@ -176,8 +178,8 @@ with
 
     complete_grid as (
         select dr.partition_month, rd.partner_region_name, rd.partner_department_name
-        from date_range dr
-        cross join regions_departments rd
+        from date_range as dr
+        cross join regions_departments as rd
     ),
 
     epn_with_zeros as (
@@ -186,9 +188,9 @@ with
             cg.partner_region_name,
             cg.partner_department_name,
             coalesce(ed.epn_created, 0) as epn_created
-        from complete_grid cg
+        from complete_grid as cg
         left join
-            epn_details ed
+            epn_details as ed
             on cg.partition_month = ed.partition_month
             and cg.partner_region_name = ed.partner_region_name
             and cg.partner_department_name = ed.partner_department_name
@@ -221,13 +223,13 @@ with
         'nombre_total_de_partenaire_actif' as kpi_name,
         count(
             distinct case
-                when days_since_last_indiv_bookable_date <= 365 then partner_id
+                when days_since_last_indiv_bookable_date <= 365 then venue_id
             end
         ) as numerator,
         1 as denominator,
         count(
             distinct case
-                when days_since_last_indiv_bookable_date <= 365 then partner_id
+                when days_since_last_indiv_bookable_date <= 365 then venue_id
             end
         ) as kpi
     from partner_details
@@ -254,7 +256,7 @@ with
                     when
                         days_since_last_indiv_bookable_date <= 365
                         and {{ partner_type.condition }}
-                    then partner_id
+                    then venue_id
                 end
             ) as numerator,
             1 as denominator,
@@ -263,7 +265,7 @@ with
                     when
                         days_since_last_indiv_bookable_date <= 365
                         and {{ partner_type.condition }}
-                    then partner_id
+                    then venue_id
                 end
             ) as kpi
         from partner_details
@@ -284,13 +286,13 @@ with
         'nombre_total_cumule_de_partenaire_actif' as kpi_name,
         count(
             distinct case
-                when days_since_last_indiv_bookable_date >= 0 then partner_id
+                when days_since_last_indiv_bookable_date >= 0 then venue_id
             end
         ) as numerator,
         1 as denominator,
         count(
             distinct case
-                when days_since_last_indiv_bookable_date >= 0 then partner_id
+                when days_since_last_indiv_bookable_date >= 0 then venue_id
             end
         ) as kpi
     from partner_details

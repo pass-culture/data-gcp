@@ -81,11 +81,13 @@ with
             apd.venue_id,
             apd.first_individual_offer_creation_date,
             apd.partition_day,
-            coalesce(bvh.total_individual_bookable_offers, 0) as total_indiv_bookable_offers
+            coalesce(
+                bvh.total_individual_bookable_offers, 0
+            ) as total_indiv_bookable_offers
         from all_activated_partners_and_days as apd
         left join
             {{ ref("int_history__bookable_venue") }} as bvh
-            --Remplacer bookable_venue_history
+            -- Remplacer bookable_venue_history
             on apd.venue_id = bvh.venue_id
             and apd.partition_day = bvh.partition_date
     ),

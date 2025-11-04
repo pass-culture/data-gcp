@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import tqdm
-
 from src.constants import DEFAULT_METADATA_COLUMNS, GTL_ID_COLUMN, ID_COLUMN
 from src.utils.preprocessing import (
     detach_single_occuring_metadata,
@@ -108,10 +106,7 @@ def build_book_metadata_heterograph_from_dataframe(
     # Step 5: Build edges by iterating through dataframe
     relevant_columns = [id_column, *metadata_columns]
 
-    for record in tqdm.tqdm(
-        df_normalized[relevant_columns].itertuples(index=False),
-        desc="Building edges",
-    ):
+    for record in df_normalized[relevant_columns].itertuples(index=False):
         record_dict = record._asdict()
         book_id = record_dict[id_column]
 

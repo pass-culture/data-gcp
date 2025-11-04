@@ -1,6 +1,7 @@
 import json
 import os
 import tempfile
+import time
 from contextlib import contextmanager
 from functools import wraps
 from pathlib import Path
@@ -25,9 +26,16 @@ MLFLOW_URI = (
     if ENV_SHORT_NAME == "prod"
     else "https://mlflow.staging.passculture.team/"
 )
+MLFLOW_TOKEN_REFRESH_INTERVAL = 300
 
-# Global variable to store credentials for token refresh
-_mlflow_credentials = None
+
+def _get_mlflow_log_functions_to_patch(extra_functions: set | None = None):
+    patch_prefix = "log_"
+    if not extra_functions:
+        extra_functions = {}
+    return [
+        m for m in dir(mlflow) if m.startswith(patch_prefix) or m in extra_functions
+    ]
 
 
 @contextmanager
@@ -39,12 +47,9 @@ def optional_mlflow_logging(enabled: bool = True):  # noqa: FBT001
         )
 
         # Include all log_* and key setup methods
-        patch_methods = [
-            m
-            for m in dir(mlflow)
-            if m.startswith("log_")
-            or m in {"create_experiment", "get_experiment_by_name"}
-        ]
+        patch_methods = _get_mlflow_log_functions_to_patch(
+            extra_functions={"create_experiment", "get_experiment_by_name"}
+        )
 
         originals = {}
         for method_name in patch_methods:
@@ -85,118 +90,113 @@ def conditional_mlflow(log_mlflow_arg_name: str = "log_mlflow"):
     return decorator
 
 
-@conditional_mlflow()
-def connect_remote_mlflow() -> None:
-    """
-    Connect to remote MLflow with authentication.
+class MLflowAuthManager:
+    """Handles MLflow authentication and periodic token refresh."""
 
-    Uses service account from Secret Manager if available,
-    otherwise falls back to default credentials.
-    """
-    global _mlflow_credentials
+    def __init__(
+        self,
+        mlflow_uri: str = MLFLOW_URI,
+        sa_secret_name: str = SA_ACCOUNT,
+        client_secret_name: str = MLFLOW_SECRET_NAME,
+        token_refresh_interval: int = MLFLOW_TOKEN_REFRESH_INTERVAL,
+    ):
+        self.mlflow_uri = mlflow_uri
+        self.sa_secret_name = sa_secret_name
+        self.client_secret_name = client_secret_name
+        self.credentials = None
+        self.token_refresh_interval = token_refresh_interval
+        self._last_refresh_ts = 0
 
-    try:
-        # Try to get service account from Secret Manager
-        logger.info(
-            "Attempting to connect to MLflow using service account from Secret Manager"
-        )
-        service_account_dict = json.loads(get_secret(SA_ACCOUNT))
-        mlflow_client_audience = get_secret(MLFLOW_SECRET_NAME)
+    # ---- Authentication ----
+    def authenticate(self):
+        """Authenticate to MLflow via service account or default credentials."""
+        try:
+            self.credentials = self._get_service_account_credentials()
+            logger.info("Authenticated with service account for MLflow")
+        except Exception as e:
+            logger.warning(f"Service account authentication failed: {e}")
+            self.credentials = self._get_default_credentials()
+            logger.info("Authenticated with default GCP credentials for MLflow")
 
-        id_token_credentials = (
-            service_account.IDTokenCredentials.from_service_account_info(
-                service_account_dict, target_audience=mlflow_client_audience
-            )
-        )
-        id_token_credentials.refresh(Request())
+        self._apply_token()
 
-        os.environ["MLFLOW_TRACKING_TOKEN"] = id_token_credentials.token
-        _mlflow_credentials = id_token_credentials
-        logger.info("Successfully authenticated to MLflow with service account")
+    # ---- Token Refresh ----
+    def refresh_token(self):
+        """Refresh token if enough time has passed."""
+        if not self.credentials:
+            logger.warning("No credentials to refresh.")
+            return
 
-    except Exception as e:
-        logger.warning(
-            f"Failed to authenticate with service account from Secret Manager: {e}"
-        )
-        logger.info("Attempting to use default credentials for MLflow")
+        now = time.time()
+        if now - self._last_refresh_ts < self.token_refresh_interval:
+            return
 
         try:
-            # Fall back to default credentials
-            credentials = get_credentials()
-            mlflow_client_audience = get_secret(MLFLOW_SECRET_NAME)
+            self.credentials.refresh(Request())
+            self._apply_token()
+            self._last_refresh_ts = now
+        except Exception as e:
+            logger.error(f"Failed to refresh MLflow token: {e}")
 
-            id_token_credentials = service_account.IDTokenCredentials(
-                credentials, target_audience=mlflow_client_audience
-            )
-            id_token_credentials.refresh(Request())
+    def _apply_token(self):
+        os.environ["MLFLOW_TRACKING_TOKEN"] = self.credentials.token
+        mlflow.set_tracking_uri(self.mlflow_uri)
 
-            os.environ["MLFLOW_TRACKING_TOKEN"] = id_token_credentials.token
-            _mlflow_credentials = id_token_credentials
-            logger.info("Successfully authenticated to MLflow with default credentials")
+    def _get_service_account_credentials(self):
+        sa_info = json.loads(get_secret(self.sa_secret_name))
+        audience = get_secret(self.client_secret_name)
+        creds = service_account.IDTokenCredentials.from_service_account_info(
+            sa_info, target_audience=audience
+        )
+        creds.refresh(Request())
+        return creds
 
-        except Exception as e2:
-            logger.error(f"Failed to authenticate to MLflow with any method: {e2}")
-            logger.warning(
-                "Proceeding without MLflow authentication - tracking may not work"
-            )
-
-    mlflow.set_tracking_uri(MLFLOW_URI)
-
-
-@conditional_mlflow()
-def refresh_mlflow_token() -> None:
-    """
-    Refresh the MLflow authentication token.
-
-    Call this periodically (e.g., every epoch) in long-running training jobs
-    to prevent token expiration.
-    """
-    global _mlflow_credentials
-    if _mlflow_credentials is None:
-        logger.warning("No credentials available for token refresh")
-        return
-
-    try:
-        _mlflow_credentials.refresh(Request())
-        os.environ["MLFLOW_TRACKING_TOKEN"] = _mlflow_credentials.token
-        mlflow.set_tracking_uri(MLFLOW_URI)
-    except Exception as e:
-        logger.error(f"Failed to refresh MLflow token: {e}")
+    def _get_default_credentials(self):
+        creds = get_credentials()
+        audience = get_secret(self.client_secret_name)
+        id_creds = service_account.IDTokenCredentials(creds, target_audience=audience)
+        id_creds.refresh(Request())
+        return id_creds
 
 
-def mlflow_refresh_token_decorator(func):
+def mlflow_refresh_token_decorator(auth_manager, func):
+    """Wrap MLflow function to refresh token automatically before calling."""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
-        refresh_mlflow_token()
+        auth_manager.refresh_token()
         return func(*args, **kwargs)
 
     return wrapper
 
 
 @contextmanager
-def mlflow_token_refresher_context():
+def mlflow_token_refresher_context(auth_manager):
     """
     Temporarily patch MLflow logging functions to refresh token before every call.
     """
-    # Choose which functions to patch
-    functions_to_patch = [
-        f
-        for f in dir(mlflow)
-        if (callable(getattr(mlflow, f)) and f.startswith("log_"))
-        or f in ["start_run", "end_run", "set_experiment"]
-    ]
 
+    # Include all log_* and key setup methods
+    patch_methods = _get_mlflow_log_functions_to_patch(
+        extra_functions={"start_run", "end_run", "set_experiment"}
+    )
+
+    # Patch functions with token refresher
     originals = {}
-    for func_name in functions_to_patch:
-        originals[func_name] = getattr(mlflow, func_name)
-        setattr(mlflow, func_name, mlflow_refresh_token_decorator(originals[func_name]))
-
+    for method_name in patch_methods:
+        func = getattr(mlflow, method_name, None)
+        if callable(func):
+            originals[method_name] = func
+            setattr(
+                mlflow, method_name, mlflow_refresh_token_decorator(auth_manager, func)
+            )
+    # Execute context block
     try:
         yield
     finally:
-        # Restore original functions after the block
-        for func_name, original_func in originals.items():
-            setattr(mlflow, func_name, original_func)
+        # Restore original functions
+        for method_name, original_func in originals.items():
+            setattr(mlflow, method_name, original_func)
 
 
 @conditional_mlflow()

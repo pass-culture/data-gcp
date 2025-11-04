@@ -148,4 +148,3 @@ table_jobs = depends_loop(
     >> gce_instance_stop
     >> start
 )
-table_jobs

@@ -25,7 +25,7 @@ end_ts=$(date -j -f "%Y-%m-%d" "$END_DATE" "+%s")
 current_ts=$start_ts
 
 # Process each step
-while [ $current_ts -ge $end_ts ]; do
+while [[ $current_ts -ge $end_ts ]]; do
     # Convert current timestamp to date
     current_date=$(date -j -f "%s" "$current_ts" "+%Y-%m-%d")
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Default to "master" if no branch is specified
-if [ -z "$1" ] || [ "$1" == "--check" ]; then
+if [[ -z "$1" ]] || [[ "$1" = "--check" ]]; then
     TARGET_BRANCH="master"
 else
     TARGET_BRANCH=$1
@@ -20,12 +20,12 @@ sqlfuff_lint_changed_sql() {
     # sqls=$(git diff $common_ancestor --name-only | grep 'orchestration/dags/data_gcp_dbt/' | grep '\.sql$')
     sqls=$(git diff origin/$TARGET_BRANCH --name-only | grep 'orchestration/dags/data_gcp_dbt/' | grep '\.sql$' | sed 's|orchestration/dags/data_gcp_dbt/||')
 
-    if [ -z "$sqls" ]; then
+    if [[ -z "$sqls" ]]; then
         echo "no SQL files were modified"
     else
         existing_sqls=""
         for sql in $sqls; do
-            if [ -f "$sql" ]; then
+            if [[ -f "$sql" ]]; then
                 # Remove the 'orchestration/dags/data_gcp_dbt/' part from the path
                 relative_sql=$(echo "$sql" | sed 's|orchestration/dags/data_gcp_dbt/||')
                 existing_sqls="$existing_sqls $relative_sql"
@@ -35,7 +35,7 @@ sqlfuff_lint_changed_sql() {
         done
         echo "existing_sqls: $existing_sqls"
 
-        if [ -n "$existing_sqls" ]; then
+        if [[ -n "$existing_sqls" ]]; then
             sqlfluff lint $existing_sqls -p -1 --verbose
             # sqlfluff lint $existing_sqls -p -1 $SQLFLUFF_FLAG
         else

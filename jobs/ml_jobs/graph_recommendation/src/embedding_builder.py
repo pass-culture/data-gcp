@@ -12,7 +12,8 @@ from torch.utils.data import DataLoader
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import MetaPath2Vec
 
-from src.constants import EMBEDDING_COLUMN, DefaultTrainingConfig, InvalidConfigError
+from src.config import TrainingConfig
+from src.constants import EMBEDDING_COLUMN
 from src.utils.mlflow import (
     conditional_mlflow,
     log_model_parameters,
@@ -93,8 +94,8 @@ def _train(
 @conditional_mlflow()
 def train_metapath2vec(
     graph_data: HeteroData,
+    training_config: TrainingConfig,
     checkpoint_path: Path = Path("checkpoints/best_metapath2vec_model.pt"),
-    train_params: DefaultTrainingConfig | dict | None = None,
     *,
     profile: bool = False,
 ) -> pd.DataFrame:
@@ -105,21 +106,8 @@ def train_metapath2vec(
         DataFrame with ['item_id', 'gtl_id', EMBEDDING_COLUMN_NAME] columns
     """
 
-    # Merge config with defaults
-    if train_params is None:
-        params = DefaultTrainingConfig()
-    elif isinstance(train_params, DefaultTrainingConfig):
-        params = train_params
-    elif isinstance(train_params, dict):
-        params = DefaultTrainingConfig()
-        params.update_from_dict(train_params)
-    else:
-        raise InvalidConfigError(
-            f"train_params must be DefaultTrainingConfig, dict, or None, "
-            f"got {type(train_params).__name__}"
-        )
     logger.info("Training configuration:")
-    logger.info(params.to_dict())
+    logger.info(training_config.to_dict())
 
     logger.info("Graph info:")
     logger.info(f"  Node types: {graph_data.node_types}")
@@ -128,47 +116,36 @@ def train_metapath2vec(
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logger.info(f"Using device: {device}")
 
-    # Retrieve parameters from params dict
-    embedding_dim = params.embedding_dim
-    metapath = params.metapath
-    context_size = params.context_size
-    walk_length = int(len(params.metapath) * params.metapath_repetitions)
-    walks_per_node = params.walks_per_node
-    num_negative_samples = params.num_negative_samples
-    batch_size = params.batch_size
-    learning_rate = params.learning_rate
-    num_epochs = params.num_epochs
-    early_stop = params.early_stop
-    num_workers = params.num_workers
-
     model = MetaPath2Vec(
         graph_data.edge_index_dict,
-        embedding_dim=embedding_dim,
-        metapath=metapath,
-        walk_length=walk_length,
-        context_size=context_size,
-        walks_per_node=walks_per_node,
-        num_negative_samples=num_negative_samples,
+        embedding_dim=training_config.embedding_dim,
+        metapath=training_config.metapath,
+        walk_length=training_config.walk_length,
+        context_size=training_config.context_size,
+        walks_per_node=training_config.walks_per_node,
+        num_negative_samples=training_config.num_negative_samples,
         sparse=True,
     ).to(device)
 
     loader = model.loader(
-        batch_size=batch_size,
+        batch_size=training_config.batch_size,
         shuffle=True,
-        num_workers=num_workers,
+        num_workers=training_config.num_workers,
         pin_memory=True,
-        persistent_workers=num_workers > 0,
+        persistent_workers=training_config.num_workers > 0,
     )
     optimizer = torch.optim.SparseAdam(
         list(model.parameters()),
-        lr=learning_rate,
+        lr=training_config.learning_rate,
     )
     scheduler = ReduceLROnPlateau(
         optimizer, mode="min", factor=0.5, patience=3, min_lr=1e-6
     )
 
-    # Log model parameters in mlflowww
-    log_model_parameters(params.to_dict() | {"walk_length": walk_length})
+    # Log model parameters in mlflow
+    log_model_parameters(
+        training_config.to_dict() | {"walk_length": training_config.walk_length}
+    )
 
     # Start training
     logger.info("Starting training...")
@@ -177,7 +154,7 @@ def train_metapath2vec(
     best_loss = float("inf")
     training_start = time.time()
     best_loss_epoch = 0
-    for epoch in range(1, num_epochs + 1):
+    for epoch in range(1, training_config.num_epochs + 1):
         t0 = time.time()
         loss = _train(model, loader, optimizer, device, epoch, profile=profile)
         epoch_time = time.time() - t0
@@ -205,17 +182,17 @@ def train_metapath2vec(
             logger.info(f"Saved best model with loss: {loss:.4f}")
             mlflow.log_metric("best_loss", best_loss, step=epoch)
             best_loss_epoch += 1
-        elif early_stop:
+        elif training_config.early_stop:
             break
 
     # Log total training time and final best loss
     total_training_time = time.time() - training_start
     mlflow.log_metric("total_training_time", total_training_time)
     mlflow.log_metric("final_best_loss", best_loss)
-    if early_stop:
-        mlflow.log_metric("stop_epoc", best_loss_epoch)
+    if training_config.early_stop:
+        mlflow.log_metric("stop_epoch", best_loss_epoch)
     else:
-        mlflow.log_metric("stop_epoc", epoch)
+        mlflow.log_metric("stop_epoch", epoch)
 
     time_formatted = str(timedelta(seconds=int(total_training_time)))
     logger.info(f"Training completed in {time_formatted}")

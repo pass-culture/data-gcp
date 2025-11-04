@@ -158,7 +158,6 @@ def run(
     if n_days is not None:
         _default = default_date()
         end_date = _default.strftime("%Y-%m-%d")
-        n_days = n_days
 
         start_date = date_minus_n_days(_default, n_days).strftime("%Y-%m-%d")
     elif start_date is None or end_date is None:

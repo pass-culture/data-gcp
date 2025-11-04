@@ -29,6 +29,15 @@ MLFLOW_URI = (
 MLFLOW_TOKEN_REFRESH_INTERVAL = 300
 
 
+def _get_mlflow_log_functions_to_patch(extra_functions: set | None = None):
+    patch_prefix = "log_"
+    if not extra_functions:
+        extra_functions = {}
+    return [
+        m for m in dir(mlflow) if m.startswith(patch_prefix) or m in extra_functions
+    ]
+
+
 @contextmanager
 def optional_mlflow_logging(enabled: bool = True):  # noqa: FBT001
     """Context manager to conditionally enable/disable MLflow logging."""
@@ -38,12 +47,9 @@ def optional_mlflow_logging(enabled: bool = True):  # noqa: FBT001
         )
 
         # Include all log_* and key setup methods
-        patch_methods = [
-            m
-            for m in dir(mlflow)
-            if m.startswith("log_")
-            or m in {"create_experiment", "get_experiment_by_name"}
-        ]
+        patch_methods = _get_mlflow_log_functions_to_patch(
+            extra_functions={"create_experiment", "get_experiment_by_name"}
+        )
 
         originals = {}
         for method_name in patch_methods:
@@ -171,11 +177,9 @@ def mlflow_token_refresher_context(auth_manager):
     """
 
     # Include all log_* and key setup methods
-    patch_methods = [
-        m
-        for m in dir(mlflow)
-        if m.startswith("log_") or m in {"start_run", "end_run", "set_experiment"}
-    ]
+    patch_methods = _get_mlflow_log_functions_to_patch(
+        extra_functions={"start_run", "end_run", "set_experiment"}
+    )
 
     # Patch functions with token refresher
     originals = {}

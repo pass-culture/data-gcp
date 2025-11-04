@@ -1,4 +1,4 @@
-    -- Crée les buckets d’index
+-- Crée les buckets d’index
 {{
     config(
         **custom_incremental_config(
@@ -10,7 +10,8 @@
     )
 }}
 
-with  bucketed as (
+with
+    bucketed as (
         select
             event_date,
             origin,
@@ -45,7 +46,8 @@ with  bucketed as (
             count(distinct unique_session_id) as total_sessions_item_viewed,
             count(distinct user_id) as total_user_item_viewed
         from bucketed
-        group by event_date,
+        group by
+            event_date,
             origin,
             module_id,
             home_entry_id,
@@ -60,9 +62,10 @@ select
     origin,
     module_id,
     home_entry_id,
-    item_type, -- offer/venue/artist    
-    item_id, -- displayed_item_id? Renommer ce champ pour distinguer avec l'item_id coté DS
-    -- item_category ? -> A mettre dans un second temps (modèle mrt filtré sur item_type)
+    item_type,  -- offer/venue/artist
+    item_id,  -- displayed_item_id? Renommer ce champ pour distinguer avec l'item_id coté DS
+    -- item_category ? -> A mettre dans un second temps (modèle mrt filtré sur
+    -- item_type)
     -- partner_id -> Dans modèle mrt filtré sur item_type
     -- partner_geographic dimensions -> Dans modèle mrt filtré sur item_type
     total_user_item_viewed,
@@ -72,7 +75,7 @@ select
     coalesce(bucket_1_3, 0) as total_user_item_viewed_bucket_1_3,
     coalesce(bucket_4_6, 0) as sessions_bucket_4_6,
     coalesce(bucket_7_9, 0) as sessions_bucket_7_9,
-    coalesce(bucket_10_plus, 0) as sessions_bucket_10_plus 
+    coalesce(bucket_10_plus, 0) as sessions_bucket_10_plus
 from
     aggregated pivot (
         sum(total_user_item_viewed) for index_bucket

@@ -60,7 +60,6 @@ with
         from split_items, unnest(item_pairs) as item_pair
     ),
 
-
 select
     event_date,
     origin,
@@ -70,7 +69,5 @@ select
     unique_session_id,
     user_id,
     cast(split(item_pair, ":")[offset(0)] as string) as item_index,
-    cast(split(item_pair, ":")[offset(1)] as string) as viewed_item_id -- renommer ce champ
+    cast(split(item_pair, ":")[offset(1)] as string) as viewed_item_id  -- renommer ce champ
 from unnested
-
-

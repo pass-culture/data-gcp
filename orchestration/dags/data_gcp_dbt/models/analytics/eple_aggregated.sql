@@ -92,7 +92,7 @@ select
     eple_infos.ministry,
     eple_infos.institution_type,
     eple_infos.macro_institution_type,
-    eple_infos.institution_program_name
+    eple_infos.institution_program_name,
     eple_infos.scholar_year,
     institution_deposit_amount,
     theoric_amount_spent,

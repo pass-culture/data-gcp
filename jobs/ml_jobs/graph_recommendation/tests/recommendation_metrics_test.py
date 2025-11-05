@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import math
+
 import pandas as pd
-import pytest
 
 from src.utils.recommendation_metrics import custom_recall_at_k
 
@@ -29,7 +30,7 @@ def test_custom_recall_at_k_perfect_match():
     # Top-2 true: item1, item2
     # Overlap: 2 items
     # Recall@2 = 2/2 = 1.0
-    assert recall == 1.0
+    assert math.isclose(recall, 1.0)
 
 
 def test_custom_recall_at_k_no_overlap():
@@ -53,7 +54,7 @@ def test_custom_recall_at_k_no_overlap():
     # Top-2 true: item1, item2
     # Overlap: 0 items
     # Recall@2 = 0/2 = 0.0
-    assert recall == 0.0
+    assert math.isclose(recall, 0.0)
 
 
 def test_custom_recall_at_k_partial_overlap():
@@ -77,7 +78,7 @@ def test_custom_recall_at_k_partial_overlap():
     # Top-3 true: item1, item2, item3
     # Overlap: 2 items (item1, item3)
     # Recall@3 = 2/3 ≈ 0.667
-    assert pytest.approx(recall, 1e-3) == 2 / 3
+    assert math.isclose(recall, 2 / 3)
 
 
 def test_custom_recall_at_k_with_tied_ratings():
@@ -107,7 +108,7 @@ def test_custom_recall_at_k_with_tied_ratings():
     # Top-2 predicted: item1, item2
     # Overlap: 2 items (item1, item2)
     # Recall@2 = 2/2 = 1.0
-    assert recall == 1.0
+    assert math.isclose(recall, 1.0)
 
 
 def test_custom_recall_at_k_with_tied_ratings_partial_overlap():
@@ -132,7 +133,7 @@ def test_custom_recall_at_k_with_tied_ratings_partial_overlap():
     # Top-2 predicted: item1, item5
     # Overlap: 1 item (item1)
     # Recall@2 = 1/2 = 0.5
-    assert recall == 0.5
+    assert math.isclose(recall, 0.5)
 
 
 def test_custom_recall_at_k_multiple_users():
@@ -156,7 +157,7 @@ def test_custom_recall_at_k_multiple_users():
     # User2: Top-1 pred=item3, Top-1 true=item3 → overlap=1, recall=1/1=1.0
     # User3: Top-1 pred=item5, Top-1 true=item5 → overlap=1, recall=1/1=1.0
     # Average recall = (1.0 + 1.0 + 1.0) / 3 = 1.0
-    assert recall == 1.0
+    assert math.isclose(recall, 1.0)
 
 
 def test_custom_recall_at_k_multiple_users_varying_overlap():
@@ -181,7 +182,7 @@ def test_custom_recall_at_k_multiple_users_varying_overlap():
     # User2: Top-2 pred=[item4, item8], Top-2 true=[item4, item5]
     #        → overlap=1, recall=1/2=0.5
     # Average recall = (1.0 + 0.5) / 2 = 0.75
-    assert recall == 0.75
+    assert math.isclose(recall, 0.75)
 
 
 def test_custom_recall_at_k_missing_users_filled_with_zero():
@@ -205,7 +206,7 @@ def test_custom_recall_at_k_missing_users_filled_with_zero():
     #        → overlap=2, recall=2/2=1.0
     # User2: No predictions → overlap=0, recall=0/2=0.0
     # Average recall = (1.0 + 0.0) / 2 = 0.5
-    assert recall == 0.5
+    assert math.isclose(recall, 0.5)
 
 
 def test_custom_recall_at_k_k_equals_1():
@@ -229,7 +230,7 @@ def test_custom_recall_at_k_k_equals_1():
     # Top-1 true: item1
     # Overlap: 0 items
     # Recall@1 = 0/1 = 0.0
-    assert recall == 0.0
+    assert math.isclose(recall, 0.0)
 
 
 def test_custom_recall_at_k_all_tied_ratings():
@@ -254,7 +255,7 @@ def test_custom_recall_at_k_all_tied_ratings():
     # Top-2 predicted: item1, item2
     # Overlap: 2 items
     # Recall@2 = 2/2 = 1.0
-    assert recall == 1.0
+    assert math.isclose(recall, 1.0)
 
 
 def test_custom_recall_at_k_custom_column_names():
@@ -286,7 +287,7 @@ def test_custom_recall_at_k_custom_column_names():
     # Top-2 true: doc1, doc2
     # Overlap: 2 items
     # Recall@2 = 2/2 = 1.0
-    assert recall == 1.0
+    assert math.isclose(recall, 1.0)
 
 
 def test_custom_recall_at_k_large_k():
@@ -314,7 +315,7 @@ def test_custom_recall_at_k_large_k():
     # Top-5 true: all items (since k > number of items)
     # Overlap: 3 items
     # Recall@5 = 3/5 = 0.6
-    assert recall == 0.6
+    assert math.isclose(recall, 0.6)
 
 
 def test_custom_recall_at_k_descending_predictions():
@@ -341,4 +342,4 @@ def test_custom_recall_at_k_descending_predictions():
     # Top-2 true: item1, item2
     # Overlap: 2 items
     # Recall@2 = 2/2 = 1.0
-    assert recall == 1.0
+    assert math.isclose(recall, 1.0)

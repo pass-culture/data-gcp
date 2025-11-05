@@ -137,8 +137,8 @@ class EvaluationConfig(BaseConfig):
     metadata_columns: list[str] = field(
         default_factory=lambda: [ID_COLUMN, GTL_ID_COLUMN, ARTIST_ID_COLUMN]
     )
-    n_samples: int = 100
-    n_retrieved: int = 1000
+    n_samples: int = 1_000
+    n_retrieved: int = 10_000
     k_values: list[int] = field(default_factory=lambda: [10, 20, 50, 100])
     ground_truth_score: str = "full_score"
     force_artist_weight: bool = False

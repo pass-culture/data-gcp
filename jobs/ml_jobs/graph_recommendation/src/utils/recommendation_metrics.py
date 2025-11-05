@@ -15,23 +15,6 @@ from recommenders.utils.constants import (
 )
 
 
-def _convert_thresholds_to_list_and_validate(
-    relevancy_thresholds: list[float] | float,
-) -> list[float]:
-    """Convert thresholds to list format and validate all values are <= 1."""
-    if isinstance(relevancy_thresholds, float):
-        relevancy_thresholds = [relevancy_thresholds]
-    assert all(threshold <= 1 for threshold in relevancy_thresholds)
-    return relevancy_thresholds
-
-
-def _convert_score_cols_to_list(score_cols: list[str] | str) -> list[str]:
-    """Convert score columns to list format."""
-    if isinstance(score_cols, str):
-        score_cols = [score_cols]
-    return score_cols
-
-
 def _add_prediction_ranks_and_topk_flags(
     retrieval_results: pd.DataFrame, k_values: list[int]
 ) -> pd.DataFrame:
@@ -70,108 +53,87 @@ def _create_ground_truth_dataframe_for_score(
 
 def _compute_all_metrics_for_single_score_column(
     df: pd.DataFrame,
-    score_col: str,
+    score_column: str,
     k_values: list[int],
-    relevancy_thresholds: list[float],
     rating_pred_sorted: pd.DataFrame,
     max_retrieved: int,
-    metrics_rows: list[dict],
-) -> None:
+) -> pd.DataFrame:
     """
     Compute all metrics for a single score column across all k values and thresholds.
     """
     # Prepare ground truth for this score (done once per score)
-    rating_true = _create_ground_truth_dataframe_for_score(df, score_col)
+    rating_true = _create_ground_truth_dataframe_for_score(df, score_column)
 
-    # Add relevance flags to dataframe (once per score/threshold combo)
-    for threshold in relevancy_thresholds:
-        col_name = f"is_relevant_{score_col}_at_{threshold}"
-        df[col_name] = (df[score_col] >= threshold).astype(bool)
-        count_col_name = f"n_relevant_{score_col}_at_{threshold}"
-        df[count_col_name] = df.groupby("query_node_id")[col_name].transform("sum")
-
+    metrics_per_k = []
     for k in k_values:
         if k > max_retrieved:
             logger.warning(
                 f"K={k} exceeds retrieved items ({max_retrieved}). Skipping."
             )
-            continue
+            raise ValueError(f"K={k} exceeds max retrieved items ({max_retrieved})")
 
-        _compute_metrics_at_k(
-            rating_true=rating_true,
-            rating_pred_sorted=rating_pred_sorted,
-            k=k,
-            relevancy_thresholds=relevancy_thresholds,
-            score_col=score_col,
-            metrics_rows=metrics_rows,
+        metrics_per_k.append(
+            _compute_metrics_at_k(
+                rating_true=rating_true,
+                rating_pred_sorted=rating_pred_sorted,
+                k=k,
+                score_column=score_column,
+            )
         )
+    return pd.DataFrame(metrics_per_k)
 
 
 def _compute_metrics_at_k(
     rating_true: pd.DataFrame,
     rating_pred_sorted: pd.DataFrame,
     k: int,
-    relevancy_thresholds: list[float],
-    score_col: str,
-    metrics_rows: list[dict],
-) -> None:
+    score_column: str,
+) -> dict:
     """Compute NDCG, recall, and precision metrics at a specific k value."""
     # Compute NDCG@K (uses raw scores)
-    try:
-        ndcg = ndcg_at_k(
-            rating_true=rating_true,
-            rating_pred=rating_pred_sorted,
-            relevancy_method="top_k",
-            k=k,
-            score_type="raw",
-        )
-        logger.info(f"    NDCG@{k}: {ndcg:.4f}")
-    except Exception as e:
-        logger.error(f"Error computing NDCG @ K={k}: {e}")
-        ndcg = None
+    ndcg = ndcg_at_k(
+        rating_true=rating_true,
+        rating_pred=rating_pred_sorted,
+        relevancy_method="top_k",
+        k=k,
+        score_type="exp",
+    )
+    logger.info(f"    NDCG@{k}: {ndcg:.4f}")
 
     # Compute threshold-based metrics (recall, precision)
     rating_pred_k = rating_pred_sorted.groupby("userID").head(k)
+    recall = recall_at_k(
+        rating_true=rating_true,
+        rating_pred=rating_pred_k,
+        relevancy_method="top_k",
+        k=k,
+    )
+    custom_recall = custom_recall_at_k(
+        rating_true=rating_true,
+        rating_pred=rating_pred_k,
+        k=k,
+    )
+    precision = precision_at_k(
+        rating_true=rating_true,
+        rating_pred=rating_pred_k,
+        relevancy_method="top_k",
+        k=k,
+    )
 
-    for threshold in relevancy_thresholds:
-        try:
-            # Recall@K
-            recall = recall_at_k(
-                rating_true=rating_true,
-                rating_pred=rating_pred_k,
-                relevancy_method="by_threshold",
-                threshold=threshold,
-                k=k,
-            )
-            # Precision@K
-            precision = precision_at_k(
-                rating_true=rating_true,
-                rating_pred=rating_pred_k,
-                relevancy_method="by_threshold",
-                threshold=threshold,
-                k=k,
-            )
-
-            metrics_rows.append(
-                {
-                    "score_col": score_col,
-                    "k": k,
-                    "threshold": threshold,
-                    "ndcg": ndcg,
-                    "recall": recall,
-                    "precision": precision,
-                }
-            )
-        except Exception as e:
-            logger.error(f"Error computing metrics @ K={k}, threshold={threshold}: {e}")
-            continue
+    return {
+        "score_column": score_column,
+        "k": k,
+        "ndcg": ndcg,
+        "recall": recall,
+        "custom_recall": custom_recall,
+        "precision": precision,
+    }
 
 
 def compute_evaluation_metrics(
     retrieval_results: pd.DataFrame,
     k_values: list[int],
-    relevancy_thresholds: list[float] | float,
-    score_cols: list[str] | str = "full_score",
+    score_column: str,
 ) -> tuple[dict[str, Any], pd.DataFrame]:
     """
     Compute metrics to evaluate embeddings quality (Microsoft Recommenders framework).
@@ -225,14 +187,9 @@ def compute_evaluation_metrics(
     """
 
     # Normalize inputs
-    relevancy_thresholds = _convert_thresholds_to_list_and_validate(
-        relevancy_thresholds
-    )
-    score_cols = _convert_score_cols_to_list(score_cols)
 
     logger.info(
-        f"Computing metrics for {len(score_cols)} score(s), "
-        f"{len(relevancy_thresholds)} threshold(s), {len(k_values)} k value(s)"
+        f"Computing metrics for score {score_column}, {len(k_values)} k value(s)"
     )
 
     # Prepare base dataframe and predictions
@@ -241,31 +198,21 @@ def compute_evaluation_metrics(
     max_retrieved = df.groupby("query_node_id").size().min()
 
     # Collect metrics in list for DataFrame
-    metrics_rows = []
-
-    # Loop: score_col -> k -> threshold
-    for score_col in score_cols:
-        logger.info(f"Processing score: {score_col}")
-        _compute_all_metrics_for_single_score_column(
-            df=df,
-            score_col=score_col,
-            k_values=k_values,
-            relevancy_thresholds=relevancy_thresholds,
-            rating_pred_sorted=rating_pred_sorted,
-            max_retrieved=max_retrieved,
-            metrics_rows=metrics_rows,
-        )
+    metrics_df = _compute_all_metrics_for_single_score_column(
+        df=df,
+        score_column=score_column,
+        k_values=k_values,
+        rating_pred_sorted=rating_pred_sorted,
+        max_retrieved=max_retrieved,
+    )
 
     # Convert to DataFrame
-    metrics_df = pd.DataFrame(metrics_rows)
     logger.info("Metrics computation complete")
     logger.info(f"Metrics shape: {metrics_df.shape}")
     return metrics_df, df
 
 
 #### Custom Recall at K ####
-
-
 def _get_kth_rating_threshold(
     df: pd.DataFrame,
     k: int,

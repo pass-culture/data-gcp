@@ -140,9 +140,6 @@ class EvaluationConfig(BaseConfig):
     n_samples: int = 100
     n_retrieved: int = 1000
     k_values: list[int] = field(default_factory=lambda: [10, 20, 50, 100])
-    relevance_thresholds: list[float] = field(
-        default_factory=lambda: [0.3, 0.4, 0.5, 0.6, 0.7]
-    )
     ground_truth_score: str = "full_score"
     force_artist_weight: bool = False
     rebuild_index: bool = False

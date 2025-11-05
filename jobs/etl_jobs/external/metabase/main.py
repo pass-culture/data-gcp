@@ -85,10 +85,10 @@ def run(
     metabase_field_mapping = get_mapped_fields(
         legacy_fields_df, new_fields_df, table_columns_mappings
     )
-    logger.info(f"Field mapping is {metabase_field_mapping}")
+    print(f"Field mapping is {metabase_field_mapping}")
 
-    dashboards_to_update = [d["id"] for d in metabase.get_dashboards()]
-    logger.info(
+    dashboards_to_update = list(set([d["id"] for d in metabase.get_dashboards()]))
+    print(
         f"{len(dashboards_to_update)} Dashboards to update with ids : {dashboards_to_update}"
     )
 
@@ -158,8 +158,10 @@ def run(
         for dashboard_id in dashboards_to_update:
             try:
                 dashboard = Dashboard(dashboard_id=dashboard_id, metabase_api=metabase)
+                print(f"Before {dashboard.dashboard_info}")
                 dashboard.update_dashboard_filters(metabase_field_mapping)
-                dashboard.update_dashboard()
+                print(f"After {dashboard.dashboard_info}")
+                # dashboard.update_dashboard()
                 transition_log["card_id"] = dashboard_id
                 transition_log["timestamp"] = datetime.datetime.now()
                 transition_log["success"] = True

@@ -219,13 +219,26 @@ def _get_kth_rating_threshold(
     col_user: str,
     col_rating: str,
 ) -> pd.DataFrame:
-    """Get the k-th highest rating per user as a threshold."""
-    return (
-        df.sort_values([col_user, col_rating], ascending=[True, False])
-        .groupby(col_user, as_index=False)
-        .nth(k - 1)[[col_user, col_rating]]
-        .rename(columns={col_rating: "kth_rating"})
-    )
+    """Get the k-th highest rating per user as a threshold.
+
+    When k exceeds the number of items for a user, uses the minimum rating
+    (lowest-ranked item) as the threshold, effectively including all items.
+    """
+    sorted_df = df.sort_values([col_user, col_rating], ascending=[True, False])
+
+    # Get the count of items per user
+    counts_per_user = sorted_df.groupby(col_user).size()
+
+    # For each user, get either the k-th item or the last item (whichever is smaller)
+    result = []
+    for user in sorted_df[col_user].unique():
+        user_data = sorted_df[sorted_df[col_user] == user]
+        count = counts_per_user[user]
+        # Use min to handle case where k > count
+        idx = min(k - 1, count - 1)
+        result.append({col_user: user, col_rating: user_data.iloc[idx][col_rating]})
+
+    return pd.DataFrame(result).rename(columns={col_rating: "kth_rating"})
 
 
 def _get_true_topk_with_ties(

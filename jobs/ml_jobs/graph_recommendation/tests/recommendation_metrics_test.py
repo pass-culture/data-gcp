@@ -292,9 +292,8 @@ def test_custom_recall_at_k_custom_column_names():
 def test_custom_recall_at_k_large_k():
     """Test recall@k when k is larger than number of items.
 
-    Note: Current implementation returns 0.0 when k > number of items
-    because _get_kth_rating_threshold cannot find a k-th item.
-    This is an edge case that may need fixing in the future.
+    When k > number of items, all items should be considered in the relevant set.
+    The recall is still calculated as overlap/k.
     """
     rating_true = pd.DataFrame(
         {
@@ -311,10 +310,11 @@ def test_custom_recall_at_k_large_k():
         }
     )
     recall = custom_recall_at_k(rating_true, rating_pred, k=5)
-    # When k > number of items, current implementation returns 0.0
-    # because it cannot find the k-th rating threshold (no 5th item exists)
-    # Ideally, this might return 3/5 = 0.6 (all items matched)
-    assert recall == 0.0
+    # Top-5 predicted: item1, item2, item3 (only 3 available)
+    # Top-5 true: all items (since k > number of items)
+    # Overlap: 3 items
+    # Recall@5 = 3/5 = 0.6
+    assert recall == 0.6
 
 
 def test_custom_recall_at_k_descending_predictions():

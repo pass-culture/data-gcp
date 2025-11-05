@@ -6,7 +6,6 @@ import lancedb
 import numpy as np
 import pandas as pd
 from loguru import logger
-from tqdm import tqdm
 
 from src.constants import (
     DATA_DIR,
@@ -209,7 +208,7 @@ def _load_gtl_ids_into_lookup(
     gtl_lookup = {}
     batch_size = 5000
 
-    for i in tqdm(range(0, len(unique_node_ids), batch_size), desc="Loading GTL IDs"):
+    for i in range(0, len(unique_node_ids), batch_size):
         batch_ids = unique_node_ids[i : i + batch_size]
         # Create filter for batch
         id_list = "','".join(batch_ids)
@@ -503,7 +502,7 @@ def compute_all_scores_lazy(
     )
 
     # Process per query
-    for query_id in tqdm(query_node_ids, desc="Scoring queries"):
+    for query_id in query_node_ids:
         _process_all_results_for_query(
             augmented_results=augmented_results,
             query_id=query_id,
@@ -605,7 +604,7 @@ def generate_predictions_lazy(
 
     results = []
 
-    for query_item in tqdm(query_node_ids, desc="Retrieving"):
+    for query_item in query_node_ids:
         # Get query embedding
         query_embedding = get_embedding_for_item_lazy(table, query_item)
 

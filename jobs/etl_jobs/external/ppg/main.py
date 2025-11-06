@@ -5,6 +5,7 @@ import typer
 
 from config import GOOGLE_DRIVE_ROOT_FOLDER_ID, REPORT_BASE_DIR_DEFAULT
 from core import ExportSession, Stakeholder, StakeholderType
+from services.google_drive import DriveUploadService
 from services.tracking import GlobalStats
 from utils.data_utils import drac_selector, get_available_regions, upload_zip_to_gcs
 from utils.file_utils import (
@@ -234,22 +235,14 @@ def upload_drive(
         default_factory=start_of_current_month,
         help="Consolidation date YYYY-MM-DD",
     ),
-    root_folder_id: Optional[str] = typer.Option(
-        None,
-        "--root-folder",
-        "-r",
-        help="Drive folder ID (uses env var if not set)",
-    ),
 ):
     """Upload generated reports to Google Drive."""
-    from services.google_drive import DriveUploadService
 
     ds = to_first_of_month(ds)
-    folder_id = root_folder_id or GOOGLE_DRIVE_ROOT_FOLDER_ID
 
-    if not folder_id:
+    if not GOOGLE_DRIVE_ROOT_FOLDER_ID:
         log_print.error(
-            "❌ Root folder ID required via --root-folder or PPG_GOOGLE_DRIVE_FOLDER_ID env var",
+            "❌ Root folder ID required via GOOGLE_DRIVE_ROOT_FOLDER_ID conf var",
             fg="red",
         )
         raise typer.Exit(code=1)
@@ -260,11 +253,12 @@ def upload_drive(
         raise typer.Exit(code=1)
 
     log_print.info(f"➡️  Uploading from: {base_dir}", fg="cyan")
-    log_print.info(f"➡️  Drive folder: {folder_id}", fg="cyan")
 
     try:
         drive_service = DriveUploadService()
-        stats = drive_service.upload_reports_directory(base_dir, ds, folder_id)
+        stats = drive_service.upload_reports_directory(
+            base_dir, ds, GOOGLE_DRIVE_ROOT_FOLDER_ID
+        )
 
         log_print.info("✅ Upload complete!", fg="green")
         log_print.info(f"   Files uploaded: {stats['files_uploaded']}")

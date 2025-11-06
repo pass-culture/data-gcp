@@ -23,7 +23,7 @@ BASE_TEMPLATE = Path("./templates/export_template.xlsx")
 REPORT_BASE_DIR_DEFAULT = Path("./reports")
 
 # Google Drive Configuration
-GOOGLE_DRIVE_ROOT_FOLDER_ID = os.environ.get("PPG_GOOGLE_DRIVE_FOLDER_ID")
+GOOGLE_DRIVE_ROOT_FOLDER_ID = "0ALZT4drzhWuYUk9PVA"
 
 # French month names for folder naming
 MONTH_NAMES_FR = {

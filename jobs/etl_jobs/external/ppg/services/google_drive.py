@@ -7,7 +7,7 @@ from google.auth import default
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
-from config import MONTH_NAMES_FR
+from config import ENV_SHORT_NAME, MONTH_NAMES_FR
 from utils.verbose_logger import log_print
 
 SCOPES = ["https://www.googleapis.com/auth/drive"]
@@ -250,17 +250,22 @@ class DriveUploadService:
             return stats
 
         try:
-            # 1. Create "Export DRAC - Mars 2024" folder
+            # 1. Get or create ENV_SHORT_NAME folder
+            log_print.info(f"📁 Using environment folder: {ENV_SHORT_NAME}", fg="cyan")
+            env_folder_id = self.find_or_create_folder(ENV_SHORT_NAME, root_folder_id)
+            stats["folders_created"] += 1
+
+            # 2. Create "Export DRAC - Mars 2024" folder inside ENV_SHORT_NAME
             export_folder_name = self._format_export_folder_name(ds)
             log_print.info(
                 f"📁 Creating export folder: {export_folder_name}", fg="cyan"
             )
             export_folder_id = self.find_or_create_folder(
-                export_folder_name, root_folder_id
+                export_folder_name, env_folder_id
             )
             stats["folders_created"] += 1
 
-            # 2. Handle NATIONAL/
+            # 3. Handle NATIONAL/
             national_dir = local_base_dir / "NATIONAL"
             if national_dir.exists() and national_dir.is_dir():
                 log_print.info("📂 Processing NATIONAL reports...", fg="cyan")
@@ -277,7 +282,7 @@ class DriveUploadService:
                     else:
                         stats["files_skipped"] += 1
 
-            # 3. Handle REGIONAL/
+            # 4. Handle REGIONAL/
             regional_dir = local_base_dir / "REGIONAL"
             if regional_dir.exists() and regional_dir.is_dir():
                 log_print.info("📂 Processing REGIONAL reports...", fg="cyan")

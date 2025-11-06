@@ -3,7 +3,7 @@ from datetime import datetime
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator, PythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
@@ -30,7 +30,6 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
-
 from jobs.crons import SCHEDULE_DICT
 
 DEFAULT_REGION = "europe-west1"
@@ -124,13 +123,13 @@ GCS_TO_DELTA_TABLES = [
     },
 ]
 
-LINK_FROM_SCRATCH_FLOW = "link_from_scratch_flow"
-LINK_NEW_PRODUCTS_TO_ARTISTS_FLOW = "link_new_products_to_artists_flow"
+FULL_REBUILD_FLOW = "full_rebuild_flow"
+LINK_NEW_PRODUCTS_TO_ARTISTS_FLOW = "incremental_flow"
 
 
 def _choose_linkage(**context):
-    if context["params"]["link_from_scratch"] is True:
-        return LINK_FROM_SCRATCH_FLOW
+    if context["linkage_mode"] == "full_rebuild":
+        return FULL_REBUILD_FLOW
     return LINK_NEW_PRODUCTS_TO_ARTISTS_FLOW
 
 
@@ -157,9 +156,10 @@ with DAG(
             default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-8",
             type="string",
         ),
-        "link_from_scratch": Param(
-            default=False,
-            type="boolean",
+        "linkage_mode": Param(
+            default="delta_update",
+            enum=["incremental", "full_rebuild", "metadata_refresh"],
+            type="string",
         ),
     },
 ) as dag:
@@ -201,10 +201,8 @@ with DAG(
         provide_context=True,
         dag=dag,
     )
-    link_from_scratch_flow = DummyOperator(task_id=LINK_FROM_SCRATCH_FLOW)
-    link_new_products_to_artists_flow = DummyOperator(
-        task_id=LINK_NEW_PRODUCTS_TO_ARTISTS_FLOW
-    )
+    full_rebuild_flow = EmptyOperator(task_id=FULL_REBUILD_FLOW)
+    incremental_flow = EmptyOperator(task_id=LINK_NEW_PRODUCTS_TO_ARTISTS_FLOW)
 
     #####################################################################################################
     #                                Link Products to Artists from Scratch                              #
@@ -214,7 +212,7 @@ with DAG(
     ) as import_data_for_linkage_from_scratch:
         BigQueryInsertJobOperator(
             project_id=GCP_PROJECT_ID,
-            task_id="import_products_to_link_from_scratch",
+            task_id="import_products_to_full_rebuild",
             configuration={
                 "extract": {
                     "sourceTable": {
@@ -358,16 +356,11 @@ with DAG(
             )
 
     # Common tasks
-    (
-        dag_init
-        >> vm_init
-        >> choose_linkage
-        >> [link_from_scratch_flow, link_new_products_to_artists_flow]
-    )
+    (dag_init >> vm_init >> choose_linkage >> [full_rebuild_flow, incremental_flow])
 
     # Link From Scratch tasks
     (
-        link_from_scratch_flow
+        full_rebuild_flow
         >> import_data_for_linkage_from_scratch
         >> link_products_to_artists_from_scratch
         >> get_wikimedia_commons_license
@@ -377,7 +370,7 @@ with DAG(
 
     # Link New Products to Artists tasks
     (
-        link_new_products_to_artists_flow
+        incremental_flow
         >> import_data_for_new_products_synchronization
         >> link_new_products_to_artists
         >> get_wikimedia_commons_license_on_artist_delta

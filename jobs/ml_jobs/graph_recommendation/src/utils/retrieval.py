@@ -1,15 +1,18 @@
-import glob
-import os
+from __future__ import annotations
 
-import gcsfs
+from typing import TYPE_CHECKING
+
 import lancedb
 import numpy as np
 import pandas as pd
 from loguru import logger
-from tqdm import tqdm
 
-from src.constants import DATA_DIR, EMBEDDING_COLUMN
-from src.utils.commons import BUCKET_PREFIX, is_bucket_path
+from src.constants import (
+    DATA_DIR,
+    EMBEDDING_COLUMN,
+    GTL_ID_COLUMN,
+    LANCEDB_NODE_ID_COLUMN,
+)
 
 # Import your existing GTL scoring functions
 from src.utils.metadata_metrics import (
@@ -17,6 +20,9 @@ from src.utils.metadata_metrics import (
     get_gtl_retrieval_score,
     get_gtl_walk_score,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 # Lance DB configuration
 
@@ -26,7 +32,16 @@ NUM_SUB_VECTORS = 16
 INDEX_TYPE = "IVF_PQ"
 EMBEDDING_METRIC = "cosine"
 LANCEDB_PATH = f"{DATA_DIR}/metadata/vector"
-TABLE_NAME = "embedding_table"
+LANCEDB_TABLE_NAME = "embedding_table"
+NON_NULL_COLUMNS = [LANCEDB_NODE_ID_COLUMN, GTL_ID_COLUMN, EMBEDDING_COLUMN]
+
+
+def chunk_dataframe(
+    df: pd.DataFrame, batch_size: int
+) -> Generator[pd.DataFrame, None, None]:
+    """Yield successive batches from DataFrame."""
+    for start_index in range(0, len(df), batch_size):
+        yield df[start_index : start_index + batch_size]
 
 
 def load_and_index_embeddings(
@@ -46,9 +61,8 @@ def load_and_index_embeddings(
     Returns:
         LanceDB table
     """
+    # Check if table exists and not rebuilding
     db = lancedb.connect(LANCEDB_PATH)
-
-    # Check if table exists
     existing_tables = db.table_names()
     table_exists = table_name in existing_tables
 
@@ -60,24 +74,16 @@ def load_and_index_embeddings(
 
     # Load data from parquet
     logger.info(f"Loading embeddings from: {parquet_path}")
-
     df = pd.read_parquet(parquet_path)
-
     logger.info(f"Loaded {len(df)} items from parquet")
 
-    non_null_columns = ["node_ids", "gtl_id", EMBEDDING_COLUMN]
-    null_rows = df[df[non_null_columns].isnull().any(axis=1)]
+    null_rows = df[df[NON_NULL_COLUMNS].isnull().any(axis=1)]
     if not null_rows.empty:
         logger.error(
-            f"Found {len(null_rows)} rows with null values in {non_null_columns}"
+            f"Found {len(null_rows)} rows with null values in {NON_NULL_COLUMNS}"
         )
         logger.info(f"Null rows sample:\n{null_rows.head()}")
         raise ValueError("DataFrame contains null values in critical columns.")
-
-    # Create batches generator
-    def make_batches(df: pd.DataFrame, batch_size: int):
-        for i in range(0, len(df), batch_size):
-            yield df[i : i + batch_size]
 
     # Drop existing table if rebuild
     if table_exists and rebuild:
@@ -88,7 +94,7 @@ def load_and_index_embeddings(
     logger.info(f"Creating LanceDB table '{table_name}'")
     table = db.create_table(
         table_name,
-        make_batches(df, LANCEDB_BATCH_SIZE),
+        chunk_dataframe(df, LANCEDB_BATCH_SIZE),
     )
     logger.info(f"Table created with {len(table)} items")
 
@@ -106,96 +112,6 @@ def load_and_index_embeddings(
     return table
 
 
-def _get_matching_file_paths(parquet_path: str) -> list[str]:
-    """Get list of Parquet file paths from GCS or local filesystem folder."""
-    if is_bucket_path(parquet_path):
-        fs = gcsfs.GCSFileSystem()
-        # Ensure folder path ends with a slash
-        if not parquet_path.endswith("/"):
-            parquet_path += "/"
-        # List all parquet files in the folder
-        matching_files = fs.ls(parquet_path)
-        # Filter only .parquet files
-        matching_files = [f for f in matching_files if f.endswith(".parquet")]
-        # Prepend bucket prefix if missing
-        matching_files = [
-            f"{BUCKET_PREFIX}{f}" if not is_bucket_path(f) else f
-            for f in matching_files
-        ]
-    else:
-        # Local folder or glob
-        if os.path.isdir(parquet_path):
-            matching_files = glob.glob(os.path.join(parquet_path, "*.parquet"))
-        else:
-            # Single file or glob pattern
-            matching_files = (
-                glob.glob(parquet_path) if "*" in parquet_path else [parquet_path]
-            )
-
-    return matching_files
-
-
-def _load_single_parquet_file(
-    file_path: str, columns: list[str] | None = None
-) -> pd.DataFrame:
-    """Load a single parquet file from GCS or local filesystem."""
-    import pandas as pd
-
-    if is_bucket_path(file_path):
-        fs = gcsfs.GCSFileSystem()
-        with fs.open(file_path, "rb") as f:
-            df_chunk = pd.read_parquet(f, columns=columns)
-    else:
-        df_chunk = pd.read_parquet(file_path, columns=columns)
-
-    return df_chunk
-
-
-def _filter_dataframe_by_field_values(
-    df_chunk: pd.DataFrame, filter_field: str | None, filter_set: set[str] | None
-) -> pd.DataFrame:
-    """Apply filter to dataframe if filter_field and filter_set are specified."""
-    if filter_field and filter_set:
-        if filter_field in df_chunk.columns:
-            df_chunk = df_chunk[df_chunk[filter_field].isin(filter_set)]
-        else:
-            logger.warning(f"Filter field '{filter_field}' not found in file")
-
-    return df_chunk
-
-
-def _load_and_filter_all_parquet_files(
-    matching_files: list[str],
-    columns: list[str] | None,
-    filter_field: str | None,
-    filter_set: set[str] | None,
-) -> list[pd.DataFrame]:
-    """Load all parquet files with filtering and return list of non-empty dataframes."""
-    dfs = []
-
-    for file_path in tqdm(matching_files, desc="Loading metadata"):
-        df_chunk = _load_single_parquet_file(file_path, columns).pipe(
-            _filter_dataframe_by_field_values,
-            filter_field=filter_field,
-            filter_set=filter_set,
-        )
-
-        if len(df_chunk) > 0:
-            dfs.append(df_chunk)
-
-    return dfs
-
-
-def _remove_duplicate_rows_by_field(
-    df: pd.DataFrame, filter_field: str | None
-) -> pd.DataFrame:
-    """Remove duplicate rows based on filter_field if it exists."""
-    if filter_field and filter_field in df.columns:
-        df = df.drop_duplicates(subset=[filter_field], keep="first")
-
-    return df
-
-
 def _normalize_gtl_id_lookup(gtl_id: str | int | float | None) -> str | None:
     """
     Normalizes a GTL ID to an 8-digit zero-padded string.
@@ -210,39 +126,6 @@ def _normalize_gtl_id_lookup(gtl_id: str | int | float | None) -> str | None:
         f"Unexpected type for GTL ID '{gtl_id}': {type(gtl_id)}. Returning None."
     )
     return None
-
-
-def load_metadata_table(
-    parquet_path: str,
-    filter_field: str | None = None,
-    filter_values: list[str] | None = None,
-    columns: list[str] | None = None,
-) -> pd.DataFrame:
-    """Load metadata from parquet file(s) with optional filtering."""
-
-    logger.info(f"Loading metadata from: {parquet_path}")
-    parquet_path = str(parquet_path)
-
-    # Get file list
-    matching_files = _get_matching_file_paths(parquet_path)
-    logger.info(f"Found {len(matching_files)} file(s)")
-
-    # Load and filter files
-    filter_set = set(filter_values) if filter_values else None
-    dfs = _load_and_filter_all_parquet_files(
-        matching_files=matching_files,
-        columns=columns,
-        filter_field=filter_field,
-        filter_set=filter_set,
-    )
-
-    df = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
-
-    # Remove duplicates if filter field exists
-    df = _remove_duplicate_rows_by_field(df, filter_field)
-
-    logger.info(f"Loaded {len(df)} rows")
-    return df
 
 
 def join_retrieval_with_metadata(
@@ -325,7 +208,7 @@ def _load_gtl_ids_into_lookup(
     gtl_lookup = {}
     batch_size = 5000
 
-    for i in tqdm(range(0, len(unique_node_ids), batch_size), desc="Loading GTL IDs"):
+    for i in range(0, len(unique_node_ids), batch_size):
         batch_ids = unique_node_ids[i : i + batch_size]
         # Create filter for batch
         id_list = "','".join(batch_ids)
@@ -337,9 +220,9 @@ def _load_gtl_ids_into_lookup(
         if batch_results.empty:
             continue
         # Add to lookup
-        normalized_gtls = batch_results["gtl_id"].apply(_normalize_gtl_id_lookup)
+        normalized_gtls = batch_results[GTL_ID_COLUMN].apply(_normalize_gtl_id_lookup)
         batch_lookup = dict(
-            zip(batch_results["node_ids"], normalized_gtls, strict=True)
+            zip(batch_results[LANCEDB_NODE_ID_COLUMN], normalized_gtls, strict=True)
         )
         gtl_lookup.update(batch_lookup)
 
@@ -619,7 +502,7 @@ def compute_all_scores_lazy(
     )
 
     # Process per query
-    for query_id in tqdm(query_node_ids, desc="Scoring queries"):
+    for query_id in query_node_ids:
         _process_all_results_for_query(
             augmented_results=augmented_results,
             query_id=query_id,
@@ -645,6 +528,7 @@ def sample_test_items_lazy(
     Sample node IDs from LanceDB table without loading full table into memory.
 
     TODO: Sample from dataframe instead of lancedb
+            & filter out ill defined data (gtl 0000000, etc)
 
     Args:
         table: LanceDB table containing items to sample from.
@@ -687,7 +571,12 @@ def get_embedding_for_item_lazy(
     Get embedding for a single item (no full table load).
     """
     # Search with filter - only loads matching rows
-    results = table.search().where(f"node_ids = '{node_id}'").limit(1).to_pandas()
+    results = (
+        table.search()
+        .where(f"{LANCEDB_NODE_ID_COLUMN} = '{node_id}'")
+        .limit(1)
+        .to_pandas()
+    )
 
     if len(results) == 0:
         return None
@@ -715,7 +604,7 @@ def generate_predictions_lazy(
 
     results = []
 
-    for query_item in tqdm(query_node_ids, desc="Retrieving"):
+    for query_item in query_node_ids:
         # Get query embedding
         query_embedding = get_embedding_for_item_lazy(table, query_item)
 
@@ -731,7 +620,7 @@ def generate_predictions_lazy(
         # Process results
         rank = 0
         for _, row in search_results.iterrows():
-            retrieved_id = row["node_ids"]
+            retrieved_id = row[LANCEDB_NODE_ID_COLUMN]
 
             # Skip self-match
             if str(retrieved_id) == str(query_item):

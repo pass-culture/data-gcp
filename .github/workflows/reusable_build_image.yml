@@ -8,9 +8,6 @@ on:
       TARGET_ENV:
         type: string
         required: true
-      DATA_GCP_PROJECT:
-        type: string
-        required: true
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER:
         required: true
@@ -22,13 +19,11 @@ env:
   DOCKER_REGISTRY_REGION: "europe-west1"
   DOCKER_REGISTRY_REPOSITORY: "pass-culture-artifact-registry"
   SOURCE_PATH: "orchestration/k8s-airflow"
-  DATA_GCP_PROJECT: ${{ vars.DATA_GCP_PROJECT }}
-  ENV_SHORT_NAME: ${{ vars.ENV_SHORT_NAME }}
+  TARGET_ENV: ${{ inputs.TARGET_ENV }}
 
 jobs:
   build-and-push-docker-image:
     name: "Build image job"
-    environment: ${{ inputs.TARGET_ENV }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -76,7 +71,7 @@ jobs:
         run: |
           tags="${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:${{ steps.sha.outputs.short_sha }}"
           tags="$tags\n${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:v1"
-          if [ "${{ inputs.TARGET_ENV }}" == "dev" ]; then
+          if [ "${TARGET_ENV}" == "dev" ]; then
             tags="$tags\n${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:dev"
           fi
           echo -e "tags<<EOF\n$tags\nEOF" >> $GITHUB_OUTPUT

@@ -4,7 +4,6 @@ import sys
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
-import pandas as pd
 import pytest
 
 # Mock http_tools before importing TiteliveClient
@@ -72,8 +71,9 @@ class TestRunIncremental:
         with (
             patch("src.scripts.run_incremental.get_last_sync_date") as mock_last_sync,
             patch(
-                "src.scripts.run_incremental.transform_api_response"
-            ) as mock_transform,
+                "src.scripts.run_incremental.extract_gencods_from_search_response"
+            ) as mock_extract,
+            patch("src.scripts.run_incremental.process_eans_batch") as mock_process,
             patch("src.scripts.run_incremental.insert_dataframe") as mock_insert,
             patch(
                 "src.scripts.run_incremental.get_destination_table_schema"
@@ -102,12 +102,15 @@ class TestRunIncremental:
                 },  # Day 2: page 1
             ]
 
-            mock_transform.return_value = pd.DataFrame(
+            # Mock gencod extraction and EAN processing
+            mock_extract.return_value = ["123"]
+            mock_process.return_value = [
                 {
-                    "ean": ["123"],
-                    "json_raw": ['{"test": "data"}'],
+                    "ean": "123",
+                    "json_raw": '{"test": "data"}',
+                    "status": "processed",
                 }
-            )
+            ]
 
             mock_schema.return_value = []
 
@@ -139,9 +142,6 @@ class TestRunIncremental:
         with (
             patch("src.scripts.run_incremental.get_last_sync_date") as mock_last_sync,
             patch(
-                "src.scripts.run_incremental.transform_api_response"
-            ) as mock_transform,
-            patch(
                 "src.scripts.run_incremental.get_destination_table_schema"
             ) as mock_schema,
         ):
@@ -150,7 +150,6 @@ class TestRunIncremental:
 
             # Mock API responses (empty results)
             mock_api_client.search_by_date.return_value = {"nbreponses": 0}
-            mock_transform.return_value = pd.DataFrame()
             mock_schema.return_value = []
 
             # Mock truncate query
@@ -240,8 +239,9 @@ class TestRunIncremental:
         with (
             patch("src.scripts.run_incremental.get_last_sync_date") as mock_last_sync,
             patch(
-                "src.scripts.run_incremental.transform_api_response"
-            ) as mock_transform,
+                "src.scripts.run_incremental.extract_gencods_from_search_response"
+            ) as mock_extract,
+            patch("src.scripts.run_incremental.process_eans_batch") as mock_process,
             patch(
                 "src.scripts.run_incremental.get_destination_table_schema"
             ) as mock_schema,
@@ -274,12 +274,15 @@ class TestRunIncremental:
             mock_api_client.search_by_date.side_effect = search_by_date_side_effect
             mock_calc_pages.return_value = 3  # 3 pages
 
-            mock_transform.return_value = pd.DataFrame(
+            # Mock gencod extraction and EAN processing
+            mock_extract.return_value = ["123"]
+            mock_process.return_value = [
                 {
-                    "ean": ["123"],
-                    "json_raw": ['{"test": "data"}'],
+                    "ean": "123",
+                    "json_raw": '{"test": "data"}',
+                    "status": "processed",
                 }
-            )
+            ]
             mock_schema.return_value = []
 
             # Mock truncate query
@@ -335,8 +338,9 @@ class TestRunIncremental:
         with (
             patch("src.scripts.run_incremental.get_last_sync_date") as mock_last_sync,
             patch(
-                "src.scripts.run_incremental.transform_api_response"
-            ) as mock_transform,
+                "src.scripts.run_incremental.extract_gencods_from_search_response"
+            ) as mock_extract,
+            patch("src.scripts.run_incremental.process_eans_batch") as mock_process,
             patch(
                 "src.scripts.run_incremental.get_destination_table_schema"
             ) as mock_schema,
@@ -372,12 +376,15 @@ class TestRunIncremental:
             mock_api_client.search_by_date.side_effect = search_by_date_side_effect
             mock_calc_pages.return_value = 2
 
-            mock_transform.return_value = pd.DataFrame(
+            # Mock gencod extraction and EAN processing
+            mock_extract.return_value = ["123"]
+            mock_process.return_value = [
                 {
-                    "ean": ["123"],
-                    "json_raw": ['{"test": "data"}'],
+                    "ean": "123",
+                    "json_raw": '{"test": "data"}',
+                    "status": "processed",
                 }
-            )
+            ]
             mock_schema.return_value = []
 
             # Mock truncate query
@@ -441,8 +448,9 @@ class TestRunIncremental:
         with (
             patch("src.scripts.run_incremental.get_last_sync_date") as mock_last_sync,
             patch(
-                "src.scripts.run_incremental.transform_api_response"
-            ) as mock_transform,
+                "src.scripts.run_incremental.extract_gencods_from_search_response"
+            ) as mock_extract,
+            patch("src.scripts.run_incremental.process_eans_batch") as mock_process,
             patch("src.scripts.run_incremental.insert_dataframe") as mock_insert,
             patch(
                 "src.scripts.run_incremental.get_destination_table_schema"
@@ -469,12 +477,15 @@ class TestRunIncremental:
                 },  # Day 2: page 1
             ]
 
-            mock_transform.return_value = pd.DataFrame(
+            # Mock gencod extraction and EAN processing
+            mock_extract.return_value = ["123"]
+            mock_process.return_value = [
                 {
-                    "ean": ["123"],
-                    "json_raw": ['{"test": "data"}'],
+                    "ean": "123",
+                    "json_raw": '{"test": "data"}',
+                    "status": "processed",
                 }
-            )
+            ]
             mock_schema.return_value = []
 
             # Mock truncate query
@@ -488,9 +499,9 @@ class TestRunIncremental:
             mock_insert.assert_called()
             inserted_df = mock_insert.call_args[0][2]  # Third argument is the dataframe
 
-            assert "status" in inserted_df.columns
             assert "processed_at" in inserted_df.columns
             assert "batch_number" in inserted_df.columns
-            assert "subcategoryid" in inserted_df.columns
             assert "images_download_status" in inserted_df.columns
             assert "images_download_processed_at" in inserted_df.columns
+            assert "recto_image_uuid" in inserted_df.columns
+            assert "verso_image_uuid" in inserted_df.columns

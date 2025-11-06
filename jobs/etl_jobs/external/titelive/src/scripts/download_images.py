@@ -251,6 +251,7 @@ def _process_batch_images(
     failed_eans = set()  # Track EANs that had parsing errors
     no_image_eans = set()  # Track EANs with ONLY "no_image" placeholder URLs
     no_image_url_count = 0  # Track total placeholder "no_image" URLs
+    no_image_cache = {}  # In-memory cache: no_image URL -> UUID (minimizes GCS calls)
 
     for row in rows:
         ean = row["ean"]
@@ -288,6 +289,22 @@ def _process_batch_images(
             recto_url = images_url.get("recto")
             verso_url = images_url.get("verso")
 
+            # Validate image availability based on image and image_4 fields
+            image_field = article.get("image")
+            image_4_field = article.get("image_4")
+
+            if image_field != 1:
+                logger.info(
+                    f"Skipping recto for EAN {ean}: image field is {image_field}"
+                )
+                recto_url = None
+
+            if image_4_field != 1:
+                logger.info(
+                    f"Skipping verso for EAN {ean}: image_4 field is {image_4_field}"
+                )
+                verso_url = None
+
             ean_images = []
             ean_has_real_image = False
             ean_has_placeholder = False
@@ -303,6 +320,8 @@ def _process_batch_images(
                 download_tasks,
                 ean_images,
                 old_recto_uuid,
+                storage_client,
+                no_image_cache,
             )
             if is_placeholder:
                 ean_has_placeholder = True
@@ -319,6 +338,8 @@ def _process_batch_images(
                 download_tasks,
                 ean_images,
                 old_verso_uuid,
+                storage_client,
+                no_image_cache,
             )
             if is_placeholder:
                 ean_has_placeholder = True
@@ -478,11 +499,15 @@ def _process_image_url(
     download_tasks: list,
     ean_images: list,
     old_uuid: str | None = None,
+    storage_client: storage.Client | None = None,
+    no_image_cache: dict[str, str] | None = None,
 ) -> tuple[bool, bool, str | None]:
     """
     Process a single image URL (recto or verso) and add to download tasks if URL changed
 
-    Skips placeholder "no_image" URLs (e.g., https://images.epagine.fr/no_image_musique.png)
+    Handles placeholder "no_image" URLs with caching and GCS existence checks:
+    - First encounter: checks cache, then GCS bucket, downloads if needed
+    - Subsequent encounters: instant cache hit (zero I/O)
 
     Uses UUID5 hash-based change detection:
     - Calculates new UUID from URL (deterministic)
@@ -497,6 +522,8 @@ def _process_image_url(
         download_tasks: List to append download task to (modified in place)
         ean_images: List to append image info to (modified in place)
         old_uuid: Previous UUID from product_mediation (None if first time)
+        storage_client: GCS client for checking blob existence
+        no_image_cache: In-memory cache mapping no_image URL -> UUID
 
     Returns:
         Tuple of (is_placeholder: bool, image_added: bool, uuid: str | None)
@@ -507,12 +534,41 @@ def _process_image_url(
     if image_url:
         # Check if placeholder "no_image" URL
         if "no_image" in image_url.lower():
-            logger.info(f"Skipping placeholder no_image URL: {image_url}")
-            return (
-                True,
-                False,
-                None,
-            )  # is_placeholder=True, image_added=False, uuid=None
+            # Check in-memory cache first (zero I/O)
+            if no_image_cache is not None and image_url in no_image_cache:
+                cached_uuid = no_image_cache[image_url]
+                logger.debug(
+                    f"Cache hit for no_image URL: {image_url} -> {cached_uuid}"
+                )
+                return (True, False, cached_uuid)
+
+            # First time seeing this no_image URL - calculate UUID
+            uuid = calculate_url_uuid(image_url)
+            logger.info(f"First encounter of no_image URL: {image_url} -> {uuid}")
+
+            # Check if blob exists in GCS (one call per unique no_image URL)
+            if storage_client is not None:
+                bucket = storage_client.bucket(gcs_bucket)
+                blob_path = f"{gcs_prefix}/{uuid}"
+                blob = bucket.blob(blob_path)
+
+                if not blob.exists():
+                    # Blob doesn't exist - add to download tasks
+                    gcs_path = f"gs://{gcs_bucket}/{blob_path}"
+                    download_tasks.append((image_url, gcs_path))
+                    logger.info(
+                        f"No_image placeholder not in bucket will download: {image_url}"
+                    )
+                else:
+                    logger.info(
+                        f"No_image placeholder already exists in bucket: {blob_path}"
+                    )
+
+            # Cache the UUID for subsequent EANs
+            if no_image_cache is not None:
+                no_image_cache[image_url] = uuid
+
+            return (True, False, uuid)  # is_placeholder=True, image_added=False
 
         # Calculate deterministic UUID5 from URL
         new_uuid = calculate_url_uuid(image_url)
@@ -524,8 +580,7 @@ def _process_image_url(
                 f"Image URL changed ({image_type}): "
                 f"old_uuid={old_uuid}, new_uuid={new_uuid}, url={image_url}"
             )
-            image_extension = _extract_extension(image_url)
-            gcs_path = f"gs://{gcs_bucket}/{gcs_prefix}/{new_uuid}{image_extension}"
+            gcs_path = f"gs://{gcs_bucket}/{gcs_prefix}/{new_uuid}"
 
             download_tasks.append((image_url, gcs_path))
             ean_images.append(
@@ -549,26 +604,3 @@ def _process_image_url(
             )  # is_placeholder=False, image_added=False, uuid=new_uuid
 
     return (False, False, None)  # No URL present
-
-
-def _extract_extension(url: str) -> str:
-    """
-    Extract file extension from URL.
-
-    Args:
-        url: Image URL
-
-    Returns:
-        Extension with dot (e.g., '.jpg') or empty string
-    """
-    # Remove query parameters
-    url_path = url.split("?")[0]
-
-    # Get extension
-    if "." in url_path:
-        extension = url_path.rsplit(".", 1)[-1].lower()
-        # Only keep common image extensions
-        if extension in ["jpg", "jpeg", "png", "gif", "webp", "bmp"]:
-            return f".{extension}"
-
-    return ".jpg"  # Default extension

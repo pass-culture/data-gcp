@@ -1,11 +1,8 @@
 import os
-import tempfile
-from pathlib import Path
 
-import pandas as pd
 from google.auth import default
 from google.auth.exceptions import DefaultCredentialsError
-from google.cloud import secretmanager, storage
+from google.cloud import secretmanager
 from google.oauth2 import service_account
 from loguru import logger
 
@@ -68,31 +65,3 @@ def get_secret(secret_id: str):
     name = f"projects/{GCP_PROJECT_ID}/secrets/{secret_id}/versions/1"
     response = client.access_secret_version(name=name)
     return response.payload.data.decode("UTF-8")
-
-
-def save_query_score_details_to_gcs(
-    results_df: pd.DataFrame,
-    score_details_bucket_folder: str,
-) -> None:
-    """
-    Save detailed query-scores DataFrame to a Parquet file in GCS,
-    optionally partitioned by columns (Hive-style).
-
-    Args:
-        results_df: DataFrame to save.
-        score_details_bucket_folder: GCS folder path, e.g., "gs://my-bucket/folder".
-        partition_cols: List of columns to partition by.
-    """
-
-    client = storage.Client()
-    # Parse bucket and prefix
-    if not score_details_bucket_folder.startswith("gs://"):
-        raise ValueError("score_details_bucket_folder must start with 'gs://'")
-    bucket_name = score_details_bucket_folder.split("/", 1)
-    _bucket = client.bucket(bucket_name)
-    # Save the full DataFrame as Parquet and publish to GCS
-    with tempfile.TemporaryDirectory() as tmpdir:
-        local_path = Path(tmpdir) / "query_score_details.parquet"
-        results_df.to_parquet(local_path, index=False)
-
-    logger.info(f"Pairwise scores saved to: {score_details_bucket_folder}")

@@ -9,10 +9,10 @@ import pandas as pd
 import torch
 import typer
 
+from src.config import EvaluationConfig, TrainingConfig
 from src.constants import MLFLOW_RUN_ID_FILEPATH, RESULTS_DIR
-from src.embedding_builder import DefaultTrainingConfig, train_metapath2vec
+from src.embedding_builder import train_metapath2vec
 from src.evaluation import (
-    DefaultEvaluationConfig,
     evaluate_embeddings,
 )
 from src.graph_builder import (
@@ -21,12 +21,13 @@ from src.graph_builder import (
 from src.heterograph_builder import build_book_metadata_heterograph
 from src.utils.graph_stats import get_graph_analysis
 from src.utils.mlflow import (
+    MLflowAuthManager,
     conditional_mlflow,
-    connect_remote_mlflow,
     get_mlflow_experiment,
     log_detailed_scores,
     log_evaluation_metrics,
     log_graph_analysis,
+    mlflow_token_refresher_context,
 )
 
 APP_DESCRIPTION = (
@@ -236,18 +237,22 @@ def train_metapath2vec_command(
     """Train a Metapath2Vec model on the book-to-metadata graph and save it to disk."""
 
     # Load default config
-    train_config = DefaultTrainingConfig()
-    # Override with user config if provided
-    if config_json:
-        train_config.update_from_json(config_json)
-    typer.echo(f"Using training config: {train_config.to_dict()}", err=True)
+    training_config = (
+        TrainingConfig().parse_and_update_config(config_json)
+        if config_json
+        else TrainingConfig()
+    )
+    typer.echo(f"Using training config: {training_config.to_dict()}", err=True)
 
     # Connect to MLflow
-    connect_remote_mlflow()
+    mlflow_auth = MLflowAuthManager()
+    mlflow_auth.authenticate()
     experiment = get_mlflow_experiment(experiment_name)
 
-    # Start MLflow run
-    with mlflow.start_run(experiment_id=experiment.experiment_id) as run:
+    with (
+        mlflow_token_refresher_context(auth_manager=mlflow_auth),
+        mlflow.start_run(experiment_id=experiment.experiment_id) as run,
+    ):
         run_id = run.info.run_id
         typer.secho(
             f"Started MLflow run '{run_id}' in experiment '{experiment.name}'."
@@ -268,7 +273,7 @@ def train_metapath2vec_command(
         # Train model with loss logging to mlflow
         embeddings_df = train_metapath2vec(
             graph_data=graph_data,
-            train_params=train_config,
+            training_config=training_config,
         )
 
         # Save embeddings
@@ -302,38 +307,41 @@ def evaluate_metapath2vec_command(
     }
     """
 
-    # Connect to MLflow
-    connect_remote_mlflow()
-
-    # Load default config
-    eval_config = DefaultEvaluationConfig()
-    # Override with user config if provided
-    if config_json:
-        eval_config.update_from_json(config_json)
-
-    typer.echo(f"Using evaluation config: {eval_config.to_dict()}", err=True)
+    evaluation_config = (
+        EvaluationConfig().parse_and_update_config(config_json)
+        if config_json
+        else EvaluationConfig()
+    )
+    typer.echo(f"Using evaluation config: {evaluation_config.to_dict()}", err=True)
 
     # Retrieving run_id locally
     with open(MLFLOW_RUN_ID_FILEPATH) as f:
         run_id = f.read().strip()
 
-    # Resume the run
-    with mlflow.start_run(run_id=run_id):
+    # Connect to MLflow
+    mlflow_auth = MLflowAuthManager()
+    mlflow_auth.authenticate()
+
+    with (
+        mlflow_token_refresher_context(auth_manager=mlflow_auth),
+        mlflow.start_run(run_id=run_id),
+    ):
         # Log config
-        mlflow.log_params({f"eval_{k}": v for k, v in eval_config.to_dict().items()})
+        mlflow.log_params(
+            {f"eval_{k}": v for k, v in evaluation_config.to_dict().items()}
+        )
 
         # Evaluate embeddings
         metrics_df, results_df = evaluate_embeddings(
             raw_data_parquet_path=raw_data_path,
             embedding_parquet_path=embedding_path,
-            eval_config=eval_config,
+            evaluation_config=evaluation_config,
         )
 
         # Log metrics to MLflow
         log_evaluation_metrics(
             metrics_df,
             output_metrics_path,
-            store_csv=True,
         )
 
         # Log detailed scores if requested

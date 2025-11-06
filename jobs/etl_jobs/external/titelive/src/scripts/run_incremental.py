@@ -6,6 +6,7 @@ import pandas as pd
 from google.cloud import bigquery
 
 from config import (
+    DEFAULT_BATCH_SIZE,
     GCP_PROJECT_ID,
     MAX_SEARCH_RESULTS,
     PROVIDER_EVENT_TABLE,
@@ -15,13 +16,14 @@ from config import (
 )
 from src.api.auth import TokenManager
 from src.api.client import TiteliveClient
-from src.utils.api_transform import transform_api_response
+from src.utils.api_transform import extract_gencods_from_search_response
 from src.utils.batching import calculate_total_pages
 from src.utils.bigquery import (
     get_destination_table_schema,
     get_last_sync_date,
     insert_dataframe,
 )
+from src.utils.ean_processing import process_eans_batch
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -189,16 +191,14 @@ def run_incremental(
                 f"Processing {total_results} {base} results across {total_pages} pages"
             )
 
-            # Iterate through pages and collect all dataframes
-            all_dataframes = []
+            # Phase 1: Collect all gencods from all pages
+            all_gencods = []
 
             for page in range(1, total_pages + 1):
-                logger.info(
-                    f"Processing {base} page {page}/{total_pages} for {date_str}"
-                )
+                logger.info(f"Fetching {base} page {page}/{total_pages} for {date_str}")
 
                 try:
-                    # Call API
+                    # Call search API
                     response = api_client.search_by_date(
                         base=base,
                         min_date=min_date_formatted,
@@ -216,40 +216,67 @@ def run_incremental(
                         )
                         continue
 
-                    # Transform response
-                    transformed_df = transform_api_response(response)
+                    # Extract gencods from search results with date filter
+                    page_gencods = extract_gencods_from_search_response(
+                        response, from_date=min_date_formatted
+                    )
+                    all_gencods.extend(page_gencods)
 
-                    # Add required fields for schema compatibility
-                    if not transformed_df.empty:
-                        transformed_df["status"] = "processed"
-                        transformed_df["processed_at"] = datetime.now()
-                        transformed_df["batch_number"] = 0
-                        transformed_df["subcategoryid"] = None
-                        transformed_df["images_download_status"] = None
-                        transformed_df["images_download_processed_at"] = None
-                        transformed_df["recto_image_uuid"] = None
-                        transformed_df["verso_image_uuid"] = None
-                        all_dataframes.append(transformed_df)
-                        logger.info(
-                            f"{base} page {page} complete: "
-                            f"{len(transformed_df)} rows fetched"
-                        )
-                    else:
-                        logger.warning(
-                            f"Page {page} produced no data after transformation."
-                        )
+                    logger.info(
+                        f"{base} page {page} complete: "
+                        f"{len(page_gencods)} gencods extracted"
+                    )
 
                 except Exception as e:
                     logger.error(
-                        f"Error processing {base} page {page} for {date_str}: {e}"
+                        f"Error fetching {base} page {page} for {date_str}: {e}"
                     )
                     logger.error("Continuing to next page...")
                     continue
 
-            # Insert all data at once after fetching all pages
-            if all_dataframes:
-                combined_df = pd.concat(all_dataframes, ignore_index=True)
+            # Phase 2: Fetch detailed data using /ean endpoint (same as run_init)
+            if all_gencods:
+                # Remove duplicates
+                unique_gencods = list(set(all_gencods))
+                logger.info(
+                    f"Collected {len(unique_gencods)} unique gencods "
+                    f"from {total_pages} pages for {base} on {date_str}"
+                )
 
+                # Map base to subcategoryid for proper routing in process_eans_batch
+                # Music EANs need a music subcategoryid to be routed to music group
+                # Paper EANs use None (defaults to paper group)
+                if base == TiteliveCategory.MUSIC:
+                    representative_subcategoryid = "SUPPORT_PHYSIQUE_MUSIQUE_CD"
+                else:
+                    representative_subcategoryid = None
+
+                # Create ean_pairs with appropriate subcategoryid
+                ean_pairs = [
+                    (gencod, representative_subcategoryid) for gencod in unique_gencods
+                ]
+
+                # Process using shared logic from run_init
+                logger.info(
+                    f"Fetching detailed data for {len(ean_pairs)} EANs "
+                    f"via /ean endpoint"
+                )
+                results = process_eans_batch(
+                    api_client, ean_pairs, sub_batch_size=DEFAULT_BATCH_SIZE
+                )
+
+                # Add required fields for schema compatibility
+                current_time = datetime.now()
+                for result in results:
+                    result["processed_at"] = current_time
+                    result["batch_number"] = 0
+                    result["images_download_status"] = None
+                    result["images_download_processed_at"] = None
+                    result["recto_image_uuid"] = None
+                    result["verso_image_uuid"] = None
+
+                # Convert to DataFrame and insert
+                combined_df = pd.DataFrame(results)
                 schema = get_destination_table_schema()
                 insert_dataframe(
                     bq_client,
@@ -263,11 +290,10 @@ def run_incremental(
                 grand_total_rows_inserted += rows_inserted
 
                 logger.info(
-                    f"Completed {base} for {date_str}: Inserted {rows_inserted} "
-                    f"rows from {len(all_dataframes)} pages"
+                    f"Completed {base} for {date_str}: Inserted {rows_inserted} rows"
                 )
             else:
-                logger.warning(f"No data to insert for {base} on {date_str}")
+                logger.warning(f"No gencods collected for {base} on {date_str}")
 
         logger.info(f"Completed processing date: {date_str}")
 

@@ -16,6 +16,7 @@ from constants import (
     IMG_KEY,
     OFFER_CATEGORY_ID_KEY,
     PRODUCTS_KEYS,
+    WIKI_ID_KEY,
 )
 from utils.loading import load_wikidata
 
@@ -26,14 +27,16 @@ ALIAS_MERGE_COLUMNS = [
     OFFER_CATEGORY_ID_KEY,
 ]
 
+ARTIST_WIKI_ID_KEY = "artist_wiki_id"
+
 
 def retrieve_artist_wikidata_id(
     artist_df: pd.DataFrame, artist_alias_df: pd.DataFrame
 ) -> pd.DataFrame:
     # Check for duplicate wikidata IDs before processing
     artists_with_multiple_wiki_ids = (
-        artist_alias_df[artist_alias_df["artist_wiki_id"].notna()]
-        .groupby(ARTIST_ID_KEY)["artist_wiki_id"]
+        artist_alias_df[artist_alias_df[ARTIST_WIKI_ID_KEY].notna()]
+        .groupby(ARTIST_ID_KEY)[ARTIST_WIKI_ID_KEY]
         .nunique()
     )
     if (artists_with_multiple_wiki_ids > 1).any():
@@ -45,15 +48,15 @@ def retrieve_artist_wikidata_id(
         )
 
     artist_id_with_wikidata_ids = (
-        artist_alias_df[artist_alias_df["artist_wiki_id"].notna()]
-        .groupby(ARTIST_ID_KEY)["artist_wiki_id"]
+        artist_alias_df[artist_alias_df[ARTIST_WIKI_ID_KEY].notna()]
+        .groupby(ARTIST_ID_KEY)[ARTIST_WIKI_ID_KEY]
         .first()
-        .to_frame(name="wiki_id")
+        .to_frame(name=WIKI_ID_KEY)
     )
 
     return artist_df.merge(
         artist_id_with_wikidata_ids,
-        how="left",
+        how="inner",
         on=ARTIST_ID_KEY,
     )
 
@@ -61,19 +64,11 @@ def retrieve_artist_wikidata_id(
 def create_delta_df_for_metadata_refresh(
     refreshed_artists_df: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    delta_artist_df = (
-        refreshed_artists_df.assign(
-            artist_name=lambda df: df.artist_name_wiki.fillna(df.artist_name),
-            description=lambda df: df.description_wiki.fillna(df.description),
-            img=lambda df: df.img_wiki.fillna(df.img),
-        )
-        .loc[:, ARTISTS_KEYS]
-        .assign(
-            **{
-                ACTION_KEY: "update",
-                COMMENT_KEY: "artist with refreshed metadata from wikidata",
-            }
-        )
+    delta_artist_df = refreshed_artists_df.loc[:, ARTISTS_KEYS].assign(
+        **{
+            ACTION_KEY: "update",
+            COMMENT_KEY: "artist with refreshed metadata from wikidata",
+        }
     )
     empty_delta_product_artist_link_df = pd.DataFrame(
         columns=PRODUCTS_KEYS
@@ -128,10 +123,11 @@ def sanity_checks(
         ARTIST_ALIASES_KEYS + [ACTION_KEY, COMMENT_KEY]
     ), "Delta artist alias dataframe has unexpected columns."
 
-    # 3. Check that we have same number of artists in delta as in applicative
+    # 3. Check that we have same number of artists with wiki_id in delta as in applicative
     assert (
-        len(delta_artist_df) == len(applicative_artist_df)
-    ), "Delta artist dataframe and applicative artist dataframe have different number of artists."
+        len(delta_artist_df)
+        == len(applicative_artist_alias_df[ARTIST_WIKI_ID_KEY].dropna().unique())
+    ), "Delta artist dataframe and applicative artist dataframes have different number of artists."
 
     # 4. Check that we have roughly at least same number of descriptions and img
     assert (
@@ -191,13 +187,13 @@ def main(
     refreshed_artists_df = artist_with_wikidata_ids_df.merge(
         wiki_df.drop(columns=["alias", "raw_alias"]).drop_duplicates(),
         how="left",
-        on="wiki_id",
-        suffixes=("", "_wiki"),
+        on=WIKI_ID_KEY,
+        suffixes=("_old", ""),
     )
 
     # 4. Refresh statistics
-    artists_with_wiki_id = artist_with_wikidata_ids_df["wiki_id"].notna().sum()
-    artists_matched_in_wiki = refreshed_artists_df["artist_name_wiki"].notna().sum()
+    artists_with_wiki_id = artist_with_wikidata_ids_df[WIKI_ID_KEY].notna().sum()
+    artists_matched_in_wiki = refreshed_artists_df[ARTIST_NAME_KEY].notna().sum()
     artists_with_wiki_id_no_match = artists_with_wiki_id - artists_matched_in_wiki
     logger.info(
         f"Artists with wiki_id: {artists_with_wiki_id}, "
@@ -227,10 +223,7 @@ def main(
     )
     logger.success("Sanity checks passed successfully.")
 
-    # 7. Filter to keep only artist with wiki_id match
-    delta_artist_df = delta_artist_df.loc[lambda df: df.wiki_id.notna()]
-
-    # 8. Save files
+    # 7. Save files
     logger.info("Saving delta dataframes...")
     logger.info(
         f"Saving delta artist dataframes to {output_delta_artist_file_path}, {output_delta_artist_alias_file_path} and {output_delta_product_artist_link_file_path}."

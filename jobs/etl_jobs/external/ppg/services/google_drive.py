@@ -1,16 +1,60 @@
 """Google Drive upload service for PPG reports."""
 
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional, TypeVar
 
 from google.auth import default
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 
-from config import ENV_SHORT_NAME, MONTH_NAMES_FR
+from config import MONTH_NAMES_FR
 from utils.verbose_logger import log_print
 
 SCOPES = ["https://www.googleapis.com/auth/drive"]
+
+T = TypeVar("T")
+
+
+def retry_with_backoff(
+    func: Callable[..., T], max_retries: int = 3, initial_delay: float = 1.0
+) -> Callable[..., T]:
+    """
+    Decorator to retry a function with exponential backoff.
+
+    Args:
+        func: Function to retry
+        max_retries: Maximum number of retry attempts
+        initial_delay: Initial delay in seconds
+
+    Returns:
+        Wrapped function with retry logic
+    """
+
+    def wrapper(*args, **kwargs) -> T:
+        delay = initial_delay
+        last_exception = None
+
+        for attempt in range(max_retries + 1):
+            try:
+                return func(*args, **kwargs)
+            except (HttpError, TimeoutError, ConnectionError, OSError) as e:
+                last_exception = e
+                if attempt < max_retries:
+                    log_print.debug(
+                        f"Retry {attempt + 1}/{max_retries} after {delay}s: {e}"
+                    )
+                    time.sleep(delay)
+                    delay *= 2  # Exponential backoff
+                else:
+                    log_print.error(f"Max retries reached: {e}", fg="red")
+
+        raise last_exception
+
+    return wrapper
 
 
 class DriveUploadService:
@@ -18,18 +62,24 @@ class DriveUploadService:
 
     def __init__(self):
         """Initialize Drive API with default credentials (GCE service account)."""
-        log_print.debug("🔐 Authenticating with Google Drive API")
+        log_print.info("🔐 Authenticating with Google Drive API")
         try:
-            creds, _ = default(scopes=SCOPES)
-            self.service = build("drive", "v3", credentials=creds)
-            log_print.debug("✅ Drive API client initialized")
+            # Get credentials once and reuse for per-thread service instances
+            self.creds, _ = default(scopes=SCOPES)
+            self.stats_lock = threading.Lock()
+            log_print.info("✅ Drive API credentials initialized")
         except Exception:
-            log_print.error(
-                "❌ Authentication failed. For local development, run:\n"
-                "   gcloud auth application-default login --scopes=https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/cloud-platform",
-                fg="red",
-            )
+            log_print.error("❌ Authentication failed", fg="red")
             raise
+
+    def _get_drive_service(self):
+        """
+        Create a new Drive API service instance for the current thread.
+
+        Returns:
+            Google Drive API service instance
+        """
+        return build("drive", "v3", credentials=self.creds)
 
     def find_folder(self, name: str, parent_id: str) -> Optional[str]:
         """
@@ -43,22 +93,32 @@ class DriveUploadService:
             Folder ID if found, None otherwise
         """
         query = (
-            f"name='{name}' and "
-            f"'{parent_id}' in parents and "
             f"mimeType='application/vnd.google-apps.folder' and "
+            f"'{parent_id}' in parents and "
+            f"name='{name}' and "
             f"trashed=false"
         )
 
         try:
-            results = (
-                self.service.files()
-                .list(q=query, spaces="drive", fields="files(id, name)")
-                .execute()
-            )
+            service = self._get_drive_service()
+
+            def _execute_query():
+                return (
+                    service.files()
+                    .list(
+                        q=query,
+                        includeItemsFromAllDrives=True,
+                        supportsAllDrives=True,
+                        fields="files(id, name)",
+                    )
+                    .execute()
+                )
+
+            results = retry_with_backoff(_execute_query)()
             items = results.get("files", [])
 
             if items:
-                log_print.debug(
+                log_print.info(
                     f"📁 Found existing folder: {name} (ID: {items[0]['id']})"
                 )
                 return items[0]["id"]
@@ -86,9 +146,16 @@ class DriveUploadService:
         }
 
         try:
-            folder = (
-                self.service.files().create(body=file_metadata, fields="id").execute()
-            )
+            service = self._get_drive_service()
+
+            def _create_folder():
+                return (
+                    service.files()
+                    .create(body=file_metadata, fields="id", supportsAllDrives=True)
+                    .execute()
+                )
+
+            folder = retry_with_backoff(_create_folder)()
             folder_id = folder.get("id")
             log_print.info(f"📁 Created folder: {name}")
             return folder_id
@@ -122,16 +189,27 @@ class DriveUploadService:
             parent_id: Parent folder ID
 
         Returns:
-            File ID if found, None otherwise
+            File ID if found, None otherwise (or if check fails)
         """
         query = f"name='{file_name}' and '{parent_id}' in parents and trashed=false"
 
         try:
-            results = (
-                self.service.files()
-                .list(q=query, spaces="drive", fields="files(id, name)")
-                .execute()
-            )
+            service = self._get_drive_service()
+
+            def _check_exists():
+                return (
+                    service.files()
+                    .list(
+                        q=query,
+                        spaces="drive",
+                        fields="files(id, name)",
+                        supportsAllDrives=True,
+                        includeItemsFromAllDrives=True,
+                    )
+                    .execute()
+                )
+
+            results = retry_with_backoff(_check_exists)()
             items = results.get("files", [])
 
             if items:
@@ -139,7 +217,11 @@ class DriveUploadService:
             return None
 
         except Exception as e:
-            log_print.warning(f"Error checking file existence '{file_name}': {e}")
+            log_print.info(
+                f"ℹ️  Could not check if '{file_name}' exists after retries: {e}. "
+                f"Continuing with upload attempt...",
+                fg="yellow",
+            )
             return None
 
     def upload_file(self, local_path: Path, parent_folder_id: str) -> Optional[str]:
@@ -171,11 +253,21 @@ class DriveUploadService:
         )
 
         try:
-            file = (
-                self.service.files()
-                .create(body=file_metadata, media_body=media, fields="id")
-                .execute()
-            )
+            service = self._get_drive_service()
+
+            def _upload_file():
+                return (
+                    service.files()
+                    .create(
+                        body=file_metadata,
+                        media_body=media,
+                        fields="id",
+                        supportsAllDrives=True,
+                    )
+                    .execute()
+                )
+
+            file = retry_with_backoff(_upload_file)()
             file_id = file.get("id")
             log_print.info(f"📤 Uploaded: {file_name}")
             return file_id
@@ -199,29 +291,60 @@ class DriveUploadService:
         month_name = MONTH_NAMES_FR[month_num]
         return f"Export DRAC - {month_name} {year}"
 
-    def verify_folder_access(self, folder_id: str) -> bool:
+    def _create_region_folder(
+        self, region_name: str, regional_folder_id: str, stats: Dict[str, Any]
+    ) -> Optional[str]:
         """
-        Verify that the folder exists and is accessible.
+        Create a region folder in Drive.
 
         Args:
-            folder_id: Google Drive folder ID
+            region_name: Region name
+            regional_folder_id: Parent regional folder ID in Drive
+            stats: Shared stats dictionary (thread-safe updates)
 
         Returns:
-            True if accessible, False otherwise
+            Created region folder ID, or None on error
         """
         try:
-            self.service.files().get(fileId=folder_id, fields="id, name").execute()
-            return True
-        except Exception as e:
-            log_print.error(
-                f"❌ Cannot access folder ID '{folder_id}': {e}\n"
-                f"   Please verify:\n"
-                f"   1. The folder ID is correct\n"
-                f"   2. Your account has access to this folder\n"
-                f"   3. The folder exists in Google Drive",
-                fg="red",
+            log_print.info(f"  📁 Creating folder: {region_name}")
+            region_folder_id = self.find_or_create_folder(
+                region_name, regional_folder_id
             )
-            return False
+            with self.stats_lock:
+                stats["folders_created"] += 1
+            return region_folder_id
+
+        except Exception as e:
+            error_msg = f"Failed to create folder for region {region_name}: {e}"
+            log_print.error(f"❌ {error_msg}", fg="red")
+            with self.stats_lock:
+                stats["errors"].append(error_msg)
+            return None
+
+    def _upload_file_task(
+        self, local_path: Path, parent_folder_id: str, stats: Dict[str, Any]
+    ) -> None:
+        """
+        Upload a single file and update stats (thread-safe).
+
+        Args:
+            local_path: Local file path
+            parent_folder_id: Parent folder ID in Drive
+            stats: Shared stats dictionary (thread-safe updates)
+        """
+        try:
+            result = self.upload_file(local_path, parent_folder_id)
+            with self.stats_lock:
+                if result:
+                    stats["files_uploaded"] += 1
+                else:
+                    stats["files_skipped"] += 1
+
+        except Exception as e:
+            error_msg = f"Failed to upload {local_path.name}: {e}"
+            log_print.error(f"❌ {error_msg}", fg="red")
+            with self.stats_lock:
+                stats["errors"].append(error_msg)
 
     def upload_reports_directory(
         self, local_base_dir: Path, ds: str, root_folder_id: str
@@ -244,28 +367,18 @@ class DriveUploadService:
             "errors": [],
         }
 
-        # Verify root folder access first
-        if not self.verify_folder_access(root_folder_id):
-            stats["errors"].append(f"Cannot access root folder: {root_folder_id}")
-            return stats
-
         try:
-            # 1. Get or create ENV_SHORT_NAME folder
-            log_print.info(f"📁 Using environment folder: {ENV_SHORT_NAME}", fg="cyan")
-            env_folder_id = self.find_or_create_folder(ENV_SHORT_NAME, root_folder_id)
-            stats["folders_created"] += 1
-
-            # 2. Create "Export DRAC - Mars 2024" folder inside ENV_SHORT_NAME
+            # 1. Create "Export DRAC - Mars 2024" folder
             export_folder_name = self._format_export_folder_name(ds)
             log_print.info(
                 f"📁 Creating export folder: {export_folder_name}", fg="cyan"
             )
             export_folder_id = self.find_or_create_folder(
-                export_folder_name, env_folder_id
+                export_folder_name, root_folder_id
             )
             stats["folders_created"] += 1
 
-            # 3. Handle NATIONAL/
+            # 2. Handle NATIONAL/
             national_dir = local_base_dir / "NATIONAL"
             if national_dir.exists() and national_dir.is_dir():
                 log_print.info("📂 Processing NATIONAL reports...", fg="cyan")
@@ -282,7 +395,7 @@ class DriveUploadService:
                     else:
                         stats["files_skipped"] += 1
 
-            # 4. Handle REGIONAL/
+            # 3. Handle REGIONAL/ (two-phase parallel processing)
             regional_dir = local_base_dir / "REGIONAL"
             if regional_dir.exists() and regional_dir.is_dir():
                 log_print.info("📂 Processing REGIONAL reports...", fg="cyan")
@@ -291,28 +404,64 @@ class DriveUploadService:
                 )
                 stats["folders_created"] += 1
 
-                # Iterate through each region folder (sorted alphabetically)
+                # Get all region folders
                 region_folders = sorted(
                     [f for f in regional_dir.iterdir() if f.is_dir()]
                 )
 
-                for region_folder in region_folders:
-                    region_name = region_folder.name
-                    log_print.info(f"  📁 Processing region: {region_name}")
+                # PHASE 1: Create all region folders in parallel
+                log_print.info(
+                    f"  📁 Creating {len(region_folders)} region folders in parallel...",
+                    fg="cyan",
+                )
+                region_folder_map = {}
+                with ThreadPoolExecutor(max_workers=10) as executor:
+                    future_to_region = {
+                        executor.submit(
+                            self._create_region_folder,
+                            region_folder.name,
+                            regional_folder_id,
+                            stats,
+                        ): region_folder
+                        for region_folder in region_folders
+                    }
+                    for future in as_completed(future_to_region):
+                        region_folder = future_to_region[future]
+                        try:
+                            region_folder_id = future.result()
+                            if region_folder_id:
+                                region_folder_map[region_folder] = region_folder_id
+                        except Exception as e:
+                            log_print.error(
+                                f"  ❌ Error creating folder: {e}", fg="red"
+                            )
 
-                    region_folder_id = self.find_or_create_folder(
-                        region_name, regional_folder_id
-                    )
-                    stats["folders_created"] += 1
-
-                    # Upload all .xlsx files in region folder
+                # PHASE 2: Collect all file upload tasks
+                log_print.info("  📤 Collecting files to upload...", fg="cyan")
+                upload_tasks = []
+                for region_folder, region_folder_id in region_folder_map.items():
                     xlsx_files = sorted(region_folder.glob("*.xlsx"))
                     for xlsx_file in xlsx_files:
-                        result = self.upload_file(xlsx_file, region_folder_id)
-                        if result:
-                            stats["files_uploaded"] += 1
-                        else:
-                            stats["files_skipped"] += 1
+                        upload_tasks.append((xlsx_file, region_folder_id))
+
+                # PHASE 3: Upload all files in parallel
+                log_print.info(
+                    f"  🚀 Uploading {len(upload_tasks)} files in parallel...",
+                    fg="cyan",
+                )
+                with ThreadPoolExecutor(max_workers=10) as executor:
+                    futures = [
+                        executor.submit(
+                            self._upload_file_task, file_path, folder_id, stats
+                        )
+                        for file_path, folder_id in upload_tasks
+                    ]
+                    # Wait for all uploads to complete
+                    for future in as_completed(futures):
+                        try:
+                            future.result()
+                        except Exception as e:
+                            log_print.error(f"  ❌ Upload error: {e}", fg="red")
 
             log_print.info("✅ Upload process completed successfully", fg="green")
 

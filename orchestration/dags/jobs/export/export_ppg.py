@@ -100,6 +100,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         labels={"job_type": "long_task", "dag_name": dag_id},
+        additional_scopes=["https://www.googleapis.com/auth/drive"],
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -115,7 +116,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py generate --stakeholder ministere --ds {{ ds }}",
+        command="python main.py generate --stakeholder all --ds {{ ds }}",
         deferrable=True,
         poll_interval=120,
     )

@@ -9,7 +9,6 @@ import typer
 from metabase_api import MetabaseAPI
 from native import NativeCard
 from query import QueryCard
-from dashboard import Dashboard
 from table import MetabaseTable, get_mapped_fields
 from utils import (
     ENVIRONMENT_LONG_NAME,
@@ -40,7 +39,7 @@ PASSWORD = access_secret_data(
 
 
 def run(
-    update_type: str = typer.Option(
+    metabase_card_type: str = typer.Option(
         ...,
         help="Type de update Metabase à faire. 'native' pour les cartes SQL, 'query' pour les cartes en clics boutons, 'dashboard' pour les filtres de dashboards",
     ),
@@ -87,16 +86,11 @@ def run(
     )
     print(f"Field mapping is {metabase_field_mapping}")
 
-    dashboards_to_update = list(set([d["id"] for d in metabase.get_dashboards()]))
-    print(
-        f"{len(dashboards_to_update)} Dashboards to update with ids : {dashboards_to_update}"
-    )
-
     native_cards, query_cards = get_dependant_cards(
         legacy_table_name, legacy_schema_name
     )
 
-    if update_type == "native":
+    if metabase_card_type == "native":
         transition_logs = []
         for card_id in native_cards:
             transition_log = {
@@ -124,7 +118,7 @@ def run(
                 print(e)
             transition_logs.append(transition_log)
 
-    if update_type == "query":
+    if metabase_card_type == "query":
         transition_logs = []
 
         for card_id in query_cards:
@@ -146,29 +140,6 @@ def run(
             except Exception as e:
                 transition_log["success"] = False
                 print(e)
-            transition_logs.append(transition_log)
-
-    if update_type == "dashboard":
-        transition_logs = []
-        transition_log = {
-            "card_type": "dashboard",
-            "legacy_table_name": legacy_table_name,
-            "new_table_name": new_table_name,
-        }
-        for dashboard_id in dashboards_to_update:
-            try:
-                dashboard = Dashboard(dashboard_id=dashboard_id, metabase_api=metabase)
-                print(f"Before {dashboard.dashboard_info}")
-                dashboard.update_dashboard_filters(metabase_field_mapping)
-                print(f"After {dashboard.dashboard_info}")
-                # dashboard.update_dashboard()
-                transition_log["card_id"] = dashboard_id
-                transition_log["timestamp"] = datetime.datetime.now()
-                transition_log["success"] = True
-            except Exception as e:
-                transition_log["success"] = False
-                print(e)
-
             transition_logs.append(transition_log)
 
     pd.DataFrame(transition_logs).to_gbq(

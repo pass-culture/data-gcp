@@ -48,7 +48,7 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "update_type": Param(
+        "metabase_card_type": Param(
             default="native",
             type="string",
         ),
@@ -96,7 +96,7 @@ with DAG(
         environment=dag_config,
         command="""
         python main.py \
-        --update-type {{ params.update_type }} \
+        --metabase-card-type {{ params.metabase_card_type }} \
         --legacy-table-name {{ params.legacy_table_name }} \
         --new-table-name {{ params.new_table_name }} \
         --legacy-schema-name {{ params.legacy_schema_name }} \

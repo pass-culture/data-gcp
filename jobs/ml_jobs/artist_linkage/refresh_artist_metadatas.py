@@ -227,7 +227,10 @@ def main(
     )
     logger.success("Sanity checks passed successfully.")
 
-    # 7. Save files
+    # 7. Filter to keep only artist with wiki_id match
+    delta_artist_df = delta_artist_df.loc[lambda df: df.wiki_id.notna()]
+
+    # 8. Save files
     logger.info("Saving delta dataframes...")
     logger.info(
         f"Saving delta artist dataframes to {output_delta_artist_file_path}, {output_delta_artist_alias_file_path} and {output_delta_product_artist_link_file_path}."

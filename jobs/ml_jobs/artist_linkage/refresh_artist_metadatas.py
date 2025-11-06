@@ -105,10 +105,33 @@ def sanity_checks(
     delta_product_df: pd.DataFrame,
     delta_artist_df: pd.DataFrame,
     delta_artist_alias_df: pd.DataFrame,
-    artist_df: pd.DataFrame,
-    artist_alias_df: pd.DataFrame,
+    applicative_artist_df: pd.DataFrame,
+    applicative_artist_alias_df: pd.DataFrame,
 ) -> None:
-    pass
+    SANITY_THRESHOLD = 0.95
+    # 1. Minimal sanity checks
+    assert (
+        len(delta_product_df) == 0
+    ), "Delta product dataframe is not empty. It should for metadata refresh."
+    assert len(delta_artist_df) > 0, "Delta artist dataframe is empty."
+    assert (
+        len(delta_artist_alias_df) == 0
+    ), "Delta artist alias dataframe is not empty. It should for metadata refresh."
+    assert len(applicative_artist_df) > 0, "Applicative artist dataframe is empty."
+    assert (
+        len(applicative_artist_alias_df) > 0
+    ), "Applicative artist alias dataframe is empty."
+
+    # 2. Check that we have same number of artists in delta as in applicative
+    assert (
+        len(delta_artist_df) == len(applicative_artist_df)
+    ), "Delta artist dataframe and applicative artist dataframe have different number of artists."
+
+    # 3. Check that we have roughly at least same number of descriptions
+    assert (
+        delta_artist_df[DESCRIPTION_KEY].notna().sum()
+        >= SANITY_THRESHOLD * applicative_artist_df[DESCRIPTION_KEY].notna().sum()
+    ), f"Delta artist dataframe has fewer descriptions than applicative artist dataframe with given threshold {SANITY_THRESHOLD}."
 
 
 # %%

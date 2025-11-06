@@ -66,7 +66,7 @@ DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME = "delta_artist_with_metadata.parquet"
 
 # BQ Tables
 PRODUCT_TO_LINK_TABLE = "product_to_link"
-TABLES_TO_IMPORT_TO_GCS_FOR_SYNC = [
+TABLES_TO_IMPORT_TO_GCS = [
     {
         "dataset_id": BIGQUERY_RAW_DATASET,
         "table_id": "applicative_database_artist",
@@ -123,14 +123,19 @@ GCS_TO_DELTA_TABLES = [
     },
 ]
 
+# Flow names
 FULL_REBUILD_FLOW = "full_rebuild_flow"
-LINK_NEW_PRODUCTS_TO_ARTISTS_FLOW = "incremental_flow"
+INCREMENTAL_FLOW = "incremental_flow"
+REFRESH_METADATA_FLOW = "refresh_metadata_flow"
 
 
 def _choose_linkage(**context):
-    if context["linkage_mode"] == "full_rebuild":
+    if context["params"]["linkage_mode"] == "full_rebuild":
         return FULL_REBUILD_FLOW
-    return LINK_NEW_PRODUCTS_TO_ARTISTS_FLOW
+    elif context["params"]["linkage_mode"] == "metadata_refresh":
+        return REFRESH_METADATA_FLOW
+    else:
+        return INCREMENTAL_FLOW
 
 
 default_args = {
@@ -157,14 +162,13 @@ with DAG(
             type="string",
         ),
         "linkage_mode": Param(
-            default="delta_update",
+            default="incremental",
             enum=["incremental", "full_rebuild", "metadata_refresh"],
             type="string",
         ),
     },
 ) as dag:
     with TaskGroup("dag_init") as dag_init:
-        # check fribourg uni serveur availability
         logging_task = PythonOperator(
             task_id="logging_task",
             python_callable=lambda: print(
@@ -202,33 +206,40 @@ with DAG(
         dag=dag,
     )
     full_rebuild_flow = EmptyOperator(task_id=FULL_REBUILD_FLOW)
-    incremental_flow = EmptyOperator(task_id=LINK_NEW_PRODUCTS_TO_ARTISTS_FLOW)
+    incremental_flow = EmptyOperator(task_id=INCREMENTAL_FLOW)
+    refresh_metadata_flow = EmptyOperator(task_id=REFRESH_METADATA_FLOW)
 
     #####################################################################################################
-    #                                Link Products to Artists from Scratch                              #
+    #                                          Import Data Task                                         #
     #####################################################################################################
+
     with TaskGroup(
-        "import_data_for_linkage_from_scratch"
-    ) as import_data_for_linkage_from_scratch:
-        BigQueryInsertJobOperator(
-            project_id=GCP_PROJECT_ID,
-            task_id="import_products_to_full_rebuild",
-            configuration={
-                "extract": {
-                    "sourceTable": {
-                        "projectId": GCP_PROJECT_ID,
-                        "datasetId": BIGQUERY_ML_LINKAGE_DATASET,
-                        "tableId": PRODUCT_TO_LINK_TABLE,
-                    },
-                    "compression": None,
-                    "destinationUris": os.path.join(
-                        STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME
-                    ),
-                    "destinationFormat": "PARQUET",
-                }
-            },
-            dag=dag,
-        )
+        "import_data",
+    ) as import_data:
+        for table_data in TABLES_TO_IMPORT_TO_GCS:
+            BigQueryInsertJobOperator(
+                project_id=GCP_PROJECT_ID,
+                task_id=f"import_{table_data['table_id']}_to_bucket",
+                configuration={
+                    "extract": {
+                        "sourceTable": {
+                            "projectId": GCP_PROJECT_ID,
+                            "datasetId": table_data["dataset_id"],
+                            "tableId": table_data["table_id"],
+                        },
+                        "compression": None,
+                        "destinationUris": os.path.join(
+                            STORAGE_BASE_PATH, table_data["filename"]
+                        ),
+                        "destinationFormat": "PARQUET",
+                    }
+                },
+                dag=dag,
+            )
+
+    #####################################################################################################
+    #                                         Full Rebuild Flow                                         #
+    #####################################################################################################
 
     link_products_to_artists_from_scratch = SSHGCEOperator(
         task_id="link_products_to_artists_from_scratch",
@@ -256,9 +267,7 @@ with DAG(
             """,
     )
 
-    with TaskGroup(
-        "load_artist_data_into_delta_tables"
-    ) as load_artist_data_into_delta_tables:
+    with TaskGroup("load_artist_data_tables") as load_artist_data_tables:
         for table_data in GCS_TO_ARTIST_TABLES:
             GCSToBigQueryOperator(
                 task_id=f"load_data_into_{table_data['table_id']}_table",
@@ -286,32 +295,8 @@ with DAG(
     )
 
     #####################################################################################################
-    #                                      Link New Products to Artists                                 #
+    #                                      Incremental Update Flow                                      #
     #####################################################################################################
-
-    with TaskGroup(
-        "import_data_for_new_products_synchronization"
-    ) as import_data_for_new_products_synchronization:
-        for table_data in TABLES_TO_IMPORT_TO_GCS_FOR_SYNC:
-            BigQueryInsertJobOperator(
-                project_id=GCP_PROJECT_ID,
-                task_id=f"import_{table_data['table_id']}_to_bucket",
-                configuration={
-                    "extract": {
-                        "sourceTable": {
-                            "projectId": GCP_PROJECT_ID,
-                            "datasetId": table_data["dataset_id"],
-                            "tableId": table_data["table_id"],
-                        },
-                        "compression": None,
-                        "destinationUris": os.path.join(
-                            STORAGE_BASE_PATH, table_data["filename"]
-                        ),
-                        "destinationFormat": "PARQUET",
-                    }
-                },
-                dag=dag,
-            )
 
     link_new_products_to_artists = SSHGCEOperator(
         task_id="link_new_products_to_artists",
@@ -331,8 +316,33 @@ with DAG(
             """,
     )
 
-    get_wikimedia_commons_license_on_artist_delta = SSHGCEOperator(
-        task_id="get_wikimedia_commons_license_on_artist_delta",
+    #####################################################################################################
+    #                                      Refresh Metadatas Flow                                       #
+    #####################################################################################################
+
+    refresh_artist_metadatas = SSHGCEOperator(
+        task_id="refresh_artist_metadatas",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+             python refresh_artist_metadatas.py \
+            --artist-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
+            --artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME)} \
+            --product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
+            --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
+            --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
+            --output-delta-artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME)} \
+            --output-delta-artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTIST_ALIAS_GCS_FILENAME)} \
+            --output-delta-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME)}
+            """,
+    )
+
+    #####################################################################################################
+    #                              Common Incremental + Refresh Metadata                                #
+    #####################################################################################################
+
+    get_wikimedia_commons_license_on_delta_tables = SSHGCEOperator(
+        task_id="get_wikimedia_commons_license_on_delta_tables",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
@@ -342,7 +352,9 @@ with DAG(
             """,
     )
 
-    with TaskGroup("load_data_into_delta_tables") as load_data_into_delta_tables:
+    with TaskGroup(
+        "load_artist_data_into_delta_tables"
+    ) as load_artist_data_into_delta_tables:
         for table_data in GCS_TO_DELTA_TABLES:
             GCSToBigQueryOperator(
                 task_id=f"load_data_into_{table_data['table_id']}_table",
@@ -355,25 +367,45 @@ with DAG(
                 autodetect=True,
             )
 
-    # Common tasks
-    (dag_init >> vm_init >> choose_linkage >> [full_rebuild_flow, incremental_flow])
+    #####################################################################################################
+    #                                        DAG Dependencies                                           #
+    #####################################################################################################
 
-    # Link From Scratch tasks
+    # Common tasks
+    (
+        dag_init
+        >> vm_init
+        >> choose_linkage
+        >> import_data
+        >> [full_rebuild_flow, incremental_flow, refresh_metadata_flow]
+    )
+
+    # Full Rebuild Flow
     (
         full_rebuild_flow
-        >> import_data_for_linkage_from_scratch
         >> link_products_to_artists_from_scratch
         >> get_wikimedia_commons_license
-        >> [load_artist_data_into_delta_tables, artist_metrics]
+        >> [load_artist_data_tables, artist_metrics]
         >> gce_instance_stop
     )
 
-    # Link New Products to Artists tasks
+    # Incremental Update Flow
     (
         incremental_flow
-        >> import_data_for_new_products_synchronization
         >> link_new_products_to_artists
-        >> get_wikimedia_commons_license_on_artist_delta
-        >> load_data_into_delta_tables
+        >> get_wikimedia_commons_license_on_delta_tables
+    )
+
+    # Refresh Metadata Flow
+    (
+        refresh_metadata_flow
+        >> refresh_artist_metadatas
+        >> get_wikimedia_commons_license_on_delta_tables
+    )
+
+    # Common end tasks
+    (
+        get_wikimedia_commons_license_on_delta_tables
+        >> load_artist_data_into_delta_tables
         >> gce_instance_stop
     )

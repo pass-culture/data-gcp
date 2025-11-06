@@ -19,6 +19,7 @@ select
     campaign_tag.micro_objective as publication_tag_micro_objective,
     campaign_tag.offer_category as publication_tag_offer_category,
     campaign_tag.region as publication_tag_region_name,
+    campaign_tag.event as publication_tag_event_name,
     date(post_detail.export_date) as publication_export_date,
     case
         when post_detail.account_id = '17841463525422101'

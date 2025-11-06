@@ -282,7 +282,6 @@ with (
         "--run-name {{ params.run_name }}",
         dag=dag,
         deferrable=True,
-        poll_interval=300,
     )
 
     evaluate = SSHGCEOperator(
@@ -295,7 +294,6 @@ with (
         "--dummy {{ params.evaluate_on_dummy }} ",
         dag=dag,
         deferrable=True,
-        poll_interval=300,
     )
 
     branch_upload_embeddings = BranchPythonOperator(

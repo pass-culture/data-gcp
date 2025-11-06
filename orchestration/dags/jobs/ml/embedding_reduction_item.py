@@ -116,7 +116,6 @@ with DAG(
         f"--reduction-config default ",
         retries=2,
         deferrable=True,
-        poll_interval=300,
     )
 
     gce_instance_stop = DeleteGCEOperator(

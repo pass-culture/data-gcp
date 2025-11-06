@@ -58,6 +58,9 @@ models:
       - name: publication_tag_region_name
         description: '{{ doc("column__publication_tag_region_name") }}'
         data_type: STRING
+      - name: publication_tag_event_name
+        description: '{{ doc("column__publication_tag_event_name") }}'
+        data_type: STRING
       - name: instagram_publication_media_type
         description: '{{ doc("column__instagram_publication_media_type") }}'
         type: STRING

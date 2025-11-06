@@ -44,8 +44,8 @@ class SyncTokenBucketRateLimiter(BaseRateLimiter):
         self.default_backoff = default_backoff
 
     def acquire(self):
-        now = time.time()
         while len(self.timestamps) >= self.calls:
+            now = time.time()
             if now - self.timestamps[0] > self.period:
                 self.timestamps.popleft()
             else:
@@ -91,8 +91,8 @@ class AsyncTokenBucketRateLimiter(BaseRateLimiter):
 
     async def acquire(self):
         async with self.lock:
-            now = time.time()
             while len(self.timestamps) >= self.calls:
+                now = time.time()
                 if now - self.timestamps[0] > self.period:
                     self.timestamps.popleft()
                 else:

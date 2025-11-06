@@ -26,3 +26,5 @@ models:
         description: "{{ doc('column__special_event_response_status') }}"
       - name: special_event_response_submitted_date
         description: "{{ doc('column__special_event_response_submitted_date') }}"
+      - name: special_event_end_date
+        description: "{{ doc('column__special_event_end_date') }}"

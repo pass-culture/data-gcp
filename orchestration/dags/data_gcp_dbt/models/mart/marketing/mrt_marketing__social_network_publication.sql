@@ -47,6 +47,7 @@
         publication_tag_micro_objective,
         publication_tag_offer_category,
         publication_tag_region_name,
+        publication_tag_event_name,
 
         -- Instagram specific metrics
         {% if social_network == "instagram" %} total_instagram_publication_interactions

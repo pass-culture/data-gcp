@@ -5,7 +5,7 @@ no_escape=false
 
 # Parse arguments
 for arg in "$@"; do
-  if [ "$arg" == "--no-escape" ]; then
+  if [[ "$arg" = "--no-escape" ]]; then
     no_escape=true
   fi
 done
@@ -28,7 +28,7 @@ eval "$find_cmd" > /tmp/list.txt
 folders=()
 # Read the list of directories from the file and add them to the array
 while IFS= read -r folder; do
-  if [ "$no_escape" = true ]; then
+  if [[ "$no_escape" = true ]]; then
     folders+=("'${folder}'")
   else
     folders+=(\\\"${folder}\\\")

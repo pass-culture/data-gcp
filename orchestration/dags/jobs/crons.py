@@ -4,6 +4,11 @@ SCHEDULE_DICT = {
         "dev": "0 12 * * 2",  # every Tuesday at 12:00 PM
         "stg": "0 12 * * 3",  # every Wednesday at 12:00 PM
     },
+    "algo_training_graph_embeddings": {
+        "prod": None,
+        "stg": None,
+        "dev": None,
+    },
     "algo_default_deployment": "0 9 * * *",
     "artist_linkage": "0 12 * * 0",
     "bigquery_archive_partition": "0 7 * * *",
@@ -23,7 +28,8 @@ SCHEDULE_DICT = {
     "embedding_reduction_item": "0 12 * * 0",
     "import_applicative_database": "0 1 * * *",
     "import_intraday_firebase_data": "0 1 * * *",
-    "import_titelive": None,
+    "import_titelive_ml": None,
+    "import_titelive": "0 4 * * *",  # every day at 4:00 AM
     "link_items": {
         "prod": "0 20 * * 3",  # every Wednesday at 8:00 PM
         "stg": "0 6 * * 3",  # every Wednesday at 6:00 AM

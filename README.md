@@ -48,10 +48,9 @@ This repository contains the core components of our data platform:
 - Make installed
   - Linux: `sudo apt install make`
   - macOS: `brew install make`
-- ggshield installed
-  - Linux: `sudo apt install ggshield`
-  - Mac: `brew install ggshield`
-- ggshield authenticated `ggshield auth login` use github auth with your work account
+- Install the prerequisites
+  - Linux: `make install_ubuntu_libs`
+  - Mac: `make install_macos_libs`
 
 ### Installation
 
@@ -72,18 +71,9 @@ This repository contains the core components of our data platform:
 
 ### Troubleshooting
 
-#### Ubuntu
-
-```bash
-make install_ubuntu_libs
-```
-
 #### macOS
 
-```bash
-make install_macos_libs
-```
-
+If you have MySQL client related issues when installing dependencies, you might need to set the following environment variables.
 Add to your `~/.zshrc`:
 
 ```bash

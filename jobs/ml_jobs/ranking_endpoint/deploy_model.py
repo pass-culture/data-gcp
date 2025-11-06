@@ -128,8 +128,8 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
     return (
         data.astype(
             {
-                "consult": "float",
-                "booking": "float",
+                "consult": "int",
+                "booking": "int",
             }
         )
         .fillna({"consult": 0, "booking": 0})
@@ -142,10 +142,10 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
         .assign(
             status=lambda df: pd.Series([ClassMapping.seen.name] * len(df))
             .where(
-                df[ClassMapping.consulted.name] != 1.0,
+                df[ClassMapping.consulted.name] != 1,
                 other=ClassMapping.consulted.name,
             )
-            .where(df[ClassMapping.booked.name] != 1.0, other=ClassMapping.booked.name),
+            .where(df[ClassMapping.booked.name] != 1, other=ClassMapping.booked.name),
             target_class=lambda df: df["status"]
             .map(
                 {

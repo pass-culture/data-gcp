@@ -1,0 +1,70 @@
+version: 2
+
+models:
+  - name: exp_backend__product_delta
+    description: "{{ doc('description__product_delta') }}"
+    columns:
+
+      - name: ean
+        description: "{{ doc('column__ean') }}"
+        tests:
+          - not_null:
+              tags: ['critical']
+          - unique:
+              tags: ['critical']
+
+      - name: name
+        description: "{{ doc('column__name') }}"
+        tests:
+          - not_null:
+              tags: ['critical']
+
+      - name: description
+        description: "{{ doc('column__description') }}"
+
+      - name: support_code
+        description: "{{ doc('column__support_code') }}"
+        tests:
+          - not_null:
+              tags: ['critical']
+
+      - name: publication_date
+        description: "{{ doc('column__publication_date') }}"
+
+      - name: publisher
+        description: "{{ doc('column__publisher') }}"
+
+      - name: language_iso
+        description: "{{ doc('column__language_iso') }}"
+
+      - name: vat_rate
+        description: "{{ doc('column__vat_rate') }}"
+
+      - name: price
+        description: "{{ doc('column__price') }}"
+
+      - name: readership_id
+        description: "{{ doc('column__readership_id') }}"
+
+      - name: gtl
+        description: "{{ doc('column__gtl') }}"
+
+      - name: multiple_authors
+        description: "{{ doc('column__multiple_authors') }}"
+
+      - name: recto_uuid
+        description: "{{ doc('column__recto_uuid') }}"
+
+      - name: verso_uuid
+        description: "{{ doc('column__verso_uuid') }}"
+
+      - name: image
+        description: "{{ doc('column__image') }}"
+
+      - name: image_4
+        description: "{{ doc('column__image_4') }}"
+
+      - name: modification_date
+        description: "{{ doc('column__modification_date') }}"
+        tests:
+          - not_null

@@ -1,250 +1,191 @@
-import os
-from datetime import datetime, timedelta
+"""Airflow DAG for Titelive ETL Pipeline with multiple execution modes."""
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import BranchPythonOperator, PythonOperator
-from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
-    GCSToBigQueryOperator,
-)
-from airflow.providers.google.cloud.transfers.gcs_to_gcs import GCSToGCSOperator
-from airflow.utils.task_group import TaskGroup
+import datetime
+import os
+
 from common import macros
 from common.callback import on_failure_vm_callback
-from common.config import (
-    BIGQUERY_ML_PREPROCESSING_DATASET,
-    DAG_FOLDER,
-    DAG_TAGS,
-    ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
-    ML_BUCKET_TEMP,
-)
+from common.config import DAG_FOLDER, DAG_TAGS, ENV_SHORT_NAME
 from common.operators.gce import (
     DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
 )
-from common.utils import get_airflow_schedule
+from common.utils import get_airflow_schedule, delayed_waiting_operator
 from jobs.crons import SCHEDULE_DICT
 
-# Basic settings
-BASE_DIR = "data-gcp/jobs/etl_jobs/external/titelive"
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import BranchPythonOperator
+
 DAG_NAME = "import_titelive"
-DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"import-titelive-{ENV_SHORT_NAME}"
+BASE_DIR = "data-gcp/jobs/etl_jobs/external/titelive"
+HTTP_TOOLS_RELATIVE_DIR = "../../"
 
-# Paths
-GCS_FOLDER_PATH = f"{DAG_NAME}_{ENV_SHORT_NAME}/{{{{ ds_nodash }}}}"
-STORAGE_BASE_PATH = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}"
-GCS_THUMB_BASE_PATH = {
-    "prod": f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/thumb",  # For prod, we use a different bucket path because metier bucket is too sensitive
-    "stg": "gs://passculture-metier-ehp-staging-assets-fine-grained/thumbs",
-    "dev": "gs://passculture-metier-ehp-testing-assets-fine-grained/thumbs",
-}[ENV_SHORT_NAME]
+# Environment Configuration
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
+BIGQUERY_DATASET = os.getenv("BIGQUERY_DATASET", "tmp_cdarnis_dev")
 
-# Filenames and table names
-TITELIVE_PRODUCTS_FILENAME = "titelive_products.parquet"
-TITELIVE_PRODUCTS_WITH_METADATAS_FILENAME = "titelive_products_with_metadata.parquet"
-OUTPUT_BOOK_TABLE_NAME = "titelive_books"
-OUTPUT_BOOK_WITH_METADATAS_TABLE_NAME = "titelive_books_with_metadatas"
+dag_config = {
+    "GCP_PROJECT_ID": GCP_PROJECT_ID,
+    "ENV_SHORT_NAME": ENV_SHORT_NAME,
+    "BIGQUERY_DATASET": BIGQUERY_DATASET,
+}
 
 
-default_args = {
-    "owner": "data-team",
-    "start_date": datetime(2024, 1, 1),
+default_dag_args = {
+    "start_date": datetime.datetime(2025, 1, 1),
+    "retries": 2,
     "on_failure_callback": on_failure_vm_callback,
-    "retries": 3,
-    "retry_delay": timedelta(minutes=5),
+    "retry_delay": datetime.timedelta(minutes=5),
 }
 
 with DAG(
     DAG_NAME,
-    default_args=default_args,
-    description="Export Titelive data pipeline",
+    default_args=default_dag_args,
+    description="Titelive ETL pipeline with multiple execution modes",
     schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME]),
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value, DAG_TAGS.DE.value, DAG_TAGS.POC.value],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
+            description="Git branch to deploy",
         ),
         "instance_type": Param(
             default="n1-standard-4",
             enum=["n1-standard-1", "n1-standard-2", "n1-standard-4", "n1-standard-8"],
+            description="GCE instance type",
         ),
-        "category": Param(
-            default="paper",
-            enum=["paper", "music"],
+        "init": Param(
+            default=False,
+            type="boolean",
+            description="If True, run init mode (BigQuery EAN batch). If False, run incremental mode (sync since last sync date)",
         ),
-        "custom_min_modified_date": Param(default=None, type=["null", "string"]),
-        "upload_images": Param(default=False, type="boolean"),
-        "augment_metadatas": Param(default=False, type="boolean"),
+        # Init mode params (when init=True)
+        "resume": Param(
+            default=False,
+            type="boolean",
+            description="Resume from last batch_number (init mode)",
+        ),
+        "reprocess_failed": Param(
+            default=False,
+            type="boolean",
+            description="Reprocess EANs with status='failed' from destination table (init mode)",
+        ),
+        # Download images params
+        "download_images_reprocess_failed": Param(
+            default=False,
+            type="boolean",
+            description="Reprocess EANs with images_download_status='failed' (download-images step)",
+        ),
     },
 ) as dag:
-    with TaskGroup("dag_init") as dag_init:
-        logging_task = PythonOperator(
-            task_id="logging_task",
-            python_callable=lambda: print(
-                f"Task executed for branch : {dag.params.get('branch')} and instance : {dag.params.get('instance_type')} on env : {ENV_SHORT_NAME}"
-            ),
-            dag=dag,
+    gce_instance_start = StartGCEOperator(
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        instance_type="{{ params.instance_type }}",
+        preemptible=False,
+        labels={"job_type": "long_task", "dag_name": DAG_NAME},
+    )
+
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
+        instance_name=GCE_INSTANCE,
+        branch="{{ params.branch }}",
+        python_version="3.12",
+        base_dir=BASE_DIR,
+        retries=2,
+    )
+
+    # Decide execution mode based on init parameter
+    def decide_execution_mode(**context):
+        """Determine which execution mode task to run."""
+        return (
+            [run_init_task.task_id]
+            if context["params"].get("init", False)
+            else [wait_for_raw.task_id]
         )
 
-    with TaskGroup("vm_init") as vm_init:
-        gce_instance_start = StartGCEOperator(
-            task_id="gce_start_task",
-            instance_name=GCE_INSTANCE,
-            instance_type="{{ params.instance_type }}",
-            preemptible=False,
-            labels={"job_type": "etl_task", "dag_name": DAG_NAME},
-        )
-        fetch_install_code = InstallDependenciesOperator(
-            task_id="fetch_install_code",
-            instance_name=GCE_INSTANCE,
-            branch="{{ params.branch }}",
-            python_version="3.12",
-            base_dir=BASE_DIR,
-            retries=2,
-        )
-        gce_instance_start >> fetch_install_code
+    execution_mode_branch = BranchPythonOperator(
+        task_id="decide_execution_mode",
+        python_callable=decide_execution_mode,
+    )
 
-    with TaskGroup("titelive_extraction") as titelive_extraction:
-        extract_products_task = SSHGCEOperator(
-            task_id="extract_new_products_from_titelive",
-            instance_name=GCE_INSTANCE,
-            base_dir=BASE_DIR,
-            command=f"""PYTHONPATH=. python scripts/extract_new_products_from_titelive.py \
-                --product-category {{{{ params.category }}}} \
-                --min-modified-date {{{{ params.custom_min_modified_date or macros.ds_add(ds, -1) }}}} \
-                --output-file-path {STORAGE_BASE_PATH}/extracted_products.parquet
-                """,
-        )
+    wait_for_raw = delayed_waiting_operator(
+        dag=dag,
+        external_dag_id="import_applicative_database",
+    )
 
-        parse_products_task = SSHGCEOperator(
-            task_id="parse_products",
-            instance_name=GCE_INSTANCE,
-            base_dir=BASE_DIR,
-            command=f"""PYTHONPATH=. python scripts/parse_products.py \
-                --min-modified-date {{{{ params.custom_min_modified_date or macros.ds_add(ds, -1) }}}} \
-                --input-file-path {STORAGE_BASE_PATH}/extracted_products.parquet \
-                --output-file-path {STORAGE_BASE_PATH}/parsed_products.parquet
-                """,
-        )
-
-        extract_products_task >> parse_products_task
-
-    upload_images_products_task = SSHGCEOperator(
-        task_id="upload_images_products_task",
+    # Init mode: Extract EANs from BigQuery and batch process
+    run_init_task = SSHGCEOperator(
+        task_id="run_init_task",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
-        command=f"""PYTHONPATH=. python scripts/upload_titelive_images_to_gcs.py \
-            --input-parquet-path {STORAGE_BASE_PATH}/parsed_products.parquet \
-            --output-parquet-path {STORAGE_BASE_PATH}/{TITELIVE_PRODUCTS_FILENAME} \
-            --gcs-thumb-base-path {GCS_THUMB_BASE_PATH}
-            """,
+        environment=dag_config,
+        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py run-init "
+        f"{{{{ '--resume' if params.resume else '' }}}} "
+        f"{{{{ '--reprocess-failed' if params.reprocess_failed else '' }}}}",
+        deferrable=True,
     )
 
-    copy_parsed_products_task = GCSToGCSOperator(
-        task_id="copy_parsed_products_task",
-        source_bucket=ML_BUCKET_TEMP,
-        source_object=os.path.join(GCS_FOLDER_PATH, "parsed_products.parquet"),
-        destination_bucket=ML_BUCKET_TEMP,
-        destination_object=os.path.join(GCS_FOLDER_PATH, TITELIVE_PRODUCTS_FILENAME),
-        move_object=False,
-    )
-
-    # Branch decision based on upload_images parameter
-    def decide_upload_images_branch(**context):
-        upload_images = context["params"].get("upload_images", True)
-        if upload_images:
-            return "upload_images_products_task"
-        else:
-            return "copy_parsed_products_task"
-
-    branch_upload_image_task = BranchPythonOperator(
-        task_id="decide_upload_images",
-        python_callable=decide_upload_images_branch,
-    )
-
-    # Branch decision based on augment_metadatas parameter
-    def decide_augment_metadatas_branch(**context):
-        augment_metadatas = context["params"].get("augment_metadatas", True)
-        if augment_metadatas:
-            return "augment_metadatas"
-        else:
-            return "export_data"
-
-    branch_augment_metadatas_task = BranchPythonOperator(
-        task_id="decide_augment_metadatas",
-        python_callable=decide_augment_metadatas_branch,
-        trigger_rule="none_failed_min_one_success",
-    )
-
-    augment_metadatas = SSHGCEOperator(
-        task_id="augment_metadatas",
+    # Incremental mode: Sync since last sync date for both bases
+    run_incremental_task = SSHGCEOperator(
+        task_id="run_incremental_task",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
-        command=f"""PYTHONPATH=. python scripts/generate_metadatas_with_llms.py \
-            --input-file-path {STORAGE_BASE_PATH}/{TITELIVE_PRODUCTS_FILENAME} \
-            --output-file-path {STORAGE_BASE_PATH}/{TITELIVE_PRODUCTS_WITH_METADATAS_FILENAME}
-            """,
+        environment=dag_config,
+        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py run-incremental",
     )
 
-    export_data = GCSToBigQueryOperator(
-        task_id="export_data",
-        project_id=GCP_PROJECT_ID,
-        bucket=ML_BUCKET_TEMP,
-        source_objects=os.path.join(GCS_FOLDER_PATH, TITELIVE_PRODUCTS_FILENAME),
-        destination_project_dataset_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.{OUTPUT_BOOK_TABLE_NAME}",
-        source_format="PARQUET",
-        write_disposition="WRITE_TRUNCATE",
-        autodetect=True,
+    # Download images for init mode (deferrable)
+    download_images_init = SSHGCEOperator(
+        task_id="download_images_init",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        environment=dag_config,
+        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py download-images "
+        f"{{{{ '--reprocess-failed' if params.download_images_reprocess_failed else '' }}}}",
+        deferrable=True,
     )
 
-    export_data_with_metadatas = GCSToBigQueryOperator(
-        task_id="export_data_with_metadatas",
-        project_id=GCP_PROJECT_ID,
-        bucket=ML_BUCKET_TEMP,
-        source_objects=os.path.join(
-            GCS_FOLDER_PATH, TITELIVE_PRODUCTS_WITH_METADATAS_FILENAME
-        ),
-        destination_project_dataset_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.{OUTPUT_BOOK_WITH_METADATAS_TABLE_NAME}",
-        source_format="PARQUET",
-        write_disposition="WRITE_TRUNCATE",
-        autodetect=True,
+    # Download images for incremental mode (not deferrable)
+    download_images_incremental = SSHGCEOperator(
+        task_id="download_images_incremental",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        environment=dag_config,
+        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py download-images "
+        f"{{{{ '--reprocess-failed' if params.download_images_reprocess_failed else '' }}}}",
+        deferrable=False,
     )
 
+    # VM cleanup
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name=GCE_INSTANCE,
-        trigger_rule="none_failed_min_one_success",
+        trigger_rule="none_failed",
     )
 
     # Task dependencies
-    dag_init >> vm_init >> titelive_extraction >> branch_upload_image_task
+    (gce_instance_start >> fetch_install_code >> execution_mode_branch)
 
-    # Branch paths upload images
     (
-        branch_upload_image_task
-        >> upload_images_products_task
-        >> branch_augment_metadatas_task
+        execution_mode_branch
+        >> run_init_task
+        >> download_images_init
+        >> gce_instance_stop
     )
     (
-        branch_upload_image_task
-        >> copy_parsed_products_task
-        >> branch_augment_metadatas_task
-    )
-
-    # Branch paths augment metadatas
-    branch_augment_metadatas_task >> export_data >> gce_instance_stop
-    (
-        branch_augment_metadatas_task
-        >> augment_metadatas
-        >> export_data_with_metadatas
+        execution_mode_branch
+        >> wait_for_raw
+        >> run_incremental_task
+        >> download_images_incremental
         >> gce_instance_stop
     )

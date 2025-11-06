@@ -35,7 +35,10 @@ def predict():
         return jsonify({"error": str(e)}), 400
 
     try:
-        handler = PredictionHandlerFactory.get_handler(request_data.model_type)
+        handler = PredictionHandlerFactory.get_handler(
+            request_type=request_data.model_type,
+            embedding_model_type=model.EMBEDDING_MODEL_TYPE,
+        )
         result: PredictionResult = handler.handle(model, request_data)
         return jsonify(result), 200
     except ValueError as e:

@@ -116,7 +116,6 @@ def extract_embedding_item_dag(
         f"--output-dataset-name {OUTPUT_DATASET_NAME} "
         f"--output-table-name {OUTPUT_TABLE_NAME} ",
         deferrable=True,
-        poll_interval=300,
     )
 
     stop_gce = DeleteGCEOperator(task_id="stop_gce", instance_name=GCE_INSTANCE)

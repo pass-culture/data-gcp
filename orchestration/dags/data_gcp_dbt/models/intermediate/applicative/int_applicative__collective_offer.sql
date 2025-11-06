@@ -58,10 +58,6 @@ with
             co.collective_offer_contact_phone,
             null as collective_offer_contact_url,
             null as collective_offer_contact_form,
-            co.collective_offer_offer_venue,
-            co.collective_offer_venue_humanized_id,
-            co.collective_offer_venue_address_type as collective_offer_address_type,
-            co.collective_offer_venue_other_address,
             co.intervention_area,
             co.template_id,
             co.collective_offer_last_validation_type,
@@ -107,7 +103,8 @@ with
                 when co.collective_offer_location_type = "SCHOOL"
                 then "school"
             end as collective_offer_location_type,
-            false as collective_offer_is_template
+            false as collective_offer_is_template,
+            co.offerer_address_id
         from {{ source("raw", "applicative_database_collective_offer") }} as co
         left join
             collective_stocks_grouped_by_collective_offers as cs
@@ -143,10 +140,6 @@ union all
         collective_offer_contact_phone,
         collective_offer_contact_url,
         collective_offer_contact_form,
-        collective_offer_offer_venue,
-        collective_offer_venue_humanized_id,
-        collective_offer_venue_address_type,
-        collective_offer_venue_other_address,
         intervention_area,
         null as template_id,
         collective_offer_last_validation_type,
@@ -189,6 +182,7 @@ union all
             when collective_offer_location_type = "SCHOOL"
             then "school"
         end as collective_offer_location_type,
-        true as collective_offer_is_template
+        true as collective_offer_is_template,
+        offerer_address_id
     from {{ source("raw", "applicative_database_collective_offer_template") }}
 )

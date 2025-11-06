@@ -96,7 +96,6 @@ with DAG(
         command='python main.py --target transactional --audience pro --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
         do_xcom_push=True,
         deferrable=True,
-        poll_interval=300,
     )
 
     import_native_transactional_data_to_tmp = SSHGCEOperator(
@@ -107,7 +106,6 @@ with DAG(
         command='python main.py --target transactional --audience native --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
         do_xcom_push=True,
         deferrable=True,
-        poll_interval=300,
     )
 
     ### jointure avec pcapi pour retirer les emails

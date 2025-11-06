@@ -1,5 +1,9 @@
+import os
 from datetime import datetime, timedelta
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -15,19 +19,16 @@ from common.operators.gce import (
 )
 from common.utils import get_airflow_schedule
 
-from airflow import DAG
-from airflow.models import Param
-
 default_args = {
     "start_date": datetime(2022, 11, 30),
     "on_failure_callback": on_failure_vm_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
+DAG_NAME = "build_and_push_two_towers_retrieval_api"
 
-DEFAULT_REGION = "europe-west1"
-DAG_NAME = "retrieval_vector_build"
 
+# Params
 gce_params = {
     "base_dir": "data-gcp/jobs/ml_jobs/retrieval_vector",
     "instance_name": f"retrieval-recommendation-build-{ENV_SHORT_NAME}",

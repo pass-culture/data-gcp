@@ -79,3 +79,6 @@ models:
       - name: instagram_publication_profile_activity
         description: '{{ doc("column__instagram_publication_profile_activity") }}'
         data_type: INT64
+      - name: publication_tag_event_name
+        description: '{{ doc("column__publication_tag_event_name") }}'
+        data_type: STRING

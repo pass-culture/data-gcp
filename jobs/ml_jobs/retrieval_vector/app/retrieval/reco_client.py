@@ -12,11 +12,14 @@ from app.retrieval.constants import (
     OUTPUT_METRIC_COLUMNS,
     SIMILARITY_ITEM_ITEM_COLUMN_NAME,
     SIMILARITY_USER_ITEM_COLUMN_NAME,
+    EmbeddingModelTypes,
 )
 from app.retrieval.core.reranker import UserReranker
 
 
 class RecoClient(DefaultClient):
+    EMBEDDING_MODEL_TYPE = EmbeddingModelTypes.RECOMMENDATION
+
     def __init__(
         self,
         default_token: str,

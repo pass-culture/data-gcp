@@ -9,7 +9,7 @@ git fetch origin $TARGET_BRANCH
 changed_files=$(git diff origin/$TARGET_BRANCH HEAD --name-only | grep 'orchestration/dags/data_gcp_dbt/' || true)
 
 # Set the output variable
-if [ -z "$changed_files" ]; then
+if [[ -z "$changed_files" ]]; then
   echo "changes=false" >> $GITHUB_OUTPUT
 else
   echo "changes=true" >> $GITHUB_OUTPUT

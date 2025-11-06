@@ -1,5 +1,11 @@
 from datetime import datetime, timedelta
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryInsertJobOperator,
+)
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -17,18 +23,11 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
-
 DATE = "{{ ts_nodash }}"
-DAG_NAME = "retrieval_semantic_vector_build"
+DAG_NAME = "build_and_push_semantic_retrieval_api"
 # Environment variables to export before running commands
 dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/retrieval_vector_{ENV_SHORT_NAME}/semantic_{DATE}/{DATE}_item_embbedding_data",
+    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/{DAG_NAME}/{DATE}_item_embbedding_data",
     "BASE_DIR": "data-gcp/jobs/ml_jobs/retrieval_vector/",
     "EXPERIMENT_NAME": f"retrieval_semantic_vector_v0.1_{ENV_SHORT_NAME}",
     "MODEL_NAME": f"v1.1_{ENV_SHORT_NAME}",
@@ -94,7 +93,7 @@ with DAG(
         ),
     },
 ) as dag:
-    start = DummyOperator(task_id="start", dag=dag)
+    start = EmptyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",

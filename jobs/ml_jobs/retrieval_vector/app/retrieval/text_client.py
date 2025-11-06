@@ -12,10 +12,13 @@ from app.retrieval.constants import (
     DEFAULT_ITEM_DOCS_PATH,
     DEFAULT_LANCE_DB_URI,
     OUTPUT_METRIC_COLUMNS,
+    EmbeddingModelTypes,
 )
 
 
 class TextClient(DefaultClient):
+    EMBEDDING_MODEL_TYPE = EmbeddingModelTypes.SEMANTIC
+
     def __init__(
         self,
         transformer: str,

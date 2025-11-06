@@ -32,3 +32,6 @@ data-gcp-api
 logs/dbt.log
 site
 package_versions.diff
+
+# AI
+.serena

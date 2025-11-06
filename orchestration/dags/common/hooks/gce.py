@@ -402,7 +402,10 @@ class GCEHook(GoogleBaseHook):
             "serviceAccounts": [
                 {
                     "email": f"{self.gce_sa}@{self.gcp_project}.iam.gserviceaccount.com",
-                    "scopes": ["https://www.googleapis.com/auth/cloud-platform"],
+                    "scopes": [
+                        "https://www.googleapis.com/auth/cloud-platform",
+                        "https://www.googleapis.com/auth/drive",
+                    ],
                 }
             ],
             "metadata": {"items": metadata},

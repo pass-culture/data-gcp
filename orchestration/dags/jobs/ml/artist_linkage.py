@@ -195,6 +195,11 @@ with DAG(
         )
         gce_instance_start >> fetch_install_code
 
+    join_before_stop = EmptyOperator(
+        task_id="join_before_stop",
+        trigger_rule="none_failed_min_one_success",
+    )
+
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE, trigger_rule="none_failed"
     )
@@ -344,6 +349,7 @@ with DAG(
         task_id="get_wikimedia_commons_license_on_delta_tables",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
+        trigger_rule="none_failed_min_one_success",
         command=f"""
              python get_wikimedia_commons_license.py \
             --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME)} \
@@ -352,7 +358,8 @@ with DAG(
     )
 
     with TaskGroup(
-        "load_artist_data_into_delta_tables"
+        "load_artist_data_into_delta_tables",
+        default_args={"trigger_rule": "none_failed_min_one_success"},
     ) as load_artist_data_into_delta_tables:
         for table_data in GCS_TO_DELTA_TABLES:
             GCSToBigQueryOperator(
@@ -385,7 +392,7 @@ with DAG(
         >> link_products_to_artists_from_scratch
         >> get_wikimedia_commons_license
         >> [load_artist_data_tables, artist_metrics]
-        >> gce_instance_stop
+        >> join_before_stop
     )
 
     # Incremental Update Flow
@@ -406,5 +413,7 @@ with DAG(
     (
         get_wikimedia_commons_license_on_delta_tables
         >> load_artist_data_into_delta_tables
-        >> gce_instance_stop
+        >> join_before_stop
     )
+
+    join_before_stop >> gce_instance_stop

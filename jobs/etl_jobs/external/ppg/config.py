@@ -23,7 +23,12 @@ BASE_TEMPLATE = Path("./templates/export_template.xlsx")
 REPORT_BASE_DIR_DEFAULT = Path("./reports")
 
 # Google Drive Configuration
-GOOGLE_DRIVE_ROOT_FOLDER_ID = "0ALZT4drzhWuYUk9PVA"
+GOOGLE_DRIVE_ROOT_FOLDER_ID_MAPPING = {
+    "dev": "1xtAFgDX-0IZmbvYgho82oBWGXIB5Fl45",
+    "stg": "1_kbEaW24GZptXC-AU8euZ8iiW3Vp_7Wv",
+    "prod": "1k7hbhKXNM2_X50TOyNnwgHAjlhaPRxHF",
+}
+GOOGLE_DRIVE_ROOT_FOLDER_ID = GOOGLE_DRIVE_ROOT_FOLDER_ID_MAPPING[ENV_SHORT_NAME]
 
 # French month names for folder naming
 MONTH_NAMES_FR = {

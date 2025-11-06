@@ -49,7 +49,6 @@ DBT_REPORTING_MODELS_PATH = f"{DAG_FOLDER}/data_gcp_dbt/models/mart/external_rep
 dag_config = {
     "GCP_PROJECT": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
-    "PPG_GOOGLE_DRIVE_FOLDER_ID": os.environ.get("PPG_GOOGLE_DRIVE_FOLDER_ID", ""),
 }
 
 
@@ -116,7 +115,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py generate --stakeholder all --ds {{ ds }}",
+        command="python main.py generate --stakeholder ministere --ds {{ ds }}",
         deferrable=True,
         poll_interval=120,
     )

@@ -148,18 +148,15 @@ jobs:
     uses: ./.github/workflows/reusable_build_image.yml
     with:
       TARGET_ENV: "dev"
-      DATA_GCP_PROJECT: "passculture-data-ehp"
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
-
   k8s-deploy-on-stg:
     needs: [find-build-job]
     if: ${{ needs.find-build-job.outputs.has-changed == 'true' && ( github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch' )}}
     uses: ./.github/workflows/reusable_build_image.yml
     with:
       TARGET_ENV: "stg"
-      DATA_GCP_PROJECT: "passculture-data-ehp"
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
@@ -169,7 +166,6 @@ jobs:
     uses: ./.github/workflows/reusable_build_image.yml
     with:
       TARGET_ENV: "prod"
-      DATA_GCP_PROJECT: "passculture-data-prod"
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}

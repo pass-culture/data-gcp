@@ -2,6 +2,7 @@
 
 import pandas as pd
 import typer
+from loguru import logger
 
 from constants import (
     ACTION_KEY,
@@ -151,6 +152,7 @@ def main(
     output_delta_product_artist_link_file_path: str = typer.Option(),
 ) -> None:
     # 1. Load data
+    logger.info("Loading artist data...")
     applicative_artist_df = pd.read_parquet(artist_file_path).rename(
         columns={
             "artist_description": DESCRIPTION_KEY,
@@ -161,39 +163,56 @@ def main(
     wiki_df = load_wikidata(
         wiki_base_path=wiki_base_path, wiki_file_name=wiki_file_name
     ).reset_index(drop=True)
+    logger.success("Artist data loaded successfully.")
+    logger.info(
+        f"Number of artists: {len(applicative_artist_df)}, Number of artist aliases: {len(applicative_artist_alias_df)}, Number of wikidata entries: {len(wiki_df)}"
+    )
 
     # 2. Find wiki_id for existing artists from artist_alias table
     # TODO: Remove this step when applicative_artist_table has wikidata ids
+    logger.info("Retrieving wikidata ids for existing artists...")
     artist_with_wikidata_ids_df = retrieve_artist_wikidata_id(
         artist_df=applicative_artist_df,
         artist_alias_df=applicative_artist_alias_df,
     )
+    logger.success("Wikidata ids retrieved successfully.")
 
     # 3. Match on wikidata to have fresh metadatas
+    logger.info("Refreshing artist metadatas from wikidata...")
     refreshed_artists_df = artist_with_wikidata_ids_df.merge(
         wiki_df.drop(columns=["alias", "raw_alias"]).drop_duplicates(),
         how="left",
         on="wiki_id",
         suffixes=("", "_wiki"),
     )
+    logger.success("Artist metadatas refreshed successfully.")
 
     # 4. Build delta artist dataframe
+    logger.info("Building delta artist dataframe...")
     empty_delta_product_artist_link_df, delta_artist_df, empty_delta_artist_alias_df = (
         create_delta_df_for_metadata_refresh(
             refreshed_artists_df=refreshed_artists_df,
         )
     )
+    logger.success("Delta artist dataframe built successfully.")
+    logger.info(f"Number of artists to update: {len(delta_artist_df)}")
 
     # 5. Sanity check for consistency
+    logger.info("Performing sanity checks...")
     sanity_checks(
         delta_product_df=empty_delta_product_artist_link_df,
         delta_artist_df=delta_artist_df,
         delta_artist_alias_df=empty_delta_artist_alias_df,
-        artist_df=applicative_artist_df,
-        artist_alias_df=applicative_artist_alias_df,
+        applicative_artist_df=applicative_artist_df,
+        applicative_artist_alias_df=applicative_artist_alias_df,
     )
+    logger.success("Sanity checks passed successfully.")
 
-    # 8. Save files
+    # 6. Save files
+    logger.info("Saving delta dataframes...")
+    logger.info(
+        f"Saving delta artist dataframes to {output_delta_artist_file_path}, {output_delta_artist_alias_file_path} and {output_delta_product_artist_link_file_path}."
+    )
     delta_artist_df.to_parquet(output_delta_artist_file_path, index=False)
     empty_delta_artist_alias_df.to_parquet(
         output_delta_artist_alias_file_path, index=False
@@ -201,6 +220,7 @@ def main(
     empty_delta_product_artist_link_df.to_parquet(
         output_delta_product_artist_link_file_path, index=False
     )
+    logger.success("Delta dataframes saved successfully.")
 
 
 if __name__ == "__main__":

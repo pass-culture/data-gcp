@@ -1,4 +1,4 @@
-"""Google Drive upload service for PPG reports."""
+"""Google Drive upload service for external reporting."""
 
 import threading
 import time

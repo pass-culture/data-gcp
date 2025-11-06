@@ -75,7 +75,7 @@ Optional Arguments:
 - -v, --verbose: Enable verbose output with detailed logging, MUST be passed after main.py
 - --ds YYYY-MM-DD: Consolidation date to find zip file (default: current month)
 - -b, --bucket NAME: GCS bucket name (uses default if not specified)
-- -d, --destination PATH: Destination path in bucket (default: ppg_reports)
+- -d, --destination PATH: Destination path in bucket (default: external_reporting)
 
 Upload to Google Drive
 
@@ -87,12 +87,17 @@ Optional Arguments:
 
 - -v, --verbose: Enable verbose output with detailed logging, MUST be passed after main.py
 - --ds YYYY-MM-DD: Consolidation date (default: current month)
-- -r, --root-folder ID: Google Drive root folder ID (uses PPG_GOOGLE_DRIVE_FOLDER_ID env var if not set)
 
 Setup Requirements:
+- Root folder ID is automatically determined from `ENV_SHORT_NAME` (dev/stg/prod) via config mapping
 - GCE instance must have Drive API scope enabled (`https://www.googleapis.com/auth/drive`)
-- Set `PPG_GOOGLE_DRIVE_FOLDER_ID` environment variable
 - Service account needs write access to target folder
+
+Features:
+- Parallel folder creation and file uploads (10 concurrent workers)
+- Automatic retry with exponential backoff on transient errors
+- Skips existing files (idempotent uploads)
+- Creates folder structure: `Export DRAC - [French Month] [YEAR]/NATIONAL/` and `REGIONAL/[Region]/`
 
 Folder Structure on Drive:
 ```
@@ -161,14 +166,14 @@ python main.py upload --destination custom_folder/reports
 Upload Drive Command
 
 ```bash
-# Upload using env var for folder ID
+# Upload reports for specific month (folder ID auto-configured per environment)
 python main.py upload-drive --ds 2024-03-01
-
-# Specify folder ID directly
-python main.py upload-drive --ds 2024-03-01 --root-folder "1ABC...XYZ"
 
 # Upload with verbose output
 python main.py --verbose upload-drive --ds 2024-03-01
+
+# Upload current month reports
+python main.py upload-drive
 ```
 
 Debug reports:

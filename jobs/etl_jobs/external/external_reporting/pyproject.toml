@@ -1,8 +1,8 @@
 
 [project]
-name = "ppg-export"
+name = "external-reporting"
 version = "0.0.0"
-description = "PPG export job"
+description = "External reporting export job"
 readme = "README.md"
 requires-python = ">=3.10"
 

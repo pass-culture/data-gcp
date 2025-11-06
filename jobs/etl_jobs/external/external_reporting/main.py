@@ -188,7 +188,7 @@ def upload(
         None, "--bucket", "-b", help="GCS bucket name"
     ),
     destination: Optional[str] = typer.Option(
-        "ppg_reports",
+        "external_reporting",
         "--destination",
         "-d",
         help="Destination path in bucket (optional)",

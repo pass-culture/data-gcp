@@ -38,10 +38,10 @@ default_dag_args = {
     "on_failure_callback": on_failure_vm_callback,
 }
 
-dag_id = "export_ppg"
+dag_id = "export_external_reporting"
 
-GCE_INSTANCE = f"export-ppg-{ENV_SHORT_NAME }"
-BASE_PATH = "data-gcp/jobs/etl_jobs/external/ppg/"
+GCE_INSTANCE = f"export-external_reporting-{ENV_SHORT_NAME }"
+BASE_PATH = "data-gcp/jobs/etl_jobs/external/external_reporting/"
 GCP_STORAGE_URI = "https://storage.googleapis.com"
 DBT_REPORTING_MODELS_PATH = f"{DAG_FOLDER}/data_gcp_dbt/models/mart/external_reporting"
 
@@ -134,7 +134,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command=f"python main.py upload --ds {{{{ ds }}}} --bucket {DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME} --destination ppg_reports",
+        command=f"python main.py upload --ds {{{{ ds }}}} --bucket {DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME} --destination external_reporting",
     )
 
     gce_export_to_drive = SSHGCEOperator(

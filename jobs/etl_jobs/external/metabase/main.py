@@ -90,6 +90,9 @@ def run(
         legacy_table_name, legacy_schema_name
     )
 
+    print(f"{len(native_cards)} native cards to update")
+    print(f"{len(query_cards)} query cards to update")
+
     if metabase_card_type == "native":
         transition_logs = []
         for card_id in native_cards:

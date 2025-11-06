@@ -5,6 +5,9 @@ version = "0.0.0"
 description = "External reporting export job"
 readme = "README.md"
 requires-python = ">=3.10"
+dependencies = [
+    "pytest>=8.4.2",
+]
 
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.
@@ -44,3 +47,6 @@ runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 # Pydantic needs to be able to evaluate types at runtime
 # see https://pypi.org/project/flake8-type-checking/ for flake8-type-checking documentation
 # see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

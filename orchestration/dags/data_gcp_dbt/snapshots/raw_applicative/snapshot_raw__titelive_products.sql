@@ -10,7 +10,7 @@
                 tags=["external_dependency"],
                 meta={
                         "external_dag_id": "import_titelive",
-                        "external_task_id": "gce_instance_stop"
+                        "external_task_id": "gce_stop_task"
                 }
             )
         )

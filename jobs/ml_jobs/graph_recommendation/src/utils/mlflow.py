@@ -295,61 +295,28 @@ def _log_metrics_at_k_csv(
 
 
 @conditional_mlflow()
-def log_evaluation_metrics(
-    metrics_df: pd.DataFrame, output_metrics_path: str, *, store_csv: bool = True
-) -> None:
-    # Log metrics at k with k as x-axis
-    # Log threshold-dependent metrics (recall and precision)
-    for _, row in metrics_df.iterrows():
-        metric_suffix = f"thresh_{row['threshold']}__{row['score_col']}"
-        mlflow.log_metric(
-            f"recall_at_{str(row['k']).zfill(3)}__{metric_suffix}", row["recall"]
-        )
-        mlflow.log_metric(
-            f"curve_recall_at_k__{metric_suffix}", row["recall"], step=int(row["k"])
-        )
-        mlflow.log_metric(
-            f"precision_at_{str(row['k']).zfill(3)}__{metric_suffix}",
-            row["precision"],
-        )
-        mlflow.log_metric(
-            f"curve_precision_at_k__{metric_suffix}",
-            row["precision"],
-            step=int(row["k"]),
-        )
+def log_evaluation_metrics(metrics_df: pd.DataFrame, output_metrics_path: str) -> None:
+    # %% Log summary metrics in metric_at_k format
+    formatted_metrics = {
+        f"{col}_at_{row['k']}": row[col]
+        for _, row in metrics_df.iterrows()
+        for col in ["ndcg", "recall", "custom_recall", "precision"]
+    }
+    mlflow.log_metrics(formatted_metrics)
 
-    # Log NDCG
-    ndcg_metrics = metrics_df.drop_duplicates(subset=["score_col", "k"])
-    for _, row in ndcg_metrics.iterrows():
-        mlflow.log_metric(
-            f"ndcg_at_{str(row['k']).zfill(3)}__{row['score_col']}",
-            row["ndcg"],
-        )
-        mlflow.log_metric(
-            f"curve_ndcg_at_k__{row['score_col']}",
-            row["ndcg"],
-            step=int(row["k"]),
-        )
+    # Save detailed scores locally first (mandatory for csv)
+    filename = output_metrics_path.split("/")[-1]
+    with tempfile.TemporaryDirectory() as tmpdir:
+        local_path = Path(tmpdir) / filename
+        metrics_df.to_csv(local_path, index=False)
 
-    # Log metrics artifact for easy lookup
-    _log_metrics_at_k_csv(
-        metrics_df, order_by=["score_col", "threshold", "metric", "k"]
-    )
-
+        # Then log as MLflow artifact
+        mlflow.log_artifact(str(local_path), artifact_path=None)
     typer.secho(
         f"Metrics saved to: {output_metrics_path}",
         fg=typer.colors.GREEN,
         err=True,
     )
-    if store_csv:
-        # Save detailed scores locally first (mandatory for csv)
-        filename = output_metrics_path.split("/")[-1]
-        with tempfile.TemporaryDirectory() as tmpdir:
-            local_path = Path(tmpdir) / filename
-            metrics_df.to_csv(local_path, index=False)
-
-            # Then log as MLflow artifact
-            mlflow.log_artifact(str(local_path), artifact_path=None)
 
 
 @conditional_mlflow()

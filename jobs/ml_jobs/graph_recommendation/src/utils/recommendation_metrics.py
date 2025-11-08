@@ -7,23 +7,12 @@ from recommenders.evaluation.python_evaluation import (
     precision_at_k,
     recall_at_k,
 )
-
-
-def _convert_thresholds_to_list_and_validate(
-    relevancy_thresholds: list[float] | float,
-) -> list[float]:
-    """Convert thresholds to list format and validate all values are <= 1."""
-    if isinstance(relevancy_thresholds, float):
-        relevancy_thresholds = [relevancy_thresholds]
-    assert all(threshold <= 1 for threshold in relevancy_thresholds)
-    return relevancy_thresholds
-
-
-def _convert_score_cols_to_list(score_cols: list[str] | str) -> list[str]:
-    """Convert score columns to list format."""
-    if isinstance(score_cols, str):
-        score_cols = [score_cols]
-    return score_cols
+from recommenders.utils.constants import (
+    DEFAULT_ITEM_COL,
+    DEFAULT_PREDICTION_COL,
+    DEFAULT_RATING_COL,
+    DEFAULT_USER_COL,
+)
 
 
 def _add_prediction_ranks_and_topk_flags(
@@ -64,108 +53,87 @@ def _create_ground_truth_dataframe_for_score(
 
 def _compute_all_metrics_for_single_score_column(
     df: pd.DataFrame,
-    score_col: str,
+    score_column: str,
     k_values: list[int],
-    relevancy_thresholds: list[float],
     rating_pred_sorted: pd.DataFrame,
     max_retrieved: int,
-    metrics_rows: list[dict],
-) -> None:
+) -> pd.DataFrame:
     """
     Compute all metrics for a single score column across all k values and thresholds.
     """
     # Prepare ground truth for this score (done once per score)
-    rating_true = _create_ground_truth_dataframe_for_score(df, score_col)
+    rating_true = _create_ground_truth_dataframe_for_score(df, score_column)
 
-    # Add relevance flags to dataframe (once per score/threshold combo)
-    for threshold in relevancy_thresholds:
-        col_name = f"is_relevant_{score_col}_at_{threshold}"
-        df[col_name] = (df[score_col] >= threshold).astype(bool)
-        count_col_name = f"n_relevant_{score_col}_at_{threshold}"
-        df[count_col_name] = df.groupby("query_node_id")[col_name].transform("sum")
-
+    metrics_per_k = []
     for k in k_values:
         if k > max_retrieved:
             logger.warning(
                 f"K={k} exceeds retrieved items ({max_retrieved}). Skipping."
             )
-            continue
+            raise ValueError(f"K={k} exceeds max retrieved items ({max_retrieved})")
 
-        _compute_metrics_at_k(
-            rating_true=rating_true,
-            rating_pred_sorted=rating_pred_sorted,
-            k=k,
-            relevancy_thresholds=relevancy_thresholds,
-            score_col=score_col,
-            metrics_rows=metrics_rows,
+        metrics_per_k.append(
+            _compute_metrics_at_k(
+                rating_true=rating_true,
+                rating_pred_sorted=rating_pred_sorted,
+                k=k,
+                score_column=score_column,
+            )
         )
+    return pd.DataFrame(metrics_per_k)
 
 
 def _compute_metrics_at_k(
     rating_true: pd.DataFrame,
     rating_pred_sorted: pd.DataFrame,
     k: int,
-    relevancy_thresholds: list[float],
-    score_col: str,
-    metrics_rows: list[dict],
-) -> None:
+    score_column: str,
+) -> dict:
     """Compute NDCG, recall, and precision metrics at a specific k value."""
     # Compute NDCG@K (uses raw scores)
-    try:
-        ndcg = ndcg_at_k(
-            rating_true=rating_true,
-            rating_pred=rating_pred_sorted,
-            relevancy_method="top_k",
-            k=k,
-            score_type="raw",
-        )
-        logger.info(f"    NDCG@{k}: {ndcg:.4f}")
-    except Exception as e:
-        logger.error(f"Error computing NDCG @ K={k}: {e}")
-        ndcg = None
+    ndcg = ndcg_at_k(
+        rating_true=rating_true,
+        rating_pred=rating_pred_sorted,
+        relevancy_method="top_k",
+        k=k,
+        score_type="exp",
+    )
+    logger.info(f"    NDCG@{k}: {ndcg:.4f}")
 
     # Compute threshold-based metrics (recall, precision)
     rating_pred_k = rating_pred_sorted.groupby("userID").head(k)
+    recall = recall_at_k(
+        rating_true=rating_true,
+        rating_pred=rating_pred_k,
+        relevancy_method="top_k",
+        k=k,
+    )
+    custom_recall = custom_recall_at_k(
+        rating_true=rating_true,
+        rating_pred=rating_pred_k,
+        k=k,
+    )
+    precision = precision_at_k(
+        rating_true=rating_true,
+        rating_pred=rating_pred_k,
+        relevancy_method="top_k",
+        k=k,
+    )
 
-    for threshold in relevancy_thresholds:
-        try:
-            # Recall@K
-            recall = recall_at_k(
-                rating_true=rating_true,
-                rating_pred=rating_pred_k,
-                relevancy_method="by_threshold",
-                threshold=threshold,
-                k=k,
-            )
-            # Precision@K
-            precision = precision_at_k(
-                rating_true=rating_true,
-                rating_pred=rating_pred_k,
-                relevancy_method="by_threshold",
-                threshold=threshold,
-                k=k,
-            )
-
-            metrics_rows.append(
-                {
-                    "score_col": score_col,
-                    "k": k,
-                    "threshold": threshold,
-                    "ndcg": ndcg,
-                    "recall": recall,
-                    "precision": precision,
-                }
-            )
-        except Exception as e:
-            logger.error(f"Error computing metrics @ K={k}, threshold={threshold}: {e}")
-            continue
+    return {
+        "score_column": score_column,
+        "k": k,
+        "ndcg": ndcg,
+        "recall": recall,
+        "custom_recall": custom_recall,
+        "precision": precision,
+    }
 
 
 def compute_evaluation_metrics(
     retrieval_results: pd.DataFrame,
     k_values: list[int],
-    relevancy_thresholds: list[float] | float,
-    score_cols: list[str] | str = "full_score",
+    score_column: str,
 ) -> tuple[dict[str, Any], pd.DataFrame]:
     """
     Compute metrics to evaluate embeddings quality (Microsoft Recommenders framework).
@@ -219,14 +187,9 @@ def compute_evaluation_metrics(
     """
 
     # Normalize inputs
-    relevancy_thresholds = _convert_thresholds_to_list_and_validate(
-        relevancy_thresholds
-    )
-    score_cols = _convert_score_cols_to_list(score_cols)
 
     logger.info(
-        f"Computing metrics for {len(score_cols)} score(s), "
-        f"{len(relevancy_thresholds)} threshold(s), {len(k_values)} k value(s)"
+        f"Computing metrics for score {score_column}, {len(k_values)} k value(s)"
     )
 
     # Prepare base dataframe and predictions
@@ -235,23 +198,123 @@ def compute_evaluation_metrics(
     max_retrieved = df.groupby("query_node_id").size().min()
 
     # Collect metrics in list for DataFrame
-    metrics_rows = []
-
-    # Loop: score_col -> k -> threshold
-    for score_col in score_cols:
-        logger.info(f"Processing score: {score_col}")
-        _compute_all_metrics_for_single_score_column(
-            df=df,
-            score_col=score_col,
-            k_values=k_values,
-            relevancy_thresholds=relevancy_thresholds,
-            rating_pred_sorted=rating_pred_sorted,
-            max_retrieved=max_retrieved,
-            metrics_rows=metrics_rows,
-        )
+    metrics_df = _compute_all_metrics_for_single_score_column(
+        df=df,
+        score_column=score_column,
+        k_values=k_values,
+        rating_pred_sorted=rating_pred_sorted,
+        max_retrieved=max_retrieved,
+    )
 
     # Convert to DataFrame
-    metrics_df = pd.DataFrame(metrics_rows)
     logger.info("Metrics computation complete")
     logger.info(f"Metrics shape: {metrics_df.shape}")
     return metrics_df, df
+
+
+#### Custom Recall at K ####
+def _get_kth_rating_threshold(
+    df: pd.DataFrame,
+    k: int,
+    col_user: str,
+    col_rating: str,
+) -> pd.DataFrame:
+    """Get the k-th highest rating per user as a threshold.
+
+    When k exceeds the number of items for a user, uses the minimum rating
+    (lowest-ranked item) as the threshold, effectively including all items.
+    """
+    sorted_df = df.sort_values([col_user, col_rating], ascending=[True, False])
+
+    # Get the count of items per user
+    counts_per_user = sorted_df.groupby(col_user).size()
+
+    # For each user, get either the k-th item or the last item (whichever is smaller)
+    result = []
+    for user in sorted_df[col_user].unique():
+        user_data = sorted_df[sorted_df[col_user] == user]
+        count = counts_per_user[user]
+        # Use min to handle case where k > count
+        idx = min(k - 1, count - 1)
+        result.append({col_user: user, col_rating: user_data.iloc[idx][col_rating]})
+
+    return pd.DataFrame(result).rename(columns={col_rating: "kth_rating"})
+
+
+def _get_true_topk_with_ties(
+    df: pd.DataFrame,
+    k: int,
+    col_user: str,
+    col_item: str,
+    col_rating: str,
+) -> pd.DataFrame:
+    """Get all items with rating >= k-th rating (handles ties)."""
+    kth_rating_per_user = _get_kth_rating_threshold(df, k, col_user, col_rating)
+    df_with_threshold = df.merge(kth_rating_per_user, on=col_user, how="left")
+    return df_with_threshold[
+        df_with_threshold[col_rating] >= df_with_threshold["kth_rating"]
+    ][[col_user, col_item, col_rating]]
+
+
+def _get_predicted_topk(
+    df: pd.DataFrame,
+    k: int,
+    col_user: str,
+    col_prediction: str,
+) -> pd.DataFrame:
+    """Get strict top-k predicted items per user."""
+    return (
+        df.sort_values([col_user, col_prediction], ascending=[True, False])
+        .groupby(col_user)
+        .head(k)
+    )
+
+
+def _calculate_recall(
+    pred_topk: pd.DataFrame,
+    true_topk: pd.DataFrame,
+    all_users: pd.Index,
+    k: int,
+    col_user: str,
+    col_item: str,
+) -> float:
+    """Calculate average recall@k across all users."""
+    merged = pred_topk.merge(true_topk, on=[col_user, col_item])
+    overlap_per_user = merged.groupby(col_user).size()
+    overlap_per_user = overlap_per_user.reindex(all_users, fill_value=0)
+    return (overlap_per_user / k).mean()
+
+
+def custom_recall_at_k(
+    rating_true: pd.DataFrame,
+    rating_pred: pd.DataFrame,
+    k: int,
+    col_user=DEFAULT_USER_COL,
+    col_item=DEFAULT_ITEM_COL,
+    col_prediction=DEFAULT_PREDICTION_COL,
+    col_rating=DEFAULT_RATING_COL,
+) -> float:
+    """
+    Calculate recall@k with proper handling of tied ratings in ground truth.
+
+    When ground truth ratings have ties, all items with rating >= k-th highest rating
+    are included in the relevant set. This prevents arbitrary exclusion of tied items
+    and ensures fair evaluation.
+    """
+    true_topk_with_ties = _get_true_topk_with_ties(
+        df=rating_true,
+        k=k,
+        col_user=col_user,
+        col_item=col_item,
+        col_rating=col_rating,
+    )
+    pred_topk = _get_predicted_topk(
+        df=rating_pred,
+        k=k,
+        col_user=col_user,
+        col_prediction=col_prediction,
+    )
+    all_users = pd.concat([rating_true[col_user], rating_pred[col_user]]).unique()
+    return _calculate_recall(
+        pred_topk, true_topk_with_ties, all_users, k, col_user, col_item
+    )

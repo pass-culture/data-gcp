@@ -134,3 +134,6 @@ models:
       - name: venue_type_label
         description: "{{ doc('column__venue_type_label') }}"
         data_type: STRING
+      - name: ministry
+        description: "{{ doc('column__ministry') }}"
+        data_type: STRING

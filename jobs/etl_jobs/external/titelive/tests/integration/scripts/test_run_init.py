@@ -13,10 +13,10 @@ sys.modules["http_tools.clients"] = Mock()
 sys.modules["http_tools.rate_limiters"] = Mock()
 
 from config import MUSIC_SUBCATEGORIES, TiteliveCategory  # noqa: E402
-from src.scripts.run_init import (  # noqa: E402
+from src.scripts.run_init import run_init  # noqa: E402
+from src.utils.ean_processing import (  # noqa: E402
     _process_eans_by_base,
     process_eans_batch,
-    run_init,
 )
 
 
@@ -83,7 +83,7 @@ class TestProcessEansBatch:
         self, mock_titelive_client, sample_ean_pairs_mixed
     ):
         """Test that EANs are correctly grouped into music and paper categories."""
-        with patch("src.scripts.run_init._process_eans_by_base") as mock_process:
+        with patch("src.utils.ean_processing._process_eans_by_base") as mock_process:
             mock_process.return_value = []
 
             process_eans_batch(mock_titelive_client, sample_ean_pairs_mixed)
@@ -113,7 +113,7 @@ class TestProcessEansBatch:
         self, mock_titelive_client, sample_ean_pairs_music
     ):
         """Test processing when only music EANs are provided."""
-        with patch("src.scripts.run_init._process_eans_by_base") as mock_process:
+        with patch("src.utils.ean_processing._process_eans_by_base") as mock_process:
             mock_process.return_value = []
 
             process_eans_batch(mock_titelive_client, sample_ean_pairs_music)
@@ -126,7 +126,7 @@ class TestProcessEansBatch:
         self, mock_titelive_client, sample_ean_pairs_paper
     ):
         """Test processing when only paper EANs are provided."""
-        with patch("src.scripts.run_init._process_eans_by_base") as mock_process:
+        with patch("src.utils.ean_processing._process_eans_by_base") as mock_process:
             mock_process.return_value = []
 
             process_eans_batch(mock_titelive_client, sample_ean_pairs_paper)
@@ -137,7 +137,7 @@ class TestProcessEansBatch:
 
     def test_handles_empty_ean_list(self, mock_titelive_client):
         """Test processing with empty EAN list."""
-        with patch("src.scripts.run_init._process_eans_by_base") as mock_process:
+        with patch("src.utils.ean_processing._process_eans_by_base") as mock_process:
             results = process_eans_batch(mock_titelive_client, [])
 
             # Should not process anything
@@ -159,7 +159,9 @@ class TestProcessEansByBase:
         ) as mock_get_eans:
             mock_get_eans.return_value = mock_api_response_with_eans(eans)
 
-            with patch("src.scripts.run_init.transform_api_response") as mock_transform:
+            with patch(
+                "src.utils.ean_processing.transform_api_response"
+            ) as mock_transform:
                 mock_transform.return_value = pd.DataFrame(
                     {
                         "ean": eans,
@@ -191,7 +193,9 @@ class TestProcessEansByBase:
         ) as mock_get_eans:
             mock_get_eans.return_value = mock_api_response_with_eans(returned_eans)
 
-            with patch("src.scripts.run_init.transform_api_response") as mock_transform:
+            with patch(
+                "src.utils.ean_processing.transform_api_response"
+            ) as mock_transform:
                 mock_transform.return_value = pd.DataFrame(
                     {
                         "ean": returned_eans,
@@ -241,7 +245,9 @@ class TestProcessEansByBase:
         ) as mock_get_eans:
             mock_get_eans.side_effect = side_effect
 
-            with patch("src.scripts.run_init.transform_api_response") as mock_transform:
+            with patch(
+                "src.utils.ean_processing.transform_api_response"
+            ) as mock_transform:
                 mock_transform.return_value = pd.DataFrame()
 
                 results = _process_eans_by_base(
@@ -338,7 +344,9 @@ class TestProcessEansByBase:
         ) as mock_get_eans:
             mock_get_eans.return_value = {"result": []}
 
-            with patch("src.scripts.run_init.transform_api_response") as mock_transform:
+            with patch(
+                "src.utils.ean_processing.transform_api_response"
+            ) as mock_transform:
                 mock_transform.return_value = pd.DataFrame()
 
                 _process_eans_by_base(

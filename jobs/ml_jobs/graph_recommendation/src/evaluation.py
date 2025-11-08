@@ -109,8 +109,7 @@ def evaluate_embeddings(
     metrics_df, df_results = compute_evaluation_metrics(
         retrieval_results=df_results,
         k_values=evaluation_config.k_values,
-        score_cols=evaluation_config.ground_truth_score,
-        relevancy_thresholds=evaluation_config.relevance_thresholds,
+        score_column=evaluation_config.ground_truth_score,
     )
 
     return metrics_df, df_results

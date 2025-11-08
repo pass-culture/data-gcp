@@ -282,7 +282,6 @@ def test_default_eval_config_structure():
         "n_samples",
         "n_retrieved",
         "k_values",
-        "relevance_thresholds",
         "ground_truth_score",
         "force_artist_weight",
         "rebuild_index",
@@ -295,7 +294,6 @@ def test_default_eval_config_structure():
     assert isinstance(default_config.n_samples, int)
     assert isinstance(default_config.n_retrieved, int)
     assert isinstance(default_config.k_values, list)
-    assert isinstance(default_config.relevance_thresholds, list)
     assert isinstance(default_config.ground_truth_score, str)
     assert isinstance(default_config.force_artist_weight, bool)
     assert isinstance(default_config.rebuild_index, bool)
@@ -304,9 +302,7 @@ def test_default_eval_config_structure():
     assert default_config.n_samples > 0
     assert default_config.n_retrieved > 0
     assert len(default_config.k_values) > 0
-    assert len(default_config.relevance_thresholds) > 0
     assert all(isinstance(k, int) for k in default_config.k_values)
-    assert all(isinstance(t, float) for t in default_config.relevance_thresholds)
 
 
 def test_evaluate_embeddings_metadata_filtering(

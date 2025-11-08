@@ -342,7 +342,6 @@ def evaluate_metapath2vec_command(
         log_evaluation_metrics(
             metrics_df,
             output_metrics_path,
-            store_csv=True,
         )
 
         # Log detailed scores if requested

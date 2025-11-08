@@ -6,9 +6,9 @@ This is a POC:
 — future iterations may include UI-controlled grid search and dynamic configuration.
 
 Notes:
-- To prevent Drag&Drop dags such as this one to be deleted during a MEP hence interupting their running tasks.
-    Place this dag in a dedicated subfolder containing a .rsyncignore file to automatically exclude that folder and its contents from deployment.
-    Make sure there are no orchestrated dags in the same folder.
+- To prevent Drag & Drop DAGs (or any manually uploaded DAGs) from being deleted during a MEP deployment,
+    which could interrupt their running tasks,
+    make sure to exclude their folders or files in the main .rsyncignore file located in the dags/ directory.
 - Scheduling is forcefully disabled as it's purpose is manual runs.
 """
 
@@ -71,47 +71,36 @@ def format_poc_dag_doc(
 
     doc = f"""
     # Airflow DAG: {dag_name} (POC)
-
     ## ⚠️ NOTICE – Proof of Concept (POC)
-
     This is a POC — future iterations may include UI-controlled grid search and dynamic configuration.
-
     ### Current Limitations:
     - Search parameters **cannot be modified dynamically via Airflow UI**.
     - All grid configurations must be **hardcoded in the DAG file**.
-
     ### Recommended Usage:
     1. Create a **dedicated dev branch** with your desired parameter search configuration.
     2. Coordinate with your team to avoid parallel modifications or DAG name collisions.
     3. Upload (`drag & drop`) this DAG file into your Airflow DAGs bucket.
     4. Trigger the DAG manually in the Airflow UI.
-
     Notes:
-    - To prevent Drag&Drop dags such as this one to be deleted during a MEP hence interupting their running tasks.
-        Place this dag in a dedicated subfolder containing a .rsyncignore file to automatically exclude that folder and its contents from deployment.
-        Make sure there are no orchestrated dags in the same folder.
+    - To prevent Drag & Drop DAGs (or any manually uploaded DAGs) from being deleted during a MEP deployment,
+        which could interrupt their running tasks,
+        make sure to exclude their folders or files in the main .rsyncignore file located in the dags/ directory.
     - Scheduling is forcefully disabled as it's purpose is manual runs.
-
     ---
-
     ## Overview
     This DAG runs a **parameter grid search** for graph embedding model training on Google Cloud VMs.
     It supports both **combinatorial** and **orthogonal** parameter search modes via the `GridDAG` abstraction.
-
     The DAG launches up to 10 VM(s), installs dependencies, trains the embedding model,
     evaluates results, and stores metrics and embeddings to GCS.
-
     ## Current Setup:
-
     ### VMs number: {n_vms}
-
     ### Search mode: {search_mode}
 
-    ### Grid Search {"Parameters" if search_mode != "points" else "Points"}
-    \n{grid_params_str}
+    ### Grid Search Parameters
+    {grid_params_str}
 
     ### Shared Parameters
-    \n{shared_params_str}
+    {shared_params_str}
 
     """
     return doc
@@ -235,24 +224,6 @@ class GridDAG(DAG):
                     comb[key] = v
                     combinations.append(comb)
 
-        elif self.search_mode == ParameterSearchMode.POINTS:
-            # Expect grid_params to be a list of dicts
-            if not isinstance(self.grid_params, list):
-                raise InvalidGridError(
-                    "For POINTS mode, `grid_params` must be a list of parameter dictionaries."
-                )
-
-            for conf in self.grid_params:
-                if not isinstance(conf, dict):
-                    raise InvalidGridError(
-                        f"Invalid config in POINTS mode: expected dict, got {type(conf)}"
-                    )
-                merged = {**self.common_params, **conf}
-                combinations.append(merged)
-
-        else:
-            raise InvalidGridError(f"Unsupported search mode: {self.search_mode}")
-
         if not combinations:
             raise InvalidGridError(f"Invalid grid configuration: {self.grid_params}")
 
@@ -293,7 +264,10 @@ class GridDAG(DAG):
         start_grid = EmptyOperator(task_id="start_grid")
         end_grid = EmptyOperator(task_id="end_grid", trigger_rule=TriggerRule.ALL_DONE)
 
-        # # Distribute parameter combos across VMs (round-robin)
+        # Distribute parameter combos across VMs (round-robin)
+        instance_names = [
+            _normalize_instance_name(f"{self.dag_id}-vm-{i}") for i in range(self.n_vms)
+        ]
         vm_to_tasks_chains = {i: [] for i in range(self.n_vms)}
         for comb_idx, params in enumerate(self.params_combinations):
             vm_idx = comb_idx % self.n_vms

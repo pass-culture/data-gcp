@@ -1,3 +1,0 @@
-Place a .rsyncignore file in any DAG subfolder to automatically exclude that folder and its contents from deployment.
-The workflow scans for .rsyncignore and builds a safe regex for gsutil -x, so excluded folders are skipped without modifying the workflow.
-It prevent's Drag&Drop dags to be deleted during a MEP hence interupting their running tasks

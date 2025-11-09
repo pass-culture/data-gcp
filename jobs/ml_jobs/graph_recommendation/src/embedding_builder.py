@@ -132,7 +132,7 @@ def train_metapath2vec(
         shuffle=True,
         num_workers=training_config.num_workers,
         pin_memory=True,
-        persistent_workers=training_config.num_workers > 0,
+        persistent_workers=False,
     )
     optimizer = torch.optim.SparseAdam(
         list(model.parameters()),

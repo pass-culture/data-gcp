@@ -95,13 +95,10 @@ def format_poc_dag_doc(
     ## Current Setup:
     ### VMs number: {n_vms}
     ### Search mode: {search_mode}
-
-    ### Grid Search Parameters
-    {grid_params_str}
-
+    ### Grid Search {"Parameters" if search_mode != "points" else "Points"}
+    \n{grid_params_str}
     ### Shared Parameters
-    {shared_params_str}
-
+    \n{shared_params_str}
     """
     return doc
 
@@ -223,6 +220,24 @@ class GridDAG(DAG):
                     comb = self.common_params.copy()
                     comb[key] = v
                     combinations.append(comb)
+
+        elif self.search_mode == ParameterSearchMode.POINTS:
+            # Expect grid_params to be a list of dicts
+            if not isinstance(self.grid_params, list):
+                raise InvalidGridError(
+                    "For POINTS mode, `grid_params` must be a list of parameter dictionaries."
+                )
+
+            for conf in self.grid_params:
+                if not isinstance(conf, dict):
+                    raise InvalidGridError(
+                        f"Invalid config in POINTS mode: expected dict, got {type(conf)}"
+                    )
+                merged = {**self.common_params, **conf}
+                combinations.append(merged)
+
+        else:
+            raise InvalidGridError(f"Unsupported search mode: {self.search_mode}")
 
         if not combinations:
             raise InvalidGridError(f"Invalid grid configuration: {self.grid_params}")

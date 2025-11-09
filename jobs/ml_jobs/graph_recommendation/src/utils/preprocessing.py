@@ -5,49 +5,6 @@ import pandas as pd
 from src.constants import GTL_ID_COLUMN
 
 
-def normalize_gtl(df: pd.DataFrame) -> pd.DataFrame:
-    """Normalize GTL IDs: convert to string, strip, replace empty/NaN with None,
-    pad 7-digit numbers to 8 chars, enforce hierarchical null rule."""
-    df = df.copy()
-
-    # Convert to string and strip whitespace
-    df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].astype(str).str.strip()
-
-    # Replace empty or NaN-like strings with None
-    df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].replace(
-        {"": None, "nan": None, "None": None, "<NA>": None}
-    )
-
-    def pad_and_validate(gtl_id):
-        if not isinstance(gtl_id, str) or not gtl_id.isdigit():
-            return None
-
-        # Pad 7-digit numbers to 8
-        if len(gtl_id) == 7:
-            gtl_id = gtl_id.zfill(8)
-        elif len(gtl_id) != 8:
-            return None  # invalid length
-
-        # Must not start with "00"
-        if gtl_id.startswith("00"):
-            return None
-
-        # Hierarchy validation: once a "00" pair appears, must be followed by "00"
-        pairs = [gtl_id[i : i + 2] for i in range(0, 8, 2)]
-        found_null = False
-        for pair in pairs:
-            if found_null and pair != "00":
-                return None
-            if pair == "00":
-                found_null = True
-
-        return gtl_id
-
-    df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].apply(pad_and_validate)
-
-    return df
-
-
 def normalize_dataframe(
     df: pd.DataFrame,
     columns: Sequence[str],
@@ -129,18 +86,70 @@ def remove_rows_with_no_metadata(
     return df[mask]
 
 
+def normalize_gtl(df: pd.DataFrame) -> pd.DataFrame:
+    """Normalize GTL IDs:
+    - Convert to string, strip spaces
+    - Replace NaN/empty with None
+    - Pad 7-digit IDs with leading 0
+    - Remove IDs starting with '00'
+    - Enforce hierarchical null rule (once '00' appears, following pairs must be '00')
+    """
+    df = df.copy()
+
+    # Step 1: Convert to string and strip whitespace
+    df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].astype(str).str.strip()
+
+    # Step 2: Replace empty or NaN-like strings with None
+    df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].replace(
+        {"": None, "nan": None, "None": None, "<NA>": None}
+    )
+
+    # Step 3: Pad 7-digit GTLs to 8 digits
+    def _pad_gtl(gtl_id):
+        if gtl_id is None:
+            return None
+        if not isinstance(gtl_id, str):
+            return None
+        if not gtl_id.isdigit():
+            return None
+        if len(gtl_id) == 7:
+            return gtl_id.zfill(8)
+        if len(gtl_id) == 8:
+            return gtl_id
+        return None
+
+    df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].apply(_pad_gtl)
+
+    # Step 4: Validate hierarchy rule and remove GTLs starting with '00'
+    def _validate_gtl_hierarchy(gtl_id):
+        if gtl_id is None:
+            return None
+        if gtl_id.startswith("00"):
+            return None
+        # Hierarchy validation
+        pairs = [gtl_id[i : i + 2] for i in range(0, 8, 2)]
+        found_null = False
+        for pair in pairs:
+            if pair == "00":
+                found_null = True
+            elif found_null:
+                # Non-zero pair after a null pair → invalid
+                return None
+        return gtl_id
+
+    df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].apply(_validate_gtl_hierarchy)
+
+    return df
+
+
 def remove_rows_with_bad_gtls(df: pd.DataFrame) -> pd.DataFrame:
-    """Remove rows with invalid GTL IDs from the dataframe.
-
-    Filters out rows where the GTL ID starts with "00" (considered invalid)
-    and rows where the GTL ID is null/NaN.
-
+    """Remove rows with missing or invalid GTL IDs (after normalization).
     Args:
         df: The input dataframe containing GTL ID column.
 
     Returns:
         A new dataframe with invalid GTL rows removed.
     """
-    return df.loc[~df[GTL_ID_COLUMN].astype(str).str.startswith("00")].loc[
-        lambda df: df.gtl_id.notna()
-    ]
+    df = df.copy()
+    df[GTL_ID_COLUMN] = normalize_gtl(df[[GTL_ID_COLUMN]])[GTL_ID_COLUMN]
+    return df[df[GTL_ID_COLUMN].notna()]

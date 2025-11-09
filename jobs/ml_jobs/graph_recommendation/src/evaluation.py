@@ -94,6 +94,12 @@ def evaluate_embeddings(
     # ==================================================================================
     logger.info("STEP 5: Computing Ground Truth Scores")
 
+    BROKEN_ITEM_ID = ["product-6220561"]
+    df_results = df_results[
+        ~df_results["query_node_id"].isin(BROKEN_ITEM_ID)
+        & ~df_results["retrieved_node_id"].isin(BROKEN_ITEM_ID)
+    ]
+
     df_results = compute_all_scores_lazy(
         augmented_results=df_results,
         table=embedding_table,

@@ -82,6 +82,10 @@ def conditional_mlflow(log_mlflow_arg_name: str = "log_mlflow"):
         def wrapper(*args, **kwargs):
             log_mlflow = kwargs.pop(log_mlflow_arg_name, True)
 
+            # read pytest environment variable to skip MLflow logging in tests
+            if os.environ.get("PYTEST_DISABLE_MLFLOW_LOGGING", "0") == "1":
+                log_mlflow = False
+
             with optional_mlflow_logging(log_mlflow):
                 return func(*args, **kwargs)
 

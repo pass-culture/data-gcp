@@ -5,6 +5,49 @@ import pandas as pd
 from src.constants import GTL_ID_COLUMN
 
 
+def normalize_gtl(df: pd.DataFrame) -> pd.DataFrame:
+    """Normalize GTL IDs: convert to string, strip, replace empty/NaN with None,
+    pad 7-digit numbers to 8 chars, enforce hierarchical null rule."""
+    df = df.copy()
+
+    # Convert to string and strip whitespace
+    df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].astype(str).str.strip()
+
+    # Replace empty or NaN-like strings with None
+    df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].replace(
+        {"": None, "nan": None, "None": None, "<NA>": None}
+    )
+
+    def pad_and_validate(gtl_id):
+        if not isinstance(gtl_id, str) or not gtl_id.isdigit():
+            return None
+
+        # Pad 7-digit numbers to 8
+        if len(gtl_id) == 7:
+            gtl_id = gtl_id.zfill(8)
+        elif len(gtl_id) != 8:
+            return None  # invalid length
+
+        # Must not start with "00"
+        if gtl_id.startswith("00"):
+            return None
+
+        # Hierarchy validation: once a "00" pair appears, must be followed by "00"
+        pairs = [gtl_id[i : i + 2] for i in range(0, 8, 2)]
+        found_null = False
+        for pair in pairs:
+            if found_null and pair != "00":
+                return None
+            if pair == "00":
+                found_null = True
+
+        return gtl_id
+
+    df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].apply(pad_and_validate)
+
+    return df
+
+
 def normalize_dataframe(
     df: pd.DataFrame,
     columns: Sequence[str],

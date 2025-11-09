@@ -7,6 +7,7 @@ import pandas as pd
 from src.utils.preprocessing import (
     detach_single_occuring_metadata,
     normalize_dataframe,
+    normalize_gtl,
     remove_rows_with_no_metadata,
 )
 
@@ -480,3 +481,52 @@ class TestPreprocessingPipeline:
         assert len(result) > 0
         assert "book-1" in result["item_id"].tolist()
         assert "book-3" in result["item_id"].tolist()
+
+
+class TestNormalizeGTL:
+    """Test suite for normalize_gtl function."""
+
+    def test_normalize_gtl(self) -> None:
+        """Test the normalize_gtl function for GTL ID normalization."""
+        df = pd.DataFrame(
+            {
+                "item_id": [
+                    "book-1",
+                    "book-2",
+                    "book-3",
+                    "book-4",
+                    "book-5",
+                    "book-6",
+                    "book-7",
+                    "book-8",
+                    "book-9",
+                ],
+                "gtl_id": [
+                    " 1234567 ",
+                    "00012345",
+                    "nan",
+                    "",
+                    "  98765432",
+                    "1234500",
+                    "123450",
+                    "0123456e",
+                    "01234 56",
+                ],
+            }
+        )
+
+        normalized_df = normalize_gtl(df)
+
+        expected_gtl_ids = [
+            "01234567",
+            None,
+            None,
+            None,
+            "98765432",
+            "01234500",
+            None,
+            None,
+            None,
+        ]
+
+        assert normalized_df["gtl_id"].tolist() == expected_gtl_ids

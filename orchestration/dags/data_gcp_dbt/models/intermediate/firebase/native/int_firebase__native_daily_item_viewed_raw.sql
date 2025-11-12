@@ -56,7 +56,7 @@ with
             item_pair,
             user_id
         from split_items, unnest(item_pairs) as item_pair
-    ),
+    )
 
 select
     event_date,

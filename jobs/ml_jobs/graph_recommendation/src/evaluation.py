@@ -7,12 +7,12 @@ from typing import TYPE_CHECKING
 import pandas as pd
 from loguru import logger
 
-from src.constants import ID_COLUMN
+from src.constants import FULL_SCORE_COLUMN, ID_COLUMN
 from src.utils.preprocessing import preprocess_metadata_dataframe
 from src.utils.recommendation_metrics import compute_evaluation_metrics
 from src.utils.retrieval import (
     LANCEDB_TABLE_NAME,
-    compute_all_scores_lazy,
+    compute_all_scores,
     generate_predictions_lazy,
     join_retrieval_with_metadata,
     load_and_index_embeddings,
@@ -77,7 +77,8 @@ def evaluate_embeddings(
     )
     metadata_df = (
         pd.read_parquet(
-            raw_data_parquet_path, columns=evaluation_config.metadata_columns
+            raw_data_parquet_path,
+            columns=[ID_COLUMN, *evaluation_config.metadata_columns],
         )
         .loc[lambda df: df[ID_COLUMN].isin(unique_node_ids)]
         .drop_duplicates(subset=[ID_COLUMN])
@@ -90,31 +91,28 @@ def evaluate_embeddings(
         retrieval_results=df_results,
         metadata_df=metadata_df,
         right_on=ID_COLUMN,
-    ).where(pd.notna(df_results), None)
+    )
 
     # ==================================================================================
     # Step 5: Compute ALL scores
     # ==================================================================================
     logger.info("STEP 5: Computing Ground Truth Scores")
 
-    df_results = compute_all_scores_lazy(
-        augmented_results=df_results,
-        table=embedding_table,
-        query_node_ids=query_node_ids,
-        artist_col_query="query_artist_id",
-        artist_col_retrieved="retrieved_artist_id",
-        force_artist_weight=evaluation_config.force_artist_weight,
+    df_results = compute_all_scores(
+        retrieved_results_with_metadata_df=df_results,
+        metadata_columns=evaluation_config.metadata_columns,
+        categorical_metadata_columns=evaluation_config.categorical_metadata_columns,
+        hierarchical_metadata_scoring_functions=evaluation_config.hierarchical_metadata_scoring_functions,
     )
 
     # ==================================================================================
     # Step 6: Compute Embeddings Evaluation Metrics
     # ==================================================================================
     logger.info("STEP 6: Computing Embeddings Evaluation Metrics")
-
     metrics_df, df_results = compute_evaluation_metrics(
         retrieval_results=df_results,
         k_values=evaluation_config.k_values,
-        score_column=evaluation_config.ground_truth_score,
+        score_column=FULL_SCORE_COLUMN,
     )
 
     return metrics_df, df_results

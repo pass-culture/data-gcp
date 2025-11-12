@@ -22,7 +22,6 @@ with
             ivr.user_id,
             ivr.viewed_item_id,
             user.user_role,
-            user.user_is_priority_public,
             user.user_age,
             case
                 when ivr.item_index between 1 and 3
@@ -34,7 +33,7 @@ with
                 else "bucket_10_plus"
             end as index_bucket
         from {{ ref("int_firebase__native_daily_item_viewed_raw") }} as ivr
-        left join {{ ref("int_global__user") }} as user on ivr.user_id = user.user_id
+        left join {{ ref("int_applicative__user") }} as user on ivr.user_id = user.user_id
         {% if is_incremental() %}
             where date(event_date) = date_sub('{{ ds() }}', interval 3 day)
         {% else %} where date(event_date) >= "2025-06-02"
@@ -52,7 +51,6 @@ with
             viewed_item_id,
             index_bucket,
             user_role,
-            user_is_priority_public,
             user_age,
             count(distinct unique_session_id) as total_sessions_item_viewed,
             count(distinct user_id) as total_user_item_viewed
@@ -66,7 +64,6 @@ with
             index_bucket,
             viewed_item_id,
             user_role,
-            user_is_priority_public,
             user_age
     )
 
@@ -79,7 +76,6 @@ select
     item_type,  -- offer/venue/artist
     viewed_item_id,  -- offer_id/venue_id/artist_id
     user_role,
-    user_is_priority_public,
     user_age,
     total_user_item_viewed,
     coalesce(bucket_1_3, 0) as total_user_item_viewed_bucket_1_3,

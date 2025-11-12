@@ -180,18 +180,3 @@ def get_gtl_retrieval_score(query_gtl_id: str, result_gtl_id: str) -> float:
 
     # Normalize by query depth
     return matching_parts / query_depth
-
-
-def get_artist_score(
-    query_artist_id: str | None, result_artist_id: str | None
-) -> float:
-    assert isinstance(
-        query_artist_id, str | None
-    ), "Type Error: artist_id must be string or None "
-    assert isinstance(
-        result_artist_id, str | None
-    ), "Type Error: artist_id must be string or None "
-
-    if query_artist_id is None or result_artist_id is None:
-        return 0.0
-    return float(query_artist_id == result_artist_id)

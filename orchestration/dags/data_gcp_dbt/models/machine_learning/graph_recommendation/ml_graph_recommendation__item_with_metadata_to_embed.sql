@@ -31,28 +31,42 @@ with
             = 1
     ),
 
-    artist_link_prepared as (
+    product_artist_link as (
         select
             artist_id, artist_type, cast(offer_product_id as string) as offer_product_id
         from {{ source("raw", "applicative_database_product_artist_link") }}
+    ),
+
+    artist as (
+        select artist_id, artist_name
+        from {{ source("raw", "applicative_database_artist") }}
+    ),
+
+    titelive_metadata as (
+        select offer_product_id, series_id, series, language_iso
+        from {{ ref("int_global__product_titelive_mapping") }}
     )
 
 select
-    omd.offer_id as example_offer_id,
-    omd.offer_product_id,
-    omd.item_id,
-    omd.offer_name,
-    omd.offer_subcategory_id,
-    omd.gtl_id,
-    omd.gtl_type,
-    omd.gtl_label_level_1,
-    omd.gtl_label_level_2,
-    omd.gtl_label_level_3,
-    omd.gtl_label_level_4,
-    omd.author,
-    al.artist_id,
-    a.artist_name,
-    al.artist_type
-from offers_with_best_metadata as omd
-left join artist_link_prepared as al on omd.offer_product_id = al.offer_product_id
-left join {{ source("ml_preproc", "artist") }} as a using (artist_id)
+    offers_with_best_metadata.offer_id as example_offer_id,
+    offers_with_best_metadata.offer_product_id,
+    offers_with_best_metadata.item_id,
+    offers_with_best_metadata.offer_name,
+    offers_with_best_metadata.offer_subcategory_id,
+    offers_with_best_metadata.gtl_id,
+    offers_with_best_metadata.gtl_type,
+    offers_with_best_metadata.gtl_label_level_1,
+    offers_with_best_metadata.gtl_label_level_2,
+    offers_with_best_metadata.gtl_label_level_3,
+    offers_with_best_metadata.gtl_label_level_4,
+    offers_with_best_metadata.author,
+    artist.artist_id,
+    artist.artist_name,
+    product_artist_link.artist_type,
+    titelive_metadata.series_id,
+    titelive_metadata.series,
+    titelive_metadata.language_iso
+from offers_with_best_metadata
+left join product_artist_link using (offer_product_id)
+left join artist using (artist_id)
+left join titelive_metadata using (offer_product_id)

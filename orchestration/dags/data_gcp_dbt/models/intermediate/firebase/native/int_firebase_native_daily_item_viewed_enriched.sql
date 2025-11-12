@@ -33,8 +33,8 @@ with
                 then "bucket_7_9"
                 else "bucket_10_plus"
             end as index_bucket
-        from ref("int_firebase__native_daily_item_viewed_raw") as ivr
-        left join ref("int_global__user") as user on ivr.user_id = user.user_id
+        from {{ ref("int_firebase__native_daily_item_viewed_raw") }} as ivr
+        left join {{ ref("int_global__user") }} as user on ivr.user_id = user.user_id
         {% if is_incremental() %}
             where date(event_date) = date_sub('{{ ds() }}', interval 3 day)
         {% else %} where date(event_date) >= "2025-06-02"

@@ -151,6 +151,17 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
             cleanup_temp_dir(temp_target_dir)
 
 
+def dbt_run_operation(operation: str, **context):
+    """
+    Run a dbt operation.
+    Args:
+        operation: dbt operation name
+        **context: Airflow context
+    """
+    command = ["run-operation", operation]
+    run_dbt_command(command, **context)
+
+
 def run_dbt_with_selector(selector: str, **context):
     """
     Run dbt with a specific selector.

@@ -115,6 +115,11 @@ class TrainingConfig(BaseConfig):
                 ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
                 ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
             ]
+            + 3
+            * [
+                ("book", "is_series_id", "series_id"),
+                ("series_id", "series_id_of", "book"),
+            ]
             + 2
             * [
                 ("book", "is_gtl_label_level_2", "gtl_label_level_2"),

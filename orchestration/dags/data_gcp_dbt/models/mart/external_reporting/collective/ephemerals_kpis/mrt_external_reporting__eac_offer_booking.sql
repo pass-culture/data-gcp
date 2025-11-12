@@ -8,11 +8,7 @@
     )
 }}
 
-{% set dimensions = [
-    {"name": "NAT", "value_expr": "'NAT'"},
-    {"name": "REG", "value_expr": "region_name"},
-    {"name": "ACAD", "value_expr": "academy_name"},
-] %}
+{% set dimensions = get_dimensions(none, 'academic') %}
 
 with
     created_collective_offers as (

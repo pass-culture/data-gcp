@@ -8,55 +8,8 @@
     )
 }}
 
-{% set dimensions = [
-    {"name": "NAT", "value_expr": "'NAT'"},
-    {"name": "REG", "value_expr": "partner_region_name"},
-    {"name": "DEP", "value_expr": "partner_department_name"},
-] %}
-
--- Définition des types de partenaires culturels avec leurs critères
-{% set partner_types = [
-    {
-        "name": "cinemas",
-        "label": "Cinémas",
-        "condition": "partner_type IN ('Cinéma - Salle de projections', 'Cinéma itinérant') OR venue_tag_name IN (\"Cinéma d'art et d'essai\")",
-    },
-    {
-        "name": "cinemas_art_et_essai",
-        "label": "Cinémas Art et Essai",
-        "condition": "venue_tag_name IN (\"Cinéma d'art et d'essai\")",
-    },
-    {
-        "name": "librairies",
-        "label": "Librairies",
-        "condition": "partner_type IN ('Librairie', 'Magasin de grande distribution')",
-    },
-    {
-        "name": "spectacle_vivant",
-        "label": "Spectacle Vivant",
-        "condition": "partner_type IN ('Spectacle vivant')",
-    },
-    {
-        "name": "spectacle_vivant_labels",
-        "label": "Spectacle Vivant avec Labels",
-        "condition": "partner_type IN ('Spectacle vivant') AND venue_tag_name IN ('CCN','CDCN','CDN','CNAREP','SCIN','Scène nationale','Théâtre lyrique','Théâtres nationaux')",
-    },
-    {
-        "name": "musique_live",
-        "label": "Musique Live",
-        "condition": "partner_type IN ('Musique - Salle de concerts', 'Festival')",
-    },
-    {
-        "name": "musee",
-        "label": "Musées",
-        "condition": "partner_type IN ('Musée')",
-    },
-    {
-        "name": "musee_labels",
-        "label": "Musées avec Labels",
-        "condition": "partner_type IN ('Musée') AND venue_tag_name IN ('MdF')",
-    },
-] %}
+{% set dimensions = get_dimensions('partner', 'geo') %}
+{% set partner_types = get_partner_types() %}
 
 with
     all_activated_partners_and_days as (
@@ -176,8 +129,8 @@ with
 
     complete_grid as (
         select dr.partition_month, rd.partner_region_name, rd.partner_department_name
-        from date_range dr
-        cross join regions_departments rd
+        from date_range as dr
+        cross join regions_departments as rd
     ),
 
     epn_with_zeros as (
@@ -186,9 +139,9 @@ with
             cg.partner_region_name,
             cg.partner_department_name,
             coalesce(ed.epn_created, 0) as epn_created
-        from complete_grid cg
+        from complete_grid as cg
         left join
-            epn_details ed
+            epn_details as ed
             on cg.partition_month = ed.partition_month
             and cg.partner_region_name = ed.partner_region_name
             and cg.partner_department_name = ed.partner_department_name

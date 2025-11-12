@@ -114,7 +114,7 @@ class TestGetYearlyValue:
         result = ExcelWriterService._get_yearly_value(yearly_data, "2021")
 
         # Assert
-        assert result == 100.5
+        assert math.isclose(result, 100.5)
 
     def test_get_yearly_value_scholar_year(self):
         """Test extraction of scholar year value (2021-2022)."""
@@ -125,7 +125,7 @@ class TestGetYearlyValue:
         result = ExcelWriterService._get_yearly_value(yearly_data, "2021-2022")
 
         # Assert
-        assert result == 250.7
+        assert math.isclose(result, 250.7)
 
     def test_get_yearly_value_scholar_year_fallback(self):
         """Test fallback to start year for scholar year."""
@@ -137,7 +137,7 @@ class TestGetYearlyValue:
 
         # Assert
         # Should fallback to 2021
-        assert result == 100.5
+        assert math.isclose(result, 100.5)
 
     def test_get_yearly_value_not_found(self):
         """Test handling when year is not in data."""
@@ -174,7 +174,7 @@ class TestWriteCellValue:
 
         # Assert
         assert result is True
-        assert mock_openpyxl_worksheet.cell(row=1, column=1).value == 100.5
+        assert math.isclose(mock_openpyxl_worksheet.cell(row=1, column=1).value, 100.5)
 
     def test_write_cell_value_integer(self, mock_openpyxl_worksheet):
         """Test writing integer value to cell."""
@@ -185,7 +185,7 @@ class TestWriteCellValue:
 
         # Assert
         assert result is True
-        assert mock_openpyxl_worksheet.cell(row=1, column=1).value == 100.0
+        assert math.isclose(mock_openpyxl_worksheet.cell(row=1, column=1).value, 100.0)
 
     def test_write_cell_value_string(self, mock_openpyxl_worksheet):
         """Test writing string value to cell."""

@@ -17,7 +17,7 @@
         {% if not loop.first %}
             union all
         {% endif %}
-        {% for age in age_groups|reverse %}
+        {% for age in age_groups | reverse %}
             {% if not loop.first %}
                 union all
             {% endif %}

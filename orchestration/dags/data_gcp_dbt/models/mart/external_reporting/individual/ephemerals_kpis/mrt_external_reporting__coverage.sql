@@ -8,7 +8,7 @@
     )
 }}
 
-{% set dimensions = get_dimensions('population', 'geo') %}
+{% set dimensions = get_dimensions("population", "geo") %}
 {% set age_groups = get_age_groups() %}
 
 {{ generate_coverage_metrics_by_age(age_groups, dimensions) }}

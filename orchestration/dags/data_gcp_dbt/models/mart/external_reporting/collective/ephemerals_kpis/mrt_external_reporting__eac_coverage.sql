@@ -8,24 +8,8 @@
     )
 }}
 
-{% set dimensions = [
-    {"name": "NAT", "value_expr": "'NAT'"},
-    {"name": "REG", "value_expr": "region_name"},
-    {"name": "ACAD", "value_expr": "academy_name"},
-] %}
-
-{% set objects = [
-    {
-        "name": "jeunes",
-        "attribute": "involved_students",
-        "table_name": "adage_involved_student",
-    },
-    {
-        "name": "eple",
-        "attribute": "institutions",
-        "table_name": "adage_involved_institution",
-    },
-] %}
+{% set dimensions = get_dimensions(none, 'academic') %}
+{% set objects = get_eac_objects() %}
 
 with
     {% for obj in objects %}

@@ -8,67 +8,14 @@
     )
 }}
 
-{% set dimensions = [
-    {"name": "NAT", "value_expr": "'NAT'", "skip_epn": false},
-    {"name": "REG", "value_expr": "partner_region_name", "skip_epn": false},
-    {
-        "name": "DEP",
-        "value_expr": "partner_department_name",
-        "skip_epn": false,
-    },
-    {"name": "EPCI", "value_expr": "partner_epci", "skip_epn": true},
-    {"name": "COM", "value_expr": "partner_city", "skip_epn": true},
-] %}
-
--- Définition des types de partenaires culturels avec leurs critères
-{% set partner_types = [
-    {
-        "name": "cinemas",
-        "label": "Cinémas",
-        "condition": "partner_type IN ('Cinéma - Salle de projections', 'Cinéma itinérant') OR venue_tag_name IN (\"Cinéma d'art et d'essai\")",
-    },
-    {
-        "name": "cinemas_art_et_essai",
-        "label": "Cinémas Art et Essai",
-        "condition": "venue_tag_name IN (\"Cinéma d'art et d'essai\")",
-    },
-    {
-        "name": "librairies",
-        "label": "Librairies",
-        "condition": "partner_type IN ('Librairie', 'Magasin de grande distribution')",
-    },
-    {
-        "name": "spectacle_vivant",
-        "label": "Spectacle Vivant",
-        "condition": "partner_type IN ('Spectacle vivant')",
-    },
-    {
-        "name": "spectacle_vivant_labels",
-        "label": "Spectacle Vivant avec Labels",
-        "condition": "partner_type IN ('Spectacle vivant') AND venue_tag_name IN ('CCN','CDCN','CDN','CNAREP','SCIN','Scène nationale','Théâtre lyrique','Théâtres nationaux')",
-    },
-    {
-        "name": "musique_live",
-        "label": "Musique Live",
-        "condition": "partner_type IN ('Musique - Salle de concerts', 'Festival')",
-    },
-    {
-        "name": "musee",
-        "label": "Musées",
-        "condition": "partner_type IN ('Musée')",
-    },
-    {
-        "name": "musee_labels",
-        "label": "Musées avec Labels",
-        "condition": "partner_type IN ('Musée') AND venue_tag_name IN ('MdF')",
-    },
-] %}
+{% set dimensions = get_dimensions('partner', 'geo') %}
+{% set partner_types = get_partner_types() %}
 
 with
     all_activated_partners_and_days as (
-        -- Pour chaque venue_id, une ligne par jour depuis la 1ère offre publiée
+        -- Pour chaque partner_id, une ligne par jour depuis la 1ère offre publiée
         select
-            gcp.venue_id,
+            gcp.partner_id,
             gcp.first_individual_offer_creation_date,
             date_add(date('2022-01-01'), interval offset day) as partition_day
         from {{ ref("mrt_global__cultural_partner") }} as gcp
@@ -84,22 +31,20 @@ with
 
     all_days_with_bookability as (
         select
-            apd.venue_id,
+            apd.partner_id,
             apd.first_individual_offer_creation_date,
             apd.partition_day,
-            coalesce(
-                bvh.total_individual_bookable_offers, 0
-            ) as total_indiv_bookable_offers
+            coalesce(bph.individual_bookable_offers, 0) as total_indiv_bookable_offers
         from all_activated_partners_and_days as apd
         left join
-            {{ ref("int_history__bookable_venue") }} as bvh
-            on apd.venue_id = bvh.venue_id
-            and apd.partition_day = bvh.partition_date
+            {{ ref("bookable_partner_history") }} as bph
+            on apd.partner_id = bph.partner_id
+            and apd.partition_day = bph.partition_date
     ),
 
     bookable_dates as (
         select
-            venue_id,
+            partner_id,
             first_individual_offer_creation_date,
             partition_day,
             date_diff(
@@ -110,7 +55,7 @@ with
                             when total_indiv_bookable_offers != 0 then partition_day
                         end
                     ) over (
-                        partition by venue_id
+                        partition by partner_id
                         order by partition_day
                         rows between unbounded preceding and current row
                     ),
@@ -123,23 +68,21 @@ with
 
     partner_details as (
         select
-            bd.venue_id,
+            bd.partner_id,
             bd.partition_day,
             bd.first_individual_offer_creation_date,
             bd.days_since_last_indiv_bookable_date,
             gcp.partner_region_name,
             gcp.partner_department_name,
-            gcp.partner_epci,
-            gcp.partner_city,
             gcp.partner_type,
             gcp.offerer_id,
             gvt.venue_tag_name
         from bookable_dates as bd
         inner join
             {{ ref("mrt_global__cultural_partner") }} as gcp
-            on bd.venue_id = gcp.venue_id
+            on bd.partner_id = gcp.partner_id
         left join
-            {{ ref("mrt_global__venue_tag") }} as gvt on gcp.venue_id = gvt.venue_id
+            {{ ref("mrt_global__venue_tag") }} as gvt on gcp.partner_id = gvt.partner_id
         inner join
             {{ ref("mrt_global__offerer") }} as gof on gcp.offerer_id = gof.offerer_id
     ),
@@ -229,22 +172,16 @@ with
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         'nombre_total_de_partenaire_actif' as kpi_name,
-        coalesce(
-            count(
-                distinct case
-                    when days_since_last_indiv_bookable_date <= 365 then venue_id
-                end
-            ),
-            0
+        count(
+            distinct case
+                when days_since_last_indiv_bookable_date <= 365 then partner_id
+            end
         ) as numerator,
         1 as denominator,
-        coalesce(
-            count(
-                distinct case
-                    when days_since_last_indiv_bookable_date <= 365 then venue_id
-                end
-            ),
-            0
+        count(
+            distinct case
+                when days_since_last_indiv_bookable_date <= 365 then partner_id
+            end
         ) as kpi
     from partner_details
     where
@@ -265,28 +202,22 @@ with
             '{{ dim.name }}' as dimension_name,
             {{ dim.value_expr }} as dimension_value,
             "nombre_de_partenaire_actif_{{ partner_type.name }}" as kpi_name,
-            coalesce(
-                count(
-                    distinct case
-                        when
-                            days_since_last_indiv_bookable_date <= 365
-                            and {{ partner_type.condition }}
-                        then venue_id
-                    end
-                ),
-                0
+            count(
+                distinct case
+                    when
+                        days_since_last_indiv_bookable_date <= 365
+                        and {{ partner_type.condition }}
+                    then partner_id
+                end
             ) as numerator,
             1 as denominator,
-            coalesce(
-                count(
-                    distinct case
-                        when
-                            days_since_last_indiv_bookable_date <= 365
-                            and {{ partner_type.condition }}
-                        then venue_id
-                    end
-                ),
-                0
+            count(
+                distinct case
+                    when
+                        days_since_last_indiv_bookable_date <= 365
+                        and {{ partner_type.condition }}
+                    then partner_id
+                end
             ) as kpi
         from partner_details
         where
@@ -304,22 +235,16 @@ with
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         'nombre_total_cumule_de_partenaire_actif' as kpi_name,
-        coalesce(
-            count(
-                distinct case
-                    when days_since_last_indiv_bookable_date >= 0 then venue_id
-                end
-            ),
-            0
+        count(
+            distinct case
+                when days_since_last_indiv_bookable_date >= 0 then partner_id
+            end
         ) as numerator,
         1 as denominator,
-        coalesce(
-            count(
-                distinct case
-                    when days_since_last_indiv_bookable_date >= 0 then venue_id
-                end
-            ),
-            0
+        count(
+            distinct case
+                when days_since_last_indiv_bookable_date >= 0 then partner_id
+            end
         ) as kpi
     from partner_details
     where
@@ -329,24 +254,22 @@ with
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
-    {% if not dim.skip_epn %}
-        union all
-        select
-            epn.partition_month,
-            timestamp("{{ ts() }}") as updated_at,
-            '{{ dim.name }}' as dimension_name,
-            {{ dim.value_expr }} as dimension_value,
-            'total_entite_epn' as kpi_name,
-            coalesce(sum(epn.cumul_epn_created), 0) as numerator,
-            1 as denominator,
-            coalesce(sum(epn.cumul_epn_created), 0) as kpi
-        from cumul_epn_details as epn
-        where
-            1 = 1
-            {% if is_incremental() %}
-                and epn.partition_month
-                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-            {% endif %}
-        group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
-    {% endif %}
+    union all
+    select
+        epn.partition_month,
+        timestamp("{{ ts() }}") as updated_at,
+        '{{ dim.name }}' as dimension_name,
+        {{ dim.value_expr }} as dimension_value,
+        'total_entite_epn' as kpi_name,
+        sum(epn.cumul_epn_created) as numerator,
+        1 as denominator,
+        sum(epn.cumul_epn_created) as kpi
+    from cumul_epn_details as epn
+    where
+        1 = 1
+        {% if is_incremental() %}
+            and epn.partition_month
+            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+        {% endif %}
+    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
 {% endfor %}

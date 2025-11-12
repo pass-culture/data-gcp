@@ -11,6 +11,7 @@ from src.constants import (
     GTL_LABEL_LEVEL_1_COLUMN,
     GTL_LABEL_LEVEL_2_COLUMN,
     GTL_LABEL_LEVEL_3_COLUMN,
+    SERIES_ID_COLUMN,
 )
 from src.heterograph_builder import (
     DEFAULT_METADATA_COLUMNS,
@@ -33,6 +34,7 @@ def _build_sample_dataframe() -> pd.DataFrame:
             "gtl_label_level_4": [None, None, None, None],
             "artist_id": ["artist-1", "artist-2", "artist-1", "artist-2"],
             "gtl_id": ["01022000", "01030000", "01022000", "01023000"],
+            "series_id": ["series-1", "series-1", "series-2", "series-2"],
         }
     )
 
@@ -49,6 +51,7 @@ def _build_empty_metadata_dataframe() -> pd.DataFrame:
             "gtl_label_level_4": [None, None],
             "artist_id": [None, None],
             "gtl_id": ["01234567", "02345678"],
+            "series_id": [None, None],
         }
     )
 
@@ -123,9 +126,9 @@ def test_heterograph_edges_are_bidirectional() -> None:
             reverse_pairs = set(
                 zip(reverse_edges[1].tolist(), reverse_edges[0].tolist(), strict=True)
             )
-            assert (
-                forward_pairs == reverse_pairs
-            ), f"Edges not symmetric for {edge_type}"
+            assert forward_pairs == reverse_pairs, (
+                f"Edges not symmetric for {edge_type}"
+            )
 
 
 def test_heterograph_metadata_organization() -> None:
@@ -144,6 +147,7 @@ def test_heterograph_metadata_organization() -> None:
         GTL_LABEL_LEVEL_3_COLUMN,
         GTL_ID_COLUMN,
         ARTIST_ID_COLUMN,
+        SERIES_ID_COLUMN,
     }
     assert set(graph_data.metadata_columns) == expected_columns
     # Check specific metadata values

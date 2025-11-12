@@ -8,7 +8,7 @@
     )
 }}
 
-{% set dimensions = get_dimensions(none, 'academic') %}
+{% set dimensions = get_dimensions(none, "academic") %}
 
 with
     created_collective_offers as (

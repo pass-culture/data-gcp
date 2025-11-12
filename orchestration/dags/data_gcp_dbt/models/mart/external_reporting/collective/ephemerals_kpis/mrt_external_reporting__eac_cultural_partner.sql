@@ -8,7 +8,7 @@
     )
 }}
 
-{% set dimensions = get_dimensions('partner', 'academic') %}
+{% set dimensions = get_dimensions("partner", "academic") %}
 
 with
     all_activated_partners_and_days as (

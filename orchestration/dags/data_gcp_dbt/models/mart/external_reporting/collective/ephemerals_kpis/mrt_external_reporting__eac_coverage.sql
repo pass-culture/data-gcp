@@ -8,7 +8,7 @@
     )
 }}
 
-{% set dimensions = get_dimensions(none, 'academic') %}
+{% set dimensions = get_dimensions(none, "academic") %}
 {% set objects = get_eac_objects() %}
 
 with

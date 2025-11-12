@@ -8,7 +8,7 @@
     )
 }}
 
-{% set dimensions = get_dimensions(none, 'geo') %}
+{% set dimensions = get_dimensions(none, "geo") %}
 {% set activity_list = get_activity_list() %}
 
 -- Base CTEs optimisées

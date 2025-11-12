@@ -8,7 +8,7 @@
     )
 }}
 
-{% set dimensions = get_dimensions('partner', 'geo') %}
+{% set dimensions = get_dimensions("partner", "geo") %}
 {% set partner_types = get_partner_types() %}
 
 with

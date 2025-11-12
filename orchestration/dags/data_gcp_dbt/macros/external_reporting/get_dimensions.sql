@@ -1,4 +1,4 @@
-{% macro get_dimensions(entity_prefix=none, hierarchy_type='geo') %}
+{% macro get_dimensions(entity_prefix=none, hierarchy_type="geo") %}
     {#
         Generate standardized dimension definitions for external reporting models.
 
@@ -24,7 +24,6 @@
             {{ get_dimensions('institution', 'academic') }}
             {{ get_dimensions(none, 'academic') }}
     #}
-
     {% if entity_prefix %}
         {% set region_col = entity_prefix ~ "_region_name" %}
         {% set dept_col = entity_prefix ~ "_department_name" %}
@@ -35,20 +34,26 @@
         {% set acad_col = "academy_name" %}
     {% endif %}
 
-    {% if hierarchy_type == 'geo' %}
+    {% if hierarchy_type == "geo" %}
         {% set dimensions = [
             {"name": "NAT", "value_expr": "'NAT'"},
             {"name": "REG", "value_expr": region_col},
             {"name": "DEP", "value_expr": dept_col},
         ] %}
-    {% elif hierarchy_type == 'academic' %}
+    {% elif hierarchy_type == "academic" %}
         {% set dimensions = [
             {"name": "NAT", "value_expr": "'NAT'"},
             {"name": "REG", "value_expr": region_col},
             {"name": "ACAD", "value_expr": acad_col},
         ] %}
     {% else %}
-        {{ exceptions.raise_compiler_error("Invalid hierarchy_type: " ~ hierarchy_type ~ ". Must be 'geo' or 'academic'.") }}
+        {{
+            exceptions.raise_compiler_error(
+                "Invalid hierarchy_type: "
+                ~ hierarchy_type
+                ~ ". Must be 'geo' or 'academic'."
+            )
+        }}
     {% endif %}
 
     {{ return(dimensions) }}

@@ -8,7 +8,7 @@
     )
 }}
 
-{% set dimensions = get_dimensions('institution', 'academic') %}
+{% set dimensions = get_dimensions("institution", "academic") %}
 
 with
     base_aggregation as (

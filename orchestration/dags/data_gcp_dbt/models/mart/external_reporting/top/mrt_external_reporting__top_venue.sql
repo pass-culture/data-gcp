@@ -8,7 +8,7 @@
     )
 }}
 
-{% set dimensions = get_dimensions('venue', 'geo') %}
+{% set dimensions = get_dimensions("venue", "geo") %}
 
 with
     base_aggregation as (

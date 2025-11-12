@@ -71,6 +71,8 @@ with
             u.user_has_enabled_marketing_push,
             u.user_subscribed_themes,
             u.user_subscribed_themes is not null as is_theme_subscribed,
+            u.user_cultural_survey_id,
+            not u.user_needs_to_fill_cultural_survey as user_has_filled_cultural_survey,
             current_date as reference_date
         from {{ source("raw", "applicative_database_user") }} as u
         where
@@ -80,6 +82,8 @@ with
 
 select
     user_id,
+    user_cultural_survey_id,
+    user_has_filled_cultural_survey,
     user_creation_date,
     user_humanized_id,
     user_has_enabled_marketing_email,

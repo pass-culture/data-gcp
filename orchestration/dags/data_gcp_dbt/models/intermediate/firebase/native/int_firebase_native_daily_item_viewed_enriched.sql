@@ -36,8 +36,7 @@ with
         from ref("int_firebase__native_daily_item_viewed_raw") as ivr
         left join ref("int_global__user") as user on ivr.user_id = user.user_id
         {% if is_incremental() %}
-            where date(event_date)
-            = date_sub('{{ ds() }}', interval 3 day)
+            where date(event_date) = date_sub('{{ ds() }}', interval 3 day)
         {% else %} where date(event_date) >= "2025-06-02"
         {% endif %}
     ),
@@ -78,7 +77,7 @@ select
     module_id,
     home_entry_id,
     item_type,  -- offer/venue/artist
-    viewed_item_id, -- offer_id/venue_id/artist_id
+    viewed_item_id,  -- offer_id/venue_id/artist_id
     user_role,
     user_is_priority_public,
     user_age,

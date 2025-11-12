@@ -26,9 +26,7 @@ with
             {% if is_incremental() %}
                 and date(native_event.event_date)
                 >= date_sub('{{ ds() }}', interval 3 day)
-            {% else %}
-                and date(native_event.event_date)
-                >= date("2025-06-02")
+            {% else %} and date(native_event.event_date) >= date("2025-06-02")
             {% endif %}
     ),
 

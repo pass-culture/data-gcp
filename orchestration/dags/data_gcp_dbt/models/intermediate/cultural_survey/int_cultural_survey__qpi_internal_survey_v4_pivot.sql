@@ -19,7 +19,7 @@ with
             subcategory_ids,
             qpi_version,
             submitted_at
-        from {{ ref("int_cultural_survey__qpi_internal_survey") }}
+        from {{ ref("int_cultural_survey__qpi_internal_survey_v4") }}
     )
 
 select

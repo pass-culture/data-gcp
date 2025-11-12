@@ -90,6 +90,8 @@ httplib2==0.31.0
     #   google-auth-httplib2
 idna==3.10
     # via requests
+iniconfig==2.3.0
+    # via pytest
 logging==0.4.9.6
     # via -r requirements.in
 markdown-it-py==4.0.0
@@ -111,6 +113,7 @@ packaging==25.0
     #   db-dtypes
     #   google-cloud-bigquery
     #   pandas-gbq
+    #   pytest
 pandas==2.2.2
     # via
     #   -r requirements.in
@@ -118,6 +121,8 @@ pandas==2.2.2
     #   pandas-gbq
 pandas-gbq==0.23.1
     # via -r requirements.in
+pluggy==1.6.0
+    # via pytest
 proto-plus==1.26.1
     # via
     #   google-api-core
@@ -146,9 +151,13 @@ pyasn1-modules==0.4.2
 pydata-google-auth==1.9.1
     # via pandas-gbq
 pygments==2.19.2
-    # via rich
+    # via
+    #   pytest
+    #   rich
 pyparsing==3.2.5
     # via httplib2
+pytest==9.0.0
+    # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via
     #   -r requirements.in

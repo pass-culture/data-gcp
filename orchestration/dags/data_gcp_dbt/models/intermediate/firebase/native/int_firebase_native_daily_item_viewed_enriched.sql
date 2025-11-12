@@ -38,7 +38,7 @@ with
         {% if is_incremental() %}
             where date(event_date)
             = date_sub('{{ ds() }}', interval 3 day)
-        {% else %} where date(event_date) >= "2025-08-01"
+        {% else %} where date(event_date) >= "2025-06-02"
         {% endif %}
     ),
 

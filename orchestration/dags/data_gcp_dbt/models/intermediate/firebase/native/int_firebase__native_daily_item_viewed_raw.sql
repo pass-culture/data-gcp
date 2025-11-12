@@ -28,7 +28,7 @@ with
                 >= date_sub('{{ ds() }}', interval 3 day)
             {% else %}
                 and date(native_event.event_date)
-                >= date_sub('{{ ds() }}', interval {{ var("full_refresh_lookback") }})
+                >= date("2025-06-02")
             {% endif %}
     ),
 

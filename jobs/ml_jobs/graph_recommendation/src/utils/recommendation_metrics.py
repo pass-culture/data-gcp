@@ -98,7 +98,6 @@ def _compute_metrics_at_k(
         k=k,
         score_type="exp",
     )
-    logger.info(f"    NDCG@{k}: {ndcg:.4f}")
 
     # Compute threshold-based metrics (recall, precision)
     rating_pred_k = rating_pred_sorted.groupby("userID").head(k)
@@ -120,6 +119,11 @@ def _compute_metrics_at_k(
         k=k,
     )
 
+    logger.info(f"Metrics at k={k} for score '{score_column}':")
+    logger.info(f"  NDCG@{k}: {ndcg:.4f}")
+    logger.info(f"  Recall@{k}: {recall:.4f}")
+    logger.info(f"  Custom Recall@{k}: {custom_recall:.4f}")
+    logger.info(f"  Precision@{k}: {precision:.4f}")
     return {
         "score_column": score_column,
         "k": k,

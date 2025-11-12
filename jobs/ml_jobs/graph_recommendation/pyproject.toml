@@ -29,6 +29,7 @@ dependencies = [
   "google-auth>=2.41.1",
   "google-cloud>=0.34.0",
   "google-cloud-secret-manager>=2.25.0",
+  "pytest-env>=1.2.0",
 ]
 
 [build-system]
@@ -96,3 +97,6 @@ runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 # Pydantic needs to be able to evaluate types at runtime
 # see https://pypi.org/project/flake8-type-checking/ for flake8-type-checking documentation
 # see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation
+
+[tool.pytest.ini_options]
+env = ["PYTEST_DISABLE_MLFLOW_LOGGING=1"]

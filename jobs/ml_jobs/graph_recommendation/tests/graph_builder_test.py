@@ -23,6 +23,7 @@ def _build_sample_dataframe() -> pd.DataFrame:
             "gtl_label_level_4": [None, None, None],
             "artist_id": ["artist-1", "artist-2", "artist-1"],
             "gtl_id": ["01022000", "01030000", "01022000"],
+            "series_id": ["series-1", "series-1", "series-2"],
         }
     )
 
@@ -81,6 +82,7 @@ def test_missing_metadata_raises_value_error() -> None:
             "gtl_label_level_4": [None],
             "artist_id": [None],
             "gtl_id": [None],
+            "series_id": [None],
         }
     )
 

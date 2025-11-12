@@ -28,6 +28,7 @@ def _build_sample_dataframe() -> pd.DataFrame:
             "gtl_label_level_4": [None, None, None, None],
             "artist_id": ["artist-1", "artist-2", "artist-1", "artist-2"],
             "gtl_id": ["01022000", "01030000", "01022000", "01023000"],
+            "series_id": ["series-1", "series-1", "series-2", "series-2"],
         }
     )
 
@@ -44,6 +45,7 @@ def _build_empty_metadata_dataframe() -> pd.DataFrame:
             "gtl_label_level_4": [None, None],
             "artist_id": [None, None],
             "gtl_id": ["gtl-1", "gtl-2"],
+            "series_id": [None, None],
         }
     )
 
@@ -162,6 +164,7 @@ def test_heterograph_metadata_organization() -> None:
         "gtl_label_level_2",
         "gtl_label_level_3",
         "artist_id",
+        "series_id",
     }
     assert set(graph_data.metadata_columns) == expected_columns
 

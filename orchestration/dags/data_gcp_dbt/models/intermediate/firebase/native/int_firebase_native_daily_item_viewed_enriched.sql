@@ -78,7 +78,8 @@ select
     viewed_item_id,  -- offer_id/venue_id/artist_id
     user_role,
     user_age,
-    total_user_item_viewed,
+    coalesce(bucket_1_3, 0) + coalesce(bucket_4_6, 0) + 
+    coalesce(bucket_7_9, 0) + coalesce(bucket_10_plus, 0) as total_user_item_viewed,
     coalesce(bucket_1_3, 0) as total_user_item_viewed_bucket_1_3,
     coalesce(bucket_4_6, 0) as total_user_item_viewed_bucket_4_6,
     coalesce(bucket_7_9, 0) as total_user_item_viewed_bucket_7_9,

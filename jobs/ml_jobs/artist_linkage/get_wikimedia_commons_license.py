@@ -29,6 +29,9 @@ LICENSES_COLUMNS = [
     "image_license",
     "image_license_url",
 ]
+WIKIMEDIA_REQUEST_HEADER = {
+    "User-Agent": "PassCulture/1.0 (https://passculture.app; contact@passculture.app) Python/requests"
+}  # Required to avoid 403 errors from Wikimedia API
 
 
 def extract_title_from_url(url: str) -> str:
@@ -73,6 +76,7 @@ def get_image_license(image_urls: list[str]) -> pd.DataFrame:
             params=build_wikimedia_query_params(
                 image_urls_per_batch=image_urls_per_batch
             ),
+            headers=WIKIMEDIA_REQUEST_HEADER,
         )
 
         if response.status_code == 200:
@@ -110,7 +114,7 @@ def get_image_license(image_urls: list[str]) -> pd.DataFrame:
 
                 licenses_list.append({**base_response, **license_metadata})
         else:
-            logging.warning(
+            raise ValueError(
                 f"Failed to fetch data for batch starting with {image_urls_per_batch[0]}"
             )
 

@@ -128,6 +128,48 @@ FULL_REBUILD_FLOW = "full_rebuild_flow"
 INCREMENTAL_FLOW = "incremental_flow"
 REFRESH_METADATA_FLOW = "refresh_metadata_flow"
 
+# DAG Documentation
+DAG_MD_DOC = """
+# Artist Linkage DAG
+
+This DAG links products to artists using clustering algorithms and enriches artist data with Wikidata metadata.
+
+## Three Execution Flows
+
+The DAG supports three different execution modes, controlled by the `linkage_mode` parameter:
+
+### 1. Full Rebuild Flow (`full_rebuild`)
+Rebuilds the entire artist linkage database from scratch.
+
+**Steps:**
+- Links all products to artists from scratch using clustering algorithms
+- Enriches artist data with Wikimedia Commons licenses
+- Loads complete artist, artist_alias, and product_artist_link tables into BigQuery
+- Evaluates linking quality using labelled test sets
+
+**Use case:** Initial setup or when a complete rebuild is needed due to major algorithm changes.
+
+### 2. Incremental Flow (`incremental`)
+Updates the existing artist database with new products only.
+
+**Steps:**
+- Links new products to existing artists or creates new artist entries
+- Enriches delta artist data with Wikimedia Commons licenses
+- Loads delta tables (delta_artist, delta_artist_alias, delta_product_artist_link) into BigQuery
+
+**Use case:** Regular updates to link newly added products to the artist database.
+
+### 3. Refresh Metadata Flow (`metadata_refresh`)
+Refreshes Wikidata metadata for existing artists without relinking products.
+
+**Steps:**
+- Retrieves updated Wikidata information for existing artists
+- Enriches delta artist data with updated Wikimedia Commons licenses
+- Loads delta tables with refreshed metadata into BigQuery
+
+**Use case:** Periodic updates to keep artist metadata (descriptions, images, etc.) up to date without reprocessing product links.
+"""
+
 
 def _choose_linkage(**context):
     if context["params"]["linkage_mode"] == "full_rebuild":
@@ -152,6 +194,7 @@ with DAG(
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
+    doc_md=DAG_MD_DOC,
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",

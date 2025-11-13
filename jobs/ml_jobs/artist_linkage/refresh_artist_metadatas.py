@@ -31,6 +31,24 @@ ARTIST_WIKI_ID_KEY = "artist_wiki_id"
 def retrieve_artist_wikidata_id(
     artist_df: pd.DataFrame, artist_alias_df: pd.DataFrame
 ) -> pd.DataFrame:
+    """Retrieve and merge wikidata IDs for artists from the artist alias table.
+
+    This function checks for duplicate wikidata IDs per artist and raises an error
+    if found, then merges the first wikidata ID for each artist back to the main
+    artist dataframe.
+
+    Args:
+        artist_df (pd.DataFrame): Main artist dataframe containing artist information.
+        artist_alias_df (pd.DataFrame): Artist alias dataframe containing wikidata IDs
+            in the 'artist_wiki_id' column.
+
+    Returns:
+        pd.DataFrame: Artist dataframe with wikidata IDs merged in, containing only
+            artists that have wikidata IDs.
+
+    Raises:
+        ValueError: If any artist has multiple different wikidata IDs.
+    """
     # Check for duplicate wikidata IDs before processing
     wiki_ids_per_artists = (
         artist_alias_df[artist_alias_df[ARTIST_WIKI_ID_KEY].notna()]
@@ -62,6 +80,22 @@ def retrieve_artist_wikidata_id(
 def create_delta_df_for_metadata_refresh(
     refreshed_artists_df: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Create delta dataframes for metadata refresh operation.
+
+    This function creates the necessary delta dataframes for updating artist metadata,
+    including an empty product link dataframe and empty artist alias dataframe since
+    only artist metadata is being refreshed.
+
+    Args:
+        refreshed_artists_df (pd.DataFrame): Dataframe containing artists with
+            refreshed metadata from wikidata.
+
+    Returns:
+        tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: A tuple containing:
+            - empty_delta_product_artist_link_df: Empty dataframe for product links
+            - delta_artist_df: Dataframe with artists to update and metadata
+            - empty_delta_artist_alias_df: Empty dataframe for artist aliases
+    """
     delta_artist_df = refreshed_artists_df.loc[:, ARTISTS_KEYS].assign(
         **{
             ACTION_KEY: "update",
@@ -96,6 +130,26 @@ def sanity_checks(
     applicative_artist_df: pd.DataFrame,
     applicative_artist_alias_df: pd.DataFrame,
 ) -> None:
+    """Perform comprehensive sanity checks on delta and applicative dataframes.
+
+    This function validates that the delta dataframes are properly structured for
+    a metadata refresh operation and that the data quality meets minimum thresholds.
+
+    Args:
+        delta_product_df (pd.DataFrame): Delta product dataframe (should be empty).
+        delta_artist_df (pd.DataFrame): Delta artist dataframe with updates.
+        delta_artist_alias_df (pd.DataFrame): Delta artist alias dataframe (should be empty).
+        applicative_artist_df (pd.DataFrame): Current applicative artist dataframe.
+        applicative_artist_alias_df (pd.DataFrame): Current applicative artist alias dataframe.
+
+    Raises:
+        AssertionError: If any sanity check fails, including:
+            - Non-empty dataframes that should be empty for metadata refresh
+            - Empty dataframes that should contain data
+            - Column mismatch in delta dataframes
+            - Mismatch in number of artists with wikidata IDs
+            - Significant drop in description or image coverage below 95% threshold
+    """
     SANITY_THRESHOLD = 0.95
     # 1. Minimal sanity checks
     assert (
@@ -153,6 +207,28 @@ def main(
     output_delta_artist_alias_file_path: str = typer.Option(),
     output_delta_product_artist_link_file_path: str = typer.Option(),
 ) -> None:
+    """Main function to refresh artist metadata from wikidata.
+
+    This function orchestrates the complete metadata refresh process:
+    1. Loads artist, artist alias, and wikidata files
+    2. Retrieves wikidata IDs for existing artists
+    3. Matches artists with wikidata to refresh metadata
+    4. Creates delta dataframes for the update operation
+    5. Performs sanity checks to ensure data quality
+    6. Saves the delta dataframes for downstream processing
+
+    Args:
+        artist_file_path (str): Path to the parquet file containing artist data.
+        artist_alias_file_path (str): Path to the parquet file containing artist aliases.
+        wiki_base_path (str): Base path for wikidata files.
+        wiki_file_name (str): Name of the wikidata file to load.
+        output_delta_artist_file_path (str): Output path for delta artist dataframe.
+        output_delta_artist_alias_file_path (str): Output path for delta artist alias dataframe.
+        output_delta_product_artist_link_file_path (str): Output path for delta product link dataframe.
+
+    Returns:
+        None: Function saves output files and logs progress information.
+    """
     # 1. Load data
     logger.info("Loading artist data...")
     applicative_artist_df = pd.read_parquet(artist_file_path).rename(

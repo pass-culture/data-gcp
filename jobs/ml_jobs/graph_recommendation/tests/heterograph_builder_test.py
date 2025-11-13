@@ -298,9 +298,9 @@ def test_heterograph_with_single_metadata_column() -> None:
     """Test heterograph creation with only one metadata column."""
     dataframe = pd.DataFrame(
         {
-            "item_id": ["book-1", "book-2", "book-3", "book-4"],
-            "artist_id": ["artist-1", "artist-2", "artist-1", "artist-2"],
-            "gtl_id": ["01234567", "02345678", "03456789", "gtl-4"],
+            "item_id": ["book-1", "book-2", "book-3", "book-4", "book-5"],
+            "artist_id": ["artist-1", "artist-2", "artist-1", "artist-2", None],
+            "gtl_id": ["01234567", "02345678", "03456789", "gtl-4", "gtl-5"],
         }
     )
 
@@ -320,5 +320,7 @@ def test_heterograph_with_single_metadata_column() -> None:
     assert set(graph_data.edge_types) == expected_edge_types
 
     # Check node counts
-    assert graph_data["book"].num_nodes == 3
+    assert (
+        graph_data["book"].num_nodes == 4
+    )  # book-5 has no artist_id nor proper gtl_id
     assert graph_data["artist_id"].num_nodes == 2

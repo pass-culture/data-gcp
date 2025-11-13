@@ -101,8 +101,8 @@ def evaluate_embeddings(
     df_results = compute_all_scores(
         retrieved_results_with_metadata_df=df_results,
         metadata_columns=evaluation_config.metadata_columns,
-        categorical_metadata_columns=evaluation_config.categorical_metadata_columns,
-        hierarchical_metadata_scoring_functions=evaluation_config.hierarchical_metadata_scoring_functions,
+        categorical_metadata_columns=evaluation_config.metadatas_with_categorical_scoring,
+        hierarchical_metadata_scoring_functions=evaluation_config.metadatas_with_custom_scoring,
     )
 
     # ==================================================================================

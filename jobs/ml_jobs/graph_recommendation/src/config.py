@@ -142,12 +142,12 @@ class TrainingConfig(BaseConfig):
 @dataclass
 class EvaluationConfig(BaseConfig):
     node_id_column: str = ID_COLUMN
-    categorical_metadata_columns: list[str] = field(
+    metadatas_with_categorical_scoring: list[str] = field(
         default_factory=lambda: [ARTIST_ID_COLUMN, SERIES_ID_COLUMN]
     )
-    hierarchical_metadata_scoring_functions: dict[str, Callable[[str, str], float]] = (
-        field(default_factory=lambda: {GTL_ID_COLUMN: get_gtl_retrieval_score})
-    )  # Could also be get_gtl_walk_score
+    metadatas_with_custom_scoring: dict[str, Callable[[str, str], float]] = field(
+        default_factory=lambda: {GTL_ID_COLUMN: get_gtl_retrieval_score}
+    )  # Could also be {GTL_ID_COLUMN: get_gtl_walk_score}
     n_samples: int = 1_000
     n_retrieved: int = 10_000
     k_values: list[int] = field(default_factory=lambda: [10, 20, 50, 100])
@@ -156,16 +156,15 @@ class EvaluationConfig(BaseConfig):
     @property
     def metadata_columns(self) -> list[str]:
         return [
-            *self.hierarchical_metadata_scoring_functions.keys(),
-            *self.categorical_metadata_columns,
+            *self.metadatas_with_custom_scoring.keys(),
+            *self.metadatas_with_categorical_scoring,
         ]
 
     def to_dict(self) -> dict:
         """Return config as a dictionary with function names instead of objects."""
         result = asdict(self)
         # Replace function objects with their names
-        result["hierarchical_metadata_scoring_functions"] = {
-            k: v.__name__
-            for k, v in self.hierarchical_metadata_scoring_functions.items()
+        result["metadatas_with_custom_scoring"] = {
+            k: v.__name__ for k, v in self.metadatas_with_custom_scoring.items()
         }
         return result

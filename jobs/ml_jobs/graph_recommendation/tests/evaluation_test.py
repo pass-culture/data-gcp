@@ -283,8 +283,8 @@ def test_default_eval_config_structure():
         "n_retrieved",
         "k_values",
         "rebuild_index",
-        "categorical_metadata_columns",
-        "hierarchical_metadata_scoring_functions",
+        "metadatas_with_categorical_scoring",
+        "metadatas_with_custom_scoring",
     }
     default_config = EvaluationConfig()
     assert set(default_config.to_dict().keys()) == required_keys

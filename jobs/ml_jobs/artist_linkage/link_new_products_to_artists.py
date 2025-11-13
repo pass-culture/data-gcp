@@ -179,6 +179,16 @@ def sanity_checks(
     assert (
         not delta_product_df.drop(columns=[ACTION_KEY, COMMENT_KEY]).duplicated().any()
     ), "Duplicate entries in delta_product_df"
+    delta_to_check_for_duplicates = delta_product_df.loc[
+        lambda df: df.action != "remove"
+    ]  # TODO: Remove this filter when duplicates product links have been cleaned up in production
+    assert len(
+        delta_to_check_for_duplicates.drop_duplicates(
+            ["offer_product_id", "artist_type"]
+        )
+    ) == len(
+        delta_to_check_for_duplicates
+    ), "Duplicate offer_product_id and artist_type combinations in delta_product_df"
 
     # 2. Artists
     recreated_artist_ids = delta_artist_df.loc[
@@ -212,8 +222,6 @@ def sanity_checks(
         .duplicated()
         .any()
     ), "Duplicate entries in delta_artist_alias_df"
-
-    # Additional checks can be added as needed
 
 
 # %%
@@ -258,7 +266,9 @@ def main(
     # 3. Match products to link with artists on both raw and preprocessed offer names
     preproc_linked_products_df, preproc_unlinked_products_df = (
         match_artist_on_offer_names(
-            products_to_link_df=products_to_link_df, artist_alias_df=artist_alias_df
+            products_to_link_df=products_to_link_df,
+            artist_alias_df=artist_alias_df,
+            product_artist_link_df=product_artist_link_df,
         )
     )
 

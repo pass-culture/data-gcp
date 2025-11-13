@@ -3,29 +3,6 @@ import numpy as np
 MAX_DEPTH = 4
 
 
-def _validate_gtl_id(gtl_id: str):
-    """Raise an error if GTL ID is invalid."""
-    if not isinstance(gtl_id, str):
-        raise TypeError("GTL ID must be a string")
-    if len(gtl_id) != 8:
-        raise ValueError("GTL ID must be 8 characters long")
-    if not gtl_id.isdigit():
-        raise ValueError("GTL ID must contain only digits")
-    if gtl_id.startswith("00"):
-        raise ValueError("GTL ID must not start with '00'")
-
-    # Ensure that once a "00" pair appears, all subsequent pairs are also "00"
-    pairs = [gtl_id[i : i + 2] for i in range(0, 8, 2)]
-    found_null = False
-    for pair in pairs:
-        if found_null and pair != "00":
-            raise ValueError(
-                "Invalid GTL ID: null branches cannot include additional sublevels."
-            )
-        if pair == "00":
-            found_null = True
-
-
 def _get_gtl_depth(gtl_id: str) -> int:
     """Compute the hierarchical depth level of a GTL identifier.
 
@@ -49,7 +26,6 @@ def _get_gtl_depth(gtl_id: str) -> int:
         AssertionError: If the input is not a valid GTL ID (wrong type,
             wrong length, or starts with "00").
     """
-    _validate_gtl_id(gtl_id)
     trailing_zero_pairs = (len(gtl_id) - len(gtl_id.rstrip("0"))) // 2
     return MAX_DEPTH - trailing_zero_pairs
 
@@ -154,8 +130,6 @@ def get_gtl_retrieval_score(query_gtl_id: str, result_gtl_id: str) -> float:
         >>> get_gtl_depth_normalized_score("01020301", "01030000")
         0.25  # Only 1 out of 4 query levels match
     """
-    _validate_gtl_id(query_gtl_id)
-    _validate_gtl_id(result_gtl_id)
 
     # Early exit if completely independent (different first level)
     if query_gtl_id[:2] != result_gtl_id[:2]:

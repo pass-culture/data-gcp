@@ -1,5 +1,3 @@
-# %%
-
 import pandas as pd
 import typer
 from loguru import logger
@@ -34,17 +32,17 @@ def retrieve_artist_wikidata_id(
     artist_df: pd.DataFrame, artist_alias_df: pd.DataFrame
 ) -> pd.DataFrame:
     # Check for duplicate wikidata IDs before processing
-    artists_with_multiple_wiki_ids = (
+    wiki_ids_per_artists = (
         artist_alias_df[artist_alias_df[ARTIST_WIKI_ID_KEY].notna()]
         .groupby(ARTIST_ID_KEY)[ARTIST_WIKI_ID_KEY]
         .nunique()
     )
-    if (artists_with_multiple_wiki_ids > 1).any():
-        problematic_artists = artists_with_multiple_wiki_ids[
-            artists_with_multiple_wiki_ids > 1
+    if (wiki_ids_per_artists > 1).any():
+        duplicated_artists = wiki_ids_per_artists[
+            wiki_ids_per_artists > 1
         ].index.tolist()
         raise ValueError(
-            f"Artists with multiple wikidata IDs: {problematic_artists[:5]}"
+            f"Artists with multiple wikidata IDs found. 5 first artists: {duplicated_artists.head(min(5, len(duplicated_artists)))}"
         )
 
     artist_id_with_wikidata_ids = (
@@ -140,7 +138,6 @@ def sanity_checks(
     ), f"Delta artist dataframe has fewer images than applicative artist dataframe with given threshold {SANITY_THRESHOLD}."
 
 
-# %%
 app = typer.Typer()
 
 

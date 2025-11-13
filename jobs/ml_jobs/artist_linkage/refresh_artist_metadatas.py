@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import typer
 from loguru import logger
@@ -150,6 +152,11 @@ def sanity_checks(
             - Mismatch in number of artists with wikidata IDs
             - Significant drop in description or image coverage below 95% threshold
     """
+    # TODO: Remove this bypass when dev data is compliant (after wiki_ids are in artist tables)
+    if os.environ.get("ENV_SHORT_NAME") == "dev":
+        logger.warning("Skipping sanity checks since mocked data is not compliant.")
+        return
+
     SANITY_THRESHOLD = 0.95
     # 1. Minimal sanity checks
     assert (

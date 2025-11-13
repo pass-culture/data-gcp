@@ -140,15 +140,3 @@ def normalize_gtl_id(df: pd.DataFrame) -> pd.DataFrame:
     df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].apply(_validate_gtl_hierarchy)
 
     return df
-
-
-def remove_rows_with_bad_gtls(df: pd.DataFrame) -> pd.DataFrame:
-    """Remove rows with missing or invalid GTL IDs (after normalization).
-    Args:
-        df: The input dataframe containing GTL ID column.
-    Returns:
-        A new dataframe with invalid GTL rows removed.
-    """
-    df = df.copy()
-    df[GTL_ID_COLUMN] = normalize_gtl_id(df[[GTL_ID_COLUMN]])[GTL_ID_COLUMN]
-    return df[df[GTL_ID_COLUMN].notna()]

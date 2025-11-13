@@ -90,7 +90,7 @@ class InvalidConfigError(Exception):
 
 @dataclass
 class TrainingConfig(BaseConfig):
-    embedding_dim: int = 128
+    embedding_dim: int = 64
     metapath_repetitions: int = 4
     context_size: int = 10
     walks_per_node: int = 5

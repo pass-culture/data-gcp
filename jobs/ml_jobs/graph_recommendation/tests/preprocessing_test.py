@@ -500,17 +500,23 @@ class TestNormalizeGTLID:
                     "book-7",
                     "book-8",
                     "book-9",
+                    "book-10",
+                    "book-11",
+                    "book-12",
                 ],
                 "gtl_id": [
-                    " 1234567 ",
-                    "00012345",
-                    "nan",
-                    "",
-                    "  98765432",
-                    "1234500",
-                    "123450",
-                    "0123456e",
-                    "01234 56",
+                    " 1234567 ",  # valid 7-digit, needs padding
+                    "00012345",  # starts with 00
+                    "nan",  # string "nan"
+                    "",  # empty string
+                    "  98765432",  # valid 8-digit with spaces
+                    "1234500",  # valid 7-digit with trailing zero
+                    "123450",  # too short
+                    "0123456e",  # contains letter
+                    "01234 56",  # contains space between digits
+                    "123456789",  # too long
+                    12345678,  # will be converted to string
+                    "01000001",  # branching from null
                 ],
             }
         )
@@ -526,6 +532,9 @@ class TestNormalizeGTLID:
             "01234500",
             None,
             None,
+            None,
+            None,
+            "12345678",
             None,
         ]
 

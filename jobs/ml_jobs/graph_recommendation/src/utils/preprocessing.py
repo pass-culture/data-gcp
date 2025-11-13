@@ -86,6 +86,61 @@ def remove_rows_with_no_metadata(
     return df[mask]
 
 
+#########################################################################
+############## GTL ID Normalization Helpers #############################
+#########################################################################
+
+
+def _pad_gtl_id(gtl_id: str | None) -> str | None:
+    """Pad 7-digit GTL IDs to 8 digits with leading zero.
+
+    Args:
+        gtl_id: GTL ID string to pad, or None.
+
+    Returns:
+        Padded 8-digit GTL ID, or None if invalid/None.
+    """
+    if gtl_id is None:
+        return None
+    if not isinstance(gtl_id, str):
+        return None
+    if not gtl_id.isdigit():
+        return None
+    if len(gtl_id) == 7:
+        return gtl_id.zfill(8)
+    if len(gtl_id) == 8:
+        return gtl_id
+    return None
+
+
+def _validate_gtl_hierarchy(gtl_id: str | None) -> str | None:
+    """Validate GTL ID hierarchy rules.
+
+    Removes IDs starting with '00' and enforces hierarchical null rule:
+    once '00' appears in a pair, all following pairs must be '00'.
+
+    Args:
+        gtl_id: GTL ID string to validate, or None.
+
+    Returns:
+        Valid GTL ID, or None if invalid/None.
+    """
+    if gtl_id is None:
+        return None
+    if gtl_id.startswith("00"):
+        return None
+    # Hierarchy validation
+    pairs = [gtl_id[i : i + 2] for i in range(0, 8, 2)]
+    found_null = False
+    for pair in pairs:
+        if pair == "00":
+            found_null = True
+        elif found_null:
+            # Non-zero pair after a null pair → invalid
+            return None
+    return gtl_id
+
+
 def normalize_gtl_id(df: pd.DataFrame) -> pd.DataFrame:
     """Normalize GTL IDs:
     - Convert to string, strip spaces
@@ -93,6 +148,12 @@ def normalize_gtl_id(df: pd.DataFrame) -> pd.DataFrame:
     - Pad 7-digit IDs with leading 0
     - Remove IDs starting with '00'
     - Enforce hierarchical null rule (once '00' appears, following pairs must be '00')
+
+    Args:
+        df: DataFrame with GTL_ID_COLUMN.
+
+    Returns:
+        DataFrame with normalized GTL IDs.
     """
     df = df.copy()
 
@@ -105,38 +166,9 @@ def normalize_gtl_id(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     # Step 3: Pad 7-digit GTLs to 8 digits
-    def _pad_gtl(gtl_id):
-        if gtl_id is None:
-            return None
-        if not isinstance(gtl_id, str):
-            return None
-        if not gtl_id.isdigit():
-            return None
-        if len(gtl_id) == 7:
-            return gtl_id.zfill(8)
-        if len(gtl_id) == 8:
-            return gtl_id
-        return None
-
-    df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].apply(_pad_gtl)
+    df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].apply(_pad_gtl_id)
 
     # Step 4: Validate hierarchy rule and remove GTLs starting with '00'
-    def _validate_gtl_hierarchy(gtl_id):
-        if gtl_id is None:
-            return None
-        if gtl_id.startswith("00"):
-            return None
-        # Hierarchy validation
-        pairs = [gtl_id[i : i + 2] for i in range(0, 8, 2)]
-        found_null = False
-        for pair in pairs:
-            if pair == "00":
-                found_null = True
-            elif found_null:
-                # Non-zero pair after a null pair → invalid
-                return None
-        return gtl_id
-
     df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].apply(_validate_gtl_hierarchy)
 
     return df

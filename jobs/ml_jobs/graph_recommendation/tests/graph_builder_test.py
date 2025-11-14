@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 from torch_geometric.data import Data
 
+from src.constants import GTL_ID_COLUMN
 from src.graph_builder import (
     DEFAULT_METADATA_COLUMNS,
     build_book_metadata_graph_from_dataframe,
@@ -32,9 +33,7 @@ def test_build_graph_from_dataframe_creates_bipartite_structure() -> None:
 
     graph_data = build_book_metadata_graph_from_dataframe(
         dataframe,
-        metadata_columns=DEFAULT_METADATA_COLUMNS,
-        id_column="item_id",
-        gtl_id_column="gtl_id",
+        metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
     )
 
     assert isinstance(graph_data, Data)
@@ -87,7 +86,5 @@ def test_missing_metadata_raises_value_error() -> None:
     with pytest.raises(ValueError, match="No edges were created"):
         build_book_metadata_graph_from_dataframe(
             dataframe,
-            metadata_columns=DEFAULT_METADATA_COLUMNS,
-            id_column="item_id",
-            gtl_id_column="gtl_id",
+            metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
         )

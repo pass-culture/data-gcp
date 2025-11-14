@@ -44,6 +44,13 @@ def mock_metadata():
                 "artist_11",
                 "artist_20",
             ],
+            "series_id": [
+                "series_1",
+                "series_2",
+                "series_10",
+                "series_11",
+                "series_20",
+            ],
         }
     )
 

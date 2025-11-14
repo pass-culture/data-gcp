@@ -86,6 +86,12 @@ def get_gtl_walk_score(query_gtl_id: str, result_gtl_id: str) -> float:
         >>> get_gtl_walk_score("01020300", "01020000")
         0.33
     """
+    # Early exit if None
+    if query_gtl_id is None:
+        return None
+    if result_gtl_id is None:
+        return 0.0
+
     dist = _get_gtl_walk_dist(query_gtl_id, result_gtl_id)
     if dist == np.inf:
         return 0.0

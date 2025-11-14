@@ -92,7 +92,9 @@ def get_gtl_walk_score(query_gtl_id: str, result_gtl_id: str) -> float:
     return 1 / (1 + dist)
 
 
-def get_gtl_retrieval_score(query_gtl_id: str, result_gtl_id: str) -> float:
+def get_gtl_retrieval_score(
+    query_gtl_id: str | None, result_gtl_id: str | None
+) -> float | None:
     """
     Compute a depth-normalized asymmetric matching score between two GTL identifiers.
 
@@ -131,8 +133,10 @@ def get_gtl_retrieval_score(query_gtl_id: str, result_gtl_id: str) -> float:
         0.25  # Only 1 out of 4 query levels match
     """
 
-    # Early exit if completely independent (different first level)
-    if query_gtl_id[:2] != result_gtl_id[:2]:
+    # Early exit if completely independent (different first level) or None
+    if query_gtl_id is None:
+        return None
+    elif (result_gtl_id is None) or (query_gtl_id[:2] != result_gtl_id[:2]):
         return 0.0
 
     # Split GTL IDs into hierarchical levels

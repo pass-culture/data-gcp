@@ -8,6 +8,7 @@ import pandas as pd
 import pytest
 
 from src.config import EvaluationConfig
+from src.constants import ID_COLUMN
 from src.evaluation import evaluate_embeddings
 
 
@@ -42,6 +43,13 @@ def mock_metadata():
                 "artist_10",
                 "artist_11",
                 "artist_20",
+            ],
+            "series_id": [
+                "series_1",
+                "series_2",
+                "series_10",
+                "series_11",
+                "series_20",
             ],
         }
     )
@@ -99,7 +107,7 @@ def _mock_evaluation_pipeline():
         patch("src.evaluation.generate_predictions_lazy") as mock_generate,
         patch("pandas.read_parquet") as mock_load_parquet,
         patch("src.evaluation.join_retrieval_with_metadata") as mock_join,
-        patch("src.evaluation.compute_all_scores_lazy") as mock_compute_scores,
+        patch("src.evaluation.compute_all_scores") as mock_compute_scores,
         patch("src.evaluation.compute_evaluation_metrics") as mock_compute_metrics,
         patch("src.evaluation.logger"),
     ):
@@ -109,7 +117,7 @@ def _mock_evaluation_pipeline():
             "generate_predictions_lazy": mock_generate,
             "load_parquet": mock_load_parquet,
             "join_retrieval_with_metadata": mock_join,
-            "compute_all_scores_lazy": mock_compute_scores,
+            "compute_all_scores": mock_compute_scores,
             "compute_evaluation_metrics": mock_compute_metrics,
         }
 
@@ -130,7 +138,7 @@ def _setup_mock_returns(
     mocks["generate_predictions_lazy"].return_value = retrieval_results
     mocks["load_parquet"].return_value = metadata
     mocks["join_retrieval_with_metadata"].return_value = augmented_results
-    mocks["compute_all_scores_lazy"].return_value = scored_results
+    mocks["compute_all_scores"].return_value = scored_results
     mocks["compute_evaluation_metrics"].return_value = (metrics, scored_results)
     return mock_table
 
@@ -197,7 +205,7 @@ def test_evaluate_embeddings_no_db_creation(
 
     # Verify no rebuild was requested (default is False)
     _, kwargs = mocks["load_and_index_embeddings"].call_args
-    assert kwargs["rebuild"] is False
+    assert kwargs["rebuild"] is EvaluationConfig().rebuild_index
 
 
 def test_evaluate_embeddings_config_merging(
@@ -212,8 +220,7 @@ def test_evaluate_embeddings_config_merging(
     custom_config = {
         "n_samples": 50,
         "n_retrieved": 500,
-        "rebuild_index": True,
-        "force_artist_weight": True,
+        "rebuild_index": False,
     }
     custom_config_jsons = json.dumps(custom_config)
     evaluation_config = EvaluationConfig().parse_and_update_config(custom_config_jsons)
@@ -237,11 +244,11 @@ def test_evaluate_embeddings_config_merging(
 
     # Check load_and_index_embeddings call
     load_call_kwargs = mocks["load_and_index_embeddings"].call_args[1]
-    assert load_call_kwargs["rebuild"] is True
+    assert load_call_kwargs["rebuild"] is custom_config["rebuild_index"]
 
     # Check compute_all_scores_lazy call
-    scores_call_kwargs = mocks["compute_all_scores_lazy"].call_args[1]
-    assert scores_call_kwargs["force_artist_weight"] is True
+    scores_call_kwargs = mocks["compute_all_scores"].call_args[1]
+    assert scores_call_kwargs["metadata_columns"] == EvaluationConfig().metadata_columns
 
     # Verify returns
     assert isinstance(metrics_df, pd.DataFrame)
@@ -278,13 +285,13 @@ def test_evaluate_embeddings_default_config_used(
 def test_default_eval_config_structure():
     """Test DEFAULT_EVAL_CONFIG has correct structure."""
     required_keys = {
-        "metadata_columns",
+        "node_id_column",
         "n_samples",
         "n_retrieved",
         "k_values",
-        "ground_truth_score",
-        "force_artist_weight",
         "rebuild_index",
+        "metadatas_with_categorical_scoring",
+        "metadatas_with_custom_scoring",
     }
     default_config = EvaluationConfig()
     assert set(default_config.to_dict().keys()) == required_keys
@@ -294,8 +301,6 @@ def test_default_eval_config_structure():
     assert isinstance(default_config.n_samples, int)
     assert isinstance(default_config.n_retrieved, int)
     assert isinstance(default_config.k_values, list)
-    assert isinstance(default_config.ground_truth_score, str)
-    assert isinstance(default_config.force_artist_weight, bool)
     assert isinstance(default_config.rebuild_index, bool)
 
     # Value checks
@@ -325,4 +330,4 @@ def test_evaluate_embeddings_metadata_filtering(
     call_kwargs = mocks["load_parquet"].call_args[1]
 
     assert call_args[0] == "fake.parquet"
-    assert call_kwargs["columns"] == default_config.metadata_columns
+    assert call_kwargs["columns"] == [ID_COLUMN, *default_config.metadata_columns]

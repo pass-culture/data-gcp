@@ -3,29 +3,6 @@ import numpy as np
 MAX_DEPTH = 4
 
 
-def _validate_gtl_id(gtl_id: str):
-    """Raise an error if GTL ID is invalid."""
-    if not isinstance(gtl_id, str):
-        raise TypeError("GTL ID must be a string")
-    if len(gtl_id) != 8:
-        raise ValueError("GTL ID must be 8 characters long")
-    if not gtl_id.isdigit():
-        raise ValueError("GTL ID must contain only digits")
-    if gtl_id.startswith("00"):
-        raise ValueError("GTL ID must not start with '00'")
-
-    # Ensure that once a "00" pair appears, all subsequent pairs are also "00"
-    pairs = [gtl_id[i : i + 2] for i in range(0, 8, 2)]
-    found_null = False
-    for pair in pairs:
-        if found_null and pair != "00":
-            raise ValueError(
-                "Invalid GTL ID: null branches cannot include additional sublevels."
-            )
-        if pair == "00":
-            found_null = True
-
-
 def _get_gtl_depth(gtl_id: str) -> int:
     """Compute the hierarchical depth level of a GTL identifier.
 
@@ -49,7 +26,6 @@ def _get_gtl_depth(gtl_id: str) -> int:
         AssertionError: If the input is not a valid GTL ID (wrong type,
             wrong length, or starts with "00").
     """
-    _validate_gtl_id(gtl_id)
     trailing_zero_pairs = (len(gtl_id) - len(gtl_id.rstrip("0"))) // 2
     return MAX_DEPTH - trailing_zero_pairs
 
@@ -110,13 +86,21 @@ def get_gtl_walk_score(query_gtl_id: str, result_gtl_id: str) -> float:
         >>> get_gtl_walk_score("01020300", "01020000")
         0.33
     """
+    # Early exit if None
+    if query_gtl_id is None:
+        return None
+    if result_gtl_id is None:
+        return 0.0
+
     dist = _get_gtl_walk_dist(query_gtl_id, result_gtl_id)
     if dist == np.inf:
         return 0.0
     return 1 / (1 + dist)
 
 
-def get_gtl_retrieval_score(query_gtl_id: str, result_gtl_id: str) -> float:
+def get_gtl_retrieval_score(
+    query_gtl_id: str | None, result_gtl_id: str | None
+) -> float | None:
     """
     Compute a depth-normalized asymmetric matching score between two GTL identifiers.
 
@@ -154,11 +138,11 @@ def get_gtl_retrieval_score(query_gtl_id: str, result_gtl_id: str) -> float:
         >>> get_gtl_depth_normalized_score("01020301", "01030000")
         0.25  # Only 1 out of 4 query levels match
     """
-    _validate_gtl_id(query_gtl_id)
-    _validate_gtl_id(result_gtl_id)
 
-    # Early exit if completely independent (different first level)
-    if query_gtl_id[:2] != result_gtl_id[:2]:
+    # Early exit if completely independent (different first level) or None
+    if query_gtl_id is None:
+        return None
+    elif (result_gtl_id is None) or (query_gtl_id[:2] != result_gtl_id[:2]):
         return 0.0
 
     # Split GTL IDs into hierarchical levels
@@ -180,18 +164,3 @@ def get_gtl_retrieval_score(query_gtl_id: str, result_gtl_id: str) -> float:
 
     # Normalize by query depth
     return matching_parts / query_depth
-
-
-def get_artist_score(
-    query_artist_id: str | None, result_artist_id: str | None
-) -> float:
-    assert isinstance(
-        query_artist_id, str | None
-    ), "Type Error: artist_id must be string or None "
-    assert isinstance(
-        result_artist_id, str | None
-    ), "Type Error: artist_id must be string or None "
-
-    if query_artist_id is None or result_artist_id is None:
-        return 0.0
-    return float(query_artist_id == result_artist_id)

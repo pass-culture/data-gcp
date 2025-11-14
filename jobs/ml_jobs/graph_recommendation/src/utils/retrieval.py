@@ -10,19 +10,14 @@ from loguru import logger
 from src.constants import (
     DATA_DIR,
     EMBEDDING_COLUMN,
-    GTL_ID_COLUMN,
+    FULL_SCORE_COLUMN,
     LANCEDB_NODE_ID_COLUMN,
 )
 
 # Import your existing GTL scoring functions
-from src.utils.metadata_metrics import (
-    get_artist_score,
-    get_gtl_retrieval_score,
-    get_gtl_walk_score,
-)
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Callable, Generator
 
 # Lance DB configuration
 
@@ -33,7 +28,7 @@ INDEX_TYPE = "IVF_PQ"
 EMBEDDING_METRIC = "cosine"
 LANCEDB_PATH = f"{DATA_DIR}/metadata/vector"
 LANCEDB_TABLE_NAME = "embedding_table"
-NON_NULL_COLUMNS = [LANCEDB_NODE_ID_COLUMN, GTL_ID_COLUMN, EMBEDDING_COLUMN]
+NON_NULL_COLUMNS = [LANCEDB_NODE_ID_COLUMN, EMBEDDING_COLUMN]
 
 
 def chunk_dataframe(
@@ -112,26 +107,10 @@ def load_and_index_embeddings(
     return table
 
 
-def _normalize_gtl_id_lookup(gtl_id: str | int | float | None) -> str | None:
-    """
-    Normalizes a GTL ID to an 8-digit zero-padded string.
-    """
-    if pd.isna(gtl_id):
-        return None
-    if isinstance(gtl_id, str):
-        return gtl_id.zfill(8)
-    if isinstance(gtl_id, (int | float)):
-        return str(int(gtl_id)).zfill(8)
-    logger.warning(
-        f"Unexpected type for GTL ID '{gtl_id}': {type(gtl_id)}. Returning None."
-    )
-    return None
-
-
 def join_retrieval_with_metadata(
     retrieval_results: pd.DataFrame,
     metadata_df: pd.DataFrame,
-    right_on: str = "node_ids",
+    right_on: str,
 ) -> pd.DataFrame:
     """
     Join retrieval results with metadata for both query and retrieved items.
@@ -171,11 +150,7 @@ def join_retrieval_with_metadata(
     logger.info("Joining retrieval results with metadata")
 
     metadata_indexed = metadata_df.set_index(right_on)
-    metadata_cols = [
-        col
-        for col in metadata_indexed.columns
-        if col not in ["query_node_id", "retrieved_node_id"]
-    ]
+    metadata_cols = metadata_indexed.columns
 
     # Join for query & retrieved items
     augmented_df = (
@@ -198,325 +173,68 @@ def join_retrieval_with_metadata(
     )
 
     logger.info(f"Augmented results shape: {augmented_df.shape}")
-    return augmented_df
-
-
-def _load_gtl_ids_into_lookup(
-    unique_node_ids: np.ndarray, table: lancedb.table.Table
-) -> dict[str, str]:
-    """Load GTL IDs for unique node IDs from table into lookup dictionary."""
-    gtl_lookup = {}
-    batch_size = 5000
-
-    for i in range(0, len(unique_node_ids), batch_size):
-        batch_ids = unique_node_ids[i : i + batch_size]
-        # Create filter for batch
-        id_list = "','".join(batch_ids)
-        where_clause = f"node_ids IN ('{id_list}')"
-        # Query only these items
-        batch_results = (
-            table.search().where(where_clause).limit(len(batch_ids)).to_pandas()
-        )
-        if batch_results.empty:
-            continue
-        # Add to lookup
-        normalized_gtls = batch_results[GTL_ID_COLUMN].apply(_normalize_gtl_id_lookup)
-        batch_lookup = dict(
-            zip(batch_results[LANCEDB_NODE_ID_COLUMN], normalized_gtls, strict=True)
-        )
-        gtl_lookup.update(batch_lookup)
-
-    logger.info(f"Loaded {len(gtl_lookup)} GTL mappings")
-    return gtl_lookup
-
-
-def _initialize_result_score_columns(augmented_results: pd.DataFrame) -> None:
-    """Initialize all score columns in the dataframe with default values."""
-    augmented_results["gtl_retrieval_score"] = 0.0
-    augmented_results["gtl_walk_score"] = 0.0
-    augmented_results["artist_score"] = 0.0
-    augmented_results["full_score"] = 0.0
-    augmented_results["has_artist"] = False
-
-
-def _process_all_results_for_query(
-    augmented_results: pd.DataFrame,
-    query_id: str,
-    gtl_lookup: dict[str, str],
-    artist_col_query: str,
-    artist_col_retrieved: str,
-    *,
-    has_artist_cols: bool,
-    force_artist_weight: bool,
-) -> None:
-    """Process all results for a single query with chunking."""
-    # Get all results for this query
-    mask = augmented_results["query_node_id"] == query_id
-    query_results_indices = augmented_results[mask].index
-
-    # Lookup query GTL once (reused for all this query's results)
-    query_gtl = gtl_lookup.get(query_id)
-
-    # Process this query's results in chunks
-    chunk_size = 5000
-    for start in range(0, len(query_results_indices), chunk_size):
-        chunk_indices = query_results_indices[start : start + chunk_size]
-        chunk = augmented_results.loc[chunk_indices]
-
-        # Compute scores for this chunk
-        gtl_retrieval_scores, gtl_walk_scores, artist_scores, has_artist = (
-            _compute_chunk_scores(
-                chunk=chunk,
-                query_gtl=query_gtl,
-                gtl_lookup=gtl_lookup,
-                has_artist_cols=has_artist_cols,
-                artist_col_query=artist_col_query,
-                artist_col_retrieved=artist_col_retrieved,
-            )
-        )
-
-        # Compute full scores
-        full_scores = _calculate_weighted_final_score(
-            gtl_retrieval_scores=gtl_retrieval_scores,
-            artist_scores=artist_scores,
-            has_artist=has_artist,
-            force_artist_weight=force_artist_weight,
-        )
-
-        # Update dataframe
-        augmented_results.loc[chunk_indices, "gtl_retrieval_score"] = (
-            gtl_retrieval_scores
-        )
-        augmented_results.loc[chunk_indices, "gtl_walk_score"] = gtl_walk_scores
-        augmented_results.loc[chunk_indices, "artist_score"] = artist_scores
-        augmented_results.loc[chunk_indices, "full_score"] = full_scores
-        augmented_results.loc[chunk_indices, "has_artist"] = has_artist
-
-
-def _compute_chunk_scores(
-    chunk: pd.DataFrame,
-    query_gtl: str | None,
-    gtl_lookup: dict[str, str],
-    artist_col_query: str,
-    artist_col_retrieved: str,
-    *,
-    has_artist_cols: bool,
-) -> tuple[list[float], list[float], np.ndarray, np.ndarray]:
-    """Compute GTL and artist scores for a chunk of results."""
-    # Get retrieved GTLs
-    retrieved_gtls = chunk["retrieved_node_id"].map(gtl_lookup)
-
-    # Compute GTL scores
-    gtl_retrieval_scores = [
-        get_gtl_retrieval_score(query_gtl, r_gtl) for r_gtl in retrieved_gtls
-    ]
-    gtl_walk_scores = [get_gtl_walk_score(query_gtl, r_gtl) for r_gtl in retrieved_gtls]
-
-    # Compute artist scores
-    if has_artist_cols:
-        artist_scores = chunk.apply(
-            lambda row: get_artist_score(
-                row[artist_col_query], row[artist_col_retrieved]
-            ),
-            axis=1,
-        ).values
-        has_artist = chunk[artist_col_query].notna().values
-    else:
-        artist_scores = np.zeros(len(chunk))
-        has_artist = np.zeros(len(chunk), dtype=bool)
-
-    return gtl_retrieval_scores, gtl_walk_scores, artist_scores, has_artist
-
-
-def _calculate_weighted_final_score(
-    gtl_retrieval_scores: list[float],
-    artist_scores: np.ndarray,
-    has_artist: np.ndarray,
-    *,
-    force_artist_weight: bool,
-) -> np.ndarray:
-    """Calculate final combined score with artist weighting."""
-    if force_artist_weight:
-        full_scores = (np.array(gtl_retrieval_scores) + artist_scores) / 2.0
-    else:
-        full_scores = np.where(
-            has_artist,
-            (np.array(gtl_retrieval_scores) + artist_scores) / 2.0,
-            gtl_retrieval_scores,
-        )
-    return full_scores
+    return augmented_df.where(lambda df: pd.notna(df), None)
 
 
 def _log_score_statistics(
     augmented_results: pd.DataFrame,
-    *,
-    has_artist_cols: bool,
 ) -> None:
-    """Log comprehensive statistics for all computed scores."""
-    logger.info("\n📊 GTL Retrieval Scores:")
-    logger.info(f"  Mean: {augmented_results['gtl_retrieval_score'].mean():.3f}")
-    logger.info(f"  Median: {augmented_results['gtl_retrieval_score'].median():.3f}")
-    logger.info(f"  Min: {augmented_results['gtl_retrieval_score'].min():.3f}")
-    logger.info(f"  Max: {augmented_results['gtl_retrieval_score'].max():.3f}")
-
-    logger.info("\n🚶 GTL Walk Scores:")
-    logger.info(f"  Mean: {augmented_results['gtl_walk_score'].mean():.3f}")
-    logger.info(f"  Median: {augmented_results['gtl_walk_score'].median():.3f}")
-    logger.info(f"  Min: {augmented_results['gtl_walk_score'].min():.3f}")
-    logger.info(f"  Max: {augmented_results['gtl_walk_score'].max():.3f}")
-
-    if has_artist_cols:
-        n_with_artist = augmented_results["has_artist"].sum()
-        total_rows = len(augmented_results)
-        logger.info("\n🎵 Artist Scores:")
-        logger.info(
-            f"  Queries with artist: {n_with_artist}/{total_rows} "
-            f"({100 * n_with_artist / total_rows:.1f}%)"
-        )
-        logger.info(f"  Mean (all): {augmented_results['artist_score'].mean():.3f}")
-        logger.info(
-            f"  Matches: {int(augmented_results['artist_score'].sum())}/{n_with_artist}"
-        )
-        if n_with_artist > 0:
-            artist_mean = augmented_results[augmented_results["has_artist"]][
-                "artist_score"
-            ].mean()
-            logger.info(f"  Mean (with artist): {artist_mean:.3f}")
-    else:
-        logger.info("\n🎵 Artist Scores: N/A (columns not found)")
-
-    logger.info("\n✨ Full Scores (gtl_retrieval + artist):")
-    logger.info(f"  Mean (all): {augmented_results['full_score'].mean():.3f}")
-    logger.info(f"  Median: {augmented_results['full_score'].median():.3f}")
-
-    if has_artist_cols and augmented_results["has_artist"].sum() > 0:
-        with_artist_mean = augmented_results[augmented_results["has_artist"]][
-            "full_score"
-        ].mean()
-        without_artist_mean = augmented_results[~augmented_results["has_artist"]][
-            "full_score"
-        ].mean()
-        logger.info(f"  Mean (with artist): {with_artist_mean:.3f}")
-        logger.info(f"  Mean (no artist): {without_artist_mean:.3f}")
-
     logger.info("=" * 80)
+    for column in augmented_results.columns:
+        if column.endswith("_score"):
+            logger.info(f"\n📊 {column.replace('_score', '').capitalize()} Scores:")
+            logger.info(f"  Mean: {augmented_results[column].mean():.3f}")
+            logger.info(f"  Median: {augmented_results[column].median():.3f}")
+            logger.info(f"  Min: {augmented_results[column].min():.3f}")
+            logger.info(f"  Max: {augmented_results[column].max():.3f}")
+            logger.info("=" * 80)
 
 
-def compute_all_scores_lazy(
-    augmented_results: pd.DataFrame,
-    table: lancedb.table.Table,
-    query_node_ids: list[str] | None = None,
-    artist_col_query: str = "query_artist_id",
-    artist_col_retrieved: str = "retrieved_artist_id",
-    *,
-    force_artist_weight: bool = False,
+def compute_all_scores(
+    retrieved_results_with_metadata_df: pd.DataFrame,
+    metadata_columns: list[str],
+    categorical_metadata_columns: list[str],
+    hierarchical_metadata_scoring_functions: dict[str, Callable[[str, str], float]],
 ) -> pd.DataFrame:
-    """
-    Compute GTL, artist, and combined scores for retrieval results.
-
-    Performs efficient query-aware scoring by loading GTL IDs lazily (only for items
-    in results), processing results grouped by query for better cache locality, and
-    reusing each query's GTL for all its retrieved items.
-
-    Computed Scores:
-        - GTL retrieval scores: Asymmetric depth-normalized scoring
-        - GTL walk scores: Symmetric distance-based scoring
-        - Artist matching scores: Binary match between query and retrieved artists
-        - Full combined score: Weighted combination of GTL and artist scores
-
-    Scoring Behavior:
-        - Missing GTL mappings result in score of 0.0
-        - Artist scoring requires both query and retrieved items to have non-null
-          artist IDs for a match (score of 1.0)
-        - When force_artist_weight=False, items without artist metadata use
-          gtl_retrieval_score as the full_score
-        - When force_artist_weight=True, all items use the averaged score formula
-
-    Args:
-        augmented_results: DataFrame with retrieval results and metadata.
-            Required columns:
-                - query_node_id: Query item identifier
-                - retrieved_node_id: Retrieved item identifier
-            Optional columns (if artist scoring enabled):
-                - {artist_col_query}: Artist ID for query item
-                - {artist_col_retrieved}: Artist ID for retrieved item
-        table: LanceDB table containing embeddings and GTL mappings.
-            Must have columns: node_ids, gtl_id
-        query_node_ids: List of query IDs to process. If None, processes all queries
-            in augmented_results.
-        artist_col_query: Column name for query item's artist ID.
-            Default: "query_artist_id"
-        artist_col_retrieved: Column name for retrieved item's artist ID.
-            Default: "retrieved_artist_id"
-        force_artist_weight: Scoring strategy for items without artist metadata.
-            - If True: Always use (gtl_score + artist_score) / 2, even when
-              artist is None (artist_score = 0)
-            - If False: Use gtl_score only when artist is None
-            Default: False
-
-    Returns:
-        DataFrame: Input dataframe with additional score columns:
-            - gtl_retrieval_score (float): Asymmetric depth-normalized GTL score [0, 1]
-            - gtl_walk_score (float): Symmetric distance-based GTL score [0, 1]
-            - artist_score (float): Binary artist match score (0 or 1)
-            - full_score (float): Combined final score [0, 1]
-            - has_artist (bool): Whether query item has artist metadata
-
-    Raises:
-        KeyError: If required columns are missing from augmented_results
-
-    Implementation Details:
-        - GTL Lookup: Lazy loading - only fetches GTL IDs for items present in
-          results, not the entire catalog. Uses batch queries of 5000 items.
-        - Query Processing: Processes results grouped by query. Each query's GTL
-          is looked up once and reused for all its retrieved items (better cache
-          locality). Results within each query are processed in chunks of 5000.
-        - Progress Tracking: Shows progress bars for GTL loading and per-query scoring
-        - Logging: Comprehensive statistics including score distributions and
-          artist matching rates
-
-    """
-    logger.info("=" * 80)
-    logger.info("MERGED SCORING: Computing GTL + Artist + Full Scores (Per-Query)")
-    logger.info("=" * 80)
-
-    # Get unique node IDs we need for GTL lookup
-    unique_node_ids = pd.concat(
-        [augmented_results["query_node_id"], augmented_results["retrieved_node_id"]]
-    ).unique()
-    logger.info(f"Need GTL IDs for {len(unique_node_ids)} unique items")
-
-    # PHASE 1: Build GTL lookup (lazy - only needed items)
-    gtl_lookup = _load_gtl_ids_into_lookup(unique_node_ids, table)
-
-    # PHASE 2: Compute all scores per-query with sub-batching
-    logger.info("Computing all scores per-query...")
-
-    # Initialize score columns
-    _initialize_result_score_columns(augmented_results)
-
-    # Check if artist columns exist
-    has_artist_cols = (
-        artist_col_query in augmented_results.columns
-        and artist_col_retrieved in augmented_results.columns
+    # 1. Compute categorical scores
+    df_with_categorical_score = retrieved_results_with_metadata_df.assign(
+        **{
+            f"{column}_score": (
+                retrieved_results_with_metadata_df[f"query_{column}"]
+                == retrieved_results_with_metadata_df[f"retrieved_{column}"]
+            )
+            .astype(int)
+            .where(retrieved_results_with_metadata_df[f"query_{column}"].notna(), None)
+            for column in categorical_metadata_columns
+        }
     )
 
-    # Process per query
-    for query_id in query_node_ids:
-        _process_all_results_for_query(
-            augmented_results=augmented_results,
-            query_id=query_id,
-            gtl_lookup=gtl_lookup,
-            has_artist_cols=has_artist_cols,
-            artist_col_query=artist_col_query,
-            artist_col_retrieved=artist_col_retrieved,
-            force_artist_weight=force_artist_weight,
-        )
+    # 2. Compute hierarchical scores
+    df_with_hierarchical_score = df_with_categorical_score.assign(
+        **{
+            f"{column}_score": df_with_categorical_score.apply(
+                lambda row, col=column, eval_fn=hierarchical_evaluation_function: (
+                    eval_fn(row[f"query_{col}"], row[f"retrieved_{col}"])
+                ),
+                axis=1,
+            )
+            for column, hierarchical_evaluation_function in hierarchical_metadata_scoring_functions.items()  # noqa: E501
+        }
+    )
 
-    # Log statistics
-    _log_score_statistics(augmented_results, has_artist_cols=has_artist_cols)
+    # 3. Compute full combined scores
+    df_with_full_scores = df_with_hierarchical_score.assign(
+        **{
+            FULL_SCORE_COLUMN: df_with_hierarchical_score[
+                [f"{column}_score" for column in metadata_columns]
+            ].mean(axis=1)
+        }
+    )
 
-    return augmented_results
+    # 4. Log statistics
+    _log_score_statistics(df_with_full_scores)
+
+    return df_with_full_scores
 
 
 def sample_test_items_lazy(

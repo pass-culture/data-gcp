@@ -351,11 +351,11 @@ def evaluate_metapath2vec_command(
                 output_detailed_scores_path,
             )
 
-    typer.secho(
-        f"✓ Metrics logged to MLflow run: {run_id}",
-        fg=typer.colors.CYAN,
-        err=True,
-    )
+        typer.secho(
+            f"✓ Metrics logged to MLflow run: {run_id}",
+            fg=typer.colors.CYAN,
+            err=True,
+        )
 
 
 if __name__ == "__main__":

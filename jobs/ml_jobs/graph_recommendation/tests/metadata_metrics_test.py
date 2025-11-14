@@ -19,22 +19,6 @@ def test_get_gtl_depth():
     assert _get_gtl_depth("01020300") == 3
     assert _get_gtl_depth("01020304") == 4
 
-    with pytest.raises(ValueError, match="GTL ID must not start with '00'"):
-        _get_gtl_depth("00100000")  # starts with 00
-    with pytest.raises(ValueError, match="GTL ID must be 8 characters long"):
-        _get_gtl_depth("010203")  # too short
-    with pytest.raises(ValueError, match="GTL ID must be 8 characters long"):
-        _get_gtl_depth("01 02 03 00")  # too long
-    with pytest.raises(ValueError, match="GTL ID must contain only digits"):
-        _get_gtl_depth("0010000e")  # not a digit string
-    with pytest.raises(TypeError):
-        _get_gtl_depth(1020300)  # not a string
-    with pytest.raises(
-        ValueError,
-        match="Invalid GTL ID: null branches cannot include additional sublevels",
-    ):
-        _get_gtl_depth("01000001")  # branching from null
-
 
 def test_get_gtl_walk_dist():
     assert _get_gtl_walk_dist("01020301", "01020301") == 0

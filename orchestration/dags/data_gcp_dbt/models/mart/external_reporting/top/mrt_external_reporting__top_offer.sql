@@ -8,11 +8,7 @@
     )
 }}
 
-{% set dimensions = [
-    {"name": "NAT", "value_expr": "'NAT'"},
-    {"name": "REG", "value_expr": "venue_region_name"},
-    {"name": "DEP", "value_expr": "venue_department_name"},
-] %}
+{% set dimensions = get_dimensions("venue", "geo") %}
 
 with
     base_aggregation as (
@@ -45,46 +41,30 @@ with
     ),
 
     all_dimensions as (
-        {% for dim in dimensions %}
-            {% if not loop.first %}
-                union all
-            {% endif %}
-            select
-                partition_month,
-                updated_at,
-                '{{ dim.name }}' as dimension_name,
-                {{ dim.value_expr }} as dimension_value,
-                item_id,
-                offer_category_id,
-                offer_subcategory_id,
-                offer_name,
-                sum(total_booking_amount) as total_booking_amount,
-                sum(total_booking_quantity) as total_booking_quantity,
-                row_number() over (
-                    partition by
-                        partition_month
-                        {% if not dim.name == "NAT" %},{{ dim.value_expr }} {% endif %}
-                    order by sum(total_booking_amount) desc
-                ) as total_booking_amount_ranked
-            from base_aggregation
-            group by
-                partition_month,
-                updated_at,
-                dimension_name,
-                dimension_value,
-                item_id,
-                offer_category_id,
-                offer_subcategory_id,
-                offer_name
-            qualify
-                row_number() over (
-                    partition by
-                        partition_month
-                        {% if not dim.name == "NAT" %},{{ dim.value_expr }} {% endif %}
-                    order by total_booking_amount desc
-                )
-                <= 50
-        {% endfor %}
+        {{
+            generate_top_ranking_by_dimensions(
+                base_cte="base_aggregation",
+                dimensions=dimensions,
+                entity_fields=[
+                    "item_id",
+                    "offer_category_id",
+                    "offer_subcategory_id",
+                    "offer_name",
+                ],
+                aggregated_metrics=[
+                    {
+                        "field": "total_booking_amount",
+                        "alias": "total_booking_amount",
+                    },
+                    {
+                        "field": "total_booking_quantity",
+                        "alias": "total_booking_quantity",
+                    },
+                ],
+                ranking_metric="total_booking_amount",
+                top_n=50,
+            )
+        }}
     )
 
 select

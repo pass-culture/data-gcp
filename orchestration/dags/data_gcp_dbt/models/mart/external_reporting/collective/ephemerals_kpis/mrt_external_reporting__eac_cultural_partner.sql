@@ -8,11 +8,7 @@
     )
 }}
 
-{% set dimensions = [
-    {"name": "NAT", "value_expr": "'NAT'"},
-    {"name": "REG", "value_expr": "partner_region_name"},
-    {"name": "ACAD", "value_expr": "partner_academy_name"},
-] %}
+{% set dimensions = get_dimensions("partner", "academic") %}
 
 with
     all_activated_partners_and_days as (

@@ -8,29 +8,8 @@
     )
 }}
 
-{% set dimensions = [
-    {"name": "NAT", "value_expr": "'NAT'"},
-    {"name": "REG", "value_expr": "region_name"},
-    {"name": "DEP", "value_expr": "dep_name"},
-] %}
-
-{% set activity_list = [
-    {"activity": "Apprenti", "value": "apprenti"},
-    {"activity": "Chômeur, En recherche d'emploi", "value": "chomeur"},
-    {
-        "activity": "Volontaire en service civique rémunéré",
-        "value": "volontaire",
-    },
-    {"activity": "Alternant", "value": "alternant"},
-    {"activity": "Employé", "value": "employe"},
-    {"activity": "Etudiant", "value": "etudiant"},
-    {"activity": "Lycéen", "value": "lyceen"},
-    {"activity": "Collégien", "value": "collegien"},
-    {
-        "activity": "Inactif (ni en emploi ni au chômage), En incapacité de travailler",
-        "value": "inactif",
-    },
-] %}
+{% set dimensions = get_dimensions(none, "geo") %}
+{% set activity_list = get_activity_list() %}
 
 -- Base CTEs optimisées
 with
@@ -136,205 +115,109 @@ with
     -- Agrégation unifiée pour tous les KPIs
     unified_metrics as (
         -- Bénéficiaires actuels
-        {% for dim in dimensions %}
-            {% if not loop.first %}
-                union all
-            {% endif %}
-            select
-                partition_month,
-                updated_at,
-                '{{ dim.name }}' as dimension_name,
-                {{ dim.value_expr }} as dimension_value,
-                "beneficiaire_actuel" as kpi_name,
-                count(distinct user_id) as numerator,
-                1 as denominator
-            from active_users_base
-            group by
-                partition_month, updated_at, dimension_name, dimension_value, kpi_name
-        {% endfor %}
+        {{
+            generate_metric_by_dimensions(
+                "active_users_base",
+                "beneficiaire_actuel",
+                "count(distinct user_id)",
+                "1",
+                dimensions,
+            )
+        }}
 
         union all
 
         -- Bénéficiaires totaux
-        {% for dim in dimensions %}
-            {% if not loop.first %}
-                union all
-            {% endif %}
-            select
-                partition_month,
-                updated_at,
-                '{{ dim.name }}' as dimension_name,
-                {{ dim.value_expr }} as dimension_value,
-                "beneficiaire_total" as kpi_name,
-                count(distinct user_id) as numerator,
-                1 as denominator
-            from total_users_base
-            group by
-                partition_month, updated_at, dimension_name, dimension_value, kpi_name
-        {% endfor %}
+        {{
+            generate_metric_by_dimensions(
+                "total_users_base",
+                "beneficiaire_total",
+                "count(distinct user_id)",
+                "1",
+                dimensions,
+            )
+        }}
 
         union all
 
         -- QPV
-        {% for dim in dimensions %}
-            {% if not loop.first %}
-                union all
-            {% endif %}
-            select
-                partition_month,
-                updated_at,
-                '{{ dim.name }}' as dimension_name,
-                {{ dim.value_expr }} as dimension_value,
-                "pct_beneficiaire_actuel_qpv" as kpi_name,
-                count(distinct case when user_is_in_qpv then user_id end) as numerator,
-                count(distinct user_id) as denominator
-            from active_users_base
-            group by
-                partition_month, updated_at, dimension_name, dimension_value, kpi_name
-        {% endfor %}
+        {{
+            generate_metric_by_dimensions(
+                "active_users_base",
+                "pct_beneficiaire_actuel_qpv",
+                "count(distinct case when user_is_in_qpv then user_id end)",
+                "count(distinct user_id)",
+                dimensions,
+            )
+        }}
 
         union all
 
         -- Rural
-        {% for dim in dimensions %}
-            {% if not loop.first %}
-                union all
-            {% endif %}
-            select
-                partition_month,
-                updated_at,
-                '{{ dim.name }}' as dimension_name,
-                {{ dim.value_expr }} as dimension_value,
-                "pct_beneficiaire_actuel_rural" as kpi_name,
-                count(
-                    distinct case
-                        when user_macro_density_label = "rural" then user_id
-                    end
-                ) as numerator,
-                count(distinct user_id) as denominator
-            from active_users_base
-            group by
-                partition_month, updated_at, dimension_name, dimension_value, kpi_name
-        {% endfor %}
+        {{
+            generate_metric_by_dimensions(
+                "active_users_base",
+                "pct_beneficiaire_actuel_rural",
+                'count(distinct case when user_macro_density_label = "rural" then user_id end)',
+                "count(distinct user_id)",
+                dimensions,
+            )
+        }}
 
         union all
 
         -- Non scolarisé
-        {% for dim in dimensions %}
-            {% if not loop.first %}
-                union all
-            {% endif %}
-            select
-                partition_month,
-                updated_at,
-                '{{ dim.name }}' as dimension_name,
-                {{ dim.value_expr }} as dimension_value,
-                "pct_beneficiaire_actuel_non_scolarise" as kpi_name,
-                count(
-                    distinct case when not user_is_in_education then user_id end
-                ) as numerator,
-                count(distinct user_id) as denominator
-            from active_users_base
-            group by
-                partition_month, updated_at, dimension_name, dimension_value, kpi_name
-        {% endfor %}
+        {{
+            generate_metric_by_dimensions(
+                "active_users_base",
+                "pct_beneficiaire_actuel_non_scolarise",
+                "count(distinct case when not user_is_in_education then user_id end)",
+                "count(distinct user_id)",
+                dimensions,
+            )
+        }}
 
         union all
 
         -- Activités
-        {% for activity in activity_list %}
-            {% if not loop.first %}
-                union all
-            {% endif %}
-            {% for dim in dimensions %}
-                {% if not loop.first %}
-                    union all
-                {% endif %}
-                select
-                    partition_month,
-                    updated_at,
-                    '{{ dim.name }}' as dimension_name,
-                    {{ dim.value_expr }} as dimension_value,
-                    "pct_beneficiaire_actuel_{{ activity.value }}" as kpi_name,
-                    count(
-                        distinct case
-                            when user_activity = "{{ activity.activity }}" then user_id
-                        end
-                    ) as numerator,
-                    count(distinct user_id) as denominator
-                from active_users_base
-                group by
-                    partition_month,
-                    updated_at,
-                    dimension_name,
-                    dimension_value,
-                    kpi_name
-            {% endfor %}
-        {% endfor %}
+        {{ generate_activity_metrics("active_users_base", activity_list, dimensions) }}
 
         union all
 
         -- Genre
-        {% for dim in dimensions %}
-            {% if not loop.first %}
-                union all
-            {% endif %}
-            select
-                partition_month,
-                updated_at,
-                '{{ dim.name }}' as dimension_name,
-                {{ dim.value_expr }} as dimension_value,
-                "beneficiaire_actuel_homme" as kpi_name,
-                count(
-                    distinct case when user_civility = "M." then user_id end
-                ) as numerator,
-                1 as denominator
-            from active_users_base
-            group by
-                partition_month, updated_at, dimension_name, dimension_value, kpi_name
-        {% endfor %}
+        {{
+            generate_metric_by_dimensions(
+                "active_users_base",
+                "beneficiaire_actuel_homme",
+                'count(distinct case when user_civility = "M." then user_id end)',
+                "1",
+                dimensions,
+            )
+        }}
 
         union all
 
-        {% for dim in dimensions %}
-            {% if not loop.first %}
-                union all
-            {% endif %}
-            select
-                partition_month,
-                updated_at,
-                '{{ dim.name }}' as dimension_name,
-                {{ dim.value_expr }} as dimension_value,
-                "beneficiaire_actuel_femme" as kpi_name,
-                count(
-                    distinct case when user_civility = "Mme." then user_id end
-                ) as numerator,
-                1 as denominator
-            from active_users_base
-            group by
-                partition_month, updated_at, dimension_name, dimension_value, kpi_name
-        {% endfor %}
+        {{
+            generate_metric_by_dimensions(
+                "active_users_base",
+                "beneficiaire_actuel_femme",
+                'count(distinct case when user_civility = "Mme." then user_id end)',
+                "1",
+                dimensions,
+            )
+        }}
 
         union all
 
-        {% for dim in dimensions %}
-            {% if not loop.first %}
-                union all
-            {% endif %}
-            select
-                partition_month,
-                updated_at,
-                '{{ dim.name }}' as dimension_name,
-                {{ dim.value_expr }} as dimension_value,
-                "beneficiaire_actuel_sans_genre" as kpi_name,
-                count(
-                    distinct case when user_civility is null then user_id end
-                ) as numerator,
-                1 as denominator
-            from active_users_base
-            group by
-                partition_month, updated_at, dimension_name, dimension_value, kpi_name
-        {% endfor %}
+        {{
+            generate_metric_by_dimensions(
+                "active_users_base",
+                "beneficiaire_actuel_sans_genre",
+                "count(distinct case when user_civility is null then user_id end)",
+                "1",
+                dimensions,
+            )
+        }}
     )
 
 select

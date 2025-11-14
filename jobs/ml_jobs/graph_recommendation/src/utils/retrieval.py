@@ -11,7 +11,6 @@ from src.constants import (
     DATA_DIR,
     EMBEDDING_COLUMN,
     FULL_SCORE_COLUMN,
-    GTL_ID_COLUMN,
     LANCEDB_NODE_ID_COLUMN,
 )
 

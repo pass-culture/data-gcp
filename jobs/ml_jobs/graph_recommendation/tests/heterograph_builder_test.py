@@ -126,9 +126,9 @@ def test_heterograph_edges_are_bidirectional() -> None:
             reverse_pairs = set(
                 zip(reverse_edges[1].tolist(), reverse_edges[0].tolist(), strict=True)
             )
-            assert forward_pairs == reverse_pairs, (
-                f"Edges not symmetric for {edge_type}"
-            )
+            assert (
+                forward_pairs == reverse_pairs
+            ), f"Edges not symmetric for {edge_type}"
 
 
 def test_heterograph_metadata_organization() -> None:

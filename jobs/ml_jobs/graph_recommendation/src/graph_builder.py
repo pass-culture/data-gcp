@@ -6,12 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from src.constants import DEFAULT_METADATA_COLUMNS, GTL_ID_COLUMN, ID_COLUMN
-from src.utils.preprocessing import (
-    detach_single_occuring_metadata,
-    normalize_dataframe,
-    normalize_gtl_id,
-    remove_rows_with_no_metadata,
-)
+from src.utils.preprocessing import preprocess_metadata_dataframe
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -74,10 +69,7 @@ def _build_metadata_index(
 
 def build_book_metadata_graph_from_dataframe(
     dataframe: pd.DataFrame,
-    *,
     metadata_columns: Sequence[str],
-    id_column: str,
-    gtl_id_column: str,
 ) -> Data:
     """Construct a bipartite book-to-metadata graph from a dataframe.
     The graph structure is:
@@ -88,8 +80,6 @@ def build_book_metadata_graph_from_dataframe(
     Args:
         dataframe: Input data with book IDs and metadata columns.
         metadata_columns: Column names to use as metadata.
-        id_column: Column name containing book IDs.
-        gtl_id_column: Column name containing GTL IDs.
 
     Returns:
         A PyG Data object with edge_index and custom attributes for mapping
@@ -97,27 +87,24 @@ def build_book_metadata_graph_from_dataframe(
     """
     missing_columns = [
         column
-        for column in (id_column, gtl_id_column, *metadata_columns)
+        for column in (ID_COLUMN, GTL_ID_COLUMN, *metadata_columns)
         if column not in dataframe.columns
     ]
     if missing_columns:
         raise KeyError(f"Missing required columns: {', '.join(missing_columns)}")
 
     # Step 1: Preprocessing
-    all_columns = [id_column, gtl_id_column, *metadata_columns]
-    df_normalized = (
-        dataframe.pipe(normalize_dataframe, columns=all_columns)
-        .pipe(normalize_gtl_id)
-        .pipe(detach_single_occuring_metadata, columns=metadata_columns)
-        .pipe(remove_rows_with_no_metadata, metadata_list=list(metadata_columns))
+    df_normalized = preprocess_metadata_dataframe(
+        dataframe,
+        metadata_columns=[GTL_ID_COLUMN, *metadata_columns],
     )
 
     # Step 2: Prepare book nodes (indexed 0 to num_books - 1)
-    unique_books = df_normalized[[id_column, gtl_id_column]].drop_duplicates(
-        subset=[id_column]
+    unique_books = df_normalized[[ID_COLUMN, GTL_ID_COLUMN]].drop_duplicates(
+        subset=[ID_COLUMN]
     )
-    book_ids = unique_books[id_column].tolist()
-    gtl_ids = unique_books[gtl_id_column].tolist()
+    book_ids = unique_books[ID_COLUMN].tolist()
+    gtl_ids = unique_books[GTL_ID_COLUMN].tolist()
     book_index = {book_id: idx for idx, book_id in enumerate(book_ids)}
 
     # Step 3: Prepare metadata type mapping (0 reserved for books)
@@ -138,12 +125,11 @@ def build_book_metadata_graph_from_dataframe(
 
     # Step 6: Create edges by iterating through rows
     edges: set[tuple[int, int]] = set()
-    relevant_columns = [id_column, *metadata_columns]
+    relevant_columns = [ID_COLUMN, *metadata_columns]
 
     for record in df_normalized[relevant_columns].itertuples(index=False):
         record_dict = record._asdict()
-        book_id = record_dict[id_column]
-
+        book_id = record_dict[ID_COLUMN]
         # Skip rows with missing book IDs
         if book_id is None or book_id not in book_index:
             continue
@@ -215,8 +201,6 @@ def build_book_metadata_graph(
 
     data_graph = build_book_metadata_graph_from_dataframe(
         df,
-        id_column=ID_COLUMN,
-        gtl_id_column=GTL_ID_COLUMN,
         metadata_columns=DEFAULT_METADATA_COLUMNS,
     )
 

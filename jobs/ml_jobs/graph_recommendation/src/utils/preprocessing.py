@@ -2,7 +2,35 @@ from collections.abc import Sequence
 
 import pandas as pd
 
-from src.constants import GTL_ID_COLUMN
+from src.constants import GTL_ID_COLUMN, ID_COLUMN
+
+
+def preprocess_metadata_dataframe(
+    df: pd.DataFrame,
+    metadata_columns: list[str],
+) -> pd.DataFrame:
+    """Preprocess metadata dataframe by normalizing and cleaning specified columns.
+
+    This function normalizes the specified metadata columns by converting values
+    to strings, stripping whitespace, replacing empty/NaN values with None,
+    detaching single-occurrence metadata, and removing rows with no metadata.
+
+    Args:
+        df: The input dataframe containing metadata.
+        metadata_columns: List of column names to preprocess.
+
+    Returns:
+        A new dataframe with preprocessed metadata columns.
+    """
+
+    all_columns = [ID_COLUMN, *metadata_columns]
+    df_processed = (
+        df.pipe(normalize_dataframe, columns=all_columns)
+        .pipe(normalize_gtl_id)
+        .pipe(detach_single_occuring_metadata, columns=metadata_columns)
+        .pipe(remove_rows_with_no_metadata, metadata_list=list(metadata_columns))
+    )
+    return df_processed
 
 
 def normalize_dataframe(

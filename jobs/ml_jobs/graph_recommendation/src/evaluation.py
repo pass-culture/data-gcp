@@ -8,7 +8,7 @@ import pandas as pd
 from loguru import logger
 
 from src.constants import ID_COLUMN
-from src.utils.preprocessing import normalize_gtl_id
+from src.utils.preprocessing import preprocess_metadata_dataframe
 from src.utils.recommendation_metrics import compute_evaluation_metrics
 from src.utils.retrieval import (
     LANCEDB_TABLE_NAME,
@@ -80,8 +80,11 @@ def evaluate_embeddings(
             raw_data_parquet_path, columns=evaluation_config.metadata_columns
         )
         .loc[lambda df: df[ID_COLUMN].isin(unique_node_ids)]
-        .pipe(normalize_gtl_id)
         .drop_duplicates(subset=[ID_COLUMN])
+        .pipe(
+            preprocess_metadata_dataframe,
+            metadata_columns=evaluation_config.metadata_columns,
+        )
     )
     df_results = join_retrieval_with_metadata(
         retrieval_results=df_results,

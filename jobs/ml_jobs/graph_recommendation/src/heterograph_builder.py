@@ -5,12 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from src.constants import DEFAULT_METADATA_COLUMNS, GTL_ID_COLUMN, ID_COLUMN
-from src.utils.preprocessing import (
-    detach_single_occuring_metadata,
-    normalize_dataframe,
-    normalize_gtl_id,
-    remove_rows_with_no_metadata,
-)
+from src.utils.preprocessing import preprocess_metadata_dataframe
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -24,10 +19,7 @@ from torch_geometric.data import HeteroData
 
 def build_book_metadata_heterograph_from_dataframe(
     dataframe: pd.DataFrame,
-    *,
     metadata_columns: Sequence[str],
-    id_column: str,
-    gtl_id_column: str,
 ) -> HeteroData:
     """Construct a heterogeneous book-to-metadata graph from a dataframe.
 
@@ -45,30 +37,28 @@ def build_book_metadata_heterograph_from_dataframe(
 
     Returns:
         A PyG HeteroData object with separate node and edge types.
+    TODO: Refactor to treat gtl_id as a metadata column (or remove it entirely).
     """
     missing_columns = [
         column
-        for column in (id_column, gtl_id_column, *metadata_columns)
+        for column in (ID_COLUMN, GTL_ID_COLUMN, *metadata_columns)
         if column not in dataframe.columns
     ]
     if missing_columns:
         raise KeyError(f"Missing required columns: {', '.join(missing_columns)}")
 
     # Step 1: Preprocess dataframe
-    all_columns = [id_column, gtl_id_column, *metadata_columns]
-    df_normalized = (
-        dataframe.pipe(normalize_dataframe, columns=all_columns)
-        .pipe(normalize_gtl_id)
-        .pipe(detach_single_occuring_metadata, columns=metadata_columns)
-        .pipe(remove_rows_with_no_metadata, metadata_list=list(metadata_columns))
+    df_normalized = preprocess_metadata_dataframe(
+        dataframe,
+        metadata_columns=[GTL_ID_COLUMN, *metadata_columns],
     )
 
     # Step 2: Prepare book nodes
-    unique_books = df_normalized[[id_column, gtl_id_column]].drop_duplicates(
-        subset=[id_column]
+    unique_books = df_normalized[[ID_COLUMN, GTL_ID_COLUMN]].drop_duplicates(
+        subset=[ID_COLUMN]
     )
-    book_ids = unique_books[id_column].tolist()
-    gtl_ids = unique_books[gtl_id_column].tolist()
+    book_ids = unique_books[ID_COLUMN].tolist()
+    gtl_ids = unique_books[GTL_ID_COLUMN].tolist()
     book_index = {book_id: idx for idx, book_id in enumerate(book_ids)}
 
     # Step 3: Build metadata nodes by column
@@ -104,12 +94,11 @@ def build_book_metadata_heterograph_from_dataframe(
             edge_indices[(column, f"{column}_of", "book")] = set()
 
     # Step 5: Build edges by iterating through dataframe
-    relevant_columns = [id_column, *metadata_columns]
+    relevant_columns = [ID_COLUMN, *metadata_columns]
 
     for record in df_normalized[relevant_columns].itertuples(index=False):
         record_dict = record._asdict()
-        book_id = record_dict[id_column]
-
+        book_id = record_dict[ID_COLUMN]
         # Skip rows with missing book IDs
         if book_id is None or book_id not in book_index:
             continue
@@ -195,8 +184,6 @@ def build_book_metadata_heterograph(
 
     data_graph = build_book_metadata_heterograph_from_dataframe(
         df,
-        id_column=ID_COLUMN,
-        gtl_id_column=GTL_ID_COLUMN,
         metadata_columns=DEFAULT_METADATA_COLUMNS,
     )
 

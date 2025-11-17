@@ -3,9 +3,6 @@ name = "data-gcp"
 version = "0.1.1"
 description = "Data Engineering GCP Project for Pass Culture"
 requires-python = ">=3.10,<3.13"
-dependencies = [
-    "pyyaml>=6.0.2",
-]
 
 [dependency-groups]
 airflow = [
@@ -19,6 +16,7 @@ airflow = [
   "flask-oidc>=2.2.2",
   "typer",
   "deepdiff==8.6.1",
+  "pyyaml==6.0.2",
 ]
 dbt = [
   "dbt-core==1.10.11",
@@ -27,23 +25,23 @@ dbt = [
   "deepdiff==8.6.1",
 ]
 docs = [
-    "mkdocs-material==9.5.42",
-    "mkdocs-awesome-pages-plugin==2.9.3",
-    "mkdocs-include-markdown-plugin",
-    "pandas==2.2.3",
-    "tabulate==0.9.0",
+  "mkdocs-material==9.5.42",
+  "mkdocs-awesome-pages-plugin==2.9.3",
+  "mkdocs-include-markdown-plugin",
+  "pandas==2.2.3",
+  "tabulate==0.9.0",
 ]
 dev = [
-    "pytest>=7.4.4",
-    "pytest-cov>=5.0.0",
-    "mock>=4.0.2",
-    "ruff==0.5.7",
-    "typer==0.12.3",
-    "pre-commit~=4.2.0",
-    "shandy-sqlfmt[jinjafmt]==0.23.2",
-    "sqlfluff==3.1.1",
-    "sqlfluff-templater-dbt==3.1.1",
-    "dotenv==0.9.9",
+  "pytest>=7.4.4",
+  "pytest-cov>=5.0.0",
+  "mock>=4.0.2",
+  "ruff==0.5.7",
+  "typer==0.12.3",
+  "pre-commit~=4.2.0",
+  "shandy-sqlfmt[jinjafmt]==0.23.2",
+  "sqlfluff==3.1.1",
+  "sqlfluff-templater-dbt==3.1.1",
+  "dotenv==0.9.9",
 ]
 
 [tool.uv]

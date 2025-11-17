@@ -23,10 +23,10 @@ select
     events.user_id,
     cast(user.user_age as int64) as user_age,
     "FAVORITE" as event_type,
-    event_date,
-    event_hour,
-    event_day,
-    event_month,
+    events.event_date,
+    events.event_hour,
+    events.event_day,
+    events.event_month,
     offer.item_id,
     offer.offer_subcategory_id,
     offer.offer_category_id,
@@ -36,6 +36,5 @@ select
     offer.venue_id,
     offer.venue_name
 from events
-inner join {{ ref("int_global__offer") }} as offer on events.offer_id = offer.offer_id
-inner join
-    {{ ref("int_global__user_beneficiary") }} as user on events.user_id = user.user_id
+inner join {{ ref("mrt_global__offer") }} as offer on events.offer_id = offer.offer_id
+inner join {{ ref("mrt_global__user_beneficiary") }} as user on events.user_id = user.user_id  -- noqa: RF04

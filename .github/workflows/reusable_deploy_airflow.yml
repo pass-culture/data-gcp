@@ -115,8 +115,57 @@ jobs:
           AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
         run: gsutil cp target/manifest.json gs://$AIRFLOW_DAGS_BUCKET/data/target/manifest.json
 
+      # Compute exclusion regex from .rsyncignore
+      - name: "Compute EXCLUDE_REGEX from .rsyncignore file"
+        id: compute_rsyncignore
+        run: |
+          readonly source_dir="dags"
+          readonly ignore_file="${source_dir}/.rsyncignore"
+
+          EXCLUDE_REGEX=""
+
+          if [ -f "$ignore_file" ]; then
+            echo "Found .rsyncignore file, building exclude regex..."
+
+            # Read each non-empty, non-comment line and convert to regex
+            while IFS= read -r pattern; do
+              # Skip comments and empty lines
+              [[ -z "$pattern" || "$pattern" =~ ^# ]] && continue
+
+              # Escape regex special characters (except * which we'll handle below)
+              safe_pattern=$(printf '%s' "$pattern" | sed 's/[.[\^$(){}+?|]/\\&/g')
+
+              # Convert simple glob-style wildcards to regex
+              safe_pattern=$(echo "$safe_pattern" | sed 's/\*/.*/g')
+
+              # Ensure pattern is relative to source_dir
+              EXCLUDE_REGEX="${EXCLUDE_REGEX}${source_dir}/${safe_pattern}|"
+            done < "$ignore_file"
+
+            # Remove trailing |
+            EXCLUDE_REGEX="${EXCLUDE_REGEX%|}"
+          fi
+
+          # Export for next step
+          echo "EXCLUDE_REGEX=$EXCLUDE_REGEX" >> $GITHUB_ENV
+          echo "Final EXCLUDE_REGEX=$EXCLUDE_REGEX"
+        shell: bash
+      # Deploy DAGs to GCS, using computed EXCLUDE_REGEX
       - name: "Deploy Airflow (dags)"
-        run: gsutil -m rsync -d -r dags gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/dags
+        env:
+          AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
+        run: |
+          readonly bucket="$AIRFLOW_DAGS_BUCKET"
+          readonly source_dir="dags"
+
+          echo "Deploying DAGs..."
+          if [ -z "$EXCLUDE_REGEX" ]; then
+            gsutil -m rsync -d -r "$source_dir" "gs://${bucket}/dags"
+          else
+            echo "Excluding folders matching: $EXCLUDE_REGEX"
+            gsutil -m rsync -d -r -x "$EXCLUDE_REGEX" "$source_dir" "gs://${bucket}/dags"
+          fi
+        shell: bash
 
       - name: "Deploy Airflow (plugins)"
         run: gsutil -m rsync -d -r plugins gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/plugins

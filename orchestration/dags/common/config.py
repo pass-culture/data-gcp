@@ -217,6 +217,7 @@ class DAG_TAGS(Enum):
     DBT = "DBT"
     INCREMENTAL = "INCREMENTAL"
     POC = "POC"
+    DRAGNDROP = "DRAG_&_DROP"
 
 
 # UV Version

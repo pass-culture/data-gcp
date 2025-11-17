@@ -106,6 +106,9 @@ _base_install:
 		make _get_gcp_credentials; \
 	fi
 
+	# Login to ggshield
+	ggshield auth login
+
 	# Install uv if not already installed
 	@if ! command -v uv &> /dev/null; then \
 		echo "Installing uv..."; \

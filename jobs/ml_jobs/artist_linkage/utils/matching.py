@@ -38,6 +38,7 @@ CATEGORY_MAPPING = {
 def match_artist_on_offer_names(
     products_to_link_df: pd.DataFrame,
     artist_alias_df: pd.DataFrame,
+    product_artist_link_df: pd.DataFrame,
 ):
     """
     Match artists with products based on offer names using both raw and preprocessed matching.
@@ -52,6 +53,7 @@ def match_artist_on_offer_names(
             - preproc_linked_products_df: Products successfully matched using preprocessed offer names
             - preproc_unlinked_products_df: Products that remain unmatched after both attempts
     """
+    N_PRODUCTS_LINKED_COLUMN = "n_products_linked"
 
     # Preprocess artist names for matching
     logger.info(
@@ -60,24 +62,43 @@ def match_artist_on_offer_names(
     preproc_products_to_link_df = products_to_link_df.pipe(
         prepare_artist_names_for_matching
     ).drop_duplicates()
-    preproc_artist_alias_df = artist_alias_df.pipe(
-        prepare_artist_names_for_matching
-    ).drop_duplicates(
-        subset=[
-            ARTIST_ID_KEY,
-            OFFER_CATEGORY_ID_KEY,
-            ARTIST_TYPE_KEY,
-            ARTIST_NAME_TO_MATCH_KEY,
-        ]
+    preproc_artist_alias_df = artist_alias_df.pipe(prepare_artist_names_for_matching)
+
+    # Filter duplicates in artist_alias_df to keep only unique artist_name per artist_id
+    artist_statistics_df = (
+        product_artist_link_df.groupby("artist_id")
+        .agg({"offer_product_id": "nunique"})
+        .rename(columns={"offer_product_id": N_PRODUCTS_LINKED_COLUMN})
+    )
+    preproc_filtered_artist_alias_df = (
+        preproc_artist_alias_df.merge(artist_statistics_df, on="artist_id")
+        .sort_values(
+            by=[
+                OFFER_CATEGORY_ID_KEY,
+                ARTIST_TYPE_KEY,
+                ARTIST_NAME_TO_MATCH_KEY,
+                N_PRODUCTS_LINKED_COLUMN,
+            ],
+            ascending=False,
+        )
+        .drop_duplicates(
+            subset=[
+                OFFER_CATEGORY_ID_KEY,
+                ARTIST_TYPE_KEY,
+                ARTIST_NAME_TO_MATCH_KEY,
+            ],
+            keep="first",
+        )
+        .drop(columns=[N_PRODUCTS_LINKED_COLUMN])
     )
     logger.info(
-        f"...Done {len(preproc_products_to_link_df)} products and {len(preproc_artist_alias_df)} artist_aliases after preprocessing."
+        f"...Done {len(preproc_products_to_link_df)} products and {len(preproc_filtered_artist_alias_df)} artist_aliases after preprocessing."
     )
 
     # Match artists with products to link on preproc offer_names
     logger.info("Matching products on preprocessed offer names...")
     preproc_matched_df = preproc_products_to_link_df.merge(
-        preproc_artist_alias_df.drop(columns=[ARTIST_NAME_KEY]),
+        preproc_filtered_artist_alias_df.drop(columns=[ARTIST_NAME_KEY]),
         how="left",
         on=[ARTIST_NAME_TO_MATCH_KEY, ARTIST_TYPE_KEY, OFFER_CATEGORY_ID_KEY],
     )

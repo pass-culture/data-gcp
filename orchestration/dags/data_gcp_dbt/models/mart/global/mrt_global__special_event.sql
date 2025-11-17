@@ -9,5 +9,6 @@ select
     special_event_response_id,
     user_id,
     special_event_response_status,
-    special_event_response_submitted_date
+    special_event_response_submitted_date,
+    special_event_end_date
 from {{ ref("int_applicative__special_event") }}

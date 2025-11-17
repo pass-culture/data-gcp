@@ -276,6 +276,7 @@ class GCEHook(GoogleBaseHook):
         gcp_conn_id: str = "google_cloud_default",
         disk_size_gb: str = "100",
         impersonation_chain: str = None,
+        additional_scopes: t.List[str] = None,
     ):
         self.gcp_project = gcp_project
         self.gce_zone = gce_zone
@@ -283,6 +284,7 @@ class GCEHook(GoogleBaseHook):
         self.gce_sa = gce_sa
         self.disk_size_gb = disk_size_gb
         self.source_image_type = source_image_type
+        self.additional_scopes = additional_scopes or []
         super().__init__(
             gcp_conn_id=gcp_conn_id,
             impersonation_chain=impersonation_chain,
@@ -402,7 +404,10 @@ class GCEHook(GoogleBaseHook):
             "serviceAccounts": [
                 {
                     "email": f"{self.gce_sa}@{self.gcp_project}.iam.gserviceaccount.com",
-                    "scopes": ["https://www.googleapis.com/auth/cloud-platform"],
+                    "scopes": [
+                        "https://www.googleapis.com/auth/cloud-platform",
+                        *self.additional_scopes,
+                    ],
                 }
             ],
             "metadata": {"items": metadata},

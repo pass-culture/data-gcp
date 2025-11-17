@@ -4,6 +4,7 @@
     updated_at=None,
     partition_by={"field": "dbt_valid_to", "data_type": "timestamp"},
     tags=["source_snapshot"],
+    meta={},
     check_cols=None,
     hard_deletes="invalidate",
     target_schema=generate_schema_name("raw_applicative_" ~ target.name)
@@ -14,6 +15,7 @@
         "updated_at": updated_at,
         "partition_by": partition_by,
         "tags": tags,
+        "meta": meta,
         "check_cols": check_cols,
         "hard_deletes": hard_deletes,
         "target_schema": target_schema,

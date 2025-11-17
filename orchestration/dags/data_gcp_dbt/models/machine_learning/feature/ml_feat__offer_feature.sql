@@ -23,12 +23,12 @@ with
                 current_date(), offer_creation_date, day
             ) as offer_created_delta_in_days
 
-        from {{ ref("int_global__offer") }}
+        from {{ ref("mrt_global__offer") }}
     ),
 
     stocks as (
         select offer_id, stock_price, stock_beginning_date
-        from {{ ref("int_global__stock") }}
+        from {{ ref("mrt_global__stock") }}
         where
             stock_price is not null
             and stock_booking_limit_date

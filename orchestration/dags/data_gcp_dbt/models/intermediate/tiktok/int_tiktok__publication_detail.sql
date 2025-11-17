@@ -23,6 +23,7 @@ select
     campaign_tag.micro_objective as publication_tag_micro_objective,
     campaign_tag.offer_category as publication_tag_offer_category,
     campaign_tag.region as publication_tag_region_name,
+    campaign_tag.event as publication_tag_event_name,
     video_detail.average_time_watched as average_tiktok_publication_time_watched,
     video_detail.video_duration as tiktok_publication_video_duration,
     video_detail.full_video_watched_rate as tiktok_publication_full_video_watched_rate,

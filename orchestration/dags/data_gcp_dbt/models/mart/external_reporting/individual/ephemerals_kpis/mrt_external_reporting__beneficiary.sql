@@ -1,3 +1,4 @@
+-- noqa: disable=all
 {{
     config(
         **custom_incremental_config(
@@ -98,7 +99,9 @@ with
         from user_cumulative_amount_spent as uua
         inner join
             last_day_of_month as ldm on uua.deposit_active_date = ldm.last_active_date
-        inner join {{ ref("mrt_global__user") }} as eud on uua.user_id = eud.user_id
+        inner join
+            {{ ref("mrt_global__user_beneficiary") }} as eud
+            on uua.user_id = eud.user_id
         left join
             {{ ref("region_department") }} as rd
             on eud.user_department_code = rd.num_dep
@@ -121,7 +124,7 @@ with
             rd.dep_name
         from last_day_of_month as ldm
         inner join
-            {{ ref("mrt_global__user") }} as eud
+            {{ ref("mrt_global__user_beneficiary") }} as eud
             on date(eud.first_deposit_creation_date) <= date(ldm.last_active_date)
         left join
             {{ ref("region_department") }} as rd

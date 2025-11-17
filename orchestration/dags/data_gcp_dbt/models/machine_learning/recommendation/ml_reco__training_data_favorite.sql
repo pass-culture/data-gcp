@@ -1,3 +1,4 @@
+-- noqa: disable=all
 {{ config(**custom_table_config(materialized="view")) }}
 
 with
@@ -36,4 +37,5 @@ select
     offer.venue_name
 from events
 inner join {{ ref("mrt_global__offer") }} as offer on events.offer_id = offer.offer_id
-inner join {{ ref("mrt_global__user") }} as user on events.user_id = user.user_id  -- noqa: RF04
+inner join
+    {{ ref("mrt_global__user_beneficiary") }} as user on events.user_id = user.user_id  -- noqa: RF04

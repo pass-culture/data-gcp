@@ -10,4 +10,4 @@ select
     d.total_recredit,
     d.total_recredit_amount
 from {{ ref("int_global__deposit") }} as d
-inner join {{ ref("int_global__user") }} as u on d.user_id = u.user_id
+inner join {{ ref("int_global__user_beneficiary") }} as u on d.user_id = u.user_id

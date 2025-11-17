@@ -30,7 +30,8 @@ with
             {{ ref("mrt_global__offer") }} as offers
             on events.offer_id = offers.offer_id
         left join
-            {{ ref("mrt_global__user") }} as users on events.user_id = users.user_id
+            {{ ref("int_global__user_beneficiary") }} as users
+            on events.user_id = users.user_id
     )
 
 select distinct

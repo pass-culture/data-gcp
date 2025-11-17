@@ -9,7 +9,7 @@ with
             event_date,
             extract(hour from event_timestamp) as event_hour,
             extract(dayofweek from event_timestamp) as event_day,
-            extract(month from event_timestamp) as event_month
+            extract(month from  event_timestamp) as event_month
         from {{ ref("int_firebase__native_event") }}
         where
             event_name = "HasAddedOfferToFavorites"

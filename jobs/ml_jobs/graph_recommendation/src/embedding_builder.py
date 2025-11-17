@@ -1,7 +1,8 @@
-import sys
 import time
+from datetime import timedelta
 from pathlib import Path
 
+import mlflow
 import pandas as pd
 import torch
 from loguru import logger
@@ -11,48 +12,21 @@ from torch.utils.data import DataLoader
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import MetaPath2Vec
 
-EMBEDDING_DIM = 32  # DEBUG: should try 128 for better results once metrics are on
-WALK_LENGTH = 14 * 2  # DEBUG: should try 14*4 for better results once metrics are on
-CONTEXT_SIZE = 10
-WALKS_PER_NODE = 5
-NUM_NEGATIVE_SAMPLES = 5
-NUM_EPOCHS = 5  # DEBUG: should try 15 for better results once metrics are on
-NUM_WORKERS = 12 if sys.platform == "linux" else 0
-BATCH_SIZE = 256
-LEARNING_RATE = 0.01
-METAPATH = (
-    4
-    * [
-        ("book", "is_artist_id", "artist_id"),
-        ("artist_id", "artist_id_of", "book"),
-    ]
-    + 4
-    * [
-        ("book", "is_gtl_label_level_4", "gtl_label_level_4"),
-        ("gtl_label_level_4", "gtl_label_level_4_of", "book"),
-    ]
-    + 3
-    * [
-        ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
-        ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
-    ]
-    + 2
-    * [
-        ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
-        ("gtl_label_level_2", "gtl_label_level_2_of", "book"),
-    ]
-    + [
-        ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
-        ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
-    ]
+from src.config import TrainingConfig
+from src.constants import EMBEDDING_COLUMN
+from src.utils.mlflow import (
+    conditional_mlflow,
+    log_model_parameters,
 )
 
 
+@conditional_mlflow()
 def _train(
     model: torch.nn.Module,
     loader: DataLoader,
     optimizer: Optimizer,
     device,
+    epoch: int,
     *,
     profile: bool,
 ):
@@ -67,7 +41,7 @@ def _train(
     }
 
     batch_start = time.time()
-    for pos_rw, neg_rw in loader:
+    for batch_idx, (pos_rw, neg_rw) in enumerate(loader):
         if profile:
             data_time = time.time() - batch_start
             timings["data_load"] += data_time
@@ -100,7 +74,13 @@ def _train(
             timings["optimizer"] += time.time() - t0
             batch_start = time.time()
 
-        total_loss += loss.item()
+        batch_loss = loss.item()
+        total_loss += batch_loss
+
+        # Log batch loss every 100 batches to MLflow
+        if batch_idx % 100 == 0:
+            global_step = (epoch - 1) * len(loader) + batch_idx
+            mlflow.log_metric("batch_loss", batch_loss, step=global_step)
 
     if profile:
         total_time = sum(timings.values())
@@ -111,18 +91,24 @@ def _train(
     return total_loss / len(loader)
 
 
+@conditional_mlflow()
 def train_metapath2vec(
     graph_data: HeteroData,
+    training_config: TrainingConfig,
     checkpoint_path: Path = Path("checkpoints/best_metapath2vec_model.pt"),
-    num_workers=NUM_WORKERS,
-    profile=False,
+    *,
+    profile: bool = False,
 ) -> pd.DataFrame:
     """
     Train MetaPath2Vec and return embeddings with gtl_id.
 
     Returns:
-        DataFrame with ['item_id', 'gtl_id', 'embeddings']
+        DataFrame with ['item_id', 'gtl_id', EMBEDDING_COLUMN_NAME] columns
     """
+
+    logger.info("Training configuration:")
+    logger.info(training_config.to_dict())
+
     logger.info("Graph info:")
     logger.info(f"  Node types: {graph_data.node_types}")
     logger.info(f"  Edge types: {graph_data.edge_types}")
@@ -132,28 +118,33 @@ def train_metapath2vec(
 
     model = MetaPath2Vec(
         graph_data.edge_index_dict,
-        embedding_dim=EMBEDDING_DIM,
-        metapath=METAPATH,
-        walk_length=WALK_LENGTH,
-        context_size=CONTEXT_SIZE,
-        walks_per_node=WALKS_PER_NODE,
-        num_negative_samples=NUM_NEGATIVE_SAMPLES,
+        embedding_dim=training_config.embedding_dim,
+        metapath=training_config.metapath,
+        walk_length=training_config.walk_length,
+        context_size=training_config.context_size,
+        walks_per_node=training_config.walks_per_node,
+        num_negative_samples=training_config.num_negative_samples,
         sparse=True,
     ).to(device)
 
     loader = model.loader(
-        batch_size=BATCH_SIZE,
+        batch_size=training_config.batch_size,
         shuffle=True,
-        num_workers=num_workers,
+        num_workers=training_config.num_workers,
         pin_memory=True,
-        persistent_workers=num_workers > 0,
+        persistent_workers=training_config.num_workers > 0,
     )
     optimizer = torch.optim.SparseAdam(
         list(model.parameters()),
-        lr=LEARNING_RATE,
+        lr=training_config.learning_rate,
     )
     scheduler = ReduceLROnPlateau(
         optimizer, mode="min", factor=0.5, patience=3, min_lr=1e-6
+    )
+
+    # Log model parameters in mlflow
+    log_model_parameters(
+        training_config.to_dict() | {"walk_length": training_config.walk_length}
     )
 
     # Start training
@@ -161,19 +152,50 @@ def train_metapath2vec(
     checkpoint_dir = checkpoint_path.parent
     checkpoint_dir.mkdir(exist_ok=True)
     best_loss = float("inf")
-    for epoch in range(1, NUM_EPOCHS + 1):
+    training_start = time.time()
+    best_loss_epoch = 0
+    for epoch in range(1, training_config.num_epochs + 1):
         t0 = time.time()
-        loss = _train(model, loader, optimizer, device, profile=profile)
+        loss = _train(model, loader, optimizer, device, epoch, profile=profile)
+        epoch_time = time.time() - t0
+
         logger.info(
             f"Epoch: {epoch:03d}, Loss: {loss:.4f}, "
-            f"LR: {optimizer.param_groups[0]['lr']:.6f}, Time: {time.time() - t0:.2f}s"
+            f"LR: {optimizer.param_groups[0]['lr']:.6f}, Time: {epoch_time:.2f}s"
         )
+
+        # Log epoch metrics to MLflow
+        mlflow.log_metrics(
+            {
+                "epoch_loss": loss,
+                "learning_rate": optimizer.param_groups[0]["lr"],
+                "epoch_time": epoch_time,
+            },
+            step=epoch,
+        )
+
         scheduler.step(loss)
+
         if loss < best_loss:
             best_loss = loss
             torch.save(model.state_dict(), checkpoint_path)
             logger.info(f"Saved best model with loss: {loss:.4f}")
-    logger.info("Training completed.")
+            mlflow.log_metric("best_loss", best_loss, step=epoch)
+            best_loss_epoch += 1
+        elif training_config.early_stop:
+            break
+
+    # Log total training time and final best loss
+    total_training_time = time.time() - training_start
+    mlflow.log_metric("total_training_time", total_training_time)
+    mlflow.log_metric("final_best_loss", best_loss)
+    if training_config.early_stop:
+        mlflow.log_metric("stop_epoch", best_loss_epoch)
+    else:
+        mlflow.log_metric("stop_epoch", epoch)
+
+    time_formatted = str(timedelta(seconds=int(total_training_time)))
+    logger.info(f"Training completed in {time_formatted}")
 
     # Extract and save embeddings for book nodes
     logger.info("Extracting book embeddings...")
@@ -187,7 +209,7 @@ def train_metapath2vec(
         {
             "node_ids": graph_data.book_ids,
             "gtl_id": graph_data.gtl_ids,
-            "embeddings": list(book_embeddings),
+            EMBEDDING_COLUMN: list(book_embeddings),
         }
     )
 

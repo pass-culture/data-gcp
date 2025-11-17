@@ -85,7 +85,9 @@ with DAG(
             default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
         ),
         "gpu_count": Param(default=1, enum=INSTANCES_TYPES["gpu"]["count"]),
-        "run_name": Param(default="default", type=["string", "null"]),
+        "experiment_name": Param(
+            default="algo_training_graph_embeddings_v1", type="string"
+        ),
         "train_only_on_10k_rows": Param(default=True, type="boolean"),
     },
 ) as _dag:
@@ -122,7 +124,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
-        python_version="3.13",
+        python_version="3.12",
         base_dir=BASE_DIR,
         retries=2,
     )
@@ -131,8 +133,9 @@ with DAG(
         task_id="train",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
-        command="PYTHONPATH=. python -m scripts.cli train-metapath2vec "
-        f"{STORAGE_BASE_PATH}/raw_input "
+        command="cli train-metapath2vec "
+        "{{ params.experiment_name }} "
+        f"{STORAGE_BASE_PATH}/raw_input/ "
         f"--output-embeddings {STORAGE_BASE_PATH}/{EMBEDDINGS_FILENAME} "
         "{% if params['train_only_on_10k_rows'] %} --nrows 10000 {% endif %}",
         deferrable=True,
@@ -149,6 +152,18 @@ with DAG(
         autodetect=True,
     )
 
+    evaluate = SSHGCEOperator(
+        task_id="evaluate",
+        instance_name="{{ params.instance_name }}",
+        base_dir=BASE_DIR,
+        command="cli evaluate-metapath2vec "
+        f"{STORAGE_BASE_PATH}/raw_input/ "
+        f"{STORAGE_BASE_PATH}/{EMBEDDINGS_FILENAME} "
+        f"{STORAGE_BASE_PATH}/evaluation_metrics.csv "
+        f"--output-scores-path {STORAGE_BASE_PATH}/evaluation_scores_details.parquet",
+        deferrable=True,
+    )
+
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
@@ -159,6 +174,6 @@ with DAG(
         >> gce_instance_start
         >> fetch_install_code
         >> train
-        >> upload_embeddings_to_bigquery
+        >> [upload_embeddings_to_bigquery, evaluate]
         >> gce_instance_stop
     )

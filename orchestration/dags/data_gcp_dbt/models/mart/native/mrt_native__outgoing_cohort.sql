@@ -30,7 +30,7 @@ with
             date_diff(
                 last_deposit_expiration_date, first_deposit_creation_date, day
             ) as seniority_days
-        from {{ ref("mrt_global__user") }}
+        from {{ ref("mrt_global__user_beneficiary") }}
         where
             current_deposit_type in ("GRANT_18", "GRANT_17_18")
             and last_deposit_expiration_date < date_trunc(current_date, month)

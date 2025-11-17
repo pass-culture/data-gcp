@@ -1,11 +1,7 @@
-"""Fixtures and test data for the test suite."""
+"""Fixtures and test data for the titelive test suite."""
 
-import json
-from datetime import datetime
-from pathlib import Path
 from unittest.mock import Mock, patch
 
-import pandas as pd
 import pytest
 
 
@@ -31,125 +27,166 @@ def mock_gcp_secret_manager():
 
 
 @pytest.fixture()
-def sample_responses():
-    """Load sample API responses from test data file."""
-    data_file = Path(__file__).parent / "data" / "sample_responses.json"
-    with open(data_file) as f:
-        return json.load(f)
-
-
-@pytest.fixture()
-def mock_titelive_api_response(sample_responses):
-    """Mock response from Titelive API search endpoint."""
-    return sample_responses["sample_titelive_response"]
-
-
-@pytest.fixture()
-def mock_music_api_response(sample_responses):
-    """Mock response from Titelive API for music category."""
-    return sample_responses["sample_music_response"]
-
-
-@pytest.fixture()
-def mock_empty_titelive_response():
-    """Mock empty response from Titelive API."""
-    return {"result": []}
-
-
-@pytest.fixture()
-def mock_token_response():
-    """Mock token response from Titelive login endpoint."""
-    return {"token": "mock_bearer_token_123"}
-
-
-@pytest.fixture()
-def sample_raw_dataframe():
-    """Sample raw DataFrame as output from extract script."""
-    data = [
-        {
-            "id": "book_123",
-            "titre": "Test Book Title",
-            "auteurs_multi": [{"nom": "Test Author", "prenom": "John"}],
-            "article": {
-                "art1": {
-                    "ean": "9781234567890",
-                    "prix": 15.99,
-                    "datemodification": "01/01/2024",
-                    "taux_tva": 5.5,
-                    "image": 1,
-                    "iad": 0,
-                    "typeproduit": 1,
-                }
+def sample_api_response():
+    """Sample API response with nested article structure."""
+    return {
+        "result": [
+            {
+                "id": 123,
+                "article": {
+                    "1": {
+                        "gencod": "9781234567890",
+                        "datemodification": "15/10/2024",
+                        "prix": 19.99,
+                        "titre": "Test Book 1",
+                    },
+                    "2": {
+                        "gencod": "9781234567891",
+                        "datemodification": "16/10/2024",
+                        "prix": 24.99,
+                        "titre": "Test Book 1 - Different Edition",
+                    },
+                },
             },
-        },
-        {
-            "id": "book_456",
-            "titre": "Another Test Book",
-            "auteurs_multi": [{"nom": "Another Author", "prenom": "Jane"}],
-            "article": {
-                "art2": {
-                    "ean": "9781234567891",
-                    "prix": 12.50,
-                    "datemodification": "02/01/2024",
-                    "taux_tva": 5.5,
-                    "image": 0,
-                    "iad": 1,
-                    "typeproduit": 2,
-                }
+            {
+                "id": 456,
+                "article": {
+                    "1": {
+                        "gencod": "9789876543210",
+                        "datemodification": "17/10/2024",
+                        "prix": 15.50,
+                        "titre": "Test Book 2",
+                    }
+                },
             },
-        },
-    ]
+        ]
+    }
 
-    return pd.DataFrame(
-        {
-            "id": [item["id"] for item in data],
-            "data": [json.dumps(item, ensure_ascii=False) for item in data],
+
+@pytest.fixture()
+def sample_api_response_list_format():
+    """Sample API response with article as list instead of dict."""
+    return {
+        "result": [
+            {
+                "id": 789,
+                "article": [
+                    {
+                        "gencod": "9781111111111",
+                        "datemodification": "18/10/2024",
+                        "prix": 12.99,
+                        "titre": "Test Book 3",
+                    }
+                ],
+            }
+        ]
+    }
+
+
+@pytest.fixture()
+def sample_api_response_dict_result():
+    """Sample API response where result is a dict instead of list."""
+    return {
+        "result": {
+            "0": {
+                "id": 999,
+                "article": {
+                    "1": {
+                        "gencod": "9782222222222",
+                        "datemodification": "19/10/2024",
+                        "prix": 29.99,
+                        "titre": "Test Book 4",
+                    }
+                },
+            }
         }
-    ).set_index("id")
+    }
 
 
 @pytest.fixture()
-def sample_parsed_dataframe():
-    """Sample parsed DataFrame as output from parse script."""
-    return pd.DataFrame(
-        {
-            "titre": ["Test Book Title", "Another Test Book"],
-            "auteurs_multi": [
-                '{"nom": "Test Author", "prenom": "John"}',
-                '{"nom": "Another Author", "prenom": "Jane"}',
-            ],
-            "article_ean": ["9781234567890", "9781234567891"],
-            "article_prix": [15.99, 12.50],
-            "article_datemodification": ["01/01/2024", "02/01/2024"],
-            "article_taux_tva": [5.5, 5.5],
-            "article_image": [1, 0],
-            "article_iad": [0, 1],
-            "article_typeproduit": [1, 2],
-        }
-    )
+def mock_bigquery_client():
+    """Mock BigQuery client."""
+    mock_client = Mock()
+    mock_client.query.return_value.result.return_value = iter([])
+    return mock_client
 
 
 @pytest.fixture()
-def mock_secret_manager():
-    """Mock for Google Cloud Secret Manager."""
-    mock = Mock()
-    mock.access_secret_version.return_value.payload.data.decode.return_value = (
-        "mock_secret_value"
-    )
-    return mock
+def mock_storage_client():
+    """Mock Google Cloud Storage client."""
+    mock_client = Mock()
+    mock_bucket = Mock()
+    mock_blob = Mock()
+    mock_client.bucket.return_value = mock_bucket
+    mock_bucket.blob.return_value = mock_blob
+    return mock_client
 
 
 @pytest.fixture()
-def sample_date():
-    """Sample date for testing."""
-    return datetime(2024, 1, 1)
+def mock_requests_session():
+    """Mock requests.Session."""
+    mock_session = Mock()
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.headers = {"Content-Type": "image/jpeg"}
+    mock_response.content = b"fake_image_data"
+    mock_response.raise_for_status.return_value = None
+    mock_session.get.return_value = mock_response
+    return mock_session
 
 
 @pytest.fixture()
-def mock_requests_response():
-    """Mock requests response object."""
-    mock = Mock()
-    mock.status_code = 200
-    mock.encoding = "utf-8"
-    mock.raise_for_status.return_value = None
-    return mock
+def mock_token_manager():
+    """Mock TokenManager for API client tests."""
+    mock_manager = Mock()
+    mock_manager.get_token.return_value = "test_token"
+    mock_manager.refresh_token.return_value = "refreshed_token"
+    return mock_manager
+
+
+@pytest.fixture()
+def mock_token_manager_with_secrets():
+    """Mock TokenManager with credentials set."""
+    with patch("src.api.auth.access_secret_data") as mock_access_secret:
+        mock_access_secret.side_effect = lambda project_id, secret_id: {
+            "titelive_epagine_api_username": "test_username",
+            "titelive_epagine_api_password": "test_password",
+        }.get(secret_id)
+
+        from src.api.auth import TokenManager
+
+        return TokenManager(project_id="test-project")
+
+
+@pytest.fixture()
+def mock_titelive_client(mock_token_manager):
+    """Mock TiteliveClient with mocked dependencies."""
+    from src.api.client import TiteliveClient
+
+    client = TiteliveClient(token_manager=mock_token_manager)
+
+    # Mock the http_client
+    client.http_client = Mock()
+    client.http_client.request = Mock()
+
+    return client
+
+
+@pytest.fixture()
+def mock_api_response():
+    """Mock Titelive API response."""
+    return {
+        "result": [
+            {
+                "id": 123,
+                "article": {
+                    "1": {
+                        "gencod": "9781234567890",
+                        "datemodification": "15/10/2024",
+                        "prix": 19.99,
+                        "titre": "Test Book",
+                    }
+                },
+            }
+        ]
+    }

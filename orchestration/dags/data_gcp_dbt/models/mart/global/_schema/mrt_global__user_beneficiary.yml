@@ -1,0 +1,243 @@
+version: 2
+models:
+  - name: mrt_global__user_beneficiary
+    description: '{{ doc("description__mrt_global__user_beneficiary") }}'
+    columns:
+      - name: user_id
+        description: '{{ doc("column__user_id") }}'
+        data_type: STRING
+        data_tests:
+          - unique:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+      - name: user_department_code
+        description: '{{ doc("column__user_department_code") }}'
+        data_type: STRING
+      - name: user_department_name
+        description: '{{ doc("column__user_department_name") }}'
+        data_type: STRING
+        data_tests:
+          - excessive_failure_ratio:
+              base_test: "not_null"
+              max_ratio: 0.0005  # 0.05%
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - not_null_proportion:
+              where_condition: "user_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)"
+              anomaly_threshold_alert_percentage: 0.01 # 0.01%
+      - name: user_postal_code
+        description: '{{ doc("column__user_postal_code") }}'
+        data_type: STRING
+        data_tests:
+          - excessive_failure_ratio:
+              base_test: "not_null"
+              max_ratio: 0.0005  # 0.05%
+          - not_null_proportion:
+              where_condition: "user_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)"
+              anomaly_threshold_alert_percentage: 0.1
+              description: >
+                We have on average less than 10k new users on the last 30 days. We want to be
+                alerted when at least 10 of them don't have a postal code.
+      - name: user_city
+        description: '{{ doc("column__user_city") }}'
+        data_type: STRING
+      - name: user_activity
+        description: '{{ doc("column__user_activity") }}'
+        data_type: STRING
+      - name: user_civility
+        description: '{{ doc("column__user_civility") }}'
+        data_type: STRING
+      - name: user_school_type
+        description: '{{ doc("column__user_school_type") }}'
+        data_type: STRING
+      - name: user_is_active
+        description: '{{ doc("column__user_is_active") }}'
+        data_type: BOOLEAN
+      - name: user_age
+        description: '{{ doc("column__user_age") }}'
+        data_type: INT64
+      - name: user_birth_date
+        description: '{{ doc("column__user_birth_date") }}'
+        data_type: DATE
+        # failed : investigation
+        # data_tests:
+        #   - is_valid_beneficiary_birth_date
+      - name: user_has_enabled_marketing_email
+        description: '{{ doc("column__user_has_enabled_marketing_email") }}'
+        data_type: BOOLEAN
+      - name: user_has_enabled_marketing_push
+        description: '{{ doc("column__user_has_enabled_marketing_push") }}'
+        data_type: BOOLEAN
+      - name: user_iris_internal_id
+        description: '{{ doc("column__user_iris_internal_id") }}'
+        data_type: STRING
+        data_tests:
+          - excessive_failure_ratio:
+              base_test: "not_null"
+              max_ratio: 0.005  # 0.5%
+      - name: user_is_priority_public
+        description: '{{ doc("column__user_is_priority_public") }}'
+        data_type: BOOLEAN
+      - name: user_is_unemployed
+        description: '{{ doc("column__user_is_unemployed") }}'
+        data_type: BOOLEAN
+      - name: user_is_in_education
+        description: '{{ doc("column__user_is_in_education") }}'
+        data_type: BOOLEAN
+      - name: user_is_in_qpv
+        description: '{{ doc("column__user_is_in_qpv") }}'
+        data_type: BOOLEAN
+      - name: user_epci
+        description: '{{ doc("column__user_epci") }}'
+        data_type: STRING
+      - name: user_density_label
+        description: '{{ doc("column__user_density_label") }}'
+        data_type: STRING
+      - name: user_city_code
+        description: '{{ doc("column__user_city_code") }}'
+        data_type: STRING
+      - name: user_macro_density_label
+        description: '{{ doc("column__user_macro_density_label") }}'
+        data_type: STRING
+      - name: user_density_level
+        description: '{{ doc("column__user_density_level") }}'
+        data_type: STRING
+      - name: user_region_name
+        description: '{{ doc("column__user_region_name") }}'
+        data_type: STRING
+        data_tests:
+          - excessive_failure_ratio:
+              base_test: "not_null"
+              max_ratio: 0.0005  # 0.05%
+      - name: user_academy_name
+        description: '{{ doc("column__user_academy_name") }}'
+        data_type: STRING
+      - name: user_humanized_id
+        description: '{{ doc("column__user_humanized_id") }}'
+        data_type: STRING
+      - name: currently_subscribed_themes
+        description: '{{ doc("column__user_currently_subscribed_themes") }}'
+        data_type: STRING
+      - name: is_theme_subscribed
+        description: '{{ doc("column__user_is_theme_subscribed") }}'
+        data_type: BOOLEAN
+      - name: first_deposit_creation_date
+        description: '{{ doc("column__user_first_deposit_creation_date") }}'
+        data_type: DATE
+      - name: first_deposit_type
+        description: '{{ doc("column__user_first_deposit_type") }}'
+        data_type: STRING
+      - name: total_deposit_amount
+        description: '{{ doc("column__total_deposit_amount") }}'
+        data_type: NUMERIC
+      - name: current_deposit_type
+        description: '{{ doc("column__user_current_deposit_type") }}'
+        data_type: STRING
+      - name: user_first_deposit_reform_category
+        description: '{{ doc("column__user_first_deposit_reform_category") }}'
+        data_type: STRING
+      - name: user_current_deposit_reform_category
+        description: '{{ doc("column__user_current_deposit_reform_category") }}'
+        data_type: STRING
+      - name: first_individual_booking_date
+        description: '{{ doc("column__first_individual_booking_date") }}'
+        data_type: DATE
+      - name: total_non_cancelled_individual_bookings
+        description: '{{ doc("column__total_non_cancelled_individual_bookings") }}'
+        data_type: INT64
+      - name: total_non_cancelled_duo_bookings
+        description: '{{ doc("column__total_non_cancelled_duo_bookings") }}'
+        data_type: INT64
+      - name: total_free_bookings
+        description: '{{ doc("column__total_free_bookings") }}'
+        data_type: INT64
+      - name: total_actual_amount_spent
+        description: '{{ doc("column__total_actual_amount_spent") }}'
+        data_type: NUMERIC
+      - name: total_theoretical_amount_spent
+        description: '{{ doc("column__total_theoretical_amount_spent") }}'
+        data_type: NUMERIC
+      - name: total_theoretical_digital_goods_amount_spent
+        description: '{{ doc("column__total_theoretical_digital_goods_amount_spent") }}'
+        data_type: NUMERIC
+      - name: total_theoretical_physical_goods_amount_spent
+        description: '{{ doc("column__total_theoretical_physical_goods_amount_spent") }}'
+        data_type: NUMERIC
+      - name: total_theoretical_outings_amount_spent
+        description: '{{ doc("column__total_theoretical_outings_amount_spent") }}'
+        data_type: NUMERIC
+      - name: total_last_deposit_digital_goods_amount_spent
+        description: '{{ doc("column__total_last_deposit_digital_goods_amount_spent") }}'
+        data_type: NUMERIC
+      - name: total_last_deposit_theoretical_amount_spent
+        description: '{{ doc("column__total_last_deposit_theoretical_amount_spent") }}'
+        data_type: NUMERIC
+      - name: total_deposit_actual_amount_spent
+        description: '{{ doc("column__total_deposit_actual_amount_spent") }}'
+        data_type: NUMERIC
+      - name: last_deposit_amount
+        description: '{{ doc("column__user_last_deposit_amount") }}'
+        data_type: NUMERIC
+      - name: total_theoretical_remaining_credit
+        description: '{{ doc("column__total_theoretical_remaining_credit") }}'
+        data_type: NUMERIC
+      - name: user_creation_date
+        description: '{{ doc("column__user_created_at") }}'
+        data_type: DATE
+      - name: last_booking_date
+        description: '{{ doc("column__last_booking_date") }}'
+        data_type: DATE
+      - name: days_between_activation_date_and_first_booking_date
+        description: '{{ doc("column__days_between_activation_date_and_first_booking_date") }}'
+        data_type: INT64
+      - name: days_between_activation_date_and_first_booking_paid
+        description: '{{ doc("column__days_between_activation_date_and_first_booking_paid") }}'
+        data_type: INT64
+      - name: user_activation_date
+        description: '{{ doc("column__user_activated_at") }}'
+        data_type: DATE
+      - name: first_booking_type
+        description: '{{ doc("column__user_first_booking_type") }}'
+        data_type: STRING
+      - name: first_paid_booking_type
+        description: '{{ doc("column__user_first_paid_booking_type") }}'
+        data_type: STRING
+      - name: total_grant_18_subcategory_booked
+        description: '{{ doc("column__total_grant_18_subcategory_booked") }}'
+        data_type: INT64
+      - name: total_grant_15_17_subcategory_booked
+        description: '{{ doc("column__total_grant_15_17_subcategory_booked") }}'
+        data_type: INT64
+      - name: user_suspension_reason
+        description: '{{ doc("column__user_suspension_reason") }}'
+        data_type: STRING
+      - name: first_deposit_amount
+        description: '{{ doc("column__user_first_deposit_amount") }}'
+        data_type: NUMERIC
+      - name: last_deposit_expiration_date
+        description: '{{ doc("column__user_last_deposit_expiration_date") }}'
+        data_type: DATE
+      - name: user_is_current_beneficiary
+        description: '{{ doc("column__user_is_current_beneficiary") }}'
+        data_type: BOOLEAN
+      - name: user_seniority
+        description: '{{ doc("column__user_seniority") }}'
+        data_type: INT64
+      - name: last_recredit_date
+        description: '{{ doc("column__last_recredit_date") }}'
+        data_type: DATE
+      - name: total_recredit
+        description: '{{ doc("column__total_recredit") }}'
+        data_type: INT64
+      - name: total_recredit_amount
+        description: '{{ doc("column__total_recredit_amount") }}'
+        data_type: FLOAT64
+      - name: total_diversity_score
+        description: '{{ doc("column__total_diversity_score") }}'
+        data_type: INT64

@@ -2,6 +2,8 @@ from collections.abc import Sequence
 
 import pandas as pd
 
+from src.constants import GTL_ID_COLUMN
+
 
 def normalize_dataframe(
     df: pd.DataFrame,
@@ -81,4 +83,21 @@ def remove_rows_with_no_metadata(
 
     # Keep rows where at least one metadata column is not null
     mask = df[metadata_list].notna().any(axis=1)
-    return df[mask].copy()
+    return df[mask]
+
+
+def remove_rows_with_bad_gtls(df: pd.DataFrame) -> pd.DataFrame:
+    """Remove rows with invalid GTL IDs from the dataframe.
+
+    Filters out rows where the GTL ID starts with "00" (considered invalid)
+    and rows where the GTL ID is null/NaN.
+
+    Args:
+        df: The input dataframe containing GTL ID column.
+
+    Returns:
+        A new dataframe with invalid GTL rows removed.
+    """
+    return df.loc[~df[GTL_ID_COLUMN].astype(str).str.startswith("00")].loc[
+        lambda df: df.gtl_id.notna()
+    ]

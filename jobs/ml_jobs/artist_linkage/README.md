@@ -107,6 +107,45 @@ python link_new_products_to_artists.py \
   --output-delta-product-artist-link-filepath /path/to/link_changes.parquet
 ```
 
+### 3. `refresh_artist_metadatas.py`
+
+**Purpose**: Refresh artist metadata (descriptions, images, etc.) from
+Wikidata for existing artists without modifying product-artist links.
+
+**What it does**:
+
+- Loads existing artist and artist alias tables
+- Retrieves Wikidata IDs for artists from the artist alias table
+- Matches artists against the latest Wikidata extraction to refresh metadata
+- Updates artist descriptions and images while preserving existing links
+- Generates delta tables for metadata updates only (no product link changes)
+- Performs sanity checks to ensure metadata quality is maintained (95% threshold)
+
+**Input files**:
+
+- `artist_file_path`: Existing artists table
+- `artist_alias_file_path`: Existing artist aliases table
+- `wiki_base_path` + `wiki_file_name`: Wikidata extraction for metadata refresh
+
+**Output files**:
+
+- `output_delta_artist_file_path`: Artist metadata updates
+- `output_delta_artist_alias_file_path`: Empty (no alias changes)
+- `output_delta_product_artist_link_file_path`: Empty (no link changes)
+
+**Usage**:
+
+```bash
+python refresh_artist_metadatas.py \
+  --artist-file-path /path/to/existing_artists.parquet \
+  --artist-alias-file-path /path/to/existing_aliases.parquet \
+  --wiki-base-path /path/to/wiki/ \
+  --wiki-file-name wikidata_artists.parquet \
+  --output-delta-artist-file-path /path/to/metadata_updates.parquet \
+  --output-delta-artist-alias-file-path /path/to/empty_aliases.parquet \
+  --output-delta-product-artist-link-file-path /path/to/empty_links.parquet
+```
+
 ## Key Features
 
 ### Data Preprocessing
@@ -171,6 +210,7 @@ Key Python packages (see `requirements.txt` for full list):
 ```text
 ├── link_products_to_artists_from_scratch.py  # Full rebuild script
 ├── link_new_products_to_artists.py          # Incremental update script
+├── refresh_artist_metadatas.py              # Metadata refresh script
 ├── constants.py                              # Configuration constants
 ├── artist_linkage_config.json               # Preprocessing configuration
 ├── evaluate.py                               # Evaluation utilities
@@ -226,3 +266,8 @@ make test
   - Adding new products to an existing system
   - Regular incremental updates
   - Maintaining an operational artist linkage system
+
+- **Use `refresh_artist_metadatas.py`** when:
+  - Updating artist descriptions and images from Wikidata
+  - Refreshing metadata without changing product-artist links
+  - Keeping artist information up-to-date with the latest Wikidata content

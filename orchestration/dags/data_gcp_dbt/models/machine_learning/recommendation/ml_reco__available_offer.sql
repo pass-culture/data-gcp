@@ -5,7 +5,7 @@ with
         where is_mediation = 1
         union distinct
         select o.offer_id
-        from {{ ref("int_applicative__offer") }} as o
+        from {{ ref("mrt_global__offer") }} as o
         inner join
             {{ ref("int_applicative__product") }} as p on o.offer_product_id = p.id
         where p.is_mediation = 1

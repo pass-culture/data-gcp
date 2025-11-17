@@ -5,13 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import tqdm
-
 from src.constants import DEFAULT_METADATA_COLUMNS, GTL_ID_COLUMN, ID_COLUMN
-from src.utils.logging import diagnose_component_sizes
 from src.utils.preprocessing import (
     detach_single_occuring_metadata,
     normalize_dataframe,
+    remove_rows_with_bad_gtls,
     remove_rows_with_no_metadata,
 )
 
@@ -22,7 +20,6 @@ if TYPE_CHECKING:
 
 import pandas as pd
 import torch
-from loguru import logger
 from torch_geometric.data import Data
 
 
@@ -111,6 +108,7 @@ def build_book_metadata_graph_from_dataframe(
     df_normalized = (
         dataframe.pipe(normalize_dataframe, columns=all_columns)
         .pipe(detach_single_occuring_metadata, columns=metadata_columns)
+        .pipe(remove_rows_with_bad_gtls)
         .pipe(remove_rows_with_no_metadata, metadata_list=list(metadata_columns))
     )
 
@@ -142,10 +140,7 @@ def build_book_metadata_graph_from_dataframe(
     edges: set[tuple[int, int]] = set()
     relevant_columns = [id_column, *metadata_columns]
 
-    for record in tqdm.tqdm(
-        df_normalized[relevant_columns].itertuples(index=False),
-        desc="Building edges",
-    ):
+    for record in df_normalized[relevant_columns].itertuples(index=False):
         record_dict = record._asdict()
         book_id = record_dict[id_column]
 
@@ -224,11 +219,5 @@ def build_book_metadata_graph(
         gtl_id_column=GTL_ID_COLUMN,
         metadata_columns=DEFAULT_METADATA_COLUMNS,
     )
-
-    try:
-        _ = diagnose_component_sizes(graph=data_graph)
-    except Exception:
-        logger.info("Connected components diagnostics skipped due to error")
-        logger.info("Error details:", exc_info=True)
 
     return data_graph

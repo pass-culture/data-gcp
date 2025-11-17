@@ -66,9 +66,9 @@
 
 with
     all_activated_partners_and_days as (
-        -- Pour chaque partner_id, une ligne par jour depuis la 1ère offre publiée
+        -- Pour chaque venue_id, une ligne par jour depuis la 1ère offre publiée
         select
-            gcp.partner_id,
+            gcp.venue_id,
             gcp.first_individual_offer_creation_date,
             date_add(date('2022-01-01'), interval offset day) as partition_day
         from {{ ref("mrt_global__cultural_partner") }} as gcp
@@ -84,20 +84,22 @@ with
 
     all_days_with_bookability as (
         select
-            apd.partner_id,
+            apd.venue_id,
             apd.first_individual_offer_creation_date,
             apd.partition_day,
-            coalesce(bph.individual_bookable_offers, 0) as total_indiv_bookable_offers
+            coalesce(
+                bvh.total_individual_bookable_offers, 0
+            ) as total_indiv_bookable_offers
         from all_activated_partners_and_days as apd
         left join
-            {{ ref("bookable_partner_history") }} as bph
-            on apd.partner_id = bph.partner_id
-            and apd.partition_day = bph.partition_date
+            {{ ref("int_history__bookable_venue") }} as bvh
+            on apd.venue_id = bvh.venue_id
+            and apd.partition_day = bvh.partition_date
     ),
 
     bookable_dates as (
         select
-            partner_id,
+            venue_id,
             first_individual_offer_creation_date,
             partition_day,
             date_diff(
@@ -108,7 +110,7 @@ with
                             when total_indiv_bookable_offers != 0 then partition_day
                         end
                     ) over (
-                        partition by partner_id
+                        partition by venue_id
                         order by partition_day
                         rows between unbounded preceding and current row
                     ),
@@ -121,7 +123,7 @@ with
 
     partner_details as (
         select
-            bd.partner_id,
+            bd.venue_id,
             bd.partition_day,
             bd.first_individual_offer_creation_date,
             bd.days_since_last_indiv_bookable_date,
@@ -135,9 +137,9 @@ with
         from bookable_dates as bd
         inner join
             {{ ref("mrt_global__cultural_partner") }} as gcp
-            on bd.partner_id = gcp.partner_id
+            on bd.venue_id = gcp.venue_id
         left join
-            {{ ref("mrt_global__venue_tag") }} as gvt on gcp.partner_id = gvt.partner_id
+            {{ ref("mrt_global__venue_tag") }} as gvt on gcp.venue_id = gvt.venue_id
         inner join
             {{ ref("mrt_global__offerer") }} as gof on gcp.offerer_id = gof.offerer_id
     ),

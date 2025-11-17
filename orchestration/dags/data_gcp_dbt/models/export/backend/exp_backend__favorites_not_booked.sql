@@ -1,3 +1,4 @@
+-- noqa: disable=all
 {{
     config(
         tags="weekly",
@@ -33,17 +34,17 @@ with
             {{ ref("mrt_global__booking") }} as booking
             on favorite.userid = booking.user_id
             and favorite.offerid = booking.offer_id
-        join
+        inner join
             {{ ref("mrt_global__offer") }} as offer on favorite.offerid = offer.offer_id
-        join
+        inner join
             {{ source("raw", "applicative_database_stock") }} as stock
             on favorite.offerid = stock.offer_id
-        join
-            {{ ref("mrt_global__user") }} as enruser
+        inner join
+            {{ ref("mrt_global__user_beneficiary") }} as enruser
             on favorite.userid = enruser.user_id
-        join
+        inner join
             {{ source("raw", "subcategories") }} as subcategories
-            on subcategories.id = offer.offer_subcategory_id
+            on offer.offer_subcategory_id = subcategories.id
 
         where
             datecreated <= date_sub(date('{{ ds() }}'), interval 8 day)

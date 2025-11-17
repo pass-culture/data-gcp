@@ -12,6 +12,8 @@ with
             eid.ministry,
             eid.institution_type,
             eid.macro_institution_type,
+            eid.institution_program_name,
+            eid.institution_macro_density_label,
             ey.scholar_year,
             ed.educational_deposit_amount as institution_deposit_amount,
             eid.total_students
@@ -92,6 +94,7 @@ select
     eple_infos.ministry,
     eple_infos.institution_type,
     eple_infos.macro_institution_type,
+    eple_infos.institution_program_name,
     eple_infos.scholar_year,
     institution_deposit_amount,
     theoric_amount_spent,

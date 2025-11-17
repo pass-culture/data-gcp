@@ -22,6 +22,14 @@
     {"name": "MUSEE", "value_expr": "musee"},
     {"name": "PRATIQUE_ART", "value_expr": "pratique_artistique"},
     {"name": "INSTRUMENT", "value_expr": "instrument"},
+    {"name": "BEAUX_ARTS", "value_expr": "beaux_arts"},
+    {"name": "CARTE_JEUNES", "value_expr": "cartes_jeunes"},
+    {"name": "CONFERENCE", "value_expr": "conference"},
+    {"name": "FILM", "value_expr": "film"},
+    {"name": "JEU", "value_expr": "jeu"},
+    {"name": "MUSIQUE_ENREGISTREE", "value_expr": "musique_enregistree"},
+    {"name": "MEDIA", "value_expr": "media"},
+    {"name": "TECHNIQUE", "value_expr": "technique"},
 ] %}
 
 {% set kpis = [

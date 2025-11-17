@@ -75,7 +75,41 @@ Optional Arguments:
 - -v, --verbose: Enable verbose output with detailed logging, MUST be passed after main.py
 - --ds YYYY-MM-DD: Consolidation date to find zip file (default: current month)
 - -b, --bucket NAME: GCS bucket name (uses default if not specified)
-- -d, --destination PATH: Destination path in bucket (default: ppg_reports)
+- -d, --destination PATH: Destination path in bucket (default: external_reporting)
+
+Upload to Google Drive
+
+```bash
+python main.py upload-drive [OPTIONS]
+```
+
+Optional Arguments:
+
+- -v, --verbose: Enable verbose output with detailed logging, MUST be passed after main.py
+- --ds YYYY-MM-DD: Consolidation date (default: current month)
+
+Setup Requirements:
+- Root folder ID is automatically determined from `ENV_SHORT_NAME` (dev/stg/prod) via config mapping
+- GCE instance must have Drive API scope enabled (`https://www.googleapis.com/auth/drive`)
+- Service account needs write access to target folder
+
+Features:
+- Parallel folder creation and file uploads (10 concurrent workers)
+- Automatic retry with exponential backoff on transient errors
+- Skips existing files (idempotent uploads)
+- Creates folder structure: `Export DRAC - [French Month] [YEAR]/NATIONAL/` and `REGIONAL/[Region]/`
+
+Folder Structure on Drive:
+```
+Export DRAC - [MONTH] [YEAR]/
+├── NATIONAL/
+│   └── rapport_national.xlsx
+└── REGIONAL/
+    └── [Region]/
+        ├── rapport_regional.xlsx
+        ├── academie_*.xlsx
+        └── departement_*.xlsx
+```
 
 Usage Examples
 Generate Command
@@ -127,6 +161,19 @@ python main.py upload --ds 2024-03-01 --bucket my-gcs-bucket
 
 # Upload to custom destination path
 python main.py upload --destination custom_folder/reports
+```
+
+Upload Drive Command
+
+```bash
+# Upload reports for specific month (folder ID auto-configured per environment)
+python main.py upload-drive --ds 2024-03-01
+
+# Upload with verbose output
+python main.py --verbose upload-drive --ds 2024-03-01
+
+# Upload current month reports
+python main.py upload-drive
 ```
 
 Debug reports:

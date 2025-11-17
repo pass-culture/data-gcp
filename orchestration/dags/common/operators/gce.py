@@ -32,6 +32,7 @@ class StartGCEOperator(BaseOperator):
         "gce_zone",
         "gpu_type",
         "gpu_count",
+        "additional_scopes",
     ]
 
     @apply_defaults
@@ -46,6 +47,7 @@ class StartGCEOperator(BaseOperator):
         gce_zone: str = "europe-west1-b",
         gpu_type: t.Optional[str] = None,
         gpu_count: int = 0,
+        additional_scopes: t.List[str] = None,
         *args,
         **kwargs,
     ):
@@ -59,6 +61,7 @@ class StartGCEOperator(BaseOperator):
         self.labels = labels
         self.use_gke_network = use_gke_network
         self.gce_zone = gce_zone
+        self.additional_scopes = additional_scopes or []
 
     def execute(self, context) -> None:
         image_type = MACHINE_TYPE["cpu"] if self.gpu_count == 0 else MACHINE_TYPE["gpu"]
@@ -70,6 +73,7 @@ class StartGCEOperator(BaseOperator):
             disk_size_gb=self.disk_size_gb,
             gce_networks=gce_networks,
             gce_zone=self.gce_zone,
+            additional_scopes=self.additional_scopes,
         )
         hook.start_vm(
             self.instance_name,

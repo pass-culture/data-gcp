@@ -11,6 +11,7 @@ sources:
       - name: applicative_database_address
       - name: applicative_database_allocine_pivot
       - name: applicative_database_allocine_venue_provider
+      - name: applicative_database_artist
       - name: applicative_database_bank_account
       - name: applicative_database_beneficiary_fraud_check
       - name: applicative_database_beneficiary_fraud_review

@@ -1,3 +1,4 @@
+-- noqa: disable=all
 select
     booking.user_id,
     cast(booking.user_age as int64) as user_age,

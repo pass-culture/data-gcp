@@ -5,6 +5,7 @@ Simple implementation that mirrors the original bash scripts functionality.
 
 import os
 import shutil
+import yaml
 from copy import copy
 import tempfile
 import logging
@@ -81,8 +82,15 @@ def cleanup_temp_dir(temp_dir: str) -> None:
         logging.debug(f"Removed temporary directory: {temp_dir}")
 
 
-def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) -> None:
-    """Execute a dbt command using dbtRunner."""
+def run_dbt_command(
+    command: list,
+    dbt_vars: dict | None = None,
+    use_tmp_artifacts: bool = True,
+    **context,
+) -> None:
+    """Execute a dbt command using dbtRunner with vars."""
+    from copy import copy
+
     # Get parameters from context
     params = context.get("params", {})
     target = params.get("target", ENV_SHORT_NAME)
@@ -98,19 +106,28 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
         # Initialize dbt runner
         dbt = dbtRunner()
 
-        # Set dbt variables
-        dbt_vars = f"{{ENV_SHORT_NAME: {ENV_SHORT_NAME},'scheduled_date': {context.get('ds')}}}"
+        # Merge default vars with user-provided vars
+        default_vars = {
+            "ENV_SHORT_NAME": ENV_SHORT_NAME,
+            "scheduled_date": context.get("ds"),
+        }
+        if dbt_vars:
+            merged_vars = {**default_vars, **dbt_vars}  # user vars override defaults
+        else:
+            merged_vars = default_vars
 
-        # Build the CLI args
+        # Convert to YAML string (safe for dbt --vars)
+        vars_str = yaml.safe_dump(merged_vars)
+
+        # Build CLI args
         cli_args = command.copy()
         cli_args.extend(["--target", target])
         cli_args.extend(["--target-path", temp_target_dir])
-        cli_args.extend(["--vars", dbt_vars])
+        cli_args.extend(["--vars", vars_str])
         cli_args.extend(["--project-dir", PATH_TO_DBT_PROJECT])
         cli_args.extend(["--profiles-dir", PATH_TO_DBT_PROJECT])
 
-        # Add global CLI flags if they exist
-
+        # Add global CLI flags
         if global_cli_flags and global_cli_flags != "":
             tmp_cli_flags = copy(global_cli_flags)
             if isinstance(tmp_cli_flags, str):
@@ -119,16 +136,14 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
                 raise TypeError(
                     f"Invalid type for GLOBAL_CLI_FLAGS: {type(global_cli_flags)}. Expected str"
                 )
-            # Split flags into a list to ensure they are valid
             g_cli_flags_list = tmp_cli_flags.split()
             assert all(
                 [flag.startswith("--") for flag in g_cli_flags_list]
             ), "All flags in GLOBAL_CLI_FLAGS must start with '--'."
 
-            if "compile" in command:
-                # Remove --no-write-json if it exists
-                if "--no-write-json" in g_cli_flags_list:
-                    g_cli_flags_list.remove("--no-write-json")
+            if "compile" in command and "--no-write-json" in g_cli_flags_list:
+                g_cli_flags_list.remove("--no-write-json")
+
             if len(g_cli_flags_list) > 0:
                 cli_args.extend(g_cli_flags_list)
 
@@ -137,7 +152,6 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
         # Execute dbt command
         res: dbtRunnerResult = dbt.invoke(cli_args)
 
-        # Check for errors
         if not res.success:
             error_msg = f"dbt command failed with exit code {res.exception}."
             logging.error(error_msg)
@@ -146,20 +160,20 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
         logging.info("DBT run completed successfully.")
 
     finally:
-        # Clean up temporary directory
         if use_tmp_artifacts:
             cleanup_temp_dir(temp_target_dir)
 
 
-def dbt_run_operation(operation: str, **context):
+def dbt_run_operation(operation: str, vars: dict | None = None, **context):
     """
     Run a dbt operation.
     Args:
         operation: dbt operation name
+        vars: Variables to pass to the operation
         **context: Airflow context
     """
     command = ["run-operation", operation]
-    run_dbt_command(command, **context)
+    run_dbt_command(command, dbt_vars=vars, **context)
 
 
 def run_dbt_with_selector(selector: str, **context):

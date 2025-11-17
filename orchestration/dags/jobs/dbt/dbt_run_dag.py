@@ -129,7 +129,8 @@ stage_external_source = PythonOperator(
     task_id="stage_external_source",
     python_callable=partial(
         dbt_run_operation,
-        operation="stage_external_source",
+        operation="stage_external_sources",
+        vars={"full_refresh": True},
         use_tmp_artifacts=False,
     ),
     dag=dag,

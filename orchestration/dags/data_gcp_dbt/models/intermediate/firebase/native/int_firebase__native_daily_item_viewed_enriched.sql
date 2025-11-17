@@ -24,11 +24,11 @@ with
             user.user_role,
             user.user_age,
             case
-                when cast(ivr.item_index as int64) between 1 and 3
+                when cast(ivr.item_index as int64) between 0 and 2
                 then "bucket_1_3"
-                when cast(ivr.item_index as int64) between 4 and 6
+                when cast(ivr.item_index as int64) between 3 and 5
                 then "bucket_4_6"
-                when cast(ivr.item_index as int64) between 7 and 9
+                when cast(ivr.item_index as int64) between 6 and 8
                 then "bucket_7_9"
                 else "bucket_10_plus"
             end as index_bucket

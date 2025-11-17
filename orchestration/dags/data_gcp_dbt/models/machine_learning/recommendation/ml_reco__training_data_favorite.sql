@@ -9,7 +9,7 @@ with
             event_date,
             extract(hour from event_timestamp) as event_hour,
             extract(dayofweek from event_timestamp) as event_day,
-            extract(month from  event_timestamp) as event_month
+            extract(month from event_timestamp) as event_month
         from {{ ref("int_firebase__native_event") }}
         where
             event_name = "HasAddedOfferToFavorites"
@@ -37,4 +37,5 @@ select
     offer.venue_name
 from events
 inner join {{ ref("mrt_global__offer") }} as offer on events.offer_id = offer.offer_id
-inner join {{ ref("mrt_global__user_beneficiary") }} as user on events.user_id = user.user_id  -- noqa: RF04
+inner join
+    {{ ref("mrt_global__user_beneficiary") }} as user on events.user_id = user.user_id  -- noqa: RF04

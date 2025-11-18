@@ -23,6 +23,7 @@ select
         then '15-16'
         when user_role is null and (user_age >= 17 or user_age <= 14)
         then 'general_public'
-        else lower(user_role)
+        when user_role is not null
+        then 'beneficiary'
     end as user_category
 from {{ ref("int_applicative__user") }}

@@ -139,6 +139,7 @@ sources:
       - name: gsheet_instagram_campaign_tag
       - name: gsheet_ml_recommendation_sensitive_item
       - name: gsheet_tiktok_campaign_tag
+      - name: gsheet_company_contacts
       - name: instagram_post_detail
       - name: metabase_collection
       - name: metabase_core_user
@@ -244,26 +245,3 @@ sources:
     tables:
       - name: cohort_unified_timezone_versioned
       - name: installs
-  - name: gcs_seeds
-    schema: seed_{{ var('ENV_SHORT_NAME') }}
-    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
-    tables:
-      - name: company_contacts
-        description: "External table for company contacts stored in GCS"
-        external:
-          location: "gs://de-bigquery-data-import-{{ var('ENV_SHORT_NAME') }}//bigquery_imports/seed/2025_company_contacts/company_contacts.csv"
-          options:
-            format: CSV
-            field_delimiter: ","
-            skip_leading_rows: 1
-        columns:
-          - name: last_name
-            data_type: STRING
-          - name: first_name
-            data_type: STRING
-          - name: direction
-            data_type: STRING
-          - name: team
-            data_type: STRING
-          - name: email
-            data_type: STRING

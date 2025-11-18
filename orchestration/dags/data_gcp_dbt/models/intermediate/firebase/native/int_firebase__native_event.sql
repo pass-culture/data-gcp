@@ -63,6 +63,8 @@ select
     modulename as module_name,
     modulelistid as module_list_id,
     index as module_index,
+    items_0 as item_index_list,
+    itemtype as item_type,
     displayed_offers,
     displayed_venues,
     traffic_gen,

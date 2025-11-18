@@ -1,0 +1,22 @@
+select
+    user_id,
+    user_creation_date,
+    user_humanized_id,
+    user_has_enabled_marketing_email,
+    user_activity,
+    user_civility,
+    user_birth_date,
+    user_age,
+    user_school_type,
+    user_is_active,
+    user_role,
+    user_last_connection_date,
+    user_is_email_validated,
+    user_has_seen_pro_tutorials,
+    user_phone_validation_status,
+    user_has_validated_email,
+    user_has_enabled_marketing_push,
+    user_subscribed_themes,
+    is_theme_subscribed,
+    user_category
+from {{ ref("int_global__user") }}

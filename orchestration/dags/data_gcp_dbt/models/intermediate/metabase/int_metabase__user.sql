@@ -13,4 +13,4 @@ select
     contact.direction as user_direction,
     contact.team as user_team
 from {{ source("raw", "metabase_core_user") }} as mb_users
-left join {{ source("raw", "gsheet_company_contacts") }} as contact using (email)
+left join {{ source("raw", "gsheet_company_contact") }} as contact using (email)

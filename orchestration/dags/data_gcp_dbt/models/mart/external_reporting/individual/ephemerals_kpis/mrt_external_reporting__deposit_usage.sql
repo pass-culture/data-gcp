@@ -32,7 +32,7 @@
         coalesce(
             safe_divide(sum(total_deposit_amount), count(distinct user_id)), 0
         ) as kpi
-    from {{ ref("mrt_global__user") }}
+    from {{ ref("mrt_global__user_beneficiary") }}
     {% if is_incremental() %}
         where
             date_trunc(last_deposit_expiration_date, month)
@@ -56,7 +56,7 @@ union all
         coalesce(
             safe_divide(sum(total_actual_amount_spent), count(distinct user_id)), 0
         ) as kpi
-    from {{ ref("mrt_global__user") }}
+    from {{ ref("mrt_global__user_beneficiary") }}
     {% if is_incremental() %}
         where
             date_trunc(last_deposit_expiration_date, month)

@@ -186,7 +186,7 @@ def load_embeddings_from_parquet(
             .struct.field("list")
             .list.eval(pl.element().struct.field("element"))
         )
-        .drop("vector")
+        .select(["item_id", "list"])
         .rename({"list": "vector"})
     )
 

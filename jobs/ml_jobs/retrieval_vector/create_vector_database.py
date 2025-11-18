@@ -186,7 +186,7 @@ def load_embeddings_from_parquet(
             .struct.field("list")
             .list.eval(pl.element().struct.field("element"))
         )
-        .drop("vector")
+        .select(["item_id", "list"])
         .rename({"list": "vector"})
     )
 
@@ -222,7 +222,7 @@ def graph_database(
         ...,
         help="Path (GCS or local) to the parquet or parquet dir containing the items with metadatas to recommend",
     ),
-    graph_embedding_path: str = typer.Option(
+    graph_embedding_gs_path: str = typer.Option(
         ...,
         help="Path (GCS or local) to the parquet or parquet dir containing the item graph embeddings",
     ),
@@ -234,8 +234,8 @@ def graph_database(
     # Load data
     recommendable_items_df = pd.read_parquet(recommendable_item_gs_path)
     graph_embeddings_df = load_embeddings_from_parquet(
-        graph_embedding_path,
-        column_renaming_mapping={"node_ids": "item_id", "embeddings": "vector"},
+        graph_embedding_gs_path,
+        column_renaming_mapping={"node_ids": "item_id", "embedding": "vector"},
     )
     items_with_embeddings_df = recommendable_items_df.merge(
         graph_embeddings_df, on="item_id", how="inner", validate="one_to_one"

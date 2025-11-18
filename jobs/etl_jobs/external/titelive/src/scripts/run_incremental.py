@@ -11,7 +11,6 @@ from config import (
     MAX_SEARCH_RESULTS,
     PROVIDER_EVENT_TABLE,
     RESULTS_PER_PAGE,
-    TITELIVE_PROVIDER_ID,
     TiteliveCategory,
 )
 from src.api.auth import TokenManager
@@ -19,6 +18,7 @@ from src.api.client import TiteliveClient
 from src.utils.api_transform import extract_gencods_from_search_response
 from src.utils.batching import calculate_total_pages
 from src.utils.bigquery import (
+    deduplicate_table_by_ean,
     get_destination_table_schema,
     get_last_sync_date,
     insert_dataframe,
@@ -34,28 +34,37 @@ def run_incremental(
     results_per_page: int = RESULTS_PER_PAGE,
     project_id: str = GCP_PROJECT_ID,
     provider_event_table: str = PROVIDER_EVENT_TABLE,
-    provider_id: str = TITELIVE_PROVIDER_ID,
+    window_days: int = 7,
 ) -> None:
     """
-    Execute incremental date range search for both paper and music products.
+    Execute incremental date range search using a sliding window approach.
+
+    This function implements a sliding window strategy to handle late-arriving data
+    from the Titelive API. On day D, it processes:
+    - The target sync date (last_sync_date from provider event table)
+    - A lookback window of the previous X days (default: 7 days)
+
+    This assumes that API results stabilize after X days, ensuring complete data
+    capture.
 
     Workflow:
     1. Query last sync date for each base from provider event table
-    2. Generate list of dates to process (last_sync_date + 1 to today - 1)
-    3. Truncate table before processing first day
+    2. Generate sliding window: [last_sync_date - window_days, last_sync_date]
+    3. Truncate table before processing
     4. For each date and each base ("paper" and "music"):
        - Initial search request to check total results
        - Verify nbresults < 20000 (API limit)
-       - Calculate total pages
-       - Iterate through pages
+       - Calculate total pages and collect all gencods
+       - Fetch detailed data via /ean endpoint
        - Transform and append results to target table
+    5. Deduplicate by EAN
 
     Args:
         target_table: Full table ID for target (project.dataset.table)
         results_per_page: Number of results per page (default: 120)
         project_id: GCP project ID
         provider_event_table: Full table ID for provider event table
-        provider_id: Provider ID for Titelive
+        window_days: Number of days to look back for catch-up (default: 7)
 
     Raises:
         ValueError: If total results exceed API limit for any base/date
@@ -84,31 +93,34 @@ def run_incremental(
             logger.warning(f"No previous sync found for {base}, skipping")
             last_sync_dates[base] = None
 
-    # Step 2: Generate list of dates to process
-    today = datetime.now().date()
-    end_date = today - timedelta(days=1)  # Process up to yesterday
+    # Step 2: Generate list of dates to process using sliding window
+    # For each base, we process: [last_sync_date - window_days, last_sync_date]
+    # This allows catching late-arriving data within the window
 
-    # Find the earliest start date across all bases
-    start_dates = []
+    # Collect all date ranges for all bases
+    all_dates = set()
     for base in bases:
         if last_sync_dates[base] is not None:
-            start_date = last_sync_dates[base]
-            if start_date <= end_date:
-                start_dates.append(start_date)
+            end_date = last_sync_dates[base]
+            start_date = end_date - timedelta(days=window_days)
 
-    if not start_dates:
+            logger.info(
+                f"{base}: Processing window from {start_date} to {end_date} "
+                f"({window_days + 1} days)"
+            )
+
+            # Add all dates in range to the set
+            current_date = start_date
+            while current_date <= end_date:
+                all_dates.add(current_date)
+                current_date += timedelta(days=1)
+
+    if not all_dates:
         logger.info("No dates to process. All bases are up to date.")
         return
 
-    # Use the earliest start date to ensure we process all necessary dates
-    earliest_start_date = min(start_dates)
-
-    # Generate list of dates
-    dates_to_process = []
-    current_date = earliest_start_date
-    while current_date <= end_date:
-        dates_to_process.append(current_date)
-        current_date += timedelta(days=1)
+    # Convert to sorted list
+    dates_to_process = sorted(all_dates)
 
     if not dates_to_process:
         logger.info("No dates to process. Already up to date.")
@@ -151,11 +163,18 @@ def run_incremental(
 
         # Process both bases for this date
         for base in bases:
-            # Skip if this base doesn't need this date
-            if last_sync_dates[base] is None or process_date < last_sync_dates[base]:
+            # Skip if this base has no sync history
+            if last_sync_dates[base] is None:
+                logger.debug(f"Skipping {base} for {date_str} (no sync history)")
+                continue
+
+            # Skip if this date is outside the base's window
+            base_end_date = last_sync_dates[base]
+            base_start_date = base_end_date - timedelta(days=window_days)
+            if not (base_start_date <= process_date <= base_end_date):
                 logger.debug(
-                    f"Skipping {base} for {date_str} "
-                    "(already synced or no sync history)"
+                    f"Skipping {base} for {date_str} (outside window: "
+                    f"{base_start_date} to {base_end_date})"
                 )
                 continue
 
@@ -167,7 +186,6 @@ def run_incremental(
                 min_date=min_date_formatted,
                 max_date=max_date_formatted,
                 page=1,
-                results_per_page=0,  # Get metadata only
             )
 
             total_results = initial_response.get("nbreponses", 0)
@@ -261,6 +279,7 @@ def run_incremental(
                     f"Fetching detailed data for {len(ean_pairs)} EANs "
                     f"via /ean endpoint"
                 )
+
                 results = process_eans_batch(
                     api_client, ean_pairs, sub_batch_size=DEFAULT_BATCH_SIZE
                 )
@@ -297,9 +316,13 @@ def run_incremental(
 
         logger.info(f"Completed processing date: {date_str}")
 
+    # Step 5: Deduplicate the destination table
+    logger.info("Step 5: Deduplicating destination table by EAN")
+    deduplicate_table_by_ean(bq_client, target_table)
+
     logger.info(
         f"Incremental mode complete. Inserted {grand_total_rows_inserted} "
-        f"total rows to {target_table}"
+        f"total rows to {target_table} (after deduplication)"
     )
 
 

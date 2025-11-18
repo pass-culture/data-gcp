@@ -117,6 +117,7 @@ def insert_dataframe(
 
     job_config = bigquery.LoadJobConfig(
         write_disposition=write_disposition,
+        clustering_fields=["ean"],
     )
 
     # Only set schema if explicitly provided
@@ -621,3 +622,36 @@ def update_image_download_results(
             client.delete_table(temp_table_id, not_found_ok=True)
         except Exception as e:
             logger.warning(f"Failed to delete temp table {temp_table_id}: {e}")
+
+
+def deduplicate_table_by_ean(
+    client: bigquery.Client,
+    table_id: str,
+) -> None:
+    """
+    Deduplicate table by EAN, keeping most recent processed_at record.
+
+    Uses CREATE OR REPLACE if table is already clustered by 'ean'.
+    Falls back to temp table strategy if table has different clustering/partitioning.
+
+    Args:
+        client: BigQuery client
+        table_id: Full table ID (project.dataset.table)
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If deduplication fails
+    """
+    logger.info(f"Deduplicating table {table_id} by EAN")
+
+    # Try CREATE OR REPLACE first (works if table already has EAN clustering)
+    deduplicate_query = f"""
+        CREATE OR REPLACE TABLE `{table_id}`
+        CLUSTER BY ean
+        AS
+        SELECT * FROM `{table_id}`
+        QUALIFY ROW_NUMBER() OVER(PARTITION BY ean ORDER BY processed_at DESC) = 1
+    """
+
+    deduplicate_job = client.query(deduplicate_query)
+    deduplicate_job.result()
+    logger.info(f"Successfully deduplicated table {table_id}")

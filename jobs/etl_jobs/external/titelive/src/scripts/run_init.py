@@ -15,6 +15,7 @@ from src.api.client import TiteliveClient
 from src.utils.bigquery import (
     count_failed_eans,
     create_destination_table,
+    deduplicate_table_by_ean,
     delete_failed_eans,
     fetch_batch_eans,
     fetch_failed_eans,
@@ -188,7 +189,11 @@ def run_init(
         # Increment batch number in memory (NO re-query - critical!)
         current_batch += 1
 
+    # Step 5: Deduplicate the destination table
+    logger.info("Step 5: Deduplicating destination table by EAN")
+    deduplicate_table_by_ean(bq_client, destination_table)
+
     logger.info(
         f"Mode 1 complete. Processed {total_processed} EANs total "
-        f"in {current_batch - last_batch_number - 1} batches."
+        f"in {current_batch - last_batch_number - 1} batches (after deduplication)."
     )

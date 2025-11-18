@@ -2,6 +2,7 @@ with
     deposit_grouped_by_user as (
         select
             user_id,
+            user_age_at_deposit,
             min(deposit_creation_date) as first_deposit_creation_date,
             min(deposit_amount) as first_deposit_amount,
             max(deposit_amount) as last_deposit_amount,
@@ -64,7 +65,7 @@ with
                 case when deposit_rank_desc = 1 then deposit_reform_category end
             ) as user_current_deposit_reform_category
         from {{ ref("int_global__deposit") }}
-        group by user_id
+        group by user_id, user_age_at_deposit
     )
 
 select
@@ -94,6 +95,7 @@ select
     ui.user_city_code,
     ui.user_is_in_qpv,
     u.user_humanized_id,
+    dgu.user_age_at_deposit,
     dgu.first_deposit_creation_date,
     dgu.total_deposit_amount,
     dgu.user_activation_date,
@@ -167,7 +169,7 @@ select
         false
     ) as user_is_current_beneficiary,
     date_diff(
-        date('{{ ds() }}'), cast(user_activation_date as date), day
+        date("{{ ds() }}"), cast(dgu.user_activation_date as date), day
     ) as user_seniority
 from {{ ref("int_applicative__user") }} as u
 left join

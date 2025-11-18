@@ -235,7 +235,7 @@ def graph_database(
     recommendable_items_df = pd.read_parquet(recommendable_item_gs_path)
     graph_embeddings_df = load_embeddings_from_parquet(
         graph_embedding_gs_path,
-        column_renaming_mapping={"node_ids": "item_id", "embeddings": "vector"},
+        column_renaming_mapping={"node_ids": "item_id", "embedding": "vector"},
     )
     items_with_embeddings_df = recommendable_items_df.merge(
         graph_embeddings_df, on="item_id", how="inner", validate="one_to_one"

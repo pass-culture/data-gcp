@@ -15,6 +15,7 @@ from common.dbt.dag_utils import (
 )
 from common.dbt.dbt_executors import (
     compile_dbt_with_selector,
+    run_dbt_operation,
     clean_dbt,
 )
 from common.utils import (
@@ -124,6 +125,17 @@ compile = PythonOperator(
     dag=dag,
 )
 
+stage_external_source = PythonOperator(
+    task_id="stage_external_source",
+    python_callable=partial(
+        run_dbt_operation,
+        operation="stage_external_sources",
+        vars={"full_refresh": True},
+        use_tmp_artifacts=False,
+    ),
+    dag=dag,
+)
+
 upload_compilation_to_gcs = BashOperator(
     task_id="upload_compilation_to_gcs",
     bash_command=f"gcloud storage rsync --recursive /opt/airflow/data/target gs://{GCS_AIRFLOW_BUCKET}/data/target",
@@ -159,4 +171,11 @@ snapshot_tasks = list(operator_dict["snapshot_op_dict"].values())
 start >> operator_dict["trigger_block"]
 end_wait >> snapshots_checkpoint >> snapshot_tasks
 end_wait >> compile
-compile >> upload_compilation_to_gcs >> (model_tasks + snapshot_tasks) >> clean >> end
+(
+    compile
+    >> upload_compilation_to_gcs
+    >> stage_external_source
+    >> (model_tasks + snapshot_tasks)
+    >> clean
+    >> end
+)

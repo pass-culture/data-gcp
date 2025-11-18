@@ -15,7 +15,7 @@ from common.dbt.dag_utils import (
 )
 from common.dbt.dbt_executors import (
     compile_dbt_with_selector,
-    dbt_run_operation,
+    run_dbt_operation,
     clean_dbt,
 )
 from common.utils import (
@@ -128,7 +128,7 @@ compile = PythonOperator(
 stage_external_source = PythonOperator(
     task_id="stage_external_source",
     python_callable=partial(
-        dbt_run_operation,
+        run_dbt_operation,
         operation="stage_external_sources",
         vars={"full_refresh": True},
         use_tmp_artifacts=False,

@@ -139,6 +139,7 @@ sources:
       - name: gsheet_instagram_campaign_tag
       - name: gsheet_ml_recommendation_sensitive_item
       - name: gsheet_tiktok_campaign_tag
+      - name: gsheet_company_contact
       - name: instagram_post_detail
       - name: metabase_collection
       - name: metabase_core_user

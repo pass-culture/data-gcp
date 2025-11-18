@@ -11,8 +11,10 @@ with
         select distinct
             card_id,
             dashboard_name,
-            row_number() over (partition by card_id order by date desc) as rank,
-            max(date) over (partition by card_id) as consultation_date
+            row_number() over (
+                partition by card_id order by execution_date desc
+            ) as rank,
+            max(execution_date) over (partition by card_id) as consultation_date
         from {{ ref("mrt_monitoring__metabase_cost") }}
         where dashboard_id is not null
     )

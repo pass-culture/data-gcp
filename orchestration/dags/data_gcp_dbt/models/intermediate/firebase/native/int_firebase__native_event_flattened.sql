@@ -54,7 +54,6 @@ with
                         "searchOfferIsDuo",
                         "geo_located",
                         "enabled",
-                        "index",
                     ]
                 )
             }},
@@ -123,6 +122,7 @@ with
                         "isHeadline",
                         "items_0",
                         "itemType",
+                        "index",
                     ]
                 )
             }},

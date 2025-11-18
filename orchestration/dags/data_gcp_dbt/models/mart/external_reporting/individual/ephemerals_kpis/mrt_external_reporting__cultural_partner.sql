@@ -232,7 +232,7 @@ with
         coalesce(
             count(
                 distinct case
-                    when days_since_last_indiv_bookable_date <= 365 then partner_id
+                    when days_since_last_indiv_bookable_date <= 365 then venue_id
                 end
             ),
             0
@@ -241,7 +241,7 @@ with
         coalesce(
             count(
                 distinct case
-                    when days_since_last_indiv_bookable_date <= 365 then partner_id
+                    when days_since_last_indiv_bookable_date <= 365 then venue_id
                 end
             ),
             0
@@ -271,7 +271,7 @@ with
                         when
                             days_since_last_indiv_bookable_date <= 365
                             and {{ partner_type.condition }}
-                        then partner_id
+                        then venue_id
                     end
                 ),
                 0
@@ -283,7 +283,7 @@ with
                         when
                             days_since_last_indiv_bookable_date <= 365
                             and {{ partner_type.condition }}
-                        then partner_id
+                        then venue_id
                     end
                 ),
                 0
@@ -307,7 +307,7 @@ with
         coalesce(
             count(
                 distinct case
-                    when days_since_last_indiv_bookable_date >= 0 then partner_id
+                    when days_since_last_indiv_bookable_date >= 0 then venue_id
                 end
             ),
             0
@@ -316,7 +316,7 @@ with
         coalesce(
             count(
                 distinct case
-                    when days_since_last_indiv_bookable_date >= 0 then partner_id
+                    when days_since_last_indiv_bookable_date >= 0 then venue_id
                 end
             ),
             0

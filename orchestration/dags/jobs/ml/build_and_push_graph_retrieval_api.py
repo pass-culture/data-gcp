@@ -48,7 +48,7 @@ INSTANCE_TYPE = {
     "stg": "n1-standard-8",
     "prod": "n1-standard-16",
 }[ENV_SHORT_NAME]
-CONTAINER_WORKER = 1
+DEFAULT_CONTAINER_WORKER = "1"
 
 # Registry
 ARTIFACT_REGISTRY_BASE_PATH = f"europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/{ENV_SHORT_NAME}"
@@ -84,6 +84,10 @@ with DAG(
         ),
         "model_name": Param(
             default=GRAPH_RETRIEVAL_MODEL_NAME,
+            type="string",
+        ),
+        "container_worker": Param(
+            default=DEFAULT_CONTAINER_WORKER,
             type="string",
         ),
         "artifact_registry_base_path": Param(

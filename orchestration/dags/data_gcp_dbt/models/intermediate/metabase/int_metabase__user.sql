@@ -1,2 +1,17 @@
-select id as user_id, email, date_joined, last_login, is_superuser
-from {{ source("raw", "metabase_core_user") }}
+{{
+    config(
+        materialized="table",
+    )
+}}
+
+select
+    mb_users.id as user_id,
+    mb_users.email,
+    mb_users.date_joined,
+    mb_users.last_login,
+    mb_users.is_superuser,
+    contact.direction as user_direction,
+    contact.team as user_team
+from {{ source("raw", "metabase_core_user") }} as mb_users
+left join {{ source("gcs_seeds", "company_contacts") }} as contact
+    using (email)

@@ -121,8 +121,13 @@ def extract_gencods_from_search_response(
 
     Filters articles based on their datemodification field:
     - Articles without datemodification are included
+    - Articles with invalid datemodification are included
     - Articles with datemodification >= from_date are included
     - Articles with datemodification < from_date are excluded
+
+    Note: Duplicates (from articles without/invalid datemodification, or from
+    API boundary overlaps) are handled by the final deduplication step in
+    run_incremental.
 
     Args:
         api_response: Search API response with structure:
@@ -131,9 +136,9 @@ def extract_gencods_from_search_response(
                 ...
             ]}
         from_date: Date filter in DD/MM/YYYY format.
-            Only articles with datemodification >= from_date
-            (or missing datemodification)
-            will be included.
+            Only articles with datemodification >= from_date will be included.
+            Articles without/invalid datemodification are also included.
+            Duplicates are handled by final deduplication step.
 
     Returns:
         List of unique EAN strings (gencod values)
@@ -192,6 +197,7 @@ def extract_gencods_from_search_response(
             datemodification = article.get("datemodification")
 
             # Include articles without datemodification
+            # (will be deduplicated at the end)
             if datemodification is not None:
                 try:
                     article_date = datetime.strptime(datemodification, "%d/%m/%Y")
@@ -201,10 +207,12 @@ def extract_gencods_from_search_response(
                         filtered_articles += 1
                         continue
                 except ValueError:
-                    # Log warning for invalid date format but include the article
+                    # Include articles with invalid date format
+                    # (will be deduplicated)
                     logger.warning(
                         f"Invalid datemodification format for article with "
-                        f"gencod {article.get('gencod')}: {datemodification}"
+                        f"gencod {article.get('gencod')}: {datemodification}. "
+                        f"Including anyway."
                     )
 
             gencod = article.get("gencod")

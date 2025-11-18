@@ -450,7 +450,7 @@ class TestExtractGencodsFromSearchResponse:
             search_response, from_date="15/10/2024"
         )
 
-        # Assert - Both should be included (>= from_date)
+        # Assert - Both should be included (datemodification >= from_date)
         assert len(gencods) == 2
         assert "9781234567890" in gencods
         assert "9781234567891" in gencods
@@ -500,7 +500,7 @@ class TestExtractGencodsFromSearchResponse:
                         },
                         "2": {
                             "gencod": "9781234567891",
-                            # No datemodification field
+                            # No datemodification field - should be included
                         },
                     },
                 }
@@ -512,7 +512,7 @@ class TestExtractGencodsFromSearchResponse:
             search_response, from_date="15/10/2024"
         )
 
-        # Assert - Only article without date should be included
+        # Assert - Only article without date should be included (other is too old)
         assert len(gencods) == 1
         assert "9781234567891" in gencods
         assert "9781234567890" not in gencods
@@ -539,7 +539,8 @@ class TestExtractGencodsFromSearchResponse:
             )
 
     def test_extract_gencods_with_invalid_article_date_format(self):
-        """Test that articles with invalid datemodification are included with warn."""
+        """Test that articles with invalid datemodification are included with
+        warning."""
         # Arrange
         search_response = {
             "result": [

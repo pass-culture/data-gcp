@@ -202,6 +202,9 @@ models:
       - name: user_activation_date
         description: '{{ doc("column__user_activated_at") }}'
         data_type: DATE
+      - name: user_age_at_deposit
+        description: '{{ doc("column__user_age_at_deposit") }}'
+        data_type: INT64
       - name: first_booking_type
         description: '{{ doc("column__user_first_booking_type") }}'
         data_type: STRING

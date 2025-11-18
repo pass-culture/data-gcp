@@ -53,6 +53,7 @@ select
     days_between_activation_date_and_first_booking_date,
     days_between_activation_date_and_first_booking_paid,
     user_activation_date,
+    user_age_at_deposit,
     first_booking_type,
     first_paid_booking_type,
     total_grant_18_subcategory_booked,

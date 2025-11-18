@@ -19,6 +19,7 @@ select
     u.user_department_name,
     u.user_age,
     u.user_creation_date,
+    d.user_age_at_deposit,
     d.deposit_source,
     d.deposit_creation_date,
     d.deposit_update_date,

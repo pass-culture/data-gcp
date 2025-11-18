@@ -32,7 +32,7 @@ with
                 then "bucket_7_9"
                 else "bucket_10_plus"
             end as index_bucket
-        from {{ ref("int_firebase__native_daily_item_viewed_raw") }} as ivr
+        from {{ ref("int_firebase__native_daily_item_viewed") }} as ivr
         left join
             {{ ref("int_applicative__user") }} as user on ivr.user_id = user.user_id
         {% if is_incremental() %}

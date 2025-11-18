@@ -18,9 +18,6 @@ models:
       - name: user_creation_date
         description: '{{ doc("column__user_created_at") }}'
         data_type: DATE
-      - name: user_humanized_id
-        description: '{{ doc("column__user_humanized_id") }}'
-        data_type: STRING
       - name: user_has_enabled_marketing_email
         description: '{{ doc("column__user_has_enabled_marketing_email") }}'
         data_type: BOOLEAN
@@ -45,14 +42,8 @@ models:
       - name: user_role
         description: '{{ doc("column__user_role") }}'
         data_type: STRING
-      - name: user_last_connection_date
-        description: '{{ doc("column__user_last_connection_date") }}'
-        data_type: DATE
       - name: user_is_email_validated
         description: '{{ doc("column__user_is_email_validated") }}'
-        data_type: BOOLEAN
-      - name: user_has_seen_pro_tutorials
-        description: '{{ doc("column__user_has_seen_pro_tutorials") }}'
         data_type: BOOLEAN
       - name: user_phone_validation_status
         description: '{{ doc("column__user_phone_validation_status") }}'

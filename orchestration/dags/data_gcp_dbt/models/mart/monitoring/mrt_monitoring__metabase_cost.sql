@@ -33,7 +33,8 @@ left join
     and mq.metabase_hash = mc.metabase_hash
     and mq.metabase_user_id = mc.metabase_user_id
 left join
-    {{ ref("int_metabase__aggregated_card_activity") }} as aca on mq.card_id = aca.card_id
+    {{ ref("int_metabase__aggregated_card_activity") }} as aca
+    on mq.card_id = aca.card_id
 where not mq.cache_hit  -- only thoses where we have real SQL queries
 group by
     date(mq.execution_date),

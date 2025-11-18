@@ -13,5 +13,4 @@ select
     contact.direction as user_direction,
     contact.team as user_team
 from {{ source("raw", "metabase_core_user") }} as mb_users
-left join {{ source("gcs_seeds", "company_contacts") }} as contact
-    using (email)
+left join {{ source("gcs_seeds", "company_contacts") }} as contact using (email)

@@ -211,6 +211,44 @@ sources:
       - name: siren_main_business_labels
       - name: siren_legal_category_labels
       - name: zrr
+      - name: qpi_answers_v1
+        external:
+          location: "gs://de-bigquery-data-archive-{{var('ENV_SHORT_NAME')}}/archive/2024/08/raw_{{var('ENV_SHORT_NAME')}}/qpi_answers_v1.jsonl"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+      - name: qpi_answers_v2
+        external:
+          location: "gs://de-bigquery-data-archive-{{var('ENV_SHORT_NAME')}}/archive/2024/08/raw_{{var('ENV_SHORT_NAME')}}/qpi_answers_v2.jsonl"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+      - name: qpi_questions_v1
+        external:
+          location: "gs://de-bigquery-data-archive-{{var('ENV_SHORT_NAME')}}/archive/2024/08/raw_{{var('ENV_SHORT_NAME')}}/qpi_questions_v1.csv"
+          options:
+            format: CSV
+            field_delimiter: ","
+            skip_leading_rows: 1
+        columns:
+          - name: question_id
+            data_type: STRING
+          - name: question_text
+            data_type: STRING
+          - name: choices
+            data_type: STRING
+      - name: qpi_questions_v2
+        external:
+          location: "gs://de-bigquery-data-archive-{{var('ENV_SHORT_NAME')}}/archive/2024/08/raw_{{var('ENV_SHORT_NAME')}}/qpi_questions_v2.csv"
+          options:
+            format: CSV
+            field_delimiter: ","
+            skip_leading_rows: 1
+        columns:
+          - name: question_id
+            data_type: STRING
+          - name: question_text
+            data_type: STRING
+          - name: choices
+            data_type: STRING
 
   - name: ml_preproc
     schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
@@ -244,46 +282,3 @@ sources:
     tables:
       - name: cohort_unified_timezone_versioned
       - name: installs
-
-  - name: gcs_seeds
-    schema: seed_{{ var('ENV_SHORT_NAME') }}
-    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
-    tables:
-      - name: qpi_answers_v1
-        external:
-          location: "gs://de-bigquery-data-archive-prod/archive/2024/08/raw_prod/qpi_answers_v1.jsonl"
-          options:
-            format: NEWLINE_DELIMITED_JSON
-      - name: qpi_answers_v2
-        external:
-          location: "gs://de-bigquery-data-archive-prod/archive/2024/08/raw_prod/qpi_answers_v2.jsonl"
-          options:
-            format: NEWLINE_DELIMITED_JSON
-      - name: qpi_questions_v1
-        external:
-          location: "gs://de-bigquery-data-archive-prod/archive/2024/08/raw_prod/qpi_questions_v1.csv"
-          options:
-            format: CSV
-            field_delimiter: ","
-            skip_leading_rows: 1
-        columns:
-          - name: question_id
-            data_type: STRING
-          - name: question_text
-            data_type: STRING
-          - name: choices
-            data_type: STRING
-      - name: qpi_questions_v2
-        external:
-          location: "gs://de-bigquery-data-archive-prod/archive/2024/08/raw_prod/qpi_questions_v2.csv"
-          options:
-            format: CSV
-            field_delimiter: ","
-            skip_leading_rows: 1
-        columns:
-          - name: question_id
-            data_type: STRING
-          - name: question_text
-            data_type: STRING
-          - name: choices
-            data_type: STRING

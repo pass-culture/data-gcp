@@ -9,7 +9,7 @@ with
             a.platform,
             ans.question_id,
             ans.choices as choice_array
-        from {{ source("gcs_seeds", "qpi_answers_v2") }} as a, unnest(a.answers) as ans
+        from {{ source("seed", "qpi_answers_v2") }} as a, unnest(a.answers) as ans
     ),
 
     aggregated_answers as (

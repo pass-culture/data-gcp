@@ -54,6 +54,9 @@
 {% docs column__user_qpi_subcategories %} QPI stands for 'Initial Practice Questionnaires'. We asked young users about their cultural practices before using the Pass, resulting in a list of subcategories used during the cold start to display offers based on these initial practices. {% enddocs %}
 {% docs column__user_modified_at %} Timestamp at which user has updated its informations. {% enddocs %}
 {% docs column__user_age_at_booking %} The age of the user at the time of booking, calculated as the difference between the booking date and the user's date of birth. {% enddocs %}
+{% docs column__user_age_at_deposit %} The age of the user at the time of deposit, calculated as the difference between the deposit date and the user's date of birth. {% enddocs %}
+{% docs column__user_age_at_first_deposit %} The age of the user at the time of the first deposit on their account, calculated as the difference between the deposit date and the user's date of birth. {% enddocs %}
+{% docs column__user_age_at_last_deposit %} The age of the user at the time of the last deposit made on their account, calculated as the difference between the deposit date and the user's date of birth. {% enddocs %}
 {% docs column__user_address_geocode_type %} Geocode precision type (street, municipality, etc) of the user's registered address. {% enddocs %}
 {% docs column__user_address_latitude %} Latitude of the user's registered address. {% enddocs %}
 {% docs column__user_address_longitude %} Longitude of the user's registered address. {% enddocs %}

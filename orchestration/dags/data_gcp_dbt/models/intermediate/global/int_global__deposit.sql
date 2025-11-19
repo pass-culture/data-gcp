@@ -88,6 +88,7 @@ select
     d.deposit_id,
     d.deposit_amount,
     d.user_id,
+    d.user_age_at_deposit,
     d.source,
     d.deposit_creation_date,
     d.deposit_update_date,

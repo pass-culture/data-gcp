@@ -13,6 +13,7 @@
     {"name": "NAT", "value_expr": "'NAT'"},
     {"name": "REG", "value_expr": "region_name"},
     {"name": "DEP", "value_expr": "dep_name"},
+    {"name": "EPCI", "value_expr": "user_epci"},
 ] %}
 
 {% set activity_list = [
@@ -94,6 +95,7 @@ with
             eud.user_activity,
             eud.user_civility,
             eud.first_deposit_creation_date,
+            eud.user_epci,
             rd.region_name,
             rd.dep_name
         from user_cumulative_amount_spent as uua
@@ -120,6 +122,7 @@ with
             ldm.partition_month,
             ldm.updated_at,
             eud.first_deposit_creation_date,
+            eud.user_epci,
             rd.region_name,
             rd.dep_name
         from last_day_of_month as ldm

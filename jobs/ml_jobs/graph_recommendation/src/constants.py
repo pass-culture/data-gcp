@@ -19,6 +19,8 @@ ID_COLUMN = "item_id"
 GTL_ID_COLUMN = "gtl_id"
 ARTIST_ID_COLUMN = "artist_id"
 LANCEDB_NODE_ID_COLUMN = "node_ids"
+SERIES_ID_COLUMN = "series_id"
+FULL_SCORE_COLUMN = "full_score"
 GTL_LABEL_LEVEL_1_COLUMN = "gtl_label_level_1"
 GTL_LABEL_LEVEL_2_COLUMN = "gtl_label_level_2"
 GTL_LABEL_LEVEL_3_COLUMN = "gtl_label_level_3"
@@ -29,6 +31,7 @@ DEFAULT_METADATA_COLUMNS: Sequence[str] = (
     GTL_LABEL_LEVEL_3_COLUMN,
     GTL_LABEL_LEVEL_4_COLUMN,
     ARTIST_ID_COLUMN,
+    SERIES_ID_COLUMN,
 )
 
 # Types

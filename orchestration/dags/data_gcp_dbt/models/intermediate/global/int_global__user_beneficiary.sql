@@ -2,6 +2,8 @@ with
     deposit_grouped_by_user as (
         select
             user_id,
+            min(user_age_at_deposit) as user_age_at_first_deposit,
+            max(user_age_at_deposit) as user_age_at_last_deposit,
             min(deposit_creation_date) as first_deposit_creation_date,
             min(deposit_amount) as first_deposit_amount,
             max(deposit_amount) as last_deposit_amount,
@@ -94,6 +96,8 @@ select
     ui.user_city_code,
     ui.user_is_in_qpv,
     u.user_humanized_id,
+    dgu.user_age_at_first_deposit,
+    dgu.user_age_at_last_deposit,
     dgu.first_deposit_creation_date,
     dgu.total_deposit_amount,
     dgu.user_activation_date,

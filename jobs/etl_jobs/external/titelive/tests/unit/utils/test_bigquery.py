@@ -3,6 +3,7 @@
 from unittest.mock import Mock, patch
 
 import pandas as pd
+import pytest
 from google.cloud import bigquery
 
 from src.utils.bigquery import (
@@ -375,3 +376,44 @@ class TestUpdateImageDownloadResults:
 
         # Assert
         mock_bigquery_client.create_table.assert_not_called()
+
+
+class TestDeduplicateTableByEan:
+    """Test cases for deduplicate_table_by_ean function."""
+
+    @patch("src.utils.bigquery.logger")
+    def test_deduplicate_table_by_ean_success(self, mock_logger, mock_bigquery_client):
+        """Test successful table deduplication."""
+        # Arrange
+        table_id = "project.dataset.table"
+        mock_job = Mock()
+        mock_bigquery_client.query.return_value = mock_job
+
+        # Act
+        from src.utils.bigquery import deduplicate_table_by_ean
+
+        deduplicate_table_by_ean(mock_bigquery_client, table_id)
+
+        # Assert
+        mock_bigquery_client.query.assert_called_once()
+        query_call = mock_bigquery_client.query.call_args[0][0]
+        assert "CREATE OR REPLACE TABLE" in query_call
+        assert "CLUSTER BY ean" in query_call
+        assert "QUALIFY ROW_NUMBER()" in query_call
+        assert "PARTITION BY ean ORDER BY processed_at DESC" in query_call
+        mock_job.result.assert_called_once()
+
+    @patch("src.utils.bigquery.logger")
+    def test_deduplicate_table_by_ean_query_failure(
+        self, mock_logger, mock_bigquery_client
+    ):
+        """Test that query failures are propagated."""
+        # Arrange
+        table_id = "project.dataset.table"
+        mock_bigquery_client.query.side_effect = Exception("Query failed")
+
+        # Act & Assert
+        from src.utils.bigquery import deduplicate_table_by_ean
+
+        with pytest.raises(Exception, match="Query failed"):
+            deduplicate_table_by_ean(mock_bigquery_client, table_id)

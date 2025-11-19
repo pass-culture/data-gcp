@@ -121,6 +121,16 @@ SHEETS = {
             "Affiliation": "affiliation",
         },
     },
+    "gsheet_company_contact": {
+        "spreadsheet_ids": ["1sc-khJYKwaVCf20lV5QBoqciUjGpjBSaKJpWbG5FHJg"],
+        "expected_headers_dict": {
+            "Nom": "last_name",
+            "Prénom": "first_name",
+            "Direction": "direction",
+            "Département": "team",
+            "Email": "email",
+        },
+    },
 }
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]

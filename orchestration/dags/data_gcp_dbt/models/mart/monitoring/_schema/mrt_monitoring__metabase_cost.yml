@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: mrt_monitoring__metabase_cost
+    description: "Model for Metabase cost metrics"
+    columns:
+      - name: metabase_hash
+        description: "Unique hash for Metabase query"
+      - name: dashboard_id
+        description: "Identifier for the Metabase dashboard"
+      - name: card_id
+        description: "Identifier for the Metabase card"
+      - name: card_id_last_editor_email
+        description: "Email of the last editor of the card"
+      - name: card_id_last_edition_date
+        description: "Date of the last edition of the card"
+      - name: metabase_user_id
+        description: "Identifier for the Metabase user"
+      - name: card_name
+        description: "Name of the Metabase card"
+      - name: dashboard_name
+        description: "Name of the Metabase dashboard"
+      - name: execution_date
+        description: "Date of execution"
+      - name: mean_result_rows
+        description: "Mean number of result rows returned"
+      - name: total_bytes
+        description: "Total bytes billed for queries"
+      - name: total_queries
+        description: "Total number of queries executed"
+      - name: cost_euro
+        description: "Cost in Euro associated with Metabase usage"

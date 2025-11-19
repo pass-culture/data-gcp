@@ -1,0 +1,65 @@
+version: 2
+models:
+  - name: mrt_global__user
+    description: '{{ doc("description__mrt_global__user") }}'
+    columns:
+      - name: user_id
+        description: '{{ doc("column__user_id") }}'
+        data_type: STRING
+        data_tests:
+          - unique:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+      - name: user_creation_date
+        description: '{{ doc("column__user_created_at") }}'
+        data_type: DATE
+      - name: user_has_enabled_marketing_email
+        description: '{{ doc("column__user_has_enabled_marketing_email") }}'
+        data_type: BOOLEAN
+      - name: user_activity
+        description: '{{ doc("column__user_activity") }}'
+        data_type: STRING
+      - name: user_civility
+        description: '{{ doc("column__user_civility") }}'
+        data_type: STRING
+      - name: user_birth_date
+        description: '{{ doc("column__user_birth_date") }}'
+        data_type: DATE
+      - name: user_age
+        description: '{{ doc("column__user_age") }}'
+        data_type: INT64
+      - name: user_school_type
+        description: '{{ doc("column__user_school_type") }}'
+        data_type: STRING
+      - name: user_is_active
+        description: '{{ doc("column__user_is_active") }}'
+        data_type: BOOLEAN
+      - name: user_role
+        description: '{{ doc("column__user_role") }}'
+        data_type: STRING
+      - name: user_is_email_validated
+        description: '{{ doc("column__user_is_email_validated") }}'
+        data_type: BOOLEAN
+      - name: user_phone_validation_status
+        description: '{{ doc("column__user_phone_validation_status") }}'
+        data_type: STRING
+      - name: user_has_validated_email
+        description: '{{ doc("column__user_has_validated_email") }}'
+        data_type: BOOLEAN
+      - name: user_has_enabled_marketing_push
+        description: '{{ doc("column__user_has_enabled_marketing_push") }}'
+        data_type: BOOLEAN
+      - name: user_subscribed_themes
+        description: '{{ doc("column__user_currently_subscribed_themes") }}'
+        data_type: STRING
+      - name: is_theme_subscribed
+        description: '{{ doc("column__user_is_theme_subscribed") }}'
+        data_type: BOOLEAN
+      - name: user_category
+        description: '{{ doc("column__user_category") }}'
+        data_type: STRING

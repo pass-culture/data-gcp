@@ -13,7 +13,6 @@ with
     )
 
 select
-    date(mq.execution_date) as date,
     mq.metabase_hash,
     mq.dashboard_id,
     mq.card_id,
@@ -22,19 +21,21 @@ select
     mq.metabase_user_id,
     mq.card_name,
     mq.dashboard_name,
-    avg(result_rows) as mean_result_rows,
-    sum(total_bytes_billed) as total_bytes,
-    sum(total_queries) as total_queries,
-    sum(cost_euro) as cost_euro
-from {{ ref("int_metabase__daily_query") }} mq
+    date(mq.execution_date) as execution_date,
+    avg(mq.result_rows) as mean_result_rows,
+    sum(mc.total_bytes_billed) as total_bytes,
+    sum(mc.total_queries) as total_queries,
+    sum(mc.cost_euro) as cost_euro
+from {{ ref("int_metabase__daily_query") }} as mq
 left join
-    metabase_cost mc
+    metabase_cost as mc
     on date(mc.creation_date) = date(mq.execution_date)
-    and mc.metabase_hash = mq.metabase_hash
-    and mc.metabase_user_id = mq.metabase_user_id
+    and mq.metabase_hash = mc.metabase_hash
+    and mq.metabase_user_id = mc.metabase_user_id
 left join
-    {{ ref("int_metabase__aggregated_card_activity") }} aca on aca.card_id = mq.card_id
-where not cache_hit  -- only thoses where we have real SQL queries
+    {{ ref("int_metabase__aggregated_card_activity") }} as aca
+    on mq.card_id = aca.card_id
+where not mq.cache_hit  -- only thoses where we have real SQL queries
 group by
     date(mq.execution_date),
     mq.metabase_hash,

@@ -58,3 +58,4 @@
 {% docs column__user_address_latitude %} Latitude of the user's registered address. {% enddocs %}
 {% docs column__user_address_longitude %} Longitude of the user's registered address. {% enddocs %}
 {% docs column__user_address_raw %} Raw address of the user's registered address. {% enddocs %}
+{% docs column__user_category %} User category derived from the user's role and age. Possible values include: '15-16' (users aged 15 or 16 with no specific role), 'general_public' (users aged 14 or under, or 17 and above, with no specific role), or 'beneficiary' (for users with a non-null role). {% enddocs %}

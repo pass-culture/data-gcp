@@ -61,7 +61,7 @@ class TestRunIncremental:
     def test_processes_single_date_single_base(
         self, mock_bq_class, mock_token_class, mock_client_class
     ):
-        """Test processing a single date for a single base."""
+        """Test processing with sliding window for a single base."""
         mock_bq_client = Mock()
         mock_bq_class.return_value = mock_bq_client
         mock_api_client = Mock()
@@ -78,6 +78,7 @@ class TestRunIncremental:
             patch(
                 "src.scripts.run_incremental.get_destination_table_schema"
             ) as mock_schema,
+            patch("src.scripts.run_incremental.deduplicate_table_by_ean") as mock_dedup,
         ):
             two_days_ago = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
 
@@ -88,19 +89,15 @@ class TestRunIncremental:
 
             mock_last_sync.side_effect = get_last_sync
 
-            # Mock API responses - code processes from last_sync_date to yesterday
-            # So 2 days ago means: process 2 days ago AND yesterday = 2 dates
-            # Each date needs: 1 metadata call + 1 page call = 4 total calls
-            mock_api_client.search_by_date.side_effect = [
-                {"nbreponses": 5},  # Day 1: metadata call
-                {
-                    "result": [{"id": 1, "article": {"1": {"gencod": "123"}}}] * 5
-                },  # Day 1: page 1
-                {"nbreponses": 5},  # Day 2: metadata call
-                {
-                    "result": [{"id": 1, "article": {"1": {"gencod": "123"}}}] * 5
-                },  # Day 2: page 1
-            ]
+            # Mock API responses - with window_days=7 (default)
+            # last_sync_date = 2 days ago
+            # Window: [2 days ago - 7, 2 days ago] = 8 days total
+            # Each date needs: 1 metadata call + 1 page call = 16 total calls
+            # Return enough responses for all dates
+            mock_api_client.search_by_date.return_value = {
+                "nbreponses": 5,
+                "result": [{"id": 1, "article": {"1": {"gencod": "123"}}}] * 5,
+            }
 
             # Mock gencod extraction and EAN processing
             mock_extract.return_value = ["123"]
@@ -114,17 +111,19 @@ class TestRunIncremental:
 
             mock_schema.return_value = []
 
-            # Mock truncate query
+            # Mock truncate query and deduplication
             mock_bq_client.query.return_value.result.return_value = None
 
             run_incremental(
                 target_table="project.dataset.target", project_id="test-project"
             )
 
-            # Should have called search_by_date (metadata + pages)
-            assert mock_api_client.search_by_date.call_count >= 2
+            # Should have called search_by_date multiple times (8 days worth)
+            assert mock_api_client.search_by_date.call_count >= 8
             # Should have inserted data
             mock_insert.assert_called()
+            # Should have deduplicated
+            mock_dedup.assert_called_once()
 
     @patch("src.scripts.run_incremental.TiteliveClient")
     @patch("src.scripts.run_incremental.TokenManager")
@@ -304,17 +303,15 @@ class TestRunIncremental:
     def test_handles_no_dates_to_process(
         self, mock_bq_class, mock_token_class, mock_client_class
     ):
-        """Test when all bases are already up to date."""
+        """Test when all bases have no sync history."""
         mock_bq_client = Mock()
         mock_bq_class.return_value = mock_bq_client
         mock_api_client = Mock()
         mock_client_class.return_value = mock_api_client
 
         with patch("src.scripts.run_incremental.get_last_sync_date") as mock_last_sync:
-            # Mock last sync date as today
-            # (so no dates to process since we process up to yesterday)
-            today = datetime.now().strftime("%Y-%m-%d")
-            mock_last_sync.return_value = today
+            # Mock no sync history for all bases
+            mock_last_sync.return_value = None
 
             run_incremental(
                 target_table="project.dataset.target", project_id="test-project"
@@ -357,14 +354,15 @@ class TestRunIncremental:
 
             mock_last_sync.side_effect = get_last_sync
 
-            # 2 dates to process, each with metadata + 2 pages
+            # With window_days=7, processes 8 dates, each with metadata + 2 pages
             # We'll make the first page of day 1 fail
             api_call_count = [0]
 
             def search_by_date_side_effect(*args, **kwargs):
                 api_call_count[0] += 1
-                if kwargs.get("results_per_page") == 0:
-                    # Metadata call
+                page = kwargs.get("page", 1)
+                if page == 1 and "results_per_page" not in kwargs:
+                    # Metadata call (initial request without results_per_page)
                     return {"nbreponses": 200}
                 elif api_call_count[0] == 2:
                     # First page of day 1 fails
@@ -395,9 +393,9 @@ class TestRunIncremental:
                 target_table="project.dataset.target", project_id="test-project"
             )
 
-            # Should have tried all pages across 2 dates despite error
-            # 2 dates x (1 metadata + 2 pages) = 6 calls total
-            assert api_call_count[0] == 6
+            # Should have tried all pages across 8 dates despite error
+            # 8 dates x (1 metadata + 2 pages) = 24 calls total
+            assert api_call_count[0] == 24
 
     @patch("src.scripts.run_incremental.TiteliveClient")
     @patch("src.scripts.run_incremental.TokenManager")
@@ -465,17 +463,12 @@ class TestRunIncremental:
 
             mock_last_sync.side_effect = get_last_sync
 
-            # Mock API responses - 2 dates to process
-            mock_api_client.search_by_date.side_effect = [
-                {"nbreponses": 1},  # Day 1: metadata
-                {
-                    "result": [{"id": 1, "article": {"1": {"gencod": "123"}}}]
-                },  # Day 1: page 1
-                {"nbreponses": 1},  # Day 2: metadata
-                {
-                    "result": [{"id": 1, "article": {"1": {"gencod": "123"}}}]
-                },  # Day 2: page 1
-            ]
+            # Mock API responses - with window_days=7, processes 8 dates
+            # Return enough responses for all dates
+            mock_api_client.search_by_date.return_value = {
+                "nbreponses": 1,
+                "result": [{"id": 1, "article": {"1": {"gencod": "123"}}}],
+            }
 
             # Mock gencod extraction and EAN processing
             mock_extract.return_value = ["123"]

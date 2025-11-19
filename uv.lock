@@ -1087,6 +1087,7 @@ airflow = [
     { name = "flask-oidc" },
     { name = "flask-openid" },
     { name = "google-cloud-bigquery-storage" },
+    { name = "pyyaml" },
     { name = "typer" },
 ]
 dbt = [
@@ -1128,6 +1129,7 @@ airflow = [
     { name = "flask-oidc", specifier = ">=2.2.2" },
     { name = "flask-openid", specifier = ">=1.3.1" },
     { name = "google-cloud-bigquery-storage", specifier = "==2.33.1" },
+    { name = "pyyaml", specifier = "==6.0.2" },
     { name = "typer" },
 ]
 dbt = [

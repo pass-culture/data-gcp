@@ -23,7 +23,6 @@ PRODUCT_MEDIATION_TABLE = (
 
 
 # Titelive Provider Configuration
-TITELIVE_PROVIDER_ID = "1082"
 TITELIVE_PROVIDER_IDS = [7, 8, 9, 10, 11, 15, 16, 17, 19, 20, 64, 1082, 1093, 2156]
 
 # Titelive API

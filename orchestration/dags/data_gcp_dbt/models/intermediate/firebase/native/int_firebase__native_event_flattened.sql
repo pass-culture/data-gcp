@@ -89,7 +89,6 @@ with
                         "searchMaxPrice",
                         "searchNativeCategories",
                         "moduleListID",
-                        "index",
                         "traffic_campaign",
                         "traffic_source",
                         "traffic_medium",
@@ -121,6 +120,9 @@ with
                         "seenDuration",
                         "youtubeId",
                         "isHeadline",
+                        "items_0",
+                        "itemType",
+                        "index",
                     ]
                 )
             }},

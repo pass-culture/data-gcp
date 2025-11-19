@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: mrt_monitoring__bigquery_cost
+    description: "Model for BigQuery cost metrics"
+    columns:
+    - name: start_date
+      description: "Start date of the billing period"
+    - name: creation_date
+      description: "Date when the billing record was created"
+    - name: user_direction
+      description: "Direction of the user (internal/external)"
+    - name: user_team
+      description: "Team associated with the user"
+    - name: referenced_tables
+      description: "Tables referenced in the queries"
+    - name: dataset_id
+      description: "Dataset identifier"
+    - name: table_id
+      description: "Table identifier"
+    - name: card_name
+      description: "Name of the Metabase card associated with the query"
+    - name: dashboard_name
+      description: "Name of the Metabase dashboard associated with the query"
+    - name: card_id
+      description: "Identifier for the Metabase card associated with the query"
+    - name: card_id_last_editor_email
+      description: "Email of the last editor of the Metabase card"
+    - name: card_id_last_edition_date
+      description: "Date of the last edition of the Metabase card"
+    - name: dashboard_id
+      description: "Identifier for the Metabase dashboard associated with the query"
+    - name: user_email
+      description: "Email of the user who executed the query"
+    - name: origin
+      description: "Origin of the query execution (Metabase, Composer, Airflow, BigQuery adhoc)"
+    - name: cost_euro
+      description: "Cost in Euro associated with BigQuery usage"
+    - name: total_gigabytes
+      description: "Total gigabytes billed for queries"
+    - name: total_bytes
+      description: "Total bytes billed for queries"
+    - name: total_queries
+      description: "Total number of queries executed"

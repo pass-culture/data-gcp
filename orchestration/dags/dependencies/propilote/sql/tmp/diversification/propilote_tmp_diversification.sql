@@ -20,7 +20,7 @@ with
             sum(delta_diversification) as diversification_indicateur
         from `{{ bigquery_analytics_dataset }}.diversification_booking` as div
         left join
-            `{{ bigquery_analytics_dataset }}.global_user` as user
+            `{{ bigquery_analytics_dataset }}.global_user_beneficiary` as user
             on div.user_id = user.user_id
         left join
             `{{ bigquery_analytics_dataset }}.region_department` as rd

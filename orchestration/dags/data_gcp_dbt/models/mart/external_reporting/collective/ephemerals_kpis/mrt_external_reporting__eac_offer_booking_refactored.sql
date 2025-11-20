@@ -8,7 +8,7 @@
     )
 }}
 
-{% set dimensions = get_dimensions(none, "academic", use_bare_epci_city=true) %}
+{% set dimensions = get_dimensions(none, "academic") %}
 
 with
     created_collective_offers as (

@@ -73,7 +73,7 @@ with
             eud.user_activity,
             eud.user_civility,
             eud.first_deposit_creation_date,
-            eud.user_epci,
+            eud.user_epci as epci_name,
             rd.region_name,
             rd.dep_name
         from user_cumulative_amount_spent as uua
@@ -98,7 +98,7 @@ with
             ldm.partition_month,
             ldm.updated_at,
             eud.first_deposit_creation_date,
-            eud.user_epci,
+            eud.user_epci as epci_name,
             rd.region_name,
             rd.dep_name
         from last_day_of_month as ldm

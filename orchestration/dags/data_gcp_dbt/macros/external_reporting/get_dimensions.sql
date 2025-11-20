@@ -1,7 +1,6 @@
 {% macro get_dimensions(
     entity_prefix=none,
     hierarchy_type="geo",
-    use_bare_epci_city=false,
     skip_epn=false
 ) %}
     {#
@@ -14,7 +13,7 @@
                 - 'population': population_region_name, population_department_name
                 - 'institution': institution_region_name, institution_academy_name
                 - 'partner': partner_region_name, partner_department_name, partner_academy_name
-                - none/null: region_name, dep_name, academy_name (bare column names)
+                - none/null: region_name, dep_name, academy_name, epci_name, city_name (bare column names)
 
             hierarchy_type (string): The geographic hierarchy to use. Options:
                 - 'geo': National → Region → Department (NAT/REG/DEP)
@@ -23,7 +22,6 @@
                 - 'academic': National → Region → Academy (NAT/REG/ACAD)
                 - 'academic_extended': National → Region → Academy → EPCI → COM (NAT/REG/ACAD/EPCI/COM)
 
-            use_bare_epci_city (bool): Use bare column names for EPCI/COM (epci_name, city_name) instead of prefixed
             skip_epn (bool): Add skip_epn flag to dimension objects (for cultural_partner models)
 
         Returns:
@@ -35,6 +33,7 @@
             {{ get_dimensions('partner', 'academic_extended') }}
             {{ get_dimensions(none, 'geo_epci') }}
             {{ get_dimensions('partner', 'geo_full', skip_epn=true) }}
+            {{ get_dimensions(none, 'academic_extended') }}
     #}
     {% if entity_prefix %}
         {% set region_col = entity_prefix ~ "_region_name" %}
@@ -46,10 +45,8 @@
         {% set region_col = "region_name" %}
         {% set dept_col = "dep_name" %}
         {% set acad_col = "academy_name" %}
-        {% if use_bare_epci_city %}
-            {% set epci_col = "epci_name" %} {% set city_col = "city_name" %}
-        {% else %} {% set epci_col = "user_epci" %} {% set city_col = "user_city" %}
-        {% endif %}
+        {% set epci_col = "epci_name" %}
+        {% set city_col = "city_name" %}
     {% endif %}
 
     {% if hierarchy_type == "geo" %}

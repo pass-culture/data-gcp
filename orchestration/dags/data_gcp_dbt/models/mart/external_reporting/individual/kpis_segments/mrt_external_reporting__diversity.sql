@@ -1,3 +1,4 @@
+-- noqa: disable=all
 {{
     config(
         **custom_incremental_config(
@@ -8,7 +9,7 @@
     )
 }}
 
-{% set dimensions = get_dimensions("user", "geo") %}
+{% set dimensions = get_dimensions("user", "geo_full") %}
 {% set categories = get_categories() %}
 
 {% for category in categories %}
@@ -35,9 +36,11 @@
             {{ dim.value_expr }} as dimension_value,
             "pct_beneficiaires_ayant_reserve_dans_la_categorie_{{ category.value_expr }}"
             as kpi_name,
-            count(distinct bc.user_id) as numerator,
-            count(distinct user_id) as denominator,
-            safe_divide(count(distinct bc.user_id), count(distinct user_id)) as kpi
+            coalesce(count(distinct bc.user_id), 0) as numerator,
+            coalesce(count(distinct user_id), 0) as denominator,
+            coalesce(
+                safe_divide(count(distinct bc.user_id), count(distinct user_id)), 0
+            ) as kpi
         from {{ ref("mrt_global__user") }}
         left join booked_category_{{ category.value_expr }} as bc using (user_id)
         where
@@ -61,9 +64,11 @@
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         "pct_beneficiaires_ayant_reserve_dans_3_categories" as kpi_name,
-        sum(total_3_category_booked_users) as numerator,
-        sum(total_users) as denominator,
-        safe_divide(sum(total_3_category_booked_users), sum(total_users)) as kpi
+        coalesce(sum(total_3_category_booked_users), 0) as numerator,
+        coalesce(sum(total_users), 0) as denominator,
+        coalesce(
+            safe_divide(sum(total_3_category_booked_users), sum(total_users)), 0
+        ) as kpi
     from {{ ref("mrt_native__outgoing_cohort") }}
     {% if is_incremental() %}
         where

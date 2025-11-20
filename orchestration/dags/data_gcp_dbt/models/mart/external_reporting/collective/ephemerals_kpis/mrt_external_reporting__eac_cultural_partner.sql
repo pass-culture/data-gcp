@@ -8,7 +8,7 @@
     )
 }}
 
-{% set dimensions = get_dimensions("partner", "academic") %}
+{% set dimensions = get_dimensions("partner", "academic_extended") %}
 
 with
     all_activated_partners_and_days as (
@@ -76,6 +76,8 @@ with
             bd.days_since_last_collective_bookable_date,
             gcp.partner_region_name,
             gcp.partner_academy_name,
+            gcp.partner_epci,
+            gcp.partner_city,
             gcp.partner_type,
             gcp.offerer_id,
             gvt.venue_tag_name,
@@ -100,23 +102,37 @@ with
             gcp.partner_id,
             gcp.partner_region_name,
             gcp.partner_academy_name,
+            gcp.partner_city,
+            gcp.partner_epci,
             min(co.collective_offer_creation_date) as first_template_offer_creation_date
         from {{ ref("mrt_global__cultural_partner") }} as gcp
         inner join
             {{ ref("int_global__collective_offer") }} as co
             on gcp.partner_id = co.partner_id
         where co.collective_offer_is_template = true
-        group by partner_id, partner_region_name, partner_academy_name
+        group by
+            partner_id,
+            partner_region_name,
+            partner_academy_name,
+            partner_city,
+            partner_epci
     ),
 
     monthly_partner_with_template_offers as (
         select
             partner_region_name,
             partner_academy_name,
+            partner_epci,
+            partner_city,
             date_trunc(first_template_offer_creation_date, month) as partition_month,
             count(distinct partner_id) as monthly_new_partners_with_template_offers
         from partner_with_template_offers
-        group by partition_month, partner_region_name, partner_academy_name
+        group by
+            partition_month,
+            partner_region_name,
+            partner_academy_name,
+            partner_epci,
+            partner_city
     ),
 
     cumul_partner_template as (
@@ -124,6 +140,8 @@ with
             partition_month,
             partner_region_name,
             partner_academy_name,
+            partner_city,
+            partner_epci,
             coalesce(
                 sum(monthly_new_partners_with_template_offers) over (
                     partition by partner_region_name, partner_academy_name

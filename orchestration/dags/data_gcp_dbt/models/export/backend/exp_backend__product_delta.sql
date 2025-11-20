@@ -32,8 +32,10 @@ with
             snap.dbt_valid_from
         from snap
         where
-            snap.dbt_valid_from
-            > (select timestamp(lss.last_sync_date) from last_successful_sync as lss)
+            snap.dbt_valid_from > (
+                select timestamp(lss.last_sync_date) as last_sync_timestamp
+                from last_successful_sync as lss
+            )
             and regexp_contains(
                 json_value(snap.json_raw, '$.article[0].codesupport'), r'[a-zA-Z]'
             )
@@ -50,13 +52,13 @@ select
     cast(json_value(delta.json_raw, '$.article[0].image') as int64) as image,
     cast(json_value(delta.json_raw, '$.article[0].image_4') as int64) as image_4,
     delta.dbt_valid_from as modification_date,
-    json_value(delta.json_raw, '$.titre') as name,
+    json_value(delta.json_raw, '$.titre') as name,  -- noqa: RF04
     json_value(delta.json_raw, '$.article[0].resume') as description,
     json_value(delta.json_raw, '$.article[0].codesupport') as support_code,
     json_value(delta.json_raw, '$.article[0].dateparution') as publication_date,
     json_value(delta.json_raw, '$.article[0].editeur') as publisher,
     json_value(delta.json_raw, '$.article[0].langueiso') as language_iso,
     json_value(delta.json_raw, '$.article[0].taux_tva') as vat_rate,
-    parse_json(json_query(delta.json_raw, '$.article[0].gtl')) as gtl,
-    parse_json(json_query(delta.json_raw, '$.auteurs_multi')) as multiple_authors
+    json_query(delta.json_raw, '$.article[0].gtl') as gtl,
+    json_query(delta.json_raw, '$.auteurs_multi') as multiple_authors
 from changed_products_snapshot as delta

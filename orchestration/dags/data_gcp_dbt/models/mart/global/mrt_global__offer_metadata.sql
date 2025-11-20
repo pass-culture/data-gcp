@@ -6,7 +6,6 @@
 
 select
     offer_id,
-    item_id,
     offer_creation_date,
     offer_subcategory_id,
     offer_category_id,

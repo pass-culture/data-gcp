@@ -6,10 +6,19 @@ models:
     columns:
       - name: offer_product_id
         description: "{{ doc('column__offer_product_id') }}"
+        tests:
+          - not_null:
+              tags: ['critical']
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"
+        tests:
+          - not_null:
+              tags: ['critical']
       - name: artist_type
         description: "{{ doc('column__artist_type') }}"
+        tests:
+          - not_null:
+              tags: ['critical']
       - name: action
         description: "{{ doc('column__delta_action') }}"
       - name: comment

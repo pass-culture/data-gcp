@@ -6,8 +6,16 @@ models:
     columns:
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"
+        tests:
+          - not_null:
+              tags: ['critical']
+          - unique:
+              tags: ['critical']
       - name: artist_name
         description: "{{ doc('column__artist_name') }}"
+        tests:
+          - not_null:
+              tags: ['critical']
       - name: artist_description
         description: "{{ doc('column__artist_description') }}"
       - name: wikidata_image_file_url

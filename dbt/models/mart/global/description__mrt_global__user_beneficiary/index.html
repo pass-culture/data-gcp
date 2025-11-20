@@ -8116,6 +8116,16 @@ Demographic information (address, activity) are purely declarative. They are reg
 <td style="text-align: left;">Date when the user's account was activated. Corresponds to the first booking date for users in experiment phase, and to user creation date for all users after the experiment phase.</td>
 </tr>
 <tr>
+<td style="text-align: left;">user_age_at_first_deposit</td>
+<td style="text-align: left;">INT64</td>
+<td style="text-align: left;">The age of the user at the time of the first deposit on their account, calculated as the difference between the deposit date and the user's date of birth.</td>
+</tr>
+<tr>
+<td style="text-align: left;">user_age_at_last_deposit</td>
+<td style="text-align: left;">INT64</td>
+<td style="text-align: left;">The age of the user at the time of the last deposit made on their account, calculated as the difference between the deposit date and the user's date of birth.</td>
+</tr>
+<tr>
 <td style="text-align: left;">first_booking_type</td>
 <td style="text-align: left;">STRING</td>
 <td style="text-align: left;">Offer category of the user's first booking.</td>

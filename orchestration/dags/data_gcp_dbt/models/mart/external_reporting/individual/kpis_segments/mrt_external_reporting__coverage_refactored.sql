@@ -8,12 +8,7 @@
     )
 }}
 
-{% set dimensions = [
-    {"name": "NAT", "value_expr": "'NAT'"},
-    {"name": "REG", "value_expr": "population_region_name"},
-    {"name": "DEP", "value_expr": "population_department_name"},
-] %}
-
-{% set age_groups = [15, 16, 17, 18] %}
+{% set dimensions = get_dimensions('population', 'geo') %}
+{% set age_groups = get_age_groups() %}
 
 {{ generate_coverage_metrics_by_age(age_groups, dimensions) }}

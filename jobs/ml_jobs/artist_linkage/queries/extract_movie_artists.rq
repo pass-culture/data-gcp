@@ -18,7 +18,9 @@ WHERE {
   ?wiki_id wdt:P31 wd:Q5;  # Ensure the entity is a human (P31 = instance of, Q5 = human)
   OPTIONAL { ?wiki_id schema:description ?description . FILTER (LANG(?description) = "fr") }
   OPTIONAL { ?wiki_id wdt:P106/rdfs:label ?profession . FILTER (LANG(?profession) = "fr") }
-  OPTIONAL { ?wiki_id rdfs:label ?artist_name_fr. FILTER(LANG(?artist_name_fr) = "fr") }
+  OPTIONAL { ?wiki_id rdfs:label ?label_fr. FILTER(LANG(?label_fr) = "fr") }
+  OPTIONAL { ?wiki_id rdfs:label ?label_mul. FILTER(LANG(?label_mul) = "mul") }
+  BIND(COALESCE(?label_fr, ?label_mul) AS ?artist_name_fr)
   OPTIONAL { ?wiki_id rdfs:label ?artist_name_en. FILTER(LANG(?artist_name_en) = "en") }
   OPTIONAL { ?wiki_id skos:altLabel ?alias_fr . FILTER (lang(?alias_fr) = "fr") }
   OPTIONAL { ?wiki_id skos:altLabel ?alias_en . FILTER (lang(?alias_en) = "en") }

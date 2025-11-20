@@ -1,8 +1,4 @@
-{% macro get_dimensions(
-    entity_prefix=none,
-    hierarchy_type="geo",
-    skip_epn=false
-) %}
+{% macro get_dimensions(entity_prefix=none, hierarchy_type="geo", skip_epn=false) %}
     {#
         Generate standardized dimension definitions for external reporting models.
 

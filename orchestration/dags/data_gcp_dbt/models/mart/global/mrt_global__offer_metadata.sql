@@ -1,3 +1,9 @@
+{{
+    config(
+        cluster_by="offer_id",
+    )
+}}
+
 select
     offer_id,
     offer_creation_date,

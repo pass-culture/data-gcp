@@ -22,6 +22,8 @@ select
     rd.last_recredit_date,
     rd.total_recredit,
     rd.total_recredit_amount,
+    {{ calculate_exact_age("d.datecreated", "u.user_birth_date") }}
+    as user_age_at_deposit,
     -- HOTFIX: Adjust 'amount' from 90 to 80 to correct a discrepancy (55 deposit are
     -- concerned)
     case

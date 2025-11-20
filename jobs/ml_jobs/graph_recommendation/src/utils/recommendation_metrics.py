@@ -5,7 +5,6 @@ from loguru import logger
 from recommenders.evaluation.python_evaluation import (
     ndcg_at_k,
     precision_at_k,
-    recall_at_k,
 )
 from recommenders.utils.constants import (
     DEFAULT_ITEM_COL,
@@ -98,28 +97,27 @@ def _compute_metrics_at_k(
         k=k,
         score_type="exp",
     )
-    logger.info(f"    NDCG@{k}: {ndcg:.4f}")
 
     # Compute threshold-based metrics (recall, precision)
     rating_pred_k = rating_pred_sorted.groupby("userID").head(k)
-    recall = recall_at_k(
-        rating_true=rating_true,
-        rating_pred=rating_pred_k,
-        relevancy_method="top_k",
-        k=k,
-    )
-    custom_recall = custom_recall_at_k(
+    recall = custom_recall_at_k(
         rating_true=rating_true,
         rating_pred=rating_pred_k,
         k=k,
     )
+    custom_recall = recall  # TODO: Remove this in the future
     precision = precision_at_k(
         rating_true=rating_true,
         rating_pred=rating_pred_k,
         relevancy_method="top_k",
         k=k,
-    )
+    )  # TODO: Should investigate if this is correct
 
+    logger.info(f"Metrics at k={k} for score '{score_column}':")
+    logger.info(f"  NDCG@{k}: {ndcg:.4f}")
+    logger.info(f"  Recall@{k}: {recall:.4f}")
+    logger.info(f"  Custom Recall@{k}: {custom_recall:.4f}")
+    logger.info(f"  Precision@{k}: {precision:.4f}")
     return {
         "score_column": score_column,
         "k": k,

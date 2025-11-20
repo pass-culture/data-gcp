@@ -7,6 +7,7 @@ import pandas as pd
 from src.utils.preprocessing import (
     detach_single_occuring_metadata,
     normalize_dataframe,
+    normalize_gtl_id,
     remove_rows_with_no_metadata,
 )
 
@@ -480,3 +481,87 @@ class TestPreprocessingPipeline:
         assert len(result) > 0
         assert "book-1" in result["item_id"].tolist()
         assert "book-3" in result["item_id"].tolist()
+
+
+class TestNormalizeGTLID:
+    """Test suite for normalize_gtl_id function."""
+
+    def test_normalize_gtl_id(self) -> None:
+        """Test the normalize_gtl_id function for GTL ID normalization."""
+        df = pd.DataFrame(
+            {
+                "item_id": [
+                    "book-1",
+                    "book-2",
+                    "book-3",
+                    "book-4",
+                    "book-5",
+                    "book-6",
+                    "book-7",
+                    "book-8",
+                    "book-9",
+                    "book-10",
+                    "book-11",
+                    "book-12",
+                ],
+                "gtl_id": [
+                    " 1234567 ",  # valid 7-digit, needs padding
+                    "00012345",  # starts with 00
+                    "nan",  # string "nan"
+                    "",  # empty string
+                    "  98765432",  # valid 8-digit with spaces
+                    "1234500",  # valid 7-digit with trailing zero
+                    "123450",  # too short
+                    "0123456e",  # contains letter
+                    "01234 56",  # contains space between digits
+                    "123456789",  # too long
+                    12345678,  # will be converted to string
+                    "01000001",  # branching from null
+                ],
+            }
+        )
+
+        normalized_df = normalize_gtl_id(df)
+
+        expected_gtl_ids = [
+            "01234567",
+            None,
+            None,
+            None,
+            "98765432",
+            "01234500",
+            None,
+            None,
+            None,
+            None,
+            "12345678",
+            None,
+        ]
+
+        assert normalized_df["gtl_id"].tolist() == expected_gtl_ids
+
+
+class TestNormalizeDataframeFunction:
+    """Test suite for normalize_dataframe function."""
+
+    def test_normalize_dataframe_function(self) -> None:
+        """Test the normalize_dataframe helper function."""
+        df = pd.DataFrame(
+            {
+                "item_id": ["book-1", "book-2"],
+                "metadata_col": ["  value1  ", ""],
+                "other_col": [float("nan"), "value2"],
+                "keep_as_is": ["unchanged", "unchanged2"],
+            }
+        )
+        normalized_df = normalize_dataframe(
+            df, ["item_id", "metadata_col", "other_col"]
+        )
+        # Check that specified columns are normalized
+        assert normalized_df["metadata_col"].tolist() == ["value1", None]
+        assert normalized_df["other_col"].tolist() == [None, "value2"]
+        assert normalized_df["item_id"].tolist() == ["book-1", "book-2"]
+        # Check that unspecified columns remain unchanged
+        assert normalized_df["keep_as_is"].tolist() == ["unchanged", "unchanged2"]
+        # Check that original dataframe is not modified
+        assert df["metadata_col"].tolist() == ["  value1  ", ""]

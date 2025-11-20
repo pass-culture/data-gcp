@@ -1,10 +1,12 @@
 import json
 import sys
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 
 from loguru import logger
 
-from src.constants import ARTIST_ID_COLUMN, GTL_ID_COLUMN, ID_COLUMN
+from src.constants import ARTIST_ID_COLUMN, GTL_ID_COLUMN, ID_COLUMN, SERIES_ID_COLUMN
+from src.utils.metadata_metrics import get_gtl_retrieval_score
 
 
 class BaseConfig:
@@ -88,7 +90,7 @@ class InvalidConfigError(Exception):
 
 @dataclass
 class TrainingConfig(BaseConfig):
-    embedding_dim: int = 128
+    embedding_dim: int = 64
     metapath_repetitions: int = 4
     context_size: int = 10
     walks_per_node: int = 5
@@ -115,6 +117,11 @@ class TrainingConfig(BaseConfig):
                 ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
                 ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
             ]
+            + 3
+            * [
+                ("book", "is_series_id", "series_id"),
+                ("series_id", "series_id_of", "book"),
+            ]
             + 2
             * [
                 ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
@@ -134,12 +141,30 @@ class TrainingConfig(BaseConfig):
 
 @dataclass
 class EvaluationConfig(BaseConfig):
-    metadata_columns: list[str] = field(
-        default_factory=lambda: [ID_COLUMN, GTL_ID_COLUMN, ARTIST_ID_COLUMN]
+    node_id_column: str = ID_COLUMN
+    metadatas_with_categorical_scoring: list[str] = field(
+        default_factory=lambda: [ARTIST_ID_COLUMN, SERIES_ID_COLUMN]
     )
+    metadatas_with_custom_scoring: dict[str, Callable[[str, str], float]] = field(
+        default_factory=lambda: {GTL_ID_COLUMN: get_gtl_retrieval_score}
+    )  # Could also be {GTL_ID_COLUMN: get_gtl_walk_score}
     n_samples: int = 1_000
     n_retrieved: int = 10_000
     k_values: list[int] = field(default_factory=lambda: [10, 20, 50, 100])
-    ground_truth_score: str = "full_score"
-    force_artist_weight: bool = False
-    rebuild_index: bool = False
+    rebuild_index: bool = True
+
+    @property
+    def metadata_columns(self) -> list[str]:
+        return [
+            *self.metadatas_with_custom_scoring.keys(),
+            *self.metadatas_with_categorical_scoring,
+        ]
+
+    def to_dict(self) -> dict:
+        """Return config as a dictionary with function names instead of objects."""
+        result = asdict(self)
+        # Replace function objects with their names
+        result["metadatas_with_custom_scoring"] = {
+            k: v.__name__ for k, v in self.metadatas_with_custom_scoring.items()
+        }
+        return result

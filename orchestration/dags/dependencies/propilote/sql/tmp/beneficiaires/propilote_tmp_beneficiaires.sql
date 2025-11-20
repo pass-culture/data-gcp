@@ -60,7 +60,7 @@ with
             last_day_of_month ldm on ldm.last_active_date = uua.deposit_active_date
         -- active nor suspended
         inner join
-            `{{ bigquery_analytics_dataset }}.global_user` eud
+            `{{ bigquery_analytics_dataset }}.global_user_beneficiary` eud
             on eud.user_id = uua.user_id
         left join
             `{{ bigquery_seed_dataset }}.region_department` as rd
@@ -84,7 +84,7 @@ with
             1 as denominator
         from last_day_of_month ldm
         inner join
-            `{{ bigquery_analytics_dataset }}.global_user` eud
+            `{{ bigquery_analytics_dataset }}.global_user_beneficiary` eud
             on date(eud.first_deposit_creation_date) <= date(ldm.last_active_date)
         left join
             `{{ bigquery_seed_dataset }}.region_department` as rd

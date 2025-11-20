@@ -19,7 +19,7 @@ select
     count(distinct user.user_id) as denominator  -- nombre de bénéficiaires
 from `{{ bigquery_analytics_dataset }}.global_deposit` as `deposit`
 join
-    `{{ bigquery_analytics_dataset }}.global_user` as user
+    `{{ bigquery_analytics_dataset }}.global_user_beneficiary` as user
     on deposit.user_id = user.user_id
 left join
     `{{ bigquery_seed_dataset }}.region_department` as rd

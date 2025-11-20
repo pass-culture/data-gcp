@@ -28,7 +28,7 @@ with
             ) as favorites_number
         from `{{ bigquery_int_firebase_dataset }}.native_event` firebase
         left join
-            `{{ bigquery_analytics_dataset }}.global_user` user
+            `{{ bigquery_analytics_dataset }}.global_user_beneficiary` user
             on firebase.user_id = user.user_id
         where
             traffic_campaign is not null

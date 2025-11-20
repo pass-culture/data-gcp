@@ -9,7 +9,7 @@
     )
 }}
 
-{% set dimensions = get_dimensions(none, 'geo_epci') %}
+{% set dimensions = get_dimensions(none, "geo_epci") %}
 {% set activity_list = get_activity_list() %}
 
 -- Base CTEs optimisées
@@ -79,9 +79,7 @@ with
         from user_cumulative_amount_spent as uua
         inner join
             last_day_of_month as ldm on uua.deposit_active_date = ldm.last_active_date
-        inner join
-            {{ ref("mrt_global__user") }} as eud
-            on uua.user_id = eud.user_id
+        inner join {{ ref("mrt_global__user") }} as eud on uua.user_id = eud.user_id
         left join
             {{ ref("region_department") }} as rd
             on eud.user_department_code = rd.num_dep

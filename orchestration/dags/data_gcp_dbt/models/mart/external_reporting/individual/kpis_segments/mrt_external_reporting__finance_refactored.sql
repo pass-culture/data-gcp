@@ -8,7 +8,7 @@
     )
 }}
 
-{% set dimensions = get_dimensions('venue', 'geo') %}
+{% set dimensions = get_dimensions("venue", "geo") %}
 {% set categories = get_categories() %}
 
 {% set kpis = [

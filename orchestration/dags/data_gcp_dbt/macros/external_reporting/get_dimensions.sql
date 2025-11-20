@@ -1,4 +1,9 @@
-{% macro get_dimensions(entity_prefix=none, hierarchy_type="geo", use_bare_epci_city=false, skip_epn=false) %}
+{% macro get_dimensions(
+    entity_prefix=none,
+    hierarchy_type="geo",
+    use_bare_epci_city=false,
+    skip_epn=false
+) %}
     {#
         Generate standardized dimension definitions for external reporting models.
 
@@ -42,11 +47,8 @@
         {% set dept_col = "dep_name" %}
         {% set acad_col = "academy_name" %}
         {% if use_bare_epci_city %}
-            {% set epci_col = "epci_name" %}
-            {% set city_col = "city_name" %}
-        {% else %}
-            {% set epci_col = "user_epci" %}
-            {% set city_col = "user_city" %}
+            {% set epci_col = "epci_name" %} {% set city_col = "city_name" %}
+        {% else %} {% set epci_col = "user_epci" %} {% set city_col = "user_city" %}
         {% endif %}
     {% endif %}
 
@@ -98,14 +100,25 @@
     {% if skip_epn %}
         {% set dimensions_with_skip = [] %}
         {% for dim in dimensions %}
-            {% if dim.name in ['EPCI', 'COM'] %}
-                {% set _ = dimensions_with_skip.append({"name": dim.name, "value_expr": dim.value_expr, "skip_epn": true}) %}
+            {% if dim.name in ["EPCI", "COM"] %}
+                {% set _ = dimensions_with_skip.append(
+                    {
+                        "name": dim.name,
+                        "value_expr": dim.value_expr,
+                        "skip_epn": true,
+                    }
+                ) %}
             {% else %}
-                {% set _ = dimensions_with_skip.append({"name": dim.name, "value_expr": dim.value_expr, "skip_epn": false}) %}
+                {% set _ = dimensions_with_skip.append(
+                    {
+                        "name": dim.name,
+                        "value_expr": dim.value_expr,
+                        "skip_epn": false,
+                    }
+                ) %}
             {% endif %}
         {% endfor %}
         {{ return(dimensions_with_skip) }}
-    {% else %}
-        {{ return(dimensions) }}
+    {% else %} {{ return(dimensions) }}
     {% endif %}
 {% endmacro %}

@@ -8,7 +8,9 @@
     )
 }}
 
-{% set dimensions = get_dimensions(none, 'academic_extended', use_bare_epci_city=true) %}
+{% set dimensions = get_dimensions(
+    none, "academic_extended", use_bare_epci_city=true
+) %}
 {% set domains = get_domains() %}
 
 with

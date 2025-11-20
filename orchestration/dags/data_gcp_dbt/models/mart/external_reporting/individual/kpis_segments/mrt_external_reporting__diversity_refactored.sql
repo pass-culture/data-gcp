@@ -9,7 +9,7 @@
     )
 }}
 
-{% set dimensions = get_dimensions('user', 'geo_full') %}
+{% set dimensions = get_dimensions("user", "geo_full") %}
 {% set categories = get_categories() %}
 
 {% for category in categories %}

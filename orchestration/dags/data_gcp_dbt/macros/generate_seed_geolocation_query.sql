@@ -8,10 +8,8 @@
     geolocalisation_prefix=""
 ) %}
     select
-        {% if id_column is string %}
-            {{ id_column }},
-        {% else %}
-            {% for id_col in id_column %}{{ id_col }}, {% endfor %}
+        {% if id_column is string %} {{ id_column }},
+        {% else %} {% for id_col in id_column %} {{ id_col }}, {% endfor %}
         {% endif %}
         {% for column in columns %} ref_data.{{ column }}, {% endfor %}
     from

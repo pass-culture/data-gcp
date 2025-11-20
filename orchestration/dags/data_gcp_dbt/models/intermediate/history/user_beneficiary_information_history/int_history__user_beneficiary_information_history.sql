@@ -2,9 +2,13 @@
     config(
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
-            partition_by={"field": "creation_timestamp", "data_type": "timestamp", "granularity": "day"},
+            partition_by={
+                "field": "creation_timestamp",
+                "data_type": "timestamp",
+                "granularity": "day",
+            },
             on_schema_change="append_new_columns",
-            cluster_by=["user_id", "info_history_rank"]
+            cluster_by=["user_id", "info_history_rank"],
         )
     )
 }}
@@ -62,9 +66,8 @@ select
     user_epci.epci_code,
     user_geo_iris.iris_internal_id
 from {{ ref("int_history__user_beneficiary_information_history_base") }} as source_data
-left join user_epci using(user_id, info_history_rank)
-left join user_geo_iris using(user_id, info_history_rank)
+left join user_epci using (user_id, info_history_rank)
+left join user_geo_iris using (user_id, info_history_rank)
 {% if is_incremental() %}
-where
-    date(creation_timestamp) = date_sub(date("{{ ds() }}"), interval 1 day)
+    where date(creation_timestamp) = date_sub(date("{{ ds() }}"), interval 1 day)
 {% endif %}

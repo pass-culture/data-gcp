@@ -1,4 +1,4 @@
-{{ config(materialized='ephemeral') }}
+{{ config(materialized="ephemeral") }}
 
 
 with
@@ -28,42 +28,62 @@ with
                             regexp_replace(
                                 regexp_replace(
                                     regexp_replace(
-                                        lower(json_value(
-                                            action_history_json_data, '$.modified_info.address.new_info'
-                                        )),
-                                        r'\s*' || lower(json_value(
-                                            action_history_json_data, '$.modified_info.postalCode.new_info'
-                                        )) || r'\s*', ' '
+                                        lower(
+                                            json_value(
+                                                action_history_json_data,
+                                                '$.modified_info.address.new_info'
+                                            )
+                                        ),
+                                        r'\s*' || lower(
+                                            json_value(
+                                                action_history_json_data,
+                                                '$.modified_info.postalCode.new_info'
+                                            )
+                                        )
+                                        || r'\s*',
+                                        ' '
                                     ),
-                                    r'\s*' || lower(json_value(
-                                        action_history_json_data, '$.modified_info.city.new_info'
-                                    )) || r'\s*', ' '
+                                    r'\s*' || lower(
+                                        json_value(
+                                            action_history_json_data,
+                                            '$.modified_info.city.new_info'
+                                        )
+                                    )
+                                    || r'\s*',
+                                    ' '
                                 ),
-                                r',\s*france\s*$', ''
+                                r',\s*france\s*$',
+                                ''
                             ),
-                            r'\d{5}', ' '
+                            r'\d{5}',
+                            ' '
                         ),
-                        r',\s*', ' '
+                        r',\s*',
+                        ' '
                     ),
-                    r'\s+', ' '
+                    r'\s+',
+                    ' '
                 )
             ) as normalized_address
         from {{ source("raw", "applicative_database_action_history") }}
-        where true
+        where
+            true
             and action_type = 'INFO_MODIFIED'
             and (
                 json_value(
                     action_history_json_data, '$.modified_info.activity.new_info'
-                ) is not null
+                )
+                is not null
                 or json_value(
                     action_history_json_data, '$.modified_info.address.new_info'
-                ) is not null
-                or json_value(
-                    action_history_json_data, '$.modified_info.city.new_info'
-                ) is not null
+                )
+                is not null
+                or json_value(action_history_json_data, '$.modified_info.city.new_info')
+                is not null
                 or json_value(
                     action_history_json_data, '$.modified_info.postalCode.new_info'
-                ) is not null
+                )
+                is not null
             )
             and user_id is not null
             {% if is_incremental() %}
@@ -90,56 +110,88 @@ with
                                 regexp_replace(
                                     regexp_replace(
                                         lower(json_value(result_content, '$.address')),
-                                        r'\s*' || lower(json_value(result_content, '$.postal_code')) || r'\s*', ' '
+                                        r'\s*' || lower(
+                                            json_value(result_content, '$.postal_code')
+                                        )
+                                        || r'\s*',
+                                        ' '
                                     ),
-                                    r'\s*' || lower(json_value(result_content, '$.city')) || r'\s*', ' '
+                                    r'\s*'
+                                    || lower(json_value(result_content, '$.city'))
+                                    || r'\s*',
+                                    ' '
                                 ),
-                                r',\s*france\s*$', ''
+                                r',\s*france\s*$',
+                                ''
                             ),
-                            r'\d{5}', ' '
+                            r'\d{5}',
+                            ' '
                         ),
-                        r',\s*', ' '
+                        r',\s*',
+                        ' '
                     ),
-                    r'\s+', ' '
+                    r'\s+',
+                    ' '
                 )
             ) as normalized_address
         from {{ source("raw", "applicative_database_beneficiary_fraud_check") }}
-        where true
+        where
+            true
             and type = 'PROFILE_COMPLETION'
             and reason != 'Anonymized'
             and user_id is not null
             {% if is_incremental() %}
                 and date(datecreated) = date_sub(date("{{ ds() }}"), interval 1 day)
             {% endif %}
-        qualify row_number() over(
-            partition by
-                user_id,
-                lower(activity),
-                trim(
-                    regexp_replace(
+        qualify
+            row_number() over (
+                partition by
+                    user_id,
+                    lower(activity),
+                    trim(
                         regexp_replace(
                             regexp_replace(
                                 regexp_replace(
                                     regexp_replace(
                                         regexp_replace(
-                                            lower(json_value(result_content, '$.address')),
-                                            r'\s*' || lower(json_value(result_content, '$.postal_code')) || r'\s*', ' '
+                                            regexp_replace(
+                                                lower(
+                                                    json_value(
+                                                        result_content, '$.address'
+                                                    )
+                                                ),
+                                                r'\s*' || lower(
+                                                    json_value(
+                                                        result_content, '$.postal_code'
+                                                    )
+                                                )
+                                                || r'\s*',
+                                                ' '
+                                            ),
+                                            r'\s*' || lower(
+                                                json_value(result_content, '$.city')
+                                            )
+                                            || r'\s*',
+                                            ' '
                                         ),
-                                        r'\s*' || lower(json_value(result_content, '$.city')) || r'\s*', ' '
+                                        r',\s*france\s*$',
+                                        ''
                                     ),
-                                    r',\s*france\s*$', ''
+                                    r'\d{5}',
+                                    ' '
                                 ),
-                                r'\d{5}', ' '
+                                r',\s*',
+                                ' '
                             ),
-                            r',\s*', ' '
-                        ),
-                        r'\s+', ' '
-                    )
-                ),
-                lower(city),
-                postal_code
-            order by creation_timestamp desc
-        ) = 1
+                            r'\s+',
+                            ' '
+                        )
+                    ),
+                    lower(city),
+                    postal_code
+                order by creation_timestamp desc
+            )
+            = 1
     ),
 
     filled_data as (
@@ -246,8 +298,12 @@ with
             ) as has_modified,
 
             -- Flags spécifiques par champ
-            coalesce(user_activity != user_previous_activity, false) as has_modified_activity,
-            coalesce(user_address != user_previous_address, false) as has_modified_address,
+            coalesce(
+                user_activity != user_previous_activity, false
+            ) as has_modified_activity,
+            coalesce(
+                user_address != user_previous_address, false
+            ) as has_modified_address,
             coalesce(user_city != user_previous_city, false) as has_modified_city,
             coalesce(
                 user_postal_code != user_previous_postal_code, false
@@ -269,11 +325,7 @@ with
     ),
 
     user_adresse_clean as (
-        select
-            user_id,
-            user_full_address,
-            latitude,
-            longitude
+        select user_id, user_full_address, latitude, longitude
         from {{ source("raw", "user_address") }}
         where result_status = 'ok'
         qualify row_number() over (partition by user_id order by updated_at desc) = 1
@@ -293,17 +345,19 @@ with
                 null
             ) as user_longitude
         from user_beneficiary_information_history as ubih
-        left join user_adresse_clean as ua
+        left join
+            user_adresse_clean as ua
             on ubih.user_id = ua.user_id
             and trim(
-                    concat(
+                concat(
                     replace(replace(ubih.user_address, '\\r', ''), '\\n', ''),
                     ' ',
                     ubih.user_postal_code,
                     ' ',
                     ubih.user_city
-                    )
-                ) = ua.user_full_address
+                )
+            )
+            = ua.user_full_address
     )
 
 select
@@ -328,6 +382,7 @@ select
     coalesce(ubih_ga.user_longitude, ubih_pc.user_longitude) as user_longitude,
     coalesce(ubih_ga.user_latitude, ubih_pc.user_latitude) as user_latitude
 from ubih_coordinates_via_postal_code as ubih_pc
-left join ubih_coordinates_via_geocoded_address as ubih_ga
+left join
+    ubih_coordinates_via_geocoded_address as ubih_ga
     on ubih_pc.user_id = ubih_ga.user_id
     and ubih_pc.info_history_rank = ubih_ga.info_history_rank

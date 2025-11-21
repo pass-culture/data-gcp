@@ -9,6 +9,7 @@ from common.config import (
     GCP_PROJECT_ID,
     SLACK_CHANNEL_DATA_QUALITY,
     SLACK_TOKEN_DATA_QUALITY,
+    LOCAL_ENV,
 )
 from common.operators.monitoring import (
     GenerateElementaryReportOperator,
@@ -135,6 +136,7 @@ create_elementary_report = GenerateElementaryReportOperator(
     report_file_path="elementary_reports/{{ execution_date.year }}/elementary_report_{{ execution_date.strftime('%Y%m%d') }}.html",
     days_back=14,
     trigger_rule="none_failed_min_one_success",
+    queue="heavy" if (ENV_SHORT_NAME == "prod" and not LOCAL_ENV) else "default",
 )
 
 send_elementary_report = SendElementaryMonitoringReportOperator(

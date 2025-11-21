@@ -1,4 +1,4 @@
-{% macro get_dimensions(entity_prefix=none, hierarchy_type="geo", skip_epn=false) %}
+{% macro get_dimensions(entity_prefix=none, hierarchy_type="geo") %}
     {#
         Generate standardized dimension definitions for external reporting models.
 
@@ -18,17 +18,14 @@
                 - 'academic': National → Region → Academy (NAT/REG/ACAD)
                 - 'academic_extended': National → Region → Academy → EPCI → COM (NAT/REG/ACAD/EPCI/COM)
 
-            skip_epn (bool): Add skip_epn flag to dimension objects (for cultural_partner models)
-
         Returns:
-            Array of dimension objects with 'name' and 'value_expr' keys (and optionally 'skip_epn')
+            Array of dimension objects with 'name' and 'value_expr' keys
 
         Examples:
             {{ get_dimensions('venue', 'geo') }}
             {{ get_dimensions('user', 'geo_full') }}
             {{ get_dimensions('partner', 'academic_extended') }}
             {{ get_dimensions(none, 'geo_epci') }}
-            {{ get_dimensions('partner', 'geo_full', skip_epn=true) }}
             {{ get_dimensions(none, 'academic_extended') }}
     #}
     {% if entity_prefix %}
@@ -90,28 +87,5 @@
         }}
     {% endif %}
 
-    {% if skip_epn %}
-        {% set dimensions_with_skip = [] %}
-        {% for dim in dimensions %}
-            {% if dim.name in ["EPCI", "COM"] %}
-                {% set _ = dimensions_with_skip.append(
-                    {
-                        "name": dim.name,
-                        "value_expr": dim.value_expr,
-                        "skip_epn": true,
-                    }
-                ) %}
-            {% else %}
-                {% set _ = dimensions_with_skip.append(
-                    {
-                        "name": dim.name,
-                        "value_expr": dim.value_expr,
-                        "skip_epn": false,
-                    }
-                ) %}
-            {% endif %}
-        {% endfor %}
-        {{ return(dimensions_with_skip) }}
-    {% else %} {{ return(dimensions) }}
-    {% endif %}
+    {{ return(dimensions) }}
 {% endmacro %}

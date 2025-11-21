@@ -41,7 +41,7 @@
             coalesce(
                 safe_divide(count(distinct bc.user_id), count(distinct user_id)), 0
             ) as kpi
-        from {{ ref("mrt_global__user") }}
+        from {{ ref("mrt_global__user_beneficiary") }}
         left join booked_category_{{ category.value_expr }} as bc using (user_id)
         where
             total_deposit_amount >= 300

@@ -8,7 +8,8 @@
     )
 }}
 
-{% set dimensions = get_dimensions("partner", "geo_full", skip_epn=true) %}
+{% set dimensions_geo = get_dimensions("partner", "geo") %}
+{% set dimensions_granular = get_dimensions("partner", "geo_full") %}
 {% set partner_types = get_partner_types() %}
 
 with
@@ -166,7 +167,8 @@ with
         from epn_with_zeros
     )
 
-{% for dim in dimensions %}
+-- KPIs pour dimensions géographiques (NAT/REG/DEP) incluant les EPN
+{% for dim in dimensions_geo %}
     {% if not loop.first %}
         union all
     {% endif %}
@@ -276,24 +278,136 @@ with
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
-    {% if not dim.skip_epn %}
+    union all
+    select
+        epn.partition_month,
+        timestamp("{{ ts() }}") as updated_at,
+        '{{ dim.name }}' as dimension_name,
+        {{ dim.value_expr }} as dimension_value,
+        'total_entite_epn' as kpi_name,
+        coalesce(sum(epn.cumul_epn_created), 0) as numerator,
+        1 as denominator,
+        coalesce(sum(epn.cumul_epn_created), 0) as kpi
+    from cumul_epn_details as epn
+    where
+        1 = 1
+        {% if is_incremental() %}
+            and epn.partition_month
+            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+        {% endif %}
+    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
+{% endfor %}
+
+-- KPIs pour dimensions granulaires (NAT/REG/DEP/EPCI/COM) sans les EPN
+union all
+{% for dim in dimensions_granular %}
+    {% if not loop.first %}
         union all
+    {% endif %}
+    select
+        date_trunc(date(partition_day), month) as partition_month,
+        timestamp("{{ ts() }}") as updated_at,
+        '{{ dim.name }}' as dimension_name,
+        {{ dim.value_expr }} as dimension_value,
+        'nombre_total_de_partenaire_actif' as kpi_name,
+        coalesce(
+            count(
+                distinct case
+                    when days_since_last_indiv_bookable_date <= 365 then venue_id
+                end
+            ),
+            0
+        ) as numerator,
+        1 as denominator,
+        coalesce(
+            count(
+                distinct case
+                    when days_since_last_indiv_bookable_date <= 365 then venue_id
+                end
+            ),
+            0
+        ) as kpi
+    from partner_details
+    where
+        1 = 1
+        {% if is_incremental() %}
+            and date_trunc(date(partition_day), month)
+            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+        {% endif %}
+    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
+    union all
+    {% for partner_type in partner_types %}
+        {% if not loop.first %}
+            union all
+        {% endif %}
         select
-            epn.partition_month,
+            date_trunc(date(partition_day), month) as partition_month,
             timestamp("{{ ts() }}") as updated_at,
             '{{ dim.name }}' as dimension_name,
             {{ dim.value_expr }} as dimension_value,
-            'total_entite_epn' as kpi_name,
-            coalesce(sum(epn.cumul_epn_created), 0) as numerator,
+            "nombre_de_partenaire_actif_{{ partner_type.name }}" as kpi_name,
+            coalesce(
+                count(
+                    distinct case
+                        when
+                            days_since_last_indiv_bookable_date <= 365
+                            and {{ partner_type.condition }}
+                        then venue_id
+                    end
+                ),
+                0
+            ) as numerator,
             1 as denominator,
-            coalesce(sum(epn.cumul_epn_created), 0) as kpi
-        from cumul_epn_details as epn
+            coalesce(
+                count(
+                    distinct case
+                        when
+                            days_since_last_indiv_bookable_date <= 365
+                            and {{ partner_type.condition }}
+                        then venue_id
+                    end
+                ),
+                0
+            ) as kpi
+        from partner_details
         where
             1 = 1
             {% if is_incremental() %}
-                and epn.partition_month
+                and date_trunc(date(partition_day), month)
                 = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
             {% endif %}
         group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
-    {% endif %}
+    {% endfor %}
+    union all
+    select
+        date_trunc(date(partition_day), month) as partition_month,
+        timestamp("{{ ts() }}") as updated_at,
+        '{{ dim.name }}' as dimension_name,
+        {{ dim.value_expr }} as dimension_value,
+        'nombre_total_cumule_de_partenaire_actif' as kpi_name,
+        coalesce(
+            count(
+                distinct case
+                    when days_since_last_indiv_bookable_date >= 0 then venue_id
+                end
+            ),
+            0
+        ) as numerator,
+        1 as denominator,
+        coalesce(
+            count(
+                distinct case
+                    when days_since_last_indiv_bookable_date >= 0 then venue_id
+                end
+            ),
+            0
+        ) as kpi
+    from partner_details
+    where
+        1 = 1
+        {% if is_incremental() %}
+            and date_trunc(date(partition_day), month)
+            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+        {% endif %}
+    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
 {% endfor %}

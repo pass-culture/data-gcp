@@ -27,6 +27,11 @@ SECTIONS_TO_REMOVE = [
     "Further reading",
 ]
 
+# COLUMNS
+PAGE_TITLE_COLUMN = "page_title"
+LANGUAGE_COLUMN = "language"
+BATCH_INDEX_COLUMN = "batch_index"
+
 
 def fetch_clean_content(wikipedia_titles: list[str], wikipedia_language: str):
     base_url = f"https://{wikipedia_language}.wikipedia.org/w/api.php"
@@ -93,7 +98,7 @@ def extract_wikipedia_content_from_url(
                 r"https://([a-z]{2})\.wikipedia\.org"
             ),
         )
-        .groupby("language")
+        .groupby(LANGUAGE_COLUMN)
         .apply(
             lambda group: group.assign(
                 batch_index=lambda df: df.reset_index().index // BATCH_SIZE
@@ -118,24 +123,24 @@ def main(
     # Fetch the wikipedia page content from MediaWiki API
     results_df_list = []
     for (language, batch_index), group in artists_with_wikipedia_url_df.groupby(
-        ["language", "batch_index"]
+        [LANGUAGE_COLUMN, BATCH_INDEX_COLUMN]
     ):
         t0 = time.time()
         logger.info(f"Processing language: {language}, batch: {batch_index}...")
-        wikipedia_pages = group["page_title"].to_list()
+        wikipedia_pages = group[PAGE_TITLE_COLUMN].to_list()
         content_dict = fetch_clean_content(
             wikipedia_titles=wikipedia_pages, wikipedia_language=language
         )
         content_df = pd.DataFrame(
             {
-                "page_title": list(content_dict.keys()),
+                PAGE_TITLE_COLUMN: list(content_dict.keys()),
                 WIKIPEDIA_CONTENT_KEY: list(content_dict.values()),
-                "batch_index": batch_index,
-                "language": language,
+                BATCH_INDEX_COLUMN: batch_index,
+                LANGUAGE_COLUMN: language,
             }
         ).merge(
-            group[["page_title", ARTIST_ID_KEY]],
-            on="page_title",
+            group[[PAGE_TITLE_COLUMN, ARTIST_ID_KEY]],
+            on=PAGE_TITLE_COLUMN,
         )
         results_df_list.append(content_df)
         logger.success(
@@ -144,7 +149,7 @@ def main(
 
     artists_with_content_df = artists_with_wikipedia_url_df.merge(
         pd.concat(results_df_list, ignore_index=True),
-        on=[ARTIST_ID_KEY, "page_title", "language", "batch_index"],
+        on=[ARTIST_ID_KEY, PAGE_TITLE_COLUMN, LANGUAGE_COLUMN, BATCH_INDEX_COLUMN],
         how="left",
     ).loc[:, [*artists_df.columns, WIKIPEDIA_CONTENT_KEY]]
     artists_with_content_df.to_parquet(output_file_path, index=False)

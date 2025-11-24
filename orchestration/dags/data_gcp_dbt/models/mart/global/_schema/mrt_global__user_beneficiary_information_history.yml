@@ -1,19 +1,7 @@
 version: 2
 models:
   - name: mrt_global__user_beneficiary_information_history
-    description: |
-      Historical tracking of user beneficiary information changes over time.
-
-      This table tracks when users modify their profile information (activity status, address, city, postal code),
-      allowing analysis of user behavior patterns while protecting privacy by excluding PII fields.
-
-      Key Features:
-      - Tracks activity changes (e.g., student → unemployed)
-      - Includes modification flags for each field type
-      - Maintains geographical aggregations (EPCI, IRIS) without exposing precise addresses
-      - Supports temporal analysis with creation_timestamp and info_history_rank
-
-      Privacy: Excludes user_address, user_city, user_postal_code, and coordinates to protect PII.
+    description: '{{ doc("description__mrt_global__user_beneficiary_information_history") }}'
     columns:
       - name: user_id
         description: '{{ doc("column__user_id") }}'
@@ -22,7 +10,7 @@ models:
           - not_null
 
       - name: info_history_rank
-        description: Sequential rank of information changes for each user (0 = first record, 1 = second, etc.)
+        description: '{{ doc("column__info_history_rank") }}'
         data_type: INT64
         data_tests:
           - not_null
@@ -30,8 +18,8 @@ models:
               min_value: 0
               inclusive: true
 
-      - name: action_type
-        description: Type of action that triggered the record (INFO_MODIFIED or PROFILE_COMPLETION)
+      - name: user_action_type
+        description: '{{ doc("column__user_action_type") }}'
         data_type: STRING
         data_tests:
           - not_null
@@ -45,57 +33,81 @@ models:
           - not_null
 
       - name: user_activity
-        description: Current user activity status (Étudiant, Lycéen, Apprenti, etc.)
+        description: '{{ doc("column__user_activity") }}'
         data_type: STRING
 
       - name: user_previous_activity
-        description: Previous user activity status before this change
+        description: '{{ doc("column__user_previous_activity") }}'
         data_type: STRING
 
+      - name: user_age_at_info_creation
+        description: '{{ doc("column__user_age_at_info_creation") }}'
+        data_type: INT64
+
       - name: has_confirmed
-        description: |
-          Boolean flag indicating if the user confirmed their existing information
-          (all fields remained the same compared to previous record)
+        description: '{{ doc("column__has_confirmed") }}'
         data_type: BOOL
         data_tests:
           - not_null
 
       - name: has_modified
-        description: |
-          Boolean flag indicating if the user modified any of their information
-          (at least one field changed compared to previous record)
+        description: '{{ doc("column__has_modified") }}'
         data_type: BOOL
         data_tests:
           - not_null
 
       - name: has_modified_activity
-        description: Boolean flag indicating if user_activity changed compared to previous record
+        description: '{{ doc("column__has_modified_activity") }}'
         data_type: BOOL
         data_tests:
           - not_null
 
       - name: has_modified_address
-        description: Boolean flag indicating if user address changed compared to previous record (normalized comparison)
+        description: '{{ doc("column__has_modified_address") }}'
         data_type: BOOL
         data_tests:
           - not_null
 
       - name: has_modified_city
-        description: Boolean flag indicating if user city changed compared to previous record
+        description: '{{ doc("column__has_modified_city") }}'
         data_type: BOOL
         data_tests:
           - not_null
 
       - name: has_modified_postal_code
-        description: Boolean flag indicating if user postal code changed compared to previous record
+        description: '{{ doc("column__has_modified_postal_code") }}'
         data_type: BOOL
         data_tests:
           - not_null
 
-      - name: epci_code
-        description: Code of the EPCI (Établissement Public de Coopération Intercommunale) where the user is located
+      - name: user_epci_code
+        description: '{{ doc("column__user_epci_code") }}'
         data_type: STRING
 
-      - name: iris_internal_id
-        description: Internal identifier for the IRIS (Îlots Regroupés pour l'Information Statistique) zone where the user is located
+      - name: user_iris_internal_id
+        description: '{{ doc("column__user_iris_internal_id") }}'
+        data_type: STRING
+
+      - name: user_region_name
+        description: '{{ doc("column__user_region_name") }}'
+        data_type: STRING
+
+      - name: user_department_name
+        description: '{{ doc("column__user_department_name") }}'
+        data_type: STRING
+
+      - name: user_density_label
+        description: '{{ doc("column__user_density_label") }}'
+        data_type: STRING
+
+      - name: user_density_macro_level
+        description: '{{ doc("column__user_density_macro_level") }}'
+        data_type: STRING
+
+      - name: user_qpv_code
+        description: '{{ doc("column__user_qpv_code") }}'
+        data_type: STRING
+
+      - name: user_qpv_name
+        description: '{{ doc("column__user_qpv_name") }}'
         data_type: STRING

@@ -13,8 +13,8 @@
     )
 }}
 
-
 with
+    -- CTE: Enrich with EPCI (intercommunal institution) information
     user_epci as (
         {{
             generate_seed_geolocation_query(
@@ -27,6 +27,7 @@ with
         }}
     ),
 
+    -- CTE: Enrich with IRIS geographical data including density and region
     user_geo_iris as (
         {{
             generate_seed_geolocation_query(
@@ -36,8 +37,27 @@ with
                 prefix_name="user",
                 columns=[
                     "iris_internal_id",
+                    "region_name",
+                    "department_name",
+                    "density_label",
+                    "density_macro_level",
                 ],
                 geo_shape="iris_shape",
+            )
+        }}
+    ),
+
+    -- CTE: Enrich with QPV (Quartier Prioritaire de la Ville) data
+    user_qpv as (
+        {{
+            generate_seed_geolocation_query(
+                source_table="int_history__user_beneficiary_information_history_base",
+                referential_table="int_seed__qpv",
+                id_column=["user_id", "info_history_rank"],
+                prefix_name="user",
+                columns=["qpv_code", "qpv_name"],
+                geo_shape="qpv_geo_shape",
+                geolocalisation_prefix="qpv_",
             )
         }}
     )
@@ -45,7 +65,7 @@ with
 select
     source_data.user_id,
     source_data.info_history_rank,
-    source_data.action_type,
+    source_data.user_action_type,
     source_data.creation_timestamp,
     source_data.user_activity,
     source_data.user_address,
@@ -63,11 +83,23 @@ select
     source_data.has_modified_postal_code,
     source_data.user_longitude,
     source_data.user_latitude,
-    user_epci.epci_code,
-    user_geo_iris.iris_internal_id
+    -- EPCI data
+    user_epci.epci_code as user_epci_code,
+    -- IRIS geographical data
+    user_geo_iris.iris_internal_id as user_iris_internal_id,
+    user_geo_iris.region_name as user_region_name,
+    user_geo_iris.department_name as user_department_name,
+    user_geo_iris.density_label as user_density_label,
+    user_geo_iris.density_macro_level as user_density_macro_level,
+    -- QPV data
+    user_qpv.qpv_code as user_qpv_code,
+    user_qpv.qpv_name as user_qpv_name,
+    -- User age at information creation
+    source_data.user_age_at_info_creation
 from {{ ref("int_history__user_beneficiary_information_history_base") }} as source_data
-left join user_epci using (user_id, info_history_rank)
-left join user_geo_iris using (user_id, info_history_rank)
+left join user_epci on source_data.user_id = user_epci.user_id and source_data.info_history_rank = user_epci.info_history_rank
+left join user_geo_iris on source_data.user_id = user_geo_iris.user_id and source_data.info_history_rank = user_geo_iris.info_history_rank
+left join user_qpv on source_data.user_id = user_qpv.user_id and source_data.info_history_rank = user_qpv.info_history_rank
 {% if is_incremental() %}
     where date(creation_timestamp) = date_sub(date("{{ ds() }}"), interval 1 day)
 {% endif %}

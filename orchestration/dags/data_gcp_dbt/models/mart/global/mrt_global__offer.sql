@@ -1,3 +1,10 @@
+{{
+    config(
+        cluster_by=["offer_id", "item_id", "offer_product_id"],
+    )
+}}
+
+
 select
     offer_id,
     offer_product_id,

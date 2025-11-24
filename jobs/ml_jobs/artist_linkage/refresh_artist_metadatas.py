@@ -182,11 +182,13 @@ def sanity_checks(
         ARTIST_ALIASES_KEYS + [ACTION_KEY, COMMENT_KEY]
     ), "Delta artist alias dataframe has unexpected columns."
 
-    # 3. Check that we have same number of artists with wiki_id in delta as in applicative
+    # 3. Check that ARTIST_NAME_KEY and WIKI_ID_KEY are not null
     assert (
-        len(delta_artist_df)
-        == len(applicative_artist_alias_df[ARTIST_WIKI_ID_KEY].dropna().unique())
-    ), "Delta artist dataframe and applicative artist dataframes have different number of artists."
+        delta_artist_df[ARTIST_NAME_KEY].notna().all()
+    ), "Delta artist dataframe has null values in artist_name column."
+    assert (
+        delta_artist_df[WIKI_ID_KEY].notna().all()
+    ), "Delta artist dataframe has null values in wikidata_id column."
 
     # 4. Check that we have roughly at least same number of descriptions and img
     assert (
@@ -266,7 +268,7 @@ def main(
     logger.info("Refreshing artist metadatas from wikidata...")
     refreshed_artists_df = artist_with_wikidata_ids_df.merge(
         wiki_df.drop(columns=["alias", "raw_alias"]).drop_duplicates(),
-        how="left",
+        how="inner",
         on=WIKI_ID_KEY,
         suffixes=("_old", ""),
     )

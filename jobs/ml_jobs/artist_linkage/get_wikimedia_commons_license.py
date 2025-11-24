@@ -7,6 +7,8 @@ import requests
 import typer
 from tqdm import tqdm
 
+from constants import WIKIMEDIA_REQUEST_HEADER
+
 logging.basicConfig(level=logging.INFO)
 app = typer.Typer()
 
@@ -29,9 +31,6 @@ LICENSES_COLUMNS = [
     "image_license",
     "image_license_url",
 ]
-WIKIMEDIA_REQUEST_HEADER = {
-    "User-Agent": "PassCulture/1.0 (https://passculture.app; contact@passculture.app) Python/requests"
-}  # Required to avoid 403 errors from Wikimedia API
 
 
 def extract_title_from_url(url: str) -> str:

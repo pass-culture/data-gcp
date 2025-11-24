@@ -54,9 +54,15 @@ def fetch_clean_content(wikipedia_titles: list[str], wikipedia_language: str):
         )
         data = response.json()
         pages = data.get("query", {}).get("pages", {})
+        redirect_mapping = {
+            item["to"]: item["from"]
+            for item in data.get("query", {}).get("redirects", [])
+        }  # Map redirected titles to original titles in case wikipedia url was redirected
 
         for _, page_data in pages.items():
-            title = page_data.get("title").replace(" ", "_")
+            raw_title = redirect_mapping.get(
+                page_data.get("title"), page_data.get("title")
+            ).replace(" ", "_")
             revisions = page_data.get("revisions", [])
 
             if revisions:
@@ -76,7 +82,7 @@ def fetch_clean_content(wikipedia_titles: list[str], wikipedia_language: str):
                 # strip_code() removes '''bold''', [[links]], and {{templates}}
                 clean_text = wikicode.strip_code()
 
-                results[title] = clean_text
+                results[raw_title] = clean_text
 
     except Exception as e:
         print(f"Error: {e}")
@@ -126,8 +132,8 @@ def main(
         [LANGUAGE_COLUMN, BATCH_INDEX_COLUMN]
     ):
         t0 = time.time()
-        logger.info(f"Processing language: {language}, batch: {batch_index}...")
         wikipedia_pages = group[PAGE_TITLE_COLUMN].to_list()
+        logger.info(f"Processing language: {language}, batch: {batch_index}...")
         content_dict = fetch_clean_content(
             wikipedia_titles=wikipedia_pages, wikipedia_language=language
         )
@@ -141,18 +147,23 @@ def main(
         ).merge(
             group[[PAGE_TITLE_COLUMN, ARTIST_ID_KEY]],
             on=PAGE_TITLE_COLUMN,
+            how="left",
         )
         results_df_list.append(content_df)
         logger.success(
             f"...Fetched {len(content_dict)} pages for language: {language}, batch: {batch_index} in {time.time() - t0:.2f} seconds."
         )
 
-    artists_with_content_df = artists_with_wikipedia_url_df.merge(
-        pd.concat(results_df_list, ignore_index=True),
-        on=[ARTIST_ID_KEY, PAGE_TITLE_COLUMN, LANGUAGE_COLUMN, BATCH_INDEX_COLUMN],
-        how="left",
-    ).loc[:, [*artists_df.columns, WIKIPEDIA_CONTENT_KEY]]
-    artists_with_content_df.to_parquet(output_file_path, index=False)
+    # Merge back the wikipedia content to the original dataframe
+    (
+        artists_with_wikipedia_url_df.merge(
+            pd.concat(results_df_list, ignore_index=True),
+            on=[ARTIST_ID_KEY, PAGE_TITLE_COLUMN, LANGUAGE_COLUMN, BATCH_INDEX_COLUMN],
+            how="left",
+        )
+        .loc[:, [*artists_df.columns, WIKIPEDIA_CONTENT_KEY]]
+        .to_parquet(output_file_path, index=False)
+    )
 
 
 if __name__ == "__main__":

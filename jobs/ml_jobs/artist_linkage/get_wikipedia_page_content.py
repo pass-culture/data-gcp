@@ -1,4 +1,3 @@
-import logging
 import time
 from urllib.parse import unquote
 
@@ -15,9 +14,7 @@ from constants import (
     WIKIPEDIA_URL_KEY,
 )
 
-logging.basicConfig(level=logging.INFO)
-app = typer.Typer()
-
+# Wikimedia API settings
 BATCH_SIZE = 50
 SECTIONS_TO_REMOVE = [
     "References",
@@ -26,28 +23,43 @@ SECTIONS_TO_REMOVE = [
     "Notes",
     "Further reading",
 ]
+BASE_QUERY_PARAMS = {
+    "action": "query",
+    "format": "json",
+    "prop": "revisions",
+    "rvprop": "content",
+    "rvslots": "main",
+    "redirects": 1,
+}
 
-# COLUMNS
+# Column names for current file
 PAGE_TITLE_COLUMN = "page_title"
 LANGUAGE_COLUMN = "language"
 BATCH_INDEX_COLUMN = "batch_index"
 
+app = typer.Typer()
 
-def fetch_clean_content(wikipedia_titles: list[str], wikipedia_language: str):
+
+def fetch_clean_content(
+    wikipedia_titles: list[str], wikipedia_language: str
+) -> dict[str, str]:
+    """
+    Fetches and cleans content from Wikipedia pages for a given list of titles and language.
+
+    Args:
+        wikipedia_titles: A list of Wikipedia page titles to fetch.
+        wikipedia_language: The language code of the Wikipedia edition (e.g., 'en', 'fr').
+
+    Returns:
+        A dictionary where keys are page titles and values are the cleaned text content.
+    """
     base_url = f"https://{wikipedia_language}.wikipedia.org/w/api.php"
-
-    results = {}
-
     params = {
-        "action": "query",
-        "format": "json",
-        "prop": "revisions",
-        "rvprop": "content",
-        "rvslots": "main",
+        **BASE_QUERY_PARAMS,
         "titles": "|".join(wikipedia_titles),
-        "redirects": 1,
     }
 
+    results = {}
     try:
         response = requests.post(
             base_url, headers=WIKIMEDIA_REQUEST_HEADER, data=params
@@ -85,7 +97,7 @@ def fetch_clean_content(wikipedia_titles: list[str], wikipedia_language: str):
                 results[raw_title] = clean_text
 
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}")
 
     return results
 
@@ -93,6 +105,15 @@ def fetch_clean_content(wikipedia_titles: list[str], wikipedia_language: str):
 def extract_wikipedia_content_from_url(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
+    """
+    Extracts metadata (page title, language) from Wikipedia URLs and assigns batch indices.
+
+    Args:
+        df: DataFrame containing Wikipedia URLs.
+
+    Returns:
+        DataFrame with added columns for page title, language, and batch index.
+    """
     return (
         df.assign(
             page_title=lambda df: df[WIKIPEDIA_URL_KEY]

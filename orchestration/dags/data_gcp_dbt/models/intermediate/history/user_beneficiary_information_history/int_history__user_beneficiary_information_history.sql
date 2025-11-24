@@ -97,9 +97,18 @@ select
     -- User age at information creation
     source_data.user_age_at_info_creation
 from {{ ref("int_history__user_beneficiary_information_history_base") }} as source_data
-left join user_epci on source_data.user_id = user_epci.user_id and source_data.info_history_rank = user_epci.info_history_rank
-left join user_geo_iris on source_data.user_id = user_geo_iris.user_id and source_data.info_history_rank = user_geo_iris.info_history_rank
-left join user_qpv on source_data.user_id = user_qpv.user_id and source_data.info_history_rank = user_qpv.info_history_rank
+left join
+    user_epci
+    on source_data.user_id = user_epci.user_id
+    and source_data.info_history_rank = user_epci.info_history_rank
+left join
+    user_geo_iris
+    on source_data.user_id = user_geo_iris.user_id
+    and source_data.info_history_rank = user_geo_iris.info_history_rank
+left join
+    user_qpv
+    on source_data.user_id = user_qpv.user_id
+    and source_data.info_history_rank = user_qpv.info_history_rank
 {% if is_incremental() %}
     where date(creation_timestamp) = date_sub(date("{{ ds() }}"), interval 1 day)
 {% endif %}

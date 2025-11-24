@@ -1,37 +1,52 @@
 {{ config(materialized="ephemeral") }}
 
-{% set json_path_activity = '$.modified_info.activity.new_info' %}
-{% set json_path_address = '$.modified_info.address.new_info' %}
-{% set json_path_city = '$.modified_info.city.new_info' %}
-{% set json_path_postal_code = '$.modified_info.postalCode.new_info' %}
+{% set json_path_activity = "$.modified_info.activity.new_info" %}
+{% set json_path_address = "$.modified_info.address.new_info" %}
+{% set json_path_city = "$.modified_info.city.new_info" %}
+{% set json_path_postal_code = "$.modified_info.postalCode.new_info" %}
 
 with
     -- CTE: Extract raw data from action_history table
-    -- Contains user profile modifications where activity, address, city, or postal code changed
+    -- Contains user profile modifications where activity, address, city, or postal
+    -- code changed
     raw_action_history as (
         select
             user_id,
             action_date as creation_timestamp,
             action_type,
-            json_value(action_history_json_data, '{{ json_path_activity }}') as activity,
+            json_value(
+                action_history_json_data, '{{ json_path_activity }}'
+            ) as activity,
             json_value(action_history_json_data, '{{ json_path_address }}') as address,
             json_value(action_history_json_data, '{{ json_path_city }}') as city,
-            json_value(action_history_json_data, '{{ json_path_postal_code }}') as postal_code,
+            json_value(
+                action_history_json_data, '{{ json_path_postal_code }}'
+            ) as postal_code,
             -- Normalize address using macro for consistent formatting
-            {{ normalize_address(
-                "json_value(action_history_json_data, '" ~ json_path_address ~ "')",
-                "json_value(action_history_json_data, '" ~ json_path_postal_code ~ "')",
-                "json_value(action_history_json_data, '" ~ json_path_city ~ "')"
-            ) }} as normalized_address
+            {{
+                normalize_address(
+                    "json_value(action_history_json_data, '"
+                    ~ json_path_address
+                    ~ "')",
+                    "json_value(action_history_json_data, '"
+                    ~ json_path_postal_code
+                    ~ "')",
+                    "json_value(action_history_json_data, '" ~ json_path_city ~ "')",
+                )
+            }} as normalized_address
         from {{ source("raw", "applicative_database_action_history") }}
         where
             true
             and action_type = 'INFO_MODIFIED'
             and (
-                json_value(action_history_json_data, '{{ json_path_activity }}') is not null
-                or json_value(action_history_json_data, '{{ json_path_address }}') is not null
-                or json_value(action_history_json_data, '{{ json_path_city }}') is not null
-                or json_value(action_history_json_data, '{{ json_path_postal_code }}') is not null
+                json_value(action_history_json_data, '{{ json_path_activity }}')
+                is not null
+                or json_value(action_history_json_data, '{{ json_path_address }}')
+                is not null
+                or json_value(action_history_json_data, '{{ json_path_city }}')
+                is not null
+                or json_value(action_history_json_data, '{{ json_path_postal_code }}')
+                is not null
             )
             and user_id is not null
             {% if is_incremental() %}
@@ -51,11 +66,13 @@ with
             json_value(result_content, '$.city') as city,
             json_value(result_content, '$.postal_code') as postal_code,
             -- Normalize address using macro for consistent formatting
-            {{ normalize_address(
-                "json_value(result_content, '$.address')",
-                "json_value(result_content, '$.postal_code')",
-                "json_value(result_content, '$.city')"
-            ) }} as normalized_address
+            {{
+                normalize_address(
+                    "json_value(result_content, '$.address')",
+                    "json_value(result_content, '$.postal_code')",
+                    "json_value(result_content, '$.city')",
+                )
+            }} as normalized_address
         from {{ source("raw", "applicative_database_beneficiary_fraud_check") }}
         where
             true
@@ -65,17 +82,20 @@ with
             {% if is_incremental() %}
                 and date(datecreated) = date_sub(date("{{ ds() }}"), interval 1 day)
             {% endif %}
-        -- Keep only one record per user with same normalized address to avoid duplicates
+        -- Keep only one record per user with same normalized address to avoid
+        -- duplicates
         qualify
             row_number() over (
                 partition by
                     user_id,
                     lower(activity),
-                    {{ normalize_address(
-                        "json_value(result_content, '$.address')",
-                        "json_value(result_content, '$.postal_code')",
-                        "json_value(result_content, '$.city')"
-                    ) }},
+                    {{
+                        normalize_address(
+                            "json_value(result_content, '$.address')",
+                            "json_value(result_content, '$.postal_code')",
+                            "json_value(result_content, '$.city')",
+                        )
+                    }},
                     lower(city),
                     postal_code
                 order by creation_timestamp desc
@@ -85,9 +105,11 @@ with
 
     -- CTE: Union both data sources into a single raw dataset
     raw_data as (
-        select * from raw_action_history
+        select *
+        from raw_action_history
         union all
-        select * from raw_fraud_check
+        select *
+        from raw_fraud_check
     ),
 
     -- CTE: Forward-fill null values within each user's history
@@ -268,10 +290,8 @@ with
 
     -- CTE: Get user birth date for age calculation
     user_birth_dates as (
-        select
-            user_id,
-            user_birth_date
-        from {{ ref("mrt_global__user") }} -- TODO: CHANGE TO BENEFICIARY
+        select user_id, user_birth_date
+        from {{ ref("mrt_global__user") }}  -- TODO: CHANGE TO BENEFICIARY
         where user_birth_date is not null
     )
 
@@ -298,7 +318,8 @@ select
     coalesce(ubih_ga.user_longitude, ubih_pc.user_longitude) as user_longitude,
     coalesce(ubih_ga.user_latitude, ubih_pc.user_latitude) as user_latitude,
     -- User age at information creation (using exact age calculation)
-    {{ calculate_exact_age("date(ubih_pc.creation_timestamp)", "ubd.user_birth_date") }} as user_age_at_info_creation
+    {{ calculate_exact_age("date(ubih_pc.creation_timestamp)", "ubd.user_birth_date") }}
+    as user_age_at_info_creation
 from ubih_coordinates_via_postal_code as ubih_pc
 left join
     ubih_coordinates_via_geocoded_address as ubih_ga

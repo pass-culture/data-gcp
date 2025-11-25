@@ -76,7 +76,8 @@ with
                     "coalesce(json_value(result_content, '$.postal_code'), json_value(result_content, '$.postalCode'))",
                     "json_value(result_content, '$.city')",
                 )
-            }} as normalized_address
+            }}
+            as normalized_address
         from {{ source("raw", "applicative_database_beneficiary_fraud_check") }}
         where
             true

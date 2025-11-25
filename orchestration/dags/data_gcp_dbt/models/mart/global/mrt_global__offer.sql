@@ -92,6 +92,8 @@ select
     last_headline_date,
     offer_finalization_date,
     scheduled_offer_bookability_date,
-    offerer_is_epn
+    offerer_is_epn,
+    booking_email,
+    booking_contact
 from {{ ref("int_global__offer") }}
 where true and offer_validation = 'APPROVED' and venue_id is not null

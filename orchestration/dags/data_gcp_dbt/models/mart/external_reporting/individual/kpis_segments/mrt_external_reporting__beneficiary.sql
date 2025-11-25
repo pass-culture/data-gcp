@@ -9,30 +9,8 @@
     )
 }}
 
-{% set dimensions = [
-    {"name": "NAT", "value_expr": "'NAT'"},
-    {"name": "REG", "value_expr": "region_name"},
-    {"name": "DEP", "value_expr": "dep_name"},
-    {"name": "EPCI", "value_expr": "user_epci"},
-] %}
-
-{% set activity_list = [
-    {"activity": "Apprenti", "value": "apprenti"},
-    {"activity": "Chômeur, En recherche d'emploi", "value": "chomeur"},
-    {
-        "activity": "Volontaire en service civique rémunéré",
-        "value": "volontaire",
-    },
-    {"activity": "Alternant", "value": "alternant"},
-    {"activity": "Employé", "value": "employe"},
-    {"activity": "Etudiant", "value": "etudiant"},
-    {"activity": "Lycéen", "value": "lyceen"},
-    {"activity": "Collégien", "value": "collegien"},
-    {
-        "activity": "Inactif (ni en emploi ni au chômage), En incapacité de travailler",
-        "value": "inactif",
-    },
-] %}
+{% set dimensions = get_dimensions(none, "geo_epci") %}
+{% set activity_list = get_activity_list() %}
 
 -- Base CTEs optimisées
 with
@@ -95,7 +73,7 @@ with
             eud.user_activity,
             eud.user_civility,
             eud.first_deposit_creation_date,
-            eud.user_epci,
+            eud.user_epci as epci_name,
             rd.region_name,
             rd.dep_name
         from user_cumulative_amount_spent as uua
@@ -122,7 +100,7 @@ with
             ldm.partition_month,
             ldm.updated_at,
             eud.first_deposit_creation_date,
-            eud.user_epci,
+            eud.user_epci as epci_name,
             rd.region_name,
             rd.dep_name
         from last_day_of_month as ldm

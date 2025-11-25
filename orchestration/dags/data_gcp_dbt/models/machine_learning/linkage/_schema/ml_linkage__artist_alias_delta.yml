@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: ml_linkage__artist_alias_delta
+    description: "{{ doc('description__ml_linkage__artist_alias_delta') }}"
+    columns:
+      - name: artist_id
+        description: "{{ doc('column__artist_id') }}"
+      - name: artist_wiki_id
+        description: "{{ doc('column__artist_wiki_id') }}"
+      - name: offer_category_id
+        description: "{{ doc('column__offer_category_id') }}"
+      - name: artist_type
+        description: "{{ doc('column__artist_type') }}"
+      - name: artist_offer_name
+        description: "{{ doc('column__artist_offer_name') }}"
+      - name: action
+        description: "{{ doc('column__delta_action') }}"
+      - name: comment
+        description: "{{ doc('column__delta_comment') }}"

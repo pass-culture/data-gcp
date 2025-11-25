@@ -64,12 +64,16 @@ with
             json_value(result_content, '$.activity') as activity,
             json_value(result_content, '$.address') as address,
             json_value(result_content, '$.city') as city,
-            json_value(result_content, '$.postal_code') as postal_code,
+            -- Handle both naming conventions: postal_code and postalCode
+            coalesce(
+                json_value(result_content, '$.postal_code'),
+                json_value(result_content, '$.postalCode')
+            ) as postal_code,
             -- Normalize address using macro for consistent formatting
             {{
                 normalize_address(
                     "json_value(result_content, '$.address')",
-                    "json_value(result_content, '$.postal_code')",
+                    "coalesce(json_value(result_content, '$.postal_code'), json_value(result_content, '$.postalCode'))",
                     "json_value(result_content, '$.city')",
                 )
             }} as normalized_address
@@ -92,7 +96,7 @@ with
                     {{
                         normalize_address(
                             "json_value(result_content, '$.address')",
-                            "json_value(result_content, '$.postal_code')",
+                            "coalesce(json_value(result_content, '$.postal_code'), json_value(result_content, '$.postalCode'))",
                             "json_value(result_content, '$.city')",
                         )
                     }},

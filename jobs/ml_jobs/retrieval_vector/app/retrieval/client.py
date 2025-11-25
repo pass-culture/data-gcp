@@ -136,7 +136,7 @@ class DefaultClient:
         similarity_metric: str = "dot",
         re_rank: bool = False,
         user_id: Optional[str] = None,
-        item_ids: List[str] = [],
+        item_ids: Optional[List[str]] = None,
     ) -> List[Dict]:
         """
         Perform a search query that filters and ranks items based on a specified vector column,
@@ -191,7 +191,7 @@ class DefaultClient:
             prefilter=prefilter,
             re_rank=re_rank,
             user_id=user_id,
-            item_ids=item_ids,
+            item_ids=item_ids or [],
         )
 
     def search_by_vector(
@@ -201,12 +201,12 @@ class DefaultClient:
         n: int = 50,
         query_filter: Optional[Dict] = None,
         details: bool = False,
-        excluded_items: List[str] = [],
+        excluded_items: Optional[List[str]] = None,
         prefilter: bool = True,
         vector_column_name: str = "vector",
         re_rank: bool = False,
         user_id: Optional[str] = None,
-        item_ids: List[str] = [],
+        item_ids: Optional[List[str]] = None,
     ) -> List[Dict]:
         """
         Search the vector database for similar items and optionally rerank results.
@@ -233,11 +233,11 @@ class DefaultClient:
             vector_column_name=vector_column_name,
             similarity_metric=similarity_metric,
             details=details,
-            excluded_items=excluded_items,
+            excluded_items=excluded_items or [],
             prefilter=prefilter,
             re_rank=re_rank,
             user_id=user_id,
-            item_ids=item_ids,
+            item_ids=item_ids or [],
         )
 
     def _perform_search(
@@ -248,13 +248,16 @@ class DefaultClient:
         vector_column_name: str,
         similarity_metric: str = "dot",
         details: bool = False,
-        excluded_items: List[str] = [],
+        excluded_items: Optional[List[str]] = None,
         user_id: Optional[str] = None,
-        item_ids: List[str] = [],
+        item_ids: Optional[List[str]] = None,
         prefilter: bool = True,
         re_rank: bool = False,
     ) -> List[Dict]:
         """Encapsulate common logic for searching and filtering."""
+
+        excluded_items = excluded_items or []
+        item_ids = item_ids or []
 
         query = self.build_query(query_filter)
         logger.debug(f"Build Query {query}")
@@ -313,7 +316,10 @@ class DefaultClient:
         )
 
     def format_results(
-        self, results: List[Dict], details: bool, excluded_items: List[str] = []
+        self,
+        results: List[Dict],
+        details: bool,
+        excluded_items: Optional[List[str]] = None,
     ) -> List[Dict]:
         """
         Format the raw search results for output.
@@ -321,12 +327,13 @@ class DefaultClient:
         Args:
             results (List[Dict]): The raw results from the database.
             details (bool): Whether to include detailed metadata in the output.
-            excluded_items (List[str]): Item ID to exclude from the results.
+            excluded_items (List[str]): Item ID to exclude from results.
 
         Returns:
             List[Dict]: A list of formatted results.
         """
         predictions = []
+        excluded_items = excluded_items or []
         for idx, row in enumerate(results):
             if str(row.get("item_id")) in excluded_items:
                 continue

@@ -70,8 +70,6 @@ with
         group by institution_id
     ),
 
-
-
 select
     ei.educational_institution_id as institution_id,
     ei.institution_id as institution_external_id,

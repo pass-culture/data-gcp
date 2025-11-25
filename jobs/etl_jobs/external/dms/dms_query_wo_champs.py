@@ -26,7 +26,7 @@ fragment DossierFragment on Dossier {
     datePassageEnConstruction
     datePassageEnInstruction
     dateTraitement
-    
+
     instructeurs {
         email
     }

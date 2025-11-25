@@ -50,6 +50,10 @@ ARTISTS_GCS_FILENAME = "artist.parquet"
 ARTIST_ALIAS_GCS_FILENAME = "artist_alias.parquet"
 PRODUCT_ARTIST_LINK_GCS_FILENAME = "product_artist_link.parquet"
 ARTISTS_WITH_METADATA_GCS_FILENAME = "artist_with_metadata.parquet"
+ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME = (
+    "artist_with_wikipedia_page_content.parquet"
+)
+
 ARTISTS_TO_LINK_GCS_FILENAME = "artists_to_link.parquet"
 TEST_SETS_GCS_DIR = f"gs://{DATA_GCS_BUCKET_NAME}/artists/labelled_test_sets"
 
@@ -96,7 +100,7 @@ GCS_TO_ARTIST_TABLES = [
     {
         "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
         "table_id": "artist",
-        "filename": ARTISTS_WITH_METADATA_GCS_FILENAME,
+        "filename": ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME,
     },
     {
         "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
@@ -319,6 +323,17 @@ with DAG(
             """,
     )
 
+    get_wikipedia_page_content = SSHGCEOperator(
+        task_id="get_wikipedia_page_content",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+             python get_wikipedia_page_content.py \
+            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME)}
+            """,
+    )
+
     with TaskGroup("load_artist_data_tables") as load_artist_data_tables:
         for table_data in GCS_TO_ARTIST_TABLES:
             GCSToBigQueryOperator(
@@ -450,6 +465,7 @@ with DAG(
         full_rebuild_flow
         >> link_products_to_artists_from_scratch
         >> get_wikimedia_commons_license
+        >> get_wikipedia_page_content
         >> [load_artist_data_tables, artist_metrics]
         >> join_before_stop
     )

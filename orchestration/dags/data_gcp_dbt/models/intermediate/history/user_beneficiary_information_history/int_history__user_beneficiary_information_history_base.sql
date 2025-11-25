@@ -291,7 +291,7 @@ with
     -- CTE: Get user birth date for age calculation
     user_birth_dates as (
         select user_id, user_birth_date
-        from {{ ref("mrt_global__user") }}  -- TODO: CHANGE TO BENEFICIARY
+        from {{ ref("int_global__user_beneficiary") }}
         where user_birth_date is not null
     )
 

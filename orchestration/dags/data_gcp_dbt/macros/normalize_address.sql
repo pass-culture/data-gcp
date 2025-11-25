@@ -25,7 +25,9 @@
                                         {{ postal_code }} is not null,
                                         regexp_replace(
                                             lower({{ address }}),
-                                            r'\s*' || lower({{ postal_code }}) || r'\s*',
+                                            r'\s*'
+                                            || lower({{ postal_code }})
+                                            || r'\s*',
                                             ' '
                                         ),
                                         lower({{ address }})

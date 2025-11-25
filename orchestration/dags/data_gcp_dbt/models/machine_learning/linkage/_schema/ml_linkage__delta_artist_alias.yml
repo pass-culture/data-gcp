@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: ml_linkage__artist_alias_delta
-    description: "{{ doc('description__ml_linkage__artist_alias_delta') }}"
+  - name: ml_linkage__delta_artist_alias
+    description: "{{ doc('description__ml_linkage__delta_artist_alias') }}"
     columns:
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"

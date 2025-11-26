@@ -19,8 +19,8 @@ select
         when user_role is null and user_age in (15, 16)
         then '15_16'
         when user_role is null and (user_age >= 17 or user_age <= 14)
-        then 'general_public'
+        then 'GENERAL_PUBLIC'
         when user_role is not null
-        then lower(user_role)
+        then user_role
     end as user_category
 from {{ ref("int_applicative__user") }}

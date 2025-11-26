@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 import logging
+import time
 logger = logging.getLogger(__name__)
 
 import pandas as pd
@@ -52,28 +53,50 @@ else:
 
 
 def get_request(ENDPOINT, API_KEY, route):
-    try:
-        headers = {"X-omogen-api-key": API_KEY}
+    retries = 3
+    delay = 5  # seconds
+    for i in range(retries):
+        try:
+            headers = {"X-omogen-api-key": API_KEY}
+            # Set a timeout for the request
+            req = requests.get(f"{ENDPOINT}/{route}", headers=headers, timeout=60)
 
-        req = requests.get(f"{ENDPOINT}/{route}", headers=headers)
-        if req.status_code == 200:
-            if not req.content:
-                logger.info(f"Empty response for route {route}")
-                return {}
-            try:
-                return req.json()
-            except requests.exceptions.JSONDecodeError as e:
-                logger.error(f"Failed to decode JSON for route {route}: {e}")
-                return None
-        else:
+            if req.status_code == 200:
+                if not req.content:
+                    logger.info(f"Empty response for route {route}")
+                    return {}
+                try:
+                    return req.json()
+                except requests.exceptions.JSONDecodeError as e:
+                    logger.error(f"Failed to decode JSON for route {route}: {e}")
+                    return None # Don't retry on JSON error
+            
+            # Retry on 5xx server errors
+            if 500 <= req.status_code < 600:
+                logger.warning(
+                    f"Request to {route} received status code {req.status_code}. "
+                    f"Retrying in {delay}s... (Attempt {i+1}/{retries})"
+                )
+                time.sleep(delay)
+                continue
+
+            # For other non-200 codes (like 4xx), don't retry, just fail.
             logger.error(
                 f"Request to {route} failed with status code {req.status_code}: {req.text}"
             )
             return None
 
-    except requests.exceptions.RequestException as e:
-        logger.error(f"An unexpected error has happened with route {route}: {e}")
-        return None
+        except requests.exceptions.RequestException as e:
+            logger.warning(
+                f"An unexpected error has happened with route {route}: {e}. "
+                f"Retrying in {delay}s... (Attempt {i+1}/{retries})"
+            )
+            if i < retries - 1:
+                time.sleep(delay)
+            else:
+                logger.error(f"Request to {route} failed after {retries} retries.")
+    
+    return None
 
 
 def import_adage():
@@ -199,9 +222,8 @@ def get_adage_stats():
         results = get_request(ENDPOINT, API_KEY, route=f"stats-pass-culture/{_id}")
 
         if results is None:
-            raise RequestReturnedNoneError(
-                f"Adage API returned None for endpoint stats-pass-culture/{_id}"
-            )
+            logger.warning(f"Adage API returned None for endpoint stats-pass-culture/{_id}")
+            continue
         else:
             for metric_name, rows in results.items():
                 for metric_id, v in rows.items():

@@ -6,6 +6,6 @@ select
     wikidata_image_license,
     wikidata_image_license_url,
     wikidata_image_author,
-    DATE(date_created) as creation_date,
-    DATE(date_modified) as modification_date
-from {{ source('raw','applicative_database_artist') }}
+    date(date_created) as creation_date,
+    date(date_modified) as modification_date
+from {{ source("raw", "applicative_database_artist") }}

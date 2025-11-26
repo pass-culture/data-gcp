@@ -5,4 +5,4 @@ select
     artist_type,
     date(date_created) as creation_date,
     date(date_modified) as modification_date
-from {{ source('raw','applicative_database_product_artist_link') }}
+from {{ source("raw", "applicative_database_product_artist_link") }}

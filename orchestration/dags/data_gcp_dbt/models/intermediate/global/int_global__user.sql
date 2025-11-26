@@ -17,10 +17,10 @@ select
     is_theme_subscribed,
     case
         when user_role is null and user_age in (15, 16)
-        then '15-16'
+        then '15_16'
         when user_role is null and (user_age >= 17 or user_age <= 14)
         then 'general_public'
         when user_role is not null
-        then 'beneficiary'
+        then lower(user_role)
     end as user_category
 from {{ ref("int_applicative__user") }}

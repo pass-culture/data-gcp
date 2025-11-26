@@ -18,7 +18,7 @@ from app.retrieval.core.reranker import UserReranker
 
 
 class RecoClient(DefaultClient):
-    EMBEDDING_MODEL_TYPE = EmbeddingModelTypes.RECOMMENDATION
+    EMBEDDING_MODEL_TYPE = EmbeddingModelTypes.TWO_TOWER
 
     def __init__(
         self,

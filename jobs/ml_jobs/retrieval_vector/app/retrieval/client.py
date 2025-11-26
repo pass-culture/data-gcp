@@ -270,29 +270,39 @@ class DefaultClient:
             .metric(
                 self.VECTOR_SEARCH_SIMILARITY_METRIC
             )  # This is overridden if a vector index exists for the column {vector_column_name}
-            .limit(n)
+            .limit(n + len(excluded_items))
         )
 
         if re_rank and self.re_ranker and user_id:
             results = results.rerank(self.re_ranker, query_string=user_id)
 
         postprocessed_results = self.postprocess(
-            ranked_items=results.to_list(), user_id=user_id, input_item_ids=item_ids
+            ranked_items=results.to_list(),
+            user_id=user_id,
+            input_item_ids=item_ids,
+            n=n,
+            excluded_items=excluded_items,
         )
 
-        return self.format_results(
-            postprocessed_results, details, excluded_items=excluded_items
-        )
+        return self.format_results(postprocessed_results, details)
 
     def postprocess(
         self,
         ranked_items: List[Dict],
+        n: int,
+        excluded_items: Optional[List[str]] = None,
         **kwargs,
     ) -> List[Dict]:
         """
         Postprocess the results.
         """
-        return ranked_items
+        excluded_items = excluded_items or []
+        filtered_items = [
+            item
+            for item in ranked_items
+            if str(item.get("item_id")) not in excluded_items
+        ]
+        return filtered_items[:n]
 
     def columns(self, details: bool, re_rank: bool) -> List[str]:
         """
@@ -316,7 +326,6 @@ class DefaultClient:
         self,
         results: List[Dict],
         details: bool,
-        excluded_items: Optional[List[str]] = None,
     ) -> List[Dict]:
         """
         Format the raw search results for output.
@@ -324,17 +333,12 @@ class DefaultClient:
         Args:
             results (List[Dict]): The raw results from the database.
             details (bool): Whether to include detailed metadata in the output.
-            excluded_items (List[str]): Item ID to exclude from results.
 
         Returns:
             List[Dict]: A list of formatted results.
         """
         predictions = []
-        excluded_items = excluded_items or []
         for idx, row in enumerate(results):
-            if str(row.get("item_id")) in excluded_items:
-                continue
-
             if not details:
                 predictions.append({"idx": idx, "item_id": row["item_id"]})
             else:

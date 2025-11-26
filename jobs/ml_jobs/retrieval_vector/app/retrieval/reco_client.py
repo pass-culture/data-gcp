@@ -132,5 +132,12 @@ class RecoClient(DefaultClient):
         ranked_items: List[Dict],
         user_id: Optional[str],
         input_item_ids: List[str],
+        n: int,
+        excluded_items: Optional[List[str]] = None,
     ) -> List[Dict]:
-        return self._add_item_dot_similarities(ranked_items, user_id, input_item_ids)
+        items_with_similarities = self._add_item_dot_similarities(
+            ranked_items, user_id, input_item_ids
+        )
+        return super().postprocess(
+            items_with_similarities, n=n, excluded_items=excluded_items
+        )

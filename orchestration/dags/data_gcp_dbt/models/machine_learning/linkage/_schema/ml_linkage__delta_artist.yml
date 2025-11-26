@@ -1,27 +1,32 @@
 version: 2
 
 models:
-  - name: ml_linkage__artist
-    description: "{{ doc('description__ml_linkage__artist') }}"
+  - name: ml_linkage__delta_artist
+    description: "{{ doc('description__ml_linkage__delta_artist') }}"
     columns:
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"
         data_tests:
-          - unique
-          - not_null
+          - not_null:
+              tags: ['critical']
+          - unique:
+              tags: ['critical']
       - name: artist_name
         description: "{{ doc('column__artist_name') }}"
+        data_tests:
+          - not_null:
+              tags: ['critical']
       - name: artist_description
         description: "{{ doc('column__artist_description') }}"
-      - name: artist_professions
-        description: "{{ doc('column__artist_professions') }}"
       - name: wikidata_image_file_url
         description: "{{ doc('column__wikidata_image_file_url') }}"
-      - name: wikidata_image_page_url
-        description: "{{ doc('column__wikidata_image_page_url') }}"
       - name: wikidata_image_author
         description: "{{ doc('column__wikidata_image_author') }}"
       - name: wikidata_image_license
         description: "{{ doc('column__wikidata_image_license') }}"
       - name: wikidata_image_license_url
         description: "{{ doc('column__wikidata_image_license_url') }}"
+      - name: action
+        description: "{{ doc('column__delta_action') }}"
+      - name: comment
+        description: "{{ doc('column__delta_comment') }}"

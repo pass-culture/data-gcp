@@ -37,9 +37,7 @@ def test_search_by_vector_dot_product(
         query_vector.embedding, fake_data
     )
     fake_data.sort_values(DISTANCE_COLUMN_NAME, ascending=True, inplace=True)
-    result = reco_client.search_by_vector(
-        vector=query_vector, similarity_metric="dot", n=limit, details=True
-    )
+    result = reco_client.search_by_vector(vector=query_vector, n=limit, details=True)
 
     assert len(result) == limit
 
@@ -66,9 +64,7 @@ def test_search_by_vector_l2_product(
     )
     fake_data.sort_values(DISTANCE_COLUMN_NAME, ascending=True, inplace=True)
 
-    result = reco_client.search_by_vector(
-        vector=query_vector, similarity_metric="l2", n=limit, details=True
-    )
+    result = reco_client.search_by_vector(vector=query_vector, n=limit, details=True)
 
     assert len(result) == limit
 

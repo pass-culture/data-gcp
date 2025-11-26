@@ -26,6 +26,9 @@ class DefaultClient:
     """
 
     EMBEDDING_MODEL_TYPE = None
+    VECTOR_SEARCH_SIMILARITY_METRIC = (
+        "dot"  # If a vector index has been created, then this will be overridden
+    )
 
     def __init__(
         self,
@@ -133,7 +136,6 @@ class DefaultClient:
         details: bool = False,
         prefilter: bool = False,
         vector_column_name: str = "booking_number_desc",
-        similarity_metric: str = "dot",
         re_rank: bool = False,
         user_id: Optional[str] = None,
         item_ids: Optional[List[str]] = None,
@@ -168,7 +170,6 @@ class DefaultClient:
             n (int): Maximum number of results to return. Default is 50.
             details (bool): Whether to include additional fields in the result. Default is False.
             vector_column_name (str): Column used for ranking. Default is "booking_number_desc".
-            similarity_metric (str): Metric for ranking, typically "dot" (dot product similarity).
             re_rank (bool): Whether to apply a secondary re-ranking process. Default is False.
             user_id (Optional[str]): User ID for personalized ranking. Default is None. If provided, will also compute
                 similarity scores for the user.
@@ -178,7 +179,6 @@ class DefaultClient:
         ### Returns:
             List[Dict]: A list of dictionaries, where each represents a ranked item.
         """
-
         DEFAULT_APPROX_TOP_VECTOR = Document(embedding=[-0.0001])
 
         return self._perform_search(
@@ -186,7 +186,6 @@ class DefaultClient:
             n=n,
             query_filter=query_filter,
             vector_column_name=vector_column_name,
-            similarity_metric=similarity_metric,
             details=details,
             prefilter=prefilter,
             re_rank=re_rank,
@@ -197,7 +196,6 @@ class DefaultClient:
     def search_by_vector(
         self,
         vector: Document,
-        similarity_metric: str = "dot",
         n: int = 50,
         query_filter: Optional[Dict] = None,
         details: bool = False,
@@ -213,7 +211,6 @@ class DefaultClient:
 
         Args:
             vector (Document): The vector to search.
-            similarity_metric (str): Similarity metric for vector search.
             n (int): Maximum number of results.
             query_filter (Optional[Dict]): Optional query filters.
             details (bool): Whether to include detailed fields in results.
@@ -231,7 +228,6 @@ class DefaultClient:
             n=n,
             query_filter=query_filter,
             vector_column_name=vector_column_name,
-            similarity_metric=similarity_metric,
             details=details,
             excluded_items=excluded_items or [],
             prefilter=prefilter,
@@ -246,7 +242,6 @@ class DefaultClient:
         n: int,
         query_filter: Optional[Dict],
         vector_column_name: str,
-        similarity_metric: str = "dot",
         details: bool = False,
         excluded_items: Optional[List[str]] = None,
         user_id: Optional[str] = None,
@@ -272,7 +267,9 @@ class DefaultClient:
             .nprobes(20)
             .refine_factor(10)
             .select(columns=self.columns(details, re_rank=re_rank))
-            .metric(similarity_metric)
+            .metric(
+                self.VECTOR_SEARCH_SIMILARITY_METRIC
+            )  # This is overridden if a vector index exists for the column {vector_column_name}
             .limit(n)
         )
 

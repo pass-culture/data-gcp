@@ -1,5 +1,7 @@
 import os
 from datetime import datetime
+import logging
+logger = logging.getLogger(__name__)
 
 import pandas as pd
 import requests
@@ -53,13 +55,25 @@ def get_request(ENDPOINT, API_KEY, route):
     try:
         headers = {"X-omogen-api-key": API_KEY}
 
-        req = requests.get("{}/{}".format(ENDPOINT, route), headers=headers)
+        req = requests.get(f"{ENDPOINT}/{route}", headers=headers)
         if req.status_code == 200:
-            return req.json()
+            if not req.content:
+                logger.info(f"Empty response for route {route}")
+                return {}
+            try:
+                return req.json()
+            except requests.exceptions.JSONDecodeError as e:
+                logger.error(f"Failed to decode JSON for route {route}: {e}")
+                return None
+        else:
+            logger.error(
+                f"Request to {route} failed with status code {req.status_code}: {req.text}"
+            )
+            return None
 
-    except Exception as e:
-        print("An unexpected error has happened {}".format(e))
-    return None
+    except requests.exceptions.RequestException as e:
+        logger.error(f"An unexpected error has happened with route {route}: {e}")
+        return None
 
 
 def import_adage():
@@ -229,8 +243,13 @@ def get_adage_stats():
                             )
                         )
 
+    if not export:
+        logger.info("No stats to import from Adage API.")
+        return
+
     df = pd.DataFrame(export)
     # force types
     for k, v in ADAGE_INVOLVED_STUDENTS_DTYPE.items():
-        df[k] = df[k].astype(v)
+        if k in df.columns:
+            df[k] = df[k].astype(v)
     save_to_raw_bq(df, "adage_involved_student")

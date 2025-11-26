@@ -95,3 +95,27 @@ This section would typically display the auto-generated schema from dbt docs.
 {% docs column__modification_date %}
 **Modification Date**: The timestamp (`dbt_valid_from`) indicating when this version of the product became active in the source snapshot. This helps trace when the change occurred.
 {% enddocs %}
+
+{% docs column__product_type %}
+**Product Type**: Indicating the type of product. Values can be `'paper'` (for books) or `'music'` (for CDs/Vinyls), determined by the format of the support code.
+{% enddocs %}
+
+{% docs column__artist %}
+**Artist**: The main artist or band name. Extracted from `$.article[0].artiste`.
+{% enddocs %}
+
+{% docs column__music_label %}
+**Music Label**: The production label. Extracted from `$.article[0].label`.
+{% enddocs %}
+
+{% docs column__composer %}
+**Composer**: The composer's name. Extracted from `$.article[0].compositeur`.
+{% enddocs %}
+
+{% docs column__product_performer %}
+**Performer**: The performer or interpreter. Extracted from `$.article[0].interprete`.
+{% enddocs %}
+
+{% docs column__nb_discs %}
+**Number of Discs**: The number of physical discs/vinyls included. Extracted from `$.article[0].nb_galettes`.
+{% enddocs %}

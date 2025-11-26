@@ -1,7 +1,7 @@
 {{ config(materialized="table") }}
 with
     base_data as (
-        select ean, parse_json(json_str) as json_raw
+        select ean, parse_json(json_value(parse_json(json_str), '$')) as json_raw
         from {{ ref("snapshot_raw__titelive_products") }}
         where dbt_valid_to is null and json_str is not null
     )

@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: int_finance__cashflow_pricing
+    description: '{{ doc("description__int_finance__cashflow_pricing") }}'
+    columns:
+      - name: cashflowId
+        description: '{{ doc("column__cashflow_id") }}'
+      - name: pricingId
+        description: '{{ doc("column__pricing_id") }}'

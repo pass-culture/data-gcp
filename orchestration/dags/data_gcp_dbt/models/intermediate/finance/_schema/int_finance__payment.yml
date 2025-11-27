@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: int_finance__payment
+    description: '{{ doc("description__int_finance__payment") }}'
+    columns:
+      - name: id
+        description: '{{ doc("column__payment_id") }}'
+      - name: author
+        description: '{{ doc("column__payment_author") }}'
+      - name: comment
+        description: '{{ doc("column__payment_comment") }}'
+      - name: recipientName
+        description: '{{ doc("column__payment_recipient_name") }}'
+      - name: bookingId
+        description: '{{ doc("column__booking_id") }}'
+      - name: amount
+        description: '{{ doc("column__payment_amount") }}'
+      - name: reimbursementRule
+        description: '{{ doc("column__payment_reimbursement_rule") }}'
+      - name: transactionEndToEndId
+        description: '{{ doc("column__payment_transaction_end_to_end_id") }}'
+      - name: recipientSiren
+        description: '{{ doc("column__payment_recipient_siren") }}'
+      - name: reimbursementRate
+        description: '{{ doc("column__payment_reimbursement_rate") }}'
+      - name: transactionLabel
+        description: '{{ doc("column__payment_transaction_label") }}'
+      - name: paymentMessageId
+        description: '{{ doc("column__payment_message_id") }}'

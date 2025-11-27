@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: int_finance__cashflow_batch
+    description: '{{ doc("description__int_finance__cashflow_batch") }}'
+    columns:
+      - name: id
+        description: '{{ doc("column__cashflow_batch_id") }}'
+      - name: creationDate
+        description: '{{ doc("column__cashflow_creation_date") }}'
+      - name: cutoff
+        description: '{{ doc("column__cashflow_batch_cutoff") }}'
+      - name: label
+        description: '{{ doc("column__cashflow_batch_label") }}'

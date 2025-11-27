@@ -8,6 +8,7 @@ with
     offer_details as (
         select
             eod.item_id,
+            eod.offer_product_id,
             eod.offer_id,
             eod.offer_name,
             v.venue_id,
@@ -21,6 +22,19 @@ with
                 order by eod.total_used_individual_bookings desc
             )
             = 1
+    ),
+
+    product_artist_link as (
+        select
+            cast(offer_product_id as string) as offer_product_id,
+            array_agg(distinct artist_id) as artist_id_list
+        from {{ source("raw", "applicative_database_product_artist_link") }}
+        group by offer_product_id
+    ),
+
+    titelive_metadata as (
+        select offer_product_id, series_id, series, language_iso
+        from {{ ref("int_global__product_titelive_mapping") }}
     ),
 
     recommendable_items_raw as (
@@ -56,13 +70,14 @@ with
             max(ro.semantic_emb_mean) as semantic_emb_mean
 
         from {{ ref("ml_reco__recommendable_offer") }} as ro
-        group by 1
+        group by ro.item_id
     ),
 
     trends as (
         select
             ro.*,
             od.offer_name as example_offer_name,
+            od.offer_product_id,
             od.offer_id as example_offer_id,
             od.venue_id as example_venue_id,
             od.venue_longitude as example_venue_longitude,
@@ -108,13 +123,21 @@ with
     )
 
 select
-    *,
-    row_number() over (order by booking_number desc) as booking_number_desc,
-    row_number() over (order by booking_trend desc) as booking_trend_desc,
+    normalized_trends.*,
+    product_artist_link.artist_id_list,
+    titelive_metadata.series_id,
     row_number() over (
-        order by booking_creation_trend desc
+        order by normalized_trends.booking_number desc
+    ) as booking_number_desc,
+    row_number() over (
+        order by normalized_trends.booking_trend desc
+    ) as booking_trend_desc,
+    row_number() over (
+        order by normalized_trends.booking_creation_trend desc
     ) as booking_creation_trend_desc,
     row_number() over (
-        order by booking_release_trend desc
+        order by normalized_trends.booking_release_trend desc
     ) as booking_release_trend_desc
 from normalized_trends
+left join product_artist_link using (offer_product_id)
+left join titelive_metadata using (offer_product_id)

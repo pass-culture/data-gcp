@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: int_finance__booking_incident
+    description: '{{ doc("description__int_finance__booking_incident") }}'
+    columns:
+      - name: id
+        description: '{{ doc("column__booking_finance_incident_id") }}'
+      - name: booking_id
+        description: '{{ doc("column__booking_id") }}'
+      - name: incident_id
+        description: '{{ doc("column__finance_incident_id") }}'
+      - name: beneficiary_id
+        description: '{{ doc("column__user_id") }}'
+      - name: collective_booking_id
+        description: '{{ doc("column__collective_booking_id") }}'
+      - name: new_total_amount
+        description: '{{ doc("column__finance_incident_new_total_amount") }}'

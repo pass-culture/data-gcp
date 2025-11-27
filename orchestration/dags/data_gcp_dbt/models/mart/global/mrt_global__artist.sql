@@ -26,11 +26,20 @@ with
             o.offer_category_id,
             o.venue_id,
             o.partner_id
+    ),
+
+    artist_consultations as (
+        select
+            artist_id,
+            count(distinct unique_session_id) as total_consultations,
+            count(distinct user_id) as total_consulted_users
+        from {{ ref("int_firebase__native_event") }}
+        where event_name = "ConsultArtist"
+        and event_date >= date("2025-01-01")
     )
 
 select
     a.artist_id,
-    apo.artist_type,
     a.artist_name,
     a.artist_description,
     a.wikidata_image_file_url,
@@ -39,6 +48,8 @@ select
     a.wikidata_image_author,
     a.creation_date,
     a.modification_date,
+    ac.total_consultations,
+    ac.total_consulted_users,
     count(distinct apo.offer_product_id) as total_products,
     count(distinct apo.offer_id) as total_offers,
     count(
@@ -50,9 +61,9 @@ select
     sum(apo.total_bookings) as total_bookings
 from {{ ref("int_applicative__artist") }} as a
 left join artist_product_offers as apo on a.artist_id = apo.artist_id
+left join artist_consultations as ac on a.artist_id = ac.artist_id
 group by
     a.artist_id,
-    apo.artist_type,
     a.artist_name,
     a.artist_description,
     a.wikidata_image_file_url,
@@ -60,4 +71,6 @@ group by
     a.wikidata_image_license_url,
     a.wikidata_image_author,
     a.creation_date,
-    a.modification_date
+    a.modification_date,
+    a.total_consultations,
+    a.total_consulted_users

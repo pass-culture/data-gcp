@@ -87,12 +87,13 @@ with
             {% if is_incremental() %}
                 and date(datecreated) = date_sub(date("{{ ds() }}"), interval 1 day)
             {% endif %}
-        -- Keep only one record per user with same normalized address to avoid
-        -- duplicates
+        -- Deduplicate rows with same date and normalized address
+        -- (duplicates may be created by normalize_address function)
         qualify
             row_number() over (
                 partition by
                     user_id,
+                    date(creation_timestamp),
                     lower(activity),
                     {{
                         normalize_address(
@@ -211,33 +212,32 @@ with
             user_previous_postal_code,
 
             -- Flag: user confirmed their existing information (all fields unchanged)
-            -- Using IS NOT DISTINCT FROM for NULL-safe comparison
             (
                 user_activity is not distinct from user_previous_activity
                 and user_address is not distinct from user_previous_address
                 and user_city is not distinct from user_previous_city
                 and user_postal_code is not distinct from user_previous_postal_code
             )
-            and user_previous_activity is not null as has_confirmed,
+            and info_history_rank > 0 as has_confirmed,
 
             -- Flag: user modified at least one field
-            not (
-                user_activity is not distinct from user_previous_activity
-                and user_address is not distinct from user_previous_address
-                and user_city is not distinct from user_previous_city
-                and user_postal_code is not distinct from user_previous_postal_code
+            (
+                user_activity is distinct from user_previous_activity
+                or user_address is distinct from user_previous_address
+                or user_city is distinct from user_previous_city
+                or user_postal_code is distinct from user_previous_postal_code
             )
-            and user_previous_activity is not null as has_modified,
+            and info_history_rank > 0 as has_modified,
 
             -- Field-specific modification flags
             (user_activity is distinct from user_previous_activity)
-            and user_previous_activity is not null as has_modified_activity,
+            and info_history_rank > 0 as has_modified_activity,
             (user_address is distinct from user_previous_address)
-            and user_previous_address is not null as has_modified_address,
+            and info_history_rank > 0 as has_modified_address,
             (user_city is distinct from user_previous_city)
-            and user_previous_city is not null as has_modified_city,
+            and info_history_rank > 0 as has_modified_city,
             (user_postal_code is distinct from user_previous_postal_code)
-            and user_previous_postal_code is not null as has_modified_postal_code
+            and info_history_rank > 0 as has_modified_postal_code
 
         from processed_data
         order by user_id asc, creation_timestamp desc

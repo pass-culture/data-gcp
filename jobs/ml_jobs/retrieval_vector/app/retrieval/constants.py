@@ -27,6 +27,8 @@ DEFAULT_DETAIL_COLUMNS: List[str] = [
     "example_offer_name",
     "example_venue_latitude",
     "example_venue_longitude",
+    "artist_id_list",
+    "series_id",
 ]
 
 SIMILARITY_USER_ITEM_COLUMN_NAME: str = "_user_item_dot_similarity"

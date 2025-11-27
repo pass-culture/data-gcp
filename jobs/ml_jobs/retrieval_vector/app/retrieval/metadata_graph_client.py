@@ -1,6 +1,7 @@
 import time
-from typing import List
+from typing import Dict, List, Optional
 
+import pandas as pd
 from loguru import logger
 
 from app.retrieval.client import DefaultClient
@@ -52,3 +53,18 @@ class MetadataGraphClient(DefaultClient):
         start_time = time.time()
         self.table = self.connect_db()
         logger.info(f"Connected to database in {time.time() - start_time:.2f} seconds.")
+
+    def postprocess(
+        self,
+        ranked_items: List[Dict],
+        n: int,
+        excluded_items: Optional[List[str]] = None,
+        **kwargs,
+    ):
+        postprocessed_items = super().postprocess(
+            ranked_items, n, excluded_items, **kwargs
+        )
+        pd.DataFrame(postprocessed_items).to_csv(
+            "metadata_graph_retrieval_results.csv", index=False
+        )
+        return postprocessed_items

@@ -108,9 +108,9 @@ with DAG(
     def decide_execution_mode(**context):
         """Determine which execution mode task to run."""
         return (
-            [run_init_task.task_id]
+            ["run_init_task"]
             if context["params"].get("init", False)
-            else [wait_for_raw.task_id]
+            else ["run_incremental_task"]
         )
 
     execution_mode_branch = BranchPythonOperator(
@@ -175,7 +175,6 @@ with DAG(
 
     # Task dependencies
     (gce_instance_start >> fetch_install_code >> execution_mode_branch)
-
     (
         execution_mode_branch
         >> run_init_task
@@ -184,7 +183,6 @@ with DAG(
     )
     (
         execution_mode_branch
-        >> wait_for_raw
         >> run_incremental_task
         >> download_images_incremental
         >> gce_instance_stop

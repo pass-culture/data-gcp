@@ -70,7 +70,7 @@ macros:
       Parameters:
         source_table: The table that contains latitude / longitude couple. This can either be a source table (two elements) or a ref table within the current dbt project (with one element).
         referential_table: The table that contains geospatial reference data (e.g., geographical boundaries) against which the source data will be matched. Similar to source_table, it can be either a source or a reference.
-        id_column: The column name in the source_table that uniquely identifies each record (user_id, venue_id, ...)
+        id_column: The column name(s) in the source_table that uniquely identify each record. Can be a string (e.g., "user_id", "venue_id") or a list for composite keys (e.g., ["user_id", "info_history_rank"]).
         prefix_name: A prefix used to identify the latitude and longitude columns in the source_table. For example <user> for user_latitude, user_longitude or <venue> For venue_latitude, venue_longitude).
         columns: A list of column names from the referential_table that you want to include in the final result.
         geo_shape (optional, default: 'geo_shape'): The name of the column in the referential_table that contains the geographical shapes (e.g., polygons) used for geospatial matching.

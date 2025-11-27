@@ -23,10 +23,6 @@ class SearchByTopsHandler(PredictionHandler):
         Returns:
             PredictionResult: An object containing the predicted items.
         """
-        if request_data.similarity_metric not in ("dot", "l2"):
-            raise ValueError(
-                "Tops should use either 'dot' or 'l2' as similarity metric."
-            )
         logger.debug(
             "filter",
             extra={

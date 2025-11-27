@@ -6,11 +6,11 @@ with
             max(date(recredit_creation_date)) as last_recredit_date,
             count(distinct recredit_id) as total_recredit,
             sum(recredit_amount) as total_recredit_amount,
-            -- Exclude PREVIOUS_DEPOSIT transfers to avoid double-counting when summing across deposits
+            -- Exclude PREVIOUS_DEPOSIT transfers to avoid double-counting when
+            -- summing across deposits
             sum(
                 case
-                    when recredit_type != 'PREVIOUS_DEPOSIT' then recredit_amount
-                    else 0
+                    when recredit_type != 'PREVIOUS_DEPOSIT' then recredit_amount else 0
                 end
             ) as total_recredit_amount_excluding_transfers
         from {{ source("raw", "applicative_database_recredit") }}

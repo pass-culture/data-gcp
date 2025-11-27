@@ -63,6 +63,8 @@ ITEM_COLUMNS = [
     "example_venue_id",
     "example_venue_latitude",
     "example_venue_longitude",
+    "artist_id_list",
+    "series_id",
 ]
 
 
@@ -322,6 +324,8 @@ def get_table_batches(
             "example_venue_id": "",
             "example_venue_latitude": 0.0,
             "example_venue_longitude": 0.0,
+            "artist_id_list": "",
+            "series_id": "",
         }
     )
 
@@ -383,6 +387,8 @@ def get_table_batches(
                     pa.array([str(row.example_venue_id)], pa.utf8()),
                     pa.array([to_float(row.example_venue_latitude)], pa.float32()),
                     pa.array([to_float(row.example_venue_longitude)], pa.float32()),
+                    pa.array([str(row.artist_id_list)], pa.utf8()),
+                    pa.array([to_float(row.series_id)], pa.float32()),
                 ],
                 ITEM_COLUMNS,
             )

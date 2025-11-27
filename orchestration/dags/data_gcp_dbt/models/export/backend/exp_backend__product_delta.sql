@@ -1,22 +1,69 @@
 {{ config(materialized="table") }}
 
-{% set product_types = {"book": "'paper'", "music": "'music'"} %}
-{% set path_code_support = "'$.article[0].codesupport'" %}
-{% set regex_paper_support = "r'[a-zA-Z]'" %}
+
+{% set provider_ids = ["9", "16", "17", "19", "20", "1082", "2156", "2190"] %}
+
+{% set path_code_support = "$.article[0].codesupport" %}
+
+{% set common_fields = [
+    "json_value(delta.json_raw, '$.titre') as name",
+    "json_value(delta.json_raw, '$.article[0].resume') as description",
+    "json_value(delta.json_raw, '" ~ path_code_support ~ "') as support_code",
+    "json_value(delta.json_raw, '$.article[0].dateparution') as publication_date",
+    "json_value(delta.json_raw, '$.article[0].editeur') as publisher",
+    "json_query(delta.json_raw, '$.article[0].gtl') as gtl",
+    "cast(json_value(delta.json_raw, '$.article[0].prix') as numeric) as price",
+    "cast(json_value(delta.json_raw, '$.article[0].image') as int64) as image",
+    "cast(json_value(delta.json_raw, '$.article[0].image_4') as int64) as image_4"
+] %}
+
+{% set specific_paper_fields = {
+    "readership_id": "cast(json_value(delta.json_raw, '$.article[0].id_lectorat') as int64)",
+    "language_iso": "json_value(delta.json_raw, '$.article[0].langueiso')",
+    "vat_rate": "json_value(delta.json_raw, '$.article[0].taux_tva')",
+    "multiple_authors": "json_query(delta.json_raw, '$.auteurs_multi')"
+} %}
+
+{% set specific_music_fields = {
+    "artist": "json_value(delta.json_raw, '$.article[0].artiste')",
+    "music_label": "json_value(delta.json_raw, '$.article[0].label')",
+    "composer": "json_value(delta.json_raw, '$.article[0].compositeur')",
+    "performer": "json_value(delta.json_raw, '$.article[0].interprete')",
+    "nb_discs": "json_value(delta.json_raw, '$.article[0].nb_galettes')"
+} %}
+
+{% set products = {
+    "paper": {
+        "payload_type": "paper",
+        "case_condition": "regexp_contains(json_value(snap.json_raw, '" ~ path_code_support ~ "'), 'r[a-zA-Z]')",
+        "specific_fields": specific_paper_fields
+    },
+    "music": {
+        "payload_type": "music",
+        "case_condition": "true",
+        "specific_fields": specific_music_fields
+    }
+} %}
 
 with
     last_successful_sync as (
         select
-            max(
-                case when payload = {{ product_types.book }} then date end
-            ) as paper_last_sync_date,
-            max(
-                case when payload = {{ product_types.music }} then date end
-            ) as music_last_sync_date
+            {% for key, p in products.items() %}
+            max(case when payload = '{{ p.payload_type }}' then date end) as {{ key }}_last_sync_date
+            {% if not loop.last %}, {% endif %}
+            {% endfor %}
         from {{ source("raw", "applicative_database_local_provider_event") }}
         where
-            providerid in ('9', '16', '17', '19', '20', '1082', '2156', '2190')
-            and payload in ({{ product_types.book }}, {{ product_types.music }})
+            providerid in (
+                {% for id in provider_ids -%}
+                    '{{ id }}'{% if not loop.last %}, {% endif %}
+                {% endfor -%}
+            )
+            and payload in (
+                {% for key, p in products.items() -%}
+                    '{{ p.payload_type }}'{% if not loop.last %}, {% endif %}
+                {% endfor -%}
+            )
             and type = 'SyncEnd'
     ),
 
@@ -39,34 +86,22 @@ with
             snap.recto_image_uuid,
             snap.verso_image_uuid,
             snap.dbt_valid_from,
-            case
-                when
-                    regexp_contains(
-                        json_value(snap.json_raw, {{ path_code_support }}),
-                        {{ regex_paper_support }}
-                    )
-                then {{ product_types.book }}
-                else {{ product_types.music }}
-            end as product_type
+
+        case
+            when {{ products.paper.case_condition }} then '{{ products.paper.payload_type }}'
+            else '{{ products.music.payload_type }}'
+        end as product_type
+
         from snap
         cross join last_successful_sync
         where
+            {% for key, p in products.items() if key != "music" %}
             (
-                regexp_contains(
-                    json_value(snap.json_raw, {{ path_code_support }}),
-                    {{ regex_paper_support }}
-                )
-                and snap.dbt_valid_from
-                > timestamp(last_successful_sync.paper_last_sync_date)
+                {{ p.case_condition }}
+                and snap.dbt_valid_from > timestamp(last_successful_sync.{{ key }}_last_sync_date)
             )
-            or (
-                not regexp_contains(
-                    json_value(snap.json_raw, {{ path_code_support }}),
-                    {{ regex_paper_support }}
-                )
-                and snap.dbt_valid_from
-                > timestamp(last_successful_sync.music_last_sync_date)
-            )
+            {% if not loop.last %} or {% endif %}
+            {% endfor %}
     )
 
 select
@@ -77,29 +112,16 @@ select
     delta.dbt_valid_from as modification_date,
 
     -- Common fields
-    json_value(delta.json_raw, '$.titre') as name,  -- noqa: RF04
-    json_value(delta.json_raw, '$.article[0].resume') as description,
-    json_value(delta.json_raw, {{ path_code_support }}) as support_code,
-    json_value(delta.json_raw, '$.article[0].dateparution') as publication_date,
-    json_value(delta.json_raw, '$.article[0].editeur') as publisher,
-    json_query(delta.json_raw, '$.article[0].gtl') as gtl,
-    cast(json_value(delta.json_raw, '$.article[0].prix') as numeric) as price,
-    cast(json_value(delta.json_raw, '$.article[0].image') as int64) as image,
-    cast(json_value(delta.json_raw, '$.article[0].image_4') as int64) as image_4,
+    {% for expr in common_fields %}
+        {{ expr }}{% if not loop.last %},{% endif -%}
+    {% endfor -%},
 
-    -- fields specific to PAPER
-    cast(
-        json_value(delta.json_raw, '$.article[0].id_lectorat') as int64
-    ) as readership_id,
-    json_value(delta.json_raw, '$.article[0].langueiso') as language_iso,
-    json_value(delta.json_raw, '$.article[0].taux_tva') as vat_rate,
-    json_query(delta.json_raw, '$.auteurs_multi') as multiple_authors,
-
-    -- fields specific to MUSIC
-    json_value(delta.json_raw, '$.article[0].artiste') as artist,
-    json_value(delta.json_raw, '$.article[0].label') as music_label,
-    json_value(delta.json_raw, '$.article[0].compositeur') as composer,
-    json_value(delta.json_raw, '$.article[0].interprete') as performer,
-    json_value(delta.json_raw, '$.article[0].nb_galettes') as nb_discs
+    -- Product-specific fields
+    {% for key, p in products.items() %}
+        {% for field_name, expr in p.specific_fields.items() -%}
+            {{ expr }} as {{ field_name }}{% if not loop.last %},{% endif %}
+        {% endfor -%}
+        {% if not loop.last %},{% endif %}
+    {% endfor -%}
 
 from changed_products_snapshot as delta

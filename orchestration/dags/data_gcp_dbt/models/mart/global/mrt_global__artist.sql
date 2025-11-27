@@ -34,8 +34,7 @@ with
             count(distinct unique_session_id) as total_consultations,
             count(distinct user_id) as total_consulted_users
         from {{ ref("int_firebase__native_event") }}
-        where event_name = "ConsultArtist"
-        and event_date >= date("2025-01-01")
+        where event_name = "ConsultArtist" and event_date >= date("2025-01-01")
     )
 
 select

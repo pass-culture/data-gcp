@@ -125,3 +125,5 @@ models:
         data_type: STRING
       - name: offerer_address_id
         description: "{{ doc('column__offerer_address_id') }}"
+      - name: collective_offer_description
+        description: "{{ doc('column__collective_offer_description') }}"

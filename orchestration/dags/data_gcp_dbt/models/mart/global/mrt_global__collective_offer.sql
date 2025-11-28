@@ -2,6 +2,7 @@ select
     collective_offer_id,
     collective_offer_humanized_id,
     collective_offer_name,
+    collective_offer_description,
     venue_id,
     partner_id,
     institution_id,

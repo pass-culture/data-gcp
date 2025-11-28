@@ -21,6 +21,7 @@ select
         else {{ target_schema }}.humanize_id(co.collective_offer_id)
     end as collective_offer_humanized_id,
     co.collective_offer_name,
+    co.collective_offer_description
     co.venue_id,
     v.partner_id,
     co.institution_id,

@@ -68,7 +68,7 @@ with
         select institution_id, sum(headcount) as total_students
         from {{ ref("int_gsheet__educational_institution_student_headcount") }}
         group by institution_id
-    )
+    ),
 
 select
     ei.educational_institution_id as institution_id,

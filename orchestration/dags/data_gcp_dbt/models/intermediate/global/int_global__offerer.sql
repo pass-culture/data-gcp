@@ -52,7 +52,7 @@ with
     epn_list as (
         select distinct offerer_id
         from {{ ref("mrt_global__offerer_tag") }}
-        where tag_name in ("part-epn")
+        where tag_name in ('part-epn')
     ),
 
     reimbursement_points as (
@@ -129,9 +129,6 @@ select
     ofr.total_bookable_individual_offers,
     ofr.total_bookable_collective_offers,
     ofr.total_bookable_offers,
-    ofr.offerer_department_code,
-    region_department.dep_name as offerer_department_name,
-    ofr.offerer_postal_code,
     ofr.offerer_siren,
     coalesce(
         date_diff(current_date, boh.last_bookable_offer_date, day) <= 30, false
@@ -157,9 +154,6 @@ select
     ) as is_collective_active_current_year,
     ofr.top_real_revenue_venue_type,
     ofr.top_bookings_venue_type,
-    region_department.region_name as offerer_region_name,
-    ofr.offerer_city,
-    region_department.academy_name,
     siren_data.activiteprincipaleunitelegale as legal_unit_business_activity_code,
     main_business.main_business_label as legal_unit_business_activity_label,
     siren_data.categoriejuridiqueunitelegale as legal_unit_legal_category_code,
@@ -237,11 +231,8 @@ select
     end as is_synchro_adage,
     tagged_partners.partner_type,
     rp.total_reimbursement_points,
-    case when epn_list.offerer_id is not null then true else false end as offerer_is_epn
+    coalesce(epn_list.offerer_id is not null, false) as offerer_is_epn
 from {{ ref("int_applicative__offerer") }} as ofr
-left join
-    {{ source("seed", "region_department") }} as region_department
-    on ofr.offerer_department_code = region_department.num_dep
 left join
     {{ source("clean", "siren_data") }} as siren_data
     on ofr.offerer_siren = siren_data.siren

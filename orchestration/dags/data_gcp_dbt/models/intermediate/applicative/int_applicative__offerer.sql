@@ -88,8 +88,6 @@ with
 select
     o.offerer_is_active,
     o.offerer_address,
-    o.offerer_postal_code,
-    o.offerer_city,
     o.offerer_id,
     concat("offerer-", o.offerer_id) as partner_id,
     o.offerer_creation_date,
@@ -98,19 +96,6 @@ select
     o.offerer_validation_status,
     o.offerer_validation_date,
     {{ target_schema }}.humanize_id(o.offerer_id) as offerer_humanized_id,
-    case
-        when o.offerer_postal_code = "97150"
-        then "978"
-        when substring(o.offerer_postal_code, 0, 2) = "97"
-        then substring(o.offerer_postal_code, 0, 3)
-        when substring(o.offerer_postal_code, 0, 2) = "98"
-        then substring(o.offerer_postal_code, 0, 3)
-        when substring(o.offerer_postal_code, 0, 3) in ("200", "201", "209", "205")
-        then "2A"
-        when substring(o.offerer_postal_code, 0, 3) in ("202", "206")
-        then "2B"
-        else substring(offerer_postal_code, 0, 2)
-    end as offerer_department_code,
     coalesce(
         vgo.total_non_cancelled_individual_bookings, 0
     ) as total_non_cancelled_individual_bookings,

@@ -40,7 +40,9 @@
     },
     "music": {
         "payload_type": "music",
-        "case_condition": "true",
+        "case_condition": "regexp_contains(json_value(snap.json_raw, '"
+        ~ path_code_support
+        ~ "'), 'r[0-9]')",
         "specific_fields": specific_music_fields_struct,
     },
 } %}

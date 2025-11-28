@@ -114,7 +114,8 @@ def extract_embedding_item_dag(
         f"--input-dataset-name {INPUT_DATASET_NAME} "
         f"--input-table-name {INPUT_TABLE_NAME} "
         f"--output-dataset-name {OUTPUT_DATASET_NAME} "
-        f"--output-table-name {OUTPUT_TABLE_NAME} ",
+        f"--output-table-name {OUTPUT_TABLE_NAME} "
+        "--ts {{ ts }}",
         deferrable=True,
     )
 

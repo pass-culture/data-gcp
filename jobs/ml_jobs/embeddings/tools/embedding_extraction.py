@@ -4,7 +4,7 @@ import time
 
 from sentence_transformers import SentenceTransformer
 
-from tools.config import TRANSFORMER_BATCH_SIZE
+from tools.config import PRIMARY_KEY, TRANSFORMER_BATCH_SIZE
 from utils.download import IMAGE_DIR, download_img_multiprocess
 from utils.file_handler import load_img_multiprocess
 from utils.logging import log_duration, logging
@@ -17,7 +17,7 @@ def extract_embedding(df_data, params):
     """
     models = load_models(params["models"])
     start = time.time()
-    df_encoded = df_data[["item_id"]].astype(str)
+    df_encoded = df_data[[PRIMARY_KEY]].astype(str)
 
     # Download images in parallel
     os.makedirs(IMAGE_DIR, exist_ok=True)

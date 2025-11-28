@@ -24,15 +24,15 @@ This section would typically display the auto-generated schema from dbt docs.
 
 {% docs table__product_delta %}{% enddocs %}
 
-
 ---
+
 ## Column Descriptions
 
 {% docs column__ean %}
 **EAN (European Article Number)**: The unique identifier for the product. It serves as the primary key for joining and identifying products across systems.
 {% enddocs %}
 
-{% docs column__name %}
+{% docs column__title %}
 **Title**: The title of the product (e.g., book title), extracted from the raw JSON payload.
 {% enddocs %}
 
@@ -57,7 +57,7 @@ This section would typically display the auto-generated schema from dbt docs.
 {% enddocs %}
 
 {% docs column__vat_rate %}
-**VAT Rate**: The applicable VAT (TVA) rate for the product, as a string. Extracted from `$.article[0].taux_tva`.  This field can be null.
+**VAT Rate**: The applicable VAT (TVA) rate for the product, as a string. Extracted from `$.article[0].taux_tva`. This field can be null.
 {% enddocs %}
 
 {% docs column__price %}

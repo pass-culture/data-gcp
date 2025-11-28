@@ -13,8 +13,8 @@ models:
           - unique:
               tags: ['critical']
 
-      - name: name
-        description: "{{ doc('column__name') }}"
+      - name: title
+        description: "{{ doc('column__title') }}"
         tests:
           - not_null:
               tags: ['critical']

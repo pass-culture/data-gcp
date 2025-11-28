@@ -10,13 +10,29 @@
     {"json_path": "$.article[0].dateparution", "alias": "publication_date"},
     {"json_path": "$.article[0].editeur", "alias": "publisher"},
     {"json_path": "$.article[0].gtl", "alias": "gtl"},
-    {"json_path": "$.article[0].prix", "alias": "price", "cast_type": "numeric"},
-    {"json_path": "$.article[0].image", "alias": "image", "cast_type": "int64"},
-    {"json_path": "$.article[0].image_4", "alias": "image_4", "cast_type": "int64"},
+    {
+        "json_path": "$.article[0].prix",
+        "alias": "price",
+        "cast_type": "numeric",
+    },
+    {
+        "json_path": "$.article[0].image",
+        "alias": "image",
+        "cast_type": "int64",
+    },
+    {
+        "json_path": "$.article[0].image_4",
+        "alias": "image_4",
+        "cast_type": "int64",
+    },
 ] %}
 
 {% set specific_paper_fields_struct = [
-    {"json_path": "$.article[0].id_lectorat", "alias": "readership_id", "cast_type": "int64"},
+    {
+        "json_path": "$.article[0].id_lectorat",
+        "alias": "readership_id",
+        "cast_type": "int64",
+    },
     {"json_path": "$.article[0].langueiso", "alias": "language_iso"},
     {"json_path": "$.article[0].taux_tva", "alias": "vat_rate"},
     {"json_path": "$.auteurs_multi", "alias": "multiple_authors"},

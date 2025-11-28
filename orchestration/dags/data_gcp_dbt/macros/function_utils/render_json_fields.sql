@@ -9,12 +9,26 @@
     - null_when_equal: optional, string/or relevant type value that should be converted to NULL using NULLIF
 -#}
     {%- for f in fields -%}
-        {%- set base_expr = "json_value(" ~ source_alias ~ "." ~ json_column ~ ", '" ~ f.json_path ~ "')" -%}
+        {%- set base_expr = (
+            "json_value("
+            ~ source_alias
+            ~ "."
+            ~ json_column
+            ~ ", '"
+            ~ f.json_path
+            ~ "')"
+        ) -%}
         {%- set null_val = None -%}
         {%- if f.cast_type is defined -%}
             {%- set cast_expr = "cast(" ~ base_expr ~ " as " ~ f.cast_type ~ ")" -%}
             {%- if f.null_when_equal is defined -%}
-                {%- set null_val = "cast('" ~ f.null_when_equal ~ "' as " ~ f.cast_type ~ ")" -%}
+                {%- set null_val = (
+                    "cast('"
+                    ~ f.null_when_equal
+                    ~ "' as "
+                    ~ f.cast_type
+                    ~ ")"
+                ) -%}
             {%- endif -%}
         {%- else -%}
             {%- set cast_expr = base_expr -%}
@@ -24,8 +38,7 @@
         {%- endif -%}
         {%- if null_val is not none -%}
             {%- set expr = "nullif(" ~ cast_expr ~ ", " ~ null_val ~ ")" -%}
-        {%- else -%}
-            {%- set expr = cast_expr -%}
+        {%- else -%} {%- set expr = cast_expr -%}
         {%- endif -%}
         {{ expr ~ " as " ~ f.alias }}
         {%- if not loop.last %},{%- endif %}

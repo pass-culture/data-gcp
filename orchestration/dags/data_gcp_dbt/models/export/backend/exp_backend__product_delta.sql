@@ -4,7 +4,7 @@
 {% set path_code_support = "$.article[0].codesupport" %}
 
 {% set common_fields_struct = [
-    {"json_path": "$.titre", "alias": "name"},
+    {"json_path": "$.titre", "alias": "title"},
     {"json_path": "$.article[0].resume", "alias": "description"},
     {"json_path": path_code_support, "alias": "support_code"},
     {"json_path": "$.article[0].dateparution", "alias": "publication_date"},

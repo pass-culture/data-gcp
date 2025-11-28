@@ -2,6 +2,7 @@ from time import time
 
 import pandas as pd
 from google.cloud import bigquery
+from jinja2 import Template
 
 from tools.config import GCP_PROJECT_ID
 from utils.logging import logging
@@ -36,19 +37,6 @@ def write_to_tmp(
     logging.info(f"Wrote {len(df)} rows to tmp table {tmp_table}")
 
 
-def generate_update_set(
-    target_table: str, exclude_columns: list, project_id: str
-) -> str:
-    client = bigquery.Client(project=project_id)
-    table = client.get_table(target_table)
-    columns = [
-        f"{col.name} = S.{col.name}"
-        for col in table.schema
-        if col.name not in exclude_columns
-    ]
-    return ",\n  ".join(columns)
-
-
 def merge_upsert(
     tmp_table: str,
     main_table: str,
@@ -69,6 +57,7 @@ def merge_upsert(
     - ttl_hours: expiration time for tmp_table in hours
     - nullify_deprecated_columns: if True, target columns not in tmp_table are set to NULL
     """
+
     client = bigquery.Client(project=project_id)
 
     tmp_schema = client.get_table(tmp_table).schema
@@ -76,6 +65,8 @@ def merge_upsert(
 
     tmp_cols = {col.name for col in tmp_schema}
     main_cols = {col.name for col in main_schema}
+
+    # --- Build UPDATE assignments ---
     update_set_list = []
     for col in main_cols:
         if col == primary_key:
@@ -85,25 +76,47 @@ def merge_upsert(
         elif nullify_deprecated_columns:
             update_set_list.append(f"T.{col} = NULL")
 
-    update_set = ",\n    ".join(update_set_list)
-
-    insert_columns = [col.name for col in tmp_schema]
+    # --- Build INSERT column/value lists ---
+    insert_columns = [c.name for c in tmp_schema]
     insert_values = [f"S.{col}" for col in insert_columns]
 
-    merge_query = f"""
-    MERGE `{main_table}` T
-    USING `{tmp_table}` S
-    ON T.{primary_key} = S.{primary_key}
+    # --- Inline Jinja template ---
+    jinja_sql = """
+    MERGE `{{ main_table }}` T
+    USING `{{ tmp_table }}` S
+    ON T.{{ primary_key }} = S.{{ primary_key }}
+
     WHEN MATCHED THEN
       UPDATE SET
-        {update_set}
+    {% for clause in update_set_list %}
+        {{ clause }}{% if not loop.last %},{% endif %}
+    {% endfor %}
+
     WHEN NOT MATCHED THEN
-      INSERT ({', '.join(insert_columns)})
-      VALUES({', '.join(insert_values)})
+      INSERT (
+        {{ insert_columns | join(', ') }}
+      )
+      VALUES (
+        {{ insert_values | join(', ') }}
+      )
     """
+
+    # Render template
+    template = Template(jinja_sql)
+    merge_query = template.render(
+        main_table=main_table,
+        tmp_table=tmp_table,
+        primary_key=primary_key,
+        update_set_list=update_set_list,
+        insert_columns=insert_columns,
+        insert_values=insert_values,
+    )
+
+    # --- Execute query ---
     client.query(merge_query).result()
     logging.info(f"Merged tmp table {tmp_table} into main table {main_table}")
 
-    tmp_table_ref = client.dataset(tmp_table)
-    tmp_table_ref.expires = int(time.time() + ttl_hours * 3600) * 1000
-    client.update_table(tmp_table_ref, ["expires"])
+    # --- Set expiration on tmp table ---
+    tmp_table_obj = client.get_table(tmp_table)
+    tmp_table_obj.expires = int(time.time() + ttl_hours * 3600) * 1000
+    client.update_table(tmp_table_obj, ["expires"])

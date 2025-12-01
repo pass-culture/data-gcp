@@ -42,7 +42,9 @@ select
     ) as total_managed_offers,
 
     -- individual offer consultation (one offer page, not catalog page)
-    sum(case when total_individual_offer_page_views>0 then 1 else 0 end ) as total_consulted_offers,
+    sum(
+        case when total_individual_offer_page_views > 0 then 1 else 0 end
+    ) as total_consulted_offers,
 
     -- guichet management
     sum(
@@ -61,13 +63,7 @@ select
     ) as total_managed_bookings,
     -- booking downloads
     sum(
-        case
-            when
-                total_download_booking_clicks
-                > 0
-            then 1
-            else 0
-        end
+        case when total_download_booking_clicks > 0 then 1 else 0 end
     ) as total_booking_downloads,
     -- finance management (consult finance pages and add bank account)
     sum(

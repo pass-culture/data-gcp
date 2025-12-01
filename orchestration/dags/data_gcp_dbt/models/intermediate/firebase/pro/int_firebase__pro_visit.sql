@@ -79,7 +79,9 @@ select
     countif(
         event_name = "page_view"
         and page_name in (
-            "Remboursements - pass Culture Pro", "Gestion financière - pass Culture Pro","Gestion financière - justificatifs - pass Culture Pro"
+            "Remboursements - pass Culture Pro",
+            "Gestion financière - pass Culture Pro",
+            "Gestion financière - justificatifs - pass Culture Pro"
         )
     ) as total_financial_receipt_page_views,
     countif(
@@ -121,17 +123,25 @@ select
     -- collectiv
     countif(
         event_name = "page_view"
-        and (page_location like "%/offre/creation/collectif/vitrine%" or page_name="Détails - Créer une offre collective vitrine - pass Culture Pro")
+        and (
+            page_location like "%/offre/creation/collectif/vitrine%"
+            or page_name
+            = "Détails - Créer une offre collective vitrine - pass Culture Pro"
+        )
     ) as total_started_created_template_collective_offers,
     countif(
         event_name = "page_view"
-        and (page_location like "%collectif/vitrine/confirmation%" or page_name="Confirmation - Offre collective vitrine publiée - pass Culture Pro")
+        and (
+            page_location like "%collectif/vitrine/confirmation%"
+            or page_name
+            = "Confirmation - Offre collective vitrine publiée - pass Culture Pro"
+        )
     ) as total_confirmed_created_template_collective_offers,
     countif(
         event_name = "page_view"
         and (
             page_location like "%/offre/creation/collectif?%"
-            or page_name="Détails - Créer une offre réservable - pass Culture Pro"
+            or page_name = "Détails - Créer une offre réservable - pass Culture Pro"
             or (
                 page_location like "%offre/collectif%"
                 and page_location like "%creation?%"
@@ -139,7 +149,11 @@ select
         )
     ) as total_started_created_bookable_collective_offers,
     countif(
-        event_name = "page_view" and (page_location like "%/collectif/confirmation%" or page_name="Confirmation - Offre réservable publiée - pass Culture Pro")
+        event_name = "page_view"
+        and (
+            page_location like "%/collectif/confirmation%"
+            or page_name = "Confirmation - Offre réservable publiée - pass Culture Pro"
+        )
     ) as total_confirmed_created_bookable_collective_offers,
 
     -- count offer edition
@@ -151,8 +165,7 @@ select
 
     countif(
         event_name = "page_view"
-        and page_name
-        like "%Modifier une offre individuelle - pass Culture Pro"
+        and page_name like "%Modifier une offre individuelle - pass Culture Pro"
         and origin like "%/offre/individuelle%"
         and origin like "%edition%"
     ) as total_confirmed_edited_individual_offers,
@@ -169,7 +182,6 @@ select
         = "Récapitulatif - Modifier une offre collective réservable - pass Culture Pro"
         and origin like "%collectif/edition%"
     ) as total_confirmed_edited_collective_offers,
-
 
     -- count venue creation
     countif(
@@ -205,7 +217,13 @@ select
     countif(
         event_name = "hasClickedSaveVenue" and is_edition = "true"
     ) as total_confirmed_edited_venues,
-    countif(event_name = "hasClickedSaveImage" AND page_name IN ("Gérer ma page sur l’application - pass Culture Pro","Gérer ma page sur ADAGE - pass Culture Pro")) as total_save_image_clicks,
+    countif(
+        event_name = "hasClickedSaveImage"
+        and page_name in (
+            "Gérer ma page sur l’application - pass Culture Pro",
+            "Gérer ma page sur ADAGE - pass Culture Pro"
+        )
+    ) as total_save_image_clicks,
 
     -- count other CTA
     countif(
@@ -223,7 +241,7 @@ select
         )
     ) as total_add_venue_to_bank_account_clicks,
     countif(
-        event_name IN ("hasClickedInviteCollaborator","hasClickedAddCollaborator")
+        event_name in ("hasClickedInviteCollaborator", "hasClickedAddCollaborator")
     ) as total_add_collaborator_clicks,
     countif(event_name = "hasSentInvitation") as total_send_invitation_clicks,
     countif(
@@ -251,7 +269,9 @@ select
     countif(event_name = "hasClickedConsultCGU") as total_consult_cgu_clicks,
     countif(event_name = "hasClickedContactOurTeams") as total_contact_our_team,
     countif(event_name = "hasClickedNewEvolutions") as total_new_evolutions_clicks,
-    countif(event_name like "hasClickedDownloadBooking%") as total_download_booking_clicks
+    countif(
+        event_name like "hasClickedDownloadBooking%"
+    ) as total_download_booking_clicks
 
 from filtered_events
 where

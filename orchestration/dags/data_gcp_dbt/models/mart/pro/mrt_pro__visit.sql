@@ -31,15 +31,18 @@ select
                 + total_confirmed_created_template_collective_offers
                 + total_started_created_bookable_collective_offers
                 + total_confirmed_created_bookable_collective_offers
-                + total_started_detail_edited_individual_offers
-                + total_confirmed_detail_edited_individual_offers
-                + total_started_stock_edited_individual_offers
-                + total_confirmed_stock_edited_individual_offers
+                + total_started_edited_individual_offers
+                + total_confirmed_edited_individual_offers
+                + total_started_edited_collective_offers
+                + total_confirmed_edited_collective_offers
                 > 0
             then 1
             else 0
         end
     ) as total_managed_offers,
+
+    -- individual offer consultation (one offer page, not catalog page)
+    sum(case when total_individual_offer_page_views>0 then 1 else 0 end ) as total_consulted_offers,
 
     -- guichet management
     sum(
@@ -56,6 +59,16 @@ select
             else 0
         end
     ) as total_managed_bookings,
+    -- booking downloads
+    sum(
+        case
+            when
+                total_download_booking_clicks
+                > 0
+            then 1
+            else 0
+        end
+    ) as total_booking_downloads,
     -- finance management (consult finance pages and add bank account)
     sum(
         case
@@ -79,7 +92,7 @@ select
                 + total_confirmed_created_venues
                 + total_started_edited_venues
                 + total_confirmed_edited_venues
-                + total_add_image_clicks
+                + total_save_image_clicks
                 > 0
             then 1
             else 0
@@ -106,6 +119,7 @@ select
             when
                 total_collective_help_clicks
                 + total_help_center_clicks
+                + total_best_practices_clicks
                 + total_consult_support_clicks
                 + total_consult_cgu_clicks
                 + total_contact_our_team

@@ -1,15 +1,23 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pandas as pd
 import typer
+from google.cloud import bigquery
 
-from tools.config import CONFIGS_PATH, GCP_PROJECT_ID
+from tools.config import (
+    BIGQUERY_TMP_DATASET,
+    CONFIGS_PATH,
+    GCP_PROJECT_ID,
+    NULLIFY_DEPRECATED_COLUMNS,
+    PRIMARY_KEY,
+)
 from tools.embedding_extraction import extract_embedding
+from utils.bigquery import load_data, merge_upsert, write_to_tmp
 from utils.logging import logging
 
 
-def preprocess(df, features):
+def preprocess(df: pd.DataFrame, features: list[dict]) -> pd.DataFrame:
     columns = list(
         set(
             [
@@ -33,19 +41,6 @@ def preprocess(df, features):
                 .str.replace("_", " ")
             )
     return df
-
-
-def load_data(
-    gcp_project: str,
-    input_dataset_name: str,
-    input_table_name: str,
-    max_rows_to_process: int,
-) -> pd.DataFrame:
-    # If max_rows_to_process is -1, we will process all data.
-    limit = f" LIMIT {max_rows_to_process} " if max_rows_to_process > 0 else ""
-    return pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.{input_dataset_name}.{input_table_name}` {limit} "
-    )
 
 
 def main(
@@ -77,6 +72,10 @@ def main(
         ...,
         help="Name of the output table",
     ),
+    ts: str = typer.Option(
+        default=datetime.now(timezone.utc).isoformat(),
+        help="Processing timestamp",
+    ),
 ) -> None:
     """
     Main loggic data for embedding extraction.
@@ -93,6 +92,15 @@ def main(
     processed_rows = 0
     iteration = 0
 
+    extraction_datetime = datetime.fromisoformat(ts)
+    extraction_date = extraction_datetime.date()
+    tmp_table = f"{BIGQUERY_TMP_DATASET}.tmp_embedding_extraction"
+    main_table = f"{output_dataset_name}.{output_table_name}"
+
+    client = bigquery.Client(project=gcp_project)
+    client.query(f"DELETE FROM `{tmp_table}` WHERE TRUE").result()
+    logging.info(f"Cleared tmp table {tmp_table}")
+
     df = load_data(
         gcp_project,
         input_dataset_name,
@@ -106,20 +114,28 @@ def main(
 
         for start in range(0, df.shape[0], batch_size):
             df_subset = df.iloc[start : start + batch_size]
-            extract_embedding(df_subset, params).assign(
-                extraction_date=datetime.now().strftime("%Y-%m-%d"),
-                extraction_datetime=datetime.now(),
-            ).to_gbq(
-                f"{output_dataset_name}.{output_table_name}",
-                project_id=gcp_project,
-                if_exists="append",
+            embeddings_df = extract_embedding(df_subset, params).assign(
+                extraction_date=extraction_date,
+                extraction_datetime=extraction_datetime,
             )
+
+            # Append to tmp table
+            write_to_tmp(embeddings_df, tmp_table, project_id=gcp_project)
+
+            processed_rows += df_subset.shape[0]
             logging.info(
                 f"{iteration} iteration (batch {start}/{start + batch_size}), processed rows: {processed_rows}"
             )
-
-            processed_rows += df_subset.shape[0]
             iteration += 1
+
+        merge_upsert(
+            tmp_table=tmp_table,
+            main_table=main_table,
+            primary_key=PRIMARY_KEY,
+            project_id=gcp_project,
+            nullify_deprecated_columns=NULLIFY_DEPRECATED_COLUMNS,
+        )
+        logging.info("All batches processed and upserted successfully.")
     else:
         logging.info("Nothing to update !")
 

@@ -7,7 +7,6 @@ from tests.utils import (
     VECTOR_DIM,
     VECTOR_SIZE,
     calculate_dot_product,
-    calculate_l2_distance,
 )
 
 
@@ -37,9 +36,7 @@ def test_search_by_vector_dot_product(
         query_vector.embedding, fake_data
     )
     fake_data.sort_values(DISTANCE_COLUMN_NAME, ascending=True, inplace=True)
-    result = reco_client.search_by_vector(
-        vector=query_vector, similarity_metric="dot", n=limit, details=True
-    )
+    result = reco_client.search_by_vector(vector=query_vector, n=limit, details=True)
 
     assert len(result) == limit
 
@@ -48,35 +45,6 @@ def test_search_by_vector_dot_product(
     assert (
         result_items == expected_items
     ), "Dot product results don't match expected values"
-
-
-def test_search_by_vector_l2_product(
-    mock_connect_db,
-    mock_generate_fake_load_item_document,
-    mock_user_document_loading,
-    fake_data,
-    reco_client,
-    query_vector,
-):
-    """Test search by vector using L2 (Euclidean distance) similarity."""
-    limit = 10
-
-    fake_data[DISTANCE_COLUMN_NAME] = calculate_l2_distance(
-        query_vector.embedding, fake_data
-    )
-    fake_data.sort_values(DISTANCE_COLUMN_NAME, ascending=True, inplace=True)
-
-    result = reco_client.search_by_vector(
-        vector=query_vector, similarity_metric="l2", n=limit, details=True
-    )
-
-    assert len(result) == limit
-
-    result_items = [pred["item_id"] for pred in result]
-    expected_items = list(fake_data["item_id"].values[:limit])
-    assert (
-        result_items == expected_items
-    ), "L2 distance results don't match expected values"
 
 
 def test_search_by_tops(

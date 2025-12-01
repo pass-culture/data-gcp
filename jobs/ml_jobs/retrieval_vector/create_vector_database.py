@@ -59,6 +59,7 @@ def prepare_docs(embedding_dimension: int) -> None:
         emb_size=embedding_dimension,
         uri=f"{OUTPUT_DATA_PATH}/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,
+        vector_search_index_metric="dot",
     )
     logger.info("Items lancedb table created.")
 
@@ -90,6 +91,7 @@ def prepare_dummy_docs(embedding_dimension: int, default_token: str) -> None:
         emb_size=embedding_dimension,
         uri=f"{OUTPUT_DATA_PATH}/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,
+        vector_search_index_metric="dot",
     )
 
 
@@ -145,6 +147,7 @@ def prepare_semantic_docs(
         emb_size=embedding_dimension,
         uri=f"{OUTPUT_DATA_PATH}/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,
+        vector_search_index_metric="dot",
     )
     logger.info("Items lancedb table created.")
 
@@ -256,6 +259,7 @@ def graph_database(
         emb_size=len(items_with_embeddings_df.iloc[0].vector),
         uri=f"{OUTPUT_DATA_PATH}/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,
+        vector_search_index_metric="cosine",
     )
 
     # Output model type

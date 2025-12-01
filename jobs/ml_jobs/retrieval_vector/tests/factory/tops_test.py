@@ -13,7 +13,6 @@ def request_data_default() -> PredictionRequest:
         size=5,
         params={},
         call_id="test-call-id",
-        similarity_metric="dot",
         debug=True,
         vector_column_name="booking_number_desc",
         re_rank=False,
@@ -30,7 +29,6 @@ def request_data_rerank() -> PredictionRequest:
         call_id="test-call-id",
         debug=True,
         vector_column_name="booking_number_desc",
-        similarity_metric="l2",
         re_rank=True,
         user_id="user_1",
     )

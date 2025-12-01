@@ -42,9 +42,6 @@ class PredictionRequest(BaseModel):
     vector_column_name: Optional[str] = Field(
         default="vector", description="Column name for the vector data."
     )
-    similarity_metric: Optional[str] = Field(
-        default="l2", description="Similarity metric to use, default is 'l2'."
-    )
     params: Optional[dict] = Field(
         default_factory=dict, description="Additional filtering parameters."
     )

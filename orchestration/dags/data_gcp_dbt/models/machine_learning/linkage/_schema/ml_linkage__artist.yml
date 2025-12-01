@@ -3,15 +3,6 @@ version: 2
 models:
   - name: ml_linkage__artist
     description: "{{ doc('description__ml_linkage__artist') }}"
-    data_tests:
-      - elementary.volume_anomalies:
-          tags: [elementary]
-          training_period:
-            period: day
-            count: 7
-          detection_period:
-            period: day
-            count: 1
     columns:
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"

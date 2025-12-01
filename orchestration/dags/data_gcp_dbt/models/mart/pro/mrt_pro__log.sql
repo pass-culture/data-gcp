@@ -75,7 +75,9 @@ where
             "Creating new Offerer and Venue",
             "Video has been deleted from offer",
             "Video has been added to offer",
-            "Video has been updated on offer"
+            "Video has been updated on offer",
+            "Highlight requests have been created",
+            "Highlight requests have been deleted"
         )
     )
     {% if is_incremental() %}

@@ -8,11 +8,7 @@
     )
 }}
 
-{% set dimensions = [
-    {"name": "NAT", "value_expr": "'NAT'"},
-    {"name": "REG", "value_expr": "venue_region_name"},
-    {"name": "ACAD", "value_expr": "venue_academy_name"},
-] %}
+{% set dimensions = get_dimensions("venue", "academic") %}
 
 with
     base_aggregation as (
@@ -42,41 +38,25 @@ with
     ),
 
     all_dimensions as (
-        {% for dim in dimensions %}
-            {% if not loop.first %}
-                union all
-            {% endif %}
-            select
-                partition_month,
-                updated_at,
-                '{{ dim.name }}' as dimension_name,
-                {{ dim.value_expr }} as dimension_value,
-                offerer_name,
-                sum(total_booking_amount) as total_booking_amount,
-                sum(total_number_of_tickets) as total_number_of_tickets,
-                row_number() over (
-                    partition by
-                        partition_month
-                        {% if not dim.name == "NAT" %}, {{ dim.value_expr }} {% endif %}
-                    order by sum(total_booking_amount) desc
-                ) as total_booking_amount_ranked
-            from base_aggregation
-            group by
-                partition_month,
-                updated_at,
-                dimension_name,
-                dimension_value,
-                offerer_name,
-                offerer_id
-            qualify
-                row_number() over (
-                    partition by
-                        partition_month
-                        {% if not dim.name == "NAT" %}, {{ dim.value_expr }} {% endif %}
-                    order by total_booking_amount desc
-                )
-                <= 50
-        {% endfor %}
+        {{
+            generate_top_ranking_by_dimensions(
+                base_cte="base_aggregation",
+                dimensions=dimensions,
+                entity_fields=["offerer_name", "offerer_id"],
+                aggregated_metrics=[
+                    {
+                        "field": "total_booking_amount",
+                        "alias": "total_booking_amount",
+                    },
+                    {
+                        "field": "total_number_of_tickets",
+                        "alias": "total_number_of_tickets",
+                    },
+                ],
+                ranking_metric="total_booking_amount",
+                top_n=50,
+            )
+        }}
     )
 
 select

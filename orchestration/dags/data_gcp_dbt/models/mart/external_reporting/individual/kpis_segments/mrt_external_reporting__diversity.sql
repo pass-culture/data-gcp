@@ -9,29 +9,14 @@
     )
 }}
 
-{% set dimensions = [
-    {"name": "NAT", "value_expr": "'NAT'"},
-    {"name": "REG", "value_expr": "user_region_name"},
-    {"name": "DEP", "value_expr": "user_department_name"},
-    {"name": "EPCI", "value_expr": "user_epci"},
-    {"name": "COM", "value_expr": "user_city"},
-] %}
-
-{% set categories = [
-    {"name": "SPECTACLE", "value": "spectacle_vivant"},
-    {"name": "MUSEE", "value": "musee"},
-    {"name": "CINEMA", "value": "cinema"},
-    {"name": "PRATIQUE_ART", "value": "pratique_artistique"},
-    {"name": "INSTRUMENT", "value": "instrument"},
-    {"name": "LIVRE", "value": "livre"},
-    {"name": "MUSIQUE_LIVE", "value": "concert"},
-] %}
+{% set dimensions = get_dimensions("user", "geo_full") %}
+{% set categories = get_categories() %}
 
 {% for category in categories %}
     {% if loop.first %}
         with
     {% endif %}
-        booked_category_{{ category.value }} as (
+        booked_category_{{ category.value_expr }} as (
             select distinct user_id
             from {{ ref("mrt_global__booking") }}
             where booking_is_used and offer_category_id = "{{ category.name }}"
@@ -49,7 +34,7 @@
             timestamp("{{ ts() }}") as updated_at,
             '{{ dim.name }}' as dimension_name,
             {{ dim.value_expr }} as dimension_value,
-            "pct_beneficiaires_ayant_reserve_dans_la_categorie_{{ category.value }}"
+            "pct_beneficiaires_ayant_reserve_dans_la_categorie_{{ category.value_expr }}"
             as kpi_name,
             coalesce(count(distinct bc.user_id), 0) as numerator,
             coalesce(count(distinct user_id), 0) as denominator,
@@ -57,7 +42,7 @@
                 safe_divide(count(distinct bc.user_id), count(distinct user_id)), 0
             ) as kpi
         from {{ ref("mrt_global__user_beneficiary") }}
-        left join booked_category_{{ category.value }} as bc using (user_id)
+        left join booked_category_{{ category.value_expr }} as bc using (user_id)
         where
             total_deposit_amount >= 300
             {% if is_incremental() %}

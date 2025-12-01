@@ -30,6 +30,8 @@ FIRST_ARTIST_KEY = "first_artist"
 IS_MULTI_ARTISTS_KEY = "is_multi_artists"
 PREPROCESSED_ARTIST_NAME_KEY = "preprocessed_artist_name"
 POSTPROCESSED_ARTIST_NAME_KEY = "postprocessed_artist_name"
+WIKIPEDIA_URL_KEY = "wikipedia_url"
+WIKIPEDIA_CONTENT_KEY = "wikipedia_content"
 
 # Dataframe Columns List
 ARTIST_ALIASES_KEYS = [
@@ -40,16 +42,22 @@ ARTIST_ALIASES_KEYS = [
     ARTIST_NAME_TO_MATCH_KEY,
     WIKI_ID_KEY,
 ]
-ARTISTS_KEYS = [ARTIST_ID_KEY, ARTIST_NAME_KEY, DESCRIPTION_KEY, IMG_KEY, WIKI_ID_KEY]
+ARTISTS_KEYS = [
+    ARTIST_ID_KEY,
+    ARTIST_NAME_KEY,
+    DESCRIPTION_KEY,
+    IMG_KEY,
+    WIKI_ID_KEY,
+    WIKIPEDIA_URL_KEY,
+]
 PRODUCTS_KEYS = [
     PRODUCT_ID_KEY,
     ARTIST_ID_KEY,
     ARTIST_TYPE_KEY,
 ]
 
+
 # Enum like classes
-
-
 class Action:
     add: ClassVar[str] = "add"
     remove: ClassVar[str] = "remove"
@@ -67,3 +75,9 @@ class ProductToLinkStatus:
     not_matched_with_artists_key = "not matched with artists"
     removed_products_key = "removed product"
     matched_with_artists_key = "matched with artists"
+
+
+# Robot files
+WIKIMEDIA_REQUEST_HEADER = {
+    "User-Agent": "PassCulture/1.0 (https://passculture.app; contact@passculture.app) Python/requests"
+}  # Required to avoid 403 errors from Wikimedia API

@@ -8,21 +8,8 @@
     )
 }}
 
-{% set dimensions = [
-    {"name": "NAT", "value_expr": "'NAT'"},
-    {"name": "REG", "value_expr": "venue_region_name"},
-    {"name": "DEP", "value_expr": "venue_department_name"},
-] %}
-
-{% set categories = [
-    {"name": "LIVRE", "value_expr": "livre"},
-    {"name": "CINEMA", "value_expr": "cinema"},
-    {"name": "MUSIQUE_LIVE", "value_expr": "concert"},
-    {"name": "SPECTACLE", "value_expr": "spectacle_vivant"},
-    {"name": "MUSEE", "value_expr": "musee"},
-    {"name": "PRATIQUE_ART", "value_expr": "pratique_artistique"},
-    {"name": "INSTRUMENT", "value_expr": "instrument"},
-] %}
+{% set dimensions = get_dimensions("venue", "geo") %}
+{% set categories = get_categories() %}
 
 {% set kpis = [
     {"name": "total_reservations", "value_expr": "total_bookings"},

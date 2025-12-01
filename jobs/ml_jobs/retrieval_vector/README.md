@@ -12,6 +12,18 @@ This API is designed to provide recommendations based on user preferences and ve
 - **Filtering**: Applies filtering criteria to narrow down recommendations and get top associated items.
 - **Re-ranking**: Supports re-ranking of results based on additional metrics.
 
+##  About vector search metrics
+
+The vector search is implemented using **LanceDB**, a high-performance vector database.
+
+The default similarity metric used for vector search is the **dot product**.
+
+**However, if an index has been built for a specific vector search, the metric used to build the index will override the default similarity metric.**
+
+> [LanceDB Doc](https://lancedb.com/docs/search/vector-search/#configure-distance-metric): You can configure the distance metric during search only if there’s no vector index. If a vector index exists, the distance metric will always be the one you specified when creating the index.
+
+=> Check create_items_table function in `create_vector_database.py` to see which metric is used.
+
 ## Requirements
 
 - **Python 3.10+**
@@ -74,7 +86,6 @@ You can find all dependencies in the `api-requirements.in` file.
        "call_id": "1234567890",
        "debug": 1,
        "prefilter": 1,
-       "similarity_metric": "dot"
        }
    ]
    }'
@@ -92,7 +103,6 @@ You can find all dependencies in the `api-requirements.in` file.
          "call_id": "1234567890",
          "debug": 1,
          "prefilter": 1,
-         "similarity_metric": "dot"
       }
       ```
 
@@ -108,7 +118,6 @@ You can find all dependencies in the `api-requirements.in` file.
          "call_id": "1234567890",
          "debug": 1,
          "prefilter": 1,
-         "similarity_metric": "dot"
       }
       ```
 
@@ -123,7 +132,6 @@ You can find all dependencies in the `api-requirements.in` file.
          "call_id": "1234567890",
          "debug": 1,
          "prefilter": 1,
-         "similarity_metric": "dot"
       }
       ```
 
@@ -137,7 +145,6 @@ You can find all dependencies in the `api-requirements.in` file.
          "call_id": "1234567890",
          "debug": 1,
          "prefilter": 1,
-         "similarity_metric": "dot",
          "vector_column_name": "booking_number_desc"
       }
       ```
@@ -152,17 +159,16 @@ You can find all dependencies in the `api-requirements.in` file.
          "call_id": "1234567890",
          "debug": 1,
          "prefilter": 1,
-         "similarity_metric": "dot",
          "text": "YOUR TEXT HERE"
       }
       ```
 
-
    In the above examples, you will get a dictionnary with a key "predictions" containing the list of recommended items.
    > Note that the `"_distance"` field is to improved :
    - for top recommendations, it will return a number > 1, the lowest being the best recommendation.
-   - for vector search, it will return the distance between the input vector and the closest vector in the database for the given similarity_metric. For instance, if you use the `dot` similarity metric, it will return `1 - dot product`.
-      - ⚠️ If you do a vector search but find no resutlts, then the fallback will be the top recommendations, giving you a `"_distance"` > 1 ⚠️
+   - for vector search, it will return the distance between the input vector and the closest vector in the database for the `dot` distance (i.e. `1 - dot_product`).
+      - ⚠️ If an index has been built for this vector search as it is recommended, then the search metric is overriden by the one used to build the index (see above section "About vector search metrics").
+      - ⚠️ If you do a vector search but find no results, then the fallback will be the top recommendations, giving you a `"_distance"` > 1
 
 ### Testing
 

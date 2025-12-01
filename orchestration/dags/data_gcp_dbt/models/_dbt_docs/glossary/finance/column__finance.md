@@ -42,6 +42,7 @@
 {% docs column__finance_incident_id %} Identifier of the parent finance incident. {% enddocs %}
 {% docs column__finance_incident_new_total_amount %} New total amount after incident correction. {% enddocs %}
 
+{% docs column__venue_pricing_point_link_id %} Unique identifier for the venue-pricing point link. {% enddocs %}
 {% docs column__pricing_point_link_beginning_date %} Start date of the venue-pricing point link. {% enddocs %}
 {% docs column__pricing_point_link_ending_date %} End date of the venue-pricing point link (null if still active). {% enddocs %}
 
@@ -57,6 +58,7 @@
 {% docs column__payment_transaction_label %} Label of the transaction. {% enddocs %}
 {% docs column__payment_message_id %} Identifier of the payment message. {% enddocs %}
 
+{% docs column__payment_status_id %} Unique identifier for the payment status record. {% enddocs %}
 {% docs column__payment_status_date %} Date of the payment status change. {% enddocs %}
 {% docs column__payment_status %} Status of the payment. {% enddocs %}
 {% docs column__payment_status_detail %} Details about the status change. {% enddocs %}

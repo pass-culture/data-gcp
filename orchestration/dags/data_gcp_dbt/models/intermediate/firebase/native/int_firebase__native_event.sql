@@ -181,5 +181,4 @@ where
         event_date between date_sub(
             date("{{ ds() }}"), interval {{ var("lookback_days", 3) }} day
         ) and date("{{ ds() }}")
-    {% else %} date(event_date) >= date("2025-11-01")
     {% endif %}

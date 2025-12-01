@@ -21,7 +21,6 @@ with
                 between date_sub(date("{{ ds() }}"), interval 3 day) and date(
                     "{{ ds() }}"
                 )
-            {% else %} date(event_date) >= date("2025-11-01")
             {% endif %}
     ),
 

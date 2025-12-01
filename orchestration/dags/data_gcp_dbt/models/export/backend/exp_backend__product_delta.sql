@@ -26,66 +26,28 @@ with
             and type = 'SyncEnd'
     ),
 
-    snap as (
-        select
-            ean,
-            recto_image_uuid,
-            verso_image_uuid,
-            dbt_valid_from,
-            dbt_valid_to,
-            parse_json(json_value(parse_json(json_str), '$')) as json_raw
-        from {{ ref("snapshot_raw__titelive_products") }}
-        where dbt_valid_to is null and json_str is not null
-    ),
-
-    changed_products_snapshot as (
-        select
-            snap.ean,
-            snap.json_raw,
-            snap.recto_image_uuid,
-            snap.verso_image_uuid,
-            snap.dbt_valid_from,
-
-            case
-                {%- for key, val in cfg.products.items() %}
-                    when
-                        regexp_contains(
-                            json_value(snap.json_raw, '{{ cfg.path_code_support }}'),
-                            '{{ val.support_code_pattern }}'
-                        )
-                    then '{{ val.payload_type }}'
-                {% endfor -%}
-                else null
-            end as product_type
-
-        from snap
+    filtered_products as (
+        select current_meta.*
+        from {{ ref("int_raw__product_titelive_details") }} as current_meta
         cross join last_successful_sync
         where
-            {% for key, val in cfg.products.items() %}
-                (
-                    regexp_contains(
-                        json_value(snap.json_raw, '{{ cfg.path_code_support }}'),
-                        '{{ val.support_code_pattern }}'
+            current_meta.product_type is not null
+            and (
+                {% for key, val in cfg.products.items() %}
+                    (
+                        current_meta.product_type = '{{ val.payload_type }}'
+                        and current_meta.last_updated_at
+                        > timestamp(last_successful_sync.{{ key }}_last_sync_date)
                     )
-                    and snap.dbt_valid_from
-                    > timestamp(last_successful_sync.{{ key }}_last_sync_date)
-                )
-                {% if not loop.last %} or {% endif %}
-            {% endfor %}
+                    {% if not loop.last %} or {% endif %}
+                {% endfor %}
+            )
     )
 
 select
-    delta.product_type,
-    delta.ean,
-    delta.recto_image_uuid as recto_uuid,
-    delta.verso_image_uuid as verso_uuid,
-    delta.dbt_valid_from as modification_date,
-    -- Common fields
-    {{- render_json_fields("delta", "json_raw", cfg.common_fields_struct) }},
-    -- Product-specific fields
-    {%- for key, val in cfg.products.items() -%}
-        {{- render_json_fields("delta", "json_raw", val.specific_fields) }}
-        {%- if not loop.last %},{% endif -%}
-    {%- endfor %}
-
-from changed_products_snapshot as delta
+    filtered.*, snap.recto_image_uuid as recto_uuid, snap.verso_image_uuid as verso_uuid
+from filtered_products as filtered
+left join
+    {{ ref("snapshot_raw__titelive_products") }} as snap
+    on filtered.ean = snap.ean
+    and snap.dbt_valid_to is null

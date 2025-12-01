@@ -12,10 +12,12 @@
         {% set config_params = {
             "materialized": "incremental",
             "incremental_strategy": incremental_strategy,
-            "partition_by": partition_by,
             "on_schema_change": on_schema_change,
             "require_partition_filter": require_partition_filter,
         } %}
+        {% if partition_by is not none %}
+            {% do config_params.update({"partition_by": partition_by}) %}
+        {% endif %}
         {% if cluster_by is not none %}
             {% do config_params.update({"cluster_by": cluster_by}) %}
         {% endif %}

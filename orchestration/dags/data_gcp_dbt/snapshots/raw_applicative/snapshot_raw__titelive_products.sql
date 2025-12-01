@@ -6,6 +6,7 @@
                 strategy="check",
                 check_cols=["json_str"],
                 unique_key="ean",
+                cluster_by=["ean"],
                 hard_deletes="ignore",
                 tags=["external_dependency"],
                 meta={

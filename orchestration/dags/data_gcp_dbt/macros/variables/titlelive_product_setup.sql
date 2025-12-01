@@ -51,16 +51,12 @@
     {% set products = {
         "paper": {
             "payload_type": "paper",
-            "case_condition": "regexp_contains(json_value(snap.json_raw, '"
-            ~ path_code_support
-            ~ "'), 'r[a-zA-Z]')",
+            "support_code_pattern": "r[a-zA-Z]",
             "specific_fields": specific_paper_fields_struct,
         },
         "music": {
             "payload_type": "music",
-            "case_condition": "regexp_contains(json_value(snap.json_raw, '"
-            ~ path_code_support
-            ~ "'), 'r[0-9]')",
+            "support_code_pattern": "r[0-9]",
             "specific_fields": specific_music_fields_struct,
         },
     } %}

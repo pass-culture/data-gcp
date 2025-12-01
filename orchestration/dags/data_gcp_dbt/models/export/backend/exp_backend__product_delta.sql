@@ -48,7 +48,10 @@ with
 
             case
                 {%- for key, val in cfg.products.items() %}
-                    when {{ val.case_condition }} then '{{ val.payload_type }}'
+                    when regexp_contains(
+                        json_value(snap.json_raw, '{{ cfg.path_code_support }}'),
+                        '{{ val.support_code_pattern }}'
+                    ) then '{{ val.payload_type }}'
                 {% endfor -%}
                 else null
             end as product_type
@@ -58,7 +61,10 @@ with
         where
             {% for key, val in cfg.products.items() %}
                 (
-                    {{ val.case_condition }}
+                    regexp_contains(
+                        json_value(snap.json_raw, '{{ cfg.path_code_support }}'),
+                        '{{ val.support_code_pattern }}'
+                    )
                     and snap.dbt_valid_from
                     > timestamp(last_successful_sync.{{ key }}_last_sync_date)
                 )

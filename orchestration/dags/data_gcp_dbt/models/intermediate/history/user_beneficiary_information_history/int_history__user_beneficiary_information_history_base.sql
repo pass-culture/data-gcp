@@ -19,8 +19,9 @@ with
             ) as activity,
             json_value(action_history_json_data, '{{ json_path_address }}') as address,
             json_value(action_history_json_data, '{{ json_path_city }}') as city,
-            json_value(
-                action_history_json_data, '{{ json_path_postal_code }}'
+            nullif(
+                json_value(action_history_json_data, '{{ json_path_postal_code }}'),
+                'None'
             ) as postal_code,
             -- Normalize address using macro for consistent formatting
             {{
@@ -28,9 +29,9 @@ with
                     "json_value(action_history_json_data, '"
                     ~ json_path_address
                     ~ "')",
-                    "json_value(action_history_json_data, '"
+                    "nullif(json_value(action_history_json_data, '"
                     ~ json_path_postal_code
-                    ~ "')",
+                    ~ "'), 'None')",
                     "json_value(action_history_json_data, '" ~ json_path_city ~ "')",
                 )
             }} as normalized_address

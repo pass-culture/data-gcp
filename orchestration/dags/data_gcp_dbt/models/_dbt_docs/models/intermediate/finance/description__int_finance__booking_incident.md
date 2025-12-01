@@ -18,10 +18,7 @@ The `booking_finance_incident` specifies which bookings are affected and the cor
 
 ## Business Context
 
-Finance incidents can occur for various reasons:
-- **Fraud**: Fraudulent booking activity detected
-- **Incorrect price**: The offer price was wrong
-- **Other errors**: Various operational issues
+Finance incidents represent cases where the reimbursement of one or more bookings is incorrect. Motives include fraud, incorrect price, etc.
 
 When a finance incident is validated, a finance event is created (linked via `finance_event.booking_finance_incident_id`) to account for the corresponding monetary movement (correction).
 

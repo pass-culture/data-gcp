@@ -11,7 +11,7 @@ The `int_finance__payment_status` table tracks the history of legacy payment sta
 
 This is a legacy model associated with the Payment model, used for bookings reimbursed **before January 1st, 2022**.
 
-**Note**: This model should only be used for historical analysis of pre-2022 reimbursements.
+<!-- TODO: This table is not documented in the official finance documentation. Need to clarify the meaning of status values with the finance team. -->
 
 {% enddocs %}
 

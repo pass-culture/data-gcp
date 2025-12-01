@@ -26,12 +26,12 @@
 
 {% docs column__pricing_line_id %} Unique identifier for a pricing line. {% enddocs %}
 {% docs column__pricing_line_amount %} Amount of this pricing line in euro cents. {% enddocs %}
-{% docs column__pricing_line_category %} Reimbursement category. {% enddocs %}
+{% docs column__pricing_line_category %} Category of the pricing line. Possible values: `offerer revenue` (main reimbursement to offerer), `offerer contribution` (offerer's participation), `commercial gesture` (rare special arrangements). {% enddocs %}
 
-{% docs column__pricing_log_timestamp %} Timestamp of the status change. {% enddocs %}
+{% docs column__pricing_log_timestamp %} Timestamp of the log entry. {% enddocs %}
 {% docs column__pricing_log_status_before %} Status before the change. {% enddocs %}
 {% docs column__pricing_log_status_after %} Status after the change. {% enddocs %}
-{% docs column__pricing_log_reason %} Reason for the status change. {% enddocs %}
+{% docs column__pricing_log_reason %} Reason for the log entry. {% enddocs %}
 
 {% docs column__invoice_id %} Unique identifier for an invoice (reimbursement receipt). {% enddocs %}
 {% docs column__invoice_creation_date %} Date when the invoice was created. {% enddocs %}

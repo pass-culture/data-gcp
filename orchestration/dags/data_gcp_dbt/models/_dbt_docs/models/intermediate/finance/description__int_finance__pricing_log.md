@@ -7,9 +7,7 @@ description: Description of the `int_finance__pricing_log` table.
 
 The `int_finance__pricing_log` table tracks the history of pricing status changes.
 
-## Business Context
-
-This table is useful for debugging and understanding the lifecycle of a pricing. It records each status transition with timestamps and reasons, enabling audit and troubleshooting of the reimbursement process.
+<!-- TODO: This table is not documented in the official finance documentation. Need to clarify its purpose and column meanings with the finance team. -->
 
 {% enddocs %}
 

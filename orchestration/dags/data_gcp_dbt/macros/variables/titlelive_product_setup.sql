@@ -38,6 +38,9 @@
         {"json_path": "$.article[0].langueiso", "alias": "language_iso"},
         {"json_path": "$.article[0].taux_tva", "alias": "vat_rate"},
         {"json_path": "$.auteurs_multi", "alias": "multiple_authors"},
+        {"json_path": "$.article[0].contributor", "alias": "contributor"},
+        {"json_path": "$.article[0].serie", "alias": "series"},
+        {"json_path": "$.article[0].idserie", "alias": "series_id"},
     ] %}
 
     {% set specific_music_fields_struct = [

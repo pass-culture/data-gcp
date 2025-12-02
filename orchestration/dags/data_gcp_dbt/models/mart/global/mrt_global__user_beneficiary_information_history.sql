@@ -45,5 +45,6 @@ select
     user_age_at_info_creation
 from {{ ref("int_history__user_beneficiary_information_history") }}
 {% if is_incremental() %}
-    where date(user_information_created_at) = date_sub(date("{{ ds() }}"), interval 1 day)
+    where
+        date(user_information_created_at) = date_sub(date("{{ ds() }}"), interval 1 day)
 {% endif %}

@@ -305,8 +305,8 @@ with
 select
     ubih_pc.user_id,
     ubih_pc.user_information_rank,
-    ubih_pc.user_action_type,
-    ubih_pc.creation_timestamp,
+    ubih_pc.user_action_type as user_information_action_type,
+    ubih_pc.creation_timestamp as user_information_created_at,
     ubih_pc.user_activity,
     ubih_pc.user_address,
     ubih_pc.user_city,
@@ -315,17 +315,17 @@ select
     ubih_pc.user_previous_address,
     ubih_pc.user_previous_city,
     ubih_pc.user_previous_postal_code,
-    ubih_pc.has_confirmed,
-    ubih_pc.has_modified,
-    ubih_pc.has_modified_activity,
-    ubih_pc.has_modified_address,
-    ubih_pc.has_modified_city,
-    ubih_pc.has_modified_postal_code,
+    ubih_pc.has_confirmed as user_has_confirmed_information,
+    ubih_pc.has_modified as user_has_modified_information,
+    ubih_pc.has_modified_activity as user_has_modified_activity,
+    ubih_pc.has_modified_address as user_has_modified_address,
+    ubih_pc.has_modified_city as user_has_modified_city,
+    ubih_pc.has_modified_postal_code as user_has_modified_postal_code,
     coalesce(ubih_ga.user_longitude, ubih_pc.user_longitude) as user_longitude,
     coalesce(ubih_ga.user_latitude, ubih_pc.user_latitude) as user_latitude,
     -- User age at information creation (using exact age calculation)
     {{ calculate_exact_age("date(ubih_pc.creation_timestamp)", "ubd.user_birth_date") }}
-    as user_age_at_info_creation
+    as user_age_at_information_creation
 from ubih_coordinates_via_postal_code as ubih_pc
 left join
     ubih_coordinates_via_geocoded_address as ubih_ga

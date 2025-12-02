@@ -22,7 +22,7 @@ with
         where
             dbt_valid_to is null and json_str is not null
             {% if is_incremental() %}
-                and dbt_valid_from > (
+                and dbt_valid_from >= (
                     select max(this.last_updated_at) as dummy_alias
                     from {{ this }} as this
                 )

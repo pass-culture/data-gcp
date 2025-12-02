@@ -304,8 +304,8 @@ with
 -- Final output: prefer geocoded coordinates over postal code centroid
 select
     ubih_pc.user_id,
-    ubih_pc.user_information_rank,
-    ubih_pc.user_action_type as user_information_action_type,
+    ubih_pc.info_history_rank as user_information_rank,
+    ubih_pc.action_type as user_information_action_type,
     ubih_pc.creation_timestamp as user_information_created_at,
     ubih_pc.user_activity,
     ubih_pc.user_address,

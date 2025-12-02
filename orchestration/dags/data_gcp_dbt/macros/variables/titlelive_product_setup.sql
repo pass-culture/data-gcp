@@ -54,12 +54,12 @@
     {% set products = {
         "paper": {
             "payload_type": "paper",
-            "support_code_pattern": "r[a-zA-Z]",
+            "support_code_pattern": "R'[a-zA-Z]'",
             "specific_fields": specific_paper_fields_struct,
         },
         "music": {
             "payload_type": "music",
-            "support_code_pattern": "r[0-9]",
+            "support_code_pattern": "R'[0-9]'",
             "specific_fields": specific_music_fields_struct,
         },
     } %}

@@ -302,7 +302,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             python link_products_to_artists_from_scratch.py \
+             uv run cli/link_products_to_artists_from_scratch.py \
             --product-filepath {os.path.join(STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME)} \
             --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
             --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
@@ -317,7 +317,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             python get_wikimedia_commons_license.py \
+             uv run cli/get_wikimedia_commons_license.py \
             --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, ARTISTS_GCS_FILENAME)} \
             --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)}
             """,
@@ -328,7 +328,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             python get_wikipedia_page_content.py \
+             uv run cli/get_wikipedia_page_content.py \
             --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)} \
             --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME)}
             """,
@@ -352,7 +352,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-         python evaluate.py \
+         uv run cli/evaluate.py \
         --products-to-link-file-path {os.path.join(STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME)} \
         --artists-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)} \
         --product-artist-link-file-path {os.path.join(STORAGE_BASE_PATH, PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
@@ -370,7 +370,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             python link_new_products_to_artists.py \
+             uv run cli/link_new_products_to_artists.py \
             --artist-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
             --artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME)} \
             --product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
@@ -392,7 +392,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             python refresh_artist_metadatas.py \
+             uv run cli/refresh_artist_metadatas.py \
             --artist-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
             --artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME)} \
             --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
@@ -413,7 +413,7 @@ with DAG(
         base_dir=BASE_DIR,
         trigger_rule="none_failed_min_one_success",
         command=f"""
-             python get_wikimedia_commons_license.py \
+             uv run cli/get_wikimedia_commons_license.py \
             --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME)} \
             --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME)}
             """,
@@ -425,7 +425,7 @@ with DAG(
         base_dir=BASE_DIR,
         trigger_rule="none_failed_min_one_success",
         command=f"""
-             python get_wikipedia_page_content.py \
+             uv run cli/get_wikipedia_page_content.py \
             --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME)} \
             --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME)}
             """,

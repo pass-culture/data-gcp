@@ -1,4 +1,4 @@
-from time import time
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 import pandas as pd
@@ -71,6 +71,7 @@ def merge_upsert(
     primary_key: str,
     project_id: str,
     ttl_hours: int = 24,
+    date_columns: list[str] = None,
     *,
     nullify_deprecated_columns: bool = False,
 ):
@@ -81,6 +82,7 @@ def merge_upsert(
     - tmp_table: source table with new rows/updates
     - main_table: target table to upsert into
     - primary_key: column name used as key for matching rows
+    - date_columns: list of columns to be cast to DATE
     - project_id: GCP project ID
     - ttl_hours: expiration time for tmp_table in hours
     - nullify_deprecated_columns: if True, target columns not in tmp_table are set to NULL
@@ -93,6 +95,7 @@ def merge_upsert(
 
     tmp_cols = {col.name for col in tmp_schema}
     main_cols = {col.name for col in main_schema}
+    date_columns = date_columns or []
 
     # --- Build UPDATE assignments ---
     update_set_list = []
@@ -100,13 +103,19 @@ def merge_upsert(
         if col == primary_key:
             continue
         if col in tmp_cols:
-            update_set_list.append(f"T.{col} = S.{col}")
+            if col in date_columns:
+                update_set_list.append(f"T.{col} = CAST(S.{col} AS DATE)")
+            else:
+                update_set_list.append(f"T.{col} = S.{col}")
         elif nullify_deprecated_columns:
             update_set_list.append(f"T.{col} = NULL")
 
     # --- Build INSERT column/value lists ---
     insert_columns = [c.name for c in tmp_schema]
-    insert_values = [f"S.{col}" for col in insert_columns]
+    insert_values = [
+        f"CAST(S.{col} AS DATE)" if col in date_columns else f"S.{col}"
+        for col in insert_columns
+    ]
 
     # --- Inline Jinja template ---
     jinja_sql = """
@@ -146,5 +155,5 @@ def merge_upsert(
 
     # --- Set expiration on tmp table ---
     tmp_table_obj = client.get_table(tmp_table)
-    tmp_table_obj.expires = int(time.time() + ttl_hours * 3600) * 1000
+    tmp_table_obj.expires = datetime.now(timezone.utc) + timedelta(hours=ttl_hours)
     client.update_table(tmp_table_obj, ["expires"])

@@ -96,7 +96,7 @@ def main(
     iteration = 0
 
     extraction_datetime = datetime.fromisoformat(ts)
-    extraction_date = extraction_datetime.date()
+    extraction_date = extraction_datetime.strftime("%Y-%m-%d")
     tmp_table = f"{BIGQUERY_TMP_DATASET}.tmp_embedding_extraction"
     main_table = f"{output_dataset_name}.{output_table_name}"
 
@@ -135,6 +135,7 @@ def main(
             main_table=main_table,
             primary_key=PRIMARY_KEY,
             project_id=gcp_project,
+            date_columns=["extraction_date"],
             nullify_deprecated_columns=NULLIFY_DEPRECATED_COLUMNS,
         )
         logging.info("All batches processed and upserted successfully.")

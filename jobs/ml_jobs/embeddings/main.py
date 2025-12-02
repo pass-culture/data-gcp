@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 
 import pandas as pd
 import typer
-from google.cloud import bigquery
 
 from tools.config import (
     BIGQUERY_TMP_DATASET,
@@ -13,7 +12,11 @@ from tools.config import (
     PRIMARY_KEY,
 )
 from tools.embedding_extraction import extract_embedding
-from utils.bigquery import load_data, merge_upsert, write_to_tmp
+from utils.bigquery import (
+    load_data,
+    merge_upsert,
+    write_to_tmp,
+)
 from utils.logging import logging
 
 
@@ -97,10 +100,6 @@ def main(
     tmp_table = f"{BIGQUERY_TMP_DATASET}.tmp_embedding_extraction"
     main_table = f"{output_dataset_name}.{output_table_name}"
 
-    client = bigquery.Client(project=gcp_project)
-    client.query(f"DELETE FROM `{tmp_table}` WHERE TRUE").result()
-    logging.info(f"Cleared tmp table {tmp_table}")
-
     df = load_data(
         gcp_project,
         input_dataset_name,
@@ -112,15 +111,18 @@ def main(
         logging.info(f"Will process {df.shape} rows.")
         df = preprocess(df, params["features"])
 
-        for start in range(0, df.shape[0], batch_size):
+        for iteration, start in enumerate(range(0, df.shape[0], batch_size)):
             df_subset = df.iloc[start : start + batch_size]
             embeddings_df = extract_embedding(df_subset, params).assign(
                 extraction_date=extraction_date,
                 extraction_datetime=extraction_datetime,
             )
 
+            if_exists = "replace" if iteration == 0 else "append"
             # Append to tmp table
-            write_to_tmp(embeddings_df, tmp_table, project_id=gcp_project)
+            write_to_tmp(
+                embeddings_df, tmp_table, if_exists=if_exists, project_id=gcp_project
+            )
 
             processed_rows += df_subset.shape[0]
             logging.info(

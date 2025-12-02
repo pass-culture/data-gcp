@@ -1,6 +1,8 @@
 from time import time
+from typing import Literal
 
 import pandas as pd
+from google.api_core import exceptions
 from google.cloud import bigquery
 from jinja2 import Template
 
@@ -21,9 +23,33 @@ def load_data(
     )
 
 
+def create_or_clear_tmp_table(client: bigquery.Client, table_name: str) -> None:
+    """
+    Ensures a BigQuery table exists.
+    If the table does not exist, it is created empty.
+    If it exists, it is cleared (DELETE WHERE TRUE).
+    """
+    try:
+        # Check existence
+        client.get_table(table_name)
+
+        # If table exists, clear it
+        client.query(f"DELETE FROM `{table_name}` WHERE TRUE").result()
+        logging.info(f"Cleared tmp table {table_name}")
+
+    except exceptions.NotFound:
+        # If table does not exist, create empty table
+        logging.info(f"Tmp table {table_name} does not exist — creating it.")
+        client.query(
+            f"CREATE TABLE `{table_name}` AS SELECT * FROM UNNEST([])"
+        ).result()
+        logging.info(f"Created empty tmp table {table_name}")
+
+
 def write_to_tmp(
     df: pd.DataFrame,
     tmp_table: str,
+    if_exists: Literal["fail", "replace", "append"] = "append",
     project_id: str = GCP_PROJECT_ID,
 ):
     """
@@ -32,9 +58,11 @@ def write_to_tmp(
     df.to_gbq(
         tmp_table,
         project_id=project_id,
-        if_exists="append",
+        if_exists=if_exists,
     )
-    logging.info(f"Wrote {len(df)} rows to tmp table {tmp_table}")
+    logging.info(
+        f"Wrote {len(df)} rows to tmp table {tmp_table} (if_exists={if_exists})"
+    )
 
 
 def merge_upsert(

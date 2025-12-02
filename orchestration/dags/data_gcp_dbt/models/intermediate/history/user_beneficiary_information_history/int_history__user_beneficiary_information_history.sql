@@ -95,7 +95,7 @@ select
     user_qpv.qpv_code as user_qpv_code,
     user_qpv.qpv_name as user_qpv_name,
     -- User age at information creation
-    source_data.user_age_at_info_creation
+    source_data.user_age_at_information_creation
 from {{ ref("int_history__user_beneficiary_information_history_base") }} as source_data
 left join
     user_epci

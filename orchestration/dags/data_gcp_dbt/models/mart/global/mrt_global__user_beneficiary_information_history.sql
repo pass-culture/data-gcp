@@ -42,7 +42,7 @@ select
     user_density_macro_level,
     user_qpv_code,
     user_qpv_name,
-    user_age_at_info_creation
+    user_age_at_information_creation
 from {{ ref("int_history__user_beneficiary_information_history") }}
 {% if is_incremental() %}
     where

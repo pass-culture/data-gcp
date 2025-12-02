@@ -4,8 +4,8 @@
 import pandas as pd
 import streamlit as st
 
-from constants import ARTIST_NAME_TO_FILTER
-from utils.preprocessing_utils import (
+from src.constants import ARTIST_NAME_TO_FILTER
+from src.utils.preprocessing_utils import (
     clean_names,
     extract_artist_name,
     extract_first_artist,

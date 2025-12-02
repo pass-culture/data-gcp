@@ -10,8 +10,8 @@ from scipy.sparse import csr_matrix, vstack
 from sklearn.cluster import DBSCAN
 from stqdm import stqdm
 
-from constants import OFFER_IS_SYNCHRONISED
-from utils.preprocessing_utils import (
+from src.constants import OFFER_IS_SYNCHRONISED
+from src.utils.preprocessing_utils import (
     FilteringParamsType,
     clean_names,
     extract_first_artist,

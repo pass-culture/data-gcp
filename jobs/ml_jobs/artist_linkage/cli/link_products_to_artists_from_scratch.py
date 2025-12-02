@@ -5,7 +5,7 @@ import pandas as pd
 import typer
 from loguru import logger
 
-from constants import (
+from src.constants import (
     ACTION_KEY,
     ARTIST_NAME_KEY,
     ARTIST_NAME_TO_MATCH_KEY,
@@ -14,9 +14,12 @@ from constants import (
     OFFER_CATEGORY_ID_KEY,
     PRODUCT_ID_KEY,
 )
-from utils.loading import load_wikidata
-from utils.matching import create_artists_tables, match_artists_with_wikidata
-from utils.preprocessing_utils import filter_products, prepare_artist_names_for_matching
+from src.utils.loading import load_wikidata
+from src.utils.matching import create_artists_tables, match_artists_with_wikidata
+from src.utils.preprocessing_utils import (
+    filter_products,
+    prepare_artist_names_for_matching,
+)
 
 app = typer.Typer()
 

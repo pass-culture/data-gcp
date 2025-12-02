@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-from constants import (
+from src.constants import (
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
     ARTIST_TYPE_KEY,
@@ -9,7 +9,7 @@ from constants import (
     PRODUCT_ID_KEY,
     WIKI_ID_KEY,
 )
-from utils.gcs_utils import get_datest_from_bucket
+from src.utils.gcs_utils import get_datest_from_bucket
 
 PRODUCTS_TO_LINK_FILENAME = "products_to_link.parquet"
 ARTISTS_FILENAME = "artist.parquet"

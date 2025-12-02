@@ -4,7 +4,7 @@ import pandas as pd
 import typer
 from loguru import logger
 
-from constants import (
+from src.constants import (
     ACTION_KEY,
     ARTIST_ALIASES_KEYS,
     ARTIST_ID_KEY,
@@ -18,7 +18,7 @@ from constants import (
     PRODUCTS_KEYS,
     WIKI_ID_KEY,
 )
-from utils.loading import load_wikidata
+from src.utils.loading import load_wikidata
 
 ALIAS_MERGE_COLUMNS = [
     ARTIST_ID_KEY,

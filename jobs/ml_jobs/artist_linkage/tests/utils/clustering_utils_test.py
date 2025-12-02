@@ -4,9 +4,9 @@ import pytest
 import rapidfuzz
 from rapidfuzz import fuzz
 
-from constants import TOTAL_OFFER_COUNT
-from utils import clustering_utils
-from utils.clustering_utils import (
+from src.constants import TOTAL_OFFER_COUNT
+from src.utils import clustering_utils
+from src.utils.clustering_utils import (
     cluster_with_distance_matrices,
     get_cluster_to_nickname_dict,
 )

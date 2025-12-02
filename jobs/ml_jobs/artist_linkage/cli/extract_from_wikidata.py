@@ -6,7 +6,7 @@ import requests
 import typer
 from loguru import logger
 
-from utils.preprocessing_utils import normalize_string_series
+from src.utils.preprocessing_utils import normalize_string_series
 
 QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
 QLEVER_HEADERS = {"Accept": "text/csv", "Content-Type": "application/sparql-query"}

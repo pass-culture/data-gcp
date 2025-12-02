@@ -8,8 +8,8 @@ import rapidfuzz
 import typer
 from loguru import logger
 
-from constants import OFFER_IS_SYNCHRONISED
-from utils.clustering_utils import (
+from src.constants import OFFER_IS_SYNCHRONISED
+from src.utils.clustering_utils import (
     cluster_with_distance_matrices,
     format_cluster_matrix,
     get_cluster_to_nickname_dict,

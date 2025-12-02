@@ -9,7 +9,7 @@ from scipy.sparse import csr_matrix, vstack
 from sklearn.cluster import DBSCAN
 from tqdm import tqdm
 
-from constants import TOTAL_OFFER_COUNT
+from src.constants import TOTAL_OFFER_COUNT
 
 
 def _get_score_multiplier(dtype_distance_matrix: np.dtype) -> int:

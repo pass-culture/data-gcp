@@ -5,7 +5,7 @@ import pandas as pd
 import typer
 from loguru import logger
 
-from constants import (
+from src.constants import (
     ACTION_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
@@ -17,13 +17,13 @@ from constants import (
     PRODUCTS_KEYS,
     ProductToLinkStatus,
 )
-from utils.loading import load_wikidata
-from utils.matching import (
+from src.utils.loading import load_wikidata
+from src.utils.matching import (
     create_artists_tables,
     match_artist_on_offer_names,
     match_artists_with_wikidata,
 )
-from utils.preprocessing_utils import filter_products
+from src.utils.preprocessing_utils import filter_products
 
 ALIAS_MERGE_COLUMNS = [
     ARTIST_ID_KEY,

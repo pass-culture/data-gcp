@@ -51,7 +51,7 @@ with
                     when
                         regexp_contains(
                             json_value(snap.json_raw, '{{ cfg.path_code_support }}'),
-                            '{{ val.support_code_pattern }}'
+                            {{ val.support_code_pattern }}
                         )
                     then '{{ val.payload_type }}'
                 {% endfor -%}
@@ -65,7 +65,7 @@ with
                 (
                     regexp_contains(
                         json_value(snap.json_raw, '{{ cfg.path_code_support }}'),
-                        '{{ val.support_code_pattern }}'
+                        {{ val.support_code_pattern }}
                     )
                     and snap.dbt_valid_from
                     > timestamp(last_successful_sync.{{ key }}_last_sync_date)

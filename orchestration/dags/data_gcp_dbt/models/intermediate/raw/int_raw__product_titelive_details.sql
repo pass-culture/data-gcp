@@ -39,7 +39,7 @@ with
                     when
                         regexp_contains(
                             json_value(json_raw, '{{ cfg.path_code_support }}'),
-                            '{{ val.support_code_pattern }}'
+                            {{ val.support_code_pattern }}
                         )
                     then '{{ val.payload_type }}'
                 {% endfor %}

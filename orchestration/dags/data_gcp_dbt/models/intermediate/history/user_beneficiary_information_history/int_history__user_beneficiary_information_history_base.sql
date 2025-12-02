@@ -201,7 +201,7 @@ with
         select
             user_id,
             info_history_rank,
-            action_type as user_action_type,
+            action_type,
             creation_timestamp,
             user_activity,
             user_address,

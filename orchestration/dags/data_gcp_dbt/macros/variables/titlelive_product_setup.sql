@@ -1,0 +1,79 @@
+{% macro titelive_product_setup() %}
+    {% set provider_ids = ["9", "16", "17", "19", "20", "1082", "2156", "2190"] %}
+    {% set path_code_support = "$.article[0].codesupport" %}
+
+    {% set common_fields_struct = [
+        {"json_path": "$.titre", "alias": "title"},
+        {"json_path": "$.article[0].resume", "alias": "description"},
+        {"json_path": path_code_support, "alias": "support_code"},
+        {
+            "json_path": "$.article[0].dateparution",
+            "alias": "publication_date",
+        },
+        {"json_path": "$.article[0].editeur", "alias": "publisher"},
+        {"json_path": "$.article[0].gtl", "alias": "gtl"},
+        {
+            "json_path": "$.article[0].prix",
+            "alias": "price",
+            "cast_type": "numeric",
+        },
+        {
+            "json_path": "$.article[0].image",
+            "alias": "image",
+            "cast_type": "int64",
+        },
+        {
+            "json_path": "$.article[0].image_4",
+            "alias": "image_4",
+            "cast_type": "int64",
+        },
+    ] %}
+
+    {% set specific_paper_fields_struct = [
+        {
+            "json_path": "$.article[0].id_lectorat",
+            "alias": "readership_id",
+            "cast_type": "int64",
+        },
+        {"json_path": "$.article[0].langueiso", "alias": "language_iso"},
+        {"json_path": "$.article[0].taux_tva", "alias": "vat_rate"},
+        {"json_path": "$.auteurs_multi", "alias": "multiple_authors"},
+        {"json_path": "$.article[0].contributor", "alias": "contributor"},
+        {"json_path": "$.article[0].serie", "alias": "series"},
+        {"json_path": "$.article[0].idserie", "alias": "series_id"},
+    ] %}
+
+    {% set specific_music_fields_struct = [
+        {"json_path": "$.article[0].artiste", "alias": "artist"},
+        {"json_path": "$.article[0].label", "alias": "music_label"},
+        {"json_path": "$.article[0].compositeur", "alias": "composer"},
+        {"json_path": "$.article[0].interprete", "alias": "performer"},
+        {"json_path": "$.article[0].nb_galettes", "alias": "nb_discs"},
+    ] %}
+
+    {% set products = {
+        "paper": {
+            "payload_type": "paper",
+            "support_code_pattern": "r[a-zA-Z]",
+            "specific_fields": specific_paper_fields_struct,
+        },
+        "music": {
+            "payload_type": "music",
+            "support_code_pattern": "r[0-9]",
+            "specific_fields": specific_music_fields_struct,
+        },
+    } %}
+
+    {{
+        return(
+            {
+                "provider_ids": provider_ids,
+                "path_code_support": path_code_support,
+                "common_fields_struct": common_fields_struct,
+                "specific_paper_fields_struct": specific_paper_fields_struct,
+                "specific_music_fields_struct": specific_music_fields_struct,
+                "products": products,
+            }
+        )
+    }}
+{% endmacro %}

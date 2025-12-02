@@ -49,6 +49,18 @@
         {"json_path": "$.article[0].compositeur", "alias": "composer"},
         {"json_path": "$.article[0].interprete", "alias": "performer"},
         {"json_path": "$.article[0].nb_galettes", "alias": "nb_discs"},
+        {"json_path": "$.article[0].commentaire", "alias": "comment"},
+        {
+            "json_path": "$.article[0].contenu_explicite",
+            "alias": "explicit_content",
+            "cast_type": "int64",
+        },
+        {
+            "json_path": "$.article[0].dispo",
+            "alias": "availability",
+            "cast_type": "int64",
+        },
+        {"json_path": "$.article[0].distributeur", "alias": "distributor"},
     ] %}
 
     {% set products = {

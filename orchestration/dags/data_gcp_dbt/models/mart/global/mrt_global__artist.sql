@@ -72,5 +72,5 @@ group by
     a.wikidata_image_author,
     a.creation_date,
     a.modification_date,
-    a.total_consultations,
-    a.total_consulted_users
+    ac.total_consultations,
+    ac.total_consulted_users

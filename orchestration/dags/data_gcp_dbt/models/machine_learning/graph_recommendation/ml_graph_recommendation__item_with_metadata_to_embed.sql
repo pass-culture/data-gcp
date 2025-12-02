@@ -44,7 +44,7 @@ with
 
     titelive_metadata as (
         select offer_product_id, series_id, series, language_iso
-        from {{ ref("int_global__product_titelive_mapping") }}
+        from {{ ref("int_global__product_titelive_paper_mapping") }}
     )
 
 select

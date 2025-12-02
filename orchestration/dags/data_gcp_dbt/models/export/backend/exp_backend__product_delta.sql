@@ -1,50 +1,53 @@
-{{ config(materialized="table") }}
+{% set cfg = titelive_product_setup() %}
 
+{{ config(materialized="table") }}
 
 with
     last_successful_sync as (
-        select max(date) as last_sync_date
+        select
+            {% for key, val in cfg.products.items() %}
+                max(
+                    case when payload = '{{ val.payload_type }}' then date end
+                ) as {{ key }}_last_sync_date
+                {% if not loop.last %}, {% endif %}
+            {% endfor %}
         from {{ source("raw", "applicative_database_local_provider_event") }}
         where
-            providerid in ('9', '16', '17', '19', '20', '1082', '2156', '2190')
-            and payload = 'paper'
+            providerid in (
+                {%- for id in cfg.provider_ids -%}
+                    '{{ id }}'{%- if not loop.last %},{% endif -%}
+                {%- endfor -%}
+            )
+            and payload in (
+                {%- for key, val in cfg.products.items() -%}
+                    '{{ val.payload_type }}'{%- if not loop.last %},{% endif -%}
+                {% endfor -%}
+            )
             and type = 'SyncEnd'
     ),
 
-    changed_products_snapshot as (
-        select
-            snap.ean,
-            snap.json_raw,
-            snap.recto_image_uuid,
-            snap.verso_image_uuid,
-            snap.dbt_valid_from
-        from {{ ref("snapshot_raw__titelive_products") }} as snap
+    filtered_products as (
+        select current_meta.*
+        from {{ ref("int_raw__product_titelive_details") }} as current_meta
+        cross join last_successful_sync
         where
-            snap.dbt_valid_to is null
-            and snap.dbt_valid_from
-            > (select timestamp(last_sync_date) from last_successful_sync)
-            and snap.json_raw is not null
-            and regexp_contains(
-                json_value(snap.json_raw, '$.article[0].codesupport'), r'[a-zA-Z]'
+            current_meta.product_type is not null
+            and (
+                {% for key, val in cfg.products.items() %}
+                    (
+                        current_meta.product_type = '{{ val.payload_type }}'
+                        and current_meta.last_updated_at
+                        > timestamp(last_successful_sync.{{ key }}_last_sync_date)
+                    )
+                    {% if not loop.last %} or {% endif %}
+                {% endfor %}
             )
     )
 
 select
-    delta.ean,
-    json_value(json_raw, '$.titre') as name,
-    json_value(json_raw, '$.article[0].resume') as description,
-    json_value(json_raw, '$.article[0].codesupport') as support_code,
-    json_value(json_raw, '$.article[0].dateparution') as publication_date,
-    json_value(json_raw, '$.article[0].editeur') as publisher,
-    json_value(json_raw, '$.article[0].langueiso') as language_iso,
-    json_value(json_raw, '$.article[0].taux_tva') as vat_rate,
-    cast(json_value(json_raw, '$.article[0].prix') as numeric) as price,
-    cast(json_value(json_raw, '$.article[0].id_lectorat') as int64) as readership_id,
-    parse_json(json_query(json_raw, '$.article[0].gtl')) as gtl,
-    parse_json(json_query(json_raw, '$.auteurs_multi')) as multiple_authors,
-    delta.recto_image_uuid as recto_uuid,
-    delta.verso_image_uuid as verso_uuid,
-    cast(json_value(json_raw, '$.article[0].image') as int64) as image,
-    cast(json_value(json_raw, '$.article[0].image_4') as int64) as image_4,
-    delta.dbt_valid_from as modification_date
-from changed_products_snapshot as delta
+    filtered.*, snap.recto_image_uuid as recto_uuid, snap.verso_image_uuid as verso_uuid
+from filtered_products as filtered
+left join
+    {{ ref("snapshot_raw__titelive_products") }} as snap
+    on filtered.ean = snap.ean
+    and snap.dbt_valid_to is null

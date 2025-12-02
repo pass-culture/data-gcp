@@ -24,15 +24,15 @@ This section would typically display the auto-generated schema from dbt docs.
 
 {% docs table__product_delta %}{% enddocs %}
 
-
 ---
+
 ## Column Descriptions
 
 {% docs column__ean %}
 **EAN (European Article Number)**: The unique identifier for the product. It serves as the primary key for joining and identifying products across systems.
 {% enddocs %}
 
-{% docs column__name %}
+{% docs column__title %}
 **Title**: The title of the product (e.g., book title), extracted from the raw JSON payload.
 {% enddocs %}
 
@@ -57,7 +57,7 @@ This section would typically display the auto-generated schema from dbt docs.
 {% enddocs %}
 
 {% docs column__vat_rate %}
-**VAT Rate**: The applicable VAT (TVA) rate for the product, as a string. Extracted from `$.article[0].taux_tva`.  This field can be null.
+**VAT Rate**: The applicable VAT (TVA) rate for the product, as a string. Extracted from `$.article[0].taux_tva`. This field can be null.
 {% enddocs %}
 
 {% docs column__price %}
@@ -94,4 +94,44 @@ This section would typically display the auto-generated schema from dbt docs.
 
 {% docs column__modification_date %}
 **Modification Date**: The timestamp (`dbt_valid_from`) indicating when this version of the product became active in the source snapshot. This helps trace when the change occurred.
+{% enddocs %}
+
+{% docs column__product_type %}
+**Product Type**: Indicating the type of product. Values can be `'paper'` (for books) or `'music'` (for CDs/Vinyls), determined by the format of the support code.
+{% enddocs %}
+
+{% docs column__artist %}
+**Artist**: The main artist or band name. Extracted from `$.article[0].artiste`.
+{% enddocs %}
+
+{% docs column__music_label %}
+**Music Label**: The production label. Extracted from `$.article[0].label`.
+{% enddocs %}
+
+{% docs column__composer %}
+**Composer**: The composer's name. Extracted from `$.article[0].compositeur`.
+{% enddocs %}
+
+{% docs column__product_performer %}
+**Performer**: The performer or interpreter. Extracted from `$.article[0].interprete`.
+{% enddocs %}
+
+{% docs column__nb_discs %}
+**Number of Discs**: The number of physical discs/vinyls included. Extracted from `$.article[0].nb_galettes`.
+{% enddocs %}
+
+{% docs column__comment %}
+**Comment**: Additional comments or notes regarding the product. Extracted from `$.article[0].commentaire`.
+{% enddocs %}
+
+{% docs column__explicit_content %}
+**Explicit Content**: Indicator regarding explicit content (e.g., parental advisory). Extracted from `$.article[0].explicit`.
+{% enddocs %}
+
+{% docs column__availability %}
+**Availability**: The availability (int Enum) status of the product. Extracted from `$.article[0].dispo`.
+{% enddocs %}
+
+{% docs column__distributor %}
+**Distributor**: The name of the distributor handling the product. Extracted from `$.article[0].distributeur`.
 {% enddocs %}

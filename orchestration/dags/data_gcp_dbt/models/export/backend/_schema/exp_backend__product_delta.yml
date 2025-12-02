@@ -13,8 +13,8 @@ models:
           - unique:
               tags: ['critical']
 
-      - name: name
-        description: "{{ doc('column__name') }}"
+      - name: title
+        description: "{{ doc('column__title') }}"
         tests:
           - not_null:
               tags: ['critical']
@@ -68,3 +68,38 @@ models:
         description: "{{ doc('column__modification_date') }}"
         tests:
           - not_null
+
+      - name: product_type
+        description: "{{ doc('column__product_type') }}"
+        tests:
+          - not_null:
+              tags: ['critical']
+          - accepted_values:
+              values: ['paper', 'music']
+
+      - name: artist
+        description: "{{ doc('column__artist') }}"
+
+      - name: music_label
+        description: "{{ doc('column__music_label') }}"
+
+      - name: composer
+        description: "{{ doc('column__composer') }}"
+
+      - name: performer
+        description: "{{ doc('column__product_performer') }}"
+
+      - name: nb_discs
+        description: "{{ doc('column__nb_discs') }}"
+
+      - name: comment
+        description: "{{ doc('column__comment') }}"
+
+      - name: explicit_content
+        description: "{{ doc('column__explicit_content') }}"
+
+      - name: availability
+        description: "{{ doc('column__availability') }}"
+
+      - name: distributor
+        description: "{{ doc('column__distributor') }}"

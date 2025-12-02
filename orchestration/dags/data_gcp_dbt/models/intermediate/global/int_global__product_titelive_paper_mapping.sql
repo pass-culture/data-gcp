@@ -8,8 +8,16 @@ with
     ),
 
     titelive_details as (
-        select ean, title, authors, contributor, language_iso, series, series_id
+        select
+            ean,
+            title,
+            multiple_authors as authors,
+            contributor,
+            language_iso,
+            series,
+            series_id
         from {{ ref("int_raw__product_titelive_details") }}
+        where product_type = 'paper'
     )
 
 select

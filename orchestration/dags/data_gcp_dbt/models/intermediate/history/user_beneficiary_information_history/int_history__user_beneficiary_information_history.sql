@@ -8,7 +8,7 @@
                 "granularity": "day",
             },
             on_schema_change="append_new_columns",
-            cluster_by=["user_id", "info_history_rank"],
+            cluster_by=["user_id", "user_information_rank"],
         )
     )
 }}
@@ -20,7 +20,7 @@ with
             generate_seed_geolocation_query(
                 source_table="int_history__user_beneficiary_information_history_base",
                 referential_table="int_seed__intercommunal_public_institution",
-                id_column=["user_id", "info_history_rank"],
+                id_column=["user_id", "user_information_rank"],
                 prefix_name="user",
                 columns=["epci_code"],
             )
@@ -33,7 +33,7 @@ with
             generate_seed_geolocation_query(
                 source_table="int_history__user_beneficiary_information_history_base",
                 referential_table="int_seed__geo_iris",
-                id_column=["user_id", "info_history_rank"],
+                id_column=["user_id", "user_information_rank"],
                 prefix_name="user",
                 columns=[
                     "iris_internal_id",
@@ -53,7 +53,7 @@ with
             generate_seed_geolocation_query(
                 source_table="int_history__user_beneficiary_information_history_base",
                 referential_table="int_seed__qpv",
-                id_column=["user_id", "info_history_rank"],
+                id_column=["user_id", "user_information_rank"],
                 prefix_name="user",
                 columns=["qpv_code", "qpv_name"],
                 geo_shape="qpv_geo_shape",
@@ -100,15 +100,15 @@ from {{ ref("int_history__user_beneficiary_information_history_base") }} as sour
 left join
     user_epci
     on source_data.user_id = user_epci.user_id
-    and source_data.info_history_rank = user_epci.info_history_rank
+    and source_data.user_information_rank = user_epci.user_information_rank
 left join
     user_geo_iris
     on source_data.user_id = user_geo_iris.user_id
-    and source_data.info_history_rank = user_geo_iris.info_history_rank
+    and source_data.user_information_rank = user_geo_iris.user_information_rank
 left join
     user_qpv
     on source_data.user_id = user_qpv.user_id
-    and source_data.info_history_rank = user_qpv.info_history_rank
+    and source_data.user_information_rank = user_qpv.user_information_rank
 {% if is_incremental() %}
     where date(creation_timestamp) = date_sub(date("{{ ds() }}"), interval 1 day)
 {% endif %}

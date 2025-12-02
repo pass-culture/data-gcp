@@ -9,12 +9,12 @@ from src.constants import (
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
     ARTIST_TYPE_KEY,
+    ENV_SHORT_NAME,
     OFFER_CATEGORY_ID_KEY,
     OFFER_IS_SYNCHRONISED,
     PRODUCT_ID_KEY,
     WIKI_ID_KEY,
 )
-from src.utils.constants import ENV_SHORT_NAME
 from src.utils.mlflow import (
     connect_remote_mlflow,
     get_mlflow_experiment,

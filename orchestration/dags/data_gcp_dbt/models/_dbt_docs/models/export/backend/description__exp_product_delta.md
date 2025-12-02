@@ -119,3 +119,19 @@ This section would typically display the auto-generated schema from dbt docs.
 {% docs column__nb_discs %}
 **Number of Discs**: The number of physical discs/vinyls included. Extracted from `$.article[0].nb_galettes`.
 {% enddocs %}
+
+{% docs column__comment %}
+**Comment**: Additional comments or notes regarding the product. Extracted from `$.article[0].commentaire`.
+{% enddocs %}
+
+{% docs column__explicit_content %}
+**Explicit Content**: Indicator regarding explicit content (e.g., parental advisory). Extracted from `$.article[0].explicit`.
+{% enddocs %}
+
+{% docs column__availability %}
+**Availability**: The availability (int Enum) status of the product. Extracted from `$.article[0].dispo`.
+{% enddocs %}
+
+{% docs column__distributor %}
+**Distributor**: The name of the distributor handling the product. Extracted from `$.article[0].distributeur`.
+{% enddocs %}

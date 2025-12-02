@@ -16,6 +16,7 @@ dependencies = [
     "mlflow>=2.20.1",
     "mwparserfromhell>=0.7.2",
     "pandas[parquet,performance]>=2.2.3",
+    "pydantic-ai>=1.25.1",
     "pytest>=8.2.1",
     "rapidfuzz>=3.9.1",
     "ruff>=0.4.5",

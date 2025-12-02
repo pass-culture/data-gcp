@@ -4,7 +4,7 @@ from typing import ClassVar
 
 # Config
 ARTIST_LINKAGE_CONFIG = json.loads(
-    Path("artist_linkage_config.json").read_text(encoding="utf-8")
+    Path("src/artist_linkage_config.json").read_text(encoding="utf-8")
 )
 ARTIST_NAME_TO_FILTER = ARTIST_LINKAGE_CONFIG["preprocessing"]["artist_names_to_remove"]
 

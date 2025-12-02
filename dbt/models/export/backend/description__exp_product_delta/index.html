@@ -8070,7 +8070,7 @@
 <p><strong>ean</strong>: 
 <strong>EAN (European Article Number)</strong>: The unique identifier for the product. It serves as the primary key for joining and identifying products across systems.</p>
 
-<p><strong>name</strong>: 
+<p><strong>title</strong>: 
 <strong>Title</strong>: The title of the product (e.g., book title), extracted from the raw JSON payload.</p>
 
 <p><strong>description</strong>: 
@@ -8089,7 +8089,7 @@
 <strong>ISO Language Code</strong>: The ISO code for the product's language (e.g., 'eng'). Extracted from <code>$.article[0].langueiso</code>. This field can be null.</p>
 
 <p><strong>vat_rate</strong>: 
-<strong>VAT Rate</strong>: The applicable VAT (TVA) rate for the product, as a string. Extracted from <code>$.article[0].taux_tva</code>.  This field can be null.</p>
+<strong>VAT Rate</strong>: The applicable VAT (TVA) rate for the product, as a string. Extracted from <code>$.article[0].taux_tva</code>. This field can be null.</p>
 
 <p><strong>price</strong>: 
 <strong>Price</strong>: The product's price, cast to a NUMERIC type. Extracted from <code>$.article[0].prix</code>. This field can be null.</p>
@@ -8117,6 +8117,24 @@
 
 <p><strong>modification_date</strong>: 
 <strong>Modification Date</strong>: The timestamp (<code>dbt_valid_from</code>) indicating when this version of the product became active in the source snapshot. This helps trace when the change occurred.</p>
+
+<p><strong>product_type</strong>: 
+<strong>Product Type</strong>: Indicating the type of product. Values can be <code>'paper'</code> (for books) or <code>'music'</code> (for CDs/Vinyls), determined by the format of the support code.</p>
+
+<p><strong>artist</strong>: 
+<strong>Artist</strong>: The main artist or band name. Extracted from <code>$.article[0].artiste</code>.</p>
+
+<p><strong>music_label</strong>: 
+<strong>Music Label</strong>: The production label. Extracted from <code>$.article[0].label</code>.</p>
+
+<p><strong>composer</strong>: 
+<strong>Composer</strong>: The composer's name. Extracted from <code>$.article[0].compositeur</code>.</p>
+
+<p><strong>product_performer</strong>: 
+<strong>Performer</strong>: The performer or interpreter. Extracted from <code>$.article[0].interprete</code>.</p>
+
+<p><strong>nb_discs</strong>: 
+<strong>Number of Discs</strong>: The number of physical discs/vinyls included. Extracted from <code>$.article[0].nb_galettes</code>.</p>
 
 
 

@@ -46,19 +46,19 @@ select
     a.wikidata_image_license,
     a.wikidata_image_license_url,
     a.wikidata_image_author,
-    a.creation_date,
-    a.modification_date,
-    ac.total_consultations,
-    ac.total_consulted_users,
-    count(distinct apo.offer_product_id) as total_products,
-    count(distinct apo.offer_id) as total_offers,
+    a.creation_date as artist_creation_date,
+    a.modification_date as artist_modification_date,
+    ac.total_consultations as artist_total_consultations,
+    ac.total_consulted_users as artist_total_consulted_users,
+    count(distinct apo.offer_product_id) as artist_total_products,
+    count(distinct apo.offer_id) as artist_total_offers,
     count(
         distinct case when apo.offer_is_bookable then apo.offer_id end
-    ) as total_bookable_offers,
-    count(distinct apo.offer_category_id) as total_offer_categories,
-    count(distinct apo.venue_id) as total_venues,
-    count(distinct apo.artist_type) as total_artist_types,
-    sum(apo.total_bookings) as total_bookings
+    ) as artist_total_bookable_offers,
+    count(distinct apo.offer_category_id) as artist_total_offer_categories,
+    count(distinct apo.venue_id) as artist_total_venues,
+    count(distinct apo.artist_type) as artist_total_artist_types,
+    sum(apo.total_bookings) as artist_total_bookings
 from {{ ref("int_applicative__artist") }} as a
 left join artist_product_offers as apo on a.artist_id = apo.artist_id
 left join artist_consultations as ac on a.artist_id = ac.artist_id

@@ -50,15 +50,15 @@ select
     a.modification_date as artist_modification_date,
     ac.total_consultations as artist_total_consultations,
     ac.total_consulted_users as artist_total_consulted_users,
-    coalesce(count(distinct apo.offer_product_id),0) as artist_total_products,
-    coalesce(count(distinct apo.offer_id),0) as artist_total_offers,
-    coalesce(count(
-        distinct case when apo.offer_is_bookable then apo.offer_id end
-    ),0) as artist_total_bookable_offers,
-    coalesce(count(distinct apo.offer_category_id),0) as artist_total_offer_categories,
-    coalesce(count(distinct apo.venue_id),0) as artist_total_venues,
-    coalesce(count(distinct apo.artist_type),0) as artist_total_artist_types,
-    coalesce(sum(apo.total_bookings),0) as artist_total_bookings
+    coalesce(count(distinct apo.offer_product_id), 0) as artist_total_products,
+    coalesce(count(distinct apo.offer_id), 0) as artist_total_offers,
+    coalesce(
+        count(distinct case when apo.offer_is_bookable then apo.offer_id end), 0
+    ) as artist_total_bookable_offers,
+    coalesce(count(distinct apo.offer_category_id), 0) as artist_total_offer_categories,
+    coalesce(count(distinct apo.venue_id), 0) as artist_total_venues,
+    coalesce(count(distinct apo.artist_type), 0) as artist_total_artist_types,
+    coalesce(sum(apo.total_bookings), 0) as artist_total_bookings
 from {{ ref("int_applicative__artist") }} as a
 left join artist_product_offers as apo on a.artist_id = apo.artist_id
 left join artist_consultations as ac on a.artist_id = ac.artist_id

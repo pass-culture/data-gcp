@@ -11,7 +11,8 @@
 
 {% set activity_list = get_activity_list() %}
 
--- Optimized version: Single-pass aggregation to avoid memory issues from 68+ UNION ALL statements
+-- Optimized version: Single-pass aggregation to avoid memory issues from 68+ UNION
+-- ALL statements
 with
     last_day_of_month as (
         select
@@ -117,7 +118,8 @@ with
         {% endif %}
     ),
 
-    -- Single-pass aggregation for active users - all metrics computed at once per dimension
+    -- Single-pass aggregation for active users - all metrics computed at once per
+    -- dimension
     active_users_aggregated as (
         select
             partition_month,
@@ -131,16 +133,31 @@ with
             -- QPV
             count(distinct case when user_is_in_qpv then user_id end) as qpv_users,
             -- Rural
-            count(distinct case when user_macro_density_label = "rural" then user_id end) as rural_users,
+            count(
+                distinct case when user_macro_density_label = "rural" then user_id end
+            ) as rural_users,
             -- Non scolarisé
-            count(distinct case when not user_is_in_education then user_id end) as non_scolarise_users,
+            count(
+                distinct case when not user_is_in_education then user_id end
+            ) as non_scolarise_users,
             -- Genre
-            count(distinct case when user_civility = "M." then user_id end) as homme_users,
-            count(distinct case when user_civility = "Mme." then user_id end) as femme_users,
-            count(distinct case when user_civility is null then user_id end) as sans_genre_users,
+            count(
+                distinct case when user_civility = "M." then user_id end
+            ) as homme_users,
+            count(
+                distinct case when user_civility = "Mme." then user_id end
+            ) as femme_users,
+            count(
+                distinct case when user_civility is null then user_id end
+            ) as sans_genre_users,
             -- Activities
             {% for activity in activity_list %}
-                count(distinct case when user_activity = "{{ activity.activity }}" then user_id end) as {{ activity.value }}_users{% if not loop.last %},{% endif %}
+                count(
+                    distinct case
+                        when user_activity = "{{ activity.activity }}" then user_id
+                    end
+                ) as {{ activity.value }}_users
+                {% if not loop.last %},{% endif %}
             {% endfor %}
         from active_users_base
         group by partition_month, updated_at, nat_dim, reg_dim, dep_dim, epci_dim
@@ -177,15 +194,15 @@ with
             {% for activity in activity_list %}
                 {{ activity.value }}_users{% if not loop.last %},{% endif %}
             {% endfor %}
-        from active_users_aggregated
-        unpivot(
-            dimension_value for dimension_name in (
-                nat_dim as 'NAT',
-                reg_dim as 'REG',
-                dep_dim as 'DEP',
-                epci_dim as 'EPCI'
+        from
+            active_users_aggregated unpivot (
+                dimension_value for dimension_name in (
+                    nat_dim as 'NAT',
+                    reg_dim as 'REG',
+                    dep_dim as 'DEP',
+                    epci_dim as 'EPCI'
+                )
             )
-        )
     ),
 
     -- Re-aggregate after unpivot to combine rows with same dimension
@@ -203,7 +220,8 @@ with
             sum(femme_users) as femme_users,
             sum(sans_genre_users) as sans_genre_users,
             {% for activity in activity_list %}
-                sum({{ activity.value }}_users) as {{ activity.value }}_users{% if not loop.last %},{% endif %}
+                sum({{ activity.value }}_users) as {{ activity.value }}_users
+                {% if not loop.last %},{% endif %}
             {% endfor %}
         from active_metrics_unpivoted
         group by partition_month, updated_at, dimension_name, dimension_value
@@ -211,21 +229,16 @@ with
 
     -- UNPIVOT dimensions for total users
     total_metrics_unpivoted as (
-        select
-            partition_month,
-            updated_at,
-            dimension_name,
-            dimension_value,
-            total_users
-        from total_users_aggregated
-        unpivot(
-            dimension_value for dimension_name in (
-                nat_dim as 'NAT',
-                reg_dim as 'REG',
-                dep_dim as 'DEP',
-                epci_dim as 'EPCI'
+        select partition_month, updated_at, dimension_name, dimension_value, total_users
+        from
+            total_users_aggregated unpivot (
+                dimension_value for dimension_name in (
+                    nat_dim as 'NAT',
+                    reg_dim as 'REG',
+                    dep_dim as 'DEP',
+                    epci_dim as 'EPCI'
+                )
             )
-        )
     ),
 
     total_metrics_final as (
@@ -317,7 +330,9 @@ with
                 {{ activity.value }}_users as numerator,
                 total_users as denominator
             from active_metrics_final
-            {% if not loop.last %}union all{% endif %}
+            {% if not loop.last %}
+                union all
+            {% endif %}
         {% endfor %}
 
         union all

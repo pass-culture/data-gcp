@@ -5,12 +5,21 @@
   fields: list of json objects to parse as new columns, each object containing:
     - json_path: JSON path string
     - alias: output column name
-    - cast_type: optional, the SQL type to cast the JSON value to (e.g., int64, numeric, default->string)
+    - cast_type: optional, the SQL type to cast the JSON value to (e.g., INT64, FLOAT64, STRING, JSON; default->STRING)
     - null_when_equal: optional, string/or relevant type value that should be converted to NULL using NULLIF
 -#}
     {%- for f in fields -%}
+
+        {# Determine whether to use JSON_QUERY (for JSON objects/arrays) or JSON_VALUE (for scalar values) #}
+        {%- set operation = "json_value" -%}
+        {%- if f.cast_type is defined and f.cast_type | upper == "JSON" -%}
+            {%- set operation = "json_query" -%}
+        {%- endif -%}
+
+        {# Build the base extraction expression #}
         {%- set base_expr = (
-            "json_value("
+            operation
+            ~ "("
             ~ source_alias
             ~ "."
             ~ json_column
@@ -18,29 +27,31 @@
             ~ f.json_path
             ~ "')"
         ) -%}
-        {%- set null_val = None -%}
-        {%- if f.cast_type is defined -%}
-            {%- set cast_expr = "cast(" ~ base_expr ~ " as " ~ f.cast_type ~ ")" -%}
-            {%- if f.null_when_equal is defined -%}
-                {%- set null_val = (
-                    "cast('"
-                    ~ f.null_when_equal
-                    ~ "' as "
-                    ~ f.cast_type
-                    ~ ")"
-                ) -%}
-            {%- endif -%}
-        {%- else -%}
-            {%- set cast_expr = base_expr -%}
-            {%- if f.null_when_equal is defined -%}
+
+        {# Apply CAST if cast_type is specified and not STRING or JSON #}
+        {%- set casted_expr = base_expr -%}
+        {%- if f.cast_type is defined and f.cast_type | upper not in (
+            "STRING",
+            "JSON",
+        ) -%}
+            {%- set casted_expr = "cast(" ~ base_expr ~ " as " ~ f.cast_type ~ ")" -%}
+        {%- endif -%}
+
+        {# Apply NULLIF if null_when_equal is specified #}
+        {%- set final_expr = casted_expr -%}
+        {%- if f.null_when_equal is defined -%}
+            {# Determine if we need to quote the null_when_equal value #}
+            {%- if f.null_when_equal is string -%}
+                {# String value - add quotes #}
                 {%- set null_val = "'" ~ f.null_when_equal ~ "'" -%}
+            {%- else -%}
+                {# Numeric or other value - no quotes #}
+                {%- set null_val = f.null_when_equal -%}
             {%- endif -%}
+            {%- set final_expr = "nullif(" ~ casted_expr ~ ", " ~ null_val ~ ")" -%}
         {%- endif -%}
-        {%- if null_val is not none -%}
-            {%- set expr = "nullif(" ~ cast_expr ~ ", " ~ null_val ~ ")" -%}
-        {%- else -%} {%- set expr = cast_expr -%}
-        {%- endif -%}
-        {{ expr ~ " as " ~ f.alias }}
-        {%- if not loop.last %},{%- endif %}
-    {% endfor -%}
-{%- endmacro -%}
+
+        {{ final_expr }} as {{ f.alias }}
+        {%- if not loop.last -%}, {%- endif -%}
+    {%- endfor -%}
+{% endmacro %}

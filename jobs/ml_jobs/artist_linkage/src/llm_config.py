@@ -22,6 +22,7 @@ class WikipediaSummary(BaseModel):
     biography: str = Field(
         description="Résumé de la page Wikipedia de l'artiste.",
         max_length=MAX_CHARS + 50,  # Allow some buffer for LLM output
+        pattern=r".*\.$",
     )
 
 

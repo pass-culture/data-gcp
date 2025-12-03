@@ -32,6 +32,14 @@ models:
         data_type: TIMESTAMP
       - name: artist_total_consultations
         description: '{{ doc("column__artist_total_consultations") }}'
+      - name: artist_total_consultations_from_search
+        description: '{{ doc("column__artist_total_consultations_from_search") }}'
+      - name: artist_total_consultations_from_offer
+        description: '{{ doc("column__artist_total_consultations_from_offer") }}'
+      - name: artist_total_consultations_from_venue
+        description: '{{ doc("column__artist_total_consultations_from_venue") }}'
+      - name: artist_total_consultations_from_search_auto_complete
+        description: '{{ doc("column__artist_total_consultations_from_search_auto_complete") }}'
       - name: artist_total_consulted_users
         description: '{{ doc("column__artist_total_consulted_users") }}'
       - name: artist_total_products

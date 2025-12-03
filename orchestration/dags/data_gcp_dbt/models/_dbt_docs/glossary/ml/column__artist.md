@@ -12,6 +12,10 @@
 {% docs column__artist_creation_date %} Creation date of the artist.{% enddocs %}
 {% docs column__artist_modification_date %} Date of the last modification of the artist.{% enddocs %}
 {% docs column__artist_total_consultations %} Total consultations of offers related to the artist, after January 2025.{% enddocs %}
+{% docs column__artist_total_consultations_from_search %} Total consultations of offers related to the artist that came from search, after January 2025.{% enddocs %}
+{% docs column__artist_total_consultations_from_offer %} Total consultations of offers related to the artist that came from offer page, after January 2025.{% enddocs %}
+{% docs column__artist_total_consultations_from_venue %} Total consultations of offers related to the artist that came from venue page, after January 2025.{% enddocs %}
+{% docs column__artist_total_consultations_from_search_auto_complete %} Total consultations of offers related to the artist that came from search auto complete, after January 2025.{% enddocs %}
 {% docs column__artist_total_consulted_users %} Total users that consulted offers related to the artist, after January 2025.{% enddocs %}
 {% docs column__artist_total_products %} Total products created related to the artist.{% enddocs %}
 {% docs column__artist_total_offers %} Total offers created related to the artist.{% enddocs %}

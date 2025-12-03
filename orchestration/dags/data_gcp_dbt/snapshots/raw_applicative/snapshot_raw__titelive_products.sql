@@ -1,4 +1,4 @@
-{% snapshot snapshot_raw__titelive_products_wip %}
+{% snapshot snapshot_raw__titelive_products %}
 
     {{
         config(

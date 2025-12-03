@@ -34,8 +34,8 @@ with
             dbt_valid_from,
             dbt_valid_to,
             parse_json(json_raw) as json_raw
-        from {{ ref("snapshot_raw__titelive_products_wip") }}
-        where dbt_valid_to is null and json_str is not null
+        from {{ ref("snapshot_raw__titelive_products") }}
+        where dbt_valid_to is null and json_raw is not null
     ),
 
     changed_products_snapshot as (

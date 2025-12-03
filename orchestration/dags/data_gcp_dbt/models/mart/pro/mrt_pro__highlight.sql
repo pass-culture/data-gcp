@@ -6,7 +6,7 @@ select
     highlight_description,
     highlight_beginning_date,
     highlight_ending_date,
-    highlight_beginning_date,
     highlight_availability_ending_date,
-    highlight_availability_communication_date
+    highlight_availability_communication_date,
+    highlight_communication_date
 from {{ ref("int_applicative__highlight") }}

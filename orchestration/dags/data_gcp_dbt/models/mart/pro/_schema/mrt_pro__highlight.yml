@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: mrt_pro__highlight
+    description: "{{ doc('description__mrt_pro__highlight') }}"
+    columns:
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+      - name: highlight_id
+        description: "{{ doc('column__highlight_id') }}"
+      - name: highlight_image_id
+        description: "{{ doc('column__highlight_image_id') }}"
+      - name: highlight_name
+        description: "{{ doc('column__highlight_name') }}"
+      - name: highlight_description
+        description: "{{ doc('column__highlight_description') }}"
+      - name: highlight_beginning_date
+        description: "{{ doc('column__highlight_beginning_date') }}"
+      - name: highlight_ending_date
+        description: "{{ doc('column__highlight_ending_date') }}"
+      - name: highlight_availability_beginning_date
+        description: "{{ doc('column__highlight_availability_beginning_date') }}"
+      - name: highlight_availability_ending_date
+        description: "{{ doc('column__highlight_availability_ending_date') }}"
+      - name: highlight_communication_date
+        description: "{{ doc('column__highlight_communication_date') }}"

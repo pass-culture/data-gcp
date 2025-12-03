@@ -6,7 +6,12 @@ from loguru import logger
 from pydantic_ai import Agent
 from tqdm.asyncio import tqdm
 
-from src.constants import ARTIST_NAME_KEY, BIOGRAPHY_KEY, WIKIPEDIA_CONTENT_KEY
+from src.constants import (
+    ARTIST_ID_KEY,
+    ARTIST_NAME_KEY,
+    BIOGRAPHY_KEY,
+    WIKIPEDIA_CONTENT_KEY,
+)
 from src.llm_config import (
     LLM_MODEL,
     LLM_SETTINGS,
@@ -17,9 +22,6 @@ from src.llm_config import (
 
 EMPTY_PREDICTION = {
     BIOGRAPHY_KEY: None,
-    "input_tokens": None,
-    "output_tokens": None,
-    "raw_response": None,
 }
 
 
@@ -29,8 +31,17 @@ def summarize_biographies_with_llm(
     *,
     debug: bool,
 ) -> pd.DataFrame:
-    """
-    Run writing style prediction on the dataset using Pydantic AI with async concurrency
+    """Summarize artist biographies from Wikipedia content using an LLM.
+
+    Args:
+        data: DataFrame containing artist information with columns for artist ID,
+            artist name, and Wikipedia content.
+        max_concurrent: Maximum number of concurrent LLM API requests to make.
+        debug: If True, enables logfire monitoring and instrumentation for pydantic-ai.
+
+    Returns:
+        DataFrame with artist IDs and their corresponding generated biographies.
+        Returns empty DataFrame with column headers if no results are produced.
     """
     if debug:
         # This is to debug and monitor usage of pydantic-ai with logfire
@@ -38,13 +49,28 @@ def summarize_biographies_with_llm(
         logfire.configure(scrubbing=False)
         logfire.instrument_pydantic_ai()
 
-    return asyncio.run(_async_summarize_biographies_with_llm(data, max_concurrent))
+    results_df = asyncio.run(
+        _async_summarize_biographies_with_llm(data, max_concurrent)
+    )
+
+    if results_df.empty:
+        return pd.DataFrame([ARTIST_ID_KEY, BIOGRAPHY_KEY])
+    return results_df[[ARTIST_ID_KEY, BIOGRAPHY_KEY]]
 
 
 async def _async_summarize_biographies_with_llm(
     data: pd.DataFrame, max_concurrent: int
 ) -> pd.DataFrame:
-    """Async implementation of writing style prediction with controlled concurrency"""
+    """Async implementation of biography summarization with controlled concurrency.
+
+    Args:
+        data: DataFrame containing artist information to process.
+        max_concurrent: Maximum number of concurrent API requests allowed.
+
+    Returns:
+        DataFrame containing all input data plus prediction results including
+        biographies, token usage, and raw responses.
+    """
     # Initialize agent once and reuse it (cached)
     agent = Agent(
         model=LLM_MODEL,
@@ -80,7 +106,16 @@ async def _async_summarize_biographies_with_llm(
 async def process_single_row(
     row_data: pd.Series, agent: Agent, semaphore: asyncio.Semaphore
 ) -> pd.Series:
-    """Process a single row with semaphore for concurrency control"""
+    """Process a single artist row to generate a biography.
+
+    Args:
+        row_data: Series containing artist data including name and Wikipedia content.
+        agent: Pydantic AI agent configured for biography generation.
+        semaphore: Asyncio semaphore to control concurrent API calls.
+
+    Returns:
+        Series containing original row data merged with prediction results.
+    """
     async with semaphore:
         # Prepare input data
         artist_name, wikipedia_content = (
@@ -105,6 +140,23 @@ async def process_single_row(
 async def predict_biography_with_pydantic_ai(
     artist_name: str, wikipedia_content: str, agent: Agent
 ) -> dict[str, str | float | None]:
+    """Generate a biography for an artist using Pydantic AI.
+
+    Args:
+        artist_name: Name of the artist to generate a biography for.
+        wikipedia_content: Wikipedia content about the artist.
+        agent: Configured Pydantic AI agent for making predictions.
+
+    Returns:
+        Dictionary containing:
+            - biography: Generated biography text or None if error
+            - input_tokens: Number of input tokens used or None
+            - output_tokens: Number of output tokens generated or None
+            - raw_response: Raw response dictionary from the model or None
+
+    Note:
+        Returns EMPTY_PREDICTION dict if any error occurs during processing.
+    """
     try:
         # Prepare the input text
         input_text = f"""
@@ -114,14 +166,10 @@ async def predict_biography_with_pydantic_ai(
 
         # Run the agent to get structured output with timeout (async version)
         result = await agent.run(input_text)
-        token_usage = result.usage()
 
         # Convert the result to a dictionary with token usage info
         return {
             BIOGRAPHY_KEY: result.output.biography,
-            "input_tokens": token_usage.input_tokens if token_usage else None,
-            "output_tokens": token_usage.output_tokens if token_usage else None,
-            "raw_response": result.output.dict() if result.output else None,
         }
 
     except Exception as e:

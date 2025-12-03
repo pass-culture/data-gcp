@@ -4,7 +4,6 @@ import typer
 from src.constants import (
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
-    BIOGRAPHY_KEY,
     ENV_SHORT_NAME,
     WIKIPEDIA_CONTENT_KEY,
 )
@@ -36,11 +35,10 @@ def main(
         max_concurrent=min(MAX_CONCURRENT_LLM_REQUESTS, len(artists_to_summarize_df)),
     )
 
-    # Merge back the biographies to the original dataframe# TODO: Fix bug if artist has no biography
-
+    # Merge back the biographies to the original dataframe
     (
         artists_df.merge(
-            artists_with_biographies_df[[ARTIST_ID_KEY, BIOGRAPHY_KEY]],
+            artists_with_biographies_df,
             on=[ARTIST_ID_KEY],
             how="left",
         ).to_parquet(output_file_path, index=False)

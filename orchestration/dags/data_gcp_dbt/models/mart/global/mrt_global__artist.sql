@@ -49,15 +49,26 @@ select
     a.wikidata_image_author,
     a.creation_date as artist_creation_date,
     a.modification_date as artist_modification_date,
-    coalesce(sum(ac.total_consultations),0) as artist_total_consultations,
-    coalesce(sum(case when ac.origin = "search" then ac.total_consultations end),0) as artist_total_consultations_from_search,
-    coalesce(sum(case when ac.origin = "offer" then ac.total_consultations end),0) as artist_total_consultations_from_offer,
-    coalesce(sum(case when ac.origin = "venue" then ac.total_consultations end),0) as artist_total_consultations_from_venue,
-    coalesce(sum(case when ac.origin = "searchAutoComplete" then ac.total_consultations end),0) as artist_total_consultations_from_search_auto_complete,
-    coalesce(sum(ac.total_consulted_users),0) as artist_total_consulted_users,
+    coalesce(sum(ac.total_consultations), 0) as artist_total_consultations,
+    coalesce(
+        sum(case when ac.origin = "search" then ac.total_consultations end), 0
+    ) as artist_total_consultations_from_search,
+    coalesce(
+        sum(case when ac.origin = "offer" then ac.total_consultations end), 0
+    ) as artist_total_consultations_from_offer,
+    coalesce(
+        sum(case when ac.origin = "venue" then ac.total_consultations end), 0
+    ) as artist_total_consultations_from_venue,
+    coalesce(
+        sum(case when ac.origin = "searchAutoComplete" then ac.total_consultations end),
+        0
+    ) as artist_total_consultations_from_search_auto_complete,
+    coalesce(sum(ac.total_consulted_users), 0) as artist_total_consulted_users,
     count(distinct apo.offer_product_id) as artist_total_products,
     count(distinct apo.offer_id) as artist_total_offers,
-    count(distinct case when apo.offer_is_bookable then apo.offer_id end) as artist_total_bookable_offers,
+    count(
+        distinct case when apo.offer_is_bookable then apo.offer_id end
+    ) as artist_total_bookable_offers,
     count(distinct apo.offer_category_id) as artist_total_offer_categories,
     count(distinct apo.venue_id) as artist_total_venues,
     count(distinct apo.artist_type) as artist_total_artist_types,

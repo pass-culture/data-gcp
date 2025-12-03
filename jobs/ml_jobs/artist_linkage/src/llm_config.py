@@ -1,4 +1,3 @@
-from llm_config import WikipediaSummary, WikipediaSummaryPrompt
 from pydantic import BaseModel, Field
 from pydantic_ai.models.gemini import ThinkingConfig
 from pydantic_ai.models.google import GoogleModel, GoogleModelSettings

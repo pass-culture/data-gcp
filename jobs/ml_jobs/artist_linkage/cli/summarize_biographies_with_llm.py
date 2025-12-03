@@ -1,12 +1,13 @@
 import pandas as pd
 import typer
-from constants import (
+
+from src.constants import (
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
     BIOGRAPHY_KEY,
     WIKIPEDIA_CONTENT_KEY,
 )
-from utils.llm import summerize_biographies_with_llm
+from src.utils.llm import summerize_biographies_with_llm
 
 app = typer.Typer()
 

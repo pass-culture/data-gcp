@@ -2,11 +2,17 @@ import asyncio
 
 import logfire
 import pandas as pd
-from constants import ARTIST_NAME_KEY, BIOGRAPHY_KEY, WIKIPEDIA_CONTENT_KEY
-from llm_config import LLM_MODEL, LLM_SETTINGS, WikipediaSummary, WikipediaSummaryPrompt
 from loguru import logger
 from pydantic_ai import Agent
 from tqdm.asyncio import tqdm
+
+from src.constants import ARTIST_NAME_KEY, BIOGRAPHY_KEY, WIKIPEDIA_CONTENT_KEY
+from src.llm_config import (
+    LLM_MODEL,
+    LLM_SETTINGS,
+    WikipediaSummary,
+    WikipediaSummaryPrompt,
+)
 
 EMPTY_PREDICTION = {
     BIOGRAPHY_KEY: None,

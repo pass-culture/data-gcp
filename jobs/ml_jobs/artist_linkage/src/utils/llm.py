@@ -10,6 +10,7 @@ from src.constants import ARTIST_NAME_KEY, BIOGRAPHY_KEY, WIKIPEDIA_CONTENT_KEY
 from src.llm_config import (
     LLM_MODEL,
     LLM_SETTINGS,
+    MAX_RETRIES,
     WikipediaSummary,
     WikipediaSummaryPrompt,
 )
@@ -50,6 +51,7 @@ async def _async_summerize_biographies_with_llm(
         model_settings=LLM_SETTINGS,
         output_type=WikipediaSummary,
         system_prompt=WikipediaSummaryPrompt,
+        retries=MAX_RETRIES,
     )
     if not agent:
         logger.error(

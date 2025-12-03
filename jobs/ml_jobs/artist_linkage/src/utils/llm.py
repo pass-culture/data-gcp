@@ -7,9 +7,9 @@ from pydantic_ai import Agent
 from tqdm.asyncio import tqdm
 
 from src.constants import (
+    ARTIST_BIOGRAPHY_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
-    BIOGRAPHY_KEY,
     WIKIPEDIA_CONTENT_KEY,
 )
 from src.llm_config import (
@@ -21,7 +21,7 @@ from src.llm_config import (
 )
 
 EMPTY_PREDICTION = {
-    BIOGRAPHY_KEY: None,
+    ARTIST_BIOGRAPHY_KEY: None,
 }
 
 
@@ -54,8 +54,8 @@ def summarize_biographies_with_llm(
     )
 
     if results_df.empty:
-        return pd.DataFrame(columns=[ARTIST_ID_KEY, BIOGRAPHY_KEY])
-    return results_df[[ARTIST_ID_KEY, BIOGRAPHY_KEY]]
+        return pd.DataFrame(columns=[ARTIST_ID_KEY, ARTIST_BIOGRAPHY_KEY])
+    return results_df[[ARTIST_ID_KEY, ARTIST_BIOGRAPHY_KEY]]
 
 
 async def _async_summarize_biographies_with_llm(
@@ -169,7 +169,7 @@ async def predict_biography_with_pydantic_ai(
 
         # Convert the result to a dictionary with token usage info
         return {
-            BIOGRAPHY_KEY: result.output.biography,
+            ARTIST_BIOGRAPHY_KEY: result.output.biography,
         }
 
     except Exception as e:

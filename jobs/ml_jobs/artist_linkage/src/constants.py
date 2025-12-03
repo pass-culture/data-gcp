@@ -35,7 +35,7 @@ DESCRIPTION_KEY = "description"
 IMG_KEY = "img"
 ACTION_KEY = "action"
 COMMENT_KEY = "comment"
-BIOGRAPHY_KEY = "biography"
+ARTIST_BIOGRAPHY_KEY = "artist_biography"
 
 ID_PER_CATEGORY = "id_per_category"
 TOTAL_BOOKING_COUNT = "total_booking_count"

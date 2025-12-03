@@ -6,6 +6,7 @@ from pydantic_ai.providers.google import GoogleProvider
 # Model Config
 GEMINI_MODEL_NAME = "gemini-2.5-flash"
 LLM_MODEL = GoogleModel(GEMINI_MODEL_NAME, provider=GoogleProvider(vertexai=True))
+MAX_CONCURRENT_LLM_REQUESTS = 10
 MAX_TOKENS = 500
 MAX_RETRIES = 5
 MAX_TIMEOUT_SECONDS = 60

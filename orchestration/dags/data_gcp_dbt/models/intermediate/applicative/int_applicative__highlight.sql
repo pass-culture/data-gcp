@@ -19,4 +19,5 @@ select
         '%Y-%m-%d', regexp_extract(h.availability_datespan, r',([^)]+)')
     ) as highlight_availability_ending_date
 from {{ source("raw", "applicative_database_highlight_request") }} as hr
-left join {{ source("raw", "applicative_database_highlight") }} as h on hr.highlight_id = h.id
+left join
+    {{ source("raw", "applicative_database_highlight") }} as h on hr.highlight_id = h.id

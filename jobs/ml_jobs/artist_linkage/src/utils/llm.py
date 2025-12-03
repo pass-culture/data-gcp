@@ -54,7 +54,7 @@ def summarize_biographies_with_llm(
     )
 
     if results_df.empty:
-        return pd.DataFrame([ARTIST_ID_KEY, BIOGRAPHY_KEY])
+        return pd.DataFrame(columns=[ARTIST_ID_KEY, BIOGRAPHY_KEY])
     return results_df[[ARTIST_ID_KEY, BIOGRAPHY_KEY]]
 
 

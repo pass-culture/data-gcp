@@ -17,6 +17,7 @@ app = typer.Typer()
 def main(
     artists_with_wikipedia_content: str = typer.Option(),
     output_file_path: str = typer.Option(),
+    debug: bool = typer.Option(False),
 ) -> None:
     artists_df = pd.read_parquet(artists_with_wikipedia_content)
 
@@ -33,6 +34,7 @@ def main(
     artists_with_biographies_df = summarize_biographies_with_llm(
         artists_to_summarize_df,
         max_concurrent=min(MAX_CONCURRENT_LLM_REQUESTS, len(artists_to_summarize_df)),
+        debug=debug,
     )
 
     # Merge back the biographies to the original dataframe

@@ -17,8 +17,8 @@ with
         select
             ean,
             dbt_valid_from,
-            parse_json(json_value(parse_json(json_str), '$')) as json_raw
-        from {{ ref("snapshot_raw__titelive_products") }}
+            parse_json(json_raw) as json_raw
+        from {{ ref("snapshot_raw__titelive_products_wip") }}
         where
             dbt_valid_to is null and json_str is not null
             {% if is_incremental() %}

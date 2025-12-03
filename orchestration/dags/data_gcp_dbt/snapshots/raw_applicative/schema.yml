@@ -17,5 +17,5 @@ snapshots:
     description: "This snapshot captures the changed stocks in the raw stock table. It has the check strategy on multiple columns."
   - name: snapshot_raw__venue
     description: "This snapshot captures the changed venues in the raw venue table. It has the check strategy on multiple columns."
-  - name: snapshot_raw__titelive_products
+  - name: snapshot_raw__titelive_products_wip
     description: "This snapshot captures the changed products from Titelive API. It has the timestamp strategy on datemodification column to track when products are updated in the Titelive system."

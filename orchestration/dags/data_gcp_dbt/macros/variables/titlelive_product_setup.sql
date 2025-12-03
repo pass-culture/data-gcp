@@ -11,21 +11,25 @@
             "alias": "publication_date",
         },
         {"json_path": "$.article[0].editeur", "alias": "publisher"},
-        {"json_path": "$.article[0].gtl", "alias": "gtl"},
+        {
+            "json_path": "$.article[0].gtl",
+            "alias": "gtl",
+            "cast_type": "JSON",
+        },
         {
             "json_path": "$.article[0].prix",
             "alias": "price",
-            "cast_type": "numeric",
+            "cast_type": "NUMERIC",
         },
         {
             "json_path": "$.article[0].image",
             "alias": "image",
-            "cast_type": "int64",
+            "cast_type": "INT64",
         },
         {
             "json_path": "$.article[0].image_4",
             "alias": "image_4",
-            "cast_type": "int64",
+            "cast_type": "INT64",
         },
     ] %}
 
@@ -33,14 +37,36 @@
         {
             "json_path": "$.article[0].id_lectorat",
             "alias": "readership_id",
-            "cast_type": "int64",
+            "cast_type": "INT64",
+            "final_cast_type": "STRING",
         },
         {"json_path": "$.article[0].langueiso", "alias": "language_iso"},
-        {"json_path": "$.article[0].taux_tva", "alias": "vat_rate"},
-        {"json_path": "$.auteurs_multi", "alias": "multiple_authors"},
-        {"json_path": "$.article[0].contributor", "alias": "contributor"},
-        {"json_path": "$.article[0].serie", "alias": "series"},
-        {"json_path": "$.article[0].idserie", "alias": "series_id"},
+        {
+            "json_path": "$.article[0].taux_tva",
+            "alias": "vat_rate",
+            "cast_type": "FLOAT64",
+            "final_cast_type": "STRING",
+        },
+        {
+            "json_path": "$.auteurs_multi",
+            "alias": "multiple_authors",
+            "cast_type": "JSON",
+        },
+        {
+            "json_path": "$.article[0].contributor",
+            "alias": "contributor",
+            "cast_type": "JSON",
+        },
+        {
+            "json_path": "$.article[0].serie",
+            "alias": "series",
+            "null_when_equal": "Non précisée",
+        },
+        {
+            "json_path": "$.article[0].idserie",
+            "alias": "series_id",
+            "null_when_equal": "0",
+        },
     ] %}
 
     {% set specific_music_fields_struct = [
@@ -48,7 +74,24 @@
         {"json_path": "$.article[0].label", "alias": "music_label"},
         {"json_path": "$.article[0].compositeur", "alias": "composer"},
         {"json_path": "$.article[0].interprete", "alias": "performer"},
-        {"json_path": "$.article[0].nb_galettes", "alias": "nb_discs"},
+        {
+            "json_path": "$.article[0].nb_galettes",
+            "alias": "nb_discs",
+            "cast_type": "INT64",
+            "final_cast_type": "STRING",
+        },
+        {"json_path": "$.article[0].commentaire", "alias": "comment"},
+        {
+            "json_path": "$.article[0].contenu_explicite",
+            "alias": "explicit_content",
+            "cast_type": "INT64",
+        },
+        {
+            "json_path": "$.article[0].dispo",
+            "alias": "availability",
+            "cast_type": "INT64",
+        },
+        {"json_path": "$.article[0].distributeur", "alias": "distributor"},
     ] %}
 
     {% set products = {

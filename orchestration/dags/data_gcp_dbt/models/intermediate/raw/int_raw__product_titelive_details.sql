@@ -14,13 +14,10 @@
 
 with
     base_data as (
-        select
-            ean,
-            dbt_valid_from,
-            parse_json(json_value(parse_json(json_str), '$')) as json_raw
+        select ean, dbt_valid_from, parse_json(json_raw) as json_raw
         from {{ ref("snapshot_raw__titelive_products") }}
         where
-            dbt_valid_to is null and json_str is not null
+            dbt_valid_to is null and json_raw is not null
             {% if is_incremental() %}
                 and dbt_valid_from >= (
                     select max(this.last_updated_at) as dummy_alias

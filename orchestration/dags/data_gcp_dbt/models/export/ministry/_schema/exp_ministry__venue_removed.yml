@@ -28,3 +28,13 @@ models:
         description: "{{ doc('column__venue_creation_date') }}"
       - name: venue_type_label
         description: "{{ doc('column__venue_type_label') }}"
+      - name: venue_department_code
+        description: "{{ doc('column__venue_department_code') }}"
+      - name: venue_city
+        description: "{{ doc('column__venue_city') }}"
+      - name: venue_postal_code
+        description: "{{ doc('column__venue_postal_code') }}"
+      - name: venue_latitude
+        description: "{{ doc('column__venue_latitude') }}"
+      - name: venue_longitude
+        description: "{{ doc('column__venue_longitude') }}"

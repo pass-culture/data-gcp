@@ -4,7 +4,7 @@
         config(
             **custom_snapshot_config(
                 strategy="check",
-                check_cols=["json_str"],
+                check_cols=["json_raw"],
                 unique_key="ean",
                 cluster_by=["ean"],
                 hard_deletes="ignore",
@@ -20,10 +20,7 @@
         ean,
         recto_image_uuid,
         verso_image_uuid,
-        case
-            when json_raw is null then null
-            else TO_JSON_STRING(json_raw)
-        end as json_str
+        json_raw
     from {{ source("raw", "raw_titelive_products") }}
     where true
         and status = 'processed'

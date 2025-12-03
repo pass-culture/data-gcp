@@ -13,6 +13,8 @@
 {% docs column__total_managed_finance %}Indicates whether any financial activities were managed during the visit.{% enddocs %}
 {% docs column__total_managed_venues %}Indicates whether any venues were managed during the visit.{% enddocs %}
 {% docs column__total_managed_profiles %}Indicates whether any profiles were managed during the visit.{% enddocs %}
+{% docs column__total_booking_downloads %}Indicates whether any bookings were downloaded during the visit.{% enddocs %}
+{% docs column__total_consulted_offers %}Indicates whether any offer pages (on "Espace partenaire") were consulted during the visit.{% enddocs %}
 {% docs column__total_stat_page_views %}The total number of statistic page views during the visit.{% enddocs %}
 {% docs column__total_consulted_help %}Indicates whether any help resources were consulted during the visit.{% enddocs %}
 {% docs column__total_partner_created_individual_offers %}The total number of individual offers created by the partner.{% enddocs %}

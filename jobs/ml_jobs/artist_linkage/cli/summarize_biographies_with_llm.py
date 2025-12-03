@@ -36,7 +36,8 @@ def main(
         max_concurrent=min(MAX_CONCURRENT_LLM_REQUESTS, len(artists_to_summarize_df)),
     )
 
-    # Merge back the biographies to the original dataframe
+    # Merge back the biographies to the original dataframe# TODO: Fix bug if artist has no biography
+
     (
         artists_df.merge(
             artists_with_biographies_df[[ARTIST_ID_KEY, BIOGRAPHY_KEY]],

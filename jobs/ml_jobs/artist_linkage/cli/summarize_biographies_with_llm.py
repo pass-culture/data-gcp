@@ -9,7 +9,7 @@ from src.constants import (
     WIKIPEDIA_CONTENT_KEY,
 )
 from src.llm_config import MAX_CONCURRENT_LLM_REQUESTS
-from src.utils.llm import summerize_biographies_with_llm
+from src.utils.llm import summarize_biographies_with_llm
 
 app = typer.Typer()
 
@@ -31,7 +31,7 @@ def main(
         artists_to_summarize_df = artists_to_summarize_df.head(100)
 
     # Summarize biographies with LLM
-    artists_with_biographies_df = summerize_biographies_with_llm(
+    artists_with_biographies_df = summarize_biographies_with_llm(
         artists_to_summarize_df,
         max_concurrent=min(MAX_CONCURRENT_LLM_REQUESTS, len(artists_to_summarize_df)),
     )

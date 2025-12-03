@@ -7,7 +7,7 @@ from pydantic_ai.providers.google import GoogleProvider
 GEMINI_MODEL_NAME = "gemini-2.5-flash"
 LLM_MODEL = GoogleModel(GEMINI_MODEL_NAME, provider=GoogleProvider(vertexai=True))
 MAX_CONCURRENT_LLM_REQUESTS = 10
-MAX_TOKENS = 500
+MAX_CHARS = 500
 MAX_RETRIES = 5
 MAX_TIMEOUT_SECONDS = 60
 LLM_SETTINGS = GoogleModelSettings(
@@ -21,7 +21,7 @@ LLM_SETTINGS = GoogleModelSettings(
 class WikipediaSummary(BaseModel):
     biography: str = Field(
         description="Résumé de la page Wikipedia de l'artiste.",
-        max_length=MAX_TOKENS + 50,  # Allow some buffer for LLM output
+        max_length=MAX_CHARS + 50,  # Allow some buffer for LLM output
     )
 
 
@@ -34,7 +34,7 @@ Rédige un résumé biographique en FRANÇAIS à partir du texte brut d'un artic
     3. Concentre-toi uniquement sur la carrière artistique de la personne (genre, succès, œuvres).
 
     RÈGLES IMPÉRATIVES :
-    1. Maximum {MAX_TOKENS} caractères. Sois extrêmement concis.
+    1. Maximum {MAX_CHARS} caractères. Sois extrêmement concis.
     2. Ton neutre et factuel.
     3. SUJET : Uniquement la carrière artistique (genre, succès, œuvres).
     4. INTERDIT : Pas de politique, pas de polémiques, pas de vie privée, pas de scandales.

@@ -23,7 +23,7 @@ EMPTY_PREDICTION = {
 }
 
 
-def summerize_biographies_with_llm(
+def summarize_biographies_with_llm(
     data: pd.DataFrame,
     max_concurrent: int,
     *,
@@ -38,10 +38,10 @@ def summerize_biographies_with_llm(
         logfire.configure(scrubbing=False)
         logfire.instrument_pydantic_ai()
 
-    return asyncio.run(_async_summerize_biographies_with_llm(data, max_concurrent))
+    return asyncio.run(_async_summarize_biographies_with_llm(data, max_concurrent))
 
 
-async def _async_summerize_biographies_with_llm(
+async def _async_summarize_biographies_with_llm(
     data: pd.DataFrame, max_concurrent: int
 ) -> pd.DataFrame:
     """Async implementation of writing style prediction with controlled concurrency"""
@@ -103,7 +103,7 @@ async def process_single_row(
 
 
 async def predict_biography_with_pydantic_ai(
-    artist_name: str, wikipedia_content, agent: Agent
+    artist_name: str, wikipedia_content: str, agent: Agent
 ) -> dict[str, str | float | None]:
     try:
         # Prepare the input text
@@ -114,12 +114,13 @@ async def predict_biography_with_pydantic_ai(
 
         # Run the agent to get structured output with timeout (async version)
         result = await agent.run(input_text)
+        token_usage = result.usage()
 
         # Convert the result to a dictionary with token usage info
         return {
             BIOGRAPHY_KEY: result.output.biography,
-            "input_tokens": result.usage().input_tokens if result.usage() else None,
-            "output_tokens": result.usage().output_tokens if result.usage() else None,
+            "input_tokens": token_usage.input_tokens if token_usage else None,
+            "output_tokens": token_usage.output_tokens if token_usage else None,
             "raw_response": result.output.dict() if result.output else None,
         }
 

@@ -7,6 +7,7 @@
     - alias: output column name
     - cast_type: optional, the SQL type to cast the JSON value to (e.g., INT64, FLOAT64, STRING, JSON; default->STRING)
     - null_when_equal: optional, string/or relevant type value that should be converted to NULL using NULLIF
+    - final_cast_type: optional, the final SQL type to cast the result to (useful for casting INT64 -> STRING, etc.)
 -#}
     {%- for f in fields -%}
 
@@ -49,6 +50,13 @@
                 {%- set null_val = f.null_when_equal -%}
             {%- endif -%}
             {%- set final_expr = "nullif(" ~ casted_expr ~ ", " ~ null_val ~ ")" -%}
+        {%- endif -%}
+
+        {# Apply final cast if final_cast_type is specified #}
+        {%- if f.final_cast_type is defined -%}
+            {%- set final_expr = (
+                "cast(" ~ final_expr ~ " as " ~ f.final_cast_type ~ ")"
+            ) -%}
         {%- endif -%}
 
         {{ final_expr }} as {{ f.alias }}

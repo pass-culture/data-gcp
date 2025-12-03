@@ -38,12 +38,14 @@
             "json_path": "$.article[0].id_lectorat",
             "alias": "readership_id",
             "cast_type": "INT64",
+            "final_cast_type": "STRING",
         },
         {"json_path": "$.article[0].langueiso", "alias": "language_iso"},
         {
             "json_path": "$.article[0].taux_tva",
             "alias": "vat_rate",
             "cast_type": "FLOAT64",
+            "final_cast_type": "STRING",
         },
         {
             "json_path": "$.auteurs_multi",
@@ -76,6 +78,7 @@
             "json_path": "$.article[0].nb_galettes",
             "alias": "nb_discs",
             "cast_type": "INT64",
+            "final_cast_type": "STRING",
         },
         {"json_path": "$.article[0].commentaire", "alias": "comment"},
         {

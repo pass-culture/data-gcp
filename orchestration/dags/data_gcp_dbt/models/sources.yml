@@ -134,6 +134,7 @@ sources:
       - name: firebase_events
       - name: firebase_ios_performance
       - name: firebase_pro_events
+      - name: gsheet_backoffice_log_cross_reference
       - name: gsheet_eac_webinar
       - name: gsheet_educational_institution_student_headcount
       - name: gsheet_instagram_campaign_tag

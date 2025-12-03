@@ -4,6 +4,14 @@ import pandas as pd
 from google.oauth2 import service_account
 
 SHEETS = {
+    "gsheet_backoffice_log_cross_reference": {
+        "spreadsheet_ids": ["1IvXNbkMM6sDaQtViB03ng3P-_vl05v1yW6-Yp4med3g"],
+        "expected_headers_dict": {
+            "log_extract": "log_extract",
+            "log_type": "log_type",
+            "log_name": "log_name",
+        },
+    },
     "gsheet_eac_webinar": {
         "spreadsheet_ids": ["1eht2OUf9eOdGXYbGa10zhJ0sDe5SENuTS8WKYJbjikc"],
         "expected_headers_dict": {

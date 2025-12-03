@@ -2,7 +2,7 @@ select
     hr.id,
     hr.offer_id,
     hr.highlight_id,
-    hr.mediation_uuid,
+    hr.mediation_uuid as highlight_image_id,
     h.highlight_name,
     h.highlight_description,
     safe.parse_date(

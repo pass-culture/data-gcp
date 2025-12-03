@@ -1,7 +1,7 @@
 select
     offer_id,
     highlight_id,
-    mediation_uuid,
+    highlight_image_id,
     highlight_name,
     highlight_description,
     highlight_beginning_date,

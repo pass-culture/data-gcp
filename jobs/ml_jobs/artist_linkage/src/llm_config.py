@@ -4,7 +4,7 @@ from pydantic_ai.models.google import GoogleModel, GoogleModelSettings
 from pydantic_ai.providers.google import GoogleProvider
 
 # Model Config
-GEMINI_MODEL_NAME = "gemini-flash-latest"
+GEMINI_MODEL_NAME = "gemini-2.5-flash"
 LLM_MODEL = GoogleModel(GEMINI_MODEL_NAME, provider=GoogleProvider(vertexai=True))
 LLM_SETTINGS = GoogleModelSettings(
     google_thinking_config=ThinkingConfig(include_thoughts=False, thinking_budget=0),

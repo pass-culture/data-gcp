@@ -115,14 +115,14 @@ async def predict_biography_with_pydantic_ai(
 
         # Convert the result to a dictionary with token usage info
         return {
-            BIOGRAPHY_KEY: result.output.biography.value,
+            BIOGRAPHY_KEY: result.output.biography,
             "input_tokens": result.usage().input_tokens if result.usage() else None,
             "output_tokens": result.usage().output_tokens if result.usage() else None,
             "raw_response": result.output.dict() if result.output else None,
         }
 
     except Exception as e:
-        logger.error(f"Error predicting writing style for '{artist_name}': {e}")
+        logger.error(f"Error predicting biography '{artist_name}': {e}")
         logger.error(f"Full error details: {e!r}")
         import traceback
 

@@ -36,8 +36,32 @@ models:
         description: '{{ doc("column__user_activity") }}'
         data_type: STRING
 
+      - name: user_address
+        description: '{{ doc("column__user_address") }}'
+        data_type: STRING
+
+      - name: user_city
+        description: '{{ doc("column__user_city") }}'
+        data_type: STRING
+
+      - name: user_postal_code
+        description: '{{ doc("column__user_postal_code") }}'
+        data_type: STRING
+
       - name: user_previous_activity
         description: '{{ doc("column__user_previous_activity") }}'
+        data_type: STRING
+
+      - name: user_previous_address
+        description: '{{ doc("column__user_previous_address") }}'
+        data_type: STRING
+
+      - name: user_previous_city
+        description: '{{ doc("column__user_previous_city") }}'
+        data_type: STRING
+
+      - name: user_previous_postal_code
+        description: '{{ doc("column__user_previous_postal_code") }}'
         data_type: STRING
 
       - name: user_age_at_information_creation
@@ -79,6 +103,14 @@ models:
         data_type: BOOL
         data_tests:
           - not_null
+
+      - name: user_longitude
+        description: '{{ doc("column__user_longitude") }}'
+        data_type: FLOAT64
+
+      - name: user_latitude
+        description: '{{ doc("column__user_latitude") }}'
+        data_type: FLOAT64
 
       - name: user_epci_code
         description: '{{ doc("column__user_epci_code") }}'

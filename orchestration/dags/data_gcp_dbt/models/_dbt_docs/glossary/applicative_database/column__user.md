@@ -64,6 +64,11 @@
 {% docs column__user_category %} User category derived from the user's role and age. Possible values include: '15-16' (users aged 15 or 16 with no specific role), 'general_public' (users aged 14 or under, or 17 and above, with no specific role), or 'beneficiary' (for users with a non-null role). {% enddocs %}
 {% docs column__user_action_type %} Type of action that triggered the user information record. Possible values: INFO_MODIFIED (user modified their profile), PROFILE_COMPLETION (initial profile completion during registration). {% enddocs %}
 {% docs column__user_previous_activity %} User's activity status before the current change. {% enddocs %}
+{% docs column__user_previous_address %} User's address before the current change. {% enddocs %}
+{% docs column__user_previous_city %} User's city before the current change. {% enddocs %}
+{% docs column__user_previous_postal_code %} User's postal code before the current change. {% enddocs %}
+{% docs column__user_longitude %} Longitude of the user's location. Derived from geocoded address when available, otherwise from postal code centroid. {% enddocs %}
+{% docs column__user_latitude %} Latitude of the user's location. Derived from geocoded address when available, otherwise from postal code centroid. {% enddocs %}
 {% docs column__user_age_at_info_creation %} User's age in years at the time the information record was created. {% enddocs %}
 {% docs column__user_qpv_code %} Code of the QPV (Quartier Prioritaire de la Ville) if the user is located in a priority neighborhood. {% enddocs %}
 {% docs column__user_qpv_name %} Name of the QPV (Quartier Prioritaire de la Ville) if the user is located in a priority neighborhood. {% enddocs %}

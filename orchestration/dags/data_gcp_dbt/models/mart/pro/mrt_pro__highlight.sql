@@ -1,4 +1,5 @@
 select
+    highlight_request_id,
     offer_id,
     highlight_id,
     highlight_image_id,

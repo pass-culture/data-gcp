@@ -1,4 +1,6 @@
-{% docs column__highlight_id %}Unique identifier of the highlight itself.
+{% docs column__highlight_request_id %}Unique identifier of the highlight request.
+{% enddocs %}
+{% docs column__highlight_id %}Unique identifier of the highlight itself ("temps de valorisation thématique").
 {% enddocs %}
 {% docs column__highlight_image_id %}Identifier of the visual or image used to represent this highlight.
 {% enddocs %}

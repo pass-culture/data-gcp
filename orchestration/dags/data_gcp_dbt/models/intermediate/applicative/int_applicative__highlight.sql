@@ -1,5 +1,5 @@
 select
-    hr.id,
+    hr.id as highlight_request_id,
     hr.offer_id,
     hr.highlight_id,
     hr.mediation_uuid as highlight_image_id,

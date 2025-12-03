@@ -8,5 +8,6 @@ select
     oc.criterion_beginning_date,
     oc.criterion_ending_date,
     oc.offer_id,
-    oc.offer_name
+    oc.offer_name,
+    oc.highlight_id
 from {{ ref("int_applicative__offer_criterion") }} as oc

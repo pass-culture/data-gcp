@@ -2,6 +2,7 @@ select
     adc.name as tag_name,
     adc.id as criterion_id,
     adc.description,
+    adc.highlight_id,
     adcc.criterion_category_label,
     date(adc.startdatetime) as criterion_beginning_date,
     date(adc.enddatetime) as criterion_ending_date,

@@ -4,6 +4,8 @@ models:
   - name: mrt_pro__highlight
     description: "{{ doc('description__mrt_pro__highlight') }}"
     columns:
+      - name: highlight_request_id
+        description: "{{ doc('column__highlight_request_id') }}"
       - name: offer_id
         description: "{{ doc('column__offer_id') }}"
       - name: highlight_id

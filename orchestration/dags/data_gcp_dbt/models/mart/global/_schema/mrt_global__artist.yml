@@ -26,10 +26,10 @@ models:
         data_type: STRING
       - name: artist_creation_date
         description: '{{ doc("column__artist_creation_date") }}'
-        data_type: TIMESTAMP
+        data_type: DATETIME
       - name: artist_modification_date
         description: '{{ doc("column__artist_modification_date") }}'
-        data_type: TIMESTAMP
+        data_type: DATETIME
       - name: artist_total_consultations
         description: '{{ doc("column__artist_total_consultations") }}'
       - name: artist_total_consultations_from_search

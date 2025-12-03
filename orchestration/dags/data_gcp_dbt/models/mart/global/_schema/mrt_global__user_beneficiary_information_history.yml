@@ -9,7 +9,7 @@ models:
         data_tests:
           - not_null
 
-      - name: info_history_rank
+      - name: user_information_rank
         description: '{{ doc("column__info_history_rank") }}'
         data_type: INT64
         data_tests:
@@ -18,7 +18,7 @@ models:
               min_value: 0
               inclusive: true
 
-      - name: user_action_type
+      - name: user_information_action_type
         description: '{{ doc("column__user_action_type") }}'
         data_type: STRING
         data_tests:
@@ -26,7 +26,7 @@ models:
           - accepted_values:
               values: ['INFO_MODIFIED', 'PROFILE_COMPLETION']
 
-      - name: creation_timestamp
+      - name: user_information_created_at
         description: Timestamp when the user information was modified (partitioning key with daily granularity)
         data_type: TIMESTAMP
         data_tests:
@@ -40,41 +40,41 @@ models:
         description: '{{ doc("column__user_previous_activity") }}'
         data_type: STRING
 
-      - name: user_age_at_info_creation
+      - name: user_age_at_information_creation
         description: '{{ doc("column__user_age_at_info_creation") }}'
         data_type: INT64
 
-      - name: has_confirmed
+      - name: user_has_confirmed_information
         description: '{{ doc("column__has_confirmed") }}'
         data_type: BOOL
         data_tests:
           - not_null
 
-      - name: has_modified
+      - name: user_has_modified_information
         description: '{{ doc("column__has_modified") }}'
         data_type: BOOL
         data_tests:
           - not_null
 
-      - name: has_modified_activity
+      - name: user_has_modified_activity
         description: '{{ doc("column__has_modified_activity") }}'
         data_type: BOOL
         data_tests:
           - not_null
 
-      - name: has_modified_address
+      - name: user_has_modified_address
         description: '{{ doc("column__has_modified_address") }}'
         data_type: BOOL
         data_tests:
           - not_null
 
-      - name: has_modified_city
+      - name: user_has_modified_city
         description: '{{ doc("column__has_modified_city") }}'
         data_type: BOOL
         data_tests:
           - not_null
 
-      - name: has_modified_postal_code
+      - name: user_has_modified_postal_code
         description: '{{ doc("column__has_modified_postal_code") }}'
         data_type: BOOL
         data_tests:

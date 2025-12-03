@@ -60,6 +60,10 @@ select
     countif(
         event_name = "page_view"
         and page_name = "Offres individuelles - pass Culture Pro"
+    ) as total_individual_catalog_page_views,
+    countif(
+        event_name = "page_view"
+        and page_name like "%Consulter une offre individuelle - pass Culture Pro"
     ) as total_individual_offer_page_views,
     countif(
         event_name = "page_view" and page_name = "Offres collectives - pass Culture Pro"
@@ -75,7 +79,9 @@ select
     countif(
         event_name = "page_view"
         and page_name in (
-            "Remboursements - pass Culture Pro", "Gestion financière - pass Culture Pro"
+            "Remboursements - pass Culture Pro",
+            "Gestion financière - pass Culture Pro",
+            "Gestion financière - justificatifs - pass Culture Pro"
         )
     ) as total_financial_receipt_page_views,
     countif(
@@ -106,7 +112,8 @@ select
         and page_name in (
             "Création - Détail de l’offre - pass Culture Pro",
             "Détails - Créer une offre individuelle - pass Culture Pro",
-            "Détails de l’offre - Créer une offre individuelle - pass Culture Pro"
+            "Détails de l’offre - Créer une offre individuelle - pass Culture Pro",
+            "Description - Créer une offre individuelle - pass Culture Pro"
         )
     ) as total_started_created_individual_offers,
     countif(
@@ -116,16 +123,25 @@ select
     -- collectiv
     countif(
         event_name = "page_view"
-        and page_location like "%/offre/creation/collectif/vitrine%"
+        and (
+            page_location like "%/offre/creation/collectif/vitrine%"
+            or page_name
+            = "Détails - Créer une offre collective vitrine - pass Culture Pro"
+        )
     ) as total_started_created_template_collective_offers,
     countif(
         event_name = "page_view"
-        and page_location like "%collectif/vitrine/confirmation%"
+        and (
+            page_location like "%collectif/vitrine/confirmation%"
+            or page_name
+            = "Confirmation - Offre collective vitrine publiée - pass Culture Pro"
+        )
     ) as total_confirmed_created_template_collective_offers,
     countif(
         event_name = "page_view"
         and (
             page_location like "%/offre/creation/collectif?%"
+            or page_name = "Détails - Créer une offre réservable - pass Culture Pro"
             or (
                 page_location like "%offre/collectif%"
                 and page_location like "%creation?%"
@@ -133,35 +149,27 @@ select
         )
     ) as total_started_created_bookable_collective_offers,
     countif(
-        event_name = "page_view" and page_location like "%/collectif/confirmation%"
+        event_name = "page_view"
+        and (
+            page_location like "%/collectif/confirmation%"
+            or page_name = "Confirmation - Offre réservable publiée - pass Culture Pro"
+        )
     ) as total_confirmed_created_bookable_collective_offers,
 
     -- count offer edition
     -- indiv
     countif(
         event_name = "page_view"
-        and page_name = "Détails - Modifier une offre individuelle - pass Culture Pro"
-    ) as total_started_detail_edited_individual_offers,
+        and page_name like "%Modifier une offre individuelle - pass Culture Pro"
+    ) as total_started_edited_individual_offers,
 
     countif(
         event_name = "page_view"
-        and page_name
-        = "Récapitulatif - Modifier une offre individuelle - pass Culture Pro"
+        and page_name like "%Modifier une offre individuelle - pass Culture Pro"
         and origin like "%/offre/individuelle%"
-        and origin like "%edition/informations%"
-    ) as total_confirmed_detail_edited_individual_offers,
-    countif(
-        event_name = "page_view"
-        and page_name
-        = "Stocks et prix - Modifier une offre individuelle - pass Culture Pro"
-    ) as total_started_stock_edited_individual_offers,
-    countif(
-        event_name = "page_view"
-        and page_name
-        = "Stocks et prix - Consulter une offre individuelle - pass Culture Pro"
-        and origin like "%/offre/individuelle%"
-        and origin like "%/stocks%"
-    ) as total_confirmed_stock_edited_individual_offers,
+        and origin like "%edition%"
+    ) as total_confirmed_edited_individual_offers,
+
     -- collectiv
     countif(
         event_name = "page_view"
@@ -209,7 +217,13 @@ select
     countif(
         event_name = "hasClickedSaveVenue" and is_edition = "true"
     ) as total_confirmed_edited_venues,
-    countif(event_name = "hasClickedAddImage") as total_add_image_clicks,
+    countif(
+        event_name = "hasClickedSaveImage"
+        and page_name in (
+            "Gérer ma page sur l’application - pass Culture Pro",
+            "Gérer ma page sur ADAGE - pass Culture Pro"
+        )
+    ) as total_save_image_clicks,
 
     -- count other CTA
     countif(
@@ -227,7 +241,7 @@ select
         )
     ) as total_add_venue_to_bank_account_clicks,
     countif(
-        event_name = "hasClickedInviteCollaborator"
+        event_name in ("hasClickedInviteCollaborator", "hasClickedAddCollaborator")
     ) as total_add_collaborator_clicks,
     countif(event_name = "hasSentInvitation") as total_send_invitation_clicks,
     countif(
@@ -255,8 +269,9 @@ select
     countif(event_name = "hasClickedConsultCGU") as total_consult_cgu_clicks,
     countif(event_name = "hasClickedContactOurTeams") as total_contact_our_team,
     countif(event_name = "hasClickedNewEvolutions") as total_new_evolutions_clicks,
-    countif(event_name = "hasClickedDownloadBooking") as total_download_booking_clicks,
-    countif(event_name = "hasClickedAddImage") as total_had_image_clicks
+    countif(
+        event_name like "hasClickedDownloadBooking%"
+    ) as total_download_booking_clicks
 
 from filtered_events
 where

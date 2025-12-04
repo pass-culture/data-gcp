@@ -138,7 +138,7 @@ def test_metapaths_structure() -> None:
     """Test that METAPATH constant contains expected structure."""
     cfg = TrainingConfig()
     # Verify metapath is a list of tuples
-    assert isinstance(cfg.metapaths, list | list | tuple)
+    assert isinstance(cfg.metapaths, list | tuple)
     assert all(
         isinstance(path, tuple) for metapath in cfg.metapaths for path in metapath
     )

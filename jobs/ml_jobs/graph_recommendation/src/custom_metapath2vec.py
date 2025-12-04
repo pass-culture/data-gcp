@@ -202,19 +202,18 @@ class CustomMetaPath2Vec(torch.nn.Module):
 
     @staticmethod
     def _get_num_nodes_dict(num_nodes_dict, edge_index_dict) -> dict[NodeType, int]:
-        if num_nodes_dict:
+        if num_nodes_dict is None:
+            num_nodes_dict = {}
+            for keys, edge_index in edge_index_dict.items():
+                key = keys[0]
+                N = int(edge_index[0].max() + 1)
+                num_nodes_dict[key] = max(N, num_nodes_dict.get(key, N))
+
+                key = keys[-1]
+                N = int(edge_index[1].max() + 1)
+                num_nodes_dict[key] = max(N, num_nodes_dict.get(key, N))
+
             return num_nodes_dict
-
-        num_nodes_dict = {}
-        for keys, edge_index in edge_index_dict.items():
-            key = keys[0]
-            N = int(edge_index[0].max() + 1)
-            num_nodes_dict[key] = max(N, num_nodes_dict.get(key, N))
-
-            key = keys[-1]
-            N = int(edge_index[1].max() + 1)
-            num_nodes_dict[key] = max(N, num_nodes_dict.get(key, N))
-
         return num_nodes_dict
 
     @staticmethod

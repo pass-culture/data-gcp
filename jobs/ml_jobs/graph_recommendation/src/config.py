@@ -91,7 +91,7 @@ class InvalidConfigError(Exception):
 @dataclass
 class TrainingConfig(BaseConfig):
     embedding_dim: int = 64
-    metapath_repetitions: int = 4
+    walk_length: int = 20
     context_size: int = 10
     walks_per_node: int = 5
     num_negative_samples: int = 5
@@ -130,10 +130,6 @@ class TrainingConfig(BaseConfig):
             ]
         )
     )
-
-    @property
-    def walk_length(self) -> int:
-        return int(len(self.metapath) * self.metapath_repetitions)
 
 
 @dataclass

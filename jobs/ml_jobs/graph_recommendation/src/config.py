@@ -100,36 +100,33 @@ class TrainingConfig(BaseConfig):
     num_workers: int = 8 if sys.platform == "linux" else 0
     batch_size: int = 256
     learning_rate: float = 0.01
-    metapath: list[tuple[str, str, str]] = field(
+    metapaths: list[list[tuple[str, str, str]]] = field(
         default_factory=lambda: (
-            4
-            * [
-                ("book", "is_artist_id", "artist_id"),
-                ("artist_id", "artist_id_of", "book"),
-            ]
-            + 4
-            * [
-                ("book", "is_gtl_label_level_4", "gtl_label_level_4"),
-                ("gtl_label_level_4", "gtl_label_level_4_of", "book"),
-            ]
-            + 3
-            * [
-                ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
-                ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
-            ]
-            + 3
-            * [
-                ("book", "is_series_id", "series_id"),
-                ("series_id", "series_id_of", "book"),
-            ]
-            + 2
-            * [
-                ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
-                ("gtl_label_level_2", "gtl_label_level_2_of", "book"),
-            ]
-            + [
-                ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
-                ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
+            [
+                [
+                    ("book", "is_artist_id", "artist_id"),
+                    ("artist_id", "artist_id_of", "book"),
+                ],
+                [
+                    ("book", "is_gtl_label_level_4", "gtl_label_level_4"),
+                    ("gtl_label_level_4", "gtl_label_level_4_of", "book"),
+                ],
+                [
+                    ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
+                    ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
+                ],
+                [
+                    ("book", "is_series_id", "series_id"),
+                    ("series_id", "series_id_of", "book"),
+                ],
+                [
+                    ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
+                    ("gtl_label_level_2", "gtl_label_level_2_of", "book"),
+                ],
+                [
+                    ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
+                    ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
+                ],
             ]
         )
     )

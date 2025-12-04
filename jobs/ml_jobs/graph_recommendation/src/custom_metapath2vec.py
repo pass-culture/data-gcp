@@ -58,6 +58,10 @@ class CustomMetaPath2Vec(torch.nn.Module):
     ):
         super().__init__()
 
+        # Validate metapaths and walk lengths
+        self._validate_metapaths(metapaths)
+        assert walk_length + 1 >= context_size
+
         self.embedding_dim = embedding_dim
         self.metapaths = metapaths
         self.walk_length = walk_length
@@ -68,35 +72,12 @@ class CustomMetaPath2Vec(torch.nn.Module):
         self.rowptr_dict, self.col_dict, self.rowcount_dict = self._get_sparse_matrix(
             edge_index_dict, self.num_nodes_dict
         )
-
-        # Validate metapaths and walk lengths
-        self._validate_metapaths(metapaths)
-        assert walk_length + 1 >= context_size
-
-        # Collect all types involved
-        types = set()
-        for metapath in metapaths:
-            types.update({x[0] for x in metapath} | {x[-1] for x in metapath})
-        types = sorted(types)
-
-        count = 0
-        self.start, self.end = {}, {}
-        for key in types:
-            self.start[key] = count
-            count += num_nodes_dict[key]
-            self.end[key] = count
-
-        # Calculate offsets for each metapath
-        self.offsets = []
-        for metapath in metapaths:
-            offset = [self.start[metapath[0][0]]]
-            offset += [self.start[keys[-1]] for keys in metapath] * int(
-                (walk_length / len(metapath)) + 1
-            )
-            offset = offset[: walk_length + 1]
-            assert len(offset) == walk_length + 1
-            self.offsets.append(torch.tensor(offset))
-
+        self.start, self.end, count = self._get_node_type_ranges(
+            self.metapaths, self.num_nodes_dict
+        )
+        self.offsets = self._compute_offsets(
+            self.metapaths, self.start, self.walk_length
+        )
         self.embedding = Embedding(count + 1, embedding_dim, sparse=sparse)
         self.dummy_idx = count
 
@@ -250,6 +231,44 @@ class CustomMetaPath2Vec(torch.nn.Module):
             col_dict[keys] = col
             rowcount_dict[keys] = rowptr[1:] - rowptr[:-1]
         return rowptr_dict, col_dict, rowcount_dict
+
+    @staticmethod
+    def _get_node_type_ranges(
+        metapaths: list[list[EdgeType]], num_nodes_dict: dict[NodeType, int]
+    ) -> tuple[dict[NodeType, int], dict[NodeType, int], int]:
+        # Collect all types involved
+        types = set()
+        for metapath in metapaths:
+            types.update({x[0] for x in metapath} | {x[-1] for x in metapath})
+        types = sorted(types)
+
+        count = 0
+        start, end = {}, {}
+        for key in types:
+            start[key] = count
+            count += num_nodes_dict[key]
+            end[key] = count
+
+        return start, end, count
+
+    @staticmethod
+    def _compute_offsets(
+        metapaths: list[list[EdgeType]],
+        start: dict[NodeType, int],
+        walk_length: int,
+    ) -> list[Tensor]:
+        # Calculate offsets for each metapath
+        offsets = []
+        for metapath in metapaths:
+            offset = [start[metapath[0][0]]]
+            offset += [start[keys[-1]] for keys in metapath] * int(
+                (walk_length / len(metapath)) + 1
+            )
+            offset = offset[: walk_length + 1]
+            assert len(offset) == walk_length + 1
+            offsets.append(torch.tensor(offset))
+
+        return offsets
 
     ###############################################################################
     ##########       Below methods are unchanged from MetaPath2Vec       ##########

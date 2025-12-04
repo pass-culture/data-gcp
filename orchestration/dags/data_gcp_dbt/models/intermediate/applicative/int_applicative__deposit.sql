@@ -9,9 +9,7 @@ with
             -- Get the total amount of previous deposit recredits
             sum(
                 case
-                    when recredit_type = 'PREVIOUS_DEPOSIT'
-                    then recredit_amount
-                    else 0
+                    when recredit_type = 'PREVIOUS_DEPOSIT' then recredit_amount else 0
                 end
             ) as total_previous_deposit_recredit_amount
         from {{ source("raw", "applicative_database_recredit") }}

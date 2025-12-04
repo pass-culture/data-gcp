@@ -5,7 +5,8 @@ from torch import Tensor
 from torch.nn import Embedding
 from torch.utils.data import DataLoader
 from torch_geometric.index import index2ptr
-from torch_geometric.typing import EdgeType, NodeType, OptTensor
+from torch_geometric.nn.models.metapath2vec import sample
+from torch_geometric.typing import EdgeType, NodeType
 from torch_geometric.utils import sort_edge_index
 
 EPS = 1e-15
@@ -14,9 +15,14 @@ EPS = 1e-15
 class CustomMetaPath2Vec(torch.nn.Module):
     r"""A custom MetaPath2Vec model that supports multiple metapaths.
 
+    Largely inspired from torch_geometric.nn.models.metapath2vec.MetaPath2Vec.
+
     This model samples random walks from multiple metapaths and learns node embeddings
     via negative sampling optimization. This allows learning from different types of
     relationships (e.g., Author-Paper-Author AND Author-Venue-Author) simultaneously.
+
+    If a metapath is stopped because it reached a dummy node, the corresponding walk is
+    discarded.
 
     Args:
         edge_index_dict (Dict[Tuple[str, str, str], torch.Tensor]): Dictionary
@@ -134,17 +140,6 @@ class CustomMetaPath2Vec(torch.nn.Module):
 
         self.reset_parameters()
 
-    def reset_parameters(self):
-        r"""Resets all learnable parameters of the module."""
-        self.embedding.reset_parameters()
-
-    def forward(self, node_type: str, batch: OptTensor = None) -> Tensor:
-        r"""Returns the embeddings for the nodes in :obj:`batch` of type
-        :obj:`node_type`.
-        """
-        emb = self.embedding.weight[self.start[node_type] : self.end[node_type]]
-        return emb if batch is None else emb.index_select(0, batch)
-
     def loader(self, **kwargs):
         r"""Returns the data loader that creates both positive and negative
         random walks on the heterogeneous graph.
@@ -240,8 +235,25 @@ class CustomMetaPath2Vec(torch.nn.Module):
         neg_rw = self._neg_sample(batch)[: len(pos_rw) * self.num_negative_samples, :]
         return pos_rw, neg_rw
 
+    #### Below methods are unchanged from MetaPath2Vec ####
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            f"{self.embedding.weight.size(0) - 1}, "
+            f"{self.embedding.weight.size(1)})"
+        )
+
+    def reset_parameters(self):
+        self.embedding.reset_parameters()
+
+    def forward(self, node_type: str, batch: Tensor) -> Tensor:
+        r"""Returns the embeddings for the given node type and batch."""
+        return self.embedding(batch + self.start[node_type])
+
     def loss(self, pos_rw: Tensor, neg_rw: Tensor) -> Tensor:
         r"""Computes the loss given positive and negative random walks."""
+
         # Positive loss.
         start, rest = pos_rw[:, 0], pos_rw[:, 1:].contiguous()
 
@@ -265,32 +277,3 @@ class CustomMetaPath2Vec(torch.nn.Module):
         neg_loss = -torch.log(1 - torch.sigmoid(out) + EPS).mean()
 
         return pos_loss + neg_loss
-
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}("
-            f"{self.embedding.weight.size(0) - 1}, "
-            f"{self.embedding.weight.size(1)})"
-        )
-
-
-def sample(
-    rowptr: Tensor,
-    col: Tensor,
-    rowcount: Tensor,
-    subset: Tensor,
-    num_neighbors: int,
-    dummy_idx: int,
-) -> Tensor:
-    mask = subset >= dummy_idx
-    subset = subset.clamp(min=0, max=rowptr.numel() - 2)
-    count = rowcount[subset]
-
-    rand = torch.rand((subset.size(0), num_neighbors), device=subset.device)
-    rand *= count.to(rand.dtype).view(-1, 1)
-    rand = rand.to(torch.long) + rowptr[subset].view(-1, 1)
-    rand = rand.clamp(max=col.numel() - 1)  # If last node is isolated.
-
-    col = col[rand] if col.numel() > 0 else rand
-    col[mask | (count == 0)] = dummy_idx
-    return col

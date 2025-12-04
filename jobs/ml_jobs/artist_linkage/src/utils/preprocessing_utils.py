@@ -5,7 +5,7 @@ from typing import TypedDict
 
 import pandas as pd
 
-from constants import ARTIST_NAME_TO_FILTER, PRODUCT_ID_KEY, TOTAL_OFFER_COUNT
+from src.constants import ARTIST_NAME_TO_FILTER, PRODUCT_ID_KEY, TOTAL_OFFER_COUNT
 
 
 ### Cleaning
@@ -400,10 +400,9 @@ def extract_artist_name(artist_name: str) -> str:
         # Flatten all initial parts into a single string without separators.
         flat_initials = "".join(initial_parts).replace(".", "").replace("-", "")
         formatted_initials = ". ".join(list(flat_initials))
-        if formatted_initials:
+        if formatted_initials and not formatted_initials.endswith("."):
             # Add a trailing dot for consistency, e.g., "j.l."
-            if not formatted_initials.endswith("."):
-                formatted_initials += "."
+            formatted_initials += "."
 
         # Reconstruct the last name
         reordered_lastname = " ".join(lastname_parts)

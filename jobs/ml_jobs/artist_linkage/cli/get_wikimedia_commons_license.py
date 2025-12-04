@@ -7,7 +7,7 @@ import requests
 import typer
 from tqdm import tqdm
 
-from constants import WIKIMEDIA_REQUEST_HEADER
+from src.constants import WIKIMEDIA_REQUEST_HEADER
 
 logging.basicConfig(level=logging.INFO)
 app = typer.Typer()

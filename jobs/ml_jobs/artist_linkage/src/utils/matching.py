@@ -3,13 +3,14 @@ import uuid
 import pandas as pd
 from loguru import logger
 
-from constants import (
+from src.constants import (
     ACTION_KEY,
     ARTIST_ALIASES_KEYS,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
     ARTIST_NAME_TO_MATCH_KEY,
     ARTIST_TYPE_KEY,
+    ARTIST_WIKI_ID_KEY,
     ARTISTS_KEYS,
     COMMENT_KEY,
     DESCRIPTION_KEY,
@@ -21,7 +22,7 @@ from constants import (
     Action,
     Comment,
 )
-from utils.preprocessing_utils import (
+from src.utils.preprocessing_utils import (
     extract_artist_name,
     prepare_artist_names_for_matching,
 )
@@ -121,9 +122,9 @@ def match_artist_on_offer_names(
 def create_artists_tables(
     preproc_unlinked_products_df: pd.DataFrame,
     exploded_artist_alias_df: pd.DataFrame,
-    products_to_remove_df=pd.DataFrame(),
-    preproc_linked_products_df=pd.DataFrame(),
-    artist_df=pd.DataFrame(columns=[ARTIST_ID_KEY]),
+    products_to_remove_df=None,
+    preproc_linked_products_df=None,
+    artist_df=None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Create delta tables for products, artists, and artist aliases with action tracking.
@@ -154,6 +155,13 @@ def create_artists_tables(
         All returned dataframes include 'action' and 'comment' columns for tracking
         the type of operation being performed.
     """
+    # Initialize empty DataFrames if None
+    if products_to_remove_df is None:
+        products_to_remove_df = pd.DataFrame(columns=PRODUCTS_KEYS)
+    if preproc_linked_products_df is None:
+        preproc_linked_products_df = pd.DataFrame(columns=PRODUCTS_KEYS)
+    if artist_df is None:
+        artist_df = pd.DataFrame(columns=[ARTIST_ID_KEY])
 
     delta_product_artist_link_df = pd.concat(
         [
@@ -218,9 +226,7 @@ def create_artists_tables(
 def match_artists_with_wikidata(
     new_artist_clusters_df: pd.DataFrame,
     wiki_df: pd.DataFrame,
-    existing_artist_alias_df: pd.DataFrame = pd.DataFrame(
-        columns=[ARTIST_ID_KEY, "artist_wiki_id"]
-    ),
+    existing_artist_alias_df: pd.DataFrame = None,
 ) -> pd.DataFrame:
     """
     Matches new artist clusters with existing Wikidata entries to assign consistent artist IDs.
@@ -248,6 +254,11 @@ def match_artists_with_wikidata(
             and match_per_category_no_namesakes).
         * If none, we assume no existing artists are present.
     """
+
+    if existing_artist_alias_df is None:
+        existing_artist_alias_df = pd.DataFrame(
+            columns=[ARTIST_ID_KEY, ARTIST_WIKI_ID_KEY]
+        )
     # 1? Preprocess to use wikidata matching functions
     wiki_df = (
         wiki_df.rename(

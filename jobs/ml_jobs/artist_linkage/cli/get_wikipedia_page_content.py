@@ -7,7 +7,7 @@ import requests
 import typer
 from loguru import logger
 
-from constants import (
+from src.constants import (
     ARTIST_ID_KEY,
     WIKIMEDIA_REQUEST_HEADER,
     WIKIPEDIA_CONTENT_KEY,
@@ -176,15 +176,18 @@ def main(
         )
 
     # Merge back the wikipedia content to the original dataframe
-    (
-        artists_with_wikipedia_url_df.merge(
-            pd.concat(results_df_list, ignore_index=True),
-            on=[ARTIST_ID_KEY, PAGE_TITLE_COLUMN, LANGUAGE_COLUMN, BATCH_INDEX_COLUMN],
-            how="left",
-        )
-        .loc[:, [*artists_df.columns, WIKIPEDIA_CONTENT_KEY]]
-        .to_parquet(output_file_path, index=False)
-    )
+    artists_id_with_wikipedia_content_df = artists_with_wikipedia_url_df.merge(
+        pd.concat(results_df_list, ignore_index=True),
+        on=[ARTIST_ID_KEY, PAGE_TITLE_COLUMN, LANGUAGE_COLUMN, BATCH_INDEX_COLUMN],
+        how="left",
+    ).loc[:, [ARTIST_ID_KEY, WIKIPEDIA_CONTENT_KEY]]
+
+    # Merge back to original dataframe and save
+    artists_df = artists_df.merge(
+        artists_id_with_wikipedia_content_df,
+        on=[ARTIST_ID_KEY],
+        how="left",
+    ).to_parquet(output_file_path, index=False)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 import time
-from typing import Callable, Generator, List
+from collections.abc import Callable, Generator
 
 import numpy as np
 import pandas as pd
@@ -9,7 +9,7 @@ from scipy.sparse import csr_matrix, vstack
 from sklearn.cluster import DBSCAN
 from tqdm import tqdm
 
-from constants import TOTAL_OFFER_COUNT
+from src.constants import TOTAL_OFFER_COUNT
 
 
 def _get_score_multiplier(dtype_distance_matrix: np.dtype) -> int:
@@ -32,15 +32,15 @@ def _get_score_multiplier(dtype_distance_matrix: np.dtype) -> int:
 
 
 def _chunks(
-    artist_list: List[str], num_chunks: int
-) -> Generator[List[str], None, None]:
+    artist_list: list[str], num_chunks: int
+) -> Generator[list[str], None, None]:
     """Yield successive n-sized chunks from artist_list."""
     for i in range(0, len(artist_list), num_chunks):
         yield artist_list[i : i + num_chunks]
 
 
 def _compute_distance_matrix(
-    artists_list: List[str],
+    artists_list: list[str],
     num_chunks: int,
     distance_metric: Callable,
     dtype_distance_matrix: np.dtype,

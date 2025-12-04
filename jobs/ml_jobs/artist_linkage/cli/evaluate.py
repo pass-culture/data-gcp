@@ -5,17 +5,17 @@ import pandas as pd
 import typer
 from loguru import logger
 
-from constants import (
+from src.constants import (
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
     ARTIST_TYPE_KEY,
+    ENV_SHORT_NAME,
     OFFER_CATEGORY_ID_KEY,
     OFFER_IS_SYNCHRONISED,
     PRODUCT_ID_KEY,
     WIKI_ID_KEY,
 )
-from utils.constants import ENV_SHORT_NAME
-from utils.mlflow import (
+from src.utils.mlflow import (
     connect_remote_mlflow,
     get_mlflow_experiment,
 )

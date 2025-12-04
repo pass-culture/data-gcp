@@ -1,10 +1,24 @@
 import json
+import os
 from pathlib import Path
 from typing import ClassVar
 
+# Infra
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
+
+MLFLOW_URI = (
+    "https://mlflow.passculture.team/"
+    if ENV_SHORT_NAME == "prod"
+    else "https://mlflow.staging.passculture.team/"
+)
+MLFLOW_SECRET_NAME = "mlflow_client_id"
+SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}"
+
+
 # Config
 ARTIST_LINKAGE_CONFIG = json.loads(
-    Path("artist_linkage_config.json").read_text(encoding="utf-8")
+    Path("src/artist_linkage_config.json").read_text(encoding="utf-8")
 )
 ARTIST_NAME_TO_FILTER = ARTIST_LINKAGE_CONFIG["preprocessing"]["artist_names_to_remove"]
 
@@ -21,6 +35,8 @@ DESCRIPTION_KEY = "description"
 IMG_KEY = "img"
 ACTION_KEY = "action"
 COMMENT_KEY = "comment"
+ARTIST_BIOGRAPHY_KEY = "artist_biography"
+ARTIST_WIKI_ID_KEY = "artist_wiki_id"
 
 ID_PER_CATEGORY = "id_per_category"
 TOTAL_BOOKING_COUNT = "total_booking_count"

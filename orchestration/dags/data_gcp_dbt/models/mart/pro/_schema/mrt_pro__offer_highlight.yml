@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: mrt_pro__highlight
-    description: "{{ doc('description__mrt_pro__highlight') }}"
+  - name: mrt_pro__offer_highlight
+    description: "{{ doc('description__mrt_pro__offer_highlight') }}"
     columns:
       - name: highlight_request_id
         description: "{{ doc('column__highlight_request_id') }}"

@@ -10,4 +10,4 @@ select
     highlight_availability_beginning_date,
     highlight_availability_ending_date,
     highlight_communication_date
-from {{ ref("int_applicative__highlight") }}
+from {{ ref("int_applicative__offer_highlight") }}

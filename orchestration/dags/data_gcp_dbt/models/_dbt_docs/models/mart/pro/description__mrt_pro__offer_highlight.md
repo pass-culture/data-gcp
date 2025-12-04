@@ -1,11 +1,11 @@
 ---
-title: Pro highlight
-description: Description of the `mrt_pro__highlight` table.
+title: Pro offer highlight
+description: Description of the `mrt_pro__offer_highlight` table.
 ---
 
-{% docs description__mrt_pro__highlight %}
+{% docs description__mrt_pro__offer_highlight %}
 
-The `mrt_pro__highlight` table gathers all participation requests submitted by cultural partners for promotional campaigns featured on the app ("Temps de valorisations thématiques" = highlights).
+The `mrt_pro__offer_highlight` table gathers all participation requests submitted by cultural partners for promotional campaigns featured on the app ("Temps de valorisations thématiques" = highlights).
 The Programmation team can then validate or not each highlight request.
 The table also provides with information about the different highlights, including visual reference (image ID), the partner application window, and the dates of active display on the app.
 

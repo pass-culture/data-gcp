@@ -10,10 +10,10 @@ from torch.optim import Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torch_geometric.data import HeteroData
-from torch_geometric.nn import MetaPath2Vec
 
 from src.config import TrainingConfig
 from src.constants import EMBEDDING_COLUMN
+from src.custom_metapath2vec import CustomMetaPath2Vec
 from src.utils.mlflow import (
     conditional_mlflow,
     log_model_parameters,
@@ -116,10 +116,10 @@ def train_metapath2vec(
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logger.info(f"Using device: {device}")
 
-    model = MetaPath2Vec(
+    model = CustomMetaPath2Vec(
         graph_data.edge_index_dict,
         embedding_dim=training_config.embedding_dim,
-        metapath=training_config.metapath,
+        metapaths=training_config.metapaths,
         walk_length=training_config.walk_length,
         context_size=training_config.context_size,
         walks_per_node=training_config.walks_per_node,

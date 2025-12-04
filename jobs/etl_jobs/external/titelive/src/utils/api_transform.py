@@ -110,7 +110,7 @@ def transform_api_response(api_response: dict) -> pd.DataFrame:
 
 def extract_gencods_from_search_response(
     api_response: dict, from_date: str
-) -> list[str]:
+) -> tuple[list[str], dict]:
     """
     Extract unique gencod values from a search API response with date filtering.
 
@@ -139,7 +139,11 @@ def extract_gencods_from_search_response(
             Duplicates are handled by final deduplication step.
 
     Returns:
-        List of unique EAN strings (gencod values)
+        Tuple of (unique_gencods, filter_stats) where filter_stats contains:
+            - total_articles: Total articles seen
+            - filtered_count: Articles filtered by date
+            - filtered_samples: List of (gencod, datemodification) for filtered items
+            - no_date_count: Articles without datemodification field
 
     Raises:
         ValueError: If API response format is invalid or from_date format is invalid
@@ -166,7 +170,9 @@ def extract_gencods_from_search_response(
 
     gencods = []
     total_articles = 0
-    filtered_articles = 0
+    filtered_count = 0
+    filtered_samples = []  # (gencod, datemodification) tuples
+    no_date_count = 0
 
     for result_item in results:
         if not isinstance(result_item, dict):
@@ -190,33 +196,44 @@ def extract_gencods_from_search_response(
                 continue
 
             total_articles += 1
+            gencod = article.get("gencod")
 
             # Apply date filter
             datemodification = article.get("datemodification")
 
-            # Include articles without datemodification
-            # (will be deduplicated at the end)
-            if datemodification is not None:
-                try:
-                    article_date = datetime.strptime(datemodification, "%d/%m/%Y")
+            # Track articles without datemodification
+            if datemodification is None:
+                no_date_count += 1
+                if gencod:
+                    gencods.append(str(gencod))
+                continue
 
-                    # Skip articles modified before from_date
-                    if article_date < from_date_obj:
-                        filtered_articles += 1
-                        continue
-                except ValueError:
-                    # Include articles with invalid date format
-                    # (will be deduplicated)
-                    logger.warning(
-                        f"Invalid datemodification format for article with "
-                        f"gencod {article.get('gencod')}: {datemodification}. "
-                        f"Including anyway."
-                    )
+            try:
+                article_date = datetime.strptime(datemodification, "%d/%m/%Y")
 
-            gencod = article.get("gencod")
+                # Skip articles modified before from_date
+                if article_date < from_date_obj:
+                    filtered_count += 1
+                    # Keep sample of filtered items (max 10)
+                    if len(filtered_samples) < 10 and gencod:
+                        filtered_samples.append((str(gencod), datemodification))
+                    continue
+            except ValueError:
+                # Include articles with invalid date format
+                logger.warning(
+                    f"Invalid datemodification format for article with "
+                    f"gencod {gencod}: {datemodification}. Including anyway."
+                )
+
             if gencod:
                 gencods.append(str(gencod))
 
-    # Return unique gencods
+    # Return unique gencods and filter stats
     unique_gencods = list(set(gencods))
-    return unique_gencods
+    filter_stats = {
+        "total_articles": total_articles,
+        "filtered_count": filtered_count,
+        "filtered_samples": filtered_samples,
+        "no_date_count": no_date_count,
+    }
+    return unique_gencods, filter_stats

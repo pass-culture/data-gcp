@@ -21,7 +21,10 @@ from src.utils.bigquery import (
     count_table_rows,
     deduplicate_table_by_ean,
     get_destination_table_schema,
+    get_images_status_breakdown,
     get_last_sync_date,
+    get_sample_eans_by_status,
+    get_status_breakdown,
     insert_dataframe,
 )
 from src.utils.ean_processing import process_eans_batch
@@ -151,7 +154,35 @@ def run_incremental(
         f"({run_stats.days_processed} days)"
     )
 
-    # Step 3: Truncate table before processing
+    # Step 3: Check current state and truncate table
+    logger.info("-" * 70)
+    logger.info("CHECKPOINT 1: INPUT STATE (before truncate)")
+
+    # Log current table state before truncate
+    try:
+        pre_truncate_count = count_table_rows(bq_client, target_table)
+        run_stats.pre_truncate_count = pre_truncate_count
+        logger.info(
+            f"Current table has {pre_truncate_count:,} rows (will be truncated)"
+        )
+
+        # Get status breakdown before truncate
+        status_breakdown = get_status_breakdown(bq_client, target_table)
+        logger.info("Status breakdown before truncate:")
+        for status, count in status_breakdown.items():
+            logger.info(f"  - {status}: {count:,}")
+
+        # Get images status breakdown
+        images_breakdown = get_images_status_breakdown(bq_client, target_table)
+        logger.info("Images download status before truncate:")
+        for status, count in images_breakdown.items():
+            logger.info(f"  - {status}: {count:,}")
+
+    except Exception as e:
+        logger.info(f"Table doesn't exist yet or is empty: {e}")
+        run_stats.pre_truncate_count = 0
+
+    # Truncate table
     logger.info("-" * 70)
     logger.info("STEP 3: Truncating target table")
     truncate_query = f"TRUNCATE TABLE `{target_table}`"
@@ -216,6 +247,8 @@ def run_incremental(
             # Phase 1: Collect all gencods from search pages
             total_pages = calculate_total_pages(total_results, results_per_page)
             all_gencods = []
+            total_filtered = 0
+            filtered_samples = []
 
             for page in range(1, total_pages + 1):
                 try:
@@ -229,10 +262,17 @@ def run_incremental(
 
                     results = response.get("result", [])
                     if results:
-                        page_gencods = extract_gencods_from_search_response(
-                            response, from_date=min_date_formatted
+                        page_gencods, filter_stats = (
+                            extract_gencods_from_search_response(
+                                response, from_date=min_date_formatted
+                            )
                         )
                         all_gencods.extend(page_gencods)
+
+                        # Aggregate filter stats
+                        total_filtered += filter_stats["filtered_count"]
+                        if len(filtered_samples) < 5:
+                            filtered_samples.extend(filter_stats["filtered_samples"])
 
                 except Exception as e:
                     logger.error(
@@ -240,20 +280,22 @@ def run_incremental(
                     )
                     continue
 
+            # Log filtered gencods if any
+            daily_stats.filtered_by_date = total_filtered
+            if total_filtered > 0:
+                logger.info(
+                    f"    ⚠️ Filtered {total_filtered} gencods "
+                    f"(datemodification < {min_date_formatted})"
+                )
+                if filtered_samples[:5]:
+                    logger.info("    Sample filtered EANs:")
+                    for gencod, date_mod in filtered_samples[:5]:
+                        logger.info(f"      - {gencod} (dateMaj={date_mod})")
+
             # Phase 2: Fetch detailed data via /ean endpoint
             if all_gencods:
                 unique_gencods = list(set(all_gencods))
                 daily_stats.gencods_collected = len(unique_gencods)
-
-                # Detect gencod/nbreponses mismatch
-                diff_pct = (
-                    (len(unique_gencods) - total_results) / max(total_results, 1) * 100
-                )
-                if abs(diff_pct) > 10:
-                    run_stats.anomalies.append(
-                        f"{base} {date_str}: API={total_results}, "
-                        f"Gencods={len(unique_gencods)} ({diff_pct:+.1f}%)"
-                    )
 
                 # Map base to subcategoryid
                 if base == TiteliveCategory.MUSIC:
@@ -270,14 +312,37 @@ def run_incremental(
                     api_client, ean_pairs, sub_batch_size=DEFAULT_BATCH_SIZE
                 )
 
-                # Count statuses
+                # Count statuses and collect samples
+                failed_eans = []
+                deleted_eans = []
                 for result in results:
                     if result["status"] == "processed":
                         daily_stats.eans_processed += 1
                     elif result["status"] == "deleted_in_titelive":
                         daily_stats.eans_deleted += 1
+                        if len(deleted_eans) < 5:
+                            deleted_eans.append(result["ean"])
                     elif result["status"] == "failed":
                         daily_stats.eans_failed += 1
+                        if len(failed_eans) < 5:
+                            failed_eans.append(result["ean"])
+
+                # Log sample failed/deleted EANs
+                if deleted_eans:
+                    daily_stats.sample_deleted_eans = deleted_eans
+                    logger.info(
+                        f"    Sample deleted EANs ({daily_stats.eans_deleted} total):"
+                    )
+                    for ean in deleted_eans:
+                        logger.info(f"      - {ean}")
+
+                if failed_eans:
+                    daily_stats.sample_failed_eans = failed_eans
+                    logger.info(
+                        f"    ⚠️ Sample failed EANs ({daily_stats.eans_failed} total):"
+                    )
+                    for ean in failed_eans:
+                        logger.info(f"      - {ean}")
 
                 # Add required fields
                 current_time = datetime.now()
@@ -319,6 +384,47 @@ def run_incremental(
 
     # Get actual row count after deduplication
     run_stats.total_rows_after_dedup = count_table_rows(bq_client, target_table)
+
+    # Final verification checkpoint
+    logger.info("-" * 70)
+    logger.info("CHECKPOINT: FINAL VERIFICATION")
+    logger.info("-" * 70)
+
+    # Status breakdown
+    final_status_breakdown = get_status_breakdown(bq_client, target_table)
+    run_stats.final_status_breakdown = final_status_breakdown
+    logger.info("Final status breakdown:")
+    for status, count in final_status_breakdown.items():
+        pct = (
+            (count / run_stats.total_rows_after_dedup * 100)
+            if run_stats.total_rows_after_dedup > 0
+            else 0
+        )
+        logger.info(f"  - {status}: {count:,} ({pct:.1f}%)")
+
+    # Sample failed EANs if any
+    failed_count = final_status_breakdown.get("failed", 0)
+    if failed_count > 0:
+        sample_failed = get_sample_eans_by_status(bq_client, target_table, "failed", 5)
+        logger.warning(f"⚠️ {failed_count} failed EANs. Sample:")
+        for ean in sample_failed:
+            logger.warning(f"    - {ean}")
+
+    # Images download status (should all be NULL at this point)
+    images_status = get_images_status_breakdown(bq_client, target_table)
+    run_stats.final_images_status_breakdown = images_status
+    logger.info("Images download status (pre-download_images):")
+    for status, count in images_status.items():
+        logger.info(f"  - {status}: {count:,}")
+
+    null_images = images_status.get("NULL", 0)
+    if null_images == run_stats.total_rows_after_dedup:
+        logger.info("  ✓ All EANs pending image download (expected)")
+    else:
+        logger.warning(
+            f"  ⚠️ Unexpected: {run_stats.total_rows_after_dedup - null_images} "
+            f"EANs already have images_download_status set"
+        )
 
     # Log comprehensive summary
     run_stats.log_summary(logger)

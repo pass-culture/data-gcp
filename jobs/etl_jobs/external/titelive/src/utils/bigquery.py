@@ -684,3 +684,194 @@ def count_table_rows(client: bigquery.Client, table_id: str) -> int:
     row_count = next(iter(result)).row_count
     logger.info(f"Table {table_id} has {row_count:,} rows")
     return row_count
+
+
+def get_status_breakdown(
+    client: bigquery.Client,
+    table_id: str,
+) -> dict[str, int]:
+    """
+    Get row counts grouped by status field.
+
+    Args:
+        client: BigQuery client
+        table_id: Full table ID (project.dataset.table)
+
+    Returns:
+        Dict mapping status to count, e.g. {"processed": 1000, "failed": 50}
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If query fails
+    """
+    query = f"""
+        SELECT
+            status,
+            COUNT(*) as count
+        FROM `{table_id}`
+        GROUP BY status
+        ORDER BY count DESC
+    """
+    query_job = client.query(query)
+    results = query_job.result()
+    return {row.status: row.count for row in results}
+
+
+def get_images_status_breakdown(
+    client: bigquery.Client,
+    table_id: str,
+) -> dict[str, int]:
+    """
+    Get row counts grouped by images_download_status field.
+
+    Args:
+        client: BigQuery client
+        table_id: Full table ID (project.dataset.table)
+
+    Returns:
+        Dict mapping status to count, e.g. {"processed": 1000, "NULL": 500}
+        NULL status is represented as string "NULL"
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If query fails
+    """
+    query = f"""
+        SELECT
+            IFNULL(images_download_status, 'NULL') as status,
+            COUNT(*) as count
+        FROM `{table_id}`
+        GROUP BY images_download_status
+        ORDER BY count DESC
+    """
+    query_job = client.query(query)
+    results = query_job.result()
+    return {row.status: row.count for row in results}
+
+
+def get_sample_eans_by_status(
+    client: bigquery.Client,
+    table_id: str,
+    status: str,
+    limit: int = 5,
+) -> list[str]:
+    """
+    Get sample EANs for a given status.
+
+    Args:
+        client: BigQuery client
+        table_id: Full table ID (project.dataset.table)
+        status: Status value to filter by
+        limit: Maximum number of EANs to return (default 5)
+
+    Returns:
+        List of EAN strings
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If query fails
+    """
+    query = f"""
+        SELECT ean
+        FROM `{table_id}`
+        WHERE status = '{status}'
+        LIMIT {limit}
+    """
+    query_job = client.query(query)
+    results = query_job.result()
+    return [row.ean for row in results]
+
+
+def get_sample_eans_by_images_status(
+    client: bigquery.Client,
+    table_id: str,
+    status: str | None,
+    limit: int = 5,
+) -> list[str]:
+    """
+    Get sample EANs for a given images_download_status.
+
+    Args:
+        client: BigQuery client
+        table_id: Full table ID (project.dataset.table)
+        status: Status value to filter by (None for NULL status)
+        limit: Maximum number of EANs to return (default 5)
+
+    Returns:
+        List of EAN strings
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If query fails
+    """
+    if status is None or status == "NULL":
+        status_filter = "images_download_status IS NULL"
+    else:
+        status_filter = f"images_download_status = '{status}'"
+
+    query = f"""
+        SELECT ean
+        FROM `{table_id}`
+        WHERE {status_filter}
+        LIMIT {limit}
+    """
+    query_job = client.query(query)
+    results = query_job.result()
+    return [row.ean for row in results]
+
+
+def get_eans_not_in_product_table(
+    client: bigquery.Client,
+    destination_table: str,
+    batch_number: int,
+    provider_ids: list[int] = TITELIVE_PROVIDER_IDS,
+    limit: int = 5,
+) -> tuple[int, list[str]]:
+    """
+    Count and sample EANs in destination table that don't exist in product_table.
+
+    Used for logging to understand how many EANs haven't synced to backend yet.
+
+    Args:
+        client: BigQuery client
+        destination_table: Full destination table ID
+        batch_number: Batch number to check
+        provider_ids: Provider IDs to filter by
+        limit: Maximum number of sample EANs to return
+
+    Returns:
+        Tuple of (count, sample_eans)
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If query fails
+    """
+    provider_ids_str = ",".join(map(str, provider_ids))
+
+    # Count query
+    count_query = f"""
+        SELECT COUNT(*) as count
+        FROM `{destination_table}` dest
+        LEFT JOIN `{PRODUCT_TABLE}` p
+            ON dest.ean = p.ean
+            AND p.lastproviderid IN ({provider_ids_str})
+        WHERE dest.batch_number = {batch_number}
+            AND dest.status = 'processed'
+            AND p.ean IS NULL
+    """
+    count_job = client.query(count_query)
+    count_result = count_job.result()
+    count = next(iter(count_result)).count
+
+    # Sample query
+    sample_query = f"""
+        SELECT dest.ean
+        FROM `{destination_table}` dest
+        LEFT JOIN `{PRODUCT_TABLE}` p
+            ON dest.ean = p.ean
+            AND p.lastproviderid IN ({provider_ids_str})
+        WHERE dest.batch_number = {batch_number}
+            AND dest.status = 'processed'
+            AND p.ean IS NULL
+        LIMIT {limit}
+    """
+    sample_job = client.query(sample_query)
+    sample_result = sample_job.result()
+    sample_eans = [row.ean for row in sample_result]
+
+    return count, sample_eans

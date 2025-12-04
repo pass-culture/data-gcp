@@ -98,7 +98,6 @@ def transform_api_response(api_response: dict) -> pd.DataFrame:
         )
 
     if not rows:
-        logger.warning("API response contains no valid articles")
         return pd.DataFrame(columns=["ean", "json_raw"])
 
     df = pd.DataFrame(rows)
@@ -106,7 +105,6 @@ def transform_api_response(api_response: dict) -> pd.DataFrame:
     # Remove duplicates based on ean
     df = df.drop_duplicates(subset=["ean"])
 
-    logger.info(f"Transformed API response to {len(df)} rows")
     return df
 
 
@@ -221,9 +219,4 @@ def extract_gencods_from_search_response(
 
     # Return unique gencods
     unique_gencods = list(set(gencods))
-    logger.info(
-        f"Extracted {len(unique_gencods)} unique gencods from search response "
-        f"(filtered {filtered_articles}/{total_articles} articles by date)"
-    )
-
     return unique_gencods

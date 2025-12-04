@@ -148,7 +148,6 @@ class TiteliveClient:
         url = f"{TITELIVE_BASE_URL}/ean"
         params = {"in": f"ean={ean_param}"}
 
-        logger.info(f"Fetching {len(ean_list)} products by EAN")
         return self._make_request("GET", url, params=params)
 
     def get_by_eans_with_base(self, ean_list: list[str], base: str) -> dict[str, Any]:
@@ -174,7 +173,6 @@ class TiteliveClient:
         url = f"{TITELIVE_BASE_URL}/ean"
         params = {"in": f"ean={ean_param}", "base": base}
 
-        logger.info(f"Fetching {len(ean_list)} products by EAN (base={base})")
         return self._make_request("GET", url, params=params)
 
     def search_by_date(
@@ -212,8 +210,4 @@ class TiteliveClient:
         if max_date:
             params["datemaxm"] = max_date
 
-        logger.info(
-            f"Searching products: base={base}, min_date={min_date}, "
-            f"max_date={max_date}, page={page}, per_page={results_per_page}"
-        )
         return self._make_request("GET", url, params=params)

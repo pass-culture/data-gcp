@@ -385,6 +385,11 @@ def fetch_batch_for_image_download(
       - Normal mode: IS NULL (pending)
       - Reprocess mode: = 'failed' (retry failed)
 
+    The JOIN with product_table/product_mediation is optional (LEFT JOIN) to get
+    old UUIDs for change detection. EANs that don't exist in product_table yet
+    (due to sync lag) will still be returned with NULL old_uuids, causing their
+    images to be downloaded.
+
     Args:
         client: BigQuery client
         destination_table: Full destination table ID (project.dataset.table)
@@ -407,6 +412,8 @@ def fetch_batch_for_image_download(
     # Convert provider IDs list to SQL IN clause
     provider_ids_str = ",".join(map(str, TITELIVE_PROVIDER_IDS))
 
+    # Note: Provider filter is in JOIN condition (not WHERE) so that EANs
+    # not yet synced to product_table are still returned with NULL old_uuids
     query = f"""
         SELECT
             dest.ean,
@@ -424,12 +431,12 @@ def fetch_batch_for_image_download(
         FROM `{destination_table}` dest
         LEFT JOIN `{PRODUCT_TABLE}` p
             ON dest.ean = p.ean
+            AND p.lastproviderid IN ({provider_ids_str})
         LEFT JOIN `{PRODUCT_MEDIATION_TABLE}` pm
             ON p.id = pm.productid
             AND p.lastproviderid = pm.lastproviderid
         WHERE TRUE
             AND dest.batch_number = {batch_number}
-            AND p.lastproviderid IN ({provider_ids_str})
             AND dest.status = 'processed'
             AND {status_filter}
         GROUP BY dest.ean, dest.json_raw
@@ -655,3 +662,25 @@ def deduplicate_table_by_ean(
     deduplicate_job = client.query(deduplicate_query)
     deduplicate_job.result()
     logger.info(f"Successfully deduplicated table {table_id}")
+
+
+def count_table_rows(client: bigquery.Client, table_id: str) -> int:
+    """
+    Count the number of rows in a BigQuery table.
+
+    Args:
+        client: BigQuery client
+        table_id: Full table ID (project.dataset.table)
+
+    Returns:
+        Number of rows in the table
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If query fails
+    """
+    query = f"SELECT COUNT(*) as row_count FROM `{table_id}`"
+    query_job = client.query(query)
+    result = query_job.result()
+    row_count = next(iter(result)).row_count
+    logger.info(f"Table {table_id} has {row_count:,} rows")
+    return row_count

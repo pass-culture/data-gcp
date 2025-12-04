@@ -35,7 +35,7 @@ def merge_data(
 
     for query_name, wiki_ids in wiki_ids_per_query.items():
         merged_df = merged_df.assign(
-            **{query_name: lambda df: df.wiki_id.isin(wiki_ids)}
+            **{query_name: lambda df, wiki_ids=wiki_ids: df.wiki_id.isin(wiki_ids)}
         )
 
     return merged_df
@@ -125,7 +125,7 @@ def main(output_file_path: str = typer.Option()) -> None:
     for query_name, query_content in QUERIES_PATHES.items():
         logger.info(f"Fetch the data in CSV format for {query_name}")
 
-        with open(query_content, "r") as file:
+        with open(query_content) as file:
             query_string = file.read()
         logger.debug(f"SPARQL Query: \n{query_string}")
 

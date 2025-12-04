@@ -139,7 +139,7 @@ class TestFormatClusterMatrix:
 
         def test_empty_dataframe(self):
             df = pd.DataFrame({"preprocessed_artist_name": []})
-            with pytest.raises(ValueError):
+            with pytest.raises(ValueError):  # noqa: PT011
                 cluster_with_distance_matrices(
                     df,
                     num_chunks=2,

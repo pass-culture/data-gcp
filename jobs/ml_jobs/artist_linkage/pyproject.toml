@@ -57,7 +57,7 @@ lint.select = [
     "RUF",    # Ruff-specific rules
     "FBT001", # flake8-boolean-trap
  ]
-ignore = [
+lint.ignore = [
     "W505", # doc line too long (handled by pydocstyle)
     "E501", # line too long (handled by pycodestyle)
 ]

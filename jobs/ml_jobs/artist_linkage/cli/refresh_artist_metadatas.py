@@ -10,6 +10,7 @@ from src.constants import (
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
     ARTIST_TYPE_KEY,
+    ARTIST_WIKI_ID_KEY,
     ARTISTS_KEYS,
     COMMENT_KEY,
     DESCRIPTION_KEY,
@@ -26,8 +27,6 @@ ALIAS_MERGE_COLUMNS = [
     ARTIST_TYPE_KEY,
     OFFER_CATEGORY_ID_KEY,
 ]
-
-ARTIST_WIKI_ID_KEY = "artist_wiki_id"
 
 
 def retrieve_artist_wikidata_id(
@@ -105,18 +104,10 @@ def create_delta_df_for_metadata_refresh(
         }
     )
     empty_delta_product_artist_link_df = pd.DataFrame(
-        columns=PRODUCTS_KEYS
-        + [
-            ACTION_KEY,
-            COMMENT_KEY,
-        ]
+        columns=[*PRODUCTS_KEYS, ACTION_KEY, COMMENT_KEY]
     )
     empty_delta_artist_alias_df = pd.DataFrame(
-        columns=ARTIST_ALIASES_KEYS
-        + [
-            ACTION_KEY,
-            COMMENT_KEY,
-        ]
+        columns=[*ARTIST_ALIASES_KEYS, ACTION_KEY, COMMENT_KEY]
     )
     return (
         empty_delta_product_artist_link_df,
@@ -172,15 +163,21 @@ def sanity_checks(
     ), "Applicative artist alias dataframe is empty."
 
     # 2. Check columns
-    assert set(delta_artist_df.columns) == set(
-        ARTISTS_KEYS + [ACTION_KEY, COMMENT_KEY]
-    ), "Delta artist dataframe has unexpected columns."
-    assert set(delta_product_df.columns) == set(
-        PRODUCTS_KEYS + [ACTION_KEY, COMMENT_KEY]
-    ), "Delta product dataframe has unexpected columns."
-    assert set(delta_artist_alias_df.columns) == set(
-        ARTIST_ALIASES_KEYS + [ACTION_KEY, COMMENT_KEY]
-    ), "Delta artist alias dataframe has unexpected columns."
+    assert set(delta_artist_df.columns) == {
+        *ARTISTS_KEYS,
+        ACTION_KEY,
+        COMMENT_KEY,
+    }, "Delta artist dataframe has unexpected columns."
+    assert set(delta_product_df.columns) == {
+        *PRODUCTS_KEYS,
+        ACTION_KEY,
+        COMMENT_KEY,
+    }, "Delta product dataframe has unexpected columns."
+    assert set(delta_artist_alias_df.columns) == {
+        *ARTIST_ALIASES_KEYS,
+        ACTION_KEY,
+        COMMENT_KEY,
+    }, "Delta artist alias dataframe has unexpected columns."
 
     # 3. Check that ARTIST_NAME_KEY and WIKI_ID_KEY are not null
     assert (

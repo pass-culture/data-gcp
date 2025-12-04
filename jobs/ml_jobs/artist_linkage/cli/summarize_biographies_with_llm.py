@@ -17,7 +17,7 @@ def main(
     artists_with_wikipedia_content: str = typer.Option(),
     output_file_path: str = typer.Option(),
     number_of_biographies_to_summarize: int = typer.Option(None),
-    debug: bool = typer.Option(False),
+    debug: bool = typer.Option(False),  # noqa: FBT001
 ) -> None:
     artists_df = pd.read_parquet(artists_with_wikipedia_content)
 

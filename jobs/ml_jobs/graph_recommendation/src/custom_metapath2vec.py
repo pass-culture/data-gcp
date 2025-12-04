@@ -144,7 +144,6 @@ class CustomMetaPath2Vec(torch.nn.Module):
 
             # Remove walks with dummy nodes
             rw = rw[(rw < self.dummy_idx).all(axis=1), :]
-            # rw[rw > self.dummy_idx] = self.dummy_idx
 
             walks = []
             num_walks_per_rw = 1 + self.walk_length + 1 - self.context_size

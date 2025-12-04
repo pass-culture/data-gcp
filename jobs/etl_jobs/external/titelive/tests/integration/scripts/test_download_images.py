@@ -794,6 +794,16 @@ class TestRunDownloadImages:
             patch(
                 "src.scripts.download_images.update_image_download_results"
             ) as mock_update,
+            patch("src.scripts.download_images.get_status_breakdown") as mock_status,
+            patch(
+                "src.scripts.download_images.get_images_status_breakdown"
+            ) as mock_img,
+            patch(
+                "src.scripts.download_images.get_eans_not_in_product_table"
+            ) as mock_not_in,
+            patch(
+                "src.scripts.download_images.get_sample_eans_by_images_status"
+            ) as mock_sample,
         ):
             mock_count.return_value = 10
             mock_last_batch.return_value = 0
@@ -807,6 +817,10 @@ class TestRunDownloadImages:
                     "verso_image_uuid": "uuid2",
                 }
             ]
+            mock_status.return_value = {"processed": 10}
+            mock_img.return_value = {"NULL": 10, "processed": 0}
+            mock_not_in.return_value = (0, [])
+            mock_sample.return_value = []
 
             run_download_images(reprocess_failed=False)
 
@@ -845,6 +859,16 @@ class TestRunDownloadImages:
             ) as mock_fetch,
             patch("src.scripts.download_images._process_batch_images") as mock_process,
             patch("src.scripts.download_images.update_image_download_results"),
+            patch("src.scripts.download_images.get_status_breakdown") as mock_status,
+            patch(
+                "src.scripts.download_images.get_images_status_breakdown"
+            ) as mock_img,
+            patch(
+                "src.scripts.download_images.get_eans_not_in_product_table"
+            ) as mock_not_in,
+            patch(
+                "src.scripts.download_images.get_sample_eans_by_images_status"
+            ) as mock_sample,
         ):
             mock_count.return_value = 5
             mock_last_batch.return_value = 0
@@ -858,6 +882,10 @@ class TestRunDownloadImages:
                     "verso_image_uuid": "uuid2",
                 }
             ]
+            mock_status.return_value = {"processed": 5}
+            mock_img.return_value = {"failed": 5, "processed": 0}
+            mock_not_in.return_value = (0, [])
+            mock_sample.return_value = []
 
             run_download_images(reprocess_failed=True)
 
@@ -886,8 +914,14 @@ class TestRunDownloadImages:
                 "src.scripts.download_images.count_pending_image_downloads"
             ) as mock_count,
             patch("src.scripts.download_images._process_batch_images") as mock_process,
+            patch("src.scripts.download_images.get_status_breakdown") as mock_status,
+            patch(
+                "src.scripts.download_images.get_images_status_breakdown"
+            ) as mock_img,
         ):
             mock_count.return_value = 0
+            mock_status.return_value = {"processed": 0}
+            mock_img.return_value = {"NULL": 0}
 
             run_download_images(reprocess_failed=False)
 
@@ -922,6 +956,16 @@ class TestRunDownloadImages:
             patch(
                 "src.scripts.download_images.update_image_download_results"
             ) as mock_update,
+            patch("src.scripts.download_images.get_status_breakdown") as mock_status,
+            patch(
+                "src.scripts.download_images.get_images_status_breakdown"
+            ) as mock_img,
+            patch(
+                "src.scripts.download_images.get_eans_not_in_product_table"
+            ) as mock_not_in,
+            patch(
+                "src.scripts.download_images.get_sample_eans_by_images_status"
+            ) as mock_sample,
         ):
             mock_count.return_value = 100
             mock_last_batch.return_value = 2  # Process batches 0, 1, 2
@@ -940,6 +984,10 @@ class TestRunDownloadImages:
                     "verso_image_uuid": "uuid2",
                 }
             ]
+            mock_status.return_value = {"processed": 100}
+            mock_img.return_value = {"NULL": 100, "processed": 0}
+            mock_not_in.return_value = (0, [])
+            mock_sample.return_value = []
 
             run_download_images(reprocess_failed=False)
 
@@ -973,6 +1021,16 @@ class TestRunDownloadImages:
             ) as mock_fetch,
             patch("src.scripts.download_images._process_batch_images") as mock_process,
             patch("src.scripts.download_images.update_image_download_results"),
+            patch("src.scripts.download_images.get_status_breakdown") as mock_status,
+            patch(
+                "src.scripts.download_images.get_images_status_breakdown"
+            ) as mock_img,
+            patch(
+                "src.scripts.download_images.get_eans_not_in_product_table"
+            ) as mock_not_in,
+            patch(
+                "src.scripts.download_images.get_sample_eans_by_images_status"
+            ) as mock_sample,
         ):
             mock_count.return_value = 100
             mock_last_batch.return_value = 0
@@ -991,6 +1049,10 @@ class TestRunDownloadImages:
                     "verso_image_uuid": "uuid2",
                 }
             ]
+            mock_status.return_value = {"processed": 100}
+            mock_img.return_value = {"NULL": 100, "processed": 0}
+            mock_not_in.return_value = (0, [])
+            mock_sample.return_value = []
 
             run_download_images(reprocess_failed=False)
 

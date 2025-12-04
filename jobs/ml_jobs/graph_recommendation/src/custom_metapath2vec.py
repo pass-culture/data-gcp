@@ -58,58 +58,20 @@ class CustomMetaPath2Vec(torch.nn.Module):
     ):
         super().__init__()
 
-        if num_nodes_dict is None:
-            num_nodes_dict = {}
-            for keys, edge_index in edge_index_dict.items():
-                key = keys[0]
-                N = int(edge_index[0].max() + 1)
-                num_nodes_dict[key] = max(N, num_nodes_dict.get(key, N))
-
-                key = keys[-1]
-                N = int(edge_index[1].max() + 1)
-                num_nodes_dict[key] = max(N, num_nodes_dict.get(key, N))
-
-        self.rowptr_dict, self.col_dict, self.rowcount_dict = {}, {}, {}
-        for keys, edge_index in edge_index_dict.items():
-            sizes = (num_nodes_dict[keys[0]], num_nodes_dict[keys[-1]])
-            row, col = sort_edge_index(edge_index, num_nodes=max(sizes)).cpu()
-            rowptr = index2ptr(row, size=sizes[0])
-            self.rowptr_dict[keys] = rowptr
-            self.col_dict[keys] = col
-            self.rowcount_dict[keys] = rowptr[1:] - rowptr[:-1]
-
-        # Validate all metapaths
-        if not metapaths:
-            raise ValueError("At least one metapath must be provided.")
-
-        start_node_type = metapaths[0][0][0]
-
-        for metapath in metapaths:
-            if metapath[0][0] != start_node_type:
-                raise ValueError(
-                    f"All metapaths must start with the same "
-                    f"node type '{start_node_type}'. "
-                    f"Found start type '{metapath[0][0]}' in one of the metapaths."
-                )
-
-            for edge_type1, edge_type2 in itertools.pairwise(metapath):
-                if edge_type1[-1] != edge_type2[0]:
-                    raise ValueError(
-                        "Found invalid metapath. Ensure that the destination node "
-                        "type matches with the source node type across all "
-                        "consecutive edge types."
-                    )
-
-        # We don't enforce walk_length vs metapath length as we repeat metapaths
-        assert walk_length + 1 >= context_size
-
         self.embedding_dim = embedding_dim
         self.metapaths = metapaths
         self.walk_length = walk_length
         self.context_size = context_size
         self.walks_per_node = walks_per_node
         self.num_negative_samples = num_negative_samples
-        self.num_nodes_dict = num_nodes_dict
+        self.num_nodes_dict = self._get_num_nodes_dict(num_nodes_dict, edge_index_dict)
+        self.rowptr_dict, self.col_dict, self.rowcount_dict = self._get_sparse_matrix(
+            edge_index_dict, self.num_nodes_dict
+        )
+
+        # Validate metapaths and walk lengths
+        self._validate_metapaths(metapaths)
+        assert walk_length + 1 >= context_size
 
         # Collect all types involved
         types = set()
@@ -235,7 +197,64 @@ class CustomMetaPath2Vec(torch.nn.Module):
         neg_rw = self._neg_sample(batch)[: len(pos_rw) * self.num_negative_samples, :]
         return pos_rw, neg_rw
 
-    #### Below methods are unchanged from MetaPath2Vec ####
+    @staticmethod
+    def _validate_metapaths(metapaths: list[list[EdgeType]]) -> None:
+        if not metapaths:
+            raise ValueError("At least one metapath must be provided.")
+
+        start_node_type = metapaths[0][0][0]
+
+        for metapath in metapaths:
+            if metapath[0][0] != start_node_type:
+                raise ValueError(
+                    f"All metapaths must start with the same "
+                    f"node type '{start_node_type}'. "
+                    f"Found start type '{metapath[0][0]}' in one of the metapaths."
+                )
+
+            for edge_type1, edge_type2 in itertools.pairwise(metapath):
+                if edge_type1[-1] != edge_type2[0]:
+                    raise ValueError(
+                        "Found invalid metapath. Ensure that the destination node "
+                        "type matches with the source node type across all "
+                        "consecutive edge types."
+                    )
+
+    @staticmethod
+    def _get_num_nodes_dict(num_nodes_dict, edge_index_dict) -> dict[NodeType, int]:
+        if num_nodes_dict:
+            return num_nodes_dict
+
+        num_nodes_dict = {}
+        for keys, edge_index in edge_index_dict.items():
+            key = keys[0]
+            N = int(edge_index[0].max() + 1)
+            num_nodes_dict[key] = max(N, num_nodes_dict.get(key, N))
+
+            key = keys[-1]
+            N = int(edge_index[1].max() + 1)
+            num_nodes_dict[key] = max(N, num_nodes_dict.get(key, N))
+
+        return num_nodes_dict
+
+    @staticmethod
+    def _get_sparse_matrix(
+        edge_index_dict: dict[EdgeType, Tensor],
+        num_nodes_dict: dict[NodeType, int],
+    ) -> tuple[dict[EdgeType, Tensor], dict[EdgeType, Tensor], dict[EdgeType, Tensor]]:
+        rowptr_dict, col_dict, rowcount_dict = {}, {}, {}
+        for keys, edge_index in edge_index_dict.items():
+            sizes = (num_nodes_dict[keys[0]], num_nodes_dict[keys[-1]])
+            row, col = sort_edge_index(edge_index, num_nodes=max(sizes)).cpu()
+            rowptr = index2ptr(row, size=sizes[0])
+            rowptr_dict[keys] = rowptr
+            col_dict[keys] = col
+            rowcount_dict[keys] = rowptr[1:] - rowptr[:-1]
+        return rowptr_dict, col_dict, rowcount_dict
+
+    ###############################################################################
+    ##########       Below methods are unchanged from MetaPath2Vec       ##########
+    ###############################################################################
 
     def __repr__(self) -> str:
         return (

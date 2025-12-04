@@ -1,11 +1,11 @@
 from unittest.mock import patch
 
 import pandas as pd
-from get_wikipedia_page_content import (
+
+from cli.get_wikipedia_page_content import (
     extract_wikipedia_content_from_url,
     fetch_clean_content,
 )
-
 from src.constants import WIKIPEDIA_URL_KEY
 
 

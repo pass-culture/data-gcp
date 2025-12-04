@@ -86,6 +86,7 @@ select
     seenduration as video_seen_duration_seconds,
     youtubeid as video_id,
     frommultivenueofferid as multi_venue_offer_id,
+    artistid as artist_id,
     coalesce(cast(double_offer_id as string), offerid) as offer_id,
     concat(user_pseudo_id, "-", ga_session_id) as unique_session_id,
     coalesce(query, searchquery) as query,

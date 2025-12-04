@@ -123,6 +123,7 @@ with
                         "items_0",
                         "itemType",
                         "index",
+                        "artistId",
                     ]
                 )
             }},

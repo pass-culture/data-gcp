@@ -1,0 +1,58 @@
+version: 2
+models:
+  - name: mrt_global__artist
+    description: '{{ doc("description__mrt_global__artist") }}'
+    columns:
+      - name: artist_id
+        description: '{{ doc("column__artist_id") }}'
+        data_type: STRING
+      - name: artist_name
+        description: '{{ doc("column__artist_name") }}'
+        data_type: STRING
+      - name: artist_description
+        description: '{{ doc("column__artist_description") }}'
+        data_type: STRING
+      - name: wikidata_image_file_url
+        description: '{{ doc("column__wikidata_image_file_url") }}'
+        data_type: STRING
+      - name: wikidata_image_license
+        description: '{{ doc("column__wikidata_image_license") }}'
+        data_type: STRING
+      - name: wikidata_image_license_url
+        description: '{{ doc("column__wikidata_image_license_url") }}'
+        data_type: STRING
+      - name: wikidata_image_author
+        description: '{{ doc("column__wikidata_image_author") }}'
+        data_type: STRING
+      - name: artist_creation_date
+        description: '{{ doc("column__artist_creation_date") }}'
+        data_type: DATETIME
+      - name: artist_modification_date
+        description: '{{ doc("column__artist_modification_date") }}'
+        data_type: DATETIME
+      - name: artist_total_consultations
+        description: '{{ doc("column__artist_total_consultations") }}'
+      - name: artist_total_consultations_from_search
+        description: '{{ doc("column__artist_total_consultations_from_search") }}'
+      - name: artist_total_consultations_from_offer
+        description: '{{ doc("column__artist_total_consultations_from_offer") }}'
+      - name: artist_total_consultations_from_venue
+        description: '{{ doc("column__artist_total_consultations_from_venue") }}'
+      - name: artist_total_consultations_from_search_auto_complete
+        description: '{{ doc("column__artist_total_consultations_from_search_auto_complete") }}'
+      - name: artist_total_consulted_users
+        description: '{{ doc("column__artist_total_consulted_users") }}'
+      - name: artist_total_products
+        description: '{{ doc("column__artist_total_products") }}'
+      - name: artist_total_offers
+        description: '{{ doc("column__artist_total_offers") }}'
+      - name: artist_total_bookable_offers
+        description: '{{ doc("column__artist_total_bookable_offers") }}'
+      - name: artist_total_offer_categories
+        description: '{{ doc("column__artist_total_offer_categories") }}'
+      - name: artist_total_venues
+        description: '{{ doc("column__artist_total_venues") }}'
+      - name: artist_total_artist_types
+        description: '{{ doc("column__artist_total_artist_types") }}'
+      - name: artist_total_bookings
+        description: '{{ doc("column__artist_total_bookings") }}'

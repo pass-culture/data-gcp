@@ -86,7 +86,8 @@ with DAG(
         ),
         "gpu_count": Param(default=1, enum=INSTANCES_TYPES["gpu"]["count"]),
         "experiment_name": Param(
-            default="algo_training_graph_embeddings_v1", type="string"
+            default=f"algo_training_graph_embeddings_v1.1_{ENV_SHORT_NAME}",
+            type="string",
         ),
         "train_only_on_10k_rows": Param(default=True, type="boolean"),
     },

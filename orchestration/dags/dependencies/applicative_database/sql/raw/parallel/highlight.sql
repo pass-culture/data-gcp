@@ -5,5 +5,5 @@ SELECT
     , CAST("mediation_uuid" as varchar(255)) as mediation_uuid
     , CAST("highlight_datespan" as varchar(255)) as highlight_datespan
     , CAST("availability_datespan" as varchar(255)) as availability_datespan
-    , "communication_date" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS communication_date
+    , CAST("communication_date" as DATETIME)  AS communication_date
 FROM public.highlight

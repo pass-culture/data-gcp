@@ -4,4 +4,5 @@ SELECT
     , "description"
     , "endDateTime"
     , "startDateTime"
+    , "highlightId"
 FROM public.criterion

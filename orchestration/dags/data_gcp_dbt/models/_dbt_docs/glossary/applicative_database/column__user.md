@@ -62,3 +62,22 @@
 {% docs column__user_address_longitude %} Longitude of the user's registered address. {% enddocs %}
 {% docs column__user_address_raw %} Raw address of the user's registered address. {% enddocs %}
 {% docs column__user_category %} User category derived from the user's role and age. Possible values include: '15-16' (users aged 15 or 16 with no specific role), 'general_public' (users aged 14 or under, or 17 and above, with no specific role), or 'beneficiary' (for users with a non-null role). {% enddocs %}
+{% docs column__user_action_type %} Type of action that triggered the user information record. Possible values: INFO_MODIFIED (user modified their profile), PROFILE_COMPLETION (initial profile completion during registration). {% enddocs %}
+{% docs column__user_previous_activity %} User's activity status before the current change. {% enddocs %}
+{% docs column__user_previous_address %} User's address before the current change. {% enddocs %}
+{% docs column__user_previous_city %} User's city before the current change. {% enddocs %}
+{% docs column__user_previous_postal_code %} User's postal code before the current change. {% enddocs %}
+{% docs column__user_longitude %} Longitude of the user's location. Derived from geocoded address when available, otherwise from postal code centroid. {% enddocs %}
+{% docs column__user_latitude %} Latitude of the user's location. Derived from geocoded address when available, otherwise from postal code centroid. {% enddocs %}
+{% docs column__user_age_at_info_creation %} User's age in years at the time the information record was created. {% enddocs %}
+{% docs column__user_qpv_code %} Code of the QPV (Quartier Prioritaire de la Ville) if the user is located in a priority neighborhood. {% enddocs %}
+{% docs column__user_qpv_name %} Name of the QPV (Quartier Prioritaire de la Ville) if the user is located in a priority neighborhood. {% enddocs %}
+{% docs column__user_epci_code %} Code of the EPCI (Etablissement Public de Cooperation Intercommunale) where the user is located. {% enddocs %}
+{% docs column__user_density_macro_level %} Macro-level urban density classification (Urban vs Rural). Aggregation of density_label into broader categories. {% enddocs %}
+{% docs column__info_history_rank %} Sequential rank of information changes for each user (0 = first record, 1 = second, etc.). {% enddocs %}
+{% docs column__has_confirmed %} Boolean flag indicating if the user confirmed their existing information (all fields remained the same compared to previous record). {% enddocs %}
+{% docs column__has_modified %} Boolean flag indicating if the user modified any of their information (at least one field changed compared to previous record). {% enddocs %}
+{% docs column__has_modified_activity %} Boolean flag indicating if user_activity changed compared to previous record. {% enddocs %}
+{% docs column__has_modified_address %} Boolean flag indicating if user address changed compared to previous record (normalized comparison). {% enddocs %}
+{% docs column__has_modified_city %} Boolean flag indicating if user city changed compared to previous record. {% enddocs %}
+{% docs column__has_modified_postal_code %} Boolean flag indicating if user postal code changed compared to previous record. {% enddocs %}

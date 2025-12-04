@@ -176,13 +176,19 @@ def train_metapath2vec(
 
         scheduler.step(loss)
 
+        prev_best_loss = best_loss
         if loss < best_loss:
             best_loss = loss
             torch.save(model.state_dict(), checkpoint_path)
             logger.info(f"Saved best model with loss: {loss:.4f}")
             mlflow.log_metric("best_loss", best_loss, step=epoch)
             best_loss_epoch += 1
-        elif training_config.early_stop:
+
+        # Early stopping check
+        if (
+            abs(prev_best_loss - best_loss) < training_config.early_stopping_delta
+            and training_config.early_stop
+        ):
             break
 
     # Log total training time and final best loss

@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: int_finance__pricing_log
+    description: '{{ doc("description__int_finance__pricing_log") }}'
+    columns:
+      - name: id
+        description: '{{ doc("column__pricing_id") }}'
+      - name: pricingId
+        description: '{{ doc("column__pricing_id") }}'
+      - name: timestamp
+        description: '{{ doc("column__pricing_log_timestamp") }}'
+      - name: statusBefore
+        description: '{{ doc("column__pricing_log_status_before") }}'
+      - name: statusAfter
+        description: '{{ doc("column__pricing_log_status_after") }}'
+      - name: reason
+        description: '{{ doc("column__pricing_log_reason") }}'

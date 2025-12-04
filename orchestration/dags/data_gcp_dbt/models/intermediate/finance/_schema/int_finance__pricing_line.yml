@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: int_finance__pricing_line
+    description: '{{ doc("description__int_finance__pricing_line") }}'
+    columns:
+      - name: id
+        description: '{{ doc("column__pricing_line_id") }}'
+      - name: pricingId
+        description: '{{ doc("column__pricing_id") }}'
+      - name: amount
+        description: '{{ doc("column__pricing_line_amount") }}'
+      - name: category
+        description: '{{ doc("column__pricing_line_category") }}'

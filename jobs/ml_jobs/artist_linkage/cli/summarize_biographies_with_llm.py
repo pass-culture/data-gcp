@@ -4,7 +4,6 @@ import typer
 from src.constants import (
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
-    ENV_SHORT_NAME,
     WIKIPEDIA_CONTENT_KEY,
 )
 from src.llm_config import MAX_CONCURRENT_LLM_REQUESTS
@@ -17,6 +16,7 @@ app = typer.Typer()
 def main(
     artists_with_wikipedia_content: str = typer.Option(),
     output_file_path: str = typer.Option(),
+    number_of_biographies_to_summarize: int = typer.Option(None),
     debug: bool = typer.Option(False),
 ) -> None:
     artists_df = pd.read_parquet(artists_with_wikipedia_content)
@@ -27,8 +27,10 @@ def main(
     ].loc[lambda df: df[ARTIST_NAME_KEY].notna()]
 
     # Predict only on few artists for testing and staging
-    if ENV_SHORT_NAME != "prod":
-        artists_to_summarize_df = artists_to_summarize_df.head(100)
+    if number_of_biographies_to_summarize is not None:
+        artists_to_summarize_df = artists_to_summarize_df.head(
+            number_of_biographies_to_summarize
+        )
 
     # Summarize biographies with LLM
     artists_with_biographies_df = summarize_biographies_with_llm(

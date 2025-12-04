@@ -37,6 +37,11 @@ GCE_INSTANCE = f"artist-linkage-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
 DAG_NAME = "artist_linkage"
 DAG_VERSION = "2.0"
+SUMMARIZE_BIOGRAPHY_OPTIONS = {
+    "dev": "--number-of-biographies-to-summarize 20",
+    "stg": "--number-of-biographies-to-summarize 100",
+    "prod": "",
+}
 
 # GCS Paths / Filenames
 GCS_FOLDER_PATH = f"artist_linkage_{ENV_SHORT_NAME}/{{{{ ds_nodash }}}}"
@@ -342,7 +347,8 @@ with DAG(
         command=f"""
              uv run cli/summarize_biographies_with_llm.py \
             --artists-with-wikipedia-content {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME)}
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME)} \
+            {SUMMARIZE_BIOGRAPHY_OPTIONS[ENV_SHORT_NAME]}
             """,
     )
 
@@ -450,7 +456,8 @@ with DAG(
         command=f"""
              uv run cli/summarize_biographies_with_llm.py \
             --artists-with-wikipedia-content {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME)}
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME)} \
+            {SUMMARIZE_BIOGRAPHY_OPTIONS[ENV_SHORT_NAME]}
             """,
     )
 

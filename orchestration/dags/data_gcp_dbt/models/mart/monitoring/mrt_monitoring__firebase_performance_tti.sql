@@ -22,5 +22,5 @@ where
     true
     {% if is_incremental() %}
         and timestamp_trunc(event_timestamp, day)
-        = timestamp(date_sub(date('{{ ds() }}'), interval 2 day))
+        >= timestamp(date_sub(date('{{ ds() }}'), interval 2 day))
     {% endif %}

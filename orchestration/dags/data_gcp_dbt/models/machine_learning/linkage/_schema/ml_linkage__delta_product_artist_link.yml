@@ -5,10 +5,9 @@ models:
     description: "{{ doc('description__ml_linkage__delta_product_artist_link') }}"
     data_tests:
       - dbt_utils.unique_combination_of_columns:
-          arguments:
-            combination_of_columns:
-              - offer_product_id
-              - artist_type
+          combination_of_columns:
+            - offer_product_id
+            - artist_type
     columns:
       - name: offer_product_id
         description: "{{ doc('column__offer_product_id') }}"

@@ -70,11 +70,15 @@ def simple_training_config() -> TrainingConfig:
     return TrainingConfig(
         num_epochs=1,
         num_workers=0,
-        metapath=[
-            ("book", "is_artist_id", "artist_id"),
-            ("artist_id", "artist_id_of", "book"),
-            ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
-            ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
+        metapaths=[
+            [
+                ("book", "is_artist_id", "artist_id"),
+                ("artist_id", "artist_id_of", "book"),
+            ],
+            [
+                ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
+                ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
+            ],
         ],
     )
 
@@ -130,19 +134,27 @@ def _mock_training_components(
         yield mock_metapath2vec, mock_train
 
 
-def test_metapath_structure() -> None:
+def test_metapaths_structure() -> None:
     """Test that METAPATH constant contains expected structure."""
     cfg = TrainingConfig()
     # Verify metapath is a list of tuples
-    assert isinstance(cfg.metapath, list | tuple)
-    assert all(isinstance(path, tuple) for path in cfg.metapath)
-    assert all(len(path) == 3 for path in cfg.metapath)  # (source, edge, target)
+    assert isinstance(cfg.metapaths, list | tuple)
+    assert all(
+        isinstance(path, tuple) for metapath in cfg.metapaths for path in metapath
+    )
+    assert all(
+        len(path) == 3 for metapath in cfg.metapaths for path in metapath
+    )  # (source, edge, target)
 
-    # Verify it contains book-related relations
-    metapath_set = set(cfg.metapath)
     # Check that it includes artist and GTL relations
-    assert any("artist_id" in str(path) for path in metapath_set)
-    assert any("gtl_label_level" in str(path) for path in metapath_set)
+    assert any(
+        "artist_id" in str(path) for metapath in cfg.metapaths for path in metapath
+    )
+    assert any(
+        "gtl_label_level" in str(path)
+        for metapath in cfg.metapaths
+        for path in metapath
+    )
 
 
 def test_train_function_basic_execution() -> None:

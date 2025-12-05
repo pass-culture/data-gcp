@@ -233,18 +233,20 @@ def log_model_parameters(params: dict) -> None:
         params (dict): Dictionary containing model parameters
     """
     metadata = params.copy()
-    _metapath = metadata.pop("metapath")
-    # Format metapath and log it
+    _metapaths = metadata.pop("metapaths")
+    # Format metapaths and log it
     metapath_dict = {
-        "metapath": [
-            {"step": i, "edge": f"{step[0]}->{step[1]}->{step[2]}"}
-            for i, step in enumerate(_metapath)
+        "metapaths": [
+            [
+                {"step": i, "edge": f"{step[0]}->{step[1]}->{step[2]}"}
+                for i, step in enumerate(_metapath)
+            ]
+            for _metapath in _metapaths
         ]
     }
-    mlflow.log_dict(metapath_dict, "config/metapath.json")
+    mlflow.log_dict(metapath_dict, "config/metapaths.json")
 
     # Log remaining parameters
-    metadata["metapath_length"] = len(_metapath)
     mlflow.log_params(metadata)
 
 

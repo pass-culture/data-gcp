@@ -5,7 +5,7 @@ select
     h.mediation_uuid as highlight_image_id,
     h.highlight_name,
     h.highlight_description,
-    h.communication_date as highlight_communication_date,
+    date(h.communication_date) as highlight_communication_date,
     safe.parse_date(
         '%Y-%m-%d', regexp_extract(h.highlight_datespan, r'\[([^,]+)')
     ) as highlight_beginning_date,

@@ -100,7 +100,15 @@ class TestRunIncremental:
             }
 
             # Mock gencod extraction and EAN processing
-            mock_extract.return_value = ["123"]
+            mock_extract.return_value = (
+                ["123"],
+                {
+                    "filtered_count": 0,
+                    "filtered_samples": [],
+                    "no_date_count": 0,
+                    "total_articles": 1,
+                },
+            )
             mock_process.return_value = [
                 {
                     "ean": "123",
@@ -114,16 +122,33 @@ class TestRunIncremental:
             # Mock truncate query and deduplication
             mock_bq_client.query.return_value.result.return_value = None
 
-            run_incremental(
-                target_table="project.dataset.target", project_id="test-project"
-            )
+            with (
+                patch("src.scripts.run_incremental.count_table_rows") as mock_count,
+                patch(
+                    "src.scripts.run_incremental.get_status_breakdown"
+                ) as mock_status,
+                patch(
+                    "src.scripts.run_incremental.get_images_status_breakdown"
+                ) as mock_img_status,
+                patch(
+                    "src.scripts.run_incremental.get_sample_eans_by_status"
+                ) as mock_sample,
+            ):
+                mock_count.return_value = 100
+                mock_status.return_value = {"processed": 100}
+                mock_img_status.return_value = {"NULL": 100}
+                mock_sample.return_value = []
 
-            # Should have called search_by_date multiple times (8 days worth)
-            assert mock_api_client.search_by_date.call_count >= 8
-            # Should have inserted data
-            mock_insert.assert_called()
-            # Should have deduplicated
-            mock_dedup.assert_called_once()
+                run_incremental(
+                    target_table="project.dataset.target", project_id="test-project"
+                )
+
+                # Should have called search_by_date multiple times (8 days worth)
+                assert mock_api_client.search_by_date.call_count >= 8
+                # Should have inserted data
+                mock_insert.assert_called()
+                # Should have deduplicated
+                mock_dedup.assert_called_once()
 
     @patch("src.scripts.run_incremental.TiteliveClient")
     @patch("src.scripts.run_incremental.TokenManager")
@@ -143,6 +168,14 @@ class TestRunIncremental:
             patch(
                 "src.scripts.run_incremental.get_destination_table_schema"
             ) as mock_schema,
+            patch("src.scripts.run_incremental.count_table_rows") as mock_count,
+            patch("src.scripts.run_incremental.get_status_breakdown") as mock_status,
+            patch(
+                "src.scripts.run_incremental.get_images_status_breakdown"
+            ) as mock_img,
+            patch(
+                "src.scripts.run_incremental.get_sample_eans_by_status"
+            ) as mock_sample,
         ):
             three_days_ago = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
             mock_last_sync.return_value = three_days_ago
@@ -150,6 +183,10 @@ class TestRunIncremental:
             # Mock API responses (empty results)
             mock_api_client.search_by_date.return_value = {"nbreponses": 0}
             mock_schema.return_value = []
+            mock_count.return_value = 0
+            mock_status.return_value = {}
+            mock_img.return_value = {"NULL": 0}
+            mock_sample.return_value = []
 
             # Mock truncate query
             mock_bq_client.query.return_value.result.return_value = None
@@ -206,12 +243,24 @@ class TestRunIncremental:
         with (
             patch("src.scripts.run_incremental.get_last_sync_date") as mock_last_sync,
             patch("src.scripts.run_incremental.insert_dataframe") as mock_insert,
+            patch("src.scripts.run_incremental.count_table_rows") as mock_count,
+            patch("src.scripts.run_incremental.get_status_breakdown") as mock_status,
+            patch(
+                "src.scripts.run_incremental.get_images_status_breakdown"
+            ) as mock_img,
+            patch(
+                "src.scripts.run_incremental.get_sample_eans_by_status"
+            ) as mock_sample,
         ):
             two_days_ago = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
             mock_last_sync.return_value = two_days_ago
 
             # Mock API response with no results
             mock_api_client.search_by_date.return_value = {"nbreponses": 0}
+            mock_count.return_value = 0
+            mock_status.return_value = {}
+            mock_img.return_value = {"NULL": 0}
+            mock_sample.return_value = []
 
             # Mock truncate query
             mock_bq_client.query.return_value.result.return_value = None
@@ -274,7 +323,15 @@ class TestRunIncremental:
             mock_calc_pages.return_value = 3  # 3 pages
 
             # Mock gencod extraction and EAN processing
-            mock_extract.return_value = ["123"]
+            mock_extract.return_value = (
+                ["123"],
+                {
+                    "filtered_count": 0,
+                    "filtered_samples": [],
+                    "no_date_count": 0,
+                    "total_articles": 1,
+                },
+            )
             mock_process.return_value = [
                 {
                     "ean": "123",
@@ -287,15 +344,32 @@ class TestRunIncremental:
             # Mock truncate query
             mock_bq_client.query.return_value.result.return_value = None
 
-            run_incremental(
-                target_table="project.dataset.target",
-                results_per_page=120,
-                project_id="test-project",
-            )
+            with (
+                patch("src.scripts.run_incremental.count_table_rows") as mock_count,
+                patch(
+                    "src.scripts.run_incremental.get_status_breakdown"
+                ) as mock_status,
+                patch(
+                    "src.scripts.run_incremental.get_images_status_breakdown"
+                ) as mock_img,
+                patch(
+                    "src.scripts.run_incremental.get_sample_eans_by_status"
+                ) as mock_sample,
+            ):
+                mock_count.return_value = 100
+                mock_status.return_value = {"processed": 100}
+                mock_img.return_value = {"NULL": 100}
+                mock_sample.return_value = []
 
-            # Should have called search_by_date:
-            # 2 dates x (1 metadata + 3 pages) = 8 calls
-            assert api_call_count[0] == 8
+                run_incremental(
+                    target_table="project.dataset.target",
+                    results_per_page=120,
+                    project_id="test-project",
+                )
+
+                # Should have called search_by_date:
+                # 2 dates x (1 metadata + 3 pages) = 8 calls
+                assert api_call_count[0] == 8
 
     @patch("src.scripts.run_incremental.TiteliveClient")
     @patch("src.scripts.run_incremental.TokenManager")
@@ -375,7 +449,15 @@ class TestRunIncremental:
             mock_calc_pages.return_value = 2
 
             # Mock gencod extraction and EAN processing
-            mock_extract.return_value = ["123"]
+            mock_extract.return_value = (
+                ["123"],
+                {
+                    "filtered_count": 0,
+                    "filtered_samples": [],
+                    "no_date_count": 0,
+                    "total_articles": 1,
+                },
+            )
             mock_process.return_value = [
                 {
                     "ean": "123",
@@ -388,14 +470,31 @@ class TestRunIncremental:
             # Mock truncate query
             mock_bq_client.query.return_value.result.return_value = None
 
-            # Should not raise exception, just log and continue
-            run_incremental(
-                target_table="project.dataset.target", project_id="test-project"
-            )
+            with (
+                patch("src.scripts.run_incremental.count_table_rows") as mock_count,
+                patch(
+                    "src.scripts.run_incremental.get_status_breakdown"
+                ) as mock_status,
+                patch(
+                    "src.scripts.run_incremental.get_images_status_breakdown"
+                ) as mock_img,
+                patch(
+                    "src.scripts.run_incremental.get_sample_eans_by_status"
+                ) as mock_sample,
+            ):
+                mock_count.return_value = 100
+                mock_status.return_value = {"processed": 100}
+                mock_img.return_value = {"NULL": 100}
+                mock_sample.return_value = []
 
-            # Should have tried all pages across 8 dates despite error
-            # 8 dates x (1 metadata + 2 pages) = 24 calls total
-            assert api_call_count[0] == 24
+                # Should not raise exception, just log and continue
+                run_incremental(
+                    target_table="project.dataset.target", project_id="test-project"
+                )
+
+                # Should have tried all pages across 8 dates despite error
+                # 8 dates x (1 metadata + 2 pages) = 24 calls total
+                assert api_call_count[0] == 24
 
     @patch("src.scripts.run_incremental.TiteliveClient")
     @patch("src.scripts.run_incremental.TokenManager")
@@ -409,9 +508,23 @@ class TestRunIncremental:
         mock_api_client = Mock()
         mock_client_class.return_value = mock_api_client
 
-        with patch("src.scripts.run_incremental.get_last_sync_date") as mock_last_sync:
+        with (
+            patch("src.scripts.run_incremental.get_last_sync_date") as mock_last_sync,
+            patch("src.scripts.run_incremental.count_table_rows") as mock_count,
+            patch("src.scripts.run_incremental.get_status_breakdown") as mock_status,
+            patch(
+                "src.scripts.run_incremental.get_images_status_breakdown"
+            ) as mock_img,
+            patch(
+                "src.scripts.run_incremental.get_sample_eans_by_status"
+            ) as mock_sample,
+        ):
             two_days_ago = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
             mock_last_sync.return_value = two_days_ago
+            mock_count.return_value = 0
+            mock_status.return_value = {}
+            mock_img.return_value = {"NULL": 0}
+            mock_sample.return_value = []
 
             # Mock API response with no results
             mock_api_client.search_by_date.return_value = {"nbreponses": 0}
@@ -453,6 +566,14 @@ class TestRunIncremental:
             patch(
                 "src.scripts.run_incremental.get_destination_table_schema"
             ) as mock_schema,
+            patch("src.scripts.run_incremental.count_table_rows") as mock_count,
+            patch("src.scripts.run_incremental.get_status_breakdown") as mock_status,
+            patch(
+                "src.scripts.run_incremental.get_images_status_breakdown"
+            ) as mock_img,
+            patch(
+                "src.scripts.run_incremental.get_sample_eans_by_status"
+            ) as mock_sample,
         ):
             two_days_ago = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
 
@@ -462,6 +583,10 @@ class TestRunIncremental:
                 return None
 
             mock_last_sync.side_effect = get_last_sync
+            mock_count.return_value = 100
+            mock_status.return_value = {"processed": 100}
+            mock_img.return_value = {"NULL": 100}
+            mock_sample.return_value = []
 
             # Mock API responses - with window_days=7, processes 8 dates
             # Return enough responses for all dates
@@ -471,7 +596,15 @@ class TestRunIncremental:
             }
 
             # Mock gencod extraction and EAN processing
-            mock_extract.return_value = ["123"]
+            mock_extract.return_value = (
+                ["123"],
+                {
+                    "filtered_count": 0,
+                    "filtered_samples": [],
+                    "no_date_count": 0,
+                    "total_articles": 1,
+                },
+            )
             mock_process.return_value = [
                 {
                     "ean": "123",

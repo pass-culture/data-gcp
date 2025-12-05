@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: int_finance__pricing
+    description: '{{ doc("description__int_finance__pricing") }}'
+    columns:
+      - name: id
+        description: '{{ doc("column__pricing_id") }}'
+      - name: status
+        description: '{{ doc("column__pricing_status") }}'
+      - name: bookingId
+        description: '{{ doc("column__booking_id") }}'
+      - name: collective_booking_id
+        description: '{{ doc("column__collective_booking_id") }}'
+      - name: creationDate
+        description: '{{ doc("column__pricing_creation_date") }}'
+      - name: valueDate
+        description: '{{ doc("column__pricing_value_date") }}'
+      - name: amount
+        description: '{{ doc("column__pricing_amount") }}'
+      - name: standardRule
+        description: '{{ doc("column__pricing_standard_rule") }}'
+      - name: customRuleId
+        description: '{{ doc("column__pricing_custom_rule_id") }}'
+      - name: revenue
+        description: '{{ doc("column__pricing_revenue") }}'
+      - name: pricing_point_id
+        description: '{{ doc("column__pricing_point_id") }}'
+      - name: venue_id
+        description: '{{ doc("column__venue_id") }}'
+      - name: event_id
+        description: '{{ doc("column__finance_event_id") }}'

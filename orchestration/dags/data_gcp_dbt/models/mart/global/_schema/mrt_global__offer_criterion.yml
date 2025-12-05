@@ -20,3 +20,5 @@ models:
         description: "{{ doc('column__offer_id') }}"
       - name: offer_name
         description: "{{ doc('column__offer_name') }}"
+      - name: highlight_id
+        description: "{{ doc('column__highlight_id') }}"

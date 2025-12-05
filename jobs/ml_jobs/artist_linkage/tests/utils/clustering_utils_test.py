@@ -4,9 +4,9 @@ import pytest
 import rapidfuzz
 from rapidfuzz import fuzz
 
-from constants import TOTAL_OFFER_COUNT
-from utils import clustering_utils
-from utils.clustering_utils import (
+from src.constants import TOTAL_OFFER_COUNT
+from src.utils import clustering_utils
+from src.utils.clustering_utils import (
     cluster_with_distance_matrices,
     get_cluster_to_nickname_dict,
 )
@@ -139,7 +139,7 @@ class TestFormatClusterMatrix:
 
         def test_empty_dataframe(self):
             df = pd.DataFrame({"preprocessed_artist_name": []})
-            with pytest.raises(ValueError):
+            with pytest.raises(ValueError):  # noqa: PT011
                 cluster_with_distance_matrices(
                     df,
                     num_chunks=2,

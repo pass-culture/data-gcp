@@ -175,7 +175,6 @@ with DAG(
 
     # Task dependencies
     (gce_instance_start >> fetch_install_code >> execution_mode_branch)
-
     (
         execution_mode_branch
         >> run_init_task

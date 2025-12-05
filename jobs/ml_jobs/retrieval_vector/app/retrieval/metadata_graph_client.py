@@ -1,6 +1,7 @@
 import time
-from typing import List
+from typing import Dict, List, Optional
 
+import pandas as pd
 from loguru import logger
 
 from app.retrieval.client import DefaultClient
@@ -52,3 +53,61 @@ class MetadataGraphClient(DefaultClient):
         start_time = time.time()
         self.table = self.connect_db()
         logger.info(f"Connected to database in {time.time() - start_time:.2f} seconds.")
+
+    def postprocess(
+        self,
+        ranked_items: List[Dict],
+        n: int,
+        excluded_items: Optional[List[str]] = None,
+        **kwargs,
+    ):
+        postprocessed_items = super().postprocess(
+            ranked_items, n, excluded_items, **kwargs
+        )
+        target = (
+            pd.DataFrame(ranked_items)
+            .loc[lambda df: df.item_id.isin(excluded_items)]
+            .iloc[0]
+        )
+        target.to_csv("metadata_graph_target.csv")
+        post_pro_df = pd.DataFrame(postprocessed_items).assign(
+            has_same_artist=lambda df: (
+                df.artist_id_list == target.artist_id_list
+            ).astype(bool),
+            has_same_gtl_l3=lambda df: (df.gtl_l3 == target.gtl_l3).astype(bool),
+            has_same_gtl_l4=lambda df: (df.gtl_l4 == target.gtl_l4).astype(bool),
+            has_same_series_id=lambda df: (df.series_id == target.series_id).astype(
+                bool
+            ),
+            feature_score=lambda df: df.loc[
+                :,
+                [
+                    "has_same_artist",
+                    "has_same_gtl_l3",
+                    "has_same_gtl_l4",
+                    "has_same_series_id",
+                ],
+            ].sum(axis=1)
+            / target[
+                [
+                    "artist_id_list",
+                    "gtl_l3",
+                    "gtl_l4",
+                    "series_id",
+                ]
+            ]
+            .notna()
+            .sum(),
+            # .where(target.gtl_l3.notna(), None),
+            # has_same_gtl_l4=lambda df: (df.gtl_l4 == target.gtl_l4).astype(bool)
+            # * target.gtl_l4.notna(),
+            # has_same_series_id=lambda df: (df.series_id == target.series_id).astype(
+            #     bool
+            # )
+            # * target.series_id.notna(),
+            # feature_score=lambda df: (df["has_same_artist", "has_same_gtl_l3"].mean()),
+        )
+
+        post_pro_df.to_csv("metadata_graph_retrieval_results.csv", index=False)
+
+        return postprocessed_items

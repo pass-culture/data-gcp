@@ -98,7 +98,7 @@ class TrainingConfig(BaseConfig):
     num_epochs: int = 8
     num_workers: int = 8 if sys.platform == "linux" else 0
     batch_size: int = 256
-    learning_rate: float = 0.01
+    learning_rate: float = 0.003
     early_stop: bool = True
     early_stopping_delta: float = 0.001
     metapaths: list[list[tuple[str, str, str]]] = field(

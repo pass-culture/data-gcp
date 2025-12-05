@@ -2,7 +2,7 @@ select
     adc.name as tag_name,
     adc.id as criterion_id,
     adc.description,
-    adc.highlightid as highlight_id,
+    adc.highlight_id,
     adcc.criterion_category_label,
     adoc.offerid as offer_id,
     ado.offer_name,

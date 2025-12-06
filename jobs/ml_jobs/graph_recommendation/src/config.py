@@ -90,15 +90,15 @@ class InvalidConfigError(Exception):
 
 @dataclass
 class TrainingConfig(BaseConfig):
-    embedding_dim: int = 64
+    embedding_dim: int = 128
     walk_length: int = 20
     context_size: int = 10
     walks_per_node: int = 5
     num_negative_samples: int = 5
     num_epochs: int = 8
     num_workers: int = 8 if sys.platform == "linux" else 0
-    batch_size: int = 256
-    learning_rate: float = 0.01
+    batch_size: int = 128
+    learning_rate: float = 0.003
     early_stop: bool = True
     early_stopping_delta: float = 0.001
     metapaths: list[list[tuple[str, str, str]]] = field(

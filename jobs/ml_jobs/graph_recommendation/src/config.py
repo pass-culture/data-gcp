@@ -93,9 +93,9 @@ class TrainingConfig(BaseConfig):
     embedding_dim: int = 64
     walk_length: int = 20
     context_size: int = 10
-    walks_per_node: int = 5
+    walks_per_node: int = 3
     num_negative_samples: int = 5
-    num_epochs: int = 8
+    num_epochs: int = 15
     num_workers: int = 8 if sys.platform == "linux" else 0
     batch_size: int = 256
     learning_rate: float = 0.003

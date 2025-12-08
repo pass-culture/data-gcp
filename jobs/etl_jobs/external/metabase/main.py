@@ -1,6 +1,7 @@
 import datetime
 import json
 from pathlib import Path
+import logging
 
 import pandas as pd
 import typer
@@ -18,6 +19,9 @@ from utils import (
     access_secret_data,
     get_dependant_cards,
 )
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 MAPPINGS_PATH = Path("data/mappings.json")
 
@@ -37,7 +41,7 @@ PASSWORD = access_secret_data(
 def run(
     metabase_card_type: str = typer.Option(
         ...,
-        help="Type de carte Metabase. 'native' pour les cartes SQL et 'query' pour les cartes en clics boutons",
+        help="Type de update Metabase à faire. 'native' pour les cartes SQL, 'query' pour les cartes en clics boutons ",
     ),
     legacy_table_name: str = typer.Option(
         ...,
@@ -56,10 +60,6 @@ def run(
         help="Nom du nouveau schéma Big Query",
     ),
 ):
-    native_cards, query_cards = get_dependant_cards(
-        legacy_table_name, legacy_schema_name
-    )
-
     with open(MAPPINGS_PATH, "r") as file:
         data = json.load(file)
         table_columns_mappings = data.get(legacy_table_name, {})
@@ -84,6 +84,14 @@ def run(
     metabase_field_mapping = get_mapped_fields(
         legacy_fields_df, new_fields_df, table_columns_mappings
     )
+    print(f"Field mapping is {metabase_field_mapping}")
+
+    native_cards, query_cards = get_dependant_cards(
+        legacy_table_name, legacy_schema_name
+    )
+
+    print(f"{len(native_cards)} native cards to update")
+    print(f"{len(query_cards)} query cards to update")
 
     if metabase_card_type == "native":
         transition_logs = []

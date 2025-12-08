@@ -32,7 +32,8 @@ with
             eple_infos.scholar_year,
             sum(
                 case
-                    when ecbd.collective_booking_status != 'CANCELLED' then ecbd.booking_amount
+                    when ecbd.collective_booking_status != 'CANCELLED'
+                    then ecbd.booking_amount
                 end
             ) as theoric_amount_spent,
             sum(

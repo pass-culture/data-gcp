@@ -41,46 +41,19 @@ with
                     then booking_amount
                 end
             ) as real_amount_spent,
-            sum(
+            coalesce(sum(
                 case
                     when collective_booking_status = 'REIMBURSED' then booking_amount
                 end
-            ) as real_amount_reimbursed
+            ),0) as real_amount_reimbursed
         from eple_infos
         inner join
             {{ ref("mrt_global__collective_booking") }} as ecbd
             on eple_infos.institution_id = ecbd.educational_institution_id
             and eple_infos.scholar_year = ecbd.scholar_year
         group by 1, 2
-    ),
-
-    nb_eleves_educonnectes_per_eple as (
-        select
-            trim(json_extract(result_content, '$.school_uai'), '"') as school,
-            count(distinct edd.user_id) as educonnect_inscriptions,
-            count(
-                distinct case
-                    when date_diff(current_date, deposit_creation_date, day) <= 365
-                    then edd.user_id
-                end
-            ) as last_12_months_inscriptions,
-            avg(coalesce(total_theoretical_amount_spent, 0)) as avg_spent_per_user,
-            safe_divide(
-                sum(total_theoretical_amount_spent), sum(deposit_amount)
-            ) as pct_spent,
-            count(distinct ebd.user_id) as nb_credit_used_students
-        from {{ ref("int_applicative__beneficiary_fraud_check") }} as bfc
-        inner join {{ ref("mrt_global__deposit") }} as edd on bfc.user_id = edd.user_id
-        left join
-            {{ ref("mrt_global__booking") }} as ebd
-            on edd.user_id = ebd.user_id
-            and not booking_is_cancelled
-        where
-            type = 'EDUCONNECT'
-            and json_extract(result_content, '$.school_uai') is not null
-            and edd.deposit_type = 'GRANT_15_17'
-        group by 1
     )
+
 
 select
     eple_infos.institution_id,
@@ -101,11 +74,6 @@ select
     real_amount_spent,
     real_amount_reimbursed,
     total_students,
-    educonnect_inscriptions,
-    last_12_months_inscriptions,
-    nb_credit_used_students,
-    avg_spent_per_user,
-    pct_spent as pct_spent_per_user,
     safe_divide(
         theoric_amount_spent, institution_deposit_amount
     ) as pct_credit_theoric_amount_spent,
@@ -120,6 +88,3 @@ left join
     eple_bookings
     on eple_infos.institution_id = eple_bookings.institution_id
     and eple_infos.scholar_year = eple_bookings.scholar_year
-left join
-    nb_eleves_educonnectes_per_eple
-    on eple_infos.institution_external_id = nb_eleves_educonnectes_per_eple.school

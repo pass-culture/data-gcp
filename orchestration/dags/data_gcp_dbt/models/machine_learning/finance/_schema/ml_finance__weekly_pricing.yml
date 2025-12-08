@@ -10,7 +10,7 @@ models:
     columns:
       - name: semaine
         description: "{{ doc('column__semaine') }}"
-        data_type: DATE
+        data_type: DATETIME
         data_tests:
           - unique
           - not_null

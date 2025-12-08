@@ -73,7 +73,7 @@ def test_initialization(sample_graph_data):
 
 def test_validate_metapaths_success(sample_graph_data):
     """Test that valid metapaths pass validation."""
-    edge_index_dict, metapaths = sample_graph_data
+    _edge_index_dict, metapaths = sample_graph_data
     # Should not raise
     CustomMetaPath2Vec._validate_metapaths(metapaths)
 
@@ -159,7 +159,7 @@ def test_sample_and_loss(sample_graph_data):
 
 def test_get_node_type_ranges(sample_graph_data):
     """Test node type range calculation."""
-    edge_index_dict, metapaths = sample_graph_data
+    _edge_index_dict, metapaths = sample_graph_data
 
     # Manually construct num_nodes_dict
     num_nodes_dict = {"author": 3, "paper": 2, "venue": 1}
@@ -183,3 +183,52 @@ def test_get_node_type_ranges(sample_graph_data):
     assert end["venue"] == 6
 
     assert count == 6
+
+
+def test_pos_sample_prunes_dummy_nodes():
+    """Test that walks containing dummy nodes are pruned."""
+    # Graph structure:
+    # author (2 nodes: 0, 1)
+    # paper (1 node: 0)
+    # Author 0 writes Paper 0.
+    # Author 1 writes nothing (dead end).
+
+    edge_index_dict = {
+        ("author", "writes", "paper"): torch.tensor([[0], [0]]),
+        ("paper", "written_by", "author"): torch.tensor([[0], [0]]),
+    }
+
+    metapaths = [[("author", "writes", "paper"), ("paper", "written_by", "author")]]
+
+    # We need to manually specify num_nodes_dict because Author 1 is isolated
+    # and won't appear in edge_index if we just infer from max index.
+    num_nodes_dict = {"author": 2, "paper": 1}
+
+    model = CustomMetaPath2Vec(
+        edge_index_dict=edge_index_dict,
+        embedding_dim=16,
+        metapaths=metapaths,
+        walk_length=2,
+        context_size=2,
+        walks_per_node=1,
+        num_nodes_dict=num_nodes_dict,
+    )
+
+    # Batch containing both Author 0 and Author 1
+    batch = torch.tensor([0, 1])
+
+    # _pos_sample should return walks for Author 0, but prune walks for Author 1
+    pos_rw = model._pos_sample(batch)
+
+    # Check that no dummy nodes are present in the result
+    # The dummy index is the total number of nodes (2 authors + 1 paper = 3)
+    assert model.dummy_idx == 3
+    assert (pos_rw < model.dummy_idx).all()
+
+    # We expect fewer walks than input batch size because Author 1 should be pruned
+    # Input batch: 2 nodes * 1 walk_per_node = 2 potential walks
+    # Walk length 2. Nodes in walk: 3 (Start -> Mid -> End).
+    # Context size 2.
+    # Windows per walk: 1 + walk_length + 1 - context_size = 1 + 2 + 1 - 2 = 2.
+    # Expected rows: 1 valid walk * 2 windows = 2 rows.
+    assert pos_rw.size(0) == 2

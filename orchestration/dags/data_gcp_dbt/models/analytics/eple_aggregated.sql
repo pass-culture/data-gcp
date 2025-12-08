@@ -2,11 +2,11 @@ with
     eple_infos as (
         select distinct
             eid.institution_id,
-            institution_external_id,
-            institution_name,
-            institution_city,
+            eid.institution_external_id,
+            eid.institution_name,
+            eid.institution_city,
             eid.institution_department_code,
-            institution_region_name as region_name,
+            eid.institution_region_name as region_name,
             eid.institution_academy_name as institution_academie,
             eid.institution_epci,
             eid.ministry,
@@ -32,20 +32,24 @@ with
             eple_infos.scholar_year,
             sum(
                 case
-                    when collective_booking_status != 'CANCELLED' then booking_amount
+                    when ecbd.collective_booking_status != 'CANCELLED' then ecbd.booking_amount
                 end
             ) as theoric_amount_spent,
             sum(
                 case
-                    when collective_booking_status in ('USED', 'REIMBURSED')
-                    then booking_amount
+                    when ecbd.collective_booking_status in ('USED', 'REIMBURSED')
+                    then ecbd.booking_amount
                 end
             ) as real_amount_spent,
-            coalesce(sum(
-                case
-                    when collective_booking_status = 'REIMBURSED' then booking_amount
-                end
-            ),0) as real_amount_reimbursed
+            coalesce(
+                sum(
+                    case
+                        when ecbd.collective_booking_status = 'REIMBURSED'
+                        then ecbd.booking_amount
+                    end
+                ),
+                0
+            ) as real_amount_reimbursed
         from eple_infos
         inner join
             {{ ref("mrt_global__collective_booking") }} as ecbd
@@ -53,7 +57,6 @@ with
             and eple_infos.scholar_year = ecbd.scholar_year
         group by 1, 2
     )
-
 
 select
     eple_infos.institution_id,
@@ -69,19 +72,19 @@ select
     eple_infos.macro_institution_type,
     eple_infos.institution_program_name,
     eple_infos.scholar_year,
-    institution_deposit_amount,
-    theoric_amount_spent,
-    real_amount_spent,
-    real_amount_reimbursed,
-    total_students,
+    eple_infos.institution_deposit_amount,
+    eple_bookings.theoric_amount_spent,
+    eple_bookings.real_amount_spent,
+    eple_bookings.real_amount_reimbursed,
+    eple_infos.total_students,
     safe_divide(
-        theoric_amount_spent, institution_deposit_amount
+        eple_bookings.theoric_amount_spent, eple_infos.institution_deposit_amount
     ) as pct_credit_theoric_amount_spent,
     safe_divide(
-        real_amount_spent, institution_deposit_amount
+        eple_bookings.real_amount_spent, eple_infos.institution_deposit_amount
     ) as pct_credit_real_amount_spent,
     safe_divide(
-        real_amount_reimbursed, institution_deposit_amount
+        eple_bookings.real_amount_reimbursed, eple_infos.institution_deposit_amount
     ) as pct_credit_real_amount_reimbursed
 from eple_infos
 left join

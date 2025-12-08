@@ -110,5 +110,5 @@ left join
     on source_data.user_id = user_qpv.user_id
     and source_data.user_information_rank = user_qpv.user_information_rank
 {% if is_incremental() %}
-    where date(creation_timestamp) = date_sub(date("{{ ds() }}"), interval 1 day)
+    where date(source_data.user_information_created_at) between date_sub(date("{{ ds() }}"), interval 1 day) and date("{{ ds() }}")
 {% endif %}

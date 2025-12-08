@@ -50,9 +50,6 @@ with
                 is not null
             )
             and user_id is not null
-            {% if is_incremental() %}
-                and date(action_date) = date_sub(date("{{ ds() }}"), interval 1 day)
-            {% endif %}
     ),
 
     -- CTE: Extract raw data from fraud_check table
@@ -85,9 +82,6 @@ with
             and type = 'PROFILE_COMPLETION'
             and reason != 'Anonymized'
             and user_id is not null
-            {% if is_incremental() %}
-                and date(datecreated) = date_sub(date("{{ ds() }}"), interval 1 day)
-            {% endif %}
         -- Deduplicate rows with same date and normalized address
         -- (duplicates may be created by normalize_address function)
         qualify

@@ -51,7 +51,7 @@ with
             )
             and user_id is not null
             {% if is_incremental() %}
-                and date(action_date) = date_sub(date("{{ ds() }}"), interval 1 day)
+                and date(action_date) between date_sub(date("{{ ds() }}"), interval 1 day) and date("{{ ds() }}")
             {% endif %}
     ),
 
@@ -86,7 +86,7 @@ with
             and reason != 'Anonymized'
             and user_id is not null
             {% if is_incremental() %}
-                and date(datecreated) = date_sub(date("{{ ds() }}"), interval 1 day)
+                and date(datecreated) between date_sub(date("{{ ds() }}"), interval 1 day) and date("{{ ds() }}")
             {% endif %}
         -- Deduplicate rows with same date and normalized address
         -- (duplicates may be created by normalize_address function)

@@ -15,6 +15,7 @@
                 - 'geo': National → Region → Department (NAT/REG/DEP)
                 - 'geo_epci': National → Region → Department → EPCI (NAT/REG/DEP/EPCI)
                 - 'geo_full': National → Region → Department → EPCI → COM (NAT/REG/DEP/EPCI/COM)
+                - 'granular_only': EPCI → COM only (EPCI/COM) - use with 'geo' to avoid duplicates
                 - 'academic': National → Region → Academy (NAT/REG/ACAD)
                 - 'academic_extended': National → Region → Academy → EPCI → COM (NAT/REG/ACAD/EPCI/COM)
 
@@ -63,6 +64,11 @@
             {"name": "EPCI", "value_expr": epci_col},
             {"name": "COM", "value_expr": city_col},
         ] %}
+    {% elif hierarchy_type == "granular_only" %}
+        {% set dimensions = [
+            {"name": "EPCI", "value_expr": epci_col},
+            {"name": "COM", "value_expr": city_col},
+        ] %}
     {% elif hierarchy_type == "academic" %}
         {% set dimensions = [
             {"name": "NAT", "value_expr": "'NAT'"},
@@ -82,7 +88,7 @@
             exceptions.raise_compiler_error(
                 "Invalid hierarchy_type: "
                 ~ hierarchy_type
-                ~ ". Must be one of: 'geo', 'geo_epci', 'geo_full', 'academic', 'academic_extended'."
+                ~ ". Must be one of: 'geo', 'geo_epci', 'geo_full', 'granular_only', 'academic', 'academic_extended'."
             )
         }}
     {% endif %}

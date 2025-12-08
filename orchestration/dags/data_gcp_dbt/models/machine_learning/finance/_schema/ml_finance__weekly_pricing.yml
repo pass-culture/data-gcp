@@ -8,8 +8,8 @@ models:
       contract:
         enforced: true
     columns:
-      - name: semaine
-        description: "{{ doc('column__semaine') }}"
+      - name: pricing_week
+        description: "{{ doc('column__pricing_week') }}"
         data_type: DATETIME
         data_tests:
           - unique

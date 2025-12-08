@@ -9,7 +9,7 @@
 }}
 
 {% set dimensions_geo = get_dimensions("partner", "geo") %}
-{% set dimensions_granular = get_dimensions("partner", "geo_full") %}
+{% set dimensions_granular_only = get_dimensions("partner", "granular_only") %}
 {% set partner_types = get_partner_types() %}
 
 with
@@ -298,12 +298,9 @@ with
     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
 {% endfor %}
 
--- KPIs pour dimensions granulaires (NAT/REG/DEP/EPCI/COM) sans les EPN
-union all
-{% for dim in dimensions_granular %}
-    {% if not loop.first %}
-        union all
-    {% endif %}
+-- KPIs pour dimensions granulaires (EPCI/COM uniquement) sans les EPN
+{% for dim in dimensions_granular_only %}
+    union all
     select
         date_trunc(date(partition_day), month) as partition_month,
         timestamp("{{ ts() }}") as updated_at,
@@ -335,11 +332,8 @@ union all
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
-    union all
     {% for partner_type in partner_types %}
-        {% if not loop.first %}
-            union all
-        {% endif %}
+        union all
         select
             date_trunc(date(partition_day), month) as partition_month,
             timestamp("{{ ts() }}") as updated_at,

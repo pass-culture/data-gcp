@@ -41,7 +41,7 @@ PASSWORD = access_secret_data(
 def run(
     metabase_card_type: str = typer.Option(
         ...,
-        help="Type de update Metabase à faire. 'native' pour les cartes SQL, 'query' pour les cartes en clics boutons, 'dashboard' pour les filtres de dashboards",
+        help="Type de update Metabase à faire. 'native' pour les cartes SQL, 'query' pour les cartes en clics boutons ",
     ),
     legacy_table_name: str = typer.Option(
         ...,

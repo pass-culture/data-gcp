@@ -65,7 +65,8 @@ DBT_MODELS = [
 ]
 # List of aggreated tables names to be refreshed with compressed config: (clickhouse_dataset_name, clickhouse_table_name, optionally depends_list)
 CLICKHOUSE_TABLES = [
-    ("analytics", "daily_aggregated_offer_event"),
+    ("analytics", "daily_aggrdaily_aggregated_venue_offer_consultation"),
+    ("analytics", "last_30_day_venue_top_offer_consultation"),
     ("analytics", "monthly_aggregated_venue_collective_revenue"),
     ("analytics", "monthly_aggregated_venue_individual_revenue"),
     (

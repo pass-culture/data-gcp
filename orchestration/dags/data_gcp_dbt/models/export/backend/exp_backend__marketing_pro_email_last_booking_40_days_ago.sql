@@ -5,7 +5,7 @@
             partition_by={
                 "field": "execution_date",
                 "data_type": "date",
-                "granularity": "day",
+                "granularity": "year",
             },
             on_schema_change="append_new_columns",
         )

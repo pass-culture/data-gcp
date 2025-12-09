@@ -25,7 +25,7 @@ from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
@@ -122,7 +122,7 @@ for dag_name, dag_params in dags.items():
         )
 
         with TaskGroup(group_id="waiting_group", dag=dag) as wait_for_daily_tasks:
-            wait = DummyOperator(task_id="waiting_branch", dag=dag)
+            wait = EmptyOperator(task_id="waiting_branch", dag=dag)
 
             wait_for_firebase = delayed_waiting_operator(
                 external_dag_id="import_intraday_firebase_data", dag=dag
@@ -138,8 +138,8 @@ for dag_name, dag_params in dags.items():
                 )
                 wait_for_firebase.set_downstream(waiting_task)
 
-        shunt = DummyOperator(task_id="shunt_manual", dag=dag)
-        join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
+        shunt = EmptyOperator(task_id="shunt_manual", dag=dag)
+        join = EmptyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
 
         gce_instance_start = StartGCEOperator(
             task_id="gce_start_task",
@@ -235,7 +235,7 @@ for dag_name, dag_params in dags.items():
             export_task >> export_bq >> clickhouse_export
             out_tables_tasks.append(clickhouse_export)
 
-        end_tables = DummyOperator(task_id="end_tables_export")
+        end_tables = EmptyOperator(task_id="end_tables_export")
 
         with TaskGroup("analytics_stage", dag=dag) as analytics_tg:
             analytics_task_mapping = {}

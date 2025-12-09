@@ -4,11 +4,9 @@
 {% docs column__artist_name %}Name of the artist.{% enddocs %}
 {% docs column__artist_offer_name %}Name of the artist as it is written in the offer.{% enddocs %}
 {% docs column__artist_description %}Short description of the artist.{% enddocs %}
-{% docs column__artist_professions %}Professions of the artist. This list use the '|' separator.{% enddocs %}
+{% docs column__artist_biography %}Biography of the artist.{% enddocs %}
+{% docs column__artist_wikipedia_url %}URL of the artist Wikipedia page.{% enddocs %}
 {% docs column__artist_type %}Whether the artist is a performer or an author.{% enddocs %}
-{% docs column__artist_total_offer_count %}Count of the offers associated to this author.{% enddocs %}
-{% docs column__artist_total_item_count %}Count of the items associated to this author.{% enddocs %}
-{% docs column__artist_total_booking_count %}Booking count made with this author.{% enddocs %}
 {% docs column__artist_creation_date %} Creation date of the artist.{% enddocs %}
 {% docs column__artist_modification_date %} Date of the last modification of the artist.{% enddocs %}
 {% docs column__artist_total_consultations %} Total consultations of offers related to the artist, after January 2025.{% enddocs %}

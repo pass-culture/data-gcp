@@ -1,15 +1,12 @@
 {{
     config(
-        **custom_incremental_config(
-            incremental_strategy="insert_overwrite",
-            partition_by={
-                "field": "user_information_created_at",
-                "data_type": "timestamp",
-                "granularity": "day",
-            },
-            on_schema_change="append_new_columns",
-            cluster_by=["user_id", "user_information_rank"],
-        )
+        materialized="table",
+        partition_by={
+            "field": "user_information_created_at",
+            "data_type": "timestamp",
+            "granularity": "day",
+        },
+        cluster_by=["user_id", "user_information_rank"],
     )
 }}
 
@@ -109,8 +106,3 @@ left join
     user_qpv
     on source_data.user_id = user_qpv.user_id
     and source_data.user_information_rank = user_qpv.user_information_rank
-{% if is_incremental() %}
-    where
-        date(source_data.user_information_created_at)
-        between date_sub(date("{{ ds() }}"), interval 1 day) and date("{{ ds() }}")
-{% endif %}

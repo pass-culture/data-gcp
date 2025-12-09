@@ -1,15 +1,12 @@
 {{
     config(
-        **custom_incremental_config(
-            incremental_strategy="insert_overwrite",
-            partition_by={
-                "field": "user_information_created_at",
-                "data_type": "timestamp",
-                "granularity": "day",
-            },
-            on_schema_change="append_new_columns",
-            cluster_by=["user_id", "user_information_rank"],
-        )
+        materialized="table",
+        partition_by={
+            "field": "user_information_created_at",
+            "data_type": "timestamp",
+            "granularity": "day",
+        },
+        cluster_by=["user_id", "user_information_rank"],
     )
 }}
 
@@ -44,7 +41,3 @@ select
     user_qpv_name,
     user_age_at_information_creation
 from {{ ref("int_history__user_beneficiary_information_history") }}
-{% if is_incremental() %}
-    where
-        date(user_information_created_at) = date_sub(date("{{ ds() }}"), interval 1 day)
-{% endif %}

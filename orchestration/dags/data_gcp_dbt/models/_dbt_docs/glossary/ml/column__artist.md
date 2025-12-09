@@ -5,7 +5,6 @@
 {% docs column__artist_offer_name %}Name of the artist as it is written in the offer.{% enddocs %}
 {% docs column__artist_description %}Short description of the artist.{% enddocs %}
 {% docs column__artist_biography %}Biography of the artist.{% enddocs %}
-{% docs column__artist_wiki_id %}Wikidata ID if successfully matched to Wikidata.{% enddocs %}
 {% docs column__artist_wikipedia_url %}URL of the artist Wikipedia page.{% enddocs %}
 {% docs column__artist_type %}Whether the artist is a performer or an author.{% enddocs %}
 {% docs column__artist_creation_date %} Creation date of the artist.{% enddocs %}

@@ -13,7 +13,7 @@ models:
       - name: artist_biography
         description: "{{ doc('column__artist_biography') }}"
       - name: wikidata_id
-        description: "{{ doc('column__wikidata_id') }}"
+        description: "{{ doc('column__artist_wiki_id') }}"
       - name: wikipedia_url
         description: "{{ doc('column__artist_wikipedia_url') }}"
       - name: wikidata_image_file_url

@@ -139,7 +139,7 @@ def train_metapath2vec(
         lr=training_config.learning_rate,
     )
     scheduler = ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=0, min_lr=1e-6, threshold=0.05
+        optimizer, mode="min", factor=0.5, patience=1, min_lr=1e-6, threshold=0.05
     )
 
     # Log model parameters in mlflow

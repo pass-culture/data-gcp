@@ -27,18 +27,11 @@
     from
         external_query(
             "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",
-            '''SELECT
+            """SELECT
             "thumbCount" AS venue_thumb_count
-            , "street" as venue_street
-            , "postalCode" as venue_postal_code
-            , "city" as venue_city
-            , "banId" as ban_id
             , CAST("id" AS varchar(255)) AS venue_id
             , "name" AS venue_name
             , "siret" AS venue_siret
-            , "departementCode" AS venue_department_code
-            , "latitude" AS venue_latitude
-            , "longitude" AS venue_longitude
             , CAST("managingOffererId" AS varchar(255)) AS venue_managing_offerer_id
             , "bookingEmail" AS venue_booking_email
             , "isVirtual" AS venue_is_virtual
@@ -90,7 +83,7 @@
             , "withdrawalDetails" AS venue_withdrawal_details
             , "offererAddressId" AS offerer_address_id
         FROM public.venue
-    '''
+    """
         )
 
 {% endsnapshot %}

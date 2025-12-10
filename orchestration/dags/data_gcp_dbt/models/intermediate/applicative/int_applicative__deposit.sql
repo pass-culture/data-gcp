@@ -39,7 +39,7 @@ select
         then 300
         when d.type = 'GRANT_18' and d.amount > 500
         then 500
-        else d.amount - rd.total_previous_deposit_recredit_amount
+        else d.amount - coalesce(rd.total_previous_deposit_recredit_amount, 0)
     end as deposit_amount,
     case
         when lower(d.source) like '%educonnect%'

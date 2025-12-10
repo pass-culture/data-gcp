@@ -90,83 +90,79 @@ with
             {{ ref("mrt_global__venue_tag") }} as gvt on gcp.venue_id = gvt.venue_id
         inner join
             {{ ref("mrt_global__offerer") }} as gof on gcp.offerer_id = gof.offerer_id
-    ),
-
-    epn_details as (
-        select
-            offerer.offerer_region_name as partner_region_name,
-            offerer.offerer_department_name as partner_department_name,
-            date_trunc(date(offerer.offerer_creation_date), month) as partition_month,
-            count(distinct offerer.offerer_id) as epn_created
-        from {{ ref("mrt_global__offerer") }} as offerer
-        where offerer_is_epn
-        group by partition_month, partner_region_name, partner_department_name
-    ),
-
-    -- Générer la série complète de mois et régions/départements
-    date_range as (
-        select
-            date_trunc(
-                date_add(
-                    (select min(partition_month) from epn_details),
-                    interval generate_month month
-                ),
-                month
-            ) as partition_month
-        from
-            unnest(
-                generate_array(
-                    0,
-                    date_diff(
-                        date_trunc(
-                            date_sub(date("{{ ds() }}"), interval 1 month), month
-                        ),
-                        (select min(partition_month) from epn_details),
-                        month
-                    )
-                )
-            ) as generate_month
-    ),
-
-    regions_departments as (
-        select distinct partner_region_name, partner_department_name from epn_details
-    ),
-
-    complete_grid as (
-        select dr.partition_month, rd.partner_region_name, rd.partner_department_name
-        from date_range as dr
-        cross join regions_departments as rd
-    ),
-
-    epn_with_zeros as (
-        select
-            cg.partition_month,
-            cg.partner_region_name,
-            cg.partner_department_name,
-            coalesce(ed.epn_created, 0) as epn_created
-        from complete_grid as cg
-        left join
-            epn_details as ed
-            on cg.partition_month = ed.partition_month
-            and cg.partner_region_name = ed.partner_region_name
-            and cg.partner_department_name = ed.partner_department_name
-    ),
-
-    -- Calculer le cumul
-    cumul_epn_details as (
-        select
-            partition_month,
-            partner_region_name,
-            partner_department_name,
-            epn_created,
-            sum(epn_created) over (
-                partition by partner_region_name, partner_department_name
-                order by partition_month asc
-                rows unbounded preceding
-            ) as cumul_epn_created
-        from epn_with_zeros
     )
 
+-- Calcul des entités EPN enlevées, en attente d'alignement sur la manière de les
+-- comptabiliser géographiquement
+-- ,epn_details as (
+-- select
+-- offerer.offerer_region_name as partner_region_name,
+-- offerer.offerer_department_name as partner_department_name,
+-- date_trunc(date(offerer.offerer_creation_date), month) as partition_month,
+-- count(distinct offerer.offerer_id) as epn_created
+-- from {{ ref("mrt_global__offerer") }} as offerer
+-- where offerer_is_epn
+-- group by partition_month, partner_region_name, partner_department_name
+-- ),
+-- Générer la série complète de mois et régions/départements
+-- date_range as (
+-- select
+-- date_trunc(
+-- date_add(
+-- (select min(partition_month) from epn_details),
+-- interval generate_month month
+-- ),
+-- month
+-- ) as partition_month
+-- from
+-- unnest(
+-- generate_array(
+-- 0,
+-- date_diff(
+-- date_trunc(
+-- date_sub(date("{{ ds() }}"), interval 1 month), month
+-- ),
+-- (select min(partition_month) from epn_details),
+-- month
+-- )
+-- )
+-- ) as generate_month
+-- ),
+-- regions_departments as (
+-- select distinct partner_region_name, partner_department_name from epn_details
+-- ),
+-- complete_grid as (
+-- select dr.partition_month, rd.partner_region_name, rd.partner_department_name
+-- from date_range as dr
+-- cross join regions_departments as rd
+-- ),
+-- epn_with_zeros as (
+-- select
+-- cg.partition_month,
+-- cg.partner_region_name,
+-- cg.partner_department_name,
+-- coalesce(ed.epn_created, 0) as epn_created
+-- from complete_grid as cg
+-- left join
+-- epn_details as ed
+-- on cg.partition_month = ed.partition_month
+-- and cg.partner_region_name = ed.partner_region_name
+-- and cg.partner_department_name = ed.partner_department_name
+-- ),
+-- -- Calculer le cumul
+-- cumul_epn_details as (
+-- select
+-- partition_month,
+-- partner_region_name,
+-- partner_department_name,
+-- epn_created,
+-- sum(epn_created) over (
+-- partition by partner_region_name, partner_department_name
+-- order by partition_month asc
+-- rows unbounded preceding
+-- ) as cumul_epn_created
+-- from epn_with_zeros
+-- )
 -- KPIs pour dimensions géographiques (NAT/REG/DEP) incluant les EPN
 {% for dim in dimensions_geo %}
     {% if not loop.first %}
@@ -278,24 +274,24 @@ with
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
-    union all
-    select
-        epn.partition_month,
-        timestamp("{{ ts() }}") as updated_at,
-        '{{ dim.name }}' as dimension_name,
-        {{ dim.value_expr }} as dimension_value,
-        'total_entite_epn' as kpi_name,
-        coalesce(sum(epn.cumul_epn_created), 0) as numerator,
-        1 as denominator,
-        coalesce(sum(epn.cumul_epn_created), 0) as kpi
-    from cumul_epn_details as epn
-    where
-        1 = 1
-        {% if is_incremental() %}
-            and epn.partition_month
-            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-        {% endif %}
-    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
+-- union all
+-- select
+-- epn.partition_month,
+-- timestamp("{{ ts() }}") as updated_at,
+-- '{{ dim.name }}' as dimension_name,
+-- {{ dim.value_expr }} as dimension_value,
+-- 'total_entite_epn' as kpi_name,
+-- coalesce(sum(epn.cumul_epn_created), 0) as numerator,
+-- 1 as denominator,
+-- coalesce(sum(epn.cumul_epn_created), 0) as kpi
+-- from cumul_epn_details as epn
+-- where
+-- 1 = 1
+-- {% if is_incremental() %}
+-- and epn.partition_month
+-- = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+-- {% endif %}
+-- group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
 {% endfor %}
 
 -- KPIs pour dimensions granulaires (EPCI/COM uniquement) sans les EPN

@@ -158,6 +158,7 @@ sources:
       - name: past_offer_context
       - name: raw_dms_jeunes
       - name: raw_dms_pro
+      - name: run_googleapis_com_stderr
       - name: sendinblue_transactional
       - name: sensitive_item_recommendation
       - name: stdout

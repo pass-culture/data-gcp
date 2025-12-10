@@ -103,7 +103,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             python extract_from_wikidata.py \
+             uv run python cli/extract_from_wikidata.py \
             --output-file-path {os.path.join(STORAGE_PATH, WIKIDATA_EXTRACTION_GCS_FILENAME)}
             """,
     )

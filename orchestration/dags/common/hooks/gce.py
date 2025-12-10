@@ -338,6 +338,26 @@ class GCEHook(GoogleBaseHook):
             )
         return self._conn
 
+    def close(self):
+        """Close the connection and clear resources."""
+        if self._conn is not None:
+            # Google API client doesn't have explicit close, but we can clear
+            # the reference to allow garbage collection of connection pools
+            self._conn = None
+
+    def __del__(self):
+        """Cleanup on destruction."""
+        self.close()
+
+    def __enter__(self):
+        """Context manager support."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Cleanup on context exit."""
+        self.close()
+        return False  # Don't suppress exceptions
+
     def start_vm(
         self,
         instance_name: str,
@@ -592,22 +612,22 @@ def on_failure_callback_stop_vm(context: Context):
 
         failing_task.log.info(f"Stopping VM {instance_name} due to task failure.")
 
-        hook = GCEHook()
-        instance_details = hook.get_instance(instance_name)
-        if instance_details:
-            labels = instance_details.get("labels", {})
-            failing_task.log.info(f"Retrieved labels for {instance_name}: {labels}")
-            if labels.get("job_type") in STOP_UPON_FAILURE_LABELS:
-                failing_task.log.info(
-                    f"Stopping VM '{instance_name}' because label 'job_type' in {STOP_UPON_FAILURE_LABELS}."
-                )
-                hook.stop_vm(instance_name)
+        with GCEHook() as hook:
+            instance_details = hook.get_instance(instance_name)
+            if instance_details:
+                labels = instance_details.get("labels", {})
+                failing_task.log.info(f"Retrieved labels for {instance_name}: {labels}")
+                if labels.get("job_type") in STOP_UPON_FAILURE_LABELS:
+                    failing_task.log.info(
+                        f"Stopping VM '{instance_name}' because label 'job_type' in {STOP_UPON_FAILURE_LABELS}."
+                    )
+                    hook.stop_vm(instance_name)
+                else:
+                    failing_task.log.info(
+                        f"Not stopping VM '{instance_name}'; label 'job_type' is not set to 'long_ml'."
+                        f" Current labels: {labels}"
+                    )
             else:
                 failing_task.log.info(
-                    f"Not stopping VM '{instance_name}'; label 'job_type' is not set to 'long_ml'."
-                    f" Current labels: {labels}"
+                    f"Instance '{instance_name}' not found; cannot perform VM stop."
                 )
-        else:
-            failing_task.log.info(
-                f"Instance '{instance_name}' not found; cannot perform VM stop."
-            )

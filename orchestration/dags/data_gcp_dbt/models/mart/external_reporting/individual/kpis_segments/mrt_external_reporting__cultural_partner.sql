@@ -163,7 +163,6 @@ with
 -- ) as cumul_epn_created
 -- from epn_with_zeros
 -- )
-
 -- KPIs pour dimensions géographiques (NAT/REG/DEP) incluant les EPN
 {% for dim in dimensions_geo %}
     {% if not loop.first %}
@@ -275,24 +274,24 @@ with
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
---     union all
---     select
---         epn.partition_month,
---         timestamp("{{ ts() }}") as updated_at,
---         '{{ dim.name }}' as dimension_name,
---         {{ dim.value_expr }} as dimension_value,
---         'total_entite_epn' as kpi_name,
---         coalesce(sum(epn.cumul_epn_created), 0) as numerator,
---         1 as denominator,
---         coalesce(sum(epn.cumul_epn_created), 0) as kpi
---     from cumul_epn_details as epn
---     where
---         1 = 1
---         {% if is_incremental() %}
---             and epn.partition_month
---             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
---         {% endif %}
---     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
+-- union all
+-- select
+-- epn.partition_month,
+-- timestamp("{{ ts() }}") as updated_at,
+-- '{{ dim.name }}' as dimension_name,
+-- {{ dim.value_expr }} as dimension_value,
+-- 'total_entite_epn' as kpi_name,
+-- coalesce(sum(epn.cumul_epn_created), 0) as numerator,
+-- 1 as denominator,
+-- coalesce(sum(epn.cumul_epn_created), 0) as kpi
+-- from cumul_epn_details as epn
+-- where
+-- 1 = 1
+-- {% if is_incremental() %}
+-- and epn.partition_month
+-- = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+-- {% endif %}
+-- group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
 {% endfor %}
 
 -- KPIs pour dimensions granulaires (EPCI/COM uniquement) sans les EPN

@@ -14,6 +14,7 @@ def process_eans_batch(
     api_client: TiteliveClient,
     ean_pairs: list[tuple[str, str]],
     sub_batch_size: int = DEFAULT_BATCH_SIZE,
+    verbose: bool = False,
 ) -> list[dict]:
     """
     Process a batch of EANs by calling the API in sub-batches, grouped by base.
@@ -30,6 +31,7 @@ def process_eans_batch(
         api_client: Titelive API client
         ean_pairs: List of (ean, subcategoryid) tuples to process
         sub_batch_size: Number of EANs per API call (default 250)
+        verbose: If True, log detailed per-sub-batch progress (default False)
 
     Returns:
         List of dicts with keys: ean, subcategoryid, status, json_raw
@@ -46,29 +48,21 @@ def process_eans_batch(
             # Default to paper for NULL, unknown, or paper subcategories
             paper_eans.append((ean, subcategoryid))
 
-    total_eans = len(ean_pairs)
-    logger.info(
-        f"Processing {total_eans} EANs: "
-        f"{len(music_eans)} music, {len(paper_eans)} paper"
-    )
-
     results = []
 
     # Process music EANs
     if music_eans:
-        logger.info(f"Processing {len(music_eans)} music EANs")
         results.extend(
             _process_eans_by_base(
-                api_client, music_eans, TiteliveCategory.MUSIC, sub_batch_size
+                api_client, music_eans, TiteliveCategory.MUSIC, sub_batch_size, verbose
             )
         )
 
     # Process paper EANs
     if paper_eans:
-        logger.info(f"Processing {len(paper_eans)} paper EANs")
         results.extend(
             _process_eans_by_base(
-                api_client, paper_eans, TiteliveCategory.PAPER, sub_batch_size
+                api_client, paper_eans, TiteliveCategory.PAPER, sub_batch_size, verbose
             )
         )
 
@@ -80,6 +74,7 @@ def _process_eans_by_base(
     ean_pairs: list[tuple[str, str]],
     base: str,
     sub_batch_size: int,
+    verbose: bool = False,
 ) -> list[dict]:
     """
     Process EANs for a specific base category in sub-batches.
@@ -89,6 +84,7 @@ def _process_eans_by_base(
         ean_pairs: List of (ean, subcategoryid) tuples
         base: API base category ('music' or 'paper')
         sub_batch_size: Number of EANs per API call
+        verbose: If True, log per-sub-batch progress
 
     Returns:
         List of dicts with processing results
@@ -97,24 +93,10 @@ def _process_eans_by_base(
     total_eans = len(ean_pairs)
     total_sub_batches = (total_eans + sub_batch_size - 1) // sub_batch_size
 
-    logger.info(
-        f"Processing {total_eans} {base} EANs in {total_sub_batches} sub-batches "
-        f"of {sub_batch_size} EANs each"
-    )
-
     for i in range(0, len(ean_pairs), sub_batch_size):
         sub_batch_pairs = ean_pairs[i : i + sub_batch_size]
         sub_batch_eans = [ean for ean, _ in sub_batch_pairs]
         current_sub_batch = (i // sub_batch_size) + 1
-        eans_processed_so_far = i
-        eans_in_this_batch = len(sub_batch_pairs)
-
-        logger.info(
-            f"Sub-batch {current_sub_batch}/{total_sub_batches} ({base}): "
-            f"Processing EANs {eans_processed_so_far + 1}-"
-            f"{eans_processed_so_far + eans_in_this_batch} "
-            f"of {total_eans}"
-        )
 
         try:
             # Call API with base parameter
@@ -122,7 +104,6 @@ def _process_eans_by_base(
 
             # Transform response
             transformed_df = transform_api_response(api_response)
-            # logger.info(f"Transformed {transformed_df.head(1)} rows")
 
             # Identify returned vs missing EANs
             returned_eans = (
@@ -157,24 +138,17 @@ def _process_eans_by_base(
                     }
                 )
 
-            logger.info(
-                f"Sub-batch {current_sub_batch}/{total_sub_batches} ({base}) complete: "
-                f"{len(returned_eans)} processed, "
-                f"{len(missing_eans)} deleted | "
-                "Progress: "
-                f"{eans_processed_so_far + eans_in_this_batch}/{total_eans} EANs"
-            )
+            if verbose:
+                logger.info(
+                    f"  Sub-batch {current_sub_batch}/{total_sub_batches} ({base}): "
+                    f"{len(returned_eans)} processed, {len(missing_eans)} deleted"
+                )
 
         except requests.exceptions.HTTPError as e:
             # Handle 404 errors by processing EANs individually
             if e.response.status_code == 404:
-                # Check if we're already processing individual EANs (batch size 1)
                 if sub_batch_size == 1:
                     # Single EAN returned 404 - mark as deleted_in_titelive
-                    logger.info(
-                        f"EAN {sub_batch_pairs[0][0]} not found (404) - \
-                        marking as deleted_in_titelive"
-                    )
                     for ean, subcategoryid in sub_batch_pairs:
                         results.append(
                             {
@@ -185,29 +159,22 @@ def _process_eans_by_base(
                             }
                         )
                 else:
-                    # Batch of EANs returned 404 - process each individually
-                    # to identify them
+                    # Batch returned 404 - process each individually
                     logger.warning(
-                        f"404 error for sub-batch "
-                        f"{current_sub_batch}/{total_sub_batches} ({base}). "
-                        f"Processing {len(sub_batch_pairs)} EANs individually "
-                        "to identify problematic EAN(s)"
+                        f"404 error for sub-batch {current_sub_batch}/"
+                        f"{total_sub_batches} ({base}). "
+                        f"Processing {len(sub_batch_pairs)} EANs individually."
                     )
-                    # Process each EAN individually by calling this function
-                    # recursively with batch size 1
                     individual_results = _process_eans_by_base(
-                        api_client, sub_batch_pairs, base, sub_batch_size=1
+                        api_client,
+                        sub_batch_pairs,
+                        base,
+                        sub_batch_size=1,
+                        verbose=False,
                     )
                     results.extend(individual_results)
-                    logger.info(
-                        f"Individual processing complete for sub-batch "
-                        f"{current_sub_batch}/{total_sub_batches} ({base}) | "
-                        "Progress: "
-                        f"{eans_processed_so_far + eans_in_this_batch}/{total_eans} "
-                        "EANs"
-                    )
             else:
-                # Mark all EANs in sub-batch as failed for other HTTP errors
+                # Mark all EANs as failed for other HTTP errors
                 logger.error(
                     f"HTTP {e.response.status_code} error for sub-batch "
                     f"{current_sub_batch}/{total_sub_batches} ({base}): {e}"
@@ -221,14 +188,9 @@ def _process_eans_by_base(
                             "json_raw": None,
                         }
                     )
-                logger.warning(
-                    f"Marked {len(sub_batch_pairs)} EANs as failed | "
-                    "Progress: "
-                    f"{eans_processed_so_far + eans_in_this_batch}/{total_eans} EANs"
-                )
 
         except Exception as e:
-            # Mark all EANs in sub-batch as failed for non-HTTP exceptions
+            # Mark all EANs as failed for non-HTTP exceptions
             logger.error(
                 f"API call failed for sub-batch "
                 f"{current_sub_batch}/{total_sub_batches} ({base}): {e}"
@@ -242,10 +204,5 @@ def _process_eans_by_base(
                         "json_raw": None,
                     }
                 )
-            logger.warning(
-                f"Marked {len(sub_batch_pairs)} EANs as failed | "
-                "Progress: "
-                f"{eans_processed_so_far + eans_in_this_batch}/{total_eans} EANs"
-            )
 
     return results

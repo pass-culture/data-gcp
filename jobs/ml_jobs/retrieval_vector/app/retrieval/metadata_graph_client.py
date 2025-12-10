@@ -1,7 +1,6 @@
 import time
-from typing import Dict, List
+from typing import List
 
-from docarray import Document
 from loguru import logger
 
 from app.retrieval.client import DefaultClient
@@ -53,27 +52,3 @@ class MetadataGraphClient(DefaultClient):
         start_time = time.time()
         self.table = self.connect_db()
         logger.info(f"Connected to database in {time.time() - start_time:.2f} seconds.")
-
-    def search_by_vector(
-        self,
-        vector: Document,
-        similarity_metric: str = "cosine",
-        **kwargs,
-    ) -> List[Dict]:
-        """
-        Search the vector database for similar items using cosine similarity by default.
-
-        This method overrides the parent's default similarity metric from 'dot' to 'cosine'
-        for metadata graph-based retrieval.
-
-        Args:
-            vector (Document): The vector to search.
-            similarity_metric (str): Similarity metric for vector search. Defaults to 'cosine'.
-            **kwargs: Additional arguments passed to the parent method.
-
-        Returns:
-            List[Dict]: A list of search results.
-        """
-        return super().search_by_vector(
-            vector=vector, similarity_metric=similarity_metric, **kwargs
-        )

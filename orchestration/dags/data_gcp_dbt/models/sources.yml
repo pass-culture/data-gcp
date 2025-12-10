@@ -71,6 +71,8 @@ sources:
       - name: applicative_database_finance_incident
       - name: applicative_database_google_places_info
       - name: applicative_database_headline_offer
+      - name: applicative_database_highlight
+      - name: applicative_database_highlight_request
       - name: applicative_database_internal_user
       - name: applicative_database_invoice
       - name: applicative_database_invoice_cashflow

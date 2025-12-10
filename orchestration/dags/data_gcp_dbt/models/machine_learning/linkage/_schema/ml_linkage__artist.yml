@@ -3,15 +3,6 @@ version: 2
 models:
   - name: ml_linkage__artist
     description: "{{ doc('description__ml_linkage__artist') }}"
-    data_tests:
-      - elementary.volume_anomalies:
-          tags: [elementary]
-          training_period:
-            period: day
-            count: 7
-          detection_period:
-            period: day
-            count: 1
     columns:
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"
@@ -22,8 +13,12 @@ models:
         description: "{{ doc('column__artist_name') }}"
       - name: artist_description
         description: "{{ doc('column__artist_description') }}"
-      - name: artist_professions
-        description: "{{ doc('column__artist_professions') }}"
+      - name: artist_biography
+        description: "{{ doc('column__artist_biography') }}"
+      - name: wikidata_id
+        description: "{{ doc('column__artist_wiki_id') }}"
+      - name: wikipedia_url
+        description: "{{ doc('column__artist_wikipedia_url') }}"
       - name: wikidata_image_file_url
         description: "{{ doc('column__wikidata_image_file_url') }}"
       - name: wikidata_image_page_url

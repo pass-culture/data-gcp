@@ -1,7 +1,7 @@
 import pandas as pd
 
-from constants import TOTAL_OFFER_COUNT
-from utils.preprocessing_utils import (
+from src.constants import TOTAL_OFFER_COUNT
+from src.utils.preprocessing_utils import (
     FilteringParamsType,
     clean_names,
     extract_first_artist,

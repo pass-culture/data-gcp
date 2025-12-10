@@ -16,9 +16,9 @@ class PredictionHandlerFactory:
         request_type: str, embedding_model_type: EmbeddingModelTypes
     ) -> PredictionHandler:
         if request_type == "recommendation":
-            if embedding_model_type != EmbeddingModelTypes.RECOMMENDATION:
+            if embedding_model_type != EmbeddingModelTypes.TWO_TOWER:
                 raise ValueError(
-                    f"Request type '{request_type}' is only supported for {EmbeddingModelTypes.RECOMMENDATION} models. Currently using '{embedding_model_type}' model."
+                    f"Request type '{request_type}' is only supported for {EmbeddingModelTypes.TWO_TOWER} models. Currently using '{embedding_model_type}' model."
                 )
             return RecommendationHandler()
 

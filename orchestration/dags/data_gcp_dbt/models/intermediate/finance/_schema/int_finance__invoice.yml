@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: int_finance__invoice
+    description: '{{ doc("description__int_finance__invoice") }}'
+    columns:
+      - name: invoice_id
+        description: '{{ doc("column__invoice_id") }}'
+      - name: invoice_creation_date
+        description: '{{ doc("column__invoice_creation_date") }}'
+      - name: invoice_reference
+        description: '{{ doc("column__invoice_reference") }}'
+      - name: amount
+        description: '{{ doc("column__invoice_amount") }}'
+      - name: bank_account_id
+        description: '{{ doc("column__bank_account_id") }}'

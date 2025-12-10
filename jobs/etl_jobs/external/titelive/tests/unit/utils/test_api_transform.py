@@ -217,7 +217,7 @@ class TestExtractGencodsFromSearchResponse:
         }
 
         # Act
-        gencods = extract_gencods_from_search_response(
+        gencods, filter_stats = extract_gencods_from_search_response(
             search_response, from_date="10/10/2024"
         )
 
@@ -226,6 +226,8 @@ class TestExtractGencodsFromSearchResponse:
         assert "9781234567890" in gencods
         assert "9781234567891" in gencods
         assert "9789876543210" in gencods
+        assert filter_stats["total_articles"] == 3
+        assert filter_stats["filtered_count"] == 0
 
     def test_extract_gencods_with_duplicates(self):
         """Test that duplicate gencods are removed."""
@@ -261,7 +263,7 @@ class TestExtractGencodsFromSearchResponse:
         }
 
         # Act
-        gencods = extract_gencods_from_search_response(
+        gencods, filter_stats = extract_gencods_from_search_response(
             search_response, from_date="10/10/2024"
         )
 
@@ -293,7 +295,7 @@ class TestExtractGencodsFromSearchResponse:
         }
 
         # Act
-        gencods = extract_gencods_from_search_response(
+        gencods, filter_stats = extract_gencods_from_search_response(
             search_response, from_date="10/10/2024"
         )
 
@@ -321,7 +323,7 @@ class TestExtractGencodsFromSearchResponse:
         }
 
         # Act
-        gencods = extract_gencods_from_search_response(
+        gencods, filter_stats = extract_gencods_from_search_response(
             search_response, from_date="10/10/2024"
         )
 
@@ -335,7 +337,7 @@ class TestExtractGencodsFromSearchResponse:
         search_response = {"result": []}
 
         # Act
-        gencods = extract_gencods_from_search_response(
+        gencods, filter_stats = extract_gencods_from_search_response(
             search_response, from_date="10/10/2024"
         )
 
@@ -375,7 +377,7 @@ class TestExtractGencodsFromSearchResponse:
         }
 
         # Act
-        gencods = extract_gencods_from_search_response(
+        gencods, filter_stats = extract_gencods_from_search_response(
             search_response, from_date="10/10/2024"
         )
 
@@ -389,7 +391,7 @@ class TestExtractGencodsFromSearchResponse:
         search_response = {"result": [{"id": 123, "article": "invalid"}]}
 
         # Act
-        gencods = extract_gencods_from_search_response(
+        gencods, filter_stats = extract_gencods_from_search_response(
             search_response, from_date="10/10/2024"
         )
 
@@ -415,7 +417,7 @@ class TestExtractGencodsFromSearchResponse:
         }
 
         # Act
-        gencods = extract_gencods_from_search_response(
+        gencods, filter_stats = extract_gencods_from_search_response(
             search_response, from_date="10/10/2024"
         )
 
@@ -446,7 +448,7 @@ class TestExtractGencodsFromSearchResponse:
         }
 
         # Act - Filter from 15/10/2024
-        gencods = extract_gencods_from_search_response(
+        gencods, filter_stats = extract_gencods_from_search_response(
             search_response, from_date="15/10/2024"
         )
 
@@ -477,7 +479,7 @@ class TestExtractGencodsFromSearchResponse:
         }
 
         # Act - Filter from 15/10/2024
-        gencods = extract_gencods_from_search_response(
+        gencods, filter_stats = extract_gencods_from_search_response(
             search_response, from_date="15/10/2024"
         )
 
@@ -485,6 +487,8 @@ class TestExtractGencodsFromSearchResponse:
         assert len(gencods) == 1
         assert "9781234567891" in gencods
         assert "9781234567890" not in gencods
+        assert filter_stats["filtered_count"] == 1
+        assert len(filter_stats["filtered_samples"]) == 1
 
     def test_extract_gencods_with_date_filter_includes_missing_date(self):
         """Test that articles without datemodification are included when filtering."""
@@ -508,7 +512,7 @@ class TestExtractGencodsFromSearchResponse:
         }
 
         # Act - Filter from 15/10/2024
-        gencods = extract_gencods_from_search_response(
+        gencods, filter_stats = extract_gencods_from_search_response(
             search_response, from_date="15/10/2024"
         )
 
@@ -516,6 +520,7 @@ class TestExtractGencodsFromSearchResponse:
         assert len(gencods) == 1
         assert "9781234567891" in gencods
         assert "9781234567890" not in gencods
+        assert filter_stats["no_date_count"] == 1
 
     def test_extract_gencods_with_invalid_from_date_format(self):
         """Test error handling for invalid from_date format."""
@@ -561,7 +566,7 @@ class TestExtractGencodsFromSearchResponse:
         }
 
         # Act - Filter from 15/10/2024
-        gencods = extract_gencods_from_search_response(
+        gencods, filter_stats = extract_gencods_from_search_response(
             search_response, from_date="15/10/2024"
         )
 

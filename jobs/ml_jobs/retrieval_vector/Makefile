@@ -15,3 +15,6 @@ download-vector-database:
 
 start:
 	uv run --no-dev hypercorn --bind 0.0.0.0:8080 app.app:app --workers=1 --log-config="json:app/logging/config.json"
+
+test:
+	PYTHONPATH=. uv run pytest -v --cov=app --cov-report=term-missing tests/

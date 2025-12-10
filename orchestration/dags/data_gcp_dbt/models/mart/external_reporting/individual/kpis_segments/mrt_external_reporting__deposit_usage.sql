@@ -9,13 +9,7 @@
     )
 }}
 
-{% set dimensions = [
-    {"name": "NAT", "value_expr": "'NAT'"},
-    {"name": "REG", "value_expr": "user_region_name"},
-    {"name": "DEP", "value_expr": "user_department_name"},
-    {"name": "EPCI", "value_expr": "user_epci"},
-    {"name": "COM", "value_expr": "user_city"},
-] %}
+{% set dimensions = get_dimensions("user", "geo_full") %}
 
 {% for dim in dimensions %}
     {% if not loop.first %}

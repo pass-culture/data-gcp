@@ -6,6 +6,7 @@
                 strategy="check",
                 check_cols=["json_raw"],
                 unique_key="ean",
+                cluster_by=["ean"],
                 hard_deletes="ignore",
                 tags=["external_dependency"],
                 meta={
@@ -15,12 +16,11 @@
             )
         )
     }}
-
     select
         ean,
-        json_raw,
         recto_image_uuid,
-        verso_image_uuid
+        verso_image_uuid,
+        json_raw
     from {{ source("raw", "raw_titelive_products") }}
     where true
         and status = 'processed'

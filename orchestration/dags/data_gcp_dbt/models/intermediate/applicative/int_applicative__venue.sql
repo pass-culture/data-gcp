@@ -95,7 +95,6 @@ with
 
 select
     v.venue_thumb_count,
-    v.ban_id,
     v.venue_id,
     v.venue_name,
     v.venue_siret,

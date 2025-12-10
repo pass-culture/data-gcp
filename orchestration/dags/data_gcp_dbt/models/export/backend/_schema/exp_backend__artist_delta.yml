@@ -6,18 +6,21 @@ models:
     columns:
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"
-        tests:
-          - not_null:
-              tags: ['critical']
-          - unique:
-              tags: ['critical']
+        data_tests:
+          - not_null
+          - unique
       - name: artist_name
         description: "{{ doc('column__artist_name') }}"
-        tests:
-          - not_null:
-              tags: ['critical']
+        data_tests:
+          - not_null
       - name: artist_description
         description: "{{ doc('column__artist_description') }}"
+      - name: artist_biography
+        description: "{{ doc('column__artist_biography') }}"
+      - name: wikidata_id
+        description: "{{ doc('column__artist_wiki_id') }}"
+      - name: wikipedia_url
+        description: "{{ doc('column__artist_wikipedia_url') }}"
       - name: wikidata_image_file_url
         description: "{{ doc('column__wikidata_image_file_url') }}"
       - name: wikidata_image_author

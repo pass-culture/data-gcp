@@ -42,3 +42,7 @@ models:
         description: "{{ doc('column__total_stat_page_views') }}"
       - name: total_consulted_help
         description: "{{ doc('column__total_consulted_help') }}"
+      - name: total_booking_downloads
+        description: "{{ doc('column__total_booking_downloads') }}"
+      - name: total_consulted_offers
+        description: "{{ doc('column__total_consulted_offers') }}"

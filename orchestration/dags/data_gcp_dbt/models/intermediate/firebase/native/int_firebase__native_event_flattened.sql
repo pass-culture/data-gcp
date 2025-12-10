@@ -123,6 +123,7 @@ with
                         "items_0",
                         "itemType",
                         "index",
+                        "artistId",
                     ]
                 )
             }},
@@ -139,10 +140,17 @@ with
                 cast({{ extract_params_int_value(["offerId"], alias=false) }} as string)
             ) as offerId, -- dbt internal hook creates tmp table for incremental and compare fields names (including the capitalization), if not biquery (case insensitive) breaks
             -- fmt: on
-            (
-                select event_params.value.string_value
-                from unnest(event_params) as event_params
-                where event_params.key = "from"
+            coalesce(
+                (
+                    select event_params.value.string_value
+                    from unnest(event_params) as event_params
+                    where event_params.key = "from"
+                ),
+                (
+                    select event_params.value.string_value
+                    from unnest(event_params) as event_params
+                    where event_params.key = "origin"
+                )
             ) as origin
         from firebase_last_two_days_events
     )

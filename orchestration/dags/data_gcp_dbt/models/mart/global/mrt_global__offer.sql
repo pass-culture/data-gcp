@@ -1,6 +1,6 @@
 {{
     config(
-        cluster_by=["offer_id", "item_id", "offer_product_id"],
+        cluster_by=["offer_id"],
     )
 }}
 

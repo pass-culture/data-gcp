@@ -393,8 +393,8 @@ def create_items_table(
     items_df: pd.DataFrame,
     emb_size: int,
     uri: str,
-    batch_size: int = LANCE_DB_BATCH_SIZE,
-    create_index: bool = True,
+    create_index: bool,
+    vector_search_index_metric: str,
 ) -> None:
     """
     Create a LanceDB table with item embeddings and metadata.
@@ -410,22 +410,24 @@ def create_items_table(
         uri (str): LanceDB database URI/path
         batch_size (int, optional): Number of items per batch. Defaults to LANCE_DB_BATCH_SIZE
         create_index (bool, optional): Whether to create indexes after table creation.
-            Defaults to True
+        vector_search_index_metric (str, optional): Metric for vector index.
 
     Returns:
         None
 
     TODO: refacto to have only a dataframe containing items and vectors
+    TODO: investigate if retrieval work bettes with cosine indexes
     """
-
-    num_batches = ceil(len(items_df) / batch_size)
+    num_batches = ceil(len(items_df) / LANCE_DB_BATCH_SIZE)
     db = lancedb.connect(uri)
     db.drop_database()
 
     for i in range(num_batches):
-        print(f"Processing batch {i + 1} // {num_batches} of batch_size {batch_size}")
-        start_idx = i * batch_size
-        end_idx = min((i + 1) * batch_size, len(items_df))
+        print(
+            f"Processing batch {i + 1} // {num_batches} of batch_size {LANCE_DB_BATCH_SIZE}"
+        )
+        start_idx = i * LANCE_DB_BATCH_SIZE
+        end_idx = min((i + 1) * LANCE_DB_BATCH_SIZE, len(items_df))
         batch_df = items_df[start_idx:end_idx]
 
         data_batch = pa.Table.from_batches(
@@ -440,7 +442,7 @@ def create_items_table(
             table.add(data_batch)
     if create_index:
         table.create_index(
-            metric="dot",
+            metric=vector_search_index_metric,
             num_partitions=8,
             num_sub_vectors=4,
             vector_column_name="vector",

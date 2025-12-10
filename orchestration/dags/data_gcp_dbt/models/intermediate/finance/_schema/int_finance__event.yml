@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: int_finance__event
+    description: '{{ doc("description__int_finance__event") }}'
+    columns:
+      - name: finance_event_id
+        description: '{{ doc("column__finance_event_id") }}'
+      - name: finance_event_creation_date
+        description: '{{ doc("column__finance_event_creation_date") }}'
+      - name: finance_event_value_date
+        description: '{{ doc("column__finance_event_value_date") }}'
+      - name: finance_event_price_ordering_date
+        description: '{{ doc("column__finance_event_price_ordering_date") }}'
+      - name: finance_event_status
+        description: '{{ doc("column__finance_event_status") }}'
+      - name: finance_event_motive
+        description: '{{ doc("column__finance_event_motive") }}'
+      - name: booking_id
+        description: '{{ doc("column__booking_id") }}'
+      - name: collective_booking_id
+        description: '{{ doc("column__collective_booking_id") }}'
+      - name: venue_id
+        description: '{{ doc("column__venue_id") }}'
+      - name: pricing_point_id
+        description: '{{ doc("column__pricing_point_id") }}'
+      - name: booking_finance_incident_id
+        description: '{{ doc("column__booking_finance_incident_id") }}'

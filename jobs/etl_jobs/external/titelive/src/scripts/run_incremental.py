@@ -18,13 +18,17 @@ from src.api.client import TiteliveClient
 from src.utils.api_transform import extract_gencods_from_search_response
 from src.utils.batching import calculate_total_pages
 from src.utils.bigquery import (
+    count_table_rows,
     deduplicate_table_by_ean,
     get_destination_table_schema,
+    get_images_status_breakdown,
     get_last_sync_date,
+    get_sample_eans_by_status,
+    get_status_breakdown,
     insert_dataframe,
 )
 from src.utils.ean_processing import process_eans_batch
-from src.utils.logging import get_logger
+from src.utils.logging import DailyStats, RunStats, get_logger
 
 logger = get_logger(__name__)
 
@@ -70,8 +74,14 @@ def run_incremental(
         ValueError: If total results exceed API limit for any base/date
         Exception: If any step fails
     """
-    logger.info("Starting incremental sync for both bases")
-    logger.info(f"Target: {target_table}")
+    # Initialize run statistics
+    run_stats = RunStats()
+
+    logger.info("=" * 70)
+    logger.info("STARTING INCREMENTAL SYNC")
+    logger.info("=" * 70)
+    logger.info(f"Target table: {target_table}")
+    logger.info(f"Window size: {window_days} days")
 
     # Initialize clients
     bq_client = bigquery.Client(project=project_id)
@@ -82,34 +92,48 @@ def run_incremental(
     bases = [base.value for base in TiteliveCategory]
 
     # Step 1: Get last sync dates for each base
-    logger.info("Step 1: Querying last sync dates from provider event table")
-    last_sync_dates = {}
+    logger.info("-" * 70)
+    logger.info("STEP 1: Querying last sync dates from provider event table")
+    today = datetime.now().date()
+
     for base in bases:
         last_sync_date = get_last_sync_date(bq_client, provider_event_table, base)
         if last_sync_date:
-            last_sync_dates[base] = datetime.strptime(last_sync_date, "%Y-%m-%d").date()
+            sync_date = datetime.strptime(last_sync_date, "%Y-%m-%d").date()
+            run_stats.last_sync_dates[base] = sync_date
+
+            # Check staleness (warn if data is older than window_days)
+            days_stale = (today - sync_date).days
+            if days_stale > run_stats.staleness_days:
+                run_stats.staleness_days = days_stale
+
+            if days_stale > window_days:
+                logger.warning(
+                    f"⚠️  STALE DATA: {base} last synced {days_stale} days ago "
+                    f"({last_sync_date}). Backend sync may be broken!"
+                )
+                run_stats.anomalies.append(
+                    f"{base} data is {days_stale} days stale "
+                    f"(last sync: {last_sync_date})"
+                )
         else:
-            # If no previous sync, we'll skip this base
             logger.warning(f"No previous sync found for {base}, skipping")
-            last_sync_dates[base] = None
+            run_stats.last_sync_dates[base] = None
+
+    logger.info(f"Last sync dates: {run_stats.last_sync_dates}")
+    logger.info(f"Today: {today}, Staleness: {run_stats.staleness_days} days")
 
     # Step 2: Generate list of dates to process using sliding window
-    # For each base, we process: [last_sync_date - window_days, last_sync_date]
-    # This allows catching late-arriving data within the window
+    logger.info("-" * 70)
+    logger.info("STEP 2: Generating date window")
 
-    # Collect all date ranges for all bases
     all_dates = set()
     for base in bases:
-        if last_sync_dates[base] is not None:
-            end_date = last_sync_dates[base]
+        sync_date = run_stats.last_sync_dates.get(base)
+        if sync_date is not None:
+            end_date = sync_date
             start_date = end_date - timedelta(days=window_days)
 
-            logger.info(
-                f"{base}: Processing window from {start_date} to {end_date} "
-                f"({window_days + 1} days)"
-            )
-
-            # Add all dates in range to the set
             current_date = start_date
             while current_date <= end_date:
                 all_dates.add(current_date)
@@ -117,70 +141,85 @@ def run_incremental(
 
     if not all_dates:
         logger.info("No dates to process. All bases are up to date.")
+        run_stats.log_summary(logger)
         return
 
-    # Convert to sorted list
     dates_to_process = sorted(all_dates)
-
-    if not dates_to_process:
-        logger.info("No dates to process. Already up to date.")
-        return
+    run_stats.window_start = dates_to_process[0]
+    run_stats.window_end = dates_to_process[-1]
+    run_stats.days_processed = len(dates_to_process)
 
     logger.info(
-        f"Dates to process: {dates_to_process[0]} to "
-        f"{dates_to_process[-1]} ({len(dates_to_process)} days)"
+        f"Window: {run_stats.window_start} to {run_stats.window_end} "
+        f"({run_stats.days_processed} days)"
     )
 
-    # Step 3: Truncate table before processing first day
-    logger.info(f"Truncating target table: {target_table}")
+    # Step 3: Check current state and truncate table
+    logger.info("-" * 70)
+    logger.info("CHECKPOINT 1: INPUT STATE (before truncate)")
+
+    # Log current table state before truncate
+    try:
+        pre_truncate_count = count_table_rows(bq_client, target_table)
+        run_stats.pre_truncate_count = pre_truncate_count
+        logger.info(
+            f"Current table has {pre_truncate_count:,} rows (will be truncated)"
+        )
+
+        # Get status breakdown before truncate
+        status_breakdown = get_status_breakdown(bq_client, target_table)
+        logger.info("Status breakdown before truncate:")
+        for status, count in status_breakdown.items():
+            logger.info(f"  - {status}: {count:,}")
+
+        # Get images status breakdown
+        images_breakdown = get_images_status_breakdown(bq_client, target_table)
+        logger.info("Images download status before truncate:")
+        for status, count in images_breakdown.items():
+            logger.info(f"  - {status}: {count:,}")
+
+    except Exception as e:
+        logger.info(f"Table doesn't exist yet or is empty: {e}")
+        run_stats.pre_truncate_count = 0
+
+    # Truncate table
+    logger.info("-" * 70)
+    logger.info("STEP 3: Truncating target table")
     truncate_query = f"TRUNCATE TABLE `{target_table}`"
     try:
         truncate_job = bq_client.query(truncate_query)
         truncate_job.result()
         logger.info("Target table truncated successfully")
     except Exception as e:
-        # Table might not exist yet, which is OK for first run
         logger.warning(f"Could not truncate table (might not exist yet): {e}")
-        logger.info("Table will be created on first insert")
 
-    # Step 4: Process each date, day by day
-    grand_total_rows_inserted = 0
+    # Step 4: Process each date
+    logger.info("-" * 70)
+    logger.info("STEP 4: Processing dates")
 
     for process_date in dates_to_process:
         date_str = process_date.strftime("%Y-%m-%d")
-        logger.info(f"Processing date: {date_str}")
 
-        # Calculate next day for API range
-        # (API requires max_date > min_date to return results)
+        # Calculate API date range
         next_day = process_date + timedelta(days=1)
-        next_day_str = next_day.strftime("%Y-%m-%d")
-
-        # Convert to API format (DD/MM/YYYY)
         min_date_formatted = _format_date_for_api(date_str)
-        max_date_formatted = _format_date_for_api(next_day_str)
-
-        logger.info(f"API date range: {min_date_formatted} to {max_date_formatted}")
+        max_date_formatted = _format_date_for_api(next_day.strftime("%Y-%m-%d"))
 
         # Process both bases for this date
         for base in bases:
-            # Skip if this base has no sync history
-            if last_sync_dates[base] is None:
-                logger.debug(f"Skipping {base} for {date_str} (no sync history)")
+            sync_date = run_stats.last_sync_dates.get(base)
+            if sync_date is None:
                 continue
 
-            # Skip if this date is outside the base's window
-            base_end_date = last_sync_dates[base]
-            base_start_date = base_end_date - timedelta(days=window_days)
-            if not (base_start_date <= process_date <= base_end_date):
-                logger.debug(
-                    f"Skipping {base} for {date_str} (outside window: "
-                    f"{base_start_date} to {base_end_date})"
-                )
+            # Skip if outside this base's window
+            base_start_date = sync_date - timedelta(days=window_days)
+            if not (base_start_date <= process_date <= sync_date):
                 continue
 
-            logger.info(f"Processing base: {base} for date: {date_str}")
+            # Initialize daily stats
+            daily_stats = DailyStats(date=date_str, base=base)
 
-            # Initial request to check total results
+            # Get total results from API
             initial_response = api_client.search_by_date(
                 base=base,
                 min_date=min_date_formatted,
@@ -189,34 +228,30 @@ def run_incremental(
             )
 
             total_results = initial_response.get("nbreponses", 0)
-            logger.info(f"Total results for {base} on {date_str}: {total_results}")
+            daily_stats.api_results_count = total_results
+
+            # Detect anomalies
+            if total_results == 0:
+                run_stats.anomalies.append(f"Zero results for {base} on {date_str}")
+                run_stats.add_daily_stats(daily_stats)
+                continue
 
             # Validate against API limit
             if total_results >= MAX_SEARCH_RESULTS:
                 msg = (
-                    f"Total results for {base} on {date_str} ({total_results}) exceeds "
-                    f"API limit ({MAX_SEARCH_RESULTS}). Cannot process this date."
+                    f"Total results for {base} on {date_str} ({total_results}) "
+                    f"exceeds API limit ({MAX_SEARCH_RESULTS})."
                 )
                 raise ValueError(msg)
 
-            if total_results == 0:
-                logger.info(f"No results found for {base} on {date_str}")
-                continue
-
-            # Calculate total pages
+            # Phase 1: Collect all gencods from search pages
             total_pages = calculate_total_pages(total_results, results_per_page)
-            logger.info(
-                f"Processing {total_results} {base} results across {total_pages} pages"
-            )
-
-            # Phase 1: Collect all gencods from all pages
             all_gencods = []
+            total_filtered = 0
+            filtered_samples = []
 
             for page in range(1, total_pages + 1):
-                logger.info(f"Fetching {base} page {page}/{total_pages} for {date_str}")
-
                 try:
-                    # Call search API
                     response = api_client.search_by_date(
                         base=base,
                         min_date=min_date_formatted,
@@ -225,66 +260,91 @@ def run_incremental(
                         results_per_page=results_per_page,
                     )
 
-                    # Extract results
                     results = response.get("result", [])
-
-                    if not results:
-                        logger.warning(
-                            f"Page {page} returned no results. Moving to next page."
+                    if results:
+                        page_gencods, filter_stats = (
+                            extract_gencods_from_search_response(
+                                response, from_date=min_date_formatted
+                            )
                         )
-                        continue
+                        all_gencods.extend(page_gencods)
 
-                    # Extract gencods from search results with date filter
-                    page_gencods = extract_gencods_from_search_response(
-                        response, from_date=min_date_formatted
-                    )
-                    all_gencods.extend(page_gencods)
-
-                    logger.info(
-                        f"{base} page {page} complete: "
-                        f"{len(page_gencods)} gencods extracted"
-                    )
+                        # Aggregate filter stats
+                        total_filtered += filter_stats["filtered_count"]
+                        if len(filtered_samples) < 5:
+                            filtered_samples.extend(filter_stats["filtered_samples"])
 
                 except Exception as e:
                     logger.error(
-                        f"Error fetching {base} page {page} for {date_str}: {e}"
+                        f"Error fetching page {page} for {base}/{date_str}: {e}"
                     )
-                    logger.error("Continuing to next page...")
                     continue
 
-            # Phase 2: Fetch detailed data using /ean endpoint (same as run_init)
-            if all_gencods:
-                # Remove duplicates
-                unique_gencods = list(set(all_gencods))
+            # Log filtered gencods if any
+            daily_stats.filtered_by_date = total_filtered
+            if total_filtered > 0:
                 logger.info(
-                    f"Collected {len(unique_gencods)} unique gencods "
-                    f"from {total_pages} pages for {base} on {date_str}"
+                    f"    ⚠️ Filtered {total_filtered} gencods "
+                    f"(datemodification < {min_date_formatted})"
                 )
+                if filtered_samples[:5]:
+                    logger.info("    Sample filtered EANs:")
+                    for gencod, date_mod in filtered_samples[:5]:
+                        logger.info(f"      - {gencod} (dateMaj={date_mod})")
 
-                # Map base to subcategoryid for proper routing in process_eans_batch
-                # Music EANs need a music subcategoryid to be routed to music group
-                # Paper EANs use None (defaults to paper group)
+            # Phase 2: Fetch detailed data via /ean endpoint
+            if all_gencods:
+                unique_gencods = list(set(all_gencods))
+                daily_stats.gencods_collected = len(unique_gencods)
+
+                # Map base to subcategoryid
                 if base == TiteliveCategory.MUSIC:
                     representative_subcategoryid = "SUPPORT_PHYSIQUE_MUSIQUE_CD"
                 else:
                     representative_subcategoryid = None
 
-                # Create ean_pairs with appropriate subcategoryid
                 ean_pairs = [
                     (gencod, representative_subcategoryid) for gencod in unique_gencods
                 ]
 
-                # Process using shared logic from run_init
-                logger.info(
-                    f"Fetching detailed data for {len(ean_pairs)} EANs "
-                    f"via /ean endpoint"
-                )
-
+                # Process EANs (reduced logging in process_eans_batch)
                 results = process_eans_batch(
                     api_client, ean_pairs, sub_batch_size=DEFAULT_BATCH_SIZE
                 )
 
-                # Add required fields for schema compatibility
+                # Count statuses and collect samples
+                failed_eans = []
+                deleted_eans = []
+                for result in results:
+                    if result["status"] == "processed":
+                        daily_stats.eans_processed += 1
+                    elif result["status"] == "deleted_in_titelive":
+                        daily_stats.eans_deleted += 1
+                        if len(deleted_eans) < 5:
+                            deleted_eans.append(result["ean"])
+                    elif result["status"] == "failed":
+                        daily_stats.eans_failed += 1
+                        if len(failed_eans) < 5:
+                            failed_eans.append(result["ean"])
+
+                # Log sample failed/deleted EANs
+                if deleted_eans:
+                    daily_stats.sample_deleted_eans = deleted_eans
+                    logger.info(
+                        f"    Sample deleted EANs ({daily_stats.eans_deleted} total):"
+                    )
+                    for ean in deleted_eans:
+                        logger.info(f"      - {ean}")
+
+                if failed_eans:
+                    daily_stats.sample_failed_eans = failed_eans
+                    logger.info(
+                        f"    ⚠️ Sample failed EANs ({daily_stats.eans_failed} total):"
+                    )
+                    for ean in failed_eans:
+                        logger.info(f"      - {ean}")
+
+                # Add required fields
                 current_time = datetime.now()
                 for result in results:
                     result["processed_at"] = current_time
@@ -294,7 +354,7 @@ def run_incremental(
                     result["recto_image_uuid"] = None
                     result["verso_image_uuid"] = None
 
-                # Convert to DataFrame and insert
+                # Insert to BigQuery
                 combined_df = pd.DataFrame(results)
                 schema = get_destination_table_schema()
                 insert_dataframe(
@@ -305,25 +365,69 @@ def run_incremental(
                     schema=schema,
                 )
 
-                rows_inserted = len(combined_df)
-                grand_total_rows_inserted += rows_inserted
+                daily_stats.rows_inserted = len(combined_df)
 
-                logger.info(
-                    f"Completed {base} for {date_str}: Inserted {rows_inserted} rows"
-                )
-            else:
-                logger.warning(f"No gencods collected for {base} on {date_str}")
+            run_stats.add_daily_stats(daily_stats)
 
-        logger.info(f"Completed processing date: {date_str}")
+            # Log progress (single line per base/date)
+            logger.info(
+                f"  {date_str} {base}: API={daily_stats.api_results_count:,} → "
+                f"Gencods={daily_stats.gencods_collected:,} → "
+                f"Inserted={daily_stats.rows_inserted:,} "
+                f"(failed={daily_stats.eans_failed})"
+            )
 
-    # Step 5: Deduplicate the destination table
-    logger.info("Step 5: Deduplicating destination table by EAN")
+    # Step 5: Deduplicate and get final count
+    logger.info("-" * 70)
+    logger.info("STEP 5: Deduplicating and counting final rows")
     deduplicate_table_by_ean(bq_client, target_table)
 
-    logger.info(
-        f"Incremental mode complete. Inserted {grand_total_rows_inserted} "
-        f"total rows to {target_table} (after deduplication)"
-    )
+    # Get actual row count after deduplication
+    run_stats.total_rows_after_dedup = count_table_rows(bq_client, target_table)
+
+    # Final verification checkpoint
+    logger.info("-" * 70)
+    logger.info("CHECKPOINT: FINAL VERIFICATION")
+    logger.info("-" * 70)
+
+    # Status breakdown
+    final_status_breakdown = get_status_breakdown(bq_client, target_table)
+    run_stats.final_status_breakdown = final_status_breakdown
+    logger.info("Final status breakdown:")
+    for status, count in final_status_breakdown.items():
+        pct = (
+            (count / run_stats.total_rows_after_dedup * 100)
+            if run_stats.total_rows_after_dedup > 0
+            else 0
+        )
+        logger.info(f"  - {status}: {count:,} ({pct:.1f}%)")
+
+    # Sample failed EANs if any
+    failed_count = final_status_breakdown.get("failed", 0)
+    if failed_count > 0:
+        sample_failed = get_sample_eans_by_status(bq_client, target_table, "failed", 5)
+        logger.warning(f"⚠️ {failed_count} failed EANs. Sample:")
+        for ean in sample_failed:
+            logger.warning(f"    - {ean}")
+
+    # Images download status (should all be NULL at this point)
+    images_status = get_images_status_breakdown(bq_client, target_table)
+    run_stats.final_images_status_breakdown = images_status
+    logger.info("Images download status (pre-download_images):")
+    for status, count in images_status.items():
+        logger.info(f"  - {status}: {count:,}")
+
+    null_images = images_status.get("NULL", 0)
+    if null_images == run_stats.total_rows_after_dedup:
+        logger.info("  ✓ All EANs pending image download (expected)")
+    else:
+        logger.warning(
+            f"  ⚠️ Unexpected: {run_stats.total_rows_after_dedup - null_images} "
+            f"EANs already have images_download_status set"
+        )
+
+    # Log comprehensive summary
+    run_stats.log_summary(logger)
 
 
 def _format_date_for_api(date_str: str) -> str:

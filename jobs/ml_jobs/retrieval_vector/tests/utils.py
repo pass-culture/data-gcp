@@ -44,13 +44,3 @@ def calculate_dot_product(query_vector, static_vectors: pd.DataFrame):
         np.dot(query_vector, -np.array(row["vector"]))
         for _, row in static_vectors.iterrows()
     ]
-
-
-# Corrected L2 (Euclidean distance) calculation
-def calculate_l2_distance(query_vector, static_vectors: pd.DataFrame):
-    """Calculate L2 distance between query vector and each vector in static_vectors."""
-    query_vector = np.array(query_vector)  # Ensure query_vector is a NumPy array
-    return [
-        np.linalg.norm(query_vector - np.array(row["vector"]))
-        for _, row in static_vectors.iterrows()
-    ]

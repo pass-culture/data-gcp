@@ -20,7 +20,11 @@ from src.utils.bigquery import (
     count_failed_image_downloads,
     count_pending_image_downloads,
     fetch_batch_for_image_download,
+    get_eans_not_in_product_table,
+    get_images_status_breakdown,
     get_last_batch_number,
+    get_sample_eans_by_images_status,
+    get_status_breakdown,
     update_image_download_results,
 )
 from src.utils.image_download import (
@@ -76,18 +80,36 @@ def run_download_images(
     sub_batch_size = IMAGE_DOWNLOAD_SUB_BATCH_SIZE
 
     mode_label = "reprocess failed" if reprocess_failed else "normal"
-    logger.info(f"Starting image download in {mode_label} mode")
+    logger.info("=" * 70)
+    logger.info("STARTING IMAGE DOWNLOAD")
+    logger.info("=" * 70)
+    logger.info(f"Mode: {mode_label}")
     logger.info(f"Source table: {source_table}")
     logger.info(f"Target: gs://{gcs_bucket}/{gcs_prefix}")
-    logger.info(f"Max workers: {max_workers}")
-    logger.info(f"Pool connections: {pool_connections}, Pool maxsize: {pool_maxsize}")
-    logger.info(f"Timeout: {timeout}s")
+    logger.info(f"Max workers: {max_workers}, Timeout: {timeout}s")
     logger.info(f"Sub-batch size: {sub_batch_size} EANs")
 
     # Initialize clients
     bq_client = bigquery.Client(project=GCP_PROJECT_ID)
     storage_client = storage.Client(project=GCP_PROJECT_ID)
     session = _get_session(pool_connections, pool_maxsize, timeout)
+
+    # CHECKPOINT 1: Initial state
+    logger.info("-" * 70)
+    logger.info("CHECKPOINT 1: INPUT STATE")
+    logger.info("-" * 70)
+
+    # Status breakdown
+    status_breakdown = get_status_breakdown(bq_client, source_table)
+    logger.info("EAN status breakdown:")
+    for status, count in status_breakdown.items():
+        logger.info(f"  - {status}: {count:,}")
+
+    # Images status breakdown
+    images_breakdown = get_images_status_breakdown(bq_client, source_table)
+    logger.info("Images download status breakdown:")
+    for status, count in images_breakdown.items():
+        logger.info(f"  - {status}: {count:,}")
 
     # Get total count based on mode
     if reprocess_failed:
@@ -97,7 +119,7 @@ def run_download_images(
         total_count = count_pending_image_downloads(bq_client, source_table)
         mode_label = "pending"
 
-    logger.info(f"Total {mode_label} image downloads: {total_count:,}")
+    logger.info(f"Total {mode_label} image downloads to process: {total_count:,}")
 
     if total_count == 0:
         logger.info(f"No {mode_label} image downloads. Exiting.")
@@ -115,7 +137,9 @@ def run_download_images(
 
     # Process batches
     while current_batch <= last_batch:
-        logger.info(f"Processing batch_number={current_batch}")
+        logger.info("-" * 70)
+        logger.info(f"CHECKPOINT: BATCH {current_batch}")
+        logger.info("-" * 70)
 
         # Fetch ALL EANs for this batch (up to 20k)
         all_rows = fetch_batch_for_image_download(
@@ -129,9 +153,31 @@ def run_download_images(
             current_batch += 1
             continue
 
+        logger.info(f"Fetched {len(all_rows)} {mode_label} EANs for processing")
+
+        # Log EANs not in product_table (for debugging sync lag issues)
+        not_in_product_count, sample_not_in_product = get_eans_not_in_product_table(
+            bq_client, source_table, current_batch
+        )
+        if not_in_product_count > 0:
+            logger.info(
+                f"  [i] {not_in_product_count:,} EANs not yet in product_table "
+                "(will still be processed)"
+            )
+            if sample_not_in_product:
+                logger.info(f"    Sample: {sample_not_in_product}")
+
+        # Check how many have old UUIDs (for change detection)
+        eans_with_old_uuid = sum(
+            1
+            for r in all_rows
+            if r.get("old_recto_image_uuid") or r.get("old_verso_image_uuid")
+        )
         logger.info(
-            f"Batch {current_batch}: Fetched {len(all_rows)} {mode_label} EANs. "
-            f"Processing in sub-batches of {sub_batch_size}"
+            f"  {eans_with_old_uuid:,} EANs have existing UUIDs (change detection)"
+        )
+        logger.info(
+            f"  {len(all_rows) - eans_with_old_uuid:,} EANs are new (no old UUIDs)"
         )
 
         # Accumulate results for entire batch
@@ -210,10 +256,47 @@ def run_download_images(
         # Move to next batch
         current_batch += 1
 
-    logger.info(
-        f"Image download complete: {total_processed:,} EANs processed, "
-        f"{total_success:,} success, {total_failed:,} failed"
-    )
+    # CHECKPOINT: FINAL VERIFICATION
+    logger.info("-" * 70)
+    logger.info("CHECKPOINT: FINAL VERIFICATION")
+    logger.info("-" * 70)
+
+    # Final images status breakdown
+    final_images_breakdown = get_images_status_breakdown(bq_client, source_table)
+    logger.info("Final images_download_status breakdown:")
+    for status, count in final_images_breakdown.items():
+        pct = count / sum(final_images_breakdown.values()) * 100
+        logger.info(f"  - {status}: {count:,} ({pct:.1f}%)")
+
+    # Check for unexpected NULL status
+    null_count = final_images_breakdown.get("NULL", 0)
+    if null_count > 0:
+        logger.warning(f"⚠️ {null_count:,} EANs still have NULL images_download_status!")
+        sample_null = get_sample_eans_by_images_status(bq_client, source_table, None, 5)
+        logger.warning(f"  Sample NULL EANs: {sample_null}")
+    else:
+        logger.info("✓ All EANs have been processed (no NULL status remaining)")
+
+    # Check for failed EANs
+    failed_img_count = final_images_breakdown.get("failed", 0)
+    if failed_img_count > 0:
+        sample_failed = get_sample_eans_by_images_status(
+            bq_client, source_table, "failed", 5
+        )
+        logger.warning(f"⚠️ {failed_img_count:,} EANs failed image download")
+        logger.warning(f"  Sample failed EANs: {sample_failed}")
+
+    # Summary
+    logger.info("=" * 70)
+    logger.info("IMAGE DOWNLOAD SUMMARY")
+    logger.info("=" * 70)
+    logger.info(f"Total processed: {total_processed:,}")
+    logger.info(f"  - Success: {total_success:,}")
+    logger.info(f"  - Failed: {total_failed:,}")
+    no_change_total = total_processed - total_success - total_failed
+    if no_change_total > 0:
+        logger.info(f"  - No change: {no_change_total:,}")
+    logger.info("=" * 70)
 
 
 def _process_batch_images(
@@ -253,6 +336,14 @@ def _process_batch_images(
     no_image_url_count = 0  # Track total placeholder "no_image" URLs
     no_image_cache = {}  # In-memory cache: no_image URL -> UUID (minimizes GCS calls)
 
+    # Filtering stats
+    skipped_recto_count = 0  # image field != 1
+    skipped_verso_count = 0  # image_4 field != 1
+    unchanged_url_count = 0  # URL hash unchanged
+    sample_skipped_recto = []
+    sample_skipped_verso = []
+    sample_parse_errors = []
+
     for row in rows:
         ean = row["ean"]
         json_raw = row["json_raw"]
@@ -273,16 +364,9 @@ def _process_batch_images(
             elif isinstance(article_data, dict):
                 # Dict format - take first numeric key's value
                 numeric_keys = sorted([k for k in article_data if k.isdigit()])
-                if numeric_keys:
-                    article = article_data[numeric_keys[0]]
-                else:
-                    article = {}
-                    logger.warning(f"Article dict has no numeric keys for EAN {ean}")
+                article = article_data[numeric_keys[0]] if numeric_keys else {}
             else:
                 article = {}
-                logger.warning(
-                    f"Unexpected article format for EAN {ean}: {type(article_data)}"
-                )
 
             images_url = article.get("imagesUrl", {})
 
@@ -294,15 +378,15 @@ def _process_batch_images(
             image_4_field = article.get("image_4")
 
             if image_field != 1:
-                logger.info(
-                    f"Skipping recto for EAN {ean}: image field is {image_field}"
-                )
+                skipped_recto_count += 1
+                if len(sample_skipped_recto) < 3:
+                    sample_skipped_recto.append((ean, image_field))
                 recto_url = None
 
             if image_4_field != 1:
-                logger.info(
-                    f"Skipping verso for EAN {ean}: image_4 field is {image_4_field}"
-                )
+                skipped_verso_count += 1
+                if len(sample_skipped_verso) < 3:
+                    sample_skipped_verso.append((ean, image_4_field))
                 verso_url = None
 
             ean_images = []
@@ -328,6 +412,8 @@ def _process_batch_images(
                 no_image_url_count += 1
             if image_added:
                 ean_has_real_image = True
+            elif recto_url and not is_placeholder:
+                unchanged_url_count += 1
 
             # Process verso with hash comparison
             is_placeholder, image_added, verso_uuid = _process_image_url(
@@ -346,6 +432,8 @@ def _process_batch_images(
                 no_image_url_count += 1
             if image_added:
                 ean_has_real_image = True
+            elif verso_url and not is_placeholder:
+                unchanged_url_count += 1
 
             ean_to_images[ean] = ean_images
             ean_to_uuids[ean] = {"recto": recto_uuid, "verso": verso_uuid}
@@ -355,17 +443,26 @@ def _process_batch_images(
                 no_image_eans.add(ean)
 
         except Exception as e:
-            logger.error(f"Failed to parse json_raw for EAN {ean}: {e}")
+            if len(sample_parse_errors) < 3:
+                sample_parse_errors.append((ean, str(e)))
             ean_to_images[ean] = []
             ean_to_uuids[ean] = {"recto": None, "verso": None}
             failed_eans.add(ean)
 
-    # Log statistics
-    logger.info(f"Extracted {len(download_tasks)} real images from {len(rows)} EANs")
-    logger.info(
-        f"Skipped {no_image_url_count} placeholder 'no_image' URLs "
-        f"({len(no_image_eans)} EANs with placeholders only)"
-    )
+    # Log filtering breakdown
+    logger.info("  Filtering breakdown:")
+    logger.info(f"    - Skipped recto (image!=1): {skipped_recto_count}")
+    if sample_skipped_recto:
+        logger.info(f"      Sample: {sample_skipped_recto}")
+    logger.info(f"    - Skipped verso (image_4!=1): {skipped_verso_count}")
+    if sample_skipped_verso:
+        logger.info(f"      Sample: {sample_skipped_verso}")
+    logger.info(f"    - Placeholder 'no_image' URLs: {no_image_url_count}")
+    logger.info(f"    - Unchanged URLs (hash match): {unchanged_url_count}")
+    logger.info(f"    - Parse errors: {len(failed_eans)}")
+    if sample_parse_errors:
+        logger.info(f"      Sample errors: {sample_parse_errors}")
+    logger.info(f"  → Real images to download: {len(download_tasks)}")
 
     # Download all images using threaded approach
     if download_tasks:
@@ -537,14 +634,10 @@ def _process_image_url(
             # Check in-memory cache first (zero I/O)
             if no_image_cache is not None and image_url in no_image_cache:
                 cached_uuid = no_image_cache[image_url]
-                logger.debug(
-                    f"Cache hit for no_image URL: {image_url} -> {cached_uuid}"
-                )
                 return (True, False, cached_uuid)
 
             # First time seeing this no_image URL - calculate UUID
             uuid = calculate_url_uuid(image_url)
-            logger.info(f"First encounter of no_image URL: {image_url} -> {uuid}")
 
             # Check if blob exists in GCS (one call per unique no_image URL)
             if storage_client is not None:
@@ -556,13 +649,6 @@ def _process_image_url(
                     # Blob doesn't exist - add to download tasks
                     gcs_path = f"gs://{gcs_bucket}/{blob_path}"
                     download_tasks.append((image_url, gcs_path))
-                    logger.info(
-                        f"No_image placeholder not in bucket will download: {image_url}"
-                    )
-                else:
-                    logger.info(
-                        f"No_image placeholder already exists in bucket: {blob_path}"
-                    )
 
             # Cache the UUID for subsequent EANs
             if no_image_cache is not None:
@@ -576,10 +662,6 @@ def _process_image_url(
         # Compare with old UUID - only download if changed
         if new_uuid != old_uuid:
             # URL changed - need to download
-            logger.info(
-                f"Image URL changed ({image_type}): "
-                f"old_uuid={old_uuid}, new_uuid={new_uuid}, url={image_url}"
-            )
             gcs_path = f"gs://{gcs_bucket}/{gcs_prefix}/{new_uuid}"
 
             download_tasks.append((image_url, gcs_path))
@@ -592,11 +674,7 @@ def _process_image_url(
                 new_uuid,
             )  # is_placeholder=False, image_added=True, uuid=new_uuid
         else:
-            # URL unchanged - skip download but return UUID
-            logger.info(
-                f"Image URL unchanged ({image_type}): "
-                f"uuid={new_uuid}, url={image_url}"
-            )
+            # URL unchanged - skip download
             return (
                 False,
                 False,

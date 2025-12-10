@@ -3,6 +3,7 @@
     unique_key=None,
     updated_at=None,
     partition_by={"field": "dbt_valid_to", "data_type": "timestamp"},
+    cluster_by=None,
     tags=["source_snapshot"],
     meta={},
     check_cols=None,
@@ -20,5 +21,8 @@
         "hard_deletes": hard_deletes,
         "target_schema": target_schema,
     } %}
+    {% if cluster_by is not none %}
+        {% do config_params.update({"cluster_by": cluster_by}) %}
+    {% endif %}
     {{ return(config_params) }}
 {% endmacro %}

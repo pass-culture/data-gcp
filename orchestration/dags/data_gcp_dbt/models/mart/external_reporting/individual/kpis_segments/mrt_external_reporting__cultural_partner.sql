@@ -163,7 +163,7 @@ with
 -- ) as cumul_epn_created
 -- from epn_with_zeros
 -- )
-{% for dim in dimensions %}
+
 -- KPIs pour dimensions géographiques (NAT/REG/DEP) incluant les EPN
 {% for dim in dimensions_geo %}
     {% if not loop.first %}

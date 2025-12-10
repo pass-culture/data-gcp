@@ -6,6 +6,9 @@ import typing as t
 from base64 import b64encode
 from dataclasses import dataclass
 from time import sleep
+import asyncio
+import os
+from concurrent.futures import ThreadPoolExecutor
 
 import dateutil
 import googleapiclient.discovery
@@ -28,6 +31,7 @@ from airflow.models.taskinstance import TaskInstance
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from airflow.utils.context import Context
+
 
 DEFAULT_LABELS = {
     "env": ENV_SHORT_NAME,
@@ -139,6 +143,7 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
     ):
         self.run_id = run_id
         self.job_id = f"{task_id}_{str(run_id)}"
+        self._ssh_executor = None  # Instance-level executor, not class-level
         super().__init__(
             task_id, task_instance, hook, environment, do_xcom_push, *args, **kwargs
         )
@@ -211,7 +216,8 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
                     echo "Process died unexpectedly" >> $JOB_DIR/output
                 fi
 
-                output=$(cat $JOB_DIR/output 2>/dev/null || echo "No output yet")
+                # Only tail the last 1000 lines to prevent memory bloat
+                output=$(tail -n 1000 $JOB_DIR/output 2>/dev/null || echo "No output yet")
                 echo "STATUS:$(cat $JOB_DIR/status)"
                 echo "OUTPUT:$output"
                 echo "PID:$pid"
@@ -221,8 +227,24 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
                 echo "PID:0"
             fi
         """
-        self.log.info(f"Running status check command: {command}")
-        agg_output = super().run_ssh_client_command(command, retry=retry)
+        self.log.info(f"Running status check command")
+        # Run sync SSH command in executor to avoid blocking event loop
+        import asyncio
+        import os
+        from concurrent.futures import ThreadPoolExecutor
+
+        # Create instance-level thread pool (not class-level) to prevent memory leak
+        # Default: 8 threads (good for 1 CPU core with I/O-bound work)
+        if self._ssh_executor is None:
+            max_workers = int(os.environ.get("TRIGGERER_SSH_THREADS", "8"))
+            self._ssh_executor = ThreadPoolExecutor(
+                max_workers=max_workers, thread_name_prefix="ssh_check"
+            )
+
+        loop = asyncio.get_event_loop()
+        agg_output = await loop.run_in_executor(
+            self._ssh_executor, super().run_ssh_client_command, command, retry
+        )
         return self._parse_check_command_output(agg_output)
 
     async def run_ssh_cleanup_command(self, retry=1) -> str:
@@ -240,8 +262,25 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
                 fi
             fi
         """
-        self.log.info(f"Running cleanup command: {command}")
-        return super().run_ssh_client_command(command, retry=retry)
+        self.log.info(f"Running cleanup command")
+        # Run sync SSH command in executor to avoid blocking event loop
+
+        # Reuse the instance-level thread pool
+        if self._ssh_executor is None:
+            max_workers = int(os.environ.get("TRIGGERER_SSH_THREADS", "8"))
+            self._ssh_executor = ThreadPoolExecutor(
+                max_workers=max_workers, thread_name_prefix="ssh_check"
+            )
+
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            self._ssh_executor, super().run_ssh_client_command, command, retry
+        )
+
+    def __del__(self):
+        """Cleanup thread pool on instance destruction to prevent memory leak."""
+        if hasattr(self, "_ssh_executor") and self._ssh_executor is not None:
+            self._ssh_executor.shutdown(wait=False)
 
     def _parse_check_command_output(self, raw: str | bytes) -> DeferrableSSHJobStatus:
         """

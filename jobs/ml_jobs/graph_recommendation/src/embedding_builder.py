@@ -10,10 +10,10 @@ from torch.optim import Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torch_geometric.data import HeteroData
-from torch_geometric.nn import MetaPath2Vec
 
 from src.config import TrainingConfig
 from src.constants import EMBEDDING_COLUMN
+from src.custom_metapath2vec import CustomMetaPath2Vec
 from src.utils.mlflow import (
     conditional_mlflow,
     log_model_parameters,
@@ -116,10 +116,10 @@ def train_metapath2vec(
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logger.info(f"Using device: {device}")
 
-    model = MetaPath2Vec(
+    model = CustomMetaPath2Vec(
         graph_data.edge_index_dict,
         embedding_dim=training_config.embedding_dim,
-        metapath=training_config.metapath,
+        metapaths=training_config.metapaths,
         walk_length=training_config.walk_length,
         context_size=training_config.context_size,
         walks_per_node=training_config.walks_per_node,
@@ -139,7 +139,7 @@ def train_metapath2vec(
         lr=training_config.learning_rate,
     )
     scheduler = ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=3, min_lr=1e-6
+        optimizer, mode="min", factor=0.5, patience=1, min_lr=1e-6, threshold=0.01
     )
 
     # Log model parameters in mlflow
@@ -176,13 +176,19 @@ def train_metapath2vec(
 
         scheduler.step(loss)
 
+        prev_best_loss = best_loss
         if loss < best_loss:
             best_loss = loss
             torch.save(model.state_dict(), checkpoint_path)
             logger.info(f"Saved best model with loss: {loss:.4f}")
             mlflow.log_metric("best_loss", best_loss, step=epoch)
             best_loss_epoch += 1
-        elif training_config.early_stop:
+
+        # Early stopping check
+        if (
+            abs(prev_best_loss - best_loss) < training_config.early_stopping_delta
+            and training_config.early_stop
+        ):
             break
 
     # Log total training time and final best loss

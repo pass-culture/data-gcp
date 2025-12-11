@@ -18,7 +18,7 @@ from common.utils import (
     get_tables_config_dict,
 )
 
-from common.dbt.dag_utils import get_models_schedule_from_manifest, load_manifest
+from common.dbt.dag_utils import get_models_schedule_from_manifest
 from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
@@ -128,7 +128,9 @@ dag = DAG(
     default_args=default_dag_args,
     dagrun_timeout=datetime.timedelta(minutes=480),
     description="historize applicative database current state to gcs bucket",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[dag_id][ENV_SHORT_NAME]),
+    schedule_interval=get_airflow_schedule(
+        SCHEDULE_DICT.get(dag_id, {}).get(ENV_SHORT_NAME)
+    ),
     catchup=False,
     tags=[DAG_TAGS.DE.value],
 )

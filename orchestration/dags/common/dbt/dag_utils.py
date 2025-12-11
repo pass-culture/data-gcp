@@ -117,9 +117,14 @@ def load_json_artifact_with_mtime(
     Returns:
         Parsed JSON dictionary
     """
+    if mtime == 0.0:
+        return {}
     local_filepath = os.path.join(path_to_dbt_target, artifact)
-    with open(local_filepath) as f:
-        return json.load(f)
+    try:
+        with open(local_filepath) as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
 
 
 def load_json_artifact(_PATH_TO_DBT_TARGET: str, artifact: str) -> dict:
@@ -130,9 +135,10 @@ def load_json_artifact(_PATH_TO_DBT_TARGET: str, artifact: str) -> dict:
     local_filepath = os.path.join(_PATH_TO_DBT_TARGET, artifact)
     try:
         mtime = os.path.getmtime(local_filepath)
-        return load_json_artifact_with_mtime(_PATH_TO_DBT_TARGET, artifact, mtime)
     except FileNotFoundError:
-        return {}
+        mtime = 0.0
+
+    return load_json_artifact_with_mtime(_PATH_TO_DBT_TARGET, artifact, mtime)
 
 
 @lru_cache(maxsize=128)
@@ -140,41 +146,68 @@ def load_manifest_with_mtime(path_to_dbt_target: str, mtime: float) -> dict:
     """
     Load and cache manifest with mtime as cache key.
     Cache invalidates automatically when manifest changes.
-    """
-    manifest = load_json_artifact_with_mtime(path_to_dbt_target, "manifest.json", mtime)
-    if manifest:
-        return manifest
 
-    # Return empty manifest structure if file doesn't exist
-    return {
-        "metadata": {},
-        "nodes": {},
-        "sources": {},
-        "metrics": {},
-        "exposures": {},
-        "groups": {},
-        "macros": {},
-        "docs": {},
-        "parent_map": {},
-        "child_map": {},
-        "group_map": {},
-        "selectors": {},
-        "disabled": {},
-    }
+    Args:
+        path_to_dbt_target: Path to dbt target directory
+        mtime: File modification time (0.0 = file doesn't exist)
+
+    Returns:
+        Parsed manifest dict, or empty manifest structure if file doesn't exist
+    """
+    # Special case: return empty manifest structure if file doesn't exist
+    if mtime == 0.0:
+        return {
+            "metadata": {},
+            "nodes": {},
+            "sources": {},
+            "metrics": {},
+            "exposures": {},
+            "groups": {},
+            "macros": {},
+            "docs": {},
+            "parent_map": {},
+            "child_map": {},
+            "group_map": {},
+            "selectors": {},
+            "disabled": {},
+        }
+
+    # Load the actual manifest
+    manifest = load_json_artifact_with_mtime(path_to_dbt_target, "manifest.json", mtime)
+
+    # If loaded manifest is empty (shouldn't happen since mtime != 0.0), return structure
+    if not manifest:
+        return {
+            "metadata": {},
+            "nodes": {},
+            "sources": {},
+            "metrics": {},
+            "exposures": {},
+            "groups": {},
+            "macros": {},
+            "docs": {},
+            "parent_map": {},
+            "child_map": {},
+            "group_map": {},
+            "selectors": {},
+            "disabled": {},
+        }
+
+    return manifest
 
 
 def load_manifest(_PATH_TO_DBT_TARGET: str) -> dict:
     """
     Load manifest with automatic cache invalidation on file changes.
-    Wrapper that handles mtime checking.
+    Returns empty manifest structure if file doesn't exist (e.g., in CI).
     """
     manifest_file = os.path.join(_PATH_TO_DBT_TARGET, "manifest.json")
     try:
         mtime = os.path.getmtime(manifest_file)
-        return load_manifest_with_mtime(_PATH_TO_DBT_TARGET, mtime)
     except FileNotFoundError:
-        # Return empty manifest if file doesn't exist
-        return load_manifest_with_mtime(_PATH_TO_DBT_TARGET, 0.0)
+        mtime = 0.0
+
+    return load_manifest_with_mtime(_PATH_TO_DBT_TARGET, mtime)
 
 
 def get_node_data(node: str, manifest: dict, is_full_node_id: bool = True) -> dict:
@@ -485,6 +518,9 @@ def load_run_results_with_mtime(
     """
     Load and cache run_results.json with mtime as cache key.
     """
+    if mtime == 0.0:
+        return {}
+
     json_dict_data = load_json_artifact_with_mtime(
         path_to_dbt_target, "run_results.json", mtime
     )
@@ -500,13 +536,16 @@ def load_run_results_with_mtime(
 def load_run_results(_PATH_TO_DBT_TARGET: str) -> dict[str, dict]:
     """
     Load run results with automatic cache invalidation on file changes.
+    Returns empty dict if file doesn't exist (e.g., in CI).
     """
     run_results_file = os.path.join(_PATH_TO_DBT_TARGET, "run_results.json")
     try:
         mtime = os.path.getmtime(run_results_file)
-        return load_run_results_with_mtime(_PATH_TO_DBT_TARGET, mtime)
     except FileNotFoundError:
-        return {}
+        # Use mtime=0.0 to signal file doesn't exist
+        mtime = 0.0
+
+    return load_run_results_with_mtime(_PATH_TO_DBT_TARGET, mtime)
 
 
 def load_and_process_manifest(

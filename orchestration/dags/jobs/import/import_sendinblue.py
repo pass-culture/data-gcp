@@ -27,7 +27,7 @@ from dependencies.sendinblue.import_sendinblue import (
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 
 DAG_NAME = "import_brevo"
 GCE_INSTANCE = f"import-brevo-{ENV_SHORT_NAME}"
@@ -117,8 +117,8 @@ with DAG(
             "operator": task,
         }
 
-    end_job = DummyOperator(task_id="end_job", dag=dag)
-    end_raw = DummyOperator(task_id="end_raw", dag=dag)
+    end_job = EmptyOperator(task_id="end_job", dag=dag)
+    end_raw = EmptyOperator(task_id="end_raw", dag=dag)
 
     raw_table_tasks = depends_loop(
         raw_tables,
@@ -158,7 +158,7 @@ with DAG(
             "operator": task,
         }
 
-    end_clean = DummyOperator(task_id="end_clean", dag=dag)
+    end_clean = EmptyOperator(task_id="end_clean", dag=dag)
 
     clean_table_tasks = depends_loop(
         clean_tables,
@@ -179,7 +179,7 @@ with DAG(
 
         # import_tables_to_analytics_tasks.append(task)
 
-    end = DummyOperator(task_id="end", dag=dag)
+    end = EmptyOperator(task_id="end", dag=dag)
     analytics_table_tasks = depends_loop(
         analytics_tables,
         analytics_table_jobs,

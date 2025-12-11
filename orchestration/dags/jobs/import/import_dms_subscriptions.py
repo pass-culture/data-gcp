@@ -23,7 +23,7 @@ from dependencies.dms_subscriptions.import_dms_subscriptions import CLEAN_TABLES
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
@@ -72,7 +72,7 @@ with DAG(
     user_defined_macros=macros.default,
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
-    start = DummyOperator(task_id="start")
+    start = EmptyOperator(task_id="start")
 
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,
@@ -207,7 +207,7 @@ with DAG(
         task = bigquery_job_task(table=table, dag=dag, job_params=params)
         cleaning_tasks.append(task)
 
-    end = DummyOperator(task_id="end")
+    end = EmptyOperator(task_id="end")
 
     gce_instance_stop = DeleteGCEOperator(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task", dag=dag

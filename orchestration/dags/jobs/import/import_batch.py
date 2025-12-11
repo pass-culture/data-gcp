@@ -20,7 +20,7 @@ from dependencies.batch.import_batch import import_batch_tables
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 
 GCE_INSTANCE = f"import-batch-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/batch"
@@ -51,7 +51,7 @@ with DAG(
     user_defined_macros=macros.default,
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
-    start = DummyOperator(task_id="start")
+    start = EmptyOperator(task_id="start")
 
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,
@@ -96,7 +96,7 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task"
     )
 
-    start_analytics_table_tasks = DummyOperator(
+    start_analytics_table_tasks = EmptyOperator(
         task_id="start_analytics_tasks", dag=dag
     )
 
@@ -110,7 +110,7 @@ with DAG(
             "dag_depends": job_params.get("dag_depends", []),  # liste de dag_id
         }
 
-    end = DummyOperator(task_id="end", dag=dag)
+    end = EmptyOperator(task_id="end", dag=dag)
 
     analytics_table_tasks = depends_loop(
         import_batch_tables,

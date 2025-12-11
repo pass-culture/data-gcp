@@ -24,7 +24,7 @@ from jobs.ml.constants import IMPORT_LINKAGE_SQL_PATH
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
@@ -155,8 +155,8 @@ with DAG(
     # ---------------------------------------------------------------------
     # START / END
     # ---------------------------------------------------------------------
-    start = DummyOperator(task_id="start")
-    end = DummyOperator(task_id="end")
+    start = EmptyOperator(task_id="start")
+    end = EmptyOperator(task_id="end")
 
     # ---------------------------------------------------------------------
     # 1) IMPORT DATA

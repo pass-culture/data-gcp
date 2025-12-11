@@ -17,7 +17,7 @@ from dependencies.applicative_database.import_applicative_database import (
 
 from airflow import DAG
 from airflow.models.baseoperator import chain
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.utils.task_group import TaskGroup
 
 default_dag_args = {
@@ -40,7 +40,7 @@ dag = DAG(
     tags=[DAG_TAGS.DE.value],
 )
 
-start = DummyOperator(task_id="start", dag=dag)
+start = EmptyOperator(task_id="start", dag=dag)
 
 # Sequential table import tasks
 with TaskGroup(group_id="sequential_tasks_group", dag=dag) as sequential_tasks_group:
@@ -51,7 +51,7 @@ with TaskGroup(group_id="sequential_tasks_group", dag=dag) as sequential_tasks_g
         )
         seq_tasks.append(task)
 
-seq_end = DummyOperator(task_id="seq_end", dag=dag)
+seq_end = EmptyOperator(task_id="seq_end", dag=dag)
 
 chain(*seq_tasks, seq_end)
 
@@ -66,7 +66,7 @@ with TaskGroup(
         )
         parallel_tasks.append(task)
 
-parallel_end = DummyOperator(task_id="parallel_end", dag=dag)
+parallel_end = EmptyOperator(task_id="parallel_end", dag=dag)
 
 # Historical table import tasks
 with TaskGroup(
@@ -77,7 +77,7 @@ with TaskGroup(
         task = bigquery_job_task(dag, table, params)
         historical_tasks.append(task)
 
-end = DummyOperator(task_id="end", dag=dag)
+end = EmptyOperator(task_id="end", dag=dag)
 
 
 (

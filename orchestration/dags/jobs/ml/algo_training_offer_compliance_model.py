@@ -24,7 +24,7 @@ from common.utils import get_airflow_schedule
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
@@ -91,7 +91,7 @@ with DAG(
         "run_name": Param(default="default", type=["string", "null"]),
     },
 ) as dag:
-    start = DummyOperator(task_id="start", dag=dag)
+    start = EmptyOperator(task_id="start", dag=dag)
 
     import_offer_as_parquet = BigQueryInsertJobOperator(
         project_id=GCP_PROJECT_ID,

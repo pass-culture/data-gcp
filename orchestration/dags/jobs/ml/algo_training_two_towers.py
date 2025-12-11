@@ -29,7 +29,7 @@ from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
@@ -159,7 +159,7 @@ with (
         },
     ) as dag
 ):
-    start = DummyOperator(task_id="start", dag=dag)
+    start = EmptyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -303,7 +303,7 @@ with (
         dag=dag,
     )
 
-    skip_upload_embeddings = DummyOperator(
+    skip_upload_embeddings = EmptyOperator(
         task_id="skip_upload_embeddings",
         dag=dag,
     )

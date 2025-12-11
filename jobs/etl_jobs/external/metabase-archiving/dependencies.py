@@ -19,6 +19,9 @@ def get_card_lists(metabase):
     native_cards = []
     other_cards = []
     for card in cards:
+        print(card.keys())
+        print(card["dataset_query"].keys())
+        break
         if card["dataset_query"]["type"] == "native":
             native_cards.append(card)
         else:

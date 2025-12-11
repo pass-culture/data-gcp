@@ -19,12 +19,7 @@ def get_card_lists(metabase):
     native_cards = []
     other_cards = []
     for card in cards:
-        try:
-            type = card["dataset_query"]["type"]
-        except KeyError:
-            print(f"Card ID {card['id']} has no dataset_query or type.")
-            continue
-        if type == "native":
+        if card["dataset_query"]["type"] == "native":
             native_cards.append(card)
         else:
             other_cards.append(card)

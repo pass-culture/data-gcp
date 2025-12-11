@@ -6,7 +6,7 @@ seeds:
       column_types:
         dbt_valid_from: TIMESTAMP
         dbt_valid_to: TIMESTAMP
-    tests:
+    data_tests:
 
       # ========================================================================
       # GROUP A: MASSIVE SPIKES (Should Always Detect - Even Without Cleaning)

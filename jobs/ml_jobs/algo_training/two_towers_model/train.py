@@ -28,6 +28,8 @@ MIN_DELTA = 0.001
 LEARNING_RATE = 0.1
 VERBOSE = 2
 
+print("Coucou")
+
 
 def setup_gpu_environment():
     """Sets up the GPU environment."""

@@ -59,7 +59,9 @@ class MetabaseAPI:
         if _id:
             response = requests.get(f"{self.host}/api/card/{_id}", headers=self.headers)
         else:
-            response = requests.get(f"{self.host}/api/card/", headers=self.headers)
+            response = requests.get(
+                f"{self.host}/api/card/?legacy-mbql=true", headers=self.headers
+            )
         return response.json()
 
     def get_table(self, table_id=None):

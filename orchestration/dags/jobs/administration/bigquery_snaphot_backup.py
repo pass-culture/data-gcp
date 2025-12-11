@@ -2,8 +2,6 @@ import datetime
 import os
 from common.callback import on_failure_base_callback
 from common.config import (
-    BIGQUERY_APPLICATIVE_SNAPSHOT_DATASET,
-    BIGQUERY_INTERMEDIATE_SNAPSHOT_DATASET,
     GCP_REGION,
     DAG_TAGS,
     DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME,
@@ -160,7 +158,7 @@ def generate_export_query(alias: str, dataset: str, yyyymmdd: str) -> str:
                     )
                 ) AS schema_json
             FROM `{GCP_PROJECT_ID}.{dataset}.INFORMATION_SCHEMA.COLUMNS`
-            WHERE table_name = '{alias}'
+            WHERE table_name = '{alias}' AND table_schema = '{dataset}'
         )
         SELECT
             CURRENT_TIMESTAMP() AS backup_at,
@@ -185,16 +183,18 @@ def skip_if_not_scheduled(**context):
     if "weekly" in schedules and "monthly" in schedules:
         if execution_date.weekday() != 0 and execution_date.day != 1:
             raise AirflowSkipException(
-                f"Skipping because table is weekly and monthly scheduled"
+                "Skipping because table is weekly and monthly scheduled"
             )
     # check weekly
     elif "weekly" in schedules:
         if execution_date.weekday() != 0:  # Monday
-            raise AirflowSkipException(f"Skipping because table is weekly scheduled")
+            raise AirflowSkipException("Skipping because table is weekly scheduled")
     # check monthly
     elif "monthly" in schedules:
         if execution_date.day != 1:
-            raise AirflowSkipException(f"Skipping because table is monthly scheduled")
+            raise AirflowSkipException("Skipping because table is monthly scheduled")
+    else:
+        pass  # no schedule, default daily, always run
 
 
 default_dag_args = {

@@ -21,7 +21,7 @@ def get_card_lists(metabase):
     for card in cards:
         try:
             type = card["dataset_query"]["type"]
-        except TypeError:
+        except KeyError:
             print(f"Card ID {card['id']} has no dataset_query or type.")
             continue
         if type == "native":

@@ -146,9 +146,10 @@ def get_models_schedule_from_manifest(
     nodes: Union[str, List[str]],
     _PATH_TO_DBT_TARGET: Path,
     allowed_schedule=["daily", "weekly", "monthly"],
+    resource_type: str = "model",
 ) -> Dict:
     nodes_manifest = load_manifest(_PATH_TO_DBT_TARGET).get("nodes", {})
-    node_prefix = "model.data_gcp_dbt"
+    node_prefix = f"{resource_type}.data_gcp_dbt"
     if isinstance(nodes, str):
         nodes = [nodes]
 

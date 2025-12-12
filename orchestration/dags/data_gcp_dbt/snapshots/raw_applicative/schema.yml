@@ -3,19 +3,55 @@ version: 2
 snapshots:
   - name: snapshot_raw__booking
     description: "This snapshot captures the changed bookings in the raw booking table. It has the check strategy on multiple columns."
+    data_tests:
+      - snapshot_volume_anomalies:
+          remove_outliers: true
+          severity: warn
   - name: snapshot_raw__collective_booking
     description: "This snapshot captures the changed collective bookings in the raw collective booking table. It has the check strategy on multiple columns."
+    data_tests:
+      - snapshot_volume_anomalies:
+          remove_outliers: true
+          severity: warn
   - name: snapshot_raw__collective_offer
     description: "This snapshot captures the changed collective offers in the raw collective offer table. It has the timestamp strategy on date_updated column."
+    data_tests:
+      - snapshot_volume_anomalies:
+          remove_outliers: true
+          severity: warn
   - name: snapshot_raw__deposit
     description: "This snapshot captures the changed deposits in the raw deposit table. It has the timestamp strategy on date_updated column."
+    data_tests:
+      - snapshot_volume_anomalies:
+          remove_outliers: true
+          severity: warn
   - name: snapshot_raw__offer
     description: "This snapshot captures the changed offers in the raw offer table. The particularity of this snapshot is that it has a conditional strategy. Monthly, it captures the changed offers based on the scd_id (hash of the characteristics of an offer) to be able to retrieve the freshest state of an offer. Daily, it captured the changed offers based on the date_updated column, pre-filtered with update in the last 5 days"
+    data_tests:
+      - snapshot_volume_anomalies:
+          remove_outliers: true
+          severity: warn
   - name: snapshot_raw__offerer
     description: "This snapshot captures the changed offerers in the raw offerer table. It has the check strategy on multiple columns."
+    data_tests:
+      - snapshot_volume_anomalies:
+          remove_outliers: true
+          severity: warn
   - name: snapshot_raw__stock
     description: "This snapshot captures the changed stocks in the raw stock table. It has the check strategy on multiple columns."
+    data_tests:
+      - snapshot_volume_anomalies:
+          remove_outliers: true
+          severity: warn
   - name: snapshot_raw__venue
     description: "This snapshot captures the changed venues in the raw venue table. It has the check strategy on multiple columns."
+    data_tests:
+      - snapshot_volume_anomalies:
+          remove_outliers: true
+          severity: warn
   - name: snapshot_raw__titelive_products
     description: "This snapshot captures the changed products from Titelive API. It has the timestamp strategy on datemodification column to track when products are updated in the Titelive system."
+    data_tests:
+      - snapshot_volume_anomalies:
+          remove_outliers: true
+          severity: warn

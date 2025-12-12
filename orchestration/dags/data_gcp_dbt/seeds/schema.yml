@@ -1,1 +1,258 @@
-version: 1
+version: 2
+
+seeds:
+  - name: mock_snapshot
+    config:
+      column_types:
+        dbt_valid_from: TIMESTAMP
+        dbt_valid_to: TIMESTAMP
+    data_tests:
+
+      # ========================================================================
+      # GROUP A: MASSIVE SPIKES (Should Always Detect - Even Without Cleaning)
+      # ========================================================================
+      
+      # Jan 10: Massive UPDATE spike (+700)
+      - snapshot_volume_anomalies:
+          name: A1_massive_update_jan10_expected_FAIL
+          check_date: '2024-01-10'
+          days_back: 08
+          sensitivity: 3
+          remove_outliers: false
+          severity: warn
+          # Expected: FAIL - 700 updates is huge, detected with clean baseline
+
+      # Jan 15: Massive CREATE spike (+700)
+      - snapshot_volume_anomalies:
+          name: A2_massive_create_jan15_expected_FAIL
+          check_date: '2024-01-15'
+          days_back: 13
+          sensitivity: 3
+          remove_outliers: false
+          severity: warn
+          # Expected: FAIL - 700 creates is huge, detected with clean baseline
+
+      # Jan 20: Massive DELETE spike (+700)
+      - snapshot_volume_anomalies:
+          name: A3_massive_delete_jan20_expected_FAIL
+          check_date: '2024-01-20'
+          days_back: 18
+          sensitivity: 3
+          remove_outliers: false
+          severity: warn
+          # Expected: FAIL - 700 deletes is huge, detected with clean baseline
+
+      # ========================================================================
+      # GROUP B: MODERATE SPIKES + CORRUPTED BASELINE (Should NOT Detect)
+      # ========================================================================
+      
+      # Feb 1: Moderate UPDATE spike (+200) - baseline corrupted by Jan 10 (+700)
+      - snapshot_volume_anomalies:
+          name: B1_moderate_update_feb1_corrupted_expected_PASS
+          check_date: '2024-02-01'
+          days_back: 28  # Includes Jan 10 massive spike
+          sensitivity: 3
+          remove_outliers: false
+          severity: warn
+          # Expected: PASS - Feb 1 (+200) hidden by Jan 10 (+700) in baseline
+
+      # Feb 6: Moderate CREATE spike (+200) - baseline corrupted by Jan 15 (+700)
+      - snapshot_volume_anomalies:
+          name: B2_moderate_create_feb6_corrupted_expected_PASS
+          check_date: '2024-02-06'
+          days_back: 30  # Includes Jan 15 massive spike
+          sensitivity: 3
+          remove_outliers: false
+          severity: warn
+          # Expected: PASS - Feb 6 (+200) hidden by Jan 15 (+700) in baseline
+
+      # Feb 11: Moderate DELETE spike (+200) - baseline corrupted by Jan 20 (+700)
+      - snapshot_volume_anomalies:
+          name: B3_moderate_delete_feb11_corrupted_expected_PASS
+          check_date: '2024-02-11'
+          days_back: 30  # Includes Jan 20 massive spike
+          sensitivity: 3
+          remove_outliers: false
+          severity: warn
+          # Expected: PASS - Feb 11 (+200) hidden by Jan 20 (+700) in baseline
+
+      # ========================================================================
+      # GROUP C: MODERATE SPIKES + CLEAN BASELINE (Should Detect)
+      # ========================================================================
+      
+      # Feb 1: Moderate UPDATE spike (+200) - baseline cleaned (Jan 10 removed)
+      - snapshot_volume_anomalies:
+          name: C1_moderate_update_feb1_cleaned_expected_FAIL
+          check_date: '2024-02-01'
+          days_back: 28
+          sensitivity: 3
+          remove_outliers: true
+          severity: warn
+          # Expected: FAIL - Jan 10 outlier removed, Feb 1 spike now detected
+
+      # Feb 6: Moderate CREATE spike (+200) - baseline cleaned (Jan 15 removed)
+      - snapshot_volume_anomalies:
+          name: C2_moderate_create_feb6_cleaned_expected_FAIL
+          check_date: '2024-02-06'
+          days_back: 30
+          sensitivity: 3
+          remove_outliers: true
+          severity: warn
+          # Expected: FAIL - Jan 15 outlier removed, Feb 6 spike now detected
+
+      # Feb 11: Moderate DELETE spike (+200) - baseline cleaned (Jan 20 removed)
+      - snapshot_volume_anomalies:
+          name: C3_moderate_delete_feb11_cleaned_expected_FAIL
+          check_date: '2024-02-11'
+          days_back: 30
+          sensitivity: 3
+          remove_outliers: true
+          severity: warn
+          # Expected: FAIL - Jan 20 outlier removed, Feb 11 spike now detected
+
+      # ========================================================================
+      # GROUP D: SENSITIVITY TUNING (Show Parameter Effects)
+      # ========================================================================
+      
+      # Lower threshold for CREATE detection
+      - snapshot_volume_anomalies:
+          name: D1_tuned_create_threshold_expected_FAIL
+          check_date: '2024-02-06'
+          days_back: 30
+          sensitivity: 3         # Baseline cleaning threshold
+          nr_sensitivity: 2      # Lower detection threshold for creates
+          remove_outliers: true
+          severity: warn
+          # Expected: FAIL - Lower threshold (2 vs 3) makes detection more sensitive
+
+      # Higher threshold for DELETE detection (should NOT detect)
+      - snapshot_volume_anomalies:
+          name: D2_tuned_delete_threshold_expected_PASS
+          check_date: '2024-02-11'
+          days_back: 30
+          sensitivity: 3         # Baseline cleaning threshold
+          dr_sensitivity: 6      # Higher detection threshold for deletes
+          remove_outliers: true
+          severity: warn
+          # Expected: PASS - Higher threshold (6 vs 3) requires bigger spike to detect
+
+      # Mixed thresholds (create sensitive, delete insensitive)
+      - snapshot_volume_anomalies:
+          name: D3_mixed_thresholds_expected_FAIL
+          check_date: '2024-02-06'
+          days_back: 30
+          sensitivity: 3         # Updates baseline
+          nr_sensitivity: 2      # Sensitive to creates
+          dr_sensitivity: 5      # Insensitive to deletes
+          remove_outliers: true
+          severity: warn
+          # Expected: FAIL - Detects create spike with nr_sensitivity=2
+
+      # ========================================================================
+      # GROUP E: BASELINE TESTS (Normal Days & Edge Cases)
+      # ========================================================================
+      
+      # Normal day - no anomalies
+      - snapshot_volume_anomalies:
+          name: E1_baseline_normal_day_expected_PASS
+          check_date: '2024-02-05'
+          days_back: 15
+          sensitivity: 3
+          # Expected: PASS - Normal day, no anomalies
+
+      # Day immediately after massive spike (should be normal)
+      - snapshot_volume_anomalies:
+          name: E2_day_after_spike_expected_PASS
+          check_date: '2024-01-21'  # Day after Jan 20 massive delete
+          days_back: 19
+          sensitivity: 3
+          remove_outliers: true
+          # Expected: PASS - Jan 21 is normal, Jan 20 spike is in baseline
+
+      # Day immediately after another massive spike
+      - snapshot_volume_anomalies:
+          name: E3_day_after_create_spike_expected_PASS
+          check_date: '2024-01-16'  # Day after Jan 15 massive create
+          days_back: 14
+          sensitivity: 3
+          remove_outliers: true
+          # Expected: PASS - Jan 16 is normal
+
+      # Very short window (high variance potential)
+      - snapshot_volume_anomalies:
+          name: E4_short_window_expected_PASS
+          check_date: '2024-01-25'
+          days_back: 7
+          sensitivity: 3
+          remove_outliers: false
+          severity: warn
+          # Expected: PASS - Jan 25 is normal despite short baseline window
+
+      # Early in dataset (limited history)
+      - snapshot_volume_anomalies:
+          name: E5_early_date_limited_history_expected_PASS
+          check_date: '2024-01-05'
+          days_back: 4
+          sensitivity: 3
+          remove_outliers: false
+          severity: warn
+          # Expected: PASS - Early normal day with limited history
+
+      # Normal day with cleaned baseline (should still be normal)
+      - snapshot_volume_anomalies:
+          name: E6_normal_day_cleaned_baseline_expected_PASS
+          check_date: '2024-02-05'
+          days_back: 30
+          sensitivity: 3
+          remove_outliers: true
+          # Expected: PASS - Normal day remains normal even with cleaning
+
+      # ========================================================================
+      # GROUP F: VALIDATION TESTS (Verify Detection Logic)
+      # ========================================================================
+      
+      # Massive spike WITH cleaning (should still detect - redundant but validates)
+      - snapshot_volume_anomalies:
+          name: F1_massive_create_with_cleaning_expected_FAIL
+          check_date: '2024-01-15'
+          days_back: 13
+          sensitivity: 3
+          remove_outliers: true
+          severity: warn
+          # Expected: FAIL - Massive spike detected regardless of cleaning
+
+      # Moderate spike with short window (excludes massive spike naturally)
+      - snapshot_volume_anomalies:
+          name: F2_moderate_create_short_window_expected_FAIL
+          check_date: '2024-02-06'
+          days_back: 20  # Only goes back to Jan 17, excludes Jan 15 spike
+          sensitivity: 3
+          remove_outliers: false
+          severity: warn
+          # Expected: FAIL - Feb 6 spike detected because baseline is naturally clean
+
+      # ========================================================================
+      # GROUP G: Threshold Sensitivity Edge Cases
+      # ========================================================================
+      
+      # Massive spike WITH cleaning (should still detect - redundant but validates)
+      # Show that even low threshold
+      - snapshot_volume_anomalies:
+          name: G1_low_threshold_expected_FAIL
+          check_date: '2024-02-28'
+          days_back: 15
+          sensitivity: 3
+          nr_sensitivity: 0.1
+          remove_outliers: false
+          severity: warn
+          # Expected: FAIL the normal data fluctuation are under the low threshold
+
+      # Moderate spike with short window (excludes massive spike naturally)
+      - snapshot_volume_anomalies:
+          name: G2_high_threshold_expected_PASS
+          check_date: '2024-02-06'
+          days_back: 20  # Only goes back to Jan 17, excludes Jan 15 spike
+          sensitivity: 30
+          remove_outliers: false
+          severity: warn
+          # Expected: PASS - the spike is below the high threshold

@@ -16,12 +16,12 @@ from google.auth.transport.requests import Request
 from google.cloud import storage
 from google.oauth2 import id_token
 
-from airflow.models import DagRun
+from airflow.models import DagRun, DagBag
 from airflow.operators.python import PythonOperator
 from airflow.sensors.external_task import ExternalTaskSensor
 from airflow.utils.db import provide_session
 from airflow.utils.types import DagRunType
-from common.dbt.dag_utils import load_manifest
+from airflow.exceptions import AirflowException
 
 
 @provide_session
@@ -118,6 +118,49 @@ def get_dependencies(tables_config):
     return dependencies
 
 
+def validate_external_task_exists(external_dag_id: str, external_task_id: str) -> None:
+    """
+    Validate that a given external DAG and task exist in the current Airflow environment.
+
+    Raises an AirflowException with a clear message if:
+      - The external DAG is not found.
+      - The task ID does not exist in the external DAG.
+
+    This is meant to be called at DAG parse time to fail fast on misconfiguration.
+
+    Args:
+        external_dag_id (str): The DAG ID of the external DAG.
+        external_task_id (str): The task ID within that external DAG to validate.
+
+    Raises:
+        AirflowException: If the DAG or task does not exist.
+    """
+    logging.info(
+        f"Validating existence of external DAG '{external_dag_id}' and task '{external_task_id}'"
+    )
+
+    dagbag = DagBag()
+    external_dag = dagbag.get_dag(external_dag_id)
+
+    # DAG existence check
+    if not external_dag:
+        raise AirflowException(
+            f"[validate_external_task_exists] External DAG '{external_dag_id}' not found. "
+            "Ensure it is deployed, importable, and visible to the scheduler."
+        )
+
+    # Task existence check
+    if external_task_id not in external_dag.task_ids:
+        raise AirflowException(
+            f"[validate_external_task_exists] Task '{external_task_id}' not found in DAG '{external_dag_id}'. "
+            f"Available tasks: {sorted(external_dag.task_ids)}"
+        )
+
+    logging.info(
+        f"External DAG '{external_dag_id}' and task '{external_task_id}' validated successfully."
+    )
+
+
 def waiting_operator(
     dag,
     dag_id,
@@ -136,6 +179,9 @@ def waiting_operator(
 
     Use this when DAG schedules are perfectly aligned.
     """
+
+    validate_external_task_exists(dag_id, external_task_id)
+
     return ExternalTaskSensor(
         task_id=f"wait_for_{dag_id}_{external_task_id}",
         external_dag_id=dag_id,
@@ -205,6 +251,9 @@ def delayed_waiting_operator(
         pool (str): Airflow pool to use.
         **kwargs: Additional arguments passed to the ExternalTaskSensor or PythonOperator.
     """
+
+    validate_external_task_exists(external_dag_id, external_task_id)
+
     if allowed_states is None:
         allowed_states = ["success"]
     if failed_states is None:

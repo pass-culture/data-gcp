@@ -127,18 +127,18 @@ def load_json_artifact_with_mtime(
         return {}
 
 
-def load_json_artifact(_PATH_TO_DBT_TARGET: str, artifact: str) -> dict:
+def load_json_artifact(path_to_dbt_target: str, artifact: str) -> dict:
     """
     Load JSON artifact with automatic cache invalidation on file changes.
     Wrapper that handles mtime checking.
     """
-    local_filepath = os.path.join(_PATH_TO_DBT_TARGET, artifact)
+    local_filepath = os.path.join(path_to_dbt_target, artifact)
     try:
         mtime = os.path.getmtime(local_filepath)
     except FileNotFoundError:
         mtime = 0.0
 
-    return load_json_artifact_with_mtime(_PATH_TO_DBT_TARGET, artifact, mtime)
+    return load_json_artifact_with_mtime(path_to_dbt_target, artifact, mtime)
 
 
 @lru_cache(maxsize=128)
@@ -196,18 +196,18 @@ def load_manifest_with_mtime(path_to_dbt_target: str, mtime: float) -> dict:
     return manifest
 
 
-def load_manifest(_PATH_TO_DBT_TARGET: str) -> dict:
+def load_manifest(path_to_dbt_target: str) -> dict:
     """
     Load manifest with automatic cache invalidation on file changes.
     Returns empty manifest structure if file doesn't exist (e.g., in CI).
     """
-    manifest_file = os.path.join(_PATH_TO_DBT_TARGET, "manifest.json")
+    manifest_file = os.path.join(path_to_dbt_target, "manifest.json")
     try:
         mtime = os.path.getmtime(manifest_file)
     except FileNotFoundError:
         mtime = 0.0
 
-    return load_manifest_with_mtime(_PATH_TO_DBT_TARGET, mtime)
+    return load_manifest_with_mtime(path_to_dbt_target, mtime)
 
 
 def get_node_data(node: str, manifest: dict, is_full_node_id: bool = True) -> dict:
@@ -366,7 +366,7 @@ def get_models_schedule_from_manifest_cached(
 
 def get_models_schedule_from_manifest(
     nodes: Union[str, list[str]],
-    _PATH_TO_DBT_TARGET: Path,
+    path_to_dbt_target: Path,
     allowed_schedule: list[str] = None,
     resource_type: str = "model",
 ) -> dict:
@@ -377,7 +377,7 @@ def get_models_schedule_from_manifest(
     if allowed_schedule is None:
         allowed_schedule = ["daily", "weekly", "monthly"]
 
-    manifest_file = os.path.join(str(_PATH_TO_DBT_TARGET), "manifest.json")
+    manifest_file = os.path.join(str(path_to_dbt_target), "manifest.json")
     try:
         mtime = os.path.getmtime(manifest_file)
     except FileNotFoundError:
@@ -388,7 +388,7 @@ def get_models_schedule_from_manifest(
 
     return get_models_schedule_from_manifest_cached(
         nodes_tuple=tuple(nodes),
-        path_to_dbt_target=str(_PATH_TO_DBT_TARGET),
+        path_to_dbt_target=str(path_to_dbt_target),
         manifest_mtime=mtime,
         allowed_schedule_tuple=tuple(allowed_schedule),
         resource_type=resource_type,
@@ -498,15 +498,15 @@ def build_simplified_manifest(json_dict_data: dict) -> dict:
     )
 
 
-def rebuild_manifest(_PATH_TO_DBT_TARGET: str) -> dict:
+def rebuild_manifest(path_to_dbt_target: str) -> dict:
     """
     Rebuild simplified manifest with automatic caching.
     Cache invalidates when manifest file changes.
     """
-    manifest_file = os.path.join(_PATH_TO_DBT_TARGET, "manifest.json")
+    manifest_file = os.path.join(path_to_dbt_target, "manifest.json")
     try:
         mtime = os.path.getmtime(manifest_file)
-        return build_simplified_manifest_cached(_PATH_TO_DBT_TARGET, mtime)
+        return build_simplified_manifest_cached(path_to_dbt_target, mtime)
     except FileNotFoundError:
         return {}
 
@@ -533,19 +533,19 @@ def load_run_results_with_mtime(
     return dict_results
 
 
-def load_run_results(_PATH_TO_DBT_TARGET: str) -> dict[str, dict]:
+def load_run_results(path_to_dbt_target: str) -> dict[str, dict]:
     """
     Load run results with automatic cache invalidation on file changes.
     Returns empty dict if file doesn't exist (e.g., in CI).
     """
-    run_results_file = os.path.join(_PATH_TO_DBT_TARGET, "run_results.json")
+    run_results_file = os.path.join(path_to_dbt_target, "run_results.json")
     try:
         mtime = os.path.getmtime(run_results_file)
     except FileNotFoundError:
         # Use mtime=0.0 to signal file doesn't exist
         mtime = 0.0
 
-    return load_run_results_with_mtime(_PATH_TO_DBT_TARGET, mtime)
+    return load_run_results_with_mtime(path_to_dbt_target, mtime)
 
 
 def load_and_process_manifest(

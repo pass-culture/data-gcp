@@ -17,6 +17,11 @@ SCHEDULE_DICT = {
         "stg": None,
         "dev": None,
     },
+    "bigquery_snapshot_backup": {
+        "prod": "15 3 * * *",  # every day at 3:15 AM
+        "stg": None,
+        "dev": None,
+    },
     "export_clickhouse_daily": {
         "prod": "0 6 * * *",  # every day at 6:00 AM
         "stg": "45 4 * * *",  # every day at 4:45 AM

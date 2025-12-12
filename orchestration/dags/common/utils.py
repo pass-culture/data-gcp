@@ -21,7 +21,6 @@ from airflow.operators.python import PythonOperator
 from airflow.sensors.external_task import ExternalTaskSensor
 from airflow.utils.db import provide_session
 from airflow.utils.types import DagRunType
-from common.dbt.dag_utils import load_manifest
 
 
 @provide_session

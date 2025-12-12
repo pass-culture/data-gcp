@@ -71,7 +71,18 @@ with
         from deduplicated
     ),
 
-    previous_state as (select item_id, content_hash from {{ this }})
+    previous_state as (
+        {% set self_relation = adapter.get_relation(
+            database=target.database,
+            schema=target.schema,
+            identifier=this.identifier,
+        ) %}
+        {% if self_relation is not none %}select item_id, content_hash from {{ this }}
+        {% else %}
+            select cast(null as string) as item_id, cast(null as int64) as content_hash
+            limit 0
+        {% endif %}
+    )
 
 select
     wfp.*,

@@ -4,7 +4,7 @@ from common.callback import on_failure_base_callback
 from common.config import (
     GCP_REGION,
     DAG_TAGS,
-    DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME,
+    DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_TARGET,
@@ -13,7 +13,6 @@ from common.config import (
 from common.utils import (
     delayed_waiting_operator,
     get_airflow_schedule,
-    get_tables_config_dict,
 )
 
 from common.dbt.dag_utils import (
@@ -138,7 +137,7 @@ SNAPSHOT_CONFIGS = get_snapshot_configs_cached(
 )
 
 GCS_SNAPSHOT_BACKUP_FOLDER = "bigquery_snapshot_backup"
-GCS_SNAPSHOT_BACKUP_BUCKET = DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME
+GCS_SNAPSHOT_BACKUP_BUCKET = DATA_GCS_BUCKET_NAME
 
 
 def generate_export_query(alias: str, dataset: str, yyyymmdd: str) -> str:

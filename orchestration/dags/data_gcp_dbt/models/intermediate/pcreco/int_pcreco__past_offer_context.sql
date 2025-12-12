@@ -82,7 +82,7 @@ with
                 ) as offer_semantic_emb_mean
             ) as offer_context,
             replace(
-                json_extract(context_extra_data, "$.offer_origin_id"), '"', ''
+                json_extract(context_extra_data, "$.offer_origin_ids"), '"', ''
             ) as offer_origin_id,
             replace(
                 json_extract(context_extra_data, "$.model_params.name"), '"', ''

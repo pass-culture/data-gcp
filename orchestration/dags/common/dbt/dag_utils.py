@@ -396,122 +396,6 @@ def get_models_schedule_from_manifest(
 
 
 @lru_cache(maxsize=128)
-def build_simplified_manifest_cached(
-    path_to_dbt_target: str, manifest_mtime: float
-) -> dict[str, dict[str, Union[str, None, list[str], dict[str, list[dict[str, str]]]]]]:
-    """
-    Build simplified manifest with caching.
-    Cache invalidates when manifest changes.
-    """
-    json_dict_data = load_manifest_with_mtime(path_to_dbt_target, manifest_mtime)
-
-    simplified_manifest_models = {
-        node: {
-            "redirect_dep": None,
-            "model_node": node,
-            "model_alias": json_dict_data["nodes"][node]["alias"],
-            "depends_on_node": json_dict_data["nodes"][node]["depends_on"]["nodes"],
-            "model_tests": {},
-            "resource_type": json_dict_data["nodes"][node]["resource_type"],
-        }
-        for node in json_dict_data["nodes"].keys()
-        if (
-            json_dict_data["nodes"][node]["resource_type"] == "model"
-            and "data_gcp_dbt" in node
-        )
-    }
-
-    simplified_manifest_sources = {
-        node: {
-            "redirect_dep": None,
-            "model_node": node,
-            "model_alias": json_dict_data["sources"][node]["name"],
-            "depends_on_node": None,
-            "model_tests": {},
-            "resource_type": json_dict_data["sources"][node]["resource_type"],
-        }
-        for node in json_dict_data["sources"].keys()
-        if (
-            json_dict_data["sources"][node]["resource_type"] == "source"
-            and "data_gcp_dbt" in node
-        )
-    }
-
-    simplified_manifest = {**simplified_manifest_models, **simplified_manifest_sources}
-
-    for node in json_dict_data["nodes"].keys():
-        if json_dict_data["nodes"][node]["resource_type"] == "test":
-            generic_test = True in [
-                generic_name in node
-                for generic_name in [
-                    "not_null",
-                    "unique",
-                    "accepted_values",
-                    "relationships",
-                ]
-            ]
-            test_alias = (
-                json_dict_data["nodes"][node]["alias"]
-                if not generic_test
-                else node.split(".")[-2]
-            )
-            test_config = json_dict_data["nodes"][node]["config"].get("severity", None)
-            try:
-                test_config = test_config.lower()
-            except AttributeError:
-                pass
-            parents = json_dict_data["nodes"][node]["depends_on"]["nodes"]
-            for p_node in parents:
-                if (
-                    simplified_manifest[p_node]["model_tests"].get(test_config, None)
-                    is None
-                ):
-                    simplified_manifest[p_node]["model_tests"][test_config] = [
-                        {
-                            "test_alias": test_alias,
-                            "test_node": node,
-                            "test_type": "generic" if generic_test else "custom",
-                        }
-                    ]
-                else:
-                    simplified_manifest[p_node]["model_tests"][test_config] += [
-                        {
-                            "test_alias": test_alias,
-                            "test_node": node,
-                            "test_type": "generic" if generic_test else "custom",
-                        }
-                    ]
-
-    return simplified_manifest
-
-
-def build_simplified_manifest(json_dict_data: dict) -> dict:
-    """
-    Build simplified manifest from raw manifest data.
-    Note: This function is kept for backwards compatibility.
-    For better performance, use rebuild_manifest() which includes caching.
-    """
-    # Extract path and mtime for caching if we have a full manifest
-    # Otherwise, just process the data directly
-    return build_simplified_manifest_cached.__wrapped__(
-        path_to_dbt_target="", manifest_mtime=0.0
-    )
-
-
-def rebuild_manifest(path_to_dbt_target: str) -> dict:
-    """
-    Rebuild simplified manifest with automatic caching.
-    Cache invalidates when manifest file changes.
-    """
-    manifest_file = os.path.join(path_to_dbt_target, "manifest.json")
-    try:
-        mtime = os.path.getmtime(manifest_file)
-        return build_simplified_manifest_cached(path_to_dbt_target, mtime)
-    except FileNotFoundError:
-        return {}
-
-
-@lru_cache(maxsize=128)
 def load_run_results_with_mtime(
     path_to_dbt_target: str, mtime: float
 ) -> dict[str, dict]:
@@ -548,8 +432,9 @@ def load_run_results(path_to_dbt_target: str) -> dict[str, dict]:
     return load_run_results_with_mtime(path_to_dbt_target, mtime)
 
 
-def load_and_process_manifest(
-    manifest_path: str,
+@lru_cache(maxsize=128)
+def load_and_process_manifest_with_mtime(
+    manifest_path: str, manifest_mtime: float
 ) -> Tuple[
     dict,
     list[str],
@@ -563,7 +448,8 @@ def load_and_process_manifest(
     Load and process manifest with automatic caching.
     Cache invalidates when manifest changes.
     """
-    manifest = load_manifest(manifest_path)
+    manifest = load_manifest_with_mtime(manifest_path, manifest_mtime)
+
     dbt_snapshots: list[str] = []
     dbt_models: list[str] = []
     dbt_crit_tests: list[str] = []
@@ -610,7 +496,31 @@ def load_and_process_manifest(
     )
 
 
-def create_test_operator(model_node: str, model_data: dict, dag: DAG) -> PythonOperator:
+def load_and_process_manifest(
+    manifest_path: str,
+) -> Tuple[
+    dict,
+    list[str],  # Return as lists for backwards compatibility
+    list[str],
+    list[str],
+    list[str],
+    list[Optional[str]],
+    dict[Optional[str], list[str]],
+]:
+    """
+    Load and process manifest with automatic caching.
+    Cache invalidates when manifest file changes.
+    """
+    manifest_file = os.path.join(manifest_path, "manifest.json")
+    try:
+        mtime = os.path.getmtime(manifest_file)
+    except FileNotFoundError:
+        mtime = 0.0
+
+    return load_and_process_manifest_with_mtime(manifest_path, mtime)
+
+
+def create_test_operator(model_data: dict, dag: DAG) -> PythonOperator:
     """Create a Python operator for running dbt tests."""
     node_tags = model_data.get("tags", [])
     return PythonOperator(
@@ -623,7 +533,7 @@ def create_test_operator(model_node: str, model_data: dict, dag: DAG) -> PythonO
 
 
 def create_model_operator(
-    model_node: str, model_data: dict, is_applicative: bool, dag: DAG
+    model_data: dict, is_applicative: bool, dag: DAG
 ) -> PythonOperator:
     """Create a Python operator for running a dbt model."""
     # Filter out weekly/monthly from excluded tags since we handle them differently now
@@ -645,9 +555,7 @@ def create_model_operator(
     )
 
 
-def create_snapshot_operator(
-    snapshot_node: str, snapshot_data: dict, dag: DAG
-) -> PythonOperator:
+def create_snapshot_operator(snapshot_data: dict, dag: DAG) -> PythonOperator:
     """Create a Python operator for running a dbt snapshot."""
     from common.utils import delayed_waiting_operator
 
@@ -690,9 +598,7 @@ def create_critical_tests_group(
             for model_node in dbt_models:
                 model_data = manifest["nodes"][model_node]
                 if model_node in models_with_crit_test_dependencies:
-                    test_op_dict[model_node] = create_test_operator(
-                        model_node, model_data, dag
-                    )
+                    test_op_dict[model_node] = create_test_operator(model_data, dag)
     return test_op_dict
 
 
@@ -710,7 +616,7 @@ def create_data_transformation_group(
                 model_data = manifest["nodes"][model_node]
                 if "applicative" in model_data["alias"]:
                     model_op_dict[model_node] = create_model_operator(
-                        model_node, model_data, True, dag
+                        model_data, True, dag
                     )
                     if model_node in models_with_crit_test_dependencies:
                         model_op_dict[model_node] >> test_op_dict[model_node]
@@ -719,7 +625,7 @@ def create_data_transformation_group(
             model_data = manifest["nodes"][model_node]
             if "applicative" not in model_data["alias"]:
                 model_op_dict[model_node] = create_model_operator(
-                    model_node, model_data, False, dag
+                    model_data, False, dag
                 )
                 if model_node in models_with_crit_test_dependencies:
                     model_op_dict[model_node] >> test_op_dict[model_node]
@@ -794,7 +700,7 @@ def create_snapshot_group(
         for snapshot_node in dbt_snapshots:
             snapshot_data = manifest["nodes"][snapshot_node]
             snapshot_op_dict[snapshot_node] = create_snapshot_operator(
-                snapshot_node, snapshot_data, dag
+                snapshot_data, dag
             )
     return snapshot_op_dict
 

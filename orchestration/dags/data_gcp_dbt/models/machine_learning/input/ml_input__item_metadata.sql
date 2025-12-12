@@ -1,3 +1,5 @@
+{{ config(materialized="table", cluster_by=["item_id", "to_embed"]) }}
+
 with
     enriched_items as (
         select
@@ -33,13 +35,52 @@ with
         left join
             {{ ref("mrt_global__offer_metadata") }} as offer_metadata
             on offer.offer_id = offer_metadata.offer_id
-    )
+        where offer.item_id is not null
+    ),
 
-select * except (total_used_individual_bookings, offer_id)
-from enriched_items
-where item_id is not null
-qualify
-    row_number() over (
-        partition by item_id order by total_used_individual_bookings desc
-    )
-    = 1
+    deduplicated as (
+        select * except (total_used_individual_bookings, offer_id)
+        from enriched_items
+        qualify
+            row_number() over (
+                partition by item_id order by total_used_individual_bookings desc
+            )
+            = 1
+    ),
+
+    with_fingerprint as (
+        select
+            *,
+            farm_fingerprint(
+                to_json_string(
+                    struct(
+                        offer_name,
+                        offer_description,
+                        image_url,
+                        titelive_gtl_id,
+                        gtl_label_level_1,
+                        gtl_label_level_2,
+                        gtl_label_level_3,
+                        gtl_label_level_4,
+                        offer_type_labels,
+                        author,
+                        performer
+                    )
+                )
+            ) as content_hash
+        from deduplicated
+    ),
+
+    previous_state as (select item_id, content_hash from {{ this }})
+
+select
+    wfp.*,
+    case
+        when ps.item_id is null
+        then true  -- New item
+        when ps.content_hash != wfp.content_hash
+        then true  -- Changed content
+        else false  -- Unchanged
+    end as to_embed
+from with_fingerprint as wfp
+left join previous_state as ps on wfp.item_id = ps.item_id

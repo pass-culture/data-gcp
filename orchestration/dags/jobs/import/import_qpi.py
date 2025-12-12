@@ -14,7 +14,7 @@ from common.utils import get_airflow_schedule
 from google.cloud import storage
 
 from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
@@ -73,13 +73,13 @@ with DAG(
     user_defined_macros=macros.default,
     tags=[DAG_TAGS.DE.value],
 ) as dag:
-    start = DummyOperator(task_id="start")
+    start = EmptyOperator(task_id="start")
 
     checking_folder_QPI = BranchPythonOperator(
         task_id="checking_folder_QPI", python_callable=verify_folder
     )
-    file = DummyOperator(task_id="Files")
-    empty = DummyOperator(task_id="Empty")
+    file = EmptyOperator(task_id="Files")
+    empty = EmptyOperator(task_id="Empty")
 
     import_historical_answers_to_bigquery = GCSToBigQueryOperator(
         project_id=GCP_PROJECT_ID,
@@ -124,9 +124,9 @@ with DAG(
         dag=dag,
     )
 
-    end_raw = DummyOperator(task_id="end_raw")
+    end_raw = EmptyOperator(task_id="end_raw")
 
-    end = DummyOperator(task_id="end")
+    end = EmptyOperator(task_id="end")
 
     (
         start

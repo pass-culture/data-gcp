@@ -23,7 +23,7 @@ from dependencies.gcs_seed.import_gcs_seed import ANALYTICS_TABLES
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -58,7 +58,7 @@ with DAG(
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
-    start = DummyOperator(task_id="start", dag=dag)
+    start = EmptyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,
@@ -87,7 +87,7 @@ with DAG(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
-    end_raw = DummyOperator(task_id="end_raw", dag=dag)
+    end_raw = EmptyOperator(task_id="end_raw", dag=dag)
 
     analytics_table_jobs = {}
     for name, params in ANALYTICS_TABLES.items():
@@ -99,7 +99,7 @@ with DAG(
             "dag_depends": params.get("dag_depends", []),
         }
 
-    end = DummyOperator(task_id="end", dag=dag)
+    end = EmptyOperator(task_id="end", dag=dag)
     analytics_table_tasks = depends_loop(
         ANALYTICS_TABLES,
         analytics_table_jobs,

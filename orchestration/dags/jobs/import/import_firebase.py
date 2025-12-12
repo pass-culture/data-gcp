@@ -9,7 +9,7 @@ from common.utils import get_airflow_schedule
 from dependencies.firebase.import_firebase import import_tables, import_perf_tables
 
 from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python_operator import BranchPythonOperator
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 
@@ -82,9 +82,9 @@ for dag_type, params in dags.items():
 
     globals()[dag_id] = dag
 
-    start = DummyOperator(task_id="start", dag=dag)
+    start = EmptyOperator(task_id="start", dag=dag)
 
-    end = DummyOperator(task_id="end", dag=dag)
+    end = EmptyOperator(task_id="end", dag=dag)
 
     import_tables_temp = copy.deepcopy(import_tables)
     for job_name_table, job_params in import_tables_temp.items():
@@ -129,7 +129,7 @@ for dag_type, params in dags.items():
             ),
         )
 
-        end_job = DummyOperator(
+        end_job = EmptyOperator(
             task_id=f"end_{job_name_table}", dag=dag, trigger_rule="one_success"
         )
 

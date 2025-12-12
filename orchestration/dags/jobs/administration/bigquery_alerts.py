@@ -19,7 +19,7 @@ from common.utils import delayed_waiting_operator, get_airflow_schedule
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 
 GCE_INSTANCE = f"bigquery-alerts-{ENV_SHORT_NAME}"
@@ -57,7 +57,7 @@ with DAG(
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
-    start = DummyOperator(task_id="start", dag=dag)
+    start = EmptyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,

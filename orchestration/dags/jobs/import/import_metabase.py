@@ -19,7 +19,7 @@ from dependencies.metabase.import_metabase import (
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 
 default_dag_args = {
@@ -47,7 +47,7 @@ with DAG(
     },
     tags=[DAG_TAGS.DE.value],
 ) as dag:
-    start = DummyOperator(task_id="start", dag=dag)
+    start = EmptyOperator(task_id="start", dag=dag)
 
     import_tables_to_raw_tasks = []
     for name, params in import_tables.items():
@@ -75,6 +75,6 @@ with DAG(
         )
         import_tables_to_raw_tasks.append(task)
 
-    end_raw = DummyOperator(task_id="end_raw", dag=dag)
+    end_raw = EmptyOperator(task_id="end_raw", dag=dag)
 
     (start >> import_tables_to_raw_tasks >> end_raw)

@@ -3,17 +3,33 @@ name = "edito-semantic-search"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11, <3.13"
 dependencies = [
-    "google-cloud-storage>=2.16.0",
+    "google-cloud-secret-manager>=2.24.0",
+    "google-cloud-secret-manager>=2.16.2",
+    "google-cloud-storage>=2.18.0",
+    "huggingface-hub>=0.34.4",
     "ipykernel>=7.1.0",
     "pandas>=2.2.0",
     "pyarrow>=16.1.0",
     "pytest>=8.2.2",
+    "pydantic>=2.11.7",
+    "pydantic-ai>=1.0.1",
     "ruff>=0.14.8",
     "streamlit>=1.35.0",
+    "sentence-transformers>=5.1.0",
     "tornado>=6.4.2",
     "typer>=0.12.3",
+    "lancedb>=0.25.3",
+    "langchain>=0.3.27",
+    "langchain-community>=0.3.27",
+    "langchain-google-genai>=2.1.9",
+    "langchain-google-vertexai>=2.0.28",
+    "langchain-huggingface>=0.3.1",
+    "loguru>=0.7.0",
+    "hypercorn>=0.18.0",
+    "flask>=3.0.0",
+    "flask-cors>=4.0.0",
 ]
 
 ## ruff

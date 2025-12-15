@@ -13,9 +13,7 @@ with
         inner join
             {{ ref("int_applicative__offer_item_id") }} as im
             on b.offer_id = im.offer_id
-        where
-            date(b.booking_creation_date)
-            > date_sub(date('{{ ds() }}'), interval 90 day)
+        where date(b.booking_creation_date) > date_sub(current_date, interval 90 day)
         group by im.item_id
     ),
 
@@ -57,7 +55,7 @@ with
         from {{ ref("int_pcreco__displayed_offer_event") }}
         where
             event_date >= date_sub(
-                date('{{ ds() }}'),
+                current_date,
                 interval {% if var("ENV_SHORT_NAME") == "prod" %} 14
                 {% else %} 365
                 {% endif %} day
@@ -83,7 +81,7 @@ with
             {{ ref("int_applicative__offer_item_id") }} as im
             on fsoe.offer_id = im.offer_id
         where
-            fsoe.event_date >= date_sub(date('{{ ds() }}'), interval 14 day)
+            fsoe.event_date >= date_sub(current_date, interval 14 day)
             and fsoe.event_name
             in ("ConsultOffer", "BookingConfirmation", "HasAddedOfferToFavorites")
         group by fsoe.user_id, im.item_id

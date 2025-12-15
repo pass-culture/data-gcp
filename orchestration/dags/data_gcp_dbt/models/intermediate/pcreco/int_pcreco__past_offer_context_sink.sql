@@ -17,7 +17,7 @@ with
     export_table as (
         select
             date(recommendation_sink.jsonpayload.extra.date) as event_date,
-            recommendation_sink.jsonpayload.extra.date as event_created_at,
+            cast(recommendation_sink.jsonpayload.extra.date as timestamp) as event_created_at,
             jsonpayload.extra.call_id as reco_call_id,
             case
                 when jsonpayload.extra.context like "similar_offer:%"
@@ -46,8 +46,8 @@ with
                 jsonpayload.extra.offer_user_distance,
                 jsonpayload.extra.offer_is_geolocated,
                 jsonpayload.extra.offer_stock_price,
-                jsonpayload.extra.offer_creation_date,
-                jsonpayload.extra.offer_stock_beginning_date,
+                cast(jsonpayload.extra.offer_creation_date as timestamp) as offer_creation_date,
+                cast(jsonpayload.extra.offer_stock_beginning_date as timestamp) as offer_stock_beginning_date,
                 jsonpayload.extra.offer_category,
                 jsonpayload.extra.offer_subcategory_id,
                 jsonpayload.extra.offer_booking_number,

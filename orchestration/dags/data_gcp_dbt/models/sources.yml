@@ -264,9 +264,6 @@ sources:
       - name: item_embedding_reduced_32
       - name: item_embedding_reduced_16
       - name: item_embedding_reduced_5
-      - name: artist
-      - name: artist_alias
-      - name: product_artist_link
       - name: delta_artist
       - name: delta_artist_alias
       - name: delta_product_artist_link

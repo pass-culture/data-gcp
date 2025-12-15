@@ -72,7 +72,7 @@ select
     coalesce(i.is_consult_offer, 0) as is_consult_offer,
     coalesce(i.is_booking_confirmation, 0) as is_booking_confirmation,
     coalesce(i.is_add_to_favorites, 0) as is_add_to_favorites
-from {{ ref("int_pcreco__past_offer_context") }} et
+from {{ ref("int_pcreco__past_offer_context_sink") }} et
 inner join
     displayed d on d.event_date = et.event_date and d.reco_call_id = et.reco_call_id
 left join

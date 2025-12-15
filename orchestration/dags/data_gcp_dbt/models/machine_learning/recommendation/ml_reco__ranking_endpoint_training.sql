@@ -13,7 +13,9 @@ with
         inner join
             {{ ref("int_applicative__offer_item_id") }} as im
             on b.offer_id = im.offer_id
-        where date(b.booking_creation_date) > date_sub(date('{{ ds() }}'), interval 90 day)
+        where
+            date(b.booking_creation_date)
+            > date_sub(date('{{ ds() }}'), interval 90 day)
         group by im.item_id
     ),
 

@@ -4,7 +4,7 @@ from common.callback import on_failure_base_callback
 from common.config import (
     GCP_REGION,
     DAG_TAGS,
-    DATA_GCS_BUCKET_NAME,
+    DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_TARGET,
@@ -30,6 +30,11 @@ from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobO
 
 from airflow.utils.task_group import TaskGroup
 from airflow.exceptions import AirflowSkipException
+import json
+import hashlib
+from google.cloud import bigquery, storage
+from airflow.exceptions import AirflowSkipException
+
 from functools import lru_cache
 
 
@@ -118,6 +123,70 @@ def get_snapshot_configs_cached(
     return get_snapshot_configs_with_mtime(manifest_path, mtime, snapshot_names)
 
 
+def skip_if_data_exists(bucket, base_path, table, yyyymmdd):
+    from google.cloud import storage
+    from airflow.exceptions import AirflowSkipException
+
+    client = storage.Client()
+    prefix = f"{base_path}/{table}/{yyyymmdd}/"
+    blobs = list(client.list_blobs(bucket, prefix=prefix))
+
+    if any(b.name.endswith(".parquet") for b in blobs):
+        raise AirflowSkipException("Data already exists, skipping export")
+
+
+def extract_schema_to_gcs(
+    project_id: str,
+    dataset: str,
+    table: str,
+    bucket: str,
+    base_path: str,
+    yyyymmdd: str,
+):
+    bq = bigquery.Client(project=project_id)
+    gcs = storage.Client()
+
+    schema_path = f"{base_path}/{table}/{yyyymmdd}/schema.json"
+    checksum_path = f"{base_path}/{table}/{yyyymmdd}/schema.sha256"
+
+    bucket_obj = gcs.bucket(bucket)
+    schema_blob = bucket_obj.blob(schema_path)
+    checksum_blob = bucket_obj.blob(checksum_path)
+
+    # Fetch schema from INFORMATION_SCHEMA
+    query = f"""
+        SELECT column_name, data_type
+        FROM `{project_id}.{dataset}.INFORMATION_SCHEMA.COLUMNS`
+        WHERE table_name = '{table}'
+        ORDER BY ordinal_position
+    """
+    rows = list(bq.query(query).result())
+
+    schema_doc = {
+        "project": project_id,
+        "dataset": dataset,
+        "table": table,
+        "columns": [{"name": r.column_name, "type": r.data_type} for r in rows],
+    }
+
+    schema_json = json.dumps(schema_doc, separators=(",", ":"), sort_keys=True)
+    checksum = hashlib.sha256(schema_json.encode()).hexdigest()
+
+    # If schema already exists → enforce immutability
+    if schema_blob.exists():
+        existing_checksum = checksum_blob.download_as_text()
+        if existing_checksum != checksum:
+            raise RuntimeError(
+                f"Schema changed for {table} on {yyyymmdd} — refusing to overwrite"
+            )
+        # Same schema → idempotent replay
+        raise AirflowSkipException("Schema already exists and matches")
+
+    # First write
+    schema_blob.upload_from_string(schema_json, content_type="application/json")
+    checksum_blob.upload_from_string(checksum)
+
+
 SNAPSHOTED_APPLICATIVE_PATH = f"{PATH_TO_DBT_PROJECT}/snapshots/raw_applicative"
 SNAPSHOTED_INTERMEDIATE_PATH = f"{PATH_TO_DBT_PROJECT}/snapshots/intermediate"
 
@@ -137,34 +206,21 @@ SNAPSHOT_CONFIGS = get_snapshot_configs_cached(
 )
 
 GCS_SNAPSHOT_BACKUP_FOLDER = "bigquery_snapshot_backup"
-GCS_SNAPSHOT_BACKUP_BUCKET = DATA_GCS_BUCKET_NAME
+GCS_SNAPSHOT_BACKUP_BUCKET = DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME
 
 
-def generate_export_query(alias: str, dataset: str, yyyymmdd: str) -> str:
+def generate_export_query(alias, dataset, yyyymmdd, snapshot_at):
     return f"""
         EXPORT DATA OPTIONS(
-            uri='gs://{GCS_SNAPSHOT_BACKUP_BUCKET}/{GCS_SNAPSHOT_BACKUP_FOLDER}/{alias}/{yyyymmdd}/*.parquet',
+            uri='gs://{GCS_SNAPSHOT_BACKUP_BUCKET}/{GCS_SNAPSHOT_BACKUP_FOLDER}/data/{alias}/{yyyymmdd}/*.parquet',
             format='PARQUET',
             compression='SNAPPY',
-            overwrite=true
+            overwrite=false
         ) AS
-        WITH schema_info AS (
-            SELECT
-                TO_JSON_STRING(
-                    ARRAY_AGG(
-                        STRUCT(column_name, data_type)
-                        ORDER BY ordinal_position
-                    )
-                ) AS schema_json
-            FROM `{GCP_PROJECT_ID}.{dataset}.INFORMATION_SCHEMA.COLUMNS`
-            WHERE table_name = '{alias}' AND table_schema = '{dataset}'
-        )
         SELECT
-            CURRENT_TIMESTAMP() AS backup_at,
-            schema_info.schema_json AS snapshot_schema,
+            TIMESTAMP('{snapshot_at}') AS backup_at,
             TO_JSON_STRING(t) AS row_values
         FROM `{GCP_PROJECT_ID}.{dataset}.{alias}` t
-        CROSS JOIN schema_info
     """
 
 
@@ -223,9 +279,11 @@ with TaskGroup(group_id="snapshots_to_gcs", dag=dag) as to_gcs:
     for table_name, bq_config in SNAPSHOT_CONFIGS.items():
         alias = bq_config["table_alias"]
         dataset = bq_config["source_dataset"]
-        _now = datetime.datetime.now()
-        historization_date = _now - datetime.timedelta(days=1)
-        yyyymmdd = historization_date.strftime("%Y%m%d")
+
+        # Use Airflow logical date (ds) for snapshot consistency
+        # yyyymmdd for paths, snapshot_at for timestamp in schema and data
+        yyyymmdd = "{{ ds_nodash }}"
+        snapshot_at = "{{ ds }}"
 
         skip_task = PythonOperator(
             task_id=f"skip_check_{table_name}",
@@ -241,18 +299,47 @@ with TaskGroup(group_id="snapshots_to_gcs", dag=dag) as to_gcs:
             external_task_id=f"snapshots.{alias}",
         )
 
+        schema_task = PythonOperator(
+            task_id=f"extract_schema_{table_name}",
+            python_callable=extract_schema_to_gcs,
+            op_kwargs={
+                "project_id": GCP_PROJECT_ID,
+                "dataset": dataset,
+                "table": alias,
+                "bucket": GCS_SNAPSHOT_BACKUP_BUCKET,
+                "base_path": GCS_SNAPSHOT_BACKUP_FOLDER,
+                "yyyymmdd": yyyymmdd,
+                "snapshot_at": snapshot_at,
+            },
+        )
+
+        data_guard = PythonOperator(
+            task_id=f"skip_if_data_exists_{table_name}",
+            python_callable=skip_if_data_exists,
+            op_kwargs={
+                "bucket": GCS_SNAPSHOT_BACKUP_BUCKET,
+                "base_path": f"{GCS_SNAPSHOT_BACKUP_FOLDER}/data",
+                "table": alias,
+                "yyyymmdd": yyyymmdd,
+            },
+        )
+
         transform_and_export = BigQueryInsertJobOperator(
             task_id=f"transform_and_export_{table_name}",
             configuration={
                 "query": {
-                    "query": generate_export_query(alias, dataset, yyyymmdd),
+                    "query": generate_export_query(
+                        alias, dataset, yyyymmdd, snapshot_at
+                    ),
                     "useLegacySql": False,
                 }
             },
             location=GCP_REGION,
             dag=dag,
         )
-        skip_task >> waiting_task >> transform_and_export
+
+        # Task dependencies
+        skip_task >> waiting_task >> schema_task >> data_guard >> transform_and_export
 
 end = EmptyOperator(task_id="end", dag=dag, trigger_rule="none_failed_min_one_success")
 

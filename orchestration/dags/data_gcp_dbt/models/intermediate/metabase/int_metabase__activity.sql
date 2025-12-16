@@ -38,7 +38,10 @@ select
         when public_collections.location like '/1783%'
         then 'restreint'
         else 'other'
-    end as parent_folder
+    end as parent_folder,
+    coalesce(
+        lower(public_collections.collection_name) like '%thematique%', false
+    ) as is_thematic_collection
 from {{ ref("int_metabase__daily_query") }} as rank_execution
 inner join
     {{ ref("int_metabase__aggregated_card_activity") }} as aggregated_activity

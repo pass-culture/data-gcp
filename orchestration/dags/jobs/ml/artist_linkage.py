@@ -56,12 +56,12 @@ APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME = (
 )
 DELTA_ARTIST_ALIAS_GCS_FILENAME = "delta_artist_alias.parquet"
 DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME = "delta_product_artist_link.parquet"
-DELTA_ARTISTS_GCS_FILENAME = "delta_artist.parquet"
-DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME = "delta_artist_with_metadata.parquet"
+DELTA_ARTISTS_GCS_FILENAME = "01_delta_artist.parquet"
+DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME = "02_delta_artist_with_metadata.parquet"
 DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME = (
-    "delta_artist_with_wikipedia_page_content.parquet"
+    "03_delta_artist_with_wikipedia_page_content.parquet"
 )
-DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME = "delta_artist_with_biography.parquet"
+DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME = "04_delta_artist_with_biography.parquet"
 
 
 # BQ Tables

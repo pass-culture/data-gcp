@@ -87,7 +87,6 @@ with
 
 select
     o.offerer_is_active,
-    o.offerer_address,
     o.offerer_id,
     concat("offerer-", o.offerer_id) as partner_id,
     o.offerer_creation_date,

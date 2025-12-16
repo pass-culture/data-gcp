@@ -15,3 +15,4 @@
 {% docs column__collective_booking_is_used %} Boolean. Indicates if the collective booking has been used (the activity took place). {% enddocs %}
 {% docs column__first_collective_booking_date %} Date of the first collective booking. {% enddocs %}
 {% docs column__last_collective_booking_date %} Date of the last collective booking. {% enddocs %}
+{% docs column__collective_booking_creation_scholar_year %} Scholar year when the pre-reservation is created. {% enddocs %}

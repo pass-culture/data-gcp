@@ -151,7 +151,7 @@ def _choose_linkage(**context):
 
 
 def _skip_llm_summerization(**context):
-    if context["params"]["skip_llm_summerization"]:
+    if context["params"]["skip_llm_summerization"] is True:
         return SKIP_SUMMERIZATION_WITH_LLM_FLOW
     return SUMMERIZATION_WITH_LLM_FLOW
 
@@ -185,7 +185,7 @@ with DAG(
             enum=["incremental", "metadata_refresh"],
             type="string",
         ),
-        "skip_llm_summerization": Param(default=False, type="bool"),
+        "skip_llm_summerization": Param(default=False, type="boolean"),
     },
 ) as dag:
     with TaskGroup("dag_init") as dag_init:

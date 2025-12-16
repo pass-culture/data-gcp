@@ -56,12 +56,12 @@ APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME = (
 )
 DELTA_ARTIST_ALIAS_GCS_FILENAME = "delta_artist_alias.parquet"
 DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME = "delta_product_artist_link.parquet"
-DELTA_ARTISTS_GCS_FILENAME = "01_delta_artist.parquet"
-DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME = "02_delta_artist_with_metadata.parquet"
-DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME = (
+DELTA_ARTISTS_GCS_FILENAME_01 = "01_delta_artist.parquet"
+DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME_02 = "02_delta_artist_with_metadata.parquet"
+DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_03 = (
     "03_delta_artist_with_wikipedia_page_content.parquet"
 )
-DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME = "04_delta_artist_with_biography.parquet"
+DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_04 = "04_delta_artist_with_biography.parquet"
 
 
 # BQ Tables
@@ -92,7 +92,7 @@ GCS_TO_DELTA_TABLES = [
     {
         "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
         "table_id": "delta_artist",
-        "filename": DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME,
+        "filename": DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_04,
     },
     {
         "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
@@ -287,7 +287,7 @@ with DAG(
             --product-filepath {os.path.join(STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME)} \
             --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
             --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
-            --output-delta-artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME)} \
+            --output-delta-artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME_01)} \
             --output-delta-artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTIST_ALIAS_GCS_FILENAME)} \
             --output-delta-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME)}
             """,
@@ -307,7 +307,7 @@ with DAG(
             --artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME)} \
             --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
             --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
-            --output-delta-artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME)} \
+            --output-delta-artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME_01)} \
             --output-delta-artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTIST_ALIAS_GCS_FILENAME)} \
             --output-delta-product-artist-link-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME)}
             """,
@@ -324,8 +324,8 @@ with DAG(
         trigger_rule="none_failed_min_one_success",
         command=f"""
              uv run cli/get_wikimedia_commons_license.py \
-            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME)}
+            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME_01)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME_02)}
             """,
     )
 
@@ -336,8 +336,8 @@ with DAG(
         trigger_rule="none_failed_min_one_success",
         command=f"""
              uv run cli/get_wikipedia_page_content.py \
-            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME)}
+            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME_02)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_03)}
             """,
     )
 
@@ -347,8 +347,8 @@ with DAG(
         base_dir=BASE_DIR,
         command=f"""
              uv run cli/summarize_biographies_with_llm.py \
-            --artists-with-wikipedia-content {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME)} \
+            --artists-with-wikipedia-content {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_03)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_04)} \
             {SUMMARIZE_BIOGRAPHY_OPTIONS[ENV_SHORT_NAME]}
             """,
     )
@@ -364,8 +364,8 @@ with DAG(
         command=f"""
              uv run cli/retrieve_artist_biographies_from_artist_table.py \
             --applicative-artist-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
-            --artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME)}
+            --artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME_02)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_04)}
             """,
     )
 

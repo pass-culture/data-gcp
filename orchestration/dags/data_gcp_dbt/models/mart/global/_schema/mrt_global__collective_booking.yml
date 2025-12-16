@@ -137,3 +137,6 @@ models:
       - name: ministry
         description: "{{ doc('column__ministry') }}"
         data_type: STRING
+      - name: collective_booking_creation_scholar_year
+        description: "{{ doc('column__collective_booking_creation_scholar_year') }}"
+        data_type: STRING

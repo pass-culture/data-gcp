@@ -114,3 +114,5 @@ models:
         description: "{{ doc('column__institution_internal_iris_id') }}"
       - name: institution_postal_code
         description: "{{ doc('column__institution_postal_code') }}"
+      - name: is_active_current_scholar_year
+        description: "{{ doc('column__is_active_current_scholar_year') }}"

@@ -109,6 +109,8 @@ GCS_TO_DELTA_TABLES = [
 # Flow names
 INCREMENTAL_FLOW = "incremental_flow"
 REFRESH_METADATA_FLOW = "refresh_metadata_flow"
+SKIP_SUMMERIZATION_WITH_LLM_FLOW = "skip_summerization_with_llm_flow"
+SUMMERIZATION_WITH_LLM_FLOW = "summerization_with_llm_flow"
 
 # DAG Documentation
 DAG_MD_DOC = """
@@ -145,8 +147,13 @@ Refreshes Wikidata metadata for existing artists without relinking products.
 def _choose_linkage(**context):
     if context["params"]["linkage_mode"] == "metadata_refresh":
         return REFRESH_METADATA_FLOW
-    else:
-        return INCREMENTAL_FLOW
+    return INCREMENTAL_FLOW
+
+
+def _skip_llm_summerization(**context):
+    if context["params"]["skip_llm_summerization"]:
+        return SKIP_SUMMERIZATION_WITH_LLM_FLOW
+    return SUMMERIZATION_WITH_LLM_FLOW
 
 
 default_args = {
@@ -178,6 +185,7 @@ with DAG(
             enum=["incremental", "metadata_refresh"],
             type="string",
         ),
+        "skip_llm_summerization": Param(default=False, type="bool"),
     },
 ) as dag:
     with TaskGroup("dag_init") as dag_init:
@@ -222,8 +230,18 @@ with DAG(
         provide_context=True,
         dag=dag,
     )
+    choose_llm_summerization = BranchPythonOperator(
+        task_id="choose_llm_summerization",
+        python_callable=_skip_llm_summerization,
+        provide_context=True,
+        dag=dag,
+    )
     incremental_flow = EmptyOperator(task_id=INCREMENTAL_FLOW)
     refresh_metadata_flow = EmptyOperator(task_id=REFRESH_METADATA_FLOW)
+    summerization_with_llm_flow = EmptyOperator(task_id=SUMMERIZATION_WITH_LLM_FLOW)
+    skip_summerization_with_llm_flow = EmptyOperator(
+        task_id=SKIP_SUMMERIZATION_WITH_LLM_FLOW
+    )
 
     #####################################################################################################
     #                                          Import Data Task                                         #
@@ -335,6 +353,26 @@ with DAG(
             """,
     )
 
+    #####################################################################################################
+    #                                     Skip LLM Summerization                                        #
+    #####################################################################################################
+
+    retrieve_artist_biographies_from_artist_table = SSHGCEOperator(
+        task_id="retrieve_artist_biographies_from_artist_table",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+             uv run cli/retrieve_artist_biographies_from_artist_table.py \
+            --applicative-artist-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
+            --artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME)}
+            """,
+    )
+
+    #####################################################################################################
+    #                                     Load Data into BigQuery                                       #
+    #####################################################################################################
+
     with TaskGroup(
         "load_artist_data_into_delta_tables",
         default_args={"trigger_rule": "none_failed_min_one_success"},
@@ -369,8 +407,7 @@ with DAG(
         incremental_flow
         >> link_new_products_to_artists
         >> get_wikimedia_commons_license_on_delta_tables
-        >> get_wikipedia_page_content_on_delta_tables
-        >> summarize_biographies_with_llm_on_delta_tables
+        >> choose_llm_summerization
     )
 
     # Refresh Metadata Flow
@@ -378,15 +415,34 @@ with DAG(
         refresh_metadata_flow
         >> refresh_artist_metadatas
         >> get_wikimedia_commons_license_on_delta_tables
+        >> choose_llm_summerization
+    )
+
+    # LLM Summerization Choice
+    (
+        choose_llm_summerization
+        >> [
+            skip_summerization_with_llm_flow,
+            summerization_with_llm_flow,
+        ]
+    )
+
+    # Skip LLM Summerization Flow
+    (
+        skip_summerization_with_llm_flow
+        >> retrieve_artist_biographies_from_artist_table
+        >> load_artist_data_into_delta_tables
+    )
+
+    # Summerization with LLM Flow
+    (
+        summerization_with_llm_flow
         >> get_wikipedia_page_content_on_delta_tables
         >> summarize_biographies_with_llm_on_delta_tables
+        >> load_artist_data_into_delta_tables
     )
 
     # Common end tasks
-    (
-        summarize_biographies_with_llm_on_delta_tables
-        >> load_artist_data_into_delta_tables
-        >> join_before_stop
-    )
+    (load_artist_data_into_delta_tables >> join_before_stop)
 
     join_before_stop >> gce_instance_stop

@@ -16,8 +16,7 @@ class CPUImage:
 
 @dataclass
 class TFGPUImage:
-    # Updated 2025-04: TF 2.17 + CUDA 12.3 image from ml-images project (was tf-ent-2-14-cu118 DEPRECATED)
-    source_image: str = "projects/ml-images/global/images/c1-deeplearning-tf-2-17-cu123-v20250205-debian-11-py310"
+    source_image: str = "projects/deeplearning-platform-release/global/images/tf-ent-2-14-cu118-v20240922-py310"
     startup_script: str = """
         #!/bin/bash
         echo 'CC=gcc' | sudo tee -a /etc/environment

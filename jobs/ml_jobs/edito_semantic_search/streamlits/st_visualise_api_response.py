@@ -12,13 +12,14 @@ st.sidebar.header("Request Parameters")
 payload = {
     "instances": [
         {
-            "search_query": "demon slayer"
-        }
-    ]
+            "search_query": "demon slayer",
+            # "filters_list":[{"operator":"=","column":"venue_department_code","value":"46"}],
+  }
+]
 }
 
 api_url = st.sidebar.text_input(
-    "API URL", value="http://localhost:8082/predict", help="URL of the /predict endpoint"
+    "API URL", value="http://localhost:8084/predict", help="URL of the /predict endpoint"
 )
 payload_text = st.sidebar.text_area(
     "Request JSON payload", value=json.dumps(payload, indent=2), height=200
@@ -33,14 +34,14 @@ if st.sidebar.button("Send Request"):
             timeout=3000,
         )
         st.subheader("Raw Response")
-        st.code(response.text, language="json")
+        # st.code(response.text, language="json")
         if response.ok:
             data = response.json()
             # Try to find offers or results in the response
             offers = data.get("offers") or data.get("results") or data.get("items")
             if offers and isinstance(offers, list):
                 st.subheader("Offers Table")
-                st.dataframe(pd.DataFrame(offers))
+                st.dataframe(pd.DataFrame(offers).head(50))
             else:
                 st.info("No offers/results/items found in response.")
         else:

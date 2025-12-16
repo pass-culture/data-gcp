@@ -28,6 +28,6 @@ embedding_model = HuggingFaceEmbeddings(
 DATABASE_URI = "gs://mlflow-bucket-prod/streamlit_data/chatbot_edito/search_db"
 VECTOR_TABLE = "embeddings"
 SCALAR_TABLE = "offers"
-K_RETRIEVAL=10
-
+K_RETRIEVAL=50
+MAX_OFFERS=3000
 GEMINI_MODEL_NAME="gemini-2.5-flash"

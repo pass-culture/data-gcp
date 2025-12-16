@@ -49,20 +49,6 @@ STORAGE_BASE_PATH = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}"
 WIKIDATA_STORAGE_BASE_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/dump_wikidata"
 WIKIDATA_EXTRACTION_GCS_FILENAME = "wikidata_extraction.parquet"
 PRODUCTS_TO_LINK_GCS_FILENAME = "products_to_link.parquet"
-
-## Link from Scratch
-TEST_SETS_GCS_DIR = f"gs://{DATA_GCS_BUCKET_NAME}/artists/labelled_test_sets"
-ARTISTS_TO_LINK_GCS_FILENAME = "artists_to_link.parquet"
-ARTISTS_GCS_FILENAME = "artist.parquet"
-ARTIST_ALIAS_GCS_FILENAME = "artist_alias.parquet"
-PRODUCT_ARTIST_LINK_GCS_FILENAME = "product_artist_link.parquet"
-ARTISTS_WITH_METADATA_GCS_FILENAME = "artist_with_metadata.parquet"
-ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME = (
-    "artist_with_wikipedia_page_content.parquet"
-)
-ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME = "artist_with_biography.parquet"
-
-## Link New Products to Artists
 APPLICATIVE_ARTISTS_GCS_FILENAME = "applicative_database_artist.parquet"
 APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME = "applicative_database_artist_alias.parquet"
 APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME = (
@@ -102,23 +88,6 @@ TABLES_TO_IMPORT_TO_GCS = [
         "filename": PRODUCTS_TO_LINK_GCS_FILENAME,
     },
 ]
-GCS_TO_ARTIST_TABLES = [
-    {
-        "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
-        "table_id": "artist",
-        "filename": ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME,
-    },
-    {
-        "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
-        "table_id": "artist_alias",
-        "filename": ARTIST_ALIAS_GCS_FILENAME,
-    },
-    {
-        "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
-        "table_id": "product_artist_link",
-        "filename": PRODUCT_ARTIST_LINK_GCS_FILENAME,
-    },
-]
 GCS_TO_DELTA_TABLES = [
     {
         "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
@@ -138,7 +107,6 @@ GCS_TO_DELTA_TABLES = [
 ]
 
 # Flow names
-FULL_REBUILD_FLOW = "full_rebuild_flow"
 INCREMENTAL_FLOW = "incremental_flow"
 REFRESH_METADATA_FLOW = "refresh_metadata_flow"
 
@@ -148,22 +116,11 @@ DAG_MD_DOC = """
 
 This DAG links products to artists using clustering algorithms and enriches artist data with Wikidata metadata.
 
-## Three Execution Flows
+## Two Execution Flows
 
-The DAG supports three different execution modes, controlled by the `linkage_mode` parameter:
+The DAG supports two different execution modes, controlled by the `linkage_mode` parameter:
 
-### 1. Full Rebuild Flow (`full_rebuild`)
-Rebuilds the entire artist linkage database from scratch.
-
-**Steps:**
-- Links all products to artists from scratch using clustering algorithms
-- Enriches artist data with Wikimedia Commons licenses
-- Loads complete artist, artist_alias, and product_artist_link tables into BigQuery
-- Evaluates linking quality using labelled test sets
-
-**Use case:** Initial setup or when a complete rebuild is needed due to major algorithm changes.
-
-### 2. Incremental Flow (`incremental`)
+### 1. Incremental Flow (`incremental`)
 Updates the existing artist database with new products only.
 
 **Steps:**
@@ -173,7 +130,7 @@ Updates the existing artist database with new products only.
 
 **Use case:** Regular updates to link newly added products to the artist database.
 
-### 3. Refresh Metadata Flow (`metadata_refresh`)
+### 2. Refresh Metadata Flow (`metadata_refresh`)
 Refreshes Wikidata metadata for existing artists without relinking products.
 
 **Steps:**
@@ -186,9 +143,7 @@ Refreshes Wikidata metadata for existing artists without relinking products.
 
 
 def _choose_linkage(**context):
-    if context["params"]["linkage_mode"] == "full_rebuild":
-        return FULL_REBUILD_FLOW
-    elif context["params"]["linkage_mode"] == "metadata_refresh":
+    if context["params"]["linkage_mode"] == "metadata_refresh":
         return REFRESH_METADATA_FLOW
     else:
         return INCREMENTAL_FLOW
@@ -220,7 +175,7 @@ with DAG(
         ),
         "linkage_mode": Param(
             default="incremental",
-            enum=["incremental", "full_rebuild", "metadata_refresh"],
+            enum=["incremental", "metadata_refresh"],
             type="string",
         ),
     },
@@ -267,7 +222,6 @@ with DAG(
         provide_context=True,
         dag=dag,
     )
-    full_rebuild_flow = EmptyOperator(task_id=FULL_REBUILD_FLOW)
     incremental_flow = EmptyOperator(task_id=INCREMENTAL_FLOW)
     refresh_metadata_flow = EmptyOperator(task_id=REFRESH_METADATA_FLOW)
 
@@ -298,86 +252,6 @@ with DAG(
                 },
                 dag=dag,
             )
-
-    #####################################################################################################
-    #                                         Full Rebuild Flow                                         #
-    #####################################################################################################
-
-    link_products_to_artists_from_scratch = SSHGCEOperator(
-        task_id="link_products_to_artists_from_scratch",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
-             uv run cli/link_products_to_artists_from_scratch.py \
-            --product-filepath {os.path.join(STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME)} \
-            --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
-            --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
-            --output-artist-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_GCS_FILENAME)} \
-            --output-artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, ARTIST_ALIAS_GCS_FILENAME)} \
-            --output-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, PRODUCT_ARTIST_LINK_GCS_FILENAME)}
-            """,
-    )
-
-    get_wikimedia_commons_license = SSHGCEOperator(
-        task_id="get_wikimedia_commons_license",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
-             uv run cli/get_wikimedia_commons_license.py \
-            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, ARTISTS_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)}
-            """,
-    )
-
-    get_wikipedia_page_content = SSHGCEOperator(
-        task_id="get_wikipedia_page_content",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
-             uv run cli/get_wikipedia_page_content.py \
-            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME)}
-            """,
-    )
-
-    summarize_biographies_with_llm = SSHGCEOperator(
-        task_id="summarize_biographies_with_llm",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
-             uv run cli/summarize_biographies_with_llm.py \
-            --artists-with-wikipedia-content {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME)} \
-            {SUMMARIZE_BIOGRAPHY_OPTIONS[ENV_SHORT_NAME]}
-            """,
-    )
-
-    with TaskGroup("load_artist_data_tables") as load_artist_data_tables:
-        for table_data in GCS_TO_ARTIST_TABLES:
-            GCSToBigQueryOperator(
-                task_id=f"load_data_into_{table_data['table_id']}_table",
-                project_id=GCP_PROJECT_ID,
-                bucket=ML_BUCKET_TEMP,
-                source_objects=os.path.join(GCS_FOLDER_PATH, table_data["filename"]),
-                destination_project_dataset_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.{table_data['table_id']}",
-                source_format="PARQUET",
-                write_disposition="WRITE_TRUNCATE",
-                autodetect=True,
-            )
-
-    artist_metrics = SSHGCEOperator(
-        task_id="artist_metrics",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
-         uv run cli/evaluate.py \
-        --products-to-link-file-path {os.path.join(STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME)} \
-        --artists-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)} \
-        --product-artist-link-file-path {os.path.join(STORAGE_BASE_PATH, PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
-        --test-sets-dir {TEST_SETS_GCS_DIR} \
-        --experiment-name artist_linkage_v{DAG_VERSION}_{ENV_SHORT_NAME}
-        """,
-    )
 
     #####################################################################################################
     #                                      Incremental Update Flow                                      #
@@ -487,18 +361,7 @@ with DAG(
         >> vm_init
         >> import_data
         >> choose_linkage
-        >> [full_rebuild_flow, incremental_flow, refresh_metadata_flow]
-    )
-
-    # Full Rebuild Flow
-    (
-        full_rebuild_flow
-        >> link_products_to_artists_from_scratch
-        >> get_wikimedia_commons_license
-        >> get_wikipedia_page_content
-        >> summarize_biographies_with_llm
-        >> [load_artist_data_tables, artist_metrics]
-        >> join_before_stop
+        >> [incremental_flow, refresh_metadata_flow]
     )
 
     # Incremental Update Flow

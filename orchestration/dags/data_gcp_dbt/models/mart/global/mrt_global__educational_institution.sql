@@ -97,6 +97,7 @@ select
     ei.institution_department_name,
     ei.institution_internal_iris_id,
     ei.institution_postal_code,
+    cb.total_non_cancelled_collective_bookings > 0 as is_active_current_scholar_year,
     coalesce(ei.current_deposit_amount, 0) as current_deposit_amount,
     coalesce(ei.total_deposit_amount, 0) as total_deposit_amount,
     coalesce(ei.total_deposits, 0) as total_deposits,

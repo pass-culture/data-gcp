@@ -5,3 +5,4 @@
 {% docs column__current_deposit_amount %} The current amount of deposit for the educational institution. {% enddocs %}
 {% docs column__current_deposit_creation_date %} The date when the current deposit was created for the educational institution. {% enddocs %}
 {% docs column__last_category_booked %} The last category booked by the educational institution.{% enddocs %}
+{% docs column__is_active_current_scholar_year %} Whether or not a pre-reservation was created during the current scholar_year.{% enddocs %}

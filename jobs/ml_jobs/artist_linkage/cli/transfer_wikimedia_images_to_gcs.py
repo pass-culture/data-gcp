@@ -1,12 +1,15 @@
 import concurrent
 import logging
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 import requests
 import typer
 from google.cloud import storage
+from requests.adapters import HTTPAdapter
 from tqdm import tqdm
+from urllib3.util.retry import Retry
 
 from src.constants import (
     ARTIST_MEDIATION_UUID_KEY,
@@ -16,19 +19,49 @@ from src.constants import (
     WIKIMEDIA_REQUEST_HEADER,
 )
 
-MAX_WORKERS = 10
 DE_DATALAKE_BUCKET_NAME = f"de-lake-{ENV_SHORT_NAME}"
 DE_DATALAKE_IMAGES_FOLDER = "artist/images"
 STATUS_KEY = "status"
+
+# Parrallel download/upload settings
+POOL_CONNECTIONS = 10
+POOL_MAXSIZE = 20
+MAX_WORKERS = 10
 
 logging.basicConfig(level=logging.INFO)
 app = typer.Typer()
 
 
-def transfer_image(gcs_bucket: storage.Bucket, image_url: str) -> dict:
+def _get_session():
+    """Create a requests session with connection pooling and retries."""
+    session = requests.Session()
+
+    # Configure retry strategy
+    retry_strategy = Retry(
+        total=10,
+        backoff_factor=1,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["GET"],
+    )
+
+    # Configure adapter with connection pooling
+    adapter = HTTPAdapter(
+        max_retries=retry_strategy,
+        pool_connections=POOL_CONNECTIONS,
+        pool_maxsize=POOL_MAXSIZE,
+    )
+
+    session.mount("https://", adapter)
+
+    return session
+
+
+def transfer_image(
+    session: requests.Session, gcs_bucket: storage.Bucket, image_url: str
+) -> dict:
     """Downloads an image stream and uploads it directly to GCS."""
     # 1. Open connection to Wikimedia
-    with requests.get(
+    with session.get(
         image_url, headers=WIKIMEDIA_REQUEST_HEADER, stream=True, timeout=15
     ) as r:
         if r.status_code == 200:
@@ -60,16 +93,17 @@ def transfer_image(gcs_bucket: storage.Bucket, image_url: str) -> dict:
 
 
 def run_parallel_image_transfers(
-    gcs_bucket: storage.Bucket, image_urls: list[str]
+    session: requests.session, gcs_bucket: storage.Bucket, image_urls: list[str]
 ) -> pd.DataFrame:
     results = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {
-            executor.submit(transfer_image, gcs_bucket, url): url for url in image_urls
+            executor.submit(transfer_image, session, gcs_bucket, url): url
+            for url in image_urls
         }
 
         for future in tqdm(
-            concurrent.futures.as_completed(futures), total=len(futures), miniters=100
+            concurrent.futures.as_completed(futures), total=len(futures)
         ):
             results.append(future.result())
     return pd.DataFrame(results)
@@ -81,12 +115,13 @@ def main(
     output_file_path: str = typer.Option(),
 ) -> None:
     artists_df = pd.read_parquet(artists_matched_on_wikidata)
+    image_urls = artists_df.image_file_url.dropna().tolist()
 
     client = storage.Client(GCP_PROJECT_ID)
     bucket = client.bucket(DE_DATALAKE_BUCKET_NAME)
-    image_urls = artists_df.image_file_url.dropna().tolist()
+    session = _get_session()
 
-    result_df = run_parallel_image_transfers(bucket, image_urls)
+    result_df = run_parallel_image_transfers(session, bucket, image_urls)
 
     artists_df.merge(
         result_df,

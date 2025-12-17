@@ -1,13 +1,14 @@
+import time
 
-from typing import List
-
+import pandas as pd
 from langchain_core.prompts import PromptTemplate
+from loguru import logger
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.providers.google import GoogleProvider
-from app.constants import GEMINI_MODEL_NAME
 
+from app.constants import GEMINI_MODEL_NAME
 
 SYSTEM_PROMPT = (
     "Extrayez toutes les offres sélectionnées du contexte. "
@@ -23,7 +24,7 @@ class OfferSelection(BaseModel):
 
 
 class LLMOutput(BaseModel):
-    offers: List[OfferSelection] = Field(default_factory=list)
+    offers: list[OfferSelection] = Field(default_factory=list)
 
 
 def build_prompt(question, retrieved_results, custom_prompt=None):
@@ -89,3 +90,26 @@ def get_llm_agent():
         output_type=[LLMOutput, str],
         system_prompt=SYSTEM_PROMPT,
     )
+
+
+def llm_thematic_filtering(search_query: str, vector_search_results: list) -> LLMOutput:
+    prompt = build_prompt(search_query, vector_search_results, custom_prompt=None)
+    logger.info(f"Prompt length for thematic filtering: {len(prompt)}")
+    start_time = time.time()
+    llm_result = get_llm_agent().run_sync(prompt)
+    logger.info(f"LLM thematic filtering perform in {time.time() - start_time} s")
+    llm_output = llm_result.output
+    logger.info(f"LLM call perform in {time.time() - start_time} s")
+    # logger.info(f"LLM output: {llm_output}")
+    offers = getattr(llm_output, "offers", None) or []
+    # logger.info(f"Offers extracted: {offers}")
+    if offers:
+        llm_df = pd.DataFrame(
+            [offer.dict() if hasattr(offer, "dict") else offer for offer in offers]
+        )
+        logger.info(f"LLM offers DataFrame len: {len(llm_df)}")
+        llm_df["rank"] = range(1, len(llm_df) + 1)
+    else:
+        llm_df = pd.DataFrame()
+        logger.info("No offers found in LLM output")
+    return llm_df

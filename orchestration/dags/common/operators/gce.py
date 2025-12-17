@@ -68,21 +68,21 @@ class StartGCEOperator(BaseOperator):
         gce_networks = (
             GKE_NETWORK_LIST if self.use_gke_network is True else BASE_NETWORK_LIST
         )
-        hook = GCEHook(
+        with GCEHook(
             source_image_type=image_type,
             disk_size_gb=self.disk_size_gb,
             gce_networks=gce_networks,
             gce_zone=self.gce_zone,
             additional_scopes=self.additional_scopes,
-        )
-        hook.start_vm(
-            self.instance_name,
-            self.instance_type,
-            preemptible=self.preemptible,
-            labels=self.labels,
-            gpu_type=self.gpu_type,
-            gpu_count=self.gpu_count,
-        )
+        ) as hook:
+            hook.start_vm(
+                self.instance_name,
+                self.instance_type,
+                preemptible=self.preemptible,
+                labels=self.labels,
+                gpu_type=self.gpu_type,
+                gpu_count=self.gpu_count,
+            )
 
 
 class CleanGCEOperator(BaseOperator):
@@ -101,10 +101,10 @@ class CleanGCEOperator(BaseOperator):
         self.job_type = job_type
 
     def execute(self, context) -> None:
-        hook = GCEHook()
-        hook.delete_instances(
-            job_type=self.job_type, timeout_in_minutes=self.timeout_in_minutes
-        )
+        with GCEHook() as hook:
+            hook.delete_instances(
+                job_type=self.job_type, timeout_in_minutes=self.timeout_in_minutes
+            )
 
 
 class DeleteGCEOperator(BaseOperator):
@@ -121,8 +121,8 @@ class DeleteGCEOperator(BaseOperator):
         self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
 
     def execute(self, context):
-        hook = GCEHook()
-        hook.delete_vm(self.instance_name)
+        with GCEHook() as hook:
+            hook.delete_vm(self.instance_name)
 
 
 class StopGCEOperator(BaseOperator):
@@ -139,8 +139,8 @@ class StopGCEOperator(BaseOperator):
         self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
 
     def execute(self, context):
-        hook = GCEHook()
-        hook.stop_vm(self.instance_name)
+        with GCEHook() as hook:
+            hook.stop_vm(self.instance_name)
 
 
 class BaseSSHGCEOperator(BaseOperator):

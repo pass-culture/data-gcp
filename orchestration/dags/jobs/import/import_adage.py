@@ -21,7 +21,7 @@ from common.utils import (
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 
 GCE_INSTANCE = f"import-adage-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/adage"
@@ -96,7 +96,7 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task"
     )
 
-    end = DummyOperator(task_id="end", dag=dag)
+    end = EmptyOperator(task_id="end", dag=dag)
 
     (
         sleep_op

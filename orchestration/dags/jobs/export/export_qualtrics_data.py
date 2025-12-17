@@ -17,7 +17,7 @@ from common.operators.bigquery import bigquery_job_task
 from common.utils import get_airflow_schedule
 
 from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 
 default_dag_args = {
@@ -124,7 +124,7 @@ def get_and_send(**kwargs):
     return 1
 
 
-start = DummyOperator(task_id="start", dag=dag)
+start = EmptyOperator(task_id="start", dag=dag)
 clean_table_jobs = {}
 for table, job_params in EXPORT_TABLES.items():
     # export table to raw table to store exported data before uploading to qualtrics

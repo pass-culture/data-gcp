@@ -91,52 +91,46 @@ class InvalidConfigError(Exception):
 @dataclass
 class TrainingConfig(BaseConfig):
     embedding_dim: int = 64
-    metapath_repetitions: int = 4
+    walk_length: int = 20
     context_size: int = 10
-    walks_per_node: int = 5
+    walks_per_node: int = 3
     num_negative_samples: int = 5
-    num_epochs: int = 8
-    early_stop: bool = True
+    num_epochs: int = 15
     num_workers: int = 8 if sys.platform == "linux" else 0
     batch_size: int = 256
-    learning_rate: float = 0.01
-    metapath: list[tuple[str, str, str]] = field(
+    learning_rate: float = 0.003
+    early_stop: bool = True
+    early_stopping_delta: float = 0.001
+    metapaths: list[list[tuple[str, str, str]]] = field(
         default_factory=lambda: (
-            4
-            * [
-                ("book", "is_artist_id", "artist_id"),
-                ("artist_id", "artist_id_of", "book"),
-            ]
-            + 4
-            * [
-                ("book", "is_gtl_label_level_4", "gtl_label_level_4"),
-                ("gtl_label_level_4", "gtl_label_level_4_of", "book"),
-            ]
-            + 3
-            * [
-                ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
-                ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
-            ]
-            + 3
-            * [
-                ("book", "is_series_id", "series_id"),
-                ("series_id", "series_id_of", "book"),
-            ]
-            + 2
-            * [
-                ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
-                ("gtl_label_level_2", "gtl_label_level_2_of", "book"),
-            ]
-            + [
-                ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
-                ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
+            [
+                [
+                    ("book", "is_artist_id", "artist_id"),
+                    ("artist_id", "artist_id_of", "book"),
+                ],
+                [
+                    ("book", "is_gtl_label_level_4", "gtl_label_level_4"),
+                    ("gtl_label_level_4", "gtl_label_level_4_of", "book"),
+                ],
+                [
+                    ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
+                    ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
+                ],
+                [
+                    ("book", "is_series_id", "series_id"),
+                    ("series_id", "series_id_of", "book"),
+                ],
+                [
+                    ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
+                    ("gtl_label_level_2", "gtl_label_level_2_of", "book"),
+                ],
+                [
+                    ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
+                    ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
+                ],
             ]
         )
     )
-
-    @property
-    def walk_length(self) -> int:
-        return int(len(self.metapath) * self.metapath_repetitions)
 
 
 @dataclass

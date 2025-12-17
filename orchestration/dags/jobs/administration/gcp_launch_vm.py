@@ -3,7 +3,7 @@ from itertools import chain
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -102,7 +102,7 @@ with (
         doc_md=DAG_DOC,
     ) as dag
 ):
-    start = DummyOperator(task_id="start", dag=dag)
+    start = EmptyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",

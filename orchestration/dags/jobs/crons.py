@@ -17,6 +17,11 @@ SCHEDULE_DICT = {
         "stg": None,
         "dev": None,
     },
+    "bigquery_snapshot_backup": {
+        "prod": "15 3 * * *",  # every day at 3:15 AM
+        "stg": None,
+        "dev": None,
+    },
     "export_clickhouse_daily": {
         "prod": "0 6 * * *",  # every day at 6:00 AM
         "stg": "45 4 * * *",  # every day at 4:45 AM
@@ -28,7 +33,6 @@ SCHEDULE_DICT = {
     "embedding_reduction_item": "0 12 * * 0",
     "import_applicative_database": "0 1 * * *",
     "import_intraday_firebase_data": "0 1 * * *",
-    "import_titelive_ml": None,
     "import_titelive": "0 2 * * *",  # every day at 2:00 AM
     "link_items": {
         "prod": "0 20 * * 3",  # every Wednesday at 8:00 PM

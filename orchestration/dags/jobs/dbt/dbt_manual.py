@@ -8,7 +8,7 @@ from common.config import (
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.utils.dates import datetime, timedelta
 
 default_args = {
@@ -51,7 +51,7 @@ dag = DAG(
     tags=[DAG_TAGS.DBT.value, DAG_TAGS.DE.value],
 )
 
-start = DummyOperator(task_id="start", dag=dag)
+start = EmptyOperator(task_id="start", dag=dag)
 
 dbt_manual_command = BashOperator(
     task_id="dbt_manual_command",
@@ -64,6 +64,6 @@ dbt_manual_command = BashOperator(
     dag=dag,
 )
 
-end = DummyOperator(task_id="end", dag=dag)
+end = EmptyOperator(task_id="end", dag=dag)
 
 start >> dbt_manual_command >> end

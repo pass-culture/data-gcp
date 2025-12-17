@@ -20,7 +20,7 @@ from dependencies.appsflyer.import_appsflyer import dag_tables
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 
 GCE_INSTANCE = f"import-appsflyer-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/appsflyer"
@@ -113,7 +113,7 @@ with DAG(
             command=f"python gcs_import.py --gcs-base-path {GCS_ETL_PARAMS['GCS_BASE_PATH']} --prefix-table-name {GCS_ETL_PARAMS['PREFIX_TABLE_NAME']} --date {GCS_ETL_PARAMS['DATE']} ",
         )
         if ENV_SHORT_NAME == "prod"
-        else DummyOperator(task_id="skip_gcs_cost_etl_op", dag=dag)
+        else EmptyOperator(task_id="skip_gcs_cost_etl_op", dag=dag)
     )
 
     gce_instance_stop = DeleteGCEOperator(
@@ -121,7 +121,7 @@ with DAG(
     )
 
 
-start = DummyOperator(task_id="start", dag=dag)
+start = EmptyOperator(task_id="start", dag=dag)
 
 table_jobs = {}
 for table, job_params in dag_tables.items():
@@ -132,7 +132,7 @@ for table, job_params in dag_tables.items():
         "dag_depends": job_params.get("dag_depends", []),
     }
 
-end = DummyOperator(task_id="end", dag=dag)
+end = EmptyOperator(task_id="end", dag=dag)
 table_jobs = depends_loop(
     dag_tables, table_jobs, start, dag=dag, default_end_operator=end
 )

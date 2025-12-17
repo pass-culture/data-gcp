@@ -1,11 +1,11 @@
 version: 2
 
 models:
-  - name: ml_finance__weekly_pricing
-    description: "{{ doc('description__ml_finance__weekly_pricing') }}"
+  - name: ml_finance__daily_pricing
+    description: "{{ doc('description__ml_finance__daily_pricing') }}"
     columns:
-      - name: pricing_week
-        description: "{{ doc('column__pricing_week') }}"
+      - name: pricing_day
+        description: "{{ doc('column__pricing_day') }}"
         data_type: DATE
         data_tests:
           - unique

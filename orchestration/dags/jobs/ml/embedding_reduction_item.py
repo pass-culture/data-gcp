@@ -21,7 +21,7 @@ from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 
 DEFAULT_REGION = "europe-west1"
@@ -65,8 +65,8 @@ with DAG(
         ),
     },
 ) as dag:
-    start = DummyOperator(task_id="start", dag=dag)
-    end = DummyOperator(task_id="end", dag=dag)
+    start = EmptyOperator(task_id="start", dag=dag)
+    end = EmptyOperator(task_id="end", dag=dag)
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",

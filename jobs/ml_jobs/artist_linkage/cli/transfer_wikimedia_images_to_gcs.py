@@ -1,5 +1,6 @@
 import concurrent
 import logging
+import os
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
@@ -26,7 +27,8 @@ STATUS_KEY = "status"
 # Parrallel download/upload settings
 POOL_CONNECTIONS = 10
 POOL_MAXSIZE = 20
-MAX_WORKERS = 10
+MAX_WORKERS = (os.cpu_count() - 1) * 5
+
 
 logging.basicConfig(level=logging.INFO)
 app = typer.Typer()
@@ -38,7 +40,7 @@ def _get_session():
 
     # Configure retry strategy
     retry_strategy = Retry(
-        total=10,
+        total=5,
         backoff_factor=1,
         status_forcelist=[429, 500, 502, 503, 504],
         allowed_methods=["GET"],

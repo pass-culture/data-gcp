@@ -112,7 +112,7 @@ GCS_TO_DELTA_TABLES = [
 # Flow names
 INCREMENTAL_FLOW = "incremental_flow"
 REFRESH_METADATA_FLOW = "refresh_metadata_flow"
-SKIP_SUMMARIZATION_WITH_LLM_FLOW = "skip_summarization_with_llm_flow"
+SKIP_SUMMARIZATION_FLOW = "skip_summarization_flow"
 SUMMARIZATION_WITH_LLM_FLOW = "summarization_with_llm_flow"
 
 # DAG Documentation
@@ -155,7 +155,7 @@ def _choose_linkage(**context):
 
 def _skip_llm_summarization(**context):
     if context["params"]["skip_llm_summarization"] is True:
-        return SKIP_SUMMARIZATION_WITH_LLM_FLOW
+        return SKIP_SUMMARIZATION_FLOW
     return SUMMARIZATION_WITH_LLM_FLOW
 
 
@@ -242,9 +242,7 @@ with DAG(
     incremental_flow = EmptyOperator(task_id=INCREMENTAL_FLOW)
     refresh_metadata_flow = EmptyOperator(task_id=REFRESH_METADATA_FLOW)
     summarization_with_llm_flow = EmptyOperator(task_id=SUMMARIZATION_WITH_LLM_FLOW)
-    skip_summarization_with_llm_flow = EmptyOperator(
-        task_id=SKIP_SUMMARIZATION_WITH_LLM_FLOW
-    )
+    skip_summarization_flow = EmptyOperator(task_id=SKIP_SUMMARIZATION_FLOW)
 
     #####################################################################################################
     #                                          Import Data Task                                         #
@@ -441,14 +439,14 @@ with DAG(
         >> transfer_wikimedia_images_to_gcs_on_delta_tables
         >> choose_llm_summarization
         >> [
-            skip_summarization_with_llm_flow,
+            skip_summarization_flow,
             summarization_with_llm_flow,
         ]
     )
 
     # Skip LLM Summarization Flow
     (
-        skip_summarization_with_llm_flow
+        skip_summarization_flow
         >> retrieve_artist_biographies_from_artist_table
         >> load_artist_data_into_delta_tables
     )

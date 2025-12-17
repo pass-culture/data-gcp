@@ -318,8 +318,8 @@ with DAG(
     #                              Common Incremental + Refresh Metadata                                #
     #####################################################################################################
 
-    get_wikimedia_commons_license_on_delta_tables = SSHGCEOperator(
-        task_id="get_wikimedia_commons_license_on_delta_tables",
+    get_wikimedia_commons_license = SSHGCEOperator(
+        task_id="get_wikimedia_commons_license",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         trigger_rule="none_failed_min_one_success",
@@ -330,8 +330,8 @@ with DAG(
             """,
     )
 
-    transfer_wikimedia_images_to_gcs_on_delta_tables = SSHGCEOperator(
-        task_id="transfer_wikimedia_images_to_gcs_on_delta_tables",
+    transfer_wikimedia_images_to_gcs = SSHGCEOperator(
+        task_id="transfer_wikimedia_images_to_gcs",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         trigger_rule="none_failed_min_one_success",
@@ -346,8 +346,8 @@ with DAG(
     #                                   Summarization with LLM Flow                                     #
     #####################################################################################################
 
-    get_wikipedia_page_content_on_delta_tables = SSHGCEOperator(
-        task_id="get_wikipedia_page_content_on_delta_tables",
+    get_wikipedia_page_content = SSHGCEOperator(
+        task_id="get_wikipedia_page_content",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         trigger_rule="none_failed_min_one_success",
@@ -358,8 +358,8 @@ with DAG(
             """,
     )
 
-    summarize_biographies_with_llm_on_delta_tables = SSHGCEOperator(
-        task_id="summarize_biographies_with_llm_on_delta_tables",
+    summarize_biographies_with_llm = SSHGCEOperator(
+        task_id="summarize_biographies_with_llm",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
@@ -391,9 +391,9 @@ with DAG(
     #####################################################################################################
 
     with TaskGroup(
-        "load_artist_data_into_delta_tables",
+        "load_delta_artist_data_into_tables",
         default_args={"trigger_rule": "none_failed_min_one_success"},
-    ) as load_artist_data_into_delta_tables:
+    ) as load_delta_artist_data_into_tables:
         for table_data in GCS_TO_DELTA_TABLES:
             GCSToBigQueryOperator(
                 task_id=f"load_data_into_{table_data['table_id']}_table",
@@ -420,23 +420,15 @@ with DAG(
     )
 
     # Incremental Update Flow
-    (
-        incremental_flow
-        >> link_new_products_to_artists
-        >> get_wikimedia_commons_license_on_delta_tables
-    )
+    (incremental_flow >> link_new_products_to_artists >> get_wikimedia_commons_license)
 
     # Refresh Metadata Flow
-    (
-        refresh_metadata_flow
-        >> refresh_artist_metadatas
-        >> get_wikimedia_commons_license_on_delta_tables
-    )
+    (refresh_metadata_flow >> refresh_artist_metadatas >> get_wikimedia_commons_license)
 
     # LLM Summarization Choice
     (
-        get_wikimedia_commons_license_on_delta_tables
-        >> transfer_wikimedia_images_to_gcs_on_delta_tables
+        get_wikimedia_commons_license
+        >> transfer_wikimedia_images_to_gcs
         >> choose_llm_summarization
         >> [
             skip_summarization_flow,
@@ -448,16 +440,16 @@ with DAG(
     (
         skip_summarization_flow
         >> retrieve_artist_biographies_from_artist_table
-        >> load_artist_data_into_delta_tables
+        >> load_delta_artist_data_into_tables
     )
 
     # Summarization with LLM Flow
     (
         summarization_with_llm_flow
-        >> get_wikipedia_page_content_on_delta_tables
-        >> summarize_biographies_with_llm_on_delta_tables
-        >> load_artist_data_into_delta_tables
+        >> get_wikipedia_page_content
+        >> summarize_biographies_with_llm
+        >> load_delta_artist_data_into_tables
     )
 
     # Common end tasks
-    (load_artist_data_into_delta_tables >> join_before_stop >> gce_instance_stop)
+    (load_delta_artist_data_into_tables >> join_before_stop >> gce_instance_stop)

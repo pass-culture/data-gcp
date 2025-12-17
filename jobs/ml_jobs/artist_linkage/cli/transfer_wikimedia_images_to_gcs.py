@@ -25,9 +25,9 @@ DE_DATALAKE_IMAGES_FOLDER = "artist/images"
 STATUS_KEY = "status"
 
 # Parrallel download/upload settings
+MAX_WORKERS = (os.cpu_count() or 1) * 5
 POOL_CONNECTIONS = 10
-POOL_MAXSIZE = 20
-MAX_WORKERS = (os.cpu_count() - 1) * 5
+POOL_MAXSIZE = MAX_WORKERS
 
 
 logging.basicConfig(level=logging.INFO)

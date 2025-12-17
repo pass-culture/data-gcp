@@ -3,9 +3,11 @@ import logging
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
+import google.auth
 import pandas as pd
 import requests
 import typer
+from google.auth.transport.requests import AuthorizedSession
 from google.cloud import storage
 from requests.adapters import HTTPAdapter
 from tqdm import tqdm
@@ -25,8 +27,8 @@ STATUS_KEY = "status"
 
 # Parrallel download/upload settings
 MAX_WORKERS = 10
-POOL_CONNECTIONS = 10
-POOL_MAXSIZE = MAX_WORKERS
+POOL_CONNECTIONS = MAX_WORKERS
+POOL_MAXSIZE = MAX_WORKERS + 5
 
 
 logging.basicConfig(level=logging.INFO)
@@ -117,7 +119,18 @@ def main(
     artists_df = pd.read_parquet(artists_matched_on_wikidata)
     image_urls = artists_df.image_file_url.dropna().tolist()
 
-    client = storage.Client(GCP_PROJECT_ID)
+    # Configure GCS client with custom session to handle concurrency
+    credentials, _ = google.auth.default()
+    authed_session = AuthorizedSession(credentials)
+    adapter = HTTPAdapter(
+        pool_connections=POOL_CONNECTIONS,
+        pool_maxsize=POOL_MAXSIZE,
+    )
+    authed_session.mount("https://", adapter)
+
+    client = storage.Client(
+        project=GCP_PROJECT_ID, credentials=credentials, _http=authed_session
+    )
     bucket = client.bucket(DE_DATALAKE_BUCKET_NAME)
     session = _get_session()
 

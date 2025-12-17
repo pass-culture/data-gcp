@@ -1,6 +1,5 @@
 import concurrent
 import logging
-import os
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
@@ -25,7 +24,7 @@ DE_DATALAKE_IMAGES_FOLDER = "artist/images"
 STATUS_KEY = "status"
 
 # Parrallel download/upload settings
-MAX_WORKERS = (os.cpu_count() or 1) * 5
+MAX_WORKERS = 10
 POOL_CONNECTIONS = 10
 POOL_MAXSIZE = MAX_WORKERS
 

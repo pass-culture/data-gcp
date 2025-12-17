@@ -62,25 +62,24 @@ def transfer_image(
     session: requests.Session, gcs_bucket: storage.Bucket, image_url: str
 ) -> dict:
     """Downloads an image stream and uploads it directly to GCS."""
-    # 1. Open connection to Wikimedia
+    # 1. Prepare GCS blob
+    clean_url = image_url.strip()
+    image_id = str(uuid.uuid5(uuid.NAMESPACE_URL, clean_url))
+    blob = gcs_bucket.blob(f"{DE_DATALAKE_IMAGES_FOLDER}/{image_id}")
+
+    # 2. Check if download is required
+    if blob.exists():
+        return {
+            IMAGE_FILE_URL_KEY: image_url,
+            ARTIST_MEDIATION_UUID_KEY: image_id,
+            STATUS_KEY: f"SKIPPED - {image_url} already exists as {image_id}",
+        }
+
+    # 3. Stream wikiemedia content directly to GCS (no local save)
     with session.get(
         image_url, headers=WIKIMEDIA_REQUEST_HEADER, stream=True, timeout=15
     ) as r:
         if r.status_code == 200:
-            # 2. Create a new blob in GCS
-            clean_url = image_url.strip()
-            image_id = str(uuid.uuid5(uuid.NAMESPACE_URL, clean_url))
-            blob = gcs_bucket.blob(f"{DE_DATALAKE_IMAGES_FOLDER}/{image_id}")
-
-            if blob.exists():
-                return {
-                    IMAGE_FILE_URL_KEY: image_url,
-                    ARTIST_MEDIATION_UUID_KEY: image_id,
-                    STATUS_KEY: f"SKIPPED - {image_url} already exists as {image_id}",
-                }
-
-            # 3. Stream content directly to GCS (no local save)
-            # content_type helps GCS serve it correctly in the browser later
             blob.upload_from_file(r.raw, content_type=r.headers.get("content-type"))
             return {
                 IMAGE_FILE_URL_KEY: image_url,

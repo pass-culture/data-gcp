@@ -6,6 +6,7 @@ import pandas as pd
 import requests
 import typer
 from google.cloud import storage
+from tqdm import tqdm
 
 from src.constants import (
     ARTIST_MEDIATION_UUID_KEY,
@@ -67,7 +68,9 @@ def run_parallel_image_transfers(
             executor.submit(transfer_image, gcs_bucket, url): url for url in image_urls
         }
 
-        for future in concurrent.futures.as_completed(futures):
+        for future in tqdm(
+            concurrent.futures.as_completed(futures), total=len(futures), miniters=100
+        ):
             results.append(future.result())
     return pd.DataFrame(results)
 

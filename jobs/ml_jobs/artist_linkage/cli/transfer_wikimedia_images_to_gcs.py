@@ -8,7 +8,7 @@ import typer
 from google.cloud import storage
 
 from src.constants import (
-    ARTIST_MEDIATION_URI_KEY,
+    ARTIST_MEDIATION_UUID_KEY,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     IMAGE_FILE_URL_KEY,
@@ -39,7 +39,7 @@ def transfer_image(gcs_bucket: storage.Bucket, image_url: str) -> dict:
             if blob.exists():
                 return {
                     IMAGE_FILE_URL_KEY: image_url,
-                    ARTIST_MEDIATION_URI_KEY: image_id,
+                    ARTIST_MEDIATION_UUID_KEY: image_id,
                     STATUS_KEY: f"SKIPPED - {image_url} already exists as {image_id}",
                 }
 
@@ -48,7 +48,7 @@ def transfer_image(gcs_bucket: storage.Bucket, image_url: str) -> dict:
             blob.upload_from_file(r.raw, content_type=r.headers.get("content-type"))
             return {
                 IMAGE_FILE_URL_KEY: image_url,
-                ARTIST_MEDIATION_URI_KEY: image_id,
+                ARTIST_MEDIATION_UUID_KEY: image_id,
                 STATUS_KEY: "SUCCESS",
             }
         else:

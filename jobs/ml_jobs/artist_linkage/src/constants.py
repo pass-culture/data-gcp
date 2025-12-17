@@ -36,7 +36,7 @@ IMG_KEY = "img"
 IMAGE_FILE_URL_KEY = "image_file_url"
 ACTION_KEY = "action"
 COMMENT_KEY = "comment"
-ARTIST_MEDIATION_URI_KEY = "artist_mediation_uri"
+ARTIST_MEDIATION_UUID_KEY = "artist_mediation_uuid"
 ARTIST_BIOGRAPHY_KEY = "artist_biography"
 ARTIST_WIKI_ID_KEY = "artist_wiki_id"
 

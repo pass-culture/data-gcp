@@ -58,10 +58,13 @@ DELTA_ARTIST_ALIAS_GCS_FILENAME = "delta_artist_alias.parquet"
 DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME = "delta_product_artist_link.parquet"
 DELTA_ARTISTS_GCS_FILENAME_01 = "01_delta_artist.parquet"
 DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME_02 = "02_delta_artist_with_metadata.parquet"
-DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_03 = (
-    "03_delta_artist_with_wikipedia_page_content.parquet"
+DELTA_ARTISTS_WITH_MEDIATION_UUID_GCS_FILENAME_03 = (
+    "03_delta_artist_with_mediation_uuid.parquet"
 )
-DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_04 = "04_delta_artist_with_biography.parquet"
+DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_04 = (
+    "04_delta_artist_with_wikipedia_page_content.parquet"
+)
+DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_05 = "05_delta_artist_with_biography.parquet"
 
 
 # BQ Tables
@@ -92,7 +95,7 @@ GCS_TO_DELTA_TABLES = [
     {
         "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
         "table_id": "delta_artist",
-        "filename": DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_04,
+        "filename": DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_05,
     },
     {
         "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
@@ -329,6 +332,22 @@ with DAG(
             """,
     )
 
+    transfer_wikimedia_images_to_gcs_on_delta_tables = SSHGCEOperator(
+        task_id="transfer_wikimedia_images_to_gcs_on_delta_tables",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        trigger_rule="none_failed_min_one_success",
+        command=f"""
+             uv run cli/transfer_wikimedia_images_to_gcs.py \
+            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME_02)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_MEDIATION_UUID_GCS_FILENAME_03)}
+            """,
+    )
+
+    #####################################################################################################
+    #                                   Summarization with LLM Flow                                     #
+    #####################################################################################################
+
     get_wikipedia_page_content_on_delta_tables = SSHGCEOperator(
         task_id="get_wikipedia_page_content_on_delta_tables",
         instance_name=GCE_INSTANCE,
@@ -336,8 +355,8 @@ with DAG(
         trigger_rule="none_failed_min_one_success",
         command=f"""
              uv run cli/get_wikipedia_page_content.py \
-            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME_02)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_03)}
+            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_MEDIATION_UUID_GCS_FILENAME_03)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_04)}
             """,
     )
 
@@ -347,8 +366,8 @@ with DAG(
         base_dir=BASE_DIR,
         command=f"""
              uv run cli/summarize_biographies_with_llm.py \
-            --artists-with-wikipedia-content {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_03)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_04)} \
+            --artists-with-wikipedia-content {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_04)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_05)} \
             {SUMMARIZE_BIOGRAPHY_OPTIONS[ENV_SHORT_NAME]}
             """,
     )
@@ -364,8 +383,8 @@ with DAG(
         command=f"""
              uv run cli/retrieve_artist_biographies_from_artist_table.py \
             --applicative-artist-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
-            --artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME_02)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_04)}
+            --artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_MEDIATION_UUID_GCS_FILENAME_03)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_05)}
             """,
     )
 
@@ -407,7 +426,6 @@ with DAG(
         incremental_flow
         >> link_new_products_to_artists
         >> get_wikimedia_commons_license_on_delta_tables
-        >> choose_llm_summarization
     )
 
     # Refresh Metadata Flow
@@ -415,12 +433,13 @@ with DAG(
         refresh_metadata_flow
         >> refresh_artist_metadatas
         >> get_wikimedia_commons_license_on_delta_tables
-        >> choose_llm_summarization
     )
 
     # LLM Summarization Choice
     (
-        choose_llm_summarization
+        get_wikimedia_commons_license_on_delta_tables
+        >> transfer_wikimedia_images_to_gcs_on_delta_tables
+        >> choose_llm_summarization
         >> [
             skip_summarization_with_llm_flow,
             summarization_with_llm_flow,
@@ -443,6 +462,4 @@ with DAG(
     )
 
     # Common end tasks
-    (load_artist_data_into_delta_tables >> join_before_stop)
-
-    join_before_stop >> gce_instance_stop
+    (load_artist_data_into_delta_tables >> join_before_stop >> gce_instance_stop)

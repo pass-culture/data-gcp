@@ -40,7 +40,7 @@ select
         else 'other'
     end as parent_folder,
     coalesce(
-        lower(public_collections.collection_name) like '%thematique%', false
+        lower(public_collections.collection_name) like '%thématique%', false
     ) as is_thematic_collection
 from {{ ref("int_metabase__daily_query") }} as rank_execution
 inner join

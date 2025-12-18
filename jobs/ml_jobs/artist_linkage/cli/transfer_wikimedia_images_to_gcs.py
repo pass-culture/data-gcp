@@ -62,41 +62,71 @@ def _get_session():
 def transfer_image(
     session: requests.Session, gcs_bucket: storage.Bucket, image_url: str
 ) -> dict:
-    """Downloads an image stream and uploads it directly to GCS."""
-    # 1. Prepare GCS blob
-    clean_url = image_url.strip()
-    image_id = str(uuid.uuid5(uuid.NAMESPACE_URL, clean_url))
-    blob = gcs_bucket.blob(f"{DE_DATALAKE_IMAGES_FOLDER}/{image_id}")
+    """Transfer an image from Wikimedia to Google Cloud Storage.
 
-    # 2. Check if download is required
-    if blob.exists():
-        return {
-            IMAGE_FILE_URL_KEY: image_url,
-            ARTIST_MEDIATION_UUID_KEY: image_id,
-            STATUS_KEY: f"SKIPPED - {image_url} already exists as {image_id}",
-        }
+    Args:
+        session: Requests session with connection pooling and retry configuration.
+        gcs_bucket: GCS bucket where the image will be stored.
+        image_url: URL of the image to download from Wikimedia.
 
-    # 3. Stream wikiemedia content directly to GCS (no local save)
-    with session.get(
-        image_url, headers=WIKIMEDIA_REQUEST_HEADER, stream=True, timeout=15
-    ) as r:
-        if r.status_code == 200:
-            blob.upload_from_file(r.raw, content_type=r.headers.get("content-type"))
+    Returns:
+        A dictionary containing the image URL, generated UUID, and transfer status.
+        Possible statuses: SUCCESS, SKIPPED (if already exists), FAILED (with status code),
+        or ERROR (with exception message).
+    """
+    try:
+        # 1. Prepare GCS blob
+        clean_url = image_url.strip()
+        image_id = str(uuid.uuid5(uuid.NAMESPACE_URL, clean_url))
+        blob = gcs_bucket.blob(f"{DE_DATALAKE_IMAGES_FOLDER}/{image_id}")
+
+        # 2. Check if download is required
+        if blob.exists():
             return {
                 IMAGE_FILE_URL_KEY: image_url,
                 ARTIST_MEDIATION_UUID_KEY: image_id,
-                STATUS_KEY: "SUCCESS",
+                STATUS_KEY: f"SKIPPED - {image_url} already exists as {image_id}",
             }
-        else:
-            return {
-                IMAGE_FILE_URL_KEY: image_url,
-                STATUS_KEY: f"FAILED ({r.status_code})",
-            }
+
+        # 3. Stream wikiemedia content directly to GCS (no local save)
+        with session.get(
+            image_url, headers=WIKIMEDIA_REQUEST_HEADER, stream=True, timeout=15
+        ) as r:
+            if r.status_code == 200:
+                blob.upload_from_file(r.raw, content_type=r.headers.get("content-type"))
+                return {
+                    IMAGE_FILE_URL_KEY: image_url,
+                    ARTIST_MEDIATION_UUID_KEY: image_id,
+                    STATUS_KEY: "SUCCESS",
+                }
+            else:
+                return {
+                    IMAGE_FILE_URL_KEY: image_url,
+                    STATUS_KEY: f"FAILED ({r.status_code})",
+                }
+    except Exception as e:
+        logging.error(f"Error processing {image_url}: {e}")
+        return {
+            IMAGE_FILE_URL_KEY: image_url,
+            STATUS_KEY: f"ERROR ({e!s})",
+        }
 
 
 def run_parallel_image_transfers(
-    session: requests.session, gcs_bucket: storage.Bucket, image_urls: list[str]
+    session: requests.Session, gcs_bucket: storage.Bucket, image_urls: list[str]
 ) -> pd.DataFrame:
+    """Transfer multiple images from Wikimedia to GCS in parallel.
+
+    Args:
+        session: Requests session with connection pooling and retry configuration.
+        gcs_bucket: GCS bucket where images will be stored.
+        image_urls: List of image URLs to transfer.
+
+    Returns:
+        A DataFrame containing the transfer results with columns for image URL,
+        UUID, and status for each image.
+    """
+
     results = []
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {

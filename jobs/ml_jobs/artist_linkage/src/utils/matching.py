@@ -226,7 +226,7 @@ def create_artists_tables(
 def match_artists_with_wikidata(
     new_artist_clusters_df: pd.DataFrame,
     wiki_df: pd.DataFrame,
-    existing_artist_alias_df: pd.DataFrame = None,
+    artist_with_wiki_ids_df: pd.DataFrame = None,
 ) -> pd.DataFrame:
     """
     Matches new artist clusters with existing Wikidata entries to assign consistent artist IDs.
@@ -236,9 +236,9 @@ def match_artists_with_wikidata(
     Args:
         new_artist_clusters_df (pd.DataFrame): DataFrame containing new artist clusters
             with artist names to be matched. Must contain ARTIST_NAME_TO_MATCH_KEY column.
-        existing_artist_alias_df (pd.DataFrame | None): DataFrame containing existing artist
-            aliases with their corresponding artist IDs and wiki IDs. Must contain
-            ARTIST_ID_KEY and WIKI_ID_KEY columns.
+        artist_with_wiki_ids_df (pd.DataFrame | None): DataFrame containing artists which have wiki_ids
+            already assigned in the applicative database. If None, an empty DataFrame is used.
+            Must contain ARTIST_ID_KEY and WIKI_ID_KEY columns.
         wiki_df (pd.DataFrame): DataFrame containing Wikidata information with artist
             names and metadata. Must contain 'alias_name_to_match' column.
     Returns:
@@ -255,11 +255,11 @@ def match_artists_with_wikidata(
         * If none, we assume no existing artists are present.
     """
 
-    if existing_artist_alias_df is None:
-        existing_artist_alias_df = pd.DataFrame(
+    if artist_with_wiki_ids_df is None:
+        artist_with_wiki_ids_df = pd.DataFrame(
             columns=[ARTIST_ID_KEY, ARTIST_WIKI_ID_KEY]
         )
-    # 1? Preprocess to use wikidata matching functions
+    # 1. Preprocess to use wikidata matching functions
     wiki_df = (
         wiki_df.rename(
             columns={
@@ -295,36 +295,36 @@ def match_artists_with_wikidata(
     ).reset_index(drop=True)
 
     # 4. wiki_id to artist_id mapping
-    existing_mapping_df = (
-        existing_artist_alias_df.rename(columns={"artist_wiki_id": WIKI_ID_KEY})
-        .loc[:, [ARTIST_ID_KEY, WIKI_ID_KEY]]
-        .dropna()
-        .drop_duplicates()
-    )
     new_mapping_df = (
         pd.Series(
-            list(set(matched_df.wiki_id).difference(set(existing_mapping_df.wiki_id)))
+            list(
+                set(matched_df[WIKI_ID_KEY]).difference(
+                    set(artist_with_wiki_ids_df[WIKI_ID_KEY])
+                )
+            )
         )
         .to_frame(WIKI_ID_KEY)
-        .assign(artist_id=lambda df: df.wiki_id.apply(lambda x: str(uuid.uuid4())))
+        .assign(artist_id=lambda df: df[WIKI_ID_KEY].apply(lambda x: str(uuid.uuid4())))
     )
     wiki_to_artist_mapping = (
-        pd.concat([existing_mapping_df, new_mapping_df])
+        pd.concat([artist_with_wiki_ids_df, new_mapping_df])
         .dropna()
-        .set_index(WIKI_ID_KEY)
-        .artist_id.to_dict()
+        .set_index(WIKI_ID_KEY)[ARTIST_ID_KEY]
+        .to_dict()
     )
 
     # 5. Remap matched_df with wiki_to_artist_mapping
     matched_with_ids_df = matched_df.assign(
-        artist_id=lambda df: df.wiki_id.map(wiki_to_artist_mapping).fillna(df.tmp_id),
+        artist_id=lambda df: df[WIKI_ID_KEY]
+        .map(wiki_to_artist_mapping)
+        .fillna(df.tmp_id),
         postprocessed_artist_name=lambda df: df.wiki_artist_name.fillna(
             df[ARTIST_NAME_TO_MATCH_KEY]
         ).apply(lambda s: s.title()),
     ).sort_values(by=ARTIST_ID_KEY)
 
     logger.info(
-        f"...Matched {len(matched_with_ids_df.loc[lambda df: df.wiki_id.notna()].wiki_id.notna().unique())} new artist clusters with Wikidata entries."
+        f"...Matched {len(matched_with_ids_df[WIKI_ID_KEY].dropna().unique())} new artist clusters with Wikidata entries."
     )
 
     # 6. Explode artist names and drop duplicates to output artist aliases

@@ -25,7 +25,7 @@ DE_DATALAKE_BUCKET_NAME = f"de-lake-{ENV_SHORT_NAME}"
 DE_DATALAKE_IMAGES_FOLDER = "artist/images"
 STATUS_KEY = "status"
 
-# Parrallel download/upload settings
+# Parrallel download/upload settings. Increasing them can cause rate limiting issues.
 MAX_WORKERS = 10
 POOL_CONNECTIONS = MAX_WORKERS
 POOL_MAXSIZE = MAX_WORKERS + 5
@@ -102,12 +102,14 @@ def transfer_image(
             else:
                 return {
                     IMAGE_FILE_URL_KEY: image_url,
+                    ARTIST_MEDIATION_UUID_KEY: None,
                     STATUS_KEY: f"FAILED ({r.status_code})",
                 }
     except Exception as e:
         logging.error(f"Error processing {image_url}: {e}")
         return {
             IMAGE_FILE_URL_KEY: image_url,
+            ARTIST_MEDIATION_UUID_KEY: None,
             STATUS_KEY: f"ERROR ({e!s})",
         }
 
@@ -147,7 +149,7 @@ def main(
     output_file_path: str = typer.Option(),
 ) -> None:
     artists_df = pd.read_parquet(artists_matched_on_wikidata)
-    image_urls = artists_df.image_file_url.dropna().tolist()
+    image_urls = artists_df[IMAGE_FILE_URL_KEY].dropna().unique().tolist()
 
     # Configure GCS client with custom session to handle concurrency
     credentials, _ = google.auth.default()
@@ -167,9 +169,7 @@ def main(
     result_df = run_parallel_image_transfers(session, bucket, image_urls)
 
     artists_df.merge(
-        result_df,
-        on=IMAGE_FILE_URL_KEY,
-        how="left",
+        result_df, on=IMAGE_FILE_URL_KEY, how="left", validate="m:1"
     ).to_parquet(output_file_path)
 
 

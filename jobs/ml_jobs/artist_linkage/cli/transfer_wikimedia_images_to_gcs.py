@@ -117,7 +117,7 @@ def transfer_image(
             return {
                 IMAGE_FILE_URL_KEY: image_url,
                 ARTIST_MEDIATION_UUID_KEY: image_id,
-                STATUS_KEY: f"SKIPPED - {image_url} already exists as {image_id}",
+                STATUS_KEY: "SKIPPED",
             }
 
         # 3. Stream wikiemedia content directly to GCS (no local save)
@@ -135,14 +135,14 @@ def transfer_image(
                 return {
                     IMAGE_FILE_URL_KEY: image_url,
                     ARTIST_MEDIATION_UUID_KEY: None,
-                    STATUS_KEY: f"FAILED ({r.status_code})",
+                    STATUS_KEY: "FAILED",
                 }
     except Exception as e:
         logging.error(f"Error processing {image_url}: {e}")
         return {
             IMAGE_FILE_URL_KEY: image_url,
             ARTIST_MEDIATION_UUID_KEY: None,
-            STATUS_KEY: f"ERROR ({e!s})",
+            STATUS_KEY: "ERROR",
         }
 
 

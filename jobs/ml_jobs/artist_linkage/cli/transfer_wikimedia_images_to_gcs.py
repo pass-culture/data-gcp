@@ -36,7 +36,16 @@ app = typer.Typer()
 
 
 def _get_session():
-    """Create a requests session with connection pooling and retries."""
+    """Create a requests session with retry strategy and connection pooling.
+
+    Configures a session optimized for downloading images from Wikimedia with:
+    - Automatic retries on transient failures (429, 5xx status codes)
+    - Exponential backoff between retries
+    - Connection pooling to reuse connections efficiently
+
+    Returns:
+        A configured requests.Session instance ready for making HTTP requests.
+    """
     session = requests.Session()
 
     # Configure retry strategy
@@ -57,6 +66,29 @@ def _get_session():
     session.mount("https://", adapter)
 
     return session
+
+
+def _get_gcs_client():
+    """Create a Google Cloud Storage client with authorized session.
+
+    This client uses an AuthorizedSession with connection pooling, optimized for
+    concurrent uploads/downloads to/from GCS.
+
+    Returns:
+        A google.cloud.storage.Client instance authenticated with default credentials.
+    """
+    credentials, _ = google.auth.default()
+    authed_session = AuthorizedSession(credentials)
+    adapter = HTTPAdapter(
+        pool_connections=POOL_CONNECTIONS,
+        pool_maxsize=POOL_MAXSIZE,
+    )
+    authed_session.mount("https://", adapter)
+
+    client = storage.Client(
+        project=GCP_PROJECT_ID, credentials=credentials, _http=authed_session
+    )
+    return client
 
 
 def transfer_image(
@@ -148,26 +180,32 @@ def main(
     artists_matched_on_wikidata: str = typer.Option(),
     output_file_path: str = typer.Option(),
 ) -> None:
+    """Transfer Wikimedia artist images to Google Cloud Storage.
+
+    Reads a parquet file containing artist data with Wikidata matches,
+    extracts unique image URLs, downloads them from Wikimedia, and uploads
+    them to GCS. The results are merged back with the original data and
+    saved to the output file.
+
+    Args:
+        artists_matched_on_wikidata: Path to the input parquet file containing
+            artist data with Wikidata image URLs.
+        output_file_path: Path where the output parquet file with transfer
+            results will be saved.
+    """
+    # 1. Load Data
     artists_df = pd.read_parquet(artists_matched_on_wikidata)
     image_urls = artists_df[IMAGE_FILE_URL_KEY].dropna().unique().tolist()
 
-    # Configure GCS client with custom session to handle concurrency
-    credentials, _ = google.auth.default()
-    authed_session = AuthorizedSession(credentials)
-    adapter = HTTPAdapter(
-        pool_connections=POOL_CONNECTIONS,
-        pool_maxsize=POOL_MAXSIZE,
-    )
-    authed_session.mount("https://", adapter)
-
-    client = storage.Client(
-        project=GCP_PROJECT_ID, credentials=credentials, _http=authed_session
-    )
-    bucket = client.bucket(DE_DATALAKE_BUCKET_NAME)
+    # 2. Setup sessions and clients
     session = _get_session()
+    gcs_client = _get_gcs_client()
+    bucket = gcs_client.bucket(DE_DATALAKE_BUCKET_NAME)
 
+    # 3. Run transfers in parallel
     result_df = run_parallel_image_transfers(session, bucket, image_urls)
 
+    # 4. Merge results and save output
     artists_df.merge(
         result_df, on=IMAGE_FILE_URL_KEY, how="left", validate="m:1"
     ).to_parquet(output_file_path)

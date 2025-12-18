@@ -5,6 +5,7 @@ select
     artist_name,
     description as artist_description,
     artist_biography,
+    artist_mediation_uuid,
     wiki_id as wikidata_id,
     wikipedia_url,
     image_file_url as wikidata_image_file_url,

@@ -17,6 +17,8 @@ models:
         description: "{{ doc('column__artist_description') }}"
       - name: artist_biography
         description: "{{ doc('column__artist_biography') }}"
+      - name: artist_mediation_uuid
+        description: "{{ doc('column__artist_mediation_uuid') }}"
       - name: wikidata_id
         description: "{{ doc('column__artist_wiki_id') }}"
       - name: wikipedia_url

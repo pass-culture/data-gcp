@@ -121,7 +121,6 @@ def sanity_checks(
     delta_artist_df: pd.DataFrame,
     delta_artist_alias_df: pd.DataFrame,
     applicative_artist_df: pd.DataFrame,
-    applicative_artist_alias_df: pd.DataFrame,
 ) -> None:
     """Perform comprehensive sanity checks on delta and applicative dataframes.
 
@@ -133,7 +132,6 @@ def sanity_checks(
         delta_artist_df (pd.DataFrame): Delta artist dataframe with updates.
         delta_artist_alias_df (pd.DataFrame): Delta artist alias dataframe (should be empty).
         applicative_artist_df (pd.DataFrame): Current applicative artist dataframe.
-        applicative_artist_alias_df (pd.DataFrame): Current applicative artist alias dataframe.
 
     Raises:
         AssertionError: If any sanity check fails, including:
@@ -158,9 +156,6 @@ def sanity_checks(
         len(delta_artist_alias_df) == 0
     ), "Delta artist alias dataframe is not empty. It should for metadata refresh."
     assert len(applicative_artist_df) > 0, "Applicative artist dataframe is empty."
-    assert (
-        len(applicative_artist_alias_df) > 0
-    ), "Applicative artist alias dataframe is empty."
 
     # 2. Check columns
     assert set(delta_artist_df.columns) == {
@@ -205,7 +200,6 @@ app = typer.Typer()
 def main(
     # Input files
     artist_file_path: str = typer.Option(),
-    artist_alias_file_path: str = typer.Option(),
     wiki_base_path: str = typer.Option(),
     wiki_file_name: str = typer.Option(),
     # Output files
@@ -241,27 +235,21 @@ def main(
         columns={
             "artist_description": DESCRIPTION_KEY,
             "wikidata_image_file_url": IMG_KEY,
+            "wikidata_id": WIKI_ID_KEY,
         }
     )
-    applicative_artist_alias_df = pd.read_parquet(artist_alias_file_path)
+    artist_with_wikidata_ids_df = applicative_artist_df.loc[
+        lambda df: df[WIKI_ID_KEY].notna()
+    ]
     wiki_df = load_wikidata(
         wiki_base_path=wiki_base_path, wiki_file_name=wiki_file_name
     ).reset_index(drop=True)
     logger.success("Artist data loaded successfully.")
     logger.info(
-        f"Number of artists: {len(applicative_artist_df)}, Number of artist aliases: {len(applicative_artist_alias_df)}, Number of wikidata entries: {len(wiki_df)}"
+        f"Number of artists: {len(applicative_artist_df)}, Number of artists with wikidata ids: {len(artist_with_wikidata_ids_df)}, Number of wikidata entries: {len(wiki_df)}"
     )
 
-    # 2. Find wiki_id for existing artists from artist_alias table
-    # TODO: Remove this step when applicative_artist_table has wikidata ids
-    logger.info("Retrieving wikidata ids for existing artists...")
-    artist_with_wikidata_ids_df = retrieve_artist_wikidata_id(
-        artist_df=applicative_artist_df,
-        artist_alias_df=applicative_artist_alias_df,
-    )
-    logger.success("Wikidata ids retrieved successfully.")
-
-    # 3. Match on wikidata to have fresh metadatas
+    # 2. Match on wikidata to have fresh metadatas
     logger.info("Refreshing artist metadatas from wikidata...")
     refreshed_artists_df = artist_with_wikidata_ids_df.merge(
         wiki_df.drop(columns=["alias", "raw_alias"]).drop_duplicates(),
@@ -270,7 +258,7 @@ def main(
         suffixes=("_old", ""),
     )
 
-    # 4. Refresh statistics
+    # 3. Refresh statistics
     artists_with_wiki_id = artist_with_wikidata_ids_df[WIKI_ID_KEY].notna().sum()
     artists_matched_in_wiki = refreshed_artists_df[ARTIST_NAME_KEY].notna().sum()
     artists_with_wiki_id_no_match = artists_with_wiki_id - artists_matched_in_wiki
@@ -298,7 +286,6 @@ def main(
         delta_artist_df=delta_artist_df,
         delta_artist_alias_df=empty_delta_artist_alias_df,
         applicative_artist_df=applicative_artist_df,
-        applicative_artist_alias_df=applicative_artist_alias_df,
     )
     logger.success("Sanity checks passed successfully.")
 
@@ -308,11 +295,12 @@ def main(
         f"Saving delta artist dataframes to {output_delta_artist_file_path}, {output_delta_artist_alias_file_path} and {output_delta_product_artist_link_file_path}."
     )
     delta_artist_df.to_parquet(output_delta_artist_file_path, index=False)
-    empty_delta_artist_alias_df.to_parquet(
-        output_delta_artist_alias_file_path, index=False
-    )
     empty_delta_product_artist_link_df.to_parquet(
         output_delta_product_artist_link_file_path, index=False
+    )
+    # TODO: Remove artist alias output when not needed by backend ingestion
+    empty_delta_artist_alias_df.to_parquet(
+        output_delta_artist_alias_file_path, index=False
     )
     logger.success("Delta dataframes saved successfully.")
 

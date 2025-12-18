@@ -50,7 +50,6 @@ WIKIDATA_STORAGE_BASE_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/dump_wikidata"
 WIKIDATA_EXTRACTION_GCS_FILENAME = "wikidata_extraction.parquet"
 PRODUCTS_TO_LINK_GCS_FILENAME = "products_to_link.parquet"
 APPLICATIVE_ARTISTS_GCS_FILENAME = "applicative_database_artist.parquet"
-APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME = "applicative_database_artist_alias.parquet"
 APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME = (
     "applicative_database_product_artist_link.parquet"
 )
@@ -74,11 +73,6 @@ TABLES_TO_IMPORT_TO_GCS = [
         "dataset_id": BIGQUERY_RAW_DATASET,
         "table_id": "applicative_database_artist",
         "filename": APPLICATIVE_ARTISTS_GCS_FILENAME,
-    },
-    {
-        "dataset_id": BIGQUERY_RAW_DATASET,
-        "table_id": "applicative_database_artist_alias",
-        "filename": APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME,
     },
     {
         "dataset_id": BIGQUERY_RAW_DATASET,
@@ -283,7 +277,6 @@ with DAG(
         command=f"""
              uv run cli/link_new_products_to_artists.py \
             --artist-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
-            --artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME)} \
             --product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
             --product-filepath {os.path.join(STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME)} \
             --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
@@ -305,7 +298,6 @@ with DAG(
         command=f"""
              uv run cli/refresh_artist_metadatas.py \
             --artist-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
-            --artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME)} \
             --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
             --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
             --output-delta-artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME_01)} \

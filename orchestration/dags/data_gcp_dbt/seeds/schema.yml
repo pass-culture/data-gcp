@@ -4,6 +4,8 @@ seeds:
   - name: mock_snapshot
     config:
       enabled: "{{ true if target.profile_name == 'CI' else false }}"
+      tags:
+        - unit_test
       column_types:
         dbt_valid_from: TIMESTAMP
         dbt_valid_to: TIMESTAMP

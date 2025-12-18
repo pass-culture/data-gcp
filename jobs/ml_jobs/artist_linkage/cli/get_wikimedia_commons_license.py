@@ -7,7 +7,7 @@ import requests
 import typer
 from tqdm import tqdm
 
-from src.constants import WIKIMEDIA_REQUEST_HEADER
+from src.constants import IMAGE_FILE_URL_KEY, WIKIMEDIA_REQUEST_HEADER
 
 logging.basicConfig(level=logging.INFO)
 app = typer.Typer()
@@ -25,7 +25,7 @@ ALLOWED_LICENSES = [
 ]
 LICENSES_COLUMNS = [
     "filename",
-    "image_file_url",
+    IMAGE_FILE_URL_KEY,
     "image_page_url",
     "image_author",
     "image_license",
@@ -85,7 +85,7 @@ def get_image_license(image_urls: list[str]) -> pd.DataFrame:
                 page_url = extract_page_url_from_title(title=page["title"])
                 base_response = {
                     "filename": page["title"],
-                    "image_file_url": image_url,
+                    IMAGE_FILE_URL_KEY: image_url,
                     "image_page_url": page_url,
                 }
 
@@ -144,15 +144,15 @@ def main(
     output_file_path: str = typer.Option(),
 ) -> None:
     artists_df = pd.read_parquet(artists_matched_on_wikidata).rename(
-        columns={"img": "image_file_url"}
+        columns={"img": IMAGE_FILE_URL_KEY}
     )
 
     # Fetch the licenses from wikidata
-    image_list = artists_df.image_file_url.dropna().drop_duplicates().tolist()
+    image_list = artists_df[IMAGE_FILE_URL_KEY].dropna().drop_duplicates().tolist()
     image_license_df = get_image_license(image_list)
 
     artists_with_licenses_df = artists_df.merge(
-        image_license_df, how="left", on="image_file_url"
+        image_license_df, how="left", on=IMAGE_FILE_URL_KEY
     ).pipe(remove_image_with_improper_license)
 
     artists_with_licenses_df.to_parquet(output_file_path)

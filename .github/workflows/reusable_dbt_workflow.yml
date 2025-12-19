@@ -156,7 +156,7 @@ jobs:
           CI_SEVERITY: "warn"
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: |
-          uv run dbt test --store-failures -s "state:modified"\
+          uv run dbt test --store-failures -s "state:modified" \
           --exclude "test_name:relationships" "tag:elementary" "config.materialized:incremental" \
           --profile CI --target $ENV_SHORT_NAME --defer \
           --state env-run-artifacts --favor-state \

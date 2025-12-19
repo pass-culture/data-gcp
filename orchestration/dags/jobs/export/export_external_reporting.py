@@ -64,7 +64,7 @@ with DAG(
     tags=[DAG_TAGS.DE.value],
     params={
         "branch": Param(
-            default="master",  # "production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
         "instance_name": Param(

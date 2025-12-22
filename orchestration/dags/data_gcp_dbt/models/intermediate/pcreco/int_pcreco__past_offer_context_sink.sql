@@ -9,6 +9,7 @@
             },
             on_schema_change="append_new_columns",
             cluster_by="playlist_origin",
+            require_partition_filter=True,
         )
     )
 }}

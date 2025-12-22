@@ -111,6 +111,30 @@ jobs:
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: uv run dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+      - name: "Build DBT seeds for unit tests"
+        working-directory: ${{ env.DBT_FOLDER }}
+        env:
+          TARGET_BRANCH: ${{ github.base_ref }}
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
+        run: |
+          uv run dbt seed -s "tag:unit_test" \
+          --profile CI --target $ENV_SHORT_NAME \
+          --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+      - name: "Run seed test for unit tests"
+        working-directory: ${{ env.DBT_FOLDER }}
+        env:
+          TARGET_BRANCH: ${{ github.base_ref }}
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
+        run: |
+          uv run dbt test -s "tag:unit_test" \
+          --profile CI --target $ENV_SHORT_NAME \
+          --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Run modified models & 1st order childrens"
         id: run-changed-models
         working-directory: .

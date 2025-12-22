@@ -6,8 +6,8 @@ from airflow.plugins_manager import AirflowPlugin
 bp = Blueprint("plugin", __name__, template_folder="templates", static_folder="static")
 
 v_appbuilder_dbt_docs_view = DBTDocs()
-v_appbuilder_package = {
-    "name": "Docs",
+v_appbuilder_dbt_docs_package = {
+    "name": "DBT Docs",
     "category": "DBT",
     "view": v_appbuilder_dbt_docs_view,
 }
@@ -24,4 +24,4 @@ v_appbuilder_colibri_package = {
 class AirflowCustomPlugin(AirflowPlugin):
     name = "AirflowCustomPlugin"
     flask_blueprints = [bp]
-    appbuilder_views = [v_appbuilder_dbt_docs_view, v_appbuilder_colibri_view]
+    appbuilder_views = [v_appbuilder_dbt_docs_package, v_appbuilder_colibri_package]

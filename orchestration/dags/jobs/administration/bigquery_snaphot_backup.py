@@ -4,7 +4,7 @@ from common.callback import on_failure_base_callback
 from common.config import (
     GCP_REGION,
     DAG_TAGS,
-    DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
+    DE_BIGQUERY_TMP_BACKUP_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_TARGET,
@@ -206,7 +206,7 @@ SNAPSHOT_CONFIGS = get_snapshot_configs_cached(
 )
 
 GCS_SNAPSHOT_BACKUP_FOLDER = "bigquery_snapshot_backup"
-GCS_SNAPSHOT_BACKUP_BUCKET = DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME
+GCS_SNAPSHOT_BACKUP_BUCKET = DE_BIGQUERY_TMP_BACKUP_BUCKET_NAME
 
 
 def generate_export_query(alias, dataset, yyyymmdd, snapshot_at):

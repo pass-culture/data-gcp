@@ -50,6 +50,11 @@ try:
     
     print(f"\n✅ Table '{TABLE_NAME}' created successfully on GCS via streaming!")
     print(f"Total rows ingested: {table.count_rows()}")
+    print("\nTable columns:")
+    print(table.schema)
+    print("\nSample rows:")
+    df = table.search().limit(10).to_pandas()
+    print(df.head(10))
     
 except Exception as e:
     print(f"A LanceDB error occurred: {e}")

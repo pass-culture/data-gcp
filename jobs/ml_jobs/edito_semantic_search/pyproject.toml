@@ -3,7 +3,7 @@ name = "edito-semantic-search"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11, <3.13"
+requires-python = ">=3.11, <3.12"
 dependencies = [
     "google-cloud-secret-manager>=2.24.0",
     "google-cloud-secret-manager>=2.16.2",
@@ -11,6 +11,7 @@ dependencies = [
     "huggingface-hub>=0.34.4",
     "ipykernel>=7.1.0",
     "pandas>=2.2.0",
+    "polars>=0.19.4",
     "pyarrow>=16.1.0",
     "pytest>=8.2.2",
     "pydantic>=2.11.7",
@@ -27,9 +28,9 @@ dependencies = [
     "langchain-google-vertexai>=2.0.28",
     "langchain-huggingface>=0.3.1",
     "loguru>=0.7.0",
-    "hypercorn>=0.18.0",
-    "flask>=3.0.0",
-    "flask-cors>=4.0.0",
+    "hypercorn==0.15.0",
+    "flask==3.0.0",
+    "flask-cors==4.0.0",
 ]
 
 ## ruff

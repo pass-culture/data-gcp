@@ -3,13 +3,17 @@
 import lancedb
 from app.constants import embedding_model
 from loguru import logger
+import polars as pl
 class SearchClient:
 	def __init__(self, database_uri: str, vector_table: str, scalar_table: str):
 		"""Connects to LanceDB and opens the specified table."""
 		self.embedding_model = embedding_model
+		logger.info(f"Connecting to LanceDB at: {database_uri}")
 		self.db = lancedb.connect(database_uri)
+		logger.info(f"Opening vector table: {vector_table} and scalar table: {scalar_table}")
 		self.vector_table = self.db.open_table(vector_table)
-		self.scalar_table = self.db.open_table(scalar_table)
+		logger.info(f"Vector table successfully opened.")
+		# self.scalar_table = self.db.open_table(scalar_table)
 
     
 	def build_where_clause(self, filters):
@@ -32,16 +36,41 @@ class SearchClient:
 			clauses.append(f"({clause})")
 		return " AND ".join(clauses)
 
-	def scalar_search(self,k:int=1000, filters:list[dict]=None):
-		"""Performs a scalar search on the given column for the specified value."""
+	def scalar_search(self, k: int = 1000, filters: list[dict] = None):
+		"""Performs a scalar search using polars lazy mode on a Parquet directory in GCS/local (supports data-*.parquet)."""
+		import polars as pl
 		try:
-			# Use pandas query for filtering
-			where_clause = self.build_where_clause(filters)
-			logger.info(f"Scalar search where clause: {where_clause}")
-			result = self.scalar_table.search().where(f"{where_clause}").limit(k).to_list()
+			from app.constants import PARQUET_FILE
+			parquet_dir = PARQUET_FILE  # should be the directory path
+			logger.info(f"Reading Parquet directory (lazy) from: {parquet_dir}")
+			lf = pl.scan_parquet(f"{parquet_dir}/data-*.parquet")
+			if filters:
+				logger.info(f"Applying filters: {filters}")
+				for f in filters:
+					col = f["column"]
+					op = f["operator"].lower()
+					val = f["value"]
+					if op == "in" and isinstance(val, (list, tuple, set)):
+						lf = lf.filter(pl.col(col).is_in(val))
+					elif op == "=":
+						lf = lf.filter(pl.col(col) == val)
+					elif op == ">":
+						lf = lf.filter(pl.col(col) > val)
+					elif op == ">=":
+						lf = lf.filter(pl.col(col) >= val)
+					elif op == "<":
+						lf = lf.filter(pl.col(col) < val)
+					elif op == "<=":
+						lf = lf.filter(pl.col(col) <= val)
+					elif op == "!=" or op == "<>":
+						lf = lf.filter(pl.col(col) != val)
+					else:
+						logger.warning(f"Unsupported operator: {op}")
+			df = lf.head(k).collect()
+			result = df.to_dicts()
 			return result
 		except Exception as e:
-			print(f"Scalar search error: {e}")
+			logger.error(f"Scalar search error: {e}")
 			return None
 
 	def vector_search(self, query_vector, k: int = 5, filters: list[dict] = None):

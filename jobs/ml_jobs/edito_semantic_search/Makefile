@@ -6,4 +6,4 @@ streamlit:
 install-api:
 	uv sync --no-dev
 start_app:
-	uv run --no-dev hypercorn --bind 0.0.0.0:8084 app.app:app --workers=1
+	uv run --no-dev hypercorn --bind 0.0.0.0:8085 app.app:app --workers=1

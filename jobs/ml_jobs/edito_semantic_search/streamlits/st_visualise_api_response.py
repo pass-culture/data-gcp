@@ -34,17 +34,17 @@ if st.sidebar.button("Send Request"):
             timeout=3000,
         )
         st.subheader("Raw Response")
-        # st.code(response.text, language="json")
         if response.ok:
             data = response.json()
             # Try to find offers or results in the response
             offers = data.get("offers") or data.get("results") or data.get("items")
             if offers and isinstance(offers, list):
                 st.subheader("Offers Table")
-                st.dataframe(pd.DataFrame(offers).head(50))
+                st.dataframe(pd.DataFrame(offers).head(100))
             else:
                 st.info("No offers/results/items found in response.")
         else:
+            st.code(response.text, language="json")
             st.error(f"Error: {response.status_code} {response.reason}")
     except Exception as e:
         st.error(f"Request failed: {e}")

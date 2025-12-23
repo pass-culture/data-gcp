@@ -77,6 +77,7 @@ select
     u.user_is_active,
     u.user_age,
     u.user_creation_date,
+    u.user_age_at_creation,
     u.user_birth_date,
     u.user_has_enabled_marketing_email,
     u.user_has_enabled_marketing_push,

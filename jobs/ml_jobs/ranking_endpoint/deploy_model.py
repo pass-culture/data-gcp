@@ -179,12 +179,13 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     figure_folder = f"/tmp/{experiment_name}/"
 
     # Start training
-    mlflow.lightgbm.autolog()
     pipeline_classifier = TrainPipeline(
         target="target_class", params=CLASSIFIER_MODEL_PARAMS
     )
 
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
+        mlflow.lightgbm.autolog()
+
         pipeline_classifier.set_pipeline()
         pipeline_classifier.train(train_data, class_weight=class_weight)
 
@@ -204,7 +205,12 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         mlflow.log_param("seed", seed)
 
     # retrain on whole
-    pipeline_classifier.train(preprocessed_data, class_weight=class_weight)
+    with mlflow.start_run(
+        experiment_id=experiment.experiment_id,
+        run_name=f"{run_name}_full_train",
+    ):
+        mlflow.lightgbm.autolog()
+        pipeline_classifier.train(preprocessed_data, class_weight=class_weight)
 
     # save
     pipeline_classifier.save(model_name="classifier")

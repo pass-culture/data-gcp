@@ -67,9 +67,6 @@ models:
         +docs:
           node_color: "#b43ddb"
           show: false
-        applicative:
-          +alias: applicative_database_
-          +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     intermediate:
       +meta:
         owner: "@data-engineering"

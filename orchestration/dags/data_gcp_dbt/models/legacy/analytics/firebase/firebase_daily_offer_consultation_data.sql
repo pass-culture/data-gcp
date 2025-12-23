@@ -13,10 +13,10 @@ select
     int_applicative__offer_item_id.item_id,
     origin,
     count(*) as nb_daily_consult
-from {{ ref("int_firebase__native_event") }} e
+from {{ ref("int_firebase__native_event") }} as e
 left join
-    {{ ref("int_applicative__offer_item_id") }} int_applicative__offer_item_id
-    on int_applicative__offer_item_id.offer_id = e.offer_id
+    {{ ref("int_applicative__offer_item_id") }} as int_applicative__offer_item_id
+    on e.offer_id = int_applicative__offer_item_id.offer_id
 where
     event_name = 'ConsultOffer'
     {% if is_incremental() %}  -- recalculate latest day's DATA + previous

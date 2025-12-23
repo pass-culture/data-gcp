@@ -416,8 +416,14 @@ class InstallDependenciesOperator(SSHGCEOperator):
                 uv sync
             fi
         """
+
+        deactivate_conda = (
+            "echo 'conda config --set auto_activate_base false' >> ~/.bashrc && bash"
+        )
+
         # Combine the git clone and installation commands
         return f"""
             {clone_command}
             {install_command}
+            {deactivate_conda}
         """

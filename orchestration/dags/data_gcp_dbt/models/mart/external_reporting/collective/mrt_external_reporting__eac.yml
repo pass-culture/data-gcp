@@ -3,20 +3,71 @@ version: 2
 models:
   - name: mrt_external_reporting__eac
     description: "{{ doc('description__mrt_external_reporting__eac') }}"
+    config:
+      contract:
+        enforced: true
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - partition_month
+            - dimension_value
+            - kpi_name
+
     columns:
+
       - name: partition_month
         description: "{{ doc('column__partition_month') }}"
+        data_type: date
+        constraints:
+          - type: not_null
+
       - name: updated_at
         description: "{{ doc('column__updated_at') }}"
+        data_type: timestamp
+        constraints:
+          - type: not_null
+
       - name: dimension_name
         description: "{{ doc('column__dimension_name') }}"
+        data_type: string
+        constraints:
+          - type: not_null
+          - type: check
+            expression: "dimension_name IN ('NAT','REG','DEP','EPCI','COM')"
+
       - name: dimension_value
         description: "{{ doc('column__dimension_value') }}"
+        data_type: string
+        constraints:
+          - type: not_null
+
       - name: kpi_name
         description: "{{ doc('column__kpi_name') }}"
+        data_type: string
+        constraints:
+          - type: not_null
+
       - name: numerator
         description: "{{ doc('column__numerator') }}"
+        data_type: numeric
+        constraints:
+          - type: not_null
+          - type: check
+            expression: "numerator >= 0"
+
       - name: denominator
         description: "{{ doc('column__denominator') }}"
+        data_type: numeric
+        constraints:
+          - type: not_null
+          - type: check
+            expression: "denominator >= 0"
+
       - name: kpi
         description: "{{ doc('column__kpi') }}"
+        data_type: numeric
+        constraints:
+          - type: not_null
+          - type: check
+            expression: "kpi > 0"

@@ -1,21 +1,18 @@
 import json
 import os
-
-from functools import partial
-from typing import Optional, Union, Tuple
+from functools import lru_cache, partial
 from pathlib import Path
-from functools import lru_cache
-
-from common.config import EXCLUDED_TAGS
+from typing import Optional, Tuple, Union
 
 from airflow import DAG
 from airflow.models.baseoperator import BaseOperator, chain
-from airflow.operators.python import PythonOperator
 from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
+from common.config import EXCLUDED_TAGS
 
 # Import the Python callable functions from dbt_executors module
-from common.dbt.dbt_executors import run_dbt_model, run_dbt_test, run_dbt_snapshot
+from common.dbt.dbt_executors import run_dbt_model, run_dbt_snapshot, run_dbt_test
 
 
 def get_models_folder_dict(
@@ -594,7 +591,7 @@ def create_critical_tests_group(
     if any(
         model_node in models_with_crit_test_dependencies for model_node in dbt_models
     ):
-        with TaskGroup(group_id="critical_tests", dag=dag) as crit_test_group:
+        with TaskGroup(group_id="critical_tests", dag=dag):
             for model_node in dbt_models:
                 model_data = manifest["nodes"][model_node]
                 if model_node in models_with_crit_test_dependencies:
@@ -610,8 +607,8 @@ def create_data_transformation_group(
     test_op_dict: dict[str, PythonOperator],
 ) -> dict[str, PythonOperator]:
     model_op_dict: dict[str, PythonOperator] = {}
-    with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
-        with TaskGroup(group_id="applicative_tables", dag=dag) as applicative:
+    with TaskGroup(group_id="data_transformation", dag=dag):
+        with TaskGroup(group_id="applicative_tables", dag=dag):
             for model_node in dbt_models:
                 model_data = manifest["nodes"][model_node]
                 if "applicative" in model_data["alias"]:
@@ -696,7 +693,7 @@ def create_snapshot_group(
     dag: DAG, dbt_snapshots: list[str], manifest: dict
 ) -> dict[str, PythonOperator]:
     snapshot_op_dict: dict[str, PythonOperator] = {}
-    with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
+    with TaskGroup(group_id="snapshots", dag=dag):
         for snapshot_node in dbt_snapshots:
             snapshot_data = manifest["nodes"][snapshot_node]
             snapshot_op_dict[snapshot_node] = create_snapshot_operator(

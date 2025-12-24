@@ -1,5 +1,9 @@
 import datetime
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from common import macros
 from common.callback import on_failure_base_callback
 from common.config import (
@@ -16,11 +20,6 @@ from dependencies.metabase.import_metabase import (
     from_external,
     import_tables,
 )
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),

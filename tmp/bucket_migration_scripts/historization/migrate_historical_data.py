@@ -18,12 +18,11 @@ Usage:
 
 import argparse
 import logging
-import os
 import subprocess
 import sys
-from datetime import datetime, timedelta
-from typing import Dict, List, Tuple
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import List, Tuple
 
 
 @dataclass
@@ -270,7 +269,7 @@ class HistoricalDataMigrator:
     def run_migration(self) -> bool:
         """Run the complete migration process."""
         self.logger.info("=" * 60)
-        self.logger.info(f"Starting historical data migration")
+        self.logger.info("Starting historical data migration")
         self.logger.info(f"Environment: {self.env}")
         self.logger.info(f"Days to migrate: {self.days}")
         self.logger.info(f"Mode: {'DRY RUN' if self.dry_run else 'EXECUTION'}")

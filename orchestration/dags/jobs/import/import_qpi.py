@@ -1,6 +1,15 @@
 import time
 from datetime import datetime, timedelta
 
+from airflow import DAG
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import BranchPythonOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryInsertJobOperator,
+)
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
 from common import macros
 from common.callback import on_failure_base_callback
 from common.config import (
@@ -12,16 +21,6 @@ from common.config import (
 )
 from common.utils import get_airflow_schedule
 from google.cloud import storage
-
-from airflow import DAG
-from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import BranchPythonOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
-from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
-    GCSToBigQueryOperator,
-)
 
 QPI_ANSWERS_SCHEMA = [
     {"name": "user_id", "type": "STRING", "mode": "NULLABLE"},

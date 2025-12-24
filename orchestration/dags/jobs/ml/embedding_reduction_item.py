@@ -1,5 +1,9 @@
 from datetime import datetime, timedelta
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -17,12 +21,8 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
-from jobs.crons import SCHEDULE_DICT
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+from jobs.crons import SCHEDULE_DICT
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"emb-reduction-{ENV_SHORT_NAME}"

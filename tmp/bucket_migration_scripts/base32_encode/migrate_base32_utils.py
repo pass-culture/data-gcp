@@ -19,7 +19,7 @@ import logging
 import subprocess
 import sys
 from datetime import datetime
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
 
 class Base32UtilityMigrator:
@@ -153,7 +153,7 @@ class Base32UtilityMigrator:
         Returns:
             Tuple of (success, files_count, analysis)
         """
-        self.logger.info(f"Starting base32-encode utility migration")
+        self.logger.info("Starting base32-encode utility migration")
         self.logger.info(f"  From: {self.old_path}")
         self.logger.info(f"  To: {self.new_path}")
 
@@ -278,7 +278,7 @@ class Base32UtilityMigrator:
     def run_migration(self) -> bool:
         """Run the complete migration process."""
         self.logger.info("=" * 80)
-        self.logger.info(f"Starting Base32-Encode Utility Migration")
+        self.logger.info("Starting Base32-Encode Utility Migration")
         self.logger.info(f"Environment: {self.env}")
         self.logger.info(f"Mode: {'DRY RUN' if self.dry_run else 'EXECUTION'}")
         self.logger.info("=" * 80)
@@ -366,7 +366,7 @@ def main():
         print(
             f"⚠️  WARNING: This will migrate base32-encode utilities to shared-utilities-bucket-{args.env}"
         )
-        print(f"   This affects BigQuery UDF JavaScript functions!")
+        print("   This affects BigQuery UDF JavaScript functions!")
         print(f"   Source: gs://data-bucket-{args.env}/base32-encode/")
         print(f"   Target: gs://shared-utilities-bucket-{args.env}/base32-encode/")
         print()

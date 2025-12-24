@@ -1,17 +1,18 @@
-import os
 import io
+import os
 import time
-from typing import List, Dict, Any
-from google.cloud import storage
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any, Dict, List
+
+from google.cloud import storage
 from helpers.utils import (
-    FILE_EXTENSION,
-    ENCRYPTED_FOLDER,
-    DEFAULT_MAX_WORKERS,
     DEFAULT_BATCH_SIZE,
+    DEFAULT_MAX_WORKERS,
+    ENCRYPTED_FOLDER,
+    FILE_EXTENSION,
     init_s3_client,
-    logger,
     load_target_bucket_config,
+    logger,
 )
 
 

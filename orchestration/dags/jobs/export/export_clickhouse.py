@@ -1,5 +1,13 @@
 import datetime
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import BranchPythonOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryInsertJobOperator,
+)
+from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -21,16 +29,8 @@ from dependencies.export_clickhouse.export_clickhouse import (
     ANALYTICS_CONFIGS,
     TABLES_CONFIGS,
 )
-from jobs.crons import SCHEDULE_DICT
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import BranchPythonOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
-from airflow.utils.task_group import TaskGroup
+from jobs.crons import SCHEDULE_DICT
 
 GCE_INSTANCE = f"export-clickhouse-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/clickhouse"

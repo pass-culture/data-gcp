@@ -103,6 +103,14 @@ jobs:
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: dbt docs generate --static --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
 
+      - name: "Generate dbt colibri documentation"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+        run: uv run colibri generate
+
       - name: "Push dependencies (dbt) to GCS (data/target/dbt_packages)"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
@@ -170,12 +178,13 @@ jobs:
       - name: "Deploy Airflow (plugins)"
         run: gsutil -m rsync -d -r plugins gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/plugins
 
-      - name: "Push documentation (dbt) to GCS (plugins/static/dbt_docs)"
+      - name: "Push documentation (dbt) to GCS (plugins/static/dbt_*)"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
         run: |
           gsutil cp target/static_index.html gs://$AIRFLOW_DAGS_BUCKET/plugins/static/dbt_docs/index.html
+          gsutil cp dist/index.html gs://$AIRFLOW_DAGS_BUCKET/plugins/static/dbt_docs/colibri.html
 
       - name: "Wait for composer to be deployed (10s x 6 times)"
         if: ${{ inputs.IS_COMPOSER }}

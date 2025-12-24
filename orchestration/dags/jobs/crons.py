@@ -9,7 +9,7 @@ SCHEDULE_DICT = {
         "stg": None,
         "dev": None,
     },
-    "algo_default_deployment": "0 9 * * *",
+    "algo_default_deployment": "0 6 * * *",
     "artist_linkage": "0 12 * * 0",
     "bigquery_archive_partition": "0 7 * * *",
     "bigquery_historize_applicative_database": {

@@ -1,13 +1,15 @@
 import json
 from datetime import datetime, timedelta
 
+from airflow import DAG
+from airflow.models import Param
 from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_TAGS,
-    ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
     DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME,
     DS_DATA_ARCHIVE_BUCKET_NAME,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -16,10 +18,8 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
-from jobs.crons import SCHEDULE_DICT
 
-from airflow import DAG
-from airflow.models import Param
+from jobs.crons import SCHEDULE_DICT
 
 # Configurations
 DAG_NAME = "bigquery_archive_partition"

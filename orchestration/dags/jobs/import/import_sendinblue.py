@@ -1,5 +1,8 @@
 import datetime
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -24,10 +27,6 @@ from dependencies.sendinblue.import_sendinblue import (
     clean_tables,
     raw_tables,
 )
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
 
 DAG_NAME = "import_brevo"
 GCE_INSTANCE = f"import-brevo-{ENV_SHORT_NAME}"

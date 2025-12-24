@@ -1,16 +1,17 @@
-import duckdb
-import time
-from typing import List, Tuple
-from contextlib import contextmanager
-from fsspec import filesystem
-from pathlib import Path
-from google.cloud import storage
 import concurrent.futures
+import time
+from contextlib import contextmanager
+from pathlib import Path
+from typing import List, Tuple
+
+import duckdb
+from fsspec import filesystem
+from google.cloud import storage
 from helpers.utils import (
-    logger,
-    ENCRYPTED_FOLDER,
     DEFAULT_BATCH_SIZE,
     DEFAULT_MAX_WORKERS,
+    ENCRYPTED_FOLDER,
+    logger,
 )
 
 

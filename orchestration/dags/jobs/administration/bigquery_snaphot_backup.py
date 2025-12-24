@@ -1,41 +1,37 @@
 import datetime
+import hashlib
+import json
 import os
+from functools import lru_cache
+
+from airflow import DAG
+from airflow.exceptions import AirflowSkipException
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+from airflow.utils.task_group import TaskGroup
 from common.callback import on_failure_base_callback
 from common.config import (
-    GCP_REGION,
     DAG_TAGS,
     DE_BIGQUERY_TMP_BACKUP_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    PATH_TO_DBT_TARGET,
+    GCP_REGION,
     PATH_TO_DBT_PROJECT,
+    PATH_TO_DBT_TARGET,
 )
-from common.utils import (
-    delayed_waiting_operator,
-    get_airflow_schedule,
-)
-
 from common.dbt.dag_utils import (
     get_models_schedule_from_manifest,
     get_node_alias_and_dataset,
     load_manifest_with_mtime,
 )
-from jobs.crons import SCHEDULE_DICT
-
-from airflow import DAG
-from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import PythonOperator
-
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-
-from airflow.utils.task_group import TaskGroup
-from airflow.exceptions import AirflowSkipException
-import json
-import hashlib
+from common.utils import (
+    delayed_waiting_operator,
+    get_airflow_schedule,
+)
 from google.cloud import bigquery, storage
-from airflow.exceptions import AirflowSkipException
 
-from functools import lru_cache
+from jobs.crons import SCHEDULE_DICT
 
 
 @lru_cache(maxsize=32)
@@ -124,8 +120,8 @@ def get_snapshot_configs_cached(
 
 
 def skip_if_data_exists(bucket, base_path, table, yyyymmdd):
-    from google.cloud import storage
     from airflow.exceptions import AirflowSkipException
+    from google.cloud import storage
 
     client = storage.Client()
     prefix = f"{base_path}/{table}/{yyyymmdd}/"

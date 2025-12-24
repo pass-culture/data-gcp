@@ -1,7 +1,6 @@
-from dbt_docs import DBTDocs, DBTColibriDocs
-from flask import Blueprint
-
 from airflow.plugins_manager import AirflowPlugin
+from dbt_docs import DBTDocs
+from flask import Blueprint
 
 bp = Blueprint("plugin", __name__, template_folder="templates", static_folder="static")
 

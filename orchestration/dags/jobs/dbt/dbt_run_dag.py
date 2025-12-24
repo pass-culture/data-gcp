@@ -1,35 +1,34 @@
 import datetime
 from functools import partial
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.bash import BashOperator
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator
 from common.callback import on_failure_base_callback
 from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    PATH_TO_DBT_TARGET,
     GCS_AIRFLOW_BUCKET,
+    PATH_TO_DBT_TARGET,
 )
 from common.dbt.dag_utils import (
     dbt_dag_reconstruction,
     load_and_process_manifest,
 )
 from common.dbt.dbt_executors import (
+    clean_dbt,
     compile_dbt_with_selector,
     run_dbt_operation,
-    clean_dbt,
 )
 from common.utils import (
     delayed_waiting_operator,
     get_airflow_schedule,
 )
+
 from jobs.crons import SCHEDULE_DICT
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.bash import BashOperator
-from airflow.operators.python import PythonOperator
-from airflow.operators.empty import EmptyOperator
-
 
 default_args = {
     "start_date": datetime.datetime(2020, 12, 23),

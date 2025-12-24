@@ -1,5 +1,11 @@
 from datetime import datetime, timedelta
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryInsertJobOperator,
+)
 from common import macros
 from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
 from common.alerts.ml_training import create_algo_training_slack_block
@@ -21,13 +27,6 @@ from common.operators.gce import (
 )
 from common.operators.slack import SendSlackMessageOperator
 from common.utils import get_airflow_schedule
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
 
 DATE = "{{ ts_nodash }}"
 DAG_NAME = "algo_training_offer_compliance_model"

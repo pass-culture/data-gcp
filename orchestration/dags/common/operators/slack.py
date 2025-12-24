@@ -1,9 +1,8 @@
 from typing import List, Optional
 
-from common.hooks.slack import SlackHook
-
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
+from common.hooks.slack import SlackHook
 
 
 class SendSlackMessageOperator(BaseOperator):

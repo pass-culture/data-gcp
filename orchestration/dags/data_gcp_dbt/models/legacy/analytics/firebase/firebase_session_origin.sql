@@ -51,7 +51,7 @@ select distinct
         order by event_timestamp
         rows between unbounded preceding and unbounded following
     ) as last_user_location_type
-from {{ ref("int_firebase__native_event") }} as firebase_events
+from {{ ref("int_firebase__native_event") }}
 where
     session_id is not null
     and event_name not in (

@@ -32,12 +32,10 @@ select
     regionid,
     academieid,
     left(siret, 9) as siren,
-    case
-        when siret in (select siret from adage_agreg_synchro) then true else false
-    end as siret_synchro_adage,
-    case
-        when left(siret, 9) in (select left(siret, 9) from adage_agreg_synchro)
-        then true
-        else false
-    end as siren_synchro_adage
+    coalesce(
+        siret in (select siret from adage_agreg_synchro), false
+    ) as siret_synchro_adage,
+    coalesce(
+        left(siret, 9) in (select left(siret, 9) from adage_agreg_synchro), false
+    ) as siren_synchro_adage
 from {{ source("raw", "adage") }}

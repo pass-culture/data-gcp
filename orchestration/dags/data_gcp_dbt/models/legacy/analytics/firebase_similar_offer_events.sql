@@ -27,14 +27,14 @@ select
     case
         when event_name = 'PlaylistVerticalScroll' then 'display' else 'convert'
     end as event_type
-from {{ ref("int_firebase__native_event") }} f_events
+from {{ ref("int_firebase__native_event") }} as f_events
 inner join
-    {{ ref("int_applicative__offer_item_id") }} int_applicative__offer_item_id using (
-        offer_id
-    )
+    {{ ref("int_applicative__offer_item_id") }} as int_applicative__offer_item_id
+    using (offer_id)
 left join
-    {{ ref("int_applicative__offer_item_id") }} similar_int_applicative__offer_item_id
-    on similar_int_applicative__offer_item_id.offer_id = f_events.similar_offer_id
+    {{ ref("int_applicative__offer_item_id") }}
+    as similar_int_applicative__offer_item_id
+    on f_events.similar_offer_id = similar_int_applicative__offer_item_id.offer_id
 where
     (
         event_name = 'PlaylistVerticalScroll'

@@ -85,9 +85,9 @@ select
 from consult_offer
 left join
     venue_data
-    on venue_data.unique_session_id = consult_offer.unique_session_id
-    and venue_data.offer_id = consult_offer.offer_id
-    and venue_data.event_timestamp > consult_offer.consult_offer_timestamp
+    on consult_offer.unique_session_id = venue_data.unique_session_id
+    and consult_offer.offer_id = venue_data.offer_id
+    and consult_offer.consult_offer_timestamp < venue_data.event_timestamp
     and event_name = 'BookingConfirmation'
 {% if is_incremental() %}
     where

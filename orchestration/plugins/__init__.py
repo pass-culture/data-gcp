@@ -1,6 +1,3 @@
-from dbt_docs import DBTDocs, DBTColibriDocs
-from flask import Blueprint
-
 from airflow.plugins_manager import AirflowPlugin
 from dbt_docs import DBTColibriDocs, DBTDocs
 from flask import Blueprint

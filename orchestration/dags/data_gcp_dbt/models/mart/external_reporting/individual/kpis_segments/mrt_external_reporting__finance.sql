@@ -8,7 +8,7 @@
     )
 }}
 
-{% set dimensions = get_dimensions("venue", "geo") %}
+{% set dimensions = get_dimensions("venue", "geo_full") %}
 {% set categories = get_categories() %}
 
 {% set kpis = [
@@ -32,6 +32,8 @@ with
             timestamp("{{ ts() }}") as updated_at,
             venue_region_name,
             venue_department_name,
+            venue_epci,
+            venue_city,
             offer_category_id,
             offerer_is_epn,
             {% for kpi in kpis %}

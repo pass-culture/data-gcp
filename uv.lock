@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.10, <3.13"
 resolution-markers = [
     "python_full_version < '3.11'",
@@ -1076,6 +1076,9 @@ wheels = [
 name = "data-gcp"
 version = "0.1.1"
 source = { virtual = "." }
+dependencies = [
+    { name = "dbt-colibri" },
+]
 
 [package.dev-dependencies]
 airflow = [
@@ -1119,6 +1122,7 @@ docs = [
 ]
 
 [package.metadata]
+requires-dist = [{ name = "dbt-colibri", specifier = ">=0.2.7" }]
 
 [package.metadata.requires-dev]
 airflow = [

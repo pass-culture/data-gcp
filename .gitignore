@@ -35,3 +35,6 @@ package_versions.diff
 
 # AI
 .serena
+
+# dist
+dist/

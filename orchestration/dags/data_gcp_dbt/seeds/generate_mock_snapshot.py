@@ -1,7 +1,8 @@
-import pandas as pd
-import numpy as np
 import random
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
+
+import numpy as np
+import pandas as pd
 
 # ==========================================
 # 1. CONFIGURATION
@@ -202,7 +203,7 @@ df = df.sort_values(by=["id", "dbt_valid_from"])
 # Reorder columns
 df = df[["id", "dbt_valid_from", "dbt_valid_to", "type"]]
 
-print(f"Simulation Complete.")
+print("Simulation Complete.")
 print(f"  - Total Rows Generated: {len(df)}")
 print(f"  - Final Active ID count: {len(active_ids_map)}")
 print(f"  - Final Max ID: {global_id_counter - 1}")

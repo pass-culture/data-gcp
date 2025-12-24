@@ -1,5 +1,7 @@
 import datetime
 
+from airflow import DAG
+from airflow.models import Param
 from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_TAGS,
@@ -13,9 +15,6 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
-
-from airflow import DAG
-from airflow.models import Param
 
 DAG_NAME = "import_gsheet"
 GCE_INSTANCE = f"import-gsheet-{ENV_SHORT_NAME}"

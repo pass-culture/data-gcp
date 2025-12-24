@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-from http_tools.clients import SyncHttpClient, AsyncHttpClient
+from http_tools.clients import AsyncHttpClient, SyncHttpClient
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.10, <3.13"
 resolution-markers = [
     "python_full_version < '3.11'",
@@ -1076,9 +1076,6 @@ wheels = [
 name = "data-gcp"
 version = "0.1.1"
 source = { virtual = "." }
-dependencies = [
-    { name = "dbt-colibri" },
-]
 
 [package.dev-dependencies]
 airflow = [
@@ -1096,6 +1093,7 @@ airflow = [
 ]
 dbt = [
     { name = "dbt-bigquery" },
+    { name = "dbt-colibri" },
     { name = "dbt-core" },
     { name = "dbt-metabase" },
     { name = "deepdiff" },
@@ -1121,7 +1119,6 @@ docs = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "dbt-colibri", specifier = ">=0.2.7" }]
 
 [package.metadata.requires-dev]
 airflow = [
@@ -1139,6 +1136,7 @@ airflow = [
 ]
 dbt = [
     { name = "dbt-bigquery", specifier = "==1.8.1" },
+    { name = "dbt-colibri", specifier = ">=0.2.7" },
     { name = "dbt-core", specifier = "==1.10.11" },
     { name = "dbt-metabase", specifier = "==1.4.2" },
     { name = "deepdiff", specifier = "==8.6.1" },

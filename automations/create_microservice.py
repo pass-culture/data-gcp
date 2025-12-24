@@ -1,7 +1,6 @@
 import re
 import shutil
 from enum import Enum
-from typing import Annotated
 
 import typer
 

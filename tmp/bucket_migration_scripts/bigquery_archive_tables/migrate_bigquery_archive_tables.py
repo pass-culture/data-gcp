@@ -123,7 +123,7 @@ class BigQueryArchiveTablesMigrator:
         Returns:
             Tuple of (success, files_count)
         """
-        self.logger.info(f"Starting bigquery_archive_tables data migration")
+        self.logger.info("Starting bigquery_archive_tables data migration")
         self.logger.info(f"  From: {self.old_path}")
         self.logger.info(f"  To: {self.new_path}")
 
@@ -227,7 +227,7 @@ class BigQueryArchiveTablesMigrator:
     def run_migration(self) -> bool:
         """Run the complete migration process."""
         self.logger.info("=" * 60)
-        self.logger.info(f"Starting bigquery_archive_tables data migration")
+        self.logger.info("Starting bigquery_archive_tables data migration")
         self.logger.info(f"Environment: {self.env}")
         self.logger.info(f"Mode: {'DRY RUN' if self.dry_run else 'EXECUTION'}")
         self.logger.info("=" * 60)

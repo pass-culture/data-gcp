@@ -2,9 +2,9 @@ import logging
 from datetime import datetime, timedelta
 from typing import List
 
+from google.cloud import bigquery
 from pydantic import BaseModel
 from utils import GCP_PROJECT_ID
-from google.cloud import bigquery
 
 # Configure logging
 logging.basicConfig(

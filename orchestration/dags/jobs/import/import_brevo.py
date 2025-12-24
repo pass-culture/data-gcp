@@ -1,5 +1,8 @@
 import datetime
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -24,10 +27,6 @@ from dependencies.brevo.import_brevo import (
     clean_tables,
     raw_tables,
 )
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
 
 DAG_NAME = "import_brevo_v2"
 GCE_INSTANCE = f"import-brevo-2-{ENV_SHORT_NAME}"

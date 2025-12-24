@@ -1,14 +1,13 @@
 import datetime
 
+from airflow import DAG
+from airflow.operators.empty import EmptyOperator
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import DAG_FOLDER, DAG_TAGS, GCP_PROJECT_ID
 from common.operators.bigquery import bigquery_job_task
 from common.utils import depends_loop, get_airflow_schedule
 from dependencies.propilote.export_propilote import propilote_tables
-
-from airflow import DAG
-from airflow.operators.empty import EmptyOperator
 
 default_dag_args = {
     "start_date": datetime.datetime(2022, 6, 24),

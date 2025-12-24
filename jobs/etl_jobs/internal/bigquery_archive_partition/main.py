@@ -1,8 +1,8 @@
-import typer
-from typing import Any, Optional
 import json
-from archive import Archive, JobConfig
 import logging
+
+import typer
+from archive import Archive, JobConfig
 
 logging.basicConfig(
     level=logging.INFO,

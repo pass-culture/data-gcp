@@ -19,7 +19,7 @@ import logging
 import subprocess
 import sys
 from datetime import datetime
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
 
 class SeedDataMigrator:
@@ -157,7 +157,7 @@ class SeedDataMigrator:
         Returns:
             Tuple of (success, total_files_migrated, migration_stats)
         """
-        self.logger.info(f"Starting seed data migration")
+        self.logger.info("Starting seed data migration")
         self.logger.info(f"  From: {self.old_path}")
         self.logger.info(f"  To: {self.new_path}")
 
@@ -297,7 +297,7 @@ class SeedDataMigrator:
     def run_migration(self) -> bool:
         """Run the complete migration process."""
         self.logger.info("=" * 80)
-        self.logger.info(f"Starting BigQuery Imports Seed Data Migration")
+        self.logger.info("Starting BigQuery Imports Seed Data Migration")
         self.logger.info(f"Environment: {self.env}")
         self.logger.info(f"Mode: {'DRY RUN' if self.dry_run else 'EXECUTION'}")
         self.logger.info("=" * 80)
@@ -376,9 +376,7 @@ def main():
         print(
             f"⚠️  WARNING: This will migrate ALL seed data from bigquery_imports/seed/ to de-bigquery-data-import-{args.env}/bigquery_imports/seed/"
         )
-        print(
-            f"   This includes 50+ reference tables with CSV, Parquet, and Avro files"
-        )
+        print("   This includes 50+ reference tables with CSV, Parquet, and Avro files")
         print(f"   Source: gs://data-bucket-{args.env}/bigquery_imports/seed/")
         print(
             f"   Target: gs://de-bigquery-data-import-{args.env}/bigquery_imports/seed/"

@@ -12,7 +12,6 @@ from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_GRAPH_RECOMMENDATION_DATASET,
     BIGQUERY_ML_RECOMMENDATION_DATASET,
-    BIGQUERY_ML_RETRIEVAL_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,

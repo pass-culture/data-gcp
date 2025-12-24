@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 
+from airflow.decorators import dag, task
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_TAGS,
@@ -14,8 +16,7 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
-from airflow.decorators import dag, task
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+
 from jobs.crons import SCHEDULE_DICT
 
 DEFAULT_REGION = "europe-west1"

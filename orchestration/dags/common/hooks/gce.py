@@ -1,18 +1,24 @@
+import asyncio
 import datetime
 import json
+import os
 import re
 import time
 import typing as t
 from base64 import b64encode
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from time import sleep
-import asyncio
-import os
-from concurrent.futures import ThreadPoolExecutor
 
 import dateutil
 import googleapiclient.discovery
 import pytz
+from airflow.configuration import conf
+from airflow.exceptions import AirflowException
+from airflow.models.taskinstance import TaskInstance
+from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
+from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
+from airflow.utils.context import Context
 from common.config import (
     ENV_SHORT_NAME,
     GCE_SA,
@@ -24,14 +30,6 @@ from common.hooks.image import CPUImage
 from common.hooks.network import BASE_NETWORK_LIST, VPCNetwork
 from googleapiclient.errors import HttpError
 from paramiko import SSHException
-
-from airflow.configuration import conf
-from airflow.exceptions import AirflowException
-from airflow.models.taskinstance import TaskInstance
-from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
-from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
-from airflow.utils.context import Context
-
 
 DEFAULT_LABELS = {
     "env": ENV_SHORT_NAME,
@@ -227,7 +225,7 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
                 echo "PID:0"
             fi
         """
-        self.log.info(f"Running status check command")
+        self.log.info("Running status check command")
         # Run sync SSH command in executor to avoid blocking event loop
         import asyncio
         import os
@@ -262,7 +260,7 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
                 fi
             fi
         """
-        self.log.info(f"Running cleanup command")
+        self.log.info("Running cleanup command")
         # Run sync SSH command in executor to avoid blocking event loop
 
         # Reuse the instance-level thread pool

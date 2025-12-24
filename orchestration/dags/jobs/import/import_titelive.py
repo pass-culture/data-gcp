@@ -3,6 +3,9 @@
 import datetime
 import os
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.python import BranchPythonOperator
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import DAG_FOLDER, DAG_TAGS, ENV_SHORT_NAME
@@ -12,13 +15,9 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from common.utils import get_airflow_schedule, delayed_waiting_operator
-from jobs.crons import SCHEDULE_DICT
+from common.utils import delayed_waiting_operator, get_airflow_schedule
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import BranchPythonOperator
+from jobs.crons import SCHEDULE_DICT
 
 DAG_NAME = "import_titelive"
 GCE_INSTANCE = f"import-titelive-{ENV_SHORT_NAME}"

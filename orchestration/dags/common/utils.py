@@ -2,10 +2,14 @@ import json
 import logging
 import os
 import time
-from datetime import timedelta, datetime
-
+from datetime import datetime, timedelta
 
 import requests
+from airflow.models import DagRun
+from airflow.operators.python import PythonOperator
+from airflow.sensors.external_task import ExternalTaskSensor
+from airflow.utils.db import provide_session
+from airflow.utils.types import DagRunType
 from common.access_gcp_secrets import create_key_if_not_exists
 from common.config import (
     GCP_PROJECT_ID,
@@ -15,12 +19,6 @@ from google.api_core.exceptions import NotFound
 from google.auth.transport.requests import Request
 from google.cloud import storage
 from google.oauth2 import id_token
-
-from airflow.models import DagRun
-from airflow.operators.python import PythonOperator
-from airflow.sensors.external_task import ExternalTaskSensor
-from airflow.utils.db import provide_session
-from airflow.utils.types import DagRunType
 
 
 @provide_session

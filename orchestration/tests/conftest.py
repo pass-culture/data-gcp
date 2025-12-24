@@ -1,16 +1,16 @@
 """Minimal conftest.py for testing delayed_waiting_operator."""
 
-import pytest
 import datetime
 import sys
 from pathlib import Path
 from unittest.mock import Mock
 
+import pytest
+from airflow import DAG
+
 # Add dags directory to Python path so all test files can import from common
 DAGS_PATH = Path(__file__).parent.parent / "dags"
 sys.path.insert(0, str(DAGS_PATH))
-
-from airflow import DAG
 
 
 @pytest.fixture

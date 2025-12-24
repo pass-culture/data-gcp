@@ -16,11 +16,11 @@ Usage:
 
 import argparse
 import logging
+import re
 import subprocess
 import sys
-from datetime import datetime, timedelta
-from typing import List, Tuple, Dict
-import re
+from datetime import datetime
+from typing import Dict, List, Tuple
 
 
 class ClickHouseExportMigrator:
@@ -187,7 +187,7 @@ class ClickHouseExportMigrator:
         Returns:
             Tuple of (success, files_count, analysis)
         """
-        self.logger.info(f"Starting ClickHouse export migration")
+        self.logger.info("Starting ClickHouse export migration")
         self.logger.info(f"  From: {self.old_path}")
         self.logger.info(f"  To: {self.new_path}")
 
@@ -338,7 +338,7 @@ class ClickHouseExportMigrator:
     def run_migration(self) -> bool:
         """Run the complete migration process."""
         self.logger.info("=" * 80)
-        self.logger.info(f"Starting ClickHouse Export Migration")
+        self.logger.info("Starting ClickHouse Export Migration")
         self.logger.info(f"Environment: {self.env}")
         self.logger.info(f"Mode: {'DRY RUN' if self.dry_run else 'EXECUTION'}")
         self.logger.info("⚠️  WARNING: This affects active daily staging pipeline!")
@@ -444,7 +444,7 @@ Coordinate with development team and ClickHouse integration.
         print(
             f"⚠️  WARNING: This will migrate ClickHouse export data to de-bigquery-data-export-{args.env}"
         )
-        print(f"   This affects daily staging pipeline!")
+        print("   This affects daily staging pipeline!")
         print(f"   Source: gs://data-bucket-{args.env}/clickhouse_export/")
         print(f"   Target: gs://de-bigquery-data-export-{args.env}/clickhouse_export/")
         print()

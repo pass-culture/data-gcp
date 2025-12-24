@@ -1,35 +1,32 @@
 import datetime
 import os
+
+from airflow import DAG
+from airflow.exceptions import AirflowSkipException
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator
+from airflow.providers.google.cloud.transfers.bigquery_to_gcs import (
+    BigQueryToGCSOperator,
+)
+from airflow.utils.task_group import TaskGroup
 from common.callback import on_failure_base_callback
 from common.config import (
     BIGQUERY_INT_RAW_DATASET,
-    DAG_FOLDER,
     DAG_TAGS,
     DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    PATH_TO_DBT_TARGET,
     PATH_TO_DBT_PROJECT,
+    PATH_TO_DBT_TARGET,
 )
+from common.dbt.dag_utils import get_models_schedule_from_manifest
 from common.utils import (
     delayed_waiting_operator,
     get_airflow_schedule,
     get_tables_config_dict,
 )
 
-from common.dbt.dag_utils import get_models_schedule_from_manifest, load_manifest
 from jobs.crons import SCHEDULE_DICT
-
-from airflow import DAG
-from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import PythonOperator
-
-from airflow.providers.google.cloud.transfers.bigquery_to_gcs import (
-    BigQueryToGCSOperator,
-)
-from airflow.utils.task_group import TaskGroup
-from airflow.exceptions import AirflowSkipException
-
 
 SNAPSHOTED_APPLICATIVE_PATH = f"{PATH_TO_DBT_PROJECT}/models/intermediate/raw"
 SNAPSHOTED_MODELS = [
@@ -63,16 +60,16 @@ def skip_if_not_scheduled(**context):
     if "weekly" in schedules and "monthly" in schedules:
         if execution_date.weekday() != 0 and execution_date.day != 1:
             raise AirflowSkipException(
-                f"Skipping because table is weekly and monthly scheduled"
+                "Skipping because table is weekly and monthly scheduled"
             )
     # check weekly
     elif "weekly" in schedules:
         if execution_date.weekday() != 0:  # Monday
-            raise AirflowSkipException(f"Skipping because table is weekly scheduled")
+            raise AirflowSkipException("Skipping because table is weekly scheduled")
     # check monthly
     elif "monthly" in schedules:
         if execution_date.day != 1:
-            raise AirflowSkipException(f"Skipping because table is monthly scheduled")
+            raise AirflowSkipException("Skipping because table is monthly scheduled")
 
 
 default_dag_args = {

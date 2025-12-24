@@ -1,5 +1,7 @@
 import datetime
 
+from airflow import DAG
+from airflow.models import Param
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -15,9 +17,6 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
-
-from airflow import DAG
-from airflow.models import Param
 
 DAG_NAME = "import_social_network"
 default_dag_args = {

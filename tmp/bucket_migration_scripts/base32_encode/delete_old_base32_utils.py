@@ -18,7 +18,7 @@ import logging
 import subprocess
 import sys
 from datetime import datetime
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
 
 
 class Base32UtilitiesCleanup:
@@ -160,13 +160,13 @@ class Base32UtilitiesCleanup:
         )
 
         if success:
-            self.logger.info(f"✅ Migration verification successful:")
+            self.logger.info("✅ Migration verification successful:")
             self.logger.info(f"   Old location: {len(old_files)} files")
             self.logger.info(f"   New location: {len(new_files)} files")
             if new_has_critical:
-                self.logger.info(f"   ✅ Critical utilities found in new location")
+                self.logger.info("   ✅ Critical utilities found in new location")
         else:
-            self.logger.error(f"❌ Migration verification failed:")
+            self.logger.error("❌ Migration verification failed:")
             self.logger.error(f"   Old location: {len(old_files)} files")
             self.logger.error(f"   New location: {len(new_files)} files")
 
@@ -288,7 +288,7 @@ class Base32UtilitiesCleanup:
     def run_cleanup(self) -> bool:
         """Run the complete cleanup process."""
         self.logger.info("=" * 80)
-        self.logger.info(f"Starting Base32-Encode Utilities Cleanup")
+        self.logger.info("Starting Base32-Encode Utilities Cleanup")
         self.logger.info(f"Environment: {self.env}")
         self.logger.info(f"Mode: {'DRY RUN' if self.dry_run else 'DELETION'}")
         self.logger.info(f"Target: {self.old_path}")

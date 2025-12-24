@@ -3,25 +3,23 @@ DBT execution functions using dbt-core Python API.
 Simple implementation that mirrors the original bash scripts functionality.
 """
 
+import logging
 import os
 import shutil
-import yaml
-from copy import copy
 import tempfile
-import logging
+from copy import copy
+from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
-from datetime import datetime
 
-from dbt.cli.main import dbtRunner, dbtRunnerResult
+import yaml
 from airflow.exceptions import AirflowSkipException
-
 from common.config import (
     ENV_SHORT_NAME,
     PATH_TO_DBT_PROJECT,
     PATH_TO_DBT_TARGET,
-    EXCLUDED_TAGS,
 )
+from dbt.cli.main import dbtRunner, dbtRunnerResult
 
 
 def should_skip_scheduled_node(node_tags: List[str], ds: str) -> Optional[str]:
@@ -89,7 +87,6 @@ def run_dbt_command(
     **context,
 ) -> None:
     """Execute a dbt command using dbtRunner with vars."""
-    from copy import copy
 
     # Get parameters from context
     params = context.get("params", {})

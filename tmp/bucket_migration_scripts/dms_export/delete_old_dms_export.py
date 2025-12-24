@@ -18,7 +18,7 @@ import logging
 import subprocess
 import sys
 from datetime import datetime
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
 
 
 class DMSExportCleanup:
@@ -158,7 +158,7 @@ class DMSExportCleanup:
         success = len(new_files) >= len(old_files) and len(old_files) > 0
 
         if success:
-            self.logger.info(f"✅ Migration verification successful:")
+            self.logger.info("✅ Migration verification successful:")
             self.logger.info(
                 f"   Old location: {len(old_files)} files ({len(old_json_files)} JSON, {len(old_parquet_files)} Parquet)"
             )
@@ -167,14 +167,14 @@ class DMSExportCleanup:
             )
 
             if len(new_json_files) >= len(old_json_files) and len(old_json_files) > 0:
-                self.logger.info(f"   ✅ JSON staging files verified")
+                self.logger.info("   ✅ JSON staging files verified")
             if (
                 len(new_parquet_files) >= len(old_parquet_files)
                 and len(old_parquet_files) > 0
             ):
-                self.logger.info(f"   ✅ Parquet staging files verified")
+                self.logger.info("   ✅ Parquet staging files verified")
         else:
-            self.logger.error(f"❌ Migration verification failed:")
+            self.logger.error("❌ Migration verification failed:")
             self.logger.error(
                 f"   Old location: {len(old_files)} files ({len(old_json_files)} JSON, {len(old_parquet_files)} Parquet)"
             )
@@ -314,7 +314,7 @@ class DMSExportCleanup:
     def run_cleanup(self) -> bool:
         """Run the complete cleanup process."""
         self.logger.info("=" * 80)
-        self.logger.info(f"Starting DMS Export Cleanup")
+        self.logger.info("Starting DMS Export Cleanup")
         self.logger.info(f"Environment: {self.env}")
         self.logger.info(f"Mode: {'DRY RUN' if self.dry_run else 'DELETION'}")
         self.logger.info(f"Target: {self.old_path}")

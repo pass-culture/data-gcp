@@ -18,8 +18,8 @@ import argparse
 import logging
 import subprocess
 import sys
-from datetime import datetime, timedelta
-from typing import List, Tuple, Dict
+from datetime import datetime
+from typing import Dict, List, Tuple
 
 
 class QPIExportsMigrator:
@@ -160,7 +160,7 @@ class QPIExportsMigrator:
         Returns:
             Tuple of (success, files_count, analysis)
         """
-        self.logger.info(f"Starting QPI exports migration")
+        self.logger.info("Starting QPI exports migration")
         self.logger.info(f"  From: {self.old_path}")
         self.logger.info(f"  To: {self.new_path}")
 
@@ -286,7 +286,7 @@ class QPIExportsMigrator:
     def run_migration(self) -> bool:
         """Run the complete migration process."""
         self.logger.info("=" * 80)
-        self.logger.info(f"Starting QPI Exports Migration")
+        self.logger.info("Starting QPI Exports Migration")
         self.logger.info(f"Environment: {self.env}")
         self.logger.info(f"Mode: {'DRY RUN' if self.dry_run else 'EXECUTION'}")
         self.logger.info("⚠️  WARNING: This affects hot daily import pipeline!")
@@ -389,7 +389,7 @@ Coordinate with development team before execution.
         print(
             f"⚠️  WARNING: This will migrate hot QPI export data to de-bigquery-data-export-{args.env}"
         )
-        print(f"   This affects daily import pipeline!")
+        print("   This affects daily import pipeline!")
         print(f"   Source: gs://data-bucket-{args.env}/QPI_exports/")
         print(f"   Target: gs://de-bigquery-data-export-{args.env}/qpi_exports/")
         print()

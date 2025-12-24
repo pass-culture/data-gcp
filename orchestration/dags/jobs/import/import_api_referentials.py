@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
 from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_TAGS,
@@ -13,10 +16,6 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
 
 GCE_INSTANCE = f"import-api-referentials-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/import_api_referentials"

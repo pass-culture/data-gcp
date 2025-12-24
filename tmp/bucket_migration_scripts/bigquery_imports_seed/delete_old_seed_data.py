@@ -18,7 +18,7 @@ import logging
 import subprocess
 import sys
 from datetime import datetime
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
 
 
 class SeedDataCleanup:
@@ -148,11 +148,11 @@ class SeedDataCleanup:
         success = len(new_files) >= len(old_files) and len(old_files) > 0
 
         if success:
-            self.logger.info(f"✅ Migration verification successful:")
+            self.logger.info("✅ Migration verification successful:")
             self.logger.info(f"   Old location: {len(old_files)} files")
             self.logger.info(f"   New location: {len(new_files)} files")
         else:
-            self.logger.error(f"❌ Migration verification failed:")
+            self.logger.error("❌ Migration verification failed:")
             self.logger.error(f"   Old location: {len(old_files)} files")
             self.logger.error(f"   New location: {len(new_files)} files")
 
@@ -250,7 +250,7 @@ class SeedDataCleanup:
     def run_cleanup(self) -> bool:
         """Run the complete cleanup process."""
         self.logger.info("=" * 80)
-        self.logger.info(f"Starting Seed Data Cleanup")
+        self.logger.info("Starting Seed Data Cleanup")
         self.logger.info(f"Environment: {self.env}")
         self.logger.info(f"Mode: {'DRY RUN' if self.dry_run else 'DELETION'}")
         self.logger.info(f"Target: {self.old_path}")

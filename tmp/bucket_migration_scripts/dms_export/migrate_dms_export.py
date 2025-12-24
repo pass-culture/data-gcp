@@ -19,7 +19,7 @@ import logging
 import subprocess
 import sys
 from datetime import datetime
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
 
 class DMSExportMigrator:
@@ -156,7 +156,7 @@ class DMSExportMigrator:
         Returns:
             Tuple of (success, files_count, analysis)
         """
-        self.logger.info(f"Starting DMS export migration")
+        self.logger.info("Starting DMS export migration")
         self.logger.info(f"  From: {self.old_path}")
         self.logger.info(f"  To: {self.new_path}")
 
@@ -305,7 +305,7 @@ class DMSExportMigrator:
     def run_migration(self) -> bool:
         """Run the complete migration process."""
         self.logger.info("=" * 80)
-        self.logger.info(f"Starting DMS Export Migration")
+        self.logger.info("Starting DMS Export Migration")
         self.logger.info(f"Environment: {self.env}")
         self.logger.info(f"Mode: {'DRY RUN' if self.dry_run else 'EXECUTION'}")
         self.logger.info("⚠️  WARNING: This affects active ETL staging pipeline!")
@@ -418,7 +418,7 @@ Coordinate with development team for timing.
         print(
             f"⚠️  WARNING: This will migrate active DMS staging data to de-bigquery-data-export-{args.env}"
         )
-        print(f"   This affects ETL staging pipeline!")
+        print("   This affects ETL staging pipeline!")
         print(f"   Source: gs://data-bucket-{args.env}/dms_export/")
         print(f"   Target: gs://de-bigquery-data-export-{args.env}/dms_export/")
         print()

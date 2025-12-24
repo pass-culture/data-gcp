@@ -1,10 +1,10 @@
+import asyncio
 import logging
 from abc import ABC, abstractmethod
 from typing import Optional
 
-import requests
 import httpx
-import asyncio
+import requests
 from http_tools.rate_limiters import BaseRateLimiter
 
 # Set up logging

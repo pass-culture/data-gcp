@@ -18,7 +18,7 @@ import logging
 import subprocess
 import sys
 from datetime import datetime
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
 
 
 class QPIExportsCleanup:
@@ -154,7 +154,7 @@ class QPIExportsCleanup:
         new_jsonl_count = int(stats["new_jsonl_files"])
 
         if success:
-            self.logger.info(f"✅ Migration verification successful:")
+            self.logger.info("✅ Migration verification successful:")
             self.logger.info(
                 f"   Old location: {len(old_files)} files ({old_jsonl_count} JSONL)"
             )
@@ -163,9 +163,9 @@ class QPIExportsCleanup:
             )
 
             if new_jsonl_count >= old_jsonl_count and old_jsonl_count > 0:
-                self.logger.info(f"   ✅ Critical JSONL export files verified")
+                self.logger.info("   ✅ Critical JSONL export files verified")
         else:
-            self.logger.error(f"❌ Migration verification failed:")
+            self.logger.error("❌ Migration verification failed:")
             self.logger.error(
                 f"   Old location: {len(old_files)} files ({old_jsonl_count} JSONL)"
             )
@@ -287,7 +287,7 @@ class QPIExportsCleanup:
     def run_cleanup(self) -> bool:
         """Run the complete cleanup process."""
         self.logger.info("=" * 80)
-        self.logger.info(f"Starting QPI Exports Cleanup")
+        self.logger.info("Starting QPI Exports Cleanup")
         self.logger.info(f"Environment: {self.env}")
         self.logger.info(f"Mode: {'DRY RUN' if self.dry_run else 'DELETION'}")
         self.logger.info(f"Target: {self.old_path}")

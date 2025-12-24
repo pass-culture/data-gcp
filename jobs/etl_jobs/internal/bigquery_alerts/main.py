@@ -40,7 +40,7 @@ def run():
         df["last_modified_time"] < df["schedule_tag"].map(get_schedule_mapping())
     ]
 
-    warning_tables = warning_tables[warning_tables.is_partition_table == False]
+    warning_tables = warning_tables[~warning_tables.is_partition_table]
 
     warning_tables_list = warning_tables["full_table_name"].to_list()
 

@@ -15,11 +15,11 @@ Usage:
 import argparse
 import json
 import logging
+import re
 import subprocess
 import sys
 from datetime import datetime
-from typing import List, Dict, Tuple
-import re
+from typing import Dict, List, Tuple
 
 
 class ElementaryReportsCleanup:
@@ -192,7 +192,7 @@ class ElementaryReportsCleanup:
         success = len(new_files) >= len(old_files) and len(old_files) > 0
 
         if success:
-            self.logger.info(f"✅ Migration verification successful:")
+            self.logger.info("✅ Migration verification successful:")
             self.logger.info(
                 f"   Old location: {len(old_files)} files ({len(old_html_files)} HTML reports)"
             )
@@ -201,9 +201,9 @@ class ElementaryReportsCleanup:
             )
 
             if len(new_html_files) >= len(old_html_files) and len(old_html_files) > 0:
-                self.logger.info(f"   ✅ HTML report files verified")
+                self.logger.info("   ✅ HTML report files verified")
         else:
-            self.logger.error(f"❌ Migration verification failed:")
+            self.logger.error("❌ Migration verification failed:")
             self.logger.error(
                 f"   Old location: {len(old_files)} files ({len(old_html_files)} HTML reports)"
             )
@@ -264,9 +264,6 @@ class ElementaryReportsCleanup:
 
         # Analyze what's being deleted
         cleanup_analysis = self.analyze_reports_for_cleanup(contents_to_delete)
-        files_to_delete = [
-            item for item in contents_to_delete if not item.endswith("/")
-        ]
         html_reports = cleanup_analysis["html_reports"]
 
         if html_reports:
@@ -341,7 +338,7 @@ class ElementaryReportsCleanup:
     def run_cleanup(self) -> bool:
         """Run the complete cleanup process."""
         self.logger.info("=" * 80)
-        self.logger.info(f"Starting Elementary Reports Cleanup")
+        self.logger.info("Starting Elementary Reports Cleanup")
         self.logger.info(f"Environment: {self.env}")
         self.logger.info(f"Mode: {'DRY RUN' if self.dry_run else 'DELETION'}")
         self.logger.info(f"Target: {self.old_path}")

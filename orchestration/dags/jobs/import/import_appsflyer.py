@@ -1,5 +1,8 @@
 import datetime
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -17,10 +20,6 @@ from common.operators.gce import (
 )
 from common.utils import depends_loop, get_airflow_schedule
 from dependencies.appsflyer.import_appsflyer import dag_tables
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
 
 GCE_INSTANCE = f"import-appsflyer-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/appsflyer"

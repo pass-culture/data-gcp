@@ -52,7 +52,7 @@ default-groups = ["airflow", "dbt", 'dev', 'docs']
 [tool.ruff]
 target-version = 'py312'
 
-lint.select = []
+lint.select = ["E4", "E7", "E9", "F", "I"]
 # TARGET : lint.select = [
 #     "E",      # pycodestyle
 #     "W",      # pycodestyle

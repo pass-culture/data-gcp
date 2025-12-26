@@ -6,6 +6,8 @@ from sklearn.metrics import (
     root_mean_squared_error,
 )
 
+from src.prophet_predict import predict_prophet_model
+
 
 def cross_validate_prophet_model(
     model, initial, period, horizon, metrics=("mae", "rmse", "mape"), plot=True
@@ -35,6 +37,7 @@ def cross_validate_prophet_model(
         plot: Whether to plot cross-validation results.
     Returns:
         cv_results: DataFrame with cross-validation results.
+        perf: DataFrame with performance metrics by horizon.
         metrics_dict: Dictionary with mean metrics.
     """
 
@@ -54,161 +57,82 @@ def cross_validate_prophet_model(
                 plt.legend()
                 plt.tight_layout()
                 plt.show()
-    return cv_results, metrics_dict
+    return cv_results, perf, metrics_dict
 
 
 def evaluate_prophet_model(
-    model,
-    df_test,
-    df_train=None,
-    test_periods=None,
-    freq="W",
-    title="Forecast",
-    x_label="weeks",
-    y_label="Pricing €",
-    figsize=(12, 8),
-    plot_train=False,
-    is_print=True,
+    model, df_actual, eval_start_date, eval_end_date, freq="W", cap=None, floor=None
 ):
     """
-    Evaluates a Prophet model: forecasts, computes metrics, and plots results.
+    Evaluate a Prophet model over a specified date range.
     Args:
         model: Trained Prophet model.
-        df_test: DataFrame with test set (columns: ds, y).
-        df_train: DataFrame with train set (optional, columns: ds, y).
-        test_periods: Number of periods to forecast (if None, uses len(df_test)).
+        eval_start_date: Start date for evaluation (string 'YYYY-MM-DD').
+        eval_end_date: End date for evaluation (string 'YYYY-MM-DD').
         freq: Frequency string for Prophet (default 'W').
-        title, x_label, y_label, figsize, plot_train: Plotting options.
-        is_print: Whether to print metrics.
+        cap: Optional cap value for logistic growth models.
+        floor: Optional floor value for logistic growth models.
     Returns:
-        forecast: Prophet forecast DataFrame.
+        forecast: Prophet forecast DataFrame. contains columns 'ds', 'yhat', 'y',
+                and all the other columns from prophet output
         metrics: dict with MAE, RMSE, MAPE.
     """
-    if test_periods is None:
-        test_periods = len(df_test)
-    future = model.make_future_dataframe(
-        periods=test_periods, freq=freq, include_history=False
+    forecast = predict_prophet_model(
+        model, eval_start_date, eval_end_date, freq, cap, floor
     )
-    forecast = model.predict(future)
-    # Align forecast with test set
-    forecast_eval = forecast.copy()
-    forecast_eval["y"] = df_test["y"].values
-    MAE = mean_absolute_error(df_test["y"], forecast_eval["yhat"])
-    RMSE = root_mean_squared_error(df_test["y"], forecast_eval["yhat"])
-    MAPE = mean_absolute_percentage_error(df_test["y"], forecast_eval["yhat"])
+    # merge forecast with actuals
+    forecast = forecast.merge(df_actual[["ds", "y"]], on="ds", how="left")
+
+    ## compute metrics
+    MAE = mean_absolute_error(forecast["y"], forecast["yhat"])
+    RMSE = root_mean_squared_error(forecast["y"], forecast["yhat"])
+    MAPE = mean_absolute_percentage_error(forecast["y"], forecast["yhat"])
+
     metrics = {"MAE": MAE, "RMSE": RMSE, "MAPE": MAPE}
-    if is_print:
-        print("MAE/semaine en euros:", MAE, "€")
-        print("RMSE/semaine en euros:", RMSE, "€")
-        print("MAPE:", 100 * MAPE, "%")
-    # Plot
-    plt.figure(figsize=figsize)
-    if plot_train and df_train is not None:
-        plt.plot(df_train.ds, df_train.y, label="train", color="tab:green")
-    plt.plot(df_test.ds, df_test.y, label="test", color="tab:orange")
-    plt.plot(
-        forecast_eval.ds, forecast_eval.yhat, label="forecast y_hat", color="tab:blue"
-    )
-    plt.plot(
-        forecast_eval.ds,
-        forecast_eval.yhat_upper,
-        label="y_hat upper",
-        color="slategrey",
-    )
-    plt.plot(
-        forecast_eval.ds,
-        forecast_eval.yhat_lower,
-        label="y_hat lower",
-        color="slategrey",
-    )
-    plt.fill_between(
-        forecast_eval.ds,
-        forecast_eval.yhat_upper,
-        forecast_eval.yhat_lower,
-        color="lightblue",
-    )
-    plt.legend()
-    plt.title(title)
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
-    plt.show()
-    return forecast_eval, metrics
+
+    return forecast, metrics
 
 
-def evaluate_prophet_backtest(
-    model,
-    df_backtest,
-    df_test,
+def plot_forecast_vs_actuals(
+    forecast,
+    title="Forecast vs Actuals",
     freq="W",
-    title="Backtest Forecast",
-    x_label="weeks",
     y_label="Pricing €",
     figsize=(12, 8),
-    is_print=True,
-    cap=None,
-    floor=None,
 ):
     """
-    Evaluates a Prophet model on a backtest set: forecasts, computes metrics,
-    and plots results.
+    Plots Prophet forecast against actual values.
     Args:
-        model: Trained Prophet model.
-        df_backtest: DataFrame with backtest set (columns: ds, y).
-        backtest_periods: Number of periods to forecast (if None, uses len(df_backtest))
-        freq: Frequency string for Prophet (default 'W').
+        forecast: DataFrame with Prophet forecasts
+                (columns: ds, yhat, yhat_lower, yhat_upper, y).
         title, x_label, y_label, figsize: Plotting options.
-        is_print: Whether to print metrics.
-    Returns:
-        forecast: Prophet forecast DataFrame.
-        metrics: dict with MAE, RMSE, MAPE.
     """
-    backtest_periods = len(df_backtest)
-    test_periods = len(df_test)
-    future = model.make_future_dataframe(
-        periods=backtest_periods + test_periods,
-        freq=freq,
-        include_history=False,  # make futures create dataframe since last train date,
-        # so add test periods to get the real backtest set
-    )
-    future = future.tail(backtest_periods)
-    if cap is not None:
-        future["cap"] = cap
-    if floor is not None:
-        future["floor"] = floor
-    forecast = model.predict(future)
-    # Align forecast with backtest set
-    forecast_eval = forecast.copy()
-    forecast_eval["y"] = df_backtest["y"].values
-    MAE = mean_absolute_error(df_backtest["y"], forecast_eval["yhat"])
-    RMSE = root_mean_squared_error(df_backtest["y"], forecast_eval["yhat"])
-    MAPE = mean_absolute_percentage_error(df_backtest["y"], forecast_eval["yhat"])
-    metrics = {"MAE": MAE, "RMSE": RMSE, "MAPE": MAPE}
-    if is_print:
-        print("Backtest MAE/semaine en euros:", MAE, "€")
-        print("Backtest RMSE/semaine en euros:", RMSE, "€")
-        print("Backtest MAPE:", 100 * MAPE, "%")
-    # Plot
+    if freq == "W":
+        x_label = "weeks"
+    elif freq == "D":
+        x_label = "days"
+    else:
+        x_label = "date"
+
     plt.figure(figsize=figsize)
-    plt.plot(df_backtest.ds, df_backtest.y, label="backtest", color="tab:orange")
+    plt.plot(forecast.ds, forecast.y, label="actuals", color="tab:orange")
+    plt.plot(forecast.ds, forecast.yhat, label="forecast y_hat", color="tab:blue")
     plt.plot(
-        forecast_eval.ds, forecast_eval.yhat, label="forecast y_hat", color="tab:blue"
-    )
-    plt.plot(
-        forecast_eval.ds,
-        forecast_eval.yhat_upper,
+        forecast.ds,
+        forecast.yhat_upper,
         label="y_hat upper",
         color="slategrey",
     )
     plt.plot(
-        forecast_eval.ds,
-        forecast_eval.yhat_lower,
+        forecast.ds,
+        forecast.yhat_lower,
         label="y_hat lower",
         color="slategrey",
     )
     plt.fill_between(
-        forecast_eval.ds,
-        forecast_eval.yhat_upper,
-        forecast_eval.yhat_lower,
+        forecast.ds,
+        forecast.yhat_upper,
+        forecast.yhat_lower,
         color="lightblue",
     )
     plt.legend()
@@ -216,4 +140,3 @@ def evaluate_prophet_backtest(
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.show()
-    return forecast_eval, metrics

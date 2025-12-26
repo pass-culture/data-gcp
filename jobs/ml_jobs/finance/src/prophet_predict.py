@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def create_full_prediction_dataframe(
+def _create_full_prediction_dataframe(
     start_date, end_date, freq="W-MON", cap=None, floor=None
 ):
     """
@@ -22,3 +22,23 @@ def create_full_prediction_dataframe(
     if floor is not None:
         df["floor"] = floor
     return df
+
+
+def predict_prophet_model(model, start_date, end_date, freq="W", cap=None, floor=None):
+    """
+    Generate forecasts using a trained Prophet model for a specified date range.
+    Args:
+        model: Trained Prophet model.
+        start_date: Start date for predictions (string 'YYYY-MM-DD').
+        end_date: End date for predictions (string 'YYYY-MM-DD').
+        freq: Frequency string for date range generation (default 'W').
+        cap: Optional cap value for logistic growth models.
+        floor: Optional floor value for logistic growth models.
+    Returns:
+        forecast: DataFrame with forecasts.
+    """
+    df_future = _create_full_prediction_dataframe(
+        start_date, end_date, freq, cap, floor
+    )
+    forecast = model.predict(df_future)
+    return forecast

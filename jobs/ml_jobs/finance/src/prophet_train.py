@@ -17,13 +17,14 @@ def prepare_data(
     regressors=None,
 ):
     """
-    Docstring for prepare_data
+    Prepares the data for Prophet model training and evaluation.
+    If cross_val is True, df_test will be empty in that case.
 
     :param df: dataframe containing time series data
     :param start_date: in sample start date
     :param end_date: oos start date
     :param target_name: the y column
-    :param datetime_name: the column that contain datetimme aka ds in prophet
+    :param datetime_name: the column that contains datetime aka ds in prophet
     :param train_prop: proportion of train in the in sample dataset
     :param pass_culture_months: a list of months where we want to enforce pass culture
     related seasonality events

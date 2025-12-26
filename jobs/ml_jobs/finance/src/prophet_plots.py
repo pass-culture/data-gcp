@@ -27,9 +27,9 @@ def plot_prophet_changepoints(
     plt.show()
 
 
-def plot_trend_with_changepoints(results, changepoints):
+def plot_trend_with_changepoints(forecast_train, changepoints):
     plt.figure(figsize=(10, 6))
-    plt.plot(results["forecast_train"].ds, results["forecast_train"]["trend"])
+    plt.plot(forecast_train.ds, forecast_train["trend"])
     # Annotate changepoints
     # Add vertical lines for changepoints
     for cp in changepoints:

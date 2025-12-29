@@ -1,4 +1,11 @@
-select *
+select
+    special_event_id,
+    special_event_title,
+    offerer_id,
+    venue_id,
+    typeform_id,
+    special_event_creation_date,
+    special_event_date
 from
     external_query(
         "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",

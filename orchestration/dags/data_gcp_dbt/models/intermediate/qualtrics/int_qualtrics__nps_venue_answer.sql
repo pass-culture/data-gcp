@@ -34,7 +34,17 @@ with
     )
 
 select
-    *,
+    start_date,
+    end_date,
+    response_id,
+    venue_id,
+    user_type,
+    question_id,
+    question_str,
+    answer,
+    question,
+    extra_data,
+    is_nps_question,
     trim(json_extract(extra_data, '$.anciennete_jours'), '"') as seniority_day_cnt,
     trim(
         json_extract(extra_data, '$.non_cancelled_bookings'), '"'

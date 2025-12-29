@@ -33,7 +33,17 @@ with
     )
 
 select
-    *,
+    response_id,
+    user_id,
+    question_id,
+    question_str,
+    answer,
+    start_date,
+    end_date,
+    user_type,
+    question,
+    extra_data,
+    is_nps_question,
     trim(
         json_extract(extra_data, '$.theoretical_amount_spent'), '"'
     ) as theoretical_amount_spent,

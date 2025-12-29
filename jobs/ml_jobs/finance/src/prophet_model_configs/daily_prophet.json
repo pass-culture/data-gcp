@@ -24,5 +24,6 @@
     "add_monthly_seasonality": true,
     "monthly_fourier_order": 5,
     "pass_culture_months": null,
-    "regressors": null
+    "regressors": null,
+    "freq": "D"
 }

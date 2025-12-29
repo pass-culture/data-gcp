@@ -15,6 +15,7 @@ from prophet_plots import (
     plot_prophet_changepoints,
     plot_trend_with_changepoints,
 )
+from prophet_predict import create_full_prediction_dataframe
 from prophet_train import fit_prophet_model, prepare_data
 
 
@@ -171,3 +172,18 @@ def main(
         mlflow.log_figure(fig_components, "plots/components.png")
 
         logger.info("MLflow run completed successfully.")
+
+        # -------------------------------------------------
+        # Forecast between OOS_end_date and PREDICTION_FULL_HORIZON
+        # -------------------------------------------------
+        df_forecast_full = create_full_prediction_dataframe(
+            start_date=OOS_end_date,
+            end_date="2026-12-31",
+            freq=train_params.get("freq"),
+            cap=df[target_name].max() * 1.2,
+            floor=0.0,
+        )
+        full_forecast = model.predict(df_forecast_full)
+        full_forecast_xlsx = "full_forecast.xlsx"
+        full_forecast.to_excel(full_forecast_xlsx, index=False)
+        mlflow.log_artifact(full_forecast_xlsx, artifact_path="data")

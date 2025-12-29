@@ -1,12 +1,11 @@
 import matplotlib.pyplot as plt
 from prophet.diagnostics import cross_validation, performance_metrics
+from prophet_predict import predict_prophet_model
 from sklearn.metrics import (
     mean_absolute_error,
     mean_absolute_percentage_error,
     root_mean_squared_error,
 )
-
-from src.prophet_predict import predict_prophet_model
 
 
 def cross_validate_prophet_model(
@@ -36,7 +35,6 @@ def cross_validate_prophet_model(
         metrics: Tuple of metrics to compute ('mae', 'rmse', 'mape').
         plot: Whether to plot cross-validation results.
     Returns:
-        cv_results: DataFrame with cross-validation results.
         perf: DataFrame with performance metrics by horizon.
         metrics_dict: Dictionary with mean metrics.
     """
@@ -45,41 +43,27 @@ def cross_validate_prophet_model(
         model, initial=initial, period=period, horizon=horizon, parallel=None
     )
     perf = performance_metrics(cv_results)
+
     metrics_dict = {m: perf[m].mean() for m in metrics if m in perf.columns}
-    if plot:
-        for m in metrics:
-            if m in perf.columns:
-                plt.figure(figsize=(8, 4))
-                plt.plot(perf["horizon"], perf[m], marker="o", linestyle="-", label=m)
-                plt.xlabel("Horizon")
-                plt.ylabel(m.upper())
-                plt.title(f"Prophet CV: {m.upper()} by Horizon")
-                plt.legend()
-                plt.tight_layout()
-                plt.show()
-    return cv_results, perf, metrics_dict
+    return perf, metrics_dict
 
 
-def evaluate_prophet_model(
-    model, df_actual, eval_start_date, eval_end_date, freq="W", cap=None, floor=None
-):
+def evaluate_prophet_model(model, df_actual):
     """
     Evaluate a Prophet model over a specified date range.
     Args:
         model: Trained Prophet model.
-        eval_start_date: Start date for evaluation (string 'YYYY-MM-DD').
-        eval_end_date: End date for evaluation (string 'YYYY-MM-DD').
-        freq: Frequency string for Prophet (default 'W').
-        cap: Optional cap value for logistic growth models.
-        floor: Optional floor value for logistic growth models.
+        df_actual: DataFrame with actual values (columns: 'ds', 'y').
     Returns:
         forecast: Prophet forecast DataFrame. contains columns 'ds', 'yhat', 'y',
                 and all the other columns from prophet output
         metrics: dict with MAE, RMSE, MAPE.
     """
-    forecast = predict_prophet_model(
-        model, eval_start_date, eval_end_date, freq, cap, floor
-    )
+    predict_cols = ["ds"]
+    if ["cap", "floor"] in df_actual.columns:
+        predict_cols += ["cap", "floor"]
+
+    forecast = predict_prophet_model(model, df_actual[predict_cols])
     # merge forecast with actuals
     forecast = forecast.merge(df_actual[["ds", "y"]], on="ds", how="left")
 
@@ -95,8 +79,8 @@ def evaluate_prophet_model(
 
 def plot_forecast_vs_actuals(
     forecast,
+    freq,
     title="Forecast vs Actuals",
-    freq="W",
     y_label="Pricing €",
     figsize=(12, 8),
 ):
@@ -105,9 +89,10 @@ def plot_forecast_vs_actuals(
     Args:
         forecast: DataFrame with Prophet forecasts
                 (columns: ds, yhat, yhat_lower, yhat_upper, y).
-        title, x_label, y_label, figsize: Plotting options.
+        freq: Frequency string ('D' for daily, 'W-MON' for weekly).
+        title, y_label, figsize: Plotting options.
     """
-    if freq == "W":
+    if freq == "W-MON":
         x_label = "weeks"
     elif freq == "D":
         x_label = "days"

@@ -17,14 +17,14 @@ with
     firebase_bookings as (
         select
             booking_date as event_date,
-            timestamp(booking_timestamp) as event_timestamp,
             session_id,
             unique_session_id,
             app_version,
             platform,
             user_location_type,
-            booking_id
-        from {{ ref("firebase_bookings") }} f_events
+            booking_id,
+            timestamp(booking_timestamp) as event_timestamp
+        from {{ ref("firebase_bookings") }}
 
         {% if is_incremental() %}
             where
@@ -39,10 +39,6 @@ with
     all_bookings_reconciled as (
         select
             booking.user_id,
-            coalesce(f_events.event_date, date(booking_created_at)) as booking_date,
-            coalesce(
-                f_events.event_timestamp, timestamp(booking_created_at)
-            ) as booking_timestamp,
             f_events.session_id as booking_session_id,
             f_events.unique_session_id as booking_unique_session_id,
             f_events.app_version as booking_app_version,
@@ -56,9 +52,14 @@ with
             booking.item_id,
             booking.booking_id,
             f_events.platform,
-            f_events.user_location_type
-        from {{ ref("mrt_global__booking") }} booking
-        left join firebase_bookings f_events on f_events.booking_id = booking.booking_id
+            f_events.user_location_type,
+            coalesce(f_events.event_date, date(booking_created_at)) as booking_date,
+            coalesce(
+                f_events.event_timestamp, timestamp(booking_created_at)
+            ) as booking_timestamp
+        from {{ ref("mrt_global__booking") }} as booking
+        left join
+            firebase_bookings as f_events on booking.booking_id = f_events.booking_id
 
         {% if is_incremental() %}
             where
@@ -76,17 +77,17 @@ with
             offer_id,
             item_id,
             event_date as consult_date,
-            timestamp(event_timestamp) as consult_timestamp,
             origin as consult_origin,
             reco_call_id,
             search_id,
             module_id,
             module_name,
-            entry_id
+            entry_id,
+            timestamp(event_timestamp) as consult_timestamp
         from {{ ref("int_firebase__native_event") }}
         inner join
-            {{ ref("int_applicative__offer_item_id") }} int_applicative__offer_item_id
-            using (offer_id)
+            {{ ref("int_applicative__offer_item_id") }}
+            as int_applicative__offer_item_id using (offer_id)
         where
             event_name = 'ConsultOffer'
             and origin
@@ -243,21 +244,21 @@ select
     search_id_last_touch,
     -- home related first_touch
     module_id_first_touch,
+    first_touch_map.home_name as home_name_first_touch,
+    first_touch_map.content_type as content_type_first_touch,
+    home_tag.home_type as home_type_first_touch,
+    module_id_last_touch,
+    last_touch_map.home_name as home_name_last_touch,
+    -- home related last_touch
+    last_touch_map.content_type as content_type_last_touch,
     coalesce(
         booking_origin.module_name_first_touch, first_touch_map.module_name
     ) as module_name_first_touch,
     coalesce(home_id_first_touch, first_touch_map.home_id) as home_id_first_touch,
-    first_touch_map.home_name as home_name_first_touch,
-    first_touch_map.content_type as content_type_first_touch,
-    home_tag.home_type as home_type_first_touch,
-    -- home related last_touch
-    module_id_last_touch,
     coalesce(
         booking_origin.module_name_last_touch, last_touch_map.module_name
     ) as module_name_last_touch,
-    coalesce(home_id_last_touch, last_touch_map.home_id) as home_id_last_touch,
-    last_touch_map.home_name as home_name_last_touch,
-    last_touch_map.content_type as content_type_last_touch
+    coalesce(home_id_last_touch, last_touch_map.home_id) as home_id_last_touch
 
 from booking_origin
 left join

@@ -14,12 +14,17 @@ with
             partner.cultural_sector,
             offerer.legal_unit_business_activity_label,
             offerer.legal_unit_legal_category_label,
-            case
-                when partner.total_created_individual_offers > 0 then true else false
-            end as has_activated_individual_part,
-            case
-                when partner.total_created_collective_offers > 0 then true else false
-            end as has_activated_collective_part,
+            partner.first_offer_creation_date as first_activation_date,
+            partner.total_non_cancelled_individual_bookings
+            as individual_bookings_after_first_activation,
+            partner.total_non_cancelled_collective_bookings
+            as collective_bookings_after_first_activation,
+            coalesce(
+                partner.total_created_individual_offers > 0, false
+            ) as has_activated_individual_part,
+            coalesce(
+                partner.total_created_collective_offers > 0, false
+            ) as has_activated_collective_part,
             case
                 when partner_status = "venue"
                 then venue.first_individual_offer_creation_date
@@ -29,18 +34,13 @@ with
                 when partner_status = "venue"
                 then venue.first_collective_offer_creation_date
                 else offerer.first_collective_offer_creation_date
-            end as collective_activation_date,
-            partner.first_offer_creation_date as first_activation_date,
-            partner.total_non_cancelled_individual_bookings
-            as individual_bookings_after_first_activation,
-            partner.total_non_cancelled_collective_bookings
-            as collective_bookings_after_first_activation
-        from {{ ref("mrt_global__cultural_partner") }} partner
+            end as collective_activation_date
+        from {{ ref("mrt_global__cultural_partner") }} as partner
         left join
-            {{ ref("mrt_global__venue") }} venue on partner.venue_id = venue.venue_id
+            {{ ref("mrt_global__venue") }} as venue on partner.venue_id = venue.venue_id
         left join
-            {{ ref("mrt_global__offerer") }} offerer
-            on offerer.offerer_id = partner.offerer_id
+            {{ ref("mrt_global__offerer") }} as offerer
+            on partner.offerer_id = offerer.offerer_id
     ),
 
     partner_activation_stated as (

@@ -1,76 +1,96 @@
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.path import Path
 
 
 def plot_prophet_changepoints(
-    model, df_train, title="Prophet Changepoints on Train Set", figsize=(12, 6)
+    model,
+    df_train,
+    title="Prophet Changepoints on Train Set",
+    figsize=(12, 6),
 ):
     """
-    Plots the training set with Prophet changepoints
-    and displays the number of changepoints.
-    Args:
-        model: Trained Prophet model.
-        df_train: DataFrame with training data (columns: ds, y).
-        title: Plot title.
-        figsize: Figure size.
+    Returns a matplotlib figure showing training data and changepoints.
     """
+    fig, ax = plt.subplots(figsize=figsize)
 
-    plt.figure(figsize=figsize)
-    plt.plot(df_train.ds, df_train.y, label="train", color="tab:green")
+    ax.plot(df_train.ds, df_train.y, label="train")
+
     for cp in model.changepoints:
-        plt.axvline(cp, color="red", linestyle="--", alpha=0.7)
-    plt.title(f"{title}\nNumber of changepoints: {len(model.changepoints)}")
-    plt.xlabel("Date")
-    plt.ylabel("y")
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
+        ax.axvline(cp, color="red", linestyle="--", alpha=0.7)
+
+    ax.set_title(f"{title}\nNumber of changepoints: {len(model.changepoints)}")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("y")
+    ax.legend()
+    fig.tight_layout()
+
+    return fig
 
 
-def plot_trend_with_changepoints(forecast_train, changepoints):
-    plt.figure(figsize=(10, 6))
-    plt.plot(forecast_train.ds, forecast_train["trend"])
-    # Annotate changepoints
-    # Add vertical lines for changepoints
+def plot_trend_with_changepoints(
+    forecast_train,
+    changepoints,
+    figsize=(10, 6),
+):
+    """
+    Returns a matplotlib figure of trend with changepoints.
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+
+    ax.plot(forecast_train.ds, forecast_train["trend"], label="trend")
+
     for cp in changepoints:
-        plt.axvline(
-            pd.to_datetime(cp),
-            color="orange",
-            linestyle="--",
-            alpha=0.8,
-        )
+        cp_dt = pd.to_datetime(cp)
+        ax.axvline(cp_dt, color="orange", linestyle="--", alpha=0.8)
 
-    for cp in changepoints:
-        plt.text(
-            pd.to_datetime(cp),
-            plt.ylim()[1] * 0.95,
-            cp,
+        ax.text(
+            cp_dt,
+            ax.get_ylim()[1] * 0.95,
+            str(cp),
             rotation=90,
             color="orange",
             va="top",
             ha="right",
             fontsize=9,
         )
-    plt.title("Trend with Changepoints")
-    plt.xlabel("Date")
-    plt.ylabel("Trend")
-    plt.show()
+
+    ax.set_title("Trend with Changepoints")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Trend")
+    ax.legend()
+    fig.tight_layout()
+
+    return fig
 
 
-def plot_cv_results(perf, metrics):
+def plot_cv_results(perf, metrics, output_dir="cv_plots"):
     """
-    Plots cross-validation results for a specified metric over the forecast horizon.
-    Args:
-        perf: DataFrame with performance metrics by horizon.
-        metrics: Dictionary with mean metrics.
+    Plots cross-validation results for specified metrics and saves figures.
+
+    Returns:
+        List of saved plot file paths
     """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    plot_paths = []
+
     for m in metrics:
         if m in perf.columns:
-            plt.figure(figsize=(8, 4))
-            plt.plot(perf["horizon"], perf[m], marker="o", linestyle="-", label=m)
-            plt.xlabel("Horizon")
-            plt.ylabel(m.upper())
-            plt.title(f"Prophet CV: {m.upper()} by Horizon")
-            plt.legend()
-            plt.tight_layout()
-            plt.show()
+            fig, ax = plt.subplots(figsize=(8, 4))
+            ax.plot(perf["horizon"], perf[m], marker="o", linestyle="-", label=m)
+
+            ax.set_xlabel("Horizon")
+            ax.set_ylabel(m.upper())
+            ax.set_title(f"Prophet CV: {m.upper()} by Horizon")
+            ax.legend()
+            fig.tight_layout()
+
+            plot_path = output_dir / f"cv_{m}.png"
+            fig.savefig(plot_path)
+            plt.close(fig)  # IMPORTANT
+
+            plot_paths.append(str(plot_path))
+
+    return plot_paths

@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10, <3.13"
 dependencies = [
     "google-cloud-aiplatform>=1.132.0",
+    "google-cloud-secret-manager>=2.26.0",
     "loguru>=0.7.3",
     "matplotlib>=3.10.8",
     "mlflow>=3.8.0",

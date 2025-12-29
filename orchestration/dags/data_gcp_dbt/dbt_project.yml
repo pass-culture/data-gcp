@@ -89,8 +89,9 @@ models:
           schedule: "monthly"
         +meta:
           owner: "@data-engineering"
+        + schema: external_reporting_{{ target.name }}
         individual:
-          ephemerals_kpis:
+          kpis_segments:
             +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
         collective:
           kpis_segments:

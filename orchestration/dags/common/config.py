@@ -72,7 +72,8 @@ DE_TOOLS_BUCKET_NAME = os.environ.get(
     "DE_TOOLS_BUCKET_NAME", f"de-tools-{ENV_SHORT_NAME}"
 )
 DE_BIGQUERY_TMP_BACKUP_BUCKET_NAME = os.environ.get(
-    "DE_BIGQUERY_TMP_BACKUP_BUCKET_NAME", f"bigquery-data-tmp-backup-{ENV_SHORT_NAME}"
+    "DE_BIGQUERY_TMP_BACKUP_BUCKET_NAME",
+    f"de-bigquery-data-tmp-backup-{ENV_SHORT_NAME}",
 )
 
 BASE32_JS_LIB_PATH = f"gs://{DE_TOOLS_BUCKET_NAME}/base32-encode/base32.js"

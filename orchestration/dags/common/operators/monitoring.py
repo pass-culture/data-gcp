@@ -1,8 +1,7 @@
-from common.hooks.monitoring import ElementaryReport
-
 from airflow.exceptions import AirflowFailException
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
+from common.hooks.monitoring import ElementaryReport
 
 
 class GenerateElementaryReportOperator(BaseOperator):

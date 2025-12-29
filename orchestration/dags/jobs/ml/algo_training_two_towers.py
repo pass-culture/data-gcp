@@ -1,5 +1,13 @@
 from datetime import datetime, timedelta
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import BranchPythonOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryInsertJobOperator,
+)
+from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
 from common.alerts.ml_training import create_algo_training_slack_block
@@ -24,17 +32,9 @@ from common.operators.gce import (
 )
 from common.operators.slack import SendSlackMessageOperator
 from common.utils import get_airflow_schedule
+
 from jobs.crons import SCHEDULE_DICT
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import BranchPythonOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
-from airflow.utils.task_group import TaskGroup
 
 DATE = "{{ ts_nodash }}"
 DAG_NAME = "algo_training_two_towers"

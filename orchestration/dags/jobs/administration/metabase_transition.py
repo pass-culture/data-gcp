@@ -1,5 +1,8 @@
 import datetime
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
 from common import macros
 from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
@@ -14,10 +17,6 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
 
 DAG_NAME = "metabase_transition"
 GCE_INSTANCE = f"metabase-transition-{ENV_SHORT_NAME}"

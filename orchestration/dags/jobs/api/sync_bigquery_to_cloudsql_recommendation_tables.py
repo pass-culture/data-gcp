@@ -20,7 +20,7 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from common.utils import delayed_waiting_operator, get_airflow_schedule
+from common.utils import get_airflow_schedule
 
 from jobs.crons import SCHEDULE_DICT
 

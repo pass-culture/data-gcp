@@ -11,28 +11,18 @@
             "2024-12-20",
             "2025-06-25"
         ],
-        "n_changepoints": 25,
-        "changepoint_range": 0.8,
         "yearly_seasonality": true,
         "weekly_seasonality": true,
         "daily_seasonality": false,
         "seasonality_mode": "additive",
         "seasonality_prior_scale": 5,
-        "holidays_prior_scale": 10.0,
         "changepoint_prior_scale": 0.05,
-        "mcmc_samples": 0,
         "interval_width": 0.95,
-        "uncertainty_samples": 1000,
-        "stan_backend": null,
-        "holidays": null,
-        "seasonality": [],
-        "country_holidays": null,
-        "custom_seasonalities": [],
-        "additive_seasonality": null,
-        "multiplicative_seasonality": null,
         "scaling": "absmax"
     },
-    "train_prop": 0.7,
-    "freq": "D",
-    "pass_culture_months": null
+    "adding_country_holidays": true,
+    "add_monthly_seasonality": true,
+    "monthly_fourier_order": 5,
+    "pass_culture_months": null,
+    "regressors": null
 }

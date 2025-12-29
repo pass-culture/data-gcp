@@ -55,3 +55,22 @@ def plot_trend_with_changepoints(forecast_train, changepoints):
     plt.xlabel("Date")
     plt.ylabel("Trend")
     plt.show()
+
+
+def plot_cv_results(perf, metrics):
+    """
+    Plots cross-validation results for a specified metric over the forecast horizon.
+    Args:
+        perf: DataFrame with performance metrics by horizon.
+        metrics: Dictionary with mean metrics.
+    """
+    for m in metrics:
+        if m in perf.columns:
+            plt.figure(figsize=(8, 4))
+            plt.plot(perf["horizon"], perf[m], marker="o", linestyle="-", label=m)
+            plt.xlabel("Horizon")
+            plt.ylabel(m.upper())
+            plt.title(f"Prophet CV: {m.upper()} by Horizon")
+            plt.legend()
+            plt.tight_layout()
+            plt.show()

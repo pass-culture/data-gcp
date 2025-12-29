@@ -7,9 +7,6 @@ from google.auth.transport.requests import Request
 from google.cloud import secretmanager
 from google.oauth2 import service_account
 
-MLFLOW_EHP_URI = "https://mlflow.staging.passculture.team/"
-MLFLOW_PROD_URI = "https://mlflow.passculture.team/"
-
 
 def get_secret(secret_id: str):
     client = secretmanager.SecretManagerServiceClient()

@@ -1,5 +1,9 @@
 import datetime
 
+from airflow import DAG
+from airflow.models.baseoperator import chain
+from airflow.operators.empty import EmptyOperator
+from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_base_callback
 from common.config import (
@@ -14,11 +18,6 @@ from dependencies.applicative_database.import_applicative_database import (
     PARALLEL_TABLES,
     SEQUENTIAL_TABLES,
 )
-
-from airflow import DAG
-from airflow.models.baseoperator import chain
-from airflow.operators.empty import EmptyOperator
-from airflow.utils.task_group import TaskGroup
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),

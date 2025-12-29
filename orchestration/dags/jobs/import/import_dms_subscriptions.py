@@ -1,6 +1,13 @@
 import time
 from datetime import date, datetime, timedelta
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -20,14 +27,6 @@ from common.operators.gce import (
 )
 from common.utils import get_airflow_schedule
 from dependencies.dms_subscriptions.import_dms_subscriptions import CLEAN_TABLES
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import PythonOperator
-from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
-    GCSToBigQueryOperator,
-)
 
 DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 GCE_INSTANCE = f"import-dms-{ENV_SHORT_NAME}"

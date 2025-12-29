@@ -23,14 +23,14 @@ with
             bookings.item_id,
             bookings.offer_id,
             bookings.booking_amount,
-            case when bookings.booking_amount = 0 then 1 else 0 end as is_free_offer,
             bookings.booking_created_at as booking_creation_date,
             bookings.booking_id,
             bookings.physical_goods,
             bookings.digital_goods,
             bookings.event,
             bookings.venue_id,
-            bookings.venue_type_label
+            bookings.venue_type_label,
+            case when bookings.booking_amount = 0 then 1 else 0 end as is_free_offer
 
         from {{ ref("mrt_global__booking") }} as bookings
         where booking_status != 'CANCELLED'
@@ -58,19 +58,6 @@ with
             bookings.booking_creation_date,
             bookings.booking_id,
             bookings.item_id,
-            case
-                when subcategories.is_event = true
-                then "event"
-                when
-                    subcategories.online_offline_platform = "ONLINE"
-                    and subcategories.is_event = false
-                then "digital"
-                when
-                    subcategories.online_offline_platform
-                    in ("OFFLINE", "ONLINE_OR_OFFLINE")
-                    and subcategories.is_event = false
-                then "physical"
-            end as format,
             bookings.offer_id,
             bookings.venue_type_label,
             is_free_offer,
@@ -83,17 +70,26 @@ with
             offer_metadata.gtl_label_level_2,
             offer_metadata.gtl_label_level_3,
             offer_metadata.gtl_label_level_4,
+            case
+                when subcategories.is_event = true
+                then 'event'
+                when
+                    subcategories.online_offline_platform = 'ONLINE'
+                    and subcategories.is_event = false
+                then 'digital'
+                when
+                    subcategories.online_offline_platform
+                    in ('OFFLINE', 'ONLINE_OR_OFFLINE')
+                    and subcategories.is_event = false
+                then 'physical'
+            end as format,
             -- prendre une venue unique pour les offres digitales
             case
-                when bookings.digital_goods = true then "digital_venue" else venue_id
+                when bookings.digital_goods = true then 'digital_venue' else venue_id
             end as venue_id,
             -- création d'une extra catégorie pour observer la diversification en
             -- genre au sein d'une catégorie(style de musique, genre de film etc...)
-            case
-                when offer_metadata.offer_type_label is null
-                then venue_id
-                else offer_metadata.offer_type_label
-            end as extra_category,
+            coalesce(offer_metadata.offer_type_label, venue_id) as extra_category,
             -- attribuer un numéro de réservation
             row_number() over (
                 partition by users.user_id order by booking_creation_date
@@ -102,7 +98,7 @@ with
         inner join bookings on users.user_id = bookings.user_id
         left join offer_metadata on bookings.offer_id = offer_metadata.offer_id
         left join
-            {{ source("raw", "subcategories") }} subcategories
+            {{ source("raw", "subcategories") }} as subcategories
             on offer_metadata.offer_subcategory_id = subcategories.id
 
     ),

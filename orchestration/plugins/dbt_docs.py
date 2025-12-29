@@ -1,13 +1,12 @@
 import os
 from pathlib import Path
 
-from flask import abort
-from flask_appbuilder import BaseView as AppBuilderBaseView
-from flask_appbuilder import expose
-
 from airflow.exceptions import AirflowConfigException
 from airflow.security import permissions
 from airflow.www.auth import has_access
+from flask import abort
+from flask_appbuilder import BaseView as AppBuilderBaseView
+from flask_appbuilder import expose
 
 
 def get_airflow_home() -> str:

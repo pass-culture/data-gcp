@@ -1,5 +1,7 @@
 import datetime
 
+from airflow import DAG
+from airflow.models import Param
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -17,9 +19,6 @@ from common.operators.gce import (
 from common.utils import (
     get_airflow_schedule,
 )
-
-from airflow import DAG
-from airflow.models import Param
 
 DAG_NAME = "metabase_governance"
 GCE_INSTANCE = f"metabase-governance-{ENV_SHORT_NAME}"

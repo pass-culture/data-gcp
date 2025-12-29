@@ -22,16 +22,16 @@ select
     offerer.offerer_creation_date,
     offerer.offerer_validation_date,
     venue.venue_id,
-    case
-        when venue.venue_is_permanent
-        then concat("venue-", venue.venue_id)
-        else concat("offerer-", offerer.offerer_id)
-    end as partner_id,
     venue.venue_name,
     venue.venue_creation_date,
     venue.venue_is_permanent,
     adage.id as adage_id,
     adage.datemodification as adage_date_modification,
+    case
+        when venue.venue_is_permanent
+        then concat("venue-", venue.venue_id)
+        else concat("offerer-", offerer.offerer_id)
+    end as partner_id,
     case
         when demandeur_siret in (select siret from {{ ref("adage") }})
         then true
@@ -44,18 +44,14 @@ select
         then true
         else false
     end as siret_synchro_adage,
-    case
-        when demandeur_entreprise_siren in (select siren from siren_reference_adage)
-        then true
-        else false
-    end as siren_ref_adage,
-    case
-        when
-            demandeur_entreprise_siren
-            in (select siren from siren_reference_adage where siren_synchro_adage)
-        then true
-        else false
-    end as siren_synchro_adage
+    coalesce(
+        demandeur_entreprise_siren in (select siren from siren_reference_adage), false
+    ) as siren_ref_adage,
+    coalesce(
+        demandeur_entreprise_siren
+        in (select siren from siren_reference_adage where siren_synchro_adage),
+        false
+    ) as siren_synchro_adage
 
 from {{ ref("dms_pro") }}
 left join
@@ -64,10 +60,10 @@ left join
     and offerer.offerer_siren <> "nan"
 left join
     {{ ref("int_global__venue") }} as venue
-    on venue.offerer_id = offerer.offerer_id
-    and venue_name <> 'Offre numérique'
+    on offerer.offerer_id = venue.offerer_id
+    and venue_name <> "Offre numérique"
 left join
-    {{ source("analytics", "adage") }} as adage on adage.siret = dms_pro.demandeur_siret
+    {{ source("analytics", "adage") }} as adage on dms_pro.demandeur_siret = adage.siret
 where
-    dms_pro.application_status = 'accepte'
-    and dms_pro.procedure_id in ('57081', '57189', '61589', '65028', '80264')
+    dms_pro.application_status = "accepte"
+    and dms_pro.procedure_id in ("57081", "57189", "61589", "65028", "80264")

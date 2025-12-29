@@ -1,12 +1,10 @@
 import asyncio
 from typing import Any, Dict, Tuple
 
-from common.config import GCP_PROJECT_ID, SSH_USER
-from common.hooks.gce import DeferrableSSHGCEJobManager
-
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.triggers.base import BaseTrigger, TriggerEvent
-from common.config import USE_INTERNAL_IP
+from common.config import GCP_PROJECT_ID, SSH_USER, USE_INTERNAL_IP
+from common.hooks.gce import DeferrableSSHGCEJobManager
 
 
 class DeferrableSSHJobMonitorTrigger(BaseTrigger):

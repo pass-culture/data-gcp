@@ -1,17 +1,16 @@
 import copy
 import datetime
 
+from airflow import DAG
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python_operator import BranchPythonOperator
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from common import macros
 from common.callback import on_failure_base_callback
 from common.config import DAG_FOLDER, DAG_TAGS, GCP_PROJECT_ID
 from common.operators.bigquery import bigquery_job_task
 from common.utils import get_airflow_schedule
-from dependencies.firebase.import_firebase import import_tables, import_perf_tables
-
-from airflow import DAG
-from airflow.operators.empty import EmptyOperator
-from airflow.operators.python_operator import BranchPythonOperator
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+from dependencies.firebase.import_firebase import import_perf_tables, import_tables
 
 dags = {
     # Reimport the data from the last two days

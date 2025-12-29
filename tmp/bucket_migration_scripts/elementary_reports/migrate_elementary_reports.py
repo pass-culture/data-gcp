@@ -16,11 +16,11 @@ Usage:
 
 import argparse
 import logging
+import re
 import subprocess
 import sys
-from datetime import datetime, timedelta
-from typing import List, Tuple, Dict
-import re
+from datetime import datetime
+from typing import Dict, List, Tuple
 
 
 class ElementaryReportsMigrator:
@@ -184,7 +184,7 @@ class ElementaryReportsMigrator:
         Returns:
             Tuple of (success, files_count, analysis)
         """
-        self.logger.info(f"Starting Elementary reports migration")
+        self.logger.info("Starting Elementary reports migration")
         self.logger.info(f"  From: {self.old_path}")
         self.logger.info(f"  To: {self.new_path}")
 
@@ -323,7 +323,7 @@ class ElementaryReportsMigrator:
     def run_migration(self) -> bool:
         """Run the complete migration process."""
         self.logger.info("=" * 80)
-        self.logger.info(f"Starting Elementary Reports Migration")
+        self.logger.info("Starting Elementary Reports Migration")
         self.logger.info(f"Environment: {self.env}")
         self.logger.info(f"Mode: {'DRY RUN' if self.dry_run else 'EXECUTION'}")
         self.logger.info(
@@ -434,7 +434,7 @@ Consider implementing retention policy after migration.
         print(
             f"⚠️  WARNING: This will migrate Elementary reports to de-bigquery-data-export-{args.env}"
         )
-        print(f"   This affects daily report generation!")
+        print("   This affects daily report generation!")
         print(f"   Source: gs://data-bucket-{args.env}/elementary_reports/")
         print(f"   Target: gs://de-bigquery-data-export-{args.env}/elementary_reports/")
         print()

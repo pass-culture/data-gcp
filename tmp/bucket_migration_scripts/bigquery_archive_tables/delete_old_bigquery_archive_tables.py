@@ -26,7 +26,7 @@ import logging
 import subprocess
 import sys
 from datetime import datetime
-from typing import List, Dict
+from typing import Dict, List
 
 
 class OldBigQueryArchiveTablesFolderDeleter:
@@ -275,7 +275,7 @@ class OldBigQueryArchiveTablesFolderDeleter:
     def run_deletion(self) -> bool:
         """Run the complete deletion process with safety checks."""
         self.logger.info("=" * 60)
-        self.logger.info(f"Starting old bigquery_archive_tables folder deletion")
+        self.logger.info("Starting old bigquery_archive_tables folder deletion")
         self.logger.info(f"Environment: {self.env}")
         self.logger.info(f"Target path: {self.old_folder_path}")
         self.logger.info(f"Mode: {'DRY RUN' if self.dry_run else 'DELETION'}")

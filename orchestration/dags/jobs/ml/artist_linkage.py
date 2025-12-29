@@ -30,6 +30,7 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
+
 from jobs.crons import SCHEDULE_DICT
 
 DEFAULT_REGION = "europe-west1"

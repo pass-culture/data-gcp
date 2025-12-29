@@ -1,5 +1,8 @@
 import datetime
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -20,10 +23,6 @@ from common.utils import (
     get_airflow_schedule,
 )
 from dependencies.gcs_seed.import_gcs_seed import ANALYTICS_TABLES
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),

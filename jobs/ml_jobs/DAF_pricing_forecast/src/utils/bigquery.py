@@ -1,7 +1,7 @@
 import pandas as pd
 from google.cloud import bigquery
 
-from src.constants import FINANCE_DATASET, GCP_PROJECT_ID
+from src.utils.constants import FINANCE_DATASET, GCP_PROJECT_ID
 
 
 def get_client() -> bigquery.Client:
@@ -24,4 +24,3 @@ def save_df_as_bigquery_table(df: pd.DataFrame, table_name: str):
     table_id = f"{GCP_PROJECT_ID}.{FINANCE_DATASET}.{table_name}"
     job = client.load_table_from_dataframe(df, table_id)
     job.result()
-    print(f"Loaded {len(df)} rows into {table_id}.")  # Wait for the job to complete

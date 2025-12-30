@@ -2,21 +2,22 @@ import datetime
 import json
 
 import mlflow
-from bigquery_utils import load_table
 from loguru import logger
-from mlflow_utils import connect_remote_mlflow, get_mlflow_experiment
 from prophet.serialize import model_to_json
-from prophet_evaluate import (
+
+from src.modeling.prophet.prophet_evaluate import (
     cross_validate_prophet_model,
     evaluate_prophet_model,
 )
-from prophet_plots import (
+from src.modeling.prophet.prophet_plots import (
     plot_cv_results,
     plot_prophet_changepoints,
     plot_trend_with_changepoints,
 )
-from prophet_predict import create_full_prediction_dataframe
-from prophet_train import fit_prophet_model, prepare_data
+from src.modeling.prophet.prophet_predict import create_full_prediction_dataframe
+from src.modeling.prophet.prophet_train import fit_prophet_model, prepare_data
+from src.utils.bigquery import load_table
+from src.utils.mlflow import connect_remote_mlflow, get_mlflow_experiment
 
 
 def main(

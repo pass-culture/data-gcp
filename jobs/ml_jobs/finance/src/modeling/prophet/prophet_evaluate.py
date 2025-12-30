@@ -1,11 +1,12 @@
 import matplotlib.pyplot as plt
 from prophet.diagnostics import cross_validation, performance_metrics
-from prophet_predict import predict_prophet_model
 from sklearn.metrics import (
     mean_absolute_error,
     mean_absolute_percentage_error,
     root_mean_squared_error,
 )
+
+from src.modeling.prophet.prophet_predict import predict_prophet_model
 
 
 def cross_validate_prophet_model(

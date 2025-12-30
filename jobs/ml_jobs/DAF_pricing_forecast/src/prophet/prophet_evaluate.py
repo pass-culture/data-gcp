@@ -12,7 +12,7 @@ from sklearn.metrics import (
     root_mean_squared_error,
 )
 
-from src.modeling.prophet.prophet_predict import predict_prophet_model
+from src.prophet.prophet_predict import predict_prophet_model
 
 
 def cross_validate_prophet_model(

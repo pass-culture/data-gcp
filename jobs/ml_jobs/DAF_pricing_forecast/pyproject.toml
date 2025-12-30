@@ -1,8 +1,9 @@
 [project]
-name = "finance"
+name = "DAF_pricing_forecast"
 version = "0.1.0"
-description = "Add your description here"
+description = "Forecast pricing values for the Pass Culture Finance team using machine learning models, including Prophet, to support data-driven financial decisions."
 readme = "README.md"
+authors = ["Pass Culture Data Science Team"]
 requires-python = ">=3.10, <3.13"
 dependencies = [
     "google-cloud-aiplatform>=1.132.0",

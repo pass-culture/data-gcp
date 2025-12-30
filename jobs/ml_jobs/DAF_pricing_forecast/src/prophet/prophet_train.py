@@ -42,7 +42,7 @@ def clean_and_prepare_df(
     growth: str,
 ) -> pd.DataFrame:
     """
-    Cleans and prepares the dataframe for Prophet modeling.
+    Cleans and prepares the dataframe for Prophet modelling.
 
     - Converts date column to datetime.
     - Renames columns for Prophet compatibility.
@@ -112,7 +112,7 @@ def select_regressor_columns(
     regressors: list[str],
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Keeps only the relevant columns for Prophet modeling.
+    Keeps only the relevant columns for Prophet modelling.
 
     Args:
         df_train: Training dataframe.

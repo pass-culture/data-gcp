@@ -1,16 +1,23 @@
+import datetime
 import json
 import os
 
 import mlflow
-from constants import GCP_PROJECT_ID, MLFLOW_SECRET_NAME, MLFLOW_URI, SA_ACCOUNT
 from google.auth.transport.requests import Request
 from google.cloud import secretmanager
 from google.oauth2 import service_account
 
+from src.utils.constants import (
+    GCP_PROJECT_ID,
+    MLFLOW_SECRET_NAME,
+    MLFLOW_URI,
+    SA_ACCOUNT,
+)
+
 
 def get_secret(secret_id: str):
     client = secretmanager.SecretManagerServiceClient()
-    name = f"projects/{GCP_PROJECT_ID}/secrets/{secret_id}/versions/1"
+    name = f"projects/{GCP_PROJECT_ID}/secrets/{secret_id}/versions/latest"
     response = client.access_secret_version(name=name)
     return response.payload.data.decode("UTF-8")
 
@@ -34,3 +41,10 @@ def get_mlflow_experiment(experiment_name: str):
         mlflow.create_experiment(name=experiment_name)
         experiment = mlflow.get_experiment_by_name(experiment_name)
     return experiment
+
+
+def setup_mlflow(experiment_name, model_name):
+    connect_remote_mlflow()
+    experiment = get_mlflow_experiment(experiment_name)
+    run_name = f"{model_name}_{datetime.datetime.now():%Y%m%d_%H%M%S}"
+    return experiment, run_name

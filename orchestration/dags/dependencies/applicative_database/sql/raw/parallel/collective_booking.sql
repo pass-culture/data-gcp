@@ -15,4 +15,5 @@ SELECT
     , "confirmationDate" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_booking_confirmation_date
     , "confirmationLimitDate" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_booking_confirmation_limit_date
     , CAST("educationalRedactorId" AS varchar(255)) AS educational_redactor_id
+    , CAST("educationalDepositId" AS varchar(255)) AS educational_deposit_id
 FROM public.collective_booking

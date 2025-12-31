@@ -3,9 +3,9 @@ import typer
 from loguru import logger
 from prophet.serialize import model_to_json
 
-from src.prophet.prophet_evaluate import evaluate_and_log
-from src.prophet.prophet_plots import log_diagnostic_plots, log_full_forecast
-from src.prophet.prophet_train import (
+from src.prophet.evaluate import evaluate_and_log
+from src.prophet.plots import log_diagnostic_plots, log_full_forecast
+from src.prophet.train import (
     fit_prophet_model,
     load_data_and_params,
     prepare_data,

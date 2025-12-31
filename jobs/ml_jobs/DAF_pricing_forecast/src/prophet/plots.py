@@ -5,7 +5,8 @@ import mlflow
 import pandas as pd
 from loguru import logger
 from prophet import Prophet
-from prophet_predict import create_full_prediction_dataframe
+
+from src.prophet.predict import create_full_prediction_dataframe
 
 
 def plot_prophet_changepoints(

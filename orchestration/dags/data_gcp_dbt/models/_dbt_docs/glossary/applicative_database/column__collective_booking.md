@@ -9,6 +9,8 @@
 {% docs column__collective_booking_confirmation_limit_date %} Confirmation limit date for the collective booking. {% enddocs %}
 {% docs column__collective_booking_used_date %} Date when the collective booking was used (when the activity booked took place). {% enddocs %}
 {% docs column__collective_booking_reimbursement_date %} Reimbursement date for the collective booking. {% enddocs %}
+{% docs column__collective_booking_rank_asc %} Ascending rank of the collective booking in the school's booking history. {% enddocs %}
+{% docs column__collective_booking_rank_desc %} Descending rank of the collective booking in the school's booking history. {% enddocs %}
 {% docs column__collective_booking_is_current %} Indicates if the booking is for the current year. {% enddocs %}
 {% docs column__collective_booking_is_used %} Boolean. Indicates if the collective booking has been used (the activity took place). {% enddocs %}
 {% docs column__first_collective_booking_date %} Date of the first collective booking. {% enddocs %}

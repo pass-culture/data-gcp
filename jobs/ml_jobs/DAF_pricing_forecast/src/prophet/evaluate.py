@@ -2,17 +2,17 @@ import mlflow
 import pandas as pd
 from prophet import Prophet
 from prophet.diagnostics import cross_validation, performance_metrics
-from prophet_plots import (
-    plot_cv_results,
-    plot_forecast_vs_actuals,
-)
 from sklearn.metrics import (
     mean_absolute_error,
     mean_absolute_percentage_error,
     root_mean_squared_error,
 )
 
-from src.prophet.prophet_predict import predict_prophet_model
+from src.prophet.plots import (
+    plot_cv_results,
+    plot_forecast_vs_actuals,
+)
+from src.prophet.predict import predict_prophet_model
 
 
 def cross_validate_prophet_model(

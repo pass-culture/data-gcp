@@ -25,9 +25,9 @@ select
             )
             and (
                 extract(month from ed.educational_deposit_beginning_date)
-                < extract(current_date)
+                < extract(month from current_date)
                 and extract(month from ed.educational_deposit_beginning_date)
-                >= extract(current_date)
+                >= extract(month from current_date)
             )
         then true
         else false

@@ -4,11 +4,9 @@ aiohttp==3.9.5
     # via gcsfs
 aiosignal==1.3.1
     # via aiohttp
-async-timeout==4.0.3
-    # via aiohttp
 attrs==23.2.0
     # via aiohttp
-authlib==0.15.4
+authlib==1.6.6
     # via -r jobs/etl_jobs/external/qualtrics/requirements.in
 cachetools==5.3.3
     # via google-auth
@@ -32,11 +30,11 @@ frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2021.4.0
+fsspec==2025.12.0
     # via
     #   -r jobs/etl_jobs/external/qualtrics/requirements.in
     #   gcsfs
-gcsfs==0.8.0
+gcsfs==2025.12.0
     # via -r jobs/etl_jobs/external/qualtrics/requirements.in
 google-api-core==2.19.1
     # via
@@ -45,6 +43,7 @@ google-api-core==2.19.1
     #   google-cloud-core
     #   google-cloud-secret-manager
     #   google-cloud-storage
+    #   google-cloud-storage-control
     #   pandas-gbq
 google-auth==2.31.0
     # via
@@ -56,6 +55,7 @@ google-auth==2.31.0
     #   google-cloud-core
     #   google-cloud-secret-manager
     #   google-cloud-storage
+    #   google-cloud-storage-control
     #   pandas-gbq
     #   pydata-google-auth
 google-auth-oauthlib==1.2.0
@@ -78,7 +78,11 @@ google-cloud-core==2.4.1
 google-cloud-secret-manager==2.20.0
     # via -r jobs/etl_jobs/external/qualtrics/requirements.in
 google-cloud-storage==2.17.0
-    # via -r jobs/etl_jobs/external/qualtrics/requirements.in
+    # via
+    #   -r jobs/etl_jobs/external/qualtrics/requirements.in
+    #   gcsfs
+google-cloud-storage-control==1.6.1
+    # via gcsfs
 google-crc32c==1.5.0
     # via
     #   google-cloud-storage
@@ -142,11 +146,13 @@ proto-plus==1.24.0
     #   google-api-core
     #   google-cloud-bigquery-storage
     #   google-cloud-secret-manager
+    #   google-cloud-storage-control
 protobuf==4.25.3
     # via
     #   google-api-core
     #   google-cloud-bigquery-storage
     #   google-cloud-secret-manager
+    #   google-cloud-storage-control
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
@@ -206,11 +212,9 @@ typing-extensions==4.12.2
     # via typer
 tzdata==2024.1
     # via pandas
-ujson==5.10.0
-    # via gcsfs
 urllib3==2.2.2
     # via requests
-werkzeug==2.2.3
+werkzeug==3.1.4
     # via -r jobs/etl_jobs/external/qualtrics/requirements.in
 yarl==1.9.4
     # via aiohttp

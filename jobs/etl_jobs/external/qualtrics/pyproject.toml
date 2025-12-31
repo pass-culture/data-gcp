@@ -1,7 +1,7 @@
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.
 [tool.ruff]
-target-version = 'py39'
+target-version = 'py310'
 
 lint.select = ["E4", "E7", "E9", "F", "I"]
 # TARGET : lint.select = [

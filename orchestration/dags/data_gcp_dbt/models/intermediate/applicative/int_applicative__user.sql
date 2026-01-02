@@ -91,6 +91,8 @@ select
     user_civility,
     user_birth_date,
     {{ calculate_exact_age("reference_date", "user_birth_date") }} as user_age,
+    {{ calculate_exact_age("user_creation_date", "user_birth_date") }}
+    as user_age_at_creation,
     user_school_type,
     user_is_active,
     user_role,

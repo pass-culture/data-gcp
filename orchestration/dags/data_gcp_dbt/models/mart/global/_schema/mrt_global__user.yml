@@ -33,6 +33,9 @@ models:
       - name: user_age
         description: '{{ doc("column__user_age") }}'
         data_type: INT64
+      - name: user_age_at_creation
+        description: '{{ doc("column__user_age_at_creation") }}'
+        data_type: INT64
       - name: user_school_type
         description: '{{ doc("column__user_school_type") }}'
         data_type: STRING

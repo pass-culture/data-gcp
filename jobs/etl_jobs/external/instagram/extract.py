@@ -31,7 +31,6 @@ def get_requests_session():
         allowed_methods=["GET"],  # Only retry GET requests
     )
     adapter = HTTPAdapter(max_retries=retry_strategy)
-    session.mount("http://", adapter)
     session.mount("https://", adapter)
     return session
 
@@ -290,7 +289,7 @@ class InstagramAnalytics:
 
         return posts_data
 
-    def _get_post_insights(self, media_id: str, media_type: str) -> dict:
+    def _get_post_insights(self, media_id: str, media_type: str) -> dict | None:
         """
         Fetches insights for a specific post.
 

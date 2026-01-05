@@ -63,7 +63,6 @@ def get_datasets_to_scan():
             f"raw_applicative_{ENV_SHORT_NAME}",
             f"snapshot_{ENV_SHORT_NAME}",
             f"backend_{ENV_SHORT_NAME}",
-            f"appsflyer_import_{ENV_SHORT_NAME}",
         ]
     ]
 

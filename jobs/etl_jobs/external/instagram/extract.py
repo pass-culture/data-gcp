@@ -13,7 +13,7 @@ BACKOFF_FACTOR = 2
 STATUS_FORCELIST = [429, 500, 502, 503, 504]  # Retry on these HTTP status codes
 
 
-def get_requests_session():
+def get_requests_session() -> requests.Session:
     """
     Create a requests session with retry logic for transient failures.
 
@@ -53,6 +53,115 @@ class InstagramAnalytics:
         self.graph_uri = "https://graph.facebook.com/v14.0/"
         self.session = get_requests_session()
 
+    # ------------------------------------------------------------------
+    # DAILY INSIGHTS
+    # ------------------------------------------------------------------
+
+    def _validate_date_range(
+        self, start_date: str, end_date: str
+    ) -> tuple[datetime, datetime]:
+        """
+        Validates that start_date is before end_date and converts to datetime objects.
+
+        Raises:
+            ValueError: If start_date is after end_date.
+        """
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+        end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+        if start_dt > end_dt:
+            raise ValueError("start_date must be earlier than or equal to end_date.")
+        return start_dt, end_dt
+
+    def _metric_dispatch(self) -> dict:
+        """
+        Returns a dispatch table to replace conditional metric-type logic.
+
+        Returns:
+            dict: Keys are metric types, values are lambdas returning extra params.
+        """
+        return {
+            "default": lambda _: {},  # default metrics require no extra parameter
+            "total_value": lambda _: {
+                "metric_type": "total_value"
+            },  # metrics like 'views' require metric_type
+        }
+
+    def _build_insight_params(
+        self,
+        metrics: list[str],
+        since: int,
+        until: int,
+        extra: dict,
+    ) -> dict:
+        """
+        Builds request parameters for Instagram insights API call.
+
+        Args:
+            metrics (list[str]): List of metric names to fetch.
+            since (int): Unix timestamp for start of day.
+            until (int): Unix timestamp for end of day.
+            extra (dict): Extra parameters based on metric type.
+
+        Returns:
+            dict: Full parameters for the GET request.
+        """
+        params = {
+            "metric": ",".join(metrics),
+            "period": "day",
+            "since": since,
+            "until": until,
+            "access_token": self.access_token,
+        }
+        params.update(extra)  # Merge any extra params like metric_type
+        return params
+
+    def _execute_insight_request(
+        self,
+        params: dict,
+        metric_type: str,
+        day_date: datetime,
+    ) -> dict | None:
+        """
+        Executes the GET request for Instagram insights and handles errors.
+
+        Args:
+            params (dict): Request parameters.
+            metric_type (str): The type of metric being requested.
+            day_date (datetime): Date for logging purposes.
+
+        Returns:
+            dict | None: JSON response if successful, None on failure.
+        """
+        try:
+            response = self.session.get(
+                f"{self.graph_uri}{self.account_id}/insights",
+                params=params,
+                timeout=TIMEOUT,
+            )
+
+            if response.status_code == 200:
+                return response.json()
+
+            # Log errors for non-200 responses
+            logger.error(
+                f"Error fetching daily insights for {metric_type}: "
+                f"{response.status_code} - {response.text}"
+            )
+            return None
+
+        except requests.exceptions.Timeout:
+            logger.error(
+                f"Timeout fetching daily insights for {metric_type} "
+                f"on {day_date.strftime('%Y-%m-%d')} after retries"
+            )
+            return None
+
+        except requests.exceptions.RequestException as exc:
+            logger.error(
+                f"Request exception fetching daily insights for {metric_type}: {exc}"
+            )
+            return None
+
     def fetch_daily_insights_data(self, start_date: str, end_date: str) -> list:
         """
         Fetches daily insights data between the specified start and end dates.
@@ -67,19 +176,10 @@ class InstagramAnalytics:
         Raises:
             RuntimeError: If more than MAX_ERROR_RATE of requests fail.
         """
+        start_dt, end_dt = self._validate_date_range(start_date, end_date)
 
-        start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-        end_dt = datetime.strptime(end_date, "%Y-%m-%d")
-
-        if start_dt > end_dt:
-            raise ValueError("start_date must be earlier than or equal to end_date.")
-
-        period = "day"
-        data = []
-        error_count = 0
-        total_requests = 0
         # Metric type mapping for Instagram Graph API
-        METRIC_TYPES = {
+        metric_types = {
             "total_value": ["views"],  # metrics that need total_value
             "default": [
                 "reach",
@@ -87,66 +187,54 @@ class InstagramAnalytics:
             ],  # metrics that don't need special type
         }
 
+        dispatch = self._metric_dispatch()  # Dispatch table for metric types
         total_days = (end_dt - start_dt).days + 1
 
-        for day in range(total_days):
-            day_date = start_dt + timedelta(days=day)
+        results: list = []
+        error_count = 0
+        total_requests = 0
+
+        # Loop through each day
+        for offset in range(total_days):
+            day_date = start_dt + timedelta(days=offset)
             since = int(day_date.timestamp())
             until = int((day_date + timedelta(days=1)).timestamp()) - 1
             logger.info(
-                f"Fetching daily insights for {day_date.strftime('%Y-%m-%d')} (day {day + 1}/{total_days})"
+                f"Fetching daily insights for {day_date.strftime('%Y-%m-%d')} "
+                f"(day {offset + 1}/{total_days})"
             )
 
-            # Make separate calls for each metric type
-            for metric_type, metrics in METRIC_TYPES.items():
+            # Loop through metric types
+            for metric_type, metrics in metric_types.items():
                 if not metrics:  # Skip if no metrics for this type
                     continue
 
                 total_requests += 1
-                params = {
-                    "metric": ",".join(metrics),
-                    "period": period,
-                    "since": since,
-                    "until": until,
-                    "access_token": self.access_token,
-                }
 
-                # Add metric_type parameter if needed
-                if metric_type != "default":
-                    params["metric_type"] = metric_type
+                # Build request params using dispatch table
+                extra_params = dispatch.get(metric_type, lambda _: {})(metrics)
+                params = self._build_insight_params(metrics, since, until, extra_params)
 
-                try:
-                    response = self.session.get(
-                        f"{self.graph_uri}{self.account_id}/insights",
-                        params=params,
-                        timeout=TIMEOUT,
-                    )
-
-                    if response.status_code == 200:
-                        data.append(response.json())
-                    else:
-                        error_count += 1
-                        logger.error(
-                            f"Error fetching daily insights data for {metric_type} metrics: {response.status_code} - {response.text}"
-                        )
-                except requests.exceptions.Timeout:
+                # Execute the request and handle response
+                payload = self._execute_insight_request(params, metric_type, day_date)
+                if payload is None:
                     error_count += 1
-                    logger.error(
-                        f"Timeout fetching daily insights data for {metric_type} metrics on {day_date.strftime('%Y-%m-%d')} after retries"
-                    )
-                except requests.exceptions.RequestException as e:
-                    error_count += 1
-                    logger.error(
-                        f"Request exception fetching daily insights data for {metric_type} metrics: {str(e)}"
-                    )
+                else:
+                    results.append(payload)
 
+        # Check error rate
         error_rate = error_count / total_requests
         if error_rate > MAX_ERROR_RATE:
             raise RuntimeError(
-                f"More than {MAX_ERROR_RATE*100}% of requests failed ({error_count}/{total_requests} errors)"
+                f"More than {MAX_ERROR_RATE*100}% of requests failed "
+                f"({error_count}/{total_requests} errors)"
             )
 
-        return data
+        return results
+
+    # ------------------------------------------------------------------
+    # INSIGHTS PREPROCESSING
+    # ------------------------------------------------------------------
 
     def preprocess_insight_data(self, insights_data: list) -> pd.DataFrame:
         """
@@ -159,15 +247,15 @@ class InstagramAnalytics:
             pd.DataFrame: Processed insights data.
         """
         rows = []
+
         for insight in insights_data:
-            data_points = insight.get("data", [])
             row = {}
-            for data_point in data_points:
-                metric_name = data_point.get("name")
-                value = data_point.get("values", [{}])[0].get("value")
-                end_time = data_point.get("values", [{}])[0].get("end_time")
-                row[metric_name] = value
-                row["event_date"] = end_time
+            for dp in insight.get("data", []):
+                # Extract metric name and value
+                row[dp.get("name")] = dp.get("values", [{}])[0].get("value")
+                # Record the end_time as event_date
+                row["event_date"] = dp.get("values", [{}])[0].get("end_time")
+
             if row:
                 rows.append(row)
 
@@ -198,22 +286,29 @@ class InstagramAnalytics:
             "website_clicks",
             "profile_views",
         ]
-        insights_data = self.fetch_daily_insights_data(start_date, end_date)
-        df_insights = self.preprocess_insight_data(insights_data)
-        df_insights["account_id"] = self.account_id
-        for c in deprecated_metrics:
-            df_insights[c] = 0
-        return df_insights
 
-    def fetch_lifetime_account_insights_data(self) -> dict:
+        insights = self.fetch_daily_insights_data(start_date, end_date)
+        df = self.preprocess_insight_data(insights)
+        df["account_id"] = self.account_id
+
+        # Add columns for deprecated metrics, filled with zeros
+        for col in deprecated_metrics:
+            df[col] = 0
+
+        return df
+
+    # ------------------------------------------------------------------
+    # LIFETIME INSIGHTS
+    # ------------------------------------------------------------------
+
+    def fetch_lifetime_account_insights_data(self) -> dict | None:
         """
         Fetches lifetime insights.
 
         Returns:
-            list: A list of lifetime insights data.
+            dict | None: JSON response containing lifetime account insights, or None on error.
         """
-
-        metrics = [
+        fields = [
             "followers_count",
             "follows_count",
             "media_count",
@@ -223,22 +318,23 @@ class InstagramAnalytics:
             "username",
         ]
 
-        params = {
-            "fields": ",".join(metrics),
-            "access_token": self.access_token,
-        }
-
         response = self.session.get(
-            f"{self.graph_uri}{self.account_id}", params=params, timeout=TIMEOUT
+            f"{self.graph_uri}{self.account_id}",
+            params={"fields": ",".join(fields), "access_token": self.access_token},
+            timeout=TIMEOUT,
         )
 
         if response.status_code == 200:
             return response.json()
-        else:
-            logger.error(
-                f"Error fetching daily insights data: {response.status_code} - {response.text}"
-            )
-            return None
+
+        logger.error(
+            f"Error fetching lifetime insights: {response.status_code} - {response.text}"
+        )
+        return None
+
+    # ------------------------------------------------------------------
+    # POSTS
+    # ------------------------------------------------------------------
 
     def _get_instagram_posts(self) -> dict:
         """
@@ -247,19 +343,22 @@ class InstagramAnalytics:
         Returns:
             dict: JSON response containing posts data.
         """
-        url = f"{self.graph_uri}{self.account_id}/media"
-        params = {
-            "fields": "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp",
-            "access_token": self.access_token,
-        }
-        response = self.session.get(url, params=params, timeout=TIMEOUT)
+        response = self.session.get(
+            f"{self.graph_uri}{self.account_id}/media",
+            params={
+                "fields": "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp",
+                "access_token": self.access_token,
+            },
+            timeout=TIMEOUT,
+        )
+
         if response.status_code == 200:
             return response.json()
-        else:
-            logger.error(
-                f"Error fetching Instagram posts: {response.status_code} - {response.text}"
-            )
-            return {}
+
+        logger.error(
+            f"Error fetching Instagram posts: {response.status_code} - {response.text}"
+        )
+        return {}
 
     def fetch_posts(self) -> list:
         """
@@ -268,39 +367,36 @@ class InstagramAnalytics:
         Returns:
             list: A list of posts data.
         """
-        logger.info(f"Starting to fetch posts for account {self.account_id}")
-        posts_response = self._get_instagram_posts()
-        posts_data = posts_response.get("data", [])
-        next_page = posts_response.get("paging", {}).get("next")
-        logger.info(f"Fetched initial batch: {len(posts_data)} posts")
+        posts = []
+        response = self._get_instagram_posts()
+
+        posts.extend(response.get("data", []))
+        next_page = response.get("paging", {}).get("next")
 
         while next_page:
-            response = self.session.get(next_page, timeout=TIMEOUT)
-            if response.status_code == 200:
-                posts_response = response.json()
-                posts_data.extend(posts_response.get("data", []))
-                next_page = posts_response.get("paging", {}).get("next")
-                logger.info(f"Importing {len(posts_response.get('data', []))} posts...")
-            else:
-                logger.error(
-                    f"Error fetching posts: {response.status_code} - {response.text}"
-                )
+            resp = self.session.get(next_page, timeout=TIMEOUT)
+            if resp.status_code != 200:
+                logger.error(f"Error fetching posts: {resp.status_code} - {resp.text}")
                 break
 
-        return posts_data
+            payload = resp.json()
+            posts.extend(payload.get("data", []))
+            next_page = payload.get("paging", {}).get("next")
 
-    def _get_post_insights(self, media_id: str, media_type: str) -> dict | None:
+        return posts
+
+    # ------------------------------------------------------------------
+    # POST INSIGHTS
+    # ------------------------------------------------------------------
+
+    def _post_metric_dispatch(self) -> dict:
         """
-        Fetches insights for a specific post.
-
-        Args:
-            media_id (str): The media ID of the post.
-            media_type (str): The media type of the post.
+        Dispatch table for post metric types to avoid if/else.
 
         Returns:
-            dict: JSON response containing insights data.
+            dict: Keys are media types, values are lists of metrics to fetch.
         """
-        default_metrics = [
+        default = [
             "views",
             "shares",
             "comments",
@@ -312,7 +408,8 @@ class InstagramAnalytics:
             "profile_activity",
             "reach",
         ]
-        metric_dict = {
+
+        return {
             "VIDEO": [
                 "shares",
                 "comments",
@@ -321,30 +418,44 @@ class InstagramAnalytics:
                 "total_interactions",
                 "reach",
             ],
-            "IMAGE": default_metrics,
-            "CAROUSEL_ALBUM": default_metrics,
+            "IMAGE": default,
+            "CAROUSEL_ALBUM": default,
         }
 
-        metrics = metric_dict.get(media_type, default_metrics)
-        url = f"{self.graph_uri}{media_id}/insights"
-        params = {"metric": ",".join(metrics), "access_token": self.access_token}
+    def _get_post_insights(self, media_id: str, media_type: str) -> dict | None:
+        """
+        Fetches insights for a specific post.
+
+        Args:
+            media_id (str): The media ID of the post.
+            media_type (str): The media type of the post.
+
+        Returns:
+            dict | None: JSON response containing insights data, or None on error.
+        """
+        metrics = self._post_metric_dispatch().get(
+            media_type,
+            self._post_metric_dispatch()["IMAGE"],
+        )
 
         try:
-            response = self.session.get(url, params=params, timeout=TIMEOUT)
+            response = self.session.get(
+                f"{self.graph_uri}{media_id}/insights",
+                params={"metric": ",".join(metrics), "access_token": self.access_token},
+                timeout=TIMEOUT,
+            )
+
             if response.status_code == 200:
                 return response.json()
-            else:
-                logger.error(
-                    f"Error fetching post insights for {media_id}: {response.status_code} - {response.text}"
-                )
-                return None
-        except requests.exceptions.Timeout:
-            logger.error(f"Timeout fetching post insights for {media_id} after retries")
-            return None
-        except requests.exceptions.RequestException as e:
+
             logger.error(
-                f"Request exception fetching post insights for {media_id}: {str(e)}"
+                f"Error fetching post insights {media_id}: "
+                f"{response.status_code} - {response.text}"
             )
+            return None
+
+        except requests.exceptions.RequestException as exc:
+            logger.error(f"Post insight request failed {media_id}: {exc}")
             return None
 
     def preprocess_insight_posts(self, posts: list) -> pd.DataFrame:
@@ -361,24 +472,21 @@ class InstagramAnalytics:
             RuntimeError: If more than MAX_ERROR_RATE of post insight requests fail.
         """
         rows = []
-        error_count = 0
-        total_posts = len(posts)
-        logger.info(f"Processing insights for {total_posts} posts")
+        errors = 0
+        total = len(posts)
 
         for idx, post in enumerate(posts, 1):
             if idx % 10 == 0:
-                logger.info(f"Processing post {idx}/{total_posts}")
-            post_insights = self._get_post_insights(
-                post.get("id"), post.get("media_type")
-            )
+                logger.info(f"Processing post {idx}/{total}")
 
-            if post_insights is None:
-                error_count += 1
+            insights = self._get_post_insights(post["id"], post["media_type"])
+            if insights is None:
+                errors += 1
                 continue
 
             row = {
-                "post_id": post.get("id"),
-                "media_type": post.get("media_type"),
+                "post_id": post["id"],
+                "media_type": post["media_type"],
                 "caption": post.get("caption"),
                 "media_url": post.get("media_url"),
                 "permalink": post.get("permalink"),
@@ -386,17 +494,16 @@ class InstagramAnalytics:
                 "url_id": post.get("permalink", "").rstrip("/").split("/")[-1],
             }
 
-            for data_point in post_insights.get("data", []):
-                metric_name = data_point.get("name")
-                value = data_point.get("values", [{}])[0].get("value")
-                row[metric_name] = value
+            # Flatten metrics into row
+            for dp in insights.get("data", []):
+                row[dp["name"]] = dp.get("values", [{}])[0].get("value")
 
             rows.append(row)
 
-        error_rate = error_count / total_posts
-        if error_rate > MAX_ERROR_RATE:
+        if total and (errors / total) > MAX_ERROR_RATE:
             raise RuntimeError(
-                f"More than {MAX_ERROR_RATE*100}% of post insight requests failed ({error_count}/{total_posts} errors)"
+                f"More than {MAX_ERROR_RATE*100}% of post insight requests failed "
+                f"({errors}/{total})"
             )
 
         return pd.DataFrame(rows)
@@ -405,16 +512,21 @@ class InstagramAnalytics:
         """
         Fetches and preprocesses Instagram posts into a DataFrame with additional metadata.
 
+        Args:
+            export_date (datetime): Date of export for metadata column.
+
         Returns:
             pd.DataFrame: Processed posts data with added 'export_date' and 'account_id' columns.
         """
-        deprecated_metrics = [
-            "video_views",
-        ]
+        deprecated_metrics = ["video_views"]
+
         posts = self.fetch_posts()
-        df_posts = self.preprocess_insight_posts(posts)
-        df_posts["export_date"] = export_date
-        df_posts["account_id"] = self.account_id
-        for c in deprecated_metrics:
-            df_posts[c] = 0
-        return df_posts
+        df = self.preprocess_insight_posts(posts)
+        df["export_date"] = export_date
+        df["account_id"] = self.account_id
+
+        # Add deprecated metric columns
+        for col in deprecated_metrics:
+            df[col] = 0
+
+        return df

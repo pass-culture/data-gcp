@@ -4,6 +4,7 @@ from datetime import datetime
 import pandas as pd
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import bigquery, secretmanager
+from loguru import logger
 
 
 def access_secret_data(project_id, secret_id, version_id=1, default=None):
@@ -22,13 +23,13 @@ def save_multiple_partitions_to_bq(
     if df.shape[0] > 0:
         df[date_column] = pd.to_datetime(df[date_column])
         _dates = pd.date_range(start_date, end_date)
-        print(f"Will Save.. {table_name} -> {df.shape[0]}")
+        logger.info(f"Will Save.. {table_name} -> {df.shape[0]}")
         for event_date in _dates:
             date_str = event_date.strftime("%Y-%m-%d")
             tmp_df = df[df[date_column].dt.date == pd.to_datetime(date_str).date()]
             tmp_df.loc[:, date_column] = tmp_df[date_column].astype(str)
             if tmp_df.shape[0] > 0:
-                print(f"Saving.. {table_name} -> {date_str}")
+                logger.info(f"Saving.. {table_name} -> {date_str}")
                 df_to_bq(tmp_df, table_name, date_str, date_column, schema)
 
 

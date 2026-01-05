@@ -2,6 +2,7 @@ from datetime import datetime
 
 import pandas as pd
 import typer
+from loguru import logger
 
 from extract import InstagramAnalytics
 from utils import (
@@ -41,7 +42,7 @@ def main(
             instagram_handler = InstagramAnalytics(
                 account_id=account_id, access_token=ACCESS_TOKEN
             )
-            print(
+            logger.info(
                 f"Fetching account {account_id} daily insights from {start_date} to {end_date}"
             )
 
@@ -63,7 +64,7 @@ def main(
             instagram_handler = InstagramAnalytics(
                 account_id=account_id, access_token=ACCESS_TOKEN
             )
-            print(f"Fetching account {account_id} insights")
+            logger.info(f"Fetching account {account_id} insights")
 
             account_insights_json = (
                 instagram_handler.fetch_lifetime_account_insights_data()
@@ -74,7 +75,7 @@ def main(
                 dfs.append(account_insights_df)
 
             else:
-                print("Could not determine account stats")
+                logger.error("Could not determine account stats")
                 raise Exception()
         df_to_bq(
             pd.concat(dfs, ignore_index=True),
@@ -89,7 +90,7 @@ def main(
             instagram_handler = InstagramAnalytics(
                 account_id=account_id, access_token=ACCESS_TOKEN
             )
-            print(f"Fetching posts from {account_id} insights")
+            logger.info(f"Fetching posts from {account_id} insights")
 
             post_insights_df = instagram_handler.fetch_and_preprocess_posts(
                 export_date="extract_date"

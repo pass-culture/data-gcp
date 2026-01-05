@@ -2,8 +2,38 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 import requests
+from loguru import logger
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 MAX_ERROR_RATE = 0.2
+TIMEOUT = 30  # seconds
+RETRIES = 3  # Total number of retries
+BACKOFF_FACTOR = 2
+STATUS_FORCELIST = [429, 500, 502, 503, 504]  # Retry on these HTTP status codes
+
+
+def get_requests_session():
+    """
+    Create a requests session with retry logic for transient failures.
+
+    Retries on:
+    - Connection errors
+    - Timeouts
+    - 5xx server errors
+    - 429 rate limit errors
+    """
+    session = requests.Session()
+    retry_strategy = Retry(
+        total=RETRIES,
+        backoff_factor=BACKOFF_FACTOR,
+        status_forcelist=STATUS_FORCELIST,
+        allowed_methods=["GET"],  # Only retry GET requests
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
 
 
 class InstagramAnalytics:
@@ -22,6 +52,7 @@ class InstagramAnalytics:
         self.account_id = account_id
         self.access_token = access_token
         self.graph_uri = "https://graph.facebook.com/v14.0/"
+        self.session = get_requests_session()
 
     def fetch_daily_insights_data(self, start_date: str, end_date: str) -> list:
         """
@@ -63,6 +94,9 @@ class InstagramAnalytics:
             day_date = start_dt + timedelta(days=day)
             since = int(day_date.timestamp())
             until = int((day_date + timedelta(days=1)).timestamp()) - 1
+            logger.info(
+                f"Fetching daily insights for {day_date.strftime('%Y-%m-%d')} (day {day + 1}/{total_days})"
+            )
 
             # Make separate calls for each metric type
             for metric_type, metrics in METRIC_TYPES.items():
@@ -82,16 +116,29 @@ class InstagramAnalytics:
                 if metric_type != "default":
                     params["metric_type"] = metric_type
 
-                response = requests.get(
-                    f"{self.graph_uri}{self.account_id}/insights", params=params
-                )
+                try:
+                    response = self.session.get(
+                        f"{self.graph_uri}{self.account_id}/insights",
+                        params=params,
+                        timeout=TIMEOUT,
+                    )
 
-                if response.status_code == 200:
-                    data.append(response.json())
-                else:
+                    if response.status_code == 200:
+                        data.append(response.json())
+                    else:
+                        error_count += 1
+                        logger.error(
+                            f"Error fetching daily insights data for {metric_type} metrics: {response.status_code} - {response.text}"
+                        )
+                except requests.exceptions.Timeout:
                     error_count += 1
-                    print(
-                        f"Error fetching daily insights data for {metric_type} metrics: {response.status_code} - {response.text}"
+                    logger.error(
+                        f"Timeout fetching daily insights data for {metric_type} metrics on {day_date.strftime('%Y-%m-%d')} after retries"
+                    )
+                except requests.exceptions.RequestException as e:
+                    error_count += 1
+                    logger.error(
+                        f"Request exception fetching daily insights data for {metric_type} metrics: {str(e)}"
                     )
 
         error_rate = error_count / total_requests
@@ -182,12 +229,14 @@ class InstagramAnalytics:
             "access_token": self.access_token,
         }
 
-        response = requests.get(f"{self.graph_uri}{self.account_id}", params=params)
+        response = self.session.get(
+            f"{self.graph_uri}{self.account_id}", params=params, timeout=TIMEOUT
+        )
 
         if response.status_code == 200:
             return response.json()
         else:
-            print(
+            logger.error(
                 f"Error fetching daily insights data: {response.status_code} - {response.text}"
             )
             return None
@@ -204,11 +253,11 @@ class InstagramAnalytics:
             "fields": "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp",
             "access_token": self.access_token,
         }
-        response = requests.get(url, params=params)
+        response = self.session.get(url, params=params, timeout=TIMEOUT)
         if response.status_code == 200:
             return response.json()
         else:
-            print(
+            logger.error(
                 f"Error fetching Instagram posts: {response.status_code} - {response.text}"
             )
             return {}
@@ -220,19 +269,23 @@ class InstagramAnalytics:
         Returns:
             list: A list of posts data.
         """
+        logger.info(f"Starting to fetch posts for account {self.account_id}")
         posts_response = self._get_instagram_posts()
         posts_data = posts_response.get("data", [])
         next_page = posts_response.get("paging", {}).get("next")
+        logger.info(f"Fetched initial batch: {len(posts_data)} posts")
 
         while next_page:
-            response = requests.get(next_page)
+            response = self.session.get(next_page, timeout=TIMEOUT)
             if response.status_code == 200:
                 posts_response = response.json()
                 posts_data.extend(posts_response.get("data", []))
                 next_page = posts_response.get("paging", {}).get("next")
-                print(f"Importing {len(posts_response.get('data', []))} posts...")
+                logger.info(f"Importing {len(posts_response.get('data', []))} posts...")
             else:
-                print(f"Error fetching posts: {response.status_code} - {response.text}")
+                logger.error(
+                    f"Error fetching posts: {response.status_code} - {response.text}"
+                )
                 break
 
         return posts_data
@@ -276,12 +329,22 @@ class InstagramAnalytics:
         metrics = metric_dict.get(media_type, default_metrics)
         url = f"{self.graph_uri}{media_id}/insights"
         params = {"metric": ",".join(metrics), "access_token": self.access_token}
-        response = requests.get(url, params=params)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            print(
-                f"Error fetching post insights: {response.status_code} - {response.text}"
+
+        try:
+            response = self.session.get(url, params=params, timeout=TIMEOUT)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logger.error(
+                    f"Error fetching post insights for {media_id}: {response.status_code} - {response.text}"
+                )
+                return None
+        except requests.exceptions.Timeout:
+            logger.error(f"Timeout fetching post insights for {media_id} after retries")
+            return None
+        except requests.exceptions.RequestException as e:
+            logger.error(
+                f"Request exception fetching post insights for {media_id}: {str(e)}"
             )
             return None
 
@@ -301,8 +364,11 @@ class InstagramAnalytics:
         rows = []
         error_count = 0
         total_posts = len(posts)
+        logger.info(f"Processing insights for {total_posts} posts")
 
-        for post in posts:
+        for idx, post in enumerate(posts, 1):
+            if idx % 10 == 0:
+                logger.info(f"Processing post {idx}/{total_posts}")
             post_insights = self._get_post_insights(
                 post.get("id"), post.get("media_type")
             )

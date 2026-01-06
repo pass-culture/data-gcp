@@ -7,7 +7,7 @@ from pydantic_ai import Agent
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.providers.google import GoogleProvider
 
-from app.constants import GEMINI_MODEL_NAME
+from app.constants import GEMINI_MODEL_NAME,GCP_PROJECT
 from app.models.validators import EditorialResult
 
 with open("app/llm/system_prompt.txt", encoding="utf-8") as f:
@@ -50,7 +50,7 @@ def build_vertex_gemini_agent(
     Build a Pydantic AI Agent backed by Google Gemini via Vertex AI.
     """
     provider = GoogleProvider(
-        vertexai=True, location="europe-west1", project="passculture-data-prod"
+        vertexai=True, location="europe-west1", project=GCP_PROJECT
     )
     model = GoogleModel(model_name, provider=provider)
     return model
@@ -71,11 +71,9 @@ def llm_thematic_filtering(
     search_query: str, vector_search_results: list
 ) -> EditorialResult:
     prompt = build_prompt(search_query, vector_search_results, custom_prompt=None)
-    logger.info(f"Prompt length for thematic filtering: {len(prompt)}")
     start_time = time.time()
     llm_result = get_llm_agent().run_sync(prompt)
     llm_output = llm_result.output
-    logger.info(f"LLM call perform in {time.time() - start_time} s")
     items = getattr(llm_output, "items", None) or []
     if items:
         llm_df = pd.DataFrame(

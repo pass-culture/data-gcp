@@ -41,6 +41,7 @@ def predict():
     try:
         ### Input parsing and validation
         data = request.get_json()
+        logger.info(f"Received prediction request: {data}")
         if not data:
             raise ValueError("Invalid JSON body")
         instances = data.get("instances")
@@ -49,7 +50,6 @@ def predict():
                 {"error": "Invalid request format: 'instances' list is required"}
             ), 400
         prediction_request = PredictionRequest(**instances[0])
-
         # Here we decide to either do vector search or LLM filtering
         # When Vector search is disabled, we directly go to scalar search with filters
         item_ids = None
@@ -97,13 +97,15 @@ def predict():
             search_results = SearchResult(
                 offers=sorted_results.to_dict(orient="records")
             )
-            # Output parsing
-            search_result_parsed = PredictionResult(predictions=search_results)
-            return jsonify(search_result_parsed.dict()), 200
+            return jsonify(PredictionResult(predictions=search_results).dict()), 200
         else:
             logger.warning("No offers found in scalar search")
-            raise ValueError("No offers found matching the criteria")
+            search_results = SearchResult(offers=[])
+            return (
+                jsonify(PredictionResult(predictions=search_results).dict()), 200
+            )
     except Exception as e:
+        logger.error(f"Error during prediction: {e}")
         return jsonify(
             {"error": "An error occurred during prediction", "details": str(e)}
         ), 500

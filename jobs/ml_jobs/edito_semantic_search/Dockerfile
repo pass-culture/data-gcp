@@ -3,7 +3,8 @@ FROM python:3.11-slim
 COPY --from=ghcr.io/astral-sh/uv:0.7.22 /uv /bin/uv
 
 ARG WORKERS=5
-
+ARG GCP_PROJECT=default_project
+ARG ENV_SHORT_NAME=default_env
 
 COPY ./pyproject.toml ./pyproject.toml
 COPY ./uv.lock ./uv.lock

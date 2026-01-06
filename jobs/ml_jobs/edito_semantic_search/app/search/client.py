@@ -72,8 +72,8 @@ class SearchClient:
         """
         lf = pl.scan_parquet(PARQUET_FILE)
         if filters:
-            lf_filtered = apply_filters(lf, filters)
-        df = lf_filtered.select(["item_id", "offer_id"]).head(k).collect()
+            lf = apply_filters(lf, filters)
+        df = lf.select(["item_id", "offer_id"]).head(k).collect()
         result = df.to_dicts()
         return result
 

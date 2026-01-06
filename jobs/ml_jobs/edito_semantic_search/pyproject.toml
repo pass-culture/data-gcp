@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.11, <3.12"
 dependencies = [
     "google-cloud-secret-manager>=2.24.0",
-    "google-cloud-secret-manager>=2.16.2",
     "google-cloud-storage>=2.18.0",
     "huggingface-hub>=0.34.4",
     "ipykernel>=7.1.0",
@@ -31,6 +30,7 @@ dependencies = [
     "hypercorn==0.15.0",
     "flask==3.0.0",
     "flask-cors==4.0.0",
+    "torch>=2.0.0", 
 ]
 
 ## ruff
@@ -67,6 +67,15 @@ ban-relative-imports = "all"
 [tool.ruff.lint.flake8-type-checking]
 strict = true
 runtime-evaluated-base-classes = ["pydantic.BaseModel"]
-# Pydantic needs to be able to evaluate types at runtime
-# see https://pypi.org/project/flake8-type-checking/ for flake8-type-checking documentation
-# see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation
+
+# ------------------------------------------------------------------
+# NEW SECTIONS ADDED BELOW FOR CPU-ONLY TORCH
+# ------------------------------------------------------------------
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }

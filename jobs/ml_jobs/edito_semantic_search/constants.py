@@ -14,7 +14,7 @@ SERVICE_ACCOUNT_EMAIL = (
 )
 REGION = "europe-west1"
 EXPERIMENT_NAME = f"search_edito_{ENV_SHORT_NAME}"
-ENDPOINT_NAME = f"semantic-search-edito-endpoint-{ENV_SHORT_NAME}"
+ENDPOINT_NAME = f"semantic_search_edito_endpoint_{ENV_SHORT_NAME}"
 VERSION_NAME = "v1"
 MODEL_TYPE = "custom"
 INSTANCE_TYPE = "n1-standard-2"

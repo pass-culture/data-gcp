@@ -15,6 +15,6 @@ WORKDIR /
 EXPOSE 8080
 
 ENV WORKERS=${WORKERS}
-ENV GCP_PROJECT="passculture-data-ehp"
-ENV ENV_SHORT_NAME="dev"
+ENV GCP_PROJECT=${GCP_PROJECT}
+ENV ENV_SHORT_NAME=${ENV_SHORT_NAME}
 CMD uv run --no-dev hypercorn --bind 0.0.0.0:8080 app.app:app --workers=${WORKERS}

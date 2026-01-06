@@ -3,28 +3,18 @@ import time
 import pandas as pd
 from langchain_core.prompts import PromptTemplate
 from loguru import logger
-from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.providers.google import GoogleProvider
 
 from app.constants import GEMINI_MODEL_NAME
+from app.models.validators import EditorialResult
 
-SYSTEM_PROMPT = (
-    "Extrayez toutes les offres sélectionnées du contexte. "
-    "Pour chaque offre, indiquez : id (product-ID ou offer-ID), pertinence (brève explication sur le lien entre l'offre et la thématique sans décrire l'offre ni prendre en compte les autres offres selectionnées). "
-    "Si aucune offre ne correspond ou n'est pertinente, retournez une liste vide. "
-    "Retournez le résultat sous forme d'un objet JSON avec une liste 'offers'."
-)
+with open("app/llm/system_prompt.txt", encoding="utf-8") as f:
+    SYSTEM_PROMPT = f.read().strip()
 
-
-class OfferSelection(BaseModel):
-    id: str
-    pertinence: str
-
-
-class LLMOutput(BaseModel):
-    offers: list[OfferSelection] = Field(default_factory=list)
+with open("app/llm/action_prompt.txt", encoding="utf-8") as f:
+    ACTION_PROMPT = f.read().strip()
 
 
 def build_prompt(question, retrieved_results, custom_prompt=None):
@@ -36,19 +26,11 @@ def build_prompt(question, retrieved_results, custom_prompt=None):
         template=(
             "{action} "
             "\n\nContext:\n{context}\n\n"
-            "Analysez les offres culturelles fournies et identifiez celles qui correspondent à la requête suivante : '{question}'\n\n"
+            "Analysez les offres culturelles fournies "
+            "et identifiez celles qui correspondent à la requête suivante :'{question}'"
         ),
     )
-    if custom_prompt:
-        action = custom_prompt
-    else:
-        action = (
-            "Vous êtes un(e) curateur(trice) culturel(le) et organisateur(trice) d'événements. "
-            "Votre tâche est d'analyser une liste d'offres culturelles et de sélectionner celles qui correspondent à une requête spécifique. "
-            "Il n'y a pas de limite au nombre d'offres que vous pouvez sélectionner, mais vous devez privilégier la pertinence et la qualité. "
-            "Présentez les offres sélectionnées dans une liste claire et organisée. Pour chaque offre sélectionnée, veuillez inclure : "
-            "id, pertinence : Expliquez brièvement en français pourquoi cette offre a été retenue pour la thématique sans décrire l'offre ni prendre en compte les autres offres selectionnées."
-        )
+    action = custom_prompt if custom_prompt else ACTION_PROMPT
     context = "\n".join(
         [
             f"- ID: {item['id']},"
@@ -66,12 +48,6 @@ def build_vertex_gemini_agent(
 ):
     """
     Build a Pydantic AI Agent backed by Google Gemini via Vertex AI.
-
-    Authentication:
-        - Uses Application Default Credentials if available (gcloud, GCE/GKE, etc.).
-        - For service account JSON, configure GOOGLE_APPLICATION_CREDENTIALS env var externally.
-
-    Parameters mirror the Pydantic AI Google docs.
     """
     provider = GoogleProvider(
         vertexai=True, location="europe-west1", project="passculture-data-prod"
@@ -80,36 +56,32 @@ def build_vertex_gemini_agent(
     return model
 
 
-# Convenient default Vertex AI Gemini agent using ADC and default region
 gemini_model = build_vertex_gemini_agent(model_name=GEMINI_MODEL_NAME)
 
 
 def get_llm_agent():
     return Agent(
         gemini_model,
-        output_type=[LLMOutput, str],
+        output_type=[EditorialResult, str],
         system_prompt=SYSTEM_PROMPT,
     )
 
 
-def llm_thematic_filtering(search_query: str, vector_search_results: list) -> LLMOutput:
+def llm_thematic_filtering(
+    search_query: str, vector_search_results: list
+) -> EditorialResult:
     prompt = build_prompt(search_query, vector_search_results, custom_prompt=None)
     logger.info(f"Prompt length for thematic filtering: {len(prompt)}")
     start_time = time.time()
     llm_result = get_llm_agent().run_sync(prompt)
-    logger.info(f"LLM thematic filtering perform in {time.time() - start_time} s")
     llm_output = llm_result.output
     logger.info(f"LLM call perform in {time.time() - start_time} s")
-    # logger.info(f"LLM output: {llm_output}")
-    offers = getattr(llm_output, "offers", None) or []
-    # logger.info(f"Offers extracted: {offers}")
-    if offers:
+    items = getattr(llm_output, "items", None) or []
+    if items:
         llm_df = pd.DataFrame(
-            [offer.dict() if hasattr(offer, "dict") else offer for offer in offers]
+            [item.dict() if hasattr(item, "dict") else item for item in items]
         )
-        logger.info(f"LLM offers DataFrame len: {len(llm_df)}")
         llm_df["rank"] = range(1, len(llm_df) + 1)
     else:
         llm_df = pd.DataFrame()
-        logger.info("No offers found in LLM output")
     return llm_df

@@ -1,24 +1,26 @@
 from dataclasses import dataclass
+from typing import ClassVar
 
-import pandas as pd
 import typer
 from google.cloud import aiplatform
 
 from constants import (
-    ENV_SHORT_NAME,
-    GCP_PROJECT,
-    REGION,
-    EXPERIMENT_NAME,
     ENDPOINT_NAME,
-    VERSION_NAME,
-    SERVING_CONTAINER,
-    MODEL_TYPE,
+    ENV_SHORT_NAME,
+    EXPERIMENT_NAME,
+    GCP_PROJECT,
     INSTANCE_TYPE,
-    TRAFFIC_PERCENTAGE,
-    MIN_NODES,
     MAX_NODES,
+    MIN_NODES,
+    MODEL_TYPE,
+    REGION,
     SERVICE_ACCOUNT_EMAIL,
+    SERVING_CONTAINER,
+    TRAFFIC_PERCENTAGE,
+    VERSION_NAME,
 )
+
+
 @dataclass
 class TFContainer:
     serving_container: str
@@ -30,9 +32,9 @@ class TFContainer:
 
 @dataclass
 class CustomContainer(TFContainer):
-    serving_container_predict_route = "/predict"
-    serving_container_health_route = "/isalive"
-    serving_container_ports = [8080]
+    serving_container_predict_route: ClassVar[str] = "/predict"
+    serving_container_health_route: ClassVar[str] = "/isalive"
+    serving_container_ports: ClassVar[list] = [8080]
 
 
 @dataclass
@@ -182,26 +184,26 @@ class ModelHandler:
                         pass
 
 
-def main(
-) -> None:
+def main() -> None:
     region = REGION
-    experiment_name=EXPERIMENT_NAME
+    experiment_name = EXPERIMENT_NAME
     endpoint_name = ENDPOINT_NAME
     version_name = VERSION_NAME
     serving_container = f"{SERVING_CONTAINER}/{experiment_name}"
     model_type = MODEL_TYPE
-    model_description=f"""{model_type} {experiment_name}"""
+    model_description = f"""{model_type} {experiment_name}"""
     instance_type = INSTANCE_TYPE
     traffic_percentage = TRAFFIC_PERCENTAGE
     min_nodes = MIN_NODES
     max_nodes = MAX_NODES
-    MODEL_TYPE_CONFIG = {"tensorflow": TFContainer, "custom": CustomContainer}
-    
+
     # fallback to default description.
     if model_description is None:
         model_description = f"""{model_type} {experiment_name}."""
 
-    container_type = CustomContainer(serving_container=serving_container,artifact_uri=None)
+    container_type = CustomContainer(
+        serving_container=serving_container, artifact_uri=None
+    )
     model_params = ModelParams(
         experiment_name.replace(".", "_"),
         version_name,

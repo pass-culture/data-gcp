@@ -1,19 +1,21 @@
-import sys
-from datetime import datetime
-import os
 import subprocess
+import sys
+
 import typer
 from loguru import logger
 
 from constants import (
-    GCP_PROJECT,
     ENV_SHORT_NAME,
     EXPERIMENT_NAME,
+    GCP_PROJECT,
     SERVING_CONTAINER,
 )
-experiment_name=EXPERIMENT_NAME
-base_serving_container_path=SERVING_CONTAINER
-container_worker="1"
+
+experiment_name = EXPERIMENT_NAME
+base_serving_container_path = SERVING_CONTAINER
+container_worker = "1"
+
+
 def deploy_container(serving_container, workers):
     """
     Deploy container to Docker registry.
@@ -25,7 +27,8 @@ def deploy_container(serving_container, workers):
     Raises:
         subprocess.CalledProcessError: If deployment fails
     """
-    command = f"sh ./deploy_to_docker_registery.sh {serving_container} {workers}"
+    command = "sh ./deploy_to_docker_registery.sh "
+    f"{serving_container} {workers} {GCP_PROJECT} {ENV_SHORT_NAME}"
     try:
         result = subprocess.run(
             command,
@@ -40,10 +43,9 @@ def deploy_container(serving_container, workers):
         print(f"Command failed with return code {e.returncode}: {e.output}")
         raise
 
+
 def main():
-    serving_container = (
-        f"{base_serving_container_path}/{experiment_name}"
-    )
+    serving_container = f"{base_serving_container_path}/{experiment_name}"
 
     try:
         logger.info(f"Deploying container: {serving_container}...")

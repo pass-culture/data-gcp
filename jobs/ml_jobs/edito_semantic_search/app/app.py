@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
+from loguru import logger
 
 from app.routes import api
 

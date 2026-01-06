@@ -22,7 +22,7 @@ TRAFFIC_PERCENTAGE = 100
 MIN_NODES = 1
 MAX_NODES = 10
 SERVING_CONTAINER_BASE = "europe-west1-docker.pkg.dev/passculture-infra-prod"
-SERVING_CONTAINER_REGISTRY = "pass-culture-artifact-registry/data-gcp/"
+SERVING_CONTAINER_REGISTRY = "pass-culture-artifact-registry/data-gcp"
 SERVING_CONTAINER_NAME = f"semantic_search_{ENV_SHORT_NAME}"
 SERVING_CONTAINER = (
     f"{SERVING_CONTAINER_BASE}/{SERVING_CONTAINER_REGISTRY}/{SERVING_CONTAINER_NAME}"

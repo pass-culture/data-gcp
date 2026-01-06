@@ -10,6 +10,7 @@ select
     user_is_active,
     user_age,
     user_birth_date,
+    user_age_at_creation,
     user_has_enabled_marketing_email,
     user_has_enabled_marketing_push,
     user_iris_internal_id,

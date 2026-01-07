@@ -1,0 +1,138 @@
+version: 2
+
+metrics:
+  # === SIMPLE METRICS (direct measure aggregations) ===
+
+  - name: total_bookings
+    description: "Total number of bookings"
+    type: simple
+    label: "Total Bookings"
+    type_params:
+      measure: total_bookings
+
+  - name: booking_revenue
+    description: "Total booking revenue"
+    type: simple
+    label: "Total Revenue"
+    type_params:
+      measure: booking_revenue
+
+  - name: booking_expected_revenue
+    description: "Expected revenue from bookings that are not cancelled"
+    type: simple
+    label: "Expected Revenue"
+    type_params:
+      measure: booking_expected_revenue
+
+  - name: active_users
+    description: "Number of unique users who made bookings"
+    type: simple
+    label: "Active Users"
+    type_params:
+      measure: unique_users
+
+  - name: cancelled_bookings
+    description: "Total cancelled bookings"
+    type: simple
+    label: "Cancelled Bookings"
+    type_params:
+      measure: cancelled_bookings
+
+  - name: used_bookings
+    description: "Total used bookings"
+    type: simple
+    label: "Used Bookings"
+    type_params:
+      measure: used_bookings
+
+  - name: qpv_user_bookings
+    description: "Bookings from users in QPV areas"
+    type: simple
+    label: "QPV User Bookings"
+    type_params:
+      measure: qpv_user_bookings
+
+  - name: student_bookings
+    description: "Bookings from students"
+    type: simple
+    label: "Student Bookings"
+    type_params:
+      measure: student_bookings
+
+  - name: priority_public_bookings
+    description: "Bookings from priority public users"
+    type: simple
+    label: "Priority Public Bookings"
+    type_params:
+      measure: priority_public_bookings
+
+  - name: physical_goods_bookings
+    description: "Bookings for physical goods"
+    type: simple
+    label: "Physical Goods Bookings"
+    type_params:
+      measure: physical_goods_bookings
+
+  - name: digital_goods_bookings
+    description: "Bookings for digital goods"
+    type: simple
+    label: "Digital Goods Bookings"
+    type_params:
+      measure: digital_goods_bookings
+
+  - name: event_bookings
+    description: "Bookings for events"
+    type: simple
+    label: "Event Bookings"
+    type_params:
+      measure: event_bookings
+
+  # === RATIO METRICS (measure1 / measure2) ===
+
+  - name: cancellation_rate
+    description: "Percentage of bookings that were cancelled"
+    type: ratio
+    label: "Cancellation Rate"
+    type_params:
+      numerator: cancelled_bookings
+      denominator: bookings
+
+  - name: usage_rate
+    description: "Percentage of bookings that were used"
+    type: ratio
+    label: "Usage Rate"
+    type_params:
+      numerator: used_bookings
+      denominator: bookings
+
+  - name: average_booking_value
+    description: "Average revenue per booking"
+    type: ratio
+    label: "Avg Booking Value"
+    type_params:
+      numerator: booking_revenue
+      denominator: bookings
+
+  - name: revenue_per_user
+    description: "Average revenue per active user"
+    type: ratio
+    label: "Revenue per User"
+    type_params:
+      numerator: booking_revenue
+      denominator: active_users
+
+  # === CUMULATIVE METRICS (running totals) ===
+
+  - name: cumulative_bookings
+    description: "Running total of bookings over time"
+    type: cumulative
+    label: "Cumulative Bookings"
+    type_params:
+      measure: bookings
+
+  - name: cumulative_revenue
+    description: "Running total of revenue over time"
+    type: cumulative
+    label: "Cumulative Revenue"
+    type_params:
+      measure: booking_revenue

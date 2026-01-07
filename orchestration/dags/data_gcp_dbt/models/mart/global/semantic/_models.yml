@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: metricflow_time_spine
+    description: |
+      A time spine table with one row per day, ranging from 2020-01-01 to 3 years in the future.
+      This table is required by MetricFlow for time-based operations and aggregations.
+    time_spine:
+      standard_granularity_column: date_day
+    columns:
+      - name: date_day
+        description: "The base date column for daily granularity"
+        granularity: day

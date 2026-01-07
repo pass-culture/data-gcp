@@ -40,7 +40,7 @@ data_gcp_dbt:
       method: oauth
       priority: interactive
       project: passculture-data-prod
-      threads: 1
+      threads: 12
       type: bigquery
 sandbox:
   target: prod

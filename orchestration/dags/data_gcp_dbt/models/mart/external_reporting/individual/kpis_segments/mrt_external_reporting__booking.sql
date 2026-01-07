@@ -30,9 +30,33 @@ with
         where b.booking_status = 'REIMBURSED'
     ),
 
+    free_bookable_offers as (
+        select
+            venue_city,
+            venue_epci,
+            date_trunc(date(offer_creation_date), month) as partition_month,
+            count(distinct offer_id) as monthly_free_bookable_offers
+        from {{ ref("mrt_global__offer") }}
+        where last_stock_price = 0 and offer_is_bookable
+        group by partition_month, venue_city, venue_epci
+    ),
+
+    cumul_free_bookable_offers as (
+        select
+            partition_month,
+            venue_city,
+            venue_epci,
+            sum(monthly_free_bookable_offers) over (
+                partition by venue_city, venue_epci
+                order by partition_month
+                rows unbounded preceding
+            ) as cumul_total_free_offers
+        from free_bookable_offers
+    ),
+
     monthly_flows as (
         {% for dim in dimensions %}
-            -- Vue du partenaire (Lieu)
+            -- Vue du partenaire
             select
                 partition_month,
                 '{{ dim.name }}' as dimension_name,
@@ -56,7 +80,7 @@ with
 
             union all
 
-            -- Vue du bénéficiaire (Jeune)
+            -- Vue du bénéficiaire
             select
                 partition_month,
                 '{{ dim.name }}' as dimension_name,
@@ -140,6 +164,45 @@ with
             cum_den_volume as denominator,
             safe_divide(cum_num_volume, cum_den_volume) as kpi
         from cumulative_aggregation
+
+        union all
+
+        {% for dim in dimensions %}
+
+            select
+                partition_month,
+                timestamp("{{ ts() }}") as updated_at,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.venue_col }} as dimension_value,
+                'total_reservations_gratuites' as kpi_name,
+                count(
+                    case when booking_intermediary_amount = 0 then 1 end
+                ) as numerator,
+                cast(1 as numeric) as denominator,
+                count(
+                    case when booking_intermediary_amount = 0 then 1 end
+                ) as kpi
+            from base_booking_data
+            group by
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
+
+            union all
+
+            select
+                partition_month,
+                timestamp("{{ ts() }}") as updated_at,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.venue_col }} as dimension_value,
+                'total_offres_gratuites_reservables' as kpi_name,
+                cumul_total_free_offers as numerator,
+                cast(1 as numeric) as denominator,
+                cumul_total_free_offers as kpi
+            from cumul_free_bookable_offers
+            {% if not loop.last %}
+                union all
+            {% endif %}
+        {% endfor %}
+
     )
 
 select *

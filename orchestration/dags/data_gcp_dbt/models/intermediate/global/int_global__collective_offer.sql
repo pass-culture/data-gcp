@@ -88,6 +88,7 @@ select
     co.collective_offer_last_validation_date,
     co.collective_offer_rejection_reason,
     cs.collective_stock_price,
+    cs.collective_stock_price_detail,
     cs.collective_stock_number_of_tickets,
     cs.collective_stock_id,
     co.collective_offer_location_type,

@@ -238,8 +238,8 @@ with
         select
             ia.institution_academie as institution_academy_name,
             ia.region_name as institution_region_name,
-            ia.institution_city as institution_city,
-            ia.institution_epci as institution_epci,
+            ia.institution_city,
+            ia.institution_epci,
             cb.venue_academy_name,
             cb.venue_region_name,
             cb.venue_city,

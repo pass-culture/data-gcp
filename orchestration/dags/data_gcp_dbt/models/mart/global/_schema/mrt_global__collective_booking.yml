@@ -137,3 +137,6 @@ models:
       - name: ministry
         description: "{{ doc('column__ministry') }}"
         data_type: STRING
+      - name: collective_offer_location_type
+        description: "{{ doc('column__collective_offer_location_type') }}"
+        data_type: STRING

@@ -33,10 +33,6 @@ class StartGCEOperator(BaseOperator):
         "gpu_type",
         "gpu_count",
         "additional_scopes",
-        "priority_weight",
-        "weight_rule",
-        "pool",
-        "pool_slots",
     ]
 
     @apply_defaults
@@ -92,10 +88,6 @@ class StartGCEOperator(BaseOperator):
 class CleanGCEOperator(BaseOperator):
     template_fields = [
         "timeout_in_minutes",
-        "priority_weight",
-        "weight_rule",
-        "pool",
-        "pool_slots",
     ]
 
     @apply_defaults
@@ -118,13 +110,7 @@ class CleanGCEOperator(BaseOperator):
 
 
 class DeleteGCEOperator(BaseOperator):
-    template_fields = [
-        "instance_name",
-        "priority_weight",
-        "weight_rule",
-        "pool",
-        "pool_slots",
-    ]
+    template_fields = ["instance_name"]
 
     @apply_defaults
     def __init__(
@@ -145,13 +131,7 @@ class DeleteGCEOperator(BaseOperator):
 
 
 class StopGCEOperator(BaseOperator):
-    template_fields = [
-        "instance_name",
-        "priority_weight",
-        "weight_rule",
-        "pool",
-        "pool_slots",
-    ]
+    template_fields = ["instance_name"]
 
     @apply_defaults
     def __init__(
@@ -176,10 +156,6 @@ class BaseSSHGCEOperator(BaseOperator):
         "gce_zone",
         "deferrable",
         "poll_interval",
-        "priority_weight",
-        "weight_rule",
-        "pool",
-        "pool_slots",
     ]
 
     @apply_defaults

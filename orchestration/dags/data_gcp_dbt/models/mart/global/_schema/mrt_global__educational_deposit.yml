@@ -16,3 +16,5 @@ models:
         description: "{{ doc('column__educational_deposit_period') }}"
       - name: educational_deposit_amount
         description: "{{ doc('column__educational_deposit_amount') }}"
+      - name: calendar_year
+        description: "{{ doc('column__calendar_year') }}"

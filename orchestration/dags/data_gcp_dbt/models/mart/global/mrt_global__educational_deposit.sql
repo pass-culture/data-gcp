@@ -1,6 +1,7 @@
 select
     ed.institution_id,
     ed.scholar_year,
+    ed.calendar_year,
     ei.institution_department_code,
     ei.institution_academy_name,
     ed.educational_deposit_period,

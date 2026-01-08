@@ -6,12 +6,13 @@ select
     ey.educational_year_expiration_date,
     ey.scholar_year,
     ed.ministry,
+    extract(year from ed.educational_deposit_beginning_date) as calendar_year,
     case
         (
             extract(month from ed.educational_deposit_beginning_date),
             extract(month from ed.educational_deposit_expiration_date)
         )
-        when (8, 12)
+        when (9, 12)
         then 'sept-dec'
         when (12, 8)
         then 'janv-aout'

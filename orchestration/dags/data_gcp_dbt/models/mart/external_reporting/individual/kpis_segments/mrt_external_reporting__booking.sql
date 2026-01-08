@@ -179,9 +179,7 @@ with
                     case when booking_intermediary_amount = 0 then 1 end
                 ) as numerator,
                 cast(1 as numeric) as denominator,
-                count(
-                    case when booking_intermediary_amount = 0 then 1 end
-                ) as kpi
+                count(case when booking_intermediary_amount = 0 then 1 end) as kpi
             from base_booking_data
             group by
                 partition_month, updated_at, dimension_name, dimension_value, kpi_name

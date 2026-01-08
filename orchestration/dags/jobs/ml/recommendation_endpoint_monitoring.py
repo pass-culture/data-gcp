@@ -1,5 +1,16 @@
-from datetime import datetime, timedelta
 import os
+from datetime import datetime, timedelta
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryInsertJobOperator,
+)
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
+from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
 from common.alerts.endpoint_monitoring import (
@@ -7,8 +18,8 @@ from common.alerts.endpoint_monitoring import (
 )
 from common.callback import on_failure_vm_callback
 from common.config import (
-    BIGQUERY_TMP_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
+    BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -23,20 +34,9 @@ from common.operators.gce import (
 )
 from common.operators.slack import SendSlackMessageOperator
 from common.utils import get_airflow_schedule
+
 from jobs.crons import SCHEDULE_DICT
 from jobs.ml.constants import IMPORT_ENDPOINT_MONITORING_SQL_PATH
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import BranchPythonOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
-from airflow.utils.task_group import TaskGroup
-from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
-    GCSToBigQueryOperator,
-)
 
 
 def create_ssh_task(task_id, command, instance_name, base_dir):

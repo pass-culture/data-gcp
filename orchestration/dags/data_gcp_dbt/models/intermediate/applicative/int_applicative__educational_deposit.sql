@@ -7,40 +7,45 @@ select
     ey.scholar_year,
     ed.ministry,
     case
-        when
-            extract(month from ed.educational_deposit_beginning_date) = 8
-            and extract(month from ed.educational_deposit_expiration_date) = 12
+        (
+            extract(month from ed.educational_deposit_beginning_date),
+            extract(month from ed.educational_deposit_expiration_date)
+        )
+        when (8, 12)
         then 'sept-dec'
-        when
-            extract(month from ed.educational_deposit_beginning_date) = 12
-            and extract(month from ed.educational_deposit_expiration_date) = 8
+        when (12, 8)
         then 'janv-aout'
         else 'all year'
     end as educational_deposit_period,
-    case
-        when
-            (
-                cast(ey.educational_year_beginning_date as date) <= current_date
-                and cast(ey.educational_year_expiration_date as date) >= current_date
-            )
-            and (
-                extract(month from ed.educational_deposit_beginning_date)
-                < extract(month from current_date)
-                and extract(month from ed.educational_deposit_beginning_date)
-                >= extract(month from current_date)
-            )
-        then true
-        else false
-    end as is_current_deposit,
-    case
-        when
-            (
-                cast(ey.educational_year_beginning_date as date) <= current_date
-                and cast(ey.educational_year_expiration_date as date) >= current_date
-            )
-        then true
-        else false
-    end as is_current_scholar_year
+    coalesce(
+        (
+            cast(ey.educational_year_beginning_date as date) <= current_date
+            and cast(ey.educational_year_expiration_date as date) >= current_date
+        )
+        and (
+            extract(month from ed.educational_deposit_beginning_date)
+            < extract(month from current_date)
+            and extract(month from ed.educational_deposit_beginning_date)
+            >= extract(month from current_date)
+        ),
+        false
+    ) as is_current_deposit,
+    rank() over (
+        partition by ed.educational_institution_id
+        order by ed.educational_deposit_creation_date, ed.educational_deposit_id
+    ) as deposit_rank_asc,
+    rank() over (
+        partition by ed.educational_institution_id
+        order by
+            ed.educational_deposit_creation_date desc, ed.educational_deposit_id desc
+    ) as deposit_rank_desc,
+    coalesce(
+        (
+            cast(ey.educational_year_beginning_date as date) <= current_date
+            and cast(ey.educational_year_expiration_date as date) >= current_date
+        ),
+        false
+    ) as is_current_scholar_year
 from {{ source("raw", "applicative_database_educational_deposit") }} as ed
 left join
     {{ source("raw", "applicative_database_educational_year") }} as ey

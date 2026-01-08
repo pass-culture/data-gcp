@@ -47,8 +47,10 @@ def process_endpoint_calls(endpoint_name, call_type, ids, n_calls_per_user):
         )
         end_time = time.time()
         latencies.append(end_time - start_time)
-        predictions_by_id[id].append(results.predictions)
-        return hasattr(results, "predictions") and bool(results.predictions)
+        status = hasattr(results, "predictions")
+        predictions = results.predictions
+        predictions_by_id[id].append(predictions)
+        return status and bool(predictions)
 
     for id in ids:
         for call_num in range(n_calls_per_user):

@@ -49,7 +49,7 @@ SCHEDULE_DICT = {
         "stg": "0 5 * * *",  # every day at 5:00 AM
         "prod": "5 * * * *",  # every hour at 5 minutes past the hour
     },
-    "endpoint_monitoring": "0 12 * * 5",  # every Friday at 12:00 PM
+    "endpoint_monitoring": "0 8 * * *",  # every day at 8:00 AM
     "export_external_reporting": {
         "prod": "45 4 1 1,4,8,12 *",  # every 1st of 4 months at 4:45 AM
     },

@@ -1,5 +1,9 @@
 import datetime
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from common import macros
 from common.callback import on_failure_base_callback
 from common.config import (
@@ -16,11 +20,6 @@ from dependencies.metabase.import_metabase import (
     from_external,
     import_tables,
 )
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -47,7 +46,7 @@ with DAG(
     },
     tags=[DAG_TAGS.DE.value],
 ) as dag:
-    start = DummyOperator(task_id="start", dag=dag)
+    start = EmptyOperator(task_id="start", dag=dag)
 
     import_tables_to_raw_tasks = []
     for name, params in import_tables.items():
@@ -75,6 +74,6 @@ with DAG(
         )
         import_tables_to_raw_tasks.append(task)
 
-    end_raw = DummyOperator(task_id="end_raw", dag=dag)
+    end_raw = EmptyOperator(task_id="end_raw", dag=dag)
 
     (start >> import_tables_to_raw_tasks >> end_raw)

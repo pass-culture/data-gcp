@@ -2,6 +2,9 @@ import datetime
 
 import pandas as pd
 import requests
+from airflow import DAG
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator
 from common import macros
 from common.access_gcp_secrets import access_secret_data
 from common.callback import on_failure_vm_callback
@@ -15,10 +18,6 @@ from common.config import (
 )
 from common.operators.bigquery import bigquery_job_task
 from common.utils import get_airflow_schedule
-
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import PythonOperator
 
 default_dag_args = {
     "start_date": datetime.datetime(2022, 6, 24),
@@ -124,7 +123,7 @@ def get_and_send(**kwargs):
     return 1
 
 
-start = DummyOperator(task_id="start", dag=dag)
+start = EmptyOperator(task_id="start", dag=dag)
 clean_table_jobs = {}
 for table, job_params in EXPORT_TABLES.items():
     # export table to raw table to store exported data before uploading to qualtrics

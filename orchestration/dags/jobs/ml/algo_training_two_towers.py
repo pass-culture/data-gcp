@@ -1,5 +1,13 @@
 from datetime import datetime, timedelta
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import BranchPythonOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryInsertJobOperator,
+)
+from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
 from common.alerts.ml_training import create_algo_training_slack_block
@@ -24,17 +32,9 @@ from common.operators.gce import (
 )
 from common.operators.slack import SendSlackMessageOperator
 from common.utils import get_airflow_schedule
+
 from jobs.crons import SCHEDULE_DICT
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import BranchPythonOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
-from airflow.utils.task_group import TaskGroup
 
 DATE = "{{ ts_nodash }}"
 DAG_NAME = "algo_training_two_towers"
@@ -159,7 +159,7 @@ with (
         },
     ) as dag
 ):
-    start = DummyOperator(task_id="start", dag=dag)
+    start = EmptyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -282,7 +282,6 @@ with (
         "--run-name {{ params.run_name }}",
         dag=dag,
         deferrable=True,
-        poll_interval=300,
     )
 
     evaluate = SSHGCEOperator(
@@ -295,7 +294,6 @@ with (
         "--dummy {{ params.evaluate_on_dummy }} ",
         dag=dag,
         deferrable=True,
-        poll_interval=300,
     )
 
     branch_upload_embeddings = BranchPythonOperator(
@@ -305,7 +303,7 @@ with (
         dag=dag,
     )
 
-    skip_upload_embeddings = DummyOperator(
+    skip_upload_embeddings = EmptyOperator(
         task_id="skip_upload_embeddings",
         dag=dag,
     )

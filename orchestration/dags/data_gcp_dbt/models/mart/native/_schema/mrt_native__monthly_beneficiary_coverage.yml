@@ -27,6 +27,10 @@ models:
         description: '{{ doc("column__population_department_code") }}'
         data_type: STRING
 
+      - name: population_department_name
+        description: '{{ doc("column__population_department_name") }}'
+        data_type: STRING
+
       - name: population_region_name
         description: '{{ doc("column__population_region_name") }}'
         data_type: STRING

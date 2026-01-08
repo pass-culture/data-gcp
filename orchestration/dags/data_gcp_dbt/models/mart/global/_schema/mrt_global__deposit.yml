@@ -73,6 +73,9 @@ models:
       - name: user_creation_date
         description: '{{ doc("column__user_created_at") }}'
         data_type: DATE
+      - name: user_age_at_deposit
+        description: '{{ doc("column__user_age_at_deposit") }}'
+        data_type: INT64
       - name: deposit_source
         description: '{{ doc("column__deposit_source") }}'
         data_type: STRING

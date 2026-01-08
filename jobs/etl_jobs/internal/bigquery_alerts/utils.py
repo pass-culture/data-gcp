@@ -1,7 +1,8 @@
-import os
-import pandas as pd
 import datetime
+import os
 import re
+
+import pandas as pd
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT_ID")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
@@ -12,13 +13,33 @@ days7 = datetime.timedelta(days=7)
 month = datetime.timedelta(weeks=4)
 year = datetime.timedelta(days=365)
 
-schedule_mapping = {
-    "daily": today - days3,
-    "weekly": today - days7,
-    "monthly": today - month,
-    "yearly": today - year,
-    "default": today - month,
-}
+
+def get_schedule_mapping():
+    """
+    Get the schedule mapping for determining table update thresholds.
+
+    Returns a dictionary mapping schedule types to datetime thresholds.
+    Tables that haven't been updated since their respective threshold
+    will be flagged as potentially stale.
+
+    Returns:
+        dict: A mapping of schedule types to datetime objects representing
+              the threshold date for each schedule:
+              - 'daily': 3 days ago
+              - 'weekly': 7 days ago
+              - 'monthly': 4 weeks ago
+              - 'yearly': 365 days ago
+              - 'default': 4 weeks ago (fallback for untagged tables)
+              - 'never': Never alert (epoch time)
+    """
+    return {
+        "daily": today - days3,
+        "weekly": today - days7,
+        "monthly": today - month,
+        "yearly": today - year,
+        "default": today - month,
+        "never": datetime.datetime(1970, 1, 1),
+    }
 
 
 def get_datasets_to_scan():
@@ -44,7 +65,6 @@ def get_datasets_to_scan():
             f"raw_applicative_{ENV_SHORT_NAME}",
             f"snapshot_{ENV_SHORT_NAME}",
             f"backend_{ENV_SHORT_NAME}",
-            f"appsflyer_import_{ENV_SHORT_NAME}",
         ]
     ]
 

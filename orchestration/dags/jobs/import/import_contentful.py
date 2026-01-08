@@ -1,5 +1,7 @@
 import datetime
 
+from airflow import DAG
+from airflow.models import Param
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -15,9 +17,6 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
-
-from airflow import DAG
-from airflow.models import Param
 
 GCE_INSTANCE = f"import-contentful-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/contentful"
@@ -50,6 +49,11 @@ with DAG(
             type="string",
         ),
         "instance_name": Param(default=GCE_INSTANCE, type="string"),
+        "playlists_names": Param(
+            default="",
+            type="string",
+            description="Comma separated list of playlists names to import: p1,p2,p3",
+        ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
@@ -64,7 +68,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.8",
+        python_version="3.10",
         base_dir=BASE_PATH,
         dag=dag,
         retries=2,
@@ -75,7 +79,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py ",
+        command="python main.py {% if params.playlists_names and params.playlists_names | trim != '' %} --playlists-names {{ params.playlists_names }}{% endif %}",
         do_xcom_push=True,
     )
 

@@ -45,4 +45,4 @@ select
     u.user_academy_name
 from {{ ref("int_applicative__favorite") }} as f
 left join {{ ref("int_global__offer") }} as o on f.offer_id = o.offer_id
-left join {{ ref("int_global__user") }} as u on f.user_id = u.user_id
+left join {{ ref("int_global__user_beneficiary") }} as u on f.user_id = u.user_id

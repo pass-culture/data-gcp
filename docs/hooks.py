@@ -1,10 +1,10 @@
-from jinja2 import Environment, nodes, FileSystemLoader
-from jinja2.ext import Extension
-import pandas as pd
-import markdown
 import json
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
+import markdown
+import pandas as pd
+from jinja2 import Environment, FileSystemLoader, nodes
+from jinja2.ext import Extension
 
 DBT_MANIFEST = "orchestration/dags/data_gcp_dbt/target/manifest.json"
 

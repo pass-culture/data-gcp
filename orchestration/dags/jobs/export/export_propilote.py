@@ -1,14 +1,13 @@
 import datetime
 
+from airflow import DAG
+from airflow.operators.empty import EmptyOperator
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import DAG_FOLDER, DAG_TAGS, GCP_PROJECT_ID
 from common.operators.bigquery import bigquery_job_task
 from common.utils import depends_loop, get_airflow_schedule
 from dependencies.propilote.export_propilote import propilote_tables
-
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
 
 default_dag_args = {
     "start_date": datetime.datetime(2022, 6, 24),
@@ -31,7 +30,7 @@ dag = DAG(
 )
 
 
-start = DummyOperator(task_id="start", dag=dag)
+start = EmptyOperator(task_id="start", dag=dag)
 
 table_jobs = {}
 for table, job_params in propilote_tables.items():
@@ -42,8 +41,7 @@ for table, job_params in propilote_tables.items():
         "dag_depends": job_params.get("dag_depends", []),
     }
 
-end = DummyOperator(task_id="end", dag=dag)
+end = EmptyOperator(task_id="end", dag=dag)
 table_jobs = depends_loop(
     propilote_tables, table_jobs, start, dag=dag, default_end_operator=end
 )
-table_jobs

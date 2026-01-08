@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 
+from airflow.decorators import dag, task
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_TAGS,
@@ -14,8 +16,7 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
-from airflow.decorators import dag, task
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+
 from jobs.crons import SCHEDULE_DICT
 
 DEFAULT_REGION = "europe-west1"
@@ -114,9 +115,9 @@ def extract_embedding_item_dag(
         f"--input-dataset-name {INPUT_DATASET_NAME} "
         f"--input-table-name {INPUT_TABLE_NAME} "
         f"--output-dataset-name {OUTPUT_DATASET_NAME} "
-        f"--output-table-name {OUTPUT_TABLE_NAME} ",
+        f"--output-table-name {OUTPUT_TABLE_NAME} "
+        "--ts {{ ts }}",
         deferrable=True,
-        poll_interval=300,
     )
 
     stop_gce = DeleteGCEOperator(task_id="stop_gce", instance_name=GCE_INSTANCE)

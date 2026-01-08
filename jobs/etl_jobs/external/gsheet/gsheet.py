@@ -30,6 +30,11 @@ SHEETS = {
     },
     "gsheet_educational_institution_student_headcount": {
         "spreadsheet_ids": [
+            "19cYAL0apbcPmoLwEIOmR3eqHZePxMyChBtzqytTXr7o",  # MA Final (sept-dec 2025-2026) -
+            "12YxzAQdpAdlZS6HAOZqYsA6bPfS1CsbuWcbpfpIX7CI",  # MASA Final (sept-dec 2025-2026) -
+            "1EFiRSptEeheoaHyjJogjjClNmzNHgrxG9colYlg1uIY",  # Aix-Marseille Provisional (2025-2026) -
+            "1Gzljf7ZHEgj_5G8A-S6HUQ7H7cZ1qK2T12xBxJ5s8oQ",  # MEN Final (sept-dec 2025-2026) -
+            "1FuEZ7Y1Yk2Tje1_3l-9sQ8W8pCyEz2BkDlXteKuXvw0",  # SEM Final (sept-dev 2025-2026) -
             "1ntswOFC_eG_OCisuTJN8cwKp8dPOms1-MamQQbcLXTg",  # MASA Final (2024-2025) -
             "1fbrPv2mgo09xAtZ4BiQcM5B6ufwunCn6ymtCjJJQaaY",  # MEN Final (2024-2025) -
             "1H8ZH4IWVhtvCS6T0smSMrRu490rrNZIl--7dpRbersc",  # MASA Provisional (2024-2025)
@@ -59,6 +64,7 @@ SHEETS = {
             "micro_objective": "micro_objective",
             "offer_category": "offer_category",
             "region": "region",
+            "event": "event",
         },
     },
     "gsheet_instagram_campaign_tag": {
@@ -72,6 +78,7 @@ SHEETS = {
             "micro_objective": "micro_objective",
             "offer_category": "offer_category",
             "region": "region",
+            "event": "event",
         },
     },
     "gsheet_institution_meg_scholar_group": {
@@ -112,6 +119,16 @@ SHEETS = {
             "Provisoire": "is_provisional",
             "Secteur": "sector",
             "Affiliation": "affiliation",
+        },
+    },
+    "gsheet_company_contact": {
+        "spreadsheet_ids": ["1sc-khJYKwaVCf20lV5QBoqciUjGpjBSaKJpWbG5FHJg"],
+        "expected_headers_dict": {
+            "Nom": "last_name",
+            "Prénom": "first_name",
+            "Direction": "direction",
+            "Département": "team",
+            "Email": "email",
         },
     },
 }

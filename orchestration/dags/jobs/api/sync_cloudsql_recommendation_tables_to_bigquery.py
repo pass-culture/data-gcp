@@ -1,12 +1,16 @@
 import datetime
 import os
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.providers.google.cloud.operators.gcs import GCSDeleteObjectsOperator
 from common import macros
 from common.callback import on_failure_base_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
-    DATA_GCS_BUCKET_NAME,
+    DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME,
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
@@ -16,12 +20,8 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
-from jobs.crons import SCHEDULE_DICT
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
-from airflow.providers.google.cloud.operators.gcs import GCSDeleteObjectsOperator
+from jobs.crons import SCHEDULE_DICT
 
 DEFAULT_DAG_ARGS = {
     "start_date": datetime.datetime(2023, 1, 1),
@@ -82,7 +82,7 @@ with DAG(
             type="string",
         ),
         "bucket_name": Param(
-            default=DATA_GCS_BUCKET_NAME,
+            default=DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME,
             type="string",
         ),
         "bucket_folder": Param(

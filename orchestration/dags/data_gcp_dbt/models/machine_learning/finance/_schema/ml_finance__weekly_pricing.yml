@@ -1,0 +1,17 @@
+version: 2
+
+models:
+  - name: ml_finance__weekly_pricing
+    description: "{{ doc('description__ml_finance__weekly_pricing') }}"
+    columns:
+      - name: pricing_week
+        description: "{{ doc('column__pricing_week') }}"
+        data_type: DATE
+        data_tests:
+          - unique
+          - not_null
+      - name: total_pricing
+        description: "{{ doc('column__total_pricing') }}"
+        data_type: FLOAT
+        data_tests:
+          - not_null

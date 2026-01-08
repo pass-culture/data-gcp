@@ -25,6 +25,11 @@ class DefaultClient:
     on items stored in a LanceDB table.
     """
 
+    EMBEDDING_MODEL_TYPE = None
+    VECTOR_SEARCH_SIMILARITY_METRIC = (
+        "dot"  # If a vector index has been created, then this will be overridden
+    )
+
     def __init__(
         self,
         base_columns: List[str] = DEFAULT_COLUMNS,
@@ -131,10 +136,9 @@ class DefaultClient:
         details: bool = False,
         prefilter: bool = False,
         vector_column_name: str = "booking_number_desc",
-        similarity_metric: str = "dot",
         re_rank: bool = False,
         user_id: Optional[str] = None,
-        item_ids: List[str] = [],
+        item_ids: Optional[List[str]] = None,
     ) -> List[Dict]:
         """
         Perform a search query that filters and ranks items based on a specified vector column,
@@ -166,7 +170,6 @@ class DefaultClient:
             n (int): Maximum number of results to return. Default is 50.
             details (bool): Whether to include additional fields in the result. Default is False.
             vector_column_name (str): Column used for ranking. Default is "booking_number_desc".
-            similarity_metric (str): Metric for ranking, typically "dot" (dot product similarity).
             re_rank (bool): Whether to apply a secondary re-ranking process. Default is False.
             user_id (Optional[str]): User ID for personalized ranking. Default is None. If provided, will also compute
                 similarity scores for the user.
@@ -176,7 +179,6 @@ class DefaultClient:
         ### Returns:
             List[Dict]: A list of dictionaries, where each represents a ranked item.
         """
-
         DEFAULT_APPROX_TOP_VECTOR = Document(embedding=[-0.0001])
 
         return self._perform_search(
@@ -184,34 +186,31 @@ class DefaultClient:
             n=n,
             query_filter=query_filter,
             vector_column_name=vector_column_name,
-            similarity_metric=similarity_metric,
             details=details,
             prefilter=prefilter,
             re_rank=re_rank,
             user_id=user_id,
-            item_ids=item_ids,
+            item_ids=item_ids or [],
         )
 
     def search_by_vector(
         self,
         vector: Document,
-        similarity_metric: str = "dot",
         n: int = 50,
         query_filter: Optional[Dict] = None,
         details: bool = False,
-        excluded_items: List[str] = [],
+        excluded_items: Optional[List[str]] = None,
         prefilter: bool = True,
         vector_column_name: str = "vector",
         re_rank: bool = False,
         user_id: Optional[str] = None,
-        item_ids: List[str] = [],
+        item_ids: Optional[List[str]] = None,
     ) -> List[Dict]:
         """
         Search the vector database for similar items and optionally rerank results.
 
         Args:
             vector (Document): The vector to search.
-            similarity_metric (str): Similarity metric for vector search.
             n (int): Maximum number of results.
             query_filter (Optional[Dict]): Optional query filters.
             details (bool): Whether to include detailed fields in results.
@@ -229,13 +228,12 @@ class DefaultClient:
             n=n,
             query_filter=query_filter,
             vector_column_name=vector_column_name,
-            similarity_metric=similarity_metric,
             details=details,
-            excluded_items=excluded_items,
+            excluded_items=excluded_items or [],
             prefilter=prefilter,
             re_rank=re_rank,
             user_id=user_id,
-            item_ids=item_ids,
+            item_ids=item_ids or [],
         )
 
     def _perform_search(
@@ -244,15 +242,17 @@ class DefaultClient:
         n: int,
         query_filter: Optional[Dict],
         vector_column_name: str,
-        similarity_metric: str = "dot",
         details: bool = False,
-        excluded_items: List[str] = [],
+        excluded_items: Optional[List[str]] = None,
         user_id: Optional[str] = None,
-        item_ids: List[str] = [],
+        item_ids: Optional[List[str]] = None,
         prefilter: bool = True,
         re_rank: bool = False,
     ) -> List[Dict]:
         """Encapsulate common logic for searching and filtering."""
+
+        excluded_items = excluded_items or []
+        item_ids = item_ids or []
 
         query = self.build_query(query_filter)
         logger.debug(f"Build Query {query}")
@@ -267,30 +267,42 @@ class DefaultClient:
             .nprobes(20)
             .refine_factor(10)
             .select(columns=self.columns(details, re_rank=re_rank))
-            .metric(similarity_metric)
-            .limit(n)
+            .metric(
+                self.VECTOR_SEARCH_SIMILARITY_METRIC
+            )  # This is overridden if a vector index exists for the column {vector_column_name}
+            .limit(n + len(excluded_items))
         )
 
         if re_rank and self.re_ranker and user_id:
             results = results.rerank(self.re_ranker, query_string=user_id)
 
         postprocessed_results = self.postprocess(
-            ranked_items=results.to_list(), user_id=user_id, input_item_ids=item_ids
+            ranked_items=results.to_list(),
+            user_id=user_id,
+            input_item_ids=item_ids,
+            n=n,
+            excluded_items=excluded_items,
         )
 
-        return self.format_results(
-            postprocessed_results, details, excluded_items=excluded_items
-        )
+        return self.format_results(postprocessed_results, details)
 
     def postprocess(
         self,
         ranked_items: List[Dict],
+        n: int,
+        excluded_items: Optional[List[str]] = None,
         **kwargs,
     ) -> List[Dict]:
         """
         Postprocess the results.
         """
-        return ranked_items
+        excluded_items = excluded_items or []
+        filtered_items = [
+            item
+            for item in ranked_items
+            if str(item.get("item_id")) not in excluded_items
+        ]
+        return filtered_items[:n]
 
     def columns(self, details: bool, re_rank: bool) -> List[str]:
         """
@@ -311,7 +323,9 @@ class DefaultClient:
         )
 
     def format_results(
-        self, results: List[Dict], details: bool, excluded_items: List[str] = []
+        self,
+        results: List[Dict],
+        details: bool,
     ) -> List[Dict]:
         """
         Format the raw search results for output.
@@ -319,16 +333,12 @@ class DefaultClient:
         Args:
             results (List[Dict]): The raw results from the database.
             details (bool): Whether to include detailed metadata in the output.
-            excluded_items (List[str]): Item ID to exclude from the results.
 
         Returns:
             List[Dict]: A list of formatted results.
         """
         predictions = []
         for idx, row in enumerate(results):
-            if str(row.get("item_id")) in excluded_items:
-                continue
-
             if not details:
                 predictions.append({"idx": idx, "item_id": row["item_id"]})
             else:

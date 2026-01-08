@@ -1,15 +1,24 @@
+import asyncio
 import datetime
 import json
+import os
 import re
 import time
 import typing as t
 from base64 import b64encode
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from time import sleep
 
 import dateutil
 import googleapiclient.discovery
 import pytz
+from airflow.configuration import conf
+from airflow.exceptions import AirflowException
+from airflow.models.taskinstance import TaskInstance
+from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
+from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
+from airflow.utils.context import Context
 from common.config import (
     ENV_SHORT_NAME,
     GCE_SA,
@@ -21,13 +30,6 @@ from common.hooks.image import CPUImage
 from common.hooks.network import BASE_NETWORK_LIST, VPCNetwork
 from googleapiclient.errors import HttpError
 from paramiko import SSHException
-
-from airflow.configuration import conf
-from airflow.exceptions import AirflowException
-from airflow.models.taskinstance import TaskInstance
-from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
-from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
-from airflow.utils.context import Context
 
 DEFAULT_LABELS = {
     "env": ENV_SHORT_NAME,
@@ -139,6 +141,7 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
     ):
         self.run_id = run_id
         self.job_id = f"{task_id}_{str(run_id)}"
+        self._ssh_executor = None  # Instance-level executor, not class-level
         super().__init__(
             task_id, task_instance, hook, environment, do_xcom_push, *args, **kwargs
         )
@@ -211,7 +214,8 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
                     echo "Process died unexpectedly" >> $JOB_DIR/output
                 fi
 
-                output=$(cat $JOB_DIR/output 2>/dev/null || echo "No output yet")
+                # Only tail the last 1000 lines to prevent memory bloat
+                output=$(tail -n 1000 $JOB_DIR/output 2>/dev/null || echo "No output yet")
                 echo "STATUS:$(cat $JOB_DIR/status)"
                 echo "OUTPUT:$output"
                 echo "PID:$pid"
@@ -221,8 +225,24 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
                 echo "PID:0"
             fi
         """
-        self.log.info(f"Running status check command: {command}")
-        agg_output = super().run_ssh_client_command(command, retry=retry)
+        self.log.info("Running status check command")
+        # Run sync SSH command in executor to avoid blocking event loop
+        import asyncio
+        import os
+        from concurrent.futures import ThreadPoolExecutor
+
+        # Create instance-level thread pool (not class-level) to prevent memory leak
+        # Default: 8 threads (good for 1 CPU core with I/O-bound work)
+        if self._ssh_executor is None:
+            max_workers = int(os.environ.get("TRIGGERER_SSH_THREADS", "8"))
+            self._ssh_executor = ThreadPoolExecutor(
+                max_workers=max_workers, thread_name_prefix="ssh_check"
+            )
+
+        loop = asyncio.get_event_loop()
+        agg_output = await loop.run_in_executor(
+            self._ssh_executor, super().run_ssh_client_command, command, retry
+        )
         return self._parse_check_command_output(agg_output)
 
     async def run_ssh_cleanup_command(self, retry=1) -> str:
@@ -240,8 +260,25 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
                 fi
             fi
         """
-        self.log.info(f"Running cleanup command: {command}")
-        return super().run_ssh_client_command(command, retry=retry)
+        self.log.info("Running cleanup command")
+        # Run sync SSH command in executor to avoid blocking event loop
+
+        # Reuse the instance-level thread pool
+        if self._ssh_executor is None:
+            max_workers = int(os.environ.get("TRIGGERER_SSH_THREADS", "8"))
+            self._ssh_executor = ThreadPoolExecutor(
+                max_workers=max_workers, thread_name_prefix="ssh_check"
+            )
+
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            self._ssh_executor, super().run_ssh_client_command, command, retry
+        )
+
+    def __del__(self):
+        """Cleanup thread pool on instance destruction to prevent memory leak."""
+        if hasattr(self, "_ssh_executor") and self._ssh_executor is not None:
+            self._ssh_executor.shutdown(wait=False)
 
     def _parse_check_command_output(self, raw: str | bytes) -> DeferrableSSHJobStatus:
         """
@@ -276,6 +313,7 @@ class GCEHook(GoogleBaseHook):
         gcp_conn_id: str = "google_cloud_default",
         disk_size_gb: str = "100",
         impersonation_chain: str = None,
+        additional_scopes: t.List[str] = None,
     ):
         self.gcp_project = gcp_project
         self.gce_zone = gce_zone
@@ -283,6 +321,7 @@ class GCEHook(GoogleBaseHook):
         self.gce_sa = gce_sa
         self.disk_size_gb = disk_size_gb
         self.source_image_type = source_image_type
+        self.additional_scopes = additional_scopes or []
         super().__init__(
             gcp_conn_id=gcp_conn_id,
             impersonation_chain=impersonation_chain,
@@ -296,6 +335,26 @@ class GCEHook(GoogleBaseHook):
                 cache_discovery=False,
             )
         return self._conn
+
+    def close(self):
+        """Close the connection and clear resources."""
+        if self._conn is not None:
+            # Google API client doesn't have explicit close, but we can clear
+            # the reference to allow garbage collection of connection pools
+            self._conn = None
+
+    def __del__(self):
+        """Cleanup on destruction."""
+        self.close()
+
+    def __enter__(self):
+        """Context manager support."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Cleanup on context exit."""
+        self.close()
+        return False  # Don't suppress exceptions
 
     def start_vm(
         self,
@@ -402,7 +461,10 @@ class GCEHook(GoogleBaseHook):
             "serviceAccounts": [
                 {
                     "email": f"{self.gce_sa}@{self.gcp_project}.iam.gserviceaccount.com",
-                    "scopes": ["https://www.googleapis.com/auth/cloud-platform"],
+                    "scopes": [
+                        "https://www.googleapis.com/auth/cloud-platform",
+                        *self.additional_scopes,
+                    ],
                 }
             ],
             "metadata": {"items": metadata},
@@ -548,22 +610,22 @@ def on_failure_callback_stop_vm(context: Context):
 
         failing_task.log.info(f"Stopping VM {instance_name} due to task failure.")
 
-        hook = GCEHook()
-        instance_details = hook.get_instance(instance_name)
-        if instance_details:
-            labels = instance_details.get("labels", {})
-            failing_task.log.info(f"Retrieved labels for {instance_name}: {labels}")
-            if labels.get("job_type") in STOP_UPON_FAILURE_LABELS:
-                failing_task.log.info(
-                    f"Stopping VM '{instance_name}' because label 'job_type' in {STOP_UPON_FAILURE_LABELS}."
-                )
-                hook.stop_vm(instance_name)
+        with GCEHook() as hook:
+            instance_details = hook.get_instance(instance_name)
+            if instance_details:
+                labels = instance_details.get("labels", {})
+                failing_task.log.info(f"Retrieved labels for {instance_name}: {labels}")
+                if labels.get("job_type") in STOP_UPON_FAILURE_LABELS:
+                    failing_task.log.info(
+                        f"Stopping VM '{instance_name}' because label 'job_type' in {STOP_UPON_FAILURE_LABELS}."
+                    )
+                    hook.stop_vm(instance_name)
+                else:
+                    failing_task.log.info(
+                        f"Not stopping VM '{instance_name}'; label 'job_type' is not set to 'long_ml'."
+                        f" Current labels: {labels}"
+                    )
             else:
                 failing_task.log.info(
-                    f"Not stopping VM '{instance_name}'; label 'job_type' is not set to 'long_ml'."
-                    f" Current labels: {labels}"
+                    f"Instance '{instance_name}' not found; cannot perform VM stop."
                 )
-        else:
-            failing_task.log.info(
-                f"Instance '{instance_name}' not found; cannot perform VM stop."
-            )

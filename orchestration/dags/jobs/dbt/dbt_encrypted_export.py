@@ -1,36 +1,35 @@
 import datetime
 import json
 from functools import partial
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.models.xcom_arg import XComArg
+from airflow.operators.python import PythonOperator
+from airflow.providers.google.cloud.transfers.bigquery_to_gcs import (
+    BigQueryToGCSOperator,
+)
+from airflow.utils.task_group import TaskGroup
 from common.access_gcp_secrets import access_secret_data
 from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    PATH_TO_DBT_PROJECT,
-    PATH_TO_DBT_TARGET,
 )
+from common.dbt.dbt_executors import run_dbt_operation, run_dbt_quality_tests
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import (
     build_export_context,
     delayed_waiting_operator,
     get_json_from_gcs,
 )
-from jobs.crons import ENCRYPTED_EXPORT_DICT
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.models.xcom_arg import XComArg
-from common.dbt.dbt_executors import run_dbt_quality_tests, run_dbt_operation
-from airflow.operators.python import PythonOperator
-from airflow.providers.google.cloud.transfers.bigquery_to_gcs import (
-    BigQueryToGCSOperator,
-)
-from airflow.utils.task_group import TaskGroup
+from jobs.crons import ENCRYPTED_EXPORT_DICT
 
 
 def run_bq_obfuscation(**context):
@@ -189,7 +188,7 @@ for partner_id, partner_name in partner_dict.items():
             ),
         )
 
-        gce_instance_stop = StopGCEOperator(
+        gce_instance_stop = DeleteGCEOperator(
             task_id="gce_stop_task", instance_name=f"{GCE_INSTANCE}-{partner_name}"
         )
 

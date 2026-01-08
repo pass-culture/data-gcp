@@ -52,7 +52,6 @@ class PredictionHandler(ABC):
                 details=request_data.debug,
                 prefilter=request_data.is_prefilter,
                 vector_column_name=request_data.vector_column_name,
-                similarity_metric=request_data.similarity_metric,
                 re_rank=request_data.re_rank,
                 user_id=request_data.user_id,
                 item_ids=request_data.items,
@@ -79,7 +78,6 @@ class PredictionHandler(ABC):
         try:
             results = model.search_by_vector(
                 vector=vector,
-                similarity_metric=request_data.similarity_metric,
                 n=request_data.size,
                 query_filter=request_data.params,
                 details=request_data.debug,

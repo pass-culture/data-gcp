@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: int_finance__payment_status
+    description: '{{ doc("description__int_finance__payment_status") }}'
+    columns:
+      - name: id
+        description: '{{ doc("column__payment_status_id") }}'
+      - name: paymentId
+        description: '{{ doc("column__payment_id") }}'
+      - name: date
+        description: '{{ doc("column__payment_status_date") }}'
+      - name: status
+        description: '{{ doc("column__payment_status") }}'
+      - name: detail
+        description: '{{ doc("column__payment_status_detail") }}'

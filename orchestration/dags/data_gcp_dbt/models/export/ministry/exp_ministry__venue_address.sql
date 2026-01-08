@@ -11,4 +11,4 @@ select
     vl.qpv_name,
     vl.venue_iris_internal_id
 from {{ ref("int_geo__venue_location") }} as vl
-inner join {{ ref("mrt_global__venue") }} as v on vl.venue_id = v.venue_id
+inner join {{ ref("int_global__venue") }} as v on vl.venue_id = v.venue_id

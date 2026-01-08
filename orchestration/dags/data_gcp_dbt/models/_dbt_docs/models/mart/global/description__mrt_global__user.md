@@ -5,13 +5,16 @@ description: Description of the `mrt_global__user` table.
 
 {% docs description__mrt_global__user %}
 
-The `mrt_global__user` table provides a comprehensive view of individual beneficiaries data, including demographic information, activity status, and engagement metrics. It is designed to support analysis of user behavior and trends over time.
+# User Model
 
+The `mrt_global__user` table contains user-level information for all users in the system.
+
+**Business Rules**
+
+Each row represents a unique user.
+All users are included in this table — general public, beneficiaries, and 15-16 — regardless of grant or credit status.
 
 {% enddocs %}
-
-All individual users who received a grant, irrespective of their grant status, are stored here.
-Demographic information (address, activity) are purely declarative. They are registered in the user's first grant application process. Users are invited to update those information when applying for a new grant (ie : when 15-17 users turn 18), and they can update those at any time through their app.
 
 ## Table description
 

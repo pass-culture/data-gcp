@@ -3,24 +3,23 @@ DBT execution functions using dbt-core Python API.
 Simple implementation that mirrors the original bash scripts functionality.
 """
 
+import logging
 import os
 import shutil
-from copy import copy
 import tempfile
-import logging
+from copy import copy
+from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
-from datetime import datetime
 
-from dbt.cli.main import dbtRunner, dbtRunnerResult
+import yaml
 from airflow.exceptions import AirflowSkipException
-
 from common.config import (
     ENV_SHORT_NAME,
     PATH_TO_DBT_PROJECT,
     PATH_TO_DBT_TARGET,
-    EXCLUDED_TAGS,
 )
+from dbt.cli.main import dbtRunner, dbtRunnerResult
 
 
 def should_skip_scheduled_node(node_tags: List[str], ds: str) -> Optional[str]:
@@ -81,8 +80,14 @@ def cleanup_temp_dir(temp_dir: str) -> None:
         logging.debug(f"Removed temporary directory: {temp_dir}")
 
 
-def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) -> None:
-    """Execute a dbt command using dbtRunner."""
+def run_dbt_command(
+    command: list,
+    dbt_vars: dict | None = None,
+    use_tmp_artifacts: bool = True,
+    **context,
+) -> None:
+    """Execute a dbt command using dbtRunner with vars."""
+
     # Get parameters from context
     params = context.get("params", {})
     target = params.get("target", ENV_SHORT_NAME)
@@ -98,16 +103,28 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
         # Initialize dbt runner
         dbt = dbtRunner()
 
-        # Build the CLI args
+        # Merge default vars with user-provided vars
+        default_vars = {
+            "ENV_SHORT_NAME": ENV_SHORT_NAME,
+            "scheduled_date": context.get("ds"),
+        }
+        if dbt_vars:
+            merged_vars = {**default_vars, **dbt_vars}  # user vars override defaults
+        else:
+            merged_vars = default_vars
+
+        # Convert to YAML string (safe for dbt --vars)
+        vars_str = yaml.safe_dump(merged_vars)
+
+        # Build CLI args
         cli_args = command.copy()
         cli_args.extend(["--target", target])
         cli_args.extend(["--target-path", temp_target_dir])
-        cli_args.extend(["--vars", f"{{ENV_SHORT_NAME: {ENV_SHORT_NAME}}}"])
+        cli_args.extend(["--vars", vars_str])
         cli_args.extend(["--project-dir", PATH_TO_DBT_PROJECT])
         cli_args.extend(["--profiles-dir", PATH_TO_DBT_PROJECT])
 
-        # Add global CLI flags if they exist
-
+        # Add global CLI flags
         if global_cli_flags and global_cli_flags != "":
             tmp_cli_flags = copy(global_cli_flags)
             if isinstance(tmp_cli_flags, str):
@@ -116,16 +133,14 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
                 raise TypeError(
                     f"Invalid type for GLOBAL_CLI_FLAGS: {type(global_cli_flags)}. Expected str"
                 )
-            # Split flags into a list to ensure they are valid
             g_cli_flags_list = tmp_cli_flags.split()
             assert all(
                 [flag.startswith("--") for flag in g_cli_flags_list]
             ), "All flags in GLOBAL_CLI_FLAGS must start with '--'."
 
-            if "compile" in command:
-                # Remove --no-write-json if it exists
-                if "--no-write-json" in g_cli_flags_list:
-                    g_cli_flags_list.remove("--no-write-json")
+            if "compile" in command and "--no-write-json" in g_cli_flags_list:
+                g_cli_flags_list.remove("--no-write-json")
+
             if len(g_cli_flags_list) > 0:
                 cli_args.extend(g_cli_flags_list)
 
@@ -134,7 +149,6 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
         # Execute dbt command
         res: dbtRunnerResult = dbt.invoke(cli_args)
 
-        # Check for errors
         if not res.success:
             error_msg = f"dbt command failed with exit code {res.exception}."
             logging.error(error_msg)
@@ -143,12 +157,11 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
         logging.info("DBT run completed successfully.")
 
     finally:
-        # Clean up temporary directory
         if use_tmp_artifacts:
             cleanup_temp_dir(temp_target_dir)
 
 
-def run_dbt_with_selector(selector: str, **context):
+def run_dbt_with_selector(selector: str, vars: dict | None = None, **context):
     """
     Run dbt with a specific selector.
     Args:
@@ -156,10 +169,10 @@ def run_dbt_with_selector(selector: str, **context):
         **context: Airflow context
     """
     command = ["run", "--select", selector]
-    run_dbt_command(command, **context)
+    run_dbt_command(command, dbt_vars=vars, **context)
 
 
-def compile_dbt(use_tmp_artifacts: bool = False, **context):
+def compile_dbt(use_tmp_artifacts: bool = False, vars: dict | None = None, **context):
     """
     Compile dbt project.
 
@@ -167,12 +180,14 @@ def compile_dbt(use_tmp_artifacts: bool = False, **context):
         use_tmp_artifacts: If True, use temporary directory. If False, compile directly to target.
         **context: Airflow context
     """
-
-    run_dbt_command(["compile"], use_tmp_artifacts=use_tmp_artifacts, **context)
+    command = ["compile"]
+    run_dbt_command(
+        command, use_tmp_artifacts=use_tmp_artifacts, dbt_vars=vars, **context
+    )
 
 
 def compile_dbt_with_selector(
-    selector: str, use_tmp_artifacts: bool = False, **context
+    selector: str, use_tmp_artifacts: bool = False, vars: dict | None = None, **context
 ):
     """
     Compile dbt project.
@@ -183,7 +198,9 @@ def compile_dbt_with_selector(
         **context: Airflow context
     """
     command = ["compile", "--select", selector]
-    run_dbt_command(command, use_tmp_artifacts=use_tmp_artifacts, **context)
+    run_dbt_command(
+        command, use_tmp_artifacts=use_tmp_artifacts, dbt_vars=vars, **context
+    )
 
 
 def clean_dbt(**context):
@@ -201,11 +218,15 @@ def run_dbt_model(
     model_name: str,
     exclude_tags: Optional[List[str]] = None,
     node_tags: Optional[List[str]] = None,
+    vars: dict | None = None,
     **context,
 ):
     """Run a specific dbt model."""
     # Check if we should skip based on schedule
     ds = context.get("ds")
+    logging.info(
+        f"context ds: {ds}, node_tags: {node_tags}, exclude_tags: {exclude_tags}"
+    )
     skip_schedule = should_skip_scheduled_node(node_tags or [], ds)
     if skip_schedule:
         logging.info(f"Skipping node scheduled {skip_schedule}")
@@ -223,10 +244,15 @@ def run_dbt_model(
         for tag in exclude_tags:
             command.extend(["--exclude", f"tag:{tag}"])
 
-    run_dbt_command(command, **context)
+    run_dbt_command(command, dbt_vars=vars, **context)
 
 
-def run_dbt_test(model_name: str, node_tags: Optional[List[str]] = None, **context):
+def run_dbt_test(
+    model_name: str,
+    node_tags: Optional[List[str]] = None,
+    vars: dict | None = None,
+    **context,
+):
     """Run tests for a specific dbt model."""
     # Check if we should skip based on schedule
     ds = context.get("ds")
@@ -236,11 +262,14 @@ def run_dbt_test(model_name: str, node_tags: Optional[List[str]] = None, **conte
         raise AirflowSkipException(f"Skipping node scheduled {skip_schedule}")
 
     command = ["test", "--select", f"{model_name},tag:critical"]
-    run_dbt_command(command, **context)
+    run_dbt_command(command, dbt_vars=vars, **context)
 
 
 def run_dbt_quality_tests(
-    select: Optional[str] = None, exclude: Optional[str] = None, **context
+    select: Optional[str] = None,
+    exclude: Optional[str] = None,
+    vars: dict | None = None,
+    **context,
 ):
     """
     Run dbt tests with custom select and exclude patterns.
@@ -260,11 +289,14 @@ def run_dbt_quality_tests(
         for exclusion in exclude.split():
             command.extend(["--exclude", exclusion])
 
-    run_dbt_command(command, **context)
+    run_dbt_command(command, dbt_vars=vars, **context)
 
 
 def run_dbt_snapshot(
-    snapshot_name: str, node_tags: Optional[List[str]] = None, **context
+    snapshot_name: str,
+    node_tags: Optional[List[str]] = None,
+    vars: dict | None = None,
+    **context,
 ):
     """Run a specific dbt snapshot."""
     # Check if we should skip based on schedule
@@ -275,15 +307,18 @@ def run_dbt_snapshot(
         raise AirflowSkipException(f"Skipping node scheduled {skip_schedule}")
 
     command = ["snapshot", "--select", snapshot_name]
-    run_dbt_command(command, **context)
+    run_dbt_command(command, dbt_vars=vars, **context)
 
 
-def run_dbt_operation(operation: str, args: Optional[str] = None, **context):
+def run_dbt_operation(
+    operation: str, args: Optional[str] = None, vars: dict | None = None, **context
+):
     """
     Run a dbt operation (macro).
 
     Args:
         operation: Name of the dbt operation/macro to run
+        vars: Variables to pass to dbt
         args: JSON string of arguments to pass to the operation
         **context: Airflow context
     """
@@ -292,4 +327,4 @@ def run_dbt_operation(operation: str, args: Optional[str] = None, **context):
     if args:
         command.extend(["--args", args])
 
-    run_dbt_command(command, **context)
+    run_dbt_command(command, dbt_vars=vars, **context)

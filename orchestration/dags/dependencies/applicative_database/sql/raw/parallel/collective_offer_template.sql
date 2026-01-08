@@ -17,10 +17,6 @@ SELECT
     , BTRIM(array_to_string("students", \',\'), \'{\') AS collective_offer_students
     , "priceDetail" AS collective_offer_price_detail
     , BTRIM(array_to_string("bookingEmails", \',\'), \'{\') AS collective_offer_booking_email
-    , "offerVenue" AS collective_offer_offer_venue
-    , "offerVenue" ->> \'venueId\' AS collective_offer_venue_humanized_id
-    , "offerVenue" ->> \'addressType\' AS collective_offer_venue_address_type
-    , "offerVenue" ->> \'otherAddress\' AS collective_offer_venue_other_address
     , BTRIM(array_to_string("interventionArea", \',\'), \'{\') AS intervention_area
     , CAST("lastValidationType" AS VARCHAR) AS collective_offer_last_validation_type
     , CAST("imageId" AS varchar(255)) AS collective_offer_image_id
@@ -32,4 +28,6 @@ SELECT
     , "contactEmail" AS collective_offer_contact_email
     , "contactPhone" AS collective_offer_contact_phone
     , "rejectionReason" AS collective_offer_rejection_reason
+    , "locationType" AS collective_offer_location_type
+    , CAST("offererAddressId" AS varchar(255)) AS offerer_address_id
 FROM public.collective_offer_template

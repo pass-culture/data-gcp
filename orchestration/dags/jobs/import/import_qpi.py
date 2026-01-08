@@ -1,20 +1,8 @@
 import time
 from datetime import datetime, timedelta
 
-from common import macros
-from common.callback import on_failure_base_callback
-from common.config import (
-    DAG_FOLDER,
-    DAG_TAGS,
-    DATA_GCS_BUCKET_NAME,
-    ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
-)
-from common.utils import get_airflow_schedule
-from google.cloud import storage
-
 from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
@@ -22,6 +10,17 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
+from common import macros
+from common.callback import on_failure_base_callback
+from common.config import (
+    DAG_FOLDER,
+    DAG_TAGS,
+    DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+)
+from common.utils import get_airflow_schedule
+from google.cloud import storage
 
 QPI_ANSWERS_SCHEMA = [
     {"name": "user_id", "type": "STRING", "mode": "NULLABLE"},
@@ -50,7 +49,7 @@ default_args = {
 def verify_folder():
     today = time.strftime("%Y%m%d")
     storage_client = storage.Client()
-    bucket = storage_client.bucket(DATA_GCS_BUCKET_NAME)
+    bucket = storage_client.bucket(DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME)
     name = f"QPI_exports/qpi_answers_{today}/"
     stats = bucket.list_blobs(prefix=name)
     blob_list = []
@@ -73,18 +72,18 @@ with DAG(
     user_defined_macros=macros.default,
     tags=[DAG_TAGS.DE.value],
 ) as dag:
-    start = DummyOperator(task_id="start")
+    start = EmptyOperator(task_id="start")
 
     checking_folder_QPI = BranchPythonOperator(
         task_id="checking_folder_QPI", python_callable=verify_folder
     )
-    file = DummyOperator(task_id="Files")
-    empty = DummyOperator(task_id="Empty")
+    file = EmptyOperator(task_id="Files")
+    empty = EmptyOperator(task_id="Empty")
 
     import_historical_answers_to_bigquery = GCSToBigQueryOperator(
         project_id=GCP_PROJECT_ID,
         task_id="import_historical_answers_to_bigquery",
-        bucket=DATA_GCS_BUCKET_NAME,
+        bucket=DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME,
         source_objects=["QPI_historical/qpi_answers_historical_*.parquet"],
         destination_project_dataset_table="{{ bigquery_raw_dataset }}.qpi_answers_historical",
         source_format="PARQUET",
@@ -96,7 +95,7 @@ with DAG(
     import_answers_to_bigquery = GCSToBigQueryOperator(
         project_id=GCP_PROJECT_ID,
         task_id="import_answers_to_bigquery",
-        bucket=DATA_GCS_BUCKET_NAME,
+        bucket=DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME,
         source_objects=["QPI_exports/qpi_answers_{{ ds_nodash }}/*.jsonl"],
         destination_project_dataset_table="{{ bigquery_tmp_dataset }}.{{ ds_nodash }}_qpi_answers_v4",
         write_disposition="WRITE_TRUNCATE",
@@ -124,9 +123,9 @@ with DAG(
         dag=dag,
     )
 
-    end_raw = DummyOperator(task_id="end_raw")
+    end_raw = EmptyOperator(task_id="end_raw")
 
-    end = DummyOperator(task_id="end")
+    end = EmptyOperator(task_id="end")
 
     (
         start

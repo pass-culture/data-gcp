@@ -11,6 +11,9 @@ with
             user_macro_density_label,
             user_region_name,
             user_department_code,
+            user_department_name,
+            user_epci,
+            user_city,
             user_activity,
             user_civility,
             total_deposit_amount,
@@ -27,7 +30,7 @@ with
             date_diff(
                 last_deposit_expiration_date, first_deposit_creation_date, day
             ) as seniority_days
-        from {{ ref("mrt_global__user") }}
+        from {{ ref("mrt_global__user_beneficiary") }}
         where
             current_deposit_type in ("GRANT_18", "GRANT_17_18")
             and last_deposit_expiration_date < date_trunc(current_date, month)
@@ -82,6 +85,9 @@ select
     u.user_macro_density_label,
     u.user_region_name,
     u.user_department_code,
+    u.user_department_name,
+    u.user_epci,
+    u.user_city,
     u.user_activity,
     u.user_civility,
     u.user_is_theme_subscribed,
@@ -147,6 +153,9 @@ group by
     u.user_macro_density_label,
     u.user_region_name,
     u.user_department_code,
+    u.user_department_name,
+    u.user_epci,
+    u.user_city,
     u.user_activity,
     u.user_civility,
     u.user_is_theme_subscribed

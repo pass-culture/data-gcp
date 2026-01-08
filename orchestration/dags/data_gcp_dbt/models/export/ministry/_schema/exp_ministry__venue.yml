@@ -26,6 +26,10 @@ models:
               tags: ['export']
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
+      - name: offerer_validation_status
+        description: "{{ doc('column__offerer_validation_status') }}"
+      - name: offerer_is_active
+        description: "{{ doc('column__offerer_is_active') }}"
       - name: venue_creation_date
         description: "{{ doc('column__venue_creation_date') }}"
       - name: venue_type_label

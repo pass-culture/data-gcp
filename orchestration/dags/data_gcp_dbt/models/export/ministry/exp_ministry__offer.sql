@@ -21,5 +21,7 @@ select
     offer_product_id,
     item_id,
     venue_id,
-    offerer_id
-from {{ ref("mrt_global__offer") }}
+    offerer_id,
+    offer_validation
+from {{ ref("int_global__offer") }}
+where venue_id is not null

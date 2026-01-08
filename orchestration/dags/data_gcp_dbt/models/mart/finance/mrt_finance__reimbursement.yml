@@ -1,0 +1,31 @@
+version: 2
+models:
+  - name: mrt_finance__reimbursement
+    description: '{{ doc("description__mrt_finance__reimbursement") }}'
+    columns:
+      - name: booking_used_date
+        description: '{{ doc("column__booking_used_date") }}'
+      - name: venue_department_code
+        description: '{{ doc("column__venue_department_code") }}'
+      - name: venue_department_name
+        description: '{{ doc("column__venue_department_name") }}'
+      - name: venue_region_name
+        description: '{{ doc("column__venue_region_name") }}'
+      - name: venue_epci
+        description: '{{ doc("column__venue_epci") }}'
+      - name: venue_city
+        description: '{{ doc("column__venue_city") }}'
+      - name: offerer_is_epn
+        description: '{{ doc("column__offerer_is_epn") }}'
+      - name: offer_category_id
+        description: '{{ doc("column__offer_category_id") }}'
+      - name: total_bookings
+        description: '{{ doc("column__total_bookings") }}'
+      - name: total_quantities
+        description: '{{ doc("column__total_quantities") }}'
+      - name: total_revenue_amount
+        description: '{{ doc("column__total_revenue_amount") }}'
+      - name: total_reimbursed_amount
+        description: '{{ doc("column__total_reimbursed_amount") }}'
+      - name: total_contribution_amount
+        description: '{{ doc("column__total_contribution_amount") }}'

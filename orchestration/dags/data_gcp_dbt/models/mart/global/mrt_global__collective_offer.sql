@@ -40,7 +40,7 @@ select
     national_program_id,
     national_program_name,
     template_id,
-    collective_offer_address_type,
+    collective_offer_location_type,
     collective_offer_contact_url,
     collective_offer_contact_form,
     collective_offer_contact_email,
@@ -51,6 +51,8 @@ select
     collective_offer_template_beginning_date,
     collective_offer_template_ending_date,
     collective_stock_price,
-    collective_stock_number_of_tickets
+    collective_stock_price_detail,
+    collective_stock_number_of_tickets,
+    offerer_address_id
 from {{ ref("int_global__collective_offer") }}
 where collective_offer_validation = 'APPROVED'

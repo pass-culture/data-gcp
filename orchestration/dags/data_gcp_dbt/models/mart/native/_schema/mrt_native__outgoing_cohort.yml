@@ -24,6 +24,8 @@ models:
         description: "{{ doc('column__user_region_name') }}"
       - name: user_department_code
         description: "{{ doc('column__user_department_code') }}"
+      - name: user_department_name
+        description: "{{ doc('column__user_department_name') }}"
       - name: user_activity
         description: "{{ doc('column__user_activity') }}"
       - name: user_civility
@@ -64,3 +66,7 @@ models:
         description: "{{ doc('column__total_venue_type_booked') }}"
       - name: total_category_booked
         description: "{{ doc('column__total_category_booked') }}"
+      - name: user_city
+        description: "{{ doc('column__user_city') }}"
+      - name: user_epci
+        description: "{{ doc('column__user_epci') }}"

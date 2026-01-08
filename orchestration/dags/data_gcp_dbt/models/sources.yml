@@ -11,6 +11,7 @@ sources:
       - name: applicative_database_address
       - name: applicative_database_allocine_pivot
       - name: applicative_database_allocine_venue_provider
+      - name: applicative_database_artist
       - name: applicative_database_bank_account
       - name: applicative_database_beneficiary_fraud_check
       - name: applicative_database_beneficiary_fraud_review
@@ -70,6 +71,8 @@ sources:
       - name: applicative_database_finance_incident
       - name: applicative_database_google_places_info
       - name: applicative_database_headline_offer
+      - name: applicative_database_highlight
+      - name: applicative_database_highlight_request
       - name: applicative_database_internal_user
       - name: applicative_database_invoice
       - name: applicative_database_invoice_cashflow
@@ -86,6 +89,7 @@ sources:
       - name: applicative_database_offerer_tag_category
       - name: applicative_database_offerer_tag
       - name: applicative_database_offer_legacy
+      - name: applicative_database_offer_meta_data
       - name: applicative_database_offer_validation_sub_rule
       - name: applicative_database_offer_validation_rule
       - name: applicative_database_offer_report
@@ -98,6 +102,7 @@ sources:
       - name: applicative_database_pricing_line
       - name: applicative_database_pricing_log
       - name: applicative_database_product
+      - name: applicative_database_product_artist_link
       - name: applicative_database_product_mediation
       - name: applicative_database_product_whitelist
       - name: applicative_database_provider
@@ -127,13 +132,16 @@ sources:
       - name: contentful_entry
       - name: contentful_relationship
       - name: contentful_tag
+      - name: firebase_android_performance
       - name: firebase_events
+      - name: firebase_ios_performance
       - name: firebase_pro_events
       - name: gsheet_eac_webinar
       - name: gsheet_educational_institution_student_headcount
       - name: gsheet_instagram_campaign_tag
       - name: gsheet_ml_recommendation_sensitive_item
       - name: gsheet_tiktok_campaign_tag
+      - name: gsheet_company_contact
       - name: instagram_post_detail
       - name: metabase_collection
       - name: metabase_core_user
@@ -150,6 +158,7 @@ sources:
       - name: past_offer_context
       - name: raw_dms_jeunes
       - name: raw_dms_pro
+      - name: run_googleapis_com_stderr
       - name: sendinblue_transactional
       - name: sensitive_item_recommendation
       - name: stdout
@@ -160,6 +169,7 @@ sources:
       - name: zendesk_macro_usage
       - name: zendesk_ticket
       - name: zendesk_survey_response
+      - name: raw_titelive_products
   - name: clean
     schema: clean_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
@@ -205,6 +215,44 @@ sources:
       - name: siren_main_business_labels
       - name: siren_legal_category_labels
       - name: zrr
+      - name: qpi_answers_v1
+        external:
+          location: "gs://de-bigquery-data-archive-{{var('ENV_SHORT_NAME')}}/archive/2024/08/raw_{{var('ENV_SHORT_NAME')}}/qpi_answers_v1.jsonl"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+      - name: qpi_answers_v2
+        external:
+          location: "gs://de-bigquery-data-archive-{{var('ENV_SHORT_NAME')}}/archive/2024/08/raw_{{var('ENV_SHORT_NAME')}}/qpi_answers_v2.jsonl"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+      - name: qpi_questions_v1
+        external:
+          location: "gs://de-bigquery-data-archive-{{var('ENV_SHORT_NAME')}}/archive/2024/08/raw_{{var('ENV_SHORT_NAME')}}/qpi_questions_v1.csv"
+          options:
+            format: CSV
+            field_delimiter: ","
+            skip_leading_rows: 1
+        columns:
+          - name: question_id
+            data_type: STRING
+          - name: question_text
+            data_type: STRING
+          - name: choices
+            data_type: STRING
+      - name: qpi_questions_v2
+        external:
+          location: "gs://de-bigquery-data-archive-{{var('ENV_SHORT_NAME')}}/archive/2024/08/raw_{{var('ENV_SHORT_NAME')}}/qpi_questions_v2.csv"
+          options:
+            format: CSV
+            field_delimiter: ","
+            skip_leading_rows: 1
+        columns:
+          - name: question_id
+            data_type: STRING
+          - name: question_text
+            data_type: STRING
+          - name: choices
+            data_type: STRING
 
   - name: ml_preproc
     schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
@@ -216,8 +264,6 @@ sources:
       - name: item_embedding_reduced_32
       - name: item_embedding_reduced_16
       - name: item_embedding_reduced_5
-      - name: artist_linked
-        description: This table contains the artist_linkage dag
       - name: delta_artist
       - name: delta_artist_alias
       - name: delta_product_artist_link

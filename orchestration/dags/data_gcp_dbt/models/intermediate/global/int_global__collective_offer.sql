@@ -9,9 +9,17 @@
 
 select
     co.collective_offer_id,
-    {{ target_schema }}.humanize_id(
-        co.collective_offer_id
-    ) as collective_offer_humanized_id,
+    case  -- noqa: PRS
+        when co.collective_offer_is_template
+        then
+            concat(
+                'template-',
+                {{ target_schema }}.humanize_id(
+                    regexp_replace(co.collective_offer_id, r'^template-', '')
+                )
+            )
+        else {{ target_schema }}.humanize_id(co.collective_offer_id)
+    end as collective_offer_humanized_id,
     co.collective_offer_name,
     co.venue_id,
     v.partner_id,
@@ -67,7 +75,6 @@ select
     co.national_program_id,
     national_program.national_program_name,
     co.template_id,
-    co.collective_offer_address_type,
     co.collective_offer_contact_url,
     co.collective_offer_contact_form,
     co.collective_offer_contact_email,
@@ -81,8 +88,11 @@ select
     co.collective_offer_last_validation_date,
     co.collective_offer_rejection_reason,
     cs.collective_stock_price,
+    cs.collective_stock_price_detail,
     cs.collective_stock_number_of_tickets,
-    cs.collective_stock_id
+    cs.collective_stock_id,
+    co.collective_offer_location_type,
+    co.offerer_address_id
 from {{ ref("int_applicative__collective_offer") }} as co
 inner join {{ ref("int_global__venue") }} as v on v.venue_id = co.venue_id
 left join

@@ -9,6 +9,7 @@ SELECT
   ?artist_name_fr
   ?artist_name_en
   ?description
+  ?wikipedia_url
   ?img
   ?gkg_id
   (GROUP_CONCAT(DISTINCT(?profession); separator=" | ") AS ?professions)
@@ -18,10 +19,21 @@ WHERE {
   ?wiki_id wdt:P31 wd:Q5;  # Ensure the entity is a human (P31 = instance of, Q5 = human)
   OPTIONAL { ?wiki_id schema:description ?description . FILTER (LANG(?description) = "fr") }
   OPTIONAL { ?wiki_id wdt:P106/rdfs:label ?profession . FILTER (LANG(?profession) = "fr") }
-  OPTIONAL { ?wiki_id rdfs:label ?artist_name_fr. FILTER(LANG(?artist_name_fr) = "fr") }
+  OPTIONAL { ?wiki_id rdfs:label ?label_fr. FILTER(LANG(?label_fr) = "fr") }
+  OPTIONAL { ?wiki_id rdfs:label ?label_mul. FILTER(LANG(?label_mul) = "mul") }
+  BIND(COALESCE(?label_fr, ?label_mul) AS ?artist_name_fr)
   OPTIONAL { ?wiki_id rdfs:label ?artist_name_en. FILTER(LANG(?artist_name_en) = "en") }
   OPTIONAL { ?wiki_id skos:altLabel ?alias_fr . FILTER (lang(?alias_fr) = "fr") }
   OPTIONAL { ?wiki_id skos:altLabel ?alias_en . FILTER (lang(?alias_en) = "en") }
+  OPTIONAL {
+      ?wikipedia_url_fr schema:about ?wiki_id .
+      ?wikipedia_url_fr schema:isPartOf <https://fr.wikipedia.org/> .
+  }
+  OPTIONAL {
+      ?wikipedia_url_en schema:about ?wiki_id .
+      ?wikipedia_url_en schema:isPartOf <https://en.wikipedia.org/> .
+  }
+  BIND(COALESCE(?wikipedia_url_fr, ?wikipedia_url_en) AS ?wikipedia_url)
   OPTIONAL {?wiki_id wdt:P345 ?imdb_id . }
   OPTIONAL {?wiki_id wdt:P1266 ?allocine_id . }
   OPTIONAL {?wiki_id wdt:P18 ?img . }
@@ -29,4 +41,4 @@ WHERE {
   FILTER ((?artist_name_fr != "") || (?artist_name_en != ""))
   FILTER ((?imdb_id != "" ) || (?allocine_id != ""))
 }
-GROUP BY ?wiki_id ?artist_name_fr ?artist_name_en ?description ?img ?gkg_id
+GROUP BY ?wiki_id ?artist_name_fr ?artist_name_en ?description ?wikipedia_url ?img ?gkg_id

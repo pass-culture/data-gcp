@@ -17,7 +17,6 @@ def request_data_single_item() -> PredictionRequest:
         debug=True,
         is_prefilter=False,
         vector_column_name="vector",
-        similarity_metric="dot",
         re_rank=False,
         user_id="user_1",
     )
@@ -83,7 +82,6 @@ def test_recommendation_fallback_handler(
         debug=True,
         is_prefilter=False,
         vector_column_name="vector",
-        similarity_metric="cosine",
         re_rank=True,
         user_id="unknown_user_1",
     )

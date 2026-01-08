@@ -71,3 +71,5 @@ models:
         data_tests:
           - not_null:
               tags: ['export']
+      - name: offer_validation
+        description: "{{ doc('column__offer_validation') }}"

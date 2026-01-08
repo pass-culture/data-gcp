@@ -1,5 +1,8 @@
 import datetime
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -18,10 +21,6 @@ from common.operators.sensor import TimeSleepSensor
 from common.utils import (
     get_airflow_schedule,
 )
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
 
 GCE_INSTANCE = f"import-adage-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/adage"
@@ -96,7 +95,7 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task"
     )
 
-    end = DummyOperator(task_id="end", dag=dag)
+    end = EmptyOperator(task_id="end", dag=dag)
 
     (
         sleep_op

@@ -1,12 +1,10 @@
 import asyncio
 from typing import Any, Dict, Tuple
 
-from common.config import GCP_PROJECT_ID, SSH_USER
-from common.hooks.gce import DeferrableSSHGCEJobManager
-
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.triggers.base import BaseTrigger, TriggerEvent
-from common.config import USE_INTERNAL_IP
+from common.config import GCP_PROJECT_ID, SSH_USER, USE_INTERNAL_IP
+from common.hooks.gce import DeferrableSSHGCEJobManager
 
 
 class DeferrableSSHJobMonitorTrigger(BaseTrigger):
@@ -21,12 +19,14 @@ class DeferrableSSHJobMonitorTrigger(BaseTrigger):
         zone: str,
         run_id: str,
         poll_interval: int = 300,
+        max_log_length: int = 5000,
     ):
         self.task_id = task_id
         self.instance_name = instance_name
         self.zone = zone
         self.run_id = run_id
         self.poll_interval = poll_interval
+        self.max_log_length = max_log_length
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         return (
@@ -70,45 +70,62 @@ class DeferrableSSHJobMonitorTrigger(BaseTrigger):
             hook=hook,
             environment={},
         )
-
-        while True:
-            try:
-                self.log.info(f"Checking job {self.run_id} status")
-                deferrable_status = await job_manager.run_ssh_status_check_command()
-                self.log.info(
-                    f"\t\t Deferrable job {self.run_id} STATUS: {deferrable_status.status}"
-                )
-
-                # Job finished
-                if deferrable_status.status in {"completed", "failed", "interrupted"}:
-                    # attempt cleanup
-                    try:
-                        await job_manager.run_ssh_cleanup_command()
-                    except Exception as cleanup_err:
-                        self.log.warning(f"Cleanup failed: {cleanup_err}")
-
-                    yield TriggerEvent(
-                        {
-                            "status": "completed"
-                            if deferrable_status.status == "completed"
-                            else "error",
-                            "run_id": self.run_id,
-                            "instance": self.instance_name,
-                            "logs": deferrable_status.logs,
-                        }
+        try:
+            while True:
+                try:
+                    self.log.info(f"Checking job {self.run_id} status")
+                    deferrable_status = await job_manager.run_ssh_status_check_command()
+                    self.log.info(
+                        f"\t\t Deferrable job {self.run_id} STATUS: {deferrable_status.status}"
                     )
 
-            except Exception as exc:
-                self.log.error(f"Error monitoring job {self.run_id}: {exc}")
-                yield TriggerEvent(
-                    {
-                        "status": "error",
-                        "run_id": self.run_id,
-                        "message": str(exc),
-                    }
-                )
+                    # Job finished
+                    if deferrable_status.status in {
+                        "completed",
+                        "failed",
+                        "interrupted",
+                    }:
+                        # attempt cleanup
+                        try:
+                            await job_manager.run_ssh_cleanup_command()
+                        except Exception as cleanup_err:
+                            self.log.warning(f"Cleanup failed: {cleanup_err}")
+                        truncated_logs = self._truncate(
+                            deferrable_status.logs, self.max_log_length
+                        )
+                        yield TriggerEvent(
+                            {
+                                "status": "completed"
+                                if deferrable_status.status == "completed"
+                                else "error",
+                                "run_id": self.run_id,
+                                "instance": self.instance_name,
+                                "logs": truncated_logs,
+                            }
+                        )
+                        break
 
-            await asyncio.sleep(self.poll_interval)
+                except Exception as exc:
+                    self.log.error(f"Error monitoring job {self.run_id}: {exc}")
+                    yield TriggerEvent(
+                        {
+                            "status": "error",
+                            "run_id": self.run_id,
+                            "message": str(exc),
+                        }
+                    )
+                    break
+
+                await asyncio.sleep(self.poll_interval)
+
+        finally:
+            # Cleanup regardless of success or failure
+            try:
+                await job_manager.run_ssh_cleanup_command()
+            except Exception as cleanup_err:
+                self.log.warning(f"Cleanup failed in finally: {cleanup_err}")
+            job_manager = None
+            hook = None
 
     @staticmethod
     def _truncate(text: str, length: int) -> str:

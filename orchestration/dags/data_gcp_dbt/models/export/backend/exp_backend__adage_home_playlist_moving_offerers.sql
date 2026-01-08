@@ -2,10 +2,8 @@
 with
     random_template_offer_per_venue as (
         select collective_offer_id, collective_offer_creation_date, venue_id
-        from {{ source("raw", "applicative_database_collective_offer_template") }} o
-        where
-            o.collective_offer_venue_address_type = "school"
-            and collective_offer_is_active
+        from {{ source("raw", "applicative_database_collective_offer_template") }} as o
+        where o.collective_offer_location_type = 'school' and collective_offer_is_active
         qualify row_number() over (partition by venue_id order by rand()) = 1
     ),
 
@@ -21,18 +19,17 @@ with
             id.institution_longitude as venue_moving_longitude,
             max(collective_booking_creation_date) as last_booking_date,
             count(distinct b.collective_booking_id) as nb_booking
-        from {{ ref("mrt_global__collective_booking") }} b
+        from {{ ref("mrt_global__collective_booking") }} as b
         inner join
-            {{ source("raw", "applicative_database_collective_offer") }}
-            o
+            {{ source("raw", "applicative_database_collective_offer") }} as o
             on b.collective_offer_id = o.collective_offer_id
-            and o.collective_offer_venue_address_type = "school"
-        join random_template_offer_per_venue v on v.venue_id = b.venue_id  -- JOIN because we only keep venues that have bookings AND template offer
+            and o.collective_offer_location_type = 'school'
+        inner join random_template_offer_per_venue as v on b.venue_id = v.venue_id  -- JOIN because we only keep venues that have bookings AND template offer
         left join
-            {{ ref("mrt_global__educational_institution") }} id
-            on id.institution_id = b.educational_institution_id
+            {{ ref("mrt_global__educational_institution") }} as id
+            on b.educational_institution_id = id.institution_id
         where
-            collective_booking_status in ("CONFIRMED", "REIMBURSED", "USED")
+            collective_booking_status in ('CONFIRMED', 'REIMBURSED', 'USED')
             and collective_booking_creation_date
             >= date_sub(current_date(), interval 12 month)
         group by 1, 2, 3, 4, 5, 6
@@ -45,7 +42,7 @@ with
             institution_density_label as institution_rural_level,
             institution_latitude,
             institution_longitude
-        from {{ ref("mrt_global__educational_institution") }} id
+        from {{ ref("mrt_global__educational_institution") }}
     ),
 
     -- Get all venues with at least one reservation at less than 300KM.
@@ -59,8 +56,8 @@ with
             o.nb_booking,
             o.venue_moving_latitude,
             o.venue_moving_longitude
-        from offerer_venue_info o
-        inner join institution_info i on i.institution_id = o.institution_id
+        from offerer_venue_info as o
+        inner join institution_info as i on o.institution_id = i.institution_id
         where
             st_distance(
                 st_geogpoint(o.venue_moving_longitude, o.venue_moving_latitude),
@@ -77,15 +74,15 @@ with
             i.institution_rural_level,
             m.venue_id,
             m.collective_offer_id,
+            m.nb_booking as reserved_nb_booking,
+            m.last_booking_date,
+            m.institution_id as reserved_institution_id,
             st_distance(
                 st_geogpoint(m.venue_moving_longitude, m.venue_moving_latitude),
                 st_geogpoint(i.institution_longitude, i.institution_latitude)
-            ) as distance,
-            m.nb_booking as reserved_nb_booking,
-            m.last_booking_date as last_booking_date,
-            m.institution_id as reserved_institution_id
-        from institution_info i
-        cross join ac_moving m  -- not the same institution
+            ) as distance
+        from institution_info as i
+        cross join ac_moving as m  -- not the same institution
 
         where i.institution_id != m.institution_id
     )

@@ -1,29 +1,21 @@
 import logging
 from functools import partial
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import BranchPythonOperator, PythonOperator
+from airflow.utils.dates import datetime, timedelta
 from common import macros
 from common.callback import on_failure_base_callback
 from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    PATH_TO_DBT_PROJECT,
-    PATH_TO_DBT_TARGET,
+    LOCAL_ENV,
     SLACK_CHANNEL_DATA_QUALITY,
     SLACK_TOKEN_DATA_QUALITY,
 )
-from common.operators.monitoring import (
-    GenerateElementaryReportOperator,
-    SendElementaryMonitoringReportOperator,
-)
-from common.utils import delayed_waiting_operator, get_airflow_schedule
-from jobs.crons import SCHEDULE_DICT
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.python import PythonOperator, BranchPythonOperator
-from airflow.operators.empty import EmptyOperator
-from airflow.utils.dates import datetime, timedelta
 
 # Import dbt execution functions
 from common.dbt.dbt_executors import (
@@ -31,6 +23,13 @@ from common.dbt.dbt_executors import (
     run_dbt_quality_tests,
     run_dbt_with_selector,
 )
+from common.operators.monitoring import (
+    GenerateElementaryReportOperator,
+    SendElementaryMonitoringReportOperator,
+)
+from common.utils import delayed_waiting_operator, get_airflow_schedule
+
+from jobs.crons import SCHEDULE_DICT
 
 
 def should_run_today(ds):
@@ -93,7 +92,7 @@ compute_metrics_elementary = PythonOperator(
     task_id="compute_metrics_elementary",
     python_callable=partial(run_dbt_with_selector, "package:elementary"),
     dag=dag,
-    trigger_rule="one_success",
+    trigger_rule="none_failed",
 )
 
 # Convert to Python operator
@@ -136,6 +135,8 @@ create_elementary_report = GenerateElementaryReportOperator(
     task_id="create_elementary_report",
     report_file_path="elementary_reports/{{ execution_date.year }}/elementary_report_{{ execution_date.strftime('%Y%m%d') }}.html",
     days_back=14,
+    trigger_rule="none_failed_min_one_success",
+    queue="heavy" if (ENV_SHORT_NAME == "prod" and not LOCAL_ENV) else "default",
 )
 
 send_elementary_report = SendElementaryMonitoringReportOperator(
@@ -157,7 +158,9 @@ recompile_dbt_project = PythonOperator(
         use_tmp_artifacts=False,
     ),
     dag=dag,
+    trigger_rule="all_done",
 )
+
 
 # DAG Dependencies
 (

@@ -38,10 +38,6 @@
         , BTRIM(array_to_string("students", \',\'), \'{\') AS collective_offer_students
         , "contactEmail" AS collective_offer_contact_email
         , "contactPhone" AS collective_offer_contact_phone
-        , "offerVenue" AS collective_offer_offer_venue
-        , "offerVenue" ->> \'venueId\' AS collective_offer_venue_humanized_id
-        , "offerVenue" ->> \'addressType\' AS collective_offer_venue_address_type
-        , "offerVenue" ->> \'otherAddress\' AS collective_offer_venue_other_address
         , CAST("lastValidationType" AS VARCHAR) AS collective_offer_last_validation_type
         , CAST("institutionId" AS varchar(255)) AS institution_id
         , BTRIM(array_to_string("interventionArea", \',\'), \'{\') AS intervention_area

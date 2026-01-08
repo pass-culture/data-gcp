@@ -49,6 +49,12 @@ with
         group by offerer_id
     ),
 
+    epn_list as (
+        select distinct offerer_id
+        from {{ ref("mrt_global__offerer_tag") }}
+        where tag_name in ('part-epn')
+    ),
+
     reimbursement_points as (
         select offerer_id, count(distinct bank_account_id) as total_reimbursement_points
         from {{ source("raw", "applicative_database_bank_account") }}
@@ -123,8 +129,6 @@ select
     ofr.total_bookable_individual_offers,
     ofr.total_bookable_collective_offers,
     ofr.total_bookable_offers,
-    ofr.offerer_department_code,
-    ofr.offerer_postal_code,
     ofr.offerer_siren,
     coalesce(
         date_diff(current_date, boh.last_bookable_offer_date, day) <= 30, false
@@ -150,9 +154,6 @@ select
     ) as is_collective_active_current_year,
     ofr.top_real_revenue_venue_type,
     ofr.top_bookings_venue_type,
-    region_department.region_name as offerer_region_name,
-    ofr.offerer_city,
-    region_department.academy_name,
     siren_data.activiteprincipaleunitelegale as legal_unit_business_activity_code,
     main_business.main_business_label as legal_unit_business_activity_label,
     siren_data.categoriejuridiqueunitelegale as legal_unit_legal_category_code,
@@ -229,11 +230,9 @@ select
         else siren_reference_adage.siren_synchro_adage
     end as is_synchro_adage,
     tagged_partners.partner_type,
-    rp.total_reimbursement_points
+    rp.total_reimbursement_points,
+    coalesce(epn_list.offerer_id is not null, false) as offerer_is_epn
 from {{ ref("int_applicative__offerer") }} as ofr
-left join
-    {{ source("seed", "region_department") }} as region_department
-    on ofr.offerer_department_code = region_department.num_dep
 left join
     {{ source("clean", "siren_data") }} as siren_data
     on ofr.offerer_siren = siren_data.siren
@@ -255,6 +254,7 @@ left join siren_reference_adage on ofr.offerer_siren = siren_reference_adage.sir
 left join tagged_partners on ofr.offerer_id = tagged_partners.offerer_id
 left join reimbursement_points as rp on ofr.offerer_id = rp.offerer_id
 left join bookable_offer_history as boh on ofr.offerer_id = boh.offerer_id
+left join epn_list on ofr.offerer_id = epn_list.offerer_id
 qualify
     row_number() over (
         partition by ofr.offerer_siren order by siren_data.update_date desc

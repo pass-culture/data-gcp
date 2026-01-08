@@ -1,9 +1,11 @@
 import joblib
 import numpy as np
+import pandas as pd
 import polars as pl
 import pyarrow.dataset as ds
 import tensorflow as tf
 import typer
+from docarray import Document, DocumentArray
 from hnne import HNNE
 from loguru import logger
 
@@ -57,6 +59,7 @@ def prepare_docs(embedding_dimension: int) -> None:
         emb_size=embedding_dimension,
         uri=f"{OUTPUT_DATA_PATH}/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,
+        vector_search_index_metric="dot",
     )
     logger.info("Items lancedb table created.")
 
@@ -88,6 +91,7 @@ def prepare_dummy_docs(embedding_dimension: int, default_token: str) -> None:
         emb_size=embedding_dimension,
         uri=f"{OUTPUT_DATA_PATH}/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,
+        vector_search_index_metric="dot",
     )
 
 
@@ -143,8 +147,53 @@ def prepare_semantic_docs(
         emb_size=embedding_dimension,
         uri=f"{OUTPUT_DATA_PATH}/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,
+        vector_search_index_metric="dot",
     )
     logger.info("Items lancedb table created.")
+
+
+def create_graph_item_docs(items_with_embeddings_df: pd.DataFrame, output_path: str):
+    """
+    Create and save item documents for graph retrieval.
+
+    Builds DocumentArray from items with graph embeddings and saves them to disk.
+    The embeddings are extracted from the 'vector' column, while other columns
+    contain item metadata.
+
+    Args:
+        items_with_embeddings_df (pd.DataFrame): DataFrame containing items with their
+            graph embeddings in a 'vector' column and associated metadata in other columns.
+        output_path: Path to save the item docs
+
+    Returns:
+        None: Saves item documents to the provided output_path
+    """
+    item_docs = DocumentArray(
+        [
+            Document(id=row.item_id, embedding=row.vector)
+            for row in items_with_embeddings_df.itertuples()
+        ]
+    )
+    item_docs.save(output_path)
+
+
+def load_embeddings_from_parquet(
+    parquet_dir: str, column_renaming_mapping: dict
+) -> dict:
+    lf = pl.scan_parquet(f"{parquet_dir}/*.parquet")
+
+    transformed_lf = (
+        lf.rename(column_renaming_mapping)
+        .with_columns(
+            pl.col("vector")
+            .struct.field("list")
+            .list.eval(pl.element().struct.field("element"))
+        )
+        .select(["item_id", "list"])
+        .rename({"list": "vector"})
+    )
+
+    return transformed_lf.collect().to_pandas()
 
 
 @app.command()
@@ -167,7 +216,53 @@ def semantic_database(
         embedding_dimension=EMBEDDING_DIMENSION,
         reducer_output_path=MODEL_TYPE["reducer"],
     )
-    print("Deploy...")
+    save_model_type(model_type=MODEL_TYPE, output_dir=OUTPUT_DATA_PATH)
+
+
+@app.command()
+def graph_database(
+    recommendable_item_gs_path: str = typer.Option(
+        ...,
+        help="Path (GCS or local) to the parquet or parquet dir containing the items with metadatas to recommend",
+    ),
+    graph_embedding_gs_path: str = typer.Option(
+        ...,
+        help="Path (GCS or local) to the parquet or parquet dir containing the item graph embeddings",
+    ),
+) -> None:
+    MODEL_TYPE = {
+        "type": "metadata_graph",
+        "default_token": None,
+    }
+    # Load data
+    recommendable_items_df = pd.read_parquet(recommendable_item_gs_path)
+    graph_embeddings_df = load_embeddings_from_parquet(
+        graph_embedding_gs_path,
+        column_renaming_mapping={"node_ids": "item_id", "embedding": "vector"},
+    )
+    items_with_embeddings_df = recommendable_items_df.merge(
+        graph_embeddings_df, on="item_id", how="inner", validate="one_to_one"
+    )
+
+    # Create item documents for graph retrieval app
+    create_graph_item_docs(
+        items_with_embeddings_df=items_with_embeddings_df,
+        output_path=f"{OUTPUT_DATA_PATH}/item.docs",
+    )
+
+    # Create lanceDB table for graph retrieval
+    create_items_table(
+        item_embedding_dict={
+            row.item_id: row.vector for row in items_with_embeddings_df.itertuples()
+        },
+        items_df=items_with_embeddings_df.loc[:, lambda df: df.columns != "vector"],
+        emb_size=len(items_with_embeddings_df.iloc[0].vector),
+        uri=f"{OUTPUT_DATA_PATH}/vector",
+        create_index=True if ENV_SHORT_NAME == "prod" else False,
+        vector_search_index_metric="cosine",
+    )
+
+    # Output model type
     save_model_type(model_type=MODEL_TYPE, output_dir=OUTPUT_DATA_PATH)
 
 

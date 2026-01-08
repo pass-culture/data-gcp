@@ -128,8 +128,8 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
     return (
         data.astype(
             {
-                "consult": "float",
-                "booking": "float",
+                "consult": "int",
+                "booking": "int",
             }
         )
         .fillna({"consult": 0, "booking": 0})
@@ -142,10 +142,10 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
         .assign(
             status=lambda df: pd.Series([ClassMapping.seen.name] * len(df))
             .where(
-                df[ClassMapping.consulted.name] != 1.0,
+                df[ClassMapping.consulted.name] != 1,
                 other=ClassMapping.consulted.name,
             )
-            .where(df[ClassMapping.booked.name] != 1.0, other=ClassMapping.booked.name),
+            .where(df[ClassMapping.booked.name] != 1, other=ClassMapping.booked.name),
             target_class=lambda df: df["status"]
             .map(
                 {
@@ -179,12 +179,13 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     figure_folder = f"/tmp/{experiment_name}/"
 
     # Start training
-    mlflow.lightgbm.autolog()
     pipeline_classifier = TrainPipeline(
         target="target_class", params=CLASSIFIER_MODEL_PARAMS
     )
 
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
+        mlflow.lightgbm.autolog()
+
         pipeline_classifier.set_pipeline()
         pipeline_classifier.train(train_data, class_weight=class_weight)
 
@@ -204,7 +205,12 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         mlflow.log_param("seed", seed)
 
     # retrain on whole
-    pipeline_classifier.train(preprocessed_data, class_weight=class_weight)
+    with mlflow.start_run(
+        experiment_id=experiment.experiment_id,
+        run_name=f"{run_name}_full_train",
+    ):
+        mlflow.lightgbm.autolog()
+        pipeline_classifier.train(preprocessed_data, class_weight=class_weight)
 
     # save
     pipeline_classifier.save(model_name="classifier")

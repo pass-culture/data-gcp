@@ -10,7 +10,8 @@ SELECT
     CAST("venueId" AS varchar(255)) AS venue_id,
     CAST("externalId" AS varchar(255)) AS typeform_id,
     "dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS special_event_creation_date,
-    "eventDate" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS special_event_date
+    "eventDate" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS special_event_date,
+    "endImportDate" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS special_event_end_date
     FROM public.special_event
 """
     )

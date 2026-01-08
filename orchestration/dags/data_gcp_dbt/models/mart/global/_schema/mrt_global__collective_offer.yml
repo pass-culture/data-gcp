@@ -6,6 +6,15 @@ models:
     columns:
       - name: collective_offer_id
         description: "{{ doc('column__collective_offer_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - unique:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: collective_offer_humanized_id
         description: "{{ doc('column__collective_offer_humanized_id') }}"
       - name: collective_offer_name
@@ -80,8 +89,6 @@ models:
         description: "{{ doc('column__national_program_name') }}"
       - name: template_id
         description: "{{ doc('column__template_id') }}"
-      - name: collective_offer_address_type
-        description: "{{ doc('column__collective_offer_address_type') }}"
       - name: collective_offer_contact_url
         description: "{{ doc('column__collective_offer_contact_url') }}"
       - name: collective_offer_contact_form
@@ -113,3 +120,10 @@ models:
       - name: venue_type_label
         description: "{{ doc('column__venue_type_label') }}"
         data_type: STRING
+      - name: collective_offer_location_type
+        description: "{{ doc('column__collective_offer_location_type') }}"
+        data_type: STRING
+      - name: offerer_address_id
+        description: "{{ doc('column__offerer_address_id') }}"
+      - name: collective_stock_price_detail
+        description: "{{ doc('column__collective_stock_price_detail') }}"

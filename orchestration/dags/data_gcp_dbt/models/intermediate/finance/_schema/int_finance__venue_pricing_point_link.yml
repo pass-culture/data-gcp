@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: int_finance__venue_pricing_point_link
+    description: '{{ doc("description__int_finance__venue_pricing_point_link") }}'
+    columns:
+      - name: id
+        description: '{{ doc("column__venue_pricing_point_link_id") }}'
+      - name: venue_id
+        description: '{{ doc("column__venue_id") }}'
+      - name: pricing_point_id
+        description: '{{ doc("column__pricing_point_id") }}'
+      - name: pricing_point_link_beginning_date
+        description: '{{ doc("column__pricing_point_link_beginning_date") }}'
+      - name: pricing_point_link_ending_date
+        description: '{{ doc("column__pricing_point_link_ending_date") }}'

@@ -32,9 +32,9 @@ repos:
       - id: sqlfmt
         name: SQL Formatting (sqlfmt)
         entry: sqlfmt --exclude "**/.venv/**" --exclude "**/venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**" --exclude "**/orchestration/dags/data_gcp_dbt/snapshots/**"
-        stages: [pre-push]
+        stages: [pre-commit]
         language: python
-        additional_dependencies: ["shandy-sqlfmt[jinjafmt]==0.23.2"]
+        additional_dependencies: ["shandy-sqlfmt[jinjafmt]==0.28.2"]
         types: [sql]
   - repo: https://github.com/sqlfluff/sqlfluff
     rev: 3.3.0
@@ -43,6 +43,14 @@ repos:
         additional_dependencies:
           ["dbt-bigquery==1.8.1", "sqlfluff-templater-dbt"]
         stages: [pre-commit]
+
+  - repo: https://github.com/gitguardian/ggshield
+    rev: v1.42.0
+    hooks:
+      - id: ggshield
+        language_version: python3
+        stages: [pre-commit]
+
   # TODO: uncomment once netskope problem is fixed
   # - repo: https://github.com/DavidAnson/markdownlint-cli2
   #   rev: v0.18.0

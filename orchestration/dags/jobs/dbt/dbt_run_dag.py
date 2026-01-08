@@ -1,13 +1,17 @@
 import datetime
-import logging
 from functools import partial
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.bash import BashOperator
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator
 from common.callback import on_failure_base_callback
 from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    PATH_TO_DBT_PROJECT,
+    GCS_AIRFLOW_BUCKET,
     PATH_TO_DBT_TARGET,
 )
 from common.dbt.dag_utils import (
@@ -15,23 +19,16 @@ from common.dbt.dag_utils import (
     load_and_process_manifest,
 )
 from common.dbt.dbt_executors import (
-    compile_dbt_with_selector,
     clean_dbt,
-    run_dbt_model,
-    run_dbt_test,
-    run_dbt_snapshot,
+    compile_dbt_with_selector,
+    run_dbt_operation,
 )
 from common.utils import (
     delayed_waiting_operator,
     get_airflow_schedule,
 )
+
 from jobs.crons import SCHEDULE_DICT
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.python import PythonOperator
-from airflow.operators.empty import EmptyOperator
-
 
 default_args = {
     "start_date": datetime.datetime(2020, 12, 23),
@@ -40,6 +37,7 @@ default_args = {
     "project_id": GCP_PROJECT_ID,
     "on_failure_callback": on_failure_base_callback,
 }
+
 
 # Load manifest and process it
 (
@@ -126,6 +124,24 @@ compile = PythonOperator(
     dag=dag,
 )
 
+stage_external_source = PythonOperator(
+    task_id="stage_external_source",
+    python_callable=partial(
+        run_dbt_operation,
+        operation="stage_external_sources",
+        vars={"full_refresh": True},
+        use_tmp_artifacts=False,
+    ),
+    dag=dag,
+)
+
+upload_compilation_to_gcs = BashOperator(
+    task_id="upload_compilation_to_gcs",
+    bash_command=f"gcloud storage rsync --recursive /opt/airflow/data/target gs://{GCS_AIRFLOW_BUCKET}/data/target",
+    pool="dbt",
+    dag=dag,
+)
+
 # Run the dbt DAG reconstruction
 operator_dict = dbt_dag_reconstruction(
     dag,
@@ -154,4 +170,11 @@ snapshot_tasks = list(operator_dict["snapshot_op_dict"].values())
 start >> operator_dict["trigger_block"]
 end_wait >> snapshots_checkpoint >> snapshot_tasks
 end_wait >> compile
-compile >> (model_tasks + snapshot_tasks) >> clean >> end
+(
+    compile
+    >> upload_compilation_to_gcs
+    >> stage_external_source
+    >> (model_tasks + snapshot_tasks)
+    >> clean
+    >> end
+)

@@ -296,3 +296,6 @@ models:
       - name: is_local_authority
         description: "{{ doc('column__is_local_authority') }}"
         data_type: BOOLEAN
+      - name: offerer_is_epn
+        description: "{{ doc('column__offerer_is_epn') }}"
+        data_type: BOOLEAN

@@ -16,6 +16,7 @@ select
     booking_id,
     offer_id,
     venue_id,
+    provider_id,
     product_id,
     stock_id,
     stock_old_quantity,
@@ -23,6 +24,16 @@ select
     stock_old_price,
     stock_new_price,
     stock_booking_quantity,
+    offerer_address_old_value,
+    offerer_address_new_value,
+    publication_date_old_value,
+    publication_date_new_value,
+    booking_limit_date_old_value,
+    booking_limit_date_new_value,
+    stock_beginning_date_old_value,
+    stock_beginning_date_new_value,
+    offer_withdrawal_details_old_value,
+    offer_withdrawal_details_new_value,
     list_of_eans_not_found,
     log_timestamp,
     partition_date,
@@ -40,7 +51,9 @@ select
     user_comment,
     suggested_offer_api_id,
     suggested_offer_api_subcategory,
-    suggested_offer_api_subcategories
+    suggested_offer_api_subcategories,
+    siret,
+    siret_is_diffusible
 from {{ ref("int_pcapi__log") }}
 where
     (
@@ -56,7 +69,15 @@ where
             "Stock update blocked because of price limitation",
             "User with new nav activated submitting review",
             "User submitting review",
-            "Offer Categorisation Data API"
+            "Offer Categorisation Data API",
+            "Deleted stock and cancelled its bookings",
+            "Searching for structure",
+            "Creating new Offerer and Venue",
+            "Video has been deleted from offer",
+            "Video has been added to offer",
+            "Video has been updated on offer",
+            "Highlight requests have been created",
+            "Highlight requests have been deleted"
         )
     )
     {% if is_incremental() %}

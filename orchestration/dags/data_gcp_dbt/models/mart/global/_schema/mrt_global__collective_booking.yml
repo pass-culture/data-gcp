@@ -6,6 +6,15 @@ models:
     columns:
       - name: collective_booking_id
         description: "{{ doc('column__collective_booking_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - unique:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: collective_stock_id
         description: "{{ doc('column__collective_stock_id') }}"
       - name: is_used_collective_booking
@@ -90,8 +99,6 @@ models:
         description: "{{ doc('column__venue_density_level') }}"
       - name: venue_postal_code
         description: "{{ doc('column__venue_postal_code') }}"
-      - name: collective_offer_address_type
-        description: "{{ doc('column__collective_offer_address_type') }}"
       - name: collective_booking_creation_date
         description: "{{ doc('column__collective_booking_creation_date') }}"
       - name: collective_booking_cancellation_date
@@ -126,4 +133,10 @@ models:
         data_type: BOOLEAN
       - name: venue_type_label
         description: "{{ doc('column__venue_type_label') }}"
+        data_type: STRING
+      - name: ministry
+        description: "{{ doc('column__ministry') }}"
+        data_type: STRING
+      - name: collective_offer_location_type
+        description: "{{ doc('column__collective_offer_location_type') }}"
         data_type: STRING

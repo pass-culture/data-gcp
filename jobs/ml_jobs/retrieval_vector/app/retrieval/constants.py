@@ -1,3 +1,4 @@
+from enum import StrEnum
 from typing import List
 
 DEFAULT_COLUMNS: List[str] = ["item_id"]
@@ -44,3 +45,9 @@ OUTPUT_METRIC_COLUMNS: List[str] = [
 DEFAULT_ITEM_DOCS_PATH: str = "./metadata/item.docs"
 DEFAULT_USER_DOCS_PATH: str = "./metadata/user.docs"
 DEFAULT_LANCE_DB_URI: str = "./metadata/vector"
+
+
+class EmbeddingModelTypes(StrEnum):
+    TWO_TOWER = "two_tower"
+    SEMANTIC = "semantic"
+    METADATA_GRAPH = "metadata_graph"

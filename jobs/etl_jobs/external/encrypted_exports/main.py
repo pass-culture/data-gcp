@@ -1,6 +1,6 @@
 import ast
-import typer
 
+import typer
 from helpers.encrypt import process_encryption
 from helpers.transfer import process_transfer
 from helpers.utils import DEFAULT_BATCH_SIZE, DEFAULT_MAX_WORKERS

@@ -1,5 +1,8 @@
 from datetime import datetime
+from typing import Optional
 
+import pandas as pd
+import typer
 from google.cloud import bigquery
 
 from contentful_client import ContentfulClient
@@ -18,10 +21,15 @@ CONTENTFUL_TAG_TABLE_NAME = "contentful_tag"
 
 
 def save_raw_modules_to_bq(modules_df, table_name):
+    nb_rows = modules_df.shape[0]
+    if nb_rows == 0:
+        print(f"No rows to save for {table_name}")
+        return
+
     _now = datetime.today()
     yyyymmdd = _now.strftime("%Y%m%d")
-    modules_df["execution_date"] = _now
-    print(f"Will save {modules_df.shape[0]} rows to {table_name}")
+    modules_df["execution_date"] = pd.to_datetime(_now.strftime("%Y-%m-%d %H:%M:%S"))
+    print(f"Will save {nb_rows} rows to {table_name}")
 
     bigquery_client = bigquery.Client()
     table_id = f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{table_name}${yyyymmdd}"
@@ -41,7 +49,20 @@ def save_raw_modules_to_bq(modules_df, table_name):
     job.result()
 
 
-def run():
+def parse_playlist_names(playlist_names: Optional[str]):
+    if playlist_names is None:
+        return []
+    elif playlist_names.strip() == "":
+        return []
+    else:
+        return [name.strip() for name in playlist_names.split(",")]
+
+
+def run(
+    playlists_names: Optional[str] = typer.Option(
+        None, help="Liste des playlists à importer"
+    ),
+):
     """The Cloud Function entrypoint.
     Args:
         request (flask.Request): The request object.
@@ -63,10 +84,11 @@ def run():
             "api_url": "cdn.contentful.com",
         },
     }
+    playlists_names = parse_playlist_names(playlists_names)
 
     config_env = contentful_envs[ENV_SHORT_NAME]
-    contentful_client = ContentfulClient(config_env)
-    df_modules, links_df, tags_df = contentful_client.get_all_playlists()
+    contentful_client = ContentfulClient(config_env, playlists_names)
+    df_modules, links_df, tags_df = contentful_client.get_playlists()
 
     for k, v in ENTRIES_DTYPE.items():
         if k in df_modules.columns:
@@ -88,4 +110,5 @@ def run():
     return "Done"
 
 
-run()
+if __name__ == "__main__":
+    typer.run(run)

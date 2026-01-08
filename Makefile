@@ -16,6 +16,7 @@ activate:
 install:
 	make _base_install
 	make _dbt_install
+	make _add_shell_aliases
 	echo "Please setup the current venv in your IDE to make it run permanently : https://www.notion.so/passcultureapp/Comment-installer-DBT-e25f7e24813c4d48baa43d641651caf8"
 
 
@@ -26,14 +27,37 @@ auth:
 ########                                 Utils                                 ########
 #######################################################################################
 
+_add_shell_aliases:
+	@echo "Configuring dbt-whereis shell alias..."
+	@if echo "$$SHELL" | grep -q "zsh"; then \
+	    shell_file="$$HOME/.zshrc"; \
+	elif echo "$$SHELL" | grep -q "bash"; then \
+	    shell_file="$$HOME/.bashrc"; \
+	else \
+	    echo "Unable to detect active shell. Defaulting to ~/.bashrc."; \
+	    shell_file="$$HOME/.bashrc"; \
+	fi; \
+	echo "Using shell file: $$shell_file"; \
+	touch "$$shell_file"; \
+	sed -i.bak '/^alias dbt-whereis=/d' "$$shell_file" || true; \
+	alias_line="alias dbt-whereis='bash $$(pwd)/orchestration/dags/data_gcp_dbt/scripts/dbt_whereis.sh'"; \
+	echo "$$alias_line" >> "$$shell_file"; \
+	echo "Added dbt-whereis alias to $$shell_file. Run 'source $$shell_file' or restart your terminal."
+
+
+
+
+
 
 
 install_ubuntu_libs:
 	sudo apt-get update -y
-	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev libmariadb-dev clang
+	curl -1sLf 'https://dl.cloudsmith.io/public/gitguardian/ggshield/setup.deb.sh' | sudo -E bash
+	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev libmariadb-dev clang ggshield
+
 
 install_macos_libs:
-	brew install mysql-client@8.4 pkg-config
+	brew install mysql-client@8.4 pkg-config ggshield
 
 _get_gcp_credentials:
 ifeq (,$(wildcard ${HOME}/.config/gcloud/application_default_credentials.json))
@@ -82,6 +106,9 @@ _base_install:
 		make _get_gcp_credentials; \
 	fi
 
+	# Login to ggshield
+	ggshield auth login
+
 	# Install uv if not already installed
 	@if ! command -v uv &> /dev/null; then \
 		echo "Installing uv..."; \
@@ -100,7 +127,7 @@ _base_install:
 #######################################################################################
 
 create_microservice:
-	python automations/create_microservice.py --ms-name $(MS_NAME) --ms-type $(MS_TYPE)
+	uv run python automations/create_microservice.py --ms-name $(MS_NAME) --ms-type $(MS_TYPE)
 	cd $(MS_BASE_PATH)/$(MS_NAME) && uv init --no-workspace -p 3.12 && uv add -r requirements.in && uv sync
 	cd $(MS_BASE_PATH)/$(MS_NAME) && cat pyproject.toml.template >> pyproject.toml && rm requirements.in pyproject.toml.template
 	git add . && git commit -am "auto: Add $(MS_NAME) as $(MS_TYPE) microservice"

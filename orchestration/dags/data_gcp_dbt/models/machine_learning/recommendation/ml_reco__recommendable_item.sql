@@ -13,8 +13,8 @@ with
             v.venue_id,
             v.venue_longitude,
             v.venue_latitude
-        from {{ ref("mrt_global__offer") }} eod
-        left join venues v on v.venue_id = eod.venue_id
+        from {{ ref("mrt_global__offer") }} as eod
+        left join venues as v on eod.venue_id = v.venue_id
         qualify
             row_number() over (
                 partition by eod.item_id
@@ -33,7 +33,6 @@ with
             max(ro.subcategory_id) as subcategory_id,
             max(ro.search_group_name) as search_group_name,
             max(ro.is_numerical) as is_numerical,
-            max(ro.is_national) as is_national,
             max(ro.is_geolocated) as is_geolocated,
             max(ro.offer_is_duo) as offer_is_duo,
             max(ro.offer_type_domain) as offer_type_domain,
@@ -56,17 +55,22 @@ with
             max(ro.total_offers) as total_offers,
             max(ro.semantic_emb_mean) as semantic_emb_mean
 
-        from {{ ref("ml_reco__recommendable_offer") }} ro
+        from {{ ref("ml_reco__recommendable_offer") }} as ro
         group by 1
     ),
 
     trends as (
         select
             ro.*,
+            od.offer_name as example_offer_name,
+            od.offer_id as example_offer_id,
+            od.venue_id as example_venue_id,
+            od.venue_longitude as example_venue_longitude,
+            od.venue_latitude as example_venue_latitude,
             coalesce(
-                booking_number_last_7_days * safe_divide(
-                    (booking_number_last_7_days + booking_number_last_14_days),
-                    booking_number_last_28_days
+                ro.booking_number_last_7_days * safe_divide(
+                    (ro.booking_number_last_7_days + ro.booking_number_last_14_days),
+                    ro.booking_number_last_28_days
                 )
                 * 0.5,
                 0
@@ -76,7 +80,7 @@ with
                 greatest(
                     date_diff(
                         current_date,
-                        coalesce(stock_beginning_date, offer_creation_date),
+                        coalesce(ro.stock_beginning_date, ro.offer_creation_date),
                         day
                     ),
                     1
@@ -84,19 +88,33 @@ with
                 / 60
             ) as stock_date_penalty_factor,
             least(
-                1, greatest(date_diff(current_date, offer_creation_date, day), 1) / 60
-            ) as creation_date_penalty_factor,
-            od.offer_name as example_offer_name,
-            od.offer_id as example_offer_id,
-            od.venue_id as example_venue_id,
-            od.venue_longitude as example_venue_longitude,
-            od.venue_latitude as example_venue_latitude
-        from recommendable_items_raw ro
-        left join offer_details od on od.item_id = ro.item_id
+                1,
+                greatest(date_diff(current_date, ro.offer_creation_date, day), 1) / 60
+            ) as creation_date_penalty_factor
+        from recommendable_items_raw as ro
+        left join offer_details as od on ro.item_id = od.item_id
+    ),
+
+    normalized_trends as (
+        select
+            *,
+            safe_divide(
+                booking_trend, stock_date_penalty_factor
+            ) as booking_release_trend,
+            safe_divide(
+                booking_trend, creation_date_penalty_factor
+            ) as booking_creation_trend
+        from trends
     )
 
 select
     *,
-    safe_divide(booking_trend, stock_date_penalty_factor) as booking_release_trend,
-    safe_divide(booking_trend, creation_date_penalty_factor) as booking_creation_trend
-from trends
+    row_number() over (order by booking_number desc) as booking_number_desc,
+    row_number() over (order by booking_trend desc) as booking_trend_desc,
+    row_number() over (
+        order by booking_creation_trend desc
+    ) as booking_creation_trend_desc,
+    row_number() over (
+        order by booking_release_trend desc
+    ) as booking_release_trend_desc
+from normalized_trends

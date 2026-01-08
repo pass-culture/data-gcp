@@ -88,6 +88,7 @@ select
     d.deposit_id,
     d.deposit_amount,
     d.user_id,
+    d.user_age_at_deposit,
     d.source,
     d.deposit_creation_date,
     d.deposit_update_date,
@@ -99,22 +100,34 @@ select
     d.deposit_rank_desc,
     d.last_recredit_date,
     d.total_recredit,
-    d.total_recredit_amount,
-    bgd.total_actual_amount_spent,
-    bgd.total_theoretical_amount_spent,
-    bgd.total_theoretical_amount_spent_in_digital_goods,
     bgd.first_individual_booking_date,
     bgd.last_individual_booking_date,
-    bgd.total_non_cancelled_individual_bookings,
-    bgd.total_non_cancelled_duo_bookings,
-    bgd.total_free_bookings,
-    bgd.total_subcategory_booked,
-    bgd.total_theoretical_physical_goods_amount_spent,
-    bgd.total_theoretical_digital_goods_amount_spent,
-    bgd.total_theoretical_outings_amount_spent,
     bgd.total_diversity_score,
     bgd.first_booking_type,
     bgd.first_paid_booking_type,
-    bgd.first_paid_booking_date
+    bgd.first_paid_booking_date,
+    coalesce(d.total_recredit_amount, 0) as total_recredit_amount,
+    coalesce(bgd.total_actual_amount_spent, 0) as total_actual_amount_spent,
+    coalesce(bgd.total_theoretical_amount_spent, 0) as total_theoretical_amount_spent,
+    coalesce(
+        bgd.total_theoretical_amount_spent_in_digital_goods, 0
+    ) as total_theoretical_amount_spent_in_digital_goods,
+    coalesce(
+        bgd.total_non_cancelled_individual_bookings, 0
+    ) as total_non_cancelled_individual_bookings,
+    coalesce(
+        bgd.total_non_cancelled_duo_bookings, 0
+    ) as total_non_cancelled_duo_bookings,
+    coalesce(bgd.total_free_bookings, 0) as total_free_bookings,
+    coalesce(bgd.total_subcategory_booked, 0) as total_subcategory_booked,
+    coalesce(
+        bgd.total_theoretical_physical_goods_amount_spent, 0
+    ) as total_theoretical_physical_goods_amount_spent,
+    coalesce(
+        bgd.total_theoretical_digital_goods_amount_spent, 0
+    ) as total_theoretical_digital_goods_amount_spent,
+    coalesce(
+        bgd.total_theoretical_outings_amount_spent, 0
+    ) as total_theoretical_outings_amount_spent
 from {{ ref("int_applicative__deposit") }} as d
 left join bookings_grouped_by_deposit as bgd on d.deposit_id = bgd.deposit_id

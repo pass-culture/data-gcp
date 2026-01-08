@@ -83,6 +83,7 @@ select
     v.venue_density_level,
     v.venue_is_permanent,
     v.is_local_authority,
+    v.offerer_is_epn,
     o.offerer_address_id,
     o.offer_publication_date,
     o.is_future_scheduled,

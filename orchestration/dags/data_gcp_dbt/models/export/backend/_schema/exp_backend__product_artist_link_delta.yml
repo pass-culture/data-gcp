@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: exp_backend__product_artist_link_delta
+    description: "{{ doc('description__exp_backend__product_artist_link_delta') }}"
+    columns:
+      - name: offer_product_id
+        description: "{{ doc('column__offer_product_id') }}"
+        data_tests:
+          - not_null
+      - name: artist_id
+        description: "{{ doc('column__artist_id') }}"
+        data_tests:
+          - not_null
+      - name: artist_type
+        description: "{{ doc('column__artist_type') }}"
+        data_tests:
+          - not_null
+      - name: action
+        description: "{{ doc('column__delta_action') }}"
+      - name: comment
+        description: "{{ doc('column__delta_comment') }}"

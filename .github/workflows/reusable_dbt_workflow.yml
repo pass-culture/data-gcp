@@ -111,7 +111,32 @@ jobs:
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: uv run dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+      - name: "Build DBT seeds for unit tests"
+        working-directory: ${{ env.DBT_FOLDER }}
+        env:
+          TARGET_BRANCH: ${{ github.base_ref }}
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
+        run: |
+          uv run dbt seed -s "tag:unit_test" \
+          --profile CI --target $ENV_SHORT_NAME \
+          --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+      - name: "Run seed test for unit tests"
+        working-directory: ${{ env.DBT_FOLDER }}
+        env:
+          TARGET_BRANCH: ${{ github.base_ref }}
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
+        run: |
+          uv run dbt test -s "tag:unit_test" \
+          --profile CI --target $ENV_SHORT_NAME \
+          --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Run modified models & 1st order childrens"
+        id: run-changed-models
         working-directory: .
         env:
           TARGET_BRANCH: ${{ github.base_ref }}
@@ -121,6 +146,7 @@ jobs:
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: uv run .github/workflows/scripts/run_dbt_changed_models.sh ${{ github.base_ref }} orchestration/dags/data_gcp_dbt
       - name: "Run modified tests"
+        if: steps.run-changed-models.outputs.should_run_tests == 'true'
         working-directory: ${{ env.DBT_FOLDER }}
         env:
           TARGET_BRANCH: ${{ github.base_ref }}

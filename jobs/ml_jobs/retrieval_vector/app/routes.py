@@ -23,7 +23,19 @@ def is_alive() -> Response:
 def predict():
     """Handle prediction requests using a factory pattern."""
     try:
-        input_json = request.get_json().get("instances", [{}])[0]
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Invalid JSON body"}), 400
+
+        instances = data.get("instances")
+        if not instances or not isinstance(instances, list):
+            return jsonify(
+                {
+                    "error": "Invalid request format: 'instances' list is required and cannot be empty"
+                }
+            ), 400
+
+        input_json = instances[0]
         request_data = PredictionRequest.model_validate(input_json)
     except ValidationError as e:
         # wrong input validation
@@ -35,7 +47,10 @@ def predict():
         return jsonify({"error": str(e)}), 400
 
     try:
-        handler = PredictionHandlerFactory.get_handler(request_data.model_type)
+        handler = PredictionHandlerFactory.get_handler(
+            request_type=request_data.model_type,
+            embedding_model_type=model.EMBEDDING_MODEL_TYPE,
+        )
         result: PredictionResult = handler.handle(model, request_data)
         return jsonify(result), 200
     except ValueError as e:
@@ -45,4 +60,4 @@ def predict():
     except Exception as e:
         # other errors
         logger.exception(e)
-        return jsonify({"error": str(e.errors())}), 500
+        return jsonify({"error": str(e)}), 500

@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: mrt_external_reporting__top_ac
+    description: "{{ doc('description__mrt_external_reporting__top_ac') }}"
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+      - name: updated_at
+        description: "{{ doc('column__updated_at') }}"
+      - name: dimension_name
+        description: "{{ doc('column__dimension_name') }}"
+      - name: dimension_value
+        description: "{{ doc('column__dimension_value') }}"
+      - name: offerer_name
+        description: "{{ doc('column__offerer_name') }}"
+      - name: total_booking_amount
+        description: "{{ doc('column__total_booking_amount') }}"
+      - name: total_number_of_tickets
+        description: "{{ doc('column__total_number_of_tickets') }}"
+      - name: total_booking_amount_ranked
+        description: "{{ doc('column__total_booking_amount_ranked') }}"

@@ -1,5 +1,8 @@
 import datetime
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -17,10 +20,6 @@ from common.operators.gce import (
 )
 from common.utils import get_airflow_schedule
 from dependencies.downloads.import_downloads import ANALYTICS_TABLES
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
 
 GCE_INSTANCE = f"import-downloads-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/downloads"
@@ -90,7 +89,7 @@ for table, params in ANALYTICS_TABLES.items():
     task = bigquery_job_task(table=table, dag=dag, job_params=params)
     analytics_tasks.append(task)
 
-end = DummyOperator(task_id="end", dag=dag)
+end = EmptyOperator(task_id="end", dag=dag)
 (
     gce_instance_start
     >> fetch_install_code

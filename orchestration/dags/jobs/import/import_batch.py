@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -17,10 +20,6 @@ from common.operators.gce import (
 )
 from common.utils import depends_loop, get_airflow_schedule
 from dependencies.batch.import_batch import import_batch_tables
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
 
 GCE_INSTANCE = f"import-batch-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/batch"
@@ -51,7 +50,7 @@ with DAG(
     user_defined_macros=macros.default,
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
-    start = DummyOperator(task_id="start")
+    start = EmptyOperator(task_id="start")
 
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,
@@ -96,7 +95,7 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task"
     )
 
-    start_analytics_table_tasks = DummyOperator(
+    start_analytics_table_tasks = EmptyOperator(
         task_id="start_analytics_tasks", dag=dag
     )
 
@@ -110,7 +109,7 @@ with DAG(
             "dag_depends": job_params.get("dag_depends", []),  # liste de dag_id
         }
 
-    end = DummyOperator(task_id="end", dag=dag)
+    end = EmptyOperator(task_id="end", dag=dag)
 
     analytics_table_tasks = depends_loop(
         import_batch_tables,

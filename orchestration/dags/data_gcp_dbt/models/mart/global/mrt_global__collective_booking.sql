@@ -25,6 +25,7 @@ select
     co.institution_program_name,
     co.institution_internal_iris_id,
     educational_institution.institution_name,
+    educational_institution.ministry,
     co.institution_academy_name,
     co.institution_region_name,
     co.institution_department_code,
@@ -45,7 +46,6 @@ select
     co.is_local_authority,
     co.venue_type_label,
     co.venue_is_permanent,
-    co.collective_offer_address_type,
     cb.collective_booking_creation_date,
     cb.collective_booking_cancellation_date,
     cb.collective_booking_is_cancelled,
@@ -58,6 +58,7 @@ select
     cb.collective_booking_rank_asc,
     cb.collective_booking_rank_desc,
     co.collective_offer_image_id,
+    co.collective_offer_location_type,
     coalesce(
         (
             cast(ey.educational_year_beginning_date as date) <= current_date

@@ -5,7 +5,7 @@ with
         where is_mediation = 1
         union distinct
         select o.offer_id
-        from {{ ref("int_applicative__offer") }} as o
+        from {{ ref("mrt_global__offer") }} as o
         inner join
             {{ ref("int_applicative__product") }} as p on o.offer_product_id = p.id
         where p.is_mediation = 1
@@ -19,7 +19,7 @@ with
             venue.venue_id,
             venue.venue_latitude,
             venue.venue_longitude,
-            offer.offer_name as name,
+            offer.offer_name as `name`,
             offer.offer_is_duo,
             im.offer_subcategory_id as subcategory_id,
             im.offer_category_id as category,
@@ -48,7 +48,6 @@ with
             ) as booking_number_last_28_days,
             any_value(ml_feat.cluster_id) as cluster_id,
             any_value(ml_feat.topic_id) as topic_id,
-            min(offer.is_national) as is_national,
             max(
                 coalesce(
                     (
@@ -116,6 +115,7 @@ with
             offer.is_active = true
             and offer.offer_is_bookable = true
             and offer.offer_validation = 'APPROVED'
+            and offer.last_stock_price is not null
             and not (
                 offer.offer_subcategory_id = 'LIVRE_PAPIER'
                 and offer.titelive_gtl_id is null

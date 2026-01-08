@@ -58,10 +58,6 @@ with
             co.collective_offer_contact_phone,
             null as collective_offer_contact_url,
             null as collective_offer_contact_form,
-            co.collective_offer_offer_venue,
-            co.collective_offer_venue_humanized_id,
-            co.collective_offer_venue_address_type as collective_offer_address_type,
-            co.collective_offer_venue_other_address,
             co.intervention_area,
             co.template_id,
             co.collective_offer_last_validation_type,
@@ -99,7 +95,16 @@ with
             ei.institution_macro_density_label,
             ei.institution_density_level,
             co.collective_offer_rejection_reason,
-            false as collective_offer_is_template
+            case
+                when co.collective_offer_location_type = "TO_BE_DEFINED"
+                then "other"
+                when co.collective_offer_location_type = "ADDRESS"
+                then "offerer"
+                when co.collective_offer_location_type = "SCHOOL"
+                then "school"
+            end as collective_offer_location_type,
+            false as collective_offer_is_template,
+            co.offerer_address_id
         from {{ source("raw", "applicative_database_collective_offer") }} as co
         left join
             collective_stocks_grouped_by_collective_offers as cs
@@ -107,6 +112,7 @@ with
         left join
             {{ ref("int_applicative__educational_institution") }} as ei
             on co.institution_id = ei.educational_institution_id
+
     )
 union all
 (
@@ -117,7 +123,7 @@ union all
         collective_offer_visual_disability_compliant,
         collective_offer_last_validation_date,
         collective_offer_validation,
-        collective_offer_id,
+        concat("template-", collective_offer_id) as collective_offer_id,
         collective_offer_is_active,
         venue_id,
         collective_offer_name,
@@ -134,10 +140,6 @@ union all
         collective_offer_contact_phone,
         collective_offer_contact_url,
         collective_offer_contact_form,
-        collective_offer_offer_venue,
-        collective_offer_venue_humanized_id,
-        collective_offer_venue_address_type,
-        collective_offer_venue_other_address,
         intervention_area,
         null as template_id,
         collective_offer_last_validation_type,
@@ -172,6 +174,15 @@ union all
         null as institution_macro_density_label,
         null as institution_density_level,
         collective_offer_rejection_reason,
-        true as collective_offer_is_template
+        case
+            when collective_offer_location_type = "TO_BE_DEFINED"
+            then "other"
+            when collective_offer_location_type = "ADDRESS"
+            then "offerer"
+            when collective_offer_location_type = "SCHOOL"
+            then "school"
+        end as collective_offer_location_type,
+        true as collective_offer_is_template,
+        offerer_address_id
     from {{ source("raw", "applicative_database_collective_offer_template") }}
 )

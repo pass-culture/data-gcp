@@ -194,7 +194,6 @@ class PretainedEmbeddingLayer(CustomInputLayer):
         for str_emb in emb_list:
             try:
                 emb = json.loads(str_emb)
-                emb = emb
             except Exception:
                 emb = [0] * emb_size
             float_emb.append(np.array(emb))

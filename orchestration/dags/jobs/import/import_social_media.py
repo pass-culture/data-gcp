@@ -1,5 +1,7 @@
 import datetime
 
+from airflow import DAG
+from airflow.models import Param
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -15,9 +17,6 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
-
-from airflow import DAG
-from airflow.models import Param
 
 DAG_NAME = "import_social_network"
 default_dag_args = {
@@ -43,7 +42,7 @@ with DAG(
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    dagrun_timeout=datetime.timedelta(minutes=120),
+    dagrun_timeout=datetime.timedelta(minutes=240),
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -52,6 +51,12 @@ with DAG(
         "n_days": Param(
             default=-14,
             type="integer",
+            description="Number of days to go back from the execution date for the start date (e.g., -1 for yesterday).",
+        ),
+        "n_index": Param(
+            default=0,
+            type="integer",
+            description="Offset in days from the execution date for the end date (e.g., 0 for the execution date, -1 for yesterday).",
         ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
@@ -81,7 +86,7 @@ with DAG(
             command="""
             python main.py \
             --start-date {{ add_days(yesterday() if dag_run.run_type == 'manual' else ds, params.n_days) }} \
-            --end-date {{ yesterday() if dag_run.run_type == 'manual' else ds }}
+            --end-date {{ add_days(yesterday() if dag_run.run_type == 'manual' else ds, params.n_index) }} \
             """,
             do_xcom_push=True,
         )

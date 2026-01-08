@@ -11,7 +11,8 @@ select
     date(se.special_event_date) as special_event_date,
     date(
         ser.special_event_response_submitted_date
-    ) as special_event_response_submitted_date
+    ) as special_event_response_submitted_date,
+    date(se.special_event_end_date) as special_event_end_date
 from {{ ref("raw_applicative__special_event_response") }} as ser
 left join
     {{ ref("raw_applicative__special_event") }} as se

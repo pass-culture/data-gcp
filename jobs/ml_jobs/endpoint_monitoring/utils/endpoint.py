@@ -81,7 +81,7 @@ def get_endpoint_path(
     return endpoint_dict["name"]
 
 
-def call_endpoint(endpoint_path: str, model_type: str, id: str, size: int = 10) -> None:
+def call_endpoint(endpoint_path: str, model_type: str, id: str, size: int = 10) -> list:
     """
     Example function to call the predict_custom_trained_model_sample.
     This is a placeholder and should be replaced with actual logic.

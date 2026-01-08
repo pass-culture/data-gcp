@@ -53,8 +53,6 @@ models:
         description: "{{ doc('column__collective_stock_end_date_time') }}"
       - name: educational_institution_id
         description: "{{ doc('column__educational_institution_id') }}"
-      - name: educational_year_id
-        description: "{{ doc('column__educational_year_id') }}"
       - name: scholar_year
         description: "{{ doc('column__educational_scholar_year') }}"
       - name: educational_redactor_id

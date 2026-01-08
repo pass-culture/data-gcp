@@ -13,6 +13,15 @@ with
                 case when is_current_deposit then deposit_creation_date end
             ) as current_deposit_creation_date,
             sum(educational_deposit_amount) as total_deposit_amount,
+            sum(
+                case when is_current_scholar_year then educational_deposit_amount end
+            ) as total_scholar_year_deposit_amount,
+            sum(
+                case
+                    when calendar_year = extract(year from current_date)
+                    then educational_deposit_amount
+                end
+            ) as total_calendar_year_deposit_amount,
             count(*) as total_deposits
         from {{ ref("int_applicative__educational_deposit") }}
         group by institution_id
@@ -56,6 +65,8 @@ select
     dgi.current_deposit_amount,
     dgi.current_deposit_creation_date,
     dgi.total_deposit_amount,
+    dgi.total_scholar_year_deposit_amount,
+    dgi.total_calendar_year_deposit_amount,
     dgi.total_deposits,
     institution_program.institution_program_name,
     ugi.total_credited_beneficiaries

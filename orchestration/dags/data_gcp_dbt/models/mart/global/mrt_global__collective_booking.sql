@@ -19,9 +19,9 @@ select
     co.collective_stock_beginning_date_time,
     co.collective_stock_end_date_time,
     cb.educational_institution_id,
-    cb.educational_year_id,
     ey.scholar_year,
     cb.educational_redactor_id,
+    cb.educational_deposit_id,
     co.institution_program_name,
     co.institution_internal_iris_id,
     educational_institution.institution_name,
@@ -65,6 +65,7 @@ select
         ),
         false
     ) as is_current_year_booking
+
 from {{ ref("int_applicative__collective_booking") }} as cb
 inner join
     {{ ref("int_global__collective_offer") }} as co
@@ -76,3 +77,6 @@ inner join
     {{ ref("int_applicative__educational_institution") }} as educational_institution
     on cb.educational_institution_id
     = educational_institution.educational_institution_id
+inner join
+    {{ ref("int_applicative__educational_deposit") }} as ed
+    on cb.educational_deposit_id = ed.educational_deposit_id

@@ -1,0 +1,90 @@
+version: 2
+
+models:
+  - name: ml_metadata__item_quality
+    description: "Table containing item_id and associated features, enriched with product, artist, and metadata information."
+    config:
+      materialized: view
+      contract:
+        enforced: true
+    columns:
+      - name: item_id
+        description: "Unique identifier for the item."
+        data_type: STRING
+        data_tests:
+          - not_null
+      - name: offer_product_id
+        description: "Product ID associated with the offer."
+        data_type: STRING
+      - name: offer_video_url
+        description: "Video URL for the offer."
+        data_type: STRING
+      - name: film_titre_format_support
+        description: "True if film title does NOT contain support format."
+        data_type: BOOLEAN
+      - name: absence_image
+        description: "True if image is missing."
+        data_type: BOOLEAN
+      - name: absence_video
+        description: "True if video is missing."
+        data_type: BOOLEAN
+      - name: absence_description
+        description: "True if description is missing or too short."
+        data_type: BOOLEAN
+      - name: livre_cd_vinyle_artiste_manquant
+        description: "True if artist is missing for book/CD/vinyl."
+        data_type: BOOLEAN
+      - name: livre_cd_vinyle_gtl_manquant
+        description: "True if GTL is missing for book/CD/vinyl."
+        data_type: BOOLEAN
+      - name: livre_cd_vinyle_createur_manquant
+        description: "True if all creator fields are missing for book/CD/vinyl."
+        data_type: BOOLEAN
+      - name: completion_score
+        description: "Weighted completion score for the item."
+        data_type: FLOAT64
+      - name: offer_subcategory_id
+        description: "Subcategory ID of the offer."
+        data_type: STRING
+      - name: offer_category_id
+        description: "Category ID of the offer."
+        data_type: STRING
+      - name: offer_name
+        description: "Name of the offer."
+        data_type: STRING
+      - name: offer_description
+        description: "Description of the offer."
+        data_type: STRING
+      - name: offer_type_domain
+        description: "Type domain of the offer."
+        data_type: STRING
+      - name: author
+        description: "Author of the item."
+        data_type: STRING
+      - name: performer
+        description: "Performer of the item."
+        data_type: STRING
+      - name: titelive_gtl_id
+        description: "Titelive GTL ID."
+        data_type: STRING
+      - name: image_url
+        description: "Image URL for the item."
+        data_type: STRING
+      - name: gtl_label_level_1
+        description: "GTL label level 1."
+        data_type: STRING
+      - name: gtl_label_level_2
+        description: "GTL label level 2."
+        data_type: STRING
+      - name: gtl_label_level_3
+        description: "GTL label level 3."
+        data_type: STRING
+      - name: gtl_label_level_4
+        description: "GTL label level 4."
+        data_type: STRING
+      - name: gtl_type
+        description: "GTL type."
+        data_type: STRING
+      - name: artist_id
+        description: "Artist ID linked to the product."
+        data_type: STRING

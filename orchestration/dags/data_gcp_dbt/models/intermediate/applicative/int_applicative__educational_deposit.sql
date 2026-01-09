@@ -48,7 +48,12 @@ select
             and cast(ey.educational_year_expiration_date as date) >= current_date
         ),
         false
-    ) as is_current_scholar_year
+    ) as is_current_scholar_year,
+    coalesce(
+        extract(year from ed.educational_deposit_beginning_date)
+        = extract(year from current_date),
+        false
+    ) as is_current_calendar_year
 from {{ source("raw", "applicative_database_educational_deposit") }} as ed
 left join
     {{ source("raw", "applicative_database_educational_year") }} as ey

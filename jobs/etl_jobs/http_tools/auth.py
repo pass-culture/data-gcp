@@ -1,8 +1,11 @@
 import asyncio
 import functools
+import logging
 import time
 from abc import ABC, abstractmethod
 from typing import Callable, Dict, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 
 class BaseAuthManager(ABC):
@@ -26,6 +29,8 @@ class BaseAuthManager(ABC):
                 and time.time() > self._expires_at - self.refresh_buffer
             )
         ):
+            reason = "forced" if force else "expired/initial"
+            logger.info(f"Refetching token (Reason: {reason})")
             token, expires_in = self._fetch_token_data()
             self._token, self._expires_at = token, time.time() + expires_in
         return self._token
@@ -39,6 +44,8 @@ class BaseAuthManager(ABC):
                 and time.time() > self._expires_at - self.refresh_buffer
             )
         ):
+            reason = "forced" if force else "expired/initial"
+            logger.info(f"[Async] Refetching token (Reason: {reason})")
             token, expires_in = await self._afetch_token_data()
             self._token, self._expires_at = token, time.time() + expires_in
         return self._token

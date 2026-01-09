@@ -6,6 +6,8 @@ select
     ey.educational_year_expiration_date,
     ey.scholar_year,
     ed.ministry,
+    ed.educational_deposit_beginning_date,
+    ed.educational_deposit_expiration_date,
     extract(year from ed.educational_deposit_beginning_date) as calendar_year,
     case
         (
@@ -14,7 +16,7 @@ select
         )
         when (9, 12)
         then 'sept-dec'
-        when (12, 8)
+        when (1, 8)
         then 'janv-aout'
         else 'all year'
     end as educational_deposit_period,
@@ -25,9 +27,9 @@ select
         )
         and (
             extract(month from ed.educational_deposit_beginning_date)
-            < extract(month from current_date)
-            and extract(month from ed.educational_deposit_beginning_date)
-            >= extract(month from current_date)
+            <= extract(month from current_date)
+            and extract(month from ed.educational_deposit_expiration_date)
+            > extract(month from current_date)
         ),
         false
     ) as is_current_deposit,

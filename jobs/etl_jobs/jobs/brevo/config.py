@@ -31,3 +31,20 @@ transactional_histo_schema = {
     "opened_count": "INTEGER",
     "unsubscribed_count": "INTEGER",
 }
+
+
+def get_api_configuration(audience: str):
+    """
+    Returns the NAME of the secret and the table, not the values.
+    """
+    if audience == "native":
+        # This is the NAME in Google Secret Manager
+        secret_id = f"sendinblue-api-key-{ENV_SHORT_NAME}"
+        table_name = "brevo_newsletters"
+    elif audience == "pro":
+        secret_id = f"sendinblue-pro-api-key-{ENV_SHORT_NAME}"
+        table_name = "brevo_pro_newsletters"
+    else:
+        raise ValueError(f"Invalid audience: {audience}")
+
+    return secret_id, table_name

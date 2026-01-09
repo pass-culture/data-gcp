@@ -3,40 +3,61 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from collections import deque
+from typing import Optional
 
-# Set up logging
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 # -----------------------------
-# Abstract Rate Limiter
+# Helper for Header Parsing
 # -----------------------------
+def parse_retry_after(response, default_backoff: int) -> int:
+    """Extracts retry delay from response headers."""
+    header = response.headers.get("Retry-After")
+    if header is None:
+        return default_backoff
+    try:
+        return int(header)
+    except ValueError:
+        # Some APIs send a HTTP-date string instead of seconds
+        return default_backoff
+
+
+# -----------------------------
+# Abstract Base Classes
+# -----------------------------
+
+
 class BaseRateLimiter(ABC):
-    """
-    Abstract base class for rate limiter strategies.
-    """
+    @abstractmethod
+    def backoff(self, response):
+        pass
 
+    def release(self):
+        """Optional: Release resources/semaphores after a request."""
+        pass
+
+
+class SyncBaseRateLimiter(BaseRateLimiter):
     @abstractmethod
     def acquire(self):
-        """Acquire a slot before making a request."""
+        pass
+
+
+class AsyncBaseRateLimiter(BaseRateLimiter):
+    @abstractmethod
+    async def acquire(self):
         pass
 
     @abstractmethod
-    def backoff(self, response):
-        """Handle backoff logic when receiving a rate-limit response."""
+    async def backoff(self, response):
         pass
 
 
 # -----------------------------
 # Sync Token Bucket
 # -----------------------------
-class SyncTokenBucketRateLimiter(BaseRateLimiter):
-    """
-    Synchronous token bucket rate limiter.
-    Controls number of requests per time period.
-    """
-
+class SyncTokenBucketRateLimiter(SyncBaseRateLimiter):
     def __init__(self, calls: int, period: int, default_backoff: int = 10):
         self.calls = calls
         self.period = period
@@ -55,20 +76,7 @@ class SyncTokenBucketRateLimiter(BaseRateLimiter):
         self.timestamps.append(time.time())
 
     def backoff(self, response):
-        header = response.headers.get("Retry-After")
-        if header is None:
-            logger.warning(
-                f"Retry-After header missing; defaulting to {self.default_backoff}s backoff"
-            )
-            retry_after = self.default_backoff
-        else:
-            try:
-                retry_after = int(header)
-            except ValueError:
-                logger.warning(
-                    f"Invalid Retry-After header '{header}'; defaulting to {self.default_backoff}s backoff"
-                )
-                retry_after = self.default_backoff
+        retry_after = parse_retry_after(response, self.default_backoff)
         logger.warning(f"Received 429. Backing off for {retry_after}s…")
         time.sleep(retry_after)
 
@@ -76,20 +84,28 @@ class SyncTokenBucketRateLimiter(BaseRateLimiter):
 # -----------------------------
 # Async Token Bucket
 # -----------------------------
-class AsyncTokenBucketRateLimiter(BaseRateLimiter):
-    """
-    Asynchronous token bucket rate limiter.
-    Uses asyncio locks and sleeps for non-blocking behavior.
-    """
-
-    def __init__(self, calls: int, period: int, default_backoff: int = 10):
+class AsyncTokenBucketRateLimiter(AsyncBaseRateLimiter):
+    def __init__(
+        self,
+        calls: int,
+        period: int,
+        default_backoff: int = 10,
+        max_concurrent: Optional[int] = None,
+    ):
         self.calls = calls
         self.period = period
         self.timestamps = deque()
         self.lock = asyncio.Lock()
         self.default_backoff = default_backoff
+        # Optional: Add a semaphore if you want to limit concurrency AND rate
+        self.semaphore = asyncio.Semaphore(max_concurrent) if max_concurrent else None
 
     async def acquire(self):
+        # 1. Handle Concurrency Limit (if set)
+        if self.semaphore:
+            await self.semaphore.acquire()
+
+        # 2. Handle Rate Limit (calls per period)
         async with self.lock:
             while len(self.timestamps) >= self.calls:
                 now = time.time()
@@ -103,20 +119,12 @@ class AsyncTokenBucketRateLimiter(BaseRateLimiter):
                     await asyncio.sleep(wait)
             self.timestamps.append(time.time())
 
+    def release(self):
+        """Releases the concurrency semaphore."""
+        if self.semaphore:
+            self.semaphore.release()
+
     async def backoff(self, response):
-        header = response.headers.get("Retry-After")
-        if header is None:
-            logger.warning(
-                f"[Async] Retry-After header missing; defaulting to {self.default_backoff}s backoff"
-            )
-            retry_after = self.default_backoff
-        else:
-            try:
-                retry_after = int(header)
-            except ValueError:
-                logger.warning(
-                    f"[Async] Invalid Retry-After header '{header}'; defaulting to {self.default_backoff}s backoff"
-                )
-                retry_after = self.default_backoff
+        retry_after = parse_retry_after(response, self.default_backoff)
         logger.warning(f"[Async] Received 429. Backing off for {retry_after}s…")
         await asyncio.sleep(retry_after)

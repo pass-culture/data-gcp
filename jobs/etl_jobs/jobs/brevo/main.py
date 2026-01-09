@@ -1,53 +1,37 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
+from typing import Optional, Tuple
 
 import typer
-from connectors.brevo import AsyncBrevoConnector, BrevoConnector
-from http_tools.clients import AsyncHttpClient, SyncHttpClient
-from jobs.brevo.config import UPDATE_WINDOW
-from jobs.brevo.utils import (
-    AsyncBrevoHeaderRateLimiter,
-    SyncBrevoHeaderRateLimiter,
-    async_etl_transactional,
-    etl_newsletter,
-    etl_transactional,
-    get_api_configuration,
+
+# Decoupled internal imports
+from factories.brevo import BrevoFactory
+from jobs.brevo.config import UPDATE_WINDOW, get_api_configuration
+from jobs.brevo.tasks import (
+    run_async_transactional_etl,
+    run_newsletter_etl,
+    run_transactional_etl,
 )
 
-# Logging setup
-for name in ("httpx", "httpcore", "urllib3"):
+# Logging setup - silence noisy network libraries
+for name in ("httpx", "httpcore", "urllib3", "google"):
     logging.getLogger(name).setLevel(logging.WARNING)
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
 logger = logging.getLogger(__name__)
 
+app = typer.Typer(help="Brevo ETL Pipeline Orchestrator")
 
-app = typer.Typer()
 
-
-@app.command()
-def run(
-    target: str = typer.Option(..., help="Task name (newsletter or transactional)"),
-    audience: str = typer.Option(..., help="Audience name (native or pro)"),
-    start_date: str = typer.Option(None, help="Import start date (YYYY-MM-DD)"),
-    end_date: str = typer.Option(None, help="Import end date (YYYY-MM-DD)"),
-    async_mode: bool = typer.Option(
-        False,
-        "--async/--no-async",
-        help="Use async processing (transactional only)",
-        show_default=True,
-    ),
-    max_concurrent: int = typer.Option(
-        5, "--max-concurrent", help="Max concurrent requests for async processing"
-    ),
-):
-    """Main entry point for Brevo ETL."""
-
-    # Set up dates
+def parse_dates(
+    start_date: Optional[str], end_date: Optional[str]
+) -> Tuple[datetime, datetime]:
+    """Helper to calculate date window or parse CLI input."""
     today = datetime.now(tz=timezone.utc)
 
-    # Parse dates or use defaults
     if start_date:
         start_dt = datetime.strptime(start_date, "%Y-%m-%d")
     else:
@@ -58,69 +42,68 @@ def run(
     else:
         end_dt = today
 
-    assert start_dt <= end_dt, "Start date must be before end date."
+    if start_dt > end_dt:
+        raise typer.BadParameter("Start date must be before end date.")
 
-    fallback_flag = async_mode and target == "newsletter"
-    async_fallback = async_mode and target == "transactional"
+    return start_dt, end_dt
+
+
+@app.command()
+def run(
+    target: str = typer.Option(..., help="Task name: 'newsletter' or 'transactional'"),
+    audience: str = typer.Option(..., help="Audience target: 'native' or 'pro'"),
+    start_date: str = typer.Option(None, help="Start date (YYYY-MM-DD)"),
+    end_date: str = typer.Option(None, help="End date (YYYY-MM-DD)"),
+    async_mode: bool = typer.Option(
+        False, "--async/--no-async", help="Use async processing (transactional only)"
+    ),
+    max_concurrent: int = typer.Option(
+        5, help="Max concurrent requests for async processing"
+    ),
+):
+    """Main Entry Point for Brevo ETL."""
+
+    # 1. Resolve Execution Parameters
+    start_dt, end_dt = parse_dates(start_date, end_date)
+
+    # Use config helper to get table name (logic remains in config)
+    _, table_name = get_api_configuration(audience)
+
     logger.info(
-        f"Running Brevo ETL: target={target}, audience={audience}, "
-        f"start={start_dt.strftime('%Y-%m-%d')}, end={end_dt.strftime('%Y-%m-%d')}, "
-        f"{'WARNING: Async mode disabled: only supported for transactional target! ' if fallback_flag else ''}"
-        f"async={async_fallback}, max_concurrent={max_concurrent if async_fallback else 'N/A'} "
+        f"🚀 Starting Brevo ETL | Target: {target} | Audience: {audience} | "
+        f"Window: {start_dt.date()} to {end_dt.date()} | Async: {async_mode}"
     )
 
-    # Get API configuration
+    # 2. Build Connector via Factory (Plumbing is hidden here)
+    connector = BrevoFactory.create_connector(
+        audience=audience, is_async=async_mode, max_concurrent=max_concurrent
+    )
+
+    # 3. Task Dispatcher
     try:
-        api_key, table_name = get_api_configuration(audience)
-    except ValueError as e:
-        typer.echo(str(e))
-        raise typer.Exit(code=1)
+        if target == "newsletter":
+            # Newsletter API doesn't benefit much from async due to small result set
+            run_newsletter_etl(connector, audience, table_name, end_dt)
 
-    # Process based on target
-    if target == "newsletter":
-        # Set up sync HTTP client and connector
-        rate_limiter = SyncBrevoHeaderRateLimiter()
-        client = SyncHttpClient(rate_limiter=rate_limiter)
-        connector = BrevoConnector(api_key=api_key, client=client)
-
-        etl_newsletter(connector, audience, table_name, start_dt, end_dt)
-
-    elif target == "transactional":
-        if async_mode:
-            # Run async version
-            asyncio.run(
-                _run_async_transactional(
-                    api_key, audience, start_dt, end_dt, max_concurrent=max_concurrent
+        elif target == "transactional":
+            if async_mode:
+                # Run the Async Task
+                asyncio.run(
+                    run_async_transactional_etl(connector, audience, start_dt, end_dt)
                 )
-            )
+            else:
+                # Run the Sync Task
+                run_transactional_etl(connector, audience, start_dt, end_dt)
+
         else:
-            # Set up sync HTTP client and connector
-            rate_limiter = SyncBrevoHeaderRateLimiter()
-            client = SyncHttpClient(rate_limiter=rate_limiter)
-            connector = BrevoConnector(api_key=api_key, client=client)
+            logger.error(f"Unknown target: {target}")
+            raise typer.Exit(code=1)
 
-            etl_transactional(connector, audience, start_dt, end_dt)
-    else:
-        typer.echo("Invalid target. Must be one of transactional/newsletter.")
+        logger.info(f"✅ ETL {target} for {audience} completed successfully.")
+
+    except Exception as e:
+        logger.critical(f"❌ ETL Process Failed: {e}", exc_info=True)
         raise typer.Exit(code=1)
-
-    logger.info(f"ETL {target} process for audience {audience} completed successfully.")
-
-
-async def _run_async_transactional(
-    api_key: str,
-    audience: str,
-    start_dt: datetime,
-    end_dt: datetime,
-    max_concurrent: int = 5,
-):
-    """Helper function to run async transactional ETL."""
-    # Set up async HTTP client and connector with concurrency control
-    rate_limiter = AsyncBrevoHeaderRateLimiter(max_concurrent=max_concurrent)
-
-    async with AsyncHttpClient(rate_limiter=rate_limiter) as client:
-        connector = AsyncBrevoConnector(api_key=api_key, client=client)
-        await async_etl_transactional(connector, audience, start_dt, end_dt)
 
 
 if __name__ == "__main__":

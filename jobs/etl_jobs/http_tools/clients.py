@@ -1,10 +1,10 @@
-import asyncio
 import logging
 from abc import ABC, abstractmethod
 from typing import Optional
 
 import httpx
 import requests
+from http_tools.auth import BaseAuthManager
 from http_tools.rate_limiters import BaseRateLimiter
 
 # Set up logging
@@ -16,17 +16,21 @@ logger.setLevel(logging.INFO)
 # Base HTTP Client (abstract)
 # -----------------------------
 class BaseHttpClient(ABC):
-    """
-    Abstract base class for HTTP clients.
-    Supports pluggable rate limiter strategy.
-    """
-
-    def __init__(self, rate_limiter: Optional[BaseRateLimiter] = None):
+    def __init__(
+        self,
+        rate_limiter: Optional[BaseRateLimiter] = None,
+        auth_manager: Optional[BaseAuthManager] = None,
+    ):
         self.rate_limiter = rate_limiter
+        self.auth_manager = auth_manager
 
     def set_rate_limiter(self, limiter: BaseRateLimiter):
-        """Set or update the rate limiter instance."""
+        """Allow switching limiters at runtime (useful for dynamic APIs)."""
         self.rate_limiter = limiter
+
+    def set_auth_manager(self, manager: BaseAuthManager):
+        """Allow switching auth strategies at runtime."""
+        self.auth_manager = manager
 
     @abstractmethod
     def request(self, method: str, url: str, **kwargs):
@@ -38,21 +42,13 @@ class BaseHttpClient(ABC):
 # Sync HTTP Client
 # -----------------------------
 class SyncHttpClient(BaseHttpClient):
-    """
-    Synchronous HTTP client with optional rate limiting and error handling.
-    """
-
     def __init__(
-        self, rate_limiter: Optional[BaseRateLimiter] = None, max_retries: int = 3
+        self,
+        rate_limiter: Optional[BaseRateLimiter] = None,
+        auth_manager: Optional[BaseAuthManager] = None,
+        max_retries: int = 3,
     ):
-        """
-        Initialize synchronous HTTP client.
-
-        Args:
-            rate_limiter: Optional rate limiter instance
-            max_retries: Maximum number of retries for rate limit (429) responses
-        """
-        super().__init__(rate_limiter)
+        super().__init__(rate_limiter, auth_manager)
         self.max_retries = max_retries
 
     def request(
@@ -61,40 +57,31 @@ class SyncHttpClient(BaseHttpClient):
         url: str,
         skip_rate_limit: bool = False,
         _retry_count: int = 0,
+        _auth_retry_count: int = 0,  # Added to prevent infinite loops on bad creds
         **kwargs,
     ):
-        """
-        Perform HTTP request with rate limiting and retry logic.
+        # --- Inject Auth Headers ---
+        if self.auth_manager:
+            token = self.auth_manager.get_token()
+            auth_headers = self.auth_manager.get_headers(token)
+            kwargs["headers"] = {**kwargs.get("headers", {}), **auth_headers}
 
-        Args:
-            method: HTTP method (GET, POST, etc.)
-            url: Request URL
-            skip_rate_limit: If True, skip rate limiter acquire (used after backoff)
-            _retry_count: Internal retry counter for rate limit retries
-            **kwargs: Additional arguments passed to requests.request
-
-        Returns:
-            Response object or None on failure
-        """
         try:
-            # Only acquire rate limit token if not skipping (i.e., not retrying after backoff)
+            # --- Rate Limiting ---
             if self.rate_limiter and not skip_rate_limit:
                 self.rate_limiter.acquire()
 
             response = requests.request(method, url, **kwargs)
 
-            # Handle 429 rate limit with backoff and retry
+            # --- Handle 429 ---
             if response.status_code == 429:
                 if _retry_count >= self.max_retries:
-                    logger.error(
-                        f"Max retries ({self.max_retries}) reached for 429 response"
-                    )
-                    response.raise_for_status()  # Will raise HTTPError
+                    logger.error(f"Max retries ({self.max_retries}) reached for 429")
+                    response.raise_for_status()
                     return response
 
                 if self.rate_limiter:
                     self.rate_limiter.backoff(response)
-                    # Retry with skip_rate_limit=True to avoid double-waiting
                     return self.request(
                         method,
                         url,
@@ -107,20 +94,38 @@ class SyncHttpClient(BaseHttpClient):
                     response.raise_for_status()
                     return response
 
-            # Handle 401 (let caller handle token refresh)
+            # --- Handle 401 ---
+            if (
+                response.status_code == 401
+                and self.auth_manager
+                and _auth_retry_count < 1
+            ):
+                logger.warning(
+                    f"Received 401 for {url}. Refreshing token and retrying..."
+                )
+                self.auth_manager.get_token(force=True)
+                return self.request(
+                    method,
+                    url,
+                    _auth_retry_count=_auth_retry_count + 1,
+                    _retry_count=_retry_count,
+                    **kwargs,
+                )
+
+            # --- Final response handling ---
             if response.status_code == 401:
-                logger.warning("Received 401 Unauthorized")
+                logger.warning(
+                    "Received 401 Unauthorized (Refresh failed or not configured)"
+                )
                 return response
 
             response.raise_for_status()
             return response
 
         except requests.exceptions.HTTPError as e:
-            # Re-raise HTTPError to preserve status code information (e.g., 404, 500)
             logger.error(f"HTTP error {e.response.status_code}: {e}")
             raise
         except requests.RequestException as e:
-            # For other request exceptions (network errors, etc.), return None
             logger.error(f"HTTP request failed: {e}")
             return None
 
@@ -129,35 +134,39 @@ class SyncHttpClient(BaseHttpClient):
 # Async HTTP Client
 # -----------------------------
 class AsyncHttpClient(BaseHttpClient):
-    """
-    Asynchronous HTTP client using httpx.AsyncClient with rate limiting.
-    Designed to be memory-safe and exception-resilient.
-    """
-
-    def __init__(self, rate_limiter: Optional[BaseRateLimiter] = None):
-        super().__init__(rate_limiter)
+    def __init__(
+        self,
+        rate_limiter: Optional[BaseRateLimiter] = None,
+        auth_manager: Optional[BaseAuthManager] = None,
+    ):
+        super().__init__(rate_limiter, auth_manager)
         self._client = None
-        self._restore_task: Optional[asyncio.Task] = None
 
     def _get_client(self) -> httpx.AsyncClient:
         if self._client is None:
             self._client = httpx.AsyncClient(
-                timeout=httpx.Timeout(30.0),  # 30 second timeout
-                limits=httpx.Limits(
-                    max_keepalive_connections=20,
-                    max_connections=50,
-                ),
+                timeout=httpx.Timeout(30.0),
+                limits=httpx.Limits(max_keepalive_connections=20, max_connections=50),
             )
         return self._client
 
-    async def request(self, method: str, url: str, **kwargs):
-        """
-        Make an async HTTP request with rate limiting.
-        The rate limiter's semaphore is NOT automatically released here
-        to allow the caller to control when it's safe to make the next request.
-        """
+    async def request(
+        self,
+        method: str,
+        url: str,
+        _retry_count: int = 0,
+        _auth_retry_count: int = 0,
+        **kwargs,
+    ):
+        # --- Inject Auth Headers (Async) ---
+        if self.auth_manager:
+            token = await self.auth_manager.get_atoken()
+            auth_headers = self.auth_manager.get_headers(token)
+            kwargs["headers"] = {**kwargs.get("headers", {}), **auth_headers}
+
         acquired = False
         try:
+            # --- Acquire Rate Limiter ---
             if self.rate_limiter:
                 await self.rate_limiter.acquire()
                 acquired = True
@@ -165,39 +174,57 @@ class AsyncHttpClient(BaseHttpClient):
             client = self._get_client()
             response = await client.request(method, url, **kwargs)
 
+            # --- Handle 429 ---
             if response.status_code == 429 and self.rate_limiter:
-                # Release semaphore before backoff
                 if acquired and hasattr(self.rate_limiter, "release"):
                     self.rate_limiter.release()
                     acquired = False
 
                 await self.rate_limiter.backoff(response)
-                return await self.request(method, url, **kwargs)  # Retry
+                return await self.request(
+                    method, url, _retry_count=_retry_count + 1, **kwargs
+                )
+
+            # --- Handle 401 ---
+            if (
+                response.status_code == 401
+                and self.auth_manager
+                and _auth_retry_count < 1
+            ):
+                logger.warning(f"Async 401 for {url}. Refreshing and retrying...")
+                if acquired and hasattr(self.rate_limiter, "release"):
+                    self.rate_limiter.release()
+                    acquired = False
+
+                await self.auth_manager.get_atoken(force=True)
+                return await self.request(
+                    method,
+                    url,
+                    _auth_retry_count=_auth_retry_count + 1,
+                    _retry_count=_retry_count,
+                    **kwargs,
+                )
 
             response.raise_for_status()
             return response
 
         except httpx.HTTPError as e:
             logger.error(f"Async HTTP request failed: {e}")
-            # Release semaphore on error
             if acquired and self.rate_limiter and hasattr(self.rate_limiter, "release"):
                 self.rate_limiter.release()
             return None
         except Exception as e:
             logger.error(f"Unexpected error in async request: {e}")
-            # Release semaphore on any error
             if acquired and self.rate_limiter and hasattr(self.rate_limiter, "release"):
                 self.rate_limiter.release()
             raise
 
     async def close(self):
-        """Close the underlying async HTTP client to free memory."""
         if self._client:
             await self._client.aclose()
             self._client = None
 
     async def __aenter__(self):
-        # Don't create client here, let it be created on first request
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):

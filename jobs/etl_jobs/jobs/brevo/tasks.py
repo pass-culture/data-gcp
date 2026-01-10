@@ -6,6 +6,8 @@ from typing import Dict, List
 import pandas as pd
 
 # Internal imports
+from http_tools.circuit_breakers import CircuitBreakerOpenError
+from http_tools.exceptions import HttpClientError, RateLimitError, ServerError
 from jobs.brevo.config import (
     BIGQUERY_RAW_DATASET,
     BIGQUERY_TMP_DATASET,
@@ -32,15 +34,40 @@ def run_newsletter_etl(connector, audience: str, table_name: str, end_date: date
     """ETL pipeline for newsletter campaigns."""
     logger.info(f"🚀 [Sync] Starting Newsletter ETL for audience: {audience}")
 
-    resp = connector.get_email_campaigns()
-    if not resp:
-        logger.warning("No response received from Brevo for campaigns.")
-        return
+    try:
+        resp = connector.get_email_campaigns()
+
+    except CircuitBreakerOpenError:
+        logger.error(
+            "🛑 Circuit breaker is open for Brevo API. "
+            "Too many recent failures. Job will retry later."
+        )
+        raise  # Fail the job, orchestrator will retry later
+
+    except RateLimitError as e:
+        logger.error(
+            f"🛑 Rate limit exceeded after retries. "
+            f"Retry-After: {e.retry_after}s. "
+            "This should not happen with retry strategy enabled."
+        )
+        raise
+
+    except ServerError as e:
+        logger.error(
+            f"🛑 Brevo server error (5xx) after all retries. "
+            f"Status: {e.status_code}, URL: {e.url}"
+        )
+        raise
+
+    except HttpClientError as e:
+        logger.error(f"🛑 HTTP error after retries: {e}")
+        raise
 
     campaigns = resp.json().get("campaigns", [])
     logger.info(f"Fetched {len(campaigns)} campaigns.")
 
     if not campaigns:
+        logger.info("No campaigns found, nothing to process.")
         return
 
     # Transform
@@ -69,8 +96,19 @@ def run_transactional_etl(
     """ETL pipeline for transactional emails (Sync version)."""
     logger.info(f"🚀 [Sync] Starting Transactional ETL for audience: {audience}")
 
-    templates_resp = connector.get_smtp_templates(active_only=True)
-    templates = templates_resp.json().get("templates", []) if templates_resp else []
+    # Fetch templates with error handling
+    try:
+        templates_resp = connector.get_smtp_templates(active_only=True)
+
+    except CircuitBreakerOpenError:
+        logger.error("🛑 Circuit breaker is open for Brevo API")
+        raise
+
+    except HttpClientError as e:
+        logger.error(f"🛑 Failed to fetch SMTP templates: {e}")
+        raise
+
+    templates = templates_resp.json().get("templates", [])
 
     if not templates:
         logger.warning("No active SMTP templates found.")
@@ -80,6 +118,7 @@ def run_transactional_etl(
         templates = templates[:1]
 
     all_events = []
+    failed_templates = []
     logger.info(f"Processing {len(templates)} templates sequentially...")
 
     for template in templates:
@@ -91,16 +130,31 @@ def run_transactional_etl(
                 logger.info(
                     f"  [Sync] Fetching {event_type} for template {t_id} (offset {offset})"
                 )
-                resp = connector.get_email_event_report(
-                    template_id=t_id,
-                    event=event_type,
-                    start_date=start_date.strftime("%Y-%m-%d"),
-                    end_date=end_date.strftime("%Y-%m-%d"),
-                    offset=offset,
-                )
 
-                if not resp:
-                    break
+                try:
+                    resp = connector.get_email_event_report(
+                        template_id=t_id,
+                        event=event_type,
+                        start_date=start_date.strftime("%Y-%m-%d"),
+                        end_date=end_date.strftime("%Y-%m-%d"),
+                        offset=offset,
+                    )
+
+                except CircuitBreakerOpenError:
+                    logger.error(
+                        f"🛑 Circuit breaker open for template {t_id}, event {event_type}"
+                    )
+                    failed_templates.append((t_id, event_type))
+                    break  # Move to next event type
+
+                except HttpClientError as e:
+                    logger.error(
+                        f"⚠️ Failed to fetch {event_type} for template {t_id} "
+                        f"at offset {offset}: {e}"
+                    )
+                    failed_templates.append((t_id, event_type))
+                    break  # Move to next event type
+
                 events = resp.json().get("events", [])
                 if not events:
                     break
@@ -120,6 +174,13 @@ def run_transactional_etl(
                     break
                 offset += 2500
 
+    # Log summary
+    if failed_templates:
+        logger.warning(
+            f"⚠️ Failed to fetch data for {len(failed_templates)} template/event combinations: "
+            f"{failed_templates}"
+        )
+
     # 3. Transform & Load
     if all_events:
         logger.info(f"Transforming and saving {len(all_events)} records...")
@@ -132,6 +193,9 @@ def run_transactional_etl(
             TRANSACTIONAL_TABLE_NAME,
             datetime.today(),
         )
+        logger.info("✅ Transactional ETL finished with partial success.")
+    else:
+        logger.warning("⚠️ No events collected. Nothing to save.")
 
 
 # ==========================================
@@ -150,10 +214,18 @@ async def run_async_transactional_etl(
         f"🚀 [Async] Starting High-Speed Transactional ETL for audience: {audience}"
     )
 
-    # 1. Fetch Templates
-    templates_resp = await connector.get_smtp_templates(active_only=True)
-    if not templates_resp:
-        return
+    # 1. Fetch Templates with error handling
+    try:
+        templates_resp = await connector.get_smtp_templates(active_only=True)
+
+    except CircuitBreakerOpenError:
+        logger.error("🛑 Circuit breaker is open for Brevo API")
+        raise
+
+    except HttpClientError as e:
+        logger.error(f"🛑 Failed to fetch SMTP templates: {e}")
+        raise
+
     templates = templates_resp.json().get("templates", [])
 
     if not templates:
@@ -178,11 +250,41 @@ async def run_async_transactional_etl(
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     all_events = []
-    for res in results:
-        if isinstance(res, list):
+    failed_templates = []
+
+    for i, res in enumerate(results):
+        template_id = templates[i].get("id")
+
+        if isinstance(res, Exception):
+            # Typed exception handling for better logging
+            if isinstance(res, CircuitBreakerOpenError):
+                logger.error(f"❌ Template {template_id}: Circuit breaker open")
+            elif isinstance(res, RateLimitError):
+                logger.error(
+                    f"❌ Template {template_id}: Rate limit exceeded "
+                    f"(retry_after: {res.retry_after}s)"
+                )
+            elif isinstance(res, ServerError):
+                logger.error(
+                    f"❌ Template {template_id}: Server error "
+                    f"(status: {res.status_code})"
+                )
+            elif isinstance(res, HttpClientError):
+                logger.error(f"❌ Template {template_id}: HTTP error - {res}")
+            else:
+                logger.error(f"❌ Template {template_id}: Unexpected error - {res}")
+
+            failed_templates.append(template_id)
+
+        elif isinstance(res, list):
             all_events.extend(res)
-        else:
-            logger.error(f"❌ Template fetch failed with error: {res}")
+
+    # Log summary
+    success_count = len(templates) - len(failed_templates)
+    logger.info(
+        f"📊 Processed {success_count}/{len(templates)} templates successfully. "
+        f"Failed: {failed_templates if failed_templates else 'none'}"
+    )
 
     # 3. Transform & Load
     if all_events:
@@ -198,7 +300,9 @@ async def run_async_transactional_etl(
             TRANSACTIONAL_TABLE_NAME,
             datetime.today(),
         )
-    logger.info("✅ Async Transactional ETL complete.")
+        logger.info("✅ Async Transactional ETL complete.")
+    else:
+        logger.warning("⚠️ No events collected. Nothing to save.")
 
 
 async def _fetch_template_events_async(

@@ -1,12 +1,23 @@
+import asyncio
 import logging
 import os
+import time
 from abc import ABC, abstractmethod
 from typing import Optional
 
 import httpx
 import requests
 from http_tools.auth import BaseAuthManager
+from http_tools.circuit_breakers import CircuitBreaker, CircuitBreakerOpenError
+from http_tools.exceptions import (
+    AuthenticationError,
+    NetworkError,
+    RateLimitError,
+    classify_http_error,
+    parse_retry_after,
+)
 from http_tools.rate_limiters import BaseRateLimiter
+from http_tools.retry_strategies import BaseRetryStrategy
 
 ENV_LOG_LEVEL = os.getenv("CLIENT_LOG_LEVEL", "INFO").upper()
 CLIENT_LOG_LEVEL = getattr(logging, ENV_LOG_LEVEL, logging.INFO)
@@ -23,9 +34,19 @@ class BaseHttpClient(ABC):
         self,
         rate_limiter: Optional[BaseRateLimiter] = None,
         auth_manager: Optional[BaseAuthManager] = None,
+        retry_strategy: Optional[BaseRetryStrategy] = None,
+        circuit_breaker: Optional[CircuitBreaker] = None,
+        use_legacy_retry: bool = True,  # Backwards compatibility flag
     ):
         self.rate_limiter = rate_limiter
         self.auth_manager = auth_manager
+        self.retry_strategy = retry_strategy
+        self.circuit_breaker = circuit_breaker
+        self.use_legacy_retry = use_legacy_retry
+
+        # If retry_strategy provided, disable legacy retry
+        if retry_strategy is not None:
+            self.use_legacy_retry = False
 
     def set_rate_limiter(self, limiter: BaseRateLimiter):
         """Allow switching limiters at runtime (useful for dynamic APIs)."""
@@ -49,6 +70,13 @@ class BaseHttpClient(ABC):
             f"Retry {attempt}/{max_retries} for {url}"
         )
 
+    def _log_retry_strategy(self, attempt: int, max_retries: int, wait: float):
+        """Log a retry event using new retry strategy."""
+        logger.warning(
+            f"⚠️ [{self.__class__.__name__}] Retry {attempt}/{max_retries}, "
+            f"waiting {wait:.2f}s"
+        )
+
     def _log_error(self, msg: str, url: str, code: Optional[int] = None):
         """Log a terminal error."""
         prefix = f"HTTP {code}" if code else "Error"
@@ -69,8 +97,17 @@ class SyncHttpClient(BaseHttpClient):
         rate_limiter: Optional[BaseRateLimiter] = None,
         auth_manager: Optional[BaseAuthManager] = None,
         max_retries: int = 3,
+        retry_strategy: Optional[BaseRetryStrategy] = None,
+        circuit_breaker: Optional[CircuitBreaker] = None,
+        use_legacy_retry: bool = True,
     ):
-        super().__init__(rate_limiter, auth_manager)
+        super().__init__(
+            rate_limiter,
+            auth_manager,
+            retry_strategy,
+            circuit_breaker,
+            use_legacy_retry,
+        )
         self.max_retries = max_retries
 
     def request(
@@ -79,9 +116,111 @@ class SyncHttpClient(BaseHttpClient):
         url: str,
         skip_rate_limit: bool = False,
         _retry_count: int = 0,
-        _auth_retry_count: int = 0,  # Added to prevent infinite loops on bad creds
+        _auth_retry_count: int = 0,
         **kwargs,
     ):
+        # Use new strategy-based approach if available
+        if not self.use_legacy_retry and self.retry_strategy is not None:
+            return self._request_with_strategy(method, url, **kwargs)
+
+        # Otherwise use legacy retry logic (backwards compatible)
+        return self._request_legacy(
+            method, url, skip_rate_limit, _retry_count, _auth_retry_count, **kwargs
+        )
+
+    def _request_with_strategy(self, method: str, url: str, **kwargs):
+        """New strategy-based request implementation."""
+
+        # Check circuit breaker
+        if self.circuit_breaker and not self.circuit_breaker.allow_request():
+            raise CircuitBreakerOpenError(f"Circuit breaker open for {url}")
+
+        self._log_request(method, url)
+
+        # Inject auth headers
+        if self.auth_manager:
+            token = self.auth_manager.get_token()
+            auth_headers = self.auth_manager.get_headers(token)
+            kwargs["headers"] = {**kwargs.get("headers", {}), **auth_headers}
+
+        # Retry loop
+        last_error = None
+        while True:
+            try:
+                # Rate limiting
+                if self.rate_limiter:
+                    self.rate_limiter.acquire()
+
+                # Make request
+                response = requests.request(method, url, **kwargs)
+
+                # Check for errors
+                if response.status_code >= 400:
+                    # Parse retry_after for 429 errors
+                    retry_after = None
+                    if response.status_code == 429:
+                        retry_after = parse_retry_after(response)
+
+                    error = classify_http_error(response.status_code, url)
+
+                    # Set retry_after on RateLimitError
+                    if isinstance(error, RateLimitError) and retry_after:
+                        error.retry_after = retry_after
+
+                    # Special handling for 429 (rate limit)
+                    if isinstance(error, RateLimitError) and self.rate_limiter:
+                        self.rate_limiter.backoff(response)
+
+                    # Special handling for 401 (auth)
+                    if isinstance(error, AuthenticationError) and self.auth_manager:
+                        self.auth_manager.get_token(force=True)
+
+                    raise error
+
+                # Success!
+                self.retry_strategy.reset()
+                if self.circuit_breaker:
+                    self.circuit_breaker.record_success()
+
+                return response
+
+            except requests.RequestException as e:
+                # Network error
+                last_error = NetworkError(str(e), url, e)
+
+            except Exception as e:
+                last_error = e
+
+            # Record failure
+            if self.circuit_breaker:
+                self.circuit_breaker.record_failure()
+
+            # Should we retry?
+            if not self.retry_strategy.should_retry(last_error):
+                self._log_error(str(last_error), url)
+                raise last_error
+
+            # Calculate backoff
+            wait = self.retry_strategy.calculate_backoff(last_error)
+            retry_count = self.retry_strategy.increment_retry_count()
+
+            self._log_retry_strategy(
+                retry_count, self.retry_strategy.policy.max_retries, wait
+            )
+
+            time.sleep(wait)
+
+    def _request_legacy(
+        self,
+        method: str,
+        url: str,
+        skip_rate_limit: bool = False,
+        _retry_count: int = 0,
+        _auth_retry_count: int = 0,
+        **kwargs,
+    ):
+        """Legacy retry logic for backwards compatibility."""
+
         # Log the start of the request
         if _retry_count == 0 and _auth_retry_count == 0:
             self._log_request(method, url)
@@ -151,8 +290,17 @@ class AsyncHttpClient(BaseHttpClient):
         self,
         rate_limiter: Optional[BaseRateLimiter] = None,
         auth_manager: Optional[BaseAuthManager] = None,
+        retry_strategy: Optional[BaseRetryStrategy] = None,
+        circuit_breaker: Optional[CircuitBreaker] = None,
+        use_legacy_retry: bool = True,
     ):
-        super().__init__(rate_limiter, auth_manager)
+        super().__init__(
+            rate_limiter,
+            auth_manager,
+            retry_strategy,
+            circuit_breaker,
+            use_legacy_retry,
+        )
         self._client = None
 
     def _get_client(self) -> httpx.AsyncClient:
@@ -171,6 +319,121 @@ class AsyncHttpClient(BaseHttpClient):
         _auth_retry_count: int = 0,
         **kwargs,
     ):
+        # Use new strategy-based approach if available
+        if not self.use_legacy_retry and self.retry_strategy is not None:
+            return await self._request_with_strategy(method, url, **kwargs)
+
+        # Otherwise use legacy retry logic (backwards compatible)
+        return await self._request_legacy(
+            method, url, _retry_count, _auth_retry_count, **kwargs
+        )
+
+    async def _request_with_strategy(self, method: str, url: str, **kwargs):
+        """New strategy-based async request implementation."""
+
+        # Check circuit breaker
+        if self.circuit_breaker and not self.circuit_breaker.allow_request():
+            raise CircuitBreakerOpenError(f"Circuit breaker open for {url}")
+
+        self._log_request(method, url)
+
+        # Inject auth headers
+        if self.auth_manager:
+            token = await self.auth_manager.get_atoken()
+            auth_headers = self.auth_manager.get_headers(token)
+            kwargs["headers"] = {**kwargs.get("headers", {}), **auth_headers}
+
+        # Retry loop
+        last_error = None
+        acquired = False
+
+        while True:
+            try:
+                # Rate limiting
+                if self.rate_limiter:
+                    await self.rate_limiter.acquire()
+                    acquired = True
+
+                # Make request
+                client = self._get_client()
+                response = await client.request(method, url, **kwargs)
+
+                # Check for errors
+                if response.status_code >= 400:
+                    # Release semaphore before backoff
+                    if acquired and self.rate_limiter:
+                        self.rate_limiter.release()
+                        acquired = False
+
+                    # Parse retry_after for 429 errors
+                    retry_after = None
+                    if response.status_code == 429:
+                        retry_after = parse_retry_after(response)
+
+                    error = classify_http_error(response.status_code, url)
+
+                    # Set retry_after on RateLimitError
+                    if isinstance(error, RateLimitError) and retry_after:
+                        error.retry_after = retry_after
+
+                    # Special handling for 429 (rate limit)
+                    if isinstance(error, RateLimitError) and self.rate_limiter:
+                        await self.rate_limiter.backoff(response)
+
+                    # Special handling for 401 (auth)
+                    if isinstance(error, AuthenticationError) and self.auth_manager:
+                        await self.auth_manager.get_atoken(force=True)
+
+                    raise error
+
+                # Success!
+                self.retry_strategy.reset()
+                if self.circuit_breaker:
+                    self.circuit_breaker.record_success()
+
+                return response
+
+            except httpx.RequestError as e:
+                last_error = NetworkError(str(e), url, e)
+
+            except Exception as e:
+                last_error = e
+
+            finally:
+                # Always release semaphore
+                if acquired and self.rate_limiter:
+                    self.rate_limiter.release()
+                    acquired = False
+
+            # Record failure
+            if self.circuit_breaker:
+                self.circuit_breaker.record_failure()
+
+            # Should we retry?
+            if not self.retry_strategy.should_retry(last_error):
+                self._log_error(str(last_error), url)
+                raise last_error
+
+            # Calculate backoff
+            wait = self.retry_strategy.calculate_backoff(last_error)
+            retry_count = self.retry_strategy.increment_retry_count()
+
+            self._log_retry_strategy(
+                retry_count, self.retry_strategy.policy.max_retries, wait
+            )
+
+            await asyncio.sleep(wait)
+
+    async def _request_legacy(
+        self,
+        method: str,
+        url: str,
+        _retry_count: int = 0,
+        _auth_retry_count: int = 0,
+        **kwargs,
+    ):
+        """Legacy retry logic for backwards compatibility."""
+
         # Log the start of the request
         if _retry_count == 0 and _auth_retry_count == 0:
             self._log_request(method, url)

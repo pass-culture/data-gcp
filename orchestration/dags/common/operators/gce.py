@@ -86,7 +86,9 @@ class StartGCEOperator(BaseOperator):
 
 
 class CleanGCEOperator(BaseOperator):
-    template_fields = ["timeout_in_minutes"]
+    template_fields = [
+        "timeout_in_minutes",
+    ]
 
     @apply_defaults
     def __init__(
@@ -117,6 +119,9 @@ class DeleteGCEOperator(BaseOperator):
         *args,
         **kwargs,
     ):
+        # Set default priority weight and weight rule for delete operations
+        kwargs.setdefault("priority_weight", 1000)
+        kwargs.setdefault("weight_rule", "absolute")
         super(DeleteGCEOperator, self).__init__(*args, **kwargs)
         self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
 
@@ -345,7 +350,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
         self,
         instance_name: str,
         requirement_file: str = "requirements.txt",
-        branch: str = "main",  # Branch for repo
+        branch: str = "master",  # Branch for repo
         environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
         base_dir: str = "data-gcp",

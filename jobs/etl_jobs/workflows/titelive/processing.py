@@ -2,14 +2,13 @@
 
 import requests
 from connectors.titelive.client import TiteliveConnector
-
-from jobs.titelive.config import (
+from workflows.titelive.config import (
     DEFAULT_BATCH_SIZE,
     MUSIC_SUBCATEGORIES,
     TiteliveCategory,
 )
-from jobs.titelive.logging_utils import get_logger
-from jobs.titelive.transform import transform_api_response
+from workflows.titelive.logging_utils import get_logger
+from workflows.titelive.transform import transform_api_response
 
 logger = get_logger(__name__)
 

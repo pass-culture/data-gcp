@@ -1,8 +1,7 @@
 """Main CLI entry point for Titelive ETL pipeline."""
 
 import typer
-
-from jobs.titelive.config import (
+from workflows.titelive.config import (
     DEFAULT_BATCH_SIZE,
     DEFAULT_SOURCE_TABLE,
     DEFAULT_TARGET_TABLE,
@@ -10,8 +9,8 @@ from jobs.titelive.config import (
     MAIN_BATCH_SIZE,
     RESULTS_PER_PAGE,
 )
-from jobs.titelive.logging_utils import get_logger
-from jobs.titelive.tasks import run_download_images, run_incremental, run_init
+from workflows.titelive.logging_utils import get_logger
+from workflows.titelive.tasks import run_download_images, run_incremental, run_init
 
 logger = get_logger(__name__)
 

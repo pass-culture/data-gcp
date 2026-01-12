@@ -8,7 +8,7 @@ import pandas as pd
 # Internal imports
 from http_tools.circuit_breakers import CircuitBreakerOpenError
 from http_tools.exceptions import HttpClientError, RateLimitError, ServerError
-from jobs.brevo.config import (
+from workflows.brevo.config import (
     BIGQUERY_RAW_DATASET,
     BIGQUERY_TMP_DATASET,
     ENV_SHORT_NAME,
@@ -17,8 +17,8 @@ from jobs.brevo.config import (
     campaigns_histo_schema,
     transactional_histo_schema,
 )
-from jobs.brevo.load import save_to_historical, save_transactional_to_historical
-from jobs.brevo.transform import (
+from workflows.brevo.load import save_to_historical, save_transactional_to_historical
+from workflows.brevo.transform import (
     transform_campaigns_to_dataframe,
     transform_events_to_dataframe,
 )

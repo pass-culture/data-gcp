@@ -75,14 +75,14 @@ The codebase follows a **4-layer architecture** designed for:
 
 #### Components
 
-| Module | Purpose | Key Classes |
-|--------|---------|-------------|
-| `clients.py` | HTTP request execution | `SyncHttpClient`, `AsyncHttpClient` |
-| `auth.py` | Authentication strategies | `BaseAuthManager`, `APIKeyAuthManager`, `OAuth2AuthManager` |
-| `rate_limiters.py` | Proactive rate limiting | `BaseRateLimiter`, `TokenBucketLimiter`, `SlidingWindowLimiter` |
-| `retry_strategies.py` | Retry policies | `ExponentialBackoffRetryStrategy`, `HeaderBasedRetryStrategy` |
-| `circuit_breakers.py` | Fault tolerance | `CircuitBreaker`, `PerEndpointCircuitBreaker` |
-| `exceptions.py` | Typed error hierarchy | `HttpClientError`, `RateLimitError`, `ServerError` |
+| Module                  | Purpose                   | Key Classes                                                           |
+| ----------------------- | ------------------------- | --------------------------------------------------------------------- |
+| `clients.py`          | HTTP request execution    | `SyncHttpClient`, `AsyncHttpClient`                               |
+| `auth.py`             | Authentication strategies | `BaseAuthManager`, `APIKeyAuthManager`, `OAuth2AuthManager`     |
+| `rate_limiters.py`    | Proactive rate limiting   | `BaseRateLimiter`, `TokenBucketLimiter`, `SlidingWindowLimiter` |
+| `retry_strategies.py` | Retry policies            | `ExponentialBackoffRetryStrategy`, `HeaderBasedRetryStrategy`     |
+| `circuit_breakers.py` | Fault tolerance           | `CircuitBreaker`, `PerEndpointCircuitBreaker`                     |
+| `exceptions.py`       | Typed error hierarchy     | `HttpClientError`, `RateLimitError`, `ServerError`              |
 
 #### Design Principles
 
@@ -94,6 +94,7 @@ The codebase follows a **4-layer architecture** designed for:
 #### Key Features
 
 **HTTP Clients**:
+
 - Automatic auth token injection
 - Proactive rate limiting with acquire/release
 - Circuit breaker integration
@@ -101,6 +102,7 @@ The codebase follows a **4-layer architecture** designed for:
 - Sync and async modes
 
 **Exception Hierarchy**:
+
 ```python
 HttpClientError (base)
 ├─ NetworkError (retryable)
@@ -112,6 +114,7 @@ HttpClientError (base)
 ```
 
 **Retry Strategies**:
+
 - Exponential backoff: 1s → 2s → 4s → 8s (default)
 - Linear backoff: 1s → 2s → 3s → 4s
 - Fixed backoff: 5s → 5s → 5s
@@ -119,6 +122,7 @@ HttpClientError (base)
 - Jitter support (prevents thundering herd)
 
 **Circuit Breakers**:
+
 - **CLOSED**: Normal operation (all requests allowed)
 - **OPEN**: Too many failures (blocking requests)
 - **HALF_OPEN**: Testing recovery (limited requests)
@@ -147,12 +151,12 @@ connectors/
 
 #### Responsibilities
 
-| File | Responsibility | Example |
-|------|----------------|---------|
-| `client.py` | Implement API routes | `get_email_campaigns()`, `get_smtp_templates()` |
-| `auth.py` | API authentication | `BrevoAuthManager` (API key in header) |
-| `limiter.py` | API rate limiting | `BrevoRateLimiter` (uses `x-sib-ratelimit-*` headers) |
-| `config.py` | Configuration | `BREVO_API_KEY`, `BASE_URL`, schemas |
+| File           | Responsibility       | Example                                                   |
+| -------------- | -------------------- | --------------------------------------------------------- |
+| `client.py`  | Implement API routes | `get_email_campaigns()`, `get_smtp_templates()`       |
+| `auth.py`    | API authentication   | `BrevoAuthManager` (API key in header)                  |
+| `limiter.py` | API rate limiting    | `BrevoRateLimiter` (uses `x-sib-ratelimit-*` headers) |
+| `config.py`  | Configuration        | `BREVO_API_KEY`, `BASE_URL`, schemas                  |
 
 #### Design Principles
 
@@ -254,16 +258,17 @@ jobs/
 
 #### Responsibilities
 
-| File | Responsibility | Example |
-|------|----------------|---------|
-| `main.py` | Orchestration, CLI | Parse dates, dispatch tasks, handle top-level errors |
-| `tasks.py` | Extract data | Fetch campaigns, handle pagination, graceful degradation |
-| `transform.py` | Transform data | Clean, validate, enrich, convert to DataFrame |
-| `load.py` | Load data | Save to BigQuery, handle schema evolution |
+| File             | Responsibility     | Example                                                  |
+| ---------------- | ------------------ | -------------------------------------------------------- |
+| `main.py`      | Orchestration, CLI | Parse dates, dispatch tasks, handle top-level errors     |
+| `tasks.py`     | Extract data       | Fetch campaigns, handle pagination, graceful degradation |
+| `transform.py` | Transform data     | Clean, validate, enrich, convert to DataFrame            |
+| `load.py`      | Load data          | Save to BigQuery, handle schema evolution                |
 
 #### Key Patterns
 
 **Graceful Degradation**:
+
 ```python
 failed_templates = []
 for template in templates:
@@ -286,6 +291,7 @@ if all_events:
 ```
 
 **Exception Propagation**:
+
 ```python
 def run_newsletter_etl(connector, audience, table_name, end_date):
     try:
@@ -319,14 +325,14 @@ def run_newsletter_etl(connector, audience, table_name, end_date):
 
 #### Exception Classification
 
-| Exception Type | Status Codes | Retryable? | Action |
-|----------------|--------------|------------|--------|
-| `NetworkError` | Connection errors | ✅ Yes | Retry with backoff |
-| `RateLimitError` | 429 | ✅ Yes | Retry after `Retry-After` header |
-| `ServerError` | 500-599 | ✅ Yes | Retry with exponential backoff |
-| `AuthenticationError` | 401, 403 | ❌ No* | Refresh token once, then fail |
-| `NotFoundError` | 404 | ❌ No | Fail immediately |
-| `CircuitBreakerOpenError` | N/A | ❌ No | Wait for circuit to close |
+| Exception Type              | Status Codes      | Retryable? | Action                             |
+| --------------------------- | ----------------- | ---------- | ---------------------------------- |
+| `NetworkError`            | Connection errors | ✅ Yes     | Retry with backoff                 |
+| `RateLimitError`          | 429               | ✅ Yes     | Retry after `Retry-After` header |
+| `ServerError`             | 500-599           | ✅ Yes     | Retry with exponential backoff     |
+| `AuthenticationError`     | 401, 403          | ❌ No*     | Refresh token once, then fail      |
+| `NotFoundError`           | 404               | ❌ No      | Fail immediately                   |
+| `CircuitBreakerOpenError` | N/A               | ❌ No      | Wait for circuit to close          |
 
 \* *Auth errors trigger one token refresh attempt, then fail*
 
@@ -354,12 +360,14 @@ Main Function
 #### Best Practices
 
 **DO**:
+
 - Use typed exceptions for different error scenarios
 - Log error details before re-raising
 - Implement graceful degradation for batch operations
 - Let circuit breakers prevent cascading failures
 
 **DON'T**:
+
 - Catch `Exception` unless you're at the top level
 - Return `None` on errors (raise exceptions instead)
 - Retry non-retryable errors (404, 403)
@@ -379,12 +387,12 @@ Main Function
 
 #### Strategy Selection Guide
 
-| API Behavior | Recommended Strategy | Configuration |
-|--------------|---------------------|---------------|
-| **Provides `Retry-After` header** | `HeaderBasedRetryStrategy` | `backoff_strategy="header"` |
-| **No retry headers** | `ExponentialBackoffRetryStrategy` | `backoff_strategy="exponential"` |
-| **Very strict rate limits** | `LinearBackoffRetryStrategy` | `backoff_strategy="linear"` |
-| **Simple retry logic** | `FixedBackoffRetryStrategy` | `backoff_strategy="fixed"` |
+| API Behavior                              | Recommended Strategy                | Configuration                      |
+| ----------------------------------------- | ----------------------------------- | ---------------------------------- |
+| **Provides `Retry-After` header** | `HeaderBasedRetryStrategy`        | `backoff_strategy="header"`      |
+| **No retry headers**                | `ExponentialBackoffRetryStrategy` | `backoff_strategy="exponential"` |
+| **Very strict rate limits**         | `LinearBackoffRetryStrategy`      | `backoff_strategy="linear"`      |
+| **Simple retry logic**              | `FixedBackoffRetryStrategy`       | `backoff_strategy="fixed"`       |
 
 #### Configuration Example
 
@@ -417,6 +425,7 @@ header_policy = RetryPolicy(
 #### Backoff Sequences
 
 **Exponential** (default):
+
 ```
 Attempt 1: 1.0s  (base)
 Attempt 2: 2.0s  (base * 2^1)
@@ -427,6 +436,7 @@ Max: 60.0s (capped)
 ```
 
 **Linear**:
+
 ```
 Attempt 1: 1.0s  (base)
 Attempt 2: 2.0s  (base * 2)
@@ -436,6 +446,7 @@ Attempt 5: 5.0s  (base * 5)
 ```
 
 **Jitter** (10% random variance):
+
 ```
 Without jitter: [1.0s, 2.0s, 4.0s, 8.0s]
 With jitter:    [1.05s, 2.08s, 3.92s, 8.13s]
@@ -444,12 +455,14 @@ With jitter:    [1.05s, 2.08s, 3.92s, 8.13s]
 #### Best Practices
 
 **DO**:
+
 - Use header-based retry for APIs that provide `Retry-After`
 - Enable jitter to prevent thundering herd
 - Set reasonable max_retries (3-5 for most APIs)
 - Increase base_backoff for strict APIs
 
 **DON'T**:
+
 - Retry forever (always have max_retries)
 - Use fixed backoff without good reason
 - Ignore Retry-After headers
@@ -469,17 +482,18 @@ With jitter:    [1.05s, 2.08s, 3.92s, 8.13s]
 
 #### Log Levels
 
-| Level | Icon | Usage | Example |
-|-------|------|-------|---------|
-| `DEBUG` | 🌐 | HTTP requests | `🌐 [SyncHttpClient] GET https://api.brevo.com/v3/campaigns` |
-| `INFO` | 🚀 ✅ 📊 | Task start/success/stats | `🚀 Starting Newsletter ETL for audience: native` |
-| `WARNING` | ⚠️ | Retries, partial failures | `⚠️ Retry 2/5, waiting 4.2s` |
-| `ERROR` | 🛑 ❌ | Terminal errors | `🛑 Circuit breaker is open for Brevo API` |
-| `CRITICAL` | ❌ | Job-level failures | `❌ ETL Process Failed: RateLimitError` |
+| Level        | Icon     | Usage                     | Example                                                        |
+| ------------ | -------- | ------------------------- | -------------------------------------------------------------- |
+| `DEBUG`    | 🌐       | HTTP requests             | `🌐 [SyncHttpClient] GET https://api.brevo.com/v3/campaigns` |
+| `INFO`     | 🚀 ✅ 📊 | Task start/success/stats  | `🚀 Starting Newsletter ETL for audience: native`            |
+| `WARNING`  | ⚠️     | Retries, partial failures | `⚠️ Retry 2/5, waiting 4.2s`                               |
+| `ERROR`    | 🛑 ❌    | Terminal errors           | `🛑 Circuit breaker is open for Brevo API`                   |
+| `CRITICAL` | ❌       | Job-level failures        | `❌ ETL Process Failed: RateLimitError`                      |
 
 #### Layer-Specific Logging
 
 **HTTP Clients** (`http_tools/clients.py`):
+
 ```python
 logger.debug(f"🌐 [SyncHttpClient] GET {url}")
 logger.warning(f"⚠️ [SyncHttpClient] Retry {attempt}/{max_retries}, waiting {wait:.2f}s")
@@ -487,12 +501,14 @@ logger.error(f"🛑 [SyncHttpClient] HTTP 429: Rate limit exceeded | URL: {url}"
 ```
 
 **Connectors** (`connectors/brevo/client.py`):
+
 ```python
 logger.info(f"Fetching email campaigns with limit={limit}, offset={offset}")
 logger.debug(f"Response: {response.status_code}, campaigns={len(campaigns)}")
 ```
 
 **Tasks** (`jobs/brevo/tasks.py`):
+
 ```python
 logger.info(f"🚀 [Sync] Starting Newsletter ETL for audience: {audience}")
 logger.error(f"🛑 Circuit breaker is open for Brevo API. Job will retry later.")
@@ -502,6 +518,7 @@ logger.info(f"✅ Newsletter ETL finished.")
 ```
 
 **Main** (`jobs/brevo/main.py`):
+
 ```python
 logger.info(f"🚀 Starting Brevo ETL | Target: {target} | Audience: {audience}")
 logger.info(f"✅ ETL {target} for {audience} completed successfully.")
@@ -529,6 +546,7 @@ CLIENT_LOG_LEVEL = getattr(logging, ENV_LOG_LEVEL, logging.INFO)
 #### Best Practices
 
 **DO**:
+
 - Log task start/success/failure at INFO level
 - Log retry attempts at WARNING level
 - Log errors with context (URL, status code, error message)
@@ -536,6 +554,7 @@ CLIENT_LOG_LEVEL = getattr(logging, ENV_LOG_LEVEL, logging.INFO)
 - Include summary statistics (success/failure counts)
 
 **DON'T**:
+
 - Log sensitive data (API keys, tokens, PII)
 - Log at DEBUG in production (too verbose)
 - Log the same error multiple times
@@ -1028,7 +1047,6 @@ results = asyncio.run(fetch_all_templates(connector, [1, 2, 3, 4, 5]))
 
 ## Testing Strategy
 
-
 ## Overview
 
 This guide provides a comprehensive testing strategy for the 4-layer factory pattern architecture used in this codebase.
@@ -1106,6 +1124,7 @@ tests/
 ## Layer 1: HTTP Tools (Foundation) - Unit Tests
 
 ### Test Strategy
+
 - **Pure unit tests**: Mock all external dependencies
 - **Focus**: Test behavior, not implementation
 - **Coverage target**: 90%+
@@ -1385,6 +1404,7 @@ class TestCircuitBreaker:
 ## Layer 2: Connectors - Unit Tests
 
 ### Test Strategy
+
 - **Mock HTTP client**: Test connector logic without network calls
 - **Focus**: API route implementations, parameter handling, error propagation
 - **Coverage target**: 85%+
@@ -1548,6 +1568,7 @@ class TestTiteliveConnectorAuth:
 ## Layer 3: Factories - Unit Tests
 
 ### Test Strategy
+
 - **Mock all dependencies**: Connectors, auth, rate limiters
 - **Focus**: Dependency injection, strategy selection, configuration
 - **Coverage target**: 95%+
@@ -1708,6 +1729,7 @@ class TestTiteliveFactory:
 ## Integration Tests
 
 ### Test Strategy
+
 - **Test layer interactions**: Verify components work together
 - **Use test doubles sparingly**: Only mock external APIs
 - **Coverage target**: 70%+
@@ -1843,6 +1865,7 @@ class TestTiteliveIntegration:
 ## Contract Tests
 
 ### Test Strategy
+
 - **Verify interfaces**: Ensure contracts between layers are maintained
 - **No implementation testing**: Focus on method signatures, return types
 - **Coverage target**: 100% of public interfaces
@@ -2261,13 +2284,13 @@ def test_b():
 
 ### Coverage Targets
 
-| Layer | Unit Tests | Integration Tests | Total |
-|-------|-----------|-------------------|-------|
-| HTTP Tools | 90% | 5% | 95% |
-| Connectors | 85% | 10% | 95% |
-| Factories | 95% | 5% | 100% |
-| Jobs | 70% | 15% | 85% |
-| **Overall** | **80%** | **10%** | **90%** |
+| Layer             | Unit Tests    | Integration Tests | Total         |
+| ----------------- | ------------- | ----------------- | ------------- |
+| HTTP Tools        | 90%           | 5%                | 95%           |
+| Connectors        | 85%           | 10%               | 95%           |
+| Factories         | 95%           | 5%                | 100%          |
+| Jobs              | 70%           | 15%               | 85%           |
+| **Overall** | **80%** | **10%**     | **90%** |
 
 ### Key Principles
 
@@ -2287,16 +2310,7 @@ def test_b():
 4. Document test writing guidelines for team
 5. Create test templates for new features
 
-
 ---
-
-## Additional Resources
-
-- **Architecture Audit**: See `ETL_ARCHITECTURE_AUDIT.md` for detailed analysis
-- **Refactoring Plans**: See `REFACTORING_PLAN_*.md` for design decisions
-- **Implementation Summary**: See `IMPLEMENTATION_SUMMARY.md` for what was built
-- **Testing Examples**: See `TESTING_EXAMPLES.md` for test patterns
-- **Task Updates**: See `RECOMMENDED_TASK_UPDATES.md` for migration guide
 
 ---
 

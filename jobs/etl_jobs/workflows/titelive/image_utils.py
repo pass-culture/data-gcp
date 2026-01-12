@@ -9,8 +9,7 @@ from google.cloud import storage
 from requests.adapters import HTTPAdapter
 from tqdm import tqdm
 from urllib3.util.retry import Retry
-
-from jobs.titelive.logging_utils import get_logger
+from workflows.titelive.logging_utils import get_logger
 
 logger = get_logger(__name__)
 

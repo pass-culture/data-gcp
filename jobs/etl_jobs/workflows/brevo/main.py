@@ -7,8 +7,8 @@ import typer
 
 # Decoupled internal imports
 from factories.brevo import BrevoFactory
-from jobs.brevo.config import UPDATE_WINDOW, get_api_configuration
-from jobs.brevo.tasks import (
+from workflows.brevo.config import UPDATE_WINDOW, get_api_configuration
+from workflows.brevo.tasks import (
     run_async_transactional_etl,
     run_newsletter_etl,
     run_transactional_etl,

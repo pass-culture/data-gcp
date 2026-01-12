@@ -8,7 +8,7 @@ GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 
 # BigQuery Tables
-BIGQUERY_DATASET = f"raw_{ENV_SHORT_NAME}"
+BIGQUERY_DATASET = f"sandbox_{ENV_SHORT_NAME}"
 DEFAULT_SOURCE_TABLE = (
     f"{GCP_PROJECT_ID}.raw_{ENV_SHORT_NAME}.applicative_database_product"
 )

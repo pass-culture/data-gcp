@@ -4,8 +4,7 @@ import json
 from datetime import datetime
 
 import pandas as pd
-
-from jobs.titelive.logging_utils import get_logger
+from workflows.titelive.logging_utils import get_logger
 
 logger = get_logger(__name__)
 

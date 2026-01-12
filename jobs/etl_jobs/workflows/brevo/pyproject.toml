@@ -1,7 +1,31 @@
+[project]
+name = "brevo"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "factories",
+    "google-cloud-bigquery>=3.0",
+    "google-cloud-storage>=2.16",
+    "pandas>=2.0",
+    "pandas-gbq>=0.19",
+    "pyarrow>=14.0",
+    "typer>=0.12",
+]
+
+[tool.uv.sources]
+factories = { workspace = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.
 [tool.ruff]
-target-version = 'py39'
+target-version = 'py310'
 
 lint.select = ["E4", "E7", "E9", "F", "I"]
 # TARGET : lint.select = [

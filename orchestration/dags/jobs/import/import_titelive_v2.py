@@ -20,7 +20,6 @@ DAG_NAME = "import_titelive_v2"
 GCE_INSTANCE = f"import-titelive-{ENV_SHORT_NAME}-v2"
 BASE_DIR = "data-gcp/jobs/etl_jobs/"
 
-# Environment Configuration
 
 PRIORITY_WEIGHT = 1000
 WEIGHT_RULE = "absolute"
@@ -101,10 +100,10 @@ with DAG(
     fetch_install_code = InstallDependenciesOperator(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
+        package="titelive",
         branch="{{ params.branch }}",
         python_version="3.12",
         base_dir=BASE_DIR,
-        requirement_file="jobs/titelive/requirements.txt",
         retries=2,
         priority_weight=PRIORITY_WEIGHT,
         weight_rule=WEIGHT_RULE,
@@ -139,7 +138,7 @@ with DAG(
             "TITELIVE_USE_BURST_RECOVERY": "{{ 'true' if params.use_burst_recovery else 'false' }}",
         },
         command="""
-            python -m jobs.titelive.main run-init \
+            uv run python -m workflows.titelive.main run-init \
             {% if params['resume'] %}--resume {% endif %}\
             {% if params['reprocess_failed'] %}--reprocess-failed {% endif %}
         """,
@@ -158,7 +157,7 @@ with DAG(
             "TITELIVE_USE_BURST_RECOVERY": "{{ 'true' if params.use_burst_recovery else 'false' }}",
         },
         command="""
-            python -m jobs.titelive.main run-incremental
+            uv run python -m workflows.titelive.main run-incremental
         """,
         priority_weight=PRIORITY_WEIGHT,
         weight_rule=WEIGHT_RULE,
@@ -174,7 +173,7 @@ with DAG(
             "TITELIVE_USE_BURST_RECOVERY": "{{ 'true' if params.use_burst_recovery else 'false' }}",
         },
         command="""
-            python -m jobs.titelive.main download-images \
+            uv run python -m workflows.titelive.main download-images \
             {% if params['download_images_reprocess_failed'] %}--reprocess-failed {% endif %}
         """,
         deferrable=True,
@@ -192,7 +191,7 @@ with DAG(
             "TITELIVE_USE_BURST_RECOVERY": "{{ 'true' if params.use_burst_recovery else 'false' }}",
         },
         command="""
-            python -m jobs.titelive.main download-images \
+            uv run python -m workflows.titelive.main download-images \
             {% if params['download_images_reprocess_failed'] %}--reprocess-failed {% endif %}
         """,
         deferrable=False,

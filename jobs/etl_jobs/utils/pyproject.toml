@@ -1,0 +1,14 @@
+[project]
+name = "utils"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "google-cloud-secret-manager>=2.20",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

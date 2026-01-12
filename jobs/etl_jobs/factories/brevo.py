@@ -7,8 +7,7 @@ from http_tools.circuit_breakers import CircuitBreaker, CircuitBreakerConfig
 from http_tools.clients import AsyncHttpClient, SyncHttpClient
 from http_tools.retry_strategies import RetryPolicy, create_retry_strategy
 from utils.gcp import access_secret_data
-
-from jobs.brevo.config import GCP_PROJECT, get_api_configuration
+from workflows.brevo.config import GCP_PROJECT, get_api_configuration
 
 logger = logging.getLogger(__name__)
 

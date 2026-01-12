@@ -4,13 +4,12 @@ from typing import Literal
 
 import pandas as pd
 from google.cloud import bigquery
-
-from jobs.titelive.config import (
+from workflows.titelive.config import (
     PRODUCT_MEDIATION_TABLE,
     PRODUCT_TABLE,
     TITELIVE_PROVIDER_IDS,
 )
-from jobs.titelive.logging_utils import get_logger
+from workflows.titelive.logging_utils import get_logger
 
 logger = get_logger(__name__)
 

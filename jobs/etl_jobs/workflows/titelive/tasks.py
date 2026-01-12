@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 import pandas as pd
 from factories.titelive import TiteliveFactory
 from google.cloud import bigquery, storage
-from jobs.titelive.batching import calculate_total_pages
-from jobs.titelive.config import (
+from workflows.titelive.batching import calculate_total_pages
+from workflows.titelive.config import (
     DE_DATALAKE_BUCKET_NAME,
     DEFAULT_BATCH_SIZE,
     DEFAULT_TARGET_TABLE,
@@ -25,12 +25,12 @@ from jobs.titelive.config import (
     RESULTS_PER_PAGE,
     TiteliveCategory,
 )
-from jobs.titelive.image_utils import (
+from workflows.titelive.image_utils import (
     _get_session,
     batch_download_and_upload,
     calculate_url_uuid,
 )
-from jobs.titelive.load import (
+from workflows.titelive.load import (
     count_failed_eans,
     count_failed_image_downloads,
     count_pending_image_downloads,
@@ -52,9 +52,9 @@ from jobs.titelive.load import (
     insert_dataframe,
     update_image_download_results,
 )
-from jobs.titelive.logging_utils import DailyStats, RunStats, get_logger
-from jobs.titelive.processing import process_eans_batch
-from jobs.titelive.transform import extract_gencods_from_search_response
+from workflows.titelive.logging_utils import DailyStats, RunStats, get_logger
+from workflows.titelive.processing import process_eans_batch
+from workflows.titelive.transform import extract_gencods_from_search_response
 
 logger = get_logger(__name__)
 

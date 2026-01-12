@@ -1,0 +1,23 @@
+[project]
+name = "connectors"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "http_tools",
+    "utils",
+]
+
+[project.optional-dependencies]
+titelive = []
+brevo = []
+
+[tool.uv.sources]
+http_tools = { workspace = true }
+utils = { workspace = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

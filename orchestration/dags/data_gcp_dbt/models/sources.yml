@@ -155,7 +155,6 @@ sources:
       - name: qualtrics_exported_venue_account
       - name: qpi_answers_historical
       - name: qpi_answers_v4
-      - name: past_offer_context
       - name: raw_dms_jeunes
       - name: raw_dms_pro
       - name: run_googleapis_com_stderr

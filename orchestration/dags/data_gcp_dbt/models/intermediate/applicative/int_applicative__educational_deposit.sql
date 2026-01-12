@@ -1,6 +1,6 @@
 select
     ed.educational_deposit_id,
-    ed.educational_institution_id,
+    ed.educational_institution_id as institution_id,
     ed.educational_deposit_creation_date,
     ed.educational_deposit_amount,
     ey.educational_year_beginning_date,

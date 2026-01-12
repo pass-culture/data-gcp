@@ -4,13 +4,27 @@ models:
   - name: mrt_global__educational_deposit
     description: "{{ doc('description__mrt_global__educational_deposit') }}"
     columns:
+      - name: educational_deposit_id
+        description: "{{ doc('column__educational_deposit_id') }}"
       - name: institution_id
         description: "{{ doc('column__institution_id') }}"
       - name: educational_year_id
         description: "{{ doc('column__educational_year_id') }}"
+      - name: scholar_year
+        description: "{{ doc('column__scholar_year') }}"
+      - name: calendar_year
+        description: "{{ doc('column__calendar_year') }}"
+      - name: educational_deposit_period
+        description: "{{ doc('column__educational_deposit_period') }}"
       - name: institution_department_code
         description: "{{ doc('column__institution_department_code') }}"
       - name: institution_academy_name
         description: "{{ doc('column__institution_academy_name') }}"
       - name: educational_deposit_amount
         description: "{{ doc('column__educational_deposit_amount') }}"
+      - name: is_current_scholar_year
+        description: "{{ doc('column__is_current_scholar_year') }}"
+      - name: is_current_calendar_year
+        description: "{{ doc('column__is_current_calendar_year') }}"
+      - name: is_current_deposit
+        description: "{{ doc('column__is_current_deposit') }}"

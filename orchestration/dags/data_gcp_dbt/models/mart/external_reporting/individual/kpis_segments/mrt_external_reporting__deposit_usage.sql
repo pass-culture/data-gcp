@@ -27,11 +27,12 @@
             safe_divide(sum(total_deposit_amount), count(distinct user_id)), 0
         ) as kpi
     from {{ ref("mrt_global__user_beneficiary") }}
-    {% if is_incremental() %}
-        where
-            date_trunc(last_deposit_expiration_date, month)
+    where
+        current_deposit_type in ("GRANT_18", "GRANT_17_18")
+        {% if is_incremental() %}
+            and date_trunc(last_deposit_expiration_date, month)
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-    {% endif %}
+        {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
 {% endfor %}
 union all
@@ -51,10 +52,11 @@ union all
             safe_divide(sum(total_actual_amount_spent), count(distinct user_id)), 0
         ) as kpi
     from {{ ref("mrt_global__user_beneficiary") }}
-    {% if is_incremental() %}
-        where
-            date_trunc(last_deposit_expiration_date, month)
+    where
+        current_deposit_type in ("GRANT_18", "GRANT_17_18")
+        {% if is_incremental() %}
+            and date_trunc(last_deposit_expiration_date, month)
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-    {% endif %}
+        {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
 {% endfor %}

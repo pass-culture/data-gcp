@@ -1,12 +1,12 @@
 """Titelive ETL tasks: init, incremental, and image download modes."""
 
 import json
+import os
 from datetime import datetime, timedelta
 
 import pandas as pd
 from factories.titelive import TiteliveFactory
 from google.cloud import bigquery, storage
-
 from jobs.titelive.batching import calculate_total_pages
 from jobs.titelive.config import (
     DE_DATALAKE_BUCKET_NAME,
@@ -108,9 +108,12 @@ def run_init(
 
     # Initialize clients
     bq_client = bigquery.Client(project=project_id)
+    use_burst_recovery = (
+        os.getenv("TITELIVE_USE_BURST_RECOVERY", "false").lower() == "true"
+    )
     api_client = TiteliveFactory.create_connector(
         project_id=project_id,
-        use_burst_recovery=False,  # Keep conservative for Phase 1
+        use_burst_recovery=use_burst_recovery,
         use_enhanced_retry=True,
         use_circuit_breaker=True,
     )
@@ -285,9 +288,12 @@ def run_incremental(
 
     # Initialize clients
     bq_client = bigquery.Client(project=project_id)
+    use_burst_recovery = (
+        os.getenv("TITELIVE_USE_BURST_RECOVERY", "false").lower() == "true"
+    )
     api_client = TiteliveFactory.create_connector(
         project_id=project_id,
-        use_burst_recovery=False,  # Keep conservative for Phase 1
+        use_burst_recovery=use_burst_recovery,
         use_enhanced_retry=True,
         use_circuit_breaker=True,
     )

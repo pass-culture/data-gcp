@@ -51,6 +51,7 @@ select
     collective_offer_template_beginning_date,
     collective_offer_template_ending_date,
     collective_stock_price,
+    collective_stock_price_detail,
     collective_stock_number_of_tickets,
     offerer_address_id
 from {{ ref("int_global__collective_offer") }}

@@ -135,3 +135,6 @@ models:
       - name: ministry
         description: "{{ doc('column__ministry') }}"
         data_type: STRING
+      - name: educational_deposit_id
+        description: "{{ doc('column__educational_deposit_id') }}"
+        data_type: STRING

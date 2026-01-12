@@ -58,6 +58,7 @@ select
     cb.collective_booking_rank_asc,
     cb.collective_booking_rank_desc,
     co.collective_offer_image_id,
+    co.collective_offer_location_type,
     coalesce(
         (
             cast(ey.educational_year_beginning_date as date) <= current_date

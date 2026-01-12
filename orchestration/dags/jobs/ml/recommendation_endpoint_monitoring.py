@@ -58,8 +58,8 @@ DAG_CONFIG = {
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
     },
     "BIGQUERY": {
-        "INPUT_USER_TABLE": "test_users",
-        "INPUT_ITEM_TABLE": "test_items",
+        "INPUT_USER_TABLE": "endpoint_monitoring_test_users",
+        "INPUT_ITEM_TABLE": "endpoint_monitoring_test_items",
         "OUTPUT_REPORT_TABLE": "endpoint_monitoring_report",
     },
     "STORAGE_PATH": f"gs://{ML_BUCKET_TEMP}/endpoint_monitoring_{ENV_SHORT_NAME}/{DATE}",

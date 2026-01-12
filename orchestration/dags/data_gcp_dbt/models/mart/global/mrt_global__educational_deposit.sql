@@ -1,4 +1,5 @@
 select
+    ed.educational_deposit_id,
     ed.institution_id,
     ed.scholar_year,
     ed.calendar_year,

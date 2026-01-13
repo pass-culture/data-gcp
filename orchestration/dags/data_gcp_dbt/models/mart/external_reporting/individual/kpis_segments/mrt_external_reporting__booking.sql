@@ -27,7 +27,7 @@ with
         from {{ ref("mrt_global__booking") }} as b
         inner join
             {{ ref("mrt_global__user_beneficiary") }} as u on b.user_id = u.user_id
-        where b.booking_status = 'REIMBURSED'
+        where b.booking_is_used
     ),
 
     free_bookable_offers as (

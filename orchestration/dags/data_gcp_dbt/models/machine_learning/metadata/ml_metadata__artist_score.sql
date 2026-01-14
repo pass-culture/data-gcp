@@ -1,13 +1,15 @@
-{{ config(
-    materialized="table",
-    sql_header="""
+{{
+    config(
+        materialized="table",
+        sql_header="""
     -- Smooth ponderation function: goes from 0, growing quickly at the beginning, then
     -- slowing down to reach a maximum of 2 when x -> +infinity
     create temp function smoothponderation(x float64)
     returns float64 as (
         if(x >= 1, (2 * sqrt(x)) / (sqrt(x) + 1), 0.0)
-    );"""
-) }}
+    );""",
+    )
+}}
 
 with
     raw_artist as (
@@ -41,12 +43,12 @@ with
                 ),
                 '|'
             ) as normalized_artist_name
-        from {{ source('raw', 'applicative_database_artist') }}
+        from {{ source("raw", "applicative_database_artist") }}
     ),
 
     raw_product_artist_link as (
         select distinct offer_product_id, artist_id
-        from {{ source('raw', 'applicative_database_product_artist_link') }}
+        from {{ source("raw", "applicative_database_product_artist_link") }}
     ),
 
     raw_product as (
@@ -57,7 +59,7 @@ with
                 offset(0)
             ] as offer_name,
             sum(coalesce(total_individual_bookings, 0)) as total_booking_count
-        from {{ ref('mrt_global__offer') }}
+        from {{ ref("mrt_global__offer") }}
         group by offer_product_id
     ),
 

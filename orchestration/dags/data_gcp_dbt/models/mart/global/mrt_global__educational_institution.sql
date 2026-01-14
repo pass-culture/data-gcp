@@ -79,6 +79,8 @@ select
     ei.institution_program_name,
     ei.first_deposit_creation_date,
     ei.current_deposit_creation_date,
+    ei.total_current_scholar_year_deposit_amount,
+    ei.total_current_calendar_year_deposit_amount,
     cb.first_booking_date,
     cb.last_booking_date,
     sh.total_students,

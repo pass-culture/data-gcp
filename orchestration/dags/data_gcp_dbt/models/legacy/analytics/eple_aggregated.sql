@@ -23,7 +23,7 @@ with
             on eid.institution_id = ed.institution_id
         inner join
             {{ source("raw", "applicative_database_educational_year") }} as ey
-            on ed.educational_year_id = ey.educational_year_id
+            on ed.scholar_year = ey.scholar_year
     ),
 
     eple_bookings as (

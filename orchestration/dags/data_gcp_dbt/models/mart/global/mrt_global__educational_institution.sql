@@ -98,6 +98,12 @@ select
     ei.institution_internal_iris_id,
     ei.institution_postal_code,
     coalesce(ei.current_deposit_amount, 0) as current_deposit_amount,
+    coalesce(
+        ei.total_scholar_year_deposit_amount, 0
+    ) as current_scholar_year_deposit_amount,
+    coalesce(
+        ei.total_calendar_year_deposit_amount, 0
+    ) as current_calendar_year_deposit_amount,
     coalesce(ei.total_deposit_amount, 0) as total_deposit_amount,
     coalesce(ei.total_deposits, 0) as total_deposits,
     coalesce(

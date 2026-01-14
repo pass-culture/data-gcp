@@ -19,7 +19,7 @@ dependencies = [
     "tensorflow==2.14.0",
     "keras==2.14.0",
     "loguru==0.6.0",
-    "mlflow==2.20.1",
+    "mlflow>=3.8.1",
     "numpy==1.26.4",
     "pandas>=1.5.3",
     "db-dtypes==1.4.3",

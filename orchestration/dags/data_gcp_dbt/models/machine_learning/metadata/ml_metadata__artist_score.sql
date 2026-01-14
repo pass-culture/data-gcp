@@ -154,10 +154,10 @@ with
                 then cast(wikidata_id is not null as int64)
                 -- ELSE, we convert the condition (is it the first?) to 1 or 0
                 else cast(rank_in_group = 1 as int64)
-            end as score_multiplier
+            end as namesake_score
         from namesake_computations
     )
 
-select *, artist_raw_score * score_multiplier as final_artist_score
+select *, artist_raw_score * namesake_score * bookable_score as artist_score
 from artist_with_final_score
-order by normalized_artist_name asc, artist_raw_score desc
+order by normalized_artist_name asc, artist_score desc

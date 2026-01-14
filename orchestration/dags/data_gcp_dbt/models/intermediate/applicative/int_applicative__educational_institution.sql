@@ -4,13 +4,15 @@ with
             institution_id,
             max(case when deposit_rank_asc = 1 then ministry end) as ministry,
             max(
-                case when deposit_rank_asc = 1 then deposit_creation_date end
+                case
+                    when deposit_rank_asc = 1 then educational_deposit_creation_date
+                end
             ) as first_deposit_creation_date,
             max(
                 case when is_current_deposit then educational_deposit_amount end
             ) as current_deposit_amount,
             max(
-                case when is_current_deposit then deposit_creation_date end
+                case when is_current_deposit then educational_deposit_creation_date end
             ) as current_deposit_creation_date,
             sum(educational_deposit_amount) as total_deposit_amount,
             count(*) as total_deposits

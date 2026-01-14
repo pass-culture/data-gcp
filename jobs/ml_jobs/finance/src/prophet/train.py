@@ -1,12 +1,15 @@
 import datetime
-import json
 import math
+from pathlib import Path
 
 import pandas as pd
+import yaml
 from loguru import logger
 from prophet import Prophet
 
 from src.utils.bigquery import load_table
+
+CONFIG_DIR = Path(__file__).parent / "prophet_model_configs"
 
 
 def load_data_and_params(
@@ -28,8 +31,9 @@ def load_data_and_params(
     if cv:
         train_prop = 1.0
         logger.info("CV enabled: using all data for training")
-    with open(f"prophet_params/{model_name}.json") as f:
-        train_params = json.load(f)
+    config_path = CONFIG_DIR / f"{model_name}.yaml"
+    with config_path.open() as f:
+        train_params = yaml.safe_load(f)
     return df, train_params, train_prop
 
 
@@ -197,7 +201,8 @@ def fit_prophet_model(
         adding_country_holidays: Boolean, whether to add country holidays.
         add_monthly_seasonality: Boolean, whether to add custom monthly seasonality.
         monthly_fourier_order: Fourier order for the monthly seasonality.
-        pass_culture_months: List of months for special seasonality events.
+        pass_culture_months: List of months for special seasonality events related to
+                            pass culture.
     Returns:
         Trained Prophet model.
     """

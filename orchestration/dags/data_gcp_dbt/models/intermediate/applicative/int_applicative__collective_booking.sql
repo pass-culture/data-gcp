@@ -21,7 +21,7 @@ select
     ed.is_current_deposit,
     ed.is_current_scholar_year,
     ed.scholar_year as deposit_scholar_year,
-    ed.is_current_calendar_year_deposit,
+    ed.is_current_calendar_year as is_current_calendar_year_deposit,
     date(cb.collective_booking_creation_date) as collective_booking_creation_date,
     cb.collective_booking_cancellation_date
     is not null as collective_booking_is_cancelled,

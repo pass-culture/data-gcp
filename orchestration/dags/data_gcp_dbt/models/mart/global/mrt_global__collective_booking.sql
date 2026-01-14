@@ -58,7 +58,7 @@ select
     cb.collective_booking_rank_desc,
     co.collective_offer_image_id,
     co.collective_offer_location_type,
-    cb.is_current_deposit_booking,
+    cb.is_current_deposit as is_current_deposit_booking_booking,
     coalesce(cb.deposit_scholar_year, ey.scholar_year) as scholar_year,
     coalesce(
         (

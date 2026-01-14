@@ -68,11 +68,11 @@ select
         false
     ) as is_current_scholar_year,
     coalesce(
-        (
-            extract(year from cb.collective_booking_creation_date)
-            = extract(year from current_date),
-            false
-        )
+
+        extract(year from cb.collective_booking_creation_date)
+        = extract(year from current_date),
+        false
+
     ) as is_current_calendar_year_deposit
 from {{ ref("int_applicative__collective_booking") }} as cb
 inner join

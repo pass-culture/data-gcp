@@ -125,8 +125,6 @@ models:
         description: "{{ doc('column__collective_offer_image_id') }}"
       - name: is_current_scholar_year
         description: "{{ doc('column__is_current_scholar_year') }}"
-      - name: is_current_calendar_year
-        description: "{{ doc('column__is_current_calendar_year') }}"
       - name: is_local_authority
         description: "{{ doc('column__is_local_authority') }}"
         data_type: BOOLEAN
@@ -141,4 +139,13 @@ models:
         data_type: STRING
       - name: collective_offer_location_type
         description: "{{ doc('column__collective_offer_location_type') }}"
+        data_type: STRING
+      - name: collective_offer_location_type
+        description: "{{ doc('column__collective_offer_location_type') }}"
+        data_type: STRING
+      - name: is_current_calendar_year_deposit
+        description: "{{ doc('column__is_current_calendar_year_deposit') }}"
+        data_type: STRING
+      - name: is_current_calendar_year_deposit
+        description: "{{ doc('column__is_current_deposit') }}"
         data_type: STRING

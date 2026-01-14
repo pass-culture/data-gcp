@@ -114,3 +114,7 @@ models:
         description: "{{ doc('column__institution_internal_iris_id') }}"
       - name: institution_postal_code
         description: "{{ doc('column__institution_postal_code') }}"
+      - name: total_current_calendar_year_deposit_amount
+        description: "{{ doc('column__total_current_calendar_year_deposit_amount') }}"
+      - name: total_current_scholar_year_deposit_amount
+        description: "{{ doc('column__total_current_scholar_year_deposit_amount') }}"

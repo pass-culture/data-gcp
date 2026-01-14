@@ -1,44 +1,46 @@
-create temp function smoothponderation(x float64)
-returns float64
-as (if(x >= 1, (2 * sqrt(x)) / (sqrt(x) + 1), 0.0))
-;
-
-create temp function normalizestring(s string)
-returns string
-as
-    (
-        array_to_string(
-            array(
-                select part
-                from
-                    unnest(
-                        split(
-                            regexp_replace(
-                                lower(
-                                    -- 1. Nettoyage des accents
-                                    regexp_replace(normalize(s, nfd), r'\p{M}', '')
-                                -- 2. Remplacer les espaces (\s) OU les tirets (-) par
-                                -- un espace unique
-                                ),
-                                r'[\s-]+',
-                                ' '
-                            ),
-                            ' '
-                        )  -- 3. On coupe sur l'espace
-                    ) as part
-                -- 3. Filtre pour éviter les chaines vides si le nom commence/finit
-                -- par un tiret
-                where part != ''
-                order by part
-            ),
-            '|'
-        )
-    )
-;
+{{ config(
+    materialized="table",
+    sql_header="""
+    -- Smooth ponderation function: goes from 0, growing quickly at the beginning, then
+    -- slowing down to reach a maximum of 2 when x -> +infinity
+    create temp function smoothponderation(x float64)
+    returns float64 as (
+        if(x >= 1, (2 * sqrt(x)) / (sqrt(x) + 1), 0.0)
+    );"""
+) }}
 
 with
     raw_artist as (
-        select *, normalizestring(artist_name) as normalized_artist_name
+        select
+            *,
+            array_to_string(
+                array(
+                    select part
+                    from
+                        unnest(
+                            split(
+                                regexp_replace(
+                                    lower(
+                                        -- 1. Clean accents
+                                        regexp_replace(
+                                            normalize(artist_name, nfd), r'\p{M}', ''
+                                        )
+                                    -- 2. Replace spaces or hyphens by a unique
+                                    -- separator
+                                    ),
+                                    r'[\s-]+',
+                                    ' '
+                                ),
+                                ' '
+                            )
+                        ) as part
+                    -- 3. Filter to avoid empty strings if the name starts/ends with a
+                    -- hyphen
+                    where part != ''
+                    order by part
+                ),
+                '|'
+            ) as normalized_artist_name
         from {{ source('raw', 'applicative_database_artist') }}
     ),
 

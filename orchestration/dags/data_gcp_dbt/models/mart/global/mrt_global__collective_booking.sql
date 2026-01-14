@@ -73,7 +73,7 @@ select
             = extract(year from current_date),
             false
         )
-    ) as is_current_calendar_year
+    ) as is_current_calendar_year_deposit
 from {{ ref("int_applicative__collective_booking") }} as cb
 inner join
     {{ ref("int_global__collective_offer") }} as co

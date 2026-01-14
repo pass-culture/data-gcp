@@ -211,7 +211,7 @@ def log_full_forecast(
     model: Prophet,
     df: pd.DataFrame,
     train_params: dict,
-    OOS_end_date: str,
+    backtest_end_date: str,
     target_name: str,
 ) -> None:
     """Generate and log full forecast to MLflow.
@@ -219,12 +219,12 @@ def log_full_forecast(
         model: Trained Prophet model.
         df: Original DataFrame with historical data.
         train_params: Dictionary with training parameters including 'freq'.
-        OOS_end_date: String, end date of out-of-sample period (YYYY-MM-DD).
+        backtest_end_date: String, end date of out-of-sample period (YYYY-MM-DD).
         target_name: String, name of the target variable column.
     Returns: None
     """
     df_forecast_full = create_full_prediction_dataframe(
-        start_date=OOS_end_date,
+        start_date=backtest_end_date,
         end_date="2026-12-31",
         freq=train_params.get("freq"),
         cap=df[target_name].max() * 1.2,

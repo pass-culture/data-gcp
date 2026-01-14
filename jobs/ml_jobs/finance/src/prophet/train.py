@@ -37,7 +37,7 @@ def clean_and_prepare_df(
     df: pd.DataFrame,
     date_column_name: str,
     target_name: str,
-    OOS_end_date: str,
+    out_of_sample_end_date: str,
     pass_culture_months: list[str],
     growth: str,
 ) -> pd.DataFrame:
@@ -46,7 +46,7 @@ def clean_and_prepare_df(
 
     - Converts date column to datetime.
     - Renames columns for Prophet compatibility.
-    - Filters data before OOS_end_date.
+    - Filters data before out_of_sample_end_date.
     - Adds pass_culture_seasonal_effect if needed.
     - Adds floor/cap columns for logistic growth.
 
@@ -54,7 +54,7 @@ def clean_and_prepare_df(
         df: Input dataframe.
         date_column_name: Name of the date column.
         target_name: Name of the target column.
-        OOS_end_date: Out-of-sample end date (exclusive).
+        backtest_end_date: Out-of-sample end date (exclusive).
         pass_culture_months: List of 'MM-YYYY' strings for special seasonality.
         growth: Prophet growth type ("linear" or "logistic").
 
@@ -63,7 +63,7 @@ def clean_and_prepare_df(
     """
     df[date_column_name] = pd.to_datetime(df[date_column_name])
     df = df.rename(columns={date_column_name: "ds", target_name: "y"})
-    df = df[df["ds"] < OOS_end_date].reset_index(drop=True)
+    df = df[df["ds"] < out_of_sample_end_date].reset_index(drop=True)
 
     if pass_culture_months:
         months_years = set(pass_culture_months)
@@ -78,8 +78,8 @@ def clean_and_prepare_df(
 
 def split_train_test_backtest(
     df: pd.DataFrame,
-    IS_start_date: str,
-    OOS_start_date: str,
+    train_start_date: str,
+    backtest_start_date: str,
     train_prop: float,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
@@ -87,21 +87,22 @@ def split_train_test_backtest(
 
     Args:
         df: Cleaned dataframe with 'ds' and 'y' columns.
-        IS_start_date: In-sample start date (inclusive).
-        OOS_start_date: Out-of-sample start date (inclusive).
+        train_start_date: In-sample start date (inclusive).
+        backtest_start_date: Out-of-sample start date (inclusive).
         train_prop: Proportion of train in the in-sample dataset.
     Returns:
         tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:(df_train, df_test, df_backtest)
     """
-    df_IS = df[
-        (df["ds"] >= datetime.datetime.fromisoformat(IS_start_date))
-        & (df["ds"] <= datetime.datetime.fromisoformat(OOS_start_date))
+    df_in_sample = df[
+        (df["ds"] >= datetime.datetime.fromisoformat(train_start_date))
+        & (df["ds"] <= datetime.datetime.fromisoformat(backtest_start_date))
     ]
-    df_OOS = df[df["ds"] > datetime.datetime.fromisoformat(OOS_start_date)]
-    train_cuttoff = math.ceil(df_IS.shape[0] * train_prop)
-    df_train = df_IS.iloc[:train_cuttoff].copy().reset_index(drop=True)
-    df_test = df_IS.iloc[train_cuttoff:].copy().reset_index(drop=True)
-    df_backtest = df_OOS.copy().reset_index(drop=True)
+    df_backtest = df.loc[
+        df["ds"] > datetime.datetime.fromisoformat(backtest_start_date)
+    ].reset_index(drop=True)
+    train_cuttoff = math.ceil(df_in_sample.shape[0] * train_prop)
+    df_train = df_in_sample.iloc[:train_cuttoff].copy().reset_index(drop=True)
+    df_test = df_in_sample.iloc[train_cuttoff:].copy().reset_index(drop=True)
     return df_train, df_test, df_backtest
 
 
@@ -134,9 +135,9 @@ def select_regressor_columns(
 def prepare_data(
     *,
     df: pd.DataFrame,
-    IS_start_date: str,
-    OOS_start_date: str,
-    OOS_end_date: str,
+    train_start_date: str,
+    backtest_start_date: str,
+    backtest_end_date: str,
     target_name: str,
     date_column_name: str,
     train_prop: float,
@@ -149,9 +150,9 @@ def prepare_data(
 
     Args:
         df: Dataframe containing time series data.
-        IS_start_date: In-sample start date.
-        OOS_start_date: Out-of-sample start date.
-        OOS_end_date: Out-of-sample end date.
+        train_start_date: In-sample start date.
+        backtest_start_date: Out-of-sample start date.
+        backtest_end_date: Out-of-sample end date.
         target_name: The y column.
         date_column_name: The column that contains datetime (aka ds in Prophet).
         train_prop: Proportion of train in the in-sample dataset.
@@ -165,12 +166,12 @@ def prepare_data(
         df,
         date_column_name,
         target_name,
-        OOS_end_date,
+        backtest_end_date,
         pass_culture_months,
         growth,
     )
     df_train, df_test, df_backtest = split_train_test_backtest(
-        df_clean, IS_start_date, OOS_start_date, train_prop
+        df_clean, train_start_date, backtest_start_date, train_prop
     )
     df_train, df_test, df_backtest = select_regressor_columns(
         df_train, df_test, df_backtest, regressors

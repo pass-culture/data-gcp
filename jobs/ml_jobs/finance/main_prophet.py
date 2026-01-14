@@ -21,9 +21,9 @@ def main(
     date_column_name: str,
     target_name: str,
     train_prop: float = 0.7,
-    IS_start_date: str,
-    OOS_start_date: str,
-    OOS_end_date: str,
+    train_start_date: str,
+    backtest_start_date: str,
+    backtest_end_date: str,
     cv: bool = True,
     cv_initial: str = "730 days",
     cv_period: str = "180 days",
@@ -39,9 +39,9 @@ def main(
         date_column_name: Name of the date column in the data.
         target_name: Name of the target variable column.
         train_prop: Proportion of data to use for training (if not CV).
-        IS_start_date: In-sample start date (YYYY-MM-DD).
-        OOS_start_date: Out-of-sample start date (YYYY-MM-DD).
-        OOS_end_date: Out-of-sample end date (YYYY-MM-DD).
+        train_start_date: In-sample start date (YYYY-MM-DD).
+        backtest_start_date: Out-of-sample start date (YYYY-MM-DD).
+        backtest_end_date: Out-of-sample end date (YYYY-MM-DD).
         cv: Whether to perform cross-validation.
         cv_initial: Initial training period for CV.
         cv_period: Period between cutoffs for CV.
@@ -65,9 +65,9 @@ def main(
         # Prepare datasets
         df_train, df_test, df_backtest = prepare_data(
             df=df,
-            IS_start_date=IS_start_date,
-            OOS_start_date=OOS_start_date,
-            OOS_end_date=OOS_end_date,
+            train_start_date=train_start_date,
+            backtest_start_date=backtest_start_date,
+            backtest_end_date=backtest_end_date,
             target_name=target_name,
             date_column_name=date_column_name,
             train_prop=train_prop,
@@ -99,7 +99,7 @@ def main(
             backtest,
         )
         log_diagnostic_plots(model, df_train)
-        log_full_forecast(model, df, train_params, OOS_end_date, target_name)
+        log_full_forecast(model, df, train_params, backtest_end_date, target_name)
 
 
 if __name__ == "__main__":

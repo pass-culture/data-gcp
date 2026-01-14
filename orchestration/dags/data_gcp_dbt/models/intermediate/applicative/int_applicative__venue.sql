@@ -58,11 +58,8 @@ with
             ) as total_collective_theoretic_revenue,
             sum(total_collective_real_revenue) as total_collective_real_revenue,
             sum(
-                total_collective_current_calendar_year_real_revenue
-            ) as total_collective_current_calendar_year_real_revenue,
-            sum(
-                total_collective_current_scholar_year_real_revenue
-            ) as total_collective_current_scholar_year_real_revenue,
+                total_collective_current_year_real_revenue
+            ) as total_collective_current_year_real_revenue,
             min(first_collective_booking_date) as first_collective_booking_date,
             max(last_collective_booking_date) as last_collective_booking_date,
             sum(total_non_cancelled_tickets) as total_non_cancelled_tickets,
@@ -193,11 +190,8 @@ select
         o.total_individual_current_year_real_revenue, 0
     ) as total_individual_current_year_real_revenue,
     coalesce(
-        co.total_collective_current_scholar_year_real_revenue, 0
-    ) as total_collective_current_scholar_year_real_revenue,
-    coalesce(
-        co.total_collective_current_calendar_scholar_year_real_revenue, 0
-    ) as total_collective_current_calendar_scholar_year_real_revenue,
+        co.total_collective_current_year_real_revenue, 0
+    ) as total_collective_current_year_real_revenue,
     coalesce(o.total_individual_theoretic_revenue, 0)
     + coalesce(co.total_collective_theoretic_revenue, 0) as total_theoretic_revenue,
     coalesce(o.total_individual_real_revenue, 0)

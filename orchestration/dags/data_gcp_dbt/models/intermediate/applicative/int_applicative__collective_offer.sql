@@ -29,18 +29,11 @@ with
             sum(
                 case
                     when
-                        total_current_scholar_year_non_cancelled_collective_bookings > 0
-                    then collective_stock_number_of_tickets
-                end
-            ) as total_current_scholar_year_non_cancelled_collective_bookings,
-            sum(
-                case
-                    when
                         total_current_calendar_year_non_cancelled_collective_bookings
                         > 0
                     then collective_stock_number_of_tickets
                 end
-            ) as total_current_calendar_year_non_cancelled_collective_bookings
+            ) as total_current_year_non_cancelled_tickets
         from {{ ref("int_applicative__collective_stock") }}
         group by collective_offer_id
     )
@@ -90,11 +83,11 @@ with
             cs.total_used_collective_bookings,
             cs.total_collective_theoretic_revenue,
             cs.total_collective_real_revenue,
-            cs.total_collective_current_scholar_year_real_revenue,
             cs.total_collective_current_calendar_year_real_revenue,
             cs.first_collective_booking_date,
             cs.last_collective_booking_date,
             cs.total_non_cancelled_tickets,
+            cs.total_current_year_non_cancelled_tickets,
             ei.institution_internal_iris_id,
             ei.institution_academy_name,
             ei.institution_region_name,
@@ -169,11 +162,11 @@ union all
         0 as total_used_collective_bookings,
         0 as total_collective_theoretic_revenue,
         0 as total_collective_real_revenue,
-        0 as total_collective_current_scholar_year_real_revenue,
-        0 as total_collective_current_calendar_year_real_revenue,
+        0 as total_collective_current_year_real_revenue,
         null as first_collective_booking_date,
         null as last_collective_booking_date,
         0 as total_non_cancelled_tickets,
+        0 as total_current_year_non_cancelled_tickets,
         null as institution_internal_iris_id,
         null as institution_academy_name,
         null as institution_region_name,

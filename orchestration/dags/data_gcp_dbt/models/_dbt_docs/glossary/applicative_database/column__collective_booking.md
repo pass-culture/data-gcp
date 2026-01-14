@@ -15,3 +15,4 @@
 {% docs column__first_collective_booking_date %} Date of the first collective booking. {% enddocs %}
 {% docs column__last_collective_booking_date %} Date of the last collective booking. {% enddocs %}
 {% docs column__is_current_calendar_year_deposit %} Whether or not the booking is linked to the current calendar year deposit of the school. {% enddocs %}
+{% docs column__is_current_deposit_booking %} Whether or not the booking is linked to the current deposit of the school. {% enddocs %}

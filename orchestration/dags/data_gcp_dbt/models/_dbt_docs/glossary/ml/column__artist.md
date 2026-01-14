@@ -23,3 +23,4 @@
 {% docs column__artist_total_venues %} Total venues that created offers related to the artist.{% enddocs %}
 {% docs column__artist_total_artist_types %} Total distinct type (author/performer) related to the artist in the base.{% enddocs %}
 {% docs column__artist_total_bookings %} Total bookings on offers related to the artist.{% enddocs %}
+{% docs column__artist_score %}Score of the artist computed by the DS team.{% enddocs %}

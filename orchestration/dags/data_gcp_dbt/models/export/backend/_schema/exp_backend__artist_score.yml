@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: exp_backend__artist_score
+    description: "{{ doc('description__exp_backend__artist_score') }}"
+    columns:
+      - name: artist_id
+        description: "{{ doc('column__artist_id') }}"
+        data_tests:
+          - not_null
+          - unique
+      - name: artist_score
+        description: "{{ doc('column__artist_score') }}"
+        data_tests:
+          - not_null

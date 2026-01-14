@@ -38,7 +38,7 @@ with
         group by collective_offer_id
     )
 
-    (
+
         select
             co.collective_offer_audio_disability_compliant,
             co.collective_offer_mental_disability_compliant,
@@ -119,9 +119,9 @@ with
             {{ ref("int_applicative__educational_institution") }} as ei
             on co.institution_id = ei.educational_institution_id
 
-    )
+
 union all
-(
+
     select
         collective_offer_audio_disability_compliant,
         collective_offer_mental_disability_compliant,
@@ -192,4 +192,4 @@ union all
         true as collective_offer_is_template,
         offerer_address_id
     from {{ source("raw", "applicative_database_collective_offer_template") }}
-)
+

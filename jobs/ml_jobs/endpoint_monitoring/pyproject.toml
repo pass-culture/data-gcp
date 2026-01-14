@@ -10,14 +10,14 @@ dependencies = [
     "google-cloud-secret-manager>=2.4.0",
     "ipykernel>=6.30.0",
     "pandas==2.2.0",
-    "pyarrow==13.0.0",
+    "pyarrow>=13.0.0",
     "pytest==8.2.2",
     "ruff>=0.12.4",
     "streamlit==1.35.0",
     "tornado==6.4.2",
     "typer==0.12.3",
-    "tensorflow==2.14.0",
-    "keras==2.14.0",
+    "tensorflow>=2.14.0",
+    "keras>=2.14.0",
     "loguru==0.6.0",
     "mlflow>=3.8.1",
     "numpy==1.26.4",
@@ -65,3 +65,9 @@ runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 # Pydantic needs to be able to evaluate types at runtime
 # see https://pypi.org/project/flake8-type-checking/ for flake8-type-checking documentation
 # see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation
+
+[tool.uv]
+environments = [
+    "sys_platform == 'darwin'",
+    "sys_platform == 'linux'",
+]

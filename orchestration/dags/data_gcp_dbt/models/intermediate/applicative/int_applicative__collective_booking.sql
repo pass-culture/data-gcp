@@ -19,7 +19,7 @@ select
     ey.educational_year_beginning_date,
     ey.educational_year_expiration_date,
     ed.is_current_deposit,
-    ed.is_current_scholar_year_deposit,
+    ed.is_current_scholar_year as is_current_scholar_year_deposit,
     ed.scholar_year as deposit_scholar_year,
     ed.is_current_calendar_year_deposit,
     cb.collective_booking_cancellation_date,

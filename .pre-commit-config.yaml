@@ -35,7 +35,7 @@ repos:
       - id: sqlfmt
         language_version: python
         additional_dependencies: ['.[jinjafmt]']
-        exclude: orchestration/dags/dependencies/applicative_database/sql/raw/.*\.sql$
+        exclude: orchestration/dags/dependencies/applicative_database/sql/raw/.*\.sql$|orchestration/dags/data_gcp_dbt/snapshots/.*\.sql$
 
   - repo: https://github.com/sqlfluff/sqlfluff
     rev: 3.3.0

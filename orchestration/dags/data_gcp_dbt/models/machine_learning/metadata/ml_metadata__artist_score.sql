@@ -89,7 +89,7 @@ with
     artist_with_stats as (
         select
             raw_artist.*,
-            coalesce(artist_statistics.artist_product_count, 1) as artist_product_count,
+            coalesce(artist_statistics.artist_product_count, 0) as artist_product_count,
             coalesce(artist_statistics.artist_booking_count, 0) as artist_booking_count,
             coalesce(
                 artist_statistics.artist_bookable_product_count, 0

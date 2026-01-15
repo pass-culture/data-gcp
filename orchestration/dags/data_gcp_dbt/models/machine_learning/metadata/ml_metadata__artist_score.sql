@@ -89,7 +89,7 @@ with
     artist_with_stats as (
         select
             raw_artist.*,
-            coalesce(artist_statistics.artist_product_count, 1) as artist_product_count,
+            coalesce(artist_statistics.artist_product_count, 0) as artist_product_count,
             coalesce(artist_statistics.artist_booking_count, 0) as artist_booking_count,
             coalesce(
                 artist_statistics.artist_bookable_product_count, 0
@@ -120,12 +120,7 @@ with
         select
             artist_with_feature_score.*,
             round(
-                5 * wikidata_score
-                + image_score
-                + bookable_score
-                + booking_score
-                + product_score,
-                2
+                5 * wikidata_score + image_score + booking_score + product_score, 2
             ) as artist_raw_score
         from artist_with_feature_score
     ),

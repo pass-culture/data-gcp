@@ -120,12 +120,7 @@ with
         select
             artist_with_feature_score.*,
             round(
-                5 * wikidata_score
-                + image_score
-                + bookable_score
-                + booking_score
-                + product_score,
-                2
+                5 * wikidata_score + image_score + booking_score + product_score, 2
             ) as artist_raw_score
         from artist_with_feature_score
     ),

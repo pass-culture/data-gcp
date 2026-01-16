@@ -56,6 +56,9 @@ with
             {{ ref("mrt_global__collective_booking") }} as ecbd
             on eple_infos.institution_id = ecbd.educational_institution_id
             and eple_infos.scholar_year = ecbd.scholar_year
+        inner join
+            {{ ref("mrt_global__educational_deposit") }} as ed
+            on ecbd.educational_deposit_id = ed.educational_deposit_id
         group by 1, 2
     )
 

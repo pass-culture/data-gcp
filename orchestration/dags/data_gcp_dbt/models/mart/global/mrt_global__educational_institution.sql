@@ -6,7 +6,8 @@ with
             sum(collective_stock_number_of_tickets) as total_tickets,
             sum(
                 case
-                    when is_current_scholar_year then collective_stock_number_of_tickets
+                    when is_current_scholar_year_booking
+                    then collective_stock_number_of_tickets
                 end
             ) as total_current_year_tickets,
             sum(
@@ -20,21 +21,21 @@ with
                     when
                         (
                             collective_booking_status in ('USED', 'REIMBURSED')
-                            and is_current_scholar_year
+                            and is_current_scholar_year_booking
                         )
                     then booking_amount
                 end
             ) as total_current_year_collective_real_revenue,
             sum(booking_amount) as total_collective_theoretic_revenue,
             sum(
-                case when is_current_scholar_year then booking_amount end
+                case when is_current_scholar_year_booking then booking_amount end
             ) as total_current_year_collective_theoretic_revenue,
             count(
                 case when is_used_collective_booking then collective_booking_id end
             ) as total_used_collective_bookings,
             count(
                 case
-                    when is_used_collective_booking and is_current_scholar_year
+                    when is_used_collective_booking and is_current_scholar_year_booking
                     then collective_booking_id
                 end
             ) as total_current_year_used_collective_bookings,
@@ -43,7 +44,7 @@ with
             ) as total_non_cancelled_collective_bookings,
             count(
                 distinct case
-                    when is_current_scholar_year then collective_booking_id
+                    when is_current_scholar_year_booking then collective_booking_id
                 end
             ) as total_current_year_non_cancelled_collective_bookings,
             max(

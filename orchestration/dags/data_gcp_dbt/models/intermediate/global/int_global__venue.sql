@@ -117,7 +117,7 @@ select
     ofr.is_synchro_adage,
     ofr.total_reimbursement_points,
     ofr.is_local_authority,
-    venue_id as partner_id,
+    v.venue_id as partner_id,
     offerer_is_epn,
     coalesce(
         date_diff(current_date, boh.last_bookable_offer_date, day) <= 30, false

@@ -14,5 +14,6 @@
 {% docs column__collective_booking_is_used %} Boolean. Indicates if the collective booking has been used (the activity took place). {% enddocs %}
 {% docs column__first_collective_booking_date %} Date of the first collective booking. {% enddocs %}
 {% docs column__last_collective_booking_date %} Date of the last collective booking. {% enddocs %}
-{% docs column__is_current_calendar_year_deposit %} Whether or not the booking is linked to the current calendar year deposit of the school. {% enddocs %}
-{% docs column__is_current_deposit_booking %} Whether or not the booking is linked to the current deposit of the school. {% enddocs %}
+{% docs column__is_current_scholar_year_booking %} Whether or not the booking is associated to the current scholar year (scholar year = a year from 1st Sept to 31 Aug, ex : 2024-2025, from 1st Sept 2024 to 31th Aug 2025). {% enddocs %}
+{% docs column__is_current_calendar_year_booking %} Whether or not the booking is associated to the current calendar year (calendar year = a year from 1st of Jan to 31th of dec, ex : 2025 from 01/01 to 12/31). {% enddocs %}
+{% docs column__is_current_deposit_booking %} Whether or not the booking is associated to the current deposit (it can be a period : p1 = sept-déc, p2 = janv-août, all_year = sept-août). {% enddocs %}

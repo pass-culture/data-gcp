@@ -66,14 +66,14 @@ select
             and cast(ey.educational_year_expiration_date as date) >= current_date
         ),
         false
-    ) as is_current_scholar_year,
+    ) as is_current_scholar_year_booking,
     coalesce(
 
         extract(year from cb.collective_booking_creation_date)
         = extract(year from current_date),
         false
 
-    ) as is_current_calendar_year
+    ) as is_current_calendar_year_booking
 from {{ ref("int_applicative__collective_booking") }} as cb
 inner join
     {{ ref("int_global__collective_offer") }} as co

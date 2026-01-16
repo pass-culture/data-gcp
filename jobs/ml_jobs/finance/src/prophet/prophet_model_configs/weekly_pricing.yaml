@@ -8,6 +8,7 @@ prophet_params:
     - "2024-07-03"
     - "2024-12-20"
     - "2025-06-25"
+  changepoint_prior_scale: 0.05
   yearly_seasonality: true
   weekly_seasonality: true
   daily_seasonality: true
@@ -15,15 +16,24 @@ prophet_params:
   seasonality_prior_scale: 1
   interval_width: 0.95
   scaling: absmax
-adding_country_holidays: true
-add_monthly_seasonality: true
-monthly_fourier_order: 5
-pass_culture_months:
-  - "06-2023"
-  - "06-2024"
-  - "06-2025"
-  - "12-2023"
-  - "12-2024"
-  - "12-2025"
-regressors: null
-freq: W-MON
+features:
+  adding_country_holidays: true
+  add_monthly_seasonality: true
+  monthly_fourier_order: 5
+  pass_culture_months:
+    - "06-2023"
+    - "06-2024"
+    - "06-2025"
+    - "12-2023"
+    - "12-2024"
+    - "12-2025"
+  regressors: null
+training:
+  freq: W-MON
+  cv: true
+  train_prop: 0.8
+  date_column_name: pricing_week
+  target_name: weekly_price
+  cv_initial: "100 weeks"
+  cv_period: "3 weeks"
+  cv_horizon: "12 weeks"

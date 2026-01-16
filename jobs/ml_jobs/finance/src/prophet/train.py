@@ -1,186 +1,20 @@
-import datetime
-import math
 from pathlib import Path
 
 import pandas as pd
 import yaml
-from loguru import logger
 from prophet import Prophet
 
-from src.utils.bigquery import load_table
+from src.prophet.model import FullConfig
 
 CONFIG_DIR = Path(__file__).parent / "prophet_model_configs"
 
 
-def load_data_and_params(
-    *, table_name: str, model_name: str, cv: bool, train_prop: float
-) -> tuple[pd.DataFrame, dict, float]:
-    """
-    Docstring for load_data_and_params
+def load_config():
+    with open("config.yaml") as f:
+        raw = yaml.safe_load(f)
 
-    Args:
-        table_name: str
-        model_name: str
-        cv: bool
-        train_prop: float
-
-    returns:
-        tuple[pd.DataFrame, dict, float]
-    """
-    df = load_table(table_name)
-    if cv:
-        train_prop = 1.0
-        logger.info("CV enabled: using all data for training")
-    config_path = CONFIG_DIR / f"{model_name}.yaml"
-    with config_path.open() as f:
-        train_params = yaml.safe_load(f)
-    return df, train_params, train_prop
-
-
-def clean_and_prepare_df(
-    df: pd.DataFrame,
-    date_column_name: str,
-    target_name: str,
-    out_of_sample_end_date: str,
-    pass_culture_months: list[str],
-    growth: str,
-) -> pd.DataFrame:
-    """
-    Cleans and prepares the dataframe for Prophet modelling.
-
-    - Converts date column to datetime.
-    - Renames columns for Prophet compatibility.
-    - Filters data before out_of_sample_end_date.
-    - Adds pass_culture_seasonal_effect if needed.
-    - Adds floor/cap columns for logistic growth.
-
-    Args:
-        df: Input dataframe.
-        date_column_name: Name of the date column.
-        target_name: Name of the target column.
-        backtest_end_date: Out-of-sample end date (exclusive).
-        pass_culture_months: List of 'MM-YYYY' strings for special seasonality.
-        growth: Prophet growth type ("linear" or "logistic").
-
-    Returns:
-        pd.DataFrame: Cleaned dataframe.
-    """
-    df[date_column_name] = pd.to_datetime(df[date_column_name])
-    df = df.rename(columns={date_column_name: "ds", target_name: "y"})
-    df = df[df["ds"] < out_of_sample_end_date].reset_index(drop=True)
-
-    if pass_culture_months:
-        months_years = set(pass_culture_months)
-        df["_month_year"] = df["ds"].dt.strftime("%m-%Y")
-        df["pass_culture_seasonal_effect"] = df["_month_year"].isin(months_years)
-        df.drop(columns=["_month_year"], inplace=True)
-    if growth == "logistic":
-        df["floor"] = 0.0
-        df["cap"] = df["y"].max() * 1.2
-    return df
-
-
-def split_train_test_backtest(
-    df: pd.DataFrame,
-    train_start_date: str,
-    backtest_start_date: str,
-    train_prop: float,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """
-    Splits the dataframe into train, test, and backtest sets.
-
-    Args:
-        df: Cleaned dataframe with 'ds' and 'y' columns.
-        train_start_date: In-sample start date (inclusive).
-        backtest_start_date: Out-of-sample start date (inclusive).
-        train_prop: Proportion of train in the in-sample dataset.
-    Returns:
-        tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:(df_train, df_test, df_backtest)
-    """
-    df_in_sample = df[
-        (df["ds"] >= datetime.datetime.fromisoformat(train_start_date))
-        & (df["ds"] <= datetime.datetime.fromisoformat(backtest_start_date))
-    ]
-    df_backtest = df.loc[
-        df["ds"] > datetime.datetime.fromisoformat(backtest_start_date)
-    ].reset_index(drop=True)
-    train_cuttoff = math.ceil(df_in_sample.shape[0] * train_prop)
-    df_train = df_in_sample.iloc[:train_cuttoff].copy().reset_index(drop=True)
-    df_test = df_in_sample.iloc[train_cuttoff:].copy().reset_index(drop=True)
-    return df_train, df_test, df_backtest
-
-
-def select_regressor_columns(
-    df_train: pd.DataFrame,
-    df_test: pd.DataFrame,
-    df_backtest: pd.DataFrame,
-    regressors: list[str],
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """
-    Keeps only the relevant columns for Prophet modelling.
-
-    Args:
-        df_train: Training dataframe.
-        df_test: Test dataframe.
-        df_backtest: Backtest dataframe.
-        regressors: List of regressor column names.
-    Returns:
-        tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:(df_train, df_test, df_backtest)
-        with selected columns.
-    """
-    if regressors:
-        cols = ["ds", "y", *regressors]
-        df_train = df_train[cols]
-        df_test = df_test[cols]
-        df_backtest = df_backtest[cols]
-    return df_train, df_test, df_backtest
-
-
-def prepare_data(
-    *,
-    df: pd.DataFrame,
-    train_start_date: str,
-    backtest_start_date: str,
-    backtest_end_date: str,
-    target_name: str,
-    date_column_name: str,
-    train_prop: float,
-    pass_culture_months: list[str],
-    growth: str,
-    regressors: list[str],
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """
-    Prepares the data for Prophet model training and evaluation.
-
-    Args:
-        df: Dataframe containing time series data.
-        train_start_date: In-sample start date.
-        backtest_start_date: Out-of-sample start date.
-        backtest_end_date: Out-of-sample end date.
-        target_name: The y column.
-        date_column_name: The column that contains datetime (aka ds in Prophet).
-        train_prop: Proportion of train in the in-sample dataset.
-        pass_culture_months: List of months for special seasonality events.
-        growth: Prophet growth type ("linear" or "logistic").
-        regressors: List of regressor column names.
-    Returns:
-        tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:(df_train, df_test, df_backtest)
-    """
-    df_clean = clean_and_prepare_df(
-        df,
-        date_column_name,
-        target_name,
-        backtest_end_date,
-        pass_culture_months,
-        growth,
-    )
-    df_train, df_test, df_backtest = split_train_test_backtest(
-        df_clean, train_start_date, backtest_start_date, train_prop
-    )
-    df_train, df_test, df_backtest = select_regressor_columns(
-        df_train, df_test, df_backtest, regressors
-    )
-    return df_train, df_test, df_backtest
+    cfg = FullConfig(**raw)
+    return cfg
 
 
 def fit_prophet_model(

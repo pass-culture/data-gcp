@@ -4,14 +4,25 @@ with
             institution_id,
             max(case when deposit_rank_asc = 1 then ministry end) as ministry,
             max(
-                case when deposit_rank_asc = 1 then deposit_creation_date end
+                case
+                    when deposit_rank_asc = 1 then educational_deposit_creation_date
+                end
             ) as first_deposit_creation_date,
             max(
                 case when is_current_deposit then educational_deposit_amount end
             ) as current_deposit_amount,
             max(
-                case when is_current_deposit then deposit_creation_date end
+                case when is_current_deposit then educational_deposit_creation_date end
             ) as current_deposit_creation_date,
+            sum(
+                case when is_current_scholar_year then educational_deposit_amount end
+            ) as total_current_scholar_year_deposit_amount,
+            sum(
+                case
+                    when calendar_year = extract(year from current_date)
+                    then educational_deposit_amount
+                end
+            ) as total_current_calendar_year_deposit_amount,
             sum(educational_deposit_amount) as total_deposit_amount,
             count(*) as total_deposits
         from {{ ref("int_applicative__educational_deposit") }}
@@ -55,6 +66,8 @@ select
     dgi.first_deposit_creation_date,
     dgi.current_deposit_amount,
     dgi.current_deposit_creation_date,
+    dgi.total_current_scholar_year_deposit_amount,
+    dgi.total_current_calendar_year_deposit_amount,
     dgi.total_deposit_amount,
     dgi.total_deposits,
     institution_program.institution_program_name,

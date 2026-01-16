@@ -20,7 +20,6 @@ select
     co.collective_stock_end_date_time,
     cb.educational_institution_id,
     cb.educational_year_id,
-    ey.scholar_year,
     cb.educational_redactor_id,
     co.institution_program_name,
     co.institution_internal_iris_id,
@@ -59,13 +58,22 @@ select
     cb.collective_booking_rank_desc,
     co.collective_offer_image_id,
     co.collective_offer_location_type,
+    cb.is_current_deposit as is_current_deposit_booking,
+    coalesce(cb.deposit_scholar_year, ey.scholar_year) as scholar_year,
     coalesce(
         (
             cast(ey.educational_year_beginning_date as date) <= current_date
             and cast(ey.educational_year_expiration_date as date) >= current_date
         ),
         false
-    ) as is_current_year_booking
+    ) as is_current_scholar_year_booking,
+    coalesce(
+
+        extract(year from cb.collective_booking_creation_date)
+        = extract(year from current_date),
+        false
+
+    ) as is_current_calendar_year_booking
 from {{ ref("int_applicative__collective_booking") }} as cb
 inner join
     {{ ref("int_global__collective_offer") }} as co

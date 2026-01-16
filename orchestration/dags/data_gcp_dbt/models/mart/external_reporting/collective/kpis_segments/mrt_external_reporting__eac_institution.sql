@@ -44,8 +44,8 @@ with recursive
             ms.partition_month,
             ms.scholar_year,
             dep.institution_id,
-            dep.institution_department_code,
-            dep.institution_academy_name,
+            inst.institution_region_name,
+            inst.institution_academy_name,
             inst.institution_epci,
             inst.institution_city
         from {{ ref("mrt_global__educational_deposit") }} as dep
@@ -71,7 +71,7 @@ with recursive
     base_data as (
         select
             base.partition_month,
-            base.institution_department_code,
+            base.institution_region_name,
             base.institution_academy_name,
             base.institution_epci,
             base.institution_city,
@@ -89,7 +89,7 @@ with recursive
             and base.scholar_year = fb.scholar_year
         group by
             base.partition_month,
-            base.institution_department_code,
+            base.institution_region_name,
             base.institution_academy_name,
             base.institution_epci,
             base.institution_city

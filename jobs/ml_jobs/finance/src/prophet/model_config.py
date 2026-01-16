@@ -24,18 +24,27 @@ class FeatureConfig(BaseModel):
     regressors: list[str] | None
 
 
-class TrainingConfig(BaseModel):
-    freq: str
+class DataProcConfig(BaseModel):
     cv: bool
     train_prop: float
+    table_name: str
     date_column_name: str
     target_name: str
+
+
+# Alias for backward compatibility
+DataProcessConfig = DataProcConfig
+
+
+class EvaluationConfig(BaseModel):
     cv_initial: str
     cv_period: str
     cv_horizon: str
+    freq: str
 
 
 class FullConfig(BaseModel):
     prophet: ProphetParams
     features: FeatureConfig
-    training: TrainingConfig
+    data_proc: DataProcessConfig
+    evaluation: EvaluationConfig

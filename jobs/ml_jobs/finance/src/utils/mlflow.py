@@ -1,3 +1,9 @@
+"""MLflow integration utilities for experiment tracking.
+
+This module provides helper functions for setting up MLflow tracking with
+Google Cloud authentication and experiment management.
+"""
+
 import datetime
 import json
 import os
@@ -15,7 +21,15 @@ from src.utils.constants import (
 )
 
 
-def get_secret(secret_id: str):
+def get_secret(secret_id: str) -> str:
+    """Retrieve a secret from Google Cloud Secret Manager.
+
+    Args:
+        secret_id: ID of the secret to retrieve.
+
+    Returns:
+        The secret value as a string.
+    """
     client = secretmanager.SecretManagerServiceClient()
     name = f"projects/{GCP_PROJECT_ID}/secrets/{secret_id}/versions/latest"
     response = client.access_secret_version(name=name)
@@ -23,6 +37,11 @@ def get_secret(secret_id: str):
 
 
 def connect_remote_mlflow() -> None:
+    """Configure MLflow to connect to remote tracking server.
+
+    Sets up authentication using service account credentials from Secret Manager
+    and configures the MLflow tracking URI.
+    """
     service_account_dict = json.loads(get_secret(SA_ACCOUNT))
     mlflow_client_audience = get_secret(MLFLOW_SECRET_NAME)
 
@@ -36,6 +55,14 @@ def connect_remote_mlflow() -> None:
 
 
 def get_mlflow_experiment(experiment_name: str):
+    """Get or create an MLflow experiment.
+
+    Args:
+        experiment_name: Name of the experiment.
+
+    Returns:
+        MLflow experiment object.
+    """
     experiment = mlflow.get_experiment_by_name(experiment_name)
     if experiment is None:
         mlflow.create_experiment(name=experiment_name)
@@ -43,7 +70,19 @@ def get_mlflow_experiment(experiment_name: str):
     return experiment
 
 
-def setup_mlflow(experiment_name, model_name):
+def setup_mlflow(experiment_name: str, model_name: str):
+    """Set up MLflow tracking for a training run.
+
+    Connects to remote MLflow server, gets or creates experiment,
+    and generates a unique run name.
+
+    Args:
+        experiment_name: Name of the MLflow experiment.
+        model_name: Name of the model being trained.
+
+    Returns:
+        Tuple of (experiment, run_name).
+    """
     connect_remote_mlflow()
     experiment = get_mlflow_experiment(experiment_name)
     run_name = f"{model_name}_{datetime.datetime.now():%Y%m%d_%H%M%S}"

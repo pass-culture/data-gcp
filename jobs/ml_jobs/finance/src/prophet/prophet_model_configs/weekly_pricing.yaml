@@ -1,4 +1,4 @@
-prophet_params:
+prophet:
   growth: linear
   changepoints:
     - "2022-12-15"
@@ -28,12 +28,14 @@ features:
     - "12-2024"
     - "12-2025"
   regressors: null
-training:
-  freq: W-MON
+data_proc:
   cv: true
   train_prop: 0.8
+  table_name: pricing_week
   date_column_name: pricing_week
   target_name: weekly_price
+evaluation:
   cv_initial: "100 weeks"
   cv_period: "3 weeks"
   cv_horizon: "12 weeks"
+  freq: W-MON

@@ -1,12 +1,9 @@
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import mlflow
 import pandas as pd
 from loguru import logger
 from prophet import Prophet
-
-from src.prophet.predict import create_full_prediction_dataframe
 
 
 def plot_prophet_changepoints(
@@ -84,7 +81,7 @@ def plot_trend_with_changepoints(
 
 
 def plot_cv_results(
-    perf: pd.DataFrame, metrics: list, output_dir: str = "cv_plots"
+    perf: pd.DataFrame, metrics: list, output_dir: str | Path = "cv_plots"
 ) -> list[str]:
     """
     Plots cross-validation results for specified metrics and saves figures.
@@ -92,13 +89,13 @@ def plot_cv_results(
     Args:
         perf: DataFrame with cross-validation performance metrics.
         metrics: List of metric names to plot.
-        output_dir: Directory to save the plots.
+        output_dir: Directory to save the plots (str or Path).
 
     Returns:
         List of saved plot file paths
     """
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
 
     plot_paths = []
 
@@ -113,7 +110,7 @@ def plot_cv_results(
             ax.legend()
             fig.tight_layout()
 
-            plot_path = output_dir / f"cv_{m}.png"
+            plot_path = output_path / f"cv_{m}.png"
             fig.savefig(plot_path)
             plt.close(fig)
 
@@ -190,47 +187,30 @@ def plot_forecast_vs_actuals(
     return fig
 
 
-def log_diagnostic_plots(model: Prophet, df_train: pd.DataFrame) -> None:
-    """Generate and log diagnostic plots for the Prophet model to MLflow.
+def log_diagnostic_plots(model: Prophet, df_train: pd.DataFrame) -> dict:
+    """Generate diagnostic plots for the Prophet model.
+
     Args:
         model: Trained Prophet model.
         df_train: DataFrame used for training with 'ds' and 'y' columns.
-    Returns: None
+
+    Returns:
+        Dictionary containing:
+            - 'changepoints': Figure showing changepoints on training data
+            - 'trend': Figure showing trend with changepoints
+            - 'components': Figure showing Prophet components
     """
+    logger.info("Generating diagnostic plots")
+
     fig_cp = plot_prophet_changepoints(model, df_train)
-    mlflow.log_figure(fig_cp, "plots/changepoints_train.png")
     forecast_train = model.predict(df_train)
     fig_trend = plot_trend_with_changepoints(forecast_train, model.changepoints)
-    mlflow.log_figure(fig_trend, "plots/trend_changepoints.png")
     fig_components = model.plot_components(forecast_train)
-    mlflow.log_figure(fig_components, "plots/components.png")
-    logger.info("MLflow run completed successfully.")
 
+    logger.info("Diagnostic plots generated successfully")
 
-def log_full_forecast(
-    model: Prophet,
-    df: pd.DataFrame,
-    train_params: dict,
-    backtest_end_date: str,
-    target_name: str,
-) -> None:
-    """Generate and log full forecast to MLflow.
-    Args:
-        model: Trained Prophet model.
-        df: Original DataFrame with historical data.
-        train_params: Dictionary with training parameters including 'freq'.
-        backtest_end_date: String, end date of out-of-sample period (YYYY-MM-DD).
-        target_name: String, name of the target variable column.
-    Returns: None
-    """
-    df_forecast_full = create_full_prediction_dataframe(
-        start_date=backtest_end_date,
-        end_date="2026-12-31",
-        freq=train_params.get("freq"),
-        cap=df[target_name].max() * 1.2,
-        floor=0.0,
-    )
-    full_forecast = model.predict(df_forecast_full)
-    full_forecast_xlsx = "full_forecast.xlsx"
-    full_forecast.to_excel(full_forecast_xlsx, index=False)
-    mlflow.log_artifact(full_forecast_xlsx, artifact_path="data")
+    return {
+        "changepoints": fig_cp,
+        "trend": fig_trend,
+        "components": fig_components,
+    }

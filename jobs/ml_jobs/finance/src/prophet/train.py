@@ -1,63 +1,71 @@
-from pathlib import Path
-
 import pandas as pd
-import yaml
+from loguru import logger
 from prophet import Prophet
 
-from src.prophet.model import FullConfig
-
-CONFIG_DIR = Path(__file__).parent / "prophet_model_configs"
-
-
-def load_config():
-    with open("config.yaml") as f:
-        raw = yaml.safe_load(f)
-
-    cfg = FullConfig(**raw)
-    return cfg
+from src.prophet.model_config import FullConfig
 
 
 def fit_prophet_model(
     df_train: pd.DataFrame,
-    prophet_params: dict,
-    *,
-    regressors: list[str],
-    adding_country_holidays: bool,
-    add_monthly_seasonality: bool,
-    monthly_fourier_order: int,
-    pass_culture_months: list[str],
+    full_config: FullConfig,
 ) -> Prophet:
     """Fit a Prophet model with specified parameters and additional features.
     Args:
         df_train: Training dataframe with 'ds' and 'y' columns.
-        prophet_params: Dictionary of Prophet parameters.
-        regressors: List of regressor column names to add to the model.
-        adding_country_holidays: Boolean, whether to add country holidays.
-        add_monthly_seasonality: Boolean, whether to add custom monthly seasonality.
-        monthly_fourier_order: Fourier order for the monthly seasonality.
-        pass_culture_months: List of months for special seasonality events related to
-                            pass culture.
+        full_config: Full configuration object holding parameters and feature settings.
     Returns:
         Trained Prophet model.
     """
-    model = Prophet(**prophet_params)
-    if regressors:
-        for reg in regressors:
+    prophet_params = full_config.prophet
+    features_config = full_config.features
+
+    logger.info(f"Initializing Prophet model with params={prophet_params.model_dump()}")
+    model = Prophet(**prophet_params.model_dump())
+
+    if features_config.regressors:
+        logger.info(
+            f"""Adding {len(features_config.regressors)} regressor(s):
+            {features_config.regressors}"""
+        )
+        for reg in features_config.regressors:
+            if reg not in df_train.columns:
+                raise ValueError(
+                    f"Regressor '{reg}' not found in training data columns"
+                )
             model.add_regressor(reg)
-    if adding_country_holidays:
+
+    if features_config.adding_country_holidays:
+        logger.info("Adding French country holidays")
         model.add_country_holidays(country_name="FR")
-    if add_monthly_seasonality:
+
+    if features_config.add_monthly_seasonality:
+        logger.info(
+            f"""Adding monthly seasonality with fourier_order=
+            {features_config.monthly_fourier_order}"""
+        )
         model.add_seasonality(
             name="monthly",
-            period=30.5,  # monthly seasonality
-            fourier_order=monthly_fourier_order,
+            period=30.5,
+            fourier_order=features_config.monthly_fourier_order,
         )
-    if pass_culture_months:
+    if features_config.pass_culture_months:
+        logger.info(
+            f"""Adding pass_culture conditional seasonality for
+            {features_config.pass_culture_months} months"""
+        )
+        if "pass_culture_months" not in df_train.columns:
+            raise ValueError(
+                "pass_culture_months column not found in training data. "
+                "Ensure preprocessing added this feature."
+            )
         model.add_seasonality(
             name="pass_culture",
-            period=30.5,  # monthly seasonality
-            fourier_order=3,
-            condition_name="pass_culture_seasonal_effect",
+            period=30.5,
+            fourier_order=features_config.monthly_fourier_order,
+            condition_name="pass_culture_months",
         )
+
+    logger.info(f"Fitting Prophet model on {len(df_train)} training observations")
     model.fit(df_train)
+    logger.info("Model fitting completed successfully")
     return model

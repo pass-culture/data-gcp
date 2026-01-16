@@ -151,3 +151,10 @@ vars:
   test_severity:
     dev: warn
     stg: warn
+
+# MetricFlow semantic layer configuration
+semantic-models:
+  +enabled: true
+
+metrics:
+  +enabled: true

@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform != 'win32'",
@@ -2705,8 +2705,8 @@ requires-dist = [
     { name = "pyarrow", specifier = ">=14.0.1" },
     { name = "pytest", specifier = "==8.2.2" },
     { name = "ruff", specifier = ">=0.12.4" },
-    { name = "tensorflow", specifier = ">=2.14.0" },
-    { name = "tornado", specifier = "==6.5" },
+    { name = "tensorflow", specifier = ">=2.16.0" },
+    { name = "tornado", specifier = ">=6.5" },
     { name = "typer", specifier = "==0.12.3" },
 ]
 

@@ -117,6 +117,8 @@ select
     ofr.is_synchro_adage,
     ofr.total_reimbursement_points,
     ofr.is_local_authority,
+    venue_id as partner_id,
+    offerer_is_epn,
     coalesce(
         date_diff(current_date, boh.last_bookable_offer_date, day) <= 30, false
     ) as is_active_last_30days,
@@ -145,7 +147,6 @@ select
         "/lieux/",
         v.venue_humanized_id
     ) as venue_pc_pro_link,
-    venue_id as partner_id,
     row_number() over (
         partition by v.venue_managing_offerer_id
         order by
@@ -159,8 +160,7 @@ select
             v.total_theoretic_revenue desc,
             v.total_created_offers desc,
             v.venue_name asc
-    ) as offerer_rank_asc,
-    offerer_is_epn
+    ) as offerer_rank_asc
 from {{ ref("int_applicative__venue") }} as v
 left join
     {{ ref("int_global__offerer") }} as ofr

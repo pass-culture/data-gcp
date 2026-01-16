@@ -145,9 +145,7 @@ select
         "/lieux/",
         v.venue_humanized_id
     ) as venue_pc_pro_link,
-    case
-        when v.venue_is_permanent then concat("venue-", v.venue_id) else ofr.partner_id
-    end as partner_id,
+    venue_id as partner_id,
     row_number() over (
         partition by v.venue_managing_offerer_id
         order by

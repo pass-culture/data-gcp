@@ -19,9 +19,10 @@ from utils.verbose_logger import log_print
 class ReportOrchestrationService:
     """Orchestrates the complete report generation process with error handling."""
 
-    def __init__(self, duckdb_conn: DuckDBPyConnection):
+    def __init__(self, duckdb_conn: DuckDBPyConnection, fetcher_concurrency: int = 2):
         self.conn = duckdb_conn
         self.data_service = DataService(duckdb_conn)
+        self.fetcher_concurrency = fetcher_concurrency
 
     def _get_layout_type(self, sheet) -> str:
         """Determine layout type based on sheet definition."""
@@ -327,7 +328,10 @@ class ReportOrchestrationService:
             )
 
             # Phase 2: Concurrent Fetching
-            with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            # We use self.fetcher_concurrency (configured from main.py)
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=self.fetcher_concurrency
+            ) as executor:
                 # Submit all tasks
                 future_to_config = {
                     executor.submit(

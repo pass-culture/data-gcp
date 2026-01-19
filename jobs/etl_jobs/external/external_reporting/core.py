@@ -247,13 +247,19 @@ class Report:
             self.workbook._sheets.remove(ws)
             self.workbook._sheets.insert(idx, ws)
 
-    def build(self, ds: str, duckdb_conn: duckdb.DuckDBPyConnection) -> ReportStats:
+    def build(
+        self,
+        ds: str,
+        duckdb_conn: duckdb.DuckDBPyConnection,
+        fetcher_concurrency: int,
+    ) -> ReportStats:
         """
         Build the report workbook using the new service architecture.
 
         Args:
             ds: Consolidation date in YYYY-MM-DD format
             duckdb_conn: DuckDB connection for data queries
+            fetcher_concurrency: Max threads for concurrent KPI fetching
 
         Returns:
             ReportStats with detailed processing statistics
@@ -276,7 +282,9 @@ class Report:
         self._cleanup_template_sheets([sheet.tab_name for sheet in self.sheets])
 
         # Step 2: Use ReportOrchestrationService for complex processing
-        orchestrator = ReportOrchestrationService(duckdb_conn)
+        orchestrator = ReportOrchestrationService(
+            duckdb_conn, fetcher_concurrency=fetcher_concurrency
+        )
         sheet_stats_list = orchestrator.process_all_sheets(self.sheets, ds)
 
         # Add all sheet stats to report stats
@@ -410,7 +418,10 @@ def process_report_worker(task: Dict[str, Any]) -> ReportStats:
             )
 
             # Build
-            report_stats = report.build(task["ds"], conn)
+            fetcher_concurrency = task.get("fetcher_concurrency", 2)
+            report_stats = report.build(
+                task["ds"], conn, fetcher_concurrency=fetcher_concurrency
+            )
 
             # Save (overwrite self)
             report.save()

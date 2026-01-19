@@ -75,6 +75,9 @@ def generate(
     concurrency: int = typer.Option(
         29, "--concurrency", "-c", help="Max simultaneous report generation workers"
     ),
+    fetcher_concurrency: int = typer.Option(
+        5, "--fetcher-concurrency", help="Max threads per worker for DB fetching"
+    ),
 ):
     """Generate reports for specified stakeholder."""
 
@@ -199,6 +202,7 @@ def generate(
                             "output_path": dest_path,
                             "ds": ds,
                             "db_path": db_path,
+                            "fetcher_concurrency": fetcher_concurrency,
                         }
                         tasks.append(task)
                 except Exception as e:

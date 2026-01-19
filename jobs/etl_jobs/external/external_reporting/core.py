@@ -393,11 +393,13 @@ def process_report_worker(task: Dict[str, Any]) -> ReportStats:
             build_trees=False,
         )
 
-        # Connect to DB (ReadOnly)
-        conn = duckdb.connect(database=str(task["db_path"]), read_only=True)
+        # Connect to DB (ReadOnly) with explicit thread limit
+        # threads=1 prevents DuckDB from spawning 32 threads PER WORKER (which would kill CPU)
+        conn = duckdb.connect(
+            database=str(task["db_path"]), read_only=True, config={"threads": 1}
+        )
 
-        try:
-            # Create Report instance
+        try:  # Create Report instance
             # Note: The template should have been copied to output_path already by main process
             report = Report(
                 report_type=task["report_type"],

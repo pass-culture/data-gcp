@@ -270,7 +270,9 @@ class ReportOrchestrationService:
     def _handle_kpi_data_filling(
         self, sheet, ds: str, date_mappings: Dict[str, Any], sheet_stats: SheetStats
     ):
-        """Handle KPI data filling for KPI sheets."""
+        """Handle KPI data filling for KPI sheets using multithreading for data fetching."""
+        import concurrent.futures
+
         try:
             # Get data source table
             source_table_key = SHEET_DEFINITIONS[sheet.definition].get("source_table")
@@ -306,81 +308,113 @@ class ReportOrchestrationService:
             total_months = len(date_mappings.get("months", []))
             total_cells_per_kpi = total_years + total_months
 
+            # Phase 1: Parsing - Identify all KPI tasks
+            kpi_tasks = []
             for row_idx, row in enumerate(
                 sheet.worksheet.iter_rows(
                     min_row=min_row, max_row=sheet.worksheet.max_row
                 )
             ):
                 kpi_config = self._parse_kpi_row(row, row_idx + min_row - 1)
-                if not kpi_config:
-                    continue
+                if kpi_config:
+                    kpi_tasks.append(kpi_config)
 
-                kpi_name = kpi_config["kpi_name"]
+            if not kpi_tasks:
+                return
 
-                # Get KPI data
-                writting_fail_count = 0
-                no_data_count = 0
-                kpi_data = self.data_service.get_kpi_data(
-                    kpi_name=kpi_name,
-                    dimension_name=dimension_context["name"],
-                    dimension_value=dimension_context["value"],
-                    ds=ds,
-                    scope=scope,
-                    table_name=table_name,
-                    select_field=kpi_config["select_field"],
-                    agg_type=kpi_config["agg_type"],
-                )
+            log_print.debug(
+                f"⚡ Fetching {len(kpi_tasks)} KPIs concurrently for {sheet.tab_name}..."
+            )
 
-                if kpi_data:
-                    # Write data to Excel
-                    write_success = ExcelWriterService.write_kpi_data_to_sheet(
-                        worksheet=sheet.worksheet,
-                        kpi_data=kpi_data,
-                        date_mappings=date_mappings,
-                        row_idx=kpi_config["row_idx"],
-                    )
+            # Phase 2: Concurrent Fetching
+            with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+                # Submit all tasks
+                future_to_config = {
+                    executor.submit(
+                        self.data_service.get_kpi_data,
+                        kpi_name=config["kpi_name"],
+                        dimension_name=dimension_context["name"],
+                        dimension_value=dimension_context["value"],
+                        ds=ds,
+                        scope=scope,
+                        table_name=table_name,
+                        select_field=config["select_field"],
+                        agg_type=config["agg_type"],
+                    ): config
+                    for config in kpi_tasks
+                }
 
-                    if write_success:
-                        # Count how many values were actually written
-                        values_written = 0
-                        yearly_data = kpi_data.get("yearly", {})
-                        monthly_data = kpi_data.get("monthly", {})
-                        values_written = len(yearly_data) + len(monthly_data)
+                # Phase 3: Sequential Writing (as results arrive)
+                for future in concurrent.futures.as_completed(future_to_config):
+                    kpi_config = future_to_config[future]
+                    kpi_name = kpi_config["kpi_name"]
+                    writting_fail_count = 0
+                    no_data_count = 0
 
+                    try:
+                        kpi_data = future.result()
+
+                        if kpi_data:
+                            # Write data to Excel (Main thread / Synchronized by virtue of loop)
+                            write_success = ExcelWriterService.write_kpi_data_to_sheet(
+                                worksheet=sheet.worksheet,
+                                kpi_data=kpi_data,
+                                date_mappings=date_mappings,
+                                row_idx=kpi_config["row_idx"],
+                            )
+
+                            if write_success:
+                                # Count how many values were actually written
+                                values_written = 0
+                                yearly_data = kpi_data.get("yearly", {})
+                                monthly_data = kpi_data.get("monthly", {})
+                                values_written = len(yearly_data) + len(monthly_data)
+
+                                kpi_result = KPIResult(
+                                    kpi_name=kpi_name,
+                                    status=KPIStatus.SUCCESS,
+                                    values_written=values_written,
+                                    total_cells=total_cells_per_kpi,
+                                )
+                            else:
+                                kpi_result = KPIResult(
+                                    kpi_name=kpi_name,
+                                    status=KPIStatus.WRITE_FAILED,
+                                    values_written=0,
+                                    total_cells=total_cells_per_kpi,
+                                    error_message="Failed to write to Excel",
+                                )
+                                writting_fail_count += 1
+
+                            sheet_stats.add_kpi_result(kpi_result)
+
+                        else:
+                            kpi_result = KPIResult(
+                                kpi_name=kpi_name,
+                                status=KPIStatus.NO_DATA,
+                                values_written=0,
+                                total_cells=total_cells_per_kpi,
+                                error_message="No data returned from query",
+                            )
+                            sheet_stats.add_kpi_result(kpi_result)
+                            no_data_count += 1
+
+                    except Exception as exc:
+                        log_print.warning(
+                            f"Failed to fetch data for KPI '{kpi_name}': {exc}"
+                        )
                         kpi_result = KPIResult(
                             kpi_name=kpi_name,
-                            status=KPIStatus.SUCCESS,
-                            values_written=values_written,
-                            total_cells=total_cells_per_kpi,
+                            status=KPIStatus.FAILED,
+                            error_message=str(exc),
                         )
-                    else:
-                        kpi_result = KPIResult(
-                            kpi_name=kpi_name,
-                            status=KPIStatus.WRITE_FAILED,
-                            values_written=0,
-                            total_cells=total_cells_per_kpi,
-                            error_message="Failed to write to Excel",
+                        sheet_stats.add_kpi_result(kpi_result)
+
+                    if writting_fail_count + no_data_count > 0:
+                        log_print.debug(
+                            f"KPI issue for '{kpi_name}' in {sheet.tab_name}: "
+                            f"{writting_fail_count} write failures, {no_data_count} no data"
                         )
-                        writting_fail_count += 1
-
-                    sheet_stats.add_kpi_result(kpi_result)
-
-                else:
-                    kpi_result = KPIResult(
-                        kpi_name=kpi_name,
-                        status=KPIStatus.NO_DATA,
-                        values_written=0,
-                        total_cells=total_cells_per_kpi,
-                        error_message="No data returned from query",
-                    )
-                    sheet_stats.add_kpi_result(kpi_result)
-                    no_data_count += 1
-
-                if writting_fail_count + no_data_count > 0:
-                    log_print.warning(
-                        f"KPI data filling failed for '{kpi_name}' to sheet {sheet.tab_name}:\n"
-                        f"{writting_fail_count} write failures, {no_data_count} no data"
-                    )
 
         except Exception as e:
             log_print.warning(f"KPI data filling failed for {sheet.tab_name}: {e}")

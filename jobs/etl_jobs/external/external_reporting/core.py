@@ -10,7 +10,6 @@ from google.cloud import bigquery
 from treelib import Tree
 
 from config import (
-    BASE_TEMPLATE,
     BIGQUERY_ANALYTICS_DATASET,
     GCP_PROJECT,
     REPORTS,
@@ -18,7 +17,7 @@ from config import (
     SOURCE_TABLES,
     STAKEHOLDER_REPORTS,
 )
-from services.tracking import ReportStats, StakeholderStats
+from services.tracking import ReportStats
 from utils.data_utils import (
     build_region_hierarchy,
     sanitize_date_fields,
@@ -44,16 +43,21 @@ class Stakeholder:
     desired_reports: List[str] = field(default_factory=list)
     academy_tree: Optional[Tree] = None
     department_tree: Optional[Tree] = None
+    hierarchy_data: Optional[Dict] = field(default=None, repr=False)
+    build_trees: bool = field(default=True)
 
     def __post_init__(self):
         # Assign default reports
         if not self.desired_reports:
             self.desired_reports = list(STAKEHOLDER_REPORTS.get(self.type.value, []))
 
-        # Only DRAC stakeholders get trees
-        if self.type == StakeholderType.DRAC:
-            # Fetch hierarchy from BigQuery
-            hierarchy = build_region_hierarchy()
+        # Only DRAC stakeholders get trees, and only if requested
+        if self.type == StakeholderType.DRAC and self.build_trees:
+            # Fetch hierarchy from BigQuery or use provided one
+            if self.hierarchy_data:
+                hierarchy = self.hierarchy_data
+            else:
+                hierarchy = build_region_hierarchy()
 
             # Ensure region exists
             if self.name not in hierarchy:
@@ -377,13 +381,63 @@ class ReportPlanner:
         return jobs
 
 
+def process_report_worker(task: Dict[str, Any]) -> ReportStats:
+    """
+    Worker function to process a single report.
+    """
+    try:
+        # Reconstruct Stakeholder (without trees for memory efficiency)
+        stakeholder = Stakeholder(
+            type=StakeholderType(task["stakeholder_type"]),
+            name=task["stakeholder_name"],
+            build_trees=False,
+        )
+
+        # Connect to DB (ReadOnly)
+        conn = duckdb.connect(database=str(task["db_path"]), read_only=True)
+
+        try:
+            # Create Report instance
+            # Note: The template should have been copied to output_path already by main process
+            report = Report(
+                report_type=task["report_type"],
+                stakeholder=stakeholder,
+                base_template_path=Path(task["output_path"]),
+                output_path=Path(task["output_path"]),
+                context=task["context"],
+            )
+
+            # Build
+            report_stats = report.build(task["ds"], conn)
+
+            # Save (overwrite self)
+            report.save()
+
+            log_print.debug(f"🏁 Worker finished logic for {task.get('output_path')}")
+            return report_stats
+
+        finally:
+            log_print.debug(f"🔌 Closing DB connection for {task.get('output_path')}")
+            conn.close()
+            log_print.debug(f"👋 Worker exiting for {task.get('output_path')}")
+
+    except Exception as e:
+        log_print.error(f"❌ Worker failed for {task.get('output_path')}: {e}")
+        # Return failed stats
+        return ReportStats(
+            report_name=str(task.get("output_path", "unknown")),
+            report_type=task.get("report_type", "unknown"),
+        )
+
+
 class ExportSession:
     """Manages the entire export session with proper resource cleanup."""
 
-    def __init__(self, ds: str):
+    def __init__(self, ds: str, db_path: str = ":memory:"):
         self.ds = ds
         self.tables_to_load = SOURCE_TABLES
-        self.conn: Optional[duckdb.duckdb.DuckDBPyConnection] = None
+        self.db_path = db_path
+        self.conn: Optional[duckdb.DuckDBPyConnection] = None
 
     def __enter__(self):
         return self
@@ -396,7 +450,8 @@ class ExportSession:
         """Load tables based on self.scope."""
 
         client = bigquery.Client(project=GCP_PROJECT)
-        self.conn = duckdb.connect(":memory:")
+        # Connect to persistent file if specified
+        self.conn = duckdb.connect(self.db_path)
 
         for _, config in self.tables_to_load.items():
             self._load_table(client, config)
@@ -429,12 +484,24 @@ class ExportSession:
             f"CREATE TABLE {table_name} AS SELECT * FROM {table_name}_tmp"
         )
 
+        # Cleanup DataFrame immediately
+        self.conn.unregister(f"{table_name}_tmp")
+        del df
+        import gc
+
+        gc.collect()
+
         # Create indexes based on available columns
-        self._create_indexes(table_name, df.columns.tolist())
+        self._create_indexes(table_name)
         log_print.info(f"✅ Created {table_name} table")
 
-    def _create_indexes(self, table_name: str, columns: List[str]):
+    def _create_indexes(self, table_name: str):
         """Create indexes on commonly queried columns with error recovery."""
+        # Fetch columns from DuckDB
+        columns = [
+            row[0] for row in self.conn.execute(f"DESCRIBE {table_name}").fetchall()
+        ]
+
         indexes_created = []
         indexes_failed = []
 
@@ -506,108 +573,3 @@ class ExportSession:
                 f"⚠ {table_name}: {len(indexes_failed)} indexes failed (table will still work)",
                 fg="yellow",
             )
-
-    def process_stakeholder(
-        self, stakeholder_type: str, name: str, output_path: Path, ds: str
-    ) -> StakeholderStats:
-        """
-        Process reports for a given stakeholder using new service architecture.
-
-        Returns:
-            StakeholderStats with detailed processing statistics
-        """
-        stakeholder = Stakeholder(
-            type=StakeholderType.MINISTERE
-            if stakeholder_type == "ministere"
-            else StakeholderType.DRAC,
-            name="Ministère" if stakeholder_type == "ministere" else name,
-        )
-        log_print.info(
-            f"⏳  Processing reports for {stakeholder.type.value} - {stakeholder.name}",
-            fg="cyan",
-        )
-
-        # Create stakeholder stats object
-        stakeholder_stats = StakeholderStats(
-            stakeholder_name=stakeholder.name, stakeholder_type=stakeholder.type.value
-        )
-
-        # Generate reports based on stakeholder's desired reports
-        planner = ReportPlanner(stakeholder)
-        report_jobs = planner.plan_reports()
-
-        total_reports = len(report_jobs)
-        log_print.info(f"📋 Planning to generate {total_reports} reports", fg="cyan")
-
-        for job in report_jobs:
-            try:
-                # Create Report instance
-                report = Report(
-                    report_type=job["report_type"],
-                    stakeholder=stakeholder,
-                    base_template_path=BASE_TEMPLATE,
-                    output_path=output_path / job["output_path"],
-                    context=job["context"],
-                )
-
-                # Build and save report using new architecture
-                report_stats = report.build(ds, self.conn)
-                report.save()
-
-                # Add report stats to stakeholder stats
-                stakeholder_stats.add_report_stats(report_stats)
-
-            except Exception as e:
-                log_print.error(
-                    f"❌ Failed to generate report {job['output_path']}: {e}", fg="red"
-                )
-                # Create empty report stats for failed report
-                from services.tracking import ReportStats
-
-                failed_report_stats = ReportStats(
-                    report_name=job["output_path"], report_type=job["report_type"]
-                )
-                stakeholder_stats.add_report_stats(failed_report_stats)
-
-        # Final summary for this stakeholder
-        if stakeholder_stats.total_kpis > 0 or stakeholder_stats.total_tops > 0:
-            success_msg = []
-            if stakeholder_stats.total_kpis > 0:
-                success_msg.append(
-                    f"{stakeholder_stats.kpis_successful}/{stakeholder_stats.total_kpis} KPIs"
-                )
-            if stakeholder_stats.total_tops > 0:
-                success_msg.append(
-                    f"{stakeholder_stats.tops_successful}/{stakeholder_stats.total_tops} tops"
-                )
-
-            if (
-                stakeholder_stats.kpis_failed == 0
-                and stakeholder_stats.tops_failed == 0
-            ):
-                log_print.info(
-                    f"✅ All {total_reports} reports generated successfully for {stakeholder.name}: "
-                    f"{', '.join(success_msg)}",
-                    fg="green",
-                )
-            elif (
-                stakeholder_stats.kpis_successful > 0
-                or stakeholder_stats.tops_successful > 0
-            ):
-                log_print.warning(
-                    f"⚠️ {total_reports} reports completed with warnings for {stakeholder.name}: "
-                    f"{', '.join(success_msg)}",
-                    fg="yellow",
-                )
-            else:
-                log_print.error(
-                    f"❌ No data processed successfully for {stakeholder.name}",
-                    fg="red",
-                )
-        else:
-            log_print.info(
-                f"✅ {total_reports} reports generated for {stakeholder.name}",
-                fg="green",
-            )
-
-        return stakeholder_stats

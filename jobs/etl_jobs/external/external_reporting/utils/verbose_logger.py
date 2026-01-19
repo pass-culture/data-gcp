@@ -54,7 +54,7 @@ class LogPrinter:
 
 # --- Setup global logger ---
 logger = logging.getLogger("external_reporting")
-logger.setLevel(logging.DEBUG)  # default; LogPrinter filters output
+logger.setLevel(logging.INFO)  # default; LogPrinter filters output
 ch = logging.StreamHandler()
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 ch.setFormatter(formatter)

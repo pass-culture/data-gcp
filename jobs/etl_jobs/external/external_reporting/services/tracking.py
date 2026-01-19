@@ -286,6 +286,21 @@ class GlobalStats:
         """Add stakeholder statistics."""
         self.stakeholder_stats.append(stats)
 
+    def add_report_stats_to_stakeholder(
+        self, stakeholder_name: str, stakeholder_type: str, report_stats: ReportStats
+    ):
+        """Add report stats to a specific stakeholder, creating the stakeholder stats if needed."""
+        # Find existing
+        for s in self.stakeholder_stats:
+            if s.stakeholder_name == stakeholder_name:
+                s.add_report_stats(report_stats)
+                return
+
+        # Create new
+        new_s = StakeholderStats(stakeholder_name, stakeholder_type)
+        new_s.add_report_stats(report_stats)
+        self.stakeholder_stats.append(new_s)
+
     @property
     def total_stakeholders(self) -> int:
         return len(self.stakeholder_stats)

@@ -1,13 +1,32 @@
+import concurrent.futures
+import os
+import shutil
+import tempfile
 from pathlib import Path
 from typing import Optional
 
 import typer
 
-from config import GOOGLE_DRIVE_ROOT_FOLDER_ID, REPORT_BASE_DIR_DEFAULT
-from core import ExportSession, Stakeholder, StakeholderType
+from config import (
+    BASE_TEMPLATE,
+    GOOGLE_DRIVE_ROOT_FOLDER_ID,
+    REPORT_BASE_DIR_DEFAULT,
+)
+from core import (
+    ExportSession,
+    ReportPlanner,
+    Stakeholder,
+    StakeholderType,
+    process_report_worker,
+)
 from services.google_drive import DriveUploadService
 from services.tracking import GlobalStats
-from utils.data_utils import drac_selector, get_available_regions, upload_zip_to_gcs
+from utils.data_utils import (
+    build_region_hierarchy,
+    drac_selector,
+    get_available_regions,
+    upload_zip_to_gcs,
+)
 from utils.file_utils import (
     compress_directory,
     get_dated_base_dir,
@@ -53,6 +72,9 @@ def generate(
     store_stats: bool = typer.Option(
         False, "--store-stats", help="Save statistics to report_stats.txt"
     ),
+    concurrency: int = typer.Option(
+        29, "--concurrency", "-c", help="Max simultaneous report generation workers"
+    ),
 ):
     """Generate reports for specified stakeholder."""
 
@@ -87,51 +109,165 @@ def generate(
 
     base_dir = get_dated_base_dir(REPORT_BASE_DIR_DEFAULT, ds)
 
-    # ===== NEW: Create global statistics tracker =====
+    # Calculate workers
+    safety_margin = 0.9  # Use only 90% of CPU cores
+    total_workers = int(min(concurrency, int(os.cpu_count() * safety_margin)))
+    if total_workers != concurrency:
+        log_print.warning(
+            f"⚠️  Adjusted concurrency to safety margin of {safety_margin*100:.0f}% CPU cores:",
+            fg="yellow",
+        )
+    log_print.info(
+        f"🚀 Parallel Execution: {total_workers} workers",
+        fg="cyan",
+    )
+
+    # Create global statistics tracker
     global_stats = GlobalStats()
 
-    # Generate reports
-    try:
-        with ExportSession(ds) as session:
+    # Create temp directory for DB
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        db_path = os.path.join(tmp_dir, "reporting_data.duckdb")
+
+        try:
+            # Load Data
+            log_print.info(f"💾 Loading data into temporary DB: {db_path}", fg="cyan")
+            # Use ExportSession to load data
+            # Note: we manually close session to release lock
+            session = ExportSession(ds, db_path=db_path)
             session.load_data()
+            if session.conn:
+                session.conn.close()
 
+            # Explicitly collect garbage after loading large datasets
+            import gc
+
+            gc.collect()
+
+            # Build hierarchy once
+            hierarchy = None
+            if stakeholder != "ministere":  # drac or all
+                hierarchy = build_region_hierarchy()
+
+            # Determine stakeholders list
+            stakeholders_to_process = []
             if national:
-                stakeholder_obj = Stakeholder(
-                    name="Ministère", type=StakeholderType.MINISTERE
-                )
-                # ===== MODIFIED: Capture returned stats =====
-                stakeholder_stats = session.process_stakeholder(
-                    "ministere", stakeholder_obj, base_dir / "NATIONAL", ds
-                )
-                global_stats.add_stakeholder_stats(stakeholder_stats)
-
+                stakeholders_to_process.append(("ministere", "Ministère"))
             if selected_regions:
-                for region in selected_regions:
-                    # ===== MODIFIED: Capture returned stats =====
-                    stakeholder_stats = session.process_stakeholder(
-                        "drac", region, base_dir / "REGIONAL" / region, ds
+                for r in selected_regions:
+                    stakeholders_to_process.append(("drac", r))
+
+            # Planning Phase
+            tasks = []
+            log_print.info("📋 Planning reports and copying templates...", fg="cyan")
+
+            for s_type, s_name in stakeholders_to_process:
+                # Create temporary stakeholder to plan
+                # Pass hierarchy if drac
+                s_hierarchy = hierarchy if s_type == "drac" else None
+
+                try:
+                    s_obj = Stakeholder(
+                        type=StakeholderType(s_type),
+                        name=s_name,
+                        hierarchy_data=s_hierarchy,
                     )
-                    global_stats.add_stakeholder_stats(stakeholder_stats)
 
-        log_print.info(f"✅ Reports generated successfully in {base_dir}", fg="green")
+                    planner = ReportPlanner(s_obj)
+                    jobs = planner.plan_reports()
 
-        # ===== NEW: Display comprehensive statistics =====
-        global_stats.print_detailed_summary()
+                    # Determine base output dir for this stakeholder
+                    if s_type == "ministere":
+                        s_base_dir = base_dir / "NATIONAL"
+                    else:
+                        s_base_dir = base_dir / "REGIONAL" / s_name
 
-        # ===== NEW: Optionally show detailed failure analysis =====
-        if show_failures:
-            global_stats.print_failed_kpis_detail()
+                    s_base_dir.mkdir(parents=True, exist_ok=True)
 
-        if store_stats:
-            stats_file = (
-                REPORT_BASE_DIR_DEFAULT / f"report_stats_{ds.replace('-', '')}.txt"
+                    for job in jobs:
+                        # Prepare destination
+                        dest_path = s_base_dir / job["output_path"]
+                        # Copy template
+                        shutil.copy(BASE_TEMPLATE, dest_path)
+
+                        # Create Task
+                        task = {
+                            "stakeholder_type": s_type,
+                            "stakeholder_name": s_name,
+                            "report_type": job["report_type"],
+                            "context": job["context"],
+                            "output_path": dest_path,
+                            "ds": ds,
+                            "db_path": db_path,
+                        }
+                        tasks.append(task)
+                except Exception as e:
+                    log_print.error(
+                        f"❌ Failed to plan reports for {s_name}: {e}", fg="red"
+                    )
+
+            # Execution Phase
+            log_print.info(f"⚡ Processing {len(tasks)} reports...", fg="cyan")
+
+            with concurrent.futures.ProcessPoolExecutor(
+                max_workers=total_workers,
+                # max_tasks_per_child=10  # Restart workers periodically to free memory
+            ) as executor:
+                future_to_task = {
+                    executor.submit(process_report_worker, task): task for task in tasks
+                }
+
+                for future in concurrent.futures.as_completed(future_to_task):
+                    task = future_to_task[future]
+                    try:
+                        stats = future.result(
+                            timeout=300
+                        )  # 5 minutes timeout per report result
+                        # Add stats to global stats using our new helper method
+                        global_stats.add_report_stats_to_stakeholder(
+                            task["stakeholder_name"], task["stakeholder_type"], stats
+                        )
+                    except concurrent.futures.TimeoutError:
+                        log_print.error(
+                            f"❌ Task timed out for {task.get('output_path')}", fg="red"
+                        )
+                    except Exception as exc:
+                        log_print.error(f"Task generated an exception: {exc}")
+
+            log_print.info(
+                f"✅ Reports generated successfully in {base_dir}", fg="green"
             )
-            global_stats.save_to_file(stats_file, show_failures=show_failures)
-            log_print.info(f"📝 Statistics saved to {stats_file}", fg="cyan")
 
-    except Exception as e:
-        log_print.error(f"❌ Export session failed: {e}")
-        raise typer.Exit(code=1)
+        except Exception as e:
+            log_print.error(f"❌ Export session failed: {e}")
+            # raise typer.Exit(code=1) # Don't exit immediately so we clean up temp file
+
+        finally:
+            # Always display and save statistics, even if execution failed partially
+            if "global_stats" in locals():
+                # Display comprehensive statistics
+                global_stats.print_detailed_summary()
+
+                # Optionally show detailed failure analysis
+                if show_failures:
+                    global_stats.print_failed_kpis_detail()
+
+                if store_stats:
+                    stats_file = (
+                        REPORT_BASE_DIR_DEFAULT
+                        / f"report_stats_{ds.replace('-', '')}.txt"
+                    )
+                    try:
+                        global_stats.save_to_file(
+                            stats_file, show_failures=show_failures
+                        )
+                        log_print.info(
+                            f"📝 Statistics saved to {stats_file}", fg="cyan"
+                        )
+                    except Exception as save_err:
+                        log_print.error(
+                            f"❌ Failed to save statistics file: {save_err}", fg="red"
+                        )
 
 
 @app.command()

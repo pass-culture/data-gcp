@@ -28,13 +28,13 @@ features:
     - "12-2024"
     - "12-2025"
   regressors: null
-data_proc:
-  cv: true
+data_processing:
   train_prop: 0.8
   table_name: pricing_week
   date_column_name: pricing_week
   target_name: weekly_price
 evaluation:
+  cv: true
   cv_initial: "100 weeks"
   cv_period: "3 weeks"
   cv_horizon: "12 weeks"

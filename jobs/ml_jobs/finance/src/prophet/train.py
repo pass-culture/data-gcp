@@ -2,36 +2,29 @@ import pandas as pd
 from loguru import logger
 from prophet import Prophet
 
-from src.prophet.model_config import FullConfig
+from src.prophet.model_config import ModelConfig
 
 
 def fit_prophet_model(
     df_train: pd.DataFrame,
-    full_config: FullConfig,
+    model_config: ModelConfig,
 ) -> Prophet:
     """Fit a Prophet model with specified parameters and additional features.
     Args:
         df_train: Training dataframe with 'ds' and 'y' columns.
-        full_config: Full configuration object holding parameters and feature settings.
+        model_config: Full configuration object holding parameters and feature settings.
     Returns:
         Trained Prophet model.
     """
-    prophet_params = full_config.prophet
-    features_config = full_config.features
+    prophet_params_dict = model_config.prophet.model_dump()
+    features_config = model_config.features
 
-    logger.info(f"Initializing Prophet model with params={prophet_params.model_dump()}")
-    model = Prophet(**prophet_params.model_dump())
+    logger.info(f"Initializing Prophet model with params={prophet_params_dict}")
+    model = Prophet(**prophet_params_dict)
 
     if features_config.regressors:
-        logger.info(
-            f"""Adding {len(features_config.regressors)} regressor(s):
-            {features_config.regressors}"""
-        )
+        logger.info(f"""Adding regressor(s): {features_config.regressors}""")
         for reg in features_config.regressors:
-            if reg not in df_train.columns:
-                raise ValueError(
-                    f"Regressor '{reg}' not found in training data columns"
-                )
             model.add_regressor(reg)
 
     if features_config.adding_country_holidays:
@@ -53,11 +46,6 @@ def fit_prophet_model(
             f"""Adding pass_culture conditional seasonality for
             {features_config.pass_culture_months} months"""
         )
-        if "pass_culture_months" not in df_train.columns:
-            raise ValueError(
-                "pass_culture_months column not found in training data. "
-                "Ensure preprocessing added this feature."
-            )
         model.add_seasonality(
             name="pass_culture",
             period=30.5,

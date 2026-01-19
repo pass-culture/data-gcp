@@ -9,6 +9,7 @@ import json
 import os
 
 import mlflow
+import mlflow.entities
 from google.auth.transport.requests import Request
 from google.cloud import secretmanager
 from google.oauth2 import service_account
@@ -54,7 +55,7 @@ def connect_remote_mlflow() -> None:
     mlflow.set_tracking_uri(MLFLOW_URI)
 
 
-def get_mlflow_experiment(experiment_name: str):
+def get_mlflow_experiment(experiment_name: str) -> mlflow.entities.Experiment:
     """Get or create an MLflow experiment.
 
     Args:
@@ -70,7 +71,7 @@ def get_mlflow_experiment(experiment_name: str):
     return experiment
 
 
-def setup_mlflow(experiment_name: str, model_name: str):
+def setup_mlflow(experiment_name: str, model_type: str, model_name: str):
     """Set up MLflow tracking for a training run.
 
     Connects to remote MLflow server, gets or creates experiment,
@@ -78,6 +79,7 @@ def setup_mlflow(experiment_name: str, model_name: str):
 
     Args:
         experiment_name: Name of the MLflow experiment.
+        model_type: Type of the model being trained.
         model_name: Name of the model being trained.
 
     Returns:
@@ -85,5 +87,5 @@ def setup_mlflow(experiment_name: str, model_name: str):
     """
     connect_remote_mlflow()
     experiment = get_mlflow_experiment(experiment_name)
-    run_name = f"{model_name}_{datetime.datetime.now():%Y%m%d_%H%M%S}"
+    run_name = f"{model_type}_{model_name}_{datetime.datetime.now():%Y%m%d_%H%M%S}"
     return experiment, run_name

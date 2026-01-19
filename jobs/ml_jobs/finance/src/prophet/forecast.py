@@ -2,15 +2,15 @@ import pandas as pd
 from loguru import logger
 from prophet import Prophet
 
-from src.prophet.model_config import FullConfig
-from src.prophet.preprocessing import TrainTestBacktestSplit
+from src.prophet.model_config import ModelConfig
+from src.prophet.preprocessing import DataSplit
 
 
 def create_full_prediction_dataframe(
     start_date: str,
     end_date: str,
-    train_test_backtest_split: TrainTestBacktestSplit,
-    full_config: FullConfig,
+    train_test_backtest_split: DataSplit,
+    model_config: ModelConfig,
 ) -> pd.DataFrame:
     """
     Create a Prophet-compatible dataframe for predictions.
@@ -22,7 +22,7 @@ def create_full_prediction_dataframe(
         start_date: Start date of prediction period (YYYY-MM-DD).
         end_date: End date of prediction period (YYYY-MM-DD).
         train_test_backtest_split: Object containing train/test/backtest splits.
-        full_config: Full configuration object holding feature and growth settings.
+        model_config: Full configuration object holding feature and growth settings.
 
     Returns:
         DataFrame with 'ds' column and optional 'cap' and 'floor' columns.
@@ -31,14 +31,14 @@ def create_full_prediction_dataframe(
     # Extract cap and floor from prophet config if provided
     cap = None
     floor = None
-    if full_config.prophet.growth == "logistic":
+    if model_config.prophet.growth == "logistic":
         # When using logistic growth, read cap and floor values from df_train
         cap = train_test_backtest_split.train["cap"].max()
         floor = train_test_backtest_split.train["floor"].min()
     df = pd.DataFrame(
         {
             "ds": pd.date_range(
-                start=start_date, end=end_date, freq=full_config.evaluation.freq
+                start=start_date, end=end_date, freq=model_config.evaluation.freq
             )
         }
     )
@@ -53,10 +53,10 @@ def create_full_prediction_dataframe(
 
 def generate_future_forecast(
     model: Prophet,
-    train_test_backtest_split: TrainTestBacktestSplit,
+    train_test_backtest_split: DataSplit,
     forecast_start_date: str,
     forecast_end_date: str,
-    full_config: FullConfig,
+    model_config: ModelConfig,
 ) -> pd.DataFrame:
     """Generate a complete future forecast from start_date to end_date.
 
@@ -68,7 +68,7 @@ def generate_future_forecast(
         train_test_backtest_split: Object containing train/test/backtest splits.
         forecast_start_date: Start date of forecast period (YYYY-MM-DD).
         forecast_end_date: End date of forecast period (YYYY-MM-DD).
-        full_config: Full configuration object with evaluation and growth settings.
+        model_config: Full configuration object with evaluation and growth settings.
 
     Returns:
         DataFrame with complete forecast including columns like 'ds', 'yhat',
@@ -80,7 +80,7 @@ def generate_future_forecast(
         start_date=forecast_start_date,
         end_date=forecast_end_date,
         train_test_backtest_split=train_test_backtest_split,
-        full_config=full_config,
+        model_config=model_config,
     )
 
     # Generate forecast

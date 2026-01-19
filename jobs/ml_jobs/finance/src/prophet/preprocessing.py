@@ -1,100 +1,99 @@
-import datetime
 import math
-from dataclasses import dataclass
 
 import pandas as pd
 from loguru import logger
 
-from src.prophet.model_config import FullConfig
+from src.interfaces import DataSplit
+from src.prophet.model_config import ModelConfig
 from src.utils.bigquery import load_table
 
 
-@dataclass
-class TrainTestBacktestSplit:
-    train: pd.DataFrame
-    test: pd.DataFrame
-    backtest: pd.DataFrame
-
-
-def filter_data(
-    df: pd.DataFrame,
-    out_of_sample_end_date: str,
-    full_config: FullConfig,
-) -> pd.DataFrame:
-    """Rename time/target columns and filter rows up to the out-of-sample end date.
+def validate_data(df: pd.DataFrame, model_config: ModelConfig) -> None:
+    """Validate that the dataframe is not empty and contains the required columns
+    from the model config.
 
     Args:
         df: Input dataframe.
-        out_of_sample_end_date: End date for out-of-sample data.
-        full_config: Training configuration object.
-
-    Returns:
-        pd.DataFrame: Preprocessed dataframe.
+        model_config: Training configuration object.
 
     Raises:
-        ValueError: If required columns are missing or data is empty.
+        ValueError: If required columns are missing.
     """
     if df.empty:
         raise ValueError("Input dataframe is empty")
 
-    if full_config.data_proc.date_column_name not in df.columns:
+    required_columns = {
+        model_config.data_processing.date_column_name,
+        model_config.data_processing.target_name,
+    }
+    required_columns.update(model_config.features.regressors or [])
+
+    missing_columns = required_columns - set(df.columns)
+    if missing_columns:
         raise ValueError(
-            f"""Date column '{full_config.data_proc.date_column_name}'
-            not found in dataframe."""
+            f"Missing required columns: {missing_columns}. "
             f"Available columns: {df.columns.tolist()}"
         )
 
-    if full_config.data_proc.target_name not in df.columns:
-        raise ValueError(
-            f"""Target column '{full_config.data_proc.target_name}'
-            not found in dataframe. """
-            f"Available columns: {df.columns.tolist()}"
-        )
 
-    df[full_config.data_proc.date_column_name] = pd.to_datetime(
-        df[full_config.data_proc.date_column_name]
+def filter_data(
+    df: pd.DataFrame,
+    backtest_end_date: str,
+    model_config: ModelConfig,
+) -> pd.DataFrame:
+    """Rename time/target columns and filter rows up to the backtest end date.
+
+    Args:
+        df: Input dataframe.
+        backtest_end_date: End date for backtest data.
+        model_config: Training configuration object.
+
+    Returns:
+        pd.DataFrame: Preprocessed dataframe.
+    """
+    date_col = model_config.data_processing.date_column_name
+    target_col = model_config.data_processing.target_name
+
+    # Filter by date
+    out_of_sample_end = pd.to_datetime(backtest_end_date)
+    df = df[pd.to_datetime(df[date_col]) < out_of_sample_end].copy()
+
+    # Rename columns in-place
+    df.rename(
+        columns={date_col: "ds", target_col: "y"},
+        inplace=True,
     )
-    df = df.rename(
-        columns={
-            full_config.data_proc.date_column_name: "ds",
-            full_config.data_proc.target_name: "y",
-        }
-    )
-    out_of_sample_end = pd.to_datetime(out_of_sample_end_date)
-    df = df[df["ds"] < out_of_sample_end].reset_index(drop=True)
-
-    if df.empty:
-        raise ValueError(
-            f"No data available before {out_of_sample_end_date}. "
-            f"Please check your date range."
-        )
-
+    df.reset_index(drop=True, inplace=True)
     return df
 
 
 def add_features(
     df: pd.DataFrame,
-    full_config: FullConfig,
+    model_config: ModelConfig,
 ) -> pd.DataFrame:
     """
     Add optional features required for Prophet modelling.
     - Adds pass_culture_months when configured.
     - Adds floor/cap columns when using logistic growth.
+        Floor is set to 0, cap to 1.2*max(y).
+        which means that the model will never predict negative values
+        and will have some headroom above the maximum observed value.
 
     Args:
         df: Input dataframe.
-        full_config: Full configuration object holding feature and growth settings.
+        model_config: Full configuration object holding feature and growth settings.
 
     Returns:
         pd.DataFrame: Cleaned dataframe.
     """
 
-    if full_config.features.pass_culture_months:
-        months_years = set(full_config.features.pass_culture_months)
-        df["_month_year"] = df["ds"].dt.strftime("%m-%Y")
-        df["pass_culture_months"] = df["_month_year"].isin(months_years)
-        df.drop(columns=["_month_year"], inplace=True)
-    if full_config.prophet.growth == "logistic":
+    if model_config.features.pass_culture_months:
+        months_years = set(model_config.features.pass_culture_months)
+        # Avoid intermediate _month_year column by computing membership directly
+        df["pass_culture_months"] = (
+            pd.to_datetime(df["ds"]).dt.strftime("%m-%Y").isin(months_years)
+        )
+    if model_config.prophet.growth == "logistic":
         df["floor"] = 0.0
         df["cap"] = df["y"].max() * 1.2
     return df
@@ -102,24 +101,24 @@ def add_features(
 
 def select_feature_columns(
     df,
-    full_config: FullConfig,
+    model_config: ModelConfig,
 ) -> pd.DataFrame:
     """
     Keep only the relevant columns for Prophet modelling.
 
     Args:
         df: Dataframe containing features.
-        full_config: Full configuration object holding regressor, seasonality,
+        model_config: Full configuration object holding regressor, seasonality,
         and growth settings.
     Returns:
         pd.DataFrame: DataFrame with selected columns.
     """
     cols = ["ds", "y"]
-    if full_config.features.regressors:
-        cols.extend(full_config.features.regressors)
-    if full_config.features.pass_culture_months:
+    if model_config.features.regressors:
+        cols.extend(model_config.features.regressors)
+    if model_config.features.pass_culture_months:
         cols.append("pass_culture_months")
-    if full_config.prophet.growth == "logistic":
+    if model_config.prophet.growth == "logistic":
         cols.extend(["floor", "cap"])
     return df[cols]
 
@@ -128,8 +127,8 @@ def split_train_test_backtest(
     df: pd.DataFrame,
     train_start_date: str,
     backtest_start_date: str,
-    full_config: FullConfig,
-) -> TrainTestBacktestSplit:
+    model_config: ModelConfig,
+) -> DataSplit:
     """
     Split the dataframe into train, test, and backtest sets.
 
@@ -138,72 +137,80 @@ def split_train_test_backtest(
         train_start_date: In-sample start date (inclusive).
         backtest_start_date: Out-of-sample start date (inclusive for test, backtest
                         strictly after).
-        full_config: Full configuration object with data processing settings including
+        model_config: Full configuration object with data processing settings including
                      CV flag and train proportion.
     Returns:
-        TrainTestBacktestSplit: Dataclass containing train, test,
+        DataSplit: Dataclass containing train, test,
                                 and backtest dataframes.
     """
-    train_start = datetime.datetime.fromisoformat(train_start_date)
-    backtest_start = datetime.datetime.fromisoformat(backtest_start_date)
+    train_start = pd.to_datetime(train_start_date)
+    backtest_start = pd.to_datetime(backtest_start_date)
 
-    # Ensure chronological order before splitting
-    df = df.sort_values("ds").reset_index(drop=True)
+    # Filter by date range first to reduce data before sorting
+    df_in_sample = df[
+        (df["ds"] >= train_start) & (df["ds"] <= backtest_start)
+    ].sort_values("ds", ignore_index=True)
+
+    # Get backtest data before operating on in_sample
+    df_backtest = df[df["ds"] > backtest_start].reset_index(drop=True)
 
     ## Process In sample split
-    cv = full_config.data_proc.cv
+    cv = model_config.evaluation.cv
     if cv:
+        ## override train_prop to 1.0 when using CV
         train_prop = 1.0
         logger.info("CV enabled: using all data for training")
     else:
-        train_prop = full_config.data_proc.train_prop
+        train_prop = model_config.data_processing.train_prop
         logger.info(f"CV disabled: using {train_prop} of in-sample data for training")
-    df_in_sample = df[(df["ds"] >= train_start) & (df["ds"] <= backtest_start)]
-    train_cutoff = math.ceil(df_in_sample.shape[0] * train_prop)
-    df_train = df_in_sample.iloc[:train_cutoff].copy().reset_index(drop=True)
-    df_test = df_in_sample.iloc[train_cutoff:].copy().reset_index(drop=True)
 
-    ## Process Backtest split
-    df_backtest = df.loc[df["ds"] > backtest_start].reset_index(drop=True)
+    train_cutoff = math.ceil(len(df_in_sample) * train_prop)
+    df_train = df_in_sample.iloc[:train_cutoff].reset_index(drop=True)
+    df_test = df_in_sample.iloc[train_cutoff:].reset_index(drop=True)
 
-    return TrainTestBacktestSplit(train=df_train, test=df_test, backtest=df_backtest)
+    return DataSplit(train=df_train, test=df_test, backtest=df_backtest)
 
 
 def preprocessing_pipeline(
     train_start_date: str,
     backtest_start_date: str,
     backtest_end_date: str,
-    full_config: FullConfig,
-) -> TrainTestBacktestSplit:
-    """Run preprocessing: filter, add configured features, select columns, then split.
+    model_config: ModelConfig,
+) -> DataSplit:
+    """Run preprocessing:
+    Steps:
+    - Load data from BigQuery.
+    - Validate required columns are present.
+    - Filter data by date,
+    - add configured features,
+    - select columns,
+    - split into train/test/backtest.
+
     Args:
         train_start_date: In-sample start date (inclusive).
         backtest_start_date: Out-of-sample start date (inclusive for test, backtest
                             strictly after).
         backtest_end_date: Out-of-sample end date (exclusive).
-        full_config: Full configuration object.
+        model_config: Full configuration object.
     Returns:
-        TrainTestBacktestSplit: Dataclass containing train, test,
+        DataSplit: Dataclass containing train, test,
                             and backtest dataframes
     """
-    df = load_table(full_config.data_proc.table_name)
-    df_clean = filter_data(
+    df = load_table(model_config.data_processing.table_name)
+    validate_data(df, model_config=model_config)
+
+    # Chain transformations to reduce intermediate copies
+    df = filter_data(
         df,
-        out_of_sample_end_date=backtest_end_date,
-        full_config=full_config,
+        backtest_end_date=backtest_end_date,
+        model_config=model_config,
     )
-    df_features = add_features(
-        df_clean,
-        full_config=full_config,
-    )
-    df = select_feature_columns(
-        df_features,
-        full_config=full_config,
-    )
-    train_test_backtest_split = split_train_test_backtest(
+    df = add_features(df, model_config=model_config)
+    df = select_feature_columns(df, model_config=model_config)
+
+    return split_train_test_backtest(
         df=df,
         train_start_date=train_start_date,
         backtest_start_date=backtest_start_date,
-        full_config=full_config,
+        model_config=model_config,
     )
-    return train_test_backtest_split

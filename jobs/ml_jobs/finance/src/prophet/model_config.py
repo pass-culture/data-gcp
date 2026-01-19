@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class ProphetParams(BaseModel):
-    growth: str  #'linear', 'logistic' or 'flat'
+    growth: str  # available values 'linear', 'logistic' or 'flat'
     changepoints: list[date]
     changepoint_prior_scale: float
     yearly_seasonality: bool
@@ -13,7 +13,7 @@ class ProphetParams(BaseModel):
     seasonality_mode: str
     seasonality_prior_scale: float
     interval_width: float
-    scaling: str  # among "absmax" or "minmax"
+    scaling: str  # available values "absmax" or "minmax"
 
 
 class FeatureConfig(BaseModel):
@@ -24,27 +24,23 @@ class FeatureConfig(BaseModel):
     regressors: list[str] | None
 
 
-class DataProcConfig(BaseModel):
-    cv: bool
+class DataProcessingConfig(BaseModel):
     train_prop: float
     table_name: str
     date_column_name: str
     target_name: str
 
 
-# Alias for backward compatibility
-DataProcessConfig = DataProcConfig
-
-
 class EvaluationConfig(BaseModel):
+    cv: bool
     cv_initial: str
     cv_period: str
     cv_horizon: str
     freq: str
 
 
-class FullConfig(BaseModel):
+class ModelConfig(BaseModel):
     prophet: ProphetParams
     features: FeatureConfig
-    data_proc: DataProcessConfig
+    data_processing: DataProcessingConfig
     evaluation: EvaluationConfig

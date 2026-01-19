@@ -23,12 +23,12 @@ features:
   pass_culture_months: null
   regressors: null
 data_proc:
-  cv: true
   train_prop: 0.8
   table_name: pricing_day
   date_column_name: pricing_day
   target_name: daily_price
 evaluation:
+  cv: true
   cv_initial: "730 days"
   cv_period: "180 days"
   cv_horizon: "365 days"

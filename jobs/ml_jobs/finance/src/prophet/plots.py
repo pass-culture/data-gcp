@@ -26,10 +26,11 @@ def plot_prophet_changepoints(
 
     ax.plot(df_train.ds, df_train.y, label="train")
 
-    for cp in model.changepoints:
-        ax.axvline(cp, color="red", linestyle="--", alpha=0.7)
+    changepoints = model.changepoints if model.changepoints is not None else []
+    for cp in changepoints:
+        ax.axvline(cp, color="red", linestyle="--", alpha=0.7)  # type: ignore
 
-    ax.set_title(f"{title}\nNumber of changepoints: {len(model.changepoints)}")
+    ax.set_title(f"{title}\nNumber of changepoints: {len(changepoints)}")
     ax.set_xlabel("Date")
     ax.set_ylabel("y")
     ax.legend()
@@ -204,7 +205,10 @@ def log_diagnostic_plots(model: Prophet, df_train: pd.DataFrame) -> dict:
 
     fig_cp = plot_prophet_changepoints(model, df_train)
     forecast_train = model.predict(df_train)
-    fig_trend = plot_trend_with_changepoints(forecast_train, model.changepoints)
+    changepoints_list = (
+        model.changepoints.tolist() if model.changepoints is not None else []
+    )
+    fig_trend = plot_trend_with_changepoints(forecast_train, changepoints_list)
     fig_components = model.plot_components(forecast_train)
 
     logger.info("Diagnostic plots generated successfully")

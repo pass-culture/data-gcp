@@ -22,7 +22,7 @@ features:
   monthly_fourier_order: 5
   pass_culture_months: null
   regressors: null
-data_proc:
+data_processing:
   train_prop: 0.8
   table_name: pricing_day
   date_column_name: pricing_day

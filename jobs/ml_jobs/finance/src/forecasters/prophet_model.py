@@ -5,17 +5,17 @@ import yaml
 from loguru import logger
 from prophet.serialize import model_to_json
 
-from src.interfaces import ForecastModel
-from src.prophet.evaluate import backtest_pipeline, evaluation_pipeline
-from src.prophet.forecast import generate_future_forecast
-from src.prophet.model_config import ModelConfig
-from src.prophet.plots import log_diagnostic_plots
-from src.prophet.preprocessing import preprocessing_pipeline
-from src.prophet.train import fit_prophet_model
+from src.forecast_engines.prophet.evaluate import backtest_pipeline, evaluation_pipeline
+from src.forecast_engines.prophet.forecast import generate_future_forecast
+from src.forecast_engines.prophet.model_config import ModelConfig
+from src.forecast_engines.prophet.plots import log_diagnostic_plots
+from src.forecast_engines.prophet.preprocessing import preprocessing_pipeline
+from src.forecast_engines.prophet.train import fit_prophet_model
+from src.forecasters.forecast_model import ForecastModel
 
 
 class ProphetModel(ForecastModel):
-    CONFIG_DIR = Path(__file__).parent / "prophet_model_configs"
+    CONFIG_DIR = Path(__file__).parent / "configs"
 
     def __init__(self, model_name: str):
         super().__init__(model_name=model_name)

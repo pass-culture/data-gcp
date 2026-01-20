@@ -1,14 +1,14 @@
 import pandas as pd
 from loguru import logger
-from prophet import Prophet
-from prophet.diagnostics import cross_validation, performance_metrics
 from sklearn.metrics import (
     mean_absolute_error,
     mean_absolute_percentage_error,
     root_mean_squared_error,
 )
 
-from src.prophet.model_config import ModelConfig
+from prophet import Prophet
+from prophet.diagnostics import cross_validation, performance_metrics
+from src.forecast_engines.prophet.model_config import ModelConfig
 
 
 def cross_validate(

@@ -1,17 +1,12 @@
-import os
-
 # Adjust import path if necessary, assuming run from jobs/ml_jobs/finance root
 # or that the workspace puts it in path.
-import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-from src.prophet.model import ProphetModel
+from src.forecasters.prophet_model import ProphetModel
 
 
 class TestProphetModel(unittest.TestCase):
@@ -25,11 +20,11 @@ class TestProphetModel(unittest.TestCase):
             }
         )
 
-    @patch("src.prophet.model.yaml.safe_load")
-    @patch("src.prophet.model.open")
-    @patch("src.prophet.model.Path.exists")
-    @patch("src.prophet.preprocessing.load_table")
-    def test_happy_path(self, mock_load_table, mock_exists, mock_yaml):
+    @patch("src.forecasters.prophet_model.yaml.safe_load")
+    @patch("src.forecasters.prophet_model.open")
+    @patch("src.forecasters.prophet_model.Path.exists")
+    @patch("src.forecast_engines.prophet.preprocessing.load_table")
+    def test_happy_path(self, mock_load_table, mock_exists, mock_open, mock_yaml):
         """test_happy_path: Check if model initializes, prepares data, trains,
         and predicts."""
 
@@ -105,10 +100,10 @@ class TestProphetModel(unittest.TestCase):
         assert "yhat" in forecast_df.columns
         assert "ds" in forecast_df.columns
 
-    @patch("src.prophet.model.log_diagnostic_plots")
-    @patch("src.prophet.model.yaml.safe_load")
-    @patch("src.prophet.model.Path.exists")
-    @patch("src.prophet.model.open")
+    @patch("src.forecasters.prophet_model.log_diagnostic_plots")
+    @patch("src.forecasters.prophet_model.yaml.safe_load")
+    @patch("src.forecasters.prophet_model.Path.exists")
+    @patch("src.forecasters.prophet_model.open")
     def test_get_diagnostics(self, mock_open, mock_exists, mock_yaml, mock_plots):
         "test_get_diagnostics: Check if it calls the plot function and returns dict."
         mock_exists.return_value = True

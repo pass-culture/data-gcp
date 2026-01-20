@@ -3,8 +3,8 @@ import math
 import pandas as pd
 from loguru import logger
 
-from src.interfaces import DataSplit
-from src.prophet.model_config import ModelConfig
+from src.forecast_engines.prophet.model_config import ModelConfig
+from src.forecasters.forecast_model import DataSplit
 from src.utils.bigquery import load_table
 
 

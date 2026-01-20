@@ -3,8 +3,8 @@ import typer
 from loguru import logger
 
 # Import the interface and implementations
-from src.interfaces import ForecastModel
-from src.prophet.model import ProphetModel
+from src.forecasters.forecast_model import ForecastModel
+from src.forecasters.prophet_model import ProphetModel
 from src.utils.constants import EXPERIMENT_NAME
 from src.utils.mlflow import setup_mlflow
 

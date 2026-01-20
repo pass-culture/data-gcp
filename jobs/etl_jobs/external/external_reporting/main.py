@@ -9,8 +9,11 @@ import typer
 
 from config import (
     BASE_TEMPLATE,
+    DATA_READER_PER_WRITER,
     GOOGLE_DRIVE_ROOT_FOLDER_ID,
     REPORT_BASE_DIR_DEFAULT,
+    THREADS_SAFETY_MARGIN,
+    WRITER_CONCURRENCY,
 )
 from core import (
     ExportSession,
@@ -73,10 +76,15 @@ def generate(
         False, "--store-stats", help="Save statistics to report_stats.txt"
     ),
     concurrency: int = typer.Option(
-        29, "--concurrency", "-c", help="Max simultaneous report generation workers"
+        WRITER_CONCURRENCY,
+        "--concurrency",
+        "-c",
+        help="Max simultaneous report generation workers",
     ),
     fetcher_concurrency: int = typer.Option(
-        5, "--fetcher-concurrency", help="Max threads per worker for DB fetching"
+        DATA_READER_PER_WRITER,
+        "--fetcher-concurrency",
+        help="Max threads per worker for DB fetching",
     ),
 ):
     """Generate reports for specified stakeholder."""
@@ -113,11 +121,10 @@ def generate(
     base_dir = get_dated_base_dir(REPORT_BASE_DIR_DEFAULT, ds)
 
     # Calculate workers
-    safety_margin = 0.9  # Use only 90% of CPU cores
-    total_workers = int(min(concurrency, int(os.cpu_count() * safety_margin)))
+    total_workers = int(min(concurrency, int(os.cpu_count() * THREADS_SAFETY_MARGIN)))
     if total_workers != concurrency:
         log_print.warning(
-            f"⚠️  Adjusted concurrency to safety margin of {safety_margin*100:.0f}% CPU cores:",
+            f"⚠️  Adjusted concurrency to safety margin of {THREADS_SAFETY_MARGIN*100:.0f}% CPU cores:",
             fg="yellow",
         )
     log_print.info(
@@ -215,7 +222,6 @@ def generate(
 
             with concurrent.futures.ProcessPoolExecutor(
                 max_workers=total_workers,
-                # max_tasks_per_child=10  # Restart workers periodically to free memory
             ) as executor:
                 future_to_task = {
                     executor.submit(process_report_worker, task): task for task in tasks
@@ -244,7 +250,6 @@ def generate(
 
         except Exception as e:
             log_print.error(f"❌ Export session failed: {e}")
-            # raise typer.Exit(code=1) # Don't exit immediately so we clean up temp file
 
         finally:
             # Always display and save statistics, even if execution failed partially

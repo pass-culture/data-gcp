@@ -8,7 +8,7 @@ dependencies = [
     "gcsfs>=2023.5.0",
     "google-cloud-aiplatform>=1.22.0",
     "google-cloud-secret-manager>=2.23.1",
-    "keras>=2.15",
+    "keras>=2.15,<3.0.0",
     "loguru>=0.6.0",
     "matplotlib>=3.8.4",
     "mlflow>=3.8.1",
@@ -27,7 +27,7 @@ dependencies = [
     "tornado>=6.4.2",
     "tqdm>=4.64.1",
     "typer>=0.7.0",
-    "h11>=0.16.0"
+    "h11>=0.16.0",
 ]
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.

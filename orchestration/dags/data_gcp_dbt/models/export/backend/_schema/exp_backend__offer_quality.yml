@@ -1,0 +1,14 @@
+version: 1
+
+models:
+  - name: exp_backend__offer_quality
+    description: "Table containing offer_id and associated features, enriched with product, artist, and metadata information."
+    columns:
+      - name: offer_id
+        description: "Unique identifier for the offer."
+        data_type: STRING
+        data_tests:
+          - not_null
+      - name: completion_score
+        description: "Weighted completion score for the item."
+        data_type: FLOAT64

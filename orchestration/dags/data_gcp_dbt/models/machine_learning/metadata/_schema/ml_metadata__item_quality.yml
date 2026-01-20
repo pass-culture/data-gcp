@@ -1,12 +1,8 @@
-version: 2
+version: 1
 
 models:
   - name: ml_metadata__item_quality
     description: "Table containing item_id and associated features, enriched with product, artist, and metadata information."
-    config:
-      materialized: view
-      contract:
-        enforced: true
     columns:
       - name: item_id
         description: "Unique identifier for the item."

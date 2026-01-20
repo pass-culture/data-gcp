@@ -161,7 +161,7 @@ with
                             else 0.0
                         end
                     )
-                    * 1.5
+                    * 1.0
                     + (
                         case
                             when
@@ -203,7 +203,7 @@ with
                     )
                     * 1.0
                 )
-                / (1.0 + 2.0 + 1.0 + 1.5 + 1.5 + 1.0 + 1.0),
+                / (1.0 + 2.0 + 1.0 + 1.5 + 1.0 + 1.0 + 1.0),
                 1
             ) as completion_score
         from item_metadata_enriched as iwa

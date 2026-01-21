@@ -6,19 +6,19 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Description of the `exp_backend__table.">
+        <meta name="description" content="Description of the `exp_backend__artist_score` table.">
       
       
         <meta name="author" content="Pass Culture Team">
       
       
-        <link rel="canonical" href="https://pass-culture.github.io/data-gcp/dbt/models/export/backend/description__exp_backend__artist/">
+        <link rel="canonical" href="https://pass-culture.github.io/data-gcp/dbt/models/export/backend/description__exp_backend__artist_score/">
       
       
-        <link rel="prev" href="../../../../overview/">
+        <link rel="prev" href="../description__exp_backend__artist_delta/">
       
       
-        <link rel="next" href="../description__exp_backend__artist_alias/">
+        <link rel="next" href="../description__exp_backend__product_artist_link_delta/">
       
       
       <link rel="icon" href="../../../../../assets/favicon.png">
@@ -26,7 +26,7 @@
     
     
       
-        <title>Artist - Pass Culture Data Documentation</title>
+        <title>Artist Score - Pass Culture Data Documentation</title>
       
     
     
@@ -115,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Artist
+              Artist Score
             
           </span>
         </div>
@@ -646,10 +646,6 @@
       
         
       
-        
-      
-        
-      
     
     
       
@@ -682,93 +678,6 @@
             Backend
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Artist
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  <span class="md-ellipsis">
-    Artist
-  </span>
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#table-description" class="md-nav__link">
-    <span class="md-ellipsis">
-      Table description
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../description__exp_backend__artist_alias/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Artist Alias
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -816,18 +725,63 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../description__exp_backend__product_artist_link/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Artist Score
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
-    Product Artist Link
+    Artist Score
   </span>
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-description" class="md-nav__link">
+    <span class="md-ellipsis">
+      Table description
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -8657,11 +8611,37 @@
   
 
 
-<h1>Table: Artist</h1>
-<p>The <code>exp_backend__artist</code> table contains the artist database built from the artist linkage DAG.
-It is an export from the ml_linkage__artist model.</p>
+<h1>Table: Artist Score</h1>
+<p>The <code>exp_backend__artist_score</code> table contains the artist scores that must be synchronized with the backend application.
+It is an export from the ml_metadata__artist_score model.</p>
 
 <h2 id="table-description">Table description</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">name</th>
+<th style="text-align: left;">data_type</th>
+<th style="text-align: left;">description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">artist_id</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Unique identifier of the artist.</td>
+</tr>
+<tr>
+<td style="text-align: left;">artist_app_search_score</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Score of the artist computed by the DS team for app search.</td>
+</tr>
+<tr>
+<td style="text-align: left;">artist_pro_search_score</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Score of the artist computed by the DS team for pro search.</td>
+</tr>
+</tbody>
+</table>
 
 
 
@@ -8700,7 +8680,7 @@ It is an export from the ml_linkage__artist model.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../../../../overview/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Overview">
+          <a href="../description__exp_backend__artist_delta/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Artist Delta">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -8710,20 +8690,20 @@ It is an export from the ml_linkage__artist model.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Overview
+                Artist Delta
               </div>
             </div>
           </a>
         
         
           
-          <a href="../description__exp_backend__artist_alias/" class="md-footer__link md-footer__link--next" aria-label="Next: Artist Alias">
+          <a href="../description__exp_backend__product_artist_link_delta/" class="md-footer__link md-footer__link--next" aria-label="Next: Product Artist Link Delta">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Artist Alias
+                Product Artist Link Delta
               </div>
             </div>
             <div class="md-footer__button md-icon">

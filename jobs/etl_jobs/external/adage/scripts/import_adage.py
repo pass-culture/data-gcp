@@ -49,11 +49,12 @@ else:
     API_KEY = access_secret(project_name, "adage_import_api_key_prod")
 
 
-def get_request(ENDPOINT, API_KEY, route):
+def get_request(ENDPOINT, API_KEY, route, params={}):
     try:
         headers = {"X-omogen-api-key": API_KEY}
-
-        req = requests.get("{}/{}".format(ENDPOINT, route), headers=headers)
+        req = requests.get(
+            "{}/{}".format(ENDPOINT, route), headers=headers, params=params
+        )
         if req.status_code == 200:
             return req.json()
 
@@ -62,10 +63,13 @@ def get_request(ENDPOINT, API_KEY, route):
     return None
 
 
-def import_adage():
+def import_adage(since_date):
     client = bigquery.Client()
     client.query(create_adage_historical_table()).result()
-    data = get_request(ENDPOINT, API_KEY, route="partenaire-culturel")
+
+    params = {"dateModificationMin": since_date.strftime("%Y-%m-%d %H:%M:%S")}
+
+    data = get_request(ENDPOINT, API_KEY, route="partenaire-culturel", params=params)
 
     if data is None:
         raise RequestReturnedNoneError(
@@ -79,10 +83,12 @@ def import_adage():
                 df[k] = None
             df[k] = df[k].astype(str)
 
+        df["update_date"] = datetime.now().strftime("%Y-%m-%d")
+
         df.to_gbq(
             f"""{BIGQUERY_RAW_DATASET}.adage""",
             project_id=GCP_PROJECT,
-            if_exists="replace",
+            if_exists="append",
         )
         client.query(adding_value()).result()
 

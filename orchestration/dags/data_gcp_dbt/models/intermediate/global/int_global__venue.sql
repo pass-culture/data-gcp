@@ -101,7 +101,6 @@ select
     v.venue_iris_internal_id,
     v.total_non_cancelled_tickets,
     v.total_current_year_non_cancelled_tickets,
-    v.offerer_address_id,
     v.venue_image_source,
     v.total_distinct_headline_offers,
     v.has_headline_offer,

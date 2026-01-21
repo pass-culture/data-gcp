@@ -3,6 +3,7 @@ select
     oa.offerer_address_label,
     oa.address_id,
     oa.offerer_id,
+    oa.venue_id,
     a.address_street,
     a.address_postal_code,
     a.address_city,

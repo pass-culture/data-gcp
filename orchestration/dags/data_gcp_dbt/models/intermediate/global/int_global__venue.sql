@@ -101,7 +101,6 @@ select
     v.venue_iris_internal_id,
     v.total_non_cancelled_tickets,
     v.total_current_year_non_cancelled_tickets,
-    v.offerer_address_id,
     v.venue_image_source,
     v.total_distinct_headline_offers,
     v.has_headline_offer,
@@ -117,6 +116,8 @@ select
     ofr.is_synchro_adage,
     ofr.total_reimbursement_points,
     ofr.is_local_authority,
+    v.venue_id as partner_id,
+    offerer_is_epn,
     coalesce(
         date_diff(current_date, boh.last_bookable_offer_date, day) <= 30, false
     ) as is_active_last_30days,
@@ -145,9 +146,6 @@ select
         "/lieux/",
         v.venue_humanized_id
     ) as venue_pc_pro_link,
-    case
-        when v.venue_is_permanent then concat("venue-", v.venue_id) else ofr.partner_id
-    end as partner_id,
     row_number() over (
         partition by v.venue_managing_offerer_id
         order by
@@ -161,8 +159,7 @@ select
             v.total_theoretic_revenue desc,
             v.total_created_offers desc,
             v.venue_name asc
-    ) as offerer_rank_asc,
-    offerer_is_epn
+    ) as offerer_rank_asc
 from {{ ref("int_applicative__venue") }} as v
 left join
     {{ ref("int_global__offerer") }} as ofr

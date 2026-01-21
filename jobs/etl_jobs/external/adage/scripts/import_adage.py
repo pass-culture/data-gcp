@@ -77,13 +77,12 @@ def import_adage(since_date):
         )
     else:
         df = pd.DataFrame(data)
+        df["update_date"] = datetime.now().strftime("%Y-%m-%d")
         _cols = list(df.columns)
         for k, v in BQ_ADAGE_DTYPE.items():
             if k not in _cols:
                 df[k] = None
             df[k] = df[k].astype(str)
-
-        df["update_date"] = datetime.now().strftime("%Y-%m-%d")
 
         df.to_gbq(
             f"""{BIGQUERY_RAW_DATASET}.adage""",

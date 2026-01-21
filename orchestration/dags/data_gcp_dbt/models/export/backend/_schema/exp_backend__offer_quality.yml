@@ -12,3 +12,5 @@ models:
       - name: completion_score
         description: "Weighted completion score for the item."
         data_type: FLOAT64
+        data_tests:
+          - not_null

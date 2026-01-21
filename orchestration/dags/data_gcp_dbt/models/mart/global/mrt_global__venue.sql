@@ -94,7 +94,6 @@ select
     venue_pc_pro_link,
     partner_id,
     venue_iris_internal_id,
-    offerer_address_id,
     offerer_rank_desc,
     offerer_rank_asc,
     venue_image_source,

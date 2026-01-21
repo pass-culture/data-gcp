@@ -14,7 +14,7 @@ def save_to_historical(
     dataset: str,
     table_name: str,
     end_date: datetime,
-    schema: dict,
+    schema: list[bigquery.SchemaField],
 ):
     """Uploads partitioned DataFrame to BigQuery."""
     client = bigquery.Client()
@@ -28,7 +28,7 @@ def save_to_historical(
     except NotFound:
         tbl = bigquery.Table(
             base_table_id,
-            schema=[bigquery.SchemaField(n, t) for n, t in schema.items()],
+            schema=schema,
         )
         tbl.time_partitioning = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY, field="update_date"
@@ -37,7 +37,7 @@ def save_to_historical(
 
     job_config = bigquery.LoadJobConfig(
         write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
-        schema=[bigquery.SchemaField(n, t) for n, t in schema.items()],
+        schema=schema,
         time_partitioning=bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY, field="update_date"
         ),
@@ -49,7 +49,7 @@ def save_to_historical(
 
 def save_transactional_to_historical(
     df: pd.DataFrame,
-    schema: dict,
+    schema: list[bigquery.SchemaField],
     project: str,
     dataset: str,
     table_name: str,
@@ -62,7 +62,7 @@ def save_transactional_to_historical(
 
     job_config = bigquery.LoadJobConfig(
         write_disposition="WRITE_APPEND",
-        schema=[bigquery.SchemaField(n, t) for n, t in schema.items()],
+        schema=schema,
     )
 
     logger.info(f"Appending {len(df)} rows to {table_id}")

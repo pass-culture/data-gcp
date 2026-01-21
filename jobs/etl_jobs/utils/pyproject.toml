@@ -4,6 +4,8 @@ version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
     "google-cloud-secret-manager>=2.20",
+    "pydantic>=2.0",
+    "google-cloud-bigquery>=3.0",
 ]
 
 [tool.hatch.build.targets.wheel]

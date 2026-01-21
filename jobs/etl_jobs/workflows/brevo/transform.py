@@ -3,81 +3,56 @@ from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
+from connectors.brevo.schemas import ApiCampaign
+from workflows.brevo.schemas import CleanCampaign, CleanTransactionalEvent
 
 
 def transform_campaigns_to_dataframe(
-    campaigns: List[Dict[str, Any]], audience: str, update_date: datetime = None
+    campaigns: List[ApiCampaign], audience: str, update_date: datetime = None
 ) -> pd.DataFrame:
-    """Transform raw campaign data from Brevo API to DataFrame format."""
-    campaign_stats = {
-        "campaign_id": [],
-        "campaign_utm": [],
-        "campaign_name": [],
-        "campaign_sent_date": [],
-        "share_link": [],
-        "audience_size": [],
-        "unsubscriptions": [],
-        "open_number": [],
-    }
+    """Transform validated campaign data to DataFrame format."""
+    clean_campaigns = []
 
-    for camp in campaigns:
-        campaign_stats["campaign_id"].append(camp.get("id"))
-        campaign_stats["campaign_utm"].append(camp.get("tag"))
-        campaign_stats["campaign_name"].append(camp.get("name"))
-        campaign_stats["campaign_sent_date"].append(camp.get("sentDate"))
-        campaign_stats["share_link"].append(camp.get("shareLink"))
-
-        stats = camp.get("statistics", {})
-        global_stats = stats.get("globalStats", {})
-        campaign_stats["audience_size"].append(
-            global_stats.get("delivered", 0) if global_stats else 0
-        )
-        campaign_stats["unsubscriptions"].append(
-            global_stats.get("unsubscriptions", 0) if global_stats else 0
-        )
-        campaign_stats["open_number"].append(
-            global_stats.get("uniqueViews", 0) if global_stats else 0
-        )
-
-    df = pd.DataFrame(campaign_stats)
-    df["update_date"] = (
+    current_update_date = (
         pd.to_datetime(update_date) if update_date else pd.to_datetime("today")
     )
-    df["campaign_target"] = audience
 
-    return df[
-        [
-            "campaign_id",
-            "campaign_utm",
-            "campaign_name",
-            "campaign_sent_date",
-            "share_link",
-            "audience_size",
-            "open_number",
-            "unsubscriptions",
-            "update_date",
-            "campaign_target",
-        ]
-    ]
+    for camp in campaigns:
+        # Map ApiCampaign (Read Schema) -> CleanCampaign (Write Schema)
+        clean = CleanCampaign(
+            campaign_id=camp.id,
+            campaign_name=camp.name,
+            campaign_utm=camp.tag,
+            campaign_sent_date=camp.sent_date,
+            share_link=camp.share_link,
+            audience_size=camp.statistics.global_stats.delivered,
+            unsubscriptions=camp.statistics.global_stats.unsubscriptions,
+            open_number=camp.statistics.global_stats.unique_views,
+            update_date=current_update_date,
+            campaign_target=audience,
+        )
+        clean_campaigns.append(clean.model_dump())
+
+    # DRY: Use model fields as single source of truth for columns
+    cols = list(CleanCampaign.model_fields.keys())
+
+    if not clean_campaigns:
+        return pd.DataFrame(columns=cols)
+
+    df = pd.DataFrame(clean_campaigns)
+
+    return df[cols]
 
 
 def transform_events_to_dataframe(
     all_events: List[Dict[str, Any]], audience: str
 ) -> pd.DataFrame:
     """Transform raw event data to aggregated DataFrame format."""
+    # DRY: Use model fields as single source of truth for columns
+    cols = list(CleanTransactionalEvent.model_fields.keys())
+
     if not all_events:
-        return pd.DataFrame(
-            columns=[
-                "template",
-                "tag",
-                "email",
-                "event_date",
-                "delivered_count",
-                "opened_count",
-                "unsubscribed_count",
-                "target",
-            ]
-        )
+        return pd.DataFrame(columns=cols)
 
     df = pd.DataFrame(all_events)
     df_grouped = (
@@ -95,32 +70,22 @@ def transform_events_to_dataframe(
         fill_value=0,
     ).reset_index()
 
-    for event_type in ["delivered", "opened", "unsubscribed"]:
-        if event_type not in df_pivot.columns:
-            df_pivot[event_type] = 0
+    # Map API event types to target column names
+    mapping = {
+        "delivered": "delivered_count",
+        "opened": "opened_count",
+        "unsubscribed": "unsubscribed_count",
+    }
 
-    df_pivot.rename(
-        columns={
-            "delivered": "delivered_count",
-            "opened": "opened_count",
-            "unsubscribed": "unsubscribed_count",
-        },
-        inplace=True,
-    )
+    for api_event, target_col in mapping.items():
+        if api_event in df_pivot.columns:
+            df_pivot.rename(columns={api_event: target_col}, inplace=True)
+        elif target_col not in df_pivot.columns:
+            df_pivot[target_col] = 0
 
     df_pivot["target"] = audience
 
-    # Ensure all columns exist for schema mapping
-    cols = [
-        "template",
-        "tag",
-        "email",
-        "event_date",
-        "delivered_count",
-        "opened_count",
-        "unsubscribed_count",
-        "target",
-    ]
+    # Ensure all columns exist based on schema
     for col in cols:
         if col not in df_pivot.columns:
             df_pivot[col] = 0 if "count" in col else np.nan

@@ -5,6 +5,7 @@ requires-python = ">=3.10"
 dependencies = [
     "http_tools",
     "utils",
+    "pydantic>=2.0",
 ]
 
 [project.optional-dependencies]

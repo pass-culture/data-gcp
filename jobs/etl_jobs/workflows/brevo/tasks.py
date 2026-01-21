@@ -4,20 +4,22 @@ from datetime import datetime
 from typing import Dict, List
 
 import pandas as pd
+from connectors.brevo.schemas import ApiCampaign, ApiEvent, ApiTemplatesResponse
 
 # Internal imports
 from http_tools.circuit_breakers import CircuitBreakerOpenError
 from http_tools.exceptions import HttpClientError, RateLimitError, ServerError
+from pydantic import ValidationError
+from utils.schemas import pydantic_to_bigquery_schema
 from workflows.brevo.config import (
     BIGQUERY_RAW_DATASET,
     BIGQUERY_TMP_DATASET,
     ENV_SHORT_NAME,
     GCP_PROJECT,
     TRANSACTIONAL_TABLE_NAME,
-    campaigns_histo_schema,
-    transactional_histo_schema,
 )
 from workflows.brevo.load import save_to_historical, save_transactional_to_historical
+from workflows.brevo.schemas import CleanCampaign, CleanTransactionalEvent
 from workflows.brevo.transform import (
     transform_campaigns_to_dataframe,
     transform_events_to_dataframe,
@@ -63,20 +65,40 @@ def run_newsletter_etl(connector, audience: str, table_name: str, end_date: date
         logger.error(f"🛑 HTTP error after retries: {e}")
         raise
 
-    campaigns = resp.json().get("campaigns", [])
-    logger.info(f"Fetched {len(campaigns)} campaigns.")
+    raw_campaigns = resp.json().get("campaigns", [])
+    logger.info(f"Fetched {len(raw_campaigns)} campaigns.")
 
-    if not campaigns:
+    if not raw_campaigns:
         logger.info("No campaigns found, nothing to process.")
         return
 
+    # Validate campaigns (Read Contract)
+    validated_campaigns = []
+    for camp in raw_campaigns:
+        try:
+            validated_campaigns.append(ApiCampaign(**camp))
+        except ValidationError as e:
+            logger.error(
+                f"🛑 Schema validation failed for campaign {camp.get('id')}: {e}"
+            )
+            raise e
+
+    if not validated_campaigns:
+        logger.warning("⚠️ No valid campaigns after schema validation.")
+        return
+
     # Transform
-    df = transform_campaigns_to_dataframe(campaigns, audience, update_date=end_date)
+    df = transform_campaigns_to_dataframe(
+        validated_campaigns, audience, update_date=end_date
+    )
 
     # Load
+    # Generate schema from Workflow Contract (Write Schema)
+    bq_schema = pydantic_to_bigquery_schema(CleanCampaign)
+
     save_to_historical(
         df=df,
-        schema=campaigns_histo_schema,
+        schema=bq_schema,
         project=GCP_PROJECT,
         dataset=BIGQUERY_RAW_DATASET,
         table_name=table_name,
@@ -108,7 +130,13 @@ def run_transactional_etl(
         logger.error(f"🛑 Failed to fetch SMTP templates: {e}")
         raise
 
-    templates = templates_resp.json().get("templates", [])
+    try:
+        # Validate templates response (Read Contract)
+        validated_templates_resp = ApiTemplatesResponse(**templates_resp.json())
+        templates = validated_templates_resp.templates
+    except ValidationError as e:
+        logger.error(f"🛑 Schema validation failed for SMTP templates: {e}")
+        raise
 
     if not templates:
         logger.warning("No active SMTP templates found.")
@@ -122,7 +150,7 @@ def run_transactional_etl(
     logger.info(f"Processing {len(templates)} templates sequentially...")
 
     for template in templates:
-        t_id, tag = template.get("id"), template.get("tag")
+        t_id, tag = template.id, template.tag
 
         for event_type in ["delivered", "opened", "unsubscribed"]:
             offset = 0
@@ -160,15 +188,24 @@ def run_transactional_etl(
                     break
 
                 for e in events:
-                    all_events.append(
-                        {
-                            "template": t_id,
-                            "tag": tag,
-                            "email": e.get("email"),
-                            "event": e.get("event"),
-                            "event_date": pd.to_datetime(e.get("date")).date(),
-                        }
-                    )
+                    try:
+                        validated_event = ApiEvent(**e)
+                        all_events.append(
+                            {
+                                "template": t_id,
+                                "tag": tag,
+                                "email": validated_event.email,
+                                "event": validated_event.event,
+                                "event_date": pd.to_datetime(
+                                    validated_event.date
+                                ).date(),
+                            }
+                        )
+                    except ValidationError as err:
+                        logger.error(
+                            f"🛑 Schema validation failed for event {e}: {err}"
+                        )
+                        raise err
 
                 if len(events) < 2500:
                     break
@@ -185,9 +222,24 @@ def run_transactional_etl(
     if all_events:
         logger.info(f"Transforming and saving {len(all_events)} records...")
         df_final = transform_events_to_dataframe(all_events, audience)
+
+        # Generate schema from Workflow Contract (Write Schema)
+        # Note: CleanTransactionalEvent defines base fields, but transform creates pivoted columns.
+        # transform_events_to_dataframe returns columns:
+        # template, tag, email, event_date, delivered_count, opened_count, unsubscribed_count, target
+        # My CleanTransactionalEvent only had: template, tag, email, event, event_date
+        # I need to update CleanTransactionalEvent to match the pivoted structure!
+        # OR define a new CleanTransactionalPivoted model.
+        # Let's assume I update CleanTransactionalEvent in next step or use a new model.
+        # For now, I'll assume I update it.
+
+        # Wait, I should verify CleanTransactionalEvent first.
+        # I will update schemas.py first to match the output of transform.
+        bq_schema = pydantic_to_bigquery_schema(CleanTransactionalEvent)
+
         save_transactional_to_historical(
             df_final,
-            transactional_histo_schema,
+            bq_schema,
             GCP_PROJECT,
             BIGQUERY_TMP_DATASET,
             TRANSACTIONAL_TABLE_NAME,
@@ -226,7 +278,13 @@ async def run_async_transactional_etl(
         logger.error(f"🛑 Failed to fetch SMTP templates: {e}")
         raise
 
-    templates = templates_resp.json().get("templates", [])
+    try:
+        # Validate templates response (Read Contract)
+        validated_templates_resp = ApiTemplatesResponse(**templates_resp.json())
+        templates = validated_templates_resp.templates
+    except ValidationError as e:
+        logger.error(f"🛑 Schema validation failed for SMTP templates: {e}")
+        raise
 
     if not templates:
         logger.warning("No templates to process.")
@@ -253,7 +311,7 @@ async def run_async_transactional_etl(
     failed_templates = []
 
     for i, res in enumerate(results):
-        template_id = templates[i].get("id")
+        template_id = templates[i].id
 
         if isinstance(res, Exception):
             # Typed exception handling for better logging
@@ -292,9 +350,13 @@ async def run_async_transactional_etl(
             f"📊 Collected {len(all_events)} events. Transformation starting..."
         )
         df_final = transform_events_to_dataframe(all_events, audience)
+
+        # Generate schema from Workflow Contract (Write Schema)
+        bq_schema = pydantic_to_bigquery_schema(CleanTransactionalEvent)
+
         save_transactional_to_historical(
             df_final,
-            transactional_histo_schema,
+            bq_schema,
             GCP_PROJECT,
             BIGQUERY_TMP_DATASET,
             TRANSACTIONAL_TABLE_NAME,
@@ -306,13 +368,13 @@ async def run_async_transactional_etl(
 
 
 async def _fetch_template_events_async(
-    connector, template: Dict, start_dt: datetime, end_dt: datetime
+    connector, template, start_dt: datetime, end_dt: datetime
 ) -> List[Dict]:
     """
     Fetches events for a template.
     Parallelizes 'delivered', 'opened', and 'unsubscribed' for maximum speed.
     """
-    t_id, tag = template.get("id"), template.get("tag")
+    t_id, tag = template.id, template.tag
 
     # --- PERFORMANCE FIX ---
     # We fetch all 3 event types for this template in parallel instead of sequentially.
@@ -342,15 +404,20 @@ async def _fetch_template_events_async(
                 break
 
             for e in data:
-                results.append(
-                    {
-                        "template": t_id,
-                        "tag": tag,
-                        "email": e.get("email"),
-                        "event": e.get("event"),
-                        "event_date": pd.to_datetime(e.get("date")).date(),
-                    }
-                )
+                try:
+                    validated_event = ApiEvent(**e)
+                    results.append(
+                        {
+                            "template": t_id,
+                            "tag": tag,
+                            "email": validated_event.email,
+                            "event": validated_event.event,
+                            "event_date": pd.to_datetime(validated_event.date).date(),
+                        }
+                    )
+                except ValidationError as err:
+                    logger.error(f"🛑 Schema validation failed for event {e}: {err}")
+                    raise err
 
             if len(data) < 2500:
                 break

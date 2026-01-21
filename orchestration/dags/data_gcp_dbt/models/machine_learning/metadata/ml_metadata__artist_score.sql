@@ -155,6 +155,9 @@ with
         from namesake_computations
     )
 
-select *, (artist_raw_score * namesake_score * bookable_score) as artist_score
+select
+    *,
+    (artist_raw_score * namesake_score * bookable_score) as artist_app_search_score,
+    ((artist_raw_score + bookable_score) * namesake_score) as artist_pro_search_score
 from artist_with_final_score
-order by normalized_artist_name asc, artist_score desc
+order by normalized_artist_name asc, artist_app_search_score desc

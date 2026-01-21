@@ -9,7 +9,11 @@ models:
         data_tests:
           - not_null
           - unique
-      - name: artist_score
-        description: "{{ doc('column__artist_score') }}"
+      - name: artist_app_search_score
+        description: "{{ doc('column__artist_app_search_score') }}"
+        data_tests:
+          - not_null
+      - name: artist_pro_search_score
+        description: "{{ doc('column__artist_pro_search_score') }}"
         data_tests:
           - not_null

@@ -2,7 +2,7 @@ version: 1
 
 models:
   - name: exp_backend__offer_quality
-    description: "Table containing offer_id and associated features, enriched with product, artist, and metadata information."
+    description: "Table containing offer_id and quality scores, like completion score"
     columns:
       - name: offer_id
         description: "Unique identifier for the offer."

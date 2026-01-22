@@ -1,0 +1,5 @@
+Extrayez toutes les offres sélectionnées du contexte.
+Pour chaque offre, indiquez :
+id (product-ID ou offer-ID), pertinence (brève explication sur le lien entre l'offre et la thématique sans décrire l'offre ni prendre en compte les autres offres selectionnées).
+Si aucune offre ne correspond ou n'est pertinente, retournez une liste vide.
+Retournez le résultat sous forme d'un objet JSON avec une liste 'offers'.

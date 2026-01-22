@@ -38,7 +38,8 @@ GCE_INSTANCE = f"export-external-reporting-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/external_reporting/"
 GCP_STORAGE_URI = "https://storage.googleapis.com"
 DBT_REPORTING_MODELS_PATH = f"{DAG_FOLDER}/data_gcp_dbt/models/mart/external_reporting"
-
+PRIORITY_WEIGHT = 1000
+WEIGHT_RULE = "absolute"
 
 dag_config = {
     "GCP_PROJECT": GCP_PROJECT_ID,
@@ -52,10 +53,11 @@ with DAG(
     description="Data reporting export for ministère & DRAC",
     schedule_interval=get_airflow_schedule(SCHEDULE_DICT[dag_id].get(ENV_SHORT_NAME)),
     catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=120),
+    dagrun_timeout=datetime.timedelta(minutes=60),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     tags=[DAG_TAGS.DE.value],
+    render_template_as_native_obj=True,
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -66,8 +68,12 @@ with DAG(
             type="string",
         ),
         "instance_type": Param(
-            default="n1-standard-4",
+            default="n1-highcpu-32",
             type="string",
+        ),
+        "preemptible": Param(
+            default=True,
+            type="boolean",
         ),
     },
 ) as dag:
@@ -90,11 +96,13 @@ with DAG(
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
-        preemptible=False,
+        preemptible="{{ params.preemptible }}",
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
-        labels={"job_type": "long_task", "dag_name": dag_id},
+        labels={"dag_name": dag_id},
         additional_scopes=["https://www.googleapis.com/auth/drive"],
+        priority_weight=PRIORITY_WEIGHT,
+        weight_rule=WEIGHT_RULE,
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -103,6 +111,8 @@ with DAG(
         branch="{{ params.branch }}",
         python_version="3.10",
         base_dir=BASE_PATH,
+        priority_weight=PRIORITY_WEIGHT,
+        weight_rule=WEIGHT_RULE,
     )
 
     gce_generate_reports = SSHGCEOperator(
@@ -110,9 +120,9 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py generate --stakeholder all --ds {{ ds }}",
-        deferrable=True,
-        poll_interval=120,
+        command="python main.py generate --stakeholder all --ds {{ ds }} --concurrency 60",  # internally ajusted to 0.9 of CPU cores
+        priority_weight=PRIORITY_WEIGHT,
+        weight_rule=WEIGHT_RULE,
     )
 
     gce_compress_reports = SSHGCEOperator(
@@ -121,6 +131,8 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="python main.py compress --ds {{ ds }}",  # add --clean flag after testing
+        priority_weight=PRIORITY_WEIGHT,
+        weight_rule=WEIGHT_RULE,
     )
 
     gce_export_to_gcs = SSHGCEOperator(
@@ -129,6 +141,8 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command=f"python main.py upload --ds {{{{ ds }}}} --bucket {DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME} --destination external_reporting",
+        priority_weight=PRIORITY_WEIGHT,
+        weight_rule=WEIGHT_RULE,
     )
 
     gce_export_to_drive = SSHGCEOperator(
@@ -137,6 +151,8 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="python main.py upload-drive --ds {{ ds }}",
+        priority_weight=PRIORITY_WEIGHT,
+        weight_rule=WEIGHT_RULE,
     )
 
     gce_instance_stop = DeleteGCEOperator(

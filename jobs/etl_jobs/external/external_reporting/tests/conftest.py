@@ -50,10 +50,11 @@ def mock_duckdb_connection():
     """Mock DuckDB connection for testing."""
     mock_conn = Mock()
 
-    # Mock execute method to return a mock result with df() method
+    # Mock execute and cursor methods to return a mock result with df() method
     mock_result = Mock()
     mock_result.df.return_value = pd.DataFrame()
     mock_conn.execute.return_value = mock_result
+    mock_conn.cursor.return_value = mock_conn
 
     return mock_conn
 

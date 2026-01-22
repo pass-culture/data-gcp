@@ -52,7 +52,7 @@ def query_kpi_data(
             ORDER BY partition_month
         """
         log_print.debug(f"Executing query: {query} with params {params}")
-        return conn.execute(query, params).df()
+        return conn.cursor().execute(query, params).df()
 
     except Exception as e:
         raise QueryError(f"Failed to query KPI {kpi_name}: {e}")
@@ -111,7 +111,7 @@ def query_yearly_kpi(
                 ORDER BY partition_month
             """
             log_print.debug(f"Executing query: {query} with params {params}")
-            df = conn.execute(query, params).df()
+            df = conn.cursor().execute(query, params).df()
             df["year_label"] = year_label
             all_data.append(df)
 
@@ -178,7 +178,7 @@ def query_monthly_kpi(
     """
     log_print.debug(f"Executing query: {query} with params {params}")
     try:
-        return conn.execute(query, params).df()
+        return conn.cursor().execute(query, params).df()
     except Exception as e:
         raise QueryError(f"Failed to query monthly KPI {kpi_name}: {e}")
 

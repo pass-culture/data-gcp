@@ -153,7 +153,7 @@ with
                     when
                         ed.educational_deposit_period = 'p1'
                         and cb.collective_booking_status != 'CANCELLED'
-                    then cs.collective_booking_id
+                    then cb.collective_booking_id
                 end
             ) as p1_total_theoric_bookings,
             count(
@@ -161,7 +161,7 @@ with
                     when
                         ed.educational_deposit_period = 'p2'
                         and cb.collective_booking_status != 'CANCELLED'
-                    then cs.collective_booking_id
+                    then cb.collective_booking_id
                 end
             ) as p2_total_theoric_bookings,
             count(
@@ -169,7 +169,7 @@ with
                     when
                         ed.educational_deposit_period = 'all_year'
                         and cb.collective_booking_status != 'CANCELLED'
-                    then cs.collective_booking_id
+                    then cb.collective_booking_id
                 end
             ) as all_year_total_theoric_bookings,
             count(
@@ -177,7 +177,7 @@ with
                     when
                         ed.educational_deposit_period = 'p1'
                         and cb.collective_booking_status not in ('CANCELLED', 'PENDING')
-                    then cs.collective_booking_id
+                    then cb.collective_booking_id
                 end
             ) as p1_total_confirmed_bookings,
             count(
@@ -185,7 +185,7 @@ with
                     when
                         ed.educational_deposit_period = 'p2'
                         and cb.collective_booking_status not in ('CANCELLED', 'PENDING')
-                    then cs.collective_booking_id
+                    then cb.collective_booking_id
                 end
             ) as p2_total_confirmed_bookings,
             count(
@@ -193,7 +193,7 @@ with
                     when
                         ed.educational_deposit_period = 'all_year'
                         and cb.collective_booking_status not in ('CANCELLED', 'PENDING')
-                    then cs.collective_booking_id
+                    then cb.collective_booking_id
                 end
             ) as all_year_total_confirmed_bookings
         from {{ ref("mrt_global__educational_deposit") }} as ed

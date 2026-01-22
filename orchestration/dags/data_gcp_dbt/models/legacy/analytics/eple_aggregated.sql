@@ -1,94 +1,334 @@
 with
-    eple_infos as (
-        select distinct
-            eid.institution_id,
-            eid.institution_external_id,
-            eid.institution_name,
-            eid.institution_city,
-            eid.institution_department_code,
-            eid.institution_region_name as region_name,
-            eid.institution_academy_name as institution_academie,
-            eid.institution_epci,
-            eid.ministry,
-            eid.institution_type,
-            eid.macro_institution_type,
-            eid.institution_program_name,
-            eid.institution_macro_density_label,
-            ey.scholar_year,
-            ed.educational_deposit_amount as institution_deposit_amount,
-            eid.total_students
-        from {{ ref("mrt_global__educational_institution") }} as eid
+    flattened_deposits as (
+        select
+            ei.institution_id,
+            ei.institution_external_id,
+            ei.institution_name,
+            ei.institution_city,
+            ei.institution_department_code,
+            ei.institution_region_name as region_name,
+            ei.institution_academy_name as institution_academie,
+            ei.institution_epci,
+            ei.ministry,
+            ei.institution_type,
+            ei.macro_institution_type,
+            ei.institution_program_name,
+            ei.institution_macro_density_label,
+            ei.scholar_year,
+            ei.total_students,
+            sum(
+                case
+                    when ed.educational_deposit_period = 'p1'
+                    then (ed.educational_deposit_amount)
+                end
+            ) as p1_deposit,
+            sum(
+                case
+                    when ed.educational_deposit_period = 'p2'
+                    then (ed.educational_deposit_amount)
+                end
+            ) as p2_deposit,
+            sum(
+                case
+                    when ed.educational_deposit_period = 'all_year'
+                    then (ed.educational_deposit_amount)
+                end
+            ) as all_year_deposit
+
+        from {{ ref("mrt_global__educational_institution") }} as ei
         inner join
-            {{ ref("mrt_global__educational_deposit") }} as ed
-            on eid.institution_id = ed.institution_id
-        inner join
-            {{ source("raw", "applicative_database_educational_year") }} as ey
-            on ed.educational_year_id = ey.educational_year_id
+            {{ ref("mrt_global__educational_deposit") }} as ed using (institution_id)
+        group by all
     ),
 
-    eple_bookings as (
+    bookings as (
         select
-            eple_infos.institution_id,
-            eple_infos.scholar_year,
-            sum(
-                case
-                    when ecbd.collective_booking_status != 'CANCELLED'
-                    then ecbd.booking_amount
-                end
-            ) as theoric_amount_spent,
-            sum(
-                case
-                    when ecbd.collective_booking_status in ('USED', 'REIMBURSED')
-                    then ecbd.booking_amount
-                end
-            ) as real_amount_spent,
+            ed.institution_id,
+            ed.educational_deposit_id,
+            ed.scholar_year,
             coalesce(
                 sum(
                     case
-                        when ecbd.collective_booking_status = 'REIMBURSED'
-                        then ecbd.booking_amount
+                        when
+                            ed.educational_deposit_period = 'p1'
+                            and cb.collective_booking_status != 'CANCELLED'
+                        then cs.collective_stock_price
                     end
                 ),
                 0
-            ) as real_amount_reimbursed
-        from eple_infos
+            ) as p1_theoric_amount_spent,
+            coalesce(
+                sum(
+                    case
+                        when
+                            ed.educational_deposit_period = 'p2'
+                            and cb.collective_booking_status != 'CANCELLED'
+                        then cs.collective_stock_price
+                    end
+                ),
+                0
+            ) as p2_theoric_amount_spent,
+            coalesce(
+                sum(
+                    case
+                        when
+                            ed.educational_deposit_period = 'all_year'
+                            and cb.collective_booking_status != 'CANCELLED'
+                        then cs.collective_stock_price
+                    end
+                ),
+                0
+            ) as all_year_theoric_amount_spent,
+            coalesce(
+                sum(
+                    case
+                        when
+                            ed.educational_deposit_period = 'p1'
+                            and cb.collective_booking_status
+                            not in ('CANCELLED', 'PENDING')
+                        then cs.collective_stock_price
+                    end
+                ),
+                0
+            ) as p1_real_amount_spent,
+            coalesce(
+                sum(
+                    case
+                        when
+                            ed.educational_deposit_period = 'p2'
+                            and cb.collective_booking_status
+                            not in ('CANCELLED', 'PENDING')
+                        then cs.collective_stock_price
+                    end
+                ),
+                0
+            ) as p2_real_amount_spent,
+            coalesce(
+                sum(
+                    case
+                        when
+                            ed.educational_deposit_period = 'all_year'
+                            and cb.collective_booking_status
+                            not in ('CANCELLED', 'PENDING')
+                        then cs.collective_stock_price
+                    end
+                ),
+                0
+            ) as all_year_real_amount_spent,
+            coalesce(
+                sum(
+                    case
+                        when
+                            ed.educational_deposit_period = 'p1'
+                            and cb.collective_booking_status = 'REIMBURSED'
+                        then cs.collective_stock_price
+                    end
+                ),
+                0
+            ) as p1_reimbursed_amount,
+            coalesce(
+                sum(
+                    case
+                        when
+                            ed.educational_deposit_period = 'p2'
+                            and cb.collective_booking_status = 'REIMBURSED'
+                        then cs.collective_stock_price
+                    end
+                ),
+                0
+            ) as p2_reimbursed_amount,
+            coalesce(
+                sum(
+                    case
+                        when
+                            ed.educational_deposit_period = 'all_year'
+                            and cb.collective_booking_status = 'REIMBURSED'
+                        then cs.collective_stock_price
+                    end
+                ),
+                0
+            ) as all_year_reimbursed_amount,
+            count(
+                case
+                    when
+                        ed.educational_deposit_period = 'p1'
+                        and cb.collective_booking_status != 'CANCELLED'
+                    then cs.collective_booking_id
+                end
+            ) as p1_total_theoric_bookings,
+            count(
+                case
+                    when
+                        ed.educational_deposit_period = 'p2'
+                        and cb.collective_booking_status != 'CANCELLED'
+                    then cs.collective_booking_id
+                end
+            ) as p2_total_theoric_bookings,
+            count(
+                case
+                    when
+                        ed.educational_deposit_period = 'all_year'
+                        and cb.collective_booking_status != 'CANCELLED'
+                    then cs.collective_booking_id
+                end
+            ) as all_year_total_theoric_bookings,
+            count(
+                case
+                    when
+                        ed.educational_deposit_period = 'p1'
+                        and cb.collective_booking_status not in ('CANCELLED', 'PENDING')
+                    then cs.collective_booking_id
+                end
+            ) as p1_total_confirmed_bookings,
+            count(
+                case
+                    when
+                        ed.educational_deposit_period = 'p2'
+                        and cb.collective_booking_status not in ('CANCELLED', 'PENDING')
+                    then cs.collective_booking_id
+                end
+            ) as p2_total_confirmed_bookings,
+            count(
+                case
+                    when
+                        ed.educational_deposit_period = 'all_year'
+                        and cb.collective_booking_status not in ('CANCELLED', 'PENDING')
+                    then cs.collective_booking_id
+                end
+            ) as all_year_total_confirmed_bookings
+        from {{ ref("mrt_global__educational_deposit") }} as ed
+        left join
+            {{ ref("int_applicative__collective_booking") }} as cb
+            on ed.educational_deposit_id = cb.educational_deposit_id
         inner join
-            {{ ref("mrt_global__collective_booking") }} as ecbd
-            on eple_infos.institution_id = ecbd.educational_institution_id
-            and eple_infos.scholar_year = ecbd.scholar_year
-        group by 1, 2
+            {{ ref("int_applicative__collective_stock") }} as cs
+            on cb.collective_stock_id = cs.collective_stock_id
+        group by 1, 2, 3
     )
 
 select
-    eple_infos.institution_id,
-    eple_infos.institution_external_id,
-    eple_infos.institution_name,
-    eple_infos.institution_academie,
-    eple_infos.region_name,
-    eple_infos.institution_department_code,
-    eple_infos.institution_city,
-    eple_infos.institution_epci,
-    eple_infos.ministry,
-    eple_infos.institution_type,
-    eple_infos.macro_institution_type,
-    eple_infos.institution_program_name,
-    eple_infos.scholar_year,
-    eple_infos.institution_deposit_amount,
-    eple_bookings.theoric_amount_spent,
-    eple_bookings.real_amount_spent,
-    eple_bookings.real_amount_reimbursed,
-    eple_infos.total_students,
+    flattened_deposits.*,
+    bookings.p1_deposit,
+    bookings.p2_deposit,
+    bookings.p1_total_theoric_bookings,
+    bookings.p2_total_theoric_bookings,
+    -- theoric bookings
+    bookings.p1_theoric_amount_spent,
+    bookings.p2_theoric_amount_spent,
+    bookings.p1_total_confirmed_bookings,
+    -- theoric amount
+    bookings.p2_total_confirmed_bookings,
+    bookings.p1_real_amount_spent,
+    bookings.p2_real_amount_spent,
+    -- pct theoric amount
+    bookings.p1_reimbursed_amount,
+    bookings.p2_reimbursed_amount,
+    coalesce(
+        (bookings.p1_deposit is not null or bookings.p2_deposit is not null), false
+    ) as is_split_deposit,
+    -- confirmed bookings
+    coalesce(
+        bookings.all_year_deposit, bookings.p1_deposit + bookings.p2_deposit
+    ) as total_scholar_year_deposit,
+    case
+        when bookings.all_year_total_theoric_bookings = 0
+        then bookings.p1_total_theoric_bookings + bookings.p2_total_theoric_bookings
+        else bookings.all_year_total_theoric_bookings
+    end as all_year_total_theoric_bookings,
+    coalesce(
+        case
+            when bookings.all_year_theoric_amount_spent = 0
+            then bookings.p1_theoric_amount_spent + bookings.p2_theoric_amount_spent
+            else bookings.all_year_theoric_amount_spent
+        end,
+        0
+    ) as all_year_theoric_amount_spent,
+    -- real amount
     safe_divide(
-        eple_bookings.theoric_amount_spent, eple_infos.institution_deposit_amount
-    ) as pct_credit_theoric_amount_spent,
+        coalesce(
+            case
+                when bookings.all_year_theoric_amount_spent = 0
+                then bookings.p1_theoric_amount_spent + bookings.p2_theoric_amount_spent
+                else bookings.all_year_theoric_amount_spent
+            end,
+            0
+        ),
+        coalesce(bookings.all_year_deposit, bookings.p1_deposit + bookings.p2_deposit)
+    ) as pct_all_year_theoric_amount_spent,
+    coalesce(
+        safe_divide(bookings.p1_theoric_amount_spent, bookings.p1_deposit), 0
+    ) as pct_p1_theoric_amount_spent,
+    coalesce(
+        safe_divide(bookings.p2_theoric_amount_spent, bookings.p2_deposit), 0
+    ) as pct_p2_theoric_amount_spent,
+    -- pct real amount
+    coalesce(
+        case
+            when bookings.all_year_total_confirmed_bookings = 0
+            then
+                bookings.p1_total_confirmed_bookings
+                + bookings.p2_total_confirmed_bookings
+            else bookings.all_year_total_confirmed_bookings
+        end,
+        0
+    ) as all_year_total_confirmed_bookings,
+    coalesce(
+        case
+            when bookings.all_year_real_amount_spent = 0
+            then bookings.p1_real_amount_spent + bookings.p2_real_amount_spent
+            else bookings.all_year_real_amount_spent
+        end,
+        0
+    ) as all_year_real_amount_spent,
+    coalesce(
+        safe_divide(bookings.p1_real_amount_spent, bookings.p1_deposit), 0
+    ) as pct_p1_real_amount_spent,
+    -- reimbursed amount
+    coalesce(
+        safe_divide(bookings.p2_real_amount_spent, bookings.p2_deposit), 0
+    ) as pct_p2_real_amount_spent,
     safe_divide(
-        eple_bookings.real_amount_spent, eple_infos.institution_deposit_amount
-    ) as pct_credit_real_amount_spent,
+        coalesce(
+            case
+                when bookings.all_year_real_amount_spent = 0
+                then bookings.p1_real_amount_spent + bookings.p2_real_amount_spent
+                else bookings.all_year_real_amount_spent
+            end,
+            0
+        ),
+        coalesce(bookings.all_year_deposit, bookings.p1_deposit + bookings.p2_deposit)
+    ) as pct_all_year_real_amount_spent,
+    coalesce(
+        case
+            when bookings.all_year_reimbursed_amount = 0
+            then bookings.p1_reimbursed_amount + bookings.p2_reimbursed_amount
+            else bookings.all_year_reimbursed_amount
+        end,
+        0
+    ) as all_year_reimbursed_amount,
+    -- pct reimbursed amount
+    coalesce(
+        safe_divide(bookings.p1_reimbursed_amount, bookings.p1_deposit), 0
+    ) as pct_p1_reimbursed_amount_spent,
+    coalesce(
+        safe_divide(bookings.p2_reimbursed_amount, bookings.p2_deposit), 0
+    ) as pct_p2_reimbursed_amount_spent,
     safe_divide(
-        eple_bookings.real_amount_reimbursed, eple_infos.institution_deposit_amount
-    ) as pct_credit_real_amount_reimbursed
-from eple_infos
-left join
-    eple_bookings
-    on eple_infos.institution_id = eple_bookings.institution_id
-    and eple_infos.scholar_year = eple_bookings.scholar_year
+        coalesce(
+            case
+                when bookings.all_year_reimbursed_amount = 0
+                then bookings.p1_reimbursed_amount + bookings.p2_reimbursed_amount
+                else bookings.all_year_reimbursed_amount
+            end,
+            0
+        ),
+        coalesce(
+            bookings.all_year_deposit, bookings.p1_deposit + bookings.p2_deposit, 0
+        )
+    ) as pct_all_year_reimbursed_amount_spent
+
+from flattened_deposits
+inner join
+    bookings
+    on flattened_deposits.institution_id = bookings.institution_id
+    and flattened_deposits.scholar_year = bookings.scholar_year

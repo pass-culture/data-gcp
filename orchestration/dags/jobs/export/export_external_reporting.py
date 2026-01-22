@@ -110,7 +110,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.10",
+        python_version="'3.10'",
         base_dir=BASE_PATH,
         priority_weight=PRIORITY_WEIGHT,
         weight_rule=WEIGHT_RULE,

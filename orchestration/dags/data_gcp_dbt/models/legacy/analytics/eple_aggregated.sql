@@ -207,20 +207,37 @@ with
     )
 
 select
-    flattened_deposits.*,
+    flattened_deposits.institution_id,
+    flattened_deposits.institution_external_id,
+    flattened_deposits.institution_name,
+    flattened_deposits.institution_city,
+    flattened_deposits.institution_department_code,
+    flattened_deposits.institution_region_name as region_name,
+    flattened_deposits.institution_academy_name as institution_academie,
+    flattened_deposits.institution_epci,
+    flattened_deposits.ministry,
+    flattened_deposits.institution_type,
+    flattened_deposits.macro_institution_type,
+    flattened_deposits.institution_program_name,
+    flattened_deposits.institution_macro_density_label,
+    flattened_deposits.scholar_year,
+    flattened_deposits.total_students,
+    flattened_deposits.p1_deposit,
+    flattened_deposits.p2_deposit,
     bookings.p1_total_theoric_bookings,
     bookings.p2_total_theoric_bookings,
-    -- theoric bookings
     bookings.p1_theoric_amount_spent,
     bookings.p2_theoric_amount_spent,
     bookings.p1_total_confirmed_bookings,
-    -- theoric amount
     bookings.p2_total_confirmed_bookings,
     bookings.p1_real_amount_spent,
     bookings.p2_real_amount_spent,
-    -- pct theoric amount
     bookings.p1_reimbursed_amount,
     bookings.p2_reimbursed_amount,
+    coalesce(
+        flattened_deposits.total_scholar_year_deposit,
+        flattened_deposits.p1_deposit + flattened_deposits.p2_deposit
+    ) as total_scholar_year_deposit,
     coalesce(
         (
             flattened_deposits.p1_deposit is not null
@@ -228,11 +245,6 @@ select
         ),
         false
     ) as is_split_deposit,
-    -- confirmed bookings
-    coalesce(
-        flattened_deposits.total_scholar_year_deposit,
-        flattened_deposits.p1_deposit + flattened_deposits.p2_deposit
-    ) as total_scholar_year_deposit,
     case
         when bookings.all_year_total_theoric_bookings = 0
         then bookings.p1_total_theoric_bookings + bookings.p2_total_theoric_bookings
@@ -246,7 +258,6 @@ select
         end,
         0
     ) as all_year_theoric_amount_spent,
-    -- real amount
     safe_divide(
         coalesce(
             case
@@ -267,7 +278,6 @@ select
     coalesce(
         safe_divide(bookings.p2_theoric_amount_spent, flattened_deposits.p2_deposit), 0
     ) as pct_p2_theoric_amount_spent,
-    -- pct real amount
     coalesce(
         case
             when bookings.all_year_total_confirmed_bookings = 0
@@ -289,7 +299,6 @@ select
     coalesce(
         safe_divide(bookings.p1_real_amount_spent, flattened_deposits.p1_deposit), 0
     ) as pct_p1_real_amount_spent,
-    -- reimbursed amount
     coalesce(
         safe_divide(bookings.p2_real_amount_spent, flattened_deposits.p2_deposit), 0
     ) as pct_p2_real_amount_spent,
@@ -315,7 +324,6 @@ select
         end,
         0
     ) as all_year_reimbursed_amount,
-    -- pct reimbursed amount
     coalesce(
         safe_divide(bookings.p1_reimbursed_amount, flattened_deposits.p1_deposit), 0
     ) as pct_p1_reimbursed_amount_spent,

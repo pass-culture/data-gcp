@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import pandas as pd
 from dateutil.relativedelta import relativedelta
@@ -190,6 +190,8 @@ def aggregate_kpi_data(
     time_grouping: str = "yearly",
     select_field: str = "kpi",
     scope: str = "individual",
+    kpi_name: str = "Unknown",
+    context: Optional[Dict[str, Any]] = None,
 ) -> Dict[Union[int, str], float]:
     """
     Aggregate KPI data:
@@ -197,7 +199,9 @@ def aggregate_kpi_data(
     - 'collective': scholar year (Sep-Aug)
     """
     if data.empty:
-        log_print.warning("No data available for aggregation.")
+        context = context or {}
+        report_name = context.get("report_name", "Unknown Report")
+        log_print.warning(f"[{report_name}] [{kpi_name}] No data available for aggregation.")
         return {}
 
     data = data.copy()

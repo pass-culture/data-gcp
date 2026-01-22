@@ -231,7 +231,7 @@ select
     -- confirmed bookings
     coalesce(
         flattened_deposits.all_year_deposit,
-        flattened_deposits.p1_deposit + bookings.p2_deposit
+        flattened_deposits.p1_deposit + flattened_deposits.p2_deposit
     ) as total_scholar_year_deposit,
     case
         when bookings.all_year_total_theoric_bookings = 0

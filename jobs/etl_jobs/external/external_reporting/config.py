@@ -6,8 +6,8 @@ from pathlib import Path
 from utils.verbose_logger import log_print
 
 ######## base configs
-GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-prod")
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "prod")
+GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 if GCP_PROJECT != "passculture-data-prod" or ENV_SHORT_NAME != "prod":
     log_print.warning(
         f"Using {GCP_PROJECT=} & {ENV_SHORT_NAME=} -> REPORTS DATA WILL BE PARTIAL OR WRONG",

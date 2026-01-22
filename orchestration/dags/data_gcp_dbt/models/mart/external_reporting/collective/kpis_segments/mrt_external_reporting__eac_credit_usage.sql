@@ -52,7 +52,7 @@ with
             ey.educational_year_beginning_date,
             ey.educational_year_expiration_date,
             ea.institution_region_name,
-            ea.institution_academie,
+            ea.institution_academy_name,
             ea.institution_city,
             ea.institution_epci
     ),

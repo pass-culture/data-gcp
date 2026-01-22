@@ -4,27 +4,31 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict
 
 
-class CleanCampaign(BaseModel):
-    """Cleaned Campaign data for BigQuery loading."""
+class TableCampaign(BaseModel):
+    """
+    Cleaned Campaign data for BigQuery loading.
+    Matches the schema expected by the 'newsletters' table.
+    """
 
     campaign_id: int
     campaign_name: str
     campaign_utm: Optional[str] = None
-    campaign_sent_date: Optional[str] = (
-        None  # Keeping as str to match existing transform logic, can be datetime
-    )
+    campaign_sent_date: Optional[str] = None
     share_link: Optional[str] = None
-    audience_size: int
-    open_number: int
-    unsubscriptions: int
+    audience_size: int = 0
+    open_number: int = 0
+    unsubscriptions: int = 0
     update_date: datetime
     campaign_target: str
 
     model_config = ConfigDict(from_attributes=True)
 
 
-class CleanTransactionalEvent(BaseModel):
-    """Cleaned Transactional Event data (pivoted) for BigQuery loading."""
+class TableTransactionalEvent(BaseModel):
+    """
+    Cleaned Transactional Event data (pivoted) for BigQuery loading.
+    Matches the schema expected by the 'transactional' table.
+    """
 
     template: int
     tag: Optional[str] = None

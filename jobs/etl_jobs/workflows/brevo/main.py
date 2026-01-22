@@ -1,20 +1,15 @@
-import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
 
 import typer
 
-# Decoupled internal imports
+# Refactored imports
 from factories.brevo import BrevoFactory
+from workflows.brevo import pipeline
 from workflows.brevo.config import UPDATE_WINDOW, get_api_configuration
-from workflows.brevo.tasks import (
-    run_async_transactional_etl,
-    run_newsletter_etl,
-    run_transactional_etl,
-)
 
-# Logging setup - silence noisy network libraries
+# Logging setup
 for name in ("httpx", "httpcore", "urllib3", "google"):
     logging.getLogger(name).setLevel(logging.WARNING)
 
@@ -23,7 +18,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-app = typer.Typer(help="Brevo ETL Pipeline Orchestrator")
+app = typer.Typer(help="Brevo ETL Pipeline Orchestrator (Refactored)")
 
 
 def parse_dates(
@@ -74,26 +69,20 @@ def run(
         f"Window: {start_dt.date()} to {end_dt.date()} | Async: {async_mode}"
     )
 
-    # 2. Build Connector via Factory (Plumbing is hidden here)
+    # 2. Build Connector via Factory
     connector = BrevoFactory.create_connector(
         audience=audience, is_async=async_mode, max_concurrent=max_concurrent
     )
 
-    # 3. Task Dispatcher
+    # 3. Pipeline Dispatcher
     try:
         if target == "newsletter":
-            # Newsletter API doesn't benefit much from async due to small result set
-            run_newsletter_etl(connector, audience, table_name, end_dt)
+            pipeline.run_newsletter_pipeline(connector, audience, table_name, end_dt)
 
         elif target == "transactional":
-            if async_mode:
-                # Run the Async Task
-                asyncio.run(
-                    run_async_transactional_etl(connector, audience, start_dt, end_dt)
-                )
-            else:
-                # Run the Sync Task
-                run_transactional_etl(connector, audience, start_dt, end_dt)
+            pipeline.run_transactional_pipeline(
+                connector, audience, start_dt, end_dt, async_mode=async_mode
+            )
 
         else:
             logger.error(f"Unknown target: {target}")

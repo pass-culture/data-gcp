@@ -6,10 +6,11 @@ A modular, production-ready ETL framework built on the **Factory Pattern** with 
 
 - [Architecture Overview](#architecture-overview)
 - [Layer Design](#layer-design)
+  - [Layer 0: Shared Utilities (Foundation)](#layer-0-shared-utilities-foundation)
   - [Layer 1: HTTP Tools (Foundation)](#layer-1-http-tools-foundation)
   - [Layer 2: Connectors (API-Specific)](#layer-2-connectors-api-specific)
   - [Layer 3: Factories (Assembly)](#layer-3-factories-assembly)
-  - [Layer 4: Jobs (Business Logic)](#layer-4-jobs-business-logic)
+  - [Layer 4: Workflows (Business Logic)](#layer-4-workflows-business-logic)
 - [Validation Layer](#validation-layer)
   - [Philosophy: Read vs Write Contracts](#philosophy-read-vs-write-contracts)
   - [Dynamic Schema Generation](#dynamic-schema-generation)
@@ -35,7 +36,7 @@ The codebase follows a **4-layer architecture** designed for:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  Layer 4: Workflows (ETL Business Logic)                     │
+│  Layer 4: Workflows (ETL Business Logic)                │
 │  ├─ Extract: Fetch data via connectors                  │
 │  ├─ Validate: Pydantic models (Read Contract)           │
 │  ├─ Transform: Map to clean models (Write Contract)     │
@@ -332,7 +333,12 @@ def run_etl(connector):
     resp = connector.get_campaigns()
 
     # 2. Validate (Read Contract)
-    valid_campaigns = [ApiCampaign(**item) for item in resp.json()]
+    # Fail Fast: Raise exception on validation error
+    try:
+        valid_campaigns = [ApiCampaign(**item) for item in resp.json()]
+    except ValidationError as e:
+        logger.error(f"🛑 Validation failed: {e}")
+        raise e
 
     # 3. Transform
     df = transform(valid_campaigns)
@@ -353,7 +359,7 @@ def run_etl(connector):
 1. **Typed Exceptions**: Use custom exception hierarchy (`http_tools.exceptions`).
 2. **Fail Fast**: Propagate errors up.
 3. **Graceful Degradation**: Continue processing batches if possible (e.g., skip invalid items).
-4. **Validation Errors**: Catch `pydantic.ValidationError` in tasks to skip malformed records without crashing the whole job.
+4. **Validation Errors**: Catch `pydantic.ValidationError` in tasks and **raise exceptions** to fail fast on data contract violations. Logs should clearly indicate the validation error.
 
 ---
 
@@ -365,7 +371,8 @@ def run_etl(connector):
 try:
     campaign = ApiCampaign(**raw_data)
 except ValidationError as e:
-    logger.warning(f"⚠️ Skipping malformed campaign {raw_data.get('id')}: {e}")
+    logger.error(f"🛑 Schema validation failed for campaign {raw_data.get('id')}: {e}")
+    raise e
 ```
 
 ---

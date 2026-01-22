@@ -4,7 +4,7 @@ from typing import Any, Dict, List
 import numpy as np
 import pandas as pd
 from connectors.brevo.schemas import ApiCampaign
-from workflows.brevo.schemas import CleanCampaign, CleanTransactionalEvent
+from workflows.brevo.schemas import TableCampaign, TableTransactionalEvent
 
 
 def transform_campaigns_to_dataframe(
@@ -18,8 +18,8 @@ def transform_campaigns_to_dataframe(
     )
 
     for camp in campaigns:
-        # Map ApiCampaign (Read Schema) -> CleanCampaign (Write Schema)
-        clean = CleanCampaign(
+        # Map ApiCampaign (Read Schema) -> TableCampaign (Write Schema)
+        clean = TableCampaign(
             campaign_id=camp.id,
             campaign_name=camp.name,
             campaign_utm=camp.tag,
@@ -34,7 +34,7 @@ def transform_campaigns_to_dataframe(
         clean_campaigns.append(clean.model_dump())
 
     # DRY: Use model fields as single source of truth for columns
-    cols = list(CleanCampaign.model_fields.keys())
+    cols = list(TableCampaign.model_fields.keys())
 
     if not clean_campaigns:
         return pd.DataFrame(columns=cols)
@@ -49,7 +49,7 @@ def transform_events_to_dataframe(
 ) -> pd.DataFrame:
     """Transform raw event data to aggregated DataFrame format."""
     # DRY: Use model fields as single source of truth for columns
-    cols = list(CleanTransactionalEvent.model_fields.keys())
+    cols = list(TableTransactionalEvent.model_fields.keys())
 
     if not all_events:
         return pd.DataFrame(columns=cols)

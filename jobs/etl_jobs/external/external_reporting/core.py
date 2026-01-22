@@ -396,6 +396,9 @@ def process_report_worker(task: Dict[str, Any]) -> ReportStats:
     """
     Worker function to process a single report.
     """
+    # Set verbosity for this worker process
+    log_print.set_verbose(task.get("verbose", False))
+
     try:
         # Reconstruct Stakeholder (without trees for memory efficiency)
         stakeholder = Stakeholder(

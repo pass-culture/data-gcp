@@ -33,7 +33,7 @@ with
                     when ed.educational_deposit_period = 'all_year'
                     then (ed.educational_deposit_amount)
                 end
-            ) as all_year_deposit
+            ) as total_scholar_year_deposit
 
         from {{ ref("mrt_global__educational_institution") }} as ei
         inner join
@@ -230,7 +230,7 @@ select
     ) as is_split_deposit,
     -- confirmed bookings
     coalesce(
-        flattened_deposits.all_year_deposit,
+        flattened_deposits.total_scholar_year_deposit,
         flattened_deposits.p1_deposit + flattened_deposits.p2_deposit
     ) as total_scholar_year_deposit,
     case
@@ -257,7 +257,7 @@ select
             0
         ),
         coalesce(
-            flattened_deposits.all_year_deposit,
+            flattened_deposits.total_scholar_year_deposit,
             flattened_deposits.p1_deposit + flattened_deposits.p2_deposit
         )
     ) as pct_all_year_theoric_amount_spent,
@@ -303,7 +303,7 @@ select
             0
         ),
         coalesce(
-            flattened_deposits.all_year_deposit,
+            flattened_deposits.total_scholar_year_deposit,
             flattened_deposits.p1_deposit + flattened_deposits.p2_deposit
         )
     ) as pct_all_year_real_amount_spent,
@@ -332,7 +332,7 @@ select
             0
         ),
         coalesce(
-            flattened_deposits.all_year_deposit,
+            flattened_deposits.total_scholar_year_deposit,
             flattened_deposits.p1_deposit + flattened_deposits.p2_deposit,
             0
         )

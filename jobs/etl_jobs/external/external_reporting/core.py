@@ -285,7 +285,10 @@ class Report:
         orchestrator = ReportOrchestrationService(
             duckdb_conn, fetcher_concurrency=fetcher_concurrency
         )
-        sheet_stats_list = orchestrator.process_all_sheets(self.sheets, ds)
+        context = {"report_name": self.output_path.name}
+        sheet_stats_list = orchestrator.process_all_sheets(
+            self.sheets, ds, context=context
+        )
 
         # Add all sheet stats to report stats
         for sheet_stats in sheet_stats_list:

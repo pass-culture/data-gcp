@@ -159,6 +159,8 @@ Refreshes Wikidata metadata for existing artists without relinking products.
 def _choose_linkage(**context):
     if context["params"]["linkage_mode"] == "metadata_refresh":
         return REFRESH_METADATA_FLOW
+    elif context["params"]["linkage_mode"] == "deduplication":
+        return DEDUPLICATION_FLOW
     return INCREMENTAL_FLOW
 
 
@@ -254,6 +256,7 @@ with DAG(
     refresh_metadata_flow = EmptyOperator(task_id=REFRESH_METADATA_FLOW)
     summarization_with_llm_flow = EmptyOperator(task_id=SUMMARIZATION_WITH_LLM_FLOW)
     skip_summarization_flow = EmptyOperator(task_id=SKIP_SUMMARIZATION_FLOW)
+    deduplication_flow = EmptyOperator(task_id=DEDUPLICATION_FLOW)
 
     #####################################################################################################
     #                                          Import Data Task                                         #
@@ -287,8 +290,8 @@ with DAG(
     #                                        Deducplication Flow                                        #
     #####################################################################################################
 
-    deduplication_flow = SSHGCEOperator(
-        task_id="deduplication_flow",
+    deduplicate_artists = SSHGCEOperator(
+        task_id="deduplicate_artists",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
@@ -445,8 +448,11 @@ with DAG(
         >> vm_init
         >> import_data
         >> choose_linkage
-        >> [incremental_flow, refresh_metadata_flow]
+        >> [incremental_flow, refresh_metadata_flow, deduplication_flow]
     )
+
+    # Deduplication Flow
+    (deduplication_flow >> deduplicate_artists >> load_delta_artist_data_into_tables)
 
     # Incremental Update Flow
     (incremental_flow >> link_new_products_to_artists >> get_wikimedia_commons_license)

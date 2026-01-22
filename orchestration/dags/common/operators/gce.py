@@ -64,6 +64,7 @@ class StartGCEOperator(BaseOperator):
         self.additional_scopes = additional_scopes or []
 
     def execute(self, context) -> None:
+        self.gpu_count = int(self.gpu_count)
         image_type = MACHINE_TYPE["cpu"] if self.gpu_count == 0 else MACHINE_TYPE["gpu"]
         gce_networks = (
             GKE_NETWORK_LIST if self.use_gke_network is True else BASE_NETWORK_LIST

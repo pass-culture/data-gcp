@@ -194,7 +194,7 @@ with DAG(
         ),
         "linkage_mode": Param(
             default="incremental",
-            enum=["incremental", "metadata_refresh"],
+            enum=["incremental", "metadata_refresh", "deduplication"],
             type="string",
         ),
         "skip_llm_summarization": Param(default=False, type="boolean"),
@@ -214,6 +214,8 @@ with DAG(
             task_id="gce_start_task",
             instance_name=GCE_INSTANCE,
             instance_type="{{ params.instance_type }}",
+            gpu_count="{{ 1 if params.linkage_mode == 'deduplication' else 0 }}",
+            gpu_type="nvidia-tesla-t4",
             preemptible=False,
             labels={"job_type": "ml", "dag_name": DAG_NAME},
         )

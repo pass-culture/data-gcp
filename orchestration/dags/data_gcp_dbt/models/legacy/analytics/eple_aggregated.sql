@@ -14,7 +14,7 @@ with
             ei.macro_institution_type,
             ei.institution_program_name,
             ei.institution_macro_density_label,
-            ei.scholar_year,
+            ed.scholar_year,
             ei.total_students,
             sum(
                 case

@@ -49,7 +49,6 @@ def main(
     Global CLI callback. Sets verbose flag for all subcommands.
     """
     # Set global verbose state
-    state.verbose = v
     log_print.set_verbose(v)
 
     if v:
@@ -210,6 +209,7 @@ def generate(
                             "ds": ds,
                             "db_path": db_path,
                             "fetcher_concurrency": fetcher_concurrency,
+                            "verbose": state.verbose,
                         }
                         tasks.append(task)
                 except Exception as e:

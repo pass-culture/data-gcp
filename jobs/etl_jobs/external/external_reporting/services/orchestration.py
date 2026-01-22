@@ -395,7 +395,11 @@ class ReportOrchestrationService:
                     try:
                         kpi_data = future.result()
 
-                        if kpi_data:
+                        has_data = kpi_data and (
+                            kpi_data.get("yearly") or kpi_data.get("monthly")
+                        )
+
+                        if has_data:
                             # Write data to Excel (Main thread / Synchronized by virtue of loop)
                             write_success = ExcelWriterService.write_kpi_data_to_sheet(
                                 worksheet=sheet.worksheet,

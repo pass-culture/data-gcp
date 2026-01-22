@@ -13,6 +13,7 @@ from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_LINKAGE_DATASET,
+    BIGQUERY_ML_METADATA_DATASET,
     BIGQUERY_ML_PREPROCESSING_DATASET,
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
@@ -54,6 +55,8 @@ APPLICATIVE_ARTISTS_GCS_FILENAME = "applicative_database_artist.parquet"
 APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME = (
     "applicative_database_product_artist_link.parquet"
 )
+ML_METADATA_ARTIST_SCORE_GCS_FILENAME = "ml_metadata_artist_score.parquet"
+ML_METADATA_PRODUCT_STATS_GCS_FILENAME = "ml_metadata_product_stats.parquet"
 DELTA_ARTIST_ALIAS_GCS_FILENAME = "delta_artist_alias.parquet"
 DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME = "delta_product_artist_link.parquet"
 DELTA_ARTISTS_GCS_FILENAME_01 = "01_delta_artist.parquet"
@@ -85,6 +88,16 @@ TABLES_TO_IMPORT_TO_GCS = [
         "table_id": PRODUCT_TO_LINK_TABLE,
         "filename": PRODUCTS_TO_LINK_GCS_FILENAME,
     },
+    {
+        "dataset_id": BIGQUERY_ML_METADATA_DATASET,
+        "table_id": "artist_score",
+        "filename": ML_METADATA_ARTIST_SCORE_GCS_FILENAME,
+    },
+    {
+        "dataset_id": BIGQUERY_ML_METADATA_DATASET,
+        "table_id": "product_stats",
+        "filename": ML_METADATA_PRODUCT_STATS_GCS_FILENAME,
+    },
 ]
 GCS_TO_DELTA_TABLES = [
     {
@@ -107,6 +120,7 @@ GCS_TO_DELTA_TABLES = [
 # Flow names
 INCREMENTAL_FLOW = "incremental_flow"
 REFRESH_METADATA_FLOW = "refresh_metadata_flow"
+DEDUPLICATION_FLOW = "deduplication_flow"
 SKIP_SUMMARIZATION_FLOW = "skip_summarization_flow"
 SUMMARIZATION_WITH_LLM_FLOW = "summarization_with_llm_flow"
 
@@ -266,6 +280,26 @@ with DAG(
                 },
                 dag=dag,
             )
+
+    #####################################################################################################
+    #                                        Deducplication Flow                                        #
+    #####################################################################################################
+
+    deduplication_flow = SSHGCEOperator(
+        task_id="deduplication_flow",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+             uv run cli/deduplicate_artists.py \
+            --applicative-artist-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
+            --applicative-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
+            --product-stats-filepath {os.path.join(STORAGE_BASE_PATH, ML_METADATA_PRODUCT_STATS_GCS_FILENAME)} \
+            --artist-score-filepath {os.path.join(STORAGE_BASE_PATH, ML_METADATA_ARTIST_SCORE_GCS_FILENAME)} \
+            --output-delta-artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_05)} \
+            --output-delta-artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTIST_ALIAS_GCS_FILENAME)} \
+            --output-delta-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME)}
+            """,
+    )
 
     #####################################################################################################
     #                                      Incremental Update Flow                                      #

@@ -20,7 +20,7 @@ T = TypeVar("T")
 
 
 def retry_with_backoff(
-    func: Callable[..., T], max_retries: int = 3, initial_delay: float = 1.0
+    func: Callable[..., T], max_retries: int = 5, initial_delay: float = 2.0
 ) -> Callable[..., T]:
     """
     Decorator to retry a function with exponential backoff.
@@ -92,10 +92,12 @@ class DriveUploadService:
         Returns:
             Folder ID if found, None otherwise
         """
+        # Escape single quotes in name for the query
+        escaped_name = name.replace("'", "\\'")
         query = (
             f"mimeType='application/vnd.google-apps.folder' and "
             f"'{parent_id}' in parents and "
-            f"name='{name}' and "
+            f"name='{escaped_name}' and "
             f"trashed=false"
         )
 
@@ -191,7 +193,9 @@ class DriveUploadService:
         Returns:
             File ID if found, None otherwise (or if check fails)
         """
-        query = f"name='{file_name}' and '{parent_id}' in parents and trashed=false"
+        # Escape single quotes in file_name for the query
+        escaped_name = file_name.replace("'", "\\'")
+        query = f"name='{escaped_name}' and '{parent_id}' in parents and trashed=false"
 
         try:
             service = self._get_drive_service()
@@ -239,12 +243,11 @@ class DriveUploadService:
 
         # Check if file already exists
         existing_file_id = self.file_exists(file_name, parent_folder_id)
-        if existing_file_id:
-            log_print.debug(f"⏭️  Skipped (exists): {file_name}")
-            return None
-
+        
         # Upload new file
-        file_metadata = {"name": file_name, "parents": [parent_folder_id]}
+        file_metadata = {"name": file_name}
+        if not existing_file_id:
+            file_metadata["parents"] = [parent_folder_id]
 
         media = MediaFileUpload(
             str(local_path),
@@ -256,20 +259,37 @@ class DriveUploadService:
             service = self._get_drive_service()
 
             def _upload_file():
-                return (
-                    service.files()
-                    .create(
-                        body=file_metadata,
-                        media_body=media,
-                        fields="id",
-                        supportsAllDrives=True,
+                if existing_file_id:
+                    log_print.info(f"🔄 Overwriting: {file_name}")
+                    return (
+                        service.files()
+                        .update(
+                            fileId=existing_file_id,
+                            body=file_metadata,
+                            media_body=media,
+                            fields="id",
+                            supportsAllDrives=True,
+                        )
+                        .execute()
                     )
-                    .execute()
-                )
+                else:
+                    return (
+                        service.files()
+                        .create(
+                            body=file_metadata,
+                            media_body=media,
+                            fields="id",
+                            supportsAllDrives=True,
+                        )
+                        .execute()
+                    )
 
             file = retry_with_backoff(_upload_file)()
             file_id = file.get("id")
-            log_print.info(f"📤 Uploaded: {file_name}")
+            if not existing_file_id:
+                log_print.info(f"📤 Uploaded: {file_name}")
+            else:
+                log_print.info(f"✅ Updated: {file_name}")
             return file_id
 
         except Exception as e:
@@ -415,7 +435,7 @@ class DriveUploadService:
                     fg="cyan",
                 )
                 region_folder_map = {}
-                with ThreadPoolExecutor(max_workers=10) as executor:
+                with ThreadPoolExecutor(max_workers=4) as executor:
                     future_to_region = {
                         executor.submit(
                             self._create_region_folder,
@@ -449,7 +469,7 @@ class DriveUploadService:
                     f"  🚀 Uploading {len(upload_tasks)} files in parallel...",
                     fg="cyan",
                 )
-                with ThreadPoolExecutor(max_workers=10) as executor:
+                with ThreadPoolExecutor(max_workers=4) as executor:
                     futures = [
                         executor.submit(
                             self._upload_file_task, file_path, folder_id, stats

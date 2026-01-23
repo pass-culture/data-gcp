@@ -214,11 +214,12 @@ class ReportOrchestrationService:
         """Handle top data filling for top sheets."""
         context = context or {}
         report_name = context.get("report_name", "Unknown Report")
+        stakeholder_name = context.get("stakeholder_name", "Unknown Stakeholder")
         try:
             source_table_key = SHEET_DEFINITIONS[sheet.definition].get("source_table")
             if not source_table_key or source_table_key not in SOURCE_TABLES:
                 log_print.warning(
-                    f"[{report_name}] [{sheet.tab_name}] No source table found for sheet definition: {sheet.definition}"
+                    f"[{stakeholder_name}] [{report_name}] [{sheet.tab_name}] No source table found for sheet definition: {sheet.definition}"
                 )
                 top_result = TopResult(
                     top_name=sheet.definition,
@@ -234,7 +235,7 @@ class ReportOrchestrationService:
             dimension_context = sheet.get_dimension_context()
             if not dimension_context:
                 log_print.warning(
-                    f"[{report_name}] [{sheet.tab_name}] Could not resolve dimension context"
+                    f"[{stakeholder_name}] [{report_name}] [{sheet.tab_name}] Could not resolve dimension context"
                 )
                 top_result = TopResult(
                     top_name=sheet.definition,
@@ -291,7 +292,7 @@ class ReportOrchestrationService:
 
         except Exception as e:
             log_print.warning(
-                f"[{report_name}] [{sheet.tab_name}] Top data filling failed: {e}"
+                f"[{stakeholder_name}] [{report_name}] [{sheet.tab_name}] Top data filling failed: {e}"
             )
             top_result = TopResult(
                 top_name=sheet.definition, status=TopStatus.FAILED, error_message=str(e)
@@ -311,13 +312,14 @@ class ReportOrchestrationService:
 
         context = context or {}
         report_name = context.get("report_name", "Unknown Report")
+        stakeholder_name = context.get("stakeholder_name", "Unknown Stakeholder")
 
         try:
             # Get data source table
             source_table_key = SHEET_DEFINITIONS[sheet.definition].get("source_table")
             if not source_table_key or source_table_key not in SOURCE_TABLES:
                 log_print.warning(
-                    f"[{report_name}] [{sheet.tab_name}] No source table found for sheet definition: {sheet.definition}"
+                    f"[{stakeholder_name}] [{report_name}] [{sheet.tab_name}] No source table found for sheet definition: {sheet.definition}"
                 )
                 return
 
@@ -331,7 +333,7 @@ class ReportOrchestrationService:
             dimension_context = sheet.get_dimension_context()
             if not dimension_context:
                 log_print.warning(
-                    f"[{report_name}] [{sheet.tab_name}] Could not resolve dimension context"
+                    f"[{stakeholder_name}] [{report_name}] [{sheet.tab_name}] Could not resolve dimension context"
                 )
                 return
 
@@ -362,7 +364,7 @@ class ReportOrchestrationService:
                 return
 
             log_print.debug(
-                f"[{report_name}] ⚡ Fetching {len(kpi_tasks)} KPIs concurrently for {sheet.tab_name}..."
+                f"[{stakeholder_name}] [{report_name}] ⚡ Fetching {len(kpi_tasks)} KPIs concurrently for {sheet.tab_name}..."
             )
 
             # Phase 2: Concurrent Fetching
@@ -448,7 +450,7 @@ class ReportOrchestrationService:
 
                     except Exception as exc:
                         log_print.warning(
-                            f"[{report_name}] [{sheet.tab_name}] Failed to fetch data for KPI '{kpi_name}': {exc}"
+                            f"[{stakeholder_name}] [{report_name}] [{sheet.tab_name}] Failed to fetch data for KPI '{kpi_name}': {exc}"
                         )
                         kpi_result = KPIResult(
                             kpi_name=kpi_name,
@@ -459,13 +461,13 @@ class ReportOrchestrationService:
 
                     if writting_fail_count + no_data_count > 0:
                         log_print.debug(
-                            f"[{report_name}] KPI issue for '{kpi_name}' in {sheet.tab_name}: "
+                            f"[{stakeholder_name}] [{report_name}] KPI issue for '{kpi_name}' in {sheet.tab_name}: "
                             f"{writting_fail_count} write failures, {no_data_count} no data"
                         )
 
         except Exception as e:
             log_print.warning(
-                f"[{report_name}] [{sheet.tab_name}] KPI data filling failed: {e}"
+                f"[{stakeholder_name}] [{report_name}] [{sheet.tab_name}] KPI data filling failed: {e}"
             )
 
     def _parse_kpi_row(self, row, row_idx: int) -> Optional[Dict[str, Any]]:

@@ -50,8 +50,9 @@ class ReportOrchestrationService:
         all_sheet_stats = []
         context = context or {}
         report_name = context.get("report_name", "Unknown Report")
+        stakeholder_name = context.get("stakeholder_name", "Unknown Stakeholder")
 
-        log_print.info(f"➡️  Processing {len(sheets)} sheets for {report_name}")
+        log_print.info(f"➡️  Processing {len(sheets)} sheets for {stakeholder_name} - {report_name}")
 
         for sheet in sheets:
             try:
@@ -60,7 +61,7 @@ class ReportOrchestrationService:
 
             except Exception as e:
                 log_print.warning(
-                    f"[{report_name}] Unexpected error processing sheet {sheet.tab_name}: {e}"
+                    f"[{stakeholder_name}] [{report_name}] Unexpected error processing sheet {sheet.tab_name}: {e}"
                 )
                 # Create failed sheet stats
                 sheet_stats = SheetStats(
@@ -81,7 +82,7 @@ class ReportOrchestrationService:
         )
 
         log_print.info(
-            f"✅ Processing complete for {report_name}: {successful_sheets}/{total_sheets} sheets successful"
+            f"✅ Processing complete for {stakeholder_name} - {report_name}: {successful_sheets}/{total_sheets} sheets successful"
         )
 
         return all_sheet_stats
@@ -103,15 +104,16 @@ class ReportOrchestrationService:
         sheet_stats = SheetStats(sheet_name=sheet.tab_name, sheet_type=sheet.definition)
         context = context or {}
         report_name = context.get("report_name", "Unknown Report")
+        stakeholder_name = context.get("stakeholder_name", "Unknown Stakeholder")
 
         try:
-            log_print.debug(f"[{report_name}] 📊 Processing sheet: {sheet.tab_name}")
+            log_print.debug(f"[{stakeholder_name}] [{report_name}] 📊 Processing sheet: {sheet.tab_name}")
 
             # Step 1: Layout preprocessing (date column expansion)
             expansion_result = self._handle_layout_preprocessing(sheet, ds)
             if not expansion_result and sheet.definition.endswith("kpis"):
                 log_print.warning(
-                    f"[{report_name}] [{sheet.tab_name}] Failed to expand date columns"
+                    f"[{stakeholder_name}] [{report_name}] [{sheet.tab_name}] Failed to expand date columns"
                 )
                 return sheet_stats
 
@@ -132,25 +134,25 @@ class ReportOrchestrationService:
                 pass
             else:
                 log_print.warning(
-                    f"[{report_name}] [{sheet.tab_name}] Unknown sheet definition: {sheet.definition}"
+                    f"[{stakeholder_name}] [{report_name}] [{sheet.tab_name}] Unknown sheet definition: {sheet.definition}"
                 )
 
             # Log completion
             if sheet.definition in ("individual_kpis", "collective_kpis"):
                 log_print.debug(
-                    f"[{report_name}] ✅ Completed sheet {sheet.tab_name}: "
+                    f"[{stakeholder_name}] [{report_name}] ✅ Completed sheet {sheet.tab_name}: "
                     f"{sheet_stats.kpis_successful} KPIs successful, "
                     f"{sheet_stats.kpis_failed} KPIs failed, "
                     f"{sheet_stats.kpis_no_data} KPIs with no data"
                 )
             elif sheet.definition.startswith("top"):
                 log_print.debug(
-                    f"[{report_name}] ✅ Completed sheet {sheet.tab_name}: "
+                    f"[{stakeholder_name}] [{report_name}] ✅ Completed sheet {sheet.tab_name}: "
                     f"{sheet_stats.tops_successful} tops successful, "
                     f"{sheet_stats.tops_failed} tops failed"
                 )
             elif sheet.definition == "lexique":
-                log_print.debug(f"[{report_name}] ✅ Completed sheet {sheet.tab_name}")
+                log_print.debug(f"[{stakeholder_name}] [{report_name}] ✅ Completed sheet {sheet.tab_name}")
 
             # Step 3: Delete template columns and Set title
             layout_type = self._get_layout_type(sheet)
@@ -162,7 +164,7 @@ class ReportOrchestrationService:
 
         except Exception as e:
             log_print.warning(
-                f"[{report_name}] Failed to process sheet {sheet.tab_name}: {e}"
+                f"[{stakeholder_name}] [{report_name}] Failed to process sheet {sheet.tab_name}: {e}"
             )
             return sheet_stats
 

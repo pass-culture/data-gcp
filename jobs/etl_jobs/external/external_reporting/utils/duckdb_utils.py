@@ -201,7 +201,10 @@ def aggregate_kpi_data(
     if data.empty:
         context = context or {}
         report_name = context.get("report_name", "Unknown Report")
-        log_print.warning(f"[{report_name}] [{kpi_name}] No data available for aggregation.")
+        stakeholder_name = context.get("stakeholder_name", "Unknown Stakeholder")
+        log_print.warning(
+            f"[{stakeholder_name}] [{report_name}] [{kpi_name}] No data available for aggregation."
+        )
         return {}
 
     data = data.copy()

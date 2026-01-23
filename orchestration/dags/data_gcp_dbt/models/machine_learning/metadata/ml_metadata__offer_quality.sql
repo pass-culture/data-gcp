@@ -4,10 +4,12 @@ with
         from {{ ref("mrt_global__offer") }}
         where offer_is_bookable
     ),
+
     offer_quality as (
-        select bo.offer_id, iq.*
+        select iq.*, bo.offer_id
         from base_offers as bo
         left join {{ ref("ml_metadata__item_quality") }} as iq using (item_id)
     )
+
 select *
 from offer_quality

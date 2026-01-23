@@ -409,7 +409,7 @@ def default_title_layout():
     return {
         "title_row_offset": 0,
         "title_col_offset": 0,
-        "title_height": 3,
+        "title_height": 1,
         "title_width": 1,
     }
 

@@ -41,28 +41,29 @@ class LogPrinter:
 
     def info(self, msg: str, **style):
         self.logger.info(msg)
-        if not state.silent and self.logger.isEnabledFor(logging.INFO):
+        # Progress info should always show in CLI unless --quiet is used
+        if not state.silent:
             fg = style.pop("fg", "cyan")
             typer.secho(msg, fg=fg, **style)
 
     def warning(self, msg: str, **style):
         self.logger.warning(msg)
-        if not state.silent and self.logger.isEnabledFor(logging.WARNING):
+        if not state.silent:
             fg = style.pop("fg", "yellow")
             typer.secho(msg, fg=fg, **style)
 
     def error(self, msg: str, **style):
         self.logger.error(msg)
-        if not state.silent and self.logger.isEnabledFor(logging.ERROR):
-            fg = style.pop("fg", "red")
-            typer.secho(msg, fg=fg, **style)
+        # Errors should always be visible in the console
+        fg = style.pop("fg", "red")
+        typer.secho(msg, fg=fg, **style)
 
     def critical(self, msg: str, **style):
         self.logger.critical(msg)
-        if not state.silent and self.logger.isEnabledFor(logging.CRITICAL):
-            fg = style.pop("fg", "red")
-            bold = style.pop("bold", True)
-            typer.secho(msg, fg=fg, bold=bold, **style)
+        # Critical errors should always be visible in the console
+        fg = style.pop("fg", "red")
+        bold = style.pop("bold", True)
+        typer.secho(msg, fg=fg, bold=bold, **style)
 
 
 # --- Setup global logger ---

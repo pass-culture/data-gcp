@@ -1,7 +1,7 @@
 {% set required_creator_metadata = [
-    "LIVRE_PAPIER",
-    "SUPPORT_PHYSIQUE_MUSIQUE_CD",
-    "SUPPORT_PHYSIQUE_MUSIQUE_VINYLE",
+    "'LIVRE_PAPIER'",
+    "'SUPPORT_PHYSIQUE_MUSIQUE_CD'",
+    "'SUPPORT_PHYSIQUE_MUSIQUE_VINYLE'",
 ] %}
 with
     base_items as (
@@ -41,7 +41,7 @@ with
         left join unique_artists as pal on bi.offer_product_id = pal.offer_product_id
     ),
 
-    final as (
+    item_metadata_score as (
         select
             iwa.*,
             -- FILM: Title does NOT contain support format
@@ -73,7 +73,13 @@ with
                 in ({{ required_creator_metadata | map("string") | join(", ") }})
                 and (iwa.author is null or iwa.author = '')
                 and (iwa.performer is null or iwa.performer = '')
-            ) as livre_cd_vinyle_createur_manquant,
+            ) as livre_cd_vinyle_createur_manquant
+        from item_metadata_enriched as iwa
+    ),
+
+    final as (
+        select
+            ims.*,
             -- Weighted completion score using macro
             {{
                 completion_score(
@@ -86,7 +92,7 @@ with
                     "livre_cd_vinyle_createur_manquant",
                 )
             }} as completion_score
-        from item_metadata_enriched as iwa
+        from item_metadata_score as ims
     )
 
 select *

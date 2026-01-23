@@ -44,14 +44,15 @@ app = typer.Typer()
 @app.callback()
 def main(
     v: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose output"),
+    q: bool = typer.Option(False, "--quiet", "-q", help="Disable console output"),
 ):
     """
     Global CLI callback. Sets verbose flag for all subcommands.
     """
     # Set global verbose state
-    log_print.set_verbose(v)
+    log_print.set_flags(v, q)
 
-    if v:
+    if v and not q:
         log_print.info("🔹 Verbose mode enabled")
 
 
@@ -210,6 +211,7 @@ def generate(
                             "db_path": db_path,
                             "fetcher_concurrency": fetcher_concurrency,
                             "verbose": state.verbose,
+                            "quiet": state.silent,
                         }
                         tasks.append(task)
                 except Exception as e:

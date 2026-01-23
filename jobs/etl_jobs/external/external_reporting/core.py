@@ -285,7 +285,10 @@ class Report:
         orchestrator = ReportOrchestrationService(
             duckdb_conn, fetcher_concurrency=fetcher_concurrency
         )
-        context = {"report_name": self.output_path.name}
+        context = {
+            "report_name": self.output_path.name,
+            "stakeholder_name": self.stakeholder.name,
+        }
         sheet_stats_list = orchestrator.process_all_sheets(
             self.sheets, ds, context=context
         )
@@ -397,7 +400,7 @@ def process_report_worker(task: Dict[str, Any]) -> ReportStats:
     Worker function to process a single report.
     """
     # Set verbosity for this worker process
-    log_print.set_verbose(task.get("verbose", False))
+    log_print.set_flags(task.get("verbose", False), task.get("quiet", False))
 
     try:
         # Reconstruct Stakeholder (without trees for memory efficiency)

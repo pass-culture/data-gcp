@@ -44,7 +44,6 @@ with
     bookings as (
         select
             ed.institution_id,
-            ed.educational_deposit_id,
             ed.scholar_year,
             coalesce(
                 sum(
@@ -203,7 +202,7 @@ with
         inner join
             {{ ref("int_applicative__collective_stock") }} as cs
             on cb.collective_stock_id = cs.collective_stock_id
-        group by 1, 2, 3
+        group by 1, 2
     )
 
 select

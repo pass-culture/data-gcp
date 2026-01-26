@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "(BSR) chore(dependabot):"
+    open-pull-requests-limit: 0 # Disable version updates
+    groups:
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - ".*"

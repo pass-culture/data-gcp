@@ -53,6 +53,7 @@ PREPROCESSED_ARTIST_NAME_KEY = "preprocessed_artist_name"
 POSTPROCESSED_ARTIST_NAME_KEY = "postprocessed_artist_name"
 WIKIPEDIA_URL_KEY = "wikipedia_url"
 WIKIPEDIA_CONTENT_KEY = "wikipedia_content"
+OFFER_NAME_KEY = "offer_name"
 
 # Dataframe Columns List
 ARTIST_ALIASES_KEYS = [

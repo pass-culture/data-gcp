@@ -6,7 +6,7 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "(BSR) chore(dependabot):"
-    open-pull-requests-limit: 0 # Disable version updates
+    open-pull-requests-limit: 5 # Limit concurrent PRs; still allows security updates
     groups:
       security-updates:
         applies-to: security-updates

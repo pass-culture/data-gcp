@@ -51,6 +51,7 @@ BQ_ADAGE_DTYPE = {
     "academieLibelle": "STRING",
     "regionLibelle": "STRING",
     "domaines": "STRING",
+    "update_date": "STRING",
 }
 
 

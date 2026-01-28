@@ -50,7 +50,7 @@ def deploy_container(serving_container):
 
 def connect_remote_mlflow(client_id, env="ehp"):
     uri = MLFLOW_PROD_URI if env == "prod" else MLFLOW_EHP_URI
-    service_account_dict = json.loads(get_secret(GCP_PROJECT_ID, SA_ACCOUNT))
+    service_account_dict = json.loads(get_secret(SA_ACCOUNT))
     client_id = get_secret("mlflow_client_id")
     id_token_credentials = service_account.IDTokenCredentials.from_service_account_info(
         service_account_dict, target_audience=client_id

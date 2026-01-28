@@ -33,8 +33,8 @@
         {% set region_col = entity_prefix ~ "_region_name" %}
         {% set dept_col = entity_prefix ~ "_department_name" %}
         {% set acad_col = entity_prefix ~ "_academy_name" %}
-        {% set epci_col = entity_prefix ~ "_epci" %}
-        {% set city_col = entity_prefix ~ "_city" %}
+        {% set epci_col = entity_prefix ~ "_epci_code" %}
+        {% set city_col = entity_prefix ~ "_city_code" %}
     {% else %}
         {% set region_col = "region_name" %}
         {% set dept_col = "dep_name" %}

@@ -40,6 +40,7 @@ select
     v.venue_is_open_to_public,
     v.venue_is_acessibility_synched,
     v.venue_type_label,
+    v.venue_activity,
     v.venue_label,
     v.venue_humanized_id,
     v.venue_backoffice_link,

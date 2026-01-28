@@ -31,6 +31,35 @@ SELECT
         WHEN "venueTypeCode" = \'TRAVELING_CINEMA\' THEN \'Cinéma itinérant\'
         WHEN "venueTypeCode" = \'DISTRIBUTION_STORE\' THEN \'Magasin de grande distribution\'
         ELSE "venueTypeCode" END AS venue_type_code
+    , CASE
+        WHEN "activity" = \'ART_GALLERY\' THEN \'Galerie d’art\'
+        WHEN "activity" = \'ART_SCHOOL\' THEN \'Conservatoire ou école d’arts\'
+        WHEN "activity" = \'ARTISTIC_COMPANY\' THEN \'Compagnie artistique\'
+        WHEN "activity" = \'ARTS_CENTRE\' THEN \'Centre d’arts\'
+        WHEN "activity" = \'ARTS_EDUCATION\' THEN \'Formation ou enseignement artistique\'
+        WHEN "activity" = \'BOOKSTORE\' THEN \'Librairie\'
+        WHEN "activity" = \'CINEMA\' THEN \'Cinéma\'
+        WHEN "activity" = \'COMMUNITY_CENTRE\' THEN \'Centre socio-culturel\'
+        WHEN "activity" = \'CREATIVE_ARTS_STORE\' THEN \'Magasin d’arts créatifs\'
+        WHEN "activity" = \'CULTURAL_CENTRE\' THEN \'Centre culturel pluridisciplinaire\'
+        WHEN "activity" = \'CULTURAL_MEDIATION\' THEN \'Médiation culturelle\'
+        WHEN "activity" = \'DISTRIBUTION_STORE\' THEN \'Magasin de distribution de produits culturels\'
+        WHEN "activity" = \'FESTIVAL\' THEN \'Festival\'
+        WHEN "activity" = \'HERITAGE_SITE\' THEN \'Site patrimonial, historique ou touristique\'
+        WHEN "activity" = \'LIBRARY\' THEN \'Bibliothèque ou médiathèque\'
+        WHEN "activity" = \'MUSEUM\' THEN \'Musée\'
+        WHEN "activity" = \'MUSIC_INSTRUMENT_STORE\' THEN \'Magasin d’instruments de musique\'
+        WHEN "activity" = \'PERFORMANCE_HALL\' THEN \'Salle de spectacles\'
+        WHEN "activity" = \'PRESS\' THEN \'Presse\'
+        WHEN "activity" = \'PRODUCTION_OR_PROMOTION_COMPANY\' THEN \'Société de production, tourneur ou label\'
+        WHEN "activity" = \'RECORD_STORE\' THEN \'Disquaire\'
+        WHEN "activity" = \'SCIENCE_CENTRE\' THEN \'Centre de culture scientifique, technique et industrielle\'
+        WHEN "activity" = \'STREAMING_PLATFORM\' THEN \'Plateforme de streaming musique ou vidéo\'
+        WHEN "activity" = \'TOURIST_INFORMATION_CENTRE\' THEN \'Office de tourisme\'
+        WHEN "activity" = \'TRAVELLING_CINEMA\' THEN \'Cinéma itinérant\'
+        WHEN "activity" = \'GAMES_CENTRE\' THEN \'Espace ludique\'
+        WHEN "activity" = \'OTHER\' THEN \'Autre\'
+        ELSE "activity" END AS venue_activity
     , CAST("venueLabelId" AS varchar(255)) AS venue_label_id
     , "dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS venue_creation_date
     , "isPermanent" AS venue_is_permanent

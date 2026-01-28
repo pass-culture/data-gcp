@@ -104,6 +104,7 @@ select
     v.venue_comment,
     v.venue_public_name,
     v.venue_type_code as venue_type_label,
+    v.venue_activity,
     v.venue_label_id,
     v.venue_creation_date,
     v.venue_is_permanent,

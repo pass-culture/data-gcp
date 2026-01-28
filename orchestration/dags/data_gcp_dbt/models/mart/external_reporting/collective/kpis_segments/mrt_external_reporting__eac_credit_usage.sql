@@ -43,7 +43,7 @@ with
             ea.institution_city,
             ea.institution_epci,
             sum(ea.total_scholar_year_deposit) as total_institution_deposit_amount
-        from {{ ref("eple_aggregated") }} as ea
+        from {{ ref("mrt_collective__eple_aggregated") }} as ea
         left join
             {{ source("raw", "applicative_database_educational_year") }} as ey
             on ea.scholar_year = ey.scholar_year

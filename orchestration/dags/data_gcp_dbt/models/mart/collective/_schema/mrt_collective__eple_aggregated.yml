@@ -1,0 +1,92 @@
+version: 2
+
+models:
+  - name: mrt_collective__eple_aggregated
+    description: "{{ doc('description__mrt_collective__eple_aggregated') }}"
+    columns:
+      - name: institution_id
+        description: "{{ doc('column__institution_id') }}"
+      - name: institution_external_id
+        description: "{{ doc('column__institution_external_id') }}"
+      - name: institution_name
+        description: "{{ doc('column__institution_name') }}"
+      - name: institution_city
+        description: "{{ doc('column__institution_city') }}"
+      - name: institution_department_code
+        description: "{{ doc('column__institution_department_code') }}"
+      - name: institution_region_name
+        description: "{{ doc('column__institution_region_name') }}"
+      - name: institution_academy_name
+        description: "{{ doc('column__institution_academy_name') }}"
+      - name: institution_epci
+        description: "{{ doc('column__institution_epci') }}"
+      - name: ministry
+        description: "{{ doc('column__ministry') }}"
+      - name: institution_type
+        description: "{{ doc('column__institution_type') }}"
+      - name: macro_institution_type
+        description: "{{ doc('column__macro_institution_type') }}"
+      - name: institution_program_name
+        description: "{{ doc('column__institution_program_name') }}"
+      - name: institution_macro_density_label
+        description: "{{ doc('column__institution_macro_density_label') }}"
+      - name: scholar_year
+        description: "{{ doc('column__scholar_year') }}"
+      - name: total_students
+        description: "{{ doc('column__total_students') }}"
+      - name: p1_deposit
+        description: "{{ doc('column__p1_deposit') }}"
+      - name: p2_deposit
+        description: "{{ doc('column__p2_deposit') }}"
+      - name: p1_total_theoric_bookings
+        description: "{{ doc('column__p1_total_theoric_bookings') }}"
+      - name: p2_total_theoric_bookings
+        description: "{{ doc('column__p2_total_theoric_bookings') }}"
+      - name: p1_theoric_amount_spent
+        description: "{{ doc('column__p1_theoric_amount_spent') }}"
+      - name: p2_theoric_amount_spent
+        description: "{{ doc('column__p2_theoric_amount_spent') }}"
+      - name: p1_total_confirmed_bookings
+        description: "{{ doc('column__p1_total_confirmed_bookings') }}"
+      - name: p2_total_confirmed_bookings
+        description: "{{ doc('column__p2_total_confirmed_bookings') }}"
+      - name: p1_real_amount_spent
+        description: "{{ doc('column__p1_real_amount_spent') }}"
+      - name: p2_real_amount_spent
+        description: "{{ doc('column__p2_real_amount_spent') }}"
+      - name: p1_reimbursed_amount
+        description: "{{ doc('column__p1_reimbursed_amount') }}"
+      - name: p2_reimbursed_amount
+        description: "{{ doc('column__p2_reimbursed_amount') }}"
+      - name: total_scholar_year_deposit
+        description: "{{ doc('column__total_scholar_year_deposit') }}"
+      - name: is_split_deposit
+        description: "{{ doc('column__is_split_deposit') }}"
+      - name: all_year_total_theoric_bookings
+        description: "{{ doc('column__all_year_total_theoric_bookings') }}"
+      - name: all_year_theoric_amount_spent
+        description: "{{ doc('column__all_year_theoric_amount_spent') }}"
+      - name: pct_all_year_theoric_amount_spent
+        description: "{{ doc('column__pct_all_year_theoric_amount_spent') }}"
+      - name: pct_p1_theoric_amount_spent
+        description: "{{ doc('column__pct_p1_theoric_amount_spent') }}"
+      - name: pct_p2_theoric_amount_spent
+        description: "{{ doc('column__pct_p2_theoric_amount_spent') }}"
+      - name: all_year_total_confirmed_bookings
+        description: "{{ doc('column__all_year_total_confirmed_bookings') }}"
+      - name: all_year_real_amount_spent
+        description: "{{ doc('column__all_year_real_amount_spent') }}"
+      - name: pct_p1_real_amount_spent
+        description: "{{ doc('column__pct_p1_real_amount_spent') }}"
+      - name: pct_p2_real_amount_spent
+        description: "{{ doc('column__pct_p2_real_amount_spent') }}"
+      - name: pct_all_year_real_amount_spent
+        description: "{{ doc('column__pct_all_year_real_amount_spent') }}"
+      - name: all_year_reimbursed_amount
+        description: "{{ doc('column__all_year_reimbursed_amount') }}"
+      - name: pct_p1_reimbursed_amount_spent
+        description: "{{ doc('column__pct_p1_reimbursed_amount_spent') }}"
+      - name: pct_p2_reimbursed_amount_spent
+        description: "{{ doc('column__pct_p2_reimbursed_amount_spent') }}"
+      - name: pct_all_year_reimbursed_amount_spent
+        description: "{{ doc('column__pct_all_year_reimbursed_amount_spent') }}"

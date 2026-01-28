@@ -31,6 +31,7 @@ SELECT
         WHEN "venueTypeCode" = \'TRAVELING_CINEMA\' THEN \'Cinéma itinérant\'
         WHEN "venueTypeCode" = \'DISTRIBUTION_STORE\' THEN \'Magasin de grande distribution\'
         ELSE "venueTypeCode" END AS venue_type_code
+    , CAST("activity" AS AS varchar(255)) AS venue_activity
     , CAST("venueLabelId" AS varchar(255)) AS venue_label_id
     , "dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS venue_creation_date
     , "isPermanent" AS venue_is_permanent

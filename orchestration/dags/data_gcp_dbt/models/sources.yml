@@ -259,6 +259,7 @@ sources:
     tables:
       - name: default_item_cluster
       - name: item_embedding_extraction
+      - name: item_embedding_extraction_v2
       - name: item_embedding_reduced_64
       - name: item_embedding_reduced_32
       - name: item_embedding_reduced_16

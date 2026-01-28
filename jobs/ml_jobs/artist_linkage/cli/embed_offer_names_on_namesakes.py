@@ -1,18 +1,15 @@
 import logging
-import os
 import unicodedata
 
 import pandas as pd
 import typer
 from sentence_transformers import SentenceTransformer
 
-from src.constants import OFFER_NAME_KEY, PRODUCT_ID_KEY
+from src.constants import ENCODER_NAME, HF_TOKEN, OFFER_NAME_KEY, PRODUCT_ID_KEY
+from src.utils.deduplication import get_namesakes
 
-ENCODER_NAME = "google/embeddinggemma-300m"
 PROMPT_NAME = "STS"
 BATCH_SIZE = 256
-THRESHOLD = 0.7
-RANDOM_SEED = 42
 
 logging.basicConfig(level=logging.INFO)
 app = typer.Typer()
@@ -24,18 +21,6 @@ def preprocess_offer_name(offer_name: str) -> str:
         char for char in normalized if unicodedata.category(char) != "Mn"
     )
     return " ".join(without_accents.lower().strip().split())
-
-
-def get_namesakes(artist_with_stats_df: pd.DataFrame) -> pd.DataFrame:
-    return (
-        artist_with_stats_df.groupby("normalized_artist_name")
-        .agg(
-            artist_id_list=("artist_id", list),
-            artist_names=("artist_name", list),
-            artist_count=("artist_id", "nunique"),
-        )
-        .loc[lambda df: df.artist_count > 1]
-    )
 
 
 @app.command()
@@ -72,7 +57,7 @@ def main(
     )
 
     # 3. Encode offer names
-    encoder = SentenceTransformer(ENCODER_NAME, token=os.environ.get("HF_TOKEN"))
+    encoder = SentenceTransformer(ENCODER_NAME, token=HF_TOKEN)
     embedding_array = encoder.encode(
         products_of_namesake_artists_df.drop_duplicates()
         .dropna(subset=[OFFER_NAME_KEY])
@@ -84,7 +69,7 @@ def main(
 
     # 3. Save results
     products_of_namesake_artists_df.assign(
-        embeddings=lambda df: list(embedding_array)
+        embedding=lambda df: list(embedding_array)
     ).to_parquet(
         output_product_embeddings_filepath,
         index=False,

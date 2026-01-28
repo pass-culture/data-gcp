@@ -7,6 +7,7 @@ from typing import ClassVar
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}"
+HF_TOKEN = os.environ.get("HF_TOKEN")
 
 # Mlflow
 MLFLOW_URI = (
@@ -83,6 +84,7 @@ PRODUCTS_KEYS = [
 class Action:
     add: ClassVar[str] = "add"
     remove: ClassVar[str] = "remove"
+    update: ClassVar[str] = "update"
 
 
 class Comment:
@@ -103,3 +105,6 @@ class ProductToLinkStatus:
 WIKIMEDIA_REQUEST_HEADER = {
     "User-Agent": "PassCulture/1.0 (https://passculture.app; contact@passculture.app) Python/requests"
 }  # Required to avoid 403 errors from Wikimedia API
+
+# Deduplication
+ENCODER_NAME = "google/embeddinggemma-300m"

@@ -24,6 +24,7 @@ with
             offer_metadata.offer_type_label,
             offer_metadata.offer_type_labels,
             offer_metadata.offer_sub_type_label,
+            offer_metadata.offer_video_url,
             if(
                 offer_metadata.offer_type_label is not null,
                 offer.total_used_individual_bookings,

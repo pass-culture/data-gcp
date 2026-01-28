@@ -8,6 +8,7 @@ def get_namesakes(artist_with_stats_df: pd.DataFrame) -> pd.DataFrame:
             artist_id_list=("artist_id", list),
             artist_names=("artist_name", list),
             artist_count=("artist_id", "nunique"),
+            product_count=("artist_product_count", "sum"),
         )
         .loc[lambda df: df.artist_count > 1]
     )

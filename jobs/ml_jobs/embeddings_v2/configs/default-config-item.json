@@ -1,0 +1,65 @@
+{
+    "features": [
+        {
+            "name": "name",
+            "type": "macro_text",
+            "content": [
+                "offer_name"
+            ],
+            "model": [
+                "optim_text"
+            ]
+        },
+        {
+            "name": "description",
+            "type": "macro_text",
+            "content": [
+                "offer_description"
+            ],
+            "model": [
+                "optim_text"
+            ]
+        },
+        {
+            "name": "semantic_content",
+            "content": [
+                "subcategory_id",
+                "category_id",
+                "offer_label_concat",
+                "author_concat",
+                "offer_name",
+                "offer_description"
+            ],
+            "type": "macro_text",
+            "model": [
+                "optim_text",
+                "hybrid"
+            ]
+        },
+        {
+            "name": "label",
+            "content": [
+                "subcategory_id",
+                "category_id",
+                "offer_label_concat"
+            ],
+            "type": "macro_text",
+            "model": [
+                "optim_text",
+                "hybrid"
+            ]
+        },
+        {
+            "name": "image",
+            "type": "image",
+            "model": [
+                "optim_image"
+            ]
+        }
+    ],
+    "models": {
+        "optim_text": "sentence-transformers/all-MiniLM-L6-v2",
+        "optim_image": "clip-ViT-B-32",
+        "hybrid": "sentence-transformers/clip-ViT-B-32-multilingual-v1"
+    }
+}

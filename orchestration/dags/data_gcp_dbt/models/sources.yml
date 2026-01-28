@@ -258,16 +258,23 @@ sources:
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: default_item_cluster
+      - name: default_item_cluster_v2
+      - name: default_user_embedding_v2
       - name: item_embedding_extraction
       - name: item_embedding_extraction_v2
       - name: item_embedding_reduced_64
       - name: item_embedding_reduced_32
       - name: item_embedding_reduced_16
       - name: item_embedding_reduced_5
+      - name: item_embedding_v2_reduced_64
+      - name: item_embedding_v2_reduced_32
+      - name: item_embedding_v2_reduced_16
+      - name: item_embedding_v2_reduced_5
       - name: delta_artist
       - name: delta_artist_alias
       - name: delta_product_artist_link
       - name: unconstrained_item_cluster
+      - name: unconstrained_item_cluster_v2
       - name: two_tower_user_embedding_history
         description: Partitionned table containing the history of the two tower user emebddings
       - name: two_tower_item_embedding_history

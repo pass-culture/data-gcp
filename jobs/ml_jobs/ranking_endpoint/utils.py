@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import time
@@ -7,7 +8,7 @@ import mlflow
 import pandas as pd
 from google.auth.transport.requests import Request
 from google.cloud import secretmanager
-from google.oauth2 import id_token
+from google.oauth2 import service_account
 
 MLFLOW_EHP_URI = "https://mlflow.staging.passculture.team/"
 MLFLOW_PROD_URI = "https://mlflow.passculture.team/"
@@ -15,6 +16,7 @@ GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
 MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"
+SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}"
 
 
 def save_experiment(experiment_name, model_name, serving_container, run_id):
@@ -47,8 +49,15 @@ def deploy_container(serving_container):
 
 
 def connect_remote_mlflow(client_id, env="ehp"):
-    os.environ["MLFLOW_TRACKING_TOKEN"] = id_token.fetch_id_token(Request(), client_id)
     uri = MLFLOW_PROD_URI if env == "prod" else MLFLOW_EHP_URI
+    service_account_dict = json.loads(get_secret(GCP_PROJECT_ID, SA_ACCOUNT))
+    client_id = get_secret("mlflow_client_id")
+    id_token_credentials = service_account.IDTokenCredentials.from_service_account_info(
+        service_account_dict, target_audience=client_id
+    )
+    id_token_credentials.refresh(Request())
+
+    os.environ["MLFLOW_TRACKING_TOKEN"] = id_token_credentials.token
     mlflow.set_tracking_uri(uri)
 
 

@@ -24,16 +24,27 @@ logging.basicConfig(level=logging.INFO)
 app = typer.Typer()
 
 THRESHOLD = 0.7
+MAX_OFFERS_FOR_COMPARISON = 1000
 
 
 def get_offer_name_similarities_on_df(
     encoder: SentenceTransformer, offer_names_df: pd.DataFrame
 ) -> pd.DataFrame:
+    if len(offer_names_df) > MAX_OFFERS_FOR_COMPARISON:
+        offer_names_df = (
+            offer_names_df.groupby(ARTIST_ID_KEY)
+            .apply(
+                lambda x: x.sample(min(MAX_OFFERS_FOR_COMPARISON, len(x))),
+                include_groups=False,
+            )
+            .reset_index(level=0)
+            .reset_index(drop=True)
+        )
     try:
         similarities = encoder.similarity(
             offer_names_df.embedding.tolist(), offer_names_df.embedding.tolist()
         ).reshape(-1)
-    except:  # noqa: E722
+    except RuntimeError:
         similarities = np.array(len(offer_names_df) * len(offer_names_df)).reshape(-1)
     offer_without_embeddings_df = offer_names_df.drop(columns=["embedding"])
     return (
@@ -64,9 +75,9 @@ def main(
     applicative_product_artist_link_filepath: str = typer.Option(),
     artist_score_filepath: str = typer.Option(),
     product_embeddings_filepath: str = typer.Option(),
-    output_delta_artist_file_path: str = typer.Option(),
-    output_delta_artist_alias_file_path: str = typer.Option(),
+    output_delta_artist_filepath: str = typer.Option(),
     output_delta_product_artist_link_filepath: str = typer.Option(),
+    output_delta_artist_alias_filepath: str = typer.Option(),
 ) -> None:
     # 1. Load raw data
     applicative_artist_df = pd.read_parquet(applicative_artist_filepath)
@@ -92,7 +103,7 @@ def main(
     artists_to_merge = []
     for artist_ids in tqdm.tqdm(
         namesake_artist_df.sort_values(
-            by="artist_count", ascending=False
+            by="product_count", ascending=False
         ).artist_id_list
     ):
         offer_names_df = product_embeddings_df.loc[
@@ -100,6 +111,7 @@ def main(
         ][
             [ARTIST_ID_KEY, "offer_name", "preprocessed_offer_name", "embedding"]
         ].sort_values(by=[ARTIST_ID_KEY, "preprocessed_offer_name"])
+
         crossed_offer_names = get_offer_name_similarities_on_df(
             encoder=encoder, offer_names_df=offer_names_df
         )
@@ -164,7 +176,7 @@ def main(
 
     # 6. Save results
     delta_artist_df.to_parquet(
-        output_delta_artist_file_path,
+        output_delta_artist_filepath,
         index=False,
     )
     delta_product_artist_link_df.to_parquet(
@@ -172,7 +184,7 @@ def main(
         index=False,
     )
     pd.DataFrame(columns=ARTIST_ALIASES_KEYS).to_parquet(
-        output_delta_artist_alias_file_path, index=False
+        output_delta_artist_alias_filepath, index=False
     )
 
 

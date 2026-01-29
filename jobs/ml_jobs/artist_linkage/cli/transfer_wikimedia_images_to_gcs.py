@@ -172,6 +172,16 @@ def run_parallel_image_transfers(
             concurrent.futures.as_completed(futures), total=len(futures)
         ):
             results.append(future.result())
+
+    if len(results) == 0:
+        logging.warning("No images were processed.")
+        return pd.DataFrame(
+            columns=[
+                WIKIDATA_IMAGE_FILE_URL_KEY,
+                ARTIST_MEDIATION_UUID_KEY,
+                STATUS_KEY,
+            ]
+        )
     return pd.DataFrame(results)
 
 

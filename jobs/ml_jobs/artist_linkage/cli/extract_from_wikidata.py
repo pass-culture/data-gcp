@@ -6,6 +6,7 @@ import requests
 import typer
 from loguru import logger
 
+from src.constants import WIKIDATA_ID_KEY
 from src.utils.preprocessing_utils import normalize_string_series
 
 QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
@@ -20,22 +21,26 @@ QUERIES_PATHES = {
 app = typer.Typer()
 
 
-def extract_wiki_id(df: pd.DataFrame) -> pd.DataFrame:
+def extract_wikidata_id(df: pd.DataFrame) -> pd.DataFrame:
     WIKI_ID_TO_STRIP = "http://www.wikidata.org/entity/"
     return df.assign(
-        wiki_id=lambda df: df.wiki_id.str.strip(WIKI_ID_TO_STRIP),
+        wikidata_id=lambda df: df.wikidata_id.str.strip(WIKI_ID_TO_STRIP),
     )
 
 
 def merge_data(
     df_list: list[pd.DataFrame], wiki_ids_per_query: dict[str, np.ndarray]
 ) -> pd.DataFrame:
-    # The drop duplicates is done on the wiki_id column due to the fact that professions or aliases can be unsorted lists
-    merged_df = pd.concat(df_list).drop_duplicates(subset=["wiki_id"])
+    # The drop duplicates is done on the wikidata_id column due to the fact that professions or aliases can be unsorted lists
+    merged_df = pd.concat(df_list).drop_duplicates(subset=[WIKIDATA_ID_KEY])
 
     for query_name, wiki_ids in wiki_ids_per_query.items():
         merged_df = merged_df.assign(
-            **{query_name: lambda df, wiki_ids=wiki_ids: df.wiki_id.isin(wiki_ids)}
+            **{
+                query_name: lambda df, wiki_ids=wiki_ids: df[WIKIDATA_ID_KEY].isin(
+                    wiki_ids
+                )
+            }
         )
 
     return merged_df
@@ -71,7 +76,11 @@ def postprocess_data(df: pd.DataFrame) -> pd.DataFrame:
             ]
         )
         .explode("aliases_list")
-        .rename(columns={"aliases_list": "alias"})
+        .rename(
+            columns={
+                "aliases_list": "alias",
+            }
+        )
         .assign(
             raw_alias=lambda df: df.alias,
             alias=lambda df: df.alias.pipe(normalize_string_series),
@@ -129,12 +138,12 @@ def main(output_file_path: str = typer.Option()) -> None:
             query_string = file.read()
         logger.debug(f"SPARQL Query: \n{query_string}")
 
-        data_df = fetch_wikidata_qlever_csv(query_string).pipe(extract_wiki_id)
+        data_df = fetch_wikidata_qlever_csv(query_string).pipe(extract_wikidata_id)
 
         if not data_df.empty:
             logger.info(f"Retrieved {len(data_df)} rows.")
             df_list.append(data_df)
-            wiki_ids_per_query[query_name] = data_df.wiki_id.unique()
+            wiki_ids_per_query[query_name] = data_df[WIKIDATA_ID_KEY].unique()
         else:
             raise ValueError("No data retrieved.")
 
@@ -144,7 +153,7 @@ def main(output_file_path: str = typer.Option()) -> None:
     logger.info("Postprocessing the data")
     postprocessed_df = postprocess_data(merged_df)
     logger.info(
-        f"Found {len(postprocessed_df)} unique (wiki_id, alias) pairs for {postprocessed_df.wiki_id.nunique()} wiki_ids"
+        f"Found {len(postprocessed_df)} unique (wikidata_id, alias) pairs for {postprocessed_df.wikidata_id.nunique()} wikidata_ids"
     )
 
     logger.info(f"Saving results to {output_file_path}")

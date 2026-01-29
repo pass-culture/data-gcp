@@ -10,14 +10,14 @@ def get_last_date_from_bucket(gcs_path: str) -> str:
     Args:
         gcs_path (str): The GCS path to be used. (ex: gs://bucket-name/path/to/base/path)
     """
-    dates = get_datest_from_bucket(gcs_path=gcs_path)
+    dates = get_datet_from_bucket(gcs_path=gcs_path)
 
     if not dates:
         raise ValueError(f"No dates found in bucket {gcs_path}")
     return sorted(dates, reverse=True)[0]
 
 
-def get_datest_from_bucket(gcs_path: str) -> list[str]:
+def get_datet_from_bucket(gcs_path: str) -> list[str]:
     """
     Get all dates from the GCS path.
 
@@ -27,7 +27,7 @@ def get_datest_from_bucket(gcs_path: str) -> list[str]:
     client = storage.Client()
     storage_path = gcs_path.replace("gs://", "")
     bucket_name = storage_path.split("/")[0]
-    base_path = storage_path.replace(f"{bucket_name}/", "")
+    base_path = storage_path.split("/", 1)[1]
     bucket = client.get_bucket(bucket_name)
     blobs = bucket.list_blobs(prefix=base_path)
 

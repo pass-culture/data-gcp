@@ -140,7 +140,6 @@ def get_native_dependencies(cards_list, tables_df):
         dependencies_native[i] = dependency
         i += 1
 
-    print(pd.DataFrame.from_dict(dependencies_native, orient="index").head())
     dependencies_native_df = (
         pd.DataFrame.from_dict(dependencies_native, orient="index")
         .explode(["table_name", "table_schema"])

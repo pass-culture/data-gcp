@@ -13,9 +13,6 @@ GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-prod")
 # BigQuery constants
 FINANCE_DATASET = f"ml_finance_{ENV_SHORT_NAME}"
 
-# Training constants
-PREDICTION_FULL_HORIZON = "2026-12-31"  # Generate predictions up to this date
-
 # MLflow Configuration
 SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}"
 MLFLOW_SECRET_NAME = "mlflow_client_id"
@@ -24,4 +21,3 @@ MLFLOW_URI = (
     if ENV_SHORT_NAME == "prod"
     else "https://mlflow.staging.passculture.team/"
 )
-EXPERIMENT_NAME = f"finance_pricing_forecast_v0_{ENV_SHORT_NAME}"

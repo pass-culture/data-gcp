@@ -7,7 +7,7 @@ including loading tables and executing queries.
 import pandas as pd
 from google.cloud import bigquery
 
-from src.utils.constants import FINANCE_DATASET, GCP_PROJECT_ID
+from forecast.utils.constants import FINANCE_DATASET, GCP_PROJECT_ID
 
 
 def get_client() -> bigquery.Client:

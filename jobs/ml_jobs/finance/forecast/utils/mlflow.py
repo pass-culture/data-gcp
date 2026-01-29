@@ -14,7 +14,7 @@ from google.auth.transport.requests import Request
 from google.cloud import secretmanager
 from google.oauth2 import service_account
 
-from src.utils.constants import (
+from forecast.utils.constants import (
     GCP_PROJECT_ID,
     MLFLOW_SECRET_NAME,
     MLFLOW_URI,

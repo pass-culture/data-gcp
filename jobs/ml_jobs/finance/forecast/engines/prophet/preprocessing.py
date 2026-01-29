@@ -3,9 +3,9 @@ import math
 import pandas as pd
 from loguru import logger
 
-from src.forecast_engines.prophet.model_config import ModelConfig
-from src.forecasters.forecast_model import DataSplit
-from src.utils.bigquery import load_table
+from forecast.engines.prophet.model_config import ModelConfig
+from forecast.forecasters.forecast_model import DataSplit
+from forecast.utils.bigquery import load_table
 
 
 def validate_data(df: pd.DataFrame, model_config: ModelConfig) -> None:

@@ -8,10 +8,10 @@ select
     artist_mediation_uuid,
     wikidata_id,
     wikipedia_url,
-    image_file_url as wikidata_image_file_url,
-    image_author as wikidata_image_author,
-    image_license as wikidata_image_license,
-    image_license_url as wikidata_image_license_url,
+    wikidata_image_file_url,
+    wikidata_image_author,
+    wikidata_image_license,
+    wikidata_image_license_url,
     action,
     comment
 from {{ source("ml_preproc", "delta_artist") }}

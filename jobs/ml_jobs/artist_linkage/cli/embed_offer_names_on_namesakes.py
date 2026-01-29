@@ -66,9 +66,9 @@ def main(
     HF_TOKEN = get_secret(HF_TOKEN_SECRET_NAME)
     encoder = SentenceTransformer(ENCODER_NAME, token=HF_TOKEN)
     embedding_array = encoder.encode(
-        products_of_namesake_artists_df.drop_duplicates()
-        .dropna(subset=[OFFER_NAME_KEY])
-        .offer_name.tolist(),
+        products_of_namesake_artists_df.dropna(
+            subset=[OFFER_NAME_KEY]
+        ).offer_name.tolist(),
         prompt_name=PROMPT_NAME,
         batch_size=BATCH_SIZE,
         show_progress_bar=True,

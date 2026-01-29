@@ -20,9 +20,9 @@ def get_card_lists(metabase):
     other_cards = []
     for card in cards:
         print(f"Card keys : {card.keys()}")
-        print(f"Card legacy_mbql keys : {card["legacy_mbql"].keys()}")
+        print(f"Card legacy_mbql keys : {card['legacy_mbql'].keys()}")
         print(
-            f"Card legacy_mbql dataset_query keys : {card["legacy_mbql"]["dataset_query"].keys()}"
+            f"Card legacy_mbql dataset_query keys : {card['legacy_mbql']['dataset_query'].keys()}"
         )
         if card["legacy_mbql"]["dataset_query"]["type"] == "native":
             native_cards.append(card)

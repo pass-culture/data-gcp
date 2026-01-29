@@ -5,6 +5,7 @@ from loguru import logger
 # Import the interface and implementations
 from forecast.forecasters.forecast_model import ForecastModel
 from forecast.forecasters.prophet_model import ProphetModel
+from forecast.utils.bigquery import save_forecast_gbq
 from forecast.utils.mlflow import setup_mlflow
 
 
@@ -76,10 +77,7 @@ def main(
             backtest_metrics = model.run_backtest()
             mlflow.log_metrics(backtest_metrics)
 
-        # 5. Diagnostics
-        ## TODO: Save plots as artifacts
-
-        # 6. Future Forecast
+        # 5. Future Forecast
         forecast_df = model.predict(backtest_end_date, forecast_horizon_date)
 
         # Save forecast to generic artifact
@@ -88,15 +86,30 @@ def main(
         mlflow.log_artifact(forecast_file, artifact_path="forecasts")
         logger.info(f"Forecast saved to {forecast_file}")
 
-        # 7. Monthly Forecast Aggregation
+        # 6. Monthly Forecast Aggregation
         try:
             monthly_forecast_df = model.aggregate_to_monthly(forecast_df)
             monthly_forecast_file = f"{run_name}_monthly_forecast.xlsx"
             monthly_forecast_df.to_excel(monthly_forecast_file, index=False)
             mlflow.log_artifact(monthly_forecast_file, artifact_path="forecasts")
             logger.info(f"Monthly Forecast saved to {monthly_forecast_file}")
+
+            # 7. Log to BigQuery
+            logger.info("Logging monthly forecast to BigQuery...")
+            save_forecast_gbq(
+                df=monthly_forecast_df,
+                run_id=mlflow.active_run().info.run_id,
+                experiment_name=experiment_name,
+                run_name=run_name,
+                model_name=model_name,
+                model_type=model_type,
+                table_name="monthly_forecasts",
+            )
+            logger.info("Monthly forecast logged to BigQuery successfully")
         except NotImplementedError:
             logger.warning(f"Monthly aggregation not implemented for {model_type}")
+        except Exception as e:
+            logger.error(f"Failed to log to BigQuery: {e}")
 
 
 if __name__ == "__main__":

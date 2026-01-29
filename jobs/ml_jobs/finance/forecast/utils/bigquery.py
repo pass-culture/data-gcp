@@ -52,22 +52,64 @@ def load_query(query: str) -> pd.DataFrame:
     return client.query(query).to_dataframe()
 
 
-def save_df_as_bigquery_table(df: pd.DataFrame, table_name: str) -> None:
-    """Save a DataFrame as a BigQuery table.
+def save_forecast_gbq(
+    df: pd.DataFrame,
+    run_id: str,
+    experiment_name: str,
+    run_name: str,
+    model_name: str,
+    model_type: str,
+    table_name: str = "monthly_forecasts",
+    if_exists: str = "append",
+) -> None:
+    """Save a forecast DataFrame to BigQuery.
 
     Args:
-        df: DataFrame to save.
-        table_name: Name of the destination table.
-
-    Raises:
-        ValueError: If table_name is empty or df is empty.
+        df: DataFrame containing the monthly forecast data.
+        run_id: MLflow run ID.
+        experiment_name: MLflow experiment name.
+        run_name: MLflow run name.
+        model_name: Name of the model configuration.
+        model_type: Type of model (e.g. 'prophet').
+        table_name: Target table name within the finance dataset.
+        if_exists: Behavior if table exists ('fail', 'replace', 'append').
     """
-    if not table_name:
-        raise ValueError("table_name cannot be empty")
-    if df.empty:
-        raise ValueError("DataFrame is empty, cannot save to BigQuery")
+    destination_table = f"{GCP_PROJECT_ID}.{FINANCE_DATASET}.{table_name}"
+
+    # Transform DataFrame to BigQuery schema
+    bq_df = df.copy()
+
+    # Rename columns to match schema if needed
+    if "ds" in bq_df.columns:
+        bq_df = bq_df.rename(columns={"ds": "forecast_date"})
+    if "total_pricing" in bq_df.columns:
+        bq_df = bq_df.rename(columns={"total_pricing": "prediction"})
+
+    # Add metadata columns
+    bq_df["run_id"] = run_id
+    bq_df["experiment_name"] = experiment_name
+    bq_df["run_name"] = run_name
+    bq_df["model_name"] = model_name
+    bq_df["model_type"] = model_type
+    bq_df["execution_date"] = pd.Timestamp.now()
+
+    # Define schema explicitly to ensure consistency
+    job_config = bigquery.LoadJobConfig(
+        schema=[
+            bigquery.SchemaField("forecast_date", "DATE"),
+            bigquery.SchemaField("prediction", "FLOAT"),
+            bigquery.SchemaField("model_name", "STRING"),
+            bigquery.SchemaField("model_type", "STRING"),
+            bigquery.SchemaField("experiment_name", "STRING"),
+            bigquery.SchemaField("run_name", "STRING"),
+            bigquery.SchemaField("run_id", "STRING"),
+            bigquery.SchemaField("execution_date", "TIMESTAMP"),
+        ],
+        write_disposition="WRITE_APPEND" if if_exists == "append" else "WRITE_TRUNCATE",
+    )
 
     client = get_client()
-    table_id = f"{GCP_PROJECT_ID}.{FINANCE_DATASET}.{table_name}"
-    job = client.load_table_from_dataframe(df, table_id)
-    job.result()
+    job = client.load_table_from_dataframe(
+        bq_df, destination_table, job_config=job_config
+    )
+    job.result()  # Wait for the job to complete

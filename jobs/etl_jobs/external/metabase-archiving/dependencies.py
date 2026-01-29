@@ -38,14 +38,14 @@ def get_query_dependencies(card_list, tables_df):
         card_id = card["id"]
         card_owner = card["creator"]["email"]
         card_name = card["name"]
-        card_type = card["query"]["type"]
-        query_attributes_keys = card["query"].keys()
+        card_type = card["legacy_query"]["query"]["type"]
+        query_attributes_keys = card["legacy_query"]["query"].keys()
         table_dependency = []
 
         if "source-table" in query_attributes_keys:
-            source_table_id = card["query"]["source-table"]
+            source_table_id = card["legacy_query"]["query"]["source-table"]
             if "joins" in query_attributes_keys:
-                for join in card["query"]["joins"]:
+                for join in card["legacy_query"]["query"]["joins"]:
                     table_dependency.append(join["source-table"])
             table_dependency.append(source_table_id)
 
@@ -53,9 +53,9 @@ def get_query_dependencies(card_list, tables_df):
             "source-query" in query_attributes_keys
             and "source-table" in card["query"]["source-query"].keys()
         ):
-            source_table = card["query"]["source-query"]["source-table"]
+            source_table = card["legacy_query"]["query"]["source-query"]["source-table"]
             if "joins" in query_attributes_keys:
-                for join in card["query"]["joins"]:
+                for join in card["legacy_query"]["query"]["joins"]:
                     table_dependency.append(join["source-table"])
             table_dependency.append(source_table)
 
@@ -103,9 +103,9 @@ def get_native_dependencies(cards_list, tables_df):
         card_id = card["id"]
         card_name = card["name"]
         card_owner = card["creator"]["email"]
-        card_type = card["native"]["type"]
+        card_type = card["legacy_query"]["native"]["type"]
 
-        sql_lines = card["native"].lower()
+        sql_lines = card["legacy_query"]["native"].lower()
         sql_lines = sql_lines.replace("`", "")
         table_dependency = re.findall(regex, sql_lines)
         table_dependency = list(set(table_dependency))

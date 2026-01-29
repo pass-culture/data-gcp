@@ -1,4 +1,6 @@
-from google.cloud import storage
+from google.cloud import secretmanager, storage
+
+from src.constants import GCP_PROJECT_ID
 
 
 def get_last_date_from_bucket(gcs_path: str) -> str:
@@ -39,3 +41,10 @@ def get_datest_from_bucket(gcs_path: str) -> list[str]:
             dates.append(blob.name.split("/")[-2])
 
     return sorted(set(dates), reverse=True)
+
+
+def get_secret(secret_name: str) -> str:
+    client = secretmanager.SecretManagerServiceClient()
+    name = f"projects/{GCP_PROJECT_ID}/secrets/{secret_name}/versions/latest"
+    response = client.access_secret_version(name=name)
+    return response.payload.data.decode("UTF-8")

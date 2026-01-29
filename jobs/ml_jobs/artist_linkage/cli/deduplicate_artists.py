@@ -46,7 +46,7 @@ def get_offer_name_similarities_on_df(
             offer_names_df.embedding.tolist(), offer_names_df.embedding.tolist()
         ).reshape(-1)
     except RuntimeError:
-        similarities = np.array(len(offer_names_df) * len(offer_names_df)).reshape(-1)
+        similarities = np.zeros(len(offer_names_df) * len(offer_names_df)).reshape(-1)
     offer_without_embeddings_df = offer_names_df.drop(columns=["embedding"])
     return (
         offer_without_embeddings_df.join(

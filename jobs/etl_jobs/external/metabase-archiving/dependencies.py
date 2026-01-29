@@ -32,6 +32,7 @@ def get_card_lists(metabase):
 
 def get_query_dependencies(card_list, tables_df):
     i = 0
+    monitoring = 0
     dependencies_other = {}
 
     for card in card_list:
@@ -39,7 +40,11 @@ def get_query_dependencies(card_list, tables_df):
         card_owner = card["creator"]["email"]
         card_name = card["name"]
         card_type = card["query_type"]
-        query_attributes_keys = card["legacy_query"]["query"].keys()
+        if card["legacy_query"]:
+            query_attributes_keys = card["legacy_query"]["query"].keys()
+        else:
+            monitoring += 1
+            continue
         table_dependency = []
 
         if "source-table" in query_attributes_keys:
@@ -51,7 +56,7 @@ def get_query_dependencies(card_list, tables_df):
 
         elif (
             "source-query" in query_attributes_keys
-            and "source-table" in card["query"]["source-query"].keys()
+            and "source-table" in card["legacy_query"]["query"]["source-query"].keys()
         ):
             source_table = card["legacy_query"]["query"]["source-query"]["source-table"]
             if "joins" in query_attributes_keys:
@@ -76,6 +81,8 @@ def get_query_dependencies(card_list, tables_df):
         .merge(tables_df, how="left", on="table_id")
     )
 
+    print(f"{monitoring} query cards without query legacy")
+
     return dependencies_other_df
 
 
@@ -98,6 +105,7 @@ def get_native_dependencies(cards_list, tables_df):
     regex = r"from\s+[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+|join\s+[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+"
 
     i = 0
+    monitoring = 0
     dependencies_native = {}
     for card in cards_list:
         card_id = card["id"]
@@ -105,8 +113,12 @@ def get_native_dependencies(cards_list, tables_df):
         card_owner = card["creator"]["email"]
         card_type = card["query_type"]
 
-        sql_lines = card["legacy_query"]["native"].lower()
-        sql_lines = sql_lines.replace("`", "")
+        if card["legacy_query"]:
+            sql_lines = card["legacy_query"]["native"]["query"].lower()
+            sql_lines = sql_lines.replace("`", "")
+        else:
+            monitoring += 1
+            continue
         table_dependency = re.findall(regex, sql_lines)
         table_dependency = list(set(table_dependency))
 
@@ -135,6 +147,8 @@ def get_native_dependencies(cards_list, tables_df):
         .reset_index(drop=True)
         .merge(tables_df, how="left", on=["table_schema", "table_name"])
     )
+
+    print(f"{monitoring} native cards without query legacy")
 
     return dependencies_native_df
 

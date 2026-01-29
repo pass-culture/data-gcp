@@ -75,8 +75,8 @@ class MetabaseAPI:
         export_cards = []
         for i, _c in enumerate(cards):
             card_dict = {}
-            if "dataset_query" in _c:
-                _dataset_type = _c["legacy_query"]["dataset_query"]["type"]
+            if "query" in _c:
+                _dataset_type = _c["legacy_query"]["query"]["type"]
                 creator_id = (
                     _c["creator"]["id"] if "creator" in _c else _c["creator_id"]
                 )
@@ -90,7 +90,7 @@ class MetabaseAPI:
                     "card_updated_at": _c["updated_at"],
                     "card_database_id": _c["database_id"],
                     "card_dataset_query": (
-                        _c["legacy_query"]["dataset_query"][_dataset_type]["query"]
+                        _c["legacy_query"]["query"][_dataset_type]["query"]
                         if _dataset_type == "native"
                         else None
                     ),

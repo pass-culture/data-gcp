@@ -38,7 +38,7 @@ def get_query_dependencies(card_list, tables_df):
         card_id = card["id"]
         card_owner = card["creator"]["email"]
         card_name = card["name"]
-        card_type = card["legacy_query"]["query"]["type"]
+        card_type = card["query_type"]
         query_attributes_keys = card["legacy_query"]["query"].keys()
         table_dependency = []
 
@@ -103,7 +103,7 @@ def get_native_dependencies(cards_list, tables_df):
         card_id = card["id"]
         card_name = card["name"]
         card_owner = card["creator"]["email"]
-        card_type = card["legacy_query"]["native"]["type"]
+        card_type = card["query_type"]
 
         sql_lines = card["legacy_query"]["native"].lower()
         sql_lines = sql_lines.replace("`", "")

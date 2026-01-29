@@ -24,7 +24,7 @@ def get_card_lists(metabase):
         print(card["legacy_query"])
         print(card["dataset_query"])
         if card["legacy_query"]:
-            card = json.loads(card["legacy_query"])
+            card["legacy_query"] = json.loads(card["legacy_query"])
         if card["type"] == "native":
             native_cards.append(card)
         elif card["type"] == "query":

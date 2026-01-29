@@ -15,10 +15,11 @@ from src.constants import (
     ARTIST_NAME_KEY,
     COMMENT_KEY,
     ENCODER_NAME,
-    HF_TOKEN,
+    HF_TOKEN_SECRET_NAME,
     Action,
 )
 from src.utils.deduplication import get_namesakes
+from src.utils.gcp import get_secret
 
 logging.basicConfig(level=logging.INFO)
 app = typer.Typer()
@@ -99,6 +100,7 @@ def main(
     )
 
     # 3. Find artists to merge
+    HF_TOKEN = get_secret(HF_TOKEN_SECRET_NAME)
     encoder = SentenceTransformer(ENCODER_NAME, token=HF_TOKEN)
     artists_to_merge = []
     for artist_ids in tqdm.tqdm(

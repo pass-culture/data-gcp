@@ -5,8 +5,14 @@ import pandas as pd
 import typer
 from sentence_transformers import SentenceTransformer
 
-from src.constants import ENCODER_NAME, HF_TOKEN, OFFER_NAME_KEY, PRODUCT_ID_KEY
+from src.constants import (
+    ENCODER_NAME,
+    HF_TOKEN_SECRET_NAME,
+    OFFER_NAME_KEY,
+    PRODUCT_ID_KEY,
+)
 from src.utils.deduplication import get_namesakes
+from src.utils.gcp import get_secret
 
 PROMPT_NAME = "STS"
 BATCH_SIZE = 256
@@ -57,6 +63,7 @@ def main(
     )
 
     # 3. Encode offer names
+    HF_TOKEN = get_secret(HF_TOKEN_SECRET_NAME)
     encoder = SentenceTransformer(ENCODER_NAME, token=HF_TOKEN)
     embedding_array = encoder.encode(
         products_of_namesake_artists_df.drop_duplicates()

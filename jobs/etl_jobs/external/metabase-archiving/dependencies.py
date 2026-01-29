@@ -22,9 +22,9 @@ def get_card_lists(metabase):
     for card in cards:
         if card["legacy_query"]:
             card["legacy_query"] = json.loads(card["legacy_query"])
-        if card["type"] == "native":
+        if card["query_type"] == "native":
             native_cards.append(card)
-        elif card["type"] == "query":
+        elif card["query_type"] == "query":
             query_cards.append(card)
 
     return native_cards, query_cards

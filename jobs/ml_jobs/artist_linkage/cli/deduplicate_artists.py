@@ -12,7 +12,6 @@ from src.constants import (
     ACTION_KEY,
     ARTIST_ALIASES_KEYS,
     ARTIST_ID_KEY,
-    ARTIST_NAME_KEY,
     COMMENT_KEY,
     ENCODER_NAME,
     HF_TOKEN_SECRET_NAME,
@@ -25,17 +24,53 @@ logging.basicConfig(level=logging.INFO)
 app = typer.Typer()
 
 THRESHOLD = 0.7
-MAX_OFFERS_FOR_COMPARISON = 1000
+MAX_OFFERS_PER_ARTIST_FOR_COMPARISON = 1000
+
+
+def get_artists_to_merge(
+    namesake_artist_df: pd.DataFrame,
+    product_embeddings_df: pd.DataFrame,
+    encoder: SentenceTransformer,
+) -> list[set]:
+    artists_to_merge = []
+    for artist_ids in tqdm.tqdm(
+        namesake_artist_df.sort_values(
+            by="product_count", ascending=False
+        ).artist_id_list
+    ):
+        offer_names_df = product_embeddings_df.loc[
+            lambda df, artist_ids=artist_ids: df[ARTIST_ID_KEY].isin(artist_ids)
+        ][
+            [ARTIST_ID_KEY, "offer_name", "preprocessed_offer_name", "embedding"]
+        ].sort_values(by=[ARTIST_ID_KEY, "preprocessed_offer_name"])
+
+        crossed_offer_names = get_offer_name_similarities_on_df(
+            encoder=encoder, offer_names_df=offer_names_df
+        )
+        if offer_names_df[ARTIST_ID_KEY].nunique() < 2:
+            logger.warning("Not enough offer names to compare between artists.")
+            continue
+
+        if crossed_offer_names.embedding_dot.max() >= THRESHOLD:
+            matched_artists_df = crossed_offer_names.loc[
+                lambda df: df.embedding_dot >= THRESHOLD,
+                ["artist_id_1", "artist_id_2"],
+            ].drop_duplicates()
+
+            artists_to_merge += get_artists_to_merge_for_matched_artists(
+                matched_artists_df
+            )
+    return artists_to_merge
 
 
 def get_offer_name_similarities_on_df(
     encoder: SentenceTransformer, offer_names_df: pd.DataFrame
 ) -> pd.DataFrame:
-    if len(offer_names_df) > MAX_OFFERS_FOR_COMPARISON:
+    if len(offer_names_df) > MAX_OFFERS_PER_ARTIST_FOR_COMPARISON:
         offer_names_df = (
             offer_names_df.groupby(ARTIST_ID_KEY)
             .apply(
-                lambda x: x.sample(min(MAX_OFFERS_FOR_COMPARISON, len(x))),
+                lambda x: x.sample(min(MAX_OFFERS_PER_ARTIST_FOR_COMPARISON, len(x))),
                 include_groups=False,
             )
             .reset_index(level=0)
@@ -95,41 +130,15 @@ def main(
     artist_id_to_score = dict(
         artist_with_score_df.set_index(ARTIST_ID_KEY)["artist_raw_score"]
     )
-    artist_id_to_name = dict(
-        applicative_artist_df.set_index(ARTIST_ID_KEY)[ARTIST_NAME_KEY]
-    )
 
     # 3. Find artists to merge
-    HF_TOKEN = get_secret(HF_TOKEN_SECRET_NAME)
-    encoder = SentenceTransformer(ENCODER_NAME, token=HF_TOKEN)
-    artists_to_merge = []
-    for artist_ids in tqdm.tqdm(
-        namesake_artist_df.sort_values(
-            by="product_count", ascending=False
-        ).artist_id_list
-    ):
-        offer_names_df = product_embeddings_df.loc[
-            lambda df, artist_ids=artist_ids: df[ARTIST_ID_KEY].isin(artist_ids)
-        ][
-            [ARTIST_ID_KEY, "offer_name", "preprocessed_offer_name", "embedding"]
-        ].sort_values(by=[ARTIST_ID_KEY, "preprocessed_offer_name"])
-
-        crossed_offer_names = get_offer_name_similarities_on_df(
-            encoder=encoder, offer_names_df=offer_names_df
-        )
-        if offer_names_df[ARTIST_ID_KEY].nunique() < 2:
-            logger.warning("Not enough offer names to compare between artists.")
-            continue
-
-        if crossed_offer_names.embedding_dot.max() >= THRESHOLD:
-            matched_artists_df = crossed_offer_names.loc[
-                lambda df: df.embedding_dot >= THRESHOLD,
-                ["artist_id_1", "artist_id_2"],
-            ].drop_duplicates()
-
-            artists_to_merge += get_artists_to_merge_for_matched_artists(
-                matched_artists_df
-            )
+    artists_to_merge = get_artists_to_merge(
+        namesake_artist_df=namesake_artist_df,
+        product_embeddings_df=product_embeddings_df,
+        encoder=SentenceTransformer(
+            ENCODER_NAME, token=get_secret(HF_TOKEN_SECRET_NAME)
+        ),
+    )
     logger.info(f"Number of artist groups to merge: {len(artists_to_merge)}")
 
     # %% 4. Build one to one artist mapping
@@ -143,23 +152,11 @@ def main(
         main_artist_id = sorted_artist_ids[0]
         for duplicate_artist_id in sorted_artist_ids[1:]:
             artist_mapping[duplicate_artist_id] = main_artist_id
-    artist_mapping_df = pd.DataFrame(
-        {
-            "duplicate_artist_id": artist_mapping.keys(),
-            "main_artist_id": artist_mapping.values(),
-        }
-    ).assign(
-        main_artist_score=lambda df: df.main_artist_id.map(artist_id_to_score),
-        duplicate_artist_score=lambda df: df.duplicate_artist_id.map(
-            artist_id_to_score
-        ),
-        main_artist_name=lambda df: df.main_artist_id.map(artist_id_to_name),
-        duplicate_artist_name=lambda df: df.duplicate_artist_id.map(artist_id_to_name),
-    )
+    logger.info(f"Number of artists to be merged: {len(artist_mapping)}")
 
     # 5. Build delta dataframes
     delta_artist_df = applicative_artist_df.loc[
-        lambda df: df[ARTIST_ID_KEY].isin(artist_mapping_df.duplicate_artist_id)
+        lambda df: df[ARTIST_ID_KEY].isin(artist_mapping.keys())
     ].assign(
         **{
             ACTION_KEY: Action.remove,
@@ -167,13 +164,16 @@ def main(
         }
     )
     delta_product_artist_link_df = applicative_product_artist_link_df.loc[
-        lambda df: df[ARTIST_ID_KEY].isin(artist_mapping_df.duplicate_artist_id)
+        lambda df: df[ARTIST_ID_KEY].isin(artist_mapping.keys())
     ].assign(
         **{
             ARTIST_ID_KEY: lambda df: df[ARTIST_ID_KEY].map(artist_mapping),
             ACTION_KEY: Action.update,
             COMMENT_KEY: "linked to main artist after deduplication",
         }
+    )
+    logger.info(
+        f"Number of product-artist links to be updated: {len(delta_product_artist_link_df)}"
     )
 
     # 6. Save results

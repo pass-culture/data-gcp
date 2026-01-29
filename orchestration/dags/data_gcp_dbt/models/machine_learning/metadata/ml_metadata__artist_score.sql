@@ -14,7 +14,9 @@
 with
     raw_artist as (
         select
-            *,
+            * except (artist_app_search_score, artist_pro_search_score),
+            artist_app_search_score as previous_artist_app_search_score,
+            artist_pro_search_score as previous_artist_pro_search_score,
             array_to_string(
                 array(
                     select part

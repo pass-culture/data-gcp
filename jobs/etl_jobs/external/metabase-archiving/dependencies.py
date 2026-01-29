@@ -19,7 +19,12 @@ def get_card_lists(metabase):
     native_cards = []
     other_cards = []
     for card in cards:
-        if card["dataset_query"]["type"] == "native":
+        print(f"Card keys : {card.keys()}")
+        print(f"Card legacy_mbql keys : {card["legacy_mbql"].keys()}")
+        print(
+            f"Card legacy_mbql dataset_query keys : {card["legacy_mbql"]["dataset_query"].keys()}"
+        )
+        if card["legacy_mbql"]["dataset_query"]["type"] == "native":
             native_cards.append(card)
         else:
             other_cards.append(card)
@@ -35,26 +40,29 @@ def get_query_dependencies(card_list, tables_df):
         card_id = card["id"]
         card_owner = card["creator"]["email"]
         card_name = card["name"]
-        card_type = card["dataset_query"]["type"]
-        query_attributes_keys = card["dataset_query"]["query"].keys()
+        card_type = card["legacy_mbql"]["dataset_query"]["type"]
+        query_attributes_keys = card["legacy_mbql"]["dataset_query"]["query"].keys()
         table_dependency = []
 
         if "source-table" in query_attributes_keys:
-            source_table_id = card["dataset_query"]["query"]["source-table"]
+            source_table_id = card["legacy_mbql"]["dataset_query"]["query"][
+                "source-table"
+            ]
             if "joins" in query_attributes_keys:
-                for join in card["dataset_query"]["query"]["joins"]:
+                for join in card["legacy_mbql"]["dataset_query"]["query"]["joins"]:
                     table_dependency.append(join["source-table"])
             table_dependency.append(source_table_id)
 
         elif (
             "source-query" in query_attributes_keys
-            and "source-table" in card["dataset_query"]["query"]["source-query"].keys()
+            and "source-table"
+            in card["legacy_mbql"]["dataset_query"]["query"]["source-query"].keys()
         ):
-            source_table = card["dataset_query"]["query"]["source-query"][
-                "source-table"
-            ]
+            source_table = card["legacy_mbql"]["dataset_query"]["query"][
+                "source-query"
+            ]["source-table"]
             if "joins" in query_attributes_keys:
-                for join in card["dataset_query"]["query"]["joins"]:
+                for join in card["legacy_mbql"]["dataset_query"]["query"]["joins"]:
                     table_dependency.append(join["source-table"])
             table_dependency.append(source_table)
 
@@ -102,9 +110,9 @@ def get_native_dependencies(cards_list, tables_df):
         card_id = card["id"]
         card_name = card["name"]
         card_owner = card["creator"]["email"]
-        card_type = card["dataset_query"]["type"]
+        card_type = card["legacy_mbql"]["dataset_query"]["type"]
 
-        sql_lines = card["dataset_query"]["native"]["query"].lower()
+        sql_lines = card["legacy_mbql"]["dataset_query"]["native"]["query"].lower()
         sql_lines = sql_lines.replace("`", "")
         table_dependency = re.findall(regex, sql_lines)
         table_dependency = list(set(table_dependency))

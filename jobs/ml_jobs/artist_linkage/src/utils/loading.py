@@ -3,7 +3,7 @@ import os
 import pandas as pd
 from loguru import logger
 
-from src.utils.gcs_utils import get_last_date_from_bucket
+from src.utils.gcp import get_last_date_from_bucket
 
 
 def load_wikidata(wiki_base_path: str, wiki_file_name: str) -> pd.DataFrame:

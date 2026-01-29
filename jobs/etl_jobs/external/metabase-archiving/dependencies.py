@@ -20,9 +20,6 @@ def get_card_lists(metabase):
     native_cards = []
     query_cards = []
     for card in cards:
-        print(f"Card keys : {card.keys()}")
-        print(card["legacy_query"])
-        print(card["dataset_query"])
         if card["legacy_query"]:
             card["legacy_query"] = json.loads(card["legacy_query"])
         if card["type"] == "native":
@@ -131,6 +128,7 @@ def get_native_dependencies(cards_list, tables_df):
         dependencies_native[i] = dependency
         i += 1
 
+    print(pd.DataFrame.from_dict(dependencies_native, orient="index").head())
     dependencies_native_df = (
         pd.DataFrame.from_dict(dependencies_native, orient="index")
         .explode(["table_name", "table_schema"])

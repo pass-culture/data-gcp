@@ -153,6 +153,18 @@ Refreshes Wikidata metadata for existing artists without relinking products.
 - Loads delta tables with refreshed metadata into BigQuery
 
 **Use case:** Periodic updates to keep artist metadata (descriptions, images, etc.) up to date without reprocessing product links.
+
+### 3. Deduplication Flow (`deduplication`)
+Identifies and merges duplicate artist entries based on namesake analysis and product similarities.
+
+**Steps:**
+- Identifies artists with identical names (namesakes).
+- Generates embeddings for product offer names associated with these artists.
+- Compares product embeddings to find matches between namesake artists.
+- Merges artists if enough product similarities are found.
+- Updates artist, artist alias, and product-artist link tables in BigQuery.
+
+**Use case:** Cleaning up the artist database by merging duplicate entries created by distinct providers or data errors.
 """
 
 

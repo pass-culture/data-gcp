@@ -18,6 +18,7 @@ select
     venue_is_open_to_public,
     venue_is_acessibility_synched,
     venue_type_label,
+    venue_activity,
     venue_label,
     venue_humanized_id,
     venue_backoffice_link,

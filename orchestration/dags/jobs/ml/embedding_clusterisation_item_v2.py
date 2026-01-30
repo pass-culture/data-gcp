@@ -1,4 +1,3 @@
-from about_time import VERSION
 from datetime import datetime, timedelta
 
 from airflow import DAG
@@ -17,7 +16,6 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from common.utils import get_airflow_schedule
 
 VERSION_SUFFIX = "_v2"
 
@@ -26,7 +24,6 @@ DEFAULT_REGION = "europe-west1"
 BASE_PATH = f"data-gcp/jobs/ml_jobs/clusterisation{VERSION_SUFFIX}"
 DATE = "{{ yyyymmdd(ds) }}"
 DAG_NAME = f"embedding_clusterisation_item{VERSION_SUFFIX}"
-
 
 
 default_args = {
@@ -54,7 +51,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Cluster items from metadata embeddings v2",
-    schedule_interval=get_airflow_schedule("0 21 * * 0"),  # every sunday
+    schedule_interval=None,
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,

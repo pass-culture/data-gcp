@@ -20,9 +20,6 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from common.utils import get_airflow_schedule
-
-from jobs.crons import SCHEDULE_DICT
 
 DEFAULT_REGION = "europe-west1"
 VERSION_SUFFIX = "_v2"
@@ -47,7 +44,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Reduce embeddings",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME]),
+    schedule_interval=None,
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,

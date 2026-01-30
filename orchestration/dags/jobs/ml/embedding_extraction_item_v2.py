@@ -15,9 +15,6 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from common.utils import get_airflow_schedule
-
-from jobs.crons import SCHEDULE_DICT
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"extract-items-embeddings-v2-{ENV_SHORT_NAME}"
@@ -28,7 +25,7 @@ INPUT_TABLE_NAME = "item_embedding_extraction_v2"
 OUTPUT_DATASET_NAME = f"ml_preproc_{ENV_SHORT_NAME}"
 OUTPUT_TABLE_NAME = "item_embedding_extraction_v2"
 DAG_NAME = "embeddings_extraction_item_v2"
-dag_schedule = get_airflow_schedule(SCHEDULE_DICT.get(DAG_NAME))
+dag_schedule = None
 
 
 default_args = {

@@ -155,9 +155,16 @@ with DAG(
         """,
     )
 
-    delete_vm = DeleteGCEOperator(
+    gce_instance_delete = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
+        trigger_rule="none_failed",
     )
 
-    start >> gce_instance_start >> install_dependencies >> fit_model >> delete_vm
+    (
+        start
+        >> gce_instance_start
+        >> install_dependencies
+        >> fit_model
+        >> gce_instance_delete
+    )

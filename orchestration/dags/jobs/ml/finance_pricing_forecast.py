@@ -4,12 +4,15 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
 from common import macros
+from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
+from common.alerts.ml_training import create_finance_pricing_forecast_slack_block
 from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
     ML_BUCKET_TEMP,
+    MLFLOW_URL,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -17,6 +20,7 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
+from common.operators.slack import SendSlackMessageOperator
 
 DATE = "{{ ts_nodash }}"
 DAG_NAME = "finance_pricing_forecast"
@@ -45,10 +49,10 @@ default_args = {
 }
 
 schedule_dict = {
-    "prod": "0 6 2 * *",
+    "prod": "0 6 * * 1",
     "dev": None,
-    "stg": "0 6 2 * *",
-}  # Run monthly, early in the month
+    "stg": "0 6 * * 1",
+}  # Run weekly just to test out the DAG then will be monthly
 
 with DAG(
     DAG_NAME,
@@ -161,10 +165,22 @@ with DAG(
         trigger_rule="none_failed",
     )
 
+    send_slack_notif_success = SendSlackMessageOperator(
+        task_id="send_slack_notif_success",
+        webhook_token=SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN,
+        trigger_rule="none_failed",
+        block=create_finance_pricing_forecast_slack_block(
+            experiment_name="{{ params.experiment_name }}",
+            mlflow_url=MLFLOW_URL,
+            env_short_name=ENV_SHORT_NAME,
+        ),
+    )
+
     (
         start
         >> gce_instance_start
         >> install_dependencies
         >> fit_model
         >> gce_instance_delete
+        >> send_slack_notif_success
     )

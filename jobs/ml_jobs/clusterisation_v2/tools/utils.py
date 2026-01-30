@@ -4,7 +4,6 @@ import io
 import json
 import os
 
-import numpy as np
 import pandas as pd
 from google.cloud import bigquery, secretmanager
 
@@ -13,6 +12,7 @@ GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 CONFIGS_PATH = os.environ.get("CONFIGS_PATH", "configs")
 TMP_DATASET = f"tmp_{ENV_SHORT_NAME}"
 CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
+MAX_EMBEDDING_SIZE = 1024
 
 
 def get_secret(secret_id: str):

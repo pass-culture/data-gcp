@@ -9,6 +9,7 @@ from tools.clusterisation import (
     clusterisation_from_prebuild_embedding,
 )
 from tools.utils import (
+    MAX_EMBEDDING_SIZE,
     export_polars_to_bq,
     load_config_file,
     sha1_to_base64,
@@ -35,7 +36,19 @@ def create_clusters(
     """
 
     params = load_config_file(config_file_name, job_type="cluster")
-    embedding_cols = [f"t{x}" for x in range(params["pretrained_embedding_size"])]
+
+    # Validate embedding size
+    raw_size = params.get("pretrained_embedding_size", 0)
+    if not isinstance(raw_size, int):
+        raise ValueError("pretrained_embedding_size must be an integer")
+
+    if raw_size < 0 or raw_size > MAX_EMBEDDING_SIZE:
+        raise ValueError(
+            f"pretrained_embedding_size must be between 0 and {MAX_EMBEDDING_SIZE}"
+        )
+    embedding_size = raw_size
+
+    embedding_cols = [f"t{x}" for x in range(embedding_size)]
     results = []
     for group in params["group_config"]:
         results.append(

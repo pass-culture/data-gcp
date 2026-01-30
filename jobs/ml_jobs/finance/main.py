@@ -19,14 +19,32 @@ def get_model_class(model_type: str) -> type[ForecastModel]:
 
 
 def main(
-    model_type: str,
-    model_name: str,
-    train_start_date: str,
-    backtest_start_date: str,
-    backtest_end_date: str,
-    forecast_horizon_date: str,
-    run_backtest: bool,
-    experiment_name: str,
+    model_type: str = typer.Option(..., help="Type of model to use. E.g., 'prophet'."),
+    model_name: str = typer.Option(
+        ..., help="Name of the model configuration/instance."
+    ),
+    train_start_date: str = typer.Option(
+        ...,
+        help="""In-sample start date (YYYY-MM-DD).
+        If you are using a prophet config with changepoints,
+        ensure this date is before the first changepoint date.""",
+    ),
+    backtest_start_date: str = typer.Option(
+        ...,
+        help="""Out-of-sample start date (YYYY-MM-DD).
+         If you are using a prophet config with changepoints,
+         ensure this date is after the last changepoint date.""",
+    ),
+    backtest_end_date: str = typer.Option(
+        ..., help="Out-of-sample end date (YYYY-MM-DD)."
+    ),
+    forecast_horizon_date: str = typer.Option(
+        ..., help="Forecast horizon end date (YYYY-MM-DD)."
+    ),
+    run_backtest: bool = typer.Option(
+        ..., help="Whether to evaluate on backtest data."
+    ),
+    experiment_name: str = typer.Option(..., help="MLflow experiment name."),
 ) -> None:
     """
     Generic main function to train, evaluate, and forecast using any supported model

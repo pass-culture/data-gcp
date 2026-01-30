@@ -1,0 +1,68 @@
+{
+    "pretrained_embedding_name": "hybrid_embedding",
+    "pretrained_embedding_size" : 32,
+    "group_config": [
+        {
+            "group": "ALL",
+            "nb_clusters": 1000,
+            "features": [
+                {
+                    "type": "category",
+                    "name": "LIVRE"
+                },
+                {
+                    "type": "category",
+                    "name": "MEDIA"
+                },
+                {
+                    "type": "category",
+                    "name": "FILM"
+                },
+                {
+                    "type": "category",
+                    "name": "CINEMA"
+                },
+                {
+                    "type": "category",
+                    "name": "MUSIQUE_ENREGISTREE"
+                },
+                {
+                    "type": "category",
+                    "name": "MUSIQUE_LIVE"
+                },
+                {
+                    "type": "category",
+                    "name": "INSTRUMENT"
+                },
+                {
+                    "type": "category",
+                    "name": "MUSEE"
+                },
+                {
+                    "type": "category",
+                    "name": "CARTE_JEUNES"
+                },
+                {
+                    "type": "category",
+                    "name": "BEAUX_ARTS"
+                },
+                {
+                    "type": "category",
+                    "name": "PRATIQUE_ART"
+                },
+                {
+                    "type": "category",
+                    "name": "SPECTACLE"
+                },
+                {
+                    "type": "category",
+                    "name": "JEU"
+                },
+                {
+                    "type": "category",
+                    "name": "CONFERENCE"
+                }
+            ]
+        }
+    ]
+}

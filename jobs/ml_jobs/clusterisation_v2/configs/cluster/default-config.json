@@ -1,0 +1,92 @@
+{
+    "pretrained_embedding_name": "hybrid_embedding",
+    "pretrained_embedding_size" : 32,
+    "group_config": [
+        {
+            "group": "LIVRES",
+            "nb_clusters": 100,
+            "features": [
+                {
+                    "type": "category",
+                    "name": "LIVRE"
+                },
+                {
+                    "type": "category",
+                    "name": "MEDIA"
+                }
+            ]
+        },
+        {
+            "group": "CINEMA",
+            "nb_clusters": 50,
+            "features": [
+                {
+                    "type": "category",
+                    "name": "FILM"
+                },
+                {
+                    "type": "category",
+                    "name": "CINEMA"
+                }
+            ]
+        },
+        {
+            "group": "MUSIQUE",
+            "nb_clusters": 50,
+            "features": [
+                {
+                    "type": "category",
+                    "name": "MUSIQUE_ENREGISTREE"
+                },
+                {
+                    "type": "category",
+                    "name": "MUSIQUE_LIVE"
+                },
+                {
+                    "type": "category",
+                    "name": "INSTRUMENT"
+                }
+            ]
+        },
+        {
+            "group": "ARTS",
+            "nb_clusters": 50,
+            "features": [
+                {
+                    "type": "category",
+                    "name": "MUSEE"
+                },
+                {
+                    "type": "category",
+                    "name": "CARTE_JEUNES"
+                },
+                {
+                    "type": "category",
+                    "name": "BEAUX_ARTS"
+                },
+                {
+                    "type": "category",
+                    "name": "PRATIQUE_ART"
+                }
+            ]
+        },
+        {
+            "group": "SORTIES",
+            "nb_clusters": 50,
+            "features": [
+                {
+                    "type": "category",
+                    "name": "SPECTACLE"
+                },
+                {
+                    "type": "category",
+                    "name": "JEU"
+                },
+                {
+                    "type": "category",
+                    "name": "CONFERENCE"
+                }
+            ]
+        }
+    ]
+}

@@ -5,31 +5,34 @@ import yaml
 from loguru import logger
 from prophet.serialize import model_to_json
 
-from src.forecast_engines.prophet.evaluate import backtest_pipeline, evaluation_pipeline
-from src.forecast_engines.prophet.forecast import generate_future_forecast
-from src.forecast_engines.prophet.model_config import ModelConfig
-from src.forecast_engines.prophet.plots import log_diagnostic_plots
-from src.forecast_engines.prophet.preprocessing import preprocessing_pipeline
-from src.forecast_engines.prophet.train import fit_prophet_model
-from src.forecasters.forecast_model import ForecastModel
+from forecast.engines.prophet.evaluate import (
+    backtest_pipeline,
+    evaluation_pipeline,
+)
+from forecast.engines.prophet.forecast import generate_future_forecast
+from forecast.engines.prophet.model_config import ModelConfig
+from forecast.engines.prophet.plots import log_diagnostic_plots
+from forecast.engines.prophet.preprocessing import preprocessing_pipeline
+from forecast.engines.prophet.train import fit_prophet_model
+from forecast.forecasters.forecast_model import ForecastModel
 
 
 class ProphetModel(ForecastModel):
-    CONFIG_DIR = Path(__file__).parent / "configs"
+    CONFIG_DIR = Path(__file__).parent / "configs" / "prophet"
 
     def __init__(self, model_name: str):
         super().__init__(model_name=model_name)
         self.config = self._load_config()
 
     def _load_config(self) -> ModelConfig:
-        config_path = self.CONFIG_DIR / f"{self.model_name}.yaml"
-        if not config_path.exists():
+        self.config_path = self.CONFIG_DIR / f"{self.model_name}.yaml"
+        if not self.config_path.exists():
             raise FileNotFoundError(
-                f"Configuration file not found: {config_path}. "
+                f"Configuration file not found: {self.config_path}. "
                 f"Available: {list(self.CONFIG_DIR.glob('*.yaml'))}"
             )
 
-        with open(config_path) as f:
+        with open(self.config_path) as f:
             raw = yaml.safe_load(f)
         return ModelConfig(**raw)
 
@@ -86,3 +89,22 @@ class ProphetModel(ForecastModel):
             forecast_end_date=end_date,
             model_config=self.config,
         )
+
+    def aggregate_to_monthly(self, forecast_df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Aggregates the daily forecast to monthly sums.
+        Returns a DataFrame with 'ds' (month) and 'total_pricing'.
+        """
+        df = forecast_df.copy()
+        if "ds" in df.columns:
+            df["ds"] = pd.to_datetime(df["ds"])
+
+        # Normalize to start of month
+        df["month"] = df["ds"].dt.to_period("M").dt.to_timestamp().dt.date
+
+        # Aggregate yhat (prediction)
+        monthly_df = df.groupby("month")[["yhat"]].sum().reset_index()
+        monthly_df.rename(
+            columns={"month": "ds", "yhat": "total_pricing"}, inplace=True
+        )
+        return monthly_df

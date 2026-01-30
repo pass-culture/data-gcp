@@ -6,9 +6,9 @@ from sklearn.metrics import (
     root_mean_squared_error,
 )
 
+from forecast.engines.prophet.model_config import ModelConfig
 from prophet import Prophet
 from prophet.diagnostics import cross_validation, performance_metrics
-from src.forecast_engines.prophet.model_config import ModelConfig
 
 
 def cross_validate(
@@ -79,7 +79,14 @@ def predict_with_truth(model: Prophet, df_actual: pd.DataFrame) -> pd.DataFrame:
     """
     # Prophet discards "y" column during prediction
     # so it is safe to pass the df_actual directly here
+    # Ensure ds is datetime
+    if "ds" in df_actual.columns:
+        df_actual["ds"] = pd.to_datetime(df_actual["ds"])
+
     forecast = model.predict(df_actual)
+    if "ds" in forecast.columns:
+        forecast["ds"] = pd.to_datetime(forecast["ds"])
+
     forecast = forecast.merge(df_actual[["ds", "y"]], on="ds", how="left")
     return forecast
 

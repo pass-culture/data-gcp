@@ -5,13 +5,17 @@ description = "Forecast pricing values for the Pass Culture Finance team using m
 readme = "README.md"
 requires-python = ">=3.10, <3.13"
 dependencies = [
+    "db-dtypes>=1.5.0",
     "google-cloud-aiplatform>=1.132.0",
+    "google-cloud-bigquery>=3.39.0",
     "google-cloud-secret-manager>=2.26.0",
     "loguru>=0.7.3",
     "matplotlib>=3.10.8",
     "mlflow>=3.8.0",
     "numpy==2.2",
+    "openpyxl>=3.1.5",
     "pandas>=2.3.3",
+    "pandas-gbq>=0.33.0",
     "prophet>=1.2.1",
     "scikit-learn>=1.7.2",
     "tqdm>=4.67.1",
@@ -41,7 +45,6 @@ lint.select = [
     "UP",     # pyupgrade
     "PT",     # flake8-pytest-style
     "RUF",    # Ruff-specific rules
-    "FBT001", # flake8-boolean-trap
 ]
 
 [tool.ruff.lint.pydocstyle]

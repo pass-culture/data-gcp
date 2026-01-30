@@ -1,8 +1,8 @@
 import pandas as pd
 from loguru import logger
 
+from forecast.engines.prophet.model_config import ModelConfig
 from prophet import Prophet
-from src.forecast_engines.prophet.model_config import ModelConfig
 
 
 def fit_prophet_model(

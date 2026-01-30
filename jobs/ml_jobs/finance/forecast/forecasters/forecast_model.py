@@ -17,6 +17,7 @@ class ForecastModel(ABC):
 
     def __init__(self, model_name: str):
         self.model_name = model_name
+        self.config_path = None
         self.config = self._load_config()
         self.model = None
         self.data_split = None
@@ -54,4 +55,9 @@ class ForecastModel(ABC):
     @abstractmethod
     def predict(self, start_date: str, end_date: str) -> pd.DataFrame:
         """Generate forecasts for a specific horizon."""
+        pass
+
+    @abstractmethod
+    def aggregate_to_monthly(self, forecast_df: pd.DataFrame) -> pd.DataFrame:
+        """Aggregate forecast to monthly level."""
         pass

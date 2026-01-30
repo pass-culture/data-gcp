@@ -1,5 +1,5 @@
 prophet:
-  growth: linear
+  growth: logistic
   changepoints:
     - "2022-12-15"
     - "2023-07-20"
@@ -11,31 +11,25 @@ prophet:
   changepoint_prior_scale: 0.05
   yearly_seasonality: true
   weekly_seasonality: true
-  daily_seasonality: true
+  daily_seasonality: false
   seasonality_mode: additive
-  seasonality_prior_scale: 1
+  seasonality_prior_scale: 5
   interval_width: 0.95
   scaling: absmax
 features:
   adding_country_holidays: true
   add_monthly_seasonality: true
   monthly_fourier_order: 5
-  pass_culture_months:
-    - "06-2023"
-    - "06-2024"
-    - "06-2025"
-    - "12-2023"
-    - "12-2024"
-    - "12-2025"
+  pass_culture_months: null
   regressors: null
 data_processing:
   train_prop: 0.8
-  table_name: pricing_week
-  date_column_name: pricing_week
-  target_name: weekly_price
+  table_name: daily_pricing
+  date_column_name: pricing_day
+  target_name: total_pricing
 evaluation:
   cv: true
-  cv_initial: "100 weeks"
-  cv_period: "3 weeks"
-  cv_horizon: "12 weeks"
-  freq: W-MON
+  cv_initial: "730 days"
+  cv_period: "180 days"
+  cv_horizon: "365 days"
+  freq: D

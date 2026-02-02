@@ -106,7 +106,7 @@ select
     v.venue_public_name,
     v.venue_type_code as venue_type_label,
     {{
-        render_enum_case(
+        render_case_when(
             "v.venue_activity",
             venue_activity_label_mapping,
             fallback_sql="v.venue_activity",

@@ -1,9 +1,9 @@
-{% macro render_enum_case(
+{% macro render_case_when(
     input_column_name, mapping_list, fallback_sql=none, fallback_str=none
 ) %}
     {% if fallback_sql is not none and fallback_str is not none %}
         {% do exceptions.raise_compiler_error(
-            "render_enum_case error: provide only one fallback, either fallback_sql or fallback_str, not both."
+            "render_case_when error: provide only one fallback, either fallback_sql or fallback_str, not both."
         ) %}
     {% endif %}
 
@@ -11,7 +11,7 @@
         {% for item in mapping_list %}
             {% if not (item.name is string or item.name is iterable) %}
                 {% do exceptions.raise_compiler_error(
-                    "render_enum_case error: item.name must be a string or an iterable of strings."
+                    "render_case_when error: item.name must be a string or an iterable of strings."
                 ) %}
             {% elif item.name is string %}
                 when {{ input_column_name }} = '{{ item.name }}'

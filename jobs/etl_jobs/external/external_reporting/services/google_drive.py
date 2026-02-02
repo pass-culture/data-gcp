@@ -358,13 +358,15 @@ class DriveUploadService:
                 if result:
                     stats["files_uploaded"] += 1
                 else:
-                    stats["files_skipped"] += 1
+                    # If upload_file returns None, it was a failure (as we now overwrite)
+                    stats["failed_tasks"].append((local_path, parent_folder_id))
 
         except Exception as e:
-            error_msg = f"Failed to upload {local_path.name}: {e}"
+            error_msg = f"Unexpected error uploading {local_path.name}: {e}"
             log_print.error(f"❌ {error_msg}", fg="red")
             with self.stats_lock:
                 stats["errors"].append(error_msg)
+                stats["failed_tasks"].append((local_path, parent_folder_id))
 
     def upload_reports_directory(
         self, local_base_dir: Path, ds: str, root_folder_id: str
@@ -385,6 +387,7 @@ class DriveUploadService:
             "folders_created": 0,
             "files_skipped": 0,
             "errors": [],
+            "failed_tasks": [],  # In-memory DLQ
         }
 
         try:

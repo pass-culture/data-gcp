@@ -10,7 +10,9 @@ with
             ) as total_non_cancelled_collective_bookings,
             count(cb.collective_booking_id) as total_collective_bookings,
             count(
-                case when is_used_collective_booking then collective_booking_id end
+                case
+                    when cb.is_used_collective_booking then cb.collective_booking_id
+                end
             ) as total_used_collective_bookings,
             min(cb.collective_booking_creation_date) as first_collective_booking_date,
             max(cb.collective_booking_creation_date) as last_collective_booking_date,
@@ -29,25 +31,42 @@ with
             sum(
                 case
                     when
-                        collective_booking_status in ('USED', 'REIMBURSED')
-                        and extract(year from collective_booking_creation_date)
+                        cb.collective_booking_status in ('USED', 'REIMBURSED')
+                        and extract(year from cb.collective_booking_creation_date)
                         = extract(year from current_date)
                     then cs.collective_stock_price
                 end
-            ) as total_collective_current_year_real_revenue,
+            ) as total_collective_current_calendar_year_real_revenue,
+            sum(
+                case
+                    when
+                        cb.collective_booking_status in ('USED', 'REIMBURSED')
+                        and cb.is_current_scholar_year
+                    then cs.collective_stock_price
+                end
+            ) as total_collective_current_scholar_year_real_revenue,
             count(
                 case
                     when
-                        is_current_educational_year
+                        cb.is_current_scholar_year
                         and cb.collective_booking_status != 'CANCELLED'
                     then cb.collective_booking_id
                 end
-            ) as total_current_year_non_cancelled_collective_bookings
+            ) as total_current_scholar_year_non_cancelled_collective_bookings,
+            count(
+                case
+                    when
+                        cb.collective_booking_status != 'CANCELLED'
+                        and extract(year from cb.collective_booking_creation_date)
+                        = extract(year from current_date)
+                    then cb.collective_booking_id
+                end
+            ) as total_current_calendar_year_non_cancelled_collective_bookings
         from {{ ref("int_applicative__collective_booking") }} as cb
         left join
             {{ source("raw", "applicative_database_collective_stock") }} as cs
             on cb.collective_stock_id = cs.collective_stock_id
-        group by collective_stock_id
+        group by cb.collective_stock_id
     )
 
 select
@@ -68,8 +87,10 @@ select
     bcs.last_collective_booking_date,
     bcs.total_collective_theoretic_revenue,
     bcs.total_collective_real_revenue,
-    bcs.total_collective_current_year_real_revenue,
-    bcs.total_current_year_non_cancelled_collective_bookings,
+    bcs.total_collective_current_scholar_year_real_revenue,
+    bcs.total_collective_current_calendar_year_real_revenue,
+    bcs.total_current_scholar_year_non_cancelled_collective_bookings,
+    bcs.total_current_calendar_year_non_cancelled_collective_bookings,
     case
         when
             total_non_cancelled_collective_bookings is null

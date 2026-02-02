@@ -81,7 +81,6 @@
             , "dmsToken" AS dms_token
             , "description" AS venue_description
             , "withdrawalDetails" AS venue_withdrawal_details
-            , "offererAddressId" AS offerer_address_id
         FROM public.venue
     """
         )

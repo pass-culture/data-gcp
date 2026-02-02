@@ -123,8 +123,6 @@ models:
         description: "{{ doc('column__collective_booking_rank_desc') }}"
       - name: collective_offer_image_id
         description: "{{ doc('column__collective_offer_image_id') }}"
-      - name: is_current_year_booking
-        description: "{{ doc('column__collective_booking_is_current') }}"
       - name: is_local_authority
         description: "{{ doc('column__is_local_authority') }}"
         data_type: BOOLEAN
@@ -139,4 +137,19 @@ models:
         data_type: STRING
       - name: collective_offer_location_type
         description: "{{ doc('column__collective_offer_location_type') }}"
+        data_type: STRING
+      - name: collective_offer_location_type
+        description: "{{ doc('column__collective_offer_location_type') }}"
+        data_type: STRING
+      - name: is_current_scholar_year_booking
+        description: "{{ doc('column__is_current_scholar_year_booking') }}"
+        data_type: STRING
+      - name: is_current_calendar_year_booking
+        description: "{{ doc('column__is_current_calendar_year_booking') }}"
+        data_type: STRING
+      - name: is_current_deposit_booking
+        description: "{{ doc('column__is_current_deposit_booking') }}"
+        data_type: STRING
+      - name: educational_deposit_id
+        description: "{{ doc('column__educational_deposit_id') }}"
         data_type: STRING

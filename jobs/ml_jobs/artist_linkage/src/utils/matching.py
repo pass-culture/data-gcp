@@ -6,6 +6,7 @@ from loguru import logger
 from src.constants import (
     ACTION_KEY,
     ARTIST_ALIASES_KEYS,
+    ARTIST_DESCRIPTION_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
     ARTIST_NAME_TO_MATCH_KEY,
@@ -13,12 +14,11 @@ from src.constants import (
     ARTIST_WIKI_ID_KEY,
     ARTISTS_KEYS,
     COMMENT_KEY,
-    DESCRIPTION_KEY,
     IMG_KEY,
     OFFER_CATEGORY_ID_KEY,
     POSTPROCESSED_ARTIST_NAME_KEY,
     PRODUCTS_KEYS,
-    WIKI_ID_KEY,
+    WIKIDATA_ID_KEY,
     Action,
     Comment,
 )
@@ -148,7 +148,7 @@ def create_artists_tables(
             - delta_product_df: DataFrame with product changes including action tracking
               (add/remove) and comments describing the operation type.
             - delta_artist_df: DataFrame with new artists to be added, deduplicated
-              and sorted by artist_id, wiki_id, img, and description.
+              and sorted by artist_id, wikidata_id, img, and artist_description.
             - delta_artist_alias_df: DataFrame with new artist aliases to be added,
               deduplicated.
     Note:
@@ -194,9 +194,9 @@ def create_artists_tables(
         exploded_artist_alias_df.sort_values(
             by=[
                 ARTIST_ID_KEY,
-                WIKI_ID_KEY,
+                WIKIDATA_ID_KEY,
                 IMG_KEY,
-                DESCRIPTION_KEY,
+                ARTIST_DESCRIPTION_KEY,
             ]
         )
         .assign(
@@ -277,7 +277,7 @@ def match_artists_with_wikidata(
     )
     matched_namesakes_df = (
         match_namesakes_per_category(new_artist_clusters_df, wiki_df)
-        .loc[lambda df: df.wiki_id.notna()]
+        .loc[lambda df: df[WIKIDATA_ID_KEY].notna()]
         .assign(has_namesake=True)
     )
 
@@ -294,28 +294,30 @@ def match_artists_with_wikidata(
         [matched_without_namesake_df, matched_namesakes_df]
     ).reset_index(drop=True)
 
-    # 4. wiki_id to artist_id mapping
+    # 4. wikidata_id to artist_id mapping
     new_mapping_df = (
         pd.Series(
             list(
-                set(matched_df[WIKI_ID_KEY]).difference(
-                    set(artist_with_wiki_ids_df[WIKI_ID_KEY])
+                set(matched_df[WIKIDATA_ID_KEY]).difference(
+                    set(artist_with_wiki_ids_df[WIKIDATA_ID_KEY])
                 )
             )
         )
-        .to_frame(WIKI_ID_KEY)
-        .assign(artist_id=lambda df: df[WIKI_ID_KEY].apply(lambda x: str(uuid.uuid4())))
+        .to_frame(WIKIDATA_ID_KEY)
+        .assign(
+            artist_id=lambda df: df[WIKIDATA_ID_KEY].apply(lambda x: str(uuid.uuid4()))
+        )
     )
     wiki_to_artist_mapping = (
         pd.concat([artist_with_wiki_ids_df, new_mapping_df])
         .dropna()
-        .set_index(WIKI_ID_KEY)[ARTIST_ID_KEY]
+        .set_index(WIKIDATA_ID_KEY)[ARTIST_ID_KEY]
         .to_dict()
     )
 
     # 5. Remap matched_df with wiki_to_artist_mapping
     matched_with_ids_df = matched_df.assign(
-        artist_id=lambda df: df[WIKI_ID_KEY]
+        artist_id=lambda df: df[WIKIDATA_ID_KEY]
         .map(wiki_to_artist_mapping)
         .fillna(df.tmp_id),
         postprocessed_artist_name=lambda df: df.wiki_artist_name.fillna(
@@ -324,7 +326,7 @@ def match_artists_with_wikidata(
     ).sort_values(by=ARTIST_ID_KEY)
 
     logger.info(
-        f"...Matched {len(matched_with_ids_df[WIKI_ID_KEY].dropna().unique())} new artist clusters with Wikidata entries."
+        f"...Matched {len(matched_with_ids_df[WIKIDATA_ID_KEY].dropna().unique())} new artist clusters with Wikidata entries."
     )
 
     # 6. Explode artist names and drop duplicates to output artist aliases

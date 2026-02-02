@@ -7,17 +7,17 @@ from loguru import logger
 from src.constants import (
     ACTION_KEY,
     ARTIST_ALIASES_KEYS,
+    ARTIST_DESCRIPTION_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
     ARTIST_TYPE_KEY,
     ARTIST_WIKI_ID_KEY,
     ARTISTS_KEYS,
     COMMENT_KEY,
-    DESCRIPTION_KEY,
     IMG_KEY,
     OFFER_CATEGORY_ID_KEY,
     PRODUCTS_KEYS,
-    WIKI_ID_KEY,
+    WIKIDATA_ID_KEY,
 )
 from src.utils.loading import load_wikidata
 
@@ -68,7 +68,7 @@ def retrieve_artist_wikidata_id(
         artist_alias_df[artist_alias_df[ARTIST_WIKI_ID_KEY].notna()]
         .groupby(ARTIST_ID_KEY)[ARTIST_WIKI_ID_KEY]
         .first()
-        .to_frame(name=WIKI_ID_KEY)
+        .to_frame(name=WIKIDATA_ID_KEY)
     )
 
     return artist_df.merge(
@@ -179,13 +179,14 @@ def sanity_checks(
         delta_artist_df[ARTIST_NAME_KEY].notna().all()
     ), "Delta artist dataframe has null values in artist_name column."
     assert (
-        delta_artist_df[WIKI_ID_KEY].notna().all()
+        delta_artist_df[WIKIDATA_ID_KEY].notna().all()
     ), "Delta artist dataframe has null values in wikidata_id column."
 
     # 4. Check that we have roughly at least same number of descriptions and img
     assert (
-        delta_artist_df[DESCRIPTION_KEY].notna().sum()
-        >= SANITY_THRESHOLD * applicative_artist_df[DESCRIPTION_KEY].notna().sum()
+        delta_artist_df[ARTIST_DESCRIPTION_KEY].notna().sum()
+        >= SANITY_THRESHOLD
+        * applicative_artist_df[ARTIST_DESCRIPTION_KEY].notna().sum()
     ), f"Delta artist dataframe has fewer descriptions than applicative artist dataframe with given threshold {SANITY_THRESHOLD}."
     assert (
         delta_artist_df[IMG_KEY].notna().sum()
@@ -233,13 +234,12 @@ def main(
     logger.info("Loading artist data...")
     applicative_artist_df = pd.read_parquet(artist_file_path).rename(
         columns={
-            "artist_description": DESCRIPTION_KEY,
             "wikidata_image_file_url": IMG_KEY,
-            "wikidata_id": WIKI_ID_KEY,
+            "wikidata_id": WIKIDATA_ID_KEY,
         }
     )
     artist_with_wikidata_ids_df = applicative_artist_df.loc[
-        lambda df: df[WIKI_ID_KEY].notna()
+        lambda df: df[WIKIDATA_ID_KEY].notna()
     ]
     wiki_df = load_wikidata(
         wiki_base_path=wiki_base_path, wiki_file_name=wiki_file_name
@@ -254,18 +254,18 @@ def main(
     refreshed_artists_df = artist_with_wikidata_ids_df.merge(
         wiki_df.drop(columns=["alias", "raw_alias"]).drop_duplicates(),
         how="inner",
-        on=WIKI_ID_KEY,
+        on=WIKIDATA_ID_KEY,
         suffixes=("_old", ""),
     )
 
     # 3. Refresh statistics
-    artists_with_wiki_id = artist_with_wikidata_ids_df[WIKI_ID_KEY].notna().sum()
+    artists_with_wiki_id = artist_with_wikidata_ids_df[WIKIDATA_ID_KEY].notna().sum()
     artists_matched_in_wiki = refreshed_artists_df[ARTIST_NAME_KEY].notna().sum()
     artists_with_wiki_id_no_match = artists_with_wiki_id - artists_matched_in_wiki
     logger.info(
-        f"Artists with wiki_id: {artists_with_wiki_id}, "
+        f"Artists with wikidata_id: {artists_with_wiki_id}, "
         f"Matched in wikidata: {artists_matched_in_wiki}, "
-        f"With wiki_id but no match: {artists_with_wiki_id_no_match}"
+        f"With wikidata_id but no match: {artists_with_wiki_id_no_match}"
     )
     logger.success("Artist metadatas refreshed successfully.")
 

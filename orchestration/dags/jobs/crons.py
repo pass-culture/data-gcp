@@ -12,11 +12,6 @@ SCHEDULE_DICT = {
     "algo_default_deployment": "0 6 * * *",
     "artist_linkage": "0 12 * * 0",
     "bigquery_archive_partition": "0 7 * * *",
-    "bigquery_historize_applicative_database": {
-        "prod": "15 3 * * *",  # every day at 3:15 AM
-        "stg": None,
-        "dev": None,
-    },
     "bigquery_snapshot_backup": {
         "prod": "15 3 * * *",  # every day at 3:15 AM
         "stg": None,
@@ -43,11 +38,6 @@ SCHEDULE_DICT = {
         "dev": "00 2 * * *",  # every day at 2:00 AM UTC
         "stg": "00 2 * * *",
         "prod": "00 2 * * *",
-    },
-    "sync_cloudsql_recommendation_tables_to_bigquery": {
-        "dev": "0 5 * * *",  # every day at 5:00 AM
-        "stg": "0 5 * * *",  # every day at 5:00 AM
-        "prod": "5 * * * *",  # every hour at 5 minutes past the hour
     },
     "endpoint_monitoring": "0 8 * * *",  # every day at 8:00 AM
     "export_external_reporting": {

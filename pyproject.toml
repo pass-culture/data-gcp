@@ -39,7 +39,7 @@ dev = [
   "ruff==0.5.7",
   "typer==0.12.3",
   "pre-commit~=4.2.0",
-  "shandy-sqlfmt[jinjafmt]==0.23.2",
+  "shandy-sqlfmt[jinjafmt]==0.29.0",
   "sqlfluff==3.1.1",
   "sqlfluff-templater-dbt==3.1.1",
   "dotenv==0.9.9",

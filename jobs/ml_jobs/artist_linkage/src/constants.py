@@ -30,10 +30,13 @@ ARTIST_NAME_KEY = "artist_name"
 ARTIST_NAME_TO_MATCH_KEY = "artist_name_to_match"
 ARTIST_TYPE_KEY = "artist_type"
 OFFER_CATEGORY_ID_KEY = "offer_category_id"
-WIKI_ID_KEY = "wiki_id"
-DESCRIPTION_KEY = "description"
+WIKIDATA_ID_KEY = "wikidata_id"
+ARTIST_DESCRIPTION_KEY = "artist_description"
 IMG_KEY = "img"
-IMAGE_FILE_URL_KEY = "image_file_url"
+WIKIDATA_IMAGE_FILE_URL_KEY = "wikidata_image_file_url"
+WIKIDATA_IMAGE_AUTHOR_KEY = "wikidata_image_author"
+WIKIDATA_IMAGE_LICENSE_KEY = "wikidata_image_license"
+WIKIDATA_IMAGE_LICENSE_URL_KEY = "wikidata_image_license_url"
 ACTION_KEY = "action"
 COMMENT_KEY = "comment"
 ARTIST_MEDIATION_UUID_KEY = "artist_mediation_uuid"
@@ -58,14 +61,14 @@ ARTIST_ALIASES_KEYS = [
     ARTIST_TYPE_KEY,
     ARTIST_NAME_KEY,
     ARTIST_NAME_TO_MATCH_KEY,
-    WIKI_ID_KEY,
+    WIKIDATA_ID_KEY,
 ]
 ARTISTS_KEYS = [
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
-    DESCRIPTION_KEY,
+    ARTIST_DESCRIPTION_KEY,
     IMG_KEY,
-    WIKI_ID_KEY,
+    WIKIDATA_ID_KEY,
     WIKIPEDIA_URL_KEY,
 ]
 PRODUCTS_KEYS = [

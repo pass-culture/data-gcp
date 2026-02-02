@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta
 
 from scripts.import_adage import (
     get_adage_stats,
@@ -7,7 +8,8 @@ from scripts.import_adage import (
 
 
 def run():
-    import_adage()
+    since_date = datetime.now() - timedelta(days=30)
+    import_adage(since_date)
     get_adage_stats()
 
 

@@ -13,7 +13,7 @@ from src.constants import (
     OFFER_CATEGORY_ID_KEY,
     OFFER_IS_SYNCHRONISED,
     PRODUCT_ID_KEY,
-    WIKI_ID_KEY,
+    WIKIDATA_ID_KEY,
 )
 from src.utils.mlflow import (
     connect_remote_mlflow,
@@ -172,7 +172,7 @@ def get_wiki_matching_metrics(artists_df: pd.DataFrame) -> pd.DataFrame:
     to Wikipedia entries, both overall and grouped by offer category.
     Args:
         artists_df (pd.DataFrame): DataFrame containing artist data with columns:
-            - wiki_id: Wikipedia ID (may contain NaN for unmatched artists)
+            - WIKIDATA_ID_KEY: Wikipedia ID (may contain NaN for unmatched artists)
             - total_booking_count: Number of bookings per artist
             - total_product_count: Number of products per artist
             - offer_category_id: Category identifier for grouping
@@ -192,7 +192,7 @@ def get_wiki_matching_metrics(artists_df: pd.DataFrame) -> pd.DataFrame:
         return {
             WIKI_MATCHED_WEIGHTED_BY_BOOKINGS_PERC: round(
                 100
-                * input_df.loc[lambda df: df.wiki_id.notna()][
+                * input_df.loc[lambda df: df[WIKIDATA_ID_KEY].notna()][
                     TOTAL_BOOKING_COUNT_KEY
                 ].sum()
                 / input_df[TOTAL_BOOKING_COUNT_KEY].sum(),
@@ -200,14 +200,14 @@ def get_wiki_matching_metrics(artists_df: pd.DataFrame) -> pd.DataFrame:
             ),
             WIKI_MATCHED_WEIGHTED_BY_PRODUCT_PERC: round(
                 100
-                * input_df.loc[lambda df: df.wiki_id.notna()][
+                * input_df.loc[lambda df: df[WIKIDATA_ID_KEY].notna()][
                     TOTAL_PRODUCT_COUNT_KEY
                 ].sum()
                 / input_df[TOTAL_PRODUCT_COUNT_KEY].sum(),
                 2,
             ),
             WIKI_MATCHED_PERC: round(
-                100 * input_df.wiki_id.notna().sum() / len(input_df),
+                100 * input_df[WIKIDATA_ID_KEY].notna().sum() / len(input_df),
                 2,
             ),
             "artist_name_count": len(input_df),
@@ -310,7 +310,7 @@ def main(
             total_product_count=(PRODUCT_ID_KEY, "nunique"),
             total_booking_count=(TOTAL_BOOKING_COUNT_KEY, "sum"),
             artist_name=(ARTIST_NAME_KEY, "first"),
-            wiki_id=(WIKI_ID_KEY, "first"),
+            wikidata_id=(WIKIDATA_ID_KEY, "first"),
         )
         .reset_index()
     )

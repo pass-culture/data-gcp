@@ -149,7 +149,6 @@ select
     v_loc.venue_in_qpv,
     v_loc.venue_in_zrr,
     v_loc.venue_rural_city_type,
-    v.offerer_address_id,
     vr.venue_target as venue_targeted_audience,
     vc.venue_contact_phone_number,
     vc.venue_contact_email,

@@ -26,7 +26,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["sql", "streamlits"]
+packages = ["sql"]
 
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.

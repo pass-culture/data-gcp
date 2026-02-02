@@ -8,9 +8,22 @@
     {% endif %}
 
     case
-        {% for activity in mapping_list %}
-            when {{ input_column_name }} = '{{ activity.name }}'
-            then '{{ activity.label }}'
+        {% for item in mapping_list %}
+            {% if not (item.name is string or item.name is iterable) %}
+                {% do exceptions.raise_compiler_error(
+                    "render_enum_case error: item.name must be a string or an iterable of strings."
+                ) %}
+            {% elif item.name is string %}
+                when {{ input_column_name }} = '{{ item.name }}'
+            {% elif item.name is iterable %}
+                when
+                    {{ input_column_name }} in (
+                        {% for val in item.name %}
+                            '{{ val }}'{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    )
+            {% endif %}
+            then '{{ item.label }}'
         {% endfor %}
         else
             {% if fallback_sql is not none %} {{ fallback_sql }}

@@ -21,7 +21,7 @@ MLFLOW_URI = (
 
 def get_secret(secret_id: str):
     client = secretmanager.SecretManagerServiceClient()
-    name = f"projects/{GCP_PROJECT}/secrets/{secret_id}/versions/1"
+    name = f"projects/{GCP_PROJECT}/secrets/{secret_id}/versions/latest"
     response = client.access_secret_version(name=name)
     return response.payload.data.decode("UTF-8")
 

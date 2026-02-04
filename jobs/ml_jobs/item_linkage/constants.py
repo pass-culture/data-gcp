@@ -22,7 +22,7 @@ METADATA_FEATURES = [
 ]
 EVALUATION_FEATURES = ["item_id", "offer_subcategory_id", "booking_count"]
 RUN_NAME = f"run_{datetime.today().strftime('%Y-%m-%d')}"
-MLFLOW_RUN_ID_FILENAME = "mlflow_run_uuid"
+MLFLOW_RUN_ID_FILENAME = "mlflow_run_id"
 RETRIEVAL_FILTERS = ["edition", "offer_subcategory_id"]
 BATCH_SIZE_RETRIEVAL = 10000
 SEMAPHORE_RETRIEVAL = 100

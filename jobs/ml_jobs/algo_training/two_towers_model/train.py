@@ -164,10 +164,10 @@ def initialize_mlflow(experiment_name: str, run_name: str):
     experiment = get_mlflow_experiment(experiment_name)
     mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name)
     logger.info("Connected to MLFlow")
-    run_uuid = mlflow.active_run().info.run_uuid
+    run_id = mlflow.active_run().info.run_id
     with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
-        file.write(run_uuid)
-    return run_uuid
+        file.write(run_id)
+    return run_id
 
 
 def log_mlflow_params(
@@ -195,7 +195,7 @@ def train_two_tower_model(
     two_tower_model: TwoTowersModel,
     training_steps: int,
     validation_steps: int,
-    run_uuid: int,
+    run_id: int,
 ):
     """
     Trains a two-tower model with early stopping and learning rate reduction.
@@ -210,7 +210,7 @@ def train_two_tower_model(
         two_tower_model (TwoTowersModel): The initialized two-tower model to be trained.
         training_steps (int): Number of steps per epoch during training.
         validation_steps (int): Number of steps for validation.
-        run_uuid (str): Unique identifier for the training run, used for logging.
+        run_id (str): Unique identifier for the training run, used for logging.
 
     Returns:
         None: The model is trained in-place.
@@ -249,7 +249,7 @@ def train_two_tower_model(
                 verbose=1,
             ),
             MLFlowLogging(
-                export_path=f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_uuid}/",
+                export_path=f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_id}/",
             ),
         ],
         verbose=VERBOSE,
@@ -263,7 +263,7 @@ def save_model_and_embeddings(
     train_user_data,
     train_item_data,
     embedding_size,
-    run_uuid,
+    run_id,
 ):
     """Saves the trained model and embeddings."""
     logger.info("Predicting final user embeddings")
@@ -281,7 +281,7 @@ def save_model_and_embeddings(
         user_embeddings=user_embeddings, item_embeddings=item_embeddings
     )
 
-    export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_uuid}/model"
+    export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_id}/model"
     tf.keras.models.save_model(match_model, export_path)
     mlflow.log_artifacts(export_path, "model")
 
@@ -307,7 +307,7 @@ def train(
 ):
     setup_gpu_environment()
     tf.random.set_seed(seed)
-    run_uuid = initialize_mlflow(experiment_name, run_name)
+    run_id = initialize_mlflow(experiment_name, run_name)
 
     user_features_config, item_features_config, input_prediction_feature = (
         load_features(config_file_name)
@@ -359,7 +359,7 @@ def train(
         two_tower_model,
         training_steps=training_steps,
         validation_steps=validation_steps,
-        run_uuid=run_uuid,
+        run_id=run_id,
     )
 
     logger.info("Compute embeddings and save Model")
@@ -370,7 +370,7 @@ def train(
         train_user_data,
         train_item_data,
         embedding_size,
-        run_uuid,
+        run_id,
     )
 
 

@@ -30,6 +30,9 @@ with
             any_value(traffic_source) as traffic_source,
             any_value(traffic_gen) as traffic_gen,
             any_value(traffic_content) as traffic_content,
+            any_value(
+                if(event_name = 'AppThemeStatus', theme_setting, null)
+            ) as theme_setting,
             max(event_timestamp) as last_event_timestamp,
             countif(event_name = "ConsultOffer") as nb_consult_offer,
             countif(event_name = "BookingConfirmation") as nb_booking_confirmation,

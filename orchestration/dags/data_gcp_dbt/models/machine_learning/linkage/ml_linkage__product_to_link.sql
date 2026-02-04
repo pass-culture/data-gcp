@@ -40,6 +40,18 @@ with
         group by gof.offer_product_id, casting_names, gof.offer_category_id
     ),
 
+    product_director as (
+        select
+            offer_product_id,
+            offer_category_id,
+            stage_director as artist_name,
+            "director" as artist_type,
+            sum(coalesce(total_individual_bookings, 0)) as total_booking_count
+        from {{ ref("mrt_global__offer") }}
+        where offer_product_id != "" and stage_director is not null
+        group by offer_product_id, stage_director, offer_category_id
+    ),
+
     product_artist as (
         select
             offer_product_id,
@@ -65,6 +77,15 @@ with
             artist_type,
             total_booking_count
         from product_actor
+        where artist_name is not null and artist_name != ""
+        union all
+        select
+            offer_product_id,
+            artist_name,
+            offer_category_id,
+            artist_type,
+            total_booking_count
+        from product_director
         where artist_name is not null and artist_name != ""
     )
 

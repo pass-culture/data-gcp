@@ -8,6 +8,11 @@ GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}"
 
+# Hugging Face
+HF_TOKEN_SECRET_NAME = (
+    "huggingface_token_prod" if ENV_SHORT_NAME == "prod" else "huggingface_token_ehp"
+)
+
 # Mlflow
 MLFLOW_URI = (
     "https://mlflow.passculture.team/"
@@ -53,6 +58,7 @@ PREPROCESSED_ARTIST_NAME_KEY = "preprocessed_artist_name"
 POSTPROCESSED_ARTIST_NAME_KEY = "postprocessed_artist_name"
 WIKIPEDIA_URL_KEY = "wikipedia_url"
 WIKIPEDIA_CONTENT_KEY = "wikipedia_content"
+OFFER_NAME_KEY = "offer_name"
 
 # Dataframe Columns List
 ARTIST_ALIASES_KEYS = [
@@ -82,6 +88,7 @@ PRODUCTS_KEYS = [
 class Action:
     add: ClassVar[str] = "add"
     remove: ClassVar[str] = "remove"
+    update: ClassVar[str] = "update"
 
 
 class Comment:
@@ -102,3 +109,6 @@ class ProductToLinkStatus:
 WIKIMEDIA_REQUEST_HEADER = {
     "User-Agent": "PassCulture/1.0 (https://passculture.app; contact@passculture.app) Python/requests"
 }  # Required to avoid 403 errors from Wikimedia API
+
+# Deduplication
+ENCODER_NAME = "google/embeddinggemma-300m"

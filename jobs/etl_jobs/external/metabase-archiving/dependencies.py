@@ -1,3 +1,4 @@
+import json
 import re
 
 import pandas as pd
@@ -17,44 +18,49 @@ def get_card_lists(metabase):
     cards = metabase.get_cards()
 
     native_cards = []
-    other_cards = []
+    query_cards = []
     for card in cards:
-        if card["dataset_query"]["type"] == "native":
+        if card["legacy_query"]:
+            card["legacy_query"] = json.loads(card["legacy_query"])
+        if card["query_type"] == "native":
             native_cards.append(card)
-        else:
-            other_cards.append(card)
+        elif card["query_type"] == "query":
+            query_cards.append(card)
 
-    return native_cards, other_cards
+    return native_cards, query_cards
 
 
 def get_query_dependencies(card_list, tables_df):
     i = 0
+    monitoring = 0
     dependencies_other = {}
 
     for card in card_list:
         card_id = card["id"]
         card_owner = card["creator"]["email"]
         card_name = card["name"]
-        card_type = card["dataset_query"]["type"]
-        query_attributes_keys = card["dataset_query"]["query"].keys()
+        card_type = card["query_type"]
+        if card["legacy_query"]:
+            query_attributes_keys = card["legacy_query"]["query"].keys()
+        else:
+            monitoring += 1
+            continue
         table_dependency = []
 
         if "source-table" in query_attributes_keys:
-            source_table_id = card["dataset_query"]["query"]["source-table"]
+            source_table_id = card["legacy_query"]["query"]["source-table"]
             if "joins" in query_attributes_keys:
-                for join in card["dataset_query"]["query"]["joins"]:
+                for join in card["legacy_query"]["query"]["joins"]:
                     table_dependency.append(join["source-table"])
             table_dependency.append(source_table_id)
 
         elif (
             "source-query" in query_attributes_keys
-            and "source-table" in card["dataset_query"]["query"]["source-query"].keys()
+            and "source-table" in card["legacy_query"]["query"]["source-query"].keys()
         ):
-            source_table = card["dataset_query"]["query"]["source-query"][
-                "source-table"
-            ]
+            source_table = card["legacy_query"]["query"]["source-query"]["source-table"]
             if "joins" in query_attributes_keys:
-                for join in card["dataset_query"]["query"]["joins"]:
+                for join in card["legacy_query"]["query"]["joins"]:
                     table_dependency.append(join["source-table"])
             table_dependency.append(source_table)
 
@@ -74,6 +80,8 @@ def get_query_dependencies(card_list, tables_df):
         .reset_index(drop=True)
         .merge(tables_df, how="left", on="table_id")
     )
+
+    print(f"{monitoring} query cards without query legacy")
 
     return dependencies_other_df
 
@@ -97,15 +105,20 @@ def get_native_dependencies(cards_list, tables_df):
     regex = r"from\s+[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+|join\s+[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+"
 
     i = 0
+    monitoring = 0
     dependencies_native = {}
     for card in cards_list:
         card_id = card["id"]
         card_name = card["name"]
         card_owner = card["creator"]["email"]
-        card_type = card["dataset_query"]["type"]
+        card_type = card["query_type"]
 
-        sql_lines = card["dataset_query"]["native"]["query"].lower()
-        sql_lines = sql_lines.replace("`", "")
+        if card["legacy_query"]:
+            sql_lines = card["legacy_query"]["native"]["query"].lower()
+            sql_lines = sql_lines.replace("`", "")
+        else:
+            monitoring += 1
+            continue
         table_dependency = re.findall(regex, sql_lines)
         table_dependency = list(set(table_dependency))
 
@@ -133,6 +146,8 @@ def get_native_dependencies(cards_list, tables_df):
         .reset_index(drop=True)
         .merge(tables_df, how="left", on=["table_schema", "table_name"])
     )
+
+    print(f"{monitoring} native cards without query legacy")
 
     return dependencies_native_df
 

@@ -1,6 +1,9 @@
 with
     adage_agreg_synchro as (
-        select siret from {{ source("raw", "adage") }} where synchropass = "1.0"
+        select siret
+        from {{ source("raw", "adage") }}
+        where synchropass = "1.0"
+        qualify row_number() over (partition by siret order by update_date desc) = 1
     )
 
 select
@@ -39,3 +42,4 @@ select
         left(siret, 9) in (select left(siret, 9) from adage_agreg_synchro), false
     ) as siren_synchro_adage
 from {{ source("raw", "adage") }}
+qualify row_number() over (partition by siret order by update_date desc) = 1

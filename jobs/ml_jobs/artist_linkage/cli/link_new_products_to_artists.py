@@ -15,7 +15,7 @@ from src.constants import (
     OFFER_CATEGORY_ID_KEY,
     PRODUCT_ID_KEY,
     PRODUCTS_KEYS,
-    WIKI_ID_KEY,
+    WIKIDATA_ID_KEY,
     ProductToLinkStatus,
 )
 from src.utils.loading import load_wikidata
@@ -254,11 +254,11 @@ def main(
     artist_df = pd.read_parquet(artist_filepath)
     artist_with_wiki_ids_df = artist_df.rename(
         columns={
-            "wikidata_id": WIKI_ID_KEY,
+            "wikidata_id": WIKIDATA_ID_KEY,
         }
     ).loc[
-        lambda df: df[WIKI_ID_KEY].notna(),
-        [ARTIST_ID_KEY, WIKI_ID_KEY],
+        lambda df: df[WIKIDATA_ID_KEY].notna(),
+        [ARTIST_ID_KEY, WIKIDATA_ID_KEY],
     ]
     wiki_df = load_wikidata(
         wiki_base_path=wiki_base_path, wiki_file_name=wiki_file_name

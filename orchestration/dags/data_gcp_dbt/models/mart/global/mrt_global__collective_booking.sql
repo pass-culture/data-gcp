@@ -1,6 +1,7 @@
 select
     cb.collective_booking_id,
     cb.collective_stock_id,
+    cb.educational_deposit_id,
     cb.is_used_collective_booking,
     co.collective_offer_id,
     co.collective_offer_name,

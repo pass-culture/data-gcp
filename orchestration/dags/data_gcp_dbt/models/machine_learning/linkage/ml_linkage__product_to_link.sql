@@ -27,7 +27,7 @@ with
         select
             offer.offer_product_id,
             offer.offer_category_id,
-            "actor" as artist_type,
+            "film_actor" as artist_type,
             trim(casting_names, '""') as artist_name,
             sum(coalesce(offer.total_individual_bookings, 0)) as total_booking_count
         from
@@ -45,7 +45,7 @@ with
             offer_product_id,
             offer_category_id,
             stage_director as artist_name,
-            "director" as artist_type,
+            "film_director" as artist_type,
             sum(coalesce(total_individual_bookings, 0)) as total_booking_count
         from {{ ref("mrt_global__offer") }}
         where offer_product_id != "" and stage_director is not null

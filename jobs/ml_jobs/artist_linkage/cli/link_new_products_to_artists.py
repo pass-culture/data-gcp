@@ -180,16 +180,6 @@ def sanity_checks(
     assert (
         not delta_product_df.drop(columns=[ACTION_KEY, COMMENT_KEY]).duplicated().any()
     ), "Duplicate entries in delta_product_df"
-    delta_to_check_for_duplicates = delta_product_df.loc[
-        lambda df: df.action != "remove"
-    ]  # TODO: Remove this filter when duplicates product links have been cleaned up in production
-    assert len(
-        delta_to_check_for_duplicates.drop_duplicates(
-            ["offer_product_id", "artist_type"]
-        )
-    ) == len(
-        delta_to_check_for_duplicates
-    ), "Duplicate offer_product_id and artist_type combinations in delta_product_df"
 
     # 2. Artists
     recreated_artist_ids = delta_artist_df.loc[

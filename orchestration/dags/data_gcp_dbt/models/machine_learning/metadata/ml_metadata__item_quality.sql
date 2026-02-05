@@ -45,34 +45,52 @@ with
         select
             iwa.*,
             -- FILM: Title does NOT contain support format
-            iwa.offer_subcategory_id = 'SUPPORT_PHYSIQUE_FILM'
-            and not regexp_contains(
-                iwa.offer_name, r'(?i)\b(DVD|Blu-ray|VHS|4K|Digital)\b'
+            coalesce(
+                iwa.offer_subcategory_id = 'SUPPORT_PHYSIQUE_FILM'
+                and not regexp_contains(
+                    iwa.offer_name, r'(?i)\b(DVD|Blu-ray|VHS|4K|Digital)\b'
+                ),
+                true
             ) as film_titre_format_support,
             -- Absence of image
-            (iwa.image_url is null or iwa.image_url = '') as absence_image,
+            coalesce(
+                (iwa.image_url is null or iwa.image_url = ''), true
+            ) as absence_image,
             -- Absence of video
-            (iwa.offer_video_url is null or iwa.offer_video_url = '') as absence_video,
+            coalesce(
+                (iwa.offer_video_url is null or iwa.offer_video_url = ''), true
+            ) as absence_video,
             -- Absence of description (<= 30 chars)
-            (length(iwa.offer_description) <= 30) as absence_description,
+            coalesce(
+                (length(iwa.offer_description) <= 30), true
+            ) as absence_description,
             -- LIVRE, CD, VINYLE: missing artist
-            (
-                iwa.offer_subcategory_id
-                in ({{ required_creator_metadata | map("string") | join(", ") }})
-                and (iwa.artist_id is null or iwa.artist_id = '')
+            coalesce(
+                (
+                    iwa.offer_subcategory_id
+                    in ({{ required_creator_metadata | map("string") | join(", ") }})
+                    and (iwa.artist_id is null or iwa.artist_id = '')
+                ),
+                true
             ) as livre_cd_vinyle_artiste_manquant,
             -- LIVRE, CD, VINYLE: missing GTL
-            (
-                iwa.offer_subcategory_id
-                in ({{ required_creator_metadata | map("string") | join(", ") }})
-                and (iwa.titelive_gtl_id is null or iwa.titelive_gtl_id = '')
+            coalesce(
+                (
+                    iwa.offer_subcategory_id
+                    in ({{ required_creator_metadata | map("string") | join(", ") }})
+                    and (iwa.titelive_gtl_id is null or iwa.titelive_gtl_id = '')
+                ),
+                true
             ) as livre_cd_vinyle_gtl_manquant,
             -- LIVRE, CD, VINYLE: all creator fields missing
-            (
-                iwa.offer_subcategory_id
-                in ({{ required_creator_metadata | map("string") | join(", ") }})
-                and (iwa.author is null or iwa.author = '')
-                and (iwa.performer is null or iwa.performer = '')
+            coalesce(
+                (
+                    iwa.offer_subcategory_id
+                    in ({{ required_creator_metadata | map("string") | join(", ") }})
+                    and (iwa.author is null or iwa.author = '')
+                    and (iwa.performer is null or iwa.performer = '')
+                ),
+                true
             ) as livre_cd_vinyle_createur_manquant
         from item_metadata_enriched as iwa
     ),

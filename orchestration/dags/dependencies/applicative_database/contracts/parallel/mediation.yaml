@@ -1,0 +1,41 @@
+table_name: mediation
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: thumbCount
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: dateModifiedAtLastProvider
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: CASTidASvarchar255
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: dateCreated
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: CASTauthorIdASvarchar255
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: CASTlastProviderIdASvarchar255
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: CASTofferIdASvarchar255
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: credit
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: isActive
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

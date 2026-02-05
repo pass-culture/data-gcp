@@ -1,0 +1,21 @@
+table_name: cinema_provider_pivot
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: cinema_provider_pivot_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: venue_id
+  input_data_type: VARCHAR(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: provider_id
+  input_data_type: VARCHAR(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: id_at_provider
+  input_data_type: VARCHAR(255)
+  output_data_type: STRING
+  is_nullable: true

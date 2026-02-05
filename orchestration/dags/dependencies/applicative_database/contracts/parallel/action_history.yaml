@@ -1,0 +1,49 @@
+table_name: action_history
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: action_history_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: action_history_json_data
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: action_type
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: action_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: author_user_id
+  input_data_type: VARCHAR(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: author_email
+  input_data_type: VARCHAR(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: blacklisted_domain
+  input_data_type: VARCHAR(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: user_id
+  input_data_type: VARCHAR(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: offerer_id
+  input_data_type: VARCHAR(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: venue_id
+  input_data_type: VARCHAR(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: comment
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

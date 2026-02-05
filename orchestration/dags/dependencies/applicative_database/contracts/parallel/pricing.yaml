@@ -1,0 +1,57 @@
+table_name: pricing
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: status
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: bookingId
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: collective_booking_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: creationDate
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: valueDate
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: amount
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: standardRule
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: customRuleId
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: revenue
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: pricing_point_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: venue_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: event_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true

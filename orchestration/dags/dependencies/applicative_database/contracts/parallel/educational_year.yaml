@@ -1,0 +1,25 @@
+table_name: educational_year
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: educational_year_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: educational_year_beginning_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: educational_year_expiration_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: adage_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: CONCATCASTextractyear
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

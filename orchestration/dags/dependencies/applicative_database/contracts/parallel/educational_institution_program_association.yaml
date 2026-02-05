@@ -1,0 +1,13 @@
+table_name: educational_institution_program_association
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: institution_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: program_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true

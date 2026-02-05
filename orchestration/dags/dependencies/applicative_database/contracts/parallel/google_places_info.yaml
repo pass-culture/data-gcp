@@ -1,0 +1,17 @@
+table_name: google_places_info
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: google_places_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: venue_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: banner_url
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true

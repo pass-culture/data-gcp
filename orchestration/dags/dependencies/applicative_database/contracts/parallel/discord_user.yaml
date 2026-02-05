@@ -1,0 +1,29 @@
+table_name: discord_user
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: userId
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: discordId
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: hasAccess
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: isBanned
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: lastUpdated
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

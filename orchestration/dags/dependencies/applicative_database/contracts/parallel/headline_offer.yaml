@@ -1,0 +1,21 @@
+table_name: headline_offer
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: offer_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: venue_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: timespan
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true

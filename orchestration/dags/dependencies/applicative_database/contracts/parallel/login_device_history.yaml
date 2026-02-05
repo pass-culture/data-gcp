@@ -1,0 +1,33 @@
+table_name: login_device_history
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: login_device_history_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: user_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: device_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: source
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: os
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: location
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: login_device_history_timestamp
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

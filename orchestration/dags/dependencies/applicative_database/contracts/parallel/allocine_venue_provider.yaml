@@ -1,0 +1,17 @@
+table_name: allocine_venue_provider
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: CASTidASvarchar255
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: isDuo
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: quantity
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

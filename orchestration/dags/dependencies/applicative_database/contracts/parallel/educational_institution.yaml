@@ -1,0 +1,45 @@
+table_name: educational_institution
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: educational_institution_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: institution_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: institution_city
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: institution_name
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: institution_postal_code
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: institution_department_code
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: institution_type
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: institution_density_label
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: institution_latitude
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: institution_longitude
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

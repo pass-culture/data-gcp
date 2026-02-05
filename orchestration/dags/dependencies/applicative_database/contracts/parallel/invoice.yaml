@@ -1,0 +1,25 @@
+table_name: invoice
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: invoice_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: invoice_creation_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: invoice_reference
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: amount
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: bank_account_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true

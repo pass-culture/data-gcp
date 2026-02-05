@@ -1,0 +1,65 @@
+table_name: stock
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: stock_id_at_providers
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: stock_modified_at_last_provider_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: stock_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: stock_modified_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: stock_price
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: stock_quantity
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: stock_booking_limit_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: stock_last_provider_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: offer_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: stock_is_soft_deleted
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: stock_beginning_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: stock_creation_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: stock_fields_updated
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: price_category_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: stock_features
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

@@ -1,0 +1,25 @@
+table_name: criterion
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: name
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: description
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: startDateTime
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: highlight_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true

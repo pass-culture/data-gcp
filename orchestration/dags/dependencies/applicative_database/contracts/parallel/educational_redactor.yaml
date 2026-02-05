@@ -1,0 +1,17 @@
+table_name: educational_redactor
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: educational_redactor_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: educational_redactor_civility
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: hashed_user_id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

@@ -1,0 +1,29 @@
+table_name: offer_report
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: offer_report_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: user_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: offer_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: offer_report_reason
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: offer_report_custom_reason_content
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: offer_report_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

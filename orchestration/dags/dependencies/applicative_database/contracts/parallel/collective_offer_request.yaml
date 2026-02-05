@@ -1,0 +1,41 @@
+table_name: collective_offer_request
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: collective_offer_request_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: collective_offer_template_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: educational_institution_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: educational_redactor_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: total_students
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: total_teachers
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: comment
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: requested_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: collective_offer_request_creation_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

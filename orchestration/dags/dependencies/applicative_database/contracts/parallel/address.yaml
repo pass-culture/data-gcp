@@ -1,0 +1,41 @@
+table_name: address
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: address_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: address_ban_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: address_insee_code
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: address_street
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: address_postal_code
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: address_city
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: address_latitude
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: address_longitude
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: address_department_code
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

@@ -1,0 +1,17 @@
+table_name: boost_cinema_details
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: boost_cinema_details_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: cinema_provider_pivot_id
+  input_data_type: VARCHAR(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: cinema_url
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

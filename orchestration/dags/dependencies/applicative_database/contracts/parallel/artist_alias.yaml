@@ -1,0 +1,41 @@
+table_name: artist_alias
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: artist_alias_id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: artist_id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: artist_offer_name
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: artist_cluster_id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: artist_wiki_id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: offer_category_id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: artist_type
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: date_created
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: date_modified
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

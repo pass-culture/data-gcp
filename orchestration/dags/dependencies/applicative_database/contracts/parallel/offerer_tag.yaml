@@ -1,0 +1,21 @@
+table_name: offerer_tag
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: offerer_tag_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: offerer_tag_name
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: offerer_tag_label
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: offerer_tag_description
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

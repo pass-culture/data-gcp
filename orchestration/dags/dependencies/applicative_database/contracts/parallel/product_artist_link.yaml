@@ -1,0 +1,29 @@
+table_name: artist_product_link
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: product_artist_link_id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: offer_product_id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: artist_id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: artist_type
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: date_created
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: date_modified
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

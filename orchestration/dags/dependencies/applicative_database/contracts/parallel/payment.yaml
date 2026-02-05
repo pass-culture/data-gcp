@@ -1,0 +1,49 @@
+table_name: payment
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: CASTidASvarchar255
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: author
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: comment
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: recipientName
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: CASTbookingIdASvarchar255
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: amount
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: reimbursementRule
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: recipientSiren
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: reimbursementRate
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: transactionLabel
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: paymentMessageId
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

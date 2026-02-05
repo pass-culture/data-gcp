@@ -1,0 +1,41 @@
+table_name: custom_reimbursement_rule
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: offer_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: amount
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: start_time
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: end_time
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: rate
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: offerer_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: subcategories
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: venue_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true

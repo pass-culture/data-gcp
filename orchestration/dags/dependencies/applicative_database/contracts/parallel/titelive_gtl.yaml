@@ -1,0 +1,29 @@
+table_name: titelive_gtl_mapping
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: gtl_type
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: gtl_id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: gtl_label_level_1
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: gtl_label_level_2
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: gtl_label_level_3
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: gtl_label_level_4
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

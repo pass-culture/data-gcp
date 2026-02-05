@@ -1,0 +1,45 @@
+table_name: collective_stock
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: collective_stock_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: collective_stock_creation_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: collective_stock_modification_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: collective_stock_beginning_date_time
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: collective_stock_end_date_time
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: collective_offer_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: collective_stock_price
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: collective_stock_booking_limit_date_time
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: collective_stock_number_of_tickets
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: collective_stock_price_detail
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

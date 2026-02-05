@@ -1,0 +1,49 @@
+table_name: product
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: name
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: description
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: thumbCount
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: jsonData
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: subcategoryId
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: last_30_days_booking
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: lastProviderId
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: dateModifiedAtLastProvider
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: ean
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: gcuCompatibilityType
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

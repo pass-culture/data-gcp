@@ -1,0 +1,29 @@
+table_name: offer_validation_sub_rule
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: validation_rule_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: model
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: attribute
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: operator
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: comparated
+  input_data_type: json
+  output_data_type: JSON
+  is_nullable: true

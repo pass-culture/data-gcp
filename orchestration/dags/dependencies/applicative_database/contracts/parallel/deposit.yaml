@@ -1,0 +1,37 @@
+table_name: deposit
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: amount
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: userId
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: source
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: dateCreated
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: dateUpdated
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: expirationDate
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: type
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

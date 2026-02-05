@@ -1,0 +1,13 @@
+table_name: opening_hours
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: time_range
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

@@ -1,0 +1,65 @@
+table_name: artist
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: artist_id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: artist_name
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: artist_description
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: artist_biography
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: artist_mediation_uuid
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: wikidata_id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: wikipedia_url
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: wikidata_image_file_url
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: wikidata_image_license
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: wikidata_image_license_url
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: wikidata_image_author
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: artist_app_search_score
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: artist_pro_search_score
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: date_created
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: date_modified
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

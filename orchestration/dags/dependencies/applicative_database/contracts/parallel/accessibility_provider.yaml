@@ -1,0 +1,25 @@
+table_name: accessibility_provider
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: accessibility_provider_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: venue_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: external_accessibility_id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: external_accessibility_data
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: last_update_at_provider
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

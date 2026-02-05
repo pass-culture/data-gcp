@@ -1,0 +1,29 @@
+table_name: pricing_log
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: CASTidASvarchar255
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: CASTpricingIdASvarchar255
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: timestamp
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: statusBefore
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: statusAfter
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: reason
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

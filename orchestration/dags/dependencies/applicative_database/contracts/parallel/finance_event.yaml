@@ -1,0 +1,49 @@
+table_name: finance_event
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: finance_event_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: finance_event_creation_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: finance_event_value_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: finance_event_price_ordering_date
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: finance_event_status
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: finance_event_motive
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: booking_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: collective_booking_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: venue_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: pricing_point_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true
+- name: booking_finance_incident_id
+  input_data_type: varchar(255)
+  output_data_type: STRING
+  is_nullable: true

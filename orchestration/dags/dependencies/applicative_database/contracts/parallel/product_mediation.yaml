@@ -1,0 +1,29 @@
+table_name: product_mediation
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: dateModifiedAtLastProvider
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: productId
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: imageType
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: lastProviderId
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: uuid
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

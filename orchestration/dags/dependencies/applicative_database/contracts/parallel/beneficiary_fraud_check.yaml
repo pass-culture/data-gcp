@@ -1,0 +1,45 @@
+table_name: beneficiary_fraud_check
+source_database: postgres
+source_dataset: public
+target_database: bigquery
+columns:
+- name: id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: datecreated
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: user_id
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: type
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: reason
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: reasonCodes
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: status
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: eligibility_type
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: thirdpartyid
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true
+- name: result_content
+  input_data_type: UNKNOWN
+  output_data_type: STRING
+  is_nullable: true

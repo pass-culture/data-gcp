@@ -12,12 +12,12 @@ SELECT
   ?wikipedia_url
   ?img
   ?gkg_id
-  (GROUP_CONCAT(DISTINCT ?alias_fr; separator=" | ") AS ?aliases_fr)
-  (GROUP_CONCAT(DISTINCT ?alias_en; separator=" | ") AS ?aliases_en)
-  (GROUP_CONCAT(DISTINCT ?professionLabel; separator=" | ") AS ?professions)
-  (GROUP_CONCAT(DISTINCT ?genreLabel; separator=" | ") AS ?genres)
+  (GROUP_CONCAT(DISTINCT ?alias_fr; separator="|") AS ?aliases_fr)
+  (GROUP_CONCAT(DISTINCT ?alias_en; separator="|") AS ?aliases_en)
+  (GROUP_CONCAT(DISTINCT ?professionLabel; separator="|") AS ?professions)
+  (GROUP_CONCAT(DISTINCT ?genreLabel; separator="|") AS ?genres)
+  (GROUP_CONCAT(DISTINCT ?langLabel; separator="|") AS ?languages_spoken)
   (MIN(?birth_date) AS ?birth_date_val)
-  (GROUP_CONCAT(DISTINCT ?langLabel; separator=" | ") AS ?languages_spoken)
   ?matching_score
 WHERE {
   # 1. OPTIMIZATION: Filter first using UNION (checks existence only) and blank nodes ([]). This is much faster than fetching all artists and then filtering them.

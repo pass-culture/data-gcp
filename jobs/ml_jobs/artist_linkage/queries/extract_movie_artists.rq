@@ -27,9 +27,9 @@ WHERE {
     { ?wikidata_id wdt:P1266 [] . } # Has Allocine ID
   }
 
-  # 2. FILTER: Ensure it is the right type
+  # 2. FILTER: Ensure it is a Human Type
   ?wikidata_id wdt:P31 ?type .
-  VALUES ?type { wd:Q5 wd:Q215380 wd:Q216337 wd:Q641066 } # Human, Musical Group, Boys Band or Girls Band
+  VALUES ?type { wd:Q5 }
 
   # 3. FETCH IDs: Now that we have the artist, fetch ALL IDs explicitly
   OPTIONAL { ?wikidata_id wdt:P345 ?imdb_id . }

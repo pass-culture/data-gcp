@@ -8,38 +8,74 @@ SELECT
   ?wikidata_id
   ?artist_name_fr
   ?artist_name_en
-  ?img
   ?artist_description
   ?wikipedia_url
+  ?img
   ?gkg_id
   (GROUP_CONCAT(DISTINCT(?alias_fr); separator=" | ") AS ?aliases_fr)
   (GROUP_CONCAT(DISTINCT(?alias_en); separator=" | ") AS ?aliases_en)
-  ((IF(BOUND(?ibdbfw_id) && ?ibdbfw_id != "", 1, 0) + IF(BOUND(?babelio_id) && ?babelio_id != "", 1, 0) + IF(BOUND(?goodreads_id) && ?goodreads_id != "", 1, 0) + IF(BOUND(?myanimelist_id) && ?myanimelist_id != "", 1, 0)) AS ?matching_score)
+  (GROUP_CONCAT(DISTINCT ?professionLabel; separator=" | ") AS ?professions)
+  (GROUP_CONCAT(DISTINCT ?genreLabel; separator=" | ") AS ?genres)
+  (MIN(?birth_date) AS ?birth_date_val)
+  (GROUP_CONCAT(DISTINCT ?langLabel; separator=" | ") AS ?languages_spoken)
+  ?matching_score
 WHERE {
-  ?wikidata_id wdt:P31 wd:Q5;  # Ensure the entity is a human (P31 = instance of, Q5 = human)
-  OPTIONAL { ?wikidata_id schema:description ?artist_description . FILTER (LANG(?artist_description) = "fr") . }
-  OPTIONAL { ?wikidata_id rdfs:label ?label_fr. FILTER(LANG(?label_fr) = "fr") }
-  OPTIONAL { ?wikidata_id rdfs:label ?label_mul. FILTER(LANG(?label_mul) = "mul") }
-  BIND(COALESCE(?label_fr, ?label_mul) AS ?artist_name_fr)
-  OPTIONAL { ?wikidata_id rdfs:label ?artist_name_en. FILTER(LANG(?artist_name_en) = "en") }
-  OPTIONAL { ?wikidata_id skos:altLabel ?alias_fr . FILTER (lang(?alias_fr) = "fr") }
-  OPTIONAL { ?wikidata_id skos:altLabel ?alias_en . FILTER (lang(?alias_en) = "en") }
-  OPTIONAL {
-      ?wikipedia_url_fr schema:about ?wikidata_id .
-      ?wikipedia_url_fr schema:isPartOf <https://fr.wikipedia.org/> .
+  # 1. OPTIMIZATION: Filter first using UNION (checks existence only) and blank nodes ([]). This is much faster than fetching all artists and then filtering them.
+  {
+    { ?wikidata_id wdt:P5365 [] . } # Has ibdbfw ID
+    UNION
+    { ?wikidata_id wdt:P3630 [] . } # Has babelio ID
+    UNION
+    { ?wikidata_id wdt:P2963 [] . } # Has goodreads ID
+    UNION
+    { ?wikidata_id wdt:P4084 [] . } # Has myanimelist
   }
-  OPTIONAL {
-      ?wikipedia_url_en schema:about ?wikidata_id .
-      ?wikipedia_url_en schema:isPartOf <https://en.wikipedia.org/> .
-  }
+
+  # 2. FILTER: Ensure it is a Human Type
+  ?wikidata_id wdt:P31 ?type .
+  VALUES ?type { wd:Q5 }
+
+  # 3. FETCH IDs: Now that we have the artist, fetch ALL IDs explicitly
+  OPTIONAL { ?wikidata_id wdt:P5365 ?ibdbfw_id . }
+  OPTIONAL { ?wikidata_id wdt:P3630 ?babelio_id . }
+  OPTIONAL { ?wikidata_id wdt:P2963 ?goodreads_id . }
+  OPTIONAL { ?wikidata_id wdt:P4084 ?myanimelist_id . }
+
+  # 4. MANUAL LABELS
+  OPTIONAL { ?wikidata_id rdfs:label ?lbl_fr . FILTER(LANG(?lbl_fr) = "fr") }
+  OPTIONAL { ?wikidata_id rdfs:label ?lbl_en . FILTER(LANG(?lbl_en) = "en") }
+  OPTIONAL { ?wikidata_id rdfs:label ?lbl_mul . FILTER(LANG(?lbl_mul) = "mul") }
+  BIND(COALESCE(?lbl_fr, ?lbl_mul, ?lbl_en) AS ?artist_name_fr)
+  BIND(?lbl_en AS ?artist_name_en)
+
+  OPTIONAL { ?wikidata_id schema:description ?artist_description . FILTER(LANG(?artist_description) = "fr") }
+
+  # 5. OTHER ATTRIBUTES
+  OPTIONAL { ?wikidata_id wdt:P18 ?img . }
+  OPTIONAL { ?wikidata_id wdt:P2671 ?gkg_id . }
+  OPTIONAL { ?wikidata_id wdt:P569 ?birth_date . }
+
+  # 6. LISTS
+  OPTIONAL { ?wikidata_id wdt:P106/rdfs:label ?professionLabel . FILTER(LANG(?professionLabel) = "fr") }
+  OPTIONAL { ?wikidata_id wdt:P136/rdfs:label ?genreLabel . FILTER(LANG(?genreLabel) = "fr") }
+  OPTIONAL { ?wikidata_id wdt:P1412/rdfs:label ?langLabel . FILTER(LANG(?langLabel) = "fr") }
+  OPTIONAL { ?wikidata_id skos:altLabel ?alias_fr . FILTER(LANG(?alias_fr) = "fr") }
+  OPTIONAL { ?wikidata_id skos:altLabel ?alias_en . FILTER(LANG(?alias_en) = "en") }
+
+  # Wikipedia
+  OPTIONAL { ?wikipedia_url_fr schema:about ?wikidata_id ; schema:isPartOf <https://fr.wikipedia.org/> . }
+  OPTIONAL { ?wikipedia_url_en schema:about ?wikidata_id ; schema:isPartOf <https://en.wikipedia.org/> . }
   BIND(COALESCE(?wikipedia_url_fr, ?wikipedia_url_en) AS ?wikipedia_url)
-  OPTIONAL {?wikidata_id wdt:P5365 ?ibdbfw_id . }
-  OPTIONAL {?wikidata_id wdt:P3630 ?babelio_id . }
-  OPTIONAL {?wikidata_id wdt:P2963 ?goodreads_id . }
-  OPTIONAL {?wikidata_id wdt:P4084 ?myanimelist_id .}
-  OPTIONAL {?wikidata_id wdt:P18 ?img . }
-  OPTIONAL {?wikidata_id wdt:P2671 ?gkg_id .}
+
+  # 7. CALCULATE SCORE
+  BIND(
+    (IF(BOUND(?ibdbfw_id), 1, 0) +
+     IF(BOUND(?babelio_id), 1, 0) +
+     IF(BOUND(?goodreads_id), 1, 0) +
+     IF(BOUND(?myanimelist_id), 1, 0))
+  AS ?matching_score)
+
+  # 8. FILTER: Ensure we have at least a name and one ID
   FILTER ((?artist_name_fr != "") || (?artist_name_en != ""))
-  FILTER ((?ibdbfw_id != "" ) || (?babelio_id != "") || (?goodreads_id != "") || (?myanimelist_id != ""))
 }
-GROUP BY ?wikidata_id ?artist_name_fr ?artist_name_en ?artist_description ?wikipedia_url ?img ?gkg_id ?ibdbfw_id ?babelio_id ?goodreads_id ?myanimelist_id
+GROUP BY ?wikidata_id ?artist_name_fr ?artist_name_en ?artist_description ?wikipedia_url ?img ?gkg_id ?matching_score

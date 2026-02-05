@@ -3,5 +3,6 @@ SELECT
     "label"  as offerer_address_label,
     CAST("addressId" AS varchar(255)) as address_id,
     CAST("offererId" AS varchar(255)) as offerer_id,
-    CAST("venueId" AS varchar(255)) as venue_id
+    CAST("venueId" AS varchar(255)) as venue_id,
+    "type" as offerer_address_type
 FROM public.offerer_address

@@ -25,19 +25,19 @@ with
 
     product_actor as (
         select
-            gof.offer_product_id,
-            gof.offer_category_id,
+            offer.offer_product_id,
+            offer.offer_category_id,
             "actor" as artist_type,
             trim(casting_names, '""') as artist_name,
-            sum(coalesce(gof.total_individual_bookings, 0)) as total_booking_count
+            sum(coalesce(offer.total_individual_bookings, 0)) as total_booking_count
         from
-            {{ ref("mrt_global__offer") }} as gof,
-            unnest(split(trim(gof.casting, "[]"), ",")) as casting_names
+            {{ ref("mrt_global__offer") }} as offer,
+            unnest(split(trim(offer.casting, "[]"), ",")) as casting_names
         where
-            gof.offer_product_id != ""
-            and gof.casting is not null
-            and gof.casting != "[]"
-        group by gof.offer_product_id, casting_names, gof.offer_category_id
+            offer.offer_product_id != ""
+            and offer.casting is not null
+            and offer.casting != "[]"
+        group by offer.offer_product_id, casting_names, offer.offer_category_id
     ),
 
     product_director as (

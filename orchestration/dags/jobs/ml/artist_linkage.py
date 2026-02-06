@@ -13,6 +13,7 @@ from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_LINKAGE_DATASET,
+    BIGQUERY_ML_METADATA_DATASET,
     BIGQUERY_ML_PREPROCESSING_DATASET,
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
@@ -54,6 +55,8 @@ APPLICATIVE_ARTISTS_GCS_FILENAME = "applicative_database_artist.parquet"
 APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME = (
     "applicative_database_product_artist_link.parquet"
 )
+ML_METADATA_ARTIST_SCORE_GCS_FILENAME = "ml_metadata_artist_score.parquet"
+ML_METADATA_PRODUCT_STATS_GCS_FILENAME = "ml_metadata_product_stats.parquet"
 DELTA_ARTIST_ALIAS_GCS_FILENAME = "delta_artist_alias.parquet"
 DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME = "delta_product_artist_link.parquet"
 DELTA_ARTISTS_GCS_FILENAME_01 = "01_delta_artist.parquet"
@@ -85,6 +88,16 @@ TABLES_TO_IMPORT_TO_GCS = [
         "table_id": PRODUCT_TO_LINK_TABLE,
         "filename": PRODUCTS_TO_LINK_GCS_FILENAME,
     },
+    {
+        "dataset_id": BIGQUERY_ML_METADATA_DATASET,
+        "table_id": "artist_score",
+        "filename": ML_METADATA_ARTIST_SCORE_GCS_FILENAME,
+    },
+    {
+        "dataset_id": BIGQUERY_ML_METADATA_DATASET,
+        "table_id": "product_stats",
+        "filename": ML_METADATA_PRODUCT_STATS_GCS_FILENAME,
+    },
 ]
 GCS_TO_DELTA_TABLES = [
     {
@@ -107,6 +120,7 @@ GCS_TO_DELTA_TABLES = [
 # Flow names
 INCREMENTAL_FLOW = "incremental_flow"
 REFRESH_METADATA_FLOW = "refresh_metadata_flow"
+DEDUPLICATION_FLOW = "deduplication_flow"
 SKIP_SUMMARIZATION_FLOW = "skip_summarization_flow"
 SUMMARIZATION_WITH_LLM_FLOW = "summarization_with_llm_flow"
 
@@ -139,12 +153,26 @@ Refreshes Wikidata metadata for existing artists without relinking products.
 - Loads delta tables with refreshed metadata into BigQuery
 
 **Use case:** Periodic updates to keep artist metadata (descriptions, images, etc.) up to date without reprocessing product links.
+
+### 3. Deduplication Flow (`deduplication`)
+Identifies and merges duplicate artist entries based on namesake analysis and product similarities.
+
+**Steps:**
+- Identifies artists with identical names (namesakes).
+- Generates embeddings for product offer names associated with these artists.
+- Compares product embeddings to find matches between namesake artists.
+- Merges artists if enough product similarities are found.
+- Updates artist, artist alias, and product-artist link tables in BigQuery.
+
+**Use case:** Cleaning up the artist database by merging duplicate entries created by distinct providers or data errors.
 """
 
 
 def _choose_linkage(**context):
     if context["params"]["linkage_mode"] == "metadata_refresh":
         return REFRESH_METADATA_FLOW
+    elif context["params"]["linkage_mode"] == "deduplication":
+        return DEDUPLICATION_FLOW
     return INCREMENTAL_FLOW
 
 
@@ -180,7 +208,7 @@ with DAG(
         ),
         "linkage_mode": Param(
             default="incremental",
-            enum=["incremental", "metadata_refresh"],
+            enum=["incremental", "metadata_refresh", "deduplication"],
             type="string",
         ),
         "skip_llm_summarization": Param(default=False, type="boolean"),
@@ -200,6 +228,8 @@ with DAG(
             task_id="gce_start_task",
             instance_name=GCE_INSTANCE,
             instance_type="{{ params.instance_type }}",
+            gpu_count="{{ 1 if params.linkage_mode == 'deduplication' else 0 }}",
+            gpu_type="nvidia-tesla-t4",
             preemptible=False,
             labels={"job_type": "ml", "dag_name": DAG_NAME},
         )
@@ -234,10 +264,6 @@ with DAG(
         provide_context=True,
         dag=dag,
     )
-    incremental_flow = EmptyOperator(task_id=INCREMENTAL_FLOW)
-    refresh_metadata_flow = EmptyOperator(task_id=REFRESH_METADATA_FLOW)
-    summarization_with_llm_flow = EmptyOperator(task_id=SUMMARIZATION_WITH_LLM_FLOW)
-    skip_summarization_flow = EmptyOperator(task_id=SKIP_SUMMARIZATION_FLOW)
 
     #####################################################################################################
     #                                          Import Data Task                                         #
@@ -268,8 +294,44 @@ with DAG(
             )
 
     #####################################################################################################
+    #                                        Deduplication Flow                                         #
+    #####################################################################################################
+
+    deduplication_flow = EmptyOperator(task_id=DEDUPLICATION_FLOW)
+
+    embed_offer_names_on_namesakes = SSHGCEOperator(
+        task_id="embed_offer_names_on_namesakes",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+             uv run cli/embed_offer_names_on_namesakes.py \
+            --applicative-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
+            --product-stats-filepath {os.path.join(STORAGE_BASE_PATH, ML_METADATA_PRODUCT_STATS_GCS_FILENAME)} \
+            --artist-score-filepath {os.path.join(STORAGE_BASE_PATH, ML_METADATA_ARTIST_SCORE_GCS_FILENAME)} \
+            --output-product-embeddings-filepath {os.path.join(STORAGE_BASE_PATH, "product_embeddings.parquet")}
+            """,
+    )
+
+    deduplicate_artists = SSHGCEOperator(
+        task_id="deduplicate_artists",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+             uv run cli/deduplicate_artists.py \
+            --applicative-artist-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
+            --applicative-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
+            --product-embeddings-filepath {os.path.join(STORAGE_BASE_PATH, "product_embeddings.parquet")} \
+            --artist-score-filepath {os.path.join(STORAGE_BASE_PATH, ML_METADATA_ARTIST_SCORE_GCS_FILENAME)} \
+            --output-delta-artist-filepath {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_05)} \
+            --output-delta-artist-alias-filepath {os.path.join(STORAGE_BASE_PATH, DELTA_ARTIST_ALIAS_GCS_FILENAME)} \
+            --output-delta-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME)}
+            """,
+    )
+
+    #####################################################################################################
     #                                      Incremental Update Flow                                      #
     #####################################################################################################
+    incremental_flow = EmptyOperator(task_id=INCREMENTAL_FLOW)
 
     link_new_products_to_artists = SSHGCEOperator(
         task_id="link_new_products_to_artists",
@@ -291,6 +353,7 @@ with DAG(
     #####################################################################################################
     #                                      Refresh Metadatas Flow                                       #
     #####################################################################################################
+    refresh_metadata_flow = EmptyOperator(task_id=REFRESH_METADATA_FLOW)
 
     refresh_artist_metadatas = SSHGCEOperator(
         task_id="refresh_artist_metadatas",
@@ -338,6 +401,7 @@ with DAG(
     #####################################################################################################
     #                                   Summarization with LLM Flow                                     #
     #####################################################################################################
+    summarization_with_llm_flow = EmptyOperator(task_id=SUMMARIZATION_WITH_LLM_FLOW)
 
     get_wikipedia_page_content = SSHGCEOperator(
         task_id="get_wikipedia_page_content",
@@ -366,6 +430,7 @@ with DAG(
     #####################################################################################################
     #                                     Skip LLM Summarization                                        #
     #####################################################################################################
+    skip_summarization_flow = EmptyOperator(task_id=SKIP_SUMMARIZATION_FLOW)
 
     retrieve_artist_biographies_from_artist_table = SSHGCEOperator(
         task_id="retrieve_artist_biographies_from_artist_table",
@@ -409,7 +474,15 @@ with DAG(
         >> vm_init
         >> import_data
         >> choose_linkage
-        >> [incremental_flow, refresh_metadata_flow]
+        >> [incremental_flow, refresh_metadata_flow, deduplication_flow]
+    )
+
+    # Deduplication Flow
+    (
+        deduplication_flow
+        >> embed_offer_names_on_namesakes
+        >> deduplicate_artists
+        >> load_delta_artist_data_into_tables
     )
 
     # Incremental Update Flow

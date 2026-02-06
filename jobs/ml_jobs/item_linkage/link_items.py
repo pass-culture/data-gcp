@@ -354,9 +354,9 @@ def main(
     with mlflow.start_run(
         experiment_id=experiment.experiment_id, run_name=RUN_NAME, run_id=run_id
     ):
-        run_uuid = mlflow.active_run().info.run_uuid
+        run_id = mlflow.active_run().info.run_id
         with open(f"{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
-            file.write(run_uuid)
+            file.write(run_id)
         mlflow.log_params(
             params={
                 f"sources_ {linkage_type}_count": len(sources),

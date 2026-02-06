@@ -56,9 +56,9 @@ def train(
     experiment_name = f"{model_name}_v1.0_{ENV_SHORT_NAME}"
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     with mlflow.start_run(experiment_id=experiment_id, run_name=run_name):
-        run_uuid = mlflow.active_run().info.run_uuid
+        run_id = mlflow.active_run().info.run_id
         with open(f"{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
-            file.write(run_uuid)
+            file.write(run_id)
         mlflow.log_params(
             params={
                 "environment": ENV_SHORT_NAME,

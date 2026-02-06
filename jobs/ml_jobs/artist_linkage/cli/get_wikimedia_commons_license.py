@@ -7,7 +7,13 @@ import requests
 import typer
 from tqdm import tqdm
 
-from src.constants import IMAGE_FILE_URL_KEY, WIKIMEDIA_REQUEST_HEADER
+from src.constants import (
+    WIKIDATA_IMAGE_AUTHOR_KEY,
+    WIKIDATA_IMAGE_FILE_URL_KEY,
+    WIKIDATA_IMAGE_LICENSE_KEY,
+    WIKIDATA_IMAGE_LICENSE_URL_KEY,
+    WIKIMEDIA_REQUEST_HEADER,
+)
 
 logging.basicConfig(level=logging.INFO)
 app = typer.Typer()
@@ -25,11 +31,10 @@ ALLOWED_LICENSES = [
 ]
 LICENSES_COLUMNS = [
     "filename",
-    IMAGE_FILE_URL_KEY,
-    "image_page_url",
-    "image_author",
-    "image_license",
-    "image_license_url",
+    WIKIDATA_IMAGE_FILE_URL_KEY,
+    WIKIDATA_IMAGE_AUTHOR_KEY,
+    WIKIDATA_IMAGE_LICENSE_KEY,
+    WIKIDATA_IMAGE_LICENSE_URL_KEY,
 ]
 
 
@@ -41,10 +46,6 @@ def extract_title_from_url(url: str) -> str:
 
 def build_title_to_url_mapping(image_urls: list[str]) -> dict:
     return {extract_title_from_url(url): url for url in image_urls}
-
-
-def extract_page_url_from_title(title: str) -> str:
-    return f"https://commons.wikimedia.org/wiki/{title}"
 
 
 def build_wikimedia_query_params(image_urls_per_batch: str) -> dict:
@@ -82,11 +83,9 @@ def get_image_license(image_urls: list[str]) -> pd.DataFrame:
             data = response.json()
             for page in data["query"]["pages"].values():
                 image_url = title_to_url_mapping[page["title"]]
-                page_url = extract_page_url_from_title(title=page["title"])
                 base_response = {
                     "filename": page["title"],
-                    IMAGE_FILE_URL_KEY: image_url,
-                    "image_page_url": page_url,
+                    WIKIDATA_IMAGE_FILE_URL_KEY: image_url,
                 }
 
                 if "imageinfo" in page:
@@ -99,16 +98,16 @@ def get_image_license(image_urls: list[str]) -> pd.DataFrame:
                         "value", NO_LICENSE_URL_VALUE
                     )
                     license_metadata = {
-                        "image_author": author,
-                        "image_license": license_info,
-                        "image_license_url": license_url,
+                        WIKIDATA_IMAGE_AUTHOR_KEY: author,
+                        WIKIDATA_IMAGE_LICENSE_KEY: license_info,
+                        WIKIDATA_IMAGE_LICENSE_URL_KEY: license_url,
                     }
 
                 else:
                     license_metadata = {
-                        "image_author": NO_AUTHOR_VALUE,
-                        "image_license": NO_LICENSE_VALUE,
-                        "image_license_url": NO_LICENSE_URL_VALUE,
+                        WIKIDATA_IMAGE_AUTHOR_KEY: NO_AUTHOR_VALUE,
+                        WIKIDATA_IMAGE_LICENSE_KEY: NO_LICENSE_VALUE,
+                        WIKIDATA_IMAGE_LICENSE_URL_KEY: NO_LICENSE_URL_VALUE,
                     }
 
                 licenses_list.append({**base_response, **license_metadata})
@@ -127,9 +126,9 @@ def get_image_license(image_urls: list[str]) -> pd.DataFrame:
 
 
 def remove_image_with_improper_license(df: pd.DataFrame) -> pd.DataFrame:
-    indexes_to_remove_images = df.image_license.notna() & ~df.image_license.isin(
-        ALLOWED_LICENSES
-    )
+    indexes_to_remove_images = df[WIKIDATA_IMAGE_LICENSE_KEY].notna() & ~df[
+        WIKIDATA_IMAGE_LICENSE_KEY
+    ].isin(ALLOWED_LICENSES)
     df.loc[
         indexes_to_remove_images,
         LICENSES_COLUMNS,
@@ -144,15 +143,17 @@ def main(
     output_file_path: str = typer.Option(),
 ) -> None:
     artists_df = pd.read_parquet(artists_matched_on_wikidata).rename(
-        columns={"img": IMAGE_FILE_URL_KEY}
+        columns={"img": WIKIDATA_IMAGE_FILE_URL_KEY}
     )
 
     # Fetch the licenses from wikidata
-    image_list = artists_df[IMAGE_FILE_URL_KEY].dropna().drop_duplicates().tolist()
+    image_list = (
+        artists_df[WIKIDATA_IMAGE_FILE_URL_KEY].dropna().drop_duplicates().tolist()
+    )
     image_license_df = get_image_license(image_list)
 
     artists_with_licenses_df = artists_df.merge(
-        image_license_df, how="left", on=IMAGE_FILE_URL_KEY
+        image_license_df, how="left", on=WIKIDATA_IMAGE_FILE_URL_KEY
     ).pipe(remove_image_with_improper_license)
 
     artists_with_licenses_df.to_parquet(output_file_path)

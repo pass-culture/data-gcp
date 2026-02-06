@@ -124,6 +124,8 @@ with
                         "itemType",
                         "index",
                         "artistId",
+                        "theme_setting",
+                        "system_theme",
                     ]
                 )
             }},

@@ -1,8 +1,9 @@
+-- TODO: Remove this model once not imported anymore in Backend
 {{ config(**custom_table_config(materialized="view")) }}
 
 select distinct
     artist_id,
-    wiki_id as artist_wiki_id,
+    cast(null as string) as artist_wiki_id,
     offer_category_id,
     artist_type,
     artist_name as artist_offer_name,

@@ -38,12 +38,12 @@ with
             ea.scholar_year,
             ey.educational_year_beginning_date,
             ey.educational_year_expiration_date,
-            ea.region_name,
-            ea.institution_academie,
+            ea.institution_region_name as region_name,
+            ea.institution_academy_name as institution_academie,
             ea.institution_city,
             ea.institution_epci,
-            sum(ea.institution_deposit_amount) as total_institution_deposit_amount
-        from {{ ref("eple_aggregated") }} as ea
+            sum(ea.total_scholar_year_deposit) as total_institution_deposit_amount
+        from {{ ref("mrt_collective__eple_aggregated") }} as ea
         left join
             {{ source("raw", "applicative_database_educational_year") }} as ey
             on ea.scholar_year = ey.scholar_year
@@ -51,8 +51,8 @@ with
             ea.scholar_year,
             ey.educational_year_beginning_date,
             ey.educational_year_expiration_date,
-            ea.region_name,
-            ea.institution_academie,
+            ea.institution_region_name,
+            ea.institution_academy_name,
             ea.institution_city,
             ea.institution_epci
     ),

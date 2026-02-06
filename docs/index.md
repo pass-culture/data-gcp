@@ -12,7 +12,7 @@ Welcome to the Pass Culture Data Documentation
 
 # Data Platform
 
-"The architectural blueprint of the data platform: Repo structure, data flow, CI/CD & Infra"
+The architectural blueprint of the data platform: Repo structure, data flow, CI/CD & Infra
 
 <div class="home-features">
     <a href="/data-gcp/project_structure_and_data_flow">

@@ -1,0 +1,59 @@
+{
+    "reduction_configs": {
+        "default": [
+            {
+                "target_dimensions": 64,
+                "target_name" : "hybrid_embedding",
+                "method": "PCA",
+                "embedding_columns": [
+                    "name_embedding",
+                    "image_embedding",
+                    "semantic_content_embedding"
+                ]
+            },
+            {
+                "target_dimensions": 32,
+                "target_name" : "hybrid_embedding",
+                "method": "PCA",
+                "embedding_columns": [
+                    "name_embedding",
+                    "image_embedding",
+                    "semantic_content_embedding"
+                ]
+            },
+            {
+                "target_dimensions": 16,
+                "target_name" : "hybrid_embedding",
+                "method": "UMAP",
+                "embedding_columns": [
+                    "name_embedding",
+                    "image_embedding",
+                    "semantic_content_embedding"
+                ],
+                "pca_pre_reduction_dimension" : 32
+            },
+            {
+                "target_dimensions": 5,
+                "target_name" : "hybrid_embedding",
+                "method": "UMAP",
+                "embedding_columns": [
+                    "name_embedding",
+                    "image_embedding",
+                    "semantic_content_embedding"
+                ],
+                "pca_pre_reduction_dimension" : 16
+            },
+            {
+                "target_dimensions": 2,
+                "target_name" : "hybrid_embedding",
+                "method": "UMAP",
+                "embedding_columns": [
+                    "name_embedding",
+                    "image_embedding",
+                    "semantic_content_embedding"
+                ],
+                "pca_pre_reduction_dimension" : 8
+            }
+        ]
+    }
+}

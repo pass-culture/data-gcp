@@ -8,6 +8,7 @@ select
     im.offer_description,
     im.image_url as image,
     im.offer_creation_date,
+    im.content_hash,
     case
         when im.titelive_gtl_id is not null
         then
@@ -31,6 +32,6 @@ select
 
 from {{ ref("ml_input__item_metadata") }} as im
 
-where im.to_embed = true
+where im.to_embed
 
 order by im.offer_creation_date desc

@@ -1,4 +1,4 @@
-{{ config(materialized="table", cluster_by=["item_id", "to_embed"]) }}
+{{ config(materialized="table", cluster_by=["to_embed", "item_id"]) }}
 
 with
     enriched_items as (
@@ -35,10 +35,13 @@ with
         left join
             {{ ref("mrt_global__offer_metadata") }} as offer_metadata
             on offer.offer_id = offer_metadata.offer_id
+        left join
+            {{ source("ml_preproc", "item_embedding_extraction") }} as ie
+            on offer.item_id = ie.item_id
         where offer.item_id is not null
     ),
 
-    deduplicated as (
+    deduplicated_items as (
         select * except (total_used_individual_bookings, offer_id)
         from enriched_items
         qualify
@@ -68,29 +71,45 @@ with
                     )
                 )
             ) as content_hash
-        from deduplicated
+        from deduplicated_items
     ),
 
     previous_state as (
-        {% set self_relation = adapter.get_relation(
-            database=target.database,
-            schema=target.schema,
-            identifier=this.identifier,
-        ) %}
-        {% if self_relation is not none %}select item_id, content_hash from {{ this }}
-        {% else %}
-            select cast(null as string) as item_id, cast(null as int64) as content_hash
-            limit 0
-        {% endif %}
+        select item_id, content_hash as content_hash_at_last_embedding
+        from {{ source("ml_preproc", "item_embedding_extraction") }}
     )
 
 select
-    wfp.*,
+    wfp.offer_id,
+    wfp.item_id,
+    wfp.offer_creation_date,
+    wfp.offer_subcategory_id,
+    wfp.offer_category_id,
+    wfp.offer_name,
+    wfp.offer_description,
+    wfp.offer_type_domain,
+    wfp.author,
+    wfp.performer,
+    wfp.titelive_gtl_id,
+    wfp.search_group_name,
+    wfp.image_url,
+    wfp.offer_type_id,
+    wfp.offer_sub_type_id,
+    wfp.gtl_type,
+    wfp.gtl_label_level_1,
+    wfp.gtl_label_level_2,
+    wfp.gtl_label_level_3,
+    wfp.gtl_label_level_4,
+    wfp.offer_type_label,
+    wfp.offer_type_labels,
+    wfp.offer_sub_type_label,
+    wfp.total_used_individual_bookings,
+    wfp.content_hash,
     case
         when ps.item_id is null
         then true  -- New item
-        when ps.content_hash != wfp.content_hash
-        then true  -- Changed content
+        when wfp.content_hash != ps.content_hash_at_last_embedding
+        then true  -- Changed content since last embedding
         else false  -- Unchanged
     end as to_embed
 from with_fingerprint as wfp

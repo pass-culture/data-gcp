@@ -54,6 +54,10 @@ theme:
 
 nav:
   - Home: index.md
+  - Architecture:
+    - Repository structure: project_structure_and_data_flow.md
+    - Data flow: |
+    - CI / CD: |
   - Data Models:
       - Overview: dbt/overview.md
       - ... | dbt/models/**/description*.md

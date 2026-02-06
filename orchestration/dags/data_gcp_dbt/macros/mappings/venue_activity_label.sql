@@ -1,5 +1,5 @@
 {% macro venue_activity_label() %}
-{% set venue_activity_label_mapping = [
+    {% set venue_activity_label_mapping = [
         {"name": "ART_GALLERY", "label": "Galerie d’art"},
         {"name": "ART_SCHOOL", "label": "Conservatoire ou école d’arts"},
         {"name": "ARTISTIC_COMPANY", "label": "Compagnie artistique"},

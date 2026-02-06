@@ -17,7 +17,7 @@ Welcome to the Pass Culture Data Documentation
 <div class="home-features">
     <a href="/data-gcp/project_structure_and_data_flow">
         <div class="feature">
-            <h2>>🏗️ Project Structure & Data Flow</h2>
+            <h2>🏗️ Project Structure & Data Flow</h2>
             <p>Overview of the platform's organization and data lifecycle.</p>
         </div>
     </a>

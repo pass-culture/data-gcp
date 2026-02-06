@@ -1,6 +1,7 @@
 {% set target_name = var("ENV_SHORT_NAME") %}
 {% set target_schema = generate_schema_name("analytics_" ~ target_name) %}
 {% set venue_activity_label_mapping = venue_activity_label() %}
+{% set venue_type_code_label_mapping = venue_type_code_label() %}
 
 {{ config(pre_hook="{{create_humanize_id_function()}}") }}
 
@@ -104,7 +105,13 @@ select
     v.venue_is_virtual,
     v.venue_comment,
     v.venue_public_name,
-    v.venue_type_code as venue_type_label,
+    {{
+        render_case_when(
+            "v.venue_type_code",
+            venue_type_code_label_mapping,
+            fallback_sql="v.venue_type_code",
+        )
+    }} as venue_type_label,
     {{
         render_case_when(
             "v.venue_activity",

@@ -62,7 +62,7 @@
                 WHEN "venueTypeCode" = \'SCIENTIFIC_CULTURE\' THEN \'Culture scientifique\'
                 WHEN "venueTypeCode" = \'TRAVELING_CINEMA\' THEN \'Cinéma itinérant\'
                 WHEN "venueTypeCode" = \'DISTRIBUTION_STORE\' THEN \'Magasin de grande distribution\'
-                ELSE "venueTypeCode" END AS venue_type_code 
+                ELSE "venueTypeCode" END AS venue_type_code
             , {{ render_case_when('"venue_activity"', venue_activity_label_mapping, fallback_sql='"venue_activity"') }} as venue_activity
             , CAST("venueLabelId" AS varchar(255)) AS venue_label_id
             , "dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS venue_creation_date

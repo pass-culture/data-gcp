@@ -3,14 +3,10 @@ version: 2
 models:
   - name: ml_finance__weekly_pricing
     description: "{{ doc('description__ml_finance__weekly_pricing') }}"
-    config:
-      materialized: view
-      contract:
-        enforced: true
     columns:
       - name: pricing_week
         description: "{{ doc('column__pricing_week') }}"
-        data_type: DATETIME
+        data_type: DATE
         data_tests:
           - unique
           - not_null

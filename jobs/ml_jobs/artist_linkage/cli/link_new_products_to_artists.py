@@ -15,6 +15,7 @@ from src.constants import (
     OFFER_CATEGORY_ID_KEY,
     PRODUCT_ID_KEY,
     PRODUCTS_KEYS,
+    WIKIDATA_ID_KEY,
     ProductToLinkStatus,
 )
 from src.utils.loading import load_wikidata
@@ -179,16 +180,6 @@ def sanity_checks(
     assert (
         not delta_product_df.drop(columns=[ACTION_KEY, COMMENT_KEY]).duplicated().any()
     ), "Duplicate entries in delta_product_df"
-    delta_to_check_for_duplicates = delta_product_df.loc[
-        lambda df: df.action != "remove"
-    ]  # TODO: Remove this filter when duplicates product links have been cleaned up in production
-    assert len(
-        delta_to_check_for_duplicates.drop_duplicates(
-            ["offer_product_id", "artist_type"]
-        )
-    ) == len(
-        delta_to_check_for_duplicates
-    ), "Duplicate offer_product_id and artist_type combinations in delta_product_df"
 
     # 2. Artists
     recreated_artist_ids = delta_artist_df.loc[
@@ -232,7 +223,6 @@ app = typer.Typer()
 def main(
     # Input files
     artist_filepath: str = typer.Option(),
-    artist_alias_file_path: str = typer.Option(),
     product_artist_link_filepath: str = typer.Option(),
     product_filepath: str = typer.Option(),
     wiki_base_path: str = typer.Option(),
@@ -252,7 +242,14 @@ def main(
         .pipe(filter_products)
     )
     artist_df = pd.read_parquet(artist_filepath)
-    existing_artist_alias_df = pd.read_parquet(artist_alias_file_path)
+    artist_with_wiki_ids_df = artist_df.rename(
+        columns={
+            "wikidata_id": WIKIDATA_ID_KEY,
+        }
+    ).loc[
+        lambda df: df[WIKIDATA_ID_KEY].notna(),
+        [ARTIST_ID_KEY, WIKIDATA_ID_KEY],
+    ]
     wiki_df = load_wikidata(
         wiki_base_path=wiki_base_path, wiki_file_name=wiki_file_name
     ).reset_index(drop=True)
@@ -293,7 +290,7 @@ def main(
     exploded_artist_alias_df = match_artists_with_wikidata(
         new_artist_clusters_df=new_artist_clusters_df,
         wiki_df=wiki_df,
-        existing_artist_alias_df=existing_artist_alias_df,
+        artist_with_wiki_ids_df=artist_with_wiki_ids_df,
     )
 
     # 6. Create new artists and artist aliases

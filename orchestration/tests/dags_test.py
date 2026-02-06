@@ -3,9 +3,9 @@ from datetime import timedelta
 from unittest import mock
 
 import pandas as pd
-from jobs.crons import SCHEDULE_DICT
-
 from airflow.models import DagBag
+
+from jobs.crons import SCHEDULE_DICT
 
 DAG_ID_LIST = list(SCHEDULE_DICT.keys())
 

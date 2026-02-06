@@ -1,6 +1,13 @@
 import time
 from datetime import date, datetime, timedelta
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -20,14 +27,6 @@ from common.operators.gce import (
 )
 from common.utils import get_airflow_schedule
 from dependencies.dms_subscriptions.import_dms_subscriptions import CLEAN_TABLES
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import PythonOperator
-from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
-    GCSToBigQueryOperator,
-)
 
 DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 GCE_INSTANCE = f"import-dms-{ENV_SHORT_NAME}"
@@ -72,7 +71,7 @@ with DAG(
     user_defined_macros=macros.default,
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
-    start = DummyOperator(task_id="start")
+    start = EmptyOperator(task_id="start")
 
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,
@@ -207,7 +206,7 @@ with DAG(
         task = bigquery_job_task(table=table, dag=dag, job_params=params)
         cleaning_tasks.append(task)
 
-    end = DummyOperator(task_id="end")
+    end = EmptyOperator(task_id="end")
 
     gce_instance_stop = DeleteGCEOperator(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task", dag=dag

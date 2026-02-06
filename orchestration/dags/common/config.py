@@ -1,5 +1,4 @@
 import os
-import re
 from enum import Enum
 
 from airflow import configuration
@@ -71,6 +70,10 @@ DS_DATA_ARCHIVE_BUCKET_NAME = os.environ.get(
 DE_TOOLS_BUCKET_NAME = os.environ.get(
     "DE_TOOLS_BUCKET_NAME", f"de-tools-{ENV_SHORT_NAME}"
 )
+DE_BIGQUERY_TMP_BACKUP_BUCKET_NAME = os.environ.get(
+    "DE_BIGQUERY_TMP_BACKUP_BUCKET_NAME",
+    f"de-bigquery-data-tmp-backup-{ENV_SHORT_NAME}",
+)
 
 BASE32_JS_LIB_PATH = f"gs://{DE_TOOLS_BUCKET_NAME}/base32-encode/base32.js"
 
@@ -116,6 +119,7 @@ BIGQUERY_ML_COMPLIANCE_DATASET = f"ml_compliance_{ENV_SHORT_NAME}"
 BIGQUERY_ML_FEATURES_DATASET = f"ml_feat_{ENV_SHORT_NAME}"
 BIGQUERY_ML_GRAPH_RECOMMENDATION_DATASET = f"ml_graph_recommendation_{ENV_SHORT_NAME}"
 BIGQUERY_ML_LINKAGE_DATASET = f"ml_linkage_{ENV_SHORT_NAME}"
+BIGQUERY_ML_METADATA_DATASET = f"ml_metadata_{ENV_SHORT_NAME}"
 BIGQUERY_ML_OFFER_CATEGORIZATION_DATASET = f"ml_offer_categorization_{ENV_SHORT_NAME}"
 BIGQUERY_ML_PREPROCESSING_DATASET = f"ml_preproc_{ENV_SHORT_NAME}"
 BIGQUERY_ML_RECOMMENDATION_DATASET = f"ml_reco_{ENV_SHORT_NAME}"

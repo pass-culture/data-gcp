@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-import json, os, subprocess, sys
+import json
+import os
+import subprocess
 from textwrap import indent
 
 import typer
@@ -87,7 +89,7 @@ def verify():
         )
         if protected:
             typer.secho(
-                f"⚠️  Unmanaged protected pools present (OK):\n  "
+                "⚠️  Unmanaged protected pools present (OK):\n  "
                 + "\n  ".join(protected),
                 fg=typer.colors.YELLOW,
             )
@@ -102,7 +104,7 @@ def verify():
         typer.echo(indent("\n".join(unprotected), "  "))
     if protected:
         typer.secho(
-            f"⚠️  Unmanaged protected pools (not an error):", fg=typer.colors.YELLOW
+            "⚠️  Unmanaged protected pools (not an error):", fg=typer.colors.YELLOW
         )
         typer.echo(indent("\n".join(protected), "  "))
     if mismatches:

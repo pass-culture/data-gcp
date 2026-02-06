@@ -14,7 +14,6 @@ from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_GRAPH_RECOMMENDATION_DATASET,
-    BIGQUERY_ML_PREPROCESSING_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -29,6 +28,7 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
+
 from jobs.crons import SCHEDULE_DICT
 
 # Airflow DAG definition

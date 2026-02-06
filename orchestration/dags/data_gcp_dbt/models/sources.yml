@@ -155,9 +155,9 @@ sources:
       - name: qualtrics_exported_venue_account
       - name: qpi_answers_historical
       - name: qpi_answers_v4
-      - name: past_offer_context
       - name: raw_dms_jeunes
       - name: raw_dms_pro
+      - name: run_googleapis_com_stderr
       - name: sendinblue_transactional
       - name: sensitive_item_recommendation
       - name: stdout
@@ -263,9 +263,6 @@ sources:
       - name: item_embedding_reduced_32
       - name: item_embedding_reduced_16
       - name: item_embedding_reduced_5
-      - name: artist
-      - name: artist_alias
-      - name: product_artist_link
       - name: delta_artist
       - name: delta_artist_alias
       - name: delta_product_artist_link

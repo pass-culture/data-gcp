@@ -22,6 +22,7 @@ dbt = [
   "dbt-core==1.10.11",
   "dbt-bigquery==1.8.1",
   "dbt-metabase==1.4.2",
+  "dbt-colibri>=0.2.7",
   "deepdiff==8.6.1",
 ]
 docs = [
@@ -38,7 +39,7 @@ dev = [
   "ruff==0.5.7",
   "typer==0.12.3",
   "pre-commit~=4.2.0",
-  "shandy-sqlfmt[jinjafmt]==0.23.2",
+  "shandy-sqlfmt[jinjafmt]==0.29.0",
   "sqlfluff==3.1.1",
   "sqlfluff-templater-dbt==3.1.1",
   "dotenv==0.9.9",
@@ -52,7 +53,7 @@ default-groups = ["airflow", "dbt", 'dev', 'docs']
 [tool.ruff]
 target-version = 'py312'
 
-lint.select = []
+lint.select = ["E4", "E7", "E9", "F", "I"]
 # TARGET : lint.select = [
 #     "E",      # pycodestyle
 #     "W",      # pycodestyle

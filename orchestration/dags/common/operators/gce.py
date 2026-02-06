@@ -64,29 +64,32 @@ class StartGCEOperator(BaseOperator):
         self.additional_scopes = additional_scopes or []
 
     def execute(self, context) -> None:
+        self.gpu_count = int(self.gpu_count)
         image_type = MACHINE_TYPE["cpu"] if self.gpu_count == 0 else MACHINE_TYPE["gpu"]
         gce_networks = (
             GKE_NETWORK_LIST if self.use_gke_network is True else BASE_NETWORK_LIST
         )
-        hook = GCEHook(
+        with GCEHook(
             source_image_type=image_type,
             disk_size_gb=self.disk_size_gb,
             gce_networks=gce_networks,
             gce_zone=self.gce_zone,
             additional_scopes=self.additional_scopes,
-        )
-        hook.start_vm(
-            self.instance_name,
-            self.instance_type,
-            preemptible=self.preemptible,
-            labels=self.labels,
-            gpu_type=self.gpu_type,
-            gpu_count=self.gpu_count,
-        )
+        ) as hook:
+            hook.start_vm(
+                self.instance_name,
+                self.instance_type,
+                preemptible=self.preemptible,
+                labels=self.labels,
+                gpu_type=self.gpu_type,
+                gpu_count=self.gpu_count,
+            )
 
 
 class CleanGCEOperator(BaseOperator):
-    template_fields = ["timeout_in_minutes"]
+    template_fields = [
+        "timeout_in_minutes",
+    ]
 
     @apply_defaults
     def __init__(
@@ -101,10 +104,10 @@ class CleanGCEOperator(BaseOperator):
         self.job_type = job_type
 
     def execute(self, context) -> None:
-        hook = GCEHook()
-        hook.delete_instances(
-            job_type=self.job_type, timeout_in_minutes=self.timeout_in_minutes
-        )
+        with GCEHook() as hook:
+            hook.delete_instances(
+                job_type=self.job_type, timeout_in_minutes=self.timeout_in_minutes
+            )
 
 
 class DeleteGCEOperator(BaseOperator):
@@ -117,12 +120,15 @@ class DeleteGCEOperator(BaseOperator):
         *args,
         **kwargs,
     ):
+        # Set default priority weight and weight rule for delete operations
+        kwargs.setdefault("priority_weight", 1000)
+        kwargs.setdefault("weight_rule", "absolute")
         super(DeleteGCEOperator, self).__init__(*args, **kwargs)
         self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
 
     def execute(self, context):
-        hook = GCEHook()
-        hook.delete_vm(self.instance_name)
+        with GCEHook() as hook:
+            hook.delete_vm(self.instance_name)
 
 
 class StopGCEOperator(BaseOperator):
@@ -139,8 +145,8 @@ class StopGCEOperator(BaseOperator):
         self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
 
     def execute(self, context):
-        hook = GCEHook()
-        hook.stop_vm(self.instance_name)
+        with GCEHook() as hook:
+            hook.stop_vm(self.instance_name)
 
 
 class BaseSSHGCEOperator(BaseOperator):
@@ -345,7 +351,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
         self,
         instance_name: str,
         requirement_file: str = "requirements.txt",
-        branch: str = "main",  # Branch for repo
+        branch: str = "master",  # Branch for repo
         environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
         base_dir: str = "data-gcp",
@@ -416,8 +422,14 @@ class InstallDependenciesOperator(SSHGCEOperator):
                 uv sync
             fi
         """
+
+        deactivate_conda = (
+            "echo 'conda config --set auto_activate_base false' >> ~/.bashrc && bash"
+        )
+
         # Combine the git clone and installation commands
         return f"""
             {clone_command}
             {install_command}
+            {deactivate_conda}
         """

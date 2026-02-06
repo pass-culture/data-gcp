@@ -9,10 +9,10 @@ SCHEDULE_DICT = {
         "stg": None,
         "dev": None,
     },
-    "algo_default_deployment": "0 9 * * *",
+    "algo_default_deployment": "0 6 * * *",
     "artist_linkage": "0 12 * * 0",
     "bigquery_archive_partition": "0 7 * * *",
-    "bigquery_historize_applicative_database": {
+    "bigquery_snapshot_backup": {
         "prod": "15 3 * * *",  # every day at 3:15 AM
         "stg": None,
         "dev": None,
@@ -28,7 +28,6 @@ SCHEDULE_DICT = {
     "embedding_reduction_item": "0 12 * * 0",
     "import_applicative_database": "0 1 * * *",
     "import_intraday_firebase_data": "0 1 * * *",
-    "import_titelive_ml": None,
     "import_titelive": "0 2 * * *",  # every day at 2:00 AM
     "link_items": {
         "prod": "0 20 * * 3",  # every Wednesday at 8:00 PM
@@ -40,11 +39,7 @@ SCHEDULE_DICT = {
         "stg": "00 2 * * *",
         "prod": "00 2 * * *",
     },
-    "sync_cloudsql_recommendation_tables_to_bigquery": {
-        "dev": "0 5 * * *",  # every day at 5:00 AM
-        "stg": "0 5 * * *",  # every day at 5:00 AM
-        "prod": "5 * * * *",  # every hour at 5 minutes past the hour
-    },
+    "endpoint_monitoring": "0 8 * * *",  # every day at 8:00 AM
     "export_external_reporting": {
         "prod": "45 4 1 1,4,8,12 *",  # every 1st of 4 months at 4:45 AM
     },

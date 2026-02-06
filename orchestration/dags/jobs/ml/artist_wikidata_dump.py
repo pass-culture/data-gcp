@@ -1,6 +1,10 @@
 import os
 from datetime import datetime
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.python import PythonOperator
+from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -16,11 +20,6 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule, sparkql_health_check
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.python import PythonOperator
-from airflow.utils.task_group import TaskGroup
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"artist-wikidata-dump-{ENV_SHORT_NAME}"

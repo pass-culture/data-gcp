@@ -16,7 +16,7 @@ dependencies = [
     "pandas>=1.4.1",
     "pandas-gbq>=0.17.1",
     "polars>=0.19.12",
-    "pyarrow>=13.0.0",
+    "pyarrow>=14.0.1",
     "pynndescent>=0.5.13",
     "setuptools>=78.1.1",
     "tqdm>=4.66.1",
@@ -62,3 +62,9 @@ runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 # Pydantic needs to be able to evaluate types at runtime
 # see https://pypi.org/project/flake8-type-checking/ for flake8-type-checking documentation
 # see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation
+
+[tool.uv]
+environments = [
+    "sys_platform == 'darwin'",
+    "sys_platform == 'linux'",
+]

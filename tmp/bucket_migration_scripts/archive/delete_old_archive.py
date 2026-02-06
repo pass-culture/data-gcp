@@ -23,11 +23,10 @@ Safety Features:
 import argparse
 import json
 import logging
-import os
 import subprocess
 import sys
 from datetime import datetime
-from typing import List, Dict
+from typing import Dict, List
 
 
 class OldArchiveFolderDeleter:
@@ -261,7 +260,7 @@ class OldArchiveFolderDeleter:
     def run_deletion(self) -> bool:
         """Run the complete deletion process with safety checks."""
         self.logger.info("=" * 60)
-        self.logger.info(f"Starting old archive folder deletion")
+        self.logger.info("Starting old archive folder deletion")
         self.logger.info(f"Environment: {self.env}")
         self.logger.info(f"Target path: {self.old_archive_path}")
         self.logger.info(f"Mode: {'DRY RUN' if self.dry_run else 'DELETION'}")

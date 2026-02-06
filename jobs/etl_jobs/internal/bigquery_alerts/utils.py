@@ -30,6 +30,7 @@ def get_schedule_mapping():
               - 'monthly': 4 weeks ago
               - 'yearly': 365 days ago
               - 'default': 4 weeks ago (fallback for untagged tables)
+              - 'never': Never alert (epoch time)
     """
     return {
         "daily": today - days3,
@@ -37,6 +38,7 @@ def get_schedule_mapping():
         "monthly": today - month,
         "yearly": today - year,
         "default": today - month,
+        "never": datetime.datetime(1970, 1, 1),
     }
 
 
@@ -63,7 +65,6 @@ def get_datasets_to_scan():
             f"raw_applicative_{ENV_SHORT_NAME}",
             f"snapshot_{ENV_SHORT_NAME}",
             f"backend_{ENV_SHORT_NAME}",
-            f"appsflyer_import_{ENV_SHORT_NAME}",
         ]
     ]
 

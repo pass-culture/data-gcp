@@ -3,8 +3,7 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.bash import BashOperator
-from airflow.operators.dummy import DummyOperator
-from airflow.operators.python import BranchPythonOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.providers.google.cloud.operators.gcs import GCSDeleteObjectsOperator
 from airflow.utils.task_group import TaskGroup
 from common import macros
@@ -21,7 +20,7 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from common.utils import delayed_waiting_operator, get_airflow_schedule
+from common.utils import get_airflow_schedule
 
 from jobs.crons import SCHEDULE_DICT
 
@@ -97,7 +96,7 @@ with DAG(
         ),
     },
 ) as dag:
-    start = DummyOperator(task_id="start", dag=dag)
+    start = EmptyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",

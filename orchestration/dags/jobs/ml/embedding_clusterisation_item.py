@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -14,10 +17,6 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
 
 DEFAULT_REGION = "europe-west1"
 
@@ -73,8 +72,8 @@ with DAG(
         cluster_prefix = cluster_config["cluster_prefix"]
         gce_instance = f"clusterisation-{job_name}-{ENV_SHORT_NAME}"
 
-        start = DummyOperator(task_id=f"start_{job_name}", dag=dag)
-        end = DummyOperator(task_id=f"end_{job_name}", dag=dag)
+        start = EmptyOperator(task_id=f"start_{job_name}", dag=dag)
+        end = EmptyOperator(task_id=f"end_{job_name}", dag=dag)
 
         gce_instance_start = StartGCEOperator(
             task_id=f"gce_start_{job_name}_task",

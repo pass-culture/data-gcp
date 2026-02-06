@@ -11,7 +11,7 @@ from constants import ENV_SHORT_NAME, GCP_PROJECT
 SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}"
 MLFLOW_SECRET_NAME = "mlflow_client_id"
 MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"
-MLFLOW_RUN_ID_FILENAME = "mlflow_run_uuid"
+MLFLOW_RUN_ID_FILENAME = "mlflow_run_id"
 MLFLOW_URI = (
     "https://mlflow.passculture.team/"
     if ENV_SHORT_NAME == "prod"
@@ -21,7 +21,7 @@ MLFLOW_URI = (
 
 def get_secret(secret_id: str):
     client = secretmanager.SecretManagerServiceClient()
-    name = f"projects/{GCP_PROJECT}/secrets/{secret_id}/versions/1"
+    name = f"projects/{GCP_PROJECT}/secrets/{secret_id}/versions/latest"
     response = client.access_secret_version(name=name)
     return response.payload.data.decode("UTF-8")
 

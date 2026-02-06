@@ -1,11 +1,10 @@
 from datetime import timedelta
 
+import airflow
+from airflow import DAG
 from common.config import ENV_SHORT_NAME
 from common.operators.gce import CleanGCEOperator
 from common.utils import get_airflow_schedule
-
-import airflow
-from airflow import DAG
 
 default_args = {
     "start_date": airflow.utils.dates.days_ago(0),

@@ -62,6 +62,9 @@ models:
       - name: user_age
         description: '{{ doc("column__user_age") }}'
         data_type: INT64
+      - name: user_age_at_creation
+        description: '{{ doc("column__user_age_at_creation") }}'
+        data_type: INT64
       - name: user_birth_date
         description: '{{ doc("column__user_birth_date") }}'
         data_type: DATE

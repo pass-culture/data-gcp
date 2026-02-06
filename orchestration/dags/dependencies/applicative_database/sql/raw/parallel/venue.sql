@@ -52,7 +52,6 @@ SELECT
     , "dmsToken" AS dms_token
     , "description" AS venue_description
     , "withdrawalDetails" AS venue_withdrawal_details
-    , CAST("offererAddressId"AS varchar(255)) AS offerer_address_id
     , "isOpenToPublic" AS venue_is_open_to_public
     ,"adageInscriptionDate" AS venue_adage_inscription_date
     , "isSoftDeleted" AS venue_is_soft_deleted

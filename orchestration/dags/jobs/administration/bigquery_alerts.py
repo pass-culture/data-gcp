@@ -1,5 +1,9 @@
 import datetime
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator
 from common import macros
 from common.alerts.freshness import bigquery_freshness_alert
 from common.callback import on_failure_vm_callback
@@ -16,11 +20,6 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import delayed_waiting_operator, get_airflow_schedule
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import PythonOperator
 
 GCE_INSTANCE = f"bigquery-alerts-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/bigquery_alerts"
@@ -57,7 +56,7 @@ with DAG(
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
-    start = DummyOperator(task_id="start", dag=dag)
+    start = EmptyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,

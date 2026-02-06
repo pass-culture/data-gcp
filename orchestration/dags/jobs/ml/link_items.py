@@ -1,6 +1,16 @@
 import os
 from datetime import datetime, timedelta
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryInsertJobOperator,
+)
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
+from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.config import (
     BIGQUERY_ML_LINKAGE_DATASET,
@@ -19,19 +29,9 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
+
 from jobs.crons import SCHEDULE_DICT
 from jobs.ml.constants import IMPORT_LINKAGE_SQL_PATH
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
-from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
-    GCSToBigQueryOperator,
-)
-from airflow.utils.task_group import TaskGroup
 
 DATE = "{{ ts_nodash }}"
 
@@ -155,8 +155,8 @@ with DAG(
     # ---------------------------------------------------------------------
     # START / END
     # ---------------------------------------------------------------------
-    start = DummyOperator(task_id="start")
-    end = DummyOperator(task_id="end")
+    start = EmptyOperator(task_id="start")
+    end = EmptyOperator(task_id="end")
 
     # ---------------------------------------------------------------------
     # 1) IMPORT DATA

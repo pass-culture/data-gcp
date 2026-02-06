@@ -3,23 +3,15 @@ import os
 
 import mlflow
 from google.auth.transport.requests import Request
-from google.cloud import secretmanager
 from google.oauth2 import service_account
 from mlflow.entities import Experiment
 
 from src.constants import (
-    GCP_PROJECT_ID,
     MLFLOW_SECRET_NAME,
     MLFLOW_URI,
     SA_ACCOUNT,
 )
-
-
-def get_secret(secret_name: str) -> str:
-    client = secretmanager.SecretManagerServiceClient()
-    name = f"projects/{GCP_PROJECT_ID}/secrets/{secret_name}/versions/latest"
-    response = client.access_secret_version(name=name)
-    return response.payload.data.decode("UTF-8")
+from src.utils.gcp import get_secret
 
 
 def connect_remote_mlflow() -> None:

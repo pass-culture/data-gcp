@@ -1,18 +1,19 @@
 import datetime
 import os
-import logging
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
-    GCP_PROJECT_ID,
-    ENV_SHORT_NAME,
-    DAG_FOLDER,
     DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
 )
-
 from common.operators.gce import (
     DeleteGCEOperator,
     InstallDependenciesOperator,
@@ -22,13 +23,6 @@ from common.operators.gce import (
 from common.utils import delayed_waiting_operator, get_airflow_schedule
 
 from jobs.crons import SCHEDULE_DICT
-
-from airflow import DAG
-from airflow.models import Param
-
-from airflow.operators.empty import EmptyOperator
-from airflow.utils.task_group import TaskGroup
-
 
 default_dag_args = {
     "start_date": datetime.datetime(2022, 6, 24),
@@ -64,7 +58,7 @@ with DAG(
     tags=[DAG_TAGS.DE.value],
     params={
         "branch": Param(
-            default="master",  # "production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
         "instance_name": Param(

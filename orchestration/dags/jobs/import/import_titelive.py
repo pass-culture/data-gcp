@@ -3,6 +3,9 @@
 import datetime
 import os
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.python import BranchPythonOperator
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import DAG_FOLDER, DAG_TAGS, ENV_SHORT_NAME
@@ -12,13 +15,9 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from common.utils import get_airflow_schedule, delayed_waiting_operator
-from jobs.crons import SCHEDULE_DICT
+from common.utils import delayed_waiting_operator, get_airflow_schedule
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import BranchPythonOperator
+from jobs.crons import SCHEDULE_DICT
 
 DAG_NAME = "import_titelive"
 GCE_INSTANCE = f"import-titelive-{ENV_SHORT_NAME}"
@@ -28,6 +27,9 @@ HTTP_TOOLS_RELATIVE_DIR = "../../"
 # Environment Configuration
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 BIGQUERY_DATASET = os.getenv("BIGQUERY_DATASET", "tmp_cdarnis_dev")
+
+PRIORITY_WEIGHT = 1000
+WEIGHT_RULE = "absolute"
 
 dag_config = {
     "GCP_PROJECT_ID": GCP_PROJECT_ID,
@@ -93,6 +95,8 @@ with DAG(
         instance_type="{{ params.instance_type }}",
         preemptible=False,
         labels={"job_type": "long_task", "dag_name": DAG_NAME},
+        priority_weight=PRIORITY_WEIGHT,
+        weight_rule=WEIGHT_RULE,
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -102,6 +106,8 @@ with DAG(
         python_version="3.12",
         base_dir=BASE_DIR,
         retries=2,
+        priority_weight=PRIORITY_WEIGHT,
+        weight_rule=WEIGHT_RULE,
     )
 
     # Decide execution mode based on init parameter
@@ -133,6 +139,8 @@ with DAG(
         f"{{{{ '--resume' if params.resume else '' }}}} "
         f"{{{{ '--reprocess-failed' if params.reprocess_failed else '' }}}}",
         deferrable=True,
+        priority_weight=PRIORITY_WEIGHT,
+        weight_rule=WEIGHT_RULE,
     )
 
     # Incremental mode: Sync since last sync date for both bases
@@ -142,6 +150,8 @@ with DAG(
         base_dir=BASE_DIR,
         environment=dag_config,
         command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py run-incremental",
+        priority_weight=PRIORITY_WEIGHT,
+        weight_rule=WEIGHT_RULE,
     )
 
     # Download images for init mode (deferrable)
@@ -153,6 +163,8 @@ with DAG(
         command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py download-images "
         f"{{{{ '--reprocess-failed' if params.download_images_reprocess_failed else '' }}}}",
         deferrable=True,
+        priority_weight=PRIORITY_WEIGHT,
+        weight_rule=WEIGHT_RULE,
     )
 
     # Download images for incremental mode (not deferrable)
@@ -164,6 +176,8 @@ with DAG(
         command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py download-images "
         f"{{{{ '--reprocess-failed' if params.download_images_reprocess_failed else '' }}}}",
         deferrable=False,
+        priority_weight=PRIORITY_WEIGHT,
+        weight_rule=WEIGHT_RULE,
     )
 
     # VM cleanup

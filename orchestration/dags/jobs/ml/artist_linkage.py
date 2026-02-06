@@ -13,6 +13,7 @@ from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_LINKAGE_DATASET,
+    BIGQUERY_ML_METADATA_DATASET,
     BIGQUERY_ML_PREPROCESSING_DATASET,
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
@@ -30,6 +31,7 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
+
 from jobs.crons import SCHEDULE_DICT
 
 DEFAULT_REGION = "europe-west1"
@@ -49,33 +51,23 @@ STORAGE_BASE_PATH = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}"
 WIKIDATA_STORAGE_BASE_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/dump_wikidata"
 WIKIDATA_EXTRACTION_GCS_FILENAME = "wikidata_extraction.parquet"
 PRODUCTS_TO_LINK_GCS_FILENAME = "products_to_link.parquet"
-
-## Link from Scratch
-TEST_SETS_GCS_DIR = f"gs://{DATA_GCS_BUCKET_NAME}/artists/labelled_test_sets"
-ARTISTS_TO_LINK_GCS_FILENAME = "artists_to_link.parquet"
-ARTISTS_GCS_FILENAME = "artist.parquet"
-ARTIST_ALIAS_GCS_FILENAME = "artist_alias.parquet"
-PRODUCT_ARTIST_LINK_GCS_FILENAME = "product_artist_link.parquet"
-ARTISTS_WITH_METADATA_GCS_FILENAME = "artist_with_metadata.parquet"
-ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME = (
-    "artist_with_wikipedia_page_content.parquet"
-)
-ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME = "artist_with_biography.parquet"
-
-## Link New Products to Artists
 APPLICATIVE_ARTISTS_GCS_FILENAME = "applicative_database_artist.parquet"
-APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME = "applicative_database_artist_alias.parquet"
 APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME = (
     "applicative_database_product_artist_link.parquet"
 )
+ML_METADATA_ARTIST_SCORE_GCS_FILENAME = "ml_metadata_artist_score.parquet"
+ML_METADATA_PRODUCT_STATS_GCS_FILENAME = "ml_metadata_product_stats.parquet"
 DELTA_ARTIST_ALIAS_GCS_FILENAME = "delta_artist_alias.parquet"
 DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME = "delta_product_artist_link.parquet"
-DELTA_ARTISTS_GCS_FILENAME = "delta_artist.parquet"
-DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME = "delta_artist_with_metadata.parquet"
-DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME = (
-    "delta_artist_with_wikipedia_page_content.parquet"
+DELTA_ARTISTS_GCS_FILENAME_01 = "01_delta_artist.parquet"
+DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME_02 = "02_delta_artist_with_metadata.parquet"
+DELTA_ARTISTS_WITH_MEDIATION_UUID_GCS_FILENAME_03 = (
+    "03_delta_artist_with_mediation_uuid.parquet"
 )
-DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME = "delta_artist_with_biography.parquet"
+DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_04 = (
+    "04_delta_artist_with_wikipedia_page_content.parquet"
+)
+DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_05 = "05_delta_artist_with_biography.parquet"
 
 
 # BQ Tables
@@ -88,11 +80,6 @@ TABLES_TO_IMPORT_TO_GCS = [
     },
     {
         "dataset_id": BIGQUERY_RAW_DATASET,
-        "table_id": "applicative_database_artist_alias",
-        "filename": APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME,
-    },
-    {
-        "dataset_id": BIGQUERY_RAW_DATASET,
         "table_id": "applicative_database_product_artist_link",
         "filename": APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME,
     },
@@ -101,29 +88,22 @@ TABLES_TO_IMPORT_TO_GCS = [
         "table_id": PRODUCT_TO_LINK_TABLE,
         "filename": PRODUCTS_TO_LINK_GCS_FILENAME,
     },
-]
-GCS_TO_ARTIST_TABLES = [
     {
-        "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
-        "table_id": "artist",
-        "filename": ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME,
+        "dataset_id": BIGQUERY_ML_METADATA_DATASET,
+        "table_id": "artist_score",
+        "filename": ML_METADATA_ARTIST_SCORE_GCS_FILENAME,
     },
     {
-        "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
-        "table_id": "artist_alias",
-        "filename": ARTIST_ALIAS_GCS_FILENAME,
-    },
-    {
-        "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
-        "table_id": "product_artist_link",
-        "filename": PRODUCT_ARTIST_LINK_GCS_FILENAME,
+        "dataset_id": BIGQUERY_ML_METADATA_DATASET,
+        "table_id": "product_stats",
+        "filename": ML_METADATA_PRODUCT_STATS_GCS_FILENAME,
     },
 ]
 GCS_TO_DELTA_TABLES = [
     {
         "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
         "table_id": "delta_artist",
-        "filename": DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME,
+        "filename": DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_05,
     },
     {
         "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
@@ -138,9 +118,11 @@ GCS_TO_DELTA_TABLES = [
 ]
 
 # Flow names
-FULL_REBUILD_FLOW = "full_rebuild_flow"
 INCREMENTAL_FLOW = "incremental_flow"
 REFRESH_METADATA_FLOW = "refresh_metadata_flow"
+DEDUPLICATION_FLOW = "deduplication_flow"
+SKIP_SUMMARIZATION_FLOW = "skip_summarization_flow"
+SUMMARIZATION_WITH_LLM_FLOW = "summarization_with_llm_flow"
 
 # DAG Documentation
 DAG_MD_DOC = """
@@ -148,22 +130,11 @@ DAG_MD_DOC = """
 
 This DAG links products to artists using clustering algorithms and enriches artist data with Wikidata metadata.
 
-## Three Execution Flows
+## Two Execution Flows
 
-The DAG supports three different execution modes, controlled by the `linkage_mode` parameter:
+The DAG supports two different execution modes, controlled by the `linkage_mode` parameter:
 
-### 1. Full Rebuild Flow (`full_rebuild`)
-Rebuilds the entire artist linkage database from scratch.
-
-**Steps:**
-- Links all products to artists from scratch using clustering algorithms
-- Enriches artist data with Wikimedia Commons licenses
-- Loads complete artist, artist_alias, and product_artist_link tables into BigQuery
-- Evaluates linking quality using labelled test sets
-
-**Use case:** Initial setup or when a complete rebuild is needed due to major algorithm changes.
-
-### 2. Incremental Flow (`incremental`)
+### 1. Incremental Flow (`incremental`)
 Updates the existing artist database with new products only.
 
 **Steps:**
@@ -173,7 +144,7 @@ Updates the existing artist database with new products only.
 
 **Use case:** Regular updates to link newly added products to the artist database.
 
-### 3. Refresh Metadata Flow (`metadata_refresh`)
+### 2. Refresh Metadata Flow (`metadata_refresh`)
 Refreshes Wikidata metadata for existing artists without relinking products.
 
 **Steps:**
@@ -182,16 +153,33 @@ Refreshes Wikidata metadata for existing artists without relinking products.
 - Loads delta tables with refreshed metadata into BigQuery
 
 **Use case:** Periodic updates to keep artist metadata (descriptions, images, etc.) up to date without reprocessing product links.
+
+### 3. Deduplication Flow (`deduplication`)
+Identifies and merges duplicate artist entries based on namesake analysis and product similarities.
+
+**Steps:**
+- Identifies artists with identical names (namesakes).
+- Generates embeddings for product offer names associated with these artists.
+- Compares product embeddings to find matches between namesake artists.
+- Merges artists if enough product similarities are found.
+- Updates artist, artist alias, and product-artist link tables in BigQuery.
+
+**Use case:** Cleaning up the artist database by merging duplicate entries created by distinct providers or data errors.
 """
 
 
 def _choose_linkage(**context):
-    if context["params"]["linkage_mode"] == "full_rebuild":
-        return FULL_REBUILD_FLOW
-    elif context["params"]["linkage_mode"] == "metadata_refresh":
+    if context["params"]["linkage_mode"] == "metadata_refresh":
         return REFRESH_METADATA_FLOW
-    else:
-        return INCREMENTAL_FLOW
+    elif context["params"]["linkage_mode"] == "deduplication":
+        return DEDUPLICATION_FLOW
+    return INCREMENTAL_FLOW
+
+
+def _skip_llm_summarization(**context):
+    if context["params"]["skip_llm_summarization"] is True:
+        return SKIP_SUMMARIZATION_FLOW
+    return SUMMARIZATION_WITH_LLM_FLOW
 
 
 default_args = {
@@ -220,9 +208,10 @@ with DAG(
         ),
         "linkage_mode": Param(
             default="incremental",
-            enum=["incremental", "full_rebuild", "metadata_refresh"],
+            enum=["incremental", "metadata_refresh", "deduplication"],
             type="string",
         ),
+        "skip_llm_summarization": Param(default=False, type="boolean"),
     },
 ) as dag:
     with TaskGroup("dag_init") as dag_init:
@@ -239,6 +228,8 @@ with DAG(
             task_id="gce_start_task",
             instance_name=GCE_INSTANCE,
             instance_type="{{ params.instance_type }}",
+            gpu_count="{{ 1 if params.linkage_mode == 'deduplication' else 0 }}",
+            gpu_type="nvidia-tesla-t4",
             preemptible=False,
             labels={"job_type": "ml", "dag_name": DAG_NAME},
         )
@@ -267,9 +258,12 @@ with DAG(
         provide_context=True,
         dag=dag,
     )
-    full_rebuild_flow = EmptyOperator(task_id=FULL_REBUILD_FLOW)
-    incremental_flow = EmptyOperator(task_id=INCREMENTAL_FLOW)
-    refresh_metadata_flow = EmptyOperator(task_id=REFRESH_METADATA_FLOW)
+    choose_llm_summarization = BranchPythonOperator(
+        task_id="choose_llm_summarization",
+        python_callable=_skip_llm_summarization,
+        provide_context=True,
+        dag=dag,
+    )
 
     #####################################################################################################
     #                                          Import Data Task                                         #
@@ -300,88 +294,44 @@ with DAG(
             )
 
     #####################################################################################################
-    #                                         Full Rebuild Flow                                         #
+    #                                        Deduplication Flow                                         #
     #####################################################################################################
 
-    link_products_to_artists_from_scratch = SSHGCEOperator(
-        task_id="link_products_to_artists_from_scratch",
+    deduplication_flow = EmptyOperator(task_id=DEDUPLICATION_FLOW)
+
+    embed_offer_names_on_namesakes = SSHGCEOperator(
+        task_id="embed_offer_names_on_namesakes",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             uv run cli/link_products_to_artists_from_scratch.py \
-            --product-filepath {os.path.join(STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME)} \
-            --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
-            --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
-            --output-artist-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_GCS_FILENAME)} \
-            --output-artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, ARTIST_ALIAS_GCS_FILENAME)} \
-            --output-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, PRODUCT_ARTIST_LINK_GCS_FILENAME)}
+             uv run cli/embed_offer_names_on_namesakes.py \
+            --applicative-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
+            --product-stats-filepath {os.path.join(STORAGE_BASE_PATH, ML_METADATA_PRODUCT_STATS_GCS_FILENAME)} \
+            --artist-score-filepath {os.path.join(STORAGE_BASE_PATH, ML_METADATA_ARTIST_SCORE_GCS_FILENAME)} \
+            --output-product-embeddings-filepath {os.path.join(STORAGE_BASE_PATH, "product_embeddings.parquet")}
             """,
     )
 
-    get_wikimedia_commons_license = SSHGCEOperator(
-        task_id="get_wikimedia_commons_license",
+    deduplicate_artists = SSHGCEOperator(
+        task_id="deduplicate_artists",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             uv run cli/get_wikimedia_commons_license.py \
-            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, ARTISTS_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)}
+             uv run cli/deduplicate_artists.py \
+            --applicative-artist-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
+            --applicative-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
+            --product-embeddings-filepath {os.path.join(STORAGE_BASE_PATH, "product_embeddings.parquet")} \
+            --artist-score-filepath {os.path.join(STORAGE_BASE_PATH, ML_METADATA_ARTIST_SCORE_GCS_FILENAME)} \
+            --output-delta-artist-filepath {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_05)} \
+            --output-delta-artist-alias-filepath {os.path.join(STORAGE_BASE_PATH, DELTA_ARTIST_ALIAS_GCS_FILENAME)} \
+            --output-delta-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME)}
             """,
-    )
-
-    get_wikipedia_page_content = SSHGCEOperator(
-        task_id="get_wikipedia_page_content",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
-             uv run cli/get_wikipedia_page_content.py \
-            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME)}
-            """,
-    )
-
-    summarize_biographies_with_llm = SSHGCEOperator(
-        task_id="summarize_biographies_with_llm",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
-             uv run cli/summarize_biographies_with_llm.py \
-            --artists-with-wikipedia-content {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME)} \
-            {SUMMARIZE_BIOGRAPHY_OPTIONS[ENV_SHORT_NAME]}
-            """,
-    )
-
-    with TaskGroup("load_artist_data_tables") as load_artist_data_tables:
-        for table_data in GCS_TO_ARTIST_TABLES:
-            GCSToBigQueryOperator(
-                task_id=f"load_data_into_{table_data['table_id']}_table",
-                project_id=GCP_PROJECT_ID,
-                bucket=ML_BUCKET_TEMP,
-                source_objects=os.path.join(GCS_FOLDER_PATH, table_data["filename"]),
-                destination_project_dataset_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.{table_data['table_id']}",
-                source_format="PARQUET",
-                write_disposition="WRITE_TRUNCATE",
-                autodetect=True,
-            )
-
-    artist_metrics = SSHGCEOperator(
-        task_id="artist_metrics",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
-         uv run cli/evaluate.py \
-        --products-to-link-file-path {os.path.join(STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME)} \
-        --artists-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)} \
-        --product-artist-link-file-path {os.path.join(STORAGE_BASE_PATH, PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
-        --test-sets-dir {TEST_SETS_GCS_DIR} \
-        --experiment-name artist_linkage_v{DAG_VERSION}_{ENV_SHORT_NAME}
-        """,
     )
 
     #####################################################################################################
     #                                      Incremental Update Flow                                      #
     #####################################################################################################
+    incremental_flow = EmptyOperator(task_id=INCREMENTAL_FLOW)
 
     link_new_products_to_artists = SSHGCEOperator(
         task_id="link_new_products_to_artists",
@@ -390,12 +340,11 @@ with DAG(
         command=f"""
              uv run cli/link_new_products_to_artists.py \
             --artist-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
-            --artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME)} \
             --product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
             --product-filepath {os.path.join(STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME)} \
             --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
             --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
-            --output-delta-artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME)} \
+            --output-delta-artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME_01)} \
             --output-delta-artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTIST_ALIAS_GCS_FILENAME)} \
             --output-delta-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME)}
             """,
@@ -404,6 +353,7 @@ with DAG(
     #####################################################################################################
     #                                      Refresh Metadatas Flow                                       #
     #####################################################################################################
+    refresh_metadata_flow = EmptyOperator(task_id=REFRESH_METADATA_FLOW)
 
     refresh_artist_metadatas = SSHGCEOperator(
         task_id="refresh_artist_metadatas",
@@ -412,10 +362,9 @@ with DAG(
         command=f"""
              uv run cli/refresh_artist_metadatas.py \
             --artist-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
-            --artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME)} \
             --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
             --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
-            --output-delta-artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME)} \
+            --output-delta-artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME_01)} \
             --output-delta-artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTIST_ALIAS_GCS_FILENAME)} \
             --output-delta-product-artist-link-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME)}
             """,
@@ -425,46 +374,84 @@ with DAG(
     #                              Common Incremental + Refresh Metadata                                #
     #####################################################################################################
 
-    get_wikimedia_commons_license_on_delta_tables = SSHGCEOperator(
-        task_id="get_wikimedia_commons_license_on_delta_tables",
+    get_wikimedia_commons_license = SSHGCEOperator(
+        task_id="get_wikimedia_commons_license",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         trigger_rule="none_failed_min_one_success",
         command=f"""
              uv run cli/get_wikimedia_commons_license.py \
-            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME)}
+            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME_01)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME_02)}
             """,
     )
 
-    get_wikipedia_page_content_on_delta_tables = SSHGCEOperator(
-        task_id="get_wikipedia_page_content_on_delta_tables",
+    transfer_wikimedia_images_to_gcs = SSHGCEOperator(
+        task_id="transfer_wikimedia_images_to_gcs",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        trigger_rule="none_failed_min_one_success",
+        command=f"""
+             uv run cli/transfer_wikimedia_images_to_gcs.py \
+            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME_02)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_MEDIATION_UUID_GCS_FILENAME_03)}
+            """,
+    )
+
+    #####################################################################################################
+    #                                   Summarization with LLM Flow                                     #
+    #####################################################################################################
+    summarization_with_llm_flow = EmptyOperator(task_id=SUMMARIZATION_WITH_LLM_FLOW)
+
+    get_wikipedia_page_content = SSHGCEOperator(
+        task_id="get_wikipedia_page_content",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         trigger_rule="none_failed_min_one_success",
         command=f"""
              uv run cli/get_wikipedia_page_content.py \
-            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME)}
+            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_MEDIATION_UUID_GCS_FILENAME_03)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_04)}
             """,
     )
 
-    summarize_biographies_with_llm_on_delta_tables = SSHGCEOperator(
-        task_id="summarize_biographies_with_llm_on_delta_tables",
+    summarize_biographies_with_llm = SSHGCEOperator(
+        task_id="summarize_biographies_with_llm",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
              uv run cli/summarize_biographies_with_llm.py \
-            --artists-with-wikipedia-content {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME)} \
+            --artists-with-wikipedia-content {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_04)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_05)} \
             {SUMMARIZE_BIOGRAPHY_OPTIONS[ENV_SHORT_NAME]}
             """,
     )
 
+    #####################################################################################################
+    #                                     Skip LLM Summarization                                        #
+    #####################################################################################################
+    skip_summarization_flow = EmptyOperator(task_id=SKIP_SUMMARIZATION_FLOW)
+
+    retrieve_artist_biographies_from_artist_table = SSHGCEOperator(
+        task_id="retrieve_artist_biographies_from_artist_table",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+             uv run cli/retrieve_artist_biographies_from_artist_table.py \
+            --applicative-artist-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
+            --artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_MEDIATION_UUID_GCS_FILENAME_03)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_05)}
+            """,
+    )
+
+    #####################################################################################################
+    #                                     Load Data into BigQuery                                       #
+    #####################################################################################################
+
     with TaskGroup(
-        "load_artist_data_into_delta_tables",
+        "load_delta_artist_data_into_tables",
         default_args={"trigger_rule": "none_failed_min_one_success"},
-    ) as load_artist_data_into_delta_tables:
+    ) as load_delta_artist_data_into_tables:
         for table_data in GCS_TO_DELTA_TABLES:
             GCSToBigQueryOperator(
                 task_id=f"load_data_into_{table_data['table_id']}_table",
@@ -487,43 +474,48 @@ with DAG(
         >> vm_init
         >> import_data
         >> choose_linkage
-        >> [full_rebuild_flow, incremental_flow, refresh_metadata_flow]
+        >> [incremental_flow, refresh_metadata_flow, deduplication_flow]
     )
 
-    # Full Rebuild Flow
+    # Deduplication Flow
     (
-        full_rebuild_flow
-        >> link_products_to_artists_from_scratch
-        >> get_wikimedia_commons_license
-        >> get_wikipedia_page_content
-        >> summarize_biographies_with_llm
-        >> [load_artist_data_tables, artist_metrics]
-        >> join_before_stop
+        deduplication_flow
+        >> embed_offer_names_on_namesakes
+        >> deduplicate_artists
+        >> load_delta_artist_data_into_tables
     )
 
     # Incremental Update Flow
-    (
-        incremental_flow
-        >> link_new_products_to_artists
-        >> get_wikimedia_commons_license_on_delta_tables
-        >> get_wikipedia_page_content_on_delta_tables
-        >> summarize_biographies_with_llm_on_delta_tables
-    )
+    (incremental_flow >> link_new_products_to_artists >> get_wikimedia_commons_license)
 
     # Refresh Metadata Flow
+    (refresh_metadata_flow >> refresh_artist_metadatas >> get_wikimedia_commons_license)
+
+    # LLM Summarization Choice
     (
-        refresh_metadata_flow
-        >> refresh_artist_metadatas
-        >> get_wikimedia_commons_license_on_delta_tables
-        >> get_wikipedia_page_content_on_delta_tables
-        >> summarize_biographies_with_llm_on_delta_tables
+        get_wikimedia_commons_license
+        >> transfer_wikimedia_images_to_gcs
+        >> choose_llm_summarization
+        >> [
+            skip_summarization_flow,
+            summarization_with_llm_flow,
+        ]
+    )
+
+    # Skip LLM Summarization Flow
+    (
+        skip_summarization_flow
+        >> retrieve_artist_biographies_from_artist_table
+        >> load_delta_artist_data_into_tables
+    )
+
+    # Summarization with LLM Flow
+    (
+        summarization_with_llm_flow
+        >> get_wikipedia_page_content
+        >> summarize_biographies_with_llm
+        >> load_delta_artist_data_into_tables
     )
 
     # Common end tasks
-    (
-        summarize_biographies_with_llm_on_delta_tables
-        >> load_artist_data_into_delta_tables
-        >> join_before_stop
-    )
-
-    join_before_stop >> gce_instance_stop
+    (load_delta_artist_data_into_tables >> join_before_stop >> gce_instance_stop)

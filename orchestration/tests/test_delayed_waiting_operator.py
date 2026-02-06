@@ -1,10 +1,10 @@
-import pytest
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
-from airflow.sensors.external_task import ExternalTaskSensor
+import pytest
 from airflow.operators.python import PythonOperator
+from airflow.sensors.external_task import ExternalTaskSensor
 from dags.common.utils import delayed_waiting_operator
-from datetime import datetime, timedelta, timezone
 
 UTC = timezone.utc
 

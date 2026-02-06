@@ -11,6 +11,10 @@ models:
         description: '{{ doc("column__venue_department_name") }}'
       - name: venue_region_name
         description: '{{ doc("column__venue_region_name") }}'
+      - name: venue_epci
+        description: '{{ doc("column__venue_epci") }}'
+      - name: venue_city
+        description: '{{ doc("column__venue_city") }}'
       - name: offerer_is_epn
         description: '{{ doc("column__offerer_is_epn") }}'
       - name: offer_category_id

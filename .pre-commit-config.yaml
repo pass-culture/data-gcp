@@ -29,13 +29,14 @@ repos:
         types: [python]
         stages: [pre-commit]
         additional_dependencies: [ruff==0.5.7]
+  - repo: https://github.com/tconbeer/sqlfmt
+    rev: v0.29.0
+    hooks:
       - id: sqlfmt
-        name: SQL Formatting (sqlfmt)
-        entry: sqlfmt --exclude "**/.venv/**" --exclude "**/venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**" --exclude "**/orchestration/dags/data_gcp_dbt/snapshots/**"
-        stages: [pre-push]
-        language: python
-        additional_dependencies: ["shandy-sqlfmt[jinjafmt]==0.28.2"]
-        types: [sql]
+        language_version: python
+        additional_dependencies: ['.[jinjafmt]']
+        exclude: orchestration/dags/dependencies/applicative_database/sql/raw/.*\.sql$|orchestration/dags/data_gcp_dbt/snapshots/.*\.sql$
+
   - repo: https://github.com/sqlfluff/sqlfluff
     rev: 3.3.0
     hooks:

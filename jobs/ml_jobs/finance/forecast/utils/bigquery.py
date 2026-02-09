@@ -7,7 +7,7 @@ including loading tables and executing queries.
 import pandas as pd
 from google.cloud import bigquery
 
-from forecast.utils.constants import FINANCE_DATASET, GCP_PROJECT_ID
+from forecast.utils.constants import GCP_PROJECT_ID
 
 
 def get_client() -> bigquery.Client:
@@ -19,10 +19,11 @@ def get_client() -> bigquery.Client:
     return bigquery.Client()
 
 
-def load_table(table_name: str) -> pd.DataFrame:
+def load_table(dataset: str, table_name: str) -> pd.DataFrame:
     """Load a table from BigQuery.
 
     Args:
+        dataset: BigQuery dataset containing the table.
         table_name: Name of the table to load.
 
     Returns:
@@ -35,7 +36,7 @@ def load_table(table_name: str) -> pd.DataFrame:
         raise ValueError("table_name cannot be empty")
 
     client = get_client()
-    query = f"SELECT * FROM `{GCP_PROJECT_ID}.{FINANCE_DATASET}.{table_name}`"
+    query = f"SELECT * FROM `{GCP_PROJECT_ID}.{dataset}.{table_name}`"
     return client.query(query).to_dataframe()
 
 
@@ -60,6 +61,7 @@ def save_forecast_gbq(
     model_name: str,
     model_type: str,
     table_name: str = "monthly_forecasts",
+    dataset: str = "ml_finance_stg",
     if_exists: str = "append",
 ) -> None:
     """Save a forecast DataFrame to BigQuery.
@@ -72,9 +74,10 @@ def save_forecast_gbq(
         model_name: Name of the model configuration.
         model_type: Type of model (e.g. 'prophet').
         table_name: Target table name within the finance dataset.
+        dataset: BigQuery dataset containing input data and forecast output.
         if_exists: Behavior if table exists ('fail', 'replace', 'append').
     """
-    destination_table = f"{GCP_PROJECT_ID}.{FINANCE_DATASET}.{table_name}"
+    destination_table = f"{GCP_PROJECT_ID}.{dataset}.{table_name}"
 
     # Transform DataFrame to BigQuery schema
     bq_df = df.copy()

@@ -45,6 +45,9 @@ def main(
         ..., help="Whether to evaluate on backtest data."
     ),
     experiment_name: str = typer.Option(..., help="MLflow experiment name."),
+    dataset: str = typer.Option(
+        ..., help="BigQuery dataset containing training data and forecast results."
+    ),
 ) -> None:
     """
     Generic main function to train, evaluate, and forecast using any supported model
@@ -60,6 +63,7 @@ def main(
         forecast_horizon_date: Forecast horizon end date (YYYY-MM-DD).
         run_backtest: Whether to evaluate on backtest data.
         experiment_name: MLflow experiment name.
+        dataset: BigQuery dataset containing the training data and forecast results.
     """
     experiment, run_name = setup_mlflow(experiment_name, model_type, model_name)
 
@@ -82,7 +86,9 @@ def main(
             logger.info(f"Logged config file: {model.config_path}")
 
         # 2. Prepare Data
-        model.prepare_data(train_start_date, backtest_start_date, backtest_end_date)
+        model.prepare_data(
+            dataset, train_start_date, backtest_start_date, backtest_end_date
+        )
 
         # 3. Train
         model.train()
@@ -122,6 +128,7 @@ def main(
                 model_name=model_name,
                 model_type=model_type,
                 table_name="monthly_forecasts",
+                dataset=dataset,
             )
             logger.info("Monthly forecast logged to BigQuery successfully")
         except NotImplementedError:

@@ -172,6 +172,7 @@ def split_train_test_backtest(
 
 
 def preprocessing_pipeline(
+    dataset: str,
     train_start_date: str,
     backtest_start_date: str,
     backtest_end_date: str,
@@ -187,6 +188,7 @@ def preprocessing_pipeline(
     - split into train/test/backtest.
 
     Args:
+        dataset: BigQuery dataset containing the training data.
         train_start_date: In-sample start date (inclusive).
         backtest_start_date: Out-of-sample start date (inclusive for test, backtest
                             strictly after).
@@ -196,7 +198,7 @@ def preprocessing_pipeline(
         DataSplit: Dataclass containing train, test,
                             and backtest dataframes
     """
-    df = load_table(model_config.data_processing.table_name)
+    df = load_table(dataset=dataset, table_name=model_config.data_processing.table_name)
     validate_data(df, model_config=model_config)
 
     # Chain transformations to reduce intermediate copies

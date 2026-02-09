@@ -22,6 +22,8 @@ from common.operators.gce import (
 )
 from common.operators.slack import SendSlackMessageOperator
 
+from jobs.crons import SCHEDULE_DICT
+
 DATE = "{{ ts_nodash }}"
 DAG_NAME = "finance_pricing_forecast"
 
@@ -41,24 +43,31 @@ gce_params = {
     },
 }
 
+script_params = {
+    "model_type": "prophet",
+    "model_name": "daily_pricing",
+    "train_start_date": "2022-01-01",
+    "backtest_start_date": "2025-09-01",
+    "backtest_end_date": "2025-12-31",
+    "forecast_horizon_date": "2026-12-31",
+    "run_backtest": True,
+    "experiment_name": f"finance_pricing_forecast_v0_{ENV_SHORT_NAME}",
+    "dataset": f"ml_finance_{ENV_SHORT_NAME}",
+}
+
 default_args = {
     "start_date": datetime(2025, 12, 1),
     "on_failure_callback": on_failure_vm_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
-
-schedule_dict = {
-    "prod": "0 6 * * 1",
-    "dev": None,
-    "stg": "0 6 * * 1",
-}  # Run weekly just to test out the DAG then will be monthly
+# Run weekly just to test out the DAG then will be monthly
 
 with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Finance Pricing Forecast ML Job",
-    schedule_interval=schedule_dict[ENV_SHORT_NAME],
+    schedule_interval=SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME],
     catchup=False,
     dagrun_timeout=timedelta(minutes=20),
     user_defined_macros=macros.default,
@@ -70,44 +79,49 @@ with DAG(
             type="string",
         ),
         "model_type": Param(
-            default="prophet",
+            default=script_params["model_type"],
             type="string",
             enum=["prophet"],
             description="Type of model to use (e.g. prophet)",
         ),
         "model_name": Param(
-            default="daily_pricing",
+            default=script_params["model_name"],
             type="string",
             enum=["daily_pricing", "weekly_pricing"],
             description="Name of the model configuration",
         ),
         "train_start_date": Param(
-            default="2022-01-01",
+            default=script_params["train_start_date"],
             type="string",
             description="In-sample start date (YYYY-MM-DD).",
         ),
         "backtest_start_date": Param(
-            default="2025-09-01",
+            default=script_params["backtest_start_date"],
             type="string",
             description="Out-of-sample start date (YYYY-MM-DD).",
         ),
         "backtest_end_date": Param(
-            default="2025-12-31",
+            default=script_params["backtest_end_date"],
             type="string",
             description="Out-of-sample end date (YYYY-MM-DD)",
         ),
         "forecast_horizon_date": Param(
-            default="2026-12-31",
+            default=script_params["forecast_horizon_date"],
             type="string",
             description="Forecast horizon end date (YYYY-MM-DD)",
         ),
         "run_backtest": Param(
-            default=True,
+            default=script_params["run_backtest"],
             type="boolean",
             description="Whether to evaluate on backtest data",
         ),
+        "dataset": Param(
+            default=script_params["dataset"],
+            type="string",
+            description="BigQuery dataset containing the training data",
+        ),
         "experiment_name": Param(
-            default=f"finance_pricing_forecast_v0_{ENV_SHORT_NAME}",
+            default=script_params["experiment_name"],
             type="string",
             description="MLflow experiment name",
         ),
@@ -155,7 +169,8 @@ with DAG(
                 --backtest-end-date "{{ params.backtest_end_date }}" \
                 --forecast-horizon-date "{{ params.forecast_horizon_date }}" \
                 {{ "--run-backtest" if params.run_backtest else "--no-run-backtest" }} \
-                --experiment-name "{{ params.experiment_name }}"
+                --experiment-name "{{ params.experiment_name }}" \
+                --dataset "{{ params.dataset }}"
         """,
     )
 

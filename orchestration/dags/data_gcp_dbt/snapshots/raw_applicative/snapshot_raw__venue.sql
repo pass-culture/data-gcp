@@ -42,7 +42,7 @@
             , "comment" AS venue_comment
             , "publicName" AS venue_public_name
             , {{ render_case_when('"venueTypeCode"', venue_type_code_label_mapping, fallback_sql='"venueTypeCode"') }} as venue_type_code
-            , {{ render_case_when('"venue_activity"', venue_activity_label_mapping, fallback_sql='"venue_activity"') }} as venue_activity
+            , {{ render_case_when('"activity"', venue_activity_label_mapping, fallback_sql='"activity"') }} as venue_activity
             , CAST("venueLabelId" AS varchar(255)) AS venue_label_id
             , "dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS venue_creation_date
             , "isPermanent" AS venue_is_permanent

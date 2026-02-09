@@ -4,6 +4,7 @@ select
     venue_siret,
     venue_is_permanent,
     venue_type_code,
+    venue_activity,
     venue_label_id,
     banner_url,
     venue_description,

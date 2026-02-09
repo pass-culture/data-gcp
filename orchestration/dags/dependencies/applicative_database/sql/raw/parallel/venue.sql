@@ -9,7 +9,7 @@ SELECT
     , "comment" AS venue_comment
     , "publicName" AS venue_public_name
     , "venueTypeCode" as venue_type_code
-    , CAST("activity" AS AS varchar(255)) AS venue_activity
+    , CAST("activity" AS varchar(255)) AS venue_activity
     , CAST("venueLabelId" AS varchar(255)) AS venue_label_id
     , "dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS venue_creation_date
     , "isPermanent" AS venue_is_permanent

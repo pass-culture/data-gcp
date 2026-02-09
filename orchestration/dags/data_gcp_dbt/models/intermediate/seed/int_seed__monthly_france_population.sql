@@ -19,7 +19,7 @@ left join
     {{ source("seed", "region_department") }} as dep
     on pop.department_code = dep.num_dep
 where
-    pop.current_year in (2020, 2021, 2022, 2023, 2024, 2025)
+    pop.current_year in (2020, 2021, 2022, 2023, 2024, 2025, 2026)
     and cast(pop.age as int) between 15 and 25
 group by
     date(pop.current_date),

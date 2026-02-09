@@ -99,7 +99,7 @@ def create_adage_historical_table():
 
 def adding_value():
     return f"""MERGE `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.adage_historical` A
-        USING `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.adage` B
+        USING (SELECT * FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.adage` qualify row_number() over (partition by id order by update_date desc) = 1) B
         ON B.id = A.id
         WHEN MATCHED THEN
             UPDATE SET

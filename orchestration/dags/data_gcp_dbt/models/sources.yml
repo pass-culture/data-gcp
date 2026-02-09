@@ -92,7 +92,6 @@ sources:
       - name: applicative_database_offer_meta_data
       - name: applicative_database_offer_validation_sub_rule
       - name: applicative_database_offer_validation_rule
-      - name: applicative_database_offer_report
       - name: applicative_database_offer_criterion
       - name: applicative_database_opening_hours
       - name: applicative_database_payment_status

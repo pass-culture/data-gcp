@@ -141,7 +141,8 @@ data_tests:
 
 vars:
   ENV_SHORT_NAME: dev
-  pass_start_date: "2018-01-01"
+  PASS_START_DATE: "2018-01-01"
+  INSEE_DATA_LAST_VALID_YEAR: 2026
   CI_MATERIALIZATION: none
   region_name: region-europe-west1
   mute_ensure_materialization_override: True

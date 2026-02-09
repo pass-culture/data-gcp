@@ -19,6 +19,7 @@ This repository contains the core components of our data platform:
 
 - [Project Overview](https://pass-culture.github.io/data-gcp/) - Main data models, glossary, and technical references
 - [Orchestration Guide](/orchestration/README.md) - Airflow DAGs documentation
+- [Structure and Data Flow](/docs/project_structure_and_data_flow.md) - Deep dive into project folders and data lifecycle
 - [CI/CD Documentation](.github/workflows/README.md) - Deployment and pipeline details
 
 ## 🏗️ Architecture

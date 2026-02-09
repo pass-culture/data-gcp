@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pandas as pd
 
-from src.forecasters.prophet_model import ProphetModel
+from forecast.forecasters.prophet_model import ProphetModel
 
 
 class TestProphetModel(unittest.TestCase):
@@ -16,14 +16,14 @@ class TestProphetModel(unittest.TestCase):
         self.dummy_df = pd.DataFrame(
             {
                 "ds": dates,
-                "y": np.random.rand(len(dates)) + 10,
+                "y": np.random.default_rng(42).random(len(dates)) + 10,
             }
         )
 
-    @patch("src.forecasters.prophet_model.yaml.safe_load")
-    @patch("src.forecasters.prophet_model.open")
-    @patch("src.forecasters.prophet_model.Path.exists")
-    @patch("src.forecast_engines.prophet.preprocessing.load_table")
+    @patch("forecast.forecasters.prophet_model.yaml.safe_load")
+    @patch("forecast.forecasters.prophet_model.open")
+    @patch("forecast.forecasters.prophet_model.Path.exists")
+    @patch("forecast.engines.prophet.preprocessing.load_table")
     def test_happy_path(self, mock_load_table, mock_exists, mock_open, mock_yaml):
         """test_happy_path: Check if model initializes, prepares data, trains,
         and predicts."""
@@ -79,6 +79,7 @@ class TestProphetModel(unittest.TestCase):
         # 4. Prepare Data
         # Using date strings within the dummy_df range
         model.prepare_data(
+            dataset="ml_finance_test",
             train_start_date="2020-01-01",
             backtest_start_date="2023-01-01",
             backtest_end_date="2023-06-01",
@@ -100,10 +101,10 @@ class TestProphetModel(unittest.TestCase):
         assert "yhat" in forecast_df.columns
         assert "ds" in forecast_df.columns
 
-    @patch("src.forecasters.prophet_model.log_diagnostic_plots")
-    @patch("src.forecasters.prophet_model.yaml.safe_load")
-    @patch("src.forecasters.prophet_model.Path.exists")
-    @patch("src.forecasters.prophet_model.open")
+    @patch("forecast.forecasters.prophet_model.log_diagnostic_plots")
+    @patch("forecast.forecasters.prophet_model.yaml.safe_load")
+    @patch("forecast.forecasters.prophet_model.Path.exists")
+    @patch("forecast.forecasters.prophet_model.open")
     def test_get_diagnostics(self, mock_open, mock_exists, mock_yaml, mock_plots):
         "test_get_diagnostics: Check if it calls the plot function and returns dict."
         mock_exists.return_value = True

@@ -7,14 +7,11 @@ MLflow tracking, and training parameters.
 import os
 
 # GCP project and Environment
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "prod")
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-prod")
-
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 # BigQuery constants
-FINANCE_DATASET = f"ml_finance_{ENV_SHORT_NAME}"
+FINANCE_DATASET = os.environ.get("FINANCE_DATASET", "ml_finance_stg")
 
-# Training constants
-PREDICTION_FULL_HORIZON = "2026-12-31"  # Generate predictions up to this date
 
 # MLflow Configuration
 SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}"
@@ -24,4 +21,3 @@ MLFLOW_URI = (
     if ENV_SHORT_NAME == "prod"
     else "https://mlflow.staging.passculture.team/"
 )
-EXPERIMENT_NAME = f"finance_pricing_forecast_v0_{ENV_SHORT_NAME}"

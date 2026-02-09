@@ -2,17 +2,18 @@
 {% set current_year = modules.datetime.date.today().year %}
 {% set insee_last_valid_year = var("INSEE_DATA_LAST_VALID_YEAR") | int %}
 
-{% if current_year > insee_last_valid_year %}
-  {{ exceptions.raise_compiler_error(
-      "INSEE data is stale: current year (" ~ current_year ~ 
-      ") is greater than last valid year (" ~ insee_last_valid_year ~ ")."
-  ) }}
-{% endif %}
-
 {{
     config(
         tags="monthly",
         labels={"schedule": "monthly"},
+        pre_hook=(
+            "select if("
+            ~ "extract(year from current_date()) > " ~ insee_last_valid_year|string
+            ~ ", error(concat("
+            ~ "'INSEE data is stale: current year (', cast(extract(year from current_date()) as string), "
+            ~ "' ) is greater than last valid year (', cast(" ~ insee_last_valid_year|string ~ " as string), ').'"
+            ~ ")), 1) as runtime_check"
+        )
     )
 }}
 

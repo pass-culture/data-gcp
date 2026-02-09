@@ -346,7 +346,7 @@ select
     ) as pct_all_year_reimbursed_amount_spent
 
 from flattened_deposits
-inner join
+left join
     bookings
     on flattened_deposits.institution_id = bookings.institution_id
     and flattened_deposits.scholar_year = bookings.scholar_year

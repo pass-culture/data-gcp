@@ -12,7 +12,7 @@ with
     {% if not is_incremental() %}
         date_bounds as (
             select
-                date('{{ var("pass_start_date") }}') as start_date,
+                date('{{ var("PASS_START_DATE") }}') as start_date,
                 date('{{ ds() }}') as end_date
         ),
     {% endif %}

@@ -43,6 +43,11 @@ SCHEDULE_DICT = {
     "export_external_reporting": {
         "prod": "45 4 1 1,4,8,12 *",  # every 1st of 4 months at 4:45 AM
     },
+    "finance_pricing_forecast": {
+        "prod": "0 6 * * 1",  # every Monday at 6:00 AM
+        "stg": None,
+        "dev": None,
+    },
 }
 
 

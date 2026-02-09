@@ -1,5 +1,7 @@
 {% set target_name = var("ENV_SHORT_NAME") %}
 {% set target_schema = generate_schema_name("analytics_" ~ target_name) %}
+{% set venue_activity_label_mapping = venue_activity_label() %}
+{% set venue_type_code_label_mapping = venue_type_code_label() %}
 
 {{ config(pre_hook="{{create_humanize_id_function()}}") }}
 
@@ -103,7 +105,20 @@ select
     v.venue_is_virtual,
     v.venue_comment,
     v.venue_public_name,
-    v.venue_type_code as venue_type_label,
+    {{
+        render_case_when(
+            "v.venue_type_code",
+            venue_type_code_label_mapping,
+            fallback_sql="v.venue_type_code",
+        )
+    }} as venue_type_label,
+    {{
+        render_case_when(
+            "v.venue_activity",
+            venue_activity_label_mapping,
+            fallback_sql="v.venue_activity",
+        )
+    }} as venue_activity,
     v.venue_label_id,
     v.venue_creation_date,
     v.venue_is_permanent,
@@ -131,7 +146,7 @@ select
     concat(
         'https://backoffice.passculture.team/pro/venue/', v.venue_id
     ) as venue_backoffice_link,
-    {{ target_schema }}.humanize_id(v.venue_id) as venue_humanized_id,
+    {{ target_schema }}.humanize_id(v.venue_id) as venue_humanized_id,  -- noqa
     v_loc.venue_street,
     v_loc.venue_latitude,
     v_loc.venue_longitude,

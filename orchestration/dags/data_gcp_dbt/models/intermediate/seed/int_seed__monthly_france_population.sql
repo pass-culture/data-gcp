@@ -1,11 +1,11 @@
 {% set insee_start_year = 2020 %}
 {% set current_year = modules.datetime.date.today().year %}
-{% set last_valid_year = var("INSEE_DATA_LAST_VALID_YEAR") | int %}
+{% set insee_last_valid_year = var("INSEE_DATA_LAST_VALID_YEAR") | int %}
 
-{% if current_year > last_valid_year %}
+{% if current_year > insee_last_valid_year %}
   {{ exceptions.raise_compiler_error(
       "INSEE data is stale: current year (" ~ current_year ~ 
-      ") is greater than last valid year (" ~ last_valid_year ~ ")."
+      ") is greater than last valid year (" ~ insee_last_valid_year ~ ")."
   ) }}
 {% endif %}
 
@@ -30,7 +30,7 @@ left join
     {{ source("seed", "region_department") }} as dep
     on pop.department_code = dep.num_dep
 where
-    pop.current_year BETWEEN {{ insee_start_year }} AND {{ last_valid_year }}
+    pop.current_year BETWEEN {{ insee_start_year }} AND {{ insee_last_valid_year }}
     and cast(pop.age as int) between 15 and 25
 group by
     date(pop.current_date),

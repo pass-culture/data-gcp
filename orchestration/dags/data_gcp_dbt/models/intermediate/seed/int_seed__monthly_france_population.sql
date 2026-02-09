@@ -8,12 +8,15 @@
         labels={"schedule": "monthly"},
         pre_hook=(
             "select if("
-            ~ "extract(year from current_date()) > " ~ insee_last_valid_year|string
+            ~ "extract(year from current_date()) > "
+            ~ insee_last_valid_year
+            | string
             ~ ", error(concat("
             ~ "'INSEE data is stale: current year (', cast(extract(year from current_date()) as string), "
-            ~ "' ) is greater than last valid year (', cast(" ~ insee_last_valid_year|string ~ " as string), ').'"
-            ~ ")), 1) as runtime_check"
-        )
+            ~ "' ) is greater than last valid year (', cast("
+            ~ insee_last_valid_year
+            | string ~ " as string), ').'" ~ ")), 1) as runtime_check"
+        ),
     )
 }}
 
@@ -31,7 +34,7 @@ left join
     {{ source("seed", "region_department") }} as dep
     on pop.department_code = dep.num_dep
 where
-    pop.current_year BETWEEN {{ insee_start_year }} AND {{ insee_last_valid_year }}
+    pop.current_year between {{ insee_start_year }} and {{ insee_last_valid_year }}
     and cast(pop.age as int) between 15 and 25
 group by
     date(pop.current_date),

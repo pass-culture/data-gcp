@@ -8,7 +8,7 @@ class ProphetParams(BaseModel):
     growth: Literal["linear", "logistic", "flat"]
     changepoints: list[date] = Field(
         default_factory=list,
-        description="Optional manual changepoint dates where the trend may change; specify as a list of historical dates.",
+        description="Optional manual changepoint dates; specify as a list of dates",
     )
     changepoint_prior_scale: float = Field(gt=0, description="Flexibility of the trend")
     yearly_seasonality: bool | Literal["auto"]

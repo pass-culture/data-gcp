@@ -79,6 +79,7 @@ class TestProphetModel(unittest.TestCase):
         # 4. Prepare Data
         # Using date strings within the dummy_df range
         model.prepare_data(
+            dataset="ml_finance_test",
             train_start_date="2020-01-01",
             backtest_start_date="2023-01-01",
             backtest_end_date="2023-06-01",

@@ -37,10 +37,15 @@ class ProphetModel(ForecastModel):
         return ModelConfig(**raw)
 
     def prepare_data(
-        self, train_start_date: str, backtest_start_date: str, backtest_end_date: str
+        self,
+        dataset: str,
+        train_start_date: str,
+        backtest_start_date: str,
+        backtest_end_date: str,
     ):
         logger.info("Running Prophet preprocessing pipeline...")
         self.data_split = preprocessing_pipeline(
+            dataset=dataset,
             train_start_date=train_start_date,
             backtest_start_date=backtest_start_date,
             backtest_end_date=backtest_end_date,

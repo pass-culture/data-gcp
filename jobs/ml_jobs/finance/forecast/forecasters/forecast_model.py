@@ -29,7 +29,11 @@ class ForecastModel(ABC):
 
     @abstractmethod
     def prepare_data(
-        self, train_start_date: str, backtest_start_date: str, backtest_end_date: str
+        self,
+        dataset: str,
+        train_start_date: str,
+        backtest_start_date: str,
+        backtest_end_date: str,
     ) -> DataSplit:
         """Prepare train/test/backtest splits and store in self.data_split."""
         pass

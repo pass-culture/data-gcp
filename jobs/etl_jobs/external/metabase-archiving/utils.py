@@ -16,8 +16,8 @@ CLEAN_DATASET = f"clean_{ENVIRONMENT_SHORT_NAME}"
 INT_METABASE_DATASET = f"int_metabase_{ENVIRONMENT_SHORT_NAME}"
 METABASE_API_USERNAME = "metabase-data-bot@passculture.app"
 
-parent_folder_to_archive = ["interne", "operationnel", "adhoc"]
-limit_inactivity_in_days = {"interne": 90, "operationnel": 30, "adhoc": 90}
+parent_folder_to_archive = ["thematic", "operationnel", "adhoc"]
+limit_inactivity_in_days = {"operationnel": 30, "adhoc": 90}
 max_cards_to_archive = 50
 
 

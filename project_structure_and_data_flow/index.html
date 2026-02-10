@@ -6,34 +6,34 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Description of the `ml_reco__training_data_booking table.">
+        <meta name="description" content="Documentation for Pass Culture's data repository, providing insights and resources for cultural accessibility projects.">
       
       
         <meta name="author" content="Pass Culture Team">
       
       
-        <link rel="canonical" href="https://pass-culture.github.io/data-gcp/dbt/models/machine_learning/recommendation/description__ml_reco__training_data_booking/">
+        <link rel="canonical" href="https://pass-culture.github.io/data-gcp/project_structure_and_data_flow/">
       
       
-        <link rel="prev" href="../description__ml_reco__recommendable_item/">
+        <link rel="prev" href="..">
       
       
-        <link rel="next" href="../description__ml_reco__training_data_click/">
+        <link rel="next" href="../dbt/overview/">
       
       
-      <link rel="icon" href="../../../../../assets/favicon.png">
+      <link rel="icon" href="../assets/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.42">
     
     
       
-        <title>Training Data Booking - Pass Culture Data Documentation</title>
+        <title>Repository structure - Pass Culture Data Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.0253249f.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.0253249f.min.css">
       
         
-        <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -52,7 +52,7 @@
       
     
     
-    <script>__md_scope=new URL("../../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -60,8 +60,8 @@
     
     
   
-  <link rel="stylesheet" href="../../../../../styles/custom.css">
-  <script src="../../../../../scripts/custom.js"></script>
+  <link rel="stylesheet" href="../styles/custom.css">
+  <script src="../scripts/custom.js"></script>
 
   </head>
   
@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#table-description" class="md-skip">
+        <a href="#project-structure-and-data-flow" class="md-skip">
           Skip to content
         </a>
       
@@ -96,7 +96,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../../../.." title="Pass Culture Data Documentation" class="md-header__button md-logo" aria-label="Pass Culture Data Documentation" data-md-component="logo">
+    <a href=".." title="Pass Culture Data Documentation" class="md-header__button md-logo" aria-label="Pass Culture Data Documentation" data-md-component="logo">
       
   <img src="https://upload.wikimedia.org/wikipedia/commons/4/4f/Logo_du_Pass_Culture.png" alt="logo">
 
@@ -115,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Training Data Booking
+              Repository structure
             
           </span>
         </div>
@@ -229,7 +229,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../../.." class="md-tabs__link">
+      <a href=".." class="md-tabs__link">
         
   
     
@@ -244,11 +244,13 @@
         
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../../../../project_structure_and_data_flow/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
           
   
     
@@ -264,13 +266,11 @@
         
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../../../../overview/" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../dbt/overview/" class="md-tabs__link">
           
   
     
@@ -290,7 +290,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../glossary/" class="md-tabs__link">
+        <a href="../dbt/glossary/" class="md-tabs__link">
           
   
     
@@ -310,7 +310,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../../team/ds/overview/" class="md-tabs__link">
+        <a href="../team/ds/overview/" class="md-tabs__link">
           
   
     
@@ -330,7 +330,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../../team/de/overview/" class="md-tabs__link">
+        <a href="../team/de/overview/" class="md-tabs__link">
           
   
     
@@ -348,7 +348,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../../../about/" class="md-tabs__link">
+      <a href="../about/" class="md-tabs__link">
         
   
     
@@ -382,7 +382,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../../../.." title="Pass Culture Data Documentation" class="md-nav__button md-logo" aria-label="Pass Culture Data Documentation" data-md-component="logo">
+    <a href=".." title="Pass Culture Data Documentation" class="md-nav__button md-logo" aria-label="Pass Culture Data Documentation" data-md-component="logo">
       
   <img src="https://upload.wikimedia.org/wikipedia/commons/4/4f/Logo_du_Pass_Culture.png" alt="logo">
 
@@ -411,7 +411,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -426,6 +426,387 @@
     
       
       
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Platform
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Platform
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Repository structure
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Repository structure
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#directory-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      📁 Directory Overview
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📁 Directory Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-jobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. jobs/
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-orchestration" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. orchestration/
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔄 Data Flow
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔄 Data Flow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-extraction-ingestion-raw-data-loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Extraction &amp; Ingestion (Raw Data Loading)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-transformation-dbt" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Transformation (dbt)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-reverse-transformation-reverse-etl-and-push-to-external-systems" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Reverse Transformation (reverse ETL) and push to external systems
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-advanced-processing-ml" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Advanced Processing (ML)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Data flow
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CI / CD
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Infra
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Data Models
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Data Models
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dbt/overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Dbt
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Dbt
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
   
   
   
@@ -453,271 +834,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
-        
-          
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
-            
-  
-  <span class="md-ellipsis">
-    Platform
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2">
-            <span class="md-nav__icon md-icon"></span>
-            Platform
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../../project_structure_and_data_flow/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Repository structure
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../.." class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Data flow
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../.." class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    CI / CD
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../.." class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Infra
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-    
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-    
-    
-      
-        
-        
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
-            
-  
-  <span class="md-ellipsis">
-    Data Models
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3">
-            <span class="md-nav__icon md-icon"></span>
-            Data Models
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../overview/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Overview
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    
-    
-      
-        
-      
-    
-    
-      
-      
-        
-          
-          
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="">
-            
-  
-  <span class="md-ellipsis">
-    Dbt
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3_2">
-            <span class="md-nav__icon md-icon"></span>
-            Dbt
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2_1" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2_1" >
         
           
           <label class="md-nav__link" for="__nav_3_2_1" id="__nav_3_2_1_label" tabindex="0">
@@ -731,7 +848,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_2_1_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_2_1_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_2_1">
             <span class="md-nav__icon md-icon"></span>
             Models
@@ -843,7 +960,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/backend/description__exp_backend__artist_alias_delta/" class="md-nav__link">
+      <a href="../dbt/models/export/backend/description__exp_backend__artist_alias_delta/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -864,7 +981,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/backend/description__exp_backend__artist_delta/" class="md-nav__link">
+      <a href="../dbt/models/export/backend/description__exp_backend__artist_delta/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -885,7 +1002,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/backend/description__exp_backend__artist_score/" class="md-nav__link">
+      <a href="../dbt/models/export/backend/description__exp_backend__artist_score/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -906,7 +1023,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/backend/description__exp_backend__product_artist_link_delta/" class="md-nav__link">
+      <a href="../dbt/models/export/backend/description__exp_backend__product_artist_link_delta/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -927,7 +1044,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/backend/description__exp_product_delta/" class="md-nav__link">
+      <a href="../dbt/models/export/backend/description__exp_product_delta/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1032,7 +1149,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__address/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__address/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1053,7 +1170,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__booking/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__booking/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1074,7 +1191,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__deposit/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__deposit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1095,7 +1212,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__favorite/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__favorite/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1116,7 +1233,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__geo_iris/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__geo_iris/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1137,7 +1254,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__offer/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__offer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1158,7 +1275,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__offer_metadata/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__offer_metadata/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1179,7 +1296,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__offer_removed/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__offer_removed/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1200,7 +1317,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__offerer/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__offerer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1221,7 +1338,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__offerer_removed/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__offerer_removed/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1242,7 +1359,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__offerer_representation_address/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__offerer_representation_address/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1263,7 +1380,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__stock/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__stock/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1284,7 +1401,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__user/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__user/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1305,7 +1422,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__user_address/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__user_address/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1326,7 +1443,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__venue/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__venue/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1347,7 +1464,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__venue_address/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__venue_address/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1368,7 +1485,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../export/ministry/description__exp_ministry__venue_removed/" class="md-nav__link">
+      <a href="../dbt/models/export/ministry/description__exp_ministry__venue_removed/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1517,7 +1634,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/applicative/description__int_applicative__achievement/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/applicative/description__int_applicative__achievement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1538,7 +1655,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/applicative/description__int_applicative__offer_item_id/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/applicative/description__int_applicative__offer_item_id/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1559,7 +1676,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/applicative/description__int_applicative__user_information_history/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/applicative/description__int_applicative__user_information_history/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1580,7 +1697,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/applicative/description__subcategories/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/applicative/description__subcategories/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1655,7 +1772,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/appsflyer/description__int_appsflyer__daily_install_attribution/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/appsflyer/description__int_appsflyer__daily_install_attribution/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1676,7 +1793,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/appsflyer/description__int_appsflyer__daily_install_cost/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/appsflyer/description__int_appsflyer__daily_install_cost/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1751,7 +1868,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/brevo/description__int_brevo__transactional_native/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/brevo/description__int_brevo__transactional_native/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1772,7 +1889,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/brevo/description__int_brevo__transactional_pro/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/brevo/description__int_brevo__transactional_pro/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1869,7 +1986,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/finance/description__int_finance__booking_incident/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/finance/description__int_finance__booking_incident/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1890,7 +2007,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/finance/description__int_finance__cashflow/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/finance/description__int_finance__cashflow/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1911,7 +2028,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/finance/description__int_finance__cashflow_batch/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/finance/description__int_finance__cashflow_batch/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1932,7 +2049,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/finance/description__int_finance__cashflow_pricing/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/finance/description__int_finance__cashflow_pricing/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1953,7 +2070,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/finance/description__int_finance__event/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/finance/description__int_finance__event/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1974,7 +2091,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/finance/description__int_finance__invoice/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/finance/description__int_finance__invoice/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1995,7 +2112,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/finance/description__int_finance__invoice_cashflow/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/finance/description__int_finance__invoice_cashflow/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2016,7 +2133,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/finance/description__int_finance__payment/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/finance/description__int_finance__payment/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2037,7 +2154,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/finance/description__int_finance__payment_status/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/finance/description__int_finance__payment_status/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2058,7 +2175,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/finance/description__int_finance__pricing/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/finance/description__int_finance__pricing/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2079,7 +2196,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/finance/description__int_finance__pricing_line/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/finance/description__int_finance__pricing_line/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2100,7 +2217,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/finance/description__int_finance__pricing_log/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/finance/description__int_finance__pricing_log/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2121,7 +2238,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/finance/description__int_finance__venue_pricing_point_link/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/finance/description__int_finance__venue_pricing_point_link/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2194,7 +2311,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/firebase/description__int_firebase__pro_experiment/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/firebase/description__int_firebase__pro_experiment/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2267,7 +2384,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/instagram/description__int_instagram__publication_detail/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/instagram/description__int_instagram__publication_detail/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2384,7 +2501,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/metric/diversity/description__int_metric__diversity_daily_booking/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/metric/diversity/description__int_metric__diversity_daily_booking/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2475,7 +2592,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/seed/description__int_seed__geo_iris/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/seed/description__int_seed__geo_iris/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2496,7 +2613,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/seed/description__int_seed__geo_iris_socio_demographics/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/seed/description__int_seed__geo_iris_socio_demographics/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2517,7 +2634,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/seed/description__int_seed__geo_postal_code/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/seed/description__int_seed__geo_postal_code/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2538,7 +2655,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/seed/description__int_seed__monthy_population_france/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/seed/description__int_seed__monthy_population_france/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2559,7 +2676,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/seed/description__int_seed__qpv/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/seed/description__int_seed__qpv/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2580,7 +2697,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/seed/description__int_seed__qpv_population/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/seed/description__int_seed__qpv_population/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2653,7 +2770,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/tiktok/description__int_tiktok__publication_detail/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/tiktok/description__int_tiktok__publication_detail/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2734,7 +2851,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/zendesk/description__int_zendesk__daily_macro_usage/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/zendesk/description__int_zendesk__daily_macro_usage/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2755,7 +2872,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/zendesk/description__int_zendesk__survey_response/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/zendesk/description__int_zendesk__survey_response/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2776,7 +2893,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/zendesk/description__int_zendesk__ticket/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/zendesk/description__int_zendesk__ticket/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2797,7 +2914,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/zendesk/description__int_zendesk__typology_native/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/zendesk/description__int_zendesk__typology_native/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2818,7 +2935,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../intermediate/zendesk/description__int_zendesk__typology_pro/" class="md-nav__link">
+      <a href="../dbt/models/intermediate/zendesk/description__int_zendesk__typology_pro/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2852,10 +2969,8 @@
                 
   
   
-    
   
   
-  
     
     
       
@@ -2879,11 +2994,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2_1_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2_1_3" >
         
           
           <label class="md-nav__link" for="__nav_3_2_1_3" id="__nav_3_2_1_3_label" tabindex="0">
@@ -2897,7 +3012,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_2_1_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_2_1_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_2_1_3">
             <span class="md-nav__icon md-icon"></span>
             Machine learning
@@ -2955,7 +3070,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../compliance/description__ml_compliance__training_data_offer/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/compliance/description__ml_compliance__training_data_offer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3030,7 +3145,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../feature/description__ml_feat__two_tower_last_item_embedding/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/feature/description__ml_feat__two_tower_last_item_embedding/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3051,7 +3166,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../feature/description__ml_feat__two_tower_last_user_embedding/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/feature/description__ml_feat__two_tower_last_user_embedding/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3126,7 +3241,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../finance/description__ml_finance__daily_pricing/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/finance/description__ml_finance__daily_pricing/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3147,7 +3262,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../finance/description__ml_finance__weekly_pricing/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/finance/description__ml_finance__weekly_pricing/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3230,7 +3345,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../linkage/description__ml_linkage__artist/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/linkage/description__ml_linkage__artist/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3251,7 +3366,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../linkage/description__ml_linkage__artist_alias/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/linkage/description__ml_linkage__artist_alias/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3272,7 +3387,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../linkage/description__ml_linkage__delta_artist/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/linkage/description__ml_linkage__delta_artist/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3293,7 +3408,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../linkage/description__ml_linkage__delta_artist_alias/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/linkage/description__ml_linkage__delta_artist_alias/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3314,7 +3429,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../linkage/description__ml_linkage__delta_product_artist_link/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/linkage/description__ml_linkage__delta_product_artist_link/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3335,7 +3450,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../linkage/description__ml_linkage__product_artist_link/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/linkage/description__ml_linkage__product_artist_link/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3361,10 +3476,8 @@
                 
   
   
-    
   
   
-  
     
     
       
@@ -3392,11 +3505,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2_1_3_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2_1_3_5" >
         
           
           <label class="md-nav__link" for="__nav_3_2_1_3_5" id="__nav_3_2_1_3_5_label" tabindex="0">
@@ -3410,7 +3523,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_3_2_1_3_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_3_2_1_3_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_2_1_3_5">
             <span class="md-nav__icon md-icon"></span>
             Recommendation
@@ -3424,7 +3537,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../description__ml_reco__available_offer/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/recommendation/description__ml_reco__available_offer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3445,7 +3558,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../description__ml_reco__recommendable_item/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/recommendation/description__ml_reco__recommendable_item/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3463,28 +3576,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Training Data Booking
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../dbt/models/machine_learning/recommendation/description__ml_reco__training_data_booking/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3493,33 +3588,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#table-description" class="md-nav__link">
-    <span class="md-ellipsis">
-      Table description
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -3532,7 +3600,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../description__ml_reco__training_data_click/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/recommendation/description__ml_reco__training_data_click/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3553,7 +3621,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../description__ml_reco__training_data_favorite/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/recommendation/description__ml_reco__training_data_favorite/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3574,7 +3642,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../description__ml_reco__training_data_item_feature/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/recommendation/description__ml_reco__training_data_item_feature/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3595,7 +3663,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../description__ml_reco__training_data_user_feature/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/recommendation/description__ml_reco__training_data_user_feature/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3616,7 +3684,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../description_ml_reco__recommendable_offer/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/recommendation/description_ml_reco__recommendable_offer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3689,7 +3757,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../retrieval/description__ml_retrieval__semantic_vector_item_embedding/" class="md-nav__link">
+      <a href="../dbt/models/machine_learning/retrieval/description__ml_retrieval__semantic_vector_item_embedding/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3830,7 +3898,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/collective/description__mrt_collective__adage_log/" class="md-nav__link">
+      <a href="../dbt/models/mart/collective/description__mrt_collective__adage_log/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3851,7 +3919,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/collective/description__mrt_collective__eple_aggregated/" class="md-nav__link">
+      <a href="../dbt/models/mart/collective/description__mrt_collective__eple_aggregated/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3984,7 +4052,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/collective/description__mrt_external_reporting__eac/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/collective/description__mrt_external_reporting__eac/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4005,7 +4073,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/collective/description__mrt_external_reporting__eac_coverage/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/collective/description__mrt_external_reporting__eac_coverage/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4026,7 +4094,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/collective/description__mrt_external_reporting__eac_credit_usage/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/collective/description__mrt_external_reporting__eac_credit_usage/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4047,7 +4115,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/collective/description__mrt_external_reporting__eac_cultural_partner/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/collective/description__mrt_external_reporting__eac_cultural_partner/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4068,7 +4136,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/collective/description__mrt_external_reporting__eac_domain/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/collective/description__mrt_external_reporting__eac_domain/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4089,7 +4157,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/collective/description__mrt_external_reporting__eac_offer_booking/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/collective/description__mrt_external_reporting__eac_offer_booking/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4110,7 +4178,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/collective/description__mrt_external_reporting__top_ac/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/collective/description__mrt_external_reporting__top_ac/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4131,7 +4199,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/collective/description__mrt_external_reporting__top_format/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/collective/description__mrt_external_reporting__top_format/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4226,7 +4294,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/individual/description__mrt_external_reporting__beneficiary/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/individual/description__mrt_external_reporting__beneficiary/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4247,7 +4315,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/individual/description__mrt_external_reporting__coverage/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/individual/description__mrt_external_reporting__coverage/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4268,7 +4336,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/individual/description__mrt_external_reporting__cultural_partner/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/individual/description__mrt_external_reporting__cultural_partner/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4289,7 +4357,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/individual/description__mrt_external_reporting__deposit_usage/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/individual/description__mrt_external_reporting__deposit_usage/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4310,7 +4378,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/individual/description__mrt_external_reporting__diversity/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/individual/description__mrt_external_reporting__diversity/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4331,7 +4399,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/individual/description__mrt_external_reporting__finance/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/individual/description__mrt_external_reporting__finance/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4352,7 +4420,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/individual/description__mrt_external_reporting__individual/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/individual/description__mrt_external_reporting__individual/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4373,7 +4441,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/individual/description__mrt_external_reporting__top_labeled_venue/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/individual/description__mrt_external_reporting__top_labeled_venue/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4394,7 +4462,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/individual/description__mrt_external_reporting__top_offer/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/individual/description__mrt_external_reporting__top_offer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4415,7 +4483,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/individual/description__mrt_external_reporting__top_offer_category/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/individual/description__mrt_external_reporting__top_offer_category/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4436,7 +4504,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/individual/description__mrt_external_reporting__top_offer_label/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/individual/description__mrt_external_reporting__top_offer_label/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4457,7 +4525,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/external_reporting/individual/description__mrt_external_reporting__top_venue/" class="md-nav__link">
+      <a href="../dbt/models/mart/external_reporting/individual/description__mrt_external_reporting__top_venue/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4538,7 +4606,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/finance/description__mrt_finance__reimbursement/" class="md-nav__link">
+      <a href="../dbt/models/mart/finance/description__mrt_finance__reimbursement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4667,7 +4735,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__address/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__address/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4688,7 +4756,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__artist/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__artist/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4709,7 +4777,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__booking/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__booking/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4730,7 +4798,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__collective_booking/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__collective_booking/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4751,7 +4819,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__collective_offer/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__collective_offer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4772,7 +4840,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__collective_offer_domain/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__collective_offer_domain/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4793,7 +4861,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__cultural_partner/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__cultural_partner/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4814,7 +4882,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__deposit/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__deposit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4835,7 +4903,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__educational_deposit/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__educational_deposit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4856,7 +4924,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__educational_institution/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__educational_institution/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4877,7 +4945,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__favorite/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__favorite/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4898,7 +4966,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__fraudulent_booking_tag/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__fraudulent_booking_tag/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4919,7 +4987,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__iris_socio_demographics/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__iris_socio_demographics/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4940,7 +5008,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__offer/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__offer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4961,7 +5029,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__offer_criterion/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__offer_criterion/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4982,7 +5050,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__offer_metadata/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__offer_metadata/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5003,7 +5071,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__offer_reminder/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__offer_reminder/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5024,7 +5092,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__offerer/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__offerer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5045,7 +5113,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__offerer_address/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__offerer_address/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5066,7 +5134,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__offerer_tag/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__offerer_tag/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5087,7 +5155,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__special_event/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__special_event/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5108,7 +5176,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__stock/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__stock/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5129,7 +5197,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__user/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__user/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5150,7 +5218,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__user_beneficiary/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__user_beneficiary/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5171,7 +5239,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__user_beneficiary_information_history/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__user_beneficiary_information_history/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5192,7 +5260,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__user_offerer/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__user_offerer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5213,7 +5281,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__venue/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__venue/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5234,7 +5302,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__venue_provider/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__venue_provider/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5255,7 +5323,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/global/description__mrt_global__venue_tag/" class="md-nav__link">
+      <a href="../dbt/models/mart/global/description__mrt_global__venue_tag/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5334,7 +5402,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/marketing/description__mrt_marketing__daily_install_acquisition_campaign/" class="md-nav__link">
+      <a href="../dbt/models/mart/marketing/description__mrt_marketing__daily_install_acquisition_campaign/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5355,7 +5423,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/marketing/description__mrt_marketing__retention_pro/" class="md-nav__link">
+      <a href="../dbt/models/mart/marketing/description__mrt_marketing__retention_pro/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5376,7 +5444,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/marketing/description__mrt_marketing__social_network_publication/" class="md-nav__link">
+      <a href="../dbt/models/mart/marketing/description__mrt_marketing__social_network_publication/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5397,7 +5465,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/marketing/description__mrt_marketing__transactional_pro/" class="md-nav__link">
+      <a href="../dbt/models/mart/marketing/description__mrt_marketing__transactional_pro/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5470,7 +5538,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/monitoring/description__mrt_monitoring__firebase_performance_tti/" class="md-nav__link">
+      <a href="../dbt/models/mart/monitoring/description__mrt_monitoring__firebase_performance_tti/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5563,7 +5631,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/native/description__mrt_native__achievement/" class="md-nav__link">
+      <a href="../dbt/models/mart/native/description__mrt_native__achievement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5584,7 +5652,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/native/description__mrt_native__consultation/" class="md-nav__link">
+      <a href="../dbt/models/mart/native/description__mrt_native__consultation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5605,7 +5673,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/native/description__mrt_native__daily_home_module_conversion/" class="md-nav__link">
+      <a href="../dbt/models/mart/native/description__mrt_native__daily_home_module_conversion/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5626,7 +5694,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/native/description__mrt_native__daily_home_offer_displayed/" class="md-nav__link">
+      <a href="../dbt/models/mart/native/description__mrt_native__daily_home_offer_displayed/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5647,7 +5715,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/native/description__mrt_native__daily_user_deposit/" class="md-nav__link">
+      <a href="../dbt/models/mart/native/description__mrt_native__daily_user_deposit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5668,7 +5736,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/native/description__mrt_native__daily_user_home_module/" class="md-nav__link">
+      <a href="../dbt/models/mart/native/description__mrt_native__daily_user_home_module/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5689,7 +5757,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/native/description__mrt_native__daily_venue_map_conversion/" class="md-nav__link">
+      <a href="../dbt/models/mart/native/description__mrt_native__daily_venue_map_conversion/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5710,7 +5778,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/native/description__mrt_native__event/" class="md-nav__link">
+      <a href="../dbt/models/mart/native/description__mrt_native__event/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5731,7 +5799,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/native/description__mrt_native__monthly_beneficiary_coverage/" class="md-nav__link">
+      <a href="../dbt/models/mart/native/description__mrt_native__monthly_beneficiary_coverage/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5752,7 +5820,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/native/description__mrt_native__nps_beneficiary/" class="md-nav__link">
+      <a href="../dbt/models/mart/native/description__mrt_native__nps_beneficiary/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5773,7 +5841,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/native/description__mrt_native__outgoing_cohort/" class="md-nav__link">
+      <a href="../dbt/models/mart/native/description__mrt_native__outgoing_cohort/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5854,7 +5922,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/pro/description__mrt_pro__event/" class="md-nav__link">
+      <a href="../dbt/models/mart/pro/description__mrt_pro__event/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5875,7 +5943,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/pro/description__mrt_pro__log/" class="md-nav__link">
+      <a href="../dbt/models/mart/pro/description__mrt_pro__log/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5896,7 +5964,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/pro/description__mrt_pro__nps_venue/" class="md-nav__link">
+      <a href="../dbt/models/mart/pro/description__mrt_pro__nps_venue/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5917,7 +5985,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/pro/description__mrt_pro__offer_highlight/" class="md-nav__link">
+      <a href="../dbt/models/mart/pro/description__mrt_pro__offer_highlight/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5938,7 +6006,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../mart/pro/description__mrt_pro__visit/" class="md-nav__link">
+      <a href="../dbt/models/mart/pro/description__mrt_pro__visit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6044,7 +6112,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/" class="md-nav__link">
+      <a href="../dbt/glossary/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6285,7 +6353,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__achievement/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__achievement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6306,7 +6374,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__address/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__address/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6327,7 +6395,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__booking/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__booking/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6348,7 +6416,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__collective_booking/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__collective_booking/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6369,7 +6437,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__collective_offer/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__collective_offer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6390,7 +6458,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__collective_offer_domain/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__collective_offer_domain/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6411,7 +6479,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__collective_stock/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__collective_stock/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6432,7 +6500,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__cultural_partner/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__cultural_partner/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6453,7 +6521,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__deposit/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__deposit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6474,7 +6542,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__educational_deposit/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__educational_deposit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6495,7 +6563,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__educational_institution/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__educational_institution/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6516,7 +6584,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__favorite/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__favorite/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6537,7 +6605,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__fraudulent_booking_tag/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__fraudulent_booking_tag/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6558,7 +6626,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__highlight/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__highlight/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6579,7 +6647,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__institution/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__institution/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6600,7 +6668,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__legal_unit/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__legal_unit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6621,7 +6689,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__offer/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__offer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6642,7 +6710,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__offer_criterion/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__offer_criterion/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6663,7 +6731,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__offerer/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__offerer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6684,7 +6752,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__offerer_address/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__offerer_address/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6705,7 +6773,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__offerer_tag/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__offerer_tag/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6726,7 +6794,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__recredit/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__recredit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6747,7 +6815,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__special_event/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__special_event/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6768,7 +6836,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__stock/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__stock/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6789,7 +6857,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__subcategories/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__subcategories/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6810,7 +6878,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__technical_partner/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__technical_partner/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6831,7 +6899,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__user/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__user/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6852,7 +6920,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__user_offerer/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__user_offerer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6873,7 +6941,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__venue/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__venue/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6894,7 +6962,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__venue_provider/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__venue_provider/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6915,7 +6983,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/applicative_database/column__venue_tag/" class="md-nav__link">
+      <a href="../dbt/glossary/applicative_database/column__venue_tag/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6988,7 +7056,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/appsflyer/column__appsflyer/" class="md-nav__link">
+      <a href="../dbt/glossary/appsflyer/column__appsflyer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7061,7 +7129,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/brevo/column__brevo/" class="md-nav__link">
+      <a href="../dbt/glossary/brevo/column__brevo/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7134,7 +7202,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/contentful/column__contentful_entry/" class="md-nav__link">
+      <a href="../dbt/glossary/contentful/column__contentful_entry/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7207,7 +7275,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/finance/column__finance/" class="md-nav__link">
+      <a href="../dbt/glossary/finance/column__finance/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7282,7 +7350,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/metric/column__metric/" class="md-nav__link">
+      <a href="../dbt/glossary/metric/column__metric/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7303,7 +7371,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/metric/column_diversity_booking/" class="md-nav__link">
+      <a href="../dbt/glossary/metric/column_diversity_booking/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7390,7 +7458,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/ml/column__artist/" class="md-nav__link">
+      <a href="../dbt/glossary/ml/column__artist/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7411,7 +7479,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/ml/column__clustering/" class="md-nav__link">
+      <a href="../dbt/glossary/ml/column__clustering/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7432,7 +7500,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/ml/column__delta/" class="md-nav__link">
+      <a href="../dbt/glossary/ml/column__delta/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7453,7 +7521,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/ml/column__embedding/" class="md-nav__link">
+      <a href="../dbt/glossary/ml/column__embedding/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7474,7 +7542,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/ml/column__finance/" class="md-nav__link">
+      <a href="../dbt/glossary/ml/column__finance/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7495,7 +7563,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/ml/column__mlflow/" class="md-nav__link">
+      <a href="../dbt/glossary/ml/column__mlflow/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7516,7 +7584,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/ml/column__recommendation/" class="md-nav__link">
+      <a href="../dbt/glossary/ml/column__recommendation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7537,7 +7605,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/ml/column__wikidata/" class="md-nav__link">
+      <a href="../dbt/glossary/ml/column__wikidata/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7610,7 +7678,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/pcapi/column__log/" class="md-nav__link">
+      <a href="../dbt/glossary/pcapi/column__log/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7683,7 +7751,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/pcreco/column_id/" class="md-nav__link">
+      <a href="../dbt/glossary/pcreco/column_id/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7756,7 +7824,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/propilote/column__propilote/" class="md-nav__link">
+      <a href="../dbt/glossary/propilote/column__propilote/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7829,7 +7897,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/qualtrics/column_qualtrics_response/" class="md-nav__link">
+      <a href="../dbt/glossary/qualtrics/column_qualtrics_response/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7910,7 +7978,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/seed/column__insee/" class="md-nav__link">
+      <a href="../dbt/glossary/seed/column__insee/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7931,7 +7999,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/seed/column__iris/" class="md-nav__link">
+      <a href="../dbt/glossary/seed/column__iris/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7952,7 +8020,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/seed/column__population/" class="md-nav__link">
+      <a href="../dbt/glossary/seed/column__population/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7973,7 +8041,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/seed/column__postal/" class="md-nav__link">
+      <a href="../dbt/glossary/seed/column__postal/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -7994,7 +8062,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/seed/column__qpv/" class="md-nav__link">
+      <a href="../dbt/glossary/seed/column__qpv/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8071,7 +8139,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/social_network/column__instagram/" class="md-nav__link">
+      <a href="../dbt/glossary/social_network/column__instagram/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8092,7 +8160,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/social_network/column__publication/" class="md-nav__link">
+      <a href="../dbt/glossary/social_network/column__publication/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8113,7 +8181,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/social_network/column__tiktok/" class="md-nav__link">
+      <a href="../dbt/glossary/social_network/column__tiktok/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8198,7 +8266,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/tracking/column__collective_adage_log/" class="md-nav__link">
+      <a href="../dbt/glossary/tracking/column__collective_adage_log/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8219,7 +8287,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/tracking/column__event/" class="md-nav__link">
+      <a href="../dbt/glossary/tracking/column__event/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8240,7 +8308,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/tracking/column__event_metric/" class="md-nav__link">
+      <a href="../dbt/glossary/tracking/column__event_metric/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8261,7 +8329,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/tracking/column__native_consultation/" class="md-nav__link">
+      <a href="../dbt/glossary/tracking/column__native_consultation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8282,7 +8350,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/tracking/column__native_event/" class="md-nav__link">
+      <a href="../dbt/glossary/tracking/column__native_event/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8303,7 +8371,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/tracking/column__native_home_module/" class="md-nav__link">
+      <a href="../dbt/glossary/tracking/column__native_home_module/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8324,7 +8392,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/tracking/column__pro_event/" class="md-nav__link">
+      <a href="../dbt/glossary/tracking/column__pro_event/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8403,7 +8471,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/zendesk/column__survey_response/" class="md-nav__link">
+      <a href="../dbt/glossary/zendesk/column__survey_response/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8424,7 +8492,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/zendesk/column__ticket/" class="md-nav__link">
+      <a href="../dbt/glossary/zendesk/column__ticket/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8445,7 +8513,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/zendesk/column__zendesk_macro/" class="md-nav__link">
+      <a href="../dbt/glossary/zendesk/column__zendesk_macro/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8466,7 +8534,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossary/zendesk/column__zendesk_typology/" class="md-nav__link">
+      <a href="../dbt/glossary/zendesk/column__zendesk_typology/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8564,7 +8632,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../team/ds/overview/" class="md-nav__link">
+      <a href="../team/ds/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8585,7 +8653,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../team/ds/recommendation/" class="md-nav__link">
+      <a href="../team/ds/recommendation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8661,7 +8729,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../team/de/overview/" class="md-nav__link">
+      <a href="../team/de/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8682,7 +8750,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../team/de/data_stack/" class="md-nav__link">
+      <a href="../team/de/data_stack/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8703,7 +8771,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../team/de/apis/" class="md-nav__link">
+      <a href="../team/de/apis/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8731,7 +8799,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../about/" class="md-nav__link">
+      <a href="../about/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -8761,6 +8829,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -8769,11 +8839,86 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#table-description" class="md-nav__link">
+  <a href="#directory-overview" class="md-nav__link">
     <span class="md-ellipsis">
-      Table description
+      📁 Directory Overview
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="📁 Directory Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-jobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. jobs/
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-orchestration" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. orchestration/
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔄 Data Flow
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔄 Data Flow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-extraction-ingestion-raw-data-loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Extraction &amp; Ingestion (Raw Data Loading)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-transformation-dbt" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Transformation (dbt)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-reverse-transformation-reverse-etl-and-push-to-external-systems" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Reverse Transformation (reverse ETL) and push to external systems
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-advanced-processing-ml" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Advanced Processing (ML)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -8795,105 +8940,68 @@
   
 
 
-<h1>Table: Training Data Booking</h1>
-<p>The <code>ml_reco__training_data_booking</code> table contains the booking used during the Two Tower training (for evaluation).</p>
-
-<h2 id="table-description">Table description</h2>
-<table>
-<thead>
-<tr>
-<th style="text-align: left;">name</th>
-<th style="text-align: left;">data_type</th>
-<th style="text-align: left;">description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: left;">user_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Unique identifier for a user.</td>
-</tr>
-<tr>
-<td style="text-align: left;">user_age</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Current age of the user.</td>
-</tr>
-<tr>
-<td style="text-align: left;">event_type</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The type of the interaction event (booking / click / favorite).</td>
-</tr>
-<tr>
-<td style="text-align: left;">event_date</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The date when the event occurred, used for partitioning the data.</td>
-</tr>
-<tr>
-<td style="text-align: left;">event_hour</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The hour of the interaction event.</td>
-</tr>
-<tr>
-<td style="text-align: left;">event_day</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The day of the interaction event.</td>
-</tr>
-<tr>
-<td style="text-align: left;">event_month</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The month of the interaction event.</td>
-</tr>
-<tr>
-<td style="text-align: left;">item_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Identifier for the item associated with the offer used internally by the data science team.</td>
-</tr>
-<tr>
-<td style="text-align: left;">offer_subcategory_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Identifier for the subcategory of the offer. Determined by the cultural partner via a list of pre-set options.</td>
-</tr>
-<tr>
-<td style="text-align: left;">offer_category_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Identifier for the category of the offer. Determined by the cultural partner via a list of pre-set options in a drop down menu.</td>
-</tr>
-<tr>
-<td style="text-align: left;">genres</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Genres of the film, if applicable.</td>
-</tr>
-<tr>
-<td style="text-align: left;">rayon</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Literary genre, if applicable.</td>
-</tr>
-<tr>
-<td style="text-align: left;">type</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Type of the offer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Unique identifier for the venue.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_name</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Name of the venue.</td>
-</tr>
-</tbody>
-</table>
+<h1 id="project-structure-and-data-flow">Project Structure and Data Flow</h1>
+<p>This document explains the organization of the <code>jobs/</code> and <code>orchestration/</code> directories and how they interact in the data lifecycle of the Pass Culture Data Platform.</p>
+<h2 id="directory-overview">📁 Directory Overview</h2>
+<h3 id="1-jobs">1. <code>jobs/</code></h3>
+<p>The <code>jobs/</code> directory contains the core logic for data processing, including ETL (Extract, Transform, Load) and Machine Learning tasks. These are typically standalone Python packages or scripts that will be run on GCE VMs. These are on general managed by Airflow DAGs in <code>orchestrations/</code>.</p>
+<ul>
+<li><strong><code>etl_jobs/</code></strong>: Responsibility for moving data between systems.<ul>
+<li><strong><code>external/</code></strong>: Scripts that fetch/push data from/to external APIs (e.g., AppsFlyer, Brevo, Qualtrics).</li>
+<li><strong><code>connectors/</code></strong>: Attempt for another way to fetch data from external APIs (<code>external/</code> is the old way).</li>
+<li><strong><code>internal/</code></strong>: Scripts that interact with internal API (to fetch/push data) to access Pass Culture services or GCP resources.</li>
+</ul>
+</li>
+<li><strong><code>ml_jobs/</code></strong>: Responsibility for machine learning workflows.<ul>
+<li>Includes subdirectories for specific ML tasks like <code>algo_training/</code>, <code>embeddings/</code>, <code>recommendation/</code>, and <code>ranking_endpoint/</code>.</li>
+</ul>
+</li>
+<li><strong><code>playground_vm/</code></strong>: Environment for testing and prototyping on virtual machines.</li>
+</ul>
+<h3 id="2-orchestration">2. <code>orchestration/</code></h3>
+<p>The <code>orchestration/</code> directory has the same structure of an Airflow project. It manages the scheduling, coordination, and execution of the jobs defined above, primarily using Apache Airflow and dbt.</p>
+<ul>
+<li><strong><code>dags/</code></strong>: The heart of Airflow orchestration. It is synchronized through the GitHub Workflows.<ul>
+<li><strong><code>jobs/</code></strong>: Contains the DAG (Directed Acyclic Graph) definition files. These files define the workflow and schedule (e.g., <code>crons.py</code>). Some the operators spin a GCE VM, install code that is in <code>jobs/etl_jobs</code>, shutsdown the GCE VM and run SQL that is in the <code>dependencies/</code>.</li>
+<li><strong><code>dependencies/</code></strong>: Contains SQL of some external system imports (or other) and python files containig configurations for these SQL statements. This is where the actual calls to <code>jobs/</code> are often wrapped.</li>
+<li><strong><code>common/</code></strong>: Shared Airflow operators, hooks, and utilities used across multiple DAGs.</li>
+<li><strong><code>data_gcp_dbt/</code></strong>: The dbt (data build tool) project. It contains SQL models for transforming raw data into analytics-ready tables within BigQuery.</li>
+</ul>
+</li>
+<li><strong><code>airflow/</code></strong>: Airflow configuration files.</li>
+<li><strong><code>k8s-airflow/</code></strong>: Kubernetes configurations for deploying Airflow.</li>
+<li><strong><code>plugins/</code></strong>: Custom Airflow plugins.</li>
+</ul>
+<hr />
+<h2 id="data-flow">🔄 Data Flow</h2>
+<p>The flow of data through the platform typically follows these stages:</p>
+<h3 id="1-extraction-ingestion-raw-data-loading">1. Extraction &amp; Ingestion (Raw Data Loading)</h3>
+<p>Data is pulled from various sources (production databases, external and internal APIs, flat files in GCS buckets) using either:
+* <strong>ETL Jobs</strong> located in <code>jobs/etl_jobs/</code>
+* Federated SQL queries present in <code>dags/dependencies/</code>
+* Simple calls to operators to access GCS resources.</p>
+<p>These jobs are triggered by <strong>Airflow DAGs</strong> (<code>orchestration/dags/jobs/</code>).</p>
+<p>The ingested data is loaded into <strong>BigQuery</strong> as "raw" tables. This stage ensures that a copy of the source data is available in the data warehouse.</p>
+<h3 id="2-transformation-dbt">2. Transformation (dbt)</h3>
+<p>Once the raw data is in BigQuery, <strong>dbt models</strong> (<code>orchestration/dags/data_gcp_dbt/</code>) are executed by Airflow. dbt performs:
+*   <strong>Cleaning</strong>: Renaming columns, casting types, and basic filtering.
+*   <strong>Modeling</strong>: Joining tables, applying business logic, and creating aggregated views.
+*   <strong>Snapshoting</strong>: Tracking changes in data over time.</p>
+<h3 id="3-reverse-transformation-reverse-etl-and-push-to-external-systems">3. Reverse Transformation (reverse ETL) and push to external systems</h3>
+<p>The transformed data is loaded into <strong>BigQuery</strong> as "analytics" tables.</p>
+<p>It is done throuhd the same setup as "1. Extraction &amp; Ingestion".</p>
+<h3 id="4-advanced-processing-ml">4. Advanced Processing (ML)</h3>
+<p>Transformed data is often used as input for <strong>ML Jobs</strong> (<code>jobs/ml_jobs/</code>). These jobs perform tasks such as:
+*   Generating embeddings for recommendations.
+*   Training models for offer ranking.
+*   Calculating user clusters.
+The results are usually written back to BigQuery or exported to other services.</p>
 
 
 
 
 
 
-
-  
-  
 
 
 
@@ -8923,7 +9031,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../description__ml_reco__recommendable_item/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Recommendable Item">
+          <a href=".." class="md-footer__link md-footer__link--prev" aria-label="Previous: Home">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -8933,20 +9041,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Recommendable Item
+                Home
               </div>
             </div>
           </a>
         
         
           
-          <a href="../description__ml_reco__training_data_click/" class="md-footer__link md-footer__link--next" aria-label="Next: Training Data Click">
+          <a href="../dbt/overview/" class="md-footer__link md-footer__link--next" aria-label="Next: Overview">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Training Data Click
+                Overview
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -8984,10 +9092,10 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../../../../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.tooltips", "navigation.footer", "navigation.indexes", "navigation.sections", "navigation.tabs", "navigation.top", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../../../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.tooltips", "navigation.footer", "navigation.indexes", "navigation.sections", "navigation.tabs", "navigation.top", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      <script src="../assets/javascripts/bundle.83f73b43.min.js"></script>
       
     
   </body>

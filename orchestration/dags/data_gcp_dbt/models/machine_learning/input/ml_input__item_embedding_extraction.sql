@@ -32,6 +32,6 @@ select
 
 from {{ ref("ml_input__item_metadata") }} as im
 
-where im.to_embed
+{% if not var("force_reembedding", default=False) %} where im.to_embed {% endif %}
 
 order by im.offer_creation_date desc

@@ -1,45 +1,43 @@
-{{ config(materialized="table", cluster_by=["to_embed", "item_id"]) }}
+{{ config(materialized="table", cluster_by=["item_id"]) }}
+
+{% set config = get_semantic_embedding_feature_config() %}
+
+{% set all_offer_cols = config.offer.embedding_features + config.offer.extra_data %}
+{% set all_metadata_cols = (
+    config.offer_metadata.embedding_features
+    + config.offer_metadata.extra_data
+) %}
+
+
+{% set offer_feat_cols = config.offer.embedding_features %}
+{% set metadata_feat_cols = config.offer_metadata.embedding_features %}
+{% set fingerprinted_features = (
+    (offer_feat_cols + metadata_feat_cols) | unique | sort
+) %}  -- important to sort for stable fingerprinting
+
 
 with
     enriched_items as (
         select
             offer.offer_id,
             offer.item_id,
-            offer.offer_creation_date,
-            offer.offer_subcategory_id,
-            offer.offer_category_id,
-            offer.offer_name,
-            offer.offer_description,
-            offer.offer_type_domain,
-            offer.author,
-            offer.performer,
-            offer.titelive_gtl_id,
-            offer_metadata.search_group_name,
-            offer_metadata.image_url,
-            offer_metadata.offer_type_id,
-            offer_metadata.offer_sub_type_id,
-            offer_metadata.gtl_type,
-            offer_metadata.gtl_label_level_1,
-            offer_metadata.gtl_label_level_2,
-            offer_metadata.gtl_label_level_3,
-            offer_metadata.gtl_label_level_4,
-            offer_metadata.offer_type_label,
-            offer_metadata.offer_type_labels,
-            offer_metadata.offer_sub_type_label,
-            offer_metadata.offer_video_url,
+            {% for col in all_offer_cols -%} offer.{{ col }}, {% endfor -%}
+            {% for col in all_metadata_cols -%} meta.{{ col }}, {% endfor -%}
+            -- features for embedding freshness and deduplication
             if(
-                offer_metadata.offer_type_label is not null,
+                meta.offer_type_label is not null,
                 offer.total_used_individual_bookings,
                 null
-            ) as total_used_individual_bookings
+            ) as total_used_individual_bookings,
+            coalesce(extracted.content_hash, '') as content_hash_at_last_embedding,
+            (extracted.item_id is null) as is_new_item
         from {{ ref("mrt_global__offer") }} as offer
         left join
-            {{ ref("mrt_global__offer_metadata") }} as offer_metadata
-            on offer.offer_id = offer_metadata.offer_id
+            {{ ref("mrt_global__offer_metadata") }} as meta
+            on offer.offer_id = meta.offer_id
         left join
-            {{ source("ml_preproc", "item_embedding_extraction") }} as ie
-            on offer.item_id = ie.item_id
-        where offer.item_id is not null
+            {{ source("ml_preproc", "item_embedding_extraction") }} as extracted
+            on offer.item_id = extracted.item_id
     ),
 
     deduplicated_items as (
@@ -47,7 +45,8 @@ with
         from enriched_items
         qualify
             row_number() over (
-                partition by item_id order by total_used_individual_bookings desc
+                partition by item_id
+                order by total_used_individual_bookings desc, offer_creation_date asc
             )
             = 1
     ),
@@ -55,63 +54,29 @@ with
     with_fingerprint as (
         select
             *,
-            farm_fingerprint(
-                to_json_string(
-                    struct(
-                        offer_name,
-                        offer_description,
-                        image_url,
-                        titelive_gtl_id,
-                        gtl_label_level_1,
-                        gtl_label_level_2,
-                        gtl_label_level_3,
-                        gtl_label_level_4,
-                        offer_type_labels,
-                        author,
-                        performer
+            -- build a content hash based on the features used for embedding to detect
+            -- changes and trigger re-embedding when necessary
+            lpad(
+                to_hex(
+                    farm_fingerprint(
+                        concat(
+                            {% for feat in fingerprinted_features -%}
+                                coalesce(
+                                    cast({{ feat }} as string), ''
+                                ){{ "||" if not loop.last else "" }}
+                            {% endfor -%}
+                        )
                     )
-                )
+                ),
+                16,
+                '0'
             ) as content_hash
         from deduplicated_items
-    ),
-
-    previous_state as (
-        select item_id, content_hash as content_hash_at_last_embedding
-        from {{ source("ml_preproc", "item_embedding_extraction") }}
     )
 
 select
-    wfp.offer_id,
-    wfp.item_id,
-    wfp.offer_creation_date,
-    wfp.offer_subcategory_id,
-    wfp.offer_category_id,
-    wfp.offer_name,
-    wfp.offer_description,
-    wfp.offer_type_domain,
-    wfp.author,
-    wfp.performer,
-    wfp.titelive_gtl_id,
-    wfp.search_group_name,
-    wfp.image_url,
-    wfp.offer_type_id,
-    wfp.offer_sub_type_id,
-    wfp.gtl_type,
-    wfp.gtl_label_level_1,
-    wfp.gtl_label_level_2,
-    wfp.gtl_label_level_3,
-    wfp.gtl_label_level_4,
-    wfp.offer_type_label,
-    wfp.offer_type_labels,
-    wfp.offer_sub_type_label,
-    wfp.total_used_individual_bookings,
-    wfp.content_hash,
-    case
-        when ps.item_id is null
-        then true  -- New item
-        when wfp.content_hash != ps.content_hash_at_last_embedding
-        then true  -- Changed content since last embedding
-        else false  -- Unchanged
-    end as to_embed
-from with_fingerprint as wfp
-left join previous_state as ps on wfp.item_id = ps.item_id
+    item_id,
+    {% for col in (all_offer_cols + all_metadata_cols) -%} {{ col }}, {% endfor -%}
+    content_hash,
+    is_new_item or (content_hash != content_hash_at_last_embedding) as to_embed
+from with_fingerprint

@@ -258,6 +258,12 @@ sources:
     tables:
       - name: default_item_cluster
       - name: item_embedding_extraction
+        columns:
+          - name: item_id
+            data_type: STRING
+            data_tests:
+              - not_null
+              - unique
       - name: item_embedding_reduced_64
       - name: item_embedding_reduced_32
       - name: item_embedding_reduced_16

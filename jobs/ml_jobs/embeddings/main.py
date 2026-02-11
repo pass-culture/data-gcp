@@ -136,8 +136,8 @@ def main(
             primary_key=PRIMARY_KEY,
             project_id=gcp_project,
             date_columns=["extraction_date"],
-            nullify_deprecated_columns=NULLIFY_DEPRECATED_COLUMNS,
             clustering_fields=[PRIMARY_KEY],
+            nullify_deprecated_columns=NULLIFY_DEPRECATED_COLUMNS,
         )
         logging.info("All batches processed and upserted successfully.")
     else:

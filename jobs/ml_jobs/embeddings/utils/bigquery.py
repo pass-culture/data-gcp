@@ -70,9 +70,9 @@ def merge_upsert(
     main_table: str,
     primary_key: str,
     project_id: str,
+    date_columns: list[str],
+    clustering_fields: list[str],
     ttl_hours: int = 24,
-    date_columns: list[str] | None = None,
-    clustering_fields: list[str] | None = None,
     *,
     nullify_deprecated_columns: bool = False,
 ):
@@ -84,9 +84,9 @@ def merge_upsert(
     - main_table: target table to upsert into
     - primary_key: column name used as key for matching rows
     - project_id: GCP project ID
-    - ttl_hours: expiration time for tmp_table in hours
     - date_columns: list of columns to be cast to DATE
     - clustering_fields: list of column names to cluster the main table by
+    - ttl_hours: expiration time for tmp_table in hours
     - nullify_deprecated_columns: if True, target columns not in tmp_table are set to NULL
     """
 
@@ -96,40 +96,22 @@ def merge_upsert(
     try:
         client.get_table(main_table)
     except exceptions.NotFound:
-        if clustering_fields:
-            logging.info(
-                f"Creating main table {main_table} with clustering on {clustering_fields}"
-            )
-            # Create table from tmp_table with clustering
-            create_query = f"""
-            CREATE TABLE `{main_table}`
-            CLUSTER BY {', '.join(clustering_fields)}
-            AS SELECT * FROM `{tmp_table}`
-            """
-            client.query(create_query).result()
+        logging.info(
+            f"Creating main table {main_table} with clustering on {clustering_fields}"
+        )
+        # Create table from tmp_table with clustering
+        create_query = f"""
+        CREATE TABLE `{main_table}`
+        CLUSTER BY {', '.join(clustering_fields)}
+        AS SELECT * FROM `{tmp_table}`
+        """
+        client.query(create_query).result()
 
-            # Set expiration on tmp table
-            tmp_table_obj = client.get_table(tmp_table)
-            tmp_table_obj.expires = datetime.now(timezone.utc) + timedelta(
-                hours=ttl_hours
-            )
-            client.update_table(tmp_table_obj, ["expires"])
-            return
-        else:
-            logging.info(f"Creating main table {main_table} without clustering")
-            create_query = f"""
-            CREATE TABLE `{main_table}`
-            AS SELECT * FROM `{tmp_table}`
-            """
-            client.query(create_query).result()
-
-            # Set expiration on tmp table
-            tmp_table_obj = client.get_table(tmp_table)
-            tmp_table_obj.expires = datetime.now(timezone.utc) + timedelta(
-                hours=ttl_hours
-            )
-            client.update_table(tmp_table_obj, ["expires"])
-            return
+        # Set expiration on tmp table
+        tmp_table_obj = client.get_table(tmp_table)
+        tmp_table_obj.expires = datetime.now(timezone.utc) + timedelta(hours=ttl_hours)
+        client.update_table(tmp_table_obj, ["expires"])
+        return
 
     tmp_schema = client.get_table(tmp_table).schema
     main_schema = client.get_table(main_table).schema

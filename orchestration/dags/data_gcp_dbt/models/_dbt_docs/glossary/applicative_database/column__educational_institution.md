@@ -7,3 +7,8 @@
 {% docs column__last_category_booked %} The last category booked by the educational institution.{% enddocs %}
 {% docs column__total_current_calendar_year_deposit_amount %} Total deposit of the current calendar year.{% enddocs %}
 {% docs column__total_current_scholar_year_deposit_amount %} Total deposit of the current scholar year.{% enddocs %}
+{% docs column__total_theoretic_amount_spent %} Total theoric amount spent (= non cancelled pre-reservations) by the school since the first deposit.{% enddocs %}
+{% docs column__total_current_scholar_year_theoretic_amount_spent %} Total theoric amount spent (= non cancelled pre-reservations) by the school during the current scholar_year.{% enddocs %}
+{% docs column__total_real_amount_spent %} Total real amount spent (= used and reimbursed reservations only) by the school since the first deposit.{% enddocs %}
+{% docs column__total_current_scholar_year_real_amount_spent %} Total real amount spent (= used and reimbursed reservations only) by the school during the current scholar_year.{% enddocs %}
+{% docs column__ratio_current_scholar_year_credit_utilization %} Total real amount spent (= used and reimbursed reservations only) by the school during the current scholar_year divided by the deposit of the current scholar year.{% enddocs %}

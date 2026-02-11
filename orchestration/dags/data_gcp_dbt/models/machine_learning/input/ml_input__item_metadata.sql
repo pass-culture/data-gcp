@@ -28,16 +28,11 @@ with
                 meta.offer_type_label is not null,
                 offer.total_used_individual_bookings,
                 null
-            ) as total_used_individual_bookings,
-            coalesce(extracted.content_hash, '') as content_hash_at_last_embedding,
-            (extracted.item_id is null) as is_new_item
+            ) as total_used_individual_bookings
         from {{ ref("mrt_global__offer") }} as offer
         left join
             {{ ref("mrt_global__offer_metadata") }} as meta
             on offer.offer_id = meta.offer_id
-        left join
-            {{ source("ml_preproc", "item_embedding_extraction") }} as extracted
-            on offer.item_id = extracted.item_id
     ),
 
     deduplicated_items as (
@@ -49,34 +44,26 @@ with
                 order by total_used_individual_bookings desc, offer_creation_date asc
             )
             = 1
-    ),
-
-    with_fingerprint as (
-        select
-            *,
-            -- build a content hash based on the features used for embedding to detect
-            -- changes and trigger re-embedding when necessary
-            lpad(
-                to_hex(
-                    farm_fingerprint(
-                        concat(
-                            {% for feat in fingerprinted_features -%}
-                                coalesce(
-                                    cast({{ feat }} as string), ''
-                                ){{ "||" if not loop.last else "" }}
-                            {% endfor -%}
-                        )
-                    )
-                ),
-                16,
-                '0'
-            ) as content_hash
-        from deduplicated_items
     )
 
 select
     item_id,
     {% for col in (all_offer_cols + all_metadata_cols) -%} {{ col }}, {% endfor -%}
-    content_hash,
-    is_new_item or (content_hash != content_hash_at_last_embedding) as to_embed
-from with_fingerprint
+    -- build a content hash based on the features used to detect
+    -- metadata changes and trigger re-embedding accordingly
+    lpad(
+        to_hex(
+            farm_fingerprint(
+                concat(
+                    {% for feat in fingerprinted_features -%}
+                        coalesce(
+                            cast({{ feat }} as string), ''
+                        ){{ "||" if not loop.last else "" }}
+                    {% endfor -%}
+                )
+            )
+        ),
+        16,
+        '0'
+    ) as content_hash
+from deduplicated_items

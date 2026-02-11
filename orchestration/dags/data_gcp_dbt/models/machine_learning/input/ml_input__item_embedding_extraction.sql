@@ -1,37 +1,61 @@
 {{ config(materialized="view") }}
 
+{% set config = get_semantic_embedding_feature_config() %}
+
+{% set all_offer_cols = config.offer.embedding_features + config.offer.extra_data %}
+{% set all_metadata_cols = (
+    config.offer_metadata.embedding_features
+    + config.offer_metadata.extra_data
+) %}
+
+with
+    items_to_process as (
+        select
+            items.item_id,
+            {% for col in (all_offer_cols + all_metadata_cols) -%}
+                items.{{ col }},
+            {% endfor -%}
+            items.content_hash,
+            (
+                past.item_id is null
+                or (items.content_hash != coalesce(past.content_hash, ''))
+            ) as to_embed
+        from {{ ref("ml_input__item_metadata") }} as items
+        left join
+            {{ source("ml_preproc", "item_embedding_extraction") }} as past
+            on items.item_id = past.item_id
+    )
+
 select
-    im.item_id,
-    im.offer_subcategory_id as subcategory_id,
-    im.offer_category_id as category_id,
-    im.offer_name,
-    im.offer_description,
-    im.image_url as image,
-    im.offer_creation_date,
-    im.content_hash,
+    item_id,
+    offer_subcategory_id as subcategory_id,
+    offer_category_id as category_id,
+    offer_name,
+    offer_description,
+    image_url as image,
+    offer_creation_date,
+    content_hash,
     case
-        when im.titelive_gtl_id is not null
+        when titelive_gtl_id is not null
         then
             trim(
                 concat(
-                    coalesce(im.gtl_label_level_1, ''),
+                    coalesce(gtl_label_level_1, ''),
                     ' ',
-                    coalesce(im.gtl_label_level_2, ''),
+                    coalesce(gtl_label_level_2, ''),
                     ' ',
-                    coalesce(im.gtl_label_level_3, ''),
+                    coalesce(gtl_label_level_3, ''),
                     ' ',
-                    coalesce(im.gtl_label_level_4, '')
+                    coalesce(gtl_label_level_4, '')
                 )
             )
-        when im.offer_type_label is not null
-        then trim(array_to_string(im.offer_type_labels, ' '))
+        when offer_type_label is not null
+        then trim(array_to_string(offer_type_labels, ' '))
     end as offer_label_concat,
-    trim(
-        concat(coalesce(im.author, ''), ' ', coalesce(im.performer, ''))
-    ) as author_concat
+    trim(concat(coalesce(author, ''), ' ', coalesce(performer, ''))) as author_concat
 
-from {{ ref("ml_input__item_metadata") }} as im
+from items_to_process
 
-{% if not var("force_reembedding", default=False) %} where im.to_embed {% endif %}
+{% if not var("force_reembedding", default=False) %} where to_embed {% endif %}
 
-order by im.offer_creation_date desc
+order by offer_creation_date desc

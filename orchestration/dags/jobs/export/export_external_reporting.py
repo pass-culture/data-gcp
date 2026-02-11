@@ -4,6 +4,7 @@ import os
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import BranchPythonOperator
 from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
@@ -105,12 +106,32 @@ with DAG(
         base_dir=BASE_PATH,
     )
 
-    gce_generate_reports = SSHGCEOperator(
-        task_id="gce_generate_reports",
+    def branch_check(logical_date):
+        if logical_date.month in [1, 4, 7, 10]:
+            return "gce_generate_quaterly_reports"
+        return "gce_generate_monthly_reports"
+
+    branching = BranchPythonOperator(
+        task_id="branching_logic",
+        python_callable=branch_check,
+    )
+
+    gce_generate_quaterly_reports = SSHGCEOperator(
+        task_id="gce_generate_quaterly_reports",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
         command="python main.py generate --stakeholder all --ds {{ ds }}",
+        deferrable=True,
+        poll_interval=120,
+    )
+
+    gce_generate_monthly_reports = SSHGCEOperator(
+        task_id="gce_generate_monthly_reports",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="python main.py generate --stakeholder ministere --ds {{ ds }}",
         deferrable=True,
         poll_interval=120,
     )
@@ -148,7 +169,8 @@ with DAG(
         >> waiting_group
         >> gce_instance_start
         >> fetch_install_code
-        >> gce_generate_reports
+        >> branching
+        >> [gce_generate_quaterly_reports, gce_generate_monthly_reports]
         >> gce_compress_reports
         >> gce_export_to_gcs
         >> gce_export_to_drive

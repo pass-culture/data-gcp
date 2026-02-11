@@ -109,25 +109,23 @@ select
     coalesce(
         cb.total_current_year_non_cancelled_collective_bookings, 0
     ) as total_current_year_non_cancelled_collective_bookings,
-    coalesce(
-        cb.total_collective_theoretic_revenue, 0
-    ) as total_collective_theoretic_revenue,
+    coalesce(cb.total_collective_theoretic_revenue, 0) as total_theoretic_amount_spent,
     coalesce(
         cb.total_current_year_collective_theoretic_revenue, 0
-    ) as total_current_year_collective_theoretic_revenue,
+    ) as total_current_scholar_year_theoretic_amount_spent,
     coalesce(cb.total_used_collective_bookings, 0) as total_used_collective_bookings,
     coalesce(
         cb.total_current_year_used_collective_bookings, 0
     ) as total_current_year_used_collective_bookings,
-    coalesce(cb.total_collective_real_revenue, 0) as total_collective_real_revenue,
+    coalesce(cb.total_collective_real_revenue, 0) as total_real_amount_spent,
     coalesce(
         cb.total_current_year_collective_real_revenue, 0
-    ) as total_current_year_collective_real_revenue,
+    ) as total_current_scholar_year_real_amount_spent,
     safe_divide(
         cb.total_current_year_collective_real_revenue, ei.current_deposit_amount
-    ) as ratio_current_credit_utilization,
+    ) as ratio_current_scholar_year_credit_utilization,
     coalesce(cb.total_tickets, 0) as total_tickets,
-    coalesce(cb.total_current_year_tickets, 0) as total_current_year_tickets
+    coalesce(cb.total_current_year_tickets, 0) as total_current_scholar_year_tickets
 from {{ ref("int_applicative__educational_institution") }} as ei
 left join
     collective_booking_grouped_by_institution as cb

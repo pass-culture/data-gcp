@@ -52,20 +52,20 @@ models:
         description: "{{ doc('column__total_non_cancelled_collective_bookings') }}"
       - name: total_current_year_non_cancelled_collective_bookings
         description: "{{ doc('column__total_current_year_non_cancelled_collective_bookings') }}"
-      - name: total_collective_theoretic_revenue
-        description: "{{ doc('column__total_collective_theoretic_revenue') }}"
-      - name: total_current_year_collective_theoretic_revenue
-        description: "{{ doc('column__total_current_year_collective_theoretic_revenue') }}"
+      - name: total_theoretic_amount_spent
+        description: "{{ doc('column__total_theoretic_amount_spent') }}"
+      - name: total_current_scholar_year_theoretic_amount_spent
+        description: "{{ doc('column__total_current_scholar_year_theoretic_amount_spent') }}"
       - name: total_used_collective_bookings
         description: "{{ doc('column__total_used_collective_bookings') }}"
       - name: total_current_year_used_collective_bookings
         description: "{{ doc('column__total_current_year_used_collective_bookings') }}"
-      - name: total_collective_real_revenue
-        description: "{{ doc('column__total_collective_real_revenue') }}"
-      - name: total_current_year_collective_real_revenue
-        description: "{{ doc('column__total_current_year_collective_real_revenue') }}"
-      - name: ratio_current_credit_utilization
-        description: "{{ doc('column__ratio_current_credit_utilization') }}"
+      - name: total_real_amount_spent
+        description: "{{ doc('column__total_real_amount_spent') }}"
+      - name: total_current_scholar_year_real_amount_spent
+        description: "{{ doc('column__total_current_scholar_year_real_amount_spent') }}"
+      - name: ratio_current_scholar_year_credit_utilization
+        description: "{{ doc('column__ratio_current_scholar_year_credit_utilization') }}"
         data_tests:
           - dbt_utils.accepted_range:
               min_value: 0

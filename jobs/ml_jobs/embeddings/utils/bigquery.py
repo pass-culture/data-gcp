@@ -15,11 +15,13 @@ def load_data(
     input_dataset_name: str,
     input_table_name: str,
     max_rows_to_process: int,
+    reembed_all: bool = False,
 ) -> pd.DataFrame:
     # If max_rows_to_process is -1, we will process all data.
     limit = f" LIMIT {max_rows_to_process} " if max_rows_to_process > 0 else ""
+    reembed_condition = "WHERE to_embed" if not reembed_all else ""
     return pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.{input_dataset_name}.{input_table_name}` {limit} "
+        f"SELECT * FROM `{gcp_project}.{input_dataset_name}.{input_table_name}` {reembed_condition} {limit}",
     )
 
 
@@ -70,8 +72,9 @@ def merge_upsert(
     main_table: str,
     primary_key: str,
     project_id: str,
+    date_columns: list[str],
+    clustering_fields: list[str],
     ttl_hours: int = 24,
-    date_columns: list[str] = None,
     *,
     nullify_deprecated_columns: bool = False,
 ):
@@ -82,13 +85,35 @@ def merge_upsert(
     - tmp_table: source table with new rows/updates
     - main_table: target table to upsert into
     - primary_key: column name used as key for matching rows
-    - date_columns: list of columns to be cast to DATE
     - project_id: GCP project ID
+    - date_columns: list of columns to be cast to DATE
+    - clustering_fields: list of column names to cluster the main table by
     - ttl_hours: expiration time for tmp_table in hours
     - nullify_deprecated_columns: if True, target columns not in tmp_table are set to NULL
     """
 
     client = bigquery.Client(project=project_id)
+
+    # Check if main table exists, if not create it with clustering
+    try:
+        client.get_table(main_table)
+    except exceptions.NotFound:
+        logging.info(
+            f"Creating main table {main_table} with clustering on {clustering_fields}"
+        )
+        # Create table from tmp_table with clustering
+        create_query = f"""
+        CREATE TABLE `{main_table}`
+        CLUSTER BY {', '.join(clustering_fields)}
+        AS SELECT * FROM `{tmp_table}`
+        """
+        client.query(create_query).result()
+
+        # Set expiration on tmp table
+        tmp_table_obj = client.get_table(tmp_table)
+        tmp_table_obj.expires = datetime.now(timezone.utc) + timedelta(hours=ttl_hours)
+        client.update_table(tmp_table_obj, ["expires"])
+        return
 
     tmp_schema = client.get_table(tmp_table).schema
     main_schema = client.get_table(main_table).schema

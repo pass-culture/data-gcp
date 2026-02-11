@@ -79,6 +79,10 @@ def main(
         default=datetime.now(timezone.utc).isoformat(),
         help="Processing timestamp",
     ),
+    reembed_all: bool = typer.Option(
+        False,
+        help="Whether to re-embed all items, or only those not embedded yet (default: False)",
+    ),
 ) -> None:
     """
     Main loggic data for embedding extraction.
@@ -105,6 +109,7 @@ def main(
         input_dataset_name,
         input_table_name,
         max_rows_to_process,
+        reembed_all=reembed_all,
     )
 
     if df.shape[0] > 0:
@@ -136,6 +141,7 @@ def main(
             primary_key=PRIMARY_KEY,
             project_id=gcp_project,
             date_columns=["extraction_date"],
+            clustering_fields=[PRIMARY_KEY],
             nullify_deprecated_columns=NULLIFY_DEPRECATED_COLUMNS,
         )
         logging.info("All batches processed and upserted successfully.")

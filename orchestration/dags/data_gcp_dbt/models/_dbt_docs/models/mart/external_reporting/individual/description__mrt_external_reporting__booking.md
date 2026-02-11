@@ -1,11 +1,11 @@
 ---
-title: EAC coverage Indicators
-description: Key indicators from the `mrt_external_reporting__eac_coverage` model.
+title: Booking Indicators
+description: Key indicators from the `mrt_external_reporting__booking` model.
 ---
 
-{% docs description__mrt_external_reporting__eac_coverage %}
+{% docs description__mrt_external_reporting__booking %}
 
-The `mrt_external_reporting__eac_coverage` model provides aggregated key indicators related to pass Culture eac student coverage.
+The `mrt_external_reporting__booking` model provides aggregated key indicators related to pass Culture bookings.
 It is designed for automated export, especially in Excel format.
 
 {% enddocs %}
@@ -15,4 +15,4 @@ It is designed for automated export, especially in Excel format.
 Each row represents a key indicator calculated for a specific month and geographic aggregation level.
 A lexique details the meaning of each kpi_name here: https://docs.google.com/spreadsheets/d/13Epof9MJbtN7srmDIld3-7QN0Hq6WpX7/edit?usp=sharing&ouid=113033507472186952579&rtpof=true&sd=true
 
-{% docs table__mrt_external_reporting__eac_coverage %}{% enddocs %}
+{% docs table__mrt_external_reporting__booking %}{% enddocs %}

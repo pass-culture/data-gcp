@@ -122,7 +122,8 @@ select
         cb.total_current_year_collective_real_revenue, 0
     ) as total_current_scholar_year_real_amount_spent,
     safe_divide(
-        cb.total_current_year_collective_real_revenue, ei.current_deposit_amount
+        cb.total_current_year_collective_real_revenue,
+        ei.total_current_scholar_year_deposit_amount
     ) as ratio_current_scholar_year_credit_utilization,
     coalesce(cb.total_tickets, 0) as total_tickets,
     coalesce(cb.total_current_year_tickets, 0) as total_current_scholar_year_tickets

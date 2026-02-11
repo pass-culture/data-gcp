@@ -35,6 +35,7 @@ select
     image_url as image,
     offer_creation_date,
     content_hash,
+    to_embed,
     case
         when titelive_gtl_id is not null
         then
@@ -53,7 +54,4 @@ select
         then trim(array_to_string(offer_type_labels, ' '))
     end as offer_label_concat,
     trim(concat(coalesce(author, ''), ' ', coalesce(performer, ''))) as author_concat
-
 from items_to_process
-
-order by offer_creation_date desc

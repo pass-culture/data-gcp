@@ -1,4 +1,11 @@
-{{ config(materialized="table", cluster_by=["item_id"]) }}
+{{
+    config(
+        **custom_table_config(
+            materialized="table",
+            cluster_by=["item_id"],
+        )
+    )
+}}
 
 {% set config = get_semantic_embedding_feature_config() %}
 
@@ -51,19 +58,17 @@ select
     {% for col in (all_offer_cols + all_metadata_cols) -%} {{ col }}, {% endfor -%}
     -- build a content hash based on the features used to detect
     -- metadata changes and trigger re-embedding accordingly
-    lpad(
-        to_hex(
-            farm_fingerprint(
-                concat(
+    -- handles the "Invalid cast" by serializing the whole struct to JSON first
+    format(
+        '%016x',
+        farm_fingerprint(
+            to_json_string(
+                struct(
                     {% for feat in fingerprinted_features -%}
-                        coalesce(
-                            cast({{ feat }} as string), ''
-                        ){{ "||" if not loop.last else "" }}
+                        {{ feat }}{{ "," if not loop.last else "" }}
                     {% endfor -%}
                 )
             )
-        ),
-        16,
-        '0'
+        )
     ) as content_hash
 from deduplicated_items

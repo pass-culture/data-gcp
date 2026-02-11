@@ -14,7 +14,9 @@
 with
     raw_artist as (
         select
-            *,
+            * except (artist_app_search_score, artist_pro_search_score),
+            artist_app_search_score as previous_artist_app_search_score,
+            artist_pro_search_score as previous_artist_pro_search_score,
             array_to_string(
                 array(
                     select part
@@ -51,29 +53,23 @@ with
         from {{ source("raw", "applicative_database_product_artist_link") }}
     ),
 
-    raw_product as (
-        select
-            cast(offer_product_id as int64) as offer_product_id,
-            logical_or(offer_is_bookable) as has_bookable_offer,
-            array_agg(offer_name order by total_individual_bookings desc limit 1)[
-                offset(0)
-            ] as offer_name,
-            sum(coalesce(total_individual_bookings, 0)) as total_booking_count
-        from {{ ref("mrt_global__offer") }}
-        group by offer_product_id
+    raw_product_stats as (
+        select offer_product_id, has_bookable_offer, offer_name, total_booking_count
+        from {{ ref("ml_metadata__product_stats") }}
     ),
 
     product_artist_link as (
         select
-            raw_product.offer_product_id,
+            raw_product_stats.offer_product_id,
             raw_product_artist_link.artist_id,
-            raw_product.has_bookable_offer,
-            raw_product.offer_name,
-            raw_product.total_booking_count
+            raw_product_stats.has_bookable_offer,
+            raw_product_stats.offer_name,
+            raw_product_stats.total_booking_count
         from raw_product_artist_link
         left join
-            raw_product
-            on raw_product_artist_link.offer_product_id = raw_product.offer_product_id
+            raw_product_stats
+            on raw_product_artist_link.offer_product_id
+            = raw_product_stats.offer_product_id
     ),
 
     artist_statistics as (

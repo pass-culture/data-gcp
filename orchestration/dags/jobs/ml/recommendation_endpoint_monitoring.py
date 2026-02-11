@@ -38,43 +38,35 @@ from common.utils import get_airflow_schedule
 from jobs.crons import SCHEDULE_DICT
 from jobs.ml.constants import IMPORT_ENDPOINT_MONITORING_SQL_PATH
 
-
-def create_ssh_task(task_id, command, instance_name, base_dir):
-    """Helper to create an SSHGCEOperator with minimal boilerplate."""
-    return SSHGCEOperator(
-        task_id=task_id,
-        instance_name=instance_name,
-        base_dir=base_dir,
-        environment=DAG_CONFIG["ENVIROMENT"],
-        command=command,
-    )
-
-
 DATE = "{{ ts_nodash }}"
-DAG_CONFIG = {
-    "ID": "endpoint_monitoring",
-    "ENVIROMENT": {
-        "GCP_PROJECT": GCP_PROJECT_ID,
-        "ENV_SHORT_NAME": ENV_SHORT_NAME,
-    },
-    "BIGQUERY": {
-        "INPUT_USER_TABLE": "test_users",
-        "INPUT_ITEM_TABLE": "test_items",
-        "OUTPUT_REPORT_TABLE": "endpoint_monitoring_report",
-    },
-    "STORAGE_PATH": f"gs://{ML_BUCKET_TEMP}/endpoint_monitoring_{ENV_SHORT_NAME}/{DATE}",
-    "GCS_PATH": f"endpoint_monitoring_{ENV_SHORT_NAME}/{DATE}",
-    "BASE_DIR": "data-gcp/jobs/ml_jobs/endpoint_monitoring",
-    "source_experiment_name": {
-        "dev": f"dummy_{ENV_SHORT_NAME}",
-        "stg": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",
-        "prod": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",
-    },
-    "endpoint_name": f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
-    "number_of_ids": 100,
-    "number_of_mock_ids": 100,
-    "number_of_calls_per_user": 2,
+
+
+# DAG Config
+DAG_ID = "recommendation_endpoint_monitoring"
+ENV_VARS = {
+    "GCP_PROJECT": GCP_PROJECT_ID,
+    "ENV_SHORT_NAME": ENV_SHORT_NAME,
 }
+BASE_DIR = "data-gcp/jobs/ml_jobs/endpoint_monitoring"
+SOURCE_EXPERIMENT_NAME = {
+    "dev": f"dummy_{ENV_SHORT_NAME}",
+    "stg": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",
+    "prod": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",
+}
+ENDPOINT_NAME = f"recommendation_user_retrieval_{ENV_SHORT_NAME}"
+METABASE_URL = "https://analytics.data.passculture.team/dashboard/986-test-dintregation-recommendation"
+NUMBER_OF_IDS = 100
+NUMBER_OF_MOCK_IDS = 100
+NUMBER_OF_CALLS_PER_USER = 2
+
+# GCP Config
+BIGQUERY_CONFIG = {
+    "INPUT_USER_TABLE": "test_users",
+    "INPUT_ITEM_TABLE": "test_items",
+    "OUTPUT_REPORT_TABLE": "endpoint_monitoring_report",
+}
+STORAGE_PATH = f"gs://{ML_BUCKET_TEMP}/endpoint_monitoring_{ENV_SHORT_NAME}/{DATE}"
+GCS_PATH = f"endpoint_monitoring_{ENV_SHORT_NAME}/{DATE}"
 
 # Environment variables to export before running commands
 default_args = {
@@ -94,10 +86,10 @@ gce_params = {
 
 with (
     DAG(
-        dag_id=DAG_CONFIG["ID"],
+        dag_id=DAG_ID,
         default_args=default_args,
         description="Run recommendation endpoint monitoring",
-        schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_CONFIG["ID"]]),
+        schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_ID]),
         catchup=False,
         dagrun_timeout=timedelta(minutes=60),
         user_defined_macros=macros.default,
@@ -116,11 +108,11 @@ with (
                 type="string",
             ),
             "experiment_name": Param(
-                default=DAG_CONFIG["source_experiment_name"][ENV_SHORT_NAME],
+                default=SOURCE_EXPERIMENT_NAME[ENV_SHORT_NAME],
                 type=["string", "null"],
             ),
             "endpoint_name": Param(
-                default=DAG_CONFIG["endpoint_name"],
+                default=ENDPOINT_NAME,
                 type=["string", "null"],
             ),
         },
@@ -143,7 +135,7 @@ with (
                     "destinationTable": {
                         "projectId": GCP_PROJECT_ID,
                         "datasetId": BIGQUERY_TMP_DATASET,
-                        "tableId": DAG_CONFIG["BIGQUERY"]["INPUT_USER_TABLE"],
+                        "tableId": BIGQUERY_CONFIG["INPUT_USER_TABLE"],
                     },
                     "writeDisposition": "WRITE_TRUNCATE",
                 }
@@ -162,7 +154,7 @@ with (
                     "destinationTable": {
                         "projectId": GCP_PROJECT_ID,
                         "datasetId": BIGQUERY_TMP_DATASET,
-                        "tableId": DAG_CONFIG["BIGQUERY"]["INPUT_ITEM_TABLE"],
+                        "tableId": BIGQUERY_CONFIG["INPUT_ITEM_TABLE"],
                     },
                     "writeDisposition": "WRITE_TRUNCATE",
                 }
@@ -180,12 +172,12 @@ with (
                     "sourceTable": {
                         "projectId": GCP_PROJECT_ID,
                         "datasetId": BIGQUERY_TMP_DATASET,
-                        "tableId": DAG_CONFIG["BIGQUERY"]["INPUT_USER_TABLE"],
+                        "tableId": BIGQUERY_CONFIG["INPUT_USER_TABLE"],
                     },
                     "compression": None,
                     "destinationFormat": "PARQUET",
                     "destinationUris": os.path.join(
-                        DAG_CONFIG["STORAGE_PATH"],
+                        STORAGE_PATH,
                         "user_data.parquet",
                     ),
                 }
@@ -200,12 +192,12 @@ with (
                     "sourceTable": {
                         "projectId": GCP_PROJECT_ID,
                         "datasetId": BIGQUERY_TMP_DATASET,
-                        "tableId": DAG_CONFIG["BIGQUERY"]["INPUT_ITEM_TABLE"],
+                        "tableId": BIGQUERY_CONFIG["INPUT_ITEM_TABLE"],
                     },
                     "compression": None,
                     "destinationFormat": "PARQUET",
                     "destinationUris": os.path.join(
-                        DAG_CONFIG["STORAGE_PATH"],
+                        STORAGE_PATH,
                         "item_data.parquet",
                     ),
                 }
@@ -218,29 +210,30 @@ with (
         instance_name=INSTANCE_NAME,
         instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={"job_type": "ml", "dag_name": DAG_CONFIG["ID"]},
+        labels={"job_type": "ml", "dag_name": DAG_ID},
     )
 
     fetch_install_code = InstallDependenciesOperator(
         task_id="fetch_install_code",
         instance_name=INSTANCE_NAME,
         branch="{{ params.branch }}",
-        python_version="'3.10'",
-        base_dir=DAG_CONFIG["BASE_DIR"],
+        python_version="'3.11'",
+        base_dir=BASE_DIR,
         retries=2,
     )
 
-    run_endpoint_monitoring_tests = create_ssh_task(
-        task_id="run_endpoint_monitoring_tests",
-        command="python main.py "
+    run_recommendation_monitoring_tests = SSHGCEOperator(
+        task_id="run_recommendation_monitoring_tests",
+        instance_name=INSTANCE_NAME,
+        base_dir=BASE_DIR,
+        environment=ENV_VARS,
+        command="python run_recommendation_monitoring_tests.py "
         "--endpoint-name {{ params.endpoint_name }} "
         "--experiment-name {{ params.experiment_name }} "
-        f"--storage-path {DAG_CONFIG['STORAGE_PATH']} "
-        f"--number-of-ids {DAG_CONFIG['number_of_ids']} "
-        f"--number-of-mock-ids {DAG_CONFIG['number_of_mock_ids']} "
-        f"--number-of-calls-per-user {DAG_CONFIG['number_of_calls_per_user']} ",
-        instance_name=INSTANCE_NAME,
-        base_dir=DAG_CONFIG["BASE_DIR"],
+        f"--storage-path {STORAGE_PATH} "
+        f"--number-of-ids {NUMBER_OF_IDS} "
+        f"--number-of-mock-ids {NUMBER_OF_MOCK_IDS} "
+        f"--number-of-calls-per-user {NUMBER_OF_CALLS_PER_USER} ",
     )
 
     gce_instance_stop = DeleteGCEOperator(
@@ -252,9 +245,9 @@ with (
         project_id=GCP_PROJECT_ID,
         task_id="load_endpoint_monitoring_report_to_bq",
         bucket=ML_BUCKET_TEMP,
-        source_objects=f"""{DAG_CONFIG['GCS_PATH']}/endpoint_monitoring_reports.parquet""",
+        source_objects=f"""{GCS_PATH}/endpoint_monitoring_reports.parquet""",
         destination_project_dataset_table=(
-            f"{BIGQUERY_ANALYTICS_DATASET}.{DAG_CONFIG['BIGQUERY']['OUTPUT_REPORT_TABLE']}"
+            f"{BIGQUERY_ANALYTICS_DATASET}.{BIGQUERY_CONFIG['OUTPUT_REPORT_TABLE']}"
         ),
         source_format="PARQUET",
         write_disposition="WRITE_APPEND",
@@ -265,8 +258,8 @@ with (
         webhook_token=SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN,
         trigger_rule="none_failed",
         block=create_recommendation_endpoint_monitoring_slack_block(
-            endpoint_name=DAG_CONFIG["endpoint_name"],
-            metabase_url="https://analytics.data.passculture.team/dashboard/986-test-dintregation-recommendation",
+            endpoint_name=ENDPOINT_NAME,
+            metabase_url=METABASE_URL,
             env_short_name=ENV_SHORT_NAME,
         ),
     )
@@ -276,7 +269,7 @@ with (
         >> export_data_group
         >> gce_instance_start
         >> fetch_install_code
-        >> run_endpoint_monitoring_tests
+        >> run_recommendation_monitoring_tests
         >> gce_instance_stop
         >> load_endpoint_monitoring_report_to_bq
         >> send_slack_notif_success

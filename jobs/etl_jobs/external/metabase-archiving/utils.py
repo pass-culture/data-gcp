@@ -16,35 +16,23 @@ CLEAN_DATASET = f"clean_{ENVIRONMENT_SHORT_NAME}"
 INT_METABASE_DATASET = f"int_metabase_{ENVIRONMENT_SHORT_NAME}"
 METABASE_API_USERNAME = "metabase-data-bot@passculture.app"
 
-parent_folder_to_archive = ["interne", "operationnel", "adhoc"]
-limit_inactivity_in_days = {"interne": 90, "operationnel": 30, "adhoc": 90}
+parent_folder_to_archive = ["thematic", "operationnel", "adhoc"]
+limit_inactivity_in_days = {"operationnel": 30, "adhoc": 90}
 max_cards_to_archive = 50
 
 
 rules = [
     {
         "rule_id": 1,
-        "rule_name": "interne_archiving",
+        "rule_name": "thematic_archiving",
         "rule_description": """
-            Règle d'archive de la collection interne : 90 jours d'inactivité ou moins de 5 vues en 6 mois et pas de dashboard associé
-            Règle d'alerte de la collection interne : moins de 5 vues en 6 mois et au moins 1 dashboard associé
+            Règle d'archive des collections thematiques : moins de 5 vues en 6 mois, créée depuis plus de 60 jours
         """,
-        "rule_archiving_sql": f"""
+        "rule_archiving_sql": """
             WHERE
-                parent_folder = 'interne'
-            AND
-                (
-                days_since_last_execution >= {limit_inactivity_in_days['interne']}
-                OR (total_views_6_months <=  5 and nbr_dashboards = 0)
-                )
-            AND date(card_creation_date) < date_sub(current_date(), interval 14 day)
-            AND clean_slug_reduced_level_2 != 'secretariat_general'
-        """,
-        "rule_alerting_sql": """
-            WHERE
-                parent_folder = 'interne'
+                is_thematic_collection
             AND total_views_6_months <=  5
-            AND nbr_dashboards > 0
+            AND date(card_creation_date) < date_sub(current_date(), interval 60 day)
         """,
     },
     {

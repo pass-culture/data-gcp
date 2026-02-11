@@ -12,11 +12,6 @@ SCHEDULE_DICT = {
     "algo_default_deployment": "0 6 * * *",
     "artist_linkage": "0 12 * * 0",
     "bigquery_archive_partition": "0 7 * * *",
-    "bigquery_historize_applicative_database": {
-        "prod": "15 3 * * *",  # every day at 3:15 AM
-        "stg": None,
-        "dev": None,
-    },
     "bigquery_snapshot_backup": {
         "prod": "15 3 * * *",  # every day at 3:15 AM
         "stg": None,
@@ -44,9 +39,14 @@ SCHEDULE_DICT = {
         "stg": "00 2 * * *",
         "prod": "00 2 * * *",
     },
-    "endpoint_monitoring": "0 8 * * *",  # every day at 8:00 AM
+    "recommendation_endpoint_monitoring": "0 8 * * *",  # every day at 8:00 AM
     "export_external_reporting": {
         "prod": "45 4 1 1,4,8,12 *",  # every 1st of 4 months at 4:45 AM
+    },
+    "finance_pricing_forecast": {
+        "prod": "0 6 * * 1",  # every Monday at 6:00 AM
+        "stg": None,
+        "dev": None,
     },
 }
 

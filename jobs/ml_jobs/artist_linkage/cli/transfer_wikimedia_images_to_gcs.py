@@ -17,7 +17,7 @@ from src.constants import (
     ARTIST_MEDIATION_UUID_KEY,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    IMAGE_FILE_URL_KEY,
+    WIKIDATA_IMAGE_FILE_URL_KEY,
     WIKIMEDIA_REQUEST_HEADER,
 )
 
@@ -115,7 +115,7 @@ def transfer_image(
         # 2. Check if download is required
         if blob.exists():
             return {
-                IMAGE_FILE_URL_KEY: image_url,
+                WIKIDATA_IMAGE_FILE_URL_KEY: image_url,
                 ARTIST_MEDIATION_UUID_KEY: image_id,
                 STATUS_KEY: "SKIPPED",
             }
@@ -127,20 +127,20 @@ def transfer_image(
             if r.status_code == 200:
                 blob.upload_from_file(r.raw, content_type=r.headers.get("content-type"))
                 return {
-                    IMAGE_FILE_URL_KEY: image_url,
+                    WIKIDATA_IMAGE_FILE_URL_KEY: image_url,
                     ARTIST_MEDIATION_UUID_KEY: image_id,
                     STATUS_KEY: "SUCCESS",
                 }
             else:
                 return {
-                    IMAGE_FILE_URL_KEY: image_url,
+                    WIKIDATA_IMAGE_FILE_URL_KEY: image_url,
                     ARTIST_MEDIATION_UUID_KEY: None,
                     STATUS_KEY: "FAILED",
                 }
     except Exception as e:
         logging.error(f"Error processing {image_url}: {e}")
         return {
-            IMAGE_FILE_URL_KEY: image_url,
+            WIKIDATA_IMAGE_FILE_URL_KEY: image_url,
             ARTIST_MEDIATION_UUID_KEY: None,
             STATUS_KEY: "ERROR",
         }
@@ -172,6 +172,16 @@ def run_parallel_image_transfers(
             concurrent.futures.as_completed(futures), total=len(futures)
         ):
             results.append(future.result())
+
+    if len(results) == 0:
+        logging.warning("No images were processed.")
+        return pd.DataFrame(
+            columns=[
+                WIKIDATA_IMAGE_FILE_URL_KEY,
+                ARTIST_MEDIATION_UUID_KEY,
+                STATUS_KEY,
+            ]
+        )
     return pd.DataFrame(results)
 
 
@@ -195,7 +205,7 @@ def main(
     """
     # 1. Load Data
     artists_df = pd.read_parquet(artists_matched_on_wikidata)
-    image_urls = artists_df[IMAGE_FILE_URL_KEY].dropna().unique().tolist()
+    image_urls = artists_df[WIKIDATA_IMAGE_FILE_URL_KEY].dropna().unique().tolist()
 
     # 2. Setup sessions and clients
     session = _get_session()
@@ -207,7 +217,7 @@ def main(
 
     # 4. Merge results and save output
     artists_df.merge(
-        result_df, on=IMAGE_FILE_URL_KEY, how="left", validate="m:1"
+        result_df, on=WIKIDATA_IMAGE_FILE_URL_KEY, how="left", validate="m:1"
     ).to_parquet(output_file_path)
 
 

@@ -158,3 +158,6 @@ models:
       - name: is_current_deposit_booking
         description: "{{ doc('column__is_current_deposit_booking') }}"
         data_type: STRING
+      - name: educational_deposit_id
+        description: "{{ doc('column__educational_deposit_id') }}"
+        data_type: STRING

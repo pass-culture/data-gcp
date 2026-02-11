@@ -25,7 +25,7 @@ ALL_USERS = False
 SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}"
 MLFLOW_SECRET_NAME = "mlflow_client_id"
 MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"
-MLFLOW_RUN_ID_FILENAME = "mlflow_run_uuid"
+MLFLOW_RUN_ID_FILENAME = "mlflow_run_id"
 MLFLOW_URI = (
     "https://mlflow.passculture.team/"
     if ENV_SHORT_NAME == "prod"

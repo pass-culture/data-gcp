@@ -5,7 +5,7 @@ description: Key indicators from the `mrt_external_reporting__eac_coverage` mode
 
 {% docs description__mrt_external_reporting__eac_coverage %}
 
-The `mrt_external_reporting__eac_coverage` model provides aggregated key indicators related to pass Culture eac student and institutions coverage.
+The `mrt_external_reporting__eac_coverage` model provides aggregated key indicators related to pass Culture eac student coverage.
 It is designed for automated export, especially in Excel format.
 
 {% enddocs %}

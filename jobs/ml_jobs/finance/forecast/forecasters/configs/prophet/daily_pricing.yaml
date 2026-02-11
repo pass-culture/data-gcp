@@ -1,0 +1,35 @@
+prophet:
+  growth: logistic
+  changepoints:
+    - "2022-12-15"
+    - "2023-07-20"
+    - "2023-10-20"
+    - "2024-03-15"
+    - "2024-07-03"
+    - "2024-12-20"
+    - "2025-06-25"
+  changepoint_prior_scale: 0.05
+  yearly_seasonality: true
+  weekly_seasonality: true
+  daily_seasonality: false
+  seasonality_mode: additive
+  seasonality_prior_scale: 5
+  interval_width: 0.95
+  scaling: absmax
+features:
+  adding_country_holidays: true
+  add_monthly_seasonality: true
+  monthly_fourier_order: 5
+  pass_culture_months: null
+  regressors: null
+data_processing:
+  train_prop: 0.8
+  table_name: daily_pricing
+  date_column_name: pricing_day
+  target_name: total_pricing
+evaluation:
+  cv: true
+  cv_initial: "730 days"
+  cv_period: "180 days"
+  cv_horizon: "365 days"
+  freq: D

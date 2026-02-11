@@ -41,6 +41,7 @@ select
     v.venue_is_open_to_public,
     v.venue_is_acessibility_synched,
     v.venue_type_label,
+    v.venue_activity,
     v.venue_label,
     v.venue_humanized_id,
     v.venue_backoffice_link,
@@ -119,7 +120,7 @@ select
     ofr.total_reimbursement_points,
     ofr.is_local_authority,
     v.venue_id as partner_id,
-    offerer_is_epn,
+    ofr.offerer_is_epn,
     coalesce(
         date_diff(current_date, boh.last_bookable_offer_date, day) <= 30, false
     ) as is_active_last_30days,

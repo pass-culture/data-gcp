@@ -21,3 +21,4 @@ select
 from {{ source("raw", "applicative_database_venue") }} as venue
 left join
     {{ ref("int_applicative__offerer_address") }} as oa on venue.venue_id = oa.venue_id
+where oa.offerer_address_type = "VENUE_LOCATION"

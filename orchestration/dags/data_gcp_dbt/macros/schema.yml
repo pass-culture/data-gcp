@@ -2,6 +2,28 @@ version: 2
 
 macros:
 
+  - name: render_case_when
+    description: |
+      Generates a SQL CASE WHEN statement based on a mapping list.
+      Each mapping item must have a `name` (string or iterable of strings) and a `label`.
+      Optionally, a fallback value can be provided as either `fallback_sql` or `fallback_str`, but not both.
+    arguments:
+      - name: input_column_name
+        description: The column name to evaluate in the CASE WHEN statement.
+        type: string
+      - name: mapping_list
+        description: |
+          A list of mappings where each item has:
+            - name: string or list of strings representing values to match
+            - label: string representing the label to return when matched
+        type: list
+      - name: fallback_sql
+        description: Optional SQL snippet to use as the ELSE clause.
+        type: string
+      - name: fallback_str
+        description: Optional string to use as the ELSE clause.
+        type: string
+
   - name: discovery_vars
     description: ""
 

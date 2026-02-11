@@ -28,6 +28,7 @@ INPUT_TABLE_NAME = "item_embedding_extraction"
 OUTPUT_DATASET_NAME = f"ml_preproc_{ENV_SHORT_NAME}"
 OUTPUT_TABLE_NAME = "item_embedding_extraction"
 DAG_NAME = "embeddings_extraction_item"
+TRIGGER_REMBEDDING_THRESHOLD = 1000
 dag_schedule = get_airflow_schedule(SCHEDULE_DICT.get(DAG_NAME))
 
 
@@ -56,6 +57,7 @@ def extract_embedding_item_dag(
     config_file_name="default-config-item",
     batch_size=5000,
     max_rows_to_process=100000 if ENV_SHORT_NAME == "prod" else 15000,
+    reembed_all=False,
 ):
     @task
     def start():
@@ -70,10 +72,11 @@ def extract_embedding_item_dag(
         query = f"""
         SELECT count(*) as count
         FROM `{GCP_PROJECT_ID}`.`{dataset_id}`.`{table_name}`
+        where to_embed or {str(reembed_all).lower()}
         """
 
         result = bq_client.query(query).to_dataframe()
-        return result["count"].values[0] > 0
+        return result["count"].values[0] > TRIGGER_REMBEDDING_THRESHOLD
 
     @task
     def end():

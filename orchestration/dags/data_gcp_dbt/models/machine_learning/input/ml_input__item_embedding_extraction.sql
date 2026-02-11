@@ -56,6 +56,4 @@ select
 
 from items_to_process
 
-{% if not var("force_reembedding", default=False) %} where to_embed {% endif %}
-
 order by offer_creation_date desc

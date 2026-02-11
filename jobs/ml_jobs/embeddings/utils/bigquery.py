@@ -15,11 +15,13 @@ def load_data(
     input_dataset_name: str,
     input_table_name: str,
     max_rows_to_process: int,
+    reembed_all: bool = False,
 ) -> pd.DataFrame:
     # If max_rows_to_process is -1, we will process all data.
     limit = f" LIMIT {max_rows_to_process} " if max_rows_to_process > 0 else ""
+    reembed_condition = "WHERE to_embed" if not reembed_all else ""
     return pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.{input_dataset_name}.{input_table_name}` {limit} "
+        f"SELECT * FROM `{gcp_project}.{input_dataset_name}.{input_table_name}` {reembed_condition} {limit}",
     )
 
 

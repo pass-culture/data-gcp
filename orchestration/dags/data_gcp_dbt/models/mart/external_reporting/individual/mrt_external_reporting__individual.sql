@@ -17,6 +17,7 @@
     "deposit_usage",
     "diversity",
     "finance",
+    "booking",
 ] %}
 
 {% for model in models %}

@@ -22,7 +22,7 @@ title: Metrics
 {% docs column__total_current_year_collective_real_revenue %}The total real revenue from collective bookings for the current year.{% enddocs %}
 {% docs column__total_current_year_non_cancelled_tickets %} Total number of tickets that were not cancelled in the current year. {% enddocs %}
 {% docs column__total_current_year_real_revenue %} Total real revenue for the current year. {% enddocs %}
-{% docs column__total_current_year_tickets %}The total number of tickets for the current year.{% enddocs %}
+{% docs column__total_current_scholar_year_tickets %}The total number of tickets for the current scholar year.{% enddocs %}
 {% docs column__total_current_year_non_cancelled_collective_bookings %} The total non cancelled collective bookings for the current year. {% enddocs %}
 {% docs column__total_current_year_collective_theoretic_revenue %} Total collective theoretical revenue for the current year. {% enddocs %}
 {% docs column__total_current_year_used_collective_bookings %} Total collective used bookings for the current year. {% enddocs %}

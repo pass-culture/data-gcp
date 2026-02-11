@@ -25,7 +25,11 @@ select
     gtl_label_level_3,
     gtl_label_level_4,
     offer_type_label,
-    offer_type_labels,
     offer_sub_type_label,
-    offer_video_url
+    offer_video_url,
+    -- Sort the array elements alphabetically to ensure the hash remains the same
+    -- regardless of the order they were originally inserted.
+    array(
+        select label from unnest(offer_type_labels) as label order by label
+    ) as offer_type_labels
 from {{ ref("int_applicative__offer_metadata") }}

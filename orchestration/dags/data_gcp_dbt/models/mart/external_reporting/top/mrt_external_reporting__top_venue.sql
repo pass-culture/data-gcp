@@ -8,7 +8,7 @@
     )
 }}
 
-{% set dimensions = get_dimensions("venue", "geo") %}
+{% set dimensions = get_dimensions("venue", "geo_full") %}
 
 with
     base_aggregation as (
@@ -20,6 +20,8 @@ with
             offerer_name,
             venue_region_name,
             venue_department_name,
+            venue_epci,
+            venue_city,
             sum(booking_intermediary_amount) as total_venue_booking_amount
         from {{ ref("mrt_global__booking") }}
         where
@@ -35,7 +37,9 @@ with
             venue_name,
             offerer_name,
             venue_region_name,
-            venue_department_name
+            venue_department_name,
+            venue_epci,
+            venue_city
     ),
 
     all_dimensions as (

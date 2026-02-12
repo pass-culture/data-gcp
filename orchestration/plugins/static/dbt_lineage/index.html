@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dbt Lineage Graph</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0b111b;
+            color: #e2e8f0;
+            overflow: hidden;
+        }
+
+        #container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #graph-container {
+            flex: 1;
+            position: relative;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            background: #0b111b;
+        }
+
+        /* Tier labels */
+        .tier-label {
+            font-size: 14px;
+            font-weight: 600;
+            fill: #64748b;
+            text-anchor: middle;
+        }
+
+        .tier-line {
+            stroke: #1e293b;
+            stroke-width: 1;
+            stroke-dasharray: 4,4;
+        }
+
+        /* Nodes */
+        .node circle {
+            cursor: pointer;
+            stroke: #1e293b;
+            stroke-width: 2;
+            transition: stroke-width 0.2s;
+        }
+
+        .node circle:hover {
+            stroke-width: 3;
+            stroke: #fff;
+        }
+
+        .node text {
+            font-size: 11px;
+            fill: #94a3b8;
+            pointer-events: none;
+        }
+
+        .node.selected circle {
+            stroke: #3b82f6;
+            stroke-width: 4;
+        }
+
+        .node.dimmed {
+            opacity: 0.15;
+        }
+
+        .node.highlighted {
+            opacity: 1;
+        }
+
+        /* Links */
+        .link {
+            fill: none;
+            stroke: #475569;
+            stroke-opacity: 0.3;
+            transition: stroke-opacity 0.3s, stroke 0.3s;
+        }
+
+        .link.dimmed {
+            stroke-opacity: 0.05;
+        }
+
+        .link.highlighted {
+            stroke: #3b82f6;
+            stroke-opacity: 1;
+            stroke-width: 2;
+        }
+
+        .link.highlighted-incoming {
+            stroke: #ef4444;
+            stroke-opacity: 1;
+            stroke-width: 2;
+        }
+
+        .link-arrow {
+            fill: #475569;
+            opacity: 0.3;
+        }
+
+        .link-arrow.highlighted {
+            fill: #3b82f6;
+            opacity: 1;
+        }
+
+        .link-arrow.highlighted-incoming {
+            fill: #ef4444;
+            opacity: 1;
+        }
+
+        /* Side Panel */
+        #side-panel {
+            width: 400px;
+            background: #111827;
+            border-left: 1px solid #1e293b;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        #side-panel.open {
+            transform: translateX(0);
+        }
+
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .panel-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f1f5f9;
+            word-break: break-word;
+        }
+
+        .panel-header .meta {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px 8px;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #f1f5f9;
+        }
+
+        .panel-search {
+            padding: 12px 20px;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .panel-search input {
+            width: 100%;
+            padding: 10px 12px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #e2e8f0;
+            font-size: 14px;
+        }
+
+        .panel-search input::placeholder {
+            color: #64748b;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+        }
+
+        .model-group {
+            margin-bottom: 20px;
+        }
+
+        .model-group h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .model-item {
+            padding: 10px 12px;
+            background: #1e293b;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+
+        .model-item .name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+
+        .model-item .details {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .model-item .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-right: 6px;
+        }
+
+        .badge-table { background: #1e40af; color: #93c5fd; }
+        .badge-view { background: #065f46; color: #6ee7b7; }
+        .badge-incremental { background: #7c2d12; color: #fdba74; }
+        .badge-ephemeral { background: #4c1d95; color: #c4b5fd; }
+        .badge-source { background: #831843; color: #f9a8d4; }
+
+        /* Control Panel */
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #111827;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 16px;
+            width: 280px;
+            z-index: 50;
+            max-height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+
+        .control-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .control-toggle {
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* Tabs */
+        .tabs-header {
+            display: flex;
+            border-bottom: 1px solid #1e293b;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 6px 4px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .tab-btn:hover { color: #e2e8f0; }
+
+        .tab-btn.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+
+        .tab-pane {
+            display: none;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .tab-pane.active { display: block; }
+
+        .control-section {
+            margin-bottom: 16px;
+        }
+
+        .control-section h4 {
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .control-row label {
+            flex: 1;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .control-row input[type="range"] {
+            width: 100px;
+            margin: 0 8px;
+        }
+
+        .control-row .value {
+            width: 50px;
+            text-align: right;
+            font-size: 12px;
+            font-family: monospace;
+            color: #64748b;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-primary:disabled {
+            background: #1e3a5f;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Status indicator */
+        #status {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: #111827;
+            border: 1px solid #1e293b;
+            border-radius: 6px;
+            padding: 10px 16px;
+            font-size: 13px;
+            z-index: 50;
+        }
+
+        #status.loading {
+            color: #fbbf24;
+        }
+
+        #status.ready {
+            color: #34d399;
+        }
+
+        #status.error {
+            color: #f87171;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 13px;
+            pointer-events: none;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .tooltip .title {
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 4px;
+        }
+
+        .tooltip .info {
+            color: #94a3b8;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #334155;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Pyodide section */
+        #pyodide-section {
+            border-top: 1px solid #1e293b;
+            padding-top: 12px;
+            margin-top: 12px;
+        }
+
+        #pyodide-status {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        /* Force exemptions panel */
+        #exemptions-section {
+            border-top: 1px solid #1e293b;
+            padding-top: 12px;
+            margin-top: 12px;
+        }
+
+        .exemption-force {
+            margin-bottom: 6px;
+            border: 1px solid #1e293b;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .exemption-force-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            background: #1e293b;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            user-select: none;
+        }
+
+        .exemption-force-header:hover { color: #e2e8f0; }
+
+        .exemption-force-header .badge-count {
+            background: #334155;
+            color: #3b82f6;
+            border-radius: 10px;
+            padding: 1px 6px;
+            font-size: 10px;
+        }
+
+        .exemption-force-body {
+            display: none;
+            padding: 6px 8px;
+            background: #0f172a;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .exemption-force-body.open { display: block; }
+
+        .exemption-search {
+            width: 100%;
+            padding: 4px 8px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-size: 11px;
+            margin-bottom: 6px;
+        }
+
+        .exemption-node-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 0;
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        .exemption-node-row input[type="checkbox"] { accent-color: #3b82f6; }
+        .exemption-node-row label { cursor: pointer; flex: 1; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="graph-container">
+            <svg id="viz"></svg>
+        </div>
+        <div id="side-panel">
+            <div class="panel-header">
+                <div>
+                    <h2 id="panel-title">Folder Name</h2>
+                    <div class="meta" id="panel-meta">0 models | Tier: Staging</div>
+                </div>
+                <button class="close-btn" onclick="closePanel()">&times;</button>
+            </div>
+            <div class="panel-search">
+                <input type="text" id="model-search" placeholder="Search models..." oninput="filterModels()">
+            </div>
+            <div class="panel-content" id="panel-models"></div>
+        </div>
+    </div>
+
+    <div id="controls">
+        <div class="control-header">
+            <h3>Controls</h3>
+            <button class="control-toggle" onclick="toggleControls()">Collapse</button>
+        </div>
+        <div id="control-body">
+            <div class="tabs-header">
+                <button class="tab-btn active" id="tab-btn-sim" onclick="switchTab('sim')">Simulation</button>
+                <button class="tab-btn" id="tab-btn-exempt" onclick="switchTab('exempt')">Force Exemptions</button>
+            </div>
+
+            <!-- Tab: Simulation -->
+            <div class="tab-pane active" id="tab-sim">
+                <div class="control-section">
+                    <h4>View</h4>
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="resetView()">Reset View</button>
+                        <button class="btn btn-secondary" onclick="centerGraph()">Center</button>
+                    </div>
+                </div>
+                <div id="pyodide-section">
+                    <h4>Live Simulation (Pyodide)</h4>
+                    <div id="pyodide-status">Not loaded</div>
+                    <button class="btn btn-primary" id="load-pyodide-btn" onclick="initPyodide()">Load Python Runtime</button>
+                    <div id="force-controls" style="display: none; margin-top: 12px;">
+                        <div id="force-sliders"></div>
+                        <div class="btn-group" style="margin-top: 12px;">
+                            <button class="btn btn-primary" id="resimulate-btn" onclick="reSimulate()">Re-simulate</button>
+                            <button class="btn btn-secondary" onclick="resetForces()">Reset</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Force Exemptions -->
+            <div class="tab-pane" id="tab-exempt">
+                <div id="exemption-forces">
+                    <p style="color:#64748b;font-size:12px;">Load Python Runtime first to enable exemptions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="status" class="loading">
+        <span class="spinner"></span>Loading visualization...
+    </div>
+
+    <div class="tooltip" id="tooltip" style="display: none;"></div>
+
+    <script>
+        // Global state
+        let vizData = null;
+        let appConfig = null;
+        let pyodide = null;
+        let selectedNode = null;
+        let svg, g, zoom;
+        let nodeElements, linkElements;
+
+        // Force configuration - loaded from config.json
+        let FORCE_CONFIG = null;
+
+        // Load config.json (generated from config.yaml)
+        async function loadConfig() {
+            const response = await fetch('data/config.json');
+            if (!response.ok) {
+                console.warn('config.json not found, using fallback defaults');
+                return null;
+            }
+            return response.json();
+        }
+
+        // Build FORCE_CONFIG from config.json forces section
+        function buildForceConfig(config) {
+            const fc = {};
+            fc.width = config.project.dimensions.width;
+            fc.height = config.project.dimensions.height;
+            for (const [key, param] of Object.entries(config.forces)) {
+                fc[key] = param.val;
+            }
+            return fc;
+        }
+
+        // Match a node ID to the best-fitting tier index using config.tiers patterns.
+        // Mirrors the scoring logic described in config.yaml:
+        //   exact      → priority + 100 + len(pattern)
+        //   startswith → priority + 50  + len(pattern)
+        //   endswith   → priority + 40  + len(pattern)
+        //   contains   → priority + 0   + len(pattern)
+        // Returns the tier index with the highest score, or the node's original
+        // pre-computed index as fallback when no pattern matches.
+        function matchTier(nodeId, tiers, fallbackIdx) {
+            if (!tiers || !tiers.length) return fallbackIdx;
+            let bestIdx = -1;
+            let bestScore = -1;
+            tiers.forEach((tier, idx) => {
+                const patterns = Array.isArray(tier.patterns) ? tier.patterns : [];
+                patterns.forEach(p => {
+                    // Support both new format {value, type, priority} and legacy string
+                    const value    = typeof p === 'string' ? p : p.value;
+                    const type     = typeof p === 'string' ? 'contains' : (p.type || 'contains');
+                    const priority = typeof p === 'string' ? 0 : (p.priority || 0);
+                    let typeBonus = 0;
+                    let matched = false;
+                    switch (type) {
+                        case 'exact':      matched = nodeId === value;             typeBonus = 100; break;
+                        case 'startswith': matched = nodeId.startsWith(value);     typeBonus = 50;  break;
+                        case 'endswith':   matched = nodeId.endsWith(value);       typeBonus = 40;  break;
+                        case 'contains':   matched = nodeId.includes(value);       typeBonus = 0;   break;
+                    }
+                    if (matched) {
+                        const score = priority + typeBonus + value.length;
+                        if (score > bestScore) { bestScore = score; bestIdx = idx; }
+                    }
+                });
+            });
+            return bestIdx >= 0 ? bestIdx : fallbackIdx;
+        }
+
+        // Resolve the tier index for a node, preferring live config patterns over
+        // the stale pre-computed index stored in viz_data.json.
+        function nodeTierIdx(d) {
+            return matchTier(d.id, appConfig?.tiers, d.tier);
+        }
+
+        // Resolve the tier label for a node.
+        function nodeTierLabel(d) {
+            const tiers = appConfig?.tiers || vizData?.tiers || [];
+            return tiers[nodeTierIdx(d)]?.label || 'Unknown';
+        }
+
+        // Generate slider controls dynamically from config.forces
+        function buildForceSliders(config) {
+            const container = document.getElementById('force-sliders');
+            container.innerHTML = '';
+
+            for (const [key, param] of Object.entries(config.forces)) {
+                if (param.min === undefined) continue; // Skip params without UI metadata
+
+                const row = document.createElement('div');
+                row.className = 'control-row';
+
+                const label = document.createElement('label');
+                label.textContent = param.label || key;
+
+                const slider = document.createElement('input');
+                slider.type = 'range';
+                slider.id = `slider-${key}`;
+                slider.min = param.min;
+                slider.max = param.max;
+                slider.step = param.step;
+                slider.value = param.val;
+                slider.oninput = () => {
+                    valueSpan.textContent = parseFloat(slider.value).toFixed(
+                        param.step < 1 ? Math.max(1, -Math.floor(Math.log10(param.step))) : 0
+                    );
+                };
+
+                const valueSpan = document.createElement('span');
+                valueSpan.className = 'value';
+                valueSpan.id = `value-${key}`;
+                valueSpan.textContent = parseFloat(param.val).toFixed(
+                    param.step < 1 ? Math.max(1, -Math.floor(Math.log10(param.step))) : 0
+                );
+
+                row.appendChild(label);
+                row.appendChild(slider);
+                row.appendChild(valueSpan);
+                container.appendChild(row);
+            }
+        }
+
+        const FORCE_LABELS = {
+            repulsion:  'Repulsion',
+            attraction: 'Attraction',
+            hierarchy:  'Hierarchy',
+            collision:  'Collision',
+            tier:       'Tier Lock',
+            gravity:    'Y Gravity',
+        };
+
+        // Build the Force Exemptions panel — one collapsible section per force,
+        // each listing all nodes as checkboxes. Defaults come from config.disabled_forces.
+        function buildExemptionPanel(config) {
+            const container = document.getElementById('exemption-forces');
+            container.innerHTML = '';
+
+            const nodeIds = vizData.nodes.map(n => n.id).sort();
+            const defaults = config.disabled_forces || {};
+
+            for (const [force, label] of Object.entries(FORCE_LABELS)) {
+                const disabled = new Set(defaults[force] || []);
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'exemption-force';
+                wrapper.dataset.force = force;
+
+                // Header
+                const header = document.createElement('div');
+                header.className = 'exemption-force-header';
+                header.innerHTML = `<span>${label}</span><span class="badge-count" id="badge-${force}">0</span>`;
+                header.onclick = () => {
+                    body.classList.toggle('open');
+                    header.querySelector('.badge-count').textContent = getDisabledForNodes(force).length;
+                };
+
+                // Body
+                const body = document.createElement('div');
+                body.className = 'exemption-force-body';
+
+                // Search
+                const search = document.createElement('input');
+                search.type = 'text';
+                search.className = 'exemption-search';
+                search.placeholder = 'Filter nodes…';
+                search.oninput = () => {
+                    const q = search.value.toLowerCase();
+                    body.querySelectorAll('.exemption-node-row').forEach(row => {
+                        row.style.display = row.dataset.id.includes(q) ? '' : 'none';
+                    });
+                };
+                body.appendChild(search);
+
+                // Node rows
+                nodeIds.forEach(nodeId => {
+                    const row = document.createElement('div');
+                    row.className = 'exemption-node-row';
+                    row.dataset.id = nodeId;
+
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.id = `exempt-${force}-${nodeId}`;
+                    cb.checked = disabled.has(nodeId);
+                    cb.onchange = () => updateBadge(force);
+
+                    const lbl = document.createElement('label');
+                    lbl.htmlFor = cb.id;
+                    lbl.textContent = nodeId;
+
+                    row.appendChild(cb);
+                    row.appendChild(lbl);
+                    body.appendChild(row);
+                });
+
+                wrapper.appendChild(header);
+                wrapper.appendChild(body);
+                container.appendChild(wrapper);
+
+                // Set initial badge
+                updateBadge(force);
+            }
+        }
+
+        function updateBadge(force) {
+            const badge = document.getElementById(`badge-${force}`);
+            if (badge) badge.textContent = getDisabledForNodes(force).length;
+        }
+
+        function getDisabledForNodes(force) {
+            return Array.from(
+                document.querySelectorAll(`#exemption-forces [data-force="${force}"] input:checked`)
+            ).map(cb => cb.id.replace(`exempt-${force}-`, ''));
+        }
+
+        // Collect current exemption state from all checkboxes
+        function getDisabledForces() {
+            const result = {};
+            for (const force of Object.keys(FORCE_LABELS)) {
+                result[force] = getDisabledForNodes(force);
+            }
+            return result;
+        }
+
+        // Initialize visualization
+        async function init() {
+            try {
+                updateStatus('loading', 'Loading configuration...');
+
+                // Load config first
+                appConfig = await loadConfig();
+                if (appConfig) {
+                    FORCE_CONFIG = buildForceConfig(appConfig);
+                    buildForceSliders(appConfig);
+                } else {
+                    // Fallback defaults if config.json missing
+                    FORCE_CONFIG = { width: 1920, height: 1080 };
+                }
+
+                updateStatus('loading', 'Loading visualization data...');
+
+                // Load pre-computed data
+                const response = await fetch('data/viz_data_with_layout.json');
+                if (!response.ok) {
+                    throw new Error(`Failed to load data: ${response.status}`);
+                }
+                vizData = await response.json();
+
+                updateStatus('ready', `Loaded ${vizData.nodes.length} folders, ${vizData.links.length} dependencies`);
+
+                // Render the graph
+                renderGraph();
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                updateStatus('error', `Error: ${error.message}`);
+            }
+        }
+
+        function updateStatus(type, message) {
+            const status = document.getElementById('status');
+            status.className = type;
+            status.innerHTML = type === 'loading'
+                ? `<span class="spinner"></span>${message}`
+                : message;
+        }
+
+        function renderGraph() {
+            const container = document.getElementById('graph-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            svg = d3.select('#viz')
+                .attr('viewBox', `0 0 ${FORCE_CONFIG.width} ${FORCE_CONFIG.height}`);
+
+            // Clear existing content
+            svg.selectAll('*').remove();
+
+            // Create main group for zoom/pan
+            g = svg.append('g');
+
+            // Setup zoom
+            zoom = d3.zoom()
+                .scaleExtent([0.1, 5])
+                .on('zoom', (event) => {
+                    g.attr('transform', event.transform);
+                });
+
+            svg.call(zoom);
+
+            // Draw tier lines and labels
+            drawTiers();
+
+            // Draw links
+            const linkGroup = g.append('g').attr('class', 'links');
+            linkElements = linkGroup.selectAll('.link')
+                .data(vizData.links)
+                .enter()
+                .append('path')
+                .attr('class', 'link')
+                .attr('d', d => createLinkPath(d))
+                .attr('stroke-width', d => 1 + Math.sqrt(d.value));
+
+            // Add arrowhead markers
+            const defs = svg.append('defs');
+
+            // Default arrowhead (gray)
+            defs.append('marker')
+                .attr('id', 'arrowhead')
+                .attr('viewBox', '-0 -5 10 10')
+                .attr('refX', 20)
+                .attr('refY', 0)
+                .attr('orient', 'auto')
+                .attr('markerWidth', 8)
+                .attr('markerHeight', 8)
+                .append('path')
+                .attr('d', 'M 0,-5 L 10,0 L 0,5')
+                .attr('fill', '#475569');
+
+            // Outgoing arrowhead (blue)
+            defs.append('marker')
+                .attr('id', 'arrowhead-highlighted')
+                .attr('viewBox', '-0 -5 10 10')
+                .attr('refX', 20)
+                .attr('refY', 0)
+                .attr('orient', 'auto')
+                .attr('markerWidth', 8)
+                .attr('markerHeight', 8)
+                .append('path')
+                .attr('d', 'M 0,-5 L 10,0 L 0,5')
+                .attr('fill', '#3b82f6');
+
+            // Incoming arrowhead (red)
+            defs.append('marker')
+                .attr('id', 'arrowhead-incoming')
+                .attr('viewBox', '-0 -5 10 10')
+                .attr('refX', 20)
+                .attr('refY', 0)
+                .attr('orient', 'auto')
+                .attr('markerWidth', 8)
+                .attr('markerHeight', 8)
+                .append('path')
+                .attr('d', 'M 0,-5 L 10,0 L 0,5')
+                .attr('fill', '#ef4444');
+
+            linkElements.attr('marker-end', 'url(#arrowhead)');
+
+            // Draw nodes
+            const nodeGroup = g.append('g').attr('class', 'nodes');
+            nodeElements = nodeGroup.selectAll('.node')
+                .data(vizData.nodes)
+                .enter()
+                .append('g')
+                .attr('class', 'node')
+                .attr('transform', d => `translate(${d.x}, ${d.y})`)
+                .call(d3.drag()
+                    .on('start', dragStarted)
+                    .on('drag', dragged)
+                    .on('end', dragEnded))
+                .on('click', nodeClicked)
+                .on('mouseenter', showTooltip)
+                .on('mouseleave', hideTooltip);
+
+            // Node circles
+            nodeElements.append('circle')
+                .attr('r', d => 5 + Math.sqrt(d.count) * 2)
+                .attr('fill', d => d.color);
+
+            // Node labels
+            nodeElements.append('text')
+                .attr('x', 12)
+                .attr('y', 4)
+                .text(d => d.id.split('/').pop());
+
+            // Fit to view
+            fitToView();
+        }
+
+        function drawTiers() {
+            const tierGroup = g.append('g').attr('class', 'tiers');
+
+            const tiers = appConfig?.tiers || vizData.tiers;
+            tiers.forEach((tier, i) => {
+                const x = tier.x_percent * FORCE_CONFIG.width;
+
+                // Tier line
+                tierGroup.append('line')
+                    .attr('class', 'tier-line')
+                    .attr('x1', x)
+                    .attr('y1', 30)
+                    .attr('x2', x)
+                    .attr('y2', FORCE_CONFIG.height - 30);
+
+                // Tier label
+                tierGroup.append('text')
+                    .attr('class', 'tier-label')
+                    .attr('x', x)
+                    .attr('y', 20)
+                    .text(tier.label);
+            });
+        }
+
+        function createLinkPath(d) {
+            const source = vizData.nodes.find(n => n.id === d.source);
+            const target = vizData.nodes.find(n => n.id === d.target);
+
+            if (!source || !target) return '';
+
+            const dx = target.x - source.x;
+            const dy = target.y - source.y;
+            const dr = Math.sqrt(dx * dx + dy * dy) * 0.5;
+
+            // Curved path
+            return `M${source.x},${source.y}Q${(source.x + target.x) / 2},${(source.y + target.y) / 2 - dr * 0.3} ${target.x},${target.y}`;
+        }
+
+        // Drag behavior
+        let dragStartPos = null;
+        let wasDragged = false;
+
+        function dragStarted(event, d) {
+            dragStartPos = { x: event.x, y: event.y };
+            wasDragged = false;
+        }
+
+        function dragged(event, d) {
+            const dist = Math.sqrt(
+                Math.pow(event.x - dragStartPos.x, 2) +
+                Math.pow(event.y - dragStartPos.y, 2)
+            );
+            if (dist > 5) wasDragged = true;
+
+            d.x = event.x;
+            d.y = event.y;
+            d3.select(this).attr('transform', `translate(${d.x}, ${d.y})`);
+
+            // Update connected links
+            linkElements
+                .filter(l => l.source === d.id || l.target === d.id)
+                .attr('d', l => createLinkPath(l));
+        }
+
+        function dragEnded(event, d) {
+            if (!wasDragged) {
+                nodeClicked.call(this, event, d);
+            }
+        }
+
+        function nodeClicked(event, d) {
+            event.stopPropagation();
+
+            if (selectedNode === d) {
+                clearSelection();
+                return;
+            }
+
+            selectedNode = d;
+            highlightConnections(d);
+            openPanel(d);
+        }
+
+        function highlightConnections(node) {
+            // Find connected nodes
+            const upstreamIds = new Set();
+            const downstreamIds = new Set();
+
+            vizData.links.forEach(l => {
+                if (l.target === node.id) upstreamIds.add(l.source);
+                if (l.source === node.id) downstreamIds.add(l.target);
+            });
+
+            const connectedIds = new Set([node.id, ...upstreamIds, ...downstreamIds]);
+
+            // Update node styles
+            nodeElements
+                .classed('selected', d => d.id === node.id)
+                .classed('highlighted', d => connectedIds.has(d.id))
+                .classed('dimmed', d => !connectedIds.has(d.id));
+
+            // Update link styles - incoming edges are red, outgoing are blue
+            linkElements
+                .classed('highlighted-incoming', l => l.target === node.id)
+                .classed('highlighted', l => l.source === node.id)
+                .classed('dimmed', l => l.source !== node.id && l.target !== node.id)
+                .attr('marker-end', l => {
+                    if (l.target === node.id) return 'url(#arrowhead-incoming)';
+                    if (l.source === node.id) return 'url(#arrowhead-highlighted)';
+                    return 'url(#arrowhead)';
+                });
+        }
+
+        function clearSelection() {
+            selectedNode = null;
+            nodeElements.classed('selected', false).classed('highlighted', false).classed('dimmed', false);
+            linkElements
+                .classed('highlighted', false)
+                .classed('highlighted-incoming', false)
+                .classed('dimmed', false)
+                .attr('marker-end', 'url(#arrowhead)');
+            closePanel();
+        }
+
+        // Side panel
+        function openPanel(node) {
+            const panel = document.getElementById('side-panel');
+            const title = document.getElementById('panel-title');
+            const meta = document.getElementById('panel-meta');
+            const tierLabel = nodeTierLabel(node);
+
+            title.textContent = node.id;
+            meta.textContent = `${node.count} models | Tier: ${tierLabel}`;
+
+            renderModels(node.models);
+            panel.classList.add('open');
+        }
+
+        function closePanel() {
+            document.getElementById('side-panel').classList.remove('open');
+            document.getElementById('model-search').value = '';
+        }
+
+        function renderModels(models, filter = '') {
+            const container = document.getElementById('panel-models');
+            const filtered = models.filter(m =>
+                m.name.toLowerCase().includes(filter.toLowerCase()) ||
+                m.description?.toLowerCase().includes(filter.toLowerCase())
+            );
+
+            // Group by materialization
+            const groups = {};
+            filtered.forEach(m => {
+                const mat = m.materialization || 'other';
+                if (!groups[mat]) groups[mat] = [];
+                groups[mat].push(m);
+            });
+
+            const icons = {
+                table: '📊',
+                view: '👁',
+                incremental: '📈',
+                ephemeral: '✨',
+                source: '📥',
+                snapshot: '📸',
+                other: '📄'
+            };
+
+            let html = '';
+            for (const [mat, items] of Object.entries(groups)) {
+                html += `<div class="model-group">
+                    <h3>${icons[mat] || '📄'} ${mat.charAt(0).toUpperCase() + mat.slice(1)} (${items.length})</h3>`;
+
+                items.forEach(m => {
+                    const badgeClass = `badge-${mat}`;
+                    html += `<div class="model-item">
+                        <div class="name">${m.name}</div>
+                        <div class="details">
+                            <span class="badge ${badgeClass}">${m.materialization}</span>
+                            ${m.upstream_count} upstream
+                            ${m.description ? `<br><small>${m.description.substring(0, 100)}${m.description.length > 100 ? '...' : ''}</small>` : ''}
+                        </div>
+                    </div>`;
+                });
+
+                html += '</div>';
+            }
+
+            container.innerHTML = html || '<p style="color: #64748b;">No models found</p>';
+        }
+
+        function filterModels() {
+            if (!selectedNode) return;
+            const filter = document.getElementById('model-search').value;
+            renderModels(selectedNode.models, filter);
+        }
+
+        // Tooltip
+        function showTooltip(event, d) {
+            const tooltip = document.getElementById('tooltip');
+            const tierLabel = nodeTierLabel(d);
+
+            tooltip.innerHTML = `
+                <div class="title">${d.id}</div>
+                <div class="info">${d.count} models | ${tierLabel}</div>
+            `;
+
+            tooltip.style.display = 'block';
+            tooltip.style.left = (event.pageX + 15) + 'px';
+            tooltip.style.top = (event.pageY - 10) + 'px';
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').style.display = 'none';
+        }
+
+        // View controls
+        function resetView() {
+            svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+            fitToView();
+        }
+
+        function centerGraph() {
+            const bounds = g.node().getBBox();
+            const centerX = bounds.x + bounds.width / 2;
+            const centerY = bounds.y + bounds.height / 2;
+
+            svg.transition().duration(500).call(
+                zoom.translateTo, centerX, centerY
+            );
+        }
+
+        function fitToView() {
+            const container = document.getElementById('graph-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            const bounds = g.node().getBBox();
+            const scale = Math.min(
+                width / (bounds.width + 100),
+                height / (bounds.height + 100)
+            ) * 0.9;
+
+            const centerX = bounds.x + bounds.width / 2;
+            const centerY = bounds.y + bounds.height / 2;
+
+            svg.transition().duration(500).call(
+                zoom.transform,
+                d3.zoomIdentity
+                    .translate(width / 2, height / 2)
+                    .scale(scale)
+                    .translate(-centerX, -centerY)
+            );
+        }
+
+        function toggleControls() {
+            const body = document.getElementById('control-body');
+            const btn = document.querySelector('.control-toggle');
+            if (body.style.display === 'none') {
+                body.style.display = 'flex';
+                body.style.flexDirection = 'column';
+                body.style.flex = '1';
+                body.style.overflow = 'hidden';
+                btn.textContent = 'Collapse';
+            } else {
+                body.style.display = 'none';
+                btn.textContent = 'Expand';
+            }
+        }
+
+        function switchTab(name) {
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${name}`).classList.add('active');
+            document.getElementById(`tab-btn-${name}`).classList.add('active');
+        }
+
+        // Pyodide integration
+        async function initPyodide() {
+            const btn = document.getElementById('load-pyodide-btn');
+            const status = document.getElementById('pyodide-status');
+
+            btn.disabled = true;
+            status.innerHTML = '<span class="spinner"></span>Loading Python runtime...';
+
+            try {
+                // Load Pyodide script first
+                await loadPyodideScript();
+
+                // Initialize Pyodide
+                status.innerHTML = '<span class="spinner"></span>Initializing Python...';
+                pyodide = await window.loadPyodide();
+
+                status.innerHTML = '<span class="spinner"></span>Loading numpy...';
+                await pyodide.loadPackage('numpy');
+
+                // Load layout algorithm (cache-bust to ensure fresh version)
+                status.innerHTML = '<span class="spinner"></span>Loading layout algorithm...';
+                const response = await fetch('data/layout_algorithm.py?v=' + Date.now());
+                if (!response.ok) throw new Error('Failed to load layout algorithm');
+                const layoutCode = await response.text();
+                await pyodide.runPythonAsync(layoutCode);
+
+                status.textContent = 'Python ready!';
+                status.style.color = '#34d399';
+
+                // Show force controls and build exemption panel
+                document.getElementById('force-controls').style.display = 'block';
+                if (appConfig) {
+                    buildExemptionPanel(appConfig);
+                    // Remove placeholder text now that panel is ready
+                    document.getElementById('tab-btn-exempt').textContent = 'Force Exemptions';
+                }
+                btn.style.display = 'none';
+
+            } catch (error) {
+                console.error('Pyodide error:', error);
+                status.textContent = `Error: ${error.message}`;
+                status.style.color = '#f87171';
+                btn.disabled = false;
+            }
+        }
+
+        async function reSimulate() {
+            if (!pyodide) return;
+
+            const btn = document.getElementById('resimulate-btn');
+            btn.disabled = true;
+            btn.textContent = 'Computing...';
+
+            try {
+                // Build config from slider values dynamically
+                const config = { ...FORCE_CONFIG };
+                if (appConfig) {
+                    for (const key of Object.keys(appConfig.forces)) {
+                        const slider = document.getElementById(`slider-${key}`);
+                        if (slider) {
+                            config[key] = parseFloat(slider.value);
+                        }
+                    }
+                }
+
+                // Prepare data for Python (toPy already converts JS -> Python)
+                pyodide.globals.set('nodes_data', pyodide.toPy(vizData.nodes));
+                pyodide.globals.set('links_data', pyodide.toPy(vizData.links));
+                pyodide.globals.set('struct_links_data', pyodide.toPy(vizData.struct_links || []));
+                pyodide.globals.set('tiers_data', pyodide.toPy(appConfig?.tiers || vizData.tiers));
+                pyodide.globals.set('config_data', pyodide.toPy(config));
+                pyodide.globals.set('disabled_forces_data', pyodide.toPy(getDisabledForces()));
+
+                // Run layout computation (data is already Python objects, no .to_py() needed)
+                const result = await pyodide.runPythonAsync(`
+import json
+positions = compute_layout(
+    list(nodes_data), list(links_data), list(struct_links_data), list(tiers_data),
+    dict(config_data), dict(disabled_forces_data)
+)
+json.dumps(positions)
+                `);
+
+                const positions = JSON.parse(result);
+
+                // Animate to new positions
+                vizData.nodes.forEach((node, i) => {
+                    node.x = positions[i][0];
+                    node.y = positions[i][1];
+                });
+
+                nodeElements.transition().duration(1000)
+                    .attr('transform', d => `translate(${d.x}, ${d.y})`);
+
+                linkElements.transition().duration(1000)
+                    .attr('d', d => createLinkPath(d));
+
+            } catch (error) {
+                console.error('Re-simulation error:', error);
+                alert('Error during re-simulation: ' + error.message);
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Re-simulate';
+        }
+
+        function resetForces() {
+            if (!appConfig) return;
+
+            // Reset sliders to config defaults
+            for (const [key, param] of Object.entries(appConfig.forces)) {
+                const slider = document.getElementById(`slider-${key}`);
+                const valueSpan = document.getElementById(`value-${key}`);
+                if (slider && valueSpan) {
+                    slider.value = param.val;
+                    valueSpan.textContent = parseFloat(param.val).toFixed(
+                        param.step < 1 ? Math.max(1, -Math.floor(Math.log10(param.step))) : 0
+                    );
+                }
+            }
+
+            // Reset exemption checkboxes to config defaults
+            const defaults = appConfig.disabled_forces || {};
+            for (const force of Object.keys(FORCE_LABELS)) {
+                const disabled = new Set(defaults[force] || []);
+                document.querySelectorAll(`#exemption-forces [data-force="${force}"] input[type="checkbox"]`)
+                    .forEach(cb => {
+                        const nodeId = cb.id.replace(`exempt-${force}-`, '');
+                        cb.checked = disabled.has(nodeId);
+                    });
+                updateBadge(force);
+            }
+        }
+
+        // Load Pyodide script
+        function loadPyodideScript() {
+            return new Promise((resolve, reject) => {
+                if (window.loadPyodide) {
+                    resolve();
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js';
+                script.onload = () => resolve();
+                script.onerror = () => reject(new Error('Failed to load Pyodide script'));
+                document.head.appendChild(script);
+            });
+        }
+
+        // Event listeners
+        svg?.addEventListener('click', (e) => {
+            if (e.target === svg || e.target === g?.node()) {
+                clearSelection();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                clearSelection();
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (vizData) fitToView();
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

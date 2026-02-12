@@ -1,0 +1,108 @@
+project:
+  name: "data_gcp_dbt"
+  dimensions:
+    width: 1920
+    height: 1080
+
+# Logic for grouping folders into horizontal columns
+# Matching strategy: Evaluate ALL patterns across ALL tiers, select the MOST SPECIFIC match
+# Pattern types define matching behavior:
+#   - "startswith": folder name starts with pattern (e.g., "src." matches "src.raw", "src.analytics")
+#   - "exact": folder name exactly equals pattern (e.g., "raw" matches only "raw", not "src.raw")
+#   - "contains": pattern appears anywhere in folder name (e.g., "analytics" matches "src.analytics")
+#   - "endswith": folder name ends with pattern
+# Priority scoring (higher = more specific, wins in case of multiple matches):
+#   - exact match: base priority + 100
+#   - startswith: base priority + 50
+#   - endswith: base priority + 40
+#   - contains: base priority + 0
+#   - longer patterns get bonus: +1 per character
+tiers:
+  - label: "Sources"
+    x_percent: 0.05
+    patterns:
+      - { value: "src.", type: "startswith", priority: 10 }
+  - label: "Bronze"
+    x_percent: 0.25
+    patterns:
+      - { value: "raw", type: "exact", priority: 10 }
+      - { value: "raw/applicative", type: "exact", priority: 10 }
+      - { value: "snapshot", type: "exact", priority: 10 }
+  - label: "Silver"
+    x_percent: 0.40
+    patterns:
+      - { value: "legacy/clean", type: "exact", priority: 100 }
+      - { value: "clean", type: "contains", priority: 10 }
+      - { value: "intermediate", type: "startswith", priority: 10 }
+  - label: "ML"
+    x_percent: 0.65
+    patterns:
+      - { value: "machine_learning", type: "startswith", priority: 10 }
+  - label: "Gold: Export / Mart"
+    x_percent: 0.90
+    patterns:
+      - { value: "mart/external_reporting", type: "startswith", priority: 10 }
+      - { value: "export", type: "contains", priority: 10 }
+      - { value: "mart", type: "startswith", priority: 10 }
+      - { value: "analytics", type: "startswith", priority: 5 }
+      - { value: "legacy", type: "startswith", priority: 10 }
+
+# Per-force node exemptions: list node IDs that should be excluded from each force.
+# These are the defaults loaded on startup; users can override them in the UI panel.
+# Supported forces: repulsion, attraction, hierarchy, collision, tier, gravity
+disabled_forces:
+  repulsion: []
+  attraction: ["src.raw","src.seed","src.appsflyer_import","src.clean"]
+  hierarchy: []
+  collision: []
+  tier: []
+  gravity: []
+
+# Simulation parameters AND UI definitions
+# key: [default_value, min, max, step, display_label]
+forces:
+  repulsion_x: { val: 300, min: 0, max: 1000, step: 10, label: "Repulsion X" }
+  repulsion_y: { val: 600, min: 0, max: 1000, step: 10, label: "Repulsion Y" }
+  attraction_x: { val: 1.0, min: 0, max: 5, step: 0.1, label: "Attraction X" }
+  attraction_y: { val: 0.0, min: 0, max: 5, step: 0.1, label: "Attraction Y" }
+  collision_radius: { val: 50, min: 10, max: 150, step: 5, label: "Collision Radius" }
+  collision_strength: { val: 5.0, min: 0, max: 20, step: 0.5, label: "Collision Strength" }
+  tier_stiffness: { val: 10.0, min: 0, max: 50, step: 1, label: "Tier Lock" }
+  center_gravity_y: { val: 0.05, min: 0, max: 0.5, step: 0.01, label: "Y Gravity" }
+  damping: { val: 0.8, min: 0.1, max: 1.0, step: 0.05, label: "Damping" }
+  flux_distance: { val: 35, min: 10, max: 100, step: 5, label: "Flux Distance" }
+  hierarchy_strength: { val: 3, min: 0, max: 5.0, step: 0.5, label: "Hierarchy Strength" }
+  hierarchy_distance: { val: 10, min: 0, max: 100, step: 5, label: "Hierarchy Distance" }
+  iterations: { val: 150, min: 10, max: 500, step: 10, label: "Iterations" }
+  initial_y_noise: { val: 200, min: 0, max: 500, step: 10, label: "Initial Y Noise" }
+  seed: { val: 42, min: 1, max: 100, step: 1, label: "Random Seed" }
+
+styling:
+  colors:
+    background: "#0b111b"
+    panel_bg: "#111827"
+    text_main: "#e2e8f0"
+    text_dim: "#64748b"
+    accent_blue: "#3b82f6"
+    tier_line: "#1e293b"
+    mapping:
+      "src.": "#ff5f6d"
+      "snapshot": "#bd93f9"
+      "raw": "#ffb86c"
+      "machine_learning": "#50fa7b"
+      "intermediate": "#2193b0"
+      "mart/external_reporting": "#ffc371"
+      "export": "#f1fa8c"
+      "mart": "#6dd5ed"
+      "legacy": "#94a3b8"
+      "analytics": "#94a3b8"
+      "clean": "#94a3b8"
+      "staging": "#8be9fd"
+      "root": "#64748b"
+  nodes:
+    base_radius: 5
+    scale_factor: 2
+  links:
+    opacity_normal: 0.3
+    opacity_dim: 0.05
+    stroke_color: "#475569"

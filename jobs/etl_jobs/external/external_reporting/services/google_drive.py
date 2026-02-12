@@ -243,7 +243,7 @@ class DriveUploadService:
 
         # Check if file already exists
         existing_file_id = self.file_exists(file_name, parent_folder_id)
-        
+
         # Upload new file
         file_metadata = {"name": file_name}
         if not existing_file_id:

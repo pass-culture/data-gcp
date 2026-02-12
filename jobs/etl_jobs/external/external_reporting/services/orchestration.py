@@ -52,7 +52,9 @@ class ReportOrchestrationService:
         report_name = context.get("report_name", "Unknown Report")
         stakeholder_name = context.get("stakeholder_name", "Unknown Stakeholder")
 
-        log_print.info(f"➡️  Processing {len(sheets)} sheets for {stakeholder_name} - {report_name}")
+        log_print.info(
+            f"➡️  Processing {len(sheets)} sheets for {stakeholder_name} - {report_name}"
+        )
 
         for sheet in sheets:
             try:
@@ -107,7 +109,9 @@ class ReportOrchestrationService:
         stakeholder_name = context.get("stakeholder_name", "Unknown Stakeholder")
 
         try:
-            log_print.debug(f"[{stakeholder_name}] [{report_name}] 📊 Processing sheet: {sheet.tab_name}")
+            log_print.debug(
+                f"[{stakeholder_name}] [{report_name}] 📊 Processing sheet: {sheet.tab_name}"
+            )
 
             # Step 1: Layout preprocessing (date column expansion)
             expansion_result = self._handle_layout_preprocessing(sheet, ds)
@@ -152,7 +156,9 @@ class ReportOrchestrationService:
                     f"{sheet_stats.tops_failed} tops failed"
                 )
             elif sheet.definition == "lexique":
-                log_print.debug(f"[{stakeholder_name}] [{report_name}] ✅ Completed sheet {sheet.tab_name}")
+                log_print.debug(
+                    f"[{stakeholder_name}] [{report_name}] ✅ Completed sheet {sheet.tab_name}"
+                )
 
             # Step 3: Delete template columns and Set title
             layout_type = self._get_layout_type(sheet)

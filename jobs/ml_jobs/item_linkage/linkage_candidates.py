@@ -20,7 +20,6 @@ from utils.common import (
 from utils.gcs_utils import upload_parquet
 
 app = typer.Typer()
-search_semaphore = asyncio.Semaphore(SEMAPHORE_RETRIEVAL)
 
 
 def load_model(model_path: str, linkage_type: str) -> SemanticSpace:
@@ -35,7 +34,8 @@ def load_model(model_path: str, linkage_type: str) -> SemanticSpace:
         SemanticSpace: The loaded model.
     """
     logger.info("Loading model...")
-    model = SemanticSpace(model_path, linkage_type)
+    # Model must be created inside async context (handled in main)
+    model = None
     logger.info("Model loaded.")
     return model
 
@@ -52,17 +52,20 @@ def build_filter_dict(row: pd.Series, filter: list) -> dict:
     """
     filters = {}
     for f in filter:
-        filters[f] = row[f]
+        filters[f] = getattr(row, f)
     return filters
 
 
 async def limited_search(model, vector, filters, n):
-    async with search_semaphore:
-        return await model.search(
-            vector=vector,
-            filters=filters,
-            n=n,
-        )
+    """
+    Wrapper around model.search with no global semaphore.
+    Concurrency is controlled inside SemanticSpace via SEMAPHORE_RETRIEVAL.
+    """
+    return await model.search(
+        vector=vector,
+        filters=filters,
+        n=n,
+    )
 
 
 async def generate_semantic_candidates(
@@ -81,38 +84,38 @@ async def generate_semantic_candidates(
     linkage = []
     logger.info(f"Generating semantic candidates for {len(data)} items...")
 
-    tasks = []
-    for index, row in tqdm(
-        data.iterrows(), total=data.shape[0], desc="Processing rows", mininterval=60
+    # IMPORTANT:
+    # We DO NOT create all tasks upfront anymore.
+    # We batch at creation time to avoid too many open files.
+
+    for i in tqdm(
+        range(0, len(data), BATCH_SIZE_RETRIEVAL),
+        desc="Processing batches",
+        mininterval=60,
     ):
-        tasks.append(
+        batch_df = data.iloc[i : i + BATCH_SIZE_RETRIEVAL]
+
+        tasks = [
             limited_search(
                 model=model,
                 vector=row.vector,
                 filters=build_filter_dict(row, RETRIEVAL_FILTERS),
                 n=NUM_RESULTS,
             )
-        )
+            for row in batch_df.itertuples()
+        ]
 
-    logger.info("Tasks ready!")
-    logger.info(f"Tasks length: {len(tasks)}")
+        batch_results = await asyncio.gather(*tasks)
 
-    results = []
-    for i in tqdm(range(0, len(tasks), BATCH_SIZE_RETRIEVAL), desc="Gathering batches"):
-        batch = tasks[i : i + BATCH_SIZE_RETRIEVAL]
-        batch_results = await asyncio.gather(*batch)
-        results.extend(batch_results)
-
-    logger.info("Finished gathering all batches!")
-
-    for result_df, row in zip(results, data.itertuples()):
-        result_df = result_df.assign(
-            candidates_id=str(uuid.uuid4()), item_id_candidate=row.item_id
-        )
-        linkage.append(result_df)
+        for result_df, row in zip(batch_results, batch_df.itertuples()):
+            result_df = result_df.assign(
+                candidates_id=str(uuid.uuid4()),
+                item_id_candidate=row.item_id,
+            )
+            linkage.append(result_df)
 
     logger.info(f"linkage length: {len(linkage)}")
-    return pd.concat(linkage)
+    return pd.concat(linkage, ignore_index=True)
 
 
 @app.command()
@@ -137,26 +140,46 @@ def main(
         input_path (str): The path to the table or file containing input data.
         output_path (str): The path where the output table will be saved.
     """
-    model = load_model(MODEL_PATH, linkage_type)
 
     tqdm.pandas()
     linkage_by_chunk = []
 
     async def process_chunks():
+
+        # Create model INSIDE async context (correct event loop lifecycle)
+        logger.info("Loading model...")
+        model = await SemanticSpace.create(
+            MODEL_PATH,
+            linkage_type,
+            max_concurrency=SEMAPHORE_RETRIEVAL,
+        )
+        logger.info("Model loaded.")
+
         for chunk in tqdm(read_parquet_in_batches_gcs(input_path, batch_size)):
             logger.info(f"chunk length: {len(chunk)} ")
-            linkage_candidates_chunk = await generate_semantic_candidates(model, chunk)
+
+            linkage_candidates_chunk = await generate_semantic_candidates(
+                model, chunk
+            )
+
             logger.info(
                 f"linkage_candidates_chunk length: {len(linkage_candidates_chunk)} "
             )
+
             linkage_by_chunk.append(linkage_candidates_chunk)
             logger.info(f"linkage_by_chunk length: {len(linkage_by_chunk)} ")
 
     asyncio.run(process_chunks())
-    linkage_candidates = pd.concat(linkage_by_chunk)
+
+    linkage_candidates = pd.concat(linkage_by_chunk, ignore_index=True)
+
     logger.info(f"linkage_candidates length: {len(linkage_candidates)} ")
     logger.info("Uploading linkage output..")
-    upload_parquet(dataframe=linkage_candidates, gcs_path=f"{output_path}/data.parquet")
+
+    upload_parquet(
+        dataframe=linkage_candidates,
+        gcs_path=f"{output_path}/data.parquet",
+    )
 
 
 if __name__ == "__main__":

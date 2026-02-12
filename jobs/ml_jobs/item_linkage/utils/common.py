@@ -93,13 +93,13 @@ def reduce_embeddings_and_store_reducer(embeddings: list, n_dim, reducer_path):
     DataFrame: DataFrame containing item IDs and normalized embeddings.
     """
     logger.info("Reducing embeddings and storing reducer...")
-    hnne = HNNE(dim=n_dim)
+    hnne = HNNE(n_components=n_dim)
     if os.path.exists(reducer_path):
         hnne = joblib.load(reducer_path)
         reduced_embeddings = list(hnne.transform(embeddings).astype(np.float32))
     else:
         reduced_embeddings = list(
-            hnne.fit_transform(embeddings, dim=n_dim).astype(np.float32)
+            hnne.fit_transform(embeddings).astype(np.float32)
         )
         joblib.dump(hnne, reducer_path)
 

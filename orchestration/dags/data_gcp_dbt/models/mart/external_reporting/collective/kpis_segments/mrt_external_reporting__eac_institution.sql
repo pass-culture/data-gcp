@@ -115,7 +115,8 @@ with recursive
     from base_data
     {% if is_incremental() %}
         where
-            partition_month = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month))
+            partition_month
+            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
     {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
 {% endfor %}

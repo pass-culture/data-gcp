@@ -4,7 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>dbt Lineage Graph</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- D3.js v7.9.0 -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"
+        integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i"
+        crossorigin="anonymous">
+    </script>
+
+    <!-- JS-YAML v4.1.0 -->
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"
+        integrity="sha384-+pxiN6T7yvpryuJmE1gM9PX7yQit15auDb+ZwwvJOd/4be2Cie5/IuVXgQb/S9du"
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer">
+    </script>
     <style>
         * {
             margin: 0;
@@ -1401,7 +1414,7 @@ json.dumps(positions)
             }
         }
 
-        // Load Pyodide script
+        // Load Pyodide script securely
         function loadPyodideScript() {
             return new Promise((resolve, reject) => {
                 if (window.loadPyodide) {
@@ -1411,8 +1424,13 @@ json.dumps(positions)
 
                 const script = document.createElement('script');
                 script.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js';
+
+                // Security Attributes: Integrity and Cross-Origin
+                script.integrity = 'sha384-KQtL+EUxNlEbNm6gFVMiDz6Glmgq4QV4VZdSHIrcpw4tCRUGtjUeLJbuQAIfxFfM';
+                script.setAttribute('crossorigin', 'anonymous');
+
                 script.onload = () => resolve();
-                script.onerror = () => reject(new Error('Failed to load Pyodide script'));
+                script.onerror = () => reject(new Error('Failed to load Pyodide script: SRI validation failed or network error.'));
                 document.head.appendChild(script);
             });
         }

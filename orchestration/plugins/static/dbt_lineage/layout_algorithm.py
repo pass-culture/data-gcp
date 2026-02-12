@@ -15,6 +15,7 @@ The algorithm applies multiple forces:
 
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -539,6 +540,78 @@ def generate_layout(
     output_dir = os.path.dirname(output_path)
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
+
+    # Fallback: Generate viz_data.json if missing
+    if not os.path.exists(input_path):
+        print(f"Input {input_path} not found. Attempting to generate from manifest...")
+        try:
+            # Import dynamically to avoid top-level dependency
+            try:
+                from .generate_viz_data import (
+                    load_config as load_raw_config,
+                )
+                from .generate_viz_data import (
+                    parse_manifest,
+                )
+            except ImportError:
+                # Fallback for when running as script or different context
+                sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+                from generate_viz_data import (
+                    load_config as load_raw_config,
+                )
+                from generate_viz_data import (
+                    parse_manifest,
+                )
+
+            airflow_home = get_airflow_home()
+            manifest_path = None
+
+            # Search paths for manifest.json
+            candidates = [
+                Path(airflow_home) / "dags/data_gcp_dbt/target/manifest.json",
+                Path(airflow_home) / "dags/target/manifest.json",
+                Path("/opt/airflow/dags/data_gcp_dbt/target/manifest.json"),
+                Path("target/manifest.json"),
+            ]
+
+            for candidate in candidates:
+                if candidate.is_file():
+                    manifest_path = candidate
+                    break
+
+            if not manifest_path:
+                print(f"Warning: Manifest not found in {candidates}")
+                raise FileNotFoundError(
+                    "viz_data.json missing and manifest.json not found."
+                )
+
+            # Load config.yaml (raw)
+            config_path = (
+                Path(os.path.dirname(os.path.abspath(__file__))) / "config.yaml"
+            )
+            if not config_path.is_file():
+                # Try relative to airflow home plugin dir
+                config_path = (
+                    Path(airflow_home) / "plugins/static/dbt_lineage/config.yaml"
+                )
+
+            if not config_path.is_file():
+                raise FileNotFoundError("config.yaml not found for generation")
+
+            viz_config = load_raw_config(str(config_path))
+            viz_data = parse_manifest(str(manifest_path), viz_config)
+
+            # Save generated data
+            with open(input_path, "w") as f:
+                json.dump(viz_data, f, indent=2)
+            print(f"Successfully generated {input_path}")
+
+        except Exception as e:
+            print(f"Generation fallback failed: {e}")
+            # Raise original error type (FileNotFoundError) for input_path
+            raise FileNotFoundError(
+                f"Input file {input_path} not found and generation failed: {e}"
+            )
 
     # Load viz data
     with open(input_path, "r") as f:

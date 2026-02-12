@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 from airflow.decorators import dag, task
+from airflow.models.param import Param
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -50,21 +51,49 @@ DAG_CONFIG = {"TOKENIZERS_PARALLELISM": "false"}
     dagrun_timeout=timedelta(hours=20),
     user_defined_macros=None,  # Replace with actual macros if needed
     tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
+    params={
+        "branch": Param(
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            type="string",
+            description="Branch to use for installation",
+        ),
+        "instance_type": Param(
+            default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-32",
+            type="string",
+            description="GCE Instance Type",
+        ),
+        "config_file_name": Param(
+            default="default-config-item",
+            type="string",
+            description="Config file name",
+        ),
+        "batch_size": Param(
+            default=5000,
+            type="integer",
+            description="Batch size",
+        ),
+        "max_rows_to_process": Param(
+            default=100000 if ENV_SHORT_NAME == "prod" else 15000,
+            type="integer",
+            description="Max rows to process",
+        ),
+        "reembed_all_items": Param(
+            default=False,
+            type="boolean",
+            description="Whether to re-embed all items",
+        ),
+    },
 )
-def extract_embedding_item_dag(
-    branch="production" if ENV_SHORT_NAME == "prod" else "master",
-    instance_type="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-32",
-    config_file_name="default-config-item",
-    batch_size=5000,
-    max_rows_to_process=100000 if ENV_SHORT_NAME == "prod" else 15000,
-    reembed_all=False,
-):
+def extract_embedding_item_dag():
     @task
     def start():
         return "started"
 
     @task
-    def check_source_count():
+    def check_source_count(**kwargs):
+        # Retrieve reembed_all_items from params explicitly
+        reembed_all_flag = kwargs.get("params", {}).get("reembed_all_items", False)
+
         bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
         bq_client = bq_hook.get_client(project_id=GCP_PROJECT_ID)
         dataset_id = INPUT_DATASET_NAME
@@ -72,7 +101,7 @@ def extract_embedding_item_dag(
         query = f"""
         SELECT count(*) as count
         FROM `{GCP_PROJECT_ID}`.`{dataset_id}`.`{table_name}`
-        where to_embed or {str(reembed_all).lower()}
+        where to_embed or {str(reembed_all_flag).lower()}
         """
 
         result = bq_client.query(query).to_dataframe()
@@ -92,7 +121,7 @@ def extract_embedding_item_dag(
         task_id="start_gce",
         instance_name=GCE_INSTANCE,
         preemptible=False,
-        instance_type=instance_type,
+        instance_type="{{ params.instance_type }}",
         retries=2,
         labels={"job_type": "ml", "dag_name": DAG_NAME},
     )
@@ -100,7 +129,7 @@ def extract_embedding_item_dag(
     fetch_install_code = InstallDependenciesOperator(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        branch=branch,
+        branch="{{ params.branch }}",
         python_version="3.10",
         base_dir=BASE_PATH,
     )

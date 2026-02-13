@@ -83,37 +83,43 @@ async def generate_semantic_candidates(
     """
     linkage = []
     logger.info(f"Generating semantic candidates for {len(data)} items...")
+    
+    # We use a queue to distribute work to a fixed number of workers
+    queue = asyncio.Queue()
+    for row in data.itertuples():
+        queue.put_nowait(row)
 
-    # IMPORTANT:
-    # We DO NOT create all tasks upfront anymore.
-    # We batch at creation time to avoid too many open files.
+    async def worker():
+        worker_results = []
+        while not queue.empty():
+            try:
+                row = await queue.get()
+                # Now we only create the search coroutine when a worker is free
+                result_df = await model.search(
+                    vector=row.vector,
+                    filters=build_filter_dict(row, RETRIEVAL_FILTERS),
+                    n=NUM_RESULTS,
+                )
+                result_df = result_df.assign(
+                    candidates_id=str(uuid.uuid4()),
+                    item_id_candidate=row.item_id,
+                )
+                worker_results.append(result_df)
+            finally:
+                queue.task_done()
+        return worker_results
 
-    for i in tqdm(
-        range(0, len(data), BATCH_SIZE_RETRIEVAL),
-        desc="Processing batches",
-        mininterval=60,
-    ):
-        batch_df = data.iloc[i : i + BATCH_SIZE_RETRIEVAL]
-
-        tasks = [
-            limited_search(
-                model=model,
-                vector=row.vector,
-                filters=build_filter_dict(row, RETRIEVAL_FILTERS),
-                n=NUM_RESULTS,
-            )
-            for row in batch_df.itertuples()
-        ]
-
-        batch_results = await asyncio.gather(*tasks)
-
-        for result_df, row in zip(batch_results, batch_df.itertuples()):
-            result_df = result_df.assign(
-                candidates_id=str(uuid.uuid4()),
-                item_id_candidate=row.item_id,
-            )
-            linkage.append(result_df)
-
+    # Start SEMAPHORE_RETRIEVAL concurrent workers to process the queue
+    logger.info(f"Starting {SEMAPHORE_RETRIEVAL} concurrent workers...")
+    workers = [worker() for _ in range(SEMAPHORE_RETRIEVAL)]
+    
+    # Gather results from all workers
+    lists_of_results = await asyncio.gather(*workers)
+    
+    # Flatten results
+    for res_list in lists_of_results:
+        linkage.extend(res_list)
+    
     logger.info(f"linkage length: {len(linkage)}")
     return pd.concat(linkage, ignore_index=True)
 

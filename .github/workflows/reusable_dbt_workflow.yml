@@ -134,7 +134,7 @@ jobs:
         run: |
           uv run dbt test -s "tag:unit_test" \
           --profile CI --target $ENV_SHORT_NAME \
-          --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+          --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME','execution_date':'2024-02-28'}"
       - name: "Run modified models & 1st order childrens"
         id: run-changed-models
         working-directory: .

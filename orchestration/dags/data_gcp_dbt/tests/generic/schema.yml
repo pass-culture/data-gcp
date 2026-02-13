@@ -1,6 +1,6 @@
 version: 2
 
-macros:
+tests:
   - name: snapshot_volume_anomalies
     description: |
       An advanced statistical anomaly detection test for SCD Type 2 Snapshots.

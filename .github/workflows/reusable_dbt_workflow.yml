@@ -103,19 +103,7 @@ jobs:
       #     ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
       #     TARGET_BRANCH: ${{ github.base_ref }}
       #   run: ./scripts/sqlfluff_lint.sh $TARGET_BRANCH
-      - name: "Check for unit test changes"
-        id: check_snapshot_volume_anomalies_changes
-        working-directory: ${{ env.DBT_FOLDER }}
-        shell: bash
-        run: |
-          # Compare current HEAD against the target branch (base_ref)
-          if git diff --name-only origin/${{ github.base_ref }} HEAD | grep -qE "^(tests/generic/snapshot_volume_anomalies.sql|seeds/snapshot_volume_anomalies_unit_test_data/)"; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-          fi
       - name: "Build DBT seeds for unit tests"
-        if: steps.check_snapshot_volume_anomalies_changes.outputs.changed == 'true'
         working-directory: ${{ env.DBT_FOLDER }}
         env:
           TARGET_BRANCH: ${{ github.base_ref }}
@@ -127,6 +115,25 @@ jobs:
           uv run dbt seed -s "tag:unit_test" \
           --profile CI --target $ENV_SHORT_NAME \
           --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+      - name: "compile dbt project"
+        working-directory: ${{ env.DBT_FOLDER }}
+        env:
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
+        run: uv run dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" --exclude "tag:unit_test"
+      - name: "Check for unit test changes"
+        id: check_snapshot_volume_anomalies_changes
+        working-directory: ${{ env.DBT_FOLDER }}
+        shell: bash
+        run: |
+          # Compare current HEAD against the target branch (base_ref)
+          if git diff --name-only origin/${{ github.base_ref }} HEAD | grep -qE "^(tests/generic/snapshot_volume_anomalies.sql|seeds/snapshot_volume_anomalies_unit_test_data/)"; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
       - name: "Run seed test for unit tests"
         if: steps.check_snapshot_volume_anomalies_changes.outputs.changed == 'true'
         env:
@@ -139,14 +146,6 @@ jobs:
           uv run dbt test -s "tag:unit_test" \
           --profile CI --target $ENV_SHORT_NAME \
           --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
-      - name: "compile dbt project"
-        working-directory: ${{ env.DBT_FOLDER }}
-        env:
-          DBT_TARGET_PATH: "target/"
-          DBT_PROFILES_DIR: "."
-          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
-          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
-        run: uv run dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Run modified models & 1st order childrens"
         id: run-changed-models
         working-directory: .

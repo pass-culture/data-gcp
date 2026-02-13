@@ -18,6 +18,7 @@ seeds:
       # Jan 10: Massive UPDATE spike (+700)
       - snapshot_volume_anomalies:
           name: A1_massive_update_jan10_expected_FAIL
+          unique_key: id
           check_date: '2024-01-10'
           days_back: 08
           sensitivity: 3
@@ -30,6 +31,7 @@ seeds:
       # Jan 15: Massive CREATE spike (+700)
       - snapshot_volume_anomalies:
           name: A2_massive_create_jan15_expected_FAIL
+          unique_key: id
           check_date: '2024-01-15'
           days_back: 13
           sensitivity: 3
@@ -42,6 +44,7 @@ seeds:
       # Jan 20: Massive DELETE spike (+700)
       - snapshot_volume_anomalies:
           name: A3_massive_delete_jan20_expected_FAIL
+          unique_key: id
           check_date: '2024-01-20'
           days_back: 18
           sensitivity: 3
@@ -58,6 +61,7 @@ seeds:
       # Feb 1: Moderate UPDATE spike (+200) - baseline corrupted by Jan 10 (+700)
       - snapshot_volume_anomalies:
           name: B1_moderate_update_feb1_corrupted_expected_PASS
+          unique_key: id
           check_date: '2024-02-01'
           days_back: 28  # Includes Jan 10 massive spike
           sensitivity: 3
@@ -70,6 +74,7 @@ seeds:
       # Feb 6: Moderate CREATE spike (+200) - baseline corrupted by Jan 15 (+700)
       - snapshot_volume_anomalies:
           name: B2_moderate_create_feb6_corrupted_expected_PASS
+          unique_key: id
           check_date: '2024-02-06'
           days_back: 30  # Includes Jan 15 massive spike
           sensitivity: 3
@@ -82,6 +87,7 @@ seeds:
       # Feb 11: Moderate DELETE spike (+200) - baseline corrupted by Jan 20 (+700)
       - snapshot_volume_anomalies:
           name: B3_moderate_delete_feb11_corrupted_expected_PASS
+          unique_key: id
           check_date: '2024-02-11'
           days_back: 30  # Includes Jan 20 massive spike
           sensitivity: 3
@@ -98,6 +104,7 @@ seeds:
       # Feb 1: Moderate UPDATE spike (+200) - baseline cleaned (Jan 10 removed)
       - snapshot_volume_anomalies:
           name: C1_moderate_update_feb1_cleaned_expected_FAIL
+          unique_key: id
           check_date: '2024-02-01'
           days_back: 28
           sensitivity: 3
@@ -110,6 +117,7 @@ seeds:
       # Feb 6: Moderate CREATE spike (+200) - baseline cleaned (Jan 15 removed)
       - snapshot_volume_anomalies:
           name: C2_moderate_create_feb6_cleaned_expected_FAIL
+          unique_key: id
           check_date: '2024-02-06'
           days_back: 30
           sensitivity: 3
@@ -122,6 +130,7 @@ seeds:
       # Feb 11: Moderate DELETE spike (+200) - baseline cleaned (Jan 20 removed)
       - snapshot_volume_anomalies:
           name: C3_moderate_delete_feb11_cleaned_expected_FAIL
+          unique_key: id
           check_date: '2024-02-11'
           days_back: 30
           sensitivity: 3
@@ -138,6 +147,7 @@ seeds:
       # Lower threshold for CREATE detection
       - snapshot_volume_anomalies:
           name: D1_tuned_create_threshold_expected_FAIL
+          unique_key: id
           check_date: '2024-02-06'
           days_back: 30
           sensitivity: 3         # Baseline cleaning threshold
@@ -151,6 +161,7 @@ seeds:
       # Higher threshold for DELETE detection (should NOT detect)
       - snapshot_volume_anomalies:
           name: D2_tuned_delete_threshold_expected_PASS
+          unique_key: id
           check_date: '2024-02-11'
           days_back: 30
           sensitivity: 3         # Baseline cleaning threshold
@@ -164,6 +175,7 @@ seeds:
       # Mixed thresholds (create sensitive, delete insensitive)
       - snapshot_volume_anomalies:
           name: D3_mixed_thresholds_expected_FAIL
+          unique_key: id
           check_date: '2024-02-06'
           days_back: 30
           sensitivity: 3         # Updates baseline
@@ -182,6 +194,7 @@ seeds:
       # Normal day - no anomalies
       - snapshot_volume_anomalies:
           name: E1_baseline_normal_day_expected_PASS
+          unique_key: id
           check_date: '2024-02-05'
           days_back: 15
           sensitivity: 3
@@ -193,6 +206,7 @@ seeds:
       # Day immediately after massive spike (should be normal)
       - snapshot_volume_anomalies:
           name: E2_day_after_spike_expected_PASS
+          unique_key: id
           check_date: '2024-01-21'  # Day after Jan 20 massive delete
           days_back: 19
           sensitivity: 3
@@ -205,6 +219,7 @@ seeds:
       # Day immediately after another massive spike
       - snapshot_volume_anomalies:
           name: E3_day_after_create_spike_expected_PASS
+          unique_key: id
           check_date: '2024-01-16'  # Day after Jan 15 massive create
           days_back: 14
           sensitivity: 3
@@ -217,6 +232,7 @@ seeds:
       # Very short window (high variance potential)
       - snapshot_volume_anomalies:
           name: E4_short_window_expected_PASS
+          unique_key: id
           check_date: '2024-01-25'
           days_back: 7
           sensitivity: 3
@@ -229,6 +245,7 @@ seeds:
       # Early in dataset (limited history)
       - snapshot_volume_anomalies:
           name: E5_early_date_limited_history_expected_PASS
+          unique_key: id
           check_date: '2024-01-05'
           days_back: 4
           sensitivity: 3
@@ -241,6 +258,7 @@ seeds:
       # Normal day with cleaned baseline (should still be normal)
       - snapshot_volume_anomalies:
           name: E6_normal_day_cleaned_baseline_expected_PASS
+          unique_key: id
           check_date: '2024-02-05'
           days_back: 30
           sensitivity: 3
@@ -257,6 +275,7 @@ seeds:
       # Massive spike WITH cleaning (should still detect - redundant but validates)
       - snapshot_volume_anomalies:
           name: F1_massive_create_with_cleaning_expected_FAIL
+          unique_key: id
           check_date: '2024-01-15'
           days_back: 13
           sensitivity: 3
@@ -269,6 +288,7 @@ seeds:
       # Moderate spike with short window (excludes massive spike naturally)
       - snapshot_volume_anomalies:
           name: F2_moderate_create_short_window_expected_FAIL
+          unique_key: id
           check_date: '2024-02-06'
           days_back: 20  # Only goes back to Jan 17, excludes Jan 15 spike
           sensitivity: 3
@@ -286,6 +306,7 @@ seeds:
       # Show that even low threshold
       - snapshot_volume_anomalies:
           name: G1_low_threshold_expected_FAIL
+          unique_key: id
           check_date: '2024-02-28'
           days_back: 15
           sensitivity: 3
@@ -299,6 +320,7 @@ seeds:
       # Moderate spike with short window (excludes massive spike naturally)
       - snapshot_volume_anomalies:
           name: G2_high_threshold_expected_PASS
+          unique_key: id
           check_date: '2024-02-06'
           days_back: 20  # Only goes back to Jan 17, excludes Jan 15 spike
           sensitivity: 30

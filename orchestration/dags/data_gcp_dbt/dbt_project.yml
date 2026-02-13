@@ -126,6 +126,8 @@ seeds:
 
 snapshots:
   +target_schema: snapshot_{{ target.name }}
+  +meta:
+    owner: "@data-engineering"
   +docs:
     show: False
 

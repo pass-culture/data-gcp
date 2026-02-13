@@ -1,0 +1,44 @@
+version: 2
+
+tests:
+  - name: snapshot_volume_anomalies
+    description: |
+      An advanced statistical anomaly detection test for SCD Type 2 Snapshots.
+      It decomposes row-level changes into business operations (Inserts, Updates, Deletes)
+      and uses a 2-pass Z-Score calculation to identify volume spikes or drops.
+
+      **Logical Workflow:**
+      1. **Known Universe Lookup:** Scans historical partitions (before the lookback window) to identify existing IDs.
+      2. **Partition Pruning:** Limits the primary scan to active or recently closed records for performance.
+      3. **Operation Disambiguation:** - **Insert:** ID started today and was NEVER seen before.
+         - **Update:** ID started today and WAS seen before (either earlier in the window or in historical partitions).
+         - **Delete:** ID was closed today and no new version was created for it.
+      4. **Statistical Baseline (Pass 1):** Calculates Mean and StdDev for all days within the `days_back` window (excluding the target day).
+      5. **Outlier Removal (Optional Pass 2):** If `remove_outliers` is true, it excludes historical days that exceed the `sensitivity` threshold to create a "clean" baseline.
+      6. **Z-Score Detection:** Compares the target day's metrics against the clean baseline. If the Z-score exceeds the specific sensitivity (NR, UR, or DR), the test fails.
+
+    arguments:
+      - name: unique_key
+        type: string | list
+        description: "The business key (or list of keys) used to identify unique records."
+      - name: days_back
+        type: integer
+        description: "The rolling window (in days) used to calculate the statistical baseline. Default is 30."
+      - name: sensitivity
+        type: float
+        description: "The default Z-score threshold (standard deviations). Higher = less sensitive. Default is 3."
+      - name: remove_outliers
+        type: boolean
+        description: "If true, identifies and removes anomalous days from the historical baseline before testing the target day."
+      - name: ur_sensitivity
+        type: float
+        description: "Specific Z-score threshold for Updated Records. Falls back to 'sensitivity' if null."
+      - name: nr_sensitivity
+        type: float
+        description: "Specific Z-score threshold for New Records (Inserts). Falls back to 'sensitivity' if null."
+      - name: dr_sensitivity
+        type: float
+        description: "Specific Z-score threshold for Deleted Records. Falls back to 'sensitivity' if null."
+      - name: check_date
+        type: date
+        description: "Overrides the target date for testing. Useful for backfilling or manual reruns."

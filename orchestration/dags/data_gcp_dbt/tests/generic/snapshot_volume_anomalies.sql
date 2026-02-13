@@ -28,11 +28,11 @@
     {% set age_check_query %}
         select cast(count(*) > 0 as int64)
         from {{ model }} 
-        where dbt_valid_to <= timestamp_sub(
+        where dbt_valid_from <= timestamp_sub(
             {% if check_date is not none %} 
                 timestamp('{{ check_date }}') 
             {% else %} 
-                timestamp(date_sub('{{ ds() }}', interval 1 day)) 
+                timestamp(date_sub(date('{{ ds() }}'), interval 1 day)) 
             {% endif %}, 
             interval {{ days_back }} day
         )

@@ -125,17 +125,25 @@ jobs:
         run: uv run dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" --exclude "tag:unit_test"
       - name: "Check for unit test changes"
         id: check_snapshot_volume_anomalies_changes
-        working-directory: ${{ env.DBT_FOLDER }}
+        env:
+          DBT_FOLDER: ${{ env.DBT_FOLDER }}
         shell: bash
         run: |
           # Compare current HEAD against the target branch (base_ref)
-          if git diff --name-only origin/${{ github.base_ref }} HEAD | grep -qE "^(tests/generic/snapshot_volume_anomalies.sql|seeds/snapshot_volume_anomalies_unit_test_data/)"; then
+          DBT_PATH=$(echo "${{ env.DBT_FOLDER }}" | sed 's:^\./::;s:/*$::')
+
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -qE "^$DBT_PATH/(tests/generic/snapshot_volume_anomalies\.sql|seeds/snapshot_volume_anomalies_unit_test_data/)"; then
+            echo "Changes detected."
             echo "changed=true" >> $GITHUB_OUTPUT
           else
+            echo "No relevant changes."
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
       - name: "Run seed test for unit tests"
         if: steps.check_snapshot_volume_anomalies_changes.outputs.changed == 'true'
+        working-directory: ${{ env.DBT_FOLDER }}
         env:
           TARGET_BRANCH: ${{ github.base_ref }}
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}

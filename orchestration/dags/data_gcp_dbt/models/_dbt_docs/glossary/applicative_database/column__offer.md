@@ -106,3 +106,5 @@ offer show sub type for shows. {% enddocs %}
 {% docs column__offer_publication_date %} Publication date of the offer on the app, bookable or not (coming soon). Data available only from July 2025. {% enddocs %}
 {% docs column__offer_finalization_date %} Finalization date of the offer creation. If offer_creation_date is not null and offer_finalization_date is null, then it is draft. Data available only from July 2025. {% enddocs %}
 {% docs column__scheduled_offer_bookability_date %} Date of bookability of the offer. This field is filled only if the offer is scheduled. {% enddocs %}
+{% docs column__booking_email %} email related to the offer, sent by OpenAgenda. It is the email which recieves notification when a booking is made on the offer. {% enddocs %}
+{% docs column__booking_contact %} contact related to the offer, sent by OpenAgenda. It is the contact which recieves notification when a booking is made on the offer. {% enddocs %}

@@ -338,6 +338,8 @@ class InstallDependenciesOperator(SSHGCEOperator):
     template_fields = set(
         [
             "requirement_file",
+            "package",
+            "extras",
             "branch",
             "instance_name",
             "base_dir",
@@ -350,7 +352,12 @@ class InstallDependenciesOperator(SSHGCEOperator):
     def __init__(
         self,
         instance_name: str,
-        requirement_file: str = "requirements.txt",
+        # === UV Workspace mode (preferred) ===
+        package: t.Optional[str] = None,  # uv sync --package {package}
+        extras: t.Optional[t.List[str]] = None,  # uv sync --extra {extra}
+        # === Legacy mode (backward compatible) ===
+        requirement_file: str
+        | None = "requirements.txt",  # uv pip sync {requirement_file}
         branch: str = "master",  # Branch for repo
         environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
@@ -359,6 +366,8 @@ class InstallDependenciesOperator(SSHGCEOperator):
         **kwargs,
     ):
         self.instance_name = instance_name
+        self.package = package
+        self.extras = extras
         self.requirement_file = requirement_file
         self.environment = environment
         self.python_version = python_version
@@ -374,16 +383,43 @@ class InstallDependenciesOperator(SSHGCEOperator):
             **kwargs,
         )
 
+    def _build_install_command(self) -> str:
+        """Build the install command based on configuration priority."""
+        # Priority 1: UV workspace package mode (new)
+        if self.package:
+            cmd = f"uv sync --package {self.package}"
+            # Add extras if specified (can be combined with package)
+            if self.extras:
+                extras_flags = " ".join(f"--extra {e}" for e in self.extras)
+                cmd = f"{cmd} {extras_flags}"
+            return cmd
+
+        # Priority 2: Extras only (without package)
+        if self.extras:
+            extras_flags = " ".join(f"--extra {e}" for e in self.extras)
+            return f"uv sync {extras_flags}"
+
+        # Priority 3: Legacy requirements file mode
+        if self.requirement_file:
+            return f"""
+            if [ -f "{self.requirement_file}" ]; then
+                uv pip sync {self.requirement_file}
+            else
+                echo "Warning: {self.requirement_file} not found, falling back to uv sync" &&
+                uv sync
+            fi
+            """
+
+        # Priority 4: Default fallback
+        return "uv sync"
+
     def execute(self, context):
-        command = self.make_install_command(
-            self.requirement_file, self.branch, self.base_dir
-        )
+        command = self.make_install_command(self.branch, self.base_dir)
         self.command = command
         return super(InstallDependenciesOperator, self).execute(context)
 
     def make_install_command(
         self,
-        requirement_file: str,
         branch: str,
         base_dir: str = "data-gcp",
     ) -> str:
@@ -411,16 +447,13 @@ class InstallDependenciesOperator(SSHGCEOperator):
             cd ~/
         """
 
+        install_cmd = self._build_install_command()
         install_command = f"""
             curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh &&
             cd {base_dir} &&
             uv venv --python {self.python_version} &&
             source .venv/bin/activate &&
-            if [ -f "{requirement_file}" ]; then
-                uv pip sync {requirement_file}
-            else
-                uv sync
-            fi
+            {install_cmd}
         """
 
         deactivate_conda = (

@@ -1,0 +1,243 @@
+version: 2
+
+{% set dbt_open = '{{' %}
+{% set dbt_close = '}}' %}
+
+semantic_models:
+  - name: user_beneficiary
+    description: |
+      User beneficiary data with deposit information, spending patterns, and demographics.
+      Core model for coverage, activation, and diversity KPIs.
+
+    model: ref('mrt_global__user_beneficiary')
+
+    defaults:
+      agg_time_dimension: user_creation_date
+
+    # ==================
+    # ENTITIES
+    # ==================
+    entities:
+      - name: user
+        type: primary
+        expr: user_id
+      - name: department_code
+        type: foreign
+        expr: user_department_code
+      - name: department_name
+        type: foreign
+        expr: user_department_name
+      - name: region_name
+        type: foreign
+        expr: user_region_name
+      - name: academy_name
+        type: foreign
+        expr: user_academy_name
+      - name: iris
+        type: foreign
+        expr: user_iris_internal_id
+      - name: epci
+        type: foreign
+        expr: user_epci
+
+    # ==================
+    # DIMENSIONS
+    # ==================
+    dimensions:
+      # --- Time Dimensions ---
+      - name: user_creation_date
+        type: time
+        description: "Date when user account was created"
+        type_params:
+          time_granularity: day
+
+      - name: user_birth_date
+        type: time
+        description: "User birth date"
+        type_params:
+          time_granularity: day
+
+      # --- Socio-Demographic Dimensions ---
+      - name: user_age
+        type: categorical
+        description: "Current user age"
+
+      - name: user_civility
+        type: categorical
+        description: "User civility (Mr./Ms./etc.)"
+        expr: user_civility
+
+      - name: user_activity
+        type: categorical
+        description: "User activity status"
+
+      - name: school_type
+        type: categorical
+        description: "Type of school if applicable"
+        expr: user_school_type
+
+      - name: density_type
+        type: categorical
+        description: "Type of residence (urban/rural/etc.)"
+        expr: user_density_type
+
+      - name: macro_density_label
+        type: categorical
+        description: "Macro density label of the user's registered address."
+        expr: user_macro_density_label
+
+      - name: priority_public
+        type: categorical
+        description: "Whether user belongs to priority public"
+        expr: user_is_priority_public
+
+      - name: unemployed_status
+        type: categorical
+        description: "Whether user is unemployed"
+        expr: user_is_unemployed
+
+      - name: education_status
+        type: categorical
+        description: "Whether user is in education"
+        expr: user_is_in_education
+
+      - name: qpv_status
+        type: categorical
+        description: "Whether user lives in QPV (priority neighborhood)"
+        expr: user_is_in_qpv
+
+      # --- usage Dimensions ---
+      - name: active_account
+        type: categorical
+        description: "Whether the user account is active"
+        expr: user_is_active
+
+      - name: beneficiary
+        type: categorical
+        description: "Whether user currently has an active deposit"
+        expr: user_is_current_beneficiary
+
+
+    # ==================
+    # MEASURES
+    # ==================
+    measures:
+      - name: total_users
+        agg: count_distinct
+        expr: user_id
+        description: "Total number of unique users"
+
+      - name: active_users
+        agg: count_distinct
+        expr: "case when user_is_active then user_id end"
+        description: "Number of users with an active account"
+
+      - name: current_beneficiaries
+        agg: count_distinct
+        expr: "case when user_is_current_beneficiary then user_id end"
+        description: "Number of users who currently have an active deposit"
+
+      - name: priority_public_users
+        agg: count_distinct
+        expr: "case when user_is_priority_public then user_id end"
+        description: "Number of users in priority public (QPV) areas"
+
+      - name: users_in_education
+        agg: count_distinct
+        expr: "case when user_is_in_education then user_id end"
+        description: "Number of users currently in education"
+
+      - name: unemployed_users
+        agg: count_distinct
+        expr: "case when user_is_unemployed then user_id end"
+        description: "Number of users marked as unemployed"
+
+  - name: bookings
+    description: "Booking data linked to users"
+    model: ref('mrt_global__booking')
+    defaults:
+      agg_time_dimension: booking_creation_date
+
+    entities:
+      - name: booking
+        type: primary
+        expr: booking_id
+      - name: user
+        type: foreign
+        expr: user_id
+      - name: venue
+        type: foreign
+        expr: venue_id
+      - name: department_code
+        type: foreign
+        expr: venue_department_code
+
+    dimensions:
+      - name: offer_category
+        type: categorical
+        expr: offer_category_id
+        description: "Type of booking"
+      - name: booking_creation_date
+        type: time
+        expr: booking_creation_date
+        type_params:
+          time_granularity: day
+      - name: booking_status
+        type: categorical
+        expr: booking_status
+        description: "Status of the booking (e.g., confirmed, cancelled)"
+
+    measures:
+      - name: revenue
+        agg: sum
+        expr: case when booking_status = 'USED' or booking_status = 'REIMBURSED' then booking_intermediary_amount else 0 end
+        description: "Total revenue from bookings"
+      - name: pending_revenue
+        agg: sum
+        expr: case when booking_status = 'CONFIRMED' then booking_intermediary_amount else 0 end
+        description: "Pending revenue expected from bookings"
+      - name: total_bookings
+        agg: count
+        expr: booking_id
+        description: "Total number of bookings"
+      - name: users_with_booking
+        agg: count_distinct
+        expr: user_id
+        description: "Distinct users with at least one booking"
+
+
+
+metrics:
+  - name: users_with_booking
+    label: "total users with booking"
+    description: "Number of users who made at least one non cancelled booking"
+    type: simple
+    type_params:
+      measure:
+        name: users_with_booking
+        fill_nulls_with: 0
+    filter: |
+      {{ dbt_open }} Dimension('booking__booking_status') {{ dbt_close }} != 'CANCELLED'
+  {% for c in booking_categories %}
+  - name: users_{{ c.value_expr }}_category
+    label: "Users {{ c.value_expr }}"
+    description: "Number of distinct users who booked {{ c.value_expr }}"
+    type: simple
+    type_params:
+      measure:
+        name: users_with_booking
+        fill_nulls_with: 0
+    filter: |
+      {{ dbt_open }} Dimension('booking__booking_status') {{ dbt_close }} != 'CANCELLED' AND {{ dbt_open }} Dimension('booking__offer_category') {{ dbt_close }} = '{{ c.name }}'
+
+  {% endfor %}
+
+  {% for c in booking_categories %}
+  - name: ratio_users_{{ c.value_expr }}_category
+    label: "Fraction of users {{ c.value_expr }}"
+    description: "Fraction of users who booked {{ c.value_expr }}"
+    type: ratio
+    type_params:
+      numerator: users_{{ c.value_expr }}_category
+      denominator: users_with_booking
+  {% endfor %}

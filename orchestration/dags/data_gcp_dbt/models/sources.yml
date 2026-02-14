@@ -112,7 +112,6 @@ sources:
       - name: applicative_database_trusted_device
       - name: applicative_database_user
       - name: applicative_database_user_offerer
-      - name: applicative_database_user_pro_new_nav_state
       - name: applicative_database_validation_rule_collective_offer_link
       - name: applicative_database_validation_rule_collective_offer_template_link
       - name: applicative_database_validation_rule_offer_link
@@ -158,7 +157,6 @@ sources:
       - name: raw_dms_pro
       - name: run_googleapis_com_stderr
       - name: sendinblue_transactional
-      - name: sensitive_item_recommendation
       - name: stdout
       - name: subcategories
       - name: tiktok_video_detail

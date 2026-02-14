@@ -20,8 +20,8 @@ with
             offerer_name,
             venue_region_name,
             venue_department_name,
-            venue_epci,
-            venue_city,
+            venue_epci_code,
+            venue_city_code,
             sum(booking_intermediary_amount) as total_venue_booking_amount
         from {{ ref("mrt_global__booking") }}
         where
@@ -38,8 +38,8 @@ with
             offerer_name,
             venue_region_name,
             venue_department_name,
-            venue_epci,
-            venue_city
+            venue_epci_code,
+            venue_city_code
     ),
 
     all_dimensions as (

@@ -76,8 +76,8 @@ with
             bd.days_since_last_collective_bookable_date,
             gcp.partner_region_name,
             gcp.partner_academy_name,
-            gcp.partner_epci,
-            gcp.partner_city,
+            gcp.partner_epci_code,
+            gcp.partner_city_code,
             gcp.partner_type,
             gcp.offerer_id,
             gvt.venue_tag_name,
@@ -102,8 +102,8 @@ with
             gcp.partner_id,
             gcp.partner_region_name,
             gcp.partner_academy_name,
-            gcp.partner_city,
-            gcp.partner_epci,
+            gcp.partner_city_code,
+            gcp.partner_epci_code,
             min(co.collective_offer_creation_date) as first_template_offer_creation_date
         from {{ ref("mrt_global__cultural_partner") }} as gcp
         inner join
@@ -114,16 +114,16 @@ with
             partner_id,
             partner_region_name,
             partner_academy_name,
-            partner_city,
-            partner_epci
+            partner_city_code,
+            partner_epci_code
     ),
 
     monthly_partner_with_template_offers as (
         select
             partner_region_name,
             partner_academy_name,
-            partner_epci,
-            partner_city,
+            partner_epci_code,
+            partner_city_code,
             date_trunc(first_template_offer_creation_date, month) as partition_month,
             count(distinct partner_id) as monthly_new_partners_with_template_offers
         from partner_with_template_offers
@@ -131,8 +131,8 @@ with
             partition_month,
             partner_region_name,
             partner_academy_name,
-            partner_epci,
-            partner_city
+            partner_epci_code,
+            partner_city_code
     ),
 
     cumul_partner_template as (
@@ -140,8 +140,8 @@ with
             partition_month,
             partner_region_name,
             partner_academy_name,
-            partner_city,
-            partner_epci,
+            partner_city_code,
+            partner_epci_code,
             coalesce(
                 sum(monthly_new_partners_with_template_offers) over (
                     partition by partner_region_name, partner_academy_name

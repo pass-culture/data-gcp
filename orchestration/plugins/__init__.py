@@ -1,5 +1,6 @@
 from airflow.plugins_manager import AirflowPlugin
 from dbt_docs import DBTColibriDocs, DBTDocs
+from dbt_lineage import DBTLineageViz
 from flask import Blueprint
 
 bp = Blueprint("plugin", __name__, template_folder="templates", static_folder="static")
@@ -18,9 +19,20 @@ v_appbuilder_colibri_package = {
     "view": v_appbuilder_colibri_view,
 }
 
+v_appbuilder_lineage_view = DBTLineageViz()
+v_appbuilder_lineage_package = {
+    "name": "DBT Lineage Graph Explorer",
+    "category": "DBT",
+    "view": v_appbuilder_lineage_view,
+}
+
 
 # Defining the plugin class
 class AirflowCustomPlugin(AirflowPlugin):
     name = "AirflowCustomPlugin"
     flask_blueprints = [bp]
-    appbuilder_views = [v_appbuilder_dbt_docs_package, v_appbuilder_colibri_package]
+    appbuilder_views = [
+        v_appbuilder_dbt_docs_package,
+        v_appbuilder_colibri_package,
+        v_appbuilder_lineage_package,
+    ]

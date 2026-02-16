@@ -6,8 +6,8 @@ from pathlib import Path
 from utils.verbose_logger import log_print
 
 ######## base configs
-GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
+GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-prod")
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "prod")
 if GCP_PROJECT != "passculture-data-prod" or ENV_SHORT_NAME != "prod":
     log_print.warning(
         f"Using {GCP_PROJECT=} & {ENV_SHORT_NAME=} -> REPORTS DATA WILL BE PARTIAL OR WRONG",
@@ -21,6 +21,12 @@ REGION_HIERARCHY_TABLE = "region_department"
 
 BASE_TEMPLATE = Path("./templates/export_template.xlsx")
 REPORT_BASE_DIR_DEFAULT = Path("./reports")
+
+THREADS_SAFETY_MARGIN = 0.9  # to avoid using 100% of CPU cores
+WRITER_CONCURRENCY = (
+    29  # Number of parallel worker threads for writing to Excel files (locked)
+)
+DATA_READER_PER_WRITER = 5  # Number of data reader threads per worker process
 
 # Google Drive Configuration
 GOOGLE_DRIVE_ROOT_FOLDER_ID_MAPPING = {
@@ -403,7 +409,7 @@ def default_title_layout():
     return {
         "title_row_offset": 0,
         "title_col_offset": 0,
-        "title_height": 3,
+        "title_height": 1,
         "title_width": 1,
     }
 

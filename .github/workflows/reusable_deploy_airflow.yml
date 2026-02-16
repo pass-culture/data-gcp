@@ -175,6 +175,86 @@ jobs:
           fi
         shell: bash
 
+      - name: "Generate dbt lineage data"
+        run: |
+          python plugins/static/dbt_lineage/generate_viz_data.py \
+            --manifest dags/data_gcp_dbt/target/manifest.json \
+            --config plugins/static/dbt_lineage/config.yaml \
+            --output plugins/static/dbt_lineage/viz_data.json
+
+      - name: "Compute dbt lineage layout"
+        run: |
+          cat <<EOF > compute_layout.py
+          import sys
+          import yaml
+          import json
+          import os
+
+          # Add plugin dir to path so we can import layout_algorithm
+          sys.path.append('plugins/static/dbt_lineage')
+          try:
+              from layout_algorithm import compute_layout_from_viz_data
+          except ImportError as e:
+              print(f"Error importing layout_algorithm: {e}")
+              sys.exit(1)
+
+          # Helper to load config manually since layout_algorithm.py's loader
+          # depends on AIRFLOW_HOME which isn't set here
+          def load_config():
+              print("Loading config from plugins/static/dbt_lineage/config.yaml")
+              with open('plugins/static/dbt_lineage/config.yaml') as f:
+                  yaml_config = yaml.safe_load(f)
+
+              # Extract dimensions
+              dimensions = yaml_config.get("project", {}).get("dimensions", {})
+              config = {
+                  "width": dimensions.get("width", 1920),
+                  "height": dimensions.get("height", 1080),
+              }
+
+              # Extract force parameters
+              forces = yaml_config.get("forces", {})
+              for key, params in forces.items():
+                  if isinstance(params, dict) and "val" in params:
+                      config[key] = params["val"]
+
+              # Extract disabled forces
+              config["disabled_forces"] = {
+                  force: list(node_ids)
+                  for force, node_ids in yaml_config.get("disabled_forces", {}).items()
+              }
+              return config
+
+          try:
+              config = load_config()
+
+              input_path = 'plugins/static/dbt_lineage/viz_data.json'
+              output_path = 'plugins/static/dbt_lineage/viz_data_with_layout.json'
+
+              if not os.path.exists(input_path):
+                  print(f"Warning: {input_path} not found. Skipping layout computation.")
+                  sys.exit(0)
+
+              print(f"Reading from {input_path}")
+              with open(input_path, 'r') as f:
+                  viz_data = json.load(f)
+
+              print(f"Computing layout for {len(viz_data.get('nodes', []))} nodes...")
+              viz_data = compute_layout_from_viz_data(viz_data, config)
+
+              print(f"Writing to {output_path}")
+              with open(output_path, 'w') as f:
+                  json.dump(viz_data, f, indent=2)
+              print("Layout computation complete.")
+
+          except Exception as e:
+              print(f"Error computing layout: {e}")
+              sys.exit(1)
+          EOF
+
+          python compute_layout.py
+          rm compute_layout.py
+
       - name: "Deploy Airflow (plugins)"
         run: gsutil -m rsync -d -r plugins gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/plugins
 

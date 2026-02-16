@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 from dateutil.relativedelta import relativedelta
@@ -25,6 +25,7 @@ class DataService:
         table_name: str,
         select_field: str = "kpi",
         agg_type: str = "sum",
+        context: Optional[Dict[str, Any]] = None,
     ) -> Optional[Dict[str, Dict[str, float]]]:
         """
         Get complete KPI data (yearly and monthly aggregations).
@@ -38,6 +39,7 @@ class DataService:
             table_name: DuckDB table name
             select_field: Field to select (kpi, numerator, denominator)
             agg_type: Aggregation type (sum, max, december, august, avg ,wavg)
+            context: Optional context dictionary
 
         Returns:
             Dict with yearly and monthly aggregated data, None if failed
@@ -48,7 +50,7 @@ class DataService:
                 kpi_name, dimension_name, dimension_value, ds, scope, table_name
             )
             yearly_agg = self._aggregate_yearly_data(
-                yearly_data, agg_type, select_field, scope
+                yearly_data, agg_type, select_field, scope, kpi_name, context
             )
 
             # Get monthly data
@@ -116,7 +118,13 @@ class DataService:
         )
 
     def _aggregate_yearly_data(
-        self, data: pd.DataFrame, agg_type: str, select_field: str, scope: str
+        self,
+        data: pd.DataFrame,
+        agg_type: str,
+        select_field: str,
+        scope: str,
+        kpi_name: str,
+        context: Optional[Dict[str, Any]] = None,
     ) -> Dict[Union[int, str], float]:
         """Aggregate yearly data using existing duckdb_utils function."""
         return aggregate_kpi_data(
@@ -125,10 +133,18 @@ class DataService:
             time_grouping="yearly",
             select_field=select_field,
             scope=scope,
+            kpi_name=kpi_name,
+            context=context,
         )
 
     def _aggregate_monthly_data(
-        self, data: pd.DataFrame, agg_type: str, select_field: str, scope: str
+        self,
+        data: pd.DataFrame,
+        agg_type: str,
+        select_field: str,
+        scope: str,
+        kpi_name: str,
+        context: Optional[Dict[str, Any]] = None,
     ) -> Dict[Union[str, pd.Timestamp], float]:
         """Aggregate monthly data using existing duckdb_utils function."""
         return aggregate_kpi_data(
@@ -137,6 +153,8 @@ class DataService:
             time_grouping="monthly",
             select_field=select_field,
             scope=scope,
+            kpi_name=kpi_name,
+            context=context,
         )
 
     def _format_monthly_data(

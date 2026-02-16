@@ -28,6 +28,7 @@ dependencies = [
     "tqdm>=4.64.1",
     "typer>=0.7.0",
     "h11>=0.16.0",
+    "tf-keras>=2.18.0",
 ]
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.

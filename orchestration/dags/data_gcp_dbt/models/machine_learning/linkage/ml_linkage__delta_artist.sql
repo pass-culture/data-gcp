@@ -28,33 +28,33 @@ with
     )
 
 select
-    delta_artist.artist_id,
-    delta_artist.artist_name,
-    delta_artist.artist_description,
-    delta_artist.artist_biography,
-    delta_artist.artist_mediation_uuid,
-    delta_artist.wikidata_id,
-    delta_artist.wikipedia_url,
-    delta_artist.wikidata_image_file_url,
-    delta_artist.wikidata_image_author,
-    delta_artist.wikidata_image_license,
-    delta_artist.wikidata_image_license_url,
-    delta_artist.action,
-    delta_artist.comment
-from {{ source("ml_preproc", "delta_artist") }} as delta_artist
+    artist_id,
+    artist_name,
+    artist_description,
+    artist_biography,
+    artist_mediation_uuid,
+    wikidata_id,
+    wikipedia_url,
+    wikidata_image_file_url,
+    wikidata_image_author,
+    wikidata_image_license,
+    wikidata_image_license_url,
+    action,
+    comment
+from {{ source("ml_preproc", "delta_artist") }}
 union all
 select
-    artists_to_remove.artist_id,
-    artists_to_remove.artist_name,
-    artists_to_remove.artist_description,
-    artists_to_remove.artist_biography,
-    artists_to_remove.artist_mediation_uuid,
-    artists_to_remove.wikidata_id,
-    artists_to_remove.wikipedia_url,
-    artists_to_remove.wikidata_image_file_url,
-    artists_to_remove.wikidata_image_author,
-    artists_to_remove.wikidata_image_license,
-    artists_to_remove.wikidata_image_license_url,
-    artists_to_remove.action,
-    artists_to_remove.comment
+    artist_id,
+    artist_name,
+    artist_description,
+    artist_biography,
+    artist_mediation_uuid,
+    wikidata_id,
+    wikipedia_url,
+    wikidata_image_file_url,
+    wikidata_image_author,
+    wikidata_image_license,
+    wikidata_image_license_url,
+    action,
+    comment
 from artists_to_remove

@@ -28,19 +28,19 @@ with
     )
 
 select
-    artist_id,
-    artist_name,
-    artist_description,
-    artist_biography,
-    artist_mediation_uuid,
-    wikidata_id,
-    wikipedia_url,
-    wikidata_image_file_url,
-    wikidata_image_author,
-    wikidata_image_license,
-    wikidata_image_license_url,
-    action,
-    comment
+    cast(artist_id as string) as artist_id,
+    cast(artist_name as string) as artist_name,
+    cast(artist_description as string) as artist_description,
+    cast(artist_biography as string) as artist_biography,
+    cast(artist_mediation_uuid as string) as artist_mediation_uuid,
+    cast(wikidata_id as string) as wikidata_id,
+    cast(wikipedia_url as string) as wikipedia_url,
+    cast(wikidata_image_file_url as string) as wikidata_image_file_url,
+    cast(wikidata_image_author as string) as wikidata_image_author,
+    cast(wikidata_image_license as string) as wikidata_image_license,
+    cast(wikidata_image_license_url as string) as wikidata_image_license_url,
+    cast(action as string) as action,  -- noqa: RF04
+    cast(comment as string) as comment  -- noqa: RF04
 from {{ source("ml_preproc", "delta_artist") }}
 union all
 select

@@ -154,6 +154,7 @@ with DAG(
         command="python main.py compress --ds {{ ds }}",  # add --clean flag after testing
         priority_weight=PRIORITY_WEIGHT,
         weight_rule=WEIGHT_RULE,
+        trigger_rule="none_failed",
     )
 
     gce_export_to_gcs = SSHGCEOperator(

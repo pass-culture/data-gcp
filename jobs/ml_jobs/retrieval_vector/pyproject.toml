@@ -18,7 +18,7 @@ dependencies = [
     "pyarrow>=14.0.1",
     "python-jose>=3.4.0",
     "python-json-logger>=2.0.7",
-    "sentence-transformers>=3.0.0",
+    "sentence-transformers>=2.2.2",
     "torch>=2.8.0",
     "torchvision>=0.21.0",
 ]
@@ -31,7 +31,7 @@ dev = [
     "google-cloud-aiplatform>=1.22.0",
     "google-cloud-bigquery[pandas]>=3.25.0",
     "google-cloud-secret-manager>=2.4.0",
-    "keras>=2.14,<3.0.0",
+    "keras>=3.13.1",
     "mlflow>=3.8.1",
     "numpy>=1.26.4",
     "polars>=0.18.6",

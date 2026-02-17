@@ -15,25 +15,21 @@ with
         select
             venue_region_name as region_name,
             venue_academy_name as academy_name,
-            venue_epci as epci_name,
-            venue_city as city_name,
+            venue_epci_code as epci_code,
+            venue_city_code as city_code,
             date_trunc(date(collective_offer_creation_date), month) as partition_month,
             coalesce(count(distinct collective_offer_id), 0) as total_created_offer
         from {{ ref("int_global__collective_offer") }}
         group by
-            venue_region_name,
-            venue_academy_name,
-            partition_month,
-            venue_epci,
-            venue_city
+            venue_region_name, venue_academy_name, partition_month, epci_code, city_code
     ),
 
     ac_booked_collective_offers as (
         select
             venue_region_name as region_name,
             venue_academy_name as academy_name,
-            venue_epci as epci_name,
-            venue_city as city_name,
+            venue_epci_code as epci_code,
+            venue_city_code as city_code,
             date_trunc(
                 date(collective_booking_creation_date), month
             ) as partition_month,
@@ -42,11 +38,7 @@ with
         from {{ ref("mrt_global__collective_booking") }}
         where collective_booking_status in ('CONFIRMED', 'USED', 'REIMBURSED')
         group by
-            venue_region_name,
-            venue_academy_name,
-            partition_month,
-            venue_epci,
-            venue_city
+            venue_region_name, venue_academy_name, partition_month, epci_code, city_code
     )
 
 {% for dim in dimensions %}
@@ -55,7 +47,7 @@ with
     {% endif %}
     select
         partition_month,
-        timestamp("{{ ts() }}") as updated_at,
+        timestamp('{{ ts() }}') as updated_at,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         'total_offres_collectives_creees' as kpi_name,
@@ -66,13 +58,13 @@ with
     {% if is_incremental() %}
         where
             partition_month
-            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+            = date_trunc(date_sub(date('{{ ds() }}'), interval 1 month), month)
     {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value
     union all
     select
         partition_month,
-        timestamp("{{ ts() }}") as updated_at,
+        timestamp('{{ ts() }}') as updated_at,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         'total_reservations_collectives' as kpi_name,
@@ -83,13 +75,13 @@ with
     {% if is_incremental() %}
         where
             partition_month
-            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+            = date_trunc(date_sub(date('{{ ds() }}'), interval 1 month), month)
     {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value
     union all
     select
         partition_month,
-        timestamp("{{ ts() }}") as updated_at,
+        timestamp('{{ ts() }}') as updated_at,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         'total_montant_engage' as kpi_name,
@@ -100,7 +92,7 @@ with
     {% if is_incremental() %}
         where
             partition_month
-            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+            = date_trunc(date_sub(date('{{ ds() }}'), interval 1 month), month)
     {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value
 {% endfor %}

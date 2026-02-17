@@ -32,6 +32,7 @@ select
     v.venue_department_name,
     v.venue_postal_code,
     v.venue_city,
+    v.venue_city_code,
     v.venue_siret,
     v.venue_is_virtual,
     v.venue_managing_offerer_id as offerer_id,
@@ -46,6 +47,7 @@ select
     v.venue_backoffice_link,
     v.venue_region_name,
     v.venue_epci,
+    v.venue_epci_code,
     v.venue_academy_name,
     v.venue_in_qpv,
     v.venue_in_zrr,
@@ -118,7 +120,7 @@ select
     ofr.total_reimbursement_points,
     ofr.is_local_authority,
     v.venue_id as partner_id,
-    offerer_is_epn,
+    ofr.offerer_is_epn,
     coalesce(
         date_diff(current_date, boh.last_bookable_offer_date, day) <= 30, false
     ) as is_active_last_30days,

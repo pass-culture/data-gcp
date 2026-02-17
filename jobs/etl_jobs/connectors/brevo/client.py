@@ -1,35 +1,26 @@
 import logging
 from typing import Optional
 
+from connectors.brevo.config import BASE_URL
 from http_tools.clients import AsyncHttpClient, SyncHttpClient
 
+# Logger here is for Business Logic / Progress tracking
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 class BrevoConnector:
-    """
-    Brevo API wrapper using SyncHttpClient for interacting with Brevo endpoints.
-    """
+    BASE_URL = BASE_URL
 
-    BASE_URL = "https://api.brevo.com/v3"
-
-    def __init__(self, api_key: str, client: Optional[SyncHttpClient] = None):
-        self.api_key = api_key
-        self.client = client or SyncHttpClient()
-        self.headers = {
-            "api-key": self.api_key,
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        }
+    def __init__(self, client: SyncHttpClient):
+        self.client = client
 
     def get_email_campaigns(
         self,
         status: str = "sent",
         limit: int = 50,
+        offset: int = 0,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
-        offset: int = 0,
     ):
         url = f"{self.BASE_URL}/emailCampaigns"
         params = {
@@ -40,16 +31,21 @@ class BrevoConnector:
         }
         if start_date:
             params["startDate"] = start_date
-
         if end_date:
             params["endDate"] = end_date
 
-        return self.client.request("GET", url, headers=self.headers, params=params)
+        # Business Context Log
+        logger.info(f"📊 Fetching email campaigns (status={status}, offset={offset})")
+
+        return self.client.request("GET", url, params=params)
 
     def get_smtp_templates(self, active_only: bool = True, offset: int = 0):
         url = f"{self.BASE_URL}/smtp/templates"
         params = {"templateStatus": str(active_only).lower(), "offset": offset}
-        return self.client.request("GET", url, headers=self.headers, params=params)
+
+        logger.info(f"📋 Listing SMTP templates (active_only={active_only})")
+
+        return self.client.request("GET", url, params=params)
 
     def get_email_event_report(
         self,
@@ -67,40 +63,36 @@ class BrevoConnector:
             "endDate": end_date,
             "offset": offset,
         }
-        return self.client.request("GET", url, headers=self.headers, params=params)
+
+        # Business Context Log - very useful for long ETL paginations
+        logger.info(
+            f"🔍 Fetching events for Template {template_id} | Type: {event} | Offset: {offset}"
+        )
+
+        return self.client.request("GET", url, params=params)
 
 
 class AsyncBrevoConnector:
-    """
-    Brevo API wrapper using AsyncHttpClient for non-blocking API interactions.
-    """
+    BASE_URL = BASE_URL
 
-    BASE_URL = "https://api.brevo.com/v3"
-
-    def __init__(self, api_key: str, client: Optional[AsyncHttpClient] = None):
-        self.api_key = api_key
-        self.client = client or AsyncHttpClient()
-        self.headers = {
-            "api-key": self.api_key,
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        }
+    def __init__(self, client: AsyncHttpClient):
+        self.client = client
 
     async def get_email_campaigns(
         self, status: str = "sent", limit: int = 50, offset: int = 0
     ):
         url = f"{self.BASE_URL}/emailCampaigns"
         params = {"status": status, "limit": limit, "offset": offset}
-        return await self.client.request(
-            "GET", url, headers=self.headers, params=params
-        )
+
+        logger.info(f"📊 [Async] Fetching campaigns offset {offset}")
+        return await self.client.request("GET", url, params=params)
 
     async def get_smtp_templates(self, active_only: bool = True, offset: int = 0):
         url = f"{self.BASE_URL}/smtp/templates"
         params = {"templateStatus": str(active_only).lower(), "offset": offset}
-        return await self.client.request(
-            "GET", url, headers=self.headers, params=params
-        )
+
+        logger.info("📋 [Async] Listing SMTP templates")
+        return await self.client.request("GET", url, params=params)
 
     async def get_email_event_report(
         self,
@@ -118,6 +110,8 @@ class AsyncBrevoConnector:
             "endDate": end_date,
             "offset": offset,
         }
-        return await self.client.request(
-            "GET", url, headers=self.headers, params=params
-        )
+
+        # This log helps you see progress in the middle of hundreds of concurrent tasks
+        logger.info(f"🔍 [Async] Template {template_id} | Page Offset {offset}")
+
+        return await self.client.request("GET", url, params=params)

@@ -77,8 +77,12 @@ models:
         description: "{{ doc('column__institution_postal_code') }}"
       - name: institution_city
         description: "{{ doc('column__institution_city') }}"
+      - name: institution_city_code
+        description: "{{ doc('column__institution_city_code') }}"
       - name: institution_epci
         description: "{{ doc('column__institution_epci') }}"
+      - name: institution_epci_code
+        description: "{{ doc('column__institution_epci_code') }}"
       - name: institution_density_label
         description: "{{ doc('column__institution_density_label') }}"
       - name: institution_macro_density_label
@@ -87,8 +91,12 @@ models:
         description: "{{ doc('column__institution_density_level') }}"
       - name: venue_city
         description: "{{ doc('column__venue_city') }}"
+      - name: venue_city_code
+        description: "{{ doc('column__venue_city_code') }}"
       - name: venue_epci
         description: "{{ doc('column__venue_epci') }}"
+      - name: venue_epci_code
+        description: "{{ doc('column__venue_epci_code') }}"
       - name: venue_academy_name
         description: "{{ doc('column__venue_academy_name') }}"
       - name: venue_density_label

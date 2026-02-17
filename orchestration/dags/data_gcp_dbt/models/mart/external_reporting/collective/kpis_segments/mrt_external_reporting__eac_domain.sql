@@ -16,8 +16,8 @@ with
         select
             cb.institution_region_name as region_name,
             cb.institution_academy_name as academy_name,
-            cb.institution_epci_code as epci_code,
-            cb.institution_city_code as city_code,
+            cb.institution_epci as epci_name,
+            cb.institution_city as city_name,
             cod.educational_domain_name as domain_name,
             date_trunc(
                 date(cb.collective_booking_creation_date), month
@@ -43,8 +43,8 @@ with
             partition_month,
             region_name,
             academy_name,
-            epci_code,
-            city_code,
+            epci_name,
+            city_name,
             domain_name,
             is_labelled_mc
     ),

@@ -77,8 +77,8 @@ with
             bd.days_since_last_indiv_bookable_date,
             gcp.partner_region_name,
             gcp.partner_department_name,
-            gcp.partner_epci_code,
-            gcp.partner_city_code,
+            gcp.partner_epci,
+            gcp.partner_city,
             gcp.partner_type,
             gcp.offerer_id,
             gvt.venue_tag_name

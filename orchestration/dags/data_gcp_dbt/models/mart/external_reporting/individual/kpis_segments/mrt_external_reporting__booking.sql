@@ -9,16 +9,8 @@
 }}
 
 {% set dimensions = [
-    {
-        "name": "EPCI",
-        "user_col": "user_epci_code",
-        "venue_col": "venue_epci_code",
-    },
-    {
-        "name": "COM",
-        "user_col": "user_city_code",
-        "venue_col": "venue_city_code",
-    },
+    {"name": "EPCI", "user_col": "user_epci", "venue_col": "venue_epci"},
+    {"name": "COM", "user_col": "user_city", "venue_col": "venue_city"},
 ] %}
 
 with
@@ -26,13 +18,9 @@ with
         select
             u.user_id,
             u.user_epci,
-            u.user_epci_code,
             u.user_city,
-            u.user_city_code,
             b.venue_epci,
-            b.venue_epci_code,
             b.venue_city,
-            b.venue_city_code,
             b.booking_id,
             b.booking_intermediary_amount,
             date_trunc(date(b.booking_used_date), month) as partition_month
@@ -44,22 +32,22 @@ with
 
     free_bookable_offers as (
         select
-            venue_city_code,
-            venue_epci_code,
+            venue_city,
+            venue_epci,
             date_trunc(date(offer_creation_date), month) as partition_month,
             count(distinct offer_id) as monthly_free_bookable_offers
         from {{ ref("mrt_global__offer") }}
         where last_stock_price = 0 and offer_is_bookable
-        group by partition_month, venue_city_code, venue_epci_code
+        group by partition_month, venue_city, venue_epci
     ),
 
     cumul_free_bookable_offers as (
         select
             partition_month,
-            venue_city_code,
-            venue_epci_code,
+            venue_city,
+            venue_epci,
             sum(monthly_free_bookable_offers) over (
-                partition by venue_city_code, venue_epci_code
+                partition by venue_city, venue_epci
                 order by partition_month
                 rows unbounded preceding
             ) as cumul_total_free_offers

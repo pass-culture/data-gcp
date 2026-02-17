@@ -69,8 +69,7 @@ with
             'NAT' as nat_dim,
             rd.region_name as reg_dim,
             rd.dep_name as dep_dim,
-            eud.user_epci_code as epci_dim,
-            eud.user_city_code as com_dim,
+            eud.user_epci as epci_dim,
             -- Segmentation fields
             eud.user_is_in_qpv,
             eud.user_macro_density_label,
@@ -104,8 +103,7 @@ with
             'NAT' as nat_dim,
             rd.region_name as reg_dim,
             rd.dep_name as dep_dim,
-            eud.user_epci_code as epci_dim,
-            eud.user_city_code as com_dim
+            eud.user_epci as epci_dim
         from last_day_of_month as ldm
         inner join
             {{ ref("mrt_global__user_beneficiary") }} as eud
@@ -130,7 +128,6 @@ with
             reg_dim,
             dep_dim,
             epci_dim,
-            com_dim,
             -- Base counts
             count(distinct user_id) as total_users,
             -- QPV
@@ -163,8 +160,7 @@ with
                 {% if not loop.last %},{% endif %}
             {% endfor %}
         from active_users_base
-        group by
-            partition_month, updated_at, nat_dim, reg_dim, dep_dim, epci_dim, com_dim
+        group by partition_month, updated_at, nat_dim, reg_dim, dep_dim, epci_dim
     ),
 
     -- Single-pass aggregation for total users
@@ -176,11 +172,9 @@ with
             reg_dim,
             dep_dim,
             epci_dim,
-            com_dim,
             count(distinct user_id) as total_users
         from total_users_base
-        group by
-            partition_month, updated_at, nat_dim, reg_dim, dep_dim, epci_dim, com_dim
+        group by partition_month, updated_at, nat_dim, reg_dim, dep_dim, epci_dim
     ),
 
     -- UNPIVOT dimensions for active users metrics
@@ -206,8 +200,7 @@ with
                     nat_dim as 'NAT',
                     reg_dim as 'REG',
                     dep_dim as 'DEP',
-                    epci_dim as 'EPCI',
-                    com_dim as 'COM'
+                    epci_dim as 'EPCI'
                 )
             )
     ),
@@ -243,8 +236,7 @@ with
                     nat_dim as 'NAT',
                     reg_dim as 'REG',
                     dep_dim as 'DEP',
-                    epci_dim as 'EPCI',
-                    com_dim as 'COM'
+                    epci_dim as 'EPCI'
                 )
             )
     ),

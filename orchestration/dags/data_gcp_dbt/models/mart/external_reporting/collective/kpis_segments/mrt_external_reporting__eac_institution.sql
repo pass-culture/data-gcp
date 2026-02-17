@@ -47,9 +47,7 @@ with recursive
             inst.institution_region_name,
             inst.institution_academy_name,
             inst.institution_epci,
-            inst.institution_epci_code,
-            inst.institution_city,
-            inst.institution_city_code
+            inst.institution_city
         from {{ ref("mrt_global__educational_deposit") }} as dep
         left join
             {{ ref("mrt_global__educational_institution") }} as inst
@@ -75,8 +73,8 @@ with recursive
             base.partition_month,
             base.institution_region_name,
             base.institution_academy_name,
-            base.institution_epci_code,
-            base.institution_city_code,
+            base.institution_epci,
+            base.institution_city,
             count(distinct base.institution_id) as total_institutions,
             count(
                 distinct case
@@ -93,8 +91,8 @@ with recursive
             base.partition_month,
             base.institution_region_name,
             base.institution_academy_name,
-            base.institution_epci_code,
-            base.institution_city_code
+            base.institution_epci,
+            base.institution_city
     )
 
 {% for dim in dimensions %}
@@ -115,8 +113,7 @@ with recursive
     from base_data
     {% if is_incremental() %}
         where
-            partition_month
-            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+            partition_month = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month))
     {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
 {% endfor %}

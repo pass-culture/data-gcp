@@ -48,10 +48,13 @@ script_params = {
     "backtest_start_date": "2025-09-01",
     "backtest_end_date": "2025-12-31",
     "forecast_horizon_date": "2026-12-31",
-    "run_backtest": True,
     "experiment_name": f"finance_pricing_forecast_v0_{ENV_SHORT_NAME}",
     "dataset": f"ml_finance_{ENV_SHORT_NAME}",
 }
+
+if ENV_SHORT_NAME == "dev":
+    # For dev, force stg dataset
+    script_params["dataset"] = "ml_finance_stg"
 
 default_args = {
     "start_date": datetime(2025, 12, 1),
@@ -107,11 +110,6 @@ with DAG(
             default=script_params["forecast_horizon_date"],
             type="string",
             description="Forecast horizon end date (YYYY-MM-DD)",
-        ),
-        "run_backtest": Param(
-            default=script_params["run_backtest"],
-            type="boolean",
-            description="Whether to evaluate on backtest data",
         ),
         "dataset": Param(
             default=script_params["dataset"],

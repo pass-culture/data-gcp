@@ -97,12 +97,6 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "models_to_run": Param(
-            default=list(MODEL_CONFIGS.keys()),
-            type="array",
-            items={"type": "string", "enum": list(MODEL_CONFIGS.keys())},
-            description="List of model configurations to run",
-        ),
         "instance_type": Param(
             default=gce_params["instance_type"][ENV_SHORT_NAME],
             type="string",
@@ -140,8 +134,6 @@ with DAG(
     ) as fit_models_group:
         fit_tasks = []
         for model_config_name, config in MODEL_CONFIGS.items():
-            if model_config_name not in "{{ params.models_to_run }}":
-                continue
             # Inject config values directly (not from params)
             fit_model = SSHGCEOperator(
                 task_id=f"fit_{model_config_name}",

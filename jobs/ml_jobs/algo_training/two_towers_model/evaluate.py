@@ -1,7 +1,13 @@
 import os
+
+################################  To use Keras 2 instead of 3  ################################
+# See [TensorFlow + Keras 2 backwards compatibility section](https://keras.io/getting_started/)
+os.environ["TF_USE_LEGACY_KERAS"] = "1"
+###############################################################################################
+
 from datetime import datetime
 
-import mlflow.tensorflow
+import mlflow
 import pandas as pd
 import tensorflow as tf
 import typer

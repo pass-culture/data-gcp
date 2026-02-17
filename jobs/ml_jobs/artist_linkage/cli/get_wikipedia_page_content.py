@@ -114,18 +114,29 @@ def extract_wikipedia_content_from_url(
     Returns:
         DataFrame with added columns for page title, language, and batch index.
     """
-    return (
-        df.assign(
-            page_title=lambda df: df[WIKIPEDIA_URL_KEY]
-            .str.split("wiki/")
-            .str[1]
-            .apply(unquote)
-            .str.replace(" ", "_"),
-            language=lambda df: df[WIKIPEDIA_URL_KEY].str.extract(
-                r"https://([a-z]{2})\.wikipedia\.org"
-            ),
+    preprocessed_df = df.assign(
+        page_title=lambda df: df[WIKIPEDIA_URL_KEY]
+        .str.split("wiki/")
+        .str[1]
+        .apply(unquote)
+        .str.replace(" ", "_"),
+        language=lambda df: df[WIKIPEDIA_URL_KEY].str.extract(
+            r"https://([a-z]{2})\.wikipedia\.org"
+        ),
+    )
+
+    if preprocessed_df[WIKIPEDIA_URL_KEY].isna().all():
+        logger.warning(
+            "All Wikipedia URLs are missing. Please check the input data. Returning original DataFrame with added columns filled with NaN."
         )
-        .groupby(LANGUAGE_COLUMN)
+        return df.assign(
+            page_title=pd.NA,
+            language=pd.NA,
+            batch_index=pd.NA,
+        )
+
+    return (
+        preprocessed_df.groupby(LANGUAGE_COLUMN)
         .apply(
             lambda group: group.assign(
                 batch_index=lambda df: df.reset_index().index // BATCH_SIZE
@@ -149,31 +160,46 @@ def main(
 
     # Fetch the wikipedia page content from MediaWiki API
     results_df_list = []
-    for (language, batch_index), group in artists_with_wikipedia_url_df.groupby(
-        [LANGUAGE_COLUMN, BATCH_INDEX_COLUMN]
-    ):
-        t0 = time.time()
-        wikipedia_pages = group[PAGE_TITLE_COLUMN].to_list()
-        logger.info(f"Processing language: {language}, batch: {batch_index}...")
-        content_dict = fetch_clean_content(
-            wikipedia_titles=wikipedia_pages, wikipedia_language=language
+
+    if len(artists_with_wikipedia_url_df) == 0:
+        logger.warning("No artists with Wikipedia URL found. Exiting.")
+        results_df_list.append(
+            pd.DataFrame(
+                columns=[
+                    ARTIST_ID_KEY,
+                    PAGE_TITLE_COLUMN,
+                    LANGUAGE_COLUMN,
+                    BATCH_INDEX_COLUMN,
+                    WIKIPEDIA_CONTENT_KEY,
+                ]
+            )
         )
-        content_df = pd.DataFrame(
-            {
-                PAGE_TITLE_COLUMN: list(content_dict.keys()),
-                WIKIPEDIA_CONTENT_KEY: list(content_dict.values()),
-                BATCH_INDEX_COLUMN: batch_index,
-                LANGUAGE_COLUMN: language,
-            }
-        ).merge(
-            group[[PAGE_TITLE_COLUMN, ARTIST_ID_KEY]],
-            on=PAGE_TITLE_COLUMN,
-            how="left",
-        )
-        results_df_list.append(content_df)
-        logger.success(
-            f"...Fetched {len(content_dict)} pages for language: {language}, batch: {batch_index} in {time.time() - t0:.2f} seconds."
-        )
+    else:
+        for (language, batch_index), group in artists_with_wikipedia_url_df.groupby(
+            [LANGUAGE_COLUMN, BATCH_INDEX_COLUMN]
+        ):
+            t0 = time.time()
+            wikipedia_pages = group[PAGE_TITLE_COLUMN].to_list()
+            logger.info(f"Processing language: {language}, batch: {batch_index}...")
+            content_dict = fetch_clean_content(
+                wikipedia_titles=wikipedia_pages, wikipedia_language=language
+            )
+            content_df = pd.DataFrame(
+                {
+                    PAGE_TITLE_COLUMN: list(content_dict.keys()),
+                    WIKIPEDIA_CONTENT_KEY: list(content_dict.values()),
+                    BATCH_INDEX_COLUMN: batch_index,
+                    LANGUAGE_COLUMN: language,
+                }
+            ).merge(
+                group[[PAGE_TITLE_COLUMN, ARTIST_ID_KEY]],
+                on=PAGE_TITLE_COLUMN,
+                how="left",
+            )
+            results_df_list.append(content_df)
+            logger.success(
+                f"...Fetched {len(content_dict)} pages for language: {language}, batch: {batch_index} in {time.time() - t0:.2f} seconds."
+            )
 
     # Merge back the wikipedia content to the original dataframe
     artists_id_with_wikipedia_content_df = artists_with_wikipedia_url_df.merge(
@@ -183,11 +209,13 @@ def main(
     ).loc[:, [ARTIST_ID_KEY, WIKIPEDIA_CONTENT_KEY]]
 
     # Merge back to original dataframe and save
-    artists_df = artists_df.merge(
+    artists_df.merge(
         artists_id_with_wikipedia_content_df,
         on=[ARTIST_ID_KEY],
         how="left",
-    ).to_parquet(output_file_path, index=False)
+    ).where(pd.notnull(artists_df), None).to_parquet(output_file_path, index=False)
+    # The default behavior of pandas merge is to use np.nan for missing values
+    # We want to replace these with None to match the rest of the pipeline
 
 
 if __name__ == "__main__":

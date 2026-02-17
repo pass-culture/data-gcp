@@ -176,7 +176,7 @@ with (
         task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
-        python_version="'3.10'",
+        python_version="'3.11'",
         base_dir=dag_config["BASE_DIR"],
         retries=2,
     )

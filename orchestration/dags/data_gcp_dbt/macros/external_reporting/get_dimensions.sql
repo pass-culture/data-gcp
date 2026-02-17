@@ -9,7 +9,7 @@
                 - 'population': population_region_name, population_department_name
                 - 'institution': institution_region_name, institution_academy_name
                 - 'partner': partner_region_name, partner_department_name, partner_academy_name
-                - none/null: region_name, dep_name, academy_name, epci_code, city_code (bare column names)
+                - none/null: region_name, dep_name, academy_name, epci_name, city_name (bare column names)
 
             hierarchy_type (string): The geographic hierarchy to use. Options:
                 - 'geo': National → Region → Department (NAT/REG/DEP)
@@ -33,14 +33,14 @@
         {% set region_col = entity_prefix ~ "_region_name" %}
         {% set dept_col = entity_prefix ~ "_department_name" %}
         {% set acad_col = entity_prefix ~ "_academy_name" %}
-        {% set epci_col = entity_prefix ~ "_epci_code" %}
-        {% set city_col = entity_prefix ~ "_city_code" %}
+        {% set epci_col = entity_prefix ~ "_epci" %}
+        {% set city_col = entity_prefix ~ "_city" %}
     {% else %}
         {% set region_col = "region_name" %}
         {% set dept_col = "dep_name" %}
         {% set acad_col = "academy_name" %}
-        {% set epci_col = "epci_code" %}
-        {% set city_col = "city_code" %}
+        {% set epci_col = "epci_name" %}
+        {% set city_col = "city_name" %}
     {% endif %}
 
     {% if hierarchy_type == "geo" %}

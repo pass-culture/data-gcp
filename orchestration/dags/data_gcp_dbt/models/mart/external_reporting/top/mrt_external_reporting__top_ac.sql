@@ -19,8 +19,8 @@ with
             offerer_name,
             venue_region_name,
             venue_academy_name,
-            venue_epci_code,
-            venue_city_code,
+            venue_epci,
+            venue_city,
             sum(booking_amount) as total_booking_amount,
             sum(collective_stock_number_of_tickets) as total_number_of_tickets
         from {{ ref("mrt_global__collective_booking") }}
@@ -37,8 +37,8 @@ with
             offerer_id,
             venue_region_name,
             venue_academy_name,
-            venue_epci_code,
-            venue_city_code
+            venue_epci,
+            venue_city
     ),
 
     all_dimensions as (

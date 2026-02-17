@@ -4,7 +4,7 @@ data_gcp_dbt:
   outputs:
     local:
       dataset: tmp_dev
-      job_execution_timeout_seconds: 3600
+      job_execution_timeout_seconds: 300
       job_retries: 1
       location: europe-west1
       method: oauth

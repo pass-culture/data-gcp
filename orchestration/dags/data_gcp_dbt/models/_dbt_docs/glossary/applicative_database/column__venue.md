@@ -8,7 +8,6 @@
 {% docs column__venue_department_code %} Department code of the venue. {% enddocs %}
 {% docs column__venue_postal_code %} Postal code of the venue. {% enddocs %}
 {% docs column__venue_city %} City where the venue is located. {% enddocs %}
-{% docs column__venue_city_code %} City code where the venue is located. {% enddocs %}
 {% docs column__venue_siret %} SIRET number of the venue. A venue may not have a SIRET (especially when it hosts public but does not belong to the offerer. Exemple : a theater company performs a play in a concert hall they don't own.) {% enddocs %}
 {% docs column__venue_is_virtual %} Indicates if the venue is virtual. Each offerer has a virtual venue, it is only used to publish digital offers. NB : digital venues will soon be deleted, their offers/bookings/stocks will be transferred to other venues of the offerer. {% enddocs %}
 {% docs column__venue_managing_offerer_id %} ID of the offerer who manage the venue. One offerer can have multiple venues. {% enddocs %}
@@ -22,8 +21,7 @@
 {% docs column__venue_humanized_id %} Unique identifier of the venue. {% enddocs %}
 {% docs column__venue_backoffice_link %} Backoffice link for the venue. {% enddocs %}
 {% docs column__venue_region_name %} Region name where the venue is located. {% enddocs %}
-{% docs column__venue_epci %} EPCI name of the venue. {% enddocs %}
-{% docs column__venue_epci_code %} EPCI code of the venue. {% enddocs %}
+{% docs column__venue_epci %} EPCI code of the venue. {% enddocs %}
 {% docs column__venue_density_label %} Detailed density label of the venue's location. {% enddocs %}
 {% docs column__venue_macro_density_label %} Macro density label of the venue's location (urbain, rural) {% enddocs %}
 {% docs column__venue_academy_name %} Academy of the venue. {% enddocs %}

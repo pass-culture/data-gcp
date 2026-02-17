@@ -141,6 +141,10 @@ jobs:
             echo "No relevant changes."
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
       - name: "Run seed test for unit tests"
         if: steps.check_snapshot_volume_anomalies_changes.outputs.changed == 'true'
         working-directory: ${{ env.DBT_FOLDER }}

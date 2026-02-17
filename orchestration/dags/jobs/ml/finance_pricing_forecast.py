@@ -22,10 +22,8 @@ from common.operators.gce import (
 )
 from common.operators.slack import SendSlackMessageOperator
 
-from jobs.crons import SCHEDULE_DICT
-
 DATE = "{{ ts_nodash }}"
-DAG_NAME = "finance_pricing_forecast"
+DAG_NAME = "finance_experimental_pricing_forecast"
 
 # Environment variables to export before running commands
 dag_config = {
@@ -67,7 +65,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Finance Pricing Forecast ML Job",
-    schedule_interval=SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME],
+    schedule=None,
     catchup=False,
     dagrun_timeout=timedelta(minutes=20),
     user_defined_macros=macros.default,

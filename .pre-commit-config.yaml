@@ -52,6 +52,15 @@ repos:
         language_version: python3
         stages: [pre-commit]
 
+  - repo: https://github.com/owenlamont/uv-secure
+    rev: 0.16.0
+    hooks:
+      - id: uv-secure
+        verbose: true
+        # uv-secure exits with non-zero code if it finds vulnerabilities but we don't want
+        #   to block commits in that case, so we ignore the exit code
+        entry: bash -c 'uv-secure "$@" || true' --
+
   # TODO: uncomment once netskope problem is fixed
   # - repo: https://github.com/DavidAnson/markdownlint-cli2
   #   rev: v0.18.0

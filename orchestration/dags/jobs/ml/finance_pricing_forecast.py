@@ -168,7 +168,6 @@ with DAG(
                 --backtest-start-date "{{ params.backtest_start_date }}" \
                 --backtest-end-date "{{ params.backtest_end_date }}" \
                 --forecast-horizon-date "{{ params.forecast_horizon_date }}" \
-                {{ "--run-backtest" if params.run_backtest else "--no-run-backtest" }} \
                 --experiment-name "{{ params.experiment_name }}" \
                 --dataset "{{ params.dataset }}"
         """,

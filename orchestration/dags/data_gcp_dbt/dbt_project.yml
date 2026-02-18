@@ -84,7 +84,7 @@ models:
         +meta:
           owner: "@data-engineering"
       external_reporting:
-        +tags: "monthly"
+        +tags: ["monthly","exclude_ci"]
         +labels:
           schedule: "monthly"
         +meta:

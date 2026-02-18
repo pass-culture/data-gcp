@@ -140,8 +140,14 @@ models:
       - name: venue_city
         description: '{{ doc("column__venue_city") }}'
         data_type: STRING
+      - name: venue_city_code
+        description: '{{ doc("column__venue_city_code") }}'
+        data_type: STRING
       - name: venue_epci
         description: '{{ doc("column__venue_epci") }}'
+        data_type: STRING
+      - name: venue_epci_code
+        description: '{{ doc("column__venue_epci_code") }}'
         data_type: STRING
       - name: venue_density_label
         description: '{{ doc("column__venue_density_label") }}'

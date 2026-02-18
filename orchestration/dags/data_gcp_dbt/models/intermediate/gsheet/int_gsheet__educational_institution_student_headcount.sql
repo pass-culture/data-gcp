@@ -1,11 +1,11 @@
 select
-    replace('nan', null, school_year) as school_year,
+    school_year as scholar_year,
     ministry,
     uai as institution_id,
-    safe_cast(is_provisional as bool) as is_provisional,
     class,
+    safe_cast(is_provisional as bool) as is_provisional,
     safe_cast(amount_per_student as float64) as amount_per_student,
-    safe_cast(headcount as float64) as headcount,
+    safe_cast(headcount as float64) as headcount
 from {{ source("raw", "gsheet_educational_institution_student_headcount") }}
 qualify
     row_number() over (

@@ -66,9 +66,12 @@ with
     ),
 
     educational_institution_student_headcount as (
-        select institution_id, sum(headcount) as total_students
+        select institution_id, scholar_year, sum(headcount) as total_students
         from {{ ref("int_gsheet__educational_institution_student_headcount") }}
-        group by institution_id
+        group by institution_id, scholar_year
+        qualify
+            row_number() over (partition by institution_id order by scholar_year desc)
+            = 1
     )
 
 select

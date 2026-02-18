@@ -15,7 +15,6 @@ with
             ei.institution_program_name,
             ei.institution_macro_density_label,
             ed.scholar_year,
-            ei.total_students,
             sum(
                 case
                     when ed.educational_deposit_period = 'p1'
@@ -202,7 +201,13 @@ with
         inner join
             {{ ref("int_applicative__collective_stock") }} as cs
             on cb.collective_stock_id = cs.collective_stock_id
-        group by 1, 2
+        group by ed.institution_id,ed.scholar_year
+    ),
+
+    students_headcount as (
+        select institution_id, scholar_year, sum(headcount) as total_students
+        from {{ ref("int_gsheet__educational_institution_student_headcount") }}
+        group by institution_id, scholar_year
     )
 
 select
@@ -220,7 +225,6 @@ select
     flattened_deposits.institution_program_name,
     flattened_deposits.institution_macro_density_label,
     flattened_deposits.scholar_year,
-    flattened_deposits.total_students,
     flattened_deposits.p1_deposit,
     flattened_deposits.p2_deposit,
     bookings.p1_total_theoric_bookings,
@@ -233,6 +237,7 @@ select
     bookings.p2_real_amount_spent,
     bookings.p1_reimbursed_amount,
     bookings.p2_reimbursed_amount,
+    students_headcount.total_students,
     coalesce(
         flattened_deposits.total_scholar_year_deposit,
         flattened_deposits.p1_deposit + flattened_deposits.p2_deposit
@@ -350,3 +355,7 @@ left join
     bookings
     on flattened_deposits.institution_id = bookings.institution_id
     and flattened_deposits.scholar_year = bookings.scholar_year
+left join
+    students_headcount
+    on flattened_deposits.institution_id = students_headcount.institution_id
+    and flattened_deposits.scholar_year = students_headcount.scholar_year

@@ -2,7 +2,9 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Param
+from airflow.models.baseoperator import chain
 from airflow.operators.empty import EmptyOperator
+from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
 from common.alerts.ml_training import create_finance_pricing_forecast_slack_block
@@ -22,8 +24,10 @@ from common.operators.gce import (
 )
 from common.operators.slack import SendSlackMessageOperator
 
+from jobs.crons import SCHEDULE_DICT
+
 DATE = "{{ ts_nodash }}"
-DAG_NAME = "finance_experimental_pricing_forecast"
+DAG_NAME = "finance_pricing_forecast"
 
 # Environment variables to export before running commands
 dag_config = {
@@ -41,20 +45,33 @@ gce_params = {
     },
 }
 
-script_params = {
-    "model_type": "prophet",
-    "model_name": "daily_pricing",
-    "train_start_date": "2022-01-01",
-    "backtest_start_date": "2025-09-01",
-    "backtest_end_date": "2025-12-31",
-    "forecast_horizon_date": "2026-12-31",
-    "experiment_name": f"finance_pricing_forecast_v0_{ENV_SHORT_NAME}",
-    "dataset": f"ml_finance_{ENV_SHORT_NAME}",
+MODEL_CONFIGS = {
+    "prophet_daily_pricing": {
+        "model_type": "prophet",
+        "model_name": "daily_pricing",
+        "train_start_date": "2022-01-01",
+        "backtest_start_date": "2025-09-01",
+        "backtest_end_date": "2025-12-31",
+        "forecast_horizon_date": "2026-12-31",
+        "experiment_name": f"finance_pricing_forecast_v0_{ENV_SHORT_NAME}",
+        "dataset": f"ml_finance_{ENV_SHORT_NAME}",
+    },
+    "prophet_weekly_pricing": {
+        "model_type": "prophet",
+        "model_name": "weekly_pricing",
+        "train_start_date": "2022-01-01",
+        "backtest_start_date": "2025-09-01",
+        "backtest_end_date": "2025-12-31",
+        "forecast_horizon_date": "2026-12-31",
+        "experiment_name": f"finance_pricing_forecast_v0_{ENV_SHORT_NAME}",
+        "dataset": f"ml_finance_{ENV_SHORT_NAME}",
+    },
 }
 
 if ENV_SHORT_NAME == "dev":
     # For dev, force stg dataset
-    script_params["dataset"] = "ml_finance_stg"
+    for config in MODEL_CONFIGS.values():
+        config["dataset"] = "ml_finance_stg"
 
 default_args = {
     "start_date": datetime(2025, 12, 1),
@@ -68,58 +85,17 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Finance Pricing Forecast ML Job",
-    schedule=None,
+    schedule_interval=SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME],
     catchup=False,
     dagrun_timeout=timedelta(minutes=20),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
     params={
+        # Infrastructure params (can be overridden at runtime)
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        ),
-        "model_type": Param(
-            default=script_params["model_type"],
-            type="string",
-            enum=["prophet"],
-            description="Type of model to use (e.g. prophet)",
-        ),
-        "model_name": Param(
-            default=script_params["model_name"],
-            type="string",
-            enum=["daily_pricing", "weekly_pricing"],
-            description="Name of the model configuration",
-        ),
-        "train_start_date": Param(
-            default=script_params["train_start_date"],
-            type="string",
-            description="In-sample start date (YYYY-MM-DD).",
-        ),
-        "backtest_start_date": Param(
-            default=script_params["backtest_start_date"],
-            type="string",
-            description="Out-of-sample start date (YYYY-MM-DD).",
-        ),
-        "backtest_end_date": Param(
-            default=script_params["backtest_end_date"],
-            type="string",
-            description="Out-of-sample end date (YYYY-MM-DD)",
-        ),
-        "forecast_horizon_date": Param(
-            default=script_params["forecast_horizon_date"],
-            type="string",
-            description="Forecast horizon end date (YYYY-MM-DD)",
-        ),
-        "dataset": Param(
-            default=script_params["dataset"],
-            type="string",
-            description="BigQuery dataset containing the training data",
-        ),
-        "experiment_name": Param(
-            default=script_params["experiment_name"],
-            type="string",
-            description="MLflow experiment name",
         ),
         "instance_type": Param(
             default=gce_params["instance_type"][ENV_SHORT_NAME],
@@ -152,22 +128,33 @@ with DAG(
         dag=dag,
     )
 
-    fit_model = SSHGCEOperator(
-        task_id="fit_model",
-        instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
-        command="""
-            uv run python main.py \
-                --model-type "{{ params.model_type }}" \
-                --model-name "{{ params.model_name }}" \
-                --train-start-date "{{ params.train_start_date }}" \
-                --backtest-start-date "{{ params.backtest_start_date }}" \
-                --backtest-end-date "{{ params.backtest_end_date }}" \
-                --forecast-horizon-date "{{ params.forecast_horizon_date }}" \
-                --experiment-name "{{ params.experiment_name }}" \
-                --dataset "{{ params.dataset }}"
-        """,
-    )
+    # Create TaskGroup for all model fitting tasks
+    with TaskGroup(
+        group_id="fit_models", tooltip="Train all pricing forecast models"
+    ) as fit_models_group:
+        fit_tasks = []
+        for model_config_name, config in MODEL_CONFIGS.items():
+            # Inject config values directly (not from params)
+            fit_model = SSHGCEOperator(
+                task_id=f"fit_{model_config_name}",
+                instance_name="{{ params.instance_name }}",
+                base_dir=dag_config["BASE_DIR"],
+                command=f"""
+                    uv run python main.py \
+                        --model-type "{config['model_type']}" \
+                        --model-name "{config['model_name']}" \
+                        --train-start-date "{config['train_start_date']}" \
+                        --backtest-start-date "{config['backtest_start_date']}" \
+                        --backtest-end-date "{config['backtest_end_date']}" \
+                        --forecast-horizon-date "{config['forecast_horizon_date']}" \
+                        --experiment-name "{config['experiment_name']}" \
+                        --dataset "{config['dataset']}"
+                """,
+            )
+            fit_tasks.append(fit_model)
+
+        # Chain tasks inside the group sequentially
+        chain(*fit_tasks)
 
     gce_instance_delete = DeleteGCEOperator(
         task_id="gce_stop_task",
@@ -175,22 +162,24 @@ with DAG(
         trigger_rule="none_failed",
     )
 
+    # Note: Slack notification uses first model's experiment name
+    # Consider updating to list all experiments if needed
     send_slack_notif_success = SendSlackMessageOperator(
         task_id="send_slack_notif_success",
         webhook_token=SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN,
         trigger_rule="none_failed",
         block=create_finance_pricing_forecast_slack_block(
-            experiment_name="{{ params.experiment_name }}",
+            experiment_name=", ".join(MODEL_CONFIGS.keys()),
             mlflow_url=MLFLOW_URL,
             env_short_name=ENV_SHORT_NAME,
         ),
     )
 
-    (
-        start
-        >> gce_instance_start
-        >> install_dependencies
-        >> fit_model
-        >> gce_instance_delete
-        >> send_slack_notif_success
+    chain(
+        start,
+        gce_instance_start,
+        install_dependencies,
+        fit_models_group,
+        gce_instance_delete,
+        send_slack_notif_success,
     )

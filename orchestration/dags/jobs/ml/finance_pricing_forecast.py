@@ -53,7 +53,6 @@ MODEL_CONFIGS = {
         "backtest_start_date": "2025-09-01",
         "backtest_end_date": "2025-12-31",
         "forecast_horizon_date": "2026-12-31",
-        "experiment_name": f"finance_pricing_forecast_v0_{ENV_SHORT_NAME}",
         "dataset": f"ml_finance_{ENV_SHORT_NAME}",
     },
     "prophet_weekly_pricing": {
@@ -63,7 +62,6 @@ MODEL_CONFIGS = {
         "backtest_start_date": "2025-09-01",
         "backtest_end_date": "2025-12-31",
         "forecast_horizon_date": "2026-12-31",
-        "experiment_name": f"finance_pricing_forecast_v0_{ENV_SHORT_NAME}",
         "dataset": f"ml_finance_{ENV_SHORT_NAME}",
     },
 }
@@ -96,6 +94,11 @@ with DAG(
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
+        ),
+        "experiment_name": Param(
+            default=f"finance_pricing_forecast_v0_{ENV_SHORT_NAME}",
+            type="string",
+            description="MLflow experiment name",
         ),
         "instance_type": Param(
             default=gce_params["instance_type"][ENV_SHORT_NAME],
@@ -147,7 +150,7 @@ with DAG(
                         --backtest-start-date "{config['backtest_start_date']}" \
                         --backtest-end-date "{config['backtest_end_date']}" \
                         --forecast-horizon-date "{config['forecast_horizon_date']}" \
-                        --experiment-name "{config['experiment_name']}" \
+                        --experiment-name "{{ params.experiment_name }}" \
                         --dataset "{config['dataset']}"
                 """,
             )
@@ -169,7 +172,7 @@ with DAG(
         webhook_token=SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN,
         trigger_rule="none_failed",
         block=create_finance_pricing_forecast_slack_block(
-            experiment_name=", ".join(MODEL_CONFIGS.keys()),
+            models=", ".join(MODEL_CONFIGS.keys()),
             mlflow_url=MLFLOW_URL,
             env_short_name=ENV_SHORT_NAME,
         ),

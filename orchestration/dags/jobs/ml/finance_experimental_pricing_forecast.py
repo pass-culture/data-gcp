@@ -180,7 +180,7 @@ with DAG(
         webhook_token=SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN,
         trigger_rule="none_failed",
         block=create_finance_pricing_forecast_slack_block(
-            experiment_name="{{ params.experiment_name }}",
+            models="{{ params.experiment_name }}",
             mlflow_url=MLFLOW_URL,
             env_short_name=ENV_SHORT_NAME,
         ),

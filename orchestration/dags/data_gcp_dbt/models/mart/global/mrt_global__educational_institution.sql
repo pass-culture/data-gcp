@@ -99,7 +99,7 @@ select
     ei.institution_academy_name,
     ei.institution_region_name,
     ei.institution_in_qpv,
-    ei.institution_department_code_code,
+    ei.institution_department_code,
     ei.institution_department_name,
     ei.institution_internal_iris_id,
     ei.institution_postal_code,

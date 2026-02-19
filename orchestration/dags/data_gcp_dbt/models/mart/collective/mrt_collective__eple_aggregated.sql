@@ -214,7 +214,7 @@ select
     flattened_deposits.institution_id,
     flattened_deposits.institution_external_id,
     flattened_deposits.institution_name,
-    flattened_deposits.institution_city,
+    flattened_deposits.institution_city_code,
     flattened_deposits.institution_department_code,
     flattened_deposits.institution_region_name,
     flattened_deposits.institution_academy_name,

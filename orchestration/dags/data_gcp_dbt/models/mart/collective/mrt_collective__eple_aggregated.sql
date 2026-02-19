@@ -201,7 +201,7 @@ with
         inner join
             {{ ref("int_applicative__collective_stock") }} as cs
             on cb.collective_stock_id = cs.collective_stock_id
-        group by ed.institution_id,ed.scholar_year
+        group by ed.institution_id, ed.scholar_year
     ),
 
     students_headcount as (

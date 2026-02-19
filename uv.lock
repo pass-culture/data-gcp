@@ -297,6 +297,23 @@ wheels = [
 ]
 
 [[package]]
+name = "apache-airflow-providers-cncf-kubernetes"
+version = "10.4.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aiofiles" },
+    { name = "apache-airflow" },
+    { name = "asgiref" },
+    { name = "cryptography" },
+    { name = "kubernetes" },
+    { name = "kubernetes-asyncio" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/10/51/85d4c743f97c253f22eb242e01cde141798a37c777fe6173d5ea49cfbb11/apache_airflow_providers_cncf_kubernetes-10.4.3.tar.gz", hash = "sha256:096cd01833f8b137427e5161608f664060ae0a4cde663a04f8c463386f78e71b", size = 442778 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d3/0e/cd024b94521160cc9dc7ab90b129f56d52afa1c3ead01cc225113f76ab5d/apache_airflow_providers_cncf_kubernetes-10.4.3-py3-none-any.whl", hash = "sha256:502adbbcb5df9abc961ac9ac22a1f6acf7c8bbe0cc782f0aa527f8e2983b94ff", size = 141581 },
+]
+
+[[package]]
 name = "apache-airflow-providers-common-compat"
 version = "1.6.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1178,6 +1195,7 @@ source = { virtual = "." }
 airflow = [
     { name = "apache-airflow", extra = ["gcp", "google"] },
     { name = "apache-airflow-providers-celery" },
+    { name = "apache-airflow-providers-cncf-kubernetes" },
     { name = "apache-airflow-providers-ssh" },
     { name = "dbt-bigquery" },
     { name = "dbt-core" },
@@ -1224,6 +1242,7 @@ docs = [
 airflow = [
     { name = "apache-airflow", extras = ["google", "gcp"], specifier = "==2.9.3" },
     { name = "apache-airflow-providers-celery", specifier = ">=3.10.6" },
+    { name = "apache-airflow-providers-cncf-kubernetes", specifier = ">=10.4.3" },
     { name = "apache-airflow-providers-ssh", specifier = ">=4.0.1" },
     { name = "dbt-bigquery", specifier = "==1.9.1" },
     { name = "dbt-core", specifier = "==1.10.11" },
@@ -1558,6 +1577,15 @@ dependencies = [
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b2/b7/545d2c10c1fc15e48653c91efde329a790f2eecfbbf2bd16003b5db2bab0/dotenv-0.9.9-py2.py3-none-any.whl", hash = "sha256:29cf74a087b31dafdb5a446b6d7e11cbce8ed2741540e2339c69fbef92c94ce9", size = 1892 },
+]
+
+[[package]]
+name = "durationpy"
+version = "0.10"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9d/a4/e44218c2b394e31a6dd0d6b095c4e1f32d0be54c2a4b250032d717647bab/durationpy-0.10.tar.gz", hash = "sha256:1fa6893409a6e739c9c72334fc65cca1f355dbdd93405d30f726deb5bde42fba", size = 3335 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b0/0d/9feae160378a3553fa9a339b0e9c1a048e147a4127210e286ef18b730f03/durationpy-0.10-py3-none-any.whl", hash = "sha256:3b41e1b601234296b4fb368338fdcd3e13e0b4fb5b67345948f4f2bf9868b286", size = 3922 },
 ]
 
 [[package]]
@@ -3233,6 +3261,45 @@ wheels = [
 [package.optional-dependencies]
 redis = [
     { name = "redis" },
+]
+
+[[package]]
+name = "kubernetes"
+version = "31.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "durationpy" },
+    { name = "google-auth" },
+    { name = "oauthlib" },
+    { name = "python-dateutil" },
+    { name = "pyyaml" },
+    { name = "requests" },
+    { name = "requests-oauthlib" },
+    { name = "six" },
+    { name = "urllib3" },
+    { name = "websocket-client" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7e/bd/ffcd3104155b467347cd9b3a64eb24182e459579845196b3a200569c8912/kubernetes-31.0.0.tar.gz", hash = "sha256:28945de906c8c259c1ebe62703b56a03b714049372196f854105afe4e6d014c0", size = 916096 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fb/a8/17f5e28cecdbd6d48127c22abdb794740803491f422a11905c4569d8e139/kubernetes-31.0.0-py2.py3-none-any.whl", hash = "sha256:bf141e2d380c8520eada8b351f4e319ffee9636328c137aa432bc486ca1200e1", size = 1857013 },
+]
+
+[[package]]
+name = "kubernetes-asyncio"
+version = "30.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "certifi" },
+    { name = "python-dateutil" },
+    { name = "pyyaml" },
+    { name = "six" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/27/56/e109ebf5b73b3dbbd9f438bfc795b2a5624d35cdff6a9316e8259b3caf23/kubernetes_asyncio-30.3.1.tar.gz", hash = "sha256:53efb902e89149a9720e00b45f964b87ea7cb8ec4110110c574d028817da1764", size = 903266 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/00/8b/0644ca1f1cb15663bd9d928c13d4d009f93f3d61cbf511b26dca8626577a/kubernetes_asyncio-30.3.1-py3-none-any.whl", hash = "sha256:9c65f79aef0a0c36149c562cec036dd21466dc64dca2ebd36b02d8ae2954d897", size = 1829417 },
 ]
 
 [[package]]
@@ -5625,6 +5692,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/35/a2/8e3becb46433538a38726c948d3399905a4c7cabd0df578ede5dc51f0ec2/wcwidth-0.6.0.tar.gz", hash = "sha256:cdc4e4262d6ef9a1a57e018384cbeb1208d8abbc64176027e2c2455c81313159", size = 159684 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/68/5a/199c59e0a824a3db2b89c5d2dade7ab5f9624dbf6448dc291b46d5ec94d3/wcwidth-0.6.0-py3-none-any.whl", hash = "sha256:1a3a1e510b553315f8e146c54764f4fb6264ffad731b3d78088cdb1478ffbdad", size = 94189 },
+]
+
+[[package]]
+name = "websocket-client"
+version = "1.9.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/2c/41/aa4bf9664e4cda14c3b39865b12251e8e7d239f4cd0e3cc1b6c2ccde25c1/websocket_client-1.9.0.tar.gz", hash = "sha256:9e813624b6eb619999a97dc7958469217c3176312b3a16a4bd1bc7e08a46ec98", size = 70576 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/34/db/b10e48aa8fff7407e67470363eac595018441cf32d5e1001567a7aeba5d2/websocket_client-1.9.0-py3-none-any.whl", hash = "sha256:af248a825037ef591efbf6ed20cc5faa03d3b47b9e5a2230a529eeee1c1fc3ef", size = 82616 },
 ]
 
 [[package]]

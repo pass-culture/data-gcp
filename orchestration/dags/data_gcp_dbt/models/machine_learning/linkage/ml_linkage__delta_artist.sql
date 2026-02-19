@@ -23,7 +23,7 @@ with
             'artist not linked to any product' as comment  -- noqa: RF04
         from {{ ref("int_applicative__artist") }} as artist
         left join artist_linked using (artist_id)
-        where artist_linked.is_linked is null
+        where (artist_linked.is_linked is null) and (artist.wikidata_id is null)
         order by artist.artist_name
     )
 

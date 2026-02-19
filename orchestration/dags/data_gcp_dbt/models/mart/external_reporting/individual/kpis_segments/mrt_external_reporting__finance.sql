@@ -32,8 +32,8 @@ with
             timestamp("{{ ts() }}") as updated_at,
             venue_region_name,
             venue_department_name,
-            venue_epci,
-            venue_city,
+            venue_epci_code,
+            venue_city_code,
             offer_category_id,
             offerer_is_epn,
             {% for kpi in kpis %}

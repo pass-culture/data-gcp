@@ -99,7 +99,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.10",
+        python_version="3.11",
         base_dir=BASE_DIR,
         retries=2,
     )

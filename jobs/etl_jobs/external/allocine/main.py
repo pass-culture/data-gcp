@@ -1,8 +1,4 @@
 import logging
-import mimetypes
-import uuid
-from pathlib import PurePosixPath
-from urllib.parse import urlparse
 
 import httpx
 import typer
@@ -17,7 +13,6 @@ from constants import (
     SECRET_ID,
     STAGING_TABLE,
 )
-from data import transform_movie
 from gcp import (
     fetch_pending_posters,
     get_bq_client,
@@ -28,6 +23,8 @@ from gcp import (
     update_poster_success,
     upload_to_gcs,
 )
+from posters import detect_extension, poster_uuid
+from transform import transform_movie
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -63,21 +60,6 @@ def sync_movies() -> None:
     )
 
 
-def _poster_uuid(poster_url: str) -> str:
-    return str(uuid.uuid5(uuid.NAMESPACE_URL, poster_url))
-
-
-def _detect_extension(url: str, content_type: str | None) -> str:
-    suffix = PurePosixPath(urlparse(url).path).suffix
-    if suffix:
-        return suffix.lstrip(".")
-    if content_type:
-        ext = mimetypes.guess_extension(content_type.split(";")[0].strip())
-        if ext:
-            return ext.lstrip(".")
-    return "jpg"
-
-
 @app.command("sync-posters")
 def sync_posters(
     max_retries: int = typer.Option(3, help="Max download attempts per poster."),
@@ -94,16 +76,14 @@ def sync_posters(
     with httpx.Client(timeout=60.0, follow_redirects=True) as http:
         for row in pending:
             movie_id: str = row["movie_id"]
-            poster_url: str | None = row["poster_url"]
+            poster_url: str = row["poster_url"]
 
             try:
                 response = http.get(poster_url)
                 response.raise_for_status()
 
                 content_type = response.headers.get("content-type")
-                ext = _detect_extension(poster_url, content_type)
-                uid = _poster_uuid(poster_url)
-                blob_name = f"{POSTER_PREFIX}/{uid}.{ext}"
+                blob_name = f"{POSTER_PREFIX}/{poster_uuid(poster_url)}.{detect_extension(poster_url, content_type)}"
 
                 gcs_uri = upload_to_gcs(
                     GCS_BUCKET,

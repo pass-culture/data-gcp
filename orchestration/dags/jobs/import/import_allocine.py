@@ -31,7 +31,7 @@ default_args = {
 }
 
 dag_config = {
-    "PROJECT_NAME": GCP_PROJECT_ID,
+    "GCP_PROJECT_ID": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
 }
 

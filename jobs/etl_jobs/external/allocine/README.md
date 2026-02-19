@@ -1,4 +1,4 @@
-# allocinev2 — Allocine ELT pipeline
+# allocine — Allocine ELT pipeline
 
 Idempotent ELT pipeline that syncs movie metadata and poster images from the Allocine GraphQL API to BigQuery and GCS.
 
@@ -47,7 +47,7 @@ Downloads poster images for movies flagged for download and stores them in GCS.
 
 **Steps:**
 
-1. **Fetch pending** — Queries `raw_movies` for rows where `poster_to_download = TRUE AND retry_count < max_retries` (default `max_retries = 3`).
+1. **Fetch pending** — Queries `raw_movies` for rows where `poster_to_download = TRUE AND retry_count < max_retries AND poster_url IS NOT NULL` (default `max_retries = 3`).
 2. **For each row:**
    - Generates a deterministic UUID5 from the `poster_url` (same URL always produces the same filename).
    - Downloads the image via HTTP (`httpx`, 60 s timeout, follows redirects).
@@ -57,7 +57,7 @@ Downloads poster images for movies flagged for download and stores them in GCS.
    - **Success** → `poster_to_download = FALSE`, `poster_gcs_path = <gcs_uri>`, `retry_count = 0`.
    - **Failure** → `retry_count += 1`. The row will be retried on the next run until `retry_count` reaches `max_retries`.
 
-**Idempotency:** If a run is interrupted, only the completed rows have been updated. Remaining rows keep `poster_to_download = TRUE` and will be picked up on the next run. A movie whose `poster_url` changes will have its UUID change too, producing a new GCS object; the old object is left in place.
+**Idempotency:** If a run is interrupted, only completed rows have been updated. Remaining rows keep `poster_to_download = TRUE` and are picked up on the next run. A movie whose `poster_url` changes produces a new GCS object; the old object is left in place.
 
 ---
 
@@ -66,10 +66,12 @@ Downloads poster images for movies flagged for download and stores them in GCS.
 | File | Responsibility |
 |---|---|
 | `constants.py` | All environment-driven config: GCP project, dataset, bucket, table names, API URL, rate-limit parameters. |
-| `client.py` | `AllocineClient` — HTTP client wrapping `httpx` with token-bucket rate limiting, automatic 429 backoff, and cursor-based pagination. |
-| `data.py` | Pure transformation functions: `transform_movie`, `compute_hash`, `normalize_cast`, `normalize_credits`, `parse_runtime_to_minutes`, `sanitize_text`. No I/O. |
-| `gcp.py` | All GCP I/O: Secret Manager (API key retrieval), BigQuery (staging load, MERGE, poster state updates), GCS (image upload). Schema definitions live here. |
-| `main.py` | CLI entry point (`typer`). Wires the above modules together for `sync-movies` and `sync-posters`. |
+| `schema.py` | BigQuery `SchemaField` definitions for `staging_movies` and `raw_movies`, plus the ordered `STAGING_COLUMNS` list and `COMPLEX_COLUMNS` set. |
+| `client.py` | `AllocineClient` — wraps `httpx` with a token-bucket rate limiter, automatic 429 backoff, and cursor-based pagination. No business logic. |
+| `transform.py` | Pure transformation functions: `transform_movie`, `compute_hash`, `normalize_cast`, `normalize_credits`, `parse_runtime_to_minutes`, `sanitize_text`. Zero I/O, zero GCP imports. |
+| `posters.py` | Stateless poster utilities: `poster_uuid` (deterministic UUID5 from URL) and `detect_extension` (extension from URL path or Content-Type header). |
+| `gcp.py` | All BigQuery, GCS and Secret Manager I/O: staging load, MERGE, poster state updates (`update_poster_success`, `update_poster_failure`), pending poster query, API key retrieval. |
+| `main.py` | CLI entry point (`typer`). Orchestration only — wires the above modules together for `sync-movies` and `sync-posters`. Contains no business logic. |
 
 ---
 
@@ -135,11 +137,4 @@ uv sync
 # Run
 uv run python main.py sync-movies
 uv run python main.py sync-posters --max-retries 5
-```
-
-Or after installing the package:
-
-```bash
-allocinev2 sync-movies
-allocinev2 sync-posters --max-retries 5
 ```

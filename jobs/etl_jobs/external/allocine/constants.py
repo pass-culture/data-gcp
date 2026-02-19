@@ -1,8 +1,7 @@
 import os
 
 ENV_SHORT_NAME = os.getenv("ENV_SHORT_NAME", "dev")
-PROJECT_SUFFIX = "prod" if ENV_SHORT_NAME == "prod" else "ehp"
-GCP_PROJECT_ID = f"passculture-data-{PROJECT_SUFFIX}"
+GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID", "passculture-data-ehp")
 SECRET_ID = f"allocine-data-{ENV_SHORT_NAME}-secret-token"
 SECRET_VERSION = "latest"
 
@@ -14,7 +13,7 @@ RAW_TABLE = "raw_movies"
 
 # GCS
 GCS_BUCKET = f"de-lake-{ENV_SHORT_NAME}"
-POSTER_PREFIX = "posters"
+POSTER_PREFIX = "allocine/movie/posters"
 
 # API
 API_BASE_URL = "https://graph-api-proxy.allocine.fr/api"

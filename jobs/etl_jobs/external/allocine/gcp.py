@@ -4,11 +4,12 @@ from google.cloud import bigquery, secretmanager, storage
 from google.cloud.bigquery import LoadJobConfig, SchemaField, WriteDisposition
 
 from constants import BQ_LOCATION, SECRET_VERSION
-from data import RAW_SCHEMA, STAGING_SCHEMA
+from schema import RAW_SCHEMA, STAGING_SCHEMA
 
 logger = logging.getLogger(__name__)
 
 
+### SECRET MANAGEMENT
 def get_secret(project_id: str, secret_id: str, version: str = SECRET_VERSION) -> str:
     client = secretmanager.SecretManagerServiceClient()
     name = f"projects/{project_id}/secrets/{secret_id}/versions/{version}"
@@ -16,6 +17,21 @@ def get_secret(project_id: str, secret_id: str, version: str = SECRET_VERSION) -
     return response.payload.data.decode("utf-8").strip()
 
 
+### GCS
+def upload_to_gcs(
+    bucket_name: str,
+    blob_name: str,
+    content: bytes,
+    content_type: str,
+    gcs_client: storage.Client | None = None,
+) -> str:
+    client = gcs_client or storage.Client()
+    blob = client.bucket(bucket_name).blob(blob_name)
+    blob.upload_from_string(content, content_type=content_type)
+    return f"gs://{bucket_name}/{blob_name}"
+
+
+### BIGQUERY
 def get_bq_client(project_id: str) -> bigquery.Client:
     return bigquery.Client(project=project_id, location=BQ_LOCATION)
 
@@ -39,14 +55,17 @@ def truncate_and_load_staging(
 
 
 def _ensure_raw_table(
-    project_id: str, dataset: str, raw_table: str, client: bigquery.Client, raw_schema: list[SchemaField] = RAW_SCHEMA
+    project_id: str,
+    dataset: str,
+    raw_table: str,
+    client: bigquery.Client,
+    raw_schema: list[SchemaField] = RAW_SCHEMA,
 ) -> None:
     table_id = f"{project_id}.{dataset}.{raw_table}"
     try:
         client.get_table(table_id)
     except Exception:
-        table = bigquery.Table(table_id, schema=raw_schema)
-        client.create_table(table)
+        client.create_table(bigquery.Table(table_id, schema=raw_schema))
         logger.info("Created table %s.", table_id)
 
 
@@ -63,10 +82,8 @@ def merge_staging_to_raw(
     staging_ref = f"`{project_id}.{dataset}.{staging_table}`"
     raw_ref = f"`{project_id}.{dataset}.{raw_table}`"
 
-    # All staging fields except movie_id are updatable
     update_fields = [f.name for f in STAGING_SCHEMA if f.name != "movie_id"]
     update_set = ",\n      ".join(f"T.{f} = S.{f}" for f in update_fields)
-    # Poster trigger: if poster_url changed, re-arm download and reset retries
     update_set += """,
       T.poster_to_download = CASE
         WHEN IFNULL(T.poster_url, '') != IFNULL(S.poster_url, '') THEN TRUE
@@ -166,16 +183,3 @@ def update_poster_failure(
         ]
     )
     client.query(sql, job_config=job_config).result()
-
-
-def upload_to_gcs(
-    bucket_name: str,
-    blob_name: str,
-    content: bytes,
-    content_type: str,
-    gcs_client: storage.Client | None = None,
-) -> str:
-    client = gcs_client or storage.Client()
-    blob = client.bucket(bucket_name).blob(blob_name)
-    blob.upload_from_string(content, content_type=content_type)
-    return f"gs://{bucket_name}/{blob_name}"

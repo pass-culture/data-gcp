@@ -10,7 +10,7 @@ models:
         description: "{{ doc('column__institution_external_id') }}"
       - name: institution_name
         description: "{{ doc('column__institution_name') }}"
-      - name: institution_city_code
+      - name: institution_city
         description: "{{ doc('column__institution_city') }}"
       - name: institution_department_code
         description: "{{ doc('column__institution_department_code') }}"
@@ -18,7 +18,7 @@ models:
         description: "{{ doc('column__institution_region_name') }}"
       - name: institution_academy_name
         description: "{{ doc('column__institution_academy_name') }}"
-      - name: institution_epci_code
+      - name: institution_epci
         description: "{{ doc('column__institution_epci') }}"
       - name: ministry
         description: "{{ doc('column__ministry') }}"

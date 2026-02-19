@@ -393,3 +393,4 @@ select
     coalesce(denominator, 0) as denominator,
     coalesce(safe_divide(numerator, denominator), 0) as kpi
 from unified_metrics
+where dimension_value is not null

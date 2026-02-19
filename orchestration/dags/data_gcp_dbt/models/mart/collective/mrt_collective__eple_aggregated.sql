@@ -218,7 +218,7 @@ select
     flattened_deposits.institution_department_code,
     flattened_deposits.institution_region_name,
     flattened_deposits.institution_academy_name,
-    flattened_deposits.institution_epci,
+    flattened_deposits.institution_epci_code,
     flattened_deposits.ministry,
     flattened_deposits.institution_type,
     flattened_deposits.macro_institution_type,

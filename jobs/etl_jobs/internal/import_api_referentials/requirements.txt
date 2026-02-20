@@ -6,8 +6,6 @@ aiosignal==1.3.1
     # via aiohttp
 attrs==23.2.0
     # via aiohttp
-backports-tarfile==1.2.0
-    # via jaraco-context
 build==1.2.2.post1
     # via poetry
 cachecontrol==0.14.0
@@ -16,7 +14,7 @@ cachetools==5.3.3
     # via google-auth
 certifi==2024.7.4
     # via requests
-cffi==1.17.1
+cffi==2.0.0
     # via cryptography
 charset-normalizer==3.3.2
     # via requests
@@ -24,7 +22,7 @@ cleo==2.1.0
     # via poetry
 crashtest==0.4.1
     # via cleo
-cryptography==43.0.3
+cryptography==46.0.5
     # via secretstorage
 db-dtypes==1.2.0
     # via pandas-gbq
@@ -89,8 +87,6 @@ idna==3.7
     # via
     #   requests
     #   yarl
-importlib-metadata==8.5.0
-    # via keyring
 installer==0.7.0
     # via poetry
 jaraco-classes==3.4.0
@@ -156,7 +152,7 @@ poetry-plugin-export==1.9.0
     # via -r requirements.in
 proto-plus==1.24.0
     # via google-api-core
-protobuf==5.27.2
+protobuf==5.29.6
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -166,7 +162,7 @@ pyarrow==16.1.0
     # via
     #   db-dtypes
     #   pandas-gbq
-pyasn1==0.6.0
+pyasn1==0.6.2
     # via
     #   pyasn1-modules
     #   rsa
@@ -219,7 +215,7 @@ trove-classifiers==2024.10.21.16
     # via poetry
 tzdata==2024.1
     # via pandas
-urllib3==2.2.2
+urllib3==2.6.3
     # via
     #   dulwich
     #   requests
@@ -227,5 +223,3 @@ virtualenv==20.27.1
     # via poetry
 yarl==1.9.4
     # via aiohttp
-zipp==3.20.2
-    # via importlib-metadata

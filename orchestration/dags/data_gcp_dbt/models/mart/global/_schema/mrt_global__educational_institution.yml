@@ -86,8 +86,12 @@ models:
               where: institution_program_name = 'Marseille en grand'
         - accepted_values:
             values: ['ECOLE','COLLEGE','LYCEE']
+      - name: institution_city_code
+        description: "{{ doc('column__institution_city_code') }}"
       - name: institution_city
         description: "{{ doc('column__institution_city') }}"
+      - name: institution_epci_code
+        description: "{{ doc('column__institution_epci_code') }}"
       - name: institution_epci
         description: "{{ doc('column__institution_epci') }}"
       - name: institution_density_label

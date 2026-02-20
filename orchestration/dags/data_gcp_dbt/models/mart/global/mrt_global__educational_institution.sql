@@ -66,9 +66,12 @@ with
     ),
 
     educational_institution_student_headcount as (
-        select institution_id, sum(headcount) as total_students
+        select institution_id, scholar_year, sum(headcount) as total_students
         from {{ ref("int_gsheet__educational_institution_student_headcount") }}
-        group by institution_id
+        group by institution_id, scholar_year
+        qualify
+            row_number() over (partition by institution_id order by scholar_year desc)
+            = 1
     )
 
 select
@@ -86,10 +89,10 @@ select
     cb.last_booking_date,
     sh.total_students,
     institution_metadata_aggregated_type.macro_institution_type,
-    ei.institution_city,
     ei.institution_city_code,
-    ei.institution_epci,
+    ei.institution_city,
     ei.institution_epci_code,
+    ei.institution_epci,
     ei.institution_density_label,
     ei.institution_macro_density_label,
     ei.institution_density_level,

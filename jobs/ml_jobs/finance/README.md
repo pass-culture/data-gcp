@@ -44,7 +44,6 @@ uv run main.py \
 | `backtest_start_date` | Start date for evaluation | `2025-01-01` |
 | `backtest_end_date` | End of evaluation / Start of forecast | `2025-12-01` |
 | `prediction_full_horizon` | End date for the final forecast | `2026-12-30` |
-| `run_backtest` | Run historical evaluation | `True` |
 | `experiment_name` | MLflow experiment name | `finance_prod` |
 
 ## Project Structure

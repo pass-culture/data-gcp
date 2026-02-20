@@ -41,9 +41,6 @@ def main(
     forecast_horizon_date: str = typer.Option(
         ..., help="Forecast horizon end date (YYYY-MM-DD)."
     ),
-    run_backtest: bool = typer.Option(
-        ..., help="Whether to evaluate on backtest data."
-    ),
     experiment_name: str = typer.Option(..., help="MLflow experiment name."),
     dataset: str = typer.Option(
         ..., help="BigQuery dataset containing training data and forecast results."
@@ -61,7 +58,6 @@ def main(
         backtest_start_date: Out-of-sample start date (YYYY-MM-DD).
         backtest_end_date: Out-of-sample end date (YYYY-MM-DD).
         forecast_horizon_date: Forecast horizon end date (YYYY-MM-DD).
-        run_backtest: Whether to evaluate on backtest data.
         experiment_name: MLflow experiment name.
         dataset: BigQuery dataset containing the training data and forecast results.
     """
@@ -93,13 +89,12 @@ def main(
         # 3. Train
         model.train()
 
-        # 4. Evaluate
+        # 4. Evaluate on test/CV and backtest data
         eval_results = model.evaluate()
         mlflow.log_metrics(eval_results)
 
-        if run_backtest:
-            backtest_metrics = model.run_backtest()
-            mlflow.log_metrics(backtest_metrics)
+        backtest_metrics = model.run_backtest()
+        mlflow.log_metrics(backtest_metrics)
 
         # 5. Future Forecast
         forecast_df = model.predict(backtest_end_date, forecast_horizon_date)

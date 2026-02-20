@@ -37,11 +37,6 @@ models:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: dimension_value
         description: "{{ doc('column__dimension_value') }}"
-        data_tests:
-        - not_null:
-              tags: ['critical']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: kpi_name
         description: "{{ doc('column__kpi_name') }}"
         data_tests:

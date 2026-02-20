@@ -3,20 +3,65 @@ version: 2
 models:
   - name: mrt_external_reporting__eac
     description: "{{ doc('description__mrt_external_reporting__eac') }}"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - partition_month
+            - dimension_name
+            - dimension_value
+            - kpi_name
+          tags: ['critical']
+          config:
+            severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
     columns:
       - name: partition_month
         description: "{{ doc('column__partition_month') }}"
+        data_tests:
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: updated_at
         description: "{{ doc('column__updated_at') }}"
       - name: dimension_name
         description: "{{ doc('column__dimension_name') }}"
+        data_tests:
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - accepted_values:
+              values: ["NAT","ACAD","REG","EPCI","COM"]
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: dimension_value
         description: "{{ doc('column__dimension_value') }}"
       - name: kpi_name
         description: "{{ doc('column__kpi_name') }}"
+        data_tests:
+          - not_null:
+                tags: ['critical']
+                config:
+                  severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: numerator
         description: "{{ doc('column__numerator') }}"
+        data_tests:
+          - not_null:
+                tags: ['critical']
+                config:
+                  severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: denominator
         description: "{{ doc('column__denominator') }}"
+        data_tests:
+          - not_null:
+                tags: ['critical']
+                config:
+                  severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: kpi
         description: "{{ doc('column__kpi') }}"
+        data_tests:
+          - not_null:
+                tags: ['critical']
+                config:
+                  severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"

@@ -333,6 +333,45 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         return super().execute(context)
 
 
+class UvxGCEOperator(BaseSSHGCEOperator):
+    """Run a CLI tool on a GCE instance via uvx (no repo clone or venv needed)."""
+
+    template_fields = set(
+        ["package", "python_version"] + list(BaseSSHGCEOperator.template_fields)
+    )
+
+    @apply_defaults
+    def __init__(
+        self,
+        instance_name: str,
+        package: str,
+        command: str,
+        python_version: str = "3.13",
+        environment: t.Dict[str, str] = {},
+        *args,
+        **kwargs,
+    ):
+        self.package = package
+        self.python_version = python_version
+        super().__init__(
+            instance_name=instance_name,
+            command=command,
+            environment=environment,
+            *args,
+            **kwargs,
+        )
+
+    def execute(self, context):
+        environment = dict(SSHGCEOperator.UV_EXPORT, **self.environment)
+        commands_list = [
+            "\n".join([f"export {key}={value}" for key, value in environment.items()]),
+            f"command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh",
+            f'uvx --python {self.python_version} --from "{self.package}" {self.command}',
+        ]
+        self.command = "\n".join(commands_list)
+        return super().execute(context)
+
+
 class InstallDependenciesOperator(SSHGCEOperator):
     REPO = "https://github.com/pass-culture/data-gcp.git"
     template_fields = set(

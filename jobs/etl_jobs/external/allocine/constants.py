@@ -18,7 +18,7 @@ POSTER_PREFIX = "allocine/movie/posters"
 # API
 API_BASE_URL = "https://graph-api-proxy.allocine.fr/api"
 API_MOVIE_ENDPOINT = "/query/movieList"
-API_BATCH_SIZE = 100
+API_REQUESTED_BATCH_SIZE = 50  # The API server caps responses at 50 regardless of this value
 
 # Rate limiting
 RATE_LIMIT_CALLS = 100

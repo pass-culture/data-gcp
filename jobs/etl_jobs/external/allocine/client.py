@@ -6,8 +6,8 @@ import httpx
 
 from constants import (
     API_BASE_URL,
-    API_BATCH_SIZE,
     API_MOVIE_ENDPOINT,
+    API_REQUESTED_BATCH_SIZE,
     MAX_API_RETRIES,
     RATE_LIMIT_BACKOFF,
     RATE_LIMIT_CALLS,
@@ -59,8 +59,7 @@ class AllocineClient:
                         continue
                     response.raise_for_status()
                 elif response.status_code == 401:
-                    logger.error("Unauthorized (401). Check API key.")
-                    return {}
+                    raise ValueError("Unauthorized (401): check your API key.")
                 else:
                     response.raise_for_status()
                 return response.json()
@@ -68,9 +67,9 @@ class AllocineClient:
                 logger.error("HTTP error on attempt %d: %s", attempt + 1, e)
                 if attempt >= MAX_API_RETRIES:
                     raise
-        return {}
+        raise RuntimeError("Exhausted retries without a valid response.")
 
-    def get_movies(self, after_cursor: str | None = None, first: int = API_BATCH_SIZE) -> dict:
+    def get_movies(self, after_cursor: str | None = None, first: int = API_REQUESTED_BATCH_SIZE) -> dict:
         params: dict = {"token": self.api_key, "first": first}
         if after_cursor:
             params["after"] = after_cursor
@@ -102,6 +101,14 @@ class AllocineClient:
             page_info = response.get("movieList", {}).get("pageInfo", {})
             has_next = page_info.get("hasNextPage", False)
             cursor = page_info.get("endCursor")
+
+            actual_batch = len(edges)
+            if actual_batch < API_REQUESTED_BATCH_SIZE:
+                logger.debug(
+                    "API returned %d items, requested %d (server may be capping page size).",
+                    actual_batch,
+                    API_REQUESTED_BATCH_SIZE,
+                )
 
             if not has_next or not cursor:
                 break

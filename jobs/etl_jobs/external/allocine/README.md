@@ -23,7 +23,7 @@ Fetches the full movie catalogue from the Allocine API and performs an upsert in
 
 **Steps:**
 
-1. **Extract** — Paginates through the Allocine GraphQL API (`/query/movieList`) using cursor-based pagination, 100 movies per page, with a token-bucket rate limiter (100 req / 60 s).
+1. **Extract** — Paginates through the Allocine GraphQL API (`/query/movieList`) using cursor-based pagination, max 50 movies per page (server side limitation), with a token-bucket rate limiter (100 req / 60 s).
 2. **Transform** — For each movie node:
    - Parses ISO 8601 runtime to integer minutes.
    - Sanitizes HTML entities in text fields.
@@ -63,15 +63,15 @@ Downloads poster images for movies flagged for download and stores them in GCS.
 
 ## File responsibilities
 
-| File | Responsibility |
-|---|---|
-| `constants.py` | All environment-driven config: GCP project, dataset, bucket, table names, API URL, rate-limit parameters. |
-| `schema.py` | BigQuery `SchemaField` definitions for `staging_movies` and `raw_movies`, plus the ordered `STAGING_COLUMNS` list and `COMPLEX_COLUMNS` set. |
-| `client.py` | `AllocineClient` — wraps `httpx` with a token-bucket rate limiter, automatic 429 backoff, and cursor-based pagination. No business logic. |
-| `transform.py` | Pure transformation functions: `transform_movie`, `compute_hash`, `normalize_cast`, `normalize_credits`, `parse_runtime_to_minutes`, `sanitize_text`. Zero I/O, zero GCP imports. |
-| `posters.py` | Stateless poster utilities: `poster_uuid` (deterministic UUID5 from URL) and `detect_extension` (extension from URL path or Content-Type header). |
-| `gcp.py` | All BigQuery, GCS and Secret Manager I/O: staging load, MERGE, poster state updates (`update_poster_success`, `update_poster_failure`), pending poster query, API key retrieval. |
-| `main.py` | CLI entry point (`typer`). Orchestration only — wires the above modules together for `sync-movies` and `sync-posters`. Contains no business logic. |
+| File             | Responsibility                                                                                                                                                                               |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `constants.py` | All environment-driven config: GCP project, dataset, bucket, table names, API URL, rate-limit parameters.                                                                                    |
+| `schema.py`    | BigQuery `SchemaField` definitions for `staging_movies` and `raw_movies`, plus the ordered `STAGING_COLUMNS` list and `COMPLEX_COLUMNS` set.                                       |
+| `client.py`    | `AllocineClient` — wraps `httpx` with a token-bucket rate limiter, automatic 429 backoff, and cursor-based pagination. No business logic.                                               |
+| `transform.py` | Pure transformation functions:`transform_movie`, `compute_hash`, `normalize_cast`, `normalize_credits`, `parse_runtime_to_minutes`, `sanitize_text`. Zero I/O, zero GCP imports. |
+| `posters.py`   | Stateless poster utilities:`poster_uuid` (deterministic UUID5 from URL) and `detect_extension` (extension from URL path or Content-Type header).                                         |
+| `gcp.py`       | All BigQuery, GCS and Secret Manager I/O: staging load, MERGE, poster state updates (`update_poster_success`, `update_poster_failure`), pending poster query, API key retrieval.         |
+| `main.py`      | CLI entry point (`typer`). Orchestration only — wires the above modules together for `sync-movies` and `sync-posters`. Contains no business logic.                                    |
 
 ---
 
@@ -79,11 +79,11 @@ Downloads poster images for movies flagged for download and stores them in GCS.
 
 All configuration is driven by the `ENV_SHORT_NAME` environment variable:
 
-| Variable | `dev` | `prod` |
-|---|---|---|
-| GCP project | `passculture-data-ehp` | `passculture-data-prod` |
-| BigQuery dataset | `raw_dev` | `raw_prod` |
-| GCS bucket | `de-lake-dev` | `de-lake-prod` |
+| Variable          | `dev`                            | `prod`                            |
+| ----------------- | ---------------------------------- | ----------------------------------- |
+| GCP project       | `passculture-data-ehp`           | `passculture-data-prod`           |
+| BigQuery dataset  | `raw_dev`                        | `raw_prod`                        |
+| GCS bucket        | `de-lake-dev`                    | `de-lake-prod`                    |
 | Secret Manager ID | `allocine-data-dev-secret-token` | `allocine-data-prod-secret-token` |
 
 ---
@@ -94,37 +94,37 @@ All configuration is driven by the `ENV_SHORT_NAME` environment variable:
 
 Truncated and reloaded on every `sync-movies` run.
 
-| Column | Type | Notes |
-|---|---|---|
-| `movie_id` | STRING (PK) | Allocine `id` |
-| `internalId` | STRING | |
-| `title` | STRING | |
-| `originalTitle` | STRING | |
-| `type` | STRING | |
-| `runtime` | INTEGER | Minutes |
-| `synopsis` | STRING | |
-| `poster_url` | STRING | |
-| `backlink_url` | STRING | |
-| `backlink_label` | STRING | |
-| `data_eidr` | STRING | |
-| `data_productionYear` | INTEGER | |
-| `cast_normalized` | STRING | JSON array |
-| `credits_normalized` | STRING | JSON array |
-| `releases` | STRING | JSON array |
-| `countries` | STRING | JSON array |
-| `genres` | STRING | JSON array |
-| `companies` | STRING | JSON array |
-| `content_hash` | STRING | MD5 of all fields |
+| Column                  | Type        | Notes             |
+| ----------------------- | ----------- | ----------------- |
+| `movie_id`            | STRING (PK) | Allocine `id`   |
+| `internalId`          | STRING      |                   |
+| `title`               | STRING      |                   |
+| `originalTitle`       | STRING      |                   |
+| `type`                | STRING      |                   |
+| `runtime`             | INTEGER     | Minutes           |
+| `synopsis`            | STRING      |                   |
+| `poster_url`          | STRING      |                   |
+| `backlink_url`        | STRING      |                   |
+| `backlink_label`      | STRING      |                   |
+| `data_eidr`           | STRING      |                   |
+| `data_productionYear` | INTEGER     |                   |
+| `cast_normalized`     | STRING      | JSON array        |
+| `credits_normalized`  | STRING      | JSON array        |
+| `releases`            | STRING      | JSON array        |
+| `countries`           | STRING      | JSON array        |
+| `genres`              | STRING      | JSON array        |
+| `companies`           | STRING      | JSON array        |
+| `content_hash`        | STRING      | MD5 of all fields |
 
 ### `raw_movies` (source of truth)
 
 All columns from `staging_movies` plus:
 
-| Column | Type | Notes |
-|---|---|---|
-| `poster_to_download` | BOOL | Set `TRUE` on insert or URL change |
-| `poster_gcs_path` | STRING | `gs://` URI, populated by `sync-posters` |
-| `retry_count` | INTEGER | Incremented on failed download attempts |
+| Column                 | Type    | Notes                                        |
+| ---------------------- | ------- | -------------------------------------------- |
+| `poster_to_download` | BOOL    | Set `TRUE` on insert or URL change         |
+| `poster_gcs_path`    | STRING  | `gs://` URI, populated by `sync-posters` |
+| `retry_count`        | INTEGER | Incremented on failed download attempts      |
 
 ---
 

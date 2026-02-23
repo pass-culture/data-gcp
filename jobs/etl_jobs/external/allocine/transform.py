@@ -97,7 +97,7 @@ def transform_movie(raw: dict) -> dict[str, Any]:
     }
 
     # Hash computed before serialization so it reflects semantic values
-    row["content_hash"] = compute_hash({k: v for k, v in row.items()})
+    row["content_hash"] = compute_hash(row)
 
     # Serialize complex columns to JSON strings for BigQuery
     for col in COMPLEX_COLUMNS:

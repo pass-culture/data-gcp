@@ -13,17 +13,15 @@ from constants import (
     SECRET_ID,
     STAGING_TABLE,
 )
-from gcp import (
+from gcp import get_bq_client, get_secret, upload_to_gcs
+from load import (
     fetch_pending_posters,
-    get_bq_client,
-    get_secret,
     merge_staging_to_raw,
+    poster_blob_name,
     truncate_and_load_staging,
     update_poster_failure,
     update_poster_success,
-    upload_to_gcs,
 )
-from posters import detect_extension, poster_uuid
 from transform import transform_movie
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -83,7 +81,7 @@ def sync_posters(
                 response.raise_for_status()
 
                 content_type = response.headers.get("content-type")
-                blob_name = f"{POSTER_PREFIX}/{poster_uuid(poster_url)}.{detect_extension(poster_url, content_type)}"
+                blob_name = poster_blob_name(POSTER_PREFIX, poster_url, content_type)
 
                 gcs_uri = upload_to_gcs(
                     GCS_BUCKET,

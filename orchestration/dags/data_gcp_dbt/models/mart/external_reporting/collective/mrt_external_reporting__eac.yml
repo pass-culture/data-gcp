@@ -65,3 +65,7 @@ models:
                 tags: ['critical']
                 config:
                   severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - kpi_variation_threshold:
+                threshold: 0.3
+                config:
+                  where: "dimension_name IN ('ACAD', 'REG', 'NAT')"

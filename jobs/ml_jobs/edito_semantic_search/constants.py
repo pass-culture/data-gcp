@@ -1,5 +1,8 @@
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
 GCP_PROJECT = os.getenv("GCP_PROJECT", "passculture-data-ehp")
 ENV_SHORT_NAME = os.getenv("ENV_SHORT_NAME", "dev")
 ENVIRONMENT = "prod" if ENV_SHORT_NAME == "prod" else "ehp"
@@ -10,7 +13,7 @@ GCS_PARQUET_FILE = f"gs://mlflow-bucket-{ENVIRONMENT}/streamlit_data/chatbot_edi
 TABLE_NAME = f"offers_{ENV_SHORT_NAME}"
 
 SERVICE_ACCOUNT_EMAIL = (
-    f"algo-training-{ENV_SHORT_NAME}@passculture-data-ehp.iam.gserviceaccount.com"
+    f"algo-training-{ENV_SHORT_NAME}@{GCP_PROJECT}.iam.gserviceaccount.com"
 )
 REGION = "europe-west1"
 EXPERIMENT_NAME = f"search_edito_{ENV_SHORT_NAME}"

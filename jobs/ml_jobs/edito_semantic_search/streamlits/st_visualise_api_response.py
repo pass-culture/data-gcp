@@ -88,7 +88,7 @@ if st.sidebar.button("Send Request"):
                     how="left",
                 )
                 st.subheader("Merged Offers with Metadata")
-                st.dataframe(merged_df.head(100))
+                st.dataframe(merged_df)
         else:
             st.info("No offers/results/items found in response.")
     except Exception as e:

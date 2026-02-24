@@ -67,15 +67,54 @@ class SearchClient:
 
     def table_query(self, k: int = 1000, filters: list[dict] | None = None):
         """
-        Performs a scalar search using polars lazy mode on a Parquet directory in GCS
-        (supports data-*.parquet).
+        Performs a scalar search using polars lazy mode on a Parquet directory in GCS.
+        Optimized for hive-partitioned data and sorted item_id column.
         """
-        lf = pl.scan_parquet(PARQUET_FILE)
+        # Separate partition columns from other filters for optimal query planning
+        partition_cols = {"offer_subcategory_id", "venue_department_code"}
+        partition_filters = []
+        item_id_filters = []
+        other_filters = []
+
         if filters:
-            lf = apply_filters(lf, filters)
-        df = lf.select(["item_id", "offer_id"]).head(k).collect()
-        result = df.to_dicts()
-        return result
+            for f in filters:
+                col = f["column"]
+                if col in partition_cols:
+                    partition_filters.append(f)
+                elif col == "item_id":
+                    item_id_filters.append(f)
+                else:
+                    other_filters.append(f)
+
+        # Build the scan with hive partitioning enabled
+        lf = pl.scan_parquet(PARQUET_FILE, hive_partitioning=True)
+
+        # Identify all columns needed
+        filter_columns = set()
+        if filters:
+            for f in filters:
+                filter_columns.add(f["column"])
+        needed_columns = list(filter_columns | {"item_id", "offer_id"})
+
+        # Apply filters in optimal order:
+        # 1. Partition filters first (prunes entire files - HUGE speedup)
+        if partition_filters:
+            lf = apply_filters(lf, partition_filters)
+
+        # 2. Select only needed columns early (reduces I/O)
+        lf = lf.select(needed_columns)
+
+        # 3. item_id filters (leverages sorting within partitions)
+        if item_id_filters:
+            lf = apply_filters(lf, item_id_filters)
+
+        # 4. Other filters last
+        if other_filters:
+            lf = apply_filters(lf, other_filters)
+
+        # Limit, then select final columns, then collect
+        df = lf.head(k).select(["item_id", "offer_id"]).collect()
+        return df.to_dicts()
 
     def vector_search(self, query_vector, k: int = 5):
         """Performs a vector similarity search using LanceDB's search method."""

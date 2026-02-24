@@ -13,7 +13,7 @@
                     order by partition_month
                 ) as prev_val
             from {{ model }}
-        )
+        ),
 
         latest_month as (select max(partition_month) as max_date from {{ model }})
 

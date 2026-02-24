@@ -15,8 +15,11 @@
             from {{ model }}
         )
 
+        latest_month as (select max(partition_month) as max_date from {{ model }})
+
     select *
     from monthly_values
+    join latest_month on monthly_values.partition_month = latest_month.max_date
     where
         prev_val is not null
         and prev_val != 0

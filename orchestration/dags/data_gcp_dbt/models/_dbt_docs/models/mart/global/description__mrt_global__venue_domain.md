@@ -1,13 +1,13 @@
 ---
 title: Venue Domain
-description: Description of the `mrt_global__venue_domain` table.
+description: Description of the `mrt_mapping__venue_domain` table.
 ---
 
-{% docs description__mrt_global__venue_domain %}
+{% docs description__mrt_mapping__venue_domain %}
 
 # Table: Venue Domain
 
-The `mrt_global__venue_domain` table is designed to store the list of the educational domains associated to venues.
+The `mrt_mapping__venue_domain` table is designed to store the list of the educational domains associated to venues.
 
 {% enddocs %}
 
@@ -15,4 +15,4 @@ Venues can be related to several educational domains, reported during subscripti
 
 ## Table description
 
-{% docs table__mrt_global__venue_domain  %}{% enddocs %}
+{% docs table__mrt_mapping__venue_domain  %}{% enddocs %}

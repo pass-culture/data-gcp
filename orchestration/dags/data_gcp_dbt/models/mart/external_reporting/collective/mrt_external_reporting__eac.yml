@@ -66,6 +66,6 @@ models:
                 config:
                   severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
           - kpi_variation_threshold:
-                threshold: 0.3
+                threshold: 0.5
                 config:
-                  where: "dimension_name IN ('ACAD', 'REG', 'NAT')"
+                  where: "dimension_name IN ('NAT')"

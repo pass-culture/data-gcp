@@ -128,7 +128,7 @@ _base_install:
 
 create_microservice:
 	uv run python automations/create_microservice.py --ms-name $(MS_NAME) --ms-type $(MS_TYPE)
-	cd $(MS_BASE_PATH)/$(MS_NAME) && uv init --no-workspace -p 3.12 && uv add -r requirements.in && uv sync
+	cd $(MS_BASE_PATH)/$(MS_NAME) && uv init --no-workspace -p $$PYTHON_VERSION && uv add -r requirements.in && uv sync
 	cd $(MS_BASE_PATH)/$(MS_NAME) && cat pyproject.toml.template >> pyproject.toml && rm requirements.in pyproject.toml.template
 	git add . && git commit -am "auto: Add $(MS_NAME) as $(MS_TYPE) microservice"
 
@@ -148,8 +148,8 @@ create_microservice_etl_internal:
 
 
 docker_compile:
-	uv export --format requirements-txt --only-group airflow -o orchestration/airflow/orchestration-requirements.txt --python=python3.10 --no-hashes
-	uv export --format requirements-txt --only-group airflow -o orchestration/k8s-airflow/k8s-worker-requirements.txt --python=python3.10 --no-hashes
+	uv export --format requirements-txt --only-group airflow -o orchestration/airflow/orchestration-requirements.txt --python=python$$PYTHON_VERSION --no-hashes
+	uv export --format requirements-txt --only-group airflow -o orchestration/k8s-airflow/k8s-worker-requirements.txt --python=python$$PYTHON_VERSION --no-hashes
 
 
 

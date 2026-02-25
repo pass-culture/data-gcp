@@ -244,14 +244,15 @@ google = [
 
 [[package]]
 name = "apache-airflow-providers-common-compat"
-version = "1.6.1"
+version = "1.13.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "apache-airflow" },
+    { name = "asgiref" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/80/8e/83a663253b1b5784629c345570b150b3ecb8140829648a4f4bb08bd87d52/apache_airflow_providers_common_compat-1.6.1.tar.gz", hash = "sha256:400d37f059842075fc58c3c6625ac54b464aa36d4cf23abee34374b31c15ffc8", size = 24607, upload-time = "2025-04-28T07:38:21.703Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ec/07/7730746ee15acf75ead9dfbe37740b3ad81e62c19caec3bf208f78fddb85/apache_airflow_providers_common_compat-1.13.1.tar.gz", hash = "sha256:7807388511aa3a19f326943ee8277f66dd2f6ccc88f449b220a6d0ed64c11fee", size = 39075, upload-time = "2026-02-14T13:23:22.704Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/03/59/3e69fdb586e90f0e7c1dde43287e59b2cfef89585502fbf8ae25024ff9c5/apache_airflow_providers_common_compat-1.6.1-py3-none-any.whl", hash = "sha256:0ab50bb44506d545bf366742ba80beb837533735fba88218cee7472045f49732", size = 30248, upload-time = "2025-04-28T07:38:18.413Z" },
+    { url = "https://files.pythonhosted.org/packages/40/06/7bb62871752c74cafdd69b52f48cd6277efdbdfaf655e0732daca631b4ba/apache_airflow_providers_common_compat-1.13.1-py3-none-any.whl", hash = "sha256:4192e00c1136bc38835d19d261e387bffdb4382d7a4c37df367620ef3bd5d724", size = 41880, upload-time = "2026-02-14T13:22:39.119Z" },
 ]
 
 [[package]]
@@ -408,6 +409,23 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/4a/a2/68ab374a1ccf016f7c6999210226d617fd572fcae0240882f5c280339ae1/apache_airflow_providers_imap-3.8.3.tar.gz", hash = "sha256:6da4a26c4b087f8c5bb5aa025f3cba382f6f16d92fbd9a1ac8555fc95654a2b6", size = 12119, upload-time = "2025-03-13T17:44:20.869Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f8/a9/9c6b3abdc296abec8091fc26345fd0642fb0c112cd6f51747eb1f62ae199/apache_airflow_providers_imap-3.8.3-py3-none-any.whl", hash = "sha256:f81a1221d82c1db750ae007b6a1091a6748688753d977c89c487e5145c80c8b9", size = 16591, upload-time = "2025-03-13T17:42:42.835Z" },
+]
+
+[[package]]
+name = "apache-airflow-providers-openlineage"
+version = "2.10.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "apache-airflow" },
+    { name = "apache-airflow-providers-common-compat" },
+    { name = "apache-airflow-providers-common-sql" },
+    { name = "attrs" },
+    { name = "openlineage-integration-common" },
+    { name = "openlineage-python" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/55/a8/0182498017a8e35e6e87a87622d04c56398dc3113bce8aff9e81e3455de2/apache_airflow_providers_openlineage-2.10.2.tar.gz", hash = "sha256:3299c301129943ffce01d7803d3184ceafbd38ace8aee5f34cf84143da6ecd83", size = 182837, upload-time = "2026-02-14T13:23:37.406Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cd/1e/de7c4ea6cee8196aade15bb2b0b96bd9462a9ef0e8fa9e6b0ba10478b4ed/apache_airflow_providers_openlineage-2.10.2-py3-none-any.whl", hash = "sha256:61a0766774886a0260d2d0da74e0e7e8b6dc7e384521d7a6c164f7fdb7dd0fca", size = 75096, upload-time = "2026-02-14T13:23:00.235Z" },
 ]
 
 [[package]]
@@ -938,6 +956,7 @@ source = { virtual = "." }
 [package.dev-dependencies]
 airflow = [
     { name = "apache-airflow", extra = ["gcp", "google"] },
+    { name = "apache-airflow-providers-openlineage" },
     { name = "apache-airflow-providers-ssh" },
     { name = "dbt-bigquery" },
     { name = "dbt-core" },
@@ -983,6 +1002,7 @@ docs = [
 [package.metadata.requires-dev]
 airflow = [
     { name = "apache-airflow", extras = ["google", "gcp"], specifier = "==2.11.1" },
+    { name = "apache-airflow-providers-openlineage", specifier = ">=1.8.0" },
     { name = "apache-airflow-providers-ssh", specifier = ">=4.0.1" },
     { name = "dbt-bigquery", specifier = "==1.11.0" },
     { name = "dbt-core", specifier = "==1.10.11" },
@@ -3330,6 +3350,47 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/0b/5f/19930f824ffeb0ad4372da4812c50edbd1434f678c90c2733e1188edfc63/oauthlib-3.3.1.tar.gz", hash = "sha256:0f0f8aa759826a193cf66c12ea1af1637f87b9b4622d46e866952bb022e538c9", size = 185918, upload-time = "2025-06-19T22:48:08.269Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/be/9c/92789c596b8df838baa98fa71844d84283302f7604ed565dafe5a6b5041a/oauthlib-3.3.1-py3-none-any.whl", hash = "sha256:88119c938d2b8fb88561af5f6ee0eec8cc8d552b7bb1f712743136eb7523b7a1", size = 160065, upload-time = "2025-06-19T22:48:06.508Z" },
+]
+
+[[package]]
+name = "openlineage-integration-common"
+version = "1.44.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "attrs" },
+    { name = "openlineage-python" },
+    { name = "openlineage-sql" },
+    { name = "pyyaml" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/16/a3/22483c3ba157a60dd7c58c4e325eaf92cb1c31f5b2b9faea8f65d1d711b6/openlineage_integration_common-1.44.1-py3-none-any.whl", hash = "sha256:a8809b90e77bb97fbd99676c3a65ab661e7651c9d92ab406801398c1fe7ea53d", size = 57640, upload-time = "2026-02-20T17:24:25.998Z" },
+]
+
+[[package]]
+name = "openlineage-python"
+version = "1.44.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "attrs" },
+    { name = "httpx" },
+    { name = "packaging" },
+    { name = "python-dateutil" },
+    { name = "pyyaml" },
+    { name = "requests" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8f/5d/e398d28e8948e96fe869ba09415c60d0c10dd9653b8c376d93f1748f3b63/openlineage_python-1.44.1-py3-none-any.whl", hash = "sha256:cc121f82cb15dcf5f2f1347bd30d4c83cae1d510809e6ccce111b98298271503", size = 102883, upload-time = "2026-02-20T17:24:29.681Z" },
+]
+
+[[package]]
+name = "openlineage-sql"
+version = "1.44.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/7b/56/f9c300fa287ed6822dfc2e2bbbdefc9fd1bda2cdda6db5faf310fd0f17e7/openlineage_sql-1.44.1.tar.gz", hash = "sha256:7676f99969796b062b5d5497d247916b2c74e3c25b9a37563a6d3d5f34a506e6", size = 40389, upload-time = "2026-02-20T17:24:39.062Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/11/58/e49fe28c47fac59125ab714c9ff32c2133923be84a4dcef6e39d80a409a2/openlineage_sql-1.44.1-cp39-abi3-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:a5217b07c3e5cb55cc24e22455984b47d5294bb0c367eb5c627371ad3ddb129c", size = 4907508, upload-time = "2026-02-20T17:24:30.819Z" },
+    { url = "https://files.pythonhosted.org/packages/51/72/41873b3ab829611bf8fb006c061aa94eefa263817f654ffa02514eb2288a/openlineage_sql-1.44.1-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:2421d3abfc772117c39217bbd4dbb3c291e273844cf367639c8a56c124b48cd0", size = 2449582, upload-time = "2026-02-20T17:24:36.518Z" },
+    { url = "https://files.pythonhosted.org/packages/eb/9a/a2abcfdb9cd745c772ee11f4c4f4ceffead6723c6fe159c51db163f52543/openlineage_sql-1.44.1-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:a8f1ef8a253ab966fbce36d535c40d566642c395842a4aa77c5e98a25060293a", size = 2616407, upload-time = "2026-02-20T17:24:38.007Z" },
 ]
 
 [[package]]

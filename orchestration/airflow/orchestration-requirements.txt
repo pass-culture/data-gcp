@@ -44,13 +44,15 @@ apache-airflow==2.11.1
     #   apache-airflow-providers-google
     #   apache-airflow-providers-http
     #   apache-airflow-providers-imap
+    #   apache-airflow-providers-openlineage
     #   apache-airflow-providers-smtp
     #   apache-airflow-providers-sqlite
     #   apache-airflow-providers-ssh
-apache-airflow-providers-common-compat==1.6.1
+apache-airflow-providers-common-compat==1.13.1
     # via
     #   apache-airflow
     #   apache-airflow-providers-fab
+    #   apache-airflow-providers-openlineage
     #   apache-airflow-providers-smtp
 apache-airflow-providers-common-io==1.5.4
     # via apache-airflow
@@ -58,6 +60,7 @@ apache-airflow-providers-common-sql==1.26.0
     # via
     #   apache-airflow
     #   apache-airflow-providers-google
+    #   apache-airflow-providers-openlineage
     #   apache-airflow-providers-sqlite
 apache-airflow-providers-fab==1.5.4
     # via apache-airflow
@@ -69,6 +72,7 @@ apache-airflow-providers-http==5.2.2
     # via apache-airflow
 apache-airflow-providers-imap==3.8.3
     # via apache-airflow
+apache-airflow-providers-openlineage==2.10.2
 apache-airflow-providers-smtp==2.0.3
     # via apache-airflow
 apache-airflow-providers-sqlite==4.0.2
@@ -81,15 +85,19 @@ argcomplete==3.6.2
 asgiref==3.8.1
     # via
     #   apache-airflow
+    #   apache-airflow-providers-common-compat
     #   apache-airflow-providers-google
     #   apache-airflow-providers-http
 attrs==25.3.0
     # via
     #   aiohttp
     #   apache-airflow
+    #   apache-airflow-providers-openlineage
     #   cattrs
     #   jsonschema
     #   looker-sdk
+    #   openlineage-integration-common
+    #   openlineage-python
     #   referencing
 authlib==1.6.0
     # via flask-oidc
@@ -595,6 +603,7 @@ httpx==0.28.1
     #   apache-airflow
     #   apache-airflow-providers-google
     #   google-genai
+    #   openlineage-python
 idna==3.10
     # via
     #   anyio
@@ -729,6 +738,14 @@ numpy==1.26.4
     #   shapely
 oauthlib==3.3.1
     # via requests-oauthlib
+openlineage-integration-common==1.44.1
+    # via apache-airflow-providers-openlineage
+openlineage-python==1.44.1
+    # via
+    #   apache-airflow-providers-openlineage
+    #   openlineage-integration-common
+openlineage-sql==1.44.1
+    # via openlineage-integration-common
 opentelemetry-api==1.39.1
     # via
     #   apache-airflow
@@ -778,6 +795,7 @@ packaging==25.0
     #   limits
     #   marshmallow
     #   marshmallow-sqlalchemy
+    #   openlineage-python
     #   pandas-gbq
     #   sqlalchemy-bigquery
 pandas==2.2.3
@@ -969,6 +987,7 @@ python-dateutil==2.9.0.post0
     #   dbt-semantic-interfaces
     #   flask-appbuilder
     #   google-cloud-bigquery
+    #   openlineage-python
     #   pandas
     #   pendulum
     #   posthog
@@ -1001,6 +1020,8 @@ pyyaml==6.0.2
     #   dbt-core
     #   dbt-semantic-interfaces
     #   google-ads
+    #   openlineage-integration-common
+    #   openlineage-python
 ratelimit==2.2.1
     # via elementary-data
 referencing==0.36.2
@@ -1023,6 +1044,7 @@ requests==2.32.4
     #   google-cloud-storage
     #   google-genai
     #   looker-sdk
+    #   openlineage-python
     #   opentelemetry-exporter-otlp-proto-http
     #   posthog
     #   pymsteams

@@ -38,10 +38,11 @@ DATABASE_URI = (
     f"gs://mlflow-bucket-{ENVIRONMENT}/streamlit_data/chatbot_edito/search_db"
 )
 # Update this path after running parquet_partioning.py
-PARQUET_FILE = f"gs://mlflow-bucket-{ENVIRONMENT}/streamlit_data/chatbot_edito/chatbot_encoded_offers_metadata_{ENV_SHORT_NAME}/partitioned/**/*.parquet"
+PARQUET_FILE = f"gs://mlflow-bucket-{ENVIRONMENT}/streamlit_data/chatbot_edito/chatbot_encoded_offers_metadata_{ENV_SHORT_NAME}/partitioned"
 VECTOR_TABLE = "embeddings"
 SCALAR_TABLE = "offers" if ENVIRONMENT == "prod" else f"offers_{ENV_SHORT_NAME}"
-K_RETRIEVAL = 250 if ENVIRONMENT == "prod" else 50
+K_RETRIEVAL = 50
+# K_RETRIEVAL = 250 if ENVIRONMENT == "prod" else 50
 MAX_OFFERS = 3000 if ENVIRONMENT == "prod" else 50
-GEMINI_MODEL_NAME = "gemini-2.5-flash"
+GEMINI_MODEL_NAME = "gemini-2.0-flash"
 PERFORM_VECTOR_SEARCH = ENV_SHORT_NAME not in ["dev"]

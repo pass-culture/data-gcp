@@ -2,10 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class PredictionRequest(BaseModel):
-    """
-    Pydantic model for parsing the incoming prediction request.
-    Ensures if 'items' is empty, 'offer_id' is used as fallback.
-    """
+    """Incoming prediction request."""
 
     search_query: str = Field(..., description="The search query string.")
     filters_list: list[dict] | None = Field(
@@ -14,8 +11,16 @@ class PredictionRequest(BaseModel):
 
 
 class ItemSelection(BaseModel):
-    item_id: str
-    pertinence: str
+    """A single selected item from the catalog."""
+
+    item_id: str = Field(
+        ...,
+        description="The numeric item_id from the 'item_id' column of the table (e.g. '1', '2').",
+    )
+    pertinence: str = Field(
+        ...,
+        description="Brief explanation in French of why this item matches the query (max 2 sentences).",
+    )
 
 
 class OfferSelection(BaseModel):
@@ -24,7 +29,12 @@ class OfferSelection(BaseModel):
 
 
 class EditorialResult(BaseModel):
-    items: list[ItemSelection] = Field(default_factory=list)
+    """List of items selected by the LLM from the catalog."""
+
+    items: list[ItemSelection] = Field(
+        default_factory=list,
+        description="List of selected items. Empty list if no items match.",
+    )
 
 
 class SearchResult(BaseModel):

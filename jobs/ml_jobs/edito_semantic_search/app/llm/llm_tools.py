@@ -6,6 +6,7 @@ from loguru import logger
 from pydantic_ai import Agent
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.providers.google import GoogleProvider
+from pydantic_ai.settings import ModelSettings
 
 from app.constants import GCP_PROJECT, GEMINI_MODEL_NAME
 from app.models.validators import EditorialResult
@@ -30,25 +31,22 @@ def build_vertex_gemini_agent(model_name: str = "gemini-1.5-flash"):
     model = GoogleModel(
         model_name,
         provider=_provider,
-        settings={
-            "temperature": 0.0,  # 0.0 is faster than 0.1
-            "top_p": 0.95,  # Higher for better JSON compliance
-            "top_k": 40,  # Add top_k for more deterministic output
-        },
     )
     return model
 
 
 gemini_model = build_vertex_gemini_agent(model_name=GEMINI_MODEL_NAME)
-MAX_VALIDATION_RETRIES = 1  # Reduce retries to speed up failure cases
 _cached_agent = Agent(
     gemini_model,
     output_type=EditorialResult,
     system_prompt=SYSTEM_PROMPT,
-    retries=MAX_VALIDATION_RETRIES,  # Balance between speed and reliability
+    retries=1,
+    model_settings=ModelSettings(
+        temperature=0.0,
+    ),
 )
 logger.info(
-    f"Google Gemini agent initialized successfully, with model: {GEMINI_MODEL_NAME}, and max_retries: {MAX_VALIDATION_RETRIES}"
+    f"Google Gemini agent initialized successfully, with model: {GEMINI_MODEL_NAME}"
 )
 
 # --- Logic ---
@@ -77,7 +75,6 @@ def build_context_from_df(retrieved_results: list):
         "offer_description",
         "offer_subcategory_id",
     ]
-    # Ensure descriptions are flattened to a single line
     if "offer_description" in df.columns:
         df["offer_description"] = (
             df["offer_description"]
@@ -86,9 +83,11 @@ def build_context_from_df(retrieved_results: list):
             .str.slice(0, 200)
         )
 
-    # Rename short_id to id for the prompt header
+    # Rename short_id to item_id so it matches the pydantic output schema exactly
     markdown_table = (
-        df[cols_to_keep].rename(columns={"short_id": "id"}).to_markdown(index=False)
+        df[cols_to_keep]
+        .rename(columns={"short_id": "item_id"})
+        .to_markdown(index=False)
     )
 
     return markdown_table, reverse_id_map
@@ -110,7 +109,7 @@ def build_prompt(question, retrieved_results, custom_prompt=None):
             "### TÂCHE\n"
             "Analyse les offres du tableau ci-dessus.\n"
             "Sélectionne celles qui correspondent à la requête.\n"
-            "Utilise UNIQUEMENT les IDs de la colonne 'id' du tableau.\n"
+            "Utilise UNIQUEMENT les item_id de la colonne 'item_id' du tableau.\n"
         ),
     )
 
@@ -173,16 +172,16 @@ def llm_thematic_filtering(
         try:
             item_dict = item.dict() if hasattr(item, "dict") else item
 
-            # Validate required fields
-            if "item_id" not in item_dict:
+            # Accept both "item_id" and "id" (fallback for LLM inconsistency)
+            raw_id = item_dict.get("item_id") or item_dict.get("id")
+            if not raw_id:
                 logger.error(
-                    f"Item {idx} missing 'item_id'. Keys: {list(item_dict.keys())}. "
-                    "Check if LLM is using 'item_id' not 'id'"
+                    f"Item {idx} missing 'item_id'. Keys: {list(item_dict.keys())}."
                 )
                 continue
 
             # Map the Short ID back to original
-            short_id = str(item_dict["item_id"])
+            short_id = str(raw_id)
             if short_id in reverse_map:
                 item_dict["item_id"] = reverse_map[short_id]
             else:

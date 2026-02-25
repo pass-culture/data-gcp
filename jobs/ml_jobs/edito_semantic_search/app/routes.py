@@ -77,7 +77,7 @@ def _perform_warmup():
                     "id": "1",
                     "offer_name": "Warmup",
                     "offer_description": "Test",
-                    "offer_subcategory_id": "TEST",
+                    "offer_subcategory_id": "LIVRE_PAPIER",
                 }
             ]
             _ = llm_thematic_filtering("warmup test", dummy_results)
@@ -223,7 +223,36 @@ def predict():
         filters = prediction_request.filters_list or []
         if item_ids:
             filters.append({"column": "item_id", "operator": "in", "value": item_ids})
+
+            # Derive partition hints from vector results to avoid full GCS scan.
+            # We already know which subcategories our selected items belong to.
+            has_user_subcategory_filter = any(
+                f["column"] == "offer_subcategory_id" for f in filters
+            )
+            if not has_user_subcategory_filter:
+                subcategory_by_id = {
+                    str(r["id"]): r["offer_subcategory_id"]
+                    for r in vector_search_results
+                    if "offer_subcategory_id" in r and r["offer_subcategory_id"] not in (None, "None")
+                }
+                selected_subcategories = list(
+                    {subcategory_by_id[iid] for iid in item_ids if iid in subcategory_by_id}
+                )
+                if selected_subcategories:
+                    filters.append(
+                        {
+                            "column": "offer_subcategory_id",
+                            "operator": "in",
+                            "value": selected_subcategories,
+                        }
+                    )
+                    logger.info(
+                        f"Injected partition hint: {len(selected_subcategories)} subcategories "
+                        f"from vector results"
+                    )
+
         # Here we do the scalar search
+        logger.info(f"Performing scalar search with filters: {filters}")
         table_time = time.time()
         scalar_search_results = search_client.table_query(filters=filters, k=MAX_OFFERS)
         logger.info(

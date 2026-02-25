@@ -1,113 +1,106 @@
-"""
-Script to partition the existing parquet file by offer_subcategory_id and venue_department_code.
-This enables hive partitioning for massive query speedups.
-
-Usage:
-    python parquet_partioning.py --env dev
-    python parquet_partioning.py --env prod --dry-run
-"""
-
 import os
 import sys
 from pathlib import Path
 
 import polars as pl
+import pyarrow.dataset as ds
+from pyarrow.fs import GcsFileSystem
 import typer
 from loguru import logger
-
-GCP_PROJECT = os.getenv("GCP_PROJECT", "passculture-data-ehp")
-env = os.getenv("env", "dev")
-
 
 # Add app to path to import constants
 sys.path.insert(0, str(Path(__file__).parent))
 
 app = typer.Typer()
 
-
 @app.command()
 def partition_parquet(
-    env: str = typer.Option("dev", help="Environment: dev,stg or prod"),
-    dry_run: bool = typer.Option(
-        False, help="Show what would be done without executing"
-    ),
+    env: str = typer.Option("dev", help="Environment: dev, stg, or prod"),
+    dry_run: bool = typer.Option(False, help="Show what would be done without executing"),
 ):
     """
     Partition existing parquet file for optimal query performance.
     """
-    ENVIRONMENT = "prod" if env == "prod" else "ehp"
-    PARQUET_FILE = f"gs://mlflow-bucket-{ENVIRONMENT}/streamlit_data/chatbot_edito/chatbot_encoded_offers_metadata_{env}/data-sorted.parquet"
-    logger.info(f"Starting partitioning for environment: {env} ({ENVIRONMENT})")
-    logger.info(f"Source file: {PARQUET_FILE}")
+    gcp_env = "prod" if env == "prod" else "ehp"
+    parquet_file = f"gs://mlflow-bucket-{gcp_env}/streamlit_data/chatbot_edito/chatbot_encoded_offers_metadata_{env}/data-sorted.parquet"
+    output_base = parquet_file.replace("/data-sorted.parquet", "/partitioned")
 
-    # Define output path (replace data-sorted.parquet with partitioned/)
-    output_base = PARQUET_FILE.replace("/data-sorted.parquet", "/partitioned")
-    logger.info(f"Output location: {output_base}")
-
+    logger.info(f"Starting partitioning for environment: {env} ({gcp_env})")
+    
     if dry_run:
         logger.info("DRY RUN - No changes will be made")
-        logger.info(f"Would read from: {PARQUET_FILE}")
-        logger.info(f"Would write to: {output_base}")
-        logger.info("Partitioning by: offer_subcategory_id, venue_department_code")
-        logger.info("Sorting within partitions by: item_id")
+        logger.info(f"Source: {parquet_file}")
+        logger.info(f"Destination: {output_base}")
         return
 
     try:
-        # Read source parquet
-        logger.info("Reading source parquet file...")
-        df = pl.read_parquet(PARQUET_FILE)
-        logger.info(f"Loaded {len(df):,} rows with {len(df.columns)} columns")
+        # 1. Read source parquet
+        logger.info(f"Reading source parquet: {parquet_file}")
+        df = pl.read_parquet(parquet_file)
+        logger.info(f"Loaded {len(df):,} rows.")
 
-        # Check required columns exist
-        required_cols = ["offer_subcategory_id", "venue_department_code", "item_id"]
+        # 2. Check required columns
+        partition_cols = ["offer_subcategory_id", "venue_department_code"]
+        required_cols = partition_cols + ["item_id"]
+        
         missing = [col for col in required_cols if col not in df.columns]
         if missing:
-            logger.error(f"Missing required columns: {missing}")
-            logger.error(f"Available columns: {df.columns}")
-            raise ValueError(f"Missing columns: {missing}")
+            raise ValueError(f"Missing required columns: {missing}. Available: {df.columns}")
 
-        # Sort for optimal performance within partitions
+        # 3. Sort for optimal performance
         logger.info("Sorting data...")
-        df = df.sort(["offer_subcategory_id", "venue_department_code", "item_id"])
+        df = df.sort(required_cols)
 
-        # Log partition distribution
+        # Log partition distribution 
         partition_counts = (
-            df.group_by(["offer_subcategory_id", "venue_department_code"])
-            .agg(pl.count())
-            .sort("count", descending=True)
+            df.group_by(partition_cols)
+            .len()
+            .sort("len", descending=True)
         )
-        logger.info(f"Will create {len(partition_counts)} partitions")
-        logger.info(f"Top 5 largest partitions:\n{partition_counts.head(5)}")
+        logger.info(f"Will create {len(partition_counts)} partitions. Top 5:\n{partition_counts.head(5)}")
 
-        # Write with hive partitioning
-        logger.info("Writing partitioned parquet...")
-        df.write_parquet(
-            output_base,
-            partition_by=["offer_subcategory_id", "venue_department_code"],
-            use_pyarrow=True,
-            pyarrow_options={
-                "compression": "snappy",
-            },
+        # 4. Write directly to GCS using PyArrow (HIVE FORMAT)
+        logger.info(f"Writing partitioned parquet directly to {output_base}...")
+        
+        # Initialize the GCS File System (auto-detects VM credentials)
+        gcs = GcsFileSystem()
+        
+        # PyArrow's GcsFileSystem expects the path without the 'gs://' prefix
+        gcs_target_path = output_base.replace("gs://", "")
+        
+        table = df.to_arrow()
+        
+        # THE FIX: Create an explicit Hive partitioning schema
+        hive_partitioning = ds.partitioning(
+            table.select(partition_cols).schema,  # <-- Swap .schema and .select
+            flavor="hive"
         )
+        
+        ds.write_dataset(
+            table,
+            base_dir=gcs_target_path,
+            filesystem=gcs,
+            format="parquet",
+            partitioning=hive_partitioning,  # <-- Use the explicit Hive schema here
+            existing_data_behavior="overwrite_or_ignore"
+        )
+        logger.info("✅ Direct GCS write completed!")
 
-        logger.info("✅ Partitioning completed successfully!")
-        logger.info(f"Update PARQUET_FILE constant to: {output_base}/**/*.parquet")
+        # 5. Verify on GCS
+        logger.info("Verifying files on GCS...")
+        row_count = pl.scan_parquet(f"{output_base}/**/*.parquet", hive_partitioning=True).select(pl.len()).collect().item()
+        logger.info(f"✅ Verified {row_count:,} rows on GCS.")
 
         # Provide update instructions
         logger.info("\n" + "=" * 60)
         logger.info("NEXT STEPS:")
-        logger.info("1. Update app/constants.py:")
-        logger.info(f'   PARQUET_FILE = "{output_base}/**/*.parquet"')
+        logger.info(f'1. Update app/constants.py: PARQUET_FILE = "{output_base}/**/*.parquet"')
         logger.info("2. Restart your application")
-        logger.info(
-            "3. Queries with subcategory/department filters will be 10-20x faster!"
-        )
         logger.info("=" * 60)
 
     except Exception as e:
         logger.error(f"Partitioning failed: {e}")
         raise
-
 
 if __name__ == "__main__":
     app()

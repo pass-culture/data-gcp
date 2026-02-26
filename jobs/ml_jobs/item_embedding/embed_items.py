@@ -3,10 +3,12 @@ from typing import Generator, Optional
 import numpy as np
 import pandas as pd
 import yaml
+from constants import HF_TOKEN_SECRET_NAME
 from loguru import logger
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
+from utils import get_secret
 
 CONFIGS_PATH = "configs"
 
@@ -123,7 +125,9 @@ def _embed_vector(
 
     _assert_required_features(df_items_metadata, vector.features)
 
-    encoder = SentenceTransformer(vector.encoder_name)
+    encoder = SentenceTransformer(
+        vector.encoder_name, token=get_secret(HF_TOKEN_SECRET_NAME)
+    )
     logger.info(f"Loaded encoder: {vector.encoder_name}")
 
     # Process in batches

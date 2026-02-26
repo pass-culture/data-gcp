@@ -252,7 +252,7 @@ def predict():
                     )
 
         # Here we do the scalar search
-        logger.info(f"Performing scalar search with filters: {filters}")
+        # logger.info(f"Performing scalar search with filters: {filters}")
         table_time = time.time()
         scalar_search_results = search_client.table_query(filters=filters, k=MAX_OFFERS)
         logger.info(

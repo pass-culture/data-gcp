@@ -1,7 +1,5 @@
 import time
-
 import pandas as pd
-from langchain_core.prompts import PromptTemplate
 from loguru import logger
 from pydantic_ai import Agent
 from pydantic_ai.models.google import GoogleModel
@@ -19,23 +17,24 @@ with open("app/llm/system_prompt.txt", encoding="utf-8") as f:
 with open("app/llm/action_prompt.txt", encoding="utf-8") as f:
     ACTION_PROMPT = f.read().strip()
 
-# Initialize provider once to reuse connections
+# Initialize provider once to reuse connections (Excellent for latency)
 _provider = GoogleProvider(vertexai=True, location="europe-west1", project=GCP_PROJECT)
-
 
 def build_vertex_gemini_agent(model_name: str = "gemini-1.5-flash"):
     """
-    Build a Pydantic AI Agent optimized for speed and token density.
+    Build a Pydantic AI Agent optimized for speed.
     """
     logger.info(f"Building Google Gemini agent with model: {model_name}")
+    # Pydantic AI's GoogleModel handles the Vertex API call natively
     model = GoogleModel(
         model_name,
         provider=_provider,
     )
     return model
 
-
 gemini_model = build_vertex_gemini_agent(model_name=GEMINI_MODEL_NAME)
+
+# Pydantic AI automatically handles native structured output via output_type
 _cached_agent = Agent(
     gemini_model,
     output_type=EditorialResult,
@@ -51,24 +50,23 @@ logger.info(
 
 # --- Logic ---
 
-
 def build_context_from_df(retrieved_results: list):
     """
-    Converts list of dicts to a token-efficient Markdown table with Short IDs.
-    Returns: (markdown_table_string, reverse_id_map)
+    Converts list of dicts to a token-efficient TSV table with Short IDs.
+    Returns: (tsv_table_string, reverse_id_map)
     """
     if not retrieved_results:
         return "", {}
 
     df = pd.DataFrame(retrieved_results)
 
-    # 1. Short ID Mapping (Saves massive token space and reduces hallucination)
+    # 1. Short ID Mapping 
     id_map = {str(orig): str(i + 1) for i, orig in enumerate(df["id"])}
     reverse_id_map = {str(i + 1): orig for i, orig in enumerate(df["id"])}
 
     df["short_id"] = df["id"].astype(str).map(id_map)
 
-    # 2. Select columns and clean text (Markdown tables hate newlines)
+    # 2. Select columns and clean text
     cols_to_keep = [
         "short_id",
         "offer_name",
@@ -79,55 +77,50 @@ def build_context_from_df(retrieved_results: list):
         df["offer_description"] = (
             df["offer_description"]
             .fillna("N/A")
-            .str.replace(r"[\n\r]+", " ", regex=True)
-            .str.slice(0, 200)
+            # Strip newlines AND tabs to protect the TSV structure
+            .str.replace(r"[\n\r\t]+", " ", regex=True) 
+            .str.slice(0, 100) 
         )
 
-    # Rename short_id to item_id so it matches the pydantic output schema exactly
-    markdown_table = (
+    # 3. Convert to TSV 
+    tsv_table = (
         df[cols_to_keep]
         .rename(columns={"short_id": "item_id"})
-        .to_markdown(index=False)
+        .to_csv(index=False, sep='\t')
     )
 
-    return markdown_table, reverse_id_map
+    return tsv_table, reverse_id_map
 
-
-def build_prompt(question, retrieved_results, custom_prompt=None):
+def build_prompt(question: str, retrieved_results: list):
     """
-    Build a prompt using Markdown Table context and Short ID mapping.
-    Optimized to ensure correct JSON schema on first try.
+    Build a prompt using TSV Table context with native f-strings for speed.
     """
-    rag_prompt_template = PromptTemplate(
-        input_variables=["context", "question"],
-        template=(
-            "### DONNÉES DES OFFRES\n"
-            "{context}\n\n"
-            "--- \n"
-            "### REQUÊTE UTILISATEUR\n"
-            "{question}\n\n"
-            "### TÂCHE\n"
-            "Analyse les offres du tableau ci-dessus.\n"
-            "Sélectionne celles qui correspondent à la requête.\n"
-            "Utilise UNIQUEMENT les item_id de la colonne 'item_id' du tableau.\n"
-        ),
-    )
-
     context_table, reverse_map = build_context_from_df(retrieved_results)
 
-    prompt = rag_prompt_template.format(context=context_table, question=question)
+    # Dropped LangChain PromptTemplate in favor of native f-strings for lower overhead
+    prompt = (
+        f"### DONNÉES DES OFFRES (Format TSV)\n"
+        f"{context_table}\n\n"
+        f"--- \n"
+        f"### REQUÊTE UTILISATEUR\n"
+        f"{question}\n\n"
+        f"### TÂCHE\n"
+        f"Analyse les offres du tableau ci-dessus.\n"
+        f"Sélectionne celles qui correspondent à la requête.\n"
+    )
 
     logger.info(f"RAG Prompt built: {len(prompt)} chars")
     return prompt, reverse_map
 
-
 def llm_thematic_filtering(
     search_query: str, vector_search_results: list
 ) -> pd.DataFrame:
+    
     # 1. Build prompt and get the ID mapping
     prompt, reverse_map = build_prompt(search_query, vector_search_results)
 
     start_time = time.time()
+    
     # 2. Run LLM
     llm_result = _cached_agent.run_sync(prompt)
     elapsed_time = time.time() - start_time
@@ -145,6 +138,7 @@ def llm_thematic_filtering(
         logger.info(f"LLM completed in {elapsed_time:.2f}s")
 
     # Log if validation took multiple attempts (sign of schema issues)
+    # Pydantic AI retries under the hood if the LLM output fails validation
     if hasattr(llm_result, "_attempt_count") or elapsed_time > 10:
         logger.warning(
             f"⚠️ Slow LLM response ({elapsed_time:.2f}s) - possible validation retries"
@@ -153,7 +147,7 @@ def llm_thematic_filtering(
             f'llm_result _attempt_count: {getattr(llm_result, "_attempt_count", "N/A")} '
         )
 
-    llm_output = llm_result.output
+    llm_output = llm_result.output # Note: Pydantic AI uses .data for the validated response
 
     # 3. Handle result and restore original IDs
     try:
@@ -170,9 +164,10 @@ def llm_thematic_filtering(
     processed_items = []
     for idx, item in enumerate(items):
         try:
-            item_dict = item.dict() if hasattr(item, "dict") else item
+            # Optimized for Pydantic v2 (Pydantic AI standard)
+            item_dict = item.model_dump() if hasattr(item, "model_dump") else item
 
-            # Accept both "item_id" and "id" (fallback for LLM inconsistency)
+            # Accept both "item_id" and "id"
             raw_id = item_dict.get("item_id") or item_dict.get("id")
             if not raw_id:
                 logger.error(

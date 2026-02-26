@@ -149,7 +149,7 @@ class SearchClient:
 
         sub_ids = self._extract_partition_values(filters, "offer_subcategory_id")
         dep_codes = self._extract_partition_values(filters, "venue_department_code")
-
+        # logger.info(f"Extracted partition filters - offer_subcategory_id: {sub_ids}, venue_department_code: {dep_codes}")
         # No partition filters at all → global fallback
         if not sub_ids and not dep_codes:
             logger.debug("No partition filters — using global LazyFrame.")
@@ -162,18 +162,21 @@ class SearchClient:
                 f"{PARQUET_FILE}/offer_subcategory_id={sid}/venue_department_code={dc}/*.parquet"
                 for sid, dc in product(sub_ids, dep_codes)
             ]
+            # logger.info(f"Both partitions → exact directory paths: {paths}")
         elif sub_ids:
             # Only subcategory → wildcard on dept code
             paths = [
                 f"{PARQUET_FILE}/offer_subcategory_id={sid}/**/*.parquet"
                 for sid in sub_ids
             ]
+            # logger.info(f"Only subcategory → wildcard on dept code: {paths}")
         else:
             # Only dept code → wildcard on subcategory
             paths = [
                 f"{PARQUET_FILE}/offer_subcategory_id=*/venue_department_code={dc}/*.parquet"
                 for dc in dep_codes
             ]
+            # logger.info(f"Only dept code → wildcard on subcategory: {paths}")
 
         logger.debug(f"Fast path: scanning {len(paths)} partition glob(s)")
 

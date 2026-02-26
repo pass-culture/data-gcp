@@ -134,24 +134,6 @@ with DAG(
         dag=dag,
     )
 
-    # export_item_metadata_to_gcs = BigQueryInsertJobOperator(
-    #     project_id=GCP_PROJECT_ID,
-    #     task_id="export_item_metadata_to_gcs",
-    #     configuration={
-    #         "extract": {
-    #             "sourceTable": {
-    #                 "projectId": GCP_PROJECT_ID,
-    #                 "datasetId": INPUT_DATASET_NAME,
-    #                 "tableId": INPUT_TABLE_NAME,
-    #             },
-    #             "compression": None,
-    #             "destinationUris": os.path.join(STORAGE_BASE_PATH, INPUT_FILE_NAME),
-    #             "destinationFormat": "PARQUET",
-    #         }
-    #     },
-    #     dag=dag,
-    # )
-
     # Step 1: Run query and save to temp table
     run_query = BigQueryInsertJobOperator(
         project_id=GCP_PROJECT_ID,
@@ -199,8 +181,8 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         command=f"""
             uv run python main.py \
-                --config-file-name "{{ params.config_file_name }}" \
-                --batch-size "{{ params.batch_size }}" \
+                --config-file-name {{{{ params.config_file_name }}}} \
+                --batch-size {{{{ params.batch_size }}}} \
                 --input-parquet-filename {os.path.join(STORAGE_BASE_PATH, INPUT_FILE_NAME)} \
                 --output-parquet-filename {os.path.join(STORAGE_BASE_PATH, OUTPUT_FILE_NAME)} \
         """,

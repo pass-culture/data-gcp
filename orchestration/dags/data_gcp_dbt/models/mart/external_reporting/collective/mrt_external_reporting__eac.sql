@@ -16,6 +16,7 @@
     "eac_cultural_partner",
     "eac_domain",
     "eac_offer_booking",
+    "eac_institution",
 ] %}
 
 {% for model in models %}

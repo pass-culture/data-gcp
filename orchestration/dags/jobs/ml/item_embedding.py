@@ -29,15 +29,16 @@ from common.operators.gce import (
 from jobs.crons import SCHEDULE_DICT
 
 ## GCS
-STORAGE_BASE_PATH = f"gs://{ML_BUCKET_TEMP}/item_embedding"
+BUCKET_BASE_PATH = f"gs://{ML_BUCKET_TEMP}"
+GCS_FOLDER_PATH = f"item_embedding_{ENV_SHORT_NAME}/{{{{ ds_nodash }}}}"
 OUTPUT_FILE_NAME = "item_embeddings.parquet"
 INPUT_FILE_NAME = "item_metadata.parquet"
 
 ## BigQuery
 INPUT_DATASET_NAME = f"ml_input_{ENV_SHORT_NAME}"
-OUTPUT_TABLE_NAME = "item_embedding"  ## TODO: change table name when refactor is done
 INPUT_TABLE_NAME = "item_embedding_extraction"
 TEMP_TABLE_NAME = "item_embedding_tmp"
+
 DATE = "{{ ts_nodash }}"
 DAG_NAME = "item_embedding"
 # Environment variables to export before running commands
@@ -46,7 +47,7 @@ dag_config = {
 }
 
 # Params
-INSTANCE_NAME = f"item-embedding-{ENV_SHORT_NAME}"
+INSTANCE_NAME = "item-embedding"
 INSTANCE_TYPE = {
     "dev": "n1-standard-2",
     "stg": "n1-standard-16",
@@ -166,7 +167,9 @@ with DAG(
                     "tableId": "tmp_item_metadata",
                 },
                 "compression": None,
-                "destinationUris": os.path.join(STORAGE_BASE_PATH, INPUT_FILE_NAME),
+                "destinationUris": os.path.join(
+                    BUCKET_BASE_PATH, GCS_FOLDER_PATH, INPUT_FILE_NAME
+                ),
                 "destinationFormat": "PARQUET",
             }
         },
@@ -180,8 +183,8 @@ with DAG(
             uv run python main.py \
                 --config-file-name {{{{ params.config_file_name }}}} \
                 --batch-size {{{{ params.batch_size }}}} \
-                --input-parquet-filename {os.path.join(STORAGE_BASE_PATH, INPUT_FILE_NAME)} \
-                --output-parquet-filename {os.path.join(STORAGE_BASE_PATH, OUTPUT_FILE_NAME)} \
+                --input-parquet-filename {os.path.join(BUCKET_BASE_PATH, GCS_FOLDER_PATH, INPUT_FILE_NAME)} \
+                --output-parquet-filename {os.path.join(BUCKET_BASE_PATH, GCS_FOLDER_PATH, OUTPUT_FILE_NAME)} \
         """,
     )
 
@@ -189,7 +192,7 @@ with DAG(
         task_id="export_item_embeddings_to_bigquery",
         project_id=GCP_PROJECT_ID,
         bucket=ML_BUCKET_TEMP,
-        source_objects=os.path.join(STORAGE_BASE_PATH, OUTPUT_FILE_NAME),
+        source_objects=os.path.join(GCS_FOLDER_PATH, OUTPUT_FILE_NAME),
         destination_project_dataset_table=f"{BIGQUERY_ML_FEATURES_DATASET}.{TEMP_TABLE_NAME}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",

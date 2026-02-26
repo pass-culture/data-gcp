@@ -15,7 +15,6 @@ from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    GCS_AIRFLOW_BUCKET,
     INSTANCES_TYPES,
     ML_BUCKET_TEMP,
 )
@@ -30,7 +29,7 @@ from common.operators.gce import (
 from jobs.crons import SCHEDULE_DICT
 
 ## GCS
-STORAGE_BASE_PATH = f"gs://{GCS_AIRFLOW_BUCKET}/item_embedding"
+STORAGE_BASE_PATH = f"gs://{ML_BUCKET_TEMP}/item_embedding"
 OUTPUT_FILE_NAME = "item_embeddings.parquet"
 INPUT_FILE_NAME = "item_metadata.parquet"
 

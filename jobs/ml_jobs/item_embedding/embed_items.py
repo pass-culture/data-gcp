@@ -196,8 +196,8 @@ def embed_all_vectors(
             gpu_count,
         )
 
-        # Store as flat (dim,) arrays per row
-        df_embeddings[vector.name] = list(vector_embeddings)
+        # Store as Python lists so PyArrow writes list<float64>
+        df_embeddings[vector.name] = [arr.tolist() for arr in vector_embeddings]
 
     logger.info(f"Final embeddings dataframe columns: {df_embeddings.columns.tolist()}")
     logger.info(f"Number of items: {df_embeddings.shape[0]}")

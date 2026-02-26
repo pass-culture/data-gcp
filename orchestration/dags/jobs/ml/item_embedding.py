@@ -35,11 +35,9 @@ INPUT_FILE_NAME = "item_metadata.parquet"
 
 ## BigQuery
 INPUT_DATASET_NAME = f"ml_input_{ENV_SHORT_NAME}"
-OUTPUT_TABLE_NAME = (
-    "item_embedding_tmp"  ## TODO: change table name when refactor is done
-)
+OUTPUT_TABLE_NAME = "item_embedding"  ## TODO: change table name when refactor is done
 INPUT_TABLE_NAME = "item_embedding_extraction"
-
+TEMP_TABLE_NAME = "item_embedding_tmp"
 DATE = "{{ ts_nodash }}"
 DAG_NAME = "item_embedding"
 # Environment variables to export before running commands
@@ -134,9 +132,9 @@ with DAG(
     )
 
     # Step 1: Run query and save to temp table
-    run_query = BigQueryInsertJobOperator(
+    bigquery_select_items_to_embed = BigQueryInsertJobOperator(
         project_id=GCP_PROJECT_ID,
-        task_id="run_query",
+        task_id="bigquery_select_items_to_embed",
         configuration={
             "query": {
                 "query": f"""
@@ -157,9 +155,9 @@ with DAG(
     )
 
     # Step 2: Export temp table to GCS
-    export_to_gcs = BigQueryInsertJobOperator(
+    export_item_metadata_to_gcs = BigQueryInsertJobOperator(
         project_id=GCP_PROJECT_ID,
-        task_id="export_to_gcs",
+        task_id="export_item_metadata_to_gcs",
         configuration={
             "extract": {
                 "sourceTable": {
@@ -192,7 +190,7 @@ with DAG(
         project_id=GCP_PROJECT_ID,
         bucket=ML_BUCKET_TEMP,
         source_objects=os.path.join(STORAGE_BASE_PATH, OUTPUT_FILE_NAME),
-        destination_project_dataset_table=f"{BIGQUERY_ML_FEATURES_DATASET}.{OUTPUT_TABLE_NAME}",
+        destination_project_dataset_table=f"{BIGQUERY_ML_FEATURES_DATASET}.{TEMP_TABLE_NAME}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,
@@ -208,8 +206,8 @@ with DAG(
         start
         >> gce_instance_start
         >> install_dependencies
-        >> run_query
-        >> export_to_gcs
+        >> bigquery_select_items_to_embed
+        >> export_item_metadata_to_gcs
         >> embed_items
         >> export_item_embeddings_to_bigquery
         >> gce_instance_delete

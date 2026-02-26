@@ -1,0 +1,12 @@
+### TÂCHE
+Analyse les offres culturelles fournies dans le contexte ci-dessous.
+Sélectionne toutes les offres qui correspondent à la thématique : "{question}"
+
+### CONTEXTE
+{context}
+
+### SORTIE ATTENDUE
+Génère une liste d'objets 'offers' respectant strictement le format JSON demandé.
+Pour chaque item :
+- id : L'identifiant original fourni dans le contexte.
+- pertinence : Ton explication brève du lien thématique.

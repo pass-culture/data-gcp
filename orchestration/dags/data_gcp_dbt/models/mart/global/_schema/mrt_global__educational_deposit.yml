@@ -28,3 +28,5 @@ models:
         description: "{{ doc('column__is_current_calendar_year') }}"
       - name: is_current_deposit
         description: "{{ doc('column__is_current_deposit') }}"
+      - name: educational_deposit_creation_date
+        description: "{{ doc('column__educational_deposit_creation_date') }}"

@@ -2,6 +2,7 @@ select
     ed.educational_deposit_id,
     ed.institution_id,
     ed.educational_year_id,
+    ed.educational_deposit_creation_date,
     ed.scholar_year,
     ed.calendar_year,
     ed.educational_deposit_period,

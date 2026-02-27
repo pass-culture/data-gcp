@@ -8,6 +8,7 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
+from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -207,18 +208,31 @@ with DAG(
         python_callable=partial(run_dbt_model, "ml_feat__item_embedding_refactor"),
     )
 
-    # Step 6: Cleanup temp table in BigQuery
-    cleanup_temp_table = BigQueryInsertJobOperator(
-        project_id=GCP_PROJECT_ID,
-        task_id="cleanup_temp_table",
-        configuration={
-            "query": {
-                "query": f"DROP TABLE IF EXISTS `{GCP_PROJECT_ID}.{INPUT_DATASET_NAME}.{TEMP_INT_TABLE_NAME}`",
-                "useLegacySql": False,
-            }
-        },
-        trigger_rule="all_done",
-    )
+    # Step 6: Cleanup temp tables in BigQuery
+    with TaskGroup(group_id="cleanup_temp_tables") as cleanup_temp_tables:
+        cleanup_input_temp_table = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
+            task_id="cleanup_input_temp_table",
+            configuration={
+                "query": {
+                    "query": f"DROP TABLE IF EXISTS `{GCP_PROJECT_ID}.{INPUT_DATASET_NAME}.{TEMP_INT_TABLE_NAME}`",
+                    "useLegacySql": False,
+                }
+            },
+            trigger_rule="all_done",
+        )
+
+        cleanup_output_temp_table = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
+            task_id="cleanup_output_temp_table",
+            configuration={
+                "query": {
+                    "query": f"DROP TABLE IF EXISTS `{GCP_PROJECT_ID}.{OUTPUT_DATASET_NAME}.{TEMP_OUTPUT_TABLE_NAME}`",
+                    "useLegacySql": False,
+                }
+            },
+            trigger_rule="all_done",
+        )
 
     gce_instance_delete = DeleteGCEOperator(
         task_id="gce_stop_task",
@@ -237,6 +251,6 @@ with DAG(
     ] >> embed_items
     embed_items >> export_item_embeddings_to_bigquery
     export_item_embeddings_to_bigquery >> run_dbt_merge
-    run_dbt_merge >> cleanup_temp_table
-    cleanup_temp_table >> gce_instance_delete
+    run_dbt_merge >> cleanup_temp_tables
+    cleanup_temp_tables >> gce_instance_delete
     gce_instance_delete >> stop

@@ -1,4 +1,3 @@
-import os
 from datetime import datetime, timedelta
 
 from airflow import DAG
@@ -28,25 +27,23 @@ from common.operators.gce import (
 
 from jobs.crons import SCHEDULE_DICT
 
-## GCS
-BUCKET_BASE_PATH = f"gs://{ML_BUCKET_TEMP}"
+###########################################################################
+## GCS CONSTANTS
 GCS_FOLDER_PATH = f"item_embedding_{ENV_SHORT_NAME}/{{{{ ds_nodash }}}}"
-OUTPUT_FILE_NAME = "item_embeddings.parquet"
-INPUT_FILE_NAME = "item_metadata.parquet"
+TEMP_OUTPUT_FILE_NAME = "item_embeddings.parquet"
+TEMP_INPUT_FILE_NAME = "item_metadata.parquet"
 
-## BigQuery
+## BigQuery CONSTANTS
 INPUT_DATASET_NAME = f"ml_input_{ENV_SHORT_NAME}"
 INPUT_TABLE_NAME = "item_embedding_extraction"
-TEMP_TABLE_NAME = "item_embedding_tmp"
+TEMP_INT_TABLE_NAME = "tmp_item_metadata"
 
-DATE = "{{ ts_nodash }}"
+OUTPUT_DATASET_NAME = BIGQUERY_ML_FEATURES_DATASET
+TEMP_OUTPUT_TABLE_NAME = "item_embedding_tmp"
+
+## DAG CONFIG
 DAG_NAME = "item_embedding"
-# Environment variables to export before running commands
-dag_config = {
-    "BASE_DIR": "data-gcp/jobs/ml_jobs/item_embedding",
-}
-
-# Params
+BASE_DIR = "data-gcp/jobs/ml_jobs/item_embedding"
 INSTANCE_NAME = "item-embedding"
 INSTANCE_TYPE = {
     "dev": "n1-standard-2",
@@ -54,25 +51,24 @@ INSTANCE_TYPE = {
     "prod": "n1-standard-16",
 }[ENV_SHORT_NAME]
 
-default_args = {
+DEFAULT_ARGS = {
     "start_date": datetime(2025, 12, 1),
     "on_failure_callback": on_failure_vm_callback,
-    "retries": 0,
+    "retries": 1,
     "retry_delay": timedelta(minutes=2),
 }
 
+############################################################################
 with DAG(
     DAG_NAME,
-    default_args=default_args,
+    default_args=DEFAULT_ARGS,
     description="Embed items metadata",
     schedule_interval=SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME],
     catchup=False,
-    dagrun_timeout=timedelta(minutes=20),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
     params={
-        # Infrastructure params (can be overridden at runtime)
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
@@ -85,7 +81,7 @@ with DAG(
         "embed_all": Param(
             default=False,
             type="boolean",
-            description="Whether to embed all items or only the ones that need embedding",
+            description="Whether to embed all items or only the ones that need embedding (to_embed = true in the input table)",
         ),
         "config_file_name": Param(
             default="default",
@@ -126,13 +122,13 @@ with DAG(
     install_dependencies = InstallDependenciesOperator(
         task_id="install_dependencies",
         instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
+        base_dir=BASE_DIR,
         branch="{{ params.branch }}",
         retries=2,
         dag=dag,
     )
 
-    # Step 1: Run query and save to temp table
+    # Step 1: Select items to embed and save to a temp table in BigQuery
     bigquery_select_items_to_embed = BigQueryInsertJobOperator(
         project_id=GCP_PROJECT_ID,
         task_id="bigquery_select_items_to_embed",
@@ -147,15 +143,15 @@ with DAG(
                 "useLegacySql": False,
                 "destinationTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "datasetId": f"sandbox_{ENV_SHORT_NAME}",
-                    "tableId": "tmp_item_metadata",
+                    "datasetId": INPUT_DATASET_NAME,
+                    "tableId": TEMP_INT_TABLE_NAME,
                 },
                 "writeDisposition": "WRITE_TRUNCATE",
             }
         },
     )
 
-    # Step 2: Export temp table to GCS
+    # Step 2: Export temp table to GCS as a parquet file (to be used as input for the embedding script)
     export_item_metadata_to_gcs = BigQueryInsertJobOperator(
         project_id=GCP_PROJECT_ID,
         task_id="export_item_metadata_to_gcs",
@@ -163,40 +159,56 @@ with DAG(
             "extract": {
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "datasetId": f"sandbox_{ENV_SHORT_NAME}",
-                    "tableId": "tmp_item_metadata",
+                    "datasetId": INPUT_DATASET_NAME,
+                    "tableId": TEMP_INT_TABLE_NAME,
                 },
-                "compression": None,
-                "destinationUris": os.path.join(
-                    BUCKET_BASE_PATH, GCS_FOLDER_PATH, INPUT_FILE_NAME
-                ),
+                "destinationUris": [
+                    f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{TEMP_INPUT_FILE_NAME}"
+                ],
                 "destinationFormat": "PARQUET",
             }
         },
     )
 
+    # Step 3: Run the embedding script on the GCE instance, with the exported parquet file as input,
+    # and save the output embeddings as a parquet file in GCS (temp because output parquet only contains to_embed items)
     embed_items = SSHGCEOperator(
         task_id="embed_items",
         instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
+        base_dir=BASE_DIR,
         command=f"""
             uv run python main.py \
                 --config-file-name {{{{ params.config_file_name }}}} \
                 --batch-size {{{{ params.batch_size }}}} \
-                --input-parquet-filename {os.path.join(BUCKET_BASE_PATH, GCS_FOLDER_PATH, INPUT_FILE_NAME)} \
-                --output-parquet-filename {os.path.join(BUCKET_BASE_PATH, GCS_FOLDER_PATH, OUTPUT_FILE_NAME)} \
+                --input-parquet-filename gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{TEMP_INPUT_FILE_NAME} \
+                --output-parquet-filename gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{TEMP_OUTPUT_FILE_NAME} \
         """,
     )
 
+    # Step 4: Export the output embeddings from GCS to BigQuery temp table
+    # (to be merged with the items table in a separate process after the DAG run)
     export_item_embeddings_to_bigquery = GCSToBigQueryOperator(
         task_id="export_item_embeddings_to_bigquery",
         project_id=GCP_PROJECT_ID,
         bucket=ML_BUCKET_TEMP,
-        source_objects=os.path.join(GCS_FOLDER_PATH, OUTPUT_FILE_NAME),
-        destination_project_dataset_table=f"{BIGQUERY_ML_FEATURES_DATASET}.{TEMP_TABLE_NAME}",
+        source_objects=[f"{GCS_FOLDER_PATH}/{TEMP_OUTPUT_FILE_NAME}"],
+        destination_project_dataset_table=f"{OUTPUT_DATASET_NAME}.{TEMP_OUTPUT_TABLE_NAME}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,
+    )
+
+    # Step 5: Cleanup temp table in BigQuery
+    cleanup_temp_table = BigQueryInsertJobOperator(
+        project_id=GCP_PROJECT_ID,
+        task_id="cleanup_temp_table",
+        configuration={
+            "query": {
+                "query": f"DROP TABLE IF EXISTS `{GCP_PROJECT_ID}.{INPUT_DATASET_NAME}.{TEMP_INT_TABLE_NAME}`",
+                "useLegacySql": False,
+            }
+        },
+        trigger_rule="all_done",
     )
 
     gce_instance_delete = DeleteGCEOperator(
@@ -205,13 +217,16 @@ with DAG(
         trigger_rule="none_failed",
     )
 
-    (
-        start
-        >> gce_instance_start
-        >> install_dependencies
-        >> bigquery_select_items_to_embed
-        >> export_item_metadata_to_gcs
-        >> embed_items
-        >> export_item_embeddings_to_bigquery
-        >> gce_instance_delete
-    )
+    stop = EmptyOperator(task_id="stop", dag=dag)
+
+    start >> [gce_instance_start, bigquery_select_items_to_embed]
+    gce_instance_start >> install_dependencies
+    bigquery_select_items_to_embed >> export_item_metadata_to_gcs
+    [
+        install_dependencies,
+        export_item_metadata_to_gcs,
+    ] >> embed_items
+    embed_items >> export_item_embeddings_to_bigquery
+    export_item_embeddings_to_bigquery >> cleanup_temp_table
+    cleanup_temp_table >> gce_instance_delete
+    gce_instance_delete >> stop

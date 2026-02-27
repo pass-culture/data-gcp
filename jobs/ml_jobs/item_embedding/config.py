@@ -34,28 +34,8 @@ def load_config(config_file_name: str) -> dict:
     config_path = CONFIGS_PATH / f"{config_file_name}.yaml"
     logger.info(f"Loading config from: {config_path}")
 
-    try:
-        with open(config_path, mode="r", encoding="utf-8") as config_file:
-            config = yaml.safe_load(config_file)
-    except FileNotFoundError:
-        logger.error(f"Config file not found: {config_path}")
-        raise
-    except yaml.YAMLError as e:
-        logger.error(f"Invalid YAML in config file: {e}")
-        raise
-
-    if not isinstance(config, dict):
-        raise ValueError(
-            f"Config file must contain a YAML mapping, got {type(config).__name__}"
-        )
-
-    missing_keys = REQUIRED_CONFIG_KEYS - config.keys()
-    if missing_keys:
-        raise ValueError(
-            f"Config file is missing required keys: {', '.join(sorted(missing_keys))}. "
-            f"Found keys: {', '.join(sorted(config.keys()))}"
-        )
-
+    with open(config_path, mode="r", encoding="utf-8") as config_file:
+        config = yaml.safe_load(config_file)
     return config
 
 
@@ -72,12 +52,5 @@ def parse_vectors(config: dict) -> list[Vector]:
         ValueError: If no vectors are configured or vector config is invalid
     """
     raw_vectors = config.get("vectors", [])
-    if not isinstance(raw_vectors, list):
-        raise ValueError(f"'vectors' must be a list, got {type(raw_vectors).__name__}")
-
     vectors = [Vector(**vector_config) for vector_config in raw_vectors]
-
-    if not vectors:
-        raise ValueError("No vectors configured in the configuration file")
-
     return vectors

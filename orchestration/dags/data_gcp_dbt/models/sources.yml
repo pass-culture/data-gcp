@@ -276,6 +276,11 @@ sources:
         description: Partitionned table containing the history of the two tower user emebddings
       - name: two_tower_item_embedding_history
         description: Partitionned table containing the history of the two tower item emebddings
+  - name: ml_feat
+    schema: ml_feat_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
+    tables:
+      - name: item_embedding_tmp
   - name: ml_linkage
     schema: ml_linkage_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"

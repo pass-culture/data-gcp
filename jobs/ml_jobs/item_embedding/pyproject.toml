@@ -1,0 +1,26 @@
+[project]
+name = "item-embedding"
+version = "0.1.0"
+description = "Microservice to embed items with sentence transformers models"
+readme = "README.md"
+requires-python = ">=3.10, <3.13"
+dependencies = [
+    "gcsfs>=2026.2.0",
+    "google-cloud-secret-manager>=2.26.0",
+    "loguru>=0.7.3",
+    "numpy>=2.2.6",
+    "pandas>=2.2.0,<3.0.0",
+    "pyarrow>=17.0.0",
+    "pydantic>=2.12.5",
+    "pyyaml>=6.0.3",
+    "sentence-transformers>=5.0.1",
+    "torch>=2.0.0",
+    "typer>=0.9.0",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.2.0",
+    "ipywidgets>=8.1.8",
+    "pytest>=8.0.0",
+]

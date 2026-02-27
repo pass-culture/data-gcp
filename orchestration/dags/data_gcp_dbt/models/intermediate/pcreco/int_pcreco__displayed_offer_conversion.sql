@@ -31,7 +31,7 @@ with
                     '{{ ds() }}'
                 )
         {% else %}
-            where consultation_date >= date_sub(date('{{ ds() }}'), interval 6 day)
+            where consultation_date >= date_sub(date('{{ ds() }}'), interval 60 day)
         {% endif %}
     ),
 
@@ -50,7 +50,7 @@ with
         {% else %}
             where
                 div_score.booking_creation_date
-                >= date_sub(date('{{ ds() }}'), interval 6 day)
+                >= date_sub(date('{{ ds() }}'), interval 60 day)
         {% endif %}
     ),
 
@@ -77,7 +77,7 @@ with
                 between date_sub(date('{{ ds() }}'), interval 3 day) and date(
                     '{{ ds() }}'
                 )
-        {% else %} where event_date >= date_sub(date('{{ ds() }}'), interval 6 day)
+        {% else %} where event_date >= date_sub(date('{{ ds() }}'), interval 60 day)
         {% endif %}
     ),
 
@@ -104,7 +104,7 @@ with
                 between date_sub(date('{{ ds() }}'), interval 3 day) and date(
                     '{{ ds() }}'
                 )
-        {% else %} where event_date >= date_sub(date('{{ ds() }}'), interval 6 day)
+        {% else %} where event_date >= date_sub(date('{{ ds() }}'), interval 60 day)
         {% endif %}
     ),
 

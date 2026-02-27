@@ -268,7 +268,10 @@ with
             on b.event_name = 'BookingConfirmation'
             and b.booking_id = div.booking_id
         group by 1, 2, 3
-        having c.consult_ts is not null
+    ),
+
+    filtered_conversion_events as (
+        select * from conversion_events as ce where ce.consult_ts is not null
     ),
 
     conversion as (
@@ -315,7 +318,7 @@ with
             and e.offer_id = v.item_id
             and e.loose_display_type = v.loose_display_type
         left join
-            conversion_events as c
+            filtered_conversion_events as c
             on e.unique_session_id = c.unique_session_id
             and e.offer_id = c.offer_id
             and e.display_type = c.display_type

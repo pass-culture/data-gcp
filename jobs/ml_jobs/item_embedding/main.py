@@ -2,9 +2,9 @@ import time
 
 import typer
 from config import load_config, parse_vectors
-from embed_items import embed_all_vectors
+from embedding import embed_all_vectors
+from gcs_utils import load_parquet, upload_parquet
 from loguru import logger
-from storage import load_parquet, upload_parquet
 
 app = typer.Typer(
     help="Generate item embeddings using Hugging Face models and save results to GCS."

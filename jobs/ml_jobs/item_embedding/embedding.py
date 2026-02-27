@@ -1,3 +1,5 @@
+from secrets import get_secret
+
 import numpy as np
 import pandas as pd
 import torch
@@ -5,7 +7,6 @@ from config import Vector
 from constants import HF_TOKEN_SECRET_NAME
 from loguru import logger
 from sentence_transformers import SentenceTransformer
-from utils import get_secret
 
 
 def _validate_required_features(df: pd.DataFrame, features: list[str]) -> None:

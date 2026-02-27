@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 import yaml
 from config import Vector, load_config, parse_vectors
-from embed_items import (
+from embedding import (
     _build_prompts,
     _validate_required_features,
     embed_all_vectors,

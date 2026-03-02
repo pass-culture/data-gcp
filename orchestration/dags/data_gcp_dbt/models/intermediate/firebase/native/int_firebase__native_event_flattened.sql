@@ -17,10 +17,9 @@ with
             true
             {% if target.profile_name != "CI" %} and {% endif %}
             {% if is_incremental() %}
-                event_date
-                between date_sub(date("{{ ds() }}"), interval 3 day) and date(
-                    "{{ ds() }}"
-                )
+                event_date between date_sub(
+                    date("{{ ds() }}"), interval {{ var("lookback_days", 3) }} day
+                ) and date("{{ ds() }}")
             {% endif %}
     ),
 
@@ -52,10 +51,8 @@ with
                         "searchIsAutocomplete",
                         "searchIsBasedOnHistory",
                         "searchOfferIsDuo",
-                        "geoLocated",
                         "enabled",
                     ],
-                    fallback_keys={"geoLocated": "geo_located"},
                 )
             }},
             {{
@@ -70,7 +67,6 @@ with
                         "locationType",
                         "step",
                         "searchGenreTypes",
-                        "callId",
                         "searchLocationFilter",
                         "age",
                         "searchCategories",
@@ -96,11 +92,6 @@ with
                         "traffic_gen",
                         "traffic_content",
                         "toEntryId",
-                        "recoOrigin",
-                        "abTest",
-                        "modelVersion",
-                        "modelName",
-                        "modelEndpoint",
                         "userStatus",
                         "social",
                         "searchView",
@@ -128,23 +119,43 @@ with
                         "theme_setting",
                         "system_theme",
                     ],
-                    fallback_keys={
-                        "callId": "call_id",
-                        "recoOrigin": "reco_origin",
-                        "abTest": "ab_test",
-                        "modelVersion": "model_version",
-                        "modelName": "model_name",
-                        "modelEndpoint": "model_endpoint",
-                    },
                 )
             }},
             -- noqa: disable=CP02
             -- fmt: off
             coalesce(
+                {{ extract_params_int_value(["geoLocated"], alias=false) }},
+                {{ extract_params_int_value(["geo_located"], alias=false) }}
+            ) as geo_located,
+            coalesce(
+                {{ extract_params_string_value(["callId"], alias=false) }},
+                {{ extract_params_string_value(["call_id"], alias=false) }}
+            ) as call_id,
+            coalesce(
+                    {{ extract_params_string_value(["recoOrigin"], alias=false) }},
+                    {{ extract_params_string_value(["reco_origin"], alias=false) }}
+            ) as reco_origin,
+            coalesce(
+                    {{ extract_params_string_value(["abTest"], alias=false) }},
+                    {{ extract_params_string_value(["ab_test"], alias=false) }}
+            ) as ab_test,
+            coalesce(
+                    {{ extract_params_string_value(["modelVersion"], alias=false) }},
+                    {{ extract_params_string_value(["model_version"], alias=false) }}
+            ) as model_version,
+            coalesce(
+                    {{ extract_params_string_value(["modelName"], alias=false) }},
+                    {{ extract_params_string_value(["model_name"], alias=false) }}
+            ) as model_name,
+            coalesce(
+                    {{ extract_params_string_value(["modelEndpoint"], alias=false) }},
+                    {{ extract_params_string_value(["model_endpoint"], alias=false) }}
+            ) as model_endpoint,
+            coalesce(
                 {{ extract_params_string_value(["bookingId"], alias=false) }},
                 cast(
                     {{ extract_params_int_value(["bookingId"], alias=false) }} as string
-                )
+            )
             ) as bookingId, -- dbt internal hook creates tmp table for incremental and compare fields names (including the capitalization), if not biquery (case insensitive) breaks
             coalesce(
                 {{ extract_params_string_value(["offerId"], alias=false) }},

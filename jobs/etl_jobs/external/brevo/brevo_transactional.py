@@ -229,7 +229,11 @@ class BrevoTransactional:
             df.assign(email=[event.email for event in all_events])
             .assign(event=[event.event for event in all_events])
             .assign(template=[event.template_id for event in all_events])
-            .assign(event_date=pd.to_datetime([event._date for event in all_events]))
+            .assign(
+                event_date=pd.to_datetime(
+                    [event._date for event in all_events], format="ISO8601"
+                )
+            )
             .assign(tag=[event.tag for event in all_events])
         )
 

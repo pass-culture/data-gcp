@@ -37,6 +37,7 @@ dependencies = [
   "protobuf>=6.33.5",
   "pyasn1>=0.6.2",
   "werkzeug>=3.1.6",
+  "pylance>=2.0.1",
 ]
 
 [build-system]

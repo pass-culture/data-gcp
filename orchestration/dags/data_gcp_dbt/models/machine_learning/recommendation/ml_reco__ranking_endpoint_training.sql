@@ -81,7 +81,12 @@ with
             {{ ref("int_applicative__offer_item_id") }} as im
             on fsoe.offer_id = im.offer_id
         where
-            fsoe.event_date >= date_sub(current_date, interval 14 day)
+            fsoe.event_date >= date_sub(
+                current_date,
+                interval {% if var("ENV_SHORT_NAME") == "prod" %} 14
+                {% else %} 365
+                {% endif %} day
+            )
             and fsoe.event_name
             in ("ConsultOffer", "BookingConfirmation", "HasAddedOfferToFavorites")
         group by fsoe.user_id, im.item_id

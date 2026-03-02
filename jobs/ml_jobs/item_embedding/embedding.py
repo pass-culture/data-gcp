@@ -1,10 +1,9 @@
-from secrets import get_secret
-
 import numpy as np
 import pandas as pd
 import torch
 from config import Vector
 from constants import HF_TOKEN_SECRET_NAME
+from gcp_secrets import get_secret
 from loguru import logger
 from sentence_transformers import SentenceTransformer
 
@@ -160,6 +159,12 @@ def embed_all_vectors(
     Returns:
         DataFrame with item_id and one embedding column per vector
     """
+
+    if df_items_metadata.empty:
+        raise ValueError("Empty metadata DataFrame — nothing to embed")
+
+    if "item_id" not in df_items_metadata.columns:
+        raise ValueError("DataFrame must contain an 'item_id' column")
 
     # Validate all features upfront before loading any encoder
     for vector in vectors:

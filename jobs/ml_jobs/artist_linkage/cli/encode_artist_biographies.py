@@ -3,8 +3,10 @@ import typer
 from sentence_transformers import SentenceTransformer
 
 from src.constants import (
+    HF_TOKEN_SECRET_NAME,
     WIKIDATA_ID_KEY,
 )
+from src.utils.gcp import get_secret
 from src.utils.loading import load_wikidata
 
 app = typer.Typer()
@@ -101,6 +103,7 @@ def embed_artist_biographies(artist_biographies: pd.Series) -> pd.Series:
         show_progress_bar=True,
         batch_size=BATCH_SIZE,
         prompt_name=PROMPT_NAME,
+        token=get_secret(HF_TOKEN_SECRET_NAME),
     )
     return pd.Series(list(embeddings), index=artist_biographies.index)
 

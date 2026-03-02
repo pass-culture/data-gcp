@@ -161,15 +161,11 @@ with
         timestamp("{{ ts() }}") as updated_at,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
-        'pct_partenaire_culturel_actif' as kpi_name,
+        'pct_partenaire_culturel_actif_collectif' as kpi_name,
         coalesce(
             count(
                 distinct case
-                    when
-                        days_since_last_collective_bookable_date <= date_diff(
-                            partition_day, educational_year_beginning_date, day
-                        )
-                    then partner_id
+                    when days_since_last_collective_bookable_date <= 365 then partner_id
                 end
             ),
             0
@@ -186,10 +182,7 @@ with
             coalesce(
                 count(
                     distinct case
-                        when
-                            days_since_last_collective_bookable_date <= date_diff(
-                                partition_day, educational_year_beginning_date, day
-                            )
+                        when days_since_last_collective_bookable_date <= 365
                         then partner_id
                     end
                 ),

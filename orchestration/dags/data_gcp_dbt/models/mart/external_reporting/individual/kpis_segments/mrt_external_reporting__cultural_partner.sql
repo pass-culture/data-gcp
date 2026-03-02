@@ -8,6 +8,7 @@
     )
 }}
 
+-- depends_on: {{ ref('mrt_global__cultural_partner') }}
 {% set dimensions_geo = get_dimensions("partner", "geo") %}
 {% set dimensions_granular_only = get_dimensions("partner", "granular_only") %}
 {% set partner_types = get_partner_types() %}
@@ -18,26 +19,39 @@ with
         select
             gcp.venue_id,
             gcp.first_individual_offer_creation_date,
+            gcp.first_collective_offer_creation_date,
             date_add(date('2022-01-01'), interval offset day) as partition_day
         from {{ ref("mrt_global__cultural_partner") }} as gcp
         cross join
             unnest(generate_array(0, date_diff(current_date(), '2022-01-01', day))) as
         offset
         where
-            gcp.first_individual_offer_creation_date is not null
-            and date_add(date('2022-01-01'), interval offset day)
-            >= gcp.first_individual_offer_creation_date
-            and date_add(date('2022-01-01'), interval offset day) < current_date()
+            (
+                gcp.first_individual_offer_creation_date is not null
+                and date_add(date('2022-01-01'), interval offset day)
+                >= gcp.first_individual_offer_creation_date
+                and date_add(date('2022-01-01'), interval offset day) < current_date()
+            )
+            or (
+                gcp.first_collective_offer_creation_date is not null
+                and date_add(date('2022-01-01'), interval offset day)
+                >= gcp.first_collective_offer_creation_date
+                and date_add(date('2022-01-01'), interval offset day) < current_date()
+            )
     ),
 
     all_days_with_bookability as (
         select
             apd.venue_id,
             apd.first_individual_offer_creation_date,
+            apd.first_collective_offer_creation_date,
             apd.partition_day,
             coalesce(
                 bvh.total_individual_bookable_offers, 0
-            ) as total_indiv_bookable_offers
+            ) as total_indiv_bookable_offers,
+            coalesce(
+                bvh.total_collective_bookable_offers, 0
+            ) as total_collective_bookable_offers
         from all_activated_partners_and_days as apd
         left join
             {{ ref("int_history__bookable_venue") }} as bvh
@@ -65,7 +79,24 @@ with
                     first_individual_offer_creation_date
                 ),
                 day
-            ) as days_since_last_indiv_bookable_date
+            ) as days_since_last_indiv_bookable_date,
+            date_diff(
+                partition_day,
+                coalesce(
+                    max(
+                        case
+                            when total_collective_bookable_offers != 0
+                            then partition_day
+                        end
+                    ) over (
+                        partition by venue_id
+                        order by partition_day
+                        rows between unbounded preceding and current row
+                    ),
+                    first_collective_offer_creation_date
+                ),
+                day
+            ) as days_since_last_collective_bookable_date
         from all_days_with_bookability
     ),
 
@@ -75,6 +106,7 @@ with
             bd.partition_day,
             bd.first_individual_offer_creation_date,
             bd.days_since_last_indiv_bookable_date,
+            bd.days_since_last_collective_bookable_date,
             gcp.partner_region_name,
             gcp.partner_department_name,
             gcp.partner_epci_code,
@@ -173,7 +205,7 @@ with
         timestamp("{{ ts() }}") as updated_at,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
-        'nombre_total_de_partenaire_actif' as kpi_name,
+        'nombre_total_de_partenaire_actif_individuel' as kpi_name,
         coalesce(
             count(
                 distinct case
@@ -200,6 +232,48 @@ with
         {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
     union all
+    select
+        date_trunc(date(partition_day), month) as partition_month,
+        timestamp("{{ ts() }}") as updated_at,
+        '{{ dim.name }}' as dimension_name,
+        {{ dim.value_expr }} as dimension_value,
+        'nombre_total_de_partenaire_actif_deux_volets' as kpi_name,
+        coalesce(
+            count(
+                distinct case
+                    when
+                        (
+                            days_since_last_indiv_bookable_date <= 365
+                            or days_since_last_collective_bookable_date <= 365
+                        )
+                    then venue_id
+                end
+            ),
+            0
+        ) as numerator,
+        1 as denominator,
+        coalesce(
+            count(
+                distinct case
+                    when
+                        (
+                            days_since_last_indiv_bookable_date <= 365
+                            or days_since_last_collective_bookable_date <= 365
+                        )
+                    then venue_id
+                end
+            ),
+            0
+        ) as kpi
+    from partner_details
+    where
+        1 = 1
+        {% if is_incremental() %}
+            and date_trunc(date(partition_day), month)
+            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+        {% endif %}
+    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
+    union all
     {% for partner_type in partner_types %}
         {% if not loop.first %}
             union all
@@ -209,7 +283,7 @@ with
             timestamp("{{ ts() }}") as updated_at,
             '{{ dim.name }}' as dimension_name,
             {{ dim.value_expr }} as dimension_value,
-            "nombre_de_partenaire_actif_{{ partner_type.name }}" as kpi_name,
+            "nombre_de_partenaire_actif_individuel_{{ partner_type.name }}" as kpi_name,
             coalesce(
                 count(
                     distinct case
@@ -248,7 +322,7 @@ with
         timestamp("{{ ts() }}") as updated_at,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
-        'nombre_total_cumule_de_partenaire_actif' as kpi_name,
+        'nombre_total_cumule_de_partenaires_actives_individuel' as kpi_name,
         coalesce(
             count(
                 distinct case
@@ -302,7 +376,7 @@ with
         timestamp("{{ ts() }}") as updated_at,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
-        'nombre_total_de_partenaire_actif' as kpi_name,
+        'nombre_total_de_partenaire_actif_individuel' as kpi_name,
         coalesce(
             count(
                 distinct case
@@ -335,7 +409,7 @@ with
             timestamp("{{ ts() }}") as updated_at,
             '{{ dim.name }}' as dimension_name,
             {{ dim.value_expr }} as dimension_value,
-            "nombre_de_partenaire_actif_{{ partner_type.name }}" as kpi_name,
+            "nombre_de_partenaire_actif_individuel_{{ partner_type.name }}" as kpi_name,
             coalesce(
                 count(
                     distinct case
@@ -374,7 +448,7 @@ with
         timestamp("{{ ts() }}") as updated_at,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
-        'nombre_total_cumule_de_partenaire_actif' as kpi_name,
+        'nombre_total_cumule_de_partenaires_actives' as kpi_name,
         coalesce(
             count(
                 distinct case

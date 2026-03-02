@@ -54,7 +54,8 @@ with
                         "searchOfferIsDuo",
                         "geoLocated",
                         "enabled",
-                    ]
+                    ],
+                    fallback_keys={"geoLocated": "geo_located"},
                 )
             }},
             {{
@@ -126,7 +127,15 @@ with
                         "artistId",
                         "theme_setting",
                         "system_theme",
-                    ]
+                    ],
+                    fallback_keys={
+                        "callId": "call_id",
+                        "recoOrigin": "reco_origin",
+                        "abTest": "ab_test",
+                        "modelVersion": "model_version",
+                        "modelName": "model_name",
+                        "modelEndpoint": "model_endpoint",
+                    },
                 )
             }},
             -- noqa: disable=CP02

@@ -24,6 +24,7 @@ from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+    GCP_REGION,
     ML_BUCKET_TEMP,
 )
 from common.operators.gce import (
@@ -126,6 +127,7 @@ with (
         import_user_data = BigQueryInsertJobOperator(
             project_id=GCP_PROJECT_ID,
             task_id="import_test_users",
+            location=GCP_REGION,
             configuration={
                 "query": {
                     "query": (
@@ -145,6 +147,7 @@ with (
         import_item_data = BigQueryInsertJobOperator(
             project_id=GCP_PROJECT_ID,
             task_id="import_test_items",
+            location=GCP_REGION,
             configuration={
                 "query": {
                     "query": (
@@ -167,6 +170,7 @@ with (
         export_user_data_to_bq = BigQueryInsertJobOperator(
             project_id=GCP_PROJECT_ID,
             task_id="export_user_data_to_bq",
+            location=GCP_REGION,
             configuration={
                 "extract": {
                     "sourceTable": {
@@ -187,6 +191,7 @@ with (
         export_item_data_to_bq = BigQueryInsertJobOperator(
             project_id=GCP_PROJECT_ID,
             task_id="export_item_data_to_bq",
+            location=GCP_REGION,
             configuration={
                 "extract": {
                     "sourceTable": {

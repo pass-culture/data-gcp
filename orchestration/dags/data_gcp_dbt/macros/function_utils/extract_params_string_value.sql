@@ -1,10 +1,25 @@
-{% macro extract_params_string_value(params, alias=true) %}
+{% macro extract_params_string_value(params, alias=true, fallback_keys={}) %}
     {% for param in params %}
-        (
-            select event_params.value.string_value
-            from unnest(event_params) event_params
-            where event_params.key = '{{ param }}'
-        )
+        {% if param in fallback_keys %}
+            coalesce(
+                (
+                    select event_params.value.string_value
+                    from unnest(event_params) event_params
+                    where event_params.key = '{{ param }}'
+                ),
+                (
+                    select event_params.value.string_value
+                    from unnest(event_params) event_params
+                    where event_params.key = '{{ fallback_keys[param] }}'
+                )
+            )
+        {% else %}
+            (
+                select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = '{{ param }}'
+            )
+        {% endif %}
         {% if alias %} as {{ param }} {% endif %}
         {% if not loop.last %},{% endif %}
     {% endfor %}

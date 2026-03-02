@@ -3,6 +3,7 @@
 #######################################################################################
 SHELL := /bin/bash
 PYTHON_VERSION := 3.12
+UV_MIN_VERSION := 0.10.5
 
 export PERSONAL_DBT_USER :=
 export DBT_TARGET_PATH ?= "target"
@@ -33,7 +34,7 @@ _add_shell_aliases:
 	    shell_file="$$HOME/.zshrc"; \
 	elif echo "$$SHELL" | grep -q "bash"; then \
 	    shell_file="$$HOME/.bashrc"; \
-	else \
+	else \~
 	    echo "Unable to detect active shell. Defaulting to ~/.bashrc."; \
 	    shell_file="$$HOME/.bashrc"; \
 	fi; \
@@ -109,10 +110,12 @@ _base_install:
 	# Login to ggshield
 	ggshield auth login
 
-	# Install uv if not already installed
-	@if ! command -v uv &> /dev/null; then \
-		echo "Installing uv..."; \
-		curl -LsSf https://astral.sh/uv/install.sh | sh; \
+	# Install uv if not already installed or if FORCE_UV_REINSTALL=1
+	@if [ "$(FORCE_UV_REINSTALL)" = "1" ] || ! command -v uv &> /dev/null; then \
+		echo "Installing uv version $$UV_MIN_VERSION..."; \
+		curl -LsSf https://astral.sh/uv/$$UV_MIN_VERSION/install.sh | sh; \
+	else \
+		echo "uv already installed, skipping installation"; \
 	fi
 
 	# Create and setup virtual environment
@@ -148,8 +151,8 @@ create_microservice_etl_internal:
 
 
 docker_compile:
-	uv export --format requirements-txt --only-group airflow -o orchestration/airflow/orchestration-requirements.txt --python=python3.10 --no-hashes
-	uv export --format requirements-txt --only-group airflow -o orchestration/k8s-airflow/k8s-worker-requirements.txt --python=python3.10 --no-hashes
+	uv export --format requirements-txt --only-group airflow -o orchestration/airflow/orchestration-requirements.txt --python=python$$PYTHON_VERSION --no-hashes
+	uv export --format requirements-txt --only-group airflow -o orchestration/k8s-airflow/k8s-worker-requirements.txt --python=python$$PYTHON_VERSION --no-hashes
 
 
 

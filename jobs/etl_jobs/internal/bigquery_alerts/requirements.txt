@@ -75,7 +75,7 @@ pandas-gbq==0.23.1
     # via -r requirements.in
 proto-plus==1.24.0
     # via google-api-core
-protobuf==5.28.0
+protobuf==5.29.6
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -85,7 +85,7 @@ pyarrow==17.0.0
     # via
     #   db-dtypes
     #   pandas-gbq
-pyasn1==0.6.0
+pyasn1==0.6.2
     # via
     #   pyasn1-modules
     #   rsa
@@ -129,7 +129,7 @@ typing-extensions==4.12.2
     # via typer
 tzdata==2024.1
     # via pandas
-urllib3==2.2.2
+urllib3==2.6.3
     # via requests
 zope-interface==7.0.3
     # via datetime

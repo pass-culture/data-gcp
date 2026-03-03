@@ -13,8 +13,11 @@ from src.constants import (
 )
 
 # Columns
-RANK_SEMANTIC_KEY = "rank_semantic"
-RANK_ITEM_KEY = "rank_item"
+RANK_KEY = "rank"
+SEMANTIC_SUFFIX = "_semantic"
+ITEM_SUFFIX = "_item"
+RANK_SEMANTIC_KEY = f"{RANK_KEY}{SEMANTIC_SUFFIX}"
+RANK_ITEM_KEY = f"{RANK_KEY}{ITEM_SUFFIX}"
 COMBINED_SCORE_KEY = "combined_score"
 
 # LanceDB parameters
@@ -95,6 +98,16 @@ def main(
             item_df = perform_search(
                 artist_table, selected_artist_row, "mean_tt_item_embedding"
             )
+        else:
+            item_df = pd.DataFrame(
+                columns=[
+                    ARTIST_ID_KEY,
+                    ARTIST_NAME_KEY,
+                    ARTIST_APP_SEARCH_SCORE_KEY,
+                    ARTIST_BIOGRAPHY_KEY,
+                    RANK_KEY,
+                ]
+            )
 
         results_df = (
             semantic_df.merge(
@@ -105,7 +118,7 @@ def main(
                     ARTIST_APP_SEARCH_SCORE_KEY,
                     ARTIST_BIOGRAPHY_KEY,
                 ],
-                suffixes=("_semantic", "_item"),
+                suffixes=(SEMANTIC_SUFFIX, ITEM_SUFFIX),
                 how="outer",
             )
             .loc[
@@ -119,11 +132,15 @@ def main(
             ]
             .assign(
                 semantic_rank_score=lambda df: (
-                    1 / (RANK_ALPHA_CONSTANT + df[RANK_SEMANTIC_KEY])
-                ).fillna(0),
+                    1.0 / (RANK_ALPHA_CONSTANT + df[RANK_SEMANTIC_KEY])
+                )
+                .infer_objects(copy=False)
+                .fillna(0),
                 item_rank_score=lambda df: (
-                    1 / (RANK_ALPHA_CONSTANT + df[RANK_ITEM_KEY])
-                ).fillna(0),
+                    1.0 / (RANK_ALPHA_CONSTANT + df[RANK_ITEM_KEY])
+                )
+                .infer_objects(copy=False)
+                .fillna(0),
                 combined_score=lambda df: df.semantic_rank_score
                 + TT_COEFFICIENT * df.item_rank_score,
             )

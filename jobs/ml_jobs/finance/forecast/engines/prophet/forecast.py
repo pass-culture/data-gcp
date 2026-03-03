@@ -35,6 +35,7 @@ def create_full_prediction_dataframe(
         # When using logistic growth, read cap and floor values from df_train
         cap = train_test_backtest_split.train["cap"].max()
         floor = train_test_backtest_split.train["floor"].min()
+
     df = pd.DataFrame(
         {
             "ds": pd.date_range(
@@ -42,6 +43,14 @@ def create_full_prediction_dataframe(
             )
         }
     )
+
+    if model_config.features.pass_culture_months:
+        months_years = set(model_config.features.pass_culture_months)
+        # Avoid intermediate _month_year column by computing membership directly
+        df["pass_culture_months"] = (
+            pd.to_datetime(df["ds"]).dt.strftime("%m-%Y").isin(months_years)
+        )
+
     if cap is not None:
         df["cap"] = cap
     if floor is not None:

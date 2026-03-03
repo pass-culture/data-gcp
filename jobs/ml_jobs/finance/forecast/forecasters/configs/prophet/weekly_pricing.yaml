@@ -35,7 +35,7 @@ data_processing:
   target_name: total_pricing
 evaluation:
   cv: true
-  cv_initial: "100 weeks"
-  cv_period: "3 weeks"
-  cv_horizon: "12 weeks"
+  cv_initial: "100 W"
+  cv_period: "3 W"
+  cv_horizon: "12 W"
   freq: W-MON

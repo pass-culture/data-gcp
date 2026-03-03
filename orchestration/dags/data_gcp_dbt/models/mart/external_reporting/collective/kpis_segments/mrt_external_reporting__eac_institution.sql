@@ -46,9 +46,7 @@ with recursive
             dep.institution_id,
             inst.institution_region_name,
             inst.institution_academy_name,
-            inst.institution_epci,
             inst.institution_epci_code,
-            inst.institution_city,
             inst.institution_city_code
         from {{ ref("mrt_global__educational_deposit") }} as dep
         left join

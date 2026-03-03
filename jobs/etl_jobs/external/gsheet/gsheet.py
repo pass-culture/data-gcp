@@ -35,6 +35,13 @@ SHEETS = {
             "1EFiRSptEeheoaHyjJogjjClNmzNHgrxG9colYlg1uIY",  # Aix-Marseille Provisional (2025-2026) -
             "1Gzljf7ZHEgj_5G8A-S6HUQ7H7cZ1qK2T12xBxJ5s8oQ",  # MEN Final (sept-dec 2025-2026) -
             "1FuEZ7Y1Yk2Tje1_3l-9sQ8W8pCyEz2BkDlXteKuXvw0",  # SEM Final (sept-dev 2025-2026) -
+            "1ntswOFC_eG_OCisuTJN8cwKp8dPOms1-MamQQbcLXTg",  # MASA Final (2024-2025) -
+            "1fbrPv2mgo09xAtZ4BiQcM5B6ufwunCn6ymtCjJJQaaY",  # MEN Final (2024-2025) -
+            "1H8ZH4IWVhtvCS6T0smSMrRu490rrNZIl--7dpRbersc",  # MASA Provisional (2024-2025)
+            "1oKulYPFMNaJaZ3gpK-kuYnBKJxngQFwjQ4rA1YTWMDM",  # SEM Provisional (2024-2025)
+            "1WeG4CG5DRUdmvZe7sS47onGBk5nRND4VQzk2qAoNK1U",  # Aix-Marseille Provisional (2024-2025)
+            "1AwclRi49IJaTO3CfjegYu9siYFVobA839vNhYjsEgeM",  # MENJ Provisional (2024-2025)
+            "1DVneUFuBhQTQS6I8tN1pcOuelsglwOyBnKVsQn4MlE8",  # MA Provisional (2024-2025)
             "1J5l4zsGJiKLmYV68EjnsiN_8X7BFkR48fIecFgzhdkU",  # Historical DATA
         ],
         "expected_headers_dict": {

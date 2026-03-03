@@ -2,6 +2,7 @@ import lancedb
 import pandas as pd
 import tqdm
 import typer
+from loguru import logger
 
 from src.constants import (
     ARTIST_APP_SEARCH_SCORE_KEY,
@@ -62,12 +63,15 @@ def main(
     )
 
     # Create lance tables
+    logger.info("Creating LanceDB table and indexes...")
     db = lancedb.connect(LANCEDB_PATH)
     if LANCEDB_TABLE_NAME in db.list_tables().tables:
         db.drop_table(LANCEDB_TABLE_NAME)
     artist_table = db.create_table(LANCEDB_TABLE_NAME, artist_df)
+    logger.info("LanceDB table created successfully.")
 
     # Create indexes for both embedding columns to speed up search
+    logger.info("Creating indexes for semantic and item embeddings...")
     artist_table.create_index(
         vector_column_name="semantic_embedding",
         metric=SEARCH_METRIC,
@@ -78,9 +82,11 @@ def main(
         metric=SEARCH_METRIC,
         num_partitions=NUM_PARTITIONS,
     )
+    logger.info("Indexes created successfully.")
 
     # Perform search for each artist and combine results
     result_list = []
+    logger.info("Performing similarity search for each artist...")
     for _, selected_artist_row in tqdm.tqdm(artist_df.iterrows(), total=len(artist_df)):
         semantic_df = perform_search(
             artist_table, selected_artist_row, "semantic_embedding"
@@ -135,8 +141,10 @@ def main(
                 .to_json(orient="records"),
             }
         )
+    logger.info("Similarity search completed. Saving results to Parquet...")
 
     pd.DataFrame(result_list).to_parquet(output_file_path, index=False)
+    logger.info("Results saved to Parquet successfully.")
 
 
 if __name__ == "__main__":

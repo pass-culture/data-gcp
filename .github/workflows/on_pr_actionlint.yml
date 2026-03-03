@@ -1,4 +1,4 @@
-name: Run actionlint
+name: 1. [on_pr] Run actionlint
 
 on:
   push:

@@ -4,6 +4,7 @@ from sentence_transformers import SentenceTransformer
 
 from src.constants import (
     HF_TOKEN_SECRET_NAME,
+    MEAN_TT_ITEM_EMBEDDING_KEY,
     WIKIDATA_ID_KEY,
 )
 from src.utils.gcp import get_secret
@@ -60,8 +61,8 @@ def get_enriched_artist_df(
     return (
         artist_df.drop_duplicates(
             subset=artist_df.columns.difference(
-                ["mean_tt_item_embedding"]
-            )  # Cannot drop duplicates on the mean_tt_item_embedding column as it is an array, which is unhashable
+                [MEAN_TT_ITEM_EMBEDDING_KEY]
+            )  # Cannot drop duplicates on the MEAN_TT_ITEM_EMBEDDING_KEY column as it is an array, which is unhashable
         )
         .merge(wiki_df, on=WIKIDATA_ID_KEY, how="left")
         .assign(

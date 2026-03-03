@@ -47,6 +47,7 @@ COMMENT_KEY = "comment"
 ARTIST_MEDIATION_UUID_KEY = "artist_mediation_uuid"
 ARTIST_BIOGRAPHY_KEY = "artist_biography"
 ARTIST_WIKI_ID_KEY = "artist_wiki_id"
+ARTIST_APP_SEARCH_SCORE_KEY = "artist_app_search_score"
 
 ID_PER_CATEGORY = "id_per_category"
 TOTAL_BOOKING_COUNT = "total_booking_count"
@@ -59,6 +60,7 @@ POSTPROCESSED_ARTIST_NAME_KEY = "postprocessed_artist_name"
 WIKIPEDIA_URL_KEY = "wikipedia_url"
 WIKIPEDIA_CONTENT_KEY = "wikipedia_content"
 OFFER_NAME_KEY = "offer_name"
+MEAN_TT_ITEM_EMBEDDING_KEY = "mean_tt_item_embedding"
 
 # Dataframe Columns List
 ARTIST_ALIASES_KEYS = [

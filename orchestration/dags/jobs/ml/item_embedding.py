@@ -1,14 +1,11 @@
 from datetime import datetime, timedelta
-from functools import partial
 
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import PythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
-from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -20,7 +17,6 @@ from common.config import (
     INSTANCES_TYPES,
     ML_BUCKET_TEMP,
 )
-from common.dbt.dbt_executors import run_dbt_model
 from common.operators.bigquery import BigQueryInsertJobOperator
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -202,38 +198,6 @@ with DAG(
         autodetect=True,
     )
 
-    # Step 5: Run dbt model to merge tmp embeddings into the main table
-    run_dbt_merge = PythonOperator(
-        task_id="run_dbt_merge_item_embedding",
-        python_callable=partial(run_dbt_model, "ml_feat__item_embedding_refactor"),
-    )
-
-    # Step 6: Cleanup temp tables in BigQuery
-    with TaskGroup(group_id="cleanup_temp_tables") as cleanup_temp_tables:
-        cleanup_input_temp_table = BigQueryInsertJobOperator(
-            project_id=GCP_PROJECT_ID,
-            task_id="cleanup_input_temp_table",
-            configuration={
-                "query": {
-                    "query": f"DROP TABLE IF EXISTS `{GCP_PROJECT_ID}.{INPUT_DATASET_NAME}.{TEMP_INT_TABLE_NAME}`",
-                    "useLegacySql": False,
-                }
-            },
-            trigger_rule="all_done",
-        )
-
-        cleanup_output_temp_table = BigQueryInsertJobOperator(
-            project_id=GCP_PROJECT_ID,
-            task_id="cleanup_output_temp_table",
-            configuration={
-                "query": {
-                    "query": f"DROP TABLE IF EXISTS `{GCP_PROJECT_ID}.{OUTPUT_DATASET_NAME}.{TEMP_OUTPUT_TABLE_NAME}`",
-                    "useLegacySql": False,
-                }
-            },
-            trigger_rule="all_done",
-        )
-
     gce_instance_delete = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
@@ -250,7 +214,5 @@ with DAG(
         export_item_metadata_to_gcs,
     ] >> embed_items
     embed_items >> export_item_embeddings_to_bigquery
-    export_item_embeddings_to_bigquery >> run_dbt_merge
-    run_dbt_merge >> cleanup_temp_tables
-    cleanup_temp_tables >> gce_instance_delete
+    export_item_embeddings_to_bigquery >> gce_instance_delete
     gce_instance_delete >> stop

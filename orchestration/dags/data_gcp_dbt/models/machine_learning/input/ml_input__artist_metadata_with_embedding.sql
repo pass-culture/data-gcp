@@ -7,14 +7,17 @@ with
             wikidata_id,
             artist_app_search_score
         from {{ ref("int_applicative__artist") }}
-        where artist_biography is not null and artist_app_search_score > 0
+        where
+            artist_biography is not null
+            and artist_biography != ''
+            and artist_app_search_score > 0
     ),
 
     products_on_artists_with_bio as (
         select
             artist_with_bio.artist_id,
             pal.offer_product_id,
-            concat("product-", pal.offer_product_id) as item_id
+            concat('product-', pal.offer_product_id) as item_id
         from artist_with_bio
         inner join
             {{ ref("int_applicative__product_artist_link") }} as pal using (artist_id)

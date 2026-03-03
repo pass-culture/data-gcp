@@ -19,7 +19,7 @@ BIRTH_DATE_KEY = "birth_date_val"
 
 def format_wikidata_series(series: pd.Series, title: str) -> pd.Series:
     return series.where(
-        series.isna(),
+        series.isna() | series.eq(""),
         series.astype(str).radd(title + ": ").add("\n"),
     )
 
@@ -94,7 +94,10 @@ def get_enriched_artist_df(
 
 
 def embed_artist_biographies(artist_biographies: pd.Series) -> pd.Series:
-    gemma_encoder = SentenceTransformer("google/embeddinggemma-300m")
+    gemma_encoder = SentenceTransformer(
+        "google/embeddinggemma-300m",
+        token=get_secret(HF_TOKEN_SECRET_NAME),
+    )
     PROMPT_NAME = "Clustering"
     BATCH_SIZE = 128
 
@@ -103,7 +106,6 @@ def embed_artist_biographies(artist_biographies: pd.Series) -> pd.Series:
         show_progress_bar=True,
         batch_size=BATCH_SIZE,
         prompt_name=PROMPT_NAME,
-        token=get_secret(HF_TOKEN_SECRET_NAME),
     )
     return pd.Series(list(embeddings), index=artist_biographies.index)
 

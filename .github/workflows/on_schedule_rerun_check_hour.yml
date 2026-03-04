@@ -20,10 +20,10 @@ jobs:
         run: |
           prs="$(gh pr list --json headRefName -R "$REPOSITORY")"
           # Loop over the PRs
-          echo "$prs" | jq -c '.[]' | while read -r pr; do
+          echo $prs | jq -c '.[]' | while read -r pr; do
             branch="$(echo "$pr" | jq -r '.headRefName')"
             echo "Branch $branch to re-run"
-            RUN_ID=($(gh run list -b "$branch" -w "$WORKFLOW_ID" --json databaseId -R "$REPOSITORY" | jq -r '.[0].databaseId'))
+            RUN_ID="$(gh run list -b "$branch" -w "$WORKFLOW_ID" --json databaseId -R "$REPOSITORY" | jq -r '.[0].databaseId')"
             echo "Running command 'gh run rerun $RUN_ID -R $REPOSITORY'"
             if [[ "$RUN_ID" == "null" ]]; then
               echo "RUN_id is null"

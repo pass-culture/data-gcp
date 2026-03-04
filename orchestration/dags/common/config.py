@@ -46,10 +46,15 @@ if ENV_SHORT_NAME != "prod":
 else:
     MLFLOW_URL = "https://mlflow.passculture.team/"
 
-APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
-    "APPLICATIVE_EXTERNAL_CONNECTION_ID",
-    "passculture-metier-ehp.europe-west1.metier-pcapi-testing-connection",
+APPLICATIVE_EXTERNAL_CONNECTION_ID = (
+    "pc-backend-tst.europe-west9.pcapi-tst-pg-pcapi-tst-eu9-c324f1845dc3a220-replica-big-query-ro"
+    if ENV_SHORT_NAME == "dev"
+    else os.environ.get(
+        "APPLICATIVE_EXTERNAL_CONNECTION_ID",
+        "pc-backend-tst.europe-west9.pcapi-tst-pg-pcapi-tst-eu9-c324f1845dc3a220-replica-big-query-ro",
+    )
 )
+
 METABASE_EXTERNAL_CONNECTION_ID = os.environ.get("METABASE_EXTERNAL_CONNECTION_ID", "")
 
 DATA_GCS_BUCKET_NAME = os.environ.get(

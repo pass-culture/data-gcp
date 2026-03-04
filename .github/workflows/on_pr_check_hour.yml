@@ -21,8 +21,8 @@ jobs:
         id: get_time
         run: |
           # Get current Paris hour (00–23) by adjusting UTC time
-          paris_hour=$(TZ='Europe/Paris' date +'%H')
-          echo "PARIS_HOUR=$paris_hour" >> $GITHUB_ENV
+          paris_hour="$(TZ='Europe/Paris' date +'%H')"
+          echo "PARIS_HOUR=$paris_hour" >> "$GITHUB_ENV"
 
       - name: Block merge if outside allowed hours (unless HF)
         env:
@@ -38,7 +38,7 @@ jobs:
 
           echo "Paris hour: $PARIS_HOUR"
           # Block merges outside 12:00–18:00 Europe/Paris
-          if [ $((10#$PARIS_HOUR)) -ge 18 ] || [ $((10#$PARIS_HOUR)) -lt 12 ]; then
+          if [ "$((10#$PARIS_HOUR))" -ge 18 ] || [ "$((10#$PARIS_HOUR))" -lt 12 ]; then
             echo "Merges are not allowed between 18:00 and 12:00 TZ:Europe/Paris."
             exit 1
           else

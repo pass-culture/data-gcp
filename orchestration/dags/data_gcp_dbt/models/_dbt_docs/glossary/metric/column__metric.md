@@ -48,7 +48,6 @@ title: Metrics
 {% docs column__total_non_cancelled_tickets %} Total number of tickets that were not cancelled. {% enddocs %}
 {% docs column__total_paid_bookings %}Total number of paid bookings.{% enddocs %}
 {% docs column__total_permanent_managed_venues %}The total number of permanent venues managed by the local authority.{% enddocs %}
-{% docs column__total_physical_managed_venues %}The total number of physical venues managed by the local authority.{% enddocs %}
 {% docs column__total_real_revenue %} Total actual revenue from all bookings. {% enddocs %}
 {% docs column__total_reimbursement_points %}The total number of reimbursement points for the local authority.{% enddocs %}
 {% docs column__total_stock_quantity %} Total remaining stock quantity. {% enddocs %}

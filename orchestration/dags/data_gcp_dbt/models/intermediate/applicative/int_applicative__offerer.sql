@@ -59,9 +59,6 @@ with
             sum(total_bookable_offers) as total_bookable_offers,
             count(distinct venue_id) as total_managed_venues,
             count(
-                distinct case when not venue_is_virtual then venue_id end
-            ) as total_physical_managed_venues,
-            count(
                 distinct case when venue_is_open_to_public then venue_id end
             ) as total_permanent_managed_venues,
             string_agg(
@@ -141,7 +138,6 @@ select
     vgo.top_real_revenue_venue_type,
     vgo.top_bookings_venue_type,
     coalesce(vgo.total_managed_venues, 0) as total_managed_venues,
-    coalesce(vgo.total_physical_managed_venues, 0) as total_physical_managed_venues,
     coalesce(vgo.total_permanent_managed_venues, 0) as total_permanent_managed_venues,
     vgo.total_administrative_venues,
     vgo.all_physical_venues_types,

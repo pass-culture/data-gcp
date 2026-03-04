@@ -11,7 +11,6 @@ select
     venue_postal_code,
     venue_city,
     venue_siret,
-    venue_is_virtual,
     offerer_id,
     venue_creation_date,
     venue_is_permanent,

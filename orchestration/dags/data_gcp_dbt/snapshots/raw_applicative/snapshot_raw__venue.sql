@@ -38,7 +38,6 @@
             , "siret" AS venue_siret
             , CAST("managingOffererId" AS varchar(255)) AS venue_managing_offerer_id
             , "bookingEmail" AS venue_booking_email
-            , "isVirtual" AS venue_is_virtual
             , "comment" AS venue_comment
             , "publicName" AS venue_public_name
             , {{ render_case_when('"venueTypeCode"', venue_type_code_label_mapping, fallback_sql='"venueTypeCode"') }} as venue_type_code

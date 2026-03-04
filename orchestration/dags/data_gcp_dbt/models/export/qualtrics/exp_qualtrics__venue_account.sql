@@ -33,10 +33,7 @@ with
             {{ source("raw", "qualtrics_opt_out_users") }} as opt_out
             on global_venue.venue_id = opt_out.ext_ref
         left join answers on global_venue.venue_id = answers.user_id
-        where
-            not global_venue.venue_is_virtual
-            and opt_out.contact_id is null
-            and answers.user_id is null
+        where and opt_out.contact_id is null and answers.user_id is null
     ),
 
     generate_export as (

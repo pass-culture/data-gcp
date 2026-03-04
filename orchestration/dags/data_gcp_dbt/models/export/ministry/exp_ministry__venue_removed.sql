@@ -4,7 +4,7 @@ select
     venue_description,
     venue_public_name,
     venue_siret,
-    venue_is_virtual,
+    venue_is_open_to_public,
     venue_managing_offerer_id as offerer_id,
     venue_creation_date,
     venue_type_code as venue_type_label,

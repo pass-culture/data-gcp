@@ -17,7 +17,6 @@ select
     venue_density_label,
     venue_macro_density_label,
     venue_density_level,
-    venue_is_virtual,
     venue_type_label,
     venue_is_permanent,
     offerer_id,

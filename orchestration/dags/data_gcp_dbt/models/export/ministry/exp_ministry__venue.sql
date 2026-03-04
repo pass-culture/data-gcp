@@ -4,7 +4,7 @@ select
     v.venue_description,
     v.venue_public_name,
     v.venue_siret,
-    v.venue_is_virtual,
+    v.venue_is_open_to_public,
     v.venue_managing_offerer_id as offerer_id,
     o.offerer_validation_status,
     o.offerer_is_active,

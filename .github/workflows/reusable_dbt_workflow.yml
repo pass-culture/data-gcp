@@ -77,8 +77,8 @@ jobs:
           TARGET_AIRFLOW_BUCKET: ${{ inputs.TARGET_AIRFLOW_BUCKET }}
         run: |
           mkdir env-run-artifacts
-          gsutil cp "gs://$TARGET_AIRFLOW_BUCKET/data/target/manifest.json env-run-artifacts/manifest.json"
-          gsutil cp "gs://$TARGET_AIRFLOW_BUCKET/data/target/run_results.json env-run-artifacts/run_results.json"
+          gsutil cp "gs://$TARGET_AIRFLOW_BUCKET/data/target/manifest.json" "env-run-artifacts/manifest.json"
+          gsutil cp "gs://$TARGET_AIRFLOW_BUCKET/data/target/run_results.json" "env-run-artifacts/run_results.json"
           ls env-run-artifacts
       - name: "Install dbt dependencies"
         working-directory: ${{ env.DBT_FOLDER }}

@@ -141,14 +141,16 @@ jobs:
               [[ -z "$pattern" || "$pattern" =~ ^# ]] && continue
 
               # Escape regex special characters (except * which we'll handle below)
+              # shellcheck disable=SC2001,SC2016
               safe_pattern="$(printf '%s' "$pattern" | sed 's/[.[\^$(){}+?|]/\\&/g')"
 
               # Convert simple glob-style wildcards to regex
+              # shellcheck disable=SC2001
               safe_pattern="$(echo "$safe_pattern" | sed 's/\*/.*/g')"
 
               # Ensure pattern is relative to source_dir
               EXCLUDE_REGEX="${EXCLUDE_REGEX}${source_dir}/${safe_pattern}|"
-            done < "$ignore_file"
+            done < $ignore_file
 
             # Remove trailing |
             EXCLUDE_REGEX="${EXCLUDE_REGEX%|}"

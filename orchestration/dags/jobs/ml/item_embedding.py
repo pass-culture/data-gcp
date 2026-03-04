@@ -30,8 +30,8 @@ from jobs.crons import SCHEDULE_DICT
 ###########################################################################
 ## GCS CONSTANTS
 GCS_FOLDER_PATH = f"item_embedding_{ENV_SHORT_NAME}/{{{{ ds_nodash }}}}"
-TEMP_OUTPUT_FILE_NAME = "item_embeddings.parquet"
-TEMP_INPUT_FILE_NAME = "item_metadata.parquet"
+TEMP_OUTPUT_FILE_NAME = "item_embeddings_*.parquet"
+TEMP_INPUT_FILE_NAME = "item_metadata_*.parquet"
 
 ## BigQuery CONSTANTS
 INPUT_DATASET_NAME = f"ml_input_{ENV_SHORT_NAME}"

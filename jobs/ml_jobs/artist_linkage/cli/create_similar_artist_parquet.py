@@ -56,10 +56,10 @@ app = typer.Typer()
 
 @app.command()
 def main(
-    artist_with_embeddings: str = typer.Option(),
+    artist_with_embeddings_file_path: str = typer.Option(),
     output_file_path: str = typer.Option(),
 ) -> None:
-    artist_df = pd.read_parquet(artist_with_embeddings).assign(
+    artist_df = pd.read_parquet(artist_with_embeddings_file_path).assign(
         mean_tt_item_embedding=lambda df: df[MEAN_TT_ITEM_EMBEDDING_KEY].where(
             df[MEAN_TT_ITEM_EMBEDDING_KEY].apply(len) > 0, None
         )

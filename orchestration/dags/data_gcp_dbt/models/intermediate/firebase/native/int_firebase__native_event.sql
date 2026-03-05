@@ -37,7 +37,6 @@ select
     searchisautocomplete as search_is_autocomplete,
     searchisbasedonhistory as search_is_based_on_history,
     searchofferisduo as search_offer_is_duo_filter,
-    geo_located as reco_geo_located,
     enabled,
     firebase_screen,
     firebase_previous_screen,
@@ -70,12 +69,6 @@ select
     traffic_gen,
     traffic_content,
     toentryid as destination_entry_id,
-    reco_origin,
-    ab_test as reco_ab_test,
-    call_id as reco_call_id,
-    model_version as reco_model_version,
-    model_name as reco_model_name,
-    model_endpoint as reco_model_endpoint,
     social as selected_social_media,
     searchview as search_type,
     type as share_type,
@@ -89,6 +82,13 @@ select
     artistid as artist_id,
     theme_setting,
     system_theme,
+    geo_located as reco_geo_located,
+    reco_origin,
+    ab_test as reco_ab_test,
+    call_id as reco_call_id,
+    model_version as reco_model_version,
+    model_name as reco_model_name,
+    model_endpoint as reco_model_endpoint,
     coalesce(cast(double_offer_id as string), offerid) as offer_id,
     concat(user_pseudo_id, "-", ga_session_id) as unique_session_id,
     coalesce(query, searchquery) as query,
@@ -159,18 +159,18 @@ select
     case
         when
             exists (
-                select 1
+                select 1 as dummy
                 from {{ source("raw", "subcategories") }} as sc
                 where
-                    lower(query) like concat("%", lower(sc.category_id), "%")
-                    or lower(query) like concat("%", lower(sc.id), "%")
+                    lower(query) like concat("%", lower(sc.category_id), "%")  -- noqa: RF02
+                    or lower(query) like concat("%", lower(sc.id), "%")  -- noqa: RF02
             )
             or exists (
-                select 1
+                select 1 as dummy
                 from {{ source("seed", "macro_rayons") }} as mr
                 where
-                    lower(query) like concat("%", lower(mr.macro_rayon), "%")
-                    or lower(query) like concat("%", lower(mr.rayon), "%")
+                    lower(query) like concat("%", lower(mr.macro_rayon), "%")  -- noqa: RF02
+                    or lower(query) like concat("%", lower(mr.rayon), "%")  -- noqa: RF02
             )
         then true
         else false

@@ -100,8 +100,13 @@ with DAG(
             default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
         ),
         "gpu_count": Param(
-            default=4 if ENV_SHORT_NAME == "prod" else 0,
+            default=4 if ENV_SHORT_NAME == "prod" else 1,
             enum=INSTANCES_TYPES["gpu"]["count"],
+            description="""Number of GPUs to use for embedding
+                        (only applicable for GPU instance types).
+                        Please note that if you choose to embed all,
+                        you should increase the GPU count to speed up the embedding process,
+                        especially if you have a large catalog.""",
         ),
     },
 ) as dag:

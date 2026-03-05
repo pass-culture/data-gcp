@@ -6,7 +6,7 @@ from gcp_secrets import get_secret
 from loguru import logger
 from sentence_transformers import SentenceTransformer
 
-BATCH_SIZE = 256
+BATCH_SIZE = 32  ## Tuned on 4 T1 GPUs, 5M items
 
 
 def _build_prompts(df: pd.DataFrame, vector: Vector) -> list[str]:

@@ -26,16 +26,20 @@ def load_parquet_file(
     parquet_filename: str,
     vectors: list,
 ) -> pd.DataFrame:
-    """Load a Parquet file.
+    """Load a Parquet file and validate required columns.
 
     Accepts a single parquet filename, returns a DataFrame object.
     Supports local or GCS paths.
 
     Args:
         parquet_filename: Local or GCS (``gs://…``) path — file, directory, or glob.
+        vectors: List of vector configurations used to determine required columns.
 
     Returns:
         pd.DataFrame containing the loaded data.
+
+    Raises:
+        ValueError: If required columns are missing from the DataFrame.
     """
     logger.info(f"Loading data from: {parquet_filename}")
 
@@ -50,10 +54,10 @@ def load_parquet_file(
 
 
 def _validate_parquet_file(df: pd.DataFrame, vectors: list) -> None:
-    """Validate that a DataFrame contains the required columns.
+    """Validate that a DataFrame contains all required columns.
 
     Args:
-        df: DataFrame object.
+        df: DataFrame to validate.
         vectors: List of vector configurations.
 
     Raises:

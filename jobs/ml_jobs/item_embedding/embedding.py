@@ -126,16 +126,17 @@ def embed_dataframe(
     encoders: dict[str, SentenceTransformer],
     gpu_count: int,
 ) -> pd.DataFrame:
-    """Compute all vector embeddings for a dataframe
+    """Compute all vector embeddings for a dataframe.
 
     Args:
-        df: Batch DataFrame (must contain 'item_id', 'content_hash' and all feature columns)
+        df: DataFrame with item metadata (must contain 'item_id', 'content_hash' and all feature columns)
         vectors: Vector configurations
         encoders: Pre-loaded encoders keyed by encoder name
         gpu_count: Number of available GPUs
 
     Returns:
-        DataFrame with 'item_id' and 'content_hash' plus one column per vector in the vector config
+        DataFrame with 'item_id', 'content_hash', and one column per vector.
+        Each vector column contains embedding arrays.
     """
     # Cache prompts by feature tuple to avoid re-building identical text
     prompts_cache: dict[tuple[str, ...], list[str]] = {}
@@ -159,6 +160,6 @@ def embed_dataframe(
             prompts=prompts_cache[features_key],
         )
 
-        df_embeddings[vector.name] = vector_embeddings
+        df_embeddings[vector.name] = vector_embeddings.tolist()
 
     return df_embeddings

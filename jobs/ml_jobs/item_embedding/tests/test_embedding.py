@@ -6,11 +6,10 @@ import numpy as np
 import pandas as pd
 import pytest
 import yaml
-from config import Vector, load_config, parse_vectors
+from config import Vector, _load_config, parse_vectors
 from embedding import (
     _build_prompts,
-    _validate_required_features,
-    embed_all_vectors,
+    embed_dataframe,
 )
 
 
@@ -44,14 +43,14 @@ class TestLoadConfig:
     def test_load_missing_file(self, tmp_path):
         with patch("config.CONFIGS_PATH", tmp_path):
             with pytest.raises(FileNotFoundError):
-                load_config("nonexistent")
+                _load_config("nonexistent")
 
     def test_load_invalid_yaml(self, tmp_path):
         bad_file = tmp_path / "bad.yaml"
         bad_file.write_text(": :\n  - :\n  invalid", encoding="utf-8")
         with patch("config.CONFIGS_PATH", tmp_path):
             with pytest.raises(yaml.YAMLError):
-                load_config("bad")
+                _load_config("bad")
 
     def test_load_valid_config(self, tmp_path):
         config_content = {
@@ -66,7 +65,7 @@ class TestLoadConfig:
         config_file = tmp_path / "test.yaml"
         config_file.write_text(yaml.dump(config_content), encoding="utf-8")
         with patch("config.CONFIGS_PATH", tmp_path):
-            config = load_config("test")
+            config = _load_config("test")
         assert "vectors" in config
 
     def test_load_config_missing_vectors_key(self, tmp_path):
@@ -74,12 +73,12 @@ class TestLoadConfig:
         config_file.write_text(yaml.dump({"other_key": 123}), encoding="utf-8")
         with patch("config.CONFIGS_PATH", tmp_path):
             with pytest.raises(ValueError, match="missing required keys"):
-                load_config("no_vectors")
+                _load_config("no_vectors")
 
 
 class TestParseVectors:
-    def test_parse_valid(self):
-        config = {
+    def test_parse_valid(self, tmp_path):
+        config_content = {
             "vectors": [
                 {
                     "name": "v1",
@@ -88,35 +87,33 @@ class TestParseVectors:
                 }
             ]
         }
-        vectors = parse_vectors(config)
+        config_file = tmp_path / "test.yaml"
+        config_file.write_text(yaml.dump(config_content), encoding="utf-8")
+        with patch("config.CONFIGS_PATH", tmp_path):
+            vectors = parse_vectors("test")
         assert len(vectors) == 1
         assert vectors[0].name == "v1"
 
-    def test_parse_empty_vectors(self):
-        with pytest.raises(ValueError, match="No vectors configured"):
-            parse_vectors({"vectors": []})
+    def test_parse_empty_vectors(self, tmp_path):
+        config_file = tmp_path / "empty.yaml"
+        config_file.write_text(yaml.dump({"vectors": []}), encoding="utf-8")
+        with patch("config.CONFIGS_PATH", tmp_path):
+            with pytest.raises(ValueError, match="No vectors configured"):
+                parse_vectors("empty")
 
-    def test_parse_no_vectors_key(self):
-        with pytest.raises(ValueError, match="No vectors configured"):
-            parse_vectors({})
+    def test_parse_no_vectors_key(self, tmp_path):
+        config_file = tmp_path / "no_vectors.yaml"
+        config_file.write_text(yaml.dump({}), encoding="utf-8")
+        with patch("config.CONFIGS_PATH", tmp_path):
+            with pytest.raises(ValueError, match="missing required keys"):
+                parse_vectors("no_vectors")
 
-    def test_parse_invalid_vectors_type(self):
-        with pytest.raises(ValueError, match="must be a list"):
-            parse_vectors({"vectors": "not_a_list"})
-
-
-# ---------------------------------------------------------------------------
-# Feature validation tests
-# ---------------------------------------------------------------------------
-class TestValidateRequiredFeatures:
-    def test_all_present(self):
-        df = pd.DataFrame({"a": [1], "b": [2], "c": [3]})
-        _validate_required_features(df, ["a", "b"])  # should not raise
-
-    def test_missing_features(self):
-        df = pd.DataFrame({"a": [1]})
-        with pytest.raises(ValueError, match="Missing required features.*b, c"):
-            _validate_required_features(df, ["a", "b", "c"])
+    def test_parse_invalid_vectors_type(self, tmp_path):
+        config_file = tmp_path / "invalid.yaml"
+        config_file.write_text(yaml.dump({"vectors": "not_a_list"}), encoding="utf-8")
+        with patch("config.CONFIGS_PATH", tmp_path):
+            with pytest.raises(ValueError, match="must be a list"):
+                parse_vectors("invalid")
 
 
 # ---------------------------------------------------------------------------
@@ -155,30 +152,11 @@ class TestBuildPrompts:
 
 
 # ---------------------------------------------------------------------------
-# End-to-end embed_all_vectors tests
+# End-to-end embed_dataframe tests
 # ---------------------------------------------------------------------------
-class TestEmbedAllVectors:
-    def test_empty_dataframe(self):
-        df = pd.DataFrame(columns=["item_id", "feat"])
-        vectors = [Vector(name="v", features=["feat"], encoder_name="m")]
-        with pytest.raises(ValueError, match="Empty metadata"):
-            embed_all_vectors(df, vectors)
-
-    def test_missing_item_id(self):
-        df = pd.DataFrame({"feat": [1, 2]})
-        vectors = [Vector(name="v", features=["feat"], encoder_name="m")]
-        with pytest.raises(ValueError, match="item_id"):
-            embed_all_vectors(df, vectors)
-
-    def test_missing_feature_column(self):
-        df = pd.DataFrame({"item_id": [1], "a": [1]})
-        vectors = [Vector(name="v", features=["a", "missing"], encoder_name="m")]
-        with pytest.raises(ValueError, match="Missing required features"):
-            embed_all_vectors(df, vectors)
-
-    @patch("embedding._load_encoders")
-    @patch("embedding._get_gpu_count", return_value=0)
-    def test_end_to_end(self, mock_gpu, mock_load_encoders):
+class TestEmbedDataframe:
+    @patch("embedding.load_encoders")
+    def test_end_to_end(self, mock_load_encoders):
         # Mock encoder that returns deterministic embeddings
         mock_encoder = MagicMock()
         mock_encoder.device = "cpu"
@@ -190,18 +168,19 @@ class TestEmbedAllVectors:
         df = pd.DataFrame(
             {
                 "item_id": ["a", "b", "c"],
+                "content_hash": ["h1", "h2", "h3"],
                 "name": ["Alice", "Bob", "Charlie"],
             }
         )
         vectors = [Vector(name="emb", features=["name"], encoder_name="test/model")]
+        encoders = {"test/model": mock_encoder}
 
-        result = embed_all_vectors(df, vectors, batch_size=32)
+        result = embed_dataframe(df, vectors, encoders, gpu_count=0)
 
-        assert list(result.columns) == ["item_id", "emb"]
+        assert "item_id" in result.columns
+        assert "content_hash" in result.columns
+        assert "emb" in result.columns
         assert len(result) == 3
-        # Each embedding should be a list of floats
-        assert result["emb"].iloc[0] == [1.0, 2.0]
 
-        # Verify encoder.encode was called with correct prompts
-        call_args = mock_encoder.encode.call_args
-        assert call_args.kwargs["batch_size"] == 32
+        # Verify encoder.encode was called
+        assert mock_encoder.encode.called

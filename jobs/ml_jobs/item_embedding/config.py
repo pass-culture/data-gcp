@@ -17,7 +17,7 @@ class Vector(BaseModel):
     prompt_name: Optional[str] = None
 
 
-def load_config(config_file_name: str) -> dict:
+def _load_config(config_file_name: str) -> dict:
     """Load YAML configuration file.
 
     Args:
@@ -44,11 +44,11 @@ def load_config(config_file_name: str) -> dict:
     return config
 
 
-def parse_vectors(config: dict) -> list[Vector]:
+def parse_vectors(config_filename: str) -> list[Vector]:
     """Parse vector configurations from config dictionary.
 
     Args:
-        config: Configuration dictionary containing a 'vectors' key
+        config_filename: Configuration filename (without .yaml extension) to load and parse vector configurations from.
 
     Returns:
         List of Vector objects
@@ -56,6 +56,7 @@ def parse_vectors(config: dict) -> list[Vector]:
     Raises:
         ValueError: If no vectors are configured or vector config is invalid
     """
+    config = _load_config(config_filename)
     raw_vectors = config.get("vectors")
 
     if raw_vectors is None or (isinstance(raw_vectors, list) and not raw_vectors):

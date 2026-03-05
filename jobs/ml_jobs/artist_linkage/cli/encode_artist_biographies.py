@@ -46,7 +46,7 @@ def map_birth_date_to_epoch(birth_date: str) -> str | None:
 
         if year < 1900:
             # Century for years < 1900 (e.g. 1844 -> 1800, -2304 -> -2400)
-            return str(year // 100) + "e siècle"
+            return str((year // 100) + 1) + "e siècle"
         else:
             # Decade for years >= 1900 (e.g. 1944 -> 1940)
             return f"{(year // 10) * 10}s"

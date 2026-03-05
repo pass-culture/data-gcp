@@ -1,4 +1,5 @@
 import lancedb
+import numpy as np
 import pandas as pd
 import tqdm
 import typer
@@ -60,8 +61,8 @@ def main(
     output_file_path: str = typer.Option(),
 ) -> None:
     artist_df = pd.read_parquet(artist_with_embeddings_file_path).assign(
-        mean_tt_item_embedding=lambda df: df[MEAN_TT_ITEM_EMBEDDING_KEY].where(
-            df[MEAN_TT_ITEM_EMBEDDING_KEY].apply(len) > 0, None
+        mean_tt_item_embedding=lambda df: df[MEAN_TT_ITEM_EMBEDDING_KEY].apply(
+            lambda x: x if isinstance(x, list | np.ndarray) and len(x) > 0 else None
         )
     )
 
@@ -151,9 +152,9 @@ def main(
             {
                 ARTIST_ID_KEY: selected_artist_row[ARTIST_ID_KEY],
                 ARTIST_NAME_KEY: selected_artist_row[ARTIST_NAME_KEY],
-                "top_matches": results_df.iloc[
-                    1:
-                ]  # Exclude the first row which is the artist itself
+                "top_matches": results_df[
+                    results_df[ARTIST_ID_KEY] != selected_artist_row[ARTIST_ID_KEY]
+                ]  # Exclude the artist itself
                 .head(10)
                 .to_json(orient="records"),
             }

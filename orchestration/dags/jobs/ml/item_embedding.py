@@ -29,7 +29,9 @@ from jobs.crons import SCHEDULE_DICT
 
 ###########################################################################
 ## GCS CONSTANTS
-GCS_FOLDER_PATH = f"item_embedding_{ENV_SHORT_NAME}/{{{{ ds_nodash }}}}"
+GCS_FOLDER_PATH = f"item_embedding_{ENV_SHORT_NAME}/{{{{ ts_nodash }}}}"
+INPUT_FOLDER = "input_item_metadata"
+OUTPUT_FOLDER = "output_item_embeddings"
 TEMP_OUTPUT_FILE_NAME = "item_embeddings_*.parquet"
 TEMP_INPUT_FILE_NAME = "item_metadata_*.parquet"
 
@@ -46,7 +48,7 @@ DAG_NAME = "item_embedding"
 BASE_DIR = "data-gcp/jobs/ml_jobs/item_embedding"
 INSTANCE_NAME = "item-embedding"
 INSTANCE_TYPE = {
-    "dev": "n1-standard-2",
+    "dev": "n1-standard-4",
     "stg": "n1-standard-16",
     "prod": "n1-standard-16",
 }[ENV_SHORT_NAME]
@@ -65,6 +67,7 @@ with DAG(
     description="Embed items metadata",
     schedule_interval=SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME],
     catchup=False,
+    dagrun_timeout=timedelta(hours=12),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
@@ -72,11 +75,6 @@ with DAG(
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        ),
-        "batch_size": Param(
-            default=100,
-            type="integer",
-            description="Number of items to process per batch",
         ),
         "embed_all": Param(
             default=False,
@@ -107,7 +105,7 @@ with DAG(
         ),
     },
 ) as dag:
-    start = EmptyOperator(task_id="start", dag=dag)
+    start = EmptyOperator(task_id="start")
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -125,7 +123,6 @@ with DAG(
         base_dir=BASE_DIR,
         branch="{{ params.branch }}",
         retries=2,
-        dag=dag,
     )
 
     # Step 1: Select items to embed and save to a temp table in BigQuery
@@ -163,7 +160,7 @@ with DAG(
                     "tableId": TEMP_INT_TABLE_NAME,
                 },
                 "destinationUris": [
-                    f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{TEMP_INPUT_FILE_NAME}"
+                    f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{INPUT_FOLDER}/{TEMP_INPUT_FILE_NAME}"
                 ],
                 "destinationFormat": "PARQUET",
             }
@@ -179,9 +176,8 @@ with DAG(
         command=f"""
             uv run python main.py \
                 --config-file-name {{{{ params.config_file_name }}}} \
-                --batch-size {{{{ params.batch_size }}}} \
-                --input-parquet-filename gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{TEMP_INPUT_FILE_NAME} \
-                --output-parquet-filename gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{TEMP_OUTPUT_FILE_NAME} \
+                --input-parquets-folder-path gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{INPUT_FOLDER} \
+                --output-parquets-folder-path gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{OUTPUT_FOLDER} \
         """,
     )
 
@@ -191,7 +187,7 @@ with DAG(
         task_id="export_item_embeddings_to_bigquery",
         project_id=GCP_PROJECT_ID,
         bucket=ML_BUCKET_TEMP,
-        source_objects=[f"{GCS_FOLDER_PATH}/{TEMP_OUTPUT_FILE_NAME}"],
+        source_objects=[f"{GCS_FOLDER_PATH}/{OUTPUT_FOLDER}/*"],
         destination_project_dataset_table=f"{OUTPUT_DATASET_NAME}.{TEMP_OUTPUT_TABLE_NAME}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
@@ -201,10 +197,10 @@ with DAG(
     gce_instance_delete = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
-        trigger_rule="none_failed",
+        trigger_rule="all_done",  # always delete the VM, even on upstream failure
     )
 
-    stop = EmptyOperator(task_id="stop", dag=dag)
+    stop = EmptyOperator(task_id="stop")
 
     start >> [gce_instance_start, bigquery_select_items_to_embed]
     gce_instance_start >> install_dependencies

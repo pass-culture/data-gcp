@@ -16,7 +16,7 @@ def list_parquet_files(gcs_path: str) -> list[str]:
     if not gcs_path.startswith("gs://"):
         raise ValueError(f"Invalid GCS path: {gcs_path}")
     fs = gcsfs.GCSFileSystem()
-    l_files = fs.glob(gcs_path)
+    l_files = fs.glob(gcs_path + "/*")
     if not l_files:
         raise FileNotFoundError(f"No files found for path: {gcs_path}")
     return [f"gs://{filename}" for filename in l_files]

@@ -1,7 +1,5 @@
-import os
-
 import gcsfs
-import pyarrow.parquet as pq
+import pandas as pd
 from loguru import logger
 
 
@@ -9,88 +7,65 @@ def list_parquet_files(gcs_path: str) -> list[str]:
     """List all Parquet files matching the given path.
     Args:
         gcs_path: GCS path
-    returns:
-        List of GCS paths to Parquet files
-    raises:
+    Returns:
+        List of GCS paths to Parquet files starting with gs://
+    Raises:
         ValueError: If the input path is not a valid GCS path.
         FileNotFoundError: If no files are found matching the path.
     """
     if not gcs_path.startswith("gs://"):
         raise ValueError(f"Invalid GCS path: {gcs_path}")
     fs = gcsfs.GCSFileSystem()
-    files = fs.glob(gcs_path)
-    if not files:
+    l_files = fs.glob(gcs_path)
+    if not l_files:
         raise FileNotFoundError(f"No files found for path: {gcs_path}")
-    return files
+    return [f"gs://{filename}" for filename in l_files]
 
 
 def load_parquet_file(
     parquet_filename: str,
-    required_columns: list[str],
-) -> pq.ParquetFile:
+    vectors: list,
+) -> pd.DataFrame:
     """Load a Parquet file.
 
-    Accepts a single parquet filename, returns a ParquetFile object that can be read in batches.
+    Accepts a single parquet filename, returns a DataFrame object.
     Supports local or GCS paths.
 
     Args:
         parquet_filename: Local or GCS (``gs://…``) path — file, directory, or glob.
 
     Returns:
-        pq.ParquetFile
-
-    Raises:
-        FileNotFoundError: If the path does not exist or matches no files.
+        pd.DataFrame containing the loaded data.
     """
     logger.info(f"Loading data from: {parquet_filename}")
 
-    pf = pq.ParquetFile(parquet_filename)
+    df = pd.read_parquet(parquet_filename)
 
-    if required_columns is not None:
-        _validate_parquet_file(pf, required_columns)
+    _validate_parquet_file(df, vectors)
 
-    logger.info(f"Loaded {pf.metadata.num_rows} items from {parquet_filename}")
-    return pf
+    logger.info(
+        f"Loaded {len(df)} items from {parquet_filename}, and validated required columns for embedding"
+    )
+    return df
 
 
-def _validate_parquet_file(pf: pq.ParquetFile, required_columns: list[str]) -> None:
-    """Validate that a Parquet file contains the required columns.
+def _validate_parquet_file(df: pd.DataFrame, vectors: list) -> None:
+    """Validate that a DataFrame contains the required columns.
 
     Args:
-        pf: ParquetFile object.
-        required_columns: List of column names that must be present in the Parquet schema.
+        df: DataFrame object.
+        vectors: List of vector configurations.
 
     Raises:
-        ValueError: If any required column is missing from the Parquet schema.
+        ValueError: If any required column is missing from the DataFrame.
     """
-    available = set(pf.schema.names)
+    required_columns = list(
+        set(
+            ["item_id", "content_hash"]
+            + [feature for vector in vectors for feature in vector.features]
+        )
+    )
+    available = set(df.columns)
     missing = [c for c in required_columns if c not in available]
     if missing:
-        raise ValueError(
-            f"Parquet file is missing required columns: {', '.join(missing)}"
-        )
-
-
-def upload_file_to_gcs(local_path: str, gcs_path: str) -> None:
-    """Upload a local file to GCS and remove the local copy.
-
-    Args:
-        local_path: Absolute path to the local file.
-        gcs_path: Destination GCS path (``gs://bucket/path/file.parquet``).
-
-    Raises:
-        FileNotFoundError: If the local file does not exist.
-        ValueError: If *gcs_path* is not a valid ``gs://`` URI.
-    """
-    if not os.path.isfile(local_path):
-        raise FileNotFoundError(f"Local file not found: {local_path}")
-    if not gcs_path.startswith("gs://"):
-        raise ValueError(f"Invalid GCS path: {gcs_path}")
-
-    logger.info(f"Uploading {local_path} -> {gcs_path}")
-    fs = gcsfs.GCSFileSystem()
-    fs.put(local_path, gcs_path)
-    logger.info(f"Upload complete: {gcs_path}")
-
-    os.remove(local_path)
-    logger.info(f"Removed local temp file: {local_path}")
+        raise ValueError(f"DataFrame is missing required columns: {', '.join(missing)}")

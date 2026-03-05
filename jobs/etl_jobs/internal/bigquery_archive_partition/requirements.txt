@@ -10,7 +10,7 @@ charset-normalizer==3.4.1
     # via requests
 click==8.1.8
     # via typer
-google-api-core==1.34.1
+google-api-core[grpc]==1.34.1
     # via
     #   google-cloud-bigquery
     #   google-cloud-core
@@ -46,7 +46,7 @@ protobuf==3.20.3
     #   google-api-core
     #   googleapis-common-protos
     #   grpcio-status
-pyasn1==0.6.1
+pyasn1==0.6.2
     # via
     #   pyasn1-modules
     #   rsa

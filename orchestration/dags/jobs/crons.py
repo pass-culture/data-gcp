@@ -48,6 +48,11 @@ SCHEDULE_DICT = {
         "stg": None,
         "dev": None,
     },
+    "item_embedding": {
+        "prod": "0 0 * * *",  # every day at midnight
+        "stg": "0 0 * * *",  # every day at midnight
+        "dev": "0 0 * * 1",  # every Monday at midnight
+    },
 }
 
 

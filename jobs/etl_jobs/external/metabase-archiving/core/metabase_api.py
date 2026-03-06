@@ -31,7 +31,7 @@ class MetabaseAPI:
         if response.status_code != 204:
             token_json = response.json()
             if "id" not in token_json:
-                raise Exception(f"Error login to {host}, error: {token_json}")
+                raise RuntimeError(f"Error login to {host}, error: {token_json}")
             self.headers = {
                 "Content-Type": "application/json",
                 "X-Metabase-Session": token_json["id"],

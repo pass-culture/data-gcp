@@ -25,55 +25,54 @@ def get_card_lists(metabase):
     return native_cards, query_cards
 
 
+def _extract_table_dependencies(query_attrs, legacy_query):
+    table_dependency = []
+    query = legacy_query["query"]
+
+    source_table_id = query.get("source-table")
+    source_query = query.get("source-query", {})
+
+    if source_table_id is not None:
+        table_dependency.append(source_table_id)
+    elif "source-table" in source_query:
+        table_dependency.append(source_query["source-table"])
+
+    if "joins" in query_attrs:
+        for join in query["joins"]:
+            table_dependency.append(join["source-table"])
+
+    return table_dependency
+
+
 def get_query_dependencies(card_list, tables_df):
-    i = 0
     monitoring = 0
-    dependencies_other = {}
+    dependencies_other = []
 
     for card in card_list:
-        card_id = card["id"]
-        card_owner = card["creator"]["email"]
-        card_name = card["name"]
-        card_type = card["query_type"]
-        if card["legacy_query"]:
-            query_attributes_keys = card["legacy_query"]["query"].keys()
-        else:
+        if not card["legacy_query"]:
             monitoring += 1
             continue
-        table_dependency = []
 
-        if "source-table" in query_attributes_keys:
-            source_table_id = card["legacy_query"]["query"]["source-table"]
-            if "joins" in query_attributes_keys:
-                for join in card["legacy_query"]["query"]["joins"]:
-                    table_dependency.append(join["source-table"])
-            table_dependency.append(source_table_id)
+        query_attrs = card["legacy_query"]["query"].keys()
+        table_dependency = _extract_table_dependencies(
+            query_attrs, card["legacy_query"]
+        )
 
-        elif (
-            "source-query" in query_attributes_keys
-            and "source-table" in card["legacy_query"]["query"]["source-query"].keys()
-        ):
-            source_table = card["legacy_query"]["query"]["source-query"]["source-table"]
-            if "joins" in query_attributes_keys:
-                for join in card["legacy_query"]["query"]["joins"]:
-                    table_dependency.append(join["source-table"])
-            table_dependency.append(source_table)
-
-        dependency = dict()
-        dependency["card_id"] = card_id
-        dependency["card_name"] = card_name
-        dependency["card_type"] = card_type
-        dependency["card_owner"] = card_owner
-        dependency["table_id"] = table_dependency
-
-        dependencies_other[i] = dependency
-        i += 1
+        dependencies_other.append(
+            {
+                "card_id": card["id"],
+                "card_name": card["name"],
+                "card_type": card["query_type"],
+                "card_owner": card["creator"]["email"],
+                "table_id": table_dependency,
+            }
+        )
 
     dependencies_other_df = (
-        pd.DataFrame.from_dict(dependencies_other, orient="index")
+        pd.DataFrame(dependencies_other)
         .explode("table_id")
         .reset_index(drop=True)
-        .merge(tables_df, how="left", on="table_id")
+        .merge(tables_df, how="left", on="table_id", validate="many_to_one")
     )
 
     logger.info("%d query cards without query legacy", monitoring)
@@ -97,7 +96,7 @@ def get_table_infos(metabase):
 
 
 def get_native_dependencies(cards_list, tables_df):
-    regex = r"from\s+[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+|join\s+[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+"
+    regex = r"from\s+\w+\.\w+|join\s+\w+\.\w+"
 
     i = 0
     monitoring = 0
@@ -117,12 +116,13 @@ def get_native_dependencies(cards_list, tables_df):
         table_dependency = re.findall(regex, sql_lines)
         table_dependency = list(set(table_dependency))
 
-        dependency = dict()
-        dependency["card_id"] = card_id
-        dependency["card_name"] = card_name
-        dependency["card_type"] = card_type
-        dependency["card_owner"] = card_owner
-        dependency["table_name"] = [table.split(".")[-1] for table in table_dependency]
+        dependency = {
+            "card_id": card_id,
+            "card_name": card_name,
+            "card_type": card_type,
+            "card_owner": card_owner,
+            "table_name": [table.split(".")[-1] for table in table_dependency],
+        }
         table_schema_list = []
         for dep in table_dependency:
             match_schema = re.search(r"(from|join)\s+(\w+)", dep)
@@ -139,7 +139,12 @@ def get_native_dependencies(cards_list, tables_df):
         pd.DataFrame.from_dict(dependencies_native, orient="index")
         .explode(["table_name", "table_schema"])
         .reset_index(drop=True)
-        .merge(tables_df, how="left", on=["table_schema", "table_name"])
+        .merge(
+            tables_df,
+            how="left",
+            on=["table_schema", "table_name"],
+            validate="many_to_one",
+        )
     )
 
     logger.info("%d native cards without query legacy", monitoring)

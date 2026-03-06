@@ -1,17 +1,12 @@
 import json
+import logging
 import re
 
 import pandas as pd
-import typer
 
-from metabase_api import MetabaseAPI
-from utils import (
-    CLIENT_ID,
-    INT_METABASE_DATASET,
-    METABASE_API_USERNAME,
-    METABASE_HOST,
-    PASSWORD,
-)
+from core.utils import INT_METABASE_DATASET
+
+logger = logging.getLogger(__name__)
 
 
 def get_card_lists(metabase):
@@ -81,7 +76,7 @@ def get_query_dependencies(card_list, tables_df):
         .merge(tables_df, how="left", on="table_id")
     )
 
-    print(f"{monitoring} query cards without query legacy")
+    logger.info("%d query cards without query legacy", monitoring)
 
     return dependencies_other_df
 
@@ -147,19 +142,12 @@ def get_native_dependencies(cards_list, tables_df):
         .merge(tables_df, how="left", on=["table_schema", "table_name"])
     )
 
-    print(f"{monitoring} native cards without query legacy")
+    logger.info("%d native cards without query legacy", monitoring)
 
     return dependencies_native_df
 
 
-def run():
-    metabase = MetabaseAPI(
-        username=METABASE_API_USERNAME,
-        password=PASSWORD,
-        host=METABASE_HOST,
-        client_id=CLIENT_ID,
-    )
-
+def run_dependencies(metabase):
     tables_df = get_table_infos(metabase)
     native_cards, other_cards = get_card_lists(metabase)
     dependencies_native_df = get_native_dependencies(native_cards, tables_df)
@@ -181,7 +169,3 @@ def run():
     )
 
     return "success"
-
-
-if __name__ == "__main__":
-    typer.run(run)

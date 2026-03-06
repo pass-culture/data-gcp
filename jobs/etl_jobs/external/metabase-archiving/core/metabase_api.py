@@ -1,10 +1,13 @@
 import json
+import logging
 from time import sleep
 
 import requests
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
 
 
 class MetabaseAPI:
@@ -107,6 +110,16 @@ class MetabaseAPI:
 
         return export_cards
 
+    def put_collection(self, collection_id, params):
+        """PUT /api/collection/{id} — update a collection."""
+        response = requests.put(
+            f"{self.host}/api/collection/{collection_id}",
+            data=json.dumps(params),
+            headers=self.headers,
+        )
+        response.raise_for_status()
+        return response.json()
+
     def get_collections(self, _id=None):
         if _id:
             response = requests.get(
@@ -127,8 +140,49 @@ class MetabaseAPI:
             response = requests.get(f"{self.host}/api/dashboard/", headers=self.headers)
         return response.json()
 
+    def put_dashboard(self, dashboard_id, params):
+        """PUT /api/dashboard/{id} — update a dashboard."""
+        response = requests.put(
+            f"{self.host}/api/dashboard/{dashboard_id}",
+            data=json.dumps(params),
+            headers=self.headers,
+        )
+        response.raise_for_status()
+        return response.json()
+
     def get_bookmarks(self):
         response = requests.get(f"{self.host}/api/bookmark/", headers=self.headers)
+        return response.json()
+
+    def get_collection_graph(self):
+        """GET /api/collection/graph — returns the full collection permission graph."""
+        response = requests.get(
+            f"{self.host}/api/collection/graph", headers=self.headers
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def put_collection_graph(self, graph):
+        """PUT /api/collection/graph — updates the full collection permission graph."""
+        response = requests.put(
+            f"{self.host}/api/collection/graph",
+            data=json.dumps(graph),
+            headers=self.headers,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def get_collection_children(self, collection_id, models=None):
+        """GET /api/collection/{id}/items — returns items in a collection."""
+        params = {}
+        if models:
+            params["models"] = models
+        response = requests.get(
+            f"{self.host}/api/collection/{collection_id}/items",
+            headers=self.headers,
+            params=params,
+        )
+        response.raise_for_status()
         return response.json()
 
     def export_dashboards(self, dashboards, timeout_sleep=1):

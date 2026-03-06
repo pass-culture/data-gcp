@@ -3,7 +3,7 @@ import pyarrow as pa
 
 API_URL = "https://data.geopf.fr/geocodage/search/csv"
 
-GCP_PROJECT = "passculture-data-prod"
+GCP_PROJECT = "passculture-data-ehp"
 DATASET_NAME = "geocoding_data"
 DEFAULT_DESTINATION_TABLE_NAME = "geocoded_addresses"
 DEFAULT_BATCH_SIZE = 10
@@ -17,17 +17,17 @@ PYARROW_TABLE_SCHEMA = pa.schema(
         pa.field("latitude", pa.string(), nullable=True),
         pa.field("result_label", pa.string(), nullable=True),
         pa.field("result_score", pa.string(), nullable=True),
-        # pa.field("result_score_next", pa.string(), nullable=True),
+        pa.field("result_score_next", pa.string(), nullable=True),
         pa.field("result_type", pa.string(), nullable=True),
         pa.field("result_id", pa.string(), nullable=True),
-        pa.field("result_housenumber", pa.string(), nullable=False),
+        pa.field("result_housenumber", pa.string(), nullable=True),
         pa.field("result_name", pa.string(), nullable=True),
         pa.field("result_street", pa.string(), nullable=True),
         pa.field("result_postcode", pa.string(), nullable=True),
         pa.field("result_city", pa.string(), nullable=True),
         pa.field("result_context", pa.string(), nullable=True),
         pa.field("result_citycode", pa.string(), nullable=True),
-        pa.field("result_oldcitycode", pa.string(), nullable=False),
+        pa.field("result_oldcitycode", pa.string(), nullable=True),
         pa.field("result_oldcity", pa.string(), nullable=True),
         pa.field("result_district", pa.string(), nullable=True),
         pa.field("result_category", pa.string(), nullable=True),
@@ -115,5 +115,5 @@ from user_candidates as uc
 -- where
 --     -- no location update or location update is older than last user update
 --     (ulu.user_id is null or ulu.last_calculation_at < uc.user_last_modified_at)
-    LIMIT 30
+    LIMIT 35
         """

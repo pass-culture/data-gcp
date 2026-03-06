@@ -1,0 +1,2082 @@
+resources:
+- name: blocked_contacts
+  endpoint:
+    path: /v3/smtp/blockedContacts
+    method: GET
+    data_selector: records
+- name: email_campaign_images
+  endpoint:
+    path: /v3/emailCampaigns/images
+    method: POST
+- name: products
+  endpoint:
+    path: /products
+    method: POST
+- name: categories
+  endpoint:
+    path: /categories
+    method: GET
+    data_selector: categories
+- name: blocked_contacts
+  endpoint:
+    path: /smtp/blockedContacts/
+    method: DELETE
+- name: blocked_domains
+  endpoint:
+    path: /smtp/blockedDomains
+    method: GET
+    data_selector: records
+    params: {}
+- name: emailCampaignImages
+  endpoint:
+    path: /emailCampaigns/images
+    method: POST
+- name: sms_campaign
+  endpoint:
+    path: /smsCampaigns
+    method: post
+- name: sms_campaign
+  endpoint:
+    path: /smsCampaigns
+    method: GET
+- name: sms_campaign
+  endpoint:
+    path: /smsCampaigns/{campaignId}
+    method: put
+- name: sms_campaign
+  endpoint:
+    path: /smsCampaigns/{campaignId}
+    method: DELETE
+- name: smsCampaigns_sendNow
+  endpoint:
+    path: /smsCampaigns/sendNow
+    method: POST
+- name: sms_campaign
+  endpoint:
+    path: /smsCampaigns/{campaignId}/status
+    method: PUT
+- name: smsCampaigns
+  endpoint:
+    path: /smsCampaigns/sendTest
+    method: POST
+    data_selector: ''
+    params: {}
+- name: contacts
+  endpoint:
+    path: /contacts
+    method: GET
+    data_selector: records
+    params: {}
+- name: senders
+  endpoint:
+    path: /senders
+    method: GET
+- name: domains
+  endpoint:
+    path: /senders/domains/{domainName}
+    method: GET
+- name: contacts
+  endpoint:
+    path: /contacts
+    method: GET
+    data_selector: records
+- name: email_campaigns
+  endpoint:
+    path: /emailCampaigns
+    method: GET
+    data_selector: records
+- name: contacts
+  endpoint:
+    path: /contacts/lists//contacts
+    method: GET
+- name: remove_contact
+  endpoint:
+    path: /contacts/lists//contacts/remove
+    method: POST
+- name: contacts
+  endpoint:
+    path: /contacts/lists//contacts/add
+    method: POST
+- name: contacts
+  endpoint:
+    path: /contacts
+    method: GET
+- name: email_campaigns
+  endpoint:
+    path: /emailCampaigns
+    method: GET
+- name: folders
+  endpoint:
+    path: /v3/contacts/folders
+    method: GET
+    data_selector: folders
+    params: {}
+- name: contacts
+  endpoint:
+    path: /contacts
+    method: GET
+- name: email_campaigns
+  endpoint:
+    path: /emailCampaigns
+    method: GET
+- name: sms_campaigns
+  endpoint:
+    path: /smsCampaigns
+    method: GET
+- name: attribution_metrics
+  endpoint:
+    path: /ecommerce/attribution/metrics
+    method: GET
+- name: coupon_collections
+  endpoint:
+    path: /couponCollections
+    method: GET
+    data_selector: collections
+- name: payment_request
+  endpoint:
+    path: /payments/requests
+    method: post
+- name: loyalty_programs
+  endpoint:
+    path: /loyalty/config/programs
+    method: GET
+    data_selector: loyalty_programs
+    params: {}
+- name: contacts_folders
+  endpoint:
+    path: /contacts/folders
+    method: GET
+    data_selector: folders
+    params: {}
+- name: senders_domains_authenticate
+  endpoint:
+    path: /senders/domains/authenticate
+    method: PUT
+- name: contacts
+  endpoint:
+    path: /contacts
+    method: GET
+- name: email_campaigns
+  endpoint:
+    path: /emailCampaigns
+    method: GET
+- name: sms_campaigns
+  endpoint:
+    path: /smsCampaigns
+    method: GET
+- name: whatsapp_campaigns
+  endpoint:
+    path: /whatsappCampaigns
+    method: GET
+- name: contacts_folders_lists
+  endpoint:
+    path: /contacts/folders//lists
+    method: GET
+    data_selector: records
+- name: contacts
+  endpoint:
+    path: /contacts
+    method: GET
+    data_selector: contacts
+- name: senders
+  endpoint:
+    path: /senders
+    method: GET
+- name: senders
+  endpoint:
+    path: /senders/
+    method: GET
+- name: senders
+  endpoint:
+    path: /senders
+    method: GET
+    data_selector: records
+- name: senders_validate
+  endpoint:
+    path: /senders/{senderId}/validate
+    method: PUT
+- name: senders
+  endpoint:
+    path: /senders
+    method: GET
+    data_selector: records
+- name: dedicated_ips
+  endpoint:
+    path: /senders/ips
+    method: GET
+- name: senders_domains
+  endpoint:
+    path: /senders/domains
+    method: GET
+- name: senders
+  endpoint:
+    path: /senders
+    method: GET
+    data_selector: records
+- name: domains
+  endpoint:
+    path: /senders/domains
+    method: GET
+    data_selector: records
+- name: senders
+  endpoint:
+    path: /senders
+    method: GET
+- name: domains
+  endpoint:
+    path: /senders/domains
+    method: GET
+- name: webhooks
+  endpoint:
+    path: /webhooks
+    method: GET
+- name: webhook
+  endpoint:
+    path: /webhooks
+    method: post
+- name: webhook
+  endpoint:
+    path: /webhooks
+    method: GET
+    data_selector: webhooks
+- name: messages
+  endpoint:
+    path: /messages
+    method: GET
+- name: email_campaigns
+  endpoint:
+    path: /emailCampaigns
+    method: GET
+- name: webhooks
+  endpoint:
+    path: /webhooks/
+    method: GET
+- name: delete_group
+  endpoint:
+    path: /v3/corporate/group/
+    method: DELETE
+- name: unlink_subaccount
+  endpoint:
+    path: /corporate/group/unlink/subAccounts
+    method: PUT
+- name: external_feed
+  endpoint:
+    path: /feeds
+    method: POST
+- name: external_feed
+  endpoint:
+    path: /feeds/{uuid}
+    method: GET
+    data_selector: ''
+    params: {}
+- name: external_feed
+  endpoint:
+    path: /feeds/{uuid}
+    method: PUT
+    data_selector: null
+    params: {}
+- name: delete_external_feed
+  endpoint:
+    path: /v3/feeds/{uuid}
+    method: DELETE
+- name: companies
+  endpoint:
+    path: /companies
+    method: GET
+- name: companies
+  endpoint:
+    path: /companies
+    method: post
+- name: companies
+  endpoint:
+    path: /companies/{id}
+    method: GET
+- name: companies
+  endpoint:
+    path: /companies/{id}
+    method: delete
+- name: companies
+  endpoint:
+    path: /companies
+    method: GET
+- name: attributes
+  endpoint:
+    path: /crm/attributes
+    method: GET
+    data_selector: records
+- name: companies
+  endpoint:
+    path: /crm/attributes/companies
+    method: GET
+- name: link_unlink_companies
+  endpoint:
+    path: /companies/link-unlink
+    method: PATCH
+- name: pipeline_details
+  endpoint:
+    path: /crm/pipeline/details/{pipelineID}
+    method: GET
+- name: pipeline_details
+  endpoint:
+    path: /pipeline/details/
+    method: GET
+- name: pipeline_details
+  endpoint:
+    path: /crm/pipeline/details/all
+    method: GET
+- name: deal_attributes
+  endpoint:
+    path: /crm/attributes/deals
+    method: GET
+    data_selector: attributes
+- name: deals
+  endpoint:
+    path: /crm/deals
+    method: GET
+    data_selector: records
+- name: deals
+  endpoint:
+    path: /crm/deals
+    method: post
+- name: deals
+  endpoint:
+    path: /crm/deals/
+    method: GET
+- name: deals
+  endpoint:
+    path: /crm/deals/
+    method: GET
+- name: deals
+  endpoint:
+    path: /crm/deals
+    method: GET
+    data_selector: records
+- name: link_unlink_deals
+  endpoint:
+    path: /crm/deals/link-unlink
+    method: PATCH
+- name: task_types
+  endpoint:
+    path: /crm/tasktypes
+    method: GET
+    data_selector: records
+- name: tasks
+  endpoint:
+    path: /crm/tasks
+    method: GET
+    data_selector: records
+- name: tasks
+  endpoint:
+    path: /crm/tasks
+    method: GET
+- name: tasks
+  endpoint:
+    path: /crm/tasks
+    method: GET
+    data_selector: records
+- name: tasks
+  endpoint:
+    path: /crm/tasks
+    method: GET
+- name: tasks
+  endpoint:
+    path: /crm/tasks
+    method: GET
+    data_selector: tasks
+    params: {}
+- name: notes
+  endpoint:
+    path: /crm/notes
+    method: GET
+    data_selector: notes
+- name: notes
+  endpoint:
+    path: /crm/notes
+    method: POST
+- name: notes
+  endpoint:
+    path: /crm/notes
+    method: GET
+    data_selector: records
+- name: notes
+  endpoint:
+    path: /crm/notes/{id}
+    method: GET
+- name: notes
+  endpoint:
+    path: /crm/notes
+    method: GET
+- name: files
+  endpoint:
+    path: /crm/files
+    method: GET
+- name: files
+  endpoint:
+    path: /crm/files
+    method: GET
+    data_selector: files
+- name: messages
+  endpoint:
+    path: /messages
+    method: GET
+- name: orders
+  endpoint:
+    path: /ecommerce/orders
+    method: POST
+- name: files
+  endpoint:
+    path: /crm/files
+    method: GET
+    data_selector: records
+- name: files
+  endpoint:
+    path: /crm/files/{id}/data
+    method: get
+- name: messages
+  endpoint:
+    path: /v3/conversations/messages
+    method: GET
+- name: pushed_messages
+  endpoint:
+    path: /conversations/pushedMessages
+    method: GET
+- name: loyalty_programs
+  endpoint:
+    path: /loyalty/config/programs
+    method: GET
+    data_selector: loyaltyPrograms
+    params: {}
+- name: account
+  endpoint:
+    path: /v3/account
+    method: GET
+    data_selector: accountDetails
+- name: campaign_member
+  endpoint:
+    path: /services/data/vXX.X/sobjects/CampaignMember
+    method: GET
+    data_selector: records
+    params:
+      incremental: updated_at
+- name: contact
+  endpoint:
+    path: /services/data/vXX.X/sobjects/Contact
+    method: GET
+    data_selector: records
+    params: {}
+- name: contacts
+  endpoint:
+    path: /contacts
+    method: GET
+    data_selector: ips
+    params: {}
+- name: send_email
+  endpoint:
+    path: /smtp/email
+    method: POST
+    data_selector: messageId
+- name: conversation_transcript
+  endpoint:
+    path: /conversations/transcript
+    method: POST
+    data_selector: event
+    params: {}
+- name: payment_authorized
+  endpoint:
+    path: /payment/authorized
+    method: POST
+    data_selector: payload
+- name: payment_link_created
+  endpoint:
+    path: /payment/link_created
+    method: POST
+    data_selector: payload
+- name: payment_not_authorized
+  endpoint:
+    path: /payment/not_authorized
+    method: POST
+    data_selector: payload
+- name: event_tracking
+  endpoint:
+    path: /events/tracking
+    method: GET
+    data_selector: events
+- name: transactional_sms
+  endpoint:
+    path: /webhook/sms
+    method: POST
+    data_selector: records
+- name: inbound_email
+  endpoint:
+    path: /webhooks/inbound
+    method: POST
+    data_selector: items
+    params: {}
+- name: sendAutoMessage
+  endpoint:
+    path: sendAutoMessage
+    method: POST
+    data_selector: text
+    params: {}
+- name: sendVisitorMessage
+  endpoint:
+    path: sendVisitorMessage
+    method: POST
+    data_selector: text
+    params:
+      groupId: optional
+- name: startBotScenario
+  endpoint:
+    path: startBotScenario
+    method: POST
+    data_selector: scenarioId
+    params: {}
+- name: setButtonPosition
+  endpoint:
+    path: setButtonPosition
+    method: POST
+    data_selector: positionCode
+    params: {}
+- name: setButtonSize
+  endpoint:
+    path: setButtonSize
+    method: POST
+    data_selector: size
+    params: {}
+- name: setChatWidth
+  endpoint:
+    path: setChatWidth
+    method: POST
+    data_selector: width
+    params: {}
+- name: setChatHeight
+  endpoint:
+    path: setChatHeight
+    method: POST
+    data_selector: height
+    params: {}
+- name: setZIndex
+  endpoint:
+    path: setZIndex
+    method: POST
+    data_selector: zIndex
+    params: {}
+- name: setColors
+  endpoint:
+    path: setColors
+    method: POST
+    data_selector: colors
+    params: {}
+- name: openChat
+  endpoint:
+    path: openChat
+    method: POST
+    data_selector: focus
+    params: {}
+- name: expandWidget
+  endpoint:
+    path: expandWidget
+    method: POST
+    data_selector: focus
+    params: {}
+- name: minimizeWidget
+  endpoint:
+    path: minimizeWidget
+    method: POST
+    data_selector: ''
+    params: {}
+- name: hide
+  endpoint:
+    path: hide
+    method: POST
+    data_selector: ''
+    params: {}
+- name: show
+  endpoint:
+    path: show
+    method: POST
+    data_selector: ''
+    params: {}
+- name: pageView
+  endpoint:
+    path: pageView
+    method: POST
+    data_selector: ''
+    params: {}
+- name: updateIntegrationData
+  endpoint:
+    path: updateIntegrationData
+    method: POST
+    data_selector: data
+    params: {}
+- name: setLocale
+  endpoint:
+    path: setLocale
+    method: POST
+    data_selector: localeModifier
+    params: {}
+- name: setGroupId
+  endpoint:
+    path: setGroupId
+    method: POST
+    data_selector: groupId
+    params: {}
+- name: restart
+  endpoint:
+    path: restart
+    method: POST
+    data_selector: ''
+    params: {}
+- name: kill
+  endpoint:
+    path: kill
+    method: POST
+    data_selector: ''
+    params: {}
+- name: activate_ecommerce
+  endpoint:
+    path: /v3/ecommerce/activate
+    method: POST
+    data_selector: null
+    params: {}
+- name: categories
+  endpoint:
+    path: /categories
+    method: POST
+    data_selector: ''
+    params: {}
+- name: retrieve_all_categories
+  endpoint:
+    path: /categories
+    method: GET
+    data_selector: ''
+    params:
+      limit: 50
+      offset: 0
+      sort: desc
+- name: retrieve_category_details
+  endpoint:
+    path: /categories/{id}
+    method: GET
+    data_selector: ''
+    params: {}
+- name: create_categories_batch
+  endpoint:
+    path: /categories/batch
+    method: POST
+    data_selector: ''
+    params: {}
+- name: products
+  endpoint:
+    path: /v3/products
+    method: POST
+    data_selector: products
+    params: {}
+- name: batch_products
+  endpoint:
+    path: /v3/products/batch
+    method: POST
+    data_selector: products
+    params: {}
+- name: retrieve_all_products
+  endpoint:
+    path: /v3/products
+    method: GET
+    data_selector: products
+    params:
+      limit: '50'
+      offset: '0'
+      sort: desc
+- name: get_product_details
+  endpoint:
+    path: /v3/products/{id}
+    method: GET
+    data_selector: product
+    params: {}
+- name: identify_user
+  endpoint:
+    path: /identify
+    method: POST
+    data_selector: attributes
+    params: {}
+- name: send_transactional_email
+  endpoint:
+    path: /v3/smtp/email
+    method: POST
+    data_selector: ''
+    params: {}
+- name: send_email
+  endpoint:
+    path: /email
+    method: POST
+    data_selector: messageId
+    params: {}
+- name: send_email
+  endpoint:
+    path: /smtp/email
+    method: POST
+    data_selector: messageVersions
+- name: scheduled_batches
+  endpoint:
+    path: /v3/smtp/emailStatus/{identifier}
+    method: GET
+    data_selector: batches
+    params: {}
+- name: cancel_scheduled_batches
+  endpoint:
+    path: /v3/smtp/email/{identifier}
+    method: DELETE
+    data_selector: ''
+    params: {}
+- name: export_transactional_events
+  endpoint:
+    path: /v3/webhooks/export
+    method: POST
+    data_selector: processId
+    params:
+      event: allEvents
+      type: transactional
+      days: 7
+- name: check_export_status
+  endpoint:
+    path: /v3/webhooks/status
+    method: GET
+    data_selector: status
+    params:
+      process_id: '1843555083931176858'
+- name: smtp_relay
+  endpoint:
+    path: /smtp/relay
+    method: POST
+    data_selector: response
+    params: {}
+- name: send_whatsapp_message
+  endpoint:
+    path: /whatsapp/sendMessage
+    method: POST
+    data_selector: none
+    params: {}
+- name: whatsapp_statistics_events
+  endpoint:
+    path: /whatsapp/statistics/events
+    method: GET
+    data_selector: none
+    params: {}
+- name: delete_log
+  endpoint:
+    path: /v3/smtp/log/[email protected]
+    method: DELETE
+    data_selector: process_id
+- name: check_process_status
+  endpoint:
+    path: /v3/processes/352351
+    method: GET
+    data_selector: status
+- name: page_view
+  endpoint:
+    path: /track/page
+    method: POST
+    data_selector: response
+    params: {}
+- name: send_sms
+  endpoint:
+    path: /v3/transactionalSMS/send
+    method: POST
+    data_selector: messageId
+- name: aggregated_report
+  endpoint:
+    path: /v3/transactionalSMS/statistics/aggregatedReport
+    method: GET
+    data_selector: requests
+- name: daily_reports
+  endpoint:
+    path: /v3/transactionalSMS/statistics/reports
+    method: GET
+    data_selector: reports
+- name: unaggregated_events
+  endpoint:
+    path: /v3/transactionalSMS/statistics/events
+    method: GET
+    data_selector: events
+- name: contact
+  endpoint:
+    path: /contacts
+    method: POST
+    data_selector: id
+    params: {}
+- name: update_contact
+  endpoint:
+    path: /contacts/[email]
+    method: PUT
+    data_selector: attributes
+    params: {}
+- name: track_event
+  endpoint:
+    path: /track_event
+    method: POST
+    data_selector: event
+    params: {}
+- name: get_whatsapp_campaign
+  endpoint:
+    path: /whatsappCampaigns/{campaignId}
+    method: GET
+    data_selector: ''
+    params: {}
+- name: delete_whatsapp_campaign
+  endpoint:
+    path: /whatsappCampaigns/{campaignId}
+    method: DELETE
+    data_selector: ''
+    params: {}
+- name: update_whatsapp_campaign
+  endpoint:
+    path: /whatsappCampaigns/{campaignId}
+    method: PUT
+    data_selector: ''
+    params: {}
+- name: return_all_created_templates
+  endpoint:
+    path: /whatsappCampaigns/template-list
+    method: GET
+    data_selector: ''
+    params: {}
+- name: create_and_send_whatsapp_campaign
+  endpoint:
+    path: /whatsappCampaigns
+    method: POST
+    data_selector: ''
+    params: {}
+- name: return_all_created_campaigns
+  endpoint:
+    path: /whatsappCampaigns
+    method: GET
+    data_selector: ''
+    params: {}
+- name: create_whatsapp_template
+  endpoint:
+    path: /whatsappCampaigns/template
+    method: POST
+    data_selector: ''
+    params: {}
+- name: send_whatsapp_template_for_approval
+  endpoint:
+    path: /whatsappCampaigns/template/approval/{templateId}
+    method: POST
+    data_selector: ''
+    params: {}
+- name: get_whatsapp_api_account_info
+  endpoint:
+    path: /whatsappCampaigns/config
+    method: GET
+    data_selector: ''
+    params: {}
+- name: export_webhook_events
+  endpoint:
+    path: /v3/webhooks/export
+    method: POST
+    data_selector: processId
+    params: {}
+- name: conversation_started
+  endpoint:
+    path: /conversations/webhooks/conversation_started
+    method: POST
+    data_selector: event
+    params: {}
+- name: conversation_fragment
+  endpoint:
+    path: /conversations/webhooks/conversation_fragment
+    method: POST
+    data_selector: event
+    params: {}
+- name: create_webhook
+  endpoint:
+    path: /webhooks
+    method: POST
+    data_selector: description
+    params:
+      batched: true
+- name: webhooks
+  endpoint:
+    path: /webhooks
+    method: POST
+    data_selector: description
+    params: {}
+- name: widget_customization
+  endpoint:
+    path: /customize
+    method: GET
+    data_selector: customization
+- name: BrevoConversationsSetup
+  endpoint:
+    path: /BrevoConversationsSetup
+    method: GET
+- name: order_status
+  endpoint:
+    path: /orders/status
+    method: POST
+    data_selector: orders
+    params: {}
+- name: batch_order_status
+  endpoint:
+    path: /orders/status/batch
+    method: POST
+    data_selector: orders
+    params:
+      notifyUrl: https://en.wikipedia.org/wiki/Webhook
+- name: couponCollections
+  endpoint:
+    path: /couponCollections
+    method: POST
+    data_selector: collectionId
+- name: coupons
+  endpoint:
+    path: /coupons
+    method: POST
+    data_selector: null
+- name: session_data
+  endpoint:
+    path: /session/data
+    method: GET
+    data_selector: session_data
+    params: {}
+- name: cart_events
+  endpoint:
+    path: /cart/events
+    method: GET
+    data_selector: cart_events
+    params: {}
+- name: custom_event
+  endpoint:
+    path: /track
+    method: POST
+    data_selector: event
+    params: {}
+- name: identify_user
+  endpoint:
+    path: /api/v2/identify
+    method: POST
+    data_selector: attributes
+    params: {}
+- name: track_link
+  endpoint:
+    path: /trackLink
+    method: POST
+    data_selector: null
+    params: {}
+- name: track_page
+  endpoint:
+    path: /trackPage
+    method: POST
+    data_selector: ''
+    params: {}
+- name: track_event
+  endpoint:
+    path: /api/v2/trackEvent
+    method: POST
+    data_selector: data
+    params: {}
+- name: contacts
+  endpoint:
+    path: /contacts
+    method: GET
+    data_selector: contacts
+- name: create_event
+  endpoint:
+    path: /v3/events
+    method: POST
+    data_selector: null
+    params: {}
+- name: senders
+  endpoint:
+    path: /senders
+    method: POST
+    data_selector: ''
+    params: {}
+- name: update_sender
+  endpoint:
+    path: /senders/{senderId}
+    method: PUT
+    data_selector: ''
+    params: {}
+- name: get_senders
+  endpoint:
+    path: /senders
+    method: GET
+    data_selector: ''
+    params:
+      ip: 192.168.8.138
+      domain: mydomain.com
+- name: delete_sender
+  endpoint:
+    path: /senders/{senderId}
+    method: DELETE
+    data_selector: ''
+    params: {}
+- name: create_domain
+  endpoint:
+    path: /senders/domains
+    method: POST
+    data_selector: ''
+    params:
+      name: mydomain.com
+- name: list_domains
+  endpoint:
+    path: /senders/domains
+    method: GET
+    data_selector: domains
+    params: {}
+- name: delete_domain
+  endpoint:
+    path: /senders/domains/{domainName}
+    method: DELETE
+    data_selector: ''
+    params:
+      domainName: mycompany.com
+- name: validate_domain
+  endpoint:
+    path: /senders/domains/{domainName}
+    method: GET
+    data_selector: domain
+    params: {}
+- name: authenticate_domain
+  endpoint:
+    path: /senders/domains/{domainName}/authenticate
+    method: PUT
+    data_selector: domain_name
+    params: {}
+- name: user_activity_logs
+  endpoint:
+    path: /v3/organization/activities
+    method: GET
+    data_selector: logs
+    params:
+      startDate: '2023-01-01'
+      endDate: '2023-02-01'
+      limit: 10
+      offset: 0
+- name: trendingcryptocoinsfeed
+  endpoint:
+    path: /v3/feeds
+    method: POST
+    data_selector: data
+    params: {}
+- name: favcryptocoinsfeed
+  endpoint:
+    path: ''
+    method: POST
+    data_selector: ''
+    params: {}
+- name: fetch_all_external_feeds
+  endpoint:
+    path: ''
+    method: GET
+    data_selector: feeds
+    params:
+      search: search
+      startDate: '2022-09-04'
+      endDate: '2022-10-01'
+      sort: desc
+      authType: basic
+      limit: 50
+      offset: 0
+- name: create_external_feed
+  endpoint:
+    path: ''
+    method: POST
+    data_selector: id
+    params:
+      name: New feed
+      url: http://requestb.in/173lyyx1
+      authType: basic
+      username: user
+      password: password
+      maxRetries: 5
+      cache: false
+      headers:
+      - name: userId
+        value: user12345
+- name: get_external_feed_by_uuid
+  endpoint:
+    path: /{uuid}
+    method: GET
+    data_selector: id
+    params: {}
+- name: update_external_feed
+  endpoint:
+    path: /{uuid}
+    method: PUT
+    data_selector: id
+    params:
+      name: New feed
+      url: http://requestb.in/173lyyx1
+      authType: token
+      username: user
+      password: password
+      maxRetries: 5
+      cache: false
+      headers:
+      - name: userId
+        value: user12345
+- name: delete_external_feed
+  endpoint:
+    path: /{uuid}
+    method: DELETE
+    data_selector: ''
+    params: {}
+- name: get_all_invited_users
+  endpoint:
+    path: /v3/organization/invited/users
+    method: GET
+    data_selector: users
+- name: get_user_permissions
+  endpoint:
+    path: /v3/organization/user/{email}/permissions
+    method: GET
+    data_selector: ''
+    params:
+      email: '[email protected]'
+- name: resend_cancel_invitation
+  endpoint:
+    path: /v3/organization/user/invitation/{action}/{email}
+    method: PUT
+    data_selector: ''
+    params:
+      action: resend
+      email: '[email protected]'
+- name: revoke_user_permission
+  endpoint:
+    path: /v3/organization/user/invitation/revoke/{email}
+    method: PUT
+    data_selector: ''
+    params:
+      email: '[email protected]'
+- name: send_invitation
+  endpoint:
+    path: /v3/organization/user/invitation/send
+    method: POST
+    data_selector: ''
+    params:
+      email: '[email protected]'
+      all_features_access: false
+- name: update_user_permissions
+  endpoint:
+    path: /v3/organization/user/update/permissions
+    method: POST
+    data_selector: ''
+    params:
+      email: '[email protected]'
+      all_features_access: true
+- name: emailCampaigns
+  endpoint:
+    path: /v3/emailCampaigns
+    method: GET
+- name: email_templates
+  endpoint:
+    path: /smtp/templates/
+    method: GET
+- name: templates
+  endpoint:
+    path: /smtp/templates
+    method: GET
+    data_selector: templates
+- name: emails
+  endpoint:
+    path: /v3/smtp/emails
+    method: GET
+    data_selector: emails
+    params:
+      startDate: ''
+      endDate: ''
+- name: email_template
+  endpoint:
+    path: /smtp/templates
+    method: POST
+    data_selector: template
+    params: {}
+- name: email_status
+  endpoint:
+    path: /smtp/emailStatus
+    method: GET
+- name: smtp_statistics_reports
+  endpoint:
+    path: /smtp/statistics/reports
+    method: GET
+- name: smtp_statistics_events
+  endpoint:
+    path: /v3/smtp/statistics/events
+    method: GET
+    data_selector: aggregatedStats
+    params:
+      startDate: ''
+      endDate: ''
+      days: ''
+- name: aggregated_report
+  endpoint:
+    path: /v3/smtp/statistics/aggregatedReport
+    method: GET
+    data_selector: aggregatedStats
+    params: {}
+- name: email_templates
+  endpoint:
+    path: /smtp/templates
+    method: GET
+    data_selector: templates
+- name: email_template
+  endpoint:
+    path: /smtp/templates/
+    method: get
+    data_selector: templates
+- name: send_test_template
+  endpoint:
+    path: /smtp/templates//sendTest
+    method: POST
+- name: template_preview
+  endpoint:
+    path: /smtp/template/preview
+    method: POST
+    data_selector: ''
+    params: {}
+- name: emailCampaigns
+  endpoint:
+    path: /emailCampaigns//exportRecipients
+    method: POST
+- name: whatsapp_campaigns
+  endpoint:
+    path: /v3/whatsappCampaigns
+    method: PUT
+- name: whatsappCampaigns
+  endpoint:
+    path: /whatsappCampaigns/template-list
+    method: GET
+- name: whatsapp_campaigns
+  endpoint:
+    path: /v3/whatsappCampaigns
+    method: POST
+    data_selector: response
+    params: {}
+- name: whatsapp_campaigns
+  endpoint:
+    path: /whatsappCampaigns
+    method: GET
+- name: smtp_emails
+  endpoint:
+    path: /v3/smtp/emails
+    method: GET
+    data_selector: uuid
+- name: aggregated_report
+  endpoint:
+    path: /v3/transactionalSMS/statistics/aggregatedReport
+    method: GET
+- name: transactional_sms_statistics_reports
+  endpoint:
+    path: /transactionalSMS/statistics/reports
+    method: GET
+- name: transactional_SMS_statistics_events
+  endpoint:
+    path: /transactionalSMS/statistics/events
+    method: GET
+- name: inbound_events
+  endpoint:
+    path: /inbound/events
+    method: GET
+    data_selector: events
+    params: {}
+- name: events
+  endpoint:
+    path: /inbound/events/
+    method: GET
+- name: inbound_attachment
+  endpoint:
+    path: /v3/inbound/attachments/{downloadToken}
+    method: GET
+- name: send_message
+  endpoint:
+    path: /whatsapp/sendMessage
+    method: POST
+    data_selector: message
+    params: {}
+- name: whatsapp_statistics_events
+  endpoint:
+    path: /v3/whatsapp/statistics/events
+    method: GET
+    data_selector: unaggregated_statistics
+- name: email_campaigns
+  endpoint:
+    path: /v3/emailCampaigns
+    method: GET
+- name: email_campaigns
+  endpoint:
+    path: /emailCampaigns
+    method: GET
+- name: email_campaigns
+  endpoint:
+    path: /emailCampaigns
+    method: GET
+    data_selector: records
+- name: email_campaigns
+  endpoint:
+    path: /emailCampaigns
+    method: GET
+- name: emailCampaigns
+  endpoint:
+    path: /emailCampaigns/sendNow
+    method: POST
+- name: emailCampaigns
+  endpoint:
+    path: /emailCampaigns/sendTest
+    method: POST
+    data_selector: ''
+- name: email_campaigns_status
+  endpoint:
+    path: /emailCampaigns//status
+    method: PUT
+- name: email_campaign
+  endpoint:
+    path: /emailCampaigns/{campaignId}
+    method: get
+- name: contacts_attributes
+  endpoint:
+    path: /contacts/attributes
+    method: GET
+    data_selector: attributes
+- name: contacts_attributes
+  endpoint:
+    path: /contacts/attributes
+    method: DELETE
+- name: contacts
+  endpoint:
+    path: /contacts
+    method: GET
+    data_selector: records
+- name: email_campaigns
+  endpoint:
+    path: /emailCampaigns
+    method: GET
+    data_selector: records
+- name: contacts
+  endpoint:
+    path: /contacts
+    method: GET
+    data_selector: records
+- name: contacts_lists
+  endpoint:
+    path: /v3/contacts/lists
+    method: GET
+    data_selector: records
+- name: doubleOptinConfirmation
+  endpoint:
+    path: /contacts/doubleOptinConfirmation
+    method: POST
+    data_selector: attributes
+    params: {}
+- name: contact
+  endpoint:
+    path: /contacts
+    method: GET
+    data_selector: contacts
+    params: {}
+- name: campaign_stats
+  endpoint:
+    path: /contacts//campaignStats
+    method: GET
+- name: contacts
+  endpoint:
+    path: /contacts
+    method: get
+    data_selector: records
+- name: segments
+  endpoint:
+    path: /contacts/segments
+    method: get
+    data_selector: records
+- name: user_invitation
+  endpoint:
+    path: /v3/corporate/user/invitation/send
+    method: POST
+    data_selector: null
+    params: {}
+- name: contacts_import
+  endpoint:
+    path: /contacts/import
+    method: POST
+    data_selector: background_process_id
+    params: {}
+- name: records
+  endpoint:
+    path: /v3/objects//records
+    method: GET
+- name: events
+  endpoint:
+    path: /v3/events
+    method: POST
+    data_selector: event
+    params: {}
+- name: webhook_export
+  endpoint:
+    path: /v3/webhooks/export
+    method: POST
+    data_selector: history
+    params: {}
+- name: account
+  endpoint:
+    path: /account
+    method: get
+    data_selector: account
+- name: activities
+  endpoint:
+    path: /organization/activities
+    method: GET
+- name: sub_account
+  endpoint:
+    path: /corporate/subAccount
+    method: GET
+    data_selector: records
+    params: {}
+- name: sub_account
+  endpoint:
+    path: /corporate/subAccount
+    method: POST
+    data_selector: ''
+    params: {}
+- name: sub_account
+  endpoint:
+    path: /v3/corporate/subAccount/
+    method: GET
+- name: subAccount
+  endpoint:
+    path: /corporate/subAccount/
+    method: DELETE
+- name: sub_account_plan
+  endpoint:
+    path: /v3/corporate/subAccount//plan
+    method: PUT
+- name: sub_accounts_plan
+  endpoint:
+    path: /corporate/subAccounts/plan
+    method: PUT
+- name: sso_token
+  endpoint:
+    path: /corporate/ssoToken
+    method: POST
+- name: sso_token
+  endpoint:
+    path: /corporate/subAccount/ssoToken
+    method: POST
+- name: master_account
+  endpoint:
+    path: /corporate/masterAccount
+    method: GET
+- name: sub_account_key
+  endpoint:
+    path: /corporate/subAccount/key
+    method: POST
+    data_selector: null
+    params: {}
+- name: create_group
+  endpoint:
+    path: /v3/corporate/group
+    method: POST
+- name: active_ips
+  endpoint:
+    path: /corporate/ip
+    method: GET
+    data_selector: data
+    params: {}
+- name: associate_ip
+  endpoint:
+    path: /v3/corporate/subAccount/ip/associate
+    method: POST
+    data_selector: null
+    params: {}
+- name: dissociate_ip
+  endpoint:
+    path: /v3/corporate/subAccount/ip/dissociate
+    method: POST
+- name: group
+  endpoint:
+    path: /corporate/group/
+    method: GET
+    data_selector: data
+- name: update_group_sub_accounts
+  endpoint:
+    path: /corporate/group/{id}
+    method: PUT
+- name: display_currency
+  endpoint:
+    path: /ecommerce/config/displayCurrency
+    method: POST
+    data_selector: ''
+    params: {}
+- name: displayCurrency
+  endpoint:
+    path: /ecommerce/config/displayCurrency
+    method: GET
+    data_selector: ''
+- name: coupon_collections
+  endpoint:
+    path: /couponCollections
+    method: GET
+    data_selector: null
+    params: {}
+- name: coupon_collection
+  endpoint:
+    path: /couponCollections
+    method: post
+- name: coupon_collection
+  endpoint:
+    path: /couponCollections/{id}
+    method: GET
+    data_selector: response
+- name: coupon_collection
+  endpoint:
+    path: /couponCollections/{id}
+    method: PATCH
+    data_selector: response
+- name: coupons
+  endpoint:
+    path: /coupons
+    method: POST
+    data_selector: null
+    params: {}
+- name: payment_requests
+  endpoint:
+    path: /payments/requests
+    method: post
+- name: user_invitation
+  endpoint:
+    path: /corporate/user/invitation
+    method: PUT
+- name: revoke_user
+  endpoint:
+    path: /v3/corporate/user/revoke
+    method: DELETE
+- name: admin_users
+  endpoint:
+    path: /corporate/invited/users
+    method: GET
+    data_selector: admin_users
+    params: {}
+- name: admin_user_permissions
+  endpoint:
+    path: /v3/corporate/user/{email}/permissions
+    method: GET
+- name: user_permissions
+  endpoint:
+    path: /corporate/user/permissions
+    method: PUT
+- name: groups
+  endpoint:
+    path: /corporate/groups
+    method: GET
+    data_selector: groups
+    params: {}
+- name: invited_users
+  endpoint:
+    path: /organization/invited/users
+    method: GET
+    data_selector: records
+- name: user_permissions
+  endpoint:
+    path: /organization/user/permissions
+    method: GET
+- name: revoke_invitation
+  endpoint:
+    path: /organization/user/invitation/revoke
+    method: PUT
+- name: user_invitation
+  endpoint:
+    path: /organization/user/invitation
+    method: PUT
+    data_selector: ''
+    params: {}
+- name: user_invitation
+  endpoint:
+    path: /v3/organization/user/invitation/send
+    method: POST
+- name: process
+  endpoint:
+    path: /processes
+    method: GET
+- name: process
+  endpoint:
+    path: /processes/
+    method: GET
+- name: feeds
+  endpoint:
+    path: /feeds
+    method: GET
+    data_selector: feeds
+- name: agent_online_ping
+  endpoint:
+    path: /conversations/agentOnlinePing
+    method: POST
+    data_selector: ''
+    params: {}
+- name: identify
+  endpoint:
+    path: /identify
+    method: POST
+- name: track_event
+  endpoint:
+    path: /api/v2/trackEvent
+    method: POST
+    data_selector: data
+    params: {}
+- name: track_link
+  endpoint:
+    path: /trackLink
+    method: POST
+- name: track_page
+  endpoint:
+    path: /trackPage
+    method: POST
+- name: orders
+  endpoint:
+    path: /orders
+    method: GET
+    data_selector: orders
+- name: products
+  endpoint:
+    path: /products
+    method: GET
+    data_selector: records
+- name: products
+  endpoint:
+    path: /products/{id}
+    method: GET
+- name: products_batch
+  endpoint:
+    path: /products/batch
+    method: post
+- name: products
+  endpoint:
+    path: /products
+    method: GET
+- name: categories
+  endpoint:
+    path: /categories
+    method: GET
+    data_selector: records
+- name: categories
+  endpoint:
+    path: /categories
+    method: GET
+- name: categories
+  endpoint:
+    path: /categories
+    method: GET
+    data_selector: records
+- name: categories_batch
+  endpoint:
+    path: /categories/batch
+    method: post
+- name: attribution_metrics
+  endpoint:
+    path: /ecommerce/attribution/metrics
+    method: GET
+- name: attribution_metrics
+  endpoint:
+    path: /v3/ecommerce/attribution/metrics
+    method: GET
+- name: payment_request_details
+  endpoint:
+    path: /payments/requests/{id}
+    method: GET
+    data_selector: response
+- name: balance_limits
+  endpoint:
+    path: /loyalty/balance/programs//balance-definitions//limits/
+    method: GET
+- name: tier_groups
+  endpoint:
+    path: /loyalty/tier/programs/tier-groups
+    method: GET
+    data_selector: records
+    params: {}
+- name: aggregated_report
+  endpoint:
+    path: /transactionalSMS/statistics/aggregatedReport
+    method: GET
+    data_selector: records
+- name: inbound_events
+  endpoint:
+    path: /inbound/events
+    method: GET
+    data_selector: events
+- name: send_message
+  endpoint:
+    path: /whatsapp/sendMessage
+    method: POST
+    data_selector: null
+    params: {}
+- name: contacts_attributes
+  endpoint:
+    path: /contacts/attributes
+    method: POST
+- name: contacts
+  endpoint:
+    path: /contacts/lists
+    method: get
+- name: contacts
+  endpoint:
+    path: /contacts
+    method: get
+    data_selector: records
+- name: email_campaigns
+  endpoint:
+    path: /emailCampaigns
+    method: get
+    data_selector: records
+- name: batch_upsert
+  endpoint:
+    path: /objects//batch/upsert
+    method: POST
+    data_selector: ''
+    params: {}
+- name: senders
+  endpoint:
+    path: /senders
+    method: GET
+- name: domains
+  endpoint:
+    path: /senders/domains
+    method: GET
+    data_selector: domains
+- name: tiers
+  endpoint:
+    path: /loyalty/tier/programs/{pid}/tiers
+    method: GET
+    data_selector: tiers
+- name: blocked_contacts
+  endpoint:
+    path: /v3/smtp/blockedContacts
+    method: GET
+    data_selector: ''
+- name: email_templates
+  endpoint:
+    path: /smtp/templates
+    method: get
+- name: smtp_statistics_reports
+  endpoint:
+    path: /smtp/statistics/reports
+    method: GET
+- name: agent_online_ping
+  endpoint:
+    path: /conversations/agentOnlinePing
+    method: POST
+    data_selector: ''
+    params: {}
+- name: identify
+  endpoint:
+    path: /identify
+    method: POST
+- name: contacts_batch
+  endpoint:
+    path: /v3/contacts/batch
+    method: POST
+- name: webhooks
+  endpoint:
+    path: /webhooks
+    method: get
+- name: account
+  endpoint:
+    path: /account
+    method: get
+    data_selector: data
+- name: sub_account
+  endpoint:
+    path: /corporate/subAccount
+    method: GET
+    data_selector: subAccounts
+- name: invited_users
+  endpoint:
+    path: /organization/invited/users
+    method: GET
+- name: process
+  endpoint:
+    path: /processes
+    method: GET
+    data_selector: records
+- name: feeds
+  endpoint:
+    path: /feeds
+    method: GET
+    data_selector: feeds
+    params: {}
+- name: companies
+  endpoint:
+    path: /companies
+    method: GET
+    data_selector: records
+- name: pipeline_details
+  endpoint:
+    path: /crm/pipeline/details/{pipelineID}
+    method: GET
+- name: task_types
+  endpoint:
+    path: /crm/tasktypes
+    method: GET
+- name: notes
+  endpoint:
+    path: /crm/notes
+    method: GET
+    data_selector: records
+- name: files
+  endpoint:
+    path: /crm/files
+    method: GET
+notes:
+- Requires setup of connected app in Brevo.
+- Some objects may return nulls in deeply nested fields
+- Requires setup of connected app in Brevo
+- Uses OAuth2 with refresh token — requires setup of connected app in api
+- Uses OAuth2 with refresh token — requires setup of connected app in Brevo
+- We're dropping support for the response attributes totalSubscribers and totalBlacklisted.
+- The `uniqueSubscribers` field is deprecated
+- Ongoing changes for this endpoint
+- We're dropping support for the response attributes `totalSubscribers` and `totalBlacklisted`.
+- Ongoing changes for this endpoint.
+- Uses OAuth2 for authentication.
+- Requires setup of connected app in API
+- Requires setup of connected app in api
+- This endpoint is deprecated. Prefer /crm/pipeline/details/{pipelineID} instead.
+- Uses OAuth2 for authentication
+- Requires API key for authentication
+- Uses OAuth2 with refresh token — requires setup of connected app in Brevo.
+- Ensure to handle rate limits as specified in the API documentation.
+- Requires authentication to access data.
+- Quotas apply to all main API actions, such as creating campaigns or adding contacts.
+- If you reach a quota limit then you will need to perform delete actions on objects
+  you might not be using on your account in order to create new ones.
+- Make sure you properly calculate your rate limit allowance. You need to send your
+  bulk requests equally distributed through the specified time granularity.
+- Considering moving to a higher rate limit tier if you application needs to scale.
+  You will need an Enterprise plan.
+- The TTL of code is by default 10 minutes.
+- Our API works over the HTTPS protocol.
+- You need a unique API key which you can rotate periodically.
+- Brevo API accepts the date in the 'yyyy-mm-dd' format only
+- You will need to replace the {{ doubleoptin }} with {{ params.DOIurl }} in your
+  DOI template design
+- Uses OAuth2 with refresh token â€” requires setup of connected app in api
+- Some objects like Contact may return nulls in deeply nested fields
+- We’ve deprecated the former transactional SMS endpoint in favor of a more stable
+  and simplified version.
+- A new User attribute type has been added for Contacts.
+- Previously, we had metainfo field for Products object so that users can enter additional
+  information about the Product e.g. Brand Name, Color, SKU etc. We have now added
+  the same for Orders object.
+- Brevo Loyalty causes customers to remain customers for a longer time through meaningful
+  engagement.
+- Event is triggered when a conversation is finished.
+- Webhook datetime values are in UTC, Local, and CET/CEST timezones.
+- Ensure your domain is verified with Brevo.
+- DNS changes can take several hours to spread over the internet.
+- You can create up to 100 categories per call.
+- If the contact does not exist yet, we will create it with the attributes you’re
+  sending
+- If there is a mistake and a given attribute in the call is not an actual attribute
+  in your contact database, we won’t take it into account
+- The sender email must be a sender registered and verified in Brevo.
+- The recipient email should be a contact registered in Brevo and assigned to a contact
+  list.
+- Includes header 'X-Sib-Sandbox' for testing emails without affecting the platform
+- You can send up to 1000 email messages in one single API call.
+- You can execute the transactional API endpoint making use of the messageVersions
+  parameter up to 6000 times per hour (or 100 times per minute).
+- The maximum exports you can generate on a 7 day basis is of 20 executions.
+- If the data volume is too high you will receive a compressed file with multiple
+  CSV files.
+- SMTP relay does not allow batch sending which can be attempted through the batch
+  sending API endpoints.
+- The SMTP relay is specifically designed to cater to the Transactional emails.
+- In case of errors, check mailq or check in the log file for Postfix.
+- If you receive an authentication error, then you may have entered incorrect credentials
+  or the changes in sasl_passwd file may not be saved.
+- This example is if you want to add more customisations into your SMTP email, it
+  will take the attributes if the contact exists within Brevo.
+- The page_name parameter is mandatory when tracking page views.
+- Automatically tracks page views once Brevo Tracker is installed.
+- You need to have access to the WhatsApp Campaigns app.
+- You must have activated the WhatsApp platform on your account.
+- The number of webhook creation is limited to a maximum of 40.
+- The events will be accumulated in windows of 5 minutes.
+- After 5 minutes, one batch is sent regardless of the number of events processed
+  during that time.
+- The amount of events in one batch is by default 500.
+- Use a color picker to generate hex color codes.
+- Any tech-savvy person can change the data identifying them sent to Conversations
+  using JS API.
+- You can create up to 1000 orders in a batch or 5MB of orders in size.
+- Any change to the cart will be shown in the Automation logs in your Sendinblue account.
+- If the identify call does not arrive on front end then it takes around 5 minutes
+  for the order or cart updates to show on the Automation logs.
+- Implement `trackLink()` after the `<body>` tag while making sure that your DOM elements
+  are already loaded.
+- Brevo API checks the API calls for authorized APIs which are allowed to access a
+  specific feature or endpoint.
+- Brevo reviews IP addresses of every call and authorizes IPs once the security check
+  is passed.
+- Brevo authorizes unknown IP addresses on your behalf.
+- You can consult Guides > Welcome to get your API key from from the Brevo developers
+  dashboard.
+- The API key must be included in the header as 'api-key'.
+- Uses basic authentication with username and password
+- Returns the template information
+- The date range can not exceed 90 days
+- This endpoint will show the aggregated stats for past 90 days by default if `startDate`
+  and `endDate` OR `days` is not passed. The date range can not exceed 90 days.
+- Uses OAuth2 authentication
+- Click 'Try It!' to start a request and see the response.
+- This API requires the List and Segment ids as recipients in Body params.
+- You can use this API for WhatsApp only if you have setup your WhatsApp account on
+  Brevo platform.
+- The first message you send using the API must contain a Template ID. You must create
+  a template on WhatsApp on the Brevo platform to fetch the Template ID.
+- Dropping support for the response attributes `totalSubscribers` and `totalBlacklisted`.
+  Default value for these attributes will be 0.
+- 'If all_features_access: false then only privileges are required otherwise if true
+  then it''s assumed that all permissions will be there for the invited admin user.'
+- Any contact attribute that doesn't exist in your account will be ignored at import
+  end.
+- This API allows bulk upsert of object records in a single request.
+- Max 1000 objects records per request.
+- 'Max request body size: 1 MB.'
+- Max 500 attributes defined per object record upsert request.
+- Max 10 associations defined per object record upsert request.
+- This feature is in beta. These are subject to change.
+- Custom objects are only available to Enterprise plans.
+- Ensure to include your API key in the Authorization header.
+- Uses OAuth2 authentication.
+- If all_features_access is false, then only privileges are required otherwise if
+  true then it's assumed that all permissions will be there for the invited user.
+- The availability of feature and its permission depends on your current plan.
+- The privileges array remains the same as in the send invitation; the user simply
+  needs to provide the permissions that need to be updated.
+- The availability of feature and its permission depends on your current plan. Please
+  select the features and permissions accordingly.
+- The first message you send using the API must contain a Template ID.
+- You must create a template on WhatsApp on the Brevo platform to fetch the Template
+  ID.
+- Max 1000 objects records per request
+- 'Max request body size: 1 MB'
+- Max 500 attributes defined per object record upsert request
+- Max 10 associations defined per object record upsert request
+- This route does not create objects. The object where the object records are upserted
+  by this API must be created already.
+- This endpoint will be deprecated soon, use `api.brevo.com/v3/contacts/import` instead
+- Note this endpoint does updates in bulks of 100 contacts at a time.
+- Get your account information, plan and credits details
+errors:
+- 'REQUEST_LIMIT_EXCEEDED: Throttle API calls or reduce frequency'
+- '401 Unauthorized: Recheck OAuth scopes or token expiration'
+- '400 Bad Request: Check your request parameters.'
+- '401 Unauthorized: Recheck OAuth token.'
+- '404 Not Found: Verify the endpoint path.'
+- '429: Too many requests'
+- 'QUERY_TIMEOUT: Break down filters or add selectivity'
+- '{ “code”: “invalid_parameter” , “message” : “An active DOI template does not exist”
+  }'
+- 'invalid_parameter: The value of the parameter you have provided is not valid. Please
+  check the format and the type'
+- 'missing_parameter: One of the required parameter is missing to perform the request'
+- 'unauthorized: You are not authorized to do this call'
+- '400: Bad Request'
+- '404: Not Found'
+- '401: Unauthorized'
+- '201: Category Created'
+- '204: Category updated'
+- '401: Unauthorized response'
+- '201: Product created'
+- '204: Product updated'
+- '401: Bad request'
+- '201: Success response indicating the email has been processed'
+- 'messageIds: List of message identifiers for each version.'
+- duplicate_parameter
+- 'Export job limit exceeded: Maximum of 20 executions allowed in 7 days.'
+- 'Data volume too high: Compressed file with multiple CSVs will be returned.'
+- '201: Successfully created'
+- '400: Bad request'
+- '400 Bad Request: Sent a bad request'
+- '400: The email address or phone number is invalid'
+- '400: The email or phone number already exists in your database'
+- '400: The api-key is missing or wrong'
+- '400: The header Content-Type: application/json is missing from your request'
+- '400: Bad request - Request parameters not in correct format.'
+- '404: campaignId not found - Campaign id is incorrect or it cannot be accessed from
+  the WhatsApp campaigns dashboard.'
+- '204: Order event posted'
+- '202: Batch id created'
+- '204: User has been identified and successfully updated'
+- '204: Link has been tracked successfully'
+- '204: Page has been tracked successfully'
+- '204: Event has been tracked successfully'
+- '204: Event created'
+- '400 Bad request: Bad API request has been sent involving wrong formats for parameters.'
+- 404 Sender ID not found
+- '404: Domain does not exist'
+- '200: Domain configuration'
+- '400: Bad request due to problems like invalid_parameter, permission_denied or not_enough_credits'
+- The external feed either does not exist or its definition is incorrect in the template.
+- External feed placeholders are defined incorrectly in the template.
+- An API issue prevents access to the external feed.
+- '200: Feed deleted'
+- '204: Feed updated'
+- '404: Feed not found'
+- '400: invalid_parameters or missing_parameters'
+- '403: Unauthorized access'
+- '200: Success'
+- Make sure both object records exist before associating them, else the API will return
+  an error.
+- This route does not create objects. The object where the object records are upserted
+  by this API must be created already else the API will return an error 'invalid object
+  type'.
+- '401 Unauthorized: Check your API key.'
+- 'invalid object type: The object where the object records are upserted by this API
+  must be created already.'
+auth_info:
+  mentioned_objects:
+  - OauthToken
+  - AuthProvider
+  - NamedCredential
+client:
+  base_url: https://api.brevo.com/v3
+  auth:
+    type: oauth2
+    location: header
+    header_name: Authorization
+    flow: refresh_token
+    token_url: https://login.brevo.com/services/oauth2/token
+    client_id: '{{ dlt.secrets[''api_client_id''] }}'
+    client_secret: '{{ dlt.secrets[''api_client_secret''] }}'
+    refresh_token: '{{ dlt.secrets[''api_refresh_token''] }}'
+    code: '{{YOUR_CODE}}'
+    user: '[email protected]'
+    pass: xxxxxxxxx
+    username: test
+    password: test
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+    content-type: application/json
+    accept: application/json
+    api-key: xkeysib-{api-key}
+    idempotencyKey: abcdef-123y-234f-567h-897y
+    ma-key: YOUR_MA_KEY
+    Authorization: Bearer {{ dlt.secrets['api_token'] }}
+  paginator:
+    type: offset
+    page_size_param: limit
+    default_page_size: 100
+    cursor_path: nextRecordsUrl
+    cursor_param: nextUrl
+  resources:
+  - name: displayCurrency
+    endpoint:
+      path: /ecommerce/config/displayCurrency
+      method: POST
+  - name: toggle_application
+    endpoint:
+      path: /corporate/subAccount//applications/toggle
+      method: PUT
+source_metadata: null

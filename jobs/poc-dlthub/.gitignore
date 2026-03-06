@@ -1,6 +1,7 @@
 .obsidian
 *.csv
 *.duckdb
+.dlt/secrets.toml
 
 # Python-generated files
 __pycache__/

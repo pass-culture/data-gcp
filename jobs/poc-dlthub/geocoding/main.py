@@ -51,14 +51,15 @@ def run_pipeline(table_name: str = DEFAULT_DESTINATION_TABLE_NAME, batch_size: i
     Run the geocoding pipeline with batch processing.
 
     Args:
-        table_name: Name of the table in DuckDB (default: "geocoded_addresses")
+        table_name: Name of the destination table (default: "geocoded_addresses")
         batch_size: Number of rows to process per batch (default: 10)
     """
     bq_client = bigquery.Client(project=GCP_PROJECT)
     query_job = bq_client.query(QUERY)
     results = query_job.result(page_size=batch_size)
 
-    pipeline = dlt.pipeline(pipeline_name="geopf_geocoding", destination="duckdb", dataset_name=DATASET_NAME)
+    dlt.secrets["destination.bigquery.project_id"] = "passculture-data-ehp"
+    pipeline = dlt.pipeline(pipeline_name="geopf_geocoding", destination="bigquery", dataset_name=DATASET_NAME)
 
     @dlt.resource(write_disposition="replace", name=table_name)
     def geocoded_addresses() -> Table:

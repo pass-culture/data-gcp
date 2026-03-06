@@ -8,7 +8,7 @@ dependencies = [
     "gcsfs>=2023.1.0",
     "google-cloud-bigquery[pandas]>=3.29.0",
     "google-cloud-secret-manager>=2.20.0",
-    "hnne==0.1.10",
+    "hnne>=0.1.10",
     "lancedb>=0.18.0",
     "loguru>=0.6.0",
     "matplotlib>=3.10.5",

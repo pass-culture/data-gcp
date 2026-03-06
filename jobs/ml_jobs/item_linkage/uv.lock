@@ -1415,7 +1415,7 @@ requires-dist = [
     { name = "gcsfs", specifier = ">=2023.1.0" },
     { name = "google-cloud-bigquery", extras = ["pandas"], specifier = ">=3.29.0" },
     { name = "google-cloud-secret-manager", specifier = ">=2.20.0" },
-    { name = "hnne", specifier = "==0.1.10" },
+    { name = "hnne", specifier = ">=0.1.10" },
     { name = "lancedb", specifier = ">=0.18.0" },
     { name = "loguru", specifier = ">=0.6.0" },
     { name = "matplotlib", specifier = ">=3.10.5" },

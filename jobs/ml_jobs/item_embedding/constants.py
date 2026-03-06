@@ -12,3 +12,6 @@ _HF_TOKEN_SECRET_NAMES: dict[str, str] = {
 HF_TOKEN_SECRET_NAME = _HF_TOKEN_SECRET_NAMES.get(
     ENV_SHORT_NAME, "huggingface_token_ehp"
 )
+
+# HF constants
+BATCH_SIZE = 32  ## Tuned on 4 T1 GPUs, 5M items

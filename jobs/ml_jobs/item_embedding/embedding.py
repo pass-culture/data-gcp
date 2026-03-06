@@ -1,12 +1,10 @@
 import numpy as np
 import pandas as pd
 from config import Vector
-from constants import HF_TOKEN_SECRET_NAME
+from constants import BATCH_SIZE, HF_TOKEN_SECRET_NAME
 from gcp_secrets import get_secret
 from loguru import logger
 from sentence_transformers import SentenceTransformer
-
-BATCH_SIZE = 32  ## Tuned on 4 T1 GPUs, 5M items
 
 
 def _build_prompts(df: pd.DataFrame, vector: Vector) -> list[str]:

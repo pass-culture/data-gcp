@@ -51,7 +51,6 @@ select
     local_authority_type,
     local_authority_is_priority,
     total_managed_venues,
-    total_physical_managed_venues,
     total_permanent_managed_venues,
     total_venues,
     offerer_humanized_id,

@@ -34,7 +34,6 @@ select
     v.venue_city,
     v.venue_city_code,
     v.venue_siret,
-    v.venue_is_virtual,
     v.venue_managing_offerer_id as offerer_id,
     v.venue_creation_date,
     v.venue_is_permanent,

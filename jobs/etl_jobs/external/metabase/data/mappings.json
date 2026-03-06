@@ -182,7 +182,6 @@
     "venue_academie": "venue_academy_name",
     "venue_department_code": "venue_department_code",
     "venue_id": "venue_id",
-    "venue_is_virtual": "venue_is_virtual",
     "venue_name": "venue_name",
     "venue_region_name": "venue_region_name",
     "collective_booking_cnt": "total_collective_bookings",
@@ -307,7 +306,6 @@
     "offerer_validation_date": "offerer_validation_date",
     "partner_id": "partner_id",
     "permanent_venues_managed": "total_permanent_managed_venues",
-    "physical_venues_managed": "total_physical_managed_venues",
     "total_venues_managed": "total_managed_venues",
     "venue_with_offer": "total_venues"
   },
@@ -338,7 +336,6 @@
     "partner_department_code": "partner_department_code",
     "partner_id": "partner_id",
     "permanent_venues_managed": "total_permanent_managed_venues",
-    "physical_venues_managed": "total_physical_managed_venues",
     "total_venues_managed": "total_managed_venues",
     "venue_with_offer": "total_venues"
   },
@@ -369,7 +366,6 @@
     "non_cancelled_individual_bookings": "total_non_cancelled_individual_bookings",
     "offerer_id": "offerer_id",
     "total_permanent_managed_venues": "total_permanent_managed_venues",
-    "total_physical_managed_venues": "total_physical_managed_venues",
     "top_CA_venue_type": "top_real_revenue_venue_type",
     "top_bookings_venue_type": "top_bookings_venue_type",
     "total_offers_created": "total_created_offers",

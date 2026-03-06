@@ -24,7 +24,6 @@ select
     offer_is_underage_selectable,
     offer_type_domain,
     offer_is_bookable,
-    venue_is_virtual,
     digital_goods,
     physical_goods,
     event,

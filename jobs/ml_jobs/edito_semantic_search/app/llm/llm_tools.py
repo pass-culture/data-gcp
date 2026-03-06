@@ -1,4 +1,5 @@
 import time
+
 import pandas as pd
 from loguru import logger
 from pydantic_ai import Agent
@@ -20,6 +21,7 @@ with open("app/llm/action_prompt.txt", encoding="utf-8") as f:
 # Initialize provider once to reuse connections (Excellent for latency)
 _provider = GoogleProvider(vertexai=True, location="europe-west1", project=GCP_PROJECT)
 
+
 def build_vertex_gemini_agent(model_name: str = "gemini-1.5-flash"):
     """
     Build a Pydantic AI Agent optimized for speed.
@@ -31,6 +33,7 @@ def build_vertex_gemini_agent(model_name: str = "gemini-1.5-flash"):
         provider=_provider,
     )
     return model
+
 
 gemini_model = build_vertex_gemini_agent(model_name=GEMINI_MODEL_NAME)
 
@@ -50,6 +53,7 @@ logger.info(
 
 # --- Logic ---
 
+
 def build_context_from_df(retrieved_results: list):
     """
     Converts list of dicts to a token-efficient TSV table with Short IDs.
@@ -60,7 +64,7 @@ def build_context_from_df(retrieved_results: list):
 
     df = pd.DataFrame(retrieved_results)
 
-    # 1. Short ID Mapping 
+    # 1. Short ID Mapping
     id_map = {str(orig): str(i + 1) for i, orig in enumerate(df["id"])}
     reverse_id_map = {str(i + 1): orig for i, orig in enumerate(df["id"])}
 
@@ -78,18 +82,19 @@ def build_context_from_df(retrieved_results: list):
             df["offer_description"]
             .fillna("N/A")
             # Strip newlines AND tabs to protect the TSV structure
-            .str.replace(r"[\n\r\t]+", " ", regex=True) 
-            .str.slice(0, 100) 
+            .str.replace(r"[\n\r\t]+", " ", regex=True)
+            .str.slice(0, 100)
         )
 
-    # 3. Convert to TSV 
+    # 3. Convert to TSV
     tsv_table = (
         df[cols_to_keep]
         .rename(columns={"short_id": "item_id"})
-        .to_csv(index=False, sep='\t')
+        .to_csv(index=False, sep="\t")
     )
 
     return tsv_table, reverse_id_map
+
 
 def build_prompt(question: str, retrieved_results: list):
     """
@@ -112,15 +117,15 @@ def build_prompt(question: str, retrieved_results: list):
     logger.info(f"RAG Prompt built: {len(prompt)} chars")
     return prompt, reverse_map
 
+
 def llm_thematic_filtering(
     search_query: str, vector_search_results: list
 ) -> pd.DataFrame:
-    
     # 1. Build prompt and get the ID mapping
     prompt, reverse_map = build_prompt(search_query, vector_search_results)
 
     start_time = time.time()
-    
+
     # 2. Run LLM
     llm_result = _cached_agent.run_sync(prompt)
     elapsed_time = time.time() - start_time
@@ -147,7 +152,9 @@ def llm_thematic_filtering(
             f'llm_result _attempt_count: {getattr(llm_result, "_attempt_count", "N/A")} '
         )
 
-    llm_output = llm_result.output # Note: Pydantic AI uses .data for the validated response
+    llm_output = (
+        llm_result.output
+    )  # Note: Pydantic AI uses .data for the validated response
 
     # 3. Handle result and restore original IDs
     try:

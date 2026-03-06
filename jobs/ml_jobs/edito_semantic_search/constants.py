@@ -30,3 +30,10 @@ SERVING_CONTAINER_NAME = f"semantic_search_{ENV_SHORT_NAME}"
 SERVING_CONTAINER = (
     f"{SERVING_CONTAINER_BASE}/{SERVING_CONTAINER_REGISTRY}/{SERVING_CONTAINER_NAME}"
 )
+
+BQ_TABLE = "chatbot_edito_search_db_items"
+
+BQ_DATASET = f"sandbox_{ENV_SHORT_NAME}"
+
+LANCEDB_URI = f"gs://mlflow-bucket-{ENVIRONMENT}/streamlit_data/chatbot_edito/search_db"
+LANCEDB_TABLE = "embeddings"  # Name of your LanceDB table

@@ -2,10 +2,10 @@ import datetime
 from itertools import product
 
 import lancedb
-import pyarrow.dataset as ds
-from pyarrow.fs import GcsFileSystem
 import polars as pl
+import pyarrow.dataset as ds
 from loguru import logger
+from pyarrow.fs import GcsFileSystem
 
 from app.constants import PARQUET_FILE, embedding_model
 
@@ -31,7 +31,19 @@ def _cast_value(val, target_dtype, col):
         return parse_date(val)
 
     type_map = {
-        **dict.fromkeys([pl.Int8, pl.Int16, pl.Int32, pl.Int64, pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64], int),
+        **dict.fromkeys(
+            [
+                pl.Int8,
+                pl.Int16,
+                pl.Int32,
+                pl.Int64,
+                pl.UInt8,
+                pl.UInt16,
+                pl.UInt32,
+                pl.UInt64,
+            ],
+            int,
+        ),
         **dict.fromkeys([pl.Float32, pl.Float64], float),
         **dict.fromkeys([pl.String, pl.Utf8], str),
     }
@@ -45,7 +57,9 @@ def _cast_value(val, target_dtype, col):
             return [cast_fn(v) for v in val]
         return cast_fn(val)
     except (ValueError, TypeError) as e:
-        raise ValueError(f"Cannot cast '{val}' to {cast_fn.__name__} for column '{col}'") from e
+        raise ValueError(
+            f"Cannot cast '{val}' to {cast_fn.__name__} for column '{col}'"
+        ) from e
 
 
 OPERATOR_MAP = {
@@ -75,7 +89,12 @@ def apply_filters(lf: pl.LazyFrame, filters: list[dict]) -> pl.LazyFrame:
         val = _cast_value(val, schema[col], col)
 
         # Special case: date "between"
-        if col in DATE_COLS and op == "between" and isinstance(val, (list, tuple)) and len(val) == 2:
+        if (
+            col in DATE_COLS
+            and op == "between"
+            and isinstance(val, (list, tuple))
+            and len(val) == 2
+        ):
             lf = lf.filter((pl.col(col) >= val[0]) & (pl.col(col) <= val[1]))
             continue
 
@@ -99,7 +118,8 @@ class SearchClient:
         self.vector_table = self.db.open_table(vector_table)
 
         # Cache the global dataset once at startup
-        logger.info("Initializing global PyArrow Dataset for fallback queries...")
+        logger.info("Loading global dataset for fallback...")
+        logger.info(f"using parqueret file: {PARQUET_FILE}")
         gcs = GcsFileSystem()
         gcs_path = PARQUET_FILE.replace("gs://", "")
         self.dataset = ds.dataset(
@@ -113,9 +133,7 @@ class SearchClient:
     # ── Partition helpers ────────────────────────────────────────────────
 
     @staticmethod
-    def _extract_partition_values(
-        filters: list[dict], column: str
-    ) -> list[str] | None:
+    def _extract_partition_values(filters: list[dict], column: str) -> list[str] | None:
         """
         Collect all values for a partition column across filters.
         Supports '=' (single) and 'in' (multi-value) operators.
@@ -183,7 +201,9 @@ class SearchClient:
         try:
             return pl.scan_parquet(paths, hive_partitioning=True)
         except Exception:
-            logger.warning("Direct partition scan failed — falling back to global LazyFrame.")
+            logger.warning(
+                "Direct partition scan failed — falling back to global LazyFrame."
+            )
             return self.global_lf
 
     # ── Public API ───────────────────────────────────────────────────────
@@ -200,4 +220,17 @@ class SearchClient:
 
     def vector_search(self, query_vector, k: int = 5):
         """Performs a vector similarity search using LanceDB."""
-        return self.vector_table.search(query_vector).limit(k).to_list()
+        return (
+            self.vector_table.search(query_vector)
+            .nprobes(10)
+            .select(
+                [
+                    "id",
+                    "offer_name",
+                    "offer_description",
+                    "offer_subcategory_id",
+                ]
+            )
+            .limit(k)
+            .to_list()
+        )

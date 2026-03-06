@@ -17,11 +17,10 @@ IMPORTANT: Utilise UNIQUEMENT les valeurs de la colonne 'item_id' du tableau fou
 
 ### RÈGLES DE SÉLECTION
 1. ANALYSE : Évalue chaque offre du contexte indépendamment.
-2. PERTINENCE : Identifie le lien direct entre l'offre et la requête de l'utilisateur.
+2. PERTINENCE : Décris très brièvement l'offre et le lien direct entre l'offre et la requête de l'utilisateur.
 3. STRICT : Si une offre n'est pas clairement liée, ignore-la.
 
 ### RÈGLES DE RÉDACTION (CHAMP pertinence)
 - Langue : Français uniquement.
 - Style : Concis et factuel (max 2 phrases).
-- INTERDICTION : Ne décris pas le contenu de l'offre. Ne compare pas avec d'autres offres.
-- FOCUS : Explique uniquement le "Pourquoi" cette offre répond à la demande.
+- INTERDICTION : Ne compare pas avec d'autres offres. Ne commence pas les phrase par "Cette offre correspond car.." ou "Cette offre est pertinente car..." ou "L'offre explore la relation entre..." ou toute autre formulation similaire. Va directement à l'essentiel.

@@ -202,11 +202,21 @@ def predict():
         item_ids = None
         if PERFORM_VECTOR_SEARCH:
             # Here we embed the query
-            query_vector = search_client.embedding_model.embed_query(
-                prediction_request.search_query
+            query_encoding_time = time.time()
+            full_query = (
+                f"task: search result | query: {prediction_request.search_query}"
             )
+            logger.info(f"Embedding search query for vector search: '{full_query}'")
+            query_vector = search_client.embedding_model.embed_query(full_query)
+            logger.info(
+                f"Query embedding completed in {time.time() - query_encoding_time:.2f} seconds"
+            )
+            vector_search_time = time.time()
             vector_search_results = search_client.vector_search(
                 query_vector=query_vector, k=K_RETRIEVAL
+            )
+            logger.info(
+                f"Vector search completed in {time.time() - vector_search_time:.2f} seconds with {len(vector_search_results)} results"
             )
             # Here we do the LLM thematic filtering
             llm_time = time.time()
@@ -233,10 +243,15 @@ def predict():
                 subcategory_by_id = {
                     str(r["id"]): r["offer_subcategory_id"]
                     for r in vector_search_results
-                    if "offer_subcategory_id" in r and r["offer_subcategory_id"] not in (None, "None")
+                    if "offer_subcategory_id" in r
+                    and r["offer_subcategory_id"] not in (None, "None")
                 }
                 selected_subcategories = list(
-                    {subcategory_by_id[iid] for iid in item_ids if iid in subcategory_by_id}
+                    {
+                        subcategory_by_id[iid]
+                        for iid in item_ids
+                        if iid in subcategory_by_id
+                    }
                 )
                 if selected_subcategories:
                     filters.append(

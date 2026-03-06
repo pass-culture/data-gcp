@@ -19,6 +19,7 @@
                     "venue_motordisabilitycompliant",
                     "venue_visualdisabilitycompliant",
                     "venue_withdrawal_details",
+                    "venue_is_open_to_public",
                 ],
             )
         )

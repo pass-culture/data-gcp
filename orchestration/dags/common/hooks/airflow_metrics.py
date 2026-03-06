@@ -13,6 +13,57 @@ logger = logging.getLogger(__name__)
 KNOWN_TASK_STATES = {"success", "failed", "skipped", "upstream_failed"}
 
 
+def _get_task_counts(session, dag_id, run_id):
+    task_counts = {state: 0 for state in KNOWN_TASK_STATES}
+    task_states = (
+        session.query(TaskInstance.state, func.count())
+        .filter(
+            TaskInstance.dag_id == dag_id,
+            TaskInstance.run_id == run_id,
+        )
+        .group_by(TaskInstance.state)
+        .all()
+    )
+    for state, count in task_states:
+        if state in KNOWN_TASK_STATES:
+            task_counts[state] = count
+    return task_counts
+
+
+def _build_dag_row(session, dag, snapshot_date):
+    dag_id = dag.dag_id
+
+    last_run = (
+        session.query(DagRun)
+        .filter(DagRun.dag_id == dag_id)
+        .order_by(DagRun.execution_date.desc())
+        .first()
+    )
+
+    task_counts = (
+        _get_task_counts(session, dag_id, last_run.run_id)
+        if last_run
+        else {state: 0 for state in KNOWN_TASK_STATES}
+    )
+    tags = [tag.name for tag in dag.tags] if dag.tags else []
+
+    return {
+        "snapshot_date": snapshot_date.isoformat(),
+        "environment": ENV_SHORT_NAME,
+        "dag_id": dag_id,
+        "tags": tags,
+        "schedule_interval": str(dag.schedule_interval),
+        "dag_run_state": last_run.state if last_run else None,
+        "dag_run_execution_date": last_run.execution_date.isoformat()
+        if last_run
+        else None,
+        "tasks_success": task_counts["success"],
+        "tasks_failed": task_counts["failed"],
+        "tasks_skipped": task_counts["skipped"],
+        "tasks_upstream_failed": task_counts["upstream_failed"],
+    }
+
+
 @provide_session
 def collect_airflow_metrics(snapshot_date: str, session=None):
     """Collect DAG metrics from Airflow metadata DB and write to BigQuery."""
@@ -30,54 +81,7 @@ def collect_airflow_metrics(snapshot_date: str, session=None):
 
     logger.info("Found %d active scheduled DAGs", len(active_dags))
 
-    rows = []
-    for dag in active_dags:
-        dag_id = dag.dag_id
-
-        last_run = (
-            session.query(DagRun)
-            .filter(DagRun.dag_id == dag_id)
-            .order_by(DagRun.execution_date.desc())
-            .first()
-        )
-
-        last_run_state = last_run.state if last_run else None
-        last_run_execution_date = last_run.execution_date if last_run else None
-
-        task_counts = {"success": 0, "failed": 0, "skipped": 0, "upstream_failed": 0}
-        if last_run:
-            task_states = (
-                session.query(TaskInstance.state, func.count())
-                .filter(
-                    TaskInstance.dag_id == dag_id,
-                    TaskInstance.run_id == last_run.run_id,
-                )
-                .group_by(TaskInstance.state)
-                .all()
-            )
-            for state, count in task_states:
-                if state in KNOWN_TASK_STATES:
-                    task_counts[state] = count
-
-        tags = [tag.name for tag in dag.tags] if dag.tags else []
-
-        rows.append(
-            {
-                "snapshot_date": today.isoformat(),
-                "environment": ENV_SHORT_NAME,
-                "dag_id": dag_id,
-                "tags": tags,
-                "schedule_interval": str(dag.schedule_interval),
-                "dag_run_state": last_run_state,
-                "dag_run_execution_date": last_run_execution_date.isoformat()
-                if last_run_execution_date
-                else None,
-                "tasks_success": task_counts["success"],
-                "tasks_failed": task_counts["failed"],
-                "tasks_skipped": task_counts["skipped"],
-                "tasks_upstream_failed": task_counts["upstream_failed"],
-            }
-        )
+    rows = [_build_dag_row(session, dag, today) for dag in active_dags]
 
     _write_to_bigquery(rows, today)
     logger.info("Wrote %d rows to %s for %s", len(rows), FULL_TABLE_ID, today)

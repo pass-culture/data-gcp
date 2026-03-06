@@ -82,6 +82,7 @@ class MaterializedView(Enum):
     NON_RECOMMENDABLE_ITEMS = "non_recommendable_items_mv"
     IRIS_FRANCE = "iris_france_mv"
     RECOMMENDABLE_OFFERS = "recommendable_offers_raw_mv"
+    VENUE_H3_MAPPING = "venue_h3_mapping_mv"
 
 
 class SQLTableConfig:

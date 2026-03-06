@@ -96,4 +96,8 @@ select
     scheduled_offer_bookability_date,
     offerer_is_epn
 from {{ ref("int_global__offer") }}
-where true and offer_validation = 'APPROVED' and venue_id is not null
+where
+    true
+    and offer_validation = 'APPROVED'
+    and venue_id is not null
+    and offerer_validation_status = 'VALIDATED'

@@ -42,6 +42,10 @@ with
         inner join {{ ref("int_applicative__offer") }} as o using (offer_id)
         inner join
             {{ source("raw", "applicative_database_venue") }} as v using (venue_id)
+        left join
+            {{ ref("int_applicative__offerer") }} as offerer
+            on v.venue_managing_offerer_id = offerer.offerer_id
+        where offerer.offerer_validation_status = 'VALIDATED'
         group by venue_id, offerer_id, partition_date, offer_type
 
         union all

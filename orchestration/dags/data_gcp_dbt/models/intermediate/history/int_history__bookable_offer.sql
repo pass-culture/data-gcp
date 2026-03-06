@@ -24,6 +24,10 @@ left join
 left join
     {{ source("raw", "subcategories") }} as subcategories
     on global_offer.offer_subcategory_id = subcategories.id
+left join
+    {{ ref("int_applicative__offerer") }} as offerer
+    on global_offer.offerer_id = offerer.offerer_id
 where
     date('{{ ds() }}') >= date(offer.dbt_valid_from)
     and (offer.dbt_valid_to is null or date('{{ ds() }}') <= date(offer.dbt_valid_to))
+    and offerer.offerer_validation_status = 'VALIDATED'

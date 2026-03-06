@@ -95,6 +95,7 @@ select
     o.first_headline_date,
     o.last_headline_date,
     o.offer_finalization_date,
-    o.scheduled_offer_bookability_date
+    o.scheduled_offer_bookability_date,
+    v.offerer_validation_status
 from {{ ref("int_applicative__offer") }} as o
-left join {{ ref("int_global__venue") }} as v on v.venue_id = o.venue_id
+left join {{ ref("int_global__venue") }} as v on o.venue_id = v.venue_id

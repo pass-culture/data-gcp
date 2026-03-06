@@ -64,7 +64,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.9",
+        python_version="3.11",
         base_dir=BASE_PATH,
         retries=2,
         dag=dag,
@@ -75,7 +75,16 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py ",
+        command="python main.py archive ",
+        do_xcom_push=True,
+    )
+
+    sync_permissions_op = SSHGCEOperator(
+        task_id="sync_permissions_op",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="python main.py permissions ",
         do_xcom_push=True,
     )
 
@@ -84,7 +93,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python dependencies.py ",
+        command="python main.py dependencies ",
         do_xcom_push=True,
     )
 
@@ -96,6 +105,7 @@ with DAG(
         gce_instance_start
         >> fetch_install_code
         >> archive_metabase_cards_op
+        >> sync_permissions_op
         >> compute_metabase_dependencies_op
         >> gce_instance_stop
     )

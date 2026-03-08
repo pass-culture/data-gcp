@@ -1,8 +1,8 @@
 import os
 
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 from huggingface_hub import login
@@ -38,7 +38,7 @@ DATABASE_URI = (
     f"gs://mlflow-bucket-{ENVIRONMENT}/streamlit_data/chatbot_edito/search_db"
 )
 # Update this path after running parquet_partioning.py
-PARQUET_FILE = f"gs://mlflow-bucket-{ENVIRONMENT}/streamlit_data/chatbot_edito/chatbot_encoded_offers_metadata_{ENV_SHORT_NAME}/partitioned"
+PARQUET_FILE = f"gs://mlflow-bucket-{ENVIRONMENT}/streamlit_data/chatbot_edito/offers_{ENV_SHORT_NAME}_partitioned"
 VECTOR_TABLE = "embeddings"
 SCALAR_TABLE = "offers" if ENVIRONMENT == "prod" else f"offers_{ENV_SHORT_NAME}"
 K_RETRIEVAL = 50

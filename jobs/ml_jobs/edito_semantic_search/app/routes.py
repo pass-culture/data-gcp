@@ -233,9 +233,11 @@ def predict():
         filters = prediction_request.filters_list or []
         if item_ids:
             filters.append({"column": "item_id", "operator": "in", "value": item_ids})
-
-            # Derive partition hints from vector results to avoid full GCS scan.
-            # We already know which subcategories our selected items belong to.
+        
+        # Derive partition hints from vector results to avoid full GCS scan.
+        # We already know which subcategories our selected items belong to.
+        # Only apply this optimization when vector search was actually performed
+        if PERFORM_VECTOR_SEARCH and item_ids:
             has_user_subcategory_filter = any(
                 f["column"] == "offer_subcategory_id" for f in filters
             )
@@ -274,9 +276,10 @@ def predict():
             f"Scalar search completed in {time.time() - table_time:.2f} seconds"
         )
         scalar_search_results_df = pd.DataFrame(scalar_search_results)
-
+        logger.info(f"Scalar search returned {len(scalar_search_results_df)} results")
+        
         # Here we match the item_ids from LLM with offers in catalog and apply filters
-        if not scalar_search_results_df.empty:
+        if len(scalar_search_results_df) > 0:
             if PERFORM_VECTOR_SEARCH:
                 merge_time = time.time()
                 prediction_result_df = pd.merge(
@@ -289,14 +292,27 @@ def predict():
                     ["offer_id", "pertinence", "rank"]
                 ]
                 logger.info(
-                    f"Merging LLM results with scalar search completed in {time.time() - merge_time:.2f} seconds"
+                    f"Merging LLM results with scalar search completed in {time.time() - merge_time:.2f} seconds with {len(prediction_result_df)} matches"
                 )
             else:
                 prediction_result_df = scalar_search_results_df
                 prediction_result_df["rank"] = [1] * len(prediction_result_df)
                 prediction_result_df["pertinence"] = "pas de pertinence (dev)"
+            
+            # Check if results remain after merge
+            if len(prediction_result_df) == 0:
+                logger.warning("No offers remaining after merge")
+                search_results = SearchResult(offers=[])
+                logger.info(
+                f"Prediction completed in {time.time() - start_time:.2f} seconds with {len(search_results.offers)} offers returned"
+                )
+                return jsonify(PredictionResult(predictions=search_results).dict()), 200
+            
             # Post-processing: Panachage sorting
             sorted_results = panachage_sort(prediction_result_df)
+            logger.info(
+                f"Panachage sorting completed. Final result count: {len(sorted_results)}"
+            )
             search_results = SearchResult(
                 offers=sorted_results.to_dict(orient="records")
             )
@@ -307,7 +323,10 @@ def predict():
         else:
             logger.warning("No offers found in scalar search")
             search_results = SearchResult(offers=[])
-            return (jsonify(PredictionResult(predictions=search_results).dict()), 200)
+            logger.info(
+                f"Prediction completed in {time.time() - start_time:.2f} seconds with {len(search_results.offers)} offers returned"
+            )
+            return jsonify(PredictionResult(predictions=search_results).dict()), 200
     except Exception as e:
         logger.error(f"Error during prediction: {e}")
         return jsonify(

@@ -38,7 +38,10 @@ class EditorialResult(BaseModel):
 
 
 class SearchResult(BaseModel):
-    offers: list[OfferSelection] = Field(default_factory=list)
+    offers: list[OfferSelection] = Field(
+        default_factory=list,
+        description="List of selected offers. Empty list if no offers match.",
+    )
 
 
 class PredictionResult(BaseModel):
@@ -46,5 +49,4 @@ class PredictionResult(BaseModel):
     Pydantic model for structuring the prediction result.
     """
 
-    # offers: List[dict] = Field(..., description="List of predicted offers.")
-    predictions: SearchResult = Field(..., description="List of predicted predictions.")
+    predictions: SearchResult = Field(..., description="Search results with offers.")

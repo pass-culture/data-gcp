@@ -203,6 +203,7 @@ def llm_thematic_filtering(
         llm_df = pd.DataFrame(processed_items)
         llm_df["rank"] = range(1, len(llm_df) + 1)
         logger.info(f"Successfully processed {len(llm_df)} items")
+        logger.info(f"LLM processed items: {llm_df['item_id'].tolist()}")  # Log first 3 items for debugging
     else:
         logger.warning("No valid items after processing")
         llm_df = pd.DataFrame()

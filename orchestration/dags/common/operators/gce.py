@@ -182,13 +182,6 @@ class BaseSSHGCEOperator(BaseOperator):
         super(BaseSSHGCEOperator, self).__init__(*args, **kwargs)
 
     def execute(self, context):
-        if LOCAL_ENV:
-            self.log.info(
-                f"Local environment detected — using gcloud compute ssh "
-                f"for instance {self.instance_name} in zone {self.gce_zone}"
-            )
-            return self._run_gcloud_ssh(context)
-
         ssh_hook = ComputeEngineSSHHook(
             instance_name=self.instance_name,
             zone=self.gce_zone,
@@ -493,6 +486,21 @@ class InstallDependenciesOperator(SSHGCEOperator):
             self.requirement_file, self.branch, self.base_dir
         )
         self.command = command
+
+        if LOCAL_ENV:
+            # Locally, use gcloud compute ssh which natively handles SSH key
+            # propagation and IAP tunnel auth via the developer's own gcloud
+            # credentials. This first connection pushes SSH keys to the VM
+            # metadata, allowing subsequent ComputeEngineSSHHook calls to work.
+            commands_list = self.prepare_command()
+            commands_list.append(self.command)
+            self.command = "\n".join(commands_list)
+            self.log.info(
+                f"Local environment detected — using gcloud compute ssh "
+                f"for instance {self.instance_name} in zone {self.gce_zone}"
+            )
+            return self._run_gcloud_ssh(context)
+
         return super(InstallDependenciesOperator, self).execute(context)
 
     def make_install_command(

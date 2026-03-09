@@ -1,9 +1,13 @@
 import os
+from datetime import datetime, timezone
 
 AUDIENCES = ["native", "pro"]
 BREVO_BASE_URL = os.getenv("BREVO_BASE_URL", "https://api.brevo.com/v3/")
 GCP_PROJECT = os.getenv("GCP_PROJECT", "no-project-defined")
 TARGET_ENV = os.environ.get("TARGET_ENV", "ehp")
+
+# Brevo requires endDate when startDate is provided
+_NOW_ISO = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 ENDPOINTS = [
     # 1. Newsletter Campaigns
@@ -24,7 +28,9 @@ ENDPOINTS = [
             "incremental": {
                 "cursor_path": "sentDate",
                 "start_param": "startDate",
+                "end_param": "endDate",
                 "initial_value": "2024-01-01T00:00:00.000Z",
+                "end_value": _NOW_ISO,
                 "on_cursor_value_missing": "exclude",
             },
         },

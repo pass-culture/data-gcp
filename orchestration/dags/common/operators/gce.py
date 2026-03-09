@@ -1,3 +1,4 @@
+import subprocess
 import typing as t
 from datetime import datetime
 
@@ -11,6 +12,7 @@ from common.config import (
     GCE_BASE_PREFIX,
     GCE_ZONE,
     GCP_PROJECT_ID,
+    LOCAL_ENV,
     SSH_USER,
     USE_INTERNAL_IP,
     UV_VERSION,
@@ -180,6 +182,13 @@ class BaseSSHGCEOperator(BaseOperator):
         super(BaseSSHGCEOperator, self).__init__(*args, **kwargs)
 
     def execute(self, context):
+        if LOCAL_ENV:
+            self.log.info(
+                f"Local environment detected — using gcloud compute ssh "
+                f"for instance {self.instance_name} in zone {self.gce_zone}"
+            )
+            return self._run_gcloud_ssh(context)
+
         ssh_hook = ComputeEngineSSHHook(
             instance_name=self.instance_name,
             zone=self.gce_zone,
@@ -198,6 +207,72 @@ class BaseSSHGCEOperator(BaseOperator):
             return self.run_deferrable(context, ssh_hook)
         else:
             return self.run_sync(context, ssh_hook)
+
+    def _run_gcloud_ssh(self, context) -> str:
+        """Execute SSH command on GCE instance via gcloud CLI.
+
+        Used for local development where ComputeEngineSSHHook may fail due to
+        SSH key propagation and IAP tunnel auth issues. gcloud compute ssh
+        handles key management, IAP tunneling, and authentication natively
+        using the developer's own gcloud credentials.
+        """
+        self.log.info(f"Running command:\n{self.command}")
+
+        gcloud_cmd = [
+            "gcloud",
+            "compute",
+            "ssh",
+            f"{SSH_USER}@{self.instance_name}",
+            f"--project={GCP_PROJECT_ID}",
+            f"--zone={self.gce_zone}",
+            "--tunnel-through-iap",
+            "--quiet",
+            "--",
+            "bash",
+            "-s",
+        ]
+
+        process = subprocess.Popen(
+            gcloud_cmd,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+
+        # Send the full command via stdin
+        process.stdin.write(self.command)
+        process.stdin.close()
+
+        # Stream output line by line to the task log
+        output_lines = []
+        for line in process.stdout:
+            line = line.rstrip("\n")
+            self.log.info(line)
+            output_lines.append(line)
+
+        return_code = process.wait()
+        output = "\n".join(output_lines)
+
+        # Push results to XCom for compatibility with SSHGCEJobManager
+        task_instance = context.get("task_instance")
+        if task_instance:
+            task_instance.xcom_push(key="ssh_exit", value=return_code)
+            lines = output.split("\n")
+            if len(lines) == 0:
+                result = ""
+            elif len(lines) == 1:
+                result = lines[0]
+            elif len(lines[-1]) > 0:
+                result = lines[-1]
+            else:
+                result = lines[-2]
+            task_instance.xcom_push(key="result", value=result)
+
+        if return_code != 0:
+            raise AirflowException(f"SSH command failed with exit code {return_code}")
+
+        return output
 
     def run_sync(self, context, ssh_hook: ComputeEngineSSHHook):
         job_manager = SSHGCEJobManager(

@@ -29,6 +29,7 @@
     from {{ ref("mrt_global__user_beneficiary") }}
     where
         current_deposit_type in ("GRANT_18", "GRANT_17_18")
+        and {{ dim.value_expr }} is not null
         {% if is_incremental() %}
             and date_trunc(last_deposit_expiration_date, month)
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
@@ -54,6 +55,7 @@ union all
     from {{ ref("mrt_global__user_beneficiary") }}
     where
         current_deposit_type in ("GRANT_18", "GRANT_17_18")
+        and {{ dim.value_expr }} is not null
         {% if is_incremental() %}
             and date_trunc(last_deposit_expiration_date, month)
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)

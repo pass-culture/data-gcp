@@ -44,7 +44,7 @@
         from {{ ref("mrt_global__user_beneficiary") }}
         left join booked_category_{{ category.value_expr }} as bc using (user_id)
         where
-            total_deposit_amount >= 300
+            total_deposit_amount >= 300 and {{ dim.value_expr }} is not null
             {% if is_incremental() %}
                 and date_trunc(last_deposit_expiration_date, month)
                 = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
@@ -70,10 +70,11 @@
             safe_divide(sum(total_3_category_booked_users), sum(total_users)), 0
         ) as kpi
     from {{ ref("mrt_native__outgoing_cohort") }}
-    {% if is_incremental() %}
-        where
-            date_trunc(user_expiration_month, month)
+    where
+        {{ dim.value_expr }} is not null
+        {% if is_incremental() %}
+            and date_trunc(user_expiration_month, month)
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-    {% endif %}
+        {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
 {% endfor %}

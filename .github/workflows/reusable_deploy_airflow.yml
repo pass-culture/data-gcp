@@ -61,7 +61,7 @@ jobs:
             SLACK_BOT_TOKEN:passculture-metier-ehp/passculture-ci-slack-bot-token
             ARTIFACT_REGISTRY_SERVICE_ACCOUNT:passculture-metier-ehp/passculture-main-artifact-registry-service-account
             ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER:passculture-metier-ehp/infra-prod-gcp-workload-identity-provider
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.10"
       - uses: yezz123/setup-uv@v4
@@ -83,7 +83,7 @@ jobs:
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
-        run: gsutil cp 'gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/data/exposures/*' ./models/
+        run: gsutil cp "gs://$AIRFLOW_DAGS_BUCKET/data/exposures/*" ./models/
 
       - name: "Install dbt dependencies"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
@@ -91,7 +91,7 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
         run: |
-          export PYTHONPATH=$PYTHONPATH:./dags
+          export PYTHONPATH="$PYTHONPATH:./dags"
           dbt deps
 
       - name: "compile dbt & generate dbt docs"
@@ -101,7 +101,7 @@ jobs:
           DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
-        run: dbt docs generate --static --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+        run: dbt docs generate --static --target "$ENV_SHORT_NAME" --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
 
       - name: "Generate dbt colibri documentation"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
@@ -115,13 +115,13 @@ jobs:
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
-        run: gsutil -m rsync -d -r target/dbt_packages gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/data/target/dbt_packages
+        run: gsutil -m rsync -d -r target/dbt_packages "gs://$AIRFLOW_DAGS_BUCKET/data/target/dbt_packages"
 
       - name: "Push manifest (dbt) to GCS (data/target)"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
-        run: gsutil cp target/manifest.json gs://$AIRFLOW_DAGS_BUCKET/data/target/manifest.json
+        run: gsutil cp target/manifest.json "gs://$AIRFLOW_DAGS_BUCKET/data/target/manifest.json"
 
       # Compute exclusion regex from .rsyncignore
       - name: "Compute EXCLUDE_REGEX from .rsyncignore file"
@@ -141,21 +141,23 @@ jobs:
               [[ -z "$pattern" || "$pattern" =~ ^# ]] && continue
 
               # Escape regex special characters (except * which we'll handle below)
-              safe_pattern=$(printf '%s' "$pattern" | sed 's/[.[\^$(){}+?|]/\\&/g')
+              # shellcheck disable=SC2001,SC2016
+              safe_pattern="$(printf '%s' "$pattern" | sed 's/[.[\^$(){}+?|]/\\&/g')"
 
               # Convert simple glob-style wildcards to regex
-              safe_pattern=$(echo "$safe_pattern" | sed 's/\*/.*/g')
+              # shellcheck disable=SC2001
+              safe_pattern="$(echo "$safe_pattern" | sed 's/\*/.*/g')"
 
               # Ensure pattern is relative to source_dir
               EXCLUDE_REGEX="${EXCLUDE_REGEX}${source_dir}/${safe_pattern}|"
-            done < "$ignore_file"
+            done < $ignore_file
 
             # Remove trailing |
             EXCLUDE_REGEX="${EXCLUDE_REGEX%|}"
           fi
 
           # Export for next step
-          echo "EXCLUDE_REGEX=$EXCLUDE_REGEX" >> $GITHUB_ENV
+          echo "EXCLUDE_REGEX=$EXCLUDE_REGEX" >> "$GITHUB_ENV"
           echo "Final EXCLUDE_REGEX=$EXCLUDE_REGEX"
         shell: bash
       # Deploy DAGs to GCS, using computed EXCLUDE_REGEX
@@ -256,20 +258,26 @@ jobs:
           rm compute_layout.py
 
       - name: "Deploy Airflow (plugins)"
-        run: gsutil -m rsync -d -r plugins gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/plugins
+        env:
+          AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
+        run: gsutil -m rsync -d -r plugins "gs://$AIRFLOW_DAGS_BUCKET/plugins"
 
       - name: "Push documentation (dbt) to GCS (plugins/static/dbt_*)"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
         run: |
-          gsutil cp target/static_index.html gs://$AIRFLOW_DAGS_BUCKET/plugins/static/dbt_docs/index.html
-          gsutil cp dist/index.html gs://$AIRFLOW_DAGS_BUCKET/plugins/static/dbt_docs/colibri.html
+          gsutil cp target/static_index.html "gs://$AIRFLOW_DAGS_BUCKET/plugins/static/dbt_docs/index.html"
+          gsutil cp dist/index.html "gs://$AIRFLOW_DAGS_BUCKET/plugins/static/dbt_docs/colibri.html"
 
       - name: "Wait for composer to be deployed (10s x 6 times)"
         if: ${{ inputs.IS_COMPOSER }}
+        env:
+          AIRFLOW_NAME: ${{ inputs.AIRFLOW_NAME }}
+          DATA_GCP_PROJECT: ${{ inputs.DATA_GCP_PROJECT }}
+          GCP_REGION: ${{ env.GCP_REGION }}
         run: |
-          ./wait_for_dag_deployed.sh ${{ inputs.AIRFLOW_NAME }} ${{ env.GCP_REGION }} airflow_monitoring 6 10 ${{ inputs.DATA_GCP_PROJECT }}
+          ./wait_for_dag_deployed.sh "$AIRFLOW_NAME" "$GCP_REGION" airflow_monitoring 6 10 "$DATA_GCP_PROJECT"
       - name: "Post to a Slack channel"
         if: always()
         uses: slackapi/slack-github-action@v1.23.0
@@ -282,7 +290,7 @@ jobs:
               "attachments": [
                 {
                   "mrkdwn_in": ["text"],
-                  "color": "${{ fromJSON('["#36a64f", "#A30002"]')[job.status != 'success'] }}",
+                  "color": "${{ fromJSON('["#36a64f", "#A30002"]')[(job.status != 'success') && 1 || 0] }}",
                   "author_name": "${{github.actor}}",
                   "author_link": "https://github.com/${{github.actor}}",
                   "author_icon": "https://github.com/${{github.actor}}.png",

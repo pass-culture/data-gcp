@@ -24,7 +24,7 @@ jobs:
         id: dbt-changes
         env:
           TARGET_BRANCH: ${{ github.base_ref }}
-        run: .github/workflows/scripts/check_dbt_changes.sh $TARGET_BRANCH
+        run: .github/workflows/scripts/check_dbt_changes.sh "$TARGET_BRANCH"
 
   dbt-integration-prod:
     needs: find-dbt-changes
@@ -80,9 +80,9 @@ jobs:
       - name: "Show found files"
         id: "compute"
         run: |
-          output=$(python3 .github/workflows/scripts/find_test_intersections.py ${{ steps.changed-etl-files.outputs.all_changed_files }} ${{ steps.changed-ml-files.outputs.all_changed_files }} ${{ steps.find-testable-jobs.outputs.testable_jobs }})
+          output="$(python3 .github/workflows/scripts/find_test_intersections.py "${{ steps.changed-etl-files.outputs.all_changed_files }}" "${{ steps.changed-ml-files.outputs.all_changed_files }}" "${{ steps.find-testable-jobs.outputs.testable_jobs }}")"
           echo "Found tests: $output"
-          echo "$output" >> $GITHUB_OUTPUT
+          echo "$output" >> "$GITHUB_OUTPUT"
 
   assert-matrix-not-empty:
     needs: find-test-jobs

@@ -10,7 +10,8 @@ SCHEDULE_DICT = {
         "dev": None,
     },
     "algo_default_deployment": "0 6 * * *",
-    "artist_linkage": "0 12 * * 0",
+    "artist_linkage": "0 12 * * *",
+    "artist_similarity_playlist": "0 12 * * 1",
     "bigquery_archive_partition": "0 7 * * *",
     "bigquery_snapshot_backup": {
         "prod": "15 3 * * *",  # every day at 3:15 AM
@@ -41,13 +42,19 @@ SCHEDULE_DICT = {
     },
     "recommendation_endpoint_monitoring": "0 8 * * *",  # every day at 8:00 AM
     "export_external_reporting": {
-        "prod": "45 4 1 * *",  # every month at 4:45 AM
+        "prod": "45 4 2 * *",  # every month the 2nd at 4:45 AM
     },
     "finance_pricing_forecast": {
         "prod": "0 6 * * 1",  # every Monday at 6:00 AM
         "stg": None,
         "dev": None,
     },
+    "item_embedding": {
+        "prod": "0 0 * * *",  # every day at midnight
+        "stg": "0 0 * * *",  # every day at midnight
+        "dev": "0 0 * * 1",  # every Monday at midnight
+    },
+    "airflow_dag_metrics": "0 12 * * *",  # every day at 12:00 PM
 }
 
 

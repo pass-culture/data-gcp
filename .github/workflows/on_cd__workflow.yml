@@ -138,9 +138,9 @@ jobs:
         id: "container-changes"
         run: |
           if [ "${{ steps.changed-files.outputs.any_changed }}" == "true" ]; then
-            echo "output=true" >> $GITHUB_OUTPUT
+            echo "output=true" >> "$GITHUB_OUTPUT"
           else
-            echo "output=false" >> $GITHUB_OUTPUT
+            echo "output=false" >> "$GITHUB_OUTPUT"
           fi
   k8s-deploy-on-dev:
     needs: [find-build-job]

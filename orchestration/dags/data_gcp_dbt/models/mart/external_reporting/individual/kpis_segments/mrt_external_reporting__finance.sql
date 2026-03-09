@@ -188,3 +188,4 @@ from category_metrics
 union all
 select *
 from epn_metrics
+where dimension_value is not null

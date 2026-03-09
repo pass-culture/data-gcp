@@ -72,20 +72,30 @@ with
                 )
                 {% if not loop.last %} or {% endif %}
             {% endfor %}
+    ),
+
+    extracted_data as (
+        select
+            delta.product_type,
+            delta.ean,
+            delta.recto_image_uuid as recto_uuid,
+            delta.verso_image_uuid as verso_uuid,
+            delta.dbt_valid_from as modification_date,
+            -- Common fields
+            {{- render_json_fields("delta", "json_raw", cfg.common_fields_struct) }},
+            -- Product-specific fields
+            {%- for key, val in cfg.products.items() -%}
+                {{- render_json_fields("delta", "json_raw", val.specific_fields) }}
+                {%- if not loop.last %},{% endif -%}
+            {%- endfor %}
+
+        from changed_products_snapshot as delta
     )
 
 select
-    delta.product_type,
-    delta.ean,
-    delta.recto_image_uuid as recto_uuid,
-    delta.verso_image_uuid as verso_uuid,
-    delta.dbt_valid_from as modification_date,
-    -- Common fields
-    {{- render_json_fields("delta", "json_raw", cfg.common_fields_struct) }},
-    -- Product-specific fields
-    {%- for key, val in cfg.products.items() -%}
-        {{- render_json_fields("delta", "json_raw", val.specific_fields) }}
-        {%- if not loop.last %},{% endif -%}
-    {%- endfor %}
-
-from changed_products_snapshot as delta
+    * replace (
+        format_date(
+            '%d/%m/%Y', safe.parse_date('%d/%m/%Y', publication_date)
+        ) as publication_date
+    )
+from extracted_data

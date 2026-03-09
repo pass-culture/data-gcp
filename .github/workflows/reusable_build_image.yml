@@ -44,10 +44,10 @@ jobs:
             ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER:passculture-metier-ehp/infra-prod-gcp-workload-identity-provider
       - name: "Output variables"
         id: "vars"
-        run: echo "DOCKER_REPO=${DOCKER_REGISTRY_REGION}-docker.pkg.dev/${DOCKER_REGISTRY_PROJECT_ID}/${DOCKER_REGISTRY_REPOSITORY}" | tee -a $GITHUB_OUTPUT
+        run: echo "DOCKER_REPO=${DOCKER_REGISTRY_REGION}-docker.pkg.dev/${DOCKER_REGISTRY_PROJECT_ID}/${DOCKER_REGISTRY_REPOSITORY}" | tee -a "$GITHUB_OUTPUT"
       - name: "Get short SHA"
         id: "sha"
-        run: echo "short_sha=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+        run: echo "short_sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
       - name: "Set up Docker Buildx"
         uses: docker/setup-buildx-action@v2.2.1
         with:
@@ -74,7 +74,7 @@ jobs:
           if [ "${TARGET_ENV}" == "dev" ]; then
             tags="$tags\n${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:dev"
           fi
-          echo -e "tags<<EOF\n$tags\nEOF" >> $GITHUB_OUTPUT
+          echo -e "tags<<EOF\n$tags\nEOF" >> "$GITHUB_OUTPUT"
       - name: "Build and push docker image"
         uses: docker/build-push-action@v3.2.0
         with:

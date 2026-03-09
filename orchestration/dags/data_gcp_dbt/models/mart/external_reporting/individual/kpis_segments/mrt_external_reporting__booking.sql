@@ -204,10 +204,12 @@ with
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.venue_col }} as dimension_value,
                 'total_offres_gratuites_reservables' as kpi_name,
-                cumul_total_free_offers as numerator,
+                sum(cumul_total_free_offers) as numerator,
                 cast(1 as numeric) as denominator,
-                cumul_total_free_offers as kpi
+                sum(cumul_total_free_offers) as kpi
             from cumul_free_bookable_offers
+            group by
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
             {% if not loop.last %}
                 union all
             {% endif %}
@@ -217,8 +219,9 @@ with
 
 select *
 from final_output
-{% if is_incremental() %}
-    where
-        partition_month
+where
+    dimension_value is not null
+    {% if is_incremental() %}
+        and partition_month
         = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-{% endif %}
+    {% endif %}

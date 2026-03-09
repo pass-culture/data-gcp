@@ -60,3 +60,7 @@ models:
       - name: offerer_is_epn
         description: "{{ doc('column__offerer_is_epn') }}"
         data_type: BOOLEAN
+      - name: booking_email
+        description: "{{ doc('column__booking_email') }}"
+      - name: booking_contact
+        description: "{{ doc('column__booking_contact') }}"

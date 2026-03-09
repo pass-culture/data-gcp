@@ -54,6 +54,7 @@ SCHEDULE_DICT = {
         "stg": "0 0 * * *",  # every day at midnight
         "dev": "0 0 * * 1",  # every Monday at midnight
     },
+    "airflow_dag_metrics": "0 12 * * *",  # every day at 12:00 PM
 }
 
 

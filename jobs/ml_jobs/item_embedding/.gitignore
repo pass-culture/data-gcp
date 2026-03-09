@@ -1,6 +1,0 @@
-# Item embedding job
-__pycache__/
-*.pyc
-.venv/
-dev.ipynb
-*.drawio

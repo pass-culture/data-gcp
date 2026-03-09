@@ -387,10 +387,17 @@ def match_namesakes_per_category(
     """
 
     def _select_best_wiki_per_alias(df: pd.DataFrame) -> pd.DataFrame:
-        return df.sort_values(by=["alias", "gkg"], ascending=False).drop_duplicates(
-            subset="alias"
-        )
+        return df.sort_values(
+            by=["alias", "alias_matching_score", "gkg"], ascending=False
+        ).drop_duplicates(subset="alias")
 
+    # Build matching score per alias
+    wikidata_df = wikidata_df.assign(
+        alias_matching_score=lambda df: df.matching_score
+        + 0.5 * (df.wiki_artist_name == df.raw_alias).astype(int)
+    )
+
+    # For each category, select the best wikidata entry per alias (keep namesakes) and match with artists_df
     matched_df_list = []
     for pass_category, wiki_categories in CATEGORY_MAPPING.items():
         # Select artist df for current category

@@ -25,7 +25,7 @@ dependencies = [
     "streamlit>=1.35.0",
     "torch>=2.8.0",
     "tornado>=6.5",
-    "tqdm>=4.64.1",
+    "tqdm>=4.67.3",
     "typer>=0.7.0",
 ]
 [tool.uv]

@@ -1,0 +1,39 @@
+# Configuration for item embedding vectors
+# Each vector defines which features to include in the embedding prompt and the model to use for embedding extraction
+
+# Features will be concatenated in the order specified for each vector type
+# e.g. the "semantic_content" vector will encode:
+    # subcategory_id : <subcategory_id_value>
+    # offer_name : <offer_name_value>
+# into a single prompt for embedding extraction
+## available prompt_names for embeddinggemma:
+# ['query', 'document', 'BitextMining', 'Clustering', 'Classification',
+# 'InstructionRetrieval', 'MultilabelClassification', 'PairClassification',
+# 'Reranking', 'Retrieval', 'Retrieval-query', 'Retrieval-document', 'STS', 'Summarization'].
+
+vectors:
+  - name: "semantic_content_STS"
+    features:
+      - offer_name
+      - category_id
+      - subcategory_id
+      - offer_label_concat
+      - author_concat
+      - offer_description
+    encoder_name: "google/embeddinggemma-300m"
+    prompt_name: "STS"
+  - name: "semantic_content_Clustering"
+    features:
+      - offer_name
+      - category_id
+      - subcategory_id
+      - offer_label_concat
+      - author_concat
+      - offer_description
+    encoder_name: "google/embeddinggemma-300m"
+    prompt_name: "Clustering"
+
+  # - name: "image_content"
+  #   features:
+  #     - image
+  #   encoder_name: "clip-ViT-B-32"

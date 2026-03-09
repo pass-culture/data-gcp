@@ -10,7 +10,7 @@ SCHEDULE_DICT = {
         "dev": None,
     },
     "algo_default_deployment": "0 6 * * *",
-    "artist_linkage": "0 12 * * 0",
+    "artist_linkage": "0 12 * * *",
     "artist_similarity_playlist": "0 12 * * 1",
     "bigquery_archive_partition": "0 7 * * *",
     "bigquery_snapshot_backup": {

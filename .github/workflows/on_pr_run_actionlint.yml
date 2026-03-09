@@ -1,0 +1,19 @@
+name: Run actionlint
+
+on:
+  push:
+    branches:
+      - main
+    tags: "**"
+  pull_request:
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  run_actionlint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pass-culture/common-workflows/actions/actionlint-check@f4db7db202ff3cddc97fcbf08c3821ebc78b10fb

@@ -2,11 +2,11 @@ from typing import Optional
 
 import numpy as np
 import pyarrow as pa
-from docarray import Document, DocumentArray
 from lancedb.rerankers import Reranker
 
 from app.logging.logger import logger
 from app.retrieval.constants import DISTANCE_COLUMN_NAME, USER_DISTANCE_COLUMN_NAME
+from app.retrieval.documents import Document, DocumentArray
 
 
 class UserReranker(Reranker):
@@ -74,7 +74,7 @@ class UserReranker(Reranker):
                 vector_results[DISTANCE_COLUMN_NAME].to_numpy(), np.array(scores)
             )
             # Update score with personalized dot product
-            return (
+            result = (
                 vector_results.append_column(
                     USER_DISTANCE_COLUMN_NAME, pa.array(scores)
                 )
@@ -82,9 +82,20 @@ class UserReranker(Reranker):
                 .append_column(DISTANCE_COLUMN_NAME, pa.array(updated_distances))
                 .sort_by([(DISTANCE_COLUMN_NAME, "ascending")])
             )
+            # lancedb >= 0.14 requires _relevance_score in reranker output
+            sorted_distances = result[DISTANCE_COLUMN_NAME].to_numpy()
+            return result.append_column(
+                "_relevance_score",
+                pa.array(-sorted_distances, type=pa.float32()),
+            )
         else:
             logger.debug(f"reranker, user_id not found {user_id}, cannot re_rank")
-            return vector_results
+            # lancedb >= 0.14 requires _relevance_score in reranker output
+            distances = vector_results[DISTANCE_COLUMN_NAME].to_numpy()
+            return vector_results.append_column(
+                "_relevance_score",
+                pa.array(-distances, type=pa.float32()),
+            )
 
     def _compute_relevance_score(
         self, original_distances: np.ndarray, user_distances: np.ndarray
@@ -132,14 +143,7 @@ class UserReranker(Reranker):
         self, query: str, vector_results: pa.Table, fts_results: pa.Table
     ) -> pa.Table:
         """
-        Combines vector results and full-text search results into a single reranked table.
-
-        Args:
-            query (str): The user ID, treated as a query.
-            vector_results (pa.Table): The vector results to be combined.
-            fts_results (pa.Table): The full-text search results to be combined.
-
-        Returns:
-            pa.Table: The combined and reranked results from both vector and FTS searches.
+        Not implemented: this service only performs pure vector search (query_type="vector"),
+        so rerank_hybrid is never called by lancedb. Required by the abstract base class.
         """
-        return self.merge_results(vector_results, fts_results)
+        raise NotImplementedError("Hybrid search is not supported by this reranker.")

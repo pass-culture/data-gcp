@@ -153,11 +153,11 @@ wheels = [
 
 [[package]]
 name = "blinker"
-version = "1.8.2"
+version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/1e/57/a6a1721eff09598fb01f3c7cda070c1b6a0f12d63c83236edf79a440abcc/blinker-1.8.2.tar.gz", hash = "sha256:8f77b09d3bf7c795e969e9486f39c2c5e9c39d4ee07424be2bc594ece9642d83", size = 23161, upload-time = "2024-05-06T17:04:10.101Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/21/28/9b3f50ce0e048515135495f198351908d99540d69bfdc8c1d15b73dc55ce/blinker-1.9.0.tar.gz", hash = "sha256:b4ce2265a7abece45e7cc896e98dbebe6cead56bcf805a3d23136d145f5445bf", size = 22460, upload-time = "2024-11-08T17:25:47.436Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bb/2a/10164ed1f31196a2f7f3799368a821765c62851ead0e630ab52b8e14b4d0/blinker-1.8.2-py3-none-any.whl", hash = "sha256:1779309f71bf239144b9399d06ae925637cf6634cf6bd131104184531bf67c01", size = 9456, upload-time = "2024-05-06T17:04:08.444Z" },
+    { url = "https://files.pythonhosted.org/packages/10/cb/f2ad4230dc2eb1a74edf38f1a38b9b52277f75bef262d8908e60d957e13c/blinker-1.9.0-py3-none-any.whl", hash = "sha256:ba0efaa9080b619ff2f3459d1d500c57bddea4a6b424b60a91141db6fd2f08bc", size = 8458, upload-time = "2024-11-08T17:25:46.184Z" },
 ]
 
 [[package]]
@@ -398,15 +398,13 @@ wheels = [
 ]
 
 [[package]]
-name = "docarray"
-version = "0.21.0"
+name = "distro"
+version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "jina-hubble-sdk", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "numpy", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "rich", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+sdist = { url = "https://files.pythonhosted.org/packages/fc/f8/98eea607f65de6527f8a2e8885fc8015d3e6f5775df186e443e0964a11c3/distro-1.9.0.tar.gz", hash = "sha256:2fa77c6fd8940f116ee1d6b94a2f90b13b5ea8d019b98bc8bafdcabcdd9bdbed", size = 60722, upload-time = "2023-12-24T09:54:32.31Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/12/b3/231ffd4ab1fc9d679809f356cebee130ac7daa00d6d6f3206dd4fd137e9e/distro-1.9.0-py3-none-any.whl", hash = "sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2", size = 20277, upload-time = "2023-12-24T09:54:30.421Z" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/01/c9/a23f15cd964b238c78bf1a77ac3dc2f0743d7b40d31f2527f7a4db82f5f3/docarray-0.21.0.tar.gz", hash = "sha256:3c9f605123800c1b0cdf8c458be3fb19c05e9a81f723e51200ef531b02e689ee", size = 658046, upload-time = "2023-01-17T09:10:51.657Z" }
 
 [[package]]
 name = "docker"
@@ -428,18 +426,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b2/9d/c3b43da9515bd270df0f80548d9944e389870713cc1fe2b8fb35fe2bcefd/docstring_parser-0.17.0.tar.gz", hash = "sha256:583de4a309722b3315439bb31d64ba3eebada841f2e2cee23b99df001434c912", size = 27442, upload-time = "2025-07-21T07:35:01.868Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/55/e2/2537ebcff11c1ee1ff17d8d0b6f4db75873e3b0fb32c2d4a2ee31ecb310a/docstring_parser-0.17.0-py3-none-any.whl", hash = "sha256:cf2569abd23dce8099b300f9b4fa8191e9582dda731fd533daf54c4551658708", size = 36896, upload-time = "2025-07-21T07:35:00.684Z" },
-]
-
-[[package]]
-name = "ecdsa"
-version = "0.19.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "six", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/5e/d0/ec8ac1de7accdcf18cfe468653ef00afd2f609faf67c423efbd02491051b/ecdsa-0.19.0.tar.gz", hash = "sha256:60eaad1199659900dd0af521ed462b793bbdf867432b3948e87416ae4caf6bf8", size = 197791, upload-time = "2024-04-08T19:01:03.247Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/00/e7/ed3243b30d1bec41675b6394a1daae46349dc2b855cb83be846a5a918238/ecdsa-0.19.0-py2.py3-none-any.whl", hash = "sha256:2cea9b88407fdac7bbeca0833b189e4c9c53f2ef1e1eaa29f6224dbc809b707a", size = 149266, upload-time = "2024-04-08T19:01:00.977Z" },
 ]
 
 [[package]]
@@ -469,18 +455,19 @@ wheels = [
 
 [[package]]
 name = "flask"
-version = "3.0.0"
+version = "3.1.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "blinker", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "click", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "itsdangerous", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "jinja2", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "markupsafe", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "werkzeug", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d8/09/c1a7354d3925a3c6c8cfdebf4245bae67d633ffda1ba415add06ffc839c5/flask-3.0.0.tar.gz", hash = "sha256:cfadcdb638b609361d29ec22360d6070a77d7463dcb3ab08d2c2f2f168845f58", size = 674171, upload-time = "2023-09-30T14:36:12.918Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/26/00/35d85dcce6c57fdc871f3867d465d780f302a175ea360f62533f12b27e2b/flask-3.1.3.tar.gz", hash = "sha256:0ef0e52b8a9cd932855379197dd8f94047b359ca0a78695144304cb45f87c9eb", size = 759004, upload-time = "2026-02-19T05:00:57.678Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/36/42/015c23096649b908c809c69388a805a571a3bea44362fe87e33fc3afa01f/flask-3.0.0-py3-none-any.whl", hash = "sha256:21128f47e4e3b9d597a3e8521a329bf56909b690fcc3fa3e477725aa81367638", size = 99724, upload-time = "2023-09-30T14:36:10.961Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/9c/34f6962f9b9e9c71f6e5ed806e0d0ff03c9d1b0b2340088a0cf4bce09b18/flask-3.1.3-py3-none-any.whl", hash = "sha256:f4bcbefc124291925f1a26446da31a5178f9483862233b23c0c96a20701f670c", size = 103424, upload-time = "2026-02-19T05:00:56.027Z" },
 ]
 
 [[package]]
@@ -635,16 +622,21 @@ grpc = [
 
 [[package]]
 name = "google-auth"
-version = "2.40.3"
+version = "2.49.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cachetools", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "cryptography", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "pyasn1-modules", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "rsa", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9e/9b/e92ef23b84fa10a64ce4831390b7a4c2e53c0132568d99d4ae61d04c8855/google_auth-2.40.3.tar.gz", hash = "sha256:500c3a29adedeb36ea9cf24b8d10858e152f2412e3ca37829b3fa18e33d63b77", size = 281029, upload-time = "2025-06-04T18:04:57.577Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7d/59/7371175bfd949abfb1170aa076352131d7281bd9449c0f978604fc4431c3/google_auth-2.49.0.tar.gz", hash = "sha256:9cc2d9259d3700d7a257681f81052db6737495a1a46b610597f4b8bafe5286ae", size = 333444, upload-time = "2026-03-06T21:53:06.07Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/17/63/b19553b658a1692443c62bd07e5868adaa0ad746a0751ba62c59568cd45b/google_auth-2.40.3-py2.py3-none-any.whl", hash = "sha256:1370d4593e86213563547f97a92752fc658456fe4514c809544f330fed45a7ca", size = 216137, upload-time = "2025-06-04T18:04:55.573Z" },
+    { url = "https://files.pythonhosted.org/packages/37/45/de64b823b639103de4b63dd193480dce99526bd36be6530c2dba85bf7817/google_auth-2.49.0-py3-none-any.whl", hash = "sha256:f893ef7307f19cf53700b7e2f61b5a6affe3aa0edf9943b13788920ab92d8d87", size = 240676, upload-time = "2026-03-06T21:52:38.304Z" },
+]
+
+[package.optional-dependencies]
+requests = [
+    { name = "requests", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
 ]
 
 [[package]]
@@ -662,7 +654,7 @@ wheels = [
 
 [[package]]
 name = "google-cloud-aiplatform"
-version = "1.112.0"
+version = "1.140.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "docstring-parser", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
@@ -676,12 +668,11 @@ dependencies = [
     { name = "proto-plus", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "protobuf", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "pydantic", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "shapely", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "typing-extensions", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/db/76/5edbe18f7218f37470d10eccec06cc1d9179d97b834723e1d857215d708c/google_cloud_aiplatform-1.112.0.tar.gz", hash = "sha256:ddc8f618d888b3b4ecdea90b74e61db100fa1dc4603f699183016e2f832763af", size = 9643584, upload-time = "2025-09-10T16:40:27.24Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1b/14/1c223faf986afffdd61c994a10c30a04985ed5ba072201058af2c6e1e572/google_cloud_aiplatform-1.140.0.tar.gz", hash = "sha256:ea7eb1870b4cf600f8c2472102e21c3a1bcaf723d6e49f00ed51bc6b88d54fff", size = 10146640, upload-time = "2026-03-04T00:56:38.95Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/95/4a/ae57e5810a37a381fcba61f5fb406e89a79a90cf920818d496d9d410e4f1/google_cloud_aiplatform-1.112.0-py2.py3-none-any.whl", hash = "sha256:918923767916e440c1b0bf1d1d8308e01e767c7cd16797295eebbc3d573a7272", size = 8029440, upload-time = "2025-09-10T16:40:23.568Z" },
+    { url = "https://files.pythonhosted.org/packages/c3/5c/bb64aee2da24895d57611eed00fac54739bfa34f98ab344020a6605875bf/google_cloud_aiplatform-1.140.0-py2.py3-none-any.whl", hash = "sha256:e94493a2682b9d17efa7146a53bb3665bf1595c3394fd3d0f45d18f71623fddc", size = 8355660, upload-time = "2026-03-04T00:56:34.441Z" },
 ]
 
 [[package]]
@@ -789,21 +780,23 @@ wheels = [
 
 [[package]]
 name = "google-genai"
-version = "1.36.0"
+version = "1.66.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "google-auth", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "distro", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "google-auth", extra = ["requests"], marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "httpx", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "pydantic", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "requests", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "sniffio", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "tenacity", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "typing-extensions", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "websockets", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/11/31/e4f6a049ce92ee4a961c37727c9c8ea68f3ab72f2a1880abc7dc309ea670/google_genai-1.36.0.tar.gz", hash = "sha256:6501f18cbf44488becab6fbff09529ff77e856f1baa65d55686261e4677cec3f", size = 243681, upload-time = "2025-09-10T23:22:07.672Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9b/ba/0b343b0770d4710ad2979fd9301d7caa56c940174d5361ed4a7cc4979241/google_genai-1.66.0.tar.gz", hash = "sha256:ffc01647b65046bca6387320057aa51db0ad64bcc72c8e3e914062acfa5f7c49", size = 504386, upload-time = "2026-03-04T22:15:28.156Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a1/7a/61a9a98d09bc507d1c7e089a65b260cafd22f62b250d8e34acacc996f01d/google_genai-1.36.0-py3-none-any.whl", hash = "sha256:bd48d800547cb90e40648178620c89474807305b03f6cd147fb3cc7faab27670", size = 244345, upload-time = "2025-09-10T23:22:06.349Z" },
+    { url = "https://files.pythonhosted.org/packages/d1/dd/403949d922d4e261b08b64aaa132af4e456c3b15c8e2a2d9e6ef693f66e2/google_genai-1.66.0-py3-none-any.whl", hash = "sha256:7f127a39cf695277104ce4091bb26e417c59bb46e952ff3699c3a982d9c474ee", size = 732174, upload-time = "2026-03-04T22:15:26.63Z" },
 ]
 
 [[package]]
@@ -1156,26 +1149,6 @@ wheels = [
 ]
 
 [[package]]
-name = "jina-hubble-sdk"
-version = "0.39.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "aiohttp", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "docker", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "filelock", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "importlib-metadata", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "pathspec", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "python-jose", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "pyyaml", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "requests", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "rich", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/64/68/ae586bd5206e50a755f7d89a0dfd5c32891dce7edf03a83b57646e93142f/jina-hubble-sdk-0.39.0.tar.gz", hash = "sha256:9021417794a6d3cf3fad8a880cf668a3a986b9d53d5be5fa391aae1767a5b9b0", size = 54571, upload-time = "2023-07-05T09:23:58.655Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c9/dc/b07ee21975993c0ce365d4cae5c4421461a4ff586442f4a46c1cfefd92f2/jina_hubble_sdk-0.39.0-py3-none-any.whl", hash = "sha256:b0edd4b62d742c27d726d68f65a041b3c4d9aa6b3b9b203d5b0e729904161e3e", size = 68309, upload-time = "2023-07-05T09:23:56.828Z" },
-]
-
-[[package]]
 name = "jinja2"
 version = "3.1.6"
 source = { registry = "https://pypi.org/simple" }
@@ -1239,27 +1212,52 @@ wheels = [
 ]
 
 [[package]]
-name = "lancedb"
-version = "0.13.0"
+name = "lance-namespace"
+version = "0.5.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "attrs", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "cachetools", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "lance-namespace-urllib3-client", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2b/c6/aec0d7752e15536564b50cf9a8926f0e5d7780aa3ab8ce8bca46daa55659/lance_namespace-0.5.2.tar.gz", hash = "sha256:566cc33091b5631793ab411f095d46c66391db0a62343cd6b4470265bb04d577", size = 10274, upload-time = "2026-02-20T03:14:31.777Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d6/3d/737c008d8fb2861e7ce260e2ffab0d5058eae41556181f80f1a1c3b52ef5/lance_namespace-0.5.2-py3-none-any.whl", hash = "sha256:6ccaf5649bf6ee6aa92eed9c535a114b7b4eb08e89f40426f58bc1466cbcffa3", size = 12087, upload-time = "2026-02-20T03:14:35.261Z" },
+]
+
+[[package]]
+name = "lance-namespace-urllib3-client"
+version = "0.5.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "python-dateutil", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "typing-extensions", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "urllib3", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e9/64/51622c93ec8c164483c83b68764e5e76e52286c0137a8247bc6a7fac25f4/lance_namespace_urllib3_client-0.5.2.tar.gz", hash = "sha256:8a3a238006e6eabc01fc9d385ac3de22ba933aef0ae8987558f3c3199c9b3799", size = 172578, upload-time = "2026-02-20T03:14:33.031Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2a/10/f86d994498b37f7f35d0b8c2f7626a16fe4cb1949b518c1e5d5052ecf95f/lance_namespace_urllib3_client-0.5.2-py3-none-any.whl", hash = "sha256:83cefb6fd6e5df0b99b5e866ee3d46300d375b75e8af32c27bc16fbf7c1a5978", size = 300351, upload-time = "2026-02-20T03:14:34.236Z" },
+]
+
+[[package]]
+name = "lancedb"
+version = "0.29.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
     { name = "deprecation", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "lance-namespace", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "numpy", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "overrides", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "packaging", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "pyarrow", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "pydantic", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "pylance", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "requests", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "retry", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "tqdm", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/36/be/c458fbc4783543897d8bfbe18e7c4635cda38c0f09b2034292fe58a72360/lancedb-0.13.0-cp38-abi3-macosx_10_15_x86_64.whl", hash = "sha256:3fb1b1e5b03d287d1f6969887fe17c8fa9501ab0da57dd6788181610028d8e37", size = 22972077, upload-time = "2024-09-10T20:40:59.442Z" },
-    { url = "https://files.pythonhosted.org/packages/1a/cc/1acfa84f8e0a44c23af84a9c2bab1b173e6c3c0b05326dee4e6e55617159/lancedb-0.13.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:0f970c46af46c3fb59979f155f9bc1e2c2d597f23286708b5880e20fa9000c2c", size = 21256438, upload-time = "2024-09-10T20:33:56.183Z" },
-    { url = "https://files.pythonhosted.org/packages/bf/66/e6ba90bcaa3952a6bccf6e6bebad65de3725c7e0d23f40c4e05a74c8d80f/lancedb-0.13.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:045ce4b59bdd3df6aa538366ed8f20a5abfcf120fca7b0389e119dbdc4d08d6d", size = 24162930, upload-time = "2024-09-10T20:28:13.409Z" },
-    { url = "https://files.pythonhosted.org/packages/92/b6/1a65c44717f68e29afb512bfae7e80bd0a4374720e19cbaba8ec5d809694/lancedb-0.13.0-cp38-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:7ae7be0f39a854e62838deae679f77ca1d39ea64a932a5e5e7f417cd5aece103", size = 23578091, upload-time = "2024-09-10T20:28:43.569Z" },
-    { url = "https://files.pythonhosted.org/packages/31/40/9b52b4da1d0c0c7cd7f91a5e10a867346104223f618ca8b7191f1a6dd32a/lancedb-0.13.0-cp38-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:4cdd18788d79f200baaa3003a69779e18fb9e661b4b9e658898e906dca0b60ab", size = 24165374, upload-time = "2024-09-10T20:28:02.41Z" },
+    { url = "https://files.pythonhosted.org/packages/f7/77/fbb25946a234928958e016c5448343fd314bd601315f9587568321591a17/lancedb-0.29.2-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:bc1faf2e12addb9585569d0fb114ecc25ec3867e4e1aa6934e9343cfb5265ee4", size = 42341708, upload-time = "2026-02-09T06:21:31.677Z" },
+    { url = "https://files.pythonhosted.org/packages/cd/95/d3a7b6d0237e343ad5b2afef2bdb99423746d5c3e882a9cab68dc041c2d0/lancedb-0.29.2-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0fec19cfc52a5b9d98e060bd2f02a1c9df6a0bfd15b36021b6017327a41893a3", size = 44147347, upload-time = "2026-02-09T06:31:02.567Z" },
+    { url = "https://files.pythonhosted.org/packages/66/21/153a42294279c5b66d763f357808dde0899b71c5c8e41ad5ecbeeb8728df/lancedb-0.29.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:636939ab9225d435020ba17c231f5eaba15312a07813bcebcd71128204cc039f", size = 47186355, upload-time = "2026-02-09T06:34:47.726Z" },
+    { url = "https://files.pythonhosted.org/packages/a2/f7/f7041ae7d7730332b2754fe7adc2e0bd496f92bf526ac710b7eb3caf1d0a/lancedb-0.29.2-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:f79b32083fcab139009db521d2f7fcd6afe4cca98a78c06c5940ff00a170cc1a", size = 44172354, upload-time = "2026-02-09T06:31:03.834Z" },
+    { url = "https://files.pythonhosted.org/packages/72/6f/c152497c18cea0f36b523fc03b8e0a48be2b120276cc15a86d79b8b83cde/lancedb-0.29.2-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:991043a28c1f49f14df2479b554a95c759a85666dc58573cc86c1b9df05db794", size = 47228009, upload-time = "2026-02-09T06:34:40.872Z" },
 ]
 
 [[package]]
@@ -1694,15 +1692,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pathspec"
-version = "0.12.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ca/bc/f35b8446f4531a7cb215605d100cd88b7ac6f44ab3fc94870c120ab3adbf/pathspec-0.12.1.tar.gz", hash = "sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712", size = 51043, upload-time = "2023-12-10T22:30:45Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/cc/20/ff623b09d963f88bfde16306a54e12ee5ea43e9b597108672ff3a408aad6/pathspec-0.12.1-py3-none-any.whl", hash = "sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08", size = 31191, upload-time = "2023-12-10T22:30:43.14Z" },
-]
-
-[[package]]
 name = "pillow"
 version = "12.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1825,15 +1814,6 @@ wheels = [
 ]
 
 [[package]]
-name = "py"
-version = "1.11.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/98/ff/fec109ceb715d2a6b4c4a85a61af3b40c723a961e8828319fbcb15b868dc/py-1.11.0.tar.gz", hash = "sha256:51c75c4126074b472f746a24399ad32f6053d1b34b68d2fa41e558e6f4a98719", size = 207796, upload-time = "2021-11-04T17:17:01.377Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f6/f0/10642828a8dfb741e5f3fbaac830550a518a775c7fff6f04a007259b0548/py-1.11.0-py2.py3-none-any.whl", hash = "sha256:607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378", size = 98708, upload-time = "2021-11-04T17:17:00.152Z" },
-]
-
-[[package]]
 name = "pyarrow"
 version = "22.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1923,18 +1903,19 @@ wheels = [
 
 [[package]]
 name = "pylance"
-version = "0.17.0"
+version = "0.23.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "pyarrow", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/dc/5b/9d519a80ab72b215be069c94a466efe42e2efdd8541cf7af765f05f6581a/pylance-0.17.0-cp39-abi3-macosx_10_15_x86_64.whl", hash = "sha256:c4e6932da3a15a445992af53cd69eeccd8b2f9fa06a2081673b578ca99443772", size = 27355262, upload-time = "2024-09-05T17:43:29.518Z" },
-    { url = "https://files.pythonhosted.org/packages/b6/89/0d1392e20119dbecc7b409b975b3d43ef01c2a24dcd92402531dcd724abc/pylance-0.17.0-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:2e848fbb480d6678ffafa0ca02d2caad00ccc35547ff6dfebd0507b44bc7e4f3", size = 25435630, upload-time = "2024-09-05T17:29:12.47Z" },
-    { url = "https://files.pythonhosted.org/packages/21/f2/6947e354975e2cf1c45dd97c501b5a1cd480b139402988ba26702742db98/pylance-0.17.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c6da675fee3b5656c192dcf2f9acc7eb908e02561489459b0e64ef23171f2576", size = 29184319, upload-time = "2024-09-05T17:31:50.458Z" },
-    { url = "https://files.pythonhosted.org/packages/98/28/e00747b02a3fa93a443c595c8f1fbb77b0108cda3d27d18b454ec8e3745d/pylance-0.17.0-cp39-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:bb00848fe872144b45271545158cc6a918c52f76203c4f1f5906fa25bd712389", size = 28369704, upload-time = "2024-09-05T17:31:56.891Z" },
-    { url = "https://files.pythonhosted.org/packages/e8/13/e74d7cf284d288ebf2b51e92d9693f85d7eda3ca1c0f124da22498db75ee/pylance-0.17.0-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:e7713bc10cc57f326e02d8f267de41ae8442c480c51cef658d20d45780a9e76a", size = 29172747, upload-time = "2024-09-05T17:30:56.676Z" },
+    { url = "https://files.pythonhosted.org/packages/02/80/83179d560816a1fbd478d42b4f46ccd5301d704175b9ee52c318801aad80/pylance-0.23.2-cp39-abi3-macosx_10_15_x86_64.whl", hash = "sha256:e1b7f17d3775c85f53097605dc5977356e423003182f428e91b26fd715234825", size = 35715489, upload-time = "2025-02-26T02:12:41.669Z" },
+    { url = "https://files.pythonhosted.org/packages/d5/2a/412bb081fcb1049f1865bfef0c8bdd518e985e71c9649cdbf564845b362b/pylance-0.23.2-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:72d1647892e041abddc82fc8fc580984746157b07487013151644e197b242837", size = 33099538, upload-time = "2025-02-26T01:57:28.271Z" },
+    { url = "https://files.pythonhosted.org/packages/0f/f5/34909391a518d1e3cc9dbb9536b40c1eff42e019ae86686d2e91b408696a/pylance-0.23.2-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:86deb642f6a213732bf8ccc406c01dd93e09769e4f136a9a3ef72a4b889d7c74", size = 33446547, upload-time = "2025-02-26T02:08:00.424Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/32/6a26e53ce2c935924614c1e2c87a2e5936e98355af77e2c6dbadd379d76a/pylance-0.23.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f7361def3230ea2b3b253013cd2e7d5c70c2589b415219763000b1c238599331", size = 36320203, upload-time = "2025-02-26T01:58:53.659Z" },
+    { url = "https://files.pythonhosted.org/packages/87/47/6e9682e58399d0d3245fe00179b304112c0887e312f4173b19663d17e60d/pylance-0.23.2-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:4a3fdfb82b8bc7266b8903ffa08866ab1029b93845ff2a9e4c4d9b2bdf27ac74", size = 33142881, upload-time = "2025-02-26T02:07:27.724Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/9e/08bc443de149928198368a191f51f6124602645a26e5798d739b2c287cec/pylance-0.23.2-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:a18bb72f8ba6ec7828159dd510953b7676d7afd5c6925fb70b8f3f57af656e7d", size = 35724545, upload-time = "2025-02-26T02:00:16.932Z" },
 ]
 
 [[package]]
@@ -2020,20 +2001,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f0/26/19cadc79a718c5edbec86fd4919a6b6d3f681039a2f6d66d14be94e75fb9/python_dotenv-1.2.1.tar.gz", hash = "sha256:42667e897e16ab0d66954af0e60a9caa94f0fd4ecf3aaf6d2d260eec1aa36ad6", size = 44221, upload-time = "2025-10-26T15:12:10.434Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/14/1b/a298b06749107c305e1fe0f814c6c74aea7b2f1e10989cb30f544a1b3253/python_dotenv-1.2.1-py3-none-any.whl", hash = "sha256:b81ee9561e9ca4004139c6cbba3a238c32b03e4894671e181b671e8cb8425d61", size = 21230, upload-time = "2025-10-26T15:12:09.109Z" },
-]
-
-[[package]]
-name = "python-jose"
-version = "3.4.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "ecdsa", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "pyasn1", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "rsa", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/8e/a0/c49687cf40cb6128ea4e0559855aff92cd5ebd1a60a31c08526818c0e51e/python-jose-3.4.0.tar.gz", hash = "sha256:9a9a40f418ced8ecaf7e3b28d69887ceaa76adad3bcaa6dae0d9e596fec1d680", size = 92145, upload-time = "2025-02-18T17:26:41.985Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/63/b0/2586ea6b6fd57a994ece0b56418cbe93fff0efb85e2c9eb6b0caf24a4e37/python_jose-3.4.0-py2.py3-none-any.whl", hash = "sha256:9c9f616819652d109bd889ecd1e15e9a162b9b94d682534c9c2146092945b78f", size = 34616, upload-time = "2025-02-18T17:26:40.826Z" },
 ]
 
 [[package]]
@@ -2123,7 +2090,6 @@ name = "retrieval-vector"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "docarray", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "flask", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "flask-cors", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "hnne", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
@@ -2134,7 +2100,7 @@ dependencies = [
     { name = "pandas", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "polars", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "pyarrow", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "python-jose", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "pylance", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "python-json-logger", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "sentence-transformers", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "tf-keras", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
@@ -2169,18 +2135,17 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "docarray", specifier = ">=0.21.0" },
     { name = "flask", specifier = ">=3.0.0" },
     { name = "flask-cors", specifier = ">=6.0.0" },
     { name = "hnne", specifier = ">=0.1.10" },
     { name = "hypercorn", specifier = ">=0.15.0" },
-    { name = "lancedb", specifier = ">=0.13.0" },
+    { name = "lancedb", specifier = ">=0.29.2" },
     { name = "loguru", specifier = ">=0.6.0" },
     { name = "numpy", specifier = ">=1.26.4" },
     { name = "pandas", specifier = ">=2.1.1" },
     { name = "polars", specifier = ">=1.35.2" },
     { name = "pyarrow", specifier = ">=14.0.1" },
-    { name = "python-jose", specifier = ">=3.4.0" },
+    { name = "pylance", specifier = ">=0.23.2" },
     { name = "python-json-logger", specifier = ">=2.0.7" },
     { name = "sentence-transformers", specifier = ">=2.2.2" },
     { name = "tf-keras", specifier = ">=2.20.1" },
@@ -2192,7 +2157,7 @@ requires-dist = [
 dev = [
     { name = "flask-testing", specifier = ">=0.8.1" },
     { name = "gcsfs", specifier = ">=2023.5.0" },
-    { name = "google-cloud-aiplatform", specifier = ">=1.22.0" },
+    { name = "google-cloud-aiplatform", specifier = ">=1.133.0" },
     { name = "google-cloud-bigquery", extras = ["pandas"], specifier = ">=3.25.0" },
     { name = "google-cloud-secret-manager", specifier = ">=2.4.0" },
     { name = "keras", specifier = ">=3.13.1" },
@@ -2208,19 +2173,6 @@ dev = [
     { name = "tqdm", specifier = ">=4.64.1" },
     { name = "typer", specifier = ">=0.7.0" },
     { name = "unittest2", specifier = ">=1.1.0" },
-]
-
-[[package]]
-name = "retry"
-version = "0.9.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "decorator", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "py", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/9d/72/75d0b85443fbc8d9f38d08d2b1b67cc184ce35280e4a3813cda2f445f3a4/retry-0.9.2.tar.gz", hash = "sha256:f8bfa8b99b69c4506d6f5bd3b0aabf77f98cdb17f3c9fc3f5ca820033336fba4", size = 6448, upload-time = "2016-05-11T13:58:51.541Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/4b/0d/53aea75710af4528a25ed6837d71d117602b01946b307a3912cb3cfcbcba/retry-0.9.2-py2.py3-none-any.whl", hash = "sha256:ccddf89761fa2c726ab29391837d4327f819ea14d244c232a1d24c67a2f98606", size = 7986, upload-time = "2016-05-11T13:58:39.925Z" },
 ]
 
 [[package]]
@@ -2327,23 +2279,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/26/da/7a7021c150030617f90aa4a90a5b23f7b49af877f70ca46967e991645117/setuptools-80.0.1.tar.gz", hash = "sha256:20fe373a22ef9f3925512650d1db90b1b8de01cdb6df91ab1788263139cbf9a2", size = 1354165, upload-time = "2025-04-30T01:41:10.956Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2a/8e/2ee81652472f3c11503d1780c41844a9a9656989b69c29811a4631e4aeb9/setuptools-80.0.1-py3-none-any.whl", hash = "sha256:f4b49d457765b3aae7cbbeb1c71f6633a61b729408c2d1a837dae064cca82ef2", size = 1240915, upload-time = "2025-04-30T01:41:09.155Z" },
-]
-
-[[package]]
-name = "shapely"
-version = "2.1.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "numpy", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ca/3c/2da625233f4e605155926566c0e7ea8dda361877f48e8b1655e53456f252/shapely-2.1.1.tar.gz", hash = "sha256:500621967f2ffe9642454808009044c21e5b35db89ce69f8a2042c2ffd0e2772", size = 315422, upload-time = "2025-05-19T11:04:41.265Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/19/97/2df985b1e03f90c503796ad5ecd3d9ed305123b64d4ccb54616b30295b29/shapely-2.1.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:587a1aa72bc858fab9b8c20427b5f6027b7cbc92743b8e2c73b9de55aa71c7a7", size = 1819368, upload-time = "2025-05-19T11:03:55.937Z" },
-    { url = "https://files.pythonhosted.org/packages/56/17/504518860370f0a28908b18864f43d72f03581e2b6680540ca668f07aa42/shapely-2.1.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:9fa5c53b0791a4b998f9ad84aad456c988600757a96b0a05e14bba10cebaaaea", size = 1625362, upload-time = "2025-05-19T11:03:57.06Z" },
-    { url = "https://files.pythonhosted.org/packages/36/a1/9677337d729b79fce1ef3296aac6b8ef4743419086f669e8a8070eff8f40/shapely-2.1.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:aabecd038841ab5310d23495253f01c2a82a3aedae5ab9ca489be214aa458aa7", size = 2999005, upload-time = "2025-05-19T11:03:58.692Z" },
-    { url = "https://files.pythonhosted.org/packages/a2/17/e09357274699c6e012bbb5a8ea14765a4d5860bb658df1931c9f90d53bd3/shapely-2.1.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:586f6aee1edec04e16227517a866df3e9a2e43c1f635efc32978bb3dc9c63753", size = 3108489, upload-time = "2025-05-19T11:04:00.059Z" },
-    { url = "https://files.pythonhosted.org/packages/17/5d/93a6c37c4b4e9955ad40834f42b17260ca74ecf36df2e81bb14d12221b90/shapely-2.1.1-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:b9878b9e37ad26c72aada8de0c9cfe418d9e2ff36992a1693b7f65a075b28647", size = 3945727, upload-time = "2025-05-19T11:04:01.786Z" },
-    { url = "https://files.pythonhosted.org/packages/a3/1a/ad696648f16fd82dd6bfcca0b3b8fbafa7aacc13431c7fc4c9b49e481681/shapely-2.1.1-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:d9a531c48f289ba355e37b134e98e28c557ff13965d4653a5228d0f42a09aed0", size = 4109311, upload-time = "2025-05-19T11:04:03.134Z" },
 ]
 
 [[package]]
@@ -2815,14 +2750,14 @@ wheels = [
 
 [[package]]
 name = "werkzeug"
-version = "3.1.5"
+version = "3.1.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "markupsafe", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5a/70/1469ef1d3542ae7c2c7b72bd5e3a4e6ee69d7978fa8a3af05a38eca5becf/werkzeug-3.1.5.tar.gz", hash = "sha256:6a548b0e88955dd07ccb25539d7d0cc97417ee9e179677d22c7041c8f078ce67", size = 864754, upload-time = "2026-01-08T17:49:23.247Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/61/f1/ee81806690a87dab5f5653c1f146c92bc066d7f4cebc603ef88eb9e13957/werkzeug-3.1.6.tar.gz", hash = "sha256:210c6bede5a420a913956b4791a7f4d6843a43b6fcee4dfa08a65e93007d0d25", size = 864736, upload-time = "2026-02-19T15:17:18.884Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ad/e4/8d97cca767bcc1be76d16fb76951608305561c6e056811587f36cb1316a8/werkzeug-3.1.5-py3-none-any.whl", hash = "sha256:5111e36e91086ece91f93268bb39b4a35c1e6f1feac762c9c822ded0a4e322dc", size = 225025, upload-time = "2026-01-08T17:49:21.859Z" },
+    { url = "https://files.pythonhosted.org/packages/4d/ec/d58832f89ede95652fd01f4f24236af7d32b70cab2196dfcc2d2fd13c5c2/werkzeug-3.1.6-py3-none-any.whl", hash = "sha256:7ddf3357bb9564e407607f988f683d72038551200c704012bb9a4c523d42f131", size = 225166, upload-time = "2026-02-19T15:17:17.475Z" },
 ]
 
 [[package]]

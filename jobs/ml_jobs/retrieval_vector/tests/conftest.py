@@ -8,9 +8,9 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 import pytest
-from docarray import Document, DocumentArray
 from sentence_transformers import SentenceTransformer
 
+from app.retrieval.documents import Document, DocumentArray
 from app.retrieval.reco_client import RecoClient
 from tests.utils import STATIC_FAKE_ITEM_DATA, TRANSFORMER, VECTOR_DIM, VECTOR_SIZE
 

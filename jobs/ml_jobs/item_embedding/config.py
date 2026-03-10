@@ -36,7 +36,8 @@ def _load_config(config_file_name: str) -> dict:
 
     with open(config_path, mode="r", encoding="utf-8") as config_file:
         config = yaml.safe_load(config_file)
-
+    if config is None:
+        raise ValueError(f"Config file '{config_file_name}.yaml' is empty or invalid")
     missing_keys = REQUIRED_CONFIG_KEYS - config.keys()
     if missing_keys:
         raise ValueError(f"Config is missing required keys: {missing_keys}")

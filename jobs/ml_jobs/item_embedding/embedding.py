@@ -39,8 +39,7 @@ def _build_prompts(df: pd.DataFrame, vector: Vector) -> list[str]:
     empty_items = df[(combined == "")].index
     if empty_count > 0:
         logger.warning(
-            f"Vector '{vector.name}': {empty_count} rows have all-null features"
-            f"{list(empty_items)}"
+            f"Vector '{vector.name}': {empty_count} rows have all-null features.\n Empty items are:\n {list(empty_items)}"
         )
 
     return combined.tolist()
@@ -73,7 +72,7 @@ def embed_vector(
     """Generate embeddings for a single vector configuration.
 
     Automatically uses multi-GPU encoding when more than one GPU is
-    available and the dataset is large enough to justify the overhead.
+    available.
 
     Args:
         vector: Vector configuration

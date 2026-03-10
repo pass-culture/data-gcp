@@ -155,7 +155,6 @@ class TestBuildPrompts:
 # End-to-end embed_dataframe tests
 # ---------------------------------------------------------------------------
 class TestEmbedDataframe:
-    @patch("embedding.load_encoders")
     def test_end_to_end(self, mock_load_encoders):
         # Mock encoder that returns deterministic embeddings
         mock_encoder = MagicMock()

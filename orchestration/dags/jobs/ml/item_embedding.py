@@ -193,7 +193,7 @@ with DAG(
         task_id="export_item_embeddings_to_bigquery",
         project_id=GCP_PROJECT_ID,
         bucket=ML_BUCKET_TEMP,
-        source_objects=[f"{GCS_FOLDER_PATH}/{OUTPUT_FOLDER}/*"],
+        source_objects=[f"{GCS_FOLDER_PATH}/{OUTPUT_FOLDER}/*.parquet"],
         destination_project_dataset_table=f"{OUTPUT_DATASET_NAME}.{TEMP_OUTPUT_TABLE_NAME}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",

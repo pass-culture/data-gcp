@@ -20,4 +20,4 @@ def get_secret(secret_name: str) -> str:
         response = client.access_secret_version(name=name)
         return response.payload.data.decode("UTF-8")
     except Exception as e:
-        raise RuntimeError(f"Failed to retrieve secret '{secret_name}': {e}")
+        raise RuntimeError(f"Failed to retrieve secret '{secret_name}': {e}") from e

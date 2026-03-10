@@ -207,7 +207,10 @@ with
     ),
 
     students_headcount as (
-        select institution_id, scholar_year, sum(headcount) as total_students
+        select
+            institution_id as institution_external_id,
+            scholar_year,
+            sum(headcount) as total_students
         from {{ ref("int_gsheet__educational_institution_student_headcount") }}
         group by institution_id, scholar_year
     )
@@ -361,5 +364,6 @@ left join
     and flattened_deposits.scholar_year = bookings.scholar_year
 left join
     students_headcount
-    on flattened_deposits.institution_id = students_headcount.institution_id
+    on flattened_deposits.institution_external_id
+    = students_headcount.institution_external_id
     and flattened_deposits.scholar_year = students_headcount.scholar_year

@@ -46,7 +46,6 @@ select
     s.venue_density_level,
     s.venue_academy_name,
     s.venue_is_permanent,
-    s.venue_is_virtual,
     s.offerer_id,
     s.offerer_name,
     s.is_local_authority,
@@ -64,13 +63,13 @@ select
     o.offer_type_label,
     o.offer_sub_type_label,
     ds.diversity_score,
+    s.offerer_is_epn,
     rank() over (
         partition by b.user_id, s.offer_subcategory_id order by b.booking_created_at
     ) as same_category_booking_rank,
     rank() over (
         partition by b.user_id order by b.booking_created_at asc, b.booking_id asc
-    ) as user_booking_rank,
-    s.offerer_is_epn
+    ) as user_booking_rank
 from {{ ref("int_applicative__booking") }} as b
 inner join {{ ref("int_global__stock") }} as s on b.stock_id = s.stock_id
 left join {{ ref("int_applicative__offer_metadata") }} as o on s.offer_id = o.offer_id

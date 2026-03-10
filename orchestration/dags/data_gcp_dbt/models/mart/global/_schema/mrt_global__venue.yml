@@ -40,7 +40,6 @@ models:
           - excessive_failure_ratio:
               base_test: "not_null"
               max_ratio: 0.005
-              where: 'not venue_is_virtual'
               tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
@@ -51,7 +50,6 @@ models:
           - excessive_failure_ratio:
               base_test: "not_null"
               max_ratio: 0.005
-              where: 'not venue_is_virtual'
               tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
@@ -63,9 +61,6 @@ models:
         data_type: STRING
         data_tests:
           - unique
-      - name: venue_is_virtual
-        description: '{{ doc("column__venue_is_virtual") }}'
-        data_type: BOOLEAN
       - name: offerer_id
         description: '{{ doc("column__offerer_id") }}'
         data_type: STRING
@@ -105,7 +100,6 @@ models:
           - excessive_failure_ratio:
               base_test: "not_null"
               max_ratio: 0.005
-              where: 'not venue_is_virtual'
               tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"

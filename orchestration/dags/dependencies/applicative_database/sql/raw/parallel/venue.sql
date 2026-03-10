@@ -5,7 +5,6 @@ SELECT
     , "siret" AS venue_siret
     , CAST("managingOffererId" AS varchar(255)) AS venue_managing_offerer_id
     , "bookingEmail" AS venue_booking_email
-    , "isVirtual" AS venue_is_virtual
     , "comment" AS venue_comment
     , "publicName" AS venue_public_name
     , "venueTypeCode" as venue_type_code

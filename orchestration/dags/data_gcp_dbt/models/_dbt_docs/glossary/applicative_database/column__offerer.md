@@ -10,7 +10,6 @@
 {% docs column__offerer_legal_unit_legal_category_label %} Legal category label of the legal unit of the offerer. {% enddocs %}
 {% docs column__offerer_is_local_authority %} Indicates if the offerer is a local authority or not. {% enddocs %}
 {% docs column__offerer_total_managed_venues %} Total number of venues managed by the offerer. {% enddocs %}
-{% docs column__offerer_total_physical_managed_venues %} Total number of physical venues managed by the offerer. {% enddocs %}
 {% docs column__offerer_total_permanent_managed_venues %} Total number of permanent venues managed by the offerer. {% enddocs %}
 {% docs column__offerer_total_venues %} Total number of venues associated with the offerer. {% enddocs %}
 {% docs column__offerer_first_dms_adage_status %} First DMS adage status of the offerer. {% enddocs %}

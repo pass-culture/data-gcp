@@ -19,7 +19,7 @@ class TestDocument:
 
     def test_extra_kwargs(self):
         doc = Document(id="x", embedding=[1.0], price=9.99, category="book")
-        assert doc.price == 9.99
+        assert np.isclose(doc.price, 9.99)
         assert doc.category == "book"
 
     def test_always_truthy(self):
@@ -131,8 +131,10 @@ class TestDocumentArray:
 
 
 class TestDocumentArrayPersistence:
+    DOC_FILENAME = "test.docs"
+
     def test_save_load_roundtrip(self, tmp_path):
-        path = str(tmp_path / "test.docs")
+        path = str(tmp_path / self.DOC_FILENAME)
         da = DocumentArray()
         da.append(Document(id="u1", embedding=[1.0, 2.0]))
         da.append(Document(id="u2", embedding=[3.0, 4.0]))
@@ -145,7 +147,7 @@ class TestDocumentArrayPersistence:
         assert loaded["u2"].embedding == [3.0, 4.0]
 
     def test_save_load_with_numpy_embeddings(self, tmp_path):
-        path = str(tmp_path / "test.docs")
+        path = str(tmp_path / self.DOC_FILENAME)
         da = DocumentArray()
         da.append(Document(id="a", embedding=np.array([1.0, 2.0, 3.0])))
         da.save(path)
@@ -154,17 +156,17 @@ class TestDocumentArrayPersistence:
         assert loaded["a"].embedding == [1.0, 2.0, 3.0]
 
     def test_save_load_with_extra_attrs(self, tmp_path):
-        path = str(tmp_path / "test.docs")
+        path = str(tmp_path / self.DOC_FILENAME)
         da = DocumentArray()
         da.append(Document(id="a", embedding=[1.0], price=9.99, tags=["x", "y"]))
         da.save(path)
 
         loaded = DocumentArray.load(path)
-        assert loaded["a"].price == 9.99
+        assert np.isclose(loaded["a"].price, 9.99)
         assert loaded["a"].tags == ["x", "y"]
 
     def test_save_produces_valid_json(self, tmp_path):
-        path = str(tmp_path / "test.docs")
+        path = str(tmp_path / self.DOC_FILENAME)
         da = DocumentArray()
         da.append(Document(id="a", embedding=[1.0]))
         da.save(path)

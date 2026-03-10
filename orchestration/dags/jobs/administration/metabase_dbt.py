@@ -81,6 +81,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
         base_dir=BASE_PATH,
+        python_version="3.12",
         retries=2,
         dag=dag,
     )

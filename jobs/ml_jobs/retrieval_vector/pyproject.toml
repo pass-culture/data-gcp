@@ -17,7 +17,6 @@ dependencies = [
     "polars>=1.35.2",
     "pylance>=0.23.2",
     "pyarrow>=14.0.1",
-    "python-jose>=3.4.0",
     "python-json-logger>=2.0.7",
     "sentence-transformers>=2.2.2",
     "tf-keras>=2.20.1",

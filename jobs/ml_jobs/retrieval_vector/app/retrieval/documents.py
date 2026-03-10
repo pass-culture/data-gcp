@@ -1,5 +1,4 @@
-"""
-Lightweight Document / DocumentArray primitives.
+"""Lightweight Document / DocumentArray primitives.
 
 These replace the docarray 0.21 ``Document`` / ``DocumentArray`` classes whose API
 was completely rewritten in docarray 0.40+.  The codebase only needs:
@@ -7,17 +6,32 @@ was completely rewritten in docarray 0.40+.  The codebase only needs:
 * ``Document``      – a thin value-object carrying an ``id`` and an ``embedding``
                       (plus any extra keyword attributes stored dynamically).
 * ``DocumentArray`` – an id-keyed collection with O(1) lookup, ``save`` / ``load``
-                      via pickle, and the same container protocol as before.
+                      via JSON, and the same container protocol as before.
 
-The on-disk format changes from docarray's binary format to pickle, so any
+The on-disk format changes from docarray's binary format to JSON, so any
 ``.docs`` files produced by the old version must be regenerated after this
 migration (re-run ``create_vector_database.py``).
 """
 
 from __future__ import annotations
 
-import pickle
+import json
 from typing import Any, Iterator, Optional
+
+import numpy as np
+
+# Bump this whenever the serialisation format changes so that stale files are
+# detected early instead of producing cryptic errors at runtime.
+_FORMAT_VERSION = 1
+
+
+def _to_serializable(value: Any) -> Any:
+    """Convert numpy arrays / scalars to plain Python types for JSON."""
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, (np.floating, np.integer)):
+        return value.item()
+    return value
 
 
 class Document:
@@ -50,8 +64,28 @@ class Document:
         # Mimic docarray behaviour: a Document is always truthy.
         return True
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Document):
+            return NotImplemented
+        return self.id == other.id and np.array_equal(
+            np.asarray(self.embedding), np.asarray(other.embedding)
+        )
+
     def __repr__(self) -> str:
         return f"Document(id={self.id!r}, embedding={self.embedding!r})"
+
+    def _to_dict(self) -> dict[str, Any]:
+        """Return a JSON-safe dict of all public attributes."""
+        return {
+            k: _to_serializable(v)
+            for k, v in self.__dict__.items()
+            if not k.startswith("_")
+        }
+
+    @classmethod
+    def _from_dict(cls, data: dict[str, Any]) -> "Document":
+        """Reconstruct a :class:`Document` from a dict produced by :meth:`_to_dict`."""
+        return cls(**data)
 
 
 class DocumentArray:
@@ -109,18 +143,47 @@ class DocumentArray:
         return f"DocumentArray({len(self)} docs)"
 
     # ------------------------------------------------------------------
-    # Persistence
+    # Persistence (JSON-based, safe against arbitrary code execution)
     # ------------------------------------------------------------------
 
     def save(self, path: str) -> None:
-        """Serialise the array to *path* using pickle."""
-        with open(path, "wb") as fh:
-            pickle.dump(self._docs, fh)
+        """Serialise the array to *path* as JSON."""
+        payload = {
+            "_format_version": _FORMAT_VERSION,
+            "documents": [doc._to_dict() for doc in self._docs.values()],
+        }
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh)
 
     @classmethod
     def load(cls, path: str) -> "DocumentArray":
-        """Deserialise a :class:`DocumentArray` previously saved with :meth:`save`."""
+        """Deserialise a :class:`DocumentArray` previously saved with :meth:`save`.
+
+        Raises
+        ------
+        ValueError
+            If the file has no ``_format_version`` key or the version is
+            higher than the one supported by this code (stale/incompatible
+            ``.docs`` file).
+        """
+        with open(path, "r", encoding="utf-8") as fh:
+            payload = json.load(fh)
+
+        version = payload.get("_format_version")
+        if version is None:
+            raise ValueError(
+                f"File {path!r} is missing '_format_version'. "
+                "It was likely produced by an older serialisation format. "
+                "Please regenerate it with create_vector_database.py."
+            )
+        if version > _FORMAT_VERSION:
+            raise ValueError(
+                f"File {path!r} has format version {version}, but this code "
+                f"only supports up to version {_FORMAT_VERSION}. "
+                "Please upgrade the retrieval_vector package."
+            )
+
         da = cls()
-        with open(path, "rb") as fh:
-            da._docs = pickle.load(fh)
+        for doc_dict in payload["documents"]:
+            da.append(Document._from_dict(doc_dict))
         return da

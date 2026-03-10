@@ -86,7 +86,7 @@ class UserReranker(Reranker):
             sorted_distances = result[DISTANCE_COLUMN_NAME].to_numpy()
             return result.append_column(
                 "_relevance_score",
-                pa.array((-sorted_distances).tolist(), type=pa.float32()),
+                pa.array(-sorted_distances, type=pa.float32()),
             )
         else:
             logger.debug(f"reranker, user_id not found {user_id}, cannot re_rank")
@@ -94,7 +94,7 @@ class UserReranker(Reranker):
             distances = vector_results[DISTANCE_COLUMN_NAME].to_numpy()
             return vector_results.append_column(
                 "_relevance_score",
-                pa.array((-distances).tolist(), type=pa.float32()),
+                pa.array(-distances, type=pa.float32()),
             )
 
     def _compute_relevance_score(

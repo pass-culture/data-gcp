@@ -5,7 +5,6 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
 dependencies = [
-    "docarray>=0.41.0",
     "flask>=3.0.0",
     "flask-cors>=6.0.0",
     "hnne>=0.1.10",

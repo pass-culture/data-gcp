@@ -2,11 +2,11 @@ from typing import Optional
 
 import numpy as np
 import pyarrow as pa
-from docarray import Document, DocumentArray
 from lancedb.rerankers import Reranker
 
 from app.logging.logger import logger
 from app.retrieval.constants import DISTANCE_COLUMN_NAME, USER_DISTANCE_COLUMN_NAME
+from app.retrieval.documents import Document, DocumentArray
 
 
 class UserReranker(Reranker):

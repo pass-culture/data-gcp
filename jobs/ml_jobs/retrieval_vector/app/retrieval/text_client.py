@@ -2,7 +2,6 @@ from typing import List, Optional
 
 import joblib
 import numpy as np
-from docarray import Document
 from sentence_transformers import SentenceTransformer
 
 from app.retrieval.client import DefaultClient
@@ -14,6 +13,7 @@ from app.retrieval.constants import (
     OUTPUT_METRIC_COLUMNS,
     EmbeddingModelTypes,
 )
+from app.retrieval.documents import Document
 
 
 class TextClient(DefaultClient):

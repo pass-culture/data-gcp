@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
-from docarray import Document
 
 from app.retrieval.constants import DISTANCE_COLUMN_NAME
+from app.retrieval.documents import Document
 from tests.utils import (
     VECTOR_DIM,
     VECTOR_SIZE,

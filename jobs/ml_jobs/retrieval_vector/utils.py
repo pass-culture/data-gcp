@@ -8,9 +8,10 @@ from math import ceil
 import lancedb
 import pandas as pd
 import pyarrow as pa
-from docarray import Document, DocumentArray
 from google.cloud import bigquery
 from loguru import logger
+
+from app.retrieval.documents import Document, DocumentArray
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")

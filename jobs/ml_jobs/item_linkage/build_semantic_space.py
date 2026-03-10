@@ -70,6 +70,7 @@ def create_index_on_items_table(linkage_type: str) -> None:
     table = db.open_table(linkage_type)
     logger.info(f"Creating index on LanceDB table {len(table)}...")
     table.create_index(
+        metric="cosine",
         index_type="IVF_PQ",
         num_partitions=NUM_PARTITIONS,
         num_sub_vectors=NUM_SUB_VECTORS,

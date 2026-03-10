@@ -2,9 +2,6 @@
 name = "metabase-dbt"
 version = "0.1.0"
 description = "Metabase-DBT integration job"
-authors = [
-    {name = "Pass Culture Data Team", email = "data@passculture.app"},
-]
 
 requires-python = ">=3.12,<3.13"
 

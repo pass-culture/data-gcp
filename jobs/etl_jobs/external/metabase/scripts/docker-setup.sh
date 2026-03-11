@@ -225,6 +225,7 @@ else
                     \"query\": \"SELECT user_id, booking_cnt, total_amount FROM analytics.old_user_stats WHERE user_type = {{user_type}}\",
                     \"template-tags\": {
                         \"user_type\": {
+                            \"id\": \"b0a3d8a0-1234-5678-9abc-def012345678\",
                             \"type\": \"text\",
                             \"name\": \"user_type\",
                             \"display-name\": \"User Type\"

@@ -104,9 +104,7 @@ with DAG(
             enum=INSTANCES_TYPES["gpu"]["count"],
             description="""Number of GPUs to use for embedding
                         (only applicable for GPU instance types).
-                        Please note that if you choose to embed all,
-                        you should increase the GPU count to speed up the embedding process,
-                        especially if you have a large catalog.""",
+                        """,
         ),
     },
 ) as dag:

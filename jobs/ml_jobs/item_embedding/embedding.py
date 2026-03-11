@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import torch
 from config import Vector
 from constants import BATCH_SIZE, HF_TOKEN_SECRET_NAME
 from gcp_secrets import get_secret
@@ -59,7 +60,9 @@ def load_encoders(vectors: list[Vector]) -> dict[str, SentenceTransformer]:
     encoders = {}
     for name in unique_encoder_names:
         logger.info(f"Loading encoder: {name}")
-        encoders[name] = SentenceTransformer(name, token=token)
+        encoders[name] = SentenceTransformer(
+            name, token=token, model_kwargs={"torch_dtype": torch.float16}
+        )
     return encoders
 
 

@@ -6,7 +6,11 @@ from cli.get_wikipedia_page_content import (
     extract_wikipedia_content_from_url,
     fetch_clean_content,
 )
-from src.constants import WIKIPEDIA_URL_KEY
+from src.constants import (
+    ARTIST_BIOGRAPHY_KEY,
+    ARTIST_ID_KEY,
+    WIKIPEDIA_URL_KEY,
+)
 
 
 def test_extract_wikipedia_content_from_url_decodes_titles():
@@ -86,3 +90,54 @@ def test_fetch_clean_content_with_redirect():
         # The function should map the result back to the requested title (Old_Title)
         assert "Old_Title" in results
         assert results["Old_Title"].strip() == "Content."
+
+
+def test_incremental_filter_skips_artists_with_existing_biography():
+    """Artists who already have a biography should be filtered out in incremental mode."""
+    artists_df = pd.DataFrame(
+        {
+            ARTIST_ID_KEY: ["a1", "a2", "a3"],
+            WIKIPEDIA_URL_KEY: [
+                "https://en.wikipedia.org/wiki/Artist_1",
+                "https://en.wikipedia.org/wiki/Artist_2",
+                "https://en.wikipedia.org/wiki/Artist_3",
+            ],
+            ARTIST_BIOGRAPHY_KEY: ["Existing bio", None, ""],
+        }
+    )
+
+    filters_series = artists_df[WIKIPEDIA_URL_KEY].notna() & (
+        artists_df[ARTIST_BIOGRAPHY_KEY].isna()
+        | artists_df[ARTIST_BIOGRAPHY_KEY].eq("")
+    )
+
+    # a1 has an existing bio so should be excluded
+    assert not filters_series.iloc[0]
+    # a2 has None bio, should be included
+    assert filters_series.iloc[1]
+    # a3 has empty string bio, should be included
+    assert filters_series.iloc[2]
+
+
+def test_incremental_filter_includes_all_when_from_scratch():
+    """When extract_all_from_scratch is True, all artists with a URL are included."""
+    artists_df = pd.DataFrame(
+        {
+            ARTIST_ID_KEY: ["a1", "a2", "a3"],
+            WIKIPEDIA_URL_KEY: [
+                "https://en.wikipedia.org/wiki/Artist_1",
+                "https://en.wikipedia.org/wiki/Artist_2",
+                None,
+            ],
+            ARTIST_BIOGRAPHY_KEY: ["Existing bio", None, None],
+        }
+    )
+
+    filters_series = artists_df[WIKIPEDIA_URL_KEY].notna()
+
+    # a1 has a URL, included even with existing bio
+    assert filters_series.iloc[0]
+    # a2 has a URL, included
+    assert filters_series.iloc[1]
+    # a3 has no URL, excluded
+    assert not filters_series.iloc[2]

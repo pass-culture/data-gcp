@@ -163,6 +163,16 @@ Identifies and merges duplicate artist entries based on namesake analysis and pr
 - Updates artist, artist alias, and product-artist link tables in BigQuery.
 
 **Use case:** Cleaning up the artist database by merging duplicate entries created by distinct providers or data errors.
+
+## LLM Summarization
+
+After the incremental or metadata refresh flow, the DAG always runs the LLM summarization pipeline:
+- Fetches Wikipedia page content for artists that don't yet have a biography (incremental skip logic).
+- Summarizes the content with an LLM to generate artist biographies.
+- Merges new biographies with existing ones, preserving previously generated biographies.
+
+The `llm_summarization_from_scratch` parameter (default: `False`) can be set to `True` to force re-fetching
+Wikipedia content and re-summarizing all artists, ignoring existing biographies.
 """
 
 
@@ -393,7 +403,7 @@ with DAG(
         f"--applicative-artist-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} "
         f"--artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_MEDIATION_UUID_GCS_FILENAME_03)} "
         f"--output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_04)} "
-        "{% if params['llm_summarization_from_scratch'] %} --extract-all-from-scratch {% endif %}",
+        "{%- if params['llm_summarization_from_scratch'] %} --extract-all-from-scratch{%- endif %}",
     )
 
     summarize_biographies_with_llm = SSHGCEOperator(

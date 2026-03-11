@@ -51,6 +51,13 @@ DAG_DOC = """
     * Working with or without a GPU :
         * if you don't need any GPU, leave the `gpu_count` parameter to 0
         * if you need a specific GPU, you might want to check the GPU availability per GCP zone [here](https://cloud.google.com/compute/docs/gpus/gpu-regions-zones)
+        * For L4 GPUs, make sure to select a compatible g2 machine. The Number of L4 GPUs you can attach to a G2 depends on its RAM.
+            Here is the breakdown:
+                    "g2-standard-4/8/12/16/32": 1 L4,
+                    "g2-standard-24": 2 L4s,
+                    "g2-standard-48": 4 L4s,
+                    "g2-standard-96": 8 L4s,
+            ⚠️ caution: frequent stockouts on L4 GPUs, especially in europe-west1, make sure to check availability before launching your VM and consider using a different GPU type if you encounter stockouts.
     * use_gke_network: if you need your VM to comminicate with the Clickhouse cluster, set this parameter to True
     * pricing: the pricing of the VM depends on the `instance_type` and can be found [here](https://gcloud-compute.com/instances.html)
       ** For instance, the `n1-standard-2` instance type costs $0.1157 per hour while the `n1-standard-32` instance type costs $1.852 per hour

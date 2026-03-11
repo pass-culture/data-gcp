@@ -1,0 +1,44 @@
+# Metabase migration tool — development tasks
+# All Python tools are run through uv.
+
+# List available recipes
+default:
+    @just --list
+
+# Format code with ruff
+format:
+    uv run --group dev ruff format .
+
+# Check formatting without applying changes
+format-check:
+    uv run --group dev ruff format --check .
+
+# Fix lint issues (includes import reordering via isort rules)
+lint:
+    uv run --group dev ruff check --fix .
+
+# Run lint checks without fixing
+lint-check:
+    uv run --group dev ruff check .
+
+# Run all tests
+test *ARGS:
+    uv run --group dev pytest {{ ARGS }}
+
+# Run tests with coverage report
+test-cov:
+    uv run --group dev pytest --cov=. --cov-report=term-missing
+
+# Run mypy type checking
+typecheck:
+    uv run --group dev mypy .
+
+# Run all checks (format, lint, typecheck, tests)
+check-all: format-check lint-check typecheck test
+
+# Auto-fix everything (format + lint fix)
+fix-all: format lint
+
+# Sync project dependencies
+sync:
+    uv sync --group dev

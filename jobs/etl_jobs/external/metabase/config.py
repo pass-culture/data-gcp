@@ -66,9 +66,7 @@ def get_metabase_client_id() -> str:
     env_val = os.environ.get("METABASE_CLIENT_ID")
     if env_val:
         return env_val
-    val = access_secret(
-        PROJECT_NAME, f"metabase-{ENV_LONG_NAME}_oauth2_client_id"
-    )
+    val = access_secret(PROJECT_NAME, f"metabase-{ENV_LONG_NAME}_oauth2_client_id")
     if not val:
         raise ValueError("METABASE_CLIENT_ID not set and secret not available")
     return val
@@ -79,9 +77,7 @@ def get_metabase_password() -> str:
     env_val = os.environ.get("METABASE_PASSWORD")
     if env_val:
         return env_val
-    val = access_secret(
-        PROJECT_NAME, f"metabase-api-secret-{ENV_SHORT_NAME}"
-    )
+    val = access_secret(PROJECT_NAME, f"metabase-api-secret-{ENV_SHORT_NAME}")
     if not val:
         raise ValueError("METABASE_PASSWORD not set and secret not available")
     return val

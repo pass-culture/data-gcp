@@ -46,9 +46,7 @@ class TestFieldRefReplacement:
         result = replace_field_ids(node, {201: 301})
         assert result == ["field", 999, None]
 
-    def test_preserves_field_options(
-        self, field_mapping: dict[int, int]
-    ) -> None:
+    def test_preserves_field_options(self, field_mapping: dict[int, int]) -> None:
         """Field options dict should be preserved after replacement."""
         node = [
             "field",
@@ -65,9 +63,7 @@ class TestFieldRefReplacement:
 class TestSourceTableReplacement:
     """Test replacement of {"source-table": id} references."""
 
-    def test_replaces_source_table(
-        self, table_mapping: dict[int, int]
-    ) -> None:
+    def test_replaces_source_table(self, table_mapping: dict[int, int]) -> None:
         node = {"source-table": 10}
         result = replace_field_ids(node, {}, table_mapping)
         assert result == {"source-table": 20}
@@ -106,9 +102,7 @@ class TestSourceTableReplacement:
 class TestForeignKeyRefs:
     """Test replacement in ["fk->", ...] references."""
 
-    def test_replaces_fk_ref_field_ids(
-        self, field_mapping: dict[int, int]
-    ) -> None:
+    def test_replaces_fk_ref_field_ids(self, field_mapping: dict[int, int]) -> None:
         """FK refs contain nested field refs that should be replaced."""
         node = ["fk->", ["field", 201, None], ["field", 203, None]]
         result = replace_field_ids(node, field_mapping)
@@ -152,18 +146,14 @@ class TestNonFieldIntegersPreserved:
             None,
         ]
 
-    def test_collection_id_not_replaced(
-        self, field_mapping: dict[int, int]
-    ) -> None:
+    def test_collection_id_not_replaced(self, field_mapping: dict[int, int]) -> None:
         """collection_id should never be touched even if same value as field ID."""
         node = {"collection_id": 201, "table_id": 201}
         result = replace_field_ids(node, field_mapping)
         assert result["collection_id"] == 201
         assert result["table_id"] == 201  # Not in table_mapping
 
-    def test_database_id_not_replaced(
-        self, field_mapping: dict[int, int]
-    ) -> None:
+    def test_database_id_not_replaced(self, field_mapping: dict[int, int]) -> None:
         """database key should not be touched."""
         node = {"database": 201, "type": "query"}
         result = replace_field_ids(node, field_mapping)
@@ -187,17 +177,13 @@ class TestNonFieldIntegersPreserved:
         # But field ref IS replaced
         assert result["graph.metrics"][0] == ["field", 301, None]
 
-    def test_string_number_not_replaced(
-        self, field_mapping: dict[int, int]
-    ) -> None:
+    def test_string_number_not_replaced(self, field_mapping: dict[int, int]) -> None:
         """String values should never be modified."""
         node = {"query": "SELECT 201 FROM table"}
         result = replace_field_ids(node, field_mapping)
         assert result["query"] == "SELECT 201 FROM table"
 
-    def test_limit_not_replaced(
-        self, field_mapping: dict[int, int]
-    ) -> None:
+    def test_limit_not_replaced(self, field_mapping: dict[int, int]) -> None:
         """Numeric values like 'limit' should not be touched."""
         node = {"limit": 201}
         result = replace_field_ids(node, field_mapping)
@@ -232,16 +218,12 @@ class TestNestedStructures:
             ],
         ]
 
-    def test_aggregation_with_field_refs(
-        self, field_mapping: dict[int, int]
-    ) -> None:
+    def test_aggregation_with_field_refs(self, field_mapping: dict[int, int]) -> None:
         node = [["sum", ["field", 203, None]], ["count"]]
         result = replace_field_ids(node, field_mapping)
         assert result == [["sum", ["field", 303, None]], ["count"]]
 
-    def test_order_by_with_field_refs(
-        self, field_mapping: dict[int, int]
-    ) -> None:
+    def test_order_by_with_field_refs(self, field_mapping: dict[int, int]) -> None:
         node = [
             ["asc", ["field", 201, None]],
             ["desc", ["field", 202, None]],
@@ -252,9 +234,7 @@ class TestNestedStructures:
             ["desc", ["field", 302, None]],
         ]
 
-    def test_expressions_with_field_refs(
-        self, field_mapping: dict[int, int]
-    ) -> None:
+    def test_expressions_with_field_refs(self, field_mapping: dict[int, int]) -> None:
         node = {
             "expressions": {
                 "double_amount": [
@@ -271,9 +251,7 @@ class TestNestedStructures:
             2,
         ]
 
-    def test_result_metadata_field_refs(
-        self, field_mapping: dict[int, int]
-    ) -> None:
+    def test_result_metadata_field_refs(self, field_mapping: dict[int, int]) -> None:
         """Field refs in result_metadata should be replaced."""
         node = [
             {

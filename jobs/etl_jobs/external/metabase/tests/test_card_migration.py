@@ -303,9 +303,7 @@ class TestMigrateCard:
                     if isinstance(ref, list) and len(ref) >= 2:
                         assert ref[1] in (301, 302, 303, 304)
 
-    def test_preserves_unrelated_properties(
-        self, native_card_fixture: dict
-    ) -> None:
+    def test_preserves_unrelated_properties(self, native_card_fixture: dict) -> None:
         """Properties not related to field/table refs should be unchanged."""
         card = Card.model_validate(native_card_fixture)
         result = migrate_card(

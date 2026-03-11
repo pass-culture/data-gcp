@@ -37,15 +37,11 @@ def migrate(
     legacy_table_name: str = typer.Option(
         ..., help="Name of the legacy table in BigQuery"
     ),
-    new_table_name: str = typer.Option(
-        ..., help="Name of the new table in BigQuery"
-    ),
+    new_table_name: str = typer.Option(..., help="Name of the new table in BigQuery"),
     legacy_schema_name: str = typer.Option(
         ..., help="Schema (dataset) of the legacy table"
     ),
-    new_schema_name: str = typer.Option(
-        ..., help="Schema (dataset) of the new table"
-    ),
+    new_schema_name: str = typer.Option(..., help="Schema (dataset) of the new table"),
     dry_run: bool = typer.Option(
         False,
         "--dry-run",
@@ -140,9 +136,7 @@ def migrate(
 
     # --- Build mappings ---
     logger.info("Building field mappings...")
-    legacy_table_id = client.find_table_id(
-        legacy_table_name, legacy_schema_name
-    )
+    legacy_table_id = client.find_table_id(legacy_table_name, legacy_schema_name)
     new_table_id = client.find_table_id(new_table_name, new_schema_name)
 
     if legacy_table_id is None:
@@ -258,19 +252,19 @@ def _print_diff(
     original_data = original.model_dump(by_alias=True)
     migrated_data = migrated.model_dump(by_alias=True)
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Card {card_id}: {original.name}")
-    print(f"Type: {original.dataset_query.type if original.dataset_query else 'unknown'}")
-    print(f"{'='*60}")
+    print(
+        f"Type: {original.dataset_query.type if original.dataset_query else 'unknown'}"
+    )
+    print(f"{'=' * 60}")
 
     _diff_recursive(original_data, migrated_data, path="")
 
     print()
 
 
-def _diff_recursive(
-    old: Any, new: Any, path: str
-) -> None:
+def _diff_recursive(old: Any, new: Any, path: str) -> None:
     """Recursively compare two structures and print differences."""
     if old == new:
         return

@@ -91,9 +91,7 @@ def migrate_card(
     # Update top-level table_id
     if new_card_data.get("table_id") is not None:
         old_table_id = new_card_data["table_id"]
-        new_card_data["table_id"] = table_mapping.get(
-            old_table_id, old_table_id
-        )
+        new_card_data["table_id"] = table_mapping.get(old_table_id, old_table_id)
 
     # Update result_metadata field refs
     new_card_data["result_metadata"] = _migrate_result_metadata(
@@ -156,9 +154,7 @@ def migrate_native_query(
     # Update template tags (dimension field IDs)
     template_tags = native.get("template-tags", {})
     if template_tags:
-        native["template-tags"] = _migrate_template_tags(
-            template_tags, field_mapping
-        )
+        native["template-tags"] = _migrate_template_tags(template_tags, field_mapping)
 
     result["native"] = native
     return result

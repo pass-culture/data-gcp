@@ -141,9 +141,7 @@ class MetabaseClient:
         Returns:
             A Table model with fields populated.
         """
-        response = self.session.get(
-            f"{self.host}/api/table/{table_id}/query_metadata"
-        )
+        response = self.session.get(f"{self.host}/api/table/{table_id}/query_metadata")
         response.raise_for_status()
         return Table.model_validate(response.json())
 
@@ -158,9 +156,7 @@ class MetabaseClient:
         response.raise_for_status()
         return response.json()
 
-    def find_table_id(
-        self, table_name: str, schema_name: str
-    ) -> int | None:
+    def find_table_id(self, table_name: str, schema_name: str) -> int | None:
         """Find a table ID by name and schema.
 
         Args:

@@ -108,7 +108,7 @@ def test_incremental_filter_skips_artists_with_existing_biography():
     )
 
     filters_series = get_artists_to_extract_wikipedia_content_filter(
-        artists_df, extract_all_from_scratch=False
+        artists_df=artists_df, extract_all_from_scratch=False
     )
 
     # a1 has an existing bio so should be excluded
@@ -134,7 +134,7 @@ def test_incremental_filter_includes_all_when_from_scratch():
     )
 
     filters_series = get_artists_to_extract_wikipedia_content_filter(
-        artists_df, extract_all_from_scratch=True
+        artists_df=artists_df, extract_all_from_scratch=True
     )
 
     # a1 has a URL, included even with existing bio

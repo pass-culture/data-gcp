@@ -149,7 +149,8 @@ def extract_wikipedia_content_from_url(
 
 def get_artists_to_extract_wikipedia_content_filter(
     artists_df: pd.DataFrame,
-    extract_all_from_scratch: bool,  # noqa: FBT001
+    *,
+    extract_all_from_scratch: bool,
 ) -> pd.Series:
     """ "
     Returns a boolean Series indicating which artists should have their Wikipedia content extracted based on the presence of a Wikipedia URL and existing biography content, depending on the incremental or from-scratch mode.
@@ -181,7 +182,8 @@ def main(
     applicative_artist_file_path: str = typer.Option(),
     artists_matched_on_wikidata: str = typer.Option(),
     output_file_path: str = typer.Option(),
-    extract_all_from_scratch: bool = typer.Option(False),  # noqa: FBT001
+    *,
+    extract_all_from_scratch: bool = typer.Option(False),
 ) -> None:
     # Load + Preprocess Data
     applicative_artists_df = pd.read_parquet(applicative_artist_file_path).assign(
@@ -202,7 +204,7 @@ def main(
 
     # Prepare Data
     filters_series = get_artists_to_extract_wikipedia_content_filter(
-        artists_df, extract_all_from_scratch
+        artists_df=artists_df, extract_all_from_scratch=extract_all_from_scratch
     )
     logger.info(f"{filters_series.sum()} artists with a Wikipedia URL to process.")
     artists_with_wikipedia_url_df = artists_df.loc[filters_series].pipe(

@@ -7,6 +7,8 @@ from gcp_secrets import get_secret
 from loguru import logger
 from sentence_transformers import SentenceTransformer
 
+HF_MODEL_KWARGS = {"torch_dtype": torch.float16}
+
 
 def _build_prompts(df: pd.DataFrame, vector: Vector) -> list[str]:
     """Build text prompts for all rows using vectorized operations.
@@ -61,7 +63,7 @@ def load_encoders(vectors: list[Vector]) -> dict[str, SentenceTransformer]:
     for name in unique_encoder_names:
         logger.info(f"Loading encoder: {name}")
         encoders[name] = SentenceTransformer(
-            name, token=token, model_kwargs={"torch_dtype": torch.float16}
+            name, token=token, model_kwargs=HF_MODEL_KWARGS
         )
     return encoders
 

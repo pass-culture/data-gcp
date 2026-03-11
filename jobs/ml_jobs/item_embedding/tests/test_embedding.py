@@ -155,14 +155,13 @@ class TestBuildPrompts:
 # End-to-end embed_dataframe tests
 # ---------------------------------------------------------------------------
 class TestEmbedDataframe:
-    def test_end_to_end(self, mock_load_encoders):
+    def test_end_to_end(self):
         # Mock encoder that returns deterministic embeddings
         mock_encoder = MagicMock()
         mock_encoder.device = "cpu"
         mock_encoder.encode.return_value = np.array(
             [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
         )
-        mock_load_encoders.return_value = {"test/model": mock_encoder}
 
         df = pd.DataFrame(
             {

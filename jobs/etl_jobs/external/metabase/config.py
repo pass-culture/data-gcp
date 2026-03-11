@@ -23,7 +23,9 @@ _ENV_LONG_NAMES: dict[str, str] = {
 ENV_LONG_NAME: str = _ENV_LONG_NAMES.get(ENV_SHORT_NAME, "development")
 
 INT_METABASE_DATASET: str = f"int_metabase_{ENV_SHORT_NAME}"
-METABASE_API_USERNAME: str = "metabase-data-bot@passculture.app"
+METABASE_API_USERNAME: str = os.environ.get(
+    "METABASE_API_USERNAME", "metabase-data-bot@passculture.app"
+)
 
 
 def access_secret(

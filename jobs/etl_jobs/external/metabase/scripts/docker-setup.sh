@@ -18,7 +18,7 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 METABASE_URL="http://localhost:3000"
 ADMIN_EMAIL="admin@test.com"
-ADMIN_PASSWORD="Test1234!"
+ADMIN_PASSWORD="Testpass1"
 ADMIN_FIRST_NAME="Admin"
 ADMIN_LAST_NAME="User"
 COMPOSE_FILE="docker/docker-compose.yml"

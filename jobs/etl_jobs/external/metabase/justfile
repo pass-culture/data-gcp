@@ -79,16 +79,17 @@ docker-open:
 docker-prepare-migration:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "==> Renaming table and column..."
+    echo "==> Creating new table (copy of old with renamed column)..."
     docker compose -f docker/docker-compose.yml exec -T sample-db \
         psql -U sample -d sample -c " \
-            ALTER TABLE IF EXISTS analytics.old_user_stats RENAME TO enriched_user_data; \
-            ALTER TABLE IF EXISTS analytics.enriched_user_data RENAME COLUMN booking_cnt TO total_individual_bookings; \
+            CREATE TABLE IF NOT EXISTS analytics.enriched_user_data AS \
+                SELECT user_id, booking_cnt AS total_individual_bookings, total_amount, last_booking_date, user_type \
+                FROM analytics.old_user_stats; \
         "
     echo "==> Triggering Metabase sync..."
     TOKEN=$(curl -sf http://localhost:3000/api/session \
         -H "Content-Type: application/json" \
-        -d '{"username":"admin@test.com","password":"Test1234!"}' \
+        -d '{"username":"admin@test.com","password":"Testpass1"}' \
         | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
     DB_ID=$(curl -sf http://localhost:3000/api/database \
         -H "X-Metabase-Session: $TOKEN" \
@@ -104,14 +105,15 @@ docker-test-migrate:
     # Get card IDs from local Metabase
     TOKEN=$(curl -sf http://localhost:3000/api/session \
         -H "Content-Type: application/json" \
-        -d '{"username":"admin@test.com","password":"Test1234!"}' \
+        -d '{"username":"admin@test.com","password":"Testpass1"}' \
         | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
     CARD_IDS=$(curl -sf http://localhost:3000/api/card \
         -H "X-Metabase-Session: $TOKEN" \
         | python3 -c "import sys,json; print(','.join(str(c['id']) for c in json.load(sys.stdin)))")
     echo "==> Running migration dry-run for cards: $CARD_IDS"
     METABASE_HOST="http://localhost:3000" \
-    METABASE_PASSWORD="Test1234!" \
+    METABASE_API_USERNAME="admin@test.com" \
+    METABASE_PASSWORD="Testpass1" \
     uv run python main.py migrate \
         --legacy-table-name old_user_stats \
         --new-table-name enriched_user_data \
@@ -126,7 +128,7 @@ docker-fetch-openapi:
     set -euo pipefail
     TOKEN=$(curl -sf http://localhost:3000/api/session \
         -H "Content-Type: application/json" \
-        -d '{"username":"admin@test.com","password":"Test1234!"}' \
+        -d '{"username":"admin@test.com","password":"Testpass1"}' \
         | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
     mkdir -p api
     curl -sf "http://localhost:3000/api/docs/openapi.json" \

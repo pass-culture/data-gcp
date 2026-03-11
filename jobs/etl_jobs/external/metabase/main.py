@@ -23,6 +23,11 @@ app = typer.Typer(
     help="Migrate Metabase cards after BigQuery table/column renames.",
 )
 
+
+@app.callback()
+def _callback() -> None:
+    """Metabase migration tool."""
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",

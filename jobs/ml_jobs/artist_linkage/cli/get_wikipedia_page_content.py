@@ -155,16 +155,12 @@ def main(
     extract_all_from_scratch: bool = typer.Option(False),  # noqa: FBT001
 ) -> None:
     # Load + Preprocess Data
-    applicative_artists_df = (
-        pd.read_parquet(applicative_artist_file_path)
-        .assign(
-            **{
-                ARTIST_BIOGRAPHY_KEY: lambda df: df[ARTIST_BIOGRAPHY_KEY]
-                if ARTIST_BIOGRAPHY_KEY in df.columns
-                else pd.NA
-            }
-        )
-        .drop_duplicates(subset=[ARTIST_ID_KEY])
+    applicative_artists_df = pd.read_parquet(applicative_artist_file_path).assign(
+        **{
+            ARTIST_BIOGRAPHY_KEY: lambda df: df[ARTIST_BIOGRAPHY_KEY]
+            if ARTIST_BIOGRAPHY_KEY in df.columns
+            else pd.NA
+        }
     )
     artists_df = pd.read_parquet(
         artists_matched_on_wikidata
@@ -172,6 +168,7 @@ def main(
         applicative_artists_df[[ARTIST_ID_KEY, ARTIST_BIOGRAPHY_KEY]],
         on=[ARTIST_ID_KEY],
         how="left",
+        validate="one_to_one",
     )  # Retrieve previously fetched biographies to avoid recomputing wikipedia content + subsequent LLM summarization
 
     # Prepare Data
@@ -247,6 +244,7 @@ def main(
         artists_id_with_wikipedia_content_df,
         on=[ARTIST_ID_KEY],
         how="left",
+        validate="one_to_one",
     )
     artist_with_content_df.where(pd.notnull(artist_with_content_df), None).to_parquet(
         output_file_path, index=False

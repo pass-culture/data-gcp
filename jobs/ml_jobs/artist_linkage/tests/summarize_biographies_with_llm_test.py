@@ -3,6 +3,9 @@ import pandas as pd
 from cli.summarize_biographies_with_llm import NEW_SUFFIX
 from src.constants import ARTIST_BIOGRAPHY_KEY, ARTIST_ID_KEY
 
+NEW_BIO_1 = "new bio 1"
+NEW_BIO_2 = "new bio 2"
+
 
 def test_combine_first_prefers_new_biography_over_old():
     """New LLM-generated biographies should overwrite existing ones."""
@@ -15,7 +18,7 @@ def test_combine_first_prefers_new_biography_over_old():
     new_biographies_df = pd.DataFrame(
         {
             ARTIST_ID_KEY: ["a1", "a2"],
-            ARTIST_BIOGRAPHY_KEY: ["new bio 1", "new bio 2"],
+            ARTIST_BIOGRAPHY_KEY: [NEW_BIO_1, NEW_BIO_2],
         }
     )
 
@@ -25,6 +28,7 @@ def test_combine_first_prefers_new_biography_over_old():
             on=[ARTIST_ID_KEY],
             how="left",
             suffixes=("", NEW_SUFFIX),
+            validate="one_to_one",
         )
         .assign(
             **{
@@ -36,8 +40,8 @@ def test_combine_first_prefers_new_biography_over_old():
         .drop(columns=[f"{ARTIST_BIOGRAPHY_KEY}{NEW_SUFFIX}"])
     )
 
-    assert result.loc[0, ARTIST_BIOGRAPHY_KEY] == "new bio 1"
-    assert result.loc[1, ARTIST_BIOGRAPHY_KEY] == "new bio 2"
+    assert result.loc[0, ARTIST_BIOGRAPHY_KEY] == NEW_BIO_1
+    assert result.loc[1, ARTIST_BIOGRAPHY_KEY] == NEW_BIO_2
 
 
 def test_combine_first_keeps_old_biography_when_new_is_missing():
@@ -52,7 +56,7 @@ def test_combine_first_keeps_old_biography_when_new_is_missing():
     new_biographies_df = pd.DataFrame(
         {
             ARTIST_ID_KEY: ["a1"],
-            ARTIST_BIOGRAPHY_KEY: ["new bio 1"],
+            ARTIST_BIOGRAPHY_KEY: [NEW_BIO_1],
         }
     )
 
@@ -62,6 +66,7 @@ def test_combine_first_keeps_old_biography_when_new_is_missing():
             on=[ARTIST_ID_KEY],
             how="left",
             suffixes=("", NEW_SUFFIX),
+            validate="one_to_one",
         )
         .assign(
             **{
@@ -73,7 +78,7 @@ def test_combine_first_keeps_old_biography_when_new_is_missing():
         .drop(columns=[f"{ARTIST_BIOGRAPHY_KEY}{NEW_SUFFIX}"])
     )
 
-    assert result.loc[0, ARTIST_BIOGRAPHY_KEY] == "new bio 1"
+    assert result.loc[0, ARTIST_BIOGRAPHY_KEY] == NEW_BIO_1
     assert result.loc[1, ARTIST_BIOGRAPHY_KEY] == "existing bio 2"
 
 
@@ -88,7 +93,7 @@ def test_combine_first_handles_no_existing_biographies():
     new_biographies_df = pd.DataFrame(
         {
             ARTIST_ID_KEY: ["a1"],
-            ARTIST_BIOGRAPHY_KEY: ["new bio 1"],
+            ARTIST_BIOGRAPHY_KEY: [NEW_BIO_1],
         }
     )
 
@@ -98,6 +103,7 @@ def test_combine_first_handles_no_existing_biographies():
             on=[ARTIST_ID_KEY],
             how="left",
             suffixes=("", NEW_SUFFIX),
+            validate="one_to_one",
         )
         .assign(
             **{
@@ -109,5 +115,5 @@ def test_combine_first_handles_no_existing_biographies():
         .drop(columns=[f"{ARTIST_BIOGRAPHY_KEY}{NEW_SUFFIX}"])
     )
 
-    assert result.loc[0, ARTIST_BIOGRAPHY_KEY] == "new bio 1"
+    assert result.loc[0, ARTIST_BIOGRAPHY_KEY] == NEW_BIO_1
     assert pd.isna(result.loc[1, ARTIST_BIOGRAPHY_KEY])

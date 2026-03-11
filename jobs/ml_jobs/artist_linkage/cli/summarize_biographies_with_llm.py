@@ -2,6 +2,7 @@ import pandas as pd
 import typer
 
 from src.constants import (
+    ARTIST_BIOGRAPHY_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
     WIKIPEDIA_CONTENT_KEY,
@@ -40,13 +41,23 @@ def main(
     )
 
     # Merge back the biographies to the original dataframe
+    NEW_SUFFIX = "_new"
     (
         artists_df.merge(
             artists_with_biographies_df,
             on=[ARTIST_ID_KEY],
             how="left",
-        ).to_parquet(output_file_path, index=False)
-    )
+            suffixes=("", NEW_SUFFIX),
+        )
+        .assign(
+            **{
+                ARTIST_BIOGRAPHY_KEY: lambda df: df[
+                    f"{ARTIST_BIOGRAPHY_KEY}{NEW_SUFFIX}"
+                ].combine_first(df[ARTIST_BIOGRAPHY_KEY])
+            }
+        )
+        .drop(columns=[f"{ARTIST_BIOGRAPHY_KEY}{NEW_SUFFIX}"])
+    ).to_parquet(output_file_path, index=False)
 
 
 if __name__ == "__main__":

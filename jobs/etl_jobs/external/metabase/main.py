@@ -1,150 +1,318 @@
+"""Typer CLI entry point for the Metabase migration tool.
+
+Provides the `migrate` command with `--dry-run` support.
+Orchestrates the full migration flow:
+1. Discover impacted cards (via BigQuery)
+2. Build field/table mappings (via Metabase API)
+3. Migrate each card (native SQL + query builder)
+4. Log results to BigQuery
+"""
+
+from __future__ import annotations
+
 import datetime
 import json
+import logging
 from pathlib import Path
+from typing import Any
 
-import pandas as pd
 import typer
 
-from metabase_api import MetabaseAPI
-from native import NativeCard
-from query import QueryCard
-from table import MetabaseTable, get_mapped_fields
-from utils import (
-    ENVIRONMENT_LONG_NAME,
-    ENVIRONMENT_SHORT_NAME,
-    INT_METABASE_DATASET,
-    METABASE_API_USERNAME,
-    PROJECT_NAME,
-    access_secret_data,
-    get_dependant_cards,
+app = typer.Typer(
+    name="metabase-migration",
+    help="Migrate Metabase cards after BigQuery table/column renames.",
 )
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 MAPPINGS_PATH = Path("data/mappings.json")
 
-METABASE_HOST = access_secret_data(
-    PROJECT_NAME, f"metabase_host_{ENVIRONMENT_LONG_NAME}"
-)
 
-CLIENT_ID = access_secret_data(
-    PROJECT_NAME, f"metabase-{ENVIRONMENT_LONG_NAME}_oauth2_client_id"
-)
-
-PASSWORD = access_secret_data(
-    PROJECT_NAME, f"metabase-api-secret-{ENVIRONMENT_SHORT_NAME}"
-)
-
-
-def run(
-    metabase_card_type: str = typer.Option(
-        ...,
-        help="Type de carte Metabase. 'native' pour les cartes SQL et 'query' pour les cartes en clics boutons",
-    ),
+@app.command()
+def migrate(
     legacy_table_name: str = typer.Option(
-        ...,
-        help="Nom de l'ancienne table",
+        ..., help="Name of the legacy table in BigQuery"
     ),
     new_table_name: str = typer.Option(
-        None,
-        help="Nom de la nouvelle table",
+        ..., help="Name of the new table in BigQuery"
     ),
     legacy_schema_name: str = typer.Option(
-        ...,
-        help="Nom de l'ancien schéma Big Query",
+        ..., help="Schema (dataset) of the legacy table"
     ),
     new_schema_name: str = typer.Option(
-        None,
-        help="Nom du nouveau schéma Big Query",
+        ..., help="Schema (dataset) of the new table"
     ),
-):
-    native_cards, query_cards = get_dependant_cards(
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Show diffs without writing changes to Metabase",
+    ),
+    mappings_file: str = typer.Option(
+        str(MAPPINGS_PATH),
+        "--mappings-file",
+        help="Path to column mappings JSON file",
+    ),
+) -> None:
+    """Migrate Metabase cards from a legacy table to a new table.
+
+    Discovers impacted cards via BigQuery, builds field mappings
+    by matching column names, and updates each card.
+
+    Supports both native SQL cards and query builder cards in a
+    single pass. Use --dry-run to preview changes without writing.
+    """
+    # Late imports to avoid import errors when just showing --help
+    from google.cloud import bigquery
+
+    from api.client import MetabaseClient
+    from config import (
+        INT_METABASE_DATASET,
+        METABASE_API_USERNAME,
+        PROJECT_NAME,
+        get_metabase_client_id,
+        get_metabase_host,
+        get_metabase_password,
+    )
+    from discovery.bigquery import (
+        build_field_mapping,
+        build_table_mapping,
+        get_impacted_cards,
+    )
+    from migration.card import migrate_card
+
+    # --- Load column mappings ---
+    column_mapping: dict[str, str] = {}
+    mappings_path = Path(mappings_file)
+    if mappings_path.exists():
+        with open(mappings_path) as f:
+            all_mappings = json.load(f)
+            column_mapping = all_mappings.get(legacy_table_name, {})
+        logger.info(
+            "Loaded %d column mappings for table '%s'",
+            len(column_mapping),
+            legacy_table_name,
+        )
+    else:
+        logger.warning("No mappings file found at %s", mappings_path)
+
+    # --- Connect to services ---
+    logger.info("Connecting to Metabase...")
+    metabase_host = get_metabase_host()
+
+    # Authenticate
+    try:
+        from google.auth.transport.requests import Request
+        from google.oauth2 import id_token
+
+        client_id = get_metabase_client_id()
+        bearer_token = id_token.fetch_id_token(Request(), client_id)
+    except Exception:
+        logger.info("GCP OAuth2 not available, using direct auth")
+        bearer_token = None
+
+    metabase_password = get_metabase_password()
+    client = MetabaseClient.from_credentials(
+        host=metabase_host,
+        username=METABASE_API_USERNAME,
+        password=metabase_password,
+        bearer_token=bearer_token,
+    )
+
+    # --- Discover impacted cards ---
+    logger.info("Discovering impacted cards...")
+    bq_client = bigquery.Client(project=PROJECT_NAME)
+    card_ids = get_impacted_cards(
+        bq_client=bq_client,
+        legacy_table=legacy_table_name,
+        legacy_schema=legacy_schema_name,
+        project_name=PROJECT_NAME,
+        dataset=INT_METABASE_DATASET,
+    )
+    logger.info("Found %d impacted cards", len(card_ids))
+
+    if not card_ids:
+        logger.info("No cards to migrate. Done.")
+        return
+
+    # --- Build mappings ---
+    logger.info("Building field mappings...")
+    legacy_table_id = client.find_table_id(
         legacy_table_name, legacy_schema_name
     )
+    new_table_id = client.find_table_id(new_table_name, new_schema_name)
 
-    with open(MAPPINGS_PATH, "r") as file:
-        data = json.load(file)
-        table_columns_mappings = data.get(legacy_table_name, {})
+    if legacy_table_id is None:
+        logger.error(
+            "Legacy table '%s.%s' not found in Metabase",
+            legacy_schema_name,
+            legacy_table_name,
+        )
+        raise typer.Exit(code=1)
 
-    metabase = MetabaseAPI(
-        username=METABASE_API_USERNAME,
-        password=PASSWORD,
-        host=METABASE_HOST,
-        client_id=CLIENT_ID,
+    if new_table_id is None:
+        logger.error(
+            "New table '%s.%s' not found in Metabase",
+            new_schema_name,
+            new_table_name,
+        )
+        raise typer.Exit(code=1)
+
+    field_mapping = build_field_mapping(
+        metabase_client=client,
+        legacy_table_id=legacy_table_id,
+        new_table_id=new_table_id,
+        column_mapping=column_mapping,
+    )
+    table_mapping = build_table_mapping(legacy_table_id, new_table_id)
+
+    logger.info(
+        "Mappings: %d fields, %d tables",
+        len(field_mapping),
+        len(table_mapping),
     )
 
-    legacy_metabase_table = MetabaseTable(
-        legacy_table_name, legacy_schema_name, metabase
-    )
-    new_metabase_table = MetabaseTable(new_table_name, new_schema_name, metabase)
-    legacy_fields_df = legacy_metabase_table.get_fields()
-    new_fields_df = new_metabase_table.get_fields()
+    # --- Migrate cards ---
+    transition_logs: list[dict[str, Any]] = []
+    success_count = 0
+    failure_count = 0
 
-    legacy_table_id = legacy_metabase_table.get_table_id()
-    new_table_id = new_metabase_table.get_table_id()
+    for card_id in card_ids:
+        log_entry: dict[str, Any] = {
+            "card_id": card_id,
+            "legacy_table_name": legacy_table_name,
+            "new_table_name": new_table_name,
+            "timestamp": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
+            "dry_run": dry_run,
+        }
 
-    metabase_field_mapping = get_mapped_fields(
-        legacy_fields_df, new_fields_df, table_columns_mappings
-    )
+        try:
+            original_card = client.get_card(card_id)
+            log_entry["card_name"] = original_card.name
+            log_entry["card_type"] = (
+                original_card.dataset_query.type
+                if original_card.dataset_query
+                else "unknown"
+            )
 
-    if metabase_card_type == "native":
-        transition_logs = []
-        for card_id in native_cards:
-            transition_log = {
-                "card_type": "native",
-                "legacy_table_name": legacy_table_name,
-                "new_table_name": new_table_name,
-            }
-            transition_log["card_id"] = card_id
-            transition_log["timestamp"] = datetime.datetime.now()
-            try:
-                native_card = NativeCard(card_id, metabase)
-                native_card.replace_schema_name(
-                    legacy_schema_name,
-                    new_schema_name,
-                    legacy_table_name,
-                    new_table_name,
+            migrated_card = migrate_card(
+                card=original_card,
+                field_mapping=field_mapping,
+                table_mapping=table_mapping,
+                column_mapping=column_mapping,
+                old_schema=legacy_schema_name,
+                new_schema=new_schema_name,
+                old_table=legacy_table_name,
+                new_table=new_table_name,
+            )
+
+            if dry_run:
+                _print_diff(original_card, migrated_card, card_id)
+                log_entry["success"] = True
+            else:
+                client.put_card(card_id, migrated_card)
+                logger.info(
+                    "✓ Migrated card %d (%s)",
+                    card_id,
+                    original_card.name,
                 )
-                native_card.replace_table_name(legacy_table_name, new_table_name)
-                native_card.replace_column_names(table_columns_mappings)
-                native_card.update_filters(metabase_field_mapping)
-                native_card.update_query()
-                transition_log["success"] = True
-            except Exception as e:
-                transition_log["success"] = False
-                print(e)
-            transition_logs.append(transition_log)
+                log_entry["success"] = True
 
-    if metabase_card_type == "query":
-        transition_logs = []
+            success_count += 1
 
-        for card_id in query_cards:
-            transition_log = {
-                "card_type": "query",
-                "legacy_table_name": legacy_table_name,
-                "new_table_name": new_table_name,
-            }
-            transition_log["card_id"] = card_id
-            transition_log["timestamp"] = datetime.datetime.now()
-            try:
-                query_card = QueryCard(card_id, metabase)
-                query_card.update_dataset_query(
-                    metabase_field_mapping, legacy_table_id, new_table_id
-                )
-                query_card.update_table_id(new_table_id)
-                query_card.update_card()
-                transition_log["success"] = True
-            except Exception as e:
-                transition_log["success"] = False
-                print(e)
-            transition_logs.append(transition_log)
+        except Exception as e:
+            logger.error("✗ Failed to migrate card %d: %s", card_id, e)
+            log_entry["success"] = False
+            log_entry["error"] = str(e)
+            failure_count += 1
 
-    pd.DataFrame(transition_logs).to_gbq(
-        (f"{INT_METABASE_DATASET}.migration_log"),
-        project_id=PROJECT_NAME,
-        if_exists="append",
+        transition_logs.append(log_entry)
+
+    # --- Log results ---
+    if not dry_run and transition_logs:
+        _log_to_bigquery(bq_client, transition_logs, PROJECT_NAME, INT_METABASE_DATASET)
+
+    # --- Summary ---
+    mode = "DRY RUN" if dry_run else "MIGRATION"
+    logger.info(
+        "%s COMPLETE: %d succeeded, %d failed, %d total",
+        mode,
+        success_count,
+        failure_count,
+        len(card_ids),
     )
 
-    return "success"
+    if failure_count > 0:
+        raise typer.Exit(code=1)
+
+
+def _print_diff(
+    original: Any,
+    migrated: Any,
+    card_id: int,
+) -> None:
+    """Print a human-readable diff between original and migrated card."""
+    original_data = original.model_dump(by_alias=True)
+    migrated_data = migrated.model_dump(by_alias=True)
+
+    print(f"\n{'='*60}")
+    print(f"Card {card_id}: {original.name}")
+    print(f"Type: {original.dataset_query.type if original.dataset_query else 'unknown'}")
+    print(f"{'='*60}")
+
+    _diff_recursive(original_data, migrated_data, path="")
+
+    print()
+
+
+def _diff_recursive(
+    old: Any, new: Any, path: str
+) -> None:
+    """Recursively compare two structures and print differences."""
+    if old == new:
+        return
+
+    if isinstance(old, dict) and isinstance(new, dict):
+        all_keys = set(old.keys()) | set(new.keys())
+        for key in sorted(all_keys):
+            _diff_recursive(
+                old.get(key),
+                new.get(key),
+                f"{path}.{key}" if path else key,
+            )
+    elif isinstance(old, list) and isinstance(new, list):
+        if old != new:
+            print(f"  {path}:")
+            print(f"    - {json.dumps(old, default=str)}")
+            print(f"    + {json.dumps(new, default=str)}")
+    else:
+        print(f"  {path}:")
+        print(f"    - {json.dumps(old, default=str)}")
+        print(f"    + {json.dumps(new, default=str)}")
+
+
+def _log_to_bigquery(
+    bq_client: Any,
+    logs: list[dict[str, Any]],
+    project_name: str,
+    dataset: str,
+) -> None:
+    """Append migration logs to BigQuery."""
+
+    table_ref = f"{project_name}.{dataset}.migration_log"
+
+    try:
+        errors = bq_client.insert_rows_json(table_ref, logs)
+        if errors:
+            logger.error("Failed to insert logs to BigQuery: %s", errors)
+        else:
+            logger.info("Logged %d entries to %s", len(logs), table_ref)
+    except Exception as e:
+        logger.error("Failed to log to BigQuery: %s", e)
 
 
 if __name__ == "__main__":
-    typer.run(run)
+    app()

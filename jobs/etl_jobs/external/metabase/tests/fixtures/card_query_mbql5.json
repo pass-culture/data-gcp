@@ -1,0 +1,79 @@
+{
+  "id": 102,
+  "name": "Test Query Builder Card",
+  "description": "A test query builder card with MBQL v5 structure",
+  "display": "table",
+  "table_id": 10,
+  "collection_id": 1,
+  "archived": false,
+  "dataset_query": {
+    "type": "query",
+    "database": 2,
+    "query": {
+      "source-table": 10,
+      "fields": [
+        ["field", 201, null],
+        ["field", 202, {"base-type": "type/Integer"}],
+        ["field", 203, null]
+      ],
+      "filter": [
+        "and",
+        [">", ["field", 202, null], 0],
+        ["=", ["field", 204, null], "active"]
+      ],
+      "breakout": [
+        ["field", 204, null]
+      ],
+      "aggregation": [
+        ["count"]
+      ],
+      "order-by": [
+        ["asc", ["field", 201, null]]
+      ]
+    }
+  },
+  "visualization_settings": {
+    "column_settings": {
+      "[\"ref\",[\"field\",201,null]]": {
+        "column_title": "User ID"
+      },
+      "[\"ref\",[\"field\",202,null]]": {
+        "column_title": "Bookings",
+        "number_style": "decimal"
+      }
+    },
+    "table.pivot_column": "user_type",
+    "graph.metrics": [["field", 202, null]],
+    "graph.dimensions": [["field", 204, null]]
+  },
+  "result_metadata": [
+    {
+      "name": "user_id",
+      "display_name": "User ID",
+      "base_type": "type/Integer",
+      "field_ref": ["field", 201, null],
+      "id": 201
+    },
+    {
+      "name": "booking_cnt",
+      "display_name": "Booking Count",
+      "base_type": "type/Integer",
+      "field_ref": ["field", 202, null],
+      "id": 202
+    },
+    {
+      "name": "total_amount",
+      "display_name": "Total Amount",
+      "base_type": "type/Float",
+      "field_ref": ["field", 203, null],
+      "id": 203
+    },
+    {
+      "name": "user_type",
+      "display_name": "User Type",
+      "base_type": "type/Text",
+      "field_ref": ["field", 204, null],
+      "id": 204
+    }
+  ]
+}

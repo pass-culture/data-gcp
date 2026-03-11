@@ -197,10 +197,23 @@ CPU_INSTANCES_TYPES = {
         "n1-highcpu-64",
         "n1-highcpu-96",
     ],
+    "gpu-g2": [
+        "g2-standard-4",
+        "g2-standard-8",
+        "g2-standard-12",
+        "g2-standard-16",
+        "g2-standard-24",
+        "g2-standard-32",
+        "g2-standard-48",
+        "g2-standard-96",
+    ],
 }
+
+
 GPU_INSTANCES_TYPES = {
     "name": [
         "nvidia-tesla-t4",
+        "nvidia-l4",
         "nvidia-tesla-p4",
         "nvidia-tesla-p100",
         "nvidia-tesla-v100",

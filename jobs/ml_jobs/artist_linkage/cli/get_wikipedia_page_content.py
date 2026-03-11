@@ -147,6 +147,35 @@ def extract_wikipedia_content_from_url(
     )
 
 
+def get_artists_to_extract_wikipedia_content_filter(
+    artists_df: pd.DataFrame,
+    extract_all_from_scratch: bool,  # noqa: FBT001
+) -> pd.Series:
+    """ "
+    Returns a boolean Series indicating which artists should have their Wikipedia content extracted based on the presence of a Wikipedia URL and existing biography content, depending on the incremental or from-scratch mode.
+    Args:
+        artists_df: DataFrame containing artist data, including Wikipedia URLs and biographies.
+        extract_all_from_scratch: If True, all artists with a Wikipedia URL are included regardless of existing biography content.
+    Returns:
+        A boolean Series where True indicates the artist should be processed for Wikipedia content extraction.
+    """
+    if extract_all_from_scratch:
+        logger.info(
+            "Extracting Wikipedia content for all artists with a Wikipedia URL, regardless of existing biography content."
+        )
+        filters_series = artists_df[WIKIPEDIA_URL_KEY].notna()
+    else:
+        logger.info(
+            "Extracting Wikipedia content only for artists with a Wikipedia URL and missing biography content."
+        )
+        filters_series = artists_df[WIKIPEDIA_URL_KEY].notna() & (
+            artists_df[ARTIST_BIOGRAPHY_KEY].isna()
+            | artists_df[ARTIST_BIOGRAPHY_KEY].eq("")
+        )
+    logger.info(f"{filters_series.sum()} artists with a Wikipedia URL to process.")
+    return filters_series
+
+
 @app.command()
 def main(
     applicative_artist_file_path: str = typer.Option(),
@@ -172,19 +201,9 @@ def main(
     )  # Retrieve previously fetched biographies to avoid recomputing wikipedia content + subsequent LLM summarization
 
     # Prepare Data
-    if extract_all_from_scratch:
-        logger.info(
-            "Extracting Wikipedia content for all artists with a Wikipedia URL, regardless of existing biography content."
-        )
-        filters_series = artists_df[WIKIPEDIA_URL_KEY].notna()
-    else:
-        logger.info(
-            "Extracting Wikipedia content only for artists with a Wikipedia URL and missing biography content."
-        )
-        filters_series = artists_df[WIKIPEDIA_URL_KEY].notna() & (
-            artists_df[ARTIST_BIOGRAPHY_KEY].isna()
-            | artists_df[ARTIST_BIOGRAPHY_KEY].eq("")
-        )
+    filters_series = get_artists_to_extract_wikipedia_content_filter(
+        artists_df, extract_all_from_scratch
+    )
     logger.info(f"{filters_series.sum()} artists with a Wikipedia URL to process.")
     artists_with_wikipedia_url_df = artists_df.loc[filters_series].pipe(
         extract_wikipedia_content_from_url

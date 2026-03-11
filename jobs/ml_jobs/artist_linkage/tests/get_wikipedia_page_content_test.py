@@ -5,6 +5,7 @@ import pandas as pd
 from cli.get_wikipedia_page_content import (
     extract_wikipedia_content_from_url,
     fetch_clean_content,
+    get_artists_to_extract_wikipedia_content_filter,
 )
 from src.constants import (
     ARTIST_BIOGRAPHY_KEY,
@@ -106,9 +107,8 @@ def test_incremental_filter_skips_artists_with_existing_biography():
         }
     )
 
-    filters_series = artists_df[WIKIPEDIA_URL_KEY].notna() & (
-        artists_df[ARTIST_BIOGRAPHY_KEY].isna()
-        | artists_df[ARTIST_BIOGRAPHY_KEY].eq("")
+    filters_series = get_artists_to_extract_wikipedia_content_filter(
+        artists_df, extract_all_from_scratch=False
     )
 
     # a1 has an existing bio so should be excluded
@@ -133,7 +133,9 @@ def test_incremental_filter_includes_all_when_from_scratch():
         }
     )
 
-    filters_series = artists_df[WIKIPEDIA_URL_KEY].notna()
+    filters_series = get_artists_to_extract_wikipedia_content_filter(
+        artists_df, extract_all_from_scratch=True
+    )
 
     # a1 has a URL, included even with existing bio
     assert filters_series.iloc[0]

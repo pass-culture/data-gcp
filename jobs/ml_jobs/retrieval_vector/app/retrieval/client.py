@@ -2,7 +2,6 @@ import time
 from typing import Dict, List, Optional
 
 import lancedb
-from docarray import Document, DocumentArray
 from lancedb.rerankers import Reranker
 from lancedb.table import Table
 
@@ -16,6 +15,7 @@ from app.retrieval.constants import (
     OUTPUT_METRIC_COLUMNS,
 )
 from app.retrieval.core.filter import Filter
+from app.retrieval.documents import Document, DocumentArray
 from app.retrieval.utils import load_documents
 
 

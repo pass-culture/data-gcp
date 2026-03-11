@@ -12,10 +12,10 @@ import polars as pl
 import pyarrow.dataset as ds
 import tensorflow as tf
 import typer
-from docarray import Document, DocumentArray
 from hnne import HNNE
 from loguru import logger
 
+from app.retrieval.documents import Document, DocumentArray
 from utils import (
     ENV_SHORT_NAME,
     MODEL_BASE_PATH,

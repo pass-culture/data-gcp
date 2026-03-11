@@ -1,4 +1,4 @@
-from docarray import DocumentArray
+from app.retrieval.documents import DocumentArray
 
 
 def load_documents(path: str) -> DocumentArray:

@@ -102,7 +102,6 @@ select
     v.venue_siret,
     v.venue_managing_offerer_id,
     v.venue_booking_email,
-    v.venue_is_virtual,
     v.venue_comment,
     v.venue_public_name,
     {{

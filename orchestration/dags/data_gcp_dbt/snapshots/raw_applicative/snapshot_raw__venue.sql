@@ -19,6 +19,7 @@
                     "venue_motordisabilitycompliant",
                     "venue_visualdisabilitycompliant",
                     "venue_withdrawal_details",
+                    "venue_is_open_to_public",
                 ],
             )
         )
@@ -38,7 +39,6 @@
             , "siret" AS venue_siret
             , CAST("managingOffererId" AS varchar(255)) AS venue_managing_offerer_id
             , "bookingEmail" AS venue_booking_email
-            , "isVirtual" AS venue_is_virtual
             , "comment" AS venue_comment
             , "publicName" AS venue_public_name
             , {{ render_case_when('"venueTypeCode"', venue_type_code_label_mapping, fallback_sql='"venueTypeCode"') }} as venue_type_code
@@ -64,6 +64,7 @@
             , "dmsToken" AS dms_token
             , "description" AS venue_description
             , "withdrawalDetails" AS venue_withdrawal_details
+            , "isOpenToPublic" AS venue_is_open_to_public
         FROM public.venue
     """
         )

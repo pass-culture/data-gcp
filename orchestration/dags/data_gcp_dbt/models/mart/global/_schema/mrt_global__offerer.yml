@@ -121,8 +121,6 @@ models:
         description: '{{ doc("column__offerer_is_local_authority") }}'
       - name: total_managed_venues
         description: '{{ doc("column__offerer_total_managed_venues") }}'
-      - name: total_physical_managed_venues
-        description: '{{ doc("column__offerer_total_physical_managed_venues") }}'
       - name: total_permanent_managed_venues
         description: '{{ doc("column__offerer_total_permanent_managed_venues") }}'
       - name: total_venues

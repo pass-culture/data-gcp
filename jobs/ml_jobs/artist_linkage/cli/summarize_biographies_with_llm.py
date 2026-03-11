@@ -2,6 +2,7 @@ import pandas as pd
 import typer
 
 from src.constants import (
+    ARTIST_BIOGRAPHY_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
     WIKIPEDIA_CONTENT_KEY,
@@ -10,6 +11,31 @@ from src.llm_config import MAX_CONCURRENT_LLM_REQUESTS
 from src.utils.llm import summarize_biographies_with_llm
 
 app = typer.Typer()
+
+NEW_SUFFIX = "_new"
+
+
+def merge_biographies(
+    artists_df: pd.DataFrame, new_biographies_df: pd.DataFrame
+) -> pd.DataFrame:
+    """Merge new LLM-generated biographies with existing ones, preferring new biographies."""
+    return (
+        artists_df.merge(
+            new_biographies_df,
+            on=[ARTIST_ID_KEY],
+            how="left",
+            suffixes=("", NEW_SUFFIX),
+            validate="one_to_one",
+        )
+        .assign(
+            **{
+                ARTIST_BIOGRAPHY_KEY: lambda df: df[
+                    f"{ARTIST_BIOGRAPHY_KEY}{NEW_SUFFIX}"
+                ].combine_first(df[ARTIST_BIOGRAPHY_KEY])
+            }
+        )
+        .drop(columns=[f"{ARTIST_BIOGRAPHY_KEY}{NEW_SUFFIX}"])
+    )
 
 
 @app.command()
@@ -40,12 +66,8 @@ def main(
     )
 
     # Merge back the biographies to the original dataframe
-    (
-        artists_df.merge(
-            artists_with_biographies_df,
-            on=[ARTIST_ID_KEY],
-            how="left",
-        ).to_parquet(output_file_path, index=False)
+    merge_biographies(artists_df, artists_with_biographies_df).to_parquet(
+        output_file_path, index=False
     )
 
 

@@ -41,7 +41,7 @@ class SemanticSpace:
             .distance_type("cosine")
             .nprobes(N_PROBES)
             .refine_factor(REFINE_FACTOR)
-            .select(columns=DETAIL_COLUMNS)
+            .select(columns=DETAIL_COLUMNS + DEFAULTS)
             .limit(n)
         )
         results = await query.to_pandas(flatten=True)

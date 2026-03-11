@@ -212,7 +212,6 @@ select
         else false
     end as local_authority_is_priority,
     ofr.total_managed_venues,
-    ofr.total_physical_managed_venues,
     ofr.total_permanent_managed_venues,
     ofr.all_physical_venues_types,
     ofr.total_administrative_venues,

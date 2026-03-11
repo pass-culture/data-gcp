@@ -20,8 +20,8 @@ models:
         description: "{{ doc('column__venue_public_name') }}"
       - name: venue_siret
         description: "{{ doc('column__venue_siret') }}"
-      - name: venue_is_virtual
-        description: "{{ doc('column__venue_is_virtual') }}"
+      - name: venue_is_open_to_public
+        description: "{{ doc('column__venue_is_open_to_public') }}"
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
       - name: venue_creation_date

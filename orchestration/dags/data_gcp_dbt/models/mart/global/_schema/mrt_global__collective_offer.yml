@@ -49,8 +49,6 @@ models:
         description: "{{ doc('column__venue_macro_density_label') }}"
       - name: venue_density_level
         description: "{{ doc('column__venue_density_level') }}"
-      - name: venue_is_virtual
-        description: "{{ doc('column__venue_is_virtual') }}"
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
       - name: offerer_name

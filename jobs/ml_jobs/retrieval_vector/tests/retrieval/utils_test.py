@@ -1,11 +1,10 @@
 from unittest.mock import patch
 
-from docarray import DocumentArray
-
+from app.retrieval.documents import DocumentArray
 from app.retrieval.utils import load_documents
 
 
-@patch("docarray.DocumentArray.load")
+@patch("app.retrieval.documents.DocumentArray.load")
 def test_load_documents(mock_load):
     mock_docarray = DocumentArray()
     mock_load.return_value = mock_docarray

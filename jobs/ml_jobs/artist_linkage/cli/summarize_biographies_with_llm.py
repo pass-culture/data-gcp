@@ -12,6 +12,8 @@ from src.utils.llm import summarize_biographies_with_llm
 
 app = typer.Typer()
 
+NEW_SUFFIX = "_new"
+
 
 @app.command()
 def main(
@@ -41,7 +43,6 @@ def main(
     )
 
     # Merge back the biographies to the original dataframe
-    NEW_SUFFIX = "_new"
     (
         artists_df.merge(
             artists_with_biographies_df,

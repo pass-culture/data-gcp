@@ -154,8 +154,18 @@ def main(
     output_file_path: str = typer.Option(),
     extract_all_from_scratch: bool = typer.Option(False),  # noqa: FBT001
 ) -> None:
-    # Load Data
-    applicative_artists_df = pd.read_parquet(applicative_artist_file_path)
+    # Load + Preprocess Data
+    applicative_artists_df = (
+        pd.read_parquet(applicative_artist_file_path)
+        .assign(
+            **{
+                ARTIST_BIOGRAPHY_KEY: lambda df: df[ARTIST_BIOGRAPHY_KEY]
+                if ARTIST_BIOGRAPHY_KEY in df.columns
+                else pd.NA
+            }
+        )
+        .drop_duplicates(subset=[ARTIST_ID_KEY])
+    )
     artists_df = pd.read_parquet(
         artists_matched_on_wikidata
     ).merge(
@@ -233,11 +243,14 @@ def main(
     ).loc[:, [ARTIST_ID_KEY, WIKIPEDIA_CONTENT_KEY]]
 
     # Merge back to original dataframe and save
-    artists_df.merge(
+    artist_with_content_df = artists_df.merge(
         artists_id_with_wikipedia_content_df,
         on=[ARTIST_ID_KEY],
         how="left",
-    ).where(pd.notnull(artists_df), None).to_parquet(output_file_path, index=False)
+    )
+    artist_with_content_df.where(pd.notnull(artist_with_content_df), None).to_parquet(
+        output_file_path, index=False
+    )
     # The default behavior of pandas merge is to use np.nan for missing values
     # We want to replace these with None to match the rest of the pipeline
 

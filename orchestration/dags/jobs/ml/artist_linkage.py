@@ -121,8 +121,6 @@ GCS_TO_DELTA_TABLES = [
 INCREMENTAL_FLOW = "incremental_flow"
 REFRESH_METADATA_FLOW = "refresh_metadata_flow"
 DEDUPLICATION_FLOW = "deduplication_flow"
-SKIP_SUMMARIZATION_FLOW = "skip_summarization_flow"
-SUMMARIZATION_WITH_LLM_FLOW = "summarization_with_llm_flow"
 
 # DAG Documentation
 DAG_MD_DOC = """
@@ -130,9 +128,9 @@ DAG_MD_DOC = """
 
 This DAG links products to artists using clustering algorithms and enriches artist data with Wikidata metadata.
 
-## Two Execution Flows
+## Three Execution Flows
 
-The DAG supports two different execution modes, controlled by the `linkage_mode` parameter:
+The DAG supports 3 different execution modes, controlled by the `linkage_mode` parameter:
 
 ### 1. Incremental Flow (`incremental`)
 Updates the existing artist database with new products only.

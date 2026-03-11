@@ -86,6 +86,23 @@ Par exemple, `nb_consult_help` → `total_consulted_help`, `booking_cnt` → `to
 
 ---
 
+## Test local (sans GCP)
+
+Un environnement Docker local permet de tester la migration de bout en bout sans credentials GCP.
+
+```bash
+just docker-setup              # ~60s : lance Metabase + seed les données
+just docker-prepare-migration  # renomme table/colonne, sync Metabase
+just docker-test-migrate       # exécute la migration en dry-run
+just docker-open               # ouvre Metabase dans le navigateur
+```
+
+Pour le guide complet (vérification visuelle des cartes avant/après migration, inspection via l'UI Metabase, troubleshooting), voir **[`docs/07-local-verification-guide.md`](docs/07-local-verification-guide.md)**.
+
+Pour le détail de la configuration Docker et du setup manuel, voir **[`docs/06-local-testing-setup.md`](docs/06-local-testing-setup.md)**.
+
+---
+
 ## En résumé
 
 Ce code automatise la migration des dashboards Metabase de **pass Culture** lors de refactorings BigQuery (renommage de tables/schémas/colonnes). Il identifie automatiquement les cartes impactées, met à jour les requêtes SQL et les définitions de questions UI, puis logge les résultats. C'est un outil critique pour éviter de casser les dashboards métier lors d'évolutions du data warehouse.

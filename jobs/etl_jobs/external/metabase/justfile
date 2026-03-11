@@ -42,3 +42,94 @@ fix-all: format lint
 # Sync project dependencies
 sync:
     uv sync --group dev
+
+# ---------------------------------------------------------------------------
+# Docker lifecycle
+# ---------------------------------------------------------------------------
+
+# Start Docker containers in background
+docker-up:
+    docker compose -f docker/docker-compose.yml up -d
+
+# Stop Docker containers (preserves volumes)
+docker-down:
+    docker compose -f docker/docker-compose.yml down
+
+# Stop Docker containers and destroy volumes (clean slate)
+docker-reset:
+    docker compose -f docker/docker-compose.yml down -v
+
+# Follow Docker container logs
+docker-logs:
+    docker compose -f docker/docker-compose.yml logs -f
+
+# Bootstrap local Metabase: start containers + seed data + create cards
+docker-setup: docker-up
+    bash scripts/docker-setup.sh
+
+# Open Metabase in browser
+docker-open:
+    open "http://localhost:3000" 2>/dev/null || xdg-open "http://localhost:3000" 2>/dev/null || echo "Open http://localhost:3000 in your browser"
+
+# ---------------------------------------------------------------------------
+# Integration testing (local Docker)
+# ---------------------------------------------------------------------------
+
+# Prepare migration scenario: rename table + column, trigger Metabase sync
+docker-prepare-migration:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "==> Renaming table and column..."
+    docker compose -f docker/docker-compose.yml exec -T sample-db \
+        psql -U sample -d sample -c " \
+            ALTER TABLE IF EXISTS analytics.old_user_stats RENAME TO enriched_user_data; \
+            ALTER TABLE IF EXISTS analytics.enriched_user_data RENAME COLUMN booking_cnt TO total_individual_bookings; \
+        "
+    echo "==> Triggering Metabase sync..."
+    TOKEN=$(curl -sf http://localhost:3000/api/session \
+        -H "Content-Type: application/json" \
+        -d '{"username":"admin@test.com","password":"Test1234!"}' \
+        | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+    DB_ID=$(curl -sf http://localhost:3000/api/database \
+        -H "X-Metabase-Session: $TOKEN" \
+        | python3 -c "import sys,json; dbs=json.load(sys.stdin); print([d['id'] for d in dbs.get('data', dbs) if d['name']=='Sample DB'][0])")
+    curl -sf -X POST "http://localhost:3000/api/database/$DB_ID/sync_schema" \
+        -H "X-Metabase-Session: $TOKEN"
+    echo "  ✓ Migration scenario prepared. Wait ~10s for sync, then run: just docker-test-migrate"
+
+# Run migration dry-run against local Docker Metabase (no GCP required)
+docker-test-migrate:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Get card IDs from local Metabase
+    TOKEN=$(curl -sf http://localhost:3000/api/session \
+        -H "Content-Type: application/json" \
+        -d '{"username":"admin@test.com","password":"Test1234!"}' \
+        | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+    CARD_IDS=$(curl -sf http://localhost:3000/api/card \
+        -H "X-Metabase-Session: $TOKEN" \
+        | python3 -c "import sys,json; print(','.join(str(c['id']) for c in json.load(sys.stdin)))")
+    echo "==> Running migration dry-run for cards: $CARD_IDS"
+    METABASE_HOST="http://localhost:3000" \
+    METABASE_PASSWORD="Test1234!" \
+    uv run python main.py migrate \
+        --legacy-table-name old_user_stats \
+        --new-table-name enriched_user_data \
+        --legacy-schema-name analytics \
+        --new-schema-name analytics \
+        --card-ids "$CARD_IDS" \
+        --dry-run
+
+# Download Metabase OpenAPI spec to api/openapi.json
+docker-fetch-openapi:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TOKEN=$(curl -sf http://localhost:3000/api/session \
+        -H "Content-Type: application/json" \
+        -d '{"username":"admin@test.com","password":"Test1234!"}' \
+        | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+    mkdir -p api
+    curl -sf "http://localhost:3000/api/docs/openapi.json" \
+        -H "X-Metabase-Session: $TOKEN" \
+        -o api/openapi.json
+    echo "  ✓ OpenAPI spec saved to api/openapi.json"

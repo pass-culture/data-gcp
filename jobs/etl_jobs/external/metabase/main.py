@@ -52,6 +52,11 @@ def migrate(
         "--mappings-file",
         help="Path to column mappings JSON file",
     ),
+    card_ids_str: str = typer.Option(
+        "",
+        "--card-ids",
+        help="Comma-separated card IDs to migrate (skips BigQuery discovery)",
+    ),
 ) -> None:
     """Migrate Metabase cards from a legacy table to a new table.
 
@@ -62,23 +67,20 @@ def migrate(
     single pass. Use --dry-run to preview changes without writing.
     """
     # Late imports to avoid import errors when just showing --help
-    from google.cloud import bigquery
-
     from api.client import MetabaseClient
     from config import (
-        INT_METABASE_DATASET,
         METABASE_API_USERNAME,
-        PROJECT_NAME,
-        get_metabase_client_id,
         get_metabase_host,
         get_metabase_password,
     )
     from discovery.bigquery import (
         build_field_mapping,
         build_table_mapping,
-        get_impacted_cards,
     )
     from migration.card import migrate_card
+
+    # Determine if we're using local card IDs (no BigQuery)
+    use_bigquery = not card_ids_str
 
     # --- Load column mappings ---
     column_mapping: dict[str, str] = {}
@@ -100,15 +102,18 @@ def migrate(
     metabase_host = get_metabase_host()
 
     # Authenticate
-    try:
-        from google.auth.transport.requests import Request
-        from google.oauth2 import id_token
+    bearer_token = None
+    if use_bigquery:
+        try:
+            from google.auth.transport.requests import Request
+            from google.oauth2 import id_token
 
-        client_id = get_metabase_client_id()
-        bearer_token = id_token.fetch_id_token(Request(), client_id)
-    except Exception:
-        logger.info("GCP OAuth2 not available, using direct auth")
-        bearer_token = None
+            from config import get_metabase_client_id
+
+            client_id = get_metabase_client_id()
+            bearer_token = id_token.fetch_id_token(Request(), client_id)
+        except Exception:
+            logger.info("GCP OAuth2 not available, using direct auth")
 
     metabase_password = get_metabase_password()
     client = MetabaseClient.from_credentials(
@@ -119,15 +124,26 @@ def migrate(
     )
 
     # --- Discover impacted cards ---
-    logger.info("Discovering impacted cards...")
-    bq_client = bigquery.Client(project=PROJECT_NAME)
-    card_ids = get_impacted_cards(
-        bq_client=bq_client,
-        legacy_table=legacy_table_name,
-        legacy_schema=legacy_schema_name,
-        project_name=PROJECT_NAME,
-        dataset=INT_METABASE_DATASET,
-    )
+    bq_client = None
+    if use_bigquery:
+        from google.cloud import bigquery
+
+        from config import INT_METABASE_DATASET, PROJECT_NAME
+        from discovery.bigquery import get_impacted_cards
+
+        logger.info("Discovering impacted cards via BigQuery...")
+        bq_client = bigquery.Client(project=PROJECT_NAME)
+        card_ids = get_impacted_cards(
+            bq_client=bq_client,
+            legacy_table=legacy_table_name,
+            legacy_schema=legacy_schema_name,
+            project_name=PROJECT_NAME,
+            dataset=INT_METABASE_DATASET,
+        )
+    else:
+        card_ids = [int(cid.strip()) for cid in card_ids_str.split(",") if cid.strip()]
+        logger.info("Using provided card IDs (BigQuery discovery skipped)")
+
     logger.info("Found %d impacted cards", len(card_ids))
 
     if not card_ids:
@@ -226,7 +242,9 @@ def migrate(
         transition_logs.append(log_entry)
 
     # --- Log results ---
-    if not dry_run and transition_logs:
+    if not dry_run and transition_logs and use_bigquery and bq_client is not None:
+        from config import INT_METABASE_DATASET, PROJECT_NAME
+
         _log_to_bigquery(bq_client, transition_logs, PROJECT_NAME, INT_METABASE_DATASET)
 
     # --- Summary ---

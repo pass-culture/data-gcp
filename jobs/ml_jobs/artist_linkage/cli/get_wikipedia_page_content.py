@@ -8,6 +8,7 @@ import typer
 from loguru import logger
 
 from src.constants import (
+    ARTIST_BIOGRAPHY_KEY,
     ARTIST_ID_KEY,
     WIKIMEDIA_REQUEST_HEADER,
     WIKIPEDIA_CONTENT_KEY,
@@ -148,19 +149,42 @@ def extract_wikipedia_content_from_url(
 
 @app.command()
 def main(
+    applicative_artist_file_path: str = typer.Option(),
     artists_matched_on_wikidata: str = typer.Option(),
     output_file_path: str = typer.Option(),
+    extract_all_from_scratch: bool = typer.Option(False),  # noqa: FBT001
 ) -> None:
-    artists_df = pd.read_parquet(artists_matched_on_wikidata)
+    # Load Data
+    applicative_artists_df = pd.read_parquet(applicative_artist_file_path)
+    artists_df = pd.read_parquet(
+        artists_matched_on_wikidata
+    ).merge(
+        applicative_artists_df[[ARTIST_ID_KEY, ARTIST_BIOGRAPHY_KEY]],
+        on=[ARTIST_ID_KEY],
+        how="left",
+    )  # Retrieve previously fetched biographies to avoid recomputing wikipedia content + subsequent LLM summarization
 
     # Prepare Data
-    artists_with_wikipedia_url_df = artists_df.loc[
-        lambda df: df[WIKIPEDIA_URL_KEY].notna()
-    ].pipe(extract_wikipedia_content_from_url)
+    if extract_all_from_scratch:
+        logger.info(
+            "Extracting Wikipedia content for all artists with a Wikipedia URL, regardless of existing biography content."
+        )
+        filters_series = artists_df[WIKIPEDIA_URL_KEY].notna()
+    else:
+        logger.info(
+            "Extracting Wikipedia content only for artists with a Wikipedia URL and missing biography content."
+        )
+        filters_series = artists_df[WIKIPEDIA_URL_KEY].notna() & (
+            artists_df[ARTIST_BIOGRAPHY_KEY].isna()
+            | artists_df[ARTIST_BIOGRAPHY_KEY].eq("")
+        )
+    logger.info(f"{filters_series.sum()} artists with a Wikipedia URL to process.")
+    artists_with_wikipedia_url_df = artists_df.loc[filters_series].pipe(
+        extract_wikipedia_content_from_url
+    )
 
     # Fetch the wikipedia page content from MediaWiki API
     results_df_list = []
-
     if len(artists_with_wikipedia_url_df) == 0:
         logger.warning("No artists with Wikipedia URL found. Exiting.")
         results_df_list.append(

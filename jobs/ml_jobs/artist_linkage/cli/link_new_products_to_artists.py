@@ -83,10 +83,14 @@ def get_products_to_remove_and_link_df(
         lambda df: df._merge == ProductToLinkStatus.removed_products_key,
         PRODUCTS_KEYS,
     ]
-    products_to_link_df = merged_df.loc[
-        lambda df: df._merge == ProductToLinkStatus.not_matched_with_artists_key,
-        MERGE_COLUMNS,
-    ].merge(products_df, how="left", on=MERGE_COLUMNS)
+    products_to_link_df = (
+        merged_df.loc[
+            lambda df: df._merge == ProductToLinkStatus.not_matched_with_artists_key,
+            MERGE_COLUMNS,
+        ]
+        .merge(products_df, how="left", on=MERGE_COLUMNS)
+        .drop_duplicates()
+    )
 
     merge_stats_df = merged_df._merge.value_counts().reset_index()
 
@@ -104,38 +108,58 @@ def get_products_to_remove_and_link_df(
 def build_artist_alias(
     product_df: pd.DataFrame,
     product_artist_link_df: pd.DataFrame,
+    artist_df: pd.DataFrame,
 ) -> pd.DataFrame:
-    """
-    Build an artist alias DataFrame by merging product and artist link data.
-    This function creates a deduplicated artist alias table by joining product
-    information with artist link data, extracting relevant artist details along
-    with their associated offer categories.
-    Args:
-        product_df (pd.DataFrame): DataFrame containing product information with
-            columns including PRODUCT_ID_KEY, ARTIST_TYPE_KEY, ARTIST_NAME_KEY,
-            and OFFER_CATEGORY_ID_KEY.
-        product_artist_link_df (pd.DataFrame): DataFrame containing artist-product
-            linkages with columns including PRODUCT_ID_KEY, ARTIST_TYPE_KEY, and
-            ARTIST_ID_KEY.
-    Returns:
-        pd.DataFrame: A deduplicated and sorted DataFrame containing artist alias
-            information with columns: ARTIST_ID_KEY, ARTIST_NAME_KEY,
-            ARTIST_TYPE_KEY, and OFFER_CATEGORY_ID_KEY.
-    Notes:
-        We don't use data from artist_alias_table because it is inconsistent (missing artist_type) and will be soon removed.
-    """
+    # Combine artist names from both artist_df and product_df to create a comprehensive artist alias dataframe
+    artist_alias_from_artist_names_df = (
+        product_artist_link_df.merge(
+            artist_df.assign(
+                artist_name=lambda df: df[ARTIST_NAME_KEY].str.lower()
+            ).loc[:, [ARTIST_ID_KEY, ARTIST_NAME_KEY]],
+            how="left",
+            on=ARTIST_ID_KEY,
+            validate="many_to_one",
+        )
+        .merge(
+            product_df.loc[
+                :, [PRODUCT_ID_KEY, OFFER_CATEGORY_ID_KEY]
+            ].drop_duplicates(),
+            how="left",
+            on=[PRODUCT_ID_KEY],
+            validate="many_to_one",
+        )
+        .loc[:, ALIAS_MERGE_COLUMNS]
+        .drop_duplicates()
+    )
 
+    # Use artist names from products when we have a clear 1:1 mapping between product and artist (i.e. no duplicates for the same product and artist type)
+    safe_product_df = product_df.loc[
+        lambda df: ~df.duplicated(subset=[PRODUCT_ID_KEY, ARTIST_TYPE_KEY], keep=False)
+    ]
     product_with_names_df = product_artist_link_df.merge(
-        product_df,
+        safe_product_df,
         how="inner",
         left_on=[PRODUCT_ID_KEY, ARTIST_TYPE_KEY],
         right_on=[PRODUCT_ID_KEY, ARTIST_TYPE_KEY],
+        validate="many_to_one",
     )
-
-    return (
+    artist_alias_based_on_products_df = (
         product_with_names_df.loc[:, ALIAS_MERGE_COLUMNS]
         .drop_duplicates()
         .sort_values(by=ALIAS_MERGE_COLUMNS)
+    )
+
+    # Combine both sources of artist aliases and remove duplicates to create the final artist alias dataframe
+    return (
+        pd.concat(
+            [
+                artist_alias_from_artist_names_df,
+                artist_alias_based_on_products_df,
+            ],
+            axis=0,
+        )
+        .drop_duplicates()
+        .reset_index(drop=True)
     )
 
 
@@ -253,7 +277,11 @@ def main(
     wiki_df = load_wikidata(
         wiki_base_path=wiki_base_path, wiki_file_name=wiki_file_name
     ).reset_index(drop=True)
-    artist_alias_df = build_artist_alias(product_df, product_artist_link_df)
+    artist_alias_df = build_artist_alias(
+        product_df=product_df,
+        product_artist_link_df=product_artist_link_df,
+        artist_df=artist_df,
+    )
 
     # 2. Split products between to remove and to link
     products_to_remove_df, products_to_link_df = get_products_to_remove_and_link_df(

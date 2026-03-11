@@ -8,6 +8,7 @@ import typer
 from loguru import logger
 
 from src.constants import (
+    ARTIST_BIOGRAPHY_KEY,
     ARTIST_ID_KEY,
     WIKIMEDIA_REQUEST_HEADER,
     WIKIPEDIA_CONTENT_KEY,
@@ -146,21 +147,72 @@ def extract_wikipedia_content_from_url(
     )
 
 
+def get_artists_to_extract_wikipedia_content_filter(
+    artists_df: pd.DataFrame,
+    *,
+    extract_all_from_scratch: bool,
+) -> pd.Series:
+    """ "
+    Returns a boolean Series indicating which artists should have their Wikipedia content extracted based on the presence of a Wikipedia URL and existing biography content, depending on the incremental or from-scratch mode.
+    Args:
+        artists_df: DataFrame containing artist data, including Wikipedia URLs and biographies.
+        extract_all_from_scratch: If True, all artists with a Wikipedia URL are included regardless of existing biography content.
+    Returns:
+        A boolean Series where True indicates the artist should be processed for Wikipedia content extraction.
+    """
+    if extract_all_from_scratch:
+        logger.info(
+            "Extracting Wikipedia content for all artists with a Wikipedia URL, regardless of existing biography content."
+        )
+        filters_series = artists_df[WIKIPEDIA_URL_KEY].notna()
+    else:
+        logger.info(
+            "Extracting Wikipedia content only for artists with a Wikipedia URL and missing biography content."
+        )
+        filters_series = artists_df[WIKIPEDIA_URL_KEY].notna() & (
+            artists_df[ARTIST_BIOGRAPHY_KEY].isna()
+            | artists_df[ARTIST_BIOGRAPHY_KEY].eq("")
+        )
+    logger.info(f"{filters_series.sum()} artists with a Wikipedia URL to process.")
+    return filters_series
+
+
 @app.command()
 def main(
+    applicative_artist_file_path: str = typer.Option(),
     artists_matched_on_wikidata: str = typer.Option(),
     output_file_path: str = typer.Option(),
+    *,
+    extract_all_from_scratch: bool = typer.Option(False),
 ) -> None:
-    artists_df = pd.read_parquet(artists_matched_on_wikidata)
+    # Load + Preprocess Data
+    applicative_artists_df = pd.read_parquet(applicative_artist_file_path).assign(
+        **{
+            ARTIST_BIOGRAPHY_KEY: lambda df: df[ARTIST_BIOGRAPHY_KEY]
+            if ARTIST_BIOGRAPHY_KEY in df.columns
+            else pd.NA
+        }
+    )
+    artists_df = pd.read_parquet(
+        artists_matched_on_wikidata
+    ).merge(
+        applicative_artists_df[[ARTIST_ID_KEY, ARTIST_BIOGRAPHY_KEY]],
+        on=[ARTIST_ID_KEY],
+        how="left",
+        validate="one_to_one",
+    )  # Retrieve previously fetched biographies to avoid recomputing wikipedia content + subsequent LLM summarization
 
     # Prepare Data
-    artists_with_wikipedia_url_df = artists_df.loc[
-        lambda df: df[WIKIPEDIA_URL_KEY].notna()
-    ].pipe(extract_wikipedia_content_from_url)
+    filters_series = get_artists_to_extract_wikipedia_content_filter(
+        artists_df=artists_df, extract_all_from_scratch=extract_all_from_scratch
+    )
+    logger.info(f"{filters_series.sum()} artists with a Wikipedia URL to process.")
+    artists_with_wikipedia_url_df = artists_df.loc[filters_series].pipe(
+        extract_wikipedia_content_from_url
+    )
 
     # Fetch the wikipedia page content from MediaWiki API
     results_df_list = []
-
     if len(artists_with_wikipedia_url_df) == 0:
         logger.warning("No artists with Wikipedia URL found. Exiting.")
         results_df_list.append(
@@ -209,11 +261,15 @@ def main(
     ).loc[:, [ARTIST_ID_KEY, WIKIPEDIA_CONTENT_KEY]]
 
     # Merge back to original dataframe and save
-    artists_df.merge(
+    artist_with_content_df = artists_df.merge(
         artists_id_with_wikipedia_content_df,
         on=[ARTIST_ID_KEY],
         how="left",
-    ).where(pd.notnull(artists_df), None).to_parquet(output_file_path, index=False)
+        validate="one_to_one",
+    )
+    artist_with_content_df.where(pd.notnull(artist_with_content_df), None).to_parquet(
+        output_file_path, index=False
+    )
     # The default behavior of pandas merge is to use np.nan for missing values
     # We want to replace these with None to match the rest of the pipeline
 

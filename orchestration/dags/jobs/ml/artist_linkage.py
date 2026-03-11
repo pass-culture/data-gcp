@@ -121,8 +121,6 @@ GCS_TO_DELTA_TABLES = [
 INCREMENTAL_FLOW = "incremental_flow"
 REFRESH_METADATA_FLOW = "refresh_metadata_flow"
 DEDUPLICATION_FLOW = "deduplication_flow"
-SKIP_SUMMARIZATION_FLOW = "skip_summarization_flow"
-SUMMARIZATION_WITH_LLM_FLOW = "summarization_with_llm_flow"
 
 # DAG Documentation
 DAG_MD_DOC = """
@@ -130,9 +128,9 @@ DAG_MD_DOC = """
 
 This DAG links products to artists using clustering algorithms and enriches artist data with Wikidata metadata.
 
-## Two Execution Flows
+## Three Execution Flows
 
-The DAG supports two different execution modes, controlled by the `linkage_mode` parameter:
+The DAG supports 3 different execution modes, controlled by the `linkage_mode` parameter:
 
 ### 1. Incremental Flow (`incremental`)
 Updates the existing artist database with new products only.
@@ -165,6 +163,16 @@ Identifies and merges duplicate artist entries based on namesake analysis and pr
 - Updates artist, artist alias, and product-artist link tables in BigQuery.
 
 **Use case:** Cleaning up the artist database by merging duplicate entries created by distinct providers or data errors.
+
+## LLM Summarization
+
+After the incremental or metadata refresh flow, the DAG always runs the LLM summarization pipeline:
+- Fetches Wikipedia page content for artists that don't yet have a biography (incremental skip logic).
+- Summarizes the content with an LLM to generate artist biographies.
+- Merges new biographies with existing ones, preserving previously generated biographies.
+
+The `llm_summarization_from_scratch` parameter (default: `False`) can be set to `True` to force re-fetching
+Wikipedia content and re-summarizing all artists, ignoring existing biographies.
 """
 
 
@@ -174,12 +182,6 @@ def _choose_linkage(**context):
     elif context["params"]["linkage_mode"] == "deduplication":
         return DEDUPLICATION_FLOW
     return INCREMENTAL_FLOW
-
-
-def _skip_llm_summarization(**context):
-    if context["params"]["skip_llm_summarization"] is True:
-        return SKIP_SUMMARIZATION_FLOW
-    return SUMMARIZATION_WITH_LLM_FLOW
 
 
 default_args = {
@@ -211,7 +213,7 @@ with DAG(
             enum=["incremental", "metadata_refresh", "deduplication"],
             type="string",
         ),
-        "skip_llm_summarization": Param(default=False, type="boolean"),
+        "llm_summarization_from_scratch": Param(default=False, type="boolean"),
     },
 ) as dag:
     with TaskGroup("dag_init") as dag_init:
@@ -255,12 +257,6 @@ with DAG(
     choose_linkage = BranchPythonOperator(
         task_id="choose_path",
         python_callable=_choose_linkage,
-        provide_context=True,
-        dag=dag,
-    )
-    choose_llm_summarization = BranchPythonOperator(
-        task_id="choose_llm_summarization",
-        python_callable=_skip_llm_summarization,
         provide_context=True,
         dag=dag,
     )
@@ -371,7 +367,7 @@ with DAG(
     )
 
     #####################################################################################################
-    #                              Common Incremental + Refresh Metadata                                #
+    #                  Common Incremental + Refresh Metadata + LLM Summarization Flow                   #
     #####################################################################################################
 
     get_wikimedia_commons_license = SSHGCEOperator(
@@ -398,21 +394,16 @@ with DAG(
             """,
     )
 
-    #####################################################################################################
-    #                                   Summarization with LLM Flow                                     #
-    #####################################################################################################
-    summarization_with_llm_flow = EmptyOperator(task_id=SUMMARIZATION_WITH_LLM_FLOW)
-
     get_wikipedia_page_content = SSHGCEOperator(
         task_id="get_wikipedia_page_content",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         trigger_rule="none_failed_min_one_success",
-        command=f"""
-             uv run cli/get_wikipedia_page_content.py \
-            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_MEDIATION_UUID_GCS_FILENAME_03)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_04)}
-            """,
+        command="uv run cli/get_wikipedia_page_content.py "
+        f"--applicative-artist-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} "
+        f"--artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_MEDIATION_UUID_GCS_FILENAME_03)} "
+        f"--output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_04)} "
+        "{%- if params['llm_summarization_from_scratch'] %} --extract-all-from-scratch{%- endif %}",
     )
 
     summarize_biographies_with_llm = SSHGCEOperator(
@@ -424,23 +415,6 @@ with DAG(
             --artists-with-wikipedia-content {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_04)} \
             --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_05)} \
             {SUMMARIZE_BIOGRAPHY_OPTIONS[ENV_SHORT_NAME]}
-            """,
-    )
-
-    #####################################################################################################
-    #                                     Skip LLM Summarization                                        #
-    #####################################################################################################
-    skip_summarization_flow = EmptyOperator(task_id=SKIP_SUMMARIZATION_FLOW)
-
-    retrieve_artist_biographies_from_artist_table = SSHGCEOperator(
-        task_id="retrieve_artist_biographies_from_artist_table",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
-             uv run cli/retrieve_artist_biographies_from_artist_table.py \
-            --applicative-artist-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
-            --artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_MEDIATION_UUID_GCS_FILENAME_03)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_05)}
             """,
     )
 
@@ -491,27 +465,10 @@ with DAG(
     # Refresh Metadata Flow
     (refresh_metadata_flow >> refresh_artist_metadatas >> get_wikimedia_commons_license)
 
-    # LLM Summarization Choice
+    # LLM Summarization
     (
         get_wikimedia_commons_license
         >> transfer_wikimedia_images_to_gcs
-        >> choose_llm_summarization
-        >> [
-            skip_summarization_flow,
-            summarization_with_llm_flow,
-        ]
-    )
-
-    # Skip LLM Summarization Flow
-    (
-        skip_summarization_flow
-        >> retrieve_artist_biographies_from_artist_table
-        >> load_delta_artist_data_into_tables
-    )
-
-    # Summarization with LLM Flow
-    (
-        summarization_with_llm_flow
         >> get_wikipedia_page_content
         >> summarize_biographies_with_llm
         >> load_delta_artist_data_into_tables

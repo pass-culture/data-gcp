@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: ml_feat__item_embedding_refactor
+    description: "{{ doc('description__ml_feat__item_embedding_refactor') }}"
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: item_id
+        description: "{{ doc('column__item_id') }}"
+        data_type: STRING
+        data_tests:
+          - unique
+          - not_null
+      - name: content_hash
+        description: "{{ doc('column__content_hash') }}"
+        data_type: STRING
+        data_tests:
+          - not_null
+      - name: semantic_content_sts
+        description: "{{ doc('column__semantic_content_sts') }}"
+        data_type: ARRAY<FLOAT64>
+        data_tests:
+          - not_null
+      - name: semantic_content_clustering
+        description: "{{ doc('column__semantic_content_clustering') }}"
+        data_type: ARRAY<FLOAT64>
+        data_tests:
+          - not_null

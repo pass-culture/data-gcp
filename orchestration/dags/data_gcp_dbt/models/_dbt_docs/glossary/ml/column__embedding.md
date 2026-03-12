@@ -5,3 +5,6 @@
 {% docs column__embedding_offer_hybrid %}Embedding generated with the image and the semantic content of an image.{% enddocs %}
 {% docs column__two_tower_item_embedding %}Two tower model item embedding.{% enddocs %}
 {% docs column__two_tower_user_embedding %}Two tower model user embedding.{% enddocs %}
+{% docs column__content_hash %} Hash of the contents of and item's metadata. {% enddocs %}
+{% docs column__semantic_content_clustering %} Embedding of item's metadata with Clustering prompt name. Encoded with embedding-gemma-300m model. {% enddocs %}
+{% docs column__semantic_content_sts %} Embedding of item's metadata with STS prompt name. Encoded with embedding-gemma-300m model {% enddocs %}

@@ -180,7 +180,10 @@ def migrate_query_builder(
     """
     # Use the tree walker on the entire dataset_query
     # It will handle source-table, field refs, fk refs, etc.
-    return replace_field_ids(dataset_query, field_mapping, table_mapping)
+    result: dict[str, Any] = replace_field_ids(
+        dataset_query, field_mapping, table_mapping
+    )
+    return result
 
 
 def _replace_sql_references(
@@ -295,7 +298,10 @@ def _migrate_result_metadata(
     if not result_metadata:
         return result_metadata
 
-    return replace_field_ids(result_metadata, field_mapping, table_mapping)
+    updated: list[dict[str, Any]] = replace_field_ids(
+        result_metadata, field_mapping, table_mapping
+    )
+    return updated
 
 
 def _migrate_visualization_settings(
@@ -319,4 +325,7 @@ def _migrate_visualization_settings(
     if not viz_settings:
         return viz_settings
 
-    return replace_field_ids(viz_settings, field_mapping, table_mapping)
+    updated: dict[str, Any] = replace_field_ids(
+        viz_settings, field_mapping, table_mapping
+    )
+    return updated

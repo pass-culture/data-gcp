@@ -255,7 +255,10 @@ class TestMigrateCard:
         assert result.table_id == 20
 
         # SQL updated
+        assert result.dataset_query is not None
+        assert result.dataset_query.native is not None
         sql = result.dataset_query.native.query
+        assert sql is not None
         assert "enriched_user_data" in sql
         assert "old_user_stats" not in sql
         assert "total_individual_bookings" in sql
@@ -287,10 +290,13 @@ class TestMigrateCard:
 
         # dataset_query.query.source-table updated
         dq = result.dataset_query
+        assert dq is not None
+        assert dq.query is not None
         assert dq.query.source_table == 20
 
         # Fields updated
         fields = dq.query.fields
+        assert fields is not None
         assert ["field", 301, None] in fields
         assert ["field", 302, {"base-type": "type/Integer"}] in fields
 
@@ -319,6 +325,8 @@ class TestMigrateCard:
         assert result.collection_id == card.collection_id
         assert result.archived == card.archived
         assert result.description == card.description
+        assert result.dataset_query is not None
+        assert card.dataset_query is not None
         assert result.dataset_query.database == card.dataset_query.database
 
     def test_card_without_dataset_query_returns_unchanged(self) -> None:

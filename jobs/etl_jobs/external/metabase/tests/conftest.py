@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -11,17 +12,19 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
 @pytest.fixture
-def native_card_fixture() -> dict:
+def native_card_fixture() -> dict[str, Any]:
     """Load the native SQL card MBQL v5 fixture."""
     with open(FIXTURES_DIR / "card_native_mbql5.json") as f:
-        return json.load(f)
+        data: dict[str, Any] = json.load(f)
+        return data
 
 
 @pytest.fixture
-def query_card_fixture() -> dict:
+def query_card_fixture() -> dict[str, Any]:
     """Load the query builder card MBQL v5 fixture."""
     with open(FIXTURES_DIR / "card_query_mbql5.json") as f:
-        return json.load(f)
+        data: dict[str, Any] = json.load(f)
+        return data
 
 
 @pytest.fixture

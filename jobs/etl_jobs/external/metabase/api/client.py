@@ -154,7 +154,8 @@ class MetabaseClient:
         """
         response = self.session.get(f"{self.host}/api/table")
         response.raise_for_status()
-        return response.json()
+        result: list[dict[str, Any]] = response.json()
+        return result
 
     def find_table_id(self, table_name: str, schema_name: str) -> int | None:
         """Find a table ID by name and schema.
@@ -169,7 +170,8 @@ class MetabaseClient:
         tables = self.list_tables()
         for t in tables:
             if t.get("name") == table_name and t.get("schema") == schema_name:
-                return t["id"]
+                table_id: int = t["id"]
+                return table_id
         return None
 
     def get_table_fields(self, table_id: int) -> list[MetabaseField]:

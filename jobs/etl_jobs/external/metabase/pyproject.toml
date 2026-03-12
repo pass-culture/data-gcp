@@ -19,6 +19,7 @@ dev = [
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
     "ruff>=0.15.5",
+    "types-requests>=2.32.4.20260107",
 ]
 
 [tool.pytest.ini_options]
@@ -47,3 +48,5 @@ python_version = "3.14"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+explicit_package_bases = true
+mypy_path = "."

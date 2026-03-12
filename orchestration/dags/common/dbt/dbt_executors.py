@@ -49,6 +49,10 @@ def should_skip_scheduled_node(node_tags: List[str], ds: str) -> Optional[str]:
             if execution_date.day != 1:
                 return "monthly"
 
+        if "monthly_15" in node_tags:
+            if execution_date.day != 15:
+                return "monthly_15"
+
     except ValueError:
         logging.warning(f"Invalid date format for ds: {ds}")
 

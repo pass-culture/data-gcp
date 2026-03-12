@@ -107,6 +107,8 @@ models:
         +tags: "monthly"
         +labels:
           schedule: "monthly"
+      cloudsql_recommendation:
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     machine_learning:
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +meta:

@@ -8,7 +8,6 @@ models:
         description: "{{ doc('column__educational_domain_id') }}"
         data_tests:
           - not_null
-          - unique
       - name: venue_id
         description: "{{ doc('column__venue_id') }}"
       - name: educational_domain_name

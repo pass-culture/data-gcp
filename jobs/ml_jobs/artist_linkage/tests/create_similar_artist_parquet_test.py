@@ -28,11 +28,6 @@ def _make_search_df(artist_ids: list, artist_names: list, ranks: list) -> pd.Dat
     )
 
 
-# ──────────────────────────────────────────────
-# merge_search_results
-# ──────────────────────────────────────────────
-
-
 class TestMergeSearchResults:
     def test_basic_merge_both_present(self):
         """Both search methods return the same artists — no NaN ranks expected."""
@@ -65,7 +60,7 @@ class TestMergeSearchResults:
 
         assert len(result) == 2
         a2_row = result.loc[result[ARTIST_ID_KEY] == "a2"].iloc[0]
-        assert a2_row["item_rank_score"] == 0.0
+        assert np.isclose(a2_row["item_rank_score"], 0.0)
 
     def test_outer_join_fills_missing_semantic_ranks(self):
         """Artists only in item results get semantic_rank_score = 0."""
@@ -76,7 +71,7 @@ class TestMergeSearchResults:
 
         assert len(result) == 2
         a3_row = result.loc[result[ARTIST_ID_KEY] == "a3"].iloc[0]
-        assert a3_row["semantic_rank_score"] == 0.0
+        assert np.isclose(a3_row["semantic_rank_score"], 0.0)
 
     def test_combined_score_formula(self):
         """Verify the combined score formula against manual calculation."""
@@ -123,7 +118,7 @@ class TestMergeSearchResults:
         result = merge_search_results(semantic_df, item_df)
 
         assert len(result) == 2
-        assert (result["item_rank_score"] == 0.0).all()
+        assert (np.isclose(result["item_rank_score"], 0.0)).all()
         # Semantic-only scores should still be positive
         assert (result["semantic_rank_score"] > 0).all()
 
@@ -141,12 +136,9 @@ class TestMergeSearchResults:
         )
 
 
-# ──────────────────────────────────────────────
-# format_results_df
-# ──────────────────────────────────────────────
-
-
 class TestFormatResultsDf:
+    artist_0_name = "Artist 0"
+
     @pytest.fixture()
     def merged_df(self) -> pd.DataFrame:
         """A realistic merged result DataFrame for artist 'query_id'."""
@@ -163,37 +155,37 @@ class TestFormatResultsDf:
 
     def test_excludes_query_artist(self, merged_df: pd.DataFrame):
         """The query artist itself should not appear in the results."""
-        result = format_results_df(merged_df, "a0", "Artist 0")
+        result = format_results_df(merged_df, "a0", self.artist_0_name)
         assert "a0" not in result[f"{ARTIST_ID_KEY}_match"].values
 
     def test_returns_at_most_10(self, merged_df: pd.DataFrame):
         """Output should contain at most 10 rows."""
-        result = format_results_df(merged_df, "a0", "Artist 0")
+        result = format_results_df(merged_df, "a0", self.artist_0_name)
         assert len(result) <= 10
 
     def test_rank_combined_is_one_based(self, merged_df: pd.DataFrame):
         """The rank_combined column should start at 1."""
-        result = format_results_df(merged_df, "a0", "Artist 0")
+        result = format_results_df(merged_df, "a0", self.artist_0_name)
         assert result[f"{RANK_KEY}_combined"].iloc[0] == 1
         assert result[f"{RANK_KEY}_combined"].iloc[-1] == len(result)
 
     def test_sorted_by_combined_score_descending(self, merged_df: pd.DataFrame):
         """Rows should be ordered by combined_score from highest to lowest."""
-        result = format_results_df(merged_df, "a0", "Artist 0")
+        result = format_results_df(merged_df, "a0", self.artist_0_name)
         scores = result[COMBINED_SCORE_KEY].values
         assert list(scores) == sorted(scores, reverse=True)
 
     def test_columns_renamed(self, merged_df: pd.DataFrame):
         """Original ID/name columns should be renamed with _match suffix."""
-        result = format_results_df(merged_df, "a0", "Artist 0")
+        result = format_results_df(merged_df, "a0", self.artist_0_name)
         assert f"{ARTIST_ID_KEY}_match" in result.columns
         assert f"{ARTIST_NAME_KEY}_match" in result.columns
 
     def test_query_artist_columns_added(self, merged_df: pd.DataFrame):
         """The query artist's ID and name should be present on every row."""
-        result = format_results_df(merged_df, "a0", "Artist 0")
+        result = format_results_df(merged_df, "a0", self.artist_0_name)
         assert (result[ARTIST_ID_KEY] == "a0").all()
-        assert (result[ARTIST_NAME_KEY] == "Artist 0").all()
+        assert (result[ARTIST_NAME_KEY] == self.artist_0_name).all()
 
     def test_fewer_than_10_candidates(self):
         """When fewer than 10 candidates exist, return all of them."""

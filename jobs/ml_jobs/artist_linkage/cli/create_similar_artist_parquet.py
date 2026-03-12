@@ -224,7 +224,7 @@ def main(
         result_df_list.append(formatted_results_df)
 
     if len(result_df_list) == 0:
-        raise Exception("No results found for any artist. Exiting without saving.")
+        raise ValueError("No results found for any artist. Exiting without saving.")
 
     logger.info("Similarity search completed. Saving results to Parquet...")
     pd.concat(result_df_list).loc[:, lambda df: df.columns.sort_values()].to_parquet(

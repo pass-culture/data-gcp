@@ -57,7 +57,7 @@ DAG_DOC = """
                     "g2-standard-24": 2 L4s,
                     "g2-standard-48": 4 L4s,
                     "g2-standard-96": 8 L4s,
-            ⚠️ caution: frequent stockouts on L4 GPUs, especially in europe-west1, make sure to check availability before launching your VM and consider using a different GPU type if you encounter stockouts.
+            ⚠️ caution: frequent stockouts on L4 GPUs, especially in europe-west1-b, try europe-west1-c or europe-west1-d if you encounter stockouts.
     * use_gke_network: if you need your VM to comminicate with the Clickhouse cluster, set this parameter to True
     * pricing: the pricing of the VM depends on the `instance_type` and can be found [here](https://gcloud-compute.com/instances.html)
       ** For instance, the `n1-standard-2` instance type costs $0.1157 per hour while the `n1-standard-32` instance type costs $1.852 per hour
@@ -93,7 +93,7 @@ with (
             "gpu_type": Param(
                 default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
             ),
-            "gce_zone": Param(default="europe-west-1b", enum=GCE_ZONES),
+            "gce_zone": Param(default="europe-west1-b", enum=GCE_ZONES),
             "keep_alive": Param(default=True, type="boolean"),
             "install_project": Param(default=True, type="boolean"),
             "use_gke_network": Param(default=False, type="boolean"),

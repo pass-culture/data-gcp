@@ -89,7 +89,7 @@ def main(
     logger.info("Indexes created successfully.")
 
     # Perform search for each artist and combine results
-    result_list = []
+    result_df_list = []
     logger.info("Performing similarity search for each artist...")
     for _, selected_artist_row in tqdm.tqdm(artist_df.iterrows(), total=len(artist_df)):
         semantic_df = perform_search(
@@ -148,20 +148,37 @@ def main(
             .sort_values(by=[COMBINED_SCORE_KEY], ascending=[False])
         )
 
-        result_list.append(
-            {
-                ARTIST_ID_KEY: selected_artist_row[ARTIST_ID_KEY],
-                ARTIST_NAME_KEY: selected_artist_row[ARTIST_NAME_KEY],
-                "top_matches": results_df[
-                    results_df[ARTIST_ID_KEY] != selected_artist_row[ARTIST_ID_KEY]
-                ]  # Exclude the artist itself
-                .head(10)
-                .to_json(orient="records"),
-            }
+        result_df_list.append(
+            results_df.loc[
+                lambda df, artist_id=selected_artist_row[ARTIST_ID_KEY]: df[
+                    ARTIST_ID_KEY
+                ]
+                == artist_id,
+                :,
+            ]
+            .head(10)
+            .reset_index(drop=True)
+            .rename(
+                {
+                    ARTIST_ID_KEY: f"{ARTIST_ID_KEY}_match",
+                    ARTIST_NAME_KEY: f"{ARTIST_NAME_KEY}_match",
+                    RANK_SEMANTIC_KEY: RANK_SEMANTIC_KEY,
+                    RANK_ITEM_KEY: RANK_ITEM_KEY,
+                    COMBINED_SCORE_KEY: COMBINED_SCORE_KEY,
+                }
+            )
+            .assign(
+                **{
+                    ARTIST_ID_KEY: selected_artist_row[ARTIST_ID_KEY],
+                    ARTIST_NAME_KEY: selected_artist_row[ARTIST_NAME_KEY],
+                    f"{RANK_KEY}_combined": lambda df: df.index + 1,
+                }
+            )
+            .sort_values(by=[ARTIST_ID_KEY, f"{RANK_KEY}_combined"])
         )
     logger.info("Similarity search completed. Saving results to Parquet...")
 
-    pd.DataFrame(result_list).to_parquet(output_file_path, index=False)
+    pd.concat(result_df_list).to_parquet(output_file_path, index=False)
     logger.info("Results saved to Parquet successfully.")
 
 

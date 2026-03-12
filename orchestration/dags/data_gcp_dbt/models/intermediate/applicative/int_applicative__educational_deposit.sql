@@ -17,9 +17,9 @@ select
             extract(month from ed.educational_deposit_expiration_date)
         )
         when (9, 12)
-        then 'p1'
+        then 'sept-dec'
         when (1, 8)
-        then 'p2'
+        then 'jan-aug'
         else 'all_year'
     end as educational_deposit_period,
     coalesce(

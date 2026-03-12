@@ -19,16 +19,16 @@ with
             ed.scholar_year,
             sum(
                 case
-                    when ed.educational_deposit_period = 'p1'
+                    when ed.educational_deposit_period = 'sept-dec'
                     then (ed.educational_deposit_amount)
                 end
-            ) as p1_deposit,
+            ) as sept_dec_deposit,
             sum(
                 case
-                    when ed.educational_deposit_period = 'p2'
+                    when ed.educational_deposit_period = 'jan-aug'
                     then (ed.educational_deposit_amount)
                 end
-            ) as p2_deposit,
+            ) as jan_aug_deposit,
             sum(
                 case
                     when ed.educational_deposit_period = 'all_year'
@@ -50,24 +50,24 @@ with
                 sum(
                     case
                         when
-                            ed.educational_deposit_period = 'p1'
+                            ed.educational_deposit_period = 'sept-dec'
                             and cb.collective_booking_status != 'CANCELLED'
                         then cs.collective_stock_price
                     end
                 ),
                 0
-            ) as p1_theoric_amount_spent,
+            ) as sept_dec_theoric_amount_spent,
             coalesce(
                 sum(
                     case
                         when
-                            ed.educational_deposit_period = 'p2'
+                            ed.educational_deposit_period = 'jan-aug'
                             and cb.collective_booking_status != 'CANCELLED'
                         then cs.collective_stock_price
                     end
                 ),
                 0
-            ) as p2_theoric_amount_spent,
+            ) as jan_aug_theoric_amount_spent,
             coalesce(
                 sum(
                     case
@@ -83,26 +83,26 @@ with
                 sum(
                     case
                         when
-                            ed.educational_deposit_period = 'p1'
+                            ed.educational_deposit_period = 'sept-dec'
                             and cb.collective_booking_status
                             not in ('CANCELLED', 'PENDING')
                         then cs.collective_stock_price
                     end
                 ),
                 0
-            ) as p1_real_amount_spent,
+            ) as sept_dec_real_amount_spent,
             coalesce(
                 sum(
                     case
                         when
-                            ed.educational_deposit_period = 'p2'
+                            ed.educational_deposit_period = 'jan-aug'
                             and cb.collective_booking_status
                             not in ('CANCELLED', 'PENDING')
                         then cs.collective_stock_price
                     end
                 ),
                 0
-            ) as p2_real_amount_spent,
+            ) as jan_aug_real_amount_spent,
             coalesce(
                 sum(
                     case
@@ -119,24 +119,24 @@ with
                 sum(
                     case
                         when
-                            ed.educational_deposit_period = 'p1'
+                            ed.educational_deposit_period = 'sept-dec'
                             and cb.collective_booking_status = 'REIMBURSED'
                         then cs.collective_stock_price
                     end
                 ),
                 0
-            ) as p1_reimbursed_amount,
+            ) as sept_dec_reimbursed_amount,
             coalesce(
                 sum(
                     case
                         when
-                            ed.educational_deposit_period = 'p2'
+                            ed.educational_deposit_period = 'jan-aug'
                             and cb.collective_booking_status = 'REIMBURSED'
                         then cs.collective_stock_price
                     end
                 ),
                 0
-            ) as p2_reimbursed_amount,
+            ) as jan_aug_reimbursed_amount,
             coalesce(
                 sum(
                     case
@@ -151,19 +151,19 @@ with
             count(
                 case
                     when
-                        ed.educational_deposit_period = 'p1'
+                        ed.educational_deposit_period = 'sept-dec'
                         and cb.collective_booking_status != 'CANCELLED'
                     then cb.collective_booking_id
                 end
-            ) as p1_total_theoric_bookings,
+            ) as sept_dec_total_theoric_bookings,
             count(
                 case
                     when
-                        ed.educational_deposit_period = 'p2'
+                        ed.educational_deposit_period = 'jan-aug'
                         and cb.collective_booking_status != 'CANCELLED'
                     then cb.collective_booking_id
                 end
-            ) as p2_total_theoric_bookings,
+            ) as jan_aug_total_theoric_bookings,
             count(
                 case
                     when
@@ -175,19 +175,19 @@ with
             count(
                 case
                     when
-                        ed.educational_deposit_period = 'p1'
+                        ed.educational_deposit_period = 'sept-dec'
                         and cb.collective_booking_status not in ('CANCELLED', 'PENDING')
                     then cb.collective_booking_id
                 end
-            ) as p1_total_confirmed_bookings,
+            ) as sept_dec_total_confirmed_bookings,
             count(
                 case
                     when
-                        ed.educational_deposit_period = 'p2'
+                        ed.educational_deposit_period = 'jan-aug'
                         and cb.collective_booking_status not in ('CANCELLED', 'PENDING')
                     then cb.collective_booking_id
                 end
-            ) as p2_total_confirmed_bookings,
+            ) as jan_aug_total_confirmed_bookings,
             count(
                 case
                     when
@@ -234,37 +234,41 @@ select
     flattened_deposits.scholar_year,
     flattened_deposits.p1_deposit,
     flattened_deposits.p2_deposit,
-    bookings.p1_total_theoric_bookings,
-    bookings.p2_total_theoric_bookings,
-    bookings.p1_theoric_amount_spent,
-    bookings.p2_theoric_amount_spent,
-    bookings.p1_total_confirmed_bookings,
-    bookings.p2_total_confirmed_bookings,
-    bookings.p1_real_amount_spent,
-    bookings.p2_real_amount_spent,
-    bookings.p1_reimbursed_amount,
-    bookings.p2_reimbursed_amount,
+    bookings.sept_dec_total_theoric_bookings,
+    bookings.jan_aug_total_theoric_bookings,
+    bookings.sept_dec_theoric_amount_spent,
+    bookings.jan_aug_theoric_amount_spent,
+    bookings.sept_dec_total_confirmed_bookings,
+    bookings.jan_aug_total_confirmed_bookings,
+    bookings.sept_dec_real_amount_spent,
+    bookings.jan_aug_real_amount_spent,
+    bookings.sept_dec_reimbursed_amount,
+    bookings.jan_aug_reimbursed_amount,
     students_headcount.total_students,
     coalesce(
         flattened_deposits.total_scholar_year_deposit,
-        flattened_deposits.p1_deposit + flattened_deposits.p2_deposit
+        flattened_deposits.sept_dec_deposit + flattened_deposits.jan_aug_deposit
     ) as total_scholar_year_deposit,
     coalesce(
         (
-            flattened_deposits.p1_deposit is not null
-            or flattened_deposits.p2_deposit is not null
+            flattened_deposits.sept_dec_deposit is not null
+            or flattened_deposits.jan_aug_deposit is not null
         ),
         false
     ) as is_split_deposit,
     case
         when bookings.all_year_total_theoric_bookings = 0
-        then bookings.p1_total_theoric_bookings + bookings.p2_total_theoric_bookings
+        then
+            bookings.sept_dec_total_theoric_bookings
+            + bookings.jan_aug_total_theoric_bookings
         else bookings.all_year_total_theoric_bookings
     end as all_year_total_theoric_bookings,
     coalesce(
         case
             when bookings.all_year_theoric_amount_spent = 0
-            then bookings.p1_theoric_amount_spent + bookings.p2_theoric_amount_spent
+            then
+                bookings.sept_dec_theoric_amount_spent
+                + bookings.jan_aug_theoric_amount_spent
             else bookings.all_year_theoric_amount_spent
         end,
         0
@@ -273,28 +277,36 @@ select
         coalesce(
             case
                 when bookings.all_year_theoric_amount_spent = 0
-                then bookings.p1_theoric_amount_spent + bookings.p2_theoric_amount_spent
+                then
+                    bookings.sept_dec_theoric_amount_spent
+                    + bookings.jan_aug_theoric_amount_spent
                 else bookings.all_year_theoric_amount_spent
             end,
             0
         ),
         coalesce(
             flattened_deposits.total_scholar_year_deposit,
-            flattened_deposits.p1_deposit + flattened_deposits.p2_deposit
+            flattened_deposits.sept_dec_deposit + flattened_deposits.jan_aug_deposit
         )
     ) as pct_all_year_theoric_amount_spent,
     coalesce(
-        safe_divide(bookings.p1_theoric_amount_spent, flattened_deposits.p1_deposit), 0
-    ) as pct_p1_theoric_amount_spent,
+        safe_divide(
+            bookings.sept_dec_theoric_amount_spent, flattened_deposits.sept_dec_deposit
+        ),
+        0
+    ) as pct_sept_dec_theoric_amount_spent,
     coalesce(
-        safe_divide(bookings.p2_theoric_amount_spent, flattened_deposits.p2_deposit), 0
-    ) as pct_p2_theoric_amount_spent,
+        safe_divide(
+            bookings.jan_aug_theoric_amount_spent, flattened_deposits.jan_aug_deposit
+        ),
+        0
+    ) as pct_jan_aug_theoric_amount_spent,
     coalesce(
         case
             when bookings.all_year_total_confirmed_bookings = 0
             then
-                bookings.p1_total_confirmed_bookings
-                + bookings.p2_total_confirmed_bookings
+                bookings.sept_dec_total_confirmed_bookings
+                + bookings.jan_aug_total_confirmed_bookings
             else bookings.all_year_total_confirmed_bookings
         end,
         0
@@ -302,57 +314,75 @@ select
     coalesce(
         case
             when bookings.all_year_real_amount_spent = 0
-            then bookings.p1_real_amount_spent + bookings.p2_real_amount_spent
+            then
+                bookings.sept_dec_real_amount_spent + bookings.jan_aug_real_amount_spent
             else bookings.all_year_real_amount_spent
         end,
         0
     ) as all_year_real_amount_spent,
     coalesce(
-        safe_divide(bookings.p1_real_amount_spent, flattened_deposits.p1_deposit), 0
-    ) as pct_p1_real_amount_spent,
+        safe_divide(
+            bookings.sept_dec_real_amount_spent, flattened_deposits.sept_dec_deposit
+        ),
+        0
+    ) as pct_sept_dec_real_amount_spent,
     coalesce(
-        safe_divide(bookings.p2_real_amount_spent, flattened_deposits.p2_deposit), 0
-    ) as pct_p2_real_amount_spent,
+        safe_divide(
+            bookings.jan_aug_real_amount_spent, flattened_deposits.jan_aug_deposit
+        ),
+        0
+    ) as pct_jan_aug_real_amount_spent,
     safe_divide(
         coalesce(
             case
                 when bookings.all_year_real_amount_spent = 0
-                then bookings.p1_real_amount_spent + bookings.p2_real_amount_spent
+                then
+                    bookings.sept_dec_real_amount_spent
+                    + bookings.jan_aug_real_amount_spent
                 else bookings.all_year_real_amount_spent
             end,
             0
         ),
         coalesce(
             flattened_deposits.total_scholar_year_deposit,
-            flattened_deposits.p1_deposit + flattened_deposits.p2_deposit
+            flattened_deposits.sept_dec_deposit + flattened_deposits.jan_aug_deposit
         )
     ) as pct_all_year_real_amount_spent,
     coalesce(
         case
             when bookings.all_year_reimbursed_amount = 0
-            then bookings.p1_reimbursed_amount + bookings.p2_reimbursed_amount
+            then
+                bookings.sept_dec_reimbursed_amount + bookings.jan_aug_reimbursed_amount
             else bookings.all_year_reimbursed_amount
         end,
         0
     ) as all_year_reimbursed_amount,
     coalesce(
-        safe_divide(bookings.p1_reimbursed_amount, flattened_deposits.p1_deposit), 0
-    ) as pct_p1_reimbursed_amount_spent,
+        safe_divide(
+            bookings.sept_dec_reimbursed_amount, flattened_deposits.sept_dec_deposit
+        ),
+        0
+    ) as pct_sept_dec_reimbursed_amount_spent,
     coalesce(
-        safe_divide(bookings.p2_reimbursed_amount, flattened_deposits.p2_deposit), 0
-    ) as pct_p2_reimbursed_amount_spent,
+        safe_divide(
+            bookings.jan_aug_reimbursed_amount, flattened_deposits.jan_aug_deposit
+        ),
+        0
+    ) as pct_jan_aug_reimbursed_amount_spent,
     safe_divide(
         coalesce(
             case
                 when bookings.all_year_reimbursed_amount = 0
-                then bookings.p1_reimbursed_amount + bookings.p2_reimbursed_amount
+                then
+                    bookings.sept_dec_reimbursed_amount
+                    + bookings.jan_aug_reimbursed_amount
                 else bookings.all_year_reimbursed_amount
             end,
             0
         ),
         coalesce(
             flattened_deposits.total_scholar_year_deposit,
-            flattened_deposits.p1_deposit + flattened_deposits.p2_deposit,
+            flattened_deposits.sept_dec_deposit + flattened_deposits.jan_aug_deposit,
             0
         )
     ) as pct_all_year_reimbursed_amount_spent

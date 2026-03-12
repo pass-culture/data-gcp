@@ -16,9 +16,9 @@ from src.constants import (
 # Columns
 RANK_KEY = "rank"
 SEMANTIC_SUFFIX = "_semantic"
-ITEM_SUFFIX = "_item"
+ITEM_TT_SUFFIX = "_item_tt"
 RANK_SEMANTIC_KEY = f"{RANK_KEY}{SEMANTIC_SUFFIX}"
-RANK_ITEM_KEY = f"{RANK_KEY}{ITEM_SUFFIX}"
+RANK_ITEM_KEY = f"{RANK_KEY}{ITEM_TT_SUFFIX}"
 COMBINED_SCORE_KEY = "combined_score"
 
 # LanceDB parameters
@@ -48,7 +48,74 @@ def perform_search(
             ascending=[True],
         )
         .reset_index(drop=True)
-        .assign(rank=lambda df: df.index + 1)
+        .assign(rank=lambda df: df.index)
+    )
+
+
+def merge_search_results(
+    semantic_df: pd.DataFrame, item_df: pd.DataFrame
+) -> pd.DataFrame:
+    return (
+        semantic_df.merge(
+            item_df,
+            on=[
+                ARTIST_ID_KEY,
+                ARTIST_NAME_KEY,
+                ARTIST_APP_SEARCH_SCORE_KEY,
+                ARTIST_BIOGRAPHY_KEY,
+            ],
+            suffixes=(SEMANTIC_SUFFIX, ITEM_TT_SUFFIX),
+            how="outer",
+        )
+        .loc[
+            :,
+            [
+                ARTIST_ID_KEY,
+                ARTIST_NAME_KEY,
+                RANK_SEMANTIC_KEY,
+                RANK_ITEM_KEY,
+            ],
+        ]
+        .assign(
+            semantic_rank_score=lambda df: (
+                1.0 / (RANK_ALPHA_CONSTANT + df[RANK_SEMANTIC_KEY])
+            )
+            .infer_objects(copy=False)
+            .fillna(0),
+            item_rank_score=lambda df: (1.0 / (RANK_ALPHA_CONSTANT + df[RANK_ITEM_KEY]))
+            .infer_objects(copy=False)
+            .fillna(0),
+            combined_score=lambda df: df.semantic_rank_score
+            + TT_COEFFICIENT * df.item_rank_score,
+        )
+    )
+
+
+def format_results_df(
+    results_df: pd.DataFrame, selected_artist_id, selected_artist_name
+) -> pd.DataFrame:
+    return (
+        results_df.loc[
+            lambda df: df[ARTIST_ID_KEY] != selected_artist_id,
+            :,
+        ]
+        .sort_values(by=[COMBINED_SCORE_KEY], ascending=[False])
+        .head(10)
+        .reset_index(drop=True)
+        .rename(
+            columns={
+                ARTIST_ID_KEY: f"{ARTIST_ID_KEY}_match",
+                ARTIST_NAME_KEY: f"{ARTIST_NAME_KEY}_match",
+            }
+        )
+        .assign(
+            **{
+                ARTIST_ID_KEY: selected_artist_id,
+                ARTIST_NAME_KEY: selected_artist_name,
+                f"{RANK_KEY}_combined": lambda df: df.index + 1,
+            }
+        )
+        .sort_values(by=[ARTIST_ID_KEY, f"{RANK_KEY}_combined"])
     )
 
 
@@ -110,74 +177,15 @@ def main(
                 ]
             )
 
-        results_df = (
-            semantic_df.merge(
-                item_df,
-                on=[
-                    ARTIST_ID_KEY,
-                    ARTIST_NAME_KEY,
-                    ARTIST_APP_SEARCH_SCORE_KEY,
-                    ARTIST_BIOGRAPHY_KEY,
-                ],
-                suffixes=(SEMANTIC_SUFFIX, ITEM_SUFFIX),
-                how="outer",
-            )
-            .loc[
-                :,
-                [
-                    ARTIST_ID_KEY,
-                    ARTIST_NAME_KEY,
-                    RANK_SEMANTIC_KEY,
-                    RANK_ITEM_KEY,
-                ],
-            ]
-            .assign(
-                semantic_rank_score=lambda df: (
-                    1.0 / (RANK_ALPHA_CONSTANT + df[RANK_SEMANTIC_KEY])
-                )
-                .infer_objects(copy=False)
-                .fillna(0),
-                item_rank_score=lambda df: (
-                    1.0 / (RANK_ALPHA_CONSTANT + df[RANK_ITEM_KEY])
-                )
-                .infer_objects(copy=False)
-                .fillna(0),
-                combined_score=lambda df: df.semantic_rank_score
-                + TT_COEFFICIENT * df.item_rank_score,
-            )
-            .sort_values(by=[COMBINED_SCORE_KEY], ascending=[False])
+        results_df = merge_search_results(semantic_df=semantic_df, item_df=item_df)
+        formatted_results_df = format_results_df(
+            results_df=results_df,
+            selected_artist_id=selected_artist_row[ARTIST_ID_KEY],
+            selected_artist_name=selected_artist_row[ARTIST_NAME_KEY],
         )
+        result_df_list.append(formatted_results_df)
 
-        result_df_list.append(
-            results_df.loc[
-                lambda df, artist_id=selected_artist_row[ARTIST_ID_KEY]: df[
-                    ARTIST_ID_KEY
-                ]
-                == artist_id,
-                :,
-            ]
-            .head(10)
-            .reset_index(drop=True)
-            .rename(
-                {
-                    ARTIST_ID_KEY: f"{ARTIST_ID_KEY}_match",
-                    ARTIST_NAME_KEY: f"{ARTIST_NAME_KEY}_match",
-                    RANK_SEMANTIC_KEY: RANK_SEMANTIC_KEY,
-                    RANK_ITEM_KEY: RANK_ITEM_KEY,
-                    COMBINED_SCORE_KEY: COMBINED_SCORE_KEY,
-                }
-            )
-            .assign(
-                **{
-                    ARTIST_ID_KEY: selected_artist_row[ARTIST_ID_KEY],
-                    ARTIST_NAME_KEY: selected_artist_row[ARTIST_NAME_KEY],
-                    f"{RANK_KEY}_combined": lambda df: df.index + 1,
-                }
-            )
-            .sort_values(by=[ARTIST_ID_KEY, f"{RANK_KEY}_combined"])
-        )
     logger.info("Similarity search completed. Saving results to Parquet...")
-
     pd.concat(result_df_list).to_parquet(output_file_path, index=False)
     logger.info("Results saved to Parquet successfully.")
 

@@ -19,6 +19,7 @@ SEMANTIC_SUFFIX = "_semantic"
 ITEM_TT_SUFFIX = "_item_tt"
 RANK_SEMANTIC_KEY = f"{RANK_KEY}{SEMANTIC_SUFFIX}"
 RANK_ITEM_KEY = f"{RANK_KEY}{ITEM_TT_SUFFIX}"
+RAW_COMBINED_SCORE_KEY = "raw_combined_score"
 COMBINED_SCORE_KEY = "combined_score"
 
 # LanceDB parameters
@@ -85,8 +86,10 @@ def merge_search_results(
             item_rank_score=lambda df: (1.0 / (RANK_ALPHA_CONSTANT + df[RANK_ITEM_KEY]))
             .infer_objects(copy=False)
             .fillna(0),
-            combined_score=lambda df: df.semantic_rank_score
+            raw_combined_score=lambda df: df.semantic_rank_score
             + TT_COEFFICIENT * df.item_rank_score,
+            combined_score=lambda df: df[RAW_COMBINED_SCORE_KEY]
+            / ((1 + TT_COEFFICIENT) / RANK_ALPHA_CONSTANT),
         )
     )
 

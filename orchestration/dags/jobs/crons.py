@@ -50,9 +50,9 @@ SCHEDULE_DICT = {
         "dev": None,
     },
     "item_embedding": {
-        "prod": "0 0 * * *",  # every day at midnight
-        "stg": "0 0 * * *",  # every day at midnight
-        "dev": "0 0 * * 1",  # every Monday at midnight
+        "prod": "0 7 * * *",  # every day at 7:00 AM
+        "stg": "0 7 * * *",  # every day at 7:00 AM
+        "dev": "0 7 * * 1",  # every Monday at 7:00 AM
     },
     "airflow_dag_metrics": "0 12 * * *",  # every day at 12:00 PM
 }

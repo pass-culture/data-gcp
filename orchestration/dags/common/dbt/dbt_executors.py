@@ -40,18 +40,15 @@ def should_skip_scheduled_node(node_tags: List[str], ds: str) -> Optional[str]:
         execution_date = datetime.strptime(ds, "%Y-%m-%d")
 
         # Check for weekly tag - run only on first day of week (Monday)
-        if "weekly" in node_tags:
-            if execution_date.weekday() != 0:  # 0 is Monday
-                return "weekly"
+        if "weekly" in node_tags and execution_date.weekday() != 0:  # 0 is Monday
+            return "weekly"
 
         # Check for monthly tag - run only on first day of month
-        if "monthly" in node_tags:
-            if execution_date.day != 1:
-                return "monthly"
+        if "monthly" in node_tags and execution_date.day != 1:
+            return "monthly"
 
-        if "monthly_15" in node_tags:
-            if execution_date.day != 15:
-                return "monthly_15"
+        if "monthly_15" in node_tags and execution_date.day != 15:
+            return "monthly_15"
 
     except ValueError:
         logging.warning(f"Invalid date format for ds: {ds}")

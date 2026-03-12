@@ -227,7 +227,9 @@ def main(
         raise Exception("No results found for any artist. Exiting without saving.")
 
     logger.info("Similarity search completed. Saving results to Parquet...")
-    pd.concat(result_df_list).to_parquet(output_file_path, index=False)
+    pd.concat(result_df_list).loc[:, lambda df: df.columns.sort_values()].to_parquet(
+        output_file_path, index=False
+    )
     logger.info("Results saved to Parquet successfully.")
 
 

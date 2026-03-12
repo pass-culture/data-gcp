@@ -16,7 +16,7 @@ from src.constants import (
 # Columns
 RANK_KEY = "rank"
 SEMANTIC_SUFFIX = "_semantic"
-ITEM_TT_SUFFIX = "_item_tt"
+ITEM_TT_SUFFIX = "_item_tt"  # Two Tower item-based embedding search suffix
 RANK_SEMANTIC_KEY = f"{RANK_KEY}{SEMANTIC_SUFFIX}"
 RANK_ITEM_KEY = f"{RANK_KEY}{ITEM_TT_SUFFIX}"
 RAW_COMBINED_SCORE_KEY = "raw_combined_score"
@@ -27,6 +27,7 @@ LANCEDB_TABLE_NAME = "artist"
 LANCEDB_PATH = "data/lancedb"
 SEARCH_METRIC = "cosine"
 NUM_PARTITIONS = 128
+MAX_SEARCH_RESULTS = 200
 
 # Reciprocal rank parameters
 TT_COEFFICIENT = 0.5
@@ -42,7 +43,7 @@ def perform_search(
             vector_column_name=similarity_retrieval_method,
         )
         .distance_type("cosine")
-        .limit(200)
+        .limit(MAX_SEARCH_RESULTS)
         .to_pandas()
         .sort_values(
             by=["_distance"],
@@ -57,26 +58,14 @@ def merge_search_results(
     semantic_df: pd.DataFrame, item_df: pd.DataFrame
 ) -> pd.DataFrame:
     return (
-        semantic_df.merge(
-            item_df,
-            on=[
-                ARTIST_ID_KEY,
-                ARTIST_NAME_KEY,
-                ARTIST_APP_SEARCH_SCORE_KEY,
-                ARTIST_BIOGRAPHY_KEY,
-            ],
+        semantic_df.loc[:, [ARTIST_ID_KEY, ARTIST_NAME_KEY, RANK_KEY]]
+        .merge(
+            item_df.loc[:, [ARTIST_ID_KEY, RANK_KEY]],
+            on=ARTIST_ID_KEY,
             suffixes=(SEMANTIC_SUFFIX, ITEM_TT_SUFFIX),
             how="outer",
+            validate="one_to_one",
         )
-        .loc[
-            :,
-            [
-                ARTIST_ID_KEY,
-                ARTIST_NAME_KEY,
-                RANK_SEMANTIC_KEY,
-                RANK_ITEM_KEY,
-            ],
-        ]
         .assign(
             semantic_rank_score=lambda df: (
                 1.0 / (RANK_ALPHA_CONSTANT + df[RANK_SEMANTIC_KEY])
@@ -95,7 +84,7 @@ def merge_search_results(
 
 
 def format_results_df(
-    results_df: pd.DataFrame, selected_artist_id, selected_artist_name
+    results_df: pd.DataFrame, selected_artist_id: str, selected_artist_name: str
 ) -> pd.DataFrame:
     return (
         results_df.loc[
@@ -118,7 +107,6 @@ def format_results_df(
                 f"{RANK_KEY}_combined": lambda df: df.index + 1,
             }
         )
-        .sort_values(by=[ARTIST_ID_KEY, f"{RANK_KEY}_combined"])
     )
 
 
@@ -187,6 +175,9 @@ def main(
             selected_artist_name=selected_artist_row[ARTIST_NAME_KEY],
         )
         result_df_list.append(formatted_results_df)
+
+    if len(result_df_list) == 0:
+        raise Exception("No results found for any artist. Exiting without saving.")
 
     logger.info("Similarity search completed. Saving results to Parquet...")
     pd.concat(result_df_list).to_parquet(output_file_path, index=False)

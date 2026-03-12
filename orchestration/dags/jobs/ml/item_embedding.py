@@ -88,6 +88,7 @@ with DAG(
     DAG_NAME,
     default_args=DEFAULT_ARGS,
     description="Embed items metadata",
+    doc_md=DAG_DOC,
     schedule_interval=SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME],
     catchup=False,
     dagrun_timeout=timedelta(hours=12),

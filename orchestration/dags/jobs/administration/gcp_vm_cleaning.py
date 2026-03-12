@@ -17,7 +17,7 @@ clean_long_tasks_delay = {"prod": 60 * 3, "dev": 60 * 12, "stg": 60 * 6}
 
 clean_ml_delay = {"prod": 60 * 12, "dev": 60 * 3, "stg": 60 * 3}
 clean_long_ml_delay = {"prod": 60 * 24, "dev": 60 * 3, "stg": 60 * 3}
-
+clean_extra_long_ml_delay = {"prod": 60 * 30, "dev": 60 * 10, "stg": 60 * 10}
 
 dag = DAG(
     "gcp_vm_cleaning",
@@ -47,9 +47,16 @@ long_tasks_cleaning = CleanGCEOperator(
     job_type="long_task",
 )
 
-long_tasks_cleaning = CleanGCEOperator(
+long_ml_cleaning = CleanGCEOperator(
     dag=dag,
     task_id="clean_long_ml_vm_gce_operator",
     timeout_in_minutes=clean_long_ml_delay[ENV_SHORT_NAME],
     job_type="long_ml",
+)
+
+extra_long_ml_cleaning = CleanGCEOperator(
+    dag=dag,
+    task_id="clean_extra_long_ml_vm_gce_operator",
+    timeout_in_minutes=clean_extra_long_ml_delay[ENV_SHORT_NAME],
+    job_type="extra_long_ml",
 )

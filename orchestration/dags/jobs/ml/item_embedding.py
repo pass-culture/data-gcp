@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from itertools import chain
 
 from airflow import DAG
 from airflow.models import Param
@@ -13,6 +14,7 @@ from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
+    GCE_ZONES,
     GCP_PROJECT_ID,
     INSTANCES_TYPES,
     ML_BUCKET_TEMP,
@@ -61,6 +63,27 @@ DEFAULT_ARGS = {
 }
 
 ############################################################################
+DAG_DOC = """
+    ### Item embedding DAG
+
+    #### Parameters:
+    *embed_all* : whether to embed all items or only the ones that need embedding (to_embed = true in the input table)
+    *config_file_name* : name of the configuration file (without .yaml extension) in the `config` folder, which contains the vector configurations and other parameters for the embedding process.
+    *instance_type* : GCE instance type to use for embedding. For L4 GPU instances, make sure to select a compatible machine type with the number of GPUs you want to use. Check hint below.
+    *instance_name* : name of the GCE instance to create for embedding.
+    *gpu_type* : If you decide to embedd all the catalogue, we highly recommend to use 4 L4 GPUs, in europe-west1-c (to avoid stockout issues in europe-west1-b). If you have a smaller catalogue or if you want to embed only the new items, you can use 4 T4 GPU, which is more widely available across zones.
+    *gpu_count* : number of GPUs to use for embedding (only applicable for GPU instance types). Make sure to select a machine type that supports the number of GPUs you want to use.
+
+
+    *Hint:* For L4 GPUs, make sure to select a compatible g2 machine. The Number of L4 GPUs you can attach to a G2 depends on its RAM.
+    Here is the breakdown:
+            "g2-standard-4/8/12/16/32": 1 L4,
+            "g2-standard-24": 2 L4s,
+            "g2-standard-48": 4 L4s,
+            "g2-standard-96": 8 L4s,
+    ⚠️ caution: frequent stockouts on L4 GPUs, especially in europe-west1-b, try europe-west1-c or europe-west1-d if you encounter stockouts.
+"""
+
 with DAG(
     DAG_NAME,
     default_args=DEFAULT_ARGS,
@@ -89,6 +112,7 @@ with DAG(
         "instance_type": Param(
             default=INSTANCE_TYPE,
             type="string",
+            enum=list(chain(*INSTANCES_TYPES["cpu"].values())),
             description="GCE instance type",
         ),
         "instance_name": Param(
@@ -106,6 +130,7 @@ with DAG(
                         (only applicable for GPU instance types).
                         """,
         ),
+        "gce_zone": Param(default="europe-west1-b", enum=GCE_ZONES),
     },
 ) as dag:
     start = EmptyOperator(task_id="start")
@@ -117,7 +142,7 @@ with DAG(
         instance_type="{{ params.instance_type }}",
         gpu_type="{{ params.gpu_type }}",
         gpu_count="{{ params.gpu_count }}",
-        labels={"job_type": "long_ml", "dag_name": DAG_NAME},
+        labels={"job_type": "extra_long_ml", "dag_name": DAG_NAME},
     )
 
     install_dependencies = InstallDependenciesOperator(
@@ -182,7 +207,7 @@ with DAG(
                 --input-parquets-folder-path gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{INPUT_FOLDER} \
                 --output-parquets-folder-path gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{OUTPUT_FOLDER} \
         """,
-        deferrable=True,
+        deferrable=False,
     )
 
     # Step 4: Export the output embeddings from GCS to BigQuery temp table

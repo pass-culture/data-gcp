@@ -117,7 +117,7 @@ with DAG(
         instance_type="{{ params.instance_type }}",
         gpu_type="{{ params.gpu_type }}",
         gpu_count="{{ params.gpu_count }}",
-        labels={"job_type": "long_ml", "dag_name": DAG_NAME},
+        labels={"job_type": "extra_long_ml", "dag_name": DAG_NAME},
     )
 
     install_dependencies = InstallDependenciesOperator(
@@ -182,7 +182,7 @@ with DAG(
                 --input-parquets-folder-path gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{INPUT_FOLDER} \
                 --output-parquets-folder-path gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{OUTPUT_FOLDER} \
         """,
-        deferrable=True,
+        deferrable=False,
     )
 
     # Step 4: Export the output embeddings from GCS to BigQuery temp table

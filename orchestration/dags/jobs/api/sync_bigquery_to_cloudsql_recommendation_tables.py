@@ -41,6 +41,7 @@ TABLES_TO_PROCESS = [
     "recommendable_offers_raw",
     "non_recommendable_items_data",
     "iris_france",
+    "venue_h3_mapping",
 ]
 
 MATERIALIZED_VIEWS = [
@@ -49,6 +50,7 @@ MATERIALIZED_VIEWS = [
     "non_recommendable_items_mv",
     "iris_france_mv",
     "recommendable_offers_raw_mv",
+    "venue_h3_mapping_mv",
 ]
 
 INSTANCE_TYPE = {

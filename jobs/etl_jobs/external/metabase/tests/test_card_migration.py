@@ -12,8 +12,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from api.models import Card
+from api.models import Card, DatasetQuery
 from migration.card import (
+    _migrate_result_metadata,
+    _migrate_template_tags,
+    _migrate_visualization_settings,
     migrate_card,
     migrate_native_query,
     migrate_query_builder,
@@ -344,3 +347,112 @@ class TestMigrateCard:
         )
         assert result.id == 999
         assert result.name == "No Query Card"
+
+    def test_unknown_query_type_returns_card_unchanged(self) -> None:
+        """A card with an unknown query type (not 'native' or 'query') is returned as-is."""
+        card = Card(
+            id=500,
+            name="Pivot Card",
+            dataset_query=DatasetQuery(type="pivot", database=2),
+            table_id=10,
+        )
+        result = migrate_card(
+            card=card,
+            field_mapping={201: 301},
+            table_mapping={10: 20},
+            column_mapping={},
+            old_schema="s",
+            new_schema="s",
+            old_table="t",
+            new_table="t",
+        )
+        assert result is card
+        assert result.id == 500
+        assert result.name == "Pivot Card"
+        assert result.table_id == 10
+
+
+class TestMigrateNativeQueryEdgeCases:
+    """Edge case tests for native query migration."""
+
+    def test_returns_early_when_native_is_empty(self) -> None:
+        """migrate_native_query returns the dataset_query unchanged when native is empty."""
+        dataset_query = {
+            "type": "native",
+            "database": 2,
+            "native": {},
+        }
+        result = migrate_native_query(
+            dataset_query=dataset_query,
+            column_mapping={"col_a": "col_b"},
+            field_mapping={201: 301},
+            old_schema="s",
+            new_schema="s",
+            old_table="t",
+            new_table="t",
+        )
+        assert result == {"type": "native", "database": 2, "native": {}}
+
+
+class TestMigrateTemplateTags:
+    """Test _migrate_template_tags edge cases."""
+
+    def test_skips_non_dict_tag_values(self) -> None:
+        """Template tag values that are not dicts should be skipped."""
+        template_tags = {
+            "valid_tag": {
+                "id": "abc",
+                "name": "valid_tag",
+                "type": "dimension",
+                "dimension": ["field", 201, None],
+            },
+            "string_tag": "not_a_dict",
+            "int_tag": 42,
+            "list_tag": [1, 2, 3],
+            "none_tag": None,
+        }
+        result = _migrate_template_tags(template_tags, field_mapping={201: 301})
+
+        # Dimension tag's field ID should be updated
+        assert result["valid_tag"]["dimension"] == ["field", 301, None]
+        # Non-dict tags should be preserved as-is
+        assert result["string_tag"] == "not_a_dict"
+        assert result["int_tag"] == 42
+        assert result["list_tag"] == [1, 2, 3]
+        assert result["none_tag"] is None
+
+
+class TestMigrateResultMetadata:
+    """Test _migrate_result_metadata edge cases."""
+
+    def test_returns_none_when_input_is_none(self) -> None:
+        """None result_metadata should return None."""
+        result = _migrate_result_metadata(
+            None, field_mapping={201: 301}, table_mapping={10: 20}
+        )
+        assert result is None
+
+    def test_returns_empty_list_when_input_is_empty(self) -> None:
+        """Empty list result_metadata should return empty list."""
+        result = _migrate_result_metadata(
+            [], field_mapping={201: 301}, table_mapping={10: 20}
+        )
+        assert result == []
+
+
+class TestMigrateVisualizationSettings:
+    """Test _migrate_visualization_settings edge cases."""
+
+    def test_returns_none_when_input_is_none(self) -> None:
+        """None visualization_settings should return None."""
+        result = _migrate_visualization_settings(
+            None, field_mapping={201: 301}, table_mapping={10: 20}
+        )
+        assert result is None
+
+    def test_returns_empty_dict_when_input_is_empty(self) -> None:
+        """Empty dict visualization_settings should return empty dict."""
+        result = _migrate_visualization_settings(
+            {}, field_mapping={201: 301}, table_mapping={10: 20}
+        )
+        assert result == {}

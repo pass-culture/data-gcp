@@ -2,6 +2,8 @@
 .vscode/
 .cursor/
 .user_id
+.obsidian/
+.dlt/
 
 __pycache__/
 .DS_Store

@@ -28,6 +28,7 @@ app = typer.Typer(
 def _callback() -> None:
     """Metabase migration tool."""
 
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -105,27 +106,11 @@ def migrate(
     # --- Connect to services ---
     logger.info("Connecting to Metabase...")
     metabase_host = get_metabase_host()
-
-    # Authenticate
-    bearer_token = None
-    if use_bigquery:
-        try:
-            from google.auth.transport.requests import Request
-            from google.oauth2 import id_token
-
-            from config import get_metabase_client_id
-
-            client_id = get_metabase_client_id()
-            bearer_token = id_token.fetch_id_token(Request(), client_id)
-        except Exception:
-            logger.info("GCP OAuth2 not available, using direct auth")
-
     metabase_password = get_metabase_password()
     client = MetabaseClient.from_credentials(
         host=metabase_host,
         username=METABASE_API_USERNAME,
         password=metabase_password,
-        bearer_token=bearer_token,
     )
 
     # --- Discover impacted cards ---

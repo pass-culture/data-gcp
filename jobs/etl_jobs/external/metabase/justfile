@@ -135,3 +135,22 @@ docker-fetch-openapi:
         -H "X-Metabase-Session: $TOKEN" \
         -o api/openapi.json
     echo "  ✓ OpenAPI spec saved to api/openapi.json"
+
+# ---------------------------------------------------------------------------
+# Staging testing (requires: gcloud auth application-default login)
+# ---------------------------------------------------------------------------
+
+# Report: list staging tables matching mappings.json and find referencing cards
+stg-explore:
+    PROJECT_NAME=passculture-data-ehp ENV_SHORT_NAME=stg uv run python scripts/stg_explore.py
+
+# Dry-run migration against staging Metabase (read-only, no writes)
+stg-dry-run LEGACY_TABLE NEW_TABLE LEGACY_SCHEMA NEW_SCHEMA CARD_IDS:
+    PROJECT_NAME=passculture-data-ehp ENV_SHORT_NAME=stg \
+    uv run python main.py migrate \
+        --legacy-table-name "{{LEGACY_TABLE}}" \
+        --new-table-name "{{NEW_TABLE}}" \
+        --legacy-schema-name "{{LEGACY_SCHEMA}}" \
+        --new-schema-name "{{NEW_SCHEMA}}" \
+        --card-ids "{{CARD_IDS}}" \
+        --dry-run

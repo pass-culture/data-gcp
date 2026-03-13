@@ -1,7 +1,6 @@
 import os
 
 # from dotenv import load_dotenv
-
 # load_dotenv()
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
@@ -44,5 +43,5 @@ SCALAR_TABLE = "offers" if ENVIRONMENT == "prod" else f"offers_{ENV_SHORT_NAME}"
 K_RETRIEVAL = 50
 # K_RETRIEVAL = 250 if ENVIRONMENT == "prod" else 50
 MAX_OFFERS = 3000 if ENVIRONMENT == "prod" else 50
-GEMINI_MODEL_NAME = "gemini-2.0-flash"
+GEMINI_MODEL_NAME = "gemini-2.5-flash-lite"
 PERFORM_VECTOR_SEARCH = ENV_SHORT_NAME not in ["dev"]

@@ -76,6 +76,7 @@ def migrate(
     from api.client import MetabaseClient
     from config import (
         METABASE_API_USERNAME,
+        get_iap_bearer_token,
         get_metabase_host,
         get_metabase_password,
     )
@@ -107,10 +108,12 @@ def migrate(
     logger.info("Connecting to Metabase...")
     metabase_host = get_metabase_host()
     metabase_password = get_metabase_password()
+    bearer_token = get_iap_bearer_token()
     client = MetabaseClient.from_credentials(
         host=metabase_host,
         username=METABASE_API_USERNAME,
         password=metabase_password,
+        bearer_token=bearer_token,
     )
 
     # --- Discover impacted cards ---

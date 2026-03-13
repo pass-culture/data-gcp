@@ -5,10 +5,15 @@ Loads settings from environment variables and GCP Secret Manager.
 
 from __future__ import annotations
 
+import logging
 import os
 
+import google.auth
+import google.auth.transport.requests
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
+
+logger = logging.getLogger(__name__)
 
 # --- Environment variables ---
 
@@ -83,3 +88,40 @@ def get_metabase_password() -> str:
     if not val:
         raise ValueError("METABASE_PASSWORD not set and secret not available")
     return val
+
+
+def get_iap_bearer_token() -> str | None:
+    """Get an IAP bearer token for the staging/prod Metabase.
+
+    Uses the default application credentials to obtain an OpenID Connect
+    identity token. For service account credentials, mints a token with
+    the Metabase OAuth2 client ID as audience. For user credentials (ADC),
+    uses the id_token from the refreshed credentials.
+
+    Returns None for local dev environments (ENV_SHORT_NAME == "dev")
+    where IAP is not used.
+
+    Returns:
+        A bearer token string, or None if IAP is not needed.
+    """
+    if ENV_SHORT_NAME == "dev":
+        return None
+
+    credentials, _ = google.auth.default()
+    request = google.auth.transport.requests.Request()
+    credentials.refresh(request)
+
+    # User ADC (google.oauth2.credentials.Credentials) carries an id_token
+    # after refresh — use it directly for IAP.
+    if hasattr(credentials, "id_token") and credentials.id_token:
+        logger.info("Obtained IAP bearer token from user credentials")
+        return str(credentials.id_token)
+
+    # Service account or other credential types: mint an ID token
+    # with the OAuth2 client ID as audience.
+    from google.oauth2 import id_token
+
+    client_id = get_metabase_client_id()
+    token: str = id_token.fetch_id_token(request, client_id)
+    logger.info("Obtained IAP bearer token for audience %s...", client_id[:20])
+    return token

@@ -35,6 +35,7 @@ BQ_TABLES_CONFIG: Dict[str, Dict] = {
             "booking_number": "integer",
             "venue_latitude": "decimal",
             "venue_longitude": "decimal",
+            "venue_id": "integer",
             "default_max_distance": "integer",
             "unique_id": "character varying",
             "is_sensitive": "boolean",
@@ -66,6 +67,17 @@ BQ_TABLES_CONFIG: Dict[str, Dict] = {
         "bigquery_table_name": "iris_france",
         "cloud_sql_table_name": "iris_france",
         "dataset_type": DatasetType.SEED,
+    },
+    "venue_h3_mapping": {
+        "columns": {
+            "venue_id": "integer",
+            "latitude": "decimal",
+            "longitude": "decimal",
+            "h3_res5": "character varying",
+        },
+        "bigquery_table_name": "venue_h3_mapping",
+        "cloud_sql_table_name": "venue_h3_mapping",
+        "dataset_type": DatasetType.ML_RECO,
     },
 }
 

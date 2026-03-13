@@ -11,6 +11,7 @@ returns
         booking_number integer,
         venue_latitude decimal,
         venue_longitude decimal,
+        venue_id integer,
         venue_geo geography,
         default_max_distance integer,
         unique_id varchar,
@@ -32,6 +33,7 @@ BEGIN
         ro.booking_number,
         ro.venue_latitude,
         ro.venue_longitude,
+        ro.venue_id,
         ST_MakePoint(ro.venue_longitude, ro.venue_latitude)::geography as venue_geo,
         ro.default_max_distance,
         ro.unique_id,
@@ -70,6 +72,9 @@ ON public.recommendable_offers_raw_mv_tmp(item_id);
 CREATE INDEX IF NOT EXISTS venue_geo_idx_offer_recommendable_raw_{{ ts_nodash  }}
 ON public.recommendable_offers_raw_mv_tmp
 USING gist(venue_geo);
+
+CREATE INDEX IF NOT EXISTS venue_idx_offer_recommendable_raw_{{ ts_nodash }}
+ON public.recommendable_offers_raw_mv_tmp(venue_id);
 
 -- Refresh state
 refresh materialized view recommendable_offers_raw_mv_tmp

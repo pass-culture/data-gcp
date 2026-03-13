@@ -51,8 +51,8 @@ BASE_DIR = "data-gcp/jobs/ml_jobs/item_embedding"
 INSTANCE_NAME = "item-embedding"
 INSTANCE_TYPE = {
     "dev": "n1-standard-4",
-    "stg": "n1-standard-16",
-    "prod": "n1-standard-16",
+    "stg": "g2-standard-48",
+    "prod": "g2-standard-48",
 }[ENV_SHORT_NAME]
 
 DEFAULT_ARGS = {
@@ -122,7 +122,8 @@ with DAG(
             description="GCE instance name",
         ),
         "gpu_type": Param(
-            default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
+            default="nvidia-tesla-t4" if ENV_SHORT_NAME == "dev" else "nvidia-l4",
+            enum=INSTANCES_TYPES["gpu"]["name"],
         ),
         "gpu_count": Param(
             default=1 if ENV_SHORT_NAME == "dev" else 4,
@@ -131,7 +132,7 @@ with DAG(
                         (only applicable for GPU instance types).
                         """,
         ),
-        "gce_zone": Param(default="europe-west1-b", enum=GCE_ZONES),
+        "gce_zone": Param(default="europe-west1-c", enum=GCE_ZONES),
     },
 ) as dag:
     start = EmptyOperator(task_id="start")
@@ -143,6 +144,7 @@ with DAG(
         instance_type="{{ params.instance_type }}",
         gpu_type="{{ params.gpu_type }}",
         gpu_count="{{ params.gpu_count }}",
+        gce_zone="{{ params.gce_zone }}",
         labels={"job_type": "extra_long_ml", "dag_name": DAG_NAME},
     )
 

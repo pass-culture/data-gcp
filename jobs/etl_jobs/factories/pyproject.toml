@@ -1,0 +1,19 @@
+[project]
+name = "factories"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "connectors",
+    "http_tools",
+]
+
+[tool.uv.sources]
+connectors = { workspace = true }
+http_tools = { workspace = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

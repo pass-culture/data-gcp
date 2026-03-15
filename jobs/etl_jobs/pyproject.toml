@@ -1,0 +1,21 @@
+[project]
+name = "etl-workspace"
+version = "0.1.0"
+requires-python = ">=3.10"
+
+[tool.uv.workspace]
+members = [
+    "http_tools",
+    "connectors",
+    "factories",
+    "utils",
+    "workflows/brevo",
+    "workflows/titelive",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]

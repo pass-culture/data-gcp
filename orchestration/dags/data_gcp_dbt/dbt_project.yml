@@ -107,8 +107,8 @@ models:
         +tags: "monthly"
         +labels:
           schedule: "monthly"
-      cloudsql:
-        +schema: cloudsql_{{ target.name }}
+      reco_cloudsql:
+        +schema: export_reco_cloudsql_{{ target.name }}
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     machine_learning:
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"

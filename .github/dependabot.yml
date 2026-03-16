@@ -6,8 +6,11 @@ updates:
     directory: "jobs/etl_jobs/internal/sync_recommendation"
     schedule:
       interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
     groups:
       sync-recommendation-security:
+        applies-to: security-updates
         patterns:
           - "*"
   - package-ecosystem: "uv"
@@ -15,26 +18,23 @@ updates:
     directory: "."
     schedule:
       interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
     groups:
       root-project-security:
-        patterns:
-          - "/pyproject.toml"
-          - "/uv.lock"
-  - package-ecosystem: "pip"
-    open-pull-requests-limit: 0
-    directory: "jobs/etl_jobs/internal/sync_recommendation"
-    schedule:
-      interval: "daily"
-    groups:
-      sync-recommendation-security:
+        applies-to: security-updates
         patterns:
           - "*"
-  - package-ecosystem: "pip"
+  - package-ecosystem: "uv"
     open-pull-requests-limit: 0
-    directory: "."
+    directories:
+      - "jobs/ml_jobs/*"
     schedule:
       interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
     groups:
-      root-project-security:
+      ml-jobs-security:
+        applies-to: security-updates
         patterns:
-          - "/pyproject.toml"
+          - "*"

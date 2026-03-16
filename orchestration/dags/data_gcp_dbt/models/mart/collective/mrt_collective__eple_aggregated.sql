@@ -1,3 +1,6 @@
+{% set p1 = "sept-dec" %}
+{% set p2 = "jan-aug" %}
+
 with
     flattened_deposits as (
         select
@@ -19,13 +22,13 @@ with
             ed.scholar_year,
             sum(
                 case
-                    when ed.educational_deposit_period = 'sept-dec'
+                    when ed.educational_deposit_period = '{{ p1 }}'
                     then (ed.educational_deposit_amount)
                 end
             ) as sept_dec_deposit,
             sum(
                 case
-                    when ed.educational_deposit_period = 'jan-aug'
+                    when ed.educational_deposit_period = '{{ p2 }}'
                     then (ed.educational_deposit_amount)
                 end
             ) as jan_aug_deposit,
@@ -50,7 +53,7 @@ with
                 sum(
                     case
                         when
-                            ed.educational_deposit_period = 'sept-dec'
+                            ed.educational_deposit_period = '{{ p1 }}'
                             and cb.collective_booking_status != 'CANCELLED'
                         then cs.collective_stock_price
                     end
@@ -61,7 +64,7 @@ with
                 sum(
                     case
                         when
-                            ed.educational_deposit_period = 'jan-aug'
+                            ed.educational_deposit_period = '{{ p2 }}'
                             and cb.collective_booking_status != 'CANCELLED'
                         then cs.collective_stock_price
                     end
@@ -83,7 +86,7 @@ with
                 sum(
                     case
                         when
-                            ed.educational_deposit_period = 'sept-dec'
+                            ed.educational_deposit_period = '{{ p1 }}'
                             and cb.collective_booking_status
                             not in ('CANCELLED', 'PENDING')
                         then cs.collective_stock_price
@@ -95,7 +98,7 @@ with
                 sum(
                     case
                         when
-                            ed.educational_deposit_period = 'jan-aug'
+                            ed.educational_deposit_period = '{{ p2 }}'
                             and cb.collective_booking_status
                             not in ('CANCELLED', 'PENDING')
                         then cs.collective_stock_price
@@ -119,7 +122,7 @@ with
                 sum(
                     case
                         when
-                            ed.educational_deposit_period = 'sept-dec'
+                            ed.educational_deposit_period = '{{ p1 }}'
                             and cb.collective_booking_status = 'REIMBURSED'
                         then cs.collective_stock_price
                     end
@@ -130,7 +133,7 @@ with
                 sum(
                     case
                         when
-                            ed.educational_deposit_period = 'jan-aug'
+                            ed.educational_deposit_period = '{{ p2 }}'
                             and cb.collective_booking_status = 'REIMBURSED'
                         then cs.collective_stock_price
                     end
@@ -151,7 +154,7 @@ with
             count(
                 case
                     when
-                        ed.educational_deposit_period = 'sept-dec'
+                        ed.educational_deposit_period = '{{ p1 }}'
                         and cb.collective_booking_status != 'CANCELLED'
                     then cb.collective_booking_id
                 end
@@ -159,7 +162,7 @@ with
             count(
                 case
                     when
-                        ed.educational_deposit_period = 'jan-aug'
+                        ed.educational_deposit_period = '{{ p2 }}'
                         and cb.collective_booking_status != 'CANCELLED'
                     then cb.collective_booking_id
                 end
@@ -175,7 +178,7 @@ with
             count(
                 case
                     when
-                        ed.educational_deposit_period = 'sept-dec'
+                        ed.educational_deposit_period = '{{ p1 }}'
                         and cb.collective_booking_status not in ('CANCELLED', 'PENDING')
                     then cb.collective_booking_id
                 end
@@ -183,7 +186,7 @@ with
             count(
                 case
                     when
-                        ed.educational_deposit_period = 'jan-aug'
+                        ed.educational_deposit_period = '{{ p2 }}'
                         and cb.collective_booking_status not in ('CANCELLED', 'PENDING')
                     then cb.collective_booking_id
                 end

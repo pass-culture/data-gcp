@@ -6,6 +6,8 @@ updates:
     directory: "jobs/etl_jobs/internal/sync_recommendation"
     schedule:
       interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
     groups:
       sync-recommendation-security:
         applies-to: security-updates
@@ -16,6 +18,8 @@ updates:
     directory: "."
     schedule:
       interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
     groups:
       root-project-security:
         applies-to: security-updates
@@ -27,6 +31,8 @@ updates:
       - "jobs/ml_jobs/*"
     schedule:
       interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
     groups:
       ml-jobs-security:
         applies-to: security-updates

@@ -1,0 +1,1038 @@
+================================================================================
+  METABASE MIGRATION TOOL — ARCHITECTURE DIAGRAMS
+================================================================================
+
+This document provides visual representations of the Metabase migration tool's
+architecture, execution flow, and key algorithms using ASCII diagrams.
+
+For detailed code-level analysis, see metabase_project_analysis.md.
+For quick reference, see QUICK_REFERENCE.md.
+
+================================================================================
+1. MAIN EXECUTION FLOW (6 PHASES)
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         METABASE MIGRATION TOOL                             │
+│                                                                             │
+│  Entry Point: main.py → migrate()                                           │
+│  CLI Framework: Typer                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ PHASE 1: Load Configuration & Column Mappings                            │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │                                                                          │
+  │  ┌─────────────────────┐         ┌──────────────────────┐                │
+  │  │ data/mappings.json  │────────▶│ column_mapping dict  │                │
+  │  └─────────────────────┘         └──────────────────────┘                │
+  │                                                                          │
+  │  Format: { "table_name": { "old_col": "new_col" } }                      │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ PHASE 2: Connect to Services                                             │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │                                                                          │
+  │  ┌────────────────────┐         ┌──────────────────────┐                 │
+  │  │ GCP Secret Manager │────────▶│ Metabase credentials │                 │
+  │  └────────────────────┘         └──────────────────────┘                 │
+  │                                           │                              │
+  │                                           ▼                              │
+  │  ┌──────────────────────────────────────────────────────┐                │
+  │  │ MetabaseClient.from_credentials()                    │                │
+  │  │  - HTTP session with retry logic (tenacity)          │                │
+  │  │  - Session auth OR OAuth2 + IAP bearer token         │                │
+  │  │  - 3 retries, exponential backoff (2-10s)            │                │
+  │  └──────────────────────────────────────────────────────┘                │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ PHASE 3: Discover Impacted Cards                                         │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │                                                                          │
+  │  ┌─────────────────────────────────────────────────────────┐             │
+  │  │ Option A: BigQuery Discovery (default)                  │             │
+  │  ├─────────────────────────────────────────────────────────┤             │
+  │  │                                                         │             │
+  │  │  Query: int_metabase_<env>.card_dependency              │             │
+  │  │  Join:  int_metabase_<env>.activity (usage metrics)     │             │
+  │  │  Filter: WHERE referenced_table = legacy_table          │             │
+  │  │  Sort:   ORDER BY usage_count DESC                      │             │
+  │  │                                                         │             │
+  │  │  Returns: List[int] (card IDs)                          │             │
+  │  └─────────────────────────────────────────────────────────┘             │
+  │                                                                          │
+  │  ┌─────────────────────────────────────────────────────────┐             │
+  │  │ Option B: Manual Card IDs (via --card-ids flag)         │             │
+  │  ├─────────────────────────────────────────────────────────┤             │
+  │  │                                                         │             │
+  │  │  Parse: --card-ids "123,456,789"                        │             │
+  │  │  Skips: BigQuery client initialization                  │             │
+  │  │  Use case: Local Docker testing, targeted migration     │             │
+  │  │                                                         │             │
+  │  └─────────────────────────────────────────────────────────┘             │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ PHASE 4: Build Field & Table Mappings                                    │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │                                                                          │
+  │  ┌────────────────────────────────────────────────────────────────┐      │
+  │  │ Step 1: Find Table IDs                                         │      │
+  │  ├────────────────────────────────────────────────────────────────┤      │
+  │  │                                                                │      │
+  │  │  client.find_table_id(legacy_table, legacy_schema)             │      │
+  │  │  client.find_table_id(new_table, new_schema)                   │      │
+  │  │                                                                │      │
+  │  │  Returns: legacy_table_id (int), new_table_id (int)            │      │
+  │  │                                                                │      │
+  │  │  ⚠️  Both tables must exist in Metabase catalog (ADR-10)       │      │
+  │  └────────────────────────────────────────────────────────────────┘      │
+  │                                                                          │
+  │  ┌────────────────────────────────────────────────────────────────┐      │
+  │  │ Step 2: Fetch Field Metadata                                   │      │
+  │  ├────────────────────────────────────────────────────────────────┤      │
+  │  │                                                                │      │
+  │  │  GET /api/table/{legacy_table_id} → legacy_fields              │      │
+  │  │  GET /api/table/{new_table_id}    → new_fields                 │      │
+  │  │                                                                │      │
+  │  │  Each field: {id, name, display_name, base_type, ...}          │      │
+  │  └────────────────────────────────────────────────────────────────┘      │
+  │                                                                          │
+  │  ┌────────────────────────────────────────────────────────────────┐      │
+  │  │ Step 3: Match Fields by Name                                   │      │
+  │  ├────────────────────────────────────────────────────────────────┤      │
+  │  │                                                                │      │
+  │  │  Algorithm: discovery/bigquery.py → build_field_mapping()      │      │
+  │  │                                                                │      │
+  │  │  For each old_field in legacy_fields:                          │      │
+  │  │    target_name = column_mapping.get(old_field.name,            │      │
+  │  │                                     old_field.name)            │      │
+  │  │    new_field = find by target_name in new_fields               │      │
+  │  │    field_mapping[old_field.id] = new_field.id                  │      │
+  │  │                                                                │      │
+  │  │  Returns: { old_field_id: new_field_id }                       │      │
+  │  └────────────────────────────────────────────────────────────────┘      │
+  │                                                                          │
+  │  ┌────────────────────────────────────────────────────────────────┐      │
+  │  │ Step 4: Build Table Mapping                                    │      │
+  │  ├────────────────────────────────────────────────────────────────┤      │
+  │  │                                                                │      │
+  │  │  table_mapping = { legacy_table_id: new_table_id }             │      │
+  │  │                                                                │      │
+  │  └────────────────────────────────────────────────────────────────┘      │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ PHASE 5: Migrate Each Card                                               │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │                                                                          │
+  │  For each card_id in discovered cards:                                   │
+  │                                                                          │
+  │    ┌──────────────────────────────────────────────────────┐              │
+  │    │ 5.1: Fetch Card                                      │              │
+  │    ├──────────────────────────────────────────────────────┤              │
+  │    │  GET /api/card/{card_id} → Card (Pydantic model)     │              │
+  │    └──────────────────────────────────────────────────────┘              │
+  │                   │                                                      │
+  │                   ▼                                                      │
+  │    ┌──────────────────────────────────────────────────────┐              │
+  │    │ 5.2: Migrate Card                                    │              │
+  │    ├──────────────────────────────────────────────────────┤              │
+  │    │  migration/card.py → migrate_card()                  │              │
+  │    │                                                      │              │
+  │    │  Dispatches to:                                      │              │
+  │    │    - migrate_native_query() for SQL cards            │              │
+  │    │    - migrate_query_builder() for UI cards            │              │
+  │    │                                                      │              │
+  │    │  Also updates:                                       │              │
+  │    │    - card.table_id (top-level table reference)       │              │
+  │    │    - card.result_metadata (field refs)               │              │
+  │    │    - card.visualization_settings (column configs)    │              │
+  │    │                                                      │              │
+  │    │  Returns: new Card (immutable, no mutation)          │              │
+  │    └──────────────────────────────────────────────────────┘              │
+  │                   │                                                      │
+  │                   ▼                                                      │
+  │    ┌──────────────────────────────────────────────────────┐              │
+  │    │ 5.3: Write Card (if not dry-run)                     │              │
+  │    ├──────────────────────────────────────────────────────┤              │
+  │    │  PUT /api/card/{card_id} ← migrated_card             │              │
+  │    │                                                      │              │
+  │    │  If dry-run: print diff instead                      │              │
+  │    └──────────────────────────────────────────────────────┘              │
+  │                                                                          │
+  │  Continue until all cards processed...                                   │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ PHASE 6: Log Results (if BigQuery available)                             │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │                                                                          │
+  │  ┌────────────────────────────────────────────────────────────┐          │
+  │  │ Write to: int_metabase_<env>.migration_log                 │          │
+  │  ├────────────────────────────────────────────────────────────┤          │
+  │  │                                                            │          │
+  │  │  Columns:                                                  │          │
+  │  │    - migration_timestamp                                   │          │
+  │  │    - card_id                                               │          │
+  │  │    - card_name                                             │          │
+  │  │    - card_type (native | query)                            │          │
+  │  │    - migration_status (success | failed)                   │          │
+  │  │    - legacy_table, new_table                               │          │
+  │  │    - legacy_schema, new_schema                             │          │
+  │  │    - dry_run (bool)                                        │          │
+  │  │                                                            │          │
+  │  └────────────────────────────────────────────────────────────┘          │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+2. CARD MIGRATION DISPATCH LOGIC
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    migration/card.py → migrate_card()                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+                   ┌─────────────────────────────────┐
+                   │ Inspect card.dataset_query.type │
+                   └─────────────────────────────────┘
+                                    │
+                 ┌──────────────────┴──────────────────┐
+                 │                                     │
+                 ▼                                     ▼
+    ┌─────────────────────────┐         ┌─────────────────────────┐
+    │ type == "native"        │         │ type == "query"         │
+    └─────────────────────────┘         └─────────────────────────┘
+                 │                                     │
+                 ▼                                     ▼
+    ┌─────────────────────────────────┐  ┌────────────────────────────────┐
+    │ migrate_native_query()          │  │ migrate_query_builder()        │
+    ├─────────────────────────────────┤  ├────────────────────────────────┤
+    │                                 │  │                                │
+    │ Input: DatasetQuery             │  │ Input: DatasetQuery            │
+    │                                 │  │                                │
+    │ What it does:                   │  │ What it does:                  │
+    │  1. Replace schema name         │  │  1. Replace source-table ID    │
+    │     in SQL string               │  │     via tree walker            │
+    │  2. Replace table name          │  │  2. Replace field refs in:     │
+    │     in SQL string               │  │     - fields[]                 │
+    │  3. Replace column names        │  │     - filter                   │
+    │     in SQL string               │  │     - breakout[]               │
+    │  4. Update template_tags        │  │     - aggregation[]            │
+    │     (field widget bindings)     │  │     - joins[]                  │
+    │                                 │  │     - order-by[]               │
+    │ Method:                         │  │  3. Recurse into nested MBQL   │
+    │  - Regex replacement on SQL     │  │                                │
+    │  - Word boundary matching       │  │ Method:                        │
+    │    (\b prefix.suffix \b)        │  │  - migration/field_walker.py   │
+    │  - Safe for SQL strings         │  │  - Recursive tree walker       │
+    │                                 │  │  - Context-aware replacement   │
+    │ Returns: new DatasetQuery       │  │                                │
+    │                                 │  │ Returns: new DatasetQuery      │
+    └─────────────────────────────────┘  └────────────────────────────────┘
+                 │                                     │
+                 └──────────────────┬──────────────────┘
+                                    ▼
+                   ┌──────────────────────────────────┐
+                   │ Update card-level references:    │
+                   ├──────────────────────────────────┤
+                   │  - card.table_id                 │
+                   │  - card.result_metadata[]        │
+                   │  - card.visualization_settings   │
+                   └──────────────────────────────────┘
+                                    │
+                                    ▼
+                   ┌──────────────────────────────────┐
+                   │ Return: new Card (immutable)     │
+                   └──────────────────────────────────┘
+
+
+Native SQL Card Example:
+─────────────────────────
+BEFORE:
+  SELECT booking_cnt, user_id
+  FROM analytics.user_stats
+  WHERE booking_cnt > 10
+
+AFTER:
+  SELECT total_individual_bookings, user_id
+  FROM analytics.enriched_user_data
+  WHERE total_individual_bookings > 10
+
+
+Query Builder Card Example:
+────────────────────────────
+BEFORE (MBQL v5):
+  {
+    "type": "query",
+    "query": {
+      "source-table": 42,
+      "fields": [
+        ["field", 123, null],
+        ["field", 456, null]
+      ]
+    }
+  }
+
+AFTER:
+  {
+    "type": "query",
+    "query": {
+      "source-table": 99,
+      "fields": [
+        ["field", 789, null],
+        ["field", 999, null]
+      ]
+    }
+  }
+
+  Where: 42 → 99 (table mapping), 123 → 789, 456 → 999 (field mapping)
+
+
+================================================================================
+3. FIELD WALKER MBQL CONSTRUCT RECOGNITION
+================================================================================
+
+The field walker (migration/field_walker.py) is a recursive tree walker that
+replaces field/table IDs ONLY in semantically correct MBQL contexts.
+
+This prevents the corruption that would occur with naive regex replacement
+(e.g., replacing "42" everywhere would corrupt card_id=42, dashboard_id=142).
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                   replace_field_ids(node, mapping)                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+                        ┌───────────────────────┐
+                        │ What type is node?    │
+                        └───────────────────────┘
+                                    │
+          ┌─────────────────────────┼─────────────────────────┐
+          │                         │                         │
+          ▼                         ▼                         ▼
+    ┌──────────┐            ┌─────────────┐          ┌──────────────┐
+    │   dict   │            │    list     │          │ scalar value │
+    └──────────┘            └─────────────┘          └──────────────┘
+          │                         │                         │
+          │                         │                         ▼
+          │                         │                ┌──────────────────┐
+          │                         │                │ Return as-is     │
+          │                         │                │ (int, str, bool, │
+          │                         │                │  float, None)    │
+          │                         │                └──────────────────┘
+          │                         │
+          ▼                         ▼
+┌──────────────────────┐  ┌──────────────────────────────────────────┐
+│ For each key, value: │  │ Check if list matches MBQL pattern:      │
+├──────────────────────┤  ├──────────────────────────────────────────┤
+│                      │  │                                          │
+│ Special keys:        │  │ Pattern 1: ["field", id, opts]           │
+│                      │  │   - len(node) >= 2                       │
+│ - "source-table"     │  │   - node[0] == "field"                   │
+│ - "source_table"     │  │   - isinstance(node[1], int)             │
+│ - "field"            │  │                                          │
+│ - "field-id"         │  │   Action: ["field", mapping[id], opts]   │
+│                      │  │                                          │
+│ If key matches AND   │  ├──────────────────────────────────────────┤
+│ value is int:        │  │                                          │
+│   Replace with       │  │ Pattern 2: ["fk->", id, ...]             │
+│   mapping[value]     │  │   - len(node) >= 2                       │
+│                      │  │   - node[0] == "fk->"                    │
+│ Otherwise:           │  │   - isinstance(node[1], int)             │
+│   Recurse into value │  │                                          │
+│                      │  │   Action: ["fk->", mapping[id],          │
+│                      │  │             recurse(node[2:])]           │
+│                      │  │                                          │
+│ Return: new dict     │  ├──────────────────────────────────────────┤
+│                      │  │                                          │
+└──────────────────────┘  │ Pattern 3: any other list                │
+                          │   Action: [recurse(item) for item in     │
+                          │            node]                         │
+                          │                                          │
+                          │ Return: new list                         │
+                          └──────────────────────────────────────────┘
+
+
+Example 1: Field Reference
+───────────────────────────
+INPUT:  ["field", 123, {"base-type": "type/Integer"}]
+OUTPUT: ["field", 789, {"base-type": "type/Integer"}]
+
+Where: mapping[123] = 789
+
+
+Example 2: Nested in Filter
+────────────────────────────
+INPUT:
+{
+  "filter": [
+    "=",
+    ["field", 123, null],
+    "active"
+  ]
+}
+
+OUTPUT:
+{
+  "filter": [
+    "=",
+    ["field", 789, null],
+    "active"
+  ]
+}
+
+
+Example 3: Foreign Key Reference
+─────────────────────────────────
+INPUT:  ["fk->", 50, ["field", 123, null]]
+OUTPUT: ["fk->", 88, ["field", 789, null]]
+
+Where: mapping[50] = 88, mapping[123] = 789
+
+
+Example 4: Safe Non-Field Integer (NOT replaced)
+─────────────────────────────────────────────────
+INPUT:
+{
+  "card_id": 123,
+  "dashboard_id": 456,
+  "visualization_settings": {
+    "graph.y_axis.max": 100
+  }
+}
+
+OUTPUT: (UNCHANGED — tree walker does NOT touch these)
+{
+  "card_id": 123,
+  "dashboard_id": 456,
+  "visualization_settings": {
+    "graph.y_axis.max": 100
+  }
+}
+
+
+Critical Safety Property:
+─────────────────────────
+The walker ONLY replaces integers that appear in known MBQL field/table
+reference constructs. All other integers (IDs, config values, literal numbers)
+are preserved unchanged. This is the key advantage over regex-on-JSON.
+
+================================================================================
+4. DOCKER ENVIRONMENT SETUP (LOCAL TESTING)
+================================================================================
+
+The docker/ directory provides a complete local Metabase environment for
+testing migrations without GCP credentials.
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    docker-compose.yml (3 containers)                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌───────────────────────────────────────────────────────────────────────┐  │
+│  │ 1. metabase-app-db (PostgreSQL 15)                                    │  │
+│  ├───────────────────────────────────────────────────────────────────────┤  │
+│  │   Purpose: Metabase application database (stores card/dashboard       │  │
+│  │            metadata, users, collections)                              │  │
+│  │   Port: 5433 (host) → 5432 (container)                                │  │
+│  │   Volume: postgres_app_data                                           │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+│  ┌───────────────────────────────────────────────────────────────────────┐  │
+│  │ 2. metabase-sample-db (PostgreSQL 15)                                 │  │
+│  ├───────────────────────────────────────────────────────────────────────┤  │
+│  │   Purpose: Sample data database (simulates BigQuery — the data        │  │
+│  │            source that Metabase queries)                              │  │
+│  │   Port: 5434 (host) → 5432 (container)                                │  │
+│  │   Volume: postgres_sample_data                                        │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+│  ┌───────────────────────────────────────────────────────────────────────┐  │
+│  │ 3. metabase (Metabase OSS v0.57.15)                                   │  │
+│  ├───────────────────────────────────────────────────────────────────────┤  │
+│  │   Purpose: Metabase application server                                │  │
+│  │   Port: 3000 (host) → 3000 (container)                                │  │
+│  │   Depends on: metabase-app-db                                         │  │
+│  │   Env vars:                                                           │  │
+│  │     - MB_DB_TYPE=postgres                                             │  │
+│  │     - MB_DB_HOST=metabase-app-db                                      │  │
+│  │     - MB_DB_PORT=5432                                                 │  │
+│  │     - MB_DB_DBNAME=metabase                                           │  │
+│  │     - MB_DB_USER=metabase                                             │  │
+│  │     - MB_DB_PASS=metabase                                             │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+Bootstrap Flow: scripts/docker-setup.sh (6 phases)
+───────────────────────────────────────────────────
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         docker-setup.sh execution                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ PHASE 1: Wait for Metabase API to be ready                               │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │                                                                          │
+  │  Loop: curl http://localhost:3000/api/health                             │
+  │  Wait: Until HTTP 200 or timeout (180s)                                  │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ PHASE 2: Setup Metabase admin user (if not exists)                       │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │                                                                          │
+  │  POST /api/setup                                                         │
+  │  Body: {                                                                 │
+  │    "token": <fetched from /api/session/properties>,                      │
+  │    "user": {                                                             │
+  │      "first_name": "Admin",                                              │
+  │      "last_name": "User",                                                │
+  │      "email": "admin@example.com",                                       │
+  │      "password": "metabase123"                                           │
+  │    },                                                                    │
+  │    "prefs": {"allow_tracking": false}                                    │
+  │  }                                                                       │
+  │                                                                          │
+  │  Result: Admin user created, returns session token                       │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ PHASE 3: Connect sample database to Metabase                             │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │                                                                          │
+  │  POST /api/database                                                      │
+  │  Body: {                                                                 │
+  │    "engine": "postgres",                                                 │
+  │    "name": "Sample DB",                                                  │
+  │    "details": {                                                          │
+  │      "host": "metabase-sample-db",                                       │
+  │      "port": 5432,                                                       │
+  │      "dbname": "sample",                                                 │
+  │      "user": "sample",                                                   │
+  │      "password": "sample"                                                │
+  │    }                                                                     │
+  │  }                                                                       │
+  │                                                                          │
+  │  Result: Database connection created, Metabase syncs schema              │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ PHASE 4: Create sample data in sample-db                                 │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │                                                                          │
+  │  SQL: CREATE TABLE user_stats (                                          │
+  │         user_id INT PRIMARY KEY,                                         │
+  │         booking_cnt INT,                                                 │
+  │         created_at TIMESTAMP                                             │
+  │       )                                                                  │
+  │                                                                          │
+  │  SQL: INSERT INTO user_stats VALUES                                      │
+  │         (1, 5, '2024-01-01 10:00:00'),                                   │
+  │         (2, 12, '2024-01-02 11:00:00'),                                  │
+  │         ...                                                              │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ PHASE 5: Trigger Metabase sync to discover new table                     │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │                                                                          │
+  │  POST /api/database/{db_id}/sync_schema                                  │
+  │  Wait: Until sync completes (poll /api/database/{db_id})                 │
+  │                                                                          │
+  │  Result: user_stats table now visible in Metabase with field metadata    │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ PHASE 6: Create test cards (native SQL + query builder)                  │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │                                                                          │
+  │  ┌────────────────────────────────────────────────────────────┐          │
+  │  │ Card 1: Native SQL card                                    │          │
+  │  ├────────────────────────────────────────────────────────────┤          │
+  │  │  POST /api/card                                            │          │
+  │  │  Body: {                                                   │          │
+  │  │    "name": "Test Native SQL - User Stats",                 │          │
+  │  │    "dataset_query": {                                      │          │
+  │  │      "type": "native",                                     │          │
+  │  │      "native": {                                           │          │
+  │  │        "query": "SELECT * FROM user_stats                  │          │
+  │  │                  WHERE booking_cnt > 10"                   │          │
+  │  │      },                                                    │          │
+  │  │      "database": <db_id>                                   │          │
+  │  │    },                                                      │          │
+  │  │    "display": "table"                                      │          │
+  │  │  }                                                         │          │
+  │  └────────────────────────────────────────────────────────────┘          │
+  │                                                                          │
+  │  ┌────────────────────────────────────────────────────────────┐          │
+  │  │ Card 2: Query Builder card                                 │          │
+  │  ├────────────────────────────────────────────────────────────┤          │
+  │  │  POST /api/card                                            │          │
+  │  │  Body: {                                                   │          │
+  │  │    "name": "Test Query Builder - User Stats",              │          │
+  │  │    "dataset_query": {                                      │          │
+  │  │      "type": "query",                                      │          │
+  │  │      "query": {                                            │          │
+  │  │        "source-table": <table_id for user_stats>,          │          │
+  │  │        "fields": [                                         │          │
+  │  │          ["field", <field_id for user_id>, null],          │          │
+  │  │          ["field", <field_id for booking_cnt>, null]       │          │
+  │  │        ]                                                   │          │
+  │  │      },                                                    │          │
+  │  │      "database": <db_id>                                   │          │
+  │  │    },                                                      │          │
+  │  │    "display": "table"                                      │          │
+  │  │  }                                                         │          │
+  │  └────────────────────────────────────────────────────────────┘          │
+  │                                                                          │
+  │  Result: Two cards created, ready for migration testing                  │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+
+Full Local Testing Workflow:
+─────────────────────────────
+
+1. just docker-up
+   → Starts 3 containers
+
+2. just docker-setup
+   → Runs scripts/docker-setup.sh (6 phases above)
+   → Creates admin user, sample DB, test cards
+
+3. just docker-prepare-migration
+   → Renames table: user_stats → enriched_user_data
+   → Renames column: booking_cnt → total_individual_bookings
+   → Triggers Metabase sync
+   → At this point, cards are "broken" (reference old table/column)
+
+4. just docker-test-migrate
+   → Runs: uv run python main.py migrate \
+            --legacy-table-name user_stats \
+            --new-table-name enriched_user_data \
+            --legacy-schema-name public \
+            --new-schema-name public \
+            --dry-run \
+            --card-ids "1,2"
+   → Prints before/after diff
+   → Does NOT write to Metabase (dry-run)
+
+5. Verify results in Metabase UI (http://localhost:3000)
+   → Login: admin@example.com / metabase123
+   → Check that cards now reference new table/column
+
+6. just docker-reset
+   → Drops tables, recreates from scratch
+   → Ready for next test iteration
+
+
+================================================================================
+5. AUTHENTICATION MODES
+================================================================================
+
+The tool supports two authentication modes: Local (direct password) and
+Production (OAuth2 + IAP bearer token for GCP).
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Authentication Decision Tree                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+                        ┌───────────────────────────┐
+                        │ Which environment?        │
+                        └───────────────────────────┘
+                                    │
+            ┌───────────────────────┴───────────────────────┐
+            │                                               │
+            ▼                                               ▼
+   ┌──────────────────┐                          ┌──────────────────────┐
+   │ LOCAL / DOCKER   │                          │ STAGING / PRODUCTION │
+   └──────────────────┘                          └──────────────────────┘
+            │                                               │
+            ▼                                               ▼
+   ┌─────────────────────────────────┐       ┌─────────────────────────────────┐
+   │ Direct Password Auth            │       │ OAuth2 + IAP Bearer Token       │
+   ├─────────────────────────────────┤       ├─────────────────────────────────┤
+   │                                 │       │                                 │
+   │ 1. POST /api/session            │       │ 1. Get GCP credentials:         │
+   │    Body: {                      │       │    - METABASE_CLIENT_ID         │
+   │      "username": "admin@...",   │       │      (from Secret Manager)      │
+   │      "password": "..."          │       │    - ID token from GCP auth     │
+   │    }                            │       │                                 │
+   │                                 │       │ 2. Exchange for IAP token:      │
+   │ 2. Response: {                  │       │    POST https://oauth2.../token │
+   │      "id": "<session_token>"    │       │    Body: {                      │
+   │    }                            │       │      "grant_type": "...",       │
+   │                                 │       │      "client_id": "...",        │
+   │ 3. Subsequent requests:         │       │      "assertion": "<id_token>"  │
+   │    Header: X-Metabase-Session   │       │    }                            │
+   │    Value: <session_token>       │       │                                 │
+   │                                 │       │ 3. Response: {                  │
+   │ Use case:                       │       │      "access_token": "..."      │
+   │  - Local Docker testing         │       │    }                            │
+   │  - No GCP dependency            │       │                                 │
+   │  - Simple setup                 │       │ 4. POST /api/session            │
+   │                                 │       │    Body: {                      │
+   │                                 │       │      "username": "...",         │
+   │                                 │       │      "password": "..."          │
+   │                                 │       │    }                            │
+   │                                 │       │                                 │
+   │                                 │       │ 5. Subsequent requests:         │
+   │                                 │       │    Header: X-Metabase-Session   │
+   │                                 │       │    Header: Authorization        │
+   │                                 │       │    Value: Bearer <iap_token>    │
+   │                                 │       │                                 │
+   │                                 │       │ Use case:                       │
+   │                                 │       │  - Staging Metabase (IAP)       │
+   │                                 │       │  - Production Metabase (IAP)    │
+   │                                 │       │  - Service account in GCE VM    │
+   │                                 │       │                                 │
+   └─────────────────────────────────┘       └─────────────────────────────────┘
+
+
+Implementation: api/client.py → MetabaseClient.from_credentials()
+──────────────────────────────────────────────────────────────────
+
+def from_credentials(
+    host: str,
+    username: str,
+    password: str,
+    bearer_token: str | None = None,
+) -> MetabaseClient:
+    """
+    If bearer_token is None:
+        → Direct password auth (local mode)
+    Else:
+        → OAuth2 + IAP auth (production mode)
+    """
+    session = requests.Session()
+
+    if bearer_token:
+        session.headers["Authorization"] = f"Bearer {bearer_token}"
+
+    # Exchange username/password for Metabase session token
+    response = session.post(
+        f"{host}/api/session",
+        json={"username": username, "password": password},
+    )
+    session_token = response.json()["id"]
+
+    # Use session token for all subsequent requests
+    session.headers["X-Metabase-Session"] = session_token
+
+    return MetabaseClient(host=host, session=session)
+
+
+================================================================================
+6. SAFETY FEATURES
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           Migration Safety Features                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │ 1. Dry-Run Mode (--dry-run flag)                                       │
+  ├────────────────────────────────────────────────────────────────────────┤
+  │                                                                        │
+  │  - Fetches cards from Metabase                                         │
+  │  - Performs all migration logic                                        │
+  │  - Prints before/after diff for each card                              │
+  │  - Does NOT call PUT /api/card (no writes)                             │
+  │  - Safe for testing on staging or production                           │
+  │                                                                        │
+  │  Usage: python main.py migrate ... --dry-run                           │
+  │                                                                        │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │ 2. Immutability (No Mutation)                                          │
+  ├────────────────────────────────────────────────────────────────────────┤
+  │                                                                        │
+  │  - All migration functions return NEW objects                          │
+  │  - Original card objects never modified in place                       │
+  │  - Safe for comparison, rollback, or retry                             │
+  │                                                                        │
+  │  Example:                                                              │
+  │    original_card = client.get_card(card_id)                            │
+  │    migrated_card = migrate_card(original_card, ...)                    │
+  │    # original_card unchanged, migrated_card is a new object            │
+  │                                                                        │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │ 3. Type Safety (Pydantic Models)                                       │
+  ├────────────────────────────────────────────────────────────────────────┤
+  │                                                                        │
+  │  - All API responses parsed into Pydantic models                       │
+  │  - Type validation at parse time (catches API changes early)           │
+  │  - IDE autocomplete prevents typos                                     │
+  │  - mypy catches type errors at build time                              │
+  │                                                                        │
+  │  Example:                                                              │
+  │    card = client.get_card(123)  # Returns Card (typed)                 │
+  │    card.name  # IDE knows this is str                                  │
+  │    card.missing_field  # mypy error at build time                      │
+  │                                                                        │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │ 4. Retry with Exponential Backoff (tenacity)                           │
+  ├────────────────────────────────────────────────────────────────────────┤
+  │                                                                        │
+  │  - All HTTP requests wrapped in @retry decorator                       │
+  │  - 3 attempts max                                                      │
+  │  - Wait: 2s, 4s, 8s (exponential backoff)                              │
+  │  - Only retries on HTTP 5xx or network errors                          │
+  │  - Does NOT retry on 4xx (client errors are not transient)             │
+  │                                                                        │
+  │  Handles: Transient API failures, rate limits, network hiccups         │
+  │                                                                        │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │ 5. Safe MBQL Tree Walker (No Regex on JSON)                            │
+  ├────────────────────────────────────────────────────────────────────────┤
+  │                                                                        │
+  │  - Replaces field IDs ONLY in known MBQL constructs                    │
+  │  - Does NOT touch card_id, dashboard_id, or other non-field integers   │
+  │  - Prevents corruption from naive regex replacement                    │
+  │  - Extensively tested (42+ test cases)                                 │
+  │                                                                        │
+  │  See: Section 3 (Field Walker) for algorithm details                   │
+  │                                                                        │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │ 6. Explicit Prerequisites Check (ADR-10)                               │
+  ├────────────────────────────────────────────────────────────────────────┤
+  │                                                                        │
+  │  - Both legacy and new tables must exist in Metabase                   │
+  │  - Tool exits with clear error if table lookup fails                   │
+  │  - Prevents partial migrations or silent failures                      │
+  │                                                                        │
+  │  Error message example:                                                │
+  │    "Table 'old_schema.old_table' not found in Metabase.                │
+  │     Ensure the table exists and has been synced."                      │
+  │                                                                        │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │ 7. Comprehensive Test Coverage                                         │
+  ├────────────────────────────────────────────────────────────────────────┤
+  │                                                                        │
+  │  - Unit tests: Field walker, card migration logic                      │
+  │  - Integration tests: Docker environment with real Metabase            │
+  │  - Fixtures: Real MBQL v4 and v5 payloads from staging                 │
+  │  - Test coverage: >85% (pytest-cov)                                    │
+  │                                                                        │
+  │  Run: just test / just test-cov                                        │
+  │                                                                        │
+  └────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+7. DATA FLOW SUMMARY
+================================================================================
+
+High-level view of how data flows through the system:
+
+  BigQuery                        Metabase API                  Migration Logic
+  ────────                        ────────────                  ───────────────
+
+┌──────────────┐
+│ card_depend- │  ────1. Discover───▶   ┌──────────────┐
+│    ency      │      impacted cards    │ Card IDs     │
+└──────────────┘                        └──────────────┘
+                                               │
+                                               ▼
+                                        ┌──────────────┐
+                                        │ For each ID: │
+                                        │              │
+                                        │ GET /api/    │───2. Fetch card──▶┌────────────┐
+                                        │   card/{id}  │                   │ Card (old) │
+                                        └──────────────┘                   └────────────┘
+                                                                                 │
+┌──────────────┐                                                                 │
+│ Table meta   │  ────3. Build field────▶   ┌──────────────┐                     │
+│ Field meta   │      mappings              │ field_mapping│                     │
+└──────────────┘                            │ table_mapping│                     │
+                                            │ column_map   │                     │
+                                            └──────────────┘                     │
+                                                   │                             │
+                                                   └─────────────┐               │
+                                                                 ▼               ▼
+                                                          ┌────────────────────────┐
+                                                          │  migrate_card()        │
+                                                          │  - Native SQL / Query  │
+                                                          │  - Tree walker         │
+                                                          │  - Update metadata     │
+                                                          └────────────────────────┘
+                                                                 │
+                                                                 ▼
+                                                          ┌────────────┐
+                                                          │ Card (new) │
+                                                          └────────────┘
+                                                                 │
+                                                                 ▼
+                                        ┌──────────────┐         │
+                                        │ PUT /api/    │◀────4. Update (if not dry-run)
+                                        │   card/{id}  │
+                                        └──────────────┘
+                                               │
+                                               ▼
+┌──────────────┐                        ┌──────────────┐
+│ migration_log│  ◀────5. Log results───│ Success /    │
+│   (BQ table) │                        │ Failure      │
+└──────────────┘                        └──────────────┘
+
+
+================================================================================
+8. MODULE DEPENDENCY GRAPH
+================================================================================
+
+Visual representation of how modules depend on each other:
+
+                              ┌─────────────┐
+                              │   main.py   │
+                              │  (CLI entry)│
+                              └─────────────┘
+                                     │
+                    ┌────────────────┼────────────────┐
+                    │                │                │
+                    ▼                ▼                ▼
+            ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+            │  config.py  │  │ api/client  │  │ discovery/  │
+            │(env vars +  │  │ (HTTP + API)│  │  bigquery   │
+            │   secrets)  │  └─────────────┘  │ (card disc.)│
+            └─────────────┘         │         └─────────────┘
+                                    │                 │
+                                    ▼                 │
+                            ┌─────────────┐           │
+                            │ api/models  │           │
+                            │ (Pydantic)  │           │
+                            └─────────────┘           │
+                                    │                 │
+                                    └────────┬────────┘
+                                             │
+                                             ▼
+                                    ┌─────────────────┐
+                                    │ migration/card  │
+                                    │ (card migration)│
+                                    └─────────────────┘
+                                             │
+                                             ▼
+                                  ┌─────────────────────┐
+                                  │ migration/          │
+                                  │  field_walker       │
+                                  │ (MBQL tree walker)  │
+                                  └─────────────────────┘
+
+
+External Dependencies:
+  - google-cloud-bigquery (discovery, logging)
+  - google-cloud-secret-manager (config)
+  - google-auth, google-auth-oauthlib (authentication)
+  - requests (HTTP client)
+  - pydantic (data validation)
+  - typer (CLI framework)
+  - tenacity (retry logic)
+
+
+================================================================================
+9. JUSTFILE RECIPES OVERVIEW
+================================================================================
+
+The justfile provides development commands for common workflows:
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            Justfile Recipes                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  Development                    Testing                   Docker            │
+│  ───────────                    ───────                   ──────            │
+│  just sync                      just test                 just docker-up    │
+│  just check-all                 just test-cov             just docker-down  │
+│  just fix-all                   just test-watch           just docker-logs  │
+│  just clean                                               just docker-reset │
+│                                                           just docker-setup │
+│  Linting                        Staging                   just docker-      │
+│  ────────                       ───────                     prepare-        │
+│  just ruff-check                just stg-explore            migration       │
+│  just ruff-fix                  just stg-dry-run          just docker-test- │
+│  just mypy                        <args>                    migrate         │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+Quick Reference for Common Tasks:
+──────────────────────────────────
+
+  Development cycle:
+    1. just sync           # Install dependencies
+    2. (make changes)
+    3. just fix-all        # Auto-fix format + lint
+    4. just test           # Run tests
+    5. just check-all      # Full validation
+
+  Local testing:
+    1. just docker-up
+    2. just docker-setup
+    3. just docker-prepare-migration
+    4. just docker-test-migrate
+    5. (verify in UI at http://localhost:3000)
+    6. just docker-reset   # Clean slate for next iteration
+
+  Staging validation:
+    1. gcloud auth application-default login
+    2. just stg-explore    # See what would be impacted
+    3. just stg-dry-run <LEGACY_TABLE> <NEW_TABLE> <LEGACY_SCHEMA> <NEW_SCHEMA>
+    4. (review output)
+    5. (If looks good, run without dry-run flag)
+
+
+================================================================================
+END OF ARCHITECTURE DIAGRAMS
+================================================================================
+
+This document covers:
+✓ Main execution flow (6 phases)
+✓ Card migration dispatch logic
+✓ Field walker MBQL construct recognition
+✓ Docker environment setup (3 containers, 6 bootstrap phases)
+✓ Authentication modes (local vs production)
+✓ Safety features (7 mechanisms)
+✓ Data flow summary
+✓ Module dependency graph
+✓ Justfile recipes overview
+
+For code-level details, see metabase_project_analysis.md.
+For quick commands, see QUICK_REFERENCE.md.

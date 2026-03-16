@@ -8,6 +8,7 @@ updates:
       interval: "daily"
     groups:
       sync-recommendation-security:
+        applies-to: security-updates
         patterns:
           - "*"
   - package-ecosystem: "uv"
@@ -17,9 +18,9 @@ updates:
       interval: "daily"
     groups:
       root-project-security:
+        applies-to: security-updates
         patterns:
-          - "/pyproject.toml"
-          - "/uv.lock"
+          - "*"
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
     directories:
@@ -31,12 +32,3 @@ updates:
         applies-to: security-updates
         patterns:
           - "*"
-  - package-ecosystem: "pip"
-    open-pull-requests-limit: 0
-    directory: "."
-    schedule:
-      interval: "daily"
-    groups:
-      root-project-security:
-        patterns:
-          - "/pyproject.toml"

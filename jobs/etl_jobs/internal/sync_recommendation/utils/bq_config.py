@@ -8,6 +8,7 @@ from utils.constant import ENV_SHORT_NAME
 class DatasetType(Enum):
     ML_RECO = "ml_reco"
     SEED = "seed"
+    EXPORT_RECO_CLOUDSQL = "export_reco_cloudsql"
 
 
 BQ_TABLES_CONFIG: Dict[str, Dict] = {
@@ -78,6 +79,15 @@ BQ_TABLES_CONFIG: Dict[str, Dict] = {
         "bigquery_table_name": "venue_h3_mapping",
         "cloud_sql_table_name": "venue_h3_mapping",
         "dataset_type": DatasetType.ML_RECO,
+    },
+    "similar_artist": {
+        "columns": {
+            "artist_id": "character varying",
+            "similar_artists_json": "character varying",
+        },
+        "bigquery_table_name": "similar_artist",
+        "cloud_sql_table_name": "similar_artist",
+        "dataset_type": DatasetType.EXPORT_RECO_CLOUDSQL,
     },
 }
 

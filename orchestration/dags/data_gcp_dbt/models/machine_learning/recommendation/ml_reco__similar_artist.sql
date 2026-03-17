@@ -1,4 +1,4 @@
-{{ config(**custom_table_config(materialized="view")) }}
+{{ config(materialized="view") }}
 
 with
     formatted_similar_artists as (

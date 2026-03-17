@@ -1,18 +1,10 @@
 version: 2
 
 updates:
-  - package-ecosystem: "uv"
-    open-pull-requests-limit: 0
-    directory: "jobs/etl_jobs/internal/sync_recommendation"
-    schedule:
-      interval: "daily"
-    commit-message:
-      prefix: "(BSR) chore(dependabot): "
-    groups:
-      sync-recommendation-security:
-        applies-to: security-updates
-        patterns:
-          - "*"
+
+#############################################################
+###################        Root Dir       ###################
+#############################################################
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
     directory: "."
@@ -25,16 +17,180 @@ updates:
         applies-to: security-updates
         patterns:
           - "*"
+
+#############################################################
+###################        ETL JOBS       ###################
+#############################################################
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
-    directories:
-      - "jobs/ml_jobs/*"
+    directory: "jobs/etl_jobs/internal/sync_recommendation"
     schedule:
       interval: "daily"
     commit-message:
       prefix: "(BSR) chore(dependabot): "
     groups:
-      ml-jobs-security:
+      sync-recommendation-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+#############################################################
+###################        ML JOBS        ###################
+#############################################################
+# Separate groups for each ML job
+  - package-ecosystem: "uv"
+    open-pull-requests-limit: 0
+    directory: "jobs/ml_jobs/algo_training"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
+    groups:
+      ml-algo-training-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "uv"
+    open-pull-requests-limit: 0
+    directory: "jobs/ml_jobs/artist_linkage"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
+    groups:
+      ml-artist-linkage-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "uv"
+    open-pull-requests-limit: 0
+    directory: "jobs/ml_jobs/clusterisation"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
+    groups:
+      ml-clusterisation-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "uv"
+    open-pull-requests-limit: 0
+    directory: "jobs/ml_jobs/embeddings"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
+    groups:
+      ml-embeddings-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "uv"
+    open-pull-requests-limit: 0
+    directory: "jobs/ml_jobs/endpoint_monitoring"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
+    groups:
+      ml-endpoint-monitoring-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "uv"
+    open-pull-requests-limit: 0
+    directory: "jobs/ml_jobs/finance"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
+    groups:
+      ml-finance-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "uv"
+    open-pull-requests-limit: 0
+    directory: "jobs/ml_jobs/graph_recommendation"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
+    groups:
+      ml-graph-recommendation-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "uv"
+    open-pull-requests-limit: 0
+    directory: "jobs/ml_jobs/item_embeddings"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
+    groups:
+      ml-item-embeddings-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "uv"
+    open-pull-requests-limit: 0
+    directory: "jobs/ml_jobs/item_linkage"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
+    groups:
+      ml-item-linkage-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "uv"
+    open-pull-requests-limit: 0
+    directory: "jobs/ml_jobs/offer_compliance"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
+    groups:
+      ml-offer-compliance-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "uv"
+    open-pull-requests-limit: 0
+    directory: "jobs/ml_jobs/ranking_endpoint"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
+    groups:
+      ml-ranking-endpoint-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "uv"
+    open-pull-requests-limit: 0
+    directory: "jobs/ml_jobs/reduction"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
+    groups:
+      ml-reduction-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "uv"
+    open-pull-requests-limit: 0
+    directory: "jobs/ml_jobs/retrieval_vector"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
+    groups:
+      ml-retrieval-vector-security:
         applies-to: security-updates
         patterns:
           - "*"

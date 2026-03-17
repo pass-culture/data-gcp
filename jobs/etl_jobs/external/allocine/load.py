@@ -8,9 +8,9 @@ from google.cloud import bigquery
 from google.cloud.bigquery import LoadJobConfig, SchemaField, WriteDisposition
 
 from gcp import get_bq_client
-from schema import RAW_SCHEMA, STAGING_SCHEMA
+from schema import RAW_SCHEMA, STAGING_SCHEMA, RAW_EXTRA_INIT_VALUES
 
-logger = logging.getLogger(__name__)
+
 
 
 def _poster_uuid(poster_url: str) -> str:
@@ -88,10 +88,16 @@ def merge_staging_to_raw(
       T.retry_count = CASE
         WHEN IFNULL(T.poster_url, '') != IFNULL(S.poster_url, '') THEN 0
         ELSE T.retry_count
-      END"""
+      END,
+      T.updated_at = CURRENT_TIMESTAMP()
+      """
 
-    insert_cols = ", ".join(f.name for f in STAGING_SCHEMA) + ", poster_to_download, poster_gcs_path, retry_count"
-    insert_vals = ", ".join(f"S.{f.name}" for f in STAGING_SCHEMA) + ", TRUE, NULL, 0"
+    staging_fields = {f.name for f in STAGING_SCHEMA}
+    insert_cols = ", ".join(f.name for f in RAW_SCHEMA)
+    insert_vals = ", ".join(
+        f"S.{f.name}" if f.name in staging_fields else RAW_EXTRA_INIT_VALUES[f.name]
+        for f in RAW_SCHEMA
+    )
 
     sql = f"""
     MERGE {raw_ref} T
@@ -119,6 +125,8 @@ def fetch_pending_posters(
     dataset: str,
     raw_table: str,
     max_retries: int,
+    poster_download_backoff: int,
+    poster_download_backoff_unit: str,
     bq_client: bigquery.Client | None = None,
 ) -> list[dict]:
     client = bq_client or get_bq_client(project_id)
@@ -127,8 +135,18 @@ def fetch_pending_posters(
     SELECT movie_id, poster_url
     FROM {table_ref}
     WHERE poster_to_download = TRUE
-      AND retry_count < {max_retries}
       AND poster_url IS NOT NULL
+      AND (
+          retry_count = 0
+          OR (
+              retry_count < {max_retries}
+              AND TIMESTAMP_TRUNC(updated_at, {poster_download_backoff_unit})
+                  <= TIMESTAMP_SUB(
+                      TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), {poster_download_backoff_unit}),
+                      INTERVAL CAST(retry_count * {poster_download_backoff} AS INT64) {poster_download_backoff_unit}
+                  )
+          )
+      )
     """
     return [dict(row) for row in client.query(sql).result()]
 
@@ -147,7 +165,8 @@ def update_poster_success(
     UPDATE {table_ref}
     SET poster_to_download = FALSE,
         poster_gcs_path = @gcs_path,
-        retry_count = 0
+        retry_count = 0,
+        updated_at = CURRENT_TIMESTAMP()
     WHERE movie_id = @movie_id
     """
     job_config = bigquery.QueryJobConfig(

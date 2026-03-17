@@ -1,6 +1,6 @@
 {
     "pretrained_embedding_name": "hybrid_embedding",
-    "pretrained_embedding_size" : 32,
+    "pretrained_embedding_size" : 768,
     "group_config": [
         {
             "group": "LIVRES",

@@ -146,7 +146,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
         command="""
-            uv run python  build_lancedb_table \
+            uv run python build_lancedb_table.py \
                 --gcs-embedding-parquet-file gs://{ml_bucket_temp}/{gcs_folder_path}/data-*.parquet \
                 --lancedb-uri {lancedb_uri} \
                 --lancedb-table {lancedb_table} \

@@ -35,5 +35,7 @@ BQ_TABLE = "chatbot_edito_search_db_items"
 
 BQ_DATASET = f"sandbox_{ENV_SHORT_NAME}"
 
+
+GCS_EMBEDDING_PARQUET_FILE = f"gs://mlflow-bucket-{ENVIRONMENT}/streamlit_data/chatbot_edito/item_embedding_0326"
 LANCEDB_URI = f"gs://mlflow-bucket-{ENVIRONMENT}/streamlit_data/chatbot_edito/search_db"
 LANCEDB_TABLE = "embeddings"  # Name of your LanceDB table

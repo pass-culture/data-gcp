@@ -1,7 +1,7 @@
 -- CREATE OR REPLACE TABLE
 -- `{project}.{sandbox_dataset}.chatbot_edito_search_db_offers` AS
 select
-    item_id,
+    go.item_id,
     go.offer_id,
     go.offer_category_id,
     go.offer_subcategory_id,
@@ -12,8 +12,8 @@ select
 from `{project}.{analytics_dataset}.global_offer` go
 join `{project}.{analytics_dataset}.global_stock` gs on go.offer_id = gs.offer_id
 join
-    `{project}.{sandbox_dataset}.chatbot_edito_search_db_items` dbi
-    on dbi.id = go.item_id
+    `{project}.{mlfeat_dataset}.item_embedding_tmp` dbi
+    on dbi.item_id = go.item_id
 where
     (stock_beginning_date is null or stock_beginning_date > current_date())
     and (

@@ -2,15 +2,15 @@ import os
 import lancedb
 from loguru import logger
 from dotenv import load_dotenv
-
+from constants import LANCEDB_URI, GCS_EMBEDDING_PARQUET_FILE, LANCEDB_TABLE
 # --- 1. Configuration ---
 load_dotenv()
 ENV_SHORT_NAME = os.getenv("ENV_SHORT_NAME", "dev")
 ENVIRONMENT = "prod" if ENV_SHORT_NAME == "prod" else "ehp"
 
 # Ensure the URI starts with gs:// for LanceDB GCS implementation
-GCS_DATABASE_URI = f"gs://mlflow-bucket-{ENVIRONMENT}/streamlit_data/chatbot_edito/search_db"
-TABLE_NAME = "embeddings"
+GCS_DATABASE_URI = LANCEDB_URI
+TABLE_NAME = LANCEDB_TABLE
 
 def build_lancedb_index(
     table: lancedb.Table,
@@ -70,6 +70,3 @@ if __name__ == "__main__":
             index_column="vector"
         )
     logger.info("Indexing process finished.")
-    logger.info("check index status with: lancedb.connect(GCS_DATABASE_URI).open_table(TABLE_NAME).index_status()")
-    stats = table.index_stats("vector")
-    logger.info(f"Unindexed rows: {stats.num_unindexed_rows}")

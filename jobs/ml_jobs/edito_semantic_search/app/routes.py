@@ -309,6 +309,7 @@ def predict():
                 return jsonify(PredictionResult(predictions=search_results).dict()), 200
             
             # Post-processing: Panachage sorting
+            prediction_result_df.drop_duplicates(subset=["offer_id"], inplace=True)
             sorted_results = panachage_sort(prediction_result_df)
             logger.info(
                 f"Panachage sorting completed. Final result count: {len(sorted_results)}"

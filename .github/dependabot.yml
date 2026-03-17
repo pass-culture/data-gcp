@@ -1,18 +1,10 @@
 version: 2
 
 updates:
-  - package-ecosystem: "uv"
-    open-pull-requests-limit: 0
-    directory: "jobs/etl_jobs/internal/sync_recommendation"
-    schedule:
-      interval: "daily"
-    commit-message:
-      prefix: "(BSR) chore(dependabot): "
-    groups:
-      sync-recommendation-security:
-        applies-to: security-updates
-        patterns:
-          - "*"
+
+#############################################################
+###################        Root Dir       ###################
+#############################################################
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
     directory: "."
@@ -25,14 +17,30 @@ updates:
         applies-to: security-updates
         patterns:
           - "*"
+
+#############################################################
+###################        ETL JOBS       ###################
+#############################################################
+  - package-ecosystem: "uv"
+    open-pull-requests-limit: 0
+    directory: "jobs/etl_jobs/internal/sync_recommendation"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "(BSR) chore(dependabot): "
+    groups:
+      sync-recommendation-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
 #############################################################
 ###################        ML JOBS        ###################
 #############################################################
-
 # 1. Global group for Patch updates (security updates only)
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
-    directories:
+    directories: # We use directories instead of directory to cover all ML jobs at once
       - "jobs/ml_jobs/*"
     schedule:
       interval: "daily"
@@ -48,8 +56,7 @@ updates:
 # 2. Separate groups for Major and Minor updates (security updates only) for each ML job
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
-    directories:
-      - "jobs/ml_jobs/algo_training"
+    directory: "jobs/ml_jobs/algo_training"
     schedule:
       interval: "daily"
     commit-message:
@@ -64,8 +71,7 @@ updates:
           - "*"
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
-    directories:
-      - "jobs/ml_jobs/artist_linkage"
+    directory: "jobs/ml_jobs/artist_linkage"
     schedule:
       interval: "daily"
     commit-message:
@@ -80,8 +86,7 @@ updates:
           - "*"
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
-    directories:
-      - "jobs/ml_jobs/clusterisation"
+    directory: "jobs/ml_jobs/clusterisation"
     schedule:
       interval: "daily"
     commit-message:
@@ -96,8 +101,7 @@ updates:
           - "*"
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
-    directories:
-      - "jobs/ml_jobs/embeddings"
+    directory: "jobs/ml_jobs/embeddings"
     schedule:
       interval: "daily"
     commit-message:
@@ -112,8 +116,7 @@ updates:
           - "*"
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
-    directories:
-      - "jobs/ml_jobs/endpoint_monitoring"
+    directory: "jobs/ml_jobs/endpoint_monitoring"
     schedule:
       interval: "daily"
     commit-message:
@@ -128,8 +131,7 @@ updates:
           - "*"
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
-    directories:
-      - "jobs/ml_jobs/finance"
+    directory: "jobs/ml_jobs/finance"
     schedule:
       interval: "daily"
     commit-message:
@@ -144,8 +146,7 @@ updates:
           - "*"
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
-    directories:
-      - "jobs/ml_jobs/graph_recommendation"
+    directory: "jobs/ml_jobs/graph_recommendation"
     schedule:
       interval: "daily"
     commit-message:
@@ -160,8 +161,7 @@ updates:
           - "*"
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
-    directories:
-      - "jobs/ml_jobs/item_embeddings"
+    directory: "jobs/ml_jobs/item_embeddings"
     schedule:
       interval: "daily"
     commit-message:
@@ -176,8 +176,7 @@ updates:
           - "*"
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
-    directories:
-      - "jobs/ml_jobs/item_linkage"
+    directory: "jobs/ml_jobs/item_linkage"
     schedule:
       interval: "daily"
     commit-message:
@@ -192,8 +191,7 @@ updates:
           - "*"
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
-    directories:
-      - "jobs/ml_jobs/offer_compliance"
+    directory: "jobs/ml_jobs/offer_compliance"
     schedule:
       interval: "daily"
     commit-message:
@@ -208,8 +206,7 @@ updates:
           - "*"
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
-    directories:
-      - "jobs/ml_jobs/ranking_endpoint"
+    directory: "jobs/ml_jobs/ranking_endpoint"
     schedule:
       interval: "daily"
     commit-message:
@@ -224,8 +221,7 @@ updates:
           - "*"
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
-    directories:
-      - "jobs/ml_jobs/reduction"
+    directory: "jobs/ml_jobs/reduction"
     schedule:
       interval: "daily"
     commit-message:
@@ -240,8 +236,7 @@ updates:
           - "*"
   - package-ecosystem: "uv"
     open-pull-requests-limit: 0
-    directories:
-      - "jobs/ml_jobs/retrieval_vector"
+    directory: "jobs/ml_jobs/retrieval_vector"
     schedule:
       interval: "daily"
     commit-message:

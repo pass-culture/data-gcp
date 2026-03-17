@@ -6,8 +6,8 @@ import pandas as pd
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import bigquery, secretmanager
 
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
-ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID","passculture-data-ehp")
+ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME","dev")
 BIGQUERY_RAW_DATASET = f"raw_{ENVIRONMENT_SHORT_NAME}"
 
 

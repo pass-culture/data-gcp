@@ -42,6 +42,7 @@ TABLES_TO_PROCESS = [
     "non_recommendable_items_data",
     "iris_france",
     "venue_h3_mapping",
+    "similar_artist",
 ]
 
 MATERIALIZED_VIEWS = [
@@ -51,6 +52,7 @@ MATERIALIZED_VIEWS = [
     "iris_france_mv",
     "recommendable_offers_raw_mv",
     "venue_h3_mapping_mv",
+    "similar_artist_mv",
 ]
 
 INSTANCE_TYPE = {
@@ -179,11 +181,11 @@ with DAG(
                 dag=dag,
             )
 
-            # Add a 3 minute delay before each view refresh (except the first)
+            # Add a 30 sec delay before each view refresh (except the first)
             if previous_task:
                 wait_between_refreshes = BashOperator(
                     task_id=f"wait_before_{view}_refresh",
-                    bash_command="sleep 180",
+                    bash_command="sleep 30",
                 )
                 previous_task >> wait_between_refreshes >> refresh_materialized_view
             previous_task = refresh_materialized_view

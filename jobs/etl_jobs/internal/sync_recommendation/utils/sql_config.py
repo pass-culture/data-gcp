@@ -83,6 +83,7 @@ class MaterializedView(Enum):
     IRIS_FRANCE = "iris_france_mv"
     RECOMMENDABLE_OFFERS = "recommendable_offers_raw_mv"
     VENUE_H3_MAPPING = "venue_h3_mapping_mv"
+    SIMILAR_ARTIST = "similar_artist_mv"
 
 
 class SQLTableConfig:

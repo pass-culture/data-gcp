@@ -30,6 +30,8 @@ GCS_OUTPUT_FILENAME = "data-*.parquet"
 ## BigQuery CONSTANTS
 INPUT_DATASET_NAME = f"ml_feat_{ENV_SHORT_NAME}"
 INPUT_TABLE_NAME = "item_embedding_refactor"
+TMP_DATASET_NAME = f"tmp_{ENV_SHORT_NAME}"
+TMP_TABLE_NAME = "item_embeddings_temp"
 
 ## DAG CONFIG
 DAG_NAME = "edito_semantic_search"
@@ -99,7 +101,28 @@ with DAG(
         retries=2,
     )
 
-    # Step 2: Export temp table to GCS as a parquet file (to be used as input for the embedding script)
+    # Step 2: Execute SQL query and store in temp table
+    create_temp_table = BigQueryInsertJobOperator(
+        project_id=GCP_PROJECT_ID,
+        task_id="create_temp_table",
+        configuration={
+            "query": {
+                "query": f"""
+                    SELECT item_id, semantic_content_STS
+                    FROM `{GCP_PROJECT_ID}.{INPUT_DATASET_NAME}.{INPUT_TABLE_NAME}`
+                """,
+                "destinationTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": TMP_DATASET_NAME,
+                    "tableId": TMP_TABLE_NAME,
+                },
+                "writeDisposition": "WRITE_TRUNCATE",
+                "useLegacySql": False,
+            }
+        },
+    )
+
+    # Step 3: Export temp table to GCS as a parquet file (to be used as input for the embedding script)
     export_item_embeddings_to_gcs = BigQueryInsertJobOperator(
         project_id=GCP_PROJECT_ID,
         task_id="export_item_embeddings_to_gcs",
@@ -107,8 +130,8 @@ with DAG(
             "extract": {
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "datasetId": INPUT_DATASET_NAME,
-                    "tableId": INPUT_TABLE_NAME,
+                    "datasetId": TMP_DATASET_NAME,
+                    "tableId": TMP_TABLE_NAME,
                 },
                 "destinationUris": [
                     f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{GCS_OUTPUT_FILENAME}"
@@ -124,10 +147,10 @@ with DAG(
         base_dir=BASE_DIR,
         command="""
             uv run python  build_lancedb_table \
-                --gcs_embedding_parquet_file gs://{ml_bucket_temp}/{gcs_folder_path}/data-*.parquet \
-                --lancedb_uri {lancedb_uri} \
-                --lancedb_table {lancedb_table} \
-                --batch_size 1000
+                --gcs-embedding-parquet-file gs://{ml_bucket_temp}/{gcs_folder_path}/data-*.parquet \
+                --lancedb-uri {lancedb_uri} \
+                --lancedb-table {lancedb_table} \
+                --batch-size 1000
         """,
         deferrable=False,
     )
@@ -144,6 +167,7 @@ with DAG(
         start
         >> gce_instance_start
         >> install_dependencies
+        >> create_temp_table
         >> export_item_embeddings_to_gcs
         >> create_lancedb
         >> gce_instance_delete

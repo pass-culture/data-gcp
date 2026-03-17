@@ -15,36 +15,22 @@ GCS_DATABASE_URI = LANCEDB_URI
 TABLE_NAME = LANCEDB_TABLE
 
 
-def build_lancedb_index(
+def build_lancedb_vector_index(
     table: lancedb.Table,
-    index_type: str = "vector",
-    index_column: str = "vector",
 ) -> None:
     """Builds the specified index on the LanceDB table."""
 
-    if index_type == "text":
-        # FTS index doesn't use IVF_PQ, it's for keyword search
-        table.create_fts_index(index_column, replace=True)
-        logger.info(f"Created FTS (text) index on column '{index_column}'")
-
-    elif index_type == "vector":
-        logger.info(
-            f"Building IVF_PQ index on '{index_column}' with 2048 partitions..."
-        )
-        # v0.26.0 syntax
-        table.create_index(
-            vector_column_name=index_column,
-            metric="cosine",  # Best for Gemma 300M RAG
-            num_partitions=2048,  # Optimized for ~2.5M - 3M rows
-            num_sub_vectors=48,  # 768 / 16 = 48 (Optimized for Gemma dims)
-            index_type="IVF_PQ",
-            replace=True,
-        )
-        logger.info(f"Created vector index on '{index_column}' successfully.")
-
-    elif index_type == "scalar":
-        table.create_scalar_index(index_column)
-        logger.info(f"Created scalar index on '{index_column}'.")
+    logger.info("Building IVF_PQ index on 'vector@' with 2048 partitions...")
+    # v0.26.0 syntax
+    table.create_index(
+        vector_column_name="vector",
+        metric="cosine",  # Best for Gemma 300M RAG
+        num_partitions=2048,  # Optimized for ~2.5M - 3M rows
+        num_sub_vectors=48,  # 768 / 16 = 48 (Optimized for Gemma dims)
+        index_type="IVF_PQ",
+        replace=True,
+    )
+    logger.info("Created vector index on 'vector' successfully.")
 
 
 if __name__ == "__main__":
@@ -62,7 +48,6 @@ if __name__ == "__main__":
         # 3. Maintenance (Crucial for GCS performance)
         logger.info("Starting maintenance on GCS files...")
         try:
-            # Compacting helps LanceDB 'see' all 2.5M rows as large contiguous files
             table.compact_files()
             table.cleanup_old_versions()
             logger.info("Maintenance complete.")
@@ -70,5 +55,5 @@ if __name__ == "__main__":
             logger.warning(f"Maintenance failed (sometimes restricted on GCS): {e}")
 
         # 4. Build Index
-        build_lancedb_index(table=table, index_type="vector", index_column="vector")
+        build_lancedb_vector_index(table=table)
     logger.info("Indexing process finished.")

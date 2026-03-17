@@ -33,6 +33,9 @@ INPUT_TABLE_NAME = "item_embedding_refactor"
 TMP_DATASET_NAME = f"tmp_{ENV_SHORT_NAME}"
 TMP_TABLE_NAME = "item_embeddings_temp"
 
+LANCEDB_URI = f"gs://{ML_BUCKET_TEMP}/lancedb/{ENV_SHORT_NAME}"
+LANCEDB_TABLE = "item_embeddings"
+
 ## DAG CONFIG
 DAG_NAME = "edito_semantic_search"
 BASE_DIR = "data-gcp/jobs/ml_jobs/edito_semantic_search"
@@ -145,11 +148,11 @@ with DAG(
         task_id="create_lancedb",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
-        command="""
+        command=f"""
             uv run python build_lancedb_table.py \
-                --gcs-embedding-parquet-file gs://{ml_bucket_temp}/{gcs_folder_path}/data-*.parquet \
-                --lancedb-uri {lancedb_uri} \
-                --lancedb-table {lancedb_table} \
+                --gcs-embedding-parquet-file gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/data-*.parquet \
+                --lancedb-uri {LANCEDB_URI} \
+                --lancedb-table {LANCEDB_TABLE} \
                 --batch-size 1000
         """,
         deferrable=False,

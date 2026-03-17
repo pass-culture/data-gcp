@@ -10,7 +10,7 @@ BEGIN
     SELECT
         similar_artist.artist_id::varchar as artist_id,
         similar_artist.similar_artists_json_string::varchar as similar_artists_json_string
-    FROM public.similar_artist similar_artist
+    FROM public.similar_artist similar_artist;
 END;
 $body$
 language plpgsql

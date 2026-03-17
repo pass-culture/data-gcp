@@ -1,7 +1,10 @@
 [project]
 name = "edito-semantic-search"
 version = "0.1.0"
-description = "Add your description here"
+description = "Job to create LanceDB table with item semantic embeddings"
 readme = "README.md"
 requires-python = ">=3.10, <3.13"
-dependencies = []
+dependencies = [
+    "lancedb>=0.30.0",
+    "pyarrow>=23.0.1",
+]

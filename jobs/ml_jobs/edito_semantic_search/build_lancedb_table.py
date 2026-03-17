@@ -1,9 +1,9 @@
 import lancedb
 import pyarrow.dataset as ds
+import typer
 
 # --- 1. Configuration ---
 # Replace with your actual GCS URIs
-from constants import GCS_EMBEDDING_PARQUET_FILE, LANCEDB_TABLE, LANCEDB_URI
 
 # Define the batch size for streaming (e.g., 100,000 rows at a time)
 BATCH_SIZE = 100000
@@ -14,7 +14,6 @@ BATCH_SIZE = 100000
 # and pq.ParquetFile.iter_batches reads only the requested batch size into memory.
 def parquet_batch_generator(parquet_uri: str, batch_size: int):
     """Yields pyarrow.RecordBatch from a Parquet directory stored on GCS or local."""
-    import pyarrow.dataset as ds
 
     try:
         print(f"Streaming data from {parquet_uri} in batches of {batch_size}...")
@@ -39,38 +38,28 @@ def parquet_batch_generator(parquet_uri: str, batch_size: int):
 
 # --- 4. Connect to LanceDB and Create Table from Generator ---
 
-if __name__ == "__main__":
+
+def build_lancedb_table(
+    gcs_embedding_parquet_file: str = typer.Option(..., help="GCS Parquet file path"),
+    lancedb_uri: str = typer.Option(..., help="LanceDB URI"),
+    lancedb_table: str = typer.Option(..., help="LanceDB table name"),
+    batch_size: int = typer.Option(..., help="Batch size for streaming"),
+):
     print("=" * 60)
     print("LanceDB Table Creation from GCS Parquet")
     print("=" * 60)
 
-    # First, inspect the schema
-    print("\n[1/3] Reading schema from:", GCS_EMBEDDING_PARQUET_FILE)
-    try:
-        dataset = ds.dataset(GCS_EMBEDDING_PARQUET_FILE, format="parquet")
-        print("\nSchema:")
-        print(dataset.schema)
-        print("\n--- Field details ---")
-        for field in dataset.schema:
-            print(f"  {field.name}: {field.type}")
-    except Exception as e:
-        print(f"Error reading schema: {e}")
-        import traceback
-
-        traceback.print_exc()
-        exit(1)
-
     # Connect to LanceDB
-    print(f"\n[2/4] Connecting to LanceDB at: {LANCEDB_URI}")
-    db = lancedb.connect(LANCEDB_URI)
+    print(f"\n[2/4] Connecting to LanceDB at: {lancedb_uri}")
+    db = lancedb.connect(lancedb_uri)
 
     # Check if table exists and drop it
-    print(f"\n[3/4] Checking for existing table '{LANCEDB_TABLE}'...")
+    print(f"\n[3/4] Checking for existing table '{lancedb_table}'...")
     try:
         existing_tables = db.table_names()
-        if LANCEDB_TABLE in existing_tables:
-            print(f"Table '{LANCEDB_TABLE}' exists. Dropping...")
-            db.drop_table(LANCEDB_TABLE)
+        if lancedb_table in existing_tables:
+            print(f"Table '{lancedb_table}' exists. Dropping...")
+            db.drop_table(lancedb_table)
             print("      ✓ Table dropped successfully")
         else:
             print("      ✓ No existing table found")
@@ -81,23 +70,25 @@ if __name__ == "__main__":
     # LanceDB will consume batches from the generator one at a time and write them
     # directly as Lance fragments onto your GCS bucket.
     try:
-        print(f"\n[4/4] Creating LanceDB table '{LANCEDB_TABLE}' on GCS...")
-        print(f"      Batch size: {BATCH_SIZE}")
+        print(f"\n[4/4] Creating LanceDB table '{lancedb_table}' on GCS...")
+        print(f"      Batch size: {batch_size}")
 
         table = db.create_table(
-            name=LANCEDB_TABLE,
-            data=parquet_batch_generator(GCS_EMBEDDING_PARQUET_FILE, BATCH_SIZE),
+            name=lancedb_table,
+            data=parquet_batch_generator(gcs_embedding_parquet_file, batch_size),
         )
 
         print(f"\n{'=' * 60}")
-        print(f"SUCCESS: Table '{LANCEDB_TABLE}' created on GCS!")
+        print(f"SUCCESS: Table '{lancedb_table}' created on GCS!")
         print(f"{'=' * 60}")
         print(f"Total rows ingested: {table.count_rows():,}")
         print("\nTable schema:")
         print(table.schema)
         print("\nSample rows:")
-        df = table.search().limit(10).to_pandas()
-        print(df.head(10))
+
+        ## for testing:
+        # df = table.search().limit(10).to_pandas()
+        # print(df.head(10))
 
     except Exception as e:
         print(f"\n{'=' * 60}")
@@ -108,3 +99,7 @@ if __name__ == "__main__":
 
         traceback.print_exc()
         exit(1)
+
+
+if __name__ == "__main__":
+    typer.run(build_lancedb_table)

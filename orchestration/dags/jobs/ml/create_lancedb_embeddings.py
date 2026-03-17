@@ -22,8 +22,6 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 
-from jobs.crons import SCHEDULE_DICT
-
 ###########################################################################
 ## GCS CONSTANTS
 GCS_FOLDER_PATH = "edito_semantic_search/item_embeddings_{{ ts_nodash }}"
@@ -59,7 +57,7 @@ with DAG(
     default_args=DEFAULT_ARGS,
     description="Create LanceDB with item embeddings",
     doc_md=DAG_DOC,
-    schedule_interval=SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME],
+    schedule_interval="1 * * * *",  # SCHEDULE_DICT["daily"],
     catchup=False,
     dagrun_timeout=timedelta(hours=12),
     user_defined_macros=macros.default,
@@ -125,8 +123,11 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
         command="""
-            uv run python main.py \
-
+            uv run python  build_lancedb_table \
+                --gcs_embedding_parquet_file gs://{ml_bucket_temp}/{gcs_folder_path}/data-*.parquet \
+                --lancedb_uri {lancedb_uri} \
+                --lancedb_table {lancedb_table} \
+                --batch_size 1000
         """,
         deferrable=False,
     )

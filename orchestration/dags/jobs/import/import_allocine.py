@@ -49,17 +49,17 @@ with DAG(
         ),
         "poster_retries": Param(
             default=3,
-            type="int",
+            type="integer",
             description="Max number of dag run to attempt poster download if url is missing.",
         ),
         "poster_download_backoff_unit": Param(
             default="DAY",
-            enum= [ "DAY", "WEEK", "MONTH", "YEAR"],
+            enum=["DAY", "WEEK", "MONTH", "YEAR"],
             description="Time unit between poster download retries.",
         ),
         "poster_download_backoff": Param(
             default=7,
-            type="int",
+            type="integer",
             description="Quantity of time units to wait between download retries.",
         ),
     },

@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 from google.cloud import bigquery
 from google.cloud.bigquery import LoadJobConfig, SchemaField, WriteDisposition
+from google.cloud.exceptions import NotFound
 
 from gcp import get_bq_client
 from schema import RAW_EXTRA_INIT_VALUES, RAW_SCHEMA, STAGING_SCHEMA
@@ -32,7 +33,7 @@ def poster_blob_name(prefix: str, poster_url: str, content_type: str | None) -> 
     return f"{prefix}/{_poster_uuid(poster_url)}.{_detect_extension(poster_url, content_type)}"
 
 
-def truncate_and_load_staging(
+def load_staging_table(
     rows: list[dict],
     project_id: str,
     dataset: str,
@@ -41,6 +42,15 @@ def truncate_and_load_staging(
 ) -> None:
     client = bq_client or get_bq_client(project_id)
     table_id = f"{project_id}.{dataset}.{staging_table}"
+
+    # 1. Ensure the table exists
+    try:
+        client.get_table(table_id)
+    except Exception:
+        client.create_table(bigquery.Table(table_id, schema=STAGING_SCHEMA))
+        logger.info("Created staging table %s.", table_id)
+
+    # 2. Load extracted data into staging
     job_config = LoadJobConfig(
         schema=STAGING_SCHEMA,
         write_disposition=WriteDisposition.WRITE_TRUNCATE,
@@ -48,6 +58,18 @@ def truncate_and_load_staging(
     job = client.load_table_from_json(rows, table_id, job_config=job_config)
     job.result()
     logger.info("Loaded %d rows into %s (truncated).", len(rows), table_id)
+
+
+def clear_staging_table(
+    project_id: str, dataset: str, staging_table: str, bq_client: bigquery.Client | None = None
+) -> None:
+    client = bq_client or get_bq_client(project_id)
+    table_id = f"{project_id}.{dataset}.{staging_table}"
+    try:
+        client.delete_table(table_id)
+        logger.info("Deleted staging table %s.", table_id)
+    except Exception:
+        logger.warning("Staging table %s did not exist, nothing to delete.", table_id)
 
 
 def _ensure_raw_table(
@@ -59,8 +81,13 @@ def _ensure_raw_table(
 ) -> None:
     table_id = f"{project_id}.{dataset}.{raw_table}"
     try:
-        client.get_table(table_id)
-    except Exception:
+        table = client.get_table(table_id)
+        # Validate schema
+        existing_cols = {f.name for f in table.schema}
+        missing = {f.name for f in raw_schema} - existing_cols
+        if missing:
+            raise RuntimeError(f"Raw table exists but is missing columns: {missing}")
+    except NotFound:
         client.create_table(bigquery.Table(table_id, schema=raw_schema))
         logger.info("Created table %s.", table_id)
 

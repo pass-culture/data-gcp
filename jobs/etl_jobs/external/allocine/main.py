@@ -14,15 +14,16 @@ from constants import (
     SECRET_ID,
     STAGING_TABLE,
 )
-from gcp import get_bq_client, get_secret, upload_to_gcs
-from load import (
+from crud import (
+    clear_staging_table,
     fetch_pending_posters,
+    load_staging_table,
     merge_staging_to_raw,
     poster_blob_name,
-    truncate_and_load_staging,
     update_poster_failure,
     update_poster_success,
 )
+from gcp import get_bq_client, get_secret, upload_to_gcs
 from transform import transform_movie
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -45,7 +46,7 @@ def sync_movies() -> None:
     transformed = [transform_movie(m) for m in raw_movies]
 
     logger.info("Loading %d rows into staging...", len(transformed))
-    truncate_and_load_staging(transformed, GCP_PROJECT_ID, BQ_DATASET, STAGING_TABLE, bq_client=bq)
+    load_staging_table(transformed, GCP_PROJECT_ID, BQ_DATASET, STAGING_TABLE, bq_client=bq)
 
     logger.info("Merging staging into raw...")
     stats = merge_staging_to_raw(GCP_PROJECT_ID, BQ_DATASET, STAGING_TABLE, RAW_TABLE, bq_client=bq)
@@ -57,6 +58,9 @@ def sync_movies() -> None:
         stats["updated"],
         len(raw_movies) - stats["inserted"] - stats["updated"],
     )
+
+    logger.info("Clearing staging table...")
+    clear_staging_table(GCP_PROJECT_ID, BQ_DATASET, STAGING_TABLE, bq_client=bq)
 
 
 @app.command("sync-posters")

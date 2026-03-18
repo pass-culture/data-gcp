@@ -1,4 +1,3 @@
-import logging
 import mimetypes
 import uuid
 from pathlib import PurePosixPath
@@ -8,9 +7,7 @@ from google.cloud import bigquery
 from google.cloud.bigquery import LoadJobConfig, SchemaField, WriteDisposition
 
 from gcp import get_bq_client
-from schema import RAW_SCHEMA, STAGING_SCHEMA, RAW_EXTRA_INIT_VALUES
-
-
+from schema import RAW_EXTRA_INIT_VALUES, RAW_SCHEMA, STAGING_SCHEMA
 
 
 def _poster_uuid(poster_url: str) -> str:
@@ -95,8 +92,7 @@ def merge_staging_to_raw(
     staging_fields = {f.name for f in STAGING_SCHEMA}
     insert_cols = ", ".join(f.name for f in RAW_SCHEMA)
     insert_vals = ", ".join(
-        f"S.{f.name}" if f.name in staging_fields else RAW_EXTRA_INIT_VALUES[f.name]
-        for f in RAW_SCHEMA
+        f"S.{f.name}" if f.name in staging_fields else RAW_EXTRA_INIT_VALUES[f.name] for f in RAW_SCHEMA
     )
 
     sql = f"""

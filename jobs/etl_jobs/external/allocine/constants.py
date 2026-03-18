@@ -28,6 +28,6 @@ MAX_API_RETRIES = 3
 
 # Retry missing posters later in time
 POSTER_RETRY_DELAY = {
-    'qty': 7,
-    'unit': 'DAY'  # Must be a valid BigQuery time unit: https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#date_and_time_types
+    "qty": 7,
+    "unit": "DAY",  # Must be a valid BigQuery time unit: https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#date_and_time_types
 }

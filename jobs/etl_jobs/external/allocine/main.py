@@ -62,8 +62,12 @@ def sync_movies() -> None:
 @app.command("sync-posters")
 def sync_posters(
     max_retries: int = typer.Option(3, help="Max download attempts per poster."),
-    poster_download_backoff: int = typer.Option(POSTER_RETRY_DELAY['qty'], help="Backoff quantity for poster download retries."),
-    poster_download_backoff_unit: str = typer.Option(POSTER_RETRY_DELAY['unit'], help="Backoff unit for poster download retries."),
+    poster_download_backoff: int = typer.Option(
+        POSTER_RETRY_DELAY["qty"], help="Backoff quantity for poster download retries."
+    ),
+    poster_download_backoff_unit: str = typer.Option(
+        POSTER_RETRY_DELAY["unit"], help="Backoff unit for poster download retries."
+    ),
 ) -> None:
     """Download pending posters from Allocine and upload to GCS."""
     from google.cloud import storage as gcs_lib
@@ -71,7 +75,15 @@ def sync_posters(
     bq = get_bq_client(GCP_PROJECT_ID)
     gcs_client = gcs_lib.Client()
 
-    pending = fetch_pending_posters(GCP_PROJECT_ID, BQ_DATASET, RAW_TABLE, max_retries, bq_client=bq, poster_download_backoff=poster_download_backoff, poster_download_backoff_unit=poster_download_backoff_unit)
+    pending = fetch_pending_posters(
+        GCP_PROJECT_ID,
+        BQ_DATASET,
+        RAW_TABLE,
+        max_retries,
+        bq_client=bq,
+        poster_download_backoff=poster_download_backoff,
+        poster_download_backoff_unit=poster_download_backoff_unit,
+    )
     logger.info("Found %d posters to download.", len(pending))
 
     with httpx.Client(timeout=60.0, follow_redirects=True) as http:

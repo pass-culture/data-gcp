@@ -8,50 +8,96 @@ import datetime
 import json
 import os
 
+import google.auth
 import mlflow
 import mlflow.entities
-from google.auth.transport.requests import Request
-from google.cloud import secretmanager
-from google.oauth2 import service_account
+from google.cloud import iam_credentials_v1
 
 from forecast.utils.constants import (
-    GCP_PROJECT_ID,
-    MLFLOW_SECRET_NAME,
     MLFLOW_URI,
     SA_ACCOUNT,
 )
 
 
-def get_secret(secret_id: str) -> str:
-    """Retrieve a secret from Google Cloud Secret Manager.
+def generate_jwt_payload(service_account_email: str, resource_url: str) -> str:
+    """Generates JWT payload for service account.
+
+    Creates a properly formatted JWT payload with standard claims (iss, sub,
+    aud, iat, exp) needed for IAP authentication.
 
     Args:
-        secret_id: ID of the secret to retrieve.
+        service_account_email (str): Specifies the service account that the
+        JWT is created for.
+        resource_url (str): Specifies the scope of the JWT, the URL that the
+        JWT will be allowed to access.
 
     Returns:
-        The secret value as a string.
+        str: JSON string containing the JWT payload with properly formatted
+        claims.
     """
-    client = secretmanager.SecretManagerServiceClient()
-    name = f"projects/{GCP_PROJECT_ID}/secrets/{secret_id}/versions/latest"
-    response = client.access_secret_version(name=name)
-    return response.payload.data.decode("UTF-8")
+    # Create current time and expiration time (1 hour later) in UTC
+    iat = datetime.datetime.now(tz=datetime.UTC)
+    exp = iat + datetime.timedelta(seconds=3600)
+
+    # Convert datetime objects to numeric timestamps (seconds since epoch)
+    # as required by JWT standard (RFC 7519)
+    payload = {
+        "iss": service_account_email,
+        "sub": service_account_email,
+        "aud": resource_url,
+        "iat": int(iat.timestamp()),
+        "exp": int(exp.timestamp()),
+    }
+
+    return json.dumps(payload)
 
 
-def connect_remote_mlflow() -> None:
-    """Configure MLflow to connect to remote tracking server.
+def sign_jwt(target_sa: str, resource_url: str) -> str:
+    """Signs JWT payload using ADC and IAM credentials API.
 
-    Sets up authentication using service account credentials from Secret Manager
-    and configures the MLflow tracking URI.
+    Uses Google Cloud's IAM Credentials API to sign a JWT. This requires the
+    caller to have iap.webServiceVersions.accessViaIap permission on the
+    target service account.
+
+    Args:
+        target_sa (str): Service Account JWT is being created for.
+            iap.webServiceVersions.accessViaIap permission is required.
+        resource_url (str): Audience of the JWT and scope of the JWT token.
+            This is the URL of the IAP-secured application.
+
+    Returns:
+        str: A signed JWT that can be used to access IAP-secured applications.
+            Use in Authorization header as: 'Bearer <signed_jwt>'
     """
-    service_account_dict = json.loads(get_secret(SA_ACCOUNT))
-    mlflow_client_audience = get_secret(MLFLOW_SECRET_NAME)
+    # Get default credentials from environment or application credentials
+    source_credentials, _ = google.auth.default()
 
-    id_token_credentials = service_account.IDTokenCredentials.from_service_account_info(
-        service_account_dict, target_audience=mlflow_client_audience
+    # Initialize IAM credentials client with source credentials
+    iam_client = iam_credentials_v1.IAMCredentialsClient(credentials=source_credentials)
+
+    # Generate the service account resource name.
+    # Project should always be "-".
+    # Replacing the wildcard character with a project ID is invalid.
+    name = iam_client.service_account_path("-", target_sa)
+
+    # Create and sign the JWT payload
+    payload = generate_jwt_payload(target_sa, resource_url)
+
+    # Sign the JWT using the IAM credentials API
+    response = iam_client.sign_jwt(name=name, payload=payload)
+
+    return response.signed_jwt
+
+
+def connect_remote_mlflow():
+    """Connect to remote MLflow tracking server using signed JWT for authentication."""
+    signed_jwt = sign_jwt(
+        target_sa=SA_ACCOUNT,
+        resource_url=MLFLOW_URI
+        + "*",  # add * wildcard to get a token that works for all MLflow API endpoints
+        # under the base URI
     )
-    id_token_credentials.refresh(Request())
-
-    os.environ["MLFLOW_TRACKING_TOKEN"] = id_token_credentials.token
+    os.environ["MLFLOW_TRACKING_TOKEN"] = signed_jwt
     mlflow.set_tracking_uri(MLFLOW_URI)
 
 

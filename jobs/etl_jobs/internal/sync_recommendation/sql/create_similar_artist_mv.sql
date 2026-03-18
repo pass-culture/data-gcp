@@ -2,14 +2,13 @@ drop function if exists get_similar_artist_{{ ts_nodash }}
 cascade
 ;
 create or replace function get_similar_artist_{{ ts_nodash }} ()
-returns table(artist_id varchar, similar_artists_json_string varchar)
-as
-    $body$
+returns table(artist_id varchar, similar_artists_json json)
+as $body$
 BEGIN
     RETURN QUERY
     SELECT
         similar_artist.artist_id::varchar as artist_id,
-        similar_artist.similar_artists_json_string::varchar as similar_artists_json_string
+        similar_artist.similar_artists_json::json as similar_artists_json
     FROM public.similar_artist similar_artist;
 END;
 $body$

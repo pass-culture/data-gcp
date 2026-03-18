@@ -32,6 +32,7 @@ select
     venue_rural_city_type,
     venue_targeted_audience,
     banner_url,
+    venue_volunteering_url,
     venue_description,
     venue_withdrawal_details,
     venue_contact_phone_number,

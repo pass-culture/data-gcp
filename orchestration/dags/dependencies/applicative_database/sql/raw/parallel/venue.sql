@@ -33,4 +33,5 @@ SELECT
     , "isOpenToPublic" AS venue_is_open_to_public
     , "adageInscriptionDate" AS venue_adage_inscription_date
     , "isSoftDeleted" AS venue_is_soft_deleted
+    , "volunteeringUrl" AS venue_volunteering_url
 FROM public.venue

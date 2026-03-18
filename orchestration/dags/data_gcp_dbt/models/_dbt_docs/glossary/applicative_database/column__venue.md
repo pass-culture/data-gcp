@@ -56,3 +56,4 @@
 {% docs column__is_collective_active_last_30days %} Analytical field: Indicates if it had collective activity in the last 30 days. {% enddocs %}
 {% docs column__is_collective_active_current_year %} Analytical field: Indicates if it has collective activity in the current year. {% enddocs %}
 {% docs column__banner_url %}Venue image url.{% enddocs %}
+{% docs column__venue_volunteering_url %}URL where users can find volunteering information for the venue.{% enddocs %}

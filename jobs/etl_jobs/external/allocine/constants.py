@@ -8,8 +8,8 @@ SECRET_VERSION = "latest"
 # BigQuery
 BQ_DATASET = f"raw_{ENV_SHORT_NAME}"
 BQ_LOCATION = "europe-west1"
-STAGING_TABLE = "tmp_allocine_movies"
-RAW_TABLE = "allocine_movies"
+STAGING_TABLE = "tmp_allocine_movie"
+RAW_TABLE = "allocine_movie"
 
 # GCS
 GCS_BUCKET = f"de-lake-{ENV_SHORT_NAME}"

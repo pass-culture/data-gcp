@@ -1,3 +1,4 @@
+import logging
 import mimetypes
 import uuid
 from pathlib import PurePosixPath
@@ -8,6 +9,8 @@ from google.cloud.bigquery import LoadJobConfig, SchemaField, WriteDisposition
 
 from gcp import get_bq_client
 from schema import RAW_EXTRA_INIT_VALUES, RAW_SCHEMA, STAGING_SCHEMA
+
+logger = logging.getLogger(__name__)
 
 
 def _poster_uuid(poster_url: str) -> str:

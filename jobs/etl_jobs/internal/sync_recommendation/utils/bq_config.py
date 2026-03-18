@@ -83,7 +83,7 @@ BQ_TABLES_CONFIG: Dict[str, Dict] = {
     "similar_artist": {
         "columns": {
             "artist_id": "character varying",
-            "similar_artists_json_string": "character varying",
+            "similar_artists_json": "json",
         },
         "bigquery_table_name": "similar_artist",
         "cloud_sql_table_name": "similar_artist",

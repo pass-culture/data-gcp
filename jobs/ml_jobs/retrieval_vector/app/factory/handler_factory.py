@@ -30,7 +30,12 @@ class PredictionHandlerFactory:
             return SemanticHandler()
 
         elif request_type == "similar_offer":
-            return SimilarOfferHandler()
+            if embedding_model_type == EmbeddingModelTypes.Graph:
+                # For graph models, we de not want fallback
+                return SimilarOfferHandler(fallback_client=None)
+
+            # TODO: Test if we want to keep fallback for regular similar offer handler
+            return SimilarOfferHandler(fallback_client=SearchByTopsHandler())
 
         elif request_type in ("filter", "tops"):
             return SearchByTopsHandler()

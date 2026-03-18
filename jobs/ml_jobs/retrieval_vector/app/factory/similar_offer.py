@@ -4,7 +4,6 @@ from typing import Dict, List
 import numpy as np
 
 from app.factory.handler import PredictionHandler
-from app.factory.tops import SearchByTopsHandler
 from app.logging.logger import logger
 from app.models.prediction_request import PredictionRequest
 from app.models.prediction_result import PredictionResult, SearchType
@@ -18,7 +17,9 @@ class SimilarOfferHandler(PredictionHandler):
     Supports both single and multiple items.
     """
 
-    fallback_client: PredictionHandler = SearchByTopsHandler()
+    def __init__(self, fallback_client: PredictionHandler | None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fallback_client: PredictionHandler | None = fallback_client
 
     def handle(
         self,
@@ -53,28 +54,35 @@ class SimilarOfferHandler(PredictionHandler):
         # Specified items are excluded in similar offer predictions context
         excluded_items = request_data.items + request_data.excluded_items
 
+        # Predict
         prediction_result = self._get_predictions_for_items(
             model, request_data, excluded_items=excluded_items
         )
+
+        # If we have predictions, return them
         if len(prediction_result.predictions) > 0:
             return prediction_result
 
         # If no predictions were found
-        return self.fallback_client.handle(
-            model,
-            request_data=PredictionRequest(
-                model_type="tops",
-                size=request_data.size,
-                debug=request_data.debug,
-                prefilter=request_data.is_prefilter,
-                re_rank=request_data.re_rank,
-                vector_column_name="booking_number_desc",
-                params=request_data.params,
-                call_id=request_data.call_id,
-                user_id=request_data.user_id,
-                items=request_data.items,
-                excluded_items=excluded_items,
-            ),
+        return (
+            self.fallback_client.handle(
+                model,
+                request_data=PredictionRequest(
+                    model_type="tops",
+                    size=request_data.size,
+                    debug=request_data.debug,
+                    prefilter=request_data.is_prefilter,
+                    re_rank=request_data.re_rank,
+                    vector_column_name="booking_number_desc",
+                    params=request_data.params,
+                    call_id=request_data.call_id,
+                    user_id=request_data.user_id,
+                    items=request_data.items,
+                    excluded_items=excluded_items,
+                ),
+            )
+            if self.fallback_client is not None
+            else PredictionResult(predictions=[])
         )
 
     def _get_predictions_for_items(
@@ -93,6 +101,7 @@ class SimilarOfferHandler(PredictionHandler):
         Returns:
             List[PredictionResult]: A list of predictions retrieved for the items.
         """
+        # TODO : Separate this handler in two : one for single item predictions and one specialized to handle multiple inputs
 
         # Iterate over each item in the request_data.items and search for predictions
         predictions_list = []

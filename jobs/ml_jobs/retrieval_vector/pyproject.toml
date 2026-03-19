@@ -45,6 +45,15 @@ dev = [
     "unittest2>=1.1.0",
 ]
 
+## Build system
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src", "scripts"]
+
+
 ## uv
 [tool.uv]
 environments = [

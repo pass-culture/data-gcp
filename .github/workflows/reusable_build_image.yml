@@ -8,6 +8,10 @@ on:
       TARGET_ENV:
         type: string
         required: true
+      IS_MANUAL:
+        type: boolean
+        required: false
+        default: false
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER:
         required: true
@@ -70,10 +74,17 @@ jobs:
         id: docker_tags
         run: |
           tags="${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:${{ steps.sha.outputs.short_sha }}"
-          tags="$tags\n${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:v1"
+
+          # Only add v1 if NOT manual
+          if [ "${{ inputs.IS_MANUAL }}" != "true" ]; then
+            tags="$tags\n${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:v1"
+          fi
+
+          # Always add dev tag for dev environment
           if [ "${TARGET_ENV}" == "dev" ]; then
             tags="$tags\n${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:dev"
           fi
+
           echo -e "tags<<EOF\n$tags\nEOF" >> "$GITHUB_OUTPUT"
       - name: "Build and push docker image"
         uses: docker/build-push-action@v3.2.0

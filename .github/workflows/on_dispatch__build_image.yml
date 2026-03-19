@@ -12,6 +12,7 @@ jobs:
     uses: ./.github/workflows/reusable_build_image.yml
     with:
       TARGET_ENV: "dev"
+      IS_MANUAL: true
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}

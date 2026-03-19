@@ -227,13 +227,20 @@ def predict():
             logger.info(
                 f"LLM thematic filtering completed in {time.time() - llm_time:.2f} seconds"
             )
+            if llm_df.empty:
+                logger.warning("LLM thematic filtering returned no results")
+                search_results = SearchResult(offers=[])
+                logger.info(
+                    f"Prediction completed in {time.time() - start_time:.2f} seconds with {len(search_results.offers)} offers returned"
+                )
+                return jsonify(PredictionResult(predictions=search_results).dict()), 200
             item_ids = llm_df["item_id"].tolist()
 
         # Here we handle filters to perform scalar search
         filters = prediction_request.filters_list or []
         if item_ids:
             filters.append({"column": "item_id", "operator": "in", "value": item_ids})
-        
+
         # Derive partition hints from vector results to avoid full GCS scan.
         # We already know which subcategories our selected items belong to.
         # Only apply this optimization when vector search was actually performed
@@ -277,7 +284,7 @@ def predict():
         )
         scalar_search_results_df = pd.DataFrame(scalar_search_results)
         logger.info(f"Scalar search returned {len(scalar_search_results_df)} results")
-        
+
         # Here we match the item_ids from LLM with offers in catalog and apply filters
         if len(scalar_search_results_df) > 0:
             if PERFORM_VECTOR_SEARCH:
@@ -298,16 +305,16 @@ def predict():
                 prediction_result_df = scalar_search_results_df
                 prediction_result_df["rank"] = [1] * len(prediction_result_df)
                 prediction_result_df["pertinence"] = "pas de pertinence (dev)"
-            
+
             # Check if results remain after merge
             if len(prediction_result_df) == 0:
                 logger.warning("No offers remaining after merge")
                 search_results = SearchResult(offers=[])
                 logger.info(
-                f"Prediction completed in {time.time() - start_time:.2f} seconds with {len(search_results.offers)} offers returned"
+                    f"Prediction completed in {time.time() - start_time:.2f} seconds with {len(search_results.offers)} offers returned"
                 )
                 return jsonify(PredictionResult(predictions=search_results).dict()), 200
-            
+
             # Post-processing: Panachage sorting
             prediction_result_df.drop_duplicates(subset=["offer_id"], inplace=True)
             sorted_results = panachage_sort(prediction_result_df)

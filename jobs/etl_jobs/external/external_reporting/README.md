@@ -9,7 +9,7 @@ It relies on the existence of a formated report templates/export_template.xlsx
 
 ### Dependencies
 
-- Python 3.10+
+- Python 3.12
 - `uv` package manager
 - Google Cloud Platform access with BigQuery permissions
 
@@ -36,7 +36,7 @@ make sure you have activated the virtual env and are authenticated (see previous
 Generate Reports
 
 ```bash
-python main.py generate [OPTIONS]
+uv run main.py generate [OPTIONS]
 ```
 
 Optional Arguments:
@@ -54,7 +54,7 @@ Optional Arguments:
 Compress Reports
 
 ```bash
-python main.py compress [OPTIONS]
+uv run main.py compress [OPTIONS]
 ```
 
 Optional Arguments:
@@ -67,7 +67,7 @@ Optional Arguments:
 Upload to GCS
 
 ```bash
-python main.py upload [OPTIONS]
+uv run main.py upload [OPTIONS]
 ```
 
 Optional Arguments:
@@ -80,7 +80,7 @@ Optional Arguments:
 Upload to Google Drive
 
 ```bash
-python main.py upload-drive [OPTIONS]
+uv run main.py upload-drive [OPTIONS]
 ```
 
 Optional Arguments:
@@ -116,71 +116,71 @@ Generate Command
 
 ```bash
 # Generate all reports with default date
-python main.py generate -s all
+uv run main.py generate -s all
 
 # Generate ministry report for specific date
-python main.py generate -s ministere --ds 2024-03-01
+uv run main.py generate -s ministere --ds 2024-03-01
 
 # Manually choose regions to generate reports for
-python main.py generate -s drac
+uv run main.py generate -s drac
 
 # Generate specific regional reports with detailed output
-python main.py --verbose generate -s drac -t "ile-de-france normandie" --ds 2024-03-01
+uv run main.py --verbose generate -s drac -t "ile-de-france normandie" --ds 2024-03-01
 
 # Generate with failure analysis and save statistics
-python main.py generate -s all --show-failures --store-stats
+uv run main.py generate -s all --show-failures --store-stats
 
 # Use current month (default)
-python main.py generate -s ministere
+uv run main.py generate -s ministere
 ```
 
 Compress Command
 
 ```bash
 # Compress current month's reports
-python main.py compress
+uv run main.py compress
 
 # Compress specific month
-python main.py compress --ds 2024-03-01
+uv run main.py compress --ds 2024-03-01
 
 # Compress and remove source directory
-python main.py compress --ds 2024-03-01 --clean
+uv run main.py compress --ds 2024-03-01 --clean
 
 # Compress custom directory
-python main.py compress --base-dir /path/to/reports
+uv run main.py compress --base-dir /path/to/reports
 ```
 
 Upload Command
 
 ```bash
 # Upload reports to default bucket
-python main.py upload
+uv run main.py upload
 
 # Upload up to specific month to custom bucket
-python main.py upload --ds 2024-03-01 --bucket my-gcs-bucket
+uv run main.py upload --ds 2024-03-01 --bucket my-gcs-bucket
 
 # Upload to custom destination path
-python main.py upload --destination custom_folder/reports
+uv run main.py upload --destination custom_folder/reports
 ```
 
 Upload Drive Command
 
 ```bash
 # Upload reports for specific month (folder ID auto-configured per environment)
-python main.py upload-drive --ds 2024-03-01
+uv run main.py upload-drive --ds 2024-03-01
 
 # Upload with verbose output
-python main.py --verbose upload-drive --ds 2024-03-01
+uv run main.py --verbose upload-drive --ds 2024-03-01
 
 # Upload current month reports
-python main.py upload-drive
+uv run main.py upload-drive
 ```
 
 Debug reports:
 
 ```bash
 # Generate with verbose output and failure details
-python main.py --verbose generate -s drac -t "normandie" -v --show-failures --store-stats
+uv run main.py --verbose generate -s drac -t "normandie" -v --show-failures --store-stats
 ```
 
 ### Configuration (`config.py`)

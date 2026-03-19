@@ -1,6 +1,7 @@
 import pytest
 
 from app.factory.similar_offer import SimilarOfferHandler
+from app.factory.tops import SearchByTopsHandler
 from app.models.prediction_request import PredictionRequest
 from app.models.prediction_result import SearchType
 from app.retrieval.constants import DISTANCE_COLUMN_NAME, SEARCH_TYPE_COLUMN_NAME
@@ -79,7 +80,7 @@ def test_similar_offer_handler(
     request_data: PredictionRequest = request.getfixturevalue(request_data_fixture)
 
     # Initialize the handler
-    handler = SimilarOfferHandler()
+    handler = SimilarOfferHandler(fallback_client=SearchByTopsHandler())
 
     # Call the handler
     result = handler.handle(reco_client, request_data)
@@ -134,7 +135,7 @@ def test_similar_offer_fallback_handler(
     )
 
     # Initialize the handler
-    handler = SimilarOfferHandler()
+    handler = SimilarOfferHandler(fallback_client=SearchByTopsHandler())
 
     # Call the handler
     result = handler.handle(reco_client, request_data)

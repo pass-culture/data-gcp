@@ -66,6 +66,8 @@ with DAG(
         base_path = f"data-gcp/jobs/etl_jobs/external/{social_network}"
         gce_instance_start = StartGCEOperator(
             instance_name=gce_instance,
+            instance_type="n1-standard-2",
+            preemptible=False,
             task_id=f"{social_network}_gce_start_task",
             labels={"dag_name": DAG_NAME},
         )

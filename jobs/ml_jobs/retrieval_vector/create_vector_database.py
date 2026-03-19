@@ -5,14 +5,11 @@ import os
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
 ###############################################################################################
 
-import joblib
 import numpy as np
 import pandas as pd
 import polars as pl
-import pyarrow.dataset as ds
 import tensorflow as tf
 import typer
-from hnne import HNNE
 from loguru import logger
 
 from app.retrieval.documents import Document, DocumentArray
@@ -102,63 +99,6 @@ def prepare_dummy_docs(embedding_dimension: int, default_token: str) -> None:
     )
 
 
-def download_embeddings_and_reduce_dimensions(
-    bucket_path: str, reduced_dimension: int, reducer_output_path: str = None
-) -> dict:
-    """Download embeddings from the specified bucket path."""
-    logger.info("Downloading embeddings...")
-    dataset = ds.dataset(bucket_path, format="parquet")
-    logger.info("Embeddings downloaded.")
-
-    logger.info(f"Reducing embeddings dimensions to {reduced_dimension} with HNNE...")
-    hnne = HNNE(dim=reduced_dimension)
-    ldf = pl.scan_pyarrow_dataset(dataset)
-    item_list = ldf.select("item_id").collect().to_numpy().flatten()
-    item_weights = np.vstack(np.vstack(ldf.select("embedding").collect())[0]).astype(
-        np.float32
-    )
-    item_weights = hnne.fit_transform(item_weights, dim=reduced_dimension).astype(
-        np.float32
-    )
-    logger.info("Embedding dimensions reduced.")
-
-    joblib.dump(hnne, reducer_output_path)
-
-    return {x: y for x, y in zip(item_list, item_weights)}
-
-
-def prepare_semantic_docs(
-    bucket_path: str, embedding_dimension: int, reducer_output_path: str
-) -> None:
-    logger.info("Get items metadata...")
-    items_df = get_items_metadata()
-    logger.info("Items metadata loaded.")
-
-    logger.info("Getting semantic embeddings...")
-    item_embedding_dict = download_embeddings_and_reduce_dimensions(
-        bucket_path=bucket_path,
-        reduced_dimension=embedding_dimension,
-        reducer_output_path=reducer_output_path,
-    )
-    logger.info("Semantic embeddings downloaded and reduced.")
-
-    logger.info("Building item documents...")
-    item_docs = get_item_docs(item_embedding_dict, items_df)
-    item_docs.save(f"{OUTPUT_DATA_PATH}/item.docs")
-    logger.info("Item documents built.")
-
-    logger.info("Create items lancedb table...")
-    create_items_table(
-        item_embedding_dict,
-        items_df,
-        emb_size=embedding_dimension,
-        uri=f"{OUTPUT_DATA_PATH}/vector",
-        create_index=True if ENV_SHORT_NAME == "prod" else False,
-        vector_search_index_metric="dot",
-    )
-    logger.info("Items lancedb table created.")
-
-
 def create_graph_item_docs(items_with_embeddings_df: pd.DataFrame, output_path: str):
     """
     Create and save item documents for graph retrieval.
@@ -201,29 +141,6 @@ def load_embeddings_from_parquet(
     )
 
     return transformed_lf.collect().to_pandas()
-
-
-@app.command()
-def semantic_database(
-    source_gs_path: str = typer.Option(
-        None,
-        help="GCS parquet path",
-    ),
-) -> None:
-    MODEL_TYPE = {
-        "type": "semantic",
-        "default_token": None,
-        "transformer": "sentence-transformers/all-MiniLM-L6-v2",
-        "reducer": f"{OUTPUT_DATA_PATH}/reducer.pkl",
-    }
-    EMBEDDING_DIMENSION = 32
-
-    prepare_semantic_docs(
-        source_gs_path,
-        embedding_dimension=EMBEDDING_DIMENSION,
-        reducer_output_path=MODEL_TYPE["reducer"],
-    )
-    save_model_type(model_type=MODEL_TYPE, output_dir=OUTPUT_DATA_PATH)
 
 
 @app.command()

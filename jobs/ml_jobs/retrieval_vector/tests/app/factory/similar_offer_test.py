@@ -120,7 +120,7 @@ def test_similar_offer_fallback_handler(
 ):
     """Test SimilarOfferHandler for fallback scenario."""
 
-    # Get the specific request_data fixture dynamically
+    # Get data with unknown item and fallback client
     request_data = PredictionRequest(
         model_type="similar_offer",
         items=["unknown_item_x"],
@@ -157,3 +157,38 @@ def test_similar_offer_fallback_handler(
     # Ensure we are using fallback search type
     for prediction in result.predictions:
         assert prediction[SEARCH_TYPE_COLUMN_NAME] == SearchType.TOPS
+
+
+def test_similar_offer_no_fallback(
+    mock_connect_db,
+    mock_user_document_loading,
+    mock_generate_fake_load_item_document,
+    request,
+    reco_client,
+):
+    """Test SimilarOfferHandler for fallback scenario."""
+
+    # Get data with unknown item and no fallback client
+    request_data = PredictionRequest(
+        model_type="similar_offer",
+        items=["unknown_item_x"],
+        size=5,
+        params={},
+        call_id="test-call-id",
+        debug=True,
+        is_prefilter=False,
+        vector_column_name="vector",
+        re_rank=True,
+        user_id="unknown_user_1",
+    )
+
+    # Initialize the handler
+    handler = SimilarOfferHandler(fallback_client=None)
+
+    # Call the handler
+    result = handler.handle(reco_client, request_data)
+
+    # Assertions
+    assert (
+        len(result.predictions) == 0
+    ), "Expected no predictions when fallback client is None"

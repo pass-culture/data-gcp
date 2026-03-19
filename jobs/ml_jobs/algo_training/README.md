@@ -42,5 +42,5 @@ diminuant le nombre de jours utilisés pour l'entraînement : paramètre `event_
 ## Install
 If you install this env on a macos, you need to pin the python version to 3.11 because tensorflow-macos lib only has wheels for 3.11 python. So to install the env:
 ```bash
-uv python pin 3.11 && uv sync
+uv sync -p 3.11
 ```

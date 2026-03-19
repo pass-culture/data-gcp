@@ -11,8 +11,6 @@ from app.retrieval.reco_client import RecoClient
 class ModelConfig:
     type: str
     default_token: Optional[str] = None
-    transformer: Optional[str] = None
-    reducer: Optional[str] = None
 
 
 def load_model() -> DefaultClient:

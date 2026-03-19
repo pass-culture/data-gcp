@@ -23,7 +23,7 @@ class PredictionHandlerFactory:
 
         elif request_type == "similar_offer":
             if embedding_model_type == EmbeddingModelTypes.METADATA_GRAPH:
-                # For graph models, we de not want fallback
+                # For graph models, we do not want fallback
                 return SimilarOfferHandler(fallback_client=None)
 
             # TODO: Test if we want to keep fallback for regular similar offer handler

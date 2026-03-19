@@ -42,7 +42,7 @@ SCHEDULE_DICT = {
     },
     "recommendation_endpoint_monitoring": "0 8 * * *",  # every day at 8:00 AM
     "export_external_reporting": {
-        "prod": "45 4 2 * *",  # every month the 2nd at 4:45 AM
+        "prod": "45 4 22 * *",  # every month the 22nd at 4:45 AM
     },
     "finance_pricing_forecast": {
         "prod": "0 6 * * 1",  # every Monday at 6:00 AM

@@ -12,6 +12,7 @@
         "intermediate" in node.path
         or "machine_learning" in node.path
         or "backend" in node.path
+        or "reco_cloudsql" in node.path
         or node.resource_type == "snapshot"
     ) -%}
     {%- set is_mart_or_export = "mart" in node.path or "export" in node.path -%}

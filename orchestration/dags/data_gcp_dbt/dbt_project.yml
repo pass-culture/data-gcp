@@ -84,7 +84,7 @@ models:
         +meta:
           owner: "@data-engineering"
       external_reporting:
-        +tags: "monthly"
+        +tags: "monthly_15"
         +labels:
           schedule: "monthly"
         +meta:
@@ -107,6 +107,9 @@ models:
         +tags: "monthly"
         +labels:
           schedule: "monthly"
+      reco_cloudsql:
+        +schema: export_reco_cloudsql_{{ target.name }}
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     machine_learning:
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +meta:

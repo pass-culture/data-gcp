@@ -38,30 +38,30 @@ models:
         description: "{{ doc('column__scholar_year') }}"
       - name: total_students
         description: "{{ doc('column__total_students') }}"
-      - name: p1_deposit
-        description: "{{ doc('column__p1_deposit') }}"
-      - name: p2_deposit
-        description: "{{ doc('column__p2_deposit') }}"
-      - name: p1_total_theoric_bookings
-        description: "{{ doc('column__p1_total_theoric_bookings') }}"
-      - name: p2_total_theoric_bookings
-        description: "{{ doc('column__p2_total_theoric_bookings') }}"
-      - name: p1_theoric_amount_spent
-        description: "{{ doc('column__p1_theoric_amount_spent') }}"
-      - name: p2_theoric_amount_spent
-        description: "{{ doc('column__p2_theoric_amount_spent') }}"
-      - name: p1_total_confirmed_bookings
-        description: "{{ doc('column__p1_total_confirmed_bookings') }}"
-      - name: p2_total_confirmed_bookings
-        description: "{{ doc('column__p2_total_confirmed_bookings') }}"
-      - name: p1_real_amount_spent
-        description: "{{ doc('column__p1_real_amount_spent') }}"
-      - name: p2_real_amount_spent
-        description: "{{ doc('column__p2_real_amount_spent') }}"
-      - name: p1_reimbursed_amount
-        description: "{{ doc('column__p1_reimbursed_amount') }}"
-      - name: p2_reimbursed_amount
-        description: "{{ doc('column__p2_reimbursed_amount') }}"
+      - name: sept_dec_deposit
+        description: "{{ doc('column__sept_dec_deposit') }}"
+      - name: jan_aug_deposit
+        description: "{{ doc('column__jan_aug_deposit') }}"
+      - name: sept_dec_total_theoric_bookings
+        description: "{{ doc('column__sept_dec_total_theoric_bookings') }}"
+      - name: jan_aug_total_theoric_bookings
+        description: "{{ doc('column__jan_aug_total_theoric_bookings') }}"
+      - name: sept_dec_theoric_amount_spent
+        description: "{{ doc('column__sept_dec_theoric_amount_spent') }}"
+      - name: jan_aug_theoric_amount_spent
+        description: "{{ doc('column__jan_aug_theoric_amount_spent') }}"
+      - name: sept_dec_total_confirmed_bookings
+        description: "{{ doc('column__sept_dec_total_confirmed_bookings') }}"
+      - name: jan_aug_total_confirmed_bookings
+        description: "{{ doc('column__jan_aug_total_confirmed_bookings') }}"
+      - name: sept_dec_real_amount_spent
+        description: "{{ doc('column__sept_dec_real_amount_spent') }}"
+      - name: jan_aug_real_amount_spent
+        description: "{{ doc('column__jan_aug_real_amount_spent') }}"
+      - name: sept_dec_reimbursed_amount
+        description: "{{ doc('column__sept_dec_reimbursed_amount') }}"
+      - name: jan_aug_reimbursed_amount
+        description: "{{ doc('column__jan_aug_reimbursed_amount') }}"
       - name: total_scholar_year_deposit
         description: "{{ doc('column__total_scholar_year_deposit') }}"
       - name: is_split_deposit
@@ -72,25 +72,25 @@ models:
         description: "{{ doc('column__all_year_theoric_amount_spent') }}"
       - name: pct_all_year_theoric_amount_spent
         description: "{{ doc('column__pct_all_year_theoric_amount_spent') }}"
-      - name: pct_p1_theoric_amount_spent
-        description: "{{ doc('column__pct_p1_theoric_amount_spent') }}"
-      - name: pct_p2_theoric_amount_spent
-        description: "{{ doc('column__pct_p2_theoric_amount_spent') }}"
+      - name: pct_sept_dec_theoric_amount_spent
+        description: "{{ doc('column__pct_sept_dec_theoric_amount_spent') }}"
+      - name: pct_jan_aug_theoric_amount_spent
+        description: "{{ doc('column__pct_jan_aug_theoric_amount_spent') }}"
       - name: all_year_total_confirmed_bookings
         description: "{{ doc('column__all_year_total_confirmed_bookings') }}"
       - name: all_year_real_amount_spent
         description: "{{ doc('column__all_year_real_amount_spent') }}"
-      - name: pct_p1_real_amount_spent
-        description: "{{ doc('column__pct_p1_real_amount_spent') }}"
-      - name: pct_p2_real_amount_spent
-        description: "{{ doc('column__pct_p2_real_amount_spent') }}"
+      - name: pct_sept_dec_real_amount_spent
+        description: "{{ doc('column__pct_sept_dec_real_amount_spent') }}"
+      - name: pct_jan_aug_real_amount_spent
+        description: "{{ doc('column__pct_jan_aug_real_amount_spent') }}"
       - name: pct_all_year_real_amount_spent
         description: "{{ doc('column__pct_all_year_real_amount_spent') }}"
       - name: all_year_reimbursed_amount
         description: "{{ doc('column__all_year_reimbursed_amount') }}"
-      - name: pct_p1_reimbursed_amount_spent
-        description: "{{ doc('column__pct_p1_reimbursed_amount_spent') }}"
-      - name: pct_p2_reimbursed_amount_spent
-        description: "{{ doc('column__pct_p2_reimbursed_amount_spent') }}"
+      - name: pct_sept_dec_reimbursed_amount_spent
+        description: "{{ doc('column__pct_sept_dec_reimbursed_amount_spent') }}"
+      - name: pct_jan_aug_reimbursed_amount_spent
+        description: "{{ doc('column__pct_jan_aug_reimbursed_amount_spent') }}"
       - name: pct_all_year_reimbursed_amount_spent
         description: "{{ doc('column__pct_all_year_reimbursed_amount_spent') }}"

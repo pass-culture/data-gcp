@@ -1,22 +1,22 @@
 from math import ceil
 
 import lancedb
+import numpy as np
 import pandas as pd
 import pyarrow as pa
 
-from src.constants import ITEM_COLUMNS, LANCE_DB_BATCH_SIZE
+from app.retrieval.documents import Document, DocumentArray
+from src.constants import (
+    ENV_SHORT_NAME,
+    ITEM_COLUMNS,
+    LANCE_DB_BATCH_SIZE,
+    OUTPUT_DATA_PATH,
+)
+from src.document_processing import get_item_docs, get_user_docs
 
 
 def _to_ts(f):
-    """
-    Convert datetime to timestamp.
-
-    Args:
-        f: Datetime object to convert
-
-    Returns:
-        float: Unix timestamp or 0.0 if conversion fails
-    """
+    """Convert datetime to timestamp."""
     try:
         return float(f.timestamp())
     except Exception:
@@ -24,22 +24,14 @@ def _to_ts(f):
 
 
 def _to_float(f):
-    """
-    Safely convert value to float.
-
-    Args:
-        f: Value to convert to float
-
-    Returns:
-        float or None: Converted float value or None if conversion fails
-    """
+    """Safely convert value to float. Returns None if conversion fails."""
     try:
         return float(f)
     except Exception:
         return None
 
 
-def get_table_batches(
+def _get_table_batches(
     item_embedding_dict: dict, items_df: pd.DataFrame, emb_size: int, total_size: int
 ) -> pa.RecordBatch:
     """
@@ -147,7 +139,7 @@ def get_table_batches(
             )
 
 
-def create_items_table(
+def _create_items_table(
     item_embedding_dict: dict,
     items_df: pd.DataFrame,
     emb_size: int,
@@ -190,7 +182,7 @@ def create_items_table(
         batch_df = items_df[start_idx:end_idx]
 
         data_batch = pa.Table.from_batches(
-            get_table_batches(
+            _get_table_batches(
                 item_embedding_dict, batch_df, emb_size, total_size=len(items_df)
             )
         )
@@ -209,3 +201,56 @@ def create_items_table(
         table.create_scalar_index("search_group_name", index_type="BITMAP")
         table.create_scalar_index("subcategory_id", index_type="BITMAP")
         table.create_scalar_index("stock_price", index_type="BTREE")
+
+
+##################################################################################################
+#######           Public functions to create lanceDB tables from different sources         #######
+##################################################################################################
+
+
+def create_lancedb_from_coreservation(
+    user_embedding_dict: dict[str, np.ndarray],
+    item_embedding_dict: dict[str, np.ndarray],
+    item_metadatas_df: pd.DataFrame,
+):
+    """Create lanceDB table from co-reservation model embeddings."""
+    # build user and item documents
+    user_docs = get_user_docs(user_embedding_dict)
+    user_docs.save(f"{OUTPUT_DATA_PATH}/user.docs")
+    item_docs = get_item_docs(item_embedding_dict, item_metadatas_df)
+    item_docs.save(f"{OUTPUT_DATA_PATH}/item.docs")
+
+    _create_items_table(
+        item_embedding_dict,
+        item_metadatas_df,
+        emb_size=len(next(iter(item_embedding_dict.values()))),
+        uri=f"{OUTPUT_DATA_PATH}/vector",
+        create_index=True if ENV_SHORT_NAME == "prod" else False,
+        vector_search_index_metric="    cosine",
+    )
+
+
+def create_lancedb_from_item_embeddings(
+    items_with_embeddings_df: pd.DataFrame,
+):
+    """Create lanceDB table from item embeddings."""
+    # Create item documents for graph retrieval app
+    item_docs = DocumentArray(
+        [
+            Document(id=row.item_id, embedding=row.vector)
+            for row in items_with_embeddings_df.itertuples()
+        ]
+    )
+    item_docs.save(f"{OUTPUT_DATA_PATH}/item.docs")
+
+    # Create lanceDB table for graph retrieval
+    _create_items_table(
+        item_embedding_dict={
+            row.item_id: row.vector for row in items_with_embeddings_df.itertuples()
+        },
+        items_df=items_with_embeddings_df.loc[:, lambda df: df.columns != "vector"],
+        emb_size=len(items_with_embeddings_df.iloc[0].vector),
+        uri=f"{OUTPUT_DATA_PATH}/vector",
+        create_index=True if ENV_SHORT_NAME == "prod" else False,
+        vector_search_index_metric="cosine",
+    )

@@ -1,20 +1,21 @@
 import os
 
 from src.embeddings import extract_embeddings_from_tt_model, generate_dummy_embeddings
+from src.vector_database import (
+    create_lancedb_from_coreservation,
+    create_lancedb_from_item_embeddings,
+)
 
 ################################  To use Keras 2 instead of 3  ################################
 # See [TensorFlow + Keras 2 backwards compatibility section](https://keras.io/getting_started/)
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
 ###############################################################################################
 
-import numpy as np
 import pandas as pd
 import typer
 from loguru import logger
 
-from app.retrieval.documents import Document, DocumentArray
-from src.constants import ENV_SHORT_NAME, MODEL_BASE_PATH, OUTPUT_DATA_PATH
-from src.document_processing import get_item_docs, get_user_docs
+from src.constants import MODEL_BASE_PATH, OUTPUT_DATA_PATH
 from src.gcs_io import (
     download_model,
     get_items_metadata,
@@ -25,57 +26,8 @@ from src.gcs_io import (
 from src.utils import (
     save_model_type,
 )
-from src.vector_database import create_items_table
 
 app = typer.Typer(help="Create lanceDB table and documents")
-
-
-def create_lancedb_from_coreservation(
-    user_embedding_dict: dict[str, np.ndarray],
-    item_embedding_dict: dict[str, np.ndarray],
-    item_metadatas_df: pd.DataFrame,
-):
-    """Create lanceDB table from co-reservation model embeddings."""
-    # build user and item documents
-    user_docs = get_user_docs(user_embedding_dict)
-    user_docs.save(f"{OUTPUT_DATA_PATH}/user.docs")
-    item_docs = get_item_docs(item_embedding_dict, item_metadatas_df)
-    item_docs.save(f"{OUTPUT_DATA_PATH}/item.docs")
-
-    create_items_table(
-        item_embedding_dict,
-        item_metadatas_df,
-        emb_size=len(next(iter(item_embedding_dict.values()))),
-        uri=f"{OUTPUT_DATA_PATH}/vector",
-        create_index=True if ENV_SHORT_NAME == "prod" else False,
-        vector_search_index_metric="cosine",
-    )
-
-
-def create_lancedb_from_item_embeddings(
-    items_with_embeddings_df: pd.DataFrame,
-):
-    """Create lanceDB table from item embeddings."""
-    # Create item documents for graph retrieval app
-    item_docs = DocumentArray(
-        [
-            Document(id=row.item_id, embedding=row.vector)
-            for row in items_with_embeddings_df.itertuples()
-        ]
-    )
-    item_docs.save(f"{OUTPUT_DATA_PATH}/item.docs")
-
-    # Create lanceDB table for graph retrieval
-    create_items_table(
-        item_embedding_dict={
-            row.item_id: row.vector for row in items_with_embeddings_df.itertuples()
-        },
-        items_df=items_with_embeddings_df.loc[:, lambda df: df.columns != "vector"],
-        emb_size=len(items_with_embeddings_df.iloc[0].vector),
-        uri=f"{OUTPUT_DATA_PATH}/vector",
-        create_index=True if ENV_SHORT_NAME == "prod" else False,
-        vector_search_index_metric="cosine",
-    )
 
 
 @app.command()

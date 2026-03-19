@@ -37,7 +37,7 @@ def generate_jwt_payload(service_account_email: str, resource_url: str) -> str:
         claims.
     """
     # Create current time and expiration time (1 hour later) in UTC
-    iat = datetime.datetime.now(tz=datetime.UTC)
+    iat = datetime.datetime.now(tz=datetime.timezone.utc)
     exp = iat + datetime.timedelta(seconds=3600)
 
     # Convert datetime objects to numeric timestamps (seconds since epoch)

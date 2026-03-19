@@ -46,7 +46,22 @@ with DAG(
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        )
+        ),
+        "poster_retries": Param(
+            default=3,
+            type="integer",
+            description="Max number of dag run to attempt poster download if url is missing.",
+        ),
+        "poster_download_backoff_unit": Param(
+            default="DAY",
+            enum=["DAY", "WEEK", "MONTH", "YEAR"],
+            description="Time unit between poster download retries.",
+        ),
+        "poster_download_backoff": Param(
+            default=7,
+            type="integer",
+            description="Quantity of time units to wait between download retries.",
+        ),
     },
     template_searchpath=DAG_FOLDER,
     user_defined_macros=macros.default,
@@ -83,7 +98,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run main.py sync-posters",
+        command="uv run main.py sync-posters --max-retries {{ params.poster_retries }} --poster-download-backoff {{ params.poster_download_backoff }} --poster-download-backoff-unit {{ params.poster_download_backoff_unit }}",
     )
 
     gce_instance_stop = DeleteGCEOperator(
@@ -96,7 +111,8 @@ with DAG(
         start
         >> gce_instance_start
         >> fetch_install_code
-        >> [synchronize_movies, synchronize_posters]
+        >> synchronize_movies
+        >> synchronize_posters
         >> gce_instance_stop
         >> end
     )

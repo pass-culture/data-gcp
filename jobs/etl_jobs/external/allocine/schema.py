@@ -1,4 +1,8 @@
+import logging
+
 from google.cloud.bigquery import SchemaField
+
+logger = logging.getLogger(__name__)
 
 # Columns serialized to JSON strings for BigQuery compatibility
 COMPLEX_COLUMNS = ["releases", "countries", "genres", "companies", "cast_normalized", "credits_normalized"]
@@ -54,6 +58,19 @@ _RAW_EXTRA: list[SchemaField] = [
     SchemaField("poster_to_download", "BOOL"),
     SchemaField("poster_gcs_path", "STRING"),
     SchemaField("retry_count", "INTEGER"),
+    SchemaField("updated_at", "TIMESTAMP"),
 ]
+
+RAW_EXTRA_INIT_VALUES = {
+    "poster_to_download": "TRUE",
+    "poster_gcs_path": "NULL",
+    "retry_count": "0",
+    "updated_at": "CURRENT_TIMESTAMP()",
+}
+
+# --- Hard check: raise if any extra field has no default ---
+missing_defaults = [f.name for f in _RAW_EXTRA if f.name not in RAW_EXTRA_INIT_VALUES]
+if missing_defaults:
+    raise ValueError(f"No init values defined for raw schema extra columns: {missing_defaults}")
 
 RAW_SCHEMA: list[SchemaField] = STAGING_SCHEMA + _RAW_EXTRA

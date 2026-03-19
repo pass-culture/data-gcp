@@ -7,7 +7,6 @@ import pyarrow as pa
 
 from app.retrieval.documents import Document, DocumentArray
 from src.constants import (
-    ENV_SHORT_NAME,
     ITEM_COLUMNS,
     LANCE_DB_BATCH_SIZE,
     OUTPUT_DATA_PATH,
@@ -159,7 +158,6 @@ def _create_items_table(
         items_df (pd.DataFrame): DataFrame containing item metadata
         emb_size (int): Dimensionality of the embedding vectors
         uri (str): LanceDB database URI/path
-        batch_size (int, optional): Number of items per batch. Defaults to LANCE_DB_BATCH_SIZE
         create_index (bool, optional): Whether to create indexes after table creation.
         vector_search_index_metric (str, optional): Metric for vector index.
 
@@ -212,6 +210,9 @@ def create_lancedb_from_coreservation(
     user_embedding_dict: dict[str, np.ndarray],
     item_embedding_dict: dict[str, np.ndarray],
     item_metadatas_df: pd.DataFrame,
+    vector_search_metric: str,
+    *,
+    create_index: bool = True,
 ):
     """Create lanceDB table from co-reservation model embeddings."""
     # build user and item documents
@@ -225,13 +226,16 @@ def create_lancedb_from_coreservation(
         item_metadatas_df,
         emb_size=len(next(iter(item_embedding_dict.values()))),
         uri=f"{OUTPUT_DATA_PATH}/vector",
-        create_index=True if ENV_SHORT_NAME == "prod" else False,
-        vector_search_index_metric="dot",
+        create_index=create_index,
+        vector_search_index_metric=vector_search_metric,
     )
 
 
 def create_lancedb_from_item_embeddings(
     items_with_embeddings_df: pd.DataFrame,
+    vector_search_metric: str,
+    *,
+    create_index: bool = True,
 ):
     """Create lanceDB table from item embeddings."""
     # Create item documents for graph retrieval app
@@ -251,6 +255,6 @@ def create_lancedb_from_item_embeddings(
         items_df=items_with_embeddings_df.loc[:, lambda df: df.columns != "vector"],
         emb_size=len(items_with_embeddings_df.iloc[0].vector),
         uri=f"{OUTPUT_DATA_PATH}/vector",
-        create_index=True if ENV_SHORT_NAME == "prod" else False,
-        vector_search_index_metric="cosine",
+        create_index=create_index,
+        vector_search_index_metric=vector_search_metric,
     )

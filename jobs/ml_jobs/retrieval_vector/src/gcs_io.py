@@ -215,7 +215,7 @@ def save_experiment(experiment_name, model_name, serving_container, run_id):
 
 def load_embeddings_from_parquet(
     parquet_dir: str, column_renaming_mapping: dict
-) -> dict:
+) -> pd.DataFrame:
     lf = pl.scan_parquet(f"{parquet_dir}/*.parquet")
 
     transformed_lf = (

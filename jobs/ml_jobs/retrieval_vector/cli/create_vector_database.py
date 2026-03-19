@@ -1,11 +1,5 @@
 import os
 
-from src.embeddings import extract_embeddings_from_tt_model, generate_dummy_embeddings
-from src.vector_database import (
-    create_lancedb_from_coreservation,
-    create_lancedb_from_item_embeddings,
-)
-
 ################################  To use Keras 2 instead of 3  ################################
 # See [TensorFlow + Keras 2 backwards compatibility section](https://keras.io/getting_started/)
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
@@ -15,7 +9,8 @@ import pandas as pd
 import typer
 from loguru import logger
 
-from src.constants import MODEL_BASE_PATH, OUTPUT_DATA_PATH
+from src.constants import ENV_SHORT_NAME, MODEL_BASE_PATH, OUTPUT_DATA_PATH
+from src.embeddings import extract_embeddings_from_tt_model, generate_dummy_embeddings
 from src.gcs_io import (
     download_model,
     get_items_metadata,
@@ -26,6 +21,10 @@ from src.gcs_io import (
 from src.utils import (
     save_model_type,
 )
+from src.vector_database import (
+    create_lancedb_from_coreservation,
+    create_lancedb_from_item_embeddings,
+)
 
 app = typer.Typer(help="Create lanceDB table and documents")
 
@@ -35,6 +34,7 @@ def dummy_database() -> None:
     MODEL_TYPE = {
         "type": "recommendation",
         "default_token": "[UNK]",
+        "vector_search_metric": "dot",
     }
     EMBEDDING_DIMENSION = 16
 
@@ -60,6 +60,8 @@ def dummy_database() -> None:
         user_embedding_dict=user_embedding_dict,
         item_embedding_dict=item_embedding_dict,
         item_metadatas_df=items_df,
+        vector_search_metric=MODEL_TYPE["vector_search_metric"],
+        create_index=False,
     )
     logger.info("Dummy lanceDB table and documents built.")
 
@@ -85,6 +87,7 @@ def default_database(
     MODEL_TYPE = {
         "type": "recommendation",
         "default_token": "[UNK]",
+        "vector_search_metric": "dot",
     }
 
     if source_artifact_uri is None or len(source_artifact_uri) <= 10:
@@ -120,6 +123,8 @@ def default_database(
         user_embedding_dict=user_embedding_dict,
         item_embedding_dict=item_embedding_dict,
         item_metadatas_df=items_df,
+        vector_search_metric=MODEL_TYPE["vector_search_metric"],
+        create_index=ENV_SHORT_NAME == "prod",
     )
     logger.info("LanceDB table and documents built.")
 
@@ -142,6 +147,7 @@ def graph_database(
     MODEL_TYPE = {
         "type": "metadata_graph",
         "default_token": None,
+        "vector_search_metric": "cosine",
     }
     # Load data
     logger.info("Load items with metadatas and graph embeddings...")
@@ -157,7 +163,11 @@ def graph_database(
 
     # build item documents and lanceDB table
     logger.info("Building lanceDB table and documents...")
-    create_lancedb_from_item_embeddings(items_with_embeddings_df)
+    create_lancedb_from_item_embeddings(
+        items_with_embeddings_df,
+        vector_search_metric=MODEL_TYPE["vector_search_metric"],
+        create_index=ENV_SHORT_NAME == "prod",
+    )
     logger.info("LanceDB table and documents built.")
 
     # Output model type

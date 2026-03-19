@@ -13,7 +13,7 @@ import typer
 from loguru import logger
 
 from app.retrieval.documents import Document, DocumentArray
-from utils import (
+from src.utils import (
     ENV_SHORT_NAME,
     MODEL_BASE_PATH,
     OUTPUT_DATA_PATH,

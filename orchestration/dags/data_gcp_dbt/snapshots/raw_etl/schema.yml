@@ -1,5 +1,0 @@
-version: 2
-
-snapshots:
-  - name: snapshot_raw__allocine_movie
-    description: "This snapshot captures the changed allocine movies in the raw allocine movie table. It has the check strategy on precomputed hash."

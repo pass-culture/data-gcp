@@ -13,15 +13,14 @@
                     "external_dag_id": "import_allocine",
                     "external_task_id": "gce_stop_task",
                 },
-                target_schema=generate_schema_name("raw_etl_" ~ target.name)
             )
         )
     }}
-    select 
+    select
         movie_id,
-        internalId,
+        internalid,
         title,
-        originalTitle,
+        originaltitle,
         type,
         runtime,
         synopsis,
@@ -29,7 +28,7 @@
         backlink_url,
         backlink_label,
         data_eidr,
-        data_productionYear,
+        data_productionyear,
         cast_normalized,
         credits_normalized,
         releases,

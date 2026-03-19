@@ -1,5 +1,10 @@
 import os
 
+from src.bigquery import (
+    get_items_metadata,
+    get_model_from_mlflow,
+    get_users_dummy_metadata,
+)
 from src.constants import ENV_SHORT_NAME, MODEL_BASE_PATH, OUTPUT_DATA_PATH
 
 ################################  To use Keras 2 instead of 3  ################################
@@ -19,10 +24,7 @@ from src.utils import (
     create_items_table,
     download_model,
     get_item_docs,
-    get_items_metadata,
-    get_model_from_mlflow,
     get_user_docs,
-    get_users_dummy_metadata,
     save_model_type,
 )
 

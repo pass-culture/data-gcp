@@ -4,10 +4,10 @@ from datetime import datetime
 import typer
 from loguru import logger
 
+from src.bigquery import save_experiment
 from src.constants import ENV_SHORT_NAME
 from src.utils import (
     deploy_container,
-    save_experiment,
 )
 
 

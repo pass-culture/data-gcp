@@ -1,12 +1,13 @@
 import os
 
-from src.bigquery import (
+from src.constants import ENV_SHORT_NAME, MODEL_BASE_PATH, OUTPUT_DATA_PATH
+from src.docker import download_model
+from src.document_processing import get_item_docs, get_user_docs
+from src.gcs_io import (
     get_items_metadata,
     get_model_from_mlflow,
     get_users_dummy_metadata,
 )
-from src.constants import ENV_SHORT_NAME, MODEL_BASE_PATH, OUTPUT_DATA_PATH
-from src.subprocesses import download_model
 from src.vector_database import create_items_table
 
 ################################  To use Keras 2 instead of 3  ################################
@@ -23,8 +24,6 @@ from loguru import logger
 
 from app.retrieval.documents import Document, DocumentArray
 from src.utils import (
-    get_item_docs,
-    get_user_docs,
     save_model_type,
 )
 

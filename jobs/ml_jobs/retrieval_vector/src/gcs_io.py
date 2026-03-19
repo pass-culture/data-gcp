@@ -1,8 +1,10 @@
+import subprocess
 import time
 from datetime import datetime
 
 import pandas as pd
 from google.cloud import bigquery
+from loguru import logger
 
 from src.constants import (
     BIGQUERY_ANALYTICS_DATASET,
@@ -11,6 +13,28 @@ from src.constants import (
     GCP_PROJECT_ID,
     MODELS_RESULTS_TABLE_NAME,
 )
+
+
+def download_model(artifact_uri: str) -> None:
+    """
+    Download model from GCS bucket
+    Args:
+        artifact_uri (str): GCS bucket path
+    """
+    command = f"gsutil -m cp -r {artifact_uri} ."
+    try:
+        result = subprocess.run(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            check=True,
+        )
+        logger.info(result.stdout)
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Command failed with return code {e.returncode}: {e.output}")
+        raise
 
 
 def get_items_metadata():

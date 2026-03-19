@@ -1,29 +1,5 @@
 import subprocess
 
-from loguru import logger
-
-
-def download_model(artifact_uri: str) -> None:
-    """
-    Download model from GCS bucket
-    Args:
-        artifact_uri (str): GCS bucket path
-    """
-    command = f"gsutil -m cp -r {artifact_uri} ."
-    try:
-        result = subprocess.run(
-            command,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            check=True,
-        )
-        logger.info(result.stdout)
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Command failed with return code {e.returncode}: {e.output}")
-        raise
-
 
 def deploy_container(serving_container, workers):
     """

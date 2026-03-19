@@ -1,7 +1,9 @@
 import os
 
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
+GCP_PROJECT_ID = (
+    "passculture-data-prod" if ENV_SHORT_NAME == "prod" else "passculture-data-ehp"
+)
 BIGQUERY_RECOMMENDATION_DATASET = f"ml_reco_{ENV_SHORT_NAME}"
 BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
 MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"

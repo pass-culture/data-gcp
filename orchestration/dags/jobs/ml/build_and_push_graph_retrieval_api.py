@@ -158,7 +158,7 @@ with DAG(
         task_id="create_graph_retrieval_database",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
-        command="python create_vector_database.py graph-database "
+        command="PYTHONPATH=. un run cli/create_vector_database.py graph-database "
         f"--recommendable-item-gs-path {STORAGE_BASE_PATH}/raw_recommendable_item "
         f"--graph-embedding-gs-path {STORAGE_BASE_PATH}/raw_graph_embedding ",
         dag=dag,
@@ -168,7 +168,7 @@ with DAG(
         task_id="build_and_push_docker_image",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
-        command="python build_and_push_docker_image.py "
+        command="PYTHONPATH=. un run cli/build_and_push_docker_image.py "
         "--experiment-name {{ params.model_version }} "
         "--model-name {{ params.model_name }} "
         "--container-worker {{ params.container_worker }} "

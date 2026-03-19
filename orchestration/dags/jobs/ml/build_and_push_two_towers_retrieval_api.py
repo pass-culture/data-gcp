@@ -120,14 +120,14 @@ with DAG(
             task_id="create_vector_database",
             instance_name="{{ params.instance_name }}",
             base_dir="{{ params.base_dir }}",
-            command="python create_vector_database.py dummy-database ",
+            command="PYTHONPATH=. un run cli/create_vector_database.py dummy-database ",
         )
     else:
         create_vector_database = SSHGCEOperator(
             task_id="create_vector_database",
             instance_name="{{ params.instance_name }}",
             base_dir="{{ params.base_dir }}",
-            command="python create_vector_database.py default-database "
+            command="PYTHONPATH=. un run cli/create_vector_database.py default-database "
             "--source-experiment-name {{ params.source_experiment_name }} "
             "--source-artifact-uri {{  params.source_artifact_uri }} "
             "--source-run-id {{ params.source_run_id }} ",
@@ -137,7 +137,7 @@ with DAG(
         task_id="build_and_push_docker_image",
         instance_name="{{ params.instance_name }}",
         base_dir="{{ params.base_dir }}",
-        command="python build_and_push_docker_image.py "
+        command="PYTHONPATH=. un run cli/build_and_push_docker_image.py "
         "--base-serving-container-path {{ params.artifact_registry_base_path }} "
         "--experiment-name {{ params.experiment_name }} "
         "--model-name {{ params.model_name }} "

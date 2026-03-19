@@ -2,6 +2,12 @@ name: "4. [on_dispatch] build airflow image"
 
 on:
   workflow_dispatch:
+    inputs:
+      CUSTOM_TAG:
+        description: "Custom Docker image tag(s), 'dev' (default), 'v1' for stg and prod, 'v1,dev' to equalize envs"
+        type: string
+        required: false
+        default: "dev"
 
 permissions:
   contents: write
@@ -12,7 +18,8 @@ jobs:
     uses: ./.github/workflows/reusable_build_image.yml
     with:
       TARGET_ENV: "dev"
-      IS_MANUAL: true
+      IS_DISPATCH: true
+      CUSTOM_TAG: ${{ inputs.CUSTOM_TAG }}
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}

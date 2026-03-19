@@ -1,5 +1,7 @@
 import os
 
+from src.constants import ENV_SHORT_NAME, MODEL_BASE_PATH, OUTPUT_DATA_PATH
+
 ################################  To use Keras 2 instead of 3  ################################
 # See [TensorFlow + Keras 2 backwards compatibility section](https://keras.io/getting_started/)
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
@@ -14,9 +16,6 @@ from loguru import logger
 
 from app.retrieval.documents import Document, DocumentArray
 from src.utils import (
-    ENV_SHORT_NAME,
-    MODEL_BASE_PATH,
-    OUTPUT_DATA_PATH,
     create_items_table,
     download_model,
     get_item_docs,

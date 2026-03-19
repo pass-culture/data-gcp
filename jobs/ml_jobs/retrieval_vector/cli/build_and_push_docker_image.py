@@ -4,8 +4,8 @@ from datetime import datetime
 import typer
 from loguru import logger
 
+from src.constants import ENV_SHORT_NAME
 from src.utils import (
-    ENV_SHORT_NAME,
     deploy_container,
     save_experiment,
 )

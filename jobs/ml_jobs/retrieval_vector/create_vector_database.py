@@ -35,6 +35,7 @@ def prepare_docs(embedding_dimension: int) -> None:
     items_df = get_items_metadata()
     logger.info("Items metadata loaded.")
 
+    # TODO: Refacto this to read embeddings directly from bigquery
     # download model
     logger.info("Load Two Tower model...")
     tf_reco = tf.keras.models.load_model(MODEL_BASE_PATH)

@@ -38,3 +38,9 @@ développement dans le DAG concerné. Les deux possibilités sont de :
 
 De plus, afin de réduire les temps d'entraînement et d'évaluation, on peut réduire le volume de données utilisées en
 diminuant le nombre de jours utilisés pour l'entraînement : paramètre `event_day_number`.
+
+## Install
+If you install this env on a macos, you need to pin the python version to 3.11 because tensorflow-macos lib only has wheels for 3.11 python. So to install the env:
+```bash
+uv python pin 3.11 && uv sync
+```

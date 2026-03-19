@@ -9,7 +9,7 @@ SELECT
     cast(venue_id AS String) AS venue_id,
     sum(
         CASE
-            WHEN collective_booking_status IN ('USED', 'REIMBURSED') THEN booking_amount
+            WHEN collective_booking_status IN ('USED', 'PENDING_REIMBURSEMENT', 'REIMBURSED') THEN booking_amount
             ELSE 0
         END
     ) AS revenue,

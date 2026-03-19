@@ -23,19 +23,25 @@ with
             offer.offer_name,
             count(
                 distinct case
-                    when booking.booking_status in ("USED", "REIMBURSED")
+                    when
+                        booking.booking_status
+                        in ("USED", "PENDING_REIMBURSEMENT", "REIMBURSED")
                     then booking.booking_id
                 end
             ) as count_bookings,  -- will be deleted
             count(
                 distinct case
-                    when booking.booking_status in ("USED", "REIMBURSED")
+                    when
+                        booking.booking_status
+                        in ("USED", "PENDING_REIMBURSEMENT", "REIMBURSED")
                     then booking.booking_id
                 end
             ) as count_used_bookings,
             sum(
                 case
-                    when booking.booking_status in ("USED", "REIMBURSED")
+                    when
+                        booking.booking_status
+                        in ("USED", "PENDING_REIMBURSEMENT", "REIMBURSED")
                     then booking.booking_quantity
                 end
             ) as count_used_tickets_booked,
@@ -52,7 +58,9 @@ with
             ) as count_pending_bookings,
             sum(
                 case
-                    when booking.booking_status in ("USED", "REIMBURSED")
+                    when
+                        booking.booking_status
+                        in ("USED", "PENDING_REIMBURSEMENT", "REIMBURSED")
                     then booking.booking_intermediary_amount
                 end
             ) as real_amount_booked,
@@ -118,7 +126,7 @@ with
                 distinct case
                     when
                         booking.collective_booking_status
-                        in ("USED", "REIMBURSED", "CONFIRMED")
+                        in ("USED", "REIMBURSED", "PENDING_REIMBURSEMENT", "CONFIRMED")
                     then booking.collective_booking_id
                 end
             ) as count_used_tickets_booked,  -- 1 offer = 1 ticket, just to match format
@@ -132,7 +140,7 @@ with
                 case
                     when
                         booking.collective_booking_status
-                        in ("USED", "REIMBURSED", "CONFIRMED")
+                        in ("USED", "REIMBURSED", "PENDING_REIMBURSEMENT", "CONFIRMED")
                     then booking.booking_amount
                 end
             ) as real_amount_booked,
@@ -153,7 +161,7 @@ with
             {{ ref("mrt_global__collective_booking") }} as booking
             on offer.collective_offer_id = booking.collective_offer_id
             and booking.collective_booking_status
-            in ("USED", "REIMBURSED", "CONFIRMED", "PENDING")
+            in ("USED", "REIMBURSED", "PENDING_REIMBURSEMENT", "CONFIRMED", "PENDING")
         where offerer.offerer_siren is not null
         group by 1, 2, 3, 4, 5, 6, 7, 8, 9
     ),

@@ -36,7 +36,9 @@ with
             coalesce(count(distinct collective_booking_id), 0) as total_booking,
             coalesce(sum(booking_amount), 0) as total_booking_amount
         from {{ ref("mrt_global__collective_booking") }}
-        where collective_booking_status in ('CONFIRMED', 'USED', 'REIMBURSED')
+        where
+            collective_booking_status
+            in ('CONFIRMED', 'USED', 'PENDING_REIMBURSEMENT', 'REIMBURSED')
         group by
             venue_region_name, venue_academy_name, partition_month, epci_code, city_code
     )

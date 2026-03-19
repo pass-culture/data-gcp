@@ -24,14 +24,17 @@ with
             ) as total_collective_theoretic_revenue,
             sum(
                 case
-                    when cb.collective_booking_status in ('USED', 'REIMBURSED')
+                    when
+                        cb.collective_booking_status
+                        in ('USED', 'PENDING_REIMBURSEMENT', 'REIMBURSED')
                     then cs.collective_stock_price
                 end
             ) as total_collective_real_revenue,
             sum(
                 case
                     when
-                        cb.collective_booking_status in ('USED', 'REIMBURSED')
+                        cb.collective_booking_status
+                        in ('USED', 'PENDING_REIMBURSEMENT', 'REIMBURSED')
                         and extract(year from cb.collective_booking_creation_date)
                         = extract(year from current_date)
                     then cs.collective_stock_price
@@ -40,7 +43,8 @@ with
             sum(
                 case
                     when
-                        cb.collective_booking_status in ('USED', 'REIMBURSED')
+                        cb.collective_booking_status
+                        in ('USED', 'PENDING_REIMBURSEMENT', 'REIMBURSED')
                         and cb.is_current_scholar_year
                     then cs.collective_stock_price
                 end

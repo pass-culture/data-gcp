@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 
 import pandas as pd
+import polars as pl
 from google.cloud import bigquery
 from loguru import logger
 
@@ -210,3 +211,22 @@ def save_experiment(experiment_name, model_name, serving_container, run_id):
 
     job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()
+
+
+def load_embeddings_from_parquet(
+    parquet_dir: str, column_renaming_mapping: dict
+) -> dict:
+    lf = pl.scan_parquet(f"{parquet_dir}/*.parquet")
+
+    transformed_lf = (
+        lf.rename(column_renaming_mapping)
+        .with_columns(
+            pl.col("vector")
+            .struct.field("list")
+            .list.eval(pl.element().struct.field("element"))
+        )
+        .select(["item_id", "list"])
+        .rename({"list": "vector"})
+    )
+
+    return transformed_lf.collect().to_pandas()

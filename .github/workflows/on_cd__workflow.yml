@@ -148,6 +148,8 @@ jobs:
     uses: ./.github/workflows/reusable_build_image.yml
     with:
       TARGET_ENV: "dev"
+      IS_DISPATCH: false
+      CUSTOM_TAG: "dev"
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
@@ -157,6 +159,8 @@ jobs:
     uses: ./.github/workflows/reusable_build_image.yml
     with:
       TARGET_ENV: "stg"
+      IS_DISPATCH: false
+      CUSTOM_TAG: "v1"
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
@@ -166,6 +170,8 @@ jobs:
     uses: ./.github/workflows/reusable_build_image.yml
     with:
       TARGET_ENV: "prod"
+      IS_DISPATCH: false
+      CUSTOM_TAG: "v1"
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}

@@ -8,6 +8,14 @@ on:
       TARGET_ENV:
         type: string
         required: true
+      IS_DISPATCH:
+        type: boolean
+        required: false
+        default: false
+      CUSTOM_TAG:
+        type: string
+        required: false
+        default: ""
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER:
         required: true
@@ -68,13 +76,35 @@ jobs:
           password: "${{ steps.openid-auth.outputs.access_token }}"
       - name: "Set Docker Tags"
         id: docker_tags
+        env:
+          CUSTOM_TAG: ${{ inputs.CUSTOM_TAG }}
+          IS_DISPATCH: ${{ inputs.IS_DISPATCH }}
         run: |
+          # Start with short SHA
           tags="${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:${{ steps.sha.outputs.short_sha }}"
-          tags="$tags\n${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:v1"
-          if [ "${TARGET_ENV}" == "dev" ]; then
-            tags="$tags\n${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:dev"
+
+          # Add v1 tag if not manual
+          if [ "${IS_DISPATCH}" != "true" ]; then
+            tags="${tags}\n${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:v1"
           fi
+
+          # Add dev tag if dev environment
+          if [ "${TARGET_ENV}" == "dev" ]; then
+            tags="${tags}\n${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:dev"
+          fi
+
+          # Add CUSTOM_TAG safely (user input) - supports comma-separated tags
+          if [ -n "$CUSTOM_TAG" ]; then
+            IFS=',' read -ra CUSTOM_TAGS <<< "$CUSTOM_TAG"
+            for tag in "${CUSTOM_TAGS[@]}"; do
+              sanitized_tag=$(printf '%s' "$tag" | tr '/ ' '--' | xargs)
+              tags="${tags}\n${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:${sanitized_tag}"
+            done
+          fi
+
+          # Output tags
           echo -e "tags<<EOF\n$tags\nEOF" >> "$GITHUB_OUTPUT"
+
       - name: "Build and push docker image"
         uses: docker/build-push-action@v3.2.0
         with:

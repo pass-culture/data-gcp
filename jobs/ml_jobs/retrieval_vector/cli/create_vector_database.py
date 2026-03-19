@@ -31,43 +31,6 @@ app = typer.Typer(help="Create lanceDB table and documents")
 
 
 @app.command()
-def graph_database(
-    recommendable_item_gs_path: str = typer.Option(
-        ...,
-        help="Path (GCS or local) to the parquet or parquet dir containing the items with metadatas to recommend",
-    ),
-    graph_embedding_gs_path: str = typer.Option(
-        ...,
-        help="Path (GCS or local) to the parquet or parquet dir containing the item graph embeddings",
-    ),
-) -> None:
-    MODEL_TYPE = {
-        "type": "metadata_graph",
-        "default_token": None,
-    }
-    # Load data
-    logger.info("Load items with metadatas and graph embeddings...")
-    recommendable_items_df = pd.read_parquet(recommendable_item_gs_path)
-    graph_embeddings_df = load_embeddings_from_parquet(
-        graph_embedding_gs_path,
-        column_renaming_mapping={"node_ids": "item_id", "embedding": "vector"},
-    )
-    items_with_embeddings_df = recommendable_items_df.merge(
-        graph_embeddings_df, on="item_id", how="inner", validate="one_to_one"
-    )
-    logger.info("Items with metadatas and graph embeddings loaded.")
-
-    # build item documents and lanceDB table
-    logger.info("Building lanceDB table and documents...")
-    create_lancedb_from_item_embeddings(items_with_embeddings_df)
-    logger.info("LanceDB table and documents built.")
-
-    # Output model type
-    save_model_type(model_type=MODEL_TYPE, output_dir=OUTPUT_DATA_PATH)
-    logger.info(f"Model type ({MODEL_TYPE['type']}) saved.")
-
-
-@app.command()
 def dummy_database() -> None:
     MODEL_TYPE = {
         "type": "recommendation",
@@ -158,6 +121,43 @@ def default_database(
         item_embedding_dict=item_embedding_dict,
         item_metadatas_df=items_df,
     )
+    logger.info("LanceDB table and documents built.")
+
+    # Output model type
+    save_model_type(model_type=MODEL_TYPE, output_dir=OUTPUT_DATA_PATH)
+    logger.info(f"Model type ({MODEL_TYPE['type']}) saved.")
+
+
+@app.command()
+def graph_database(
+    recommendable_item_gs_path: str = typer.Option(
+        ...,
+        help="Path (GCS or local) to the parquet or parquet dir containing the items with metadatas to recommend",
+    ),
+    graph_embedding_gs_path: str = typer.Option(
+        ...,
+        help="Path (GCS or local) to the parquet or parquet dir containing the item graph embeddings",
+    ),
+) -> None:
+    MODEL_TYPE = {
+        "type": "metadata_graph",
+        "default_token": None,
+    }
+    # Load data
+    logger.info("Load items with metadatas and graph embeddings...")
+    recommendable_items_df = pd.read_parquet(recommendable_item_gs_path)
+    graph_embeddings_df = load_embeddings_from_parquet(
+        graph_embedding_gs_path,
+        column_renaming_mapping={"node_ids": "item_id", "embedding": "vector"},
+    )
+    items_with_embeddings_df = recommendable_items_df.merge(
+        graph_embeddings_df, on="item_id", how="inner", validate="one_to_one"
+    )
+    logger.info("Items with metadatas and graph embeddings loaded.")
+
+    # build item documents and lanceDB table
+    logger.info("Building lanceDB table and documents...")
+    create_lancedb_from_item_embeddings(items_with_embeddings_df)
     logger.info("LanceDB table and documents built.")
 
     # Output model type

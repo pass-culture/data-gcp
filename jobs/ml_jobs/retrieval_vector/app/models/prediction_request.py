@@ -12,7 +12,6 @@ DEFAULT_TREND_FIELDS = [
 ]
 MODEL_TYPES = {
     "recommendation": DEFAULT_VECTOR_FIELDS,
-    "semantic": DEFAULT_VECTOR_FIELDS,
     "similar_offer": DEFAULT_VECTOR_FIELDS,
     "filter": DEFAULT_TREND_FIELDS,
     "tops": DEFAULT_TREND_FIELDS,

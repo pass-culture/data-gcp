@@ -5,7 +5,6 @@ from typing import Optional
 from app.retrieval.client import DefaultClient
 from app.retrieval.metadata_graph_client import MetadataGraphClient
 from app.retrieval.reco_client import RecoClient
-from app.retrieval.text_client import TextClient
 
 
 @dataclass
@@ -24,10 +23,6 @@ def load_model() -> DefaultClient:
 
         if config.type == "recommendation":
             return RecoClient(default_token=config.default_token)
-        elif config.type == "semantic":
-            return TextClient(
-                transformer=config.transformer, reducer_path=config.reducer
-            )
         elif config.type == "metadata_graph":
             return MetadataGraphClient(default_token=config.default_token)
         else:

@@ -22,7 +22,7 @@ class PredictionHandlerFactory:
             return RecommendationHandler()
 
         elif request_type == "similar_offer":
-            if embedding_model_type == EmbeddingModelTypes.Graph:
+            if embedding_model_type == EmbeddingModelTypes.METADATA_GRAPH:
                 # For graph models, we de not want fallback
                 return SimilarOfferHandler(fallback_client=None)
 

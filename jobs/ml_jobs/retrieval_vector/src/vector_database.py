@@ -226,7 +226,7 @@ def create_lancedb_from_coreservation(
         emb_size=len(next(iter(item_embedding_dict.values()))),
         uri=f"{OUTPUT_DATA_PATH}/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,
-        vector_search_index_metric="    cosine",
+        vector_search_index_metric="dot",
     )
 
 

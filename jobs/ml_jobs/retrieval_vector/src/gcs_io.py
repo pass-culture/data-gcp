@@ -49,7 +49,7 @@ def get_items_metadata():
         pd.DataFrame: DataFrame containing item metadata with columns for
             item_id, categories, booking statistics, embeddings, and venue information
     """
-    client = bigquery.Client()
+    client = bigquery.Client(project=GCP_PROJECT_ID)
 
     sql = f"""
         SELECT
@@ -107,7 +107,7 @@ def get_users_dummy_metadata():
     Returns:
         pd.DataFrame: DataFrame containing user_id column
     """
-    client = bigquery.Client()
+    client = bigquery.Client(project=GCP_PROJECT_ID)
 
     sql = f"""
         SELECT
@@ -138,7 +138,7 @@ def get_model_from_mlflow(
     Raises:
         Exception: If model is not found in BigQuery results table
     """
-    client = bigquery.Client()
+    client = bigquery.Client(project=GCP_PROJECT_ID)
 
     # get artifact_uri from BQ
     if artifact_uri is None or len(artifact_uri) <= 10:
@@ -189,7 +189,7 @@ def save_experiment(experiment_name, model_name, serving_container, run_id):
         "serving_container": serving_container,
     }
 
-    client = bigquery.Client()
+    client = bigquery.Client(project=GCP_PROJECT_ID)
     table_id = f"""{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}"""
 
     job_config = bigquery.LoadJobConfig(

@@ -4,6 +4,7 @@ import lancedb
 import numpy as np
 import pandas as pd
 import pyarrow as pa
+from loguru import logger
 
 from app.retrieval.documents import Document, DocumentArray
 from src.constants import (
@@ -143,7 +144,6 @@ def _create_items_table(
     items_df: pd.DataFrame,
     emb_size: int,
     uri: str,
-    create_index: bool,
     vector_search_index_metric: str,
 ) -> None:
     """
@@ -189,16 +189,20 @@ def _create_items_table(
             table = db.create_table("items", data=data_batch)
         else:
             table.add(data_batch)
-    if create_index:
-        table.create_index(
-            metric=vector_search_index_metric,
-            num_partitions=8,
-            num_sub_vectors=4,
-            vector_column_name="vector",
-        )
-        table.create_scalar_index("search_group_name", index_type="BITMAP")
-        table.create_scalar_index("subcategory_id", index_type="BITMAP")
-        table.create_scalar_index("stock_price", index_type="BTREE")
+
+    logger.info(
+        f"Creating indexes for table 'items' with metric '{vector_search_index_metric}'..."
+    )
+    table.create_index(
+        metric=vector_search_index_metric,
+        num_partitions=8,
+        num_sub_vectors=4,
+        vector_column_name="vector",
+    )
+    table.create_scalar_index("search_group_name", index_type="BITMAP")
+    table.create_scalar_index("subcategory_id", index_type="BITMAP")
+    table.create_scalar_index("stock_price", index_type="BTREE")
+    logger.info("Indexes created.")
 
 
 ##################################################################################################
@@ -211,8 +215,6 @@ def create_lancedb_from_coreservation(
     item_embedding_dict: dict[str, np.ndarray],
     item_metadatas_df: pd.DataFrame,
     vector_search_metric: str,
-    *,
-    create_index: bool = True,
 ):
     """Create lanceDB table from co-reservation model embeddings."""
     # build user and item documents
@@ -226,7 +228,6 @@ def create_lancedb_from_coreservation(
         item_metadatas_df,
         emb_size=len(next(iter(item_embedding_dict.values()))),
         uri=f"{OUTPUT_DATA_PATH}/vector",
-        create_index=create_index,
         vector_search_index_metric=vector_search_metric,
     )
 
@@ -234,8 +235,6 @@ def create_lancedb_from_coreservation(
 def create_lancedb_from_item_embeddings(
     items_with_embeddings_df: pd.DataFrame,
     vector_search_metric: str,
-    *,
-    create_index: bool = True,
 ):
     """Create lanceDB table from item embeddings."""
     # Create item documents for graph retrieval app
@@ -255,6 +254,5 @@ def create_lancedb_from_item_embeddings(
         items_df=items_with_embeddings_df.loc[:, lambda df: df.columns != "vector"],
         emb_size=len(items_with_embeddings_df.iloc[0].vector),
         uri=f"{OUTPUT_DATA_PATH}/vector",
-        create_index=create_index,
         vector_search_index_metric=vector_search_metric,
     )

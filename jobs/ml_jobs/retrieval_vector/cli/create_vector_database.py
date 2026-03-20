@@ -9,7 +9,7 @@ import pandas as pd
 import typer
 from loguru import logger
 
-from src.constants import ENV_SHORT_NAME, MODEL_BASE_PATH, OUTPUT_DATA_PATH
+from src.constants import MODEL_BASE_PATH, OUTPUT_DATA_PATH
 from src.embeddings import extract_embeddings_from_tt_model, generate_dummy_embeddings
 from src.gcs_io import (
     download_model,
@@ -59,7 +59,6 @@ def dummy_database() -> None:
         item_embedding_dict=item_embedding_dict,
         item_metadatas_df=items_df,
         vector_search_metric=MODEL_TYPE["vector_search_metric"],
-        create_index=False,
     )
     logger.info("Dummy lanceDB table and documents built.")
 
@@ -124,7 +123,6 @@ def default_database(
         item_embedding_dict=item_embedding_dict,
         item_metadatas_df=items_df,
         vector_search_metric=MODEL_TYPE["vector_search_metric"],
-        create_index=ENV_SHORT_NAME == "prod",
     )
     logger.info("LanceDB table and documents built.")
 
@@ -165,7 +163,6 @@ def graph_database(
     create_lancedb_from_item_embeddings(
         items_with_embeddings_df,
         vector_search_metric=MODEL_TYPE["vector_search_metric"],
-        create_index=ENV_SHORT_NAME == "prod",
     )
     logger.info("LanceDB table and documents built.")
 

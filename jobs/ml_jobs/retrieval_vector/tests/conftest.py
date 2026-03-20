@@ -8,25 +8,12 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 import pytest
-from sentence_transformers import SentenceTransformer
 
 from app.retrieval.documents import Document, DocumentArray
 from app.retrieval.reco_client import RecoClient
-from tests.utils import STATIC_FAKE_ITEM_DATA, TRANSFORMER, VECTOR_DIM, VECTOR_SIZE
+from tests.utils import VECTOR_DIM, VECTOR_SIZE
 
 logger = logging.getLogger(__name__)
-
-
-@pytest.fixture(scope="session")
-def generate_fake_text_item_data() -> pd.DataFrame:
-    """
-    Encode the 'title' of each item in the input list into vectors using the specified transformer.
-    Returns a DataFrame with the original items and an additional 'vector' column.
-    """
-    model = SentenceTransformer(TRANSFORMER)
-    df = pd.DataFrame(STATIC_FAKE_ITEM_DATA)
-    df["vector"] = df["title"].apply(lambda title: model.encode(title).tolist())
-    return df
 
 
 @pytest.fixture(scope="session")
@@ -139,25 +126,6 @@ def mock_generate_fake_load_item_document(generate_fake_data):
         yield mock_load
 
 
-@pytest.fixture
-def mock_semantic_load_item_document(generate_fake_text_item_data):
-    """Fixture to mock the load_item_document function used in DefaultClient."""
-
-    with patch("app.retrieval.client.DefaultClient.load_item_document") as mock_load:
-        item_docs = DocumentArray()
-        for _, row in generate_fake_text_item_data.iterrows():
-            item_docs.append(
-                Document(
-                    id=row["item_id"],
-                    embedding=row["vector"],
-                    booking_number_desc=row["booking_number_desc"],
-                    price=row["price"],
-                )
-            )
-        mock_load.return_value = item_docs
-        yield mock_load
-
-
 @pytest.fixture(scope="session")
 def mock_user_document_loading(
     generate_fake_data: Callable[[int, int, str], pd.DataFrame],
@@ -198,22 +166,9 @@ def mock_user_document_loading(
 
 
 @pytest.fixture
-def mock_semantic_connect_db(generate_fake_text_item_data):
-    """Fixture to mock the load_item_document function used in DefaultClient."""
-
-    with patch("app.retrieval.client.DefaultClient.connect_db") as mock_load:
-        uri = "~/.lancedb/"
-        db = lancedb.connect(f"{uri}")
-        mock_load.return_value = db.create_table(
-            "items", data=generate_fake_text_item_data, exist_ok=True, mode="overwrite"
-        )
-        yield mock_load
-
-
-@pytest.fixture
 def reco_client() -> RecoClient:
     """Fixture to initialize the RecoClient."""
     detail_columns = ["vector", "booking_number_desc"]
-    client = RecoClient(default_token="[UNK]", detail_columns=detail_columns)
+    client = RecoClient(detail_columns=detail_columns)
     client.load()
     return client

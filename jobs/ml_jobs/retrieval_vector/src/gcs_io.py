@@ -117,9 +117,7 @@ def get_users_dummy_metadata():
     return client.query(sql).to_dataframe()
 
 
-def get_model_from_mlflow(
-    experiment_name: str, run_id: str = None, artifact_uri: str = None
-):
+def get_model_uri_from_mlflow(experiment_name: str, run_id: str = None):
     """
     Retrieve model artifact URI from MLflow via BigQuery.
 
@@ -129,8 +127,6 @@ def get_model_from_mlflow(
     Args:
         experiment_name (str): Name of the MLflow experiment
         run_id (str, optional): Specific MLflow run ID. Defaults to None
-        artifact_uri (str, optional): Direct artifact URI (returned if valid).
-            Defaults to None
 
     Returns:
         str: GCS artifact URI for the model
@@ -140,31 +136,33 @@ def get_model_from_mlflow(
     """
     client = bigquery.Client(project=GCP_PROJECT_ID)
 
-    # get artifact_uri from BQ
-    if artifact_uri is None or len(artifact_uri) <= 10:
-        if run_id is None or len(run_id) <= 2:
-            results_array = (
-                client.query(
-                    f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' ORDER BY execution_date DESC LIMIT 1"""
-                )
-                .to_dataframe()
-                .to_dict("records")
+    if run_id is None:
+        logger.info(f"Get latest model from MLFlow experiment {experiment_name}...")
+        results_array = (
+            client.query(
+                f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' ORDER BY execution_date DESC LIMIT 1"""
             )
-        else:
-            results_array = (
-                client.query(
-                    f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' AND run_id = '{run_id}' ORDER BY execution_date DESC LIMIT 1"""
-                )
-                .to_dataframe()
-                .to_dict("records")
+            .to_dataframe()
+            .to_dict("records")
+        )
+    else:
+        logger.info(
+            f"Get model from MLFlow experiment {experiment_name} with run_id {run_id}..."
+        )
+        results_array = (
+            client.query(
+                f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' AND run_id = '{run_id}' ORDER BY execution_date DESC LIMIT 1"""
             )
-        if len(results_array) == 0:
-            raise Exception(
-                f"Model {experiment_name} not found into BQ {MODELS_RESULTS_TABLE_NAME}. Failing."
-            )
-        else:
-            artifact_uri = results_array[0]["artifact_uri"]
-    return artifact_uri
+            .to_dataframe()
+            .to_dict("records")
+        )
+
+    if len(results_array) == 0:
+        raise Exception(
+            f"Model {experiment_name} not found into BQ {MODELS_RESULTS_TABLE_NAME}. Failing."
+        )
+
+    return results_array[0]["artifact_uri"]
 
 
 def save_experiment(experiment_name, model_name, serving_container, run_id):

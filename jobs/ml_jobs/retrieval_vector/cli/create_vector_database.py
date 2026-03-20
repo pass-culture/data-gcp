@@ -14,7 +14,7 @@ from src.embeddings import extract_embeddings_from_tt_model, generate_dummy_embe
 from src.gcs_io import (
     download_model,
     get_items_metadata,
-    get_model_from_mlflow,
+    get_model_uri_from_mlflow,
     get_users_dummy_metadata,
     load_embeddings_from_parquet,
 )
@@ -90,14 +90,17 @@ def default_database(
         "vector_search_metric": "dot",
     }
 
-    if source_artifact_uri is None or len(source_artifact_uri) <= 10:
-        logger.info(
-            f"Get model from MLFlow experiment {source_experiment_name} with run_id {source_run_id}..."
-        )
-        source_artifact_uri = get_model_from_mlflow(
+    # Parse input
+    # TODO: Refacto this so that source_artifact_uri is None in input instead of "."
+    source_artifact_uri = (
+        None if source_artifact_uri in [None, "", "."] else source_artifact_uri
+    )
+    source_run_id = None if source_run_id in [None, "", "."] else source_run_id
+
+    if source_artifact_uri is None:
+        source_artifact_uri = get_model_uri_from_mlflow(
             experiment_name=source_experiment_name,
             run_id=source_run_id,
-            artifact_uri=source_artifact_uri,
         )
         logger.info(f"Model artifact_uri: {source_artifact_uri}")
 

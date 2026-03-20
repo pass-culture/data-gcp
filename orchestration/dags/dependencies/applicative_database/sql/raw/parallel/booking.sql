@@ -7,7 +7,7 @@ SELECT
     , "amount" as booking_amount
     , CAST("status" AS varchar(255)) AS booking_status
     , "status" = \'CANCELLED\' AS booking_is_cancelled
-    , "status" IN (\'USED\', \'REIMBURSED\') as booking_is_used
+    , "status" IN (\'USED\', \'PENDING_REIMBURSEMENT\', \'REIMBURSED\') as booking_is_used
     , "status" = \'REIMBURSED\' AS reimbursed
     , "dateUsed" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as booking_used_date
     , "cancellationDate" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as booking_cancellation_date

@@ -49,7 +49,7 @@ with DAG(
             type="string",
         ),
         "n_days": Param(
-            default=-14,
+            default=-7,
             type="integer",
             description="Number of days to go back from the execution date for the start date (e.g., -1 for yesterday).",
         ),
@@ -66,6 +66,8 @@ with DAG(
         base_path = f"data-gcp/jobs/etl_jobs/external/{social_network}"
         gce_instance_start = StartGCEOperator(
             instance_name=gce_instance,
+            instance_type="n1-standard-1",
+            preemptible=False,
             task_id=f"{social_network}_gce_start_task",
             labels={"dag_name": DAG_NAME},
         )

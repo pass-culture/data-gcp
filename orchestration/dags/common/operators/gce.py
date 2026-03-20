@@ -42,7 +42,7 @@ class StartGCEOperator(BaseOperator):
         self,
         instance_name: str,
         instance_type: str = "n1-standard-1",
-        preemptible: bool = True,
+        preemptible: bool = False,
         disk_size_gb: str = "100",
         labels={},
         use_gke_network: bool = False,

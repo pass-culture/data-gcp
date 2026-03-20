@@ -10,8 +10,7 @@ WITH effective_revenue as (
         cast(venue_id as String) as venue_id,
         sum(
             case
-                when collective_booking_status = 'USED'
-                or collective_booking_status = 'REIMBURSED' then booking_amount
+                when collective_booking_status in ('USED', 'PENDING_REIMBURSEMENT', 'REIMBURSED') then booking_amount
                 else 0
             end
         ) AS collective_revenue

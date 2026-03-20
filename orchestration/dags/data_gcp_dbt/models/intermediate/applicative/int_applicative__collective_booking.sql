@@ -26,7 +26,8 @@ select
     cb.collective_booking_cancellation_date
     is not null as collective_booking_is_cancelled,
     coalesce(
-        cb.collective_booking_status in ('USED', 'REIMBURSED'), false
+        cb.collective_booking_status in ('USED', 'PENDING_REIMBURSEMENT', 'REIMBURSED'),
+        false
     ) as is_used_collective_booking,
     current_date
     between ey.educational_year_beginning_date and ey.educational_year_expiration_date

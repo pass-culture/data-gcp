@@ -16,7 +16,10 @@ with
                 case when booking_is_cancelled then booking_quantity end
             ) as total_cancelled_bookings,
             sum(
-                case when booking_status = 'REIMBURSED' then booking_quantity end
+                case
+                    when booking_status in ('REIMBURSED', 'PENDING_REIMBURSEMENT')
+                    then booking_quantity
+                end
             ) as total_paid_bookings,
             count(booking_id) as total_individual_bookings,
             count(

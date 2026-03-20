@@ -38,7 +38,9 @@ with
             on cb.venue_id = vt.venue_id
             and venue_tag_category_label
             = 'Comptage partenaire label et appellation du MC'
-        where cb.collective_booking_status in ('CONFIRMED', 'USED', 'REIMBURSED')
+        where
+            cb.collective_booking_status
+            in ('CONFIRMED', 'USED', 'PENDING_REIMBURSEMENT', 'REIMBURSED')
         group by
             partition_month,
             region_name,

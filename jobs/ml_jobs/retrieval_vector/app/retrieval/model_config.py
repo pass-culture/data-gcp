@@ -1,7 +1,6 @@
 import json
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Optional
 
 from app.retrieval.client import DefaultClient
 from app.retrieval.metadata_graph_client import MetadataGraphClient
@@ -16,7 +15,6 @@ class ModelType(StrEnum):
 @dataclass
 class ModelConfig:
     type: ModelType
-    default_token: Optional[str] = None
 
 
 def load_model() -> DefaultClient:
@@ -25,13 +23,11 @@ def load_model() -> DefaultClient:
     # Load model configuration
     with open("./metadata/model_type.json", "r") as file:
         desc = json.load(file)
-    config = ModelConfig(
-        type=ModelType(desc["type"]), default_token=desc.get("default_token")
-    )
+    config = ModelConfig(type=ModelType(desc["type"]))
 
     if config.type == ModelType.RECOMMENDATION:
-        return RecoClient(default_token=config.default_token)
+        return RecoClient()
     elif config.type == ModelType.METADATA_GRAPH:
-        return MetadataGraphClient(default_token=config.default_token)
+        return MetadataGraphClient()
     else:
         raise ValueError("Invalid model type")

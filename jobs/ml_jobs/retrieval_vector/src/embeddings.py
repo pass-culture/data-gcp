@@ -31,15 +31,11 @@ def generate_dummy_embeddings(
     embedding_dimension: int,
     item_ids: list[str],
     user_ids: list[str],
-    default_token: str,
 ):
     """Generate dummy embeddings for items and users."""
     user_embedding_dict = {
         user_id: np.random.random((embedding_dimension,)) for user_id in user_ids
     }
-    user_embedding_dict[default_token] = np.random.random(
-        embedding_dimension,
-    )
     item_embedding_dict = {
         item_id: np.random.random((embedding_dimension,)) for item_id in item_ids
     }

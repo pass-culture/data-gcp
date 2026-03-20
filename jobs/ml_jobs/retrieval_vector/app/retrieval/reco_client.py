@@ -22,7 +22,6 @@ class RecoClient(DefaultClient):
 
     def __init__(
         self,
-        default_token: str,
         base_columns: List[str] = DEFAULT_COLUMNS,
         detail_columns: List[str] = DEFAULT_DETAIL_COLUMNS,
         output_metric_columns: List[str] = OUTPUT_METRIC_COLUMNS,
@@ -39,7 +38,6 @@ class RecoClient(DefaultClient):
             lance_db_uri=lance_db_uri,
         )
         self.user_docs_path = user_docs_path
-        self.default_token = default_token
         self.re_rank_weight = re_rank_weight
         self.re_ranker = None
         self.user_docs = None

@@ -169,6 +169,6 @@ def mock_user_document_loading(
 def reco_client() -> RecoClient:
     """Fixture to initialize the RecoClient."""
     detail_columns = ["vector", "booking_number_desc"]
-    client = RecoClient(default_token="[UNK]", detail_columns=detail_columns)
+    client = RecoClient(detail_columns=detail_columns)
     client.load()
     return client

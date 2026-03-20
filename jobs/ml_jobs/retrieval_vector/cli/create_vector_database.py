@@ -33,7 +33,6 @@ app = typer.Typer(help="Create lanceDB table and documents")
 def dummy_database() -> None:
     MODEL_TYPE = {
         "type": "recommendation",
-        "default_token": "[UNK]",
         "vector_search_metric": "dot",
     }
     EMBEDDING_DIMENSION = 16
@@ -50,7 +49,6 @@ def dummy_database() -> None:
         embedding_dimension=EMBEDDING_DIMENSION,
         item_ids=items_df.item_id.tolist(),
         user_ids=user_df.user_id.tolist(),
-        default_token=MODEL_TYPE["default_token"],
     )
     logger.info("Dummy embeddings generated.")
 
@@ -86,7 +84,6 @@ def default_database(
 ) -> None:
     MODEL_TYPE = {
         "type": "recommendation",
-        "default_token": "[UNK]",
         "vector_search_metric": "dot",
     }
 
@@ -149,7 +146,6 @@ def graph_database(
 ) -> None:
     MODEL_TYPE = {
         "type": "metadata_graph",
-        "default_token": None,
         "vector_search_metric": "cosine",
     }
     # Load data

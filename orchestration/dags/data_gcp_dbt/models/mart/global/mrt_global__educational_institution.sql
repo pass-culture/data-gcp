@@ -12,7 +12,9 @@ with
             ) as total_current_year_tickets,
             sum(
                 case
-                    when collective_booking_status in ('USED', 'REIMBURSED')
+                    when
+                        collective_booking_status
+                        in ('USED', 'PENDING_REIMBURSEMENT', 'REIMBURSED')
                     then booking_amount
                 end
             ) as total_collective_real_revenue,
@@ -20,7 +22,8 @@ with
                 case
                     when
                         (
-                            collective_booking_status in ('USED', 'REIMBURSED')
+                            collective_booking_status
+                            in ('USED', 'PENDING_REIMBURSEMENT', 'REIMBURSED')
                             and is_current_scholar_year_booking
                         )
                     then booking_amount

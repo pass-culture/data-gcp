@@ -5,6 +5,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from common.config import (
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
     GCP_PROJECT_ID,
+    GCP_REGION,
 )
 from common.utils import one_line_query
 
@@ -56,6 +57,7 @@ def bigquery_view_task(dag, table, job_params, extra_params={}, exists_ok=True):
 def bigquery_federated_query_task(dag, task_id, job_params):
     return BigQueryInsertJobOperator(
         task_id=task_id,
+        location=GCP_REGION,
         configuration={
             "query": {
                 "query": f"""SELECT * FROM EXTERNAL_QUERY('{APPLICATIVE_EXTERNAL_CONNECTION_ID}', ''' {one_line_query(job_params['sql'])} ''')""",

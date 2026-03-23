@@ -70,11 +70,14 @@ class BaseConfig:
         if not isinstance(config_dict, dict):
             logger.error("config_dict must be a dictionary")
             raise InvalidConfigError("Invalid config_dict")
-        for k, v in config_dict.items():
-            if hasattr(self, k):
-                setattr(self, k, v)
+        for key, value in config_dict.items():
+            if hasattr(self, key):
+                if key == "metapaths":
+                    # Convert JSON list of list of list back to list of list of tuples
+                    value = [[tuple(edge) for edge in metapath] for metapath in value]
+                setattr(self, key, value)
             else:
-                logger.warning(f"Ignored unknown config field: {k}")
+                logger.warning(f"Ignored unknown config field: {key}")
         return self
 
     def to_dict(self) -> dict:

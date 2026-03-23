@@ -116,10 +116,18 @@ def train_metapath2vec(
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logger.info(f"Using device: {device}")
 
+    # Restrict metapaths to those that exist in the graph
+    valid_metapaths = [
+        metapath
+        for metapath in training_config.metapaths
+        if metapath[1][0] in graph_data.metadata_ids_by_column
+    ]
+    logger.info(f"Using these valid metapaths for training: {valid_metapaths}")
+
     model = CustomMetaPath2Vec(
         graph_data.edge_index_dict,
         embedding_dim=training_config.embedding_dim,
-        metapaths=training_config.metapaths,
+        metapaths=valid_metapaths,
         walk_length=training_config.walk_length,
         context_size=training_config.context_size,
         walks_per_node=training_config.walks_per_node,

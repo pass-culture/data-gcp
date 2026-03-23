@@ -34,6 +34,10 @@ PASSWORD = access_secret_data(
 )
 
 
+app = typer.Typer(pretty_exceptions_show_locals=False)
+
+
+@app.command()
 def run(
     metabase_card_type: str = typer.Option(
         ...,
@@ -67,8 +71,8 @@ def run(
     metabase = MetabaseAPI(
         username=METABASE_API_USERNAME,
         password=PASSWORD,
-        host=METABASE_HOST,
-        client_id=CLIENT_ID,
+        host=METABASE_HOST.get_secret_value(),
+        client_id=CLIENT_ID.get_secret_value(),
     )
 
     legacy_metabase_table = MetabaseTable(
@@ -147,4 +151,4 @@ def run(
 
 
 if __name__ == "__main__":
-    typer.run(run)
+    app()

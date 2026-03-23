@@ -20,7 +20,9 @@ class MetabaseAPI:
                 "Content-Type": "application/json",
                 "Authorization": self.bearer_token,
             },
-            data=json.dumps({"username": username, "password": password.get_secret_value()}),
+            data=json.dumps(
+                {"username": username, "password": password.get_secret_value()}
+            ),
         )
         response.raise_for_status()  # raises exception when not a 2xx response
         if response.status_code != 204:

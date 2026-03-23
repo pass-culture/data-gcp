@@ -25,6 +25,7 @@ class SecretStr:
     def __len__(self) -> int:
         return len(self._value)
 
+
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 ENVIRONMENT_LONG_NAME = {

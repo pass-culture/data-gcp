@@ -44,7 +44,7 @@ DEFAULT_ARGS = {
 # GCE
 INSTANCE_NAME = f"algo-training-graph-embeddings-{ENV_SHORT_NAME}"
 INSTANCE_TYPE = {
-    "dev": "n1-standard-2",
+    "dev": "n1-standard-4",
     "stg": "n1-standard-16",
     "prod": "n1-standard-16",
 }[ENV_SHORT_NAME]

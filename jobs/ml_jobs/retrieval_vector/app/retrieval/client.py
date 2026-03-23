@@ -18,6 +18,8 @@ from app.retrieval.core.filter import Filter
 from app.retrieval.documents import Document, DocumentArray
 from app.retrieval.utils import load_documents
 
+DEFAULT_VECTOR_SEARCH_METRIC = "dot"
+
 
 class DefaultClient:
     """
@@ -26,9 +28,6 @@ class DefaultClient:
     """
 
     EMBEDDING_MODEL_TYPE = None
-    VECTOR_SEARCH_SIMILARITY_METRIC = (
-        "dot"  # If a vector index has been created, then this will be overridden
-    )
 
     def __init__(
         self,
@@ -38,6 +37,7 @@ class DefaultClient:
         item_docs_path: str = DEFAULT_ITEM_DOCS_PATH,
         user_docs_path: str = DEFAULT_USER_DOCS_PATH,
         lance_db_uri: str = DEFAULT_LANCE_DB_URI,
+        vector_search_metric: str = DEFAULT_VECTOR_SEARCH_METRIC,
     ) -> None:
         self.base_columns = base_columns
         self.detail_columns = detail_columns
@@ -45,6 +45,7 @@ class DefaultClient:
         self.item_docs_path = item_docs_path
         self.user_docs_path = user_docs_path
         self.lance_db_uri = lance_db_uri
+        self.vector_search_metric = vector_search_metric
         self.table: Optional[Table] = None
         self.re_ranker: Optional[Reranker] = None
         self.item_docs: Optional[Document] = None
@@ -268,7 +269,7 @@ class DefaultClient:
             .refine_factor(10)
             .select(columns=self.columns(details, re_rank=re_rank))
             .metric(
-                self.VECTOR_SEARCH_SIMILARITY_METRIC
+                self.vector_search_metric
             )  # This is overridden if a vector index exists for the column {vector_column_name}
             .limit(n + len(excluded_items))
         )

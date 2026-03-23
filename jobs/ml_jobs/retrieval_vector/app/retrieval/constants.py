@@ -49,5 +49,4 @@ DEFAULT_LANCE_DB_URI: str = "./metadata/vector"
 
 class EmbeddingModelTypes(StrEnum):
     TWO_TOWER = "two_tower"
-    SEMANTIC = "semantic"
     METADATA_GRAPH = "metadata_graph"

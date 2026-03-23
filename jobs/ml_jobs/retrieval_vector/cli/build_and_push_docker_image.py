@@ -4,11 +4,11 @@ from datetime import datetime
 import typer
 from loguru import logger
 
-from utils import (
-    ENV_SHORT_NAME,
+from src.constants import ENV_SHORT_NAME
+from src.docker import (
     deploy_container,
-    save_experiment,
 )
+from src.gcs_io import save_experiment
 
 
 def main(

@@ -48,7 +48,7 @@ else:
 
 APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
     "APPLICATIVE_EXTERNAL_CONNECTION_ID",
-    "passculture-metier-ehp.europe-west1.metier-pcapi-testing-connection",
+    "passculture-metier-ehp.europe-west1.pcapi-tst-pg-pcapi-tst-eu9-c324f1845dc3a220-replica-big-query-eu1-ro",
 )
 METABASE_EXTERNAL_CONNECTION_ID = os.environ.get("METABASE_EXTERNAL_CONNECTION_ID", "")
 

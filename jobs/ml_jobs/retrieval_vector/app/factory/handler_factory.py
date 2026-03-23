@@ -1,6 +1,5 @@
 from app.factory.handler import PredictionHandler
 from app.factory.recommendation import RecommendationHandler
-from app.factory.semantic import SemanticHandler
 from app.factory.similar_offer import SimilarOfferHandler
 from app.factory.tops import SearchByTopsHandler
 from app.retrieval.constants import EmbeddingModelTypes
@@ -22,15 +21,13 @@ class PredictionHandlerFactory:
                 )
             return RecommendationHandler()
 
-        elif request_type == "semantic":
-            if embedding_model_type != EmbeddingModelTypes.SEMANTIC:
-                raise ValueError(
-                    f"Request type '{request_type}' is only supported for {EmbeddingModelTypes.SEMANTIC} models. Currently using '{embedding_model_type}' model."
-                )
-            return SemanticHandler()
-
         elif request_type == "similar_offer":
-            return SimilarOfferHandler()
+            if embedding_model_type == EmbeddingModelTypes.METADATA_GRAPH:
+                # For graph models, we do not want fallback
+                return SimilarOfferHandler(fallback_client=None)
+
+            # TODO: Test if we want to keep fallback for regular similar offer handler
+            return SimilarOfferHandler(fallback_client=SearchByTopsHandler())
 
         elif request_type in ("filter", "tops"):
             return SearchByTopsHandler()

@@ -120,7 +120,7 @@ def train_metapath2vec(
     valid_metapaths = [
         metapath
         for metapath in training_config.metapaths
-        if metapath[1][0] in graph_data.metadata_ids_by_column
+        if metapath[1][0] in graph_data.metadata_columns
     ]
     logger.info(f"Using these valid metapaths for training: {valid_metapaths}")
 

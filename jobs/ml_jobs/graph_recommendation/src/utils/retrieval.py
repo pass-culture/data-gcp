@@ -95,13 +95,14 @@ def load_and_index_embeddings(
 
     # Create vector index
     logger.info("Creating vector index...")
-    table.create_index(
-        vector_column_name=EMBEDDING_COLUMN,
-        index_type=INDEX_TYPE,
-        num_partitions=NUM_PARTITIONS,
-        num_sub_vectors=NUM_SUB_VECTORS,
-        metric=EMBEDDING_METRIC,
-    )
+    if len(df) >= 256:  # LanceDB may have issues creating index on very small datasets
+        table.create_index(
+            vector_column_name=EMBEDDING_COLUMN,
+            index_type=INDEX_TYPE,
+            num_partitions=NUM_PARTITIONS,
+            num_sub_vectors=NUM_SUB_VECTORS,
+            metric=EMBEDDING_METRIC,
+        )
     logger.info("Vector index created successfully")
 
     return table

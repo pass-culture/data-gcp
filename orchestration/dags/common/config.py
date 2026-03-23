@@ -6,18 +6,11 @@ from common.access_gcp_secrets import access_secret_data
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
-ENVIRONMENT_NAME = {
-    "dev": "development",
-    "stg": "staging",
-    "prod": "production",
-}[ENV_SHORT_NAME]
+ENVIRONMENT_NAME = os.environ.get("ENV", "development")
+
 DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags/")
 LOCAL_ENV = os.environ.get("LOCAL_ENV", None)
-AIRFLOW_URI = {
-    "dev": "airflow-dev.data.ehp.passculture.team",
-    "stg": "airflow-stg.data.ehp.passculture.team",
-    "prod": "airflow.data.passculture.team",
-}[ENV_SHORT_NAME]
+AIRFLOW_URI = os.environ.get("AIRFLOW_URI", "airflow-dev.data.ehp.passculture.team")
 
 GCS_AIRFLOW_BUCKET = os.environ.get(
     "GCS_BUCKET", f"airflow-data-bucket-{ENV_SHORT_NAME}"
@@ -25,8 +18,8 @@ GCS_AIRFLOW_BUCKET = os.environ.get(
 
 SSH_USER = os.environ.get("SSH_USER", "airflow")
 
-GCP_REGION = "europe-west1"
-GCE_ZONE = "europe-west1-b"
+GCP_REGION = os.environ.get("GCP_REGION", "europe-west1")
+GCE_ZONE = os.environ.get("GCE_ZONE", "europe-west1-b")
 
 GCE_SA = os.environ.get("GCE_SA", f"algo-training-{ENV_SHORT_NAME}")
 
@@ -46,9 +39,13 @@ if ENV_SHORT_NAME != "prod":
 else:
     MLFLOW_URL = "https://mlflow.passculture.team/"
 
-APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
-    "APPLICATIVE_EXTERNAL_CONNECTION_ID",
-    "passculture-metier-ehp.europe-west1.metier-pcapi-testing-connection",
+APPLICATIVE_EXTERNAL_CONNECTION_ID = (
+    os.environ.get(
+        "APPLICATIVE_EXTERNAL_CONNECTION_ID",
+        f"pc-backend-tst.{GCP_REGION}.pcapi-tst-pg-pcapi-tst-eu9-c324f1845dc3a220-replica-big-query-eu1-ro",
+    )
+    if ENV_SHORT_NAME != "dev"
+    else f"pc-backend-tst.{GCP_REGION}.pcapi-tst-pg-pcapi-tst-eu9-c324f1845dc3a220-replica-big-query-eu1-ro"
 )
 METABASE_EXTERNAL_CONNECTION_ID = os.environ.get("METABASE_EXTERNAL_CONNECTION_ID", "")
 

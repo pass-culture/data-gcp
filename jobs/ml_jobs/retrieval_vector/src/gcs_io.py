@@ -158,7 +158,7 @@ def get_model_uri_from_mlflow(experiment_name: str, run_id: str = None):
         )
 
     if len(results_array) == 0:
-        raise Exception(
+        raise ValueError(
             f"Model {experiment_name} not found into BQ {MODELS_RESULTS_TABLE_NAME}. Failing."
         )
 
@@ -176,20 +176,20 @@ def save_experiment(experiment_name, model_name, serving_container, run_id):
         run_id (str): MLflow run ID
     """
     log_results = {
-        "execution_date": datetime.now().isoformat(),
-        "experiment_name": experiment_name,
-        "model_name": model_name,
-        "model_type": "custom",
-        "run_id": run_id,
-        "run_start_time": int(time.time() * 1000.0),
-        "run_end_time": int(time.time() * 1000.0),
-        "artifact_uri": None,
-        "serving_container": serving_container,
+        "execution_date": [datetime.now().isoformat()],
+        "experiment_name": [experiment_name],
+        "model_name": [model_name],
+        "model_type": ["custom"],
+        "run_id": [run_id],
+        "run_start_time": [int(time.time() * 1000.0)],
+        "run_end_time": [int(time.time() * 1000.0)],
+        "artifact_uri": [None],
+        "serving_container": [serving_container],
     }
+    df = pd.DataFrame.from_dict(log_results)
 
     client = bigquery.Client(project=GCP_PROJECT_ID)
     table_id = f"""{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}"""
-
     job_config = bigquery.LoadJobConfig(
         schema=[
             bigquery.SchemaField("execution_date", "STRING"),
@@ -204,8 +204,6 @@ def save_experiment(experiment_name, model_name, serving_container, run_id):
         ]
     )
     job_config.write_disposition = bigquery.WriteDisposition.WRITE_APPEND
-
-    df = pd.DataFrame.from_dict([log_results], orient="columns")
 
     job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()

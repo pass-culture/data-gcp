@@ -28,7 +28,7 @@ def get_item_docs(item_embedding_dict: dict, items_df: pd.DataFrame) -> Document
             docs.append(Document(id=str(item_id), embedding=embedding_id))
 
     if len(docs) == 0:
-        raise Exception("Item Document is empty. Does the model match the query ?")
+        raise ValueError("Item Document is empty. Does the model match the query ?")
 
     return docs
 

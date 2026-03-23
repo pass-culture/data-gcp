@@ -91,7 +91,7 @@ def test_search_by_tops_rerank(
 
     # Check if items are sorted by booking_number_desc (which is [0], [1], ... [9])
     result_booking_numbers = [pred["booking_number_desc"][0] for pred in result]
-    expected_booking_numbers = sorted(list(range(10)), reverse=True)
+    expected_booking_numbers = sorted(range(10), reverse=True)
 
     assert (
         result_booking_numbers == expected_booking_numbers

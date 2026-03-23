@@ -4,6 +4,28 @@ import pandas as pd
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 
+
+class SecretStr:
+    """String wrapper that refuses to reveal its value in repr/str/logging."""
+
+    __slots__ = ("_value",)
+
+    def __init__(self, value: str):
+        self._value = value
+
+    def get_secret_value(self) -> str:
+        return self._value
+
+    def __repr__(self) -> str:
+        return "SecretStr('**********')"
+
+    def __str__(self) -> str:
+        return "**********"
+
+    def __len__(self) -> int:
+        return len(self._value)
+
+
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 ENVIRONMENT_LONG_NAME = {
@@ -21,7 +43,7 @@ def access_secret_data(project_id, secret_id, default=None):
         client = secretmanager.SecretManagerServiceClient()
         name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
         response = client.access_secret_version(request={"name": name})
-        return response.payload.data.decode("UTF-8")
+        return SecretStr(response.payload.data.decode("UTF-8"))
     except DefaultCredentialsError:
         return default
 

@@ -13,14 +13,16 @@ class MetabaseAPI:
         self.host = host
         self.bearer_token = f"Bearer {self.get_open_id(client_id)}"
 
-        url = f"{host}/api/session"
+        url = f"{self.host}/api/session"
         response = requests.post(
             url,
             headers={
                 "Content-Type": "application/json",
                 "Authorization": self.bearer_token,
             },
-            data=json.dumps({"username": username, "password": password}),
+            data=json.dumps(
+                {"username": username, "password": password.get_secret_value()}
+            ),
         )
         response.raise_for_status()  # raises exception when not a 2xx response
         if response.status_code != 204:

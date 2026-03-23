@@ -89,7 +89,9 @@ with DAG(
             default=f"algo_training_graph_embeddings_v1.1_{ENV_SHORT_NAME}",
             type="string",
         ),
-        "train_only_on_10k_rows": Param(default=True, type="boolean"),
+        "train_only_on_10k_rows": Param(
+            default=ENV_SHORT_NAME != "prod", type="boolean"
+        ),
     },
 ) as _dag:
     start = EmptyOperator(task_id="start")

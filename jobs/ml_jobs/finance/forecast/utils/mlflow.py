@@ -39,8 +39,6 @@ def generate_jwt_payload(service_account_email: str, resource_url: str) -> str:
     iat = datetime.datetime.now(tz=datetime.UTC)
     exp = iat + datetime.timedelta(seconds=3600)
 
-    # Convert datetime objects to numeric timestamps (seconds since epoch)
-    # as required by JWT standard (RFC 7519)
     payload = {
         "iss": service_account_email,
         "sub": service_account_email,
@@ -69,23 +67,11 @@ def sign_jwt(target_sa: str, resource_url: str) -> str:
         str: A signed JWT that can be used to access IAP-secured applications.
             Use in Authorization header as: 'Bearer <signed_jwt>'
     """
-    # Get default credentials from environment or application credentials
     source_credentials, _ = google.auth.default()
-
-    # Initialize IAM credentials client with source credentials
     iam_client = iam_credentials_v1.IAMCredentialsClient(credentials=source_credentials)
-
-    # Generate the service account resource name.
-    # Project should always be "-".
-    # Replacing the wildcard character with a project ID is invalid.
     name = iam_client.service_account_path("-", target_sa)
-
-    # Create and sign the JWT payload
     payload = generate_jwt_payload(target_sa, resource_url)
-
-    # Sign the JWT using the IAM credentials API
     response = iam_client.sign_jwt(name=name, payload=payload)
-
     return response.signed_jwt
 
 

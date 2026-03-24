@@ -51,6 +51,11 @@ dev = [
 [tool.uv]
 default-groups = ["airflow", "dbt", 'dev', 'docs']
 
+[tool.uv.workspace]
+members = [
+    "jobs/etl_jobs/external/downloads",
+]
+
 
 ## ruff
 [tool.ruff]

@@ -51,7 +51,12 @@ with DAG(
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        )
+        ),
+        "execution_date": Param(
+            default=None,
+            type="string",
+            description="Execution date in YYYY-MM-DD format. If not provided, it will default to ds.",
+        ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
@@ -66,18 +71,25 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.9",
+        python_version="3.12",
         base_dir=BASE_PATH,
         retries=2,
     )
 
-    import_downloads_data_to_bigquery = SSHGCEOperator(
-        task_id="import_downloads_data_to_bigquery",
+    import_google_downloads_data_to_bigquery = SSHGCEOperator(
+        task_id="import_google_downloads_data_to_bigquery",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py ",
-        do_xcom_push=True,
+        command="uv run main.py --target google --execution_date {{ params.execution_date or ds }}",
+    )
+
+    import_apple_downloads_data_to_bigquery = SSHGCEOperator(
+        task_id="import_apple_downloads_data_to_bigquery",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="uv run main.py --target apple --execution_date {{ params.execution_date or ds }}",
     )
 
     gce_instance_stop = DeleteGCEOperator(
@@ -90,10 +102,14 @@ for table, params in ANALYTICS_TABLES.items():
     analytics_tasks.append(task)
 
 end = EmptyOperator(task_id="end", dag=dag)
+
 (
     gce_instance_start
     >> fetch_install_code
-    >> import_downloads_data_to_bigquery
+    >> (
+        import_google_downloads_data_to_bigquery,
+        import_apple_downloads_data_to_bigquery,
+    )
     >> gce_instance_stop
     >> analytics_tasks
     >> end

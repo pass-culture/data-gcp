@@ -4,6 +4,7 @@ import zlib
 import pandas as pd
 import requests
 from authlib.jose import jwt
+from loguru import logger
 
 OUT_COLS = [
     "provider",
@@ -51,7 +52,12 @@ class AppleClient:
         }
 
         # Create the JWT
-        token = jwt.encode(header, payload, private_key)
+        _key = (
+            private_key.get_secret_value()
+            if hasattr(private_key, "get_secret_value")
+            else private_key
+        )
+        token = jwt.encode(header, payload, _key)
 
         jwt_bearer = "Bearer " + token.decode()
         self.url = "https://api.appstoreconnect.apple.com/v1/salesReports"
@@ -75,9 +81,9 @@ class AppleClient:
         try:
             data = zlib.decompress(r.content, zlib.MAX_WBITS | 32)
         except Exception:
-            print(f"Error with {report_date}")
-            print(r.status_code)
-            print(r.content)
+            logger.error(
+                f"Failed to decompress response for {report_date} | status={r.status_code} | body={r.content[:200]}"
+            )
             return None
         with open("/tmp/report.txt", "wb") as outFile:
             outFile.write(data)

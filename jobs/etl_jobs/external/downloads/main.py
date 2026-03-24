@@ -1,8 +1,12 @@
 from datetime import datetime, timedelta
+from enum import Enum
 from time import sleep
+from typing import Optional
 
 import pandas as pd
+import typer
 from google.cloud import bigquery
+from loguru import logger
 from pandas_gbq import to_gbq
 
 from apple_client import AppleClient
@@ -16,8 +20,15 @@ from utils import (
     get_last_month,
 )
 
+app = typer.Typer()
 
-def get_apple(execution_date):
+
+class Target(str, Enum):
+    apple = "apple"
+    google = "google"
+
+
+def get_apple(execution_date: datetime):
     start = get_last_month(execution_date)
     date_generated = [
         start + timedelta(days=x) for x in range(0, (execution_date - start).days)
@@ -46,7 +57,7 @@ def get_apple(execution_date):
     to_gbq(df, f"{BIGQUERY_RAW_DATASET}.apple_download_stats", if_exists="append")
 
 
-def get_google(execution_date):
+def get_google(execution_date: datetime):
     current_month = execution_date.strftime("%Y-%m")
     last_month = get_last_month(execution_date).strftime("%Y-%m")
     google_client = GoogleClient(report_bucket_name=BUCKET_NAME)
@@ -69,13 +80,27 @@ def get_google(execution_date):
     to_gbq(df, f"{BIGQUERY_RAW_DATASET}.google_download_stats", if_exists="append")
 
 
-def run():
-    execution_date = datetime.today()
+@app.command()
+def run(
+    target: Target = typer.Option(
+        ..., help="Store to fetch downloads from appstore provider."
+    ),
+    execution_date: Optional[datetime] = typer.Option(
+        None,
+        formats=["%Y-%m-%d"],
+        help="Execution date (YYYY-MM-DD). Defaults to today.",
+    ),
+):
+    date = execution_date or datetime.today()
+    logger.info(f"Running downloads job | target={target.value} | date={date.date()}")
 
-    get_google(execution_date)
-    get_apple(execution_date)
+    if target == Target.google:
+        get_google(date)
+    elif target == Target.apple:
+        get_apple(date)
 
-    return "Success"
+    logger.info("Done")
 
 
-run()
+if __name__ == "__main__":
+    app()

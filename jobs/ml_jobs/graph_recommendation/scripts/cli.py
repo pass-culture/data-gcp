@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import os
-
 import mlflow
-import pandas as pd
 import torch
 import typer
 
@@ -22,7 +19,6 @@ from src.heterograph_builder import build_book_metadata_heterograph
 from src.utils.graph_stats import get_graph_analysis
 from src.utils.mlflow import (
     MLflowAuthManager,
-    conditional_mlflow,
     get_mlflow_experiment,
     log_detailed_scores,
     log_evaluation_metrics,
@@ -30,19 +26,9 @@ from src.utils.mlflow import (
     mlflow_token_refresher_context,
 )
 
-APP_DESCRIPTION = (
-    "Utilities to build PyTorch Geometric graphs for book recommendations."
-)
-app = typer.Typer(help=APP_DESCRIPTION)
-
 EXPERIMENT_NAME_ARGUMENT = typer.Argument(
     ...,
     help="Name of the experiment. for mlflow tracking.",
-)
-
-RUN_ID_ARGUMENT = typer.Argument(
-    ...,
-    help="Name of the run. for mlflow tracking.",
 )
 
 PARQUET_ARGUMENT = typer.Argument(
@@ -80,23 +66,11 @@ TRAIN_CONFIG_OPTION = typer.Option(
     help="JSON string to override default training parameters.",
 )
 
-RAW_DATA_PATH_ARGUMENT = typer.Argument(
-    ...,
-    help="Path to raw metadata parquet (can be glob pattern like data-*.parquet).",
-)
-
 EMBEDDING_INPUT_ARGUMENT = typer.Argument(
     ...,
     help="Where to save the node embeddings as a parquet file. "
     "Can be a local path or a GCS path (gs://...).",
     dir_okay=False,
-)
-
-REBUILD_GRAPH_OPTION = typer.Option(
-    False,
-    "--rebuild-graph",
-    help="Optional flag to rebuild graph if it already exists",
-    show_default=True,
 )
 
 METRICS_OUTPUT_ARGUMENT = typer.Argument(
@@ -120,56 +94,9 @@ EVAL_CONFIG_OPTION = typer.Option(
 )
 
 
-@conditional_mlflow()
-def lazy_graph_building(
-    parquet_path: str,
-    results_dir: str = RESULTS_DIR,
-    nrows: int | None = None,
-    *,
-    rebuild_graph: bool = False,
-) -> tuple[object, pd.DataFrame, pd.DataFrame]:
-    """
-    Lazily builds or loads a graph and its analysis.
-
-    Parameters:
-        parquet_path: Path to the source parquet data
-        results_dir: Directory to save graph and analysis
-        rebuild_graph: Force rebuild if True
-        nrows: Optional number of rows to read from parquet
-
-    Returns:
-        graph_data: The loaded or built graph
-        graph_summary: Summary DataFrame
-        graph_components: Components DataFrame
-    """
-    graph_path = f"{results_dir}/book_metadata_graph.pt"
-    summary_path = f"{results_dir}/graph_summary.csv"
-    components_path = f"{results_dir}/graph_components.csv"
-
-    rebuild_needed = rebuild_graph or not os.path.exists(graph_path)
-
-    if rebuild_needed:
-        # Build graph and save
-        graph_data = build_book_metadata_heterograph(parquet_path, nrows=nrows)
-        torch.save(graph_data, graph_path)
-
-        # Analyze and log
-        graph_summary, graph_components = get_graph_analysis(graph_data)
-        log_graph_analysis(graph_summary, graph_components)
-
-    else:
-        # Load graph
-        graph_data = torch.load(graph_path, weights_only=False)
-
-        # Load analysis, regenerate only if missing
-        if os.path.exists(summary_path) and os.path.exists(components_path):
-            graph_summary = pd.read_csv(summary_path)
-            graph_components = pd.read_csv(components_path)
-        else:
-            graph_summary, graph_components = get_graph_analysis(graph_data)
-        log_graph_analysis(graph_summary, graph_components)
-
-    return graph_data
+app = typer.Typer(
+    help="Utilities to build PyTorch Geometric graphs for book recommendations."
+)
 
 
 @app.command("build-graph")
@@ -231,8 +158,6 @@ def train_metapath2vec_command(
     embedding_output_path: str = EMBEDDING_OUTPUT_OPTION,
     nrows: int | None = NROWS_OPTION,
     config_json: str | None = TRAIN_CONFIG_OPTION,
-    *,
-    rebuild_graph: bool = REBUILD_GRAPH_OPTION,
 ):
     """Train a Metapath2Vec model on the book-to-metadata graph and save it to disk."""
 
@@ -262,13 +187,13 @@ def train_metapath2vec_command(
         with open(MLFLOW_RUN_ID_FILEPATH, "w") as f:
             f.write(run_id)
 
-        # Graph building
-        graph_data = lazy_graph_building(
-            parquet_path,
-            nrows=nrows,
-            results_dir=RESULTS_DIR,
-            rebuild_graph=rebuild_graph,
-        )
+        # Build graph and save
+        graph_data = build_book_metadata_heterograph(parquet_path, nrows=nrows)
+        torch.save(graph_data, f=f"{RESULTS_DIR}/book_metadata_graph.pt")
+
+        # Analyze and log
+        graph_summary, graph_components = get_graph_analysis(graph_data)
+        log_graph_analysis(graph_summary, graph_components)
 
         # Train model with loss logging to mlflow
         embeddings_df = train_metapath2vec(

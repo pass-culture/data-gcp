@@ -197,7 +197,7 @@ def build_book_metadata_graph(
 
     df = pd.read_parquet(path, **read_kwargs)
     if nrows is not None:
-        df = df.sample(nrows, random_state=42)
+        df = df.sample(min(len(df), nrows), random_state=42)
 
     data_graph = build_book_metadata_graph_from_dataframe(
         df,

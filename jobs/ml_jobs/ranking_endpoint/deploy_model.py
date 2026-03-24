@@ -20,6 +20,7 @@ from utils import (
     connect_remote_mlflow,
     deploy_container,
     get_mlflow_experiment,
+    get_secret,
     save_experiment,
 )
 
@@ -172,7 +173,8 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     class_weight = {k: 1 / v for k, v in class_frequency.items()}
 
     # Connect to MLFlow
-    connect_remote_mlflow()
+    client_id = get_secret("mlflow_client_id")
+    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     experiment = get_mlflow_experiment(experiment_name)
     figure_folder = f"/tmp/{experiment_name}/"
 

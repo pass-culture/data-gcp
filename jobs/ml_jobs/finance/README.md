@@ -23,7 +23,15 @@ make install  # Install dependencies
 Run the pipeline using `main.py`.
 
 ```bash
-uv run main.py --model-type 'prophet' --model-name 'daily_pricing' --train-start-date '2022-01-01' --backtest-start-date '2025-01-01' --backtest-end-date '2025-12-01' --forecast-horizon-date "2026-12-30"  --experiment-name "finance_pricing_forecast_v0_PROD" --dataset "ml-finance-dev"
+uv run main.py \
+    'prophet' \
+    'daily_pricing' \
+    '2022-01-01' \
+    '2025-01-01' \
+    '2025-12-01' \
+    "2026-12-30" \
+    True \
+    "finance_pricing_forecast_v0_PROD"
 ```
 
 ### Arguments

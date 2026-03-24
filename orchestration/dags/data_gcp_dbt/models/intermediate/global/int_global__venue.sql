@@ -56,6 +56,7 @@ select
     v.venue_density_level,
     v.venue_targeted_audience,
     v.banner_url,
+    v.venue_volunteering_url,
     v.venue_description,
     v.venue_withdrawal_details,
     v.venue_contact_phone_number,

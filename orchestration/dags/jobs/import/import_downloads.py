@@ -53,7 +53,7 @@ with DAG(
             type="string",
         ),
         "execution_date": Param(
-            default=None,
+            default="",
             type="string",
             description="Execution date in YYYY-MM-DD format. If not provided, it will default to ds.",
         ),
@@ -81,7 +81,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run main.py --target google --execution_date {{ params.execution_date or ds }}",
+        command="uv run main.py --target google --execution-date {{ params.execution_date or ds }}",
     )
 
     import_apple_downloads_data_to_bigquery = SSHGCEOperator(
@@ -89,7 +89,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run main.py --target apple --execution_date {{ params.execution_date or ds }}",
+        command="uv run main.py --target apple --execution-date {{ params.execution_date or ds }}",
     )
 
     gce_instance_stop = DeleteGCEOperator(

@@ -85,13 +85,16 @@ def run(
     target: Target = typer.Option(
         ..., help="Store to fetch downloads from appstore provider."
     ),
-    execution_date: Optional[datetime] = typer.Option(
+    execution_date: Optional[str] = typer.Option(
         None,
-        formats=["%Y-%m-%d"],
         help="Execution date (YYYY-MM-DD). Defaults to today.",
     ),
 ):
-    date = execution_date or datetime.today()
+    date = (
+        datetime.strptime(execution_date, "%Y-%m-%d")
+        if execution_date
+        else datetime.today()
+    )
     logger.info(f"Running downloads job | target={target.value} | date={date.date()}")
 
     if target == Target.google:

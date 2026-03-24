@@ -14,7 +14,6 @@ dependencies = [
     "google-cloud-core>=1.6.0",
     "google-cloud-secret-manager>=2.2.0",
     "google-cloud-storage>=1.38.0",
-    "loguru>=0.7.3",
     "numpy>=1.26.4",
     "pandas>=2.0.3",
     "pandas-gbq>=0.23.1",

@@ -1,10 +1,13 @@
+import logging
 import time
 import zlib
 
 import pandas as pd
 import requests
 from authlib.jose import jwt
-from loguru import logger
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 OUT_COLS = [
     "provider",

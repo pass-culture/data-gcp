@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 from enum import Enum
 from time import sleep
@@ -6,7 +7,6 @@ from typing import Optional
 import pandas as pd
 import typer
 from google.cloud import bigquery
-from loguru import logger
 from pandas_gbq import to_gbq
 
 from apple_client import AppleClient
@@ -19,6 +19,9 @@ from utils import (
     PRIVATE_KEY,
     get_last_month,
 )
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 app = typer.Typer()
 
@@ -82,8 +85,8 @@ def get_google(execution_date: datetime):
 
 @app.command()
 def run(
-    target: Target = typer.Option(
-        ..., help="Store to fetch downloads from appstore provider."
+    provider: Target = typer.Option(
+        ..., help="App store provider to fetch downloads from."
     ),
     execution_date: Optional[str] = typer.Option(
         None,
@@ -95,11 +98,13 @@ def run(
         if execution_date
         else datetime.today()
     )
-    logger.info(f"Running downloads job | target={target.value} | date={date.date()}")
+    logger.info(
+        f"Running downloads job | provider={provider.value} | date={date.date()}"
+    )
 
-    if target == Target.google:
+    if provider == Target.google:
         get_google(date)
-    elif target == Target.apple:
+    elif provider == Target.apple:
         get_apple(date)
 
     logger.info("Done")

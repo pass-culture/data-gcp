@@ -1,11 +1,14 @@
+import logging
 import os
 import tempfile
 
 import pandas as pd
 from google.api_core.exceptions import GoogleAPIError, NotFound
 from google.cloud import storage
-from loguru import logger
 from werkzeug.utils import secure_filename
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 OUT_COLS = [
     "date",

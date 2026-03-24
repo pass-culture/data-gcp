@@ -10,8 +10,8 @@ Fetches app download stats from Apple App Store Connect and Google Play Store, t
 ## Usage
 
 ```bash
-uv run main.py --target google --execution-date 2024-03-01
-uv run main.py --target apple --execution-date 2024-03-01
+uv run main.py --provider google --execution-date 2024-03-01
+uv run main.py --provider apple --execution-date 2024-03-01
 # --execution-date defaults to today
 ```
 

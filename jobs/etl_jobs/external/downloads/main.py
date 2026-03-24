@@ -20,7 +20,7 @@ from utils import (
     get_last_month,
 )
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s - %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 app = typer.Typer()

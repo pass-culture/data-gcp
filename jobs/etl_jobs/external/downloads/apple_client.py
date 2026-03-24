@@ -67,6 +67,7 @@ class AppleClient:
         self.head = {"Authorization": jwt_bearer}
 
     def get_downloads(self, frequency="MONTHLY", report_date="2021-05"):
+        logger.info(f"Fetching Apple report | date={report_date} frequency={frequency}")
         r = requests.get(
             self.url,
             params={
@@ -80,6 +81,7 @@ class AppleClient:
         )
 
         if r.status_code == 404:
+            logger.info(f"No report available for {report_date} (404)")
             return None
         try:
             data = zlib.decompress(r.content, zlib.MAX_WBITS | 32)
@@ -99,4 +101,5 @@ class AppleClient:
         df["units"] = df["units"].astype(float)
         df = df[df["units"] > 0]
         df["date"] = report_date
+        logger.debug(f"Downloaded {len(df)} rows for {report_date}")
         return df

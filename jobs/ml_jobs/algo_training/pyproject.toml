@@ -7,7 +7,6 @@ dependencies = [
     "fastparquet>=2024.11.0",
     "gcsfs>=2023.5.0",
     "google-cloud-aiplatform>=1.22.0",
-    "google-cloud-secret-manager>=2.23.1",
     "keras>=3.13.1",
     "loguru>=0.6.0",
     "matplotlib>=3.8.4",
@@ -29,6 +28,7 @@ dependencies = [
     "typer>=0.7.0",
     "h11>=0.16.0",
     "tf-keras>=2.18.0",
+    "google-cloud-iam>=2.21.0",
 ]
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.
@@ -70,6 +70,5 @@ runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 # see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation
 [tool.uv]
 environments = [
-    "sys_platform == 'darwin'",
     "sys_platform == 'linux'",
 ]

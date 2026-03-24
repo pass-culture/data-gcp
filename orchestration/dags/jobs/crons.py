@@ -6,12 +6,22 @@ SCHEDULE_DICT = {
     },
     "algo_training_graph_embeddings": {
         "prod": "0 14 * * 4",  # every Thursday at 2:00 PM
-        "dev": "0 14 * * 2",  # every Tuesday at 2:00 PM
         "stg": "0 14 * * 3",  # every Wednesday at 2:00 PM
+        "dev": "0 14 * * 2",  # every Tuesday at 2:00 PM
     },
     "algo_default_deployment": "0 6 * * *",
     "artist_linkage": "0 12 * * *",
     "artist_similarity_playlist": "0 12 * * 1",
+    "build_and_push_graph_retrieval_api": {
+        "prod": "0 4 * * 5",  # every Friday at 4:00 AM
+        "stg": "0 4 * * 4",  # every Thursday at 4:00 AM
+        "dev": "0 4 * * 3",  # every Wednesday at 4:00 AM
+    },
+    "build_and_push_two_towers_retrieval_api": {
+        "prod": "0 8 * * *",  # every day at 8:00 AM
+        "dev": "0 8 * * *",  # every day at 8:00 AM
+        "stg": "0 8 * * 3",  # every Wednesday at 8:00 AM
+    },
     "bigquery_archive_partition": "0 7 * * *",
     "bigquery_snapshot_backup": {
         "prod": "15 3 * * *",  # every day at 3:15 AM

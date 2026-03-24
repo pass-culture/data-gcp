@@ -81,7 +81,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run --no-project main.py --provider google --execution-date {{ params.execution_date or ds }}",
+        command="uv run main.py --provider google --execution-date {{ params.execution_date or ds }}",
     )
 
     import_apple_downloads_data_to_bigquery = SSHGCEOperator(
@@ -89,7 +89,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run --no-project main.py --provider apple --execution-date {{ params.execution_date or ds }}",
+        command="uv run main.py --provider apple --execution-date {{ params.execution_date or ds }}",
     )
 
     gce_instance_stop = DeleteGCEOperator(

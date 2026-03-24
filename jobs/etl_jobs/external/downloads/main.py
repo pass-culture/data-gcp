@@ -20,8 +20,8 @@ from utils import (
     get_last_month,
 )
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s - %(message)s")
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 app = typer.Typer()
 
@@ -58,6 +58,7 @@ def get_apple(execution_date: datetime):
         pass
 
     to_gbq(df, f"{BIGQUERY_RAW_DATASET}.apple_download_stats", if_exists="append")
+    logger.info(f"Loaded {len(df)} rows to apple_download_stats")
 
 
 def get_google(execution_date: datetime):
@@ -81,6 +82,7 @@ def get_google(execution_date: datetime):
     except Exception:
         pass
     to_gbq(df, f"{BIGQUERY_RAW_DATASET}.google_download_stats", if_exists="append")
+    logger.info(f"Loaded {len(df)} rows to google_download_stats")
 
 
 @app.command()

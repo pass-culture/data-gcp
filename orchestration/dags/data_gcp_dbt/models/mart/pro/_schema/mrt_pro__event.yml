@@ -136,4 +136,3 @@ models:
         description: "{{ doc('column__headline_offer_action_type') }}"
       - name: subscription_user_type
         description: "{{ doc('column__subscription_user_type') }}"
-      

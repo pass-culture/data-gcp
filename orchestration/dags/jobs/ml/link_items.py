@@ -266,7 +266,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
-        python_version="3.11",
+        python_version="3.10",
         base_dir=DAG_CONFIG["DIRS"]["BASE"],
         retries=2,
     )

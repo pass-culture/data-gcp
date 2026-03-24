@@ -84,7 +84,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
-        python_version="3.11",
+        python_version="3.10",
         base_dir=BASE_PATH,
     )
 

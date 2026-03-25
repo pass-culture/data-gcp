@@ -52,6 +52,7 @@ select
                 "selected_offers",
                 "imageCreationStage",
                 "actionType",
+                "target",
             ]
         )
     }},

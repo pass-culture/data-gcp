@@ -8,12 +8,10 @@ STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 
 # MLflow
-SA_ACCOUNT = (
-    f"algo-training-{ENV_SHORT_NAME}@passculture-data-ehp.iam.gserviceaccount.com"
-)
-MLFLOW_RUN_ID_FILENAME = "mlflow_run_id"
+SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}@{GCP_PROJECT_ID}.iam.gserviceaccount.com"
 MLFLOW_URI = (
     "https://mlflow.passculture.team/"
     if ENV_SHORT_NAME == "prod"
     else "https://mlflow.staging.passculture.team/"
 )
+MLFLOW_RUN_ID_FILENAME = "mlflow_run_id"

@@ -55,7 +55,7 @@ DEFAULT_CONTAINER_WORKER = "1"
 # Registry
 ARTIFACT_REGISTRY_BASE_PATH = f"europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/{ENV_SHORT_NAME}"
 GRAPH_RETRIEVAL_MODEL_NAME = "metapath2vec"
-GRAPH_RETRIEVAL_MODEL_VERSION = f"graph_retrieval_recommendation_v0.1_{ENV_SHORT_NAME}"
+GRAPH_RETRIEVAL_MODEL_VERSION = f"graph_retrieval_recommendation_v1.1_{ENV_SHORT_NAME}"
 
 with DAG(
     DAG_NAME,

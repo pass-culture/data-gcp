@@ -12,8 +12,8 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-clean_default_delay = {"prod": 60 * 1, "dev": 60 * 2, "stg": 60 * 1}
-clean_long_tasks_delay = {"prod": 60 * 3, "dev": 60 * 12, "stg": 60 * 6}
+clean_default_delay = {"prod": 60 * 1, "stg": 60 * 1, "dev": 60 * 2}
+clean_long_tasks_delay = {"prod": 60 * 3, "stg": 60 * 6, "dev": 60 * 12}
 
 clean_ml_delay = {"prod": 60 * 3, "stg": 60 * 2, "dev": 60 * 1}
 clean_long_ml_delay = {"prod": 60 * 6, "stg": 60 * 6, "dev": 60 * 3}

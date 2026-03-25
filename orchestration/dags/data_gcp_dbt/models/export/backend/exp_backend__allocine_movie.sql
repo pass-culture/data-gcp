@@ -7,6 +7,7 @@ select
     runtime,
     synopsis,
     poster_url,
+    poster_gcs_path,
     backlink_url,
     backlink_label,
     data_eidr,

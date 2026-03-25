@@ -212,7 +212,6 @@ with
             -- KPI 1 : Taux d'utilisation
             select
                 ca.partition_month,
-                bg.scholar_year,
                 timestamp("{{ ts() }}") as updated_at,
                 '{{ dim.name }}' as dimension_name,
                 bg.dimension_value,
@@ -240,7 +239,6 @@ with
             -- KPI 2 & 3 : Basés sur la consommation
             select
                 partition_month,
-                scholar_year,
                 timestamp("{{ ts() }}") as updated_at,
                 '{{ dim.name }}' as dimension_name,
                 dimension_value,
@@ -260,7 +258,6 @@ with
 
             select
                 partition_month,
-                scholar_year,
                 timestamp("{{ ts() }}") as updated_at,
                 '{{ dim.name }}' as dimension_name,
                 dimension_value,
@@ -280,3 +277,4 @@ with
 
 select *
 from aggregation_by_scholar_year
+where partition_month is not null and dimension_value is not null

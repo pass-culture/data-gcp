@@ -37,12 +37,12 @@ RANKING_DICT = {
     "stg": "n1-highcpu-2",
     "dev": "n1-highcpu-2",
 }
-RETRIEVAL_DICT = {
+CORESERVATION_RETRIEVAL_DICT = {
     "prod": "n1-standard-4",
     "stg": "n1-standard-2",
     "dev": "n1-standard-2",
 }
-SEMANTIC_DICT = {
+GRAPH_RETRIEVAL_DICT = {
     "prod": "n1-standard-4",
     "stg": "n1-standard-2",
     "dev": "n1-standard-2",
@@ -59,12 +59,21 @@ models_to_deploy = [
         "min_nodes": {"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
         "max_nodes": {"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
     },
-    # retrieval endpoint
+    # two-tower retrieval endpoint
     {
         "experiment_name": f"retrieval_recommendation_v1.2_{ENV_SHORT_NAME}",
         "endpoint_name": f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
-        "instance_type": RETRIEVAL_DICT[ENV_SHORT_NAME],
+        "instance_type": CORESERVATION_RETRIEVAL_DICT[ENV_SHORT_NAME],
+        "min_nodes": {"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
+        "max_nodes": {"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
+    },
+    # graph retrieval endpoint
+    {
+        "experiment_name": f"graph_retrieval_recommendation_v1.1_{ENV_SHORT_NAME}",
+        "endpoint_name": f"recommendation_graph_retrieval_{ENV_SHORT_NAME}",
+        "version_name": "v_{{ ts_nodash }}",
+        "instance_type": GRAPH_RETRIEVAL_DICT[ENV_SHORT_NAME],
         "min_nodes": {"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
         "max_nodes": {"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
     },

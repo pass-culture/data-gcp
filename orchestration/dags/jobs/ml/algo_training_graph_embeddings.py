@@ -90,7 +90,7 @@ with DAG(
             type="string",
         ),
         "train_only_on_10k_rows": Param(
-            default=ENV_SHORT_NAME != "prod", type="boolean"
+            default=ENV_SHORT_NAME == "dev", type="boolean"
         ),
     },
 ) as _dag:

@@ -17,6 +17,8 @@ from common.operators.gce import (
 )
 from common.utils import get_airflow_schedule
 
+from jobs.crons import SCHEDULE_DICT
+
 default_args = {
     "start_date": datetime(2022, 11, 30),
     "on_failure_callback": on_failure_vm_callback,
@@ -49,14 +51,12 @@ gce_params = {
     "container_worker": {"dev": "1", "stg": "1", "prod": "1"},
 }
 
-schedule_dict = {"prod": "0 8 * * *", "dev": "0 8 * * *", "stg": "0 8 * * 3"}
-
 
 with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Custom Building job",
-    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,

@@ -87,6 +87,7 @@ def sign_jwt(target_sa: str, resource_url: str) -> str:
     Uses Google Cloud's IAM Credentials API to sign a JWT. This requires the
     caller to have iap.webServiceVersions.accessViaIap permission on the
     target service account.
+    SA must have the role "Service Account Token Creator" on itself.
 
     Args:
         target_sa (str): Service Account JWT is being created for.

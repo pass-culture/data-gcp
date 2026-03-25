@@ -40,7 +40,7 @@ default_args = {
 
 # GCS Paths / Filenames
 BASE_DIR = "data-gcp/jobs/ml_jobs/retrieval_vector/"
-GCS_FOLDER_PATH = f"{DAG_NAME}_{ENV_SHORT_NAME}/{{{{ ds_nodash }}}}"
+GCS_FOLDER_PATH = f"{DAG_NAME}_{ENV_SHORT_NAME}/{{{{ ts_nodash }}}}"
 STORAGE_BASE_PATH = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}"
 
 # GCE

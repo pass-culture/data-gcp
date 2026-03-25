@@ -1,9 +1,23 @@
 import os
 from datetime import datetime
 
+## GCP CONSTANTS
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
+
+## MLflow Constants
+SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}@{GCP_PROJECT_ID}.iam.gserviceaccount.com"
+MLFLOW_URI = (
+    "https://mlflow.passculture.team/"
+    if ENV_SHORT_NAME == "prod"
+    else "https://mlflow.staging.passculture.team/"
+)
 EXPERIMENT_NAME = f"item_linkage_v2.0_{ENV_SHORT_NAME}"
+RUN_NAME = f"run_{datetime.today().strftime('%Y-%m-%d')}"
+MLFLOW_RUN_ID_FILENAME = "mlflow_run_id"
+
+
+## Item Linkage Constants
 DETAIL_COLUMNS = ["item_id"]
 SYNCHRO_SUBCATEGORIES = [
     "SUPPORT_PHYSIQUE_MUSIQUE_VINYLE",
@@ -21,8 +35,6 @@ METADATA_FEATURES = [
     "offer_subcategory_id",
 ]
 EVALUATION_FEATURES = ["item_id", "offer_subcategory_id", "booking_count"]
-RUN_NAME = f"run_{datetime.today().strftime('%Y-%m-%d')}"
-MLFLOW_RUN_ID_FILENAME = "mlflow_run_id"
 RETRIEVAL_FILTERS = ["edition", "offer_subcategory_id"]
 BATCH_SIZE_RETRIEVAL = 10000
 SEMAPHORE_RETRIEVAL = 100
@@ -56,3 +68,4 @@ UNKNOWN_PERFORMER = "unkn"
 UNKNOWN_NAME = "no_name"
 UNKNOWN_DESCRIPTION = "no_des"
 INITIAL_LINK_ID = "NC"
+MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"

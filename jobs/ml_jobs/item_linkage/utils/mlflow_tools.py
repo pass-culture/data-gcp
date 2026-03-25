@@ -6,16 +6,7 @@ import google.auth
 import mlflow
 from google.cloud import iam_credentials_v1
 
-from constants import ENV_SHORT_NAME, GCP_PROJECT_ID
-
-SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}@{GCP_PROJECT_ID}.iam.gserviceaccount.com"
-MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"
-MLFLOW_RUN_ID_FILENAME = "mlflow_run_id"
-MLFLOW_URI = (
-    "https://mlflow.passculture.team/"
-    if ENV_SHORT_NAME == "prod"
-    else "https://mlflow.staging.passculture.team/"
-)
+from constants import MLFLOW_URI, SA_ACCOUNT
 
 
 def generate_jwt_payload(service_account_email: str, resource_url: str) -> str:
@@ -55,6 +46,7 @@ def sign_jwt(target_sa: str, resource_url: str) -> str:
     Uses Google Cloud's IAM Credentials API to sign a JWT. This requires the
     caller to have iap.webServiceVersions.accessViaIap permission on the
     target service account.
+    SA must have the role "Service Account Token Creator" on itself.
 
     Args:
         target_sa (str): Service Account JWT is being created for.

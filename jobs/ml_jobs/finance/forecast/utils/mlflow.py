@@ -30,6 +30,7 @@ def generate_jwt_payload(service_account_email: str, resource_url: str) -> str:
         JWT is created for.
         resource_url (str): Specifies the scope of the JWT, the URL that the
         JWT will be allowed to access.
+        SA must have the role "Service Account Token Creator" on itself.
 
     Returns:
         str: JSON string containing the JWT payload with properly formatted
@@ -56,6 +57,7 @@ def sign_jwt(target_sa: str, resource_url: str) -> str:
     Uses Google Cloud's IAM Credentials API to sign a JWT. This requires the
     caller to have iap.webServiceVersions.accessViaIap permission on the
     target service account.
+    SA must have the role "Service Account Token Creator" on itself.
 
     Args:
         target_sa (str): Service Account JWT is being created for.

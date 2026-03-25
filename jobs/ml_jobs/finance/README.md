@@ -35,8 +35,9 @@ uv run main.py --model-type 'prophet' --model-name 'daily_pricing' --train-start
 | `train_start_date` | Start date for training data | `2022-01-01` |
 | `backtest_start_date` | Start date for evaluation | `2025-01-01` |
 | `backtest_end_date` | End of evaluation / Start of forecast | `2025-12-01` |
-| `prediction_full_horizon` | End date for the final forecast | `2026-12-30` |
-| `experiment_name` | MLflow experiment name | `finance_prod` |
+| `forecast-horizon-date` | End date for the final forecast | `2026-12-30` |
+| `experiment_name` | MLflow experiment name | `finance_dev` |
+| `dataset`| Bigquery dataset name | `ml-finance-dev` |
 
 ## Project Structure
 

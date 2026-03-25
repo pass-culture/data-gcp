@@ -1,7 +1,11 @@
+import logging
 from datetime import datetime, timedelta
+from enum import Enum
 from time import sleep
+from typing import Optional
 
 import pandas as pd
+import typer
 from google.cloud import bigquery
 from pandas_gbq import to_gbq
 
@@ -16,8 +20,18 @@ from utils import (
     get_last_month,
 )
 
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s - %(message)s")
+logger = logging.getLogger(__name__)
 
-def get_apple(execution_date):
+app = typer.Typer()
+
+
+class Target(str, Enum):
+    apple = "apple"
+    google = "google"
+
+
+def get_apple(execution_date: datetime):
     start = get_last_month(execution_date)
     date_generated = [
         start + timedelta(days=x) for x in range(0, (execution_date - start).days)
@@ -44,9 +58,10 @@ def get_apple(execution_date):
         pass
 
     to_gbq(df, f"{BIGQUERY_RAW_DATASET}.apple_download_stats", if_exists="append")
+    logger.info(f"Loaded {len(df)} rows to apple_download_stats")
 
 
-def get_google(execution_date):
+def get_google(execution_date: datetime):
     current_month = execution_date.strftime("%Y-%m")
     last_month = get_last_month(execution_date).strftime("%Y-%m")
     google_client = GoogleClient(report_bucket_name=BUCKET_NAME)
@@ -67,15 +82,35 @@ def get_google(execution_date):
     except Exception:
         pass
     to_gbq(df, f"{BIGQUERY_RAW_DATASET}.google_download_stats", if_exists="append")
+    logger.info(f"Loaded {len(df)} rows to google_download_stats")
 
 
-def run():
-    execution_date = datetime.today()
+@app.command()
+def run(
+    provider: Target = typer.Option(
+        ..., help="App store provider to fetch downloads from."
+    ),
+    execution_date: Optional[str] = typer.Option(
+        None,
+        help="Execution date (YYYY-MM-DD). Defaults to today.",
+    ),
+):
+    date = (
+        datetime.strptime(execution_date, "%Y-%m-%d")
+        if execution_date
+        else datetime.today()
+    )
+    logger.info(
+        f"Running downloads job | provider={provider.value} | date={date.date()}"
+    )
 
-    get_google(execution_date)
-    get_apple(execution_date)
+    if provider == Target.google:
+        get_google(date)
+    elif provider == Target.apple:
+        get_apple(date)
 
-    return "Success"
+    logger.info("Done")
 
 
-run()
+if __name__ == "__main__":
+    app()

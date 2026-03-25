@@ -26,9 +26,8 @@ from jobs.crons import SCHEDULE_DICT
 
 ###########################################################################
 ## GCS CONSTANTS
-GCS_FOLDER_PATH = (
-    f"gs://{ML_BUCKET_TEMP}/semantic_search_lancedb/item_embeddings_{{ ts_nodash }}"
-)
+GCS_FOLDER_PATH = "semantic_search_lancedb"
+INPUT_FOLDER = "item_embeddings_{{ ts_nodash }}"
 GCS_OUTPUT_FILENAME = "data-*.parquet"
 
 ## BigQuery CONSTANTS
@@ -88,12 +87,12 @@ with DAG(
             description="GCE instance name",
         ),
         "input_dataset_name": Param(
-            default="item_embedding_refactor",
+            default=f"ml_feat_{ENV_SHORT_NAME}",
             type="string",
             description="Name of the BigQuery dataset containing the input table.",
         ),
         "input_table_name": Param(
-            default=f"ml_feat_{ENV_SHORT_NAME}",
+            default="item_embedding_refactor",
             type="string",
             description="Name of the BigQuery table containing the item embeddings.",
         ),
@@ -129,8 +128,8 @@ with DAG(
         configuration={
             "query": {
                 "query": f"""
-                    SELECT item_id, {{ params.vector_embedding_column_name }}
-                    FROM `{GCP_PROJECT_ID}.{{ params.input_dataset_name }}.{{ params.input_table_name }}`
+                    SELECT item_id, {{{{ params.vector_embedding_column_name }}}}
+                    FROM `{GCP_PROJECT_ID}.{{{{ params.input_dataset_name }}}}.{{{{ params.input_table_name }}}}`
                 """,
                 "destinationTable": {
                     "projectId": GCP_PROJECT_ID,
@@ -155,7 +154,7 @@ with DAG(
                     "tableId": TMP_TABLE_NAME,
                 },
                 "destinationUris": [
-                    f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{GCS_OUTPUT_FILENAME}"
+                    f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{INPUT_FOLDER}/{GCS_OUTPUT_FILENAME}"
                 ],
                 "destinationFormat": "PARQUET",
             }
@@ -168,10 +167,11 @@ with DAG(
         base_dir=BASE_DIR,
         command=f"""
             uv run python build_lancedb_table.py \
-                --gcs-embedding-parquet-file gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/data-*.parquet \
+                --gcs-embedding-parquet-file gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{INPUT_FOLDER} \
                 --lancedb-uri {LANCEDB_URI} \
                 --lancedb-table {LANCEDB_TABLE} \
                 --batch-size 10000
+                --vector-column-name {{{{ params.vector_embedding_column_name }}}}
         """,
         deferrable=False,
     )
@@ -184,13 +184,8 @@ with DAG(
 
     stop = EmptyOperator(task_id="stop")
 
-    (
-        start
-        >> gce_instance_start
-        >> install_dependencies
-        >> create_temp_table
-        >> export_item_embeddings_to_gcs
-        >> create_lancedb
-        >> gce_instance_delete
-        >> stop
-    )
+    (start >> [gce_instance_start, create_temp_table])
+    gce_instance_start >> install_dependencies
+    create_temp_table >> export_item_embeddings_to_gcs
+    [install_dependencies, export_item_embeddings_to_gcs] >> create_lancedb
+    create_lancedb >> gce_instance_delete >> stop

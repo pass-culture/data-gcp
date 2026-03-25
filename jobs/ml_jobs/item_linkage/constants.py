@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 
-GCP_PROJECT = os.environ.get("GCP_PROJECT")
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 EXPERIMENT_NAME = f"item_linkage_v2.0_{ENV_SHORT_NAME}"
 DETAIL_COLUMNS = ["item_id"]

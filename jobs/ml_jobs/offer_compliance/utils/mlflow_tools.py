@@ -6,11 +6,9 @@ import google.auth
 import mlflow
 from google.cloud import iam_credentials_v1
 
-from constants import ENV_SHORT_NAME
+from constants import ENV_SHORT_NAME, GCP_PROJECT_ID
 
-SA_ACCOUNT = (
-    f"algo-training-{ENV_SHORT_NAME}@passculture-data-ehp.iam.gserviceaccount.com"
-)
+SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}@{GCP_PROJECT_ID}.iam.gserviceaccount.com"
 MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"
 MLFLOW_RUN_ID_FILENAME = "mlflow_run_id"
 MLFLOW_URI = (

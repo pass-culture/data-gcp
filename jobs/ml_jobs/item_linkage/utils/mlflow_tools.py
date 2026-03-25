@@ -6,11 +6,9 @@ import google.auth
 import mlflow
 from google.cloud import iam_credentials_v1
 
-from constants import ENV_SHORT_NAME
+from constants import ENV_SHORT_NAME, GCP_PROJECT_ID
 
-SA_ACCOUNT = (
-    f"algo-training-{ENV_SHORT_NAME}@passculture-data-ehp.iam.gserviceaccount.com"
-)
+SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}@{GCP_PROJECT_ID}.iam.gserviceaccount.com"
 MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"
 MLFLOW_RUN_ID_FILENAME = "mlflow_run_id"
 MLFLOW_URI = (
@@ -36,9 +34,9 @@ def generate_jwt_payload(service_account_email: str, resource_url: str) -> str:
         str: JSON string containing the JWT payload with properly formatted
         claims.
     """
-    # Create current time and expiration time (6 hours later) in UTC
+    # Create current time and expiration time (1 hour later) in UTC
     iat = datetime.datetime.now(tz=datetime.UTC)
-    exp = iat + datetime.timedelta(seconds=6 * 3600)
+    exp = iat + datetime.timedelta(seconds=3600)
 
     payload = {
         "iss": service_account_email,

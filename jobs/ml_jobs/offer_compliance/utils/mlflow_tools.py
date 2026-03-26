@@ -17,6 +17,9 @@ def generate_jwt_payload(service_account_email: str, resource_url: str) -> str:
 
     Creates a properly formatted JWT payload with standard claims (iss, sub,
     aud, iat, exp) needed for IAP authentication.
+    Warning: the JWT token expires after 1 hour (3600 seconds)
+    and needs to be regenerated after that.
+
 
     Args:
         service_account_email (str): Specifies the service account that the

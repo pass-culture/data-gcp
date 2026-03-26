@@ -69,3 +69,4 @@ models:
                 threshold: 0.5
                 config:
                   where: "dimension_name IN ('NAT')"
+                tags: "monthly_15"

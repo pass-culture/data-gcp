@@ -128,6 +128,7 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         branch="{{ params.branch }}",
         retries=2,
+        python_version="3.11",
         dag=dag,
     )
 

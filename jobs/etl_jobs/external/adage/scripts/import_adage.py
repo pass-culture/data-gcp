@@ -58,7 +58,7 @@ def get_request(ENDPOINT, API_KEY, route, params={}):
     logger.info("GET %s params=%s", url, params)
     try:
         headers = {"X-omogen-api-key": API_KEY}
-        req = requests.get(url, headers=headers, params=params)
+        req = requests.get(url, headers=headers, params=params, timeout=120)
         if req.status_code == 200:
             data = req.json()
             logger.info(

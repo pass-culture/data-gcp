@@ -83,18 +83,19 @@ models:
       monitoring:
         +meta:
           owner: "@data-engineering"
-      external_reporting:
-        +tags: "monthly_15"
-        +labels:
-          schedule: "monthly"
-        +meta:
-          owner: "@data-engineering"
-        individual:
-          ephemerals_kpis:
-            +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
-        collective:
-          kpis_segments:
-            +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+    external_reporting:
+      +schema: external_reporting_{{ target.name }}
+      +tags: "monthly_15"
+      +labels:
+        schedule: "monthly"
+      +meta:
+        owner: "@data-engineering"
+      individual:
+        ephemerals_kpis:
+          +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+      collective:
+        kpis_segments:
+          +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     export:
       +schema: export_{{ target.name }}
       +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"

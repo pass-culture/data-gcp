@@ -1,10 +1,13 @@
+import logging
 import os
 from datetime import datetime
 
 from google.cloud import bigquery
 
-GCP_PROJECT = os.environ.get("PROJECT_NAME")
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "")
+logger = logging.getLogger(__name__)
+
+GCP_PROJECT = os.environ.get("PROJECT_NAME", "passculture-data-ehp")
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
 BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
 BIGQUERY_RAW_DATASET = f"raw_{ENV_SHORT_NAME}"
@@ -67,6 +70,7 @@ def save_to_raw_bq(df, table_name):
     df["execution_date"] = _now
     bigquery_client = bigquery.Client()
     table_id = f"{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{table_name}${yyyymmdd}"
+    logger.info("Loading %d rows into BQ table %s", len(df), table_id)
     job_config = bigquery.LoadJobConfig(
         write_disposition="WRITE_TRUNCATE",
         time_partitioning=bigquery.TimePartitioning(
@@ -79,3 +83,4 @@ def save_to_raw_bq(df, table_name):
     )
     job = bigquery_client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()
+    logger.info("BQ load job %s completed for table %s", job.job_id, table_id)

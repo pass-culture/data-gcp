@@ -472,7 +472,7 @@ with GridDAG(
         "instance_type": "{{ params.instance_type }}",
         "gpu_type": "{{ params.gpu_type }}",
         "gpu_count": "{{ params.gpu_count }}",
-        "labels": {"job_type": "long_ml"},
+        "labels": {"job_type": "extra_long_ml"},
     },
     install_deps_kwargs={
         "python_version": "3.12",

@@ -101,7 +101,7 @@ with DAG(
         task_id="gce_start_task",
         instance_name=GCE_INSTANCE,
         retries=2,
-        labels={"job_type": "ml", "dag_name": DAG_NAME},
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

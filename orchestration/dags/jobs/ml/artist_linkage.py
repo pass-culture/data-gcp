@@ -233,7 +233,7 @@ with DAG(
             gpu_count="{{ 1 if params.linkage_mode == 'deduplication' else 0 }}",
             gpu_type="nvidia-tesla-t4",
             preemptible=False,
-            labels={"job_type": "ml", "dag_name": DAG_NAME},
+            labels={"job_type": "long_ml", "dag_name": DAG_NAME},
         )
         fetch_install_code = InstallDependenciesOperator(
             task_id="fetch_install_code",

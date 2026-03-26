@@ -92,6 +92,7 @@ sources:
       - name: applicative_database_offer_artist_link
       - name: applicative_database_offer_legacy
       - name: applicative_database_offer_meta_data
+      - name: applicative_database_offer_quality
       - name: applicative_database_offer_validation_sub_rule
       - name: applicative_database_offer_validation_rule
       - name: applicative_database_offer_criterion

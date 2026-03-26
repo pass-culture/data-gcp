@@ -1,46 +1,36 @@
 # Semantic Search LanceDB
 
-This job creates a LanceDB vector database from parquet files stored in GCS containing item embeddings.
+Creates a LanceDB vector database from Parquet embedding files on GCS. Outputs an IVF_PQ-indexed table with `item_id` and `vector` columns.
 
 ## Features
 
-- **LanceModel Schema**: Uses pydantic-based LanceModel for easy schema definition and metadata additions
-- **Batch Processing**: Streams data in batches to handle large parquet files efficiently (up to 100k+ items per file)
-- **Multi-file Support**: Automatically processes all parquet files in a GCS folder
-- **Vector Indexing**: Creates IVF_PQ index with cosine distance, optimized for 768-dimension embeddings (embeddinggemma)
+- **Batch streaming**: Streams Parquet data in configurable batches to handle large datasets
+- **Multi-file support**: Processes all Parquet files in a GCS folder
+- **Auto-scaled indexing**: IVF_PQ index with cosine distance; `num_partitions` scales with dataset size (`sqrt(n)`)
+- **Schema normalization**: Handles PyArrow/LanceDB list field naming mismatch automatically
 
 ## Usage
 
-### Environment Variables
-
 ```bash
-export LANCEDB_URI="gs://your-bucket/path"
-export GCS_EMBEDDING_PARQUET_FILE="gs://your-bucket/embeddings/*.parquet"
-export LANCEDB_TABLE="embeddings"
-export BATCH_SIZE="100000"
+uv run python main.py \
+  --gcs-embedding-parquet-file "gs://bucket/path/to/embeddings/" \
+  --lancedb-uri "gs://bucket/lancedb/env" \
+  --lancedb-table "item_embeddings" \
+  --batch-size 10000 \
+  --vector-column-name "semantic_content_sts"
 ```
 
-### Run the job
+### Parameters
 
-```bash
-python main.py
-```
+| Parameter | Description |
+|---|---|
+| `--gcs-embedding-parquet-file` | GCS path to Parquet file(s) containing embeddings |
+| `--lancedb-uri` | GCS URI for the LanceDB database |
+| `--lancedb-table` | Name of the table to create |
+| `--batch-size` | Number of rows per batch during ingestion |
+| `--vector-column-name` | Name of the embedding column in the source Parquet (renamed to `vector`) |
 
-Or with custom parameters:
+## Warning
 
-```bash
-python main.py \
-  --gcs-embedding-parquet-file "gs://bucket/embeddings/" \
-  --lancedb-uri "gs://bucket/lancedb/" \
-  --lancedb-table "my_embeddings" \
-  --batch-size 100000
-```
-
-## Schema
-
-The LanceDB table uses the following schema:
-
-- `item_id`: string - Unique identifier for each item
-- `vector`: Vector(768) - Embedding vector (768 dimensions for embeddinggemma)
-
-The schema is defined as a LanceModel, making it easy to add additional fields or metadata later.
+- This job **drops and recreates** the LanceDB table if it already exists. If you use this table in a latency-sensitive service, consider writing to a staging table and swapping.
+- The indexing takes about 10 to 15 minutes. So do not worry if you don't get frequet logs during indexing.

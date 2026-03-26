@@ -1,15 +1,7 @@
 import lancedb
+import pyarrow as pa
 import pyarrow.dataset as ds
-import typer
-from lancedb.pydantic import LanceModel, Vector
 from loguru import logger
-
-
-class ItemEmbedding(LanceModel):
-    """Schema for item embeddings in LanceDB."""
-
-    item_id: str
-    vector: Vector(768)
 
 
 def parquet_batch_generator(
@@ -25,20 +17,33 @@ def parquet_batch_generator(
             if i % 10 == 0:
                 logger.info(f"Processed {i * batch_size:,} rows")
             batch = batch.rename_columns({vector_column_name: "vector"})
-            yield batch
+            table = pa.Table.from_batches([batch])
+            # Drop all list columns except "vector"
+            drop_cols = [
+                f.name for f in table.schema if f.name not in ("vector", "item_id")
+            ]
+            table = table.drop(drop_cols)
+            # Re-cast list columns so child field is named "item" (LanceDB default)
+            # instead of "element" (parquet default), avoiding schema mismatch.
+            new_fields = []
+            for field in table.schema:
+                if pa.types.is_list(field.type) or pa.types.is_large_list(field.type):
+                    new_fields.append(field.with_type(pa.list_(field.type.value_type)))
+                else:
+                    new_fields.append(field)
+            table = table.cast(pa.schema(new_fields))
+            yield table
     except Exception as e:
         logger.error(f"Error during GCS streaming: {e}")
         raise
 
 
 def build_lancedb_table(
-    gcs_embedding_parquet_file: str = typer.Option(..., help="GCS Parquet file path"),
-    lancedb_uri: str = typer.Option(..., help="LanceDB URI"),
-    lancedb_table: str = typer.Option(..., help="LanceDB table name"),
-    batch_size: int = typer.Option(..., help="Batch size for streaming"),
-    vector_column_name: str = typer.Option(
-        "semantic_content_sts", help="Name of the vector column in the parquet file"
-    ),
+    gcs_embedding_parquet_file: str,
+    lancedb_uri: str,
+    lancedb_table: str,
+    batch_size: int,
+    vector_column_name: str,
 ):
     logger.info(f"Connecting to LanceDB at: {lancedb_uri}")
     db = lancedb.connect(lancedb_uri)
@@ -61,7 +66,6 @@ def build_lancedb_table(
 
         table = db.create_table(
             name=lancedb_table,
-            schema=ItemEmbedding,
             data=parquet_batch_generator(
                 gcs_embedding_parquet_file,
                 batch_size,
@@ -69,17 +73,25 @@ def build_lancedb_table(
             ),
         )
 
-        logger.success(
-            f"Table '{lancedb_table}' created with {table.count_rows():,} rows"
-        )
+        num_rows = table.count_rows()
+        logger.success(f"Table '{lancedb_table}' created with {num_rows:,} rows")
         logger.info(f"Schema: {table.schema}")
 
-        logger.info("Creating vector index with cosine distance")
+        # Scale index parameters to dataset size:
+        # - num_partitions: sqrt(num_rows) is a good heuristic, but capped at 256
+        #   to avoid "too many open files" errors during index creation.
+        # - num_sub_vectors: must evenly divide vector dimension
+        num_partitions = min(256, max(2, int(num_rows**0.5)))
+        num_sub_vectors = 48
+        logger.info(
+            f"Creating IVF_PQ index with cosine distance, "
+            f"{num_partitions} partitions, {num_sub_vectors} sub-vectors"
+        )
         table.create_index(
             vector_column_name="vector",
             metric="cosine",
-            num_partitions=2048,
-            num_sub_vectors=48,
+            num_partitions=num_partitions,
+            num_sub_vectors=num_sub_vectors,
             index_type="IVF_PQ",
             replace=True,
         )
@@ -88,7 +100,3 @@ def build_lancedb_table(
     except Exception as e:
         logger.error(f"LanceDB table creation failed: {e}")
         raise
-
-
-if __name__ == "__main__":
-    typer.run(build_lancedb_table)

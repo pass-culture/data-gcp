@@ -22,24 +22,27 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 
+from jobs.crons import SCHEDULE_DICT
+
 ###########################################################################
 ## GCS CONSTANTS
-GCS_FOLDER_PATH = "edito_semantic_search/item_embeddings_{{ ts_nodash }}"
+GCS_FOLDER_PATH = "semantic_search_lancedb"
+INPUT_FOLDER = "item_embeddings_{{ ts_nodash }}"
 GCS_OUTPUT_FILENAME = "data-*.parquet"
 
 ## BigQuery CONSTANTS
 INPUT_DATASET_NAME = f"ml_feat_{ENV_SHORT_NAME}"
 INPUT_TABLE_NAME = "item_embedding_refactor"
-TMP_DATASET_NAME = f"tmp_{ENV_SHORT_NAME}"
-TMP_TABLE_NAME = "item_embeddings_temp"
+VECTOR_COLUMN_NAME = "semantic_content_sts"
 
+## LanceDB CONSTANTS
 LANCEDB_URI = f"gs://{ML_BUCKET_TEMP}/lancedb/{ENV_SHORT_NAME}"
 LANCEDB_TABLE = "item_embeddings"
 
 ## DAG CONFIG
-DAG_NAME = "edito_semantic_search"
-BASE_DIR = "data-gcp/jobs/ml_jobs/edito_semantic_search"
-INSTANCE_NAME = "create-lancedb-embeddings"
+DAG_NAME = "semantic_search_lancedb"
+BASE_DIR = "data-gcp/jobs/ml_jobs/semantic_search_lancedb"
+INSTANCE_NAME = "semantic-search-lancedb"
 INSTANCE_TYPE = {
     "dev": "n1-standard-4",
     "stg": "n1-standard-4",
@@ -62,7 +65,7 @@ with DAG(
     default_args=DEFAULT_ARGS,
     description="Create LanceDB with item embeddings",
     doc_md=DAG_DOC,
-    schedule_interval="1 * * * *",  # SCHEDULE_DICT["daily"],
+    schedule_interval=SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME],
     catchup=False,
     dagrun_timeout=timedelta(hours=12),
     user_defined_macros=macros.default,
@@ -84,6 +87,12 @@ with DAG(
             type="string",
             description="GCE instance name",
         ),
+        "vector_embedding_column_name": Param(
+            default=VECTOR_COLUMN_NAME,
+            type="string",
+            description="""Name of the column containing the vector embedding in BigQuery.
+            Make sure it exists in the input table.""",
+        ),
     },
 ) as dag:
     start = EmptyOperator(task_id="start")
@@ -104,28 +113,6 @@ with DAG(
         retries=2,
     )
 
-    # Step 2: Execute SQL query and store in temp table
-    create_temp_table = BigQueryInsertJobOperator(
-        project_id=GCP_PROJECT_ID,
-        task_id="create_temp_table",
-        configuration={
-            "query": {
-                "query": f"""
-                    SELECT item_id, semantic_content_STS
-                    FROM `{GCP_PROJECT_ID}.{INPUT_DATASET_NAME}.{INPUT_TABLE_NAME}`
-                """,
-                "destinationTable": {
-                    "projectId": GCP_PROJECT_ID,
-                    "datasetId": TMP_DATASET_NAME,
-                    "tableId": TMP_TABLE_NAME,
-                },
-                "writeDisposition": "WRITE_TRUNCATE",
-                "useLegacySql": False,
-            }
-        },
-    )
-
-    # Step 3: Export temp table to GCS as a parquet file (to be used as input for the embedding script)
     export_item_embeddings_to_gcs = BigQueryInsertJobOperator(
         project_id=GCP_PROJECT_ID,
         task_id="export_item_embeddings_to_gcs",
@@ -133,11 +120,11 @@ with DAG(
             "extract": {
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "datasetId": TMP_DATASET_NAME,
-                    "tableId": TMP_TABLE_NAME,
+                    "datasetId": INPUT_DATASET_NAME,
+                    "tableId": INPUT_TABLE_NAME,
                 },
                 "destinationUris": [
-                    f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{GCS_OUTPUT_FILENAME}"
+                    f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{INPUT_FOLDER}/{GCS_OUTPUT_FILENAME}"
                 ],
                 "destinationFormat": "PARQUET",
             }
@@ -149,11 +136,12 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
         command=f"""
-            uv run python build_lancedb_table.py \
-                --gcs-embedding-parquet-file gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/data-*.parquet \
+            uv run python main.py \
+                --gcs-embedding-parquet-file gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{INPUT_FOLDER} \
                 --lancedb-uri {LANCEDB_URI} \
                 --lancedb-table {LANCEDB_TABLE} \
-                --batch-size 1000
+                --batch-size 10000 \
+                --vector-column-name {{{{ params.vector_embedding_column_name }}}}
         """,
         deferrable=False,
     )
@@ -161,18 +149,12 @@ with DAG(
     gce_instance_delete = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
-        trigger_rule="all_done",  # always delete the VM, even on upstream failure
+        trigger_rule="all_done",
     )
 
     stop = EmptyOperator(task_id="stop")
 
-    (
-        start
-        >> gce_instance_start
-        >> install_dependencies
-        >> create_temp_table
-        >> export_item_embeddings_to_gcs
-        >> create_lancedb
-        >> gce_instance_delete
-        >> stop
-    )
+    (start >> [gce_instance_start, export_item_embeddings_to_gcs])
+    gce_instance_start >> install_dependencies
+    [install_dependencies, export_item_embeddings_to_gcs] >> create_lancedb
+    create_lancedb >> gce_instance_delete >> stop

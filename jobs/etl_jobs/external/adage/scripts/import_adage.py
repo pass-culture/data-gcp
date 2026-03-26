@@ -1,4 +1,5 @@
 import logging
+import time
 from datetime import datetime
 
 import pandas as pd
@@ -53,24 +54,39 @@ else:
     API_KEY = access_secret(project_name, "adage_import_api_key_prod")
 
 
-def get_request(ENDPOINT, API_KEY, route, params={}):
+def get_request(ENDPOINT, API_KEY, route, params={}, max_retries=3, backoff_factor=2):
     url = "{}/{}".format(ENDPOINT, route)
-    logger.info("GET %s params=%s", url, params)
-    try:
-        headers = {"X-omogen-api-key": API_KEY}
-        req = requests.get(url, headers=headers, params=params, timeout=120)
-        if req.status_code == 200:
-            data = req.json()
-            logger.info(
-                "GET %s -> HTTP 200, %d records",
-                url,
-                len(data) if isinstance(data, list) else 1,
+    headers = {"X-omogen-api-key": API_KEY}
+    for attempt in range(1, max_retries + 1):
+        logger.info(
+            "GET %s params=%s (attempt %d/%d)", url, params, attempt, max_retries
+        )
+        try:
+            req = requests.get(url, headers=headers, params=params, timeout=120)
+            if req.status_code == 200:
+                data = req.json()
+                logger.info(
+                    "GET %s -> HTTP 200, %d records",
+                    url,
+                    len(data) if isinstance(data, list) else 1,
+                )
+                return data
+            elif req.status_code in (429, 500, 502, 503, 504):
+                wait = backoff_factor**attempt
+                logger.warning(
+                    "GET %s -> HTTP %d, retrying in %ds", url, req.status_code, wait
+                )
+                time.sleep(wait)
+            else:
+                logger.error("GET %s -> HTTP %d, not retrying", url, req.status_code)
+                return None
+        except Exception as e:
+            wait = backoff_factor**attempt
+            logger.error(
+                "GET %s -> unexpected error: %s, retrying in %ds", url, e, wait
             )
-            return data
-        else:
-            logger.error("GET %s -> HTTP %d", url, req.status_code)
-    except Exception as e:
-        logger.error("GET %s -> unexpected error: %s", url, e)
+            time.sleep(wait)
+    logger.error("GET %s -> all %d attempts failed", url, max_retries)
     return None
 
 

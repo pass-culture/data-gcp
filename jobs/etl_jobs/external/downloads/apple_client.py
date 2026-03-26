@@ -1,9 +1,13 @@
+import logging
 import time
 import zlib
 
 import pandas as pd
 import requests
 from authlib.jose import jwt
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 OUT_COLS = [
     "provider",
@@ -51,13 +55,19 @@ class AppleClient:
         }
 
         # Create the JWT
-        token = jwt.encode(header, payload, private_key)
+        _key = (
+            private_key.get_secret_value()
+            if hasattr(private_key, "get_secret_value")
+            else private_key
+        )
+        token = jwt.encode(header, payload, _key)
 
         jwt_bearer = "Bearer " + token.decode()
         self.url = "https://api.appstoreconnect.apple.com/v1/salesReports"
         self.head = {"Authorization": jwt_bearer}
 
     def get_downloads(self, frequency="MONTHLY", report_date="2021-05"):
+        logger.info(f"Fetching Apple report | date={report_date} frequency={frequency}")
         r = requests.get(
             self.url,
             params={
@@ -71,13 +81,14 @@ class AppleClient:
         )
 
         if r.status_code == 404:
+            logger.info(f"No report available for {report_date} (404)")
             return None
         try:
             data = zlib.decompress(r.content, zlib.MAX_WBITS | 32)
         except Exception:
-            print(f"Error with {report_date}")
-            print(r.status_code)
-            print(r.content)
+            logger.error(
+                f"Failed to decompress response for {report_date} | status={r.status_code} | body={r.content[:200]}"
+            )
             return None
         with open("/tmp/report.txt", "wb") as outFile:
             outFile.write(data)
@@ -90,4 +101,5 @@ class AppleClient:
         df["units"] = df["units"].astype(float)
         df = df[df["units"] > 0]
         df["date"] = report_date
+        logger.debug(f"Downloaded {len(df)} rows for {report_date}")
         return df

@@ -44,7 +44,7 @@ DEFAULT_ARGS = {
 # GCE
 INSTANCE_NAME = f"algo-training-graph-embeddings-{ENV_SHORT_NAME}"
 INSTANCE_TYPE = {
-    "dev": "n1-standard-2",
+    "dev": "n1-standard-4",
     "stg": "n1-standard-16",
     "prod": "n1-standard-16",
 }[ENV_SHORT_NAME]
@@ -89,7 +89,9 @@ with DAG(
             default=f"algo_training_graph_embeddings_v1.1_{ENV_SHORT_NAME}",
             type="string",
         ),
-        "train_only_on_10k_rows": Param(default=True, type="boolean"),
+        "train_only_on_10k_rows": Param(
+            default=ENV_SHORT_NAME == "dev", type="boolean"
+        ),
     },
 ) as _dag:
     start = EmptyOperator(task_id="start")

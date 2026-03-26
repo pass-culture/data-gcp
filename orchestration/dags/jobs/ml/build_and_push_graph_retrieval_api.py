@@ -24,6 +24,9 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
+from common.utils import get_airflow_schedule
+
+from jobs.crons import SCHEDULE_DICT
 
 # Ariflow params
 DATE = "{{ ts_nodash }}"
@@ -37,7 +40,7 @@ default_args = {
 
 # GCS Paths / Filenames
 BASE_DIR = "data-gcp/jobs/ml_jobs/retrieval_vector/"
-GCS_FOLDER_PATH = f"{DAG_NAME}_{ENV_SHORT_NAME}/{{{{ ds_nodash }}}}"
+GCS_FOLDER_PATH = f"{DAG_NAME}_{ENV_SHORT_NAME}/{{{{ ts_nodash }}}}"
 STORAGE_BASE_PATH = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}"
 
 # GCE
@@ -52,13 +55,13 @@ DEFAULT_CONTAINER_WORKER = "1"
 # Registry
 ARTIFACT_REGISTRY_BASE_PATH = f"europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/{ENV_SHORT_NAME}"
 GRAPH_RETRIEVAL_MODEL_NAME = "metapath2vec"
-GRAPH_RETRIEVAL_MODEL_VERSION = f"graph_retrieval_recommendation_v0.1_{ENV_SHORT_NAME}"
+GRAPH_RETRIEVAL_MODEL_VERSION = f"graph_retrieval_recommendation_v1.1_{ENV_SHORT_NAME}"
 
 with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Custom training job",
-    schedule_interval=None,
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
@@ -142,7 +145,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={"job_type": "ml", "dag_name": DAG_NAME},
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

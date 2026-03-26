@@ -210,7 +210,7 @@ with (
         instance_name=INSTANCE_NAME,
         instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={"job_type": "ml", "dag_name": DAG_ID},
+        labels={"dag_name": DAG_ID},
     )
 
     fetch_install_code = InstallDependenciesOperator(

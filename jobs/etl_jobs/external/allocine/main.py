@@ -100,7 +100,7 @@ def sync_posters(
                 response.raise_for_status()
 
                 content_type = response.headers.get("content-type")
-                blob_name = poster_blob_name(POSTER_PREFIX, poster_url, content_type)
+                blob_name = poster_blob_name(POSTER_PREFIX, poster_url)
 
                 gcs_uri = upload_to_gcs(
                     GCS_BUCKET,

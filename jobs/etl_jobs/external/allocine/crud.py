@@ -1,8 +1,5 @@
 import logging
-import mimetypes
 import uuid
-from pathlib import PurePosixPath
-from urllib.parse import urlparse
 
 from google.cloud import bigquery
 from google.cloud.bigquery import LoadJobConfig, SchemaField, WriteDisposition
@@ -18,19 +15,8 @@ def _poster_uuid(poster_url: str) -> str:
     return str(uuid.uuid5(uuid.NAMESPACE_URL, poster_url))
 
 
-def _detect_extension(url: str, content_type: str | None) -> str:
-    suffix = PurePosixPath(urlparse(url).path).suffix
-    if suffix:
-        return suffix.lstrip(".")
-    if content_type:
-        ext = mimetypes.guess_extension(content_type.split(";")[0].strip())
-        if ext:
-            return ext.lstrip(".")
-    return "jpg"
-
-
-def poster_blob_name(prefix: str, poster_url: str, content_type: str | None) -> str:
-    return f"{prefix}/{_poster_uuid(poster_url)}.{_detect_extension(poster_url, content_type)}"
+def poster_blob_name(prefix: str, poster_url: str) -> str:
+    return f"{prefix}/{_poster_uuid(poster_url)}"
 
 
 def load_staging_table(

@@ -330,6 +330,9 @@ models:
       - name: banner_url
         description: '{{ doc("column__banner_url") }}'
         data_type: STRING
+      - name: venue_volunteering_url
+        description: '{{ doc("column__venue_volunteering_url") }}'
+        data_type: STRING
       - name: venue_image_source
         description: '{{ doc("column__venue_image_source") }}'
         data_type: STRING

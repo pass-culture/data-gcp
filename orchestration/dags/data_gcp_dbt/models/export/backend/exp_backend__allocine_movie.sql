@@ -1,0 +1,22 @@
+select
+    movie_id,
+    internalid,
+    title,
+    originaltitle,
+    type,
+    runtime,
+    synopsis,
+    poster_url,
+    poster_gcs_path,
+    backlink_url,
+    backlink_label,
+    data_eidr,
+    data_productionyear,
+    cast_normalized,
+    credits_normalized,
+    releases,
+    countries,
+    genres,
+    companies,
+    updated_at
+from {{ source("raw", "allocine_movie") }}

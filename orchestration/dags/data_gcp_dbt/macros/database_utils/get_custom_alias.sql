@@ -21,6 +21,7 @@
     ) -%}
     {%- set is_raw_applicative = "raw_applicative" in node.name -%}
     {%- set is_mart_or_export = "mart" in node.path or "export" in node.path -%}
+    {%- set is_external_reporting = "external_reporting" in node.path -%}
 
     {%- if is_ci or is_local or is_elementary -%} {{ node.name }}
 
@@ -30,7 +31,7 @@
     {%- elif is_applicative and custom_alias_name -%}
         {{ custom_alias_name ~ node.name }}
 
-    {%- elif is_intermediate_or_ml and is_orchestrated -%}
+    {%- elif is_external_reporting or (is_intermediate_or_ml and is_orchestrated) -%}
         {{ node.name.split("__")[-1] | trim }}
 
     {%- elif is_mart_or_export and is_orchestrated -%}

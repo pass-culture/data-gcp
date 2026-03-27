@@ -38,7 +38,7 @@ dag_id = "export_external_reporting"
 GCE_INSTANCE = f"export-external-reporting-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/external_reporting/"
 GCP_STORAGE_URI = "https://storage.googleapis.com"
-DBT_REPORTING_MODELS_PATH = f"{DAG_FOLDER}/data_gcp_dbt/models/mart/external_reporting"
+DBT_REPORTING_MODELS_PATH = f"{DAG_FOLDER}/data_gcp_dbt/models/external_reporting"
 PRIORITY_WEIGHT = 1000
 WEIGHT_RULE = "absolute"
 

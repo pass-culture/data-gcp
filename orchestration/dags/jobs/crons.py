@@ -65,6 +65,11 @@ SCHEDULE_DICT = {
         "dev": "0 7 * * 1",  # every Monday at 7:00 AM
     },
     "airflow_dag_metrics": "0 12 * * *",  # every day at 12:00 PM
+    "semantic_search_lancedb": {
+        "prod": "0 12 * * *",  # every day at 12:00 PM
+        "stg": "0 12 * * *",  # every day at 12:00 PM
+        "dev": "0 12 * * 1",  # every Monday at 12:00 PM
+    },
 }
 
 

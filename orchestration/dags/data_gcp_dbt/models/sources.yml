@@ -39,7 +39,6 @@ sources:
       - name: applicative_database_boost_cinema_details
       - name: applicative_database_cashflow
       - name: applicative_database_cashflow_batch
-      - name: applicative_database_cashflow_log
       - name: applicative_database_cashflow_pricing
       - name: applicative_database_cds_cinema_details
       - name: applicative_database_cgr_cinema_details

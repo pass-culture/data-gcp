@@ -1,0 +1,96 @@
+collections:
+  root:
+    id: "root"
+    enforce_on_children: true
+    permissions:
+      2: "write"
+      1: "none"
+      16: "none"
+      23: "none"
+      12: "none"
+      24: "none"
+      14: "read"
+    children:
+      internal:
+        id: 608
+        enforce_on_children: true
+        permissions:
+          2: "write"
+          1: "none"
+          16: "none"
+          23: "none"
+          12: "none"
+          24: "none"
+          14: "write"
+        children:
+          general:
+            id: 617
+            enforce_on_children: true
+            permissions:
+              2: "write"
+              1: "none"
+              16: "none"
+              23: "none"
+              12: "none"
+              24: "none"
+              14: "read"
+
+      external:
+        id: 607
+        enforce_on_children: true
+        permissions:
+          2: "write"
+          1: "none"
+          16: "none"
+          23: "none"
+          12: "none"
+          24: "none"
+          14: "read"
+        children:
+          eac:
+            id: 330
+            enforce_on_children: true
+            permissions:
+              2: "write"
+              1: "none"
+              16: "read"
+              23: "none"
+              12: "none"
+              24: "none"
+              14: "read"
+
+      operational:
+        id: 606
+        enforce_on_children: true
+        permissions:
+          2: "write"
+          1: "none"
+          16: "none"
+          23: "none"
+          12: "none"
+          24: "none"
+          14: "write"
+
+      restricted:
+        id: 1783
+        enforce_on_children: true
+        permissions:
+          2: "write"
+          1: "none"
+          16: "none"
+          23: "read"
+          12: "none"
+          24: "none"
+          14: "none"
+
+      archive:
+        id: 610
+        enforce_on_children: true
+        permissions:
+          2: "write"
+          1: "none"
+          16: "none"
+          23: "none"
+          12: "none"
+          24: "none"
+          14: "none"

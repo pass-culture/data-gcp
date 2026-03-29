@@ -52,7 +52,7 @@ configupdater==3.2
 connexion==2.14.2
 cron-descriptor==1.4.5
 croniter==6.0.0
-cryptography==41.0.7
+cryptography==46.0.6
 daff==1.4.2
 db-dtypes==1.4.3
 dbt-adapters==1.16.6

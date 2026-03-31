@@ -50,11 +50,13 @@ DEFAULT_ARGS = {
 }
 
 
-class FrozenBaseModel(BaseModel):
-    model_config = ConfigDict(frozen=True, validate_default=True, strict=True)
+class DagBaseConfig(BaseModel):
+    model_config = ConfigDict(
+        frozen=True, validate_default=True, strict=True, extra="forbid"
+    )
 
 
-class GCEConfig(FrozenBaseModel):
+class GCEConfig(DagBaseConfig):
     _INSTANCE_TYPES = {
         "dev": "n1-standard-2",
         "stg": "n1-standard-4",
@@ -64,27 +66,27 @@ class GCEConfig(FrozenBaseModel):
     instance_type: str = _INSTANCE_TYPES[ENV_SHORT_NAME]
 
 
-class BigQueryConfig(FrozenBaseModel):
+class BigQueryConfig(DagBaseConfig):
     input_user_table: str = f"test_users_{DATE}"
     input_item_table: str = f"test_items_{DATE}"
     output_report_table: str = f"endpoint_monitoring_report_{DATE}"
 
 
 # Alerting
-class AlertingConfig(FrozenBaseModel):
+class AlertingConfig(DagBaseConfig):
     metabase_url: str = "https://analytics.data.passculture.team/dashboard/986-test-dintregation-recommendation"
     endpoint_name: str = f"recommendation_user_retrieval_{ENV_SHORT_NAME}"
 
 
 # Parameters for the recommendation endpoint monitoring tests
-class EndpointMonitoringConfig(FrozenBaseModel):
+class EndpointMonitoringConfig(DagBaseConfig):
     endpoint_name: str = f"recommendation_user_retrieval_{ENV_SHORT_NAME}"
     number_of_ids: int = Field(default=100, gt=0)
     number_of_mock_ids: int = Field(default=100, gt=0)
     number_of_calls_per_user: int = Field(default=2, gt=0)
 
 
-class DagConfig(FrozenBaseModel):
+class DagConfig(DagBaseConfig):
     dag_id: str = "recommendation_endpoint_monitoring"
     base_dir: str = "data-gcp/jobs/ml_jobs/endpoint_monitoring"
     source_experiment_name: dict = {

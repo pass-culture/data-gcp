@@ -51,7 +51,7 @@ DEFAULT_ARGS = {
 
 
 class FrozenBaseModel(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, validate_default=True, strict=True)
 
 
 class GCEConfig(FrozenBaseModel):

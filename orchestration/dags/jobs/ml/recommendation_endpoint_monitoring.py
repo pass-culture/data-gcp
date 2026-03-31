@@ -55,12 +55,13 @@ class FrozenBaseModel(BaseModel):
 
 
 class GCEConfig(FrozenBaseModel):
-    instance_name: str = f"recommendation-endpoint-monitoring-{ENV_SHORT_NAME}"
-    instance_type: str = {
+    _INSTANCE_TYPES = {
         "dev": "n1-standard-2",
         "stg": "n1-standard-4",
         "prod": "n1-standard-4",
-    }[ENV_SHORT_NAME]
+    }
+    instance_name: str = f"recommendation-endpoint-monitoring-{ENV_SHORT_NAME}"
+    instance_type: str = _INSTANCE_TYPES[ENV_SHORT_NAME]
 
 
 class BigQueryConfig(FrozenBaseModel):

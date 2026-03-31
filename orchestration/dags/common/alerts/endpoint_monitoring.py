@@ -1,10 +1,5 @@
-from common.config import ENV_SHORT_NAME
-
-
 def create_recommendation_endpoint_monitoring_slack_block(
-    endpoint_name: str,
-    metabase_url: str,
-    env_short_name: str = ENV_SHORT_NAME,
+    endpoint_name: str, metabase_url: str, env_short_name: str
 ):
     return [
         {

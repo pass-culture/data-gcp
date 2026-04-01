@@ -50,18 +50,16 @@ MODEL_CONFIGS = {
         "model_type": "prophet",
         "model_name": "daily_pricing",
         "train_start_date": "2022-01-01",
-        "backtest_start_date": "2025-09-01",
-        "backtest_end_date": "2025-12-31",
-        "forecast_horizon_date": "2026-12-31",
+        "backtest_days": 120,  # ~4 months of test data
+        "forecast_days": 365,  # 1 year forecast
         "dataset": f"ml_finance_{ENV_SHORT_NAME}",
     },
     "prophet_weekly_pricing": {
         "model_type": "prophet",
         "model_name": "weekly_pricing",
         "train_start_date": "2022-01-01",
-        "backtest_start_date": "2025-09-01",
-        "backtest_end_date": "2025-12-31",
-        "forecast_horizon_date": "2026-12-31",
+        "backtest_days": 120,
+        "forecast_days": 365,
         "dataset": f"ml_finance_{ENV_SHORT_NAME}",
     },
 }
@@ -138,20 +136,19 @@ with DAG(
     ) as fit_models_group:
         fit_tasks = []
         for model_config_name, config in MODEL_CONFIGS.items():
-            # Inject config values directly (not from params)
             fit_model = SSHGCEOperator(
                 task_id=f"fit_{model_config_name}",
                 instance_name="{{ params.instance_name }}",
                 base_dir=dag_config["BASE_DIR"],
                 command=f"""
-                    uv run python main.py \
-                        --model-type "{config['model_type']}" \
-                        --model-name "{config['model_name']}" \
-                        --train-start-date "{config['train_start_date']}" \
-                        --backtest-start-date "{config['backtest_start_date']}" \
-                        --backtest-end-date "{config['backtest_end_date']}" \
-                        --forecast-horizon-date "{config['forecast_horizon_date']}" \
-                        --experiment-name "{{ params.experiment_name }}" \
+                    uv run python main.py \\
+                        --model-type "{config['model_type']}" \\
+                        --model-name "{config['model_name']}" \\
+                        --train-start-date "{config['train_start_date']}" \\
+                        --execution-date "{{{{ ds }}}}" \\
+                        --backtest-days {config['backtest_days']} \\
+                        --forecast-days {config['forecast_days']} \\
+                        --experiment-name "{{{{ params.experiment_name }}}}" \\
                         --dataset "{config['dataset']}"
                 """,
             )

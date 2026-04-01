@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import mlflow
 import typer
 from loguru import logger
@@ -25,21 +27,19 @@ def main(
     ),
     train_start_date: str = typer.Option(
         ...,
-        help="""In-sample start date (YYYY-MM-DD).
-        If you are using a prophet config with changepoints,
-        ensure this date is before the first changepoint date.""",
+        help="In-sample start date (YYYY-MM-DD). Must be before first changepoint.",
     ),
-    backtest_start_date: str = typer.Option(
+    execution_date: str = typer.Option(
         ...,
-        help="""Out-of-sample start date (YYYY-MM-DD).
-         If you are using a prophet config with changepoints,
-         ensure this date is after the last changepoint date.""",
+        help="DAG execution date (YYYY-MM-DD). Used to compute sliding window dates.",
     ),
-    backtest_end_date: str = typer.Option(
-        ..., help="Out-of-sample end date (YYYY-MM-DD)."
+    backtest_days: int = typer.Option(
+        120,
+        help="Number of days for backtest period (counted back from execution_date).",
     ),
-    forecast_horizon_date: str = typer.Option(
-        ..., help="Forecast horizon end date (YYYY-MM-DD)."
+    forecast_days: int = typer.Option(
+        365,
+        help="Number of days for forecast horizon",
     ),
     experiment_name: str = typer.Option(..., help="MLflow experiment name."),
     dataset: str = typer.Option(
@@ -47,20 +47,30 @@ def main(
     ),
 ) -> None:
     """
-    Generic main function to train, evaluate, and forecast using any supported model
-    class.
+    Train, evaluate, and forecast using a sliding window approach.
 
-    Args:
-        model_type: Type of model to use. E.g., 'prophet'.
-                    Must be implemented in get_model_class().
-        model_name: Name of the model configuration/instance.
-        train_start_date: In-sample start date (YYYY-MM-DD).
-        backtest_start_date: Out-of-sample start date (YYYY-MM-DD).
-        backtest_end_date: Out-of-sample end date (YYYY-MM-DD).
-        forecast_horizon_date: Forecast horizon end date (YYYY-MM-DD).
-        experiment_name: MLflow experiment name.
-        dataset: BigQuery dataset containing the training data and forecast results.
+    Dates are computed from execution_date:
+    - backtest_start = execution_date - backtest_days
+    - backtest_end = execution_date - 1 day
+    - forecast_horizon = execution_date + forecast_days
+
+    Changepoints outside the training period are automatically filtered.
     """
+    # Compute dates from execution_date
+    exec_date = datetime.strptime(execution_date, "%Y-%m-%d")
+    backtest_start_date = (exec_date - timedelta(days=backtest_days)).strftime(
+        "%Y-%m-%d"
+    )
+    backtest_end_date = (exec_date - timedelta(days=1)).strftime("%Y-%m-%d")
+    forecast_horizon_date = (exec_date + timedelta(days=forecast_days)).strftime(
+        "%Y-%m-%d"
+    )
+
+    logger.info(f"Sliding window dates computed from execution_date={execution_date}:")
+    logger.info(f"  train_start_date: {train_start_date}")
+    logger.info(f"  backtest_start_date: {backtest_start_date}")
+    logger.info(f"  backtest_end_date: {backtest_end_date}")
+    logger.info(f"  forecast_horizon_date: {forecast_horizon_date}")
     experiment, run_name = setup_mlflow(experiment_name, model_type, model_name)
 
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):

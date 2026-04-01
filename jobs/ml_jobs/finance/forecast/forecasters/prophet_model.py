@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -43,6 +44,9 @@ class ProphetModel(ForecastModel):
         backtest_start_date: str,
         backtest_end_date: str,
     ):
+        # Filter changepoints that fall outside training period
+        self._filter_changepoints(backtest_start_date)
+
         logger.info("Running Prophet preprocessing pipeline...")
         self.data_split = preprocessing_pipeline(
             dataset=dataset,
@@ -57,6 +61,35 @@ class ProphetModel(ForecastModel):
             f"Backtest: {len(self.data_split.backtest)}"
         )
         return self.data_split
+
+    def _filter_changepoints(self, backtest_start_date: str) -> None:
+        """Remove changepoints that fall on or after backtest_start_date.
+
+        Training data ends at backtest_start_date, so changepoints must be
+        strictly before that date to be included in training.
+        """
+        if not self.config.prophet.changepoints:
+            return
+
+        cutoff = datetime.strptime(backtest_start_date, "%Y-%m-%d").date()
+        original_count = len(self.config.prophet.changepoints)
+
+        # Filter changepoints that are before the cutoff
+        valid_changepoints = [
+            cp for cp in self.config.prophet.changepoints if cp < cutoff
+        ]
+
+        dropped = original_count - len(valid_changepoints)
+        if dropped > 0:
+            logger.warning(
+                f"Dropped {dropped} changepoint(s) >= {backtest_start_date}: "
+                f"{[cp for cp in self.config.prophet.changepoints if cp >= cutoff]}"
+            )
+
+        self.config.prophet.changepoints = valid_changepoints
+        logger.info(
+            f"Using {len(valid_changepoints)} changepoint(s): {valid_changepoints}"
+        )
 
     def train(self):
         logger.info(f"Training Prophet model: {self.model_name}")

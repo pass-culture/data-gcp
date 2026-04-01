@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 import mlflow
+import pandas as pd
 import typer
 from loguru import logger
 
@@ -106,8 +107,14 @@ def main(
         backtest_metrics = model.run_backtest()
         mlflow.log_metrics(backtest_metrics)
 
-        # 5. Future Forecast
-        forecast_df = model.predict(backtest_end_date, forecast_horizon_date)
+        # 5. Future Forecast - start from 1st of month after last data point
+        last_data_date = model.data_split.backtest["ds"].max()
+        forecast_start = (last_data_date + pd.offsets.MonthBegin(1)).strftime(
+            "%Y-%m-%d"
+        )
+        logger.info(f"Last data: {last_data_date}, forecast starts: {forecast_start}")
+
+        forecast_df = model.predict(forecast_start, forecast_horizon_date)
 
         # Save forecast to generic artifact
         forecast_file = f"{run_name}_forecast.xlsx"

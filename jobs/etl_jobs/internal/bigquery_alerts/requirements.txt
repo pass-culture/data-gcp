@@ -85,7 +85,7 @@ pyarrow==17.0.0
     # via
     #   db-dtypes
     #   pandas-gbq
-pyasn1==0.6.0
+pyasn1==0.6.3
     # via
     #   pyasn1-modules
     #   rsa
@@ -103,7 +103,7 @@ pytz==2024.1
     # via
     #   datetime
     #   pandas
-requests==2.32.3
+requests==2.33.0
     # via
     #   google-api-core
     #   google-cloud-bigquery

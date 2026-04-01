@@ -61,6 +61,13 @@ repos:
         #   to block commits in that case, so we ignore the exit code
         entry: bash -c 'uv-secure "$@" || true' --
 
+  - repo: https://github.com/semgrep/pre-commit
+    rev: '33d4462c25147807aaa122d613a04d9fbd5f4840' # v1.156.0
+    hooks:
+      - id: semgrep
+        entry: semgrep
+        args: ['--config', 'p/security-audit', '--baseline-commit', 'HEAD~']
+
   # TODO: uncomment once netskope problem is fixed
   # - repo: https://github.com/DavidAnson/markdownlint-cli2
   #   rev: v0.18.0

@@ -46,7 +46,7 @@ protobuf==3.20.3
     #   google-api-core
     #   googleapis-common-protos
     #   grpcio-status
-pyasn1==0.6.1
+pyasn1==0.6.3
     # via
     #   pyasn1-modules
     #   rsa
@@ -58,7 +58,7 @@ pydantic-core==2.33.1
     # via pydantic
 python-dateutil==2.9.0.post0
     # via google-cloud-bigquery
-requests==2.32.3
+requests==2.33.0
     # via
     #   google-api-core
     #   google-cloud-bigquery

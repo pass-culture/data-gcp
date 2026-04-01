@@ -52,7 +52,7 @@ protobuf==3.20.3
     #   googleapis-common-protos
     #   grpcio-status
     #   proto-plus
-pyasn1==0.6.0
+pyasn1==0.6.3
     # via
     #   pyasn1-modules
     #   rsa
@@ -60,7 +60,7 @@ pyasn1-modules==0.4.0
     # via google-auth
 pytz==2024.1
     # via datetime
-requests==2.32.3
+requests==2.33.0
     # via
     #   google-api-core
     #   google-cloud-storage

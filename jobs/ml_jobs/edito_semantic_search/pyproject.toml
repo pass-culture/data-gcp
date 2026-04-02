@@ -27,9 +27,8 @@ dependencies = [
     "langchain-google-vertexai>=2.0.28",
     "langchain-huggingface>=0.3.1",
     "loguru>=0.7.0",
-    "hypercorn==0.15.0",
-    "flask==3.0.0",
-    "flask-cors==4.0.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
     "torch>=2.0.0",
     "tabulate>=0.9.0",
 ]

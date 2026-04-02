@@ -1,4 +1,6 @@
+import asyncio
 import time
+from pathlib import Path
 
 import pandas as pd
 from loguru import logger
@@ -12,11 +14,16 @@ from app.models.validators import EditorialResult
 
 # --- Initialization ---
 
-with open("app/llm/system_prompt.txt", encoding="utf-8") as f:
+_PROMPT_DIR = Path(__file__).parent
+
+with open(_PROMPT_DIR / "system_prompt.txt", encoding="utf-8") as f:
     SYSTEM_PROMPT = f.read().strip()
 
-with open("app/llm/action_prompt.txt", encoding="utf-8") as f:
+with open(_PROMPT_DIR / "action_prompt.txt", encoding="utf-8") as f:
     ACTION_PROMPT = f.read().strip()
+
+# Timeout for LLM calls (seconds)
+LLM_TIMEOUT_SECONDS = 30
 
 # Lazy-initialized to avoid binding httpx async connections to an event loop
 # that doesn't yet exist at import time (before Uvicorn starts its loop).
@@ -134,7 +141,13 @@ async def llm_thematic_filtering(
 
     # 2. Run LLM (async — works natively with Uvicorn's event loop)
     agent = _get_agent()
-    llm_result = await agent.run(prompt)
+    try:
+        llm_result = await asyncio.wait_for(
+            agent.run(prompt), timeout=LLM_TIMEOUT_SECONDS
+        )
+    except TimeoutError:
+        logger.error(f"LLM call timed out after {LLM_TIMEOUT_SECONDS}s")
+        return pd.DataFrame()
     elapsed_time = time.time() - start_time
 
     # Log token usage and timing

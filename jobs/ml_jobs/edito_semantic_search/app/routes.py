@@ -4,6 +4,7 @@ import pandas as pd
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse, Response
 from loguru import logger
+from pydantic import BaseModel, Field
 
 from app.constants import (
     DATABASE_URI,
@@ -72,23 +73,24 @@ def is_alive() -> Response:
     return Response(status_code=200)
 
 
+class VertexAIPredictRequest(BaseModel):
+    """Vertex AI online prediction envelope."""
+
+    instances: list[PredictionRequest] = Field(
+        ..., min_length=1, description="List of prediction instances."
+    )
+
+
 @api.post("/predict")
-async def predict(data: dict):
+async def predict(data: VertexAIPredictRequest):
     """Predict endpoint."""
-    # Warning instances Handling
     try:
         ### Input parsing and validation
         start_time = time.time()
-        logger.info(f"Received prediction request: {data}")
-        instances = data.get("instances")
-        if not instances or not isinstance(instances, list):
-            return JSONResponse(
-                content={
-                    "error": "Invalid request format: 'instances' list is required"
-                },
-                status_code=400,
-            )
-        prediction_request = PredictionRequest(**instances[0])
+        logger.info(
+            f"Received prediction request for query: {data.instances[0].search_query!r}"
+        )
+        prediction_request = data.instances[0]
         # Here we decide to either do vector search or LLM filtering
         # When Vector search is disabled, we directly go to scalar search with filters
         item_ids = None
@@ -240,8 +242,8 @@ async def predict(data: dict):
             )
             return PredictionResult(predictions=search_results).model_dump()
     except Exception as e:
-        logger.error(f"Error during prediction: {e}")
+        logger.error(f"Error during prediction: {e}", exc_info=True)
         return JSONResponse(
-            content={"error": "An error occurred during prediction", "details": str(e)},
+            content={"error": "An internal error occurred during prediction."},
             status_code=500,
         )

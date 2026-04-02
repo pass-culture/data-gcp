@@ -5,7 +5,7 @@ import pyarrow.dataset as ds
 from loguru import logger
 from pyarrow.fs import GcsFileSystem
 
-from app.constants import PARQUET_FILE, embedding_model
+from app.constants import PARQUET_FILE, get_embedding_model
 from app.search.filters import apply_filters
 
 PARTITION_COLS = ["offer_subcategory_id"]
@@ -14,7 +14,7 @@ PARTITION_COLS = ["offer_subcategory_id"]
 class SearchClient:
     def __init__(self, database_uri: str, vector_table: str, scalar_table: str):
         """Connects to LanceDB and opens the specified table."""
-        self.embedding_model = embedding_model
+        self.embedding_model = get_embedding_model()
         logger.info(f"Connecting to LanceDB at: {database_uri}")
         self.db = lancedb.connect(database_uri)
 

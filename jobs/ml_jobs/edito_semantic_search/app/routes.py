@@ -44,7 +44,9 @@ def _startup_warmup():
         # 2. Warmup vector search (LanceDB) + LLM
         if PERFORM_VECTOR_SEARCH:
             vector_start = time.time()
-            dummy_query_vector = search_client.embedding_model.embed_query("warmup")
+            dummy_query_vector = search_client.embedding_model.encode(
+                "warmup", prompt_name="query"
+            ).tolist()
             _ = search_client.vector_search(query_vector=dummy_query_vector, k=1)
             logger.info(f"Vector search warmup: {time.time() - vector_start:.2f}s")
 
@@ -97,7 +99,9 @@ async def predict(data: dict):
                 f"task: search result | query: {prediction_request.search_query}"
             )
             logger.info(f"Embedding search query for vector search: '{full_query}'")
-            query_vector = search_client.embedding_model.embed_query(full_query)
+            query_vector = search_client.embedding_model.encode(
+                full_query, prompt_name="query"
+            ).tolist()
             logger.info(
                 f"Query embedding completed "
                 f"in {time.time() - query_encoding_time:.2f} seconds"

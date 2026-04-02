@@ -5,8 +5,8 @@ import os
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 from huggingface_hub import login
-from langchain_huggingface import HuggingFaceEmbeddings
 from loguru import logger
+from sentence_transformers import SentenceTransformer
 
 
 def access_secret(project_id, secret_id, default=None):
@@ -29,9 +29,9 @@ if not HUGGINGFACE_TOKEN:
     os.environ["HUGGINGFACE_TOKEN"] = HUGGINGFACE_TOKEN
 HUGGINGFACE_MODEL = "google/embeddinggemma-300m"
 login(token=HUGGINGFACE_TOKEN)
-embedding_model = HuggingFaceEmbeddings(
-    model=HUGGINGFACE_MODEL,
-    query_encode_kwargs={"prompt_name": "query"},
+embedding_model = SentenceTransformer(
+    HUGGINGFACE_MODEL,
+    trust_remote_code=True,
 )
 DATABASE_URI = (
     f"gs://mlflow-bucket-{ENVIRONMENT}/streamlit_data/chatbot_edito/search_db"

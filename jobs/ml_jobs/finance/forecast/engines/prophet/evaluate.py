@@ -11,6 +11,28 @@ from prophet import Prophet
 from prophet.diagnostics import cross_validation, performance_metrics
 
 
+def _convert_cv_param(param: float, training_period: int, freq: str) -> str:
+    """
+    Convert CV parameter to time string for Prophet.
+
+    Args:
+        param: a float percentage like 0.6
+        training_period: Total number of periods in the training data (days or weeks)
+        freq: Frequency string ('D' for daily, 'W-MON' for weekly, etc.)
+
+    Returns:
+        String in Prophet's format (e.g., "730 days" or "100 W")
+    """
+
+    periods = int(param * training_period)
+
+    # Determine unit based on frequency
+    if freq.startswith("W"):
+        return f"{periods} W"
+    else:  # Default to days for daily and other frequencies
+        return f"{periods} days"
+
+
 def cross_validate(
     model: Prophet,
     model_config: ModelConfig,
@@ -43,9 +65,19 @@ def cross_validate(
                         (e.g., {'MAE': 123.45, 'RMSE': 234.56, 'MAPE': 0.12}).
     """
     metrics = ["MAE", "RMSE", "MAPE"]
-    initial = model_config.evaluation.cv_initial
-    period = model_config.evaluation.cv_period
-    horizon = model_config.evaluation.cv_horizon
+
+    # Calculate training data length from model history
+    freq = model_config.evaluation.freq
+    training_period = len(model.history)
+
+    # Convert CV params (handle both string and percentage formats)
+    initial = _convert_cv_param(
+        model_config.evaluation.cv_initial, training_period, freq
+    )
+    period = _convert_cv_param(model_config.evaluation.cv_period, training_period, freq)
+    horizon = _convert_cv_param(
+        model_config.evaluation.cv_horizon, training_period, freq
+    )
 
     logger.info(
         f"Starting cross-validation: initial={initial}, period={period}, "

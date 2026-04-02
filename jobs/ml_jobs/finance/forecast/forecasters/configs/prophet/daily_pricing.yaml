@@ -29,7 +29,7 @@ data_processing:
   target_name: total_pricing
 evaluation:
   cv: true
-  cv_initial: "730 days"
-  cv_period: "180 days"
-  cv_horizon: "365 days"
+  cv_initial: 0.6  # 60% of training data for initial window
+  cv_period: 0.15  # 15% of training data between cutoffs
+  cv_horizon: 0.3  # 30% of training data for forecast horizon
   freq: D

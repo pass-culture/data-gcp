@@ -86,16 +86,7 @@ class ProphetModel(ForecastModel):
         ]
 
         dropped = original_count - len(valid_changepoints)
-        if dropped > 0:
-            dropped_cps = [
-                cp
-                for cp in self.config.prophet.changepoints
-                if cp < train_start or cp >= train_end
-            ]
-            logger.warning(
-                f"Dropped {dropped} changepoint(s) outside training range "
-                f"[{train_start_date}, {backtest_start_date}): {dropped_cps}"
-            )
+        logger.warning(f"Dropped {dropped} changepoint(s) outside training range ")
 
         self.config.prophet.changepoints = valid_changepoints
         logger.info(

@@ -35,7 +35,7 @@ data_processing:
   target_name: total_pricing
 evaluation:
   cv: true
-  cv_initial: "100 W"
-  cv_period: "3 W"
-  cv_horizon: "12 W"
+  cv_initial: 0.6  # 60% of training data for initial window
+  cv_period: 0.15  # 15% of training data between cutoffs
+  cv_horizon: 0.3  # 30% of training data for forecast horizon
   freq: W-MON

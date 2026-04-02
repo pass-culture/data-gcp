@@ -67,30 +67,29 @@ def main(
         "%Y-%m-%d"
     )
 
-    logger.info(f"Sliding window dates computed from execution_date={execution_date}:")
-    logger.info(f"  train_start_date: {train_start_date}")
-    logger.info(f"  backtest_start_date: {backtest_start_date}")
-    logger.info(f"  backtest_end_date: {backtest_end_date}")
-    logger.info(f"  forecast_horizon_date: {forecast_horizon_date}")
     experiment, run_name = setup_mlflow(experiment_name, model_type, model_name)
-
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
         mlflow.set_tag("model_type", model_type)
         mlflow.set_tag("model_name", model_name)
+
+        # Log sliding window parameters
+        mlflow.log_params(
+            {
+                "train_start_date": train_start_date,
+                "backtest_start_date": backtest_start_date,
+                "backtest_end_date": backtest_end_date,
+                "forecast_horizon_date": forecast_horizon_date,
+            }
+        )
 
         # 1. Initialize Model
         logger.info(f"Initializing {model_type} model for {model_name}")
         ModelClass = get_model_class(model_type)
         model = ModelClass(model_name)
 
-        # Log config parameters if available
-        if model.config is not None and hasattr(model.config, "model_dump"):
-            mlflow.log_params(model.config.model_dump())
-
         # Log config file if available
         if model.config_path and model.config_path.exists():
             mlflow.log_artifact(str(model.config_path), artifact_path="config")
-            logger.info(f"Logged config file: {model.config_path}")
 
         # 2. Prepare Data
         model.prepare_data(
@@ -123,30 +122,25 @@ def main(
         logger.info(f"Forecast saved to {forecast_file}")
 
         # 6. Monthly Forecast Aggregation
-        try:
-            monthly_forecast_df = model.aggregate_to_monthly(forecast_df)
-            monthly_forecast_file = f"{run_name}_monthly_forecast.xlsx"
-            monthly_forecast_df.to_excel(monthly_forecast_file, index=False)
-            mlflow.log_artifact(monthly_forecast_file, artifact_path="forecasts")
-            logger.info(f"Monthly Forecast saved to {monthly_forecast_file}")
+        monthly_forecast_df = model.aggregate_to_monthly(forecast_df)
+        monthly_forecast_file = f"{run_name}_monthly_forecast.xlsx"
+        monthly_forecast_df.to_excel(monthly_forecast_file, index=False)
+        mlflow.log_artifact(monthly_forecast_file, artifact_path="forecasts")
+        logger.info(f"Monthly Forecast saved to {monthly_forecast_file}")
 
-            # 7. Log to BigQuery
-            logger.info("Logging monthly forecast to BigQuery...")
-            save_forecast_gbq(
-                df=monthly_forecast_df,
-                run_id=mlflow.active_run().info.run_id,
-                experiment_name=experiment_name,
-                run_name=run_name,
-                model_name=model_name,
-                model_type=model_type,
-                table_name="monthly_forecasts",
-                dataset=dataset,
-            )
-            logger.info("Monthly forecast logged to BigQuery successfully")
-        except NotImplementedError:
-            logger.warning(f"Monthly aggregation not implemented for {model_type}")
-        except Exception as e:
-            logger.error(f"Failed to log to BigQuery: {e}")
+        # 7. Log to BigQuery
+        logger.info("Logging monthly forecast to BigQuery...")
+        save_forecast_gbq(
+            df=monthly_forecast_df,
+            run_id=mlflow.active_run().info.run_id,
+            experiment_name=experiment_name,
+            run_name=run_name,
+            model_name=model_name,
+            model_type=model_type,
+            table_name="monthly_forecasts",
+            dataset=dataset,
+        )
+        logger.info("Monthly forecast logged to BigQuery successfully")
 
 
 if __name__ == "__main__":

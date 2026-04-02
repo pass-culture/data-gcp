@@ -49,17 +49,11 @@ MODEL_CONFIGS = {
     "prophet_daily_pricing": {
         "model_type": "prophet",
         "model_name": "daily_pricing",
-        "train_start_date": "2022-01-01",
-        "backtest_days": 120,  # ~4 months of test data
-        "forecast_days": 365,  # 1 year forecast
         "dataset": f"ml_finance_{ENV_SHORT_NAME}",
     },
     "prophet_weekly_pricing": {
         "model_type": "prophet",
         "model_name": "weekly_pricing",
-        "train_start_date": "2022-01-01",
-        "backtest_days": 120,
-        "forecast_days": 365,
         "dataset": f"ml_finance_{ENV_SHORT_NAME}",
     },
 }
@@ -108,6 +102,22 @@ with DAG(
             type="string",
             description="GCE instance name",
         ),
+        # Model training params
+        "train_start_date": Param(
+            default="2022-01-01",
+            type="string",
+            description="Training start date (YYYY-MM-DD). Must be before first changepoint.",
+        ),
+        "backtest_days": Param(
+            default=120,
+            type="integer",
+            description="Number of days for backtest period (~4 months)",
+        ),
+        "forecast_days": Param(
+            default=365,
+            type="integer",
+            description="Number of days for forecast horizon (1 year)",
+        ),
     },
 ) as dag:
     start = EmptyOperator(task_id="start", dag=dag)
@@ -144,10 +154,10 @@ with DAG(
                     uv run python main.py \\
                         --model-type "{config['model_type']}" \\
                         --model-name "{config['model_name']}" \\
-                        --train-start-date "{config['train_start_date']}" \\
+                        --train-start-date "{{{{ params.train_start_date }}}}" \\
                         --execution-date "{{{{ ds }}}}" \\
-                        --backtest-days {config['backtest_days']} \\
-                        --forecast-days {config['forecast_days']} \\
+                        --backtest-days {{{{ params.backtest_days }}}} \\
+                        --forecast-days {{{{ params.forecast_days }}}} \\
                         --experiment-name "{{{{ params.experiment_name }}}}" \\
                         --dataset "{config['dataset']}"
                 """,

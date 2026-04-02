@@ -1,15 +1,23 @@
-from flask import Flask
-from flask_cors import CORS
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from app.routes import api
 
-app = Flask(__name__)
-CORS(app)
+app = FastAPI()
 
-app.register_blueprint(api)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(api)
 
 
 if __name__ == "__main__":
+    import uvicorn
+
     logger.info("startup", extra={"event": "startup", "response": "ready"})
-    app.run()
+    uvicorn.run(app, host="0.0.0.0", port=8080)

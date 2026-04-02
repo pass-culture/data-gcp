@@ -15,11 +15,13 @@ class ItemSelection(BaseModel):
 
     item_id: str = Field(
         ...,
-        description="The numeric item_id from the 'item_id' column of the table (e.g. '1', '2').",
+        description="The numeric item_id from the 'item_id' column of the table "
+        "(e.g. '1', '2').",
     )
     pertinence: str = Field(
         ...,
-        description="Brief explanation in French of why this item matches the query (max 2 sentences).",
+        description="Brief explanation in French of why this item matches the query "
+        "(max 2 sentences).",
     )
 
 

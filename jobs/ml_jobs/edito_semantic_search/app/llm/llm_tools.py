@@ -18,38 +18,44 @@ with open("app/llm/system_prompt.txt", encoding="utf-8") as f:
 with open("app/llm/action_prompt.txt", encoding="utf-8") as f:
     ACTION_PROMPT = f.read().strip()
 
-# Initialize provider once to reuse connections (Excellent for latency)
-_provider = GoogleProvider(vertexai=True, location="europe-west1", project=GCP_PROJECT)
+# Lazy-initialized to avoid binding httpx async connections to an event loop
+# that doesn't yet exist at import time (before Uvicorn starts its loop).
+_cached_agent: Agent | None = None
 
 
-def build_vertex_gemini_agent(model_name: str = "gemini-1.5-flash"):
+def _get_agent() -> Agent:
     """
-    Build a Pydantic AI Agent optimized for speed.
+    Lazily build and cache the Pydantic AI Agent on first use.
+
+    GoogleProvider/httpx binds to the current asyncio event loop on creation.
+    If created at import time (before Uvicorn), the first async request fails
+    with "Event loop is closed". Deferring creation to the first call guarantees
+    we use Uvicorn's running event loop.
     """
-    logger.info(f"Building Google Gemini agent with model: {model_name}")
-    # Pydantic AI's GoogleModel handles the Vertex API call natively
-    model = GoogleModel(
-        model_name,
-        provider=_provider,
+    global _cached_agent
+    if _cached_agent is not None:
+        return _cached_agent
+
+    logger.info(f"Building Google Gemini agent with model: {GEMINI_MODEL_NAME}")
+    provider = GoogleProvider(
+        vertexai=True, location="europe-west1", project=GCP_PROJECT
     )
-    return model
+    model = GoogleModel(GEMINI_MODEL_NAME, provider=provider)
 
+    _cached_agent = Agent(
+        model,
+        output_type=EditorialResult,
+        system_prompt=SYSTEM_PROMPT,
+        retries=1,
+        model_settings=ModelSettings(
+            temperature=0.0,
+        ),
+    )
+    logger.info(
+        f"Google Gemini agent initialized successfully, with model: {GEMINI_MODEL_NAME}"
+    )
+    return _cached_agent
 
-gemini_model = build_vertex_gemini_agent(model_name=GEMINI_MODEL_NAME)
-
-# Pydantic AI automatically handles native structured output via output_type
-_cached_agent = Agent(
-    gemini_model,
-    output_type=EditorialResult,
-    system_prompt=SYSTEM_PROMPT,
-    retries=1,
-    model_settings=ModelSettings(
-        temperature=0.0,
-    ),
-)
-logger.info(
-    f"Google Gemini agent initialized successfully, with model: {GEMINI_MODEL_NAME}"
-)
 
 # --- Logic ---
 
@@ -118,7 +124,7 @@ def build_prompt(question: str, retrieved_results: list):
     return prompt, reverse_map
 
 
-def llm_thematic_filtering(
+async def llm_thematic_filtering(
     search_query: str, vector_search_results: list
 ) -> pd.DataFrame:
     # 1. Build prompt and get the ID mapping
@@ -126,8 +132,9 @@ def llm_thematic_filtering(
 
     start_time = time.time()
 
-    # 2. Run LLM
-    llm_result = _cached_agent.run_sync(prompt)
+    # 2. Run LLM (async — works natively with Uvicorn's event loop)
+    agent = _get_agent()
+    llm_result = await agent.run(prompt)
     elapsed_time = time.time() - start_time
 
     # Log token usage and timing
@@ -149,7 +156,7 @@ def llm_thematic_filtering(
             f"⚠️ Slow LLM response ({elapsed_time:.2f}s) - possible validation retries"
         )
         logger.info(
-            f'llm_result _attempt_count: {getattr(llm_result, "_attempt_count", "N/A")} '
+            f"llm_result _attempt_count: {getattr(llm_result, '_attempt_count', 'N/A')}"
         )
 
     llm_output = (
@@ -203,7 +210,9 @@ def llm_thematic_filtering(
         llm_df = pd.DataFrame(processed_items)
         llm_df["rank"] = range(1, len(llm_df) + 1)
         logger.info(f"Successfully processed {len(llm_df)} items")
-        logger.info(f"LLM processed items: {llm_df['item_id'].tolist()}")  # Log first 3 items for debugging
+        logger.info(
+            f"LLM processed items: {llm_df['item_id'].tolist()}"
+        )  # Log first 3 items for debugging
     else:
         logger.warning("No valid items after processing")
         llm_df = pd.DataFrame()

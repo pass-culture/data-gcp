@@ -14,7 +14,6 @@ SELECT
 	, "lastConnectionDate" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as user_last_connection_date
 	, "isEmailValidated" as user_is_email_validated
 	, "isActive" as user_is_active
-	, "hasSeenProTutorials" as user_has_seen_pro_tutorials
 	, "phoneValidationStatus" AS user_phone_validation_status
 	, "isEmailValidated" AS user_has_validated_email
 	, CAST("notificationSubscriptions" -> \'marketing_push\' AS BOOLEAN) AS user_has_enabled_marketing_push

@@ -32,8 +32,7 @@ models:
         description: "{{ doc('column__user_is_email_validated') }}"
       - name: user_is_active
         description: "{{ doc('column__user_is_active') }}"
-      - name: user_has_seen_pro_tutorials
-        description: "{{ doc('column__user_has_seen_pro_tutorials') }}"
+
       - name: user_phone_validation_status
         description: "{{ doc('column__user_phone_validation_status') }}"
       - name: user_has_validated_email

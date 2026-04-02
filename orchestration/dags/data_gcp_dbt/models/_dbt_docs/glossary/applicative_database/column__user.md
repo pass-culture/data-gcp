@@ -33,7 +33,6 @@
 {% docs column__user_address %} User's registered address. Registered at first grant deposit and updated when the user applies for its GRANT_18. {% enddocs %}
 {% docs column__user_last_connection_date %} Date of the user's last connection. {% enddocs %}
 {% docs column__user_is_email_validated %} Boolean. Indicates if the user's email is validated. {% enddocs %}
-{% docs column__user_has_seen_pro_tutorials %} Boolean. Indicates if the user has seen professional tutorials. {% enddocs %}
 {% docs column__user_phone_validation_status %} Status of the user's phone validation step. {% enddocs %}
 {% docs column__user_has_validated_email %} Indicates if the user has validated their email. {% enddocs %}
 {% docs column__user_currently_subscribed_themes %} Users themes subscribed. Users can subscribe to themes (cinema, music) to receive custom communication related to those themes. {% enddocs %}

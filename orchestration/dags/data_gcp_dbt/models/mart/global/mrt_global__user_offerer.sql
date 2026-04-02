@@ -11,7 +11,6 @@ select
     user_last_connection_date,
     user_is_email_validated,
     user_is_active,
-    user_has_seen_pro_tutorials,
     user_phone_validation_status,
     user_has_validated_email,
     user_has_enabled_marketing_push,

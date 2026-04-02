@@ -197,10 +197,6 @@ def main() -> None:
     min_nodes = MIN_NODES
     max_nodes = MAX_NODES
 
-    # fallback to default description.
-    if model_description is None:
-        model_description = f"""{model_type} {experiment_name}."""
-
     container_type = CustomContainer(
         serving_container=serving_container, artifact_uri=None
     )

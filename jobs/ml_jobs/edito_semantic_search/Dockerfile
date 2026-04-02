@@ -10,12 +10,17 @@ COPY ./pyproject.toml ./pyproject.toml
 COPY ./uv.lock ./uv.lock
 RUN uv sync --no-dev --no-cache-dir
 
+# Create a non-root user to run the application
+RUN adduser --disabled-password --gecos "" appuser
+
 COPY ./app /app
 WORKDIR /
 
 EXPOSE 8080
 
+# Run as the non-root user
+USER appuser
 ENV WORKERS=${WORKERS}
 ENV GCP_PROJECT=${GCP_PROJECT}
 ENV ENV_SHORT_NAME=${ENV_SHORT_NAME}
-CMD uv run --no-dev uvicorn app.app:app --host 0.0.0.0 --port 8080 --workers=${WORKERS}
+CMD ["sh", "-c", "uv run --no-dev uvicorn app.app:app --host 0.0.0.0 --port 8080 --workers=${WORKERS}"]

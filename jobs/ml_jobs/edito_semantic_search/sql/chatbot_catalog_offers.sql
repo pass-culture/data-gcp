@@ -11,9 +11,7 @@ select
     gs.stock_beginning_date
 from `{project}.{analytics_dataset}.global_offer` go
 join `{project}.{analytics_dataset}.global_stock` gs on go.offer_id = gs.offer_id
-join
-    `{project}.{mlfeat_dataset}.item_embedding_tmp` dbi
-    on dbi.item_id = go.item_id
+join `{project}.{mlfeat_dataset}.item_embedding_tmp` dbi on dbi.item_id = go.item_id
 where
     (stock_beginning_date is null or stock_beginning_date > current_date())
     and (

@@ -176,15 +176,19 @@ def evaluation_pipeline(
     return metrics
 
 
-def backtest_pipeline(df_backtest: pd.DataFrame, model: Prophet) -> dict:
+def backtest_pipeline(
+    df_backtest: pd.DataFrame, model: Prophet
+) -> tuple[dict, pd.DataFrame]:
     """Perform backtest evaluation.
     Args:
         df_backtest: DataFrame for backtest evaluation.
         model: Trained Prophet model.
     Returns:
-        Dictionary containing backtest evaluation metrics.
+        Tuple containing:
+            - Dictionary with backtest evaluation metrics
+            - DataFrame with backtest forecast (ds, y, yhat, yhat_lower, yhat_upper)
     """
     logger.info("Performing backtest evaluation")
     backtest_forecast_df = predict_with_truth(model, df_backtest)
     backtest_metrics = compute_metrics(backtest_forecast_df)
-    return backtest_metrics
+    return backtest_metrics, backtest_forecast_df

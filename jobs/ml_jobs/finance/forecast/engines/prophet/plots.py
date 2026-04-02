@@ -5,6 +5,7 @@ import mlflow
 import pandas as pd
 from loguru import logger
 
+from forecast.forecasters.prophet_model import ProphetModel
 from prophet import Prophet
 
 
@@ -190,21 +191,27 @@ def plot_forecast_vs_actuals(
     return fig
 
 
-def log_diagnostic_plots(model: Prophet, df_train: pd.DataFrame) -> dict:
-    """Generate and log diagnostic plots for the Prophet model to MLflow.
+def log_all_plots(
+    ProphetModelInstance: ProphetModel,
+    backtest_forecast: pd.DataFrame,
+) -> dict:
+    """Generate and log all diagnostic and evaluation plots to MLflow.
 
     Args:
-        model: Trained Prophet model.
-        df_train: DataFrame used for training with 'ds' and 'y' columns.
+        ProphetModelInstance: Instance of the ProphetModel class.
+        backtest_forecast: Optional DataFrame with backtest predictions and actuals.
+            Must contain: ds, y, yhat, yhat_lower, yhat_upper
 
     Returns:
-        Dictionary containing:
-            - 'changepoints': Figure showing changepoints on training data
-            - 'trend': Figure showing trend with changepoints
-            - 'components': Figure showing Prophet components
+        Dictionary containing figure objects for diagnostic plots.
     """
-    logger.info("Generating diagnostic plots")
 
+    logger.info("Generating all plots")
+    model = ProphetModelInstance.model
+    df_train = ProphetModelInstance.data_split.train
+    freq = ProphetModelInstance.config.evaluation.freq
+
+    # Generate diagnostic plots
     fig_cp = plot_prophet_changepoints(model, df_train)
     forecast_train = model.predict(df_train)
     changepoints_list = (
@@ -212,19 +219,21 @@ def log_diagnostic_plots(model: Prophet, df_train: pd.DataFrame) -> dict:
     )
     fig_trend = plot_trend_with_changepoints(forecast_train, changepoints_list)
     fig_components = model.plot_components(forecast_train)
+    fig_backtest = plot_forecast_vs_actuals(
+        forecast=backtest_forecast,
+        freq=freq,
+        title="Backtest: Forecast vs Actuals",
+        y_label="Pricing €",
+    )
 
-    # Log figures to MLflow
+    # Log diagnostic figures to MLflow
     logger.info("Logging diagnostic plots to MLflow")
     mlflow.log_figure(fig_cp, "diagnostics/changepoints.png")
     mlflow.log_figure(fig_trend, "diagnostics/trend.png")
     mlflow.log_figure(fig_components, "diagnostics/components.png")
+    mlflow.log_figure(fig_backtest, "diagnostics/backtest_forecast.png")
 
-    # Close figures to free memory
-    plt.close(fig_cp)
-    plt.close(fig_trend)
-    plt.close(fig_components)
-
-    logger.info("Diagnostic plots generated and logged successfully")
+    logger.info("All plots generated and logged successfully")
 
     return {
         "changepoints": fig_cp,

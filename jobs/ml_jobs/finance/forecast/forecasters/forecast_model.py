@@ -52,8 +52,14 @@ class ForecastModel(ABC):
         pass
 
     @abstractmethod
-    def run_backtest(self) -> dict[str, Any]:
-        """Run backtest evaluation and return metrics."""
+    def run_backtest(self) -> tuple[dict[str, Any], pd.DataFrame]:
+        """Run backtest evaluation and return metrics and forecast data.
+
+        Returns:
+            Tuple containing:
+                - Dictionary with backtest metrics
+                - DataFrame with backtest forecast
+        """
         pass
 
     @abstractmethod

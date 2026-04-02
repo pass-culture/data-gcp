@@ -12,7 +12,6 @@ from forecast.engines.prophet.evaluate import (
 )
 from forecast.engines.prophet.forecast import generate_future_forecast
 from forecast.engines.prophet.model_config import ModelConfig
-from forecast.engines.prophet.plots import log_diagnostic_plots
 from forecast.engines.prophet.preprocessing import preprocessing_pipeline
 from forecast.engines.prophet.train import fit_prophet_model
 from forecast.forecasters.forecast_model import ForecastModel
@@ -112,13 +111,19 @@ class ProphetModel(ForecastModel):
             model_config=self.config,
         )
 
-    def run_backtest(self) -> dict:
-        return backtest_pipeline(df_backtest=self.data_split.backtest, model=self.model)
+    def run_backtest(self) -> tuple[dict, pd.DataFrame]:
+        """Run backtest and return metrics and forecast data.
 
-    def get_diagnostics(self) -> dict:
-        plots = log_diagnostic_plots(self.model, self.data_split.train)
-        logger.info("Diagnostic plots generated")
-        return plots
+        Returns:
+            Tuple containing:
+                - Dictionary with backtest metrics
+                - DataFrame with backtest forecast
+        """
+        metrics, backtest_forecast = backtest_pipeline(
+            df_backtest=self.data_split.backtest, model=self.model
+        )
+
+        return metrics, backtest_forecast
 
     def predict(self, start_date: str, end_date: str) -> pd.DataFrame:
         logger.info(f"Generating forecast from {start_date} to {end_date}")

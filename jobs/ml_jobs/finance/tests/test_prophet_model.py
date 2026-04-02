@@ -61,9 +61,9 @@ class TestProphetModel(unittest.TestCase):
             },
             "evaluation": {
                 "cv": False,
-                "cv_initial": "365 days",
-                "cv_period": "30 days",
-                "cv_horizon": "30 days",
+                "cv_initial": "0.7",
+                "cv_period": "0.15",
+                "cv_horizon": "0.1",
                 "freq": "D",
             },
         }
@@ -136,9 +136,9 @@ class TestProphetModel(unittest.TestCase):
             },
             "evaluation": {
                 "cv": False,
-                "cv_initial": "1 d",
-                "cv_period": "1 d",
-                "cv_horizon": "1 d",
+                "cv_initial": "0.7",
+                "cv_period": "0.15",
+                "cv_horizon": "0.1",
                 "freq": "D",
             },
         }

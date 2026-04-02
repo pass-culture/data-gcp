@@ -99,14 +99,17 @@ def main(
         # 3. Train
         model.train()
 
-        # 4. Evaluate on test/CV and backtest data
+        # 4. Generate and log diagnostic plots
+        model.get_diagnostics()
+
+        # 5. Evaluate on test/CV and backtest data
         eval_results = model.evaluate()
         mlflow.log_metrics(eval_results)
 
         backtest_metrics = model.run_backtest()
         mlflow.log_metrics(backtest_metrics)
 
-        # 5. Future Forecast - start from 1st of month after last data point
+        # 6. Future Forecast - start from 1st of month after last data point
         last_data_date = model.data_split.backtest["ds"].max()
         forecast_start = (last_data_date + pd.offsets.MonthBegin(1)).strftime(
             "%Y-%m-%d"
@@ -121,14 +124,14 @@ def main(
         mlflow.log_artifact(forecast_file, artifact_path="forecasts")
         logger.info(f"Forecast saved to {forecast_file}")
 
-        # 6. Monthly Forecast Aggregation
+        # 7. Monthly Forecast Aggregation
         monthly_forecast_df = model.aggregate_to_monthly(forecast_df)
         monthly_forecast_file = f"{run_name}_monthly_forecast.xlsx"
         monthly_forecast_df.to_excel(monthly_forecast_file, index=False)
         mlflow.log_artifact(monthly_forecast_file, artifact_path="forecasts")
         logger.info(f"Monthly Forecast saved to {monthly_forecast_file}")
 
-        # 7. Log to BigQuery
+        # 8. Log to BigQuery
         logger.info("Logging monthly forecast to BigQuery...")
         save_forecast_gbq(
             df=monthly_forecast_df,

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import mlflow
 import pandas as pd
 from loguru import logger
 
@@ -113,7 +114,7 @@ def plot_cv_results(
             fig.tight_layout()
 
             plot_path = output_path / f"cv_{m}.png"
-            fig.savefig(plot_path)
+            fig.savefig(str(plot_path))
             plt.close(fig)
 
             plot_paths.append(str(plot_path))
@@ -173,8 +174,8 @@ def plot_forecast_vs_actuals(
 
     ax.fill_between(
         forecast.ds,
-        forecast.yhat_lower,
-        forecast.yhat_upper,
+        forecast.yhat_lower.values,
+        forecast.yhat_upper.values,
         alpha=0.3,
         label="uncertainty interval",
     )
@@ -190,7 +191,7 @@ def plot_forecast_vs_actuals(
 
 
 def log_diagnostic_plots(model: Prophet, df_train: pd.DataFrame) -> dict:
-    """Generate diagnostic plots for the Prophet model.
+    """Generate and log diagnostic plots for the Prophet model to MLflow.
 
     Args:
         model: Trained Prophet model.
@@ -212,7 +213,18 @@ def log_diagnostic_plots(model: Prophet, df_train: pd.DataFrame) -> dict:
     fig_trend = plot_trend_with_changepoints(forecast_train, changepoints_list)
     fig_components = model.plot_components(forecast_train)
 
-    logger.info("Diagnostic plots generated successfully")
+    # Log figures to MLflow
+    logger.info("Logging diagnostic plots to MLflow")
+    mlflow.log_figure(fig_cp, "diagnostics/changepoints.png")
+    mlflow.log_figure(fig_trend, "diagnostics/trend.png")
+    mlflow.log_figure(fig_components, "diagnostics/components.png")
+
+    # Close figures to free memory
+    plt.close(fig_cp)
+    plt.close(fig_trend)
+    plt.close(fig_components)
+
+    logger.info("Diagnostic plots generated and logged successfully")
 
     return {
         "changepoints": fig_cp,

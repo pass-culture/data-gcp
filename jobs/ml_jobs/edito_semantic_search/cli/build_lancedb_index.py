@@ -1,8 +1,13 @@
+# TODO: Refactor this script if it is still usefull, or delete otherwise
+
 import os
+
 import lancedb
-from loguru import logger
 from dotenv import load_dotenv
-from constants import LANCEDB_URI, GCS_EMBEDDING_PARQUET_FILE, LANCEDB_TABLE
+from loguru import logger
+
+from constants import LANCEDB_TABLE, LANCEDB_URI
+
 # --- 1. Configuration ---
 load_dotenv()
 ENV_SHORT_NAME = os.getenv("ENV_SHORT_NAME", "dev")
@@ -12,34 +17,38 @@ ENVIRONMENT = "prod" if ENV_SHORT_NAME == "prod" else "ehp"
 GCS_DATABASE_URI = LANCEDB_URI
 TABLE_NAME = LANCEDB_TABLE
 
+
 def build_lancedb_index(
     table: lancedb.Table,
     index_type: str = "vector",
     index_column: str = "vector",
 ) -> None:
     """Builds the specified index on the LanceDB table."""
-    
+
     if index_type == "text":
         # FTS index doesn't use IVF_PQ, it's for keyword search
         table.create_fts_index(index_column, replace=True)
         logger.info(f"Created FTS (text) index on column '{index_column}'")
 
     elif index_type == "vector":
-        logger.info(f"Building IVF_PQ index on '{index_column}' with 2048 partitions...")
+        logger.info(
+            f"Building IVF_PQ index on '{index_column}' with 2048 partitions..."
+        )
         # v0.26.0 syntax
         table.create_index(
             vector_column_name=index_column,
-            metric="cosine",      # Best for Gemma 300M RAG
+            metric="cosine",  # Best for Gemma 300M RAG
             num_partitions=2048,  # Optimized for ~2.5M - 3M rows
-            num_sub_vectors=48,   # 768 / 16 = 48 (Optimized for Gemma dims)
+            num_sub_vectors=48,  # 768 / 16 = 48 (Optimized for Gemma dims)
             index_type="IVF_PQ",
-            replace=True
+            replace=True,
         )
         logger.info(f"Created vector index on '{index_column}' successfully.")
 
     elif index_type == "scalar":
         table.create_scalar_index(index_column)
         logger.info(f"Created scalar index on '{index_column}'.")
+
 
 if __name__ == "__main__":
     # 1. Connect to GCS
@@ -49,7 +58,7 @@ if __name__ == "__main__":
     # 2. Diagnostics
     row_count = len(table)
     logger.info(f"Connected to GCS Table. Row count: {row_count}")
-    
+
     if "vector" not in table.schema.names:
         logger.error(f"Column 'vector' not found. Available: {table.schema.names}")
     else:
@@ -64,9 +73,5 @@ if __name__ == "__main__":
             logger.warning(f"Maintenance failed (sometimes restricted on GCS): {e}")
 
         # 4. Build Index
-        build_lancedb_index(
-            table=table,
-            index_type="vector",
-            index_column="vector"
-        )
+        build_lancedb_index(table=table, index_type="vector", index_column="vector")
     logger.info("Indexing process finished.")

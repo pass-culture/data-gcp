@@ -16,14 +16,17 @@ app = typer.Typer()
 @app.command()
 def partition_parquet(
     env: str = typer.Option("dev", help="Environment: dev, stg, or prod"),
-    partition_cols: list[str] = typer.Option(
+    partition_cols: list[str] = typer.Option(  # noqa: B008
         ["offer_subcategory_id", "venue_department_code"],
         "--partition-col",
         "-p",
-        help="Columns to partition by. Pass multiple times for nested partitions (e.g., -p col1 -p col2)",
+        help="Columns to partition by. "
+        "Pass multiple times for nested partitions (e.g., -p col1 -p col2)",
     ),
+    *,
     analyze_only: bool = typer.Option(
-        False, help="Analyze the dataset to recommend if the chosen columns are efficient"
+        False,
+        help="Analyze the dataset to recommend if the chosen columns are efficient",
     ),
     dry_run: bool = typer.Option(
         False, help="Show what would be done without executing"
@@ -33,7 +36,9 @@ def partition_parquet(
     Partition existing parquet file for optimal query performance.
     """
     gcp_env = "prod" if env == "prod" else "ehp"
-    parquet_file = f"gs://mlflow-bucket-{gcp_env}/streamlit_data/chatbot_edito/offers_{env}/"
+    parquet_file = (
+        f"gs://mlflow-bucket-{gcp_env}/streamlit_data/chatbot_edito/offers_{env}/"
+    )
     output_base = f"gs://mlflow-bucket-{gcp_env}/streamlit_data/chatbot_edito/offers_{env}_partitioned"
 
     logger.info(f"Starting partitioning for environment: {env} ({gcp_env})")
@@ -49,9 +54,9 @@ def partition_parquet(
         df = pl.read_parquet(parquet_file)
         logger.info(f"Loaded {len(df):,} rows.")
         logger.info(f"Columns available in source: {df.columns}")
-        
+
         # 2. Check required columns
-        required_cols = list(partition_cols) + ["item_id"]
+        required_cols = [*list(partition_cols), "item_id"]
         missing = [col for col in required_cols if col not in df.columns]
         if missing:
             raise ValueError(
@@ -65,15 +70,23 @@ def partition_parquet(
                 n_unique = df.select(pl.col(col).n_unique()).item()
                 logger.info(f"Column '{col}' has {n_unique} unique values.")
                 if n_unique > 5000:
-                    logger.warning(f"⚠️ '{col}' has high cardinality! This may cause the 'small files' problem.")
+                    logger.warning(
+                        f"⚠️ '{col}' has high cardinality! "
+                        "This may cause the 'small files' problem."
+                    )
                 elif n_unique < 2:
-                    logger.warning(f"⚠️ '{col}' has very low cardinality. Partitioning won't help performance much.")
-            
+                    logger.warning(
+                        f"⚠️ '{col}' has very low cardinality. "
+                        "Partitioning won't help performance much."
+                    )
+
             # Show skew/distribution
-            partition_counts = df.group_by(partition_cols).len().sort("len", descending=True)
+            partition_counts = (
+                df.group_by(partition_cols).len().sort("len", descending=True)
+            )
             total_partitions = len(partition_counts)
             avg_rows = len(df) / total_partitions
-            
+
             logger.info(f"Total partitions that will be created: {total_partitions}")
             logger.info(f"Average rows per partition: {avg_rows:,.0f}")
             logger.info(f"Top 5 largest partitions:\n{partition_counts.head(5)}")
@@ -118,6 +131,7 @@ def partition_parquet(
     except Exception as e:
         logger.error(f"Partitioning failed: {e}")
         raise
+
 
 if __name__ == "__main__":
     app()

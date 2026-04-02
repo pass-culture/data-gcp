@@ -35,8 +35,8 @@ bq_client = bigquery.Client(project=GCP_PROJECT)
 
 # Configure the load job
 job_config = bigquery.LoadJobConfig(
-    autodetect=True,  # Automatically detect the schema (e.g., STRING or INTEGER)
-    write_disposition="WRITE_TRUNCATE",  # Overwrites if table exists. Use WRITE_APPEND to add rows instead.
+    autodetect=True,
+    write_disposition="WRITE_TRUNCATE",
 )
 
 logger.info(f"Creating/loading table {BQ_TABLE_ID} in BigQuery...")

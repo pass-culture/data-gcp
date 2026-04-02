@@ -1,15 +1,14 @@
+# TODO: Refactor this script if it is still usefull, or delete otherwise
+
 import lancedb
-import pyarrow as pa
 import pyarrow.dataset as ds
-import pyarrow.parquet as pq
 
 # --- 1. Configuration ---
 # Replace with your actual GCS URIs
-from constants import LANCEDB_URI, GCS_EMBEDDING_PARQUET_FILE, LANCEDB_TABLE
+from constants import GCS_EMBEDDING_PARQUET_FILE, LANCEDB_TABLE, LANCEDB_URI
 
 # Define the batch size for streaming (e.g., 100,000 rows at a time)
 BATCH_SIZE = 100000
-
 
 
 # This function reads the Parquet file from GCS in chunks.
@@ -22,22 +21,20 @@ def parquet_batch_generator(parquet_uri: str, batch_size: int):
     try:
         print(f"Streaming data from {parquet_uri} in batches of {batch_size}...")
         dataset = ds.dataset(parquet_uri, format="parquet")
-        
+
         # Print schema for debugging
-        print(f"\nOriginal schema:")
+        print("\nOriginal schema:")
         for field in dataset.schema:
             print(f"  {field.name}: {field.type}")
         print()
-        
-        for batch in dataset.to_batches(batch_size=batch_size):
-            # Convert nested structures to LanceDB-compatible format
-            yield batch
+
+        yield from dataset.to_batches(batch_size=batch_size)
     except Exception as e:
         print(f"An error occurred during GCS streaming: {e}")
         import traceback
+
         traceback.print_exc()
         # Make sure your authentication is set up for pyarrow/gcsfs
-
 
 
 # --- 4. Connect to LanceDB and Create Table from Generator ---
@@ -46,19 +43,20 @@ if __name__ == "__main__":
     print("=" * 60)
     print("LanceDB Table Creation from GCS Parquet")
     print("=" * 60)
-    
+
     # First, inspect the schema
-    print('\n[1/3] Reading schema from:', GCS_EMBEDDING_PARQUET_FILE)
+    print("\n[1/3] Reading schema from:", GCS_EMBEDDING_PARQUET_FILE)
     try:
-        dataset = ds.dataset(GCS_EMBEDDING_PARQUET_FILE, format='parquet')
-        print('\nSchema:')
+        dataset = ds.dataset(GCS_EMBEDDING_PARQUET_FILE, format="parquet")
+        print("\nSchema:")
         print(dataset.schema)
-        print('\n--- Field details ---')
+        print("\n--- Field details ---")
         for field in dataset.schema:
-            print(f'  {field.name}: {field.type}')
+            print(f"  {field.name}: {field.type}")
     except Exception as e:
         print(f"Error reading schema: {e}")
         import traceback
+
         traceback.print_exc()
         exit(1)
 
@@ -73,9 +71,9 @@ if __name__ == "__main__":
         if LANCEDB_TABLE in existing_tables:
             print(f"Table '{LANCEDB_TABLE}' exists. Dropping...")
             db.drop_table(LANCEDB_TABLE)
-            print(f"      ✓ Table dropped successfully")
+            print("      ✓ Table dropped successfully")
         else:
-            print(f"      ✓ No existing table found")
+            print("      ✓ No existing table found")
     except Exception as e:
         print(f"      Warning: Could not check/drop table: {e}")
 
@@ -103,9 +101,10 @@ if __name__ == "__main__":
 
     except Exception as e:
         print(f"\n{'=' * 60}")
-        print(f"ERROR: LanceDB table creation failed")
+        print("ERROR: LanceDB table creation failed")
         print(f"{'=' * 60}")
         print(f"Error message: {e}")
         import traceback
+
         traceback.print_exc()
         exit(1)

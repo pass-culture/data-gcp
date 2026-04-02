@@ -16,6 +16,7 @@ app = typer.Typer()
 @app.command()
 def partition_parquet(
     env: str = typer.Option("dev", help="Environment: dev, stg, or prod"),
+    *,
     dry_run: bool = typer.Option(
         False, help="Show what would be done without executing"
     ),
@@ -46,7 +47,7 @@ def partition_parquet(
 
         # 2. Check required columns
         partition_cols = ["offer_subcategory_id", "venue_department_code"]
-        required_cols = partition_cols + ["item_id"]
+        required_cols = [*partition_cols, "item_id"]
 
         missing = [col for col in required_cols if col not in df.columns]
         if missing:
@@ -63,7 +64,8 @@ def partition_parquet(
             df.group_by(partition_cols).len().sort("len", descending=True)
         )
         logger.info(
-            f"Will create {len(partition_counts)} partitions. Top 5:\n{partition_counts.head(5)}"
+            f"Will create {len(partition_counts)} partitions. "
+            "Top 5:\n{partition_counts.head(5)}"
         )
 
         # 4. Write directly to GCS using PyArrow (HIVE FORMAT)

@@ -28,7 +28,7 @@ def deploy_container(serving_container, workers):
         subprocess.CalledProcessError: If deployment fails
     """
     command = (
-        "sh ./deploy_to_docker_registery.sh "
+        "sh cli/deploy_to_docker_registery.sh "
         f"{serving_container} {workers} {GCP_PROJECT} {ENV_SHORT_NAME}"
     )
     try:

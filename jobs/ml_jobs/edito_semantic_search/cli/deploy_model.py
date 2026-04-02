@@ -3,10 +3,10 @@ from typing import ClassVar
 
 import typer
 from google.cloud import aiplatform
+from loguru import logger
 
 from constants import (
     ENDPOINT_NAME,
-    ENV_SHORT_NAME,
     EXPERIMENT_NAME,
     GCP_PROJECT,
     INSTANCE_TYPE,
@@ -67,7 +67,7 @@ class ModelHandler:
         self.model_params = model_params
         self.endpoint_params = endpoint_params
 
-    def upload_model(self):
+    def upload_model(self) -> aiplatform.Model:
         experiment_name = self.model_params.experiment_name
         print("Uploading model to Vertex AI model registery...")
         print(f"Search for existing model...  {experiment_name}")
@@ -100,7 +100,7 @@ class ModelHandler:
         )
         return model
 
-    def deploy_model(self, model):
+    def deploy_model(self, model: aiplatform.Model) -> None:
         enpoint_name = self.endpoint_params.endpoint_name
         print("Deploying model to endpoint...")
         print(f"Search for existing endoipoint...  {enpoint_name}")
@@ -219,13 +219,21 @@ def main() -> None:
         traffic_percentage=int(traffic_percentage),
     )
     handler = ModelHandler(region, GCP_PROJECT, model_params, endpoint_params)
+
     # Upload new model to registery
     model = handler.upload_model()
+    logger.info(f"Model uploaded to VertexAI registry: {model.resource_name}")
+
     # Deploy it to an endpoint
-    handler.deploy_model(model)
-    # Delete old model versions
-    max_model_versions = 5 if ENV_SHORT_NAME == "prod" else 1
-    handler.clean_model_versions(max_model_versions)
+    logger.warning(
+        "Skipping model deployment because we lack the right permissions "
+        "on the service account. Please deploy manually for now."
+    )
+    # handler.deploy_model(model)
+
+    # # Delete old model versions
+    # max_model_versions = 5 if ENV_SHORT_NAME == "prod" else 1
+    # handler.clean_model_versions(max_model_versions)
 
 
 if __name__ == "__main__":

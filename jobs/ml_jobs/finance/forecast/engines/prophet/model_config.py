@@ -41,9 +41,9 @@ class DataProcessingConfig(BaseModel):
 
 class EvaluationConfig(BaseModel):
     cv: bool
-    cv_initial: float  # 0.6 (60% of training data)
-    cv_period: float  # 0.15 (15% of training data)
-    cv_horizon: float  # 0.3 (30% of training data)
+    cv_initial: float
+    cv_period: float
+    cv_horizon: float
     freq: str
 
 

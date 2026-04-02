@@ -29,8 +29,7 @@ def _convert_cv_param(param: float, training_period: int, freq: str) -> str:
     # Determine unit based on frequency
     if freq.startswith("W"):
         return f"{periods} W"
-    else:  # Default to days for daily and other frequencies
-        return f"{periods} days"
+    return f"{periods} days"
 
 
 def cross_validate(

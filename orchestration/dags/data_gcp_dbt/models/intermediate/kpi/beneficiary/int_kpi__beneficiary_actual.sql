@@ -1,3 +1,5 @@
+{% set secret_threshold_beneficiary = 5 %}
+
 with
 
     last_day_of_month as (
@@ -79,28 +81,59 @@ with
             {{ ref("region_department") }} as rd
             on eud.user_department_code = rd.num_dep
         where uua.cumulative_amount_spent < uua.initial_deposit_amount
+    ),
+
+    final_data as (
+        select
+            partition_month,
+            region_name,
+            region_code,
+            department_name,
+            department_code,
+            age_at_calculation,
+            is_in_qpv,
+            macro_density_label,
+            micro_density_label,
+            count(distinct user_id) as total_actual_beneficiaries
+        from active_users_base
+        where age_at_calculation between 15 and 22
+        group by
+            partition_month,
+            region_name,
+            region_code,
+            department_name,
+            department_code,
+            age_at_calculation,
+            is_in_qpv,
+            macro_density_label,
+            micro_density_label
     )
 
 select
     partition_month,
-    region_name,
-    region_code,
-    department_name,
-    department_code,
+    case
+        when total_actual_beneficiaries <= {{ secret_threshold_beneficiary }}
+        then "secret_statistique"
+        else cast(region_name as string)
+    end as region_name,
+    case
+        when total_actual_beneficiaries <= {{ secret_threshold_beneficiary }}
+        then "secret_statistique"
+        else cast(region_code as string)
+    end as region_code,
+    case
+        when total_actual_beneficiaries <= {{ secret_threshold_beneficiary }}
+        then "secret_statistique"
+        else cast(department_name as string)
+    end as department_name,
+    case
+        when total_actual_beneficiaries <= {{ secret_threshold_beneficiary }}
+        then "secret_statistique"
+        else cast(department_code as string)
+    end as department_code,
     age_at_calculation,
     is_in_qpv,
     macro_density_label,
     micro_density_label,
-    count(distinct user_id) as total_actual_beneficiaries
-from active_users_base
-where age_at_calculation between 15 and 22
-group by
-    partition_month,
-    region_name,
-    region_code,
-    department_name,
-    department_code,
-    age_at_calculation,
-    is_in_qpv,
-    macro_density_label,
-    micro_density_label
+    total_actual_beneficiaries
+from final_data

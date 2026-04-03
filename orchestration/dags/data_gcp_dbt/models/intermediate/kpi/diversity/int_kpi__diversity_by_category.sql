@@ -1,3 +1,5 @@
+{% set secret_threshold_beneficiary = 5 %}
+
 with
     expired_users as (
         select
@@ -26,31 +28,64 @@ with
         select distinct user_id, offer_category_id
         from {{ ref("int_global__booking") }}
         where booking_is_used
+    ),
+
+    final_data as (
+        select
+            u.deposit_expiration_month,
+            u.is_in_qpv,
+            u.macro_density_label,
+            u.micro_density_label,
+            u.region_name,
+            u.region_code,
+            u.department_name,
+            u.department_code,
+            cat.offer_category_id,
+            count(
+                distinct case
+                    when cat.offer_category_id is not null then cat.user_id
+                end
+            ) as total_category_booked_beneficiaries
+        from expired_users as u
+        left join user_booked_categories as cat on u.user_id = cat.user_id
+        where cat.offer_category_id is not null
+        group by
+            u.deposit_expiration_month,
+            u.is_in_qpv,
+            u.macro_density_label,
+            u.micro_density_label,
+            u.region_name,
+            u.region_code,
+            u.department_name,
+            u.department_code,
+            cat.offer_category_id
     )
 
 select
-    u.deposit_expiration_month,
-    u.is_in_qpv,
-    u.macro_density_label,
-    u.micro_density_label,
-    u.region_name,
-    u.region_code,
-    u.department_name,
-    u.department_code,
-    cat.offer_category_id,
-    count(
-        distinct case when cat.offer_category_id is not null then cat.user_id end
-    ) as total_category_booked_beneficiaries
-from expired_users as u
-left join user_booked_categories as cat on u.user_id = cat.user_id
-where cat.offer_category_id is not null
-group by
-    u.deposit_expiration_month,
-    u.is_in_qpv,
-    u.macro_density_label,
-    u.micro_density_label,
-    u.region_name,
-    u.region_code,
-    u.department_name,
-    u.department_code,
-    cat.offer_category_id
+    deposit_expiration_month,
+    case
+        when total_category_booked_beneficiaries <= {{ secret_threshold_beneficiary }}
+        then "secret_statistique"
+        else cast(region_name as string)
+    end as region_name,
+    case
+        when total_category_booked_beneficiaries <= {{ secret_threshold_beneficiary }}
+        then "secret_statistique"
+        else cast(region_code as string)
+    end as region_code,
+    case
+        when total_category_booked_beneficiaries <= {{ secret_threshold_beneficiary }}
+        then "secret_statistique"
+        else cast(department_name as string)
+    end as department_name,
+    case
+        when total_category_booked_beneficiaries <= {{ secret_threshold_beneficiary }}
+        then "secret_statistique"
+        else cast(department_code as string)
+    end as department_code,
+    is_in_qpv,
+    macro_density_label,
+    micro_density_label,
+    offer_category_id,
+    total_category_booked_beneficiaries
+from final_data

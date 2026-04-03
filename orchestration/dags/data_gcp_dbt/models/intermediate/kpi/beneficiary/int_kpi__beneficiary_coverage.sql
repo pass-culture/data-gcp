@@ -1,3 +1,5 @@
+{% set secret_threshold_beneficiary = 5 %}
+
 with
     user_deposit as (
         select
@@ -25,20 +27,48 @@ with
             ub.total_beneficiaries
         from user_deposit as ub
         left join
-            {{ ref("region_department") }} as rd on rd.num_dep = ub.department_code
+            {{ ref("region_department") }} as rd on ub.department_code = rd.num_dep
+    ),
+
+    final_data as (
+        select
+            deposit_active_month as partition_month,
+            region_name,
+            region_code,
+            department_name,
+            department_code,
+            cast(milestone_age as integer) as milestone_age,
+            sum(total_beneficiaries) over (
+                partition by milestone_age, department_code
+                order by deposit_active_month
+                rows between 11 preceding and current row
+            ) as total_beneficiaries_last_12_months
+        from beneficiary_coverage
+        where milestone_age in ("16", "17", "18", "19", "20")
     )
 
 select
-    deposit_active_month as partition_month,
-    region_name,
-    region_code,
-    department_name,
-    department_code,
-    cast(milestone_age as integer) as milestone_age,
-    sum(total_beneficiaries) over (
-        partition by milestone_age, department_code
-        order by deposit_active_month
-        rows between 11 preceding and current row
-    ) as total_beneficiaries_last_12_months
-from beneficiary_coverage
-where milestone_age in ("16", "17", "18", "19", "20")
+    partition_month,
+    case
+        when total_beneficiaries_last_12_months <= {{ secret_threshold_beneficiary }}
+        then "secret_statistique"
+        else cast(region_name as string)
+    end as region_name,
+    case
+        when total_beneficiaries_last_12_months <= {{ secret_threshold_beneficiary }}
+        then "secret_statistique"
+        else cast(region_code as string)
+    end as region_code,
+    case
+        when total_beneficiaries_last_12_months <= {{ secret_threshold_beneficiary }}
+        then "secret_statistique"
+        else cast(department_name as string)
+    end as department_name,
+    case
+        when total_beneficiaries_last_12_months <= {{ secret_threshold_beneficiary }}
+        then "secret_statistique"
+        else cast(department_code as string)
+    end as department_code,
+    milestone_age,
+    total_beneficiaries_last_12_months
+from final_data

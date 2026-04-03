@@ -1,3 +1,5 @@
+{% set secret_threshold_beneficiary = 5 %}
+
 with
     last_day_of_month as (
         select
@@ -41,27 +43,57 @@ with
         left join
             {{ ref("region_department") }} as rd
             on eud.user_department_code = rd.num_dep
+    ),
+
+    final_data as (
+        select
+            partition_month,
+            region_name,
+            region_code,
+            department_name,
+            department_code,
+            -- age_at_calculation,
+            is_in_qpv,
+            macro_density_label,
+            micro_density_label,
+            count(distinct user_id) as total_cumulative_beneficiaries
+        from total_users_base
+        group by
+            partition_month,
+            region_name,
+            region_code,
+            department_name,
+            department_code,
+            -- age_at_calculation,
+            is_in_qpv,
+            macro_density_label,
+            micro_density_label
     )
 
 select
     partition_month,
-    region_name,
-    region_code,
-    department_name,
-    department_code,
-    -- age_at_calculation,
+    case
+        when total_cumulative_beneficiaries <= {{ secret_threshold_beneficiary }}
+        then "secret_statistique"
+        else cast(region_name as string)
+    end as region_name,
+    case
+        when total_cumulative_beneficiaries <= {{ secret_threshold_beneficiary }}
+        then "secret_statistique"
+        else cast(region_code as string)
+    end as region_code,
+    case
+        when total_cumulative_beneficiaries <= {{ secret_threshold_beneficiary }}
+        then "secret_statistique"
+        else cast(department_name as string)
+    end as department_name,
+    case
+        when total_cumulative_beneficiaries <= {{ secret_threshold_beneficiary }}
+        then "secret_statistique"
+        else cast(department_code as string)
+    end as department_code,
     is_in_qpv,
     macro_density_label,
     micro_density_label,
-    count(distinct user_id) as total_cumulative_beneficiaries
-from total_users_base
-group by
-    partition_month,
-    region_name,
-    region_code,
-    department_name,
-    department_code,
-    -- age_at_calculation,
-    is_in_qpv,
-    macro_density_label,
-    micro_density_label
+    total_cumulative_beneficiaries
+from final_data

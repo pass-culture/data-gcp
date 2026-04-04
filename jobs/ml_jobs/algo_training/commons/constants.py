@@ -22,8 +22,9 @@ USER_BATCH_SIZE = 100
 ALL_USERS = False
 
 # MLflow
-SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}"
-MLFLOW_SECRET_NAME = "mlflow_client_id"
+SA_ACCOUNT = (
+    f"algo-training-{ENV_SHORT_NAME}@passculture-data-ehp.iam.gserviceaccount.com"
+)
 MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"
 MLFLOW_RUN_ID_FILENAME = "mlflow_run_id"
 MLFLOW_URI = (

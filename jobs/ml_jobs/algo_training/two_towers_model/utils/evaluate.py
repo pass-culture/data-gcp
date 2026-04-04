@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -15,7 +15,6 @@ from tqdm import tqdm
 
 from commons.constants import (
     ALL_USERS,
-    ENV_SHORT_NAME,
     EVALUATION_USER_NUMBER,
     LIST_K,
     USER_BATCH_SIZE,
@@ -70,31 +69,9 @@ def load_data_for_evaluation(
     return {"train": train_data, "test": test_data}
 
 
-def get_scann_params(env_short_name: str, max_k: int) -> Dict[str, Any]:
-    if env_short_name == "prod":
-        logger.info("Using ScaNN params for prod")
-        return {
-            "k": max_k,
-            "distance_measure": "dot_product",
-            "num_leaves": 500,
-            "num_leaves_to_search": 50,
-            "training_iterations": 20,
-            "parallelize_batch_searches": True,
-            "num_reordering_candidates": max_k,
-        }
-
-    else:
-        logger.info("Using ScaNN params for ehp")
-        return {
-            "distance_measure": "dot_product",
-            "num_leaves": 1,
-            "num_leaves_to_search": 1,
-        }
-
-
 def get_offers_to_score(test_data: pd.DataFrame) -> np.ndarray:
     """
-    Get unique items to score and duplicate them if necessary to meet ScaNN requirements.
+    Get unique items to score.
 
     Args:
         test_data (pd.DataFrame): DataFrame containing test data with 'item_id' column.
@@ -103,9 +80,6 @@ def get_offers_to_score(test_data: pd.DataFrame) -> np.ndarray:
         numpy array of unique items to score.
     """
     offers_to_score = test_data.item_id.unique()
-    if len(offers_to_score) < 20:
-        # ScaNN requires at least 16 items to score, so duplicate items if necessary
-        offers_to_score = np.repeat(offers_to_score, 50 // len(offers_to_score))
     logger.info(f"Number of unique items to score: {len(offers_to_score)}")
     return offers_to_score
 
@@ -138,7 +112,7 @@ def generate_predictions(
     max_k: int,
 ) -> pd.DataFrame:
     """
-    Generates item recommendations for each user in the test dataset using ScaNN indexing.
+    Generates item recommendations for each user in the test dataset using BruteForce top-k retrieval.
     The recommendations are computed using the user embeddings from the model's user tower.
 
     Args:
@@ -165,11 +139,9 @@ def generate_predictions(
     # Truncate test data if not all users are to be evaluated
     test_data, users_to_test = get_users_to_test(test_data)
 
-    # Initialize ScaNN index with appropriate parameters tuned for env.
-    scann = tfrs.layers.factorized_top_k.ScaNN(
-        **get_scann_params(ENV_SHORT_NAME, max_k)
-    )
-    scann_index = scann.index(
+    # Initialize BruteForce index for exact top-k retrieval.
+    brute_force = tfrs.layers.factorized_top_k.BruteForce(k=max_k)
+    brute_force.index(
         candidates=offers_to_score_embeddings,
         identifiers=tf.constant(offers_to_score),
     )
@@ -179,12 +151,11 @@ def generate_predictions(
     for batch_start_index in tqdm(
         range(0, len(users_to_test), USER_BATCH_SIZE), mininterval=20, maxinterval=60
     ):
-        # Get recommendations using ScaNN
         batch_users = users_to_test[
             batch_start_index : batch_start_index + USER_BATCH_SIZE
         ]
         user_embeddings = model.user_layer(batch_users)
-        scores, candidates = scann_index(user_embeddings)
+        scores, candidates = brute_force(user_embeddings)
 
         list_predictions_dict.append(
             {

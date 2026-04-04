@@ -332,12 +332,16 @@ def package_api_model(
         "compliance_default", help="Model name for the training"
     ),
     config_file_name: str = typer.Option(
-        ...,
+        "default",
         help="Name of the config file containing feature informations",
     ),
-    catboost_model_alias: str = typer.Option(
+    catboost_model_tag: str = typer.Option(
         "/latest",
         help="Alias of the catboost model to load from mlflow registry",
+    ),
+    api_model_alias: str = typer.Option(
+        "production",
+        help="Alias of the API model to register in mlflow registry",
     ),
 ):
     with open(
@@ -351,7 +355,7 @@ def package_api_model(
 
     # Build the API model
     catboost_model = mlflow.catboost.load_model(
-        model_uri=f"models:/{model_name}_{ENV_SHORT_NAME}/latest"
+        model_uri=f"models:/{model_name}_{ENV_SHORT_NAME}{catboost_model_tag}"
     )
     api_model = ApiModel(classification_model=catboost_model, features=features)
 
@@ -375,7 +379,9 @@ def package_api_model(
         key="training_run_id",
         value=training_run_id,
     )
-    client.set_registered_model_alias(api_model_name, "production", api_model_version)
+    client.set_registered_model_alias(
+        api_model_name, api_model_alias, api_model_version
+    )
 
 
 if __name__ == "__main__":

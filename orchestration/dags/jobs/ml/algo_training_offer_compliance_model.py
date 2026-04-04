@@ -28,7 +28,7 @@ DAG_NAME = "algo_training_offer_compliance_model"
 
 # Environment variables to export before running commands
 dag_config = {
-    "STORAGE_PATH": f"gs://{ML_BUCKET_TEMP}/algo_training_{ENV_SHORT_NAME}/algo_training_offer_compliance_model_v2.0_{DATE}",
+    "STORAGE_PATH": f"gs://{ML_BUCKET_TEMP}/algo_training_{ENV_SHORT_NAME}/algo_training_offer_compliance_model_v1.0_{DATE}",
     "BASE_DIR": "data-gcp/jobs/ml_jobs/offer_compliance",
 }
 
@@ -82,7 +82,6 @@ with DAG(
             default=gce_params["instance_type"][ENV_SHORT_NAME], type="string"
         ),
         "instance_name": Param(default=gce_params["instance_name"], type="string"),
-        "run_name": Param(default="default", type=["string", "null"]),
     },
 ) as dag:
     start = EmptyOperator(task_id="start", dag=dag)
@@ -105,16 +104,22 @@ with DAG(
     )
 
     # Model training is skip since data has shifted a lot and we are not sure this model is still used
-    skip_training_operator = EmptyOperator(task_id="skip_training", dag=dag)
+    skip_catboost_training_operator = EmptyOperator(
+        task_id="skip_catboost_training", dag=dag
+    )
 
+    # TODO: Remove --catboost-model-tag once Catboost training is On
+    # TODO: Remove --api-model-alias once migration is Done In Compliance API (sentence transformer update)
     package_api_model = SSHGCEOperator(
         task_id="package_api_model",
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command="PYTHONPATH=. python package_api_model.py "
+        command="PYTHONPATH=. uv run python package_api_model.py "
         "--model-name {{ params.model_name }} "
-        "--config-file-name {{ params.config_file_name }} ",
+        "--config-file-name {{ params.config_file_name }} "
+        "--catboost-model-tag '@healthy' "
+        "--api-model-alias healthy",
         dag=dag,
     )
 
@@ -134,6 +139,7 @@ with DAG(
         start
         >> gce_instance_start
         >> fetch_install_code
+        >> skip_catboost_training_operator
         >> package_api_model
         >> gce_instance_stop
         >> send_slack_notif_success

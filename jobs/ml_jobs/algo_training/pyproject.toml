@@ -1,7 +1,7 @@
 [project]
 name = "algo-training"
 version = "0.1.0"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 dependencies = [
     "datetime>=4.3",
     "fastparquet>=2024.11.0",
@@ -11,7 +11,7 @@ dependencies = [
     "keras>=3.13.1",
     "loguru>=0.6.0",
     "matplotlib>=3.8.4",
-    "mlflow>=3.8.1",
+    "mlflow>=3.10.1",
     "numpy>=1.26.4",
     "pandas>=2.2.0",
     "pandas-gbq>=0.23.1",
@@ -70,6 +70,6 @@ runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 # see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation
 [tool.uv]
 environments = [
-    "sys_platform == 'darwin'",
+    # "sys_platform == 'darwin'", # Readd this once we know how to handle ScannNN dependency on macOS
     "sys_platform == 'linux'",
 ]

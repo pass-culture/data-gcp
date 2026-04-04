@@ -335,6 +335,10 @@ def package_api_model(
         ...,
         help="Name of the config file containing feature informations",
     ),
+    catboost_model_alias: str = typer.Option(
+        "/latest",
+        help="Alias of the catboost model to load from mlflow registry",
+    ),
 ):
     with open(
         f"{CONFIGS_PATH}/{config_file_name}.json",

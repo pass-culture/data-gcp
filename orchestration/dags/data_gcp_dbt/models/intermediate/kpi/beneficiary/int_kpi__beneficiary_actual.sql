@@ -46,6 +46,40 @@ with
         from user_amount_spent_per_day
     ),
 
+    total_users_base as (
+        select
+            eud.user_id,
+            ldm.partition_month,
+            rd.region_name,
+            rd.region_code,
+            rd.dep_name as department_name,
+            rd.num_dep as department_code,
+            eud.user_is_in_qpv as is_in_qpv,
+            eud.user_macro_density_label as macro_density_label,
+            eud.user_density_label as micro_density_label,
+            date_diff(ldm.partition_month, eud.user_birth_date, year) - if(
+                extract(month from eud.user_birth_date)
+                > extract(month from ldm.partition_month)
+                or (
+                    extract(month from eud.user_birth_date)
+                    = extract(month from ldm.partition_month)
+                    and extract(day from eud.user_birth_date)
+                    > extract(day from ldm.partition_month)
+                ),
+                1,
+                0
+            ) as age_at_calculation
+        from last_day_of_month as ldm
+        inner join
+            {{ ref("int_global__user_beneficiary") }} as eud
+            on date(eud.first_deposit_creation_date) <= date(ldm.last_active_date)
+            and (eud.user_is_active or eud.user_suspension_reason = "upon user request")
+            and eud.current_deposit_type != "GRANT_FREE"
+        left join
+            {{ ref("region_department") }} as rd
+            on eud.user_department_code = rd.num_dep
+    ),
+
     active_users_base as (
         select
             uua.user_id,
@@ -85,25 +119,29 @@ with
 
     final_data as (
         select
-            partition_month,
-            region_name,
-            region_code,
-            department_name,
-            department_code,
-            age_at_calculation,
-            is_in_qpv,
-            macro_density_label,
-            micro_density_label,
-            count(distinct user_id) as total_actual_beneficiaries
-        from active_users_base
-        where age_at_calculation between 15 and 22
+            tub.partition_month,
+            tub.region_name,
+            tub.region_code,
+            tub.department_name,
+            tub.department_code,
+            tub.age_at_calculation,
+            tub.is_in_qpv,
+            tub.macro_density_label,
+            tub.micro_density_label,
+            count(distinct aub.user_id) as total_actual_beneficiaries,
+            count(distinct tub.user_id) as total_beneficiaries
+        from total_users_base as tub
+        left join
+            active_users_base as aub
+            on tub.user_id = aub.user_id
+            and tub.partition_month = aub.partition_month
         group by
-            partition_month,
-            region_name,
-            region_code,
-            department_name,
-            department_code,
-            age_at_calculation,
+            tub.partition_month,
+            tub.region_name,
+            tub.region_code,
+            tub.department_name,
+            tub.department_code,
+            tub.age_at_calculation,
             is_in_qpv,
             macro_density_label,
             micro_density_label
@@ -113,27 +151,17 @@ select
     partition_month,
     case
         when total_actual_beneficiaries <= {{ secret_threshold_beneficiary }}
-        then "secret_statistique"
-        else cast(region_name as string)
-    end as region_name,
-    case
-        when total_actual_beneficiaries <= {{ secret_threshold_beneficiary }}
-        then "secret_statistique"
-        else cast(region_code as string)
-    end as region_code,
-    case
-        when total_actual_beneficiaries <= {{ secret_threshold_beneficiary }}
-        then "secret_statistique"
-        else cast(department_name as string)
-    end as department_name,
-    case
-        when total_actual_beneficiaries <= {{ secret_threshold_beneficiary }}
-        then "secret_statistique"
-        else cast(department_code as string)
-    end as department_code,
+        then true
+        else false
+    end as is_statistic_secret,
+    region_name,
+    region_code,
+    department_name,
+    department_code,
     age_at_calculation,
     is_in_qpv,
     macro_density_label,
     micro_density_label,
-    total_actual_beneficiaries
+    total_actual_beneficiaries,
+    total_beneficiaries
 from final_data

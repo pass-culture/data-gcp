@@ -51,24 +51,13 @@ select
     partition_month,
     case
         when total_beneficiaries_last_12_months <= {{ secret_threshold_beneficiary }}
-        then "secret_statistique"
-        else cast(region_name as string)
-    end as region_name,
-    case
-        when total_beneficiaries_last_12_months <= {{ secret_threshold_beneficiary }}
-        then "secret_statistique"
-        else cast(region_code as string)
-    end as region_code,
-    case
-        when total_beneficiaries_last_12_months <= {{ secret_threshold_beneficiary }}
-        then "secret_statistique"
-        else cast(department_name as string)
-    end as department_name,
-    case
-        when total_beneficiaries_last_12_months <= {{ secret_threshold_beneficiary }}
-        then "secret_statistique"
-        else cast(department_code as string)
-    end as department_code,
+        then true
+        else false
+    end as is_statistc_secret,
+    region_name,
+    region_code,
+    department_name,
+    department_code,
     milestone_age,
     total_beneficiaries_last_12_months
 from final_data

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.dummy_operator import EmptyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
@@ -141,7 +141,7 @@ with (
     ) as dag
 ):
     INSTANCE_NAME = "{{ params.instance_name }}"
-    start = DummyOperator(task_id="start", dag=dag)
+    start = EmptyOperator(task_id="start", dag=dag)
     with TaskGroup(
         "import_data", tooltip="Import data from SQL to BQ"
     ) as import_data_group:

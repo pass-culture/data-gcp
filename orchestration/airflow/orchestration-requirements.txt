@@ -13,7 +13,7 @@ aiofiles==23.2.1
     #   gcloud-aio-storage
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.13
+aiohttp==3.13.4
     # via
     #   aiohttp-jinja2
     #   apache-airflow-providers-http
@@ -830,7 +830,7 @@ pandas-gbq==0.29.1
     # via
     #   apache-airflow-providers-google
     #   google-cloud-bigquery
-paramiko==2.12.0
+paramiko==3.4.0
     # via
     #   apache-airflow-providers-ssh
     #   sshtunnel

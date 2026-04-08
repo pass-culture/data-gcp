@@ -54,6 +54,10 @@ with
             rd.region_code,
             rd.dep_name as department_name,
             rd.num_dep as department_code,
+            eud.user_epci as epci_name,
+            eud.user_epci_code as epci_code,
+            eud.user_city as city_name,
+            eud.user_city_code as city_code,
             eud.user_is_in_qpv as is_in_qpv,
             eud.user_macro_density_label as macro_density_label,
             eud.user_density_label as micro_density_label,
@@ -81,28 +85,7 @@ with
     ),
 
     active_users_base as (
-        select
-            uua.user_id,
-            ldm.partition_month,
-            rd.region_name,
-            rd.region_code,
-            rd.dep_name as department_name,
-            rd.num_dep as department_code,
-            eud.user_is_in_qpv as is_in_qpv,
-            eud.user_macro_density_label as macro_density_label,
-            eud.user_density_label as micro_density_label,
-            date_diff(ldm.partition_month, eud.user_birth_date, year) - if(
-                extract(month from eud.user_birth_date)
-                > extract(month from ldm.partition_month)
-                or (
-                    extract(month from eud.user_birth_date)
-                    = extract(month from ldm.partition_month)
-                    and extract(day from eud.user_birth_date)
-                    > extract(day from ldm.partition_month)
-                ),
-                1,
-                0
-            ) as age_at_calculation
+        select uua.user_id, ldm.partition_month
         from user_cumulative_amount_spent as uua
         inner join
             last_day_of_month as ldm on uua.deposit_active_date = ldm.last_active_date
@@ -124,6 +107,10 @@ with
             tub.region_code,
             tub.department_name,
             tub.department_code,
+            tub.epci_name,
+            tub.epci_code,
+            tub.city_name,
+            tub.city_code,
             tub.age_at_calculation,
             tub.is_in_qpv,
             tub.macro_density_label,
@@ -141,10 +128,14 @@ with
             tub.region_code,
             tub.department_name,
             tub.department_code,
+            tub.epci_name,
+            tub.epci_code,
+            tub.city_name,
+            tub.city_code,
             tub.age_at_calculation,
-            is_in_qpv,
-            macro_density_label,
-            micro_density_label
+            tub.is_in_qpv,
+            tub.macro_density_label,
+            tub.micro_density_label
     )
 
 select
@@ -158,6 +149,10 @@ select
     region_code,
     department_name,
     department_code,
+    epci_name,
+    epci_code,
+    city_name,
+    city_code,
     age_at_calculation,
     is_in_qpv,
     macro_density_label,

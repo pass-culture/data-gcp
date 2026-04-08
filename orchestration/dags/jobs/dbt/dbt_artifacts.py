@@ -34,12 +34,19 @@ from jobs.crons import SCHEDULE_DICT
 
 def should_run_today(ds):
     try:
-        next_tasks = ["dbt_test", "dbt_test_weekly", "dbt_test_monthly"]
+        next_tasks = [
+            "dbt_test",
+            "dbt_test_weekly",
+            "dbt_test_monthly",
+            "dbt_test_monthly_15",
+        ]
         execution_date = datetime.strptime(ds, "%Y-%m-%d")
         if execution_date.weekday() != 0:  # 0 is Monday
             next_tasks.remove("dbt_test_weekly")
         if execution_date.day != 1:
             next_tasks.remove("dbt_test_monthly")
+        if execution_date.day != 15:
+            next_tasks.remove("dbt_test_monthly_15")
         logging.info(f"Next tasks for ds {ds}: {next_tasks}")
         if len(next_tasks) == 0:
             raise ValueError(f"empty next_tasks for ds: {ds}")
@@ -131,6 +138,15 @@ dbt_test_monthly = PythonOperator(
     trigger_rule="all_success",
 )
 
+dbt_test_monthly_15 = PythonOperator(
+    task_id="dbt_test_monthly_15",
+    python_callable=partial(
+        run_dbt_quality_tests, select="tag:monthly_15", exclude="audit"
+    ),
+    dag=dag,
+    trigger_rule="all_success",
+)
+
 create_elementary_report = GenerateElementaryReportOperator(
     task_id="create_elementary_report",
     report_file_path="elementary_reports/{{ execution_date.year }}/elementary_report_{{ execution_date.strftime('%Y%m%d') }}.html",
@@ -175,3 +191,4 @@ recompile_dbt_project = PythonOperator(
 )
 (check_schedule >> dbt_test_weekly >> compute_metrics_elementary)
 (check_schedule >> dbt_test_monthly >> compute_metrics_elementary)
+(check_schedule >> dbt_test_monthly_15 >> compute_metrics_elementary)

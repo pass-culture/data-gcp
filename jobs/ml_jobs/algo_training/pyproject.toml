@@ -8,7 +8,6 @@ dependencies = [
     "gcsfs>=2023.5.0",
     "google-cloud-aiplatform>=1.22.0",
     "google-cloud-iam>=2.22.0",
-    "google-cloud-secret-manager>=2.23.1",
     "h11>=0.16.0",
     "keras>=3.13.1",
     "loguru>=0.6.0",

@@ -1,0 +1,54 @@
+{
+    "version": 1,
+    "disable_existing_loggers": false,
+    "loggers": {
+      "root": {
+        "level": "INFO",
+        "handlers": ["stdout_handler", "stderr_handler"],
+        "propagate": false
+      },
+      "hypercorn.error": {
+        "level": "INFO",
+        "handlers": ["stdout_handler"],
+        "propagate": false,
+        "qualname": "hypercorn.error"
+      },
+      "hypercorn.access": {
+        "level": "INFO",
+        "handlers": ["stdout_handler"],
+        "propagate": false,
+        "qualname": "hypercorn.access"
+      }
+    },
+    "handlers": {
+      "stdout_handler": {
+        "class": "logging.StreamHandler",
+        "level": "INFO",
+        "formatter": "json_formatter",
+        "stream": "ext://sys.stdout",
+        "filters": ["custom_log_filter"]
+      },
+      "stderr_handler": {
+        "class": "logging.StreamHandler",
+        "level": "WARNING",
+        "formatter": "json_formatter",
+        "stream": "ext://sys.stderr"
+      }
+    },
+    "formatters": {
+      "json_formatter": {
+        "class": "pythonjsonlogger.jsonlogger.JsonFormatter",
+        "format": "%(name)s %(asctime)s %(levelname)s %(filename)s %(lineno)s %(process)d %(message)s",
+        "rename_fields": {
+          "levelname": "severity",
+          "asctime": "timestamp"
+        }
+      }
+    },
+    "filters": {
+      "custom_log_filter": {
+        "()": "app.logging.filter.CustomLogFilter",
+        "max_level": "WARNING"
+      }
+    }
+  }

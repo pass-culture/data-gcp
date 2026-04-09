@@ -64,6 +64,9 @@ with
         select
             event_date,
             origin,
+            traffic_source,
+            traffic_medium,
+            traffic_campaign,
             module_id,
             home_entry_id,
             home_name,

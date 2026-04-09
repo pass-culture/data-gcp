@@ -8,7 +8,27 @@ select distinct
         bigfunctions.europe_west1.h3(
             "latLngToCell", to_json([venue_latitude, venue_longitude, 5])
         )
-    ) as h3_res5
+    ) as h3_res5,
+    string(
+        bigfunctions.europe_west1.h3(
+            "latLngToCell", to_json([venue_latitude, venue_longitude, 6])
+        )
+    ) as h3_res6,
+    string(
+        bigfunctions.europe_west1.h3(
+            "latLngToCell", to_json([venue_latitude, venue_longitude, 7])
+        )
+    ) as h3_res7,
+    string(
+        bigfunctions.europe_west1.h3(
+            "latLngToCell", to_json([venue_latitude, venue_longitude, 8])
+        )
+    ) as h3_res8,
+    string(
+        bigfunctions.europe_west1.h3(
+            "latLngToCell", to_json([venue_latitude, venue_longitude, 9])
+        )
+    ) as h3_res9
 from {{ ref("ml_reco__recommendable_offer") }}
 where
     venue_id is not null and venue_latitude is not null and venue_longitude is not null

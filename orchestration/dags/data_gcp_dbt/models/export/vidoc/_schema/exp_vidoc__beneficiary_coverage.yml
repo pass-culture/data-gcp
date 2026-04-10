@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: exp_vidoc_beneficiary__coverage
+    description: "{{ doc('description__exp_vidoc_beneficiary__coverage') }}"
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+      - name: is_statistic_secret
+        description: "{{ doc('column__is_statistic_secret') }}"
+      - name: region_name
+        description: "{{ doc('column__region_name') }}"
+      - name: region_code
+        description: "{{ doc('column__region_code') }}"
+      - name: department_name
+        description: "{{ doc('column__department_name') }}"
+      - name: department_code
+        description: "{{ doc('column__department_code') }}"
+      - name: milestone_age
+        description: "{{ doc('column__milestone_age') }}"
+      - name: total_beneficiaries_last_12_months
+        description: "{{ doc('column__total_users_last_12_months') }}"

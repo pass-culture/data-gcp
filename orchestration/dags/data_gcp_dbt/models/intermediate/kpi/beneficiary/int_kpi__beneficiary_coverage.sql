@@ -53,7 +53,7 @@ select
         when total_beneficiaries_last_12_months <= {{ secret_threshold_beneficiary }}
         then true
         else false
-    end as is_statistc_secret,
+    end as is_statistic_secret,
     region_name,
     region_code,
     department_name,

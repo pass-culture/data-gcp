@@ -11,6 +11,10 @@ with
             rd.dep_name as department_name,
             rd.region_name,
             rd.region_code,
+            ub.user_epci as epci_name,
+            ub.user_epci_code as epci_code,
+            ub.user_city as city_name,
+            ub.user_city_code as city_code,
             date_trunc(
                 ub.last_deposit_expiration_date, month
             ) as deposit_expiration_month
@@ -40,6 +44,10 @@ with
             u.region_code,
             u.department_name,
             u.department_code,
+            u.epci_name,
+            u.epci_code,
+            u.city_name,
+            u.city_code,
             cat.offer_category_id,
             count(
                 distinct case
@@ -56,6 +64,10 @@ with
             u.micro_density_label,
             u.region_name,
             u.region_code,
+            u.epci_name,
+            u.epci_code,
+            u.city_name,
+            u.city_code,
             u.department_name,
             u.department_code,
             cat.offer_category_id
@@ -67,11 +79,15 @@ select
         when total_category_booked_beneficiaries <= {{ secret_threshold_beneficiary }}
         then true
         else false
-    end as is_statistc_secret,
+    end as is_statistic_secret,
     region_name,
     region_code,
     department_name,
     department_code,
+    epci_name,
+    epci_code,
+    city_name,
+    city_code,
     is_in_qpv,
     macro_density_label,
     micro_density_label,

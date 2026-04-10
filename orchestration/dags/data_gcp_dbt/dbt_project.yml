@@ -95,6 +95,13 @@ models:
         collective:
           kpis_segments:
             +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+    metrics:
+        +labels:
+              schedule: "monthly"
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+        +meta:
+          owner: "@analytics"
+        +schema: metrics_{{ target.name }}
     export:
       +schema: export_{{ target.name }}
       +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"

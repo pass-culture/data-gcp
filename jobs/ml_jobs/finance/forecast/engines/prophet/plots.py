@@ -5,7 +5,6 @@ import mlflow
 import pandas as pd
 from loguru import logger
 
-from forecast.forecasters.prophet_model import ProphetModel
 from prophet import Prophet
 
 
@@ -191,8 +190,10 @@ def plot_forecast_vs_actuals(
     return fig
 
 
-def log_all_plots(
-    ProphetModelInstance: ProphetModel,
+def log_diagnostics_plots(
+    model: Prophet,
+    df_train: pd.DataFrame,
+    freq: str,
     backtest_forecast: pd.DataFrame,
 ) -> dict:
     """Generate and log all diagnostic and evaluation plots to MLflow.
@@ -207,9 +208,6 @@ def log_all_plots(
     """
 
     logger.info("Generating all plots")
-    model = ProphetModelInstance.model
-    df_train = ProphetModelInstance.data_split.train
-    freq = ProphetModelInstance.config.evaluation.freq
 
     # Generate diagnostic plots
     fig_cp = plot_prophet_changepoints(model, df_train)
@@ -240,3 +238,46 @@ def log_all_plots(
         "trend": fig_trend,
         "components": fig_components,
     }
+
+
+def log_future_forecast_plots(
+    monthly_forecast: pd.DataFrame,
+) -> None:
+    """Generate and log future forecast plots to MLflow.
+
+    Args:
+        monthly_forecast: DataFrame with future forecast data, must contain:
+            ds, yhat, yhat_lower, yhat_upper
+    """
+    fig_future = plt.figure(figsize=(12, 6))
+    plt.plot(
+        monthly_forecast.ds,
+        monthly_forecast.total_pricing,
+    )
+    plt.title("Future Monthly Forecast")
+    plt.hlines(
+        y=5e6,
+        xmin=monthly_forecast.ds.min(),
+        xmax=monthly_forecast.ds.max(),
+        colors="orange",
+        linestyles="--",
+        alpha=0.7,
+        label="Ligne des 5 Millions €",
+    )
+    plt.hlines(
+        y=15e6,
+        xmin=monthly_forecast.ds.min(),
+        xmax=monthly_forecast.ds.max(),
+        colors="red",
+        linestyles="--",
+        alpha=0.7,
+        label="Ligne des 15 Millions €",
+    )
+
+    plt.xlabel("Month")
+    plt.ylabel("Total Pricing €")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.legend()
+
+    mlflow.log_figure(fig_future, "forecasts/forecast.png")

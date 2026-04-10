@@ -71,3 +71,18 @@ class ForecastModel(ABC):
     def aggregate_to_monthly(self, forecast_df: pd.DataFrame) -> pd.DataFrame:
         """Aggregate forecast to monthly level."""
         pass
+
+    @abstractmethod
+    def log_plots(
+        self, backtest_forecast: pd.DataFrame, monthly_forecast: pd.DataFrame
+    ) -> None:
+        """Log all relevant plots to MLflow.
+
+        Args:
+            backtest_forecast: DataFrame with backtest predictions and actuals
+                            (full datafarame with yhat, yhat_lower, yhat_upper, etc).
+            monthly_forecast: DataFrame with monthly forecast data.
+                                Exactly two columns: ds, total_pricing
+
+        """
+        pass

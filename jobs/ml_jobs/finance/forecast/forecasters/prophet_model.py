@@ -12,6 +12,10 @@ from forecast.engines.prophet.evaluate import (
 )
 from forecast.engines.prophet.forecast import generate_future_forecast
 from forecast.engines.prophet.model_config import ModelConfig
+from forecast.engines.prophet.plots import (
+    log_diagnostics_plots,
+    log_future_forecast_plots,
+)
 from forecast.engines.prophet.preprocessing import preprocessing_pipeline
 from forecast.engines.prophet.train import fit_prophet_model
 from forecast.forecasters.forecast_model import ForecastModel
@@ -153,3 +157,13 @@ class ProphetModel(ForecastModel):
             columns={"month": "ds", "yhat": "total_pricing"}, inplace=True
         )
         return monthly_df
+
+    def log_plots(self, backtest_forecast: pd.DataFrame, future_forecast: pd.DataFrame):
+        """Log all relevant plots to MLflow."""
+        log_diagnostics_plots(
+            model=self.model,
+            df_train=self.data_split.train,
+            freq=self.config.evaluation.freq,
+            backtest_forecast=backtest_forecast,
+        )
+        log_future_forecast_plots(future_forecast)

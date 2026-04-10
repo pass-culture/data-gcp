@@ -83,9 +83,7 @@ def plot_trend_with_changepoints(
     return fig
 
 
-def plot_cv_results(
-    perf: pd.DataFrame, metrics: list, output_dir: str | Path = "cv_plots"
-) -> list[str]:
+def plot_cv_results(perf: pd.DataFrame, metrics: list, output_dir: str | Path = "cv_plots") -> list[str]:
     """
     Plots cross-validation results for specified metrics and saves figures.
 
@@ -212,9 +210,7 @@ def log_diagnostics_plots(
     # Generate diagnostic plots
     fig_cp = plot_prophet_changepoints(model, df_train)
     forecast_train = model.predict(df_train)
-    changepoints_list = (
-        model.changepoints.tolist() if model.changepoints is not None else []
-    )
+    changepoints_list = model.changepoints.tolist() if model.changepoints is not None else []
     fig_trend = plot_trend_with_changepoints(forecast_train, changepoints_list)
     fig_components = model.plot_components(forecast_train)
     fig_backtest = plot_forecast_vs_actuals(
@@ -280,4 +276,4 @@ def log_future_forecast_plots(
     plt.tight_layout()
     plt.legend()
 
-    mlflow.log_figure(fig_future, "forecasts/forecast.png")
+    mlflow.log_figure(fig_future, "forecasts/current_run_monthly_forecast_plot.png")

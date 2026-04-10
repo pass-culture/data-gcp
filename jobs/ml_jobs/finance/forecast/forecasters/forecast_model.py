@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 
+import matplotlib.pyplot as plt
 import pandas as pd
 
 
@@ -73,9 +74,7 @@ class ForecastModel(ABC):
         pass
 
     @abstractmethod
-    def log_plots(
-        self, backtest_forecast: pd.DataFrame, monthly_forecast: pd.DataFrame
-    ) -> None:
+    def log_plots(self, backtest_forecast: pd.DataFrame, monthly_forecast: pd.DataFrame) -> None:
         """Log all relevant plots to MLflow.
 
         Args:
@@ -86,3 +85,51 @@ class ForecastModel(ABC):
 
         """
         pass
+
+    def plot_last_runs_forecasts(self, past_monthly_forecasts):
+        """Plot the monthly forecasts of past runs for comparison.
+        Args:
+            past_monthly_forecasts: DataFrame with past runs forecasts, containing at least
+                                    'run_name', 'forecast_date', 'prediction' columns.
+        Returns:
+            Matplotlib figure object with the comparison plot.
+        """
+
+        ## Plot all past runs monthly forecasts
+        fig, ax = plt.subplots(figsize=(12, 6))
+        for run_name, g in past_monthly_forecasts.sort_values("forecast_date").groupby("run_name"):
+            ax.plot(
+                g["forecast_date"],
+                g["prediction"],
+                marker="o",
+                linewidth=2,
+                label=run_name,
+            )
+        # Add horizontal lines at 5 and 15 millions,
+        # considered as important thresholds for the monthly pricing
+        ax.axhline(y=5e6, color="orange", linestyle="--", label="5M threshold")
+        ax.axhline(y=15e6, color="red", linestyle="--", label="15M threshold")
+        ax.set_xlabel("Forecast date")
+        ax.set_ylabel("Prediction")
+        ax.legend(title="run_name", bbox_to_anchor=(1.02, 1), loc="upper left")
+        ax.grid(True, alpha=0.3)
+        fig.autofmt_xdate()
+        fig.tight_layout()
+        return fig
+
+    def compute_average_forecast(
+        self,
+        past_monthly_forecasts: pd.DataFrame,
+    ) -> pd.DataFrame:
+        """Compute average forecast of past runs for comparison.
+        Args:
+            past_monthly_forecasts: DataFrame with past runs forecasts, containing at least
+                                    'run_name', 'forecast_date', 'prediction' columns.
+        Returns:
+            DataFrame with average forecast across past runs, containing 'forecast_date'
+            and 'prediction' columns.
+        """
+        ## Compute average forecast of past runs
+        avg_forecast_df = past_monthly_forecasts.groupby("forecast_date")["prediction"].mean().reset_index()
+
+        return avg_forecast_df

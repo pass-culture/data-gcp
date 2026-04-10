@@ -55,7 +55,7 @@ SCHEDULE_DICT = {
         "prod": "45 4 22 * *",  # every month the 22nd at 4:45 AM
     },
     "finance_pricing_forecast": {
-        "prod": "0 6 * * 1",  # every Monday at 6:00 AM
+        "prod": "0 6 1 * *",  # every 1st day of the month at 6:00 AM
         "stg": None,
         "dev": None,
     },

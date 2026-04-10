@@ -40,7 +40,6 @@
         {%- set model_folder = model_name_parts[0].split(prefix)[-1] | trim -%}
         {{ model_folder ~ "_" ~ model_name_parts[-1] | trim }}
     {%- elif is_metrics and is_orchestrated -%}
-        {# On enlève 'metrics_' au début et on remplace '__' par '_' #}
         {%- set cleaned_name = (
             node.name | replace("metrics_", "", 1) | replace("__", "_")
         ) -%}

@@ -117,10 +117,14 @@ models:
       reco_cloudsql:
         +schema: export_reco_cloudsql_{{ target.name }}
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+      vidoc:
+        +schema: export_vidoc_{{ target.name }}
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     machine_learning:
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +meta:
         owner: "@data-science"
+
 
   elementary:
     +on_schema_change: "append_new_columns"

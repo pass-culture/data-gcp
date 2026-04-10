@@ -156,6 +156,20 @@ class ProphetModel(ForecastModel):
         monthly_df.rename(
             columns={"month": "ds", "yhat": "total_pricing"}, inplace=True
         )
+
+        # if last month has less than 4 rows for weeky model or 30 for daily model,
+        # we drop it
+        if len(monthly_df) > 0:
+            last_month = monthly_df["ds"].iloc[-1]
+            last_month_rows = df[df["month"] == last_month].shape[0]
+            if (self.config.evaluation.freq == "W" and last_month_rows < 4) or (
+                self.config.evaluation.freq == "D" and last_month_rows < 30
+            ):
+                logger.warning(
+                    f"""Dropping last month {last_month} from monthly forecast due to
+                    insufficient data points ({last_month_rows} rows)"""
+                )
+                monthly_df = monthly_df.head(-1)
         return monthly_df
 
     def log_plots(self, backtest_forecast: pd.DataFrame, future_forecast: pd.DataFrame):

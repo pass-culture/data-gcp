@@ -8,13 +8,13 @@ models:
         data_type: STRING
         data_tests:
           - unique:
-              tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
           - not_null:
-              tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: user_creation_date
         description: '{{ doc("column__user_created_at") }}'
         data_type: DATE

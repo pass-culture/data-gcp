@@ -8,14 +8,17 @@ models:
         description: "{{ doc('column__artist_id') }}"
         data_tests:
           - not_null:
-              tags: ['critical']
+              config:
+                tags: ['critical']
           - unique:
-              tags: ['critical']
+              config:
+                tags: ['critical']
       - name: artist_name
         description: "{{ doc('column__artist_name') }}"
         data_tests:
           - not_null:
-              tags: ['critical']
+              config:
+                tags: ['critical']
       - name: artist_description
         description: "{{ doc('column__artist_description') }}"
       - name: artist_biography

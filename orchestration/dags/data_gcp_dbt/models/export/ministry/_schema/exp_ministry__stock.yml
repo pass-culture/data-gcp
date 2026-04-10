@@ -8,9 +8,11 @@ models:
         description: "{{ doc('column__stock_id') }}"
         data_tests:
           - not_null:
-              tags: ['export']
+              config:
+                tags: ['export']
           - unique:
-              tags: ['export']
+              config:
+                tags: ['export']
       - name: stock_beginning_date
         description: "{{ doc('column__stock_beginning_date') }}"
       - name: stock_last_provider_id
@@ -29,12 +31,14 @@ models:
         description: "{{ doc('column__offer_id') }}"
         data_tests:
           - not_null:
-              tags: ['export']
+              config:
+                tags: ['export']
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
         data_tests:
           - not_null:
-              tags: ['export']
+              config:
+                tags: ['export']
       - name: price_categoryId
         description: "{{ doc('column__price_category_id') }}"
       - name: price_category_label

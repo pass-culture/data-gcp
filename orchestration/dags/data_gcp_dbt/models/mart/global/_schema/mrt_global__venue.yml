@@ -8,12 +8,12 @@ models:
         data_type: STRING
         data_tests:
           - not_null:
-              tags: ['critical']
               config:
+                tags: ['critical']
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
           - unique:
-              tags: ['critical']
               config:
+                tags: ['critical']
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: venue_name
         description: '{{ doc("column__venue_name") }}'
@@ -38,21 +38,23 @@ models:
         data_type: STRING
         data_tests:
           - excessive_failure_ratio:
-              base_test: "not_null"
-              max_ratio: 0.005
-              tags: ['critical']
+              arguments:
+                base_test: "not_null"
+                max_ratio: 0.005
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: venue_postal_code
         description: '{{ doc("column__venue_postal_code") }}'
         data_type: STRING
         data_tests:
           - excessive_failure_ratio:
-              base_test: "not_null"
-              max_ratio: 0.005
-              tags: ['critical']
+              arguments:
+                base_test: "not_null"
+                max_ratio: 0.005
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: venue_city
         description: '{{ doc("column__venue_city") }}'
         data_type: STRING
@@ -98,11 +100,12 @@ models:
         data_type: STRING
         data_tests:
           - excessive_failure_ratio:
-              base_test: "not_null"
-              max_ratio: 0.005
-              tags: ['critical']
+              arguments:
+                base_test: "not_null"
+                max_ratio: 0.005
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: venue_epci
         description: '{{ doc("column__venue_epci") }}'
         data_type: STRING

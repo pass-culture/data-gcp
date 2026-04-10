@@ -8,17 +8,20 @@ models:
         description: "{{ doc('column__offer_product_id') }}"
         data_tests:
           - not_null:
-              tags: ['critical']
+              config:
+                tags: ['critical']
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"
         data_tests:
           - not_null:
-              tags: ['critical']
+              config:
+                tags: ['critical']
       - name: artist_type
         description: "{{ doc('column__artist_type') }}"
         data_tests:
           - not_null:
-              tags: ['critical']
+              config:
+                tags: ['critical']
       - name: action
         description: "{{ doc('column__delta_action') }}"
       - name: comment

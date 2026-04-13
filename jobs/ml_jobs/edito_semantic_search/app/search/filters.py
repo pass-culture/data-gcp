@@ -13,9 +13,10 @@ def parse_date(val):
         return val
     try:
         return datetime.datetime.strptime(val, "%Y-%m-%d").date()
-    except Exception:
-        logger.warning(f"Could not parse date: {val}")
-        return val
+    except Exception as e:
+        raise ValueError(
+            f"Could not parse date value '{val}': {e}. " f"Expected format: YYYY-MM-DD."
+        ) from e
 
 
 def _cast_value(val, target_dtype, col):

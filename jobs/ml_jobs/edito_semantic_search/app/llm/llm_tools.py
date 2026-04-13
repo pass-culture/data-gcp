@@ -1,5 +1,4 @@
 import asyncio
-import time
 from pathlib import Path
 
 import pandas as pd
@@ -11,6 +10,7 @@ from pydantic_ai.settings import ModelSettings
 
 from app.constants import GCP_PROJECT, GEMINI_MODEL_NAME
 from app.models.validators import EditorialResult
+from app.utils.timing import log_timing
 
 # --- Initialization ---
 
@@ -18,9 +18,6 @@ _PROMPT_DIR = Path(__file__).parent
 
 with open(_PROMPT_DIR / "system_prompt.txt", encoding="utf-8") as f:
     SYSTEM_PROMPT = f.read().strip()
-
-with open(_PROMPT_DIR / "action_prompt.txt", encoding="utf-8") as f:
-    ACTION_PROMPT = f.read().strip()
 
 # Timeout for LLM calls (seconds)
 LLM_TIMEOUT_SECONDS = 30
@@ -137,44 +134,38 @@ async def llm_thematic_filtering(
     # 1. Build prompt and get the ID mapping
     prompt, reverse_map = build_prompt(search_query, vector_search_results)
 
-    start_time = time.time()
-
     # 2. Run LLM (async — works natively with Uvicorn's event loop)
     agent = _get_agent()
-    try:
-        llm_result = await asyncio.wait_for(
-            agent.run(prompt), timeout=LLM_TIMEOUT_SECONDS
-        )
-    except TimeoutError:
-        logger.error(f"LLM call timed out after {LLM_TIMEOUT_SECONDS}s")
-        return pd.DataFrame()
-    elapsed_time = time.time() - start_time
+    with log_timing("LLM call") as t:
+        try:
+            llm_result = await asyncio.wait_for(
+                agent.run(prompt), timeout=LLM_TIMEOUT_SECONDS
+            )
+        except TimeoutError:
+            logger.error(f"LLM call timed out after {LLM_TIMEOUT_SECONDS}s")
+            return pd.DataFrame()
+
+    elapsed_time = t["elapsed"]
 
     # Log token usage and timing
     usage = llm_result.usage()
-    if usage:
-        tokens_per_sec = usage.total_tokens / elapsed_time if elapsed_time > 0 else 0
-        logger.info(
-            f"LLM completed in {elapsed_time:.2f}s | "
-            f"Tokens: {usage.total_tokens} ({tokens_per_sec:.0f} tokens/s) | "
-            f"Input: {usage.request_tokens}, Output: {usage.response_tokens}"
-        )
-    else:
-        logger.info(f"LLM completed in {elapsed_time:.2f}s")
+    tokens_per_sec = usage.total_tokens / elapsed_time if elapsed_time > 0 else 0
+    logger.info(
+        f"LLM tokens: {usage.total_tokens} ({tokens_per_sec:.0f} tokens/s) | "
+        f"Input: {usage.request_tokens}, Output: {usage.response_tokens}"
+    )
 
     # Log if validation took multiple attempts (sign of schema issues)
     # Pydantic AI retries under the hood if the LLM output fails validation
     if hasattr(llm_result, "_attempt_count") or elapsed_time > 10:
         logger.warning(
-            f"⚠️ Slow LLM response ({elapsed_time:.2f}s) - possible validation retries"
+            f"Slow LLM response ({elapsed_time:.2f}s) - possible validation retries"
         )
-        logger.info(
+        logger.debug(
             f"llm_result _attempt_count: {getattr(llm_result, '_attempt_count', 'N/A')}"
         )
 
-    llm_output = (
-        llm_result.output
-    )  # Note: Pydantic AI uses .data for the validated response
+    llm_output = llm_result.output
 
     # 3. Handle result and restore original IDs
     try:
@@ -208,8 +199,8 @@ async def llm_thematic_filtering(
                 item_dict["item_id"] = reverse_map[short_id]
             else:
                 logger.warning(
-                    f"Short ID '{short_id}' not in reverse_map. "
-                    f"Available IDs: {list(reverse_map.keys())[:10]}"
+                    f"Short ID '{short_id}' not in reverse_map "
+                    f"({len(reverse_map)} keys available)."
                 )
                 continue
 
@@ -223,9 +214,7 @@ async def llm_thematic_filtering(
         llm_df = pd.DataFrame(processed_items)
         llm_df["rank"] = range(1, len(llm_df) + 1)
         logger.info(f"Successfully processed {len(llm_df)} items")
-        logger.info(
-            f"LLM processed items: {llm_df['item_id'].tolist()}"
-        )  # Log first 3 items for debugging
+        logger.debug(f"LLM processed items: {llm_df['item_id'].tolist()}")
     else:
         logger.warning("No valid items after processing")
         llm_df = pd.DataFrame()

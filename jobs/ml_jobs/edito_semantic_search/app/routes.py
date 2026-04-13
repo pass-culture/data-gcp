@@ -22,6 +22,7 @@ from app.models.validators import (
 )
 from app.post_process.panachage import panachage_sort
 from app.search.client import SearchClient
+from app.utils.timing import log_timing
 
 api = APIRouter()
 
@@ -36,20 +37,18 @@ def _startup_warmup():
     """One-shot warmup at startup to prime all connections."""
     try:
         logger.info("Running startup warmup...")
-        warmup_start = time.time()
 
         # 1. Warmup GCS/Parquet connection
-        _ = search_client.table_query(k=1)
-        logger.info(f"GCS warmup: {time.time() - warmup_start:.2f}s")
+        with log_timing("GCS warmup"):
+            _ = search_client.table_query(k=1)
 
         # 2. Warmup vector search (LanceDB) + LLM
         if PERFORM_VECTOR_SEARCH:
-            vector_start = time.time()
-            dummy_query_vector = search_client.embedding_model.encode(
-                "warmup", prompt_name="query"
-            ).tolist()
-            _ = search_client.vector_search(query_vector=dummy_query_vector, k=1)
-            logger.info(f"Vector search warmup: {time.time() - vector_start:.2f}s")
+            with log_timing("Vector search warmup"):
+                dummy_query_vector = search_client.embedding_model.encode(
+                    "warmup", prompt_name="query"
+                ).tolist()
+                _ = search_client.vector_search(query_vector=dummy_query_vector, k=1)
 
             # NOTE: LLM warmup is skipped intentionally.
             # Using asyncio.run() here would create and close a temporary event loop,
@@ -59,7 +58,7 @@ def _startup_warmup():
             # The agent and model are already initialized at import time.
             logger.info("LLM warmup skipped (agent initialized at import time)")
 
-        logger.info(f"Startup warmup completed in {time.time() - warmup_start:.2f}s")
+        logger.info("Startup warmup done.")
     except Exception as e:
         logger.warning(f"Startup warmup failed (non-fatal): {e}")
 
@@ -96,36 +95,28 @@ async def predict(data: VertexAIPredictRequest):
         item_ids = None
         if PERFORM_VECTOR_SEARCH:
             # Here we embed the query
-            query_encoding_time = time.time()
             full_query = (
                 f"task: search result | query: {prediction_request.search_query}"
             )
             logger.info(f"Embedding search query for vector search: '{full_query}'")
-            query_vector = search_client.embedding_model.encode(
-                full_query, prompt_name="query"
-            ).tolist()
-            logger.info(
-                f"Query embedding completed "
-                f"in {time.time() - query_encoding_time:.2f} seconds"
-            )
-            vector_search_time = time.time()
-            vector_search_results = search_client.vector_search(
-                query_vector=query_vector, k=K_RETRIEVAL
-            )
-            logger.info(
-                f"Vector search completed in {time.time() - vector_search_time:.2f} "
-                f"seconds with {len(vector_search_results)} results"
-            )
+            with log_timing("Query embedding"):
+                query_vector = search_client.embedding_model.encode(
+                    full_query, prompt_name="query"
+                ).tolist()
+
+            with log_timing("Vector search"):
+                vector_search_results = search_client.vector_search(
+                    query_vector=query_vector, k=K_RETRIEVAL
+                )
+            logger.info(f"Vector search returned {len(vector_search_results)} results")
+
             # Here we do the LLM thematic filtering
-            llm_time = time.time()
-            llm_df = await llm_thematic_filtering(
-                search_query=prediction_request.search_query,
-                vector_search_results=vector_search_results,
-            )
-            logger.info(
-                f"LLM thematic filtering completed "
-                f"in {time.time() - llm_time:.2f} seconds"
-            )
+            with log_timing("LLM thematic filtering"):
+                llm_df = await llm_thematic_filtering(
+                    search_query=prediction_request.search_query,
+                    vector_search_results=vector_search_results,
+                )
+
             if llm_df.empty:
                 logger.warning("LLM thematic filtering returned no results")
                 search_results = SearchResult(offers=[])
@@ -176,33 +167,27 @@ async def predict(data: VertexAIPredictRequest):
                     )
 
         # Here we do the scalar search
-        # logger.info(f"Performing scalar search with filters: {filters}")
-        table_time = time.time()
-        scalar_search_results = search_client.table_query(filters=filters, k=MAX_OFFERS)
-        logger.info(
-            f"Scalar search completed in {time.time() - table_time:.2f} seconds"
-        )
+        with log_timing("Scalar search"):
+            scalar_search_results = search_client.table_query(
+                filters=filters, k=MAX_OFFERS
+            )
         scalar_search_results_df = pd.DataFrame(scalar_search_results)
         logger.info(f"Scalar search returned {len(scalar_search_results_df)} results")
 
         # Here we match the item_ids from LLM with offers in catalog and apply filters
         if len(scalar_search_results_df) > 0:
             if PERFORM_VECTOR_SEARCH:
-                merge_time = time.time()
-                prediction_result_df = pd.merge(
-                    llm_df,
-                    scalar_search_results_df,
-                    on="item_id",
-                    how="inner",
-                )
-                prediction_result_df = prediction_result_df[
-                    ["offer_id", "pertinence", "rank"]
-                ]
-                logger.info(
-                    f"Merging LLM results with scalar search completed in "
-                    f"{time.time() - merge_time:.2f} seconds with "
-                    f"{len(prediction_result_df)} matches"
-                )
+                with log_timing("Merge LLM + scalar results"):
+                    prediction_result_df = pd.merge(
+                        llm_df,
+                        scalar_search_results_df,
+                        on="item_id",
+                        how="inner",
+                    )
+                    prediction_result_df = prediction_result_df[
+                        ["offer_id", "pertinence", "rank"]
+                    ]
+                logger.info(f"Merge produced {len(prediction_result_df)} matches")
             else:
                 prediction_result_df = scalar_search_results_df
                 prediction_result_df["rank"] = [1] * len(prediction_result_df)

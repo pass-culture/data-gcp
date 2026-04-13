@@ -15,8 +15,8 @@ class ItemSelection(BaseModel):
 
     item_id: str = Field(
         ...,
-        description="The numeric item_id from the 'item_id' column of the table "
-        "(e.g. '1', '2').",
+        description="The item_id from the 'item_id' column of the table "
+        "(e.g. 'product-12345', 'offer-678').",
     )
     pertinence: str = Field(
         ...,

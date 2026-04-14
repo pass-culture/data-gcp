@@ -96,6 +96,9 @@ def main(
 
         # 5. Backtest evaluation and generate all plots
         backtest_metrics, backtest_forecast = model.run_backtest()
+        backtest_forecast_file = f"{run_name}_backtest_forecast.xlsx"
+        backtest_forecast.to_excel(backtest_forecast_file, index=False)
+        mlflow.log_artifact(backtest_forecast_file, artifact_path="diagnostics")
         mlflow.log_metrics(backtest_metrics)
 
         # 6. Future Forecast - start from 1st of month after last data point

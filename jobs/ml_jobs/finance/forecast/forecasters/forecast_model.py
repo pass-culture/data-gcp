@@ -5,6 +5,8 @@ from typing import Any
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from forecast.utils.constants import PRICING_LOWER_BOUND, PRICING_UPPER_BOUND
+
 
 @dataclass
 class DataSplit:
@@ -105,10 +107,14 @@ class ForecastModel(ABC):
                 linewidth=2,
                 label=run_name,
             )
-        # Add horizontal lines at 5 and 15 millions,
+        # Add horizontal lines at PRICING_LOWER_BOUND and PRICING_UPPER_BOUND,
         # considered as important thresholds for the monthly pricing
-        ax.axhline(y=5e6, color="orange", linestyle="--", label="5M threshold")
-        ax.axhline(y=15e6, color="red", linestyle="--", label="15M threshold")
+        ax.axhline(
+            y=PRICING_LOWER_BOUND, color="orange", linestyle="--", label=f"{PRICING_LOWER_BOUND / 1e6:.0f}M threshold"
+        )
+        ax.axhline(
+            y=PRICING_UPPER_BOUND, color="red", linestyle="--", label=f"{PRICING_UPPER_BOUND / 1e6:.0f}M threshold"
+        )
         ax.set_xlabel("Forecast date")
         ax.set_ylabel("Prediction")
         ax.legend(title="run_name", bbox_to_anchor=(1.02, 1), loc="upper left")

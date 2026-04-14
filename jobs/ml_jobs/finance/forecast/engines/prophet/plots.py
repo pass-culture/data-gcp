@@ -5,6 +5,7 @@ import mlflow
 import pandas as pd
 from loguru import logger
 
+from forecast.utils.constants import PRICING_LOWER_BOUND, PRICING_UPPER_BOUND
 from prophet import Prophet
 
 
@@ -252,22 +253,22 @@ def log_future_forecast_plots(
     )
     plt.title("Future Monthly Forecast")
     plt.hlines(
-        y=5e6,
+        y=PRICING_LOWER_BOUND,
         xmin=monthly_forecast.ds.min(),
         xmax=monthly_forecast.ds.max(),
         colors="orange",
         linestyles="--",
         alpha=0.7,
-        label="Ligne des 5 Millions €",
+        label=f"Ligne des {PRICING_LOWER_BOUND / 1e6:.0f} Millions €",
     )
     plt.hlines(
-        y=15e6,
+        y=PRICING_UPPER_BOUND,
         xmin=monthly_forecast.ds.min(),
         xmax=monthly_forecast.ds.max(),
         colors="red",
         linestyles="--",
         alpha=0.7,
-        label="Ligne des 15 Millions €",
+        label=f"Ligne des {PRICING_UPPER_BOUND / 1e6:.0f} Millions €",
     )
 
     plt.xlabel("Month")

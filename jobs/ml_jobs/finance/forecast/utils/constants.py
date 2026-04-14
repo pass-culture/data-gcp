@@ -13,7 +13,10 @@ GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 # MLflow Configuration
 SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}@{GCP_PROJECT_ID}.iam.gserviceaccount.com"
 MLFLOW_URI = (
-    "https://mlflow.passculture.team/"
-    if ENV_SHORT_NAME == "prod"
-    else "https://mlflow.staging.passculture.team/"
+    "https://mlflow.passculture.team/" if ENV_SHORT_NAME == "prod" else "https://mlflow.staging.passculture.team/"
 )
+
+
+## Plots
+PRICING_LOWER_BOUND = 5e6
+PRICING_UPPER_BOUND = 15e6

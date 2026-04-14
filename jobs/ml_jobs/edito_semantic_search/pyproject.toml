@@ -28,7 +28,7 @@ dependencies = [
 dev = [
     "streamlit>=1.35.0",
     "ruff>=0.14.8",
-    "pytest>=8.2.2",
+    "pytest>=9.0.3",
     "ipykernel>=7.1.0",
 ]
 

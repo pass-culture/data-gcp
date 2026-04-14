@@ -12,7 +12,7 @@ dependencies = [
     "keras>=3.13.1",
     "loguru>=0.6.0",
     "matplotlib>=3.8.4",
-    "mlflow>=3.10.1",
+    "mlflow>=3.11.1",
     "numpy>=1.26.4",
     "pandas-gbq>=0.23.1",
     "pandas>=2.2.0",
@@ -26,7 +26,7 @@ dependencies = [
     "tensorflow-recommenders>=0.7.3",
     "tensorflow[and-cuda]>=2.16.0",
     "tf-keras>=2.18.0",
-    "tornado>=6.4.2",
+    "tornado>=6.5.5",
     "tqdm>=4.64.1",
     "typer>=0.7.0",
 ]

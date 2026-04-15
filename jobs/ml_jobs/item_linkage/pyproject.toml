@@ -12,7 +12,7 @@ dependencies = [
     "lancedb>=0.18.0",
     "loguru>=0.6.0",
     "matplotlib>=3.10.5",
-    "mlflow>=3.8.1",
+    "mlflow>=3.11.1",
     "networkx>=3.3",
     "numpy>=1.26.0",
     "pandas>=2.2.2",
@@ -24,7 +24,7 @@ dependencies = [
     "setuptools>=78.1.1",
     "streamlit>=1.35.0",
     "torch>=2.8.0",
-    "tornado>=6.5",
+    "tornado>=6.5.5",
     "tqdm>=4.67.3",
     "typer>=0.7.0",
 ]

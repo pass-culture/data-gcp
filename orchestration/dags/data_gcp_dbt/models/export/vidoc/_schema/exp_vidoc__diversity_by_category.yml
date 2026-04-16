@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: exp_vidoc_diversity__by_category
+  - name: exp_vidoc__diversity_by_category
     description: "{{ doc('description__exp_vidoc_diversity__by_category') }}"
     columns:
       - name: deposit_expiration_month

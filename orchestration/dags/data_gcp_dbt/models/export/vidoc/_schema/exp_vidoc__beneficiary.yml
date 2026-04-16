@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: exp_vidoc_beneficiary
+  - name: exp_vidoc__beneficiary
     description: "{{ doc('description__exp_vidoc_beneficiary') }}"
     columns:
       - name: partition_month

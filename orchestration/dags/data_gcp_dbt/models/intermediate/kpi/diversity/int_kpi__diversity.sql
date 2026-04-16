@@ -1,5 +1,3 @@
-{% set secret_threshold_beneficiary = 5 %}
-
 with
     final_data as (
         select
@@ -20,7 +18,9 @@ with
             coalesce(
                 sum(oc.total_3_category_booked_users), 0
             ) as total_3plus_category_booked_beneficiaries,
-            coalesce(sum(oc.total_users), 0) as total_expired_credit_beneficiaries
+            coalesce(sum(oc.total_users), 0) as total_expired_credit_beneficiaries,
+            mod(abs(sum(oc.cell_key_3_category)), 256) as cell_key_3plus,
+            mod(abs(sum(oc.cell_key_users)), 256) as cell_key_expired
         from {{ ref("mrt_native__outgoing_cohort") }} as oc
         left join
             {{ ref("region_department") }} as rd on oc.user_department_code = rd.num_dep
@@ -41,13 +41,6 @@ with
 
 select
     deposit_expiration_month,
-    case
-        when
-            total_3plus_category_booked_beneficiaries
-            <= {{ secret_threshold_beneficiary }}
-        then true
-        else false
-    end as is_statistic_secret,
     region_name,
     region_code,
     department_name,
@@ -60,5 +53,7 @@ select
     macro_density_label,
     micro_density_label,
     total_3plus_category_booked_beneficiaries,
-    total_expired_credit_beneficiaries
+    total_expired_credit_beneficiaries,
+    cell_key_3plus,
+    cell_key_expired
 from final_data

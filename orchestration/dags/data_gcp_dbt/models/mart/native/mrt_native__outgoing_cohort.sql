@@ -101,6 +101,18 @@ select
         ),
         0
     ) as total_3_category_booked_users,
+    mod(abs(sum(distinct {{ record_key("u.user_id") }})), 256) as cell_key_users,
+    mod(
+        abs(
+            sum(
+                distinct case
+                    when b.total_distinct_category_booked >= 3
+                    then {{ record_key("u.user_id") }}
+                end
+            )
+        ),
+        256
+    ) as cell_key_3_category,
     coalesce(sum(u.total_actual_amount_spent), 0) as total_amount_spent,
     coalesce(
         sum(u.total_theoretical_digital_goods_amount_spent), 0

@@ -1,5 +1,3 @@
-{% set secret_threshold_beneficiary = 5 %}
-
 with
 
     last_day_of_month as (
@@ -98,65 +96,46 @@ with
             {{ ref("region_department") }} as rd
             on eud.user_department_code = rd.num_dep
         where uua.cumulative_amount_spent < uua.initial_deposit_amount
-    ),
-
-    final_data as (
-        select
-            tub.partition_month,
-            tub.region_name,
-            tub.region_code,
-            tub.department_name,
-            tub.department_code,
-            tub.epci_name,
-            tub.epci_code,
-            tub.city_name,
-            tub.city_code,
-            tub.age_at_calculation,
-            tub.is_in_qpv,
-            tub.macro_density_label,
-            tub.micro_density_label,
-            count(distinct aub.user_id) as total_actual_beneficiaries,
-            count(distinct tub.user_id) as total_beneficiaries
-        from total_users_base as tub
-        left join
-            active_users_base as aub
-            on tub.user_id = aub.user_id
-            and tub.partition_month = aub.partition_month
-        group by
-            tub.partition_month,
-            tub.region_name,
-            tub.region_code,
-            tub.department_name,
-            tub.department_code,
-            tub.epci_name,
-            tub.epci_code,
-            tub.city_name,
-            tub.city_code,
-            tub.age_at_calculation,
-            tub.is_in_qpv,
-            tub.macro_density_label,
-            tub.micro_density_label
     )
 
 select
-    partition_month,
-    case
-        when total_actual_beneficiaries <= {{ secret_threshold_beneficiary }}
-        then true
-        else false
-    end as is_statistic_secret,
-    region_name,
-    region_code,
-    department_name,
-    department_code,
-    epci_name,
-    epci_code,
-    city_name,
-    city_code,
-    age_at_calculation,
-    is_in_qpv,
-    macro_density_label,
-    micro_density_label,
-    total_actual_beneficiaries,
-    total_beneficiaries
-from final_data
+    tub.partition_month,
+    tub.region_name,
+    tub.region_code,
+    tub.department_name,
+    tub.department_code,
+    tub.epci_name,
+    tub.epci_code,
+    tub.city_name,
+    tub.city_code,
+    tub.age_at_calculation,
+    tub.is_in_qpv,
+    tub.macro_density_label,
+    tub.micro_density_label,
+    count(distinct aub.user_id) as total_actual_beneficiaries,
+    count(distinct tub.user_id) as total_beneficiaries,
+    mod(
+        abs(sum(distinct {{ record_key("tub.user_id") }})), 256
+    ) as cell_key_beneficiaries,
+    mod(
+        abs(sum(distinct {{ record_key("aub.user_id") }})), 256
+    ) as cell_key_actual_beneficiaries
+from total_users_base as tub
+left join
+    active_users_base as aub
+    on tub.user_id = aub.user_id
+    and tub.partition_month = aub.partition_month
+group by
+    tub.partition_month,
+    tub.region_name,
+    tub.region_code,
+    tub.department_name,
+    tub.department_code,
+    tub.epci_name,
+    tub.epci_code,
+    tub.city_name,
+    tub.city_code,
+    tub.age_at_calculation,
+    tub.is_in_qpv,
+    tub.macro_density_label,
+    tub.micro_density_label

@@ -1,5 +1,3 @@
-{% set secret_threshold_beneficiary = 5 %}
-
 with
     expired_users as (
         select
@@ -32,65 +30,40 @@ with
         select distinct user_id, offer_category_id
         from {{ ref("int_global__booking") }}
         where booking_is_used
-    ),
-
-    final_data as (
-        select
-            u.deposit_expiration_month,
-            u.is_in_qpv,
-            u.macro_density_label,
-            u.micro_density_label,
-            u.region_name,
-            u.region_code,
-            u.department_name,
-            u.department_code,
-            u.epci_name,
-            u.epci_code,
-            u.city_name,
-            u.city_code,
-            cat.offer_category_id,
-            count(
-                distinct case
-                    when cat.offer_category_id is not null then cat.user_id
-                end
-            ) as total_category_booked_beneficiaries
-        from expired_users as u
-        left join user_booked_categories as cat on u.user_id = cat.user_id
-        where cat.offer_category_id is not null
-        group by
-            u.deposit_expiration_month,
-            u.is_in_qpv,
-            u.macro_density_label,
-            u.micro_density_label,
-            u.region_name,
-            u.region_code,
-            u.epci_name,
-            u.epci_code,
-            u.city_name,
-            u.city_code,
-            u.department_name,
-            u.department_code,
-            cat.offer_category_id
     )
 
 select
-    deposit_expiration_month,
-    case
-        when total_category_booked_beneficiaries <= {{ secret_threshold_beneficiary }}
-        then true
-        else false
-    end as is_statistic_secret,
-    region_name,
-    region_code,
-    department_name,
-    department_code,
-    epci_name,
-    epci_code,
-    city_name,
-    city_code,
-    is_in_qpv,
-    macro_density_label,
-    micro_density_label,
-    offer_category_id,
-    total_category_booked_beneficiaries
-from final_data
+    u.deposit_expiration_month,
+    u.is_in_qpv,
+    u.macro_density_label,
+    u.micro_density_label,
+    u.region_name,
+    u.region_code,
+    u.department_name,
+    u.department_code,
+    u.epci_name,
+    u.epci_code,
+    u.city_name,
+    u.city_code,
+    cat.offer_category_id,
+    count(
+        distinct case when cat.offer_category_id is not null then cat.user_id end
+    ) as total_category_booked_beneficiaries,
+    mod(abs(sum(distinct {{ record_key("cat.user_id") }})), 256) as cell_key_category
+from expired_users as u
+left join user_booked_categories as cat on u.user_id = cat.user_id
+where cat.offer_category_id is not null
+group by
+    u.deposit_expiration_month,
+    u.is_in_qpv,
+    u.macro_density_label,
+    u.micro_density_label,
+    u.region_name,
+    u.region_code,
+    u.epci_name,
+    u.epci_code,
+    u.city_name,
+    u.city_code,
+    u.department_name,
+    u.department_code,
+    cat.offer_category_id

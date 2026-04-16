@@ -1,6 +1,5 @@
 select
     deposit_expiration_month,
-    is_statistic_secret,
     region_name,
     region_code,
     department_name,
@@ -13,5 +12,6 @@ select
     macro_density_label,
     micro_density_label,
     offer_category_id,
-    total_category_booked_beneficiaries
+    total_category_booked_beneficiaries,
+    cell_key_category
 from {{ ref("int_kpi__diversity_by_category") }}

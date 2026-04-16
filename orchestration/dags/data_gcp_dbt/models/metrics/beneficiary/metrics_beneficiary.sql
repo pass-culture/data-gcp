@@ -1,6 +1,5 @@
 select
     partition_month,
-    is_statistic_secret,
     region_name,
     region_code,
     department_name,
@@ -14,5 +13,7 @@ select
     macro_density_label,
     micro_density_label,
     total_actual_beneficiaries,
-    total_beneficiaries
+    total_beneficiaries,
+    cell_key_beneficiaries,
+    cell_key_actual_beneficiaries
 from {{ ref("int_kpi__beneficiary") }}

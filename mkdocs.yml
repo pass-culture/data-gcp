@@ -61,7 +61,18 @@ nav:
     - Infra: |
   - Data Models:
       - Overview: dbt/overview.md
-      - ... | dbt/models/**/description*.md
+      - KPIs:
+        - Vidoc:
+          - dbt/vidoc_kpis/index.md
+          - Cumulative beneficiaries: dbt/vidoc_kpis/cumulative_beneficiaries.md
+          - Active beneficiaries: dbt/vidoc_kpis/active_beneficiaries.md
+          - Beneficiary coverage rate: dbt/vidoc_kpis/beneficiary_coverage_rate.md
+          - Diversity rate (3+ categories): dbt/vidoc_kpis/diversity_3plus_categories.md
+          - Booking share by category: dbt/vidoc_kpis/booking_share_by_category.md
+      - Table definitions:
+        - ... | dbt/models/**/description*.md
+      - Methodology:
+        - Statistical confidentiality: dbt/references/statistical_confidentiality.md
   - Glossary:
       - Overview: dbt/glossary.md
       - ... | dbt/glossary/*/column*.md

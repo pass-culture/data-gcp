@@ -25,5 +25,16 @@ Detail of logs supported (field message) :
             "Offer Categorisation Data API" : data science team need to measure performance of their predictive model for individual offer creation (suggestion of subcategories)
             "Searching for structure"
             "Creating new Offerer and Venue"
+            Several engagement actions (editorialisation of the cultural partner via "Espace partenaire")
+            1. Video on offer
+            "Video has been deleted from offer"
+            "Video has been added to offer"
+            "Video has been updated on offer"
+            2. Application to highlight playlists on Home
+            "Highlight requests have been created"
+            "Highlight requests have been deleted"
+            3. Recommendation of an offer
+            "Pro advice updated"
+            "Pro advice created"
 
 {% docs table__mrt_pro__log %}{% enddocs %}

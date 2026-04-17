@@ -30,10 +30,7 @@ def validate_data(df: pd.DataFrame, model_config: ModelConfig) -> None:
 
     missing_columns = required_columns - set(df.columns)
     if missing_columns:
-        raise ValueError(
-            f"Missing required columns: {missing_columns}. "
-            f"Available columns: {df.columns.tolist()}"
-        )
+        raise ValueError(f"Missing required columns: {missing_columns}. Available columns: {df.columns.tolist()}")
 
 
 def filter_data(
@@ -90,9 +87,7 @@ def add_features(
     if model_config.features.pass_culture_months:
         months_years = set(model_config.features.pass_culture_months)
         # Avoid intermediate _month_year column by computing membership directly
-        df["pass_culture_months"] = (
-            pd.to_datetime(df["ds"]).dt.strftime("%m-%Y").isin(months_years)
-        )
+        df["pass_culture_months"] = pd.to_datetime(df["ds"]).dt.strftime("%m-%Y").isin(months_years)
     if model_config.prophet.growth == "logistic":
         df["floor"] = 0.0
         df["cap"] = df["y"].max() * 1.2
@@ -147,9 +142,7 @@ def split_train_test_backtest(
     backtest_start = pd.to_datetime(backtest_start_date)
 
     # Filter by date range first to reduce data before sorting
-    df_in_sample = df[
-        (df["ds"] >= train_start) & (df["ds"] <= backtest_start)
-    ].sort_values("ds", ignore_index=True)
+    df_in_sample = df[(df["ds"] >= train_start) & (df["ds"] <= backtest_start)].sort_values("ds", ignore_index=True)
 
     # Get backtest data before operating on in_sample
     df_backtest = df[df["ds"] > backtest_start].reset_index(drop=True)

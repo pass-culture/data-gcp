@@ -1,0 +1,16 @@
+[project]
+name = "http_tools"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.27",
+    "requests>=2.31",
+    "backoff>=2.2",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

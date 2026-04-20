@@ -85,7 +85,7 @@ with DAG(
     fetch_install_code = InstallDependenciesOperator(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        requirement_file="jobs/brevo/requirements.txt",
+        package="brevo",
         branch="{{ params.branch }}",
         python_version="'3.10'",
         base_dir=BASE_PATH,
@@ -98,7 +98,7 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="""
-            python -m jobs.brevo.main \
+            uv run python -m workflows.brevo.main \
             --target transactional \
             --audience pro \
             --start-date {{ params.start_date }} \
@@ -114,7 +114,7 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="""
-            python -m jobs.brevo.main \
+            uv run python -m workflows.brevo.main \
             --target transactional \
             --audience native \
             --start-date {{ params.start_date }} \
@@ -149,7 +149,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python -m jobs.brevo.main --target newsletter --audience pro --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
+        command="uv run python -m workflows.brevo.main --target newsletter --audience pro --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
         do_xcom_push=True,
     )
 
@@ -158,7 +158,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python -m jobs.brevo.main --target newsletter --audience native --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
+        command="uv run python -m workflows.brevo.main --target newsletter --audience native --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
         do_xcom_push=True,
     )
 

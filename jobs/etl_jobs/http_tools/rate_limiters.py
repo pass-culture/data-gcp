@@ -1,42 +1,77 @@
 import asyncio
 import logging
+import os
 import time
 from abc import ABC, abstractmethod
 from collections import deque
+from typing import Optional
 
 # Set up logging
+ENV_LOG_LEVEL = os.getenv("CLIENT_LOG_LEVEL", "INFO").upper()
+LIMITER_LOG_LEVEL = getattr(logging, ENV_LOG_LEVEL, logging.INFO)
+
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(LIMITER_LOG_LEVEL)
 
 
 # -----------------------------
-# Abstract Rate Limiter
+# Helper for Header Parsing
 # -----------------------------
+def parse_retry_after(response, default_backoff: int) -> int:
+    """Extracts retry delay from response headers."""
+    header = response.headers.get("Retry-After")
+    if header is None:
+        return default_backoff
+    try:
+        return int(header)
+    except ValueError:
+        # Some APIs send a HTTP-date string instead of seconds
+        logger.debug(f"Could not parse Retry-After header: '{header}'. Using default.")
+        return default_backoff
+
+
+# -----------------------------
+# Abstract Base Classes
+# -----------------------------
+
+
 class BaseRateLimiter(ABC):
-    """
-    Abstract base class for rate limiter strategies.
-    """
+    @abstractmethod
+    def backoff(self, response):
+        pass
 
+    def release(self):
+        """Optional: Release resources/semaphores after a request."""
+        pass
+
+    def _log_event(
+        self, icon: str, event_type: str, message: str, level: int = logging.DEBUG
+    ):
+        """Standardized format: ICON [ClassName] EVENT: Message"""
+        limiter_name = self.__class__.__name__
+        logger.log(level, f"{icon} [{limiter_name}] {event_type.upper()}: {message}")
+
+
+class SyncBaseRateLimiter(BaseRateLimiter):
     @abstractmethod
     def acquire(self):
-        """Acquire a slot before making a request."""
+        pass
+
+
+class AsyncBaseRateLimiter(BaseRateLimiter):
+    @abstractmethod
+    async def acquire(self):
         pass
 
     @abstractmethod
-    def backoff(self, response):
-        """Handle backoff logic when receiving a rate-limit response."""
+    async def backoff(self, response):
         pass
 
 
 # -----------------------------
 # Sync Token Bucket
 # -----------------------------
-class SyncTokenBucketRateLimiter(BaseRateLimiter):
-    """
-    Synchronous token bucket rate limiter.
-    Controls number of requests per time period.
-    """
-
+class SyncTokenBucketRateLimiter(SyncBaseRateLimiter):
     def __init__(self, calls: int, period: int, default_backoff: int = 10):
         self.calls = calls
         self.period = period
@@ -50,46 +85,60 @@ class SyncTokenBucketRateLimiter(BaseRateLimiter):
                 self.timestamps.popleft()
             else:
                 sleep_time = self.period - (now - self.timestamps[0])
-                logger.warning(f"Rate limit reached. Sleeping {sleep_time:.2f}s...")
+                # USE BASE LOGGING
+                self._log_event(
+                    "⏳",
+                    "Throttle",
+                    f"Proactive rate limit. Sleeping {sleep_time:.2f}s",
+                )
                 time.sleep(sleep_time)
         self.timestamps.append(time.time())
 
     def backoff(self, response):
-        header = response.headers.get("Retry-After")
-        if header is None:
-            logger.warning(
-                f"Retry-After header missing; defaulting to {self.default_backoff}s backoff"
-            )
-            retry_after = self.default_backoff
-        else:
-            try:
-                retry_after = int(header)
-            except ValueError:
-                logger.warning(
-                    f"Invalid Retry-After header '{header}'; defaulting to {self.default_backoff}s backoff"
-                )
-                retry_after = self.default_backoff
-        logger.warning(f"Received 429. Backing off for {retry_after}s…")
+        header_val = response.headers.get("Retry-After")
+        retry_after = parse_retry_after(response, self.default_backoff)
+        source = "Retry-After header" if header_val else "default backoff"
+
+        # USE BASE LOGGING
+        self._log_event(
+            "😴",
+            "Backoff",
+            f"Received 429. Waiting {retry_after}s (Source: {source})",
+            logging.WARNING,
+        )
         time.sleep(retry_after)
 
 
 # -----------------------------
 # Async Token Bucket
 # -----------------------------
-class AsyncTokenBucketRateLimiter(BaseRateLimiter):
-    """
-    Asynchronous token bucket rate limiter.
-    Uses asyncio locks and sleeps for non-blocking behavior.
-    """
-
-    def __init__(self, calls: int, period: int, default_backoff: int = 10):
+class AsyncTokenBucketRateLimiter(AsyncBaseRateLimiter):
+    def __init__(
+        self,
+        calls: int,
+        period: int,
+        default_backoff: int = 10,
+        max_concurrent: Optional[int] = None,
+    ):
         self.calls = calls
         self.period = period
         self.timestamps = deque()
         self.lock = asyncio.Lock()
         self.default_backoff = default_backoff
+        self.semaphore = asyncio.Semaphore(max_concurrent) if max_concurrent else None
 
     async def acquire(self):
+        if self.semaphore:
+            if self.semaphore.locked():
+                # USE BASE LOGGING
+                self._log_event(
+                    "🚧",
+                    "Concurrency",
+                    "Max concurrent slots reached. Waiting...",
+                    logging.DEBUG,
+                )
+            await self.semaphore.acquire()
+
         async with self.lock:
             while len(self.timestamps) >= self.calls:
                 now = time.time()
@@ -97,26 +146,30 @@ class AsyncTokenBucketRateLimiter(BaseRateLimiter):
                     self.timestamps.popleft()
                 else:
                     wait = self.period - (now - self.timestamps[0])
-                    logger.warning(
-                        f"[Async] Rate limit reached. Sleeping {wait:.2f}s..."
+                    # USE BASE LOGGING
+                    self._log_event(
+                        "⏳",
+                        "Throttle",
+                        f"Proactive rate limit. Sleeping {wait:.2f}s",
+                        logging.INFO,
                     )
                     await asyncio.sleep(wait)
             self.timestamps.append(time.time())
 
+    def release(self):
+        if self.semaphore:
+            self.semaphore.release()
+
     async def backoff(self, response):
-        header = response.headers.get("Retry-After")
-        if header is None:
-            logger.warning(
-                f"[Async] Retry-After header missing; defaulting to {self.default_backoff}s backoff"
-            )
-            retry_after = self.default_backoff
-        else:
-            try:
-                retry_after = int(header)
-            except ValueError:
-                logger.warning(
-                    f"[Async] Invalid Retry-After header '{header}'; defaulting to {self.default_backoff}s backoff"
-                )
-                retry_after = self.default_backoff
-        logger.warning(f"[Async] Received 429. Backing off for {retry_after}s…")
+        header_val = response.headers.get("Retry-After")
+        retry_after = parse_retry_after(response, self.default_backoff)
+        source = "Retry-After header" if header_val else "default backoff"
+
+        # USE BASE LOGGING
+        self._log_event(
+            "😴",
+            "Backoff",
+            f"Received 429. Waiting {retry_after}s (Source: {source})",
+            logging.WARNING,
+        )
         await asyncio.sleep(retry_after)

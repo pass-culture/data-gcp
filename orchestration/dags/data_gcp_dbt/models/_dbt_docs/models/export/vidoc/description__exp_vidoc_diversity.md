@@ -14,4 +14,4 @@ It is designed to be exported to ministry for vidoc visualisation.
 
 Each row represents a key indicator calculated for a specific month, geographic aggregation and beneficiary dimensions level.
 
-{% docs table__exp_vidoc_diversity %}{% enddocs %}
+{% docs table__exp_vidoc__diversity %}{% enddocs %}

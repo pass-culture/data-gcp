@@ -1,0 +1,8 @@
+SELECT
+    CAST("id" AS varchar(255)) as id
+    , CAST("offerId" AS varchar(255)) as offer_id
+    , CAST("venueId" AS varchar(255)) as venue_id
+    , CAST("content" AS varchar(255)) as advice_content
+    , CAST("author" as varchar(255)) as advice_author
+    , CAST("updatedAt" as varchar(255))  AS update_date
+FROM public.pro_advice

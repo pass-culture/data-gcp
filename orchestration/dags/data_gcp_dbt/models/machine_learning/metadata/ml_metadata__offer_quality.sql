@@ -29,7 +29,7 @@ with
         from {{ ref("mrt_global__offer") }} as offer
         left join
             {{ ref("mrt_global__offer_metadata") }} as offer_metadata using (offer_id)
-        where offer.offer_product_id is not null and offer.offer_is_bookable
+        where offer.offer_is_bookable
     ),
 
     artists_per_product as (

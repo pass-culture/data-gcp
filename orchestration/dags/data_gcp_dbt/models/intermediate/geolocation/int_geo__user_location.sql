@@ -74,7 +74,9 @@ select
     coalesce(region_department.academy_name, "non localisé") as user_academy_name,
     coalesce(region_department.dep_name, "non localisé") as user_department_name,
     coalesce(region_department.region_name, "non localisé") as user_region_name,
-    coalesce(user_geo_iris.iris_internal_id, "-1") as user_iris_internal_id,
+    coalesce(
+        user_geo_iris.iris_internal_id, "00000000000000000000000000000000"
+    ) as user_iris_internal_id,
     coalesce(user_geo_iris.city_label, "non localisé") as user_city,
     coalesce(cast(user_geo_iris.city_code as string), "-1") as user_city_code,
     coalesce(user_geo_iris.rural_city_type, "non localisé") as user_rural_city_type,

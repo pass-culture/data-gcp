@@ -73,7 +73,9 @@ select
     coalesce(region_department.academy_name, "non localisé") as venue_academy_name,
     coalesce(region_department.dep_name, "non localisé") as venue_department_name,
     coalesce(region_department.region_name, "non localisé") as venue_region_name,
-    coalesce(venue_geo_iris.iris_internal_id, "-1") as venue_iris_internal_id,
+    coalesce(
+        venue_geo_iris.iris_internal_id, "00000000000000000000000000000000"
+    ) as venue_iris_internal_id,
     coalesce(venue_geo_iris.city_label, "non localisé") as venue_city,
     coalesce(cast(venue_geo_iris.city_code as string), "-1") as venue_city_code,
     coalesce(venue_geo_iris.rural_city_type, "non localisé") as venue_rural_city_type,

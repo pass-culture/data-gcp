@@ -30,8 +30,8 @@ SELECT
         SUM(cat.total_category_booked_beneficiaries),
         SUM(div.total_expired_credit_beneficiaries)
     ) AS category_booking_rate
-FROM exp_vidoc_diversity_by_category AS cat
-INNER JOIN exp_vidoc_diversity AS div
+FROM `<project_name>.<dataset_name>.diversity_by_category` AS cat
+INNER JOIN `<project_name>.<dataset_name>.diversity` AS div
     ON cat.deposit_expiration_month = div.deposit_expiration_month
     AND cat.department_code = div.department_code
     AND cat.is_in_qpv = div.is_in_qpv

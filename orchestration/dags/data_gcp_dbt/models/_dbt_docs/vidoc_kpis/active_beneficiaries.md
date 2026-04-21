@@ -23,7 +23,7 @@ Sum the `total_actual_beneficiaries` column over the desired dimensions.
 SELECT
     partition_month,
     SUM(total_actual_beneficiaries) AS active_beneficiaries
-FROM exp_vidoc_beneficiary
+FROM `<project_name>.<dataset_name>.beneficiary`
 GROUP BY partition_month
 ORDER BY partition_month
 ```

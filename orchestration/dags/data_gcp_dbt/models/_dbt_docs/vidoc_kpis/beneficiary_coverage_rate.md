@@ -30,8 +30,8 @@ SELECT
         SUM(b.total_beneficiaries_last_12_months),
         SUM(p.total_population_last_12_months)
     ) AS coverage_rate
-FROM `<project_name>.<dataset_name>.beneficiary_coverage` AS b
-INNER JOIN `<project_name>.<dataset_name>.population_coverage` AS p
+FROM `beneficiary_coverage` AS b
+INNER JOIN `population_coverage` AS p
     ON b.partition_month = p.partition_month
     AND b.department_code = p.department_code
     AND CAST(b.milestone_age AS STRING) = p.milestone_age

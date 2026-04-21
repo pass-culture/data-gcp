@@ -28,7 +28,7 @@ SELECT
         SUM(total_3plus_category_booked_beneficiaries),
         SUM(total_expired_credit_beneficiaries)
     ) AS diversity_rate
-FROM `<project_name>.<dataset_name>.diversity`
+FROM `diversity`
 GROUP BY deposit_expiration_month
 ORDER BY deposit_expiration_month
 ```

@@ -64,7 +64,7 @@ nav:
       - KPIs:
         - Vidoc:
           - dbt/vidoc_kpis/index.md
-          - Cumulative beneficiaries: dbt/vidoc_kpis/cumulative_beneficiaries.md
+          - Ever-credited beneficiaries: dbt/vidoc_kpis/ever_credited_beneficiaries.md
           - Active beneficiaries: dbt/vidoc_kpis/active_beneficiaries.md
           - Beneficiary coverage rate: dbt/vidoc_kpis/beneficiary_coverage_rate.md
           - Diversity rate (3+ categories): dbt/vidoc_kpis/diversity_3plus_categories.md

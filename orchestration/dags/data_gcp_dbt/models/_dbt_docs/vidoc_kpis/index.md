@@ -17,7 +17,7 @@ All exported counts are protected using the **Cell Key Perturbation method** —
 
 | KPI | Definition | Source table(s) | Tracking |
 |-----|-----------|-----------------|----------|
-| [Cumulative number of beneficiaries](cumulative_beneficiaries.md) | Total young people who have received a pass Culture credit | `exp_vidoc_beneficiary` | Quarterly |
+| [Number of ever-credited beneficiaries](ever_credited_beneficiaries.md) | Young people who have ever received a pass Culture credit, active or not | `exp_vidoc_beneficiary` | Quarterly |
 | [Number of active beneficiaries](active_beneficiaries.md) | Beneficiaries with a non-expired, non-exhausted credit | `exp_vidoc_beneficiary` | Quarterly |
 | [Beneficiary coverage rate](beneficiary_coverage_rate.md) | Share of eligible youth who received a credit | `exp_vidoc_beneficiary_coverage` + `exp_vidoc_population_coverage` | Annual |
 | [Diversity rate (3+ categories)](diversity_3plus_categories.md) | Share who booked in 3+ categories at credit expiration | `exp_vidoc_diversity` | Quarterly |

@@ -168,7 +168,7 @@ def main(
     ].assign(
         **{
             ARTIST_ID_KEY: lambda df: df[ARTIST_ID_KEY].map(artist_mapping),
-            ACTION_KEY: Action.update,
+            ACTION_KEY: Action.add,
             COMMENT_KEY: "linked to main artist after deduplication",
         }
     )

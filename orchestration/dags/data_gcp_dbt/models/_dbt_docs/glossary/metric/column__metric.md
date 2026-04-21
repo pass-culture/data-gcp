@@ -155,7 +155,7 @@ The total count of active beneficiaries at the time of calculation. To be includ
 {% enddocs %}
 
 {% docs column__metrics__total_beneficiaries %}
-The cumulative number of beneficiaries to date. This metric counts every user who has ever received credit, regardless of whether their credit is currently expired or if they have any remaining balance.
+Number of beneficiaries at the end of the partition month, broken down by `age_at_calculation`. Counts every user with an active account (or suspended upon user request) who has ever received credit, regardless of whether the credit is currently active, exhausted, or expired. A user's `age_at_calculation` is recomputed each month, so the same user can appear in different age buckets across partition_months. Not a true running total — users with deactivated accounts drop from the count.
 {% enddocs %}
 
 {% docs column__metrics__total_category_booked_beneficiaries %}

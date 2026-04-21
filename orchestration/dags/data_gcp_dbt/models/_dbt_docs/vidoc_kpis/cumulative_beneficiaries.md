@@ -1,13 +1,20 @@
 ---
-title: Cumulative number of beneficiaries
-description: How to calculate the cumulative number of young people who have received a pass Culture credit.
+title: Number of ever-credited beneficiaries
+description: How to calculate the number of young people who have ever received a pass Culture credit, whether the credit is still active or not.
 ---
 
-## Cumulative number of beneficiaries
+## Number of ever-credited beneficiaries
 
 ### Definition
 
-Cumulative number of young people who have received a pass Culture credit, whether the credit is still active or not.
+Number of young people who have ever received a pass Culture credit, whether that credit is still active, exhausted, or expired.
+
+Reported as a **stock at the end of each `partition_month`**, broken down by `age_at_calculation` (age reached at that month). This is not a true running total:
+
+- A user only enters the stock from the month in which they first received a credit.
+- A user's `age_at_calculation` is recomputed each month, so the same user appears in different age buckets across months as they age.
+- A user leaves the stock if their account becomes inactive for any reason other than "suspension upon user request" (e.g. account deletion).
+- Users with a `GRANT_FREE` deposit type are excluded.
 
 ### Source table
 
@@ -20,7 +27,7 @@ Sum the `total_beneficiaries` column over the desired dimensions.
 ```sql
 SELECT
     partition_month,
-    SUM(total_beneficiaries) AS cumulative_beneficiaries
+    SUM(total_beneficiaries) AS total_ever_credited_beneficiaries
 FROM exp_vidoc_beneficiary
 GROUP BY partition_month
 ORDER BY partition_month

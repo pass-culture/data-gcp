@@ -84,7 +84,7 @@ select
     coalesce(
         user_geo_iris.density_macro_level, "non localisé"
     ) as user_macro_density_label,
-    coalesce(user_geo_iris.density_level, "non localisé") as user_density_level,
+    coalesce(user_geo_iris.density_level, -1) as user_density_level,
     coalesce(user_epci.epci_name, "non localisé") as user_epci,
     coalesce(cast(user_epci.epci_code as string), "-1") as user_epci_code,
     user_qpv.qpv_code,

@@ -83,7 +83,7 @@ select
     coalesce(
         venue_geo_iris.density_macro_level, "non localisé"
     ) as venue_macro_density_label,
-    coalesce(venue_geo_iris.density_level, "non localisé") as venue_density_level,
+    coalesce(venue_geo_iris.density_level, -1) as venue_density_level,
     coalesce(venue_epci.epci_name, "non localisé") as venue_epci,
     coalesce(cast(venue_epci.epci_code as string), "-1") as venue_epci_code,
     venue_qpv.qpv_code,

@@ -223,10 +223,9 @@ from {{ ref("int_applicative__extract_offer") }} as o
 left join {{ ref("int_applicative__offer_item_id") }} as ii on ii.offer_id = o.offer_id
 left join stocks_grouped_by_offers on stocks_grouped_by_offers.offer_id = o.offer_id
 left join total_favorites on total_favorites.offerid = o.offer_id
-left join total_favorites on total_favorites.offerid = o.offer_id
 left join
     offer_last_advice on offer_last_advice.offer_id = o.offer_id
-    {{ source("raw", "subcategories") }} as subcategories
+left join {{ source("raw", "subcategories") }} as subcategories
     on o.offer_subcategoryid = subcategories.id
 left join
     {{ ref("int_applicative__offer_ean") }} as offer_ean

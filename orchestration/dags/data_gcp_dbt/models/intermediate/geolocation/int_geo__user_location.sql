@@ -62,17 +62,6 @@ with
                 geo_shape="iris_shape",
             )
         }}
-    ),
-
-    region_department as (
-        select num_dep, dep_name, region_name, academy_name
-        from {{ source("seed", "region_department") }}
-        union all
-        select
-            "-1" as num_dep,
-            "non localisé" as dep_name,
-            "non localisé" as region_name,
-            "non localisé" as academy_name
     )
 
 select
@@ -118,8 +107,7 @@ left join user_qpv on users.user_id = user_qpv.user_id
 left join user_zrr on users.user_id = user_zrr.user_id
 left join user_geo_iris on users.user_id = user_geo_iris.user_id
 -- ensure to have region and department name for non IRIS based regions (Wallis and
--- Futuna, New Caledonia, etc.), and fall back to the synthetic "-1" row when the
--- user has no department code at all
+-- Futuna, New Caledonia, etc.)
 left join
-    region_department
-    on coalesce(users.user_department_code, "-1") = region_department.num_dep
+    {{ source("seed", "region_department") }} as region_department
+    on users.user_department_code = region_department.num_dep

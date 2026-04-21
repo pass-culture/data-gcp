@@ -61,17 +61,6 @@ with
                 geo_shape="iris_shape",
             )
         }}
-    ),
-
-    region_department as (
-        select num_dep, dep_name, region_name, academy_name
-        from {{ source("seed", "region_department") }}
-        union all
-        select
-            "-1" as num_dep,
-            "non localisé" as dep_name,
-            "non localisé" as region_name,
-            "non localisé" as academy_name
     )
 
 select
@@ -116,8 +105,7 @@ left join venue_qpv on venue.venue_id = venue_qpv.venue_id
 left join venue_zrr on venue.venue_id = venue_zrr.venue_id
 left join venue_geo_iris on venue.venue_id = venue_geo_iris.venue_id
 -- ensure to have region and department name for non IRIS based regions (Wallis and
--- Futuna, New Caledonia, etc.), and fall back to the synthetic "-1" row when the
--- venue has no department code at all
+-- Futuna, New Caledonia, etc.)
 left join
-    region_department
-    on coalesce(venue.venue_department_code, "-1") = region_department.num_dep
+    {{ source("seed", "region_department") }} as region_department
+    on venue.venue_department_code = region_department.num_dep

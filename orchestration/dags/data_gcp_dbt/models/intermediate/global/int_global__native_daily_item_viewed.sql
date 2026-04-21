@@ -15,8 +15,20 @@ with
         select
             ivr.event_date,
             ivr.origin,
+            ivr.traffic_source,
+            ivr.traffic_medium,
+            ivr.traffic_campaign,
             ivr.module_id,
             ivr.home_entry_id,
+            home_tag.home_name,
+            home_tag.home_type,
+            home_tag.home_audience,
+            home_tag.user_lifecycle_home,
+            playlist_tag.bloc_name as playlist_name,
+            playlist_tag.playlist_type,
+            playlist_tag.offer_category as playlist_offer_category,
+            playlist_tag.playlist_reach,
+            playlist_tag.playlist_recurrence,
             ivr.item_type,
             ivr.unique_session_id,
             ivr.user_id,
@@ -35,6 +47,12 @@ with
         from {{ ref("int_firebase__native_daily_item_viewed") }} as ivr
         left join
             {{ ref("int_applicative__user") }} as user on ivr.user_id = user.user_id
+        left join
+            {{ ref("int_contentful__home_tag") }} as home_tag
+            on ivr.home_entry_id = home_tag.entry_id
+        left join
+            {{ ref("int_contentful__playlist_tag") }} as playlist_tag
+            on ivr.module_id = playlist_tag.entry_id
         {% if is_incremental() %}
             where date(event_date) = date_sub('{{ ds() }}', interval 3 day)
         {% else %} where date(event_date) >= "2025-06-02"
@@ -46,8 +64,20 @@ with
         select
             event_date,
             origin,
+            traffic_source,
+            traffic_medium,
+            traffic_campaign,
             module_id,
             home_entry_id,
+            home_name,
+            home_type,
+            home_audience,
+            user_lifecycle_home,
+            playlist_name,
+            playlist_type,
+            playlist_offer_category,
+            playlist_reach,
+            playlist_recurrence,
             item_type,
             viewed_item_id,
             index_bucket,
@@ -59,8 +89,20 @@ with
         group by
             event_date,
             origin,
+            traffic_source,
+            traffic_medium,
+            traffic_campaign,
             module_id,
             home_entry_id,
+            home_name,
+            home_type,
+            home_audience,
+            user_lifecycle_home,
+            playlist_name,
+            playlist_type,
+            playlist_offer_category,
+            playlist_reach,
+            playlist_recurrence,
             item_type,
             index_bucket,
             viewed_item_id,
@@ -72,8 +114,20 @@ with
 select
     event_date,
     origin,
+    traffic_source,
+    traffic_medium,
+    traffic_campaign,
     module_id,
     home_entry_id,
+    home_name,
+    home_type,
+    home_audience,
+    user_lifecycle_home,
+    playlist_name,
+    playlist_type,
+    playlist_offer_category,
+    playlist_reach,
+    playlist_recurrence,
     item_type,  -- offer/venue/artist
     viewed_item_id,  -- offer_id/venue_id/artist_id
     user_role,

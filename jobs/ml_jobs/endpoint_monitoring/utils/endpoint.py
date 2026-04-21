@@ -22,7 +22,7 @@ from google.protobuf import json_format
 from google.protobuf.struct_pb2 import Value
 from loguru import logger
 
-from constants import API_ENDPOINT, GCP_PROJECT, LOCATION
+from constants import API_ENDPOINT, GCP_PROJECT_ID, LOCATION
 
 RETRIEVAL_SIZE = 60  # Default size for retrieval, can be adjusted as needed
 
@@ -75,7 +75,9 @@ def get_endpoint_path(
     """
 
     endpoint = aiplatform.Endpoint.list(
-        filter=f"display_name={endpoint_name}", location=LOCATION, project=GCP_PROJECT
+        filter=f"display_name={endpoint_name}",
+        location=LOCATION,
+        project=GCP_PROJECT_ID,
     )[0]
     endpoint_dict = endpoint.to_dict()
     return endpoint_dict["name"]

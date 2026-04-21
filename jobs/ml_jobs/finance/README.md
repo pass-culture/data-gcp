@@ -23,7 +23,7 @@ make install  # Install dependencies
 Run the pipeline using `main.py`.
 
 ```bash
-uv run main.py --model-type 'prophet' --model-name 'daily_pricing' --train-start-date '2022-01-01' --backtest-start-date '2025-01-01' --backtest-end-date '2025-12-01' --forecast-horizon-date "2026-12-30"  --experiment-name "finance_pricing_forecast_v0_PROD" --dataset "ml-finance-dev"
+uv run main.py --model-type 'prophet' --model-name 'daily_pricing' --train-start-date '2022-01-01' --execution-date '2026-01-01' --backtest-days 90 --forecast-days 365  --experiment-name "finance_pricing_forecast_v0_dev" --dataset "ml_finance_dev"
 ```
 
 ### Arguments
@@ -33,11 +33,11 @@ uv run main.py --model-type 'prophet' --model-name 'daily_pricing' --train-start
 | `model_type` | Model implementation to use | `prophet` |
 | `model_name` | Configuration file name (see `configs/`) | `daily_pricing` |
 | `train_start_date` | Start date for training data | `2022-01-01` |
-| `backtest_start_date` | Start date for evaluation | `2025-01-01` |
-| `backtest_end_date` | End of evaluation / Start of forecast | `2025-12-01` |
-| `forecast-horizon-date` | End date for the final forecast | `2026-12-30` |
-| `experiment_name` | MLflow experiment name | `finance_dev` |
-| `dataset`| Bigquery dataset name | `ml-finance-dev` |
+| `execution_date` | Run Start date  | `2026-01-01` |
+| `backtest_days` | number of days to backtest on | 90 |
+| `forecast_days` | number of days to forecast | 365 |
+| `experiment_name` | MLflow experiment name | `finance_pricing_forecast_v0_dev` |
+| `dataset`| Bigquery dataset name | `ml_finance_dev` |
 
 ## Project Structure
 

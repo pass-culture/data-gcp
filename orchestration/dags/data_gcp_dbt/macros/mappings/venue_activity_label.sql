@@ -5,8 +5,8 @@
         {"name": "ARTISTIC_COMPANY", "label": "Compagnie artistique"},
         {"name": "ARTS_CENTRE", "label": "Centre d’arts"},
         {
-            "name": "ARTS_EDUCATION",
-            "label": "Formation ou enseignement artistique",
+            "name": "ARTISTIC_PRACTICE",
+            "label": "Pratique ou enseignement artistique",
         },
         {"name": "BOOKSTORE", "label": "Librairie"},
         {"name": "CINEMA", "label": "Cinéma"},
@@ -24,7 +24,7 @@
         {"name": "FESTIVAL", "label": "Festival"},
         {
             "name": "HERITAGE_SITE",
-            "label": "Site patrimonial, historique ou touristique",
+            "label": "Activité patrimoniale, historique ou touristique",
         },
         {"name": "LIBRARY", "label": "Bibliothèque ou médiathèque"},
         {"name": "MUSEUM", "label": "Musée"},
@@ -57,6 +57,14 @@
         {
             "name": "RADIO_OR_MUSIC_STREAMING",
             "label": "Radio ou streaming musical",
+        },
+        {
+            "name": "MUNICIPALITY_CULTURAL_DEPARTMENT",
+            "label": "Service culturel de collectivité",
+        },
+        {
+            "name": "PUBLISHING_HOUSE",
+            "label": "Maison d’édition",
         },
         {"name": "OTHER", "label": "Autre"},
     ] %}

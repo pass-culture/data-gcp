@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: exp_vidoc__diversity
+    description: "{{ doc('description__exp_vidoc_diversity') }}"
+    columns:
+      - name: deposit_expiration_month
+        description: "{{ doc('column__deposit_expiration_month') }}"
+      - name: region_name
+        description: "{{ doc('column__region_name') }}"
+      - name: region_code
+        description: "{{ doc('column__region_code') }}"
+      - name: department_name
+        description: "{{ doc('column__department_name') }}"
+      - name: department_code
+        description: "{{ doc('column__department_code') }}"
+      - name: is_in_qpv
+        description: "{{ doc('column__user_is_in_qpv') }}"
+      - name: macro_density_label
+        description: "{{ doc('column__user_macro_density_label') }}"
+      - name: micro_density_label
+        description: "{{ doc('column__user_density_label') }}"
+      - name: total_3plus_category_booked_beneficiaries
+        description: "{{ doc('column__metrics__total_3plus_category_booked_beneficiaries') }}"
+      - name: total_expired_credit_beneficiaries
+        description: "{{ doc('column__metrics__total_expired_credit_beneficiaries') }}"

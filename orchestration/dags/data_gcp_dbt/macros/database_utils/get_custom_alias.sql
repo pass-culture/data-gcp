@@ -16,6 +16,7 @@
         or node.resource_type == "snapshot"
     ) -%}
     {%- set is_mart_or_export = "mart" in node.path or "export" in node.path -%}
+    {%- set is_metrics = "metrics" in node.path -%}
     {%- set is_raw_snapshot = (
         "raw_applicative" in node.path and node.resource_type == "snapshot"
     ) -%}
@@ -38,6 +39,11 @@
         {%- set model_name_parts = node.name.split("__") -%}
         {%- set model_folder = model_name_parts[0].split(prefix)[-1] | trim -%}
         {{ model_folder ~ "_" ~ model_name_parts[-1] | trim }}
+    {%- elif is_metrics and is_orchestrated -%}
+        {%- set cleaned_name = (
+            node.name | replace("metrics_", "", 1) | replace("__", "_")
+        ) -%}
+        {{ cleaned_name | trim }}
 
     {%- elif node.version -%}
         {{ node.name ~ "_v" ~ (node.version | replace(".", "_")) }}

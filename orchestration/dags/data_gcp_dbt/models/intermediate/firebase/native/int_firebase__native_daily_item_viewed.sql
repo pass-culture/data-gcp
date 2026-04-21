@@ -14,6 +14,9 @@ with
         select
             event_date,
             origin,
+            traffic_source,
+            traffic_medium,
+            traffic_campaign,
             module_id,
             entry_id as home_entry_id,
             item_type,
@@ -35,6 +38,9 @@ with
         select
             event_date,
             origin,
+            traffic_source,
+            traffic_medium,
+            traffic_campaign,
             module_id,
             home_entry_id,
             item_type,
@@ -49,6 +55,9 @@ with
         select
             event_date,
             origin,
+            traffic_source,
+            traffic_medium,
+            traffic_campaign,
             module_id,
             home_entry_id,
             item_type,
@@ -61,6 +70,9 @@ with
 select
     event_date,
     origin,
+    traffic_source,
+    traffic_medium,
+    traffic_campaign,
     module_id,
     home_entry_id,
     item_type,

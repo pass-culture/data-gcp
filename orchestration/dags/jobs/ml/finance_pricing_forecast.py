@@ -118,6 +118,11 @@ with DAG(
             type="integer",
             description="Number of days for forecast horizon (1 year)",
         ),
+        "n_past_runs_to_compare": Param(
+            default=6,
+            type="integer",
+            description="Number of past runs to compare in MLflow for best model selection",
+        ),
     },
 ) as dag:
     start = EmptyOperator(task_id="start", dag=dag)
@@ -159,7 +164,8 @@ with DAG(
                         --backtest-days {{{{ params.backtest_days }}}} \\
                         --forecast-days {{{{ params.forecast_days }}}} \\
                         --experiment-name "{{{{ params.experiment_name }}}}" \\
-                        --dataset "{config['dataset']}"
+                        --dataset "{config['dataset']}" \\
+                        --n-past-runs-to-compare "{{{{ params.n_past_runs_to_compare }}}}"
                 """,
             )
             fit_tasks.append(fit_model)

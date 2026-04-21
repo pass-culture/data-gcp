@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: metrics_population__coverage
+    description: "{{ doc('description__metrics_population__coverage') }}"
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+      - name: birth_month
+        description: "{{ doc('column__population_birth_month') }}"
+      - name: milestone_age
+        description: "{{ doc('column__milestone_age') }}"
+      - name: department_code
+        description: "{{ doc('column__department_code') }}"
+      - name: department_name
+        description: "{{ doc('column__department_name') }}"
+      - name: region_name
+        description: "{{ doc('column__region_name') }}"
+      - name: region_code
+        description: "{{ doc('column__region_code') }}"
+      - name: total_population_last_12_months
+        description: "{{ doc('column__total_population_last_12_months') }}"

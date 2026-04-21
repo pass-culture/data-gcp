@@ -149,3 +149,23 @@ title: Metrics
 {% docs column__pct_sept_dec_reimbursed_amount_spent %} Sept-dec reimbursed amount / sept-dec deposit (only for the institutions and scholar year with a split deposit).  {% enddocs %}
 {% docs column__pct_jan_aug_reimbursed_amount_spent %} Jan-aug reimbursed amount / jan-aug deposit (only for the institutions and scholar year with a split deposit).  {% enddocs %}
 {% docs column__pct_all_year_reimbursed_amount_spent %} Scholar year reimbursed amount / scholar year deposit (if the deposit is split it is the sum of sept-dec and jan-aug deposit).  {% enddocs %}
+
+{% docs column__metrics__total_actual_beneficiaries %}
+The total count of active beneficiaries at the time of calculation. To be included, a user must have a non-expired credit and a remaining amount of credit available for booking.
+{% enddocs %}
+
+{% docs column__metrics__total_beneficiaries %}
+The cumulative number of beneficiaries to date. This metric counts every user who has ever received credit, regardless of whether their credit is currently expired or if they have any remaining balance.
+{% enddocs %}
+
+{% docs column__metrics__total_category_booked_beneficiaries %}
+The number of beneficiaries who made at least one booking in the specific category by the time their credit expired.
+{% enddocs %}
+
+{% docs column__metrics__total_3plus_category_booked_beneficiaries %}
+The number of beneficiaries who booked across at least three different categories by the time their credit expired. This indicator is used to the diversification of cultural practices at the end of the beneficiary lifecycle.
+{% enddocs %}
+
+{% docs column__metrics__total_expired_credit_beneficiaries %}
+The total number of beneficiaries whose credit expired during the specific month. This column serves as the denominator (baseline) for calculating percentages related to user behavior at the end of their eligibility period (e.g., the proportion of users who diversified their bookings).
+{% enddocs %}

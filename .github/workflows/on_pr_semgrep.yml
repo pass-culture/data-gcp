@@ -1,4 +1,4 @@
-name: Semgrep
+name: [on_pr] Semgrep
 
 on:
   pull_request: {}

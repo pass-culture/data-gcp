@@ -86,7 +86,14 @@ class MetabaseDBTHandler:
             airflow_bucket_manifest_path (str): The path to the DBT manifest in the GCS bucket.
             local_manifest_path (str): The path to the DBT manifest on the local filesystem.
         """
+        # TODO(auth-migration): Replace usage of google.oauth2.id_token with standard JWT validation.
+        # Owner: vbusson
+        # Date: 2026-05-22
+
         open_id_token = self.get_open_id(CLIENT_ID)
+        if not open_id_token:
+            raise ValueError("OpenID token is empty — IAP authentication will fail")
+
         logger.info("Fetched OpenID token for authentication.")
 
         # Download DBT manifest from GCS
@@ -108,6 +115,7 @@ class MetabaseDBTHandler:
 
     def get_open_id(self, client_id: str) -> str:
         """
+        DEPRECATED !!!
         Fetches the OpenID token using the provided client_id.
 
         Args:
@@ -175,7 +183,7 @@ class MetabaseDBTHandler:
             logger.info(f"Models {model_names} exported to Metabase successfully.")
         except Exception as e:
             logger.error(f"Failed to export models to Metabase: {e}")
-            pass
+            raise
 
     def export_exposures(self, collection_filters: List[str], output_path: str) -> None:
         """

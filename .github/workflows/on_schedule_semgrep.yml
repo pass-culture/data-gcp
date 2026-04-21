@@ -1,4 +1,4 @@
-name: "[on_schedule] Semgrep"
+name: "[on_schedule] check code security"
 
 on:
   schedule:

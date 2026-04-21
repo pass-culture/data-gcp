@@ -62,27 +62,40 @@ with
                 geo_shape="iris_shape",
             )
         }}
+    ),
+
+    region_department as (
+        select num_dep, dep_name, region_name, academy_name
+        from {{ source("seed", "region_department") }}
+        union all
+        select
+            "-1" as num_dep,
+            "non localisé" as dep_name,
+            "non localisé" as region_name,
+            "non localisé" as academy_name
     )
 
 select
     users.user_id,
     users.user_address_raw,
     users.user_postal_code,
-    users.user_department_code,
+    coalesce(users.user_department_code, "-1") as user_department_code,
     users.user_longitude,
     users.user_latitude,
-    region_department.academy_name as user_academy_name,
-    region_department.dep_name as user_department_name,
-    region_department.region_name as user_region_name,
-    user_geo_iris.iris_internal_id as user_iris_internal_id,
-    user_geo_iris.city_label as user_city,
-    cast(user_geo_iris.city_code as string) as user_city_code,
-    user_geo_iris.rural_city_type as user_rural_city_type,
-    user_geo_iris.density_label as user_density_label,
-    user_geo_iris.density_macro_level as user_macro_density_label,
-    user_geo_iris.density_level as user_density_level,
-    user_epci.epci_name as user_epci,
-    cast(user_epci.epci_code as string) as user_epci_code,
+    coalesce(region_department.academy_name, "non localisé") as user_academy_name,
+    coalesce(region_department.dep_name, "non localisé") as user_department_name,
+    coalesce(region_department.region_name, "non localisé") as user_region_name,
+    coalesce(user_geo_iris.iris_internal_id, "-1") as user_iris_internal_id,
+    coalesce(user_geo_iris.city_label, "non localisé") as user_city,
+    coalesce(cast(user_geo_iris.city_code as string), "-1") as user_city_code,
+    coalesce(user_geo_iris.rural_city_type, "non localisé") as user_rural_city_type,
+    coalesce(user_geo_iris.density_label, "non localisé") as user_density_label,
+    coalesce(
+        user_geo_iris.density_macro_level, "non localisé"
+    ) as user_macro_density_label,
+    coalesce(user_geo_iris.density_level, "non localisé") as user_density_level,
+    coalesce(user_epci.epci_name, "non localisé") as user_epci,
+    coalesce(cast(user_epci.epci_code as string), "-1") as user_epci_code,
     user_qpv.qpv_code,
     user_qpv.qpv_name,
     user_qpv.qpv_municipality,
@@ -105,7 +118,8 @@ left join user_qpv on users.user_id = user_qpv.user_id
 left join user_zrr on users.user_id = user_zrr.user_id
 left join user_geo_iris on users.user_id = user_geo_iris.user_id
 -- ensure to have region and department name for non IRIS based regions (Wallis and
--- Futuna, New Caledonia, etc.)
+-- Futuna, New Caledonia, etc.), and fall back to the synthetic "-1" row when the
+-- user has no department code at all
 left join
-    {{ source("seed", "region_department") }} as region_department
-    on users.user_department_code = region_department.num_dep
+    region_department
+    on coalesce(users.user_department_code, "-1") = region_department.num_dep

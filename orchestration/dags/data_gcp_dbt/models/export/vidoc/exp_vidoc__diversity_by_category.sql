@@ -45,3 +45,4 @@ inner join
     {{ ref("perturbation_table__individual") }} as pt
     on s.total_category_booked_beneficiaries between pt.count_min and pt.count_max
     and s.cell_key_category between pt.cell_key_min and pt.cell_key_max
+where s.deposit_expiration_month > "2021-01-01"

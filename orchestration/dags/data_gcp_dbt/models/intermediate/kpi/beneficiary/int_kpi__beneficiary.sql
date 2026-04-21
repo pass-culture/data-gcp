@@ -117,8 +117,8 @@ select
     mod(
         abs(sum(distinct {{ record_key("tub.user_id") }})), 256
     ) as cell_key_beneficiaries,
-    mod(
-        abs(sum(distinct {{ record_key("aub.user_id") }})), 256
+    coalesce(
+        mod(abs(sum(distinct {{ record_key("aub.user_id") }})), 256), 0
     ) as cell_key_actual_beneficiaries
 from total_users_base as tub
 left join

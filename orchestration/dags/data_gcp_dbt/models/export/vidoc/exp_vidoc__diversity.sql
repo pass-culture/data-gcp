@@ -55,3 +55,4 @@ inner join
     on s.total_expired_credit_beneficiaries
     between pt_expired.count_min and pt_expired.count_max
     and s.cell_key_expired between pt_expired.cell_key_min and pt_expired.cell_key_max
+where s.deposit_expiration_month > "2021-01-01"

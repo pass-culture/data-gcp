@@ -14,4 +14,8 @@ It is designed to be exported to ministry for vidoc visualisation.
 
 Each row represents a key indicator calculated for a specific month, geographic aggregation and beneficiary dimensions level.
 
+**Grain**: `partition_month`, `region_code`, `department_code`, `age_at_calculation`, `is_in_qpv`, `macro_density_label`, `micro_density_label`.
+
+`total_actual_beneficiaries` is a subset of `total_beneficiaries` (active ⊂ ever-credited), but the two are perturbed independently — the invariant `total_actual ≤ total_beneficiaries` is only guaranteed after aggregation across many cells.
+
 {% docs table__exp_vidoc__beneficiary %}{% enddocs %}

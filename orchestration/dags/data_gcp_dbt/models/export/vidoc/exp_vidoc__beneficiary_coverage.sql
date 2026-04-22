@@ -7,11 +7,17 @@ select
     s.department_name,
     s.department_code,
     s.milestone_age,
-    greatest(
-        s.total_beneficiaries_last_12_months + pt.perturbation, 0
-    ) as total_beneficiaries_last_12_months
-from source as s
-inner join
-    {{ ref("perturbation_table__individual") }} as pt
-    on s.total_beneficiaries_last_12_months between pt.count_min and pt.count_max
-    and s.cell_key_beneficiaries between pt.cell_key_min and pt.cell_key_max
+    {{
+        apply_perturbation(
+            "s.total_beneficiaries_last_12_months",
+            "total_beneficiaries_last_12_months",
+            "pt",
+        )
+    }}
+from
+    source as s
+    {{
+        perturbation_join(
+            "pt", "s.total_beneficiaries_last_12_months", "s.cell_key_beneficiaries"
+        )
+    }}

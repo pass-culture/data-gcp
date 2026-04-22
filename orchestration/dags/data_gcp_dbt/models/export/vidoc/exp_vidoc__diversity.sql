@@ -38,21 +38,32 @@ select
     s.is_in_qpv,
     s.macro_density_label,
     s.micro_density_label,
-    greatest(
-        s.total_3plus_category_booked_beneficiaries + pt_3plus.perturbation, 0
-    ) as total_3plus_category_booked_beneficiaries,
-    greatest(
-        s.total_expired_credit_beneficiaries + pt_expired.perturbation, 0
-    ) as total_expired_credit_beneficiaries
-from source as s
-inner join
-    {{ ref("perturbation_table__individual") }} as pt_3plus
-    on s.total_3plus_category_booked_beneficiaries
-    between pt_3plus.count_min and pt_3plus.count_max
-    and s.cell_key_3plus between pt_3plus.cell_key_min and pt_3plus.cell_key_max
-inner join
-    {{ ref("perturbation_table__individual") }} as pt_expired
-    on s.total_expired_credit_beneficiaries
-    between pt_expired.count_min and pt_expired.count_max
-    and s.cell_key_expired between pt_expired.cell_key_min and pt_expired.cell_key_max
+    {{
+        apply_perturbation(
+            "s.total_3plus_category_booked_beneficiaries",
+            "total_3plus_category_booked_beneficiaries",
+            "pt_3plus",
+        )
+    }},
+    {{
+        apply_perturbation(
+            "s.total_expired_credit_beneficiaries",
+            "total_expired_credit_beneficiaries",
+            "pt_expired",
+        )
+    }}
+from
+    source as s
+    {{
+        perturbation_join(
+            "pt_3plus",
+            "s.total_3plus_category_booked_beneficiaries",
+            "s.cell_key_3plus",
+        )
+    }}
+    {{
+        perturbation_join(
+            "pt_expired", "s.total_expired_credit_beneficiaries", "s.cell_key_expired"
+        )
+    }}
 where s.deposit_expiration_month > "2021-01-01"

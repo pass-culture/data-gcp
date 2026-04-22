@@ -50,4 +50,8 @@ ORDER BY deposit_expiration_month
 
 ### Data protection
 
-Both numerator and denominator are protected using the [Cell Key Perturbation method](../references/statistical_confidentiality.md). Rates computed on small cells may be slightly affected.
+Both columns are protected using the [Cell Key Perturbation method](../references/statistical_confidentiality.md). They correspond to **nested cohorts** (`3plus ⊂ expired`) but are perturbed **independently** (each column has its own cell key). Consequences:
+
+- On a single small cell, the invariant `total_3plus_category_booked_beneficiaries ≤ total_expired_credit_beneficiaries` can be **violated** after perturbation.
+- Always aggregate over many cells (national, regional, quarterly) before computing the rate; the law of large numbers brings the ratio back close to the true value.
+- For the national/quarterly rate, the relative error is negligible.

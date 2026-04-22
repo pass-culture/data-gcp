@@ -66,6 +66,17 @@ When summing perturbed cells to compute a regional or national total, the indivi
 | 1 region (~10 depts) | ~10 | +/- 3-5 |
 | National (~100 depts) | ~100 | +/- 10-15 |
 
+### Impact on ratios and nested counts
+
+The cell-key method adds **one perturbation per published count**, based on that count's cell key. Two counts always have different cell keys unless they cover exactly the same set of individuals, so their perturbations are **statistically independent** — even when the underlying cohorts are nested (e.g. "users who booked 3+ categories" ⊂ "users whose credit expired"), or when one is a numerator and the other a denominator of the same rate.
+
+Practical consequences:
+
+- **Nested invariants can break on a single cell.** If cohort A ⊂ B, the raw counts satisfy `count(A) ≤ count(B)`, but after independent perturbation `count(A) + noise_A ≤ count(B) + noise_B` is not guaranteed on small cells.
+- **Ratio noise does not cancel.** A rate `count(A)/count(B)` gets independent noise on both sides, so per-cell ratios can be noticeably off on small cells.
+- **Aggregation is the fix.** Sum numerator and denominator each over many cells (national, regional, quarterly) before dividing — the `O(sqrt(N))` error on each sum becomes negligible relative to the sum.
+- **Additive consistency is not guaranteed.** `perturb(total) ≠ Σ perturb(sub-totals)`. Don't expect published breakdowns to sum exactly to a published total.
+
 ### Parameters
 
 | Parameter | Value | Description |

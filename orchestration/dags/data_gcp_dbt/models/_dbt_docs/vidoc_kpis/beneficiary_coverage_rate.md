@@ -34,7 +34,7 @@ FROM `beneficiary_coverage` AS b
 INNER JOIN `population_coverage` AS p
     ON b.partition_month = p.partition_month
     AND b.department_code = p.department_code
-    AND CAST(b.milestone_age AS STRING) = p.milestone_age
+    AND b.milestone_age = p.milestone_age
 GROUP BY b.partition_month, b.department_code, b.department_name, b.milestone_age
 ORDER BY b.partition_month, b.department_code, b.milestone_age
 ```

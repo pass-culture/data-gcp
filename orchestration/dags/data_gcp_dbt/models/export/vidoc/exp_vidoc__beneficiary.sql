@@ -39,17 +39,23 @@ select
     s.is_in_qpv,
     s.macro_density_label,
     s.micro_density_label,
-    greatest(
-        s.total_actual_beneficiaries + pt_actual.perturbation, 0
-    ) as total_actual_beneficiaries,
-    greatest(s.total_beneficiaries + pt_benef.perturbation, 0) as total_beneficiaries
-from source as s
-inner join
-    {{ ref("perturbation_table__individual") }} as pt_benef
-    on s.total_beneficiaries between pt_benef.count_min and pt_benef.count_max
-    and s.cell_key_beneficiaries between pt_benef.cell_key_min and pt_benef.cell_key_max
-inner join
-    {{ ref("perturbation_table__individual") }} as pt_actual
-    on s.total_actual_beneficiaries between pt_actual.count_min and pt_actual.count_max
-    and s.cell_key_actual_beneficiaries
-    between pt_actual.cell_key_min and pt_actual.cell_key_max
+    {{
+        apply_perturbation(
+            "s.total_actual_beneficiaries", "total_actual_beneficiaries", "pt_actual"
+        )
+    }},
+    {{ apply_perturbation("s.total_beneficiaries", "total_beneficiaries", "pt_benef") }}
+from
+    source as s
+    {{
+        perturbation_join(
+            "pt_benef", "s.total_beneficiaries", "s.cell_key_beneficiaries"
+        )
+    }}
+    {{
+        perturbation_join(
+            "pt_actual",
+            "s.total_actual_beneficiaries",
+            "s.cell_key_actual_beneficiaries",
+        )
+    }}

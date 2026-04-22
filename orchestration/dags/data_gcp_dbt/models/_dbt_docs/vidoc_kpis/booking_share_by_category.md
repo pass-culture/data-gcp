@@ -18,27 +18,58 @@ Only beneficiaries who received an age-18 credit are considered.
 
 ### Calculation
 
-The share is the ratio of `total_category_booked_beneficiaries` (per category) to `total_expired_credit_beneficiaries` (total), joined on the same expiration month and geographic dimensions.
+The share is the ratio of `total_category_booked_beneficiaries` (per category) to `total_expired_credit_beneficiaries` (total, **independent of the category**).
+
+Because the denominator is not category-specific, **aggregate the numerator and the denominator separately** before dividing:
 
 ```sql
+WITH numerator AS (
+    SELECT
+        deposit_expiration_month,
+        offer_category_id,
+        SUM(total_category_booked_beneficiaries) AS booked_in_category
+    FROM `diversity_by_category`
+    GROUP BY deposit_expiration_month, offer_category_id
+),
+denominator AS (
+    SELECT
+        deposit_expiration_month,
+        SUM(total_expired_credit_beneficiaries) AS total_expired
+    FROM `diversity`
+    GROUP BY deposit_expiration_month
+)
 SELECT
-    cat.deposit_expiration_month,
-    cat.offer_category_id,
-    SUM(cat.total_category_booked_beneficiaries) AS booked_in_category,
-    SUM(div.total_expired_credit_beneficiaries) AS total_expired,
-    SAFE_DIVIDE(
-        SUM(cat.total_category_booked_beneficiaries),
-        SUM(div.total_expired_credit_beneficiaries)
-    ) AS category_booking_rate
-FROM `diversity_by_category` AS cat
-INNER JOIN `diversity` AS div
-    ON cat.deposit_expiration_month = div.deposit_expiration_month
-    AND cat.department_code = div.department_code
-    AND cat.is_in_qpv = div.is_in_qpv
-    AND cat.macro_density_label = div.macro_density_label
-    AND cat.micro_density_label = div.micro_density_label
-GROUP BY cat.deposit_expiration_month, cat.offer_category_id
-ORDER BY cat.deposit_expiration_month, cat.offer_category_id
+    n.deposit_expiration_month,
+    n.offer_category_id,
+    n.booked_in_category,
+    d.total_expired,
+    SAFE_DIVIDE(n.booked_in_category, d.total_expired) AS category_booking_rate
+FROM numerator AS n
+INNER JOIN denominator AS d USING (deposit_expiration_month)
+ORDER BY n.deposit_expiration_month, n.offer_category_id
+```
+
+> **Do not** join `diversity_by_category` to `diversity` on all geographic dimensions before summing: `diversity_by_category` has one row per `(cell, category present)`, so an `INNER JOIN` at the cell level silently drops from the denominator every cell where the category has zero bookings. The rate is then **overestimated**, especially for rare categories. Always aggregate each side to its natural grain first, then join.
+
+To compute the rate on a sub-group (e.g. per department, per QPV), add the grouping dimensions to both CTEs and join on them. Cross-join with the list of categories if you need to emit explicit zero-booking rows:
+
+```sql
+WITH denom AS (
+    SELECT deposit_expiration_month, department_code,
+           SUM(total_expired_credit_beneficiaries) AS total_expired
+    FROM `diversity`
+    GROUP BY deposit_expiration_month, department_code
+),
+num AS (
+    SELECT deposit_expiration_month, department_code, offer_category_id,
+           SUM(total_category_booked_beneficiaries) AS booked
+    FROM `diversity_by_category`
+    GROUP BY deposit_expiration_month, department_code, offer_category_id
+)
+SELECT d.deposit_expiration_month, d.department_code, n.offer_category_id,
+       SAFE_DIVIDE(n.booked, d.total_expired) AS rate
+FROM denom AS d
+LEFT JOIN num AS n USING (deposit_expiration_month, department_code)
 ```
 
 ### Available dimensions
@@ -59,4 +90,8 @@ ORDER BY cat.deposit_expiration_month, cat.offer_category_id
 
 ### Data protection
 
-Counts are protected using the [Cell Key Perturbation method](../references/statistical_confidentiality.md). Both the per-category numerator and the denominator from `exp_vidoc_diversity` are perturbed independently.
+Counts are protected using the [Cell Key Perturbation method](../references/statistical_confidentiality.md). The numerator (`total_category_booked_beneficiaries`) and the denominator (`total_expired_credit_beneficiaries`) come from **different cohorts of users** and are therefore perturbed **independently** (different cell keys → independent noise). Consequences:
+
+- On a single small cell, the ratio can be unstable (numerator and denominator each shifted by up to ±5).
+- The invariant `booked_in_category ≤ total_expired` can be **violated** at the cell level after perturbation. Always aggregate over many cells (national, regional, quarterly) before computing a rate.
+- For very rare categories, a rate computed at a fine geographic grain should be treated as indicative only.

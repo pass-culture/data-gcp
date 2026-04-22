@@ -14,4 +14,6 @@ It is designed to be exported to ministry for vidoc visualisation.
 
 Each row represents a key indicator calculated for a specific month, geographic aggregation and beneficiary dimensions level.
 
+**Grain** (natural key, one row per combination): `deposit_expiration_month`, `region_code`, `department_code`, `is_in_qpv`, `macro_density_label`, `micro_density_label`.
+
 {% docs table__exp_vidoc__diversity %}{% enddocs %}

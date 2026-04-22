@@ -46,3 +46,5 @@ ORDER BY partition_month
 ### Data protection
 
 Counts are protected using the [Cell Key Perturbation method](../references/statistical_confidentiality.md). Small counts are slightly modified; large counts and aggregated totals are virtually exact.
+
+Note: `total_actual_beneficiaries` and `total_beneficiaries` correspond to nested cohorts (active ⊂ ever-credited) but are perturbed **independently**. At the cell level, the invariant `total_actual_beneficiaries ≤ total_beneficiaries` can be violated after perturbation; aggregate over many cells before computing an "active share" ratio.

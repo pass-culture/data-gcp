@@ -37,12 +37,18 @@ select
     s.macro_density_label,
     s.micro_density_label,
     s.offer_category_id,
-    greatest(
-        s.total_category_booked_beneficiaries + pt.perturbation, 0
-    ) as total_category_booked_beneficiaries
-from source as s
-inner join
-    {{ ref("perturbation_table__individual") }} as pt
-    on s.total_category_booked_beneficiaries between pt.count_min and pt.count_max
-    and s.cell_key_category between pt.cell_key_min and pt.cell_key_max
+    {{
+        apply_perturbation(
+            "s.total_category_booked_beneficiaries",
+            "total_category_booked_beneficiaries",
+            "pt",
+        )
+    }}
+from
+    source as s
+    {{
+        perturbation_join(
+            "pt", "s.total_category_booked_beneficiaries", "s.cell_key_category"
+        )
+    }}
 where s.deposit_expiration_month > "2021-01-01"

@@ -1,7 +1,7 @@
 select
     partition_month,
     birth_month,
-    milestone_age,
+    cast(milestone_age as int64) as milestone_age,
     department_code,
     department_name,
     region_name,

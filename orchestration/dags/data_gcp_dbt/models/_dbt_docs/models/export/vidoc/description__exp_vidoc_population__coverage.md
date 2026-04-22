@@ -16,6 +16,6 @@ Each row represents a key indicator calculated for a specific month and a geogra
 
 **Grain**: `partition_month`, `birth_month`, `milestone_age`, `department_code`.
 
-Public INSEE population data — **not perturbed**. `total_population_last_12_months` uses a 12-month rolling window matching `exp_vidoc__beneficiary_coverage`.
+Public INSEE population data — see [data-insee-population](https://github.com/pass-culture/data-insee-population/) for details.
 
 {% docs table__exp_vidoc__population_coverage %}{% enddocs %}

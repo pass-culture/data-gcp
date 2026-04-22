@@ -34,10 +34,6 @@ with
             rd.region_code
     ),
 
-    -- The 12-month rolling window sums monthly distinct user counts,
-    -- so a user active in all 12 months is counted 12 times (person-month
-    -- semantic, not "distinct users over the last year"). The rolling
-    -- cell_key sum matches that semantic.
     final_data as (
         select
             deposit_active_month as partition_month,

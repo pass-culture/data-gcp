@@ -16,6 +16,4 @@ Each row represents a key indicator calculated for a specific month, geographic 
 
 **Grain**: `partition_month`, `region_code`, `department_code`, `milestone_age`.
 
-`total_beneficiaries_last_12_months` is a **12-month rolling sum of monthly distinct counts** — a user active across all 12 months contributes 12 times. Semantic is person-months, not "distinct users over the last year".
-
 {% docs table__exp_vidoc__beneficiary_coverage %}{% enddocs %}

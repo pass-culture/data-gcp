@@ -58,12 +58,14 @@ WITH denom AS (
     SELECT deposit_expiration_month, department_code,
            SUM(total_expired_credit_beneficiaries) AS total_expired
     FROM `diversity`
+    WHERE department_code = 'XX' -- optional filter to a specific sub-group
     GROUP BY deposit_expiration_month, department_code
 ),
 num AS (
     SELECT deposit_expiration_month, department_code, offer_category_id,
            SUM(total_category_booked_beneficiaries) AS booked
     FROM `diversity_by_category`
+    WHERE department_code = 'XX' -- optional filter to a specific sub-group
     GROUP BY deposit_expiration_month, department_code, offer_category_id
 )
 SELECT d.deposit_expiration_month, d.department_code, n.offer_category_id,

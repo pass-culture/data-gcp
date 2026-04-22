@@ -118,6 +118,10 @@ with
                         "artistId",
                         "theme_setting",
                         "system_theme",
+                        "featureName",
+                        "feedbackResponse",
+                        "originDetails",
+                        "adviceType",
                     ],
                 )
             }},

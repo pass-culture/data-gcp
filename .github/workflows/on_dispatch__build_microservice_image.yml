@@ -1,0 +1,44 @@
+name: "5. [on_dispatch] build microservice image"
+
+on:
+  workflow_dispatch:
+    inputs:
+      CUSTOM_TAG:
+        description: "Custom Docker image tag(s), 'dev' (default), 'v1' for stg and prod, 'v1,dev' to equalize envs"
+        type: string
+        required: false
+        default: "dev"
+      SOURCE_PATH:
+        description: "Path to the Dockerfile context (default: jobs/etl_jobs/external/instagram)"
+        type: string
+        required: false
+        default: "jobs/etl_jobs/external/instagram"
+      DOCKEFILE:
+        description: "Name of the Dockerfile (default: Dockerfile.instagram)"
+        type: string
+        required: false
+        default: "Dockerfile.instagram"
+      REGISTRY_BASE_NAME:
+        description: "Base name for the Docker image in the registry (default: data-gcp/etl/instagram)"
+        type: string
+        required: false
+        default: "data-gcp/etl/instagram"
+
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  register-microservice-image:
+    uses: ./.github/workflows/reusable_build_image.yml
+    with:
+      TARGET_ENV: "dev"
+      IS_MANUAL_DISPATCH: true
+      CUSTOM_TAG: ${{ inputs.CUSTOM_TAG }}
+      SOURCE_PATH: ${{ inputs.SOURCE_PATH }}
+      DOCKEFILE: ${{ inputs.DOCKEFILE }}
+      REGISTRY_BASE_NAME: ${{ inputs.REGISTRY_BASE_NAME }}
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}

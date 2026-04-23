@@ -4,5 +4,5 @@ SELECT
     , CAST("venueId" AS varchar(255)) as venue_id
     , CAST("content" AS varchar(255)) as advice_content
     , CAST("author" as varchar(255)) as advice_author
-    , CAST("updatedAt" as varchar(255))  AS update_date
+    , "updatedAt" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as update_date
 FROM public.pro_advice

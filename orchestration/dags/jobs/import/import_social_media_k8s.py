@@ -15,10 +15,20 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.utils import get_airflow_schedule
+from kubernetes.client import V1ResourceRequirements
 
-REGISTRY_REGION = "europe-west1-docker.pkg.dev"
-REGISTRY_PROJECT = "passculture-infra-prod"
+REGISTRY = (
+    "europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry"
+)
+image_prefix = "data-gcp/etl"
 
+env_map = {
+    "prod": "production",
+    "stg": "staging",
+    "dev": "development",
+}
+
+namespace = f"airflow-{env_map[ENV_SHORT_NAME]}"
 
 DAG_NAME = "import_social_network_k8s"
 default_dag_args = {
@@ -39,6 +49,16 @@ def make_pod_name(name: str) -> str:
     return re.sub(r"[^a-z0-9-]", "-", name.lower()).strip("-")[:253]
 
 
+container_resources = V1ResourceRequirements(
+    requests={
+        "cpu": "1",
+        "memory": "1Gi",
+    },
+    limits={
+        "memory": "1Gi",
+    },
+)
+
 with DAG(
     DAG_NAME,
     default_args=default_dag_args,
@@ -50,7 +70,7 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     dagrun_timeout=datetime.timedelta(minutes=240),
     params={
-        "tag": Param(
+        "image_tag": Param(
             default="dev",
             type="string",
         ),
@@ -71,8 +91,8 @@ with DAG(
         task = KubernetesPodOperator(
             task_id=f"run_{social_network}_etl",
             name=make_pod_name(f"{social_network}"),
-            namespace="airflow",
-            image=f"{REGISTRY_REGION}-docker.pkg.dev/{REGISTRY_PROJECT}/data-gcp/etl/{social_network}:{{{{ params.tag }}}}",
+            namespace=namespace,
+            image=f"{REGISTRY}/{image_prefix}/{social_network}:{{{{ params.image_tag }}}}",
             arguments=[
                 "--start-date",
                 "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_days) }}",
@@ -83,22 +103,12 @@ with DAG(
             is_delete_operator_pod=False,
             in_cluster=True,
             env_vars={
-                "GCP_PROJECT_ID": "passculture-data-ehp",
-                "ENV_SHORT_NAME": "dev",
+                "GCP_PROJECT_ID": GCP_PROJECT_ID,
+                "ENV_SHORT_NAME": ENV_SHORT_NAME,
             },
-            # executor_config={
-            #     "KubernetesExecutor": {"namespace": "airflow"}
-            # },
-            # queue="kubernetes",
-            # node_selector={"role": "airflow-kube-worker"},
-            # tolerations=[
-            #     V1Toleration(
-            #         key="role",
-            #         operator="Equal",
-            #         value="airflow-kube-worker",
-            #         effect="NoSchedule",
-            #     )
-            # ], # Ensure the pod can be scheduled on the dedicated node.
+            labels={"dag": DAG_NAME, "task": f"run_{social_network}_etl"},
+            service_account_name="airflow-worker",
+            container_resources=container_resources,
         )
-
-        task  # Enable dry run for testing without executing the pod.
+        # task.dry_run() Enable dry run for testing without executing the pod.
+        task

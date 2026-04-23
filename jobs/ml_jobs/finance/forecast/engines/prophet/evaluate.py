@@ -70,21 +70,12 @@ def cross_validate(
     training_period = len(model.history)
 
     # Convert CV params (handle both string and percentage formats)
-    initial = _convert_cv_param(
-        model_config.evaluation.cv_initial, training_period, freq
-    )
+    initial = _convert_cv_param(model_config.evaluation.cv_initial, training_period, freq)
     period = _convert_cv_param(model_config.evaluation.cv_period, training_period, freq)
-    horizon = _convert_cv_param(
-        model_config.evaluation.cv_horizon, training_period, freq
-    )
+    horizon = _convert_cv_param(model_config.evaluation.cv_horizon, training_period, freq)
 
-    logger.info(
-        f"Starting cross-validation: initial={initial}, period={period}, "
-        f"horizon={horizon}"
-    )
-    cv_results = cross_validation(
-        model, initial=initial, period=period, horizon=horizon, parallel=None
-    )
+    logger.info(f"Starting cross-validation: initial={initial}, period={period}, horizon={horizon}")
+    cv_results = cross_validation(model, initial=initial, period=period, horizon=horizon, parallel=None)
     perf = performance_metrics(cv_results)
 
     if perf is not None:
@@ -176,15 +167,34 @@ def evaluation_pipeline(
     return metrics
 
 
-def backtest_pipeline(df_backtest: pd.DataFrame, model: Prophet) -> dict:
-    """Perform backtest evaluation.
+def _aggregate_forecast_monthly(forecast: pd.DataFrame) -> pd.DataFrame:
+    """
+    Aggregate forecast/actual values at monthly level.
+    """
+    df = forecast.copy()
+    df["ds"] = pd.to_datetime(df["ds"])
+
+    agg_map = {col: "sum" for col in ["y", "yhat", "yhat_lower", "yhat_upper"] if col in df.columns}
+
+    monthly = df.set_index("ds").resample("MS").agg(agg_map).reset_index().sort_values("ds")
+    return monthly
+
+
+def backtest_pipeline(df_backtest: pd.DataFrame, model: Prophet) -> tuple[dict, pd.DataFrame]:
+    """Perform backtest evaluation on monthly aggregated predictions.
     Args:
         df_backtest: DataFrame for backtest evaluation.
         model: Trained Prophet model.
     Returns:
-        Dictionary containing backtest evaluation metrics.
+        Tuple containing:
+            - Dictionary with backtest evaluation metrics (monthly level)
+            - DataFrame with backtest forecast at original frequency (ds, y, yhat, etc)
     """
-    logger.info("Performing backtest evaluation")
+    logger.info("Performing backtest evaluation (monthly aggregated metrics)")
     backtest_forecast_df = predict_with_truth(model, df_backtest)
-    backtest_metrics = compute_metrics(backtest_forecast_df)
-    return backtest_metrics
+
+    # compute monthly aggregated metrics for backtest evaluation
+    backtest_forecast_monthly_df = _aggregate_forecast_monthly(backtest_forecast_df)
+    backtest_metrics = compute_metrics(backtest_forecast_monthly_df)
+
+    return backtest_metrics, backtest_forecast_df

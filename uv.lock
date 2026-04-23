@@ -878,14 +878,14 @@ wheels = [
 
 [[package]]
 name = "click"
-version = "8.2.1"
+version = "8.3.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/60/6c/8ca2efa64cf75a977a0d7fac081354553ebe483345c734fb6b6515d96bbc/click-8.2.1.tar.gz", hash = "sha256:27c491cc05d968d271d5a1db13e3b5a184636d9d930f148c50b038f0d0646202", size = 286342, upload-time = "2025-05-20T23:19:49.832Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/57/75/31212c6bf2503fdf920d87fee5d7a86a2e3bcf444984126f13d8e4016804/click-8.3.2.tar.gz", hash = "sha256:14162b8b3b3550a7d479eafa77dfd3c38d9dc8951f6f69c78913a8f9a7540fd5", size = 302856, upload-time = "2026-04-03T19:14:45.118Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/85/32/10bb5764d90a8eee674e9dc6f4db6a0ab47c8c4d0d83c27f7c39ac415a4d/click-8.2.1-py3-none-any.whl", hash = "sha256:61a3265b914e850b85317d0b3109c7f8cd35a670f963866005d6ef1d5175a12b", size = 102215, upload-time = "2025-05-20T23:19:47.796Z" },
+    { url = "https://files.pythonhosted.org/packages/e4/20/71885d8b97d4f3dde17b1fdb92dbd4908b00541c5a3379787137285f602e/click-8.3.2-py3-none-any.whl", hash = "sha256:1924d2c27c5653561cd2cae4548d1406039cb79b858b747cfea24924bbc1616d", size = 108379, upload-time = "2026-04-03T19:14:43.505Z" },
 ]
 
 [[package]]
@@ -1118,10 +1118,10 @@ docs = [
 [package.metadata.requires-dev]
 airflow = [
     { name = "apache-airflow", extras = ["fab", "google", "google-auth", "celery", "ssh", "cncf-kubernetes", "uv"], specifier = "==2.11.2" },
-    { name = "dbt-bigquery", specifier = "==1.9.1" },
-    { name = "dbt-core", specifier = "==1.10.11" },
+    { name = "dbt-bigquery", specifier = "==1.11.1" },
+    { name = "dbt-core", specifier = "==1.11.8" },
     { name = "deepdiff", specifier = "==8.6.1" },
-    { name = "elementary-data", extras = ["bigquery"], specifier = "==0.18.1" },
+    { name = "elementary-data", extras = ["bigquery"], specifier = "==0.23.1" },
     { name = "flask" },
     { name = "flask-oidc", specifier = ">=2.2.2" },
     { name = "flask-openid", specifier = ">=1.3.1" },
@@ -1134,10 +1134,10 @@ airflow = [
     { name = "typer" },
 ]
 dbt = [
-    { name = "dbt-bigquery", specifier = "==1.9.1" },
-    { name = "dbt-colibri", specifier = ">=0.2.7" },
-    { name = "dbt-core", specifier = "==1.10.11" },
-    { name = "dbt-metabase", specifier = "==1.4.2" },
+    { name = "dbt-bigquery", specifier = "==1.11.1" },
+    { name = "dbt-colibri", specifier = ">=0.3.0" },
+    { name = "dbt-core", specifier = "==1.11.8" },
+    { name = "dbt-metabase", specifier = "==1.7.3" },
     { name = "deepdiff", specifier = "==8.6.1" },
 ]
 dev = [
@@ -1177,7 +1177,7 @@ wheels = [
 
 [[package]]
 name = "dbt-adapters"
-version = "1.16.6"
+version = "1.22.10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "agate" },
@@ -1188,45 +1188,48 @@ dependencies = [
     { name = "pytz" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f3/0e/6602d1450f89215ebc6bee547c5336c59502d2c8760c22894fbfa94ba794/dbt_adapters-1.16.6.tar.gz", hash = "sha256:5d2c890730d7c34868cd389eec128de199ac866e6c89d933dca43d25eb7c3307", size = 131418, upload-time = "2025-09-03T19:01:00.511Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/87/f6/a74ae2c203b5a475a2d8866a2ccf7deb253e0f1cbaee86b6faf1562503e2/dbt_adapters-1.22.10.tar.gz", hash = "sha256:28fca9f9c2f310706ce02c8f7b0f297edca14d6bd97ad7928aac55af4ce2972f", size = 138306, upload-time = "2026-03-30T16:57:29.106Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f4/a6/5ddba2a0de19f682cc829472bec5c0fc466aa6a41d9a6b715053b59536d6/dbt_adapters-1.16.6-py3-none-any.whl", hash = "sha256:a601fa352db1f97cb4a8b7531063a911e2846dc9978e189b014177f9e797a1d2", size = 167871, upload-time = "2025-09-03T19:00:58.775Z" },
+    { url = "https://files.pythonhosted.org/packages/fe/9b/7913d4780962e323956d10c21328af5fcf85d00ab273eb7e808d8ec19336/dbt_adapters-1.22.10-py3-none-any.whl", hash = "sha256:9217a2f8dd35425cafc9093dae70ea12b4b8fc414e3abce8a44d44d5c2fff563", size = 173738, upload-time = "2026-03-30T16:57:27.636Z" },
 ]
 
 [[package]]
 name = "dbt-bigquery"
-version = "1.9.1"
+version = "1.11.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dbt-adapters" },
     { name = "dbt-common" },
     { name = "dbt-core" },
     { name = "google-api-core" },
+    { name = "google-auth" },
+    { name = "google-cloud-aiplatform" },
     { name = "google-cloud-bigquery", extra = ["pandas"] },
     { name = "google-cloud-dataproc" },
     { name = "google-cloud-storage" },
+    { name = "nbformat" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a6/2b/5e7632fe49bfdb0a30a01aedd95fef5726ecc1bff818a01c403a36c44d10/dbt_bigquery-1.9.1.tar.gz", hash = "sha256:da1c7f1fa7e0a06265881d990e385f5867369529bbebf4b36500db0b3bcd495b", size = 57231, upload-time = "2025-01-10T23:06:45.703Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4c/15/8becb292fe176a730c4b92dee22a17048379cc3cbbd06b8d02fde96c5469/dbt_bigquery-1.11.1.tar.gz", hash = "sha256:e0a4b67b6670cf1a23d53cc6701d3d1192ab49ba72b0f4784b16330fdd9b3898", size = 164123, upload-time = "2026-03-03T20:43:34.834Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2d/86/777ffda6e87b75b7f00574d2b8cef75189e25c8671a067ad4b9ac952a942/dbt_bigquery-1.9.1-py3-none-any.whl", hash = "sha256:e2f55050e0b212403701cc21aa2de1829aa724dfbca788db02061acf9be0603f", size = 79863, upload-time = "2025-01-10T23:06:44.274Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/e5/2f22192541ed1d1dd01f6df7574fc5d7520d60c5db8fb9db67234fca9ab3/dbt_bigquery-1.11.1-py3-none-any.whl", hash = "sha256:4f53155366b4bcf1a38bbf9247589e3e18812ed2468e56c14676c649782eae5d", size = 103321, upload-time = "2026-03-03T20:43:33.485Z" },
 ]
 
 [[package]]
 name = "dbt-colibri"
-version = "0.2.7"
+version = "0.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
-    { name = "sqlglot", extra = ["rs"] },
+    { name = "sqlglot", extra = ["c"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e2/42/5ac148c90aec3340cbda2e00723fbc6d65a18aac479290f3cbcaddae5f8b/dbt_colibri-0.2.7.tar.gz", hash = "sha256:a6f06e05bd4c070ed1d2de653db9e156ef5b79953639cf4ec4c0e70cb4db885e", size = 960860, upload-time = "2025-10-19T07:20:40.595Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8b/58/aa429c6c14a735e167f16db535dfc0d70788981428a287b5ff49a507fea6/dbt_colibri-0.3.0.tar.gz", hash = "sha256:a9910b58408033b3a12e56d243e54adee562d1b072c8d94a764513be593ff114", size = 1202642, upload-time = "2026-04-04T02:04:10.45Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/23/81/c1b4741a409d921895954813ab04e1c18000ef92a0ede482d656149a103d/dbt_colibri-0.2.7-py3-none-any.whl", hash = "sha256:3f58ee563e57faffbad89f6704a3c8485b370dc7c5840a7c606171d5ddda47d1", size = 955223, upload-time = "2025-10-19T07:20:38.158Z" },
+    { url = "https://files.pythonhosted.org/packages/97/52/21849360acfa0621a46e21a61e93e7c10a02ed6bfb742b0a01d04c28850b/dbt_colibri-0.3.0-py3-none-any.whl", hash = "sha256:b678f0d32a39871ae5850ac49a7a4cc9f61ec774c9efcf8e21ebab024b99b25d", size = 1186352, upload-time = "2026-04-04T02:04:11.836Z" },
 ]
 
 [[package]]
 name = "dbt-common"
-version = "1.29.0"
+version = "1.37.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "agate" },
@@ -1243,14 +1246,14 @@ dependencies = [
     { name = "requests" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d0/04/28ca2599232a51be0d226c6c6469df253ba2b6db863d1fd83f3274296ba3/dbt_common-1.29.0.tar.gz", hash = "sha256:46c59d24904c48253af7e5580a19cb74f607b1b1cb4078507c8bf1135bfafeb3", size = 84079, upload-time = "2025-09-04T18:50:16.856Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/12/3a/c95078b7ebb87795551f73fd58e5ddbcf7f75b478e9b50ab72fe2939baf0/dbt_common-1.37.3.tar.gz", hash = "sha256:f99304cf93f549c09d302eb61d9b280748bbe24e2245e214189ea08b41196ec3", size = 86217, upload-time = "2026-03-02T17:26:34.027Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/46/47/91c0f92872b7f6b0c70d7dd667543465771a716aa5f24db7fd74dbb08ce0/dbt_common-1.29.0-py3-none-any.whl", hash = "sha256:8f4d98343aabfaf6f4315059cf8315c06be7217510fa72069538f44216c54934", size = 86083, upload-time = "2025-09-04T18:50:15.076Z" },
+    { url = "https://files.pythonhosted.org/packages/3b/7e/629351d21ffa1b51a893334faf8c497f0c34f4da3cece9b24d7a5af29d90/dbt_common-1.37.3-py3-none-any.whl", hash = "sha256:e11b81903107d9f254d0ec7ac14b2bcf6d531e46456cbc7881fdbfeb9bbd8eec", size = 87733, upload-time = "2026-03-02T17:26:31.248Z" },
 ]
 
 [[package]]
 name = "dbt-core"
-version = "1.10.11"
+version = "1.11.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "agate" },
@@ -1276,9 +1279,9 @@ dependencies = [
     { name = "sqlparse" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/99/ae/d74eca7ef1f32753126cd48ab66e660a343e8edbba1f7f16e89a09a72229/dbt_core-1.10.11.tar.gz", hash = "sha256:1cacd2952f2d54d44356b7560a05c01560363d5779188e37da0302575c9b9b50", size = 898318, upload-time = "2025-09-04T18:53:49.057Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/54/4f/5524b85f0bd94053ee51fe7e8b0011295f056da707c754975ed7da3888f9/dbt_core-1.11.8.tar.gz", hash = "sha256:1bfe0b40c958785680a1b2b894b0851f5bf780ddc058747dd1e62c389b0d3b1d", size = 972635, upload-time = "2026-04-08T19:01:46.63Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f7/0f/3570a65f17082f00ad7843dd8f2e1215322744c17834c8089f1ba843ab2c/dbt_core-1.10.11-py3-none-any.whl", hash = "sha256:b5a8937a1b6e971d922785b60bc6b4621680b1c0f01081cf942b358df79c9aa6", size = 984527, upload-time = "2025-09-04T18:53:47.306Z" },
+    { url = "https://files.pythonhosted.org/packages/36/47/a07061c70e0872d8f49fbd12cf93f481b22cabb2e75016ce00aa3520a7ab/dbt_core-1.11.8-py3-none-any.whl", hash = "sha256:13ff79252a7ae9c9acc7de243789b72f04f7f915f05930d3407edeeea3758b6f", size = 1061289, upload-time = "2026-04-08T19:01:44.83Z" },
 ]
 
 [[package]]
@@ -1306,7 +1309,7 @@ wheels = [
 
 [[package]]
 name = "dbt-metabase"
-version = "1.4.2"
+version = "1.7.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -1314,21 +1317,21 @@ dependencies = [
     { name = "requests" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/99/08/4f7fc119fab941b5acfe9adc48f41c37c907c445f258d3c0827375b53c5c/dbt_metabase-1.4.2.tar.gz", hash = "sha256:ce76c5e2a654aca9aaaf18acaf982961cd4ee8cf5e1abc447299f3f2c8521867", size = 515723, upload-time = "2024-12-20T07:13:23.066Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/dd/03/2e341b7d78f6972080e39a350a439a44ab362895054e423f88dffbe99318/dbt_metabase-1.7.3.tar.gz", hash = "sha256:3151ea471415ce3e90957f16bee6487616bf33edbcebd4ccd4b23940b0839c49", size = 879505, upload-time = "2026-03-27T09:33:50.973Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d2/35/d27a7015f678586fea0ec2da65beb5849cde8078ec546c89425026259c03/dbt_metabase-1.4.2-py3-none-any.whl", hash = "sha256:82b1b725b1bde230b363e5d5f7aa80a1e6a92397780c3c6e21354e6be2c95483", size = 28661, upload-time = "2024-12-20T07:13:20.39Z" },
+    { url = "https://files.pythonhosted.org/packages/d9/76/67c3ac45c17ccfc675e888b3cca32c7bacd86ce12ee60e8869f4dd408f26/dbt_metabase-1.7.3-py3-none-any.whl", hash = "sha256:141260d1dad48de4963a835bada757d322107df032459850efa807f78294cd04", size = 30084, upload-time = "2026-03-27T09:33:49.046Z" },
 ]
 
 [[package]]
 name = "dbt-protos"
-version = "1.0.348"
+version = "1.0.443"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "protobuf" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a0/73/94a28249678aab925824497284f6bbb5f8e740613c10be6bf66042701aa7/dbt_protos-1.0.348.tar.gz", hash = "sha256:d8834c685c323b1533c1c7fdb5db5636cffab2f1a58515caba54b3dc13a3578b", size = 76628, upload-time = "2025-07-21T20:27:10.353Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/44/a439f5631013de921f4f9716af639740e277286f7c693930450d930fdc00/dbt_protos-1.0.443.tar.gz", hash = "sha256:6cc4b2146ccdf77d597534a0525c97e37d68b0ca34334661f37650d81e09632b", size = 127531, upload-time = "2026-03-17T15:24:56.585Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c1/d1/90bd370d92db997c635412661e0d0088b64d481f1365088842bb4823ccc0/dbt_protos-1.0.348-py3-none-any.whl", hash = "sha256:5d89171b64058170b39a80fc69abbd344170ac637c5dee90e7b3cbd7b1a43fe4", size = 94035, upload-time = "2025-07-21T20:27:09.015Z" },
+    { url = "https://files.pythonhosted.org/packages/d3/01/d9385e15664acd680eff3b19ce4d45f167bc7054de455bfac2e7c638c62f/dbt_protos-1.0.443-py3-none-any.whl", hash = "sha256:f8c4bef794ee3c442248b4c8f7cba3d0af46ad389d4960c0a73a3b307f9434fa", size = 186314, upload-time = "2026-03-17T15:24:54.792Z" },
 ]
 
 [[package]]
@@ -1466,7 +1469,7 @@ wheels = [
 
 [[package]]
 name = "elementary-data"
-version = "0.18.1"
+version = "0.23.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alive-progress" },
@@ -1477,7 +1480,6 @@ dependencies = [
     { name = "dbt-core" },
     { name = "google-cloud-storage" },
     { name = "networkx" },
-    { name = "numpy" },
     { name = "packaging" },
     { name = "posthog" },
     { name = "pydantic" },
@@ -1488,10 +1490,11 @@ dependencies = [
     { name = "ruamel-yaml" },
     { name = "slack-sdk" },
     { name = "tabulate" },
+    { name = "tenacity" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0f/cc/54d0f7740d8a6df3547e802c8cb0fe0652c8f51df4521804175c8408256e/elementary_data-0.18.1.tar.gz", hash = "sha256:28cf76d8ce3ff520a5370fcd5c902524f93ad2726ac3a59c604980e4dbaf7330", size = 1127297, upload-time = "2025-04-06T13:41:45.681Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/de/d4/0daa465281b4d4646f470db158f9f960bc5689a2b0db3c154bde68a79799/elementary_data-0.23.1.tar.gz", hash = "sha256:1f03f9e29fe4b652a8b96920a627e47fdf6edcfff8e8c0fb8b99d05d7c6e1b0e", size = 1377745, upload-time = "2026-03-19T17:59:05.334Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/32/04/2ae33a1bd756238a3fb2b83a1908cfb9cd94612bb8fc5190a1698e6dabfc/elementary_data-0.18.1-py3-none-any.whl", hash = "sha256:339daf8147294c454feebc2fb60a42a2b5ccc59240a1a0a3237de697a8b1a856", size = 1208385, upload-time = "2025-04-06T13:41:44.032Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/50/cf37d0a0b132fa42a6beb31a373ecfe9f6a5206c6baa25624f4d5f792c91/elementary_data-0.23.1-py3-none-any.whl", hash = "sha256:a24010a6b34c4165bcf9ea60ea52b10bdcc4e8c5d4d71c2a15ac25abc7ec9d3b", size = 1464840, upload-time = "2026-03-19T17:59:03.203Z" },
 ]
 
 [package.optional-dependencies]
@@ -1510,6 +1513,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/48/ce/13508a1ec3f8bb981ae4ca79ea40384becc868bfae97fd1c942bb3a001b1/email_validator-2.2.0.tar.gz", hash = "sha256:cb690f344c617a714f22e66ae771445a1ceb46821152df8e165c5f9a364582b7", size = 48967, upload-time = "2024-06-20T11:30:30.034Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d7/ee/bf0adb559ad3c786f12bcbc9296b3f5675f529199bef03e2df281fa1fadb/email_validator-2.2.0-py3-none-any.whl", hash = "sha256:561977c2d73ce3611850a06fa56b414621e0c8faa9d66f2611407d87465da631", size = 33521, upload-time = "2024-06-20T11:30:28.248Z" },
+]
+
+[[package]]
+name = "fastjsonschema"
+version = "2.21.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/20/b5/23b216d9d985a956623b6bd12d4086b60f0059b27799f23016af04a74ea1/fastjsonschema-2.21.2.tar.gz", hash = "sha256:b1eb43748041c880796cd077f1a07c3d94e93ae84bba5ed36800a33554ae05de", size = 374130, upload-time = "2025-08-14T18:49:36.666Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cb/a8/20d0723294217e47de6d9e2e40fd4a9d2f7c4b6ef974babd482a59743694/fastjsonschema-2.21.2-py3-none-any.whl", hash = "sha256:1c797122d0a86c5cace2e54bf4e819c36223b552017172f32c5c024a6b77e463", size = 24024, upload-time = "2025-08-14T18:49:34.776Z" },
 ]
 
 [[package]]
@@ -3002,6 +3014,19 @@ wheels = [
 ]
 
 [[package]]
+name = "jupyter-core"
+version = "5.9.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "platformdirs" },
+    { name = "traitlets" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/02/49/9d1284d0dc65e2c757b74c6687b6d319b02f822ad039e5c512df9194d9dd/jupyter_core-5.9.1.tar.gz", hash = "sha256:4d09aaff303b9566c3ce657f580bd089ff5c91f5f89cf7d8846c3cdf465b5508", size = 89814, upload-time = "2025-10-16T19:19:18.444Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e7/e7/80988e32bf6f73919a113473a604f5a8f09094de312b9d52b79c2df7612b/jupyter_core-5.9.1-py3-none-any.whl", hash = "sha256:ebf87fdc6073d142e114c72c9e29a9d7ca03fad818c5d300ce2adc1fb0743407", size = 29032, upload-time = "2025-10-16T19:19:16.783Z" },
+]
+
+[[package]]
 name = "kombu"
 version = "5.6.2"
 source = { registry = "https://pypi.org/simple" }
@@ -3474,6 +3499,21 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e2/a9/a0c57aee75f77794adaf35322f8b6404cbd0f89ad45c87197a937764b7d0/natsort-8.4.0.tar.gz", hash = "sha256:45312c4a0e5507593da193dedd04abb1469253b601ecaf63445ad80f0a1ea581", size = 76575, upload-time = "2023-06-20T04:17:19.925Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ef/82/7a9d0550484a62c6da82858ee9419f3dd1ccc9aa1c26a1e43da3ecd20b0d/natsort-8.4.0-py3-none-any.whl", hash = "sha256:4732914fb471f56b5cce04d7bae6f164a592c7712e1c85f9ef585e197299521c", size = 38268, upload-time = "2023-06-20T04:17:17.522Z" },
+]
+
+[[package]]
+name = "nbformat"
+version = "5.10.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "fastjsonschema" },
+    { name = "jsonschema" },
+    { name = "jupyter-core" },
+    { name = "traitlets" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6d/fd/91545e604bc3dad7dca9ed03284086039b294c6b3d75c0d2fa45f9e9caf3/nbformat-5.10.4.tar.gz", hash = "sha256:322168b14f937a5d11362988ecac2a4952d3d8e3a2cbeb2319584631226d5b3a", size = 142749, upload-time = "2024-04-04T11:20:37.371Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a9/82/0340caa499416c78e5d8f5f05947ae4bc3cba53c9f038ab6e9ed964e22f1/nbformat-5.10.4-py3-none-any.whl", hash = "sha256:3b48d6c8fbca4b299bf3982ea7db1af21580e4fec269ad087b9e81588891200b", size = 78454, upload-time = "2024-04-04T11:20:34.895Z" },
 ]
 
 [[package]]
@@ -4739,43 +4779,37 @@ wheels = [
 
 [[package]]
 name = "sqlglot"
-version = "28.5.0"
+version = "30.4.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/bf/8c/a4d24b6103305467506c1dea9c3ca8dc92773a91bae246c2517c256a0cf9/sqlglot-28.5.0.tar.gz", hash = "sha256:b3213b3e867dcc306074f1c90480aeee89a0e635cf0dfe70eb4a3af7b61972e6", size = 5652688, upload-time = "2025-12-17T23:38:00.121Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b9/e9/0014221c8caddeeb24801fee95f8c6306db0b2d8baa36e5f843ac9427f2d/sqlglot-30.4.2.tar.gz", hash = "sha256:02775ae2a0c5c16fe307279c9f2cf107c1b7d6724a6f30306acd2a557472a3cd", size = 5827240, upload-time = "2026-04-08T19:50:23.021Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ec/f7/6a7effd2526f64bcb0d2264c0dbebc7f8508add3f2c0748540d1448a24a3/sqlglot-28.5.0-py3-none-any.whl", hash = "sha256:5798bfdb6e9bc36c964e6c64d7222624d98b2631cc20f44628a82eba7cf7b4bf", size = 561086, upload-time = "2025-12-17T23:37:57.972Z" },
+    { url = "https://files.pythonhosted.org/packages/de/fe/1e5289e2e5111d276ff060ae48a2c5795f669b99aeeda0bb005b1815e2c8/sqlglot-30.4.2-py3-none-any.whl", hash = "sha256:f9424479412cabc8f1e7ff9e90a442cd88c6586e8b36cceeb0fc5ca0b8bd3364", size = 670857, upload-time = "2026-04-08T19:50:20.816Z" },
 ]
 
 [package.optional-dependencies]
-rs = [
-    { name = "sqlglotrs" },
+c = [
+    { name = "sqlglotc" },
 ]
 
 [[package]]
-name = "sqlglotrs"
-version = "0.10.0"
+name = "sqlglotc"
+version = "30.4.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ff/4f/650badfe6eb4db4ecf982faf9b8deefebc6ddbddf1760ea227a2bee5d01d/sqlglotrs-0.10.0.tar.gz", hash = "sha256:dbf91b9547db4f9594e4897afe72cd39e2aa73b8728531fede8861cb2be9aea0", size = 15827, upload-time = "2025-12-16T22:25:34.115Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bf/9a/bc64b2e5560ee1d485884720777553d413638aceec59b5699e1ae80ef7d2/sqlglotc-30.4.2.tar.gz", hash = "sha256:c6ced1d307201aba059e8b1ce747db7e69bb0a1710259ec31874a48403ba19f8", size = 458183, upload-time = "2026-04-08T19:49:27.752Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/35/7d/9fa1559555fb2528b84322f77f7846e63716adfb1e4814a41089c30d182c/sqlglotrs-0.10.0-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:115a4b6155b0e76534c443ed046a36fe5d0ba33cc8204e364a085e719683f798", size = 315369, upload-time = "2025-12-16T22:25:29.917Z" },
-    { url = "https://files.pythonhosted.org/packages/91/3d/0c53f5d4b792aa034894dfa86d8a6c1d12fbe69db2b8553ac575c394e071/sqlglotrs-0.10.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:00db32b5f86dfce7ae164fb880c754884a3183c17fcd7c864ecdd9835f9cac00", size = 304075, upload-time = "2025-12-16T22:25:22.008Z" },
-    { url = "https://files.pythonhosted.org/packages/6e/d1/c80e21bc95bde8d6df42d58b0c0218a4855de7a17c0f9e038cf464b1187b/sqlglotrs-0.10.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2c61be110aaf4af6196ba08fa4f3f17633204f9c03cae58965f1fd72f10a5ea8", size = 341174, upload-time = "2025-12-16T22:24:40.614Z" },
-    { url = "https://files.pythonhosted.org/packages/e1/8f/eae992e6aed2e47affe7267698085b1d7a8e0473218f3be686510c2f0e29/sqlglotrs-0.10.0-cp312-cp312-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:2e3fc92db4ca1db2f1600cb8005e0e704ffc8304f959fe8e12c5c48b60fde3ed", size = 347213, upload-time = "2025-12-16T22:24:47.4Z" },
-    { url = "https://files.pythonhosted.org/packages/d6/52/86d9e5795bd0139dd83a59d59c783e4bce78515baa08797b077e18730721/sqlglotrs-0.10.0-cp312-cp312-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:65cb3f754701a4d2a2ee49452212b8c7ab00bc443c724ca6d3ee73dc2c9ce32a", size = 475971, upload-time = "2025-12-16T22:25:00.629Z" },
-    { url = "https://files.pythonhosted.org/packages/23/91/c7eb9500d67102ec779beb76307b7702658021f4ba22ee9964658b67b0d8/sqlglotrs-0.10.0-cp312-cp312-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:f4c46aed5ded19ef4aad5083fae56dc8ced57d8025e2afbdb2ecda08d2fa6549", size = 364759, upload-time = "2025-12-16T22:25:07.535Z" },
-    { url = "https://files.pythonhosted.org/packages/15/60/82a8563b4863d8c4a026cff9c51881c347fab463cb18da074f62a175eac0/sqlglotrs-0.10.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:819b5f92bf3510117c736a5403cc17480db49f26c9e4a2b33d2cbb8cd32eabe1", size = 346939, upload-time = "2025-12-16T22:25:14.075Z" },
-    { url = "https://files.pythonhosted.org/packages/4c/3a/42c97bd48d595e16301e1707ef72a02ffc436dc245cfee5eff2b09837fa3/sqlglotrs-0.10.0-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:c6fee56676233df4e564c0d4c6025d0a48d66f83bc2504bfbf3833c11f5ef78e", size = 368593, upload-time = "2025-12-16T22:24:54.142Z" },
-    { url = "https://files.pythonhosted.org/packages/28/c4/63504a7ee342630f7ad1aa542e72035ba4085653edeffb24543bc83ffbfb/sqlglotrs-0.10.0-cp312-cp312-win32.whl", hash = "sha256:00990e8a4b1b1242819173e2ca225cee0b08bb41d8d4f2f8729481700ca13894", size = 188788, upload-time = "2025-12-16T22:25:36.787Z" },
-    { url = "https://files.pythonhosted.org/packages/18/13/bb0f226d5844958685e8a0dc074929a6340fa93cf2b705cae1e9f74fade9/sqlglotrs-0.10.0-cp312-cp312-win_amd64.whl", hash = "sha256:747168975eb4ae28da13e97e669fb0d868a72be700f09b462caf4ff4e0ef2f34", size = 202014, upload-time = "2025-12-16T22:25:45.507Z" },
+    { url = "https://files.pythonhosted.org/packages/16/21/1c150b17dca2a1ae93b68aa8009e8968ff009a646a78db4ceb711a9c109c/sqlglotc-30.4.2-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:14cc57190bb6bb49529e39e84364b28311047252bbc3410332b60941ee4cc442", size = 18775844, upload-time = "2026-04-08T19:48:40.275Z" },
+    { url = "https://files.pythonhosted.org/packages/9a/86/3c9131e1e7a43aa8f3606f38ef197c5bbd18f4c247170244e33686733a61/sqlglotc-30.4.2-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:36f7547637eb0a83073571f2ca2af99e4dceb6b469c7788a0184c24f000de6db", size = 13125373, upload-time = "2026-04-08T19:48:43.669Z" },
+    { url = "https://files.pythonhosted.org/packages/32/40/cc2f7646b01d344149458128971086ab1e6e384bb58037a29d1c7f353fe4/sqlglotc-30.4.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:ea58611ef7c0a78f9a5ee638320ae65f7890d92df4ee0614f451a1ba09f51c0e", size = 13755335, upload-time = "2026-04-08T19:48:46.587Z" },
+    { url = "https://files.pythonhosted.org/packages/cd/ce/4d6d0ab52aa1155af21d00a7e29c7f795929ae504d5f9546c0baeff1c34a/sqlglotc-30.4.2-cp312-cp312-win_amd64.whl", hash = "sha256:10ee0306bed790150d5b80f1aa1ab47c4579f57a1a57b7db0154abc111cb7c58", size = 8284118, upload-time = "2026-04-08T19:48:49.152Z" },
 ]
 
 [[package]]
 name = "sqlparse"
-version = "0.5.3"
+version = "0.5.5"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e5/40/edede8dd6977b0d3da179a342c198ed100dd2aba4be081861ee5911e4da4/sqlparse-0.5.3.tar.gz", hash = "sha256:09f67787f56a0b16ecdbde1bfc7f5d9c3371ca683cfeaa8e6ff60b4807ec9272", size = 84999, upload-time = "2024-12-10T12:05:30.728Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/90/76/437d71068094df0726366574cf3432a4ed754217b436eb7429415cf2d480/sqlparse-0.5.5.tar.gz", hash = "sha256:e20d4a9b0b8585fdf63b10d30066c7c94c5d7a7ec47c889a2d83a3caa93ff28e", size = 120815, upload-time = "2025-12-19T07:17:45.073Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a9/5c/bfd6bd0bf979426d405cc6e71eceb8701b148b16c21d2dc3c261efc61c7b/sqlparse-0.5.3-py3-none-any.whl", hash = "sha256:cf2196ed3418f3ba5de6af7e82c694a9fbdbfecccdfc72e281548517081f16ca", size = 44415, upload-time = "2024-12-10T12:05:27.824Z" },
+    { url = "https://files.pythonhosted.org/packages/49/4b/359f28a903c13438ef59ebeee215fb25da53066db67b305c125f1c6d2a25/sqlparse-0.5.5-py3-none-any.whl", hash = "sha256:12a08b3bf3eec877c519589833aed092e2444e68240a3577e8e26148acc7b1ba", size = 46138, upload-time = "2025-12-19T07:17:46.573Z" },
 ]
 
 [[package]]
@@ -4871,6 +4905,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737, upload-time = "2024-11-24T20:12:22.481Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl", hash = "sha256:26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2", size = 78540, upload-time = "2024-11-24T20:12:19.698Z" },
+]
+
+[[package]]
+name = "traitlets"
+version = "5.14.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/eb/79/72064e6a701c2183016abbbfedaba506d81e30e232a68c9f0d6f6fcd1574/traitlets-5.14.3.tar.gz", hash = "sha256:9ed0579d3502c94b4b3732ac120375cda96f923114522847de4b3bb98b96b6b7", size = 161621, upload-time = "2024-04-19T11:11:49.746Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/00/c0/8f5d070730d7836adc9c9b6408dec68c6ced86b304a9b26a14df072a6e8c/traitlets-5.14.3-py3-none-any.whl", hash = "sha256:b74e89e397b1ed28cc831db7aea759ba6640cb3de13090ca145426688ff1ac4f", size = 85359, upload-time = "2024-04-19T11:11:46.763Z" },
 ]
 
 [[package]]

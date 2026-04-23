@@ -5,41 +5,51 @@ models:
   - name: int_firebase__native_event_flattened
     data_tests:
       - elementary.volume_anomalies:
-          tags: [elementary]
-          where_expression: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)"
-          timestamp_column: event_date
-          time_bucket:
-            period: day
-            count: 1
+          config:
+            tags: [elementary]
+          arguments:
+            where_expression: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)"
+            timestamp_column: event_date
+            time_bucket:
+              period: day
+              count: 1
     columns:
       - name: event_name
         data_tests:
           - not_null:
-              where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
+              config:
+                where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
       - name: user_pseudo_id
         data_tests:
           - not_null:
-              where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
+              config:
+                where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
       - name: user_id
         data_tests:
           - not_null_proportion:
-              where_condition: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) and event_name = 'BookingConfirmation'"
-              anomaly_threshold_alert_percentage: 1
+              arguments:
+                where_condition: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) and event_name = 'BookingConfirmation'"
+                anomaly_threshold_alert_percentage: 1
       - name: bookingId
         data_tests:
           - relationships:
-              to: ref("int_applicative__booking")
-              field: booking_id
-              where: "event_name = 'BookingConfirmation' AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
+              arguments:
+                to: ref("int_applicative__booking")
+                field: booking_id
+              config:
+                where: "event_name = 'BookingConfirmation' AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
           - not_null_proportion:
-              where_condition: "event_name = 'BookingConfirmation' AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
-              anomaly_threshold_alert_percentage: 5
+              arguments:
+                where_condition: "event_name = 'BookingConfirmation' AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
+                anomaly_threshold_alert_percentage: 5
       - name: offerId
         data_tests:
           - not_null_proportion:
-              where_condition: "event_name = 'ConsultOffer' AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
-              anomaly_threshold_alert_percentage: 5
+              arguments:
+                where_condition: "event_name = 'ConsultOffer' AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
+                anomaly_threshold_alert_percentage: 5
       - name: event_date
         data_tests:
           - generic_has_no_missing_partitions:
-              where_condition: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)"
+              arguments:
+                where_condition: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)"

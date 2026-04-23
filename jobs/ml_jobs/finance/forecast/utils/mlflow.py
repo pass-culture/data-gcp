@@ -84,8 +84,7 @@ def connect_remote_mlflow():
     """Connect to remote MLflow tracking server using signed JWT for authentication."""
     signed_jwt = sign_jwt(
         target_sa=SA_ACCOUNT,
-        resource_url=MLFLOW_URI
-        + "*",  # add * wildcard to get a token that works for all MLflow API endpoints
+        resource_url=MLFLOW_URI + "*",  # add * wildcard to get a token that works for all MLflow API endpoints
         # under the base URI
     )
     os.environ["MLFLOW_TRACKING_TOKEN"] = signed_jwt

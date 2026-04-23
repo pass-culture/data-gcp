@@ -22,24 +22,25 @@ sources:
       - name: applicative_database_booking
         data_tests:
           - elementary.volume_anomalies:
-              tags: [elementary]
-              timestamp_column: booking_creation_date
-              anomaly_direction: both
-              detection_period:
-                period: day
-                count: 1
-              training_period:
-                period: month
-                count: 1
-              time_bucket:
-                period: day
-                count: 1
-              anomaly_sensitivity: 3
+              config:
+                tags: [elementary]
+              arguments:
+                timestamp_column: booking_creation_date
+                anomaly_direction: both
+                detection_period:
+                  period: day
+                  count: 1
+                training_period:
+                  period: month
+                  count: 1
+                time_bucket:
+                  period: day
+                  count: 1
+                anomaly_sensitivity: 3
       - name: applicative_database_booking_finance_incident
       - name: applicative_database_boost_cinema_details
       - name: applicative_database_cashflow
       - name: applicative_database_cashflow_batch
-      - name: applicative_database_cashflow_log
       - name: applicative_database_cashflow_pricing
       - name: applicative_database_cds_cinema_details
       - name: applicative_database_cgr_cinema_details

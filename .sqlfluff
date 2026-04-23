@@ -28,7 +28,7 @@ target = stg
 
 [sqlfluff:templater:dbt:context]
 ENV_SHORT_NAME = "stg"
-APPLICATIVE_EXTERNAL_CONNECTION_ID="passculture-metier-ehp.europe-west1.metier-pcapi-testing-connection"
+APPLICATIVE_EXTERNAL_CONNECTION_ID="pc-backend-tst.europe-west1.pcapi-tst-pg-pcapi-tst-eu9-c324f1845dc3a220-replica-big-query-eu1-ro"
 
 [sqlfluff:rules:aliasing.table]
 aliasing = explicit

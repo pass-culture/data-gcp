@@ -1,13 +1,11 @@
 version: 2
 
 models:
-  - name: exp_vidoc_beneficiary__coverage
+  - name: exp_vidoc__beneficiary_coverage
     description: "{{ doc('description__exp_vidoc_beneficiary__coverage') }}"
     columns:
       - name: partition_month
         description: "{{ doc('column__partition_month') }}"
-      - name: is_statistic_secret
-        description: "{{ doc('column__is_statistic_secret') }}"
       - name: region_name
         description: "{{ doc('column__region_name') }}"
       - name: region_code

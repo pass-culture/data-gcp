@@ -12,7 +12,10 @@ from forecast.engines.prophet.evaluate import (
 )
 from forecast.engines.prophet.forecast import generate_future_forecast
 from forecast.engines.prophet.model_config import ModelConfig
-from forecast.engines.prophet.plots import log_diagnostic_plots
+from forecast.engines.prophet.plots import (
+    log_diagnostics_plots,
+    log_future_forecast_plots,
+)
 from forecast.engines.prophet.preprocessing import preprocessing_pipeline
 from forecast.engines.prophet.train import fit_prophet_model
 from forecast.forecasters.forecast_model import ForecastModel
@@ -29,8 +32,7 @@ class ProphetModel(ForecastModel):
         self.config_path = self.CONFIG_DIR / f"{self.model_name}.yaml"
         if not self.config_path.exists():
             raise FileNotFoundError(
-                f"Configuration file not found: {self.config_path}. "
-                f"Available: {list(self.CONFIG_DIR.glob('*.yaml'))}"
+                f"Configuration file not found: {self.config_path}. Available: {list(self.CONFIG_DIR.glob('*.yaml'))}"
             )
 
         with open(self.config_path) as f:
@@ -62,9 +64,7 @@ class ProphetModel(ForecastModel):
         )
         return self.data_split
 
-    def _filter_changepoints(
-        self, train_start_date: str, backtest_start_date: str
-    ) -> None:
+    def _filter_changepoints(self, train_start_date: str, backtest_start_date: str) -> None:
         """Remove changepoints that fall outside the training data range.
 
         Training data spans from train_start_date (inclusive) to backtest_start_date
@@ -79,19 +79,13 @@ class ProphetModel(ForecastModel):
         original_count = len(self.config.prophet.changepoints)
 
         # Filter changepoints that are within training range
-        valid_changepoints = [
-            cp
-            for cp in self.config.prophet.changepoints
-            if train_start <= cp < train_end
-        ]
+        valid_changepoints = [cp for cp in self.config.prophet.changepoints if train_start <= cp < train_end]
 
         dropped = original_count - len(valid_changepoints)
         logger.warning(f"Dropped {dropped} changepoint(s) outside training range ")
 
         self.config.prophet.changepoints = valid_changepoints
-        logger.info(
-            f"Using {len(valid_changepoints)} changepoint(s): {valid_changepoints}"
-        )
+        logger.info(f"Using {len(valid_changepoints)} changepoint(s): {valid_changepoints}")
 
     def train(self):
         logger.info(f"Training Prophet model: {self.model_name}")
@@ -112,13 +106,17 @@ class ProphetModel(ForecastModel):
             model_config=self.config,
         )
 
-    def run_backtest(self) -> dict:
-        return backtest_pipeline(df_backtest=self.data_split.backtest, model=self.model)
+    def run_backtest(self) -> tuple[dict, pd.DataFrame]:
+        """Run backtest and return metrics and forecast data.
 
-    def get_diagnostics(self) -> dict:
-        plots = log_diagnostic_plots(self.model, self.data_split.train)
-        logger.info("Diagnostic plots generated")
-        return plots
+        Returns:
+            Tuple containing:
+                - Dictionary with backtest metrics
+                - DataFrame with backtest forecast
+        """
+        metrics, backtest_forecast = backtest_pipeline(df_backtest=self.data_split.backtest, model=self.model)
+
+        return metrics, backtest_forecast
 
     def predict(self, start_date: str, end_date: str) -> pd.DataFrame:
         logger.info(f"Generating forecast from {start_date} to {end_date}")
@@ -144,7 +142,29 @@ class ProphetModel(ForecastModel):
 
         # Aggregate yhat (prediction)
         monthly_df = df.groupby("month")[["yhat"]].sum().reset_index()
-        monthly_df.rename(
-            columns={"month": "ds", "yhat": "total_pricing"}, inplace=True
-        )
+        monthly_df.rename(columns={"month": "ds", "yhat": "total_pricing"}, inplace=True)
+
+        # if last month has less than 4 rows for weeky model or 30 for daily model,
+        # we drop it
+        if len(monthly_df) > 0:
+            last_month = monthly_df["ds"].iloc[-1]
+            last_month_rows = df[df["month"] == last_month].shape[0]
+            if (self.config.evaluation.freq == "W" and last_month_rows < 4) or (
+                self.config.evaluation.freq == "D" and last_month_rows < 30
+            ):
+                logger.warning(
+                    f"""Dropping last month {last_month} from monthly forecast due to
+                    insufficient data points ({last_month_rows} rows)"""
+                )
+                monthly_df = monthly_df.head(-1)
         return monthly_df
+
+    def log_plots(self, backtest_forecast: pd.DataFrame, future_forecast: pd.DataFrame):
+        """Log all relevant plots to MLflow."""
+        log_diagnostics_plots(
+            model=self.model,
+            df_train=self.data_split.train,
+            freq=self.config.evaluation.freq,
+            backtest_forecast=backtest_forecast,
+        )
+        log_future_forecast_plots(future_forecast)

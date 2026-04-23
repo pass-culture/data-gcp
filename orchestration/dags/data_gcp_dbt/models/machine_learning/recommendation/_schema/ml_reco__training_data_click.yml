@@ -5,13 +5,15 @@ models:
     description: "{{ doc('description__ml_reco__training_data_click') }}"
     data_tests:
       - elementary.volume_anomalies:
-          tags: [elementary]
-          training_period:
-            period: day
-            count: 7
-          detection_period:
-            period: day
-            count: 1
+          config:
+            tags: [elementary]
+          arguments:
+            training_period:
+              period: day
+              count: 7
+            detection_period:
+              period: day
+              count: 1
     columns:
       - name: event_date
         description: "{{ doc('column__event_date') }}"

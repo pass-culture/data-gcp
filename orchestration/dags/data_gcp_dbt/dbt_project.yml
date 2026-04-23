@@ -84,17 +84,12 @@ models:
         +meta:
           owner: "@data-engineering"
       external_reporting:
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
         +tags: "monthly_15"
         +labels:
           schedule: "monthly"
         +meta:
           owner: "@data-engineering"
-        individual:
-          ephemerals_kpis:
-            +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
-        collective:
-          kpis_segments:
-            +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     metrics:
         +labels:
               schedule: "monthly"
@@ -144,15 +139,12 @@ snapshots:
     show: False
 
 data_tests:
-  +store_failures: False # Storing results can be expensive on large tables.
-  +severity: "{{ env_var('CI_SEVERITY', 'warn') }}" # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.
-  +docs:
-    show: True
-    tags: "test"
+  +store_failures: False
+  +severity: "{{ env_var('CI_SEVERITY', 'warn') }}"
+  +tags: "test"
   data_gcp_dbt:
     export:
       +severity: "{{ 'error' if target.name in ['prod', 'stg'] else 'warn' }}"
-
 vars:
   ENV_SHORT_NAME: dev
   PASS_START_DATE: "2018-01-01"

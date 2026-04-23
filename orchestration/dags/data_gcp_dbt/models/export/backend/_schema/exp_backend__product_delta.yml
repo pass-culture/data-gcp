@@ -9,15 +9,18 @@ models:
         description: "{{ doc('column__ean') }}"
         tests:
           - not_null:
-              tags: ['critical']
+              config:
+                tags: ['critical']
           - unique:
-              tags: ['critical']
+              config:
+                tags: ['critical']
 
       - name: title
         description: "{{ doc('column__title') }}"
         tests:
           - not_null:
-              tags: ['critical']
+              config:
+                tags: ['critical']
 
       - name: description
         description: "{{ doc('column__description') }}"
@@ -26,7 +29,8 @@ models:
         description: "{{ doc('column__support_code') }}"
         tests:
           - not_null:
-              tags: ['critical']
+              config:
+                tags: ['critical']
 
       - name: publication_date
         description: "{{ doc('column__publication_date') }}"
@@ -73,9 +77,11 @@ models:
         description: "{{ doc('column__product_type') }}"
         tests:
           - not_null:
-              tags: ['critical']
+              config:
+                tags: ['critical']
           - accepted_values:
-              values: ['paper', 'music']
+              arguments:
+                values: ['paper', 'music']
 
       - name: artist
         description: "{{ doc('column__artist') }}"

@@ -8,10 +8,10 @@ requires-python = ">=3.12,<3.13"
 airflow = [
   "apache-airflow[fab,google,google-auth,celery,ssh,cncf-kubernetes,uv]==2.11.2",
   "statsd<=4.0.1",
-  "dbt-core==1.10.11",
-  "dbt-bigquery==1.9.1",
+  "dbt-core==1.11.8",
+  "dbt-bigquery==1.11.1",
   "psycopg2-binary==2.9.9",
-  "elementary-data[bigquery]==0.18.1",
+  "elementary-data[bigquery]==0.23.1",
   "google-cloud-bigquery-storage==2.33.1",
   "flask-openid>=1.3.1",
   "flask-oidc>=2.2.2",
@@ -23,10 +23,10 @@ airflow = [
   "pyyaml",
 ]
 dbt = [
-  "dbt-core==1.10.11",
-  "dbt-bigquery==1.9.1",
-  "dbt-metabase==1.4.2",
-  "dbt-colibri>=0.2.7",
+  "dbt-core==1.11.8",
+  "dbt-bigquery==1.11.1",
+  "dbt-metabase==1.7.3",
+  "dbt-colibri>=0.3.0",
   "deepdiff==8.6.1",
 ]
 docs = [

@@ -1,7 +1,7 @@
 # Adjust import path if necessary, assuming run from jobs/ml_jobs/finance root
 # or that the workspace puts it in path.
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
@@ -100,61 +100,6 @@ class TestProphetModel(unittest.TestCase):
         assert not forecast_df.empty
         assert "yhat" in forecast_df.columns
         assert "ds" in forecast_df.columns
-
-    @patch("forecast.forecasters.prophet_model.log_diagnostic_plots")
-    @patch("forecast.forecasters.prophet_model.yaml.safe_load")
-    @patch("forecast.forecasters.prophet_model.Path.exists")
-    @patch("forecast.forecasters.prophet_model.open")
-    def test_get_diagnostics(self, mock_open, mock_exists, mock_yaml, mock_plots):
-        "test_get_diagnostics: Check if it calls the plot function and returns dict."
-        mock_exists.return_value = True
-        mock_yaml.return_value = {
-            "prophet": {
-                "growth": "linear",
-                "changepoints": [],
-                "changepoint_prior_scale": 0.05,
-                "yearly_seasonality": False,
-                "weekly_seasonality": False,
-                "daily_seasonality": False,
-                "seasonality_mode": "additive",
-                "seasonality_prior_scale": 1.0,
-                "interval_width": 0.8,
-                "scaling": "minmax",
-            },
-            "features": {
-                "adding_country_holidays": False,
-                "add_monthly_seasonality": False,
-                "monthly_fourier_order": 3,
-                "pass_culture_months": None,
-                "regressors": None,
-            },
-            "data_processing": {
-                "train_prop": 0.8,
-                "table_name": "t",
-                "date_column_name": "ds",
-                "target_name": "y",
-            },
-            "evaluation": {
-                "cv": False,
-                "cv_initial": "0.7",
-                "cv_period": "0.15",
-                "cv_horizon": "0.1",
-                "freq": "D",
-            },
-        }
-
-        model = ProphetModel("test_model")
-
-        # Manually set mocked internals to skip data prep/training
-        model.model = MagicMock()
-        model.data_split = MagicMock()
-        model.data_split.train = pd.DataFrame({"ds": [], "y": []})
-
-        mock_plots.return_value = {"trend": "figure_obj"}
-
-        diags = model.get_diagnostics()
-        assert diags == {"trend": "figure_obj"}
-        mock_plots.assert_called_once()
 
 
 if __name__ == "__main__":

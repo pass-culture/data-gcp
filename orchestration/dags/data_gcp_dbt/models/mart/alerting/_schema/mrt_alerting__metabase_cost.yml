@@ -7,9 +7,10 @@ models:
         description: Average cost of a card
         data_tests:
           - dbt_utils.accepted_range:
-              min_value: 0
-              max_value: 0.4
-              inclusive: true
+              arguments:
+                min_value: 0
+                max_value: 0.4
+                inclusive: true
       - name: total_cost
         description: Total cost of a card
       - name: card_name

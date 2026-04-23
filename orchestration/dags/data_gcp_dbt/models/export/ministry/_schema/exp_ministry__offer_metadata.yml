@@ -8,9 +8,11 @@ models:
         description: "{{ doc('column__offer_id') }}"
         data_tests:
           - not_null:
-              tags: ['export']
+              config:
+                tags: ['export']
           - unique:
-              tags: ['export']
+              config:
+                tags: ['export']
       - name: search_group_name
         description: "{{ doc('column__search_group_name') }}"
       - name: author

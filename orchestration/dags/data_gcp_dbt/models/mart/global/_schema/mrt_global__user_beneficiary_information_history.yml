@@ -15,8 +15,9 @@ models:
         data_tests:
           - not_null
           - dbt_utils.accepted_range:
-              min_value: 0
-              inclusive: true
+              arguments:
+                min_value: 0
+                inclusive: true
 
       - name: user_information_action_type
         description: '{{ doc("column__user_action_type") }}'
@@ -24,7 +25,8 @@ models:
         data_tests:
           - not_null
           - accepted_values:
-              values: ['INFO_MODIFIED', 'PROFILE_COMPLETION']
+              arguments:
+                values: ['INFO_MODIFIED', 'PROFILE_COMPLETION']
 
       - name: user_information_created_at
         description: Timestamp when the user information was modified (partitioning key with daily granularity)

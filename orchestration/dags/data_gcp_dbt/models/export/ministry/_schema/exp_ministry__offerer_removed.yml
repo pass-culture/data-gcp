@@ -8,9 +8,11 @@ models:
         description: "{{ doc('column__offerer_id') }}"
         data_tests:
           - not_null:
-              tags: ['export']
+              config:
+                tags: ['export']
           - unique:
-              tags: ['export']
+              config:
+                tags: ['export']
       - name: offerer_name
         description: "{{ doc('column__offerer_name') }}"
       - name: offerer_creation_date

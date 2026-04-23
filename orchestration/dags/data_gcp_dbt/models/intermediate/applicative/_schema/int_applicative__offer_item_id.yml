@@ -7,9 +7,10 @@ models:
       by applying business rules to determine the appropriate item identifiers.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - offer_id
-            - item_id
+          arguments:
+            combination_of_columns:
+              - offer_id
+              - item_id
     columns:
       - name: offer_id
         description: '{{ doc("column__offer_id") }}'

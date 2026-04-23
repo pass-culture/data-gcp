@@ -1,0 +1,35 @@
+FROM ghcr.io/astral-sh/uv:python3.10-trixie-slim
+
+ARG AIRFLOW_USER_HOME=/opt/airflow
+ARG GCLOUD_VERSION=google-cloud-cli-538.0.0-linux-x86_64.tar.gz
+
+USER root
+
+# install system deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    ca-certificates \
+    curl \
+    tar \
+    && rm -rf /var/lib/apt/lists/*
+
+# install gcloud
+RUN mkdir -p ${AIRFLOW_USER_HOME} \
+    && curl -LO https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} \
+    && tar xf ${GCLOUD_VERSION} \
+    && mv google-cloud-sdk ${AIRFLOW_USER_HOME}/ \
+    && rm ${GCLOUD_VERSION}
+
+ENV PATH=$PATH:${AIRFLOW_USER_HOME}/google-cloud-sdk/bin
+
+COPY . /jobs
+WORKDIR /jobs
+
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+
+RUN uv sync --no-install-project --no-dev --no-editable --no-cache --frozen \
+    && rm -rf /root/.cache/uv
+
+ENTRYPOINT ["uv", "run", "main.py"]
+CMD []

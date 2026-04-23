@@ -8,13 +8,13 @@ models:
         description: "{{ doc('column__collective_booking_id') }}"
         data_tests:
           - not_null:
-              tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
           - unique:
-              tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: collective_stock_id
         description: "{{ doc('column__collective_stock_id') }}"
       - name: is_used_collective_booking

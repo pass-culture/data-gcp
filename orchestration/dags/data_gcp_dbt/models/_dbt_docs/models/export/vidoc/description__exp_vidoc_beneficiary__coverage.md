@@ -14,4 +14,6 @@ It is designed to be exported to ministry for vidoc visualisation.
 
 Each row represents a key indicator calculated for a specific month, geographic aggregation and beneficiary dimensions level.
 
-{% docs table__exp_vidoc_beneficiary__coverage %}{% enddocs %}
+**Grain**: `partition_month`, `region_code`, `department_code`, `milestone_age`.
+
+{% docs table__exp_vidoc__beneficiary_coverage %}{% enddocs %}

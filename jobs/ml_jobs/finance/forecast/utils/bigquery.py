@@ -5,6 +5,7 @@ including loading tables and executing queries.
 """
 
 import pandas as pd
+import pandas_gbq
 from google.cloud import bigquery
 
 from forecast.utils.constants import GCP_PROJECT_ID
@@ -112,7 +113,40 @@ def save_forecast_gbq(
     )
 
     client = get_client()
-    job = client.load_table_from_dataframe(
-        bq_df, destination_table, job_config=job_config
-    )
+    job = client.load_table_from_dataframe(bq_df, destination_table, job_config=job_config)
     job.result()  # Wait for the job to complete
+
+
+def get_past_runs(n_past_runs: int, dataset: str) -> pd.DataFrame:
+    """Get past forecast runs from BigQuery for comparison.
+
+    Args:
+        n_past_runs: Number of past runs to include in the comparison plot.
+        dataset: BigQuery dataset containing past forecast results.
+    """
+
+    past_monthly_forecasts = pandas_gbq.read_gbq(
+        f"""
+            WITH latest_{n_past_runs}_run_names AS (
+                SELECT run_name
+                FROM `{GCP_PROJECT_ID}.{dataset}.monthly_forecasts`
+                GROUP BY run_name, execution_date
+                ORDER BY execution_date DESC
+                LIMIT {n_past_runs}
+            )
+            SELECT
+                t.forecast_date,
+                t.prediction,
+                t.run_name,
+                t.execution_date
+            FROM `{GCP_PROJECT_ID}.{dataset}.monthly_forecasts` AS t
+            WHERE t.run_name IN
+                (SELECT run_name FROM latest_{n_past_runs}_run_names)
+            ORDER BY t.execution_date DESC, t.forecast_date ASC
+                    """,
+        project_id=GCP_PROJECT_ID,
+    )
+    # Ensure proper dtypes
+    past_monthly_forecasts["forecast_date"] = pd.to_datetime(past_monthly_forecasts["forecast_date"])
+    past_monthly_forecasts["prediction"] = pd.to_numeric(past_monthly_forecasts["prediction"], errors="coerce")
+    return past_monthly_forecasts

@@ -44,7 +44,7 @@ with
     offer_last_advice as (
         select offer_id, advice_content
         from {{ ref("int_applicative__offer_pro_advice") }}
-        qualify row_number() over (partition by offer_id order by update_date desc) = 1
+        qualify row_number() over (partition by offer_id order by updated_at desc) = 1
     )
 
 select

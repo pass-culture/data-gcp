@@ -1,0 +1,208 @@
+# Metabase migration tool — development tasks
+# All Python tools are run through uv.
+
+# List available recipes
+default:
+    @just --list
+
+# Format code with ruff
+format:
+    uv run --group dev ruff format .
+
+# Check formatting without applying changes
+format-check:
+    uv run --group dev ruff format --check .
+
+# Fix lint issues (includes import reordering via isort rules)
+lint:
+    uv run --group dev ruff check --fix .
+
+# Run lint checks without fixing
+lint-check:
+    uv run --group dev ruff check .
+
+# Run all tests
+test *ARGS:
+    uv run --group dev pytest {{ ARGS }}
+
+# Run tests with coverage report
+test-cov:
+    uv run --group dev pytest --cov=. --cov-report=term-missing
+
+# Run mypy type checking
+typecheck:
+    uv run --group dev mypy .
+
+# Run all checks (format, lint, typecheck, tests)
+check-all: format-check lint-check typecheck test
+
+# Auto-fix everything (format + lint fix)
+fix-all: format lint
+
+# Sync project dependencies
+sync:
+    uv sync --group dev
+
+# ---------------------------------------------------------------------------
+# Docker lifecycle
+# ---------------------------------------------------------------------------
+
+# Start Docker containers in background
+docker-up:
+    docker compose -f docker/docker-compose.yml up -d
+
+# Stop Docker containers (preserves volumes)
+docker-down:
+    docker compose -f docker/docker-compose.yml down
+
+# Stop Docker containers and destroy volumes (clean slate)
+docker-reset:
+    docker compose -f docker/docker-compose.yml down -v
+
+# Follow Docker container logs
+docker-logs:
+    docker compose -f docker/docker-compose.yml logs -f
+
+# Bootstrap local Metabase: start containers + seed data + create cards
+docker-setup: docker-up
+    bash scripts/docker-setup.sh
+
+# Open Metabase in browser
+docker-open:
+    open "http://localhost:3000" 2>/dev/null || xdg-open "http://localhost:3000" 2>/dev/null || echo "Open http://localhost:3000 in your browser"
+
+# ---------------------------------------------------------------------------
+# Integration testing (local Docker)
+# ---------------------------------------------------------------------------
+
+# Prepare migration scenario: rename table + column, trigger Metabase sync
+docker-prepare-migration:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "==> Creating new table (copy of old with renamed column)..."
+    docker compose -f docker/docker-compose.yml exec -T sample-db \
+        psql -U sample -d sample -c " \
+            CREATE TABLE IF NOT EXISTS analytics.enriched_user_data AS \
+                SELECT user_id, booking_cnt AS total_individual_bookings, total_amount, last_booking_date, user_type \
+                FROM analytics.old_user_stats; \
+        "
+    echo "==> Triggering Metabase sync..."
+    TOKEN=$(curl -sf http://localhost:3000/api/session \
+        -H "Content-Type: application/json" \
+        -d '{"username":"admin@test.com","password":"Testpass1"}' \
+        | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+    DB_ID=$(curl -sf http://localhost:3000/api/database \
+        -H "X-Metabase-Session: $TOKEN" \
+        | python3 -c "import sys,json; dbs=json.load(sys.stdin); print([d['id'] for d in dbs.get('data', dbs) if d['name']=='Sample DB'][0])")
+    curl -sf -X POST "http://localhost:3000/api/database/$DB_ID/sync_schema" \
+        -H "X-Metabase-Session: $TOKEN"
+    echo "  ✓ Migration scenario prepared. Wait ~10s for sync, then run: just docker-test-migrate"
+
+# Run migration dry-run against local Docker Metabase (no GCP required)
+docker-test-migrate:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Get card IDs from local Metabase
+    TOKEN=$(curl -sf http://localhost:3000/api/session \
+        -H "Content-Type: application/json" \
+        -d '{"username":"admin@test.com","password":"Testpass1"}' \
+        | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+    CARD_IDS=$(curl -sf http://localhost:3000/api/card \
+        -H "X-Metabase-Session: $TOKEN" \
+        | python3 -c "import sys,json; print(','.join(str(c['id']) for c in json.load(sys.stdin)))")
+    echo "==> Running migration dry-run for cards: $CARD_IDS"
+    METABASE_HOST="http://localhost:3000" \
+    METABASE_API_USERNAME="admin@test.com" \
+    METABASE_PASSWORD="Testpass1" \
+    uv run python main.py migrate \
+        --legacy-table-name old_user_stats \
+        --new-table-name enriched_user_data \
+        --legacy-schema-name analytics \
+        --new-schema-name analytics \
+        --card-ids "$CARD_IDS" \
+        --dry-run
+
+# Test that deleted tables appear as inactive via the metadata API
+docker-test-inactive-tables:
+    bash scripts/docker-test-inactive-tables.sh
+
+# Download Metabase OpenAPI spec to api/openapi.json
+docker-fetch-openapi:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TOKEN=$(curl -sf http://localhost:3000/api/session \
+        -H "Content-Type: application/json" \
+        -d '{"username":"admin@test.com","password":"Testpass1"}' \
+        | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+    mkdir -p api
+    curl -sf "http://localhost:3000/api/docs/openapi.json" \
+        -H "X-Metabase-Session: $TOKEN" \
+        -o api/openapi.json
+    echo "  ✓ OpenAPI spec saved to api/openapi.json"
+
+# ---------------------------------------------------------------------------
+# Staging testing (requires: gcloud auth application-default login)
+# ---------------------------------------------------------------------------
+
+# Report: list staging tables matching mappings.json and find referencing cards
+stg-explore:
+    PROJECT_NAME=passculture-data-ehp ENV_SHORT_NAME=stg uv run python scripts/stg_explore.py
+
+# Dry-run migration against staging Metabase (read-only, no writes)
+stg-dry-run LEGACY_TABLE NEW_TABLE LEGACY_SCHEMA NEW_SCHEMA CARD_IDS:
+    PROJECT_NAME=passculture-data-ehp ENV_SHORT_NAME=stg \
+    uv run python main.py migrate \
+        --legacy-table-name "{{LEGACY_TABLE}}" \
+        --new-table-name "{{NEW_TABLE}}" \
+        --legacy-schema-name "{{LEGACY_SCHEMA}}" \
+        --new-schema-name "{{NEW_SCHEMA}}" \
+        --card-ids "{{CARD_IDS}}" \
+        --dry-run
+
+# ---------------------------------------------------------------------------
+# Staging via kubectl port-forward (bypasses IAP)
+# Prereq: kubectl -n metabase-analytics port-forward svc/metabase-analytics 8080:80
+# ---------------------------------------------------------------------------
+
+# Report: staging explore via port-forward (no IAP)
+stg-pf-explore:
+    PROJECT_NAME=passculture-data-ehp ENV_SHORT_NAME=stg \
+    METABASE_HOST=http://localhost:8080 \
+    uv run python scripts/stg_explore.py
+
+# Dry-run migration via port-forward (no IAP) for the whole of metabase
+stg-pf-full-dry-run LEGACY_TABLE NEW_TABLE LEGACY_SCHEMA NEW_SCHEMA DATABASE_NAME:
+    PROJECT_NAME=passculture-data-ehp ENV_SHORT_NAME=stg \
+    METABASE_HOST=http://localhost:8080 \
+    uv run python main.py migrate \
+        --legacy-table-name "{{LEGACY_TABLE}}" \
+        --new-table-name "{{NEW_TABLE}}" \
+        --legacy-schema-name "{{LEGACY_SCHEMA}}" \
+        --new-schema-name "{{NEW_SCHEMA}}" \
+        --database-name "{{DATABASE_NAME}}" \
+        --dry-run
+
+# Dry-run migration via port-forward (no IAP) for a single card
+stg-pf-for-card-id-only-dry-run LEGACY_TABLE NEW_TABLE LEGACY_SCHEMA NEW_SCHEMA CARD_IDS DATABASE_NAME:
+    PROJECT_NAME=passculture-data-ehp ENV_SHORT_NAME=stg \
+    METABASE_HOST=http://localhost:8080 \
+    uv run python main.py migrate \
+        --legacy-table-name "{{LEGACY_TABLE}}" \
+        --new-table-name "{{NEW_TABLE}}" \
+        --legacy-schema-name "{{LEGACY_SCHEMA}}" \
+        --new-schema-name "{{NEW_SCHEMA}}" \
+        --card-ids "{{CARD_IDS}}" \
+        --database-name "{{DATABASE_NAME}}" \
+        --dry-run
+
+# Execute migration via port-forward (no IAP)
+stg-pf-for-card-id-only-execute LEGACY_TABLE NEW_TABLE LEGACY_SCHEMA NEW_SCHEMA CARD_IDS DATABASE_NAME:
+    PROJECT_NAME=passculture-data-ehp ENV_SHORT_NAME=stg \
+    METABASE_HOST=http://localhost:8080 \
+    uv run python main.py migrate \
+        --legacy-table-name "{{LEGACY_TABLE}}" \
+        --new-table-name "{{NEW_TABLE}}" \
+        --legacy-schema-name "{{LEGACY_SCHEMA}}" \
+        --new-schema-name "{{NEW_SCHEMA}}" \
+        --card-ids "{{CARD_IDS}}" \
+        --database-name "{{DATABASE_NAME}}"

@@ -36,8 +36,8 @@ default_dag_args = {
 with DAG(
     DAG_NAME,
     default_args=default_dag_args,
-    description="Switch metabase tables following dbt migration",
-    schedule=None,
+    description="Migrate Metabase cards after BigQuery table/column renames",
+    schedule_interval=None,
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -47,8 +47,8 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "metabase_card_type": Param(
-            default="native",
+        "database_name": Param(
+            default="Pass Culture BigQuery",
             type="string",
         ),
         "legacy_table_name": Param(
@@ -66,6 +66,10 @@ with DAG(
         "new_schema_name": Param(
             default=BIGQUERY_ANALYTICS_DATASET,
             type="string",
+        ),
+        "dry_run": Param(
+            default=False,
+            type="boolean",
         ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
@@ -94,12 +98,13 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="""
-        uv run python main.py \
-        --metabase-card-type {{ params.metabase_card_type }} \
+        uv run main.py migrate \
+        --database-name {{ params.database_name }} \
         --legacy-table-name {{ params.legacy_table_name }} \
         --new-table-name {{ params.new_table_name }} \
         --legacy-schema-name {{ params.legacy_schema_name }} \
-        --new-schema-name {{ params.new_schema_name }}
+        --new-schema-name {{ params.new_schema_name }} \
+        {% if params.dry_run %}--dry-run{% endif %}
         """,
     )
 

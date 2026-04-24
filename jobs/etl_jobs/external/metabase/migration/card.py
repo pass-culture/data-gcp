@@ -275,16 +275,16 @@ def _replace_qualified_table(sql: str, pattern: re.Pattern, new_schema: str, new
         # Check which pattern matched
         if match.group(2) is not None:
             # Option A: Full qualified backticks `schema.table`
-            return left_boundary + "`" + new_schema + "." + new_table + "`"
+            return f"{left_boundary}`{new_schema}.{new_table}`"
         else:
             # Option B: Component backticks (groups 3-6)
             schema_open = match.group(3) or ""
             schema_close = match.group(4) or ""
             table_open = match.group(5) or ""
             table_close = match.group(6) or ""
-            return left_boundary + schema_open + new_schema + schema_close + "." + table_open + new_table + table_close
+            return f"{left_boundary}{schema_open}{new_schema}{schema_close}.{table_open}{new_table}{table_close}"
 
-    return pattern.sub(replacer, sql)
+    return str(pattern.sub(replacer, sql))
 
 
 def _replace_unqualified_table_with_warning(sql: str, old_table: str, new_table: str, schema_context: str) -> str:

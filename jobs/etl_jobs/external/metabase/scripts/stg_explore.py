@@ -1,7 +1,7 @@
 """Staging Metabase exploration script (read-only).
 
 Connects to the staging Metabase, builds a card dependency cache via the API,
-cross-references with data/mappings.json, and reports which cards reference
+cross-references with data/tables-to-migrate.json, and reports which cards reference
 each mapped table.
 
 Usage:
@@ -26,7 +26,7 @@ if _PROJECT_ROOT not in sys.path:
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-MAPPINGS_PATH = Path(__file__).resolve().parent.parent / "data" / "mappings.json"
+TABLES_TO_MIGRATE_PATH = Path(__file__).resolve().parent.parent / "data" / "tables-to-migrate.json"
 
 
 def main() -> None:
@@ -36,16 +36,26 @@ def main() -> None:
     from config import METABASE_API_USERNAME, get_iap_bearer_token, get_metabase_host, get_metabase_password
     from discovery.metabase import build_card_dependency_cache
 
-    # --- Load mappings ---
-    if not MAPPINGS_PATH.exists():
-        logger.error("mappings.json not found at %s", MAPPINGS_PATH)
+    # --- Load tables to migrate ---
+    if not TABLES_TO_MIGRATE_PATH.exists():
+        logger.error("tables-to-migrate.json not found at %s", TABLES_TO_MIGRATE_PATH)
         sys.exit(1)
 
-    with open(MAPPINGS_PATH) as f:
-        all_mappings: dict[str, dict[str, str]] = json.load(f)
+    from api.models import TablesToMigrate
 
-    mapped_table_names = set(all_mappings.keys())
-    logger.info("Loaded %d tables from mappings.json", len(mapped_table_names))
+    with open(TABLES_TO_MIGRATE_PATH) as f:
+        raw = json.load(f)
+
+    tables_to_migrate = TablesToMigrate.model_validate(raw)
+
+    # Build lookup: table_name → (schema, num_column_renames)
+    mapped_tables: dict[str, tuple[str, int]] = {}
+    for key, entry in tables_to_migrate.root.items():
+        schema, table_name = key.split(".")
+        num_renames = len(entry.columns_to_migrate) if entry.columns_to_migrate else 0
+        mapped_tables[table_name] = (schema, num_renames)
+
+    logger.info("Loaded %d tables from tables-to-migrate.json", len(mapped_tables))
 
     # --- Authenticate ---
     metabase_host = get_metabase_host()
@@ -77,18 +87,18 @@ def main() -> None:
     print("\n=== Staging Metabase Impact Report ===\n")
 
     for table_name in sorted(cache.keys()):
-        if table_name not in mapped_table_names:
+        if table_name not in mapped_tables:
             continue
 
         dep = cache[table_name]
-        num_renames = len(all_mappings.get(table_name, {}))
+        schema, num_renames = mapped_tables[table_name]
 
         native_cards = [cid for cid, info in dep.cards_using_table.items() if info.card_type == "native"]
         qb_cards = [cid for cid, info in dep.cards_using_table.items() if info.card_type == "query_builder"]
 
         total_cards = len(native_cards) + len(qb_cards)
         print(f"{table_name} (schema: {dep.schema_}, table_id: {dep.id})")
-        print(f"  {num_renames} column renames in mappings.json")
+        print(f"  {num_renames} column renames in tables-to-migrate.json")
         print(f"  {total_cards} cards reference this table")
         if native_cards:
             ids_str = ", ".join(native_cards[:10])

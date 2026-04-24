@@ -12,6 +12,7 @@ from treelib import Tree
 from config import (
     BIGQUERY_ANALYTICS_DATASET,
     GCP_PROJECT,
+    LOADING_FILTERS,
     REPORTS,
     SHEET_DEFINITIONS,
     SOURCE_TABLES,
@@ -485,6 +486,9 @@ class ExportSession:
         project_id = config.get("project", GCP_PROJECT)
         log_print.info(f"⏳ Loading {table_name} from BigQuery...")
         query = f"SELECT * FROM `{project_id}.{dataset}.{table_name}`"
+        query_filters = [f"({col} {cond})" for col, cond in LOADING_FILTERS.items()]
+        if query_filters:
+            query += " WHERE " + " AND ".join(query_filters)
         with warnings.catch_warnings():
             warnings.filterwarnings(
                 "ignore", message=".*BigQuery Storage module not found.*"

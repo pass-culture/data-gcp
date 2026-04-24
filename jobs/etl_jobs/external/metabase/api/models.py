@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, RootModel, model_validator
 from pydantic import Field as PydanticField
 
 
@@ -110,3 +110,48 @@ class TableDependency(BaseModel):
     id: int
     schema_: str = PydanticField(alias="schema")
     cards_using_table: dict[str, CardDependencyInfo]
+
+
+class TableMigrationEntry(BaseModel):
+    """A single table migration entry in tables-to-migrate.json.
+
+    Both fields are optional individually, but at least one must be present
+    (validated at model level).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    target_table: str | None = None
+    columns_to_migrate: dict[str, str] | None = None
+
+
+class TablesToMigrate(RootModel[dict[str, TableMigrationEntry]]):
+    """Root model for data/tables-to-migrate.json.
+
+    Keys are "legacy_schema.legacy_table", values describe the migration.
+    Validates:
+    - Each key contains exactly one dot (schema.table format)
+    - Each entry has at least one of target_table or columns_to_migrate
+    - target_table (if present) contains exactly one dot (schema.table format)
+    """
+
+    @model_validator(mode="after")
+    def validate_entries(self) -> TablesToMigrate:
+        """Validate all entries in the migration configuration."""
+        for key, entry in self.root.items():
+            # Validate key format: schema.table
+            if key.count(".") != 1:
+                msg = f"Key '{key}' must have format 'schema.table' (exactly one dot)"
+                raise ValueError(msg)
+
+            # At least one field must be present
+            if entry.target_table is None and entry.columns_to_migrate is None:
+                msg = f"Entry '{key}' must have at least one of 'target_table' or 'columns_to_migrate'"
+                raise ValueError(msg)
+
+            # Validate target_table format if present
+            if entry.target_table is not None and entry.target_table.count(".") != 1:
+                msg = f"Entry '{key}': target_table '{entry.target_table}' must have format 'schema.table' (exactly one dot)"
+                raise ValueError(msg)
+
+        return self

@@ -30,7 +30,9 @@ htmlcov/
 
 # Secrets
 secrets/
-*.json
+
+# Generated cache files (not for version control)
+data/cache_*.json
 
 # UV lock file
 #uv.lock

@@ -116,6 +116,7 @@ docker-test-migrate:
     uv run python main.py migrate \
         --tables-file docker/tables-to-migrate-test.json \
         --card-ids "$CARD_IDS" \
+        --database-name "Sample DB" \
         --dry-run
 
 # Test that deleted tables appear as inactive via the metadata API

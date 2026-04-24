@@ -17,6 +17,13 @@ from pathlib import Path
 from typing import Any
 
 import typer
+from pydantic import ValidationError
+
+from api.client import DATABASE_TABLES_CACHE_PATH, MetabaseClient
+from api.models import Card, TablesToMigrate
+from config import METABASE_API_USERNAME, get_iap_bearer_token, get_metabase_host, get_metabase_password
+from discovery.mapping import build_field_mapping, build_table_mapping
+from migration.card import _get_stage_type, migrate_card
 
 app = typer.Typer(name="metabase-migration", help="Migrate Metabase cards after BigQuery table/column renames.")
 
@@ -29,7 +36,7 @@ def _callback() -> None:
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-MAPPINGS_PATH = Path("data/mappings.json")
+TABLES_TO_MIGRATE_PATH = Path("data/tables-to-migrate.json")
 
 
 def _card_references_legacy_table(
@@ -73,18 +80,16 @@ def _card_references_legacy_table(
 
 @app.command()
 def migrate(
-    legacy_table_name: str = typer.Option(..., help="Name of the legacy table in BigQuery"),
-    new_table_name: str = typer.Option(..., help="Name of the new table in BigQuery"),
-    legacy_schema_name: str = typer.Option(..., help="Schema (dataset) of the legacy table"),
-    new_schema_name: str = typer.Option(..., help="Schema (dataset) of the new table"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show diffs without writing changes to Metabase"),
-    mappings_file: str = typer.Option(str(MAPPINGS_PATH), "--mappings-file", help="Path to column mappings JSON file"),
+    tables_file: str = typer.Option(
+        str(TABLES_TO_MIGRATE_PATH), "--tables-file", help="Path to tables-to-migrate JSON file"
+    ),
     card_ids_str: str = typer.Option(
         "", "--card-ids", help="Comma-separated card IDs to migrate (skips API discovery)"
     ),
     database_name: str = typer.Option(..., help="Name of the Metabase database to search tables in"),
 ) -> None:
-    """Migrate Metabase cards from a legacy table to a new table.
+    """Migrate Metabase cards from legacy tables to new tables.
 
     Discovers impacted cards via the Metabase API, builds field mappings
     by matching column names, and updates each card.
@@ -92,26 +97,25 @@ def migrate(
     Supports both native SQL cards and query builder cards in a
     single pass. Use --dry-run to preview changes without writing.
     """
-    # Late imports to avoid import errors when just showing --help
-    from api.client import DATABASE_TABLES_CACHE_PATH, MetabaseClient
-    from api.models import Card
-    from config import METABASE_API_USERNAME, get_iap_bearer_token, get_metabase_host, get_metabase_password
-    from discovery.mapping import build_field_mapping, build_table_mapping
-    from migration.card import _get_stage_type, migrate_card
-
     # Determine if we're using local card IDs (no API discovery)
     use_api_discovery = not card_ids_str
 
-    # --- Load column mappings ---
-    column_mapping: dict[str, str] = {}
-    mappings_path = Path(mappings_file)
-    if mappings_path.exists():
-        with open(mappings_path) as f:
-            all_mappings = json.load(f)
-            column_mapping = all_mappings.get(legacy_table_name, {})
-        logger.info("Loaded %d column mappings for table '%s'", len(column_mapping), legacy_table_name)
-    else:
-        logger.warning("No mappings file found at %s", mappings_path)
+    # --- Load and validate tables-to-migrate JSON ---
+    tables_path = Path(tables_file)
+    if not tables_path.exists():
+        logger.error("Tables-to-migrate file not found at %s", tables_path)
+        raise typer.Exit(code=1)
+
+    with open(tables_path) as f:
+        raw = json.load(f)
+
+    try:
+        tables_to_migrate = TablesToMigrate.model_validate(raw)
+    except ValidationError as e:
+        logger.error("Invalid tables-to-migrate file: %s", e)
+        raise typer.Exit(code=1)
+
+    logger.info("Loaded %d table migration entries", len(tables_to_migrate.root))
 
     # --- Connect to services ---
     logger.info("Connecting to Metabase...")
@@ -133,142 +137,190 @@ def migrate(
 
     table_catalog = client.build_table_catalog(database_id)
 
-    # --- Discover impacted cards ---
-    if card_ids_str:
-        requested_ids = [int(cid.strip()) for cid in card_ids_str.split(",") if cid.strip()]
-        logger.info("Using provided card IDs (API discovery skipped)")
+    # --- Per-table migration loop ---
+    any_table_failed = False
+    global_success = 0
+    global_failure = 0
 
-        # Fetch each card to verify it exists
-        found_cards: list[Card] = []
-        not_found_ids: list[int] = []
-        for cid in requested_ids:
-            try:
-                found_cards.append(client.get_card(cid))
-            except Exception:
-                not_found_ids.append(cid)
+    for legacy_key, entry in tables_to_migrate.root.items():
+        # Parse legacy schema and table from key
+        legacy_schema, legacy_table = legacy_key.split(".")
 
-        if not_found_ids:
-            logger.warning(
-                "Found %d cards out of %d provided (card IDs not found: %s)",
+        # Determine new schema and table
+        if entry.target_table is not None:
+            new_schema, new_table = entry.target_table.split(".")
+        else:
+            # columns-only migration — same table
+            new_schema, new_table = legacy_schema, legacy_table
+
+        column_mapping = entry.columns_to_migrate or {}
+
+        # Log migration type
+        if entry.target_table is None:
+            logger.info("Table '%s': columns-only migration (%d columns)", legacy_key, len(column_mapping))
+        elif entry.columns_to_migrate is None:
+            logger.info("Table '%s': table rename only → %s", legacy_key, entry.target_table)
+        else:
+            logger.info("Table '%s' → '%s' (%d columns)", legacy_key, entry.target_table, len(column_mapping))
+
+        # --- Discover impacted cards ---
+        if card_ids_str:
+            requested_ids = [int(cid.strip()) for cid in card_ids_str.split(",") if cid.strip()]
+            logger.info("Using provided card IDs (API discovery skipped)")
+
+            # Fetch each card to verify it exists
+            found_cards: list[Card] = []
+            not_found_ids: list[int] = []
+            for cid in requested_ids:
+                try:
+                    found_cards.append(client.get_card(cid))
+                except Exception:
+                    not_found_ids.append(cid)
+
+            if not_found_ids:
+                logger.warning(
+                    "Found %d cards out of %d provided (card IDs not found: %s)",
+                    len(found_cards),
+                    len(requested_ids),
+                    not_found_ids,
+                )
+            else:
+                logger.info("All %d cards found", len(found_cards))
+
+            # Resolve legacy table ID early so we can check which cards are impacted
+            legacy_table_id_for_check = client.find_table_id(legacy_table, legacy_schema)
+
+            # Filter to only cards that actually reference the legacy table
+            impacted_cards = [
+                card
+                for card in found_cards
+                if _card_references_legacy_table(card, legacy_table, legacy_schema, legacy_table_id_for_check)
+            ]
+            card_ids = [card.id for card in impacted_cards if card.id is not None]
+            logger.info(
+                "%d cards impacted out of %d found for table '%s'",
+                len(card_ids),
                 len(found_cards),
-                len(requested_ids),
-                not_found_ids,
+                legacy_key,
             )
         else:
-            logger.info("All %d cards found", len(found_cards))
+            from discovery.metabase import build_card_dependency_cache, get_impacted_cards_from_cache
 
-        # Resolve legacy table ID early so we can check which cards are impacted
-        legacy_table_id_for_check = client.find_table_id(legacy_table_name, legacy_schema_name)
+            logger.info("Discovering impacted cards via Metabase API for table '%s'...", legacy_key)
+            cache = build_card_dependency_cache(client, table_catalog)
+            card_ids = get_impacted_cards_from_cache(legacy_table, cache)
+            logger.info("Found %d impacted cards for table '%s'", len(card_ids), legacy_key)
 
-        # Filter to only cards that actually reference the legacy table
-        impacted_cards = [
-            card
-            for card in found_cards
-            if _card_references_legacy_table(card, legacy_table_name, legacy_schema_name, legacy_table_id_for_check)
-        ]
-        card_ids = [card.id for card in impacted_cards if card.id is not None]
-        logger.info(
-            "%d cards impacted out of %d found",
-            len(card_ids),
-            len(found_cards),
+        if not card_ids:
+            logger.info("No cards to migrate for table '%s'. Skipping.", legacy_key)
+            continue
+
+        # --- Build mappings ---
+        logger.info("Building field mappings for table '%s'...", legacy_key)
+        legacy_table_id = client.find_table_id(legacy_table, legacy_schema)
+        new_table_id = client.find_table_id(new_table, new_schema)
+
+        if legacy_table_id is None:
+            logger.error("Legacy table '%s.%s' not found in Metabase", legacy_schema, legacy_table)
+            any_table_failed = True
+            continue
+
+        if new_table_id is None:
+            logger.error("New table '%s.%s' not found in Metabase", new_schema, new_table)
+            any_table_failed = True
+            continue
+
+        field_mapping = build_field_mapping(
+            metabase_client=client,
+            legacy_table_id=legacy_table_id,
+            new_table_id=new_table_id,
+            column_mapping=column_mapping,
         )
-    else:
-        from discovery.metabase import build_card_dependency_cache, get_impacted_cards_from_cache
+        table_mapping = build_table_mapping(legacy_table_id, new_table_id)
 
-        logger.info("Discovering impacted cards via Metabase API...")
-        cache = build_card_dependency_cache(client, table_catalog)
-        card_ids = get_impacted_cards_from_cache(legacy_table_name, cache)
-        logger.info("Found %d impacted cards", len(card_ids))
+        logger.info("Mappings for '%s': %d fields, %d tables", legacy_key, len(field_mapping), len(table_mapping))
 
-    if not card_ids:
-        logger.info("No cards to migrate. Done.")
-        return
+        # --- Migrate cards ---
+        table_logs: list[dict[str, Any]] = []
+        table_success = 0
+        table_failure = 0
 
-    # --- Build mappings ---
-    logger.info("Building field mappings...")
-    legacy_table_id = client.find_table_id(legacy_table_name, legacy_schema_name)
-    new_table_id = client.find_table_id(new_table_name, new_schema_name)
+        for card_id in card_ids:
+            log_entry: dict[str, Any] = {
+                "card_id": card_id,
+                "legacy_table_name": legacy_table,
+                "new_table_name": new_table,
+                "timestamp": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
+                "dry_run": dry_run,
+            }
 
-    if legacy_table_id is None:
-        logger.error("Legacy table '%s.%s' not found in Metabase", legacy_schema_name, legacy_table_name)
-        raise typer.Exit(code=1)
+            try:
+                original_card = client.get_card(card_id)
+                log_entry["card_name"] = original_card.name
+                log_entry["card_type"] = _get_stage_type(original_card) or "unknown"
 
-    if new_table_id is None:
-        logger.error("New table '%s.%s' not found in Metabase", new_schema_name, new_table_name)
-        raise typer.Exit(code=1)
+                migrated_card = migrate_card(
+                    card=original_card,
+                    field_mapping=field_mapping,
+                    table_mapping=table_mapping,
+                    column_mapping=column_mapping,
+                    old_schema=legacy_schema,
+                    new_schema=new_schema,
+                    old_table=legacy_table,
+                    new_table=new_table,
+                )
 
-    field_mapping = build_field_mapping(
-        metabase_client=client,
-        legacy_table_id=legacy_table_id,
-        new_table_id=new_table_id,
-        column_mapping=column_mapping,
-    )
-    table_mapping = build_table_mapping(legacy_table_id, new_table_id)
+                if dry_run:
+                    _print_diff(original_card, migrated_card, card_id)
+                    log_entry["success"] = True
+                else:
+                    client.put_card(card_id, migrated_card)
+                    logger.info("✓ Migrated card %d (%s)", card_id, original_card.name)
+                    log_entry["success"] = True
 
-    logger.info("Mappings: %d fields, %d tables", len(field_mapping), len(table_mapping))
+                table_success += 1
 
-    # --- Migrate cards ---
-    transition_logs: list[dict[str, Any]] = []
-    success_count = 0
-    failure_count = 0
+            except Exception as e:
+                logger.error("✗ Failed to migrate card %d: %s", card_id, e)
+                log_entry["success"] = False
+                log_entry["error"] = str(e)
+                table_failure += 1
 
-    for card_id in card_ids:
-        log_entry: dict[str, Any] = {
-            "card_id": card_id,
-            "legacy_table_name": legacy_table_name,
-            "new_table_name": new_table_name,
-            "timestamp": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
-            "dry_run": dry_run,
-        }
+            table_logs.append(log_entry)
 
-        try:
-            original_card = client.get_card(card_id)
-            log_entry["card_name"] = original_card.name
-            log_entry["card_type"] = _get_stage_type(original_card) or "unknown"
+        # Track table-level results
+        if table_failure > 0:
+            any_table_failed = True
+        global_success += table_success
+        global_failure += table_failure
 
-            migrated_card = migrate_card(
-                card=original_card,
-                field_mapping=field_mapping,
-                table_mapping=table_mapping,
-                column_mapping=column_mapping,
-                old_schema=legacy_schema_name,
-                new_schema=new_schema_name,
-                old_table=legacy_table_name,
-                new_table=new_table_name,
-            )
+        # --- Log results to BigQuery per table ---
+        if not dry_run and table_logs and use_api_discovery:
+            from google.cloud import bigquery
 
-            if dry_run:
-                _print_diff(original_card, migrated_card, card_id)
-                log_entry["success"] = True
-            else:
-                client.put_card(card_id, migrated_card)
-                logger.info("✓ Migrated card %d (%s)", card_id, original_card.name)
-                log_entry["success"] = True
+            from config import INT_METABASE_DATASET, PROJECT_NAME
 
-            success_count += 1
+            bq_client = bigquery.Client(project=PROJECT_NAME)
+            _log_to_bigquery(bq_client, table_logs, PROJECT_NAME, INT_METABASE_DATASET)
 
-        except Exception as e:
-            logger.error("✗ Failed to migrate card %d: %s", card_id, e)
-            log_entry["success"] = False
-            log_entry["error"] = str(e)
-            failure_count += 1
+        logger.info(
+            "Table '%s' complete: %d succeeded, %d failed",
+            legacy_key,
+            table_success,
+            table_failure,
+        )
 
-        transition_logs.append(log_entry)
-
-    # --- Log results ---
-    if not dry_run and transition_logs and use_api_discovery:
-        from google.cloud import bigquery
-
-        from config import INT_METABASE_DATASET, PROJECT_NAME
-
-        bq_client = bigquery.Client(project=PROJECT_NAME)
-        _log_to_bigquery(bq_client, transition_logs, PROJECT_NAME, INT_METABASE_DATASET)
-
-    # --- Summary ---
+    # --- Final summary ---
     mode = "DRY RUN" if dry_run else "MIGRATION"
-    logger.info("%s COMPLETE: %d succeeded, %d failed, %d total", mode, success_count, failure_count, len(card_ids))
+    logger.info(
+        "%s COMPLETE: %d tables processed, %d cards succeeded, %d cards failed",
+        mode,
+        len(tables_to_migrate.root),
+        global_success,
+        global_failure,
+    )
 
-    if failure_count > 0:
+    if any_table_failed:
         raise typer.Exit(code=1)
 
 

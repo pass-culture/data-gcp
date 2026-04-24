@@ -13,6 +13,8 @@ import google.auth
 import google.auth.transport.requests
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
+from google.oauth2 import id_token
+from google.oauth2 import service_account as sa_module
 
 logger = logging.getLogger(__name__)
 
@@ -115,8 +117,6 @@ def get_iap_bearer_token() -> str | None:
 
     # Prefer explicit SA key file (local developer workflow)
     if sa_key_path.is_file():
-        from google.oauth2 import service_account as sa_module
-
         id_token_creds = sa_module.IDTokenCredentials.from_service_account_file(
             str(sa_key_path), target_audience=client_id
         )
@@ -133,8 +133,6 @@ def get_iap_bearer_token() -> str | None:
     if hasattr(credentials, "id_token") and credentials.id_token:
         logger.info("Obtained IAP bearer token from user credentials")
         return str(credentials.id_token)
-
-    from google.oauth2 import id_token
 
     token: str = id_token.fetch_id_token(request, client_id)
     logger.info("Obtained IAP bearer token for audience %s...", client_id[:20])

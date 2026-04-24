@@ -5,7 +5,6 @@ from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
 from common import macros
 from common.config import (
-    BIGQUERY_ANALYTICS_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -51,21 +50,10 @@ with DAG(
             default="Pass Culture BigQuery",
             type="string",
         ),
-        "legacy_table_name": Param(
+        "card_ids": Param(
             default="",
             type="string",
-        ),
-        "new_table_name": Param(
-            default="",
-            type="string",
-        ),
-        "legacy_schema_name": Param(
-            default=BIGQUERY_ANALYTICS_DATASET,
-            type="string",
-        ),
-        "new_schema_name": Param(
-            default=BIGQUERY_ANALYTICS_DATASET,
-            type="string",
+            description="Comma-separated card IDs to migrate (optional, empty = all cards)",
         ),
         "dry_run": Param(
             default=False,
@@ -100,10 +88,7 @@ with DAG(
         command="""
         uv run python main.py migrate \
         --database-name "{{ params.database_name }}" \
-        --legacy-table-name "{{ params.legacy_table_name }}" \
-        --new-table-name "{{ params.new_table_name }}" \
-        --legacy-schema-name "{{ params.legacy_schema_name }}" \
-        --new-schema-name "{{ params.new_schema_name }}" \
+        {% if params.card_ids %}--card-ids "{{ params.card_ids }}"{% endif %} \
         {% if params.dry_run %}--dry-run{% endif %}
         """,
     )

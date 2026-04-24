@@ -768,4 +768,3 @@ class TestSchemaAwareDiscovery:
         assert _sql_references_table(sql, "venue_provider", "analytics_stg")
         assert _sql_references_table(sql, "venue_provider", "raw_data")
         assert not _sql_references_table(sql, "venue_provider", "production")
-

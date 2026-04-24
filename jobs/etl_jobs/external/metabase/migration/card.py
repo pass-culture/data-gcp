@@ -252,12 +252,12 @@ def _create_qualified_table_pattern(schema_name: str, table_name: str) -> re.Pat
     pattern = re.compile(
         r"([\s(`\"\[,]|^)"  # Group 1: Left boundary
         r"(?:"  # Non-capturing group for alternation
-            # Option A: Full qualified backticks `schema.table`
-            r"`(" + escaped_schema + r"\." + escaped_table + r")`"
-            r"|"  # OR
-            # Option B: Component-level backticks or no backticks
-            r"(`?)" + escaped_schema + r"(`?)\."
-            r"(`?)" + escaped_table + r"(`?)"
+        # Option A: Full qualified backticks `schema.table`
+        r"`(" + escaped_schema + r"\." + escaped_table + r")`"
+        r"|"  # OR
+        # Option B: Component-level backticks or no backticks
+        r"(`?)" + escaped_schema + r"(`?)\."
+        r"(`?)" + escaped_table + r"(`?)"
         r")"
         r"(?=[.\s,)`\"\]]|$)",  # Right lookahead WITH DOT
         re.IGNORECASE,
@@ -282,8 +282,7 @@ def _replace_qualified_table(sql: str, pattern: re.Pattern, new_schema: str, new
             schema_close = match.group(4) or ""
             table_open = match.group(5) or ""
             table_close = match.group(6) or ""
-            return (left_boundary + schema_open + new_schema + schema_close + "." +
-                    table_open + new_table + table_close)
+            return left_boundary + schema_open + new_schema + schema_close + "." + table_open + new_table + table_close
 
     return pattern.sub(replacer, sql)
 
@@ -300,7 +299,8 @@ def _replace_unqualified_table_with_warning(sql: str, old_table: str, new_table:
         r"([\s(`\"\[,]|^)"  # Group 1: Left boundary
         r"(?<!\.)"  # Not preceded by dot (would be schema.table)
         r"(?<!`\.)"  # Not preceded by backtick+dot
-        r"`?" + escaped_table + r"`?" r"(?=[\s,)`\"\]]|$)",
+        r"`?" + escaped_table + r"`?"
+        r"(?=[\s,)`\"\]]|$)",
         re.IGNORECASE,
     )
 

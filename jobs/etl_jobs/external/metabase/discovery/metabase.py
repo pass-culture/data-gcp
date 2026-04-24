@@ -193,4 +193,3 @@ def _create_qualified_table_pattern(schema_name: str, table_name: str) -> re.Pat
         re.IGNORECASE,
     )
     return pattern
-

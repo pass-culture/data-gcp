@@ -259,7 +259,7 @@ def _create_qualified_table_pattern(schema_name: str, table_name: str) -> re.Pat
         r"(`?)" + escaped_schema + r"(`?)\."
         r"(`?)" + escaped_table + r"(`?)"
         r")"
-        r"(?=[.\s,)`\"\]]|$)",  # Right lookahead WITH DOT
+        r"(?=[.\s,)\"\]]|$)",  # Right lookahead WITHOUT backtick
         re.IGNORECASE,
     )
     return pattern
@@ -299,6 +299,7 @@ def _replace_unqualified_table_with_warning(sql: str, old_table: str, new_table:
         r"([\s(`\"\[,]|^)"  # Group 1: Left boundary
         r"(?<!\.)"  # Not preceded by dot (would be schema.table)
         r"(?<!`\.)"  # Not preceded by backtick+dot
+        r"(?<!\.`)"  # Not preceded by dot+backtick (for .`table` pattern)
         r"`?" + escaped_table + r"`?"
         r"(?=[\s,)`\"\]]|$)",
         re.IGNORECASE,

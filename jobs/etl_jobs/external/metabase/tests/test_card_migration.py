@@ -630,7 +630,7 @@ class TestSchemaAwareSQLReplacement:
         )
 
         # Then
-        expected = "FROM analytics.venue_provider"
+        expected = "FROM `analytics`.`venue_provider`"
         assert expected in result
 
     def test_schema_prefix_exact_match(self) -> None:

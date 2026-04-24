@@ -1,6 +1,6 @@
 {
-  "external_reporting_stg.individual": {
-    "target_table": "analytics_stg.external_reporting_individual"
+  "analytics_stg.external_reporting_individual": {
+    "target_table": "external_reporting_stg.individual"
   },
   "analytics_stg.firebase_pro_visits": {
     "columns_to_migrate": {

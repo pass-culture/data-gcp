@@ -273,7 +273,6 @@ sources:
       - name: item_embedding_reduced_16
       - name: item_embedding_reduced_5
       - name: delta_artist
-      - name: delta_artist_alias
       - name: delta_product_artist_link
       - name: similar_artist
       - name: unconstrained_item_cluster

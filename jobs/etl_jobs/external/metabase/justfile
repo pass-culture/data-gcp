@@ -102,7 +102,6 @@ docker-prepare-migration:
 docker-test-migrate:
     #!/usr/bin/env bash
     set -euo pipefail
-    # Get card IDs from local Metabase
     TOKEN=$(curl -sf http://localhost:3000/api/session \
         -H "Content-Type: application/json" \
         -d '{"username":"admin@test.com","password":"Testpass1"}' \
@@ -115,10 +114,6 @@ docker-test-migrate:
     METABASE_API_USERNAME="admin@test.com" \
     METABASE_PASSWORD="Testpass1" \
     uv run python main.py migrate \
-        --legacy-table-name old_user_stats \
-        --new-table-name enriched_user_data \
-        --legacy-schema-name analytics \
-        --new-schema-name analytics \
         --card-ids "$CARD_IDS" \
         --dry-run
 
@@ -144,65 +139,65 @@ docker-fetch-openapi:
 # Staging testing (requires: gcloud auth application-default login)
 # ---------------------------------------------------------------------------
 
-# Report: list staging tables matching mappings.json and find referencing cards
+# Report: list staging tables matching tables-to-migrate.json and find referencing cards
 stg-explore:
-    PROJECT_NAME=passculture-data-ehp ENV_SHORT_NAME=stg uv run python scripts/stg_explore.py
+    #!/usr/bin/env bash
+    set -a
+    [ -f .env ] && source .env
+    set +a
+    uv run python scripts/stg_explore.py
 
 # Dry-run migration against staging Metabase (read-only, no writes)
-stg-dry-run LEGACY_TABLE NEW_TABLE LEGACY_SCHEMA NEW_SCHEMA CARD_IDS:
-    PROJECT_NAME=passculture-data-ehp ENV_SHORT_NAME=stg \
+stg-dry-run CARD_IDS:
+    #!/usr/bin/env bash
+    set -a
+    [ -f .env ] && source .env
+    set +a
     uv run python main.py migrate \
-        --legacy-table-name "{{LEGACY_TABLE}}" \
-        --new-table-name "{{NEW_TABLE}}" \
-        --legacy-schema-name "{{LEGACY_SCHEMA}}" \
-        --new-schema-name "{{NEW_SCHEMA}}" \
         --card-ids "{{CARD_IDS}}" \
         --dry-run
 
 # ---------------------------------------------------------------------------
 # Staging via kubectl port-forward (bypasses IAP)
-# Prereq: kubectl -n metabase-analytics port-forward svc/metabase-analytics 8080:80
+# Prereq: kubectl -n metabase-analytics port-forward svc/metabase-analytics 8082:80
+# Then: source .env to load METABASE_HOST and DATABASE_NAME
 # ---------------------------------------------------------------------------
 
 # Report: staging explore via port-forward (no IAP)
 stg-pf-explore:
-    PROJECT_NAME=passculture-data-ehp ENV_SHORT_NAME=stg \
-    METABASE_HOST=http://localhost:8080 \
+    #!/usr/bin/env bash
+    set -a
+    [ -f .env ] && source .env
+    set +a
     uv run python scripts/stg_explore.py
 
 # Dry-run migration via port-forward (no IAP) for the whole of metabase
-stg-pf-full-dry-run LEGACY_TABLE NEW_TABLE LEGACY_SCHEMA NEW_SCHEMA DATABASE_NAME:
-    PROJECT_NAME=passculture-data-ehp ENV_SHORT_NAME=stg \
-    METABASE_HOST=http://localhost:8080 \
+stg-pf-full-dry-run DATABASE_NAME:
+    #!/usr/bin/env bash
+    set -a
+    [ -f .env ] && source .env
+    set +a
     uv run python main.py migrate \
-        --legacy-table-name "{{LEGACY_TABLE}}" \
-        --new-table-name "{{NEW_TABLE}}" \
-        --legacy-schema-name "{{LEGACY_SCHEMA}}" \
-        --new-schema-name "{{NEW_SCHEMA}}" \
         --database-name "{{DATABASE_NAME}}" \
         --dry-run
 
-# Dry-run migration via port-forward (no IAP) for a single card
-stg-pf-for-card-id-only-dry-run LEGACY_TABLE NEW_TABLE LEGACY_SCHEMA NEW_SCHEMA CARD_IDS DATABASE_NAME:
-    PROJECT_NAME=passculture-data-ehp ENV_SHORT_NAME=stg \
-    METABASE_HOST=http://localhost:8080 \
+# Dry-run migration via port-forward (no IAP) for specific cards
+stg-pf-for-card-id-only-dry-run CARD_IDS DATABASE_NAME:
+    #!/usr/bin/env bash
+    set -a
+    [ -f .env ] && source .env
+    set +a
     uv run python main.py migrate \
-        --legacy-table-name "{{LEGACY_TABLE}}" \
-        --new-table-name "{{NEW_TABLE}}" \
-        --legacy-schema-name "{{LEGACY_SCHEMA}}" \
-        --new-schema-name "{{NEW_SCHEMA}}" \
         --card-ids "{{CARD_IDS}}" \
         --database-name "{{DATABASE_NAME}}" \
         --dry-run
 
 # Execute migration via port-forward (no IAP)
-stg-pf-for-card-id-only-execute LEGACY_TABLE NEW_TABLE LEGACY_SCHEMA NEW_SCHEMA CARD_IDS DATABASE_NAME:
-    PROJECT_NAME=passculture-data-ehp ENV_SHORT_NAME=stg \
-    METABASE_HOST=http://localhost:8080 \
+stg-pf-for-card-id-only-execute CARD_IDS DATABASE_NAME:
+    #!/usr/bin/env bash
+    set -a
+    [ -f .env ] && source .env
+    set +a
     uv run python main.py migrate \
-        --legacy-table-name "{{LEGACY_TABLE}}" \
-        --new-table-name "{{NEW_TABLE}}" \
-        --legacy-schema-name "{{LEGACY_SCHEMA}}" \
-        --new-schema-name "{{NEW_SCHEMA}}" \
         --card-ids "{{CARD_IDS}}" \
         --database-name "{{DATABASE_NAME}}"

@@ -247,7 +247,8 @@ def migrate(
             new_table_id=new_table_id,
             column_mapping=column_mapping,
         )
-        table_mapping = build_table_mapping(legacy_table_id, new_table_id)
+        is_table_rename = entry.target_table is not None and entry.target_table != legacy_key
+        table_mapping = build_table_mapping(legacy_table_id, new_table_id) if is_table_rename else {}
 
         logger.info("Mappings for '%s': %d fields, %d tables", legacy_key, len(field_mapping), len(table_mapping))
 

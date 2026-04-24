@@ -98,12 +98,12 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="""
-        uv run main.py migrate \
-        --database-name {{ params.database_name }} \
-        --legacy-table-name {{ params.legacy_table_name }} \
-        --new-table-name {{ params.new_table_name }} \
-        --legacy-schema-name {{ params.legacy_schema_name }} \
-        --new-schema-name {{ params.new_schema_name }} \
+        uv run python main.py migrate \
+        --database-name "{{ params.database_name }}" \
+        --legacy-table-name "{{ params.legacy_table_name }}" \
+        --new-table-name "{{ params.new_table_name }}" \
+        --legacy-schema-name "{{ params.legacy_schema_name }}" \
+        --new-schema-name "{{ params.new_schema_name }}" \
         {% if params.dry_run %}--dry-run{% endif %}
         """,
     )

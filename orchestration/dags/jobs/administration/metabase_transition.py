@@ -51,8 +51,8 @@ with DAG(
             type="string",
         ),
         "card_ids": Param(
-            default="",
-            type="string",
+            default=None,
+            type=["null", "string"],
             description="Comma-separated card IDs to migrate (optional, empty = all cards)",
         ),
         "dry_run": Param(

@@ -114,6 +114,7 @@ docker-test-migrate:
     METABASE_API_USERNAME="admin@test.com" \
     METABASE_PASSWORD="Testpass1" \
     uv run python main.py migrate \
+        --tables-file docker/tables-to-migrate-test.json \
         --card-ids "$CARD_IDS" \
         --dry-run
 

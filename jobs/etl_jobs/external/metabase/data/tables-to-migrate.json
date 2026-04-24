@@ -1,4 +1,7 @@
 {
+  "external_reporting_stg.individual": {
+    "target_table": "analytics_stg.external_reporting_individual"
+  },
   "analytics_stg.firebase_pro_visits": {
     "columns_to_migrate": {
       "first_event_date": "first_event_date",

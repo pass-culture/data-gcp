@@ -13,7 +13,7 @@ on:
         type: string
         required: false
         default: "jobs/etl_jobs/external/instagram"
-      DOCKEFILE:
+      DOCKERFILE:
         description: "Name of the Dockerfile (default: Dockerfile.instagram)"
         type: string
         required: false
@@ -37,7 +37,7 @@ jobs:
       IS_MANUAL_DISPATCH: true
       CUSTOM_TAG: ${{ inputs.CUSTOM_TAG }}
       SOURCE_PATH: ${{ inputs.SOURCE_PATH }}
-      DOCKEFILE: ${{ inputs.DOCKEFILE }}
+      DOCKERFILE: ${{ inputs.DOCKERFILE }}
       REGISTRY_BASE_NAME: ${{ inputs.REGISTRY_BASE_NAME }}
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}

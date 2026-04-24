@@ -19,7 +19,7 @@ on:
         type: string
         required: false
         default: "orchestration/k8s-airflow"
-      DOCKEFILE:
+      DOCKERFILE:
         type: string
         required: false
         default: "Dockerfile.k8s-worker"
@@ -40,7 +40,7 @@ env:
   DOCKER_REGISTRY_REPOSITORY: "pass-culture-artifact-registry"
   SOURCE_PATH: ${{ inputs.SOURCE_PATH }}
   TARGET_ENV: ${{ inputs.TARGET_ENV }}
-  DOCKERFILE: ${{ inputs.DOCKEFILE }}
+  DOCKERFILE: ${{ inputs.DOCKERFILE }}
   REGISTRY_BASE_NAME: ${{ inputs.REGISTRY_BASE_NAME }}
 
 jobs:
@@ -95,16 +95,16 @@ jobs:
           IS_MANUAL_DISPATCH: ${{ inputs.IS_MANUAL_DISPATCH }}
         run: |
           # Start with short SHA
-          tags="${{ steps.vars.outputs.DOCKER_REPO }}/${{ env.REGISTRY_BASE_NAME }}:${{ steps.sha.outputs.short_sha }}"
+          tags="${{ steps.vars.outputs.DOCKER_REPO }}/${REGISTRY_BASE_NAME}:${{ steps.sha.outputs.short_sha }}"
 
           # Add v1 tag if not manual
           if [ "${IS_MANUAL_DISPATCH}" != "true" ]; then
-            tags="${tags}\n${{ steps.vars.outputs.DOCKER_REPO }}/${{ env.REGISTRY_BASE_NAME }}:v1"
+            tags="${tags}\n${{ steps.vars.outputs.DOCKER_REPO }}/${REGISTRY_BASE_NAME}:v1"
           fi
 
           # Add dev tag if dev environment
           if [ "${TARGET_ENV}" == "dev" ]; then
-            tags="${tags}\n${{ steps.vars.outputs.DOCKER_REPO }}/${{ env.REGISTRY_BASE_NAME }}:dev"
+            tags="${tags}\n${{ steps.vars.outputs.DOCKER_REPO }}/${REGISTRY_BASE_NAME}:dev"
           fi
 
           # Add CUSTOM_TAG safely (user input) - supports comma-separated tags
@@ -112,7 +112,7 @@ jobs:
             IFS=',' read -ra CUSTOM_TAGS <<< "$CUSTOM_TAG"
             for tag in "${CUSTOM_TAGS[@]}"; do
               sanitized_tag=$(printf '%s' "$tag" | tr '/ ' '--' | xargs)
-              tags="${tags}\n${{ steps.vars.outputs.DOCKER_REPO }}/${{ env.REGISTRY_BASE_NAME }}:${sanitized_tag}"
+              tags="${tags}\n${{ steps.vars.outputs.DOCKER_REPO }}/${REGISTRY_BASE_NAME}:${sanitized_tag}"
             done
           fi
 

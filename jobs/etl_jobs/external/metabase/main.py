@@ -17,12 +17,21 @@ from pathlib import Path
 from typing import Any
 
 import typer
+from google.cloud import bigquery
 from pydantic import ValidationError
 
 from api.client import DATABASE_TABLES_CACHE_PATH, MetabaseClient
 from api.models import Card, TablesToMigrate
-from config import METABASE_API_USERNAME, get_iap_bearer_token, get_metabase_host, get_metabase_password
+from config import (
+    INT_METABASE_DATASET,
+    METABASE_API_USERNAME,
+    PROJECT_NAME,
+    get_iap_bearer_token,
+    get_metabase_host,
+    get_metabase_password,
+)
 from discovery.mapping import build_field_mapping, build_table_mapping
+from discovery.metabase import _sql_references_table, build_card_dependency_cache, get_impacted_cards_from_cache
 from migration.card import _get_stage_type, migrate_card
 
 app = typer.Typer(name="metabase-migration", help="Migrate Metabase cards after BigQuery table/column renames.")
@@ -64,8 +73,6 @@ def _card_references_legacy_table(
     stage_type = stage.get("lib/type")
 
     if stage_type == "mbql.stage/native":
-        from discovery.metabase import _sql_references_table
-
         sql = stage.get("native", "")
         return _sql_references_table(sql, legacy_table_name, legacy_schema_name)
 
@@ -137,6 +144,13 @@ def migrate(
 
     table_catalog = client.build_table_catalog(database_id)
 
+    # --- Pre-build card dependency cache (once for all tables) ---
+    if not card_ids_str:
+        logger.info("Building card dependency cache for all tables...")
+        _card_dep_cache = build_card_dependency_cache(client, table_catalog)
+    else:
+        _card_dep_cache = None
+
     # --- Per-table migration loop ---
     any_table_failed = False
     global_success = 0
@@ -204,11 +218,8 @@ def migrate(
                 legacy_key,
             )
         else:
-            from discovery.metabase import build_card_dependency_cache, get_impacted_cards_from_cache
-
-            logger.info("Discovering impacted cards via Metabase API for table '%s'...", legacy_key)
-            cache = build_card_dependency_cache(client, table_catalog)
-            card_ids = get_impacted_cards_from_cache(legacy_table, cache)
+            logger.info("Looking up impacted cards for table '%s' from cache...", legacy_key)
+            card_ids = get_impacted_cards_from_cache(legacy_table, _card_dep_cache)
             logger.info("Found %d impacted cards for table '%s'", len(card_ids), legacy_key)
 
         if not card_ids:
@@ -296,10 +307,6 @@ def migrate(
 
         # --- Log results to BigQuery per table ---
         if not dry_run and table_logs and use_api_discovery:
-            from google.cloud import bigquery
-
-            from config import INT_METABASE_DATASET, PROJECT_NAME
-
             bq_client = bigquery.Client(project=PROJECT_NAME)
             _log_to_bigquery(bq_client, table_logs, PROJECT_NAME, INT_METABASE_DATASET)
 
@@ -326,8 +333,6 @@ def migrate(
 
 def _print_diff(original: Any, migrated: Any, card_id: int) -> None:
     """Print a human-readable diff between original and migrated card."""
-    from migration.card import _get_stage_type
-
     original_data = original.model_dump(by_alias=True)
     migrated_data = migrated.model_dump(by_alias=True)
 

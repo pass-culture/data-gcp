@@ -39,7 +39,7 @@ anyio==4.9.0
     # via
     #   google-genai
     #   httpx
-apache-airflow==2.11.2
+apache-airflow==3.2.0
     # via
     #   apache-airflow-providers-celery
     #   apache-airflow-providers-cncf-kubernetes
@@ -107,7 +107,7 @@ attrs==25.3.0
     #   jsonschema
     #   looker-sdk
     #   referencing
-authlib==1.6.0
+authlib==1.6.11
     # via
     #   apache-airflow
     #   flask-oidc
@@ -204,7 +204,7 @@ cron-descriptor==1.4.5
     # via apache-airflow
 croniter==6.0.0
     # via apache-airflow
-cryptography==41.0.7
+cryptography==46.0.7
     # via
     #   apache-airflow
     #   apache-airflow-providers-cncf-kubernetes
@@ -839,7 +839,7 @@ pandas-gbq==0.29.1
     # via
     #   apache-airflow-providers-google
     #   google-cloud-bigquery
-paramiko==2.12.0
+paramiko==3.4.0
     # via
     #   apache-airflow-providers-ssh
     #   sshtunnel
@@ -1029,7 +1029,7 @@ python-dateutil==2.9.0.post0
     #   pandas
     #   pendulum
     #   posthog
-python-multipart==0.0.24
+python-multipart==0.0.26
     # via connexion
 python-nvd3==0.16.0
     # via apache-airflow
@@ -1254,7 +1254,7 @@ urllib3==2.5.0
     #   kubernetes
     #   kubernetes-asyncio
     #   requests
-uv==0.11.3
+uv==0.11.6
     # via apache-airflow
 vine==5.1.0
     # via

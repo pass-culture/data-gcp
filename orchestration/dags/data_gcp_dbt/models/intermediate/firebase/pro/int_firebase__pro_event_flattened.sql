@@ -29,6 +29,7 @@ select
         extract_params_string_value(
             [
                 "venue_id",
+                "action",
                 "page_title",
                 "page_location",
                 "page_referrer",

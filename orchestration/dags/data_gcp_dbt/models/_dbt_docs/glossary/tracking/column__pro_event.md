@@ -24,7 +24,7 @@
 {% docs column__download_files_cnt %}The count of files downloaded during the event, if applicable.{% enddocs %}
 {% docs column__suggested_offer_subcategory_selected %}Indicates whether a suggested offer subcategory was selected during the event.{% enddocs %}
 {% docs column__image_creation_stage %}Indicates the different stages of image upload while creating/editing an offer/a partner page.{% enddocs %}
-{% docs column__headline_offer_action_type %}Indicates the different action types of headline offer feature.{% enddocs %}
+{% docs column__action_type %}Indicates the different action types of a feature. Several event_name can have it.{% enddocs %}
 {% docs column__subscription_user_type %}Specifies the category selected during the initial phase of the cultural partner subscription: jeune, partenaire culturel, enseignant{% enddocs %}
 
 

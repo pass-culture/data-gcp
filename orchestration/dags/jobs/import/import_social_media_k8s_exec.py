@@ -28,7 +28,7 @@ env_map = {
 
 namespace = f"airflow-{env_map[ENV_SHORT_NAME]}"
 
-DAG_NAME = "import_social_network_k8s"
+DAG_NAME = "import_social_network_k8s_executor"
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
     "on_failure_callback": on_failure_vm_callback,
@@ -111,6 +111,8 @@ with DAG(
             # labels={"airflow_dag": DAG_NAME, "airflow_task": f"run_{social_network}_etl"},
             service_account_name="airflow-worker",
             container_resources=container_resources,
+            queue="kubernetes",
+            # pod_template_file=f"{DAG_FOLDER}/common/watcher_pod_template.yaml",
         )
         # task.dry_run() Enable dry run for testing without executing the pod.
         task

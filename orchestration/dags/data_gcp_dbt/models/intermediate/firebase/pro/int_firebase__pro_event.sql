@@ -101,7 +101,7 @@ with
             imagecreationstage as image_creation_stage,
             json_extract_array(selected_offers) as selected_offers_array,
             array_length(json_extract_array(selected_offers)) > 1 as multiple_selection,
-            coalesce(action,actiontype) as action_type,
+            coalesce(action, actiontype) as action_type,
             target as subscription_user_type
         from {{ ref("int_firebase__pro_event_flattened") }}
         {% if is_incremental() %}

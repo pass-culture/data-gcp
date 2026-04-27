@@ -39,6 +39,12 @@ with
         select offerid, count(*) as total_favorites
         from {{ source("raw", "applicative_database_favorite") }}
         group by offerid
+    ),
+
+    offer_last_advice as (
+        select offer_id, advice_content
+        from {{ ref("int_applicative__offer_pro_advice") }}
+        qualify row_number() over (partition by offer_id order by updated_at desc) = 1
     )
 
 select
@@ -211,11 +217,13 @@ select
     first_headline_date,
     last_headline_date,
     o.offer_finalization_date,
-    o.scheduled_offer_bookability_date
+    o.scheduled_offer_bookability_date,
+    offer_last_advice.advice_content as offer_advice_content
 from {{ ref("int_applicative__extract_offer") }} as o
 left join {{ ref("int_applicative__offer_item_id") }} as ii on ii.offer_id = o.offer_id
 left join stocks_grouped_by_offers on stocks_grouped_by_offers.offer_id = o.offer_id
 left join total_favorites on total_favorites.offerid = o.offer_id
+left join offer_last_advice on offer_last_advice.offer_id = o.offer_id
 left join
     {{ source("raw", "subcategories") }} as subcategories
     on o.offer_subcategoryid = subcategories.id

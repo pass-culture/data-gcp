@@ -93,7 +93,8 @@ select
     last_headline_date,
     offer_finalization_date,
     scheduled_offer_bookability_date,
-    offerer_is_epn
+    offerer_is_epn,
+    offer_advice_content
 from {{ ref("int_global__offer") }}
 where
     true

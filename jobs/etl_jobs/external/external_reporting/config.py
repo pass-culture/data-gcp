@@ -19,6 +19,9 @@ BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
 EXPORT_BUCKET = f"de-bigquery-data-export-{ENV_SHORT_NAME}"
 REGION_HIERARCHY_TABLE = "region_department"
 
+# filter loaded data so duckdb remains performant
+LOADING_FILTERS = {"dimension_name": "NOT IN ('COM','EPCI')"}
+
 BASE_TEMPLATE = Path("./templates/export_template.xlsx")
 REPORT_BASE_DIR_DEFAULT = Path("./reports")
 

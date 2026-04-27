@@ -295,3 +295,6 @@ models:
       - name: offerer_is_epn
         description: "{{ doc('column__offerer_is_epn') }}"
         data_type: BOOLEAN
+      - name: offer_advice_content
+        description: "{{ doc('column__offer_advice_content') }}"
+        data_type: STRING

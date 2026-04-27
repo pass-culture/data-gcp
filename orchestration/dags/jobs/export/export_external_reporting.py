@@ -116,8 +116,8 @@ with DAG(
         weight_rule=WEIGHT_RULE,
     )
 
-    def branch_check(logical_date):
-        if logical_date.month in [1, 4, 7, 10]:
+    def branch_check(data_interval_end, **kwargs):
+        if data_interval_end.month in [1, 4, 7, 10]:
             return "gce_generate_quaterly_reports"
         return "gce_generate_monthly_reports"
 

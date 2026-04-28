@@ -1,17 +1,14 @@
 import json
 
 import requests
-from google.auth.transport.requests import Request
-from google.oauth2 import id_token
+
+from authent import _sign_jwt
 
 
 class MetabaseAPI:
-    def get_open_id(self, client_id):
-        return id_token.fetch_id_token(Request(), client_id)
-
     def __init__(self, username, password, host, client_id):
         self.host = host
-        self.bearer_token = f"Bearer {self.get_open_id(client_id)}"
+        self.bearer_token = f"Bearer {_sign_jwt(client_id)}"
 
         url = f"{self.host}/api/session"
         response = requests.post(

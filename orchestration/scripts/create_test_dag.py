@@ -4,6 +4,35 @@
 create_test_dag.py
 Create a test copy of a DAG file with modified dag_id
 
+WHY THIS SCRIPT EXISTS:
+-----------------------
+In Apache Airflow (and similar orchestration systems), each DAG must have a unique dag_id.
+When developing or debugging DAGs, you often need to test changes without affecting the
+production DAG. This requires creating a test copy with a different dag_id.
+
+Manually copying and renaming DAGs is error-prone because:
+1. You need to find and modify all dag_id references (DAG_NAME variables, dag_id parameters)
+2. You need to ensure the new dag_id is unique (typically by adding your username)
+3. You need to follow naming conventions for the output file
+4. You need to ensure the file is in the correct directory structure
+
+WHAT THIS SCRIPT DOES:
+----------------------
+This script automates the process of creating test DAG copies by:
+1. Reading an existing DAG file from orchestration/dags/
+2. Finding all dag_id patterns (DAG_NAME constants and dag_id parameters)
+3. Adding a suffix to each dag_id (default: _test_<username>)
+4. Generating an output filename with the same suffix
+5. Creating the new file in the appropriate location
+6. Validating that files are in the correct directory structure
+
+USE CASES:
+----------
+- Testing DAG changes in isolation without affecting production
+- Creating personal development versions of shared DAGs
+- Debugging DAG issues in a safe environment
+- Experimenting with DAG modifications before committing
+
 Usage: ./create_test_dag.py [OPTIONS] <dag_file_path>
 """
 

@@ -3,15 +3,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: metabase
-      POSTGRES_USER: metabase
-      POSTGRES_PASSWORD: metabase
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - metabase-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U metabase"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 5s
       retries: 5
 
@@ -19,15 +19,15 @@ services:
   sample-db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: sample
-      POSTGRES_USER: sample
-      POSTGRES_PASSWORD: sample
+      POSTGRES_DB: ${SAMPLE_DB}
+      POSTGRES_USER: ${SAMPLE_USER}
+      POSTGRES_PASSWORD: ${SAMPLE_PASSWORD}
     ports:
       - "5433:5432"
     volumes:
       - sample-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sample"]
+      test: ["CMD-SHELL", "pg_isready -U ${SAMPLE_USER}"]
       interval: 5s
       retries: 5
 
@@ -39,9 +39,9 @@ services:
       MB_DB_TYPE: postgres
       MB_DB_HOST: postgres
       MB_DB_PORT: 5432
-      MB_DB_DBNAME: metabase
-      MB_DB_USER: metabase
-      MB_DB_PASS: metabase
+      MB_DB_DBNAME: ${POSTGRES_DB}
+      MB_DB_USER: ${POSTGRES_USER}
+      MB_DB_PASS: ${POSTGRES_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy

@@ -13,15 +13,31 @@
 
 set -euo pipefail
 
+# Load environment variables from .env file
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "${SCRIPT_DIR}/.env" ]; then
+    # Export variables from .env file, handling comments and empty lines
+    set -a
+    source "${SCRIPT_DIR}/.env"
+    set +a
+else
+    echo "Warning: ${SCRIPT_DIR}/.env file not found. Using default values."
+fi
+
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-METABASE_URL="http://localhost:3000"
-ADMIN_EMAIL="admin@test.com"
-ADMIN_PASSWORD="Testpass1"
-ADMIN_FIRST_NAME="Admin"
-ADMIN_LAST_NAME="User"
+METABASE_URL="${METABASE_URL:-http://localhost:3000}"
+ADMIN_EMAIL="${ADMIN_EMAIL:-admin@test.com}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-Testpass1}"
+ADMIN_FIRST_NAME="${ADMIN_FIRST_NAME:-Admin}"
+ADMIN_LAST_NAME="${ADMIN_LAST_NAME:-User}"
 COMPOSE_FILE="docker/docker-compose.yml"
+
+# Sample database credentials (must match docker/.env)
+SAMPLE_DB="${SAMPLE_DB:-sample}"
+SAMPLE_USER="${SAMPLE_USER:-sample}"
+SAMPLE_PASSWORD="${SAMPLE_PASSWORD:-sample}"
 
 MAX_WAIT_METABASE=90   # seconds to wait for Metabase readiness
 MAX_WAIT_SYNC=30       # seconds to wait for table sync
@@ -118,17 +134,17 @@ if [ "$EXISTING_DB" = "[]" ]; then
     curl -sf "${METABASE_URL}/api/database" \
         -H "$AUTH_HEADER" \
         -H "Content-Type: application/json" \
-        -d '{
-            "engine": "postgres",
-            "name": "Sample DB",
-            "details": {
-                "host": "sample-db",
-                "port": 5432,
-                "dbname": "sample",
-                "user": "sample",
-                "password": "sample"
+        -d "{
+            \"engine\": \"postgres\",
+            \"name\": \"Sample DB\",
+            \"details\": {
+                \"host\": \"sample-db\",
+                \"port\": 5432,
+                \"dbname\": \"${SAMPLE_DB}\",
+                \"user\": \"${SAMPLE_USER}\",
+                \"password\": \"${SAMPLE_PASSWORD}\"
             }
-        }' > /dev/null
+        }" > /dev/null
     ok "Sample DB connected"
 else
     skip "Sample DB connection"
@@ -149,7 +165,7 @@ fi
 info "Phase 4: Creating test tables..."
 
 docker compose -f "$COMPOSE_FILE" exec -T sample-db \
-    psql -U sample -d sample -q <<'SQL'
+    psql -U "${SAMPLE_USER}" -d "${SAMPLE_DB}" -q <<'SQL'
 CREATE SCHEMA IF NOT EXISTS analytics;
 
 CREATE TABLE IF NOT EXISTS analytics.old_user_stats (

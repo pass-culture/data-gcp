@@ -10,6 +10,7 @@ RUN uv venv --python 3.10
 RUN uv sync
 ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8080
+USER 1000
 ENV WORKERS=${WORKERS}
 
 CMD hypercorn --bind 0.0.0.0:8080 app:app --workers=${WORKERS} --log-config="json:custom_logging/config.json"

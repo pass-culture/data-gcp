@@ -19,6 +19,12 @@ select
     count(distinct execution_id) as total_views,
     count(
         distinct case
+            when date(execution_date) > date_sub(current_date(), interval 3 month)
+            then execution_id
+        end
+    ) as total_views_3_months,
+    count(
+        distinct case
             when date(execution_date) > date_sub(current_date(), interval 6 month)
             then execution_id
         end

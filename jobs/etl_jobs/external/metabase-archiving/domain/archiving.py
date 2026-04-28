@@ -122,6 +122,11 @@ def _hard_archive_breakdown_query(name_pattern, min_days_since_update):
                 ) AS root_id
             FROM `{RAW_METABASE_DATASET}.metabase_collection` AS c
         ),
+        already_hard_archived AS (
+            SELECT DISTINCT id
+            FROM `{INT_METABASE_DATASET}.archiving_log`
+            WHERE object_type = 'card_hard_archive' AND status = 'success'
+        ),
         hard_candidates AS (
             SELECT rc.id, coll_root.root_id
             FROM `{RAW_METABASE_DATASET}.metabase_report_card` AS rc
@@ -134,6 +139,7 @@ def _hard_archive_breakdown_query(name_pattern, min_days_since_update):
               )
               AND coll_root.own_personal_owner_id IS NULL
               AND root_coll.personal_owner_id IS NULL
+              AND rc.id NOT IN (SELECT id FROM already_hard_archived)
         )
         SELECT
             COALESCE(LOWER(top_c.collection_name), '(no collection)') AS top_folder,
@@ -467,6 +473,11 @@ def hard_archive_stale_cards(
                     )[SAFE_OFFSET(0)] AS INT64
                 ) AS root_id
             FROM `{RAW_METABASE_DATASET}.metabase_collection` AS c
+        ),
+        already_hard_archived AS (
+            SELECT DISTINCT id
+            FROM `{INT_METABASE_DATASET}.archiving_log`
+            WHERE object_type = 'card_hard_archive' AND status = 'success'
         )
         SELECT rc.id, rc.card_collection_id
         FROM `{RAW_METABASE_DATASET}.metabase_report_card` AS rc
@@ -477,6 +488,7 @@ def hard_archive_stale_cards(
           AND date(rc.updated_at) < date_sub(current_date(), interval {int(min_days_since_update)} day)
           AND coll_root.own_personal_owner_id IS NULL
           AND root_coll.personal_owner_id IS NULL
+          AND rc.id NOT IN (SELECT id FROM already_hard_archived)
         ORDER BY rc.id
         LIMIT {int(max_cards)}
     """

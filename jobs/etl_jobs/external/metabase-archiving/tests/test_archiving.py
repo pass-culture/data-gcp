@@ -546,9 +546,11 @@ class TestComputeArchiveStats:
             "1. external",
             "2. internal",
         ]
-        # Hard breakdown query must exclude personal collections.
+        # Hard breakdown query must exclude personal collections AND cards
+        # already hard-archived (so stats match the action query).
         hard_query = mock_read_gbq.call_args_list[1][0][0]
         assert "personal_owner_id IS NULL" in hard_query
+        assert "already_hard_archived" in hard_query
 
 
 class TestLogArchiveStats:
@@ -719,6 +721,11 @@ class TestHardArchiveStaleCards:
         # Must exclude personal collections.
         assert "personal_owner_id IS NULL" in query
         assert "raw_dev.metabase_collection" in query
+        # Must also exclude cards already hard-archived by previous runs,
+        # otherwise the SQL surfaces them every day and we waste 50 API
+        # GETs only to skip them all.
+        assert "already_hard_archived" in query
+        assert "int_metabase_dev.archiving_log" in query
 
 
 class TestIsOldEnough:

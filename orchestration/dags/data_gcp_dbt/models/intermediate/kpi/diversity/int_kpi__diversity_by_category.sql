@@ -13,8 +13,8 @@ with
             ub.user_epci_code as epci_code,
             ub.user_city as city_name,
             ub.user_city_code as city_code,
-            date_trunc(
-                ub.last_deposit_expiration_date, month
+            date(
+                date_trunc(ub.last_deposit_expiration_date, month)
             ) as deposit_expiration_month
         from {{ ref("int_global__user_beneficiary") }} as ub
         left join

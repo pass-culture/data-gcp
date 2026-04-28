@@ -14,6 +14,7 @@ RUN chown 1000 /.cache/uv
 
 COPY ./app /app
 COPY ./metadata /metadata
+WORKDIR /
 
 EXPOSE 8080
 

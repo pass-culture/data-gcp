@@ -6,7 +6,7 @@ requires-python = ">=3.12,<3.13"
 
 [dependency-groups]
 airflow = [
-  "apache-airflow[fab,google,google-auth,celery,ssh,cncf-kubernetes,uv]==2.11.2",
+  "apache-airflow[fab,google,google-auth,celery,ssh,cncf-kubernetes,uv]~=2.11",
   "statsd<=4.0.1",
   "dbt-core==1.11.8",
   "dbt-bigquery==1.11.1",
@@ -16,10 +16,10 @@ airflow = [
   "flask-openid>=1.3.1",
   "flask-oidc>=2.2.2",
   "typer",
-  "deepdiff==8.6.1",
+  "deepdiff~=8.6",
   "pyyaml==6.0.2",
   "numpy",
-  "flask",
+  "flask~=2.3",
   "pyyaml",
 ]
 dbt = [
@@ -27,17 +27,17 @@ dbt = [
   "dbt-bigquery==1.11.1",
   "dbt-metabase==1.7.3",
   "dbt-colibri>=0.3.0",
-  "deepdiff==8.6.1",
+  "deepdiff>=8.6.2,<=9.0.0",
 ]
 docs = [
   "mkdocs-material==9.5.42",
   "mkdocs-awesome-pages-plugin==2.9.3",
-  "mkdocs-include-markdown-plugin",
+  "mkdocs-include-markdown-plugin~=7.1",
   "pandas==2.2.3",
   "tabulate==0.9.0",
 ]
 dev = [
-  "pytest>=7.4.4",
+  "pytest~=9.0.3",
   "pytest-cov>=5.0.0",
   "mock>=4.0.2",
   "ruff==0.5.7",

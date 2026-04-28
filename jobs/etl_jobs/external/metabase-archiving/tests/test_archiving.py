@@ -11,12 +11,14 @@ from domain.archiving import (
     _is_dashboard_dead,
     _is_old_enough,
     _like_to_regex,
+    _summarize_metabase_error,
     append_archiving_logs,
     archive_dead_dashboards,
     archive_empty_collections,
     compute_archive_stats,
     hard_archive_stale_cards,
     load_activity_dataframe,
+    load_recently_failed_card_ids,
     log_archive_stats,
     select_soft_archive_candidates,
 )
@@ -277,6 +279,23 @@ class TestSelectSoftArchiveCandidates:
         with pytest.raises(ValueError, match="ancestor_collection_names"):
             select_soft_archive_candidates(df, [ADHOC_RULE])
 
+    def test_excluded_ids_are_skipped(self):
+        df = pd.DataFrame(
+            [
+                _activity_row(card_id=1, ancestors=["[adhoc]"]),
+                _activity_row(card_id=2, ancestors=["[adhoc]"]),
+            ]
+        )
+        result = select_soft_archive_candidates(df, [ADHOC_RULE], excluded_ids={2})
+        assert [c["id"] for c in result] == [1]
+
+    def test_excluded_ids_none_passes_everything(self):
+        df = pd.DataFrame([_activity_row(card_id=1, ancestors=["[adhoc]"])])
+        assert (
+            len(select_soft_archive_candidates(df, [ADHOC_RULE], excluded_ids=None))
+            == 1
+        )
+
     def test_handles_none_ancestors(self):
         row = _activity_row()
         row["ancestor_collection_names"] = None
@@ -333,13 +352,31 @@ class TestMoveToArchive:
         m.move_object()
         metabase.update_card_collections.assert_called_once_with([42], 717)
 
-    def test_failure_logs_full_response(self, caplog, metabase):
-        metabase.update_card_collections.return_value = {"errors": "boom"}
+    def test_failure_logs_summary_not_full_response(self, caplog, metabase):
+        # A real Metabase remote-sync rejection — long Clojure stacktrace.
+        metabase.update_card_collections.return_value = {
+            "via": [
+                {
+                    "type": "clojure.lang.ExceptionInfo",
+                    "message": "Uses content that is not remote synced.",
+                }
+            ],
+            "trace": ["x"] * 200,  # very long; we don't want this in the log
+            "cause": "Uses content that is not remote synced.",
+            "data": {
+                "non-remote-synced-models": [19627],
+                "status-code": 400,
+            },
+            "message": "Uses content that is not remote synced.",
+        }
         m = MoveToArchive(self._card(), 99, metabase)
         with caplog.at_level("ERROR"):
             m.move_object()
-        # Surface response body, not just status=None
-        assert "boom" in caplog.text
+        # The cause and the actionable data are visible.
+        assert "not remote synced" in caplog.text
+        assert "non-remote-synced-models=[19627]" in caplog.text
+        # The Clojure trace is NOT dumped at ERROR level.
+        assert "trace" not in caplog.text
 
     def test_dry_run_skips_move(self, metabase, caplog):
         m = MoveToArchive(self._card(), 99, metabase, dry_run=True)
@@ -355,6 +392,32 @@ class TestMoveToArchive:
             m.rename_archive_object()
         metabase.put_card.assert_not_called()
         assert "[DRY-RUN]" in caplog.text
+
+
+class TestSummarizeMetabaseError:
+    def test_remote_sync_failure(self):
+        result = {
+            "cause": "Uses content that is not remote synced.",
+            "data": {"non-remote-synced-models": [1, 2], "status-code": 400},
+        }
+        msg = _summarize_metabase_error(result)
+        assert "not remote synced" in msg
+        assert "status-code=400" in msg
+        assert "non-remote-synced-models=[1, 2]" in msg
+
+    def test_via_message_fallback(self):
+        # No top-level cause/message; pull from via[0].message.
+        result = {
+            "via": [{"message": "boom"}],
+            "data": {"status-code": 500},
+        }
+        assert "boom" in _summarize_metabase_error(result)
+
+    def test_unknown_shape(self):
+        assert _summarize_metabase_error({}) == "unknown error"
+
+    def test_non_dict_input(self):
+        assert "fail" in _summarize_metabase_error("fail")
 
 
 class TestFirstAncestor:
@@ -420,6 +483,20 @@ class TestComputeArchiveStats:
         assert adhoc_row["cards"] == 2
 
     @patch("domain.archiving.pd.read_gbq")
+    def test_excluded_ids_show_up_in_stats(self, mock_read_gbq):
+        mock_read_gbq.return_value = pd.DataFrame({"scope": ["global"], "cards": [10]})
+        df = pd.DataFrame(
+            [
+                _activity_row(card_id=1, ancestors=["[adhoc]"]),
+                _activity_row(card_id=2, ancestors=["[adhoc]"]),
+            ]
+        )
+        config = {"soft_archive_rules": [ADHOC_RULE]}
+        stats = compute_archive_stats(df, config, excluded_ids={2})
+        assert stats["soft_excluded"] == 1
+        assert stats["soft_total"] == 1  # only card 1 remains
+
+    @patch("domain.archiving.pd.read_gbq")
     def test_soft_breakdown_handles_numpy_array_ancestors(self, mock_read_gbq):
         # pd.read_gbq returns ARRAY<STRING> columns as numpy arrays.
         mock_read_gbq.return_value = pd.DataFrame({"scope": ["global"], "cards": [10]})
@@ -481,6 +558,7 @@ class TestLogArchiveStats:
                 {"scope": ["global", "personal"], "cards": [10, 2]}
             ),
             "soft_total": 3,
+            "soft_excluded": 0,
             "soft_by_folder": pd.DataFrame(
                 {
                     "rule_name": ["adhoc"],
@@ -503,6 +581,36 @@ class TestLogArchiveStats:
         assert "Soft-archive candidates: 3" in text
         assert "Hard-archive candidates: 12" in text
         assert "608" in text and "610" in text
+
+
+class TestLoadRecentlyFailedCardIds:
+    @patch("domain.archiving.pd.read_gbq")
+    def test_returns_set_of_ids(self, mock_read_gbq):
+        mock_read_gbq.return_value = pd.DataFrame({"id": [1, 2, 3]})
+        result = load_recently_failed_card_ids(cooldown_days=30)
+        assert result == {1, 2, 3}
+
+    @patch("domain.archiving.pd.read_gbq")
+    def test_empty_result(self, mock_read_gbq):
+        mock_read_gbq.return_value = pd.DataFrame({"id": []})
+        assert load_recently_failed_card_ids(cooldown_days=30) == set()
+
+    @patch("domain.archiving.pd.read_gbq")
+    def test_query_filters_failures_in_window(self, mock_read_gbq):
+        mock_read_gbq.return_value = pd.DataFrame({"id": []})
+        load_recently_failed_card_ids(cooldown_days=14)
+        query = mock_read_gbq.call_args[0][0]
+        assert "archiving_log" in query
+        assert "object_type = 'card'" in query
+        assert "interval 14 day" in query
+        # Must include both NULL and non-success statuses.
+        assert "COALESCE(status, '') != 'success'" in query
+
+    def test_none_cooldown_skips_query(self):
+        # No BQ call when cooldown disabled.
+        with patch("domain.archiving.pd.read_gbq") as mock_read_gbq:
+            assert load_recently_failed_card_ids(cooldown_days=None) == set()
+            mock_read_gbq.assert_not_called()
 
 
 class TestAppendArchivingLogs:

@@ -27,6 +27,28 @@ def _like_to_regex(pattern):
     return re.compile("".join(out), re.IGNORECASE)
 
 
+def _summarize_metabase_error(result):
+    """One-line summary of a Metabase API error JSON. Pulls the human-readable
+    cause and any actionable hints (e.g. non-remote-synced-models) out of the
+    Clojure stacktrace blob so it doesn't drown the log."""
+    if not isinstance(result, dict):
+        return repr(result)[:200]
+    cause = result.get("cause") or result.get("message")
+    if not cause:
+        via = result.get("via")
+        if isinstance(via, list) and via and isinstance(via[0], dict):
+            cause = via[0].get("message")
+    data = result.get("data") or {}
+    extras = []
+    for key in ("status-code", "non-remote-synced-models"):
+        if data.get(key) is not None:
+            extras.append(f"{key}={data[key]}")
+    extras_str = " ".join(extras)
+    if extras_str:
+        return f"{cause or 'unknown error'} [{extras_str}]"
+    return cause or "unknown error"
+
+
 def _ancestors_match(regex, ancestors):
     if ancestors is None:
         return False
@@ -124,25 +146,28 @@ def _hard_archive_breakdown_query(name_pattern, min_days_since_update):
     """
 
 
-def compute_archive_stats(activity_df, config):
+def compute_archive_stats(activity_df, config, excluded_ids=None):
     """Pre-flight stats for the archive command. Pure read — no mutations.
 
     Returns a dict with:
       - scope_breakdown: DataFrame of total cards split by scope (global / personal)
       - soft_total / soft_by_folder: soft-archive candidate counts
+      - soft_excluded: count of cards skipped via the failure cooldown
       - hard_total / hard_by_folder: hard-archive candidate counts (BQ-driven)
       - cleanup_root_collection_ids / cleanup_min_age_days: echo of cleanup config
 
     Empty-collection / dead-dashboard counts are NOT included because they
     require an API walk; use `archive --dry-run` to see those per-item.
     """
-    stats = {}
+    stats = {"soft_excluded": len(excluded_ids or set())}
 
     stats["scope_breakdown"] = pd.read_gbq(_scope_breakdown_query())
 
     soft_rules = config.get("soft_archive_rules", [])
     if soft_rules and activity_df is not None and not activity_df.empty:
-        candidates = select_soft_archive_candidates(activity_df, soft_rules)
+        candidates = select_soft_archive_candidates(
+            activity_df, soft_rules, excluded_ids=excluded_ids
+        )
         if candidates:
             cand_df = pd.DataFrame(candidates)
             ancestor_map = activity_df.set_index("card_id")[
@@ -194,7 +219,12 @@ def log_archive_stats(stats):
         "Cards in scope (global vs personal):\n%s",
         stats["scope_breakdown"].to_string(index=False),
     )
-    logger.info("Soft-archive candidates: %d", stats["soft_total"])
+    excluded = stats.get("soft_excluded", 0)
+    logger.info(
+        "Soft-archive candidates: %d (skipped %d previously-failed)",
+        stats["soft_total"],
+        excluded,
+    )
     if stats["soft_total"]:
         logger.info(
             "  by rule + top folder:\n%s",
@@ -220,6 +250,30 @@ def log_archive_stats(stats):
     logger.info("================================")
 
 
+def load_recently_failed_card_ids(cooldown_days=30):
+    """Card IDs that failed to soft-archive in the last `cooldown_days`.
+
+    Used to skip cards that previously hit Metabase API errors (e.g. the
+    remote-sync rejection class) so daily runs don't keep retrying the same
+    dead-ends. Pass `cooldown_days=None` to disable.
+    """
+    if cooldown_days is None:
+        return set()
+    query = f"""
+        SELECT DISTINCT id
+        FROM `{INT_METABASE_DATASET}.archiving_log`
+        WHERE object_type = 'card'
+          AND COALESCE(status, '') != 'success'
+          AND date(archived_at) >= date_sub(
+              current_date(), interval {int(cooldown_days)} day
+          )
+    """
+    df = pd.read_gbq(query)
+    if df.empty:
+        return set()
+    return set(df["id"].astype(int).tolist())
+
+
 def append_archiving_logs(log_entries):
     """Append a batch of log entries to the archiving_log BQ table in one call."""
     if not log_entries:
@@ -233,16 +287,18 @@ def append_archiving_logs(log_entries):
     logger.info("Wrote %d archiving log entries to BQ", len(log_entries))
 
 
-def select_soft_archive_candidates(df, rules):
+def select_soft_archive_candidates(df, rules, excluded_ids=None):
     """Pick cards to soft-archive. First matching rule wins (rules order = YAML order).
 
     A card is a candidate for a rule when:
+      * its id is NOT in `excluded_ids` (e.g. recent failure cooldown),
       * any of its ancestor collection names matches the rule's title pattern,
       * its card_creation_date is older than rule.min_age_days,
       * its views over rule.views_window_months are strictly below rule.max_views,
       * (optional) its card_update_date is older than rule.min_days_since_update
         — protects cards being actively edited even if they have low traffic.
     """
+    excluded_ids = set(excluded_ids) if excluded_ids else set()
     if df is None or df.empty:
         return []
 
@@ -280,6 +336,7 @@ def select_soft_archive_candidates(df, rules):
             ancestor_match
             & (age_days >= rule["min_age_days"])
             & (df[views_col] < rule["max_views"])
+            & (~df["card_id"].isin(excluded_ids))
         )
         min_update_age = rule.get("min_days_since_update")
         if min_update_age is not None:
@@ -378,11 +435,12 @@ class MoveToArchive:
             )
         else:
             logger.error(
-                "Failed to move card %s: status=%s response=%r",
+                "Failed to move card %s: status=%s reason=%s",
                 self.id,
                 status,
-                result,
+                _summarize_metabase_error(result),
             )
+            logger.debug("Full move response for card %s: %r", self.id, result)
 
         return log_entry
 

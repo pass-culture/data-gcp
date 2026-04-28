@@ -19,6 +19,7 @@ from domain.archiving import (
     compute_archive_stats,
     hard_archive_stale_cards,
     load_activity_dataframe,
+    load_recently_failed_card_ids,
     log_archive_stats,
     select_soft_archive_candidates,
 )
@@ -75,17 +76,26 @@ def archive(
     archive_collection_id = config["archive_collection_id"]
     max_cards = config.get("max_cards_to_archive", 50)
     soft_rules = config.get("soft_archive_rules", [])
+    failure_cooldown_days = config.get("soft_archive_failure_cooldown_days", 30)
 
     activity_df = None
+    excluded_ids = set()
     if soft_rules:
         activity_df = load_activity_dataframe(dataset=dataset_name, table=table_name)
+        excluded_ids = load_recently_failed_card_ids(failure_cooldown_days)
 
-    log_archive_stats(compute_archive_stats(activity_df, config))
+    log_archive_stats(
+        compute_archive_stats(activity_df, config, excluded_ids=excluded_ids)
+    )
 
     if soft_rules:
-        candidates = select_soft_archive_candidates(activity_df, soft_rules)
+        candidates = select_soft_archive_candidates(
+            activity_df, soft_rules, excluded_ids=excluded_ids
+        )
 
         log_entries = []
+        moved = 0
+        failed = []
         for card in candidates[:max_cards]:
             archiving = MoveToArchive(
                 card=card,
@@ -96,11 +106,27 @@ def archive(
             log_entry = archiving.move_object()
             if log_entry is not None:
                 log_entries.append(log_entry)
-            archiving.rename_archive_object()
+            # Only rename when the move actually succeeded — otherwise the card
+            # stays in its original collection with a "[Archive] - ..." prefix.
+            if dry_run or (log_entry and log_entry.get("status") == "success"):
+                archiving.rename_archive_object()
+                moved += 1
+            else:
+                failed.append((card["id"], card["name"]))
             if not dry_run:
                 time.sleep(1)
         if not dry_run:
             append_archiving_logs(log_entries)
+
+        logger.info("Soft-archive run: %d moved, %d failed", moved, len(failed))
+        if failed:
+            sample = failed[:5]
+            logger.warning(
+                "First %d failure(s) (id, name): %s%s",
+                len(sample),
+                sample,
+                "" if len(failed) <= 5 else f" (and {len(failed) - 5} more)",
+            )
 
     hard_archive_config = config.get("hard_archive_cards")
     if hard_archive_config:
@@ -154,10 +180,15 @@ def stats(
     """Print archive pre-flight stats without mutating anything."""
     config = load_archiving_config()
     soft_rules = config.get("soft_archive_rules", [])
+    cooldown_days = config.get("soft_archive_failure_cooldown_days", 30)
     activity_df = None
+    excluded_ids = set()
     if soft_rules:
         activity_df = load_activity_dataframe(dataset=dataset_name, table=table_name)
-    log_archive_stats(compute_archive_stats(activity_df, config))
+        excluded_ids = load_recently_failed_card_ids(cooldown_days)
+    log_archive_stats(
+        compute_archive_stats(activity_df, config, excluded_ids=excluded_ids)
+    )
 
 
 @app.command()

@@ -1,5 +1,9 @@
 archive_collection_id: 717
 max_cards_to_archive: 50
+# Cards that failed to soft-archive in the last N days are skipped on
+# subsequent runs (e.g. Metabase remote-sync rejections). Set to null to
+# disable the cooldown.
+soft_archive_failure_cooldown_days: 30
 
 soft_archive_rules:
   - name: thematic

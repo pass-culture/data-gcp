@@ -2,7 +2,6 @@ import datetime
 import re
 
 from airflow import DAG
-from airflow.decorators import task
 from airflow.models import Param
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 from common import macros
@@ -16,18 +15,27 @@ from common.config import (
 from common.utils import get_airflow_schedule
 from kubernetes.client import (
     V1Container,
+    V1EmptyDirVolumeSource,
+    V1EnvVar,
     V1Pod,
     V1PodSpec,
     V1ResourceRequirements,
+    V1Volume,
     V1VolumeMount,
 )
+
+if not hasattr(V1EnvVar, "template_fields"):
+    V1EnvVar.template_fields = ("value",)
+
+if not hasattr(V1Container, "template_fields"):
+    V1Container.template_fields = ("image", "command", "args", "env")
 
 REPO_URL = "https://github.com/pass-culture/data-gcp"
 DAG_PATH_IN_REPO = "orchestration/dags"
 REPO_NAME = "data-gcp"
 
 BRANCH = "k8s-social-network"
-
+IMAGE_TAG = "dev"
 REGISTRY = (
     "europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry"
 )
@@ -93,6 +101,63 @@ def git_sync_override(branch: str) -> V1Pod:
     )
 
 
+MICROSERVICE_PATH_IN_REPO = "jobs/etl_jobs/external/instagram"
+
+
+def make_full_pod_spec(
+    repo_url: str,
+    repo_name: str,
+    branch: str,
+    image_tag: str,
+    microservice_path: str,
+    registry: str,
+    image_prefix: str,
+    social_network: str,
+    resources: V1ResourceRequirements,
+    gcp_project_id: str,
+    env_short_name: str,
+    service_account: str,
+) -> V1Pod:
+    return V1Pod(
+        spec=V1PodSpec(
+            restart_policy="Never",
+            service_account_name=service_account,
+            init_containers=[
+                V1Container(
+                    name="git-clone",
+                    image="alpine/git",
+                    command=["sh", "-c"],
+                    args=[
+                        f"git clone --depth 1 --branch {branch} {repo_url} /tmp/{repo_name}"
+                        f" && cp -r /tmp/{repo_name}/{microservice_path}/. /app/"
+                    ],
+                    volume_mounts=[V1VolumeMount(name="app-code", mount_path="/app")],
+                )
+            ],
+            containers=[
+                V1Container(
+                    name="base-workload",
+                    image=f"{registry}/{image_prefix}/{social_network}:{image_tag}",
+                    command=["sh", "-c"],
+                    args=[
+                        "cd /app && uv run main.py "
+                        "--start-date {% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_days) }} "
+                        "--end-date {% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_index) }}"
+                    ],
+                    env=[
+                        V1EnvVar(name="GCP_PROJECT_ID", value=gcp_project_id),
+                        V1EnvVar(name="ENV_SHORT_NAME", value=env_short_name),
+                        V1EnvVar(name="GIT_BRANCH", value="{{ params.branch }}"),
+                    ],
+                    resources=resources,
+                    volume_mounts=[V1VolumeMount(name="app-code", mount_path="/app")],
+                )
+            ],
+            volumes=[V1Volume(name="app-code", empty_dir=V1EmptyDirVolumeSource())],
+        )
+    )
+
+
 container_resources = V1ResourceRequirements(
     requests={
         "cpu": "0.2",
@@ -110,11 +175,12 @@ kpo_common = dict(
     env_vars={
         "GCP_PROJECT_ID": GCP_PROJECT_ID,
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
+        "GIT_BRANCH": "{{ params.branch }}",
     },
     in_cluster=True,
     get_logs=True,
-    is_delete_operator_pod=False,
-    on_finish_action="keep_pod",
+    is_delete_operator_pod=False,  # True,
+    on_finish_action="keep_pod",  # "delete_pod",
     image_pull_policy="Always" if ENV_SHORT_NAME == "dev" else "IfNotPresent",
     queue="kubernetes",
     service_account_name="airflow-worker",
@@ -152,24 +218,24 @@ with DAG(
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ):
-    # @task(task_id="resolve_branch")
-    # def resolve_branch(**context) -> str:
-    #     return context["params"]["branch"]
-
     for social_network in ["instagram"]:
-        task = KubernetesPodOperator(
+        KubernetesPodOperator(
             task_id=f"{social_network}_etl",
-            name=make_pod_name(f"{social_network}"),
-            image=f"{REGISTRY}/{image_prefix}/{social_network}:{{{{ params.image_tag }}}}",
-            arguments=[
-                "--start-date",
-                "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_days) }}",
-                "--end-date",
-                "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_index) }}",
-            ],
+            name=make_pod_name(social_network),
+            full_pod_spec=make_full_pod_spec(
+                repo_url=REPO_URL,
+                repo_name=REPO_NAME,
+                branch=BRANCH,
+                image_tag=IMAGE_TAG,
+                microservice_path=MICROSERVICE_PATH_IN_REPO,
+                registry=REGISTRY,
+                image_prefix=image_prefix,
+                social_network=social_network,
+                resources=container_resources,
+                gcp_project_id=GCP_PROJECT_ID,
+                env_short_name=ENV_SHORT_NAME,
+                service_account="airflow-worker",
+            ),
             executor_config={"pod_override": git_sync_override(branch=BRANCH)},
             **kpo_common,
-            # pod_template_file=f"{DAG_FOLDER}/common/watcher_pod_template.yaml",
         )
-        # task.dry_run() Enable dry run for testing without executing the pod.
-        task

@@ -3,6 +3,7 @@ import datetime
 
 from airflow import DAG
 from airflow.decorators import task
+from airflow.models import Param
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 from airflow.providers.cncf.kubernetes.operators.resource import (
     KubernetesCreateResourceOperator,
@@ -11,13 +12,23 @@ from airflow.providers.cncf.kubernetes.operators.resource import (
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
 from airflow.providers.google.cloud.operators.gcs import GCSDeleteObjectsOperator
 from kubernetes.client import (
+    V1Container,
+    V1EnvVar,
     V1PersistentVolumeClaimVolumeSource,
+    V1Pod,
+    V1PodSpec,
     V1ResourceRequirements,
     V1Volume,
     V1VolumeMount,
 )
 
 # --- Config ---
+REPO = "https://github.com/pass-culture/data-gcp"
+DAG_PATH_IN_REPO = "orchestration/dags"
+GIT_SYNC_ROOT = "/git"
+GIT_SYNC_DEST = "repo"
+
+
 NAMESPACE = "airflow-development"
 GCS_BUCKET = "airflow-data-bucket-dev"
 GCS_FOLDER = "tmp_folder"
@@ -55,43 +66,46 @@ def encode_script(script: str) -> str:
     return base64.b64encode(script.encode()).decode()
 
 
+def git_sync_override(branch: str) -> dict:
+    return {
+        "pod_override": V1Pod(
+            spec=V1PodSpec(
+                init_containers=[
+                    V1Container(
+                        name="git-sync",
+                        image="registry.k8s.io/git-sync/git-sync:v4.2.1",
+                        env=[
+                            V1EnvVar(name="GITSYNC_REPO", value=REPO),
+                            V1EnvVar(name="GITSYNC_BRANCH", value=branch),
+                            V1EnvVar(name="GITSYNC_DEPTH", value="1"),
+                            V1EnvVar(name="GITSYNC_ROOT", value=GIT_SYNC_ROOT),
+                            V1EnvVar(name="GITSYNC_DEST", value=GIT_SYNC_DEST),
+                            V1EnvVar(name="GITSYNC_ONE_TIME", value="true"),
+                        ],
+                        volume_mounts=[
+                            V1VolumeMount(name="airflow-dags", mount_path=GIT_SYNC_ROOT)
+                        ],
+                    )
+                ],
+                containers=[
+                    V1Container(
+                        name="base",
+                        volume_mounts=[
+                            V1VolumeMount(
+                                name="airflow-dags",
+                                mount_path="/opt/airflow/dags",
+                                sub_path=f"{GIT_SYNC_DEST}/{DAG_PATH_IN_REPO}",
+                            )
+                        ],
+                    )
+                ],
+            )
+        )
+    }
+
+
 # --- Kubernetes manifests ---
 
-# PV must be created before PVC so the claim can bind to it.
-# Using a hostPath here for demo purposes; swap for your storage backend.
-# PV_YAML = f"""
-# apiVersion: v1
-# kind: PersistentVolume
-# metadata:
-#   name: {PV_NAME}
-# spec:
-#   capacity:
-#     storage: 1Gi
-#   accessModes:
-#     - ReadWriteOnce
-#   persistentVolumeReclaimPolicy: Delete
-#   storageClassName: standard-rwo
-#   hostPath:
-#     path: /mnt/data/{PV_NAME}
-# """
-
-# PVC references the PV explicitly via storageClassName + volumeName so it
-# binds deterministically rather than grabbing a random available PV.
-# PVC_YAML = f"""
-# apiVersion: v1
-# kind: PersistentVolumeClaim
-# metadata:
-#   name: {PVC_NAME}
-#   namespace: {NAMESPACE}
-# spec:
-#   accessModes:
-#     - ReadWriteOnce
-#   resources:
-#     requests:
-#       storage: 1Gi
-#   storageClassName: standard-rwo
-#   volumeName: {PV_NAME}
-# """
 PVC_YAML = f"""
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -155,6 +169,12 @@ with DAG(
     schedule_interval=None,
     catchup=False,
     tags=["demo", "pvc", "gcs"],
+    params={
+        "branch": Param(
+            default="k8s-social-network",
+            type="string",
+        ),
+    },
 ):
 
     @task(task_id="create_gcs_folder")
@@ -187,6 +207,7 @@ with DAG(
             f"&& echo '{encode_script(WRITE_SCRIPT)}' | base64 -d | python"
         ],
         **kpo_common,
+        pod_override=git_sync_override(branch="{{ params.branch }}")["pod_override"],
         queue="kubernetes",
     )
 
@@ -199,6 +220,7 @@ with DAG(
             f"&& echo '{encode_script(READ_SCRIPT)}' | base64 -d | python"
         ],
         **kpo_common,
+        pod_override=git_sync_override(branch="{{ params.branch }}")["pod_override"],
         queue="kubernetes",
     )
 

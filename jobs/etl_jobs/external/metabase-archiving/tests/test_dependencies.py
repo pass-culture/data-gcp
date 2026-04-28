@@ -160,6 +160,39 @@ class TestGetQueryDependencies:
         assert len(result) == 1
         assert result.iloc[0]["card_id"] == 2
 
+    def test_malformed_query_skipped(self):
+        # Cards with query_type "query" but legacy_query lacking a dict ["query"]
+        # path should be skipped (not crash).
+        tables_df = pd.DataFrame(
+            {"table_id": [10], "table_schema": ["p"], "table_name": ["a"]}
+        )
+        cards = [
+            {
+                "id": 1,
+                "name": "Bad shape",
+                "creator": {"email": "u@t.com"},
+                "query_type": "query",
+                "legacy_query": {"native": {"query": "SELECT 1"}},  # wrong shape
+            },
+            {
+                "id": 2,
+                "name": "Non-dict query",
+                "creator": {"email": "u@t.com"},
+                "query_type": "query",
+                "legacy_query": {"query": "not a dict"},
+            },
+            {
+                "id": 3,
+                "name": "Good",
+                "creator": {"email": "u@t.com"},
+                "query_type": "query",
+                "legacy_query": {"query": {"source-table": 10}},
+            },
+        ]
+        result = get_query_dependencies(cards, tables_df)
+        assert len(result) == 1
+        assert result.iloc[0]["card_id"] == 3
+
     def test_no_source_table_nor_source_query(self):
         tables_df = pd.DataFrame(
             {"table_id": [10], "table_schema": ["p"], "table_name": ["a"]}
@@ -244,6 +277,39 @@ class TestGetNativeDependencies:
         # Only card 2 should appear (card 1 skipped)
         assert len(result) == 1
         assert result.iloc[0]["card_id"] == 2
+
+    def test_malformed_native_skipped(self):
+        # Some cards report query_type == "native" but legacy_query lacks the
+        # ["native"]["query"] path. Should be skipped, not crash.
+        tables_df = pd.DataFrame(
+            {"table_id": [1], "table_schema": ["a"], "table_name": ["users"]}
+        )
+        cards = [
+            {
+                "id": 1,
+                "name": "Bad Card",
+                "creator": {"email": "u@t.com"},
+                "query_type": "native",
+                "legacy_query": {"query": {"source-table": 1}},  # wrong shape
+            },
+            {
+                "id": 2,
+                "name": "Empty native",
+                "creator": {"email": "u@t.com"},
+                "query_type": "native",
+                "legacy_query": {"native": {}},  # missing 'query'
+            },
+            {
+                "id": 3,
+                "name": "Good Card",
+                "creator": {"email": "u@t.com"},
+                "query_type": "native",
+                "legacy_query": {"native": {"query": "SELECT * FROM a.users"}},
+            },
+        ]
+        result = get_native_dependencies(cards, tables_df)
+        assert len(result) == 1
+        assert result.iloc[0]["card_id"] == 3
 
     def test_removes_backticks(self):
         tables_df = pd.DataFrame(

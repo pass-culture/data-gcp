@@ -1,0 +1,31 @@
+archive_collection_id: 717
+max_cards_to_archive: 50
+
+soft_archive_rules:
+  - name: thematic
+    ancestor_title_pattern: "%suivi par thématiques%"
+    min_age_days: 60
+    min_days_since_update: 60   # protect cards still being edited
+    views_window_months: 6
+    max_views: 1  # strict less-than → archive only cards with 0 views in 6 months
+
+  - name: adhoc
+    ancestor_title_pattern: "%adhoc%"
+    min_age_days: 15
+    min_days_since_update: 15
+    views_window_months: 3
+    max_views: 5
+
+hard_archive_cards:
+  min_days_since_update: 30
+  name_pattern: "^\\[Archive\\]"
+  max_cards: 50
+
+empty_cleanup:
+  min_age_days: 15
+  min_days_since_update: 15   # don't touch dashboards/collections edited recently
+  scan_root_collection_ids:
+    - 47   # internal
+    - 417  # external
+    - 455  # operational
+    - 717  # archive

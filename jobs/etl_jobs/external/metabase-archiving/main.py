@@ -12,10 +12,15 @@ from core.utils import (
     load_archiving_config,
 )
 from domain.archiving import (
-    ListArchive,
     MoveToArchive,
+    append_archiving_logs,
     archive_dead_dashboards,
     archive_empty_collections,
+    compute_archive_stats,
+    hard_archive_stale_cards,
+    load_activity_dataframe,
+    log_archive_stats,
+    select_soft_archive_candidates,
 )
 from domain.dependencies import run_dependencies
 from domain.permissions import sync_permissions
@@ -39,40 +44,120 @@ def _get_metabase_client():
 
 
 @app.command()
-def archive():
+def archive(
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Log every action without mutating Metabase or writing to BigQuery.",
+    ),
+    dataset_name: str = typer.Option(
+        None,
+        "--dataset-name",
+        help="Override the BigQuery dataset for the activity table "
+        "(default: int_metabase_<env>). Useful for sandbox / pre-deploy testing.",
+    ),
+    table_name: str = typer.Option(
+        "activity",
+        "--table-name",
+        help="Override the activity table name (default: 'activity').",
+    ),
+):
     """Archive cards based on archiving rules."""
-    logger.info("Starting archiving process")
+    logger.info(
+        "Starting archiving process (dry_run=%s, dataset=%s, table=%s)",
+        dry_run,
+        dataset_name,
+        table_name,
+    )
     metabase = _get_metabase_client()
     config = load_archiving_config()
 
-    rules_by_name = {rule["name"]: rule["sql"] for rule in config["rules"]}
+    archive_collection_id = config["archive_collection_id"]
+    max_cards = config.get("max_cards_to_archive", 50)
+    soft_rules = config.get("soft_archive_rules", [])
 
-    for folder in config["folders"]:
-        rule_sql = rules_by_name.get(f"{folder}_archiving")
-        if not rule_sql:
-            logger.warning("No archiving rule found for folder '%s'", folder)
-            continue
+    activity_df = None
+    if soft_rules:
+        activity_df = load_activity_dataframe(dataset=dataset_name, table=table_name)
 
-        list_archive = ListArchive(metabase_folder=folder, rule_sql=rule_sql)
-        list_archive.get_data_archiving()
-        cards = list_archive.preprocess_data_archiving()
+    log_archive_stats(compute_archive_stats(activity_df, config))
 
-        for card in cards[: config["max_cards_to_archive"]]:
-            archiving = MoveToArchive(movement=card, metabase=metabase)
+    if soft_rules:
+        candidates = select_soft_archive_candidates(activity_df, soft_rules)
+
+        log_entries = []
+        for card in candidates[:max_cards]:
+            archiving = MoveToArchive(
+                card=card,
+                archive_collection_id=archive_collection_id,
+                metabase=metabase,
+                dry_run=dry_run,
+            )
             log_entry = archiving.move_object()
+            if log_entry is not None:
+                log_entries.append(log_entry)
             archiving.rename_archive_object()
-            archiving.save_logs_bq(log_entry)
-            time.sleep(1)
+            if not dry_run:
+                time.sleep(1)
+        if not dry_run:
+            append_archiving_logs(log_entries)
 
-    cleanup_config = config.get("empty_collection_cleanup", {})
-    root_ids = cleanup_config.get("root_collection_ids", [])
-    if root_ids:
+    hard_archive_config = config.get("hard_archive_cards")
+    if hard_archive_config:
+        logger.info("Hard-archiving cards stale in archive folder...")
+        hard_archive_stale_cards(
+            metabase,
+            name_pattern=hard_archive_config["name_pattern"],
+            min_days_since_update=hard_archive_config["min_days_since_update"],
+            max_cards=hard_archive_config["max_cards"],
+            dry_run=dry_run,
+        )
+
+    cleanup_config = config.get("empty_cleanup")
+    root_ids = (cleanup_config or {}).get("scan_root_collection_ids", [])
+    if cleanup_config and root_ids:
+        min_age_days = cleanup_config["min_age_days"]
+        min_days_since_update = cleanup_config.get("min_days_since_update")
         logger.info("Cleaning up dead dashboards...")
-        archive_dead_dashboards(metabase, root_ids)
+        archive_dead_dashboards(
+            metabase,
+            root_ids,
+            min_age_days=min_age_days,
+            min_days_since_update=min_days_since_update,
+            dry_run=dry_run,
+        )
         logger.info("Cleaning up empty collections...")
-        archive_empty_collections(metabase, root_ids)
+        archive_empty_collections(
+            metabase,
+            root_ids,
+            min_age_days=min_age_days,
+            min_days_since_update=min_days_since_update,
+            dry_run=dry_run,
+        )
 
     logger.info("Archiving complete")
+
+
+@app.command()
+def stats(
+    dataset_name: str = typer.Option(
+        None,
+        "--dataset-name",
+        help="Override BigQuery dataset for the activity table (default: int_metabase_<env>).",
+    ),
+    table_name: str = typer.Option(
+        "activity",
+        "--table-name",
+        help="Override the activity table name (default: 'activity').",
+    ),
+):
+    """Print archive pre-flight stats without mutating anything."""
+    config = load_archiving_config()
+    soft_rules = config.get("soft_archive_rules", [])
+    activity_df = None
+    if soft_rules:
+        activity_df = load_activity_dataframe(dataset=dataset_name, table=table_name)
+    log_archive_stats(compute_archive_stats(activity_df, config))
 
 
 @app.command()

@@ -62,7 +62,16 @@ def _apply_permissions_to_graph(graph, collection_id, permissions):
         str_group_id = str(group_id)
 
         if str_group_id not in graph:
-            raise ValueError(f"Group {group_id} not found in Metabase permission graph")
+            # Since Metabase 0.56.13, /api/collection/graph omits any
+            # (group, collection) pair whose permission is "none". An absent
+            # group is therefore equivalent to "none" everywhere — nothing
+            # to do when that's what we want.
+            if expected_permission == "none":
+                continue
+            raise ValueError(
+                f"Group {group_id} not found in Metabase permission graph "
+                f"(cannot grant '{expected_permission}' on collection {collection_id})"
+            )
 
         current_permission = graph[str_group_id].get(str_collection_id)
 

@@ -75,7 +75,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py archive ",
+        command="uv run python main.py archive ",
         do_xcom_push=True,
     )
 
@@ -84,7 +84,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py permissions ",
+        command="uv run python main.py permissions ",
         do_xcom_push=True,
     )
 
@@ -93,7 +93,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py dependencies ",
+        command="uv run python main.py dependencies ",
         do_xcom_push=True,
     )
 

@@ -84,10 +84,18 @@ class TestApplyPermissionsToGraph:
         changes = _apply_permissions_to_graph(graph, 10, {5: "write"})
         assert changes == []
 
-    def test_missing_group_raises(self):
+    def test_missing_group_raises_for_non_none(self):
         graph = {"5": {"10": "read"}}
         with pytest.raises(ValueError, match="Group 99 not found"):
             _apply_permissions_to_graph(graph, 10, {99: "write"})
+
+    def test_missing_group_skipped_when_none(self):
+        # Since Metabase 0.56.13, the graph omits 'none' entries entirely,
+        # so an absent group is equivalent to 'none' — no change required.
+        graph = {"5": {"10": "read"}}
+        changes = _apply_permissions_to_graph(graph, 10, {1: "none", 5: "write"})
+        assert len(changes) == 1
+        assert changes[0]["group_id"] == 5
 
     def test_new_collection_in_group(self):
         graph = {"5": {}}

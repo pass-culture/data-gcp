@@ -48,7 +48,7 @@ collections:
           14: "read"
         children:
           eac:
-            id: 330
+            id: 552
             enforce_on_children: true
             permissions:
               2: "write"
@@ -59,7 +59,7 @@ collections:
               24: "none"
               14: "read"
 
-      operational:
+      adhoc:
         id: 606
         enforce_on_children: true
         permissions:

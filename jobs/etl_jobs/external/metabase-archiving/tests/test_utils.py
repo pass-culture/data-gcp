@@ -23,6 +23,11 @@ class TestModuleConstants:
 
         assert INT_METABASE_DATASET == "int_metabase_dev"
 
+    def test_raw_metabase_dataset(self):
+        from core.utils import RAW_METABASE_DATASET
+
+        assert RAW_METABASE_DATASET == "raw_dev"
+
     def test_metabase_api_username(self):
         from core.utils import METABASE_API_USERNAME
 
@@ -41,10 +46,9 @@ class TestLoadArchivingConfig:
 
         config = load_archiving_config()
         assert "max_cards_to_archive" in config
-        assert "folders" in config
-        assert "rules" in config
-        assert isinstance(config["folders"], list)
-        assert isinstance(config["rules"], list)
+        assert "archive_collection_id" in config
+        assert "soft_archive_rules" in config
+        assert isinstance(config["soft_archive_rules"], list)
 
 
 class TestAccessSecretData:

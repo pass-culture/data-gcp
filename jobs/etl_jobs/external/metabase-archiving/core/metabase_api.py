@@ -10,15 +10,41 @@ from tqdm import tqdm
 logger = logging.getLogger(__name__)
 
 
+def _redact_token(token):
+    if not token:
+        return f"<EMPTY token type={type(token).__name__}>"
+    return f"len={len(token)} prefix={token[:10]}... suffix=...{token[-6:]}"
+
+
+def _log_http_failure(label, response):
+    iap_marker = response.headers.get("x-goog-iap-generated-response")
+    logger.error(
+        "[%s] HTTP %s url=%s iap=%s body=%r",
+        label,
+        response.status_code,
+        response.url,
+        iap_marker,
+        response.text[:300],
+    )
+
+
 class MetabaseAPI:
     def get_open_id(self, client_id):
-        return id_token.fetch_id_token(Request(), client_id)
+        logger.info("Fetching IAP id_token (audience client_id=%r)", client_id)
+        token = id_token.fetch_id_token(Request(), client_id)
+        logger.info("IAP token fetched: %s", _redact_token(token))
+        return token
 
     def __init__(self, username, password, host, client_id):
         self.host = host
         self.bearer_token = f"Bearer {self.get_open_id(client_id)}"
 
         url = f"{host}/api/session"
+        logger.info(
+            "POST %s with auth header (bearer %s)",
+            url,
+            _redact_token(self.bearer_token.removeprefix("Bearer ").strip()),
+        )
         response = requests.post(
             url,
             headers={
@@ -27,11 +53,13 @@ class MetabaseAPI:
             },
             data=json.dumps({"username": username, "password": password}),
         )
+        if not response.ok:
+            _log_http_failure("session-login", response)
         response.raise_for_status()  # raises exception when not a 2xx response
         if response.status_code != 204:
             token_json = response.json()
             if "id" not in token_json:
-                raise Exception(f"Error login to {host}, error: {token_json}")
+                raise RuntimeError(f"Error login to {host}, error: {token_json}")
             self.headers = {
                 "Content-Type": "application/json",
                 "X-Metabase-Session": token_json["id"],
@@ -56,7 +84,16 @@ class MetabaseAPI:
             data=json.dumps(params),
             headers=self.headers,
         )
-        return response.json()
+        if not response.ok:
+            _log_http_failure("update_card_collections", response)
+        try:
+            return response.json()
+        except ValueError:
+            return {
+                "status": None,
+                "http_status": response.status_code,
+                "body": response.text[:300],
+            }
 
     def get_cards(self, _id=None):
         if _id:
@@ -117,6 +154,8 @@ class MetabaseAPI:
             data=json.dumps(params),
             headers=self.headers,
         )
+        if not response.ok:
+            _log_http_failure("put_collection", response)
         response.raise_for_status()
         return response.json()
 
@@ -147,6 +186,8 @@ class MetabaseAPI:
             data=json.dumps(params),
             headers=self.headers,
         )
+        if not response.ok:
+            _log_http_failure("put_dashboard", response)
         response.raise_for_status()
         return response.json()
 
@@ -159,6 +200,8 @@ class MetabaseAPI:
         response = requests.get(
             f"{self.host}/api/collection/graph", headers=self.headers
         )
+        if not response.ok:
+            _log_http_failure("get_collection_graph", response)
         response.raise_for_status()
         return response.json()
 
@@ -169,6 +212,8 @@ class MetabaseAPI:
             data=json.dumps(graph),
             headers=self.headers,
         )
+        if not response.ok:
+            _log_http_failure("put_collection_graph", response)
         response.raise_for_status()
         return response.json()
 
@@ -182,6 +227,8 @@ class MetabaseAPI:
             headers=self.headers,
             params=params,
         )
+        if not response.ok:
+            _log_http_failure("get_collection_children", response)
         response.raise_for_status()
         return response.json()
 

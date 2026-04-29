@@ -64,7 +64,7 @@ with DAG(
     default_args=default_dag_args,
     description="Import Social Network Data",
     on_failure_callback=None,
-    schedule_interval=get_airflow_schedule(schedule_dict),
+    schedule=get_airflow_schedule(schedule_dict),
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,

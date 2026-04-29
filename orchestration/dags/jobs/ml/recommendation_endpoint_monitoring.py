@@ -111,7 +111,7 @@ with (
         dag_id=DAG_CONFIG.dag_id,
         default_args=DEFAULT_ARGS,
         description="Run recommendation endpoint monitoring",
-        schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_CONFIG.dag_id]),
+        schedule=get_airflow_schedule(SCHEDULE_DICT[DAG_CONFIG.dag_id]),
         catchup=False,
         dagrun_timeout=timedelta(minutes=60),
         user_defined_macros=macros.default,

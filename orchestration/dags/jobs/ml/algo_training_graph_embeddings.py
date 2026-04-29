@@ -63,9 +63,7 @@ with DAG(
     DAG_NAME,
     default_args=DEFAULT_ARGS,
     description="Training job for building embeddings based on the metadatas graph",
-    schedule_interval=get_airflow_schedule(
-        SCHEDULE_DICT.get(DAG_NAME, {}).get(ENV_SHORT_NAME)
-    ),
+    schedule=get_airflow_schedule(SCHEDULE_DICT.get(DAG_NAME, {}).get(ENV_SHORT_NAME)),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1200),
     user_defined_macros=macros.default,

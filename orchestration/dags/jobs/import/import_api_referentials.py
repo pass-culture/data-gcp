@@ -33,9 +33,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Continuous update of api model to BQ",
-    schedule_interval=get_airflow_schedule(
-        "30 0 * * 1"
-    ),  # import every monday at 00:00
+    schedule=get_airflow_schedule("30 0 * * 1"),  # import every monday at 00:00
     catchup=False,
     dagrun_timeout=timedelta(minutes=300),
     params={

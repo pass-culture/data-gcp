@@ -394,11 +394,11 @@ def one_line_query(sql_path):
     return lines
 
 
-def get_airflow_schedule(schedule_interval, local_env=LOCAL_ENV):
+def get_airflow_schedule(schedule, local_env=LOCAL_ENV):
     if local_env == "1":
         return None
     else:
-        return schedule_interval
+        return schedule
 
 
 def decode_output(task_id, key, **kwargs):

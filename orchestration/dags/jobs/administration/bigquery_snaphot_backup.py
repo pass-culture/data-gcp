@@ -262,9 +262,7 @@ dag = DAG(
     default_args=default_dag_args,
     dagrun_timeout=datetime.timedelta(minutes=480),
     description="historize applicative database current state to gcs bucket",
-    schedule_interval=get_airflow_schedule(
-        SCHEDULE_DICT.get(dag_id, {}).get(ENV_SHORT_NAME)
-    ),
+    schedule=get_airflow_schedule(SCHEDULE_DICT.get(dag_id, {}).get(ENV_SHORT_NAME)),
     catchup=False,
     tags=[DAG_TAGS.DE.value],
 )

@@ -22,7 +22,7 @@ dag = DAG(
     default_args=default_args,
     catchup=False,
     description="A dbt wrapper for airflow",
-    schedule_interval=None,
+    schedule=None,
     params={
         "dbt_command": Param(
             "compile",

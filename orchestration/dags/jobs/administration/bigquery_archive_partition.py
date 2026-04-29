@@ -88,7 +88,7 @@ default_dag_args = {
 dag = DAG(
     DAG_NAME,
     default_args=default_dag_args,
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT.get(DAG_NAME, None)),
+    schedule=get_airflow_schedule(SCHEDULE_DICT.get(DAG_NAME, None)),
     catchup=False,
     params={
         "branch": Param(

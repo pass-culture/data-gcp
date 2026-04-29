@@ -50,7 +50,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Import DMS subscriptions",
-    schedule_interval=get_airflow_schedule("0 2 * * *"),
+    schedule=get_airflow_schedule("0 2 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=300),
     params={

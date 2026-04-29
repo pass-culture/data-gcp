@@ -52,7 +52,7 @@ with DAG(
     dag_id,
     default_args=default_dag_args,
     description="Data reporting export for ministère & DRAC",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[dag_id].get(ENV_SHORT_NAME)),
+    schedule=get_airflow_schedule(SCHEDULE_DICT[dag_id].get(ENV_SHORT_NAME)),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=60),
     user_defined_macros=macros.default,

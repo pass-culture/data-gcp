@@ -71,7 +71,7 @@ with DAG(
     DAG_ID,
     default_args=default_args,
     description="Compute similar artists based on Two Tower and Semantic Embeddings.",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_ID]),
+    schedule=get_airflow_schedule(SCHEDULE_DICT[DAG_ID]),
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,

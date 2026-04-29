@@ -10,6 +10,7 @@ from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+    LOCAL_ENV,
 )
 from common.operators.kubernetes import KubernetesPodOperatorWithGitSync
 from common.utils import get_airflow_schedule
@@ -112,8 +113,9 @@ kpo_common = dict(
         "GCP_PROJECT_ID": GCP_PROJECT_ID,
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
         "GIT_BRANCH": "{{ params.branch }}",
+        "UV_CACHE_DIR": "/app/.cache/uv",
     },
-    in_cluster=True,
+    in_cluster=not LOCAL_ENV,
     get_logs=True,
     is_delete_operator_pod=False,
     on_finish_action="keep_pod",

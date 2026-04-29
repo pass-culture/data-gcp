@@ -22,5 +22,8 @@ RUN mkdir -p ${AIRFLOW_USER_HOME} \
 
 ENV PATH=$PATH:${AIRFLOW_USER_HOME}/google-cloud-sdk/bin
 
+# redirect uv cache to /tmp which is always writable regardless of uid
+ENV UV_CACHE_DIR=/tmp/.cache/uv
+
 ENTRYPOINT []
 CMD []

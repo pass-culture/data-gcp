@@ -22,7 +22,7 @@ with
             ) as total_3plus_category_booked_beneficiaries,
             coalesce(sum(oc.total_users), 0) as total_expired_credit_beneficiaries
         from {{ ref("mrt_native__outgoing_cohort") }} as oc
-        left join
+        inner join
             {{ ref("region_department") }} as rd on oc.user_department_code = rd.num_dep
         group by
             date_trunc(date(oc.user_expiration_month), month),

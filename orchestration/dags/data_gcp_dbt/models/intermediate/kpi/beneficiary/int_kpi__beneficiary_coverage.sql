@@ -26,7 +26,7 @@ with
             rd.region_code,
             ub.total_beneficiaries
         from user_deposit as ub
-        left join
+        inner join
             {{ ref("region_department") }} as rd on ub.department_code = rd.num_dep
     ),
 

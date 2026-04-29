@@ -19,7 +19,7 @@ with
                 ub.last_deposit_expiration_date, month
             ) as deposit_expiration_month
         from {{ ref("int_global__user_beneficiary") }} as ub
-        left join
+        inner join
             {{ ref("region_department") }} as rd on ub.user_department_code = rd.num_dep
         where
             ub.total_deposit_amount >= 300

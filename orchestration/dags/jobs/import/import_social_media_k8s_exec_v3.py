@@ -118,10 +118,11 @@ kpo_common = dict(
     in_cluster=not LOCAL_ENV,
     get_logs=True,
     is_delete_operator_pod=False,
-    on_finish_action="keep_pod",
+    on_finish_action="delete_pod",
     image_pull_policy="Always" if ENV_SHORT_NAME == "dev" else "IfNotPresent",
     queue="kubernetes",
     service_account_name="airflow-worker",
+    kubernetes_conn_id="kubernetes_default" if LOCAL_ENV else None,
 )
 
 with DAG(

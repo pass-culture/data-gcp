@@ -31,7 +31,7 @@ dag_config = {
 }
 
 
-schedule_interval = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
+schedule = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
 
 default_args = {
     "start_date": datetime(2021, 3, 30),
@@ -45,7 +45,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Importing new data from addresses api every day.",
-    schedule_interval=get_airflow_schedule(schedule_interval),
+    schedule=get_airflow_schedule(schedule),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     template_searchpath=DAG_FOLDER,

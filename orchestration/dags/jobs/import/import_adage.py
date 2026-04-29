@@ -44,7 +44,7 @@ with DAG(
     default_args=default_dag_args,
     description="Import Adage from API",
     on_failure_callback=None,
-    schedule_interval=get_airflow_schedule("0 1 * * *"),
+    schedule=get_airflow_schedule("0 1 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=240),
     user_defined_macros=macros.default,

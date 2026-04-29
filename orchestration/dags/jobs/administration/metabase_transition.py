@@ -37,7 +37,7 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Switch metabase tables following dbt migration",
-    schedule_interval=None,
+    schedule=None,
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

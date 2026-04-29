@@ -83,9 +83,7 @@ for partner_id, partner_name in partner_dict.items():
         dagrun_timeout=datetime.timedelta(minutes=180),
         catchup=False,
         description=f"Generate obfuscated export for {partner_name}",
-        schedule_interval=ENCRYPTED_EXPORT_DICT.get(partner_id, {}).get(
-            ENV_SHORT_NAME, None
-        ),
+        schedule=ENCRYPTED_EXPORT_DICT.get(partner_id, {}).get(ENV_SHORT_NAME, None),
         params={
             "branch": Param(
                 default="production" if ENV_SHORT_NAME == "prod" else "master",

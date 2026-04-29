@@ -75,7 +75,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Finance Pricing Forecast ML Job",
-    schedule_interval=SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME],
+    schedule=SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME],
     catchup=False,
     dagrun_timeout=timedelta(minutes=20),
     user_defined_macros=macros.default,

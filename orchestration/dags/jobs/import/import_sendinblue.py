@@ -49,7 +49,7 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Import brevo tables",
-    schedule_interval=get_airflow_schedule("00 04 * * *")
+    schedule=get_airflow_schedule("00 04 * * *")
     if ENV_SHORT_NAME in ["prod", "stg"]
     else get_airflow_schedule(None),
     catchup=False,

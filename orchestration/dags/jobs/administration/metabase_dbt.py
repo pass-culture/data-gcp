@@ -40,7 +40,7 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Import metabase tables from CloudSQL & archive old cards",
-    schedule_interval=get_airflow_schedule("0 */6 * * 1-5")
+    schedule=get_airflow_schedule("0 */6 * * 1-5")
     if ENV_SHORT_NAME == "prod"
     else None,
     catchup=False,

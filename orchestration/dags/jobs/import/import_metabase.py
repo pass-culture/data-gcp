@@ -33,7 +33,7 @@ with DAG(
     "import_metabase",
     default_args=default_dag_args,
     description="Import metabase tables from CloudSQL",
-    schedule_interval=get_airflow_schedule("00 01 * * *"),
+    schedule=get_airflow_schedule("00 01 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

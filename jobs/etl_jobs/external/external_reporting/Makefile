@@ -1,4 +1,4 @@
-PYTHON := python3.10
+PYTHON := python3.12
 VENV := .venv
 
 ENV_VARS := \
@@ -40,7 +40,7 @@ venv:
 	@echo "}" >> $(VENV)/bin/activate
 
 install: venv
-	uv pip install -r requirements.txt --python $(VENV)/bin/python
+	uv sync
 	@echo "✓ Activate with: source $(VENV)/bin/activate"
 
 clean:

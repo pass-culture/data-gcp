@@ -167,6 +167,10 @@ USE_INTERNAL_IP = False if LOCAL_ENV is not None else True
 
 SLACK_TOKEN_DATA_QUALITY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")
 SLACK_CHANNEL_DATA_QUALITY = "alertes-data-quality"
+EXTERNAL_REPORTING_DRIVE_URL = access_secret_data(
+    GCP_PROJECT_ID, "external_reporting_drive_url"
+)
+
 
 CPU_INSTANCES_TYPES = {
     "standard": [

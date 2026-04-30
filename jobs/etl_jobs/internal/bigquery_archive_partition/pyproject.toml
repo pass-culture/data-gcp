@@ -1,0 +1,15 @@
+[project]
+name = "pass-culture-bigquery-archive-partition"
+version = "0.1.0"
+authors = [
+    { name = "Emmanuel Sciara", email = "258792908+esciara-pass@users.noreply.github.com" }
+]
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

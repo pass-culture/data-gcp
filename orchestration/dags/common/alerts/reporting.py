@@ -1,4 +1,4 @@
-from config import EXTERNAL_REPORTING_DRIVE_URL
+from common.config import EXTERNAL_REPORTING_DRIVE_URL
 
 
 def create_reporting_slack_block(

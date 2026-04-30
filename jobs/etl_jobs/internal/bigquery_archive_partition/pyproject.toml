@@ -4,8 +4,12 @@ version = "0.1.0"
 authors = [
     { name = "Emmanuel Sciara", email = "258792908+esciara-pass@users.noreply.github.com" }
 ]
-requires-python = ">=3.10"
-dependencies = []
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    "google-cloud-bigquery==3.20.1",
+    "typer==0.7.0",
+    "pydantic==2.11.3",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]

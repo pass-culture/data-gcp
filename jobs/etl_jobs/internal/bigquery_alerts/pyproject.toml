@@ -1,0 +1,21 @@
+[project]
+name = "pass-culture-bigquery-alerts"
+version = "0.1.0"
+description = "ETL job for BigQuery table freshness alerts"
+requires-python = ">=3.9"
+dependencies = [
+    "datetime==4.3",
+    "pandas==2.2.2",
+    "pandas-gbq==0.23.1",
+    "typer==0.12.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+environments = [
+    "sys_platform == 'linux'",
+    "sys_platform == 'darwin'",
+]

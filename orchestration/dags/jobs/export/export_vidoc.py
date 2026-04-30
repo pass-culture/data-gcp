@@ -86,7 +86,6 @@ with DAG(
     branching = BranchPythonOperator(
         task_id="branching",
         python_callable=_choose_branch,
-        provide_context=True,
     )
 
     with TaskGroup(group_id="waiting_group") as waiting_group:

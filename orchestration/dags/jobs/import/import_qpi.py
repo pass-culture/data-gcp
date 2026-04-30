@@ -119,7 +119,7 @@ with DAG(
                 "writeDisposition": "WRITE_APPEND",
             }
         },
-        trigger_rule="none_failed_or_skipped",
+        trigger_rule="none_failed_min_one_success",
         dag=dag,
     )
 

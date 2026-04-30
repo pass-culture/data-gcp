@@ -257,7 +257,6 @@ with DAG(
     choose_linkage = BranchPythonOperator(
         task_id="choose_path",
         python_callable=_choose_linkage,
-        provide_context=True,
         dag=dag,
     )
 

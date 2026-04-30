@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import EmptyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )

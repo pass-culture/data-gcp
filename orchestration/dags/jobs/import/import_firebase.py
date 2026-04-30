@@ -3,7 +3,7 @@ import datetime
 
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
-from airflow.operators.python_operator import BranchPythonOperator
+from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from common import macros
 from common.callback import on_failure_base_callback
@@ -102,7 +102,6 @@ for dag_type, params in dags.items():
             dag=dag,
             task_id=f"check_table_exists_task_{job_name_table}",
             python_callable=check_table_exists,
-            provide_context=True,
             op_kwargs={
                 "job_params": job_params["params"],
                 "table": table_id,

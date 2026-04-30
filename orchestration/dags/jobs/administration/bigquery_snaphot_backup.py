@@ -282,7 +282,6 @@ with TaskGroup(group_id="snapshots_to_gcs", dag=dag) as to_gcs:
         skip_task = PythonOperator(
             task_id=f"skip_check_{table_name}",
             python_callable=skip_if_not_scheduled,
-            provide_context=True,
             params={**bq_config, **(MODELS_SCHEDULES.get(table_name, {}))},
             dag=dag,
         )

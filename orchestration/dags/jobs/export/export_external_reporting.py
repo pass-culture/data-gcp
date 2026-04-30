@@ -7,6 +7,8 @@ from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator
 from airflow.utils.task_group import TaskGroup
 from common import macros
+from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
+from common.alerts.reporting import create_reporting_slack_block
 from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
@@ -21,6 +23,7 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
+from common.operators.slack import SendSlackMessageOperator
 from common.utils import delayed_waiting_operator, get_airflow_schedule
 
 from jobs.crons import SCHEDULE_DICT
@@ -181,6 +184,13 @@ with DAG(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
+    send_slack_notif_success = SendSlackMessageOperator(
+        task_id="send_slack_notif_success",
+        webhook_token=SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN,
+        trigger_rule="none_failed",
+        block=create_reporting_slack_block(),
+    )
+
     (
         start
         >> waiting_group
@@ -192,4 +202,5 @@ with DAG(
         >> gce_export_to_gcs
         >> gce_export_to_drive
         >> gce_instance_stop
+        >> send_slack_notif_success
     )

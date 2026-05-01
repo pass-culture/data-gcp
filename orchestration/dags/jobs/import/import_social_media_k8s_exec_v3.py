@@ -117,7 +117,7 @@ kpo_common = dict(
     },
     in_cluster=not LOCAL_ENV,
     get_logs=True,
-    is_delete_operator_pod=False,
+    is_delete_operator_pod=True,
     on_finish_action="delete_pod",
     image_pull_policy="Always" if ENV_SHORT_NAME == "dev" else "IfNotPresent",
     queue="kubernetes",
@@ -175,5 +175,7 @@ with DAG(
                 "--end-date {% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_index) }}"
             ],
             executor_config={"pod_override": git_sync_override(branch=BRANCH)},
+            deferrable=True,
+            poll_interval=300,
             **kpo_common,
         )

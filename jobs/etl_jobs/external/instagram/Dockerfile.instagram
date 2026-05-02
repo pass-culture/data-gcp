@@ -31,5 +31,5 @@ ENV UV_LINK_MODE=copy
 RUN uv sync --no-install-project --no-dev --no-editable --no-cache --frozen \
     && rm -rf /root/.cache/uv
 
-ENTRYPOINT ["uv", "run", "main.py"]
+ENTRYPOINT ["uv", "run"]
 CMD []

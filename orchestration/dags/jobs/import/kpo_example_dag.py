@@ -178,13 +178,19 @@ _ARGS_LIST = [
     "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_index) }}",
 ]
 
+# Custom resources and env vars for all tasks in this DAG, on top of the defaults defined in KPO_COMMON_DEFAULTS.
 container_resources = V1ResourceRequirements(
     requests={"cpu": "0.2", "memory": "1Gi"},
     limits={"cpu": "0.5", "memory": "1Gi"},
 )
+extra_env_vars = {"DUMMY_ENV_VAR": "dummy_value"}
 
-kpo_common = KPO_COMMON_DEFAULTS | dict(container_resources=container_resources)
+kpo_common = KPO_COMMON_DEFAULTS.copy()
+kpo_common["container_resources"] = container_resources
+kpo_common["env_vars"] = kpo_common["env_vars"] | extra_env_vars
 
+base_image = "europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/py311"
+microservice_image = f"{REGISTRY}/data-gcp/etl/instagram"
 
 with DAG(
     DAG_NAME,
@@ -231,6 +237,7 @@ with DAG(
     EasyKubernetesPodOperator(
         task_id="celery_gitsynced",
         runtime_mode="gitsynced",
+        image=f"{base_image}:{{{{ params.image_tag }}}}",
         branch="{{ params.branch }}",
         microservice_path=MICROSERVICE_PATH,
         image_tag="{{ params.image_tag }}",
@@ -244,7 +251,7 @@ with DAG(
     EasyKubernetesPodOperator(
         task_id="celery_containerized",
         runtime_mode="containerized",
-        image=f"{REGISTRY}/data-gcp/etl/instagram:{{{{ params.image_tag }}}}",
+        image=f"{microservice_image}:{{{{ params.image_tag }}}}",
         arguments=_ARGS_LIST,
         **kpo_common,
     )
@@ -256,6 +263,7 @@ with DAG(
         task_id="k8s_gitsynced",
         orchestration_mode="kubernetes",
         runtime_mode="gitsynced",
+        image=f"{base_image}:{{{{ params.image_tag }}}}",
         branch="{{ params.branch }}",
         microservice_path=MICROSERVICE_PATH,
         image_tag="{{ params.image_tag }}",
@@ -273,7 +281,7 @@ with DAG(
         task_id="k8s_containerized",
         orchestration_mode="kubernetes",
         runtime_mode="containerized",
-        image=f"{REGISTRY}/data-gcp/etl/instagram:{{{{ params.image_tag }}}}",
+        image=f"{microservice_image}:{{{{ params.image_tag }}}}",
         dags_image_tag="{{ params.dags_image_tag }}",
         arguments=_ARGS_LIST,
         # deferrable=True,

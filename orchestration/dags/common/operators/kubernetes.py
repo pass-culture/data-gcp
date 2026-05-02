@@ -176,6 +176,12 @@ class EasyKubernetesPodOperator(KubernetesPodOperator):
                     f"cd {_MS_MOUNT} && uv run {kwargs['arguments'][0]}"
                 ]
             kwargs["cmds"] = ["sh", "-c"]
+            _uv_env = {"UV_CACHE_DIR": f"{_MS_MOUNT}/.cache/uv"}
+            existing_env = kwargs.get("env_vars")
+            if existing_env is None:
+                kwargs["env_vars"] = _uv_env
+            elif isinstance(existing_env, dict):
+                kwargs["env_vars"] = {**_uv_env, **existing_env}
 
         if orchestration_mode == "kubernetes":
             kwargs["queue"] = "kubernetes"

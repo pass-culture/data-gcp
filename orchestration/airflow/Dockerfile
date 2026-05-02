@@ -31,10 +31,14 @@ RUN uv pip install -r requirements.txt
 # Install gcloud
 USER root
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git ca-certificates curl \
+    && apt-get install -y --no-install-recommends \
+        git \
+        ca-certificates \
+        curl \
     && update-ca-certificates \
-    && curl --proto '=https' --proto-redir '=https' -fsSL https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} \
-       -o /tmp/${GCLOUD_VERSION} \
+    && curl --proto '=https' --proto-redir '=https' -fsSL \
+        https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} \
+        -o /tmp/${GCLOUD_VERSION} \
     && cd /tmp \
     && tar -xzf ${GCLOUD_VERSION} \
     && rm -rf /var/lib/apt/lists/* \
@@ -43,9 +47,11 @@ RUN apt-get update \
          --path-update=false \
     && mv /tmp/google-cloud-sdk ${AIRFLOW_USER_HOME}/google-cloud-sdk \
     && chown -R airflow ${AIRFLOW_USER_HOME}/google-cloud-sdk \
-    && rm /tmp/${GCLOUD_VERSION}
+    && rm /tmp/${GCLOUD_VERSION} \
+    && ${AIRFLOW_USER_HOME}/google-cloud-sdk/bin/gcloud components install gke-gcloud-auth-plugin --quiet
 
 ENV PATH="${PATH}:${AIRFLOW_USER_HOME}/google-cloud-sdk/bin"
+ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
 # Silence gcloud logs for Paramiko ProxyCommand usage
 RUN gcloud config set core/verbosity error \

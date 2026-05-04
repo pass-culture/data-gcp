@@ -86,7 +86,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
-        python_version="3.10",
+        python_version="3.13",
         base_dir=BASE_PATH,
         dag=dag,
         retries=2,
@@ -96,7 +96,7 @@ with DAG(
         task_id="import_to_bigquery",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_PATH,
-        command="python main.py --ndays {{ params.ndays }} --job {{ params.job }} --prior-date {{ params.prior_date }} ",
+        command="uv run python main.py --ndays {{ params.ndays }} --job {{ params.job }} --prior-date {{ params.prior_date }} ",
         do_xcom_push=True,
     )
 

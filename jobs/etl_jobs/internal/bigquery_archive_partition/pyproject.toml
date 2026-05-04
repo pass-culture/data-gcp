@@ -1,9 +1,6 @@
 [project]
 name = "pass-culture-bigquery-archive-partition"
 version = "0.1.0"
-authors = [
-    { name = "Emmanuel Sciara", email = "emmanuel.sciara@passculture.app" }
-]
 requires-python = ">=3.10,<3.11"
 dependencies = [
     "google-cloud-bigquery==3.20.1",

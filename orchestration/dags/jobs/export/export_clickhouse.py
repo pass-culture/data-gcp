@@ -54,7 +54,7 @@ gce_params = {
 
 dags = {
     "daily": {
-        "schedule_interval": SCHEDULE_DICT["export_clickhouse_daily"],
+        "schedule": SCHEDULE_DICT["export_clickhouse_daily"],
         "yyyymmdd": "{{ yyyymmdd(ds) }}",
         "default_dag_args": {
             "start_date": datetime.datetime(2024, 3, 1),
@@ -81,9 +81,7 @@ for dag_name, dag_params in dags.items():
         DAG_NAME,
         default_args=dag_params["default_dag_args"],
         description="Export data to clickhouse",
-        schedule_interval=get_airflow_schedule(
-            dag_params["schedule_interval"][ENV_SHORT_NAME]
-        ),
+        schedule=get_airflow_schedule(dag_params["schedule"][ENV_SHORT_NAME]),
         catchup=False,
         start_date=datetime.datetime(2023, 12, 15),
         max_active_runs=1,

@@ -68,9 +68,7 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Export exp_vidoc__* BigQuery tables to the SNUM OVH-S3 bucket",
-    schedule_interval=get_airflow_schedule(
-        SCHEDULE_DICT["export_vidoc_daily"][ENV_SHORT_NAME]
-    ),
+    schedule=get_airflow_schedule(SCHEDULE_DICT["export_vidoc_daily"][ENV_SHORT_NAME]),
     catchup=False,
     max_active_runs=1,
     dagrun_timeout=datetime.timedelta(minutes=60),

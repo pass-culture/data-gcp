@@ -4,8 +4,55 @@ import datetime
 from airflow import DAG
 from common.config import GCS_AIRFLOW_BUCKET
 from common.operators.kubernetes import EasyKubernetesPodOperator
-from common.storage_utils_v2 import DEFAULT_PVC_NAME, make_storage_lifecycle
+from common.shared_volume import DEFAULT_PVC_NAME, make_storage_lifecycle
 from kubernetes.client import V1ResourceRequirements
+
+DOC = """
+## Shared GCS FUSE volume — example DAG
+
+Demonstrates how to share data between KPO tasks within the same DAG run using a
+GCS FUSE-backed PersistentVolumeClaim. A `write_task` writes a JSON file to the
+shared volume; a `read_task` reads it back and prints the content.
+
+---
+
+### How the shared volume works
+
+The PV and PVC are provisioned permanently via Helm. This DAG only manages the
+**GCS folder lifecycle**: `storage_setup` creates a scoped folder before the tasks
+run; `storage_teardown` deletes it after.
+
+```
+storage_setup → write_task → read_task → storage_teardown
+```
+
+Volume scoping is handled in two layers:
+
+| Layer | Mechanism | Scope |
+|---|---|---|
+| DAG-level | `sub_path` in `V1VolumeMount` | `shared/{dag_id}/` — isolates DAGs from each other |
+| Run-level | `RUN_ID` env var + run-scoped teardown | `{mount_path}/{RUN_ID}/` — isolates concurrent runs within the same DAG |
+
+`sub_path` is resolved at DAG parse time (no Jinja). `RUN_ID` is rendered at
+execution time via env var — that is why the scripts write to `/shared/{RUN_ID}/`
+rather than a fixed path. Setup and teardown are both scoped to the run folder
+(`shared/{dag_id}/{run_id}/`), so concurrent runs are fully independent.
+
+---
+
+### `storage.kpo_kwargs()`
+
+`make_storage_lifecycle` returns a `StorageLifecycle` object. Spread
+`**storage.kpo_kwargs()` into every operator that needs the shared volume — it
+injects all of the following in one call:
+
+- `volumes` / `volume_mounts` / `annotations` — GCS FUSE volume wiring
+- `RUN_ID` — Jinja-rendered run ID for per-run file isolation
+- `GCS_FOLDER` — resolved GCS path for the current run (`shared/{dag_id}/{run_id}`)
+
+Pass `extra_env_vars` to merge additional variables without losing the defaults.
+
+"""
 
 # --- Config ---
 DAG_ID = "kpo_shared_volume_example"
@@ -61,10 +108,10 @@ with DAG(
     dag_id=DAG_ID,
     default_args=default_args,
     description="Demo: GCS FUSE shared volume with write/read KPO tasks",
+    doc_md=DOC,
     schedule_interval=None,
     catchup=False,
-    max_active_runs=1,
-    tags=["demo", "pvc"],
+    tags=["example", "kubernetes"],
 ):
     storage = make_storage_lifecycle(
         bucket_name=GCS_AIRFLOW_BUCKET,
@@ -74,25 +121,25 @@ with DAG(
     write_task = EasyKubernetesPodOperator(
         task_id="write_task",
         runtime_mode="containerized",
-        runtime_image="python:3.12-slim",
-        volumes=[storage.shared_volume.volume],
-        volume_mounts=[storage.shared_volume.mount],
-        annotations=storage.shared_volume.annotations,
+        private_registry=False,
+        runtime_image="python",
+        runtime_image_tag="3.12-slim",
+        cmds=["sh", "-c"],
         arguments=[f"echo '{encode_script(WRITE_SCRIPT)}' | base64 -d | python"],
-        env_vars={"GCS_FOLDER": storage.gcs_run_folder},
         container_resources=resources,
+        **storage.kpo_kwargs(),
     )
 
     read_task = EasyKubernetesPodOperator(
         task_id="read_task",
         runtime_mode="containerized",
-        runtime_image="python:3.12-slim",
-        volumes=[storage.shared_volume.volume],
-        volume_mounts=[storage.shared_volume.mount],
-        annotations=storage.shared_volume.annotations,
+        runtime_image="python",
+        runtime_image_tag="3.12-slim",
+        private_registry=False,
+        cmds=["sh", "-c"],
         arguments=[f"echo '{encode_script(READ_SCRIPT)}' | base64 -d | python"],
-        env_vars={"GCS_FOLDER": storage.gcs_run_folder},
         container_resources=resources,
+        **storage.kpo_kwargs(),
     )
 
     storage.setup >> write_task >> read_task >> storage.teardown

@@ -1,4 +1,3 @@
-import os
 import re
 from typing import Literal
 
@@ -32,13 +31,11 @@ _REGISTRY_FOLDER = "data-gcp"
 _BASE_PYTHON_IMAGE_NAME = "py312"
 _CELERY_WORKER_IMAGE_NAME = "airflow-k8s-worker"
 
-_DEFAULT_DAGS_BRANCH = os.environ.get(
-    "GIT_BRANCH", "master" if ENV_SHORT_NAME != "prod" else "production"
-)
+_DEFAULT_DAGS_BRANCH = "master" if ENV_SHORT_NAME != "prod" else "production"
 
-container_resources = V1ResourceRequirements(
-    requests={"cpu": "0.2", "memory": "1Gi"},
-    limits={"cpu": "0.5", "memory": "1Gi"},
+DEFAULT_CONTAINER_RESOURCES = V1ResourceRequirements(
+    requests={"cpu": "1", "memory": "2Gi"},
+    limits={"cpu": "1", "memory": "2Gi"},
 )
 
 default_env_vars = {
@@ -48,7 +45,7 @@ default_env_vars = {
     "RUN_ID": "{{ run_id }}",
 }
 KPO_COMMON_DEFAULTS = dict(
-    container_resources=container_resources,
+    container_resources=DEFAULT_CONTAINER_RESOURCES,
     env_vars=default_env_vars,
 )
 
@@ -81,7 +78,7 @@ def _make_orchestration_worker_pod_spec(dags_branch: str, dags_image_tag: str) -
             ],
             containers=[
                 V1Container(
-                    name="watcher",
+                    name="base",
                     image=f"{get_registry_image(_CELERY_WORKER_IMAGE_NAME)}:{dags_image_tag}",
                     volume_mounts=[
                         V1VolumeMount(name=_DAGS_VOLUME, mount_path=_DAGS_MOUNT)
@@ -112,7 +109,7 @@ def _make_job_worker_pod_spec(branch: str, microservice_path: str) -> V1Pod:
             ],
             containers=[
                 V1Container(
-                    name="runtime",
+                    name="base",
                     volume_mounts=[
                         V1VolumeMount(name=_MS_VOLUME, mount_path=_MS_MOUNT)
                     ],
@@ -140,7 +137,17 @@ class EasyKubernetesPodOperator(KubernetesPodOperator):
         entrypoint via `uv run`. `branch` is a template field and is rendered before
         execute(), so Jinja expressions like "{{ params.branch }}" work here.
       - "containerized": job pod uses a fully-built image; no init container. The user
-        must provide `image=`.
+        must provide `runtime_image=`.
+
+    private_registry (containerized mode only, default True):
+      - True: `runtime_image` is treated as a short name within the internal Artifact
+        Registry. The full image ref is built as
+        `{registry}/{registry_folder}/{runtime_image}:{runtime_image_tag}`.
+        If `runtime_image` already starts with the full registry URL it is used
+        as-is and only the tag is appended.
+      - False: `runtime_image` is treated as a public / external image name (e.g.
+        `"python"`, `"alpine"`). The full image ref is built as
+        `{runtime_image}:{runtime_image_tag}` — no registry prefix is added.
 
     Parameters handled implicitly (must not appear in DAG code):
       git-sync init containers, volume wiring, executor_config / queue assignment,
@@ -166,6 +173,7 @@ class EasyKubernetesPodOperator(KubernetesPodOperator):
         microservice_path: str | None = None,
         runtime_image: str | None = None,
         runtime_image_tag: str = "dev",
+        private_registry: bool = True,
         namespace: str = AIRFLOW_NAMESPACE,
         service_account_name: str = "airflow-worker",
         in_cluster: bool | None = None,
@@ -194,6 +202,7 @@ class EasyKubernetesPodOperator(KubernetesPodOperator):
         self.microservice_path = microservice_path
         self.runtime_image = runtime_image
         self.runtime_image_tag = runtime_image_tag
+        self.private_registry = private_registry
 
         kwargs.setdefault(
             "name",
@@ -207,9 +216,17 @@ class EasyKubernetesPodOperator(KubernetesPodOperator):
         if kubernetes_conn_id is None:
             kubernetes_conn_id = "kubernetes_default" if LOCAL_ENV else None
 
+        extra_env = kwargs.get("env_vars")
+        if extra_env is None:
+            kwargs["env_vars"] = default_env_vars
+        elif isinstance(extra_env, dict):
+            kwargs["env_vars"] = {**default_env_vars, **extra_env}
+
         if runtime_mode == "gitsynced":
             if runtime_image is not None:
-                kwargs["image"] = runtime_image
+                kwargs["image"] = (
+                    f"{runtime_image if runtime_image.startswith(_REGISTRY) else get_registry_image(runtime_image)}:{runtime_image_tag}"
+                )
             else:
                 kwargs.setdefault(
                     "image",
@@ -224,18 +241,19 @@ class EasyKubernetesPodOperator(KubernetesPodOperator):
                     f"cd {_MS_MOUNT} && uv run {kwargs['arguments'][0]}"
                 ]
 
-            extra_env = kwargs.get("env_vars")
-            if extra_env is None:
-                kwargs["env_vars"] = default_env_vars
-            elif isinstance(extra_env, dict):
-                kwargs["env_vars"] = {**default_env_vars, **extra_env}
-
         elif runtime_mode == "containerized":
             if runtime_image is None:
                 raise ValueError(
                     "runtime_image is required for runtime_mode='containerized'"
                 )
-            kwargs["image"] = runtime_image
+            if not private_registry:
+                kwargs["image"] = f"{runtime_image}:{runtime_image_tag}"
+            elif runtime_image.startswith(_REGISTRY):
+                kwargs["image"] = f"{runtime_image}:{runtime_image_tag}"
+            else:
+                kwargs["image"] = (
+                    f"{get_registry_image(runtime_image)}:{runtime_image_tag}"
+                )
 
         if orchestration_mode == "kubernetes":
             kwargs["queue"] = "kubernetes"

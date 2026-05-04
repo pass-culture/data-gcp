@@ -6,15 +6,11 @@ from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
-    DAG_TAGS,
+    ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
-from common.operators.kubernetes import KPO_COMMON_DEFAULTS, EasyKubernetesPodOperator
+from common.operators.kubernetes import EasyKubernetesPodOperator
 from kubernetes.client import V1ResourceRequirements
-
-REGISTRY = (
-    "europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry"
-)
 
 DOC = """
 ## EasyKubernetesPodOperator — example DAG
@@ -37,7 +33,7 @@ Controls which pod calls the Kubernetes API to create the actual job pod.
 - Routes to the `kubernetes` queue.
 - The Helm chart pod template is used as the base, with a `git-sync` init container
   injected to clone the DAGs repo into `/opt/airflow/dags` before the worker starts.
-- `dag_branch` *(templated — default: `$GIT_BRANCH` env var)*: branch of the DAGs
+- `dag_branch` *(templated — default: `"master"` / `"production"` depending on env)*: branch of the DAGs
   repo to clone into the worker pod.
 - `dag_image_tag` *(templated — default: `"dev"`)*: image tag for the Airflow worker
   container (`airflow-k8s-worker:<tag>`).
@@ -150,6 +146,8 @@ MICROSERVICE_PATH = "jobs/etl_jobs/external/instagram"
 
 DAG_NAME = "kubernetes_example_dag"
 
+branch = "master" if ENV_SHORT_NAME != "prod" else "production"
+
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
     "on_failure_callback": on_failure_vm_callback,
@@ -183,14 +181,14 @@ container_resources = V1ResourceRequirements(
     requests={"cpu": "0.2", "memory": "1Gi"},
     limits={"cpu": "0.5", "memory": "1Gi"},
 )
-extra_env_vars = {"DUMMY_ENV_VAR": "dummy_value"}
+extra_env_vars = {
+    "DUMMY_ENV_VAR": "dummy_value"
+}  # this is just an example of how to add extra env vars on top of the defaults provided by the operator
 
-kpo_common = KPO_COMMON_DEFAULTS.copy()
+kpo_common = {}
 kpo_common["container_resources"] = container_resources
-kpo_common["env_vars"] = kpo_common["env_vars"] | extra_env_vars
+kpo_common["env_vars"] = extra_env_vars
 
-base_image = "europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/py311"
-microservice_image = f"{REGISTRY}/data-gcp/etl/instagram"
 
 with DAG(
     DAG_NAME,
@@ -204,7 +202,7 @@ with DAG(
     dagrun_timeout=datetime.timedelta(minutes=60),
     params={
         "runtime_branch": Param(
-            default="k8s-social-network",
+            default=branch,
             type="string",
             description="Git branch for the job pod (gitsynced runtime)",
         ),
@@ -212,6 +210,11 @@ with DAG(
             default="dev",
             type="string",
             description="Tag for the runtime job image (py31x for gitsynced, user image for containerized)",
+        ),
+        "dag_branch": Param(
+            default=branch,
+            type="string",
+            description="DAGs repo branch cloned into the kubernetes executor worker pod",
         ),
         "dag_image_tag": Param(
             default="dev",
@@ -229,7 +232,7 @@ with DAG(
             description="Offset from execution date for end date",
         ),
     },
-    tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
+    tags=[["example", "kubernetes"]],
 ):
     # ── celery + gitsynced ──────────────────────────────────────────────────
     # Operator forces `sh -c` and prepends `cd /app && uv run `.
@@ -237,10 +240,10 @@ with DAG(
     EasyKubernetesPodOperator(
         task_id="celery_gitsynced",
         runtime_mode="gitsynced",
-        runtime_image=f"{base_image}:{{{{ params.runtime_image_tag }}}}",
+        runtime_image="py310",
+        runtime_image_tag="{{ params.runtime_image_tag }}",
         runtime_branch="{{ params.runtime_branch }}",
         microservice_path=MICROSERVICE_PATH,
-        runtime_image_tag="{{ params.runtime_image_tag }}",
         arguments=[_ARGS_SHELL],
         **kpo_common,
     )
@@ -251,7 +254,8 @@ with DAG(
     EasyKubernetesPodOperator(
         task_id="celery_containerized",
         runtime_mode="containerized",
-        runtime_image=f"{microservice_image}:{{{{ params.runtime_image_tag }}}}",
+        runtime_image="etl/instagram",
+        runtime_image_tag="{{ params.runtime_image_tag }}",
         arguments=_ARGS_LIST,
         **kpo_common,
     )
@@ -263,10 +267,11 @@ with DAG(
         task_id="k8s_gitsynced",
         orchestration_mode="kubernetes",
         runtime_mode="gitsynced",
-        runtime_image=f"{base_image}:{{{{ params.runtime_image_tag }}}}",
+        runtime_image="py310",
+        runtime_image_tag="{{ params.runtime_image_tag }}",
         runtime_branch="{{ params.runtime_branch }}",
         microservice_path=MICROSERVICE_PATH,
-        runtime_image_tag="{{ params.runtime_image_tag }}",
+        dag_branch="{{ params.dag_branch }}",
         dag_image_tag="{{ params.dag_image_tag }}",
         arguments=[_ARGS_SHELL],
         # deferrable=True,
@@ -281,7 +286,9 @@ with DAG(
         task_id="k8s_containerized",
         orchestration_mode="kubernetes",
         runtime_mode="containerized",
-        runtime_image=f"{microservice_image}:{{{{ params.runtime_image_tag }}}}",
+        runtime_image="etl/instagram",
+        runtime_image_tag="{{ params.runtime_image_tag }}",
+        dag_branch="{{ params.dag_branch }}",
         dag_image_tag="{{ params.dag_image_tag }}",
         arguments=_ARGS_LIST,
         # deferrable=True,

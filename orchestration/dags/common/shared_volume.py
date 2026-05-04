@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 from airflow.models.dag import DagContext
 from airflow.operators.python import PythonOperator
@@ -22,12 +22,13 @@ DEFAULT_GCS_BASE_PREFIX = "shared"
 GCS_FUSE_ANNOTATIONS = {"gke-gcsfuse/volumes": "true"}
 
 
-def _make_gcs_folder_task(bucket_name: str, folder: str) -> Callable:
-    def _run():
+def _make_gcs_folder_task(bucket_name: str, gcs_folder: str) -> PythonOperator:
+    def _run(run_id: str) -> None:
         import tempfile
 
         from airflow.providers.google.cloud.hooks.gcs import GCSHook
 
+        folder = f"{gcs_folder}/{run_id}"
         hook = GCSHook()
         with tempfile.NamedTemporaryFile() as tmp:
             hook.upload(
@@ -38,7 +39,11 @@ def _make_gcs_folder_task(bucket_name: str, folder: str) -> Callable:
             )
         logger.info("Created gs://%s/%s/", bucket_name, folder)
 
-    return PythonOperator(task_id="create_gcs_folder", python_callable=_run)
+    return PythonOperator(
+        task_id="create_gcs_folder",
+        python_callable=_run,
+        op_kwargs={"run_id": "{{ run_id }}"},
+    )
 
 
 @dataclass
@@ -102,8 +107,10 @@ class StorageLifecycle:
         teardown: TaskGroup that deletes the scoped GCS folder.
         gcs_folder: Resolved GCS folder path (without ``gs://`` prefix).
         gcs_run_folder: Resolved GCS folder path for the current run (without ``gs://`` prefix).
-        shared_volume: :class:`SharedPVCVolume` instance ready to inject into
-            KubernetesPodOperator via ``**storage.shared_volume.kpo_kwargs``.
+        shared_volume: :class:`SharedPVCVolume` instance. Use ``**storage.kpo_kwargs()``
+            to inject volumes, mounts, annotations, ``RUN_ID``, and ``GCS_FOLDER`` into a
+            KubernetesPodOperator. Use ``**storage.shared_volume.kpo_kwargs()`` directly
+            when you need volume wiring only, without the GCS folder env vars.
     """
 
     setup: TaskGroup
@@ -111,6 +118,27 @@ class StorageLifecycle:
     gcs_folder: str
     gcs_run_folder: str
     shared_volume: SharedPVCVolume
+
+    def kpo_kwargs(
+        self, extra_env_vars: dict[str, str] | None = None
+    ) -> dict[str, Any]:
+        """Return kwargs to inject into EasyKubernetesPodOperator.
+
+        Includes volume wiring (volumes, volume_mounts, annotations) and env vars
+        ``RUN_ID`` (Jinja-rendered at execution time) and ``GCS_FOLDER`` (the
+        run-scoped GCS path). Pass ``extra_env_vars`` to merge additional vars.
+        """
+        env_vars = {
+            "RUN_ID": "{{ run_id }}",
+            "GCS_FOLDER": self.gcs_run_folder,
+            **(extra_env_vars or {}),
+        }
+        return {
+            "volumes": [self.shared_volume.volume],
+            "volume_mounts": [self.shared_volume.mount],
+            "annotations": self.shared_volume.annotations,
+            "env_vars": env_vars,
+        }
 
 
 def make_storage_lifecycle(
@@ -123,37 +151,51 @@ def make_storage_lifecycle(
     """Create GCS folder setup/teardown tasks for a GCS FUSE-backed shared volume.
 
     The PV and PVC are assumed permanent (provisioned via Helm/Terraform).
-    This function only manages the GCS folder lifecycle: creates the folder
-    on setup and deletes it on teardown.
+    This function only manages the GCS folder lifecycle: creates the scoped
+    folder on setup and deletes it on teardown.
 
-    When ``sub_path`` is not provided, ``dag_id`` is resolved automatically
-    from the active DAG context and used to scope the GCS folder and volume
-    mount to ``"{gcs_base_prefix}/{dag_id}"``. Must be called inside an active
-    DAG context in that case.
+    **Scoping model**
 
-    For file-level run isolation within the mount, pass ``RUN_ID="{{ run_id }}"``
-    in your operator's ``env_vars`` — Jinja is rendered in env vars at execution
-    time, unlike ``V1VolumeMount.sub_path`` which is parse-time only.
+    When ``sub_path`` is not provided, ``dag_id`` is resolved from the active
+    DAG context and used to scope both the GCS folder and the Kubernetes volume
+    mount to ``"{gcs_base_prefix}/{dag_id}"``. This provides DAG-level mount
+    isolation.
+
+    Setup and teardown are both scoped to the run folder
+    (``{gcs_base_prefix}/{dag_id}/{run_id}``), so concurrent runs are fully
+    independent: each run creates its own folder on setup and deletes only its
+    own folder on teardown. Use ``**storage.kpo_kwargs()`` on every operator —
+    it injects ``RUN_ID`` and ``GCS_FOLDER`` automatically so scripts can write
+    to ``/shared/{RUN_ID}/`` without any extra wiring.
+
+    **Jinja note**
+
+    ``V1VolumeMount.sub_path`` is resolved at DAG parse time and cannot contain
+    Jinja templates. ``RUN_ID`` must be passed as an env var (already done by
+    ``kpo_kwargs``) so it is rendered at execution time.
 
     Args:
         bucket_name: GCS bucket backing the FUSE-mounted PVC.
             Defaults to ``GCS_AIRFLOW_BUCKET``.
         pvc_name: Name of the pre-existing PersistentVolumeClaim.
-            Defaults to ``"airflow-runtime-storage-{ENV_SHORT_NAME}"``.
+            Defaults to ``"airflow-runtime-storage-{ENVIRONMENT_NAME}"``.
         mount_path: Filesystem path where the volume is mounted inside pods.
             Defaults to ``"/shared"``.
         gcs_base_prefix: Top-level GCS prefix under which the scoped folder
             is created. Defaults to ``"shared"``.
         sub_path: Kubernetes sub_path for the volume mount, scoping the mount
-            to a subdirectory within the bucket. When not provided, resolved
-            from the active DAG context as ``"{gcs_base_prefix}/{dag_id}"``.
-            Pass an explicit value for custom isolation — DAG context is not
+            to a subdirectory within the PVC. When not provided, resolved from
+            the active DAG context as ``"{gcs_base_prefix}/{dag_id}"``. Pass
+            an explicit value for custom isolation — DAG context is not
             required in that case.
 
     Returns:
-        StorageLifecycle: Dataclass with setup/teardown TaskGroups, resolved
-            ``gcs_folder``, and a ``shared_volume`` ready to inject into
-            KubernetesPodOperator via ``**storage.shared_volume.kpo_kwargs``.
+        StorageLifecycle: Dataclass with ``setup``/``teardown`` TaskGroups,
+            resolved ``gcs_folder`` and ``gcs_run_folder`` paths, and a
+            ``shared_volume`` ready for volume wiring. Use
+            ``**storage.kpo_kwargs()`` to inject volumes, mounts, annotations,
+            ``RUN_ID``, and ``GCS_FOLDER`` into a KubernetesPodOperator in one
+            call.
 
     Raises:
         RuntimeError: If ``sub_path`` is not provided and the function is called
@@ -188,7 +230,7 @@ def make_storage_lifecycle(
         GCSDeleteObjectsOperator(
             task_id="delete_gcs_folder",
             bucket_name=bucket_name,
-            prefix=f"{gcs_folder}/",
+            prefix=f"{gcs_folder}/{{{{ run_id }}}}/",
         )
 
     return StorageLifecycle(

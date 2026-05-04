@@ -1,7 +1,6 @@
 from typing import List, Optional
 
 from airflow.models import BaseOperator
-from airflow.utils.decorators import apply_defaults
 from common.hooks.slack import SlackHook
 
 
@@ -12,7 +11,6 @@ class SendSlackMessageOperator(BaseOperator):
 
     template_fields = ["message", "block"]
 
-    @apply_defaults
     def __init__(
         self,
         webhook_token: str,

@@ -299,7 +299,6 @@ with (
     branch_upload_embeddings = BranchPythonOperator(
         task_id="branch_upload_embeddings",
         python_callable=should_upload_embeddings,
-        provide_context=True,
         dag=dag,
     )
 

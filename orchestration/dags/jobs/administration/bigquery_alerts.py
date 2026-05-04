@@ -89,7 +89,6 @@ with DAG(
         op_kwargs={
             "warning_table_list": "{{task_instance.xcom_pull(task_ids='get_warning_tables', key='result')}}",
         },
-        provide_context=True,
         dag=dag,
     )
 

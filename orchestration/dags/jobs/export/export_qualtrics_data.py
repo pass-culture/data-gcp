@@ -133,7 +133,6 @@ for table, job_params in EXPORT_TABLES.items():
     export_task = PythonOperator(
         task_id=f"export_to_qualtrics_{table}",
         python_callable=get_and_send,
-        provide_context=True,
         op_kwargs={
             "table_name": table,
             "dataset_id": job_params["destination_dataset"],

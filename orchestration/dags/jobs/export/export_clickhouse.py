@@ -115,7 +115,6 @@ for dag_name, dag_params in dags.items():
         branching = BranchPythonOperator(
             task_id="branching",
             python_callable=choose_branch,
-            provide_context=True,
             dag=dag,
         )
 

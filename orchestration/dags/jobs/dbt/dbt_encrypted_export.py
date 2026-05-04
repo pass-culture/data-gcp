@@ -155,7 +155,7 @@ for partner_id, partner_name in partner_dict.items():
             task_id="fetch_install_code",
             instance_name=f"{GCE_INSTANCE}-{partner_name}",
             branch="{{ params.branch }}",
-            python_version="3.10",
+            python_version="3.13",
             base_dir=BASE_PATH,
         )
 
@@ -164,7 +164,7 @@ for partner_id, partner_name in partner_dict.items():
             instance_name=f"{GCE_INSTANCE}-{partner_name}",
             base_dir=BASE_PATH,
             command=(
-                "python main.py encrypt "
+                "uv run python main.py encrypt "
                 "--partner-name \"{{ ti.xcom_pull(task_ids='build_export_context', key='partner_name') }}\" "
                 f'--gcs-bucket "{BASE_BUCKET}" '
                 "--export-date \"{{ ti.xcom_pull(task_ids='build_export_context', key='export_date') }}\" "
@@ -178,7 +178,7 @@ for partner_id, partner_name in partner_dict.items():
             instance_name=f"{GCE_INSTANCE}-{partner_name}",
             base_dir=BASE_PATH,
             command=(
-                "python main.py transfer "
+                "uv run python main.py transfer "
                 "--partner-name \"{{ ti.xcom_pull(task_ids='build_export_context', key='partner_name') }}\" "
                 f'--gcs-bucket "{BASE_BUCKET}" '
                 "--export-date \"{{ ti.xcom_pull(task_ids='build_export_context', key='export_date') }}\" "

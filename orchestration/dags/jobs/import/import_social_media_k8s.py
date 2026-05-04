@@ -76,6 +76,7 @@ with DAG(
             runtime_image=f"etl/{social_network}",
             runtime_image_tag="{{ params.runtime_image_tag }}",
             arguments=[
+                "main.py",
                 "--start-date",
                 "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_days) }}",
                 "--end-date",

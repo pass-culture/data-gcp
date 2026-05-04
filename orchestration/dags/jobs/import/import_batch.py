@@ -65,7 +65,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.10",
+        python_version="3.13",
         base_dir=BASE_PATH,
         dag=dag,
         retries=2,
@@ -76,7 +76,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
-        python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} ios
+        uv run python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} ios
         """,
         retries=2,
     )
@@ -86,7 +86,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
-        python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} android
+        uv run python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} android
         """,
         retries=2,
     )

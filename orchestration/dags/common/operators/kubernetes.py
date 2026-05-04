@@ -29,7 +29,7 @@ _REGISTRY = (
 )
 _REGISTRY_FOLDER = "data-gcp"
 _BASE_PYTHON_IMAGE_NAME = "py312"
-_CELERY_WORKER_IMAGE_NAME = "airflow-k8s-worker"
+_CELERY_WORKER_IMAGE_NAME = "airflow"
 
 _DEFAULT_DAGS_BRANCH = "master" if ENV_SHORT_NAME != "prod" else "production"
 _DEFAULT_DAGS_IMAGE_TAG = "dev" if ENV_SHORT_NAME == "dev" else "v1"

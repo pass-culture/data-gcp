@@ -86,7 +86,7 @@ with DAG(
             instance_name=gce_instance,
             base_dir=base_path,
             command="""
-            uv run python main.py \
+            uv run main.py \
             --start-date {{ add_days(yesterday() if dag_run.run_type == 'manual' else ds, params.n_days) }} \
             --end-date {{ add_days(yesterday() if dag_run.run_type == 'manual' else ds, params.n_index) }} \
             """,

@@ -243,8 +243,12 @@ class EasyKubernetesPodOperator(KubernetesPodOperator):
                 kwargs["cmds"] = ["sh", "-c"]
 
             if "arguments" in kwargs:
+                # Join all items into a single shell string so the split-list format
+                # (["script.py", "--flag", "value"]) works identically to containerized.
+                # Limitation: argument values that contain spaces will be word-split by
+                # the shell — avoid spaces in values or wrap them in shell quotes.
                 kwargs["arguments"] = [
-                    f"cd {_MS_MOUNT} && uv run {kwargs['arguments'][0]}"
+                    f"cd {_MS_MOUNT} && uv run {' '.join(str(a) for a in kwargs['arguments'])}"
                 ]
 
         elif runtime_mode == "containerized":

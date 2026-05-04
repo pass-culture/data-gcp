@@ -57,9 +57,11 @@ Controls the image and entrypoint of the actual job pod.
   must contain a `pyproject.toml` (e.g. `jobs/etl_jobs/external/instagram`).
 - `runtime_image` *(templated, optional — default: `py312`)*: override the base Python image.
 - `runtime_image_tag` *(templated — default: `"dev"` in dev, `"v1"` otherwise)*: image tag.
-- `arguments` *(list)*: script name + flags as a **single shell string**,
-  e.g. `["main.py --start-date 2024-01-01"]`. Do not include `uv run` — the operator
-  prepends it automatically.
+- `arguments` *(list)*: split list of script name + flags, e.g.
+  `["main.py", "--start-date", "2024-01-01"]`. Do not include `uv run` — the operator
+  joins the items with spaces and prepends `cd /app && uv run` automatically.
+  **Limitation**: argument values that contain spaces will be word-split by the shell;
+  avoid spaces in values or wrap them in shell quotes.
 
 **`containerized`**
 - Job pod uses a fully self-contained image — code and deps are pre-installed.
@@ -70,9 +72,9 @@ Controls the image and entrypoint of the actual job pod.
   - `False`: used as-is (e.g. `"python"`, `"alpine"`) — no registry prefix added.
 - `runtime_image_tag` *(templated — default: `"dev"` in dev, `"v1"` otherwise)*: appended
   to the image ref as the tag.
-- `arguments` *(list)*: passed directly to the image ENTRYPOINT as individual args.
-  Use a **split list** `["--flag", "value"]` — a single concatenated string is treated
-  as one argument by the container runtime and will be rejected by most CLIs.
+- `arguments` *(list)*: split list passed as individual argv elements to the ENTRYPOINT,
+  e.g. `["main.py", "--flag", "value"]`. Same format as `gitsynced` — both modes accept
+  the identical argument list.
 
 ---
 
@@ -169,19 +171,13 @@ default_dag_args = {
 }
 
 
-# For gitsynced: single shell string — operator wraps in `sh -c`.
-_ARGS_SHELL = (
-    "main.py "
-    "--start-date "
-    "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}"
-    "{{ add_days(base, params.n_days) }} "
-    "--end-date "
-    "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}"
-    "{{ add_days(base, params.n_index) }}"
-)
-
-# For containerized: split list — each item becomes a separate arg to the image ENTRYPOINT.
-_ARGS_LIST = [
+# Split-list format works for both runtime modes:
+#   - containerized: each item is passed as a separate argv element to the ENTRYPOINT.
+#   - gitsynced: items are joined with spaces into a single shell string by the operator,
+#     then executed as: sh -c "cd /app && uv run main.py --flag value ..."
+# Limitation: argument values that contain spaces will be word-split by the shell in
+# gitsynced mode. Avoid spaces in values, or wrap them in shell quotes if needed.
+_ARGS = [
     "main.py",
     "--start-date",
     "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_days) }}",
@@ -238,8 +234,6 @@ with DAG(
     tags=["example", "kubernetes"],
 ):
     # ── celery + gitsynced ──────────────────────────────────────────────────
-    # Operator forces `sh -c` and prepends `cd /app && uv run `.
-    # Pass the script name + args as a single shell string.
     EasyKubernetesPodOperator(
         task_id="celery_gitsynced",
         runtime_mode="gitsynced",
@@ -247,25 +241,21 @@ with DAG(
         runtime_image_tag="{{ params.runtime_image_tag }}",
         runtime_branch="{{ params.runtime_branch }}",
         microservice_path=MICROSERVICE_PATH,
-        arguments=[_ARGS_SHELL],
+        arguments=_ARGS,
         **kpo_common,
     )
 
     # ── celery + containerized ──────────────────────────────────────────────
-    # Image ENTRYPOINT is preserved. Pass each flag/value as a separate list
-    # item so Kubernetes delivers them as individual args to the entrypoint.
     EasyKubernetesPodOperator(
         task_id="celery_containerized",
         runtime_mode="containerized",
         runtime_image="etl/instagram",
         runtime_image_tag="{{ params.runtime_image_tag }}",
-        arguments=_ARGS_LIST,
+        arguments=_ARGS,
         **kpo_common,
     )
 
     # ── kubernetes + gitsynced ──────────────────────────────────────────────
-    # Operator forces `sh -c` and prepends `cd /app && uv run `.
-    # Pass the script name + args as a single shell string.
     EasyKubernetesPodOperator(
         task_id="k8s_gitsynced",
         orchestration_mode="kubernetes",
@@ -274,22 +264,20 @@ with DAG(
         runtime_image_tag="{{ params.runtime_image_tag }}",
         runtime_branch="{{ params.runtime_branch }}",
         microservice_path=MICROSERVICE_PATH,
-        arguments=[_ARGS_SHELL],
+        arguments=_ARGS,
         # deferrable=True,
         # poll_interval=60,
         **kpo_common,
     )
 
     # ── kubernetes + containerized ──────────────────────────────────────────
-    # Image ENTRYPOINT is preserved. Pass each flag/value as a separate list
-    # item so Kubernetes delivers them as individual args to the entrypoint.
     EasyKubernetesPodOperator(
         task_id="k8s_containerized",
         orchestration_mode="kubernetes",
         runtime_mode="containerized",
         runtime_image="etl/instagram",
         runtime_image_tag="{{ params.runtime_image_tag }}",
-        arguments=_ARGS_LIST,
+        arguments=_ARGS,
         # deferrable=True,
         # poll_interval=60,
         **kpo_common,

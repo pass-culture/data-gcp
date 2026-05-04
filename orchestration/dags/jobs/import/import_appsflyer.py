@@ -71,7 +71,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.9",
+        python_version="3.13",
         base_dir=BASE_PATH,
         retries=2,
     )
@@ -80,28 +80,28 @@ with DAG(
         task_id="activity_report_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command="python api_import.py --n-days {{ params.n_days }} --table-name activity_report ",
+        command="uv run python api_import.py --n-days {{ params.n_days }} --table-name activity_report ",
     )
 
     daily_report_op = SSHGCEOperator(
         task_id="daily_report_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command="python api_import.py --n-days {{ params.n_days }} --table-name daily_report ",
+        command="uv run python api_import.py --n-days {{ params.n_days }} --table-name daily_report ",
     )
 
     partner_report_op = SSHGCEOperator(
         task_id="partner_report_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command="python api_import.py --n-days {{ params.n_days }} --table-name partner_report ",
+        command="uv run python api_import.py --n-days {{ params.n_days }} --table-name partner_report ",
     )
 
     in_app_event_report_op = SSHGCEOperator(
         task_id="in_app_event_report_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command="python api_import.py --n-days {{ params.n_days }} --table-name in_app_event_report ",
+        command="uv run python api_import.py --n-days {{ params.n_days }} --table-name in_app_event_report ",
     )
 
     gcs_cost_etl_op = (
@@ -109,7 +109,7 @@ with DAG(
             task_id="gcs_cost_etl_op",
             instance_name=GCE_INSTANCE,
             base_dir=BASE_PATH,
-            command=f"python gcs_import.py --gcs-base-path {GCS_ETL_PARAMS['GCS_BASE_PATH']} --prefix-table-name {GCS_ETL_PARAMS['PREFIX_TABLE_NAME']} --date {GCS_ETL_PARAMS['DATE']} ",
+            command=f"uv run python gcs_import.py --gcs-base-path {GCS_ETL_PARAMS['GCS_BASE_PATH']} --prefix-table-name {GCS_ETL_PARAMS['PREFIX_TABLE_NAME']} --date {GCS_ETL_PARAMS['DATE']} ",
         )
         if ENV_SHORT_NAME == "prod"
         else EmptyOperator(task_id="skip_gcs_cost_etl_op", dag=dag)

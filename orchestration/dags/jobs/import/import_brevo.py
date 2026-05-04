@@ -30,7 +30,7 @@ from dependencies.brevo.import_brevo import (
 
 DAG_NAME = "import_brevo_v2"
 GCE_INSTANCE = f"import-brevo-2-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/"
+BASE_PATH = "data-gcp/jobs/etl_jobs/jobs/brevo/"
 yesterday = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 dag_config = {
     "GCP_PROJECT": GCP_PROJECT_ID,
@@ -85,7 +85,6 @@ with DAG(
     fetch_install_code = InstallDependenciesOperator(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        requirement_file="jobs/brevo/requirements.txt",
         branch="{{ params.branch }}",
         python_version="'3.10'",
         base_dir=BASE_PATH,
@@ -98,7 +97,7 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="""
-            python -m jobs.brevo.main \
+            uv run python main.py \
             --target transactional \
             --audience pro \
             --start-date {{ params.start_date }} \

@@ -144,7 +144,7 @@ when running airflow locally, only the runtime worker pod is created on the clus
 """
 MICROSERVICE_PATH = "jobs/etl_jobs/external/instagram"
 
-DAG_NAME = "kubernetes_example_dag"
+DAG_NAME = "kpo_example_dag"
 
 branch = "master" if ENV_SHORT_NAME != "prod" else "production"
 
@@ -232,7 +232,7 @@ with DAG(
             description="Offset from execution date for end date",
         ),
     },
-    tags=[["example", "kubernetes"]],
+    tags=["example", "kubernetes"],
 ):
     # ── celery + gitsynced ──────────────────────────────────────────────────
     # Operator forces `sh -c` and prepends `cd /app && uv run `.

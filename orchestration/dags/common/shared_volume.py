@@ -224,7 +224,7 @@ def make_storage_lifecycle(
     )
 
     with TaskGroup("storage_setup") as setup:
-        _make_gcs_folder_task(bucket_name=bucket_name, folder=gcs_folder)
+        _make_gcs_folder_task(bucket_name=bucket_name, gcs_folder=gcs_folder)
 
     with TaskGroup("storage_teardown") as teardown:
         GCSDeleteObjectsOperator(

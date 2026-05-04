@@ -3,7 +3,7 @@ name = "downloads"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = "~=3.12.0"
+requires-python = ">=3.13,<3.14"
 dependencies = [
     "authlib>=0.4.6",
     "fsspec>=2025.5.1",
@@ -25,7 +25,7 @@ dependencies = [
 
 # Recommended ruff config for now, to be updated as we go along.
 [tool.ruff]
-target-version = 'py312'
+target-version = 'py313'
 
 lint.select = ["E4", "E7", "E9", "F", "I"]
 # TARGET : lint.select = [

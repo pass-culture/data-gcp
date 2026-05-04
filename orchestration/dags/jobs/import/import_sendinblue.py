@@ -82,7 +82,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.9",
+        python_version="3.13",
         base_dir=BASE_PATH,
         retries=2,
     )
@@ -92,7 +92,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command='python main.py --target transactional --audience pro --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
+        command='uv run python main.py --target transactional --audience pro --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
         do_xcom_push=True,
         deferrable=True,
     )
@@ -102,7 +102,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command='python main.py --target transactional --audience native --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
+        command='uv run python main.py --target transactional --audience native --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
         do_xcom_push=True,
         deferrable=True,
     )
@@ -132,7 +132,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py --target newsletter --audience pro --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
+        command="uv run python main.py --target newsletter --audience pro --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
         do_xcom_push=True,
     )
 
@@ -141,7 +141,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py --target newsletter --audience native --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
+        command="uv run python main.py --target newsletter --audience native --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
         do_xcom_push=True,
     )
 

@@ -23,6 +23,8 @@ GCS_AIRFLOW_BUCKET = os.environ.get(
     "GCS_BUCKET", f"airflow-data-bucket-{ENV_SHORT_NAME}"
 )
 
+AIRFLOW_NAMESPACE = f"airflow-{ENVIRONMENT_NAME}"
+
 SSH_USER = os.environ.get("SSH_USER", "airflow")
 
 GCP_REGION = "europe-west1"

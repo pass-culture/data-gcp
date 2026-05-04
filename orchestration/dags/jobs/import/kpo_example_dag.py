@@ -37,9 +37,9 @@ Controls which pod calls the Kubernetes API to create the actual job pod.
 - Routes to the `kubernetes` queue.
 - The Helm chart pod template is used as the base, with a `git-sync` init container
   injected to clone the DAGs repo into `/opt/airflow/dags` before the worker starts.
-- `dags_branch` *(templated — default: `$GIT_BRANCH` env var)*: branch of the DAGs
+- `dag_branch` *(templated — default: `$GIT_BRANCH` env var)*: branch of the DAGs
   repo to clone into the worker pod.
-- `dags_image_tag` *(templated — default: `"dev"`)*: image tag for the Airflow worker
+- `dag_image_tag` *(templated — default: `"dev"`)*: image tag for the Airflow worker
   container (`airflow-k8s-worker:<tag>`).
 - Both params are resolved in `execute()` after Jinja rendering, so
   `{{ params.xxx }}` works for both.
@@ -51,13 +51,13 @@ Controls which pod calls the Kubernetes API to create the actual job pod.
 Controls the image and entrypoint of the actual job pod.
 
 **`gitsynced`**
-- Job pod uses a base Python image (`py310:<image_tag>`).
+- Job pod uses a base Python image (`py31x:<runtime_image_tag>`).
 - A `git-clone` init container clones the microservice repo at `branch` into `/app`.
 - The operator constructs the entrypoint: `sh -c "cd /app && uv run <arguments>"`.
-- `branch` *(templated, required)*: branch of the microservice repo to clone.
+- `runtime_branch` *(templated, required)*: branch of the microservice repo to clone.
 - `microservice_path` *(required)*: path inside the repo copied into `/app`;
   must contain a `pyproject.toml` (e.g. `jobs/etl_jobs/external/instagram`).
-- `image_tag` *(templated — default: `"dev"`)*: tag of the base Python image.
+- `runtime_image_tag` *(templated — default: `"dev"`)*: tag of the base Python image.
 - `arguments` *(list)*: script name + flags as a **single shell string**,
   e.g. `["main.py --start-date 2024-01-01"]`. Do not include `uv run` — the operator
   prepends it automatically.
@@ -79,7 +79,7 @@ Controls the image and entrypoint of the actual job pod.
 Celery worker (helm chart, untouched)
   └─ KPO.execute() → job pod
        ├─ init: git-clone  →  git clone --branch <branch> .../instagram  →  /app
-       └─ main: py310:<image_tag>
+       └─ main: py31x:<runtime_image_tag>
                 sh -c "cd /app && uv run main.py --start-date ... --end-date ..."
 ```
 
@@ -87,28 +87,28 @@ Celery worker (helm chart, untouched)
 ```
 Celery worker (helm chart, untouched)
   └─ KPO.execute() → job pod
-       └─ main: etl/instagram:<image_tag>
+       └─ main: etl/instagram:<runtime_image_tag>
                 ENTRYPOINT uv run  +  CMD ["main.py", "--start-date","...","--end-date","..."]
 ```
 
 **k8s_gitsynced**
 ```
 Kubernetes executor → worker pod
-  ├─ init: git-sync  →  git clone --branch <dags_branch> .../data-gcp  →  /opt/airflow/dags
-  └─ main: airflow-k8s-worker:<dags_image_tag>
+  ├─ init: git-sync  →  git clone --branch <dag_branch> .../data-gcp  →  /opt/airflow/dags
+  └─ main: airflow-k8s-worker:<dag_image_tag>
              └─ KPO.execute() → job pod
-                  ├─ init: git-clone  →  git clone --branch <branch> .../instagram  →  /app
-                  └─ main: py310:<image_tag>
+                  ├─ init: git-clone  →  git clone --branch <runtime_branch> .../instagram  →  /app
+                  └─ main: py31x:<runtime_image_tag>
                            sh -c "cd /app && uv run main.py --start-date ... --end-date ..."
 ```
 
 **k8s_containerized**
 ```
 Kubernetes executor → worker pod
-  ├─ init: git-sync  →  git clone --branch <dags_branch> .../data-gcp  →  /opt/airflow/dags
-  └─ main: airflow-k8s-worker:<dags_image_tag>
+  ├─ init: git-sync  →  git clone --branch <dag_branch> .../data-gcp  →  /opt/airflow/dags
+  └─ main: airflow-k8s-worker:<dag_image_tag>
              └─ KPO.execute() → job pod
-                  └─ main: etl/instagram:<image_tag>
+                  └─ main: etl/instagram:<runtime_image_tag>
                            ENTRYPOINT uv run  +  CMD ["main.py", "--start-date","...","--end-date","..."]
 ```
 
@@ -140,7 +140,7 @@ Deferrable mode (deferrable = True, poll_interval= 300s) is available for both o
 ### Advices and Troubleshooting
 
 when containering a microservice, it is recommended to add ENTRYPOINT ["uv","run"] in the Dockerfile, so that you can pass the script name and arguments as CMD and have a consistent experience with the gitsynced runtime, which also uses `uv run` as the entrypoint command. This way, you can switch between runtimes without changing the way you pass arguments.
-when using kubernetes orchestration mode, make sure to push your dags change to the branch specified in `dags_branch` param, as the worker pod will clone the DAGs repo and run airflow commands based on that code. If you are testing the microservice and DAG argument do not change between runs, you can use the same worker pod by not changing the `dags_branch` and focus only on "branch" param which controls the microservice code.
+when using kubernetes orchestration mode, make sure to push your dags change to the branch specified in `dag_branch` param, as the worker pod will clone the DAGs repo and run airflow commands based on that code. If you are testing the microservice and DAG argument do not change between runs, you can use the same worker pod by not changing the `dag_branch` and focus only on `runtime_branch` param which controls the microservice code.
 Developement workflow is recommended to be done using git-sync with a base image as you don't need to build a new image at each change, and you can easily access the logs in real time to debug. Once the code is stable, you can switch to containerized mode for faster execution and better resource management.
 Deferrable mode is not available when running airflow locally with docker-compose due to the absence of triggerer component.
 when running airflow locally, only the runtime worker pod is created on the cluster, the operator runs in the local environment and communicates with the cluster to create the job pod. In this case, make sure to have the right kubeconfig context set up to point to the desired cluster.
@@ -203,17 +203,17 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     dagrun_timeout=datetime.timedelta(minutes=60),
     params={
-        "branch": Param(
+        "runtime_branch": Param(
             default="k8s-social-network",
             type="string",
             description="Git branch for the job pod (gitsynced runtime)",
         ),
-        "image_tag": Param(
+        "runtime_image_tag": Param(
             default="dev",
             type="string",
             description="Tag for the runtime job image (py31x for gitsynced, user image for containerized)",
         ),
-        "dags_image_tag": Param(
+        "dag_image_tag": Param(
             default="dev",
             type="string",
             description="Tag for the Airflow worker image used by the kubernetes executor worker pod",
@@ -237,10 +237,10 @@ with DAG(
     EasyKubernetesPodOperator(
         task_id="celery_gitsynced",
         runtime_mode="gitsynced",
-        image=f"{base_image}:{{{{ params.image_tag }}}}",
-        branch="{{ params.branch }}",
+        runtime_image=f"{base_image}:{{{{ params.runtime_image_tag }}}}",
+        runtime_branch="{{ params.runtime_branch }}",
         microservice_path=MICROSERVICE_PATH,
-        image_tag="{{ params.image_tag }}",
+        runtime_image_tag="{{ params.runtime_image_tag }}",
         arguments=[_ARGS_SHELL],
         **kpo_common,
     )
@@ -251,7 +251,7 @@ with DAG(
     EasyKubernetesPodOperator(
         task_id="celery_containerized",
         runtime_mode="containerized",
-        image=f"{microservice_image}:{{{{ params.image_tag }}}}",
+        runtime_image=f"{microservice_image}:{{{{ params.runtime_image_tag }}}}",
         arguments=_ARGS_LIST,
         **kpo_common,
     )
@@ -263,11 +263,11 @@ with DAG(
         task_id="k8s_gitsynced",
         orchestration_mode="kubernetes",
         runtime_mode="gitsynced",
-        image=f"{base_image}:{{{{ params.image_tag }}}}",
-        branch="{{ params.branch }}",
+        runtime_image=f"{base_image}:{{{{ params.runtime_image_tag }}}}",
+        runtime_branch="{{ params.runtime_branch }}",
         microservice_path=MICROSERVICE_PATH,
-        image_tag="{{ params.image_tag }}",
-        dags_image_tag="{{ params.dags_image_tag }}",
+        runtime_image_tag="{{ params.runtime_image_tag }}",
+        dag_image_tag="{{ params.dag_image_tag }}",
         arguments=[_ARGS_SHELL],
         # deferrable=True,
         # poll_interval=60,
@@ -281,8 +281,8 @@ with DAG(
         task_id="k8s_containerized",
         orchestration_mode="kubernetes",
         runtime_mode="containerized",
-        image=f"{microservice_image}:{{{{ params.image_tag }}}}",
-        dags_image_tag="{{ params.dags_image_tag }}",
+        runtime_image=f"{microservice_image}:{{{{ params.runtime_image_tag }}}}",
+        dag_image_tag="{{ params.dag_image_tag }}",
         arguments=_ARGS_LIST,
         # deferrable=True,
         # poll_interval=60,

@@ -167,7 +167,7 @@ with DAG(
             microservice_path=MICROSERVICE_PATH_IN_REPO,
             branch="{{ params.branch }}",
             # main container
-            image=f"{REGISTRY}/{image_prefix}/py310:{{{{ params.image_tag }}}}",
+            image=f"{REGISTRY}/{image_prefix}/py311:{{{{ params.image_tag }}}}",
             cmds=["sh", "-c"],
             arguments=[
                 "uv run main.py "

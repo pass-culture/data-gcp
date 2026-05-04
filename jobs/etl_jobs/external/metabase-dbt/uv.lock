@@ -136,7 +136,7 @@ wheels = [
 
 [[package]]
 name = "dbt-metabase"
-version = "1.7.1"
+version = "1.7.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -144,9 +144,9 @@ dependencies = [
     { name = "requests" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/78/75/7159f96727a2a0e0cc40a9ecd8a3db3f6bc04516d4c1189c1fc761823001/dbt_metabase-1.7.1.tar.gz", hash = "sha256:9f9fd8a7de99309be60c4868c2698e0e1f3b8232d755cb5262ae38b8830f6980", size = 772774, upload-time = "2026-03-09T11:34:26.234Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fc/9c/655929eeeb43fea50a108200dceeae4f10fa7b75a5ffd253f3328428bc9a/dbt_metabase-1.7.4.tar.gz", hash = "sha256:946074b88b77d234c11db1cb110f628952fe93045ec6402ec7588099263ca38e", size = 880676, upload-time = "2026-04-19T09:53:38.443Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d9/ce/e5157514c4921533a57c5a4620ad17d98bfc7c00caabcb94c764cc99c01c/dbt_metabase-1.7.1-py3-none-any.whl", hash = "sha256:ad4d21bbe5fd7231978338b7af876729f0f425604046463f5a88697888876569", size = 29998, upload-time = "2026-03-09T11:34:24.834Z" },
+    { url = "https://files.pythonhosted.org/packages/3b/08/9fdd50f6517746bedab9c6dd5ba85f3700c619b253ea55d9b6f16bebb9a2/dbt_metabase-1.7.4-py3-none-any.whl", hash = "sha256:ae1174a31beef0016f351ad7d4c6b45bc5a8f888c94725ba7ab15a7928e59fe9", size = 30406, upload-time = "2026-04-19T09:53:36.946Z" },
 ]
 
 [[package]]
@@ -402,7 +402,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dbt-metabase", specifier = "==1.7.1" },
+    { name = "dbt-metabase", specifier = "==1.7.4" },
     { name = "google-auth-oauthlib", specifier = "==1.2.0" },
     { name = "google-cloud-secret-manager", specifier = "==2.26.0" },
     { name = "google-cloud-storage", specifier = "==2.19.0" },

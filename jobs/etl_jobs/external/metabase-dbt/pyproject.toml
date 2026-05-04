@@ -14,7 +14,7 @@ dependencies = [
     "google-auth-oauthlib==1.2.0",
     "typer==0.15.1",
     "protobuf==6.33.5",
-    "dbt-metabase==1.7.1",
+    "dbt-metabase==1.7.4",
 ]
 
 ## ruff

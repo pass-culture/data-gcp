@@ -32,6 +32,8 @@ _BASE_PYTHON_IMAGE_NAME = "py312"
 _CELERY_WORKER_IMAGE_NAME = "airflow-k8s-worker"
 
 _DEFAULT_DAGS_BRANCH = "master" if ENV_SHORT_NAME != "prod" else "production"
+_DEFAULT_DAGS_IMAGE_TAG = "dev" if ENV_SHORT_NAME == "dev" else "v1"
+_DEFAULT_RUNTIME_IMAGE_TAG = "dev" if ENV_SHORT_NAME == "dev" else "v1"
 
 DEFAULT_CONTAINER_RESOURCES = V1ResourceRequirements(
     requests={"cpu": "1", "memory": "2Gi"},
@@ -129,13 +131,18 @@ class EasyKubernetesPodOperator(KubernetesPodOperator):
         untouched (fully defined by the Airflow helm chart).
       - "kubernetes": task is routed to the kubernetes queue; the worker pod gets a
         git-sync init container that pulls the DAGs repo at `dag_branch`.
-        Both `dag_branch` and `dag_image_tag` are template fields — executor_config
-        is built in execute() after Jinja rendering.
+        `dag_branch` and `dag_image_tag` must be **literal strings** — they are embedded
+        into executor_config at DAG parse time so the Kubernetes executor can inject
+        the init container when it creates the worker pod. Jinja templates, XCom refs,
+        and dynamic task mapping cannot be used here: executor_config is consumed by the
+        scheduler before any template rendering occurs. To target a different branch or
+        image tag, change the value in the DAG file and let the scheduler re-parse.
 
     runtime_mode:
       - "gitsynced": job pod clones the microservice repo at `branch` and runs the
         entrypoint via `uv run`. `branch` is a template field and is rendered before
         execute(), so Jinja expressions like "{{ params.branch }}" work here.
+        when using this mode, the user must provide `microservice_path`, the runtime image and tags (optional defaults to the base Python image), and the command is always `uv run` with the provided arguments.
       - "containerized": job pod uses a fully-built image; no init container. The user
         must provide `runtime_image=`.
 
@@ -159,7 +166,6 @@ class EasyKubernetesPodOperator(KubernetesPodOperator):
         "dag_branch",
         "runtime_image",
         "runtime_image_tag",
-        "dag_image_tag",
     )
 
     def __init__(
@@ -168,11 +174,11 @@ class EasyKubernetesPodOperator(KubernetesPodOperator):
         runtime_mode: Literal["gitsynced", "containerized"],
         orchestration_mode: Literal["celery", "kubernetes"] = "celery",
         dag_branch: str = _DEFAULT_DAGS_BRANCH,
-        dag_image_tag: str = "dev",
+        dag_image_tag: str = _DEFAULT_DAGS_IMAGE_TAG,
         runtime_branch: str | None = None,
         microservice_path: str | None = None,
         runtime_image: str | None = None,
-        runtime_image_tag: str = "dev",
+        runtime_image_tag: str = _DEFAULT_RUNTIME_IMAGE_TAG,
         private_registry: bool = True,
         namespace: str = AIRFLOW_NAMESPACE,
         service_account_name: str = "airflow-worker",
@@ -257,8 +263,14 @@ class EasyKubernetesPodOperator(KubernetesPodOperator):
 
         if orchestration_mode == "kubernetes":
             kwargs["queue"] = "kubernetes"
-            # executor_config is built in execute() so dag_branch / dag_image_tag
-            # are already Jinja-rendered before _make_worker_pod_spec() is called.
+            # Must be set at __init__ time: the scheduler reads executor_config when
+            # it creates the worker pod, before the pod exists and before any Jinja
+            # rendering. dag_branch and dag_image_tag must therefore be literal strings.
+            kwargs["executor_config"] = {
+                "pod_override": _make_orchestration_worker_pod_spec(
+                    dag_branch, dag_image_tag
+                )
+            }
 
         super().__init__(
             namespace=namespace,
@@ -273,12 +285,6 @@ class EasyKubernetesPodOperator(KubernetesPodOperator):
         )
 
     def execute(self, context):
-        if self.orchestration_mode == "kubernetes":
-            self.executor_config = {
-                "pod_override": _make_orchestration_worker_pod_spec(
-                    self.dag_branch, self.dag_image_tag
-                )
-            }
         if self.runtime_mode == "gitsynced":
             self.full_pod_spec = _make_job_worker_pod_spec(
                 self.runtime_branch, self.microservice_path

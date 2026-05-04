@@ -33,12 +33,14 @@ Controls which pod calls the Kubernetes API to create the actual job pod.
 - Routes to the `kubernetes` queue.
 - The Helm chart pod template is used as the base, with a `git-sync` init container
   injected to clone the DAGs repo into `/opt/airflow/dags` before the worker starts.
-- `dag_branch` *(templated — default: `"master"` / `"production"` depending on env)*: branch of the DAGs
-  repo to clone into the worker pod.
-- `dag_image_tag` *(templated — default: `"dev"`)*: image tag for the Airflow worker
-  container (`airflow-k8s-worker:<tag>`).
-- Both params are resolved in `execute()` after Jinja rendering, so
-  `{{ params.xxx }}` works for both.
+- `dag_branch` *(literal string — default: `"master"` / `"production"` depending on env)*:
+  branch of the DAGs repo cloned into the worker pod.
+- `dag_image_tag` *(literal string — default: `"dev"` in dev, `"v1"` otherwise)*:
+  image tag for the Airflow worker container (`airflow-k8s-worker:<tag>`).
+- **Both must be literal strings.** They are embedded into `executor_config` at DAG
+  parse time — before the worker pod exists and before any Jinja rendering. Jinja
+  templates, XCom refs, and `params` cannot be used here. To switch branches or tags,
+  update the value in the DAG file directly.
 
 ---
 
@@ -47,13 +49,14 @@ Controls which pod calls the Kubernetes API to create the actual job pod.
 Controls the image and entrypoint of the actual job pod.
 
 **`gitsynced`**
-- Job pod uses a base Python image (`py31x:<runtime_image_tag>`).
-- A `git-clone` init container clones the microservice repo at `branch` into `/app`.
+- Job pod uses a base Python image (`py312:<runtime_image_tag>` by default).
+- A `git-sync` init container clones the microservice repo at `runtime_branch` into `/app`.
 - The operator constructs the entrypoint: `sh -c "cd /app && uv run <arguments>"`.
 - `runtime_branch` *(templated, required)*: branch of the microservice repo to clone.
 - `microservice_path` *(required)*: path inside the repo copied into `/app`;
   must contain a `pyproject.toml` (e.g. `jobs/etl_jobs/external/instagram`).
-- `runtime_image_tag` *(templated — default: `"dev"`)*: tag of the base Python image.
+- `runtime_image` *(templated, optional — default: `py312`)*: override the base Python image.
+- `runtime_image_tag` *(templated — default: `"dev"` in dev, `"v1"` otherwise)*: image tag.
 - `arguments` *(list)*: script name + flags as a **single shell string**,
   e.g. `["main.py --start-date 2024-01-01"]`. Do not include `uv run` — the operator
   prepends it automatically.
@@ -61,8 +64,13 @@ Controls the image and entrypoint of the actual job pod.
 **`containerized`**
 - Job pod uses a fully self-contained image — code and deps are pre-installed.
 - No init container; image ENTRYPOINT is preserved.
-- `image` *(required)*: fully qualified image reference including tag.
-- `arguments` *(list)*: passed directly to the image ENTRYPOINT as separate args.
+- `runtime_image` *(required)*: image name. Behaviour depends on `private_registry`:
+  - `True` (default): short name (e.g. `"etl/instagram"`) — internal Artifact Registry
+    prefix is prepended automatically. Pass the full registry URL to skip prefixing.
+  - `False`: used as-is (e.g. `"python"`, `"alpine"`) — no registry prefix added.
+- `runtime_image_tag` *(templated — default: `"dev"` in dev, `"v1"` otherwise)*: appended
+  to the image ref as the tag.
+- `arguments` *(list)*: passed directly to the image ENTRYPOINT as individual args.
   Use a **split list** `["--flag", "value"]` — a single concatenated string is treated
   as one argument by the container runtime and will be rejected by most CLIs.
 
@@ -74,8 +82,8 @@ Controls the image and entrypoint of the actual job pod.
 ```
 Celery worker (helm chart, untouched)
   └─ KPO.execute() → job pod
-       ├─ init: git-clone  →  git clone --branch <branch> .../instagram  →  /app
-       └─ main: py31x:<runtime_image_tag>
+       ├─ init: git-sync  →  git clone --branch <runtime_branch> .../instagram  →  /app
+       └─ main: py312:<runtime_image_tag>
                 sh -c "cd /app && uv run main.py --start-date ... --end-date ..."
 ```
 
@@ -83,28 +91,28 @@ Celery worker (helm chart, untouched)
 ```
 Celery worker (helm chart, untouched)
   └─ KPO.execute() → job pod
-       └─ main: etl/instagram:<runtime_image_tag>
+       └─ main: <registry>/etl/instagram:<runtime_image_tag>
                 ENTRYPOINT uv run  +  CMD ["main.py", "--start-date","...","--end-date","..."]
 ```
 
 **k8s_gitsynced**
 ```
-Kubernetes executor → worker pod
+Kubernetes executor → worker pod  [dag_branch + dag_image_tag baked in at parse time]
   ├─ init: git-sync  →  git clone --branch <dag_branch> .../data-gcp  →  /opt/airflow/dags
   └─ main: airflow-k8s-worker:<dag_image_tag>
              └─ KPO.execute() → job pod
-                  ├─ init: git-clone  →  git clone --branch <runtime_branch> .../instagram  →  /app
-                  └─ main: py31x:<runtime_image_tag>
+                  ├─ init: git-sync  →  git clone --branch <runtime_branch> .../instagram  →  /app
+                  └─ main: py312:<runtime_image_tag>
                            sh -c "cd /app && uv run main.py --start-date ... --end-date ..."
 ```
 
 **k8s_containerized**
 ```
-Kubernetes executor → worker pod
+Kubernetes executor → worker pod  [dag_branch + dag_image_tag baked in at parse time]
   ├─ init: git-sync  →  git clone --branch <dag_branch> .../data-gcp  →  /opt/airflow/dags
   └─ main: airflow-k8s-worker:<dag_image_tag>
              └─ KPO.execute() → job pod
-                  └─ main: etl/instagram:<runtime_image_tag>
+                  └─ main: <registry>/etl/instagram:<runtime_image_tag>
                            ENTRYPOINT uv run  +  CMD ["main.py", "--start-date","...","--end-date","..."]
 ```
 
@@ -120,6 +128,11 @@ Kubernetes executor → worker pod
 - `is_delete_operator_pod` — default `True`
 - `on_finish_action` — default `"delete_pod"`
 - `kubernetes_conn_id` — auto: `"kubernetes_default"` when running locally
+- `private_registry` *(containerized mode only, default `True`)*: controls image ref construction.
+  `True` — prepends the internal Artifact Registry prefix to `runtime_image` (e.g. `"etl/instagram"`
+  becomes `<registry>/data-gcp/etl/instagram:<tag>`). Pass the full registry URL to skip prefixing.
+  `False` — `runtime_image` is used as-is, no prefix added (e.g. `"python"` → `"python:<tag>"`).
+  Use `False` for public Docker Hub or external images.
 
 ---
 
@@ -136,7 +149,7 @@ Deferrable mode (deferrable = True, poll_interval= 300s) is available for both o
 ### Advices and Troubleshooting
 
 when containering a microservice, it is recommended to add ENTRYPOINT ["uv","run"] in the Dockerfile, so that you can pass the script name and arguments as CMD and have a consistent experience with the gitsynced runtime, which also uses `uv run` as the entrypoint command. This way, you can switch between runtimes without changing the way you pass arguments.
-when using kubernetes orchestration mode, make sure to push your dags change to the branch specified in `dag_branch` param, as the worker pod will clone the DAGs repo and run airflow commands based on that code. If you are testing the microservice and DAG argument do not change between runs, you can use the same worker pod by not changing the `dag_branch` and focus only on `runtime_branch` param which controls the microservice code.
+when using kubernetes orchestration mode, make sure to push your DAG changes to the branch set in `dag_branch` (hardcoded literal in the DAG file, defaults to `master`/`production`), as the worker pod clones that branch and runs Airflow from that code. If you are only iterating on the microservice and the DAG arguments are unchanged between runs, you can leave `dag_branch` and `dag_image_tag` as-is and only update `runtime_branch`, which controls what code the job pod runs.
 Developement workflow is recommended to be done using git-sync with a base image as you don't need to build a new image at each change, and you can easily access the logs in real time to debug. Once the code is stable, you can switch to containerized mode for faster execution and better resource management.
 Deferrable mode is not available when running airflow locally with docker-compose due to the absence of triggerer component.
 when running airflow locally, only the runtime worker pod is created on the cluster, the operator runs in the local environment and communicates with the cluster to create the job pod. In this case, make sure to have the right kubeconfig context set up to point to the desired cluster.
@@ -211,16 +224,6 @@ with DAG(
             type="string",
             description="Tag for the runtime job image (py31x for gitsynced, user image for containerized)",
         ),
-        "dag_branch": Param(
-            default=branch,
-            type="string",
-            description="DAGs repo branch cloned into the kubernetes executor worker pod",
-        ),
-        "dag_image_tag": Param(
-            default="dev",
-            type="string",
-            description="Tag for the Airflow worker image used by the kubernetes executor worker pod",
-        ),
         "n_days": Param(
             default=-7,
             type="integer",
@@ -271,8 +274,6 @@ with DAG(
         runtime_image_tag="{{ params.runtime_image_tag }}",
         runtime_branch="{{ params.runtime_branch }}",
         microservice_path=MICROSERVICE_PATH,
-        dag_branch="{{ params.dag_branch }}",
-        dag_image_tag="{{ params.dag_image_tag }}",
         arguments=[_ARGS_SHELL],
         # deferrable=True,
         # poll_interval=60,
@@ -288,8 +289,6 @@ with DAG(
         runtime_mode="containerized",
         runtime_image="etl/instagram",
         runtime_image_tag="{{ params.runtime_image_tag }}",
-        dag_branch="{{ params.dag_branch }}",
-        dag_image_tag="{{ params.dag_image_tag }}",
         arguments=_ARGS_LIST,
         # deferrable=True,
         # poll_interval=60,

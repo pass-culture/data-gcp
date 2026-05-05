@@ -164,7 +164,7 @@ for partner_id, partner_name in partner_dict.items():
             instance_name=f"{GCE_INSTANCE}-{partner_name}",
             base_dir=BASE_PATH,
             command=(
-                "uv run python main.py encrypt "
+                "uv run main.py encrypt "
                 "--partner-name \"{{ ti.xcom_pull(task_ids='build_export_context', key='partner_name') }}\" "
                 f'--gcs-bucket "{BASE_BUCKET}" '
                 "--export-date \"{{ ti.xcom_pull(task_ids='build_export_context', key='export_date') }}\" "

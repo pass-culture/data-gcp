@@ -79,7 +79,9 @@ where
             "Highlight requests have been created",
             "Highlight requests have been deleted",
             "Pro advice updated",
-            "Pro advice created"
+            "Pro advice created",
+            "Volunteering URL has been added",
+            "Volunteering URL has been removed"
         )
     )
     {% if is_incremental() %}

@@ -1,6 +1,6 @@
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.bash_operator import BashOperator
+from airflow.operators.bash import BashOperator
 from airflow.operators.empty import EmptyOperator
 from airflow.utils.dates import datetime, timedelta
 from common.config import (

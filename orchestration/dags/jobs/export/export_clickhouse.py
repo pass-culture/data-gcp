@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from airflow import DAG
 from airflow.models import Param
@@ -26,8 +27,8 @@ from common.operators.gce import (
 )
 from common.utils import delayed_waiting_operator, get_airflow_schedule
 from dependencies.export_clickhouse.export_clickhouse import (
-    ANALYTICS_CONFIGS,
-    TABLES_CONFIGS,
+    CLICKHOUSE_ANALYTICS_TRANSFORMATION_CONFIGS,
+    CLICKHOUSE_LOADING_CONFIGS,
 )
 
 from jobs.crons import SCHEDULE_DICT
@@ -35,10 +36,6 @@ from jobs.crons import SCHEDULE_DICT
 GCE_INSTANCE = f"export-clickhouse-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/clickhouse"
 GCP_STORAGE_URI = "https://storage.googleapis.com"
-dag_config = {
-    "PROJECT_NAME": GCP_PROJECT_ID,
-    "ENV_SHORT_NAME": ENV_SHORT_NAME,
-}
 
 DATE = "{{ yyyymmdd(ds) }}"
 
@@ -115,7 +112,6 @@ for dag_name, dag_params in dags.items():
         branching = BranchPythonOperator(
             task_id="branching",
             python_callable=choose_branch,
-            provide_context=True,
             dag=dag,
         )
 
@@ -128,11 +124,11 @@ for dag_name, dag_params in dags.items():
 
             wait.set_downstream(wait_for_firebase)
 
-            for table_config in TABLES_CONFIGS:
+            for table_config in CLICKHOUSE_LOADING_CONFIGS:
                 waiting_task = delayed_waiting_operator(
                     dag,
                     external_dag_id="dbt_run_dag",
-                    external_task_id=f"data_transformation.{table_config['dbt_model']}",
+                    external_task_id=f"data_transformation.{table_config.dbt_model}",
                 )
                 wait_for_firebase.set_downstream(waiting_task)
 
@@ -159,108 +155,106 @@ for dag_name, dag_params in dags.items():
             dag=dag,
         )
 
-        in_tables_tasks, out_tables_tasks = [], []
-        for table_config in TABLES_CONFIGS:
-            table_name = table_config["bigquery_table_name"]
-            dataset_name = table_config["bigquery_dataset_name"]
-            partition_key = table_config["partition_key"]
-            clickhouse_table_name = table_config["clickhouse_table_name"]
-            clickhouse_dataset_name = table_config["clickhouse_dataset_name"]
+        with TaskGroup("loading_stage", dag=dag) as export_tables_tg:
+            in_tables_tasks, out_tables_tasks = [], []
+            for table_config in CLICKHOUSE_LOADING_CONFIGS:
+                _ts = "{{ ts_nodash }}"
+                _ds = "{{ ds }}"
+                table_id = f"tmp_{_ts}_{table_config.bigquery_table_name}"
+                storage_path = f"{dag_config['STORAGE_PATH']}/{table_config.model_name}"
 
-            mode = table_config["mode"]
-            _ts = "{{ ts_nodash }}"
-            _ds = "{{ ds }}"
-            table_id = f"tmp_{_ts}_{table_name}"
-            storage_path = f"{dag_config['STORAGE_PATH']}/{clickhouse_table_name}"
+                if table_config.mode == "overwrite":
+                    sql_query = f"SELECT * FROM {table_config.bigquery_dataset_name}.{table_config.bigquery_table_name}"
+                elif table_config.mode == "incremental":
+                    sql_query = (
+                        f"SELECT * FROM {table_config.bigquery_dataset_name}.{table_config.bigquery_table_name} "
+                        f"WHERE {table_config.partition_key} "
+                        + 'BETWEEN DATE("{{ add_days(ds, params.from_days)}}") AND DATE("{{ add_days(ds, params.to_days) }}")'
+                    )
 
-            if mode == "overwrite":
-                sql_query = f"""SELECT * FROM {dataset_name}.{table_name} """
-            elif mode == "incremental":
-                sql_query = (
-                    f"""SELECT * FROM {dataset_name}.{table_name}  WHERE {partition_key} """
-                    + ' BETWEEN DATE("{{ add_days(ds, params.from_days)}}") AND DATE("{{ add_days(ds, params.to_days) }}")'
+                export_task = BigQueryInsertJobOperator(
+                    project_id=GCP_PROJECT_ID,
+                    task_id=f"bigquery_export_{table_config.model_name}",
+                    configuration={
+                        "query": {
+                            "query": sql_query,
+                            "useLegacySql": False,
+                            "destinationTable": {
+                                "projectId": GCP_PROJECT_ID,
+                                "datasetId": BIGQUERY_TMP_DATASET,
+                                "tableId": table_id,
+                            },
+                            "writeDisposition": "WRITE_TRUNCATE",
+                        }
+                    },
+                    dag=dag,
+                )
+                in_tables_tasks.append(export_task)
+
+                export_bq = BigQueryInsertJobOperator(
+                    project_id=GCP_PROJECT_ID,
+                    task_id=f"{table_config.model_name}_to_bucket",
+                    configuration={
+                        "extract": {
+                            "sourceTable": {
+                                "projectId": GCP_PROJECT_ID,
+                                "datasetId": BIGQUERY_TMP_DATASET,
+                                "tableId": table_id,
+                            },
+                            "compression": None,
+                            "destinationUris": f"gs://{storage_path}/data-*.parquet",
+                            "destinationFormat": "PARQUET",
+                        }
+                    },
+                    dag=dag,
                 )
 
-            export_task = BigQueryInsertJobOperator(
-                project_id=GCP_PROJECT_ID,
-                task_id=f"bigquery_export_{clickhouse_table_name}",
-                configuration={
-                    "query": {
-                        "query": sql_query,
-                        "useLegacySql": False,
-                        "destinationTable": {
-                            "projectId": GCP_PROJECT_ID,
-                            "datasetId": BIGQUERY_TMP_DATASET,
-                            "tableId": table_id,
-                        },
-                        "writeDisposition": "WRITE_TRUNCATE",
-                    }
-                },
-                dag=dag,
-            )
-            in_tables_tasks.append(export_task)
-
-            export_bq = BigQueryInsertJobOperator(
-                project_id=GCP_PROJECT_ID,
-                task_id=f"{clickhouse_table_name}_to_bucket",
-                configuration={
-                    "extract": {
-                        "sourceTable": {
-                            "projectId": GCP_PROJECT_ID,
-                            "datasetId": BIGQUERY_TMP_DATASET,
-                            "tableId": table_id,
-                        },
-                        "compression": None,
-                        "destinationUris": f"gs://{storage_path}/data-*.parquet",
-                        "destinationFormat": "PARQUET",
-                    }
-                },
-                dag=dag,
-            )
-
-            clickhouse_export = SSHGCEOperator(
-                dag=dag,
-                task_id=f"{clickhouse_table_name}_export",
-                instance_name="{{ params.instance_name }}",
-                base_dir=dag_config["BASE_DIR"],
-                command="python main.py "
-                f"--source-gs-path {GCP_STORAGE_URI}/{storage_path}/data-*.parquet "
-                f"--table-name {clickhouse_table_name} "
-                f"--dataset-name {clickhouse_dataset_name} "
-                f"--update-date {_ds} "
-                f"--mode {mode} ",
-            )
-            export_task >> export_bq >> clickhouse_export
-            out_tables_tasks.append(clickhouse_export)
+                clickhouse_export = SSHGCEOperator(
+                    dag=dag,
+                    task_id=f"{table_config.model_name}_export",
+                    instance_name="{{ params.instance_name }}",
+                    base_dir=dag_config["BASE_DIR"],
+                    command=(
+                        "python main.py "
+                        f"--source-gs-path {GCP_STORAGE_URI}/{storage_path}/data-*.parquet "
+                        f"--table-name {table_config.model_name} "
+                        f"--dataset-name {table_config.clickhouse_dataset_name} "
+                        f"--update-date {_ds} "
+                        f"--mode {table_config.mode}"
+                    ),
+                )
+                export_task >> export_bq >> clickhouse_export
+                out_tables_tasks.append(clickhouse_export)
 
         end_tables = EmptyOperator(task_id="end_tables_export")
 
         with TaskGroup("analytics_stage", dag=dag) as analytics_tg:
             analytics_task_mapping = {}
-            for config in ANALYTICS_CONFIGS:
-                clickhouse_table_name = config["clickhouse_table_name"]
-                clickhouse_folder_name = config["clickhouse_dataset_name"]
+            for config in CLICKHOUSE_ANALYTICS_TRANSFORMATION_CONFIGS:
+                command = (
+                    f"python refresh.py "
+                    f"--table-name {config.clickhouse_table_name} "
+                    f"--folder {config.clickhouse_dataset_name}"
+                )
+                if config.ch_session_settings:
+                    command += f" --ch-session-settings '{json.dumps(config.ch_session_settings)}'"
 
                 task = SSHGCEOperator(
-                    task_id=f"{clickhouse_table_name}",
+                    task_id=f"{config.clickhouse_table_name}",
                     instance_name="{{ params.instance_name }}",
                     base_dir=dag_config["BASE_DIR"],
-                    command=f"python refresh.py --table-name {clickhouse_table_name} --folder {clickhouse_folder_name}",
+                    command=command,
                     dag=dag,
                 )
-                analytics_task_mapping[clickhouse_table_name] = task
+                analytics_task_mapping[config.clickhouse_table_name] = task
 
-            for config in ANALYTICS_CONFIGS:
-                clickhouse_table_name = config["clickhouse_table_name"]
-                # Set upstream dependencies if the config has a "depends_list"
-                if "depends_list" in config:
-                    for dependency in config["depends_list"]:
-                        # Set the upstream dependency
-                        if dependency in analytics_task_mapping:
-                            (
-                                analytics_task_mapping[dependency]
-                                >> analytics_task_mapping[clickhouse_table_name]
-                            )
+            for config in CLICKHOUSE_ANALYTICS_TRANSFORMATION_CONFIGS:
+                for dependency in config.depends_list:
+                    if dependency in analytics_task_mapping:
+                        (
+                            analytics_task_mapping[dependency]
+                            >> analytics_task_mapping[config.clickhouse_table_name]
+                        )
 
         gce_instance_stop = DeleteGCEOperator(
             task_id="gce_stop_task", instance_name="{{ params.instance_name }}"

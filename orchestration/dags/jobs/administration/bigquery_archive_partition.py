@@ -131,7 +131,7 @@ for job_name, config in TABLES.items():
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_PATH,
         environment=dag_config,
-        command=f"python main.py --config '{config}' --limit {{{{ params.limit }}}}",
+        command=f"uv run main.py --config '{config}' --limit {{{{ params.limit }}}}",
         do_xcom_push=True,
     )
     tasks.append(export_old_partitions_to_gcs)

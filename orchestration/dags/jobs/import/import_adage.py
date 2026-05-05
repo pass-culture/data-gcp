@@ -88,7 +88,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run python main.py ",
+        command="uv run main.py ",
     )
 
     gce_instance_stop = DeleteGCEOperator(

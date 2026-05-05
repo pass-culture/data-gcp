@@ -74,7 +74,7 @@ def collect_airflow_metrics(snapshot_date: str, session=None):
         .filter(
             DagModel.is_active.is_(True),
             DagModel.is_paused.is_(False),
-            DagModel.schedule.isnot(None),
+            DagModel.schedule_interval.isnot(None),
         )
         .all()
     )

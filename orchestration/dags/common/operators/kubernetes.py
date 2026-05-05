@@ -1,3 +1,4 @@
+import os
 import re
 from typing import Literal
 
@@ -20,6 +21,10 @@ _DAGS_REPO_NAME = "data-gcp"
 _DAGS_PATH = "orchestration/dags"
 _DAGS_VOLUME = "airflow-dags"
 _DAGS_MOUNT = "/opt/airflow/dags"
+_DAGS_SPARSE_PATHS = [
+    "orchestration/dags/common",
+    "orchestration/dags/jobs",
+]  # sparse-clone only the dags folder for efficiency
 
 _MS_REPO_URL = "https://github.com/pass-culture/data-gcp"
 _MS_REPO_NAME = "data-gcp"
@@ -50,6 +55,11 @@ DEFAULT_CONTAINER_SECURITY_CONTEXT = V1SecurityContext(
     run_as_non_root=True,
 )
 
+_GIT_CLONE_SECURITY_CONTEXT = V1SecurityContext(
+    run_as_non_root=False,
+    run_as_user=0,
+)
+
 DEFAULT_CONTAINER_RESOURCES = V1ResourceRequirements(
     requests={"cpu": "1", "memory": "2Gi"},
     limits={"cpu": "1", "memory": "2Gi"},
@@ -59,6 +69,7 @@ default_env_vars = {
     "GCP_PROJECT_ID": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
     "UV_CACHE_DIR": "/tmp/.cache/uv",
+    "UV_LINK_MODE": "copy",
     "RUN_ID": "{{ run_id }}",
 }
 KPO_COMMON_DEFAULTS = dict(
@@ -75,6 +86,82 @@ def get_registry_image(image_name: str) -> str:
     return f"{_REGISTRY}/{_REGISTRY_FOLDER}/{image_name}"
 
 
+def _make_git_clone_command(
+    repo_url: str,
+    repo_name: str,
+    branch: str,
+    dest: str,
+    sparse_paths: str | list[str] | None = None,
+) -> str:
+    """Build a shell command that clones a git repository and copies specified paths to a destination.
+
+    When sparse_paths is provided, uses --filter=blob:none and --sparse to only
+    download blobs for the specified paths, minimizing network transfer and memory footprint.
+    When sparse_paths is None, performs a full shallow clone (--depth 1) of the repository.
+
+    Only directories are supported as sparse_paths — individual files are not handled.
+
+    Copying behaviour depends on the number of sparse_paths:
+        - Single directory: contents are flattened into dest using cp -r <path>/. <dest>/.
+          The directory itself is not created under dest — only its children are.
+          Use this when the consumer expects files at the root of dest.
+          Example: sparse_paths="orchestration/dags" → dest/common/, dest/jobs/
+          Example: sparse_paths="jobs/etl/instagram" → dest/pyproject.toml, dest/src/
+        - Multiple directories: each path is copied to dest/{path}, preserving full
+          repository hierarchy so sibling paths do not collide.
+          Example: sparse_paths=["common", "jobs"] → dest/common/, dest/jobs/
+
+    Args:
+        repo_url: URL of the git repository to clone.
+        repo_name: Local name for the cloned repo under /tmp/.
+        branch: Branch to clone.
+        dest: Destination directory where paths are copied into.
+        sparse_paths: One or more repo-relative directory paths to sparse-checkout and copy.
+            - Single string or single-element list: contents are flattened into dest.
+            - Multi-element list: each path is copied to dest/{path}, preserving hierarchy.
+            - None: full repository contents are copied into dest.
+
+    Returns:
+        A shell command string suitable for use as a container entrypoint arg.
+
+    """
+    if sparse_paths is not None:
+        if isinstance(sparse_paths, str):
+            sparse_paths = [sparse_paths]
+
+        anchored = " ".join(f"/{p}" for p in sparse_paths)
+
+        if len(sparse_paths) == 1:
+            copies = f"cp -r /tmp/{repo_name}/{sparse_paths[0]}/. {dest}/"
+        else:
+            common_prefix = os.path.commonpath(sparse_paths)
+            copies = f"cp -r /tmp/{repo_name}/{common_prefix}/. {dest}/"
+
+        return (
+            f"echo '=== sparse-cloning {' '.join(sparse_paths)} from branch: {branch} ==='"
+            f" && git clone --depth 1 --branch {branch} --filter=blob:none --sparse {repo_url} /tmp/{repo_name}"
+            f" && cd /tmp/{repo_name}"
+            f" && git sparse-checkout set --no-cone {anchored}"
+            f" && set -x"
+            f" && {copies}"
+            f" && set +x"
+            f" && echo '=== cleaning ==='"
+            f" && rm -rf /tmp/{repo_name}"
+            f" && echo '=== contents ==='"
+            f" && ls {dest}/"
+        )
+
+    return (
+        f"echo '=== cloning branch: {branch} ==='"
+        f" && git clone --depth 1 --branch {branch} {repo_url} /tmp/{repo_name}"
+        f" && cp -r /tmp/{repo_name}/. {dest}/"
+        f" && echo '=== cleaning ==='"
+        f" && rm -rf /tmp/{repo_name}"
+        f" && echo '=== contents ==='"
+        f" && ls {dest}/"
+    )
+
+
 def _make_orchestration_worker_pod_spec(dags_branch: str, dags_image_tag: str) -> V1Pod:
     """Pod spec for the non-celery orchestration worker that runs the git-sync init container in orchestration_mode='kubernetes'."""
     return V1Pod(
@@ -85,20 +172,18 @@ def _make_orchestration_worker_pod_spec(dags_branch: str, dags_image_tag: str) -
                     image="alpine/git",
                     command=["sh", "-c"],
                     args=[
-                        f"set -x"
-                        f" && git clone --depth 1 --branch {dags_branch} {_DAGS_REPO_URL} /tmp/{_DAGS_REPO_NAME}"
-                        f" && echo '=== cloned branch: {dags_branch} ==='"
-                        f" && cp -rv /tmp/{_DAGS_REPO_NAME}/{_DAGS_PATH}/. {_DAGS_MOUNT}/"
-                        f" && echo '=== dest contents ==='"
-                        f" && ls {_DAGS_MOUNT}/"
+                        _make_git_clone_command(
+                            repo_url=_DAGS_REPO_URL,
+                            repo_name=_DAGS_REPO_NAME,
+                            branch=dags_branch,
+                            sparse_paths=_DAGS_SPARSE_PATHS,
+                            dest=_DAGS_MOUNT,
+                        )
                     ],
                     volume_mounts=[
                         V1VolumeMount(name=_DAGS_VOLUME, mount_path=_DAGS_MOUNT)
                     ],
-                    security_context=V1SecurityContext(
-                        run_as_non_root=False,
-                        run_as_user=0,
-                    ),
+                    security_context=_GIT_CLONE_SECURITY_CONTEXT,
                 )
             ],
             containers=[
@@ -126,20 +211,18 @@ def _make_job_worker_pod_spec(
                     image="alpine/git",
                     command=["sh", "-c"],
                     args=[
-                        f"set -x"
-                        f" && git clone --depth 1 --branch {branch} {_MS_REPO_URL} /tmp/{_MS_REPO_NAME}"
-                        f" && echo '=== cloned branch: {branch} ==='"
-                        f" && cp -rv /tmp/{_MS_REPO_NAME}/{microservice_path}/. {_MS_MOUNT}/"
-                        f" && echo '=== dest contents ==='"
-                        f" && ls {_MS_MOUNT}/"
+                        _make_git_clone_command(
+                            repo_url=_MS_REPO_URL,
+                            repo_name=_MS_REPO_NAME,
+                            branch=branch,
+                            sparse_paths=microservice_path,
+                            dest=_MS_MOUNT,
+                        )
                     ],
                     volume_mounts=[
                         V1VolumeMount(name=_MS_VOLUME, mount_path=_MS_MOUNT)
                     ],
-                    security_context=V1SecurityContext(
-                        run_as_non_root=False,
-                        run_as_user=0,
-                    ),
+                    security_context=_GIT_CLONE_SECURITY_CONTEXT,
                 )
             ],
             containers=[

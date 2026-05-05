@@ -79,7 +79,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run python main.py --task import_all_survey_answers",
+        command="uv run main.py --task import_all_survey_answers",
         do_xcom_push=True,
     )
 

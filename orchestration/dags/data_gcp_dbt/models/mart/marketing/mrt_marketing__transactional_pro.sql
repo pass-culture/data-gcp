@@ -10,7 +10,6 @@
 select
     brevo_tag,
     brevo_template_id,
-    email_id,
     offerer_id,
     event_date,
     coalesce(total_delivered > 0, false) as email_is_delivered,

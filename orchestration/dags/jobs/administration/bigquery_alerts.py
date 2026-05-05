@@ -81,7 +81,7 @@ with DAG(
         environment=dag_config,
         do_xcom_push=True,
         command="""
-        uv run python main.py
+        uv run main.py
         """,
     )
 

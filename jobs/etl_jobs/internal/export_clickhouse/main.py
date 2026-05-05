@@ -1,21 +1,36 @@
+import json
+import logging
 from datetime import datetime
+from typing import Optional
 
 import typer
+from clickhouse_connect.driver.client import Client as ClickhouseClient
 
 from core.update import (
-    create_intermediate_schema,
+    create_schema,
     create_tmp_schema,
     update_incremental,
     update_overwrite,
 )
+from core.utils import get_clickhouse_client
+
+logger = logging.getLogger(__name__)
 
 
-def main_update(mode, source_gs_path, table_name, dataset_name, update_date):
+def main_update(
+    client: ClickhouseClient,
+    mode: str,
+    source_gs_path: str,
+    table_name: str,
+    dataset_name: str,
+    update_date: str,
+):
     _id = datetime.now().strftime("%Y%m%d%H%M%S")
     tmp_table_name = f"{table_name}_{_id}"
 
     # import table in a tmp
     create_tmp_schema(
+        client=client,
         sql_file_name=f"{dataset_name}_{table_name}",
         table_name=tmp_table_name,
         update_date=update_date,
@@ -23,24 +38,26 @@ def main_update(mode, source_gs_path, table_name, dataset_name, update_date):
     )
 
     # create table schema
-    create_intermediate_schema(table_name, dataset_name)
+    create_schema(client, table_name, dataset_name)
 
     # update tables
     if mode == "incremental":
         update_incremental(
+            client=client,
             dataset_name=dataset_name,
             table_name=table_name,
             tmp_table_name=tmp_table_name,
         )
     elif mode == "overwrite":
         update_overwrite(
+            client=client,
             dataset_name=dataset_name,
             table_name=table_name,
             tmp_table_name=tmp_table_name,
             update_date=update_date,
         )
     else:
-        raise Exception(f"Mode unknown, got {mode}")
+        raise ValueError(f"Mode unknown, got {mode!r}")
 
 
 def run(
@@ -64,13 +81,31 @@ def run(
         None,
         help="source_gs_path",
     ),
+    ch_session_settings: Optional[str] = typer.Option(
+        None, help="JSON string of ClickHouse session settings"
+    ),
 ):
+    parsed_settings = json.loads(ch_session_settings) if ch_session_settings else None
+
+    if parsed_settings:
+        logger.info(f"Using client session settings: {parsed_settings}")
+
+    try:
+        client = get_clickhouse_client(settings=parsed_settings)
+    except Exception as e:
+        logger.error(f"Failed to create ClickHouse client: {e}")
+        raise RuntimeError("Failed to create ClickHouse client") from e
+
     if mode in ("incremental", "overwrite"):
         if source_gs_path is None:
-            raise Exception("source_gs_path should be specified")
-        main_update(mode, source_gs_path, table_name, dataset_name, update_date)
+            raise ValueError(
+                "source_gs_path must be specified for incremental or overwrite mode"
+            )
+        main_update(client, mode, source_gs_path, table_name, dataset_name, update_date)
     else:
-        raise Exception(f"wrong specified mode, got {mode} ")
+        raise ValueError(
+            f"Invalid mode {mode!r}, expected 'incremental' or 'overwrite'"
+        )
 
 
 if __name__ == "__main__":

@@ -262,9 +262,7 @@ dag = DAG(
     default_args=default_dag_args,
     dagrun_timeout=datetime.timedelta(minutes=480),
     description="historize applicative database current state to gcs bucket",
-    schedule_interval=get_airflow_schedule(
-        SCHEDULE_DICT.get(dag_id, {}).get(ENV_SHORT_NAME)
-    ),
+    schedule=get_airflow_schedule(SCHEDULE_DICT.get(dag_id, {}).get(ENV_SHORT_NAME)),
     catchup=False,
     tags=[DAG_TAGS.DE.value],
 )
@@ -284,7 +282,6 @@ with TaskGroup(group_id="snapshots_to_gcs", dag=dag) as to_gcs:
         skip_task = PythonOperator(
             task_id=f"skip_check_{table_name}",
             python_callable=skip_if_not_scheduled,
-            provide_context=True,
             params={**bq_config, **(MODELS_SCHEDULES.get(table_name, {}))},
             dag=dag,
         )

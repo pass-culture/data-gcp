@@ -39,7 +39,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Import allocine movies data",
-    schedule_interval=get_airflow_schedule("0 0 * * *"),  # import every day at 00:00
+    schedule=get_airflow_schedule("0 0 * * *"),  # import every day at 00:00
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=300),
     params={

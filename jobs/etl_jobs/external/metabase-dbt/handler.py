@@ -1,7 +1,10 @@
+import http.client
 import logging
+import os
 from typing import List, Optional
 
 import pandas as pd
+import requests
 from dbtmetabase import DbtMetabase, Filter
 from google.auth.transport.requests import Request
 from google.cloud import storage
@@ -12,6 +15,100 @@ from utils import CLIENT_ID, METABASE_API_KEY, METABASE_HOST
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def _redact_token(token):
+    if not token:
+        return f"<EMPTY token type={type(token).__name__}>"
+    return f"len={len(token)} prefix={token[:10]}... suffix=...{token[-6:]}"
+
+
+def _redact_headers(headers):
+    if not headers:
+        return {}
+    redacted = {}
+    for k, v in headers.items():
+        if k.lower() in ("authorization", "proxy-authorization", "x-api-key"):
+            token = v.removeprefix("Bearer ").strip() if isinstance(v, str) else v
+            redacted[k] = _redact_token(token)
+        else:
+            redacted[k] = v
+    return redacted
+
+
+if os.environ.get("DEBUG_HTTP") == "1":
+    http.client.HTTPConnection.debuglevel = 1
+    logging.getLogger("urllib3").setLevel(logging.DEBUG)
+    logging.getLogger("requests.packages.urllib3").setLevel(logging.DEBUG)
+    logger.warning(
+        "DEBUG_HTTP=1 — HTTP wire logging is ON (request headers will be visible)"
+    )
+
+
+def _introspect_dbtmetabase_http(client, max_depth=2):
+    """Dump where the requests.Session lives inside the dbtmetabase client and
+    log its headers (redacted). Walks the object graph up to max_depth."""
+    logger.info("DbtMetabase MRO: %s", [c.__name__ for c in type(client).__mro__])
+    seen = set()
+    found_any = False
+
+    def walk(obj, path, depth):
+        nonlocal found_any
+        if id(obj) in seen or depth > max_depth:
+            return
+        seen.add(id(obj))
+
+        if isinstance(obj, requests.Session):
+            found_any = True
+            logger.info(
+                "Found requests.Session at %s — headers=%s",
+                path or "<client>",
+                _redact_headers(dict(obj.headers)),
+            )
+            return
+
+        attrs = getattr(obj, "__dict__", {})
+        if depth == 0:
+            logger.info(
+                "%s attrs: %s",
+                path or "<client>",
+                {k: type(v).__name__ for k, v in attrs.items()},
+            )
+
+        for name, value in attrs.items():
+            if name.startswith("__"):
+                continue
+            sub_path = f"{path}.{name}" if path else name
+            if isinstance(value, requests.Session):
+                found_any = True
+                logger.info(
+                    "Found requests.Session at .%s — headers=%s",
+                    sub_path,
+                    _redact_headers(dict(value.headers)),
+                )
+            elif hasattr(value, "headers") and hasattr(value, "request"):
+                found_any = True
+                logger.info(
+                    "Session-like at .%s (type=%s) headers=%s",
+                    sub_path,
+                    type(value).__name__,
+                    _redact_headers(dict(getattr(value, "headers", {}))),
+                )
+            elif hasattr(value, "__dict__") and not isinstance(
+                value, (str, bytes, int, float, bool, list, tuple, dict, set)
+            ):
+                walk(value, sub_path, depth + 1)
+
+    walk(client, "", 0)
+
+    if not found_any:
+        logger.warning(
+            "No requests.Session found within depth=%d. "
+            "dbt-metabase likely creates a Session per call — "
+            "http_headers may not be persisted. Inspect dir(client): %s",
+            max_depth,
+            sorted(a for a in dir(client) if not a.startswith("__"))[:60],
+        )
 
 
 class BigqueryDBTHandler:
@@ -94,7 +191,10 @@ class MetabaseDBTHandler:
         if not open_id_token:
             raise ValueError("OpenID token is empty — IAP authentication will fail")
 
-        logger.info("Fetched OpenID token for authentication.")
+        logger.info(
+            "Fetched OpenID token for authentication: %s",
+            _redact_token(open_id_token),
+        )
 
         # Download DBT manifest from GCS
         self.download_gcs_dbt_manifest(
@@ -104,13 +204,22 @@ class MetabaseDBTHandler:
         )
         logger.info(f"Downloaded DBT manifest from GCS: {local_manifest_path}")
 
-        # Initialize the DbtMetabase client
+        http_headers = {"Proxy-Authorization": f"Bearer {open_id_token}"}
+        logger.info(
+            "Initializing DbtMetabase: host=%s api_key=%s http_headers=%s",
+            METABASE_HOST,
+            _redact_token(METABASE_API_KEY),
+            _redact_headers(http_headers),
+        )
         self.client = DbtMetabase(
             manifest_path=local_manifest_path,
             metabase_url=METABASE_HOST,
             metabase_api_key=METABASE_API_KEY,
-            http_headers={"Proxy-Authorization": f"Bearer {open_id_token}"},
+            http_headers=http_headers,
         )
+
+        _introspect_dbtmetabase_http(self.client)
+
         logger.info("Initialized DbtMetabase client.")
 
     def get_open_id(self, client_id: str) -> str:

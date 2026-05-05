@@ -1,11 +1,15 @@
+import logging
+
 import typer
 
 from core.utils import (
-    CLICKHOUSE_CLIENT,
     ENV_SHORT_NAME,
     PROJECT_NAME,
     access_secret_data,
+    get_clickhouse_client,
 )
+
+logger = logging.getLogger(__name__)
 
 DATABASE = ["tmp", "intermediate", "analytics"]
 
@@ -19,22 +23,25 @@ secret_access_key = access_secret_data(
 
 def init() -> None:
     """Create default configuration for Clickhouse."""
+    client = get_clickhouse_client()
     for db in DATABASE:
         try:
             sql_query = f""" CREATE DATABASE IF NOT EXISTS {db} ON cluster default """
-            print(f"Will Execute: {sql_query}")
-            CLICKHOUSE_CLIENT.command(sql_query)
+            logger.info(f"Will Execute: {sql_query}")
+            client.command(sql_query)
         except Exception as e:
-            print(f"Something went wrong: {e}")
+            logger.error(f"Failed to create database {db!r}: {e}")
+            raise RuntimeError(f"Failed to create database {db!r}") from e
     try:
         named_collection = f"""
             CREATE NAMED COLLECTION gcs_credentials on cluster default AS
                 access_key_id = '{access_key_id}',
                 secret_access_key = '{secret_access_key}'
         """
-        CLICKHOUSE_CLIENT.command(named_collection)
+        client.command(named_collection)
     except Exception as e:
-        print(f"Something went wrong: {e}")
+        logger.error(f"Failed to create named collection: {e}")
+        raise RuntimeError("Failed to create GCS named collection") from e
 
 
 def run():

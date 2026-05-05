@@ -26,7 +26,9 @@ a configuration to a production DAG.
 Controls which pod calls the Kubernetes API to create the actual job pod.
 
 **`celery`** (default)
-- Routes to the default Airflow celery worker queue.
+- Routes to the default Airflow celery worker (default queue).
+- Celery workers are autoscaled by KEDA based on the number of pending tasks in the queue and the number of available slots in workers.
+- using queue="k8s-watcher", routes to a dedicated worker set whith higher concurrency and it own keda autoscaling.
 - Worker pod is fully defined by the Airflow Helm chart — the operator adds nothing.
 
 **`kubernetes`**
@@ -236,6 +238,8 @@ with DAG(
     # ── celery + gitsynced ──────────────────────────────────────────────────
     EasyKubernetesPodOperator(
         task_id="celery_gitsynced",
+        orchestration_mode="celery",
+        queue="k8s-watcher",
         runtime_mode="gitsynced",
         runtime_image="py310",
         runtime_image_tag="{{ params.runtime_image_tag }}",
@@ -248,6 +252,8 @@ with DAG(
     # ── celery + containerized ──────────────────────────────────────────────
     EasyKubernetesPodOperator(
         task_id="celery_containerized",
+        orchestration_mode="celery",
+        queue="k8s-watcher",
         runtime_mode="containerized",
         runtime_image="etl/instagram",
         runtime_image_tag="{{ params.runtime_image_tag }}",
@@ -259,6 +265,7 @@ with DAG(
     EasyKubernetesPodOperator(
         task_id="k8s_gitsynced",
         orchestration_mode="kubernetes",
+        dag_branch=branch,
         runtime_mode="gitsynced",
         runtime_image="py310",
         runtime_image_tag="{{ params.runtime_image_tag }}",
@@ -274,6 +281,7 @@ with DAG(
     EasyKubernetesPodOperator(
         task_id="k8s_containerized",
         orchestration_mode="kubernetes",
+        dag_branch=branch,
         runtime_mode="containerized",
         runtime_image="etl/instagram",
         runtime_image_tag="{{ params.runtime_image_tag }}",

@@ -1,7 +1,11 @@
+import logging
 import os
 
-import clickhouse_connect
+from clickhouse_connect import get_client
+from clickhouse_connect.driver.client import Client as ClickhouseClient
 from google.cloud import secretmanager
+
+logger = logging.getLogger(__name__)
 
 ENVIRONMENT_NAME = os.environ.get("ENVIRONMENT_NAME", "development")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
@@ -14,12 +18,13 @@ def access_secret_data(project_id, secret_id, version_id="latest", default=None)
         name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
         response = client.access_secret_version(request={"name": name})
         return response.payload.data.decode("UTF-8")
-    except Exception:
+    except Exception as e:
+        logger.error(f"Failed to access secret data: {e}")
         return default
 
 
-def get_clickhouse_client(settings: dict | None = None):
-    return clickhouse_connect.get_client(
+def get_clickhouse_client(settings: dict | None = None) -> ClickhouseClient:
+    return get_client(
         host=access_secret_data(PROJECT_NAME, f"data-{ENVIRONMENT_NAME}_clickhouse_ip"),
         port=access_secret_data(
             PROJECT_NAME, f"clickhouse_port_{ENV_SHORT_NAME}", default=8123
@@ -32,6 +37,3 @@ def get_clickhouse_client(settings: dict | None = None):
         ),
         settings=settings,
     )
-
-
-CLICKHOUSE_CLIENT = get_clickhouse_client()

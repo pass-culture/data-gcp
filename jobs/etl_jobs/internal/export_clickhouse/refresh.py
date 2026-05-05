@@ -5,7 +5,7 @@ from typing import Optional
 import typer
 
 from core.fs import load_sql
-from core.utils import CLICKHOUSE_CLIENT, ENV_SHORT_NAME, get_clickhouse_client
+from core.utils import ENV_SHORT_NAME, get_clickhouse_client
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ def run(
         folder=folder,
         extra_data={"env_short_name": ENV_SHORT_NAME},
     )
-    parsed_settings = json.loads(ch_session_settings) if ch_session_settings else {}
+    parsed_settings = json.loads(ch_session_settings) if ch_session_settings else None
 
     logger.info("Will Execute:")
     logger.info(sql_query)
@@ -37,12 +37,17 @@ def run(
     if parsed_settings:
         logger.info(f"With query settings: {parsed_settings}")
 
-    client = (
-        get_clickhouse_client(settings=parsed_settings)
-        if parsed_settings
-        else CLICKHOUSE_CLIENT
-    )
-    client.command(sql_query)
+    try:
+        client = get_clickhouse_client(settings=parsed_settings)
+    except Exception as e:
+        logger.error(f"Failed to create ClickHouse client: {e}")
+        raise RuntimeError("Failed to create ClickHouse client") from e
+
+    try:
+        client.command(sql_query)
+    except Exception as e:
+        logger.error(f"Failed to refresh table {table_name!r}: {e}")
+        raise RuntimeError(f"Failed to refresh table {table_name!r}") from e
 
 
 if __name__ == "__main__":

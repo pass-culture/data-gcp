@@ -61,18 +61,36 @@ class AnalyticsConfig:
 
 # List of models to be exported
 CLICKHOUSE_LOADING_CONFIGS = [
-    TableConfig("booking", "overwrite", "update_date"),
-    TableConfig("collective_booking", "overwrite", "update_date"),
-    TableConfig("native_event", "incremental", "partition_date"),
-    TableConfig("venue_offer_statistic", "overwrite", None),
+    TableConfig(model_name="booking", mode="overwrite", partition_key="update_date"),
+    TableConfig(
+        model_name="collective_booking", mode="overwrite", partition_key="update_date"
+    ),
+    TableConfig(
+        model_name="native_event", mode="incremental", partition_key="partition_date"
+    ),
+    TableConfig(
+        model_name="venue_offer_statistic", mode="overwrite", partition_key=None
+    ),
 ]
 
 # List of aggregated tables to be refreshed
 CLICKHOUSE_ANALYTICS_TRANSFORMATION_CONFIGS = [
-    AnalyticsConfig("analytics", "daily_aggregated_venue_offer_consultation"),
-    AnalyticsConfig("analytics", "last_30_day_venue_top_offer_consultation"),
-    AnalyticsConfig("analytics", "monthly_aggregated_venue_collective_revenue"),
-    AnalyticsConfig("analytics", "monthly_aggregated_venue_individual_revenue"),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="daily_aggregated_venue_offer_consultation",
+    ),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="last_30_day_venue_top_offer_consultation",
+    ),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="monthly_aggregated_venue_collective_revenue",
+    ),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="monthly_aggregated_venue_individual_revenue",
+    ),
     AnalyticsConfig(
         clickhouse_dataset_name="analytics",
         clickhouse_table_name="monthly_aggregated_venue_revenue",
@@ -82,8 +100,14 @@ CLICKHOUSE_ANALYTICS_TRANSFORMATION_CONFIGS = [
         ],
         ch_session_settings={"max_partitions_per_insert_block": 200},
     ),
-    AnalyticsConfig("analytics", "yearly_aggregated_venue_collective_revenue"),
-    AnalyticsConfig("analytics", "yearly_aggregated_venue_individual_revenue"),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="yearly_aggregated_venue_collective_revenue",
+    ),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="yearly_aggregated_venue_individual_revenue",
+    ),
     AnalyticsConfig(
         clickhouse_dataset_name="analytics",
         clickhouse_table_name="yearly_aggregated_venue_revenue",

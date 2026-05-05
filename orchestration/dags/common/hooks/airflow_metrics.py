@@ -52,7 +52,7 @@ def _build_dag_row(session, dag, snapshot_date):
         "environment": ENV_SHORT_NAME,
         "dag_id": dag_id,
         "tags": tags,
-        "schedule": str(dag.schedule_interval),
+        "schedule_interval": str(dag.schedule_interval),
         "dag_run_state": last_run.state if last_run else None,
         "dag_run_execution_date": last_run.execution_date.isoformat()
         if last_run

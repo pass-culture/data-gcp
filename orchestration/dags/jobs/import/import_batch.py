@@ -76,7 +76,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
-        uv run python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} ios
+        uv run main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} ios
         """,
         retries=2,
     )

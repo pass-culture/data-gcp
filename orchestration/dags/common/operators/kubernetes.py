@@ -7,8 +7,10 @@ from kubernetes.client import (
     V1Container,
     V1EmptyDirVolumeSource,
     V1Pod,
+    V1PodSecurityContext,
     V1PodSpec,
     V1ResourceRequirements,
+    V1SecurityContext,
     V1Volume,
     V1VolumeMount,
 )
@@ -34,6 +36,19 @@ _CELERY_WORKER_IMAGE_NAME = "airflow"
 _DEFAULT_DAGS_BRANCH = "master" if ENV_SHORT_NAME != "prod" else "production"
 _DEFAULT_DAGS_IMAGE_TAG = "dev" if ENV_SHORT_NAME == "dev" else "v1"
 _DEFAULT_RUNTIME_IMAGE_TAG = "dev" if ENV_SHORT_NAME == "dev" else "v1"
+
+_AIRFLOW_USER_UUID = 50000
+# Pod-level: fs_group, run_as_non_root, run_as_user/group
+DEFAULT_POD_SECURITY_CONTEXT = V1PodSecurityContext(
+    run_as_non_root=True,
+    run_as_user=_AIRFLOW_USER_UUID,
+    run_as_group=_AIRFLOW_USER_UUID,
+    fs_group=_AIRFLOW_USER_UUID,  # makes emptyDir volumes group-writable
+)
+# Container-level: for init containers using public images (alpine/git)
+DEFAULT_CONTAINER_SECURITY_CONTEXT = V1SecurityContext(
+    run_as_non_root=True,
+)
 
 DEFAULT_CONTAINER_RESOURCES = V1ResourceRequirements(
     requests={"cpu": "1", "memory": "2Gi"},
@@ -66,7 +81,7 @@ def _make_orchestration_worker_pod_spec(dags_branch: str, dags_image_tag: str) -
         spec=V1PodSpec(
             init_containers=[
                 V1Container(
-                    name="git-sync",
+                    name="git-clone",
                     image="alpine/git",
                     command=["sh", "-c"],
                     args=[
@@ -76,6 +91,7 @@ def _make_orchestration_worker_pod_spec(dags_branch: str, dags_image_tag: str) -
                     volume_mounts=[
                         V1VolumeMount(name=_DAGS_VOLUME, mount_path=_DAGS_MOUNT)
                     ],
+                    security_context=DEFAULT_CONTAINER_SECURITY_CONTEXT,
                 )
             ],
             containers=[
@@ -91,13 +107,15 @@ def _make_orchestration_worker_pod_spec(dags_branch: str, dags_image_tag: str) -
     )
 
 
-def _make_job_worker_pod_spec(branch: str, microservice_path: str) -> V1Pod:
+def _make_job_worker_pod_spec(
+    branch: str, microservice_path: str, run_as_non_root: bool = True
+) -> V1Pod:
     """Pod spec for the job worker that runs the git-sync init container in runtime_mode='gitsynced'."""
     return V1Pod(
         spec=V1PodSpec(
             init_containers=[
                 V1Container(
-                    name="git-sync",
+                    name="git-clone",
                     image="alpine/git",
                     command=["sh", "-c"],
                     args=[
@@ -107,6 +125,9 @@ def _make_job_worker_pod_spec(branch: str, microservice_path: str) -> V1Pod:
                     volume_mounts=[
                         V1VolumeMount(name=_MS_VOLUME, mount_path=_MS_MOUNT)
                     ],
+                    security_context=DEFAULT_CONTAINER_SECURITY_CONTEXT
+                    if run_as_non_root
+                    else None,
                 )
             ],
             containers=[
@@ -210,6 +231,9 @@ class EasyKubernetesPodOperator(KubernetesPodOperator):
         self.runtime_image_tag = runtime_image_tag
         self.private_registry = private_registry
 
+        if private_registry:
+            kwargs["security_context"] = DEFAULT_POD_SECURITY_CONTEXT
+
         kwargs.setdefault(
             "name",
             make_pod_name(kwargs.get("name", kwargs.get("task_id", ""))),
@@ -291,6 +315,8 @@ class EasyKubernetesPodOperator(KubernetesPodOperator):
     def execute(self, context):
         if self.runtime_mode == "gitsynced":
             self.full_pod_spec = _make_job_worker_pod_spec(
-                self.runtime_branch, self.microservice_path
+                self.runtime_branch,
+                self.microservice_path,
+                run_as_non_root=self.private_registry,
             )
         return super().execute(context)

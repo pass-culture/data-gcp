@@ -58,7 +58,7 @@ DEFAULT_CONTAINER_RESOURCES = V1ResourceRequirements(
 default_env_vars = {
     "GCP_PROJECT_ID": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
-    "UV_CACHE_DIR": f"{_MS_MOUNT}/.cache/uv",
+    "UV_CACHE_DIR": "/tmp/.cache/uv",
     "RUN_ID": "{{ run_id }}",
 }
 KPO_COMMON_DEFAULTS = dict(
@@ -85,13 +85,20 @@ def _make_orchestration_worker_pod_spec(dags_branch: str, dags_image_tag: str) -
                     image="alpine/git",
                     command=["sh", "-c"],
                     args=[
-                        f"git clone --depth 1 --branch {dags_branch} {_DAGS_REPO_URL} /tmp/{_DAGS_REPO_NAME}"
-                        f" && cp -r /tmp/{_DAGS_REPO_NAME}/{_DAGS_PATH}/. {_DAGS_MOUNT}/"
+                        f"set -x"
+                        f" && git clone --depth 1 --branch {dags_branch} {_DAGS_REPO_URL} /tmp/{_DAGS_REPO_NAME}"
+                        f" && echo '=== cloned branch: {dags_branch} ==='"
+                        f" && cp -rv /tmp/{_DAGS_REPO_NAME}/{_DAGS_PATH}/. {_DAGS_MOUNT}/"
+                        f" && echo '=== dest contents ==='"
+                        f" && ls {_DAGS_MOUNT}/"
                     ],
                     volume_mounts=[
                         V1VolumeMount(name=_DAGS_VOLUME, mount_path=_DAGS_MOUNT)
                     ],
-                    security_context=DEFAULT_CONTAINER_SECURITY_CONTEXT,
+                    security_context=V1SecurityContext(
+                        run_as_non_root=False,
+                        run_as_user=0,
+                    ),
                 )
             ],
             containers=[
@@ -119,15 +126,20 @@ def _make_job_worker_pod_spec(
                     image="alpine/git",
                     command=["sh", "-c"],
                     args=[
-                        f"git clone --depth 1 --branch {branch} {_MS_REPO_URL} /tmp/{_MS_REPO_NAME}"
-                        f" && cp -r /tmp/{_MS_REPO_NAME}/{microservice_path}/. {_MS_MOUNT}/"
+                        f"set -x"
+                        f" && git clone --depth 1 --branch {branch} {_MS_REPO_URL} /tmp/{_MS_REPO_NAME}"
+                        f" && echo '=== cloned branch: {branch} ==='"
+                        f" && cp -rv /tmp/{_MS_REPO_NAME}/{microservice_path}/. {_MS_MOUNT}/"
+                        f" && echo '=== dest contents ==='"
+                        f" && ls {_MS_MOUNT}/"
                     ],
                     volume_mounts=[
                         V1VolumeMount(name=_MS_VOLUME, mount_path=_MS_MOUNT)
                     ],
-                    security_context=DEFAULT_CONTAINER_SECURITY_CONTEXT
-                    if run_as_non_root
-                    else None,
+                    security_context=V1SecurityContext(
+                        run_as_non_root=False,
+                        run_as_user=0,
+                    ),
                 )
             ],
             containers=[
@@ -272,8 +284,10 @@ class EasyKubernetesPodOperator(KubernetesPodOperator):
                 # Limitation: argument values that contain spaces will be word-split by
                 # the shell — avoid spaces in values or wrap them in shell quotes.
                 kwargs["arguments"] = [
-                    f"cd {_MS_MOUNT} && uv run {' '.join(str(a) for a in kwargs['arguments'])}"
+                    f"cd {_MS_MOUNT} && uv run --no-cache {' '.join(str(a) for a in kwargs['arguments'])}"
                 ]
+
+            kwargs["env_vars"]["UV_CACHE_DIR"] = f"{_MS_MOUNT}/.cache/uv"
 
         elif runtime_mode == "containerized":
             if runtime_image is None:

@@ -6,7 +6,6 @@ from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
-    ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
 from common.operators.kubernetes import EasyKubernetesPodOperator
@@ -163,7 +162,7 @@ MICROSERVICE_PATH = "jobs/etl_jobs/external/instagram"
 
 DAG_NAME = "kpo_example_dag"
 
-branch = "master" if ENV_SHORT_NAME != "prod" else "production"
+branch = "docker-security"  # "master" if ENV_SHORT_NAME != "prod" else "production"
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),

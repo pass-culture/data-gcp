@@ -70,7 +70,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run python main.py --task import_opt_out_users",
+        command="uv run main.py --task import_opt_out_users",
         do_xcom_push=True,
     )
 

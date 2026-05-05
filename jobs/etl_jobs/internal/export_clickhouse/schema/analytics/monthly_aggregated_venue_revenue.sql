@@ -2,7 +2,7 @@ CREATE OR REPLACE TABLE analytics.monthly_aggregated_venue_revenue ON cluster de
 ENGINE = SummingMergeTree()
 PARTITION BY month
 ORDER BY (venue_id)
-SETTINGS storage_policy = 'gcs_main', max_partitions_per_insert_block = 200
+SETTINGS storage_policy = 'gcs_main'
 AS
 WITH
     -- Generate a sequence of months from January 2018 to the current month

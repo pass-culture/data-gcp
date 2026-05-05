@@ -23,7 +23,7 @@ with
                 abs(sum(distinct {{ record_key("ub.user_id") }})), 256
             ) as cell_key_beneficiaries
         from user_deposit as ub
-        left join
+        inner join
             {{ ref("region_department") }} as rd on ub.department_code = rd.num_dep
         group by
             ub.deposit_active_month,

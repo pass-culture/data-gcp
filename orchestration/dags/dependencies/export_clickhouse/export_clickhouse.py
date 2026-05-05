@@ -1,93 +1,119 @@
-from typing import Dict, List, Tuple, Union
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional
 
 from common.config import ENV_SHORT_NAME
 
-
-def generate_table_configs(models):
-    """
-    Generates configuration for Clickhous export table from DBT models to GCS
-    DBT models are prefixed with 'exp_clickhouse__{model_name}' but will be aliased in BigQuery 'exp_{env}.clickhouse_{model_name}'.
-
-    Returns:
-        list: List of table configurations.
-    """
-
-    return [
-        {
-            "dbt_model": f"exp_clickhouse__{model_name}",
-            "bigquery_dataset_name": f"export_{ENV_SHORT_NAME}",
-            "bigquery_table_name": f"clickhouse_{model_name}",
-            "clickhouse_table_name": model_name,
-            "clickhouse_dataset_name": "intermediate",
-            "mode": mode,
-            "partition_key": partition_key,
-        }
-        for model_name, mode, partition_key in models
-    ]
+BQ_EXPORT_SCHEMA = f"export_{ENV_SHORT_NAME}"
+DBT_MODELS_PREFIX = "exp_clickhouse"
+BQ_CLICKHOUSE_TABLE_PREFIX = "clickhouse"
+CLICKHOUSE_STAGING_DATASET = "intermediate"
 
 
-def generate_analytics_configs(
-    table_list: List[Union[Tuple[str, str], Tuple[str, str, List[str]]]],
-) -> List[Dict]:
-    """
-    Generates configuration for views in ClickHouse.
+@dataclass
+class TableConfig:
+    model_name: str
+    mode: str
+    partition_key: Optional[str]
 
-    Args:
-        table_names (list): List of tuples containing dataset name, table name, and optionally a depends list.
+    @property
+    def dbt_model(self) -> str:
+        return f"{DBT_MODELS_PREFIX}__{self.model_name}"
 
-    Returns:
-        list: List of view configurations.
-    """
-    configs = []
+    @property
+    def bigquery_dataset_name(self) -> str:
+        return f"{BQ_EXPORT_SCHEMA}"
 
-    for table in table_list:
-        # Handle case with or without dependencies
-        config = {
-            "clickhouse_dataset_name": table[0],
-            "clickhouse_table_name": table[1],
+    @property
+    def bigquery_table_name(self) -> str:
+        return f"{BQ_CLICKHOUSE_TABLE_PREFIX}_{self.model_name}"
+
+    @property
+    def clickhouse_dataset_name(self) -> str:
+        return CLICKHOUSE_STAGING_DATASET
+
+    def to_dict(self) -> Dict:
+        return {
+            "dbt_model": self.dbt_model,
+            "bigquery_dataset_name": self.bigquery_dataset_name,
+            "bigquery_table_name": self.bigquery_table_name,
+            "clickhouse_table_name": self.model_name,
+            "clickhouse_dataset_name": self.clickhouse_dataset_name,
+            "mode": self.mode,
+            "partition_key": self.partition_key,
         }
 
-        # Add depends_list if it exists
-        if len(table) == 3:
-            config["depends_list"] = table[2]
 
-        configs.append(config)
+@dataclass
+class AnalyticsConfig:
+    clickhouse_dataset_name: str
+    clickhouse_table_name: str
+    depends_list: List[str] = field(default_factory=list)
+    ch_session_settings: Dict = field(default_factory=dict)
 
-    return configs
+    def to_dict(self) -> Dict:
+        return {
+            "clickhouse_dataset_name": self.clickhouse_dataset_name,
+            "clickhouse_table_name": self.clickhouse_table_name,
+            "depends_list": self.depends_list,
+            "ch_session_settings": self.ch_session_settings,
+        }
 
 
 # List of models to be exported
-DBT_MODELS = [
-    ("booking", "overwrite", "update_date"),
-    ("collective_booking", "overwrite", "update_date"),
-    ("native_event", "incremental", "partition_date"),
-    ("venue_offer_statistic", "overwrite", None),
+CLICKHOUSE_LOADING_CONFIGS = [
+    TableConfig(model_name="booking", mode="overwrite", partition_key="update_date"),
+    TableConfig(
+        model_name="collective_booking", mode="overwrite", partition_key="update_date"
+    ),
+    TableConfig(
+        model_name="native_event", mode="incremental", partition_key="partition_date"
+    ),
+    TableConfig(
+        model_name="venue_offer_statistic", mode="overwrite", partition_key=None
+    ),
 ]
-# List of aggreated tables names to be refreshed with compressed config: (clickhouse_dataset_name, clickhouse_table_name, optionally depends_list)
-CLICKHOUSE_TABLES = [
-    ("analytics", "daily_aggregated_venue_offer_consultation"),
-    ("analytics", "last_30_day_venue_top_offer_consultation"),
-    ("analytics", "monthly_aggregated_venue_collective_revenue"),
-    ("analytics", "monthly_aggregated_venue_individual_revenue"),
-    (
-        "analytics",
-        "monthly_aggregated_venue_revenue",
-        [
+
+# List of aggregated tables to be refreshed
+CLICKHOUSE_ANALYTICS_TRANSFORMATION_CONFIGS = [
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="daily_aggregated_venue_offer_consultation",
+    ),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="last_30_day_venue_top_offer_consultation",
+    ),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="monthly_aggregated_venue_collective_revenue",
+    ),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="monthly_aggregated_venue_individual_revenue",
+    ),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="monthly_aggregated_venue_revenue",
+        depends_list=[
             "monthly_aggregated_venue_collective_revenue",
             "monthly_aggregated_venue_individual_revenue",
         ],
+        ch_session_settings={"max_partitions_per_insert_block": 200},
     ),
-    ("analytics", "yearly_aggregated_venue_collective_revenue"),
-    ("analytics", "yearly_aggregated_venue_individual_revenue"),
-    (
-        "analytics",
-        "yearly_aggregated_venue_revenue",
-        [
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="yearly_aggregated_venue_collective_revenue",
+    ),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="yearly_aggregated_venue_individual_revenue",
+    ),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="yearly_aggregated_venue_revenue",
+        depends_list=[
             "yearly_aggregated_venue_collective_revenue",
             "yearly_aggregated_venue_individual_revenue",
         ],
     ),
 ]
-
-TABLES_CONFIGS = generate_table_configs(models=DBT_MODELS)
-ANALYTICS_CONFIGS = generate_analytics_configs(table_list=CLICKHOUSE_TABLES)

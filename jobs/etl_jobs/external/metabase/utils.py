@@ -74,7 +74,6 @@ def get_dependant_cards(legacy_table_name, legacy_schema_name):
             "card_type",
             "card_name",
             "card_collection_id",
-            "slug_reduced_level_2",
             "total_users",
             "total_views",
             "nbr_dashboards",

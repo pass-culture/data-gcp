@@ -143,7 +143,8 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
-        run: uv run .github/workflows/scripts/run_dbt_changed_models.sh ${{ github.base_ref }} orchestration/dags/data_gcp_dbt
+          BASE_REF: ${{ github.base_ref }}
+        run: uv run .github/workflows/scripts/run_dbt_changed_models.sh "$BASE_REF" orchestration/dags/data_gcp_dbt
       - name: "Run modified tests"
         if: steps.run-changed-models.outputs.should_run_tests == 'true'
         working-directory: ${{ env.DBT_FOLDER }}

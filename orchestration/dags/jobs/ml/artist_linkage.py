@@ -193,7 +193,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Link artists via clustering",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME]),
+    schedule=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME]),
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
@@ -257,7 +257,6 @@ with DAG(
     choose_linkage = BranchPythonOperator(
         task_id="choose_path",
         python_callable=_choose_linkage,
-        provide_context=True,
         dag=dag,
     )
 

@@ -46,7 +46,7 @@ DAG_CONFIG = {"TOKENIZERS_PARALLELISM": "false"}
     dag_id=DAG_NAME,
     default_args=default_args,
     description="Extract items metadata embeddings",
-    schedule_interval=dag_schedule,  # every day at 12:00, 18:00, and 23:00
+    schedule=dag_schedule,  # every day at 12:00, 18:00, and 23:00
     catchup=False,
     dagrun_timeout=timedelta(hours=20),
     user_defined_macros=None,  # Replace with actual macros if needed

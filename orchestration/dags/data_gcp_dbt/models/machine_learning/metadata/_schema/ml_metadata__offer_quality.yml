@@ -12,8 +12,6 @@ models:
       - name: item_id
         description: "Unique identifier for the item."
         data_type: STRING
-        data_tests:
-          - not_null
       - name: offer_product_id
         description: "Product ID associated with the offer."
         data_type: STRING

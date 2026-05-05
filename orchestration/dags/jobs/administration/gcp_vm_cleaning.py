@@ -24,7 +24,7 @@ dag = DAG(
     default_args=default_args,
     catchup=False,
     description="Automatic cleaning of VMs",
-    schedule_interval=get_airflow_schedule("0 * * * *"),
+    schedule=get_airflow_schedule("0 * * * *"),
     dagrun_timeout=timedelta(hours=1),
 )
 

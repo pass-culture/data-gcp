@@ -2,7 +2,7 @@ CREATE OR REPLACE TABLE analytics.monthly_aggregated_venue_collective_revenue ON
 ENGINE = SummingMergeTree()
 PARTITION BY month
 ORDER BY (venue_id)
-SETTINGS storage_policy='gcs_main'
+SETTINGS storage_policy='gcs_main', max_partitions_per_insert_block = 200
 AS
 SELECT
     toStartOfMonth(coalesce(toDate(used_date), toDate(creation_date))) AS month,

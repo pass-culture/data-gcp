@@ -92,7 +92,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command='uv run python main.py --target transactional --audience pro --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
+        command='uv run main.py --target transactional --audience pro --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
         do_xcom_push=True,
         deferrable=True,
     )
@@ -102,7 +102,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command='uv run python main.py --target transactional --audience native --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
+        command='uv run main.py --target transactional --audience native --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
         do_xcom_push=True,
         deferrable=True,
     )
@@ -132,7 +132,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run python main.py --target newsletter --audience pro --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
+        command="uv run main.py --target newsletter --audience pro --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
         do_xcom_push=True,
     )
 
@@ -141,7 +141,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run python main.py --target newsletter --audience native --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
+        command="uv run main.py --target newsletter --audience native --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
         do_xcom_push=True,
     )
 

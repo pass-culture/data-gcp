@@ -87,11 +87,11 @@ select
     coalesce(user_geo_iris.density_level, -1) as user_density_level,
     coalesce(user_epci.epci_name, "non localisé") as user_epci,
     coalesce(cast(user_epci.epci_code as string), "-1") as user_epci_code,
-    user_qpv.qpv_code,
-    user_qpv.qpv_name,
-    user_qpv.qpv_municipality,
-    user_zrr.zrr_level,
-    user_zrr.zrr_level_detail,
+    coalesce(user_qpv.qpv_code, "-1") as user_qpv_code,
+    coalesce(user_qpv.qpv_name, "non localisé") as user_qpv_name,
+    coalesce(user_qpv.qpv_municipality, "non localisé") as user_qpv_municipality,
+    coalesce(user_zrr.zrr_level, "non localisé") as user_zrr_level,
+    coalesce(user_zrr.zrr_level_detail, "non localisé") as user_zrr_level_detail,
     users.user_address_geocode_updated_at,
     users.geocode_type as user_address_geocode_type,
     case
@@ -99,7 +99,7 @@ select
             user_qpv.qpv_code is null
             and users.user_latitude is null
             and users.user_longitude is null
-        then null
+        then false
         else user_qpv.qpv_code is not null
     end as user_is_in_qpv
 

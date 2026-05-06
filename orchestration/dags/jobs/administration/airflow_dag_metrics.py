@@ -28,7 +28,7 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Daily snapshot of Airflow DAG metrics to BigQuery",
-    schedule_interval=get_airflow_schedule(schedule),
+    schedule=get_airflow_schedule(schedule),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=30),
     tags=[DAG_TAGS.DE.value],

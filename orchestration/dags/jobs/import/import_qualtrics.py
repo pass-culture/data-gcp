@@ -37,9 +37,7 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Import qualtrics tables",
-    schedule_interval=get_airflow_schedule(
-        "0 0 * * 1"
-    ),  # execute each Monday at midnight
+    schedule=get_airflow_schedule("0 0 * * 1"),  # execute each Monday at midnight
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -62,7 +60,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.9",
+        python_version="3.13",
         base_dir=BASE_PATH,
         retries=2,
     )
@@ -72,7 +70,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py --task import_opt_out_users",
+        command="uv run main.py --task import_opt_out_users",
         do_xcom_push=True,
     )
 
@@ -81,7 +79,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py --task import_all_survey_answers",
+        command="uv run main.py --task import_all_survey_answers",
         do_xcom_push=True,
     )
 

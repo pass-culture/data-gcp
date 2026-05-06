@@ -65,7 +65,7 @@ with DAG(
     "import_qpi_answers_v1",
     default_args=default_args,
     description="Importing new data from QPI every day.",
-    schedule_interval=get_airflow_schedule("0 2 * * *"),
+    schedule=get_airflow_schedule("0 2 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     template_searchpath=DAG_FOLDER,
@@ -119,7 +119,7 @@ with DAG(
                 "writeDisposition": "WRITE_APPEND",
             }
         },
-        trigger_rule="none_failed_or_skipped",
+        trigger_rule="none_failed_min_one_success",
         dag=dag,
     )
 

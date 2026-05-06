@@ -1,6 +1,5 @@
 from airflow.exceptions import AirflowFailException
 from airflow.models import BaseOperator
-from airflow.utils.decorators import apply_defaults
 from common.hooks.monitoring import ElementaryReport
 
 
@@ -10,7 +9,6 @@ class GenerateElementaryReportOperator(BaseOperator):
         "days_back",
     ]
 
-    @apply_defaults
     def __init__(
         self,
         report_file_path: str,
@@ -40,7 +38,6 @@ class SendElementaryMonitoringReportOperator(BaseOperator):
         "send_slack_report",
     ]
 
-    @apply_defaults
     def __init__(
         self,
         slack_channel: str,

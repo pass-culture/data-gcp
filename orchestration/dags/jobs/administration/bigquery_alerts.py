@@ -41,9 +41,7 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Send alerts when bigquery table is not updated in expected schedule",
-    schedule_interval=get_airflow_schedule(
-        "00 08 * * *" if ENV_SHORT_NAME == "prod" else None
-    ),
+    schedule=get_airflow_schedule("00 08 * * *" if ENV_SHORT_NAME == "prod" else None),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -81,7 +79,7 @@ with DAG(
         environment=dag_config,
         do_xcom_push=True,
         command="""
-        python main.py
+        uv run main.py
         """,
     )
 
@@ -91,7 +89,6 @@ with DAG(
         op_kwargs={
             "warning_table_list": "{{task_instance.xcom_pull(task_ids='get_warning_tables', key='result')}}",
         },
-        provide_context=True,
         dag=dag,
     )
 

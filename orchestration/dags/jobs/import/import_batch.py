@@ -37,7 +37,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Import batch push notifications statistics",
-    schedule_interval=get_airflow_schedule("0 0 * * *"),  # import every day at 00:00
+    schedule=get_airflow_schedule("0 0 * * *"),  # import every day at 00:00
     catchup=False,
     dagrun_timeout=timedelta(minutes=300),
     params={
@@ -65,7 +65,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.10",
+        python_version="3.13",
         base_dir=BASE_PATH,
         dag=dag,
         retries=2,
@@ -76,7 +76,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
-        python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} ios
+        uv run main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} ios
         """,
         retries=2,
     )
@@ -86,7 +86,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
-        python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} android
+        uv run main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} android
         """,
         retries=2,
     )

@@ -1,7 +1,7 @@
 with
     fraud_users as (
         select user_id
-        from {{ ref("user_suspension") }}
+        from {{ ref("int_applicative__action_history") }}
         qualify
             row_number() over (partition by user_id order by action_date desc) = 1  -- ceux qui n'ont pas été unsuspended ensuite
             and action_type = 'USER_SUSPENDED'

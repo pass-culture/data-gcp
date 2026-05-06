@@ -49,7 +49,7 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Import brevo tables",
-    schedule_interval=get_airflow_schedule("00 04 * * *")
+    schedule=get_airflow_schedule("00 04 * * *")
     if ENV_SHORT_NAME in ["prod", "stg"]
     else get_airflow_schedule(None),
     catchup=False,
@@ -82,7 +82,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.9",
+        python_version="3.13",
         base_dir=BASE_PATH,
         retries=2,
     )
@@ -92,7 +92,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command='python main.py --target transactional --audience pro --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
+        command='uv run main.py --target transactional --audience pro --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
         do_xcom_push=True,
         deferrable=True,
     )
@@ -102,7 +102,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command='python main.py --target transactional --audience native --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
+        command='uv run main.py --target transactional --audience native --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
         do_xcom_push=True,
         deferrable=True,
     )
@@ -132,7 +132,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py --target newsletter --audience pro --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
+        command="uv run main.py --target newsletter --audience pro --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
         do_xcom_push=True,
     )
 
@@ -141,7 +141,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py --target newsletter --audience native --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
+        command="uv run main.py --target newsletter --audience native --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
         do_xcom_push=True,
     )
 

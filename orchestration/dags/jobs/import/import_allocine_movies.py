@@ -39,7 +39,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Import allocine movies data",
-    schedule_interval=get_airflow_schedule("0 0 * * *"),  # import every day at 00:00
+    schedule=get_airflow_schedule("0 0 * * *"),  # import every day at 00:00
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=300),
     params={
@@ -79,7 +79,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.12",
+        python_version="3.13",
         base_dir=BASE_PATH,
         dag=dag,
         retries=2,

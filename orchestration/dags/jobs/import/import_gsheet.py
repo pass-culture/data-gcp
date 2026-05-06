@@ -37,7 +37,7 @@ with DAG(
     default_args=default_dag_args,
     description="Import Adhoc Gsheet",
     on_failure_callback=None,
-    schedule_interval=get_airflow_schedule("0 1 * * *"),
+    schedule=get_airflow_schedule("0 1 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     params={
@@ -58,7 +58,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.9",
+        python_version="3.13",
         base_dir=BASE_PATH,
         retries=2,
     )
@@ -68,7 +68,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py ",
+        command="uv run main.py ",
         do_xcom_push=True,
     )
 

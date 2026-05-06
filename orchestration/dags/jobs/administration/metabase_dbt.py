@@ -40,7 +40,7 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Import metabase tables from CloudSQL & archive old cards",
-    schedule_interval=get_airflow_schedule("0 */6 * * 1-5")
+    schedule=get_airflow_schedule("0 */6 * * 1-5")
     if ENV_SHORT_NAME == "prod"
     else None,
     catchup=False,
@@ -81,7 +81,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
         base_dir=BASE_PATH,
-        python_version="3.12",
+        python_version="3.13",
         retries=2,
         dag=dag,
     )
@@ -91,7 +91,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py export-models --airflow-bucket-name {{ params.airflow_bucket_name}} ",
+        command="uv run main.py export-models --airflow-bucket-name {{ params.airflow_bucket_name}} ",
         do_xcom_push=True,
     )
 
@@ -100,7 +100,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py export-exposures --airflow-bucket-name {{ params.airflow_bucket_name}} --exposure-dataset-name {{ params.exposure_dataset_name }} --exposure-table-name {{ params.exposure_table_name }}",
+        command="uv run main.py export-exposures --airflow-bucket-name {{ params.airflow_bucket_name}} --exposure-dataset-name {{ params.exposure_dataset_name }} --exposure-table-name {{ params.exposure_table_name }}",
         do_xcom_push=True,
     )
 

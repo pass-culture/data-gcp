@@ -96,7 +96,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run python main.py pro {{ params.updated_since_pro }} ",
+        command="uv run main.py pro {{ params.updated_since_pro }} ",
         do_xcom_push=True,
     )
 
@@ -111,7 +111,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run python main.py jeunes {{ params.updated_since_jeunes }} ",
+        command="uv run main.py jeunes {{ params.updated_since_jeunes }} ",
         do_xcom_push=True,
     )
 
@@ -120,7 +120,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run python parse_dms_subscriptions_to_tabular.py --target jeunes --updated-since {{ params.updated_since_jeunes }} "
+        command="uv run parse_dms_subscriptions_to_tabular.py --target jeunes --updated-since {{ params.updated_since_jeunes }} "
         + f"--bucket-name {DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME} ",
         do_xcom_push=True,
     )
@@ -130,7 +130,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run python parse_dms_subscriptions_to_tabular.py --target pro --updated-since {{ params.updated_since_pro }} "
+        command="uv run parse_dms_subscriptions_to_tabular.py --target pro --updated-since {{ params.updated_since_pro }} "
         + f"--bucket-name {DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME} ",
         do_xcom_push=True,
     )

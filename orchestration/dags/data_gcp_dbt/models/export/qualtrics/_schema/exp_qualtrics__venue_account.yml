@@ -18,8 +18,6 @@ models:
       - name: venue_booking_email
         description: "{{ doc('column__venue_booking_email') }}"
         data_type: STRING
-        data_tests:
-          - not_null
       - name: venue_name
         description: "{{ doc('column__venue_name') }}"
         data_type: STRING

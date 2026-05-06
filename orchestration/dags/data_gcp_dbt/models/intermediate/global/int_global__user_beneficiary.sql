@@ -97,7 +97,7 @@ select
     coalesce(ui.user_academy_name, "non localisé") as user_academy_name,
     coalesce(ui.user_density_label, "non localisé") as user_density_label,
     coalesce(ui.user_macro_density_label, "non localisé") as user_macro_density_label,
-    coalesce(ui.user_density_level, "non localisé") as user_density_level,
+    coalesce(ui.user_density_level, null) as user_density_level,
     coalesce(ui.user_is_in_qpv, false) as user_is_in_qpv,
     u.user_humanized_id,
     dgu.user_age_at_first_deposit,

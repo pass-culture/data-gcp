@@ -29,7 +29,7 @@ with
         left join
             {{ source("raw", "qualtrics_opt_out_users") }} as opt_out
             on global_venue.venue_id = opt_out.ext_ref
-        where opt_out.contact_id is null
+        where opt_out.contact_id is null and global_venue.venue_booking_email is not null
     ),
 
     generate_export as (

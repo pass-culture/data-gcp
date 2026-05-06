@@ -14,7 +14,7 @@ with
         from {{ source("raw", "qualtrics_exported_beneficiary_account") }}
         where
             calculation_month
-            >= date_sub(date_trunc(date("{{ ds() }}"), month), interval 6 month)
+            >= date_sub(date_trunc(date("{{ ds() }}"), month), interval 1 month)
 
     ),
 
@@ -25,15 +25,17 @@ with
             user_data.user_id,
             user_data.current_deposit_type as deposit_type,
             user_data.user_civility,
-            user_data.total_non_cancelled_individual_bookings as no_cancelled_booking,
+            user_data.total_non_cancelled_individual_bookings,
             user_data.user_region_name,
-            user_data.total_actual_amount_spent as actual_amount_spent,
+            user_data.total_actual_amount_spent,
             user_data.user_activity,
-            user_visits.total_visit_last_month,  -- TODO legacy: rename field in qualtrics
-            user_location.user_rural_city_type as geo_type,
-            user_location.qpv_code as code_qpv,  -- TODO legacy: rename field in qualtrics
-            user_location.zrr_level as zrr,
+            user_visits.total_visit_last_month,
+            user_location.user_rural_city_type,
+            user_location.qpv_code,
+            user_location.zrr_level,
             user_data.user_seniority,
+            user_data.user_age,
+            user_data.total_diversity_score,
             user_data.user_current_deposit_reform_category
 
         from {{ ref("mrt_global__user_beneficiary") }} as user_data
@@ -64,7 +66,7 @@ with
         {% else %} where ir.deposit_type = "GRANT_15_17"
         {% endif %}
         order by rand()
-        limit 8000
+        limit 10000
     ),
 
     grant_18 as (
@@ -76,7 +78,7 @@ with
         {% else %} where ir.deposit_type = "GRANT_18"
         {% endif %}
         order by rand()
-        limit 8000
+        limit 10000
     )
 
 select current_date as export_date, *

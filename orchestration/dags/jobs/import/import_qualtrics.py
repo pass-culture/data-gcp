@@ -60,8 +60,8 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.9",
         base_dir=BASE_PATH,
+        python_version="3.13",
         retries=2,
     )
 
@@ -70,7 +70,8 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py --task import_opt_out_users",
+        command="uv run python main.py --task import_opt_out_users",
+        deferrable=True,
         do_xcom_push=True,
     )
 
@@ -79,7 +80,8 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py --task import_all_survey_answers",
+        command="uv run python main.py --task import_all_survey_answers",
+        deferrable=True,
         do_xcom_push=True,
     )
 

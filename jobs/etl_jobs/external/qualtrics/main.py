@@ -2,6 +2,8 @@ import time
 
 import typer
 
+from qualtrics_client import QualtricsClient
+from qualtrics_export import export_beneficiary_to_qualtrics, export_venue_to_qualtrics
 from qualtrics_opt_out import import_qualtrics_opt_out
 from qualtrics_survey_answers import (
     QualtricsSurvey,
@@ -24,10 +26,9 @@ ir_surveys_mapping = {
 
 
 def run(
-    task: str = typer.Option(
-        ...,
-        help="Nom de la tache",
-    ),
+    task: str = typer.Option(..., help="Task name"),
+    ds: str = typer.Option("", help="Execution date (YYYY-MM-DD)"),
+    mailing_list_id: str = typer.Option("", help="Qualtrics mailing list ID"),
 ):
     if task == "import_opt_out_users":
         import_qualtrics_opt_out(
@@ -55,9 +56,27 @@ def run(
             if i % 10:
                 time.sleep(60)
 
+    elif task == "export_beneficiary":
+        client = QualtricsClient(api_token=API_TOKEN, data_center=DATA_CENTER)
+        export_beneficiary_to_qualtrics(
+            ds=ds,
+            directory_id=DIRECTORY_ID,
+            mailing_list_id=mailing_list_id,
+            client=client,
+        )
+
+    elif task == "export_venue":
+        client = QualtricsClient(api_token=API_TOKEN, data_center=DATA_CENTER)
+        export_venue_to_qualtrics(
+            ds=ds,
+            directory_id=DIRECTORY_ID,
+            mailing_list_id=mailing_list_id,
+            client=client,
+        )
+
     else:
         raise RuntimeError(
-            "Task argument must be one of import_opt_out_users or import_all_survey_answers."
+            "Task must be one of: import_opt_out_users, import_all_survey_answers, export_beneficiary, export_venue."
         )
 
     return "Success"

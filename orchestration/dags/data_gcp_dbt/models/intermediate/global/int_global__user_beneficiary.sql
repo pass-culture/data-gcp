@@ -84,7 +84,7 @@ select
     u.user_subscribed_themes,
     u.is_theme_subscribed,
     coalesce(
-        ui.user_iris_internal_id, "" 00000000000000000000000000000000 ""
+        ui.user_iris_internal_id, "00000000000000000000000000000000"
     ) as user_iris_internal_id,
     coalesce(ui.user_department_code, "-1") as user_department_code,
     coalesce(ui.user_postal_code, "-1") as user_postal_code,

@@ -38,29 +38,14 @@ models:
       - name: venue_rural_city_type
         description: "{{ doc('column__rural_city_type') }}"
         data_type: STRING
-      - name: venue_in_qpv
-        description: "{{ doc('column__venue_in_qpv') }}"
-        data_type: BOOLEAN
-      - name: venue_in_zrr
-        description: "{{ doc('column__venue_in_zrr') }}"
-        data_type: BOOLEAN
-      - name: venue_is_permanent
-        description: "{{ doc('column__venue_is_permanent') }}"
-        data_type: BOOLEAN
       - name: total_real_revenue
         description: "{{ doc('column__total_real_revenue') }}"
         data_type: FLOAT64
-      - name: total_non_cancelled_bookings
-        description: "{{ doc('column__total_non_cancelled_bookings') }}"
+      - name: total_non_cancelled_individual_bookings
+        description: "{{ doc('column__total_non_cancelled_individual_bookings') }}"
         data_type: INT64
-      - name: total_created_individual_offers
-        description: "{{ doc('column__total_created_individual_offers') }}"
-        data_type: INT64
-      - name: total_created_collective_offers
-        description: "{{ doc('column__total_created_collective_offers') }}"
-        data_type: INT64
-      - name: total_created_offers
-        description: "{{ doc('column__total_created_offers') }}"
+      - name: total_non_cancelled_collective_bookings
+        description: "{{ doc('column__total_non_cancelled_collective_bookings') }}"
         data_type: INT64
       - name: is_active_current_year
         description: "{{ doc('column__is_active_current_year') }}"

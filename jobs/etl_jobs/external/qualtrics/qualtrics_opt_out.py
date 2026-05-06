@@ -16,6 +16,8 @@ def import_qualtrics_opt_out(data_center, directory_id, api_token, export_column
     while next_page is not None:
         print(f"Page {i}")
         response = requests.get(next_page, headers=headers).json()
+        if "result" not in response:
+            raise RuntimeError(f"Unexpected API response: {response}")
         results += response["result"]["elements"]
         next_page = response["result"].get("nextPage", None)
         i += 1

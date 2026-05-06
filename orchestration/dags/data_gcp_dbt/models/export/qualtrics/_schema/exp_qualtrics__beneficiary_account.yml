@@ -28,9 +28,6 @@ models:
       - name: user_age
         description: "{{ doc('column__user_age') }}"
         data_type: INT64
-      - name: user_activity
-        description: "{{ doc('column__user_activity') }}"
-        data_type: STRING
       - name: user_seniority
         description: "{{ doc('column__user_seniority') }}"
         data_type: INT64
@@ -45,19 +42,4 @@ models:
         data_type: STRING
       - name: qpv_code
         description: "{{ doc('column__qpv_code') }}"
-        data_type: STRING
-      - name: zrr_level
-        description: "{{ doc('column__zrr_level') }}"
-        data_type: STRING
-      - name: total_non_cancelled_individual_bookings
-        description: "{{ doc('column__total_non_cancelled_individual_bookings') }}"
-        data_type: INT64
-      - name: total_actual_amount_spent
-        description: "{{ doc('column__total_actual_amount_spent') }}"
-        data_type: FLOAT64
-      - name: total_visit_last_month
-        description: "{{ doc('column__total_visit_last_month') }}"
-        data_type: INT64
-      - name: user_current_deposit_reform_category
-        description: "{{ doc('column__user_current_deposit_reform_category') }}"
         data_type: STRING

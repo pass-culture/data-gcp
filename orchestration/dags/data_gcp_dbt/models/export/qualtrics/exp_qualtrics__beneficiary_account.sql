@@ -1,14 +1,5 @@
 -- noqa: disable=all
 with
-    user_visits as (
-        select
-            user_id,
-            count(distinct concat(user_pseudo_id, session_id)) as total_visit_last_month
-        from {{ ref("int_firebase__native_event") }}
-        where date(event_date) >= date_sub(current_date, interval 1 month)
-        group by user_id
-    ),
-
     previous_export as (
         select distinct user_id
         from {{ source("raw", "qualtrics_exported_beneficiary_account") }}
@@ -23,20 +14,14 @@ with
     ir_export as (
         select
             user_data.user_id,
-            user_data.current_deposit_type as deposit_type,
-            user_data.user_civility,
-            user_data.total_non_cancelled_individual_bookings,
-            user_data.user_region_name,
-            user_data.total_actual_amount_spent,
-            user_data.user_activity,
-            user_visits.total_visit_last_month,
-            user_location.user_rural_city_type,
-            user_location.qpv_code,
-            user_location.zrr_level,
-            user_data.user_seniority,
             user_data.user_age,
+            user_data.user_civility,
+            user_data.current_deposit_type as deposit_type,
+            user_data.user_seniority,
+            user_data.user_region_name,
             user_data.total_diversity_score,
-            user_data.user_current_deposit_reform_category
+            user_location.user_rural_city_type,
+            user_location.qpv_code
 
         from {{ ref("mrt_global__user_beneficiary") }} as user_data
         left join
@@ -45,7 +30,6 @@ with
         left join
             {{ source("raw", "qualtrics_opt_out_users") }} as opt_out
             on user_data.user_id = opt_out.ext_ref
-        left join user_visits on user_data.user_id = user_visits.user_id
         left join answers on user_data.user_id = answers.user_id
         where
             user_data.user_id is not null

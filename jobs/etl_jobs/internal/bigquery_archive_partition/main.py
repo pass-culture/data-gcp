@@ -12,7 +12,9 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+app = typer.Typer()
 
+@app.command()
 def run(
     config: str = typer.Option(
         ...,
@@ -38,4 +40,4 @@ def run(
 
 
 if __name__ == "__main__":
-    typer.run(run)
+    app()

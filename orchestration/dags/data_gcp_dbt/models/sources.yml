@@ -131,7 +131,7 @@ sources:
       - name: applicative_database_venue_provider
       - name: applicative_database_venue_provider_external_urls
       - name: applicative_database_venue_registration
-      - name: appsflyer_cost_channel
+
       - name: brevo_transactional
       - name: contentful_entry
       - name: contentful_relationship
@@ -291,9 +291,3 @@ sources:
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: item_offer_mapping
-  - name: appsflyer_import
-    schema: appsflyer_import_{{ var('ENV_SHORT_NAME') }}
-    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
-    tables:
-      - name: cohort_unified_timezone_versioned
-      - name: installs

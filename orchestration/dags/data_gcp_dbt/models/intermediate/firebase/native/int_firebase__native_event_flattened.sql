@@ -96,7 +96,6 @@ with
                         "social",
                         "searchView",
                         "duration",
-                        "appsFlyerUserId",
                         "accessibilityFilter",
                         "offers_1_10",
                         "offers_11_20",

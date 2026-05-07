@@ -8,7 +8,7 @@ This document explains the organization of the `jobs/` and `orchestration/` dire
 The `jobs/` directory contains the core logic for data processing, including ETL (Extract, Transform, Load) and Machine Learning tasks. These are typically standalone Python packages or scripts that will be run on GCE VMs. These are on general managed by Airflow DAGs in `orchestrations/`.
 
 *   **`etl_jobs/`**: Responsibility for moving data between systems.
-    *   **`external/`**: Scripts that fetch/push data from/to external APIs (e.g., AppsFlyer, Brevo, Qualtrics).
+    *   **`external/`**: Scripts that fetch/push data from/to external APIs (e.g.,  Brevo, Qualtrics).
     *   **`connectors/`**: Attempt for another way to fetch data from external APIs (`external/` is the old way).
     *   **`internal/`**: Scripts that interact with internal API (to fetch/push data) to access Pass Culture services or GCP resources.
 *   **`ml_jobs/`**: Responsibility for machine learning workflows.

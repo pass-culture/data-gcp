@@ -73,7 +73,6 @@ select
     searchview as search_type,
     type as share_type,
     duration,
-    appsflyeruserid as appsflyer_id,
     accessibilityfilter as search_accessibility_filter,
     videoduration as video_duration_seconds,
     seenduration as video_seen_duration_seconds,

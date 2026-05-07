@@ -52,7 +52,7 @@ tiers:
 # Supported forces: repulsion, attraction, hierarchy, collision, tier, gravity
 disabled_forces:
   repulsion: []
-  attraction: ["src.raw","src.seed","src.appsflyer_import","src.clean"]
+  attraction: ["src.raw","src.seed","src.clean"]
   hierarchy: []
   collision: []
   tier: []

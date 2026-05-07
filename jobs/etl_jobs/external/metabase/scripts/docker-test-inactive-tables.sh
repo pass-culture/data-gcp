@@ -33,7 +33,8 @@ fail()  { echo "  ✗ $*" >&2; exit 1; }
 
 # Parse JSON with Python (guaranteed available in this project)
 json_get() {
-    python3 -c "import sys, json; data=json.load(sys.stdin); print($1)"
+    local python_expression="$1"
+    python3 -c "import sys, json; data=json.load(sys.stdin); print($python_expression)"
 }
 
 # ---------------------------------------------------------------------------

@@ -15,7 +15,7 @@ set -euo pipefail
 
 # Load environment variables from .env file
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ -f "${SCRIPT_DIR}/.env" ]; then
+if [[ -f "${SCRIPT_DIR}/.env" ]]; then
     # Export variables from .env file, handling comments and empty lines
     set -a
     source "${SCRIPT_DIR}/.env"
@@ -61,7 +61,7 @@ json_get() {
 info "Phase 1: Waiting for Metabase to be ready..."
 
 elapsed=0
-while [ $elapsed -lt $MAX_WAIT_METABASE ]; do
+while [[ $elapsed -lt $MAX_WAIT_METABASE ]]; do
     if curl -sf "${METABASE_URL}/api/session/properties" > /dev/null 2>&1; then
         ok "Metabase is ready (${elapsed}s)"
         break
@@ -70,7 +70,7 @@ while [ $elapsed -lt $MAX_WAIT_METABASE ]; do
     elapsed=$((elapsed + 2))
 done
 
-if [ $elapsed -ge $MAX_WAIT_METABASE ]; then
+if [[ $elapsed -ge $MAX_WAIT_METABASE ]]; then
     fail "Metabase did not become ready within ${MAX_WAIT_METABASE}s"
 fi
 
@@ -82,7 +82,7 @@ info "Phase 2: Setting up admin account..."
 SETUP_TOKEN=$(curl -sf "${METABASE_URL}/api/session/properties" \
     | json_get "data.get('setup-token', '')")
 
-if [ -n "$SETUP_TOKEN" ] && [ "$SETUP_TOKEN" != "None" ]; then
+if [[ -n "$SETUP_TOKEN" && "$SETUP_TOKEN" != "None" ]]; then
     # First-time setup
     RESPONSE=$(curl -sf "${METABASE_URL}/api/setup" \
         -H "Content-Type: application/json" \
@@ -115,7 +115,7 @@ else
     skip "Admin account"
 fi
 
-if [ -z "$TOKEN" ] || [ "$TOKEN" = "None" ]; then
+if [[ -z "$TOKEN" || "$TOKEN" == "None" ]]; then
     fail "Could not obtain session token"
 fi
 
@@ -130,7 +130,7 @@ EXISTING_DB=$(curl -sf "${METABASE_URL}/api/database" \
     -H "$AUTH_HEADER" \
     | json_get "[d['id'] for d in data.get('data', data) if d['name'] == 'Sample DB']")
 
-if [ "$EXISTING_DB" = "[]" ]; then
+if [[ "$EXISTING_DB" == "[]" ]]; then
     curl -sf "${METABASE_URL}/api/database" \
         -H "$AUTH_HEADER" \
         -H "Content-Type: application/json" \
@@ -155,7 +155,7 @@ DB_ID=$(curl -sf "${METABASE_URL}/api/database" \
     -H "$AUTH_HEADER" \
     | json_get "[d['id'] for d in data.get('data', data) if d['name'] == 'Sample DB'][0]")
 
-if [ -z "$DB_ID" ] || [ "$DB_ID" = "None" ]; then
+if [[ -z "$DB_ID" || "$DB_ID" == "None" ]]; then
     fail "Could not find Sample DB ID"
 fi
 
@@ -197,19 +197,19 @@ curl -sf -X POST "${METABASE_URL}/api/database/${DB_ID}/sync_schema" \
 # Wait for old_user_stats to appear in Metabase table list
 elapsed=0
 TABLE_ID=""
-while [ $elapsed -lt $MAX_WAIT_SYNC ]; do
+while [[ $elapsed -lt $MAX_WAIT_SYNC ]]; do
     TABLE_ID=$(curl -sf "${METABASE_URL}/api/table" \
         -H "$AUTH_HEADER" \
         | json_get "str([t['id'] for t in data if t.get('name') == 'old_user_stats' and t.get('db_id') == ${DB_ID}][0])" 2>/dev/null || echo "")
 
-    if [ -n "$TABLE_ID" ] && [ "$TABLE_ID" != "" ] && [ "$TABLE_ID" != "None" ]; then
+    if [[ -n "$TABLE_ID" && "$TABLE_ID" != "" && "$TABLE_ID" != "None" ]]; then
         break
     fi
     sleep 2
     elapsed=$((elapsed + 2))
 done
 
-if [ -z "$TABLE_ID" ] || [ "$TABLE_ID" = "None" ]; then
+if [[ -z "$TABLE_ID" || "$TABLE_ID" == "None" ]]; then
     fail "Table old_user_stats did not appear in Metabase within ${MAX_WAIT_SYNC}s"
 fi
 

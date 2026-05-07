@@ -49,7 +49,7 @@ TOKEN=$(curl -sf "${METABASE_URL}/api/session" \
         \"password\": \"${ADMIN_PASSWORD}\"
     }" | json_get "data['id']")
 
-if [ -z "$TOKEN" ] || [ "$TOKEN" = "None" ]; then
+if [[ -z "$TOKEN" || "$TOKEN" == "None" ]]; then
     fail "Could not obtain session token — is Metabase running?"
 fi
 
@@ -60,7 +60,7 @@ DB_ID=$(curl -sf "${METABASE_URL}/api/database" \
     -H "$AUTH_HEADER" \
     | json_get "[d['id'] for d in data.get('data', data) if d['name'] == 'Sample DB'][0]")
 
-if [ -z "$DB_ID" ] || [ "$DB_ID" = "None" ]; then
+if [[ -z "$DB_ID" || "$DB_ID" == "None" ]]; then
     fail "Could not find Sample DB — has docker-setup.sh been run?"
 fi
 
@@ -69,7 +69,7 @@ TABLE_ID=$(curl -sf "${METABASE_URL}/api/table" \
     -H "$AUTH_HEADER" \
     | json_get "next(iter([t['id'] for t in data if t.get('name') == 'old_user_stats' and t.get('db_id') == ${DB_ID}]), '')")
 
-if [ -z "$TABLE_ID" ] || [ "$TABLE_ID" = "None" ]; then
+if [[ -z "$TABLE_ID" || "$TABLE_ID" == "None" ]]; then
     fail "Table old_user_stats not found in Metabase — run 'just docker-setup' first"
 fi
 
@@ -78,7 +78,7 @@ ACTIVE_FLAG=$(docker compose -f "$COMPOSE_FILE" exec -T postgres \
     psql -U metabase -d metabase -t -A \
     -c "SELECT active FROM metabase_table WHERE name = 'old_user_stats' AND db_id = ${DB_ID};")
 
-if [ "$ACTIVE_FLAG" != "t" ]; then
+if [[ "$ACTIVE_FLAG" != "t" ]]; then
     fail "Table old_user_stats is not active in Metabase DB (expected 't', got '${ACTIVE_FLAG}')"
 fi
 ok "Table active in Metabase DB (SQL: active=$ACTIVE_FLAG)"
@@ -88,7 +88,7 @@ API_ACTIVE=$(curl -sf "${METABASE_URL}/api/database/${DB_ID}/metadata?skip_field
     -H "$AUTH_HEADER" \
     | json_get "[t['active'] for t in data.get('tables', []) if t['name'] == 'old_user_stats'][0]")
 
-if [ "$API_ACTIVE" != "True" ]; then
+if [[ "$API_ACTIVE" != "True" ]]; then
     fail "Table old_user_stats is not active via API (expected 'True', got '${API_ACTIVE}')"
 fi
 ok "Table active via API (remove_inactive=false: active=$API_ACTIVE)"
@@ -112,11 +112,11 @@ curl -sf -X POST "${METABASE_URL}/api/database/${DB_ID}/sync_schema" \
     -H "$AUTH_HEADER" > /dev/null
 
 elapsed=0
-while [ $elapsed -lt $MAX_WAIT_SYNC ]; do
+while [[ $elapsed -lt $MAX_WAIT_SYNC ]]; do
     FOUND=$(curl -sf "${METABASE_URL}/api/table" -H "$AUTH_HEADER" \
         | json_get "[t['id'] for t in data if t.get('name') == 'old_user_stats' and t.get('db_id') == ${DB_ID}]")
 
-    if [ "$FOUND" = "[]" ]; then
+    if [[ "$FOUND" == "[]" ]]; then
         ok "Table disappeared from active table list (${elapsed}s)"
         break
     fi
@@ -124,7 +124,7 @@ while [ $elapsed -lt $MAX_WAIT_SYNC ]; do
     elapsed=$((elapsed + 2))
 done
 
-if [ $elapsed -ge $MAX_WAIT_SYNC ]; then
+if [[ $elapsed -ge $MAX_WAIT_SYNC ]]; then
     fail "Table old_user_stats did not become inactive within ${MAX_WAIT_SYNC}s"
 fi
 
@@ -140,7 +140,7 @@ ACTIVE_FLAG=$(docker compose -f "$COMPOSE_FILE" exec -T postgres \
     psql -U metabase -d metabase -t -A \
     -c "SELECT active FROM metabase_table WHERE name = 'old_user_stats' AND db_id = ${DB_ID};")
 
-if [ "$ACTIVE_FLAG" != "f" ]; then
+if [[ "$ACTIVE_FLAG" != "f" ]]; then
     echo "  ✗ Table old_user_stats is not inactive in Metabase DB (expected 'f', got '${ACTIVE_FLAG}')" >&2
     TEST_PASSED=false
 else
@@ -154,7 +154,7 @@ API_TABLES=$(curl -sf "${METABASE_URL}/api/database/${DB_ID}/metadata?skip_field
     -H "$AUTH_HEADER" \
     | json_get "[t['name'] for t in data.get('tables', []) if t['name'] == 'old_user_stats']")
 
-if [ "$API_TABLES" = "[]" ]; then
+if [[ "$API_TABLES" == "[]" ]]; then
     echo "  ✗ Table found in Metabase app DB but NOT returned by metadata API with remove_inactive=false" >&2
     TEST_PASSED=false
 else
@@ -190,11 +190,11 @@ curl -sf -X POST "${METABASE_URL}/api/database/${DB_ID}/sync_schema" \
 
 # Wait for table to reappear
 elapsed=0
-while [ $elapsed -lt $MAX_WAIT_SYNC ]; do
+while [[ $elapsed -lt $MAX_WAIT_SYNC ]]; do
     FOUND=$(curl -sf "${METABASE_URL}/api/table" -H "$AUTH_HEADER" \
         | json_get "[t['id'] for t in data if t.get('name') == 'old_user_stats' and t.get('db_id') == ${DB_ID}]")
 
-    if [ "$FOUND" != "[]" ]; then
+    if [[ "$FOUND" != "[]" ]]; then
         ok "Table reappeared in active table list (${elapsed}s)"
         break
     fi
@@ -202,7 +202,7 @@ while [ $elapsed -lt $MAX_WAIT_SYNC ]; do
     elapsed=$((elapsed + 2))
 done
 
-if [ $elapsed -ge $MAX_WAIT_SYNC ]; then
+if [[ $elapsed -ge $MAX_WAIT_SYNC ]]; then
     fail "Table old_user_stats did not reappear within ${MAX_WAIT_SYNC}s"
 fi
 
@@ -211,7 +211,7 @@ API_ACTIVE=$(curl -sf "${METABASE_URL}/api/database/${DB_ID}/metadata?skip_field
     -H "$AUTH_HEADER" \
     | json_get "[t['active'] for t in data.get('tables', []) if t['name'] == 'old_user_stats'][0]")
 
-if [ "$API_ACTIVE" != "True" ]; then
+if [[ "$API_ACTIVE" != "True" ]]; then
     fail "Table old_user_stats should be active again (expected 'True', got '${API_ACTIVE}')"
 fi
 ok "Table restored and active again"
@@ -220,7 +220,7 @@ ok "Table restored and active again"
 # Summary
 # ---------------------------------------------------------------------------
 echo ""
-if [ "$TEST_PASSED" = true ]; then
+if [[ "$TEST_PASSED" == true ]]; then
     echo "============================================================"
     echo " Inactive Tables Test: PASSED"
     echo "============================================================"

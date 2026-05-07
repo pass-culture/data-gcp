@@ -21,6 +21,7 @@ METABASE_URL="http://localhost:3000"
 ADMIN_EMAIL="admin@test.com"
 ADMIN_PASSWORD="Testpass1"
 COMPOSE_FILE="docker/docker-compose.yml"
+SEPARATOR="============================================================"
 
 MAX_WAIT_SYNC=60   # seconds to wait for sync (longer than docker-setup's 30s)
 
@@ -222,24 +223,24 @@ ok "Table restored and active again"
 # ---------------------------------------------------------------------------
 echo ""
 if [[ "$TEST_PASSED" == true ]]; then
-    echo "============================================================"
+    echo "$SEPARATOR"
     echo " Inactive Tables Test: PASSED"
-    echo "============================================================"
+    echo "$SEPARATOR"
     echo " All assertions verified:"
     echo "   ✓ Table initially active in Metabase DB and API"
     echo "   ✓ After deletion + sync: table found in Metabase app DB with active=false"
     echo "   ✓ After deletion + sync: table returned by metadata API with remove_inactive=false"
     echo "   ✓ Table restored and active again"
-    echo "============================================================"
+    echo "$SEPARATOR"
 else
-    echo "============================================================"
+    echo "$SEPARATOR"
     echo " Inactive Tables Test: FAILED"
-    echo "============================================================"
+    echo "$SEPARATOR"
     echo " Assertions:"
     echo "   ✓ Table initially active in Metabase DB and API"
     echo "   ✓ After deletion + sync: table found in Metabase app DB with active=false"
     echo "   ✗ After deletion + sync: table NOT returned by metadata API with remove_inactive=false"
     echo "   ✓ Table restored and active again"
-    echo "============================================================"
+    echo "$SEPARATOR"
     exit 1
 fi

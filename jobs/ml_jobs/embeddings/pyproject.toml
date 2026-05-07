@@ -13,18 +13,18 @@ dependencies = [
     "numpy<2.0.0",
     "pandas>=2.0.3",
     "pandas-gbq>=0.23.1",
-    "pillow>=10.4.0",
+    "pillow>=12.2.0",
     "polars>=0.19.12",
-    "protobuf>=3.9.2",
+    "protobuf>=7.34.1",
     "psutil>=6.0.0",
     "pytest>=6.1.1",
-    "requests>=2.31.0",
+    "requests>=2.33.1",
     "sentence-transformers>=2.3",
-    "setuptools>=78.1.1",
+    "setuptools>=82.0.1",
     "torch>=2.6.0",
     "tqdm>=4.66.4",
     "typer>=0.7.0",
-    "jinja2>=3.1.4",
+    "jinja2>=3.1.6",
 ]
 
 ## ruff

@@ -33,6 +33,7 @@ ADMIN_PASSWORD="${ADMIN_PASSWORD:-Testpass1}"
 ADMIN_FIRST_NAME="${ADMIN_FIRST_NAME:-Admin}"
 ADMIN_LAST_NAME="${ADMIN_LAST_NAME:-User}"
 COMPOSE_FILE="docker/docker-compose.yml"
+CONTENT_TYPE_JSON="Content-Type: application/json"
 
 # Sample database credentials (must match docker/.env)
 SAMPLE_DB="${SAMPLE_DB:-sample}"
@@ -86,7 +87,7 @@ SETUP_TOKEN=$(curl -sf "${METABASE_URL}/api/session/properties" \
 if [[ -n "$SETUP_TOKEN" && "$SETUP_TOKEN" != "None" ]]; then
     # First-time setup
     RESPONSE=$(curl -sf "${METABASE_URL}/api/setup" \
-        -H "Content-Type: application/json" \
+        -H "$CONTENT_TYPE_JSON" \
         -d "{
             \"token\": \"${SETUP_TOKEN}\",
             \"user\": {
@@ -107,7 +108,7 @@ if [[ -n "$SETUP_TOKEN" && "$SETUP_TOKEN" != "None" ]]; then
 else
     # Already set up — log in
     RESPONSE=$(curl -sf "${METABASE_URL}/api/session" \
-        -H "Content-Type: application/json" \
+        -H "$CONTENT_TYPE_JSON" \
         -d "{
             \"username\": \"${ADMIN_EMAIL}\",
             \"password\": \"${ADMIN_PASSWORD}\"
@@ -134,7 +135,7 @@ EXISTING_DB=$(curl -sf "${METABASE_URL}/api/database" \
 if [[ "$EXISTING_DB" == "[]" ]]; then
     curl -sf "${METABASE_URL}/api/database" \
         -H "$AUTH_HEADER" \
-        -H "Content-Type: application/json" \
+        -H "$CONTENT_TYPE_JSON" \
         -d "{
             \"engine\": \"postgres\",
             \"name\": \"Sample DB\",
@@ -231,7 +232,7 @@ if echo "$EXISTING_CARDS" | grep -q "Test Native Card"; then
 else
     NATIVE_CARD=$(curl -sf "${METABASE_URL}/api/card" \
         -H "$AUTH_HEADER" \
-        -H "Content-Type: application/json" \
+        -H "$CONTENT_TYPE_JSON" \
         -d "{
             \"name\": \"Test Native Card\",
             \"display\": \"table\",
@@ -262,7 +263,7 @@ if echo "$EXISTING_CARDS" | grep -q "Test Query Builder Card"; then
 else
     QB_CARD=$(curl -sf "${METABASE_URL}/api/card" \
         -H "$AUTH_HEADER" \
-        -H "Content-Type: application/json" \
+        -H "$CONTENT_TYPE_JSON" \
         -d "{
             \"name\": \"Test Query Builder Card\",
             \"display\": \"table\",

@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 app = typer.Typer()
 
+
 @app.command()
 def run(
     config: str = typer.Option(

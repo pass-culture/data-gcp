@@ -61,13 +61,13 @@ RUN gcloud config set core/custom_ca_certs_file ${CERT_PATH_DOCKER} \
 
 # 6. INSTALL PYTHON DEPS
 USER root
+RUN chown -R airflow:root /home/airflow/.local
+USER airflow
 WORKDIR ${AIRFLOW_USER_HOME}
 COPY ./airflow/orchestration-requirements.txt ./requirements.txt
 
 # Force UV_CERT_BUNDLE again at the command level to ensure 'airflow' user sees it
-RUN UV_CERT_BUNDLE=${CERT_PATH_DOCKER} uv pip install --native-tls --system -r requirements.txt
-
-RUN chown -R airflow:root ${AIRFLOW_USER_HOME}
+RUN UV_CERT_BUNDLE=${CERT_PATH_DOCKER} uv pip install --native-tls -r requirements.txt
 
 ################################
 ## Stage 3 Builder with proxy ##

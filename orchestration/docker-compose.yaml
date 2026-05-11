@@ -59,7 +59,8 @@ services:
       retries: 5
     restart: "unless-stopped"
     depends_on:
-      - airflow-init
+      airflow-init:
+        condition: service_completed_successfully
 
   airflow-scheduler:
     image: airflow-custom-image:latest
@@ -75,7 +76,8 @@ services:
       retries: 10
     restart: "unless-stopped"
     depends_on:
-      - airflow-init
+      airflow-init:
+        condition: service_completed_successfully
   airflow-triggerer:
     image: airflow-custom-image:latest
     <<: *airflow-common
@@ -93,7 +95,8 @@ services:
       retries: 5
     restart: unless-stopped
     depends_on:
-      - airflow-init
+      airflow-init:
+        condition: service_completed_successfully
   airflow-init:
     build:
       context: .

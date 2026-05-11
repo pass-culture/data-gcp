@@ -10,6 +10,16 @@
 
 {% set dimensions = [
     {
+        "name": "REG",
+        "user_col": "user_region_name",
+        "venue_col": "venue_region_name",
+    },
+    {
+        "name": "DEP",
+        "user_col": "user_department_name",
+        "venue_col": "venue_department_name",
+    },
+    {
         "name": "EPCI",
         "user_col": "user_epci_code",
         "venue_col": "venue_epci_code",
@@ -25,10 +35,14 @@ with
     base_booking_data as (
         select
             u.user_id,
+            u.user_region_name,
+            u.user_department_name,
             u.user_epci,
             u.user_epci_code,
             u.user_city,
             u.user_city_code,
+            b.venue_region_name,
+            b.venue_department_name,
             b.venue_epci,
             b.venue_epci_code,
             b.venue_city,
@@ -46,11 +60,18 @@ with
         select
             venue_city_code,
             venue_epci_code,
+            venue_region_name,
+            venue_department_name,
             date_trunc(date(offer_creation_date), month) as partition_month,
             count(distinct offer_id) as monthly_free_bookable_offers
         from {{ ref("mrt_global__offer") }}
         where last_stock_price = 0 and offer_is_bookable
-        group by partition_month, venue_city_code, venue_epci_code
+        group by
+            partition_month,
+            venue_city_code,
+            venue_epci_code,
+            venue_region_name,
+            venue_department_name
     ),
 
     cumul_free_bookable_offers as (
@@ -58,8 +79,14 @@ with
             partition_month,
             venue_city_code,
             venue_epci_code,
+            venue_region_name,
+            venue_department_name,
             sum(monthly_free_bookable_offers) over (
-                partition by venue_city_code, venue_epci_code
+                partition by
+                    venue_city_code,
+                    venue_epci_code,
+                    venue_region_name,
+                    venue_department_name
                 order by partition_month
                 rows unbounded preceding
             ) as cumul_total_free_offers

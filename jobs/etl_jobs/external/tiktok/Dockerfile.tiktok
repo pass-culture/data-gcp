@@ -1,4 +1,4 @@
-FROM ghcr.io/astral-sh/uv:python3.10-trixie-slim
+FROM ghcr.io/astral-sh/uv:python3.13-trixie-slim
 
 ARG AIRFLOW_USER_HOME=/opt/airflow
 ARG GCLOUD_VERSION=google-cloud-cli-538.0.0-linux-x86_64.tar.gz
@@ -37,5 +37,5 @@ RUN groupadd -g 50000 airflow \
 
 USER airflow
 
-ENTRYPOINT ["uv", "run", "main.py"]
+ENTRYPOINT ["uv", "run"]
 CMD []

@@ -21,7 +21,6 @@ airflow = [
   "numpy",
   "flask",
   "pyyaml",
-  "authlib>=1.6.9",
 ]
 dbt = [
   "dbt-core==1.11.8",

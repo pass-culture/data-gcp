@@ -1072,7 +1072,6 @@ source = { virtual = "." }
 [package.dev-dependencies]
 airflow = [
     { name = "apache-airflow", extra = ["celery", "cncf-kubernetes", "fab", "google", "google-auth", "ssh", "uv"] },
-    { name = "authlib" },
     { name = "dbt-bigquery" },
     { name = "dbt-core" },
     { name = "deepdiff" },
@@ -1119,7 +1118,6 @@ docs = [
 [package.metadata.requires-dev]
 airflow = [
     { name = "apache-airflow", extras = ["fab", "google", "google-auth", "celery", "ssh", "cncf-kubernetes", "uv"], specifier = "==2.11.2" },
-    { name = "authlib", specifier = ">=1.6.9" },
     { name = "dbt-bigquery", specifier = "==1.11.1" },
     { name = "dbt-core", specifier = "==1.11.8" },
     { name = "deepdiff", specifier = "==8.6.1" },

@@ -107,7 +107,7 @@ attrs==25.3.0
     #   jsonschema
     #   looker-sdk
     #   referencing
-authlib==1.6.0
+authlib==1.6.12
     # via
     #   apache-airflow
     #   flask-oidc

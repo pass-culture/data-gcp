@@ -76,7 +76,7 @@ with DAG(
             task_id=f"{social_network}_fetch_install_code",
             instance_name=gce_instance,
             branch="{{ params.branch }}",
-            python_version="3.10",
+            python_version="3.13",
             base_dir=base_path,
             retries=2,
         )
@@ -86,7 +86,7 @@ with DAG(
             instance_name=gce_instance,
             base_dir=base_path,
             command="""
-            python main.py \
+            uv run main.py \
             --start-date {{ add_days(yesterday() if dag_run.run_type == 'manual' else ds, params.n_days) }} \
             --end-date {{ add_days(yesterday() if dag_run.run_type == 'manual' else ds, params.n_index) }} \
             """,

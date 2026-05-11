@@ -1,6 +1,7 @@
 import json
 import os
 
+import pandas_gbq
 import typer
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
@@ -28,9 +29,10 @@ def main():
         sheet_df = export_sheet(
             json.loads(access_secret_data(GCP_PROJECT_ID, SA_ACCOUNT)), v
         )
-        sheet_df.to_gbq(
+        pandas_gbq.to_gbq(
+            sheet_df,
             f"{BIGQUERY_RAW_DATASET}.{k}",
-            GCP_PROJECT_ID,
+            project_id=GCP_PROJECT_ID,
             if_exists="replace",
         )
 

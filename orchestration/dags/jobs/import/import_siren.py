@@ -66,7 +66,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.8",
+        python_version="3.13",
         base_dir=BASE_PATH,
         retries=2,
     )
@@ -76,7 +76,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py ",
+        command="uv run main.py ",
         do_xcom_push=True,
     )
 

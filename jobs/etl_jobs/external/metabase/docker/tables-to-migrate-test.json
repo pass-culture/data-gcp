@@ -1,0 +1,12 @@
+{
+  "analytics.old_user_stats": {
+    "target_table": "analytics.enriched_user_data",
+    "columns_to_migrate": {
+      "booking_cnt": "total_individual_bookings",
+      "user_id": "user_id",
+      "total_amount": "total_amount",
+      "last_booking_date": "last_booking_date",
+      "user_type": "user_type"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": 101,
+  "name": "Test Native Card",
+  "description": "A test native SQL card in pMBQL format",
+  "display": "table",
+  "table_id": 10,
+  "collection_id": 1,
+  "archived": false,
+  "dataset_query": {
+    "lib/type": "mbql/query",
+    "database": 2,
+    "stages": [
+      {
+        "lib/type": "mbql.stage/native",
+        "native": "SELECT user_id, booking_cnt, total_amount FROM analytics.old_user_stats WHERE user_type = {{user_type}} AND booking_cnt > 0",
+        "template-tags": {
+          "user_type": {
+            "id": "abc123",
+            "name": "user_type",
+            "display-name": "User Type",
+            "type": "text"
+          }
+        }
+      }
+    ]
+  },
+  "visualization_settings": {
+    "table.pivot_column": "user_type",
+    "table.cell_column": "booking_cnt"
+  },
+  "result_metadata": [
+    {
+      "name": "user_id",
+      "display_name": "User ID",
+      "base_type": "type/Integer",
+      "field_ref": ["field", {"lib/uuid": "uuid-user-id"}, 201]
+    },
+    {
+      "name": "booking_cnt",
+      "display_name": "Booking Count",
+      "base_type": "type/Integer",
+      "field_ref": ["field", {"lib/uuid": "uuid-booking-cnt"}, 202]
+    }
+  ]
+}

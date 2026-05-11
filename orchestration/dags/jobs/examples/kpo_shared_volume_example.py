@@ -29,7 +29,7 @@ Use ``make_storage_lifecycle(storage_size=...)`` to get setup/teardown TaskGroup
 and inject ``**storage.kpo_kwargs()`` into any operator that needs the volume.
 """
 
-DAG_ID = "kpo_shared_volume_example_v3"
+DAG_ID = "kpo_shared_volume_example"
 MOUNT_PATH = "/shared"
 
 
@@ -100,10 +100,8 @@ with DAG(
         arguments=[f"echo '{encode_script(WRITE_SCRIPT)}' | base64 -d | python"],
         container_resources=resources,
         is_delete_operator_pod=False,
-        volumes=[
-            volume
-        ],  # we could also use **storage.kpo_kwargs() here, but we want to demonstrate the explicit volume/mount usage
-        volume_mounts=[mount],  # same as above
+        volumes=volume,  # already a list from kpo_kwargs()
+        volume_mounts=mount,  # same as above
     )
 
     read_task = EasyKubernetesPodOperator(

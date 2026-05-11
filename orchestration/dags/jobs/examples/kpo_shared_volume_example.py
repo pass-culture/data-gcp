@@ -3,7 +3,7 @@ import datetime
 
 from airflow import DAG
 from common.dynamic_pvc import make_storage_lifecycle
-from common.operators.kubernetes import EasyKubernetesPodOperator
+from common.operators.kubernetes import CustomKubernetesPodOperator
 from kubernetes.client import V1ResourceRequirements
 
 DOC = """
@@ -90,7 +90,7 @@ with DAG(
     volume = storage.kpo_kwargs()["volumes"]
     mount = storage.kpo_kwargs()["volume_mounts"]
 
-    write_task = EasyKubernetesPodOperator(
+    write_task = CustomKubernetesPodOperator(
         task_id="write_task",
         runtime_mode="containerized",
         private_registry=False,
@@ -104,7 +104,7 @@ with DAG(
         volume_mounts=mount,  # same as above
     )
 
-    read_task = EasyKubernetesPodOperator(
+    read_task = CustomKubernetesPodOperator(
         task_id="read_task",
         runtime_mode="containerized",
         private_registry=False,

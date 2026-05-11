@@ -10,7 +10,7 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
-from common.operators.kubernetes import EasyKubernetesPodOperator
+from common.operators.kubernetes import CustomKubernetesPodOperator
 from common.utils import get_airflow_schedule
 from kubernetes.client import V1ResourceRequirements
 
@@ -69,7 +69,7 @@ with DAG(
     tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ):
     for social_network in ["instagram", "tiktok"]:
-        task = EasyKubernetesPodOperator(
+        task = CustomKubernetesPodOperator(
             task_id=f"{social_network}_etl",
             orchestration_mode="celery",  # use a celery worker to request the task to k8s and free it up with deferrable=True
             runtime_mode="containerized",

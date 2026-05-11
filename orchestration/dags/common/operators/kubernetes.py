@@ -238,7 +238,7 @@ def _make_job_worker_pod_spec(
     )
 
 
-class EasyKubernetesPodOperator(KubernetesPodOperator):
+class CustomKubernetesPodOperator(KubernetesPodOperator):
     """
     Opinionated wrapper around KubernetesPodOperator with two configuration axes:
 

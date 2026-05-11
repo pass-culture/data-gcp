@@ -8,14 +8,14 @@ from common.config import (
     DAG_FOLDER,
     GCP_PROJECT_ID,
 )
-from common.operators.kubernetes import EasyKubernetesPodOperator
+from common.operators.kubernetes import CustomKubernetesPodOperator
 from kubernetes.client import V1ResourceRequirements
 
 DOC = """
-## EasyKubernetesPodOperator — example DAG
+## CustomKubernetesPodOperator — example DAG
 
 Exercises all four combinations of `orchestration_mode x runtime_mode` exposed by
-`EasyKubernetesPodOperator`. Use this DAG to validate operator wiring before promoting
+`CustomKubernetesPodOperator`. Use this DAG to validate operator wiring before promoting
 a configuration to a production DAG.
 
 ---
@@ -203,7 +203,7 @@ kpo_common["env_vars"] = extra_env_vars
 with DAG(
     DAG_NAME,
     default_args=default_dag_args,
-    description="EasyKubernetesPodOperator — all four mode combinations",
+    description="CustomKubernetesPodOperator — all four mode combinations",
     doc_md=DOC,
     schedule_interval=None,
     catchup=False,
@@ -235,7 +235,7 @@ with DAG(
     tags=["example", "kubernetes"],
 ):
     # ── celery + gitsynced ──────────────────────────────────────────────────
-    EasyKubernetesPodOperator(
+    CustomKubernetesPodOperator(
         task_id="celery_gitsynced",
         orchestration_mode="celery",
         queue="k8s-watcher",
@@ -249,7 +249,7 @@ with DAG(
     )
 
     # ── celery + containerized ──────────────────────────────────────────────
-    EasyKubernetesPodOperator(
+    CustomKubernetesPodOperator(
         task_id="celery_containerized",
         orchestration_mode="celery",
         queue="k8s-watcher",
@@ -261,7 +261,7 @@ with DAG(
     )
 
     # ── kubernetes + gitsynced ──────────────────────────────────────────────
-    EasyKubernetesPodOperator(
+    CustomKubernetesPodOperator(
         task_id="k8s_gitsynced",
         orchestration_mode="kubernetes",
         dag_branch=branch,
@@ -277,7 +277,7 @@ with DAG(
     )
 
     # ── kubernetes + containerized ──────────────────────────────────────────
-    EasyKubernetesPodOperator(
+    CustomKubernetesPodOperator(
         task_id="k8s_containerized",
         orchestration_mode="kubernetes",
         dag_branch=branch,

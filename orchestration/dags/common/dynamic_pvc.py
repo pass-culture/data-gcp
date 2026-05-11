@@ -8,7 +8,7 @@ from airflow.utils.task_group import TaskGroup
 from common.config import AIRFLOW_NAMESPACE, ENV_SHORT_NAME
 from common.operators.kubernetes import (
     _DEFAULT_DAGS_IMAGE_TAG,
-    EasyKubernetesPodOperator,
+    CustomKubernetesPodOperator,
 )
 from kubernetes.client import (
     V1PersistentVolumeClaimVolumeSource,
@@ -36,7 +36,7 @@ def _make_create_pvc_task(
     namespace: str,
     storage_class: str,
     storage_size: str,
-) -> EasyKubernetesPodOperator:
+) -> CustomKubernetesPodOperator:
     """Return a task that creates a namespaced PVC via the in-cluster Kubernetes API.
 
     The script is base64-encoded and piped to Python at runtime to avoid shell
@@ -65,7 +65,7 @@ body = client.V1PersistentVolumeClaim(
 v1.create_namespaced_persistent_volume_claim(namespace="{namespace}", body=body)
 print("Created PVC {namespace}/{pvc_name} ({storage_class}, {storage_size})")
 """
-    return EasyKubernetesPodOperator(
+    return CustomKubernetesPodOperator(
         task_id="create_pvc",
         orchestration_mode="kubernetes",
         runtime_mode="containerized",
@@ -81,7 +81,7 @@ print("Created PVC {namespace}/{pvc_name} ({storage_class}, {storage_size})")
 def _make_delete_pvc_task(
     pvc_name: str,
     namespace: str,
-) -> EasyKubernetesPodOperator:
+) -> CustomKubernetesPodOperator:
     """Return a task that deletes a namespaced PVC via the in-cluster Kubernetes API.
 
     Deleting the PVC also triggers deletion of the underlying GCE Persistent
@@ -99,7 +99,7 @@ client.CoreV1Api().delete_namespaced_persistent_volume_claim(
 )
 print("Deleted PVC {namespace}/{pvc_name}")
 """
-    return EasyKubernetesPodOperator(
+    return CustomKubernetesPodOperator(
         task_id="delete_pvc",
         orchestration_mode="kubernetes",
         runtime_mode="containerized",
@@ -148,7 +148,7 @@ class SharedVolume:
         )
 
     def kpo_kwargs(self) -> dict[str, Any]:
-        """Return kwargs to inject into EasyKubernetesPodOperator."""
+        """Return kwargs to inject into CustomKubernetesPodOperator."""
         return {
             "volumes": [self.volume],
             "volume_mounts": [self.mount],
@@ -171,7 +171,7 @@ class StorageLifecycle:
 
         storage = make_storage_lifecycle(storage_size="20Gi")
 
-        task = EasyKubernetesPodOperator(
+        task = CustomKubernetesPodOperator(
             task_id="my_task",
             ...
             **storage.kpo_kwargs(),
@@ -218,12 +218,12 @@ def make_storage_lifecycle(
         with DAG(..., max_active_runs=1):
             storage = make_storage_lifecycle(storage_size="20Gi")
 
-            task_a = EasyKubernetesPodOperator(
+            task_a = CustomKubernetesPodOperator(
                 task_id="task_a",
                 ...
                 **storage.kpo_kwargs(),
             )
-            task_b = EasyKubernetesPodOperator(
+            task_b = CustomKubernetesPodOperator(
                 task_id="task_b",
                 ...
                 **storage.kpo_kwargs(),

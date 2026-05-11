@@ -85,7 +85,33 @@ def save_to_bq(
     date_fmt = datetime.strptime(event_date, "%Y-%m-%d")
     yyyymmdd = date_fmt.strftime("%Y%m%d")
 
+    df = df.copy()
     df[date_column] = pd.to_datetime(date_fmt).date()
+
+    # pandas 3.x uses Arrow-backed large_string dtype; pyarrow cannot cast
+    # large_string → list for REPEATED fields, so we convert them explicitly.
+    # Also, BigQuery REPEATED fields cannot contain null elements, so we filter them out.
+    def _clean_repeated_field(v):
+        """Convert a value to a list, dropping None/NaN elements for BQ REPEATED fields."""
+
+        def _is_null(x):
+            if x is None:
+                return True
+            try:
+                return bool(pd.isna(x))
+            except (TypeError, ValueError):
+                return False
+
+        if isinstance(v, list):
+            return [x for x in v if not _is_null(x)]
+        elif _is_null(v):
+            return []
+        else:
+            return [v]
+
+    for field in schema_field:
+        if field.mode == "REPEATED" and field.name in df.columns:
+            df[field.name] = [_clean_repeated_field(v) for v in df[field.name]]
 
     bigquery_client = bigquery.Client()
     table_id = f"{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.{table_name}${yyyymmdd}"

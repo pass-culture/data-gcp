@@ -102,6 +102,7 @@ title: Metrics
 {% docs column__total_session_fav %} The total number of sessions which puts an offer to favorite, related to a specific object like module_id or offer_id. {% enddocs %}
 {% docs column__total_session_with_consult_video %} The total number of sessions with a video consultation, related to a specific object like module_id. {% enddocs %}
 {% docs column__total_click %} The total number of clicks on a specific object like module_id or offer_id. {% enddocs %}
+{% docs column__total_visit_last_month %} Number of distinct app sessions by the user in the last 30 days, computed as count of distinct (user_pseudo_id, session_id) pairs from Firebase native events. {% enddocs %}
 {% docs column__total_consult_offer %} The total number of offer consultations. {% enddocs %}
 {% docs column__total_fav %} The total number of bookmark actions. {% enddocs %}
 {% docs column__total_session_with_booking %} The total number of session which performed a booking. {% enddocs %}

@@ -30,7 +30,7 @@ with
             and ebd.booking_is_used
         where uua.deposit_active_date > date("2021-01-01")
         group by
-            uua.deposit_active_date, uua.user_id, uua.deposit_type, uua.deposit_amount
+            uua.deposit_active_date, uua.user_id, deposit_type, uua.deposit_amount
     ),
 
     user_cumulative_amount_spent as (

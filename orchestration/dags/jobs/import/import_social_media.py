@@ -91,6 +91,7 @@ with DAG(
             --end-date {{ add_days(yesterday() if dag_run.run_type == 'manual' else ds, params.n_index) }} \
             """,
             do_xcom_push=True,
+            deferrable=True,
         )
 
         gce_instance_stop = DeleteGCEOperator(

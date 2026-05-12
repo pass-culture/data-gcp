@@ -627,7 +627,7 @@ wheels = [
 ]
 
 [[package]]
-name = "tiktok-etl"
+name = "tiktok"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

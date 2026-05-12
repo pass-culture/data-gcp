@@ -14,6 +14,8 @@ x-airflow-common: &airflow-common
     SSL_CERT_FILE: /usr/local/share/ca-certificates/nscacert_combined.pem
     CLOUDSDK_CONFIG: /root/.config/gcloud
     CLOUDSDK_CORE_CUSTOM_CA_CERTS_FILE: /usr/local/share/ca-certificates/nscacert_combined.pem
+    KUBECONFIG: /root/.kube/config
+    AIRFLOW_CONN_KUBERNETES_DEFAULT: '{"conn_type": "kubernetes", "extra": {"kube_config_path": "/root/.kube/config", "cluster_context": "gke_passculture-data-ehp_europe-west1_data-gke-cluster-ehp", "in_cluster": false}}'
   volumes:
     - ./dags:/opt/airflow/dags
     - ./plugins:/opt/airflow/plugins
@@ -21,6 +23,7 @@ x-airflow-common: &airflow-common
     - ./airflow/logs:/opt/airflow/logs
     - ./dags/data_gcp_dbt:/opt/airflow/data_gcp_dbt
     - ~/.config/gcloud:/root/.config/gcloud
+    - ~/.kube:/root/.kube
   user: root
   depends_on:
     - postgres
@@ -56,7 +59,8 @@ services:
       retries: 5
     restart: "unless-stopped"
     depends_on:
-      - airflow-init
+      airflow-init:
+        condition: service_completed_successfully
 
   airflow-scheduler:
     image: airflow-custom-image:latest
@@ -72,7 +76,8 @@ services:
       retries: 10
     restart: "unless-stopped"
     depends_on:
-      - airflow-init
+      airflow-init:
+        condition: service_completed_successfully
   airflow-triggerer:
     image: airflow-custom-image:latest
     <<: *airflow-common
@@ -90,7 +95,8 @@ services:
       retries: 5
     restart: unless-stopped
     depends_on:
-      - airflow-init
+      airflow-init:
+        condition: service_completed_successfully
   airflow-init:
     build:
       context: .

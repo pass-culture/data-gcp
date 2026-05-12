@@ -22,14 +22,8 @@ RUN mkdir -p ${AIRFLOW_USER_HOME} \
 
 ENV PATH=$PATH:${AIRFLOW_USER_HOME}/google-cloud-sdk/bin
 
-COPY . /jobs
-WORKDIR /jobs
-
-ENV UV_COMPILE_BYTECODE=1
-ENV UV_LINK_MODE=copy
-
-RUN uv sync --no-install-project --no-dev --no-editable --no-cache --frozen \
-    && rm -rf /root/.cache/uv
+# redirect uv cache to /tmp which is always writable regardless of uid
+ENV UV_CACHE_DIR=/tmp/.cache/uv
 
 RUN groupadd -g 50000 airflow \
     && useradd -u 50000 -g 50000 -d ${AIRFLOW_USER_HOME} -s /bin/bash airflow \
@@ -37,5 +31,5 @@ RUN groupadd -g 50000 airflow \
 
 USER airflow
 
-ENTRYPOINT ["uv", "run"]
+ENTRYPOINT []
 CMD []

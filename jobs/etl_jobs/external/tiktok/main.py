@@ -49,10 +49,7 @@ def main(
         )
 
         # Authenticate
-        if not client.authenticate():
-            logger.info("Failed to authenticate with TikTok API. Exiting.")
-            return
-
+        client.authenticate()
         logger.info("Successfully authenticated with TikTok API")
 
         # Get account ID if not provided
@@ -62,8 +59,8 @@ def main(
                 account_id = account_info["data"]["user"]["open_id"]
                 logger.info(f"Retrieved account ID: {account_id}")
             except TikTokAPIError as e:
-                logger.info(f"Failed to get account info: {e}")
-                return
+                logger.error(f"Failed to get account info: {e}")
+                raise
 
         # Initialize ETL processor
         etl_processor = TikTokETL(client)

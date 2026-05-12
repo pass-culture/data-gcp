@@ -1,12 +1,8 @@
 import datetime
-import re
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 from common import macros
-
-# from kubernetes.client import V1Toleration
 from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
@@ -14,21 +10,9 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
+from common.operators.kubernetes import CustomKubernetesPodOperator
 from common.utils import get_airflow_schedule
 from kubernetes.client import V1ResourceRequirements
-
-REGISTRY = (
-    "europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry"
-)
-image_prefix = "data-gcp/etl"
-
-env_map = {
-    "prod": "production",
-    "stg": "staging",
-    "dev": "development",
-}
-
-namespace = f"airflow-{env_map[ENV_SHORT_NAME]}"
 
 DAG_NAME = "import_social_network_k8s"
 default_dag_args = {
@@ -45,16 +29,13 @@ schedule_dict = {
 }[ENV_SHORT_NAME]
 
 
-def make_pod_name(name: str) -> str:
-    return re.sub(r"[^a-z0-9-]", "-", name.lower()).strip("-")[:253]
-
-
 container_resources = V1ResourceRequirements(
     requests={
-        "cpu": "1",
-        "memory": "1Gi",
+        "cpu": "0.2",
+        "memory": "500Mi",
     },
     limits={
+        "cpu": "0.5",
         "memory": "1Gi",
     },
 )
@@ -70,7 +51,7 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     dagrun_timeout=datetime.timedelta(minutes=240),
     params={
-        "image_tag": Param(
+        "runtime_image_tag": Param(
             default="dev",
             type="string",
         ),
@@ -85,30 +66,25 @@ with DAG(
             description="Offset in days from the execution date for the end date (e.g., 0 for the execution date, -1 for yesterday).",
         ),
     },
-    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ):
-    for social_network in ["instagram"]:
-        task = KubernetesPodOperator(
-            task_id=f"run_{social_network}_etl",
-            name=make_pod_name(f"{social_network}"),
-            namespace=namespace,
-            image=f"{REGISTRY}/{image_prefix}/{social_network}:{{{{ params.image_tag }}}}",
+    for social_network in ["instagram", "tiktok"]:
+        task = CustomKubernetesPodOperator(
+            task_id=f"{social_network}_etl",
+            orchestration_mode="celery",  # use a celery worker to request the task to k8s and free it up with deferrable=True
+            runtime_mode="containerized",
+            runtime_image=f"etl/{social_network}",
+            runtime_image_tag="{{ params.runtime_image_tag }}",
             arguments=[
+                "main.py",
                 "--start-date",
                 "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_days) }}",
                 "--end-date",
                 "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_index) }}",
             ],
-            get_logs=True,
-            is_delete_operator_pod=False,
-            in_cluster=True,
-            env_vars={
-                "GCP_PROJECT_ID": GCP_PROJECT_ID,
-                "ENV_SHORT_NAME": ENV_SHORT_NAME,
-            },
-            labels={"dag": DAG_NAME, "task": f"run_{social_network}_etl"},
-            service_account_name="airflow-worker",
             container_resources=container_resources,
+            deferrable=True,
+            poll_interval=180,
         )
-        # task.dry_run() Enable dry run for testing without executing the pod.
+
         task

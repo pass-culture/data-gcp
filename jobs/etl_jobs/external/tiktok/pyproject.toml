@@ -1,5 +1,5 @@
 [project]
-name = "tiktok-etl"
+name = "tiktok"
 version = "0.1.0"
 description = "TikTok ETL job for extracting analytics data"
 requires-python = ">=3.13,<3.14"

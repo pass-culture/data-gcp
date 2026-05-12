@@ -13,7 +13,7 @@ aiofiles==23.2.1
     #   gcloud-aio-storage
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.13
+aiohttp==3.13.4
     # via
     #   aiohttp-jinja2
     #   apache-airflow-providers-http
@@ -39,7 +39,7 @@ anyio==4.9.0
     # via
     #   google-genai
     #   httpx
-apache-airflow==2.11.2
+apache-airflow==3.2.1rc1
     # via
     #   apache-airflow-providers-celery
     #   apache-airflow-providers-cncf-kubernetes
@@ -912,7 +912,7 @@ proto-plus==1.26.1
     #   google-cloud-videointelligence
     #   google-cloud-vision
     #   google-cloud-workflows
-protobuf==6.32.0
+protobuf==6.33.5
     # via
     #   dbt-adapters
     #   dbt-common
@@ -968,12 +968,12 @@ protobuf==6.32.0
 psutil==7.0.0
     # via apache-airflow
 psycopg2-binary==2.9.9
-pyarrow==20.0.0
+pyarrow==24.0.0
     # via
     #   db-dtypes
     #   google-cloud-bigquery
     #   pandas-gbq
-pyasn1==0.5.1
+pyasn1==0.6.3
     # via
     #   pyasn1-modules
     #   rsa
@@ -1069,7 +1069,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.4
+requests==2.33.0
     # via
     #   apache-airflow
     #   apache-airflow-providers-http
@@ -1126,7 +1126,7 @@ s3transfer==0.13.0
     # via boto3
 setproctitle==1.3.6
     # via apache-airflow
-setuptools==66.1.1
+setuptools==78.1.1
     # via
     #   gcloud-aio-auth
     #   pandas-gbq
@@ -1247,7 +1247,7 @@ universal-pathlib==0.2.6
     # via apache-airflow
 uritemplate==4.2.0
     # via google-api-python-client
-urllib3==2.5.0
+urllib3==2.7.0
     # via
     #   apache-airflow-providers-cncf-kubernetes
     #   botocore

@@ -27,6 +27,8 @@ WORKDIR /jobs
 
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
+ENV UV_SYSTEM_CERTS=1
+ENV UV_INSECURE_HOST="files.pythonhosted.org pypi.org"
 
 RUN uv sync --no-install-project --no-dev --no-editable --no-cache --frozen \
     && rm -rf /root/.cache/uv

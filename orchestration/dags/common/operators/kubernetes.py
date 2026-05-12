@@ -337,7 +337,9 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
         if in_cluster is None:
             in_cluster = not bool(LOCAL_ENV)
         if image_pull_policy is None:
-            image_pull_policy = "Always" if ENV_SHORT_NAME == "dev" else "IfNotPresent"
+            image_pull_policy = (
+                "Always"  # if ENV_SHORT_NAME == "dev" else "IfNotPresent"
+            )
         if kubernetes_conn_id is None:
             kubernetes_conn_id = "kubernetes_default" if LOCAL_ENV else None
 

@@ -29,8 +29,7 @@ with
             and uua.deposit_active_date = date(ebd.booking_used_date)
             and ebd.booking_is_used
         where uua.deposit_active_date > date("2021-01-01")
-        group by
-            uua.deposit_active_date, uua.user_id, deposit_type, uua.deposit_amount
+        group by uua.deposit_active_date, uua.user_id, deposit_type, uua.deposit_amount
     ),
 
     user_cumulative_amount_spent as (

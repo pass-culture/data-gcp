@@ -68,9 +68,11 @@ select
     users.user_id,
     users.user_address_raw,
     users.user_postal_code,
-    coalesce(users.user_department_code, "-1") as user_department_code,
     users.user_longitude,
     users.user_latitude,
+    users.user_address_geocode_updated_at,
+    users.geocode_type as user_address_geocode_type,
+    coalesce(region_department.num_dep, "-1") as user_department_code,
     coalesce(region_department.academy_name, "non localisé") as user_academy_name,
     coalesce(region_department.dep_name, "non localisé") as user_department_name,
     coalesce(region_department.region_name, "non localisé") as user_region_name,
@@ -92,8 +94,6 @@ select
     coalesce(user_qpv.qpv_municipality, "non localisé") as qpv_municipality,
     coalesce(user_zrr.zrr_level, "non localisé") as zrr_level,
     coalesce(user_zrr.zrr_level_detail, "non localisé") as zrr_level_detail,
-    users.user_address_geocode_updated_at,
-    users.geocode_type as user_address_geocode_type,
     case
         when
             user_qpv.qpv_code is null

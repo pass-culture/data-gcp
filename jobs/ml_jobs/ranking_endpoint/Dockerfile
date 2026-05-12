@@ -6,19 +6,18 @@ ARG WORKERS=8
 RUN groupadd --system --gid 999 appuser \
     && useradd --system --gid 999 --uid 999 appuser
 
-WORKDIR /app
-
 # Allow uv to compile bytecode (faster init) and disable caching to reduce image size
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_NO_CACHE=1
 
-# Copy dependency files with proper ownership and permissions, then install dependencies in a virtual environment
-COPY --chown=appuser:appuser --chmod=644 ./app/pyproject.toml ./app/uv.lock /app/
+# Copy dependency files then install dependencies in a virtual environment
+WORKDIR /app
+COPY ./app/pyproject.toml ./app/uv.lock /app/
 RUN uv venv --python 3.10 && uv sync --locked
 
-# Copy application code and metadata and set ownership to non-root user
-COPY --chown=appuser:appuser ./app /app
-COPY --chown=appuser:appuser ./metadata /app/metadata
+# Copy application code and metadata
+COPY ./app /app
+COPY ./metadata /app/metadata
 
 # Expose the application port and set environment variable for workers
 EXPOSE 8080

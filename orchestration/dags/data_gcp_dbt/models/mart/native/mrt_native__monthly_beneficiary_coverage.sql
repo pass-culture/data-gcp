@@ -5,7 +5,7 @@ with
             date(date_trunc(dud.deposit_active_date, month)) as deposit_active_month,
             date(date_trunc(dud.user_birth_date, month)) as birth_month,
             count(distinct dud.user_id) as total_users
-        from {{ ref("mrt_native__daily_user_deposit") }} as dud
+        from {{ ref("int_global__daily_deposit") }} as dud
         where dud.deposit_active_date > date_sub(current_date(), interval 48 month)  -- 4 years
         group by
             date(date_trunc(dud.deposit_active_date, month)),

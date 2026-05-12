@@ -4,7 +4,7 @@ with
         select
             date(date_trunc(deposit_active_date, month)) as partition_month,
             max(deposit_active_date) as last_active_date
-        from {{ ref("mrt_native__daily_user_deposit") }}
+        from {{ ref("int_global__daily_deposit") }}
         where deposit_active_date > date("2021-01-01")
         group by date(date_trunc(deposit_active_date, month))
     ),
@@ -22,7 +22,7 @@ with
                 else uua.deposit_type
             end as deposit_type,
             coalesce(sum(ebd.booking_intermediary_amount), 0) as amount_spent
-        from {{ ref("mrt_native__daily_user_deposit") }} as uua
+        from {{ ref("int_global__daily_deposit") }} as uua
         left join
             {{ ref("int_global__booking") }} as ebd
             on uua.deposit_id = ebd.deposit_id

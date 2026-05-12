@@ -1,7 +1,7 @@
 version: 2
 models:
-  - name: mrt_native__daily_user_deposit
-    description: '{{ doc("description__mrt_native__daily_user_deposit") }}'
+  - name: int_global__daily_deposit
+    description: '{{ doc("description__int_global__daily_deposit") }}'
     columns:
       - name: deposit_active_date
         description: '{{ doc("column__deposit_active_date") }}'

@@ -6,7 +6,7 @@ with
             date(date_trunc(dud.deposit_active_date, month)) as deposit_active_month,
             date_diff(dud.deposit_active_date, dud.user_birth_date, month)
             / 12.0 as user_decimal_age
-        from {{ ref("mrt_native__daily_user_deposit") }} as dud
+        from {{ ref("int_global__daily_deposit") }} as dud
         where dud.deposit_active_date > date_sub(current_date(), interval 48 month)
     ),
 

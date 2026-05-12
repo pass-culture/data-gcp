@@ -23,7 +23,7 @@ COPY ./metadata /app/metadata
 EXPOSE 8080
 ENV WORKERS=${WORKERS}
 
-# Switch to non-root user for security and set ownership of the application files
+# Switch to non-root user for security
 USER appuser
 
 # Use uv to run the app

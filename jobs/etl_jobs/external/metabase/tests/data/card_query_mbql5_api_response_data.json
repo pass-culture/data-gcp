@@ -1,0 +1,82 @@
+{
+  "id": 102,
+  "name": "Test Query Builder Card",
+  "description": "A test query builder card in pMBQL format",
+  "display": "table",
+  "table_id": 10,
+  "collection_id": 1,
+  "archived": false,
+  "dataset_query": {
+    "lib/type": "mbql/query",
+    "database": 2,
+    "stages": [
+      {
+        "lib/type": "mbql.stage/mbql",
+        "source-table": 10,
+        "fields": [
+          ["field", {"lib/uuid": "uuid-user-id"}, 201],
+          ["field", {"lib/uuid": "uuid-booking-cnt", "base-type": "type/Integer"}, 202],
+          ["field", {"lib/uuid": "uuid-total-amount"}, 203]
+        ],
+        "filter": [
+          "and",
+          [">", ["field", {"lib/uuid": "uuid-booking-cnt"}, 202], 0],
+          ["=", ["field", {"lib/uuid": "uuid-user-type"}, 204], "active"]
+        ],
+        "breakout": [
+          ["field", {"lib/uuid": "uuid-user-type"}, 204]
+        ],
+        "aggregation": [
+          ["count"]
+        ],
+        "order-by": [
+          ["asc", ["field", {"lib/uuid": "uuid-user-id"}, 201]]
+        ]
+      }
+    ]
+  },
+  "visualization_settings": {
+    "column_settings": {
+      "[\"ref\",[\"field\",{\"lib/uuid\":\"uuid-user-id\"},201]]": {
+        "column_title": "User ID"
+      },
+      "[\"ref\",[\"field\",{\"lib/uuid\":\"uuid-booking-cnt\"},202]]": {
+        "column_title": "Bookings",
+        "number_style": "decimal"
+      }
+    },
+    "table.pivot_column": "user_type",
+    "graph.metrics": [["field", {"lib/uuid": "uuid-booking-cnt"}, 202]],
+    "graph.dimensions": [["field", {"lib/uuid": "uuid-user-type"}, 204]]
+  },
+  "result_metadata": [
+    {
+      "name": "user_id",
+      "display_name": "User ID",
+      "base_type": "type/Integer",
+      "field_ref": ["field", {"lib/uuid": "uuid-user-id"}, 201],
+      "id": 201
+    },
+    {
+      "name": "booking_cnt",
+      "display_name": "Booking Count",
+      "base_type": "type/Integer",
+      "field_ref": ["field", {"lib/uuid": "uuid-booking-cnt"}, 202],
+      "id": 202
+    },
+    {
+      "name": "total_amount",
+      "display_name": "Total Amount",
+      "base_type": "type/Float",
+      "field_ref": ["field", {"lib/uuid": "uuid-total-amount"}, 203],
+      "id": 203
+    },
+    {
+      "name": "user_type",
+      "display_name": "User Type",
+      "base_type": "type/Text",
+      "field_ref": ["field", {"lib/uuid": "uuid-user-type"}, 204],
+      "id": 204
+    }
+  ]
+}

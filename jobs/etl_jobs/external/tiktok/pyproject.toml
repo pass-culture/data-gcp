@@ -1,5 +1,5 @@
 [project]
-name = "tiktok-etl"
+name = "tiktok"
 version = "0.1.0"
 description = "TikTok ETL job for extracting analytics data"
 requires-python = ">=3.13,<3.14"
@@ -12,10 +12,10 @@ dependencies = [
     "google-cloud-storage==2.17.0",
     "numpy>=1.26.4",
     "pandas>=2.2.0",
-    "requests==2.32.3",
+    "requests>=2.32.0",
     "pandas-gbq==0.23.1",
     "gspread==6.0.0",
-    "typer>=0.7.0",
+    "typer>=0.24.0",
     "urllib3>=2.0.0",
     "loguru>=0.7.0",
 ]

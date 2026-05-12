@@ -23,6 +23,8 @@ GCS_AIRFLOW_BUCKET = os.environ.get(
     "GCS_BUCKET", f"airflow-data-bucket-{ENV_SHORT_NAME}"
 )
 
+AIRFLOW_NAMESPACE = f"airflow-{ENVIRONMENT_NAME}"
+
 SSH_USER = os.environ.get("SSH_USER", "airflow")
 
 GCP_REGION = "europe-west1"
@@ -240,6 +242,7 @@ class DAG_TAGS(Enum):
     DS = "DS"
     DE = "DE"
     VM = "VM"
+    POD = "POD"
     DBT = "DBT"
     INCREMENTAL = "INCREMENTAL"
     POC = "POC"

@@ -107,7 +107,7 @@ attrs==25.3.0
     #   jsonschema
     #   looker-sdk
     #   referencing
-authlib==1.6.0
+authlib==1.6.12
     # via
     #   apache-airflow
     #   flask-oidc
@@ -1254,7 +1254,7 @@ urllib3==2.5.0
     #   kubernetes
     #   kubernetes-asyncio
     #   requests
-uv==0.11.3
+uv==0.11.13
     # via apache-airflow
 vine==5.1.0
     # via

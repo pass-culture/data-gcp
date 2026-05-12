@@ -1,6 +1,6 @@
 with
     previous_export as (
-        select distinct venue_booking_email
+        select distinct email as venue_booking_email
         from {{ source("raw", "qualtrics_exported_venue_account") }}
         where
             calculation_month

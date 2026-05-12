@@ -13,9 +13,9 @@ dependencies = [
     "google-cloud-storage==2.17.0",
     "numpy>=2.0.0",
     "pandas>=2.2.0",
-    "requests==2.32.3",
+    "requests>=2.33.0",
     "pandas-gbq==0.23.1",
-    "typer>=0.7.0",
+    "typer>=0.24.0",
     "loguru>=0.7.3",
     "urllib3>=2.2.2",
 ]

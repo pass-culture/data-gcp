@@ -26,18 +26,8 @@ with
             unnest(generate_array(0, date_diff(current_date(), '2022-01-01', day))) as
         offset
         where
-            (
-                gcp.first_individual_offer_creation_date is not null
-                and date_add(date('2022-01-01'), interval offset day)
-                >= gcp.first_individual_offer_creation_date
-                and date_add(date('2022-01-01'), interval offset day) < current_date()
-            )
-            or (
-                gcp.first_collective_offer_creation_date is not null
-                and date_add(date('2022-01-01'), interval offset day)
-                >= gcp.first_collective_offer_creation_date
-                and date_add(date('2022-01-01'), interval offset day) < current_date()
-            )
+            (gcp.first_individual_offer_creation_date is not null)
+            or (gcp.first_collective_offer_creation_date is not null)
     ),
 
     all_days_with_bookability as (
@@ -257,7 +247,7 @@ with
                             when
                                 (
                                     days_since_last_indiv_bookable_date <= 365
-                                    or days_since_last_collective_bookable_date <= 365
+                                    and days_since_last_collective_bookable_date <= 365
                                 )
                             then venue_id
                         end
@@ -271,7 +261,7 @@ with
                             when
                                 (
                                     days_since_last_indiv_bookable_date <= 365
-                                    or days_since_last_collective_bookable_date <= 365
+                                    and days_since_last_collective_bookable_date <= 365
                                 )
                             then venue_id
                         end
@@ -418,7 +408,7 @@ with
                             when
                                 (
                                     days_since_last_collective_bookable_date >= 0
-                                    or days_since_last_indiv_bookable_date >= 0
+                                    and days_since_last_indiv_bookable_date >= 0
                                 )
                             then venue_id
                         end
@@ -432,7 +422,7 @@ with
                             when
                                 (
                                     days_since_last_collective_bookable_date >= 0
-                                    or days_since_last_indiv_bookable_date >= 0
+                                    and days_since_last_indiv_bookable_date >= 0
                                 )
                             then venue_id
                         end
@@ -454,7 +444,7 @@ with
                 timestamp("{{ ts() }}") as updated_at,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
-                'nombre_total_cumule_de_partenaires_actif_indiv_sans_collectif'
+                'nombre_total_cumule_de_partenaires_actives_indiv_sans_collectif'
                 as kpi_name,
                 coalesce(
                     count(
@@ -494,7 +484,7 @@ with
                 timestamp("{{ ts() }}") as updated_at,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
-                'nombre_total_cumule_de_partenaires_actif_collectif_sans_indiv'
+                'nombre_total_cumule_de_partenaires_actives_collectif_sans_indiv'
                 as kpi_name,
                 coalesce(
                     count(

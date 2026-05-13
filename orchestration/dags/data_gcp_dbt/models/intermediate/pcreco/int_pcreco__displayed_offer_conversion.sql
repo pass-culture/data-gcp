@@ -303,7 +303,7 @@ with
             ) as diversity_score,
             if(
                 e.event_timestamp <= c.consult_ts and e.event_timestamp <= c.book_ts,
-                1 / e.item_booking_count,
+                1 / (e.item_booking_count + 1),
                 0
             ) as item_niche_score,
             if(

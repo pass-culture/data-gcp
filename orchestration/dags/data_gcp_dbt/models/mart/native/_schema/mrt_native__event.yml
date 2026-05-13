@@ -50,6 +50,8 @@ models:
         description: "{{ doc('column__module_id') }}"
       - name: entry_id
         description: "{{ doc('column__entry_id') }}"
+      - name: artist_id
+        description: "{{ doc('column__artist_id') }}"
       - name: onboarding_user_selected_age
         description: "{{ doc('column__onboarding_user_selected_age') }}"
       - name: offer_name

@@ -9,7 +9,7 @@
 }}
 
 -- depends_on: {{ ref('mrt_global__cultural_partner') }}
-{% set dimensions_geo = get_dimensions("partner", "geo") %}
+{% set dimensions_geo = get_dimensions("partner", "geo_epci") %}
 {% set dimensions_granular_only = get_dimensions("partner", "granular_only") %}
 {% set partner_types = get_partner_types() %}
 
@@ -26,18 +26,8 @@ with
             unnest(generate_array(0, date_diff(current_date(), '2022-01-01', day))) as
         offset
         where
-            (
-                gcp.first_individual_offer_creation_date is not null
-                and date_add(date('2022-01-01'), interval offset day)
-                >= gcp.first_individual_offer_creation_date
-                and date_add(date('2022-01-01'), interval offset day) < current_date()
-            )
-            or (
-                gcp.first_collective_offer_creation_date is not null
-                and date_add(date('2022-01-01'), interval offset day)
-                >= gcp.first_collective_offer_creation_date
-                and date_add(date('2022-01-01'), interval offset day) < current_date()
-            )
+            (gcp.first_individual_offer_creation_date is not null)
+            or (gcp.first_collective_offer_creation_date is not null)
     ),
 
     all_days_with_bookability as (
@@ -63,6 +53,7 @@ with
         select
             venue_id,
             first_individual_offer_creation_date,
+            first_collective_offer_creation_date,
             partition_day,
             date_diff(
                 partition_day,
@@ -105,8 +96,13 @@ with
             bd.venue_id,
             bd.partition_day,
             bd.first_individual_offer_creation_date,
-            bd.days_since_last_indiv_bookable_date,
-            bd.days_since_last_collective_bookable_date,
+            bd.first_collective_offer_creation_date,
+            coalesce(
+                bd.days_since_last_indiv_bookable_date, -9999
+            ) as days_since_last_indiv_bookable_date,
+            coalesce(
+                bd.days_since_last_collective_bookable_date, -9999
+            ) as days_since_last_collective_bookable_date,
             gcp.partner_region_name,
             gcp.partner_department_name,
             gcp.partner_epci_code,
@@ -119,7 +115,10 @@ with
             {{ ref("mrt_global__cultural_partner") }} as gcp
             on bd.venue_id = gcp.venue_id
         left join
-            {{ ref("mrt_global__venue_tag") }} as gvt on gcp.venue_id = gvt.venue_id
+            {{ ref("mrt_global__venue_tag") }} as gvt
+            on gcp.venue_id = gvt.venue_id
+            and gvt.venue_tag_category_label
+            = "Comptage partenaire label et appellation du MC"
         inner join
             {{ ref("mrt_global__offerer") }} as gof on gcp.offerer_id = gof.offerer_id
     ),
@@ -248,7 +247,7 @@ with
                             when
                                 (
                                     days_since_last_indiv_bookable_date <= 365
-                                    or days_since_last_collective_bookable_date <= 365
+                                    and days_since_last_collective_bookable_date <= 365
                                 )
                             then venue_id
                         end
@@ -262,7 +261,7 @@ with
                             when
                                 (
                                     days_since_last_indiv_bookable_date <= 365
-                                    or days_since_last_collective_bookable_date <= 365
+                                    and days_since_last_collective_bookable_date <= 365
                                 )
                             then venue_id
                         end
@@ -348,6 +347,164 @@ with
                     count(
                         distinct case
                             when days_since_last_indiv_bookable_date >= 0 then venue_id
+                        end
+                    ),
+                    0
+                ) as kpi
+            from partner_details
+            where
+                1 = 1
+                {% if is_incremental() %}
+                    and date_trunc(date(partition_day), month)
+                    = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+                {% endif %}
+            group by
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
+            union all
+            select
+                date_trunc(date(partition_day), month) as partition_month,
+                timestamp("{{ ts() }}") as updated_at,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.value_expr }} as dimension_value,
+                'nombre_total_cumule_de_partenaires_actives_collectif' as kpi_name,
+                coalesce(
+                    count(
+                        distinct case
+                            when days_since_last_collective_bookable_date >= 0
+                            then venue_id
+                        end
+                    ),
+                    0
+                ) as numerator,
+                1 as denominator,
+                coalesce(
+                    count(
+                        distinct case
+                            when days_since_last_collective_bookable_date >= 0
+                            then venue_id
+                        end
+                    ),
+                    0
+                ) as kpi
+            from partner_details
+            where
+                1 = 1
+                {% if is_incremental() %}
+                    and date_trunc(date(partition_day), month)
+                    = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+                {% endif %}
+            group by
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
+            union all
+            select
+                date_trunc(date(partition_day), month) as partition_month,
+                timestamp("{{ ts() }}") as updated_at,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.value_expr }} as dimension_value,
+                'nombre_total_cumule_de_partenaires_actives_deux_volets' as kpi_name,
+                coalesce(
+                    count(
+                        distinct case
+                            when
+                                (
+                                    days_since_last_collective_bookable_date >= 0
+                                    and days_since_last_indiv_bookable_date >= 0
+                                )
+                            then venue_id
+                        end
+                    ),
+                    0
+                ) as numerator,
+                1 as denominator,
+                coalesce(
+                    count(
+                        distinct case
+                            when
+                                (
+                                    days_since_last_collective_bookable_date >= 0
+                                    and days_since_last_indiv_bookable_date >= 0
+                                )
+                            then venue_id
+                        end
+                    ),
+                    0
+                ) as kpi
+            from partner_details
+            where
+                1 = 1
+                {% if is_incremental() %}
+                    and date_trunc(date(partition_day), month)
+                    = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+                {% endif %}
+            group by
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
+            union all
+            select
+                date_trunc(date(partition_day), month) as partition_month,
+                timestamp("{{ ts() }}") as updated_at,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.value_expr }} as dimension_value,
+                'nombre_total_cumule_de_partenaires_actives_indiv_sans_collectif'
+                as kpi_name,
+                coalesce(
+                    count(
+                        distinct case
+                            when
+                                days_since_last_indiv_bookable_date >= 0
+                                and days_since_last_collective_bookable_date < 0
+                            then venue_id
+                        end
+                    ),
+                    0
+                ) as numerator,
+                1 as denominator,
+                coalesce(
+                    count(
+                        distinct case
+                            when
+                                days_since_last_indiv_bookable_date >= 0
+                                and days_since_last_collective_bookable_date < 0
+                            then venue_id
+                        end
+                    ),
+                    0
+                ) as kpi
+            from partner_details
+            where
+                1 = 1
+                {% if is_incremental() %}
+                    and date_trunc(date(partition_day), month)
+                    = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+                {% endif %}
+            group by
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
+            union all
+            select
+                date_trunc(date(partition_day), month) as partition_month,
+                timestamp("{{ ts() }}") as updated_at,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.value_expr }} as dimension_value,
+                'nombre_total_cumule_de_partenaires_actives_collectif_sans_indiv'
+                as kpi_name,
+                coalesce(
+                    count(
+                        distinct case
+                            when
+                                days_since_last_collective_bookable_date >= 0
+                                and days_since_last_indiv_bookable_date < 0
+                            then venue_id
+                        end
+                    ),
+                    0
+                ) as numerator,
+                1 as denominator,
+                coalesce(
+                    count(
+                        distinct case
+                            when
+                                days_since_last_collective_bookable_date >= 0
+                                and days_since_last_indiv_bookable_date < 0
+                            then venue_id
                         end
                     ),
                     0

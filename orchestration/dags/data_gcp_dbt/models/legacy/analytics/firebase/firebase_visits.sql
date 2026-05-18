@@ -20,7 +20,7 @@ with
             user_pseudo_id,
             unique_session_id,
             platform,
-            app_version,
+            max(app_version) as app_version,  -- in case of app update during the session, we want to keep the last version used
             any_value(session_number) as session_number,
             any_value(user_id) as user_id,
             min(event_timestamp) as first_event_timestamp,
@@ -101,7 +101,7 @@ with
                 "batch_notification_dismiss",
                 "app_update"
             )
-        group by session_id, user_pseudo_id, unique_session_id, platform, app_version
+        group by session_id, user_pseudo_id, unique_session_id, platform
     )
 
 select *

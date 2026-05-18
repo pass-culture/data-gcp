@@ -3,7 +3,7 @@ title: Population User Deposits
 description: Description of the `population_user_deposits` table.
 ---
 
-{% docs description__mrt_native__daily_user_deposit %}
+{% docs description__int_global__daily_deposit %}
 This table records deposit activity for users over time, including user details and transaction information.
 
 ### **Business Rules**
@@ -15,4 +15,4 @@ This table records deposit activity for users over time, including user details 
 
 ## Table description
 
-{% docs table__mrt_native__daily_user_deposit %}{% enddocs %}
+{% docs table__int_global__daily_deposit %}{% enddocs %}

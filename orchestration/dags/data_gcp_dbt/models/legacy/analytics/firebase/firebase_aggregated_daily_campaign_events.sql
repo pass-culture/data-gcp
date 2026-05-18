@@ -79,7 +79,7 @@ inner join
     on firebase_session_origin.unique_session_id = firebase_visits.unique_session_id
     and firebase_session_origin.traffic_campaign is not null
 left join
-    {{ ref("mrt_native__daily_user_deposit") }} as daily_activity
+    {{ ref("int_global__daily_deposit") }} as daily_activity
     on daily_activity.user_id = firebase_visits.user_id
     and daily_activity.deposit_active_date = date(firebase_visits.first_event_timestamp)
     {% if is_incremental() %}

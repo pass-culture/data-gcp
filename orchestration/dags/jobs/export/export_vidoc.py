@@ -22,8 +22,8 @@ from common.utils import delayed_waiting_operator, get_airflow_schedule
 from dependencies.export_vidoc.export_vidoc import S3_SECRET_NAME, TABLES_CONFIGS
 from dependencies.export_vidoc.s3_utils import (
     init_s3_client,
+    prune_stale_s3_objects,
     upload_gcs_prefix_to_s3,
-    wipe_s3_prefix,
 )
 
 from jobs.crons import SCHEDULE_DICT
@@ -32,20 +32,23 @@ DAG_NAME = "export_vidoc_daily"
 GCS_EXPORT_ROOT = f"vidoc_export/{ENV_SHORT_NAME}"
 
 
-def _transfer_to_s3(gcs_prefix: str, s3_prefix: str, secret_name: str, **_):
+def _transfer_to_s3(
+    gcs_prefix: str, s3_prefix: str, secret_name: str, ds_nodash: str, **_
+):
     s3_config = access_secret_data(GCP_PROJECT_ID, secret_name, as_dict=True)
     if not s3_config:
         raise RuntimeError(f"Secret {secret_name} is missing or empty")
     s3_client = init_s3_client(s3_config)
     s3_bucket = s3_config["target_s3_name"]
-    wipe_s3_prefix(s3_client, s3_bucket, f"{s3_prefix}/")
-    upload_gcs_prefix_to_s3(
+    uploaded_keys = upload_gcs_prefix_to_s3(
         gcs_bucket=DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
         gcs_prefix=gcs_prefix,
         s3_client=s3_client,
         s3_bucket=s3_bucket,
         s3_prefix=s3_prefix,
+        key_prefix=ds_nodash,
     )
+    prune_stale_s3_objects(s3_client, s3_bucket, f"{s3_prefix}/", uploaded_keys)
 
 
 def _choose_branch(**context):

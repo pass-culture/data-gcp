@@ -31,19 +31,26 @@ with
 
 select
     __days.day as deposit_active_date,
-    mrt_global__deposit.user_id,
-    mrt_global__deposit.user_department_code,
-    mrt_global__deposit.user_region_name,
-    mrt_global__deposit.user_birth_date,
-    mrt_global__deposit.deposit_id,
-    mrt_global__deposit.deposit_amount,
-    mrt_global__deposit.deposit_creation_date,
-    mrt_global__deposit.deposit_type,
-    {{ calculate_exact_age("__days.day", "mrt_global__deposit.user_birth_date") }}
-    as user_age
-from {{ ref("mrt_global__deposit") }} as mrt_global__deposit
+    u.user_id,
+    u.user_department_code,
+    u.user_region_name,
+    u.user_birth_date,
+    int_global__deposit.deposit_id,
+    int_global__deposit.deposit_amount,
+    int_global__deposit.deposit_creation_date,
+    int_global__deposit.deposit_type,
+    {{ calculate_exact_age("__days.day", "u.user_birth_date") }} as user_age
+from {{ ref("int_global__deposit") }} as int_global__deposit
+inner join
+    {{ ref("int_global__user_beneficiary") }} as u
+    on int_global__deposit.user_id = u.user_id
 inner join
     __days
-    on __days.day between date(mrt_global__deposit.deposit_creation_date) and date(
-        mrt_global__deposit.deposit_expiration_date
+    on __days.day between date(int_global__deposit.deposit_creation_date) and date(
+        int_global__deposit.deposit_expiration_date
     )
+left join
+    {{ ref("int_applicative__action_history") }} as ah
+    on int_global__deposit.user_id = ah.user_id
+    and ah.action_history_rk = 1
+where (u.user_is_active or ah.action_history_reason = 'upon user request')

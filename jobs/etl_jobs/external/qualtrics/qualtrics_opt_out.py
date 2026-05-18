@@ -1,7 +1,8 @@
 import pandas as pd
+import pandas_gbq
 import requests
 
-from utils import BIGQUERY_RAW_DATASET
+from utils import BIGQUERY_RAW_DATASET, PROJECT_NAME
 
 
 def import_qualtrics_opt_out(data_center, directory_id, api_token, export_columns):
@@ -24,11 +25,17 @@ def import_qualtrics_opt_out(data_center, directory_id, api_token, export_column
     df = pd.DataFrame(results)
     df = df.rename(columns=export_columns)
     df["directory_unsubscribe_date"] = pd.to_datetime(df["directory_unsubscribe_date"])
-    df[
+    df_to_load = df[
         [
             "directory_unsubscribe_date",
             "contact_id",
             "email",
             "ext_ref",
         ]
-    ].to_gbq(f"{BIGQUERY_RAW_DATASET}.qualtrics_opt_out_users", if_exists="replace")
+    ]
+    pandas_gbq.to_gbq(
+        df_to_load,
+        f"{BIGQUERY_RAW_DATASET}.qualtrics_opt_out_users",
+        project_id=PROJECT_NAME,
+        if_exists="replace",
+    )

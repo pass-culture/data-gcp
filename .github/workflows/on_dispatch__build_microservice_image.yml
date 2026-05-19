@@ -37,6 +37,7 @@ jobs:
       IS_MANUAL_DISPATCH: true
       CUSTOM_TAG: ${{ inputs.CUSTOM_TAG }}
       SOURCE_PATH: ${{ inputs.SOURCE_PATH }}
+      CONTEXT_PATH: ${{ inputs.SOURCE_PATH }}
       DOCKERFILE: ${{ inputs.DOCKERFILE }}
       REGISTRY_BASE_NAME: ${{ inputs.REGISTRY_BASE_NAME }}
     secrets:

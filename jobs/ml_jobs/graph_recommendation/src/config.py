@@ -107,29 +107,58 @@ class TrainingConfig(BaseConfig):
     metapaths: list[list[tuple[str, str, str]]] = field(
         default_factory=lambda: (
             [
+                # --- book metapaths ---
                 [
                     ("book", "is_artist_id", "artist_id"),
                     ("artist_id", "artist_id_of", "book"),
                 ],
                 [
-                    ("book", "is_gtl_label_level_4", "gtl_label_level_4"),
-                    ("gtl_label_level_4", "gtl_label_level_4_of", "book"),
+                    ("book", "is_gtl_label_level_4", "book_gtl_label_level_4"),
+                    ("book_gtl_label_level_4", "gtl_label_level_4_of", "book"),
                 ],
                 [
-                    ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
-                    ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
+                    ("book", "is_gtl_label_level_3", "book_gtl_label_level_3"),
+                    ("book_gtl_label_level_3", "gtl_label_level_3_of", "book"),
                 ],
                 [
                     ("book", "is_series_id", "series_id"),
                     ("series_id", "series_id_of", "book"),
                 ],
                 [
-                    ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
-                    ("gtl_label_level_2", "gtl_label_level_2_of", "book"),
+                    ("book", "is_gtl_label_level_2", "book_gtl_label_level_2"),
+                    ("book_gtl_label_level_2", "gtl_label_level_2_of", "book"),
                 ],
                 [
-                    ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
-                    ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
+                    ("book", "is_gtl_label_level_1", "book_gtl_label_level_1"),
+                    ("book_gtl_label_level_1", "gtl_label_level_1_of", "book"),
+                ],
+                # --- music metapaths ---
+                [
+                    ("music", "is_artist_id", "artist_id"),
+                    ("artist_id", "artist_id_of", "music"),
+                ],
+                [
+                    ("music", "is_gtl_label_level_4", "music_gtl_label_level_4"),
+                    ("music_gtl_label_level_4", "gtl_label_level_4_of", "music"),
+                ],
+                [
+                    ("music", "is_gtl_label_level_3", "music_gtl_label_level_3"),
+                    ("music_gtl_label_level_3", "gtl_label_level_3_of", "music"),
+                ],
+                [
+                    ("music", "is_gtl_label_level_2", "music_gtl_label_level_2"),
+                    ("music_gtl_label_level_2", "gtl_label_level_2_of", "music"),
+                ],
+                [
+                    ("music", "is_gtl_label_level_1", "music_gtl_label_level_1"),
+                    ("music_gtl_label_level_1", "gtl_label_level_1_of", "music"),
+                ],
+                # --- cross-type metapaths (via shared artist_id) ---
+                [
+                    ("book", "is_artist_id", "artist_id"),
+                    ("artist_id", "artist_id_of", "music"),
+                    ("music", "is_artist_id", "artist_id"),
+                    ("artist_id", "artist_id_of", "book"),
                 ],
             ]
         )

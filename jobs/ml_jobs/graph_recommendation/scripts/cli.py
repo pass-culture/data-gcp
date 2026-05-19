@@ -99,6 +99,7 @@ app = typer.Typer(
 )
 
 
+# deprecated
 @app.command("build-graph")
 def build_graph_command(
     parquet_path: str = PARQUET_ARGUMENT,

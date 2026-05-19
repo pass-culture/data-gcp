@@ -211,21 +211,49 @@ def train_metapath2vec(
     time_formatted = str(timedelta(seconds=int(total_training_time)))
     logger.info(f"Training completed in {time_formatted}")
 
-    # Extract and save embeddings for book nodes
-    logger.info("Extracting book embeddings...")
+    # Extract embeddings for all item-type nodes
+    logger.info("Extracting item embeddings...")
     checkpoint = torch.load(checkpoint_path, weights_only=True)
     embedding = checkpoint["embedding.weight"].detach().cpu().numpy()
-    book_embeddings = embedding[
-        model.start["book"] : model.start["book"] + graph_data["book"].num_nodes, :
-    ]
 
-    embeddings_df = pd.DataFrame(
-        {
-            "node_ids": graph_data.book_ids,
-            "gtl_id": graph_data.gtl_ids,
-            EMBEDDING_COLUMN: list(book_embeddings),
-        }
+    # Determine which node types correspond to items (not metadata).
+    # graph_data.item_ids_by_type is set by both the single-type and multi-type
+    # builders; fall back to {"book": graph_data.book_ids} for safety.
+    item_ids_by_type: dict[str, list] = getattr(
+        graph_data,
+        "item_ids_by_type",
+        {"book": graph_data.book_ids},
+    )
+    gtl_ids_by_type: dict[str, list] = getattr(
+        graph_data,
+        "gtl_ids_by_type",
+        {"book": graph_data.gtl_ids},
     )
 
-    logger.info(f"Book embeddings extracted: {len(embeddings_df)} items with gtl_id")
+    all_rows: list[dict] = []
+    for item_type, item_ids in item_ids_by_type.items():
+        if item_type not in model.start:
+            logger.warning(f"Node type '{item_type}' not found in model; skipping.")
+            continue
+        start = model.start[item_type]
+        n = graph_data[item_type].num_nodes
+        type_embeddings = embedding[start : start + n, :]
+        gtl_ids = gtl_ids_by_type.get(item_type, [None] * n)
+        for node_ids, gtl_id, emb in zip(
+            item_ids, gtl_ids, type_embeddings, strict=False
+        ):
+            all_rows.append(
+                {
+                    "node_ids": node_ids,
+                    "gtl_id": gtl_id,
+                    "item_type": item_type,
+                    EMBEDDING_COLUMN: emb,
+                }
+            )
+
+    embeddings_df = pd.DataFrame(all_rows)
+    logger.info(
+        f"Embeddings extracted: {len(embeddings_df)} items "
+        f"({', '.join(f'{t}: {(embeddings_df.item_type == t).sum()}' for t in item_ids_by_type)})"
+    )
     return embeddings_df

@@ -13,7 +13,9 @@ from loguru import logger
 from client import TikTokAPIError, TikTokClient
 from utils import (
     TIKTOK_ACCOUNT_DAILY_ACTIVITY,
+    TIKTOK_ACCOUNT_DAILY_ACTIVITY_SCHEMA,
     TIKTOK_ACCOUNT_HOURLY_AUDIENCE,
+    TIKTOK_ACCOUNT_HOURLY_AUDIENCE_SCHEMA,
     TIKTOK_VIDEO_AUDIENCE_COUNTRY,
     TIKTOK_VIDEO_AUDIENCE_COUNTRY_SCHEMA,
     TIKTOK_VIDEO_DETAIL,
@@ -296,6 +298,7 @@ class TikTokETL:
                 table_name=TIKTOK_ACCOUNT_HOURLY_AUDIENCE,
                 start_date=start_date,
                 end_date=end_date,
+                schema_field=TIKTOK_ACCOUNT_HOURLY_AUDIENCE_SCHEMA,
                 date_column="date",
             )
             logger.success("Loaded {} hourly activity records", len(hourly_activity_df))
@@ -310,6 +313,7 @@ class TikTokETL:
             table_name=TIKTOK_ACCOUNT_DAILY_ACTIVITY,
             start_date=start_date,
             end_date=end_date,
+            schema_field=TIKTOK_ACCOUNT_DAILY_ACTIVITY_SCHEMA,
             date_column="date",
         )
         logger.success("Loaded {} daily activity records", len(daily_activity_df))

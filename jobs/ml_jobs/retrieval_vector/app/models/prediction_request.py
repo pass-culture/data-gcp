@@ -31,7 +31,10 @@ class PredictionRequest(BaseModel):
         ge=1,
         description="Number of results to return, must be greater than 0.",
     )
-    debug: Optional[bool] = Field(default=False, description="Enable debug mode.")
+    debug: Optional[bool] = Field(
+        default=False,
+        description="Enable debug mode.If enabled (set to 1), the response will include additional information about the recommendations.",
+    )
     prefilter: Optional[bool] = Field(
         default=False, description="Apply prefiltering if set."
     )

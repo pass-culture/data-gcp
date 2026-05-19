@@ -5,15 +5,32 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "google-cloud-storage>=2.16.0",
-    "ipykernel>=7.2.0",
-    "pandas>=2.2.0",
-    "pyarrow>=16.1.0",
-    "pytest>=8.2.2",
-    "ruff>=0.15.13",
-    "tornado>=6.4.2",
-    "typer>=0.21.2",
+    "google-cloud-storage~=3.10",
+    "pandas~=3.0",
+    "typer~=0.21",
 ]
+
+## uv
+[tool.uv]
+dev-dependencies = [
+    "ipykernel~=7.2",
+    "pyarrow~=24.0",
+    "pytest~=9.0",
+    "ruff~=0.15",
+]
+
+environments = [
+    "sys_platform == 'darwin'",
+    "sys_platform == 'linux'",
+]
+
+## build
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src", "cli"]
 
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.

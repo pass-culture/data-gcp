@@ -138,14 +138,6 @@ class TrainingConfig(BaseConfig):
                     ("artist_id", "artist_id_of", "music"),
                 ],
                 [
-                    ("music", "is_gtl_label_level_4", "music_gtl_label_level_4"),
-                    ("music_gtl_label_level_4", "gtl_label_level_4_of", "music"),
-                ],
-                [
-                    ("music", "is_gtl_label_level_3", "music_gtl_label_level_3"),
-                    ("music_gtl_label_level_3", "gtl_label_level_3_of", "music"),
-                ],
-                [
                     ("music", "is_gtl_label_level_2", "music_gtl_label_level_2"),
                     ("music_gtl_label_level_2", "gtl_label_level_2_of", "music"),
                 ],

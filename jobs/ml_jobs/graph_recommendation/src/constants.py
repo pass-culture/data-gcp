@@ -41,6 +41,21 @@ GTL_METADATA_COLUMNS: Sequence[str] = (
     GTL_LABEL_LEVEL_4_COLUMN,
 )
 
+# GTL columns available per item type.
+# Music products only have levels 1 and 2; levels 3 and 4 are always null.
+GTL_METADATA_COLUMNS_BY_ITEM_TYPE: dict[str, Sequence[str]] = {
+    ITEM_TYPE_BOOK: (
+        GTL_LABEL_LEVEL_1_COLUMN,
+        GTL_LABEL_LEVEL_2_COLUMN,
+        GTL_LABEL_LEVEL_3_COLUMN,
+        GTL_LABEL_LEVEL_4_COLUMN,
+    ),
+    ITEM_TYPE_MUSIC: (
+        GTL_LABEL_LEVEL_1_COLUMN,
+        GTL_LABEL_LEVEL_2_COLUMN,
+    ),
+}
+
 # Metadata columns that are shared across all item types (e.g. the same artist_id
 # bridges a book and a CD from the same artist).
 SHARED_METADATA_COLUMNS: Sequence[str] = (

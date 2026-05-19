@@ -8,6 +8,7 @@ from src.constants import (
     DEFAULT_METADATA_COLUMNS,
     GTL_ID_COLUMN,
     GTL_METADATA_COLUMNS,
+    GTL_METADATA_COLUMNS_BY_ITEM_TYPE,
     ID_COLUMN,
     ITEM_TYPE_COLUMN,
     KNOWN_ITEM_TYPES,
@@ -294,13 +295,20 @@ def build_multitype_metadata_heterograph_from_dataframe(
             shared_nodes[col] = {v: i for i, v in enumerate(unique_vals)}
             shared_ids[col] = unique_vals
 
-    # 3b. GTL metadata: separate node spaces per item type
+    # 3b. GTL metadata: separate node spaces per item type, using only the
+    # GTL levels that are relevant for each item type (e.g. music has no
+    # levels 3 & 4, so we never create useless empty node types for them).
     gtl_nodes: dict[str, dict[str, int]] = {}  # key = namespaced node type
     gtl_ids_map: dict[str, list[str]] = {}
 
     for item_type in item_types_present:
         df_type = df_normalized[df_normalized[ITEM_TYPE_COLUMN] == item_type]
-        for col in gtl_metadata_columns:
+        # Use the per-type GTL column list; fall back to the full list for
+        # unknown item types so the builder stays future-proof.
+        applicable_gtl_columns = GTL_METADATA_COLUMNS_BY_ITEM_TYPE.get(
+            item_type, gtl_metadata_columns
+        )
+        for col in applicable_gtl_columns:
             if col not in df_type.columns:
                 continue
             node_type = _gtl_node_type(item_type, col)
@@ -326,7 +334,10 @@ def build_multitype_metadata_heterograph_from_dataframe(
             if col in shared_nodes:
                 _ensure_edge((item_type, f"is_{col}", col))
                 _ensure_edge((col, f"{col}_of", item_type))
-        for col in gtl_metadata_columns:
+        applicable_gtl_columns = GTL_METADATA_COLUMNS_BY_ITEM_TYPE.get(
+            item_type, gtl_metadata_columns
+        )
+        for col in applicable_gtl_columns:
             node_type = _gtl_node_type(item_type, col)
             if node_type in gtl_nodes:
                 _ensure_edge((item_type, f"is_{col}", node_type))
@@ -359,8 +370,11 @@ def build_multitype_metadata_heterograph_from_dataframe(
                 edge_indices[(item_type, f"is_{col}", col)].add((item_idx, meta_idx))
                 edge_indices[(col, f"{col}_of", item_type)].add((meta_idx, item_idx))
 
-        # GTL (namespaced) metadata edges
-        for col in gtl_metadata_columns:
+        # GTL (namespaced) metadata edges — only for levels applicable to this type
+        applicable_gtl_columns = GTL_METADATA_COLUMNS_BY_ITEM_TYPE.get(
+            item_type, gtl_metadata_columns
+        )
+        for col in applicable_gtl_columns:
             node_type = _gtl_node_type(item_type, col)
             if node_type not in gtl_nodes:
                 continue

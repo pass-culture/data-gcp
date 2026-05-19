@@ -33,6 +33,9 @@ RUN apt-get update \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+# 2. Install uv
+COPY --from=ghcr.io/astral-sh/uv:0.3.4 /uv /bin/
+
 ENV UV_CERT_BUNDLE=${CERT_PATH_DOCKER}
 ENV UV_NATIVE_TLS=true
 ENV SSL_CERT_FILE=${CERT_PATH_DOCKER}
@@ -64,10 +67,12 @@ USER root
 RUN chown -R airflow:root /home/airflow/.local
 USER airflow
 WORKDIR ${AIRFLOW_USER_HOME}
-COPY ./airflow/orchestration-requirements.txt ./requirements.txt
+COPY ./uv.lock ./pyproject.toml ./
+
+ENV PATH="${AIRFLOW_USER_HOME}/.venv/bin:$PATH"
 
 # Force UV_CERT_BUNDLE again at the command level to ensure 'airflow' user sees it
-RUN UV_CERT_BUNDLE=${CERT_PATH_DOCKER} uv pip install --native-tls -r requirements.txt
+RUN UV_CERT_BUNDLE=${CERT_PATH_DOCKER} uv sync --frozen
 
 ################################
 ## Stage 3 Builder with proxy ##

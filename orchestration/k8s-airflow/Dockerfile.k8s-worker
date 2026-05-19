@@ -22,7 +22,7 @@ ENV PATH="${AIRFLOW_USER_HOME}/.venv/bin:$PATH"
 
 WORKDIR ${AIRFLOW_USER_HOME}
 COPY uv.lock pyproject.toml /opt/
-RUN uv sync --only-group airflow --frozen
+RUN uv sync --frozen
 
 # Install python dependencies
 USER airflow

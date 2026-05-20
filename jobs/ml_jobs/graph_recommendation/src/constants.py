@@ -3,8 +3,8 @@ from collections.abc import Sequence
 from pathlib import Path
 
 # GCP project and Environment
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-prod")
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "prod")
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "stg")
 
 
 # Project root directory
@@ -21,6 +21,8 @@ GTL_ID_COLUMN = "gtl_id"
 ARTIST_ID_COLUMN = "artist_id"
 LANCEDB_NODE_ID_COLUMN = "node_ids"
 SERIES_ID_COLUMN = "series_id"
+MUSIC_LABEL_COLUMN = "music_label"
+DISTRIBUTOR_COLUMN = "distributor"
 FULL_SCORE_COLUMN = "full_score"
 GTL_LABEL_LEVEL_1_COLUMN = "gtl_label_level_1"
 GTL_LABEL_LEVEL_2_COLUMN = "gtl_label_level_2"
@@ -58,9 +60,13 @@ GTL_METADATA_COLUMNS_BY_ITEM_TYPE: dict[str, Sequence[str]] = {
 
 # Metadata columns that are shared across all item types (e.g. the same artist_id
 # bridges a book and a CD from the same artist).
+# Columns that are null for a given item type simply produce no edges for that
+# type — no special handling needed.
 SHARED_METADATA_COLUMNS: Sequence[str] = (
     ARTIST_ID_COLUMN,
     SERIES_ID_COLUMN,
+    MUSIC_LABEL_COLUMN,
+    DISTRIBUTOR_COLUMN,
 )
 
 # Default combined metadata columns (kept for backward-compat with book-only pipelines)

@@ -101,49 +101,41 @@ class TrainingConfig(BaseConfig):
     num_epochs: int = 15
     num_workers: int = 8 if sys.platform == "linux" else 0
     batch_size: int = 256
-    learning_rate: float = 0.003
+    learning_rate: float = 0.003  # * 3
     early_stop: bool = True
     early_stopping_delta: float = 0.001
     metapaths: list[list[tuple[str, str, str]]] = field(
         default_factory=lambda: (
             [
-                # All metapaths start from "item" (the unified node type for
-                # books and music). GTL nodes are namespaced per item_type
-                # (book_gtl_..., music_gtl_...) to keep semantics separate.
-                # --- shared metadata ---
+                # All metapaths start from "item" (books + music unified).
+                # GTL values are prefixed (b-/m-) so book and music GTL nodes
+                # are distinct even though they share the same node type.
+                # The same metapaths apply to both item types — no duplication.
                 [
                     ("item", "is_artist_id", "artist_id"),
                     ("artist_id", "artist_id_of", "item"),
                 ],
                 [
+                    ("item", "is_gtl_label_level_1", "gtl_label_level_1"),
+                    ("gtl_label_level_1", "gtl_label_level_1_of", "item"),
+                ],
+                [
+                    ("item", "is_gtl_label_level_2", "gtl_label_level_2"),
+                    ("gtl_label_level_2", "gtl_label_level_2_of", "item"),
+                ],
+                # --- book-specific metapaths ---
+                [
                     ("item", "is_series_id", "series_id"),
                     ("series_id", "series_id_of", "item"),
                 ],
-                # --- book GTL metapaths ---
+                # --- music-specific metapaths ---
                 [
-                    ("item", "is_gtl_label_level_1_book", "book_gtl_label_level_1"),
-                    ("book_gtl_label_level_1", "gtl_label_level_1_book_of", "item"),
+                    ("item", "is_music_label", "music_label"),
+                    ("music_label", "music_label_of", "item"),
                 ],
                 [
-                    ("item", "is_gtl_label_level_2_book", "book_gtl_label_level_2"),
-                    ("book_gtl_label_level_2", "gtl_label_level_2_book_of", "item"),
-                ],
-                [
-                    ("item", "is_gtl_label_level_3_book", "book_gtl_label_level_3"),
-                    ("book_gtl_label_level_3", "gtl_label_level_3_book_of", "item"),
-                ],
-                [
-                    ("item", "is_gtl_label_level_4_book", "book_gtl_label_level_4"),
-                    ("book_gtl_label_level_4", "gtl_label_level_4_book_of", "item"),
-                ],
-                # --- music GTL metapaths ---
-                [
-                    ("item", "is_gtl_label_level_1_music", "music_gtl_label_level_1"),
-                    ("music_gtl_label_level_1", "gtl_label_level_1_music_of", "item"),
-                ],
-                [
-                    ("item", "is_gtl_label_level_2_music", "music_gtl_label_level_2"),
-                    ("music_gtl_label_level_2", "gtl_label_level_2_music_of", "item"),
+                    ("item", "is_distributor", "distributor"),
+                    ("distributor", "distributor_of", "item"),
                 ],
             ]
         )

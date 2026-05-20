@@ -116,11 +116,19 @@ def train_metapath2vec(
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logger.info(f"Using device: {device}")
 
-    # Restrict metapaths to those that exist in the graph
+    # Restrict metapaths to those that exist in the graph.
+    # A metapath is valid when ALL node types it references are present in the
+    # graph.  We collect every unique node type across all edges of the metapath
+    # and check that each one exists as a node type in graph_data.
+    all_node_types = set(graph_data.node_types)
     valid_metapaths = [
         metapath
         for metapath in training_config.metapaths
-        if metapath[1][0] in graph_data.metadata_columns
+        if all(
+            node_type in all_node_types
+            for edge in metapath
+            for node_type in (edge[0], edge[2])
+        )
     ]
     logger.info(f"Using these valid metapaths for training: {valid_metapaths}")
 

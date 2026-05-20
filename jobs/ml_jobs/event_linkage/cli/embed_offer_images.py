@@ -11,9 +11,9 @@ from transformers.image_utils import load_image
 
 from src.constants import (
     HF_TOKEN_SECRET_NAME,
-    IMAGE_EMBEDDING_COLUMN,
-    IMAGE_URL_COLUMN,
-    OFFER_ID_COLUMN,
+    IMAGE_EMBEDDING_COL,
+    IMAGE_URL_COL,
+    OFFER_ID_COL,
 )
 from src.gcp_utils import get_secret
 
@@ -68,7 +68,7 @@ def encode_images_on_batch_df(
 
     # Download images and filter out failed loads
     images_df = batch_df.assign(
-        **{LOADED_IMAGE_COLUMN: batch_df[IMAGE_URL_COLUMN].map(custom_load_image)}
+        **{LOADED_IMAGE_COLUMN: batch_df[IMAGE_URL_COL].map(custom_load_image)}
     ).dropna(subset=[LOADED_IMAGE_COLUMN])
 
     # Encode images and return results
@@ -82,7 +82,7 @@ def encode_images_on_batch_df(
         .cpu()
         .numpy()
     )
-    return images_df.assign(**{IMAGE_EMBEDDING_COLUMN: list(image_embeddings)}).drop(
+    return images_df.assign(**{IMAGE_EMBEDDING_COL: list(image_embeddings)}).drop(
         columns=[LOADED_IMAGE_COLUMN]
     )  # We don't need to keep the loaded images in memory
 
@@ -100,7 +100,7 @@ def main(
 
     # 3. Prepare data to embed: keep only offers with image and relevant columns
     data_to_embed_df = offer_event_df.loc[
-        lambda df: df[IMAGE_URL_COLUMN].notna(), [OFFER_ID_COLUMN, IMAGE_URL_COLUMN]
+        lambda df: df[IMAGE_URL_COL].notna(), [OFFER_ID_COL, IMAGE_URL_COL]
     ]
 
     # 4. Encode offer images
@@ -119,8 +119,8 @@ def main(
 
     # 5. Reconcile with original data and save results
     offer_event_df.merge(
-        embeddings_df.loc[:, [OFFER_ID_COLUMN, IMAGE_EMBEDDING_COLUMN]],
-        on=OFFER_ID_COLUMN,
+        embeddings_df.loc[:, [OFFER_ID_COL, IMAGE_EMBEDDING_COL]],
+        on=OFFER_ID_COL,
         how="left",
     ).to_parquet(output_filepath, index=False)
 

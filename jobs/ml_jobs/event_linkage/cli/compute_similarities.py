@@ -7,11 +7,11 @@ from rapidfuzz import fuzz
 
 from src.constants import (
     DESCRIPTION_SIMILARITY_COL,
-    IMAGE_EMBEDDING_COLUMN,
+    IMAGE_EMBEDDING_COL,
     IMAGE_SIMILARITY_COL,
     NAME_SIMILARITY_COL,
     OFFER_DESCRIPTION_COL,
-    OFFER_ID_COLUMN,
+    OFFER_ID_COL,
     OFFER_NAME_COL,
     OFFER_SUBCATEGORY_ID_COL,
     PARTIAL_NAME_SIMILARITY_COL,
@@ -75,9 +75,9 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
     logger.success("Partial name similarity computed")
 
     # 2. Compute image similarity
-    _zero_image = np.zeros_like(selected_df[IMAGE_EMBEDDING_COLUMN].dropna().iloc[0])
+    _zero_image = np.zeros_like(selected_df[IMAGE_EMBEDDING_COL].dropna().iloc[0])
     image_embedding = np.array(
-        selected_df[IMAGE_EMBEDDING_COLUMN]
+        selected_df[IMAGE_EMBEDDING_COL]
         .apply(lambda x: _zero_image if x is None else x)
         .to_list()
     )
@@ -86,10 +86,8 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
 
     # 3. Create similarities_df
     similarities_df = (
-        selected_df.loc[:, [OFFER_ID_COLUMN]]
-        .merge(
-            selected_df.loc[:, [OFFER_ID_COLUMN]], how="cross", suffixes=("_1", "_2")
-        )
+        selected_df.loc[:, [OFFER_ID_COL]]
+        .merge(selected_df.loc[:, [OFFER_ID_COL]], how="cross", suffixes=("_1", "_2"))
         .assign(
             **{
                 NAME_SIMILARITY_COL: name_similarity,
@@ -101,21 +99,21 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
 
     # 4. Filter out pairs with low partial name similarity
     filtered_df = similarities_df.loc[
-        lambda df: df[f"{OFFER_ID_COLUMN}_1"] > df[f"{OFFER_ID_COLUMN}_2"]
+        lambda df: df[f"{OFFER_ID_COL}_1"] > df[f"{OFFER_ID_COL}_2"]
     ].loc[lambda df: df[PARTIAL_NAME_SIMILARITY_COL] > FUZZ_THRESHOLD]
 
     # 5. Compute description similarity using rapidfuzz on the filtered pairs only
     #    to save time
-    offer_id_to_description = selected_df.set_index(OFFER_ID_COLUMN)[
+    offer_id_to_description = selected_df.set_index(OFFER_ID_COL)[
         OFFER_DESCRIPTION_COL
     ].to_dict()
-    offer_id_to_name = selected_df.set_index(OFFER_ID_COLUMN)[OFFER_NAME_COL].to_dict()
+    offer_id_to_name = selected_df.set_index(OFFER_ID_COL)[OFFER_NAME_COL].to_dict()
     logger.info(f"Computing description similarity for {len(filtered_df)} pairs...")
     description_similarity = rapidfuzz.process.cpdist(
-        filtered_df[f"{OFFER_ID_COLUMN}_1"]
+        filtered_df[f"{OFFER_ID_COL}_1"]
         .map(offer_id_to_description)
         .pipe(description_preprocessing),
-        filtered_df[f"{OFFER_ID_COLUMN}_2"]
+        filtered_df[f"{OFFER_ID_COL}_2"]
         .map(offer_id_to_description)
         .pipe(description_preprocessing),
         scorer=fuzz.partial_ratio,
@@ -129,16 +127,16 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
     return filtered_df.assign(
         **{
             DESCRIPTION_SIMILARITY_COL: description_similarity,
-            f"{OFFER_NAME_COL}_1": filtered_df[f"{OFFER_ID_COLUMN}_1"].map(
+            f"{OFFER_NAME_COL}_1": filtered_df[f"{OFFER_ID_COL}_1"].map(
                 offer_id_to_name
             ),
-            f"{OFFER_NAME_COL}_2": filtered_df[f"{OFFER_ID_COLUMN}_2"].map(
+            f"{OFFER_NAME_COL}_2": filtered_df[f"{OFFER_ID_COL}_2"].map(
                 offer_id_to_name
             ),
-            f"{OFFER_DESCRIPTION_COL}_1": filtered_df[f"{OFFER_ID_COLUMN}_1"].map(
+            f"{OFFER_DESCRIPTION_COL}_1": filtered_df[f"{OFFER_ID_COL}_1"].map(
                 offer_id_to_description
             ),
-            f"{OFFER_DESCRIPTION_COL}_2": filtered_df[f"{OFFER_ID_COLUMN}_2"].map(
+            f"{OFFER_DESCRIPTION_COL}_2": filtered_df[f"{OFFER_ID_COL}_2"].map(
                 offer_id_to_description
             ),
         }
@@ -163,10 +161,10 @@ def main(
             .loc[
                 :,
                 [
-                    OFFER_ID_COLUMN,
+                    OFFER_ID_COL,
                     OFFER_NAME_COL,
                     OFFER_DESCRIPTION_COL,
-                    IMAGE_EMBEDDING_COLUMN,
+                    IMAGE_EMBEDDING_COL,
                 ],
             ]
             .reset_index(drop=True)

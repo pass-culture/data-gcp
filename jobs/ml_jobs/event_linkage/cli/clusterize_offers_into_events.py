@@ -5,10 +5,10 @@ import typer
 from src.constants import (
     DESCRIPTION_SIMILARITY_COL,
     IMAGE_SIMILARITY_COL,
-    IMAGE_URL_COLUMN,
+    IMAGE_URL_COL,
     NAME_SIMILARITY_COL,
     OFFER_DESCRIPTION_COL,
-    OFFER_ID_COLUMN,
+    OFFER_ID_COL,
     OFFER_NAME_COL,
     OFFER_SUBCATEGORY_ID_COL,
 )
@@ -46,19 +46,19 @@ def build_cross_df(
     raw_data_df: pd.DataFrame, similarities_df: pd.DataFrame
 ) -> pd.DataFrame:
     RAW_COLUMNS = [
-        OFFER_ID_COLUMN,
+        OFFER_ID_COL,
         OFFER_SUBCATEGORY_ID_COL,
-        IMAGE_URL_COLUMN,
+        IMAGE_URL_COL,
     ]
     selected_df = raw_data_df.loc[:, lambda df: df.columns.isin(RAW_COLUMNS)]
 
     return similarities_df.merge(
         selected_df.add_suffix("_1"),
-        on=f"{OFFER_ID_COLUMN}_1",
+        on=f"{OFFER_ID_COL}_1",
         how="left",
     ).merge(
         selected_df.add_suffix("_2"),
-        on=f"{OFFER_ID_COLUMN}_2",
+        on=f"{OFFER_ID_COL}_2",
         how="left",
     )
 
@@ -100,7 +100,7 @@ def main(
         # Clusterize
         matched_df = selected_df[selected_df["match"]]
         G = nx.from_pandas_edgelist(
-            matched_df, source=f"{OFFER_ID_COLUMN}_1", target=f"{OFFER_ID_COLUMN}_2"
+            matched_df, source=f"{OFFER_ID_COL}_1", target=f"{OFFER_ID_COL}_2"
         )
         cluster_df = pd.DataFrame({"cluster": list(nx.connected_components(G))}).assign(
             cluster_length=lambda df: df.cluster.map(len), subcategory_id=subcategory
@@ -114,14 +114,14 @@ def main(
         all_cluster_df.sort_values(by="cluster_length", ascending=False).itertuples()
     ):
         exploded_cluster_dfs.append(
-            raw_data_df[raw_data_df[OFFER_ID_COLUMN].isin(cluster_row.cluster)]
+            raw_data_df[raw_data_df[OFFER_ID_COL].isin(cluster_row.cluster)]
             .loc[
                 :,
                 [
-                    OFFER_ID_COLUMN,
+                    OFFER_ID_COL,
                     OFFER_NAME_COL,
                     OFFER_DESCRIPTION_COL,
-                    IMAGE_URL_COLUMN,
+                    IMAGE_URL_COL,
                 ],
             ]
             .copy()

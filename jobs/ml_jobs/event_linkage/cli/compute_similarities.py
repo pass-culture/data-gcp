@@ -1,5 +1,3 @@
-import time
-
 import numpy as np
 import pandas as pd
 import rapidfuzz
@@ -15,7 +13,8 @@ from src.constants import (
     OFFER_SUBCATEGORY_ID_COL,
 )
 
-THRESHOLD = 70
+FUZZ_THRESHOLD = 70
+MIN_DESCRIPTION_LENGTH = 30
 
 
 app = typer.Typer()
@@ -28,16 +27,17 @@ def description_preprocessing(series: pd.Series) -> pd.Series:
         .str.normalize("NFD")
         .str.encode("ascii", errors="ignore")
         .str.decode("ascii")
-        .where(lambda s: s.str.len() >= 30, other=pd.NA)
+        .where(lambda s: s.str.len() >= MIN_DESCRIPTION_LENGTH, other=pd.NA)
     )
 
 
 def offer_name_preprocessing(series: pd.Series) -> pd.Series:
     return (
         series.str.lower()
-        .str.split(
-            r"/|\+|&|•|\||:| - | à | en concert | x | et | au | avec |concert |concert de poche|apero-concert"  # noqa: E501
+        .str.replace(
+            r"^(?:concert de poche|apero-concert|concerts?)\W*", "", regex=True
         )
+        .str.split(r"/|\+|&|•|\||:| - | à | en concert | x | et | au | avec ")
         .str[0]
         .str.strip()
         .str.normalize("NFD")
@@ -48,8 +48,11 @@ def offer_name_preprocessing(series: pd.Series) -> pd.Series:
 
 
 def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
+    NAME_SIMILARITY_COL = "name_similarity"
+    PARTIAL_NAME_SIMILARITY_COL = "partial_name_similarity"
+    IMAGE_SIMILARITY_COL = "image_similarity"
+
     # 1. Compute name similarity
-    t0 = time.time()
     name_similarity = rapidfuzz.process.cdist(
         selected_df[OFFER_NAME_COL].pipe(offer_name_preprocessing),
         selected_df[OFFER_NAME_COL].pipe(offer_name_preprocessing),
@@ -58,20 +61,18 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
         workers=-1,
         dtype=np.uint8,
     ).reshape(-1)
-    t1 = time.time()
-    logger.success(f"Name similarity computed in {t1 - t0:.2f} seconds")
-    t1 = time.time()
+    logger.success("Name similarity computed")
+
     partial_name_similarity = rapidfuzz.process.cdist(
         selected_df[OFFER_NAME_COL].pipe(offer_name_preprocessing),
         selected_df[OFFER_NAME_COL].pipe(offer_name_preprocessing),
         processor=rapidfuzz.utils.default_process,
         scorer=fuzz.partial_ratio,
         workers=-1,
-        score_cutoff=THRESHOLD,
+        score_cutoff=FUZZ_THRESHOLD,
         dtype=np.uint8,
     ).reshape(-1)
-    t2 = time.time()
-    logger.success(f"Partial name similarity computed in {t2 - t1:.2f} seconds")
+    logger.success("Partial name similarity computed")
 
     # 2. Compute image similarity
     _zero_image = np.zeros_like(selected_df[IMAGE_EMBEDDING_COLUMN].dropna().iloc[0])
@@ -81,30 +82,30 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
         .to_list()
     )
     image_scores = (image_embedding @ image_embedding.T).reshape(-1)
-    t3 = time.time()
-    logger.success(f"Image similarity computed in {t3 - t2:.2f} seconds")
+    logger.success("Image similarity computed")
 
-    # 4. Create temp df with all similarities
-    temp_df = (
+    # 3. Create similarities_df
+    similarities_df = (
         selected_df.loc[:, [OFFER_ID_COLUMN]]
         .merge(
             selected_df.loc[:, [OFFER_ID_COLUMN]], how="cross", suffixes=("_1", "_2")
         )
         .assign(
-            image_similarity=image_scores,
-            name_similarity=name_similarity,
-            partial_name_similarity=partial_name_similarity,
+            **{
+                NAME_SIMILARITY_COL: name_similarity,
+                PARTIAL_NAME_SIMILARITY_COL: partial_name_similarity,
+                IMAGE_SIMILARITY_COL: image_scores,
+            }
         )
     )
-    t4 = time.time()
-    logger.success(f"Temp df computed in {t4 - t3:.2f} seconds")
 
-    # 5. Filter pairs with high partial name similarity
-    filtered_df = temp_df.loc[
+    # 4. Filter out pairs with low partial name similarity
+    filtered_df = similarities_df.loc[
         lambda df: df[f"{OFFER_ID_COLUMN}_1"] > df[f"{OFFER_ID_COLUMN}_2"]
-    ].loc[lambda df: df["partial_name_similarity"] > THRESHOLD]
+    ].loc[lambda df: df[PARTIAL_NAME_SIMILARITY_COL] > FUZZ_THRESHOLD]
 
-    # 6. Compute description similarity using rapidfuzz
+    # 5. Compute description similarity using rapidfuzz on the filtered pairs only
+    #    to save time
     offer_id_to_description = selected_df.set_index(OFFER_ID_COLUMN)[
         OFFER_DESCRIPTION_COL
     ].to_dict()
@@ -122,9 +123,9 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
         workers=-1,
         dtype=np.uint8,
     )
-    logger.success(f"Description similarity computed in {time.time() - t4:.2f} seconds")
+    logger.success("Description similarity computed")
 
-    # 7. Add description similarity to filtered df and return
+    # 6. Add description similarity to filtered df and return
     return filtered_df.assign(
         description_similarity=description_similarity,
         description_1=filtered_df[f"{OFFER_ID_COLUMN}_1"].map(offer_id_to_description),
@@ -134,12 +135,13 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
     ).reset_index(drop=True)
 
 
+@app.command()
 def main(
-    offer_event_with_embbedings_filepath: str = typer.Option(),
+    offer_event_with_embeddings_filepath: str = typer.Option(),
     output_filepath: str = typer.Option(),
 ) -> None:
     # 1. Load Data
-    offers_df = pd.read_parquet(offer_event_with_embbedings_filepath).sort_values(
+    offers_df = pd.read_parquet(offer_event_with_embeddings_filepath).sort_values(
         by=OFFER_NAME_COL
     )
 
@@ -160,19 +162,19 @@ def main(
             .reset_index(drop=True)
         )
 
-        similarties_per_category_df = compute_similarities(offers_per_subcategory_df)
-        all_similarities_dfs.append(similarties_per_category_df)
-        logger.success(
-            f"Similarities computed for subcategory {subcategory} with "
-            f"{len(offers_per_subcategory_df)} offers and "
-            f"{len(similarties_per_category_df)} similar pairs"
+        logger.info(
+            f"Computing similarities for subcategory {subcategory} with "
+            f"{len(offers_per_subcategory_df)} offers..."
         )
+        all_similarities_dfs.append(compute_similarities(offers_per_subcategory_df))
+        logger.success(f"Similarities computed for subcategory {subcategory}")
 
     # 3. Concat and save results
     pd.concat(all_similarities_dfs, ignore_index=True).to_parquet(
         output_filepath, index=False
     )
+    logger.success(f"All similarities computed and saved to {output_filepath}")
 
 
 if __name__ == "__main__":
-    main()
+    app()

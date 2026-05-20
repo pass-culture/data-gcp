@@ -8,3 +8,8 @@ ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 HF_TOKEN_SECRET_NAME = (
     "huggingface_token_prod" if ENV_SHORT_NAME == "prod" else "huggingface_token_ehp"
 )
+
+# Columns
+IMAGE_URL_COLUMN = "image_url"
+OFFER_ID_COLUMN = "offer_id"
+IMAGE_EMBEDDING_COLUMN = "image_embedding"

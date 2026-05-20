@@ -92,6 +92,14 @@ with DAG(
         "train_only_on_10k_rows": Param(
             default=ENV_SHORT_NAME == "dev", type="boolean"
         ),
+        "input_table_name": Param(
+            default=INPUT_TABLE_NAME,
+            enum=[
+                INPUT_TABLE_NAME,
+                "test_cross_type_gtl_items",
+            ],
+            description="BQ table to use as training input. Use 'test_cross_type_gtl_items' to run on the cross-type GTL test dataset.",
+        ),
     },
 ) as _dag:
     start = EmptyOperator(task_id="start")
@@ -104,7 +112,7 @@ with DAG(
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
                     "datasetId": BIGQUERY_ML_GRAPH_RECOMMENDATION_DATASET,
-                    "tableId": INPUT_TABLE_NAME,
+                    "tableId": "{{ params.input_table_name }}",
                 },
                 "compression": None,
                 "destinationUris": f"{STORAGE_BASE_PATH}/raw_input/data-*.parquet",

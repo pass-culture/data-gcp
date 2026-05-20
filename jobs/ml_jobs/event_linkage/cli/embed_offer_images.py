@@ -90,7 +90,7 @@ def encode_images_on_batch_df(
 @app.command()
 def main(
     offer_event_filepath: str = typer.Option(),
-    offer_event_with_image_embeddings_filepath: str = typer.Option(),
+    output_filepath: str = typer.Option(),
 ) -> None:
     # 1. Load raw data
     offer_event_df = pd.read_parquet(offer_event_filepath)
@@ -122,7 +122,7 @@ def main(
         embeddings_df.loc[:, [OFFER_ID_COLUMN, IMAGE_EMBEDDING_COLUMN]],
         on=OFFER_ID_COLUMN,
         how="left",
-    ).to_parquet(offer_event_with_image_embeddings_filepath, index=False)
+    ).to_parquet(output_filepath, index=False)
 
 
 if __name__ == "__main__":

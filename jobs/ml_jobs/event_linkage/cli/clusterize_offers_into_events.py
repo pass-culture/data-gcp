@@ -1,6 +1,7 @@
 import networkx as nx
 import pandas as pd
 import typer
+from loguru import logger
 
 from src.constants import (
     DESCRIPTION_SIMILARITY_COL,
@@ -77,8 +78,10 @@ def main(
     cross_df = build_cross_df(raw_data_df, similarities_df)
 
     # 3. Clusterize per subcategory
+    logger.info("Clusterizing offers into events...")
     cluster_dfs = []
     for subcategory in raw_data_df[OFFER_SUBCATEGORY_ID_COL].dropna().unique():
+        logger.info(f"Clusterizing subcategory {subcategory}...")
         selected_df = (
             cross_df.loc[
                 lambda df, s=subcategory: df[f"{OFFER_SUBCATEGORY_ID_COL}_1"] == s
@@ -106,7 +109,16 @@ def main(
             cluster_length=lambda df: df.cluster.map(len), subcategory_id=subcategory
         )
         cluster_dfs.append(cluster_df)
+        logger.success(
+            f"Subcategory {subcategory} clusterized into {len(cluster_df)} clusters "
+            f"with {cluster_df['cluster_length'].sum()} offers in clusters."
+        )
+
     all_cluster_df = pd.concat(cluster_dfs, ignore_index=True)
+    logger.success(
+        f"Clusterized offers into {len(all_cluster_df)} clusters across "
+        f"{len(cluster_dfs)} subcategories."
+    )
 
     # 4. Merge clusters and save
     exploded_cluster_dfs = []
@@ -130,6 +142,9 @@ def main(
 
     pd.concat(exploded_cluster_dfs, ignore_index=True).to_parquet(
         output_filepath, index=False
+    )
+    logger.success(
+        f"Clusterized {len(exploded_cluster_dfs)} offers saved to {output_filepath}"
     )
 
 

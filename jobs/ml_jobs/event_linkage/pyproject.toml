@@ -5,9 +5,12 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "accelerate~=1.13",
     "google-cloud-secret-manager~=2.28",
     "google-cloud-storage~=3.10",
     "pandas~=3.0",
+    "rapidfuzz~=3.14",
+    "sentence-transformers~=5.3",
     "torch~=2.11",
     "torchvision~=0.26",
     "typer~=0.21",

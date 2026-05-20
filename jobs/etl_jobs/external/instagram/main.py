@@ -46,8 +46,10 @@ def main(
                     f"Fetching account {account_id} daily insights from {start_date} to {end_date}"
                 )
 
-                account_daily_insights_df = instagram_handler.fetch_and_preprocess_insights(
-                    start_date=start_date, end_date=end_date
+                account_daily_insights_df = (
+                    instagram_handler.fetch_and_preprocess_insights(
+                        start_date=start_date, end_date=end_date
+                    )
                 )
                 dfs.append(account_daily_insights_df)
             save_multiple_partitions_to_bq(

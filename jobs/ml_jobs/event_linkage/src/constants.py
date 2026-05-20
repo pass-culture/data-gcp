@@ -16,3 +16,8 @@ OFFER_DESCRIPTION_COL = "offer_description"
 OFFER_SUBCATEGORY_ID_COL = "offer_subcategory_id"
 IMAGE_URL_COLUMN = "image_url"
 IMAGE_EMBEDDING_COLUMN = "image_embedding"
+
+DESCRIPTION_SIMILARITY_COL = "description_similarity"
+NAME_SIMILARITY_COL = "name_similarity"
+PARTIAL_NAME_SIMILARITY_COL = "partial_name_similarity"
+IMAGE_SIMILARITY_COL = "image_similarity"

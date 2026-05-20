@@ -6,11 +6,15 @@ from loguru import logger
 from rapidfuzz import fuzz
 
 from src.constants import (
+    DESCRIPTION_SIMILARITY_COL,
     IMAGE_EMBEDDING_COLUMN,
+    IMAGE_SIMILARITY_COL,
+    NAME_SIMILARITY_COL,
     OFFER_DESCRIPTION_COL,
     OFFER_ID_COLUMN,
     OFFER_NAME_COL,
     OFFER_SUBCATEGORY_ID_COL,
+    PARTIAL_NAME_SIMILARITY_COL,
 )
 
 FUZZ_THRESHOLD = 70
@@ -48,10 +52,6 @@ def offer_name_preprocessing(series: pd.Series) -> pd.Series:
 
 
 def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
-    NAME_SIMILARITY_COL = "name_similarity"
-    PARTIAL_NAME_SIMILARITY_COL = "partial_name_similarity"
-    IMAGE_SIMILARITY_COL = "image_similarity"
-
     # 1. Compute name similarity
     name_similarity = rapidfuzz.process.cdist(
         selected_df[OFFER_NAME_COL].pipe(offer_name_preprocessing),
@@ -127,11 +127,21 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
 
     # 6. Add description similarity to filtered df and return
     return filtered_df.assign(
-        description_similarity=description_similarity,
-        description_1=filtered_df[f"{OFFER_ID_COLUMN}_1"].map(offer_id_to_description),
-        description_2=filtered_df[f"{OFFER_ID_COLUMN}_2"].map(offer_id_to_description),
-        name_1=filtered_df[f"{OFFER_ID_COLUMN}_1"].map(offer_id_to_name),
-        name_2=filtered_df[f"{OFFER_ID_COLUMN}_2"].map(offer_id_to_name),
+        **{
+            DESCRIPTION_SIMILARITY_COL: description_similarity,
+            f"{OFFER_NAME_COL}_1": filtered_df[f"{OFFER_ID_COLUMN}_1"].map(
+                offer_id_to_name
+            ),
+            f"{OFFER_NAME_COL}_2": filtered_df[f"{OFFER_ID_COLUMN}_2"].map(
+                offer_id_to_name
+            ),
+            f"{OFFER_DESCRIPTION_COL}_1": filtered_df[f"{OFFER_ID_COLUMN}_1"].map(
+                offer_id_to_description
+            ),
+            f"{OFFER_DESCRIPTION_COL}_2": filtered_df[f"{OFFER_ID_COLUMN}_2"].map(
+                offer_id_to_description
+            ),
+        }
     ).reset_index(drop=True)
 
 

@@ -7,7 +7,9 @@ from src.constants import (
     IMAGE_SIMILARITY_COL,
     IMAGE_URL_COLUMN,
     NAME_SIMILARITY_COL,
+    OFFER_DESCRIPTION_COL,
     OFFER_ID_COLUMN,
+    OFFER_NAME_COL,
     OFFER_SUBCATEGORY_ID_COL,
 )
 
@@ -101,12 +103,34 @@ def main(
             matched_df, source=f"{OFFER_ID_COLUMN}_1", target=f"{OFFER_ID_COLUMN}_2"
         )
         cluster_df = pd.DataFrame({"cluster": list(nx.connected_components(G))}).assign(
-            cluster_length=lambda df: df.cluster.map(len)
+            cluster_length=lambda df: df.cluster.map(len), subcategory_id=subcategory
         )
         cluster_dfs.append(cluster_df)
+    all_cluster_df = pd.concat(cluster_dfs, ignore_index=True)
 
     # 4. Merge clusters and save
-    pd.concat(cluster_dfs, ignore_index=True).to_parquet(output_filepath, index=False)
+    exploded_cluster_dfs = []
+    for cluster_id, cluster_row in enumerate(
+        all_cluster_df.sort_values(by="cluster_length", ascending=False).itertuples()
+    ):
+        exploded_cluster_dfs.append(
+            raw_data_df[raw_data_df[OFFER_ID_COLUMN].isin(cluster_row.cluster)]
+            .loc[
+                :,
+                [
+                    OFFER_ID_COLUMN,
+                    OFFER_NAME_COL,
+                    OFFER_DESCRIPTION_COL,
+                    IMAGE_URL_COLUMN,
+                ],
+            ]
+            .copy()
+            .assign(cluster_id=cluster_id, subcategory_id=cluster_row.subcategory_id)
+        )
+
+    pd.concat(exploded_cluster_dfs, ignore_index=True).to_parquet(
+        output_filepath, index=False
+    )
 
 
 if __name__ == "__main__":

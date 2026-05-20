@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "google-cloud-secret-manager~=2.28",
     "google-cloud-storage~=3.10",
     "pandas~=3.0",
     "typer~=0.21",
@@ -12,16 +13,17 @@ dependencies = [
 
 ## uv
 [tool.uv]
-dev-dependencies = [
+environments = [
+    "sys_platform == 'darwin'",
+    "sys_platform == 'linux'",
+]
+
+[dependency-groups]
+dev = [
     "ipykernel~=7.2",
     "pyarrow~=24.0",
     "pytest~=9.0",
     "ruff~=0.15",
-]
-
-environments = [
-    "sys_platform == 'darwin'",
-    "sys_platform == 'linux'",
 ]
 
 ## build

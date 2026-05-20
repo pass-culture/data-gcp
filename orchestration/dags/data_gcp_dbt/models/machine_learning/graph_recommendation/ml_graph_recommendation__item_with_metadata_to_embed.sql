@@ -11,21 +11,26 @@ with
     ),
 
     offers as (
-        select offer_id, offer_product_id, item_id, offer_name, offer_subcategory_id,
+        select
+            offer_id,
+            offer_product_id,
+            item_id,
+            offer_name,
+            offer_subcategory_id,
             case
                 when offer_category_id = 'LIVRE'
-                    then 'book'
-                when offer_subcategory_id in (
-                    'SUPPORT_PHYSIQUE_MUSIQUE_CD', 'SUPPORT_PHYSIQUE_MUSIQUE_VINYLE'
-                )
-                    then 'music'
+                then 'book'
+                when
+                    offer_subcategory_id in (
+                        'SUPPORT_PHYSIQUE_MUSIQUE_CD', 'SUPPORT_PHYSIQUE_MUSIQUE_VINYLE'
+                    )
+                then 'music'
             end as item_type
         from {{ ref("mrt_global__offer") }}
         where
             offer_category_id = 'LIVRE'
-            or offer_subcategory_id in (
-                'SUPPORT_PHYSIQUE_MUSIQUE_CD', 'SUPPORT_PHYSIQUE_MUSIQUE_VINYLE'
-            )
+            or offer_subcategory_id
+            in ('SUPPORT_PHYSIQUE_MUSIQUE_CD', 'SUPPORT_PHYSIQUE_MUSIQUE_VINYLE')
     ),
 
     offers_with_best_metadata as (
@@ -40,11 +45,11 @@ with
             offer_metadata.gtl_label_level_1,
             offer_metadata.gtl_label_level_2,
             -- levels 3 & 4 are only relevant for books; null for music
-            case when offers.item_type = 'book'
-                then offer_metadata.gtl_label_level_3
+            case
+                when offers.item_type = 'book' then offer_metadata.gtl_label_level_3
             end as gtl_label_level_3,
-            case when offers.item_type = 'book'
-                then offer_metadata.gtl_label_level_4
+            case
+                when offers.item_type = 'book' then offer_metadata.gtl_label_level_4
             end as gtl_label_level_4
         from offers
         left join
@@ -53,8 +58,7 @@ with
             row_number() over (
                 partition by offers.item_id
                 order by
-                    (offer_metadata.gtl_label_level_1 is not null) desc,
-                    offers.offer_id  -- deterministic tie breaker
+                    (offer_metadata.gtl_label_level_1 is not null) desc, offers.offer_id  -- deterministic tie breaker
             )
             = 1
     ),
@@ -94,4 +98,3 @@ left join product_artist_link using (offer_product_id)
 left join artist using (artist_id)
 left join book_titelive_metadata using (offer_product_id)
 left join music_titelive_metadata using (offer_product_id)
-

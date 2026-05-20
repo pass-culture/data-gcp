@@ -203,9 +203,15 @@ def build_multitype_metadata_heterograph_from_dataframe(
 ) -> HeteroData:
     """Construct a heterogeneous graph supporting multiple item types.
 
+    All items (books, music, …) are stored under a **single node type
+    ``"item"``** so that MetaPath2Vec can start random walks from a unique
+    node type.  The original ``item_type`` value is preserved as a per-node
+    attribute (``graph_data.item_types``) and in the ``item_ids_by_type`` /
+    ``gtl_ids_by_type`` mappings so that embeddings can be split back by type
+    after training.
+
     **Node types**
-    - One node type per distinct value in the ``item_type`` column (e.g.
-      ``"book"``, ``"music"``).
+    - ``"item"`` — all items regardless of type (books, music, …).
     - One node type per *shared* metadata column (e.g. ``artist_id``,
       ``series_id``): these nodes bridge different item types — for instance,
       a book and a CD by the same artist are connected through the same
@@ -216,9 +222,8 @@ def build_multitype_metadata_heterograph_from_dataframe(
       carries unrelated semantic meaning, so they must NOT be shared.
 
     **Edge types** (bipartite, both directions)
-    For each item type ``T`` and metadata column ``C``:
-    - ``(T, "is_{C}", node_type(C, T))``  — item → metadata node
-    - ``(node_type(C, T), "{C}_of", T)``  — metadata node → item
+    - ``("item", "is_{C}", node_type)``  — item → metadata node
+    - ``(node_type, "{C}_of", "item")``  — metadata node → item
 
     Args:
         dataframe: Input DataFrame. Must contain ``item_id``, ``gtl_id``,
@@ -264,20 +269,29 @@ def build_multitype_metadata_heterograph_from_dataframe(
             stacklevel=2,
         )
 
-    # --- 2. Index items per type ---
-    item_index_by_type: dict[str, dict[str, int]] = {}
+    # --- 2. Index ALL items under a single "item" node type ---
+    # Items are sorted by item_type first for determinism, then by item_id.
+    df_items = (
+        df_normalized[[ID_COLUMN, GTL_ID_COLUMN, ITEM_TYPE_COLUMN]]
+        .drop_duplicates(subset=[ID_COLUMN])
+        .sort_values([ITEM_TYPE_COLUMN, ID_COLUMN])
+        .reset_index(drop=True)
+    )
+    # Filter to known item types only
+    df_items = df_items[df_items[ITEM_TYPE_COLUMN].isin(item_types_present)]
+
+    all_item_ids: list[str] = df_items[ID_COLUMN].tolist()
+    all_gtl_ids: list[str] = df_items[GTL_ID_COLUMN].tolist()
+    all_item_types: list[str] = df_items[ITEM_TYPE_COLUMN].tolist()
+    item_index: dict[str, int] = {iid: idx for idx, iid in enumerate(all_item_ids)}
+
+    # Build per-type slices for post-training embedding extraction
     item_ids_by_type: dict[str, list[str]] = {}
     gtl_ids_by_type: dict[str, list[str]] = {}
-
     for item_type in item_types_present:
-        df_type = df_normalized[df_normalized[ITEM_TYPE_COLUMN] == item_type]
-        unique_items = df_type[[ID_COLUMN, GTL_ID_COLUMN]].drop_duplicates(
-            subset=[ID_COLUMN]
-        )
-        ids = unique_items[ID_COLUMN].tolist()
-        item_ids_by_type[item_type] = ids
-        gtl_ids_by_type[item_type] = unique_items[GTL_ID_COLUMN].tolist()
-        item_index_by_type[item_type] = {iid: idx for idx, iid in enumerate(ids)}
+        mask = df_items[ITEM_TYPE_COLUMN] == item_type
+        item_ids_by_type[item_type] = df_items.loc[mask, ID_COLUMN].tolist()
+        gtl_ids_by_type[item_type] = df_items.loc[mask, GTL_ID_COLUMN].tolist()
 
     # --- 3. Build metadata node indices ---
     # 3a. Shared metadata: pool values across all item types
@@ -322,6 +336,9 @@ def build_multitype_metadata_heterograph_from_dataframe(
                 gtl_ids_map[node_type] = unique_vals
 
     # --- 4. Build edge index sets ---
+    # All edges use "item" as the item-side node type regardless of item_type.
+    # GTL metadata nodes are still namespaced per item_type (book_gtl_...,
+    # music_gtl_...) to keep their semantics separate.
     edge_indices: dict[tuple[str, str, str], set[tuple[int, int]]] = {}
 
     def _ensure_edge(key: tuple[str, str, str]) -> None:
@@ -332,32 +349,32 @@ def build_multitype_metadata_heterograph_from_dataframe(
     for item_type in item_types_present:
         for col in shared_metadata_columns:
             if col in shared_nodes:
-                _ensure_edge((item_type, f"is_{col}", col))
-                _ensure_edge((col, f"{col}_of", item_type))
+                _ensure_edge(("item", f"is_{col}", col))
+                _ensure_edge((col, f"{col}_of", "item"))
         applicable_gtl_columns = GTL_METADATA_COLUMNS_BY_ITEM_TYPE.get(
             item_type, gtl_metadata_columns
         )
         for col in applicable_gtl_columns:
             node_type = _gtl_node_type(item_type, col)
             if node_type in gtl_nodes:
-                _ensure_edge((item_type, f"is_{col}", node_type))
-                _ensure_edge((node_type, f"{col}_of", item_type))
+                _ensure_edge(("item", f"is_{col}_{item_type}", node_type))
+                _ensure_edge((node_type, f"{col}_{item_type}_of", "item"))
 
-    # Iterate rows once per item type
+    # Iterate rows and build edges
     all_edge_columns = [ID_COLUMN, ITEM_TYPE_COLUMN, *all_metadata_columns]
     for record in df_normalized[all_edge_columns].itertuples(index=False):
         record_dict = record._asdict()
         item_id = record_dict[ID_COLUMN]
         item_type = record_dict[ITEM_TYPE_COLUMN]
 
-        if item_type not in item_index_by_type:
+        if item_type not in item_types_present:
             continue
-        if item_id not in item_index_by_type[item_type]:
+        if item_id not in item_index:
             continue
 
-        item_idx = item_index_by_type[item_type][item_id]
+        item_idx = item_index[item_id]
 
-        # Shared metadata edges
+        # Shared metadata edges (edge type independent of item_type)
         for col in shared_metadata_columns:
             if col not in shared_nodes:
                 continue
@@ -367,10 +384,11 @@ def build_multitype_metadata_heterograph_from_dataframe(
             value_str = str(value)
             if value_str in shared_nodes[col]:
                 meta_idx = shared_nodes[col][value_str]
-                edge_indices[(item_type, f"is_{col}", col)].add((item_idx, meta_idx))
-                edge_indices[(col, f"{col}_of", item_type)].add((meta_idx, item_idx))
+                edge_indices[("item", f"is_{col}", col)].add((item_idx, meta_idx))
+                edge_indices[(col, f"{col}_of", "item")].add((meta_idx, item_idx))
 
-        # GTL (namespaced) metadata edges — only for levels applicable to this type
+        # GTL (namespaced) metadata edges — edge type includes item_type suffix
+        # so that book GTL edges and music GTL edges remain distinct relation types
         applicable_gtl_columns = GTL_METADATA_COLUMNS_BY_ITEM_TYPE.get(
             item_type, gtl_metadata_columns
         )
@@ -384,10 +402,10 @@ def build_multitype_metadata_heterograph_from_dataframe(
             value_str = str(value)
             if value_str in gtl_nodes[node_type]:
                 meta_idx = gtl_nodes[node_type][value_str]
-                edge_indices[(item_type, f"is_{col}", node_type)].add(
+                edge_indices[("item", f"is_{col}_{item_type}", node_type)].add(
                     (item_idx, meta_idx)
                 )
-                edge_indices[(node_type, f"{col}_of", item_type)].add(
+                edge_indices[(node_type, f"{col}_{item_type}_of", "item")].add(
                     (meta_idx, item_idx)
                 )
 
@@ -401,8 +419,8 @@ def build_multitype_metadata_heterograph_from_dataframe(
     # --- 6. Assemble HeteroData ---
     graph_data = HeteroData()
 
-    for item_type in item_types_present:
-        graph_data[item_type].num_nodes = len(item_ids_by_type[item_type])
+    # Single "item" node type for all items
+    graph_data["item"].num_nodes = len(all_item_ids)
 
     for col, node_mapping in shared_nodes.items():
         graph_data[col].num_nodes = len(node_mapping)
@@ -417,15 +435,16 @@ def build_multitype_metadata_heterograph_from_dataframe(
             graph_data[src_type, edge_type, dst_type].edge_index = edge_index
 
     # --- 7. Store identifier mappings ---
+    # Flat lists over all items (order matches node indices)
+    graph_data.book_ids = all_item_ids  # back-compat alias
+    graph_data.gtl_ids = all_gtl_ids
+    graph_data.item_types = all_item_types  # per-node item_type label
+
+    # Per-type slices for post-training embedding extraction
     graph_data.item_ids_by_type = item_ids_by_type
     graph_data.gtl_ids_by_type = gtl_ids_by_type
 
-    # Back-compat: expose the first known item type as "book_ids" / "gtl_ids"
-    primary_type = item_types_present[0] if item_types_present else "book"
-    graph_data.book_ids = item_ids_by_type.get(primary_type, [])
-    graph_data.gtl_ids = gtl_ids_by_type.get(primary_type, [])
-
-    # Flatten all metadata column names (namespaced GTL + shared)
+    # Metadata column registry
     all_node_types_for_metadata = [*gtl_nodes.keys(), *shared_nodes.keys()]
     graph_data.metadata_columns = all_node_types_for_metadata
 

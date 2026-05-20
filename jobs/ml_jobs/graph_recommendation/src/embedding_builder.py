@@ -219,40 +219,54 @@ def train_metapath2vec(
     time_formatted = str(timedelta(seconds=int(total_training_time)))
     logger.info(f"Training completed in {time_formatted}")
 
-    # Extract embeddings for all item-type nodes
+    # Extract embeddings for all items from the single "item" node type.
+    # item_ids_by_type maps each item_type to the ordered list of its item_ids,
+    # which correspond to contiguous slices within the global "item" node range.
     logger.info("Extracting item embeddings...")
     checkpoint = torch.load(checkpoint_path, weights_only=True)
     embedding = checkpoint["embedding.weight"].detach().cpu().numpy()
 
-    # Determine which node types correspond to items (not metadata).
-    # graph_data.item_ids_by_type is set by both the single-type and multi-type
-    # builders; fall back to {"book": graph_data.book_ids} for safety.
+    # The node type in the model is always "item" in the multi-type graph.
+    # Fall back to "book" for legacy single-type graphs.
+    item_node_type = "item" if "item" in model.start else "book"
+
     item_ids_by_type: dict[str, list] = getattr(
         graph_data,
         "item_ids_by_type",
-        {"book": graph_data.book_ids},
+        {item_node_type: graph_data.book_ids},
     )
     gtl_ids_by_type: dict[str, list] = getattr(
         graph_data,
         "gtl_ids_by_type",
-        {"book": graph_data.gtl_ids},
+        {item_node_type: graph_data.gtl_ids},
     )
 
+    if item_node_type not in model.start:
+        raise RuntimeError(
+            f"Node type '{item_node_type}' not found in model.start: {list(model.start.keys())}"
+        )
+
+    start_idx = model.start[item_node_type]
+    all_item_embeddings = embedding[
+        start_idx : start_idx + graph_data[item_node_type].num_nodes, :
+    ]
+
+    # item_ids_by_type contains per-type slices in the same order as the
+    # global item node list built by the heterograph builder (sorted by
+    # item_type then item_id), so we can slice the embedding matrix directly.
     all_rows: list[dict] = []
-    for item_type, item_ids in item_ids_by_type.items():
-        if item_type not in model.start:
-            logger.warning(f"Node type '{item_type}' not found in model; skipping.")
-            continue
-        start = model.start[item_type]
-        n = graph_data[item_type].num_nodes
-        type_embeddings = embedding[start : start + n, :]
-        gtl_ids = gtl_ids_by_type.get(item_type, [None] * n)
-        for node_ids, gtl_id, emb in zip(
+    offset = 0
+    for item_type in sorted(item_ids_by_type.keys()):
+        item_ids = item_ids_by_type[item_type]
+        gtl_ids = gtl_ids_by_type.get(item_type, [None] * len(item_ids))
+        type_embeddings = all_item_embeddings[offset : offset + len(item_ids), :]
+        offset += len(item_ids)
+        for node_id, gtl_id, emb in zip(
             item_ids, gtl_ids, type_embeddings, strict=False
         ):
             all_rows.append(
                 {
-                    "node_ids": node_ids,
+                    "node_ids": node_id,
                     "gtl_id": gtl_id,
                     "item_type": item_type,
                     EMBEDDING_COLUMN: emb,

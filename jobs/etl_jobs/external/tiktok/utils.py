@@ -85,6 +85,7 @@ def to_sql_type(_type):
         "FLOAT": bigquery.enums.SqlTypeNames.FLOAT64,
         "INTEGER": bigquery.enums.SqlTypeNames.INT64,
         "DATETIME": bigquery.enums.SqlTypeNames.DATETIME,
+        "TIMESTAMP": bigquery.enums.SqlTypeNames.TIMESTAMP,
     }
     return _dict[_type]
 

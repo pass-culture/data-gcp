@@ -8,7 +8,16 @@ dependencies = [
     "google-cloud-secret-manager~=2.28",
     "google-cloud-storage~=3.10",
     "pandas~=3.0",
+    "torch~=2.11",
+    "torchvision~=0.26",
     "typer~=0.21",
+]
+[dependency-groups]
+dev = [
+    "ipykernel~=7.2",
+    "pyarrow~=24.0",
+    "pytest~=9.0",
+    "ruff~=0.15",
 ]
 
 ## uv
@@ -18,13 +27,26 @@ environments = [
     "sys_platform == 'linux'",
 ]
 
-[dependency-groups]
-dev = [
-    "ipykernel~=7.2",
-    "pyarrow~=24.0",
-    "pytest~=9.0",
-    "ruff~=0.15",
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", marker = "sys_platform != 'linux'" },
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux'" },
 ]
+torchvision = [
+    { index = "pytorch-cpu", marker = "sys_platform != 'linux'" },
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
 
 ## build
 [build-system]

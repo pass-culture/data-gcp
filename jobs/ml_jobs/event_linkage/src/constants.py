@@ -10,6 +10,9 @@ HF_TOKEN_SECRET_NAME = (
 )
 
 # Columns
-IMAGE_URL_COLUMN = "image_url"
 OFFER_ID_COLUMN = "offer_id"
+OFFER_NAME_COL = "offer_name"
+OFFER_DESCRIPTION_COL = "offer_description"
+OFFER_SUBCATEGORY_ID_COL = "offer_subcategory_id"
+IMAGE_URL_COLUMN = "image_url"
 IMAGE_EMBEDDING_COLUMN = "image_embedding"

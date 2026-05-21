@@ -73,11 +73,14 @@ def main(
         if success:
             logger.info("TikTok ETL job completed successfully!")
         else:
-            logger.info("TikTok ETL job failed!")
+            logger.error("TikTok ETL job failed!")
+            raise typer.Exit(code=1)
 
-    except Exception as e:
-        logger.info(f"Unexpected error in TikTok ETL job: {e}")
+    except typer.Exit:
         raise
+    except Exception as e:
+        logger.error(f"Unexpected error in TikTok ETL job: {e}")
+        raise typer.Exit(code=1)
 
 
 if __name__ == "__main__":

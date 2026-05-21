@@ -19,6 +19,11 @@ from src.constants import (
     PARTIAL_NAME_SIMILARITY_COL,
     PARTIAL_NAME_SIMILARITY_THRESHOLD,
 )
+from src.preprocessing import (
+    description_preprocessing,
+    full_name_preprocessing,
+    offer_name_preprocessing,
+)
 
 MIN_DESCRIPTION_LENGTH = 30
 
@@ -26,49 +31,12 @@ MIN_DESCRIPTION_LENGTH = 30
 app = typer.Typer()
 
 
-def description_preprocessing(series: pd.Series) -> pd.Series:
-    return (
-        series.str.lower()
-        .str.strip()
-        .str.normalize("NFD")
-        .str.encode("ascii", errors="ignore")
-        .str.decode("ascii")
-        .where(lambda s: s.str.len() >= MIN_DESCRIPTION_LENGTH, other=pd.NA)
-    )
-
-
-def offer_name_preprocessing(series: pd.Series) -> pd.Series:
-    return (
-        series.str.lower()
-        .str.replace(
-            r"^(?:concert de poche|apero-concert|concerts?)\W*", "", regex=True
-        )
-        .str.split(r"/|\+|&|•|\||:| - | à | en concert | x | et | au | avec ")
-        .str[0]
-        .str.strip()
-        .str.normalize("NFD")
-        .str.encode("ascii", errors="ignore")
-        .str.decode("ascii")
-        .replace("", pd.NA)
-    )
-
-
-def full_name_preprocessing(series: pd.Series) -> pd.Series:
-    return (
-        series.str.lower()
-        .str.strip()
-        .str.normalize("NFD")
-        .str.encode("ascii", errors="ignore")
-        .str.decode("ascii")
-        .replace("", pd.NA)
-    )
-
-
 def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
     # 1. Compute name similarity
+    preprocessed_names = selected_df[OFFER_NAME_COL].pipe(offer_name_preprocessing)
     name_similarity = rapidfuzz.process.cdist(
-        selected_df[OFFER_NAME_COL].pipe(offer_name_preprocessing),
-        selected_df[OFFER_NAME_COL].pipe(offer_name_preprocessing),
+        preprocessed_names,
+        preprocessed_names,
         processor=rapidfuzz.utils.default_process,
         scorer=fuzz.ratio,
         workers=-1,
@@ -77,8 +45,8 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
     logger.success("Name similarity computed")
 
     partial_name_similarity = rapidfuzz.process.cdist(
-        selected_df[OFFER_NAME_COL].pipe(offer_name_preprocessing),
-        selected_df[OFFER_NAME_COL].pipe(offer_name_preprocessing),
+        preprocessed_names,
+        preprocessed_names,
         processor=rapidfuzz.utils.default_process,
         scorer=fuzz.partial_ratio,
         workers=-1,
@@ -87,9 +55,10 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
     ).reshape(-1)
     logger.success("Partial name similarity computed")
 
+    preprocessed_full_names = selected_df[OFFER_NAME_COL].pipe(full_name_preprocessing)
     full_name_similarity = rapidfuzz.process.cdist(
-        selected_df[OFFER_NAME_COL].pipe(full_name_preprocessing),
-        selected_df[OFFER_NAME_COL].pipe(full_name_preprocessing),
+        preprocessed_full_names,
+        preprocessed_full_names,
         processor=rapidfuzz.utils.default_process,
         scorer=fuzz.ratio,
         workers=-1,
@@ -135,13 +104,19 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
     offer_id_to_name = selected_df.set_index(OFFER_ID_COL)[OFFER_NAME_COL].to_dict()
 
     logger.info(f"Computing description similarity for {len(filtered_df)} pairs...")
-    description_similarity = rapidfuzz.process.cpdist(
+    preprocessed_descriptions_1 = (
         filtered_df[f"{OFFER_ID_COL}_1"]
         .map(offer_id_to_description)
-        .pipe(description_preprocessing),
+        .pipe(description_preprocessing)
+    )
+    preprocessed_descriptions_2 = (
         filtered_df[f"{OFFER_ID_COL}_2"]
         .map(offer_id_to_description)
-        .pipe(description_preprocessing),
+        .pipe(description_preprocessing)
+    )
+    description_similarity = rapidfuzz.process.cpdist(
+        preprocessed_descriptions_1,
+        preprocessed_descriptions_2,
         scorer=fuzz.partial_ratio,
         processor=rapidfuzz.utils.default_process,
         workers=-1,
@@ -153,12 +128,8 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
         f"Computing full description similarity for {len(filtered_df)} pairs..."
     )
     full_description_similarity = rapidfuzz.process.cpdist(
-        filtered_df[f"{OFFER_ID_COL}_1"]
-        .map(offer_id_to_description)
-        .pipe(description_preprocessing),
-        filtered_df[f"{OFFER_ID_COL}_2"]
-        .map(offer_id_to_description)
-        .pipe(description_preprocessing),
+        preprocessed_descriptions_1,
+        preprocessed_descriptions_2,
         scorer=fuzz.ratio,
         processor=rapidfuzz.utils.default_process,
         workers=-1,

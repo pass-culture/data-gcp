@@ -1,3 +1,6 @@
+import hashlib
+import uuid
+
 import networkx as nx
 import pandas as pd
 
@@ -18,6 +21,22 @@ from src.interfaces import ClusterRepresentantMethod
 
 # Matching Params
 SUBCATECORIES_NOT_MATCHING_ON_OFFER_NAMES = ["SPECTACLE_REPRESENTATION"]
+
+
+def get_uuid_from_cluster(offer_ids: set[str]) -> str:
+    """
+    Generate a UUID based on the offer IDs in the cluster.
+        This ensures that the same cluster will always have the same UUID,
+        even if the order of offers in the cluster changes.
+
+    Args:
+        offer_ids (set[str]): The set of offer IDs in the cluster.
+
+    Returns:
+        str: A UUID string generated from the offer IDs.
+    """
+    digest = hashlib.sha256(",".join(sorted(offer_ids)).encode()).hexdigest()
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, digest))
 
 
 def should_match_on_offer_names(df: pd.DataFrame, subcategory_id: str) -> pd.Series:

@@ -1,34 +1,19 @@
-import hashlib
-import uuid
-
 import pandas as pd
 import typer
 from loguru import logger
 from tqdm import tqdm
 
-from src.clustering import clusterize_offers, extract_cluster_metadata
+from src.clustering import (
+    clusterize_offers,
+    extract_cluster_metadata,
+    get_uuid_from_cluster,
+)
 from src.constants import (
     IMAGE_URL_COL,
     OFFER_ID_COL,
     OFFER_SUBCATEGORY_ID_COL,
 )
 from src.interfaces import ActionType, CommentType
-
-
-def get_uuid_from_cluster(offer_ids: set[str]) -> str:
-    """
-    Generate a UUID based on the offer IDs in the cluster.
-        This ensures that the same cluster will always have the same UUID,
-        even if the order of offers in the cluster changes.
-
-    Args:
-        offer_ids (set[str]): The set of offer IDs in the cluster.
-
-    Returns:
-        str: A UUID string generated from the offer IDs.
-    """
-    digest = hashlib.sha256(",".join(sorted(offer_ids)).encode()).hexdigest()
-    return str(uuid.uuid5(uuid.NAMESPACE_URL, digest))
 
 
 def build_cross_df(

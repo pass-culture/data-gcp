@@ -116,12 +116,12 @@ class TrainingConfig(BaseConfig):
                     ("artist_id", "artist_id_of", "item"),
                 ],
                 [
-                    ("book", "is_gtl_label_level_4", "gtl_label_level_4"),
-                    ("gtl_label_level_4", "gtl_label_level_4_of", "book"),
+                    ("item", "is_gtl_label_level_4", "gtl_label_level_4"),
+                    ("gtl_label_level_4", "gtl_label_level_4_of", "item"),
                 ],
                 [
-                    ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
-                    ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
+                    ("item", "is_gtl_label_level_3", "gtl_label_level_3"),
+                    ("gtl_label_level_3", "gtl_label_level_3_of", "item"),
                 ],
                 # --- book-specific metapaths ---
                 [

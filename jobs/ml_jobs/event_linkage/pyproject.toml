@@ -14,6 +14,7 @@ dependencies = [
     "sentence-transformers~=5.3",
     "torch~=2.11",
     "torchvision~=0.26",
+    "tqdm>=4.67.3",
     "typer~=0.21",
 ]
 [dependency-groups]
@@ -63,7 +64,7 @@ packages = ["src", "cli"]
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.
 [tool.ruff]
-target-version = 'py312'
+target-version = 'py313'
 
 lint.select = [
     "E",      # pycodestyle

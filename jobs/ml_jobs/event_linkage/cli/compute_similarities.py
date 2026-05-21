@@ -17,9 +17,9 @@ from src.constants import (
     OFFER_NAME_COL,
     OFFER_SUBCATEGORY_ID_COL,
     PARTIAL_NAME_SIMILARITY_COL,
+    PARTIAL_NAME_SIMILARITY_THRESHOLD,
 )
 
-FUZZ_THRESHOLD = 70
 MIN_DESCRIPTION_LENGTH = 30
 
 
@@ -82,7 +82,7 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
         processor=rapidfuzz.utils.default_process,
         scorer=fuzz.partial_ratio,
         workers=-1,
-        score_cutoff=FUZZ_THRESHOLD,
+        score_cutoff=PARTIAL_NAME_SIMILARITY_THRESHOLD,
         dtype=np.uint8,
     ).reshape(-1)
     logger.success("Partial name similarity computed")
@@ -123,11 +123,12 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
     # 4. Filter out pairs with low partial name similarity
     filtered_df = similarities_df.loc[
         lambda df: df[f"{OFFER_ID_COL}_1"] > df[f"{OFFER_ID_COL}_2"]
-    ].loc[lambda df: df[PARTIAL_NAME_SIMILARITY_COL] > FUZZ_THRESHOLD]
+    ].loc[
+        lambda df: df[PARTIAL_NAME_SIMILARITY_COL] >= PARTIAL_NAME_SIMILARITY_THRESHOLD
+    ]
 
     # 5. Compute description similarity using rapidfuzz on the filtered pairs only
     #    to save time
-    # Preprocessing
     offer_id_to_description = selected_df.set_index(OFFER_ID_COL)[
         OFFER_DESCRIPTION_COL
     ].to_dict()

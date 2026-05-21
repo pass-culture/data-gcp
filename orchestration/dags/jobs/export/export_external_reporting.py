@@ -4,7 +4,6 @@ import os
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import BranchPythonOperator
 from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
@@ -119,34 +118,14 @@ with DAG(
         weight_rule=WEIGHT_RULE,
     )
 
-    def branch_check(data_interval_end, **kwargs):
-        if data_interval_end.month in [1, 4, 7, 10]:
-            return "gce_generate_quaterly_reports"
-        return "gce_generate_monthly_reports"
-
-    branching = BranchPythonOperator(
-        task_id="branching_logic",
-        python_callable=branch_check,
-    )
-
-    gce_generate_quaterly_reports = SSHGCEOperator(
-        task_id="gce_generate_quaterly_reports",
+    gce_generate_monthly_reports = SSHGCEOperator(
+        task_id="gce_generate_monthly_reports",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
         command="uv run main.py generate --stakeholder all --ds {{ ds }} --concurrency 60",  # internally ajusted to 0.9 of CPU cores
         priority_weight=PRIORITY_WEIGHT,
         weight_rule=WEIGHT_RULE,
-    )
-
-    gce_generate_monthly_reports = SSHGCEOperator(
-        task_id="gce_generate_monthly_reports",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="uv run main.py generate --stakeholder ministere --ds {{ ds }}",
-        deferrable=True,
-        poll_interval=120,
     )
 
     gce_compress_reports = SSHGCEOperator(
@@ -196,8 +175,7 @@ with DAG(
         >> waiting_group
         >> gce_instance_start
         >> fetch_install_code
-        >> branching
-        >> [gce_generate_quaterly_reports, gce_generate_monthly_reports]
+        >> gce_generate_monthly_reports
         >> gce_compress_reports
         >> gce_export_to_gcs
         >> gce_export_to_drive

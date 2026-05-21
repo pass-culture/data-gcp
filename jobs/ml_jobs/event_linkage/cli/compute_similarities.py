@@ -7,6 +7,8 @@ from rapidfuzz import fuzz
 
 from src.constants import (
     DESCRIPTION_SIMILARITY_COL,
+    FULL_DESCRIPTION_SIMILARITY_COL,
+    FULL_NAME_SIMILARITY_COL,
     IMAGE_EMBEDDING_COL,
     IMAGE_SIMILARITY_COL,
     NAME_SIMILARITY_COL,
@@ -51,6 +53,17 @@ def offer_name_preprocessing(series: pd.Series) -> pd.Series:
     )
 
 
+def full_name_preprocessing(series: pd.Series) -> pd.Series:
+    return (
+        series.str.lower()
+        .str.strip()
+        .str.normalize("NFD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("ascii")
+        .replace("", pd.NA)
+    )
+
+
 def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
     # 1. Compute name similarity
     name_similarity = rapidfuzz.process.cdist(
@@ -74,6 +87,15 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
     ).reshape(-1)
     logger.success("Partial name similarity computed")
 
+    full_name_similarity = rapidfuzz.process.cdist(
+        selected_df[OFFER_NAME_COL].pipe(full_name_preprocessing),
+        selected_df[OFFER_NAME_COL].pipe(full_name_preprocessing),
+        processor=rapidfuzz.utils.default_process,
+        scorer=fuzz.ratio,
+        workers=-1,
+        dtype=np.uint8,
+    ).reshape(-1)
+
     # 2. Compute image similarity
     _zero_image = np.zeros_like(selected_df[IMAGE_EMBEDDING_COL].dropna().iloc[0])
     image_embedding = np.array(
@@ -92,6 +114,7 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
             **{
                 NAME_SIMILARITY_COL: name_similarity,
                 PARTIAL_NAME_SIMILARITY_COL: partial_name_similarity,
+                FULL_NAME_SIMILARITY_COL: full_name_similarity,
                 IMAGE_SIMILARITY_COL: image_scores,
             }
         )
@@ -104,10 +127,12 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
 
     # 5. Compute description similarity using rapidfuzz on the filtered pairs only
     #    to save time
+    # Preprocessing
     offer_id_to_description = selected_df.set_index(OFFER_ID_COL)[
         OFFER_DESCRIPTION_COL
     ].to_dict()
     offer_id_to_name = selected_df.set_index(OFFER_ID_COL)[OFFER_NAME_COL].to_dict()
+
     logger.info(f"Computing description similarity for {len(filtered_df)} pairs...")
     description_similarity = rapidfuzz.process.cpdist(
         filtered_df[f"{OFFER_ID_COL}_1"]
@@ -123,10 +148,28 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
     )
     logger.success("Description similarity computed")
 
+    logger.info(
+        f"Computing full description similarity for {len(filtered_df)} pairs..."
+    )
+    full_description_similarity = rapidfuzz.process.cpdist(
+        filtered_df[f"{OFFER_ID_COL}_1"]
+        .map(offer_id_to_description)
+        .pipe(description_preprocessing),
+        filtered_df[f"{OFFER_ID_COL}_2"]
+        .map(offer_id_to_description)
+        .pipe(description_preprocessing),
+        scorer=fuzz.ratio,
+        processor=rapidfuzz.utils.default_process,
+        workers=-1,
+        dtype=np.uint8,
+    )
+    logger.success("Full description similarity computed")
+
     # 6. Add description similarity to filtered df and return
     return filtered_df.assign(
         **{
             DESCRIPTION_SIMILARITY_COL: description_similarity,
+            FULL_DESCRIPTION_SIMILARITY_COL: full_description_similarity,
             f"{OFFER_NAME_COL}_1": filtered_df[f"{OFFER_ID_COL}_1"].map(
                 offer_id_to_name
             ),

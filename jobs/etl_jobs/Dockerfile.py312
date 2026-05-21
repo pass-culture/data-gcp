@@ -1,4 +1,5 @@
-FROM ghcr.io/astral-sh/uv:python3.12-trixie-slim
+ARG UV_VERSION=0.11.14
+FROM ghcr.io/astral-sh/uv:${UV_VERSION}:python3.12-trixie-slim
 
 ARG AIRFLOW_USER_HOME=/opt/airflow
 ARG GCLOUD_VERSION=google-cloud-cli-538.0.0-linux-x86_64.tar.gz

@@ -47,9 +47,16 @@ start:
 _start:
 	docker compose up -d
 	@echo "Waiting for Airflow to start..."
-	@timeout 60 sh -c 'until curl -s http://localhost:8080 > /dev/null; do sleep 2; done' || (echo "Airflow did not start in time. Exiting." && exit 1)
-	@echo "Airflow is ready!"
-	python -m webbrowser "http://localhost:8080"
+	@for i in {1..30}; do \
+		if curl -s http://localhost:8080 > /dev/null; then \
+			echo "Airflow is ready!"; \
+			python -m webbrowser "http://localhost:8080"; \
+			exit 0; \
+		fi; \
+		sleep 2; \
+	done; \
+	echo "Airflow did not start in time. Exiting."; \
+	exit 1
 
 stop:
 	docker compose stop;

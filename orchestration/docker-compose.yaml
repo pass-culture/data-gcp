@@ -2,20 +2,18 @@ volumes:
   postgres-db-volume:
 
 x-airflow-common: &airflow-common
+  env_file:
+    - .env
   environment: &airflow-common-env
-    LOCAL_ENV: ${LOCAL_ENV:-1}
-    GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
-    GCP_PROJECT_ID: ${GOOGLE_CLOUD_PROJECT:-}
-    AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-}
-    AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: ${AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT:-}
-    AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY:-}
-    ENV_SHORT_NAME: ${ENV_SHORT_NAME:-}
-    APPLICATIVE_EXTERNAL_CONNECTION_ID: ${APPLICATIVE_EXTERNAL_CONNECTION_ID:-}
-    SSL_CERT_FILE: /usr/local/share/ca-certificates/nscacert_combined.pem
+    SSL_CERT_FILE: /usr/local/share/ca-certificates/nscacert_combined.crt
     CLOUDSDK_CONFIG: /root/.config/gcloud
-    CLOUDSDK_CORE_CUSTOM_CA_CERTS_FILE: /usr/local/share/ca-certificates/nscacert_combined.pem
+    CLOUDSDK_CORE_CUSTOM_CA_CERTS_FILE: /usr/local/share/ca-certificates/nscacert_combined.crt
+    GOOGLE_APPLICATION_CREDENTIALS: /root/.config/gcloud/application_default_credentials.json
+    AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: '{"conn_type": "google_cloud_platform", "extra": {"key_path": null, "keyfile_dict": null, "no_auth": false, "project": "${GCP_PROJECT_ID}"}}'
+    AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT_FORCE: "true"
     KUBECONFIG: /root/.kube/config
-    AIRFLOW_CONN_KUBERNETES_DEFAULT: '{"conn_type": "kubernetes", "extra": {"kube_config_path": "/root/.kube/config", "cluster_context": "gke_passculture-data-ehp_europe-west1_data-gke-cluster-ehp", "in_cluster": false}}'
+    AIRFLOW_CONN_KUBERNETES_DEFAULT: '{"conn_type": "kubernetes", "extra": {"kube_config_path": "/root/.kube/config", "cluster_context": "gke_passculture-data-ehp_europe-west1_data-gke-cluster-ehp", "in_cluster": false, "gcp_key_path": "/root/.config/gcloud/application_default_credentials.json"}}'
+    AIRFLOW_CONN_KUBERNETES_DEFAULT_FORCE: "true"
   volumes:
     - ./dags:/opt/airflow/dags
     - ./plugins:/opt/airflow/plugins
@@ -24,6 +22,7 @@ x-airflow-common: &airflow-common
     - ./dags/data_gcp_dbt:/opt/airflow/data_gcp_dbt
     - ~/.config/gcloud:/root/.config/gcloud
     - ~/.kube:/root/.kube
+    - ~/.config/gcloud/application_default_credentials.json:/root/.config/gcloud/application_default_credentials.json:ro
   user: root
   depends_on:
     - postgres
@@ -122,7 +121,8 @@ services:
   sync-pools:
     <<: *airflow-common
     image: airflow-custom-image:latest
-    entrypoint: ["uv", "run","/opt/airflow/sync_pools.py","sync"]
+    entrypoint: ["/bin/bash", "-c"]
+    command: ["/opt/airflow/.venv/bin/python", "/opt/airflow/sync_pools.py", "sync"]
     environment:
       <<: *airflow-common-env
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}

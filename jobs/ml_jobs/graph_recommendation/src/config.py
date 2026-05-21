@@ -116,12 +116,12 @@ class TrainingConfig(BaseConfig):
                     ("artist_id", "artist_id_of", "item"),
                 ],
                 [
-                    ("item", "is_gtl_label_level_1", "gtl_label_level_1"),
-                    ("gtl_label_level_1", "gtl_label_level_1_of", "item"),
+                    ("book", "is_gtl_label_level_4", "gtl_label_level_4"),
+                    ("gtl_label_level_4", "gtl_label_level_4_of", "book"),
                 ],
                 [
-                    ("item", "is_gtl_label_level_2", "gtl_label_level_2"),
-                    ("gtl_label_level_2", "gtl_label_level_2_of", "item"),
+                    ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
+                    ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
                 ],
                 # --- book-specific metapaths ---
                 [
@@ -134,8 +134,12 @@ class TrainingConfig(BaseConfig):
                     ("music_label", "music_label_of", "item"),
                 ],
                 [
-                    ("item", "is_distributor", "distributor"),
-                    ("distributor", "distributor_of", "item"),
+                    ("item", "is_gtl_label_level_1", "gtl_label_level_1"),
+                    ("gtl_label_level_1", "gtl_label_level_1_of", "item"),
+                ],
+                [
+                    ("item", "is_gtl_label_level_2", "gtl_label_level_2"),
+                    ("gtl_label_level_2", "gtl_label_level_2_of", "item"),
                 ],
             ]
         )

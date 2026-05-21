@@ -33,6 +33,9 @@ with
             in ('SUPPORT_PHYSIQUE_MUSIQUE_CD', 'SUPPORT_PHYSIQUE_MUSIQUE_VINYLE')
     ),
 
+    -- One row per item: pick the offer with the best GTL coverage.
+    -- Deduplication happens on the INNER JOIN result so the chosen offer
+    -- is guaranteed to have metadata (items without any metadata are excluded).
     offers_with_best_metadata as (
         select
             offers.offer_id,
@@ -52,13 +55,13 @@ with
                 when offers.item_type = 'book' then offer_metadata.gtl_label_level_4
             end as gtl_label_level_4
         from offers
-        left join
+        inner join
             {{ ref("mrt_global__offer_metadata") }} as offer_metadata using (offer_id)
         qualify
             row_number() over (
                 partition by offers.item_id
                 order by
-                    (offer_metadata.gtl_label_level_1 is not null) desc, offers.offer_id  -- deterministic tie breaker
+                    (offer_metadata.gtl_label_level_1 is not null) desc, offers.offer_id  -- deterministic tie-breaker
             )
             = 1
     ),

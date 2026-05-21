@@ -5,9 +5,44 @@ from src.clustering import (
     clusterize_offers,
     extract_cluster_metadata,
     get_cluster_metadata_representant,
+    get_uuid_from_cluster,
     should_match_on_offer_names,
 )
 from src.interfaces import ClusterRepresentantMethod
+
+
+class TestGetUuidFromCluster:
+    def test_returns_valid_uuid_format(self):
+        result = get_uuid_from_cluster({"offer_1", "offer_2"})
+        # UUID format: 8-4-4-4-12 hex characters
+        parts = result.split("-")
+        assert len(parts) == 5
+        assert [len(p) for p in parts] == [8, 4, 4, 4, 12]
+
+    def test_same_set_produces_same_uuid(self):
+        result1 = get_uuid_from_cluster({"A", "B", "C"})
+        result2 = get_uuid_from_cluster({"C", "A", "B"})
+        assert result1 == result2
+
+    def test_different_sets_produce_different_uuids(self):
+        result1 = get_uuid_from_cluster({"A", "B"})
+        result2 = get_uuid_from_cluster({"A", "C"})
+        assert result1 != result2
+
+    def test_single_offer(self):
+        result = get_uuid_from_cluster({"only_one"})
+        assert isinstance(result, str)
+        assert len(result) == 36
+
+    def test_returns_expected_uuid(self):
+        expected_uuid = "afef4be4-351c-5499-b92c-b0ffb80d4ffd"
+        computed_uuid = get_uuid_from_cluster({"offer1", "offer2", "offer3"})
+        assert computed_uuid == expected_uuid
+
+    def test_works_on_list_input(self):
+        result1 = get_uuid_from_cluster(["A", "B", "C"])
+        result2 = get_uuid_from_cluster({"A", "B", "C"})
+        assert result1 == result2
 
 
 class TestShouldMatchOnOfferNames:

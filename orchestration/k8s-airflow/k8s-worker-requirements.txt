@@ -82,7 +82,7 @@ apache-airflow-providers-http==5.2.2
     # via apache-airflow
 apache-airflow-providers-imap==3.8.3
     # via apache-airflow
-apache-airflow-providers-smtp==2.0.3
+apache-airflow-providers-smtp==3.0.0
     # via apache-airflow
 apache-airflow-providers-sqlite==4.0.2
     # via apache-airflow
@@ -107,7 +107,7 @@ attrs==25.3.0
     #   jsonschema
     #   looker-sdk
     #   referencing
-authlib==1.6.12
+authlib==1.7.2
     # via
     #   apache-airflow
     #   flask-oidc
@@ -638,7 +638,7 @@ httpx==0.28.1
     #   google-genai
 humanize==4.15.0
     # via flower
-idna==3.10
+idna==3.15
     # via
     #   anyio
     #   email-validator
@@ -1247,7 +1247,7 @@ universal-pathlib==0.2.6
     # via apache-airflow
 uritemplate==4.2.0
     # via google-api-python-client
-urllib3==2.5.0
+urllib3==2.7.0
     # via
     #   apache-airflow-providers-cncf-kubernetes
     #   botocore

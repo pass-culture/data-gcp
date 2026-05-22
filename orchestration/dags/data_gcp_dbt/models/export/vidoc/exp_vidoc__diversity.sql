@@ -47,8 +47,8 @@ select
     }},
     {{
         apply_perturbation(
-            "s.total_expired_credit_beneficiaries",
-            "total_expired_credit_beneficiaries",
+            "s.total_expired_deposit_beneficiaries",
+            "total_expired_deposit_beneficiaries",
             "pt_expired",
         )
     }}
@@ -63,7 +63,9 @@ from
     }}
     {{
         perturbation_join(
-            "pt_expired", "s.total_expired_credit_beneficiaries", "s.cell_key_expired"
+            "pt_expired",
+            "s.total_expired_deposit_beneficiaries",
+            "s.cell_key_expired",
         )
     }}
 where s.deposit_expiration_month > "2021-01-01"

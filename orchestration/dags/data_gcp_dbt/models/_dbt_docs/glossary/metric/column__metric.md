@@ -167,6 +167,22 @@ The number of beneficiaries who made at least one booking in the specific catego
 The number of beneficiaries who booked across at least three different categories by the time their credit expired. This indicator is used to the diversification of cultural practices at the end of the beneficiary lifecycle.
 {% enddocs %}
 
-{% docs column__metrics__total_expired_credit_beneficiaries %}
+{% docs column__metrics__total_expired_beneficiaries %}
 The total number of beneficiaries whose credit expired during the specific month. This column serves as the denominator (baseline) for calculating percentages related to user behavior at the end of their eligibility period (e.g., the proportion of users who diversified their bookings).
+{% enddocs %}
+
+{% docs column__metrics__total_deposit_amount_at_expiration %}
+The total deposit amount allocated to beneficiaries that reached its expiration date during the given month.
+{% enddocs %}
+
+{% docs column__metrics__total_actual_amount_spent_at_expiration %}
+The total deposit amount effectively spent by beneficiaries before it expired.
+{% enddocs %}
+
+{% docs column__metrics__average_deposit_amount_at_expiration %}
+The average deposit amount allocated per beneficiary at the time of expiration.
+{% enddocs %}
+
+{% docs column__metrics__average_actual_amount_spent_at_expiration %}
+The average deposit amount effectively spent per beneficiary at the time of expiration.
 {% enddocs %}

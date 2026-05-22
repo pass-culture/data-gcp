@@ -12,9 +12,7 @@ with
             sum(
                 total_3plus_category_booked_beneficiaries
             ) as total_3plus_category_booked_beneficiaries,
-            sum(
-                total_expired_credit_beneficiaries
-            ) as total_expired_credit_beneficiaries,
+            sum(total_expired_beneficiaries) as total_expired_beneficiaries,
             mod(abs(sum(cell_key_3plus)), 256) as cell_key_3plus,
             mod(abs(sum(cell_key_expired)), 256) as cell_key_expired
         from {{ ref("metrics_diversity") }}

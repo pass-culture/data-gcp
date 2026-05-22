@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: metrics_beneficiary__expired_cohorts
+    description: "{{ doc('description__metrics_beneficiary__expired_cohorts') }}"
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+      - name: region_name
+        description: "{{ doc('column__region_name') }}"
+      - name: department_name
+        description: "{{ doc('column__department_name') }}"
+      - name: department_code
+        description: "{{ doc('column__department_code') }}"
+      - name: epci_name
+        description: "{{ doc('column__epci_label') }}"
+      - name: epci_code
+        description: "{{ doc('column__epci_code') }}"
+      - name: city_name
+        description: "{{ doc('column__city_label') }}"
+      - name: city_code
+        description: "{{ doc('column__city_code') }}"
+      - name: is_in_qpv
+        description: "{{ doc('column__user_is_in_qpv') }}"
+      - name: macro_density_label
+        description: "{{ doc('column__user_macro_density_label') }}"
+      - name: micro_density_label
+        description: "{{ doc('column__user_density_label') }}"
+      - name: total_expired_beneficiaries
+        description: "{{ doc('column__metrics__total_expired_beneficiaries') }}"
+      - name: total_deposit_amount_at_expiration
+        description: "{{ doc('column__metrics__total_deposit_amount_at_expiration') }}"
+      - name: average_deposit_amount_at_expiration
+        description: "{{ doc('column__metrics__average_deposit_amount_at_expiration') }}"
+      - name: total_actual_amount_spent_at_expiration
+        description: "{{ doc('column__metrics__total_actual_amount_spent_at_expiration') }}"
+      - name: average_actual_amount_spent_at_expiration
+        description: "{{ doc('column__metrics__average_actual_amount_spent_at_expiration') }}"

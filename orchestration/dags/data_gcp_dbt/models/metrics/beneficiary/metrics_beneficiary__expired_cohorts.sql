@@ -10,7 +10,7 @@ select
     is_in_qpv,
     micro_density_label,
     macro_density_label,
-    total_expired_beneficiaries,
+    total_expired_deposit_beneficiaries,
     total_deposit_amount_at_expiration,
     average_deposit_amount_at_expiration,
     total_actual_amount_spent_at_expiration,

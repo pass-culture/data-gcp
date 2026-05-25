@@ -319,8 +319,6 @@ Centralized configuration including:
 ├── core.py                    # Domain objects and main orchestration
 ├── main.py                    # CLI entry point
 ├── pyproject.toml
-├── requirements.in
-├── requirements.txt
 ├── services/                  # Service layer
 │   ├── __init__.py
 │   ├── data.py               # Data retrieval and aggregation

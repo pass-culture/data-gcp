@@ -99,8 +99,8 @@ services:
         condition: service_completed_successfully
   airflow-init:
     build:
-      context: .
-      dockerfile: ${DOCKERFILE_PATH:-airflow/Dockerfile}
+      context: ..
+      dockerfile: ${DOCKERFILE_PATH:-orchestration/airflow/Dockerfile}
       target: final-builder
       args:
         - NETWORK_MODE=${NETWORK_MODE:-default}

@@ -179,7 +179,7 @@ jobs:
 
       - name: "Generate dbt lineage data"
         run: |
-          python plugins/static/dbt_lineage/generate_viz_data.py \
+          uv run plugins/static/dbt_lineage/generate_viz_data.py \
             --manifest dags/data_gcp_dbt/target/manifest.json \
             --config plugins/static/dbt_lineage/config.yaml \
             --output plugins/static/dbt_lineage/viz_data.json
@@ -254,7 +254,7 @@ jobs:
               sys.exit(1)
           EOF
 
-          python compute_layout.py
+          uv run compute_layout.py
           rm compute_layout.py
 
       - name: "Deploy Airflow (plugins)"

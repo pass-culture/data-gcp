@@ -12,7 +12,7 @@ dependencies =  [
     "google-cloud-aiplatform>=1.85.0",
     "google-cloud-iam>=2.21.0",
     "loguru>=0.7.3",
-    "mlflow>=3.10.1",
+    "mlflow==3.12.0",
     "numpy>=1.26.4",
     "pandas-gbq>=0.17.1",
     "pandas>=1.5.3",

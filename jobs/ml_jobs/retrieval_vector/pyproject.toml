@@ -20,6 +20,7 @@ dependencies = [
     "tf-keras>=2.20.1",
     "torch>=2.8.0",
     "torchvision>=0.21.0",
+    "mlflow==3.12.0",
 ]
 
 

@@ -92,7 +92,7 @@ jobs:
           DBT_PROFILES_DIR: "."
         run: |
           export PYTHONPATH="$PYTHONPATH:./dags"
-          dbt deps
+          uv run dbt deps
 
       - name: "compile dbt & generate dbt docs"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
@@ -101,7 +101,7 @@ jobs:
           DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
-        run: dbt docs generate --static --target "$ENV_SHORT_NAME" --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+        run: uv run dbt docs generate --static --target "$ENV_SHORT_NAME" --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
 
       - name: "Generate dbt colibri documentation"
         working-directory: "./orchestration/dags/data_gcp_dbt/"

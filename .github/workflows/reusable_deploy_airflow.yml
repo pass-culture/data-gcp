@@ -66,7 +66,7 @@ jobs:
           python-version: "3.10"
       - uses: yezz123/setup-uv@v4
       - name: "Install Python requirements"
-        run: uv sync --only-group airflow --frozen
+        run: uv sync --frozen
       - id: auth
         name: "Authenticate with Google Cloud"
         uses: "google-github-actions/auth@v2"
@@ -92,7 +92,7 @@ jobs:
           DBT_PROFILES_DIR: "."
         run: |
           export PYTHONPATH="$PYTHONPATH:./dags"
-          dbt deps
+          uv run dbt deps
 
       - name: "compile dbt & generate dbt docs"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
@@ -101,7 +101,7 @@ jobs:
           DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
-        run: dbt docs generate --static --target "$ENV_SHORT_NAME" --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+        run: uv run dbt docs generate --static --target "$ENV_SHORT_NAME" --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
 
       - name: "Generate dbt colibri documentation"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
@@ -179,7 +179,7 @@ jobs:
 
       - name: "Generate dbt lineage data"
         run: |
-          python plugins/static/dbt_lineage/generate_viz_data.py \
+          uv run plugins/static/dbt_lineage/generate_viz_data.py \
             --manifest dags/data_gcp_dbt/target/manifest.json \
             --config plugins/static/dbt_lineage/config.yaml \
             --output plugins/static/dbt_lineage/viz_data.json
@@ -254,7 +254,7 @@ jobs:
               sys.exit(1)
           EOF
 
-          python compute_layout.py
+          uv run compute_layout.py
           rm compute_layout.py
 
       - name: "Deploy Airflow (plugins)"

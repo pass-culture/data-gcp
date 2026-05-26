@@ -199,6 +199,7 @@ def _create_items_table(
         num_sub_vectors=4,
         vector_column_name="vector",
     )
+    table.create_scalar_index("category", index_type="BITMAP")
     table.create_scalar_index("search_group_name", index_type="BITMAP")
     table.create_scalar_index("subcategory_id", index_type="BITMAP")
     table.create_scalar_index("stock_price", index_type="BTREE")

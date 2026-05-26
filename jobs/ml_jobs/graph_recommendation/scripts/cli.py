@@ -45,7 +45,7 @@ EMBEDDING_OUTPUT_OPTION = typer.Option(
     f"{RESULTS_DIR}/item_metadata_embeddings.parquet",
     "--output-embeddings",
     "-e",
-    help="Where to save the node embeddings as a parquet file. " "Can be a local path or a GCS path (gs://...).",
+    help="Where to save the node embeddings as a parquet file. Can be a local path or a GCS path (gs://...).",
     dir_okay=False,
 )
 
@@ -64,7 +64,7 @@ TRAIN_CONFIG_OPTION = typer.Option(
 
 EMBEDDING_INPUT_ARGUMENT = typer.Argument(
     ...,
-    help="Where to save the node embeddings as a parquet file. " "Can be a local path or a GCS path (gs://...).",
+    help="Where to save the node embeddings as a parquet file. Can be a local path or a GCS path (gs://...).",
     dir_okay=False,
 )
 

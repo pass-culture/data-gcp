@@ -50,7 +50,7 @@ models on heterogeneous graphs. The training pipeline:
 # Build and save heterogeneous graph
 python -m scripts.cli build-heterograph \
   data/item_for_graph_recommendation.parquet \
-  --output data/item_metadata_heterograph.pt \
+  --output-graph data/item_metadata_heterograph.pt \
   --nrows 5000  # optional sampling for quick iterations
 
 # Train MetaPath2Vec model on heterogeneous graph

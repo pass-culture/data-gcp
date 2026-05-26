@@ -31,9 +31,7 @@ LANCEDB_TABLE_NAME = "embedding_table"
 NON_NULL_COLUMNS = [LANCEDB_NODE_ID_COLUMN, EMBEDDING_COLUMN]
 
 
-def chunk_dataframe(
-    df: pd.DataFrame, batch_size: int
-) -> Generator[pd.DataFrame, None, None]:
+def chunk_dataframe(df: pd.DataFrame, batch_size: int) -> Generator[pd.DataFrame, None, None]:
     """Yield successive batches from DataFrame."""
     for start_index in range(0, len(df), batch_size):
         yield df[start_index : start_index + batch_size]
@@ -74,9 +72,7 @@ def load_and_index_embeddings(
 
     null_rows = df[df[NON_NULL_COLUMNS].isnull().any(axis=1)]
     if not null_rows.empty:
-        logger.error(
-            f"Found {len(null_rows)} rows with null values in {NON_NULL_COLUMNS}"
-        )
+        logger.error(f"Found {len(null_rows)} rows with null values in {NON_NULL_COLUMNS}")
         logger.info(f"Null rows sample:\n{null_rows.head()}")
         raise ValueError("DataFrame contains null values in critical columns.")
 
@@ -219,16 +215,16 @@ def compute_all_scores(
                 ),
                 axis=1,
             )
-            for column, hierarchical_evaluation_function in hierarchical_metadata_scoring_functions.items()  # noqa: E501
+            for column, hierarchical_evaluation_function in hierarchical_metadata_scoring_functions.items()
         }
     )
 
     # 3. Compute full combined scores
     df_with_full_scores = df_with_hierarchical_score.assign(
         **{
-            FULL_SCORE_COLUMN: df_with_hierarchical_score[
-                [f"{column}_score" for column in metadata_columns]
-            ].mean(axis=1)
+            FULL_SCORE_COLUMN: df_with_hierarchical_score[[f"{column}_score" for column in metadata_columns]].mean(
+                axis=1
+            )
         }
     )
 
@@ -290,12 +286,7 @@ def get_embedding_for_item_lazy(
     Get embedding for a single item (no full table load).
     """
     # Search with filter - only loads matching rows
-    results = (
-        table.search()
-        .where(f"{LANCEDB_NODE_ID_COLUMN} = '{node_id}'")
-        .limit(1)
-        .to_pandas()
-    )
+    results = table.search().where(f"{LANCEDB_NODE_ID_COLUMN} = '{node_id}'").limit(1).to_pandas()
 
     if len(results) == 0:
         return None
@@ -317,9 +308,7 @@ def generate_predictions_lazy(
         table: LanceDB table
         n_retrieved: Number of results per query
     """
-    logger.info(
-        f"Retrieving top-{n_retrieved} similar items for {len(query_node_ids)} queries"
-    )
+    logger.info(f"Retrieving top-{n_retrieved} similar items for {len(query_node_ids)} queries")
 
     results = []
 
@@ -332,9 +321,7 @@ def generate_predictions_lazy(
             continue
 
         # Search LanceDB (only loads n_retrieved+1 results)
-        search_results = (
-            table.search(query_embedding).limit(n_retrieved + 1).to_pandas()
-        )
+        search_results = table.search(query_embedding).limit(n_retrieved + 1).to_pandas()
 
         # Process results
         rank = 0
@@ -351,9 +338,7 @@ def generate_predictions_lazy(
 
             # Convert distance to similarity
             distance = row.get("_distance", 0)
-            similarity_score = (
-                1.0 - distance if EMBEDDING_METRIC == "cosine" else distance
-            )
+            similarity_score = 1.0 - distance if EMBEDDING_METRIC == "cosine" else distance
 
             results.append(
                 {

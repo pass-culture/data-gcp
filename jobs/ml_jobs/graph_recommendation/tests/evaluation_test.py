@@ -186,15 +186,9 @@ def test_evaluate_embeddings_no_db_creation(
 
     # Verify NO actual database operations happened
     # by checking mocks were called instead
-    assert mocks[
-        "load_and_index_embeddings"
-    ].called, "Should have called mocked load_and_index_embeddings"
-    assert mocks[
-        "sample_test_items_lazy"
-    ].called, "Should have called mocked sample_test_items_lazy"
-    assert mocks[
-        "generate_predictions_lazy"
-    ].called, "Should have called mocked generate_predictions_lazy"
+    assert mocks["load_and_index_embeddings"].called, "Should have called mocked load_and_index_embeddings"
+    assert mocks["sample_test_items_lazy"].called, "Should have called mocked sample_test_items_lazy"
+    assert mocks["generate_predictions_lazy"].called, "Should have called mocked generate_predictions_lazy"
     assert mocks["load_parquet"].called, "Should have called mocked load_parquet"
 
     # Verify returns are correct

@@ -52,9 +52,7 @@ def evaluate_embeddings(
     # ==================================================================================
     logger.info("STEP 2: Sampling Query Nodes")
 
-    query_node_ids = sample_test_items_lazy(
-        embedding_table, n_samples=evaluation_config.n_samples
-    )
+    query_node_ids = sample_test_items_lazy(embedding_table, n_samples=evaluation_config.n_samples)
 
     # ==================================================================================
     # Step 3: Generate predictions
@@ -70,11 +68,7 @@ def evaluate_embeddings(
     # ==================================================================================
     logger.info("STEP 4: Joining Retrieval Results with Metadata")
 
-    unique_node_ids = (
-        pd.concat([df_results["query_node_id"], df_results["retrieved_node_id"]])
-        .unique()
-        .tolist()
-    )
+    unique_node_ids = pd.concat([df_results["query_node_id"], df_results["retrieved_node_id"]]).unique().tolist()
     metadata_df = (
         pd.read_parquet(
             raw_data_parquet_path,

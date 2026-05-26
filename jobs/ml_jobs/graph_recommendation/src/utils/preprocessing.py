@@ -93,9 +93,7 @@ def detach_single_occuring_metadata(
     return df
 
 
-def remove_rows_with_no_metadata(
-    df: pd.DataFrame, metadata_list: list | None = None
-) -> pd.DataFrame:
+def remove_rows_with_no_metadata(df: pd.DataFrame, metadata_list: list | None = None) -> pd.DataFrame:
     """Filter out rows where all specified feature_link columns are null.
 
     Args:
@@ -189,9 +187,7 @@ def normalize_gtl_id(df: pd.DataFrame) -> pd.DataFrame:
     df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].astype(str).str.strip()
 
     # Step 2: Replace empty or NaN-like strings with None
-    df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].replace(
-        {"": None, "nan": None, "None": None, "<NA>": None}
-    )
+    df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].replace({"": None, "nan": None, "None": None, "<NA>": None})
 
     # Step 3: Pad 7-digit GTLs to 8 digits
     df[GTL_ID_COLUMN] = df[GTL_ID_COLUMN].apply(_pad_gtl_id)

@@ -36,15 +36,10 @@ def get_credentials():
     if sa_key_path:
         try:
             logger.info(f"Using service account from: {sa_key_path}")
-            credentials = service_account.Credentials.from_service_account_file(
-                sa_key_path
-            )
+            credentials = service_account.Credentials.from_service_account_file(sa_key_path)
             return credentials
         except Exception as e:
-            logger.warning(
-                f"Failed to load service account: {e}. "
-                "Falling back to default credentials."
-            )
+            logger.warning(f"Failed to load service account: {e}. Falling back to default credentials.")
 
     try:
         logger.info("Using default credentials (gcloud)")

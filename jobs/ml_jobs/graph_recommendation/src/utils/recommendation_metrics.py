@@ -14,15 +14,11 @@ from recommenders.utils.constants import (
 )
 
 
-def _add_prediction_ranks_and_topk_flags(
-    retrieval_results: pd.DataFrame, k_values: list[int]
-) -> pd.DataFrame:
+def _add_prediction_ranks_and_topk_flags(retrieval_results: pd.DataFrame, k_values: list[int]) -> pd.DataFrame:
     """Add prediction rank and top-k flag columns to dataframe."""
     df = retrieval_results.copy()
     df["prediction_rank"] = (
-        df.groupby("query_node_id")["similarity_score"]
-        .rank(ascending=False, method="first")
-        .astype(int)
+        df.groupby("query_node_id")["similarity_score"].rank(ascending=False, method="first").astype(int)
     )
     # Add top-k flags
     for k in k_values:
@@ -35,15 +31,11 @@ def _create_sorted_predictions_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     rating_pred = df[["query_node_id", "retrieved_node_id", "similarity_score"]].copy()
     rating_pred.columns = ["userID", "itemID", "prediction"]
     # Sort once (reused for all k values)
-    rating_pred_sorted = rating_pred.sort_values(
-        ["userID", "prediction"], ascending=[True, False]
-    )
+    rating_pred_sorted = rating_pred.sort_values(["userID", "prediction"], ascending=[True, False])
     return rating_pred_sorted
 
 
-def _create_ground_truth_dataframe_for_score(
-    df: pd.DataFrame, score_col: str
-) -> pd.DataFrame:
+def _create_ground_truth_dataframe_for_score(df: pd.DataFrame, score_col: str) -> pd.DataFrame:
     """Create ground truth dataframe for a specific score column."""
     rating_true = df[["query_node_id", "retrieved_node_id", score_col]].copy()
     rating_true.columns = ["userID", "itemID", "rating"]
@@ -66,9 +58,7 @@ def _compute_all_metrics_for_single_score_column(
     metrics_per_k = []
     for k in k_values:
         if k > max_retrieved:
-            logger.warning(
-                f"K={k} exceeds retrieved items ({max_retrieved}). Skipping."
-            )
+            logger.warning(f"K={k} exceeds retrieved items ({max_retrieved}). Skipping.")
             raise ValueError(f"K={k} exceeds max retrieved items ({max_retrieved})")
 
         metrics_per_k.append(
@@ -186,9 +176,7 @@ def compute_evaluation_metrics(
 
     # Normalize inputs
 
-    logger.info(
-        f"Computing metrics for score {score_column}, {len(k_values)} k value(s)"
-    )
+    logger.info(f"Computing metrics for score {score_column}, {len(k_values)} k value(s)")
 
     # Prepare base dataframe and predictions
     df = _add_prediction_ranks_and_topk_flags(retrieval_results, k_values)
@@ -249,9 +237,9 @@ def _get_true_topk_with_ties(
     """Get all items with rating >= k-th rating (handles ties)."""
     kth_rating_per_user = _get_kth_rating_threshold(df, k, col_user, col_rating)
     df_with_threshold = df.merge(kth_rating_per_user, on=col_user, how="left")
-    return df_with_threshold[
-        df_with_threshold[col_rating] >= df_with_threshold["kth_rating"]
-    ][[col_user, col_item, col_rating]]
+    return df_with_threshold[df_with_threshold[col_rating] >= df_with_threshold["kth_rating"]][
+        [col_user, col_item, col_rating]
+    ]
 
 
 def _get_predicted_topk(
@@ -261,11 +249,7 @@ def _get_predicted_topk(
     col_prediction: str,
 ) -> pd.DataFrame:
     """Get strict top-k predicted items per user."""
-    return (
-        df.sort_values([col_user, col_prediction], ascending=[True, False])
-        .groupby(col_user)
-        .head(k)
-    )
+    return df.sort_values([col_user, col_prediction], ascending=[True, False]).groupby(col_user).head(k)
 
 
 def _calculate_recall(
@@ -313,6 +297,4 @@ def custom_recall_at_k(
         col_prediction=col_prediction,
     )
     all_users = pd.concat([rating_true[col_user], rating_pred[col_user]]).unique()
-    return _calculate_recall(
-        pred_topk, true_topk_with_ties, all_users, k, col_user, col_item
-    )
+    return _calculate_recall(pred_topk, true_topk_with_ties, all_users, k, col_user, col_item)

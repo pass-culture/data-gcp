@@ -175,8 +175,7 @@ def train_metapath2vec(
         epoch_time = time.time() - t0
 
         logger.info(
-            f"Epoch: {epoch:03d}, Loss: {loss:.4f}, "
-            f"LR: {optimizer.param_groups[0]['lr']:.6f}, Time: {epoch_time:.2f}s"
+            f"Epoch: {epoch:03d}, Loss: {loss:.4f}, LR: {optimizer.param_groups[0]['lr']:.6f}, Time: {epoch_time:.2f}s"
         )
 
         # Log epoch metrics to MLflow

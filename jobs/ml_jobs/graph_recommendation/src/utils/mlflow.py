@@ -22,9 +22,7 @@ from src.utils.gcp import (
 
 MLFLOW_SECRET_NAME = "mlflow_client_id"
 MLFLOW_URI = (
-    "https://mlflow.passculture.team/"
-    if ENV_SHORT_NAME == "prod"
-    else "https://mlflow.staging.passculture.team/"
+    "https://mlflow.passculture.team/" if ENV_SHORT_NAME == "prod" else "https://mlflow.staging.passculture.team/"
 )
 MLFLOW_TOKEN_REFRESH_INTERVAL = 300
 
@@ -33,18 +31,14 @@ def _get_mlflow_log_functions_to_patch(extra_functions: set | None = None):
     patch_prefix = "log_"
     if not extra_functions:
         extra_functions = {}
-    return [
-        m for m in dir(mlflow) if m.startswith(patch_prefix) or m in extra_functions
-    ]
+    return [m for m in dir(mlflow) if m.startswith(patch_prefix) or m in extra_functions]
 
 
 @contextmanager
 def optional_mlflow_logging(enabled: bool = True):  # noqa: FBT001
     """Context manager to conditionally enable/disable MLflow logging."""
     if not enabled:
-        logger.warning(
-            "MLflow logging is DISABLED - all mlflow.log_* calls will be no-ops"
-        )
+        logger.warning("MLflow logging is DISABLED - all mlflow.log_* calls will be no-ops")
 
         # Include all log_* and key setup methods
         patch_methods = _get_mlflow_log_functions_to_patch(
@@ -145,9 +139,7 @@ class MLflowAuthManager:
     def _get_service_account_credentials(self):
         sa_info = json.loads(get_secret(self.sa_secret_name))
         audience = get_secret(self.client_secret_name)
-        creds = service_account.IDTokenCredentials.from_service_account_info(
-            sa_info, target_audience=audience
-        )
+        creds = service_account.IDTokenCredentials.from_service_account_info(sa_info, target_audience=audience)
         creds.refresh(Request())
         return creds
 
@@ -177,9 +169,7 @@ def mlflow_token_refresher_context(auth_manager):
     """
 
     # Include all log_* and key setup methods
-    patch_methods = _get_mlflow_log_functions_to_patch(
-        extra_functions={"start_run", "end_run", "set_experiment"}
-    )
+    patch_methods = _get_mlflow_log_functions_to_patch(extra_functions={"start_run", "end_run", "set_experiment"})
 
     # Patch functions with token refresher
     originals = {}
@@ -187,9 +177,7 @@ def mlflow_token_refresher_context(auth_manager):
         func = getattr(mlflow, method_name, None)
         if callable(func):
             originals[method_name] = func
-            setattr(
-                mlflow, method_name, mlflow_refresh_token_decorator(auth_manager, func)
-            )
+            setattr(mlflow, method_name, mlflow_refresh_token_decorator(auth_manager, func))
     # Execute context block
     try:
         yield
@@ -215,9 +203,7 @@ def get_mlflow_experiment(experiment_name: str):
         experiment = client.get_experiment(experiment_id)
     elif experiment.lifecycle_stage == "deleted":
         # Experiment is deleted → reactivate it
-        logger.warning(
-            f"MLflow experiment '{experiment_name}' is deleted. Reactivating it."
-        )
+        logger.warning(f"MLflow experiment '{experiment_name}' is deleted. Reactivating it.")
         client.restore_experiment(experiment.experiment_id)
         experiment = client.get_experiment(experiment.experiment_id)
 
@@ -237,10 +223,7 @@ def log_model_parameters(params: dict) -> None:
     # Format metapaths and log it
     metapath_dict = {
         "metapaths": [
-            [
-                {"step": i, "edge": f"{step[0]}->{step[1]}->{step[2]}"}
-                for i, step in enumerate(_metapath)
-            ]
+            [{"step": i, "edge": f"{step[0]}->{step[1]}->{step[2]}"} for i, step in enumerate(_metapath)]
             for _metapath in _metapaths
         ]
     }
@@ -251,9 +234,7 @@ def log_model_parameters(params: dict) -> None:
 
 
 @conditional_mlflow()
-def _log_metrics_at_k_csv(
-    metrics_df: pd.DataFrame, order_by: list[str] | None = None
-) -> None:
+def _log_metrics_at_k_csv(metrics_df: pd.DataFrame, order_by: list[str] | None = None) -> None:
     """
     Converts metrics DataFrame into tidy format and logs as csv artifact to MLflow.
 
@@ -267,16 +248,12 @@ def _log_metrics_at_k_csv(
     """
     tidy_rows = []
 
-    metric_cols = [
-        c for c in metrics_df.columns if c not in ["score_col", "k", "threshold"]
-    ]
+    metric_cols = [c for c in metrics_df.columns if c not in ["score_col", "k", "threshold"]]
 
     for _, row in metrics_df.iterrows():
         for metric_name in metric_cols:
             # Only thresholded metrics should vary per threshold
-            threshold_val = (
-                row["threshold"] if metric_name in ["recall", "precision"] else None
-            )
+            threshold_val = row["threshold"] if metric_name in ["recall", "precision"] else None
             tidy_rows.append(
                 {
                     "score_col": row["score_col"],
@@ -322,9 +299,7 @@ def log_evaluation_metrics(metrics_df: pd.DataFrame, output_metrics_path: str) -
 
 
 @conditional_mlflow()
-def log_detailed_scores(
-    results_df: pd.DataFrame, output_detailed_scores_path: str | None
-) -> None:
+def log_detailed_scores(results_df: pd.DataFrame, output_detailed_scores_path: str | None) -> None:
     # Save detailed scores if requested
     if output_detailed_scores_path:
         results_df.to_parquet(output_detailed_scores_path, index=False)
@@ -336,9 +311,7 @@ def log_detailed_scores(
 
 
 @conditional_mlflow()
-def log_graph_analysis(
-    graph_summary: pd.DataFrame, graph_components: pd.DataFrame
-) -> None:
+def log_graph_analysis(graph_summary: pd.DataFrame, graph_components: pd.DataFrame) -> None:
     """Log graph analysis statistics to MLflow."""
 
     with tempfile.TemporaryDirectory() as tmpdir:

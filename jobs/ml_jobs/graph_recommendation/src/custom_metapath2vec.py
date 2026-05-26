@@ -72,12 +72,8 @@ class CustomMetaPath2Vec(torch.nn.Module):
         self.rowptr_dict, self.col_dict, self.rowcount_dict = self._get_sparse_matrix(
             edge_index_dict, self.num_nodes_dict
         )
-        self.start, self.end, count = self._get_node_type_ranges(
-            self.metapaths, self.num_nodes_dict
-        )
-        self.offsets = self._compute_offsets(
-            self.metapaths, self.start, self.walk_length
-        )
+        self.start, self.end, count = self._get_node_type_ranges(self.metapaths, self.num_nodes_dict)
+        self.offsets = self._compute_offsets(self.metapaths, self.start, self.walk_length)
         self.embedding = Embedding(count + 1, embedding_dim, sparse=sparse)
         self.dummy_idx = count
 
@@ -260,9 +256,7 @@ class CustomMetaPath2Vec(torch.nn.Module):
         offsets = []
         for metapath in metapaths:
             offset = [start[metapath[0][0]]]
-            offset += [start[keys[-1]] for keys in metapath] * int(
-                (walk_length / len(metapath)) + 1
-            )
+            offset += [start[keys[-1]] for keys in metapath] * int((walk_length / len(metapath)) + 1)
             offset = offset[: walk_length + 1]
             assert len(offset) == walk_length + 1
             offsets.append(torch.tensor(offset))
@@ -274,11 +268,7 @@ class CustomMetaPath2Vec(torch.nn.Module):
     ###############################################################################
 
     def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}("
-            f"{self.embedding.weight.size(0) - 1}, "
-            f"{self.embedding.weight.size(1)})"
-        )
+        return f"{self.__class__.__name__}({self.embedding.weight.size(0) - 1}, {self.embedding.weight.size(1)})"
 
     def reset_parameters(self):
         self.embedding.reset_parameters()
@@ -297,9 +287,7 @@ class CustomMetaPath2Vec(torch.nn.Module):
         start, rest = pos_rw[:, 0], pos_rw[:, 1:].contiguous()
 
         h_start = self.embedding(start).view(pos_rw.size(0), 1, self.embedding_dim)
-        h_rest = self.embedding(rest.view(-1)).view(
-            pos_rw.size(0), -1, self.embedding_dim
-        )
+        h_rest = self.embedding(rest.view(-1)).view(pos_rw.size(0), -1, self.embedding_dim)
 
         out = (h_start * h_rest).sum(dim=-1).view(-1)
         pos_loss = -torch.log(torch.sigmoid(out) + EPS).mean()
@@ -308,9 +296,7 @@ class CustomMetaPath2Vec(torch.nn.Module):
         start, rest = neg_rw[:, 0], neg_rw[:, 1:].contiguous()
 
         h_start = self.embedding(start).view(neg_rw.size(0), 1, self.embedding_dim)
-        h_rest = self.embedding(rest.view(-1)).view(
-            neg_rw.size(0), -1, self.embedding_dim
-        )
+        h_rest = self.embedding(rest.view(-1)).view(neg_rw.size(0), -1, self.embedding_dim)
 
         out = (h_start * h_rest).sum(dim=-1).view(-1)
         neg_loss = -torch.log(1 - torch.sigmoid(out) + EPS).mean()

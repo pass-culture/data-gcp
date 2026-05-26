@@ -90,9 +90,7 @@ def test_validate_metapaths_different_start_type():
         [("author", "writes", "paper")],
         [("paper", "written_by", "author")],
     ]
-    with pytest.raises(
-        ValueError, match="All metapaths must start with the same node type"
-    ):
+    with pytest.raises(ValueError, match="All metapaths must start with the same node type"):
         CustomMetaPath2Vec._validate_metapaths(metapaths)
 
 
@@ -164,9 +162,7 @@ def test_get_node_type_ranges(sample_graph_data):
     # Manually construct num_nodes_dict
     num_nodes_dict = {"author": 3, "paper": 2, "venue": 1}
 
-    start, end, count = CustomMetaPath2Vec._get_node_type_ranges(
-        metapaths, num_nodes_dict
-    )
+    start, end, count = CustomMetaPath2Vec._get_node_type_ranges(metapaths, num_nodes_dict)
 
     # Types are sorted alphabetically: author, paper, venue
     # author: 0-3

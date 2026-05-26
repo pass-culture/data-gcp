@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
+from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -52,48 +53,46 @@ with DAG(
 ) as dag:
     start = EmptyOperator(task_id="start")
 
-    gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE,
-        instance_type="n1-standard-1",
-        task_id="gce_start_task",
-        retries=2,
-        preemptible=False,
-        labels={"job_type": "long_task", "dag_name": DAG_NAME},
-    )
+    import_task_groups = []
+    for store in ["ios", "android"]:
+        with TaskGroup(group_id=f"{store}_import_tasks") as tg:
+            gce_instance_start = StartGCEOperator(
+                instance_name=f"{store}-{GCE_INSTANCE}",
+                instance_type="n1-standard-1",
+                task_id=f"gce_start_task_{store}",
+                retries=2,
+                preemptible=False,
+                labels={"job_type": "long_task", "dag_name": DAG_NAME},
+            )
 
-    fetch_install_code = InstallDependenciesOperator(
-        task_id="fetch_install_code",
-        instance_name=GCE_INSTANCE,
-        branch="{{ params.branch }}",
-        python_version="3.13",
-        base_dir=BASE_PATH,
-        dag=dag,
-        retries=2,
-    )
+            fetch_install_code = InstallDependenciesOperator(
+                task_id=f"fetch_install_code_{store}",
+                instance_name=f"{store}-{GCE_INSTANCE}",
+                branch="{{ params.branch }}",
+                python_version="3.13",
+                base_dir=BASE_PATH,
+                dag=dag,
+                retries=2,
+            )
 
-    ios_job = SSHGCEOperator(
-        task_id="import_ios",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        command=f"""
-        uv run main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} ios
-        """,
-        retries=2,
-    )
+            import_job = SSHGCEOperator(
+                task_id=f"import_{store}",
+                instance_name=f"{store}-{GCE_INSTANCE}",
+                base_dir=BASE_PATH,
+                command=f"""
+                uv run main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} {store}
+                """,
+                retries=2,
+            )
 
-    android_job = SSHGCEOperator(
-        task_id="import_android",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        command=f"""
-        uv run main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} android
-        """,
-        retries=2,
-    )
+            gce_instance_stop = DeleteGCEOperator(
+                instance_name=f"{store}-{GCE_INSTANCE}",
+                task_id=f"gce_stop_task_{store}",
+            )
 
-    gce_instance_stop = DeleteGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_stop_task"
-    )
+            gce_instance_start >> fetch_install_code >> import_job >> gce_instance_stop
+
+        import_task_groups.append(tg)
 
     start_analytics_table_tasks = EmptyOperator(
         task_id="start_analytics_tasks", dag=dag
@@ -119,12 +118,6 @@ with DAG(
         default_end_operator=end,
     )
 
-    (start >> gce_instance_start >> fetch_install_code)
-    (
-        fetch_install_code
-        >> ios_job
-        >> android_job
-        >> gce_instance_stop
-        >> start_analytics_table_tasks
-        >> analytics_table_tasks
-    )
+    (start >> import_task_groups)
+
+    (import_task_groups >> start_analytics_table_tasks)

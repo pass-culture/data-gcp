@@ -141,18 +141,6 @@ create_microservice_etl_external:
 create_microservice_etl_internal:
 	MS_TYPE=etl_internal MS_NAME=$(MS_NAME) MS_BASE_PATH=jobs/etl_jobs/internal make create_microservice
 
-
-#######################################################################################
-########                              Docker Requirements                      ########
-#######################################################################################
-
-
-docker_compile:
-	uv export --format requirements-txt --only-group airflow -o orchestration/airflow/orchestration-requirements.txt --python=python${PYTHON_VERSION} --no-hashes
-	uv export --format requirements-txt --only-group airflow -o orchestration/k8s-airflow/k8s-worker-requirements.txt --python=python${PYTHON_VERSION} --no-hashes
-
-
-
 #######################################################################################
 ########                              Pre-commit                              ########
 #######################################################################################

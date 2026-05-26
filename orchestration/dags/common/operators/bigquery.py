@@ -1,5 +1,5 @@
 from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryCreateEmptyTableOperator,
+    BigQueryCreateTableOperator,
     BigQueryInsertJobOperator,
 )
 from common.config import (
@@ -38,7 +38,7 @@ def bigquery_job_task(dag, table, job_params, extra_params={}):
 
 
 def bigquery_view_task(dag, table, job_params, extra_params={}, exists_ok=True):
-    return BigQueryCreateEmptyTableOperator(
+    return BigQueryCreateTableOperator(
         task_id=f"create_view_{table}",
         view={
             "query": "{% include '" + job_params["sql"] + "' %}",

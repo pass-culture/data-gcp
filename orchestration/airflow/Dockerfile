@@ -10,6 +10,11 @@ ENV REQUESTS_CA_BUNDLE=${CERT_PATH_DOCKER}
 ENV SSL_CERT_FILE=${CERT_PATH_DOCKER}
 ENV CURL_CA_BUNDLE=${CERT_PATH_DOCKER}
 ENV HTTPLIB2_CA_CERTS=${CERT_PATH_DOCKER}
+ENV CLOUDSDK_CORE_CUSTOM_CA_CERTS_FILE=${CERT_PATH_DOCKER}
+ENV UV_CERT_BUNDLE=${CERT_PATH_DOCKER}
+ENV UV_NATIVE_TLS=true
+ENV PIP_CERT=${CERT_PATH_DOCKER}
+
 
 ##################################
 ## Stage 1 Builder without proxy ##
@@ -64,18 +69,13 @@ COPY uv.lock pyproject.toml ./
 ENV PATH="${AIRFLOW_USER_HOME}/.venv/bin:$PATH"
 
 # Force UV_CERT_BUNDLE again at the command level to ensure 'airflow' user sees it
-RUN UV_CERT_BUNDLE=${CERT_PATH_DOCKER} uv sync --frozen --only-group airflow
+RUN uv sync --frozen --only-group airflow
 
 ################################
 ## Stage 3 Builder with proxy ##
 FROM general-builder AS builder-proxy
 ARG CERT_PATH_DOCKER=/usr/local/share/ca-certificates/nscacert_combined.crt
-ENV UV_CERT_BUNDLE=${CERT_PATH_DOCKER}
-ENV UV_NATIVE_TLS=true
-ENV SSL_CERT_FILE=${CERT_PATH_DOCKER}
-ENV REQUESTS_CA_BUNDLE=${CERT_PATH_DOCKER}
-ENV PIP_CERT=${CERT_PATH_DOCKER}
-ENV CURL_CA_BUNDLE=${CERT_PATH_DOCKER}
+
 RUN gcloud config set core/custom_ca_certs_file ${CERT_PATH_DOCKER}
 
 ################################

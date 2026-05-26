@@ -25,6 +25,7 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     ML_BUCKET_TEMP,
+    DagBaseConfig,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -34,7 +35,7 @@ from common.operators.gce import (
 )
 from common.operators.slack import SendSlackMessageOperator
 from common.utils import get_airflow_schedule
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
 from jobs.crons import SCHEDULE_DICT
 from jobs.ml.constants import IMPORT_ENDPOINT_MONITORING_SQL_PATH
@@ -48,12 +49,6 @@ DEFAULT_ARGS = {
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
-
-
-class DagBaseConfig(BaseModel):
-    model_config = ConfigDict(
-        frozen=True, validate_default=True, strict=True, extra="forbid"
-    )
 
 
 class GCEConfig(DagBaseConfig):

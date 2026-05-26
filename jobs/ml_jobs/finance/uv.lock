@@ -6,6 +6,9 @@ resolution-markers = [
     "python_full_version < '3.12'",
 ]
 
+[manifest]
+constraints = [{ name = "mlflow", specifier = ">=3.12.0" }]
+
 [[package]]
 name = "aiohappyeyeballs"
 version = "2.6.2"
@@ -410,7 +413,7 @@ requires-dist = [
     { name = "google-cloud-iam", specifier = ">=2.21.0" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "matplotlib", specifier = ">=3.10.8" },
-    { name = "mlflow", specifier = "==3.12.0" },
+    { name = "mlflow", specifier = ">=3.8.0" },
     { name = "numpy", specifier = "==2.2" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "pandas", specifier = ">=2.3.3" },

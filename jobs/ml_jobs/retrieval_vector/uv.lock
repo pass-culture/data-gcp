@@ -11,6 +11,9 @@ supported-markers = [
     "sys_platform == 'linux'",
 ]
 
+[manifest]
+constraints = [{ name = "mlflow", specifier = ">=3.12.0" }]
+
 [[package]]
 name = "absl-py"
 version = "2.3.1"
@@ -2045,7 +2048,6 @@ dependencies = [
     { name = "hypercorn", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "lancedb", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "loguru", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "mlflow", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "numpy", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "pandas", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "polars", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
@@ -2090,7 +2092,6 @@ requires-dist = [
     { name = "hypercorn", specifier = ">=0.15.0" },
     { name = "lancedb", specifier = ">=0.29.2" },
     { name = "loguru", specifier = ">=0.6.0" },
-    { name = "mlflow", specifier = "==3.12.0" },
     { name = "numpy", specifier = ">=1.26.4" },
     { name = "pandas", specifier = ">=2.1.1" },
     { name = "polars", specifier = ">=1.35.2" },

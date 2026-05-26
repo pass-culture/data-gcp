@@ -10,6 +10,9 @@ supported-markers = [
     "sys_platform == 'linux'",
 ]
 
+[manifest]
+constraints = [{ name = "mlflow", specifier = ">=3.12.0" }]
+
 [[package]]
 name = "absl-py"
 version = "2.4.0"
@@ -1914,7 +1917,7 @@ requires-dist = [
     { name = "ipykernel", specifier = ">=6.30.0" },
     { name = "keras", specifier = ">=3.13.2" },
     { name = "loguru", specifier = "==0.6.0" },
-    { name = "mlflow", specifier = "==3.12.0" },
+    { name = "mlflow", specifier = ">=3.8.1" },
     { name = "numpy", specifier = "==1.26.4" },
     { name = "pandas", specifier = "==2.2.0" },
     { name = "pandas", specifier = ">=1.5.3" },

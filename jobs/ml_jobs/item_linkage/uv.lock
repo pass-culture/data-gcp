@@ -12,6 +12,9 @@ supported-markers = [
     "sys_platform == 'linux'",
 ]
 
+[manifest]
+constraints = [{ name = "mlflow", specifier = ">=3.12.0" }]
+
 [[package]]
 name = "aiohappyeyeballs"
 version = "2.6.1"
@@ -1108,7 +1111,7 @@ requires-dist = [
     { name = "lancedb", specifier = ">=0.18.0" },
     { name = "loguru", specifier = ">=0.6.0" },
     { name = "matplotlib", specifier = ">=3.10.5" },
-    { name = "mlflow", specifier = "==3.12.0" },
+    { name = "mlflow", specifier = ">=3.8.1" },
     { name = "networkx", specifier = ">=3.3" },
     { name = "numpy", specifier = ">=1.26.0" },
     { name = "pandas", specifier = ">=2.2.2" },

@@ -54,13 +54,19 @@ class GCEConfig(DagBaseConfig):
 
 
 class GCSConfig(DagBaseConfig):
-    event_offer_to_link_gcs_path = f"{STORAGE_BASE_PATH}/00_event_offer_to_link.parquet"
-    offers_with_embedded_images_gcs_path = (
+    ml_bucket_temp: str = ML_BUCKET_TEMP
+    gcs_folder_path: str = GCS_FOLDER_PATH
+    event_offer_to_link_gcs_path: str = (
+        f"{STORAGE_BASE_PATH}/00_event_offer_to_link.parquet"
+    )
+    offers_with_embedded_images_gcs_path: str = (
         f"{STORAGE_BASE_PATH}/01_offers_with_embedded_images.parquet"
     )
-    similarities_gcs_path = f"{STORAGE_BASE_PATH}/02_similarities.parquet"
-    delta_event_series_gcs_path = f"{STORAGE_BASE_PATH}/03_delta_event_series.parquet"
-    delta_event_series_offer_links_gcs_path = (
+    similarities_gcs_path: str = f"{STORAGE_BASE_PATH}/02_similarities.parquet"
+    delta_event_series_gcs_path: str = (
+        f"{STORAGE_BASE_PATH}/03_delta_event_series.parquet"
+    )
+    delta_event_series_offer_links_gcs_path: str = (
         f"{STORAGE_BASE_PATH}/03_delta_event_series_offer_links.parquet"
     )
 
@@ -71,13 +77,11 @@ class BigQueryConfig(DagBaseConfig):
     delta_event_series_offer_links_table: str = "delta_event_series_offer_links"
     linkage_dataset: str = BIGQUERY_ML_LINKAGE_DATASET
     preprocessing_dataset: str = BIGQUERY_ML_PREPROCESSING_DATASET
-    ml_bucket_temp: str = ML_BUCKET_TEMP
 
 
 class DagConfig(DagBaseConfig):
     dag_id: str = "event_linkage"
     base_dir: str = "data-gcp/jobs/ml_jobs/event_linkage"
-    gcs_path: str = GCS_FOLDER_PATH
     storage_path: str = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}"
     gce: GCEConfig = GCEConfig()
     gcs: GCSConfig = GCSConfig()

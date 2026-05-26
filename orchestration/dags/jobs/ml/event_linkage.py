@@ -107,7 +107,7 @@ with DAG(
     DAG_CONFIG.dag_id,
     default_args=DEFAULT_ARGS,
     description="Link offer events between them and create event series objects.",
-    schedule=get_airflow_schedule(SCHEDULE_DICT[DAG_CONFIG.dag_id]),
+    schedule=get_airflow_schedule(SCHEDULE_DICT[DAG_CONFIG.dag_id][ENV_SHORT_NAME]),
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,

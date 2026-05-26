@@ -57,7 +57,7 @@ install_ubuntu_libs:
 
 
 install_macos_libs:
-	brew install mysql-client@8.4 pkg-config ggshield
+	brew install mysql-client@8.4 pkg-config ggshield coreutils
 
 _get_gcp_credentials:
 ifeq (,$(wildcard ${HOME}/.config/gcloud/application_default_credentials.json))

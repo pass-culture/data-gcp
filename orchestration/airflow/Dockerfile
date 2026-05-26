@@ -10,6 +10,11 @@ ENV REQUESTS_CA_BUNDLE=${CERT_PATH_DOCKER}
 ENV SSL_CERT_FILE=${CERT_PATH_DOCKER}
 ENV CURL_CA_BUNDLE=${CERT_PATH_DOCKER}
 ENV HTTPLIB2_CA_CERTS=${CERT_PATH_DOCKER}
+ENV CLOUDSDK_CORE_CUSTOM_CA_CERTS_FILE=${CERT_PATH_DOCKER}
+ENV UV_CERT_BUNDLE=${CERT_PATH_DOCKER}
+ENV UV_NATIVE_TLS=true
+ENV PIP_CERT=${CERT_PATH_DOCKER}
+
 
 ##################################
 ## Stage 1 Builder without proxy ##
@@ -33,20 +38,13 @@ RUN apt-get update \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Install uv
+# 3. INSTALL UV
 COPY --from=ghcr.io/astral-sh/uv:0.11.5 /uv /bin/
-
-ENV UV_CERT_BUNDLE=${CERT_PATH_DOCKER}
-ENV UV_NATIVE_TLS=true
-ENV SSL_CERT_FILE=${CERT_PATH_DOCKER}
-ENV REQUESTS_CA_BUNDLE=${CERT_PATH_DOCKER}
-ENV PIP_CERT=${CERT_PATH_DOCKER}
-ENV CURL_CA_BUNDLE=${CERT_PATH_DOCKER}
 
 # 4. INSTALL GCLOUD
 RUN curl --proto '=https' --proto-redir '=https' -fsSL \
-        https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} \
-        -o /tmp/${GCLOUD_VERSION} \
+    https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} \
+    -o /tmp/${GCLOUD_VERSION} \
     && cd /tmp && tar -xzf ${GCLOUD_VERSION} \
     && ./google-cloud-sdk/install.sh --quiet --usage-reporting=false --path-update=false \
     && mv /tmp/google-cloud-sdk ${AIRFLOW_USER_HOME}/google-cloud-sdk \
@@ -57,8 +55,7 @@ ENV PATH="${PATH}:${AIRFLOW_USER_HOME}/google-cloud-sdk/bin"
 ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
 # 5. CONFIGURE GCLOUD & INSTALL PLUGIN
-RUN gcloud config set core/custom_ca_certs_file ${CERT_PATH_DOCKER} \
-    && gcloud components install gke-gcloud-auth-plugin --quiet \
+RUN gcloud components install gke-gcloud-auth-plugin --quiet \
     && gcloud config set core/verbosity error \
     && gcloud config set core/log_http false
 
@@ -72,11 +69,14 @@ COPY uv.lock pyproject.toml ./
 ENV PATH="${AIRFLOW_USER_HOME}/.venv/bin:$PATH"
 
 # Force UV_CERT_BUNDLE again at the command level to ensure 'airflow' user sees it
-RUN UV_CERT_BUNDLE=${CERT_PATH_DOCKER} uv sync --frozen --only-group airflow
+RUN uv sync --frozen --only-group airflow
 
 ################################
 ## Stage 3 Builder with proxy ##
 FROM general-builder AS builder-proxy
+ARG CERT_PATH_DOCKER=/usr/local/share/ca-certificates/nscacert_combined.crt
+
+RUN gcloud config set core/custom_ca_certs_file ${CERT_PATH_DOCKER}
 
 ################################
 ## Stage 3 Builder without proxy ##

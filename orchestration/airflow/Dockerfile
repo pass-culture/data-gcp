@@ -33,20 +33,13 @@ RUN apt-get update \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Install uv
+# 3. INSTALL UV
 COPY --from=ghcr.io/astral-sh/uv:0.11.5 /uv /bin/
-
-ENV UV_CERT_BUNDLE=${CERT_PATH_DOCKER}
-ENV UV_NATIVE_TLS=true
-ENV SSL_CERT_FILE=${CERT_PATH_DOCKER}
-ENV REQUESTS_CA_BUNDLE=${CERT_PATH_DOCKER}
-ENV PIP_CERT=${CERT_PATH_DOCKER}
-ENV CURL_CA_BUNDLE=${CERT_PATH_DOCKER}
 
 # 4. INSTALL GCLOUD
 RUN curl --proto '=https' --proto-redir '=https' -fsSL \
-        https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} \
-        -o /tmp/${GCLOUD_VERSION} \
+    https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} \
+    -o /tmp/${GCLOUD_VERSION} \
     && cd /tmp && tar -xzf ${GCLOUD_VERSION} \
     && ./google-cloud-sdk/install.sh --quiet --usage-reporting=false --path-update=false \
     && mv /tmp/google-cloud-sdk ${AIRFLOW_USER_HOME}/google-cloud-sdk \
@@ -57,8 +50,7 @@ ENV PATH="${PATH}:${AIRFLOW_USER_HOME}/google-cloud-sdk/bin"
 ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
 # 5. CONFIGURE GCLOUD & INSTALL PLUGIN
-RUN gcloud config set core/custom_ca_certs_file ${CERT_PATH_DOCKER} \
-    && gcloud components install gke-gcloud-auth-plugin --quiet \
+RUN gcloud components install gke-gcloud-auth-plugin --quiet \
     && gcloud config set core/verbosity error \
     && gcloud config set core/log_http false
 
@@ -77,6 +69,14 @@ RUN UV_CERT_BUNDLE=${CERT_PATH_DOCKER} uv sync --frozen --only-group airflow
 ################################
 ## Stage 3 Builder with proxy ##
 FROM general-builder AS builder-proxy
+ARG CERT_PATH_DOCKER=/usr/local/share/ca-certificates/nscacert_combined.crt
+ENV UV_CERT_BUNDLE=${CERT_PATH_DOCKER}
+ENV UV_NATIVE_TLS=true
+ENV SSL_CERT_FILE=${CERT_PATH_DOCKER}
+ENV REQUESTS_CA_BUNDLE=${CERT_PATH_DOCKER}
+ENV PIP_CERT=${CERT_PATH_DOCKER}
+ENV CURL_CA_BUNDLE=${CERT_PATH_DOCKER}
+RUN gcloud config set core/custom_ca_certs_file ${CERT_PATH_DOCKER}
 
 ################################
 ## Stage 3 Builder without proxy ##

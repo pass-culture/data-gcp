@@ -11,9 +11,7 @@ x-airflow-common: &airflow-common
     AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY:-}
     ENV_SHORT_NAME: ${ENV_SHORT_NAME:-}
     APPLICATIVE_EXTERNAL_CONNECTION_ID: ${APPLICATIVE_EXTERNAL_CONNECTION_ID:-}
-    SSL_CERT_FILE: /usr/local/share/ca-certificates/nscacert_combined.pem
     CLOUDSDK_CONFIG: /root/.config/gcloud
-    CLOUDSDK_CORE_CUSTOM_CA_CERTS_FILE: /usr/local/share/ca-certificates/nscacert_combined.pem
     KUBECONFIG: /root/.kube/config
     AIRFLOW_CONN_KUBERNETES_DEFAULT: '{"conn_type": "kubernetes", "extra": {"kube_config_path": "/root/.kube/config", "cluster_context": "gke_passculture-data-ehp_europe-west1_data-gke-cluster-ehp", "in_cluster": false}}'
   volumes:

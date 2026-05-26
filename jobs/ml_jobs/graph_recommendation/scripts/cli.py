@@ -15,7 +15,7 @@ from src.evaluation import (
 from src.graph_builder import (
     build_book_metadata_graph,
 )
-from src.heterograph_builder import build_book_metadata_heterograph
+from src.heterograph_builder import build_heterograph_from_parquet
 from src.utils.graph_stats import get_graph_analysis
 from src.utils.mlflow import (
     MLflowAuthManager,
@@ -37,7 +37,7 @@ PARQUET_ARGUMENT = typer.Argument(
 )
 
 GRAPH_OUTPUT_OPTION = typer.Option(
-    f"{RESULTS_DIR}/book_metadata_graph.pt",
+    f"{RESULTS_DIR}/item_metadata_graph.pt",
     "--output-graph",
     "-o",
     help="Where to save the serialized PyG Data object.",
@@ -45,11 +45,10 @@ GRAPH_OUTPUT_OPTION = typer.Option(
 )
 
 EMBEDDING_OUTPUT_OPTION = typer.Option(
-    f"{RESULTS_DIR}/book_metadata_embeddings.parquet",
+    f"{RESULTS_DIR}/item_metadata_embeddings.parquet",
     "--output-embeddings",
     "-e",
-    help="Where to save the node embeddings as a parquet file. "
-    "Can be a local path or a GCS path (gs://...).",
+    help="Where to save the node embeddings as a parquet file. " "Can be a local path or a GCS path (gs://...).",
     dir_okay=False,
 )
 
@@ -68,8 +67,7 @@ TRAIN_CONFIG_OPTION = typer.Option(
 
 EMBEDDING_INPUT_ARGUMENT = typer.Argument(
     ...,
-    help="Where to save the node embeddings as a parquet file. "
-    "Can be a local path or a GCS path (gs://...).",
+    help="Where to save the node embeddings as a parquet file. " "Can be a local path or a GCS path (gs://...).",
     dir_okay=False,
 )
 
@@ -94,18 +92,17 @@ EVAL_CONFIG_OPTION = typer.Option(
 )
 
 
-app = typer.Typer(
-    help="Utilities to build PyTorch Geometric graphs for book recommendations."
-)
+app = typer.Typer(help="Utilities to build PyTorch Geometric graphs for book recommendations.")
 
 
+# deprecated
 @app.command("build-graph")
 def build_graph_command(
     parquet_path: str = PARQUET_ARGUMENT,
     output_path: str = GRAPH_OUTPUT_OPTION,
     nrows: int | None = NROWS_OPTION,
 ) -> None:
-    """Build the book-to-metadata graph and save it to disk."""
+    """Build the book-to-metadata bipartite graph and save it to disk."""
 
     graph_data = build_book_metadata_graph(
         parquet_path,
@@ -118,7 +115,7 @@ def build_graph_command(
             f"Graph saved to {output_path} "
             f"(nodes={graph_data.num_nodes}, "
             f"edges={graph_data.num_edges}, "
-            f"books={len(graph_data.book_ids)}, "
+            f"items={len(graph_data.book_ids)}, "
             f"metadata={len(graph_data.metadata_ids)})"
         ),
         fg=typer.colors.GREEN,
@@ -131,9 +128,9 @@ def build_heterograph_command(
     output_path: str = GRAPH_OUTPUT_OPTION,
     nrows: int | None = NROWS_OPTION,
 ) -> None:
-    """Build the book-to-metadata graph and save it to disk."""
+    """Build the item-to-metadata graph and save it to disk."""
 
-    graph_data = build_book_metadata_heterograph(
+    graph_data = build_heterograph_from_parquet(
         parquet_path,
         nrows=nrows,
     )
@@ -144,7 +141,7 @@ def build_heterograph_command(
             f"Graph saved to {output_path} "
             f"(nodes={graph_data.num_nodes}, "
             f"edges={graph_data.num_edges}, "
-            f"books={len(graph_data.book_ids)}, "
+            f"items={len(graph_data.book_ids)}, "
             f"metadata={len(graph_data.metadata_ids)})"
         ),
         fg=typer.colors.GREEN,
@@ -159,14 +156,10 @@ def train_metapath2vec_command(
     nrows: int | None = NROWS_OPTION,
     config_json: str | None = TRAIN_CONFIG_OPTION,
 ):
-    """Train a Metapath2Vec model on the book-to-metadata graph and save it to disk."""
+    """Train a Metapath2Vec model on the item-to-metadata graph and save it to disk."""
 
     # Load default config
-    training_config = (
-        TrainingConfig().parse_and_update_config(config_json)
-        if config_json
-        else TrainingConfig()
-    )
+    training_config = TrainingConfig().parse_and_update_config(config_json) if config_json else TrainingConfig()
     typer.echo(f"Using training config: {training_config.to_dict()}", err=True)
 
     # Connect to MLflow
@@ -188,8 +181,8 @@ def train_metapath2vec_command(
             f.write(run_id)
 
         # Build graph and save
-        graph_data = build_book_metadata_heterograph(parquet_path, nrows=nrows)
-        torch.save(graph_data, f=f"{RESULTS_DIR}/book_metadata_graph.pt")
+        graph_data = build_heterograph_from_parquet(parquet_path, nrows=nrows)
+        torch.save(graph_data, f=f"{RESULTS_DIR}/item_metadata_graph.pt")
 
         # Analyze and log
         graph_summary, graph_components = get_graph_analysis(graph_data)
@@ -232,11 +225,7 @@ def evaluate_metapath2vec_command(
     }
     """
 
-    evaluation_config = (
-        EvaluationConfig().parse_and_update_config(config_json)
-        if config_json
-        else EvaluationConfig()
-    )
+    evaluation_config = EvaluationConfig().parse_and_update_config(config_json) if config_json else EvaluationConfig()
     typer.echo(f"Using evaluation config: {evaluation_config.to_dict()}", err=True)
 
     # Retrieving run_id locally
@@ -252,9 +241,7 @@ def evaluate_metapath2vec_command(
         mlflow.start_run(run_id=run_id),
     ):
         # Log config
-        mlflow.log_params(
-            {f"eval_{k}": v for k, v in evaluation_config.to_dict().items()}
-        )
+        mlflow.log_params({f"eval_{k}": v for k, v in evaluation_config.to_dict().items()})
 
         # Evaluate embeddings
         metrics_df, results_df = evaluate_embeddings(

@@ -8,9 +8,49 @@ import pytest
 from src.utils.metadata_metrics import (
     _get_gtl_depth,
     _get_gtl_walk_dist,
+    _strip_gtl_prefix,
     get_gtl_retrieval_score,
     get_gtl_walk_score,
 )
+
+
+def test_strip_gtl_prefix() -> None:
+    """Test that item-type prefixes are correctly stripped."""
+    assert _strip_gtl_prefix("b-01020300") == "01020300"
+    assert _strip_gtl_prefix("m-01020300") == "01020300"
+    assert _strip_gtl_prefix("01020300") == "01020300"  # no prefix → unchanged
+
+
+# ...existing code...
+
+
+def test_gtl_retrieval_score_with_prefix() -> None:
+    """Test that prefixed GTL IDs are scored correctly after stripping the prefix."""
+    # Same prefix → same as unprefixed comparison
+    assert pytest.approx(get_gtl_retrieval_score("b-01020301", "b-01020301"), 1e-3) == 1.0
+    assert pytest.approx(get_gtl_retrieval_score("b-01020301", "b-01020302"), 1e-3) == 3 / 4
+    assert pytest.approx(get_gtl_retrieval_score("m-01020301", "m-01020301"), 1e-3) == 1.0
+
+
+def test_gtl_retrieval_score_cross_type_is_zero() -> None:
+    """Test that cross-type comparisons always return 0.0.
+
+    A book GTL and a music GTL are semantically unrelated even when their
+    numeric codes are identical, so the score must be 0.0.
+    """
+    assert get_gtl_retrieval_score("b-01020301", "m-01020301") == 0.0
+    assert get_gtl_retrieval_score("m-01000000", "b-01000000") == 0.0
+    assert get_gtl_retrieval_score("b-01020301", "m-02000000") == 0.0
+
+
+def test_gtl_retrieval_score_unprefixed_vs_prefixed_is_zero() -> None:
+    """Test that comparing prefixed and unprefixed IDs returns 0.0.
+
+    A prefixed ID has an item-type prefix (e.g. "b-"), while an unprefixed one
+    does not. They should be treated as different types.
+    """
+    assert get_gtl_retrieval_score("b-01020301", "01020301") == 0.0
+    assert get_gtl_retrieval_score("01020301", "b-01020301") == 0.0
 
 
 def test_get_gtl_depth():

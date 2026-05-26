@@ -100,10 +100,17 @@ def train_metapath2vec(
     profile: bool = False,
 ) -> pd.DataFrame:
     """
-    Train MetaPath2Vec and return embeddings with gtl_id.
+    Train MetaPath2Vec and return embeddings for all items.
+
+    Args:
+        graph_data: Heterogeneous graph built by build_multitype_metadata_heterograph_from_dataframe.
+            Must contain an "item" node type and item_ids_by_type / gtl_ids_by_type attributes.
+        training_config: Training hyperparameters and metapath configuration.
+        checkpoint_path: Path to save the best model checkpoint.
+        profile: Whether to log per-batch timing breakdowns.
 
     Returns:
-        DataFrame with ['item_id', 'gtl_id', EMBEDDING_COLUMN_NAME] columns
+        DataFrame with columns ['node_ids', 'gtl_id', 'item_type', EMBEDDING_COLUMN].
     """
 
     logger.info("Training configuration:")
@@ -116,11 +123,15 @@ def train_metapath2vec(
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logger.info(f"Using device: {device}")
 
-    # Restrict metapaths to those that exist in the graph
+    # Restrict metapaths to those that exist in the graph.
+    # A metapath is valid when ALL node types it references are present in the
+    # graph.  We collect every unique node type across all edges of the metapath
+    # and check that each one exists as a node type in graph_data.
+    all_node_types = set(graph_data.node_types)
     valid_metapaths = [
         metapath
         for metapath in training_config.metapaths
-        if metapath[1][0] in graph_data.metadata_columns
+        if all(node_type in all_node_types for edge in metapath for node_type in (edge[0], edge[2]))
     ]
     logger.info(f"Using these valid metapaths for training: {valid_metapaths}")
 
@@ -146,14 +157,10 @@ def train_metapath2vec(
         list(model.parameters()),
         lr=training_config.learning_rate,
     )
-    scheduler = ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=1, min_lr=1e-6, threshold=0.01
-    )
+    scheduler = ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=1, min_lr=1e-6, threshold=0.01)
 
     # Log model parameters in mlflow
-    log_model_parameters(
-        training_config.to_dict() | {"walk_length": training_config.walk_length}
-    )
+    log_model_parameters(training_config.to_dict() | {"walk_length": training_config.walk_length})
 
     # Start training
     logger.info("Starting training...")
@@ -193,10 +200,7 @@ def train_metapath2vec(
             best_loss_epoch += 1
 
         # Early stopping check
-        if (
-            abs(prev_best_loss - best_loss) < training_config.early_stopping_delta
-            and training_config.early_stop
-        ):
+        if abs(prev_best_loss - best_loss) < training_config.early_stopping_delta and training_config.early_stop:
             break
 
     # Log total training time and final best loss
@@ -211,21 +215,58 @@ def train_metapath2vec(
     time_formatted = str(timedelta(seconds=int(total_training_time)))
     logger.info(f"Training completed in {time_formatted}")
 
-    # Extract and save embeddings for book nodes
-    logger.info("Extracting book embeddings...")
+    # Extract embeddings for all items from the single "item" node type.
+    # item_ids_by_type maps each item_type to the ordered list of its item_ids,
+    # which correspond to contiguous slices within the global "item" node range.
+    logger.info("Extracting item embeddings...")
     checkpoint = torch.load(checkpoint_path, weights_only=True)
     embedding = checkpoint["embedding.weight"].detach().cpu().numpy()
-    book_embeddings = embedding[
-        model.start["book"] : model.start["book"] + graph_data["book"].num_nodes, :
-    ]
 
-    embeddings_df = pd.DataFrame(
-        {
-            "node_ids": graph_data.book_ids,
-            "gtl_id": graph_data.gtl_ids,
-            EMBEDDING_COLUMN: list(book_embeddings),
-        }
-    )
+    # The node type in the model must be "item" in the multi-type graph.
+    item_node_type = "item"
+    if item_node_type not in model.start:
+        raise RuntimeError(
+            f"Node type '{item_node_type}' not found in model.start: "
+            f"{list(model.start.keys())}. The graph must use the multi-type builder."
+        )
 
-    logger.info(f"Book embeddings extracted: {len(embeddings_df)} items with gtl_id")
+    if not hasattr(graph_data, "item_ids_by_type"):
+        raise AttributeError(
+            "graph_data is missing 'item_ids_by_type'. "
+            "The graph must be built with build_multitype_metadata_heterograph_from_dataframe."
+        )
+    if not hasattr(graph_data, "gtl_ids_by_type"):
+        raise AttributeError(
+            "graph_data is missing 'gtl_ids_by_type'. "
+            "The graph must be built with build_multitype_metadata_heterograph_from_dataframe."
+        )
+    item_ids_by_type: dict[str, list] = graph_data.item_ids_by_type
+    gtl_ids_by_type: dict[str, list] = graph_data.gtl_ids_by_type
+
+    start_idx = model.start[item_node_type]
+    all_item_embeddings = embedding[start_idx : start_idx + graph_data[item_node_type].num_nodes, :]
+
+    # item_ids_by_type contains per-type slices in the same order as the
+    # global item node list built by the heterograph builder (sorted by
+    # item_type then item_id), so we can slice the embedding matrix directly.
+    all_rows: list[dict] = []
+    offset = 0
+    for item_type in sorted(item_ids_by_type.keys()):
+        item_ids = item_ids_by_type[item_type]
+        gtl_ids = gtl_ids_by_type.get(item_type, [None] * len(item_ids))
+        type_embeddings = all_item_embeddings[offset : offset + len(item_ids), :]
+        offset += len(item_ids)
+        for node_id, gtl_id, emb in zip(item_ids, gtl_ids, type_embeddings, strict=False):
+            all_rows.append(
+                {
+                    "node_ids": node_id,
+                    "gtl_id": gtl_id,
+                    "item_type": item_type,
+                    EMBEDDING_COLUMN: emb,
+                }
+            )
+
+    embeddings_df = pd.DataFrame(all_rows)
+    type_counts = ", ".join(f"{t}: {(embeddings_df.item_type == t).sum()}" for t in item_ids_by_type)
+    logger.info(f"Embeddings extracted: {len(embeddings_df)} items ({type_counts})")
     return embeddings_df

@@ -1,6 +1,6 @@
 # Graph Recommendation
 
-Utilities to turn parquet exports of book offers into a PyTorch Geometric graph
+Utilities to turn parquet exports of book and music offers into a PyTorch Geometric graph
 that can be consumed by embedding pipelines such as Node2Vec and MetaPath2Vec.
 
 ## Installation
@@ -12,7 +12,7 @@ package in editable mode to expose the CLI and Python modules:
 make install
 ```
 
-## Building the book → metadata graph
+## Building the item → metadata graph
 
 ### Standard Bipartite Graph
 
@@ -20,21 +20,26 @@ The entry point lives in `src/graph_recommendation/graph_builder.py`. It
 produces a bipartite `torch_geometric.data.Data` object with the following
 characteristics:
 
-* Book nodes are indexed by the `item_id` column.
+* Item nodes are indexed by the `item_id` column.
 * Metadata nodes are created for each distinct value in `DEFAULT_METADATA_COLUMNS`
   (`gtl_label_level_1` → `_level_4`, `artist_id`).
-* Empty values are skipped; every remaining `(book, metadata)` pair contributes
+* Empty values are skipped; every remaining `(item, metadata)` pair contributes
   a bidirectional edge.
 
 ### Heterogeneous Graph
 
-The heterograph builder in `src/graph_recommendation/heterograph_builder.py` creates
-a `torch_geometric.data.HeteroData` object with typed nodes and edges:
+The heterograph builder in `src/heterograph_builder.py` creates
+a `torch_geometric.data.HeteroData` object with typed nodes and edges supporting
+multiple item types (books, music, …):
 
-* **Node types**: `"book"` for books, plus one type per metadata column
+* **Node types**: `"item"` for all items (books, music, …), plus one type per metadata column
   (e.g., `"artist_id"`, `"gtl_label_level_1"`)
-* **Edge types**: `("book", "is_{metadata}", "{metadata}")` and
-  `("{metadata}", "{metadata}_of", "book")`
+* **Edge types**: `("item", "is_{metadata}", "{metadata}")` and
+  `("{metadata}", "{metadata}_of", "item")`
+* `gtl_id` is prefixed per item type (`b-` for books, `m-` for music) at the DBT source
+  level to prevent spurious cross-type similarity. `gtl_label_level_*` columns are
+  not prefixed as their textual values are already distinct across item types.
+* The input parquet file must contain an `item_type` column
 * This structure enables heterogeneous graph neural networks and metapath-based
   algorithms like MetaPath2Vec
 
@@ -45,33 +50,32 @@ a `torch_geometric.data.HeteroData` object with typed nodes and edges:
 The `embedding_builder.py` module provides training functionality for MetaPath2Vec
 models on heterogeneous graphs. The training pipeline:
 
-* Uses a predefined metapath that traverses book-artist and book-GTL relationships
+* Uses a predefined metapath that traverses item-artist and item-GTL relationships
 * Generates random walks following the metapath structure
 * Trains embeddings using skip-gram with negative sampling
 * Supports GPU acceleration when available
 * Implements learning rate scheduling and early stopping
-* Saves checkpoints and extracts book embeddings
+* Saves checkpoints and extracts item embeddings
 
 ### CLI
 
 ```bash
 # Build and save standard bipartite graph
 python -m scripts.cli build-graph \
-  data/book_item_for_graph_recommendation.parquet \
-  --output data/book_metadata_graph.pt \
+  data/item_for_graph_recommendation.parquet \
+  --output data/item_metadata_graph.pt \
   --nrows 5000  # optional sampling for quick iterations
 
 # Build and save heterogeneous graph
 python -m scripts.cli build-heterograph \
-  data/book_item_for_graph_recommendation.parquet \
-  --output data/book_metadata_heterograph.pt \
+  data/item_for_graph_recommendation.parquet \
+  --output data/item_metadata_heterograph.pt \
   --nrows 5000  # optional sampling for quick iterations
 
 # Train MetaPath2Vec model on heterogeneous graph
 python -m scripts.cli train-metapath2vec \
-  data/book_item_for_graph_recommendation.parquet \
-  --output-embeddings data/book_metadata_embeddings.parquet \
-  --num-workers 8 \
+  data/item_for_graph_recommendation.parquet \
+  --output-embeddings data/item_metadata_embeddings.parquet \
   --nrows 5000  # optional sampling for quick iterations
 ```
 
@@ -80,8 +84,8 @@ python -m scripts.cli train-metapath2vec \
 * `build-heterograph` materialises the heterogeneous graph and serialises it
   with `torch.save`.
 * `train-metapath2vec` builds a heterogeneous graph, trains a MetaPath2Vec
-  model, and saves the resulting book embeddings as a parquet file with columns
-  `node_ids` (book identifiers) and `embeddings` (embedding vectors).
+  model, and saves the resulting item embeddings as a parquet file with columns
+  `node_ids` (item identifiers) and `embedding` (embedding vectors).
 
 ### Python API
 
@@ -95,43 +99,40 @@ from src.graph_builder import (
     DEFAULT_METADATA_COLUMNS,
 )
 from src.heterograph_builder import (
-    build_book_metadata_heterograph,
-    build_book_metadata_heterograph_from_dataframe,
+    build_heterograph_from_parquet,
+    build_multitype_metadata_heterograph_from_dataframe,
 )
+from src.constants import GTL_METADATA_COLUMNS, SHARED_METADATA_COLUMNS
+from src.config import TrainingConfig
 from src.embedding_builder import train_metapath2vec
 
-# Standard bipartite graph
+# Standard bipartite graph (books only)
 graph_data = build_book_metadata_graph(
-    Path("data/book_item_for_graph_recommendation.parquet"),
+    Path("data/item_for_graph_recommendation.parquet"),
     nrows=10_000,
 )
-torch.save(graph_data, Path("data/book_metadata_graph.pt"))
+torch.save(graph_data, Path("data/item_metadata_graph.pt"))
 
-# Heterogeneous graph
-hetero_graph_data = build_book_metadata_heterograph(
-    Path("data/book_item_for_graph_recommendation.parquet"),
+# Heterogeneous graph (multi-type: books + music)
+hetero_graph_data = build_heterograph_from_parquet(
+    Path("data/item_for_graph_recommendation.parquet"),
     nrows=10_000,
 )
-torch.save(hetero_graph_data, Path("data/book_metadata_heterograph.pt"))
+torch.save(hetero_graph_data, Path("data/item_metadata_heterograph.pt"))
 
 # Train MetaPath2Vec embeddings
 embeddings_df = train_metapath2vec(
     graph_data=hetero_graph_data,
-    num_workers=8,
+    training_config=TrainingConfig(num_workers=8),
 )
-embeddings_df.to_parquet("data/book_embeddings.parquet", index=False)
+embeddings_df.to_parquet("data/item_embeddings.parquet", index=False)
 
 # Or reuse a dataframe if it is already in memory
-graph_data = build_book_metadata_graph_from_dataframe(
+# (dataframe must contain an item_type column and a prefixed gtl_id)
+hetero_graph_data = build_multitype_metadata_heterograph_from_dataframe(
     dataframe,
-    metadata_columns=DEFAULT_METADATA_COLUMNS,
-    id_column="item_id",
-)
-
-hetero_graph_data = build_book_metadata_heterograph_from_dataframe(
-    dataframe,
-    metadata_columns=DEFAULT_METADATA_COLUMNS,
-    id_column="item_id",
+    gtl_metadata_columns=list(GTL_METADATA_COLUMNS),
+    shared_metadata_columns=list(SHARED_METADATA_COLUMNS),
 )
 ```
 
@@ -151,8 +152,9 @@ identifiers:
 
 **Heterogeneous graph (`HeteroData`):**
 
-* `book_ids` / `metadata_ids` / `metadata_ids_by_column`
-* `metadata_columns` listing active metadata types
+* `book_ids` — all item ids (books + music), legacy name kept for compatibility
+* `item_ids_by_type` / `gtl_ids_by_type` / `item_types` — per-type mappings
+* `metadata_ids` / `metadata_ids_by_column` / `metadata_columns`
 * Access `graph_data[src_type, edge_type, dst_type].edge_index` for typed edges
 * Node types accessible via `graph_data.node_types` and `graph_data.edge_types`
 
@@ -176,86 +178,12 @@ The test suite includes:
 
 ## Resources
 
-###  Queries to get the training data
+### DBT model
 
-Get products for books with metadata and artists.
+The training data is generated by the DBT model
+`ml_graph_recommendation__item_with_metadata_to_embed` which exports books and music
+items with their metadata. The `gtl_id` field is prefixed with the item type initial
+(`b-` for books, `m-` for music) directly in the DBT model.
 
-```sql
-    WITH
-        offers AS (
-            SELECT
-                offer_id,
-                offer_product_id,
-                item_id,
-                offer_name,
-                offer_subcategory_id,
-                rayon
-            FROM
-                `passculture-data-prod.analytics_prod.global_offer`
-            WHERE
-                offer_category_id = "LIVRE" ),
-        offers_with_extended_metadata AS (
-            SELECT
-                offers.offer_id,
-                offers.offer_product_id,
-                offers.item_id,
-                offers.offer_name,
-                offers.offer_subcategory_id,
-                offers.rayon,
-                offer_metadata.gtl_type,
-                offer_metadata.gtl_label_level_1,
-                offer_metadata.gtl_label_level_2,
-                offer_metadata.gtl_label_level_3,
-                offer_metadata.gtl_label_level_4,
-                offer_metadata.author,
-                artist_link.artist_id,
-                artist_link.artist_type,
-                artist.artist_name
-            FROM
-                offers
-            LEFT JOIN
-                `passculture-data-prod.analytics_prod.global_offer_metadata` offer_metadata
-            USING
-                (offer_id)
-            LEFT JOIN
-                `passculture-data-prod.raw_prod.applicative_database_product_artist_link` artist_link
-            ON
-                offers.offer_product_id = CAST(artist_link.offer_product_id AS STRING)
-            LEFT JOIN
-                `passculture-data-prod.raw_prod.applicative_database_artist` artist
-            USING
-                (artist_id)),
-        offer_with_score AS (
-            SELECT
-                *,
-                CAST(gtl_label_level_1 IS NOT NULL AS int) AS has_gtl
-            FROM
-                offers_with_extended_metadata)
-    SELECT
-        offer_id AS example_offer_id,
-        offer_product_id,
-        item_id,
-        offer_name,
-        offer_subcategory_id,
-        rayon,
-        gtl_type,
-        gtl_label_level_1,
-        gtl_label_level_2,
-        gtl_label_level_3,
-        gtl_label_level_4,
-        author,
-        artist_id,
-        artist_name,
-        artist_type
-    FROM
-        offer_with_score
-        QUALIFY
-        ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY has_gtl DESC ) = 1;
-```
-
-* The data is exported at this GCS location : `gs://data-bucket-prod/sandbox_prod/lmontier/graph_recommendation/book_item_for_graph_recommendation.parquet`
-  * To download it:
-
-    ```bash
-    gsutil cp gs://data-bucket-prod/sandbox_prod/lmontier/graph_recommendation/book_item_for_graph_recommendation.parquet ./data/
-    ```
+* The data is exported to GCS and then to BigQuery before being loaded as a parquet
+  file for training.

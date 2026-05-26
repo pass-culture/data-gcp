@@ -7,16 +7,19 @@ from torch_geometric.data import HeteroData
 
 from src.constants import (
     ARTIST_ID_COLUMN,
-    GTL_ID_COLUMN,
     GTL_LABEL_LEVEL_1_COLUMN,
     GTL_LABEL_LEVEL_2_COLUMN,
     GTL_LABEL_LEVEL_3_COLUMN,
+    GTL_METADATA_COLUMNS,
     SERIES_ID_COLUMN,
+    SHARED_METADATA_COLUMNS,
 )
 from src.heterograph_builder import (
-    DEFAULT_METADATA_COLUMNS,
-    build_book_metadata_heterograph_from_dataframe,
+    build_multitype_metadata_heterograph_from_dataframe,
 )
+
+_GTL_COLS = list(GTL_METADATA_COLUMNS)
+_SHARED_COLS = list(SHARED_METADATA_COLUMNS)
 
 
 def _build_sample_dataframe() -> pd.DataFrame:
@@ -27,6 +30,7 @@ def _build_sample_dataframe() -> pd.DataFrame:
     return pd.DataFrame(
         {
             "item_id": ["book-1", "book-2", "book-3", "book-4"],
+            "item_type": ["book", "book", "book", "book"],
             "rayon": ["Literature", "Comics", "Literature", "Comics"],
             "gtl_label_level_1": ["Arts", "Arts", "Arts", "Arts"],
             "gtl_label_level_2": ["Painting", "Drawing", "Painting", "Drawing"],
@@ -35,6 +39,7 @@ def _build_sample_dataframe() -> pd.DataFrame:
             "artist_id": ["artist-1", "artist-2", "artist-1", "artist-2"],
             "gtl_id": ["01022000", "01030000", "01022000", "01023000"],
             "series_id": ["series-1", "series-1", "series-2", "series-2"],
+            "music_label": [None, None, None, None],
         }
     )
 
@@ -44,6 +49,7 @@ def _build_empty_metadata_dataframe() -> pd.DataFrame:
     return pd.DataFrame(
         {
             "item_id": ["book-1", "book-2"],
+            "item_type": ["book", "book"],
             "rayon": [None, ""],
             "gtl_label_level_1": [None, "   "],
             "gtl_label_level_2": [None, None],
@@ -52,6 +58,7 @@ def _build_empty_metadata_dataframe() -> pd.DataFrame:
             "artist_id": [None, None],
             "gtl_id": ["01234567", "02345678"],
             "series_id": [None, None],
+            "music_label": [None, None],
         }
     )
 
@@ -59,13 +66,14 @@ def _build_empty_metadata_dataframe() -> pd.DataFrame:
 def test_build_heterograph_from_dataframe_creates_correct_structure() -> None:
     """Test that heterograph creates proper node and edge types."""
     dataframe = _build_sample_dataframe()
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_multitype_metadata_heterograph_from_dataframe(
         dataframe,
-        metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
+        gtl_metadata_columns=_GTL_COLS,
+        shared_metadata_columns=_SHARED_COLS,
     )
     assert isinstance(graph_data, HeteroData)
     # Check that we have the expected node types
-    assert "book" in graph_data.node_types
+    assert "item" in graph_data.node_types
     expected_metadata_types = {
         "gtl_label_level_1",
         "gtl_label_level_2",
@@ -76,8 +84,8 @@ def test_build_heterograph_from_dataframe_creates_correct_structure() -> None:
         assert node_type in graph_data.node_types
     # gtl_label_level_4 should not be present since all values are None
     assert "gtl_label_level_4" not in graph_data.node_types
-    # Check book nodes
-    assert graph_data["book"].num_nodes == 4
+    # Check item nodes
+    assert graph_data["item"].num_nodes == 4
     assert len(graph_data.book_ids) == 4
     assert set(graph_data.book_ids) == {"book-1", "book-2", "book-3", "book-4"}
 
@@ -85,58 +93,55 @@ def test_build_heterograph_from_dataframe_creates_correct_structure() -> None:
 def test_heterograph_edge_types_are_correct() -> None:
     """Test that edge types follow the expected naming convention."""
     dataframe = _build_sample_dataframe()
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_multitype_metadata_heterograph_from_dataframe(
         dataframe,
-        metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
+        gtl_metadata_columns=_GTL_COLS,
+        shared_metadata_columns=_SHARED_COLS,
     )
     # Check that edge types exist for each metadata column
     expected_edge_patterns = [
-        ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
-        ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
-        ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
-        ("gtl_label_level_2", "gtl_label_level_2_of", "book"),
-        ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
-        ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
-        ("book", "is_artist_id", "artist_id"),
-        ("artist_id", "artist_id_of", "book"),
+        ("item", "is_gtl_label_level_1", "gtl_label_level_1"),
+        ("gtl_label_level_1", "gtl_label_level_1_of", "item"),
+        ("item", "is_gtl_label_level_2", "gtl_label_level_2"),
+        ("gtl_label_level_2", "gtl_label_level_2_of", "item"),
+        ("item", "is_gtl_label_level_3", "gtl_label_level_3"),
+        ("gtl_label_level_3", "gtl_label_level_3_of", "item"),
+        ("item", "is_artist_id", "artist_id"),
+        ("artist_id", "artist_id_of", "item"),
     ]
     for src_type, edge_type, dst_type in expected_edge_patterns:
         assert (src_type, edge_type, dst_type) in graph_data.edge_types
 
 
 def test_heterograph_edges_are_bidirectional() -> None:
-    """Test that edges exist in both directions (book->metadata and metadata->book)."""
+    """Test that edges exist in both directions (item->metadata and metadata->item)."""
     dataframe = _build_sample_dataframe()
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_multitype_metadata_heterograph_from_dataframe(
         dataframe,
-        metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
+        gtl_metadata_columns=_GTL_COLS,
+        shared_metadata_columns=_SHARED_COLS,
     )
     # For each forward edge, check that reverse edge exists
     for src_type, edge_type, dst_type in graph_data.edge_types:
-        if src_type == "book" and edge_type.startswith("is_"):
-            # Forward edge: book -> metadata
+        if src_type == "item" and edge_type.startswith("is_"):
+            # Forward edge: item -> metadata
             forward_edges = graph_data[src_type, edge_type, dst_type].edge_index
             # Find corresponding reverse edge
             reverse_edge_type = f"{dst_type}_of"
-            reverse_edges = graph_data[dst_type, reverse_edge_type, "book"].edge_index
+            reverse_edges = graph_data[dst_type, reverse_edge_type, "item"].edge_index
             # Check that every forward edge has a corresponding reverse edge
-            forward_pairs = set(
-                zip(forward_edges[0].tolist(), forward_edges[1].tolist(), strict=True)
-            )
-            reverse_pairs = set(
-                zip(reverse_edges[1].tolist(), reverse_edges[0].tolist(), strict=True)
-            )
-            assert (
-                forward_pairs == reverse_pairs
-            ), f"Edges not symmetric for {edge_type}"
+            forward_pairs = set(zip(forward_edges[0].tolist(), forward_edges[1].tolist(), strict=True))
+            reverse_pairs = set(zip(reverse_edges[1].tolist(), reverse_edges[0].tolist(), strict=True))
+            assert forward_pairs == reverse_pairs, f"Edges not symmetric for {edge_type}"
 
 
 def test_heterograph_metadata_organization() -> None:
     """Test that metadata is properly organized by column."""
     dataframe = _build_sample_dataframe()
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_multitype_metadata_heterograph_from_dataframe(
         dataframe,
-        metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
+        gtl_metadata_columns=_GTL_COLS,
+        shared_metadata_columns=_SHARED_COLS,
     )
     # Check metadata_ids_by_column structure
     assert isinstance(graph_data.metadata_ids_by_column, dict)
@@ -145,12 +150,11 @@ def test_heterograph_metadata_organization() -> None:
         GTL_LABEL_LEVEL_1_COLUMN,
         GTL_LABEL_LEVEL_2_COLUMN,
         GTL_LABEL_LEVEL_3_COLUMN,
-        GTL_ID_COLUMN,
         ARTIST_ID_COLUMN,
         SERIES_ID_COLUMN,
     }
-    assert set(graph_data.metadata_columns) == expected_columns
-    # Check specific metadata values
+    assert expected_columns.issubset(set(graph_data.metadata_columns))
+    # Check specific metadata values (no longer prefixed — labels are distinct across item types by nature)
     assert "Arts" in graph_data.metadata_ids_by_column["gtl_label_level_1"]
     assert "Painting" in graph_data.metadata_ids_by_column["gtl_label_level_2"]
     assert "Drawing" in graph_data.metadata_ids_by_column["gtl_label_level_2"]
@@ -174,18 +178,17 @@ def test_heterograph_metadata_organization() -> None:
 def test_heterograph_node_counts_are_correct() -> None:
     """Test that node counts match the expected unique values."""
     dataframe = _build_sample_dataframe()
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_multitype_metadata_heterograph_from_dataframe(
         dataframe,
-        metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
+        gtl_metadata_columns=_GTL_COLS,
+        shared_metadata_columns=_SHARED_COLS,
     )
-    # Check book node count
-    assert graph_data["book"].num_nodes == 4
+    # Check item node count
+    assert graph_data["item"].num_nodes == 4
     # Check metadata node counts
     assert graph_data[GTL_LABEL_LEVEL_1_COLUMN].num_nodes == 1  # Only "Arts"
     assert graph_data[GTL_LABEL_LEVEL_2_COLUMN].num_nodes == 2  # "Painting", "Drawing"
-    assert (
-        graph_data[GTL_LABEL_LEVEL_3_COLUMN].num_nodes == 2
-    )  # "Watercolor", "Sketching"
+    assert graph_data[GTL_LABEL_LEVEL_3_COLUMN].num_nodes == 2  # "Watercolor", "Sketching"
     assert graph_data[ARTIST_ID_COLUMN].num_nodes == 2  # "artist-1", "artist-2"
 
 
@@ -193,9 +196,10 @@ def test_heterograph_missing_columns_raises_error() -> None:
     """Test that missing required columns raise KeyError."""
     dataframe = pd.DataFrame({"item_id": ["book-1"], "some_other_column": ["value"]})
     with pytest.raises(KeyError, match="Missing required columns"):
-        build_book_metadata_heterograph_from_dataframe(
+        build_multitype_metadata_heterograph_from_dataframe(
             dataframe,
-            metadata_columns=[GTL_ID_COLUMN, "missing_column"],
+            gtl_metadata_columns=_GTL_COLS,
+            shared_metadata_columns=_SHARED_COLS,
         )
 
 
@@ -203,9 +207,10 @@ def test_heterograph_no_valid_metadata_raises_error() -> None:
     """Test that dataframe with no valid metadata raises ValueError."""
     dataframe = _build_empty_metadata_dataframe()
     with pytest.raises(ValueError, match="No edges were created"):
-        build_book_metadata_heterograph_from_dataframe(
+        build_multitype_metadata_heterograph_from_dataframe(
             dataframe,
-            metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
+            gtl_metadata_columns=_GTL_COLS,
+            shared_metadata_columns=_SHARED_COLS,
         )
 
 
@@ -214,28 +219,35 @@ def test_heterograph_handles_duplicate_books() -> None:
     dataframe = pd.DataFrame(
         {
             "item_id": ["book-1", "book-1", "book-2", "book-3", "book-4"],
+            "item_type": ["book", "book", "book", "book", "book"],
             "artist_id": ["artist-1", "artist-1", "artist-2", "artist-1", "artist-2"],
             "gtl_label_level_1": ["Arts", "Arts", "Comics", "Arts", "Comics"],
+            "gtl_label_level_2": [None, None, None, None, None],
+            "gtl_label_level_3": [None, None, None, None, None],
+            "gtl_label_level_4": [None, None, None, None, None],
             "gtl_id": ["01234567", "01234567", "02345678", "03456789", "04567890"],
+            "series_id": [None, None, None, None, None],
+            "music_label": [None, None, None, None, None],
         }
     )
 
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_multitype_metadata_heterograph_from_dataframe(
         dataframe,
-        metadata_columns=[GTL_ID_COLUMN, ARTIST_ID_COLUMN, GTL_LABEL_LEVEL_1_COLUMN],
+        gtl_metadata_columns=_GTL_COLS,
+        shared_metadata_columns=_SHARED_COLS,
     )
-    # Should have unique books only (book-1 appears twice but deduplicated)
-    # All metadata values appear at least twice, so they survive preprocessing
-    assert graph_data["book"].num_nodes == 4
+    # Should have unique items only (book-1 appears twice but deduplicated)
+    assert graph_data["item"].num_nodes == 4
     assert set(graph_data.book_ids) == {"book-1", "book-2", "book-3", "book-4"}
 
 
 def test_heterograph_edge_indices_are_valid_tensors() -> None:
     """Test that edge indices are valid PyTorch tensors with correct format."""
     dataframe = _build_sample_dataframe()
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_multitype_metadata_heterograph_from_dataframe(
         dataframe,
-        metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
+        gtl_metadata_columns=_GTL_COLS,
+        shared_metadata_columns=_SHARED_COLS,
     )
     for src_type, edge_type, dst_type in graph_data.edge_types:
         edge_index = graph_data[src_type, edge_type, dst_type].edge_index
@@ -250,12 +262,12 @@ def test_heterograph_edge_indices_are_valid_tensors() -> None:
         dst_indices = edge_index[1]
         assert src_indices.min() >= 0
         assert dst_indices.min() >= 0
-        if src_type == "book":
-            assert src_indices.max() < graph_data["book"].num_nodes
+        if src_type == "item":
+            assert src_indices.max() < graph_data["item"].num_nodes
         else:
             assert src_indices.max() < graph_data[src_type].num_nodes
-        if dst_type == "book":
-            assert dst_indices.max() < graph_data["book"].num_nodes
+        if dst_type == "item":
+            assert dst_indices.max() < graph_data["item"].num_nodes
         else:
             assert dst_indices.max() < graph_data[dst_type].num_nodes
 
@@ -265,17 +277,24 @@ def test_heterograph_handles_mixed_data_types() -> None:
     dataframe = pd.DataFrame(
         {
             "item_id": ["book-1", "book-2", "book-3", "book-4"],
+            "item_type": ["book", "book", "book", "book"],
             # Mixed types, 123 appears twice
             "artist_id": [123, "artist-string", 456.789, 123],
             # Category A appears twice
             "gtl_label_level_1": ["Category A", 999, None, "Category A"],
+            "gtl_label_level_2": [None, None, None, None],
+            "gtl_label_level_3": [None, None, None, None],
+            "gtl_label_level_4": [None, None, None, None],
             "gtl_id": ["01234567", "02345678", "gtl-3", "gtl-4"],
+            "series_id": [None, None, None, None],
+            "music_label": [None, None, None, None],
         }
     )
 
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_multitype_metadata_heterograph_from_dataframe(
         dataframe,
-        metadata_columns=[GTL_ID_COLUMN, ARTIST_ID_COLUMN, GTL_LABEL_LEVEL_1_COLUMN],
+        gtl_metadata_columns=_GTL_COLS,
+        shared_metadata_columns=_SHARED_COLS,
     )
     # Check that mixed types are converted to strings
     # Only values appearing at least twice survive preprocessing
@@ -283,7 +302,7 @@ def test_heterograph_handles_mixed_data_types() -> None:
     assert "123" in artist_values  # Appears twice
     # "artist-string" and "456.789" appear only once, so they're removed
     gtl_values = graph_data.metadata_ids_by_column["gtl_label_level_1"]
-    assert "Category A" in gtl_values  # Appears twice
+    assert "Category A" in gtl_values  # Appears twice, no prefix needed
     # "999" appears only once, so it's removed
     # None should be excluded
 
@@ -293,26 +312,33 @@ def test_heterograph_with_single_metadata_column() -> None:
     dataframe = pd.DataFrame(
         {
             "item_id": ["book-1", "book-2", "book-3", "book-4", "book-5"],
+            "item_type": ["book", "book", "book", "book", "book"],
             "artist_id": ["artist-1", "artist-2", "artist-1", "artist-2", None],
+            "gtl_label_level_1": [None, None, None, None, None],
+            "gtl_label_level_2": [None, None, None, None, None],
+            "gtl_label_level_3": [None, None, None, None, None],
+            "gtl_label_level_4": [None, None, None, None, None],
             "gtl_id": ["01234567", "02345678", "03456789", "gtl-4", "gtl-5"],
+            "series_id": [None, None, None, None, None],
+            "music_label": [None, None, None, None, None],
         }
     )
 
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_multitype_metadata_heterograph_from_dataframe(
         dataframe,
-        metadata_columns=[GTL_ID_COLUMN, ARTIST_ID_COLUMN],
+        gtl_metadata_columns=_GTL_COLS,
+        shared_metadata_columns=_SHARED_COLS,
     )
-    # Should have book and artist_id node types
-    assert set(graph_data.node_types) == {"book", "artist_id"}
-    # Should have exactly 2 edge types (forward and backward)
+    # Should have item and artist_id node types
+    assert "item" in graph_data.node_types
+    assert "artist_id" in graph_data.node_types
+    # Should have exactly the artist_id edge types (forward and backward)
     expected_edge_types = {
-        ("book", "is_artist_id", "artist_id"),
-        ("artist_id", "artist_id_of", "book"),
+        ("item", "is_artist_id", "artist_id"),
+        ("artist_id", "artist_id_of", "item"),
     }
-    assert set(graph_data.edge_types) == expected_edge_types
+    assert expected_edge_types.issubset(set(graph_data.edge_types))
 
-    # Check node counts
-    assert (
-        graph_data["book"].num_nodes == 4
-    )  # book-5 has no artist_id nor proper gtl_id
+    # Check node counts (book-5 has no artist_id, others have artist_id)
+    assert graph_data["item"].num_nodes == 4
     assert graph_data["artist_id"].num_nodes == 2

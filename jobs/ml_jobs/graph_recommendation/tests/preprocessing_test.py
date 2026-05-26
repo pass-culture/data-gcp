@@ -448,8 +448,8 @@ class TestPreprocessingPipeline:
         assert len(result) == 4
         assert result["item_id"].tolist() == ["book-1", "book-2", "book-3", "book-5"]
 
-    def test_pipeline_with_real_book_data_structure(self) -> None:
-        """Test pipeline with structure similar to real book data."""
+    def test_pipeline_with_real_item_data_structure(self) -> None:
+        """Test pipeline with structure similar to real item data (books or music)."""
         df = pd.DataFrame(
             {
                 "item_id": ["book-1", "book-2", "book-3", "book-4"],
@@ -554,9 +554,7 @@ class TestNormalizeDataframeFunction:
                 "keep_as_is": ["unchanged", "unchanged2"],
             }
         )
-        normalized_df = normalize_dataframe(
-            df, ["item_id", "metadata_col", "other_col"]
-        )
+        normalized_df = normalize_dataframe(df, ["item_id", "metadata_col", "other_col"])
         # Check that specified columns are normalized
         assert normalized_df["metadata_col"].tolist() == ["value1", None]
         assert normalized_df["other_col"].tolist() == [None, "value2"]

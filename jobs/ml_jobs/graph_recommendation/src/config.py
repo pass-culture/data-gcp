@@ -101,35 +101,50 @@ class TrainingConfig(BaseConfig):
     num_epochs: int = 15
     num_workers: int = 8 if sys.platform == "linux" else 0
     batch_size: int = 256
-    learning_rate: float = 0.003
+    learning_rate: float = 0.003  # * 3
     early_stop: bool = True
     early_stopping_delta: float = 0.001
     metapaths: list[list[tuple[str, str, str]]] = field(
         default_factory=lambda: (
             [
+                # All metapaths start from "item" (books + music unified).
+                # GTL values are prefixed (b-/m-) so book and music GTL nodes
+                # are distinct even though they share the same node type.
+                # The same metapaths apply to both item types — no duplication.
                 [
-                    ("book", "is_artist_id", "artist_id"),
-                    ("artist_id", "artist_id_of", "book"),
+                    ("item", "is_artist_id", "artist_id"),
+                    ("artist_id", "artist_id_of", "item"),
+                ],
+                # gtl_label_level_3 and gtl_label_level_4 are book-specific:
+                # music items have null values for these levels.
+                [
+                    ("item", "is_gtl_label_level_4", "gtl_label_level_4"),
+                    ("gtl_label_level_4", "gtl_label_level_4_of", "item"),
                 ],
                 [
-                    ("book", "is_gtl_label_level_4", "gtl_label_level_4"),
-                    ("gtl_label_level_4", "gtl_label_level_4_of", "book"),
+                    ("item", "is_gtl_label_level_3", "gtl_label_level_3"),
+                    ("gtl_label_level_3", "gtl_label_level_3_of", "item"),
+                ],
+                # --- book-specific metapaths ---
+                [
+                    ("item", "is_series_id", "series_id"),
+                    ("series_id", "series_id_of", "item"),
+                ],
+                # --- music-specific metapaths ---
+                [
+                    ("item", "is_music_label", "music_label"),
+                    ("music_label", "music_label_of", "item"),
+                ],
+                # gtl_label_level_1 and gtl_label_level_2 are shared across item types:
+                # both books and music use these levels, but GTL values are prefixed
+                # (b-/m-) so book and music nodes remain distinct within the same node type.
+                [
+                    ("item", "is_gtl_label_level_2", "gtl_label_level_2"),
+                    ("gtl_label_level_2", "gtl_label_level_2_of", "item"),
                 ],
                 [
-                    ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
-                    ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
-                ],
-                [
-                    ("book", "is_series_id", "series_id"),
-                    ("series_id", "series_id_of", "book"),
-                ],
-                [
-                    ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
-                    ("gtl_label_level_2", "gtl_label_level_2_of", "book"),
-                ],
-                [
-                    ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
-                    ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
+                    ("item", "is_gtl_label_level_1", "gtl_label_level_1"),
+                    ("gtl_label_level_1", "gtl_label_level_1_of", "item"),
                 ],
             ]
         )
@@ -139,9 +154,7 @@ class TrainingConfig(BaseConfig):
 @dataclass
 class EvaluationConfig(BaseConfig):
     node_id_column: str = ID_COLUMN
-    metadatas_with_categorical_scoring: list[str] = field(
-        default_factory=lambda: [ARTIST_ID_COLUMN, SERIES_ID_COLUMN]
-    )
+    metadatas_with_categorical_scoring: list[str] = field(default_factory=lambda: [ARTIST_ID_COLUMN, SERIES_ID_COLUMN])
     metadatas_with_custom_scoring: dict[str, Callable[[str, str], float]] = field(
         default_factory=lambda: {GTL_ID_COLUMN: get_gtl_retrieval_score}
     )  # Could also be {GTL_ID_COLUMN: get_gtl_walk_score}
@@ -161,7 +174,5 @@ class EvaluationConfig(BaseConfig):
         """Return config as a dictionary with function names instead of objects."""
         result = asdict(self)
         # Replace function objects with their names
-        result["metadatas_with_custom_scoring"] = {
-            k: v.__name__ for k, v in self.metadatas_with_custom_scoring.items()
-        }
+        result["metadatas_with_custom_scoring"] = {k: v.__name__ for k, v in self.metadatas_with_custom_scoring.items()}
         return result

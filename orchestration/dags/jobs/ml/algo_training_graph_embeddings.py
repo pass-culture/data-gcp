@@ -75,21 +75,15 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "instance_type": Param(
-            default=INSTANCE_TYPE, enum=INSTANCES_TYPES["cpu"]["standard"]
-        ),
+        "instance_type": Param(default=INSTANCE_TYPE, enum=INSTANCES_TYPES["cpu"]["standard"]),
         "instance_name": Param(default=INSTANCE_NAME, type="string"),
-        "gpu_type": Param(
-            default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
-        ),
+        "gpu_type": Param(default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]),
         "gpu_count": Param(default=1, enum=INSTANCES_TYPES["gpu"]["count"]),
         "experiment_name": Param(
             default=f"algo_training_graph_embeddings_v1.1_{ENV_SHORT_NAME}",
             type="string",
         ),
-        "train_only_on_10k_rows": Param(
-            default=ENV_SHORT_NAME == "dev", type="boolean"
-        ),
+        "train_only_on_10k_rows": Param(default=ENV_SHORT_NAME == "dev", type="boolean"),
     },
 ) as _dag:
     start = EmptyOperator(task_id="start")
@@ -165,9 +159,7 @@ with DAG(
         deferrable=True,
     )
 
-    gce_instance_stop = DeleteGCEOperator(
-        task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
-    )
+    gce_instance_stop = DeleteGCEOperator(task_id="gce_stop_task", instance_name="{{ params.instance_name }}")
 
     (
         start

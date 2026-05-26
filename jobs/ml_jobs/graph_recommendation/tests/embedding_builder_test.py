@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
@@ -22,35 +21,28 @@ from src.embedding_builder import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from contextlib import AbstractContextManager
 
 
 def _build_sample_heterograph() -> HeteroData:
-    """Build a minimal heterograph for testing."""
+    """Build a minimal heterograph for testing with the multi-type "item" node type."""
     data = HeteroData()
 
-    # Add book nodes - num_nodes is inferred from x.shape[0]
-    data["book"].x = torch.rand(3, 16)
-    data["book"].num_nodes = 3  # Explicitly set num_nodes
-    data.book_ids = ["book_1", "book_2", "book_3"]
-    data["gtl_ids"] = ["01022000", "01030000", "01022000"]
+    # Add item nodes (multi-type graph uses "item", not "book")
+    data["item"].x = torch.rand(3, 16)
+    data["item"].num_nodes = 3
+    data.book_ids = ["item_1", "item_2", "item_3"]
+    data.item_ids_by_type = {"book": ["item_1", "item_2", "item_3"]}
+    data.gtl_ids_by_type = {"book": ["b-01022000", "b-01030000", "b-01022000"]}
 
     # Add metadata nodes
     data["artist_id"].x = torch.rand(2, 16)
     data["gtl_label_level_1"].x = torch.rand(2, 16)
     # Add edges
-    data["book", "is_artist_id", "artist_id"].edge_index = torch.tensor(
-        [[0, 1], [0, 1]]
-    )
-    data["artist_id", "artist_id_of", "book"].edge_index = torch.tensor(
-        [[0, 1], [0, 1]]
-    )
-    data["book", "is_gtl_label_level_1", "gtl_label_level_1"].edge_index = torch.tensor(
-        [[1, 2], [0, 1]]
-    )
-    data["gtl_label_level_1", "gtl_label_level_1_of", "book"].edge_index = torch.tensor(
-        [[0, 1], [1, 2]]
-    )
+    data["item", "is_artist_id", "artist_id"].edge_index = torch.tensor([[0, 1], [0, 1]])
+    data["artist_id", "artist_id_of", "item"].edge_index = torch.tensor([[0, 1], [0, 1]])
+    data["item", "is_gtl_label_level_1", "gtl_label_level_1"].edge_index = torch.tensor([[1, 2], [0, 1]])
+    data["gtl_label_level_1", "gtl_label_level_1_of", "item"].edge_index = torch.tensor([[0, 1], [1, 2]])
 
     # Add metadata tracking
     data.metadata_ids = [
@@ -72,66 +64,66 @@ def simple_training_config() -> TrainingConfig:
         num_workers=0,
         metapaths=[
             [
-                ("book", "is_artist_id", "artist_id"),
-                ("artist_id", "artist_id_of", "book"),
+                ("item", "is_artist_id", "artist_id"),
+                ("artist_id", "artist_id_of", "item"),
             ],
             [
-                ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
-                ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
+                ("item", "is_gtl_label_level_1", "gtl_label_level_1"),
+                ("gtl_label_level_1", "gtl_label_level_1_of", "item"),
             ],
         ],
     )
 
 
-@contextmanager
 def _mock_training_components(
     graph_data: HeteroData,
-) -> Generator[tuple[MagicMock, MagicMock], None, None]:
+) -> AbstractContextManager[tuple[MagicMock, MagicMock]]:
     """Context manager to mock heavy ML training components.
 
     Args:
-        graph_data: The heterograph data containing book nodes
+        graph_data: The heterograph data containing item nodes.
 
-    Yields:
-        Tuple of (mock_metapath2vec, mock_train) for additional assertions
+    Returns:
+        Tuple of (mock_metapath2vec, mock_train) for additional assertions.
     """
-    with (
-        patch("src.embedding_builder.MetaPath2Vec") as mock_metapath2vec,
-        patch("src.embedding_builder.torch.save"),
-        patch("src.embedding_builder.torch.load") as mock_load,
-        patch("torch.optim.SparseAdam") as mock_optimizer_cls,
-        patch("src.embedding_builder.ReduceLROnPlateau"),
-        patch("src.embedding_builder._train") as mock_train,
-        patch("src.embedding_builder.logger"),
-        patch("pathlib.Path.mkdir"),
-    ):
-        cfg = TrainingConfig()
-        # Set up minimal model mock
-        mock_model = MagicMock()
-        mock_model.to.return_value.start = {"book": 0}
-        mock_metapath2vec.return_value = mock_model
+    from contextlib import contextmanager
 
-        # Mock optimizer to have param_groups
-        mock_optimizer = MagicMock()
-        mock_optimizer.param_groups = [{"lr": cfg.learning_rate}]
-        mock_optimizer_cls.return_value = mock_optimizer
+    @contextmanager
+    def _inner():
+        with (
+            patch("src.embedding_builder.MetaPath2Vec") as mock_metapath2vec,
+            patch("src.embedding_builder.torch.save"),
+            patch("src.embedding_builder.torch.load") as mock_load,
+            patch("torch.optim.SparseAdam") as mock_optimizer_cls,
+            patch("src.embedding_builder.ReduceLROnPlateau"),
+            patch("src.embedding_builder._train") as mock_train,
+            patch("src.embedding_builder.logger"),
+            patch("pathlib.Path.mkdir"),
+        ):
+            cfg = TrainingConfig()
+            # Set up minimal model mock — node type must be "item"
+            mock_model = MagicMock()
+            mock_model.to.return_value.start = {"item": 0}
+            mock_metapath2vec.return_value = mock_model
 
-        # Mock the embedding tensor that would be loaded from checkpoint
-        # Need to match the number of book nodes (3 in our test graph)
-        num_book_nodes = len(graph_data.book_ids)
-        # Create embeddings as a proper tensor that can be sliced
-        mock_embeddings = torch.rand(num_book_nodes, cfg.embedding_dim)
+            # Mock optimizer to have param_groups
+            mock_optimizer = MagicMock()
+            mock_optimizer.param_groups = [{"lr": cfg.learning_rate}]
+            mock_optimizer_cls.return_value = mock_optimizer
 
-        # Mock torch.load to return checkpoint with proper structure
-        def mock_load_fn(path, weights_only=False):
-            return {"embedding.weight": mock_embeddings}
+            # Mock the embedding tensor that would be loaded from checkpoint
+            num_item_nodes = graph_data["item"].num_nodes
+            mock_embeddings = torch.rand(num_item_nodes, cfg.embedding_dim)
 
-        mock_load.side_effect = mock_load_fn
+            def mock_load_fn(path, weights_only=False):
+                return {"embedding.weight": mock_embeddings}
 
-        # Mock _train to return a loss value
-        mock_train.return_value = 0.5
+            mock_load.side_effect = mock_load_fn
+            mock_train.return_value = 0.5
 
-        yield mock_metapath2vec, mock_train
+            yield mock_metapath2vec, mock_train
+
+    return _inner()
 
 
 def test_metapaths_structure() -> None:
@@ -139,22 +131,12 @@ def test_metapaths_structure() -> None:
     cfg = TrainingConfig()
     # Verify metapath is a list of tuples
     assert isinstance(cfg.metapaths, list | tuple)
-    assert all(
-        isinstance(path, tuple) for metapath in cfg.metapaths for path in metapath
-    )
-    assert all(
-        len(path) == 3 for metapath in cfg.metapaths for path in metapath
-    )  # (source, edge, target)
+    assert all(isinstance(path, tuple) for metapath in cfg.metapaths for path in metapath)
+    assert all(len(path) == 3 for metapath in cfg.metapaths for path in metapath)  # (source, edge, target)
 
     # Check that it includes artist and GTL relations
-    assert any(
-        "artist_id" in str(path) for metapath in cfg.metapaths for path in metapath
-    )
-    assert any(
-        "gtl_label_level" in str(path)
-        for metapath in cfg.metapaths
-        for path in metapath
-    )
+    assert any("artist_id" in str(path) for metapath in cfg.metapaths for path in metapath)
+    assert any("gtl_label_level" in str(path) for metapath in cfg.metapaths for path in metapath)
 
 
 def test_train_function_basic_execution() -> None:
@@ -183,7 +165,6 @@ def test_train_function_basic_execution() -> None:
         device,
         epoch,
         profile=False,
-        log_mlflow=False,
     )
 
     # Verify basic operations were called
@@ -208,8 +189,8 @@ def test_train_metapath2vec_with_minimal_mocking(simple_training_config) -> None
     assert LANCEDB_NODE_ID_COLUMN in result.columns
     assert GTL_ID_COLUMN in result.columns
     assert EMBEDDING_COLUMN in result.columns
-    # Should have embeddings for all books
-    assert len(result) == len(graph_data.book_ids)
+    # Should have embeddings for all items
+    assert len(result) == graph_data["item"].num_nodes
 
 
 def test_train_metapath2vec_parameter_acceptance(simple_training_config) -> None:

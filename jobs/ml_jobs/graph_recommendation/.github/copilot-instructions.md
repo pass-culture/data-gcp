@@ -172,7 +172,7 @@ When adding features:
 - Custom edge weights: Extend the `edges` set to include weight tuples in
   bipartite graphs, or add edge attributes in heterogeneous graphs
 - Filters: Use `filters` parameter in both `build_book_metadata_graph()` and
-  `build_book_metadata_heterograph()` for parquet row filtering
+  `build_heterograph_from_parquet()` for parquet row filtering
 - Metapath customization: Modify the `METAPATH` constant in `embedding_builder.py`
   to adjust relationship weights or add new edge types
 - Training hyperparameters: Update constants at the top of `embedding_builder.py`

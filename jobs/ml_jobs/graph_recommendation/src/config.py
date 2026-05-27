@@ -5,7 +5,13 @@ from dataclasses import asdict, dataclass, field
 
 from loguru import logger
 
-from src.constants import ARTIST_ID_COLUMN, GTL_ID_COLUMN, ID_COLUMN, SERIES_ID_COLUMN
+from src.constants import (
+    ARTIST_ID_COLUMN,
+    GTL_ID_COLUMN,
+    ID_COLUMN,
+    MUSIC_LABEL_COLUMN,
+    SERIES_ID_COLUMN,
+)
 from src.utils.metadata_metrics import get_gtl_retrieval_score
 
 
@@ -124,6 +130,10 @@ class TrainingConfig(BaseConfig):
                     ("series_id", "series_id_of", "book"),
                 ],
                 [
+                    ("book", "is_music_label", "music_label"),
+                    ("music_label", "music_label_of", "book"),
+                ],
+                [
                     ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
                     ("gtl_label_level_2", "gtl_label_level_2_of", "book"),
                 ],
@@ -140,7 +150,7 @@ class TrainingConfig(BaseConfig):
 class EvaluationConfig(BaseConfig):
     node_id_column: str = ID_COLUMN
     metadatas_with_categorical_scoring: list[str] = field(
-        default_factory=lambda: [ARTIST_ID_COLUMN, SERIES_ID_COLUMN]
+        default_factory=lambda: [ARTIST_ID_COLUMN, SERIES_ID_COLUMN, MUSIC_LABEL_COLUMN]
     )
     metadatas_with_custom_scoring: dict[str, Callable[[str, str], float]] = field(
         default_factory=lambda: {GTL_ID_COLUMN: get_gtl_retrieval_score}

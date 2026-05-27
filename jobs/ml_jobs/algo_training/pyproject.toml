@@ -73,3 +73,7 @@ environments = [
     # "sys_platform == 'darwin'", # Readd this once we know how to handle ScannNN dependency on macOS
     "sys_platform == 'linux'",
 ]
+constraint-dependencies = [
+    "mlflow >= 3.12.0", # CVE-2026-0545
+
+]

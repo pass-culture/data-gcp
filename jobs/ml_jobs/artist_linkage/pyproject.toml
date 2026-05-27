@@ -88,5 +88,4 @@ environments = [
 ]
 constraint-dependencies = [
     "mlflow >= 3.12.0", # CVE-2026-0545
-
 ]

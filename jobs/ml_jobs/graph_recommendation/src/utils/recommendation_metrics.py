@@ -89,25 +89,42 @@ def _compute_metrics_at_k(
     score_column: str,
 ) -> dict:
     """Compute NDCG, recall, and precision metrics at a specific k value."""
+    # Filter out queries where all ground-truth scores are 0 — ndcg_at_k
+    # divides by the ideal DCG which is 0 in that case, causing ZeroDivisionError.
+    users_with_positive_scores = rating_true[rating_true["rating"] > 0]["userID"].unique()
+    if len(users_with_positive_scores) == 0:
+        logger.warning(f"No positive scores found for score column '{score_column}' at k={k}. Skipping.")
+        return {
+            "score_column": score_column,
+            "k": k,
+            "ndcg": 0.0,
+            "recall": 0.0,
+            "custom_recall": 0.0,
+            "precision": 0.0,
+        }
+
+    rating_true_filtered = rating_true[rating_true["userID"].isin(users_with_positive_scores)]
+    rating_pred_filtered = rating_pred_sorted[rating_pred_sorted["userID"].isin(users_with_positive_scores)]
+
     # Compute NDCG@K (uses raw scores)
     ndcg = ndcg_at_k(
-        rating_true=rating_true,
-        rating_pred=rating_pred_sorted,
+        rating_true=rating_true_filtered,
+        rating_pred=rating_pred_filtered,
         relevancy_method="top_k",
         k=k,
         score_type="exp",
     )
 
     # Compute threshold-based metrics (recall, precision)
-    rating_pred_k = rating_pred_sorted.groupby("userID").head(k)
+    rating_pred_k = rating_pred_filtered.groupby("userID").head(k)
     recall = custom_recall_at_k(
-        rating_true=rating_true,
+        rating_true=rating_true_filtered,
         rating_pred=rating_pred_k,
         k=k,
     )
     custom_recall = recall  # TODO: Remove this in the future
     precision = precision_at_k(
-        rating_true=rating_true,
+        rating_true=rating_true_filtered,
         rating_pred=rating_pred_k,
         relevancy_method="top_k",
         k=k,

@@ -45,7 +45,7 @@ def main(
     offer_event_filepath: str = typer.Option(),
     similarities_filepath: str = typer.Option(),
     delta_events_filepath: str = typer.Option(),
-    delta_event_offer_links_filepath: str = typer.Option(),
+    delta_event_offer_link_filepath: str = typer.Option(),
 ) -> None:
     # 1. Load Data
     raw_data_df = pd.read_parquet(offer_event_filepath)
@@ -106,10 +106,10 @@ def main(
     pd.DataFrame(delta_events).to_parquet(delta_events_filepath, index=False)
     pd.DataFrame(delta_event_offer_links).explode("offer_ids").rename(
         columns={"offer_ids": OFFER_ID_COL}
-    ).to_parquet(delta_event_offer_links_filepath, index=False)
+    ).to_parquet(delta_event_offer_link_filepath, index=False)
     logger.success(
         f"Saved delta events to {delta_events_filepath} and "
-        f"delta event-offer links to {delta_event_offer_links_filepath}."
+        f"delta event-offer links to {delta_event_offer_link_filepath}."
     )
 
 

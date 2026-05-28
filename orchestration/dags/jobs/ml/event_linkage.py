@@ -66,15 +66,15 @@ class GCSConfig(DagBaseConfig):
     delta_event_series_gcs_path: str = (
         f"{STORAGE_BASE_PATH}/03_delta_event_series.parquet"
     )
-    delta_event_series_offer_links_gcs_path: str = (
-        f"{STORAGE_BASE_PATH}/03_delta_event_series_offer_links.parquet"
+    delta_event_series_offer_link_gcs_path: str = (
+        f"{STORAGE_BASE_PATH}/03_delta_event_series_offer_link.parquet"
     )
 
 
 class BigQueryConfig(DagBaseConfig):
     event_offer_to_link_table: str = "event_offer_to_link"
     delta_event_series_table: str = "delta_event_series"
-    delta_event_series_offer_links_table: str = "delta_event_series_offer_links"
+    delta_event_series_offer_link_table: str = "delta_event_series_offer_link"
     linkage_dataset: str = BIGQUERY_ML_LINKAGE_DATASET
     preprocessing_dataset: str = BIGQUERY_ML_PREPROCESSING_DATASET
 
@@ -96,10 +96,10 @@ GCS_TO_DELTA_TABLES = [
         "table_id": DAG_CONFIG.bq.delta_event_series_table,
     },
     {
-        "filename": DAG_CONFIG.gcs.delta_event_series_offer_links_gcs_path.split("/")[
+        "filename": DAG_CONFIG.gcs.delta_event_series_offer_link_gcs_path.split("/")[
             -1
         ],
-        "table_id": DAG_CONFIG.bq.delta_event_series_offer_links_table,
+        "table_id": DAG_CONFIG.bq.delta_event_series_offer_link_table,
     },
 ]
 
@@ -199,7 +199,7 @@ with DAG(
                 --offer-event-filepath {DAG_CONFIG.gcs.event_offer_to_link_gcs_path} \
                 --similarities-filepath {DAG_CONFIG.gcs.similarities_gcs_path} \
                 --delta-events-filepath {DAG_CONFIG.gcs.delta_event_series_gcs_path} \
-                --delta-event-offer-links-filepath {DAG_CONFIG.gcs.delta_event_series_offer_links_gcs_path}
+                --delta-event-offer-link-filepath {DAG_CONFIG.gcs.delta_event_series_offer_link_gcs_path}
             """,
     )
 

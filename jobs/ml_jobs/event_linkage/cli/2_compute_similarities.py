@@ -25,13 +25,28 @@ from src.preprocessing import (
     offer_name_preprocessing,
 )
 
-MIN_DESCRIPTION_LENGTH = 30
-
-
 app = typer.Typer()
 
 
 def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
+    """Compute pairwise similarities between offers within a subcategory.
+
+    Computes name, partial name, full name, image, description, and full
+    description similarities for all offer pairs.
+
+    Note:
+        Pairs are first filtered by partial name similarity threshold before
+        the more expensive description similarity is computed.
+
+    Args:
+        selected_df: DataFrame containing offers for a single subcategory with
+            columns for offer ID, name, description, and image embedding.
+
+    Returns:
+        DataFrame of offer pairs that pass the partial name similarity threshold,
+        with columns for each similarity metric as well as the raw offer names
+        and descriptions for both items in the pair.
+    """
     # 1. Compute name similarity
     preprocessed_names = selected_df[OFFER_NAME_COL].pipe(offer_name_preprocessing)
     name_similarity = rapidfuzz.process.cdist(
@@ -67,15 +82,17 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
 
     # 2. Compute image similarity
     _zero_image = np.zeros_like(selected_df[IMAGE_EMBEDDING_COL].dropna().iloc[0])
-    image_embedding = np.array(
+    image_embeddings = np.array(
         selected_df[IMAGE_EMBEDDING_COL]
         .apply(lambda x: _zero_image if x is None else x)
         .to_list()
-    )
-    image_scores = (image_embedding @ image_embedding.T).reshape(-1)
+    )  # Dim is (num_offers, embedding_size)
+    image_scores = (image_embeddings @ image_embeddings.T).reshape(-1)
     logger.success("Image similarity computed")
 
-    # 3. Create similarities_df
+    # 3. Create similarities_df with columns
+    #   OFFER_ID_1, OFFER_ID_2, NAME_SIMILARITY, PARTIAL_NAME_SIMILARITY,
+    #   FULL_NAME_SIMILARITY, IMAGE_SIMILARITY
     similarities_df = (
         selected_df.loc[:, [OFFER_ID_COL]]
         .merge(selected_df.loc[:, [OFFER_ID_COL]], how="cross", suffixes=("_1", "_2"))

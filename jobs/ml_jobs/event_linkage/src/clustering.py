@@ -19,8 +19,13 @@ from src.constants import (
 )
 from src.interfaces import ClusterRepresentantMethod
 
+DESCRIPTION_MATCH_COL = "description_match"
+NAME_MATCH_COL = "name_match"
+IMAGE_MATCH_COL = "image_match"
+MATCH_COL = "match"
+
 # Matching Params
-SUBCATECORIES_NOT_MATCHING_ON_OFFER_NAMES = ["SPECTACLE_REPRESENTATION"]
+SUBCATEGORIES_NOT_MATCHING_ON_OFFER_NAMES = ["SPECTACLE_REPRESENTATION"]
 
 
 def get_uuid_from_cluster(offer_ids: set[str]) -> str:
@@ -52,10 +57,10 @@ def should_match_on_offer_names(df: pd.DataFrame, subcategory_id: str) -> pd.Ser
         pd.Series: A boolean series indicating whether the offers match based on
             the selected criteria.
     """
-    if subcategory_id in SUBCATECORIES_NOT_MATCHING_ON_OFFER_NAMES:
-        return df["description_match"] | df["image_match"]
+    if subcategory_id in SUBCATEGORIES_NOT_MATCHING_ON_OFFER_NAMES:
+        return df[DESCRIPTION_MATCH_COL] | df[IMAGE_MATCH_COL]
 
-    return df["description_match"] | df["name_match"] | df["image_match"]
+    return df[DESCRIPTION_MATCH_COL] | df[NAME_MATCH_COL] | df[IMAGE_MATCH_COL]
 
 
 def clusterize_offers(cross_df: pd.DataFrame, subcategory_id: str) -> pd.DataFrame:
@@ -79,15 +84,19 @@ def clusterize_offers(cross_df: pd.DataFrame, subcategory_id: str) -> pd.DataFra
         ]
         .reset_index(drop=True)
     ).assign(
-        description_match=lambda df: df[DESCRIPTION_SIMILARITY_COL]
-        >= DESCRIPTION_SIMILARITY_THRESHOLD,
-        name_match=lambda df: df[NAME_SIMILARITY_COL] >= NAME_SIMILARITY_THRESHOLD,
-        image_match=lambda df: df[IMAGE_SIMILARITY_COL] >= IMAGE_SIMILARITY_THRESHOLD,
-        match=lambda df: should_match_on_offer_names(df, subcategory_id),
+        **{
+            DESCRIPTION_MATCH_COL: lambda df: df[DESCRIPTION_SIMILARITY_COL]
+            >= DESCRIPTION_SIMILARITY_THRESHOLD,
+            NAME_MATCH_COL: lambda df: df[NAME_SIMILARITY_COL]
+            >= NAME_SIMILARITY_THRESHOLD,
+            IMAGE_MATCH_COL: lambda df: df[IMAGE_SIMILARITY_COL]
+            >= IMAGE_SIMILARITY_THRESHOLD,
+            MATCH_COL: lambda df: should_match_on_offer_names(df, subcategory_id),
+        }
     )
 
     # Clusterize
-    matched_df = selected_df[selected_df["match"]]
+    matched_df = selected_df[selected_df[MATCH_COL]]
     G = nx.from_pandas_edgelist(
         matched_df, source=f"{OFFER_ID_COL}_1", target=f"{OFFER_ID_COL}_2"
     )

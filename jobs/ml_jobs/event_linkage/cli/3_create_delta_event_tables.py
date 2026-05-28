@@ -82,10 +82,11 @@ def main(
     ):
         # Extract cluster metadata to create event
         cluster_metadata = extract_cluster_metadata(cluster_row, cross_df, raw_data_df)
+        event_id = get_uuid_from_cluster(cluster_row.cluster)
 
         delta_events.append(
             {
-                "event_id": get_uuid_from_cluster(cluster_row.cluster),
+                "event_id": event_id,
                 **cluster_metadata,
                 "action": ActionType.ADD,
                 "comment": CommentType.NEW_EVENT,
@@ -94,7 +95,7 @@ def main(
 
         delta_event_offer_links.append(
             {
-                "event_id": get_uuid_from_cluster(cluster_row.cluster),
+                "event_id": event_id,
                 "offer_ids": cluster_row.cluster,
                 "action": ActionType.ADD,
                 "comment": CommentType.NEW_EVENT,

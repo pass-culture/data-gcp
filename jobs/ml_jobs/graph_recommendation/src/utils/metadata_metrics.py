@@ -1,6 +1,34 @@
 import numpy as np
 
 MAX_DEPTH = 4
+_GTL_PREFIX_SEP = "-"
+
+
+def _strip_gtl_prefix(gtl_id: str) -> str:
+    """Strip an optional item-type prefix from a GTL identifier.
+
+    When GTL IDs are prefixed at the source (e.g. ``"b-01020300"`` for books,
+    ``"m-01020300"`` for music), this function returns the bare 8-character
+    numeric code.  IDs that are already unprefixed are returned unchanged.
+
+    Examples:
+        >>> _strip_gtl_prefix("b-01020300")
+        '01020300'
+        >>> _strip_gtl_prefix("m-01020300")
+        '01020300'
+        >>> _strip_gtl_prefix("01020300")
+        '01020300'
+    """
+    if _GTL_PREFIX_SEP in gtl_id:
+        return gtl_id.split(_GTL_PREFIX_SEP, 1)[1]
+    return gtl_id
+
+
+# Extract and compare item-type prefixes before stripping.
+# A book GTL and a music GTL are semantically unrelated even when their
+# numeric codes are identical — cross-type comparisons always return 0.0.
+def _extract_prefix(gtl_id: str) -> str | None:
+    return gtl_id.split(_GTL_PREFIX_SEP, 1)[0] if _GTL_PREFIX_SEP in gtl_id else None
 
 
 def _get_gtl_depth(gtl_id: str) -> int:
@@ -72,6 +100,7 @@ def get_gtl_walk_score(query_gtl_id: str, result_gtl_id: str) -> float:
 
     The score is the inverse of their hierarchical distance. Higher values indicate
     greater similarity (closer relationship in the GTL taxonomy).
+    Accepts both bare GTL IDs (``"01020000"``) and prefixed ones (``"b-01020000"``).
 
     Args:
         query_gtl_id (str): The query GTL identifier.
@@ -83,7 +112,7 @@ def get_gtl_walk_score(query_gtl_id: str, result_gtl_id: str) -> float:
     Examples:
         >>> get_gtl_walk_score("01020000", "01020300")
         0.33
-        >>> get_gtl_walk_score("01020300", "01020000")
+        >>> get_gtl_walk_score("b-01020000", "b-01020300")
         0.33
     """
     # Early exit if None
@@ -92,7 +121,9 @@ def get_gtl_walk_score(query_gtl_id: str, result_gtl_id: str) -> float:
     if result_gtl_id is None:
         return 0.0
 
-    dist = _get_gtl_walk_dist(query_gtl_id, result_gtl_id)
+    dist = _get_gtl_walk_dist(
+        _strip_gtl_prefix(query_gtl_id), _strip_gtl_prefix(result_gtl_id)
+    )
     if dist == np.inf:
         return 0.0
     return 1 / (1 + dist)
@@ -110,13 +141,18 @@ def get_gtl_retrieval_score(
       a result missing 1 level from a depth-3 query (2/3 = 0.667)
     - Penalizes missing deeper (more specific) levels more heavily
 
+    Accepts both bare GTL IDs (``"01020301"``) and prefixed ones (``"b-01020301"``).
+    The prefix is stripped before comparison, so cross-type comparisons (e.g.
+    ``"b-01020301"`` vs ``"m-01020301"``) correctly return 0.0 only when the
+    numeric prefixes differ — the item-type tag itself does **not** influence the score.
+
     Use this metric when:
     - You want to emphasize precision in deeper hierarchies
     - Missing a child node should be penalized less than missing a parent node
     - Query specificity should influence the scoring
 
     Args:
-        query_gtl_id: The query GTL identifier (8 characters, e.g., "01020301")
+        query_gtl_id: The query GTL identifier (e.g. "01020301" or "b-01020301")
         result_gtl_id: The result GTL identifier to score against the query
 
     Returns:
@@ -126,23 +162,43 @@ def get_gtl_retrieval_score(
                - Intermediate = proportion of query levels matched
 
     Examples:
-        >>> get_gtl_depth_normalized_score("01020301", "01020301")
+        >>> get_gtl_retrieval_score("01020301", "01020301")
         1.0  # Exact match
 
-        >>> get_gtl_depth_normalized_score("01020301", "01020302")
+        >>> get_gtl_retrieval_score("01020301", "01020302")
         0.75  # 3 out of 4 query levels match
 
-        >>> get_gtl_depth_normalized_score("01020000", "01020301")
+        >>> get_gtl_retrieval_score("01020000", "01020301")
         1.0  # Result is descendant of query (all query levels match)
 
-        >>> get_gtl_depth_normalized_score("01020301", "01030000")
+        >>> get_gtl_retrieval_score("01020301", "01030000")
         0.25  # Only 1 out of 4 query levels match
+
+        >>> get_gtl_retrieval_score("b-01020301", "b-01020302")
+        0.75  # Prefix stripped before comparison, 3 out of 4 query levels match
+
+        >>> get_gtl_retrieval_score("b-01020301", "m-01020301")
+        0.0  # Cross-type: different item-type prefix → always 0.0
+        even if numeric codes are identical
     """
 
     # Early exit if completely independent (different first level) or None
     if query_gtl_id is None:
         return None
-    elif (result_gtl_id is None) or (query_gtl_id[:2] != result_gtl_id[:2]):
+
+    query_prefix = _extract_prefix(query_gtl_id)
+    result_prefix = (
+        _extract_prefix(result_gtl_id) if result_gtl_id is not None else None
+    )
+    if query_prefix != result_prefix:
+        return 0.0
+
+    query_gtl_id = _strip_gtl_prefix(query_gtl_id)
+    if result_gtl_id is None:
+        return 0.0
+    result_gtl_id = _strip_gtl_prefix(result_gtl_id)
+
+    if query_gtl_id[:2] != result_gtl_id[:2]:
         return 0.0
 
     # Split GTL IDs into hierarchical levels

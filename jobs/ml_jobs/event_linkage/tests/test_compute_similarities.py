@@ -81,7 +81,7 @@ class TestComputeSimilarities:
         assert FULL_DESCRIPTION_SIMILARITY_COL in similarities_df.columns
 
         # Since [1.0, 0.0] @ [1.0, 0.0] = 1.0
-        assert pytest.approx(row[IMAGE_SIMILARITY_COL]) == 1.0
+        assert row[IMAGE_SIMILARITY_COL] == pytest.approx(1.0)
 
         # Assert rapidfuzz score ranges (0 to 100)
         assert 0 <= row[NAME_SIMILARITY_COL] <= 100
@@ -159,4 +159,4 @@ class TestComputeSimilaritiesCLIIntegration:
         assert row[f"{OFFER_ID_COL}_2"] == "1"
         assert row[f"{OFFER_NAME_COL}_1"] == "Concert Johnny Hallyday Paris"
         assert row[f"{OFFER_NAME_COL}_2"] == "Concert de Johnny Hallyday"
-        assert row[IMAGE_SIMILARITY_COL] == 1.0
+        assert row[IMAGE_SIMILARITY_COL] == pytest.approx(1.0)

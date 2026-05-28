@@ -41,7 +41,7 @@ dev = [
   "pytest-cov>=5.0.0",
   "mock>=4.0.2",
   "ruff==0.5.7",
-  "typer==0.12.3",
+  "typer~=0.13.1",
   "pre-commit~=4.2.0",
   "shandy-sqlfmt[jinjafmt]==0.29.0",
   "sqlfluff==3.1.1",

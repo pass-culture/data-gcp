@@ -1,5 +1,5 @@
 select
-    partition_month,
+    deposit_expiration_month,
     region_name,
     department_name,
     department_code,

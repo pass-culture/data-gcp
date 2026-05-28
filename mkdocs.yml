@@ -69,6 +69,13 @@ nav:
           - Beneficiary coverage rate: dbt/vidoc_kpis/beneficiary_coverage_rate.md
           - Diversity rate (3+ categories): dbt/vidoc_kpis/diversity_3plus_categories.md
           - Booking share by category: dbt/vidoc_kpis/booking_share_by_category.md
+        - Ministry exports:
+          - dbt/ministry_kpis/index.md
+          - User and deposits: dbt/ministry_kpis/user_and_deposit.md
+          - Bookings: dbt/ministry_kpis/booking.md
+          - Offers and stocks: dbt/ministry_kpis/offer_and_stock.md
+          - Offerers and venues: dbt/ministry_kpis/offerer_and_venue.md
+          - Geography tables: dbt/ministry_kpis/geography.md
       - Table definitions:
         - ... | dbt/models/**/description*.md
       - Methodology:

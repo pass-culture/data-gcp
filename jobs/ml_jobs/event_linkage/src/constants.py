@@ -24,6 +24,10 @@ IMAGE_SIMILARITY_COL = "image_similarity"
 DESCRIPTION_SIMILARITY_COL = "description_similarity"
 FULL_DESCRIPTION_SIMILARITY_COL = "full_description_similarity"
 
+EVENT_NAME_COL = "event_name"
+EVENT_DESCRIPTION_COL = "event_description"
+EVENT_IMAGE_URL_COL = "event_image_url"
+
 # Thresholds
 PARTIAL_NAME_SIMILARITY_THRESHOLD = 60
 NAME_SIMILARITY_THRESHOLD = 90

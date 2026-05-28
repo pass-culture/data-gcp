@@ -7,6 +7,9 @@ import pandas as pd
 from src.constants import (
     DESCRIPTION_SIMILARITY_COL,
     DESCRIPTION_SIMILARITY_THRESHOLD,
+    EVENT_DESCRIPTION_COL,
+    EVENT_IMAGE_URL_COL,
+    EVENT_NAME_COL,
     FULL_DESCRIPTION_SIMILARITY_COL,
     FULL_NAME_SIMILARITY_COL,
     IMAGE_SIMILARITY_COL,
@@ -23,6 +26,7 @@ DESCRIPTION_MATCH_COL = "description_match"
 NAME_MATCH_COL = "name_match"
 IMAGE_MATCH_COL = "image_match"
 MATCH_COL = "match"
+
 
 # Matching Params
 SUBCATEGORIES_NOT_MATCHING_ON_OFFER_NAMES = ["SPECTACLE_REPRESENTATION"]
@@ -156,11 +160,39 @@ def get_cluster_metadata_representant(
 def extract_cluster_metadata(
     cluster_row: pd.Series, cross_df: pd.DataFrame, raw_data_df: pd.DataFrame
 ) -> dict[str, str | None]:
+    """
+    Extract representative metadata (name, description, image) for a cluster of offers.
+
+    For each metadata field, a representative offer is selected from the cluster using
+    similarity scores: the offer with the highest name/description similarity is chosen
+    for text fields, and the offer with the most common image similarity value is chosen
+    for the image field.
+
+    Args:
+        cluster_row (pd.Series): A row from the clusters dataframe, expected to have a
+            "cluster" field containing a set of offer IDs belonging to the cluster.
+        cross_df (pd.DataFrame): The dataframe containing pairwise similarity scores
+            between offers, with columns "offer_id_1", "offer_id_2", and the relevant
+            similarity metric columns.
+        raw_data_df (pd.DataFrame): The dataframe containing raw offer data, expected
+            to have columns "offer_id", "offer_name", "offer_description", and
+            "image_url".
+
+    Returns:
+        dict[str, str | None]: A dictionary with the following keys:
+            - "event_name": the offer name of the most representative offer for the
+                cluster name, or None if no valid similarity was found.
+            - "event_description": the offer description of the most representative
+                offer for the cluster description, or None if no valid similarity was
+                found.
+            - "event_image_url": the image URL of the most representative offer for
+                the cluster image, or None if no valid similarity was found.
+    """
     # Retrieve offers and similarities in cluster
-    offers_in_cluster = raw_data_df[raw_data_df["offer_id"].isin(cluster_row.cluster)]
+    offers_in_cluster = raw_data_df[raw_data_df[OFFER_ID_COL].isin(cluster_row.cluster)]
     similarities_in_cluster = cross_df.loc[
-        lambda df, o=offers_in_cluster: df["offer_id_1"].isin(o["offer_id"])
-        & df["offer_id_2"].isin(o["offer_id"])
+        lambda df, o=offers_in_cluster: df[f"{OFFER_ID_COL}_1"].isin(o[OFFER_ID_COL])
+        & df[f"{OFFER_ID_COL}_2"].isin(o[OFFER_ID_COL])
     ]
 
     # Get most common attributes in cluster
@@ -187,20 +219,20 @@ def extract_cluster_metadata(
     )
 
     return {
-        "event_name": raw_data_df.loc[
-            lambda df: df["offer_id"] == offer_name_representant,
+        EVENT_NAME_COL: raw_data_df.loc[
+            lambda df: df[OFFER_ID_COL] == offer_name_representant,
             "offer_name",
         ].values[0]
         if offer_name_representant is not None
         else None,
-        "event_description": raw_data_df.loc[
-            lambda df: df["offer_id"] == offer_description_representant,
+        EVENT_DESCRIPTION_COL: raw_data_df.loc[
+            lambda df: df[OFFER_ID_COL] == offer_description_representant,
             "offer_description",
         ].values[0]
         if offer_description_representant is not None
         else None,
-        "event_image_url": raw_data_df.loc[
-            lambda df: df["offer_id"] == offer_image_representant,
+        EVENT_IMAGE_URL_COL: raw_data_df.loc[
+            lambda df: df[OFFER_ID_COL] == offer_image_representant,
             "image_url",
         ].values[0]
         if offer_image_representant is not None

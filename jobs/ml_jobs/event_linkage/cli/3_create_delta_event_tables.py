@@ -9,6 +9,7 @@ from src.clustering import (
     get_uuid_from_cluster,
 )
 from src.constants import (
+    EVENT_NAME_COL,
     IMAGE_URL_COL,
     OFFER_ID_COL,
     OFFER_SUBCATEGORY_ID_COL,
@@ -83,6 +84,13 @@ def main(
         # Extract cluster metadata to create event
         cluster_metadata = extract_cluster_metadata(cluster_row, cross_df, raw_data_df)
         event_id = get_uuid_from_cluster(cluster_row.cluster)
+
+        if cluster_metadata[EVENT_NAME_COL] is None:
+            logger.warning(
+                f"Cluster {cluster_row.Index} with offers {cluster_row.cluster} "
+                f"has no event name, skipping..."
+            )
+            continue
 
         delta_events.append(
             {

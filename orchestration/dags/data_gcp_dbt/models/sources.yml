@@ -276,6 +276,8 @@ sources:
       - name: delta_artist
       - name: delta_product_artist_link
       - name: similar_artist
+      - name: delta_event_series
+      - name: delta_event_series_offer_link
       - name: unconstrained_item_cluster
       - name: two_tower_user_embedding_history
         description: Partitionned table containing the history of the two tower user emebddings

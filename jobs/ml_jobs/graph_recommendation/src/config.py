@@ -118,12 +118,12 @@ class TrainingConfig(BaseConfig):
                     ("artist_id", "artist_id_of", "book"),
                 ],
                 [
-                    ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
-                    ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
+                    ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
+                    ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
                 ],
                 [
-                    ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
-                    ("gtl_label_level_2", "gtl_label_level_2_of", "book"),
+                    ("book", "is_gtl_label_level_4", "gtl_label_level_4"),
+                    ("gtl_label_level_4", "gtl_label_level_4_of", "book"),
                 ],
                 [
                     ("book", "is_series_id", "series_id"),
@@ -132,6 +132,14 @@ class TrainingConfig(BaseConfig):
                 [
                     ("book", "is_music_label", "music_label"),
                     ("music_label", "music_label_of", "book"),
+                ],
+                [
+                    ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
+                    ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
+                ],
+                [
+                    ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
+                    ("gtl_label_level_2", "gtl_label_level_2_of", "book"),
                 ],
             ]
         )

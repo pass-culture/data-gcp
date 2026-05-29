@@ -91,7 +91,7 @@ def main(
             metrics = {}
             metrics.update(
                 {
-                    "date": pd.Timestamp.today().strftime("%Y-%m-%d"),
+                    "transaction_date": pd.Timestamp.today().date(),
                     "call_type": call_type,
                     "data_type": data_type,
                 }

@@ -1,8 +1,12 @@
 import pandas as pd
 import pandas_gbq
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from utils import BIGQUERY_RAW_DATASET, PROJECT_NAME
+
+_RETRY = Retry(total=3, backoff_factor=2, status_forcelist=[500, 502, 503, 504])
 
 
 def import_qualtrics_opt_out(data_center, directory_id, api_token, export_columns):
@@ -12,11 +16,14 @@ def import_qualtrics_opt_out(data_center, directory_id, api_token, export_column
     headers = {
         "x-api-token": api_token,
     }
+    session = requests.Session()
+    session.mount("https://", HTTPAdapter(max_retries=_RETRY))
+
     results = []
     i = 0
     while next_page is not None:
         print(f"Page {i}")
-        response = requests.get(next_page, headers=headers).json()
+        response = session.get(next_page, headers=headers).json()
         if "result" not in response:
             raise RuntimeError(f"Unexpected API response: {response}")
         results += response["result"]["elements"]

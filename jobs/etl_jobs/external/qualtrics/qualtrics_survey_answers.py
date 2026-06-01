@@ -4,8 +4,12 @@ import zipfile
 import pandas as pd
 import pandas_gbq
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from utils import BIGQUERY_RAW_DATASET, PROJECT_NAME
+
+_RETRY = Retry(total=3, backoff_factor=2, status_forcelist=[500, 502, 503, 504])
 
 FORMAT_DICT = {
     "start_date": str,
@@ -31,7 +35,9 @@ def import_survey_metadata(data_center, api_token):
         "x-api-token": api_token,
     }
 
-    response = requests.get(base_url, headers=headers)
+    session = requests.Session()
+    session.mount("https://", HTTPAdapter(max_retries=_RETRY))
+    response = session.get(base_url, headers=headers)
     if response.json()["meta"]["httpStatus"] == "200 - OK":
         surveys = pd.DataFrame(response.json()["result"]["elements"])
         pandas_gbq.to_gbq(
@@ -49,6 +55,9 @@ class QualtricsSurvey:
         self.api_token = api_token
         self.survey_id = survey_id
         self.data_center = data_center
+        self.session = requests.Session()
+        self.session.headers.update({"content-type": "application/json", "x-api-token": api_token})
+        self.session.mount("https://", HTTPAdapter(max_retries=_RETRY))
 
     def get_qualtrics_survey(self) -> pd.DataFrame:
         # Setting user Parameters
@@ -58,26 +67,22 @@ class QualtricsSurvey:
         request_check_progress = 0
         progress_status = "in progress"
         base_url = f"https://{self.data_center}.qualtrics.com/API/v3/surveys/{self.survey_id}/export-responses/"
-        headers = {
-            "content-type": "application/json",
-            "x-api-token": self.api_token,
-        }
 
         # Step 1: Creating Data Export
         download_request_url = base_url
         download_request_payload = (
             '{"format":"' + file_format + '"}'
         )  # you can set useLabels:True to get responses in text format
-        download_request_response = requests.request(
-            "POST", download_request_url, data=download_request_payload, headers=headers
+        download_request_response = self.session.request(
+            "POST", download_request_url, data=download_request_payload
         )
         progress_id = download_request_response.json()["result"]["progressId"]
 
         # Step 2: Checking on Data Export Progress and waiting until export is ready
         while request_check_progress < 100 and progress_status != "complete":
             request_check_url = base_url + progress_id
-            request_check_response = requests.request(
-                "GET", request_check_url, headers=headers
+            request_check_response = self.session.request(
+                "GET", request_check_url
             )
             request_check_progress = request_check_response.json()["result"][
                 "percentComplete"
@@ -87,8 +92,8 @@ class QualtricsSurvey:
 
         answers_request_url = f"https://{self.data_center}.qualtrics.com/API/v3/surveys/{self.survey_id}/export-responses/{file_id}/file"
 
-        answers_request_response = requests.request(
-            "GET", answers_request_url, headers=headers
+        answers_request_response = self.session.request(
+            "GET", answers_request_url
         )
 
         file = zipfile.ZipFile(io.BytesIO(answers_request_response.content))

@@ -2,6 +2,8 @@ import time
 from typing import Any
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 DEFAULT_CHUNK_SIZE = 5000
 DEFAULT_POLL_INTERVAL = 5
@@ -12,7 +14,9 @@ REQUEST_TIMEOUT = 30
 class QualtricsClient:
     def __init__(self, api_token: str, data_center: str):
         self.base_url = f"https://{data_center}.qualtrics.com/API/v3"
+        retry = Retry(total=3, backoff_factor=2, status_forcelist=[500, 502, 503, 504])
         self.session = requests.Session()
+        self.session.mount("https://", HTTPAdapter(max_retries=retry))
         self.session.headers.update(
             {
                 "X-API-TOKEN": api_token,

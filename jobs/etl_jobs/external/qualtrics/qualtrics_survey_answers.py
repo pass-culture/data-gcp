@@ -154,7 +154,7 @@ class QualtricsSurvey:
                 "offers_created",
             ]
 
-        mapping_question = response_df[questions_columns][:2].to_dict(orient="records")
+        mapping_question = response_df[questions_columns].iloc[:2].to_dict(orient="records")
         mapping_question_str = mapping_question[0]
         mapping_question_id = mapping_question[1]
         for key, value in mapping_question_id.items():
@@ -184,7 +184,7 @@ class QualtricsSurvey:
             response_processed.columns.str.normalize("NFKD")
             .str.encode("ascii", errors="ignore")
             .str.decode("utf-8")  # remove accents
-            .str.replace("[.,(,),-]", "", regex=True)  # Added regex=True to prevent Pandas 2.0+ errors
+            .str.replace("[.,(,),-]", "", regex=True)
             .str.replace("-", "", regex=False)
             .str.replace("  ", " ", regex=False)
             .str.replace(" ", "_", regex=False)
@@ -211,7 +211,7 @@ class QualtricsSurvey:
             for col in columns
             if col not in system_columns + answer_columns + drop_columns
         ]
-        mapping_question = self.raw_answer_df[answer_columns][:2].to_dict(
+        mapping_question = self.raw_answer_df[answer_columns].iloc[:2].to_dict(
             orient="records"
         )
         mapping_question_str = mapping_question[0]
@@ -226,7 +226,7 @@ class QualtricsSurvey:
         df_step1 = (
             self.raw_answer_df[2:]
             .set_index(list(self.raw_answer_df.columns.drop(answer_columns)))
-            .stack()  # Removed dropna=False to fix pandas 3.0 crash
+            .stack()
             .reset_index()
             .rename(columns=columns_mapping)
             .assign(

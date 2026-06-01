@@ -184,10 +184,10 @@ class QualtricsSurvey:
             response_processed.columns.str.normalize("NFKD")
             .str.encode("ascii", errors="ignore")
             .str.decode("utf-8")  # remove accents
-            .str.replace("[.,(,),-]", "")
-            .str.replace("-", "")
-            .str.replace("  ", " ")
-            .str.replace(" ", "_")
+            .str.replace("[.,(,),-]", "", regex=True)  # Added regex=True to prevent Pandas 2.0+ errors
+            .str.replace("-", "", regex=False)
+            .str.replace("  ", " ", regex=False)
+            .str.replace(" ", "_", regex=False)
         )
 
         response_processed = response_processed.astype(str)
@@ -226,7 +226,7 @@ class QualtricsSurvey:
         df_step1 = (
             self.raw_answer_df[2:]
             .set_index(list(self.raw_answer_df.columns.drop(answer_columns)))
-            .stack(dropna=False)
+            .stack()  # Removed dropna=False to fix pandas 3.0 crash
             .reset_index()
             .rename(columns=columns_mapping)
             .assign(
@@ -255,9 +255,10 @@ class QualtricsSurvey:
 
         df_final = df_final.rename(columns=rename_dict).astype(FORMAT_DICT)
 
+        # Prevent crashes on unmapped or missing values with na=False in contains method 
         filtered_df = df_final[
-            (~df_final["question_id"].str.contains("TEXT"))
-            | (df_final["question_id"].str.contains("Topics"))
+            (~df_final["question_id"].str.contains("TEXT", na=False))
+            | (df_final["question_id"].str.contains("Topics", na=False))
         ]
 
         return filtered_df

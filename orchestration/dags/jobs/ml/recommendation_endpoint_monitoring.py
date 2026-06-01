@@ -273,7 +273,7 @@ with (
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,
-        time_partitioning={"type": "DAY", "field": "transaction_date"},
+        time_partitioning={"type": "DAY", "field": "run_date"},
     )
     send_slack_notif_success = SendSlackMessageOperator(
         task_id="send_slack_notif_success",

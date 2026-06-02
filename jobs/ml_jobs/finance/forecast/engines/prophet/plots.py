@@ -1,9 +1,11 @@
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import mlflow
 import pandas as pd
 from loguru import logger
 
+from forecast.utils.constants import PRICING_LOWER_BOUND, PRICING_UPPER_BOUND
 from prophet import Prophet
 
 
@@ -82,9 +84,7 @@ def plot_trend_with_changepoints(
     return fig
 
 
-def plot_cv_results(
-    perf: pd.DataFrame, metrics: list, output_dir: str | Path = "cv_plots"
-) -> list[str]:
+def plot_cv_results(perf: pd.DataFrame, metrics: list, output_dir: str | Path = "cv_plots") -> list[str]:
     """
     Plots cross-validation results for specified metrics and saves figures.
 
@@ -113,7 +113,7 @@ def plot_cv_results(
             fig.tight_layout()
 
             plot_path = output_path / f"cv_{m}.png"
-            fig.savefig(plot_path)
+            fig.savefig(str(plot_path))
             plt.close(fig)
 
             plot_paths.append(str(plot_path))
@@ -173,8 +173,8 @@ def plot_forecast_vs_actuals(
 
     ax.fill_between(
         forecast.ds,
-        forecast.yhat_lower,
-        forecast.yhat_upper,
+        forecast.yhat_lower.values,
+        forecast.yhat_upper.values,
         alpha=0.3,
         label="uncertainty interval",
     )
@@ -189,33 +189,92 @@ def plot_forecast_vs_actuals(
     return fig
 
 
-def log_diagnostic_plots(model: Prophet, df_train: pd.DataFrame) -> dict:
-    """Generate diagnostic plots for the Prophet model.
+def log_diagnostics_plots(
+    model: Prophet,
+    df_train: pd.DataFrame,
+    freq: str,
+    backtest_forecast: pd.DataFrame,
+) -> dict:
+    """Generate and log all diagnostic and evaluation plots to MLflow.
 
     Args:
-        model: Trained Prophet model.
-        df_train: DataFrame used for training with 'ds' and 'y' columns.
+        ProphetModelInstance: Instance of the ProphetModel class.
+        backtest_forecast: Optional DataFrame with backtest predictions and actuals.
+            Must contain: ds, y, yhat, yhat_lower, yhat_upper
 
     Returns:
-        Dictionary containing:
-            - 'changepoints': Figure showing changepoints on training data
-            - 'trend': Figure showing trend with changepoints
-            - 'components': Figure showing Prophet components
+        Dictionary containing figure objects for diagnostic plots.
     """
-    logger.info("Generating diagnostic plots")
 
+    logger.info("Generating all plots")
+
+    # Generate diagnostic plots
     fig_cp = plot_prophet_changepoints(model, df_train)
     forecast_train = model.predict(df_train)
-    changepoints_list = (
-        model.changepoints.tolist() if model.changepoints is not None else []
-    )
+    changepoints_list = model.changepoints.tolist() if model.changepoints is not None else []
     fig_trend = plot_trend_with_changepoints(forecast_train, changepoints_list)
     fig_components = model.plot_components(forecast_train)
+    fig_backtest = plot_forecast_vs_actuals(
+        forecast=backtest_forecast,
+        freq=freq,
+        title="Backtest: Forecast vs Actuals",
+        y_label="Pricing €",
+    )
 
-    logger.info("Diagnostic plots generated successfully")
+    # Log diagnostic figures to MLflow
+    logger.info("Logging diagnostic plots to MLflow")
+    mlflow.log_figure(fig_cp, "diagnostics/changepoints.png")
+    mlflow.log_figure(fig_trend, "diagnostics/trend.png")
+    mlflow.log_figure(fig_components, "diagnostics/components.png")
+    mlflow.log_figure(fig_backtest, "diagnostics/backtest_forecast.png")
+
+    logger.info("All plots generated and logged successfully")
 
     return {
         "changepoints": fig_cp,
         "trend": fig_trend,
         "components": fig_components,
     }
+
+
+def log_future_forecast_plots(
+    monthly_forecast: pd.DataFrame,
+) -> None:
+    """Generate and log future forecast plots to MLflow.
+
+    Args:
+        monthly_forecast: DataFrame with future forecast data, must contain:
+            ds, yhat, yhat_lower, yhat_upper
+    """
+    fig_future = plt.figure(figsize=(12, 6))
+    plt.plot(
+        monthly_forecast.ds,
+        monthly_forecast.total_pricing,
+    )
+    plt.title("Future Monthly Forecast")
+    plt.hlines(
+        y=PRICING_LOWER_BOUND,
+        xmin=monthly_forecast.ds.min(),
+        xmax=monthly_forecast.ds.max(),
+        colors="orange",
+        linestyles="--",
+        alpha=0.7,
+        label=f"Ligne des {PRICING_LOWER_BOUND / 1e6:.0f} Millions €",
+    )
+    plt.hlines(
+        y=PRICING_UPPER_BOUND,
+        xmin=monthly_forecast.ds.min(),
+        xmax=monthly_forecast.ds.max(),
+        colors="red",
+        linestyles="--",
+        alpha=0.7,
+        label=f"Ligne des {PRICING_UPPER_BOUND / 1e6:.0f} Millions €",
+    )
+
+    plt.xlabel("Month")
+    plt.ylabel("Total Pricing €")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.legend()
+
+    mlflow.log_figure(fig_future, "forecasts/current_run_monthly_forecast_plot.png")

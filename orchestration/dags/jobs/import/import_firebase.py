@@ -3,7 +3,7 @@ import datetime
 
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
-from airflow.operators.python_operator import BranchPythonOperator
+from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from common import macros
 from common.callback import on_failure_base_callback
@@ -16,7 +16,7 @@ dags = {
     # Reimport the data from the last two days
     "daily": {
         "prefix": "_intraday_",
-        "schedule_interval": "00 13 * * *",
+        "schedule": "00 13 * * *",
         # two days ago
         "yyyymmdd": "{{ yyyymmdd(add_days(ds, -1)) }}",
         "default_dag_args": {
@@ -29,7 +29,7 @@ dags = {
     # Import data from the last day
     "intraday": {
         "prefix": "_intraday_",
-        "schedule_interval": "00 01 * * *",
+        "schedule": "00 01 * * *",
         # one day ago
         "yyyymmdd": "{{ yyyymmdd(ds) }}",
         "default_dag_args": {
@@ -71,7 +71,7 @@ for dag_type, params in dags.items():
         default_args=params["default_dag_args"],
         description="Import firebase data and dispatch it to each env",
         on_failure_callback=on_failure_base_callback,
-        schedule_interval=get_airflow_schedule(params["schedule_interval"]),
+        schedule=get_airflow_schedule(params["schedule"]),
         catchup=False,
         dagrun_timeout=datetime.timedelta(minutes=90),
         user_defined_macros=macros.default,
@@ -102,7 +102,6 @@ for dag_type, params in dags.items():
             dag=dag,
             task_id=f"check_table_exists_task_{job_name_table}",
             python_callable=check_table_exists,
-            provide_context=True,
             op_kwargs={
                 "job_params": job_params["params"],
                 "table": table_id,

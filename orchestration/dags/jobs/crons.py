@@ -33,10 +33,20 @@ SCHEDULE_DICT = {
         "stg": "45 4 * * *",  # every day at 4:45 AM
         "dev": "45 4 * * *",  # every day at 4:45 AM
     },
+    "export_vidoc_daily": {
+        "prod": "0 7 * * *",  # every day at 7:00 AM
+        "stg": "0 6 * * *",
+        "dev": "0 6 * * *",
+    },
     "dbt_artifacts": "0 6 * * *",
     "dbt_run_dag": "45 2 * * *",
     "embeddings_extraction_item": "0 12,18,23 * * *",
     "embedding_reduction_item": "0 12 * * 0",
+    "event_linkage": {
+        "prod": "0 11 * * 3",  # every Wednesday at 11:00 AM
+        "stg": "0 11 * * 2",  # every Tuesday at 11:00 AM
+        "dev": "0 11 * * 2",  # every Tuesday at 11:00 AM
+    },
     "import_applicative_database": "0 1 * * *",
     "import_intraday_firebase_data": "0 1 * * *",
     "import_titelive": "0 2 * * *",  # every day at 2:00 AM
@@ -55,7 +65,7 @@ SCHEDULE_DICT = {
         "prod": "45 4 22 * *",  # every month the 22nd at 4:45 AM
     },
     "finance_pricing_forecast": {
-        "prod": "0 6 * * 1",  # every Monday at 6:00 AM
+        "prod": "0 6 1 * *",  # every 1st day of the month at 6:00 AM
         "stg": None,
         "dev": None,
     },

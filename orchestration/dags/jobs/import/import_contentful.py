@@ -38,7 +38,7 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Import contentful tables",
-    schedule_interval=get_airflow_schedule("30 01 * * *"),
+    schedule=get_airflow_schedule("30 01 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -68,7 +68,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.10",
+        python_version="3.13",
         base_dir=BASE_PATH,
         dag=dag,
         retries=2,
@@ -79,7 +79,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py {% if params.playlists_names and params.playlists_names | trim != '' %} --playlists-names {{ params.playlists_names }}{% endif %}",
+        command="uv run main.py {% if params.playlists_names and params.playlists_names | trim != '' %} --playlists-names {{ params.playlists_names }}{% endif %}",
         do_xcom_push=True,
     )
 

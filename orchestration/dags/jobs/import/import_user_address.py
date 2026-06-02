@@ -31,7 +31,7 @@ dag_config = {
 }
 
 
-schedule_interval = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
+schedule = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
 
 default_args = {
     "start_date": datetime(2021, 3, 30),
@@ -45,7 +45,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Importing new data from addresses api every day.",
-    schedule_interval=get_airflow_schedule(schedule_interval),
+    schedule=get_airflow_schedule(schedule),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     template_searchpath=DAG_FOLDER,
@@ -128,7 +128,7 @@ with DAG(
             task_id="fetch_install_code",
             instance_name=instance_name,
             branch=context["params"]["branch"],
-            python_version="3.12",
+            python_version="3.13",
             base_dir=BASE_PATH,
         )
         return operator.execute(context=context)
@@ -141,7 +141,7 @@ with DAG(
             instance_name=instance_name,
             base_dir=BASE_PATH,
             environment=dag_config,
-            command=f"""python main.py \
+            command=f"""uv run python main.py \
                 --source-dataset-id {context["params"]["source_dataset_id"]} \
                 --source-table-name {context["params"]["source_table_name"]} \
                 --destination-dataset-id {context["params"]["destination_dataset_id"]} \

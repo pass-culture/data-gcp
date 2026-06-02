@@ -8,7 +8,11 @@ returns
         latitude decimal,
         longitude decimal,
         venue_geo geography,
-        h3_res5 varchar
+        h3_res5 varchar,
+        h3_res6 varchar,
+        h3_res7 varchar,
+        h3_res8 varchar,
+        h3_res9 varchar
     )
 as $body$
 BEGIN
@@ -18,7 +22,11 @@ BEGIN
         v.latitude::decimal,
         v.longitude::decimal,
         ST_MakePoint(v.longitude, v.latitude)::geography AS venue_geo,
-        v.h3_res5::varchar
+        v.h3_res5::varchar,
+        v.h3_res6::varchar,
+        v.h3_res7::varchar,
+        v.h3_res8::varchar,
+        v.h3_res9::varchar
     FROM public.venue_h3_mapping v;
 END;
 $body$
@@ -42,6 +50,18 @@ ON public.venue_h3_mapping_mv_tmp USING GIST (venue_geo);
 
 CREATE INDEX IF NOT EXISTS idx_venue_h3_res5_{{ ts_nodash }}
 ON public.venue_h3_mapping_mv_tmp(h3_res5);
+
+CREATE INDEX IF NOT EXISTS idx_venue_h3_res6_{{ ts_nodash }}
+ON public.venue_h3_mapping_mv_tmp(h3_res6);
+
+CREATE INDEX IF NOT EXISTS idx_venue_h3_res7_{{ ts_nodash }}
+ON public.venue_h3_mapping_mv_tmp(h3_res7);
+
+CREATE INDEX IF NOT EXISTS idx_venue_h3_res8_{{ ts_nodash }}
+ON public.venue_h3_mapping_mv_tmp(h3_res8);
+
+CREATE INDEX IF NOT EXISTS idx_venue_h3_res9_{{ ts_nodash }}
+ON public.venue_h3_mapping_mv_tmp(h3_res9);
 
 -- Refresh state
 refresh materialized view venue_h3_mapping_mv_tmp

@@ -1,0 +1,45 @@
+version: 2
+
+models:
+  - name: exp_qualtrics__beneficiary_account
+    description: "{{ doc('description__exp_qualtrics__beneficiary_account') }}"
+    columns:
+      - name: export_date
+        description: "{{ doc('column__export_date') }}"
+        data_type: DATE
+        data_tests:
+          - not_null
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+        data_type: STRING
+        data_tests:
+          - not_null
+          - unique
+      - name: deposit_type
+        description: "{{ doc('column__deposit_type') }}"
+        data_type: STRING
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ["GRANT_15_17", "GRANT_18"]
+      - name: user_civility
+        description: "{{ doc('column__user_civility') }}"
+        data_type: STRING
+      - name: user_age
+        description: "{{ doc('column__user_age') }}"
+        data_type: INT64
+      - name: user_seniority
+        description: "{{ doc('column__user_seniority') }}"
+        data_type: INT64
+      - name: total_diversity_score
+        description: "{{ doc('column__total_diversity_score') }}"
+        data_type: FLOAT64
+      - name: user_rural_city_type
+        description: "{{ doc('column__rural_city_type') }}"
+        data_type: STRING
+      - name: user_region_name
+        description: "{{ doc('column__user_region_name') }}"
+        data_type: STRING
+      - name: qpv_code
+        description: "{{ doc('column__qpv_code') }}"
+        data_type: STRING

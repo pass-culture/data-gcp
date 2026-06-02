@@ -24,9 +24,6 @@ macros:
         description: Optional string to use as the ELSE clause.
         type: string
 
-  - name: discovery_vars
-    description: ""
-
   - name: extract_params_int_value
     description: |
       This macro generates a SQL snippet to extract the `int_value` from event parameters in a nested structure, based on the provided list of parameter keys.

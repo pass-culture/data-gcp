@@ -44,7 +44,7 @@ with DAG(
     default_args=default_dag_args,
     description="Import Adage from API",
     on_failure_callback=None,
-    schedule_interval=get_airflow_schedule("0 1 * * *"),
+    schedule=get_airflow_schedule("0 1 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=240),
     user_defined_macros=macros.default,
@@ -77,7 +77,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.8",
+        python_version="3.13",
         base_dir=BASE_PATH,
         dag=dag,
         retries=2,
@@ -88,7 +88,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py ",
+        command="uv run main.py ",
     )
 
     gce_instance_stop = DeleteGCEOperator(

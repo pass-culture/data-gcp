@@ -102,6 +102,7 @@ title: Metrics
 {% docs column__total_session_fav %} The total number of sessions which puts an offer to favorite, related to a specific object like module_id or offer_id. {% enddocs %}
 {% docs column__total_session_with_consult_video %} The total number of sessions with a video consultation, related to a specific object like module_id. {% enddocs %}
 {% docs column__total_click %} The total number of clicks on a specific object like module_id or offer_id. {% enddocs %}
+{% docs column__total_visit_last_month %} Number of distinct app sessions by the user in the last 30 days, computed as count of distinct (user_pseudo_id, session_id) pairs from Firebase native events. {% enddocs %}
 {% docs column__total_consult_offer %} The total number of offer consultations. {% enddocs %}
 {% docs column__total_fav %} The total number of bookmark actions. {% enddocs %}
 {% docs column__total_session_with_booking %} The total number of session which performed a booking. {% enddocs %}
@@ -155,7 +156,7 @@ The total count of active beneficiaries at the time of calculation. To be includ
 {% enddocs %}
 
 {% docs column__metrics__total_beneficiaries %}
-The cumulative number of beneficiaries to date. This metric counts every user who has ever received credit, regardless of whether their credit is currently expired or if they have any remaining balance.
+Number of beneficiaries at the end of the partition month, broken down by `age_at_calculation`. Counts every user with an active account (or suspended upon user request) who has ever received credit, regardless of whether the credit is currently active, exhausted, or expired. A user's `age_at_calculation` is recomputed each month, so the same user can appear in different age buckets across partition_months. Not a true running total — users with deactivated accounts drop from the count.
 {% enddocs %}
 
 {% docs column__metrics__total_category_booked_beneficiaries %}

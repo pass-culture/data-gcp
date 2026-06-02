@@ -22,7 +22,7 @@ DAG_NAME = "import_insee_population"
 GCE_INSTANCE = f"import-insee-pop-{ENV_SHORT_NAME}"
 INSEE_POP_PACKAGE = "passculture-data-insee-population @ git+https://github.com/pass-culture/data-insee-population.git"
 
-schedule_interval = "0 2 1 * *"  # Monthly on the 1st at 2 AM
+schedule = "0 2 1 * *"  # Monthly on the 1st at 2 AM
 
 default_dag_args = {
     "start_date": datetime.datetime(2025, 1, 1),
@@ -36,7 +36,7 @@ with DAG(
     default_args=default_dag_args,
     description="Import INSEE population data at department, EPCI and IRIS levels",
     on_failure_callback=None,
-    schedule_interval=get_airflow_schedule(schedule_interval),
+    schedule=get_airflow_schedule(schedule),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

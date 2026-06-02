@@ -26,8 +26,10 @@ def save_multiple_partitions_to_bq(
         logger.info(f"Will Save.. {table_name} -> {df.shape[0]}")
         for event_date in _dates:
             date_str = event_date.strftime("%Y-%m-%d")
-            tmp_df = df[df[date_column].dt.date == pd.to_datetime(date_str).date()]
-            tmp_df.loc[:, date_column] = tmp_df[date_column].astype(str)
+            tmp_df = df[
+                df[date_column].dt.date == pd.to_datetime(date_str).date()
+            ].copy()
+            tmp_df[date_column] = tmp_df[date_column].astype(str)
             if tmp_df.shape[0] > 0:
                 logger.info(f"Saving.. {table_name} -> {date_str}")
                 df_to_bq(tmp_df, table_name, date_str, date_column, schema)
@@ -36,7 +38,8 @@ def save_multiple_partitions_to_bq(
 def df_to_bq(df, table_name, event_date, date_column="export_date", schema=None):
     date_fmt = datetime.strptime(event_date, "%Y-%m-%d")
     yyyymmdd = date_fmt.strftime("%Y%m%d")
-    df.loc[:, date_column] = date_fmt
+    df = df.copy()
+    df[date_column] = pd.Timestamp(date_fmt).tz_localize("UTC")
     bigquery_client = bigquery.Client()
     table_id = f"{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.{table_name}${yyyymmdd}"
     job_config = bigquery.LoadJobConfig(

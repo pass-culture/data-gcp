@@ -19,7 +19,7 @@ def test_dag():
     return DAG(
         "test_dag",
         start_date=datetime.datetime(2024, 1, 1),
-        schedule="@daily",  # Changed from schedule_interval
+        schedule="@daily",
         catchup=False,
     )
 

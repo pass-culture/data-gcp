@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.dummy_operator import EmptyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
@@ -18,13 +18,14 @@ from common.alerts.endpoint_monitoring import (
 )
 from common.callback import on_failure_vm_callback
 from common.config import (
-    BIGQUERY_ANALYTICS_DATASET,
+    BIGQUERY_ML_RECOMMENDATION_DATASET,
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     ML_BUCKET_TEMP,
+    DagBaseConfig,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -34,7 +35,7 @@ from common.operators.gce import (
 )
 from common.operators.slack import SendSlackMessageOperator
 from common.utils import get_airflow_schedule
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
 from jobs.crons import SCHEDULE_DICT
 from jobs.ml.constants import IMPORT_ENDPOINT_MONITORING_SQL_PATH
@@ -50,12 +51,6 @@ DEFAULT_ARGS = {
 }
 
 
-class DagBaseConfig(BaseModel):
-    model_config = ConfigDict(
-        frozen=True, validate_default=True, strict=True, extra="forbid"
-    )
-
-
 class GCEConfig(DagBaseConfig):
     _INSTANCE_TYPES = {
         "dev": "n1-standard-2",
@@ -69,7 +64,7 @@ class GCEConfig(DagBaseConfig):
 class BigQueryConfig(DagBaseConfig):
     input_user_table: str = f"test_users_{DATE}"
     input_item_table: str = f"test_items_{DATE}"
-    output_report_table: str = f"endpoint_monitoring_report_{DATE}"
+    output_report_table: str = "endpoint_monitoring_report"
 
 
 # Alerting
@@ -111,7 +106,7 @@ with (
         dag_id=DAG_CONFIG.dag_id,
         default_args=DEFAULT_ARGS,
         description="Run recommendation endpoint monitoring",
-        schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_CONFIG.dag_id]),
+        schedule=get_airflow_schedule(SCHEDULE_DICT[DAG_CONFIG.dag_id]),
         catchup=False,
         dagrun_timeout=timedelta(minutes=60),
         user_defined_macros=macros.default,
@@ -268,11 +263,12 @@ with (
         bucket=ML_BUCKET_TEMP,
         source_objects=f"""{DAG_CONFIG.gcs_path}/endpoint_monitoring_reports.parquet""",
         destination_project_dataset_table=(
-            f"{BIGQUERY_ANALYTICS_DATASET}.{DAG_CONFIG.bigquery.output_report_table}"
+            f"{BIGQUERY_ML_RECOMMENDATION_DATASET}.{DAG_CONFIG.bigquery.output_report_table}${DATE}"
         ),
         source_format="PARQUET",
-        write_disposition="WRITE_APPEND",
+        write_disposition="WRITE_TRUNCATE",
         autodetect=True,
+        time_partitioning={"type": "DAY", "field": "run_date"},
     )
     send_slack_notif_success = SendSlackMessageOperator(
         task_id="send_slack_notif_success",

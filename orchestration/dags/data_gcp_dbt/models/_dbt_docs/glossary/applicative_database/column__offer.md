@@ -19,7 +19,15 @@ enddocs %}
 # Metadata related
 
 {% docs column__offer_type %} Deprecated. {% enddocs %}
-{% docs column__offer_is_bookable %} Indicates if the offer is bookable (the offer has non expired and non depleted stock, and can thus still be booked by users in app). {% enddocs %}
+{% docs column__offer_is_bookable %}
+Indicates if the offer is bookable.
+
+An offer is considered bookable if it meets the following criteria:
+1. **Stock availability**: The offer has non-expired and non-depleted stock.
+2. **User access**: It can be booked by users in the app.
+3. **Offerer Validation**: The offerer who created the offer must be officially validated.
+{% enddocs %}
+
 {% docs column__offer_is_digital_goods %} Indicates if the offer includes digital goods. {% enddocs %}
 {% docs column__offer_is_physical_goods %} Indicates if the offer includes physical goods. {% enddocs %}
 {% docs column__offer_is_event %} Indicates if the offer is an event. {% enddocs %}
@@ -90,6 +98,7 @@ offer show sub type for shows. {% enddocs %}
 {% docs column__offer_last_provider_id %} Id of the offer's last provider. {% enddocs %}
 {% docs column__is_local_authority %} Indicates if the offerer is a local authority or not. {% enddocs %}
 {% docs column__offer_video_url %} Indicates URL video of the offer downloaded by the cultural partner during offer creation. {% enddocs %}
+{% docs column__offer_advice_content %} Indicates cultural partner recommendations for specific offers, accessible directly within the app. {% enddocs %}
 
 # Date related
 

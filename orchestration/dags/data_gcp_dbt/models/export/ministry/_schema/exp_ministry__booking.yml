@@ -9,9 +9,11 @@ models:
         data_type: STRING
         data_tests:
           - not_null:
-              tags: ['export']
+              config:
+                tags: ['export']
           - unique:
-              tags: ['export']
+              config:
+                tags: ['export']
       - name: booking_creation_date
         description: "{{ doc('column__booking_creation_date') }}"
       - name: booking_quantity
@@ -19,9 +21,11 @@ models:
         data_type: INT64
         data_tests:
           - accepted_values:
-              values: [1,2]
-              quote: false
-              tags: ['export']
+              arguments:
+                values: [1,2]
+                quote: false
+              config:
+                tags: ['export']
       - name: booking_amount
         description: "{{ doc('column__booking_amount') }}"
       - name: booking_status
@@ -29,8 +33,10 @@ models:
         data_type: STRING
         data_tests:
           - accepted_values:
-              values: ['REIMBURSED', 'PENDING_REIMBURSEMENT', 'USED', 'CANCELLED', 'CONFIRMED']
-              tags: ['export']
+              arguments:
+                values: ['REIMBURSED', 'PENDING_REIMBURSEMENT', 'USED', 'CANCELLED', 'CONFIRMED']
+              config:
+                tags: ['export']
       - name: booking_cancellation_date
         description: "{{ doc('column__booking_cancellation_date') }}"
       - name: booking_cancellation_reason
@@ -40,13 +46,15 @@ models:
         data_type: STRING
         data_tests:
           - not_null:
-              tags: ['export']
+              config:
+                tags: ['export']
       - name: deposit_id
         description: "{{ doc('column__deposit_id') }}"
         data_type: STRING
         data_tests:
           - not_null:
-              tags: ['export']
+              config:
+                tags: ['export']
       - name: booking_intermediary_amount
         description: "{{ doc('column__booking_intermediary_amount') }}"
         data_type: NUMERIC
@@ -59,22 +67,26 @@ models:
         data_type: STRING
         data_tests:
           - not_null:
-              tags: ['export']
+              config:
+                tags: ['export']
       - name: offer_id
         description: "{{ doc('column__offer_id') }}"
         data_type: STRING
         data_tests:
           - not_null:
-              tags: ['export']
+              config:
+                tags: ['export']
       - name: venue_id
         description: "{{ doc('column__venue_id') }}"
         data_type: STRING
         data_tests:
           - not_null:
-              tags: ['export']
+              config:
+                tags: ['export']
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
         data_type: STRING
         data_tests:
           - not_null:
-              tags: ['export']
+              config:
+                tags: ['export']

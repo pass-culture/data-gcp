@@ -45,7 +45,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Artist extraction from wikidata",
-    schedule_interval=get_airflow_schedule(SCHEDULE_CRON),
+    schedule=get_airflow_schedule(SCHEDULE_CRON),
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,

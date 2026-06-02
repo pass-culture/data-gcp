@@ -1,13 +1,11 @@
 version: 2
 
 models:
-  - name: exp_vidoc_beneficiary
+  - name: exp_vidoc__beneficiary
     description: "{{ doc('description__exp_vidoc_beneficiary') }}"
     columns:
       - name: partition_month
         description: "{{ doc('column__partition_month') }}"
-      - name: is_statistic_secret
-        description: "{{ doc('column__is_statistic_secret') }}"
       - name: region_name
         description: "{{ doc('column__region_name') }}"
       - name: region_code
@@ -16,14 +14,6 @@ models:
         description: "{{ doc('column__department_name') }}"
       - name: department_code
         description: "{{ doc('column__department_code') }}"
-      - name: epci_name
-        description: "{{ doc('column__user_epci') }}"
-      - name: epci_code
-        description: "{{ doc('column__user_epci_code') }}"
-      - name: city_name
-        description: "{{ doc('column__user_city') }}"
-      - name: city_code
-        description: "{{ doc('column__user_city_code') }}"
       - name: age_at_calculation
         description: "{{ doc('column__age_at_calculation') }}"
       - name: is_in_qpv

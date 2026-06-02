@@ -8,13 +8,13 @@ models:
         data_type: STRING
         data_tests:
           - unique:
-              tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
           - not_null:
-              tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: user_department_code
         description: '{{ doc("column__user_department_code") }}'
         data_type: STRING
@@ -23,24 +23,28 @@ models:
         data_type: STRING
         data_tests:
           - excessive_failure_ratio:
-              base_test: "not_null"
-              max_ratio: 0.0005  # 0.05%
-              tags: ['critical']
+              arguments:
+                base_test: "not_null"
+                max_ratio: 0.0005  # 0.05%
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
           - not_null_proportion:
-              where_condition: "user_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)"
-              anomaly_threshold_alert_percentage: 0.01 # 0.01%
+              arguments:
+                where_condition: "user_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)"
+                anomaly_threshold_alert_percentage: 0.01 # 0.01%
       - name: user_postal_code
         description: '{{ doc("column__user_postal_code") }}'
         data_type: STRING
         data_tests:
           - excessive_failure_ratio:
-              base_test: "not_null"
-              max_ratio: 0.0005  # 0.05%
+              arguments:
+                base_test: "not_null"
+                max_ratio: 0.0005  # 0.05%
           - not_null_proportion:
-              where_condition: "user_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)"
-              anomaly_threshold_alert_percentage: 0.1
+              arguments:
+                where_condition: "user_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)"
+                anomaly_threshold_alert_percentage: 0.1
               description: >
                 We have on average less than 10k new users on the last 30 days. We want to be
                 alerted when at least 10 of them don't have a postal code.
@@ -82,8 +86,9 @@ models:
         data_type: STRING
         data_tests:
           - excessive_failure_ratio:
-              base_test: "not_null"
-              max_ratio: 0.005  # 0.5%
+              arguments:
+                base_test: "not_null"
+                max_ratio: 0.005  # 0.5%
       - name: user_is_priority_public
         description: '{{ doc("column__user_is_priority_public") }}'
         data_type: BOOLEAN
@@ -116,8 +121,9 @@ models:
         data_type: STRING
         data_tests:
           - excessive_failure_ratio:
-              base_test: "not_null"
-              max_ratio: 0.0005  # 0.05%
+              arguments:
+                base_test: "not_null"
+                max_ratio: 0.0005  # 0.05%
       - name: user_academy_name
         description: '{{ doc("column__user_academy_name") }}'
         data_type: STRING

@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: exp_vidoc_population__coverage
+  - name: exp_vidoc__population_coverage
     description: "{{ doc('description__exp_vidoc_population__coverage') }}"
     columns:
       - name: partition_month

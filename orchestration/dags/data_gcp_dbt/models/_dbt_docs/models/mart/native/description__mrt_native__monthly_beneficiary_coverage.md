@@ -18,7 +18,7 @@ This table is used to:
 3. Identify seasonal trends enrollment MoM.
 
 ### **Sources**
-- `mrt_native__daily_user_deposit`: Tracks daily user deposits.
+- `int_global__daily_deposit`: Tracks daily user deposits.
 - `int_seed__monthly_france_population`: Provides population estimates by age and department.
 
 

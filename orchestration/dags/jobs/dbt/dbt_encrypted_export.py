@@ -83,9 +83,7 @@ for partner_id, partner_name in partner_dict.items():
         dagrun_timeout=datetime.timedelta(minutes=180),
         catchup=False,
         description=f"Generate obfuscated export for {partner_name}",
-        schedule_interval=ENCRYPTED_EXPORT_DICT.get(partner_id, {}).get(
-            ENV_SHORT_NAME, None
-        ),
+        schedule=ENCRYPTED_EXPORT_DICT.get(partner_id, {}).get(ENV_SHORT_NAME, None),
         params={
             "branch": Param(
                 default="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -157,7 +155,7 @@ for partner_id, partner_name in partner_dict.items():
             task_id="fetch_install_code",
             instance_name=f"{GCE_INSTANCE}-{partner_name}",
             branch="{{ params.branch }}",
-            python_version="3.10",
+            python_version="3.13",
             base_dir=BASE_PATH,
         )
 
@@ -166,7 +164,7 @@ for partner_id, partner_name in partner_dict.items():
             instance_name=f"{GCE_INSTANCE}-{partner_name}",
             base_dir=BASE_PATH,
             command=(
-                "python main.py encrypt "
+                "uv run main.py encrypt "
                 "--partner-name \"{{ ti.xcom_pull(task_ids='build_export_context', key='partner_name') }}\" "
                 f'--gcs-bucket "{BASE_BUCKET}" '
                 "--export-date \"{{ ti.xcom_pull(task_ids='build_export_context', key='export_date') }}\" "
@@ -180,7 +178,7 @@ for partner_id, partner_name in partner_dict.items():
             instance_name=f"{GCE_INSTANCE}-{partner_name}",
             base_dir=BASE_PATH,
             command=(
-                "python main.py transfer "
+                "uv run main.py transfer "
                 "--partner-name \"{{ ti.xcom_pull(task_ids='build_export_context', key='partner_name') }}\" "
                 f'--gcs-bucket "{BASE_BUCKET}" '
                 "--export-date \"{{ ti.xcom_pull(task_ids='build_export_context', key='export_date') }}\" "

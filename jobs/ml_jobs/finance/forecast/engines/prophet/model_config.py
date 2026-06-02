@@ -16,9 +16,7 @@ class ProphetParams(BaseModel):
     daily_seasonality: bool | Literal["auto"]
     seasonality_mode: Literal["additive", "multiplicative"]
     seasonality_prior_scale: float = Field(gt=0, description="Strength of seasonality")
-    interval_width: float = Field(
-        gt=0, lt=1, description="Width of uncertainty intervals"
-    )
+    interval_width: float = Field(gt=0, lt=1, description="Width of uncertainty intervals")
     scaling: Literal["absmax", "minmax"] | None = None
 
 
@@ -31,9 +29,7 @@ class FeatureConfig(BaseModel):
 
 
 class DataProcessingConfig(BaseModel):
-    train_prop: float = Field(
-        gt=0.1, lt=1.0, description="Proportion of data for training"
-    )
+    train_prop: float = Field(gt=0.1, lt=1.0, description="Proportion of data for training")
     table_name: str
     date_column_name: str
     target_name: str

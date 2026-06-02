@@ -8,13 +8,13 @@ models:
         data_type: STRING
         data_tests:
           - not_null:
-              tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
           - unique:
-              tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: offer_product_id
         description: '{{ doc("column__offer_product_id") }}'
         data_type: STRING
@@ -90,9 +90,9 @@ models:
         data_type: STRING
         data_tests:
           - not_null:
-              tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: offer_url
         description: '{{ doc("column__offer_url") }}'
         data_type: STRING
@@ -295,3 +295,6 @@ models:
       - name: offerer_is_epn
         description: "{{ doc('column__offerer_is_epn') }}"
         data_type: BOOLEAN
+      - name: offer_advice_content
+        description: "{{ doc('column__offer_advice_content') }}"
+        data_type: STRING

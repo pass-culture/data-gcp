@@ -1,0 +1,46 @@
+FROM ghcr.io/astral-sh/uv:0.11-python3.13-trixie-slim
+
+ARG AIRFLOW_USER_HOME=/opt/airflow
+ARG GCLOUD_VERSION=google-cloud-cli-538.0.0-linux-x86_64.tar.gz
+
+USER root
+
+# install system deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    ca-certificates \
+    curl \
+    tar \
+    && rm -rf /var/lib/apt/lists/*
+
+# create user early so the home dir has correct ownership from the start,
+# avoiding a recursive chown over the gcloud SDK tree later
+RUN groupadd -g 50000 airflow \
+    && useradd -u 50000 -g 50000 -d ${AIRFLOW_USER_HOME} -s /bin/bash airflow \
+    && install -d -o airflow -g airflow -m 750 ${AIRFLOW_USER_HOME}
+
+# install gcloud (root-owned; world-readable/executable is sufficient)
+RUN curl -LO https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} \
+    && tar xf ${GCLOUD_VERSION} \
+    && mv google-cloud-sdk ${AIRFLOW_USER_HOME}/ \
+    && rm ${GCLOUD_VERSION}
+
+ENV PATH=$PATH:${AIRFLOW_USER_HOME}/google-cloud-sdk/bin
+
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_NO_CACHE=1
+ENV UV_SYSTEM_CERTS=1
+ENV UV_INSECURE_HOST="files.pythonhosted.org pypi.org"
+
+WORKDIR /jobs
+
+# copy only dep files first so the uv sync layer is cached until the lock changes
+COPY pyproject.toml uv.lock ./
+RUN uv sync --no-install-project --no-dev --no-editable --frozen
+
+COPY . .
+
+USER airflow
+
+ENTRYPOINT ["uv", "run"]
+CMD []

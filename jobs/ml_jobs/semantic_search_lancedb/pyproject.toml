@@ -15,5 +15,5 @@ dependencies = [
 dev = [
     "ipykernel>=7.2.0",
     "pandas>=3.0.1",
-    "pytest>=9.0.2",
+    "pytest>=9.0.3",
 ]

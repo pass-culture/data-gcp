@@ -1,0 +1,7 @@
+collections:
+  root:
+    id: "root"
+    enforce_on_children: true
+    permissions:
+      2: "write"
+      1: "none"

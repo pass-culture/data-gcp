@@ -32,6 +32,7 @@ select
     e.module_name,
     e.module_id,
     e.entry_id,
+    e.artist_id,
     e.onboarding_user_selected_age,
     o.offer_name,
     o.offer_category_id,

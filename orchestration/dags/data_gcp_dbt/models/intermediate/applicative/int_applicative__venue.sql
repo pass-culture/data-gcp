@@ -143,6 +143,7 @@ select
     v.venue_description,
     v.venue_withdrawal_details,
     v.venue_adage_inscription_date,
+    v.venue_state,
     concat(
         'https://backoffice.passculture.team/pro/venue/', v.venue_id
     ) as venue_backoffice_link,

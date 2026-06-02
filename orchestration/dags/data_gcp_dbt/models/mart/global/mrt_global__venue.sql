@@ -103,6 +103,7 @@ select
     first_headline_offer_date,
     last_headline_offer_date,
     venue_adage_inscription_date,
+    venue_state,
     offerer_is_epn
 from {{ ref("int_global__venue") }}
-where offerer_validation_status = 'VALIDATED' and offerer_is_active
+where offerer_validation_status = 'VALIDATED' and offerer_is_active and (venue_state is null or venue_state != 'CLOSED')

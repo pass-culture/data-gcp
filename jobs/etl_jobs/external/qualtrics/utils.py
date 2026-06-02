@@ -75,38 +75,6 @@ OPT_OUT_EXPORT_COLUMNS = {
     "directoryUnsubscribeDate": "directory_unsubscribe_date",
 }
 
-IR_JEUNES_TABLE_SCHEMA = {
-    "StartDate": "STRING",
-    "EndDate": "STRING",
-    "ResponseId": "STRING",
-    "ExternalReference": "STRING",
-    "theoretical_amount_spent": "STRING",
-    "user_activity": "STRING",
-    "user_civility": "STRING",
-    "Q3_Topics": "STRING",
-    "question": "STRING",
-    "answer": "STRING",
-    "question_str": "STRING",
-    "question_id": "STRING",
-    "user_type": "STRING",
-}
-
-IR_PRO_TABLE_SCHEMA = {
-    "StartDate": "STRING",
-    "EndDate": "STRING",
-    "ResponseId": "STRING",
-    "ExternalReference": "STRING",
-    "anciennete_jours": "STRING",
-    "non_cancelled_bookings": "STRING",
-    "offers_created": "STRING",
-    "Q1_Topics": "STRING",
-    "question": "STRING",
-    "answer": "STRING",
-    "question_str": "STRING",
-    "question_id": "STRING",
-    "user_type": "STRING",
-}
-
 ANSWERS_SCHEMA = {
     "start_date": "STRING",
     "end_date": "STRING",

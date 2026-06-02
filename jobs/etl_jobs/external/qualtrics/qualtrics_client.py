@@ -1,6 +1,9 @@
+import io
 import time
+import zipfile
 from typing import Any
 
+import pandas as pd
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -32,6 +35,57 @@ class QualtricsClient:
                 f"{response.status_code} {response.text}"
             )
         return response.json()
+
+    def list_surveys(self) -> list[dict]:
+        url = f"{self.base_url}/surveys"
+        elements: list[dict] = []
+        next_page: str | None = url
+        while next_page:
+            data = self._request("GET", next_page)
+            elements.extend(data["result"]["elements"])
+            next_page = data["result"].get("nextPage")
+        return elements
+
+    def download_survey_responses(
+        self,
+        survey_id: str,
+        poll_interval: int = DEFAULT_POLL_INTERVAL,
+    ) -> pd.DataFrame:
+        base_url = f"{self.base_url}/surveys/{survey_id}/export-responses/"
+
+        data = self._request("POST", base_url, json={"format": "csv"})
+        progress_id = data["result"]["progressId"]
+
+        percent = 0
+        while percent < 100:
+            data = self._request("GET", base_url + progress_id)
+            percent = data["result"]["percentComplete"]
+            if percent < 100:
+                time.sleep(poll_interval)
+        file_id = data["result"]["fileId"]
+
+        file_url = f"{self.base_url}/surveys/{survey_id}/export-responses/{file_id}/file"
+        response = self.session.request("GET", file_url, timeout=REQUEST_TIMEOUT)
+        if not response.ok:
+            raise RuntimeError(
+                f"Qualtrics GET {file_url} failed: {response.status_code} {response.text}"
+            )
+        zf = zipfile.ZipFile(io.BytesIO(response.content))
+        print(f"Downloaded survey {survey_id}")
+        return pd.read_csv(zf.open(zf.namelist()[0]))
+
+    def fetch_opt_out_contacts(self, directory_id: str) -> list[dict]:
+        url = f"{self.base_url}/directories/{directory_id}/contacts/optedOutContacts"
+        elements: list[dict] = []
+        next_page: str | None = url
+        page = 0
+        while next_page:
+            print(f"Page {page}")
+            data = self._request("GET", next_page)
+            elements.extend(data["result"]["elements"])
+            next_page = data["result"].get("nextPage")
+            page += 1
+        return elements
 
     def list_mailing_lists(self, directory_id: str) -> list[dict]:
         url = f"{self.base_url}/directories/{directory_id}/mailinglists"

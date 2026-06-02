@@ -23,10 +23,17 @@ MAILING_LIST_SECRETS = {
     "export_venue": f"qualtrics_ir_ac_automation_id_{ENV_SHORT_NAME}",
 }
 
+RATE_LIMIT_SLEEP_S = 60
+
 app = typer.Typer(help="Qualtrics ETL Operations Pipelines", no_args_is_help=True)
 
 _client: QualtricsClient | None = None
 _directory_id: str = ""
+
+
+def _get_client() -> QualtricsClient:
+    assert _client is not None, "QualtricsClient not initialized — callback did not run"
+    return _client
 
 
 @app.callback()
@@ -42,7 +49,7 @@ def init() -> None:
 def import_opt_out_users_cmd():
     """Fetch opt-out users from Qualtrics directory and sync to BigQuery."""
     try:
-        import_qualtrics_opt_out(_client, _directory_id, OPT_OUT_EXPORT_COLUMNS)
+        import_qualtrics_opt_out(_get_client(), _directory_id, OPT_OUT_EXPORT_COLUMNS)
         typer.echo("Successfully imported opt-out users.")
     except Exception as e:
         typer.echo(f"import_opt_out_users failed: {e}", err=True)
@@ -53,7 +60,8 @@ def import_opt_out_users_cmd():
 def import_all_survey_answers_cmd():
     """Fetch active survey metadata and sync all answers to BigQuery."""
     try:
-        surveys = pd.DataFrame(_client.list_surveys())
+        client = _get_client()
+        surveys = pd.DataFrame(client.list_surveys())
         pandas_gbq.to_gbq(
             surveys,
             f"{BIGQUERY_RAW_DATASET}.qualtrics_survey",
@@ -67,13 +75,13 @@ def import_all_survey_answers_cmd():
             return
 
         for i, s_id in enumerate(active_surveys, start=1):
-            df = _client.download_survey_responses(s_id)
+            df = client.download_survey_responses(s_id)
             df = process_survey_answers(df, s_id)
             save_partition_table_to_bq(
                 df, "qualtrics_answers", ANSWERS_SCHEMA, "survey_int_id"
             )
             if i % 10 == 0:
-                time.sleep(60)
+                time.sleep(RATE_LIMIT_SLEEP_S)
 
         typer.echo("Successfully processed all survey answers.")
     except Exception as e:
@@ -98,7 +106,7 @@ def export_beneficiary_cmd(
             table_name=table_name,
             directory_id=_directory_id,
             mailing_list_id=mailing_list_id,
-            client=_client,
+            client=_get_client(),
         )
         typer.echo("Successfully exported beneficiaries to Qualtrics.")
     except Exception as e:
@@ -123,7 +131,7 @@ def export_venue_cmd(
             table_name=table_name,
             directory_id=_directory_id,
             mailing_list_id=mailing_list_id,
-            client=_client,
+            client=_get_client(),
         )
         typer.echo("Successfully exported venues to Qualtrics.")
     except Exception as e:

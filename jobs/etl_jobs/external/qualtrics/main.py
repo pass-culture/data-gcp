@@ -40,9 +40,8 @@ app = typer.Typer(
 def import_opt_out_users_cmd():
     """Import opt-out users directory listings from Qualtrics to BigQuery."""
     try:
-        import_qualtrics_opt_out(
-            DATA_CENTER, DIRECTORY_ID, API_TOKEN, OPT_OUT_EXPORT_COLUMNS
-        )
+        client = QualtricsClient(api_token=API_TOKEN, data_center=DATA_CENTER)
+        import_qualtrics_opt_out(client, DIRECTORY_ID, OPT_OUT_EXPORT_COLUMNS)
         typer.echo("Successfully executed import_opt_out_users.")
     except Exception as e:
         typer.echo(f"Critical error during opt-out import: {e}", err=True)

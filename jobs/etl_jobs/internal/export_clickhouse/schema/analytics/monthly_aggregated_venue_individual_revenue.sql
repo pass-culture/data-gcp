@@ -19,4 +19,4 @@ FROM
 WHERE
     venue_id IS NOT NULL
 GROUP BY
-    1,2
+    month, venue_id

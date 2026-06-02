@@ -79,16 +79,26 @@ def import_all_survey_answers_cmd():
             logger.info("No active surveys found.")
             return
 
+        failed = []
         for i, s_id in enumerate(active_surveys, start=1):
             logger.info(f"[{i}/{len(active_surveys)}] Processing survey {s_id}")
-            df = client.download_survey_responses(s_id)
-            df = process_survey_answers(df, s_id)
-            save_partition_table_to_bq(
-                df, "qualtrics_answers", ANSWERS_SCHEMA, "survey_int_id"
-            )
+            try:
+                df = client.download_survey_responses(s_id)
+                logger.info(f"[{i}/{len(active_surveys)}] Processing answers ({len(df)} rows)")
+                df = process_survey_answers(df, s_id)
+                logger.info(f"[{i}/{len(active_surveys)}] Saving to BigQuery ({len(df)} rows after filtering)")
+                save_partition_table_to_bq(
+                    df, "qualtrics_answers", ANSWERS_SCHEMA, "survey_int_id"
+                )
+                logger.info(f"[{i}/{len(active_surveys)}] Done")
+            except Exception as e:
+                logger.exception(f"[{i}/{len(active_surveys)}] Failed on survey {s_id}: {e}")
+                failed.append(s_id)
             if i % 10 == 0:
                 time.sleep(RATE_LIMIT_SLEEP_S)
 
+        if failed:
+            raise RuntimeError(f"Failed surveys: {failed}")
         logger.info("Successfully processed all survey answers.")
     except Exception as e:
         logger.exception(f"import_all_survey_answers failed: {e}")

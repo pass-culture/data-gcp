@@ -1,4 +1,5 @@
 import time
+from typing import Annotated
 
 import typer
 
@@ -32,22 +33,38 @@ ir_surveys_mapping = {
     "pro": "SV_eOOPuFjgZo1emR8",
 }
 
+# Initialize modern Typer App instance
+app = typer.Typer(
+    help="Qualtrics Data Synchronization Pipeline CLI Tools.",
+    no_args_is_help=True
+)
 
-def run(
-    task: str = typer.Option(..., help="Task name"),
-    ds: str = typer.Option("", help="Execution date (YYYY-MM-DD)"),
-    dataset_name: str = typer.Option("", help="BQ dataset containing the source table"),
-    table_name: str = typer.Option("", help="BQ table name to read from"),
-):
-    if task == "import_opt_out_users":
+
+@app.command(name="import_opt_out_users")
+def import_opt_out_users_cmd():
+    """Import opt-out users directory listings from Qualtrics to BigQuery."""
+    try:
         import_qualtrics_opt_out(
             DATA_CENTER, DIRECTORY_ID, API_TOKEN, OPT_OUT_EXPORT_COLUMNS
         )
+        typer.echo("Successfully executed import_opt_out_users.")
+    except Exception as e:
+        typer.echo(f"Critical error during opt-out import: {e}", err=True)
+        raise typer.Exit(code=1)
 
-    elif task == "import_all_survey_answers":
+
+@app.command(name="import_all_survey_answers")
+def import_all_survey_answers_cmd():
+    """Download and mirror response payloads for all active Qualtrics surveys into BigQuery."""
+    try:
         active_surveys = import_survey_metadata(
             data_center=DATA_CENTER, api_token=API_TOKEN
         )
+        
+        if not active_surveys:
+            typer.echo("No active surveys located for collection processing.")
+            return
+
         i = 0
         for s_id in active_surveys:
             i = i + 1
@@ -64,8 +81,21 @@ def run(
             )
             if i % 10:
                 time.sleep(60)
+                
+        typer.echo("Successfully completed all survey answers ingest actions.")
+    except Exception as e:
+        typer.echo(f"Critical error during active answer aggregation: {e}", err=True)
+        raise typer.Exit(code=1)
 
-    elif task == "export_beneficiary":
+
+@app.command(name="export_beneficiary")
+def export_beneficiary_cmd(
+    ds: Annotated[str, typer.Option(help="Execution target parsing window date (YYYY-MM-DD)")] = "",
+    dataset_name: Annotated[str, typer.Option(help="BigQuery target distribution source dataset identity reference")] = "",
+    table_name: Annotated[str, typer.Option(help="BigQuery target data query source table reference")] = "",
+):
+    """Sync beneficiary demographics records out from structured data warehouses directly to active mailing contacts registries."""
+    try:
         mailing_list_id = access_secret_data(
             PROJECT_NAME, MAILING_LIST_SECRETS["export_beneficiary"]
         )
@@ -78,8 +108,20 @@ def run(
             mailing_list_id=mailing_list_id,
             client=client,
         )
+        typer.echo("Successfully finalized validation distributions tracking loops out to target listings.")
+    except Exception as e:
+        typer.echo(f"Critical execution error tracking export distributions maps: {e}", err=True)
+        raise typer.Exit(code=1)
 
-    elif task == "export_venue":
+
+@app.command(name="export_venue")
+def export_venue_cmd(
+    ds: Annotated[str, typer.Option(help="Execution target parsing window date (YYYY-MM-DD)")] = "",
+    dataset_name: Annotated[str, typer.Option(help="BigQuery target distribution source dataset identity reference")] = "",
+    table_name: Annotated[str, typer.Option(help="BigQuery target data query source table reference")] = "",
+):
+    """Sync venue tracking demographics records out from data warehouses directly to targeting distribution tables."""
+    try:
         mailing_list_id = access_secret_data(
             PROJECT_NAME, MAILING_LIST_SECRETS["export_venue"]
         )
@@ -92,14 +134,11 @@ def run(
             mailing_list_id=mailing_list_id,
             client=client,
         )
-
-    else:
-        raise RuntimeError(
-            "Task must be one of: import_opt_out_users, import_all_survey_answers, export_beneficiary, export_venue."
-        )
-
-    return "Success"
+        typer.echo("Successfully finalized venue target listing pipelines metrics mapping.")
+    except Exception as e:
+        typer.echo(f"Critical validation failures tracing venue transformations tracking sequences: {e}", err=True)
+        raise typer.Exit(code=1)
 
 
 if __name__ == "__main__":
-    typer.run(run)
+    app()

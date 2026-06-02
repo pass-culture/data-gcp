@@ -141,7 +141,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run python main.py --task export_beneficiary --ds {{ ds }} --dataset-name {{ params.beneficiary_dataset }} --table-name {{ params.beneficiary_table }}_{{ ds_nodash }}",
+        command="uv run python main.py export_beneficiary --ds {{ ds }} --dataset-name {{ params.beneficiary_dataset }} --table-name {{ params.beneficiary_table }}_{{ ds_nodash }}",
         deferrable=True,
         do_xcom_push=True,
     )
@@ -151,7 +151,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run python main.py --task export_venue --ds {{ ds }} --dataset-name {{ params.venue_dataset }} --table-name {{ params.venue_table }}_{{ ds_nodash }}",
+        command="uv run python main.py export_venue --ds {{ ds }} --dataset-name {{ params.venue_dataset }} --table-name {{ params.venue_table }}_{{ ds_nodash }}",
         deferrable=True,
         do_xcom_push=True,
     )

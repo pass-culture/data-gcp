@@ -64,7 +64,9 @@ class QualtricsClient:
                 time.sleep(poll_interval)
         file_id = data["result"]["fileId"]
 
-        file_url = f"{self.base_url}/surveys/{survey_id}/export-responses/{file_id}/file"
+        file_url = (
+            f"{self.base_url}/surveys/{survey_id}/export-responses/{file_id}/file"
+        )
         response = self.session.request("GET", file_url, timeout=REQUEST_TIMEOUT)
         if not response.ok:
             raise RuntimeError(

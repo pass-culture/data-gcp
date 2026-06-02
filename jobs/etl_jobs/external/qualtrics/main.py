@@ -40,8 +40,12 @@ def _get_client() -> QualtricsClient:
 def init() -> None:
     global _client, _directory_id
     api_token = access_secret_data(PROJECT_NAME, f"qualtrics_token_{ENV_SHORT_NAME}")
-    data_center = access_secret_data(PROJECT_NAME, f"qualtrics_data_center_{ENV_SHORT_NAME}")
-    _directory_id = access_secret_data(PROJECT_NAME, f"qualtrics_directory_id_{ENV_SHORT_NAME}")
+    data_center = access_secret_data(
+        PROJECT_NAME, f"qualtrics_data_center_{ENV_SHORT_NAME}"
+    )
+    _directory_id = access_secret_data(
+        PROJECT_NAME, f"qualtrics_directory_id_{ENV_SHORT_NAME}"
+    )
     _client = QualtricsClient(api_token=api_token, data_center=data_center)
 
 

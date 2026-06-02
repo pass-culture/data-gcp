@@ -74,7 +74,7 @@ class QualtricsClient:
             )
         zf = zipfile.ZipFile(io.BytesIO(response.content))
         print(f"Downloaded survey {survey_id}")
-        return pd.read_csv(zf.open(zf.namelist()[0]))
+        return pd.read_csv(zf.open(zf.namelist()[0]), dtype=str)
 
     def fetch_opt_out_contacts(self, directory_id: str) -> list[dict]:
         url = f"{self.base_url}/directories/{directory_id}/contacts/optedOutContacts"

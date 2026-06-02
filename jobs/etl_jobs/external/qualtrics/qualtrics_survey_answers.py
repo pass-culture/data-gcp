@@ -1,4 +1,5 @@
 import pandas as pd
+from loguru import logger
 
 from schemas import FORMAT_DICT
 
@@ -24,6 +25,9 @@ def process_survey_answers(df: pd.DataFrame, survey_id: str) -> pd.DataFrame:
     mapping_question_id = df[answer_columns].iloc[1].to_dict()
 
     id_vars = [col for col in columns if col not in answer_columns + drop_columns]
+    logger.info(
+        f"[{survey_id}] shape={df.shape} answer_cols={len(answer_columns)} other_cols={len(other_columns)}"
+    )
     df_step1 = pd.melt(
         df.iloc[2:],
         id_vars=id_vars,
@@ -34,11 +38,13 @@ def process_survey_answers(df: pd.DataFrame, survey_id: str) -> pd.DataFrame:
         question_str=lambda _df: _df["question"].map(mapping_question_str),
         question_id=lambda _df: _df["question"].map(mapping_question_id),
     )
+    logger.info(f"[{survey_id}] melt done: {len(df_step1)} rows")
 
     if len(other_columns) > 0:
         df_final = df_step1.assign(
             extra_data=lambda _df: _df[other_columns].to_dict(orient="records")
         ).drop(columns=other_columns)
+        logger.info(f"[{survey_id}] extra_data done")
     else:
         df_final = df_step1
 

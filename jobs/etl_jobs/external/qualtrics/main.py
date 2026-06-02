@@ -10,13 +10,12 @@ from qualtrics_survey_answers import (
     QualtricsSurvey,
     import_survey_metadata,
 )
+from schemas import ANSWERS_SCHEMA, OPT_OUT_EXPORT_COLUMNS
 from utils import (
-    ANSWERS_SCHEMA,
     API_TOKEN,
     DATA_CENTER,
     DIRECTORY_ID,
     ENV_SHORT_NAME,
-    OPT_OUT_EXPORT_COLUMNS,
     PROJECT_NAME,
     access_secret_data,
     save_partition_table_to_bq,

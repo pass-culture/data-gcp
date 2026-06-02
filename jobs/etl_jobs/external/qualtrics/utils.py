@@ -63,30 +63,3 @@ DIRECTORY_ID = access_secret_data(
     PROJECT_NAME, f"qualtrics_directory_id_{ENV_SHORT_NAME}"
 )
 
-OPT_OUT_EXPORT_COLUMNS = {
-    "contactId": "contact_id",
-    "firstName": "first_name",
-    "lastName": "last_name",
-    "email": "email",
-    "phone": "phone",
-    "language": "language",
-    "extRef": "ext_ref",
-    "directoryUnsubscribed": "directory_unsubscribed",
-    "directoryUnsubscribeDate": "directory_unsubscribe_date",
-}
-
-ANSWERS_SCHEMA = {
-    "start_date": "STRING",
-    "end_date": "STRING",
-    "status": "INTEGER",
-    "response_id": "STRING",
-    "user_id": "STRING",
-    "distribution_channel": "STRING",
-    "question": "STRING",
-    "answer": "STRING",
-    "question_str": "STRING",
-    "question_id": "STRING",
-    "extra_data": "STRING",
-    "survey_id": "STRING",
-    "survey_int_id": "INTEGER",
-}

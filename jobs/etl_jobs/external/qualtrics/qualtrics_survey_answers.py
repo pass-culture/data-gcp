@@ -7,24 +7,10 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from schemas import FORMAT_DICT
 from utils import BIGQUERY_RAW_DATASET, PROJECT_NAME
 
 _RETRY = Retry(total=3, backoff_factor=2, status_forcelist=[500, 502, 503, 504])
-
-FORMAT_DICT = {
-    "start_date": str,
-    "end_date": str,
-    "status": int,
-    "response_id": str,
-    "user_id": str,
-    "distribution_channel": str,
-    "question": str,
-    "answer": str,
-    "question_str": str,
-    "question_id": str,
-    "extra_data": str,
-    "survey_id": str,
-}
 
 
 def import_survey_metadata(data_center, api_token):

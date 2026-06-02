@@ -6,10 +6,7 @@ import typer
 from qualtrics_client import QualtricsClient
 from qualtrics_export import export_beneficiary_to_qualtrics, export_venue_to_qualtrics
 from qualtrics_opt_out import import_qualtrics_opt_out
-from qualtrics_survey_answers import (
-    QualtricsSurvey,
-    import_survey_metadata,
-)
+from qualtrics_survey_answers import import_survey_metadata, process_survey_answers
 from schemas import ANSWERS_SCHEMA, OPT_OUT_EXPORT_COLUMNS
 from utils import (
     API_TOKEN,
@@ -64,21 +61,14 @@ def import_all_survey_answers_cmd():
             typer.echo("No active surveys located for collection processing.")
             return
 
-        i = 0
-        for s_id in active_surveys:
-            i = i + 1
-            survey = QualtricsSurvey(
-                api_token=API_TOKEN, survey_id=s_id, data_center=DATA_CENTER
-            )
-            survey.get_qualtrics_survey()
-            df = survey.process_survey_answers()
-            df["survey_int_id"] = df["survey_id"].apply(
-                lambda survey_id: abs(hash(str(survey_id)) % 1000000007)
-            )
+        client = QualtricsClient(api_token=API_TOKEN, data_center=DATA_CENTER)
+        for i, s_id in enumerate(active_surveys, start=1):
+            df = client.download_survey_responses(s_id)
+            df = process_survey_answers(df, s_id)
             save_partition_table_to_bq(
                 df, "qualtrics_answers", ANSWERS_SCHEMA, "survey_int_id"
             )
-            if i % 10:
+            if i % 10 == 0:
                 time.sleep(60)
                 
         typer.echo("Successfully completed all survey answers ingest actions.")

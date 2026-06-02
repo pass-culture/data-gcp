@@ -1,7 +1,14 @@
+import io
 import time
+import zipfile
 from typing import Any
 
+from loguru import logger
+
+import pandas as pd
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 DEFAULT_CHUNK_SIZE = 5000
 DEFAULT_POLL_INTERVAL = 5
@@ -12,7 +19,9 @@ REQUEST_TIMEOUT = 30
 class QualtricsClient:
     def __init__(self, api_token: str, data_center: str):
         self.base_url = f"https://{data_center}.qualtrics.com/API/v3"
+        retry = Retry(total=3, backoff_factor=2, status_forcelist=[500, 502, 503, 504])
         self.session = requests.Session()
+        self.session.mount("https://", HTTPAdapter(max_retries=retry))
         self.session.headers.update(
             {
                 "X-API-TOKEN": api_token,
@@ -28,6 +37,59 @@ class QualtricsClient:
                 f"{response.status_code} {response.text}"
             )
         return response.json()
+
+    def list_surveys(self) -> list[dict]:
+        url = f"{self.base_url}/surveys"
+        elements: list[dict] = []
+        next_page: str | None = url
+        while next_page:
+            data = self._request("GET", next_page)
+            elements.extend(data["result"]["elements"])
+            next_page = data["result"].get("nextPage")
+        return elements
+
+    def download_survey_responses(
+        self,
+        survey_id: str,
+        poll_interval: int = DEFAULT_POLL_INTERVAL,
+    ) -> pd.DataFrame:
+        base_url = f"{self.base_url}/surveys/{survey_id}/export-responses/"
+
+        data = self._request("POST", base_url, json={"format": "csv"})
+        progress_id = data["result"]["progressId"]
+
+        percent = 0
+        while percent < 100:
+            data = self._request("GET", base_url + progress_id)
+            percent = data["result"]["percentComplete"]
+            if percent < 100:
+                time.sleep(poll_interval)
+        file_id = data["result"]["fileId"]
+
+        file_url = (
+            f"{self.base_url}/surveys/{survey_id}/export-responses/{file_id}/file"
+        )
+        response = self.session.request("GET", file_url, timeout=REQUEST_TIMEOUT)
+        if not response.ok:
+            raise RuntimeError(
+                f"Qualtrics GET {file_url} failed: {response.status_code} {response.text}"
+            )
+        zf = zipfile.ZipFile(io.BytesIO(response.content))
+        logger.info(f"Downloaded survey {survey_id}")
+        return pd.read_csv(zf.open(zf.namelist()[0]), dtype=str)
+
+    def fetch_opt_out_contacts(self, directory_id: str) -> list[dict]:
+        url = f"{self.base_url}/directories/{directory_id}/contacts/optedOutContacts"
+        elements: list[dict] = []
+        next_page: str | None = url
+        page = 0
+        while next_page:
+            logger.info(f"Page {page}")
+            data = self._request("GET", next_page)
+            elements.extend(data["result"]["elements"])
+            next_page = data["result"].get("nextPage")
+            page += 1
+        return elements
 
     def list_mailing_lists(self, directory_id: str) -> list[dict]:
         url = f"{self.base_url}/directories/{directory_id}/mailinglists"
@@ -49,7 +111,7 @@ class QualtricsClient:
         timeout: int = DEFAULT_TIMEOUT,
     ) -> list[dict]:
         if not contacts:
-            print("No contacts to import")
+            logger.info("No contacts to import")
             return []
 
         url = (
@@ -61,7 +123,7 @@ class QualtricsClient:
             data = self._request("POST", url, json={"contacts": chunk})
             result = data["result"]
             tracking_url = result["tracking"]["url"]
-            print(
+            logger.info(
                 f"Chunk {chunk_index + 1}: submitted {len(chunk)} contacts "
                 f"(progressId={result['id']})"
             )
@@ -79,11 +141,11 @@ class QualtricsClient:
             if status == "complete":
                 unprocessed = result.get("contacts", {}).get("unprocessed", [])
                 if unprocessed:
-                    print(
+                    logger.warning(
                         f"Import complete with {len(unprocessed)} unprocessed contacts"
                     )
                 else:
-                    print("Import complete")
+                    logger.info("Import complete")
                 return result
             if status == "failed":
                 raise RuntimeError(f"Qualtrics import failed: {data}")

@@ -70,7 +70,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run python main.py --task import_opt_out_users",
+        command="uv run python main.py import_opt_out_users",
         deferrable=True,
         do_xcom_push=True,
     )
@@ -80,7 +80,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run python main.py --task import_all_survey_answers",
+        command="uv run python main.py import_all_survey_answers",
         deferrable=True,
         do_xcom_push=True,
     )

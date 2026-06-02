@@ -2,6 +2,7 @@ import os
 
 import pandas as pd
 from google.cloud import bigquery
+from loguru import logger
 
 from qualtrics_client import QualtricsClient
 
@@ -99,7 +100,7 @@ def _export_to_qualtrics(
     df = bq.query(
         f"SELECT * FROM `{project}.{dataset_name}.{table_name}`"
     ).to_dataframe()
-    print(f"{log_label} export: {len(df)} rows")
+    logger.info(f"{log_label} export: {len(df)} rows")
 
     _write_audit_table(bq, df, project, raw_dataset, audit_table, ds)
 
@@ -109,10 +110,10 @@ def _export_to_qualtrics(
         ext_ref_column=ext_ref_column,
         embedded_data_columns=embedded_data_columns,
     )
-    print(f"{log_label} contacts ready: {len(contacts)}")
+    logger.info(f"{log_label} contacts ready: {len(contacts)}")
 
     results = client.import_contacts(directory_id, mailing_list_id, contacts)
-    print(f"{log_label} import complete: {len(results)} chunk(s)")
+    logger.info(f"{log_label} import complete: {len(results)} chunk(s)")
     return results
 
 
@@ -161,4 +162,4 @@ def _write_audit_table(
     )
     job = bq.load_table_from_dataframe(audit_df, table_id, job_config=job_config)
     job.result()
-    print(f"Audit written to {table_id}: {len(audit_df)} rows")
+    logger.info(f"Audit written to {table_id}: {len(audit_df)} rows")

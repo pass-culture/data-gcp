@@ -1,33 +1,6 @@
 import pandas as pd
-import pandas_gbq
 
 from schemas import FORMAT_DICT
-from utils import BIGQUERY_RAW_DATASET, PROJECT_NAME
-
-
-def import_survey_metadata(data_center, api_token):
-    import requests
-    from requests.adapters import HTTPAdapter
-    from urllib3.util.retry import Retry
-
-    base_url = f"https://{data_center}.qualtrics.com/API/v3/surveys/"
-    headers = {
-        "Accept": "application/json",
-        "x-api-token": api_token,
-    }
-    session = requests.Session()
-    session.mount("https://", HTTPAdapter(max_retries=Retry(total=3, backoff_factor=2, status_forcelist=[500, 502, 503, 504])))
-    response = session.get(base_url, headers=headers)
-    if response.json()["meta"]["httpStatus"] == "200 - OK":
-        surveys = pd.DataFrame(response.json()["result"]["elements"])
-        pandas_gbq.to_gbq(
-            surveys,
-            f"{BIGQUERY_RAW_DATASET}.qualtrics_survey",
-            project_id=PROJECT_NAME,
-            if_exists="replace",
-        )
-        active_surveys = surveys.loc[lambda df: df.isActive].id.tolist()
-        return active_surveys
 
 
 def process_survey_answers(df: pd.DataFrame, survey_id: str) -> pd.DataFrame:

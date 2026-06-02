@@ -1,17 +1,17 @@
 import time
 from typing import Annotated
 
+import pandas as pd
+import pandas_gbq
 import typer
 
 from qualtrics_client import QualtricsClient
 from qualtrics_export import export_beneficiary_to_qualtrics, export_venue_to_qualtrics
 from qualtrics_opt_out import import_qualtrics_opt_out
-from qualtrics_survey_answers import import_survey_metadata, process_survey_answers
+from qualtrics_survey_answers import process_survey_answers
 from schemas import ANSWERS_SCHEMA, OPT_OUT_EXPORT_COLUMNS
 from utils import (
-    API_TOKEN,
-    DATA_CENTER,
-    DIRECTORY_ID,
+    BIGQUERY_RAW_DATASET,
     ENV_SHORT_NAME,
     PROJECT_NAME,
     access_secret_data,
@@ -23,108 +23,111 @@ MAILING_LIST_SECRETS = {
     "export_venue": f"qualtrics_ir_ac_automation_id_{ENV_SHORT_NAME}",
 }
 
-ir_surveys_mapping = {
-    "GRANT_15_17": "SV_3IdnHqrnsuS17oy",
-    "GRANT_18": "SV_cBV3xaZ92BoW5sW",
-    "pro": "SV_eOOPuFjgZo1emR8",
-}
+app = typer.Typer(help="Qualtrics ETL Operations Pipelines", no_args_is_help=True)
 
-# Initialize modern Typer App instance
-app = typer.Typer(
-    help="Qualtrics Data Synchronization Pipeline CLI Tools.",
-    no_args_is_help=True
-)
+_client: QualtricsClient | None = None
+_directory_id: str = ""
+
+
+@app.callback()
+def init() -> None:
+    global _client, _directory_id
+    api_token = access_secret_data(PROJECT_NAME, f"qualtrics_token_{ENV_SHORT_NAME}")
+    data_center = access_secret_data(PROJECT_NAME, f"qualtrics_data_center_{ENV_SHORT_NAME}")
+    _directory_id = access_secret_data(PROJECT_NAME, f"qualtrics_directory_id_{ENV_SHORT_NAME}")
+    _client = QualtricsClient(api_token=api_token, data_center=data_center)
 
 
 @app.command(name="import_opt_out_users")
 def import_opt_out_users_cmd():
-    """Import opt-out users directory listings from Qualtrics to BigQuery."""
+    """Fetch opt-out users from Qualtrics directory and sync to BigQuery."""
     try:
-        client = QualtricsClient(api_token=API_TOKEN, data_center=DATA_CENTER)
-        import_qualtrics_opt_out(client, DIRECTORY_ID, OPT_OUT_EXPORT_COLUMNS)
-        typer.echo("Successfully executed import_opt_out_users.")
+        import_qualtrics_opt_out(_client, _directory_id, OPT_OUT_EXPORT_COLUMNS)
+        typer.echo("Successfully imported opt-out users.")
     except Exception as e:
-        typer.echo(f"Critical error during opt-out import: {e}", err=True)
+        typer.echo(f"import_opt_out_users failed: {e}", err=True)
         raise typer.Exit(code=1)
 
 
 @app.command(name="import_all_survey_answers")
 def import_all_survey_answers_cmd():
-    """Download and mirror response payloads for all active Qualtrics surveys into BigQuery."""
+    """Fetch active survey metadata and sync all answers to BigQuery."""
     try:
-        active_surveys = import_survey_metadata(
-            data_center=DATA_CENTER, api_token=API_TOKEN
+        surveys = pd.DataFrame(_client.list_surveys())
+        pandas_gbq.to_gbq(
+            surveys,
+            f"{BIGQUERY_RAW_DATASET}.qualtrics_survey",
+            project_id=PROJECT_NAME,
+            if_exists="replace",
         )
-        
+        active_surveys = surveys.loc[lambda df: df.isActive].id.tolist()
+
         if not active_surveys:
-            typer.echo("No active surveys located for collection processing.")
+            typer.echo("No active surveys found.")
             return
 
-        client = QualtricsClient(api_token=API_TOKEN, data_center=DATA_CENTER)
         for i, s_id in enumerate(active_surveys, start=1):
-            df = client.download_survey_responses(s_id)
+            df = _client.download_survey_responses(s_id)
             df = process_survey_answers(df, s_id)
             save_partition_table_to_bq(
                 df, "qualtrics_answers", ANSWERS_SCHEMA, "survey_int_id"
             )
             if i % 10 == 0:
                 time.sleep(60)
-                
-        typer.echo("Successfully completed all survey answers ingest actions.")
+
+        typer.echo("Successfully processed all survey answers.")
     except Exception as e:
-        typer.echo(f"Critical error during active answer aggregation: {e}", err=True)
+        typer.echo(f"import_all_survey_answers failed: {e}", err=True)
         raise typer.Exit(code=1)
 
 
 @app.command(name="export_beneficiary")
 def export_beneficiary_cmd(
-    ds: Annotated[str, typer.Option(help="Execution target parsing window date (YYYY-MM-DD)")] = "",
-    dataset_name: Annotated[str, typer.Option(help="BigQuery target distribution source dataset identity reference")] = "",
-    table_name: Annotated[str, typer.Option(help="BigQuery target data query source table reference")] = "",
+    ds: Annotated[str, typer.Option(help="Execution date (YYYY-MM-DD)")] = "",
+    dataset_name: Annotated[str, typer.Option(help="BQ source dataset")] = "",
+    table_name: Annotated[str, typer.Option(help="BQ source table")] = "",
 ):
-    """Sync beneficiary demographics records out from structured data warehouses directly to active mailing contacts registries."""
+    """Export beneficiary data from BigQuery to Qualtrics mailing list."""
     try:
         mailing_list_id = access_secret_data(
             PROJECT_NAME, MAILING_LIST_SECRETS["export_beneficiary"]
         )
-        client = QualtricsClient(api_token=API_TOKEN, data_center=DATA_CENTER)
         export_beneficiary_to_qualtrics(
             ds=ds,
             dataset_name=dataset_name,
             table_name=table_name,
-            directory_id=DIRECTORY_ID,
+            directory_id=_directory_id,
             mailing_list_id=mailing_list_id,
-            client=client,
+            client=_client,
         )
-        typer.echo("Successfully finalized validation distributions tracking loops out to target listings.")
+        typer.echo("Successfully exported beneficiaries to Qualtrics.")
     except Exception as e:
-        typer.echo(f"Critical execution error tracking export distributions maps: {e}", err=True)
+        typer.echo(f"export_beneficiary failed: {e}", err=True)
         raise typer.Exit(code=1)
 
 
 @app.command(name="export_venue")
 def export_venue_cmd(
-    ds: Annotated[str, typer.Option(help="Execution target parsing window date (YYYY-MM-DD)")] = "",
-    dataset_name: Annotated[str, typer.Option(help="BigQuery target distribution source dataset identity reference")] = "",
-    table_name: Annotated[str, typer.Option(help="BigQuery target data query source table reference")] = "",
+    ds: Annotated[str, typer.Option(help="Execution date (YYYY-MM-DD)")] = "",
+    dataset_name: Annotated[str, typer.Option(help="BQ source dataset")] = "",
+    table_name: Annotated[str, typer.Option(help="BQ source table")] = "",
 ):
-    """Sync venue tracking demographics records out from data warehouses directly to targeting distribution tables."""
+    """Export venue data from BigQuery to Qualtrics mailing list."""
     try:
         mailing_list_id = access_secret_data(
             PROJECT_NAME, MAILING_LIST_SECRETS["export_venue"]
         )
-        client = QualtricsClient(api_token=API_TOKEN, data_center=DATA_CENTER)
         export_venue_to_qualtrics(
             ds=ds,
             dataset_name=dataset_name,
             table_name=table_name,
-            directory_id=DIRECTORY_ID,
+            directory_id=_directory_id,
             mailing_list_id=mailing_list_id,
-            client=client,
+            client=_client,
         )
-        typer.echo("Successfully finalized venue target listing pipelines metrics mapping.")
+        typer.echo("Successfully exported venues to Qualtrics.")
     except Exception as e:
-        typer.echo(f"Critical validation failures tracing venue transformations tracking sequences: {e}", err=True)
+        typer.echo(f"export_venue failed: {e}", err=True)
         raise typer.Exit(code=1)
 
 

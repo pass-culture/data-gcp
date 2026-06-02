@@ -55,11 +55,3 @@ def save_partition_table_to_bq(df, table_name, schema, partition_field):
     job.result()
 
 
-API_TOKEN = access_secret_data(PROJECT_NAME, f"qualtrics_token_{ENV_SHORT_NAME}")
-DATA_CENTER = access_secret_data(
-    PROJECT_NAME, f"qualtrics_data_center_{ENV_SHORT_NAME}"
-)
-DIRECTORY_ID = access_secret_data(
-    PROJECT_NAME, f"qualtrics_directory_id_{ENV_SHORT_NAME}"
-)
-

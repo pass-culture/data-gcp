@@ -20,33 +20,27 @@ def process_survey_answers(df: pd.DataFrame, survey_id: str) -> pd.DataFrame:
         for col in columns
         if col not in system_columns + answer_columns + drop_columns
     ]
-    mapping_question = df[answer_columns].iloc[:2].to_dict(orient="records")
-    mapping_question_str = mapping_question[0]
-    mapping_question_id = mapping_question[1]
+    mapping_question_str = df[answer_columns].iloc[0].to_dict()
+    mapping_question_id = df[answer_columns].iloc[1].to_dict()
 
-    nb_columns = df.shape[1]
-    columns_mapping = {
-        f"level_{nb_columns - len(answer_columns)}": "question",
-        0: "answer",
-    }
-
-    df_step1 = (
-        df[2:]
-        .set_index(list(df.columns.drop(answer_columns)))
-        .stack()
-        .reset_index()
-        .rename(columns=columns_mapping)
-        .assign(
-            question_str=lambda _df: _df["question"].map(mapping_question_str),
-            question_id=lambda _df: _df["question"].map(mapping_question_id),
-        )
+    id_vars = [col for col in columns if col not in answer_columns + drop_columns]
+    df_step1 = pd.melt(
+        df.iloc[2:],
+        id_vars=id_vars,
+        value_vars=answer_columns,
+        var_name="question",
+        value_name="answer",
+    ).assign(
+        question_str=lambda _df: _df["question"].map(mapping_question_str),
+        question_id=lambda _df: _df["question"].map(mapping_question_id),
     )
+
     if len(other_columns) > 0:
         df_final = df_step1.assign(
             extra_data=lambda _df: _df[other_columns].to_dict(orient="records")
-        ).drop(drop_columns + other_columns, axis=1)
+        ).drop(columns=other_columns)
     else:
-        df_final = df_step1.drop(drop_columns + other_columns, axis=1)
+        df_final = df_step1
 
     df_final["survey_id"] = survey_id
     df_final["survey_int_id"] = abs(hash(str(survey_id)) % 1000000007)

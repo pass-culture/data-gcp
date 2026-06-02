@@ -3,6 +3,8 @@ import time
 import zipfile
 from typing import Any
 
+from loguru import logger
+
 import pandas as pd
 import requests
 from requests.adapters import HTTPAdapter
@@ -73,7 +75,7 @@ class QualtricsClient:
                 f"Qualtrics GET {file_url} failed: {response.status_code} {response.text}"
             )
         zf = zipfile.ZipFile(io.BytesIO(response.content))
-        print(f"Downloaded survey {survey_id}")
+        logger.info(f"Downloaded survey {survey_id}")
         return pd.read_csv(zf.open(zf.namelist()[0]), dtype=str)
 
     def fetch_opt_out_contacts(self, directory_id: str) -> list[dict]:
@@ -82,7 +84,7 @@ class QualtricsClient:
         next_page: str | None = url
         page = 0
         while next_page:
-            print(f"Page {page}")
+            logger.info(f"Page {page}")
             data = self._request("GET", next_page)
             elements.extend(data["result"]["elements"])
             next_page = data["result"].get("nextPage")
@@ -109,7 +111,7 @@ class QualtricsClient:
         timeout: int = DEFAULT_TIMEOUT,
     ) -> list[dict]:
         if not contacts:
-            print("No contacts to import")
+            logger.info("No contacts to import")
             return []
 
         url = (
@@ -121,7 +123,7 @@ class QualtricsClient:
             data = self._request("POST", url, json={"contacts": chunk})
             result = data["result"]
             tracking_url = result["tracking"]["url"]
-            print(
+            logger.info(
                 f"Chunk {chunk_index + 1}: submitted {len(chunk)} contacts "
                 f"(progressId={result['id']})"
             )
@@ -139,11 +141,11 @@ class QualtricsClient:
             if status == "complete":
                 unprocessed = result.get("contacts", {}).get("unprocessed", [])
                 if unprocessed:
-                    print(
+                    logger.warning(
                         f"Import complete with {len(unprocessed)} unprocessed contacts"
                     )
                 else:
-                    print("Import complete")
+                    logger.info("Import complete")
                 return result
             if status == "failed":
                 raise RuntimeError(f"Qualtrics import failed: {data}")

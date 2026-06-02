@@ -4,6 +4,7 @@ from typing import Annotated
 import pandas as pd
 import pandas_gbq
 import typer
+from loguru import logger
 
 from qualtrics_client import QualtricsClient
 from qualtrics_export import export_beneficiary_to_qualtrics, export_venue_to_qualtrics
@@ -54,9 +55,9 @@ def import_opt_out_users_cmd():
     """Fetch opt-out users from Qualtrics directory and sync to BigQuery."""
     try:
         import_qualtrics_opt_out(_get_client(), _directory_id, OPT_OUT_EXPORT_COLUMNS)
-        typer.echo("Successfully imported opt-out users.")
+        logger.info("Successfully imported opt-out users.")
     except Exception as e:
-        typer.echo(f"import_opt_out_users failed: {e}", err=True)
+        logger.exception(f"import_opt_out_users failed: {e}")
         raise typer.Exit(code=1)
 
 
@@ -75,10 +76,11 @@ def import_all_survey_answers_cmd():
         active_surveys = surveys.loc[lambda df: df.isActive].id.tolist()
 
         if not active_surveys:
-            typer.echo("No active surveys found.")
+            logger.info("No active surveys found.")
             return
 
         for i, s_id in enumerate(active_surveys, start=1):
+            logger.info(f"[{i}/{len(active_surveys)}] Processing survey {s_id}")
             df = client.download_survey_responses(s_id)
             df = process_survey_answers(df, s_id)
             save_partition_table_to_bq(
@@ -87,9 +89,9 @@ def import_all_survey_answers_cmd():
             if i % 10 == 0:
                 time.sleep(RATE_LIMIT_SLEEP_S)
 
-        typer.echo("Successfully processed all survey answers.")
+        logger.info("Successfully processed all survey answers.")
     except Exception as e:
-        typer.echo(f"import_all_survey_answers failed: {e}", err=True)
+        logger.exception(f"import_all_survey_answers failed: {e}")
         raise typer.Exit(code=1)
 
 
@@ -112,9 +114,9 @@ def export_beneficiary_cmd(
             mailing_list_id=mailing_list_id,
             client=_get_client(),
         )
-        typer.echo("Successfully exported beneficiaries to Qualtrics.")
+        logger.info("Successfully exported beneficiaries to Qualtrics.")
     except Exception as e:
-        typer.echo(f"export_beneficiary failed: {e}", err=True)
+        logger.exception(f"export_beneficiary failed: {e}")
         raise typer.Exit(code=1)
 
 
@@ -137,9 +139,9 @@ def export_venue_cmd(
             mailing_list_id=mailing_list_id,
             client=_get_client(),
         )
-        typer.echo("Successfully exported venues to Qualtrics.")
+        logger.info("Successfully exported venues to Qualtrics.")
     except Exception as e:
-        typer.echo(f"export_venue failed: {e}", err=True)
+        logger.exception(f"export_venue failed: {e}")
         raise typer.Exit(code=1)
 
 

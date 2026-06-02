@@ -15,19 +15,26 @@ with
         select
             venue_region_name as region_name,
             venue_academy_name as academy_name,
+            venue_department_name as dep_name,
             venue_epci_code as epci_code,
             venue_city_code as city_code,
             date_trunc(date(collective_offer_creation_date), month) as partition_month,
             coalesce(count(distinct collective_offer_id), 0) as total_created_offer
         from {{ ref("int_global__collective_offer") }}
         group by
-            venue_region_name, venue_academy_name, partition_month, epci_code, city_code
+            venue_region_name,
+            venue_academy_name,
+            venue_department_name,
+            partition_month,
+            epci_code,
+            city_code
     ),
 
     ac_booked_collective_offers as (
         select
             venue_region_name as region_name,
             venue_academy_name as academy_name,
+            venue_department_name as dep_name,
             venue_epci_code as epci_code,
             venue_city_code as city_code,
             date_trunc(
@@ -40,7 +47,12 @@ with
             collective_booking_status
             in ('CONFIRMED', 'USED', 'PENDING_REIMBURSEMENT', 'REIMBURSED')
         group by
-            venue_region_name, venue_academy_name, partition_month, epci_code, city_code
+            venue_region_name,
+            venue_academy_name,
+            venue_department_name,
+            partition_month,
+            epci_code,
+            city_code
     )
 
 {% for dim in dimensions %}

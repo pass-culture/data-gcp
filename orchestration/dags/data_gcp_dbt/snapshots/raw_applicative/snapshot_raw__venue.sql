@@ -66,7 +66,7 @@
             , "description" AS venue_description
             , "withdrawalDetails" AS venue_withdrawal_details
             , "isOpenToPublic" AS venue_is_open_to_public
-            , "venue" AS venue_state
+            , "state" AS venue_state
         FROM public.venue
     """
         )

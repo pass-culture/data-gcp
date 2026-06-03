@@ -39,7 +39,7 @@ with
             {% for kpi in kpis %}
                 {{ kpi.value_expr }}{% if not loop.last %},{% endif %}
             {% endfor %}
-        from {{ ref("mrt_finance__reimbursement") }}
+        from {{ ref("int_finance__reimbursement") }}
         where
             1 = 1
             {% if is_incremental() %}

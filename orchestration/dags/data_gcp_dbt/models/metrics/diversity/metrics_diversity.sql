@@ -12,7 +12,7 @@ select
     macro_density_label,
     micro_density_label,
     total_3plus_category_booked_beneficiaries,
-    total_expired_credit_beneficiaries,
+    total_expired_deposit_beneficiaries,
     cell_key_3plus,
     cell_key_expired
 from {{ ref("int_kpi__diversity") }}

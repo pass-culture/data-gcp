@@ -42,6 +42,11 @@ SCHEDULE_DICT = {
     "dbt_run_dag": "45 2 * * *",
     "embeddings_extraction_item": "0 12,18,23 * * *",
     "embedding_reduction_item": "0 12 * * 0",
+    "event_linkage": {
+        "prod": "0 11 * * 3",  # every Wednesday at 11:00 AM
+        "stg": "0 11 * * 2",  # every Tuesday at 11:00 AM
+        "dev": "0 11 * * 2",  # every Tuesday at 11:00 AM
+    },
     "import_applicative_database": "0 1 * * *",
     "import_intraday_firebase_data": "0 1 * * *",
     "import_titelive": "0 2 * * *",  # every day at 2:00 AM

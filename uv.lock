@@ -1186,7 +1186,7 @@ dev = [
     { name = "shandy-sqlfmt", extras = ["jinjafmt"], specifier = "==0.29.0" },
     { name = "sqlfluff", specifier = "==3.1.1" },
     { name = "sqlfluff-templater-dbt", specifier = "==3.1.1" },
-    { name = "typer", specifier = "==0.12.3" },
+    { name = "typer", specifier = "~=0.13.1" },
 ]
 docs = [
     { name = "mkdocs-awesome-pages-plugin", specifier = "==2.9.3" },
@@ -5151,7 +5151,7 @@ wheels = [
 
 [[package]]
 name = "typer"
-version = "0.12.3"
+version = "0.13.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -5159,9 +5159,9 @@ dependencies = [
     { name = "shellingham" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ac/0a/d55af35db5f50f486e3eda0ada747eed773859e2699d3ce570b682a9b70a/typer-0.12.3.tar.gz", hash = "sha256:49e73131481d804288ef62598d97a1ceef3058905aa536a1134f90891ba35482", size = 94276, upload-time = "2024-04-09T17:14:03.893Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/76/41/49ead3ad3310545e767bcb917c759b026ca9eada5d5c150c2fb6fc555568/typer-0.13.1.tar.gz", hash = "sha256:9d444cb96cc268ce6f8b94e13b4335084cef4c079998a9f4851a90229a3bd25c", size = 98631, upload-time = "2024-11-18T22:39:19.727Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/20/b5/11cf2e34fbb11b937e006286ab5b8cfd334fde1c8fa4dd7f491226931180/typer-0.12.3-py3-none-any.whl", hash = "sha256:070d7ca53f785acbccba8e7d28b08dcd88f79f1fbda035ade0aecec71ca5c914", size = 47209, upload-time = "2024-04-09T17:13:25.476Z" },
+    { url = "https://files.pythonhosted.org/packages/22/69/e90a0b4d0c16e095901679216c8ecdc728110c7c54e7b5f43a623bc4c789/typer-0.13.1-py3-none-any.whl", hash = "sha256:5b59580fd925e89463a29d363e0a43245ec02765bde9fb77d39e5d0f29dd7157", size = 44723, upload-time = "2024-11-18T22:39:17.882Z" },
 ]
 
 [[package]]

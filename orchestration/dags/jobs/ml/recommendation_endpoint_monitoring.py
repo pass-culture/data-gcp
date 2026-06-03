@@ -263,7 +263,7 @@ with (
         bucket=ML_BUCKET_TEMP,
         source_objects=f"""{DAG_CONFIG.gcs_path}/endpoint_monitoring_reports.parquet""",
         destination_project_dataset_table=(
-            f"{BIGQUERY_ML_RECOMMENDATION_DATASET}.{DAG_CONFIG.bigquery.output_report_table}${DATE}"
+            f"{BIGQUERY_ML_RECOMMENDATION_DATASET}.{DAG_CONFIG.bigquery.output_report_table}"
         ),
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",

@@ -18,7 +18,7 @@ WITH effective_revenue as (
         intermediate.booking
     WHERE
         venue_id IS NOT NULL
-    GROUP BY 1,2
+    GROUP BY year, venue_id
 )
 
 , expected_revenue as (
@@ -36,12 +36,12 @@ WITH effective_revenue as (
         intermediate.booking
     WHERE
         venue_id IS NOT NULL
-    GROUP BY 1, 2
+    GROUP BY year, venue_id
 )
 
 SELECT
-    year,
-    venue_id,
+    effective_revenue.year as year,
+    effective_revenue.venue_id as venue_id,
     individual_revenue as revenue,
     individual_revenue + individual_expected_revenue AS expected_revenue
 FROM effective_revenue

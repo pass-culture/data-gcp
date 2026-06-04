@@ -22,5 +22,5 @@ models:
         description: "{{ doc('column__user_density_label') }}"
       - name: total_3plus_category_booked_beneficiaries
         description: "{{ doc('column__metrics__total_3plus_category_booked_beneficiaries') }}"
-      - name: total_expired_credit_beneficiaries
-        description: "{{ doc('column__metrics__total_expired_credit_beneficiaries') }}"
+      - name: total_expired_deposit_beneficiaries
+        description: "{{ doc('column__metrics__total_expired_deposit_beneficiaries') }}"

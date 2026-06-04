@@ -226,7 +226,7 @@ class QualtricsSurvey:
         df_step1 = (
             self.raw_answer_df[2:]
             .set_index(list(self.raw_answer_df.columns.drop(answer_columns)))
-            .stack(dropna=False)
+            .stack()
             .reset_index()
             .rename(columns=columns_mapping)
             .assign(

@@ -103,7 +103,6 @@ select
     first_headline_offer_date,
     last_headline_offer_date,
     venue_adage_inscription_date,
-    venue_state,
     offerer_is_epn
 from {{ ref("int_global__venue") }}
 where

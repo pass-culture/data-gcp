@@ -34,4 +34,5 @@ SELECT
     , "adageInscriptionDate" AS venue_adage_inscription_date
     , "isSoftDeleted" AS venue_is_soft_deleted
     , "volunteeringUrl" AS venue_volunteering_url
+    , "state" AS venue_state
 FROM public.venue

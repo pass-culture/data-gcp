@@ -6,7 +6,7 @@ import typer
 from google.cloud import bigquery, storage
 
 from config import (
-    BIGQUERY_ANALYTICS_DATASET,
+    BIGQUERY_REPORTING_DATASET,
     EXPORT_BUCKET,
     GCP_PROJECT,
     REGION_HIERARCHY_TABLE,
@@ -17,7 +17,7 @@ from utils.verbose_logger import log_print
 
 def build_region_hierarchy(
     project_id: str = GCP_PROJECT,
-    dataset: str = BIGQUERY_ANALYTICS_DATASET,
+    dataset: str = BIGQUERY_REPORTING_DATASET,
     table: str = REGION_HIERARCHY_TABLE,
 ) -> Dict[str, Dict]:
     """

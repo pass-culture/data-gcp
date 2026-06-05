@@ -10,7 +10,7 @@ from google.cloud import bigquery
 from treelib import Tree
 
 from config import (
-    BIGQUERY_ANALYTICS_DATASET,
+    BIGQUERY_REPORTING_DATASET,
     GCP_PROJECT,
     LOADING_FILTERS,
     REPORTS,
@@ -482,7 +482,7 @@ class ExportSession:
     def _load_table(self, client: bigquery.Client, config: Dict):
         """Load a single table into DuckDB."""
         table_name = config["table"]
-        dataset = config.get("dataset", BIGQUERY_ANALYTICS_DATASET)
+        dataset = config.get("dataset", BIGQUERY_REPORTING_DATASET)
         project_id = config.get("project", GCP_PROJECT)
         log_print.info(f"⏳ Loading {table_name} from BigQuery...")
         query = f"SELECT * FROM `{project_id}.{dataset}.{table_name}`"

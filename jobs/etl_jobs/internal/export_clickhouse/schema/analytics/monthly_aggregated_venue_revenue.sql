@@ -46,6 +46,6 @@ FROM
 LEFT JOIN revenue_union ru
     ON s.month = ru.month
 GROUP BY
-    1,2
+    month, venue_id
 ORDER BY
-    1,2
+    month, venue_id

@@ -45,6 +45,7 @@ select
     v.venue_humanized_id,
     v.venue_backoffice_link,
     v.venue_region_name,
+    v.venue_region_code,
     v.venue_epci,
     v.venue_epci_code,
     v.venue_academy_name,

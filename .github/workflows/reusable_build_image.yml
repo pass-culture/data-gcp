@@ -19,6 +19,10 @@ on:
         type: string
         required: false
         default: "orchestration/k8s-airflow"
+      CONTEXT_PATH:
+        type: string
+        required: false
+        default: "."
       DOCKERFILE:
         type: string
         required: false
@@ -39,6 +43,7 @@ env:
   DOCKER_REGISTRY_REGION: "europe-west1"
   DOCKER_REGISTRY_REPOSITORY: "pass-culture-artifact-registry"
   SOURCE_PATH: ${{ inputs.SOURCE_PATH }}
+  CONTEXT_PATH: ${{ inputs.CONTEXT_PATH }}
   TARGET_ENV: ${{ inputs.TARGET_ENV }}
   DOCKERFILE: ${{ inputs.DOCKERFILE }}
   REGISTRY_BASE_NAME: ${{ inputs.REGISTRY_BASE_NAME }}
@@ -122,7 +127,7 @@ jobs:
       - name: "Build and push docker image"
         uses: docker/build-push-action@v3.2.0
         with:
-          context: ${{ env.SOURCE_PATH }}
+          context: ${{ env.CONTEXT_PATH }}
           file: ${{ env.SOURCE_PATH }}/${{ env.DOCKERFILE }}
           push: true
           tags: ${{ steps.docker_tags.outputs.tags }}

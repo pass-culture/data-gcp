@@ -46,6 +46,7 @@ with recursive
             dep.institution_id,
             inst.institution_region_name,
             inst.institution_academy_name,
+            inst.institution_department_name,
             inst.institution_epci_code,
             inst.institution_city_code
         from {{ ref("mrt_global__educational_deposit") }} as dep
@@ -73,6 +74,7 @@ with recursive
             base.partition_month,
             base.institution_region_name,
             base.institution_academy_name,
+            base.institution_department_name,
             base.institution_epci_code,
             base.institution_city_code,
             count(distinct base.institution_id) as total_institutions,
@@ -91,6 +93,7 @@ with recursive
             base.partition_month,
             base.institution_region_name,
             base.institution_academy_name,
+            base.institution_department_name,
             base.institution_epci_code,
             base.institution_city_code
     )

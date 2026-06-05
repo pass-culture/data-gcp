@@ -68,28 +68,30 @@ endif
 _configure_personal_user:
 	@read -p "Enter your username (e.g., adamasio for Alain Damasio): " username; \
 	if ! echo "$$username" | grep -Eq "^[a-z]+$$"; then \
-	    echo "Invalid username. Use lowercase letters only, no spaces, underscores, or numbers."; \
-	    exit 1; \
+		echo "Invalid username. Use lowercase letters only, no spaces, underscores, or numbers."; \
+		exit 1; \
 	fi; \
 	echo "Using username: $$username"; \
 	if echo "$$SHELL" | grep -q "zsh"; then \
-	    shell_file="$$(echo $$HOME/.zshrc)"; \
+		shell_file="$$(echo $$HOME/.zshrc)"; \
 	elif echo "$$SHELL" | grep -q "bash"; then \
-	    shell_file="$$(echo $$HOME/.bashrc)"; \
+		shell_file="$$(echo $$HOME/.bashrc)"; \
 	else \
-	    echo "Unable to detect active shell. Defaulting to ~/.bashrc."; \
-	    shell_file="$$(echo $$HOME/.bashrc)"; \
+		echo "Unable to detect active shell. Defaulting to ~/.bashrc."; \
+		shell_file="$$(echo $$HOME/.bashrc)"; \
 	fi; \
 	echo "Configuring shell file: $$shell_file"; \
 	if [ ! -f "$$shell_file" ]; then \
-	    echo "Shell file $$shell_file does not exist. Creating it now."; \
-	    touch "$$shell_file"; \
+		echo "Shell file $$shell_file does not exist. Creating it now."; \
+		touch "$$shell_file"; \
 	fi; \
 	if grep -q "^export PERSONAL_DBT_USER=" "$$shell_file" 2>/dev/null; then \
-	    sed -i.bak "/^export PERSONAL_DBT_USER=/d" "$$shell_file"; \
-	    echo "export PERSONAL_DBT_USER=$$username" >> "$$shell_file"; \
+		sed -i.bak "s|^export PERSONAL_DBT_USER=.*|export PERSONAL_DBT_USER=$$username|" "$$shell_file"; \
+		echo "Existing PERSONAL_DBT_USER overridden in-place."; \
 	else \
-	    echo "export PERSONAL_DBT_USER=$$username" >> "$$shell_file"; \
+		echo "" >> "$$shell_file"; \
+		echo "export PERSONAL_DBT_USER=$$username" >> "$$shell_file"; \
+		echo "PERSONAL_DBT_USER added."; \
 	fi; \
 	echo "Environment variable PERSONAL_DBT_USER set to $$username in $$shell_file."; \
 	echo "Please run 'source $$shell_file' or restart your terminal to apply changes."
@@ -140,18 +142,6 @@ create_microservice_etl_external:
 
 create_microservice_etl_internal:
 	MS_TYPE=etl_internal MS_NAME=$(MS_NAME) MS_BASE_PATH=jobs/etl_jobs/internal make create_microservice
-
-
-#######################################################################################
-########                              Docker Requirements                      ########
-#######################################################################################
-
-
-docker_compile:
-	uv export --format requirements-txt --only-group airflow -o orchestration/airflow/orchestration-requirements.txt --python=python${PYTHON_VERSION} --no-hashes
-	uv export --format requirements-txt --only-group airflow -o orchestration/k8s-airflow/k8s-worker-requirements.txt --python=python${PYTHON_VERSION} --no-hashes
-
-
 
 #######################################################################################
 ########                              Pre-commit                              ########

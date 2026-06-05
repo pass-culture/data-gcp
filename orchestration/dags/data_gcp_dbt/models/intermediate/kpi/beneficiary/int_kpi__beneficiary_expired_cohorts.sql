@@ -9,7 +9,7 @@ select
     user_is_in_qpv as is_in_qpv,
     user_density_label as micro_density_label,
     user_macro_density_label as macro_density_label,
-    date_trunc(date(last_deposit_expiration_date), month) as partition_month,
+    date_trunc(date(last_deposit_expiration_date), month) as deposit_expiration_month,
     coalesce(count(distinct user_id), 0) as total_expired_deposit_beneficiaries,
     coalesce(sum(total_deposit_amount), 0) as total_deposit_amount_at_expiration,
     coalesce(
@@ -26,8 +26,9 @@ where
     (user_is_active or user_suspension_reason = 'upon user request')
     and current_deposit_type != 'GRANT_FREE'
     and current_deposit_type in ('GRANT_18', 'GRANT_17_18')
+    and last_deposit_expiration_date < date_trunc(current_date, month)
 group by
-    partition_month,
+    deposit_expiration_month,
     region_name,
     department_name,
     department_code,

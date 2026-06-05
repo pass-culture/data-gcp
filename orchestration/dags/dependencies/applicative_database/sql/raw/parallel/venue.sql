@@ -24,7 +24,6 @@ SELECT
     , "collectiveWebsite" AS collective_website
     , "collectiveNetwork" AS collective_network
     , "collectiveInterventionArea" AS collective_intervention_area
-    , "collectiveAccessInformation" AS collective_access_information
     , "collectivePhone" AS collective_phone
     , "collectiveEmail" AS collective_email
     , "dmsToken" AS dms_token
@@ -34,4 +33,5 @@ SELECT
     , "adageInscriptionDate" AS venue_adage_inscription_date
     , "isSoftDeleted" AS venue_is_soft_deleted
     , "volunteeringUrl" AS venue_volunteering_url
+    , "state" AS venue_state
 FROM public.venue

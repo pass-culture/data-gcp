@@ -136,13 +136,13 @@ select
     v.collective_website,
     v.collective_network,
     v.collective_intervention_area,
-    v.collective_access_information,
     v.collective_phone,
     v.collective_email,
     v.dms_token,
     v.venue_description,
     v.venue_withdrawal_details,
     v.venue_adage_inscription_date,
+    v.venue_state,
     concat(
         'https://backoffice.passculture.team/pro/venue/', v.venue_id
     ) as venue_backoffice_link,

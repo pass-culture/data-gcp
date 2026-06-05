@@ -3,6 +3,7 @@ from enum import Enum
 
 from airflow import configuration
 from common.access_gcp_secrets import access_secret_data
+from pydantic import BaseModel, ConfigDict
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
@@ -276,3 +277,12 @@ def get_airflow_uri():
     if "localhost" in base_url:
         return f"https://{AIRFLOW_URI}"
     return base_url
+
+
+### Dag Config
+
+
+class DagBaseConfig(BaseModel):
+    model_config = ConfigDict(
+        frozen=True, validate_default=True, strict=True, extra="forbid"
+    )

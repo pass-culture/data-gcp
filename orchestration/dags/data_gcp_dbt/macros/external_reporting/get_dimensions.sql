@@ -74,6 +74,7 @@
             {"name": "NAT", "value_expr": "'NAT'"},
             {"name": "REG", "value_expr": region_col},
             {"name": "ACAD", "value_expr": acad_col},
+            {"name": "DEP", "value_expr": dept_col},
         ] %}
     {% elif hierarchy_type == "academic_extended" %}
         {% set dimensions = [
@@ -82,6 +83,7 @@
             {"name": "ACAD", "value_expr": acad_col},
             {"name": "EPCI", "value_expr": epci_col},
             {"name": "COM", "value_expr": city_col},
+            {"name": "DEP", "value_expr": dept_col},
         ] %}
     {% else %}
         {{

@@ -18,6 +18,7 @@ with
             cb.institution_academy_name as academy_name,
             cb.institution_epci_code as epci_code,
             cb.institution_city_code as city_code,
+            cb.institution_department_name as dep_name,
             cod.educational_domain_name as domain_name,
             date_trunc(
                 date(cb.collective_booking_creation_date), month
@@ -45,6 +46,7 @@ with
             partition_month,
             region_name,
             academy_name,
+            dep_name,
             epci_code,
             city_code,
             domain_name,

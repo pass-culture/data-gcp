@@ -146,6 +146,7 @@ data_tests:
     export:
       +severity: "{{ 'error' if target.name in ['prod', 'stg'] else 'warn' }}"
 vars:
+  disable_dbt_artifacts_autoupload: true
   ENV_SHORT_NAME: dev
   PASS_START_DATE: "2018-01-01"
   INSEE_DATA_LAST_VALID_YEAR: 2026

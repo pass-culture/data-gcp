@@ -59,7 +59,6 @@
             , "collectiveWebsite" AS collective_website
             , "collectiveNetwork" AS collective_network
             , "collectiveInterventionArea" AS collective_intervention_area
-            , "collectiveAccessInformation" AS collective_access_information
             , "collectivePhone" AS collective_phone
             , "collectiveEmail" AS collective_email
             , "dmsToken" AS dms_token

@@ -17,7 +17,7 @@ from utils.verbose_logger import log_print
 
 def build_region_hierarchy(
     project_id: str = GCP_PROJECT,
-    dataset: str = BIGQUERY_REPORTING_DATASET,
+    dataset: str = BIGQUERY_ANALYTICS_DATASET,
     table: str = REGION_HIERARCHY_TABLE,
 ) -> Dict[str, Dict]:
     """

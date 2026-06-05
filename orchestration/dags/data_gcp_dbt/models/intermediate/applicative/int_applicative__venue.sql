@@ -136,7 +136,6 @@ select
     v.collective_website,
     v.collective_network,
     v.collective_intervention_area,
-    v.collective_access_information,
     v.collective_phone,
     v.collective_email,
     v.dms_token,

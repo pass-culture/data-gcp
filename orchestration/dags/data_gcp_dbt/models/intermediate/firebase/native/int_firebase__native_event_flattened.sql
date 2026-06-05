@@ -120,7 +120,7 @@ with
                         "system_theme",
                         "featureName",
                         "feedbackResponse",
-                        "originDetails",
+                        "origin_detail",
                         "adviceType",
                     ],
                 )

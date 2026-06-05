@@ -4,6 +4,7 @@
 {% docs column__partner_name %}Name of the cultural partner.{% enddocs %}
 {% docs column__partner_academy_name %}Name of the academy associated with the cultural partner.{% enddocs %}
 {% docs column__partner_region_name %}Name of the region where the cultural partner is located.{% enddocs %}
+{% docs column__partner_region_code %}Code of the region where the cultural partner is located.{% enddocs %}
 {% docs column__partner_department_code %}Code of the department where the cultural partner is located.{% enddocs %}
 {% docs column__partner_department_name %}Name of the department where the cultural partner is located.{% enddocs %}
 {% docs column__partner_postal_code %}Postal code of the cultural partner's location.{% enddocs %}

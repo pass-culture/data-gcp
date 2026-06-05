@@ -77,6 +77,10 @@ CLICKHOUSE_LOADING_CONFIGS = [
 CLICKHOUSE_ANALYTICS_TRANSFORMATION_CONFIGS = [
     AnalyticsConfig(
         clickhouse_dataset_name="analytics",
+        clickhouse_table_name="offer_consultation_cumulative",
+    ),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
         clickhouse_table_name="daily_aggregated_venue_offer_consultation",
     ),
     AnalyticsConfig(

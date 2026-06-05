@@ -20,6 +20,7 @@
                     "venue_visualdisabilitycompliant",
                     "venue_withdrawal_details",
                     "venue_is_open_to_public",
+                    "venue_state",
                 ],
             )
         )
@@ -58,13 +59,13 @@
             , "collectiveWebsite" AS collective_website
             , "collectiveNetwork" AS collective_network
             , "collectiveInterventionArea" AS collective_intervention_area
-            , "collectiveAccessInformation" AS collective_access_information
             , "collectivePhone" AS collective_phone
             , "collectiveEmail" AS collective_email
             , "dmsToken" AS dms_token
             , "description" AS venue_description
             , "withdrawalDetails" AS venue_withdrawal_details
             , "isOpenToPublic" AS venue_is_open_to_public
+            , "state" AS venue_state
         FROM public.venue
     """
         )

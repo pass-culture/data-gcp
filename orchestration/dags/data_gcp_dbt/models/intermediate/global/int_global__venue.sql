@@ -110,6 +110,7 @@ select
     v.first_headline_offer_date,
     v.last_headline_offer_date,
     v.venue_adage_inscription_date,
+    v.venue_state,
     ofr.offerer_name,
     ofr.offerer_validation_status,
     ofr.offerer_is_active,

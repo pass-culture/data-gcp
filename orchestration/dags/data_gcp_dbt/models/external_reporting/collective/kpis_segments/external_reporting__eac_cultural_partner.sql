@@ -47,6 +47,7 @@ with
             bd.partition_month,
             gcp.partner_region_name,
             gcp.partner_academy_name,
+            gcp.partner_department_name,
             gcp.partner_epci_code,
             gcp.partner_city_code,
             gcp.partner_type,
@@ -78,6 +79,7 @@ with
             gcp.partner_id,
             gcp.partner_region_name,
             gcp.partner_academy_name,
+            gcp.partner_department_name,
             gcp.partner_city_code,
             gcp.partner_epci_code,
             min(co.collective_offer_creation_date) as first_template_offer_creation_date
@@ -90,6 +92,7 @@ with
             partner_id,
             partner_region_name,
             partner_academy_name,
+            partner_department_name,
             partner_city_code,
             partner_epci_code
     ),
@@ -98,6 +101,7 @@ with
         select
             partner_region_name,
             partner_academy_name,
+            partner_department_name,
             partner_epci_code,
             partner_city_code,
             date_trunc(first_template_offer_creation_date, month) as partition_month,
@@ -107,6 +111,7 @@ with
             partition_month,
             partner_region_name,
             partner_academy_name,
+            partner_department_name,
             partner_epci_code,
             partner_city_code
     ),
@@ -116,6 +121,7 @@ with
             partition_month,
             partner_region_name,
             partner_academy_name,
+            partner_department_name,
             partner_city_code,
             partner_epci_code,
             coalesce(
@@ -123,8 +129,9 @@ with
                     partition by
                         partner_region_name,
                         partner_academy_name,
-                        partner_city_code,
-                        partner_epci_code
+                        partner_department_name,
+                        partner_epci_code,
+                        partner_city_code
                     order by partition_month asc
                 ),
                 0

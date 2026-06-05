@@ -17,6 +17,7 @@ with
             timestamp("{{ ts() }}") as updated_at,
             collective_offer_format,
             institution_region_name,
+            institution_department_name,
             institution_academy_name,
             sum(booking_amount) as total_booking_amount,
             sum(collective_stock_number_of_tickets) as total_number_of_tickets
@@ -32,6 +33,7 @@ with
             updated_at,
             collective_offer_format,
             institution_region_name,
+            institution_department_name,
             institution_academy_name
     ),
 

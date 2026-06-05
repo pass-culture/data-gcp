@@ -18,6 +18,7 @@ with
             offerer_id,
             offerer_name,
             venue_region_name,
+            venue_department_name,
             venue_academy_name,
             venue_epci_code,
             venue_city_code,
@@ -36,6 +37,7 @@ with
             offerer_name,
             offerer_id,
             venue_region_name,
+            venue_department_name,
             venue_academy_name,
             venue_epci_code,
             venue_city_code

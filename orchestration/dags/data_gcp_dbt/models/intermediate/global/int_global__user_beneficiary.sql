@@ -140,7 +140,7 @@ select
     ) as user_is_in_education,
     coalesce(
         (
-            (ui.qpv_name is not null)
+            (ui.qpv_name != "non localisé")
             or (
                 u.user_activity
                 not in ("Collégien", "Etudiant", "Lycéen", "Apprenti", "Alternant")

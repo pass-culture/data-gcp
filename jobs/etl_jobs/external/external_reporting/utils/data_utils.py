@@ -6,7 +6,7 @@ import typer
 from google.cloud import bigquery, storage
 
 from config import (
-    BIGQUERY_REPORTING_DATASET,
+    BIGQUERY_ANALYTICS_DATASET,
     EXPORT_BUCKET,
     GCP_PROJECT,
     REGION_HIERARCHY_TABLE,

@@ -17,6 +17,8 @@ models:
         description: "{{ doc('column__event_series_description') }}"
       - name: event_series_image_url
         description: "{{ doc('column__event_series_image_url') }}"
+      - name: event_series_mediation_uuid
+        description: "{{ doc('column__mediation_humanized_id') }}"
       - name: action
         description: "{{ doc('column__delta_action') }}"
       - name: comment

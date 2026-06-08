@@ -537,11 +537,12 @@ class InstallDependenciesOperator(SSHGCEOperator):
         """
 
         deactivate_conda = (
-            "echo 'conda config --set auto_activate_base false' >> ~/.bashrc && bash"
+            "echo 'conda config --set auto_activate_base false' >> ~/.bashrc"
         )
 
         # Combine the git clone and installation commands
         return f"""
+            set -e
             {clone_command}
             {install_command}
             {deactivate_conda}

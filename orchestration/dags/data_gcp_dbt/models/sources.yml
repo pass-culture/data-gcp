@@ -144,6 +144,7 @@ sources:
       - name: gsheet_educational_institution_student_headcount
       - name: gsheet_instagram_campaign_tag
       - name: gsheet_ml_recommendation_sensitive_item
+      - name: gsheet_fraudulent_device
       - name: gsheet_tiktok_campaign_tag
       - name: gsheet_company_contact
       - name: instagram_post_detail

@@ -61,7 +61,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
       - name: "Install passdirector"
         run: |
-          uv tool install --from git+https://github.com/pass-culture/passdirector@main passdirector
+          uv tool install --from "git+https://x-access-token:${{ github.token }}@github.com/pass-culture/passdirector@main" passdirector
           echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: "Authenticate with Google Cloud"
         uses: 'google-github-actions/auth@v2'

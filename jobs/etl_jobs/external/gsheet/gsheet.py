@@ -131,6 +131,13 @@ SHEETS = {
             "Email": "email",
         },
     },
+    "gsheet_fraudulent_device": {
+        "spreadsheet_ids": ["1sGddi6t73_JbwN6QE9_IiZxJbWkNuXsNU"],
+        "expected_headers_dict": {
+            "fraudulent_device_id": "fraudulent_device_id",
+            "fraudulent_device_tagged_date": "fraudulent_device_tagged_date",
+        },
+    },
 }
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]

@@ -251,7 +251,7 @@ class DAG_TAGS(Enum):
 
 
 # UV Version
-UV_VERSION = "0.5.2"
+UV_VERSION = "0.11.5"
 
 ENV_EMOJI = {
     "prod": ":volcano: *PROD* :volcano:",

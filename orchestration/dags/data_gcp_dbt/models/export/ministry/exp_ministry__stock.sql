@@ -11,7 +11,6 @@ select
     offerer_id,
     price_category_label,
     -- fmt: off
-    price_category_id as  price_categoryId, -- noqa: CP02
-    price_category_label_id as  price_category_labelId -- noqa: CP02
+    price_category_id as  price_categoryId -- noqa: CP02
     -- fmt: on
 from {{ ref("mrt_global__stock") }}

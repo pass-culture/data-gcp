@@ -13,7 +13,6 @@ select
     s.total_cancelled_bookings,
     s.total_paid_bookings,
     s.stock_price,
-    s.price_category_label_id,
     s.price_category_label,
     s.stock_features,
     s.stock_last_provider_id,

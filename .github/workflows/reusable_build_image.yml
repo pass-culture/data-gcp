@@ -57,42 +57,27 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: "Connect to Secret Manager"
+      - name: "Install uv"
+        uses: astral-sh/setup-uv@v7
+      - name: "Install passdirector"
+        run: |
+          uv tool install --from git+https://github.com/pass-culture/passdirector@main passdirector
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: "Authenticate with Google Cloud"
         uses: 'google-github-actions/auth@v2'
         with:
           workload_identity_provider: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
-      - name: "Get secrets for Slack"
-        id: 'secrets'
-        uses: 'google-github-actions/get-secretmanager-secrets@v2'
-        with:
-          secrets: |-
-            ARTIFACT_REGISTRY_SERVICE_ACCOUNT:passculture-metier-ehp/passculture-main-artifact-registry-service-account
-            ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER:passculture-metier-ehp/infra-prod-gcp-workload-identity-provider
-      - name: "Output variables"
-        id: "vars"
-        run: echo "DOCKER_REPO=${DOCKER_REGISTRY_REGION}-docker.pkg.dev/${DOCKER_REGISTRY_PROJECT_ID}/${DOCKER_REGISTRY_REPOSITORY}" | tee -a "$GITHUB_OUTPUT"
-      - name: "Get short SHA"
-        id: "sha"
-        run: echo "short_sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
       - name: "Set up Docker Buildx"
         uses: docker/setup-buildx-action@v2.2.1
         with:
           driver: docker
-      - id: "openid-auth"
-        name: "Authenticate with Google Cloud"
-        uses: "google-github-actions/auth@v2"
-        with:
-          create_credentials_file: false
-          token_format: "access_token"
-          workload_identity_provider: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
-      - name: "Docker login"
-        uses: docker/login-action@v2.1.0
-        with:
-          registry: "${{ env.DOCKER_REGISTRY_REGION }}-docker.pkg.dev"
-          username: "oauth2accesstoken"
-          password: "${{ steps.openid-auth.outputs.access_token }}"
+      - name: "Get short SHA"
+        id: "sha"
+        run: echo "short_sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - name: "Output variables"
+        id: "vars"
+        run: echo "DOCKER_REPO=${DOCKER_REGISTRY_REGION}-docker.pkg.dev/${DOCKER_REGISTRY_PROJECT_ID}/${DOCKER_REGISTRY_REPOSITORY}" | tee -a "$GITHUB_OUTPUT"
       - name: "Set Docker Tags"
         id: docker_tags
         env:
@@ -123,11 +108,25 @@ jobs:
 
           # Output tags
           echo -e "tags<<EOF\n$tags\nEOF" >> "$GITHUB_OUTPUT"
+      - name: "Build local Docker image"
+        run: |
+          docker build \
+          -f ${{ inputs.SOURCE_PATH }}/${{ inputs.DOCKERFILE }} \
+          -t k8s-worker:latest \
+          ${{ inputs.CONTEXT_PATH }}
 
-      - name: "Build and push docker image"
-        uses: docker/build-push-action@v3.2.0
-        with:
-          context: ${{ env.CONTEXT_PATH }}
-          file: ${{ env.SOURCE_PATH }}/${{ env.DOCKERFILE }}
-          push: true
-          tags: ${{ steps.docker_tags.outputs.tags }}
+      - name: "Push image with passdirector"
+        env:
+          TAGS: ${{ steps.docker_tags.outputs.tags }}
+        run: |
+          echo "$TAGS" | while read -r full_image_path; do
+            if [ -n "$full_image_path" ]; then
+              TAG="${full_image_path##*:}"
+              image_name="${full_image_path%:*}"
+
+              passdirector docker push \
+                --source-image "k8s-worker:latest" \
+                --image-name "$image_name" \
+                --tag "$TAG"
+            fi
+          done

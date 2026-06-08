@@ -138,8 +138,8 @@ jobs:
               image_name="${full_image_path%:*}"
 
               passdirector docker push \
-                --source-image "k8s-worker:latest" \
-                --image-name "$image_name" \
+                --source "k8s-worker:latest" \
+                --destination "$image_name" \
                 --tag "$TAG"
             fi
           done

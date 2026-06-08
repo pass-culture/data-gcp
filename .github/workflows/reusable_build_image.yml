@@ -61,7 +61,13 @@ jobs:
         uses: astral-sh/setup-uv@v7
       - name: "Install passdirector"
         run: |
-          uv tool install --from "git+https://x-access-token:${{ github.token }}@github.com/pass-culture/passdirector@main" passdirector
+          # 1. On configure Git pour injecter automatiquement le token temporaire
+          git config --global url."https://x-access-token:${{ github.token }}@github.com/".insteadOf "https://github.com/"
+
+          # 2. On lance l'installation normalement (Git va intercepter l'URL tout seul)
+          uv tool install --from git+https://github.com/pass-culture/passdirector@main passdirector
+
+          # 3. On met à jour le PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: "Authenticate with Google Cloud"
         uses: 'google-github-actions/auth@v2'

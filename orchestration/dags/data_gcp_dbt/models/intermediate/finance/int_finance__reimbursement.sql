@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(**custom_table_config()) }}
 
 with
     booking_amount as (

@@ -3,72 +3,72 @@ version: 2
 models:
   - name: external_reporting__eac
     description: "{{ doc('description__external_reporting__eac') }}"
-    # tests:
-    #   - dbt_utils.unique_combination_of_columns:
-    #       arguments:
-    #         combination_of_columns:
-    #           - partition_month
-    #           - dimension_name
-    #           - dimension_value
-    #           - kpi_name
-    #       config:
-    #         severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
-    #         tags: ['critical']
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - partition_month
+              - dimension_name
+              - dimension_value
+              - kpi_name
+          config:
+            severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+            tags: ['critical']
     columns:
       - name: partition_month
         description: "{{ doc('column__partition_month') }}"
-        # data_tests:
-        #   - not_null:
-        #       config:
-        #         severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
-        #         tags: ['critical']
+        data_tests:
+          - not_null:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: updated_at
         description: "{{ doc('column__updated_at') }}"
       - name: dimension_name
         description: "{{ doc('column__dimension_name') }}"
-        # data_tests:
-        #   - not_null:
-        #       config:
-        #         severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
-        #         tags: ['critical']
-        #   - accepted_values:
-        #       arguments:
-        #         values: ["NAT","ACAD","REG","EPCI","COM"]
-        #       config:
-        #         severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
-        #         tags: ['critical']
+        data_tests:
+          - not_null:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
+          - accepted_values:
+              arguments:
+                values: ["NAT","ACAD","REG","EPCI","COM"]
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: dimension_value
         description: "{{ doc('column__dimension_value') }}"
       - name: kpi_name
         description: "{{ doc('column__kpi_name') }}"
-        # data_tests:
-        #   - not_null:
-        #       config:
-        #         severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
-        #         tags: ['critical']
+        data_tests:
+          - not_null:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: numerator
         description: "{{ doc('column__numerator') }}"
-        # data_tests:
-        #   - not_null:
-        #       config:
-        #         severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
-        #         tags: ['critical']
+        data_tests:
+          - not_null:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: denominator
         description: "{{ doc('column__denominator') }}"
-        # data_tests:
-        #   - not_null:
-        #       config:
-        #         severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
-        #         tags: ['critical']
+        data_tests:
+          - not_null:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: kpi
         description: "{{ doc('column__kpi') }}"
-        # data_tests:
-        #   - not_null:
-        #       config:
-        #         severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
-        #         tags: ['critical']
-        #   - kpi_variation_threshold:
-        #       arguments:
-        #         threshold: 0.5
-        #       config:
-        #         where: "dimension_name IN ('NAT')"
+        data_tests:
+          - not_null:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
+          - kpi_variation_threshold:
+              arguments:
+                threshold: 0.5
+              config:
+                where: "dimension_name IN ('NAT')"

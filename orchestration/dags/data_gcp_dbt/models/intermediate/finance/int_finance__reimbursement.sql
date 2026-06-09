@@ -1,3 +1,5 @@
+{{ config(materialized="table") }}
+
 with
     booking_amount as (
         select

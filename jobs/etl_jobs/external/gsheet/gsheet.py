@@ -2,6 +2,7 @@ import gspread
 import numpy as np
 import pandas as pd
 from google.oauth2 import service_account
+from loguru import logger
 
 SHEETS = {
     "gsheet_eac_webinar": {
@@ -149,10 +150,23 @@ def export_sheet(sa_info, sheet_details):
     )
     dfs = []
     for spreadsheet_id in sheet_details["spreadsheet_ids"]:
+        logger.info(f"Fetching spreadsheet: {spreadsheet_id}")
         gc = gspread.authorize(credentials)
         sh = gc.open_by_key(spreadsheet_id)
         worksheet = sh.get_worksheet(0)
         raw_columns = list(sheet_details["expected_headers_dict"].keys())
+
+        actual_headers = worksheet.row_values(1)
+        missing = set(raw_columns) - set(actual_headers)
+        unexpected = set(actual_headers) - set(raw_columns)
+        if missing:
+            raise ValueError(
+                f"Spreadsheet {spreadsheet_id} header mismatch — "
+                f"missing: {sorted(missing)}, "
+                f"unexpected: {sorted(unexpected)}, "
+                f"found: {actual_headers}"
+            )
+        logger.info(f"Headers validated for spreadsheet: {spreadsheet_id}")
 
         df = pd.DataFrame(worksheet.get_all_records(expected_headers=raw_columns))[
             raw_columns

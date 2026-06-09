@@ -10,7 +10,7 @@ with
             stock_id,
             sum(booking_quantity) as total_bookings,
             sum(
-                case when not booking_is_cancelled then booking_quantity else null end
+                case when not booking_is_cancelled then booking_quantity end
             ) as total_non_cancelled_bookings,
             sum(
                 case when booking_is_cancelled then booking_quantity end
@@ -44,7 +44,6 @@ with
                         and extract(year from booking_creation_date)
                         = extract(year from current_date)
                     then booking_intermediary_amount
-                    else null
                 end
             ) as total_individual_current_year_real_revenue,
             min(booking_creation_date) as first_individual_booking_date,
@@ -89,8 +88,8 @@ select
     bs.total_non_cancelled_individual_bookings,
     bs.total_used_individual_bookings,
     bs.total_individual_theoretic_revenue,
-    total_individual_real_revenue,
-    total_individual_current_year_real_revenue,
+    bs.total_individual_real_revenue,
+    bs.total_individual_current_year_real_revenue,
     bs.first_individual_booking_date,
     bs.last_individual_booking_date,
     bs.total_first_bookings,
@@ -98,11 +97,11 @@ select
         when
             (
                 (
-                    date(s.stock_booking_limit_date) > (date("{{ ds() }}") - 1)
+                    date(s.stock_booking_limit_date) > (date('{{ ds() }}') - 1)
                     or s.stock_booking_limit_date is null
                 )
                 and (
-                    date(s.stock_beginning_date) > (date("{{ ds() }}") - 1)
+                    date(s.stock_beginning_date) > (date('{{ ds() }}') - 1)
                     or s.stock_beginning_date is null
                 )
                 -- <> available_stock > 0 OR available_stock is null
@@ -119,8 +118,7 @@ select
         then true
         else false
     end as is_bookable,
-    price_category.price_category_label_id,
-    price_category_label.label as price_category_label,
+    price_category.price_category_label,
     rank() over (
         partition by s.offer_id order by s.stock_creation_date desc, s.stock_id desc
     ) as stock_rk
@@ -129,8 +127,3 @@ left join bookings_grouped_by_stock as bs on bs.stock_id = s.stock_id
 left join
     {{ source("raw", "applicative_database_price_category") }} as price_category
     on price_category.price_category_id = s.price_category_id
-left join
-    {{ source("raw", "applicative_database_price_category_label") }}
-    as price_category_label
-    on price_category.price_category_label_id
-    = price_category_label.price_category_label_id

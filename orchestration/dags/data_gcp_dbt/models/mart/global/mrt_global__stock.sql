@@ -19,7 +19,6 @@ select
     partner_id,
     price_category_id,
     price_category_label,
-    price_category_label_id,
     venue_department_code,
     offerer_is_epn
 from {{ ref("int_global__stock") }}

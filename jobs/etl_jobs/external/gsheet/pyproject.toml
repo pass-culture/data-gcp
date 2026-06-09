@@ -13,9 +13,9 @@ dependencies = [
     "numpy",
     "pandas",
     "pandas-gbq==0.23.1",
-    "requests==2.32.3",
-    "tqdm",
+    "requests>=2.33.0",
     "typer>=0.7.0",
+    "loguru>=0.7.3",
 ]
 
 ## ruff

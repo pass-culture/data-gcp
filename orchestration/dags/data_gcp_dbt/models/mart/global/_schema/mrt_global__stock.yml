@@ -53,8 +53,6 @@ models:
         description: '{{ doc("column__price_category_id") }}'
       - name: price_category_label
         description: '{{ doc("column__price_category_label") }}'
-      - name: price_category_label_id
-        description: '{{ doc("column__price_category_label_id") }}'
       - name: venue_department_code
         description: '{{ doc("column__venue_department_code") }}'
       - name: offerer_is_epn

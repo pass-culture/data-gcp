@@ -100,7 +100,6 @@ sources:
       - name: applicative_database_opening_hours
       - name: applicative_database_payment_status
       - name: applicative_database_price_category
-      - name: applicative_database_price_category_label
       - name: applicative_database_pricing
       - name: applicative_database_pricing_line
       - name: applicative_database_pricing_log

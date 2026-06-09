@@ -33,7 +33,7 @@ models:
                 tags: ['critical']
           - accepted_values:
               arguments:
-                values: ["NAT","ACAD","REG","EPCI","COM"]
+                values: ["NAT","ACAD", "DEP", "REG","EPCI","COM"]
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
                 tags: ['critical']

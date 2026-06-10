@@ -1,0 +1,4 @@
+[REVIEW] (DE-4521) New user_engagement model | Complexity: 3 | Time: ~15mn
+
+New dbt model aggregating Firebase events → daily user engagement metrics.
+Looking for reviews on aggregation logic & metric selection.

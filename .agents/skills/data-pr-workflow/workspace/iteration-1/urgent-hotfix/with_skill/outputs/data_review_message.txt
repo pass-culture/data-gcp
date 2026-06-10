@@ -1,0 +1,3 @@
+[URGENT REVIEW] (HF-9182) Production bug: recommendation scoring @ml-team | Complexity: 4 | Time: ~20mn
+
+PRODUCTION BUG - Feature normalization incorrect in ranking model. Needs immediate review and deployment.

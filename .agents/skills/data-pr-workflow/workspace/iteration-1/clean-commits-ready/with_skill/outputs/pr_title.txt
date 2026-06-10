@@ -1,0 +1,1 @@
+(DA-8823) fix(analytics): correct booking metrics calculation

@@ -1,0 +1,44 @@
+{
+  "expectations": [
+    {
+      "text": "PR title matches regex format",
+      "passed": false,
+      "evidence": "PR title: 'Fix for DA-8823 booking metrics' - does not match regex"
+    },
+    {
+      "text": "PR title includes correct ticket ID",
+      "passed": false,
+      "evidence": "Looking for (DA-8823) in 'Fix for DA-8823 booking metrics'"
+    },
+    {
+      "text": "PR title uses 'fix' type",
+      "passed": false,
+      "evidence": "Looking for fix type in 'Fix for DA-8823 booking metrics'"
+    },
+    {
+      "text": "PR title uses 'analytics' scope",
+      "passed": false,
+      "evidence": "Looking for (analytics) scope in 'Fix for DA-8823 booking metrics'"
+    },
+    {
+      "text": "Recognizes commits are clean",
+      "passed": true,
+      "evidence": "Commits appear to be handled appropriately"
+    },
+    {
+      "text": "#data-review message generated",
+      "passed": true,
+      "evidence": "Review message contains review indicator"
+    },
+    {
+      "text": "PR description mentions the bug fix",
+      "passed": true,
+      "evidence": "Description mentions double-counting issue"
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "passed": 3,
+    "pass_rate": 0.42857142857142855
+  }
+}

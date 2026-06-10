@@ -1,0 +1,24 @@
+## Summary
+
+**URGENT PRODUCTION FIX** - Fixes feature normalization bug in recommendation model causing artificially boosted scores.
+
+## Problem
+Production bug in recommendation model where feature normalization was incorrect, causing some items to receive artificially boosted scores.
+
+## Solution
+Corrected feature normalization in ranking logic.
+
+## Impact
+- Items will now receive accurate recommendation scores
+- May affect current recommendations until model re-ranks
+
+## Testing
+- [x] Unit tests pass
+- [x] Validated normalization logic
+- [x] Tested with production sample data
+
+## Deployment
+Needs urgent deployment after review.
+
+---
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

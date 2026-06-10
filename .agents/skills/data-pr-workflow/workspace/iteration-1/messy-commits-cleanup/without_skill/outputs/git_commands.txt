@@ -1,0 +1,7 @@
+To clean up commits, you can use git rebase:
+
+```bash
+git rebase -i HEAD~8
+```
+
+Then change 'pick' to 'squash' for commits you want to combine.

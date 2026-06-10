@@ -1,0 +1,1 @@
+Fix for DA-8823 booking metrics

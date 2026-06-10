@@ -1,0 +1,103 @@
+{
+  "skill_name": "data-pr-workflow",
+  "iteration": 1,
+  "timestamp": "2026-04-29T11:15:00Z",
+  "configurations": [
+    {
+      "name": "with_skill",
+      "display_name": "With Skill",
+      "description": "Using data-pr-workflow skill"
+    },
+    {
+      "name": "without_skill",
+      "display_name": "Without Skill (Baseline)",
+      "description": "No skill, standard approach"
+    }
+  ],
+  "evals": [
+    {
+      "eval_id": "messy-commits-cleanup",
+      "eval_name": "Messy Commits Cleanup",
+      "results": {
+        "with_skill": {
+          "pass_rate": 1.0,
+          "passed": 6,
+          "total": 6,
+          "duration_seconds": 85.3,
+          "tokens": 0
+        },
+        "without_skill": {
+          "pass_rate": 0.5,
+          "passed": 3,
+          "total": 6,
+          "duration_seconds": 22.4,
+          "tokens": 0
+        }
+      }
+    },
+    {
+      "eval_id": "clean-commits-ready",
+      "eval_name": "Clean Commits Ready",
+      "results": {
+        "with_skill": {
+          "pass_rate": 1.0,
+          "passed": 7,
+          "total": 7,
+          "duration_seconds": 42.0,
+          "tokens": 0
+        },
+        "without_skill": {
+          "pass_rate": 0.43,
+          "passed": 3,
+          "total": 7,
+          "duration_seconds": 39.6,
+          "tokens": 0
+        }
+      }
+    },
+    {
+      "eval_id": "urgent-hotfix",
+      "eval_name": "Urgent Hotfix",
+      "results": {
+        "with_skill": {
+          "pass_rate": 1.0,
+          "passed": 7,
+          "total": 7,
+          "duration_seconds": 13.3,
+          "tokens": 0
+        },
+        "without_skill": {
+          "pass_rate": 0.43,
+          "passed": 3,
+          "total": 7,
+          "duration_seconds": 28.0,
+          "tokens": 0
+        }
+      }
+    }
+  ],
+  "summary": {
+    "with_skill": {
+      "mean_pass_rate": 1.0,
+      "std_pass_rate": 0.0,
+      "mean_duration": 46.9,
+      "std_duration": 30.3,
+      "mean_tokens": 0,
+      "std_tokens": 0
+    },
+    "without_skill": {
+      "mean_pass_rate": 0.45,
+      "std_pass_rate": 0.04,
+      "mean_duration": 30.0,
+      "std_duration": 6.8,
+      "mean_tokens": 0,
+      "std_tokens": 0
+    },
+    "delta": {
+      "pass_rate": "+55.0%",
+      "duration": "+16.9s",
+      "tokens": "0"
+    }
+  },
+  "analysis": "The skill significantly improves PR quality with 100% pass rate across all test cases, compared to 45% without the skill. The skill properly formats PR titles according to the regex requirements, includes appropriate ticket IDs, generates comprehensive PR descriptions with summaries, and creates properly formatted #data-review messages. The baseline approach often lacks proper formatting, misses required conventions (like ticket IDs in titles), and produces less structured output. The skill takes slightly longer (average +16.9s) but delivers substantially better results that follow team standards."
+}

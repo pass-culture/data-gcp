@@ -1,0 +1,31 @@
+{
+  "eval_id": 1,
+  "eval_name": "messy-commits-cleanup",
+  "prompt": "hey so i've been working on this branch (DE-4521/add-user-engagement-model) for the past 2 days and I think it's finally ready. I've got like 8 commits but some of them are just 'fix tests' and 'wip' stuff. Can you help me get this ready for review? The main changes are a new dbt model called user_engagement that aggregates firebase events.",
+  "assertions": [
+    {
+      "name": "PR title matches regex format",
+      "description": "The generated PR title must match the required format"
+    },
+    {
+      "name": "PR title includes correct ticket ID",
+      "description": "The PR title should include (DE-4521)"
+    },
+    {
+      "name": "PR title uses 'dbt' scope",
+      "description": "The scope should be (dbt)"
+    },
+    {
+      "name": "Commit cleanup guidance provided",
+      "description": "Should provide specific guidance on squashing messy commits"
+    },
+    {
+      "name": "#data-review message generated",
+      "description": "Should generate Slack message with [REVIEW] prefix"
+    },
+    {
+      "name": "PR description includes summary",
+      "description": "PR description should have a summary section"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "eval_id": 3,
+  "eval_name": "urgent-hotfix",
+  "prompt": "ok this is kinda urgent - found a bug in production in our recommendation model. I'm on a branch HF-9182/fix-recommendation-scoring and I have one commit '(HF-9182) fix(ml_jobs): correct feature normalization in ranking'. Need to get this PR up ASAP so someone can review and we can deploy. The bug was causing some items to get artificially boosted scores.",
+  "assertions": [
+    {
+      "name": "PR title matches regex format",
+      "description": "The generated PR title must match the required format"
+    },
+    {
+      "name": "PR title includes HF ticket ID",
+      "description": "The PR title should include (HF-9182)"
+    },
+    {
+      "name": "PR title uses 'fix' type",
+      "description": "Type should be 'fix'"
+    },
+    {
+      "name": "PR title uses 'ml_jobs' scope",
+      "description": "The scope should be (ml_jobs)"
+    },
+    {
+      "name": "Urgency acknowledged",
+      "description": "Should acknowledge urgent nature"
+    },
+    {
+      "name": "#data-review message indicates urgency",
+      "description": "Slack message should communicate urgency"
+    },
+    {
+      "name": "PR description mentions production bug",
+      "description": "Description should state this fixes a production issue"
+    }
+  ]
+}

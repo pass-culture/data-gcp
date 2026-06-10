@@ -1,0 +1,35 @@
+{
+  "eval_id": 2,
+  "eval_name": "clean-commits-ready",
+  "prompt": "I need to create a PR for my work. I'm on branch DA-8823/fix-booking-metrics and I've already cleaned up my commits - I have 3 commits total: 'feat(analytics): update booking metrics calculation', 'test(analytics): add tests for new metrics', and 'docs(analytics): update README with metric definitions'. This fixes an issue where we were double-counting some bookings in our dashboards.",
+  "assertions": [
+    {
+      "name": "PR title matches regex format",
+      "description": "The generated PR title must match the required format"
+    },
+    {
+      "name": "PR title includes correct ticket ID",
+      "description": "The PR title should include (DA-8823)"
+    },
+    {
+      "name": "PR title uses 'fix' type",
+      "description": "Type should be 'fix' not 'feat'"
+    },
+    {
+      "name": "PR title uses 'analytics' scope",
+      "description": "The scope should be (analytics)"
+    },
+    {
+      "name": "Recognizes commits are clean",
+      "description": "Should acknowledge commits are well-formatted"
+    },
+    {
+      "name": "#data-review message generated",
+      "description": "Should generate Slack message"
+    },
+    {
+      "name": "PR description mentions the bug fix",
+      "description": "Description should mention double-counting issue"
+    }
+  ]
+}

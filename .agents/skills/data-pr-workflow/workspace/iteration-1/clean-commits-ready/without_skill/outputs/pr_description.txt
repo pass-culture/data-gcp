@@ -1,0 +1,3 @@
+Fixes the booking metrics double counting issue.
+
+Updated the calculation and added tests.

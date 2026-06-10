@@ -1,0 +1,7 @@
+## Bug Fix
+
+Fixes the feature normalization bug in the recommendation model.
+
+The bug was causing artificially boosted scores for some items.
+
+Tested and ready to deploy.

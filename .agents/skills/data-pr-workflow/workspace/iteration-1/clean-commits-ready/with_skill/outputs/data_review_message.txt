@@ -1,0 +1,3 @@
+[REVIEW] (DA-8823) Fix booking metrics double-counting | Complexity: 2 | Time: ~10mn
+
+Fixes double-counting issue in booking metrics. Please verify calculation logic.

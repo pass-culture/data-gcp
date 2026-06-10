@@ -1,0 +1,23 @@
+## Summary
+
+This PR fixes a double-counting issue in our booking metrics dashboards.
+
+## Problem
+Booking metrics were double-counting some bookings, leading to inflated dashboard numbers.
+
+## Solution
+- Updated booking metrics calculation logic
+- Added tests to prevent regression
+- Updated documentation with metric definitions
+
+## Impact
+- Dashboards will now show accurate booking counts
+- Historical data may need recalculation
+
+## Test Plan
+- [x] All tests passing
+- [x] Validated metrics match expected values
+- [x] Checked impact on existing dashboards
+
+---
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

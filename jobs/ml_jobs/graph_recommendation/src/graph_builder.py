@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
-from src.constants import DEFAULT_METADATA_COLUMNS, GTL_ID_COLUMN, ID_COLUMN
+from src.constants import GTL_ID_COLUMN, ID_COLUMN
 from src.utils.preprocessing import preprocess_metadata_dataframe
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Sequence
+
+    import pandas as pd
 
     from src.constants import MetadataKey
 
-import pandas as pd
 import torch
 from torch_geometric.data import Data
 
@@ -177,31 +177,3 @@ def build_item_metadata_graph_from_dataframe(
     graph_data.node_ids = graph_data.item_ids + graph_data.metadata_ids
 
     return graph_data
-
-
-def build_item_metadata_graph(
-    parquet_path: Path | str,
-    *,
-    nrows: int | None = None,
-    filters: Sequence[tuple[str, str, Iterable[object]]] | None = None,
-) -> Data:
-    """Load a parquet file and build the corresponding item-metadata graph."""
-
-    path = Path(parquet_path)
-    if not path.exists():
-        raise FileNotFoundError(f"Parquet file not found: {path}")
-
-    read_kwargs: dict[str, object] = {}
-    if filters is not None:
-        read_kwargs["filters"] = list(filters)
-
-    df = pd.read_parquet(path, **read_kwargs)
-    if nrows is not None:
-        df = df.sample(min(len(df), nrows), random_state=42)
-
-    data_graph = build_item_metadata_graph_from_dataframe(
-        df,
-        metadata_columns=DEFAULT_METADATA_COLUMNS,
-    )
-
-    return data_graph

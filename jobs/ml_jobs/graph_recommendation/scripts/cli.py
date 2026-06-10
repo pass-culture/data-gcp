@@ -12,9 +12,6 @@ from src.embedding_builder import train_metapath2vec
 from src.evaluation import (
     evaluate_embeddings,
 )
-from src.graph_builder import (
-    build_item_metadata_graph,
-)
 from src.heterograph_builder import build_item_metadata_heterograph
 from src.utils.graph_stats import get_graph_analysis
 from src.utils.mlflow import (
@@ -97,32 +94,6 @@ EVAL_CONFIG_OPTION = typer.Option(
 app = typer.Typer(
     help="Utilities to build PyTorch Geometric graphs for item recommendations."
 )
-
-
-@app.command("build-graph")
-def build_graph_command(
-    parquet_path: str = PARQUET_ARGUMENT,
-    output_path: str = GRAPH_OUTPUT_OPTION,
-    nrows: int | None = NROWS_OPTION,
-) -> None:
-    """Build the item-to-metadata graph and save it to disk."""
-
-    graph_data = build_item_metadata_graph(
-        parquet_path,
-        nrows=nrows,
-    )
-    torch.save(graph_data, output_path)
-
-    typer.secho(
-        (
-            f"Graph saved to {output_path} "
-            f"(nodes={graph_data.num_nodes}, "
-            f"edges={graph_data.num_edges}, "
-            f"items={len(graph_data.item_ids)}, "
-            f"metadata={len(graph_data.metadata_ids)})"
-        ),
-        fg=typer.colors.GREEN,
-    )
 
 
 @app.command("build-heterograph")

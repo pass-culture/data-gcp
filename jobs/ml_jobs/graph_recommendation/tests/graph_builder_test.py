@@ -6,9 +6,8 @@ import pandas as pd
 import pytest
 from torch_geometric.data import Data
 
-from src.constants import GTL_ID_COLUMN
+from src.constants import DEFAULT_METADATA_COLUMNS, GTL_ID_COLUMN
 from src.graph_builder import (
-    DEFAULT_METADATA_COLUMNS,
     build_item_metadata_graph_from_dataframe,
 )
 

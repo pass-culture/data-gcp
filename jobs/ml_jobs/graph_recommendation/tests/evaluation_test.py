@@ -51,6 +51,13 @@ def mock_metadata():
                 "series_11",
                 "series_20",
             ],
+            "music_label": [
+                "music_label_1",
+                "music_label_2",
+                "music_label_10",
+                "music_label_11",
+                "music_label_20",
+            ],
         }
     )
 

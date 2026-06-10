@@ -217,8 +217,8 @@ def test_pos_sample_prunes_dummy_nodes():
     # Batch containing both Author 0 and Author 1
     batch = torch.tensor([0, 1])
 
-    # _pos_sample should return walks for Author 0, but prune walks for Author 1
-    pos_rw = model._pos_sample(batch)
+    # _sample should return walks for Author 0, but prune walks for Author 1
+    pos_rw, neg_rw = model._sample(batch)
 
     # Check that no dummy nodes are present in the result
     # The dummy index is the total number of nodes (2 authors + 1 paper = 3)

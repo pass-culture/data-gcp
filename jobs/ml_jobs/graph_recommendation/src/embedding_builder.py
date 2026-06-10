@@ -117,10 +117,16 @@ def train_metapath2vec(
     logger.info(f"Using device: {device}")
 
     # Restrict metapaths to those that exist in the graph
+    all_node_types = set(graph_data.node_types)
     valid_metapaths = [
         metapath
         for metapath in training_config.metapaths
         if metapath[1][0] in graph_data.metadata_columns
+        if all(
+            node_type in all_node_types
+            for edge in metapath
+            for node_type in (edge[0], edge[2])
+        )
     ]
     logger.info(f"Using these valid metapaths for training: {valid_metapaths}")
 

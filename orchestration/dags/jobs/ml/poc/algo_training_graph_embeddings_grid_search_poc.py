@@ -163,9 +163,9 @@ class GridDAG(DAG):
         **kwargs,
     ):
         # Scheduling disabled for drag & drop dags
-        if "schedule_interval" in kwargs:
-            del kwargs["schedule_interval"]
-        kwargs["schedule_interval"] = None
+        if "schedule" in kwargs:
+            del kwargs["schedule"]
+        kwargs["schedule"] = None
 
         super().__init__(*args, **kwargs)
         if not callable(ml_task_fn):

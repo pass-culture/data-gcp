@@ -49,7 +49,24 @@ TIKTOK_VIDEO_IMPRESSION_SOURCE_SCHEMA = {
 }
 
 TIKTOK_ACCOUNT_HOURLY_AUDIENCE = "tiktok_account_hourly_audience"
+TIKTOK_ACCOUNT_HOURLY_AUDIENCE_SCHEMA = {
+    "date": "DATETIME",
+    "hour": "STRING",
+    "audience": "INTEGER",
+    "account": "STRING",
+}
+
 TIKTOK_ACCOUNT_DAILY_ACTIVITY = "tiktok_account_daily_activity"
+TIKTOK_ACCOUNT_DAILY_ACTIVITY_SCHEMA = {
+    "date": "TIMESTAMP",
+    "video_views": "INTEGER",
+    "likes": "INTEGER",
+    "followers_count": "INTEGER",
+    "shares": "INTEGER",
+    "profile_views": "INTEGER",
+    "comments": "INTEGER",
+    "account": "STRING",
+}
 
 
 def access_secret_data(project_id, secret_id, version_id=1, default=None):
@@ -68,6 +85,7 @@ def to_sql_type(_type):
         "FLOAT": bigquery.enums.SqlTypeNames.FLOAT64,
         "INTEGER": bigquery.enums.SqlTypeNames.INT64,
         "DATETIME": bigquery.enums.SqlTypeNames.DATETIME,
+        "TIMESTAMP": bigquery.enums.SqlTypeNames.TIMESTAMP,
     }
     return _dict[_type]
 

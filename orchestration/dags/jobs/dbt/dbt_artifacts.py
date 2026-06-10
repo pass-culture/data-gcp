@@ -71,7 +71,7 @@ dag = DAG(
     default_args=default_args,
     catchup=False,
     description="Compute data quality metrics with package elementary and send Slack notifications reports",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[dag_id]),
+    schedule=get_airflow_schedule(SCHEDULE_DICT[dag_id]),
     user_defined_macros=macros.default,
     params={
         "target": Param(
@@ -97,7 +97,11 @@ wait_dbt_run = delayed_waiting_operator(dag=dag, external_dag_id="dbt_run_dag")
 # Convert to Python operator
 compute_metrics_elementary = PythonOperator(
     task_id="compute_metrics_elementary",
-    python_callable=partial(run_dbt_with_selector, "package:elementary"),
+    python_callable=partial(
+        run_dbt_with_selector,
+        "package:elementary",
+        vars={"enable_elementary_models": True},
+    ),
     dag=dag,
     trigger_rule="none_failed",
 )

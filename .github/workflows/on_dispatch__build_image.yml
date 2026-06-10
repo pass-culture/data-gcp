@@ -21,8 +21,9 @@ jobs:
       IS_MANUAL_DISPATCH: true
       CUSTOM_TAG: ${{ inputs.CUSTOM_TAG }}
       SOURCE_PATH: "orchestration/k8s-airflow"
+      CONTEXT_PATH: .
       DOCKERFILE: "Dockerfile.k8s-worker"
-      REGISTRY_BASE_NAME: "k8s-data/airflow"
+      REGISTRY_BASE_NAME: "data-gcp/airflow"
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}

@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 
 import pandas as pd
+import pandas_gbq
 import requests
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import bigquery, secretmanager
@@ -84,7 +85,8 @@ def import_adage(since_date):
                 df[k] = None
             df[k] = df[k].astype(str)
 
-        df.to_gbq(
+        pandas_gbq.to_gbq(
+            df,
             f"""{BIGQUERY_RAW_DATASET}.adage""",
             project_id=GCP_PROJECT,
             if_exists="append",

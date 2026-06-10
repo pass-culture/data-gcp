@@ -6,7 +6,7 @@ with
             date(date_trunc(dud.deposit_active_date, month)) as deposit_active_month,
             date_diff(dud.deposit_active_date, dud.user_birth_date, month)
             / 12.0 as user_decimal_age
-        from {{ ref("mrt_native__daily_user_deposit") }} as dud
+        from {{ ref("int_global__daily_deposit") }} as dud
         where dud.deposit_active_date > date_sub(current_date(), interval 48 month)
     ),
 
@@ -23,7 +23,7 @@ with
                 abs(sum(distinct {{ record_key("ub.user_id") }})), 256
             ) as cell_key_beneficiaries
         from user_deposit as ub
-        left join
+        inner join
             {{ ref("region_department") }} as rd on ub.department_code = rd.num_dep
         group by
             ub.deposit_active_month,

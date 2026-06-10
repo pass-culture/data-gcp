@@ -18,11 +18,11 @@ with
             coalesce(
                 sum(oc.total_3_category_booked_users), 0
             ) as total_3plus_category_booked_beneficiaries,
-            coalesce(sum(oc.total_users), 0) as total_expired_credit_beneficiaries,
+            coalesce(sum(oc.total_users), 0) as total_expired_deposit_beneficiaries,
             coalesce(mod(abs(sum(oc.cell_key_3_category)), 256), 0) as cell_key_3plus,
             mod(abs(sum(oc.cell_key_users)), 256) as cell_key_expired
         from {{ ref("mrt_native__outgoing_cohort") }} as oc
-        left join
+        inner join
             {{ ref("region_department") }} as rd on oc.user_department_code = rd.num_dep
         group by
             date_trunc(date(oc.user_expiration_month), month),
@@ -53,7 +53,7 @@ select
     macro_density_label,
     micro_density_label,
     total_3plus_category_booked_beneficiaries,
-    total_expired_credit_beneficiaries,
+    total_expired_deposit_beneficiaries,
     cell_key_3plus,
     cell_key_expired
 from final_data

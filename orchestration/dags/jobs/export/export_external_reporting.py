@@ -4,9 +4,10 @@ import os
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import BranchPythonOperator
 from airflow.utils.task_group import TaskGroup
 from common import macros
+from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
+from common.alerts.reporting import create_reporting_slack_block
 from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
@@ -21,6 +22,7 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
+from common.operators.slack import SendSlackMessageOperator
 from common.utils import delayed_waiting_operator, get_airflow_schedule
 
 from jobs.crons import SCHEDULE_DICT
@@ -38,7 +40,7 @@ dag_id = "export_external_reporting"
 GCE_INSTANCE = f"export-external-reporting-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/external_reporting/"
 GCP_STORAGE_URI = "https://storage.googleapis.com"
-DBT_REPORTING_MODELS_PATH = f"{DAG_FOLDER}/data_gcp_dbt/models/mart/external_reporting"
+DBT_REPORTING_MODELS_PATH = f"{DAG_FOLDER}/data_gcp_dbt/models/external_reporting"
 PRIORITY_WEIGHT = 1000
 WEIGHT_RULE = "absolute"
 
@@ -52,7 +54,7 @@ with DAG(
     dag_id,
     default_args=default_dag_args,
     description="Data reporting export for ministère & DRAC",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[dag_id].get(ENV_SHORT_NAME)),
+    schedule=get_airflow_schedule(SCHEDULE_DICT[dag_id].get(ENV_SHORT_NAME)),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=60),
     user_defined_macros=macros.default,
@@ -110,28 +112,8 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="'3.10'",
+        python_version="3.13",
         base_dir=BASE_PATH,
-        priority_weight=PRIORITY_WEIGHT,
-        weight_rule=WEIGHT_RULE,
-    )
-
-    def branch_check(data_interval_end, **kwargs):
-        if data_interval_end.month in [1, 4, 7, 10]:
-            return "gce_generate_quaterly_reports"
-        return "gce_generate_monthly_reports"
-
-    branching = BranchPythonOperator(
-        task_id="branching_logic",
-        python_callable=branch_check,
-    )
-
-    gce_generate_quaterly_reports = SSHGCEOperator(
-        task_id="gce_generate_quaterly_reports",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="python main.py generate --stakeholder all --ds {{ ds }} --concurrency 60",  # internally ajusted to 0.9 of CPU cores
         priority_weight=PRIORITY_WEIGHT,
         weight_rule=WEIGHT_RULE,
     )
@@ -141,9 +123,9 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py generate --stakeholder ministere --ds {{ ds }}",
-        deferrable=True,
-        poll_interval=120,
+        command="uv run main.py generate --stakeholder all --ds {{ ds }} --concurrency 60",  # internally ajusted to 0.9 of CPU cores
+        priority_weight=PRIORITY_WEIGHT,
+        weight_rule=WEIGHT_RULE,
     )
 
     gce_compress_reports = SSHGCEOperator(
@@ -151,7 +133,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py compress --ds {{ ds }}",  # add --clean flag after testing
+        command="uv run main.py compress --ds {{ ds }}",  # add --clean flag after testing
         priority_weight=PRIORITY_WEIGHT,
         weight_rule=WEIGHT_RULE,
         trigger_rule="none_failed",
@@ -162,7 +144,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command=f"python main.py upload --ds {{{{ ds }}}} --bucket {DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME} --destination external_reporting",
+        command=f"uv run main.py upload --ds {{{{ ds }}}} --bucket {DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME} --destination external_reporting",
         priority_weight=PRIORITY_WEIGHT,
         weight_rule=WEIGHT_RULE,
     )
@@ -172,7 +154,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py upload-drive --ds {{ ds }}",
+        command="uv run main.py upload-drive --ds {{ ds }}",
         priority_weight=PRIORITY_WEIGHT,
         weight_rule=WEIGHT_RULE,
     )
@@ -181,15 +163,22 @@ with DAG(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
+    send_slack_notif_success = SendSlackMessageOperator(
+        task_id="send_slack_notif_success",
+        webhook_token=SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN,
+        trigger_rule="none_failed",
+        block=create_reporting_slack_block(),
+    )
+
     (
         start
         >> waiting_group
         >> gce_instance_start
         >> fetch_install_code
-        >> branching
-        >> [gce_generate_quaterly_reports, gce_generate_monthly_reports]
+        >> gce_generate_monthly_reports
         >> gce_compress_reports
         >> gce_export_to_gcs
         >> gce_export_to_drive
         >> gce_instance_stop
+        >> send_slack_notif_success
     )

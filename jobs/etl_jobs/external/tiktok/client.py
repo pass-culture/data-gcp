@@ -64,22 +64,17 @@ class TikTokClient:
 
         return session
 
-    def authenticate(self) -> bool:
+    def authenticate(self) -> None:
         """
         Authenticate with TikTok API using refresh token.
 
-        Returns:
-            bool: True if authentication successful, False otherwise
+        Raises:
+            TikTokAPIError: If authentication fails or no access token is returned.
         """
-        try:
-            response = self._refresh_access_token()
-            if response.get("access_token"):
-                self.access_token = response["access_token"]
-                return True
-            return False
-        except Exception as e:
-            logger.info(f"Authentication failed: {e}")
-            return False
+        response = self._refresh_access_token()
+        if not response.get("access_token"):
+            raise TikTokAPIError("Authentication failed: no access token in response")
+        self.access_token = response["access_token"]
 
     def _refresh_access_token(self) -> Dict[str, Any]:
         """Refresh the access token using the refresh token."""

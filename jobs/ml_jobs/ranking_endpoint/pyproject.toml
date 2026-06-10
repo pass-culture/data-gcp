@@ -30,6 +30,9 @@ environments = [
     "sys_platform == 'darwin'",
     "sys_platform == 'linux'",
 ]
+constraint-dependencies = [
+    "mlflow >= 3.12.0", # CVE-2026-0545
+]
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.
 [tool.ruff]

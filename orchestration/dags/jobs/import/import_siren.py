@@ -21,7 +21,7 @@ from common.utils import get_airflow_schedule
 
 FUNCTION_NAME = f"siren_import_{ENV_SHORT_NAME}"
 SIREN_FILENAME = "siren_data.csv"
-schedule_interval = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 */6 * * *"
+schedule = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 */6 * * *"
 
 DAG_NAME = "import_siren_v1"
 GCE_INSTANCE = f"import-siren-{ENV_SHORT_NAME}"
@@ -43,7 +43,7 @@ with DAG(
     default_args=default_dag_args,
     description="Import Siren from INSEE API",
     on_failure_callback=None,
-    schedule_interval=get_airflow_schedule(schedule_interval),
+    schedule=get_airflow_schedule(schedule),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -66,7 +66,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.8",
+        python_version="3.13",
         base_dir=BASE_PATH,
         retries=2,
     )
@@ -76,7 +76,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py ",
+        command="uv run main.py ",
         do_xcom_push=True,
     )
 

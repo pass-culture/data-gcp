@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
+import pandas_gbq
 import typer
 
 from batch_client import BatchClient
@@ -34,7 +35,8 @@ def main(
 
     # Campaigns
     metadata = batch_client.get_campaigns_metadata()
-    metadata.to_gbq(
+    pandas_gbq.to_gbq(
+        metadata,
         destination_table=f"raw_{env_short_name}.batch_campaigns_ref",
         if_exists="replace",
     )
@@ -49,7 +51,8 @@ def main(
         stats = campaigns_stats_df
         stats["version"] = np.nan
     stats = stats.assign(operating_system=operating_system)
-    stats.to_gbq(
+    pandas_gbq.to_gbq(
+        stats,
         destination_table=f"raw_{env_short_name}.batch_campaigns_stats",
         if_exists="append",
     )

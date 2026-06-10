@@ -46,6 +46,6 @@ FROM
 LEFT JOIN revenue_union ru
     ON s.year = ru.year
 GROUP BY
-    1,2
+    year, venue_id
 ORDER BY
-    1,2
+    year, venue_id

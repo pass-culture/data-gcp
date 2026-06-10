@@ -5,7 +5,6 @@ from datetime import datetime
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
-from airflow.utils.decorators import apply_defaults
 from common.config import (
     ENV_SHORT_NAME,
     ENVIRONMENT_NAME,
@@ -37,7 +36,6 @@ class StartGCEOperator(BaseOperator):
         "additional_scopes",
     ]
 
-    @apply_defaults
     def __init__(
         self,
         instance_name: str,
@@ -93,7 +91,6 @@ class CleanGCEOperator(BaseOperator):
         "timeout_in_minutes",
     ]
 
-    @apply_defaults
     def __init__(
         self,
         timeout_in_minutes: int,
@@ -115,7 +112,6 @@ class CleanGCEOperator(BaseOperator):
 class DeleteGCEOperator(BaseOperator):
     template_fields = ["instance_name"]
 
-    @apply_defaults
     def __init__(
         self,
         instance_name: str,
@@ -136,7 +132,6 @@ class DeleteGCEOperator(BaseOperator):
 class StopGCEOperator(BaseOperator):
     template_fields = ["instance_name"]
 
-    @apply_defaults
     def __init__(
         self,
         instance_name: str,
@@ -161,7 +156,6 @@ class BaseSSHGCEOperator(BaseOperator):
         "poll_interval",
     ]
 
-    @apply_defaults
     def __init__(
         self,
         instance_name: str,
@@ -353,7 +347,6 @@ class SSHGCEOperator(BaseSSHGCEOperator):
 
     UV_EXPORT = {**DEFAULT_EXPORT, "PATH": "$HOME/.local/bin:$PATH"}
 
-    @apply_defaults
     def __init__(
         self,
         instance_name: str,
@@ -408,7 +401,6 @@ class UvxGCEOperator(BaseSSHGCEOperator):
         ["package", "python_version"] + list(BaseSSHGCEOperator.template_fields)
     )
 
-    @apply_defaults
     def __init__(
         self,
         instance_name: str,
@@ -453,7 +445,6 @@ class InstallDependenciesOperator(SSHGCEOperator):
         + SSHGCEOperator.template_fields
     )
 
-    @apply_defaults
     def __init__(
         self,
         instance_name: str,
@@ -546,11 +537,12 @@ class InstallDependenciesOperator(SSHGCEOperator):
         """
 
         deactivate_conda = (
-            "echo 'conda config --set auto_activate_base false' >> ~/.bashrc && bash"
+            "echo 'conda config --set auto_activate_base false' >> ~/.bashrc"
         )
 
         # Combine the git clone and installation commands
         return f"""
+            set -e
             {clone_command}
             {install_command}
             {deactivate_conda}

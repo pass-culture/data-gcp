@@ -70,6 +70,12 @@ To run Airflow locally for development:
    * Copy `.env.template` to `orchestration/.env`
    * Update variable values accordingly.
 
+3. **Kubernetes - running containers on cluster from local airflow instance**:
+  * make sure to have kubectl, kubens installed
+  * authenticate using your admin account
+  * connect to the cluster: `gcloud container clusters get-credentials data-gke-cluster-ehp --dns-endpoint --region europe-west1 --project passculture-data-ehp`
+  * pro tip: k9s is very helpful to see what is happening in the cluster
+
 #### 🛠️ Environment Variable Tips
 
 * `_AIRFLOW_WWW_USER_USERNAME` / `_AIRFLOW_WWW_USER_PASSWORD`: set arbitrarily

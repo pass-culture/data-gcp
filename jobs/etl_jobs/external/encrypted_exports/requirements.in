@@ -1,9 +1,0 @@
-duckdb
-fsspec
-gcsfs
-google-cloud-storage
-boto3
-botocore
-typer
-google-cloud-secret-manager
-loguru

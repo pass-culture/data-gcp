@@ -2,9 +2,10 @@ import io
 import zipfile
 
 import pandas as pd
+import pandas_gbq
 import requests
 
-from utils import ENV_SHORT_NAME
+from utils import BIGQUERY_RAW_DATASET, PROJECT_NAME
 
 FORMAT_DICT = {
     "start_date": str,
@@ -33,7 +34,12 @@ def import_survey_metadata(data_center, api_token):
     response = requests.get(base_url, headers=headers)
     if response.json()["meta"]["httpStatus"] == "200 - OK":
         surveys = pd.DataFrame(response.json()["result"]["elements"])
-        surveys.to_gbq(f"raw_{ENV_SHORT_NAME}.qualtrics_survey", if_exists="replace")
+        pandas_gbq.to_gbq(
+            surveys,
+            f"{BIGQUERY_RAW_DATASET}.qualtrics_survey",
+            project_id=PROJECT_NAME,
+            if_exists="replace",
+        )
         active_surveys = surveys.loc[lambda df: df.isActive].id.tolist()
         return active_surveys
 
@@ -220,7 +226,7 @@ class QualtricsSurvey:
         df_step1 = (
             self.raw_answer_df[2:]
             .set_index(list(self.raw_answer_df.columns.drop(answer_columns)))
-            .stack(dropna=False)
+            .stack()
             .reset_index()
             .rename(columns=columns_mapping)
             .assign(

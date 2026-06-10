@@ -13,8 +13,8 @@ with
                 total_3plus_category_booked_beneficiaries
             ) as total_3plus_category_booked_beneficiaries,
             sum(
-                total_expired_credit_beneficiaries
-            ) as total_expired_credit_beneficiaries,
+                total_expired_deposit_beneficiaries
+            ) as total_expired_deposit_beneficiaries,
             mod(abs(sum(cell_key_3plus)), 256) as cell_key_3plus,
             mod(abs(sum(cell_key_expired)), 256) as cell_key_expired
         from {{ ref("metrics_diversity") }}
@@ -47,8 +47,8 @@ select
     }},
     {{
         apply_perturbation(
-            "s.total_expired_credit_beneficiaries",
-            "total_expired_credit_beneficiaries",
+            "s.total_expired_deposit_beneficiaries",
+            "total_expired_deposit_beneficiaries",
             "pt_expired",
         )
     }}
@@ -63,7 +63,9 @@ from
     }}
     {{
         perturbation_join(
-            "pt_expired", "s.total_expired_credit_beneficiaries", "s.cell_key_expired"
+            "pt_expired",
+            "s.total_expired_deposit_beneficiaries",
+            "s.cell_key_expired",
         )
     }}
 where s.deposit_expiration_month > "2021-01-01"

@@ -31,7 +31,7 @@ dag = DAG(
     "import_applicative_database",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
-    schedule_interval=get_airflow_schedule("0 1 * * *"),
+    schedule=get_airflow_schedule("0 1 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=480),
     user_defined_macros=macros.default,

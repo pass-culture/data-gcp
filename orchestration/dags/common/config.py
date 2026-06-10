@@ -3,6 +3,7 @@ from enum import Enum
 
 from airflow import configuration
 from common.access_gcp_secrets import access_secret_data
+from pydantic import BaseModel, ConfigDict
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
@@ -22,6 +23,8 @@ AIRFLOW_URI = {
 GCS_AIRFLOW_BUCKET = os.environ.get(
     "GCS_BUCKET", f"airflow-data-bucket-{ENV_SHORT_NAME}"
 )
+
+AIRFLOW_NAMESPACE = f"airflow-{ENVIRONMENT_NAME}"
 
 SSH_USER = os.environ.get("SSH_USER", "airflow")
 
@@ -156,17 +159,14 @@ else:
     )
 EXCLUDED_TAGS = ["sandbox", "weekly", "monthly"]
 
-if LOCAL_ENV is None:
-    ELEMENTARY_PYTHON_PATH = (
-        "/opt/python3.11/lib/python3.11/site-packages/elementary/monitor/dbt_project/"
-    )
-else:
-    ELEMENTARY_PYTHON_PATH = os.environ.get("ELEMENTARY_PYTHON_PATH")
-
 USE_INTERNAL_IP = False if LOCAL_ENV is not None else True
 
 SLACK_TOKEN_DATA_QUALITY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")
 SLACK_CHANNEL_DATA_QUALITY = "alertes-data-quality"
+EXTERNAL_REPORTING_DRIVE_URL = access_secret_data(
+    GCP_PROJECT_ID, "external_reporting_drive_url"
+)
+
 
 CPU_INSTANCES_TYPES = {
     "standard": [
@@ -236,6 +236,7 @@ class DAG_TAGS(Enum):
     DS = "DS"
     DE = "DE"
     VM = "VM"
+    POD = "POD"
     DBT = "DBT"
     INCREMENTAL = "INCREMENTAL"
     POC = "POC"
@@ -243,7 +244,7 @@ class DAG_TAGS(Enum):
 
 
 # UV Version
-UV_VERSION = "0.5.2"
+UV_VERSION = "0.11.5"
 
 ENV_EMOJI = {
     "prod": ":volcano: *PROD* :volcano:",
@@ -269,3 +270,12 @@ def get_airflow_uri():
     if "localhost" in base_url:
         return f"https://{AIRFLOW_URI}"
     return base_url
+
+
+### Dag Config
+
+
+class DagBaseConfig(BaseModel):
+    model_config = ConfigDict(
+        frozen=True, validate_default=True, strict=True, extra="forbid"
+    )

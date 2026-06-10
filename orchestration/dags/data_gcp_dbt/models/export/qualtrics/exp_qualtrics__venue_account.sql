@@ -1,48 +1,46 @@
 with
     previous_export as (
-        select distinct email
+        select distinct email as venue_booking_email
         from {{ source("raw", "qualtrics_exported_venue_account") }}
         where
             calculation_month
-            >= date_sub(date_trunc(date("{{ ds() }}"), month), interval 6 month)
+            >= date_sub(date_trunc(date("{{ ds() }}"), month), interval 3 month)
     ),
 
-    answers as (select distinct user_id from {{ source("raw", "qualtrics_answers") }}),
-
-    lieux_physique as (
+    venues as (
         select
             global_venue.venue_id,
-            global_venue.venue_booking_email as email,
+            global_venue.venue_booking_email,
+            global_venue.venue_name,
             global_venue.venue_type_label,
-            global_venue.total_non_cancelled_bookings,
-            global_venue.total_created_individual_offers,
-            global_venue.total_created_collective_offers,
-            global_venue.venue_is_permanent,
             global_venue.venue_region_name,
             global_venue.venue_department_code,
-            global_venue.venue_rural_city_type as geo_type,
-            global_venue.venue_in_qpv,
-            global_venue.venue_in_zrr,
+            global_venue.venue_rural_city_type,
+            global_venue.total_real_revenue,
+            global_venue.total_non_cancelled_individual_bookings,
+            global_venue.total_non_cancelled_collective_bookings,
+            global_venue.is_active_current_year,
+            global_venue.is_individual_active_current_year,
+            global_venue.is_collective_active_current_year,
             date_diff(
                 current_date(), global_venue.venue_creation_date, day
-            ) as seniority_day_cnt,
-            global_venue.total_created_individual_offers
-            + global_venue.total_created_collective_offers as offers_created
+            ) as venue_seniority_days
         from {{ ref("mrt_global__venue") }} as global_venue
         left join
             {{ source("raw", "qualtrics_opt_out_users") }} as opt_out
             on global_venue.venue_id = opt_out.ext_ref
-        left join answers on global_venue.venue_id = answers.user_id
-        where opt_out.contact_id is null and answers.user_id is null
+        where
+            opt_out.contact_id is null and global_venue.venue_booking_email is not null
     ),
 
     generate_export as (
-        select lp.*
-        from lieux_physique as lp
-        left join previous_export as pe on lp.email = pe.email
-        where pe.email is null
+        select v.*
+        from venues as v
+        left join
+            previous_export as pe on v.venue_booking_email = pe.venue_booking_email
+        where pe.venue_booking_email is null
         order by rand()
-        limit 3500
+        limit 4000
     )
 
 select *, current_date as export_date

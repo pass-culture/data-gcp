@@ -10,13 +10,9 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
-from common.operators.gce import (
-    DeleteGCEOperator,
-    InstallDependenciesOperator,
-    SSHGCEOperator,
-    StartGCEOperator,
-)
+from common.operators.kubernetes import CustomKubernetesPodOperator
 from common.utils import get_airflow_schedule
+from kubernetes.client import V1ResourceRequirements
 
 DAG_NAME = "import_social_network"
 default_dag_args = {
@@ -33,12 +29,23 @@ schedule_dict = {
 }[ENV_SHORT_NAME]
 
 
+container_resources = V1ResourceRequirements(
+    requests={
+        "cpu": "0.2",
+        "memory": "500Mi",
+    },
+    limits={
+        "cpu": "0.5",
+        "memory": "1Gi",
+    },
+)
+
 with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Import Social Network Data",
     on_failure_callback=None,
-    schedule_interval=get_airflow_schedule(schedule_dict),
+    schedule=get_airflow_schedule(schedule_dict),
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
@@ -59,42 +66,26 @@ with DAG(
             description="Offset in days from the execution date for the end date (e.g., 0 for the execution date, -1 for yesterday).",
         ),
     },
-    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ):
-    for social_network in ["tiktok", "instagram"]:
-        gce_instance = f"import-{social_network}-{ENV_SHORT_NAME}"
-        base_path = f"data-gcp/jobs/etl_jobs/external/{social_network}"
-        gce_instance_start = StartGCEOperator(
-            instance_name=gce_instance,
-            instance_type="n1-standard-1",
-            preemptible=False,
-            task_id=f"{social_network}_gce_start_task",
-            labels={"dag_name": DAG_NAME},
+    for social_network in ["instagram", "tiktok"]:
+        task = CustomKubernetesPodOperator(
+            task_id=f"{social_network}_etl",
+            orchestration_mode="celery",  # use a celery worker to request the task to k8s
+            queue="k8s-watcher",  # we route the task to a specific queue that is listened by a celery-worker pool with higher concurency than the default one, this allow running multiple k8s tasks in parallel, while freeing up the default celery-worker for other non-k8s tasks
+            runtime_mode="gitsynced",
+            runtime_branch="{{ params.branch }}",
+            runtime_image="py313",
+            runtime_image_tag="v1",
+            microservice_path=f"jobs/etl_jobs/external/{social_network}",
+            arguments=[
+                "main.py",
+                "--start-date",
+                "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_days) }}",
+                "--end-date",
+                "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_index) }}",
+            ],
+            container_resources=container_resources,
         )
 
-        fetch_install_code = InstallDependenciesOperator(
-            task_id=f"{social_network}_fetch_install_code",
-            instance_name=gce_instance,
-            branch="{{ params.branch }}",
-            python_version="3.10",
-            base_dir=base_path,
-            retries=2,
-        )
-
-        job_to_bq = SSHGCEOperator(
-            task_id=f"{social_network}_to_bq",
-            instance_name=gce_instance,
-            base_dir=base_path,
-            command="""
-            python main.py \
-            --start-date {{ add_days(yesterday() if dag_run.run_type == 'manual' else ds, params.n_days) }} \
-            --end-date {{ add_days(yesterday() if dag_run.run_type == 'manual' else ds, params.n_index) }} \
-            """,
-            do_xcom_push=True,
-        )
-
-        gce_instance_stop = DeleteGCEOperator(
-            task_id=f"{social_network}_gce_stop_task", instance_name=gce_instance
-        )
-
-        (gce_instance_start >> fetch_install_code >> job_to_bq >> gce_instance_stop)
+        task

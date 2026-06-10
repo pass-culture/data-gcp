@@ -5,7 +5,6 @@ from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
 from common import macros
 from common.config import (
-    BIGQUERY_ANALYTICS_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -36,7 +35,7 @@ default_dag_args = {
 with DAG(
     DAG_NAME,
     default_args=default_dag_args,
-    description="Switch metabase tables following dbt migration",
+    description="Migrate Metabase cards after BigQuery table/column renames",
     schedule_interval=None,
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
@@ -47,25 +46,18 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "metabase_card_type": Param(
-            default="native",
+        "database_name": Param(
+            default="Pass Culture BigQuery",
             type="string",
         ),
-        "legacy_table_name": Param(
-            default="",
-            type="string",
+        "card_ids": Param(
+            default=None,
+            type=["null", "string"],
+            description="Comma-separated card IDs to migrate (optional, empty = all cards)",
         ),
-        "new_table_name": Param(
-            default="",
-            type="string",
-        ),
-        "legacy_schema_name": Param(
-            default=BIGQUERY_ANALYTICS_DATASET,
-            type="string",
-        ),
-        "new_schema_name": Param(
-            default=BIGQUERY_ANALYTICS_DATASET,
-            type="string",
+        "dry_run": Param(
+            default=False,
+            type="boolean",
         ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
@@ -82,7 +74,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.9",
+        python_version="3.13",
         base_dir=BASE_PATH,
         dag=dag,
         retries=2,
@@ -94,12 +86,10 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="""
-        python main.py \
-        --metabase-card-type {{ params.metabase_card_type }} \
-        --legacy-table-name {{ params.legacy_table_name }} \
-        --new-table-name {{ params.new_table_name }} \
-        --legacy-schema-name {{ params.legacy_schema_name }} \
-        --new-schema-name {{ params.new_schema_name }}
+        uv run python main.py migrate \
+        --database-name "{{ params.database_name }}" \
+        {% if params.card_ids %}--card-ids "{{ params.card_ids }}"{% endif %} \
+        {% if params.dry_run %}--dry-run{% endif %}
         """,
     )
 

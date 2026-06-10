@@ -43,5 +43,3 @@ models:
         description: "{{ doc('column__price_category_id') }}"
       - name: price_category_label
         description: "{{ doc('column__price_category_label') }}"
-      - name: price_category_labelId
-        description: "{{ doc('column__price_category_label_id') }}"

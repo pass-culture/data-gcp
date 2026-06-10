@@ -62,16 +62,16 @@ INSTANCE_TYPE = {
 }[ENV_SHORT_NAME]
 
 
-def get_schedule_interval(dag_id: str):
-    schedule_interval = SCHEDULE_DICT.get(dag_id, {}).get(ENV_SHORT_NAME, None)
-    return get_airflow_schedule(schedule_interval)
+def get_schedule(dag_id: str):
+    schedule = SCHEDULE_DICT.get(dag_id, {}).get(ENV_SHORT_NAME, None)
+    return get_airflow_schedule(schedule)
 
 
 with DAG(
     DAG_ID,
     default_args=default_args,
     description="Sync BigQuery tables to Cloud SQL for recommendation engine",
-    schedule_interval=get_schedule_interval(DAG_ID),
+    schedule=get_schedule(DAG_ID),
     catchup=False,
     dagrun_timeout=timedelta(minutes=480),
     user_defined_macros=macros.default,

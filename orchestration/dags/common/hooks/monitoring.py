@@ -1,3 +1,5 @@
+import os
+
 from common.config import (
     DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
     ELEMENTARY_REPORT_URL,
@@ -25,6 +27,10 @@ class ElementaryReport:
             days_back: Number of days to look back for report. Default is 7.
             report_file_path: Path to save the report file
         """
+        # elementary's dbt_project.yml uses env_var('DBT_PACKAGES_FOLDER', 'dbt_packages')
+        # for packages-install-path; redirect to /tmp to avoid Permission denied in site-packages
+        dbt_package_folder = os.environ.get("DBT_PACKAGES_FOLDER")
+        os.environ["DBT_PACKAGES_FOLDER"] = "/tmp/dbt_packages"
 
         config = Config(
             config_dir=PATH_TO_DBT_PROJECT,
@@ -45,6 +51,10 @@ class ElementaryReport:
             force_update_dbt_package=False,
             disable_samples=False,
         )
+
+        if dbt_package_folder:
+            os.environ["DBT_PACKAGES_FOLDER"] = dbt_package_folder
+
         return data_monitoring.send_report(
             days_back=days_back,
             test_runs_amount=720,
@@ -75,6 +85,11 @@ class ElementaryReport:
             global_suppression_interval: Number of hours to wait before sending the same alert again. Default is 24.
             days_back: Number of days to look back for alerts. Default is 1.
         """
+        # elementary's dbt_project.yml uses env_var('DBT_PACKAGES_FOLDER', 'dbt_packages')
+        # for packages-install-path; redirect to /tmp to avoid Permission denied in site-packages
+        dbt_package_folder = os.environ.get("DBT_PACKAGES_FOLDER")
+
+        os.environ["DBT_PACKAGES_FOLDER"] = "/tmp/dbt_packages"
 
         config = Config(
             config_dir=PATH_TO_DBT_PROJECT,
@@ -107,3 +122,6 @@ class ElementaryReport:
             dbt_full_refresh=False,
             dbt_vars=None,
         )
+
+        if dbt_package_folder:
+            os.environ["DBT_PACKAGES_FOLDER"] = dbt_package_folder

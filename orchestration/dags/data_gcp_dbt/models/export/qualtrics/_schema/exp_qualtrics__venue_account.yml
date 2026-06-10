@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: exp_qualtrics__venue_account
+    description: "{{ doc('description__exp_qualtrics__venue_account') }}"
+    columns:
+      - name: export_date
+        description: "{{ doc('column__export_date') }}"
+        data_type: DATE
+        data_tests:
+          - not_null
+      - name: venue_id
+        description: "{{ doc('column__venue_id') }}"
+        data_type: INT64
+        data_tests:
+          - not_null
+          - unique
+      - name: venue_booking_email
+        description: "{{ doc('column__venue_booking_email') }}"
+        data_type: STRING
+      - name: venue_name
+        description: "{{ doc('column__venue_name') }}"
+        data_type: STRING
+      - name: venue_type_label
+        description: "{{ doc('column__venue_type_label') }}"
+        data_type: STRING
+      - name: venue_seniority_days
+        description: "{{ doc('column__venue_seniority_days') }}"
+        data_type: INT64
+      - name: venue_region_name
+        description: "{{ doc('column__venue_region_name') }}"
+        data_type: STRING
+      - name: venue_department_code
+        description: "{{ doc('column__venue_department_code') }}"
+        data_type: STRING
+      - name: venue_rural_city_type
+        description: "{{ doc('column__rural_city_type') }}"
+        data_type: STRING
+      - name: total_real_revenue
+        description: "{{ doc('column__total_real_revenue') }}"
+        data_type: FLOAT64
+      - name: total_non_cancelled_individual_bookings
+        description: "{{ doc('column__total_non_cancelled_individual_bookings') }}"
+        data_type: INT64
+      - name: total_non_cancelled_collective_bookings
+        description: "{{ doc('column__total_non_cancelled_collective_bookings') }}"
+        data_type: INT64
+      - name: is_active_current_year
+        description: "{{ doc('column__is_active_current_year') }}"
+        data_type: BOOLEAN
+      - name: is_individual_active_current_year
+        description: "{{ doc('column__is_individual_active_current_year') }}"
+        data_type: BOOLEAN
+      - name: is_collective_active_current_year
+        description: "{{ doc('column__is_collective_active_current_year') }}"
+        data_type: BOOLEAN

@@ -2,6 +2,7 @@ import time
 from datetime import datetime, timedelta
 
 import pandas as pd
+import pandas_gbq
 import requests
 from google.cloud import bigquery
 
@@ -182,8 +183,9 @@ def siren_to_bq():
 def save_to_bq(siren_list):
     df = pd.DataFrame(siren_list)
     df["update_date"] = datetime.now().strftime("%Y-%m-%d")
-    df.to_gbq(
-        f"""{BIGQUERY_CLEAN_DATASET}.siren_data""",
+    pandas_gbq.to_gbq(
+        df,
+        f"{BIGQUERY_CLEAN_DATASET}.siren_data",
         project_id=GCP_PROJECT,
         if_exists="append",
     )

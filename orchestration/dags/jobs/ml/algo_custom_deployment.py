@@ -48,7 +48,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="ML Custom Deployment job",
-    schedule_interval=None,
+    schedule=None,
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,

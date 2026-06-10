@@ -49,7 +49,7 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Titelive ETL pipeline with multiple execution modes",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME]),
+    schedule=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME]),
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,

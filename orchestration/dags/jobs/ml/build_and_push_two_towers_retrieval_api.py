@@ -56,7 +56,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Custom Building job",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME]),
+    schedule=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,

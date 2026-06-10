@@ -100,7 +100,6 @@ sources:
       - name: applicative_database_opening_hours
       - name: applicative_database_payment_status
       - name: applicative_database_price_category
-      - name: applicative_database_price_category_label
       - name: applicative_database_pricing
       - name: applicative_database_pricing_line
       - name: applicative_database_pricing_log
@@ -144,6 +143,7 @@ sources:
       - name: gsheet_educational_institution_student_headcount
       - name: gsheet_instagram_campaign_tag
       - name: gsheet_ml_recommendation_sensitive_item
+      - name: gsheet_fraudulent_device
       - name: gsheet_tiktok_campaign_tag
       - name: gsheet_company_contact
       - name: instagram_post_detail
@@ -276,6 +276,8 @@ sources:
       - name: delta_artist
       - name: delta_product_artist_link
       - name: similar_artist
+      - name: delta_event_series
+      - name: delta_event_series_offer_link
       - name: unconstrained_item_cluster
       - name: two_tower_user_embedding_history
         description: Partitionned table containing the history of the two tower user emebddings

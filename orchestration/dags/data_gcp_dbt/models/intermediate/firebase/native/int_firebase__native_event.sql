@@ -84,7 +84,7 @@ select
     system_theme,
     featurename as feature_name,
     feedbackresponse as feedback_response,
-    origindetails as origin_detail,
+    origin_detail,
     advicetype as advice_type,
     geo_located as reco_geo_located,
     reco_origin,

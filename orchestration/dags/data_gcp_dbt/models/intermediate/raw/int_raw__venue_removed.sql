@@ -10,4 +10,4 @@ select *
 from {{ ref("snapshot_raw__venue") }}
 qualify
     row_number() over (partition by venue_id order by dbt_valid_from desc) = 1
-    and dbt_valid_to is not null
+    and (dbt_valid_to is not null or venue_state = 'CLOSED')

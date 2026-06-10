@@ -120,6 +120,10 @@ with
                 offer.offer_subcategory_id = 'LIVRE_PAPIER'
                 and offer.titelive_gtl_id is null
             )  -- TODO: See if it is still required after filter on is_restrained
+            and not (
+                offer.offer_subcategory_id = 'LIVRE_PAPIER'
+                and offer.offer_product_id is null
+            )
         group by
             1,
             2,

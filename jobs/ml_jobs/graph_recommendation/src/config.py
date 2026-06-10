@@ -114,32 +114,32 @@ class TrainingConfig(BaseConfig):
         default_factory=lambda: (
             [
                 [
-                    ("book", "is_artist_id", "artist_id"),
-                    ("artist_id", "artist_id_of", "book"),
+                    ("item", "is_artist_id", "artist_id"),
+                    ("artist_id", "artist_id_of", "item"),
                 ],
                 [
-                    ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
-                    ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
+                    ("item", "is_gtl_label_level_3", "gtl_label_level_3"),
+                    ("gtl_label_level_3", "gtl_label_level_3_of", "item"),
                 ],
                 [
-                    ("book", "is_gtl_label_level_4", "gtl_label_level_4"),
-                    ("gtl_label_level_4", "gtl_label_level_4_of", "book"),
+                    ("item", "is_gtl_label_level_4", "gtl_label_level_4"),
+                    ("gtl_label_level_4", "gtl_label_level_4_of", "item"),
                 ],
                 [
-                    ("book", "is_series_id", "series_id"),
-                    ("series_id", "series_id_of", "book"),
+                    ("item", "is_series_id", "series_id"),
+                    ("series_id", "series_id_of", "item"),
                 ],
                 [
-                    ("book", "is_music_label", "music_label"),
-                    ("music_label", "music_label_of", "book"),
+                    ("item", "is_music_label", "music_label"),
+                    ("music_label", "music_label_of", "item"),
                 ],
                 [
-                    ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
-                    ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
+                    ("item", "is_gtl_label_level_1", "gtl_label_level_1"),
+                    ("gtl_label_level_1", "gtl_label_level_1_of", "item"),
                 ],
                 [
-                    ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
-                    ("gtl_label_level_2", "gtl_label_level_2_of", "book"),
+                    ("item", "is_gtl_label_level_2", "gtl_label_level_2"),
+                    ("gtl_label_level_2", "gtl_label_level_2_of", "item"),
                 ],
             ]
         )

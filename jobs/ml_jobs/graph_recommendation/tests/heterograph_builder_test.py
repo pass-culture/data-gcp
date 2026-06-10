@@ -11,11 +11,13 @@ from src.constants import (
     GTL_LABEL_LEVEL_1_COLUMN,
     GTL_LABEL_LEVEL_2_COLUMN,
     GTL_LABEL_LEVEL_3_COLUMN,
+    ITEM_TYPE_COLUMN,
+    MUSIC_LABEL_COLUMN,
     SERIES_ID_COLUMN,
 )
 from src.heterograph_builder import (
     DEFAULT_METADATA_COLUMNS,
-    build_book_metadata_heterograph_from_dataframe,
+    build_item_metadata_heterograph_from_dataframe,
 )
 
 
@@ -27,6 +29,7 @@ def _build_sample_dataframe() -> pd.DataFrame:
     return pd.DataFrame(
         {
             "item_id": ["book-1", "book-2", "book-3", "book-4"],
+            "item_type": ["book", "music", "book", "music"],
             "rayon": ["Literature", "Comics", "Literature", "Comics"],
             "gtl_label_level_1": ["Arts", "Arts", "Arts", "Arts"],
             "gtl_label_level_2": ["Painting", "Drawing", "Painting", "Drawing"],
@@ -35,6 +38,7 @@ def _build_sample_dataframe() -> pd.DataFrame:
             "artist_id": ["artist-1", "artist-2", "artist-1", "artist-2"],
             "gtl_id": ["01022000", "01030000", "01022000", "01023000"],
             "series_id": ["series-1", "series-1", "series-2", "series-2"],
+            "music_label": ["label-A", None, "label-A", None],
         }
     )
 
@@ -44,6 +48,7 @@ def _build_empty_metadata_dataframe() -> pd.DataFrame:
     return pd.DataFrame(
         {
             "item_id": ["book-1", "book-2"],
+            "item_type": [None, None],
             "rayon": [None, ""],
             "gtl_label_level_1": [None, "   "],
             "gtl_label_level_2": [None, None],
@@ -52,6 +57,7 @@ def _build_empty_metadata_dataframe() -> pd.DataFrame:
             "artist_id": [None, None],
             "gtl_id": ["01234567", "02345678"],
             "series_id": [None, None],
+            "music_label": [None, None],
         }
     )
 
@@ -59,13 +65,13 @@ def _build_empty_metadata_dataframe() -> pd.DataFrame:
 def test_build_heterograph_from_dataframe_creates_correct_structure() -> None:
     """Test that heterograph creates proper node and edge types."""
     dataframe = _build_sample_dataframe()
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_item_metadata_heterograph_from_dataframe(
         dataframe,
         metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
     )
     assert isinstance(graph_data, HeteroData)
     # Check that we have the expected node types
-    assert "book" in graph_data.node_types
+    assert "item" in graph_data.node_types
     expected_metadata_types = {
         "gtl_label_level_1",
         "gtl_label_level_2",
@@ -76,49 +82,49 @@ def test_build_heterograph_from_dataframe_creates_correct_structure() -> None:
         assert node_type in graph_data.node_types
     # gtl_label_level_4 should not be present since all values are None
     assert "gtl_label_level_4" not in graph_data.node_types
-    # Check book nodes
-    assert graph_data["book"].num_nodes == 4
-    assert len(graph_data.book_ids) == 4
-    assert set(graph_data.book_ids) == {"book-1", "book-2", "book-3", "book-4"}
+    # Check item nodes
+    assert graph_data["item"].num_nodes == 4
+    assert len(graph_data.item_ids) == 4
+    assert set(graph_data.item_ids) == {"book-1", "book-2", "book-3", "book-4"}
 
 
 def test_heterograph_edge_types_are_correct() -> None:
     """Test that edge types follow the expected naming convention."""
     dataframe = _build_sample_dataframe()
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_item_metadata_heterograph_from_dataframe(
         dataframe,
         metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
     )
     # Check that edge types exist for each metadata column
     expected_edge_patterns = [
-        ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
-        ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
-        ("book", "is_gtl_label_level_2", "gtl_label_level_2"),
-        ("gtl_label_level_2", "gtl_label_level_2_of", "book"),
-        ("book", "is_gtl_label_level_3", "gtl_label_level_3"),
-        ("gtl_label_level_3", "gtl_label_level_3_of", "book"),
-        ("book", "is_artist_id", "artist_id"),
-        ("artist_id", "artist_id_of", "book"),
+        ("item", "is_gtl_label_level_1", "gtl_label_level_1"),
+        ("gtl_label_level_1", "gtl_label_level_1_of", "item"),
+        ("item", "is_gtl_label_level_2", "gtl_label_level_2"),
+        ("gtl_label_level_2", "gtl_label_level_2_of", "item"),
+        ("item", "is_gtl_label_level_3", "gtl_label_level_3"),
+        ("gtl_label_level_3", "gtl_label_level_3_of", "item"),
+        ("item", "is_artist_id", "artist_id"),
+        ("artist_id", "artist_id_of", "item"),
     ]
     for src_type, edge_type, dst_type in expected_edge_patterns:
         assert (src_type, edge_type, dst_type) in graph_data.edge_types
 
 
 def test_heterograph_edges_are_bidirectional() -> None:
-    """Test that edges exist in both directions (book->metadata and metadata->book)."""
+    """Test that edges exist in both directions (item->metadata and metadata->item)."""
     dataframe = _build_sample_dataframe()
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_item_metadata_heterograph_from_dataframe(
         dataframe,
         metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
     )
     # For each forward edge, check that reverse edge exists
     for src_type, edge_type, dst_type in graph_data.edge_types:
-        if src_type == "book" and edge_type.startswith("is_"):
-            # Forward edge: book -> metadata
+        if src_type == "item" and edge_type.startswith("is_"):
+            # Forward edge: item -> metadata
             forward_edges = graph_data[src_type, edge_type, dst_type].edge_index
             # Find corresponding reverse edge
             reverse_edge_type = f"{dst_type}_of"
-            reverse_edges = graph_data[dst_type, reverse_edge_type, "book"].edge_index
+            reverse_edges = graph_data[dst_type, reverse_edge_type, "item"].edge_index
             # Check that every forward edge has a corresponding reverse edge
             forward_pairs = set(
                 zip(forward_edges[0].tolist(), forward_edges[1].tolist(), strict=True)
@@ -134,7 +140,7 @@ def test_heterograph_edges_are_bidirectional() -> None:
 def test_heterograph_metadata_organization() -> None:
     """Test that metadata is properly organized by column."""
     dataframe = _build_sample_dataframe()
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_item_metadata_heterograph_from_dataframe(
         dataframe,
         metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
     )
@@ -142,12 +148,14 @@ def test_heterograph_metadata_organization() -> None:
     assert isinstance(graph_data.metadata_ids_by_column, dict)
     # Check that we have the right metadata columns
     expected_columns = {
+        ITEM_TYPE_COLUMN,
         GTL_LABEL_LEVEL_1_COLUMN,
         GTL_LABEL_LEVEL_2_COLUMN,
         GTL_LABEL_LEVEL_3_COLUMN,
         GTL_ID_COLUMN,
         ARTIST_ID_COLUMN,
         SERIES_ID_COLUMN,
+        MUSIC_LABEL_COLUMN,
     }
     assert set(graph_data.metadata_columns) == expected_columns
     # Check specific metadata values
@@ -174,12 +182,12 @@ def test_heterograph_metadata_organization() -> None:
 def test_heterograph_node_counts_are_correct() -> None:
     """Test that node counts match the expected unique values."""
     dataframe = _build_sample_dataframe()
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_item_metadata_heterograph_from_dataframe(
         dataframe,
         metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
     )
-    # Check book node count
-    assert graph_data["book"].num_nodes == 4
+    # Check item node count
+    assert graph_data["item"].num_nodes == 4
     # Check metadata node counts
     assert graph_data[GTL_LABEL_LEVEL_1_COLUMN].num_nodes == 1  # Only "Arts"
     assert graph_data[GTL_LABEL_LEVEL_2_COLUMN].num_nodes == 2  # "Painting", "Drawing"
@@ -193,7 +201,7 @@ def test_heterograph_missing_columns_raises_error() -> None:
     """Test that missing required columns raise KeyError."""
     dataframe = pd.DataFrame({"item_id": ["book-1"], "some_other_column": ["value"]})
     with pytest.raises(KeyError, match="Missing required columns"):
-        build_book_metadata_heterograph_from_dataframe(
+        build_item_metadata_heterograph_from_dataframe(
             dataframe,
             metadata_columns=[GTL_ID_COLUMN, "missing_column"],
         )
@@ -203,14 +211,14 @@ def test_heterograph_no_valid_metadata_raises_error() -> None:
     """Test that dataframe with no valid metadata raises ValueError."""
     dataframe = _build_empty_metadata_dataframe()
     with pytest.raises(ValueError, match="No edges were created"):
-        build_book_metadata_heterograph_from_dataframe(
+        build_item_metadata_heterograph_from_dataframe(
             dataframe,
             metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
         )
 
 
 def test_heterograph_handles_duplicate_books() -> None:
-    """Test that duplicate books are handled correctly."""
+    """Test that duplicate items are handled correctly."""
     dataframe = pd.DataFrame(
         {
             "item_id": ["book-1", "book-1", "book-2", "book-3", "book-4"],
@@ -220,20 +228,20 @@ def test_heterograph_handles_duplicate_books() -> None:
         }
     )
 
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_item_metadata_heterograph_from_dataframe(
         dataframe,
         metadata_columns=[GTL_ID_COLUMN, ARTIST_ID_COLUMN, GTL_LABEL_LEVEL_1_COLUMN],
     )
-    # Should have unique books only (book-1 appears twice but deduplicated)
+    # Should have unique items only (book-1 appears twice but deduplicated)
     # All metadata values appear at least twice, so they survive preprocessing
-    assert graph_data["book"].num_nodes == 4
-    assert set(graph_data.book_ids) == {"book-1", "book-2", "book-3", "book-4"}
+    assert graph_data["item"].num_nodes == 4
+    assert set(graph_data.item_ids) == {"book-1", "book-2", "book-3", "book-4"}
 
 
 def test_heterograph_edge_indices_are_valid_tensors() -> None:
     """Test that edge indices are valid PyTorch tensors with correct format."""
     dataframe = _build_sample_dataframe()
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_item_metadata_heterograph_from_dataframe(
         dataframe,
         metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
     )
@@ -250,12 +258,12 @@ def test_heterograph_edge_indices_are_valid_tensors() -> None:
         dst_indices = edge_index[1]
         assert src_indices.min() >= 0
         assert dst_indices.min() >= 0
-        if src_type == "book":
-            assert src_indices.max() < graph_data["book"].num_nodes
+        if src_type == "item":
+            assert src_indices.max() < graph_data["item"].num_nodes
         else:
             assert src_indices.max() < graph_data[src_type].num_nodes
-        if dst_type == "book":
-            assert dst_indices.max() < graph_data["book"].num_nodes
+        if dst_type == "item":
+            assert dst_indices.max() < graph_data["item"].num_nodes
         else:
             assert dst_indices.max() < graph_data[dst_type].num_nodes
 
@@ -273,7 +281,7 @@ def test_heterograph_handles_mixed_data_types() -> None:
         }
     )
 
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_item_metadata_heterograph_from_dataframe(
         dataframe,
         metadata_columns=[GTL_ID_COLUMN, ARTIST_ID_COLUMN, GTL_LABEL_LEVEL_1_COLUMN],
     )
@@ -298,21 +306,21 @@ def test_heterograph_with_single_metadata_column() -> None:
         }
     )
 
-    graph_data = build_book_metadata_heterograph_from_dataframe(
+    graph_data = build_item_metadata_heterograph_from_dataframe(
         dataframe,
         metadata_columns=[GTL_ID_COLUMN, ARTIST_ID_COLUMN],
     )
-    # Should have book and artist_id node types
-    assert set(graph_data.node_types) == {"book", "artist_id"}
+    # Should have item and artist_id node types
+    assert set(graph_data.node_types) == {"item", "artist_id"}
     # Should have exactly 2 edge types (forward and backward)
     expected_edge_types = {
-        ("book", "is_artist_id", "artist_id"),
-        ("artist_id", "artist_id_of", "book"),
+        ("item", "is_artist_id", "artist_id"),
+        ("artist_id", "artist_id_of", "item"),
     }
     assert set(graph_data.edge_types) == expected_edge_types
 
     # Check node counts
     assert (
-        graph_data["book"].num_nodes == 4
+        graph_data["item"].num_nodes == 4
     )  # book-5 has no artist_id nor proper gtl_id
     assert graph_data["artist_id"].num_nodes == 2

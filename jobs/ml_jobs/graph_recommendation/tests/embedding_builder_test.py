@@ -29,26 +29,26 @@ def _build_sample_heterograph() -> HeteroData:
     """Build a minimal heterograph for testing."""
     data = HeteroData()
 
-    # Add book nodes - num_nodes is inferred from x.shape[0]
-    data["book"].x = torch.rand(3, 16)
-    data["book"].num_nodes = 3  # Explicitly set num_nodes
-    data.book_ids = ["book_1", "book_2", "book_3"]
+    # Add item nodes - num_nodes is inferred from x.shape[0]
+    data["item"].x = torch.rand(3, 16)
+    data["item"].num_nodes = 3  # Explicitly set num_nodes
+    data.item_ids = ["book_1", "book_2", "book_3"]
     data["gtl_ids"] = ["01022000", "01030000", "01022000"]
 
     # Add metadata nodes
     data["artist_id"].x = torch.rand(2, 16)
     data["gtl_label_level_1"].x = torch.rand(2, 16)
     # Add edges
-    data["book", "is_artist_id", "artist_id"].edge_index = torch.tensor(
+    data["item", "is_artist_id", "artist_id"].edge_index = torch.tensor(
         [[0, 1], [0, 1]]
     )
-    data["artist_id", "artist_id_of", "book"].edge_index = torch.tensor(
+    data["artist_id", "artist_id_of", "item"].edge_index = torch.tensor(
         [[0, 1], [0, 1]]
     )
-    data["book", "is_gtl_label_level_1", "gtl_label_level_1"].edge_index = torch.tensor(
+    data["item", "is_gtl_label_level_1", "gtl_label_level_1"].edge_index = torch.tensor(
         [[1, 2], [0, 1]]
     )
-    data["gtl_label_level_1", "gtl_label_level_1_of", "book"].edge_index = torch.tensor(
+    data["gtl_label_level_1", "gtl_label_level_1_of", "item"].edge_index = torch.tensor(
         [[0, 1], [1, 2]]
     )
 
@@ -72,12 +72,12 @@ def simple_training_config() -> TrainingConfig:
         num_workers=0,
         metapaths=[
             [
-                ("book", "is_artist_id", "artist_id"),
-                ("artist_id", "artist_id_of", "book"),
+                ("item", "is_artist_id", "artist_id"),
+                ("artist_id", "artist_id_of", "item"),
             ],
             [
-                ("book", "is_gtl_label_level_1", "gtl_label_level_1"),
-                ("gtl_label_level_1", "gtl_label_level_1_of", "book"),
+                ("item", "is_gtl_label_level_1", "gtl_label_level_1"),
+                ("gtl_label_level_1", "gtl_label_level_1_of", "item"),
             ],
         ],
     )
@@ -90,7 +90,7 @@ def _mock_training_components(
     """Context manager to mock heavy ML training components.
 
     Args:
-        graph_data: The heterograph data containing book nodes
+        graph_data: The heterograph data containing item nodes
 
     Yields:
         Tuple of (mock_metapath2vec, mock_train) for additional assertions
@@ -108,7 +108,7 @@ def _mock_training_components(
         cfg = TrainingConfig()
         # Set up minimal model mock
         mock_model = MagicMock()
-        mock_model.to.return_value.start = {"book": 0}
+        mock_model.to.return_value.start = {"item": 0}
         mock_metapath2vec.return_value = mock_model
 
         # Mock optimizer to have param_groups
@@ -117,10 +117,10 @@ def _mock_training_components(
         mock_optimizer_cls.return_value = mock_optimizer
 
         # Mock the embedding tensor that would be loaded from checkpoint
-        # Need to match the number of book nodes (3 in our test graph)
-        num_book_nodes = len(graph_data.book_ids)
+        # Need to match the number of item nodes (3 in our test graph)
+        num_item_nodes = len(graph_data.item_ids)
         # Create embeddings as a proper tensor that can be sliced
-        mock_embeddings = torch.rand(num_book_nodes, cfg.embedding_dim)
+        mock_embeddings = torch.rand(num_item_nodes, cfg.embedding_dim)
 
         # Mock torch.load to return checkpoint with proper structure
         def mock_load_fn(path, weights_only=False):
@@ -208,8 +208,8 @@ def test_train_metapath2vec_with_minimal_mocking(simple_training_config) -> None
     assert LANCEDB_NODE_ID_COLUMN in result.columns
     assert GTL_ID_COLUMN in result.columns
     assert EMBEDDING_COLUMN in result.columns
-    # Should have embeddings for all books
-    assert len(result) == len(graph_data.book_ids)
+    # Should have embeddings for all items
+    assert len(result) == len(graph_data.item_ids)
 
 
 def test_train_metapath2vec_parameter_acceptance(simple_training_config) -> None:

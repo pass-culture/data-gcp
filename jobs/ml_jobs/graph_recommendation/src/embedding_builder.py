@@ -217,21 +217,21 @@ def train_metapath2vec(
     time_formatted = str(timedelta(seconds=int(total_training_time)))
     logger.info(f"Training completed in {time_formatted}")
 
-    # Extract and save embeddings for book nodes
-    logger.info("Extracting book embeddings...")
+    # Extract and save embeddings for item nodes
+    logger.info("Extracting item embeddings...")
     checkpoint = torch.load(checkpoint_path, weights_only=True)
     embedding = checkpoint["embedding.weight"].detach().cpu().numpy()
-    book_embeddings = embedding[
-        model.start["book"] : model.start["book"] + graph_data["book"].num_nodes, :
+    item_embeddings = embedding[
+        model.start["item"] : model.start["item"] + graph_data["item"].num_nodes, :
     ]
 
     embeddings_df = pd.DataFrame(
         {
-            "node_ids": graph_data.book_ids,
+            "node_ids": graph_data.item_ids,
             "gtl_id": graph_data.gtl_ids,
-            EMBEDDING_COLUMN: list(book_embeddings),
+            EMBEDDING_COLUMN: list(item_embeddings),
         }
     )
 
-    logger.info(f"Book embeddings extracted: {len(embeddings_df)} items with gtl_id")
+    logger.info(f"Item embeddings extracted: {len(embeddings_df)} items with gtl_id")
     return embeddings_df

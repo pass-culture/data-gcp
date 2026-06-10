@@ -293,7 +293,6 @@ with (
         "--experiment-name {{ params.experiment_name }} "
         "--dummy {{ params.evaluate_on_dummy }} ",
         dag=dag,
-        deferrable=True,
     )
 
     branch_upload_embeddings = BranchPythonOperator(

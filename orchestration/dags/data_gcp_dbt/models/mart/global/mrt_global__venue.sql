@@ -102,6 +102,8 @@ select
     has_headline_offer,
     first_headline_offer_date,
     last_headline_offer_date,
+    total_created_mediation_individual_offers,
+    has_mediation_offer,
     venue_adage_inscription_date,
     offerer_is_epn
 from {{ ref("int_global__venue") }}

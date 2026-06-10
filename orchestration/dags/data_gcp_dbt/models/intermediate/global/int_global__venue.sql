@@ -109,6 +109,8 @@ select
     v.has_headline_offer,
     v.first_headline_offer_date,
     v.last_headline_offer_date,
+    v.total_created_mediation_individual_offers,
+    v.has_mediation_offer,
     v.venue_adage_inscription_date,
     v.venue_state,
     ofr.offerer_name,

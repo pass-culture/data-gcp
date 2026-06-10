@@ -1,1 +1,0 @@
-(DE-4521) feat(dbt): add user_engagement model with Firebase event aggregation

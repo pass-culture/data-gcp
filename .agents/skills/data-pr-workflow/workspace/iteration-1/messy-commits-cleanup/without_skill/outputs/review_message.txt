@@ -1,3 +1,0 @@
-Hey team, I have a PR ready for review: DE-4521 - user engagement model.
-
-It adds a new dbt model. Let me know if you have questions!

@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: exp_backend__event_series_pre_ingestion_checks
+    description: "{{ doc('description__exp_backend__event_series_pre_ingestion_checks') }}"
+    columns:
+      - name: count_event_series_id_duplicates_in_future_event_series
+        description: "Number of duplicate event_series_id entries in the future event series data."
+      - name: count_event_series_name_null_or_empty_in_future_event_series
+        description: "Number of rows with a null or empty event_series_name in the future event series data."
+      - name: count_duplicate_links_in_future_event_series_offer_link
+        description: "Number of duplicate (offer_id, event_series_id) pairs in the future event series offer link data."
+      - name: ready_for_ingestion
+        description: "Boolean flag that is true when all check counts are zero, indicating the data is ready for backend ingestion."

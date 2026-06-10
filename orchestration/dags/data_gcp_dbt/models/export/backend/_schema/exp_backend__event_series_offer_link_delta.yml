@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: exp_backend__event_series_offer_link_delta
+    description: "{{ doc('description__exp_backend__event_series_offer_link_delta') }}"
+    columns:
+      - name: event_series_id
+        description: "{{ doc('column__event_series_id') }}"
+        data_tests:
+          - not_null
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+        data_tests:
+          - not_null
+      - name: action
+        description: "{{ doc('column__delta_action') }}"
+      - name: comment
+        description: "{{ doc('column__delta_comment') }}"

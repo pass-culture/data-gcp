@@ -134,7 +134,7 @@ rm dags/jobs/analytics/my_analysis_dag_test_john.py
 gsutil rm gs://airflow-data-bucket-dev/dags/jobs/analytics/my_analysis_dag_test_john.py
 ```
 
-> Test DAGs matching `*_test_*.py` are automatically purged from **stg** after 14 days by the `purge_test_dags` DAG. They are never deleted from dev or prod automatically.
+> Test DAGs matching `*_test_*.py` are automatically purged from **all environments** after 14 days by the `purge_test_dags` DAG (runs twice daily at 3h and 18h).
 
 ---
 
@@ -176,7 +176,7 @@ The script is called by `make create-test-dag` but can also be run directly for 
 Wait up to 5 minutes. Check for parse errors in the Airflow UI. Verify the file exists in GCS: `gsutil ls gs://airflow-data-bucket-<env>/dags/...`
 
 **Multiple DAGs found error**
-Provide a more specific filename: `make test-dag DAG=jobs/analytics/my_dag.py` (partial path also works with `find`). Or run `find dags -name "my_dag.py"` to see all matches.
+Run `find dags -name "my_dag.py"` to see all matches, then delete or rename the duplicate you don't need.
 
 **Wrong code version executing**
 Verify the `branch` parameter in your trigger config. Check the `fetch_install_code` task logs.

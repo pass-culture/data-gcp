@@ -35,11 +35,12 @@ else:
 
 def _purge_test_dags(**context) -> None:
     force_purge_all: bool = context["params"]["force_purge_all"]
+    max_age_days: int = context["params"]["max_age_days"]
 
     client = storage.Client()
     bucket = client.bucket(GCS_AIRFLOW_BUCKET)
     cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
-        days=TEST_DAG_MAX_AGE_DAYS
+        days=max_age_days
     )
 
     if force_purge_all:
@@ -48,7 +49,7 @@ def _purge_test_dags(**context) -> None:
         logging.info(
             "Deleting test DAGs last updated before %s (%d-day threshold).",
             cutoff.isoformat(),
-            TEST_DAG_MAX_AGE_DAYS,
+            max_age_days,
         )
 
     deleted = []
@@ -77,6 +78,11 @@ with DAG(
             default=False,
             type="boolean",
             description="When True, delete all test DAGs regardless of age. Intended for manual triggers only.",
+        ),
+        "max_age_days": Param(
+            default=TEST_DAG_MAX_AGE_DAYS,
+            type="integer",
+            description="Delete test DAGs last updated more than this many days ago.",
         ),
     },
     tags=[DAG_TAGS.DE.value],

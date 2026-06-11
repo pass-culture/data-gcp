@@ -184,32 +184,30 @@ def find_dag_constructor_range(lines: list[str]) -> tuple[int, int]:
 # ---------------------------------------------------------------------------
 
 
-def _splice(line: str, match: re.Match[str], new_inner: str) -> str:
+def _splice(line: str, match: re.Match[str], new_value: str) -> str:
     """
-    Space insensitive replace match group 2 with new_inner, preserving group 1, group 3, and the rest of the line.
+    Replace the 'value' named capture group with new_value, preserving everything else.
+    All regexes must use (?P<value>...) for the part to replace.
 
-    Regexps in this script use three capture groups around the value to replace:
-      group 1 — prefix including opening quote, e.g. 'DAG_NAME = "'
-      group 2 — the value itself,              e.g. 'my_dag'
-      group 3 — closing quote,                 e.g. '"'
+    Character-position slicing ensures only this exact span is modified:
 
-    Example:
-
-      line  = 'DAG_NAME = "my_dag"  # some comment'
-      match on r'(DAG_NAME\\s*=\\s*f?["\'])([^"\']+)(["\'])'
+      line    = 'DAG_NAME = "my_dag"  # some comment'
+                 ────────────╥──────╥───────────────
+      slice        [: start] ║value ║ [end :]
+                             ╚──────╝
       _splice(line, match, "my_dag__test__john")
       → 'DAG_NAME = "my_dag__test__john"  # some comment'
 
-    Using character positions (match.start/end) rather than str.replace ensures only
-    this exact occurrence is modified and neighbouring text is never touched.
+    Unlike str.replace, this never touches other occurrences of the same string elsewhere
+    in the line.
     """
-    return (
-        line[: match.start(1)]
-        + match.group(1)
-        + new_inner
-        + match.group(3)
-        + line[match.end(3) :]
-    )
+    assert isinstance(
+        match, re.Match
+    ), f"_splice expects a Match object, got {type(match)!r}"
+    assert (
+        "value" in match.groupdict()
+    ), "_splice requires a (?P<value>...) named group in the regex"
+    return line[: match.start("value")] + new_value + line[match.end("value") :]
 
 
 def _rename_dag_constant(lines: list[str], suffix: str) -> tuple[str, str, str] | None:
@@ -225,11 +223,13 @@ def _rename_dag_constant(lines: list[str], suffix: str) -> tuple[str, str, str] 
         # Skip # line comment
         if re.match(r"\s*#", line):
             continue
-        # Group 1: prefix up to opening quote  Group 2: value  Group 3: closing quote
+        # Group 'value': the dag id string content between quotes
         # f? handles f-strings: suffix appended inside the template stays valid Python
-        match = re.search(r'(DAG_(?:NAME|ID)\s*=\s*f?["\'])([^"\']+)(["\'])', line)
+        match = re.search(
+            r'(DAG_(?:NAME|ID)\s*=\s*f?["\'])(?P<value>[^"\']+)(["\'])', line
+        )
         if match:
-            original = match.group(2)
+            original = match.group("value")
             new_value = f"{original}{suffix}"
             # Mutate the shared list in place so later passes (constructor range lookup,
             # dag_id kwarg rename) see the already-updated content.
@@ -257,9 +257,11 @@ def _rename_dag_id_kwarg(
             continue
 
         # match a dag_id="litteral_or_f-string" and suffix it
-        match = re.search(r'(?<!\w)(dag_id\s*=\s*f?["\'])([^"\']+)(["\'])', line)
+        match = re.search(
+            r'(?<!\w)(dag_id\s*=\s*f?["\'])(?P<value>[^"\']+)(["\'])', line
+        )
         if match:
-            original = match.group(2)
+            original = match.group("value")
             new_value = f"{original}{suffix}"
             lines[i] = _splice(line, match, new_value)
             return ("dag_id", original, new_value)
@@ -308,35 +310,37 @@ def _replace_schedule(
             continue
 
         # In DAG constructor copy other parameters as is
-        match = re.search(r"(?<!\w)(schedule(?:_interval)?\s*=\s*)(.+)", line)
-        if not (match and not re.match(r"\s*#", line)):
+        match = re.search(r"(?<!\w)(schedule(?:_interval)?\s*=\s*)(?P<value>.+)", line)
+        if not match or re.match(r"\s*#", line):
             new_lines.append(line)
             i += 1
             continue
 
-        # Replace schedule by None, when the line contains schedule or schedule_interval parametrer
+        # Replace schedule by None, when the line contains schedule or schedule_interval parameter
         # 1 - Strip inline comment and trailing whitespace from the RHS
-        rest = match.group(2)
+        rest = match.group("value")
         hash_pos = rest.find("#")
         comment = ("  " + rest[hash_pos:].rstrip()) if hash_pos >= 0 else ""
         rest = rest[:hash_pos].rstrip() if hash_pos >= 0 else rest.rstrip()
         current_val = rest.rstrip(",").strip()
-        param_name = match.group(1).rstrip().rstrip("=").rstrip()
+        # Extract plain param name from group(1) e.g. "schedule =" → "schedule"
+        param_name = match.group(1).split("=")[0].strip()
 
         # If already None, copy line as is
         if current_val == "None":
             new_lines.extend(lines[i:])
             return new_lines, None, True
 
-        # Consume multi-line continuation, then replace the whole value with None
-        end_idx = _end_of_value(lines, i, rest)
-        # Preserve the trailing comma so the surrounding argument list stays valid
+        # Consume multi-line continuation using current_val (comma-stripped) to avoid
+        # spurious paren imbalance from a trailing comma on the last continuation line
+        end_idx = _end_of_value(lines, i, current_val)
+        # Preserve the trailing comma so the surrounding argument list stays valid.
+        # For multi-line values the comma lives on the last continuation line;
+        # for single-line values it lives in rest (pre-strip), not current_val.
         last_line = lines[end_idx - 1].rstrip() if end_idx > i + 1 else rest
         trailing = "," if last_line.endswith(",") else ""
 
-        new_lines.append(
-            line[: match.start(1)] + match.group(1) + "None" + trailing + comment
-        )
+        new_lines.append(_splice(line, match, f"None{trailing}{comment}"))
         new_lines.extend(lines[end_idx:])
         return new_lines, (param_name, current_val, "None"), True
 
@@ -497,9 +501,6 @@ Examples:
 
     if not validate_dag_file(str(input_path)):
         sys.exit(1)
-
-    orchestration_root = find_orchestration_root()
-    input_path = get_secure_path(args.dag_file, orchestration_root)
 
     try:
         content = input_path.read_text(encoding="utf-8")

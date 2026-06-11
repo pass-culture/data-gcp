@@ -157,6 +157,7 @@ create_elementary_report = GenerateElementaryReportOperator(
     days_back=14,
     trigger_rule="none_failed_min_one_success",
     queue="heavy" if (ENV_SHORT_NAME == "prod" and not LOCAL_ENV) else "default",
+    dag=dag,
 )
 
 send_elementary_report = SendElementaryMonitoringReportOperator(
@@ -167,6 +168,7 @@ send_elementary_report = SendElementaryMonitoringReportOperator(
     slack_group_alerts_by="{{ params.slack_group_alerts_by }}",
     global_suppression_interval=0,
     send_slack_report="{{ params.send_slack_report }}",
+    dag=dag,
 )
 
 # Convert to Python operator

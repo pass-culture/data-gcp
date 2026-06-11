@@ -93,4 +93,4 @@ class SendElementaryMonitoringReportOperator(BaseOperator):
         if results:
             self.log.info("Elementary monitoring report sent successfully")
         else:
-            self.log.error("Elementary monitoring report sending failed")
+            raise AirflowFailException("Elementary monitoring report sending failed")

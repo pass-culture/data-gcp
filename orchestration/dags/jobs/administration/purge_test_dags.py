@@ -1,6 +1,7 @@
 import datetime
 import fnmatch
 import logging
+import os
 
 from airflow import DAG
 from airflow.models.param import Param
@@ -15,6 +16,7 @@ from jobs.crons import SCHEDULE_DICT
 DAG_NAME = "purge_test_dags"
 
 TEST_DAG_MAX_AGE_DAYS = 14
+TEST_DAG_FILE_REGEX_PATTERN = "*__test__*.py"
 
 default_dag_args = {
     "start_date": datetime.datetime(2026, 6, 1),
@@ -51,9 +53,9 @@ def _purge_test_dags(**context) -> None:
 
     deleted = []
     for blob in client.list_blobs(bucket, prefix="dags/jobs/"):
-        if not fnmatch.fnmatch(blob.name, "*_test_*.py"):
+        if not fnmatch.fnmatch(blob.name, TEST_DAG_FILE_REGEX_PATTERN):
             continue
-        if blob.name.endswith(DAG_NAME):
+        if blob.name.endswith(os.path.basename(__file__)):
             continue
         if force_purge_all or blob.updated < cutoff:
             logging.info("Deleting %s (last updated %s)", blob.name, blob.updated)

@@ -4,7 +4,7 @@
 
 This guide explains how to test modified DAGs on any Airflow environment (dev, stg, prod) without affecting the live version.
 
-**Key concept:** You create a **test copy** of your DAG with a different `dag_id` (e.g., `my_dag_test_john`), so both the original and test versions coexist without conflicts. The test copy has `schedule_interval=None` so it never runs automatically — only when you trigger it manually.
+**Key concept:** You create a **test copy** of your DAG with a different `dag_id` (e.g., `my_dag__test__john`), so both the original and test versions coexist without conflicts. The test copy has `schedule_interval=None` so it never runs automatically — only when you trigger it manually.
 
 ---
 
@@ -50,7 +50,7 @@ This finds the DAG file anywhere under `dags/` by filename, creates a local test
 make create-test-dag DAG=my_dag.py
 
 # Step 2 — upload when ready
-make push-dag DAG=my_dag_test_john.py ENV=stg
+make push-dag DAG=my_dag__test__john.py ENV=stg
 ```
 
 Use this when you want to review or edit the test copy before uploading.
@@ -81,7 +81,7 @@ make test-dag DAG=my_analysis_dag.py
 
 **What happens:**
 - Finds `my_analysis_dag.py` anywhere under `dags/`
-- Creates `my_analysis_dag_test_<username>.py` next to it
+- Creates `my_analysis_dag__test__<username>.py` next to it
 - Changes `DAG_NAME`/`dag_id` to include the test suffix
 - Sets `schedule_interval=None` (manual trigger only)
 - Uploads the file to `gs://airflow-data-bucket-dev/dags/...`
@@ -90,11 +90,11 @@ make test-dag DAG=my_analysis_dag.py
 ```
 ✅ Test DAG created successfully!
 Input : dags/jobs/analytics/my_analysis_dag.py
-Output: dags/jobs/analytics/my_analysis_dag_test_john.py
-DAG_NAME changed: "my_analysis_dag" → "my_analysis_dag_test_john"
+Output: dags/jobs/analytics/my_analysis_dag__test__john.py
+DAG_NAME changed: "my_analysis_dag" → "my_analysis_dag__test__john"
 schedule_interval changed: "get_airflow_schedule(schedule)" → "None"
 
-🚀  dags/jobs/analytics/my_analysis_dag_test_john.py  →  gs://airflow-data-bucket-dev/dags/jobs/analytics/my_analysis_dag_test_john.py
+🚀  dags/jobs/analytics/my_analysis_dag__test__john.py  →  gs://airflow-data-bucket-dev/dags/jobs/analytics/my_analysis_dag__test__john.py
 ✅ Done. DAG should appear in Airflow dev within 2-3 min.
 ```
 
@@ -104,7 +104,7 @@ schedule_interval changed: "get_airflow_schedule(schedule)" → "None"
 
 1. Open the Airflow UI for your environment (see links in [Resources](#resources))
 2. Wait 2-3 minutes for Airflow to parse the new file
-3. Search for your test DAG name (e.g., `my_analysis_dag_test_john`)
+3. Search for your test DAG name (e.g., `my_analysis_dag__test__john`)
 4. Click **▶️ Trigger DAG** and specify your branch in the config:
    ```json
    { "branch": "feature/improve-analysis" }
@@ -128,13 +128,13 @@ After testing and merging to master:
 
 ```bash
 # Remove local test copy
-rm dags/jobs/analytics/my_analysis_dag_test_john.py
+rm dags/jobs/analytics/my_analysis_dag__test__john.py
 
 # Remove from GCS (replace dev with the env you uploaded to)
-gsutil rm gs://airflow-data-bucket-dev/dags/jobs/analytics/my_analysis_dag_test_john.py
+gsutil rm gs://airflow-data-bucket-dev/dags/jobs/analytics/my_analysis_dag__test__john.py
 ```
 
-> Test DAGs matching `*_test_*.py` are automatically purged from **all environments** after 14 days by the `purge_test_dags` DAG (runs twice daily at 3h and 18h).
+> Test DAGs matching `*__test__*.py` are automatically purged from **all environments** after 14 days by the `purge_test_dags` DAG (runs twice daily at 3h and 18h).
 
 ---
 
@@ -158,7 +158,7 @@ All commands run from `orchestration/`. `ENV` defaults to `dev`.
 The script is called by `make create-test-dag` but can also be run directly for advanced use cases:
 
 ```bash
-# Custom suffix instead of _test_<username>
+# Custom suffix instead of __test__<username>
 ./scripts/create_test_dag.py --suffix debug dags/path/to/my_dag.py
 
 # Custom output path

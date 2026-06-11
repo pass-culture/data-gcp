@@ -65,35 +65,34 @@ show_airflow_logs:
 
 ENV ?= dev
 
-create-test-dag: ## Create a local test copy of a DAG (no upload). make create-test-dag DAG=<name>
-	@PATTERN=$$(echo "$(DAG)" | sed 's/\.py$$//').py; \
-	DAG_PATH=$$(find dags -name "$$PATTERN" -not -path "*/__pycache__/*" 2>/dev/null); \
-	[ -z "$$DAG_PATH" ] && { echo "❌ No DAG found matching: $$PATTERN"; exit 1; }; \
-	COUNT=$$(echo "$$DAG_PATH" | wc -l | tr -d ' '); \
-	[ "$$COUNT" -gt 1 ] && { echo "❌ Multiple matches — be more specific:"; echo "$$DAG_PATH"; exit 1; }; \
-	uv run scripts/create_test_dag.py "$$DAG_PATH"
+# Shared search tool to get a .py dag file path from it's name
+define FETCH_DAG_PATH
+[ -z "$(DAG)" ] && { echo "❌ DAG variable is required. Usage: make $(MAKECMDGOALS) DAG=<name>"; exit 1; }; \
+PATTERN=$$(echo "$(DAG)" | sed 's/\.py$$//').py; \
+DAG_PATH=$$(find dags -name "$$PATTERN" -not -path "*/__pycache__/*" 2>/dev/null); \
+[ -z "$$DAG_PATH" ] && { echo "❌ No DAG found matching: $$PATTERN"; exit 1; }; \
+COUNT=$$(echo "$$DAG_PATH" | wc -l | tr -d ' '); \
+[ "$$COUNT" -gt 1 ] && { echo "❌ Multiple matches — be more specific:"; echo "$$DAG_PATH"; exit 1; }
+endef
 
-push-dag: check-auth ## Upload a DAG file to GCS. make push-dag DAG=<name> [ENV=dev]
-	@PATTERN=$$(echo "$(DAG)" | sed 's/\.py$$//').py; \
-	DAG_PATH=$$(find dags -name "$$PATTERN" -not -path "*/__pycache__/*" 2>/dev/null); \
-	[ -z "$$DAG_PATH" ] && { echo "❌ No DAG found matching: $$PATTERN"; exit 1; }; \
-	COUNT=$$(echo "$$DAG_PATH" | wc -l | tr -d ' '); \
-	[ "$$COUNT" -gt 1 ] && { echo "❌ Multiple matches — be more specific:"; echo "$$DAG_PATH"; exit 1; }; \
+## Create a local test copy of a DAG (no upload). make create-test-dag DAG=<name>
+create-test-dag:
+	@$(FETCH_DAG_PATH); \
+	uv run scripts/create_test_dag.py "$$DAG_PATH" --force
+
+## Upload a DAG file to GCS. make push-dag DAG=<name> [ENV=dev]
+push-dag: check-auth
+	@$(FETCH_DAG_PATH); \
 	echo "🚀  $$DAG_PATH  →  gs://airflow-data-bucket-$(ENV)/$$DAG_PATH"; \
+	echo ""; \
 	gcloud storage cp "$$DAG_PATH" "gs://airflow-data-bucket-$(ENV)/$$DAG_PATH"; \
+	echo ""; \
 	echo "✅ Done. DAG should appear in Airflow $(ENV) within 1-2 min."
 
-test-dag: check-auth ## Create a test copy and push it. make test-dag DAG=<name> [ENV=dev]
-	@PATTERN=$$(echo "$(DAG)" | sed 's/\.py$$//').py; \
-	DAG_PATH=$$(find dags -name "$$PATTERN" -not -path "*/__pycache__/*" 2>/dev/null); \
-	[ -z "$$DAG_PATH" ] && { echo "❌ No DAG found matching: $$PATTERN"; exit 1; }; \
-	COUNT=$$(echo "$$DAG_PATH" | wc -l | tr -d ' '); \
-	[ "$$COUNT" -gt 1 ] && { echo "❌ Multiple matches — be more specific:"; echo "$$DAG_PATH"; exit 1; }; \
-	uv run scripts/create_test_dag.py --force "$$DAG_PATH" || exit 1; \
-	_GIT_USER=$$(git config user.name 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr ' ' '_'); \
-	_DAG_USER=$${_GIT_USER:-$$(whoami | tr '[:upper:]' '[:lower:]')}; \
+## Create a test copy and push it. make test-dag DAG=<name> [ENV=dev]
+test-dag: check-auth
+	@$(FETCH_DAG_PATH); \
+	uv run scripts/create_test_dag.py --no-hint --force "$$DAG_PATH" || exit 1; \
+	_DAG_USER=$$(whoami | tr '[:upper:]' '[:lower:]'); \
 	STEM=$$(basename "$$DAG_PATH" .py); \
-	TEST_DAG="$$(dirname "$$DAG_PATH")/$${STEM}_test_$${_DAG_USER}.py"; \
-	echo "🚀  $$TEST_DAG  →  gs://airflow-data-bucket-$(ENV)/$$TEST_DAG"; \
-	gcloud storage cp "$$TEST_DAG" "gs://airflow-data-bucket-$(ENV)/$$TEST_DAG"; \
-	echo "✅ Done. DAG should appear in Airflow $(ENV) within 1-2 min."
+	$(MAKE) push-dag DAG=$${STEM}__test__$${_DAG_USER}

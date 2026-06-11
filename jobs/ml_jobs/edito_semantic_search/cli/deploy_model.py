@@ -7,6 +7,7 @@ from loguru import logger
 
 from constants import (
     ENDPOINT_NAME,
+    ENV_SHORT_NAME,
     EXPERIMENT_NAME,
     GCP_PROJECT,
     INSTANCE_TYPE,
@@ -221,15 +222,11 @@ def main() -> None:
     logger.info(f"Model uploaded to VertexAI registry: {model.resource_name}")
 
     # Deploy it to an endpoint
-    logger.warning(
-        "Skipping model deployment because we lack the right permissions "
-        "on the service account. Please deploy manually for now."
-    )
-    # handler.deploy_model(model)
+    handler.deploy_model(model)
 
-    # # Delete old model versions
-    # max_model_versions = 5 if ENV_SHORT_NAME == "prod" else 1
-    # handler.clean_model_versions(max_model_versions)
+    # Delete old model versions
+    max_model_versions = 5 if ENV_SHORT_NAME == "prod" else 1
+    handler.clean_model_versions(max_model_versions)
 
 
 if __name__ == "__main__":

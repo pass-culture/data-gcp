@@ -6,10 +6,11 @@ using the class-based architecture for better organization and maintainability.
 """
 
 import typer
-from jobs.etl_jobs.external.appfollow.client import AppFollowClient
-from jobs.etl_jobs.external.appfollow.etl import AppFollowETL
-from jobs.etl_jobs.external.appfollow.utils import API_TOKEN
 from loguru import logger
+
+from client import AppFollowClient
+from etl import AppFollowETL
+from utils import API_TOKEN
 
 
 def main(

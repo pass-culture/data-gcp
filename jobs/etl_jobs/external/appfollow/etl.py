@@ -8,13 +8,14 @@ AppFollow analytics data into BigQuery.
 from typing import Any, Dict, List
 
 import pandas as pd
-from jobs.etl_jobs.external.appfollow.client import AppFollowAPIError, AppFollowClient
-from jobs.etl_jobs.external.appfollow.utils import (
+from loguru import logger
+
+from client import AppFollowAPIError, AppFollowClient
+from utils import (
     APPFOLLOW_REVIEWS,
     APPFOLLOW_REVIEWS_SCHEMA,
     save_to_bq,
 )
-from loguru import logger
 
 
 class AppFollowETL:

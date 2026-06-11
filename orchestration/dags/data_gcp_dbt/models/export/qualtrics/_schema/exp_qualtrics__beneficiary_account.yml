@@ -21,7 +21,8 @@ models:
         data_tests:
           - not_null
           - accepted_values:
-              values: ["GRANT_15_17", "GRANT_18"]
+              arguments:
+                values: ["GRANT_15_17", "GRANT_18"]
       - name: user_civility
         description: "{{ doc('column__user_civility') }}"
         data_type: STRING

@@ -347,6 +347,56 @@ def _replace_schedule(
     return new_lines, None, False  # schedule param not found in constructor
 
 
+def _add_or_replace_tags(
+    lines: list[str], dag_start: int, dag_end: int, username: str
+) -> tuple[list[str], tuple[str, str, str]]:
+    """
+    Replace tags= with ["TEST", <username>] inside the DAG() constructor, or inject
+    it as a new line if absent.
+
+    Full replacement avoids any list-parsing complexity — test tags are authoritative,
+    whatever was there before is irrelevant for a test copy.
+    Returns (lines, change_tuple).
+    """
+    new_tags_value = f'["TEST", "{username}"]'
+
+    # Case 1 — tags= already present: splice in the new value - same logic as _replace_schedule
+    for i in range(dag_start, dag_end):
+        line = lines[i]
+        match = re.search(r"(?<!\w)(tags\s*=\s*)(?P<value>\[.*?\])", line)
+        if not match or re.match(r"\s*#", line):
+            continue
+        original = match.group("value")
+        lines[i] = _splice(line, match, new_tags_value)
+        return lines, ("tags", original, new_tags_value)
+
+    # Case 2 — tags= absent: inject just before the closing ) of the constructor,
+    # but before any **kwargs unpacking since keyword args cannot follow ** in Python.
+    insert_at = dag_end
+    for i in range(dag_end - 1, dag_start, -1):
+        stripped = lines[i].strip().rstrip(",")
+        if stripped.startswith("**"):
+            insert_at = i
+        else:
+            break
+
+    # Indent is read from the insert_at line — either the closing ) or the **kwargs line,
+    # whichever the insertion point ended up at. Guaranteed to match param indentation
+    # regardless of context manager nesting, no guessing needed.
+    ref_line = lines[insert_at]
+    indent = ref_line[: len(ref_line) - len(ref_line.lstrip())]
+
+    # Ensure the line just above the insertion point has a trailing comma
+    # since we are inserting a new argument after it
+    prev = lines[insert_at - 1]
+    if prev.rstrip() and not prev.rstrip().endswith(","):
+        lines[insert_at - 1] = prev.rstrip() + ","
+
+    new_line = f"{indent}tags={new_tags_value},"
+    lines.insert(insert_at, new_line)
+    return lines, ("tags", "", new_tags_value)
+
+
 # ---------------------------------------------------------------------------
 # Main rewrite orchestrator
 # ---------------------------------------------------------------------------
@@ -395,10 +445,22 @@ def modify_content(content: str, suffix: str) -> tuple[str, list[tuple[str, str,
             "constructor — cannot guarantee the test DAG won't run automatically. Aborting."
         )
         sys.exit(1)
+
     if change:
         changes.append(change)
+        # _replace_schedule may have collapsed a multi-line value, invalidating
+        # dag_start/dag_end — recompute before any subsequent constructor-range operation
+        try:
+            dag_start, dag_end = find_dag_constructor_range(lines)
+        except ValueError as e:
+            print_error(str(e))
+            sys.exit(1)
 
-    # 5. Guard: ensure the dag_id was actually renamed (unsupported patterns like DagConfig)
+    # 5. Add or replace tags= with TEST marker inside the constructor
+    lines, change = _add_or_replace_tags(lines, dag_start, dag_end, get_username())
+    changes.append(change)
+
+    # 6. Guard: ensure the dag_id was actually renamed (unsupported patterns like DagConfig)
     if not any(t in ("DAG_NAME", "DAG_ID", "dag_id") for t, *_ in changes):
         print_error(
             "Could not rename the dag_id — the test copy would conflict with the "

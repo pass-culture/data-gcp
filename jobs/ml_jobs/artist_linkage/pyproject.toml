@@ -3,7 +3,7 @@ name = "artist-linkage"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11, <3.14"
 dependencies = [
     "async-timeout>=4.0.3",
     "gcsfs>=2024.9.0.post1",

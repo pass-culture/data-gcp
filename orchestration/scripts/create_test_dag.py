@@ -70,6 +70,42 @@ def print_detail(label: str, value: str) -> None:
 
 
 # ---------------------------------------------------------------------------
+# PATH management
+# ---------------------------------------------------------------------------
+
+
+def find_orchestration_root() -> Path:
+    """Climbs up from the script's location to find the 'orchestration' folder."""
+    script_path = Path(__file__).resolve()
+
+    for parent in script_path.parents:
+        if parent.name == "orchestration":
+            return parent
+
+    # If the loop finishes without returning, the folder wasn't found
+    raise FileNotFoundError(
+        f"Security Configuration Error: Could not locate the required 'orchestration' "
+        f"root directory anywhere in the path ancestry of this script ({script_path})."
+    )
+
+
+def get_secure_path(user_input: str, base_dir: Path) -> Path:
+    """
+    Resolves a path string securely and ensures it stays within the trusted base directory.
+    """
+    resolved_path = Path(user_input).resolve()
+
+    # Verify that the path resides strictly inside our base directory
+    if base_dir not in resolved_path.parents and resolved_path != base_dir:
+        print_error(
+            f"Security Error: Access denied. Path '{user_input}' escapes the boundary restrictions."
+        )
+        sys.exit(1)
+
+    return resolved_path
+
+
+# ---------------------------------------------------------------------------
 # Username
 # ---------------------------------------------------------------------------
 
@@ -100,7 +136,7 @@ def find_dag_constructor_range(lines: list[str]) -> tuple[int, int]:
     # ^\s* — anchored to avoid matching DAG( inside strings or nested calls
     # \w*DAG — covers subclasses like GridDAG
     # (?:with\s+)? / (?:[\w.]+\s*=\s*)? — context-manager and assignment prefixes
-    dag_line_re = re.compile(r"^\s*(?:(?:with\s+)?(?:[\w.]+\s*=\s*)?\w*DAG)\s*\(")
+    dag_line_re = re.compile(r"^\s*(?:with\s+)?(?:[\w.]+\s*=\s*)?\w*DAG\s*\(")
     decorator_fail_re = re.compile(r"^\s*@dag\b")
 
     # Parsing Python using raw string indices instead of the 'ast' module is a sin and it's exactly what this function does...
@@ -448,10 +484,22 @@ Examples:
     parser.add_argument("--no-hint", action="store_true", help="Hide next steps hints")
     args = parser.parse_args()
 
-    if not validate_dag_file(args.dag_file):
+    # Sanitize string inputs to prevent indirect path traversal injection
+    if args.suffix and not re.match(r"^[\w-]+$", args.suffix):
+        print_error(
+            "Security Error: Invalid characters in suffix. Only alphanumeric characters, underscores, and hyphens are allowed."
+        )
         sys.exit(1)
 
-    input_path = Path(args.dag_file).resolve()
+    # Securely resolve the input path first before validation or reading
+    orchestration_root = find_orchestration_root()
+    input_path = get_secure_path(args.dag_file, orchestration_root)
+
+    if not validate_dag_file(str(input_path)):
+        sys.exit(1)
+
+    orchestration_root = find_orchestration_root()
+    input_path = get_secure_path(args.dag_file, orchestration_root)
 
     try:
         content = input_path.read_text(encoding="utf-8")
@@ -459,21 +507,21 @@ Examples:
         print_error(f"Failed to read file: {e}")
         sys.exit(1)
 
-    suffix = (
-        (
-            f"_{args.suffix}"
-            if args.suffix and not args.suffix.startswith("_")
-            else args.suffix
-        )
-        if args.suffix
-        else f"{DEFAULT_COPY_BASE_SUFFIX}{get_username()}"
-    )
+    if not args.suffix:
+        suffix = f"{DEFAULT_COPY_BASE_SUFFIX}{get_username()}"
+    elif not args.suffix.startswith("_"):
+        suffix = f"_{args.suffix}"
+    else:
+        suffix = args.suffix
 
     modified_content, changes = modify_content(content, suffix)
 
-    output_path = (
-        Path(args.output) if args.output else generate_output_path(input_path, suffix)
-    )
+    if args.output:
+        output_path = get_secure_path(args.output, orchestration_root)
+    else:
+        # Pass the dynamic path through validation to ensure it stays in the boundary
+        generated_path = generate_output_path(input_path, suffix)
+        output_path = get_secure_path(str(generated_path), orchestration_root)
 
     if args.dry_run:
         print()

@@ -926,8 +926,8 @@ wheels = [
 ]
 
 [[package]]
-name = "google-cloud-secret-manager"
-version = "2.26.0"
+name = "google-cloud-iam"
+version = "2.23.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "google-api-core", extra = ["grpc"], marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
@@ -937,9 +937,9 @@ dependencies = [
     { name = "proto-plus", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "protobuf", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c3/9c/a6c7144bc96df77376ae3fcc916fb639c40814c2e4bba2051d31dc136cd0/google_cloud_secret_manager-2.26.0.tar.gz", hash = "sha256:0d1d6f76327685a0ed78a4cf50f289e1bfbbe56026ed0affa98663b86d6d50d6", size = 277603, upload-time = "2025-12-18T00:29:31.065Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0d/5f/128a1462354e0f8f0b7baff34b5a1a4e5cd7aee100d8db0eb39843b43d1d/google_cloud_iam-2.23.0.tar.gz", hash = "sha256:49246f6221026d381cff4f8d804daf1bb6416153f2504bf5ef54d4af2450b828", size = 561685, upload-time = "2026-05-07T08:04:16.253Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c8/30/a58739dd12cec0f7f761ed1efb518aed2250a407d4ed14c5a0eeee7eaaf9/google_cloud_secret_manager-2.26.0-py3-none-any.whl", hash = "sha256:940a5447a6ec9951446fd1a0f22c81a4303fde164cd747aae152c5f5c8e6723e", size = 223623, upload-time = "2025-12-18T00:29:29.311Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/ee/470f0c337a235b12c6a880df25809b8b11b33986510d66450cb5ef540a83/google_cloud_iam-2.23.0-py3-none-any.whl", hash = "sha256:a123ac45080a5c1735218a6b3db4c6e6ea12a1cdc86feec1c30ad1ede6c91fc6", size = 515952, upload-time = "2026-05-07T08:02:48.144Z" },
 ]
 
 [[package]]
@@ -1025,7 +1025,7 @@ dependencies = [
     { name = "gcsfs", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "google-auth", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "google-cloud", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "google-cloud-secret-manager", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "google-cloud-iam", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "google-cloud-storage", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "ipykernel", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "lancedb", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
@@ -1055,7 +1055,7 @@ requires-dist = [
     { name = "gcsfs", specifier = ">=2025.9.0" },
     { name = "google-auth", specifier = ">=2.41.1" },
     { name = "google-cloud", specifier = ">=0.34.0" },
-    { name = "google-cloud-secret-manager", specifier = ">=2.25.0" },
+    { name = "google-cloud-iam", specifier = ">=2.22.0" },
     { name = "google-cloud-storage", specifier = ">=2.16.0" },
     { name = "ipykernel", specifier = ">=6.30.1" },
     { name = "lancedb", specifier = ">=0.25.1" },

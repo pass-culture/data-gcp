@@ -5,6 +5,7 @@ from pathlib import Path
 # GCP project and Environment
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-prod")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "prod")
+SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}@{GCP_PROJECT_ID}.iam.gserviceaccount.com"
 
 
 # Project root directory

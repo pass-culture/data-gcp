@@ -32,15 +32,27 @@ dependencies = [
   "pylance>=2.0.1",
 ]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src", "scripts"]
-
-[project.scripts]
-cli = "scripts.cli:app"
+[tool.uv]
+environments = [
+    "sys_platform == 'darwin'",
+    "sys_platform == 'linux'",
+]
+constraint-dependencies = [
+    "mlflow >= 3.12.0", # CVE-2026-0545
+    "aiohttp >= 3.14.0", # CVE-2026-47265, CVE-2026-34993
+    "gitpython >= 3.1.50", # CVE-2026-44243, GHSA-mv93-w799-cj2w, CVE-2026-42215, CVE-2026-44244, CVE-2026-42284
+    "idna >= 3.15", # CVE-2026-45409
+    "jupyter-server >= 2.18.0", # CVE-2026-40110, CVE-2026-35397, CVE-2026-40934, CVE-2025-61669
+    "jupyterlab >= 4.5.7", # CVE-2026-42266, CVE-2026-42557
+    "urllib3 >= 2.7.0", # CVE-2026-44432, CVE-2026-44431
+    "mako >= 1.3.12", # CVE-2026-44307, CVE-2026-41205
+    "mistune >= 3.2.1", # CVE-2026-44896, CVE-2026-44898, CVE-2026-44708, CVE-2026-33079, CVE-2026-44899, CVE-2026-44897
+    "notebook >= 7.5.6", # CVE-2026-42557, CVE-2026-40171
+    "pygments >= 2.20.0", # CVE-2026-4539
+    "python-dotenv >= 1.2.2", # CVE-2026-28684
+    "starlette >= 1.0.1", # CVE-2026-48710
+]
 
 [tool.uv.sources]
 torch = [
@@ -58,6 +70,18 @@ explicit = true
 name = "pytorch-cu128"
 url = "https://download.pytorch.org/whl/cu128"
 explicit = true
+
+## build
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src", "scripts"]
+
+[project.scripts]
+cli = "scripts.cli:app"
 
 
 ## ruff
@@ -97,24 +121,3 @@ runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 # Pydantic needs to be able to evaluate types at runtime
 # see https://pypi.org/project/flake8-type-checking/ for flake8-type-checking documentation
 # see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation
-
-[tool.uv]
-environments = [
-    "sys_platform == 'darwin'",
-    "sys_platform == 'linux'",
-]
-constraint-dependencies = [
-    "mlflow >= 3.12.0", # CVE-2026-0545
-    "aiohttp >= 3.14.0", # CVE-2026-47265, CVE-2026-34993
-    "gitpython >= 3.1.50", # CVE-2026-44243, GHSA-mv93-w799-cj2w, CVE-2026-42215, CVE-2026-44244, CVE-2026-42284
-    "idna >= 3.15", # CVE-2026-45409
-    "jupyter-server >= 2.18.0", # CVE-2026-40110, CVE-2026-35397, CVE-2026-40934, CVE-2025-61669
-    "jupyterlab >= 4.5.7", # CVE-2026-42266, CVE-2026-42557
-    "urllib3 >= 2.7.0", # CVE-2026-44432, CVE-2026-44431
-    "mako >= 1.3.12", # CVE-2026-44307, CVE-2026-41205
-    "mistune >= 3.2.1", # CVE-2026-44896, CVE-2026-44898, CVE-2026-44708, CVE-2026-33079, CVE-2026-44899, CVE-2026-44897
-    "notebook >= 7.5.6", # CVE-2026-42557, CVE-2026-40171
-    "pygments >= 2.20.0", # CVE-2026-4539
-    "python-dotenv >= 1.2.2", # CVE-2026-28684
-    "starlette >= 1.0.1", # CVE-2026-48710
-]

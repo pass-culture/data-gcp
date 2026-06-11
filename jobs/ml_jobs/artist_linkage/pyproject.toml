@@ -3,7 +3,7 @@ name = "artist-linkage"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11, <3.14"
 dependencies = [
     "async-timeout>=4.0.3",
     "gcsfs>=2024.9.0.post1",
@@ -17,8 +17,8 @@ dependencies = [
     "mlflow>=3.10.1",
     "mwparserfromhell>=0.7.2",
     "pandas[parquet,performance]>=2.2.3",
-    "pydantic-ai>=1.56.0",
-    "pytest>=8.2.1",
+    "pydantic-ai>=1.99.0",
+    "pytest>=9.0.3",
     "rapidfuzz>=3.9.1",
     "ruff>=0.4.5",
     "scikit-learn>=1.5.0",
@@ -88,4 +88,19 @@ environments = [
 ]
 constraint-dependencies = [
     "mlflow >= 3.12.0", # CVE-2026-0545
+    "aiohttp >= 3.14.0", # CVE-2026-47265, CVE-2026-34993
+    "authlib >= 1.6.12", # CVE-2026-41425, CVE-2026-44681, CVE-2026-41479
+    "cryptography >= 46.0.7", # CVE-2026-39892
+    "gitpython >= 3.1.50", # CVE-2026-44243, CVE-2026-42215, CVE-2026-44244, CVE-2026-42284
+    "idna >= 3.15", # CVE-2026-45409
+    "mako >= 1.3.12", # CVE-2026-44307, CVE-2026-41205
+    "pillow >= 12.2.0", # CVE-2026-42309, CVE-2026-42311, CVE-2026-42310, CVE-2026-40192, CVE-2026-42308
+    "pyarrow >= 23.0.1", # CVE-2026-25087
+    "pydantic-ai-slim >= 1.99.0", # CVE-2026-46678
+    "pyjwt >= 2.13.0", # CVE-2026-48522, CVE-2026-48524, CVE-2026-48525, CVE-2026-48526
+    "python-dotenv >= 1.2.2", # CVE-2026-28684
+    "python-multipart >= 0.0.27", # CVE-2026-40347, CVE-2026-42561
+    "starlette >= 1.0.1", # CVE-2026-48710
+    "transformers >= 5.0.0rc3", # CVE-2026-1839
+    "urllib3 >= 2.7.0", # CVE-2026-44432, CVE-2026-44431
 ]

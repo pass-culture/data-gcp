@@ -53,6 +53,9 @@ constraint-dependencies = [
     "python-dotenv >= 1.2.2", # CVE-2026-28684
     "starlette >= 1.0.1", # CVE-2026-48710
 ]
+override-dependencies = [
+    "transformers >= 5.0.0", # CVE-2026-1839 + incompatibility with recommenders 1.2.1 (last version)
+]
 
 [tool.uv.sources]
 torch = [

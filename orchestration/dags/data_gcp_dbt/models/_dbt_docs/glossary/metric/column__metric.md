@@ -150,6 +150,8 @@ title: Metrics
 {% docs column__pct_sept_dec_reimbursed_amount_spent %} Sept-dec reimbursed amount / sept-dec deposit (only for the institutions and scholar year with a split deposit).  {% enddocs %}
 {% docs column__pct_jan_aug_reimbursed_amount_spent %} Jan-aug reimbursed amount / jan-aug deposit (only for the institutions and scholar year with a split deposit).  {% enddocs %}
 {% docs column__pct_all_year_reimbursed_amount_spent %} Scholar year reimbursed amount / scholar year deposit (if the deposit is split it is the sum of sept-dec and jan-aug deposit).  {% enddocs %}
+{% docs column__total_created_mediation_individual_offers %} Total number of individual offers with mediation (cultural outreach). {% enddocs %}
+{% docs column__has_mediation_offer %} Indicates whether the venue has at least one offer with mediation (cultural outreach). {% enddocs %}
 
 {% docs column__metrics__total_actual_beneficiaries %}
 The total count of active beneficiaries at the time of calculation. To be included, a user must have a non-expired credit and a remaining amount of credit available for booking.

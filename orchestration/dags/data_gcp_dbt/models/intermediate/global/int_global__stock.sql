@@ -56,6 +56,8 @@ select
     o.last_stock_price,
     o.venue_is_permanent,
     o.is_local_authority,
-    o.offerer_is_epn
+    o.offerer_is_epn,
+    o.offer_has_mediation,
+    o.cultural_outreach_status
 from {{ ref("int_applicative__stock") }} as s
 inner join {{ ref("int_global__offer") }} as o on s.offer_id = o.offer_id

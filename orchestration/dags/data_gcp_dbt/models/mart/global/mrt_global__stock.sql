@@ -20,5 +20,7 @@ select
     price_category_id,
     price_category_label,
     venue_department_code,
-    offerer_is_epn
+    offerer_is_epn,
+    offer_has_mediation,
+    cultural_outreach_status
 from {{ ref("int_global__stock") }}

@@ -21,8 +21,30 @@ APPFOLLOW_REVIEWS_SCHEMA = {
     "store": "STRING",
     "answer_text": "STRING",
     "answer_date": "STRING",
+    "app_version": "STRING",
     "ext_id": "STRING",
 }
+
+
+class SecretStr:
+    """String wrapper that refuses to reveal its value in repr/str/logging."""
+
+    __slots__ = ("_value",)
+
+    def __init__(self, value: str):
+        self._value = value
+
+    def get_secret_value(self) -> str:
+        return self._value
+
+    def __repr__(self) -> str:
+        return "SecretStr('**********')"
+
+    def __str__(self) -> str:
+        return "**********"
+
+    def __len__(self) -> int:
+        return len(self._value)
 
 
 def to_sql_type(_type):
@@ -92,6 +114,9 @@ def access_secret_data(project_id, secret_id, version_id=1, default=None):
         return default
 
 
-API_TOKEN = access_secret_data(
-    GCP_PROJECT_ID, f"appfollow-api-token-{ENV_SHORT_NAME}", version_id="latest"
+API_TOKEN = SecretStr(
+    access_secret_data(
+        GCP_PROJECT_ID, f"appfollow-api-token-{ENV_SHORT_NAME}", version_id="latest"
+    )
+    or ""
 )

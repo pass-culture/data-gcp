@@ -4,11 +4,13 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.python import BranchPythonOperator
 from common import macros
-from common.callback import on_failure_vm_callback
+from common.alerts.task_fail import task_fail_slack_alert
 from common.config import DAG_FOLDER, DAG_TAGS, ENV_SHORT_NAME, GCP_PROJECT_ID
-from common.operators.kubernetes import CustomKubernetesPodOperator
+from common.operators.kubernetes import (
+    DEFAULT_CONTAINER_RESOURCES,
+    CustomKubernetesPodOperator,
+)
 from common.utils import get_airflow_schedule
-from kubernetes.client import V1ResourceRequirements
 
 from jobs.crons import SCHEDULE_DICT
 
@@ -18,22 +20,11 @@ APPS = {"ios": "1557887412", "android": "app.passculture.webapp"}
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 1, 1),
-    "on_failure_callback": on_failure_vm_callback,
+    "on_failure_callback": task_fail_slack_alert,
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }
-
-container_resources = V1ResourceRequirements(
-    requests={
-        "cpu": "0.2",
-        "memory": "500Mi",
-    },
-    limits={
-        "cpu": "0.5",
-        "memory": "1Gi",
-    },
-)
 
 
 def choose_platform_to_run(**kwargs):
@@ -100,6 +91,6 @@ with DAG(
                 "--ext-id",
                 ext_id,
             ],
-            container_resources=container_resources,
+            container_resources=DEFAULT_CONTAINER_RESOURCES,
         )
         branch_platform >> task

@@ -5,7 +5,7 @@ This module provides classes for extracting, transforming, and loading
 AppFollow analytics data into BigQuery.
 """
 
-from typing import Any, Dict, List
+from typing import Any
 
 import pandas as pd
 from loguru import logger
@@ -37,7 +37,7 @@ class AppFollowETL:
 
     def extract_reviews_data(
         self, ext_id: str, from_date: str, to_date: str
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Extract all reviews for a specific app within a date range.
 
@@ -57,7 +57,7 @@ class AppFollowETL:
             logger.error(f"Error extracting AppFollow reviews data for: {ext_id}", e)
             return []
 
-    def transform_reviews_data(self, reviews: List[Dict[str, Any]]) -> pd.DataFrame:
+    def transform_reviews_data(self, reviews: list[dict[str, Any]]) -> pd.DataFrame:
         """
         Transform raw AppFollow reviews data into a DataFrame.
 
@@ -79,6 +79,7 @@ class AppFollowETL:
                 "store": review.get("store"),
                 "answer_text": review.get("answer_text"),
                 "answer_date": review.get("answer_date"),
+                "app_version": review.get("app_version"),
             }
             for review in reviews
         ]

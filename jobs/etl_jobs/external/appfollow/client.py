@@ -5,6 +5,8 @@ from loguru import logger
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
+from utils import SecretStr
+
 
 class AppFollowAPIError(Exception):
     """Custom exception for AppFollow API errors."""
@@ -22,7 +24,7 @@ class AppFollowClient:
 
     BASE_API_URL = "https://api.appfollow.io/api/v2"
 
-    def __init__(self, api_token: str):
+    def __init__(self, api_token: SecretStr):
         self.api_token = api_token
         self.session = self._create_session()
 
@@ -33,7 +35,7 @@ class AppFollowClient:
         session.headers.update(
             {
                 "accept": "application/json",
-                "X-AppFollow-API-Token": self.api_token,
+                "X-AppFollow-API-Token": self.api_token.get_secret_value(),
             }
         )
 

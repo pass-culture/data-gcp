@@ -98,7 +98,7 @@ select
     o.offer_advice_content,
     o.offer_has_mediation,
     o.cultural_outreach_status,
-    o.cultural_outreach_claimed_at,
+    o.cultural_outreach_claimed_date,
     v.offerer_validation_status
 from {{ ref("int_applicative__offer") }} as o
 left join {{ ref("int_global__venue") }} as v on o.venue_id = v.venue_id

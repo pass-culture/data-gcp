@@ -221,7 +221,7 @@ select
     offer_last_advice.advice_content as offer_advice_content,
     coalesce(co.offer_has_mediation, false) as offer_has_mediation,
     coalesce(co.cultural_outreach_status, 'NOT_APPLIED') as cultural_outreach_status,
-    co.cultural_outreach_claimed_at
+    co.cultural_outreach_claimed_date
 from {{ ref("int_applicative__extract_offer") }} as o
 left join {{ ref("int_applicative__offer_item_id") }} as ii on ii.offer_id = o.offer_id
 left join stocks_grouped_by_offers on stocks_grouped_by_offers.offer_id = o.offer_id

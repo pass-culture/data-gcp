@@ -3,9 +3,11 @@ from unittest.mock import patch
 import numpy as np
 import pandas as pd
 import pytest
+from google.api_core.exceptions import NotFound
 
 from domain.archiving import (
     MoveToArchive,
+    _ensure_archiving_log_columns,
     _first_ancestor,
     _is_collection_empty,
     _is_dashboard_dead,
@@ -339,12 +341,42 @@ class TestMoveToArchive:
         assert log_entry["new_collection_id"] == 99
         assert log_entry["previous_collection_id"] == 10
         assert log_entry["parent_folder"] == "adhoc"
+        # No diagnostics recorded on success.
+        assert log_entry["error_reason"] is None
+        assert log_entry["http_status"] is None
 
     def test_move_object_failure(self, metabase):
         metabase.update_card_collections.return_value = {"status": "error"}
         m = MoveToArchive(self._card(), 99, metabase)
         log_entry = m.move_object()
         assert log_entry["status"] == "error"
+        assert log_entry["error_reason"] is not None
+
+    def test_move_object_json_rejection_records_reason(self, metabase):
+        # A Metabase JSON error has no "status" key -> null status, but the
+        # cause is captured in error_reason for BQ-side diagnosis.
+        metabase.update_card_collections.return_value = {
+            "cause": "Uses content that is not remote synced.",
+            "data": {"status-code": 400},
+        }
+        m = MoveToArchive(self._card(), 99, metabase)
+        log_entry = m.move_object()
+        assert log_entry["status"] is None
+        assert "not remote synced" in log_entry["error_reason"]
+
+    def test_move_object_null_status_captures_http_body(self, metabase):
+        # Non-JSON response (e.g. IAP login-page redirect) surfaced by
+        # update_card_collections as {"status": None, "http_status", "body"}.
+        metabase.update_card_collections.return_value = {
+            "status": None,
+            "http_status": 302,
+            "body": "<html>Sign in with Google</html>",
+        }
+        m = MoveToArchive(self._card(), 99, metabase)
+        log_entry = m.move_object()
+        assert log_entry["status"] is None
+        assert log_entry["http_status"] == 302
+        assert "Sign in" in log_entry["error_reason"]
 
     def test_move_object_uses_archive_collection_id(self, metabase):
         metabase.update_card_collections.return_value = {"status": "ok"}
@@ -412,6 +444,11 @@ class TestSummarizeMetabaseError:
             "data": {"status-code": 500},
         }
         assert "boom" in _summarize_metabase_error(result)
+
+    def test_body_fallback_for_non_json_response(self):
+        # Non-JSON branch of update_card_collections (IAP redirect etc.).
+        result = {"status": None, "http_status": 302, "body": "<html>login</html>"}
+        assert "login" in _summarize_metabase_error(result)
 
     def test_unknown_shape(self):
         assert _summarize_metabase_error({}) == "unknown error"
@@ -616,8 +653,9 @@ class TestLoadRecentlyFailedCardIds:
 
 
 class TestAppendArchivingLogs:
+    @patch("domain.archiving._ensure_archiving_log_columns")
     @patch("domain.archiving.pd.DataFrame.to_gbq")
-    def test_writes_single_dataframe(self, mock_to_gbq):
+    def test_writes_single_dataframe(self, mock_to_gbq, mock_ensure):
         log_entries = [
             {"id": 1, "status": "success"},
             {"id": 2, "status": "success"},
@@ -628,17 +666,42 @@ class TestAppendArchivingLogs:
         # The DataFrame written must include all entries (single batched call).
         df_written = mock_to_gbq.call_args  # to_gbq was called on the DataFrame self
         assert df_written is not None
+        # Schema is reconciled before the append so new columns don't fail it.
+        mock_ensure.assert_called_once()
 
+    @patch("domain.archiving._ensure_archiving_log_columns")
     @patch("domain.archiving.pd.DataFrame.to_gbq")
-    def test_no_op_on_empty(self, mock_to_gbq):
+    def test_no_op_on_empty(self, mock_to_gbq, mock_ensure):
         append_archiving_logs([])
         mock_to_gbq.assert_not_called()
+        mock_ensure.assert_not_called()
+
+
+class TestEnsureArchivingLogColumns:
+    @patch("domain.archiving.bigquery.Client")
+    def test_alters_existing_table(self, mock_client_cls):
+        client = mock_client_cls.return_value
+        _ensure_archiving_log_columns("p.d.archiving_log")
+        client.get_table.assert_called_once_with("p.d.archiving_log")
+        query = client.query.call_args[0][0]
+        assert "ADD COLUMN IF NOT EXISTS http_status" in query
+        assert "ADD COLUMN IF NOT EXISTS error_reason" in query
+
+    @patch("domain.archiving.bigquery.Client")
+    def test_noop_when_table_missing(self, mock_client_cls):
+        client = mock_client_cls.return_value
+        client.get_table.side_effect = NotFound("nope")
+        _ensure_archiving_log_columns("p.d.archiving_log")
+        client.query.assert_not_called()
 
 
 class TestHardArchiveStaleCards:
+    @patch("domain.archiving._ensure_archiving_log_columns")
     @patch("domain.archiving.pd.DataFrame.to_gbq")
     @patch("domain.archiving.pd.read_gbq")
-    def test_archives_candidates(self, mock_read_gbq, mock_to_gbq, metabase):
+    def test_archives_candidates(
+        self, mock_read_gbq, mock_to_gbq, mock_ensure, metabase
+    ):
         mock_read_gbq.return_value = pd.DataFrame(
             {"id": [1, 2], "card_collection_id": [99, 99]}
         )

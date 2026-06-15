@@ -17,6 +17,13 @@ models:
     description: |
       This model gives a comprehensive view of each card's execution details.
 
+  - name: int_metabase__daily_view
+    description: |
+      One row per card view event, sourced from Metabase's `view_log` (true
+      view tracking) rather than `query_execution`. Kept parallel to
+      `int_metabase__daily_query` so view-based and execution-based activity
+      can be compared before switching the archiving views signal over.
+
   - name: int_metabase__user
     description: |
       This model gives details about users from the Metabase instance.

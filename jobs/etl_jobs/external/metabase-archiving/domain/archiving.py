@@ -2,6 +2,8 @@ import logging
 import re
 
 import pandas as pd
+from google.api_core.exceptions import NotFound
+from google.cloud import bigquery
 
 from core.utils import (
     INT_METABASE_DATASET,
@@ -38,6 +40,10 @@ def _summarize_metabase_error(result):
         via = result.get("via")
         if isinstance(via, list) and via and isinstance(via[0], dict):
             cause = via[0].get("message")
+    if not cause:
+        # Non-JSON responses (e.g. an IAP login-page redirect) land here with
+        # the raw body captured by update_card_collections — surface it.
+        cause = result.get("body")
     data = result.get("data") or {}
     extras = []
     for key in ("status-code", "non-remote-synced-models"):
@@ -280,13 +286,37 @@ def load_recently_failed_card_ids(cooldown_days=30):
     return set(df["id"].astype(int).tolist())
 
 
+def _ensure_archiving_log_columns(table_id):
+    """Add the optional diagnostic columns to archiving_log if they're missing.
+
+    `to_gbq(if_exists="append")` rejects a DataFrame whose columns aren't all
+    present in the destination table, so http_status / error_reason must exist
+    before the append. No-op when the table doesn't exist yet — to_gbq creates
+    it with the full schema in that case.
+    """
+    client = bigquery.Client(project=PROJECT_NAME)
+    try:
+        client.get_table(table_id)
+    except NotFound:
+        return
+    client.query(
+        f"""
+        ALTER TABLE `{table_id}`
+        ADD COLUMN IF NOT EXISTS http_status INT64,
+        ADD COLUMN IF NOT EXISTS error_reason STRING
+        """
+    ).result()
+
+
 def append_archiving_logs(log_entries):
     """Append a batch of log entries to the archiving_log BQ table in one call."""
     if not log_entries:
         logger.info("No archiving log entries to write")
         return
+    table_id = f"{PROJECT_NAME}.{INT_METABASE_DATASET}.archiving_log"
+    _ensure_archiving_log_columns(table_id)
     pd.DataFrame(log_entries).to_gbq(
-        f"{PROJECT_NAME}.{INT_METABASE_DATASET}.archiving_log",
+        table_id,
         project_id=PROJECT_NAME,
         if_exists="append",
     )
@@ -424,6 +454,12 @@ class MoveToArchive:
             "id": self.id,
             "object_type": "card",
             "status": status,
+            "http_status": (
+                result.get("http_status") if isinstance(result, dict) else None
+            ),
+            "error_reason": (
+                None if status == "success" else _summarize_metabase_error(result)
+            ),
             "new_collection_id": self.archive_collection_id,
             "previous_collection_id": self.collection_id,
             "archived_at": pd.Timestamp.now(),

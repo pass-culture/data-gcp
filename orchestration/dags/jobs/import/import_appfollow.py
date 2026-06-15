@@ -10,6 +10,8 @@ from common.operators.kubernetes import CustomKubernetesPodOperator
 from common.utils import get_airflow_schedule
 from kubernetes.client import V1ResourceRequirements
 
+from jobs.crons import SCHEDULE_DICT
+
 DAG_NAME = "import_appfollow"
 
 APPS = {"ios": "1557887412", "android": "app.passculture.webapp"}
@@ -21,11 +23,6 @@ default_dag_args = {
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }
-schedule_dict = {
-    "prod": "0 2 * * 1",
-    "stg": "0 3 * * 1",
-    "dev": None,
-}[ENV_SHORT_NAME]
 
 container_resources = V1ResourceRequirements(
     requests={
@@ -51,7 +48,7 @@ with DAG(
     default_args=default_dag_args,
     description="Import Appfollow Data",
     on_failure_callback=None,
-    schedule=get_airflow_schedule(schedule_dict),
+    schedule=get_airflow_schedule(SCHEDULE_DICT["import_appfollow"][ENV_SHORT_NAME]),
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,

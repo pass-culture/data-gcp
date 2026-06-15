@@ -64,6 +64,7 @@ select
     o.offer_sub_type_label,
     ds.diversity_score,
     s.offerer_is_epn,
+    s.offer_has_mediation,
     rank() over (
         partition by b.user_id, s.offer_subcategory_id order by b.booking_created_at
     ) as same_category_booking_rank,

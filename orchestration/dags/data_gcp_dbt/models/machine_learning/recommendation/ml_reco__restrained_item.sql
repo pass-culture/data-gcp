@@ -29,8 +29,6 @@ select
             when eim.titelive_gtl_id like "0406%"
             then true  -- "Vie quotidienne & Bien-être",
             -- LVL3
-            when eim.titelive_gtl_id like "030201%"
-            then true  -- "Public averti (+ 18 ans)"
             when eim.titelive_gtl_id like "030403%"
             then true  -- "Kodomo"
             when eim.titelive_gtl_id like "040505%"
@@ -76,7 +74,7 @@ select
             else false
         end
     ) as blocked
-from {{ ref("mrt_global__offer") }} eod
-inner join {{ ref("ml_input__item_metadata") }} eim on eim.item_id = eod.item_id
+from {{ ref("mrt_global__offer") }} as eod
+inner join {{ ref("ml_input__item_metadata") }} as eim on eod.item_id = eim.item_id
 where eod.offer_type_domain = "BOOK"
 group by 1

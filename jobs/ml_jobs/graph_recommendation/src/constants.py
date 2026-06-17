@@ -5,6 +5,7 @@ from pathlib import Path
 # GCP project and Environment
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-prod")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "prod")
+SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}@{GCP_PROJECT_ID}.iam.gserviceaccount.com"
 
 
 # Project root directory
@@ -25,13 +26,17 @@ GTL_LABEL_LEVEL_1_COLUMN = "gtl_label_level_1"
 GTL_LABEL_LEVEL_2_COLUMN = "gtl_label_level_2"
 GTL_LABEL_LEVEL_3_COLUMN = "gtl_label_level_3"
 GTL_LABEL_LEVEL_4_COLUMN = "gtl_label_level_4"
+ITEM_TYPE_COLUMN = "item_type"
+MUSIC_LABEL_COLUMN = "music_label"
 DEFAULT_METADATA_COLUMNS: Sequence[str] = (
+    ITEM_TYPE_COLUMN,
     GTL_LABEL_LEVEL_1_COLUMN,
     GTL_LABEL_LEVEL_2_COLUMN,
     GTL_LABEL_LEVEL_3_COLUMN,
     GTL_LABEL_LEVEL_4_COLUMN,
     ARTIST_ID_COLUMN,
     SERIES_ID_COLUMN,
+    MUSIC_LABEL_COLUMN,
 )
 
 # Types

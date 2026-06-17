@@ -79,6 +79,24 @@ class DeferrableSSHJobMonitorTrigger(BaseTrigger):
                         f"\t\t Deferrable job {self.run_id} STATUS: {deferrable_status.status}"
                     )
 
+                    # Retry once on "directory not found" to guard against transient
+                    # filesystem visibility delays at trigger startup.
+                    if (
+                        deferrable_status.status == "failed"
+                        and "Job directory not found" in deferrable_status.output
+                    ):
+                        self.log.warning(
+                            f"Job directory not found for {self.run_id}, retrying in 30s "
+                            f"(transient filesystem visibility or triggerer restart)"
+                        )
+                        await asyncio.sleep(30)
+                        deferrable_status = (
+                            await job_manager.run_ssh_status_check_command()
+                        )
+                        self.log.info(
+                            f"\t\t Deferrable job {self.run_id} STATUS after retry: {deferrable_status.status}"
+                        )
+
                     # Job finished
                     if deferrable_status.status in {
                         "completed",

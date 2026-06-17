@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: int_gsheet__fraudulent_device
+    description: '{{ doc("description__int_gsheet__fraudulent_device") }}'
+    columns:
+      - name: fraudulent_device_id
+        description: Unique identifier of the device flagged as fraudulent.
+      - name: fraudulent_device_tagged_date
+        description: Date on which the device was identified and tagged as fraudulent by the Fraud team.

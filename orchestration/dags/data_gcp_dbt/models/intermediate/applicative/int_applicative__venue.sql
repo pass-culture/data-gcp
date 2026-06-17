@@ -42,7 +42,11 @@ with
             ) as total_distinct_headline_offers,
             max(is_headlined) as has_headline_offer,
             min(first_headline_date) as first_headline_offer_date,
-            max(last_headline_date) as last_headline_offer_date
+            max(last_headline_date) as last_headline_offer_date,
+            count(
+                distinct case when offer_has_mediation then offer_id end
+            ) as total_created_mediation_individual_offers,
+            max(offer_has_mediation) as has_mediation_offer
         from {{ ref("int_applicative__offer") }}
         group by venue_id
     ),
@@ -297,7 +301,11 @@ select
     coalesce(o.total_distinct_headline_offers, 0) as total_distinct_headline_offers,
     coalesce(o.has_headline_offer, false) as has_headline_offer,
     o.first_headline_offer_date,
-    o.last_headline_offer_date
+    o.last_headline_offer_date,
+    coalesce(
+        o.total_created_mediation_individual_offers, 0
+    ) as total_created_mediation_individual_offers,
+    coalesce(o.has_mediation_offer, false) as has_mediation_offer
 from {{ source("raw", "applicative_database_venue") }} as v
 left join {{ ref("int_geo__venue_location") }} as v_loc on v_loc.venue_id = v.venue_id
 left join offers_grouped_by_venue as o on o.venue_id = v.venue_id

@@ -61,8 +61,8 @@ _GIT_CLONE_SECURITY_CONTEXT = V1SecurityContext(
 )
 
 DEFAULT_CONTAINER_RESOURCES = V1ResourceRequirements(
-    requests={"cpu": "1", "memory": "2Gi"},
-    limits={"cpu": "1", "memory": "2Gi"},
+    requests={"cpu": "0.2", "memory": "500Mi"},
+    limits={"cpu": "0.5", "memory": "1Gi"},
 )
 
 default_env_vars = {

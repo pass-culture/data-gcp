@@ -28,7 +28,7 @@ dependencies = [
   "mlflow>=3.8.1",
   "google-auth>=2.41.1",
   "google-cloud>=0.34.0",
-  "google-cloud-secret-manager>=2.25.0",
+  "google-cloud-iam>=2.22.0",
   "pylance>=2.0.1",
 ]
 

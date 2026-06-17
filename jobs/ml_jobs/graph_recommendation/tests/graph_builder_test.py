@@ -6,10 +6,9 @@ import pandas as pd
 import pytest
 from torch_geometric.data import Data
 
-from src.constants import GTL_ID_COLUMN
+from src.constants import DEFAULT_METADATA_COLUMNS, GTL_ID_COLUMN
 from src.graph_builder import (
-    DEFAULT_METADATA_COLUMNS,
-    build_book_metadata_graph_from_dataframe,
+    build_item_metadata_graph_from_dataframe,
 )
 
 
@@ -17,6 +16,7 @@ def _build_sample_dataframe() -> pd.DataFrame:
     return pd.DataFrame(
         {
             "item_id": ["book-1", "book-2", "book-1"],
+            "item_type": ["book", "music", "book"],
             "rayon": ["Literature", "Comics", "Literature"],
             "gtl_label_level_1": ["Arts", "Arts", "Arts"],
             "gtl_label_level_2": ["Painting", "Drawing", "Painting"],
@@ -25,6 +25,7 @@ def _build_sample_dataframe() -> pd.DataFrame:
             "artist_id": ["artist-1", "artist-2", "artist-1"],
             "gtl_id": ["01022000", "01030000", "01022000"],
             "series_id": ["series-1", "series-1", "series-2"],
+            "music_label": [None, "label-A", None],
         }
     )
 
@@ -32,15 +33,15 @@ def _build_sample_dataframe() -> pd.DataFrame:
 def test_build_graph_from_dataframe_creates_bipartite_structure() -> None:
     dataframe = _build_sample_dataframe()
 
-    graph_data = build_book_metadata_graph_from_dataframe(
+    graph_data = build_item_metadata_graph_from_dataframe(
         dataframe,
         metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
     )
 
     assert isinstance(graph_data, Data)
-    assert len(graph_data.book_ids) == 2
+    assert len(graph_data.item_ids) == 2
     assert len(graph_data.metadata_ids) == graph_data.num_nodes - len(
-        graph_data.book_ids
+        graph_data.item_ids
     )
     assert graph_data.edge_index.shape[0] == 2
 
@@ -54,19 +55,19 @@ def test_build_graph_from_dataframe_creates_bipartite_structure() -> None:
     )
     counter = Counter(edge_pairs)
     for source, target in edge_pairs:
-        if source < len(graph_data.book_ids):
+        if source < len(graph_data.item_ids):
             assert counter[(source, target)] == 1
             assert counter[(target, source)] == 1
 
     # verify node types and masks
-    assert graph_data.book_mask.sum().item() == len(graph_data.book_ids)
+    assert graph_data.item_mask.sum().item() == len(graph_data.item_ids)
     assert graph_data.metadata_mask.sum().item() == len(graph_data.metadata_ids)
-    assert graph_data.node_type[: len(graph_data.book_ids)].tolist() == [0] * len(
-        graph_data.book_ids
+    assert graph_data.node_type[: len(graph_data.item_ids)].tolist() == [0] * len(
+        graph_data.item_ids
     )
     assert all(
         value >= 1
-        for value in graph_data.node_type[len(graph_data.book_ids) :].tolist()
+        for value in graph_data.node_type[len(graph_data.item_ids) :].tolist()
     )
 
 
@@ -74,6 +75,7 @@ def test_missing_metadata_raises_value_error() -> None:
     dataframe = pd.DataFrame(
         {
             "item_id": ["book-1"],
+            "item_type": [None],
             "rayon": [None],
             "gtl_label_level_1": [None],
             "gtl_label_level_2": [None],
@@ -82,11 +84,12 @@ def test_missing_metadata_raises_value_error() -> None:
             "artist_id": [None],
             "gtl_id": [None],
             "series_id": [None],
+            "music_label": [None],
         }
     )
 
     with pytest.raises(ValueError, match="No edges were created"):
-        build_book_metadata_graph_from_dataframe(
+        build_item_metadata_graph_from_dataframe(
             dataframe,
             metadata_columns=[GTL_ID_COLUMN, *DEFAULT_METADATA_COLUMNS],
         )

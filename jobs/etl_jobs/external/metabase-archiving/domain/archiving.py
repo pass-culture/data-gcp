@@ -2,6 +2,7 @@ import logging
 import re
 
 import pandas as pd
+from google.cloud import bigquery
 
 from core.utils import (
     INT_METABASE_DATASET,
@@ -285,17 +286,50 @@ def load_recently_failed_card_ids(cooldown_days=30):
     return set(df["id"].astype(int).tolist())
 
 
+# Single source of truth for the archiving_log table. Every log_entry dict
+# built in this module must only use field names present here. Passing this
+# schema to the load job (with ALLOW_FIELD_ADDITION) lets new audit fields
+# (e.g. http_status / error_reason) roll out with no manual migration: BigQuery
+# adds any missing columns as part of the append.
+ARCHIVING_LOG_SCHEMA = [
+    bigquery.SchemaField("id", "INT64"),
+    bigquery.SchemaField("object_type", "STRING"),
+    bigquery.SchemaField("status", "STRING"),
+    bigquery.SchemaField("http_status", "INT64"),
+    bigquery.SchemaField("error_reason", "STRING"),
+    bigquery.SchemaField("new_collection_id", "INT64"),
+    bigquery.SchemaField("previous_collection_id", "INT64"),
+    bigquery.SchemaField("archived_at", "TIMESTAMP"),
+    bigquery.SchemaField("last_execution_date", "TIMESTAMP"),
+    bigquery.SchemaField("last_execution_context", "STRING"),
+    bigquery.SchemaField("parent_folder", "STRING"),
+]
+
+
 def append_archiving_logs(log_entries):
-    """Append a batch of log entries to the archiving_log BQ table in one call."""
+    """Append a batch of log entries to the archiving_log BQ table in one call.
+
+    Uses a native load job with an explicit schema and ALLOW_FIELD_ADDITION so a
+    batch carrying a new field (e.g. http_status) adds that column to the table
+    instead of failing the load, and a batch missing optional fields still loads
+    them as NULL. Creates the table on first write.
+    """
     if not log_entries:
         logger.info("No archiving log entries to write")
         return
     table_id = f"{PROJECT_NAME}.{INT_METABASE_DATASET}.archiving_log"
-    pd.DataFrame(log_entries).to_gbq(
-        table_id,
-        project_id=PROJECT_NAME,
-        if_exists="append",
+    # Reindex to the canonical column set: drops stray keys and fills any field a
+    # given batch omits, so the DataFrame always matches the schema by name.
+    df = pd.DataFrame(log_entries).reindex(
+        columns=[field.name for field in ARCHIVING_LOG_SCHEMA]
     )
+    client = bigquery.Client(project=PROJECT_NAME)
+    job_config = bigquery.LoadJobConfig(
+        write_disposition="WRITE_APPEND",
+        schema_update_options=[bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION],
+        schema=ARCHIVING_LOG_SCHEMA,
+    )
+    client.load_table_from_dataframe(df, table_id, job_config=job_config).result()
     logger.info("Wrote %d archiving log entries to BQ", len(log_entries))
 
 

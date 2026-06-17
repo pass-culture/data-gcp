@@ -3,8 +3,10 @@ from unittest.mock import patch
 import numpy as np
 import pandas as pd
 import pytest
+from google.cloud import bigquery
 
 from domain.archiving import (
+    ARCHIVING_LOG_SCHEMA,
     MoveToArchive,
     _first_ancestor,
     _is_collection_empty,
@@ -651,29 +653,37 @@ class TestLoadRecentlyFailedCardIds:
 
 
 class TestAppendArchivingLogs:
-    @patch("domain.archiving.pd.DataFrame.to_gbq")
-    def test_writes_single_dataframe(self, mock_to_gbq):
+    @patch("domain.archiving.bigquery.Client")
+    def test_writes_single_dataframe(self, mock_bq_client):
         log_entries = [
             {"id": 1, "status": "success"},
             {"id": 2, "status": "success"},
             {"id": 3, "status": "success"},
         ]
         append_archiving_logs(log_entries)
-        mock_to_gbq.assert_called_once()
-        # The DataFrame written must include all entries (single batched call).
-        df_written = mock_to_gbq.call_args  # to_gbq was called on the DataFrame self
-        assert df_written is not None
+        load = mock_bq_client.return_value.load_table_from_dataframe
+        load.assert_called_once()
+        # Whole batch loaded in one job, reindexed to the canonical schema.
+        df_loaded = load.call_args[0][0]
+        assert len(df_loaded) == 3
+        assert list(df_loaded.columns) == [f.name for f in ARCHIVING_LOG_SCHEMA]
+        # ALLOW_FIELD_ADDITION lets new audit fields create their column.
+        job_config = load.call_args[1]["job_config"]
+        assert (
+            bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION
+            in job_config.schema_update_options
+        )
 
-    @patch("domain.archiving.pd.DataFrame.to_gbq")
-    def test_no_op_on_empty(self, mock_to_gbq):
+    @patch("domain.archiving.bigquery.Client")
+    def test_no_op_on_empty(self, mock_bq_client):
         append_archiving_logs([])
-        mock_to_gbq.assert_not_called()
+        mock_bq_client.return_value.load_table_from_dataframe.assert_not_called()
 
 
 class TestHardArchiveStaleCards:
-    @patch("domain.archiving.pd.DataFrame.to_gbq")
+    @patch("domain.archiving.bigquery.Client")
     @patch("domain.archiving.pd.read_gbq")
-    def test_archives_candidates(self, mock_read_gbq, mock_to_gbq, metabase):
+    def test_archives_candidates(self, mock_read_gbq, mock_bq_client, metabase):
         mock_read_gbq.return_value = pd.DataFrame(
             {"id": [1, 2], "card_collection_id": [99, 99]}
         )
@@ -693,12 +703,12 @@ class TestHardArchiveStaleCards:
         metabase.put_card.assert_any_call(1, {"archived": True})
         metabase.put_card.assert_any_call(2, {"archived": True})
         # Single batched BQ append, not one per card.
-        assert mock_to_gbq.call_count == 1
+        assert mock_bq_client.return_value.load_table_from_dataframe.call_count == 1
 
-    @patch("domain.archiving.pd.DataFrame.to_gbq")
+    @patch("domain.archiving.bigquery.Client")
     @patch("domain.archiving.pd.read_gbq")
     def test_failed_put_is_not_counted_as_archived(
-        self, mock_read_gbq, mock_to_gbq, metabase
+        self, mock_read_gbq, mock_bq_client, metabase
     ):
         mock_read_gbq.return_value = pd.DataFrame(
             {"id": [1], "card_collection_id": [99]}
@@ -721,11 +731,11 @@ class TestHardArchiveStaleCards:
         # Not a fake success — excluded from the result and logged as failed so
         # the cooldown skips it next run instead of the dedup CTE dropping it.
         assert result == []
-        mock_to_gbq.assert_called_once()
+        mock_bq_client.return_value.load_table_from_dataframe.assert_called_once()
 
-    @patch("domain.archiving.pd.DataFrame.to_gbq")
+    @patch("domain.archiving.bigquery.Client")
     @patch("domain.archiving.pd.read_gbq")
-    def test_skips_already_archived(self, mock_read_gbq, mock_to_gbq, metabase):
+    def test_skips_already_archived(self, mock_read_gbq, mock_bq_client, metabase):
         mock_read_gbq.return_value = pd.DataFrame(
             {"id": [1], "card_collection_id": [99]}
         )
@@ -743,13 +753,13 @@ class TestHardArchiveStaleCards:
         metabase.put_card.assert_not_called()
         # ...but the skip IS logged so the dedup CTE excludes it next run,
         # otherwise already-archived cards clog the LIMIT batch forever.
-        mock_to_gbq.assert_called_once()
-        written = mock_to_gbq.call_args[0][0]
-        assert written == "test-project.int_metabase_dev.archiving_log"
+        load = mock_bq_client.return_value.load_table_from_dataframe
+        load.assert_called_once()
+        assert load.call_args[0][1] == "test-project.int_metabase_dev.archiving_log"
 
-    @patch("domain.archiving.pd.DataFrame.to_gbq")
+    @patch("domain.archiving.bigquery.Client")
     @patch("domain.archiving.pd.read_gbq")
-    def test_dry_run_skips_mutations(self, mock_read_gbq, mock_to_gbq, metabase):
+    def test_dry_run_skips_mutations(self, mock_read_gbq, mock_bq_client, metabase):
         mock_read_gbq.return_value = pd.DataFrame(
             {"id": [1, 2], "card_collection_id": [99, 99]}
         )
@@ -766,7 +776,7 @@ class TestHardArchiveStaleCards:
         assert result == [1, 2]
         metabase.get_cards.assert_not_called()
         metabase.put_card.assert_not_called()
-        mock_to_gbq.assert_not_called()
+        mock_bq_client.return_value.load_table_from_dataframe.assert_not_called()
 
     @patch("domain.archiving.pd.read_gbq")
     def test_query_targets_raw_table(self, mock_read_gbq, metabase):
@@ -836,11 +846,11 @@ class TestIsOldEnough:
 class TestArchiveDeadDashboards:
     @pytest.fixture(autouse=True)
     def _mock_gbq(self):
-        # Real (non-dry-run) cleanup now appends an audit batch to BQ; keep it
-        # off the wire and expose the mock so tests can assert what was written.
-        with patch("domain.archiving.pd.DataFrame.to_gbq") as mock_to_gbq:
-            self.mock_to_gbq = mock_to_gbq
-            yield mock_to_gbq
+        # Real (non-dry-run) cleanup now appends an audit batch to BQ; keep the
+        # load job off the wire and expose the client mock to the tests.
+        with patch("domain.archiving.bigquery.Client") as mock_bq_client:
+            self.mock_bq_client = mock_bq_client
+            yield mock_bq_client
 
     def test_no_items(self, metabase):
         metabase.get_collection_children.return_value = {"data": []}
@@ -1044,9 +1054,9 @@ class TestIsCollectionEmpty:
 class TestArchiveEmptyCollections:
     @pytest.fixture(autouse=True)
     def _mock_gbq(self):
-        with patch("domain.archiving.pd.DataFrame.to_gbq") as mock_to_gbq:
-            self.mock_to_gbq = mock_to_gbq
-            yield mock_to_gbq
+        with patch("domain.archiving.bigquery.Client") as mock_bq_client:
+            self.mock_bq_client = mock_bq_client
+            yield mock_bq_client
 
     def test_no_empty_collections(self, metabase):
         metabase.get_collection_children.return_value = {"data": []}

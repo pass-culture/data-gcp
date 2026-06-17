@@ -211,6 +211,8 @@ class TestArchiveCommand:
             name_pattern=r"^\[Archive\]",
             min_days_since_update=60,
             max_cards=50,
+            # Absent from config → default cooldown applied.
+            failure_cooldown_days=30,
             dry_run=False,
         )
 

@@ -11,7 +11,7 @@ soft_archive_rules:
     min_age_days: 60
     min_days_since_update: 60   # protect cards still being edited
     views_window_months: 6
-    max_views: 1  # strict less-than → archive only cards with 0 views in 6 months
+    max_views: 1
 
   - name: adhoc
     ancestor_title_pattern: "%adhoc%"
@@ -23,9 +23,11 @@ soft_archive_rules:
 hard_archive_cards:
   min_days_since_update: 30
   name_pattern: "^\\[Archive\\]"
-  # ~10.8k stale cards backlog in the archive folder; 50/run is far too slow.
-  # Each card = 1 API GET (+ 1 PUT when actually archived), no throttle between.
   max_cards: 500
+  # Cards that failed to hard-archive in the last N days are skipped on
+  # subsequent runs (e.g. Metabase remote-sync rejections), so the batch isn't
+  # consumed retrying the same dead-ends. Set to null to disable.
+  failure_cooldown_days: 30
 
 empty_cleanup:
   min_age_days: 15

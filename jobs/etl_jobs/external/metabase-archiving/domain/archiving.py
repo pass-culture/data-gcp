@@ -464,7 +464,12 @@ class MoveToArchive:
 
 
 def hard_archive_stale_cards(
-    metabase, name_pattern, min_days_since_update, max_cards, dry_run=False
+    metabase,
+    name_pattern,
+    min_days_since_update,
+    max_cards,
+    failure_cooldown_days=30,
+    dry_run=False,
 ):
     """Hard-archive cards whose name matches `name_pattern` (regex) and that have
     not been updated for at least `min_days_since_update` days.
@@ -472,7 +477,26 @@ def hard_archive_stale_cards(
     Candidate selection is done in BigQuery on `raw.metabase_report_card`
     (no API pagination). The per-card `archived` flag is verified via the API
     before flipping it, since the raw mirror does not expose `archived`.
+
+    Cards that failed to hard-archive in the last `failure_cooldown_days` (e.g.
+    Metabase remote-sync rejections) are skipped so a fixed-size batch isn't
+    permanently consumed retrying the same dead-ends. Pass None to disable.
     """
+    if failure_cooldown_days is None:
+        cooldown_cte = ""
+        cooldown_filter = ""
+    else:
+        cooldown_cte = f""",
+        recently_failed AS (
+            SELECT DISTINCT id
+            FROM `{INT_METABASE_DATASET}.archiving_log`
+            WHERE object_type = 'card_hard_archive'
+              AND COALESCE(status, '') NOT IN ('success', 'already_archived')
+              AND date(archived_at) >= date_sub(
+                  current_date(), interval {int(failure_cooldown_days)} day
+              )
+        )"""
+        cooldown_filter = "AND rc.id NOT IN (SELECT id FROM recently_failed)"
     query = f"""
         WITH coll_root AS (
             SELECT
@@ -491,7 +515,7 @@ def hard_archive_stale_cards(
             FROM `{INT_METABASE_DATASET}.archiving_log`
             WHERE object_type = 'card_hard_archive'
               AND status IN ('success', 'already_archived')
-        )
+        ){cooldown_cte}
         SELECT rc.id, rc.card_collection_id
         FROM `{RAW_METABASE_DATASET}.metabase_report_card` AS rc
         LEFT JOIN coll_root ON rc.card_collection_id = coll_root.collection_id
@@ -502,6 +526,7 @@ def hard_archive_stale_cards(
           AND coll_root.own_personal_owner_id IS NULL
           AND root_coll.personal_owner_id IS NULL
           AND rc.id NOT IN (SELECT id FROM already_hard_archived)
+          {cooldown_filter}
         ORDER BY rc.id
         LIMIT {int(max_cards)}
     """
@@ -510,6 +535,7 @@ def hard_archive_stale_cards(
 
     archived_ids = []
     skipped_already_archived = 0
+    failed = 0
     log_entries = []
     for _, row in df.iterrows():
         card_id = int(row["id"])
@@ -529,42 +555,38 @@ def hard_archive_stale_cards(
             # predates logging). Record it so the dedup CTE excludes it next
             # run — otherwise these cards permanently fill the LIMIT batch and
             # genuinely-stale candidates are never reached.
-            logger.info(
-                "Card %s already archived in Metabase, recording skip", card_id
-            )
+            logger.info("Card %s already archived in Metabase, recording skip", card_id)
             skipped_already_archived += 1
             log_entries.append(
-                {
-                    "id": card_id,
-                    "object_type": "card_hard_archive",
-                    "status": "already_archived",
-                    "new_collection_id": card.get("collection_id"),
-                    "previous_collection_id": card.get("collection_id"),
-                    "archived_at": pd.Timestamp.now(),
-                    "last_execution_date": None,
-                    "last_execution_context": None,
-                    "parent_folder": "archive",
-                }
+                _hard_archive_log_entry(card_id, "already_archived", card)
             )
             continue
 
-        metabase.put_card(card_id, {"archived": True})
-        archived_ids.append(card_id)
-        logger.info("Hard-archived card %s", card_id)
-
-        log_entries.append(
-            {
-                "id": card_id,
-                "object_type": "card_hard_archive",
-                "status": "success",
-                "new_collection_id": card.get("collection_id"),
-                "previous_collection_id": card.get("collection_id"),
-                "archived_at": pd.Timestamp.now(),
-                "last_execution_date": None,
-                "last_execution_context": None,
-                "parent_folder": "archive",
-            }
-        )
+        result = metabase.put_card(card_id, {"archived": True})
+        # Success returns the updated card with `archived: true`; a remote-sync
+        # rejection (or any HTTP error) returns an error body instead. Only
+        # confirmed archives count, so failures aren't logged as success and
+        # silently dropped by the dedup CTE.
+        if isinstance(result, dict) and result.get("archived") is True:
+            archived_ids.append(card_id)
+            logger.info("Hard-archived card %s", card_id)
+            log_entries.append(_hard_archive_log_entry(card_id, "success", card))
+        else:
+            reason = _summarize_metabase_error(result)
+            http_status = (
+                result.get("http_status") if isinstance(result, dict) else None
+            )
+            logger.error("Failed to hard-archive card %s: %s", card_id, reason)
+            failed += 1
+            log_entries.append(
+                _hard_archive_log_entry(
+                    card_id,
+                    "failed",
+                    card,
+                    http_status=http_status,
+                    error_reason=reason,
+                )
+            )
 
     if not dry_run:
         append_archiving_logs(log_entries)
@@ -578,8 +600,33 @@ def hard_archive_stale_cards(
             "Recorded %d card(s) already archived in Metabase (excluded next run)",
             skipped_already_archived,
         )
+    if failed:
+        logger.warning(
+            "%d card(s) failed to hard-archive (skipped for the cooldown window)",
+            failed,
+        )
 
     return archived_ids
+
+
+def _hard_archive_log_entry(card_id, status, card, http_status=None, error_reason=None):
+    """Build one archiving_log row for the hard-archive path. All hard-archive
+    entries share a stable schema (incl. http_status / error_reason) so a mixed
+    success/failure batch appends cleanly."""
+    collection_id = card.get("collection_id") if isinstance(card, dict) else None
+    return {
+        "id": card_id,
+        "object_type": "card_hard_archive",
+        "status": status,
+        "http_status": http_status,
+        "error_reason": error_reason,
+        "new_collection_id": collection_id,
+        "previous_collection_id": collection_id,
+        "archived_at": pd.Timestamp.now(),
+        "last_execution_date": None,
+        "last_execution_context": None,
+        "parent_folder": "archive",
+    }
 
 
 def _is_old_enough(created_at, min_age_days):
@@ -739,7 +786,11 @@ def _scan_dashboards_recursive(
                     "Dead dashboard %s kept (newer than age threshold)", item["id"]
                 )
                 _record_cleanup_candidate(
-                    log_entries, item["id"], "dashboard", "skipped_recent", collection_id
+                    log_entries,
+                    item["id"],
+                    "dashboard",
+                    "skipped_recent",
+                    collection_id,
                 )
                 continue
             if dry_run:
@@ -874,9 +925,7 @@ def _archive_empty_recursive(
             _required_meta_fields(min_days_since_update),
         )
         if not _passes_age_filters(meta, min_age_days, min_days_since_update):
-            logger.info(
-                "Empty collection %s kept (newer than age threshold)", child_id
-            )
+            logger.info("Empty collection %s kept (newer than age threshold)", child_id)
             _record_cleanup_candidate(
                 log_entries, child_id, "collection", "skipped_recent", collection_id
             )

@@ -74,7 +74,17 @@ class MetabaseAPI:
         response = requests.put(
             f"{self.host}/api/card/{_id}", data=json.dumps(_dict), headers=self.headers
         )
-        return response.json()
+        if not response.ok:
+            _log_http_failure("put_card", response)
+        try:
+            result = response.json()
+        except ValueError:
+            result = {"body": response.text[:300]}
+        # Surface the HTTP status on failures so callers can detect and audit
+        # them (success returns the card object, which carries `archived`).
+        if not response.ok and isinstance(result, dict):
+            result.setdefault("http_status", response.status_code)
+        return result
 
     def update_card_collections(self, card_ids, collection_id):
         params = {"card_ids": card_ids, "collection_id": collection_id}

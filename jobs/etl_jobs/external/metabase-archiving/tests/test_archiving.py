@@ -678,6 +678,8 @@ class TestHardArchiveStaleCards:
             {"id": [1, 2], "card_collection_id": [99, 99]}
         )
         metabase.get_cards.return_value = {"archived": False, "collection_id": 99}
+        # Success returns the updated card with archived flipped to true.
+        metabase.put_card.return_value = {"archived": True, "collection_id": 99}
 
         result = hard_archive_stale_cards(
             metabase,
@@ -692,6 +694,34 @@ class TestHardArchiveStaleCards:
         metabase.put_card.assert_any_call(2, {"archived": True})
         # Single batched BQ append, not one per card.
         assert mock_to_gbq.call_count == 1
+
+    @patch("domain.archiving.pd.DataFrame.to_gbq")
+    @patch("domain.archiving.pd.read_gbq")
+    def test_failed_put_is_not_counted_as_archived(
+        self, mock_read_gbq, mock_to_gbq, metabase
+    ):
+        mock_read_gbq.return_value = pd.DataFrame(
+            {"id": [1], "card_collection_id": [99]}
+        )
+        metabase.get_cards.return_value = {"archived": False, "collection_id": 99}
+        # Remote-sync rejection: error body, no `archived: true`.
+        metabase.put_card.return_value = {
+            "message": "Utilise du contenu qui n'est pas synchronisé à distance.",
+            "data": {"status-code": 400, "non-remote-synced-models": [15367]},
+            "http_status": 400,
+        }
+
+        result = hard_archive_stale_cards(
+            metabase,
+            name_pattern=r"^\[Archive\]",
+            min_days_since_update=60,
+            max_cards=50,
+        )
+
+        # Not a fake success — excluded from the result and logged as failed so
+        # the cooldown skips it next run instead of the dedup CTE dropping it.
+        assert result == []
+        mock_to_gbq.assert_called_once()
 
     @patch("domain.archiving.pd.DataFrame.to_gbq")
     @patch("domain.archiving.pd.read_gbq")
@@ -766,6 +796,25 @@ class TestHardArchiveStaleCards:
         # GETs only to skip them all.
         assert "already_hard_archived" in query
         assert "int_metabase_dev.archiving_log" in query
+        # Cooldown (default 30d) must also exclude recently-failed cards so the
+        # LIMIT batch isn't consumed retrying the same remote-sync dead-ends.
+        assert "recently_failed" in query
+        assert "interval 30 day" in query
+
+    @patch("domain.archiving.pd.read_gbq")
+    def test_cooldown_disabled_omits_recently_failed(self, mock_read_gbq, metabase):
+        mock_read_gbq.return_value = pd.DataFrame({"id": [], "card_collection_id": []})
+
+        hard_archive_stale_cards(
+            metabase,
+            name_pattern=r"^\[Archive\]",
+            min_days_since_update=60,
+            max_cards=25,
+            failure_cooldown_days=None,
+        )
+
+        query = mock_read_gbq.call_args[0][0]
+        assert "recently_failed" not in query
 
 
 class TestIsOldEnough:

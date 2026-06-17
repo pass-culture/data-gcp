@@ -363,7 +363,7 @@ def _add_or_replace_tags(
     # Case 1 — tags= already present: splice in the new value - same logic as _replace_schedule
     for i in range(dag_start, dag_end):
         line = lines[i]
-        match = re.search(r"(?<!\w)(tags\s*=\s*)(?P<value>\[.*?\])", line)
+        match = re.search(r"(?<!\w)(tags\s*=\s*)(?P<value>\[[^\]]*\])", line)
         if not match or re.match(r"\s*#", line):
             continue
         original = match.group("value")

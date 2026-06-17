@@ -117,7 +117,7 @@ class ElementaryReport:
             override_config=False,
         )
 
-        data_monitoring.run_alerts(
+        results = data_monitoring.run_alerts(
             days_back=days_back,
             dbt_full_refresh=False,
             dbt_vars=None,
@@ -125,3 +125,5 @@ class ElementaryReport:
 
         if dbt_package_folder:
             os.environ["DBT_PACKAGES_FOLDER"] = dbt_package_folder
+
+        return results

@@ -276,7 +276,7 @@ def load_recently_failed_card_ids(cooldown_days=30):
         FROM `{INT_METABASE_DATASET}.archiving_log`
         WHERE object_type = 'card'
           AND COALESCE(status, '') != 'success'
-          AND date(archived_at) >= date_sub(
+          AND date(COALESCE(logged_at, archived_at)) >= date_sub(
               current_date(), interval {int(cooldown_days)} day
           )
     """
@@ -299,11 +299,66 @@ ARCHIVING_LOG_SCHEMA = [
     bigquery.SchemaField("error_reason", "STRING"),
     bigquery.SchemaField("new_collection_id", "INT64"),
     bigquery.SchemaField("previous_collection_id", "INT64"),
+    bigquery.SchemaField("object_created_at", "TIMESTAMP"),
+    bigquery.SchemaField("object_updated_at", "TIMESTAMP"),
+    # logged_at = when this row was written; archived_at = when we actually
+    # archived the object (set only for status='success', else NULL).
+    bigquery.SchemaField("logged_at", "TIMESTAMP"),
     bigquery.SchemaField("archived_at", "TIMESTAMP"),
     bigquery.SchemaField("last_execution_date", "TIMESTAMP"),
     bigquery.SchemaField("last_execution_context", "STRING"),
     bigquery.SchemaField("parent_folder", "STRING"),
 ]
+
+
+def _to_timestamp(value):
+    """Coerce an API date (ISO string, datetime, or None) to a UTC Timestamp,
+    or None — so TIMESTAMP columns load cleanly regardless of the input shape."""
+    if value is None:
+        return None
+    ts = pd.to_datetime(value, utc=True, errors="coerce")
+    return None if pd.isna(ts) else ts
+
+
+def _build_log_entry(
+    object_id,
+    object_type,
+    status,
+    *,
+    parent_folder,
+    new_collection_id=None,
+    previous_collection_id=None,
+    http_status=None,
+    error_reason=None,
+    object_created_at=None,
+    object_updated_at=None,
+    last_execution_date=None,
+    last_execution_context=None,
+):
+    """Build one archiving_log row with the canonical schema.
+
+    `logged_at` is always the insert time. `archived_at` is set only when we
+    actually archived the object this run (status='success'); it stays NULL for
+    failures, already-archived skips, and kept candidates — so a populated
+    archived_at unambiguously means "archived by this job".
+    """
+    now = pd.Timestamp.now()
+    return {
+        "id": object_id,
+        "object_type": object_type,
+        "status": status,
+        "http_status": http_status,
+        "error_reason": error_reason,
+        "new_collection_id": new_collection_id,
+        "previous_collection_id": previous_collection_id,
+        "object_created_at": _to_timestamp(object_created_at),
+        "object_updated_at": _to_timestamp(object_updated_at),
+        "logged_at": now,
+        "archived_at": now if status == "success" else None,
+        "last_execution_date": last_execution_date,
+        "last_execution_context": last_execution_context,
+        "parent_folder": parent_folder,
+    }
 
 
 def append_archiving_logs(log_entries):
@@ -460,23 +515,22 @@ class MoveToArchive:
         raw_status = result.get("status") if isinstance(result, dict) else None
         status = "success" if raw_status == "ok" else raw_status
 
-        log_entry = {
-            "id": self.id,
-            "object_type": "card",
-            "status": status,
-            "http_status": (
+        log_entry = _build_log_entry(
+            self.id,
+            "card",
+            status,
+            parent_folder=self.rule_name,
+            new_collection_id=self.archive_collection_id,
+            previous_collection_id=self.collection_id,
+            http_status=(
                 result.get("http_status") if isinstance(result, dict) else None
             ),
-            "error_reason": (
+            error_reason=(
                 None if status == "success" else _summarize_metabase_error(result)
             ),
-            "new_collection_id": self.archive_collection_id,
-            "previous_collection_id": self.collection_id,
-            "archived_at": pd.Timestamp.now(),
-            "last_execution_date": self.last_execution_date,
-            "last_execution_context": self.last_execution_context,
-            "parent_folder": self.rule_name,
-        }
+            last_execution_date=self.last_execution_date,
+            last_execution_context=self.last_execution_context,
+        )
 
         if status == "success":
             logger.info(
@@ -526,7 +580,7 @@ def hard_archive_stale_cards(
             FROM `{INT_METABASE_DATASET}.archiving_log`
             WHERE object_type = 'card_hard_archive'
               AND COALESCE(status, '') NOT IN ('success', 'already_archived')
-              AND date(archived_at) >= date_sub(
+              AND date(COALESCE(logged_at, archived_at)) >= date_sub(
                   current_date(), interval {int(failure_cooldown_days)} day
               )
         )"""
@@ -644,23 +698,21 @@ def hard_archive_stale_cards(
 
 
 def _hard_archive_log_entry(card_id, status, card, http_status=None, error_reason=None):
-    """Build one archiving_log row for the hard-archive path. All hard-archive
-    entries share a stable schema (incl. http_status / error_reason) so a mixed
-    success/failure batch appends cleanly."""
-    collection_id = card.get("collection_id") if isinstance(card, dict) else None
-    return {
-        "id": card_id,
-        "object_type": "card_hard_archive",
-        "status": status,
-        "http_status": http_status,
-        "error_reason": error_reason,
-        "new_collection_id": collection_id,
-        "previous_collection_id": collection_id,
-        "archived_at": pd.Timestamp.now(),
-        "last_execution_date": None,
-        "last_execution_context": None,
-        "parent_folder": "archive",
-    }
+    """Build one archiving_log row for the hard-archive path."""
+    card = card if isinstance(card, dict) else {}
+    collection_id = card.get("collection_id")
+    return _build_log_entry(
+        card_id,
+        "card_hard_archive",
+        status,
+        parent_folder="archive",
+        new_collection_id=collection_id,
+        previous_collection_id=collection_id,
+        http_status=http_status,
+        error_reason=error_reason,
+        object_created_at=card.get("created_at"),
+        object_updated_at=card.get("updated_at"),
+    )
 
 
 def _is_old_enough(created_at, min_age_days):
@@ -703,6 +755,30 @@ def _passes_age_filters(meta, min_age_days, min_days_since_update):
     return True
 
 
+def _age_kept_reason(meta, min_age_days, min_days_since_update):
+    """Explain, per candidate, why the age filter kept it: each date, its cutoff,
+    and whether it passed. A MISSING date counts as not-old-enough (kept) — the
+    likely cause of "old empty folders never archived" when Metabase doesn't
+    expose updated_at, so it's called out explicitly here."""
+    today = pd.Timestamp.utcnow().normalize()
+
+    def _verdict(value, min_days):
+        cutoff = (today - pd.Timedelta(days=min_days)).date()
+        if value is None:
+            return f"{value} (cutoff {cutoff}, MISSING -> kept)"
+        ok = _is_old_enough(value, min_days)
+        return (
+            f"{value} (cutoff {cutoff}, {'old enough' if ok else 'too recent -> kept'})"
+        )
+
+    parts = [f"created_at={_verdict(meta.get('created_at'), min_age_days)}"]
+    if min_days_since_update is not None:
+        parts.append(
+            f"updated_at={_verdict(meta.get('updated_at'), min_days_since_update)}"
+        )
+    return "; ".join(parts)
+
+
 def _required_meta_fields(min_days_since_update):
     """Only request `updated_at` when the caller actually filters on it —
     avoids an extra API fetch when the fallback path has to fill it in."""
@@ -712,31 +788,29 @@ def _required_meta_fields(min_days_since_update):
     return fields
 
 
-def _record_cleanup_candidate(
-    log_entries, object_id, object_type, status, parent_collection_id
+def _record_cleanup_archive(
+    log_entries, object_id, object_type, parent_collection_id, meta=None
 ):
-    """Append one archiving_log audit row for a cleanup candidate (an empty
-    collection or a dead dashboard) to `log_entries`.
+    """Append one archiving_log row for a collection/dashboard we archived.
 
-    No-op when `log_entries` is None (caller opted out of auditing). `status`
-    is one of: `success` (archived), `skipped_recent` (a genuine candidate kept
-    because it's newer than the age threshold), or `dry_run`. Only candidates
-    are recorded — live dashboards / non-empty collections are not, so the table
-    shows exactly what the cleanup considered and why it acted or didn't."""
+    No-op when `log_entries` is None. Only actual archives are persisted —
+    candidates kept by the age filter (`skipped_recent`) are log-only, since
+    the cleanup re-scans every run and would otherwise rewrite a row per
+    empty-but-young object every day. `object_created_at` / `object_updated_at`
+    record how old the object was when archived."""
     if log_entries is None:
         return
+    meta = meta or {}
     log_entries.append(
-        {
-            "id": object_id,
-            "object_type": object_type,
-            "status": status,
-            "new_collection_id": None,
-            "previous_collection_id": parent_collection_id,
-            "archived_at": pd.Timestamp.now(),
-            "last_execution_date": None,
-            "last_execution_context": None,
-            "parent_folder": f"{object_type}_cleanup",
-        }
+        _build_log_entry(
+            object_id,
+            object_type,
+            "success",
+            parent_folder=f"{object_type}_cleanup",
+            previous_collection_id=parent_collection_id,
+            object_created_at=meta.get("created_at"),
+            object_updated_at=meta.get("updated_at"),
+        )
     )
 
 
@@ -817,26 +891,19 @@ def _scan_dashboards_recursive(
             )
             if not _passes_age_filters(meta, min_age_days, min_days_since_update):
                 logger.info(
-                    "Dead dashboard %s kept (newer than age threshold)", item["id"]
-                )
-                _record_cleanup_candidate(
-                    log_entries,
+                    "Dead dashboard %s kept (newer than age threshold): %s",
                     item["id"],
-                    "dashboard",
-                    "skipped_recent",
-                    collection_id,
+                    _age_kept_reason(meta, min_age_days, min_days_since_update),
                 )
+                # Kept candidates are log-only — see _record_cleanup_archive.
                 continue
             if dry_run:
                 logger.info("[DRY-RUN] Would archive dead dashboard %s", item["id"])
-                _record_cleanup_candidate(
-                    log_entries, item["id"], "dashboard", "dry_run", collection_id
-                )
             else:
                 logger.info("Archiving dead dashboard %s", item["id"])
                 metabase.put_dashboard(item["id"], {"archived": True})
-                _record_cleanup_candidate(
-                    log_entries, item["id"], "dashboard", "success", collection_id
+                _record_cleanup_archive(
+                    log_entries, item["id"], "dashboard", collection_id, meta
                 )
             archived.append(item["id"])
 
@@ -959,22 +1026,21 @@ def _archive_empty_recursive(
             _required_meta_fields(min_days_since_update),
         )
         if not _passes_age_filters(meta, min_age_days, min_days_since_update):
-            logger.info("Empty collection %s kept (newer than age threshold)", child_id)
-            _record_cleanup_candidate(
-                log_entries, child_id, "collection", "skipped_recent", collection_id
+            logger.info(
+                "Empty collection %s kept (newer than age threshold): %s",
+                child_id,
+                _age_kept_reason(meta, min_age_days, min_days_since_update),
             )
+            # Kept candidates are log-only — see _record_cleanup_archive.
             continue
 
         if dry_run:
             logger.info("[DRY-RUN] Would archive empty collection %s", child_id)
-            _record_cleanup_candidate(
-                log_entries, child_id, "collection", "dry_run", collection_id
-            )
         else:
             logger.info("Archiving empty collection %s", child_id)
             metabase.put_collection(child_id, {"archived": True})
-            _record_cleanup_candidate(
-                log_entries, child_id, "collection", "success", collection_id
+            _record_cleanup_archive(
+                log_entries, child_id, "collection", collection_id, meta
             )
         archived.append(child_id)
 

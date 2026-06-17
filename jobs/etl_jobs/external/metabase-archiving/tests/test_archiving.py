@@ -857,13 +857,13 @@ class TestArchiveDeadDashboards:
         result = archive_dead_dashboards(metabase, [100], min_age_days=15)
         assert result == []
 
-    def test_audits_archived_and_skipped_candidates(self, metabase):
+    def test_only_archived_candidates_are_persisted(self, metabase):
         old = (pd.Timestamp.utcnow() - pd.Timedelta(days=30)).isoformat()
         recent = (pd.Timestamp.utcnow() - pd.Timedelta(days=5)).isoformat()
-        log_entries = []
+        recorded = []
         with patch(
-            "domain.archiving._record_cleanup_candidate",
-            side_effect=lambda entries, *a: log_entries.append(a),
+            "domain.archiving._record_cleanup_archive",
+            side_effect=lambda entries, *a, **kw: recorded.append((a, kw)),
         ):
             metabase.get_collection_children.return_value = {
                 "data": [
@@ -873,9 +873,10 @@ class TestArchiveDeadDashboards:
             }
             metabase.get_dashboards.return_value = {"ordered_cards": []}
             archive_dead_dashboards(metabase, [100], min_age_days=15)
-        # Dead-and-old → archived; dead-but-recent → recorded as a kept candidate.
-        assert (5, "dashboard", "success", 100) in log_entries
-        assert (6, "dashboard", "skipped_recent", 100) in log_entries
+        # Dead-and-old → archived (persisted). Dead-but-recent → kept, log-only:
+        # NOT persisted, otherwise a daily re-scan rewrites it every run.
+        archived_ids = [args[0] for args, _ in recorded]
+        assert archived_ids == [5]
 
     def test_archives_old_dead_dashboard(self, metabase):
         old = (pd.Timestamp.utcnow() - pd.Timedelta(days=30)).isoformat()
@@ -1063,7 +1064,7 @@ class TestArchiveEmptyCollections:
         result = archive_empty_collections(metabase, [100], min_age_days=15)
         assert result == []
 
-    def test_audits_archived_and_skipped_candidates(self, metabase):
+    def test_only_archived_candidates_are_persisted(self, metabase):
         old = (pd.Timestamp.utcnow() - pd.Timedelta(days=30)).isoformat()
         recent = (pd.Timestamp.utcnow() - pd.Timedelta(days=5)).isoformat()
 
@@ -1081,15 +1082,16 @@ class TestArchiveEmptyCollections:
 
         metabase.get_collection_children.side_effect = side_effect
 
-        log_entries = []
+        recorded = []
         with patch(
-            "domain.archiving._record_cleanup_candidate",
-            side_effect=lambda entries, *a: log_entries.append(a),
+            "domain.archiving._record_cleanup_archive",
+            side_effect=lambda entries, *a, **kw: recorded.append((a, kw)),
         ):
             archive_empty_collections(metabase, [100], min_age_days=15)
-        # Empty-and-old → archived; empty-but-recent → recorded as a kept candidate.
-        assert (200, "collection", "success", 100) in log_entries
-        assert (201, "collection", "skipped_recent", 100) in log_entries
+        # Empty-and-old → archived (persisted). Empty-but-recent → kept, log-only:
+        # NOT persisted, else a daily re-scan rewrites it every run.
+        archived_ids = [args[0] for args, _ in recorded]
+        assert archived_ids == [200]
 
     def test_archives_old_empty_leaf(self, metabase):
         old = (pd.Timestamp.utcnow() - pd.Timedelta(days=30)).isoformat()

@@ -1,19 +1,19 @@
-"""Utilities to construct a PyTorch Geometric graph for book recommendations."""
+"""Utilities to construct a PyTorch Geometric graph for item recommendations."""
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
-from src.constants import DEFAULT_METADATA_COLUMNS, GTL_ID_COLUMN, ID_COLUMN
+from src.constants import GTL_ID_COLUMN, ID_COLUMN
 from src.utils.preprocessing import preprocess_metadata_dataframe
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Sequence
+
+    import pandas as pd
 
     from src.constants import MetadataKey
 
-import pandas as pd
 import torch
 from torch_geometric.data import Data
 
@@ -22,7 +22,7 @@ def _build_metadata_index(
     df: pd.DataFrame,
     metadata_columns: Sequence[str],
     metadata_type_to_id: dict[str, int],
-    num_books: int,
+    num_items: int,
 ) -> tuple[list[MetadataKey], dict[MetadataKey, int], list[int]]:
     """Build index of all unique metadata nodes before edge creation.
 
@@ -33,7 +33,7 @@ def _build_metadata_index(
         df: The normalized dataframe.
         metadata_columns: List of metadata column names.
         metadata_type_to_id: Mapping from column names to type IDs.
-        num_books: Number of book nodes (metadata indices start after this).
+        num_items: Number of item nodes (metadata indices start after this).
 
     Returns:
         A tuple of:
@@ -58,8 +58,8 @@ def _build_metadata_index(
 
             key = (column, str(value))
             if key not in metadata_index:
-                # Metadata nodes are indexed after book nodes
-                idx = num_books + len(metadata_keys)
+                # Metadata nodes are indexed after item nodes
+                idx = num_items + len(metadata_keys)
                 metadata_index[key] = idx
                 metadata_keys.append(key)
                 node_types.append(metadata_type_to_id[column])
@@ -67,18 +67,18 @@ def _build_metadata_index(
     return metadata_keys, metadata_index, node_types
 
 
-def build_book_metadata_graph_from_dataframe(
+def build_item_metadata_graph_from_dataframe(
     dataframe: pd.DataFrame,
     metadata_columns: Sequence[str],
 ) -> Data:
-    """Construct a bipartite book-to-metadata graph from a dataframe.
+    """Construct a bipartite item-to-metadata graph from a dataframe.
     The graph structure is:
-    - Book nodes are indexed 0 to (num_books - 1)
-    - Metadata nodes are indexed num_books to (num_total_nodes - 1)
+    - Item nodes are indexed 0 to (num_items - 1)
+    - Metadata nodes are indexed num_items to (num_total_nodes - 1)
     - Edges are bidirectional (undirected graph)
 
     Args:
-        dataframe: Input data with book IDs and metadata columns.
+        dataframe: Input data with item IDs and metadata columns.
         metadata_columns: Column names to use as metadata.
 
     Returns:
@@ -99,16 +99,16 @@ def build_book_metadata_graph_from_dataframe(
         metadata_columns=[GTL_ID_COLUMN, *metadata_columns],
     )
 
-    # Step 2: Prepare book nodes (indexed 0 to num_books - 1)
-    unique_books = df_normalized[[ID_COLUMN, GTL_ID_COLUMN]].drop_duplicates(
+    # Step 2: Prepare item nodes (indexed 0 to num_items - 1)
+    unique_items = df_normalized[[ID_COLUMN, GTL_ID_COLUMN]].drop_duplicates(
         subset=[ID_COLUMN]
     )
-    book_ids = unique_books[ID_COLUMN].tolist()
-    gtl_ids = unique_books[GTL_ID_COLUMN].tolist()
-    book_index = {book_id: idx for idx, book_id in enumerate(book_ids)}
+    item_ids = unique_items[ID_COLUMN].tolist()
+    gtl_ids = unique_items[GTL_ID_COLUMN].tolist()
+    item_index = {item_id: idx for idx, item_id in enumerate(item_ids)}
 
-    # Step 3: Prepare metadata type mapping (0 reserved for books)
-    metadata_type_to_id = {"book": 0}
+    # Step 3: Prepare metadata type mapping (0 reserved for items)
+    metadata_type_to_id = {"item": 0}
     for offset, column_name in enumerate(metadata_columns, start=1):
         metadata_type_to_id[column_name] = offset
 
@@ -117,11 +117,11 @@ def build_book_metadata_graph_from_dataframe(
         df_normalized,
         metadata_columns,
         metadata_type_to_id,
-        num_books=len(book_ids),
+        num_items=len(item_ids),
     )
 
-    # Step 5: Create node type list (books first, then metadata)
-    node_types = [metadata_type_to_id["book"]] * len(book_ids) + metadata_node_types
+    # Step 5: Create node type list (items first, then metadata)
+    node_types = [metadata_type_to_id["item"]] * len(item_ids) + metadata_node_types
 
     # Step 6: Create edges by iterating through rows
     edges: set[tuple[int, int]] = set()
@@ -129,12 +129,12 @@ def build_book_metadata_graph_from_dataframe(
 
     for record in df_normalized[relevant_columns].itertuples(index=False):
         record_dict = record._asdict()
-        book_id = record_dict[ID_COLUMN]
-        # Skip rows with missing book IDs
-        if book_id is None or book_id not in book_index:
+        item_id = record_dict[ID_COLUMN]
+        # Skip rows with missing item IDs
+        if item_id is None or item_id not in item_index:
             continue
 
-        source_idx = book_index[book_id]
+        source_idx = item_index[item_id]
 
         # Create edges to all metadata values in this row
         for column in metadata_columns:
@@ -165,43 +165,15 @@ def build_book_metadata_graph_from_dataframe(
 
     # Step 8: Add custom attributes for identifier mapping
     graph_data.node_type = torch.tensor(node_types, dtype=torch.long)
-    book_mask = torch.zeros(len(node_types), dtype=torch.bool)
-    book_mask[: len(book_ids)] = True
-    graph_data.book_mask = book_mask
-    graph_data.metadata_mask = ~book_mask
+    item_mask = torch.zeros(len(node_types), dtype=torch.bool)
+    item_mask[: len(item_ids)] = True
+    graph_data.item_mask = item_mask
+    graph_data.metadata_mask = ~item_mask
     graph_data.metadata_type_to_id = metadata_type_to_id
     graph_data.metadata_columns = list(metadata_columns)
-    graph_data.book_ids = list(book_ids)
+    graph_data.item_ids = list(item_ids)
     graph_data.gtl_ids = list(gtl_ids)
     graph_data.metadata_ids = list(metadata_keys)
-    graph_data.node_ids = graph_data.book_ids + graph_data.metadata_ids
+    graph_data.node_ids = graph_data.item_ids + graph_data.metadata_ids
 
     return graph_data
-
-
-def build_book_metadata_graph(
-    parquet_path: Path | str,
-    *,
-    nrows: int | None = None,
-    filters: Sequence[tuple[str, str, Iterable[object]]] | None = None,
-) -> Data:
-    """Load a parquet file and build the corresponding book-metadata graph."""
-
-    path = Path(parquet_path)
-    if not path.exists():
-        raise FileNotFoundError(f"Parquet file not found: {path}")
-
-    read_kwargs: dict[str, object] = {}
-    if filters is not None:
-        read_kwargs["filters"] = list(filters)
-
-    df = pd.read_parquet(path, **read_kwargs)
-    if nrows is not None:
-        df = df.sample(min(len(df), nrows), random_state=42)
-
-    data_graph = build_book_metadata_graph_from_dataframe(
-        df,
-        metadata_columns=DEFAULT_METADATA_COLUMNS,
-    )
-
-    return data_graph

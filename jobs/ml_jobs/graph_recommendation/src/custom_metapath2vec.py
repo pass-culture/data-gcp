@@ -94,87 +94,111 @@ class CustomMetaPath2Vec(torch.nn.Module):
             **kwargs,
         )
 
-    def _pos_sample(self, batch: Tensor) -> Tensor:
-        batch = batch.repeat(self.walks_per_node)
-        all_walks = []
-
-        for i, metapath in enumerate(self.metapaths):
-            # Important: Use a copy/fresh batch for each metapath iteration
-            # because sample() modifies the batch (returns next nodes)
-            curr_batch = batch
-            rws = [curr_batch]
-
-            for k in range(self.walk_length):
-                edge_type = metapath[k % len(metapath)]
-                curr_batch = sample(
-                    self.rowptr_dict[edge_type],
-                    self.col_dict[edge_type],
-                    self.rowcount_dict[edge_type],
-                    curr_batch,
-                    num_neighbors=1,
-                    dummy_idx=self.dummy_idx,
-                ).view(-1)
-                rws.append(curr_batch)
-
-            rw = torch.stack(rws, dim=-1)
-
-            # Apply offset for this specific metapath
-            # Ensure offset is on the same device as rw
-            offset = self.offsets[i].to(rw.device)
-            rw.add_(offset.view(1, -1))
-
-            # Remove walks with dummy nodes
-            rw = rw[(rw < self.dummy_idx).all(axis=1), :]
-
-            walks = []
-            num_walks_per_rw = 1 + self.walk_length + 1 - self.context_size
-            for j in range(num_walks_per_rw):
-                walks.append(rw[:, j : j + self.context_size])
-
-            all_walks.append(torch.cat(walks, dim=0))
-        return torch.cat(all_walks, dim=0)
-
-    def _neg_sample(self, batch: Tensor) -> Tensor:
-        batch = batch.repeat(self.walks_per_node * self.num_negative_samples)
-
-        all_walks = []
-
-        for i, metapath in enumerate(self.metapaths):
-            curr_batch = batch
-            rws = [curr_batch]
-
-            for k in range(self.walk_length):
-                keys = metapath[k % len(metapath)]
-                curr_batch = torch.randint(
-                    0,
-                    self.num_nodes_dict[keys[-1]],
-                    (curr_batch.size(0),),
-                    dtype=torch.long,
-                    device=curr_batch.device,
-                )
-                rws.append(curr_batch)
-
-            rw = torch.stack(rws, dim=-1)
-
-            # Apply offset for this specific metapath
-            offset = self.offsets[i].to(rw.device)
-            rw.add_(offset.view(1, -1))
-
-            walks = []
-            num_walks_per_rw = 1 + self.walk_length + 1 - self.context_size
-            for j in range(num_walks_per_rw):
-                walks.append(rw[:, j : j + self.context_size])
-
-            all_walks.append(torch.cat(walks, dim=0))
-
-        return torch.cat(all_walks, dim=0)
-
     def _sample(self, batch: list[int]) -> tuple[Tensor, Tensor]:
+        """Generate positive and negative random walk samples for a batch of nodes.
+
+        For each metapath, this method:
+          1. Generates positive walks by following edges according to the metapath
+             sequence. Walks that hit a dummy node (i.e. a node with no outgoing
+             edge for the requested edge type) are discarded.
+          2. Generates negative walks only for the surviving positive walks, by
+             keeping the same start node but sampling random destination nodes at
+             each step (ignoring the graph structure).
+          3. Applies a global node-type offset to both positive and negative walks
+             so that node indices are unique across all node types in the embedding.
+          4. Slices each walk into overlapping windows of size ``context_size`` to
+             produce the final training pairs.
+
+        Args:
+            batch (list[int]): Indices of the source nodes to sample walks from.
+
+        Returns:
+            tuple[Tensor, Tensor]: A pair ``(pos_rw, neg_rw)`` where both tensors
+                have shape ``(N, context_size)`` and contain offset node indices.
+                ``pos_rw`` holds windows extracted from valid metapath walks, while
+                ``neg_rw`` holds the corresponding windows from randomly-sampled
+                (corrupted) walks. Both tensors are empty (shape ``(0, context_size)``)
+                if no walk survived for any metapath.
+        """
         if not isinstance(batch, Tensor):
             batch = torch.tensor(batch, dtype=torch.long)
 
-        pos_rw = self._pos_sample(batch)
-        neg_rw = self._neg_sample(batch)[: len(pos_rw) * self.num_negative_samples, :]
+        batch_pos = batch.repeat(self.walks_per_node)
+        all_pos_walks = []
+        all_neg_walks = []
+
+        num_walks_per_rw = 1 + self.walk_length + 1 - self.context_size
+
+        for i, metapath in enumerate(self.metapaths):
+            # 1. Generate Positive Walk
+            curr_batch_pos = batch_pos
+            rws_pos = [curr_batch_pos]
+
+            for k in range(self.walk_length):
+                edge_type = metapath[k % len(metapath)]
+                curr_batch_pos = sample(
+                    self.rowptr_dict[edge_type],
+                    self.col_dict[edge_type],
+                    self.rowcount_dict[edge_type],
+                    curr_batch_pos,
+                    num_neighbors=1,
+                    dummy_idx=self.dummy_idx,
+                ).view(-1)
+                rws_pos.append(curr_batch_pos)
+
+            rw_pos = torch.stack(rws_pos, dim=-1)
+
+            # Check which walks survived (no dummy nodes)
+            keep_mask = (rw_pos < self.dummy_idx).all(dim=1)
+            rw_pos_survived = rw_pos[keep_mask]
+
+            num_survived = rw_pos_survived.size(0)
+            if num_survived == 0:
+                continue
+
+            # 2. Generate Negative walks ONLY for survived positive walks
+            # The start node is the first node of each survived walk
+            start_nodes = rw_pos_survived[:, 0]
+            curr_batch_neg = start_nodes.repeat_interleave(self.num_negative_samples)
+            rws_neg = [curr_batch_neg]
+
+            for k in range(self.walk_length):
+                keys = metapath[k % len(metapath)]
+                curr_batch_neg = torch.randint(
+                    0,
+                    self.num_nodes_dict[keys[-1]],
+                    (curr_batch_neg.size(0),),
+                    dtype=torch.long,
+                    device=curr_batch_neg.device,
+                )
+                rws_neg.append(curr_batch_neg)
+
+            rw_neg = torch.stack(rws_neg, dim=-1)
+
+            # Apply offset to both positive and negative walks
+            offset = self.offsets[i].to(rw_pos.device)
+            rw_pos_survived_offset = rw_pos_survived + offset.view(1, -1)
+            rw_neg_offset = rw_neg + offset.view(1, -1)
+
+            # Slice into windows of context_size
+            walks_pos = []
+            for j in range(num_walks_per_rw):
+                walks_pos.append(rw_pos_survived_offset[:, j : j + self.context_size])
+            all_pos_walks.append(torch.cat(walks_pos, dim=0))
+
+            walks_neg = []
+            for j in range(num_walks_per_rw):
+                walks_neg.append(rw_neg_offset[:, j : j + self.context_size])
+            all_neg_walks.append(torch.cat(walks_neg, dim=0))
+
+        if not all_pos_walks:
+            empty_tensor = torch.empty(
+                (0, self.context_size), dtype=torch.long, device=batch.device
+            )
+            return empty_tensor, empty_tensor
+
+        pos_rw = torch.cat(all_pos_walks, dim=0)
+        neg_rw = torch.cat(all_neg_walks, dim=0)
         return pos_rw, neg_rw
 
     @staticmethod

@@ -1,4 +1,4 @@
-"""Utilities to construct a PyTorch Geometric graph for book recommendations."""
+"""Utilities to construct a PyTorch Geometric graph for item recommendations."""
 
 from __future__ import annotations
 
@@ -17,22 +17,22 @@ import torch
 from torch_geometric.data import HeteroData
 
 
-def build_book_metadata_heterograph_from_dataframe(
+def build_item_metadata_heterograph_from_dataframe(
     dataframe: pd.DataFrame,
     metadata_columns: Sequence[str],
 ) -> HeteroData:
-    """Construct a heterogeneous book-to-metadata graph from a dataframe.
+    """Construct a heterogeneous item-to-metadata graph from a dataframe.
 
     The graph structure creates:
-    - "book" node type for all books
+    - "item" node type for all items
     - One node type for each metadata column (e.g., "rayon", "artist_id")
-    - "is_{metadata}" edge types from books to metadata
-    - "{metadata}_of" edge types from metadata back to books
+    - "is_{metadata}" edge types from items to metadata
+    - "{metadata}_of" edge types from metadata back to items
 
     Args:
-        dataframe: Input data with book IDs and metadata columns.
+        dataframe: Input data with item IDs and metadata columns.
         metadata_columns: Column names to use as metadata.
-        id_column: Column name containing book IDs.
+        id_column: Column name containing item IDs.
         gtl_id_column: Column name containing GTL IDs.
 
     Returns:
@@ -53,13 +53,13 @@ def build_book_metadata_heterograph_from_dataframe(
         metadata_columns=[GTL_ID_COLUMN, *metadata_columns],
     )
 
-    # Step 2: Prepare book nodes
-    unique_books = df_normalized[[ID_COLUMN, GTL_ID_COLUMN]].drop_duplicates(
+    # Step 2: Prepare item nodes
+    unique_items = df_normalized[[ID_COLUMN, GTL_ID_COLUMN]].drop_duplicates(
         subset=[ID_COLUMN]
     )
-    book_ids = unique_books[ID_COLUMN].tolist()
-    gtl_ids = unique_books[GTL_ID_COLUMN].tolist()
-    book_index = {book_id: idx for idx, book_id in enumerate(book_ids)}
+    item_ids = unique_items[ID_COLUMN].tolist()
+    gtl_ids = unique_items[GTL_ID_COLUMN].tolist()
+    item_index = {item_id: idx for idx, item_id in enumerate(item_ids)}
 
     # Step 3: Build metadata nodes by column
     metadata_nodes_by_column: dict[str, dict[str, int]] = {}
@@ -88,22 +88,22 @@ def build_book_metadata_heterograph_from_dataframe(
     # Initialize edge sets for each metadata column
     for column in metadata_columns:
         if column in metadata_nodes_by_column:
-            # "book" -> "is_{column}" -> "{column}"
-            edge_indices[("book", f"is_{column}", column)] = set()
-            # "{column}" -> "{column}_of" -> "book"
-            edge_indices[(column, f"{column}_of", "book")] = set()
+            # "item" -> "is_{column}" -> "{column}"
+            edge_indices[("item", f"is_{column}", column)] = set()
+            # "{column}" -> "{column}_of" -> "item"
+            edge_indices[(column, f"{column}_of", "item")] = set()
 
     # Step 5: Build edges by iterating through dataframe
     relevant_columns = [ID_COLUMN, *metadata_columns]
 
     for record in df_normalized[relevant_columns].itertuples(index=False):
         record_dict = record._asdict()
-        book_id = record_dict[ID_COLUMN]
-        # Skip rows with missing book IDs
-        if book_id is None or book_id not in book_index:
+        item_id = record_dict[ID_COLUMN]
+        # Skip rows with missing item IDs
+        if item_id is None or item_id not in item_index:
             continue
 
-        book_idx = book_index[book_id]
+        item_idx = item_index[item_id]
 
         # Create edges to all metadata values in this row
         for column in metadata_columns:
@@ -119,10 +119,10 @@ def build_book_metadata_heterograph_from_dataframe(
                 metadata_idx = metadata_nodes_by_column[column][value_str]
 
                 # Add edges in both directions
-                edge_key_forward = ("book", f"is_{column}", column)
-                edge_key_backward = (column, f"{column}_of", "book")
-                edge_indices[edge_key_forward].add((book_idx, metadata_idx))
-                edge_indices[edge_key_backward].add((metadata_idx, book_idx))
+                edge_key_forward = ("item", f"is_{column}", column)
+                edge_key_backward = (column, f"{column}_of", "item")
+                edge_indices[edge_key_forward].add((item_idx, metadata_idx))
+                edge_indices[edge_key_backward].add((metadata_idx, item_idx))
 
     # Check if any edges were created
     total_edges = sum(len(edges) for edges in edge_indices.values())
@@ -134,8 +134,8 @@ def build_book_metadata_heterograph_from_dataframe(
     # Step 6: Create HeteroData object
     graph_data = HeteroData()
 
-    # Add book nodes
-    graph_data["book"].num_nodes = len(book_ids)
+    # Add item nodes
+    graph_data["item"].num_nodes = len(item_ids)
 
     # Add metadata nodes for each column
     for column, node_mapping in metadata_nodes_by_column.items():
@@ -149,7 +149,7 @@ def build_book_metadata_heterograph_from_dataframe(
             graph_data[src_type, edge_type, dst_type].edge_index = edge_index
 
     # Step 7: Add custom attributes for identifier mapping
-    graph_data.book_ids = list(book_ids)
+    graph_data.item_ids = list(item_ids)
     graph_data.gtl_ids = list(gtl_ids)
     graph_data.metadata_ids_by_column = metadata_ids_by_column
     graph_data.metadata_columns = [
@@ -166,13 +166,13 @@ def build_book_metadata_heterograph_from_dataframe(
     return graph_data
 
 
-def build_book_metadata_heterograph(
+def build_item_metadata_heterograph(
     parquet_path: str,
     *,
     nrows: int | None = None,
     filters: Sequence[tuple[str, str, Iterable[object]]] | None = None,
 ) -> HeteroData:
-    """Load a parquet file and build the corresponding book-metadata graph."""
+    """Load a parquet file and build the corresponding item-metadata graph."""
 
     read_kwargs: dict[str, object] = {}
     if filters is not None:
@@ -182,7 +182,7 @@ def build_book_metadata_heterograph(
     if nrows is not None:
         df = df.sample(min(len(df), nrows), random_state=42)
 
-    data_graph = build_book_metadata_heterograph_from_dataframe(
+    data_graph = build_item_metadata_heterograph_from_dataframe(
         df,
         metadata_columns=DEFAULT_METADATA_COLUMNS,
     )

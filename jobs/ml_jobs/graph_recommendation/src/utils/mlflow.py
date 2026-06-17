@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import tempfile
@@ -6,21 +7,15 @@ from contextlib import contextmanager
 from functools import wraps
 from pathlib import Path
 
+import google.auth
 import mlflow
 import pandas as pd
 import typer
-from google.auth.transport.requests import Request
-from google.oauth2 import service_account
+from google.cloud import iam_credentials_v1
 from loguru import logger
 
-from src.utils.gcp import (
-    ENV_SHORT_NAME,
-    SA_ACCOUNT,
-    get_credentials,
-    get_secret,
-)
+from src.constants import ENV_SHORT_NAME, SA_ACCOUNT
 
-MLFLOW_SECRET_NAME = "mlflow_client_id"
 MLFLOW_URI = (
     "https://mlflow.passculture.team/"
     if ENV_SHORT_NAME == "prod"
@@ -91,40 +86,40 @@ def conditional_mlflow(log_mlflow_arg_name: str = "log_mlflow"):
 
 
 class MLflowAuthManager:
-    """Handles MLflow authentication and periodic token refresh."""
+    """Handles MLflow authentication and periodic token refresh using signed JWTs."""
 
     def __init__(
         self,
         mlflow_uri: str = MLFLOW_URI,
-        sa_secret_name: str = SA_ACCOUNT,
-        client_secret_name: str = MLFLOW_SECRET_NAME,
+        sa_account: str = SA_ACCOUNT,
         token_refresh_interval: int = MLFLOW_TOKEN_REFRESH_INTERVAL,
     ):
         self.mlflow_uri = mlflow_uri
-        self.sa_secret_name = sa_secret_name
-        self.client_secret_name = client_secret_name
-        self.credentials = None
+        self.sa_account = sa_account
         self.token_refresh_interval = token_refresh_interval
         self._last_refresh_ts = 0
+        self.token = None
 
     # ---- Authentication ----
     def authenticate(self):
-        """Authenticate to MLflow via service account or default credentials."""
-        try:
-            self.credentials = self._get_service_account_credentials()
-            logger.info("Authenticated with service account for MLflow")
-        except Exception as e:
-            logger.warning(f"Service account authentication failed: {e}")
-            self.credentials = self._get_default_credentials()
-            logger.info("Authenticated with default GCP credentials for MLflow")
+        """Authenticate to MLflow via signed JWT token.
 
-        self._apply_token()
+        Uses the Google IAM Credentials API.
+        """
+        try:
+            self._refresh_jwt_token()
+            logger.info(
+                f"Authenticated for MLflow using signed JWT for {self.sa_account}"
+            )
+        except Exception as e:
+            logger.error(f"MLflow authentication failed: {e}")
+            raise
 
     # ---- Token Refresh ----
     def refresh_token(self):
         """Refresh token if enough time has passed."""
-        if not self.credentials:
-            logger.warning("No credentials to refresh.")
+        if not self.token:
+            logger.warning("No token to refresh. Call authenticate() first.")
             return
 
         now = time.time()
@@ -132,31 +127,55 @@ class MLflowAuthManager:
             return
 
         try:
-            self.credentials.refresh(Request())
-            self._apply_token()
-            self._last_refresh_ts = now
+            self._refresh_jwt_token()
         except Exception as e:
             logger.error(f"Failed to refresh MLflow token: {e}")
 
+    def _refresh_jwt_token(self):
+        """Generate and sign a new JWT token using Google IAM Credentials API."""
+        signed_jwt = self._sign_jwt()
+        self.token = signed_jwt
+        self._apply_token()
+        self._last_refresh_ts = time.time()
+        logger.info("Successfully refreshed MLflow tracking token")
+
     def _apply_token(self):
-        os.environ["MLFLOW_TRACKING_TOKEN"] = self.credentials.token
+        os.environ["MLFLOW_TRACKING_TOKEN"] = self.token
         mlflow.set_tracking_uri(self.mlflow_uri)
 
-    def _get_service_account_credentials(self):
-        sa_info = json.loads(get_secret(self.sa_secret_name))
-        audience = get_secret(self.client_secret_name)
-        creds = service_account.IDTokenCredentials.from_service_account_info(
-            sa_info, target_audience=audience
-        )
-        creds.refresh(Request())
-        return creds
+    def _generate_jwt_payload(self) -> str:
+        """Generates JWT payload for service account.
 
-    def _get_default_credentials(self):
-        creds = get_credentials()
-        audience = get_secret(self.client_secret_name)
-        id_creds = service_account.IDTokenCredentials(creds, target_audience=audience)
-        id_creds.refresh(Request())
-        return id_creds
+        Creates a properly formatted JWT payload with standard claims (iss, sub,
+        aud, iat, exp) needed for IAP authentication.
+        """
+        iat = datetime.datetime.now(tz=datetime.UTC)
+        exp = iat + datetime.timedelta(seconds=3600)
+
+        payload = {
+            "iss": self.sa_account,
+            "sub": self.sa_account,
+            "aud": self.mlflow_uri + "*",
+            "iat": int(iat.timestamp()),
+            "exp": int(exp.timestamp()),
+        }
+
+        return json.dumps(payload)
+
+    def _sign_jwt(self) -> str:
+        """Signs JWT payload using ADC and IAM credentials API.
+
+        Uses Google Cloud's IAM Credentials API to sign a JWT.
+        """
+        source_credentials, _ = google.auth.default()
+        iam_client = iam_credentials_v1.IAMCredentialsClient(
+            credentials=source_credentials
+        )
+        name = iam_client.service_account_path("-", self.sa_account)
+        payload = self._generate_jwt_payload()
+        response = iam_client.sign_jwt(name=name, payload=payload)
+
+        return response.signed_jwt
 
 
 def mlflow_refresh_token_decorator(auth_manager, func):

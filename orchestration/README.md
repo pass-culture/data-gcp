@@ -44,6 +44,22 @@ To manually access or trigger DAGs, use the following Airflow instances:
 * **EHP**: [https://airflow-{env}.data.ehp.passculture.team](https://airflow-{env}.data.ehp.passculture.team)
 * **Production**: [https://airflow.data.passculture.team](https://airflow.data.passculture.team)
 
+### 🧪 Testing a DAG from your local branch
+
+You can deploy a personal test copy of any DAG to a live Airflow environment without affecting the production version. The test copy gets a unique `dag_id`, has `schedule_interval=None`, and is automatically purged after 14 days.
+
+```bash
+cd orchestration/
+
+# Create test copy and push to dev (default)
+make test-dag DAG=my_dag.py
+
+# Push to stg or prod
+make test-dag DAG=my_dag.py ENV=stg
+```
+
+See [`scripts/HOW-TO-TEST-DAGS-FROM-LOCAL-MACHINE.md`](scripts/HOW-TO-TEST-DAGS-FROM-LOCAL-MACHINE.md) for the full workflow.
+
 ---
 
 ## 🧪 Local Airflow Setup (with Docker)

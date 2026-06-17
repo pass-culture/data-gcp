@@ -1,1 +1,3 @@
 jobs/ml/poc/
+# Test DAGs created by create_test_dag.py — excluded from rsync so CI/CD never deletes them
+*__test__*.py

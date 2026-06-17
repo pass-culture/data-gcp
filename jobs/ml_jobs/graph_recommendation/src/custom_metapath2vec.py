@@ -95,6 +95,31 @@ class CustomMetaPath2Vec(torch.nn.Module):
         )
 
     def _sample(self, batch: list[int]) -> tuple[Tensor, Tensor]:
+        """Generate positive and negative random walk samples for a batch of nodes.
+
+        For each metapath, this method:
+          1. Generates positive walks by following edges according to the metapath
+             sequence. Walks that hit a dummy node (i.e. a node with no outgoing
+             edge for the requested edge type) are discarded.
+          2. Generates negative walks only for the surviving positive walks, by
+             keeping the same start node but sampling random destination nodes at
+             each step (ignoring the graph structure).
+          3. Applies a global node-type offset to both positive and negative walks
+             so that node indices are unique across all node types in the embedding.
+          4. Slices each walk into overlapping windows of size ``context_size`` to
+             produce the final training pairs.
+
+        Args:
+            batch (list[int]): Indices of the source nodes to sample walks from.
+
+        Returns:
+            tuple[Tensor, Tensor]: A pair ``(pos_rw, neg_rw)`` where both tensors
+                have shape ``(N, context_size)`` and contain offset node indices.
+                ``pos_rw`` holds windows extracted from valid metapath walks, while
+                ``neg_rw`` holds the corresponding windows from randomly-sampled
+                (corrupted) walks. Both tensors are empty (shape ``(0, context_size)``)
+                if no walk survived for any metapath.
+        """
         if not isinstance(batch, Tensor):
             batch = torch.tensor(batch, dtype=torch.long)
 

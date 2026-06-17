@@ -232,3 +232,98 @@ def test_pos_sample_prunes_dummy_nodes():
     # Windows per walk: 1 + walk_length + 1 - context_size = 1 + 2 + 1 - 2 = 2.
     # Expected rows: 1 valid walk * 2 windows = 2 rows.
     assert pos_rw.size(0) == 2
+
+
+def test_neg_walks_match_survived_pos_walks_single_metapath():
+    """Test that neg walks are generated only for nodes whose positive walk survived.
+
+    When some positive walks are pruned (dummy node hit), negative walks must
+    be generated only for the surviving walks, not for the full original batch.
+    The invariant is: neg_rw.size(0) == pos_rw.size(0) * num_negative_samples.
+    """
+    # Graph:
+    # - author 0 -> paper 0 -> author 0  (valid APA walk)
+    # - author 1 has no outgoing "writes" edge  (dead end -> walk pruned)
+    edge_index_dict = {
+        ("author", "writes", "paper"): torch.tensor([[0], [0]]),
+        ("paper", "written_by", "author"): torch.tensor([[0], [0]]),
+    }
+    metapaths = [[("author", "writes", "paper"), ("paper", "written_by", "author")]]
+    num_nodes_dict = {"author": 2, "paper": 1}
+    num_negative_samples = 3
+
+    model = CustomMetaPath2Vec(
+        edge_index_dict=edge_index_dict,
+        embedding_dim=16,
+        metapaths=metapaths,
+        walk_length=2,
+        context_size=2,
+        walks_per_node=1,
+        num_negative_samples=num_negative_samples,
+        num_nodes_dict=num_nodes_dict,
+    )
+
+    # Batch: author 0 (valid) + author 1 (dead end)
+    batch = torch.tensor([0, 1])
+    pos_rw, neg_rw = model._sample(batch)
+
+    # Only author 0's walk survives -> pos_rw has some rows
+    assert pos_rw.size(0) > 0
+    # Negative walks must be generated ONLY for the survived positive walks,
+    # NOT for the full batch (which would incorrectly include author 1).
+    assert neg_rw.size(0) == pos_rw.size(0) * num_negative_samples
+
+
+def test_neg_walks_absent_when_all_pos_walks_pruned_for_one_metapath():
+    """Test with 2 metapaths: when all positive walks of MP2 are pruned,
+    no negative walks are generated for MP2 either.
+
+    Setup:
+    - MP1 (APA):  author 0 -> paper 0 -> author 0  (valid)
+    - MP2 (AVA):  author 0 has no "visits" edge at all  (all walks dead)
+
+    Without the fix: neg walks would have been generated for MP2's full batch,
+    inflating neg_rw beyond pos_rw.size(0) * num_negative_samples.
+    With the fix:  the ``continue`` statement skips MP2 entirely, so the
+    invariant neg_rw.size(0) == pos_rw.size(0) * num_negative_samples holds.
+    """
+    # MP2 uses edge types with no edges at all -> every walk immediately hits
+    # the dummy node and is discarded.
+    edge_index_dict = {
+        # MP1 edges (author 0 only)
+        ("author", "writes", "paper"): torch.tensor([[0], [0]]),
+        ("paper", "written_by", "author"): torch.tensor([[0], [0]]),
+        # MP2 edges: completely empty -> author 0 always hits dummy node
+        ("author", "visits", "venue"): torch.zeros((2, 0), dtype=torch.long),
+        ("venue", "visited_by", "author"): torch.tensor([[0], [0]]),
+    }
+    metapaths = [
+        [
+            ("author", "writes", "paper"),
+            ("paper", "written_by", "author"),
+        ],  # MP1: valid
+        [("author", "visits", "venue"), ("venue", "visited_by", "author")],  # MP2: dead
+    ]
+    num_nodes_dict = {"author": 1, "paper": 1, "venue": 1}
+    num_negative_samples = 2
+
+    model = CustomMetaPath2Vec(
+        edge_index_dict=edge_index_dict,
+        embedding_dim=16,
+        metapaths=metapaths,
+        walk_length=2,
+        context_size=2,
+        walks_per_node=1,
+        num_negative_samples=num_negative_samples,
+        num_nodes_dict=num_nodes_dict,
+    )
+
+    batch = torch.tensor([0])  # single author
+    pos_rw, neg_rw = model._sample(batch)
+
+    # MP1 yields 1 valid walk => 1 window (walk_length=2, context_size=2 => 1 window)
+    # MP2 yields 0 valid walks => must produce 0 neg walks as well
+    assert pos_rw.size(0) > 0
+    # The key assertion: neg rows come only from survived pos walks (MP1),
+    # NOT from the dead MP2.
+    assert neg_rw.size(0) == pos_rw.size(0) * num_negative_samples

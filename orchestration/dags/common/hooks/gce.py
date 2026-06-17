@@ -166,6 +166,7 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
 
             # Initialize job status
             echo "running" > $JOB_DIR/status
+            sync
         """
 
     @property
@@ -204,6 +205,7 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
     async def run_ssh_status_check_command(self, retry=1) -> DeferrableSSHJobStatus:
         command = f"""
             JOB_DIR={self._job_dir}
+            ARCHIVE_LOG={self._job_base_dir}/archive/{self.job_id}_output.log
             if [ -f "$JOB_DIR/status" ]; then
                 status=$(cat $JOB_DIR/status)
                 pid=$(cat $JOB_DIR/pid 2>/dev/null || echo "0")
@@ -219,6 +221,14 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
                 echo "STATUS:$(cat $JOB_DIR/status)"
                 echo "OUTPUT:$output"
                 echo "PID:$pid"
+            elif [ -f "$ARCHIVE_LOG" ]; then
+                # Job directory was already cleaned up after a successful run.
+                # This happens when the triggerer restarts after cleanup but before
+                # the TriggerEvent was delivered to the Airflow scheduler.
+                output=$(tail -n 1000 "$ARCHIVE_LOG" 2>/dev/null || echo "No archived output")
+                echo "STATUS:completed"
+                echo "OUTPUT:$output"
+                echo "PID:0"
             else
                 echo "STATUS:failed"
                 echo "OUTPUT:Job directory not found"

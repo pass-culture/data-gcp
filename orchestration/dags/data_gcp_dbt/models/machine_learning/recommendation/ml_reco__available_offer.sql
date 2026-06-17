@@ -1,14 +1,24 @@
 with
     offers_with_mediation as (
+        -- Custom mediation image exists (active mediation with thumb_count >= 1)
         select offer_id
         from {{ ref("int_applicative__mediation") }}
         where is_mediation = 1
         union distinct
+        -- Product thumbnail fallback, only if no active mediation overrides it
         select o.offer_id
         from {{ ref("mrt_global__offer") }} as o
         inner join
             {{ ref("int_applicative__product") }} as p on o.offer_product_id = p.id
-        where p.is_mediation = 1
+        where p.is_mediation = 1 and o.mediation_humanized_id is null
+        union distinct
+        -- Product mediation UUID fallback, only if no active mediation overrides it
+        select o.offer_id
+        from {{ ref("mrt_global__offer") }} as o
+        inner join
+            {{ ref("int_applicative__product_mediation") }} as pm
+            on o.offer_product_id = pm.product_id
+        where pm.uuid is not null and o.mediation_humanized_id is null
     ),
 
     get_recommendable_offers as (

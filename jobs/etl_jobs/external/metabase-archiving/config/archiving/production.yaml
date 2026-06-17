@@ -23,7 +23,9 @@ soft_archive_rules:
 hard_archive_cards:
   min_days_since_update: 30
   name_pattern: "^\\[Archive\\]"
-  max_cards: 50
+  # ~10.8k stale cards backlog in the archive folder; 50/run is far too slow.
+  # Each card = 1 API GET (+ 1 PUT when actually archived), no throttle between.
+  max_cards: 500
 
 empty_cleanup:
   min_age_days: 15

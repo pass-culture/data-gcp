@@ -2,8 +2,6 @@ import logging
 import re
 
 import pandas as pd
-from google.api_core.exceptions import NotFound
-from google.cloud import bigquery
 
 from core.utils import (
     INT_METABASE_DATASET,
@@ -131,7 +129,8 @@ def _hard_archive_breakdown_query(name_pattern, min_days_since_update):
         already_hard_archived AS (
             SELECT DISTINCT id
             FROM `{INT_METABASE_DATASET}.archiving_log`
-            WHERE object_type = 'card_hard_archive' AND status = 'success'
+            WHERE object_type = 'card_hard_archive'
+              AND status IN ('success', 'already_archived')
         ),
         hard_candidates AS (
             SELECT rc.id, coll_root.root_id
@@ -286,35 +285,12 @@ def load_recently_failed_card_ids(cooldown_days=30):
     return set(df["id"].astype(int).tolist())
 
 
-def _ensure_archiving_log_columns(table_id):
-    """Add the optional diagnostic columns to archiving_log if they're missing.
-
-    `to_gbq(if_exists="append")` rejects a DataFrame whose columns aren't all
-    present in the destination table, so http_status / error_reason must exist
-    before the append. No-op when the table doesn't exist yet — to_gbq creates
-    it with the full schema in that case.
-    """
-    client = bigquery.Client(project=PROJECT_NAME)
-    try:
-        client.get_table(table_id)
-    except NotFound:
-        return
-    client.query(
-        f"""
-        ALTER TABLE `{table_id}`
-        ADD COLUMN IF NOT EXISTS http_status INT64,
-        ADD COLUMN IF NOT EXISTS error_reason STRING
-        """
-    ).result()
-
-
 def append_archiving_logs(log_entries):
     """Append a batch of log entries to the archiving_log BQ table in one call."""
     if not log_entries:
         logger.info("No archiving log entries to write")
         return
     table_id = f"{PROJECT_NAME}.{INT_METABASE_DATASET}.archiving_log"
-    _ensure_archiving_log_columns(table_id)
     pd.DataFrame(log_entries).to_gbq(
         table_id,
         project_id=PROJECT_NAME,
@@ -513,7 +489,8 @@ def hard_archive_stale_cards(
         already_hard_archived AS (
             SELECT DISTINCT id
             FROM `{INT_METABASE_DATASET}.archiving_log`
-            WHERE object_type = 'card_hard_archive' AND status = 'success'
+            WHERE object_type = 'card_hard_archive'
+              AND status IN ('success', 'already_archived')
         )
         SELECT rc.id, rc.card_collection_id
         FROM `{RAW_METABASE_DATASET}.metabase_report_card` AS rc
@@ -532,6 +509,7 @@ def hard_archive_stale_cards(
     logger.info("%d card(s) candidate for hard-archive", len(df))
 
     archived_ids = []
+    skipped_already_archived = 0
     log_entries = []
     for _, row in df.iterrows():
         card_id = int(row["id"])
@@ -547,7 +525,27 @@ def hard_archive_stale_cards(
 
         card = metabase.get_cards(card_id)
         if card.get("archived", False):
-            logger.debug("Card %s already hard-archived, skipping", card_id)
+            # Already archived in Metabase (manual archive, or a run that
+            # predates logging). Record it so the dedup CTE excludes it next
+            # run — otherwise these cards permanently fill the LIMIT batch and
+            # genuinely-stale candidates are never reached.
+            logger.info(
+                "Card %s already archived in Metabase, recording skip", card_id
+            )
+            skipped_already_archived += 1
+            log_entries.append(
+                {
+                    "id": card_id,
+                    "object_type": "card_hard_archive",
+                    "status": "already_archived",
+                    "new_collection_id": card.get("collection_id"),
+                    "previous_collection_id": card.get("collection_id"),
+                    "archived_at": pd.Timestamp.now(),
+                    "last_execution_date": None,
+                    "last_execution_context": None,
+                    "parent_folder": "archive",
+                }
+            )
             continue
 
         metabase.put_card(card_id, {"archived": True})
@@ -575,6 +573,11 @@ def hard_archive_stale_cards(
         logger.info("Hard-archived %d card(s): %s", len(archived_ids), archived_ids)
     else:
         logger.info("No stale cards to hard-archive")
+    if skipped_already_archived:
+        logger.info(
+            "Recorded %d card(s) already archived in Metabase (excluded next run)",
+            skipped_already_archived,
+        )
 
     return archived_ids
 
@@ -628,6 +631,34 @@ def _required_meta_fields(min_days_since_update):
     return fields
 
 
+def _record_cleanup_candidate(
+    log_entries, object_id, object_type, status, parent_collection_id
+):
+    """Append one archiving_log audit row for a cleanup candidate (an empty
+    collection or a dead dashboard) to `log_entries`.
+
+    No-op when `log_entries` is None (caller opted out of auditing). `status`
+    is one of: `success` (archived), `skipped_recent` (a genuine candidate kept
+    because it's newer than the age threshold), or `dry_run`. Only candidates
+    are recorded — live dashboards / non-empty collections are not, so the table
+    shows exactly what the cleanup considered and why it acted or didn't."""
+    if log_entries is None:
+        return
+    log_entries.append(
+        {
+            "id": object_id,
+            "object_type": object_type,
+            "status": status,
+            "new_collection_id": None,
+            "previous_collection_id": parent_collection_id,
+            "archived_at": pd.Timestamp.now(),
+            "last_execution_date": None,
+            "last_execution_context": None,
+            "parent_folder": f"{object_type}_cleanup",
+        }
+    )
+
+
 def archive_dead_dashboards(
     metabase,
     root_collection_ids,
@@ -640,13 +671,22 @@ def archive_dead_dashboards(
     been updated for `min_days_since_update` days. Scans recursively under
     each of `root_collection_ids` (archive root included by the caller)."""
     archived = []
+    log_entries = []
 
     for root_id in root_collection_ids:
         archived.extend(
             _scan_dashboards_recursive(
-                metabase, root_id, min_age_days, min_days_since_update, dry_run
+                metabase,
+                root_id,
+                min_age_days,
+                min_days_since_update,
+                dry_run,
+                log_entries,
             )
         )
+
+    if not dry_run:
+        append_archiving_logs(log_entries)
 
     prefix = "[DRY-RUN] Would archive" if dry_run else "Archived"
     if archived:
@@ -658,7 +698,12 @@ def archive_dead_dashboards(
 
 
 def _scan_dashboards_recursive(
-    metabase, collection_id, min_age_days, min_days_since_update=None, dry_run=False
+    metabase,
+    collection_id,
+    min_age_days,
+    min_days_since_update=None,
+    dry_run=False,
+    log_entries=None,
 ):
     archived = []
 
@@ -675,9 +720,14 @@ def _scan_dashboards_recursive(
                     min_age_days,
                     min_days_since_update,
                     dry_run,
+                    log_entries,
                 )
             )
         elif model == "dashboard":
+            # Deadness first so we can audit dead-but-too-recent dashboards too
+            # (the candidates a reader wants to see, not just the archived ones).
+            if not _is_dashboard_dead(metabase, item["id"]):
+                continue
             meta = _resolve_metadata(
                 item,
                 metabase,
@@ -685,14 +735,25 @@ def _scan_dashboards_recursive(
                 _required_meta_fields(min_days_since_update),
             )
             if not _passes_age_filters(meta, min_age_days, min_days_since_update):
+                logger.info(
+                    "Dead dashboard %s kept (newer than age threshold)", item["id"]
+                )
+                _record_cleanup_candidate(
+                    log_entries, item["id"], "dashboard", "skipped_recent", collection_id
+                )
                 continue
-            if _is_dashboard_dead(metabase, item["id"]):
-                if dry_run:
-                    logger.info("[DRY-RUN] Would archive dead dashboard %s", item["id"])
-                else:
-                    logger.info("Archiving dead dashboard %s", item["id"])
-                    metabase.put_dashboard(item["id"], {"archived": True})
-                archived.append(item["id"])
+            if dry_run:
+                logger.info("[DRY-RUN] Would archive dead dashboard %s", item["id"])
+                _record_cleanup_candidate(
+                    log_entries, item["id"], "dashboard", "dry_run", collection_id
+                )
+            else:
+                logger.info("Archiving dead dashboard %s", item["id"])
+                metabase.put_dashboard(item["id"], {"archived": True})
+                _record_cleanup_candidate(
+                    log_entries, item["id"], "dashboard", "success", collection_id
+                )
+            archived.append(item["id"])
 
     return archived
 
@@ -744,6 +805,7 @@ def archive_empty_collections(
         exclude_ids = set(root_collection_ids)
 
     archived = []
+    log_entries = []
 
     for root_id in root_collection_ids:
         archived.extend(
@@ -754,8 +816,12 @@ def archive_empty_collections(
                 min_age_days,
                 min_days_since_update,
                 dry_run,
+                log_entries,
             )
         )
+
+    if not dry_run:
+        append_archiving_logs(log_entries)
 
     prefix = "[DRY-RUN] Would archive" if dry_run else "Archived"
     if archived:
@@ -773,6 +839,7 @@ def _archive_empty_recursive(
     min_age_days,
     min_days_since_update=None,
     dry_run=False,
+    log_entries=None,
 ):
     archived = []
 
@@ -790,10 +857,15 @@ def _archive_empty_recursive(
             min_age_days,
             min_days_since_update,
             dry_run,
+            log_entries,
         )
         archived.extend(sub_archived)
 
         if child_id in exclude_ids:
+            continue
+        # Emptiness first so we can audit empty-but-too-recent folders too — the
+        # candidates a reader wants to see, not just the archived ones.
+        if not _is_collection_empty(metabase, child_id):
             continue
         meta = _resolve_metadata(
             child,
@@ -802,15 +874,25 @@ def _archive_empty_recursive(
             _required_meta_fields(min_days_since_update),
         )
         if not _passes_age_filters(meta, min_age_days, min_days_since_update):
-            continue
-        if not _is_collection_empty(metabase, child_id):
+            logger.info(
+                "Empty collection %s kept (newer than age threshold)", child_id
+            )
+            _record_cleanup_candidate(
+                log_entries, child_id, "collection", "skipped_recent", collection_id
+            )
             continue
 
         if dry_run:
             logger.info("[DRY-RUN] Would archive empty collection %s", child_id)
+            _record_cleanup_candidate(
+                log_entries, child_id, "collection", "dry_run", collection_id
+            )
         else:
             logger.info("Archiving empty collection %s", child_id)
             metabase.put_collection(child_id, {"archived": True})
+            _record_cleanup_candidate(
+                log_entries, child_id, "collection", "success", collection_id
+            )
         archived.append(child_id)
 
     return archived

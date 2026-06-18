@@ -303,5 +303,7 @@ models:
         data_type: BOOLEAN
       - name: cultural_outreach_status
         description: "{{ doc('column__cultural_outreach_status') }}"
-      - name: cultural_outreach_claimed_at
-        description: "{{ doc('column__cultural_outreach_claimed_at') }}"
+        data_type: STRING
+      - name: cultural_outreach_claimed_date
+        description: "{{ doc('column__cultural_outreach_claimed_date') }}"
+        data_type: DATETIME

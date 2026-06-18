@@ -100,7 +100,6 @@ offer show sub type for shows. {% enddocs %}
 {% docs column__offer_video_url %} Indicates URL video of the offer downloaded by the cultural partner during offer creation. {% enddocs %}
 {% docs column__offer_advice_content %} Indicates cultural partner recommendations for specific offers, accessible directly within the app. {% enddocs %}
 {% docs column__offer_has_mediation %} Indicates if the offer has a qualified mediation (cultural outreach). {% enddocs %}
-{% docs column__cultural_outreach_claimed_at %} Timestamp at which the cultural outreach checkbox was checked {% enddocs %}
 {% docs column__cultural_outreach_status %} Status of the cultural outreach: qualified, disqualified,pending or not applied if the checkbox was never checked {% enddocs %}
 
 # Date related
@@ -118,3 +117,4 @@ offer show sub type for shows. {% enddocs %}
 {% docs column__offer_publication_date %} Publication date of the offer on the app, bookable or not (coming soon). Data available only from July 2025. {% enddocs %}
 {% docs column__offer_finalization_date %} Finalization date of the offer creation. If offer_creation_date is not null and offer_finalization_date is null, then it is draft. Data available only from July 2025. {% enddocs %}
 {% docs column__scheduled_offer_bookability_date %} Date of bookability of the offer. This field is filled only if the offer is scheduled. {% enddocs %}
+{% docs column__cultural_outreach_claimed_date %} Date at which the cultural outreach checkbox was checked {% enddocs %}

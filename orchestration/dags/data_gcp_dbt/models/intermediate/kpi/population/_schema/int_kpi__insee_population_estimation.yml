@@ -1,0 +1,36 @@
+version: 2
+models:
+  - name: int_kpi__insee_population_estimation
+    description: '{{ doc("description__int_kpi__insee_population_estimation") }}'
+    columns:
+      - name: partition_month
+        description: '{{ doc("column__partition_month") }}'
+        data_type: STRING
+
+      - name: birth_month
+        description: '{{ doc("column__population_birth_month") }}'
+        data_type: INTEGER
+
+      - name: milestone_age
+        description: '{{ doc("column__milestone_age") }}'
+        data_type: STRING
+
+      - name: department_code
+        description: '{{ doc("column__population_department_code") }}'
+        data_type: STRING
+
+      - name: department_name
+        description: '{{ doc("column__population_department_name") }}'
+        data_type: STRING
+
+      - name: region_name
+        description: '{{ doc("column__population_region_name") }}'
+        data_type: STRING
+
+      - name: region_code
+        description: '{{ doc("column__region_code") }}'
+        data_type: STRING
+
+      - name: total_population_last_12_months
+        description: '{{ doc("column__total_population_last_12_months") }}'
+        data_type: INTEGER

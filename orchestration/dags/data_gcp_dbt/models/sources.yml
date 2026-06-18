@@ -170,6 +170,7 @@ sources:
       - name: subcategories
       - name: tiktok_video_detail
       - name: offer_types
+      - name: population_department
       - name: user_address
       - name: zendesk_macro_usage
       - name: zendesk_ticket

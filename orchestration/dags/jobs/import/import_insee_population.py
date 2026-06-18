@@ -67,6 +67,7 @@ with DAG(
             " --min-age 15 --max-age 24"
             " --start-year 2020 --end-year 2026"
             " --to-bigquery"
+            " --monthly"
             " --project-id $GCP_PROJECT_ID"
             " --dataset raw_$ENV_SHORT_NAME"
         ),

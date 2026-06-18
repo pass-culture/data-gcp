@@ -136,6 +136,7 @@ def archive(
             name_pattern=hard_archive_config["name_pattern"],
             min_days_since_update=hard_archive_config["min_days_since_update"],
             max_cards=hard_archive_config["max_cards"],
+            failure_cooldown_days=hard_archive_config.get("failure_cooldown_days", 30),
             dry_run=dry_run,
         )
 

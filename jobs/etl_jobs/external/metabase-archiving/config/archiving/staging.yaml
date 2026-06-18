@@ -24,6 +24,10 @@ hard_archive_cards:
   min_days_since_update: 30
   name_pattern: "^\\[Archive\\]"
   max_cards: 50
+  # Cards that failed to hard-archive in the last N days are skipped on
+  # subsequent runs (e.g. Metabase remote-sync rejections), so the batch isn't
+  # consumed retrying the same dead-ends. Set to null to disable.
+  failure_cooldown_days: 30
 
 empty_cleanup:
   min_age_days: 15

@@ -56,3 +56,43 @@ stop:
 
 show_airflow_logs:
 	docker compose logs -f;
+
+## ── DAG testing helpers ──────────────────────────────────────────────────────
+## DAG=  filename or stem (with or without .py).  ENV defaults to dev.
+## Examples:
+##   make test-dag DAG=bigquery_alerts
+##   make test-dag DAG=bigquery_alerts.py ENV=stg
+
+ENV ?= dev
+
+# Shared search tool to get a .py dag file path from it's name
+define FETCH_DAG_PATH
+[ -z "$(DAG)" ] && { echo "❌ DAG variable is required. Usage: make $(MAKECMDGOALS) DAG=<name>"; exit 1; }; \
+PATTERN=$$(echo "$(DAG)" | sed 's/\.py$$//').py; \
+DAG_PATH=$$(find dags -name "$$PATTERN" -not -path "*/__pycache__/*" 2>/dev/null); \
+[ -z "$$DAG_PATH" ] && { echo "❌ No DAG found matching: $$PATTERN"; exit 1; }; \
+COUNT=$$(echo "$$DAG_PATH" | wc -l | tr -d ' '); \
+[ "$$COUNT" -gt 1 ] && { echo "❌ Multiple matches — be more specific:"; echo "$$DAG_PATH"; exit 1; }
+endef
+
+## Create a local test copy of a DAG (no upload). make create-test-dag DAG=<name>
+create-test-dag:
+	@$(FETCH_DAG_PATH); \
+	uv run scripts/create_test_dag.py "$$DAG_PATH" --force
+
+## Upload a DAG file to GCS. make push-dag DAG=<name> [ENV=dev]
+push-dag: check-auth
+	@$(FETCH_DAG_PATH); \
+	echo "🚀  $$DAG_PATH  →  gs://airflow-data-bucket-$(ENV)/$$DAG_PATH"; \
+	echo ""; \
+	gcloud storage cp "$$DAG_PATH" "gs://airflow-data-bucket-$(ENV)/$$DAG_PATH"; \
+	echo ""; \
+	echo "✅ Done. DAG should appear in Airflow $(ENV) within 1-2 min."
+
+## Create a test copy and push it. make test-dag DAG=<name> [ENV=dev]
+test-dag: check-auth
+	@$(FETCH_DAG_PATH); \
+	uv run scripts/create_test_dag.py --no-hint --force "$$DAG_PATH" || exit 1; \
+	_DAG_USER=$$(whoami | tr '[:upper:]' '[:lower:]'); \
+	STEM=$$(basename "$$DAG_PATH" .py); \
+	$(MAKE) push-dag DAG=$${STEM}__test__$${_DAG_USER}

@@ -3,8 +3,10 @@ from unittest.mock import patch
 import numpy as np
 import pandas as pd
 import pytest
+from google.cloud import bigquery
 
 from domain.archiving import (
+    ARCHIVING_LOG_SCHEMA,
     MoveToArchive,
     _first_ancestor,
     _is_collection_empty,
@@ -339,12 +341,42 @@ class TestMoveToArchive:
         assert log_entry["new_collection_id"] == 99
         assert log_entry["previous_collection_id"] == 10
         assert log_entry["parent_folder"] == "adhoc"
+        # No diagnostics recorded on success.
+        assert log_entry["error_reason"] is None
+        assert log_entry["http_status"] is None
 
     def test_move_object_failure(self, metabase):
         metabase.update_card_collections.return_value = {"status": "error"}
         m = MoveToArchive(self._card(), 99, metabase)
         log_entry = m.move_object()
         assert log_entry["status"] == "error"
+        assert log_entry["error_reason"] is not None
+
+    def test_move_object_json_rejection_records_reason(self, metabase):
+        # A Metabase JSON error has no "status" key -> null status, but the
+        # cause is captured in error_reason for BQ-side diagnosis.
+        metabase.update_card_collections.return_value = {
+            "cause": "Uses content that is not remote synced.",
+            "data": {"status-code": 400},
+        }
+        m = MoveToArchive(self._card(), 99, metabase)
+        log_entry = m.move_object()
+        assert log_entry["status"] is None
+        assert "not remote synced" in log_entry["error_reason"]
+
+    def test_move_object_null_status_captures_http_body(self, metabase):
+        # Non-JSON response (e.g. IAP login-page redirect) surfaced by
+        # update_card_collections as {"status": None, "http_status", "body"}.
+        metabase.update_card_collections.return_value = {
+            "status": None,
+            "http_status": 302,
+            "body": "<html>Sign in with Google</html>",
+        }
+        m = MoveToArchive(self._card(), 99, metabase)
+        log_entry = m.move_object()
+        assert log_entry["status"] is None
+        assert log_entry["http_status"] == 302
+        assert "Sign in" in log_entry["error_reason"]
 
     def test_move_object_uses_archive_collection_id(self, metabase):
         metabase.update_card_collections.return_value = {"status": "ok"}
@@ -412,6 +444,11 @@ class TestSummarizeMetabaseError:
             "data": {"status-code": 500},
         }
         assert "boom" in _summarize_metabase_error(result)
+
+    def test_body_fallback_for_non_json_response(self):
+        # Non-JSON branch of update_card_collections (IAP redirect etc.).
+        result = {"status": None, "http_status": 302, "body": "<html>login</html>"}
+        assert "login" in _summarize_metabase_error(result)
 
     def test_unknown_shape(self):
         assert _summarize_metabase_error({}) == "unknown error"
@@ -616,33 +653,43 @@ class TestLoadRecentlyFailedCardIds:
 
 
 class TestAppendArchivingLogs:
-    @patch("domain.archiving.pd.DataFrame.to_gbq")
-    def test_writes_single_dataframe(self, mock_to_gbq):
+    @patch("domain.archiving.bigquery.Client")
+    def test_writes_single_dataframe(self, mock_bq_client):
         log_entries = [
             {"id": 1, "status": "success"},
             {"id": 2, "status": "success"},
             {"id": 3, "status": "success"},
         ]
         append_archiving_logs(log_entries)
-        mock_to_gbq.assert_called_once()
-        # The DataFrame written must include all entries (single batched call).
-        df_written = mock_to_gbq.call_args  # to_gbq was called on the DataFrame self
-        assert df_written is not None
+        load = mock_bq_client.return_value.load_table_from_dataframe
+        load.assert_called_once()
+        # Whole batch loaded in one job, reindexed to the canonical schema.
+        df_loaded = load.call_args[0][0]
+        assert len(df_loaded) == 3
+        assert list(df_loaded.columns) == [f.name for f in ARCHIVING_LOG_SCHEMA]
+        # ALLOW_FIELD_ADDITION lets new audit fields create their column.
+        job_config = load.call_args[1]["job_config"]
+        assert (
+            bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION
+            in job_config.schema_update_options
+        )
 
-    @patch("domain.archiving.pd.DataFrame.to_gbq")
-    def test_no_op_on_empty(self, mock_to_gbq):
+    @patch("domain.archiving.bigquery.Client")
+    def test_no_op_on_empty(self, mock_bq_client):
         append_archiving_logs([])
-        mock_to_gbq.assert_not_called()
+        mock_bq_client.return_value.load_table_from_dataframe.assert_not_called()
 
 
 class TestHardArchiveStaleCards:
-    @patch("domain.archiving.pd.DataFrame.to_gbq")
+    @patch("domain.archiving.bigquery.Client")
     @patch("domain.archiving.pd.read_gbq")
-    def test_archives_candidates(self, mock_read_gbq, mock_to_gbq, metabase):
+    def test_archives_candidates(self, mock_read_gbq, mock_bq_client, metabase):
         mock_read_gbq.return_value = pd.DataFrame(
             {"id": [1, 2], "card_collection_id": [99, 99]}
         )
         metabase.get_cards.return_value = {"archived": False, "collection_id": 99}
+        # Success returns the updated card with archived flipped to true.
+        metabase.put_card.return_value = {"archived": True, "collection_id": 99}
 
         result = hard_archive_stale_cards(
             metabase,
@@ -656,11 +703,39 @@ class TestHardArchiveStaleCards:
         metabase.put_card.assert_any_call(1, {"archived": True})
         metabase.put_card.assert_any_call(2, {"archived": True})
         # Single batched BQ append, not one per card.
-        assert mock_to_gbq.call_count == 1
+        assert mock_bq_client.return_value.load_table_from_dataframe.call_count == 1
 
-    @patch("domain.archiving.pd.DataFrame.to_gbq")
+    @patch("domain.archiving.bigquery.Client")
     @patch("domain.archiving.pd.read_gbq")
-    def test_skips_already_archived(self, mock_read_gbq, mock_to_gbq, metabase):
+    def test_failed_put_is_not_counted_as_archived(
+        self, mock_read_gbq, mock_bq_client, metabase
+    ):
+        mock_read_gbq.return_value = pd.DataFrame(
+            {"id": [1], "card_collection_id": [99]}
+        )
+        metabase.get_cards.return_value = {"archived": False, "collection_id": 99}
+        # Remote-sync rejection: error body, no `archived: true`.
+        metabase.put_card.return_value = {
+            "message": "Utilise du contenu qui n'est pas synchronisé à distance.",
+            "data": {"status-code": 400, "non-remote-synced-models": [15367]},
+            "http_status": 400,
+        }
+
+        result = hard_archive_stale_cards(
+            metabase,
+            name_pattern=r"^\[Archive\]",
+            min_days_since_update=60,
+            max_cards=50,
+        )
+
+        # Not a fake success — excluded from the result and logged as failed so
+        # the cooldown skips it next run instead of the dedup CTE dropping it.
+        assert result == []
+        mock_bq_client.return_value.load_table_from_dataframe.assert_called_once()
+
+    @patch("domain.archiving.bigquery.Client")
+    @patch("domain.archiving.pd.read_gbq")
+    def test_skips_already_archived(self, mock_read_gbq, mock_bq_client, metabase):
         mock_read_gbq.return_value = pd.DataFrame(
             {"id": [1], "card_collection_id": [99]}
         )
@@ -673,13 +748,18 @@ class TestHardArchiveStaleCards:
             max_cards=50,
         )
 
+        # Not counted as newly archived and never re-PUT...
         assert result == []
         metabase.put_card.assert_not_called()
-        mock_to_gbq.assert_not_called()
+        # ...but the skip IS logged so the dedup CTE excludes it next run,
+        # otherwise already-archived cards clog the LIMIT batch forever.
+        load = mock_bq_client.return_value.load_table_from_dataframe
+        load.assert_called_once()
+        assert load.call_args[0][1] == "test-project.int_metabase_dev.archiving_log"
 
-    @patch("domain.archiving.pd.DataFrame.to_gbq")
+    @patch("domain.archiving.bigquery.Client")
     @patch("domain.archiving.pd.read_gbq")
-    def test_dry_run_skips_mutations(self, mock_read_gbq, mock_to_gbq, metabase):
+    def test_dry_run_skips_mutations(self, mock_read_gbq, mock_bq_client, metabase):
         mock_read_gbq.return_value = pd.DataFrame(
             {"id": [1, 2], "card_collection_id": [99, 99]}
         )
@@ -696,7 +776,7 @@ class TestHardArchiveStaleCards:
         assert result == [1, 2]
         metabase.get_cards.assert_not_called()
         metabase.put_card.assert_not_called()
-        mock_to_gbq.assert_not_called()
+        mock_bq_client.return_value.load_table_from_dataframe.assert_not_called()
 
     @patch("domain.archiving.pd.read_gbq")
     def test_query_targets_raw_table(self, mock_read_gbq, metabase):
@@ -726,6 +806,25 @@ class TestHardArchiveStaleCards:
         # GETs only to skip them all.
         assert "already_hard_archived" in query
         assert "int_metabase_dev.archiving_log" in query
+        # Cooldown (default 30d) must also exclude recently-failed cards so the
+        # LIMIT batch isn't consumed retrying the same remote-sync dead-ends.
+        assert "recently_failed" in query
+        assert "interval 30 day" in query
+
+    @patch("domain.archiving.pd.read_gbq")
+    def test_cooldown_disabled_omits_recently_failed(self, mock_read_gbq, metabase):
+        mock_read_gbq.return_value = pd.DataFrame({"id": [], "card_collection_id": []})
+
+        hard_archive_stale_cards(
+            metabase,
+            name_pattern=r"^\[Archive\]",
+            min_days_since_update=60,
+            max_cards=25,
+            failure_cooldown_days=None,
+        )
+
+        query = mock_read_gbq.call_args[0][0]
+        assert "recently_failed" not in query
 
 
 class TestIsOldEnough:
@@ -745,10 +844,39 @@ class TestIsOldEnough:
 
 
 class TestArchiveDeadDashboards:
+    @pytest.fixture(autouse=True)
+    def _mock_gbq(self):
+        # Real (non-dry-run) cleanup now appends an audit batch to BQ; keep the
+        # load job off the wire and expose the client mock to the tests.
+        with patch("domain.archiving.bigquery.Client") as mock_bq_client:
+            self.mock_bq_client = mock_bq_client
+            yield mock_bq_client
+
     def test_no_items(self, metabase):
         metabase.get_collection_children.return_value = {"data": []}
         result = archive_dead_dashboards(metabase, [100], min_age_days=15)
         assert result == []
+
+    def test_only_archived_candidates_are_persisted(self, metabase):
+        old = (pd.Timestamp.utcnow() - pd.Timedelta(days=30)).isoformat()
+        recent = (pd.Timestamp.utcnow() - pd.Timedelta(days=5)).isoformat()
+        recorded = []
+        with patch(
+            "domain.archiving._record_cleanup_archive",
+            side_effect=lambda entries, *a, **kw: recorded.append((a, kw)),
+        ):
+            metabase.get_collection_children.return_value = {
+                "data": [
+                    {"model": "dashboard", "id": 5, "created_at": old},
+                    {"model": "dashboard", "id": 6, "created_at": recent},
+                ]
+            }
+            metabase.get_dashboards.return_value = {"ordered_cards": []}
+            archive_dead_dashboards(metabase, [100], min_age_days=15)
+        # Dead-and-old → archived (persisted). Dead-but-recent → kept, log-only:
+        # NOT persisted, otherwise a daily re-scan rewrites it every run.
+        archived_ids = [args[0] for args, _ in recorded]
+        assert archived_ids == [5]
 
     def test_archives_old_dead_dashboard(self, metabase):
         old = (pd.Timestamp.utcnow() - pd.Timedelta(days=30)).isoformat()
@@ -925,10 +1053,45 @@ class TestIsCollectionEmpty:
 
 
 class TestArchiveEmptyCollections:
+    @pytest.fixture(autouse=True)
+    def _mock_gbq(self):
+        with patch("domain.archiving.bigquery.Client") as mock_bq_client:
+            self.mock_bq_client = mock_bq_client
+            yield mock_bq_client
+
     def test_no_empty_collections(self, metabase):
         metabase.get_collection_children.return_value = {"data": []}
         result = archive_empty_collections(metabase, [100], min_age_days=15)
         assert result == []
+
+    def test_only_archived_candidates_are_persisted(self, metabase):
+        old = (pd.Timestamp.utcnow() - pd.Timedelta(days=30)).isoformat()
+        recent = (pd.Timestamp.utcnow() - pd.Timedelta(days=5)).isoformat()
+
+        def side_effect(collection_id, **kwargs):
+            if kwargs.get("models") == ["collection"]:
+                if collection_id == 100:
+                    return {
+                        "data": [
+                            {"model": "collection", "id": 200, "created_at": old},
+                            {"model": "collection", "id": 201, "created_at": recent},
+                        ]
+                    }
+                return {"data": []}  # 200 / 201 have no sub-collections
+            return {"data": []}  # emptiness check: both empty
+
+        metabase.get_collection_children.side_effect = side_effect
+
+        recorded = []
+        with patch(
+            "domain.archiving._record_cleanup_archive",
+            side_effect=lambda entries, *a, **kw: recorded.append((a, kw)),
+        ):
+            archive_empty_collections(metabase, [100], min_age_days=15)
+        # Empty-and-old → archived (persisted). Empty-but-recent → kept, log-only:
+        # NOT persisted, else a daily re-scan rewrites it every run.
+        archived_ids = [args[0] for args, _ in recorded]
+        assert archived_ids == [200]
 
     def test_archives_old_empty_leaf(self, metabase):
         old = (pd.Timestamp.utcnow() - pd.Timedelta(days=30)).isoformat()
@@ -948,6 +1111,29 @@ class TestArchiveEmptyCollections:
 
         metabase.get_collection_children.side_effect = side_effect
         result = archive_empty_collections(metabase, [100], min_age_days=15)
+        assert result == [200]
+        metabase.put_collection.assert_called_once_with(200, {"archived": True})
+
+    def test_missing_updated_at_falls_back_to_created_at(self, metabase):
+        # Metabase collections don't expose updated_at; an old collection must
+        # still be archived (created_at as the recency proxy), not kept forever.
+        old = (pd.Timestamp.utcnow() - pd.Timedelta(days=400)).isoformat()
+
+        def side_effect(collection_id, **kwargs):
+            models = kwargs.get("models")
+            if collection_id == 100 and models == ["collection"]:
+                return {"data": [{"model": "collection", "id": 200, "created_at": old}]}
+            if collection_id == 200 and models == ["collection"]:
+                return {"data": []}
+            return {"data": []}
+
+        metabase.get_collection_children.side_effect = side_effect
+        # No updated_at anywhere, even from the full-object fallback.
+        metabase.get_collections.return_value = {"created_at": old}
+
+        result = archive_empty_collections(
+            metabase, [100], min_age_days=15, min_days_since_update=15
+        )
         assert result == [200]
         metabase.put_collection.assert_called_once_with(200, {"archived": True})
 

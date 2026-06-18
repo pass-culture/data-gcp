@@ -154,6 +154,7 @@ sources:
       - name: metabase_report_card
       - name: metabase_report_dashboard
       - name: metabase_revision
+      - name: metabase_view_log
       - name: qualtrics_answers
       - name: qualtrics_opt_out_users
       - name: qualtrics_exported_beneficiary_account
@@ -169,6 +170,7 @@ sources:
       - name: subcategories
       - name: tiktok_video_detail
       - name: offer_types
+      - name: population_department
       - name: user_address
       - name: zendesk_macro_usage
       - name: zendesk_ticket

@@ -3,6 +3,6 @@ SELECT
     ,"product_id" as offer_product_id
     ,"artist_id"
     ,"artist_type"
-    ,"date_created"
-    ,"date_modified"
+    ,"date_created" AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Paris'
+    ,"date_modified" AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Paris'
 FROM public.artist_product_link

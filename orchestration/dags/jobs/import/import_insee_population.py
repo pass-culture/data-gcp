@@ -45,7 +45,11 @@ with DAG(
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        )
+        ),
+        "instance_type": Param(
+            default="n1-standard-16",
+            type="string",
+        ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
@@ -55,7 +59,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         task_id="gce_start_task",
         labels={"dag_name": DAG_NAME},
-        instance_type="n1-standard-8",
+        instance_type="{{ params.instance_type }}",
     )
 
     import_insee_population = UvxGCEOperator(

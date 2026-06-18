@@ -1114,6 +1114,29 @@ class TestArchiveEmptyCollections:
         assert result == [200]
         metabase.put_collection.assert_called_once_with(200, {"archived": True})
 
+    def test_missing_updated_at_falls_back_to_created_at(self, metabase):
+        # Metabase collections don't expose updated_at; an old collection must
+        # still be archived (created_at as the recency proxy), not kept forever.
+        old = (pd.Timestamp.utcnow() - pd.Timedelta(days=400)).isoformat()
+
+        def side_effect(collection_id, **kwargs):
+            models = kwargs.get("models")
+            if collection_id == 100 and models == ["collection"]:
+                return {"data": [{"model": "collection", "id": 200, "created_at": old}]}
+            if collection_id == 200 and models == ["collection"]:
+                return {"data": []}
+            return {"data": []}
+
+        metabase.get_collection_children.side_effect = side_effect
+        # No updated_at anywhere, even from the full-object fallback.
+        metabase.get_collections.return_value = {"created_at": old}
+
+        result = archive_empty_collections(
+            metabase, [100], min_age_days=15, min_days_since_update=15
+        )
+        assert result == [200]
+        metabase.put_collection.assert_called_once_with(200, {"archived": True})
+
     def test_skips_recent_empty_leaf(self, metabase):
         recent = (pd.Timestamp.utcnow() - pd.Timedelta(days=5)).isoformat()
 

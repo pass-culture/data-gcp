@@ -745,37 +745,45 @@ def _resolve_metadata(item, metabase, fetcher, fields):
 
 def _passes_age_filters(meta, min_age_days, min_days_since_update):
     """Item is eligible only if it's old enough since creation AND, when
-    `min_days_since_update` is set, also old enough since last update."""
-    if not _is_old_enough(meta.get("created_at"), min_age_days):
+    `min_days_since_update` is set, also old enough since last update.
+
+    Metabase collections don't expose `updated_at`, so when it's missing we fall
+    back to `created_at` — otherwise a missing update date would keep every old
+    empty collection forever (`_is_old_enough(None)` is False)."""
+    created_at = meta.get("created_at")
+    if not _is_old_enough(created_at, min_age_days):
         return False
-    if min_days_since_update is not None and not _is_old_enough(
-        meta.get("updated_at"), min_days_since_update
-    ):
-        return False
+    if min_days_since_update is not None:
+        updated_at = meta.get("updated_at") or created_at
+        if not _is_old_enough(updated_at, min_days_since_update):
+            return False
     return True
 
 
 def _age_kept_reason(meta, min_age_days, min_days_since_update):
     """Explain, per candidate, why the age filter kept it: each date, its cutoff,
-    and whether it passed. A MISSING date counts as not-old-enough (kept) — the
-    likely cause of "old empty folders never archived" when Metabase doesn't
-    expose updated_at, so it's called out explicitly here."""
+    and whether it passed. Mirrors `_passes_age_filters`, including the
+    created_at fallback used when `updated_at` is missing."""
     today = pd.Timestamp.utcnow().normalize()
 
     def _verdict(value, min_days):
         cutoff = (today - pd.Timedelta(days=min_days)).date()
-        if value is None:
-            return f"{value} (cutoff {cutoff}, MISSING -> kept)"
         ok = _is_old_enough(value, min_days)
         return (
             f"{value} (cutoff {cutoff}, {'old enough' if ok else 'too recent -> kept'})"
         )
 
-    parts = [f"created_at={_verdict(meta.get('created_at'), min_age_days)}"]
+    created_at = meta.get("created_at")
+    parts = [f"created_at={_verdict(created_at, min_age_days)}"]
     if min_days_since_update is not None:
-        parts.append(
-            f"updated_at={_verdict(meta.get('updated_at'), min_days_since_update)}"
-        )
+        updated_at = meta.get("updated_at")
+        if updated_at is None:
+            parts.append(
+                "updated_at=None -> fallback created_at="
+                f"{_verdict(created_at, min_days_since_update)}"
+            )
+        else:
+            parts.append(f"updated_at={_verdict(updated_at, min_days_since_update)}")
     return "; ".join(parts)
 
 

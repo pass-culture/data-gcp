@@ -32,14 +32,12 @@ select
     dep.dep_name as population_department_name,
     dep.academy_name as population_academy_name,
     dep.region_name as population_region_name,
-    pop.territory_type as population_territory_type,
+    dep.territory_type as population_territory_type,
     pop.snapshot_month as population_snapshot_month,
     pop.born_date as population_birth_month,
     sum(pop.population) as total_population
 from {{ source("raw", "population_department") }} as pop
-left join
-    {{ source("seed", "region_department") }} as dep
-    on pop.department_code = dep.num_dep
+left join {{ ref("region_department") }} as dep on pop.department_code = dep.num_dep
 where
     pop.year between {{ insee_start_year }} and {{ insee_last_valid_year }}
     and pop.age between 15 and 25

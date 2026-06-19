@@ -37,9 +37,7 @@ select
     date(pop.born_date) as population_birth_month,
     sum(pop.population) as total_population
 from {{ source("seed", "population_age_and_department_france_details") }} as pop
-left join
-    {{ source("seed", "region_department") }} as dep
-    on pop.department_code = dep.num_dep
+left join {{ ref("region_department") }} as dep on pop.department_code = dep.num_dep
 where
     pop.current_year between {{ insee_start_year }} and {{ insee_last_valid_year }}
     and cast(pop.age as int) between 15 and 25

@@ -29,7 +29,7 @@ RAW_DATA_PATH=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --raw-data) RAW_DATA_PATH="$2"; shift 2 ;;
-    *) echo "Unknown argument: $1"; exit 1 ;;
+    *) echo "Unknown argument: $1" >&2; exit 1 ;;
   esac
 done
 
@@ -37,17 +37,17 @@ done
 # Validate inputs
 # ---------------------------------------------------------------------------
 if [[ ! -f "$EMBEDDINGS_PATH" ]]; then
-  echo "ERROR: embeddings file not found: $EMBEDDINGS_PATH"
+  echo "ERROR: embeddings file not found: $EMBEDDINGS_PATH" >&2
   exit 1
 fi
 
 if [[ -z "$RAW_DATA_PATH" ]]; then
-  echo "ERROR: --raw-data is required (path to raw input parquet or directory)"
+  echo "ERROR: --raw-data is required (path to raw input parquet or directory)" >&2
   exit 1
 fi
 
 if [[ ! -e "$RAW_DATA_PATH" ]]; then
-  echo "ERROR: raw-data path not found: $RAW_DATA_PATH"
+  echo "ERROR: raw-data path not found: $RAW_DATA_PATH" >&2
   exit 1
 fi
 

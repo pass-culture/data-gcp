@@ -15,82 +15,21 @@ Usage:
 from __future__ import annotations
 
 import argparse
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+from plot_utils import (
+    ITEM_TYPE_COLORS,
+    ITEM_TYPE_MARKERS,
+    compute_centroids,
+    load_embeddings,
+    save_or_show,
+)
 from sklearn.manifold import TSNE
 
-ITEM_TYPE_COLORS = {"book": "#1f77b4", "music": "#ff7f0e"}
-ITEM_TYPE_MARKERS = {"book": "o", "music": "^"}
-
-
-def load_embeddings(parquet_path: str, raw_data_path: str) -> pd.DataFrame:
-    """Load embeddings and join item_type and GTL code from the raw dataset.
-
-    Only GTL level-2 codes (ending in '0000', excluding '00000000') are kept.
-
-    Args:
-        parquet_path:   Path to the embeddings parquet file.
-        raw_data_path:  Path to the raw parquet file or directory.
-
-    Returns:
-        Filtered DataFrame with columns:
-        node_ids, embedding, item_id, item_type, gtl_id.
-    """
-    raw = pd.read_parquet(raw_data_path).loc[:, ["item_id", "item_type", "raw_gtl_id"]]
-    df = (
-        pd.read_parquet(parquet_path)
-        .drop(columns=["gtl_id"], errors="ignore")
-        .merge(raw, left_on="node_ids", right_on="item_id", how="left")
-        .rename(columns={"raw_gtl_id": "gtl_id"})
-    )
-
-    print(
-        f"Loaded {len(df)} embeddings"
-        f" | item_types: {df['item_type'].value_counts().to_dict()}"
-    )
-
-    df = df[
-        df["gtl_id"].notna()
-        & df["gtl_id"].astype(str).str.endswith("0000")
-        & (df["gtl_id"].astype(str) != "00000000")
-    ].copy()
-
-    return df
-
-
-def compute_centroids(df: pd.DataFrame) -> pd.DataFrame:
-    """Compute one centroid embedding per (gtl_id, item_type) group.
-
-    Args:
-        df: Filtered DataFrame from load_embeddings().
-
-    Returns:
-        DataFrame with columns: cluster, gtl_id, item_type, n_items, centroid.
-        Sorted by (item_type, gtl_id) and index reset.
-    """
-    embeddings = np.stack(df["embedding"].values)
-
-    records = []
-    for (gtl_id, item_type), group in df.groupby(["gtl_id", "item_type"]):
-        positions = [df.index.get_loc(i) for i in group.index]
-        centroid = embeddings[positions].mean(axis=0)
-        records.append(
-            {
-                "cluster": f"{gtl_id}__{item_type}",
-                "gtl_id": gtl_id,
-                "item_type": item_type,
-                "n_items": len(group),
-                "centroid": centroid,
-            }
-        )
-
-    return (
-        pd.DataFrame(records)
-        .sort_values(["item_type", "gtl_id"])
-        .reset_index(drop=True)
-    )
+if TYPE_CHECKING:
+    import pandas as pd
 
 
 def plot_tsne_centroids(centroids_df: pd.DataFrame, output_path: str | None) -> None:
@@ -171,11 +110,7 @@ def plot_tsne_centroids(centroids_df: pd.DataFrame, output_path: str | None) -> 
     ax.set_ylabel("t-SNE 2")
     plt.tight_layout()
 
-    if output_path:
-        plt.savefig(output_path, dpi=150, bbox_inches="tight")
-        print(f"Saved: {output_path}")
-    else:
-        plt.show()
+    save_or_show(output_path)
     plt.close(fig)
 
 
@@ -199,7 +134,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    df = load_embeddings(args.parquet_path, args.raw_data)
+    df = load_embeddings(args.parquet_path, args.raw_data, filter_gtl_level2=True)
     centroids_df = compute_centroids(df)
 
     print("Generating t-SNE of centroids…")

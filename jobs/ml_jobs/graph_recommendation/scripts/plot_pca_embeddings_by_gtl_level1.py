@@ -18,12 +18,22 @@ from __future__ import annotations
 import argparse
 
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from sklearn.decomposition import PCA
+from plot_utils import (
+    DEFAULT_MARKER,
+    ITEM_TYPE_MARKERS,
+    add_embedding_args,
+    add_nrows_arg,
+    add_output_arg,
+    add_raw_data_arg,
+    build_gtl_legend_handles,
+    build_item_type_legend_handles,
+    load_embeddings,
+    resolve_parquet_path,
+    run_pca_2d,
+    save_or_show,
+    subsample_df,
+)
 
-ITEM_TYPE_MARKERS = {"book": "o", "music": "^"}
-DEFAULT_MARKER = "s"
 UNKNOWN_COLOR = (0.7, 0.7, 0.7, 0.3)
 
 
@@ -52,46 +62,22 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="PCA 2D colored by item_type x GTL level-1."
     )
-    parser.add_argument("parquet_path", nargs="?", default=None)
-    parser.add_argument("--embeddings", "-e", default=None)
-    parser.add_argument(
-        "--raw-data",
-        "-r",
-        required=True,
-        help="Raw input parquet or directory to join item_type and raw_gtl_id.",
+    add_embedding_args(parser)
+    add_raw_data_arg(
+        parser, help="Raw input parquet or directory to join item_type and raw_gtl_id."
     )
-    parser.add_argument("--output", "-o", default=None)
-    parser.add_argument("--nrows", type=int, default=None)
+    add_output_arg(parser)
+    add_nrows_arg(parser)
     args = parser.parse_args()
 
-    parquet_path = args.embeddings or args.parquet_path
-    if not parquet_path:
-        parser.error(
-            "Provide embeddings path as positional argument or via --embeddings"
-        )
+    parquet_path = resolve_parquet_path(args, parser)
 
     # --- Load embeddings and join item type + GTL from raw data ---
-    raw = pd.read_parquet(args.raw_data).loc[:, ["item_id", "item_type", "raw_gtl_id"]]
-    df = (
-        pd.read_parquet(parquet_path)
-        .drop(columns=["gtl_id"], errors="ignore")
-        .merge(raw, left_on="node_ids", right_on="item_id", how="left")
-        .rename(columns={"raw_gtl_id": "gtl_id"})
-    )
-
-    print(f"Loaded {len(df)} embeddings")
-    print(df["item_type"].value_counts().to_string())
-
-    if args.nrows and len(df) > args.nrows:
-        df = df.sample(args.nrows, random_state=42)
-        print(f"Subsampled to {len(df)} rows")
+    df = load_embeddings(parquet_path, args.raw_data)
+    df = subsample_df(df, args.nrows)
 
     # --- PCA dimensionality reduction ---
-    embeddings = np.stack(df["embedding"].values)
-    pca = PCA(n_components=2, random_state=42)
-    coords = pca.fit_transform(embeddings)
-    explained = pca.explained_variance_ratio_
-    print(f"PCA variance: PC1={explained[0]:.1%}, PC2={explained[1]:.1%}")
+    coords, explained = run_pca_2d(df)
 
     df = df.copy()
     df["x"] = coords[:, 0]
@@ -108,7 +94,7 @@ def main() -> None:
     item_types = sorted(df["item_type"].unique())
 
     # --- Scatter plot: one layer per (GTL level-1, item type) ---
-    fig, ax = plt.subplots(figsize=(14, 10))
+    _fig, ax = plt.subplots(figsize=(14, 10))
 
     for gtl in gtl_l1_values:
         for item_type in item_types:
@@ -125,33 +111,9 @@ def main() -> None:
                 linewidths=0,
             )
 
-    # --- Legend: GTL level-1 colors ---
-    handles_gtl = [
-        plt.Line2D(
-            [0],
-            [0],
-            marker="o",
-            color="w",
-            markerfacecolor=gtl_color[gtl],
-            markersize=9,
-            label=gtl,
-        )
-        for gtl in gtl_l1_values
-    ]
-
-    # --- Legend: item type markers ---
-    handles_type = [
-        plt.Line2D(
-            [0],
-            [0],
-            marker=ITEM_TYPE_MARKERS.get(item_type, DEFAULT_MARKER),
-            color="grey",
-            markersize=9,
-            linestyle="None",
-            label=item_type,
-        )
-        for item_type in item_types
-    ]
+    # --- Legends ---
+    handles_gtl = build_gtl_legend_handles(gtl_l1_values, gtl_color, markersize=9)
+    handles_type = build_item_type_legend_handles(item_types, markersize=9)
 
     leg1 = ax.legend(
         handles=handles_gtl,
@@ -180,11 +142,7 @@ def main() -> None:
     ax.set_ylabel("PC2")
     plt.tight_layout()
 
-    if args.output:
-        plt.savefig(args.output, dpi=150, bbox_inches="tight")
-        print(f"Saved to {args.output}")
-    else:
-        plt.show()
+    save_or_show(args.output)
 
 
 if __name__ == "__main__":

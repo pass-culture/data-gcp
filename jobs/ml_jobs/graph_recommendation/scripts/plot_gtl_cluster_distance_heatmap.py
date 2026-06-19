@@ -20,70 +20,13 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from plot_utils import (
+    compute_centroids,
+    filter_gtl_level2_rows,
+    load_embeddings,
+    save_or_show,
+)
 from sklearn.metrics.pairwise import cosine_distances
-
-
-def load_embeddings(parquet_path: str, raw_data_path: str) -> pd.DataFrame:
-    """Load embeddings and join item_type and GTL code from the raw dataset.
-
-    Args:
-        parquet_path:   Path to the embeddings parquet file.
-        raw_data_path:  Path to the raw parquet file or directory.
-
-    Returns:
-        DataFrame with columns: node_ids, embedding, item_id, item_type, gtl_id.
-    """
-    df = pd.read_parquet(parquet_path)
-    raw = pd.read_parquet(raw_data_path).loc[:, ["item_id", "item_type", "raw_gtl_id"]]
-    df = (
-        df.drop(columns=["gtl_id"], errors="ignore")
-        .merge(raw, left_on="node_ids", right_on="item_id", how="left")
-        .rename(columns={"raw_gtl_id": "gtl_id"})
-    )
-
-    print(f"Loaded {len(df)} embeddings")
-    print(df["item_type"].value_counts().to_string())
-
-    return df
-
-
-def compute_centroids(df: pd.DataFrame) -> pd.DataFrame:
-    """Compute one centroid embedding per (gtl_id, item_type) group.
-
-    Only GTL level-2 codes (ending in '0000', excluding '00000000') are kept.
-
-    Args:
-        df: DataFrame with columns: embedding, gtl_id, item_type.
-
-    Returns:
-        DataFrame with columns: cluster, gtl_id, item_type, n_items, centroid.
-    """
-    df = df[
-        df["gtl_id"].notna()
-        & df["gtl_id"].astype(str).str.endswith("0000")
-        & (df["gtl_id"].astype(str) != "00000000")
-    ].copy()
-
-    embeddings_matrix = np.stack(df["embedding"].values)
-
-    records = []
-    for (gtl_id, item_type), group in df.groupby(["gtl_id", "item_type"]):
-        positions = [df.index.get_loc(i) for i in group.index]
-        centroid = embeddings_matrix[positions].mean(axis=0)
-        records.append(
-            {
-                "cluster": f"{gtl_id}__{item_type}",
-                "gtl_id": gtl_id,
-                "item_type": item_type,
-                "n_items": len(group),
-                "centroid": centroid,
-            }
-        )
-
-    centroids_df = pd.DataFrame(records).sort_values(["gtl_id", "item_type"])
-    print(f"\nFound {len(centroids_df)} clusters (gtl_id x item_type)")
-
-    return centroids_df
 
 
 def compute_distances(centroids_df: pd.DataFrame) -> pd.DataFrame:
@@ -174,7 +117,11 @@ def print_summary(dist_df: pd.DataFrame) -> None:
     )
 
     cross_type = cross_type.merge(
-        nearest_same_type_distance, left_on="src_cluster", right_index=True, how="left"
+        nearest_same_type_distance,
+        left_on="src_cluster",
+        right_index=True,
+        how="left",
+        validate="m:1",
     )
     cross_type["ratio"] = (
         cross_type["cosine_distance"] / cross_type["nearest_same_type_dist"]
@@ -233,7 +180,7 @@ def plot_heatmap(
     ]
     label_colors = ["#1f77b4" if "book" in c else "#ff7f0e" for c in labels]
 
-    fig, ax = plt.subplots(figsize=(max(10, n * 0.55), max(8, n * 0.5)))
+    _fig, ax = plt.subplots(figsize=(max(10, n * 0.55), max(8, n * 0.5)))
     im = ax.imshow(matrix, cmap="RdYlGn_r", aspect="auto", vmin=0, vmax=matrix.max())
 
     ax.set_xticks(range(n))
@@ -290,11 +237,7 @@ def plot_heatmap(
     )
     plt.tight_layout()
 
-    if plot_path:
-        plt.savefig(plot_path, dpi=150, bbox_inches="tight")
-        print(f"Heatmap saved to {plot_path}")
-    else:
-        plt.show()
+    save_or_show(plot_path)
 
 
 def main() -> None:
@@ -320,6 +263,7 @@ def main() -> None:
     args = parser.parse_args()
 
     df = load_embeddings(args.parquet_path, args.raw_data)
+    df = filter_gtl_level2_rows(df)
     centroids_df = compute_centroids(df)
     dist_df = compute_distances(centroids_df)
 

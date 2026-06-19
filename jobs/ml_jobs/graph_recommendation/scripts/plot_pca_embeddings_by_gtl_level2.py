@@ -15,60 +15,28 @@ Usage:
 from __future__ import annotations
 
 import argparse
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from sklearn.decomposition import PCA
+from plot_utils import (
+    DEFAULT_MARKER,
+    ITEM_TYPE_MARKERS,
+    add_embedding_args,
+    add_nrows_arg,
+    add_output_arg,
+    add_raw_data_arg,
+    build_gtl_legend_handles,
+    build_item_type_legend_handles,
+    load_embeddings,
+    resolve_parquet_path,
+    run_pca_2d,
+    save_or_show,
+    subsample_df,
+)
 
-ITEM_TYPE_MARKERS = {"book": "o", "music": "^"}
-DEFAULT_MARKER = "s"
-
-
-def load_embeddings(parquet_path: str, raw_data_path: str) -> pd.DataFrame:
-    """Load embeddings and join item_type and GTL code from the raw dataset.
-
-    Args:
-        parquet_path:   Path to the embeddings parquet file
-                        (columns: node_ids, embedding).
-        raw_data_path:  Path to the raw parquet file or directory (columns: item_id,
-                        item_type, raw_gtl_id).
-
-    Returns:
-        DataFrame with columns: node_ids, embedding, item_id, item_type, gtl_id.
-    """
-    raw = pd.read_parquet(raw_data_path).loc[:, ["item_id", "item_type", "raw_gtl_id"]]
-    df = (
-        pd.read_parquet(parquet_path)
-        .drop(columns=["gtl_id"], errors="ignore")
-        .merge(raw, left_on="node_ids", right_on="item_id", how="left")
-        .rename(columns={"raw_gtl_id": "gtl_id"})
-    )
-
-    print(f"Loaded {len(df)} embeddings")
-    print(df["item_type"].value_counts().to_string())
-    print(f"GTL sample: {df['gtl_id'].dropna().unique()[:5].tolist()}")
-
-    return df
-
-
-def reduce_to_2d_pca(embeddings: np.ndarray) -> np.ndarray:
-    """Fit a 2-component PCA on the embedding matrix and return the 2D coordinates.
-
-    Args:
-        embeddings: 2D array of shape (n_items, embedding_dim).
-
-    Returns:
-        2D array of shape (n_items, 2) containing the projected coordinates.
-    """
-    pca = PCA(n_components=2, random_state=42)
-    coords = pca.fit_transform(embeddings)
-    explained = pca.explained_variance_ratio_
-    print(
-        f"PCA explained variance: PC1={explained[0]:.1%}, PC2={explained[1]:.1%} "
-        f"(total={sum(explained):.1%})"
-    )
-    return coords
+if TYPE_CHECKING:
+    import numpy as np
+    import pandas as pd
 
 
 def plot_embeddings(
@@ -103,7 +71,7 @@ def plot_embeddings(
     item_types = df_plot["item_type"].unique()
 
     # --- Scatter plot: one layer per (GTL, item type) ---
-    fig, ax = plt.subplots(figsize=(14, 10))
+    _fig, ax = plt.subplots(figsize=(14, 10))
 
     for gtl in gtl_ids:
         for item_type in item_types:
@@ -124,33 +92,9 @@ def plot_embeddings(
                 label=label,
             )
 
-    # --- Legend: GTL level-2 colors ---
-    handles_gtl = [
-        plt.Line2D(
-            [0],
-            [0],
-            marker="o",
-            color="w",
-            markerfacecolor=gtl_color[gtl],
-            markersize=8,
-            label=gtl,
-        )
-        for gtl in gtl_ids
-    ]
-
-    # --- Legend: item type markers ---
-    handles_type = [
-        plt.Line2D(
-            [0],
-            [0],
-            marker=ITEM_TYPE_MARKERS.get(item_type, DEFAULT_MARKER),
-            color="grey",
-            markersize=8,
-            linestyle="None",
-            label=item_type,
-        )
-        for item_type in item_types
-    ]
+    # --- Legends ---
+    handles_gtl = build_gtl_legend_handles(gtl_ids, gtl_color, markersize=8)
+    handles_type = build_item_type_legend_handles(list(item_types), markersize=8)
 
     leg1 = ax.legend(
         handles=handles_gtl,
@@ -175,52 +119,31 @@ def plot_embeddings(
     ax.set_ylabel("PC2")
     plt.tight_layout()
 
-    if output_path:
-        plt.savefig(output_path, dpi=150, bbox_inches="tight")
-        print(f"Saved to {output_path}")
-    else:
-        plt.show()
+    save_or_show(output_path)
 
 
 def main() -> None:
     """Parse CLI arguments, run PCA, and render the GTL level-2 scatter plot."""
     parser = argparse.ArgumentParser(description="Visualize embeddings with PCA.")
-    parser.add_argument("parquet_path", nargs="?", default=None)
-    parser.add_argument("--embeddings", "-e", default=None)
-    parser.add_argument(
-        "--raw-data",
-        "-r",
-        required=True,
-        help="Raw input parquet or directory to join item_type and raw_gtl_id.",
+    add_embedding_args(parser)
+    add_raw_data_arg(
+        parser, help="Raw input parquet or directory to join item_type and raw_gtl_id."
     )
-    parser.add_argument(
-        "--output",
-        "-o",
-        default=None,
+    add_output_arg(
+        parser,
         help="Save plot to this path (PNG/PDF). If omitted, display interactively.",
     )
-    parser.add_argument(
-        "--nrows",
-        type=int,
-        default=None,
-        help="Subsample N rows before plotting (faster for large files).",
-    )
+    add_nrows_arg(parser)
     args = parser.parse_args()
 
-    parquet_path = args.embeddings or args.parquet_path
-    if not parquet_path:
-        parser.error(
-            "Provide embeddings path as positional argument or via --embeddings"
-        )
+    parquet_path = resolve_parquet_path(args, parser)
 
     df = load_embeddings(parquet_path, args.raw_data)
+    print(f"GTL sample: {df['gtl_id'].dropna().unique()[:5].tolist()}")
 
-    if args.nrows and len(df) > args.nrows:
-        df = df.sample(args.nrows, random_state=42)
-        print(f"Subsampled to {len(df)} rows")
+    df = subsample_df(df, args.nrows)
 
-    embeddings = np.stack(df["embedding"].values)
-    coords = reduce_to_2d_pca(embeddings)
+    coords, _explained = run_pca_2d(df)
     plot_embeddings(df, coords, args.output)
 
 

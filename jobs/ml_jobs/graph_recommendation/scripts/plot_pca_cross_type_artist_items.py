@@ -21,12 +21,25 @@ Usage:
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from sklearn.decomposition import PCA
+from plot_utils import (
+    add_embedding_args,
+    add_nrows_arg,
+    add_output_arg,
+    add_raw_data_arg,
+    load_embeddings,
+    load_parquet_or_dir,
+    resolve_parquet_path,
+    run_pca_2d,
+    safe_resolve_path,
+    save_or_show,
+    subsample_df,
+)
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 # (color, marker, legend label)
 STYLE_CROSS_TYPE = {
@@ -37,33 +50,6 @@ STYLE_BACKGROUND = {
     "book": ("#90CAF9", "o", "book  — no shared artist"),
     "music": ("#FFCDD2", "^", "music — no shared artist"),
 }
-
-
-def _safe_resolve_path(raw_path: str) -> Path:
-    """Resolve and validate a user-supplied path against path injection attacks.
-
-    Resolves the path to its canonical absolute form (expanding ``..`` and
-    symlinks) and rejects inputs that contain null bytes.
-
-    Args:
-        raw_path: Raw path string supplied via CLI or an external source.
-
-    Returns:
-        Resolved :class:`~pathlib.Path` object.
-
-    Raises:
-        ValueError: If the path contains null bytes or other illegal characters.
-        FileNotFoundError: If the resolved path does not exist.
-    """
-    if "\x00" in raw_path:
-        raise ValueError("Path contains null bytes, which is not allowed.")
-
-    resolved = Path(raw_path).resolve()
-
-    if not resolved.exists():
-        raise FileNotFoundError(f"Path does not exist: {resolved}")
-
-    return resolved
 
 
 def load_artist_mapping(raw_path: str) -> pd.DataFrame:
@@ -81,21 +67,7 @@ def load_artist_mapping(raw_path: str) -> pd.DataFrame:
         ValueError: If the path is invalid or contains illegal characters.
         FileNotFoundError: If raw_path is a directory with no parquet files.
     """
-    safe_path = _safe_resolve_path(raw_path)
-
-    if safe_path.is_dir():
-        files: list[Path] = sorted(
-            f
-            for f in safe_path.glob("**/*.parquet")
-            if f.resolve().is_relative_to(safe_path)
-        )
-        if not files:
-            raise FileNotFoundError(f"No .parquet files found under: {safe_path}")
-        print(f"  Found {len(files)} parquet file(s) under {safe_path}")
-        df = pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
-    else:
-        df = pd.read_parquet(str(safe_path))
-
+    df = load_parquet_or_dir(raw_path)
     return df[["item_id", "item_type", "artist_id"]].drop_duplicates(subset=["item_id"])
 
 
@@ -131,51 +103,35 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="PCA 2D — highlight items linked by cross-type artists."
     )
-    parser.add_argument("parquet_path", nargs="?", default=None)
-    parser.add_argument("--embeddings", "-e", default=None)
-    parser.add_argument(
-        "--raw-data",
-        "-r",
-        required=True,
+    add_embedding_args(parser)
+    add_raw_data_arg(
+        parser,
         help=(
             "Raw input parquet or directory"
             " (used both for item_type join and artist mapping)."
         ),
     )
-    parser.add_argument("--output", "-o", default=None)
-    parser.add_argument("--nrows", type=int, default=None)
+    add_output_arg(parser)
+    add_nrows_arg(parser)
     args = parser.parse_args()
 
-    parquet_path = args.embeddings or args.parquet_path
-    if not parquet_path:
-        parser.error(
-            "Provide embeddings path as positional argument or via --embeddings"
-        )
+    parquet_path = resolve_parquet_path(args, parser)
+
+    # Validate raw-data path early
+    safe_resolve_path(args.raw_data)
 
     # --- Load embeddings and join item type ---
-    emb_df = pd.read_parquet(parquet_path).merge(
-        pd.read_parquet(args.raw_data).loc[:, ["item_id", "item_type"]],
-        left_on="node_ids",
-        right_on="item_id",
-        how="left",
-    )
-    print(f"Loaded {len(emb_df)} embeddings")
-    print(emb_df["item_type"].value_counts().to_string())
+    emb_df = load_embeddings(parquet_path, args.raw_data, include_gtl=False)
 
     # --- Identify cross-type items ---
     print("Loading artist mapping from raw data…")
     artist_mapping = load_artist_mapping(args.raw_data)
     cross_type_items = find_cross_type_item_ids(artist_mapping)
 
-    if args.nrows and len(emb_df) > args.nrows:
-        emb_df = emb_df.sample(args.nrows, random_state=42)
+    emb_df = subsample_df(emb_df, args.nrows)
 
     # --- PCA dimensionality reduction ---
-    embeddings = np.stack(emb_df["embedding"].values)
-    pca = PCA(n_components=2, random_state=42)
-    coords = pca.fit_transform(embeddings)
-    explained = pca.explained_variance_ratio_
-    print(f"PCA variance: PC1={explained[0]:.1%}, PC2={explained[1]:.1%}")
+    coords, explained = run_pca_2d(emb_df)
 
     emb_df = emb_df.copy()
     emb_df["x"] = coords[:, 0]
@@ -185,7 +141,7 @@ def main() -> None:
     print(f"Plotting {len(emb_df)} items ({emb_df['is_cross'].sum()} cross-type)")
 
     # --- Plot ---
-    fig, ax = plt.subplots(figsize=(13, 9))
+    _fig, ax = plt.subplots(figsize=(13, 9))
     ax.set_facecolor("#F5F5F5")
 
     # Background: items without a cross-type artist (transparent, small)
@@ -259,11 +215,7 @@ def main() -> None:
     ax.set_ylabel("PC2")
     plt.tight_layout()
 
-    if args.output:
-        plt.savefig(args.output, dpi=150, bbox_inches="tight")
-        print(f"Saved to {args.output}")
-    else:
-        plt.show()
+    save_or_show(args.output)
 
 
 if __name__ == "__main__":

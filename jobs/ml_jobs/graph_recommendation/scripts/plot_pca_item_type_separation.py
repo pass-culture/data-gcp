@@ -16,64 +16,47 @@ from __future__ import annotations
 import argparse
 
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from sklearn.decomposition import PCA
+from plot_utils import (
+    ITEM_TYPE_COLORS,
+    ITEM_TYPE_MARKERS,
+    add_embedding_args,
+    add_nrows_arg,
+    add_output_arg,
+    add_raw_data_arg,
+    load_embeddings,
+    resolve_parquet_path,
+    run_pca_2d,
+    save_or_show,
+    subsample_df,
+)
 
-ITEM_TYPE_COLORS = {"book": "#1f77b4", "music": "#ff7f0e"}
-ITEM_TYPE_MARKERS = {"book": "o", "music": "^"}
 ITEM_TYPE_ALPHAS = {"book": 0.35, "music": 0.45}
 
 
 def main() -> None:
     """Parse CLI arguments, run PCA, and render the book vs music separation plot."""
     parser = argparse.ArgumentParser(description="Visualize book vs music separation.")
-    parser.add_argument("parquet_path", nargs="?", default=None)
-    parser.add_argument("--embeddings", "-e", default=None)
-    parser.add_argument(
-        "--raw-data",
-        "-r",
-        required=True,
-        help="Raw input parquet or directory to join item_type.",
-    )
-    parser.add_argument("--output", "-o", default=None)
-    parser.add_argument("--nrows", type=int, default=None)
+    add_embedding_args(parser)
+    add_raw_data_arg(parser, help="Raw input parquet or directory to join item_type.")
+    add_output_arg(parser)
+    add_nrows_arg(parser)
     args = parser.parse_args()
 
-    parquet_path = args.embeddings or args.parquet_path
-    if not parquet_path:
-        parser.error(
-            "Provide embeddings path as positional argument or via --embeddings"
-        )
+    parquet_path = resolve_parquet_path(args, parser)
 
     # --- Load embeddings and join item type from raw data ---
-    df = pd.read_parquet(parquet_path)
-    df = df.merge(
-        pd.read_parquet(args.raw_data).loc[:, ["item_id", "item_type"]],
-        left_on="node_ids",
-        right_on="item_id",
-        how="left",
-    )
-    print(f"Loaded {len(df)} embeddings")
-    print(df["item_type"].value_counts().to_string())
-
-    if args.nrows and len(df) > args.nrows:
-        df = df.sample(args.nrows, random_state=42)
-        print(f"Subsampled to {len(df)} rows")
+    df = load_embeddings(parquet_path, args.raw_data, include_gtl=False)
+    df = subsample_df(df, args.nrows)
 
     # --- PCA dimensionality reduction ---
-    embeddings = np.stack(df["embedding"].values)
-    pca = PCA(n_components=2, random_state=42)
-    coords = pca.fit_transform(embeddings)
-    explained = pca.explained_variance_ratio_
-    print(f"PCA variance: PC1={explained[0]:.1%}, PC2={explained[1]:.1%}")
+    coords, explained = run_pca_2d(df)
 
     df = df.copy()
     df["x"] = coords[:, 0]
     df["y"] = coords[:, 1]
 
     # --- Scatter plot: one layer per item type ---
-    fig, ax = plt.subplots(figsize=(12, 8))
+    _fig, ax = plt.subplots(figsize=(12, 8))
 
     for item_type, group in df.groupby("item_type"):
         ax.scatter(
@@ -120,11 +103,7 @@ def main() -> None:
     ax.set_ylabel("PC2")
     plt.tight_layout()
 
-    if args.output:
-        plt.savefig(args.output, dpi=150, bbox_inches="tight")
-        print(f"Saved to {args.output}")
-    else:
-        plt.show()
+    save_or_show(args.output)
 
 
 if __name__ == "__main__":

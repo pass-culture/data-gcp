@@ -10,10 +10,10 @@ select
     total_active_partners_collective,
     total_active_partners_global,
     total_active_partners_dual_part,
-    total_cumulative_partners_individual,
-    total_cumulative_partners_collective,
-    total_cumulative_partners_global,
-    total_cumulative_partners_individual_only,
-    total_cumulative_partners_collective_only,
-    total_cumulative_partners_dual_part
+    total_cumulative_activated_partners_individual,
+    total_cumulative_activated_partners_collective,
+    total_cumulative_activated_partners_global,
+    total_cumulative_activated_partners_individual_only,
+    total_cumulative_activated_partners_collective_only,
+    total_cumulative_activated_partners_dual_part
 from {{ ref("int_kpi__cultural_partner_activation") }}

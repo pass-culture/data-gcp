@@ -203,26 +203,26 @@ The total number of unique partners who had at least one active offer within eit
 The total number of unique partners who had at least one active offer within both the individual part and the collective part simultaneously during the 365 days prior to the calculation date.
 {% enddocs %}
 
-{% docs column__metrics__total_cumulative_partners_individual %}
+{% docs column__metrics__total_cumulative_activated_partners_individual %}
 The total cumulative number of unique partners who have had at least one active offer within the individual part for at least 1 day since inception up to the given month.
 {% enddocs %}
 
-{% docs column__metrics__total_cumulative_partners_collective %}
+{% docs column__metrics__total_cumulative_activated_partners_collective %}
 The total cumulative number of unique partners who have had at least one active offer within the collective part for at least 1 day since inception up to the given month.
 {% enddocs %}
 
-{% docs column__metrics__total_cumulative_partners_global %}
+{% docs column__metrics__total_cumulative_activated_partners_global %}
 The total cumulative number of unique partners who have had at least one active offer within either the individual part, the collective part, or both, for at least 1 day since inception up to the given month.
 {% enddocs %}
 
-{% docs column__metrics__total_cumulative_partners_individual_only %}
+{% docs column__metrics__total_cumulative_activated_partners_individual_only %}
 The total cumulative number of unique partners who have had at least one active offer exclusively within the individual part for at least 1 day, and have never had an active offer within the collective part since inception up to the given month.
 {% enddocs %}
 
-{% docs column__metrics__total_cumulative_partners_collective_only %}
+{% docs column__metrics__total_cumulative_activated_partners_collective_only %}
 The total cumulative number of unique partners who have had at least one active offer exclusively within the collective part for at least 1 day, and have never had an active offer within the individual part since inception up to the given month.
 {% enddocs %}
 
-{% docs column__metrics__total_cumulative_partners_dual_part %}
+{% docs column__metrics__total_cumulative_activated_partners_dual_part %}
 The total cumulative number of unique partners who have had at least one active offer within both the individual part and the collective part (at any point, concurrently or sequentially) for at least 1 day since inception up to the given month.
 {% enddocs %}

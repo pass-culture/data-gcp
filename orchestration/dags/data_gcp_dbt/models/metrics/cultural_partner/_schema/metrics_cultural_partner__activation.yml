@@ -26,15 +26,15 @@ models:
         description: "{{ doc('column__metrics__total_active_partners_global') }}"
       - name: total_active_partners_dual_part
         description: "{{ doc('column__metrics__total_active_partners_dual_part') }}"
-      - name: total_cumulative_partners_individual
-        description: "{{ doc('column__metrics__total_cumulative_partners_individual') }}"
-      - name: total_cumulative_partners_collective
-        description: "{{ doc('column__metrics__total_cumulative_partners_collective') }}"
-      - name: total_cumulative_partners_global
-        description: "{{ doc('column__metrics__total_cumulative_partners_global') }}"
-      - name: total_cumulative_partners_individual_only
-        description: "{{ doc('column__metrics__total_cumulative_partners_individual_only') }}"
-      - name: total_cumulative_partners_collective_only
-        description: "{{ doc('column__metrics__total_cumulative_partners_collective_only') }}"
-      - name: total_cumulative_partners_dual_part
-        description: "{{ doc('column__metrics__total_cumulative_partners_dual_part') }}"
+      - name: total_cumulative_activated_partners_individual
+        description: "{{ doc('column__metrics__total_cumulative_activated_partners_individual') }}"
+      - name: total_cumulative_activated_partners_collective
+        description: "{{ doc('column__metrics__total_cumulative_activated_partners_collective') }}"
+      - name: total_cumulative_activated_partners_global
+        description: "{{ doc('column__metrics__total_cumulative_activated_partners_global') }}"
+      - name: total_cumulative_activated_partners_individual_only
+        description: "{{ doc('column__metrics__total_cumulative_activated_partners_individual_only') }}"
+      - name: total_cumulative_activated_partners_collective_only
+        description: "{{ doc('column__metrics__total_cumulative_activated_partners_collective_only') }}"
+      - name: total_cumulative_activated_partners_dual_part
+        description: "{{ doc('column__metrics__total_cumulative_activated_partners_dual_part') }}"

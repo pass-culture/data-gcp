@@ -111,12 +111,12 @@ with
                 distinct case
                     when days_since_last_indiv_bookable_date >= 0 then venue_id
                 end
-            ) as total_cumulative_partners_individual,
+            ) as total_cumulative_activated_partners_individual,
             count(
                 distinct case
                     when days_since_last_collective_bookable_date >= 0 then venue_id
                 end
-            ) as total_cumulative_partners_collective,
+            ) as total_cumulative_activated_partners_collective,
             count(
                 distinct case
                     when
@@ -124,23 +124,23 @@ with
                         or days_since_last_collective_bookable_date >= 0
                     then venue_id
                 end
-            ) as total_cumulative_partners_global,
+            ) as total_cumulative_activated_partners_global,
             count(
                 distinct case
                     when
-                        days_since_last_indiv_bookable_date >= 0
-                        and days_since_last_collective_bookable_date < 0
+                        days_since_last_indiv_bookable_date is not null
+                        and days_since_last_collective_bookable_date is null
                     then venue_id
                 end
-            ) as total_cumulative_partners_individual_only,
+            ) as total_cumulative_activated_partners_individual_only,
             count(
                 distinct case
                     when
-                        days_since_last_collective_bookable_date >= 0
-                        and days_since_last_indiv_bookable_date < 0
+                        days_since_last_collective_bookable_date is not null
+                        and days_since_last_indiv_bookable_date is null
                     then venue_id
                 end
-            ) as total_cumulative_partners_collective_only,
+            ) as total_cumulative_activated_partners_collective_only,
             count(
                 distinct case
                     when
@@ -148,7 +148,7 @@ with
                         and days_since_last_collective_bookable_date >= 0
                     then venue_id
                 end
-            ) as total_cumulative_partners_dual_part
+            ) as total_cumulative_activated_partners_dual_part
 
         from partner_details
         group by
@@ -173,11 +173,11 @@ select
     total_active_partners_collective,
     total_active_partners_global,
     total_active_partners_dual_part,
-    total_cumulative_partners_individual,
-    total_cumulative_partners_collective,
-    total_cumulative_partners_global,
-    total_cumulative_partners_individual_only,
-    total_cumulative_partners_collective_only,
-    total_cumulative_partners_dual_part
+    total_cumulative_activated_partners_individual,
+    total_cumulative_activated_partners_collective,
+    total_cumulative_activated_partners_global,
+    total_cumulative_activated_partners_individual_only,
+    total_cumulative_activated_partners_collective_only,
+    total_cumulative_activated_partners_dual_part
 from monthly_aggregated_kpis
 where partner_city_code is not null

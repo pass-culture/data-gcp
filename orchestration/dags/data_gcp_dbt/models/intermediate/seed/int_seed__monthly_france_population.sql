@@ -32,6 +32,7 @@ select
     pop.department_name as population_department_name,
     dep.academy_name as population_academy_name,
     dep.region_name as population_region_name,
+    dep.territory_type as population_territory_type,
     date(pop.current_date) as population_snapshot_month,
     date(pop.born_date) as population_birth_month,
     sum(pop.population) as total_population
@@ -49,4 +50,5 @@ group by
     pop.department_code,
     pop.department_name,
     dep.academy_name,
-    dep.region_name
+    dep.region_name,
+    dep.territory_type

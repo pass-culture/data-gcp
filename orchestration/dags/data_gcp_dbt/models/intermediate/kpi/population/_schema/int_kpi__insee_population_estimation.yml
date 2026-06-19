@@ -31,6 +31,10 @@ models:
         description: '{{ doc("column__region_code") }}'
         data_type: STRING
 
+      - name: territory_type
+        description: '{{ doc("column__population_territory_type") }}'
+        data_type: STRING
+
       - name: total_population_last_12_months
         description: '{{ doc("column__total_population_last_12_months") }}'
         data_type: INTEGER

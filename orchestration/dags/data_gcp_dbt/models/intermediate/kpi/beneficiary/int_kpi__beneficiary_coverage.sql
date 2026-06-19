@@ -18,6 +18,7 @@ with
             rd.dep_name as department_name,
             rd.region_name,
             rd.region_code,
+            rd.territory_type,
             count(distinct ub.user_id) as total_beneficiaries,
             mod(
                 abs(sum(distinct {{ record_key("ub.user_id") }})), 256
@@ -31,7 +32,8 @@ with
             ub.department_code,
             rd.dep_name,
             rd.region_name,
-            rd.region_code
+            rd.region_code,
+            rd.territory_type
     ),
 
     final_data as (
@@ -39,6 +41,7 @@ with
             deposit_active_month as partition_month,
             region_name,
             region_code,
+            territory_type,
             department_name,
             department_code,
             cast(milestone_age as integer) as milestone_age,
@@ -60,6 +63,7 @@ select
     partition_month,
     region_name,
     region_code,
+    territory_type,
     department_name,
     department_code,
     milestone_age,

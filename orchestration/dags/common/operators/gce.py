@@ -110,11 +110,12 @@ class CleanGCEOperator(BaseOperator):
 
 
 class DeleteGCEOperator(BaseOperator):
-    template_fields = ["instance_name"]
+    template_fields = ["instance_name", "gce_zone"]
 
     def __init__(
         self,
         instance_name: str,
+        gce_zone: str = GCE_ZONE,
         *args,
         **kwargs,
     ):
@@ -123,9 +124,12 @@ class DeleteGCEOperator(BaseOperator):
         kwargs.setdefault("weight_rule", "absolute")
         super(DeleteGCEOperator, self).__init__(*args, **kwargs)
         self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
+        self.gce_zone = gce_zone
 
     def execute(self, context):
-        with GCEHook() as hook:
+        # Delete in the zone the VM was created in: deleting in the wrong zone
+        # 404s silently and leaves a billable instance running.
+        with GCEHook(gce_zone=self.gce_zone) as hook:
             hook.delete_vm(self.instance_name)
 
 

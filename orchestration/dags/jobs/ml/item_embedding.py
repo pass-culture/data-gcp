@@ -49,6 +49,7 @@ TEMP_OUTPUT_TABLE_NAME = "item_embedding_tmp"
 DAG_NAME = "item_embedding"
 BASE_DIR = "data-gcp/jobs/ml_jobs/item_embedding"
 INSTANCE_NAME = "item-embedding"
+GCE_ZONE_TEMPLATE = "{{ params.gce_zone }}"
 INSTANCE_TYPE = {
     "dev": "n1-standard-4",
     "stg": "g2-standard-48",
@@ -144,7 +145,7 @@ with DAG(
         instance_type="{{ params.instance_type }}",
         gpu_type="{{ params.gpu_type }}",
         gpu_count="{{ params.gpu_count }}",
-        gce_zone="{{ params.gce_zone }}",
+        gce_zone=GCE_ZONE_TEMPLATE,
         labels={"job_type": "extra_long_ml", "dag_name": DAG_NAME},
     )
 
@@ -153,6 +154,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
         branch="{{ params.branch }}",
+        gce_zone=GCE_ZONE_TEMPLATE,
         retries=2,
     )
 
@@ -204,6 +206,7 @@ with DAG(
         task_id="embed_items",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
+        gce_zone=GCE_ZONE_TEMPLATE,
         command=f"""
             uv run python main.py \
                 --config-file-name {{{{ params.config_file_name }}}} \
@@ -229,6 +232,7 @@ with DAG(
     gce_instance_delete = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
+        gce_zone=GCE_ZONE_TEMPLATE,  # delete in the zone the VM was created in
         trigger_rule="all_done",  # always delete the VM, even on upstream failure
     )
 

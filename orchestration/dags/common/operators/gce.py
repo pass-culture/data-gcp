@@ -134,19 +134,21 @@ class DeleteGCEOperator(BaseOperator):
 
 
 class StopGCEOperator(BaseOperator):
-    template_fields = ["instance_name"]
+    template_fields = ["instance_name", "gce_zone"]
 
     def __init__(
         self,
         instance_name: str,
+        gce_zone: str = GCE_ZONE,
         *args,
         **kwargs,
     ):
         super(StopGCEOperator, self).__init__(*args, **kwargs)
         self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
+        self.gce_zone = gce_zone
 
     def execute(self, context):
-        with GCEHook() as hook:
+        with GCEHook(gce_zone=self.gce_zone) as hook:
             hook.stop_vm(self.instance_name)
 
 

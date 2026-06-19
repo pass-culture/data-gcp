@@ -21,8 +21,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import glob
-import os
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -40,6 +39,33 @@ STYLE_BACKGROUND = {
 }
 
 
+def _safe_resolve_path(raw_path: str) -> Path:
+    """Resolve and validate a user-supplied path against path injection attacks.
+
+    Resolves the path to its canonical absolute form (expanding ``..`` and
+    symlinks) and rejects inputs that contain null bytes.
+
+    Args:
+        raw_path: Raw path string supplied via CLI or an external source.
+
+    Returns:
+        Resolved :class:`~pathlib.Path` object.
+
+    Raises:
+        ValueError: If the path contains null bytes or other illegal characters.
+        FileNotFoundError: If the resolved path does not exist.
+    """
+    if "\x00" in raw_path:
+        raise ValueError("Path contains null bytes, which is not allowed.")
+
+    resolved = Path(raw_path).resolve()
+
+    if not resolved.exists():
+        raise FileNotFoundError(f"Path does not exist: {resolved}")
+
+    return resolved
+
+
 def load_artist_mapping(raw_path: str) -> pd.DataFrame:
     """Load the item_id → (item_type, artist_id) mapping from raw parquet files.
 
@@ -52,18 +78,23 @@ def load_artist_mapping(raw_path: str) -> pd.DataFrame:
         Deduplicated DataFrame with columns: item_id, item_type, artist_id.
 
     Raises:
+        ValueError: If the path is invalid or contains illegal characters.
         FileNotFoundError: If raw_path is a directory with no parquet files.
     """
-    if os.path.isdir(raw_path):
-        files = sorted(
-            glob.glob(os.path.join(raw_path, "**", "*.parquet"), recursive=True)
+    safe_path = _safe_resolve_path(raw_path)
+
+    if safe_path.is_dir():
+        files: list[Path] = sorted(
+            f
+            for f in safe_path.glob("**/*.parquet")
+            if f.resolve().is_relative_to(safe_path)
         )
         if not files:
-            raise FileNotFoundError(f"No .parquet files found under: {raw_path}")
-        print(f"  Found {len(files)} parquet file(s) under {raw_path}")
+            raise FileNotFoundError(f"No .parquet files found under: {safe_path}")
+        print(f"  Found {len(files)} parquet file(s) under {safe_path}")
         df = pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
     else:
-        df = pd.read_parquet(raw_path)
+        df = pd.read_parquet(str(safe_path))
 
     return df[["item_id", "item_type", "artist_id"]].drop_duplicates(subset=["item_id"])
 

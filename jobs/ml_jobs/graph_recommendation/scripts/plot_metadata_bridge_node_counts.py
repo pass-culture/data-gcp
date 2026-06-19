@@ -20,8 +20,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import glob
-import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -41,6 +39,37 @@ COLOR_MUSIC = "#E53935"
 COLOR_BRIDGE = "#2E7D32"
 
 
+def _safe_resolve_path(raw_path: str, *, must_exist: bool = True) -> Path:
+    """Resolve and validate a user-supplied path against path injection attacks.
+
+    Resolves the path to its canonical absolute form (expanding ``..`` and
+    symlinks) and rejects inputs that contain null bytes.
+
+    Args:
+        raw_path:   Raw path string supplied via CLI or an external source.
+        must_exist: When *True* (default), raise :exc:`FileNotFoundError` if
+                    the resolved path does not exist on disk.  Set to *False*
+                    for output paths that are about to be created.
+
+    Returns:
+        Resolved :class:`~pathlib.Path` object.
+
+    Raises:
+        ValueError: If the path contains null bytes or other illegal characters.
+        FileNotFoundError: If *must_exist* is True and the resolved path does
+            not exist.
+    """
+    if "\x00" in raw_path:
+        raise ValueError("Path contains null bytes, which is not allowed.")
+
+    resolved = Path(raw_path).resolve()
+
+    if must_exist and not resolved.exists():
+        raise FileNotFoundError(f"Path does not exist: {resolved}")
+
+    return resolved
+
+
 def load_raw(raw_path: str) -> pd.DataFrame:
     """Load the raw item dataset from a parquet file or a directory tree.
 
@@ -51,17 +80,20 @@ def load_raw(raw_path: str) -> pd.DataFrame:
         Concatenated DataFrame of all parquet files found.
 
     Raises:
+        ValueError: If the path is invalid or contains illegal characters.
         FileNotFoundError: If raw_path is a directory with no parquet files.
     """
-    if os.path.isdir(raw_path):
-        files = sorted(
-            glob.glob(os.path.join(raw_path, "**", "*.parquet"), recursive=True)
-        )
+    safe_path = _safe_resolve_path(raw_path)
+
+    if safe_path.is_dir():
+        files = sorted(safe_path.glob("**/*.parquet"))
         if not files:
-            raise FileNotFoundError(f"No .parquet files found under: {raw_path}")
-        print(f"  Found {len(files)} parquet file(s) under {raw_path}")
+            raise FileNotFoundError(f"No .parquet files found under: {safe_path}")
+        # Ensure every discovered file is still a descendant of safe_path
+        files = [f for f in files if f.resolve().is_relative_to(safe_path)]
+        print(f"  Found {len(files)} parquet file(s) under {safe_path}")
         return pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
-    return pd.read_parquet(raw_path)
+    return pd.read_parquet(safe_path)
 
 
 def classify_nodes(
@@ -340,7 +372,11 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    out_dir = Path(args.output_dir) if args.output_dir else None
+    out_dir = (
+        _safe_resolve_path(args.output_dir, must_exist=False)
+        if args.output_dir
+        else None
+    )
     if out_dir:
         out_dir.mkdir(parents=True, exist_ok=True)
 

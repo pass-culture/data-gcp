@@ -213,7 +213,7 @@ with DAG(
                 --input-parquets-folder-path gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{INPUT_FOLDER} \
                 --output-parquets-folder-path gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{OUTPUT_FOLDER} \
         """,
-        deferrable=False,
+        deferrable=True,
     )
 
     # Step 4: Export the output embeddings from GCS to BigQuery temp table

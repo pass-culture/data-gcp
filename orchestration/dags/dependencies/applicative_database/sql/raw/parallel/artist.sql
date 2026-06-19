@@ -12,6 +12,6 @@ SELECT
     ,"image_author" as wikidata_image_author
     ,"app_search_score" as artist_app_search_score
     ,"pro_search_score" as artist_pro_search_score
-    ,"date_created" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\'
-    ,"date_modified" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\'
+    ,"date_created" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as date_created
+    ,"date_modified" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as date_modified
 FROM public.artist

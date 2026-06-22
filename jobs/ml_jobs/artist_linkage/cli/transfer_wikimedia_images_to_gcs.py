@@ -1,4 +1,5 @@
 import concurrent
+import io
 import logging
 import uuid
 from concurrent.futures import ThreadPoolExecutor
@@ -9,6 +10,7 @@ import requests
 import typer
 from google.auth.transport.requests import AuthorizedSession
 from google.cloud import storage
+from PIL import Image, UnidentifiedImageError
 from requests.adapters import HTTPAdapter
 from tqdm import tqdm
 from urllib3.util.retry import Retry
@@ -29,6 +31,11 @@ STATUS_KEY = "status"
 MAX_WORKERS = 10
 POOL_CONNECTIONS = MAX_WORKERS
 POOL_MAXSIZE = MAX_WORKERS + 5
+
+# Image compression and WebP conversion settings
+IMAGE_MAX_SIZE = (800, 800)
+IMAGE_WEBP_QUALITY = 80
+IMAGE_WEBP_METHOD = 4
 
 
 logging.basicConfig(level=logging.INFO)
@@ -91,6 +98,38 @@ def _get_gcs_client():
     return client
 
 
+def compress_and_convert_to_webp(image_bytes: bytes) -> bytes:
+    """Resize image to fit within max_size and convert/compress to WebP in memory.
+
+    Args:
+        image_bytes: The raw image bytes downloaded from Wikimedia.
+        max_size: Bounding box for resizing the image.
+
+    Returns:
+        Bytes of the compressed WebP image.
+    """
+    with Image.open(io.BytesIO(image_bytes)) as img:
+        # Standardize image modes for WebP compatibility
+        # If the image has transparency (RGBA or palette-based with transparency), keep RGBA
+        if img.mode not in ("RGB", "RGBA"):
+            img = img.convert(
+                "RGBA" if "transparency" in img.info or img.mode == "P" else "RGB"
+            )
+
+        # Resize maintaining aspect ratio
+        img.thumbnail(IMAGE_MAX_SIZE, Image.Resampling.LANCZOS)
+
+        # Save compressed WebP to bytes
+        output_buffer = io.BytesIO()
+        img.save(
+            output_buffer,
+            format="WEBP",
+            quality=IMAGE_WEBP_QUALITY,
+            method=IMAGE_WEBP_METHOD,
+        )
+        return output_buffer.getvalue()
+
+
 def transfer_image(
     session: requests.Session, gcs_bucket: storage.Bucket, image_url: str
 ) -> dict:
@@ -109,7 +148,7 @@ def transfer_image(
     try:
         # 1. Prepare GCS blob
         clean_url = image_url.strip()
-        image_id = str(uuid.uuid5(uuid.NAMESPACE_URL, clean_url))
+        image_id = str(uuid.uuid5(uuid.NAMESPACE_URL, clean_url + "/webp"))
         blob = gcs_bucket.blob(f"{DE_DATALAKE_IMAGES_FOLDER}/{image_id}")
 
         # 2. Check if download is required
@@ -120,12 +159,28 @@ def transfer_image(
                 STATUS_KEY: "SKIPPED",
             }
 
-        # 3. Stream wikiemedia content directly to GCS (no local save)
+        # 3. Download wikimedia content
         with session.get(
             image_url, headers=WIKIMEDIA_REQUEST_HEADER, stream=True, timeout=15
         ) as r:
             if r.status_code == 200:
-                blob.upload_from_file(r.raw, content_type=r.headers.get("content-type"))
+                raw_bytes = r.content
+
+                try:
+                    # 4. Attempt to compress and convert to WebP
+                    compressed_bytes = compress_and_convert_to_webp(
+                        image_bytes=raw_bytes,
+                    )
+                    content_type = "image/webp"
+                except UnidentifiedImageError:
+                    # Fallback for vectors/SVGs or files Pillow cannot process (upload as-is)
+                    compressed_bytes = raw_bytes
+                    content_type = r.headers.get(
+                        "content-type", "application/octet-stream"
+                    )
+
+                # 5. Upload bytes to GCS
+                blob.upload_from_string(compressed_bytes, content_type=content_type)
                 return {
                     WIKIDATA_IMAGE_FILE_URL_KEY: image_url,
                     ARTIST_MEDIATION_UUID_KEY: image_id,

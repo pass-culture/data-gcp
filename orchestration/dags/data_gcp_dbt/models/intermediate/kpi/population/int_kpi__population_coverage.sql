@@ -9,6 +9,7 @@ with
             pop.population_region_name,
             rd.region_code as population_region_code,
             pop.population_academy_name,
+            pop.population_territory_type,
             pop.total_population
         from {{ ref("int_seed__monthly_france_population") }} as pop
         left join
@@ -24,6 +25,7 @@ select
     population_department_name as department_name,
     population_region_name as region_name,
     population_region_code as region_code,
+    population_territory_type as territory_type,
     sum(total_population) over (
         partition by population_decimal_age, population_department_code
         order by population_snapshot_month

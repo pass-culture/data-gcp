@@ -25,6 +25,10 @@ The name of the educational academy associated with the department.
 The name of the region in which the department is located.
 {% enddocs %}
 
+{% docs column__population_territory_type %}
+The type of territory classification for the department, which can include categories such as metropolitan, overseas, or special territories.
+{% enddocs %}
+
 {% docs column__population_birth_month %}
 The estimated birth month of individuals based on observed birth trends.
 {% enddocs %}

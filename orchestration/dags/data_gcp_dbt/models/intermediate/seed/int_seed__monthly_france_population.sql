@@ -32,13 +32,12 @@ select
     pop.department_name as population_department_name,
     dep.academy_name as population_academy_name,
     dep.region_name as population_region_name,
+    dep.territory_type as population_territory_type,
     date(pop.current_date) as population_snapshot_month,
     date(pop.born_date) as population_birth_month,
     sum(pop.population) as total_population
 from {{ source("seed", "population_age_and_department_france_details") }} as pop
-left join
-    {{ source("seed", "region_department") }} as dep
-    on pop.department_code = dep.num_dep
+left join {{ ref("region_department") }} as dep on pop.department_code = dep.num_dep
 where
     pop.current_year between {{ insee_start_year }} and {{ insee_last_valid_year }}
     and cast(pop.age as int) between 15 and 25
@@ -49,4 +48,5 @@ group by
     pop.department_code,
     pop.department_name,
     dep.academy_name,
-    dep.region_name
+    dep.region_name,
+    dep.territory_type

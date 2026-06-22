@@ -16,6 +16,7 @@ if GCP_PROJECT != "passculture-data-prod" or ENV_SHORT_NAME != "prod":
     )
 
 BIGQUERY_REPORTING_DATASET = f"external_reporting_{ENV_SHORT_NAME}"
+BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
 EXPORT_BUCKET = f"de-bigquery-data-export-{ENV_SHORT_NAME}"
 REGION_HIERARCHY_TABLE = "region_department"
 

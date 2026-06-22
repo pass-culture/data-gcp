@@ -75,6 +75,9 @@ models:
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       raw:
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+      pcreco:
+        +meta:
+          owner: "@data-science"
     mart:
       +meta:
         owner: "@analytics"
@@ -111,6 +114,9 @@ models:
       backend:
         +schema: backend_{{ target.name }}
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+        data_science:
+          +meta:
+            owner: "@data-science"
       ministry:
         +tags: "monthly"
         +labels:
@@ -118,6 +124,8 @@ models:
       reco_cloudsql:
         +schema: export_reco_cloudsql_{{ target.name }}
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+        +meta:
+          owner: "@data-science"
       vidoc:
         +schema: export_vidoc_{{ target.name }}
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"

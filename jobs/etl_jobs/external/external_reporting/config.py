@@ -15,7 +15,7 @@ if GCP_PROJECT != "passculture-data-prod" or ENV_SHORT_NAME != "prod":
         bold=True,
     )
 
-BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
+BIGQUERY_REPORTING_DATASET = f"external_reporting_{ENV_SHORT_NAME}"
 EXPORT_BUCKET = f"de-bigquery-data-export-{ENV_SHORT_NAME}"
 REGION_HIERARCHY_TABLE = "region_department"
 
@@ -56,44 +56,42 @@ MONTH_NAMES_FR = {
 }
 
 # data sources
-table_prefix = "external_reporting"
-
 SOURCE_TABLES = {
     "individual": {
-        "dataset": BIGQUERY_ANALYTICS_DATASET,
-        "table": f"{table_prefix}_individual",
+        "dataset": BIGQUERY_REPORTING_DATASET,
+        "table": "individual",
     },
     "collective": {
-        "dataset": BIGQUERY_ANALYTICS_DATASET,
-        "table": f"{table_prefix}_eac",
+        "dataset": BIGQUERY_REPORTING_DATASET,
+        "table": "eac",
     },
     "top_offer": {
-        "dataset": BIGQUERY_ANALYTICS_DATASET,
-        "table": f"{table_prefix}_top_offer",
+        "dataset": BIGQUERY_REPORTING_DATASET,
+        "table": "top_offer",
     },
     "top_offer_category": {
-        "dataset": BIGQUERY_ANALYTICS_DATASET,
-        "table": f"{table_prefix}_top_offer_category",
+        "dataset": BIGQUERY_REPORTING_DATASET,
+        "table": "top_offer_category",
     },
     "top_offer_label": {
-        "dataset": BIGQUERY_ANALYTICS_DATASET,
-        "table": f"{table_prefix}_top_offer_label",
+        "dataset": BIGQUERY_REPORTING_DATASET,
+        "table": "top_offer_label",
     },
     "top_venue": {
-        "dataset": BIGQUERY_ANALYTICS_DATASET,
-        "table": f"{table_prefix}_top_venue",
+        "dataset": BIGQUERY_REPORTING_DATASET,
+        "table": "top_venue",
     },
     "top_labeled_venue": {
-        "dataset": BIGQUERY_ANALYTICS_DATASET,
-        "table": f"{table_prefix}_top_labeled_venue",
+        "dataset": BIGQUERY_REPORTING_DATASET,
+        "table": "top_labeled_venue",
     },
     "top_ac": {
-        "dataset": BIGQUERY_ANALYTICS_DATASET,
-        "table": f"{table_prefix}_top_ac",
+        "dataset": BIGQUERY_REPORTING_DATASET,
+        "table": "top_ac",
     },
     "top_format": {
-        "dataset": BIGQUERY_ANALYTICS_DATASET,
-        "table": f"{table_prefix}_top_format",
+        "dataset": BIGQUERY_REPORTING_DATASET,
+        "table": "top_format",
     },
 }
 

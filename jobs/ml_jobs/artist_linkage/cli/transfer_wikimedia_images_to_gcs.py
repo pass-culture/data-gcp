@@ -32,10 +32,9 @@ MAX_WORKERS = 10
 POOL_CONNECTIONS = MAX_WORKERS
 POOL_MAXSIZE = MAX_WORKERS + 5
 
-# Image compression and WebP conversion settings
+# Image compression and JPEG conversion settings
 IMAGE_MAX_SIZE = (800, 800)
-IMAGE_WEBP_QUALITY = 80
-IMAGE_WEBP_METHOD = 4
+IMAGE_JPEG_QUALITY = 80
 
 
 logging.basicConfig(level=logging.INFO)
@@ -98,35 +97,37 @@ def _get_gcs_client():
     return client
 
 
-def compress_and_convert_to_webp(image_bytes: bytes) -> bytes:
-    """Resize image to fit within max_size and convert/compress to WebP in memory.
+def compress_and_convert_to_jpeg(
+    image_bytes: bytes, max_size: tuple[int, int] = IMAGE_MAX_SIZE
+) -> bytes:
+    """Resize image to fit within max_size and convert/compress to JPEG in memory.
 
     Args:
         image_bytes: The raw image bytes downloaded from Wikimedia.
         max_size: Bounding box for resizing the image.
 
     Returns:
-        Bytes of the compressed WebP image.
+        Bytes of the compressed JPEG image.
     """
     with Image.open(io.BytesIO(image_bytes)) as img:
-        # Standardize image modes for WebP compatibility
-        # If the image has transparency (RGBA or palette-based with transparency), keep RGBA
-        if img.mode not in ("RGB", "RGBA"):
-            img = img.convert(
-                "RGBA" if "transparency" in img.info or img.mode == "P" else "RGB"
-            )
+        # Standardize image modes for JPEG compatibility (JPEG doesn't support RGBA/alpha)
+        if img.mode in ("RGBA", "LA") or (
+            img.mode == "P" and "transparency" in img.info
+        ):
+            # Create a white background to preserve transparent images nicely
+            background = Image.new("RGB", img.size, (255, 255, 255))
+            rgba_img = img.convert("RGBA")
+            background.paste(rgba_img, mask=rgba_img.split()[-1])
+            img = background
+        else:
+            img = img.convert("RGB")
 
         # Resize maintaining aspect ratio
-        img.thumbnail(IMAGE_MAX_SIZE, Image.Resampling.LANCZOS)
+        img.thumbnail(max_size, Image.Resampling.LANCZOS)
 
-        # Save compressed WebP to bytes
+        # Save compressed JPEG to bytes
         output_buffer = io.BytesIO()
-        img.save(
-            output_buffer,
-            format="WEBP",
-            quality=IMAGE_WEBP_QUALITY,
-            method=IMAGE_WEBP_METHOD,
-        )
+        img.save(output_buffer, format="JPEG", quality=IMAGE_JPEG_QUALITY)
         return output_buffer.getvalue()
 
 
@@ -148,7 +149,12 @@ def transfer_image(
     try:
         # 1. Prepare GCS blob
         clean_url = image_url.strip()
-        image_id = str(uuid.uuid5(uuid.NAMESPACE_URL, clean_url + "/webp"))
+        image_id = str(
+            uuid.uuid5(
+                uuid.NAMESPACE_URL,
+                f"{clean_url}_jpeg_{IMAGE_JPEG_QUALITY}_{IMAGE_MAX_SIZE}",
+            )
+        )
         blob = gcs_bucket.blob(f"{DE_DATALAKE_IMAGES_FOLDER}/{image_id}")
 
         # 2. Check if download is required
@@ -167,11 +173,9 @@ def transfer_image(
                 raw_bytes = r.content
 
                 try:
-                    # 4. Attempt to compress and convert to WebP
-                    compressed_bytes = compress_and_convert_to_webp(
-                        image_bytes=raw_bytes,
-                    )
-                    content_type = "image/webp"
+                    # 4. Attempt to compress and convert to JPEG
+                    compressed_bytes = compress_and_convert_to_jpeg(raw_bytes)
+                    content_type = "image/jpeg"
                 except UnidentifiedImageError:
                     # Fallback for vectors/SVGs or files Pillow cannot process (upload as-is)
                     compressed_bytes = raw_bytes

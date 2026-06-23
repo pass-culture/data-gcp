@@ -46,13 +46,18 @@ with DAG(
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        )
+        ),
+        "instance_type": Param(
+            default="n1-standard-4",
+            type="string",
+        ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,
         task_id="gce_start_task",
+        instance_type="{{ params.instance_type }}",
         labels={"job_type": "long_task", "dag_name": DAG_NAME},
     )
 

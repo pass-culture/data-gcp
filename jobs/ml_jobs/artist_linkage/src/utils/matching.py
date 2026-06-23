@@ -267,7 +267,11 @@ def perform_wikidata_category_matching(
     matched_without_namesake_df = (
         match_per_category_no_namesakes(new_artist_clusters_df, wiki_df)
         .assign(has_namesake=False)
-        .loc[lambda df: ~df.tmp_id.isin(matched_namesakes_df.tmp_id.unique())]
+        .loc[
+            lambda df: ~df[ARTIST_ID_KEY].isin(
+                matched_namesakes_df[ARTIST_ID_KEY].unique()
+            )
+        ]
     )
 
     # 3. Reconciliate matching
@@ -340,9 +344,11 @@ def match_artists_with_wikidata(
 
     # 5. Remap matched_df with wiki_to_artist_mapping
     matched_with_ids_df = matched_df.assign(
-        artist_id=lambda df: df[WIKIDATA_ID_KEY]
-        .map(wiki_to_artist_mapping)
-        .fillna(df.tmp_id),
+        **{
+            ARTIST_ID_KEY: lambda df: df[WIKIDATA_ID_KEY]
+            .map(wiki_to_artist_mapping)
+            .fillna(df[ARTIST_ID_KEY]),
+        },
         postprocessed_artist_name=lambda df: df.wiki_artist_name.fillna(
             df[ARTIST_NAME_TO_MATCH_KEY]
         ).apply(lambda s: s.title()),

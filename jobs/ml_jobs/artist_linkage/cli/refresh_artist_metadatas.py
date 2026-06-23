@@ -141,6 +141,7 @@ def match_unmatched_artists_with_wikidata(
 
     Args:
         applicative_artist_df (pd.DataFrame): Current applicative database artists.
+            Must contain ARTIST_PRO_SEARCH_SCORE_KEY column.
         artist_with_wikidata_ids_df (pd.DataFrame): Artists with wikidata_id already assigned.
         product_artist_link_filepath (str): Path to product artist links.
         product_filepath (str): Path to products.
@@ -171,7 +172,7 @@ def match_unmatched_artists_with_wikidata(
     )
 
     aliases_to_match_df = artist_alias_df.merge(
-        artists_without_wiki_ids_df[[ARTIST_ID_KEY]],
+        artists_without_wiki_ids_df[[ARTIST_ID_KEY, ARTIST_PRO_SEARCH_SCORE_KEY]],
         on=ARTIST_ID_KEY,
         how="inner",
     )
@@ -182,7 +183,7 @@ def match_unmatched_artists_with_wikidata(
     if len(preproc_aliases_df) == 0:
         return pd.DataFrame(columns=ARTISTS_KEYS)
 
-    new_artist_clusters_df = (
+    unmatched_artist_clusters_df = (
         preproc_aliases_df.groupby(
             [
                 ARTIST_ID_KEY,
@@ -192,15 +193,22 @@ def match_unmatched_artists_with_wikidata(
             ]
         )
         .agg(
-            tmp_id=(ARTIST_ID_KEY, "first"),
             artist_name_set=(ARTIST_NAME_KEY, lambda x: set(x.unique())),
             artist_name_count=(ARTIST_NAME_KEY, "count"),
             artist_name_nunique=(ARTIST_NAME_KEY, "nunique"),
+            **{
+                ARTIST_PRO_SEARCH_SCORE_KEY: (
+                    ARTIST_PRO_SEARCH_SCORE_KEY,
+                    "first",
+                ),
+            },
         )
         .reset_index()
     )
 
-    matched_df = perform_wikidata_category_matching(new_artist_clusters_df, wiki_df)
+    matched_df = perform_wikidata_category_matching(
+        unmatched_artist_clusters_df, wiki_df
+    )
     if len(matched_df) == 0:
         return pd.DataFrame(columns=ARTISTS_KEYS)
 
@@ -212,29 +220,17 @@ def match_unmatched_artists_with_wikidata(
         lambda df: ~df[WIKIDATA_ID_KEY].isin(already_used_wikidata_ids)
     ]
 
-    # Merge with applicative_artist_df to get artist_pro_search_score
-    matched_df = matched_df.merge(
-        applicative_artist_df[[ARTIST_ID_KEY, ARTIST_PRO_SEARCH_SCORE_KEY]],
-        left_on="tmp_id",
-        right_on=ARTIST_ID_KEY,
-        how="left",
-    ).assign(
-        **{
-            ARTIST_PRO_SEARCH_SCORE_KEY: lambda df: df[
-                ARTIST_PRO_SEARCH_SCORE_KEY
-            ].fillna(0)
-        }
-    )
-
-    # Constraint 2: if a wikidata_id is matched to multiple artist_ids,
-    # keep the match for the artist with the highest pro search score
+    # Sort for Contraint 2 and 3
     matched_df = matched_df.sort_values(
         by=[ARTIST_PRO_SEARCH_SCORE_KEY, "matching_score", "gkg"],
         ascending=False,
-    ).drop_duplicates(subset=[WIKIDATA_ID_KEY], keep="first")
+    )
+    # Constraint 2: if a wikidata_id is matched to multiple artist_ids, keep
+    # the match for the artist with the highest pro search score
+    matched_df = matched_df.drop_duplicates(subset=[WIKIDATA_ID_KEY], keep="first")
 
-    # Constraint 3: keep the best match per artist_id (tmp_id)
-    matched_df = matched_df.drop_duplicates(subset=["tmp_id"], keep="first")
+    # Constraint 3: keep the best match per artist_id
+    matched_df = matched_df.drop_duplicates(subset=[ARTIST_ID_KEY], keep="first")
 
     if len(matched_df) == 0:
         return pd.DataFrame(columns=ARTISTS_KEYS)
@@ -242,13 +238,16 @@ def match_unmatched_artists_with_wikidata(
     logger.info(
         f"Successfully matched {len(matched_df)} unmatched artists to Wikidata."
     )
-    new_matched_df = matched_df.assign(
-        artist_id=lambda df: df.tmp_id,
-        artist_name=lambda df: df.wiki_artist_name.fillna(df[ARTIST_NAME_TO_MATCH_KEY])
-        .astype(str)
-        .apply(lambda s: s.title()),
+    matched_artists_df = matched_df.assign(
+        **{
+            ARTIST_NAME_KEY: lambda df: (
+                df.wiki_artist_name.fillna(df[ARTIST_NAME_TO_MATCH_KEY])
+                .astype(str)
+                .apply(lambda s: s.title())
+            ),
+        }
     )
-    return new_matched_df.loc[:, ARTISTS_KEYS]
+    return matched_artists_df.loc[:, ARTISTS_KEYS]
 
 
 def sanity_checks(

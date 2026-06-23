@@ -10,23 +10,25 @@ from src.constants import (
     ARTIST_DESCRIPTION_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
+    ARTIST_NAME_TO_MATCH_KEY,
+    ARTIST_PRO_SEARCH_SCORE_KEY,
     ARTIST_TYPE_KEY,
     ARTIST_WIKI_ID_KEY,
     ARTISTS_KEYS,
     COMMENT_KEY,
     IMG_KEY,
     OFFER_CATEGORY_ID_KEY,
+    PRODUCT_ID_KEY,
     PRODUCTS_KEYS,
     WIKIDATA_ID_KEY,
+    Action,
 )
 from src.utils.loading import load_wikidata
-
-ALIAS_MERGE_COLUMNS = [
-    ARTIST_ID_KEY,
-    ARTIST_NAME_KEY,
-    ARTIST_TYPE_KEY,
-    OFFER_CATEGORY_ID_KEY,
-]
+from src.utils.matching import build_artist_alias, perform_wikidata_category_matching
+from src.utils.preprocessing_utils import (
+    filter_products,
+    prepare_artist_names_for_matching,
+)
 
 
 def retrieve_artist_wikidata_id(
@@ -80,6 +82,7 @@ def retrieve_artist_wikidata_id(
 
 def create_delta_df_for_metadata_refresh(
     refreshed_artists_df: pd.DataFrame,
+    newly_matched_artists_df: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Create delta dataframes for metadata refresh operation.
 
@@ -90,6 +93,8 @@ def create_delta_df_for_metadata_refresh(
     Args:
         refreshed_artists_df (pd.DataFrame): Dataframe containing artists with
             refreshed metadata from wikidata.
+        newly_matched_artists_df (pd.DataFrame): Dataframe containing newly matched
+            artists with metadata from wikidata.
 
     Returns:
         tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: A tuple containing:
@@ -97,11 +102,20 @@ def create_delta_df_for_metadata_refresh(
             - delta_artist_df: Dataframe with artists to update and metadata
             - empty_delta_artist_alias_df: Empty dataframe for artist aliases
     """
-    delta_artist_df = refreshed_artists_df.loc[:, ARTISTS_KEYS].assign(
+    delta_already_matched = refreshed_artists_df.loc[:, ARTISTS_KEYS].assign(
         **{
-            ACTION_KEY: "update",
+            ACTION_KEY: Action.update,
             COMMENT_KEY: "artist with refreshed metadata from wikidata",
         }
+    )
+    delta_newly_matched = newly_matched_artists_df.assign(
+        **{
+            ACTION_KEY: Action.update,
+            COMMENT_KEY: "artist matched and refreshed from wikidata",
+        }
+    )
+    delta_artist_df = pd.concat(
+        [delta_already_matched, delta_newly_matched], ignore_index=True
     )
     empty_delta_product_artist_link_df = pd.DataFrame(
         columns=[*PRODUCTS_KEYS, ACTION_KEY, COMMENT_KEY]
@@ -114,6 +128,127 @@ def create_delta_df_for_metadata_refresh(
         delta_artist_df,
         empty_delta_artist_alias_df,
     )
+
+
+def match_unmatched_artists_with_wikidata(
+    applicative_artist_df: pd.DataFrame,
+    artist_with_wikidata_ids_df: pd.DataFrame,
+    product_artist_link_filepath: str,
+    product_filepath: str,
+    wiki_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """Match unmatched existing artists onto Wikidata.
+
+    Args:
+        applicative_artist_df (pd.DataFrame): Current applicative database artists.
+        artist_with_wikidata_ids_df (pd.DataFrame): Artists with wikidata_id already assigned.
+        product_artist_link_filepath (str): Path to product artist links.
+        product_filepath (str): Path to products.
+        wiki_df (pd.DataFrame): Wikidata dump.
+
+    Returns:
+        pd.DataFrame: Newly matched artists to update, projected to ARTISTS_KEYS.
+    """
+    artists_without_wiki_ids_df = applicative_artist_df.loc[
+        lambda df: df[WIKIDATA_ID_KEY].isna()
+    ]
+    if len(artists_without_wiki_ids_df) == 0:
+        return pd.DataFrame(columns=ARTISTS_KEYS)
+
+    product_artist_link_df = pd.read_parquet(product_artist_link_filepath).astype(
+        {PRODUCT_ID_KEY: int}
+    )
+    product_df = (
+        pd.read_parquet(product_filepath)
+        .astype({PRODUCT_ID_KEY: int})
+        .pipe(filter_products)
+    )
+
+    artist_alias_df = build_artist_alias(
+        product_df=product_df,
+        product_artist_link_df=product_artist_link_df,
+        artist_df=applicative_artist_df,
+    )
+
+    aliases_to_match_df = artist_alias_df.merge(
+        artists_without_wiki_ids_df[[ARTIST_ID_KEY]],
+        on=ARTIST_ID_KEY,
+        how="inner",
+    )
+    if len(aliases_to_match_df) == 0:
+        return pd.DataFrame(columns=ARTISTS_KEYS)
+
+    preproc_aliases_df = prepare_artist_names_for_matching(aliases_to_match_df)
+    if len(preproc_aliases_df) == 0:
+        return pd.DataFrame(columns=ARTISTS_KEYS)
+
+    new_artist_clusters_df = (
+        preproc_aliases_df.groupby(
+            [
+                ARTIST_ID_KEY,
+                OFFER_CATEGORY_ID_KEY,
+                ARTIST_TYPE_KEY,
+                ARTIST_NAME_TO_MATCH_KEY,
+            ]
+        )
+        .agg(
+            tmp_id=(ARTIST_ID_KEY, "first"),
+            artist_name_set=(ARTIST_NAME_KEY, lambda x: set(x.unique())),
+            artist_name_count=(ARTIST_NAME_KEY, "count"),
+            artist_name_nunique=(ARTIST_NAME_KEY, "nunique"),
+        )
+        .reset_index()
+    )
+
+    matched_df = perform_wikidata_category_matching(new_artist_clusters_df, wiki_df)
+    if len(matched_df) == 0:
+        return pd.DataFrame(columns=ARTISTS_KEYS)
+
+    # Constraint 1: exclude wikidata_ids already used in the database
+    already_used_wikidata_ids = set(
+        artist_with_wikidata_ids_df[WIKIDATA_ID_KEY].dropna().unique()
+    )
+    matched_df = matched_df.loc[
+        lambda df: ~df[WIKIDATA_ID_KEY].isin(already_used_wikidata_ids)
+    ]
+
+    # Merge with applicative_artist_df to get artist_pro_search_score
+    matched_df = matched_df.merge(
+        applicative_artist_df[[ARTIST_ID_KEY, ARTIST_PRO_SEARCH_SCORE_KEY]],
+        left_on="tmp_id",
+        right_on=ARTIST_ID_KEY,
+        how="left",
+    ).assign(
+        **{
+            ARTIST_PRO_SEARCH_SCORE_KEY: lambda df: df[
+                ARTIST_PRO_SEARCH_SCORE_KEY
+            ].fillna(0)
+        }
+    )
+
+    # Constraint 2: if a wikidata_id is matched to multiple artist_ids,
+    # keep the match for the artist with the highest pro search score
+    matched_df = matched_df.sort_values(
+        by=[ARTIST_PRO_SEARCH_SCORE_KEY, "matching_score", "gkg"],
+        ascending=False,
+    ).drop_duplicates(subset=[WIKIDATA_ID_KEY], keep="first")
+
+    # Constraint 3: keep the best match per artist_id (tmp_id)
+    matched_df = matched_df.drop_duplicates(subset=["tmp_id"], keep="first")
+
+    if len(matched_df) == 0:
+        return pd.DataFrame(columns=ARTISTS_KEYS)
+
+    logger.info(
+        f"Successfully matched {len(matched_df)} unmatched artists to Wikidata."
+    )
+    new_matched_df = matched_df.assign(
+        artist_id=lambda df: df.tmp_id,
+        artist_name=lambda df: df.wiki_artist_name.fillna(df[ARTIST_NAME_TO_MATCH_KEY])
+        .astype(str)
+        .apply(lambda s: s.title()),
+    )
+    return new_matched_df.loc[:, ARTISTS_KEYS]
 
 
 def sanity_checks(
@@ -201,6 +336,8 @@ app = typer.Typer()
 def main(
     # Input files
     artist_file_path: str = typer.Option(),
+    product_artist_link_filepath: str = typer.Option(),
+    product_filepath: str = typer.Option(),
     wiki_base_path: str = typer.Option(),
     wiki_file_name: str = typer.Option(),
     # Output files
@@ -213,14 +350,16 @@ def main(
     This function orchestrates the complete metadata refresh process:
     1. Loads artist, artist alias, and wikidata files
     2. Retrieves wikidata IDs for existing artists
-    3. Matches artists with wikidata to refresh metadata
-    4. Creates delta dataframes for the update operation
-    5. Performs sanity checks to ensure data quality
-    6. Saves the delta dataframes for downstream processing
+    3. Matches unmatched artists with wikidata to find new matches
+    4. Matches artists with wikidata to refresh metadata
+    5. Creates delta dataframes for the update operation
+    6. Performs sanity checks to ensure data quality
+    7. Saves the delta dataframes for downstream processing
 
     Args:
         artist_file_path (str): Path to the parquet file containing artist data.
-        artist_alias_file_path (str): Path to the parquet file containing artist aliases.
+        product_artist_link_filepath (str): Optional path to product artist link parquet file.
+        product_filepath (str): Optional path to products parquet file.
         wiki_base_path (str): Base path for wikidata files.
         wiki_file_name (str): Name of the wikidata file to load.
         output_delta_artist_file_path (str): Output path for delta artist dataframe.
@@ -249,7 +388,7 @@ def main(
         f"Number of artists: {len(applicative_artist_df)}, Number of artists with wikidata ids: {len(artist_with_wikidata_ids_df)}, Number of wikidata entries: {len(wiki_df)}"
     )
 
-    # 2. Match on wikidata to have fresh metadatas
+    # 2. Match on wikidata to have fresh metadatas for already matched artists
     logger.info("Refreshing artist metadatas from wikidata...")
     refreshed_artists_df = artist_with_wikidata_ids_df.merge(
         wiki_df.drop(columns=["alias", "raw_alias"]).drop_duplicates(),
@@ -258,7 +397,16 @@ def main(
         suffixes=("_old", ""),
     )
 
-    # 3. Refresh statistics
+    # 3. Match existing unmatched artists on Wikidata
+    newly_matched_artists_df = match_unmatched_artists_with_wikidata(
+        applicative_artist_df=applicative_artist_df,
+        artist_with_wikidata_ids_df=artist_with_wikidata_ids_df,
+        product_artist_link_filepath=product_artist_link_filepath,
+        product_filepath=product_filepath,
+        wiki_df=wiki_df,
+    )
+
+    # 4. Refresh statistics
     artists_with_wiki_id = artist_with_wikidata_ids_df[WIKIDATA_ID_KEY].notna().sum()
     artists_matched_in_wiki = refreshed_artists_df[ARTIST_NAME_KEY].notna().sum()
     artists_with_wiki_id_no_match = artists_with_wiki_id - artists_matched_in_wiki
@@ -271,20 +419,22 @@ def main(
 
     # 5. Build delta artist dataframe
     logger.info("Building delta artist dataframe...")
-    empty_delta_product_artist_link_df, delta_artist_df, empty_delta_artist_alias_df = (
+    delta_product_df, delta_artist_df, delta_artist_alias_df = (
         create_delta_df_for_metadata_refresh(
             refreshed_artists_df=refreshed_artists_df,
+            newly_matched_artists_df=newly_matched_artists_df,
         )
     )
+
     logger.success("Delta artist dataframe built successfully.")
     logger.info(f"Number of artists to update: {len(delta_artist_df)}")
 
     # 6. Sanity check for consistency
     logger.info("Performing sanity checks...")
     sanity_checks(
-        delta_product_df=empty_delta_product_artist_link_df,
+        delta_product_df=delta_product_df,
         delta_artist_df=delta_artist_df,
-        delta_artist_alias_df=empty_delta_artist_alias_df,
+        delta_artist_alias_df=delta_artist_alias_df,
         applicative_artist_df=applicative_artist_df,
     )
     logger.success("Sanity checks passed successfully.")
@@ -295,13 +445,8 @@ def main(
         f"Saving delta artist dataframes to {output_delta_artist_file_path}, {output_delta_artist_alias_file_path} and {output_delta_product_artist_link_file_path}."
     )
     delta_artist_df.to_parquet(output_delta_artist_file_path, index=False)
-    empty_delta_product_artist_link_df.to_parquet(
-        output_delta_product_artist_link_file_path, index=False
-    )
-    # TODO: Remove artist alias output when not needed by backend ingestion
-    empty_delta_artist_alias_df.to_parquet(
-        output_delta_artist_alias_file_path, index=False
-    )
+    delta_product_df.to_parquet(output_delta_product_artist_link_file_path, index=False)
+    delta_artist_alias_df.to_parquet(output_delta_artist_alias_file_path, index=False)
     logger.success("Delta dataframes saved successfully.")
 
 

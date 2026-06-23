@@ -48,6 +48,8 @@ ARTIST_MEDIATION_UUID_KEY = "artist_mediation_uuid"
 ARTIST_BIOGRAPHY_KEY = "artist_biography"
 ARTIST_WIKI_ID_KEY = "artist_wiki_id"
 ARTIST_APP_SEARCH_SCORE_KEY = "artist_app_search_score"
+ARTIST_PRO_SEARCH_SCORE_KEY = "artist_pro_search_score"
+
 
 ID_PER_CATEGORY = "id_per_category"
 TOTAL_BOOKING_COUNT = "total_booking_count"

@@ -9,7 +9,9 @@ with
             eu.total_theoretical_remaining_credit,
             eu.total_non_cancelled_individual_bookings as booking_cnt
         from {{ ref("mrt_global__user_beneficiary") }} as eu
-        where eu.last_deposit_amount is not null  -- Bad quality data (4 rows in stg and prod)
+        where
+            eu.last_deposit_amount is not null  -- Bad quality data (4 rows in stg and prod)
+            and eu.user_is_active
     )
 
 select

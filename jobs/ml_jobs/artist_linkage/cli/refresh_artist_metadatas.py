@@ -208,7 +208,7 @@ def match_unmatched_artists_with_wikidata(
 
     matched_df = perform_wikidata_category_matching(
         unmatched_artist_clusters_df, wiki_df
-    )
+    ).loc[lambda df: df[WIKIDATA_ID_KEY].notna()]
     if len(matched_df) == 0:
         return pd.DataFrame(columns=ARTISTS_KEYS)
 

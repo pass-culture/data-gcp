@@ -33,7 +33,7 @@ def generate_backend_imported_tables_file():
             table = get_tables_from_sql(sql_content)
             imported_tables.extend(table)
     imported_tables = sorted(imported_tables)
-    OUTPUT_FILE.write_text("\n".join(imported_tables), encoding="utf-8")
+    OUTPUT_FILE.write_text("\n".join(imported_tables) + "\n", encoding="utf-8")
     return imported_tables
 
 

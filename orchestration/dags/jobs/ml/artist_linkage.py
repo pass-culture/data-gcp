@@ -357,6 +357,8 @@ with DAG(
         command=f"""
              uv run cli/refresh_artist_metadatas.py \
             --artist-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
+            --product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
+            --product-filepath {os.path.join(STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME)} \
             --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
             --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
             --output-delta-artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME_01)} \

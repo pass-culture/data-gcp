@@ -240,7 +240,9 @@ def main(
             [OFFER_CATEGORY_ID_KEY, ARTIST_TYPE_KEY, ARTIST_NAME_TO_MATCH_KEY]
         )
         .agg(
-            tmp_id=(ARTIST_NAME_KEY, lambda x: str(uuid.uuid4())),
+            **{
+                ARTIST_ID_KEY: (ARTIST_NAME_KEY, lambda x: str(uuid.uuid4())),
+            },
             artist_name_set=(ARTIST_NAME_KEY, lambda x: set(x.unique())),
             artist_name_count=(ARTIST_NAME_KEY, "count"),
             artist_name_nunique=(ARTIST_NAME_KEY, "nunique"),

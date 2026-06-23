@@ -238,7 +238,8 @@ def perform_wikidata_category_matching(
             Must contain 'artist_name', 'raw_alias', and category indicator columns.
 
     Returns:
-        pd.DataFrame: DataFrame containing all matched artists before remapping/deduplication.
+        pd.DataFrame: DataFrame containing all artist clusters after category matching,
+            including unmatched clusters (with NaN wikidata_id).
     """
     # 1. Preprocess to use wikidata matching functions
     wiki_df = (
@@ -279,7 +280,7 @@ def perform_wikidata_category_matching(
         [matched_without_namesake_df, matched_namesakes_df]
     ).reset_index(drop=True)
 
-    return matched_df.loc[lambda df: df[WIKIDATA_ID_KEY].notna()]
+    return matched_df
 
 
 def match_artists_with_wikidata(

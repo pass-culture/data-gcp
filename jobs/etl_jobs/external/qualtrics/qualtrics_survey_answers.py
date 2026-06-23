@@ -93,7 +93,12 @@ class QualtricsSurvey:
 
         file = zipfile.ZipFile(io.BytesIO(answers_request_response.content))
         name = file.namelist()[0]
-        df = pd.read_csv(file.open(name))
+        # Qualtrics CSV exports are fully text-based (the first two data rows hold
+        # question labels and ImportId JSON), so reading every column as str avoids
+        # pandas' per-chunk dtype inference (DtypeWarning) and keeps typing
+        # deterministic. The few columns needing a specific type are cast later
+        # via FORMAT_DICT in process_survey_answers / .astype(str) in the IR path.
+        df = pd.read_csv(file.open(name), dtype=str)
         ### Export to raw here ?
         print("Downloaded qualtrics survey")
         self.raw_answer_df = df

@@ -28,7 +28,7 @@ jobs:
         - name: Install Default Python requirements
           run: uv sync
         - name: Generate backend_imported_tables file
-          run: uv run python automations/generate_backend_imported_tables.py
+          run: uv run python automations/backend_imported_tables.py
         - name: Commit updated file if changed
           run: |
             git config user.name "GitHub Actions"

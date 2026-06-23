@@ -4,4 +4,4 @@ SELECT
     , "externalAccessibilityId" AS external_accessibility_id
     , "externalAccessibilityData" AS external_accessibility_data
     , "lastUpdateAtProvider" AS last_update_at_provider
-FROM public.accessibility_provider
+FROM public.accessibility_test

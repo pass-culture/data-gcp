@@ -275,6 +275,49 @@ with
             group by
                 partition_month, updated_at, dimension_name, dimension_value, kpi_name
             union all
+            select
+                partition_month,
+                timestamp("{{ ts() }}") as updated_at,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.value_expr }} as dimension_value,
+                'nombre_total_de_partenaire_actif_individuel_ou_collectif' as kpi_name,
+                coalesce(
+                    count(
+                        distinct case
+                            when
+                                (
+                                    days_since_last_indiv_bookable_date <= 365
+                                    or days_since_last_collective_bookable_date <= 365
+                                )
+                            then venue_id
+                        end
+                    ),
+                    0
+                ) as numerator,
+                1 as denominator,
+                coalesce(
+                    count(
+                        distinct case
+                            when
+                                (
+                                    days_since_last_indiv_bookable_date <= 365
+                                    or days_since_last_collective_bookable_date <= 365
+                                )
+                            then venue_id
+                        end
+                    ),
+                    0
+                ) as kpi
+            from partner_details
+            where
+                1 = 1
+                {% if is_incremental() %}
+                    and partition_month
+                    = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+                {% endif %}
+            group by
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
+            union all
             {% for partner_type in partner_types %}
                 {% if not loop.first %}
                     union all

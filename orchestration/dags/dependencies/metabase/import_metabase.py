@@ -39,6 +39,11 @@ import_tables = {
         "destination_dataset": "{{ bigquery_raw_dataset }}",
         "destination_table": "metabase_report_dashboard",
     },
+    "report_dashboardcard": {
+        "sql": f"{SQL_PATH}/raw/report_dashboardcard.sql",
+        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_table": "metabase_report_dashboardcard",
+    },
     "collection": {
         "sql": f"{SQL_PATH}/raw/collection.sql",
         "destination_dataset": "{{ bigquery_raw_dataset }}",

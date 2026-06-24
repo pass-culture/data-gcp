@@ -1,10 +1,12 @@
 import http.client
 import logging
 import os
-from typing import List, Optional
+import re
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 import requests
+import yaml
 from dbtmetabase import DbtMetabase, Filter
 from google.auth.transport.requests import Request
 from google.cloud import storage
@@ -15,6 +17,25 @@ from utils import CLIENT_ID, METABASE_API_KEY, METABASE_HOST
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Matches the Metabase asset referenced by an exposure URL. dbt-metabase emits
+# `/card/<id>` for questions and `/dashboard/<id>` for dashboards; the Metabase
+# UI uses `/question/<id>` for cards, so both card forms are accepted.
+_ASSET_URL_RE = re.compile(r"/(card|question|dashboard)/(\d+)")
+
+
+def _asset_key_from_url(url: str) -> Optional[Tuple[str, int]]:
+    """Parse an exposure URL into a (asset_kind, asset_id) key, or None."""
+    match = _ASSET_URL_RE.search(url or "")
+    if not match:
+        return None
+    kind = "dashboard" if match.group(1) == "dashboard" else "card"
+    return (kind, int(match.group(2)))
+
+
+def _clean(value):
+    """Return a JSON/YAML-serialisable scalar, mapping NaN/NaT to None."""
+    return None if pd.isna(value) else value
 
 
 def _redact_token(token):
@@ -166,6 +187,61 @@ class BigqueryDBTHandler:
             )
             raise
 
+    def get_exposure_candidates(
+        self, dataset_name: str, table_name: str
+    ) -> pd.DataFrame:
+        """
+        Fetches the classified exposure candidates (one row per high-quality
+        Metabase asset) from BigQuery.
+
+        Args:
+        -----
+        dataset_name: str
+            The name of the BigQuery dataset.
+        table_name: str
+            The name of the candidates table (int_metabase__exposure_candidates).
+
+        Returns:
+        --------
+        pd.DataFrame
+            A DataFrame with one row per candidate asset, including
+            collection_name and the {tier, squad, certified} classification.
+        """
+        try:
+            query = f"SELECT * FROM {dataset_name}.{table_name}"
+            self.logger.info(f"Executing query: {query}")
+            df = pd.read_gbq(query)
+            self.logger.info(
+                f"Fetched {len(df)} candidate rows from {dataset_name}.{table_name}"
+            )
+            return df
+        except Exception as e:
+            self.logger.error(
+                f"Error fetching candidates from {dataset_name}.{table_name}: {e}"
+            )
+            raise
+
+    @staticmethod
+    def candidate_collection_filters(candidates_df: pd.DataFrame) -> List[str]:
+        """Distinct collection names to feed to dbt-metabase's collection filter."""
+        return candidates_df["collection_name"].dropna().unique().tolist()
+
+    @staticmethod
+    def build_classification_lookup(
+        candidates_df: pd.DataFrame,
+    ) -> Dict[Tuple[str, int], Dict]:
+        """Map each candidate asset to the meta stamped onto its exposure,
+        keyed by (asset_kind, asset_id)."""
+        lookup: Dict[Tuple[str, int], Dict] = {}
+        for row in candidates_df.itertuples(index=False):
+            lookup[(row.asset_kind, int(row.asset_id))] = {
+                "tier": _clean(row.tier),
+                "squad": _clean(row.squad),
+                "certified": bool(row.certified),
+                "is_active": bool(row.is_active),
+            }
+        return lookup
+
 
 class MetabaseDBTHandler:
     def __init__(
@@ -314,6 +390,52 @@ class MetabaseDBTHandler:
         except Exception as e:
             logger.error(f"Failed to export exposures: {e}")
             raise
+
+    def inject_exposure_meta(
+        self,
+        exposures_path: str,
+        classification_by_asset: Dict[Tuple[str, int], Dict],
+    ) -> None:
+        """
+        Post-process the generated exposures YAML to stamp the classification
+        ({tier, squad, certified, is_active}) into each exposure's config.meta,
+        keyed by the Metabase asset parsed from its URL. Exposures whose asset is
+        not in the candidate set (e.g. siblings pulled in by the collection
+        filter) are left untouched.
+
+        Args:
+            exposures_path (str): Path to the exposures YAML written by export.
+            classification_by_asset: (asset_kind, asset_id) -> meta dict.
+        """
+        with open(exposures_path) as f:
+            doc = yaml.safe_load(f)
+
+        exposures = (doc or {}).get("exposures") or []
+        if not exposures:
+            logger.warning(
+                "No exposures found in %s; skipping meta injection", exposures_path
+            )
+            return
+
+        enriched = 0
+        for exposure in exposures:
+            key = _asset_key_from_url(exposure.get("url", ""))
+            meta_values = classification_by_asset.get(key) if key else None
+            if not meta_values:
+                continue
+            config = exposure.setdefault("config", {})
+            meta = config.setdefault("meta", {})
+            meta.update(meta_values)
+            enriched += 1
+
+        with open(exposures_path, "w") as f:
+            yaml.safe_dump(doc, f, sort_keys=False, allow_unicode=True)
+
+        logger.info(
+            "Injected classification meta into %d/%d exposures",
+            enriched,
+            len(exposures),
+        )
 
     def push_exposures_to_bucket(
         self,

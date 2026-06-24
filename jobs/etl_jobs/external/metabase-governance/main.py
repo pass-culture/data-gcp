@@ -10,6 +10,7 @@ from core.utils import (
     METABASE_HOST,
     PASSWORD,
     load_archiving_config,
+    load_taxonomy_config,
 )
 from domain.archiving import (
     MoveToArchive,
@@ -25,6 +26,7 @@ from domain.archiving import (
 )
 from domain.dependencies import run_dependencies
 from domain.permissions import sync_permissions
+from domain.taxonomy import run_taxonomy
 
 logging.basicConfig(
     level=logging.INFO,
@@ -216,6 +218,32 @@ def dependencies():
     metabase = _get_metabase_client()
     run_dependencies(metabase)
     logger.info("Dependencies export complete")
+
+
+@app.command()
+def taxonomy(
+    dataset_name: str = typer.Option(
+        None,
+        "--dataset-name",
+        help="Override the source raw dataset holding metabase_collection "
+        "(default: raw_<env>). Useful for sandbox / pre-deploy testing.",
+    ),
+    destination_dataset: str = typer.Option(
+        None,
+        "--destination-dataset",
+        help="Override the destination dataset for collection_taxonomy "
+        "(default: int_metabase_<env>).",
+    ),
+):
+    """Resolve the collection taxonomy (squad/tier/certified) and write it to BigQuery."""
+    logger.info(
+        "Starting taxonomy resolution (dataset=%s, destination=%s)",
+        dataset_name,
+        destination_dataset,
+    )
+    config = load_taxonomy_config()
+    run_taxonomy(config, dataset=dataset_name, destination_dataset=destination_dataset)
+    logger.info("Taxonomy resolution complete")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 import concurrent
+import io
 import logging
 import uuid
 from concurrent.futures import ThreadPoolExecutor
@@ -9,6 +10,7 @@ import requests
 import typer
 from google.auth.transport.requests import AuthorizedSession
 from google.cloud import storage
+from PIL import Image, UnidentifiedImageError
 from requests.adapters import HTTPAdapter
 from tqdm import tqdm
 from urllib3.util.retry import Retry
@@ -29,6 +31,10 @@ STATUS_KEY = "status"
 MAX_WORKERS = 10
 POOL_CONNECTIONS = MAX_WORKERS
 POOL_MAXSIZE = MAX_WORKERS + 5
+
+# Image compression and JPEG conversion settings
+IMAGE_MAX_SIZE = (800, 800)
+IMAGE_JPEG_QUALITY = 80
 
 
 logging.basicConfig(level=logging.INFO)
@@ -91,6 +97,40 @@ def _get_gcs_client():
     return client
 
 
+def compress_and_convert_to_jpeg(
+    image_bytes: bytes, max_size: tuple[int, int] = IMAGE_MAX_SIZE
+) -> bytes:
+    """Resize image to fit within max_size and convert/compress to JPEG in memory.
+
+    Args:
+        image_bytes: The raw image bytes downloaded from Wikimedia.
+        max_size: Bounding box for resizing the image.
+
+    Returns:
+        Bytes of the compressed JPEG image.
+    """
+    with Image.open(io.BytesIO(image_bytes)) as img:
+        # Standardize image modes for JPEG compatibility (JPEG doesn't support RGBA/alpha)
+        if img.mode in ("RGBA", "LA") or (
+            img.mode == "P" and "transparency" in img.info
+        ):
+            # Create a white background to preserve transparent images nicely
+            background = Image.new("RGB", img.size, (255, 255, 255))
+            rgba_img = img.convert("RGBA")
+            background.paste(rgba_img, mask=rgba_img.split()[-1])
+            img = background
+        else:
+            img = img.convert("RGB")
+
+        # Resize maintaining aspect ratio
+        img.thumbnail(max_size, Image.Resampling.LANCZOS)
+
+        # Save compressed JPEG to bytes
+        output_buffer = io.BytesIO()
+        img.save(output_buffer, format="JPEG", quality=IMAGE_JPEG_QUALITY)
+        return output_buffer.getvalue()
+
+
 def transfer_image(
     session: requests.Session, gcs_bucket: storage.Bucket, image_url: str
 ) -> dict:
@@ -109,7 +149,12 @@ def transfer_image(
     try:
         # 1. Prepare GCS blob
         clean_url = image_url.strip()
-        image_id = str(uuid.uuid5(uuid.NAMESPACE_URL, clean_url))
+        image_id = str(
+            uuid.uuid5(
+                uuid.NAMESPACE_URL,
+                f"{clean_url}_jpeg_{IMAGE_JPEG_QUALITY}_{IMAGE_MAX_SIZE}",
+            )
+        )
         blob = gcs_bucket.blob(f"{DE_DATALAKE_IMAGES_FOLDER}/{image_id}")
 
         # 2. Check if download is required
@@ -120,12 +165,26 @@ def transfer_image(
                 STATUS_KEY: "SKIPPED",
             }
 
-        # 3. Stream wikiemedia content directly to GCS (no local save)
+        # 3. Download wikimedia content
         with session.get(
             image_url, headers=WIKIMEDIA_REQUEST_HEADER, stream=True, timeout=15
         ) as r:
             if r.status_code == 200:
-                blob.upload_from_file(r.raw, content_type=r.headers.get("content-type"))
+                raw_bytes = r.content
+
+                try:
+                    # 4. Attempt to compress and convert to JPEG
+                    compressed_bytes = compress_and_convert_to_jpeg(raw_bytes)
+                    content_type = "image/jpeg"
+                except UnidentifiedImageError:
+                    # Fallback for vectors/SVGs or files Pillow cannot process (upload as-is)
+                    compressed_bytes = raw_bytes
+                    content_type = r.headers.get(
+                        "content-type", "application/octet-stream"
+                    )
+
+                # 5. Upload bytes to GCS
+                blob.upload_from_string(compressed_bytes, content_type=content_type)
                 return {
                     WIKIDATA_IMAGE_FILE_URL_KEY: image_url,
                     ARTIST_MEDIATION_UUID_KEY: image_id,

@@ -66,8 +66,7 @@ with
         left join
             {{ ref("mrt_global__venue_tag") }} as gvt
             on gcp.venue_id = gvt.venue_id
-            and gvt.venue_tag_category_label
-            = 'Comptage partenaire label et appellation du MC'
+            and gvt.venue_tag_category_id = '1'
         inner join
             {{ ref("mrt_global__offerer") }} as gof on gcp.offerer_id = gof.offerer_id
     ),

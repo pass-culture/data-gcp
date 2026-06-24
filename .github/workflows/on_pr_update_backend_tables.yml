@@ -1,0 +1,37 @@
+name: "[on_pr] update backend tables"
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "orchestration/dags/dependencies/applicative_database/sql/raw/parallel/*.sql"
+      - "orchestration/dags/dependencies/applicative_database/sql/raw/sequential/*.sql"
+      - "orchestration/dags/data_gcp_dbt/models/raw/applicative/*.sql"
+
+jobs:
+  update_backend_imported_tables:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+          with:
+            ref: ${{ github.head_ref }}
+            fetch-depth: 0
+        - name: Install uv
+          uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        - name: Set up Python
+          uses: actions/setup-python@v5
+          with:
+            python-version: '3.12'
+        - name: Install Default Python requirements
+          run: uv sync
+        - name: Generate backend_imported_tables file
+          run: uv run python automations/backend_imported_tables.py
+        - name: Commit updated file if changed
+          run: |
+            git config user.name "GitHub Actions"
+            git config user.email noreply@github.com
+            git add backend_imported_tables.txt
+            git diff --cached --quiet || (git commit -m "Update backend_imported_tables.txt" && git push)

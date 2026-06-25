@@ -1,6 +1,6 @@
 ---
 name: data-pr-workflow
-description: Create pull requests that follow data team standards with proper naming conventions, commit validation, and squash-and-merge workflow. Use this skill when the user wants to create a PR, mentions pull requests, needs help with commit naming, wants to clean up commits before review, or talks about submitting work for review. Also trigger when they mention tickets like DE-XXX, DA-XXX, HF-XXX, or BSR, or when they're working with dbt, bq_jobs, ml_jobs, or analytics code and need to get their changes reviewed.
+description: Create pull requests that follow data team standards with proper naming conventions, commit validation, and squash-and-merge workflow. Use this skill when the user wants to create a PR, mentions pull requests, needs help with commit naming, wants to clean up commits before review, or talks about submitting work for review. Also trigger when they mention tickets like DE-XXX, HF-XXX, or BSR, or when they're working with dbt, bq_jobs, ml_jobs, or analytics code and need to get their changes reviewed.
 ---
 
 # Data Team PR Workflow
@@ -49,8 +49,7 @@ Commits must follow this format:
 ```
 
 **Ticket ID** (optional in commit, required in PR):
-- `DA-XXX` - Data Analyst tasks
-- `DE-XXX` - Data Engineering tasks
+- `DE-XXX` - Data tasks
 - `HF-XXX` - HotFix (urgent)
 - `BSR` - Boy Scout Rule (code improvements)
 - Can be omitted in commits if not applicable
@@ -76,13 +75,14 @@ A brief description in English. Can include table names in parentheses if releva
 
 **Examples:**
 - `(DE-3456) feat(bq_jobs): add new import job for Firebase events`
-- `(DA-7890) fix(dbt): correct transformation logic in export_backend model`
+- `(DE-7890) fix(dbt): correct transformation logic in export_backend model`
 - `feat(analytics): add global_booking mart model`
 - `review: include review comments`
 
 ## Step 3: Commit Cleanup
 
 If the branch has too many commits (>10) or commits with unclear names (like "wip", "fix", "temp"), help clean them up.
+Give the rebase strategy specifying the command to the user but do not execute it.
 
 **Identify commits to clean:**
 ```bash
@@ -103,7 +103,7 @@ For simple cases (combining last N commits):
 git rebase -i HEAD~N
 ```
 
-Explain to the user:
+Explain to the user and do not execute :
 1. In the editor that opens, change `pick` to `squash` (or `s`) for commits to combine
 2. Keep `pick` for the first commit you want to keep
 3. Save and close
@@ -165,7 +165,7 @@ The PR description should be concise but informative. Remember: the code is publ
 - [Key change 3]
 
 ## Related
-- Ticket: [link or reference to DA-XXX / DE-XXX in Notion]
+- Ticket: [link or reference to DE-XXX in Notion]
 - Documentation: [link if applicable]
 
 ## Testing

@@ -4,9 +4,6 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
 from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
@@ -23,6 +20,9 @@ from common.config import (
     INSTANCES_TYPES,
     ML_BUCKET_TEMP,
     MLFLOW_URL,
+)
+from common.operators.bigquery import (
+    BigQueryInsertJobOperatorAugmented,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -186,7 +186,7 @@ with (
         split_tasks = {}
         for dataset in ["training", "validation", "test"]:
             # The params.input_type tells the .sql files which table to take as input
-            split_tasks[dataset] = BigQueryInsertJobOperator(
+            split_tasks[dataset] = BigQueryInsertJobOperatorAugmented(
                 project_id=GCP_PROJECT_ID,
                 task_id=f"create_{dataset}_table",
                 configuration={
@@ -212,7 +212,7 @@ with (
     with TaskGroup(group_id="import_tables_to_bucket") as import_tables:
         import_tasks = {}
         for split in ["training", "validation", "test"]:
-            import_tasks[split] = BigQueryInsertJobOperator(
+            import_tasks[split] = BigQueryInsertJobOperatorAugmented(
                 project_id=GCP_PROJECT_ID,
                 task_id=f"store_{split}_data",
                 configuration={
@@ -230,7 +230,7 @@ with (
                 dag=dag,
             )
 
-        import_tasks["booking"] = BigQueryInsertJobOperator(
+        import_tasks["booking"] = BigQueryInsertJobOperatorAugmented(
             project_id=GCP_PROJECT_ID,
             task_id="import_booking_to_bucket",
             configuration={

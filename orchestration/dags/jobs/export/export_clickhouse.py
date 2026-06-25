@@ -5,9 +5,6 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
 from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
@@ -18,6 +15,9 @@ from common.config import (
     DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+)
+from common.operators.bigquery import (
+    BigQueryInsertJobOperatorAugmented,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -172,7 +172,7 @@ for dag_name, dag_params in dags.items():
                         + 'BETWEEN DATE("{{ add_days(ds, params.from_days)}}") AND DATE("{{ add_days(ds, params.to_days) }}")'
                     )
 
-                export_task = BigQueryInsertJobOperator(
+                export_task = BigQueryInsertJobOperatorAugmented(
                     project_id=GCP_PROJECT_ID,
                     task_id=f"bigquery_export_{table_config.model_name}",
                     configuration={
@@ -191,7 +191,7 @@ for dag_name, dag_params in dags.items():
                 )
                 in_tables_tasks.append(export_task)
 
-                export_bq = BigQueryInsertJobOperator(
+                export_bq = BigQueryInsertJobOperatorAugmented(
                     project_id=GCP_PROJECT_ID,
                     task_id=f"{table_config.model_name}_to_bucket",
                     configuration={

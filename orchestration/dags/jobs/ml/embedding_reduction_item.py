@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -14,6 +13,7 @@ from common.config import (
     GCP_PROJECT_ID,
     ML_BUCKET_TEMP,
 )
+from common.operators.bigquery import BigQueryInsertJobOperatorAugmented
 from common.operators.gce import (
     DeleteGCEOperator,
     InstallDependenciesOperator,
@@ -85,7 +85,7 @@ with DAG(
         base_dir=BASE_PATH,
     )
 
-    export_bq = BigQueryInsertJobOperator(
+    export_bq = BigQueryInsertJobOperatorAugmented(
         project_id=GCP_PROJECT_ID,
         task_id="store_item_embbedding_data",
         configuration={

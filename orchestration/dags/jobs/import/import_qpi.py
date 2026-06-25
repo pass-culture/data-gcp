@@ -4,9 +4,6 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
@@ -19,6 +16,7 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
+from common.operators.bigquery import BigQueryInsertJobOperatorAugmented
 from common.utils import get_airflow_schedule
 from google.cloud import storage
 
@@ -104,7 +102,7 @@ with DAG(
         schema_fields=QPI_ANSWERS_SCHEMA,
     )
 
-    append_to_raw = BigQueryInsertJobOperator(
+    append_to_raw = BigQueryInsertJobOperatorAugmented(
         project_id=GCP_PROJECT_ID,
         task_id="add_tmp_table_to_raw",
         configuration={

@@ -2,9 +2,6 @@ import datetime
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -15,6 +12,7 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
+from common.operators.bigquery import BigQueryInsertJobOperatorAugmented
 from common.operators.gce import (
     DeleteGCEOperator,
     InstallDependenciesOperator,
@@ -89,7 +87,7 @@ with DAG(
         retries=2,
     )
 
-    prepare_beneficiary_tmp = BigQueryInsertJobOperator(
+    prepare_beneficiary_tmp = BigQueryInsertJobOperatorAugmented(
         task_id="prepare_beneficiary_tmp",
         project_id=GCP_PROJECT_ID,
         configuration={
@@ -116,7 +114,7 @@ with DAG(
         },
     )
 
-    prepare_venue_tmp = BigQueryInsertJobOperator(
+    prepare_venue_tmp = BigQueryInsertJobOperatorAugmented(
         task_id="prepare_venue_tmp",
         project_id=GCP_PROJECT_ID,
         configuration={

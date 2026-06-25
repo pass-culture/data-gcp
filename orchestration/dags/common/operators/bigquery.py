@@ -29,12 +29,42 @@ def bigquery_job_task(dag, table, job_params, extra_params={}):
                 "timePartitioning": job_params.get("time_partitioning", None),
                 "clustering": job_params.get("clustering_fields", None),
                 "schemaUpdateOptions": job_params.get("schemaUpdateOptions", None),
-            }
+            },
+            "labels": {
+                "airflow_dag_id": "{{ dag.dag_id | lower }}",
+                "airflow_task_id": "{{ task.task_id | lower }}",
+                "target": "bigquery",
+            },
         },
         trigger_rule=job_params.get("trigger_rule", "all_success"),
         params=dict(job_params.get("params", {}), **extra_params),
         dag=dag,
     )
+
+
+class BigQueryInsertJobOperatorAugmented(BigQueryInsertJobOperator):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.configuration.setdefault("labels", {})
+        if "query" in self.configuration:
+            self.configuration["query"].setdefault("useLegacySql", False)
+            self.configuration["labels"].update(
+                {
+                    "target": "bigquery",
+                }
+            )
+        if "extract" in self.configuration:
+            self.configuration["labels"].update(
+                {
+                    "target": "gcs",
+                }
+            )
+        self.configuration["labels"].update(
+            {
+                "airflow_dag_id": "{{ dag.dag_id | lower }}",
+                "airflow_task_id": "{{ task.task_id | lower }}",
+            }
+        )
 
 
 def bigquery_view_task(dag, table, job_params, extra_params={}, exists_ok=True):

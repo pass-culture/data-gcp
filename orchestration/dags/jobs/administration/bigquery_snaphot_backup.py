@@ -8,7 +8,6 @@ from airflow import DAG
 from airflow.exceptions import AirflowSkipException
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.utils.task_group import TaskGroup
 from common.callback import on_failure_base_callback
 from common.config import (
@@ -25,6 +24,7 @@ from common.dbt.dag_utils import (
     get_node_alias_and_dataset,
     load_manifest_with_mtime,
 )
+from common.operators.bigquery import BigQueryInsertJobOperatorAugmented
 from common.utils import (
     delayed_waiting_operator,
     get_airflow_schedule,
@@ -317,7 +317,7 @@ with TaskGroup(group_id="snapshots_to_gcs", dag=dag) as to_gcs:
             },
         )
 
-        transform_and_export = BigQueryInsertJobOperator(
+        transform_and_export = BigQueryInsertJobOperatorAugmented(
             task_id=f"transform_and_export_{table_name}",
             configuration={
                 "query": {

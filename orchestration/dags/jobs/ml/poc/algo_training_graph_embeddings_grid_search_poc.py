@@ -22,7 +22,6 @@ from typing import Callable
 from airflow import DAG
 from airflow.models import BaseOperator, Param
 from airflow.operators.empty import EmptyOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.trigger_rule import TriggerRule
 
@@ -38,6 +37,7 @@ from common.config import (
     INSTANCES_TYPES,
     ML_BUCKET_TEMP,
 )
+from common.operators.bigquery import BigQueryInsertJobOperatorAugmented
 from common.operators.gce import (
     DeleteGCEOperator,
     InstallDependenciesOperator,
@@ -502,7 +502,7 @@ with GridDAG(
     # Initial extraction step: prepare training data from BigQuery
     start = EmptyOperator(task_id="start")
 
-    import_offer_as_parquet = BigQueryInsertJobOperator(
+    import_offer_as_parquet = BigQueryInsertJobOperatorAugmented(
         project_id=GCP_PROJECT_ID,
         task_id="import_offer_as_parquet",
         configuration={

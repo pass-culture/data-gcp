@@ -16,7 +16,7 @@ from common.config import (
     INSTANCES_TYPES,
     ML_BUCKET_TEMP,
 )
-from common.operators.bigquery import BigQueryInsertJobOperator
+from common.operators.bigquery import BigQueryInsertJobOperatorAugmented
 from common.operators.gce import (
     DeleteGCEOperator,
     InstallDependenciesOperator,
@@ -121,7 +121,7 @@ with DAG(
         python_version="3.11",
     )
 
-    export_item_embeddings_to_gcs = BigQueryInsertJobOperator(
+    export_item_embeddings_to_gcs = BigQueryInsertJobOperatorAugmented(
         project_id=GCP_PROJECT_ID,
         task_id="export_item_embeddings_to_gcs",
         configuration={

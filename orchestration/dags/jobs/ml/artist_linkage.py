@@ -23,7 +23,7 @@ from common.config import (
     GCP_PROJECT_ID,
     ML_BUCKET_TEMP,
 )
-from common.operators.bigquery import BigQueryInsertJobOperator
+from common.operators.bigquery import BigQueryInsertJobOperatorAugmented
 from common.operators.gce import (
     DeleteGCEOperator,
     InstallDependenciesOperator,
@@ -268,7 +268,7 @@ with DAG(
         "import_data",
     ) as import_data:
         for table_data in TABLES_TO_IMPORT_TO_GCS:
-            BigQueryInsertJobOperator(
+            BigQueryInsertJobOperatorAugmented(
                 project_id=GCP_PROJECT_ID,
                 task_id=f"import_{table_data['table_id']}_to_bucket",
                 configuration={

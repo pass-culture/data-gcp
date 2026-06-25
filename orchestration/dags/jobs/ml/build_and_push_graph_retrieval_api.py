@@ -3,9 +3,6 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
 from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
@@ -18,6 +15,7 @@ from common.config import (
     GCP_PROJECT_ID,
     ML_BUCKET_TEMP,
 )
+from common.operators.bigquery import BigQueryInsertJobOperatorAugmented
 from common.operators.gce import (
     DeleteGCEOperator,
     InstallDependenciesOperator,
@@ -103,7 +101,7 @@ with DAG(
     with TaskGroup(
         "import_data_from_bq_to_gcs", tooltip="Data Preparation"
     ) as import_data_from_bq_to_gcs:
-        BigQueryInsertJobOperator(
+        BigQueryInsertJobOperatorAugmented(
             project_id=GCP_PROJECT_ID,
             task_id="import_recommendable_item_data",
             configuration={
@@ -121,7 +119,7 @@ with DAG(
             dag=dag,
         )
 
-        BigQueryInsertJobOperator(
+        BigQueryInsertJobOperatorAugmented(
             project_id=GCP_PROJECT_ID,
             task_id="import_graph_embedding_data",
             configuration={

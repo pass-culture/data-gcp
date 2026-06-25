@@ -22,7 +22,7 @@ from common.config import (
     ML_BUCKET_TEMP,
     DagBaseConfig,
 )
-from common.operators.bigquery import BigQueryInsertJobOperator
+from common.operators.bigquery import BigQueryInsertJobOperatorAugmented
 from common.operators.gce import (
     DeleteGCEOperator,
     InstallDependenciesOperator,
@@ -131,7 +131,7 @@ with DAG(
             ),
         )
 
-    import_event_offer_to_link_to_gcs = BigQueryInsertJobOperator(
+    import_event_offer_to_link_to_gcs = BigQueryInsertJobOperatorAugmented(
         project_id=GCP_PROJECT_ID,
         task_id="import_event_offer_to_link_to_gcs",
         configuration={

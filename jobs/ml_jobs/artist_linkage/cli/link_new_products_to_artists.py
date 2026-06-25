@@ -20,13 +20,18 @@ from src.constants import (
 )
 from src.utils.loading import load_wikidata
 from src.utils.matching import (
-    ALIAS_MERGE_COLUMNS,
-    build_artist_alias,
     create_artists_tables,
     match_artist_on_offer_names,
     match_artists_with_wikidata,
 )
 from src.utils.preprocessing_utils import filter_products
+
+ALIAS_MERGE_COLUMNS = [
+    ARTIST_ID_KEY,
+    ARTIST_NAME_KEY,
+    ARTIST_TYPE_KEY,
+    OFFER_CATEGORY_ID_KEY,
+]
 
 
 def get_products_to_remove_and_link_df(
@@ -98,6 +103,64 @@ def get_products_to_remove_and_link_df(
     )
 
     return products_to_remove_df, products_to_link_df
+
+
+def build_artist_alias(
+    product_df: pd.DataFrame,
+    product_artist_link_df: pd.DataFrame,
+    artist_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """Combine artist names from artist_df and product_df to create a comprehensive alias dataframe."""
+    artist_alias_from_artist_names_df = (
+        product_artist_link_df.merge(
+            artist_df.assign(
+                artist_name=lambda df: df[ARTIST_NAME_KEY].str.lower()
+            ).loc[:, [ARTIST_ID_KEY, ARTIST_NAME_KEY]],
+            how="left",
+            on=ARTIST_ID_KEY,
+            validate="many_to_one",
+        )
+        .merge(
+            product_df.loc[
+                :, [PRODUCT_ID_KEY, OFFER_CATEGORY_ID_KEY]
+            ].drop_duplicates(),
+            how="left",
+            on=[PRODUCT_ID_KEY],
+            validate="many_to_one",
+        )
+        .loc[:, ALIAS_MERGE_COLUMNS]
+        .drop_duplicates()
+    )
+
+    # Use artist names from products when we have a clear 1:1 mapping between product and artist
+    safe_product_df = product_df.loc[
+        lambda df: ~df.duplicated(subset=[PRODUCT_ID_KEY, ARTIST_TYPE_KEY], keep=False)
+    ]
+    product_with_names_df = product_artist_link_df.merge(
+        safe_product_df,
+        how="inner",
+        left_on=[PRODUCT_ID_KEY, ARTIST_TYPE_KEY],
+        right_on=[PRODUCT_ID_KEY, ARTIST_TYPE_KEY],
+        validate="many_to_one",
+    )
+    artist_alias_based_on_products_df = (
+        product_with_names_df.loc[:, ALIAS_MERGE_COLUMNS]
+        .drop_duplicates()
+        .sort_values(by=ALIAS_MERGE_COLUMNS)
+    )
+
+    # Combine both sources of artist aliases and remove duplicates
+    return (
+        pd.concat(
+            [
+                artist_alias_from_artist_names_df,
+                artist_alias_based_on_products_df,
+            ],
+            axis=0,
+        )
+        .drop_duplicates()
+        .reset_index(drop=True)
+    )
 
 
 def sanity_checks(

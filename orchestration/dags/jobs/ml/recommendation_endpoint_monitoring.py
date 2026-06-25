@@ -4,9 +4,6 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
@@ -27,6 +24,7 @@ from common.config import (
     ML_BUCKET_TEMP,
     DagBaseConfig,
 )
+from common.operators.bigquery import BigQueryInsertJobOperatorAugmented
 from common.operators.gce import (
     DeleteGCEOperator,
     InstallDependenciesOperator,
@@ -140,7 +138,7 @@ with (
     with TaskGroup(
         "import_data", tooltip="Import data from SQL to BQ"
     ) as import_data_group:
-        import_user_data = BigQueryInsertJobOperator(
+        import_user_data = BigQueryInsertJobOperatorAugmented(
             project_id=GCP_PROJECT_ID,
             task_id="import_test_users",
             configuration={
@@ -159,7 +157,7 @@ with (
             },
         )
 
-        import_item_data = BigQueryInsertJobOperator(
+        import_item_data = BigQueryInsertJobOperatorAugmented(
             project_id=GCP_PROJECT_ID,
             task_id="import_test_items",
             configuration={
@@ -181,7 +179,7 @@ with (
     with TaskGroup(
         "export_data", tooltip="Export data from BQ to GCS"
     ) as export_data_group:
-        export_user_data_to_bq = BigQueryInsertJobOperator(
+        export_user_data_to_bq = BigQueryInsertJobOperatorAugmented(
             project_id=GCP_PROJECT_ID,
             task_id="export_user_data_to_bq",
             configuration={
@@ -201,7 +199,7 @@ with (
             },
         )
 
-        export_item_data_to_bq = BigQueryInsertJobOperator(
+        export_item_data_to_bq = BigQueryInsertJobOperatorAugmented(
             project_id=GCP_PROJECT_ID,
             task_id="export_item_data_to_bq",
             configuration={

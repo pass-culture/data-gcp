@@ -3,7 +3,6 @@ import datetime
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from common import macros
 from common.callback import on_failure_base_callback
 from common.config import (
@@ -13,6 +12,7 @@ from common.config import (
     GCP_PROJECT_ID,
     METABASE_EXTERNAL_CONNECTION_ID,
 )
+from common.operators.bigquery import BigQueryInsertJobOperatorAugmented
 from common.utils import (
     get_airflow_schedule,
 )
@@ -50,7 +50,7 @@ with DAG(
 
     import_tables_to_raw_tasks = []
     for name, params in import_tables.items():
-        task = BigQueryInsertJobOperator(
+        task = BigQueryInsertJobOperatorAugmented(
             project_id=GCP_PROJECT_ID,
             task_id=f"import_metabase_{name}_to_raw",
             configuration={

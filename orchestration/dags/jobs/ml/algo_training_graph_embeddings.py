@@ -4,9 +4,6 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
@@ -20,6 +17,9 @@ from common.config import (
     GCP_PROJECT_ID,
     INSTANCES_TYPES,
     ML_BUCKET_TEMP,
+)
+from common.operators.bigquery import (
+    BigQueryInsertJobOperatorAugmented,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -94,7 +94,7 @@ with DAG(
 ) as _dag:
     start = EmptyOperator(task_id="start")
 
-    import_offer_as_parquet = BigQueryInsertJobOperator(
+    import_offer_as_parquet = BigQueryInsertJobOperatorAugmented(
         project_id=GCP_PROJECT_ID,
         task_id="import_offer_as_parquet",
         configuration={

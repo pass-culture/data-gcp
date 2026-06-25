@@ -19,7 +19,7 @@ from common.config import (
     INSTANCES_TYPES,
     ML_BUCKET_TEMP,
 )
-from common.operators.bigquery import BigQueryInsertJobOperator
+from common.operators.bigquery import BigQueryInsertJobOperatorAugmented
 from common.operators.gce import (
     DeleteGCEOperator,
     InstallDependenciesOperator,
@@ -155,7 +155,7 @@ with DAG(
     )
 
     # Step 1: Select items to embed and save to a temp table in BigQuery
-    bigquery_select_items_to_embed = BigQueryInsertJobOperator(
+    bigquery_select_items_to_embed = BigQueryInsertJobOperatorAugmented(
         project_id=GCP_PROJECT_ID,
         task_id="bigquery_select_items_to_embed",
         configuration={
@@ -178,7 +178,7 @@ with DAG(
     )
 
     # Step 2: Export temp table to GCS as a parquet file (to be used as input for the embedding script)
-    export_item_metadata_to_gcs = BigQueryInsertJobOperator(
+    export_item_metadata_to_gcs = BigQueryInsertJobOperatorAugmented(
         project_id=GCP_PROJECT_ID,
         task_id="export_item_metadata_to_gcs",
         configuration={

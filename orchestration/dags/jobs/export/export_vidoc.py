@@ -4,9 +4,6 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator, PythonOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
 from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.access_gcp_secrets import access_secret_data
@@ -17,6 +14,9 @@ from common.config import (
     DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+)
+from common.operators.bigquery import (
+    BigQueryInsertJobOperatorAugmented,
 )
 from common.utils import delayed_waiting_operator, get_airflow_schedule
 from dependencies.export_vidoc.export_vidoc import S3_SECRET_NAME, TABLES_CONFIGS
@@ -110,7 +110,7 @@ with DAG(
         s3_prefix = config["s3_prefix"]
         gcs_prefix = f"{GCS_EXPORT_ROOT}/{{{{ ds_nodash }}}}/{s3_prefix}"
 
-        bq_to_gcs = BigQueryInsertJobOperator(
+        bq_to_gcs = BigQueryInsertJobOperatorAugmented(
             project_id=GCP_PROJECT_ID,
             task_id=f"bq_extract_{s3_prefix}",
             configuration={

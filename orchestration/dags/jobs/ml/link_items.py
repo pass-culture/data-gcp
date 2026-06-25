@@ -4,9 +4,6 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
@@ -22,6 +19,7 @@ from common.config import (
     GCP_PROJECT_ID,
     ML_BUCKET_TEMP,
 )
+from common.operators.bigquery import BigQueryInsertJobOperatorAugmented
 from common.operators.gce import (
     DeleteGCEOperator,
     InstallDependenciesOperator,
@@ -162,7 +160,7 @@ with DAG(
     with TaskGroup(
         "import_data", tooltip="Import data from SQL to BQ"
     ) as import_data_group:
-        import_sources = BigQueryInsertJobOperator(
+        import_sources = BigQueryInsertJobOperatorAugmented(
             project_id=GCP_PROJECT_ID,
             task_id="import_sources",
             configuration={
@@ -181,7 +179,7 @@ with DAG(
             },
         )
 
-        import_candidates = BigQueryInsertJobOperator(
+        import_candidates = BigQueryInsertJobOperatorAugmented(
             project_id=GCP_PROJECT_ID,
             task_id="import_candidates",
             configuration={
@@ -206,7 +204,7 @@ with DAG(
     with TaskGroup(
         "export_data", tooltip="Export data from BQ to GCS"
     ) as export_data_group:
-        export_sources_bq = BigQueryInsertJobOperator(
+        export_sources_bq = BigQueryInsertJobOperatorAugmented(
             project_id=GCP_PROJECT_ID,
             task_id="export_sources_bq",
             configuration={
@@ -227,7 +225,7 @@ with DAG(
             },
         )
 
-        export_candidates_bq = BigQueryInsertJobOperator(
+        export_candidates_bq = BigQueryInsertJobOperatorAugmented(
             project_id=GCP_PROJECT_ID,
             task_id="export_candidates_bq",
             configuration={
@@ -500,7 +498,7 @@ with DAG(
     # - ---------------------------------------------------------------------
     #  7) Export item mapping to BigQuery
     # ---------------------------------------------------------------------
-    export_item_mapping = BigQueryInsertJobOperator(
+    export_item_mapping = BigQueryInsertJobOperatorAugmented(
         task_id="export_item_mapping",
         configuration={
             "query": {
@@ -512,7 +510,11 @@ with DAG(
                     "tableId": DAG_CONFIG["BIGQUERY"]["ITEM_MAPPING_TABLE"],
                 },
                 "writeDisposition": "WRITE_TRUNCATE",
-            }
+            },
+            "labels": {
+                "airflow_dag_id": "{{ dag.dag_id | lower }}",
+                "airflow_task_id": "{{ task.task_id | lower }}",
+            },
         },
     )
 

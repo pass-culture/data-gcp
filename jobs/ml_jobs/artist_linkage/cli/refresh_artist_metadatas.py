@@ -24,7 +24,7 @@ from src.constants import (
     Action,
 )
 from src.utils.loading import load_wikidata
-from src.utils.matching import build_artist_alias, perform_wikidata_category_matching
+from src.utils.matching import perform_wikidata_category_matching
 from src.utils.preprocessing_utils import (
     filter_products,
     prepare_artist_names_for_matching,
@@ -156,6 +156,7 @@ def match_unmatched_artists_with_wikidata(
     if len(artists_without_wiki_ids_df) == 0:
         return pd.DataFrame(columns=ARTISTS_KEYS)
 
+    # Derive (artist_id → offer_category_id, artist_type) from product/link data
     product_artist_link_df = pd.read_parquet(product_artist_link_filepath).astype(
         {PRODUCT_ID_KEY: int}
     )
@@ -164,46 +165,43 @@ def match_unmatched_artists_with_wikidata(
         .astype({PRODUCT_ID_KEY: int})
         .pipe(filter_products)
     )
-
-    artist_alias_df = build_artist_alias(
-        product_df=product_df,
-        product_artist_link_df=product_artist_link_df,
-        artist_df=applicative_artist_df,
+    artist_category_type_df = (
+        product_artist_link_df.merge(
+            product_df[[PRODUCT_ID_KEY, OFFER_CATEGORY_ID_KEY]].drop_duplicates(),
+            on=PRODUCT_ID_KEY,
+            how="inner",
+        )
+        .loc[:, [ARTIST_ID_KEY, ARTIST_TYPE_KEY, OFFER_CATEGORY_ID_KEY]]
+        .drop_duplicates()
     )
 
-    aliases_to_match_df = artist_alias_df.merge(
-        artists_without_wiki_ids_df[[ARTIST_ID_KEY, ARTIST_PRO_SEARCH_SCORE_KEY]],
+    # Enrich unmatched artists with offer_category and artist_type
+    artists_to_match_df = artists_without_wiki_ids_df[
+        [ARTIST_ID_KEY, ARTIST_NAME_KEY, ARTIST_PRO_SEARCH_SCORE_KEY]
+    ].merge(
+        artist_category_type_df,
         on=ARTIST_ID_KEY,
         how="inner",
     )
-    if len(aliases_to_match_df) == 0:
+
+    # Preprocess the actual artist name for wikidata matching
+    preproc_artists_df = prepare_artist_names_for_matching(artists_to_match_df)
+    if len(preproc_artists_df) == 0:
         return pd.DataFrame(columns=ARTISTS_KEYS)
 
-    preproc_aliases_df = prepare_artist_names_for_matching(aliases_to_match_df)
-    if len(preproc_aliases_df) == 0:
-        return pd.DataFrame(columns=ARTISTS_KEYS)
-
-    unmatched_artist_clusters_df = (
-        preproc_aliases_df.groupby(
-            [
-                ARTIST_ID_KEY,
-                OFFER_CATEGORY_ID_KEY,
-                ARTIST_TYPE_KEY,
-                ARTIST_NAME_TO_MATCH_KEY,
-            ]
-        )
-        .agg(
-            artist_name_set=(ARTIST_NAME_KEY, lambda x: set(x.unique())),
-            artist_name_count=(ARTIST_NAME_KEY, "count"),
-            artist_name_nunique=(ARTIST_NAME_KEY, "nunique"),
-            **{
-                ARTIST_PRO_SEARCH_SCORE_KEY: (
-                    ARTIST_PRO_SEARCH_SCORE_KEY,
-                    "first",
-                ),
-            },
-        )
-        .reset_index()
+    unmatched_artist_clusters_df = preproc_artists_df.drop_duplicates(
+        subset=[
+            ARTIST_ID_KEY,
+            OFFER_CATEGORY_ID_KEY,
+            ARTIST_TYPE_KEY,
+            ARTIST_NAME_TO_MATCH_KEY,
+        ]
+    ).assign(
+        artist_name_set=lambda df: df[ARTIST_NAME_KEY].apply(
+            lambda x: {x}
+        ),  # for perform_wikidata_category_matching compatibility
+        artist_name_count=1,
+        artist_name_nunique=1,
     )
 
     matched_df = perform_wikidata_category_matching(
@@ -225,6 +223,7 @@ def match_unmatched_artists_with_wikidata(
         by=[ARTIST_PRO_SEARCH_SCORE_KEY, "matching_score", "gkg"],
         ascending=False,
     )
+
     # Constraint 2: if a wikidata_id is matched to multiple artist_ids, keep
     # the match for the artist with the highest pro search score
     matched_df = matched_df.drop_duplicates(subset=[WIKIDATA_ID_KEY], keep="first")

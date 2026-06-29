@@ -244,7 +244,8 @@ class DAG_TAGS(Enum):
 
 
 # UV Version
-UV_VERSION = "0.11.5"
+# >=0.11.15 fixes GHSA-4gg8-gxpx-9rph.
+UV_VERSION = "0.11.15"
 
 ENV_EMOJI = {
     "prod": ":volcano: *PROD* :volcano:",

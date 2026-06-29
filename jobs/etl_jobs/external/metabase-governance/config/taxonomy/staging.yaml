@@ -1,0 +1,22 @@
+# Collection taxonomy rules for staging/dev. The staging Metabase has a
+# different collection tree than production, so the numeric ids below differ
+# from production.yaml (roots taken from config/archiving/staging.yaml).
+#
+# Squad ids and the certified-ancestor id are unknown in staging and left
+# empty/null — the data team can fill them in. The tier_rules match collection
+# *titles* and are therefore environment-agnostic, so tier resolution still
+# works in staging for smoke-testing.
+
+in_scope_root_collection_ids: [47] # internal (whitelist; everything else is out of scope)
+
+# Unknown in staging; null disables certified resolution.
+certified_ancestor_collection_id: null
+
+# Unknown in staging; squad resolution yields null until filled in.
+squads: []
+
+tier_rules:
+  - {tier: key_dashboard, ancestor_title_pattern: "%tableau de bord clé%"}
+  - {tier: key_dashboard, ancestor_title_pattern: "%indicateurs clés%"}
+  - {tier: thematique, ancestor_title_pattern: "%thématique%"}
+  - {tier: chantier, ancestor_title_pattern: "%chantier%"}

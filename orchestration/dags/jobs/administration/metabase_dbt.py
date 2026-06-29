@@ -65,7 +65,7 @@ with DAG(
             type="string",
         ),
         "exposure_table_name": Param(
-            default="internal_dbt_exposure",
+            default="exposure_candidates",
             type="string",
         ),
     },

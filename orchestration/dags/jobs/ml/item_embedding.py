@@ -74,7 +74,7 @@ DAG_DOC = """
     *instance_name* : name of the GCE instance to create for embedding.
     *gpu_type* : If you decide to embedd all the catalogue, we highly recommend to use 4 L4 GPUs, in europe-west1-c (to avoid stockout issues in europe-west1-b). If you have a smaller catalogue or if you want to embed only the new items, you can use 4 T4 GPU, which is more widely available across zones.
     *gpu_count* : number of GPUs to use for embedding (only applicable for GPU instance types). Make sure to select a machine type that supports the number of GPUs you want to use.
-
+    *gce_zone* : GCE zone to use for embedding. Only europe-west1-c and europe-west1-b have L4 GPUs. europe-west1-d has T4 GPUs. Stockout are very frequent.
 
     *Hint:* For L4 GPUs, make sure to select a compatible g2 machine. The Number of L4 GPUs you can attach to a G2 depends on its RAM.
     Here is the breakdown:

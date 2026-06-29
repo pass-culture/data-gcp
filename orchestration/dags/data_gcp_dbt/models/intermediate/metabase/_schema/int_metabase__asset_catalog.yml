@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: int_metabase__asset_catalog
+    description: "{{ doc('description__int_metabase__asset_catalog') }}"
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "(not certified) or (617 in unnest(ancestor_collection_ids))"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "(not in_scope) or (not is_excluded)"
+    columns:
+      - name: asset_id
+        description: "{{ doc('column__asset_id') }}"
+        data_tests:
+          - not_null
+      - name: asset_kind
+        description: "{{ doc('column__asset_kind') }}"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['card', 'dashboard']
+      - name: tier
+        description: "{{ doc('column__tier') }}"
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['key_dashboard', 'thematique', 'chantier']
+      - name: certified
+        description: "{{ doc('column__certified') }}"
+        data_tests:
+          - not_null
+      - name: in_scope
+        description: "{{ doc('column__in_scope') }}"
+        data_tests:
+          - not_null

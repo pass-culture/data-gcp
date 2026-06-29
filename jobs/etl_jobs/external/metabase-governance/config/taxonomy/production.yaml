@@ -14,6 +14,7 @@ certified_ancestor_collection_id: 617
 # Squads = direct children of /608/. Matched by collection_id in the ancestor
 # chain (depth-1 under the in-scope root).
 squads:
+  - {collection_id: 617, label: global} # # Chiffres clés à l'échelle du pass
   - {collection_id: 622, label: produit}
   - {collection_id: 618, label: developpement}
   - {collection_id: 619, label: crem}

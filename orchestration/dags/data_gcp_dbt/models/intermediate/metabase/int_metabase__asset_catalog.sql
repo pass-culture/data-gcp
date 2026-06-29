@@ -1,8 +1,3 @@
--- One row per Metabase asset (dashboard or card) with its placement in the
--- collection tree, the squad/tier/certified classification resolved by the
--- metabase-governance `taxonomy` job, usage signals and (for dashboards) the
--- markdown / member-card context. Dashboards are first-class, higher-quality
--- context than isolated cards.
 with
     taxonomy as (select * from {{ source("int_metabase", "collection_taxonomy") }}),
 
@@ -43,7 +38,6 @@ with
         group by 1
     ),
 
-    -- Dashboard-level usage rolled up from the per-card execution log.
     dashboard_usage as (
         select
             dashboard_id,
@@ -62,13 +56,11 @@ with
         group by 1
     ),
 
-    -- Cards laid out on each dashboard (authoritative membership, from the
-    -- replicated report_dashboardcard); empty until that raw table lands.
     dashboard_members as (
         select
             dc.dashboard_id,
             array_agg(rc.card_name ignore nulls order by rc.card_name) as member_cards
-        from {{ source("raw", "metabase_report_dashboardcard") }} as dc
+        from {{ source("raw", "metabase_report_dashboard_card") }} as dc
         inner join
             {{ source("raw", "metabase_report_card") }} as rc on dc.card_id = rc.id
         where dc.card_id is not null
@@ -76,8 +68,6 @@ with
     ),
 
     card_assets as (
-        -- noqa: ST06 — column order kept aligned with dashboard_assets for the
-        -- union; heterogeneous branches can't satisfy simple-before-calc on both.
         select  -- noqa: ST06
             'card' as asset_kind,
             rc.id as asset_id,

@@ -32,7 +32,7 @@ models:
     description: |
       Aggregates the in-dashboard markdown text widgets (visualization_settings.text
       of card-less dashboard cards) into one markdown blob per dashboard. Populated
-      once `raw.metabase_report_dashboardcard` is replicated.
+      once `raw.metabase_report_dashboard_card` is replicated.
     columns:
       - name: dashboard_id
         description: Metabase dashboard id.
@@ -49,6 +49,13 @@ models:
       metabase-governance `taxonomy` job, usage signals, and (for dashboards) the
       markdown / member-card context. The classified asset catalog used downstream
       for retrieval routing and exposure selection.
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "(not certified) or (617 in unnest(ancestor_collection_ids))"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "(not in_scope) or (not is_excluded)"
     columns:
       - name: asset_id
         description: Metabase id of the card or dashboard.
@@ -71,17 +78,10 @@ models:
         description: True when the certified ancestor collection (617) is in the chain.
         data_tests:
           - not_null
-          # certified must imply 617 is in the ancestor chain.
-          - dbt_utils.expression_is_true:
-              arguments:
-                expression: "(not certified) or (617 in unnest(ancestor_collection_ids))"
       - name: in_scope
         description: True when the asset's root collection is in scope and the asset is neither archived nor personal. In-scope rows are never excluded.
         data_tests:
           - not_null
-          - dbt_utils.expression_is_true:
-              arguments:
-                expression: "(not in_scope) or (not is_excluded)"
 
   - name: int_metabase__exposure_candidates
     description: |

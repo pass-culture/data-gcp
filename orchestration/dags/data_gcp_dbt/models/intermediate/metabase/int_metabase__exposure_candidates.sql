@@ -1,8 +1,3 @@
--- High-quality subset of int_metabase__asset_catalog that drives dbt exposure
--- generation (replaces the old "top-10 collections by query volume" heuristic).
--- Keeps every in-scope, active, classified asset (tiered OR certified) and adds
--- a usage-based safety net (top-N most-viewed in-scope active assets) so we do
--- not regress exposure coverage. Dashboards rank above standalone cards.
 {% set usage_safety_net_size = 100 %}
 
 with

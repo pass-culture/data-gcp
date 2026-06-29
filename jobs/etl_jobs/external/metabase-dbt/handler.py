@@ -18,9 +18,6 @@ from utils import CLIENT_ID, METABASE_API_KEY, METABASE_HOST
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Matches the Metabase asset referenced by an exposure URL. dbt-metabase emits
-# `/card/<id>` for questions and `/dashboard/<id>` for dashboards; the Metabase
-# UI uses `/question/<id>` for cards, so both card forms are accepted.
 _ASSET_URL_RE = re.compile(r"/(card|question|dashboard)/(\d+)")
 
 

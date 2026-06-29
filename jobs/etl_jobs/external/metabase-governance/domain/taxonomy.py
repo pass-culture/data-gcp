@@ -3,7 +3,7 @@ import re
 
 import pandas as pd
 
-from core.utils import INT_METABASE_DATASET, RAW_METABASE_DATASET
+from core.utils import INT_METABASE_DATASET, PROJECT_NAME, RAW_METABASE_DATASET
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ def load_collections(dataset=None):
         SELECT collection_id, collection_name, location, archived, personal_owner_id
         FROM {dataset}.metabase_collection
     """
-    return pd.read_gbq(query)
+    return pd.read_gbq(query, project_id=PROJECT_NAME, use_bqstorage_api=False)
 
 
 def build_taxonomy(collections_df, config):
@@ -132,7 +132,7 @@ def run_taxonomy(config, dataset=None, destination_dataset=None):
 
     destination_dataset = destination_dataset or INT_METABASE_DATASET
     destination = f"{destination_dataset}.{TAXONOMY_TABLE}"
-    taxonomy_df.to_gbq(destination, if_exists="replace")
-    logger.info("Wrote %s", destination)
+    taxonomy_df.to_gbq(destination, project_id=PROJECT_NAME, if_exists="replace")
+    logger.info("Wrote %s.%s", PROJECT_NAME, destination)
 
     return "success"

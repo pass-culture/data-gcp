@@ -6,6 +6,7 @@ CONFIG = {
     "in_scope_root_collection_ids": [608],
     "certified_ancestor_collection_id": 617,
     "squads": [
+        {"collection_id": 617, "label": "global"},
         {"collection_id": 622, "label": "produit"},
         {"collection_id": 621, "label": "tech"},
     ],
@@ -83,6 +84,12 @@ class TestBuildTaxonomy:
     def test_certified_when_617_in_chain(self):
         assert self.tax[6171].certified is True
         assert self.tax[701].certified is False
+
+    def test_global_squad_under_617(self):
+        # Collections under "# Chiffres clés à l'échelle du pass" → squad global,
+        # and still certified.
+        assert self.tax[6171].squad == "global"
+        assert self.tax[6171].certified is True
 
     def test_in_scope_only_under_608(self):
         assert self.tax[701].in_scope is True

@@ -153,7 +153,7 @@ sources:
       - name: metabase_query_execution
       - name: metabase_report_card
       - name: metabase_report_dashboard
-      - name: metabase_report_dashboardcard
+      - name: metabase_report_dashboard_card
       - name: metabase_revision
       - name: metabase_view_log
       - name: qualtrics_answers

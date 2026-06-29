@@ -237,6 +237,9 @@ def migrate(
             logger.info("Looking up impacted cards for table '%s' from cache...", legacy_key)
             card_ids = get_impacted_cards_from_cache(legacy_table, _card_dep_cache)
             logger.info("Found %d impacted cards for table '%s'", len(card_ids), legacy_key)
+            if len(card_ids) > 0:
+                logger.info(f"IDs : {list(card_ids.keys()) if hasattr(card_ids, 'keys') else list(card_ids)}")
+                logger.info("==============================================================")
 
         if not card_ids:
             logger.info("No cards to migrate for table '%s'. Skipping.", legacy_key)

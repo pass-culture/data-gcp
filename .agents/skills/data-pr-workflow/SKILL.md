@@ -41,45 +41,7 @@ Look for:
 - Commit messages should follow the format
 - Number of commits (ideally < 10)
 
-## Step 2: Commit Naming Standards
-
-Commits must follow this format:
-```
-(TICKET-ID) type(scope): description
-```
-
-**Ticket ID** (optional in commit, required in PR):
-- `DE-XXX` - Data tasks
-- `HF-XXX` - HotFix (urgent)
-- `BSR` - Boy Scout Rule (code improvements)
-- Can be omitted in commits if not applicable
-
-**Type** (required):
-- `feat` - New feature (code planned in the ticket)
-- `fix` - Bug fix
-- `test` - Test additions or modifications
-- `docs` - Documentation updates
-- `refactor` - Code restructuring without behavior change
-- `perf` - Performance improvements
-- `build`, `lint`, `ci`, `core`, `dbt` - Other types
-
-**Scope** (required):
-The area of the codebase affected:
-- `bq_jobs` - Import sources (applicative, firebase, contentful) or export (clickhouse, pcapi)
-- `dbt` - dbt models and transformations (int_firebase, analytics, export_backend, etc.)
-- `ml_jobs` - ML job types (retrieval, ranking, compliance, recommendation)
-- Generic: `core`, `analytics`, `engineering`, `science`, `ci`
-
-**Description** (required):
-A brief description in English. Can include table names in parentheses if relevant.
-
-**Examples:**
-- `(DE-3456) feat(bq_jobs): add new import job for Firebase events`
-- `(DE-7890) fix(dbt): correct transformation logic in export_backend model`
-- `feat(analytics): add global_booking mart model`
-- `review: include review comments`
-
-## Step 3: Commit Cleanup
+## Step 2: Commit Cleanup
 
 If the branch has too many commits (>10) or commits with unclear names (like "wip", "fix", "temp"), help clean them up.
 Give the rebase strategy specifying the command to the user but do not execute it.
@@ -123,7 +85,7 @@ git rebase -i $(git merge-base master HEAD)
 - Commit 2: `test(scope): add tests and documentation`
 - Commit 3: `review: incorporate review feedback` (if there was a prior review)
 
-## Step 4: Generate PR Title
+## Step 3: Generate PR Title
 
 The PR title must follow this regex pattern:
 ```
@@ -150,7 +112,7 @@ The PR title must follow this regex pattern:
 
 **Validate** the title matches the regex before proceeding.
 
-## Step 5: Create PR Description
+## Step 4: Create PR Description
 
 The PR description should be concise but informative. Remember: the code is public, so avoid sensitive details.
 
@@ -174,7 +136,7 @@ The PR description should be concise but informative. Remember: the code is publ
 
 **Keep it brief.** If more context is needed, reference the Notion ticket.
 
-## Step 6: Definition of Ready (DOR) Checklist
+## Step 5: Definition of Ready (DOR) Checklist
 
 Before creating the PR, verify:
 - [ ] All tests are passing (CI is green)
@@ -185,7 +147,7 @@ Before creating the PR, verify:
 
 Ask the user to confirm these points if not already clear.
 
-## Step 7: Create the PR
+## Step 6: Create the PR
 
 Use `gh pr create` with the generated title and description:
 
@@ -200,7 +162,7 @@ gh pr create --title "GENERATED_TITLE" --body "GENERATED_DESCRIPTION" --draft
 
 After creation, get the PR number for the review message.
 
-## Step 8: Generate #data-review Message
+## Step 7: Generate #data-review Message
 
 Create the Slack message for the #data-review channel:
 
@@ -222,7 +184,7 @@ Create the Slack message for the #data-review channel:
 
 Ask the user about complexity and time if not obvious from the changes.
 
-## Step 9: Final Reminders
+## Step 8: Final Reminders
 
 After the PR is created, remind the user:
 

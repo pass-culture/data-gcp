@@ -5,6 +5,7 @@ title: Metabase
 
 {% docs column__dashboard_id %} Metabase dashboard id. {% enddocs %}
 {% docs column__dashboard_markdown %} Concatenated markdown of the dashboard's text widgets, in layout order. {% enddocs %}
+{% docs column__dashboard_parameters %} Dashboard filter widgets as an array of {name, slug, type}; `slug` is the URL key for deep-linking (`/dashboard/<id>?<slug>=<value>`). Empty array when the dashboard has no filters. {% enddocs %}
 {% docs column__asset_id %} Metabase id of the card or dashboard. {% enddocs %}
 {% docs column__asset_kind %} Whether the row is a 'card' or a 'dashboard'. {% enddocs %}
 {% docs column__tier %} Steering tier resolved from the ancestor collections. {% enddocs %}

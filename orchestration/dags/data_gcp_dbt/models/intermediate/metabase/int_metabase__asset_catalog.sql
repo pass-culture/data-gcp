@@ -141,6 +141,7 @@ select
     coalesce(t.in_scope, false) and not a.is_archived as in_scope,
     coalesce(t.is_excluded, true) or a.is_archived as is_excluded,
     coalesce(dmem.member_cards, []) as member_cards,
+    coalesce(dp.dashboard_parameters, []) as dashboard_parameters,
     a.total_views_3_months > 0 as is_active
 from assets as a
 left join taxonomy as t on a.collection_id = t.collection_id
@@ -150,3 +151,7 @@ left join
     dashboard_members as dmem
     on a.asset_kind = 'dashboard'
     and a.asset_id = dmem.dashboard_id
+left join
+    {{ ref("int_metabase__dashboard_parameters") }} as dp
+    on a.asset_kind = 'dashboard'
+    and a.asset_id = dp.dashboard_id

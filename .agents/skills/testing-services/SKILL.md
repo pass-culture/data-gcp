@@ -60,8 +60,35 @@ Apply these rules in order — assign the **highest** level that matches. Report
 1. Read the matching reference file for the exact conventions (naming, fixtures, mocking, file location) — these differ per domain and matter for CI.
 2. **Mirror the closest existing test** in that same service/model. Match its structure, naming, fixture style, and assertion style rather than introducing a new pattern.
 3. Write tests for the gaps surfaced in Step 2, prioritizing high-risk untested behavior.
-4. Run the new tests (command is in the reference file) and iterate until green.
-5. Report what was added and the new coverage picture.
+4. **Run pre-commit checks** on the new files before running the tests (see §Pre-commit rules below). Fix all violations, then re-run until both ruff and the end-of-file fixer are clean.
+5. Run the new tests (command is in the reference file) and iterate until green.
+6. Report what was added and the new coverage picture.
+
+## Pre-commit rules (apply to every generated Python file)
+
+The repo enforces pre-commit hooks on every commit. Violations block the commit. Always run these two commands from the **service root** (where the local `pyproject.toml` lives) after writing or editing test files:
+
+```bash
+# 1. Format (ruff format auto-fixes style; re-run until "N files left unchanged")
+uv run ruff format tests/
+
+# 2. Lint with auto-fix (ruff check --fix handles most issues automatically)
+uv run ruff check --fix tests/
+```
+
+If `ruff check` reports errors it cannot auto-fix, fix them manually, then re-run. Common issues to watch for:
+
+| Hook | Common violation | Fix |
+|---|---|---|
+| `end-of-file-fixer` | File does not end with a newline | Ensure the last line of every file is a blank newline |
+| `ruff format` | Trailing whitespace, quote style, blank lines, line length | Auto-fixed by `ruff format` — just re-run |
+| `SIM117` (flake8-simplify) | Nested `with` statements | Combine into a single `with a(), b():` statement |
+| `I` (isort) | Imports not sorted / grouped | Auto-fixed by `ruff check --fix` |
+| `UP` (pyupgrade) | Old-style type hints (`Optional[X]`, `Union[X, Y]`) | Use `X \| None`, `X \| Y` (Python 3.10+ syntax) |
+| `PT` (pytest-style) | `assert` on exception outside `pytest.raises` | Use `pytest.raises` context manager |
+| `TCH` (type-checking) | Runtime import that should be under `TYPE_CHECKING` | Move import to `if TYPE_CHECKING:` block |
+
+> **Note:** each service may extend the root ruff config in its own `pyproject.toml` with stricter rules (e.g. `SIM`, `PT`, `B`, `UP`). Always check `<service>/pyproject.toml` — if a `[tool.ruff]` section exists there, those rules apply to tests in that service.
 
 ## Conventions that apply everywhere
 
@@ -74,6 +101,8 @@ Apply these rules in order — assign the **highest** level that matches. Report
 ## Quality bar before finishing
 
 - [ ] New tests follow the local naming/layout convention (verified against a neighbor)
+- [ ] `uv run ruff format tests/` outputs "N files left unchanged" (zero reformatted)
+- [ ] `uv run ruff check tests/` outputs "All checks passed!" (zero errors)
 - [ ] Tests run green with the domain's documented command
 - [ ] Each new test fails if its asserted behavior breaks (sanity-check at least the riskiest one)
 - [ ] No real external calls (secrets/BQ/network/endpoints are mocked)

@@ -195,7 +195,7 @@ def main(etl_parameters...):
         raise
     except Exception as e:
         logger.exception(f"ETL job failed: {e}")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from e
 ```
 
 **Steps:**
@@ -204,11 +204,11 @@ def main(etl_parameters...):
 3. If the function body is NOT already wrapped in a try/except with `typer.Exit(code=1)`:
    - Wrap the entire function body in `try:`
    - Add `except typer.Exit: raise` clause
-   - Add `except Exception as e: logger.exception(...); raise typer.Exit(code=1)` clause
+   - Add `except Exception as e: logger.exception(...); raise typer.Exit(code=1) from e` clause
    - Ensure `import logging` and `logger = logging.getLogger(__name__)` exist (add if missing)
 4. Show the diff to the user and **wait for approval** before saving
 
-**Also patch `pyproject.toml`:** Read `<microservice_path>/pyproject.toml` and check the `typer` dependency version. If it is pinned below 0.24 (e.g., `typer>=0.12` or `typer<0.24`), update it to `typer>=0.24`. If typer is not listed, add it. Warn the user that below 0.24, argument parsing is incompatible with the container entrypoint — they should test the CLI after bumping.
+**Also patch `pyproject.toml`:** Read `<microservice_path>/pyproject.toml` and check the `typer` dependency version. If it is pinned below 0.24 (e.g., `typer>=0.12` or `typer<0.24`), update it to `typer>=0.24`. If typer is not listed, add it and regenerate the lock file (cd to microservice path, run `uv sync`). Warn the user that below 0.24, argument parsing is incompatible with the container entrypoint — they should test the CLI after bumping.
 
 ### Step 4: Validate
 
@@ -232,7 +232,7 @@ See [./references/advanced-patterns.md](./references/advanced-patterns.md) for:
 | Pitfall | Fix |
 |---------|-----|
 | Typer swallows exceptions silently | Wrap in try/except, re-raise as `typer.Exit(code=1)` |
-| Typer < 0.24 breaks argument parsing | Pin `typer>=0.24` in `pyproject.toml` |
+| Typer < 0.24 breaks argument parsing | Pin `typer>=0.24` in `pyproject.toml` | regenerate uv lock file (cd to microservice path, run `uv sync`) |
 | Forgot to push microservice code | `runtime_branch` fetches code at runtime — branch must exist |
 | Using `image_pull_policy="IfNotPresent"` | Always use default (Always) to avoid stale images |
 | Templating `orchestration_mode` via params | Not possible — scheduler needs it at parse time |

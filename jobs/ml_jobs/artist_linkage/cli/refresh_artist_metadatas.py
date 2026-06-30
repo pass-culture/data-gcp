@@ -6,7 +6,6 @@ from loguru import logger
 
 from src.constants import (
     ACTION_KEY,
-    ARTIST_ALIASES_KEYS,
     ARTIST_DESCRIPTION_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
@@ -87,8 +86,7 @@ def create_delta_df_for_metadata_refresh(
     """Create delta dataframes for metadata refresh operation.
 
     This function creates the necessary delta dataframes for updating artist metadata,
-    including an empty product link dataframe and empty artist alias dataframe since
-    only artist metadata is being refreshed.
+    including an empty product link dataframe since only artist metadata is being refreshed.
 
     Args:
         refreshed_artists_df (pd.DataFrame): Dataframe containing artists with
@@ -100,7 +98,6 @@ def create_delta_df_for_metadata_refresh(
         tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: A tuple containing:
             - empty_delta_product_artist_link_df: Empty dataframe for product links
             - delta_artist_df: Dataframe with artists to update and metadata
-            - empty_delta_artist_alias_df: Empty dataframe for artist aliases
     """
     delta_already_matched = refreshed_artists_df.loc[:, ARTISTS_KEYS].assign(
         **{
@@ -120,13 +117,9 @@ def create_delta_df_for_metadata_refresh(
     empty_delta_product_artist_link_df = pd.DataFrame(
         columns=[*PRODUCTS_KEYS, ACTION_KEY, COMMENT_KEY]
     )
-    empty_delta_artist_alias_df = pd.DataFrame(
-        columns=[*ARTIST_ALIASES_KEYS, ACTION_KEY, COMMENT_KEY]
-    )
     return (
         empty_delta_product_artist_link_df,
         delta_artist_df,
-        empty_delta_artist_alias_df,
     )
 
 
@@ -252,7 +245,6 @@ def match_unmatched_artists_with_wikidata(
 def sanity_checks(
     delta_product_df: pd.DataFrame,
     delta_artist_df: pd.DataFrame,
-    delta_artist_alias_df: pd.DataFrame,
     applicative_artist_df: pd.DataFrame,
 ) -> None:
     """Perform comprehensive sanity checks on delta and applicative dataframes.
@@ -263,7 +255,6 @@ def sanity_checks(
     Args:
         delta_product_df (pd.DataFrame): Delta product dataframe (should be empty).
         delta_artist_df (pd.DataFrame): Delta artist dataframe with updates.
-        delta_artist_alias_df (pd.DataFrame): Delta artist alias dataframe (should be empty).
         applicative_artist_df (pd.DataFrame): Current applicative artist dataframe.
 
     Raises:
@@ -285,9 +276,6 @@ def sanity_checks(
         len(delta_product_df) == 0
     ), "Delta product dataframe is not empty. It should for metadata refresh."
     assert len(delta_artist_df) > 0, "Delta artist dataframe is empty."
-    assert (
-        len(delta_artist_alias_df) == 0
-    ), "Delta artist alias dataframe is not empty. It should for metadata refresh."
     assert len(applicative_artist_df) > 0, "Applicative artist dataframe is empty."
 
     # 2. Check columns
@@ -301,11 +289,6 @@ def sanity_checks(
         ACTION_KEY,
         COMMENT_KEY,
     }, "Delta product dataframe has unexpected columns."
-    assert set(delta_artist_alias_df.columns) == {
-        *ARTIST_ALIASES_KEYS,
-        ACTION_KEY,
-        COMMENT_KEY,
-    }, "Delta artist alias dataframe has unexpected columns."
 
     # 3. Check that ARTIST_NAME_KEY and WIKI_ID_KEY are not null
     assert (
@@ -340,7 +323,6 @@ def main(
     wiki_file_name: str = typer.Option(),
     # Output files
     output_delta_artist_file_path: str = typer.Option(),
-    output_delta_artist_alias_file_path: str = typer.Option(),
     output_delta_product_artist_link_file_path: str = typer.Option(),
 ) -> None:
     """Main function to refresh artist metadata from wikidata.
@@ -361,7 +343,6 @@ def main(
         wiki_base_path (str): Base path for wikidata files.
         wiki_file_name (str): Name of the wikidata file to load.
         output_delta_artist_file_path (str): Output path for delta artist dataframe.
-        output_delta_artist_alias_file_path (str): Output path for delta artist alias dataframe.
         output_delta_product_artist_link_file_path (str): Output path for delta product link dataframe.
 
     Returns:
@@ -417,11 +398,9 @@ def main(
 
     # 5. Build delta artist dataframe
     logger.info("Building delta artist dataframe...")
-    delta_product_df, delta_artist_df, delta_artist_alias_df = (
-        create_delta_df_for_metadata_refresh(
-            refreshed_artists_df=refreshed_artists_df,
-            newly_matched_artists_df=newly_matched_artists_df,
-        )
+    delta_product_df, delta_artist_df = create_delta_df_for_metadata_refresh(
+        refreshed_artists_df=refreshed_artists_df,
+        newly_matched_artists_df=newly_matched_artists_df,
     )
 
     logger.success("Delta artist dataframe built successfully.")
@@ -432,7 +411,6 @@ def main(
     sanity_checks(
         delta_product_df=delta_product_df,
         delta_artist_df=delta_artist_df,
-        delta_artist_alias_df=delta_artist_alias_df,
         applicative_artist_df=applicative_artist_df,
     )
     logger.success("Sanity checks passed successfully.")
@@ -440,11 +418,10 @@ def main(
     # 7. Save files
     logger.info("Saving delta dataframes...")
     logger.info(
-        f"Saving delta artist dataframes to {output_delta_artist_file_path}, {output_delta_artist_alias_file_path} and {output_delta_product_artist_link_file_path}."
+        f"Saving delta artist dataframes to {output_delta_artist_file_path} and {output_delta_product_artist_link_file_path}."
     )
     delta_artist_df.to_parquet(output_delta_artist_file_path, index=False)
     delta_product_df.to_parquet(output_delta_product_artist_link_file_path, index=False)
-    delta_artist_alias_df.to_parquet(output_delta_artist_alias_file_path, index=False)
     logger.success("Delta dataframes saved successfully.")
 
 

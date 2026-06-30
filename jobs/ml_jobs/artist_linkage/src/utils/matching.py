@@ -5,7 +5,6 @@ from loguru import logger
 
 from src.constants import (
     ACTION_KEY,
-    ARTIST_ALIASES_KEYS,
     ARTIST_DESCRIPTION_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
@@ -127,7 +126,7 @@ def create_artists_tables(
     artist_df=None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Create delta tables for products, artists, and artist aliases with action tracking.
+    Create delta tables for products artist links and artists with action tracking.
     This function processes various product and artist dataframes to create delta tables
     that track additions and removals for database synchronization purposes.
     Args:
@@ -149,8 +148,6 @@ def create_artists_tables(
               (add/remove) and comments describing the operation type.
             - delta_artist_df: DataFrame with new artists to be added, deduplicated
               and sorted by artist_id, wikidata_id, img, and artist_description.
-            - delta_artist_alias_df: DataFrame with new artist aliases to be added,
-              deduplicated.
     Note:
         All returned dataframes include 'action' and 'comment' columns for tracking
         the type of operation being performed.
@@ -206,20 +203,13 @@ def create_artists_tables(
         .drop_duplicates()
         .assign(**{ACTION_KEY: Action.add, COMMENT_KEY: Comment.new_artist})
     )
-    delta_artist_alias_df = (
-        exploded_artist_alias_df.loc[:, ARTIST_ALIASES_KEYS]
-        .drop_duplicates()
-        .assign(**{ACTION_KEY: Action.add, COMMENT_KEY: Comment.new_artist_alias})
-    )
 
     logger.info(f"Created {len(delta_artist_df)} new artists.")
-    logger.info(f"Created {len(delta_artist_alias_df)} new artist aliases.")
     logger.info(f"Created {len(delta_product_artist_link_df)} product-artist links.")
 
     return (
         delta_product_artist_link_df,
         delta_artist_df,
-        delta_artist_alias_df,
     )
 
 
@@ -268,8 +258,8 @@ def perform_wikidata_category_matching(
         match_per_category_no_namesakes(new_artist_clusters_df, wiki_df)
         .assign(has_namesake=False)
         .loc[
-            lambda df: ~df[ARTIST_ID_KEY].isin(
-                matched_namesakes_df[ARTIST_ID_KEY].unique()
+            lambda df: (
+                ~df[ARTIST_ID_KEY].isin(matched_namesakes_df[ARTIST_ID_KEY].unique())
             )
         ]
     )
@@ -345,9 +335,11 @@ def match_artists_with_wikidata(
     # 5. Remap matched_df with wiki_to_artist_mapping
     matched_with_ids_df = matched_df.assign(
         **{
-            ARTIST_ID_KEY: lambda df: df[WIKIDATA_ID_KEY]
-            .map(wiki_to_artist_mapping)
-            .fillna(df[ARTIST_ID_KEY]),
+            ARTIST_ID_KEY: lambda df: (
+                df[WIKIDATA_ID_KEY]
+                .map(wiki_to_artist_mapping)
+                .fillna(df[ARTIST_ID_KEY])
+            ),
         },
         postprocessed_artist_name=lambda df: df.wiki_artist_name.fillna(
             df[ARTIST_NAME_TO_MATCH_KEY]
@@ -382,8 +374,9 @@ def match_per_category_no_namesakes(
     for pass_category, wiki_category in CATEGORY_MAPPING.items():
         # Select artist df for current category
         artists_per_category_df = artists_df.loc[
-            lambda df, pass_category=pass_category: df.offer_category_id
-            == pass_category
+            lambda df, pass_category=pass_category: (
+                df.offer_category_id == pass_category
+            )
         ]
 
         # Select wikidata artists for current category (remove namesaked ones)
@@ -422,8 +415,9 @@ def match_namesakes_per_category(
 
     # Build matching score per alias
     wikidata_df = wikidata_df.assign(
-        alias_matching_score=lambda df: df.matching_score
-        + 0.5 * (df.wiki_artist_name == df.raw_alias).astype(int)
+        alias_matching_score=lambda df: (
+            df.matching_score + 0.5 * (df.wiki_artist_name == df.raw_alias).astype(int)
+        )
     )
 
     # For each category, select the best wikidata entry per alias (keep namesakes) and match with artists_df
@@ -431,8 +425,9 @@ def match_namesakes_per_category(
     for pass_category, wiki_categories in CATEGORY_MAPPING.items():
         # Select artist df for current category
         artists_per_category_df = artists_df.loc[
-            lambda df, pass_category=pass_category: df.offer_category_id
-            == pass_category
+            lambda df, pass_category=pass_category: (
+                df.offer_category_id == pass_category
+            )
         ]
 
         # Select namesaked wikidata artists for current category

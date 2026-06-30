@@ -57,7 +57,6 @@ APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME = (
 )
 ML_METADATA_ARTIST_SCORE_GCS_FILENAME = "ml_metadata_artist_score.parquet"
 ML_METADATA_PRODUCT_STATS_GCS_FILENAME = "ml_metadata_product_stats.parquet"
-DELTA_ARTIST_ALIAS_GCS_FILENAME = "delta_artist_alias.parquet"
 DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME = "delta_product_artist_link.parquet"
 DELTA_ARTISTS_GCS_FILENAME_01 = "01_delta_artist.parquet"
 DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME_02 = "02_delta_artist_with_metadata.parquet"
@@ -107,11 +106,6 @@ GCS_TO_DELTA_TABLES = [
     },
     {
         "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
-        "table_id": "delta_artist_alias",
-        "filename": DELTA_ARTIST_ALIAS_GCS_FILENAME,
-    },
-    {
-        "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
         "table_id": "delta_product_artist_link",
         "filename": DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME,
     },
@@ -138,7 +132,7 @@ Updates the existing artist database with new products only.
 **Steps:**
 - Links new products to existing artists or creates new artist entries
 - Enriches delta artist data with Wikimedia Commons licenses
-- Loads delta tables (delta_artist, delta_artist_alias, delta_product_artist_link) into BigQuery
+- Loads delta tables (delta_artist, delta_product_artist_link) into BigQuery
 
 **Use case:** Regular updates to link newly added products to the artist database.
 
@@ -160,7 +154,7 @@ Identifies and merges duplicate artist entries based on namesake analysis and pr
 - Generates embeddings for product offer names associated with these artists.
 - Compares product embeddings to find matches between namesake artists.
 - Merges artists if enough product similarities are found.
-- Updates artist, artist alias, and product-artist link tables in BigQuery.
+- Updates artist and product-artist link tables in BigQuery.
 
 **Use case:** Cleaning up the artist database by merging duplicate entries created by distinct providers or data errors.
 
@@ -318,7 +312,6 @@ with DAG(
             --product-embeddings-filepath {os.path.join(STORAGE_BASE_PATH, "product_embeddings.parquet")} \
             --artist-score-filepath {os.path.join(STORAGE_BASE_PATH, ML_METADATA_ARTIST_SCORE_GCS_FILENAME)} \
             --output-delta-artist-filepath {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_05)} \
-            --output-delta-artist-alias-filepath {os.path.join(STORAGE_BASE_PATH, DELTA_ARTIST_ALIAS_GCS_FILENAME)} \
             --output-delta-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME)}
             """,
     )
@@ -340,7 +333,6 @@ with DAG(
             --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
             --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
             --output-delta-artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME_01)} \
-            --output-delta-artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTIST_ALIAS_GCS_FILENAME)} \
             --output-delta-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME)}
             """,
     )
@@ -362,7 +354,6 @@ with DAG(
             --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
             --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
             --output-delta-artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME_01)} \
-            --output-delta-artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTIST_ALIAS_GCS_FILENAME)} \
             --output-delta-product-artist-link-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME)}
             """,
     )

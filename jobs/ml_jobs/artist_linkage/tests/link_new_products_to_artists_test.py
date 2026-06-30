@@ -20,7 +20,6 @@ def test_link_new_products_to_artists(tmp_path):
     product_file = tmp_path / "product.parquet"
 
     output_delta_artist = tmp_path / "delta_artist.parquet"
-    output_delta_artist_alias = tmp_path / "delta_artist_alias.parquet"
     output_delta_product_link = tmp_path / "delta_product_link.parquet"
 
     # Existing database artist:
@@ -92,17 +91,12 @@ def test_link_new_products_to_artists(tmp_path):
             wiki_base_path=str(tmp_path),
             wiki_file_name="wiki.parquet",
             output_delta_artist_file_path=str(output_delta_artist),
-            output_delta_artist_alias_file_path=str(output_delta_artist_alias),
             output_delta_product_artist_link_filepath=str(output_delta_product_link),
         )
 
     # 4. Load outputs and verify
     delta_artist_df = pd.read_parquet(output_delta_artist)
-    delta_artist_alias_df = pd.read_parquet(output_delta_artist_alias)
     delta_product_link_df = pd.read_parquet(output_delta_product_link)
-
-    # Verify artist aliases:
-    assert len(delta_artist_alias_df) >= 2
 
     # Verify products:
     # 2 new products should be in delta_product_link_df (product 2 and product 3)

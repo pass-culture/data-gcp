@@ -36,3 +36,5 @@ models:
         description: "{{ doc('column__in_scope') }}"
         data_tests:
           - not_null
+      - name: dashboard_parameters
+        description: "{{ doc('column__dashboard_parameters') }}"

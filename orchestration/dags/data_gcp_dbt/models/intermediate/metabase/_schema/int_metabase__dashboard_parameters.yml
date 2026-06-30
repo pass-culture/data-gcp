@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: int_metabase__dashboard_parameters
+    description: "{{ doc('description__int_metabase__dashboard_parameters') }}"
+    columns:
+      - name: dashboard_id
+        description: "{{ doc('column__dashboard_id') }}"
+        data_tests:
+          - not_null
+          - unique
+      - name: dashboard_parameters
+        description: "{{ doc('column__dashboard_parameters') }}"

@@ -44,6 +44,17 @@ It reports file/model -> test existence (a fast "what has zero tests" list), not
 
 **Step 4 — what counts as a gap** depends on the domain (uncovered functions/branches for Python; uncovered models/columns/freshness for dbt). The domain reference file lists the specific checks. Report gaps before writing anything so the user can prioritize.
 
+**Step 4b — classify every gap by severity** using the four levels below. Always include the severity in the audit report so the user can triage.
+
+| Severity | Criteria |
+|---|---|
+| 🚨 **Critique** | A bug would produce **silently wrong results** (incorrect metrics, corrupted data, wrong predictions) with no exception raised. Covers: data transformation pipelines, metric computations, split/aggregation logic where bad output is indistinguishable from good output at runtime. |
+| 🔴 **Élevé** | A bug would **break a key business flow** or leave an important branch (e.g. CV vs non-CV, logistic vs linear growth, weekly vs daily frequency) completely unvalidated. Covers: conditional evaluation paths, core model methods (`evaluate`, `run_backtest`, `predict`), feature-engineering branches. |
+| 🟠 **Moyen** | Logic is probably correct but has **no safety net**: error-handling paths (ValueError, missing columns), factory/dispatch functions, concrete shared utilities, serialization. A regression here would be caught by users, not by CI. |
+| 🟡 **Faible** | External-boundary wrappers (GCP, MLflow, HTTP), visualisation helpers, and orchestration entry points. Bugs are visible quickly; mocking cost is high relative to the logic tested. |
+
+Apply these rules in order — assign the **highest** level that matches. Report all gaps grouped by severity before writing any test.
+
 ## Step 3: Create tests
 
 1. Read the matching reference file for the exact conventions (naming, fixtures, mocking, file location) — these differ per domain and matter for CI.

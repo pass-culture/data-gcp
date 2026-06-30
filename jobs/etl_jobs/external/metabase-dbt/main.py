@@ -61,12 +61,19 @@ def export_exposures(
     handler = MetabaseDBTHandler(
         airflow_bucket_name, airflow_bucket_manifest_path, local_manifest_path
     )
-    df = BigqueryDBTHandler().get_bq_metabase_internal_exposure(
-        dataset_name=exposure_dataset_name, table_name=exposure_table_name, limit=10
+    bigquery_handler = BigqueryDBTHandler()
+    candidates_df = bigquery_handler.get_exposure_candidates(
+        dataset_name=exposure_dataset_name, table_name=exposure_table_name
     )
 
-    collection_filters = df["metabase_collection_name"].unique().tolist()
+    collection_filters = bigquery_handler.candidate_collection_filters(candidates_df)
+    classification = bigquery_handler.build_classification_lookup(candidates_df)
+
     handler.export_exposures(collection_filters=collection_filters, output_path=".")
+    handler.inject_exposure_meta(
+        exposures_path="exposures.yml",
+        classification_by_asset=classification,
+    )
     handler.push_exposures_to_bucket(
         airflow_bucket_name=airflow_bucket_name,
         airflow_bucket_path=f"{airflow_bucket_base_folder}exposures.yml",

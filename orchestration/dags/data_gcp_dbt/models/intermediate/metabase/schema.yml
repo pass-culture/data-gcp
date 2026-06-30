@@ -27,3 +27,80 @@ models:
   - name: int_metabase__user
     description: |
       This model gives details about users from the Metabase instance.
+
+  - name: int_metabase__dashboard_markdown
+    description: |
+      Aggregates the in-dashboard markdown text widgets (visualization_settings.text
+      of card-less dashboard cards) into one markdown blob per dashboard. Populated
+      once `raw.metabase_report_dashboard_card` is replicated.
+    columns:
+      - name: dashboard_id
+        description: Metabase dashboard id.
+        data_tests:
+          - not_null
+          - unique
+      - name: dashboard_markdown
+        description: Concatenated markdown of the dashboard's text widgets, in layout order.
+
+  - name: int_metabase__asset_catalog
+    description: |
+      One row per Metabase asset (dashboard or card) with its placement in the
+      collection tree, the squad/tier/certified classification resolved by the
+      metabase-governance `taxonomy` job, usage signals, and (for dashboards) the
+      markdown / member-card context. The classified asset catalog used downstream
+      for retrieval routing and exposure selection.
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "(not certified) or (617 in unnest(ancestor_collection_ids))"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "(not in_scope) or (not is_excluded)"
+    columns:
+      - name: asset_id
+        description: Metabase id of the card or dashboard.
+        data_tests:
+          - not_null
+      - name: asset_kind
+        description: Whether the row is a 'card' or a 'dashboard'.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['card', 'dashboard']
+      - name: tier
+        description: Steering tier resolved from the ancestor collections.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['key_dashboard', 'thematique', 'chantier']
+      - name: certified
+        description: True when the certified ancestor collection (617) is in the chain.
+        data_tests:
+          - not_null
+      - name: in_scope
+        description: True when the asset's root collection is in scope and the asset is neither archived nor personal. In-scope rows are never excluded.
+        data_tests:
+          - not_null
+
+  - name: int_metabase__exposure_candidates
+    description: |
+      High-quality subset of int_metabase__asset_catalog selected for dbt exposure
+      generation: every in-scope, active, classified (tiered or certified) asset
+      plus a usage-based safety net. Replaces the legacy top-10-collections rule
+      consumed by the metabase-dbt export job.
+    columns:
+      - name: asset_id
+        description: Metabase id of the candidate card or dashboard.
+        data_tests:
+          - not_null
+      - name: collection_name
+        description: Name of the asset's collection (used as the export collection filter).
+        data_tests:
+          - not_null
+      - name: selection_reason
+        description: Why the asset was selected ('classified' or 'usage_safety_net').
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['classified', 'usage_safety_net']

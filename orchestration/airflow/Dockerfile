@@ -39,7 +39,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # 3. INSTALL UV
-COPY --from=ghcr.io/astral-sh/uv:0.11.5 /uv /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11.15 /uv /bin/
 
 # 4. INSTALL GCLOUD
 RUN curl --proto '=https' --proto-redir '=https' -fsSL \

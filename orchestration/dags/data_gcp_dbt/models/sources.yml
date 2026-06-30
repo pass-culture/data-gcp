@@ -177,6 +177,12 @@ sources:
       - name: zendesk_ticket
       - name: zendesk_survey_response
       - name: raw_titelive_products
+  - name: int_metabase
+    schema: int_metabase_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
+    tables:
+      # Written by the metabase-governance `taxonomy` job (not by dbt).
+      - name: collection_taxonomy
   - name: clean
     schema: clean_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"

@@ -150,6 +150,21 @@ class TestBuildPrompts:
         assert len(prompts) == 3
         assert prompts[1] == "x : b"
 
+    # --- 🚨 Critique: whitespace-only values silently omitted ---
+
+    def test_whitespace_only_value_omitted(self):
+        """A value made of only spaces must be treated like null and omitted from
+        the prompt without raising an exception — the silent-wrong-data risk."""
+        df = pd.DataFrame({"x": ["   "], "y": ["world"]})
+        prompts = _build_prompts(df, self.make_vector(["x", "y"]))
+        assert prompts == ["y : world"]
+
+    def test_empty_string_omitted(self):
+        """An empty string must also be treated as missing and omitted."""
+        df = pd.DataFrame({"x": [""], "y": ["world"]})
+        prompts = _build_prompts(df, self.make_vector(["x", "y"]))
+        assert prompts == ["y : world"]
+
 
 # ---------------------------------------------------------------------------
 # End-to-end embed_dataframe tests
@@ -182,3 +197,95 @@ class TestEmbedDataframe:
 
         # Verify encoder.encode was called
         assert mock_encoder.encode.called
+
+    # --- 🚨 Critique: embedding values correctly assigned per vector column ---
+
+    def test_embedding_values_correctly_assigned_per_vector(self):
+        """Each vector column must hold its own encoder's output.
+        A regression where both columns receive the same embeddings would be
+        silently wrong (no exception raised, bad predictions)."""
+        mock_encoder_a = MagicMock()
+        mock_encoder_a.device = "cpu"
+        mock_encoder_a.encode.return_value = np.array([[1.0, 2.0], [3.0, 4.0]])
+
+        mock_encoder_b = MagicMock()
+        mock_encoder_b.device = "cpu"
+        mock_encoder_b.encode.return_value = np.array([[7.0, 8.0], [9.0, 10.0]])
+
+        df = pd.DataFrame(
+            {
+                "item_id": ["a", "b"],
+                "content_hash": ["h1", "h2"],
+                "name": ["Alice", "Bob"],
+                "category": ["cat1", "cat2"],
+            }
+        )
+        vectors = [
+            Vector(name="emb_a", features=["name"], encoder_name="model_a"),
+            Vector(name="emb_b", features=["category"], encoder_name="model_b"),
+        ]
+        encoders = {"model_a": mock_encoder_a, "model_b": mock_encoder_b}
+
+        result = embed_dataframe(df, vectors, encoders, gpu_count=0)
+
+        assert result["emb_a"].tolist() == [[1.0, 2.0], [3.0, 4.0]]
+        assert result["emb_b"].tolist() == [[7.0, 8.0], [9.0, 10.0]]
+
+    # --- 🚨 Critique: item_id ↔ embedding positional alignment ---
+
+    def test_item_id_alignment_preserved(self):
+        """The embedding in each row must correspond to the item_id of that row.
+        Misalignment would silently associate wrong items with wrong embeddings."""
+        mock_encoder = MagicMock()
+        mock_encoder.device = "cpu"
+        # Row 0 → [10.0], row 1 → [20.0]
+        mock_encoder.encode.return_value = np.array([[10.0], [20.0]])
+
+        df = pd.DataFrame(
+            {
+                "item_id": ["item_a", "item_b"],
+                "content_hash": ["hash1", "hash2"],
+                "feat": ["val1", "val2"],
+            }
+        )
+        vectors = [Vector(name="emb", features=["feat"], encoder_name="model")]
+        encoders = {"model": mock_encoder}
+
+        result = embed_dataframe(df, vectors, encoders, gpu_count=0)
+
+        assert result.iloc[0]["item_id"] == "item_a"
+        assert result.iloc[0]["emb"] == [10.0]
+        assert result.iloc[1]["item_id"] == "item_b"
+        assert result.iloc[1]["emb"] == [20.0]
+
+    # --- 🔴 Élevé: prompt cache reuse (else branch — production's common path) ---
+
+    def test_prompt_cache_reuses_for_shared_features(self):
+        """Two vectors with identical features (the exact production pattern in
+        default.yaml) must reuse the cached prompts: _build_prompts must be called
+        only once, not twice."""
+        mock_encoder = MagicMock()
+        mock_encoder.device = "cpu"
+        mock_encoder.encode.return_value = np.array([[1.0], [2.0]])
+
+        df = pd.DataFrame(
+            {
+                "item_id": ["a", "b"],
+                "content_hash": ["h1", "h2"],
+                "name": ["Alice", "Bob"],
+            }
+        )
+        vectors = [
+            Vector(name="emb1", features=["name"], encoder_name="model"),
+            Vector(name="emb2", features=["name"], encoder_name="model"),
+        ]
+        encoders = {"model": mock_encoder}
+
+        with patch("embedding._build_prompts", wraps=_build_prompts) as spy:
+            result = embed_dataframe(df, vectors, encoders, gpu_count=0)
+            # Cache hit for second vector → _build_prompts called only once
+            assert spy.call_count == 1
+
+        assert "emb1" in result.columns
+        assert "emb2" in result.columns
+        assert len(result) == 2

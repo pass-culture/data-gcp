@@ -55,11 +55,40 @@ It reports file/model -> test existence (a fast "what has zero tests" list), not
 
 Apply these rules in order — assign the **highest** level that matches. Report all gaps grouped by severity before writing any test.
 
+## Step 2b — Scope from a diff or recent commits (optional)
+
+When the user asks to write or update tests **based on changes** rather than a full service audit, narrow the scope first using git, then run the standard audit (Step 2) on only the changed files.
+
+### Get the changed source files
+
+```bash
+# From the current working diff (staged + unstaged):
+git --no-pager diff HEAD --name-only --diff-filter=ACMR | grep '\.py$'
+
+# From the last N commits (replace N):
+git --no-pager diff HEAD~N HEAD --name-only --diff-filter=ACMR | grep '\.py$'
+
+# See the actual changes (useful to understand what logic changed):
+git --no-pager diff HEAD                 # working diff
+git --no-pager diff HEAD~N HEAD          # last N commits
+```
+
+> Always use `git --no-pager` for any command that outputs diff or log content. Without it, pagers like `less`, `more`, or `most` may block output when the agent reads the terminal, causing the command to hang or return empty results.
+
+Filter to only **source files** (exclude existing test files from the list — they are the output, not the input). Then for each changed source file:
+
+1. Read the diff to understand exactly which functions/branches were added or modified.
+2. Check whether a corresponding test file already exists (mirror path, suffix convention).
+3. Run the audit Step 4 checklist **only on those changed functions** — new code must be covered, modified code must have its affected branches re-checked.
+4. Report the targeted gap list (changed functions without tests, or tests that no longer match the new behavior), then proceed to Step 3.
+
+> If the diff touches multiple services or domains, group by service and handle each independently.
+
 ## Step 3: Create tests
 
 1. Read the matching reference file for the exact conventions (naming, fixtures, mocking, file location) — these differ per domain and matter for CI.
 2. **Mirror the closest existing test** in that same service/model. Match its structure, naming, fixture style, and assertion style rather than introducing a new pattern.
-3. Write tests for the gaps surfaced in Step 2, prioritizing high-risk untested behavior.
+3. Write tests for the gaps surfaced in Step 2 (or Step 2b if scoped to a diff), prioritizing high-risk untested behavior.
 4. **Run pre-commit checks** on the new files before running the tests (see §Pre-commit rules below). Fix all violations, then re-run until both ruff and the end-of-file fixer are clean.
 5. Run the new tests (command is in the reference file) and iterate until green.
 6. Report what was added and the new coverage picture.

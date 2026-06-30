@@ -5,50 +5,61 @@ description: 'Review a pull request and rate it /10 on bugs, security, improveme
 
 # PR Review Skill
 
-Review the PR diff and provide a concise score out of 10 with feedback on each axis below.
+## Context Gathering
+
+1. Use `git diff master...HEAD` to get changes.
+2. Read adjacent code for each modified file.
+3. Check for new/modified tests related to changes.
+4. If dependency files changed (`pyproject.toml`, `uv.lock`, `requirements.txt`), use the `validate_cves` tool.
 
 ## Evaluation Criteria
 
-### 1. Bugs
-- Logic errors, off-by-one, race conditions, unhandled edge cases.
-- Missing null/empty checks, incorrect types.
+Hints below are additional focus areas — use your own judgment to evaluate thoroughly.
 
-### 2. Security
-- Vulnerable or outdated packages (check CVEs when relevant).
-- Secrets in code, SQL injection, unsafe deserialization, overly permissive permissions.
+1. **Bugs** (weight: critical)
+2. **Security** (weight: critical)
+3. **Tests & Reliability** (weight: high)
+4. **Improvements** (weight: medium) — simpler libraries, unnecessary complexity, performance.
+5. **Technical Quality** (weight: medium) — AHA rule: only extract when used **>3 times**.
+6. **Consistency** (weight: low) — match patterns/naming/style of surrounding code.
 
-### 3. Improvements
-- Could a better library simplify this?
-- Unnecessary complexity—can the code be simplified without losing clarity?
-- Over-engineering vs. pragmatic solutions.
+## Severity Levels
 
-### 4. Technical Quality
-- Code is clear and readable.
-- Well separated into focused functions/modules.
-- Apply AHA programming: only extract/reuse when something is used **more than 3 times**; premature abstraction is worse than duplication.
+- 🔴 **Blocker**: Must fix before merge.
+- 🟠 **Important**: Should fix.
+- 🟡 **Minor**: Nice to fix.
 
-### 5. Consistency
-- The code follows the same patterns, naming conventions, and style as the surrounding/adjacent code in the repo.
+## Scoring Rules
+
+- Any 🔴 → Overall capped at **5/10**.
+- Any 🟠 → Overall capped at **7/10**.
+- Bugs & Security count **2x** in weighted average.
 
 ## Output Format
 
 ```
-## PR Review — <PR title or short summary>
+## PR Review — <PR title>
 
-| Criteria         | Score /10 | Comments |
-|------------------|-----------|----------|
-| Bugs             |           |          |
-| Security         |           |          |
-| Improvements     |           |          |
-| Technical Quality|           |          |
-| Consistency      |           |          |
-| **Overall**      |   **/10** |          |
+| Criteria           | Status | Comments |
+|--------------------|--------|----------|
+| Bugs               | 🟢/🟡/🟠/🔴 |          |
+| Security           | 🟢/🟡/🟠/🔴 |          |
+| Tests & Reliability| 🟢/🟡/🟠/🔴 |          |
+| Improvements       | 🟢/🟡/🟠/🔴 |          |
+| Technical Quality  | 🟢/🟡/🟠/🔴 |          |
+| Consistency        | 🟢/🟡/🟠/🔴 |          |
 
-### Key Findings
-- …
+**Overall: X/10**
 
+### 🔴 Blockers
+### 🟠 Important
+### 🟡 Minor
+### 👍 What's Done Well
 ### Suggestions
-- …
 ```
 
-Keep feedback actionable and concise. Praise what's done well.
+## Guidelines
+
+- Reference specific lines/files. Be actionable. Praise what's good.
+- Don't nitpick formatting if a linter is configured.
+- When unsure about a pattern, check similar code in the repo first.

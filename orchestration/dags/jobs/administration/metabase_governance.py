@@ -5,6 +5,7 @@ from airflow.models import Param
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
+    BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -49,7 +50,15 @@ with DAG(
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        )
+        ),
+        "taxonomy_source_dataset": Param(default=BIGQUERY_RAW_DATASET, type="string"),
+        "taxonomy_source_table": Param(default="metabase_collection", type="string"),
+        "taxonomy_destination_dataset": Param(
+            default=BIGQUERY_RAW_DATASET, type="string"
+        ),
+        "taxonomy_destination_table": Param(
+            default="collection_taxonomy", type="string"
+        ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
@@ -100,7 +109,13 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run python main.py taxonomy ",
+        command=(
+            "uv run python main.py taxonomy "
+            "--dataset-name {{ params.taxonomy_source_dataset }} "
+            "--table-name {{ params.taxonomy_source_table }} "
+            "--destination-dataset {{ params.taxonomy_destination_dataset }} "
+            "--destination-table {{ params.taxonomy_destination_table }}"
+        ),
         do_xcom_push=True,
     )
 

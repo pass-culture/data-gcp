@@ -3,10 +3,11 @@ import re
 
 import pandas as pd
 
-from core.utils import INT_METABASE_DATASET, PROJECT_NAME, RAW_METABASE_DATASET
+from core.utils import PROJECT_NAME, RAW_METABASE_DATASET
 
 logger = logging.getLogger(__name__)
 
+COLLECTION_TABLE = "metabase_collection"
 TAXONOMY_TABLE = "collection_taxonomy"
 
 
@@ -37,12 +38,13 @@ def _parse_location_ids(location):
     return [int(part) for part in location.strip("/").split("/") if part]
 
 
-def load_collections(dataset=None):
+def load_collections(dataset=None, table=None):
     """Load the collection tree from the raw Metabase replication."""
     dataset = dataset or RAW_METABASE_DATASET
+    table = table or COLLECTION_TABLE
     query = f"""
         SELECT collection_id, collection_name, location, archived, personal_owner_id
-        FROM {dataset}.metabase_collection
+        FROM {dataset}.{table}
     """
     return pd.read_gbq(query, project_id=PROJECT_NAME, use_bqstorage_api=False)
 
@@ -116,9 +118,11 @@ def build_taxonomy(collections_df, config):
     return pd.DataFrame(rows)
 
 
-def run_taxonomy(config, dataset=None, destination_dataset=None):
+def run_taxonomy(
+    config, dataset=None, table=None, destination_dataset=None, destination_table=None
+):
     """Resolve the collection taxonomy and write it to BigQuery."""
-    collections_df = load_collections(dataset=dataset)
+    collections_df = load_collections(dataset=dataset, table=table)
     logger.info("Loaded %d collections from raw", len(collections_df))
 
     taxonomy_df = build_taxonomy(collections_df, config)
@@ -130,8 +134,9 @@ def run_taxonomy(config, dataset=None, destination_dataset=None):
         len(taxonomy_df),
     )
 
-    destination_dataset = destination_dataset or INT_METABASE_DATASET
-    destination = f"{destination_dataset}.{TAXONOMY_TABLE}"
+    destination_dataset = destination_dataset or RAW_METABASE_DATASET
+    destination_table = destination_table or TAXONOMY_TABLE
+    destination = f"{destination_dataset}.{destination_table}"
     taxonomy_df.to_gbq(destination, project_id=PROJECT_NAME, if_exists="replace")
     logger.info("Wrote %s.%s", PROJECT_NAME, destination)
 

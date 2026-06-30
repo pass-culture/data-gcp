@@ -5,6 +5,7 @@ from airflow.models import Param
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
+    BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -22,7 +23,7 @@ from common.utils import (
 
 DAG_NAME = "metabase_governance"
 GCE_INSTANCE = f"metabase-governance-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/external/metabase-archiving"
+BASE_PATH = "data-gcp/jobs/etl_jobs/external/metabase-governance"
 dag_config = {
     "PROJECT_NAME": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
@@ -49,7 +50,15 @@ with DAG(
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        )
+        ),
+        "taxonomy_source_dataset": Param(default=BIGQUERY_RAW_DATASET, type="string"),
+        "taxonomy_source_table": Param(default="metabase_collection", type="string"),
+        "taxonomy_destination_dataset": Param(
+            default=BIGQUERY_RAW_DATASET, type="string"
+        ),
+        "taxonomy_destination_table": Param(
+            default="collection_taxonomy", type="string"
+        ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
@@ -95,6 +104,21 @@ with DAG(
         do_xcom_push=True,
     )
 
+    compute_metabase_taxonomy_op = SSHGCEOperator(
+        task_id="compute_metabase_taxonomy_op",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command=(
+            "uv run python main.py taxonomy "
+            "--dataset-name {{ params.taxonomy_source_dataset }} "
+            "--table-name {{ params.taxonomy_source_table }} "
+            "--destination-dataset {{ params.taxonomy_destination_dataset }} "
+            "--destination-table {{ params.taxonomy_destination_table }}"
+        ),
+        do_xcom_push=True,
+    )
+
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
@@ -105,5 +129,6 @@ with DAG(
         >> archive_metabase_cards_op
         >> sync_permissions_op
         >> compute_metabase_dependencies_op
+        >> compute_metabase_taxonomy_op
         >> gce_instance_stop
     )

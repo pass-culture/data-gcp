@@ -83,7 +83,7 @@ def retrieve_artist_wikidata_id(
 def create_delta_df_for_metadata_refresh(
     refreshed_artists_df: pd.DataFrame,
     newly_matched_artists_df: pd.DataFrame,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Create delta dataframes for metadata refresh operation.
 
     This function creates the necessary delta dataframes for updating artist metadata,

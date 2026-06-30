@@ -125,7 +125,7 @@ def create_artists_tables(
     products_to_remove_df=None,
     preproc_linked_products_df=None,
     artist_df=None,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Create delta tables for products, artists, and artist aliases with action tracking.
     This function processes various product and artist dataframes to create delta tables

@@ -469,7 +469,7 @@
       "available_stock_information": "total_available_stock"
     }
   },
-  "analytics_prod.firebase_aggregated_search_events": {
+  "analytics_stg.firebase_aggregated_search_events": {
     "columns_to_migrate": {
       "nb_offers_consulted": "total_offers_consulted",
       "nb_offers_added_to_favorites": "total_offers_added_to_favorites",

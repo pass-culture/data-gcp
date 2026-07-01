@@ -19,7 +19,44 @@ from common.config import (
 from common.hooks.gce import DeferrableSSHGCEJobManager, GCEHook, SSHGCEJobManager
 from common.hooks.image import MACHINE_TYPE
 from common.hooks.network import BASE_NETWORK_LIST, GKE_NETWORK_LIST
-from common.triggers.gce import DeferrableSSHJobMonitorTrigger
+from common.triggers.gce import (
+    DeferrableSSHJobMonitorTrigger,
+    GCEInstanceRunningTrigger,
+)
+
+
+def parse_duration_to_seconds(value: t.Union[str, int, None]) -> t.Optional[int]:
+    """Parse a duration into seconds.
+
+    Accepts an int (seconds), a plain numeric string ("3600"), or a compound
+    duration string like "1d2h3m4s", "12h", "90m". Returns None for empty input.
+    """
+    if value is None or value == "":
+        return None
+    if isinstance(value, int):
+        return value
+    value = str(value).strip()
+    if value.isdigit():
+        return int(value)
+    units = {"d": 86400, "h": 3600, "m": 60, "s": 1}
+    total = 0
+    num = ""
+    matched = False
+    for char in value:
+        if char.isdigit():
+            num += char
+        elif char in units and num:
+            total += int(num) * units[char]
+            num = ""
+            matched = True
+        else:
+            raise ValueError(f"Invalid duration string: {value!r}")
+    if num:  # trailing bare number is treated as seconds
+        total += int(num)
+        matched = True
+    if not matched:
+        raise ValueError(f"Invalid duration string: {value!r}")
+    return total
 
 
 class StartGCEOperator(BaseOperator):
@@ -34,6 +71,9 @@ class StartGCEOperator(BaseOperator):
         "gpu_type",
         "gpu_count",
         "additional_scopes",
+        "provisioning_model",
+        "max_run_duration",
+        "request_valid_for_duration",
     ]
 
     def __init__(
@@ -48,6 +88,11 @@ class StartGCEOperator(BaseOperator):
         gpu_type: t.Optional[str] = None,
         gpu_count: int = 0,
         additional_scopes: t.List[str] = None,
+        provisioning_model: str = "STANDARD",
+        max_run_duration: t.Union[str, int, None] = None,
+        request_valid_for_duration: t.Union[str, int, None] = None,
+        deferrable: bool = False,
+        poll_interval: int = 60,
         *args,
         **kwargs,
     ):
@@ -62,12 +107,22 @@ class StartGCEOperator(BaseOperator):
         self.use_gke_network = use_gke_network
         self.gce_zone = gce_zone
         self.additional_scopes = additional_scopes or []
+        self.provisioning_model = provisioning_model
+        self.max_run_duration = max_run_duration
+        self.request_valid_for_duration = request_valid_for_duration
+        self.deferrable = deferrable
+        self.poll_interval = poll_interval
 
     def execute(self, context) -> None:
         self.gpu_count = int(self.gpu_count)
         image_type = MACHINE_TYPE["cpu"] if self.gpu_count == 0 else MACHINE_TYPE["gpu"]
         gce_networks = (
             GKE_NETWORK_LIST if self.use_gke_network is True else BASE_NETWORK_LIST
+        )
+        is_flex_start = (self.provisioning_model or "STANDARD").upper() == "FLEX_START"
+        max_run_seconds = parse_duration_to_seconds(self.max_run_duration)
+        request_valid_seconds = parse_duration_to_seconds(
+            self.request_valid_for_duration
         )
         with GCEHook(
             source_image_type=image_type,
@@ -76,6 +131,9 @@ class StartGCEOperator(BaseOperator):
             gce_zone=self.gce_zone,
             additional_scopes=self.additional_scopes,
         ) as hook:
+            # For a deferrable flex-start start we submit the (async, queued) insert
+            # and hand off polling to the trigger so the worker slot is freed while
+            # the VM is PENDING. Otherwise start_vm blocks until the VM is RUNNING.
             hook.start_vm(
                 self.instance_name,
                 self.instance_type,
@@ -83,7 +141,40 @@ class StartGCEOperator(BaseOperator):
                 labels=self.labels,
                 gpu_type=self.gpu_type,
                 gpu_count=self.gpu_count,
+                provisioning_model=self.provisioning_model,
+                max_run_duration_seconds=max_run_seconds,
+                request_valid_for_duration_seconds=request_valid_seconds,
+                wait_for_running=not (is_flex_start and self.deferrable),
             )
+
+        if is_flex_start and self.deferrable:
+            # Cover the max queue wait plus provisioning/boot margin.
+            timeout = (request_valid_seconds or 7200) + 1800
+            self.log.info(
+                f"Flex-start request for {self.instance_name} submitted; deferring "
+                "until the instance reaches RUNNING."
+            )
+            self.defer(
+                trigger=GCEInstanceRunningTrigger(
+                    instance_name=self.instance_name,
+                    zone=self.gce_zone,
+                    poll_interval=self.poll_interval,
+                    timeout=timeout,
+                ),
+                method_name="execute_complete",
+            )
+
+    def execute_complete(
+        self, context: t.Dict[str, t.Any], event: t.Optional[t.Dict[str, t.Any]] = None
+    ) -> None:
+        if event is None:
+            raise AirflowException("No event received in trigger callback")
+        if event.get("status") == "running_ok":
+            self.log.info(f"Instance {event.get('instance')} is RUNNING.")
+            return
+        raise AirflowException(
+            event.get("message", "Flex-start instance failed to start")
+        )
 
 
 class CleanGCEOperator(BaseOperator):

@@ -75,6 +75,8 @@ DAG_DOC = """
     *gpu_type* : If you decide to embedd all the catalogue, we highly recommend to use 4 L4 GPUs, in europe-west1-c (to avoid stockout issues in europe-west1-b). If you have a smaller catalogue or if you want to embed only the new items, you can use 4 T4 GPU, which is more widely available across zones.
     *gpu_count* : number of GPUs to use for embedding (only applicable for GPU instance types). Make sure to select a machine type that supports the number of GPUs you want to use.
     *gce_zone* : GCE zone to use for embedding. Only europe-west1-c and europe-west1-b have L4 GPUs. europe-west1-d has T4 GPUs. Stockout are very frequent.
+    *provisioning_model* : STANDARD (default) requests the GPU immediately and fails on stockout. FLEX_START uses Dynamic Workload Scheduler (DWS): instead of failing, the request is queued until GPU capacity frees up (queue held for up to *request_valid_for_duration*, hard-capped at 2h by GCP). Uses preemptible quota. Best for the full-catalogue L4 run given frequent stockouts.
+    *max_run_duration* / *request_valid_for_duration* : FLEX_START only. See parameter descriptions.
 
     *Hint:* For L4 GPUs, make sure to select a compatible g2 machine. The Number of L4 GPUs you can attach to a G2 depends on its RAM.
     Here is the breakdown:
@@ -134,6 +136,29 @@ with DAG(
                         """,
         ),
         "gce_zone": Param(default="europe-west1-c", enum=GCE_ZONES),
+        "provisioning_model": Param(
+            default="FLEX_START",
+            enum=["STANDARD", "FLEX_START"],
+            description="""VM provisioning model. STANDARD requests capacity
+                        immediately (fails on stockout). FLEX_START uses Dynamic
+                        Workload Scheduler (DWS) to queue the GPU request until
+                        capacity is available (queue held for up to
+                        request_valid_for_duration, max 2h).""",
+        ),
+        "max_run_duration": Param(
+            default="12h",
+            type="string",
+            description="""(FLEX_START only) Max VM run duration before it is
+                        auto-deleted. Accepts e.g. '12h', '1d2h', or seconds.
+                        Max 7 days.""",
+        ),
+        "request_valid_for_duration": Param(
+            default="2h",
+            type="string",
+            description="""(FLEX_START only) How long DWS holds the request in
+                        queue while the VM is PENDING. Accepts e.g. '2h', '90m'.
+                        Must be 0 or between 90s and 2h.""",
+        ),
     },
 ) as dag:
     start = EmptyOperator(task_id="start")
@@ -147,6 +172,14 @@ with DAG(
         gpu_count="{{ params.gpu_count }}",
         gce_zone=GCE_ZONE_TEMPLATE,
         labels={"job_type": "extra_long_ml", "dag_name": DAG_NAME},
+        provisioning_model="{{ params.provisioning_model }}",
+        max_run_duration="{{ params.max_run_duration }}",
+        request_valid_for_duration="{{ params.request_valid_for_duration }}",
+        # Defer while a FLEX_START request sits queued so the worker slot is freed.
+        deferrable=True,
+        # Cover the max 2h DWS queue wait plus provisioning/boot margin.
+        execution_timeout=timedelta(hours=3),
+        retries=3,
     )
 
     install_dependencies = InstallDependenciesOperator(

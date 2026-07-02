@@ -31,8 +31,13 @@ from config import (
     get_metabase_password,
 )
 from discovery.mapping import build_field_mapping, build_table_mapping
-from discovery.metabase import _sql_references_table, build_card_dependency_cache, get_impacted_cards_from_cache
-from migration.card import _get_stage_type, migrate_card
+from discovery.metabase import (
+    _sql_references_table,
+    build_card_dependency_cache,
+    build_dashboard_dependency_cache,
+    get_impacted_cards_from_cache,
+)
+from migration.card import _get_stage_type, migrate_card, migrate_dashboard
 
 app = typer.Typer(name="metabase-migration", help="Migrate Metabase cards after BigQuery table/column renames.")
 
@@ -144,12 +149,23 @@ def migrate(
 
     table_catalog = client.build_table_catalog(database_id)
 
+    global_impacted_card_ids = set()
+
     # --- Pre-build card dependency cache (once for all tables) ---
     if not card_ids_str:
         logger.info("Building card dependency cache for all tables...")
         _card_dep_cache = build_card_dependency_cache(client, table_catalog)
+        for legacy_key in tables_to_migrate.root.keys():
+            legacy_table = legacy_key.split(".")[1]
+            for impacted_card_id in get_impacted_cards_from_cache(legacy_table, _card_dep_cache):
+                global_impacted_card_ids.add(str(impacted_card_id))
     else:
         _card_dep_cache = None
+        for impacted_card_id in card_ids_str.split(","):
+            global_impacted_card_ids.add(impacted_card_id.strip())
+
+    logger.info("Building dashboard dependency cache for %d targeted cards...", len(global_impacted_card_ids))
+    _dash_dep_cache = build_dashboard_dependency_cache(client, global_impacted_card_ids)
 
     # --- Per-table migration loop ---
     any_table_failed = False
@@ -290,6 +306,35 @@ def migrate(
                     logger.info("✓ Migrated card %d (%s)", card_id, original_card.name)
                     log_entry["success"] = True
 
+                card_id_str = str(card_id)
+                if card_id_str in _dash_dep_cache:
+                    linked_dashboards = _dash_dep_cache[card_id_str]
+                    for dash_info in linked_dashboards:
+                        dash_id = dash_info["id"]
+                        dash_name = dash_info["name"]
+                        dash_detail = client.fetch_dashboard_details(dash_id)
+
+                        updated_dash = migrate_dashboard(
+                            dashboard_detail=dash_detail,
+                            card_id=card_id,
+                            field_mapping=field_mapping,
+                        )
+                        if updated_dash != dash_detail:
+                            if dry_run:
+                                _print_dashboard_diff(
+                                    original=dash_detail,
+                                    migrated=updated_dash,
+                                    dash_id=dash_id,
+                                    dash_name=dash_name,
+                                    card_id=card_id,
+                                )
+                            else:
+                                response = client.session.put(
+                                    f"{client.host}/api/dashboard/{dash_id}", json=updated_dash
+                                )
+                                response.raise_for_status()
+                                logger.info("Reconnected filters for dashboard '%s'", dash_name)
+
                 table_success += 1
 
             except Exception as e:
@@ -345,6 +390,22 @@ def _print_diff(original: Any, migrated: Any, card_id: int) -> None:
 
     _diff_recursive(original_data, migrated_data, path="")
 
+    print()
+
+
+def _print_dashboard_diff(
+    original: dict[str, Any],
+    migrated: dict[str, Any],
+    dash_id: int,
+    dash_name: str,
+    card_id: int,
+) -> None:
+    """Print a human-readable diff between original and migrated dashboard filters."""
+    print(f"\n{'=' * 60}")
+    print(f"Dashboard {dash_id}: {dash_name} (Filter Update for Card {card_id})")
+    print(f"{'=' * 60}")
+
+    _diff_recursive(original, migrated, path="")
     print()
 
 

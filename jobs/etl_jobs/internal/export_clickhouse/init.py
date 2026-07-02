@@ -4,7 +4,7 @@ import typer
 
 from core.utils import (
     ENV_SHORT_NAME,
-    PROJECT_NAME,
+    NEW_PROJECT_NAME,
     access_secret_data,
     get_clickhouse_client,
 )
@@ -14,10 +14,10 @@ logger = logging.getLogger(__name__)
 DATABASE = ["tmp", "intermediate", "analytics"]
 
 access_key_id = access_secret_data(
-    PROJECT_NAME, f"clickhouse-s3_access_id-{ENV_SHORT_NAME}"
+    NEW_PROJECT_NAME, f"clickhouse-s3_access_id-{ENV_SHORT_NAME}"
 )
 secret_access_key = access_secret_data(
-    PROJECT_NAME, f"clickhouse-s3_secret_key-{ENV_SHORT_NAME}"
+    NEW_PROJECT_NAME, f"clickhouse-s3_secret_key-{ENV_SHORT_NAME}"
 )
 
 

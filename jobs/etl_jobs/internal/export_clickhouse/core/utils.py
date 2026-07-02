@@ -10,6 +10,12 @@ logger = logging.getLogger(__name__)
 ENVIRONMENT_NAME = os.environ.get("ENVIRONMENT_NAME", "development")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 PROJECT_NAME = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
+ENV_SHORT_NAME_MAPPING = {
+    "dev": "tst",
+    "stg": "stg",
+    "prod": "prd",
+}
+NEW_PROJECT_NAME = f"pc-data-{ENV_SHORT_NAME_MAPPING.get(ENV_SHORT_NAME, "dev")}"
 
 
 def access_secret_data(project_id, secret_id, version_id="latest", default=None):

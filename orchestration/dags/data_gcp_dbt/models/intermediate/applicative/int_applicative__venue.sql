@@ -159,6 +159,7 @@ select
     v_loc.venue_department_name,
     v_loc.venue_iris_internal_id,
     v_loc.venue_region_name,
+    v_loc.venue_region_code,
     v_loc.venue_city,
     v_loc.venue_city_code,
     v_loc.venue_epci,

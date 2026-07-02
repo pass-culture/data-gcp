@@ -223,6 +223,65 @@ def create_artists_tables(
     )
 
 
+def perform_wikidata_category_matching(
+    new_artist_clusters_df: pd.DataFrame,
+    wiki_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Performs category and namesake-based matching of artist clusters against Wikidata.
+
+    Args:
+        new_artist_clusters_df (pd.DataFrame): DataFrame containing artist clusters
+            with artist names to be matched. Must contain ARTIST_NAME_TO_MATCH_KEY column.
+        wiki_df (pd.DataFrame): DataFrame containing Wikidata information.
+            Must contain 'artist_name', 'raw_alias', and category indicator columns.
+
+    Returns:
+        pd.DataFrame: DataFrame containing all artist clusters after category matching,
+            including unmatched clusters (with NaN wikidata_id).
+    """
+    # 1. Preprocess to use wikidata matching functions
+    wiki_df = (
+        wiki_df.rename(
+            columns={
+                "artist_name": "wiki_artist_name",
+            }
+        )
+        .assign(
+            alias_name_to_match=lambda df: df.raw_alias.apply(extract_artist_name),
+            alias=lambda df: df.alias_name_to_match,
+        )
+        .loc[lambda df: (df.alias_name_to_match != "") & df.alias_name_to_match.notna()]
+    )
+    new_artist_clusters_df = new_artist_clusters_df.assign(
+        alias=lambda df: df[ARTIST_NAME_TO_MATCH_KEY]
+    )
+    matched_namesakes_df = (
+        match_namesakes_per_category(new_artist_clusters_df, wiki_df)
+        .loc[lambda df: df[WIKIDATA_ID_KEY].notna()]
+        .assign(has_namesake=True)
+    )
+
+    # 2. Match artists on wikidata for artists with no namesake
+    logger.info(f"Matching {len(new_artist_clusters_df)} artists with Wikidata...")
+    matched_without_namesake_df = (
+        match_per_category_no_namesakes(new_artist_clusters_df, wiki_df)
+        .assign(has_namesake=False)
+        .loc[
+            lambda df: ~df[ARTIST_ID_KEY].isin(
+                matched_namesakes_df[ARTIST_ID_KEY].unique()
+            )
+        ]
+    )
+
+    # 3. Reconciliate matching
+    matched_df = pd.concat(
+        [matched_without_namesake_df, matched_namesakes_df]
+    ).reset_index(drop=True)
+
+    return matched_df
+
+
 def match_artists_with_wikidata(
     new_artist_clusters_df: pd.DataFrame,
     wiki_df: pd.DataFrame,
@@ -259,40 +318,8 @@ def match_artists_with_wikidata(
         artist_with_wiki_ids_df = pd.DataFrame(
             columns=[ARTIST_ID_KEY, ARTIST_WIKI_ID_KEY]
         )
-    # 1. Preprocess to use wikidata matching functions
-    wiki_df = (
-        wiki_df.rename(
-            columns={
-                "artist_name": "wiki_artist_name",
-            }
-        )
-        .assign(
-            alias_name_to_match=lambda df: df.raw_alias.apply(extract_artist_name),
-            alias=lambda df: df.alias_name_to_match,
-        )
-        .loc[lambda df: (df.alias_name_to_match != "") & df.alias_name_to_match.notna()]
-    )
-    new_artist_clusters_df = new_artist_clusters_df.assign(
-        alias=lambda df: df[ARTIST_NAME_TO_MATCH_KEY]
-    )
-    matched_namesakes_df = (
-        match_namesakes_per_category(new_artist_clusters_df, wiki_df)
-        .loc[lambda df: df[WIKIDATA_ID_KEY].notna()]
-        .assign(has_namesake=True)
-    )
 
-    # 2. Match artists on wikidata for artists with no namesake
-    logger.info(f"Matching {len(new_artist_clusters_df)} artists with Wikidata...")
-    matched_without_namesake_df = (
-        match_per_category_no_namesakes(new_artist_clusters_df, wiki_df)
-        .assign(has_namesake=False)
-        .loc[lambda df: ~df.tmp_id.isin(matched_namesakes_df.tmp_id.unique())]
-    )
-
-    # 3. Reconciliate matching
-    matched_df = pd.concat(
-        [matched_without_namesake_df, matched_namesakes_df]
-    ).reset_index(drop=True)
+    matched_df = perform_wikidata_category_matching(new_artist_clusters_df, wiki_df)
 
     # 4. wikidata_id to artist_id mapping
     new_mapping_df = (
@@ -317,9 +344,11 @@ def match_artists_with_wikidata(
 
     # 5. Remap matched_df with wiki_to_artist_mapping
     matched_with_ids_df = matched_df.assign(
-        artist_id=lambda df: df[WIKIDATA_ID_KEY]
-        .map(wiki_to_artist_mapping)
-        .fillna(df.tmp_id),
+        **{
+            ARTIST_ID_KEY: lambda df: df[WIKIDATA_ID_KEY]
+            .map(wiki_to_artist_mapping)
+            .fillna(df[ARTIST_ID_KEY]),
+        },
         postprocessed_artist_name=lambda df: df.wiki_artist_name.fillna(
             df[ARTIST_NAME_TO_MATCH_KEY]
         ).apply(lambda s: s.title()),

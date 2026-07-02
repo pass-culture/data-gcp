@@ -377,6 +377,7 @@ class GCEHook(GoogleBaseHook):
         provisioning_model: str = "STANDARD",
         max_run_duration_seconds: t.Optional[int] = None,
         request_valid_for_duration_seconds: t.Optional[int] = None,
+        reservation_name: t.Optional[str] = None,
         wait_for_running: bool = True,
     ):
         instances = self.list_instances()
@@ -405,6 +406,7 @@ class GCEHook(GoogleBaseHook):
             provisioning_model=provisioning_model,
             max_run_duration_seconds=max_run_duration_seconds,
             request_valid_for_duration_seconds=request_valid_for_duration_seconds,
+            reservation_name=reservation_name,
         )
         if is_flex_start and wait_for_running:
             self.wait_for_instance_running(instance_name)
@@ -484,9 +486,31 @@ class GCEHook(GoogleBaseHook):
         preemptible: bool,
         max_run_duration_seconds: t.Optional[int],
         request_valid_for_duration_seconds: t.Optional[int],
+        reservation_name: t.Optional[str] = None,
     ) -> None:
         """Set the scheduling (and, for flex-start, params/reservation) block."""
         provisioning_model = (provisioning_model or "STANDARD").upper()
+
+        # Consume a specific (future) reservation: capacity is already secured,
+        # so we run STANDARD and target the reservation by name. This is mutually
+        # exclusive with FLEX_START/DWS, which queues for on-demand capacity and
+        # requires NO_RESERVATION.
+        if reservation_name:
+            if provisioning_model == "FLEX_START":
+                raise AirflowException(
+                    "reservation_name is incompatible with FLEX_START provisioning; "
+                    "set provisioning_model=STANDARD to consume a reservation."
+                )
+            config["scheduling"] = {"onHostMaintenance": "terminate"}
+            if preemptible:
+                config["scheduling"]["preemptible"] = True
+            config["reservationAffinity"] = {
+                "consumeReservationType": "SPECIFIC_RESERVATION",
+                "key": "compute.googleapis.com/reservation-name",
+                "values": [reservation_name],
+            }
+            return
+
         if provisioning_model != "FLEX_START":
             config["scheduling"] = {"onHostMaintenance": "terminate"}
             if preemptible:
@@ -536,6 +560,7 @@ class GCEHook(GoogleBaseHook):
         provisioning_model: str = "STANDARD",
         max_run_duration_seconds: t.Optional[int] = None,
         request_valid_for_duration_seconds: t.Optional[int] = None,
+        reservation_name: t.Optional[str] = None,
     ):
         instance_type = "zones/%s/machineTypes/%s" % (self.gce_zone, instance_type)
         metadata = (
@@ -601,6 +626,7 @@ class GCEHook(GoogleBaseHook):
             preemptible=preemptible,
             max_run_duration_seconds=max_run_duration_seconds,
             request_valid_for_duration_seconds=request_valid_for_duration_seconds,
+            reservation_name=reservation_name,
         )
 
         self.log.info(

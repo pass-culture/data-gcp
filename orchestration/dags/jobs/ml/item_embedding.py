@@ -77,6 +77,7 @@ DAG_DOC = """
     *gce_zone* : GCE zone to use for embedding. Only europe-west1-c and europe-west1-b have L4 GPUs. europe-west1-d has T4 GPUs. Stockout are very frequent.
     *provisioning_model* : STANDARD (default) requests the GPU immediately and fails on stockout. FLEX_START uses Dynamic Workload Scheduler (DWS): instead of failing, the request is queued until GPU capacity frees up (queue held for up to *request_valid_for_duration*, hard-capped at 2h by GCP). Uses preemptible quota. Best for the full-catalogue L4 run given frequent stockouts.
     *max_run_duration* / *request_valid_for_duration* : FLEX_START only. See parameter descriptions.
+    *reservation_name* : Consume a specific Compute Engine reservation (e.g. the one auto-created by a future reservation on its start date). When set, use provisioning_model=STANDARD (incompatible with FLEX_START) and make sure instance_type/gpu_type/gpu_count/gce_zone match the reservation exactly.
 
     *Hint:* For L4 GPUs, make sure to select a compatible g2 machine. The Number of L4 GPUs you can attach to a G2 depends on its RAM.
     Here is the breakdown:
@@ -159,6 +160,18 @@ with DAG(
                         queue while the VM is PENDING. Accepts e.g. '2h', '90m'.
                         Must be 0 or between 90s and 2h.""",
         ),
+        "reservation_name": Param(
+            default="",
+            type="string",
+            description="""Name of a specific Compute Engine reservation to
+                        consume (e.g. the reservation auto-created by a future
+                        reservation on its start date). When set, the VM targets
+                        this reservation via SPECIFIC_RESERVATION and requires
+                        provisioning_model=STANDARD (incompatible with
+                        FLEX_START). The instance_type, gpu_type, gpu_count and
+                        gce_zone must match the reservation exactly. Leave empty
+                        to not target any reservation.""",
+        ),
     },
 ) as dag:
     start = EmptyOperator(task_id="start")
@@ -175,6 +188,7 @@ with DAG(
         provisioning_model="{{ params.provisioning_model }}",
         max_run_duration="{{ params.max_run_duration }}",
         request_valid_for_duration="{{ params.request_valid_for_duration }}",
+        reservation_name="{{ params.reservation_name }}",
         # Defer while a FLEX_START request sits queued so the worker slot is freed.
         deferrable=True,
         # Cover the max 2h DWS queue wait plus provisioning/boot margin.

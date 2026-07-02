@@ -74,6 +74,7 @@ class StartGCEOperator(BaseOperator):
         "provisioning_model",
         "max_run_duration",
         "request_valid_for_duration",
+        "reservation_name",
     ]
 
     def __init__(
@@ -91,6 +92,7 @@ class StartGCEOperator(BaseOperator):
         provisioning_model: str = "STANDARD",
         max_run_duration: t.Union[str, int, None] = None,
         request_valid_for_duration: t.Union[str, int, None] = None,
+        reservation_name: t.Optional[str] = None,
         deferrable: bool = False,
         poll_interval: int = 60,
         *args,
@@ -110,6 +112,7 @@ class StartGCEOperator(BaseOperator):
         self.provisioning_model = provisioning_model
         self.max_run_duration = max_run_duration
         self.request_valid_for_duration = request_valid_for_duration
+        self.reservation_name = reservation_name
         self.deferrable = deferrable
         self.poll_interval = poll_interval
 
@@ -144,6 +147,7 @@ class StartGCEOperator(BaseOperator):
                 provisioning_model=self.provisioning_model,
                 max_run_duration_seconds=max_run_seconds,
                 request_valid_for_duration_seconds=request_valid_seconds,
+                reservation_name=self.reservation_name or None,
                 wait_for_running=not (is_flex_start and self.deferrable),
             )
 

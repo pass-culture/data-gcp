@@ -48,21 +48,14 @@ Create a YAML file in the `configs/` directory:
 
 ```yaml
 vectors:
-  - name: "semantic_content_STS"
+  - name: "semantic_content"
     features:
       - offer_name
       - category_id
       - subcategory_id
       - offer_description
     encoder_name: "google/embeddinggemma-300m"
-    prompt_name: "STS"  # Optional, model-dependent
-
-  - name: "semantic_content_Clustering"
-    features:
-      - offer_name
-      - category_id
-    encoder_name: "google/embeddinggemma-300m"
-    prompt_name: "Clustering"
+    prompt_name: "query"  # Optional, model-dependent
 ```
 
 ### Configuration Fields
@@ -86,7 +79,7 @@ Input parquet file must contain:
 Output parquet file contains:
 - `item_id`: Item identifiers from the input
 - `content_hash`: Hash of the item state
-- One column per configured vector (e.g., `semantic_content_STS`) containing embedding arrays
+- One column per configured vector (e.g., `semantic_content`) containing embedding arrays
 
 ## Architecture
 

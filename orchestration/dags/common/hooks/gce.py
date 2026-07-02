@@ -374,6 +374,11 @@ class GCEHook(GoogleBaseHook):
         labels={},
         gpu_count: int = 0,
         gpu_type: t.Optional[str] = None,
+        provisioning_model: str = "STANDARD",
+        max_run_duration_seconds: t.Optional[int] = None,
+        request_valid_for_duration_seconds: t.Optional[int] = None,
+        reservation_name: t.Optional[str] = None,
+        wait_for_running: bool = True,
     ):
         instances = self.list_instances()
         instances = [x["name"] for x in instances if x["status"] == "RUNNING"]
@@ -381,18 +386,71 @@ class GCEHook(GoogleBaseHook):
             self.log.info(f"Instance {instance_name} already running, pass.")
             return
 
+        is_flex_start = (provisioning_model or "STANDARD").upper() == "FLEX_START"
         self.log.info(
-            f"Launching {instance_name} on compute engine (instance: {instance_type})"
+            f"Launching {instance_name} on compute engine (instance: {instance_type}, "
+            f"provisioning_model: {provisioning_model})"
         )
+        # For STANDARD/preemptible VMs the insert operation completes only once the
+        # VM is provisioned, so we wait on it. FLEX_START inserts are async: the
+        # request is queued by DWS and the VM sits in PENDING until capacity is
+        # found, so we submit without waiting and poll the instance status instead.
         self.__create_instance(
             instance_type,
             instance_name,
             labels=labels,
-            wait=True,
+            wait=not is_flex_start,
             preemptible=preemptible,
             gpu_type=gpu_type,
             gpu_count=gpu_count,
+            provisioning_model=provisioning_model,
+            max_run_duration_seconds=max_run_duration_seconds,
+            request_valid_for_duration_seconds=request_valid_for_duration_seconds,
+            reservation_name=reservation_name,
         )
+        if is_flex_start and wait_for_running:
+            self.wait_for_instance_running(instance_name)
+
+    def wait_for_instance_running(
+        self,
+        instance_name: str,
+        timeout_seconds: t.Optional[int] = None,
+        poll_interval: int = 30,
+    ):
+        """Poll a (flex-start) instance until it reaches RUNNING.
+
+        DWS holds flex-start requests in a queue while the VM is PENDING. If the
+        request expires without securing capacity the instance is deleted (404) or
+        moves to a terminal state; both are treated as failures.
+        """
+        deadline = time.time() + timeout_seconds if timeout_seconds else None
+        terminal_states = {"TERMINATED", "SUSPENDED", "SUSPENDING", "STOPPING"}
+        while True:
+            instance = self.get_instance(instance_name)
+            if instance is None:
+                raise AirflowException(
+                    f"Instance {instance_name} no longer exists: the flex-start "
+                    "request likely expired without securing capacity."
+                )
+            status = instance.get("status")
+            self.log.info(f"Instance {instance_name} status: {status}")
+            if status == "RUNNING":
+                # Give the startup script (e.g. GPU drivers) time to run, mirroring
+                # the synchronous insert path.
+                if self.source_image_type.startup_script_wait_time > 0:
+                    time.sleep(self.source_image_type.startup_script_wait_time)
+                return
+            if status in terminal_states:
+                raise AirflowException(
+                    f"Instance {instance_name} reached terminal state {status} "
+                    "before RUNNING; flex-start failed to secure capacity."
+                )
+            if deadline and time.time() > deadline:
+                raise AirflowException(
+                    f"Timed out waiting for {instance_name} to reach RUNNING "
+                    f"(last status: {status})."
+                )
+            time.sleep(poll_interval)
 
     def delete_vm(self, instance_name):
         self.log.info(f"Deleting {instance_name} on compute engine")
@@ -421,6 +479,74 @@ class GCEHook(GoogleBaseHook):
             else:
                 raise
 
+    @staticmethod
+    def _apply_provisioning_config(
+        config: dict,
+        provisioning_model: str,
+        preemptible: bool,
+        max_run_duration_seconds: t.Optional[int],
+        request_valid_for_duration_seconds: t.Optional[int],
+        reservation_name: t.Optional[str] = None,
+    ) -> None:
+        """Set the scheduling (and, for flex-start, params/reservation) block."""
+        provisioning_model = (provisioning_model or "STANDARD").upper()
+
+        # Consume a specific (future) reservation: capacity is already secured,
+        # so we run STANDARD and target the reservation by name. This is mutually
+        # exclusive with FLEX_START/DWS, which queues for on-demand capacity and
+        # requires NO_RESERVATION.
+        if reservation_name:
+            if provisioning_model == "FLEX_START":
+                raise AirflowException(
+                    "reservation_name is incompatible with FLEX_START provisioning; "
+                    "set provisioning_model=STANDARD to consume a reservation."
+                )
+            config["scheduling"] = {"onHostMaintenance": "terminate"}
+            if preemptible:
+                config["scheduling"]["preemptible"] = True
+            config["reservationAffinity"] = {
+                "consumeReservationType": "SPECIFIC_RESERVATION",
+                "key": "compute.googleapis.com/reservation-name",
+                "values": [reservation_name],
+            }
+            return
+
+        if provisioning_model != "FLEX_START":
+            config["scheduling"] = {"onHostMaintenance": "terminate"}
+            if preemptible:
+                config["scheduling"]["preemptible"] = True
+            return
+
+        # Flex-start (DWS) queues the request until GPU capacity is available
+        # instead of failing immediately on a stockout. It requires a max run
+        # duration and consumes preemptible quota; it is mutually exclusive with
+        # the preemptible flag.
+        if preemptible:
+            raise AirflowException(
+                "preemptible=True is incompatible with FLEX_START provisioning."
+            )
+        if not max_run_duration_seconds:
+            raise AirflowException(
+                "max_run_duration_seconds is required for FLEX_START provisioning."
+            )
+        # Default to the 2h max queue so flex-start actually queues; omitting it
+        # would silently fall back to GCP's ~90s fail-fast behavior.
+        request_valid_for_duration_seconds = request_valid_for_duration_seconds or 7200
+        config["scheduling"] = {
+            "provisioningModel": "FLEX_START",
+            "onHostMaintenance": "TERMINATE",
+            "instanceTerminationAction": "DELETE",
+            "maxRunDuration": {"seconds": str(int(max_run_duration_seconds))},
+        }
+        config["reservationAffinity"] = {"consumeReservationType": "NO_RESERVATION"}
+        # Hold the request in the DWS queue for up to this long (max 2h) while the
+        # VM sits in PENDING waiting for capacity.
+        config["params"] = {
+            "requestValidForDuration": {
+                "seconds": str(int(request_valid_for_duration_seconds))
+            }
+        }
+
     def __create_instance(
         self,
         instance_type,
@@ -431,6 +557,10 @@ class GCEHook(GoogleBaseHook):
         gpu_count: int = 0,
         gpu_type: t.Optional[str] = None,
         preemptible=False,
+        provisioning_model: str = "STANDARD",
+        max_run_duration_seconds: t.Optional[int] = None,
+        request_valid_for_duration_seconds: t.Optional[int] = None,
+        reservation_name: t.Optional[str] = None,
     ):
         instance_type = "zones/%s/machineTypes/%s" % (self.gce_zone, instance_type)
         metadata = (
@@ -490,13 +620,14 @@ class GCEHook(GoogleBaseHook):
                     "acceleratorType": f"zones/{self.gce_zone}/acceleratorTypes/{gpu_type}",
                 }
             ]
-        if preemptible:
-            config["scheduling"] = {
-                "onHostMaintenance": "terminate",
-                "preemptible": True,
-            }
-        else:
-            config["scheduling"] = {"onHostMaintenance": "terminate"}
+        self._apply_provisioning_config(
+            config,
+            provisioning_model=provisioning_model,
+            preemptible=preemptible,
+            max_run_duration_seconds=max_run_duration_seconds,
+            request_valid_for_duration_seconds=request_valid_for_duration_seconds,
+            reservation_name=reservation_name,
+        )
 
         self.log.info(
             f"Creating {name}: \n {json.dumps(config, sort_keys=True, indent=4)}"

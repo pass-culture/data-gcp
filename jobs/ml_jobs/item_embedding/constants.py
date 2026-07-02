@@ -14,4 +14,4 @@ HF_TOKEN_SECRET_NAME = _HF_TOKEN_SECRET_NAMES.get(
 )
 
 # HF constants
-BATCH_SIZE = 64  ## Tuned for 4* nvidia tesla T4 with fp16 precision
+BATCH_SIZE = 64

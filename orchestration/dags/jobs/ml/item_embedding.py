@@ -4,6 +4,7 @@ from itertools import chain
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
@@ -136,22 +137,37 @@ with DAG(
 ) as dag:
     start = EmptyOperator(task_id="start")
 
+    # Routing Mechanism: Check if infrastructure was provided externally
+    def _check_trigger_source(**context):
+        if context["dag_run"].conf and "instance_name" in context["dag_run"].conf:
+            return "skip_gce_start"
+        return "gce_start_task"
+
+    check_trigger_source = BranchPythonOperator(
+        task_id="check_trigger_source",
+        python_callable=_check_trigger_source,
+    )
+
+    skip_gce_start = EmptyOperator(task_id="skip_gce_start")
+
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         preemptible=False,
-        instance_name="{{ params.instance_name }}",
-        instance_type="{{ params.instance_type }}",
-        gpu_type="{{ params.gpu_type }}",
-        gpu_count="{{ params.gpu_count }}",
+        instance_name="{{ dag_run.conf.get('instance_name', params.instance_name) }}",
+        instance_type="{{ dag_run.conf.get('instance_type', params.instance_type) }}",
+        gpu_type="{{ dag_run.conf.get('gpu_type', params.gpu_type) }}",
+        gpu_count="{{ dag_run.conf.get('gpu_count', params.gpu_count) }}",
+        gce_zone="{{ dag_run.conf.get('gce_zone', params.gce_zone) }}",
         labels={"job_type": "extra_long_ml", "dag_name": DAG_NAME},
     )
 
     install_dependencies = InstallDependenciesOperator(
         task_id="install_dependencies",
-        instance_name="{{ params.instance_name }}",
+        instance_name="{{ dag_run.conf.get('instance_name', params.instance_name) }}",
         base_dir=BASE_DIR,
-        branch="{{ params.branch }}",
+        branch="{{ dag_run.conf.get('branch', params.branch) }}",
         retries=2,
+        trigger_rule="none_failed_min_one_success",
     )
 
     # Step 1: Select items to embed and save to a temp table in BigQuery
@@ -175,6 +191,7 @@ with DAG(
                 "writeDisposition": "WRITE_TRUNCATE",
             }
         },
+        trigger_rule="none_failed_min_one_success",
     )
 
     # Step 2: Export temp table to GCS as a parquet file (to be used as input for the embedding script)
@@ -227,13 +244,25 @@ with DAG(
     gce_instance_delete = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
-        trigger_rule="all_done",  # always delete the VM, even on upstream failure
+        gce_zone="{{ dag_run.conf.get('gce_zone', params.gce_zone) }}",
+        # trigger_rule="all_done",  # always delete the VM, even on upstream failure
     )
 
     stop = EmptyOperator(task_id="stop")
 
-    start >> [gce_instance_start, bigquery_select_items_to_embed]
-    gce_instance_start >> install_dependencies
+    (start >> check_trigger_source,)
+
+    (
+        check_trigger_source
+        >> gce_instance_start
+        >> [install_dependencies, bigquery_select_items_to_embed]
+    )
+    (
+        check_trigger_source
+        >> skip_gce_start
+        >> [install_dependencies, bigquery_select_items_to_embed]
+    )
+
     bigquery_select_items_to_embed >> export_item_metadata_to_gcs
     [
         install_dependencies,

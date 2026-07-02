@@ -57,6 +57,10 @@ def migrate_dashboard(
     """
     new_dash_data = copy.deepcopy(dashboard_detail)
 
+    remapped_count = 0
+    unchanged_count = 0
+    skipped_count = 0
+
     for dashcard in new_dash_data.get("dashcards", []):
         if dashcard.get("card_id") != card_id:
             continue
@@ -69,21 +73,35 @@ def migrate_dashboard(
                 continue
 
             if old_field_id not in field_mapping:
-                logger.info(
-                    "Field %d not in field_mapping for card %d — skipping",
-                    old_field_id,
+                logger.warning(
+                    "Dashboard card %d: field %d not in field_mapping — skipping",
                     card_id,
+                    old_field_id,
                 )
+                skipped_count += 1
                 continue
 
             new_field_id = field_mapping[old_field_id]
             target[1][1] = new_field_id
-            logger.info(
-                "Dashboard card %d: remapped field %d → %d",
-                card_id,
-                old_field_id,
-                new_field_id,
-            )
+            if old_field_id != new_field_id:
+                logger.info(
+                    "Dashboard card %d: remapped field %d → %d",
+                    card_id,
+                    old_field_id,
+                    new_field_id,
+                )
+                remapped_count += 1
+            else:
+                unchanged_count += 1
+
+    if remapped_count or unchanged_count or skipped_count:
+        logger.info(
+            "Dashboard card %d: %d field(s) remapped, %d unchanged, %d skipped",
+            card_id,
+            remapped_count,
+            unchanged_count,
+            skipped_count,
+        )
 
     return new_dash_data
 

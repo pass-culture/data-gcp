@@ -1,32 +1,28 @@
 import datetime
-from itertools import chain
 
 from airflow import DAG
 from airflow.models import Param
 from common import macros
-from common.callback import on_failure_vm_callback
+from common.alerts.task_fail import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    INSTANCES_TYPES,
 )
-from common.operators.gce import (
-    DeleteGCEOperator,
-    InstallDependenciesOperator,
-    SSHGCEOperator,
-    StartGCEOperator,
+from common.operators.kubernetes import (
+    DEFAULT_CONTAINER_RESOURCES,
+    CustomKubernetesPodOperator,
 )
 from common.utils import get_airflow_schedule
 
 DAG_NAME = "import_zendesk"
-BASE_PATH = "data-gcp/jobs/etl_jobs/external/zendesk"
+MICROSERVICE_PATH = "jobs/etl_jobs/external/zendesk"
 
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
-    "on_failure_callback": on_failure_vm_callback,
+    "on_failure_callback": task_fail_slack_alert,
     "retries": 1,
     "project_id": GCP_PROJECT_ID,
 }
@@ -65,49 +61,26 @@ with DAG(
             type="string",
             help="Optional prior date (YYYY-MM-DD) to calculate the ndays range from instead of now().",
         ),
-        "instance_name": Param(
-            default=f"import-zendesk-{ENV_SHORT_NAME}", type="string"
-        ),
-        "instance_type": Param(
-            default="n1-standard-2",
-            enum=list(chain(*INSTANCES_TYPES["cpu"].values())),
-        ),
     },
-    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ) as dag:
-    gce_instance_start = StartGCEOperator(
-        instance_name="{{ params.instance_name }}",
-        instance_type="{{ params.instance_type }}",
-        task_id="gce_start_task",
-        labels={"dag_name": DAG_NAME},
-    )
-
-    fetch_install_code = InstallDependenciesOperator(
-        task_id="fetch_install_code",
-        instance_name="{{ params.instance_name }}",
-        branch="{{ params.branch }}",
-        python_version="3.13",
-        base_dir=BASE_PATH,
-        dag=dag,
-        retries=2,
-    )
-
-    import_data_to_bigquery = SSHGCEOperator(
+    import_data_to_bigquery = CustomKubernetesPodOperator(
         task_id="import_to_bigquery",
-        instance_name="{{ params.instance_name }}",
-        base_dir=BASE_PATH,
-        command="uv run main.py --ndays {{ params.ndays }} --job {{ params.job }} --prior-date {{ params.prior_date }} ",
-        do_xcom_push=True,
-    )
-
-    gce_instance_stop = DeleteGCEOperator(
-        task_id="gce_stop_task",
-        instance_name="{{ params.instance_name }}",
-    )
-
-    (
-        gce_instance_start
-        >> fetch_install_code
-        >> import_data_to_bigquery
-        >> gce_instance_stop
+        orchestration_mode="celery",
+        queue="k8s-watcher",
+        runtime_mode="gitsynced",
+        runtime_branch="{{ params.branch }}",
+        runtime_image="py313",
+        runtime_image_tag="v1",
+        microservice_path=MICROSERVICE_PATH,
+        arguments=[
+            "main.py",
+            "--ndays",
+            "{{ params.ndays }}",
+            "--job",
+            "{{ params.job }}",
+            "--prior-date",
+            "{{ params.prior_date }}",
+        ],
+        container_resources=DEFAULT_CONTAINER_RESOURCES,
     )

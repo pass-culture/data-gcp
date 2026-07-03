@@ -5,7 +5,7 @@ from airflow.decorators import task
 from airflow.models import Param
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from common import macros
-from common.callback import on_failure_vm_callback
+from common.alerts.task_fail import task_fail_slack_alert
 from common.config import (
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
@@ -13,29 +13,20 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
-from common.operators.gce import (
-    DeleteGCEOperator,
-    InstallDependenciesOperator,
-    SSHGCEOperator,
-    StartGCEOperator,
+from common.operators.kubernetes import (
+    DEFAULT_CONTAINER_RESOURCES,
+    CustomKubernetesPodOperator,
 )
 from common.utils import get_airflow_schedule
 
-GCE_INSTANCE = f"import-user-address-bulk-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/external/api_gouv"
+MICROSERVICE_PATH = "jobs/etl_jobs/external/api_gouv"
 DAG_NAME = "import_user_address_bulk"
-
-dag_config = {
-    "GCP_PROJECT": GCP_PROJECT_ID,
-    "ENV_SHORT_NAME": ENV_SHORT_NAME,
-}
-
 
 schedule = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
 
 default_args = {
     "start_date": datetime(2021, 3, 30),
-    "on_failure_callback": on_failure_vm_callback,
+    "on_failure_callback": task_fail_slack_alert,
     "retries": 1,
     "retry_delay": timedelta(minutes=2),
 }
@@ -53,10 +44,6 @@ with DAG(
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
-            type="string",
-        ),
-        "instance_name": Param(
-            default=GCE_INSTANCE,
             type="string",
         ),
         "source_dataset_id": Param(
@@ -84,7 +71,7 @@ with DAG(
             type="number",
         ),
     },
-    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ) as dag:
 
     @task
@@ -108,80 +95,46 @@ with DAG(
     @task.branch
     def branch(count_result):
         if count_result:
-            return "start_gce"
+            return "import_to_bigquery"
         return "end"
-
-    @task
-    def start_gce(**context):
-        instance_name = context["params"]["instance_name"]
-        operator = StartGCEOperator(
-            instance_name=instance_name,
-            task_id="gce_start_task",
-            labels={"dag_name": DAG_NAME},
-        )
-        return operator.execute(context=context)
-
-    @task
-    def fetch_install_code(**context):
-        instance_name = context["params"]["instance_name"]
-        operator = InstallDependenciesOperator(
-            task_id="fetch_install_code",
-            instance_name=instance_name,
-            branch=context["params"]["branch"],
-            python_version="3.13",
-            base_dir=BASE_PATH,
-        )
-        return operator.execute(context=context)
-
-    @task
-    def addresses_to_gcs(**context):
-        instance_name = context["params"]["instance_name"]
-        operator = SSHGCEOperator(
-            task_id="user_address_to_bq",
-            instance_name=instance_name,
-            base_dir=BASE_PATH,
-            environment=dag_config,
-            command=f"""uv run python main.py \
-                --source-dataset-id {context["params"]["source_dataset_id"]} \
-                --source-table-name {context["params"]["source_table_name"]} \
-                --destination-dataset-id {context["params"]["destination_dataset_id"]} \
-                --destination-table-name {context["params"]["destination_table_name"]} \
-                --max-rows {context["params"]["max_rows"]} \
-                --chunk-size {context["params"]["chunk_size"]}
-            """,
-            do_xcom_push=True,
-        )
-        return operator.execute(context=context)
-
-    @task
-    def stop_gce(**context):
-        operator = DeleteGCEOperator(
-            task_id="gce_stop_task", instance_name=context["params"]["instance_name"]
-        )
-        return operator.execute(context=context)
 
     @task
     def end():
         return "completed"
 
+    import_to_bigquery = CustomKubernetesPodOperator(
+        task_id="import_to_bigquery",
+        orchestration_mode="celery",
+        queue="k8s-watcher",
+        runtime_mode="gitsynced",
+        runtime_branch="{{ params.branch }}",
+        runtime_image="py313",
+        runtime_image_tag="v1",
+        microservice_path=MICROSERVICE_PATH,
+        arguments=[
+            "main.py",
+            "--source-dataset-id",
+            "{{ params.source_dataset_id }}",
+            "--source-table-name",
+            "{{ params.source_table_name }}",
+            "--destination-dataset-id",
+            "{{ params.destination_dataset_id }}",
+            "--destination-table-name",
+            "{{ params.destination_table_name }}",
+            "--max-rows",
+            "{{ params.max_rows }}",
+            "--chunk-size",
+            "{{ params.chunk_size }}",
+        ],
+        container_resources=DEFAULT_CONTAINER_RESOURCES,
+    )
+
     # Define the task dependencies
     start_result = start()
     count_result = check_source_count()
     branch_result = branch(count_result)
-    gce_start_result = start_gce()
-    fetch_result = fetch_install_code()
-    addresses_result = addresses_to_gcs()
-    stop_result = stop_gce()
     end_result = end()
 
-    # Set task dependencies
     start_result >> count_result >> branch_result
-    (
-        branch_result
-        >> gce_start_result
-        >> fetch_result
-        >> addresses_result
-        >> stop_result
-        >> end_result
-    )
+    branch_result >> import_to_bigquery >> end_result
     branch_result >> end_result

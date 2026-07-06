@@ -93,17 +93,6 @@ offer_description : Le chamanisme est le monde de la sensibilité construite et 
 
 A prompt longer than the model's `max_sequence_length` (2048 tokens for `embeddinggemma-300m`) is truncated by the model, dropping the **end** of the prompt first. Keep the longest feature (typically `offer_description`) **last** so truncation only trims that field and never the identifying ones.
 
-This is a non-issue for our catalogue. As of 6 July 2026, across ~5M items with the default config:
-
-| Metric | Value |
-|--------|-------|
-| Mean tokens | 167 |
-| p99.9 tokens | 923 |
-| Items > 1024 tokens | ~3,000 (0.06%) |
-| Items > 2048 tokens | 239 (0.005%) |
-
-Only 239 items in the entire catalogue are truncated at 2048, and each keeps its first 2048 tokens. No chunking is needed.
-
 ## Output Format
 
 Output parquet file contains:
@@ -132,7 +121,7 @@ setup_encoders.py - load encoder models, set the precision and pooling if availa
 
 ## Precision & hardware
 
-- **Precision** is selected automatically: `bfloat16` on Ampere+ GPUs (compute capability ≥ 8, e.g. L4), `float32` otherwise (e.g. T4). `float16` is never used — Gemma models overflow in fp16 and produce NaN embeddings.
+- **Precision** is selected automatically: `bfloat16` on Ampere+ GPUs (compute capability ≥ 8, e.g. L4), `float32` otherwise (e.g. T4). `float16` is never used (the default Gemma models overflow in fp16 and produce NaN embeddings).
 - **Machine sizing**: the model is small (~300M params) and prompts are short (mean ~167 tokens), so a single T4 handles the workload. Extra GPUs (T4 or L4) speed up large runs through the multi-process pool; prefer L4 for full-catalogue runs, where bf16 halves memory and improves throughput.
 - **Batch size** is set by `BATCH_SIZE` in `constants.py`. It is the main memory/speed lever; sequence length is capped by the model itself (2048).
 
@@ -141,7 +130,6 @@ setup_encoders.py - load encoder models, set the precision and pooling if availa
 The job runs on a **single GCE VM** with N GPUs driven by the multi-process pool — it does not distribute across machines. So sizing means picking one VM and its GPU count.
 
 The full catalogue is ~5M items, mean ~167 tokens (short text), so the run is throughput-bound, not memory-bound. The key driver is precision: **T4 (Turing) has no bf16 and Gemma NaNs in fp16, so T4 runs in fp32** and loses the tensor-core speedup — L4 (bf16) is roughly 8–12× faster per GPU for this model.
-
 
 **Recommendation:** full catalogue → one `g2-standard-48` (4× L4) in `europe-west1-c` with `provisioning_model=FLEX_START`. Incremental runs (new/changed items only) are small enough that 4× T4 is fine and more widely available. Avoid CPU: it is far too slow and cannot be scaled across machines here.
 

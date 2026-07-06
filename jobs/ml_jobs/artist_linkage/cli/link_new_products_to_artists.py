@@ -110,7 +110,7 @@ def build_artist_alias(
     product_artist_link_df: pd.DataFrame,
     artist_df: pd.DataFrame,
 ) -> pd.DataFrame:
-    # Combine artist names from both artist_df and product_df to create a comprehensive artist alias dataframe
+    """Combine artist names from artist_df and product_df to create a comprehensive alias dataframe."""
     artist_alias_from_artist_names_df = (
         product_artist_link_df.merge(
             artist_df.assign(
@@ -132,7 +132,7 @@ def build_artist_alias(
         .drop_duplicates()
     )
 
-    # Use artist names from products when we have a clear 1:1 mapping between product and artist (i.e. no duplicates for the same product and artist type)
+    # Use artist names from products when we have a clear 1:1 mapping between product and artist
     safe_product_df = product_df.loc[
         lambda df: ~df.duplicated(subset=[PRODUCT_ID_KEY, ARTIST_TYPE_KEY], keep=False)
     ]
@@ -149,7 +149,7 @@ def build_artist_alias(
         .sort_values(by=ALIAS_MERGE_COLUMNS)
     )
 
-    # Combine both sources of artist aliases and remove duplicates to create the final artist alias dataframe
+    # Combine both sources of artist aliases and remove duplicates
     return (
         pd.concat(
             [
@@ -303,7 +303,9 @@ def main(
             [OFFER_CATEGORY_ID_KEY, ARTIST_TYPE_KEY, ARTIST_NAME_TO_MATCH_KEY]
         )
         .agg(
-            tmp_id=(ARTIST_NAME_KEY, lambda x: str(uuid.uuid4())),
+            **{
+                ARTIST_ID_KEY: (ARTIST_NAME_KEY, lambda x: str(uuid.uuid4())),
+            },
             artist_name_set=(ARTIST_NAME_KEY, lambda x: set(x.unique())),
             artist_name_count=(ARTIST_NAME_KEY, "count"),
             artist_name_nunique=(ARTIST_NAME_KEY, "nunique"),

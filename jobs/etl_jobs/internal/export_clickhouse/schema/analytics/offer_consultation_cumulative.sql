@@ -18,5 +18,5 @@ WITH offer_consultations AS (
 SELECT
     partition_date,
     offer_id,
-    sum(consultation_cnt) OVER (ORDER BY partition_date ASC) AS consultation_cumulative_cnt
+    sum(consultation_cnt) OVER (PARTITION BY offer_id ORDER BY partition_date ASC) AS consultation_cumulative_cnt
 FROM offer_consultations

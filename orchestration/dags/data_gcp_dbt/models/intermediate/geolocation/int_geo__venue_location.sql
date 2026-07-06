@@ -66,13 +66,20 @@ with
 select
     venue.venue_id,
     venue.venue_postal_code,
-    coalesce(venue.venue_department_code, "-1") as venue_department_code,
     venue.venue_latitude,
     venue.venue_longitude,
     venue.venue_street,
+    venue_qpv.qpv_code,
+    venue_qpv.qpv_name,
+    venue_qpv.qpv_municipality,
+    venue_zrr.zrr_level,
+    venue_zrr.zrr_level_detail,
+    venue_zrr.is_in_zrr as venue_in_zrr,
+    coalesce(venue.venue_department_code, "-1") as venue_department_code,
     coalesce(region_department.academy_name, "non localisé") as venue_academy_name,
     coalesce(region_department.dep_name, "non localisé") as venue_department_name,
     coalesce(region_department.region_name, "non localisé") as venue_region_name,
+    coalesce(cast(region_department.region_code as string), "-1") as venue_region_code,
     coalesce(
         venue_geo_iris.iris_internal_id, "00000000000000000000000000000000"
     ) as venue_iris_internal_id,
@@ -86,12 +93,6 @@ select
     coalesce(venue_geo_iris.density_level, -1) as venue_density_level,
     coalesce(venue_epci.epci_name, "non localisé") as venue_epci,
     coalesce(cast(venue_epci.epci_code as string), "-1") as venue_epci_code,
-    venue_qpv.qpv_code,
-    venue_qpv.qpv_name,
-    venue_qpv.qpv_municipality,
-    venue_zrr.zrr_level,
-    venue_zrr.zrr_level_detail,
-    venue_zrr.is_in_zrr as venue_in_zrr,
     case
         when
             venue_qpv.qpv_code is null

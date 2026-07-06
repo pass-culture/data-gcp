@@ -1,5 +1,5 @@
 [project]
-name = "metabase-archiving"
+name = "metabase-governance"
 version = "0.1.0"
 description = "Metabase governance: archiving cards and managing collection permissions"
 requires-python = ">=3.13,<3.14"

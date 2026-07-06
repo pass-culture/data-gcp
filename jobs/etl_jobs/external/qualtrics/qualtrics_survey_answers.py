@@ -93,8 +93,7 @@ class QualtricsSurvey:
 
         file = zipfile.ZipFile(io.BytesIO(answers_request_response.content))
         name = file.namelist()[0]
-        df = pd.read_csv(file.open(name))
-        ### Export to raw here ?
+        df = pd.read_csv(file.open(name), dtype=str)
         print("Downloaded qualtrics survey")
         self.raw_answer_df = df
 

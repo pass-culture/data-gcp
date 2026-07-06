@@ -1,47 +1,32 @@
 """Airflow DAG for Titelive ETL Pipeline with multiple execution modes."""
 
 import datetime
-import os
 
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.python import BranchPythonOperator
 from common import macros
-from common.callback import on_failure_vm_callback
+from common.alerts.task_fail import task_fail_slack_alert
 from common.config import DAG_FOLDER, DAG_TAGS, ENV_SHORT_NAME
-from common.operators.gce import (
-    DeleteGCEOperator,
-    InstallDependenciesOperator,
-    SSHGCEOperator,
-    StartGCEOperator,
+from common.operators.kubernetes import (
+    DEFAULT_CONTAINER_RESOURCES,
+    CustomKubernetesPodOperator,
 )
 from common.utils import delayed_waiting_operator, get_airflow_schedule
 
 from jobs.crons import SCHEDULE_DICT
 
 DAG_NAME = "import_titelive"
-GCE_INSTANCE = f"import-titelive-{ENV_SHORT_NAME}"
-BASE_DIR = "data-gcp/jobs/etl_jobs/external/titelive"
-HTTP_TOOLS_RELATIVE_DIR = "../../"
-
-# Environment Configuration
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
-BIGQUERY_DATASET = os.getenv("BIGQUERY_DATASET", "tmp_cdarnis_dev")
+MICROSERVICE_PATH = "jobs/etl_jobs/external/titelive"
+SPARSE_PATHS = [MICROSERVICE_PATH, "jobs/etl_jobs/http_tools"]
 
 PRIORITY_WEIGHT = 1000
 WEIGHT_RULE = "absolute"
 
-dag_config = {
-    "GCP_PROJECT_ID": GCP_PROJECT_ID,
-    "ENV_SHORT_NAME": ENV_SHORT_NAME,
-    "BIGQUERY_DATASET": BIGQUERY_DATASET,
-}
-
-
 default_dag_args = {
     "start_date": datetime.datetime(2025, 1, 1),
     "retries": 2,
-    "on_failure_callback": on_failure_vm_callback,
+    "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
 }
 
@@ -53,24 +38,18 @@ with DAG(
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
             description="Git branch to deploy",
         ),
-        "instance_type": Param(
-            default="n1-standard-4",
-            enum=["n1-standard-1", "n1-standard-2", "n1-standard-4", "n1-standard-8"],
-            description="GCE instance type",
-        ),
         "init": Param(
             default=False,
             type="boolean",
             description="If True, run init mode (BigQuery EAN batch). If False, run incremental mode (sync since last sync date)",
         ),
-        # Init mode params (when init=True)
         "resume": Param(
             default=False,
             type="boolean",
@@ -81,7 +60,6 @@ with DAG(
             type="boolean",
             description="Reprocess EANs with status='failed' from destination table (init mode)",
         ),
-        # Download images params
         "download_images_reprocess_failed": Param(
             default=False,
             type="boolean",
@@ -89,28 +67,7 @@ with DAG(
         ),
     },
 ) as dag:
-    gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE,
-        task_id="gce_start_task",
-        instance_type="{{ params.instance_type }}",
-        preemptible=False,
-        labels={"job_type": "long_task", "dag_name": DAG_NAME},
-        priority_weight=PRIORITY_WEIGHT,
-        weight_rule=WEIGHT_RULE,
-    )
 
-    fetch_install_code = InstallDependenciesOperator(
-        task_id="fetch_install_code",
-        instance_name=GCE_INSTANCE,
-        branch="{{ params.branch }}",
-        python_version="3.12",
-        base_dir=BASE_DIR,
-        retries=2,
-        priority_weight=PRIORITY_WEIGHT,
-        weight_rule=WEIGHT_RULE,
-    )
-
-    # Decide execution mode based on init parameter
     def decide_execution_mode(**context):
         """Determine which execution mode task to run."""
         return (
@@ -129,76 +86,65 @@ with DAG(
         external_dag_id="import_applicative_database",
     )
 
-    # Init mode: Extract EANs from BigQuery and batch process
-    run_init_task = SSHGCEOperator(
+    _kpo_common = dict(
+        orchestration_mode="celery",
+        queue="k8s-watcher",
+        runtime_mode="gitsynced",
+        runtime_branch="{{ params.branch }}",
+        runtime_image="py312",
+        runtime_image_tag="v1",
+        microservice_path=MICROSERVICE_PATH,
+        runtime_sparse_paths=SPARSE_PATHS,
+        runtime_workdir=MICROSERVICE_PATH,
+        container_resources=DEFAULT_CONTAINER_RESOURCES,
+        priority_weight=PRIORITY_WEIGHT,
+        weight_rule=WEIGHT_RULE,
+    )
+
+    run_init_task = CustomKubernetesPodOperator(
         task_id="run_init_task",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        environment=dag_config,
-        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py run-init "
-        f"{{{{ '--resume' if params.resume else '' }}}} "
-        f"{{{{ '--reprocess-failed' if params.reprocess_failed else '' }}}}",
+        arguments=[
+            "main.py",
+            "run-init",
+            "{{ '--resume' if params.resume else '' }}",
+            "{{ '--reprocess-failed' if params.reprocess_failed else '' }}",
+        ],
         deferrable=True,
-        priority_weight=PRIORITY_WEIGHT,
-        weight_rule=WEIGHT_RULE,
+        **_kpo_common,
     )
 
-    # Incremental mode: Sync since last sync date for both bases
-    run_incremental_task = SSHGCEOperator(
+    run_incremental_task = CustomKubernetesPodOperator(
         task_id="run_incremental_task",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        environment=dag_config,
-        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py run-incremental",
-        priority_weight=PRIORITY_WEIGHT,
-        weight_rule=WEIGHT_RULE,
+        arguments=["main.py", "run-incremental"],
+        **_kpo_common,
     )
 
-    # Download images for init mode (deferrable)
-    download_images_init = SSHGCEOperator(
+    download_images_init = CustomKubernetesPodOperator(
         task_id="download_images_init",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        environment=dag_config,
-        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py download-images "
-        f"{{{{ '--reprocess-failed' if params.download_images_reprocess_failed else '' }}}}",
+        arguments=[
+            "main.py",
+            "download-images",
+            "{{ '--reprocess-failed' if params.download_images_reprocess_failed else '' }}",
+        ],
         deferrable=True,
-        priority_weight=PRIORITY_WEIGHT,
-        weight_rule=WEIGHT_RULE,
+        **_kpo_common,
     )
 
-    # Download images for incremental mode (not deferrable)
-    download_images_incremental = SSHGCEOperator(
+    download_images_incremental = CustomKubernetesPodOperator(
         task_id="download_images_incremental",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        environment=dag_config,
-        command=f"PYTHONPATH={HTTP_TOOLS_RELATIVE_DIR} python main.py download-images "
-        f"{{{{ '--reprocess-failed' if params.download_images_reprocess_failed else '' }}}}",
-        deferrable=False,
-        priority_weight=PRIORITY_WEIGHT,
-        weight_rule=WEIGHT_RULE,
-    )
-
-    # VM cleanup
-    gce_instance_stop = DeleteGCEOperator(
-        task_id="gce_stop_task",
-        instance_name=GCE_INSTANCE,
-        trigger_rule="none_failed",
+        arguments=[
+            "main.py",
+            "download-images",
+            "{{ '--reprocess-failed' if params.download_images_reprocess_failed else '' }}",
+        ],
+        **_kpo_common,
     )
 
     # Task dependencies
-    (gce_instance_start >> fetch_install_code >> execution_mode_branch)
-    (
-        execution_mode_branch
-        >> run_init_task
-        >> download_images_init
-        >> gce_instance_stop
-    )
+    execution_mode_branch >> run_init_task >> download_images_init
     (
         execution_mode_branch
         >> wait_for_raw
         >> run_incremental_task
         >> download_images_incremental
-        >> gce_instance_stop
     )

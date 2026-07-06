@@ -138,8 +138,8 @@ with (
                             Must be between 90s and 2h. If set to 0, the request is held for the max 2h.""",
             ),
             "reservation_name": Param(
-                default="",
-                type="string",
+                default=None,
+                type=["string", "null"],
                 description="""Name of a specific Compute Engine reservation to
                             consume. When set, the VM targets this reservation via
                             SPECIFIC_RESERVATION and requires provisioning_model=STANDARD

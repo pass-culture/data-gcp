@@ -145,7 +145,7 @@ The full catalogue is ~5M items, mean ~167 tokens (short text), so the run is th
 
 **Recommendation:** full catalogue → one `g2-standard-48` (4× L4) in `europe-west1-c` with `provisioning_model=FLEX_START`. Incremental runs (new/changed items only) are small enough that 4× T4 is fine and more widely available. Avoid CPU: it is far too slow and cannot be scaled across machines here.
 
-Most probably you will run into stockout even with flexstart so the solution would be to launch a GCloud reservation to provision the machine:
+Most probably you will run into stockout even with flexstart so the solution would be to launch a GCloud reservation to provision the machine: **Must be sumbmitted 72h before start date**
 ```bash
 gcloud compute future-reservations create draft-test-reservation \
     --project=passculture-data-prod \

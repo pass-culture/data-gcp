@@ -2,21 +2,7 @@
 
 ## Custom CPU/RAM Resources
 
-When the microservice needs more than default resources (0.2 CPU / 500Mi RAM):
-
-```python
-from kubernetes.client import V1ResourceRequirements
-
-container_resources = V1ResourceRequirements(
-    requests={"cpu": "0.2", "memory": "500Mi"},
-    limits={"cpu": "0.5", "memory": "1Gi"},
-)
-
-task = CustomKubernetesPodOperator(
-    ...,
-    container_resources=container_resources,
-)
-```
+When the microservice needs more than default resources (0.2 CPU / 500Mi RAM), overwrite `DEFAULT_CONTAINER_RESOURCES`.
 
 ## Shared Volumes Between Sequential Tasks
 
@@ -121,23 +107,3 @@ task = CustomKubernetesPodOperator(
 | `kubernetes` | KubernetesExecutor creates pod directly | High-parallelism DAGs, resource isolation |
 
 For `celery` mode, always set `queue="k8s-watcher"`.
-
-## Environment Variables
-
-The KPO operator automatically injects:
-- `GCP_PROJECT_ID`
-- `ENV_SHORT_NAME`
-- `UV_CACHE_DIR`
-- `UV_LINK_MODE`
-- `RUN_ID`
-
-To add custom env vars:
-```python
-task = CustomKubernetesPodOperator(
-    ...,
-    env_vars={
-        "MY_CUSTOM_VAR": "value",
-        "ANOTHER_VAR": "{{ ds }}",  # Jinja templates work
-    },
-)
-```

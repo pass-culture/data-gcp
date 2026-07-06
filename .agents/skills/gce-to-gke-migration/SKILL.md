@@ -8,12 +8,6 @@ argument-hint: 'Path to the DAG file to migrate, or DAG name'
 
 Automates the migration of Airflow DAGs from GCE architecture (SSHGCEOperator + VM lifecycle) to GKE architecture (CustomKubernetesPodOperator).
 
-## When to Use
-
-- User wants to migrate a DAG from `SSHGCEOperator` to `CustomKubernetesPodOperator`
-- User mentions GCE-to-GKE, VM-to-pod, or Kubernetes migration
-- User wants to remove VM lifecycle operators (StartGCE, DeleteGCE, InstallDependencies)
-
 ## Prerequisites
 
 Before starting, confirm with the user:
@@ -37,146 +31,34 @@ Before starting, confirm with the user:
 
 ### Step 2: Present Migration Plan
 
-Show the user a summary of changes before applying:
-
-```
-Migration Plan for: <DAG_NAME>
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-REMOVE:
-  - StartGCEOperator (gce_start_task)
-  - InstallDependenciesOperator (fetch_install_code)
-  - DeleteGCEOperator (gce_stop_task)
-
-ADD:
-  - Storage Lifecycle (dynamic PVC) if tasks share data via filesystem. For example, storage = make_storage_lifecycle(storage_size="10Gi")
-
-CONVERT (SSHGCEOperator → CustomKubernetesPodOperator):
-  - <task_id>: command="<cmd>" → arguments=["<cmd_parts>"]
-
-SETTINGS:
-  - runtime_mode: gitsynced
-  - runtime_image: py3XX
-  - microservice_path: <derived from BASE_PATH>
-  - orchestration_mode: celery (default)
-
-TAG CHANGE: DAG_TAGS.VM → DAG_TAGS.POD
-```
-
-**Wait for user approval before proceeding.**
+Show the user a formatted summary of changes before applying and wait for user approval before proceeding.
 
 ### Step 3: Apply Migration
 
 After user approval, apply these transformations:
 
-#### 3a. Update Imports
+#### 3a. Update Imports, remove VM Lifecycle Operators and update Task Dependencies
 
-Remove:
-```python
-from common.operators.gce import (
-    SSHGCEOperator,
-    StartGCEOperator,
-    DeleteGCEOperator,
-    InstallDependenciesOperator,
-)
-```
+Remove GCE lifecycle from the chain : imports, variables and operators. Update the task dependency chain to reflect the new KPO tasks.
 
-Add:
-```python
-from common.operators.kubernetes import (
-    CustomKubernetesPodOperator,
-    DEFAULT_CONTAINER_RESOURCES,
-)
-```
+In case of shared volume (dynamic PVC), ensure the storage lifecycle tasks are added and dependencies updated accordingly. You can read advanced patterns reference for this (Shared Volumes Between Sequential Tasks).
 
-Also remove `from common.callback import on_failure_vm_callback` if present (not needed for KPO).
-
-#### 3b. Remove GCE-Specific Variables
-
-Remove:
-- `GCE_INSTANCE = f"..."` variable
-- `BASE_PATH` variable (convert to `microservice_path` format)
-
-Add:
-- `MICROSERVICE_PATH` — derived from `BASE_PATH` by removing the leading repo name prefix (e.g., `data-gcp/jobs/etl_jobs/external/adage` → `jobs/etl_jobs/external/adage`)
-
-#### 3c. Convert SSHGCEOperator Tasks
-
-For each `SSHGCEOperator` task, convert to `CustomKubernetesPodOperator`:
-
-**Before (GCE):**
-```python
-task = SSHGCEOperator(
-    task_id="my_task",
-    instance_name=GCE_INSTANCE,
-    base_dir=BASE_PATH,
-    environment=dag_config,
-    command="uv run main.py --arg1 value1",
-)
-```
-
-**After (KPO):**
-```python
-task = CustomKubernetesPodOperator(
-    task_id="my_task",
-    orchestration_mode="celery",
-    queue="k8s-watcher",
-    runtime_mode="gitsynced",
-    runtime_branch="{{ params.branch }}",
-    runtime_image="py313",
-    runtime_image_tag="v1",
-    microservice_path=MICROSERVICE_PATH,
-    arguments=["main.py", "--arg1", "value1"],
-    container_resources=DEFAULT_CONTAINER_RESOURCES,
-)
-```
+#### 3b. Convert SSHGCEOperator tasks to `CustomKubernetesPodOperator`.
 
 **Conversion rules for `arguments`:**
 - The `command` field typically looks like `uv run main.py --flag value`. Strip the `uv run` prefix (handled by the operator in gitsynced mode).
 - Split the remaining command into a list: `["main.py", "--flag", "value"]`
 - Preserve Jinja templates as-is in the list elements
-- If environment variables were passed via `environment=dag_config`, note that `GCP_PROJECT_ID` and `ENV_SHORT_NAME` are already injected by the KPO operator by default — only add extra env vars if needed via `env_vars`
+- If environment variables were passed via `environment=dag_config`, note that the KPO operator automatically injects: `GCP_PROJECT_ID`, `ENV_SHORT_NAME`, `UV_CACHE_DIR`, `UV_LINK_MODE`, `RUN_ID`. Only add extra env vars if needed via `env_vars` parameter.
+- You can find before and after examples in the references folder: [before-example.md](./references/before-example.md) and [after-example.md](./references/after-example.md).
 
-#### 3d. Remove VM Lifecycle Operators
-
-Delete:
-- `StartGCEOperator` task
-- `InstallDependenciesOperator` task
-- `DeleteGCEOperator` task
-
-#### 3e. Update Task Dependencies
-
-Remove VM lifecycle from the chain.
-
-**Before:**
-```python
-gce_start >> fetch_install >> task1 >> task2 >> gce_stop >> end
-```
-
-**After:**
-```python
-task1 >> task2 >> end
-```
-
-In case of shared volume (dynamic PVC), ensure the storage lifecycle tasks are added and dependencies updated accordingly. For example,
-**Before:**
-```python
-gce_start >> fetch_install >> write_task >> read_task >> gce_stop >> end
-```
-
-**After:**
-```python
-storage = make_storage_lifecycle(storage_size="10Gi")
-storage.setup >> write_task >> read_task >> storage.teardown
-````
-
-
-#### 3f. Update DAG Metadata
+#### 3c. Update DAG Metadata
 
 - Change `tags`: replace `DAG_TAGS.VM.value` with `DAG_TAGS.POD.value`
 - Remove `on_failure_callback=on_failure_vm_callback` from `default_dag_args` (replace with `task_fail_slack_alert` if not already present)
 - Keep `params.branch` (used by `runtime_branch`)
 
-#### 3g. Patch `main.py` Error Handling (Critical — Automated)
+#### 3d. Patch `main.py` Error Handling (Critical — Automated)
 
 Open the microservice's `main.py` (path derived from `microservice_path`). If it uses Typer, **automatically patch** the main function to propagate errors correctly.
 

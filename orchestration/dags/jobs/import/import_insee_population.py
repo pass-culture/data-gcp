@@ -72,6 +72,7 @@ with DAG(
             " --start-year 2020 --end-year 2026"
             " --to-bigquery"
             " --monthly"
+            " --yearly-levels epci,canton,iris"
             " --project-id $GCP_PROJECT_ID"
             " --dataset raw_$ENV_SHORT_NAME"
         ),

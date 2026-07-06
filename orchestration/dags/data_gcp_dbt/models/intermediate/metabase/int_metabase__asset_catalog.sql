@@ -1,7 +1,7 @@
 with
     taxonomy as (
         select collection_id, squad, tier, certified, in_scope, is_excluded
-        from {{ source("raw", "collection_taxonomy") }}
+        from {{ source("raw", "metabase_collection_taxonomy") }}
     ),
 
     public_collections as (

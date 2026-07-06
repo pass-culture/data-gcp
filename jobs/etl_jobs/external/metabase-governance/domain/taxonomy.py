@@ -8,7 +8,7 @@ from core.utils import PROJECT_NAME, RAW_METABASE_DATASET
 logger = logging.getLogger(__name__)
 
 COLLECTION_TABLE = "metabase_collection"
-TAXONOMY_TABLE = "collection_taxonomy"
+TAXONOMY_TABLE = "metabase_collection_taxonomy"
 
 
 def _like_to_regex(pattern):

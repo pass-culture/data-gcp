@@ -148,7 +148,7 @@ sources:
       - name: gsheet_tiktok_campaign_tag
       - name: gsheet_company_contact
       - name: instagram_post_detail
-      - name: collection_taxonomy
+      - name: metabase_collection_taxonomy
       - name: metabase_collection
       - name: metabase_core_user
       - name: metabase_query_execution

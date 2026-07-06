@@ -64,12 +64,10 @@ def embed_vector(
     Returns:
         Numpy array of shape (n_items, embedding_dim)
     """
-    logger.info(f"Processing vector: {vector.name}")
-
-    logger.info(f"Vector '{vector.name}': batch_size={BATCH_SIZE}")
+    logger.info(f"Processing vector '{vector.name}' (batch_size={BATCH_SIZE})")
     encode_kwargs = {
         "convert_to_numpy": True,
-        "show_progress_bar": False,  # noisy and useless in non-interactive VM logs
+        "show_progress_bar": False,
         "batch_size": BATCH_SIZE,
         "prompt_name": vector.prompt_name,
     }

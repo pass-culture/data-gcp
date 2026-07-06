@@ -65,10 +65,8 @@ def main(
                 f"Processing parquet file {i + 1}/{len(parquet_files)}: {parquet_filepath}"
             )
 
-            # Load item metadata as a table
             df_metadata = load_parquet_file(parquet_filepath, vectors)
 
-            # Stream batches, embed, and write to a local temp parquet
             df_embeddings = embed_dataframe(df_metadata, vectors, encoders, pools=pools)
             logger.info(
                 f"Generated embeddings for {len(df_embeddings)} items from {parquet_filepath}"

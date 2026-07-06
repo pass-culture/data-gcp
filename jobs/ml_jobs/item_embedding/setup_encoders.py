@@ -1,26 +1,28 @@
 import torch
 from config import Vector
-from constants import (
-    HF_TOKEN_SECRET_NAME,
-)
+from constants import HF_TOKEN_SECRET_NAME
 from gcp_secrets import get_secret
 from loguru import logger
 from sentence_transformers import SentenceTransformer
 
 
-def _resolve_precision(gpu_count: int) -> str:
-    """Resolve the precision to use for the run. Depends on GPU count and type
+def _resolve_precision(gpu_count: int) -> torch.dtype:
+    """Resolve the torch dtype to use, based on GPU count and capability.
+
+    Uses bfloat16 on Ampere+ GPUs, else float32. float16 is deliberately never
+    used: Gemma models overflow in float16 and produce NaN embeddings.
 
     Args:
         gpu_count: Number of available GPUs
 
     Returns:
-        Precision torch dtype
+        Precision as a torch dtype
     """
-    if gpu_count != 0 & _bf16_supported():
+    if gpu_count != 0 and _bf16_supported():
         logger.info("GPU supports bfloat16; using bfloat16 precision")
         return torch.bfloat16
 
+    logger.info("GPU does not support bfloat16 or no GPU: using float32 precision")
     return torch.float32
 
 
@@ -46,12 +48,23 @@ def load_encoders(
     token = get_secret(HF_TOKEN_SECRET_NAME)
     precision = _resolve_precision(gpu_count)
 
+    # With >1 GPU, the multi-process pool loads a full model copy onto every GPU.
+    # Keep the main-process copy on CPU so GPU 0 does not hold two copies (OOM).
+    device = "cpu" if gpu_count > 1 else None
+
     encoders = {}
     for name in unique_encoder_names:
-        logger.info(f"Loading encoder: {name} (precision={precision})")
-        encoders[name] = SentenceTransformer(
-            name, token=token, model_kwargs={"torch_dtype": precision}
+        logger.info(
+            f"Loading encoder: {name} (precision={precision}, "
+            f"main-process device={device or 'auto'})"
         )
+        encoder = SentenceTransformer(
+            name,
+            token=token,
+            device=device,
+            model_kwargs={"torch_dtype": precision},
+        )
+        encoders[name] = encoder
     return encoders
 
 

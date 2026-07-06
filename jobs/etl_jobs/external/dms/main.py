@@ -40,6 +40,7 @@ def run(target: str, updated_since: str):
 
 def fetch_dms(updated_since, demarches, target):
     result = fetch_result(demarches, updated_since)
+    logger.info(f"Fetched {len(result['data'])} demarches for target={target}")
     save_json(
         result,
         f"gs://{DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME}/dms_export/unsorted_dms_{target}_{updated_since}.json",
@@ -67,9 +68,6 @@ def fetch_result(demarches_ids, updated_since):
             if "errors" in resultTemp:
                 logger.warning(f"GraphQL errors: {resultTemp['errors']}")
             if resultTemp["data"] is not None:
-                logger.info(
-                    f'Fetched {len(resultTemp["data"]["demarche"]["dossiers"]["edges"])} dossiers'
-                )
                 for node in resultTemp["data"]["demarche"]["dossiers"]["edges"]:
                     dossier = node["node"]
                     if dossier is not None:

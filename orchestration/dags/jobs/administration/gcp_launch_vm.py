@@ -168,9 +168,8 @@ with (
         max_run_duration="{{ params.max_run_duration }}",
         request_valid_for_duration="{{ params.request_valid_for_duration }}",
         reservation_name="{{ params.reservation_name }}",
-        # Do not defer the task, because the deferrable mode requires to query a file in the VM started, so in the case of FLEX_START, the VM is not started and the deferrable mode might crash.
-        deferrable=False,
-        # Cover the max 2h DWS queue wait plus provisioning/boot margin.
+        # A FLEX_START request waits synchronously while DWS keeps it queued, so
+        # cover the max 2h queue wait plus provisioning/boot margin.
         execution_timeout=timedelta(hours=3),
     )
 

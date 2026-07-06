@@ -21,7 +21,6 @@ from common.hooks.image import MACHINE_TYPE
 from common.hooks.network import BASE_NETWORK_LIST, GKE_NETWORK_LIST
 from common.triggers.gce import (
     DeferrableSSHJobMonitorTrigger,
-    GCEInstanceRunningTrigger,
 )
 
 
@@ -93,8 +92,6 @@ class StartGCEOperator(BaseOperator):
         max_run_duration: t.Union[str, int, None] = None,
         request_valid_for_duration: t.Union[str, int, None] = None,
         reservation_name: t.Optional[str] = None,
-        deferrable: bool = False,
-        poll_interval: int = 60,
         *args,
         **kwargs,
     ):
@@ -113,8 +110,6 @@ class StartGCEOperator(BaseOperator):
         self.max_run_duration = max_run_duration
         self.request_valid_for_duration = request_valid_for_duration
         self.reservation_name = reservation_name
-        self.deferrable = deferrable
-        self.poll_interval = poll_interval
 
     def execute(self, context) -> None:
         self.gpu_count = int(self.gpu_count)
@@ -122,7 +117,6 @@ class StartGCEOperator(BaseOperator):
         gce_networks = (
             GKE_NETWORK_LIST if self.use_gke_network is True else BASE_NETWORK_LIST
         )
-        is_flex_start = (self.provisioning_model or "STANDARD").upper() == "FLEX_START"
         max_run_seconds = parse_duration_to_seconds(self.max_run_duration)
         request_valid_seconds = parse_duration_to_seconds(
             self.request_valid_for_duration
@@ -134,9 +128,9 @@ class StartGCEOperator(BaseOperator):
             gce_zone=self.gce_zone,
             additional_scopes=self.additional_scopes,
         ) as hook:
-            # For a deferrable flex-start start we submit the (async, queued) insert
-            # and hand off polling to the trigger so the worker slot is freed while
-            # the VM is PENDING. Otherwise start_vm blocks until the VM is RUNNING.
+            # start_vm blocks until the VM is RUNNING. For a FLEX_START request
+            # that means the task stays occupied while DWS keeps the request
+            # queued in PENDING until GPU capacity is found.
             hook.start_vm(
                 self.instance_name,
                 self.instance_type,
@@ -148,37 +142,8 @@ class StartGCEOperator(BaseOperator):
                 max_run_duration_seconds=max_run_seconds,
                 request_valid_for_duration_seconds=request_valid_seconds,
                 reservation_name=self.reservation_name or None,
-                wait_for_running=not (is_flex_start and self.deferrable),
+                wait_for_running=True,
             )
-
-        if is_flex_start and self.deferrable:
-            # Cover the max queue wait plus provisioning/boot margin.
-            timeout = (request_valid_seconds or 7200) + 1800
-            self.log.info(
-                f"Flex-start request for {self.instance_name} submitted; deferring "
-                "until the instance reaches RUNNING."
-            )
-            self.defer(
-                trigger=GCEInstanceRunningTrigger(
-                    instance_name=self.instance_name,
-                    zone=self.gce_zone,
-                    poll_interval=self.poll_interval,
-                    timeout=timeout,
-                ),
-                method_name="execute_complete",
-            )
-
-    def execute_complete(
-        self, context: t.Dict[str, t.Any], event: t.Optional[t.Dict[str, t.Any]] = None
-    ) -> None:
-        if event is None:
-            raise AirflowException("No event received in trigger callback")
-        if event.get("status") == "running_ok":
-            self.log.info(f"Instance {event.get('instance')} is RUNNING.")
-            return
-        raise AirflowException(
-            event.get("message", "Flex-start instance failed to start")
-        )
 
 
 class CleanGCEOperator(BaseOperator):

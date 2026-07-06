@@ -193,9 +193,8 @@ with DAG(
         max_run_duration="{{ params.max_run_duration }}",
         request_valid_for_duration="{{ params.request_valid_for_duration }}",
         reservation_name="{{ params.reservation_name }}",
-        # Defer while a FLEX_START request sits queued so the worker slot is freed.
-        deferrable=True,
-        # Cover the max 2h DWS queue wait plus provisioning/boot margin.
+        # A FLEX_START request waits synchronously while DWS keeps it queued, so
+        # cover the max 2h queue wait plus provisioning/boot margin.
         execution_timeout=timedelta(hours=3),
         retries=3,
     )

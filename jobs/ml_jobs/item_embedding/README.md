@@ -136,6 +136,36 @@ setup_encoders.py - load encoder models, set the precision and pooling if availa
 - **Machine sizing**: the model is small (~300M params) and prompts are short (mean ~167 tokens), so a single T4 handles the workload. Extra GPUs (T4 or L4) speed up large runs through the multi-process pool; prefer L4 for full-catalogue runs, where bf16 halves memory and improves throughput.
 - **Batch size** is set by `BATCH_SIZE` in `constants.py`. It is the main memory/speed lever; sequence length is capped by the model itself (2048).
 
+## Capacity & sizing
+
+The job runs on a **single GCE VM** with N GPUs driven by the multi-process pool — it does not distribute across machines. So sizing means picking one VM and its GPU count.
+
+The full catalogue is ~5M items, mean ~167 tokens (short text), so the run is throughput-bound, not memory-bound. The key driver is precision: **T4 (Turing) has no bf16 and Gemma NaNs in fp16, so T4 runs in fp32** and loses the tensor-core speedup — L4 (bf16) is roughly 8–12× faster per GPU for this model.
+
+
+**Recommendation:** full catalogue → one `g2-standard-48` (4× L4) in `europe-west1-c` with `provisioning_model=FLEX_START`. Incremental runs (new/changed items only) are small enough that 4× T4 is fine and more widely available. Avoid CPU: it is far too slow and cannot be scaled across machines here.
+
+Most probably you will run into stockout even with flexstart so the solution would be to launch a GCloud reservation to provision the machine:
+```bash
+gcloud compute future-reservations create draft-test-reservation \
+    --project=passculture-data-prod \
+    --zone=europe-west1-c \
+    --machine-type=g2-standard-48 \
+    --accelerator=count=4,type=nvidia-l4 \
+    --total-count=1 \
+    --start-time="2026-07-07T12:00:00+02:00" \
+    --end-time="2026-07-08T12:00:00+02:00" \
+    --planning-status=SUBMITTED \ ## DRAFT if you want to test
+    --auto-delete-auto-created-reservations
+```
+
+then the day of the start of the reserbation trigger the `item_embedding` DAG with:
+    - `reservation_name` = that reservation name
+    - `provisioning_model` = **`STANDARD`** (required — FLEX_START will error out)
+    - `gce_zone` = `europe-west1-c`, `instance_type` = `g2-standard-48`, `gpu_type` = `nvidia-l4`, `gpu_count` = `4` — **must match the reservation exactly**, or the insert won't consume it.
+    - The `Creating <name>:` log line in the `gce_start_task` will show the `reservationAffinity` block so you can confirm it targeted the reservation.
+
+
 ## Troubleshooting
 
 | Problem | Solution |

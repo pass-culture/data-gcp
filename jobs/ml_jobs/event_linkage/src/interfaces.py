@@ -3,10 +3,13 @@ from enum import StrEnum
 
 class ActionType(StrEnum):
     ADD = "add"
+    REMOVE = "remove"
 
 
 class CommentType(StrEnum):
     NEW_EVENT = "new_event"
+    LINKED_TO_EXISTING_EVENT = "linked_to_existing_event"
+    REMOVED_EVENT = "removed_event"
 
 
 class ClusterRepresentantMethod(StrEnum):

@@ -24,6 +24,8 @@ IMAGE_SIMILARITY_COL = "image_similarity"
 DESCRIPTION_SIMILARITY_COL = "description_similarity"
 FULL_DESCRIPTION_SIMILARITY_COL = "full_description_similarity"
 
+EVENT_ID_COL = "event_id"
+EVENT_SERIES_ID_COL = "event_series_id"
 EVENT_NAME_COL = "event_name"
 EVENT_DESCRIPTION_COL = "event_description"
 EVENT_IMAGE_URL_COL = "event_image_url"

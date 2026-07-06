@@ -67,9 +67,10 @@ def should_match_on_offer_names(df: pd.DataFrame, subcategory_id: str) -> pd.Ser
     return df[DESCRIPTION_MATCH_COL] | df[NAME_MATCH_COL] | df[IMAGE_MATCH_COL]
 
 
-def clusterize_offers(cross_df: pd.DataFrame, subcategory_id: str) -> pd.DataFrame:
+def compute_matched_pairs(cross_df: pd.DataFrame, subcategory_id: str) -> pd.DataFrame:
     """
-    Clusterize offers into events based on their similarities.
+    Filter offer pairs of a subcategory down to those that match on
+        name, description, or image similarity (per subcategory rules).
 
     Args:
         cross_df (pd.DataFrame): The dataframe containing the offers and
@@ -77,7 +78,8 @@ def clusterize_offers(cross_df: pd.DataFrame, subcategory_id: str) -> pd.DataFra
         subcategory_id (str): The subcategory ID to filter offers by.
 
     Returns:
-        pd.DataFrame: A dataframe containing the clusters of offers.
+        pd.DataFrame: The offer pairs of the subcategory that match, with
+            all similarity columns and match flag columns.
     """
     # Filter offers by subcategory and similarity thresholds
     selected_df = (
@@ -99,14 +101,47 @@ def clusterize_offers(cross_df: pd.DataFrame, subcategory_id: str) -> pd.DataFra
         }
     )
 
-    # Clusterize
-    matched_df = selected_df[selected_df[MATCH_COL]]
+    return selected_df[selected_df[MATCH_COL]]
+
+
+def build_clusters_from_matched_pairs(
+    matched_df: pd.DataFrame, subcategory_id: str
+) -> pd.DataFrame:
+    """
+    Build clusters (connected components) of offers from a set of matched
+        offer pairs.
+
+    Args:
+        matched_df (pd.DataFrame): Offer pairs that match, with columns
+            "offer_id_1" and "offer_id_2".
+        subcategory_id (str): The subcategory ID the pairs belong to, stored
+            alongside each cluster.
+
+    Returns:
+        pd.DataFrame: A dataframe containing the clusters of offers.
+    """
     G = nx.from_pandas_edgelist(
         matched_df, source=f"{OFFER_ID_COL}_1", target=f"{OFFER_ID_COL}_2"
     )
     return pd.DataFrame({"cluster": list(nx.connected_components(G))}).assign(
         cluster_length=lambda df: df.cluster.map(len), subcategory_id=subcategory_id
     )
+
+
+def clusterize_offers(cross_df: pd.DataFrame, subcategory_id: str) -> pd.DataFrame:
+    """
+    Clusterize offers into events based on their similarities.
+
+    Args:
+        cross_df (pd.DataFrame): The dataframe containing the offers and
+            their similarities.
+        subcategory_id (str): The subcategory ID to filter offers by.
+
+    Returns:
+        pd.DataFrame: A dataframe containing the clusters of offers.
+    """
+    matched_df = compute_matched_pairs(cross_df, subcategory_id)
+    return build_clusters_from_matched_pairs(matched_df, subcategory_id)
 
 
 def get_cluster_metadata_representant(

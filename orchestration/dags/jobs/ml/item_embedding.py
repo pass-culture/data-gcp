@@ -52,8 +52,8 @@ INSTANCE_NAME = "item-embedding"
 GCE_ZONE_TEMPLATE = "{{ params.gce_zone }}"
 INSTANCE_TYPE = {
     "dev": "n1-standard-4",
-    "stg": "g2-standard-48",
-    "prod": "g2-standard-48",
+    "stg": "n1-standard-16",
+    "prod": "n1-standard-16",
 }[ENV_SHORT_NAME]
 
 DEFAULT_ARGS = {
@@ -86,6 +86,10 @@ DAG_DOC = """
             "g2-standard-48": 4 L4s,
             "g2-standard-96": 8 L4s,
     ⚠️ caution: frequent stockouts on L4 GPUs, especially in europe-west1-b, try europe-west1-c or europe-west1-d if you encounter stockouts.
+
+    **How to choose your machine?**
+    *  If you choose to embed_all, the default 1*T4 machine would take ~27 hours to complete. If you can get an L4 or more T4, it will dramatically reduce the time.
+    *  If you want to embed only the new items, you can use the default 1*T4 machine, which is more widely available across zones.
 """
 
 with DAG(
@@ -107,7 +111,7 @@ with DAG(
         "embed_all": Param(
             default=False,
             type="boolean",
-            description="Whether to embed all items or only the ones that need embedding (to_embed = true in the input table)",
+            description="Whether to embed all items or only the ones that need embedding (to_embed = true in the input table). If you choose to embed_all, the default 1*T4 machine would take ~27 hours to complete. If you can get an L4, it will dramatically reduce the time to ~6 hours. If you have a smaller catalogue or if you want to embed only the new items, you can use 1*T4 machine, which is more widely available across zones.",
         ),
         "config_file_name": Param(
             default="default",
@@ -126,11 +130,11 @@ with DAG(
             description="GCE instance name",
         ),
         "gpu_type": Param(
-            default="nvidia-tesla-t4" if ENV_SHORT_NAME == "dev" else "nvidia-l4",
+            default="nvidia-tesla-t4",
             enum=INSTANCES_TYPES["gpu"]["name"],
         ),
         "gpu_count": Param(
-            default=1 if ENV_SHORT_NAME == "dev" else 4,
+            default=1,
             enum=INSTANCES_TYPES["gpu"]["count"],
             description="""Number of GPUs to use for embedding
                         (only applicable for GPU instance types).

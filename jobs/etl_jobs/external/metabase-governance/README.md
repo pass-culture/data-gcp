@@ -1,8 +1,8 @@
-# metabase-archiving
+# metabase-governance
 
-Daily job that keeps the analytics Metabase clean: archives stale cards, hard-archives long-dormant ones, prunes empty dashboards/collections, and syncs collection permissions from a versioned config.
+Daily job that governs the analytics Metabase: archives stale cards, hard-archives long-dormant ones, prunes empty dashboards/collections, syncs collection permissions from a versioned config, and classifies the collection tree into a squad/tier/certified taxonomy.
 
-CLI is one Typer app (`main.py`) with four commands:
+CLI is one Typer app (`main.py`) with five commands:
 
 | Command | What it does |
 |---|---|
@@ -10,8 +10,9 @@ CLI is one Typer app (`main.py`) with four commands:
 | `stats` | Prints the same pre-flight stats as `archive` but mutates nothing. |
 | `permissions` | Reconciles Metabase collection permissions with the YAML config. |
 | `dependencies` | Exports card → table dependencies to BigQuery (used by the legacy table-migration tool in `metabase/`). |
+| `taxonomy` | Classifies every collection into `{squad, tier, certified, in_scope}` from the rules in `config/taxonomy/{env}.yaml` and writes `int_metabase_<env>.collection_taxonomy` (consumed by the dbt `int_metabase__asset_catalog`). |
 
-All commands read environment-specific config from `config/{archiving,permissions}/{staging,production}.yaml`, picked by `ENV_SHORT_NAME`. `dev` and `stg` both use `staging.yaml`.
+All commands read environment-specific config from `config/{archiving,permissions,taxonomy}/{staging,production}.yaml`, picked by `ENV_SHORT_NAME`. `dev` and `stg` both use `staging.yaml`.
 
 ## 1. Archiving
 

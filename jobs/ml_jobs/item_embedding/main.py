@@ -1,9 +1,14 @@
 import torch
 import typer
 from config import parse_vectors
-from embedding import embed_dataframe, load_encoders
+from embedding import embed_dataframe
 from gcs_utils import list_parquet_files, load_parquet_file
 from loguru import logger
+from setup_encoders import (
+    load_encoders,
+    start_encoder_pools,
+    stop_encoder_pools,
+)
 
 app = typer.Typer(
     help="Generate item embeddings using Hugging Face models and save results to GCS."
@@ -43,34 +48,37 @@ def main(
     # Load configuration and vectors
     vectors = parse_vectors(config_file_name)
 
-    encoders = load_encoders(vectors)
+    gpu_count = _get_gpu_count()
+    logger.info(f"Detected {gpu_count} GPU(s) available")
+
+    encoders = load_encoders(vectors, gpu_count)
 
     ## List all parquet files matching the input path
     parquet_files = list_parquet_files(input_parquets_folder_path)
     logger.info(f"Found {len(parquet_files)} parquet files to process")
 
-    gpu_count = _get_gpu_count()
-    logger.info(f"Detected {gpu_count} GPU(s) available")
+    # Start multi-GPU pools once for the whole run (loads models onto GPUs once)
+    pools = start_encoder_pools(encoders, gpu_count)
+    try:
+        for i, parquet_filepath in enumerate(parquet_files):
+            logger.info(
+                f"Processing parquet file {i + 1}/{len(parquet_files)}: {parquet_filepath}"
+            )
 
-    for i, parquet_filepath in enumerate(parquet_files):
-        logger.info(
-            f"Processing parquet file {i + 1}/{len(parquet_files)}: {parquet_filepath}"
-        )
+            df_metadata = load_parquet_file(parquet_filepath, vectors)
 
-        # Load item metadata as a table
-        df_metadata = load_parquet_file(parquet_filepath, vectors)
-
-        # Stream batches, embed, and write to a local temp parquet
-        df_embeddings = embed_dataframe(df_metadata, vectors, encoders, gpu_count)
-        logger.info(
-            f"Generated embeddings for {len(df_embeddings)} items from {parquet_filepath}"
-        )
-        # Upload the resulting dataframe to GCS as a parquet file
-        output_parquet_path = (
-            f"{output_parquets_folder_path}/item_embeddings_{i}.parquet"
-        )
-        df_embeddings.to_parquet(output_parquet_path, index=False)
-        logger.info(f"Saved embeddings to {output_parquet_path}")
+            df_embeddings = embed_dataframe(df_metadata, vectors, encoders, pools=pools)
+            logger.info(
+                f"Generated embeddings for {len(df_embeddings)} items from {parquet_filepath}"
+            )
+            # Upload the resulting dataframe to GCS as a parquet file
+            output_parquet_path = (
+                f"{output_parquets_folder_path}/item_embeddings_{i}.parquet"
+            )
+            df_embeddings.to_parquet(output_parquet_path, index=False)
+            logger.info(f"Saved embeddings to {output_parquet_path}")
+    finally:
+        stop_encoder_pools(encoders, pools)
 
     logger.info("✔ All parquet files processed successfully")
 

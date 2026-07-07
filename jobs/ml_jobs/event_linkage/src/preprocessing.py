@@ -1,6 +1,6 @@
 import pandas as pd
 
-MIN_DESCRIPTION_LENGTH = 30
+MIN_DESCRIPTION_LENGTH = 150
 
 
 def description_preprocessing(series: pd.Series) -> pd.Series:

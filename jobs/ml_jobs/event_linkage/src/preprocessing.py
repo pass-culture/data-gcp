@@ -1,16 +1,14 @@
 import pandas as pd
 
-MIN_DESCRIPTION_LENGTH = 150
 
-
-def description_preprocessing(series: pd.Series) -> pd.Series:
+def description_preprocessing(series: pd.Series, min_length: int) -> pd.Series:
     return (
         series.str.lower()
         .str.strip()
         .str.normalize("NFD")
         .str.encode("ascii", errors="ignore")
         .str.decode("ascii")
-        .where(lambda s: s.str.len() >= MIN_DESCRIPTION_LENGTH, other=pd.NA)
+        .where(lambda s: s.str.len() >= min_length, other=pd.NA)
     )
 
 

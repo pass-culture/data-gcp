@@ -154,6 +154,7 @@ def _make_git_clone_command(
             f" && set +x"
             f" && echo '=== cleaning ==='"
             f" && rm -rf /tmp/{repo_name}"
+            f" && chown -R 50000:50000 {dest}/"
             f" && echo '=== contents ==='"
             f" && ls {dest}/"
         )

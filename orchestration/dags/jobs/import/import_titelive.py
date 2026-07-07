@@ -91,7 +91,7 @@ with DAG(
         queue="k8s-watcher",
         runtime_mode="gitsynced",
         runtime_branch="{{ params.branch }}",
-        runtime_image="py312",
+        runtime_image="py313",
         runtime_image_tag="v1",
         microservice_path=MICROSERVICE_PATH,
         runtime_sparse_paths=SPARSE_PATHS,
@@ -99,6 +99,7 @@ with DAG(
         container_resources=DEFAULT_CONTAINER_RESOURCES,
         priority_weight=PRIORITY_WEIGHT,
         weight_rule=WEIGHT_RULE,
+        env_vars={"PYTHONPATH": "/app/jobs/etl_jobs"},
     )
 
     run_init_task = CustomKubernetesPodOperator(

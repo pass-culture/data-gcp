@@ -199,3 +199,32 @@ class TestBuildRemovedEvents:
 
         assert len(removed_events_df) == 0
         assert len(removed_links_df) == 0
+
+    def test_empty_active_offer_ids_removes_all_events(self):
+        link_df = _make_link_df([["S1", "A"], ["S1", "B"], ["S2", "C"]])
+
+        removed_events_df, removed_links_df = build_removed_events(link_df, set())
+
+        assert set(removed_events_df["event_id"]) == {"S1", "S2"}
+        assert (removed_events_df["action"] == ActionType.REMOVE).all()
+
+        assert set(removed_links_df["offer_id"]) == {"A", "B", "C"}
+        assert (removed_links_df["action"] == ActionType.REMOVE).all()
+
+    def test_custom_comment_is_used(self):
+        link_df = _make_link_df([["S1", "A"]])
+
+        removed_events_df, removed_links_df = build_removed_events(
+            link_df, set(), comment=CommentType.FULL_RESET
+        )
+
+        assert (removed_events_df["comment"] == CommentType.FULL_RESET).all()
+        assert (removed_links_df["comment"] == CommentType.FULL_RESET).all()
+
+    def test_default_comment_is_removed_event(self):
+        link_df = _make_link_df([["S1", "A"], ["S1", "B"]])
+
+        removed_events_df, removed_links_df = build_removed_events(link_df, set())
+
+        assert (removed_events_df["comment"] == CommentType.REMOVED_EVENT).all()
+        assert (removed_links_df["comment"] == CommentType.REMOVED_EVENT).all()

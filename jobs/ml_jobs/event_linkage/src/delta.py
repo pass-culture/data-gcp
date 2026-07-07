@@ -100,7 +100,9 @@ def match_offers_to_existing_events(
 
 
 def build_removed_events(
-    event_offer_link_df: pd.DataFrame, active_offer_ids: set[str]
+    event_offer_link_df: pd.DataFrame,
+    active_offer_ids: set[str],
+    comment: CommentType = CommentType.REMOVED_EVENT,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Identify event_series whose offers have all been deleted, and build delta
@@ -109,13 +111,15 @@ def build_removed_events(
     An offer is considered deleted if it is linked to an event_series but is
     absent from the current set of active offers. An event_series is only
     removed if ALL of its linked offers are deleted; if at least one offer
-    survives, nothing is done.
+    survives, nothing is done. Passing an empty `active_offer_ids` therefore
+    removes every event_series in `event_offer_link_df`.
 
     Args:
         event_offer_link_df (pd.DataFrame): Existing links between offers and
             event_series, with columns "event_id" and "offer_id".
         active_offer_ids (set[str]): The set of offer IDs currently active
             (present in the pipeline's raw offer input).
+        comment (CommentType): Comment to stamp on the removed events/links.
 
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]: A tuple of
@@ -136,11 +140,11 @@ def build_removed_events(
             lambda df: df[EVENT_ID_COL].isin(fully_deleted_event_ids),
             [EVENT_ID_COL, OFFER_ID_COL],
         ]
-        .assign(action=ActionType.REMOVE, comment=CommentType.REMOVED_EVENT)
+        .assign(action=ActionType.REMOVE, comment=comment)
         .reset_index(drop=True)
     )
     removed_events_df = pd.DataFrame({EVENT_ID_COL: fully_deleted_event_ids}).assign(
-        action=ActionType.REMOVE, comment=CommentType.REMOVED_EVENT
+        action=ActionType.REMOVE, comment=comment
     )
 
     return removed_events_df, removed_links_df

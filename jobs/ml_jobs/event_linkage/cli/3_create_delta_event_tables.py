@@ -54,25 +54,41 @@ def main(
     event_series_offer_link_filepath: str = typer.Option(),
     delta_events_filepath: str = typer.Option(),
     delta_event_offer_link_filepath: str = typer.Option(),
+    *,
+    from_scratch: bool = typer.Option(
+        False,
+        help="Remove all existing event_series and re-cluster every offer "
+        "from scratch.",
+    ),
 ) -> None:
     # 1. Load Data
     raw_data_df = pd.read_parquet(offer_event_filepath)
     similarities_df = pd.read_parquet(similarities_filepath)
-    event_offer_link_df = (
+    original_event_offer_link_df = (
         pd.read_parquet(event_series_offer_link_filepath)
         .rename(columns={EVENT_SERIES_ID_COL: EVENT_ID_COL})
         .astype({OFFER_ID_COL: raw_data_df[OFFER_ID_COL].dtype})
     )
-    if (
-        len(event_offer_link_df) > 0
-        and not event_offer_link_df[OFFER_ID_COL].isin(raw_data_df[OFFER_ID_COL]).any()
-    ):
-        logger.warning(
-            "None of the offers in the event-series-offer-link file are present "
-            "in the raw offers input. This usually indicates an offer_id dtype "
-            "mismatch between the two files and would cause every existing "
-            "event_series to be flagged as removed."
+    if from_scratch:
+        logger.info(
+            "From-scratch mode: all existing event_series will be removed and "
+            "every offer will be re-clustered."
         )
+        event_offer_link_df = original_event_offer_link_df.iloc[0:0]
+    else:
+        event_offer_link_df = original_event_offer_link_df
+        if (
+            len(event_offer_link_df) > 0
+            and not event_offer_link_df[OFFER_ID_COL]
+            .isin(raw_data_df[OFFER_ID_COL])
+            .any()
+        ):
+            logger.warning(
+                "None of the offers in the event-series-offer-link file are present "
+                "in the raw offers input. This usually indicates an offer_id dtype "
+                "mismatch between the two files and would cause every existing "
+                "event_series to be flagged as removed."
+            )
 
     # 2. Build cross df with similarities and raw data
     cross_df = build_cross_df(raw_data_df, similarities_df)
@@ -162,10 +178,13 @@ def main(
         )
     logger.success(f"Created {len(delta_events)} delta events from clusters.")
 
-    # 5. Remove events whose offers have all been deleted
-    active_offer_ids = set(raw_data_df[OFFER_ID_COL])
+    # 5. Remove events whose offers have all been deleted (or, in from-scratch
+    #    mode, remove every existing event since active_offer_ids is empty)
+    active_offer_ids = set() if from_scratch else set(raw_data_df[OFFER_ID_COL])
     removed_events_df, removed_event_links_df = build_removed_events(
-        event_offer_link_df, active_offer_ids
+        original_event_offer_link_df,
+        active_offer_ids,
+        comment=CommentType.FULL_RESET if from_scratch else CommentType.REMOVED_EVENT,
     )
     logger.success(f"Removed {len(removed_events_df)} events with no active offers.")
 
@@ -183,6 +202,17 @@ def main(
         ],
         ignore_index=True,
     )
+
+    if from_scratch:
+        recreated_event_ids = set(removed_events_df[EVENT_ID_COL]) & {
+            e["event_id"] for e in delta_events
+        }
+        if recreated_event_ids:
+            logger.info(
+                f"{len(recreated_event_ids)} event_id(s) were removed and "
+                "immediately recreated identically (same offers clustered "
+                "again): " + ", ".join(sorted(recreated_event_ids))
+            )
 
     all_delta_events_df.to_parquet(delta_events_filepath, index=False)
     all_delta_event_offer_links_df.to_parquet(

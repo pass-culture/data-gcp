@@ -17,13 +17,9 @@ from common.operators.kubernetes import (
 )
 from common.utils import get_airflow_schedule
 
-FUNCTION_NAME = f"siren_import_{ENV_SHORT_NAME}"
-SIREN_FILENAME = "siren_data.csv"
 schedule = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 */6 * * *"
 
 DAG_NAME = "import_siren_v1"
-GCE_INSTANCE = f"import-siren-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/external/siren"
 MICROSERVICE_PATH = "jobs/etl_jobs/external/siren"
 SIREN_ENV_VARS = {"PROJECT_NAME": GCP_PROJECT_ID}
 

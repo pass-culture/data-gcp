@@ -210,7 +210,6 @@ def _make_orchestration_worker_pod_spec(dags_branch: str, dags_image_tag: str) -
 def _make_job_worker_pod_spec(
     branch: str,
     sparse_paths: str | list[str],
-    run_as_non_root: bool = True,
 ) -> V1Pod:
     """Pod spec for the job worker that runs the git-sync init container in runtime_mode='gitsynced'."""
     return V1Pod(

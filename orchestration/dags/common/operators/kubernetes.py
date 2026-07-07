@@ -306,7 +306,7 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
         runtime_branch: str | None = None,
         microservice_path: str | None = None,
         runtime_sparse_paths: str | list[str] | None = None,
-        runtime_workdir: str | None = None,
+        runtime_workdir: str = ".",
         runtime_image: str | None = None,
         runtime_image_tag: str = _DEFAULT_RUNTIME_IMAGE_TAG,
         private_registry: bool = True,
@@ -348,7 +348,7 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
                     else [runtime_sparse_paths]
                 )
 
-            self.runtime_workdir = runtime_workdir or microservice_path
+            self.runtime_workdir = runtime_workdir
         self.runtime_image = runtime_image
         self.runtime_image_tag = runtime_image_tag
         self.private_registry = private_registry

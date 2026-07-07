@@ -445,6 +445,5 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
                 self.runtime_sparse_paths
                 if self.runtime_sparse_paths
                 else self.microservice_path,
-                run_as_non_root=self.private_registry,
             )
         return super().execute(context)

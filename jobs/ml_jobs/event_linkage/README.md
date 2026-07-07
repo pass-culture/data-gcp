@@ -59,11 +59,23 @@ Runs incrementally against the already-existing event_series (loaded from `--eve
 
 Additionally, any event_series whose offers have **all** disappeared from the current input (deleted offers) is removed: both the event and its offer links are emitted with `action = "remove"`. An event_series with at least one surviving offer is left untouched.
 
+**`--from-scratch`** — pass this flag to ignore the existing `event_series_id` ↔ `offer_id` links entirely: no offer is treated as already linked, so every offer goes through clustering instead of being attached to an existing event, and **all** existing event_series are flagged for removal (with `comment = "full_reset"` instead of `"removed_event"`). This produces a full remove-then-add delta that re-clusters every offer from scratch while still going through the normal delta mechanism. If a cluster ends up identical to an event_series that was just removed, that `event_id` is logged as removed-and-recreated. Use this to rebuild the event_series from scratch, e.g. after a change to the matching/clustering logic.
+
+```bash
+python cli/3_create_delta_event_tables.py \
+    --offer-event-filepath <input.parquet> \
+    --similarities-filepath <similarities.parquet> \
+    --event-series-offer-link-filepath <applicative_event_series_offer_link.parquet> \
+    --delta-events-filepath <delta_events.parquet> \
+    --delta-event-offer-links-filepath <delta_event_offer_links.parquet> \
+    --from-scratch
+```
+
 Produces two output tables:
 - **delta_events** — one row per event (new or removed) with metadata and action type.
 - **delta_event_offer_links** — one row per (event_id, offer_id) link (new, linked-to-existing, or removed).
 
-Action/comment values: `action` is `add` or `remove` (`src/interfaces.py::ActionType`); `comment` is one of `new_event`, `linked_to_existing_event`, `removed_event` (`src/interfaces.py::CommentType`).
+Action/comment values: `action` is `add` or `remove` (`src/interfaces.py::ActionType`); `comment` is one of `new_event`, `linked_to_existing_event`, `removed_event`, `full_reset` (`src/interfaces.py::CommentType`).
 
 ## Configuration
 

@@ -20,6 +20,8 @@ from src.constants import (
 from src.delta import build_removed_events, match_offers_to_existing_events
 from src.interfaces import ActionType, CommentType
 
+SUBCATEGORIES_TO_CLUSTERIZE = ["SPECTACLE_REPRESENTATION", "CONCERT"]
+
 
 def build_cross_df(
     raw_data_df: pd.DataFrame, similarities_df: pd.DataFrame
@@ -83,6 +85,14 @@ def main(
     existing_event_links_dfs = []
     for subcategory in raw_data_df[OFFER_SUBCATEGORY_ID_COL].dropna().unique():
         logger.info(f"Processing subcategory {subcategory}...")
+
+        if subcategory not in SUBCATEGORIES_TO_CLUSTERIZE:
+            logger.info(
+                f"Skipping subcategory {subcategory}... since it's not in the list of "
+                "subcategories to clusterize."
+            )
+            continue
+
         matched_pairs_df = compute_matched_pairs(cross_df, subcategory)
 
         existing_event_links_df = match_offers_to_existing_events(
@@ -93,10 +103,10 @@ def main(
 
         excluded_offer_ids = existing_linked_offer_ids | newly_linked_offer_ids
         remaining_pairs_df = matched_pairs_df.loc[
-            lambda df, excluded=excluded_offer_ids: ~df[f"{OFFER_ID_COL}_1"].isin(
-                excluded
+            lambda df, excluded=excluded_offer_ids: (
+                ~df[f"{OFFER_ID_COL}_1"].isin(excluded)
+                & ~df[f"{OFFER_ID_COL}_2"].isin(excluded)
             )
-            & ~df[f"{OFFER_ID_COL}_2"].isin(excluded)
         ]
         cluster_df = build_clusters_from_matched_pairs(remaining_pairs_df, subcategory)
         logger.success(

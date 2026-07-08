@@ -1,3 +1,5 @@
+```python
+
 import datetime
 
 from airflow import DAG
@@ -74,3 +76,5 @@ with DAG(
     end = EmptyOperator(task_id="end", dag=dag)
 
     sleep_op >> adage_to_bq >> end
+
+```

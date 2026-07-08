@@ -241,10 +241,10 @@ def taxonomy(
         "(default: raw_<env>).",
     ),
     destination_table: str = typer.Option(
-        "collection_taxonomy",
+        "metabase_collection_taxonomy",
         "--destination-table",
         help="Override the destination taxonomy table name "
-        "(default: 'collection_taxonomy').",
+        "(default: 'metabase_collection_taxonomy').",
     ),
 ):
     """Resolve the collection taxonomy (squad/tier/certified) and write it to BigQuery."""

@@ -57,7 +57,7 @@ with DAG(
             default=BIGQUERY_RAW_DATASET, type="string"
         ),
         "taxonomy_destination_table": Param(
-            default="collection_taxonomy", type="string"
+            default="metabase_collection_taxonomy", type="string"
         ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],

@@ -8,6 +8,7 @@ select
     col as col_position,
     size_x,
     size_y,
-    visualization_settings
+    visualization_settings,
+    parameter_mappings
 
 from public.report_dashboardcard

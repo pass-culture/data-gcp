@@ -3,7 +3,7 @@ from datetime import datetime
 
 from google.cloud import bigquery
 
-GCP_PROJECT = os.environ.get("PROJECT_NAME")
+GCP_PROJECT = os.environ.get("GCP_PROJECT_ID")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "")
 BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
 BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"

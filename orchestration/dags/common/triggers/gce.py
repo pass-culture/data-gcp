@@ -1,10 +1,113 @@
 import asyncio
+import time
 from typing import Any, Dict, Tuple
 
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from common.config import GCP_PROJECT_ID, SSH_USER, USE_INTERNAL_IP
-from common.hooks.gce import DeferrableSSHGCEJobManager
+from common.hooks.gce import DeferrableSSHGCEJobManager, GCEHook
+
+
+class GCEInstanceRunningTrigger(BaseTrigger):
+    """Polls a (flex-start) GCE instance until it reaches RUNNING.
+
+    Used by the deferrable ``StartGCEOperator`` so the Airflow worker slot is
+    freed while a DWS flex-start request sits queued in PENDING waiting for GPU
+    capacity (which can take up to the configured ``request_valid_for_duration``,
+    max 2h).
+    """
+
+    TERMINAL_STATES = {"TERMINATED", "SUSPENDED", "SUSPENDING", "STOPPING"}
+
+    def __init__(
+        self,
+        instance_name: str,
+        zone: str,
+        poll_interval: int = 60,
+        timeout: int = 9000,
+    ):
+        super().__init__()
+        self.instance_name = instance_name
+        self.zone = zone
+        self.poll_interval = poll_interval
+        self.timeout = timeout
+
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+        return (
+            self.__class__.__module__ + "." + self.__class__.__name__,
+            {
+                "instance_name": self.instance_name,
+                "zone": self.zone,
+                "poll_interval": self.poll_interval,
+                "timeout": self.timeout,
+            },
+        )
+
+    def _get_instance(self):
+        with GCEHook(gce_zone=self.zone) as hook:
+            return hook.get_instance(self.instance_name)
+
+    async def run(self):
+        loop = asyncio.get_event_loop()
+        deadline = time.time() + self.timeout
+        while True:
+            try:
+                instance = await loop.run_in_executor(None, self._get_instance)
+            except Exception as exc:  # transient API error: log and retry
+                self.log.warning(
+                    f"Error checking {self.instance_name} status: {exc}. Retrying."
+                )
+                instance = {"status": "UNKNOWN"}
+
+            if instance is None:
+                yield TriggerEvent(
+                    {
+                        "status": "error",
+                        "instance": self.instance_name,
+                        "message": (
+                            f"Instance {self.instance_name} no longer exists: the "
+                            "flex-start request likely expired without securing "
+                            "capacity."
+                        ),
+                    }
+                )
+                return
+
+            status = instance.get("status")
+            self.log.info(f"Instance {self.instance_name} status: {status}")
+
+            if status == "RUNNING":
+                yield TriggerEvent(
+                    {"status": "running_ok", "instance": self.instance_name}
+                )
+                return
+            if status in self.TERMINAL_STATES:
+                yield TriggerEvent(
+                    {
+                        "status": "error",
+                        "instance": self.instance_name,
+                        "message": (
+                            f"Instance {self.instance_name} reached terminal state "
+                            f"{status} before RUNNING; flex-start failed to secure "
+                            "capacity."
+                        ),
+                    }
+                )
+                return
+            if time.time() > deadline:
+                yield TriggerEvent(
+                    {
+                        "status": "error",
+                        "instance": self.instance_name,
+                        "message": (
+                            f"Timed out waiting for {self.instance_name} to reach "
+                            f"RUNNING (last status: {status})."
+                        ),
+                    }
+                )
+                return
+
+            await asyncio.sleep(self.poll_interval)
 
 
 class DeferrableSSHJobMonitorTrigger(BaseTrigger):

@@ -173,7 +173,7 @@ class TestEmbedDataframe:
         vectors = [Vector(name="emb", features=["name"], encoder_name="test/model")]
         encoders = {"test/model": mock_encoder}
 
-        result = embed_dataframe(df, vectors, encoders, gpu_count=0)
+        result = embed_dataframe(df, vectors, encoders)
 
         assert "item_id" in result.columns
         assert "content_hash" in result.columns

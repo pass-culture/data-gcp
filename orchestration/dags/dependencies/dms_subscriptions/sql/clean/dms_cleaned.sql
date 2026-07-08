@@ -6,14 +6,14 @@ select
         application_archived,
         application_status,
 
-        timestamp_micros(cast((last_update_at / 1000) as integer)) as last_update_at,
+        timestamp_micros(cast((last_update_at) as integer)) as last_update_at,
         timestamp_micros(
-            cast((application_submitted_at / 1000) as integer)
+            cast((application_submitted_at) as integer)
         ) as application_submitted_at,
         timestamp_micros(
-            cast((passed_in_instruction_at / 1000) as integer)
+            cast((passed_in_instruction_at) as integer)
         ) as passed_in_instruction_at,
-        timestamp_micros(cast((processed_at / 1000) as integer)) as processed_at,
+        timestamp_micros(cast((processed_at) as integer)) as processed_at,
         instructors,
         demandeur_siret,
         demandeur_naf,

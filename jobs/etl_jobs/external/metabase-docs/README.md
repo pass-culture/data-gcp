@@ -3,9 +3,6 @@
 Enrich + reconcile the imported Notion dashboard docs into a structured, queryable
 "dashboard ontology" table.
 
-**PR 2 of 2** — depends on the `notion` import job (`raw_<env>.notion_dashboard_docs`) and on the
-daily Metabase sync (`metabase-governance` + dbt → `int_metabase_<env>.asset_catalog`).
-
 ## What it does
 
 For each doc in the latest partition of `raw_<env>.notion_dashboard_docs`:

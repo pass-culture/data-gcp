@@ -18,7 +18,7 @@ with
         select
             event_series_id,
             event_series_name,
-            event_series_description,
+            cast(event_series_description as string) as event_series_description,
             event_series_mediation_uuid
         from {{ ref("exp_backend__event_series_delta") }}
         where action = "add" or action = "update"

@@ -7,7 +7,7 @@ dashboard/question deep link auto-detected.
 ## Run
 
 ```bash
-# env (also injected by the DAG): GCP_PROJECT, ENV_SHORT_NAME
+# env (also injected by the DAG): GCP_PROJECT_ID, ENV_SHORT_NAME
 
 uv run main.py export    # export → raw_<env>.notion_dashboard_docs
 ```
@@ -16,7 +16,7 @@ uv run main.py export    # export → raw_<env>.notion_dashboard_docs
 
 | variable | purpose | default |
 |---|---|---|
-| `GCP_PROJECT` | BigQuery + Secret Manager project | — |
+| `GCP_PROJECT_ID` | BigQuery + Secret Manager project | — |
 | `ENV_SHORT_NAME` | `dev` / `stg` / `prod`; suffixes datasets + secrets | — |
 | `NOTION_TOKEN` | integration token override | secret `notion_api_key_<env>` |
 | `NOTION_DB_ID` | database id override | secret `notion_dashboard_database_id_<env>` |

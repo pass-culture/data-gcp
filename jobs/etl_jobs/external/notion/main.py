@@ -2,7 +2,7 @@
 
     uv run main.py export     # export → raw_<env>.notion_dashboard_docs
 
-Secrets (Secret Manager on GCP_PROJECT):
+Secrets (Secret Manager on GCP_PROJECT_ID):
     notion_api_key_<env>
     notion_dashboard_database_id_<env>
 """
@@ -87,12 +87,19 @@ def _collect_rows(notion: NotionClient, db_id: str, execution_date: datetime):
 @app.command()
 def export():
     """Export the dashboard-docs DB → raw_<env>.notion_dashboard_docs."""
-    notion = _client()
-    db_id = get_notion_db_id()
-    execution_date = datetime.now(timezone.utc)
-    rows = list(_collect_rows(notion, db_id, execution_date))
-    save_to_bq(rows, execution_date)
-    logger.info("Done: %s docs → %s", len(rows), NOTION_DOCS_TABLE)
+    try:
+        notion = _client()
+        db_id = get_notion_db_id()
+        execution_date = datetime.now(timezone.utc)
+        rows = list(_collect_rows(notion, db_id, execution_date))
+        save_to_bq(rows, execution_date)
+        logger.info("Done: %s docs → %s", len(rows), NOTION_DOCS_TABLE)
+    except typer.Exit:
+        # typer.Exit is a subclass of Exception — re-raise before broad except catches it
+        raise
+    except Exception as e:
+        logger.exception(f"ETL job failed: {e}")
+        raise typer.Exit(code=1) from e
 
 
 if __name__ == "__main__":

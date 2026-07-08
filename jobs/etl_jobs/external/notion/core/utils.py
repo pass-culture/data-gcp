@@ -3,7 +3,7 @@ import os
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 
-GCP_PROJECT = os.environ.get("GCP_PROJECT")
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 BIGQUERY_RAW_DATASET = f"raw_{ENV_SHORT_NAME}"
 
@@ -24,11 +24,11 @@ def access_secret_data(project_id, secret_id, version_id="latest", default=None)
 
 def get_notion_token():
     """Notion integration token from Secret Manager."""
-    return access_secret_data(GCP_PROJECT, f"notion_api_key_{ENV_SHORT_NAME}")
+    return access_secret_data(GCP_PROJECT_ID, f"notion_api_key_{ENV_SHORT_NAME}")
 
 
 def get_notion_db_id():
     """Dashboard-docs database id from Secret Manager."""
     return access_secret_data(
-        GCP_PROJECT, f"notion_dashboard_database_id_{ENV_SHORT_NAME}"
+        GCP_PROJECT_ID, f"notion_dashboard_database_id_{ENV_SHORT_NAME}"
     )

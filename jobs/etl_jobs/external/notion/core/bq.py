@@ -6,7 +6,7 @@ from datetime import datetime
 import pandas as pd
 from google.cloud import bigquery
 
-from core.utils import BIGQUERY_RAW_DATASET, GCP_PROJECT, NOTION_DOCS_TABLE
+from core.utils import BIGQUERY_RAW_DATASET, GCP_PROJECT_ID, NOTION_DOCS_TABLE
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ def save_to_bq(rows: list, execution_date: datetime):
     df["execution_date"] = pd.to_datetime(df["execution_date"], utc=True)
 
     yyyymmdd = execution_date.strftime("%Y%m%d")
-    table_id = f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{NOTION_DOCS_TABLE}${yyyymmdd}"
+    table_id = f"{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.{NOTION_DOCS_TABLE}${yyyymmdd}"
     job_config = bigquery.LoadJobConfig(
         schema=BQ_SCHEMA,
         write_disposition="WRITE_TRUNCATE",
@@ -43,5 +43,5 @@ def save_to_bq(rows: list, execution_date: datetime):
         ),
     )
     logger.info("Loading %s rows → %s", len(df), table_id)
-    client = bigquery.Client(project=GCP_PROJECT)
+    client = bigquery.Client(project=GCP_PROJECT_ID)
     client.load_table_from_dataframe(df, table_id, job_config=job_config).result()

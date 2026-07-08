@@ -19,6 +19,7 @@ from src.constants import (
     OFFER_ID_COL,
     OFFER_SUBCATEGORY_ID_COL,
     PARTIAL_NAME_SIMILARITY_THRESHOLD,
+    SUBCATEGORIES_NOT_MATCHING_ON_OFFER_NAMES,
 )
 from src.interfaces import ClusterRepresentantMethod
 
@@ -26,10 +27,6 @@ DESCRIPTION_MATCH_COL = "description_match"
 NAME_MATCH_COL = "name_match"
 IMAGE_MATCH_COL = "image_match"
 MATCH_COL = "match"
-
-
-# Matching Params
-SUBCATEGORIES_NOT_MATCHING_ON_OFFER_NAMES = ["SPECTACLE_REPRESENTATION"]
 
 
 def get_uuid_from_cluster(offer_ids: set[str]) -> str:

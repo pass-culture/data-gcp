@@ -16,11 +16,10 @@ from src.constants import (
     IMAGE_URL_COL,
     OFFER_ID_COL,
     OFFER_SUBCATEGORY_ID_COL,
+    SUBCATEGORIES_TO_CLUSTERIZE,
 )
 from src.delta import build_removed_events, match_offers_to_existing_events
 from src.interfaces import ActionType, CommentType
-
-SUBCATEGORIES_TO_CLUSTERIZE = ["SPECTACLE_REPRESENTATION", "CONCERT"]
 
 
 def build_cross_df(
@@ -132,8 +131,16 @@ def main(
         )
         cluster_dfs.append(cluster_df)
 
-    all_cluster_df = pd.concat(cluster_dfs, ignore_index=True)
-    all_existing_event_links_df = pd.concat(existing_event_links_dfs, ignore_index=True)
+    all_cluster_df = (
+        pd.concat(cluster_dfs, ignore_index=True)
+        if cluster_dfs
+        else pd.DataFrame(columns=["cluster", "cluster_length", "subcategory_id"])
+    )
+    all_existing_event_links_df = (
+        pd.concat(existing_event_links_dfs, ignore_index=True)
+        if existing_event_links_dfs
+        else pd.DataFrame(columns=[EVENT_ID_COL, OFFER_ID_COL, "action", "comment"])
+    )
     logger.success(
         f"Clusterized offers into {len(all_cluster_df)} new clusters and linked "
         f"{len(all_existing_event_links_df)} offers to existing events across "
@@ -192,11 +199,16 @@ def main(
     all_delta_events_df = pd.concat(
         [pd.DataFrame(delta_events), removed_events_df], ignore_index=True
     )
+    delta_event_offer_links_df = (
+        pd.DataFrame(delta_event_offer_links)
+        if delta_event_offer_links
+        else pd.DataFrame(columns=["event_id", "offer_ids", "action", "comment"])
+    )
     all_delta_event_offer_links_df = pd.concat(
         [
-            pd.DataFrame(delta_event_offer_links)
-            .explode("offer_ids")
-            .rename(columns={"offer_ids": OFFER_ID_COL}),
+            delta_event_offer_links_df.explode("offer_ids").rename(
+                columns={"offer_ids": OFFER_ID_COL}
+            ),
             all_existing_event_links_df,
             removed_event_links_df,
         ],

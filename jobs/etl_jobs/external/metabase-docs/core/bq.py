@@ -13,7 +13,7 @@ from core.utils import (
     BIGQUERY_RAW_DATASET,
     DASHBOARD_CARD_TABLE,
     DASHBOARD_DOCS_TABLE,
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
     NOTION_DOCS_TABLE,
     QUERY_EXECUTION_TABLE,
     QUERY_TABLE,
@@ -47,11 +47,11 @@ _NATIVE_SQL_RE = re.compile(r"\s+")
 
 
 def _raw(table: str) -> str:
-    return f"`{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{table}`"
+    return f"`{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.{table}`"
 
 
 def _int(table: str) -> str:
-    return f"`{GCP_PROJECT}.{BIGQUERY_INT_METABASE_DATASET}.{table}`"
+    return f"`{GCP_PROJECT_ID}.{BIGQUERY_INT_METABASE_DATASET}.{table}`"
 
 
 def read_notion_docs(client: bigquery.Client) -> list:
@@ -180,7 +180,7 @@ def save_docs(client: bigquery.Client, rows: list, execution_date: datetime):
         logger.warning("No rows to save — leaving %s untouched.", DASHBOARD_DOCS_TABLE)
         return
     yyyymmdd = execution_date.strftime("%Y%m%d")
-    table_id = f"{GCP_PROJECT}.{BIGQUERY_INT_METABASE_DATASET}.{DASHBOARD_DOCS_TABLE}${yyyymmdd}"
+    table_id = f"{GCP_PROJECT_ID}.{BIGQUERY_INT_METABASE_DATASET}.{DASHBOARD_DOCS_TABLE}${yyyymmdd}"
     job_config = bigquery.LoadJobConfig(
         schema=BQ_SCHEMA,
         write_disposition="WRITE_TRUNCATE",

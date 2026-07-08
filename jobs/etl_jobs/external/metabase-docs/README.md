@@ -34,7 +34,7 @@ uv run main.py enrich --force   # re-enrich every doc
 
 | var | meaning |
 |---|---|
-| `GCP_PROJECT` | BigQuery + Vertex project |
+| `GCP_PROJECT_ID` | BigQuery + Vertex project |
 | `ENV_SHORT_NAME` | `dev` / `stg` / `prod` (dataset suffix) |
 | `VERTEX_LOCATION` | Vertex region (default `europe-west1`) |
 | `VERTEX_MODEL` | Gemini model (default `gemini-2.5-flash`) |

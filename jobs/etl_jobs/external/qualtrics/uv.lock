@@ -780,7 +780,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.2.0" },
     { name = "pandas-gbq", specifier = ">=0.26.0" },
     { name = "requests", specifier = ">=2.32.3" },
-    { name = "typer", specifier = ">=0.15.0" },
+    { name = "typer", specifier = ">=0.24" },
 ]
 
 [[package]]

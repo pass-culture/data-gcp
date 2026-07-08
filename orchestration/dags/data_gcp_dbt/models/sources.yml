@@ -68,6 +68,8 @@ sources:
       - name: applicative_database_educational_redactor
       - name: applicative_database_educational_year
       - name: applicative_database_ems_cinema_details
+      - name: applicative_database_event_series
+      - name: applicative_database_event_series_offer_link
       - name: applicative_database_favorite
       - name: applicative_database_feature
       - name: applicative_database_finance_event

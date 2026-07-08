@@ -10,5 +10,23 @@ models:
         description: "Number of rows with a null or empty event_series_name in the future event series data."
       - name: count_duplicate_links_in_future_event_series_offer_link
         description: "Number of duplicate (offer_id, event_series_id) pairs in the future event series offer link data."
+      - name: count_orphan_event_series_in_future_event_series_offer_link
+        description: "Number of future event series offer links whose event_series_id does not exist in the future event series data."
+      - name: count_event_series_id_null_or_empty_in_future_event_series
+        description: "Number of rows with a null or empty event_series_id in the future event series data."
+      - name: count_null_or_empty_keys_in_future_event_series_offer_link
+        description: "Number of rows with a null or empty event_series_id or offer_id in the future event series offer link data."
+      - name: count_invalid_actions_in_event_series_delta
+        description: "Number of rows in the event series delta with a null action or an action other than add, update, or remove."
+      - name: count_invalid_actions_in_event_series_offer_link_delta
+        description: "Number of rows in the event series offer link delta with a null action or an action other than add, update, or remove."
+      - name: count_offers_linked_to_multiple_event_series
+        description: "Number of offers linked to more than one event series in the future event series offer link data."
+      - name: count_missing_mediation_uuid_in_event_series_delta
+        description: "Number of added or updated rows in the event series delta with an image url but a null or empty mediation uuid."
+      - name: count_future_event_series_below_shrinkage_threshold
+        description: "Flag (0 or 1) set to 1 when the future event series row count drops below 30% of the current applicative event series row count."
+      - name: count_future_event_series_offer_link_below_shrinkage_threshold
+        description: "Flag (0 or 1) set to 1 when the future event series offer link row count drops below 30% of the current applicative event series offer link row count."
       - name: ready_for_ingestion
         description: "Boolean flag that is true when all check counts are zero, indicating the data is ready for backend ingestion."

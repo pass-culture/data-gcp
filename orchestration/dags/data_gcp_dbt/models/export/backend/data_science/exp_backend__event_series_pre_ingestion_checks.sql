@@ -4,16 +4,52 @@ with
             event_series_id,
             event_series_name,
             event_series_description,
-            event_series_image_url
+            event_series_mediation_uuid
+        from {{ source("raw", "applicative_database_event_series") }}
+        where
+            event_series_id not in (
+                select distinct event_series_delta.event_series_id
+                from {{ ref("exp_backend__event_series_delta") }} as event_series_delta
+                where
+                    event_series_delta.action = "remove"
+                    or event_series_delta.action = "update"
+            )
+        union all
+        select
+            event_series_id,
+            event_series_name,
+            cast(event_series_description as string) as event_series_description,
+            event_series_mediation_uuid
         from {{ ref("exp_backend__event_series_delta") }}
-        where action = "add"
-    ),  -- Add current event series once we have the delta in place to be able to check for duplicates on future event series
+        where action = "add" or action = "update"
+    ),
 
     future_event_series_offer_link as (
-        select event_series_id, offer_id
+        select
+            event_series_id,
+            cast(offer_id as string) as offer_id,
+            concat(event_series_id, offer_id) as concat_id
+        from {{ source("raw", "applicative_database_event_series_offer_link") }}
+        where
+            concat(event_series_id, offer_id) not in (
+
+                select
+                    concat(
+                        event_series_offer_link_delta.event_series_id,
+                        event_series_offer_link_delta.offer_id
+                    ) as concat_id
+                from
+                    {{ ref("exp_backend__event_series_offer_link_delta") }}
+                    as event_series_offer_link_delta
+                where
+                    event_series_offer_link_delta.action = "remove"
+                    or event_series_offer_link_delta.action = "update"
+            )
+        union all
+        select event_series_id, offer_id, concat(event_series_id, offer_id) as concat_id
         from {{ ref("exp_backend__event_series_offer_link_delta") }}
-        where action = "add"
-    ),  -- Add current event series offer link once we have the delta in place to be able to check on future links
+        where action = "add" or action = "update"
+    ),
 
     check_event_series_id_duplicates_in_future_event_series as (
         select

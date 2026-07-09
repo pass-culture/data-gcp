@@ -66,8 +66,19 @@ def should_match_on_offer_names(df: pd.DataFrame, subcategory_id: str) -> pd.Ser
 
 def compute_matched_pairs(cross_df: pd.DataFrame, subcategory_id: str) -> pd.DataFrame:
     """
-    Filter offer pairs of a subcategory down to those that match on
-        name, description, or image similarity (per subcategory rules).
+    Identify, among all offer pairs of a given subcategory, the pairs that
+    are likely to belong to the same event.
+
+    1. An offer pair is first restricted to those in the target subcategory
+        and above the partial name similarity threshold.
+    2. For the remaining pairs,
+        a. three boolean flags are computed (name, description, and image match,
+            each based on its own similarity threshold),
+        b. then these flags are combined into a final match flag via
+            `should_match_on_offer_names` (which, for some subcategories, ignores
+                the name match because offer names are not discriminant enough for
+                those subcategories).
+    3. Finally, it returns only pairs with a final match flag set to True.
 
     Args:
         cross_df (pd.DataFrame): The dataframe containing the offers and
@@ -82,18 +93,22 @@ def compute_matched_pairs(cross_df: pd.DataFrame, subcategory_id: str) -> pd.Dat
     selected_df = (
         cross_df.loc[lambda df: df[f"{OFFER_SUBCATEGORY_ID_COL}_1"] == subcategory_id]
         .loc[
-            lambda df: df["partial_name_similarity"]
-            >= PARTIAL_NAME_SIMILARITY_THRESHOLD
+            lambda df: (
+                df["partial_name_similarity"] >= PARTIAL_NAME_SIMILARITY_THRESHOLD
+            )
         ]
         .reset_index(drop=True)
     ).assign(
         **{
-            DESCRIPTION_MATCH_COL: lambda df: df[DESCRIPTION_SIMILARITY_COL]
-            >= DESCRIPTION_SIMILARITY_THRESHOLD,
-            NAME_MATCH_COL: lambda df: df[NAME_SIMILARITY_COL]
-            >= NAME_SIMILARITY_THRESHOLD,
-            IMAGE_MATCH_COL: lambda df: df[IMAGE_SIMILARITY_COL]
-            >= IMAGE_SIMILARITY_THRESHOLD,
+            DESCRIPTION_MATCH_COL: lambda df: (
+                df[DESCRIPTION_SIMILARITY_COL] >= DESCRIPTION_SIMILARITY_THRESHOLD
+            ),
+            NAME_MATCH_COL: lambda df: (
+                df[NAME_SIMILARITY_COL] >= NAME_SIMILARITY_THRESHOLD
+            ),
+            IMAGE_MATCH_COL: lambda df: (
+                df[IMAGE_SIMILARITY_COL] >= IMAGE_SIMILARITY_THRESHOLD
+            ),
             MATCH_COL: lambda df: should_match_on_offer_names(df, subcategory_id),
         }
     )
@@ -223,8 +238,10 @@ def extract_cluster_metadata(
     # Retrieve offers and similarities in cluster
     offers_in_cluster = raw_data_df[raw_data_df[OFFER_ID_COL].isin(cluster_row.cluster)]
     similarities_in_cluster = cross_df.loc[
-        lambda df, o=offers_in_cluster: df[f"{OFFER_ID_COL}_1"].isin(o[OFFER_ID_COL])
-        & df[f"{OFFER_ID_COL}_2"].isin(o[OFFER_ID_COL])
+        lambda df, o=offers_in_cluster: (
+            df[f"{OFFER_ID_COL}_1"].isin(o[OFFER_ID_COL])
+            & df[f"{OFFER_ID_COL}_2"].isin(o[OFFER_ID_COL])
+        )
     ]
 
     # Get most common attributes in cluster

@@ -58,6 +58,14 @@ DAG_DOC = """
                     "g2-standard-48": 4 L4s,
                     "g2-standard-96": 8 L4s,
             ⚠️ caution: frequent stockouts on L4 GPUs, especially in europe-west1-b, try europe-west1-c or europe-west1-d if you encounter stockouts.
+    * provisioning_model: leave to `STANDARD` for an immediate start. Set to `FLEX_START`
+      to use Dynamic Workload Scheduler (DWS), which queues the request until capacity is
+      available instead of failing on stockout — handy for GPUs that frequently stock out.
+      With FLEX_START you must set `max_run_duration` (the VM is auto-deleted after it), and
+      `request_valid_for_duration` controls how long the request stays queued (max 2h). The
+      task does not defer while the request is queued.
+      FLEX_START is incompatible with `reservation_name` and preemptible.
+    * reservation_name: if you have a specific Compute Engine reservation to consume, set this parameter to the name of the reservation. When set, the VM targets this reservation via SPECIFIC_RESERVATION and requires provisioning_model=STANDARD (incompatible with FLEX_START). The instance_type, gpu_type, gpu_count and gce_zone must match the reservation exactly. Leave empty to not target any reservation.
     * use_gke_network: if you need your VM to comminicate with the Clickhouse cluster, set this parameter to True
     * pricing: the pricing of the VM depends on the `instance_type` and can be found [here](https://gcloud-compute.com/instances.html)
       ** For instance, the `n1-standard-2` instance type costs $0.1157 per hour while the `n1-standard-32` instance type costs $1.852 per hour
@@ -85,7 +93,7 @@ with (
                 type="string",
             ),
             "instance_type": Param(
-                default=gce_params["instance_type"]["prod"],
+                default=gce_params["instance_type"][ENV_SHORT_NAME],
                 enum=list(chain(*INSTANCES_TYPES["cpu"].values())),
             ),
             "instance_name": Param(default=gce_params["instance_name"], type="string"),
@@ -105,6 +113,40 @@ with (
                 default="'3.10'",
                 enum=["'3.8'", "'3.9'", "'3.10'", "'3.11'", "'3.12'", "'3.13'"],
             ),
+            "provisioning_model": Param(
+                default="STANDARD",
+                enum=["STANDARD", "FLEX_START"],
+                description="""VM provisioning model. STANDARD requests capacity
+                            immediately (fails on stockout). FLEX_START uses Dynamic
+                            Workload Scheduler (DWS) to queue the request until
+                            capacity is available (queue held for up to
+                            request_valid_for_duration, max 2h). Useful for GPUs
+                            with frequent stockouts.""",
+            ),
+            "max_run_duration": Param(
+                default="12h",
+                type="string",
+                description="""(FLEX_START only) Max VM run duration before it is
+                            auto-deleted. Accepts e.g. '12h', '1d2h', or seconds.
+                            Max 7 days.""",
+            ),
+            "request_valid_for_duration": Param(
+                default="2h",
+                type="string",
+                description="""(FLEX_START only) How long DWS holds the request in
+                            queue while the VM is PENDING. Accepts e.g. '2h', '90m'.
+                            Must be between 90s and 2h. If set to 0, the request is held for the max 2h.""",
+            ),
+            "reservation_name": Param(
+                default=None,
+                type=["string", "null"],
+                description="""Name of a specific Compute Engine reservation to
+                            consume. When set, the VM targets this reservation via
+                            SPECIFIC_RESERVATION and requires provisioning_model=STANDARD
+                            (incompatible with FLEX_START). The instance_type, gpu_type,
+                            gpu_count and gce_zone must match the reservation exactly.
+                            Leave empty to not target any reservation.""",
+            ),
         },
         doc_md=DAG_DOC,
     ) as dag
@@ -122,6 +164,13 @@ with (
         gce_zone="{{ params.gce_zone }}",
         gpu_type="{{ params.gpu_type }}",
         gpu_count="{{ params.gpu_count }}",
+        provisioning_model="{{ params.provisioning_model }}",
+        max_run_duration="{{ params.max_run_duration }}",
+        request_valid_for_duration="{{ params.request_valid_for_duration }}",
+        reservation_name="{{ params.reservation_name }}",
+        # A FLEX_START request waits synchronously while DWS keeps it queued, so
+        # cover the max 2h queue wait plus provisioning/boot margin.
+        execution_timeout=timedelta(hours=3),
     )
 
     clone_install = InstallDependenciesOperator(

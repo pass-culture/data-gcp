@@ -47,18 +47,35 @@ Only pairs exceeding the partial name similarity threshold are kept for further 
 python cli/3_create_delta_event_tables.py \
     --offer-event-filepath <input.parquet> \
     --similarities-filepath <similarities.parquet> \
+    --event-series-offer-link-filepath <applicative_event_series_offer_link.parquet> \
     --delta-events-filepath <delta_events.parquet> \
     --delta-event-offer-links-filepath <delta_event_offer_links.parquet>
 ```
 
-Clusters similar offer pairs into events using a graph-based approach (connected components via `networkx`). For each subcategory, offers that match on name, description, or image (depending on subcategory rules) are grouped into clusters. Each cluster becomes a new event with:
+Runs incrementally against the already-existing event_series (loaded from `--event-series-offer-link-filepath`, the current `event_series_id` ↔ `offer_id` links). For each subcategory, offer pairs that match on name, description, or image (depending on subcategory rules) are computed, then processed in two passes:
 
-- A deterministic UUID derived from the sorted offer IDs in the cluster.
-- Metadata extracted from the cluster representative.
+1. **Link to existing events** — a new offer (not yet linked to any event_series) that matches one or more already-linked offers is attached to an existing event_series, without creating a new event. If it matches offers from several event_series, it is linked to the one with the most matching offers (majority vote), tie-broken by the highest similarity score, then by `event_id`. Existing event_series are never modified, merged, or re-matched.
+2. **Cluster the rest** — offers still unmatched are clustered among themselves via connected components (`networkx`), exactly as in a from-scratch run. Each cluster becomes a new event with a deterministic UUID (derived from the sorted offer IDs) and metadata extracted from the cluster representative.
+
+Additionally, any event_series whose offers have **all** disappeared from the current input (deleted offers) is removed: both the event and its offer links are emitted with `action = "remove"`. An event_series with at least one surviving offer is left untouched.
+
+**`--from-scratch`** — pass this flag to ignore the existing `event_series_id` ↔ `offer_id` links entirely: no offer is treated as already linked, so every offer goes through clustering instead of being attached to an existing event, and **all** existing event_series are flagged for removal (with `comment = "full_reset"` instead of `"removed_event"`). This produces a full remove-then-add delta that re-clusters every offer from scratch while still going through the normal delta mechanism. If a cluster ends up identical to an event_series that was just removed, that `event_id` is logged as removed-and-recreated. Use this to rebuild the event_series from scratch, e.g. after a change to the matching/clustering logic.
+
+```bash
+python cli/3_create_delta_event_tables.py \
+    --offer-event-filepath <input.parquet> \
+    --similarities-filepath <similarities.parquet> \
+    --event-series-offer-link-filepath <applicative_event_series_offer_link.parquet> \
+    --delta-events-filepath <delta_events.parquet> \
+    --delta-event-offer-links-filepath <delta_event_offer_links.parquet> \
+    --from-scratch
+```
 
 Produces two output tables:
-- **delta_events** — one row per event with metadata and action type.
-- **delta_event_offer_links** — one row per (event_id, offer_id) link.
+- **delta_events** — one row per event (new or removed) with metadata and action type.
+- **delta_event_offer_links** — one row per (event_id, offer_id) link (new, linked-to-existing, or removed).
+
+Action/comment values: `action` is `add` or `remove` (`src/interfaces.py::ActionType`); `comment` is one of `new_event`, `linked_to_existing_event`, `removed_event`, `full_reset` (`src/interfaces.py::CommentType`).
 
 ## Configuration
 

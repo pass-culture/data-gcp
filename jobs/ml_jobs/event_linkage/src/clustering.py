@@ -19,6 +19,7 @@ from src.constants import (
     OFFER_ID_COL,
     OFFER_SUBCATEGORY_ID_COL,
     PARTIAL_NAME_SIMILARITY_THRESHOLD,
+    SUBCATEGORIES_NOT_MATCHING_ON_OFFER_NAMES,
 )
 from src.interfaces import ClusterRepresentantMethod
 
@@ -26,10 +27,6 @@ DESCRIPTION_MATCH_COL = "description_match"
 NAME_MATCH_COL = "name_match"
 IMAGE_MATCH_COL = "image_match"
 MATCH_COL = "match"
-
-
-# Matching Params
-SUBCATEGORIES_NOT_MATCHING_ON_OFFER_NAMES = ["SPECTACLE_REPRESENTATION"]
 
 
 def get_uuid_from_cluster(offer_ids: set[str]) -> str:
@@ -67,6 +64,82 @@ def should_match_on_offer_names(df: pd.DataFrame, subcategory_id: str) -> pd.Ser
     return df[DESCRIPTION_MATCH_COL] | df[NAME_MATCH_COL] | df[IMAGE_MATCH_COL]
 
 
+def compute_matched_pairs(cross_df: pd.DataFrame, subcategory_id: str) -> pd.DataFrame:
+    """
+    Identify, among all offer pairs of a given subcategory, the pairs that
+    are likely to belong to the same event.
+
+    1. An offer pair is first restricted to those in the target subcategory
+        and above the partial name similarity threshold.
+    2. For the remaining pairs,
+        a. three boolean flags are computed (name, description, and image match,
+            each based on its own similarity threshold),
+        b. then these flags are combined into a final match flag via
+            `should_match_on_offer_names` (which, for some subcategories, ignores
+                the name match because offer names are not discriminant enough for
+                those subcategories).
+    3. Finally, it returns only pairs with a final match flag set to True.
+
+    Args:
+        cross_df (pd.DataFrame): The dataframe containing the offers and
+            their similarities.
+        subcategory_id (str): The subcategory ID to filter offers by.
+
+    Returns:
+        pd.DataFrame: The offer pairs of the subcategory that match, with
+            all similarity columns and match flag columns.
+    """
+    # Filter offers by subcategory and similarity thresholds
+    selected_df = (
+        cross_df.loc[lambda df: df[f"{OFFER_SUBCATEGORY_ID_COL}_1"] == subcategory_id]
+        .loc[
+            lambda df: (
+                df["partial_name_similarity"] >= PARTIAL_NAME_SIMILARITY_THRESHOLD
+            )
+        ]
+        .reset_index(drop=True)
+    ).assign(
+        **{
+            DESCRIPTION_MATCH_COL: lambda df: (
+                df[DESCRIPTION_SIMILARITY_COL] >= DESCRIPTION_SIMILARITY_THRESHOLD
+            ),
+            NAME_MATCH_COL: lambda df: (
+                df[NAME_SIMILARITY_COL] >= NAME_SIMILARITY_THRESHOLD
+            ),
+            IMAGE_MATCH_COL: lambda df: (
+                df[IMAGE_SIMILARITY_COL] >= IMAGE_SIMILARITY_THRESHOLD
+            ),
+            MATCH_COL: lambda df: should_match_on_offer_names(df, subcategory_id),
+        }
+    )
+
+    return selected_df[selected_df[MATCH_COL]]
+
+
+def build_clusters_from_matched_pairs(
+    matched_df: pd.DataFrame, subcategory_id: str
+) -> pd.DataFrame:
+    """
+    Build clusters (connected components) of offers from a set of matched
+        offer pairs.
+
+    Args:
+        matched_df (pd.DataFrame): Offer pairs that match, with columns
+            "offer_id_1" and "offer_id_2".
+        subcategory_id (str): The subcategory ID the pairs belong to, stored
+            alongside each cluster.
+
+    Returns:
+        pd.DataFrame: A dataframe containing the clusters of offers.
+    """
+    G = nx.from_pandas_edgelist(
+        matched_df, source=f"{OFFER_ID_COL}_1", target=f"{OFFER_ID_COL}_2"
+    )
+    return pd.DataFrame({"cluster": list(nx.connected_components(G))}).assign(
+        cluster_length=lambda df: df.cluster.map(len), subcategory_id=subcategory_id
+    )
+
+
 def clusterize_offers(cross_df: pd.DataFrame, subcategory_id: str) -> pd.DataFrame:
     """
     Clusterize offers into events based on their similarities.
@@ -79,34 +152,8 @@ def clusterize_offers(cross_df: pd.DataFrame, subcategory_id: str) -> pd.DataFra
     Returns:
         pd.DataFrame: A dataframe containing the clusters of offers.
     """
-    # Filter offers by subcategory and similarity thresholds
-    selected_df = (
-        cross_df.loc[lambda df: df[f"{OFFER_SUBCATEGORY_ID_COL}_1"] == subcategory_id]
-        .loc[
-            lambda df: df["partial_name_similarity"]
-            >= PARTIAL_NAME_SIMILARITY_THRESHOLD
-        ]
-        .reset_index(drop=True)
-    ).assign(
-        **{
-            DESCRIPTION_MATCH_COL: lambda df: df[DESCRIPTION_SIMILARITY_COL]
-            >= DESCRIPTION_SIMILARITY_THRESHOLD,
-            NAME_MATCH_COL: lambda df: df[NAME_SIMILARITY_COL]
-            >= NAME_SIMILARITY_THRESHOLD,
-            IMAGE_MATCH_COL: lambda df: df[IMAGE_SIMILARITY_COL]
-            >= IMAGE_SIMILARITY_THRESHOLD,
-            MATCH_COL: lambda df: should_match_on_offer_names(df, subcategory_id),
-        }
-    )
-
-    # Clusterize
-    matched_df = selected_df[selected_df[MATCH_COL]]
-    G = nx.from_pandas_edgelist(
-        matched_df, source=f"{OFFER_ID_COL}_1", target=f"{OFFER_ID_COL}_2"
-    )
-    return pd.DataFrame({"cluster": list(nx.connected_components(G))}).assign(
-        cluster_length=lambda df: df.cluster.map(len), subcategory_id=subcategory_id
-    )
+    matched_df = compute_matched_pairs(cross_df, subcategory_id)
+    return build_clusters_from_matched_pairs(matched_df, subcategory_id)
 
 
 def get_cluster_metadata_representant(
@@ -191,8 +238,10 @@ def extract_cluster_metadata(
     # Retrieve offers and similarities in cluster
     offers_in_cluster = raw_data_df[raw_data_df[OFFER_ID_COL].isin(cluster_row.cluster)]
     similarities_in_cluster = cross_df.loc[
-        lambda df, o=offers_in_cluster: df[f"{OFFER_ID_COL}_1"].isin(o[OFFER_ID_COL])
-        & df[f"{OFFER_ID_COL}_2"].isin(o[OFFER_ID_COL])
+        lambda df, o=offers_in_cluster: (
+            df[f"{OFFER_ID_COL}_1"].isin(o[OFFER_ID_COL])
+            & df[f"{OFFER_ID_COL}_2"].isin(o[OFFER_ID_COL])
+        )
     ]
 
     # Get most common attributes in cluster

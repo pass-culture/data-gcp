@@ -69,7 +69,7 @@ ENV ?= dev
 define FETCH_DAG_PATH
 [ -z "$(DAG)" ] && { echo "❌ DAG variable is required. Usage: make $(MAKECMDGOALS) DAG=<name>"; exit 1; }; \
 PATTERN=$$(echo "$(DAG)" | sed 's/\.py$$//').py; \
-DAG_PATH=$$(find dags -name "$$PATTERN" -not -path "*/__pycache__/*" 2>/dev/null); \
+DAG_PATH=$$(find dags -path "*/$$PATTERN" -not -path "*/__pycache__/*" 2>/dev/null); \
 [ -z "$$DAG_PATH" ] && { echo "❌ No DAG found matching: $$PATTERN"; exit 1; }; \
 COUNT=$$(echo "$$DAG_PATH" | wc -l | tr -d ' '); \
 [ "$$COUNT" -gt 1 ] && { echo "❌ Multiple matches — be more specific:"; echo "$$DAG_PATH"; exit 1; }

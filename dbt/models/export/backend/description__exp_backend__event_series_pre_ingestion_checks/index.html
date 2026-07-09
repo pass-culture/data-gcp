@@ -10649,6 +10649,15 @@
 <p>The <code>exp_backend__event_series_pre_ingestion_checks</code> table aggregates data quality checks on the future event series and event series / offer link data before they are ingested by the backend application.
 This table will be read by the backend application to determine if the data is ready for ingestion (i.e. all checks pass).
 The <code>ready_for_ingestion</code> column is <code>true</code> when all checks pass (all counts equal zero).</p>
+<p>The checks cover:</p>
+<ul>
+<li><strong>Uniqueness</strong>: duplicate <code>event_series_id</code> in the future event series data, and duplicate <code>(offer_id, event_series_id)</code> pairs in the future links.</li>
+<li><strong>Null keys</strong>: null or empty <code>event_series_id</code>, <code>offer_id</code>, or <code>event_series_name</code>.</li>
+<li><strong>Referential integrity</strong>: future links pointing to an <code>event_series_id</code> that doesn't exist in the future event series data.</li>
+<li><strong>Delta validity</strong>: rows in either delta with a null action or an action outside <code>add</code>, <code>update</code>, <code>remove</code>.</li>
+<li><strong>Business rules</strong>: an offer linked to more than one event series; an added/updated event series with an image url but no extracted mediation uuid.</li>
+<li><strong>Shrinkage guard</strong>: the future event series (or offer link) row count drops below 30% of the current applicative row count, which would indicate a pathological delta wiping out most of the table.</li>
+</ul>
 
 
 

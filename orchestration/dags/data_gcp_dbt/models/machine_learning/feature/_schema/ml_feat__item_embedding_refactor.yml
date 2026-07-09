@@ -18,13 +18,8 @@ models:
         data_type: STRING
         data_tests:
           - not_null
-      - name: semantic_content_sts
-        description: "{{ doc('column__semantic_content_sts') }}"
-        data_type: ARRAY<FLOAT64>
-        data_tests:
-          - not_null
-      - name: semantic_content_clustering
-        description: "{{ doc('column__semantic_content_clustering') }}"
+      - name: semantic_content
+        description: "{{ doc('column__semantic_content') }}"
         data_type: ARRAY<FLOAT64>
         data_tests:
           - not_null

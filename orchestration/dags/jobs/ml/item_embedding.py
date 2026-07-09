@@ -68,28 +68,32 @@ DAG_DOC = """
     ### Item embedding DAG
 
     #### Parameters:
-    *embed_all* : whether to embed all items or only the ones that need embedding (to_embed = true in the input table)
-    *config_file_name* : name of the configuration file (without .yaml extension) in the `config` folder, which contains the vector configurations and other parameters for the embedding process.
-    *instance_type* : GCE instance type to use for embedding. For L4 GPU instances, make sure to select a compatible machine type with the number of GPUs you want to use. Check hint below.
-    *instance_name* : name of the GCE instance to create for embedding.
-    *gpu_type* : If you decide to embedd all the catalogue, we highly recommend to use 4 L4 GPUs, in europe-west1-c (to avoid stockout issues in europe-west1-b). If you have a smaller catalogue or if you want to embed only the new items, you can use 4 T4 GPU, which is more widely available across zones.
-    *gpu_count* : number of GPUs to use for embedding (only applicable for GPU instance types). Make sure to select a machine type that supports the number of GPUs you want to use.
-    *gce_zone* : GCE zone to use for embedding. Only europe-west1-c and europe-west1-b have L4 GPUs. europe-west1-d has T4 GPUs. Stockout are very frequent.
-    *provisioning_model* : STANDARD (default) requests the GPU immediately and fails on stockout. FLEX_START uses Dynamic Workload Scheduler (DWS): instead of failing, the request is queued until GPU capacity frees up (queue held for up to *request_valid_for_duration*, hard-capped at 2h by GCP). Uses preemptible quota. Best for the full-catalogue L4 run given frequent stockouts.
-    *max_run_duration* / *request_valid_for_duration* : FLEX_START only. See parameter descriptions.
-    *reservation_name* : Consume a specific Compute Engine reservation (e.g. the one auto-created by a future reservation on its start date). When set, use provisioning_model=STANDARD (incompatible with FLEX_START) and make sure instance_type/gpu_type/gpu_count/gce_zone match the reservation exactly.
+    * *embed_all* : whether to embed all items or only the ones that need embedding (to_embed = true in the input table)
+    * *config_file_name* : name of the configuration file (without .yaml extension) in the `config` folder, which contains the vector configurations and other parameters for the embedding process.
+    * *instance_type* : GCE instance type to use for embedding. For L4 GPU instances, make sure to select a compatible machine type with the number of GPUs you want to use. Check hint below.
+    * *instance_name* : name of the GCE instance to create for embedding.
+    * *gpu_type* : If you decide to embedd all the catalogue, we highly recommend to use 4 L4 GPUs, in europe-west1-c (to avoid stockout issues in europe-west1-b). If you have a smaller catalogue or if you want to embed only the new items, you can use 4 T4 GPU, which is more widely available across zones.
+    * *gpu_count* : number of GPUs to use for embedding (only applicable for GPU instance types). Make sure to select a machine type that supports the number of GPUs you want to use.
+    * *gce_zone* : GCE zone to use for embedding. Only europe-west1-c and europe-west1-b have L4 GPUs. europe-west1-d has T4 GPUs. Stockout are very frequent.
+    * *provisioning_model* : STANDARD (default) requests the GPU immediately and fails on stockout. FLEX_START uses Dynamic Workload Scheduler (DWS): instead of failing, the request is queued until GPU capacity frees up (queue held for up to *request_valid_for_duration*, hard-capped at 2h by GCP). Uses preemptible quota. Best for the full-catalogue L4 run given frequent stockouts.
+    * *max_run_duration* / *request_valid_for_duration* : FLEX_START only. See parameter descriptions.
+    * *reservation_name* : Consume a specific Compute Engine reservation (e.g. the one auto-created by a future reservation on its start date). When set, use provisioning_model=STANDARD (incompatible with FLEX_START) and make sure instance_type/gpu_type/gpu_count/gce_zone match the reservation exactly.
 
     *Hint:* For L4 GPUs, make sure to select a compatible g2 machine. The Number of L4 GPUs you can attach to a G2 depends on its RAM.
     Here is the breakdown:
-            "g2-standard-4/8/12/16/32": 1 L4,
-            "g2-standard-24": 2 L4s,
-            "g2-standard-48": 4 L4s,
-            "g2-standard-96": 8 L4s,
-    ⚠️ caution: frequent stockouts on L4 GPUs, especially in europe-west1-b, try europe-west1-c or europe-west1-d if you encounter stockouts.
+           * "g2-standard-4/8/12/16/32": 1 L4,
+           * "g2-standard-24": 2 L4s,
+           * "g2-standard-48": 4 L4s,
+           * "g2-standard-96": 8 L4s,
+    ⚠️ caution: frequent stockouts on **L4 GPUs**, especially in europe-west1-b, try europe-west1-c if you encounter stockouts.
 
-    **How to choose your machine?**
-    *  If you choose to embed_all, the default 1*T4 machine would take ~27 hours to complete. If you can get an L4 or more T4, it will dramatically reduce the time.
-    *  If you want to embed only the new items, you can use the default 1*T4 machine, which is more widely available across zones.
+    **If you want to embed the whole catalog**:
+    * Enable the *embed_all* toggle in the DAG parameters.
+    * The default 1*T4 machine would take ~27 hours to complete. So to accelerate:
+        * Try to get an 1*L4, 2*L4 or 4*T4 machine.
+        * Select *FLEX_START* provisioning model which will queue your VM request in GCP until it is provisioned (max request_valid_for_duration param defaults to2h queue). Note that the airflow worker will hang on until it is provisioned. It lasts till max_run_duration (max 7 days) or until the job is completed, whichever comes first.
+        * You can also try to change the *gce_zone* to *europe-west1-b* if you encounter stockouts in *europe-west1-c*.
+        * Finally, you can also try to reserve a GCE instance with the desired configuration in advance (87 hours prior), and then use the *reservation_name* parameter to consume it on d-day.
 """
 
 with DAG(
@@ -99,7 +103,7 @@ with DAG(
     doc_md=DAG_DOC,
     schedule=SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME],
     catchup=False,
-    dagrun_timeout=timedelta(hours=12),
+    dagrun_timeout=timedelta(hours=30),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
@@ -111,7 +115,7 @@ with DAG(
         "embed_all": Param(
             default=False,
             type="boolean",
-            description="Whether to embed all items or only the ones that need embedding (to_embed = true in the input table). If you choose to embed_all, the default 1*T4 machine would take ~27 hours to complete. If you can get an L4, it will dramatically reduce the time to ~6 hours. If you have a smaller catalogue or if you want to embed only the new items, you can use 1*T4 machine, which is more widely available across zones.",
+            description="Whether to embed all items or only the ones that need embedding (to_embed = true in the input table). See DAG docs for VM setup recommendations.",
         ),
         "config_file_name": Param(
             default="default",
@@ -142,7 +146,7 @@ with DAG(
         ),
         "gce_zone": Param(default="europe-west1-c", enum=GCE_ZONES),
         "provisioning_model": Param(
-            default="FLEX_START",
+            default="STANDARD",
             enum=["STANDARD", "FLEX_START"],
             description="""VM provisioning model. STANDARD requests capacity
                         immediately (fails on stockout). FLEX_START uses Dynamic
@@ -193,7 +197,6 @@ with DAG(
         max_run_duration="{{ params.max_run_duration }}",
         request_valid_for_duration="{{ params.request_valid_for_duration }}",
         reservation_name="{{ params.reservation_name }}",
-        # A FLEX_START request waits synchronously while DWS keeps it queued, so
         # cover the max 2h queue wait plus provisioning/boot margin.
         execution_timeout=timedelta(hours=3),
         retries=3,

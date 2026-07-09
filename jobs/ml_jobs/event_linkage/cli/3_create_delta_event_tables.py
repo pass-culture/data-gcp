@@ -10,7 +10,9 @@ from src.clustering import (
     get_uuid_from_cluster,
 )
 from src.constants import (
+    EVENT_DESCRIPTION_COL,
     EVENT_ID_COL,
+    EVENT_IMAGE_URL_COL,
     EVENT_NAME_COL,
     EVENT_SERIES_ID_COL,
     IMAGE_URL_COL,
@@ -196,8 +198,22 @@ def main(
     logger.success(f"Removed {len(removed_events_df)} events with no active offers.")
 
     # 6. Assemble and save delta tables
+    delta_events_df = (
+        pd.DataFrame(delta_events)
+        if delta_events
+        else pd.DataFrame(
+            columns=[
+                EVENT_ID_COL,
+                EVENT_NAME_COL,
+                EVENT_DESCRIPTION_COL,
+                EVENT_IMAGE_URL_COL,
+                "action",
+                "comment",
+            ]
+        )
+    )
     all_delta_events_df = pd.concat(
-        [pd.DataFrame(delta_events), removed_events_df], ignore_index=True
+        [delta_events_df, removed_events_df], ignore_index=True
     )
     delta_event_offer_links_df = (
         pd.DataFrame(delta_event_offer_links)

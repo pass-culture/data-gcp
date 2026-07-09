@@ -17,7 +17,7 @@ clean_long_tasks_delay = {"prod": 60 * 3, "stg": 60 * 6, "dev": 60 * 12}
 
 clean_ml_delay = {"prod": 60 * 3, "stg": 60 * 2, "dev": 60 * 1}
 clean_long_ml_delay = {"prod": 60 * 6, "stg": 60 * 6, "dev": 60 * 3}
-clean_extra_long_ml_delay = {"prod": 60 * 24, "stg": 60 * 12, "dev": 60 * 12}
+clean_extra_long_ml_delay = {"prod": 60 * 30, "stg": 60 * 12, "dev": 60 * 12}
 
 dag = DAG(
     "gcp_vm_cleaning",

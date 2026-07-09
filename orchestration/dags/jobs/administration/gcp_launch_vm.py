@@ -93,7 +93,7 @@ with (
                 type="string",
             ),
             "instance_type": Param(
-                default=gce_params["instance_type"]["prod"],
+                default=gce_params["instance_type"][ENV_SHORT_NAME],
                 enum=list(chain(*INSTANCES_TYPES["cpu"].values())),
             ),
             "instance_name": Param(default=gce_params["instance_name"], type="string"),

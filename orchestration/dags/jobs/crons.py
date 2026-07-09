@@ -75,7 +75,7 @@ SCHEDULE_DICT = {
         "dev": None,
     },
     "item_embedding": {
-        "prod": "0 7 * * *",  # every day at 7:00 AM
+        "prod": "0 4 * * *",  # every day at 4:00 AM
         "stg": "0 7 * * *",  # every day at 7:00 AM
         "dev": "0 7 * * 1",  # every Monday at 7:00 AM
     },

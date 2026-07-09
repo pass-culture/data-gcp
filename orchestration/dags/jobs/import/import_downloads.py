@@ -4,7 +4,7 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
 from common import macros
-from common.callback import on_failure_vm_callback
+from common.alerts.task_fail import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -12,28 +12,20 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.bigquery import bigquery_job_task
-from common.operators.gce import (
-    DeleteGCEOperator,
-    InstallDependenciesOperator,
-    SSHGCEOperator,
-    StartGCEOperator,
+from common.operators.kubernetes import (
+    DEFAULT_CONTAINER_RESOURCES,
+    CustomKubernetesPodOperator,
 )
 from common.utils import get_airflow_schedule
 from dependencies.downloads.import_downloads import ANALYTICS_TABLES
 
-GCE_INSTANCE = f"import-downloads-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/external/downloads"
+MICROSERVICE_PATH = "jobs/etl_jobs/external/downloads"
 DAG_NAME = "import_downloads"
-
-dag_config = {
-    "PROJECT_NAME": GCP_PROJECT_ID,
-    "ENV_SHORT_NAME": ENV_SHORT_NAME,
-}
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
-    "on_failure_callback": on_failure_vm_callback,
+    "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }
@@ -58,43 +50,48 @@ with DAG(
             description="Execution date in YYYY-MM-DD format. If not provided, it will default to ds.",
         ),
     },
-    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ) as dag:
-    gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE,
-        task_id="gce_start_task",
-        retries=2,
-        labels={"dag_name": DAG_NAME},
-    )
-
-    fetch_install_code = InstallDependenciesOperator(
-        task_id="fetch_install_code",
-        instance_name=GCE_INSTANCE,
-        branch="{{ params.branch }}",
-        python_version="3.13",
-        base_dir=BASE_PATH,
-        retries=2,
-    )
-
-    import_google_downloads_data_to_bigquery = SSHGCEOperator(
+    import_google_downloads_data_to_bigquery = CustomKubernetesPodOperator(
         task_id="import_google_downloads_data_to_bigquery",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="uv run main.py --provider google --execution-date {{ params.execution_date or ds }}",
+        orchestration_mode="celery",
+        queue="k8s-watcher",
+        runtime_mode="gitsynced",
+        runtime_branch="{{ params.branch }}",
+        runtime_image="py313",
+        runtime_image_tag="v1",
+        microservice_path=MICROSERVICE_PATH,
+        arguments=[
+            "main.py",
+            "--provider",
+            "google",
+            "--execution-date",
+            "{{ params.execution_date or ds }}",
+        ],
+        container_resources=DEFAULT_CONTAINER_RESOURCES,
+        env_vars={"PROJECT_NAME": GCP_PROJECT_ID},
     )
 
-    import_apple_downloads_data_to_bigquery = SSHGCEOperator(
+    import_apple_downloads_data_to_bigquery = CustomKubernetesPodOperator(
         task_id="import_apple_downloads_data_to_bigquery",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="uv run main.py --provider apple --execution-date {{ params.execution_date or ds }}",
+        orchestration_mode="celery",
+        queue="k8s-watcher",
+        runtime_mode="gitsynced",
+        runtime_branch="{{ params.branch }}",
+        runtime_image="py313",
+        runtime_image_tag="v1",
+        microservice_path=MICROSERVICE_PATH,
+        arguments=[
+            "main.py",
+            "--provider",
+            "apple",
+            "--execution-date",
+            "{{ params.execution_date or ds }}",
+        ],
+        container_resources=DEFAULT_CONTAINER_RESOURCES,
+        env_vars={"PROJECT_NAME": GCP_PROJECT_ID},
     )
 
-    gce_instance_stop = DeleteGCEOperator(
-        task_id="gce_stop_task", instance_name=GCE_INSTANCE
-    )
 # only downloads included here
 analytics_tasks = []
 for table, params in ANALYTICS_TABLES.items():
@@ -104,13 +101,10 @@ for table, params in ANALYTICS_TABLES.items():
 end = EmptyOperator(task_id="end", dag=dag)
 
 (
-    gce_instance_start
-    >> fetch_install_code
-    >> (
+    (
         import_google_downloads_data_to_bigquery,
         import_apple_downloads_data_to_bigquery,
     )
-    >> gce_instance_stop
     >> analytics_tasks
     >> end
 )

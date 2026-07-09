@@ -4,6 +4,7 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
 from common import macros
+from common.alerts.task_fail import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -27,6 +28,7 @@ DAG_NAME = "import_gcs_seed"
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
+    "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }

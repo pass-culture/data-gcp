@@ -19,7 +19,7 @@ with
                         when application_submitted_at <= 0
                         then null
                         when application_submitted_at > 10000000000000000
-                        then cast(application_submitted_at / 1000 as int64)
+                        then safe_cast(application_submitted_at / 1000 as int64)
                         else application_submitted_at
                     end
                 ),
@@ -31,7 +31,7 @@ with
                         when processed_at <= 0
                         then null
                         when processed_at > 10000000000000000
-                        then cast(processed_at / 1000 as int64)
+                        then safe_cast(processed_at / 1000 as int64)
                         else processed_at
                     end
                 ),
@@ -43,7 +43,7 @@ with
                         when passed_in_instruction_at <= 0
                         then null
                         when passed_in_instruction_at > 10000000000000000
-                        then cast(passed_in_instruction_at / 1000 as int64)
+                        then safe_cast(passed_in_instruction_at / 1000 as int64)
                         else passed_in_instruction_at
                     end
                 ),
@@ -55,7 +55,7 @@ with
                         when last_update_at <= 0
                         then null
                         when last_update_at > 10000000000000000
-                        then cast(last_update_at / 1000 as int64)
+                        then safe_cast(last_update_at / 1000 as int64)
                         else last_update_at
                     end
                 ),

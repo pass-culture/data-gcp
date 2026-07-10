@@ -119,6 +119,54 @@ setup_encoders.py - load encoder models, set the precision and pooling if availa
 - **Multi-GPU**: Automatic `encode_multi_process()` when >1 GPU detected
 - **Encoder deduplication**: Each unique model is loaded once, even if used by multiple vectors
 
+## If you change the config (add/remove/rename a vector)
+
+The job itself will run fine and write the new columns into `ml_feat_<env>.item_embedding_tmp`.
+
+The final table is **not** automatically consistent afterwards. `ml_feat__item_embedding_refactor`
+is an incremental `merge` model, and `item_embedding_tmp` is overwritten (`WRITE_TRUNCATE`) on
+every run. So on the next scheduled dbt run:
+
+- New columns are appended to the schema, but only populated for the items in the last job run.
+  Every other item gets an **empty array**. The `not_null` test does not catch this — BigQuery
+  reads a NULL array back as an empty one.
+- Old columns are kept, still holding the previous config's embeddings.
+
+### If you want to rebuild the `ml_feat__item_embedding_refactor` table to only reflect your new config:
+
+1. Run the `item_embedding` DAG with **`embed_all=True`** so that `item_embedding_tmp` holds the
+   entire catalogue. (~27h on the default 1×T4 — see the DAG docs for faster VM options.)
+2. Verify `item_embedding_tmp` has the expected row count and columns.
+3. Full-refresh the dbt model:
+
+```bash
+dbt run --full-refresh -s ml_feat__item_embedding_refactor --target <ENV_SHORT_NAME> --vars "{'ENV_SHORT_NAME':'<ENV_SHORT_NAME>'}"
+```
+
+> ⚠️ `--full-refresh` rebuilds the table from `item_embedding_tmp` alone. If you skip step 1, it
+> will **delete every item that was not re-embedded in the last run**. Recovery requires a full
+> `embed_all` run.
+
+Downstream jobs use this table `item_embedding_refactor` so you might need to refactor these jobs to use the new schema of the table.
+
+### Else: testing a new config without touching final table `ml_feat__item_embedding_refactor`
+
+Trigger the `item_embedding` DAG with these params overridden, so the run writes to a
+sandbox table instead of `item_embedding_tmp` the one `ml_feat__item_embedding_refactor` reads from:
+
+- `output_table_name`: e.g. `item_embedding_tmp_<myconfig>` (no
+  need to pre-create it)
+- `output_dataset_name`: leave as `ml_feat_<env>`, or point at your own sandbox dataset
+- `instance_name`: e.g. `item-embedding-myconfig`, so you don't collide with the
+  scheduled run's VM
+
+> ⚠️ `output_table_name` is loaded with `WRITE_TRUNCATE`. Pointing it at an existing
+> table **overwrites it**. **NEVER SET IT TO `item_embedding_refactor`.**
+
+Note that the run still overwrites the shared intermediate table
+`ml_input_<env>.tmp_item_metadata`, so avoid running this while the scheduled DAG is active.
+
+
 ## Precision & hardware
 
 - **Precision** is selected automatically: `bfloat16` on Ampere+ GPUs (compute capability ≥ 8, e.g. L4), `float32` otherwise (e.g. T4). `float16` is never used (the default Gemma models overflow in fp16 and produce NaN embeddings).

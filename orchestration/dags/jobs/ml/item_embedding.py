@@ -122,6 +122,16 @@ with DAG(
             type="string",
             description="Name of the configuration file (without .yaml extension)",
         ),
+        "output_dataset_name": Param(
+            default=OUTPUT_DATASET_NAME,
+            type="string",
+            description="BigQuery dataset name for the output embeddings",
+        ),
+        "output_table_name": Param(
+            default=TEMP_OUTPUT_TABLE_NAME,
+            type="string",
+            description="BigQuery table name for the output embeddings",
+        ),
         "instance_type": Param(
             default=INSTANCE_TYPE,
             type="string",
@@ -169,8 +179,8 @@ with DAG(
                         Must be 0 or between 90s and 2h.""",
         ),
         "reservation_name": Param(
-            default="",
-            type="string",
+            default=None,
+            type=["string", "null"],
             description="""Name of a specific Compute Engine reservation to
                         consume (e.g. the reservation auto-created by a future
                         reservation on its start date). When set, the VM targets
@@ -276,7 +286,7 @@ with DAG(
         project_id=GCP_PROJECT_ID,
         bucket=ML_BUCKET_TEMP,
         source_objects=[f"{GCS_FOLDER_PATH}/{OUTPUT_FOLDER}/*.parquet"],
-        destination_project_dataset_table=f"{OUTPUT_DATASET_NAME}.{TEMP_OUTPUT_TABLE_NAME}",
+        destination_project_dataset_table="{{ params.output_dataset_name }}.{{ params.output_table_name }}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,

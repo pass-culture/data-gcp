@@ -14,18 +14,52 @@ with
             nullif(instructors, '') as dms_application_instructors,
 
             datetime(
-                timestamp_micros(safe_cast((application_submitted_at) as int64)),
+                timestamp_micros(
+                    case
+                        when application_submitted_at <= 0
+                        then null
+                        when application_submitted_at > 10000000000000000
+                        then cast(application_submitted_at / 1000 as int64)
+                        else application_submitted_at
+                    end
+                ),
                 'Europe/Paris'
             ) as dms_application_submitted_date,
             datetime(
-                timestamp_micros(safe_cast((processed_at) as int64)), 'Europe/Paris'
+                timestamp_micros(
+                    case
+                        when processed_at <= 0
+                        then null
+                        when processed_at > 10000000000000000
+                        then cast(processed_at / 1000 as int64)
+                        else processed_at
+                    end
+                ),
+                'Europe/Paris'
             ) as dms_application_processed_date,
             datetime(
-                timestamp_micros(safe_cast((passed_in_instruction_at) as int64)),
+                timestamp_micros(
+                    case
+                        when passed_in_instruction_at <= 0
+                        then null
+                        when passed_in_instruction_at > 10000000000000000
+                        then cast(passed_in_instruction_at / 1000 as int64)
+                        else passed_in_instruction_at
+                    end
+                ),
                 'Europe/Paris'
             ) as dms_application_instruction_passed_date,
             datetime(
-                timestamp_micros(safe_cast((last_update_at) as int64)), 'Europe/Paris'
+                timestamp_micros(
+                    case
+                        when last_update_at <= 0
+                        then null
+                        when last_update_at > 10000000000000000
+                        then cast(last_update_at / 1000 as int64)
+                        else last_update_at
+                    end
+                ),
+                'Europe/Paris'
             ) as dms_application_last_updated_at,
 
             -- pro fields only

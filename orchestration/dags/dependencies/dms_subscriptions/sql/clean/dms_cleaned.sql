@@ -6,14 +6,42 @@ select
         application_archived,
         application_status,
 
-        timestamp_micros(cast((last_update_at) as integer)) as last_update_at,
         timestamp_micros(
-            cast((application_submitted_at) as integer)
+            case
+                when last_update_at <= 0
+                then null
+                when last_update_at > 10000000000000000
+                then cast(last_update_at / 1000 as int64)
+                else last_update_at
+            end
+        ) as last_update_at,
+        timestamp_micros(
+            case
+                when application_submitted_at <= 0
+                then null
+                when application_submitted_at > 10000000000000000
+                then cast(application_submitted_at / 1000 as int64)
+                else application_submitted_at
+            end
         ) as application_submitted_at,
         timestamp_micros(
-            cast((passed_in_instruction_at) as integer)
+            case
+                when passed_in_instruction_at <= 0
+                then null
+                when passed_in_instruction_at > 10000000000000000
+                then cast(passed_in_instruction_at / 1000 as int64)
+                else passed_in_instruction_at
+            end
         ) as passed_in_instruction_at,
-        timestamp_micros(cast((processed_at) as integer)) as processed_at,
+        timestamp_micros(
+            case
+                when processed_at <= 0
+                then null
+                when processed_at > 10000000000000000
+                then cast(processed_at / 1000 as int64)
+                else processed_at
+            end
+        ) as processed_at,
         instructors,
         demandeur_siret,
         demandeur_naf,
@@ -45,14 +73,42 @@ select
         application_number,
         application_archived,
         application_status,
-        timestamp_micros(cast((last_update_at / 1000) as integer)) as last_update_at,
         timestamp_micros(
-            cast((application_submitted_at / 1000) as integer)
+            case
+                when last_update_at <= 0
+                then null
+                when last_update_at > 10000000000000000
+                then cast(last_update_at / 1000 as int64)
+                else last_update_at
+            end
+        ) as last_update_at,
+        timestamp_micros(
+            case
+                when application_submitted_at <= 0
+                then null
+                when application_submitted_at > 10000000000000000
+                then cast(application_submitted_at / 1000 as int64)
+                else application_submitted_at
+            end
         ) as application_submitted_at,
         timestamp_micros(
-            cast((passed_in_instruction_at / 1000) as integer)
+            case
+                when passed_in_instruction_at <= 0
+                then null
+                when passed_in_instruction_at > 10000000000000000
+                then cast(passed_in_instruction_at / 1000 as int64)
+                else passed_in_instruction_at
+            end
         ) as passed_in_instruction_at,
-        timestamp_micros(cast((processed_at / 1000) as integer)) as processed_at,
+        timestamp_micros(
+            case
+                when processed_at <= 0
+                then null
+                when processed_at > 10000000000000000
+                then cast(processed_at / 1000 as int64)
+                else processed_at
+            end
+        ) as processed_at,
         instructors,
         applicant_department,
         applicant_postal_code

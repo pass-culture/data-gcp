@@ -169,8 +169,8 @@ with DAG(
                         Must be 0 or between 90s and 2h.""",
         ),
         "reservation_name": Param(
-            default="",
-            type="string",
+            default=None,
+            type=["string", "null"],
             description="""Name of a specific Compute Engine reservation to
                         consume (e.g. the reservation auto-created by a future
                         reservation on its start date). When set, the VM targets

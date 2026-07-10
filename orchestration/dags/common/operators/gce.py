@@ -24,6 +24,20 @@ from common.triggers.gce import (
 )
 
 
+def _clean_optional_template(value: t.Optional[str]) -> t.Optional[str]:
+    """Normalize a rendered optional template field to None when unset.
+
+    A Param defaulting to None renders through Jinja as the literal string
+    "None", which is truthy and would otherwise be treated as a real value.
+    """
+    if value is None:
+        return None
+    value = str(value).strip()
+    if value.lower() in ("", "none", "null"):
+        return None
+    return value
+
+
 def parse_duration_to_seconds(value: t.Union[str, int, None]) -> t.Optional[int]:
     """Parse a duration into seconds.
 
@@ -141,7 +155,7 @@ class StartGCEOperator(BaseOperator):
                 provisioning_model=self.provisioning_model,
                 max_run_duration_seconds=max_run_seconds,
                 request_valid_for_duration_seconds=request_valid_seconds,
-                reservation_name=self.reservation_name or None,
+                reservation_name=_clean_optional_template(self.reservation_name),
                 wait_for_running=True,
             )
 

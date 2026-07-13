@@ -1,3 +1,4 @@
+import logging
 import time
 from datetime import date, timedelta
 
@@ -16,6 +17,8 @@ from core.mapping import (
     PARTNER_REPORT_MAPPING,
 )
 from core.utils import ANDROID_APP_ID, IOS_APP_ID, TOKEN, save_to_bq
+
+logger = logging.getLogger(__name__)
 
 APPS = {"ios": IOS_APP_ID, "android": ANDROID_APP_ID}
 
@@ -155,57 +158,63 @@ def run(
         help="Date de début",
     ),
 ):
-    if n_days is not None:
-        _default = default_date()
-        end_date = _default.strftime("%Y-%m-%d")
+    try:
+        if n_days is not None:
+            _default = default_date()
+            end_date = _default.strftime("%Y-%m-%d")
 
-        start_date = date_minus_n_days(_default, n_days).strftime("%Y-%m-%d")
-    elif start_date is None or end_date is None:
-        raise Exception("n_days or start_date | end_date should be not None")
+            start_date = date_minus_n_days(_default, n_days).strftime("%Y-%m-%d")
+        elif start_date is None or end_date is None:
+            raise Exception("n_days or start_date | end_date should be not None")
 
-    import_app = ImportAppsFlyer(start_date, end_date)
-    if "activity_report" == table_name:
-        print("Run activity_report...")
-        save_to_bq(
-            import_app.get_install_report(),
-            "appsflyer_activity_report",
-            start_date,
-            end_date,
-            INSTALLS_REPORT_MAPPING,
-            date_column="event_time",
-        )
-    if "daily_report" == table_name:
-        print("Run daily_report...")
-        save_to_bq(
-            import_app.get_daily_report(),
-            "appsflyer_daily_report",
-            start_date,
-            end_date,
-            DAILY_REPORT_MAPPING,
-            date_column="date",
-        )
-    if "partner_report" == table_name:
-        print("Run partner_report...")
-        save_to_bq(
-            import_app.get_partner_report(),
-            "appsflyer_partner_report",
-            start_date,
-            end_date,
-            DAILY_REPORT_MAPPING,
-            date_column="date",
-        )
-    if "in_app_event_report" == table_name:
-        print("Run in_app_event_report...")
-        save_to_bq(
-            import_app.get_in_app_events_report(),
-            "appsflyer_in_app_event_report",
-            start_date,
-            end_date,
-            APP_REPORT_MAPPING,
-            date_column="event_time",
-        )
+        import_app = ImportAppsFlyer(start_date, end_date)
+        if "activity_report" == table_name:
+            print("Run activity_report...")
+            save_to_bq(
+                import_app.get_install_report(),
+                "appsflyer_activity_report",
+                start_date,
+                end_date,
+                INSTALLS_REPORT_MAPPING,
+                date_column="event_time",
+            )
+        if "daily_report" == table_name:
+            print("Run daily_report...")
+            save_to_bq(
+                import_app.get_daily_report(),
+                "appsflyer_daily_report",
+                start_date,
+                end_date,
+                DAILY_REPORT_MAPPING,
+                date_column="date",
+            )
+        if "partner_report" == table_name:
+            print("Run partner_report...")
+            save_to_bq(
+                import_app.get_partner_report(),
+                "appsflyer_partner_report",
+                start_date,
+                end_date,
+                DAILY_REPORT_MAPPING,
+                date_column="date",
+            )
+        if "in_app_event_report" == table_name:
+            print("Run in_app_event_report...")
+            save_to_bq(
+                import_app.get_in_app_events_report(),
+                "appsflyer_in_app_event_report",
+                start_date,
+                end_date,
+                APP_REPORT_MAPPING,
+                date_column="event_time",
+            )
 
-    return "Success"
+        return "Success"
+    except typer.Exit:
+        raise
+    except Exception as e:
+        logger.exception(f"ETL job failed: {e}")
+        raise typer.Exit(code=1) from e
 
 
 if __name__ == "__main__":

@@ -100,6 +100,25 @@ plugins:
       lang: fr
   - include-markdown
   - awesome-pages
+  - llmstxt:
+      full_output: llms-full.txt
+      markdown_description: >-
+        Documentation for Pass Culture's data repository: dbt data models,
+        KPIs, glossary, and data engineering/science references.
+      sections:
+        Platform:
+          - project_structure_and_data_flow.md
+        Data Models:
+          - dbt/overview.md
+          - dbt/vidoc_kpis/*.md
+          - dbt/ministry_kpis/*.md
+          - dbt/models/**/description*.md
+        Glossary:
+          - dbt/glossary.md
+          - dbt/glossary/*/column*.md
+        Teams:
+          - team/ds/*.md
+          - team/de/*.md
 
 # Markdown Extensions
 markdown_extensions:

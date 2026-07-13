@@ -4,6 +4,7 @@ import datetime
 
 from airflow import DAG
 from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator
 from common import macros
 from common.alerts.task_fail import task_fail_slack_alert
@@ -142,11 +143,16 @@ with DAG(
         **_kpo_common,
     )
 
+    end = EmptyOperator(
+        task_id="end", dag=dag, trigger_rule="none_failed_min_one_success"
+    )
+
     # Task dependencies
-    execution_mode_branch >> run_init_task >> download_images_init
+    execution_mode_branch >> run_init_task >> download_images_init >> end
     (
         execution_mode_branch
         >> wait_for_raw
         >> run_incremental_task
         >> download_images_incremental
+        >> end
     )

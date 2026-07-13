@@ -43,68 +43,79 @@ def run(
     ),
 ):
     """Main entry point for Brevo ETL."""
-
-    # Set up dates
-    today = datetime.now(tz=timezone.utc)
-
-    # Parse dates or use defaults
-    if start_date:
-        start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-    else:
-        start_dt = today - timedelta(days=UPDATE_WINDOW)
-
-    if end_date:
-        end_dt = datetime.strptime(end_date, "%Y-%m-%d")
-    else:
-        end_dt = today
-
-    assert start_dt <= end_dt, "Start date must be before end date."
-
-    fallback_flag = async_mode and target == "newsletter"
-    async_fallback = async_mode and target == "transactional"
-    logger.info(
-        f"Running Brevo ETL: target={target}, audience={audience}, "
-        f"start={start_dt.strftime('%Y-%m-%d')}, end={end_dt.strftime('%Y-%m-%d')}, "
-        f"{'WARNING: Async mode disabled: only supported for transactional target! ' if fallback_flag else ''}"
-        f"async={async_fallback}, max_concurrent={max_concurrent if async_fallback else 'N/A'} "
-    )
-
-    # Get API configuration
     try:
-        api_key, table_name = get_api_configuration(audience)
-    except ValueError as e:
-        typer.echo(str(e))
-        raise typer.Exit(code=1)
+        # Set up dates
+        today = datetime.now(tz=timezone.utc)
 
-    # Process based on target
-    if target == "newsletter":
-        # Set up sync HTTP client and connector
-        rate_limiter = SyncBrevoHeaderRateLimiter()
-        client = SyncHttpClient(rate_limiter=rate_limiter)
-        connector = BrevoConnector(api_key=api_key, client=client)
-
-        etl_newsletter(connector, audience, table_name, start_dt, end_dt)
-
-    elif target == "transactional":
-        if async_mode:
-            # Run async version
-            asyncio.run(
-                _run_async_transactional(
-                    api_key, audience, start_dt, end_dt, max_concurrent=max_concurrent
-                )
-            )
+        # Parse dates or use defaults
+        if start_date:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
         else:
+            start_dt = today - timedelta(days=UPDATE_WINDOW)
+
+        if end_date:
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+        else:
+            end_dt = today
+
+        assert start_dt <= end_dt, "Start date must be before end date."
+
+        fallback_flag = async_mode and target == "newsletter"
+        async_fallback = async_mode and target == "transactional"
+        logger.info(
+            f"Running Brevo ETL: target={target}, audience={audience}, "
+            f"start={start_dt.strftime('%Y-%m-%d')}, end={end_dt.strftime('%Y-%m-%d')}, "
+            f"{'WARNING: Async mode disabled: only supported for transactional target! ' if fallback_flag else ''}"
+            f"async={async_fallback}, max_concurrent={max_concurrent if async_fallback else 'N/A'} "
+        )
+
+        # Get API configuration
+        try:
+            api_key, table_name = get_api_configuration(audience)
+        except ValueError as e:
+            typer.echo(str(e))
+            raise typer.Exit(code=1)
+
+        # Process based on target
+        if target == "newsletter":
             # Set up sync HTTP client and connector
             rate_limiter = SyncBrevoHeaderRateLimiter()
             client = SyncHttpClient(rate_limiter=rate_limiter)
             connector = BrevoConnector(api_key=api_key, client=client)
 
-            etl_transactional(connector, audience, start_dt, end_dt)
-    else:
-        typer.echo("Invalid target. Must be one of transactional/newsletter.")
-        raise typer.Exit(code=1)
+            etl_newsletter(connector, audience, table_name, start_dt, end_dt)
 
-    logger.info(f"ETL {target} process for audience {audience} completed successfully.")
+        elif target == "transactional":
+            if async_mode:
+                # Run async version
+                asyncio.run(
+                    _run_async_transactional(
+                        api_key,
+                        audience,
+                        start_dt,
+                        end_dt,
+                        max_concurrent=max_concurrent,
+                    )
+                )
+            else:
+                # Set up sync HTTP client and connector
+                rate_limiter = SyncBrevoHeaderRateLimiter()
+                client = SyncHttpClient(rate_limiter=rate_limiter)
+                connector = BrevoConnector(api_key=api_key, client=client)
+
+                etl_transactional(connector, audience, start_dt, end_dt)
+        else:
+            typer.echo("Invalid target. Must be one of transactional/newsletter.")
+            raise typer.Exit(code=1)
+
+        logger.info(
+            f"ETL {target} process for audience {audience} completed successfully."
+        )
+    except typer.Exit:
+        raise
+    except Exception as e:
+        logger.exception(f"ETL job failed: {e}")
+        raise typer.Exit(code=1) from e
 
 
 async def _run_async_transactional(

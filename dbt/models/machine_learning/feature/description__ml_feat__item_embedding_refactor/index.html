@@ -10708,7 +10708,7 @@
 <p>The <code>ml_feat__item_embedding_refactor</code> table contains item embeddings produced by embedding-gemma-300m. Each item has:</p>
 <ul>
 <li>a content hash of the item's metadata.</li>
-<li>multiple embedding columns that are defined in the item_embedding microservice config.</li>
+<li>embedding columns that are defined in the item_embedding microservice config.</li>
 </ul>
 
 <h2 id="table-description">Table description</h2>
@@ -10732,14 +10732,9 @@
 <td style="text-align: left;">Hash of item's metadata.</td>
 </tr>
 <tr>
-<td style="text-align: left;">semantic_content_sts</td>
+<td style="text-align: left;">semantic_content</td>
 <td style="text-align: left;">ARRAY<FLOAT64></td>
-<td style="text-align: left;">Embedding of item's metadata with "STS" prompt name. Encoded with embedding-gemma-300m model.</td>
-</tr>
-<tr>
-<td style="text-align: left;">semantic_content_clustering</td>
-<td style="text-align: left;">ARRAY<FLOAT64></td>
-<td style="text-align: left;">Embedding of item's metadata with "Clustering" prompt name. Encoded with embedding-gemma-300m model.</td>
+<td style="text-align: left;">Embedding of item's metadata with "query" prompt name. Encoded with embedding-gemma-300m model.</td>
 </tr>
 </tbody>
 </table>

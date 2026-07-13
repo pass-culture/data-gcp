@@ -52,3 +52,8 @@ runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 # Pydantic needs to be able to evaluate types at runtime
 # see https://pypi.org/project/flake8-type-checking/ for flake8-type-checking documentation
 # see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation
+
+[tool.uv]
+constraint-dependencies = [
+    "urllib3 >= 2.7.0", # CVE-2026-44432, CVE-2026-44431, PYSEC-2026-141, PYSEC-2026-142
+]

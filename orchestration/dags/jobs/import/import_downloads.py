@@ -92,19 +92,20 @@ with DAG(
         env_vars={"PROJECT_NAME": GCP_PROJECT_ID},
     )
 
-# only downloads included here
-analytics_tasks = []
-for table, params in ANALYTICS_TABLES.items():
-    task = bigquery_job_task(table=table, dag=dag, job_params=params)
-    analytics_tasks.append(task)
+    # only downloads included here
+    analytics_tasks = []
+    for table, params in ANALYTICS_TABLES.items():
+        task = bigquery_job_task(table=table, dag=dag, job_params=params)
+        analytics_tasks.append(task)
 
-end = EmptyOperator(task_id="end", dag=dag)
+    end = EmptyOperator(task_id="end", dag=dag)
 
-(
-    (
-        import_google_downloads_data_to_bigquery,
-        import_apple_downloads_data_to_bigquery,
-    )
-    >> analytics_tasks
-    >> end
-)
+    for analytics_task in analytics_tasks:
+        (
+            [
+                import_google_downloads_data_to_bigquery,
+                import_apple_downloads_data_to_bigquery,
+            ]
+            >> analytics_task
+            >> end
+        )

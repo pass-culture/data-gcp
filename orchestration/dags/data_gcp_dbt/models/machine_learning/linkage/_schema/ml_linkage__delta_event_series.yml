@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: ml_linkage__delta_event_series
+    description: "{{ doc('description__ml_linkage__delta_event_series') }}"
+    columns:
+      - name: event_series_id
+        description: "{{ doc('column__event_series_id') }}"
+        data_tests:
+          - not_null:
+              config:
+                tags: ['critical']
+      - name: event_series_description
+        description: "{{ doc('column__event_series_description') }}"
+      - name: event_series_image_url
+        description: "{{ doc('column__event_series_image_url') }}"
+      - name: action
+        description: "{{ doc('column__delta_action') }}"
+      - name: comment
+        description: "{{ doc('column__delta_comment') }}"
+      - name: event_series_name
+        description: "{{ doc('column__event_series_name') }}"
+        data_tests:
+          - not_null:
+              config:
+                tags: ['critical']
+      - name: event_series_mediation_uuid
+        description: "{{ doc('column__event_series_mediation_uuid') }}"

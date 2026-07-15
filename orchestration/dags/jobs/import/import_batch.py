@@ -3,9 +3,8 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
-from airflow.utils.task_group import TaskGroup
 from common import macros
-from common.callback import on_failure_vm_callback
+from common.alerts.task_fail import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -13,22 +12,19 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.bigquery import bigquery_job_task
-from common.operators.gce import (
-    DeleteGCEOperator,
-    InstallDependenciesOperator,
-    SSHGCEOperator,
-    StartGCEOperator,
+from common.operators.kubernetes import (
+    DEFAULT_CONTAINER_RESOURCES,
+    CustomKubernetesPodOperator,
 )
 from common.utils import depends_loop, get_airflow_schedule
 from dependencies.batch.import_batch import import_batch_tables
 
-GCE_INSTANCE = f"import-batch-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/external/batch"
+MICROSERVICE_PATH = "jobs/etl_jobs/external/batch"
 DAG_NAME = "import_batch"
 
 default_args = {
     "start_date": datetime(2022, 4, 13),
-    "on_failure_callback": on_failure_vm_callback,
+    "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -49,50 +45,33 @@ with DAG(
     },
     template_searchpath=DAG_FOLDER,
     user_defined_macros=macros.default,
-    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ) as dag:
     start = EmptyOperator(task_id="start")
 
-    import_task_groups = []
-    for store in ["ios", "android"]:
-        with TaskGroup(group_id=f"{store}_import_tasks") as tg:
-            gce_instance_start = StartGCEOperator(
-                instance_name=f"{store}-{GCE_INSTANCE}",
-                instance_type="n1-standard-1",
-                task_id=f"gce_start_task_{store}",
-                retries=2,
-                preemptible=False,
-                labels={"job_type": "long_task", "dag_name": DAG_NAME},
-            )
+    _kpo_common = {
+        "orchestration_mode": "celery",
+        "queue": "k8s-watcher",
+        "runtime_mode": "gitsynced",
+        "runtime_branch": "{{ params.branch }}",
+        "runtime_image": "py313",
+        "runtime_image_tag": "v1",
+        "microservice_path": MICROSERVICE_PATH,
+        "container_resources": DEFAULT_CONTAINER_RESOURCES,
+        "retries": 2,
+    }
 
-            fetch_install_code = InstallDependenciesOperator(
-                task_id=f"fetch_install_code_{store}",
-                instance_name=f"{store}-{GCE_INSTANCE}",
-                branch="{{ params.branch }}",
-                python_version="3.13",
-                base_dir=BASE_PATH,
-                dag=dag,
-                retries=2,
-            )
+    import_ios = CustomKubernetesPodOperator(
+        task_id="import_ios",
+        arguments=["main.py", GCP_PROJECT_ID, ENV_SHORT_NAME, "ios"],
+        **_kpo_common,
+    )
 
-            import_job = SSHGCEOperator(
-                task_id=f"import_{store}",
-                instance_name=f"{store}-{GCE_INSTANCE}",
-                base_dir=BASE_PATH,
-                command=f"""
-                uv run main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} {store}
-                """,
-                retries=2,
-            )
-
-            gce_instance_stop = DeleteGCEOperator(
-                instance_name=f"{store}-{GCE_INSTANCE}",
-                task_id=f"gce_stop_task_{store}",
-            )
-
-            gce_instance_start >> fetch_install_code >> import_job >> gce_instance_stop
-
-        import_task_groups.append(tg)
+    import_android = CustomKubernetesPodOperator(
+        task_id="import_android",
+        arguments=["main.py", GCP_PROJECT_ID, ENV_SHORT_NAME, "android"],
+        **_kpo_common,
+    )
 
     start_analytics_table_tasks = EmptyOperator(
         task_id="start_analytics_tasks", dag=dag
@@ -105,7 +84,7 @@ with DAG(
         analytics_table_jobs[table] = {
             "operator": task,
             "depends": job_params.get("depends", []),
-            "dag_depends": job_params.get("dag_depends", []),  # liste de dag_id
+            "dag_depends": job_params.get("dag_depends", []),
         }
 
     end = EmptyOperator(task_id="end", dag=dag)
@@ -118,6 +97,4 @@ with DAG(
         default_end_operator=end,
     )
 
-    (start >> import_task_groups)
-
-    (import_task_groups >> start_analytics_table_tasks)
+    start >> [import_ios, import_android] >> start_analytics_table_tasks

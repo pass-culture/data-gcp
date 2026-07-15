@@ -9,7 +9,7 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
 from common import macros
-from common.callback import on_failure_vm_callback
+from common.alerts.task_fail import task_fail_slack_alert
 from common.config import (
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
@@ -19,28 +19,19 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.bigquery import bigquery_job_task
-from common.operators.gce import (
-    DeleteGCEOperator,
-    InstallDependenciesOperator,
-    SSHGCEOperator,
-    StartGCEOperator,
+from common.operators.kubernetes import (
+    DEFAULT_CONTAINER_RESOURCES,
+    CustomKubernetesPodOperator,
 )
 from common.utils import get_airflow_schedule
 from dependencies.dms_subscriptions.import_dms_subscriptions import CLEAN_TABLES
 
-DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
-GCE_INSTANCE = f"import-dms-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/external/dms"
+MICROSERVICE_PATH = "jobs/etl_jobs/external/dms"
 DAG_NAME = "import_dms_subscriptions"
-
-dag_config = {
-    "GCP_PROJECT_ID": GCP_PROJECT_ID,
-    "ENV_SHORT_NAME": ENV_SHORT_NAME,
-}
 
 default_args = {
     "start_date": datetime(2020, 12, 1),
-    "on_failure_callback": on_failure_vm_callback,
+    "on_failure_callback": task_fail_slack_alert,
     "retries": 2,
     "retry_delay": timedelta(minutes=5),
 }
@@ -69,35 +60,21 @@ with DAG(
     },
     template_searchpath=DAG_FOLDER,
     user_defined_macros=macros.default,
-    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ) as dag:
     start = EmptyOperator(task_id="start")
 
-    gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE,
-        instance_type="n1-standard-4",
-        task_id="gce_start_task",
-        retries=2,
-        labels={"job_type": "long_task", "dag_name": DAG_NAME},
-    )
-
-    fetch_install_code = InstallDependenciesOperator(
-        task_id="fetch_install_code",
-        instance_name=GCE_INSTANCE,
-        branch="{{ params.branch }}",
-        python_version="3.13",
-        base_dir=BASE_PATH,
-        dag=dag,
-        retries=2,
-    )
-
-    dms_to_gcs_pro = SSHGCEOperator(
+    dms_to_gcs_pro = CustomKubernetesPodOperator(
         task_id="dms_to_gcs_pro",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="uv run main.py pro {{ params.updated_since_pro }} ",
-        do_xcom_push=True,
+        orchestration_mode="celery",
+        queue="k8s-watcher",
+        runtime_mode="gitsynced",
+        runtime_branch="{{ params.branch }}",
+        runtime_image="py313",
+        runtime_image_tag="v1",
+        microservice_path=MICROSERVICE_PATH,
+        arguments=["main.py", "pro", "{{ params.updated_since_pro }}"],
+        container_resources=DEFAULT_CONTAINER_RESOURCES,
     )
 
     sleep_op = PythonOperator(
@@ -106,33 +83,59 @@ with DAG(
         python_callable=lambda: time.sleep(60),  # wait 1 minute
     )
 
-    dms_to_gcs_jeunes = SSHGCEOperator(
+    dms_to_gcs_jeunes = CustomKubernetesPodOperator(
         task_id="dms_to_gcs_jeunes",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="uv run main.py jeunes {{ params.updated_since_jeunes }} ",
-        do_xcom_push=True,
+        orchestration_mode="celery",
+        queue="k8s-watcher",
+        runtime_mode="gitsynced",
+        runtime_branch="{{ params.branch }}",
+        runtime_image="py313",
+        runtime_image_tag="v1",
+        microservice_path=MICROSERVICE_PATH,
+        arguments=["main.py", "jeunes", "{{ params.updated_since_jeunes }}"],
+        container_resources=DEFAULT_CONTAINER_RESOURCES,
     )
 
-    parse_api_result_jeunes = SSHGCEOperator(
+    parse_api_result_jeunes = CustomKubernetesPodOperator(
         task_id="parse_api_result_jeunes",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="uv run parse_dms_subscriptions_to_tabular.py --target jeunes --updated-since {{ params.updated_since_jeunes }} "
-        + f"--bucket-name {DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME} ",
-        do_xcom_push=True,
+        orchestration_mode="celery",
+        queue="k8s-watcher",
+        runtime_mode="gitsynced",
+        runtime_branch="{{ params.branch }}",
+        runtime_image="py313",
+        runtime_image_tag="v1",
+        microservice_path=MICROSERVICE_PATH,
+        arguments=[
+            "parse_dms_subscriptions_to_tabular.py",
+            "--target",
+            "jeunes",
+            "--updated-since",
+            "{{ params.updated_since_jeunes }}",
+            "--bucket-name",
+            DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME,
+        ],
+        container_resources=DEFAULT_CONTAINER_RESOURCES,
     )
 
-    parse_api_result_pro = SSHGCEOperator(
+    parse_api_result_pro = CustomKubernetesPodOperator(
         task_id="parse_api_result_pro",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="uv run parse_dms_subscriptions_to_tabular.py --target pro --updated-since {{ params.updated_since_pro }} "
-        + f"--bucket-name {DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME} ",
-        do_xcom_push=True,
+        orchestration_mode="celery",
+        queue="k8s-watcher",
+        runtime_mode="gitsynced",
+        runtime_branch="{{ params.branch }}",
+        runtime_image="py313",
+        runtime_image_tag="v1",
+        microservice_path=MICROSERVICE_PATH,
+        arguments=[
+            "parse_dms_subscriptions_to_tabular.py",
+            "--target",
+            "pro",
+            "--updated-since",
+            "{{ params.updated_since_pro }}",
+            "--bucket-name",
+            DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME,
+        ],
+        container_resources=DEFAULT_CONTAINER_RESOURCES,
     )
 
     import_dms_jeunes_to_bq = GCSToBigQueryOperator(
@@ -208,11 +211,7 @@ with DAG(
 
     end = EmptyOperator(task_id="end")
 
-    gce_instance_stop = DeleteGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_stop_task", dag=dag
-    )
-
-(start >> gce_instance_start >> fetch_install_code >> [dms_to_gcs_pro, sleep_op])
+(start >> [dms_to_gcs_pro, sleep_op])
 (
     sleep_op
     >> dms_to_gcs_jeunes
@@ -228,4 +227,3 @@ with DAG(
     >> cleaning_tasks[1]
     >> end
 )
-(end >> gce_instance_stop)

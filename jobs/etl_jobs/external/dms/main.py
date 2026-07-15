@@ -25,17 +25,19 @@ app = typer.Typer()
 
 @app.command()
 def run(target: str, updated_since: str):
-    logger.info(f"updated_since={updated_since}")
-
-    if target not in ("jeunes", "pro"):
-        logger.error(f"Unknown target: {target}")
-        raise typer.Exit(code=1)
-
     try:
+        logger.info(f"updated_since={updated_since}")
+
+        if target not in ("jeunes", "pro"):
+            logger.error(f"Unknown target: {target}")
+            raise typer.Exit(code=1)
+
         fetch_dms(updated_since, demarches=demarches[target], target=target)
+    except typer.Exit:
+        raise
     except Exception as e:
-        logger.error(f"Failed to fetch DMS for target={target}: {e}")
-        raise typer.Exit(code=1)
+        logger.exception(f"ETL job failed for target={target}: {e}")
+        raise typer.Exit(code=1) from e
 
 
 def fetch_dms(updated_since, demarches, target):

@@ -4,7 +4,7 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
 from common import macros
-from common.callback import on_failure_vm_callback
+from common.alerts.task_fail import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -12,11 +12,9 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.bigquery import bigquery_job_task
-from common.operators.gce import (
-    DeleteGCEOperator,
-    InstallDependenciesOperator,
-    SSHGCEOperator,
-    StartGCEOperator,
+from common.operators.kubernetes import (
+    DEFAULT_CONTAINER_RESOURCES,
+    CustomKubernetesPodOperator,
 )
 from common.utils import (
     depends_loop,
@@ -24,20 +22,15 @@ from common.utils import (
 )
 from dependencies.gcs_seed.import_gcs_seed import ANALYTICS_TABLES
 
+MICROSERVICE_PATH = "jobs/etl_jobs/internal/gcs_seed"
+DAG_NAME = "import_gcs_seed"
+
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
-    "on_failure_callback": on_failure_vm_callback,
+    "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
-}
-
-GCE_INSTANCE = f"import-gcs-seed-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/internal/gcs_seed"
-DAG_NAME = "import_gcs_seed"
-dag_config = {
-    "PROJECT_NAME": GCP_PROJECT_ID,
-    "ENV_SHORT_NAME": ENV_SHORT_NAME,
 }
 
 with DAG(
@@ -55,35 +48,22 @@ with DAG(
             type="string",
         )
     },
-    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ) as dag:
     start = EmptyOperator(task_id="start", dag=dag)
 
-    gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE,
-        task_id="gce_start_task",
-        labels={"dag_name": DAG_NAME},
-    )
-
-    fetch_install_code = InstallDependenciesOperator(
-        task_id="fetch_install_code",
-        instance_name=GCE_INSTANCE,
-        branch="{{ params.branch }}",
-        python_version="3.9",
-        base_dir=BASE_PATH,
-        retries=2,
-    )
-
-    import_seed_data_op = SSHGCEOperator(
+    import_seed_data_op = CustomKubernetesPodOperator(
         task_id="import_seed_data_op",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="python main.py ",
-    )
-
-    gce_instance_stop = DeleteGCEOperator(
-        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+        orchestration_mode="celery",
+        queue="k8s-watcher",
+        runtime_mode="gitsynced",
+        runtime_branch="{{ params.branch }}",
+        runtime_image="py313",
+        runtime_image_tag="v1",
+        microservice_path=MICROSERVICE_PATH,
+        arguments=["main.py"],
+        container_resources=DEFAULT_CONTAINER_RESOURCES,
+        env_vars={"PROJECT_NAME": GCP_PROJECT_ID},
     )
 
     end_raw = EmptyOperator(task_id="end_raw", dag=dag)
@@ -107,12 +87,4 @@ with DAG(
         default_end_operator=end,
     )
 
-    (
-        start
-        >> gce_instance_start
-        >> fetch_install_code
-        >> import_seed_data_op
-        >> gce_instance_stop
-        >> end_raw
-        >> analytics_table_tasks
-    )
+    (start >> import_seed_data_op >> end_raw >> analytics_table_tasks)

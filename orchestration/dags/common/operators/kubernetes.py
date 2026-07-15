@@ -134,8 +134,15 @@ def _make_git_clone_command(
         if len(sparse_paths) == 1:
             copies = f"cp -r /tmp/{repo_name}/{sparse_paths[0]}/. {dest}/"
         else:
-            common_prefix = os.path.commonpath(sparse_paths)
-            copies = f"cp -r /tmp/{repo_name}/{common_prefix}/. {dest}/"
+            copies = " && ".join(
+                [
+                    (
+                        f"mkdir -p {dest}/{os.path.dirname(path)}"
+                        f" && cp -r /tmp/{repo_name}/{path} {dest}/{path}"
+                    )
+                    for path in sparse_paths
+                ]
+            )
 
         return (
             f"echo '=== sparse-cloning {' '.join(sparse_paths)} from branch: {branch} ==='"
@@ -147,6 +154,7 @@ def _make_git_clone_command(
             f" && set +x"
             f" && echo '=== cleaning ==='"
             f" && rm -rf /tmp/{repo_name}"
+            f" && chown -R {_AIRFLOW_USER_UUID}:{_AIRFLOW_USER_UUID} {dest}/"
             f" && echo '=== contents ==='"
             f" && ls {dest}/"
         )
@@ -200,7 +208,8 @@ def _make_orchestration_worker_pod_spec(dags_branch: str, dags_image_tag: str) -
 
 
 def _make_job_worker_pod_spec(
-    branch: str, microservice_path: str, run_as_non_root: bool = True
+    branch: str,
+    sparse_paths: str | list[str],
 ) -> V1Pod:
     """Pod spec for the job worker that runs the git-sync init container in runtime_mode='gitsynced'."""
     return V1Pod(
@@ -215,7 +224,7 @@ def _make_job_worker_pod_spec(
                             repo_url=_MS_REPO_URL,
                             repo_name=_MS_REPO_NAME,
                             branch=branch,
-                            sparse_paths=microservice_path,
+                            sparse_paths=sparse_paths,
                             dest=_MS_MOUNT,
                         )
                     ],
@@ -259,6 +268,9 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
         entrypoint via `uv run`. `branch` is a template field and is rendered before
         execute(), so Jinja expressions like "{{ params.branch }}" work here.
         when using this mode, the user must provide `microservice_path`, the runtime image and tags (optional defaults to the base Python image), and the command is always `uv run` with the provided arguments.
+        Optionally, `runtime_sparse_paths` can be used to clone additional repo paths
+        in the same job pod (for shared modules). When provided, `microservice_path`
+        is still required and used as default runtime working directory.
       - "containerized": job pod uses a fully-built image; no init container. The user
         must provide `runtime_image=`.
 
@@ -277,7 +289,7 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
       base image selection, uv entrypoint construction.
     """
 
-    template_fields = KubernetesPodOperator.template_fields + (
+    template_fields = tuple(KubernetesPodOperator.template_fields) + (
         "runtime_branch",
         "dag_branch",
         "runtime_image",
@@ -293,6 +305,8 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
         dag_image_tag: str = _DEFAULT_DAGS_IMAGE_TAG,
         runtime_branch: str | None = None,
         microservice_path: str | None = None,
+        runtime_sparse_paths: str | list[str] | None = None,
+        runtime_workdir: str = ".",
         runtime_image: str | None = None,
         runtime_image_tag: str = _DEFAULT_RUNTIME_IMAGE_TAG,
         private_registry: bool = True,
@@ -306,6 +320,15 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
         kubernetes_conn_id: str | None = None,
         **kwargs,
     ):
+        self.runtime_mode = runtime_mode
+        self.orchestration_mode = orchestration_mode
+        self.dag_branch = dag_branch
+        self.dag_image_tag = dag_image_tag
+        self.runtime_branch = runtime_branch
+        self.microservice_path = microservice_path
+        self.runtime_sparse_paths = None
+        self.runtime_workdir = runtime_workdir
+
         if runtime_mode == "gitsynced":
             if runtime_branch is None:
                 raise ValueError(
@@ -316,12 +339,15 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
                     "microservice_path is required for runtime_mode='gitsynced'"
                 )
 
-        self.runtime_mode = runtime_mode
-        self.orchestration_mode = orchestration_mode
-        self.dag_branch = dag_branch
-        self.dag_image_tag = dag_image_tag
-        self.runtime_branch = runtime_branch
-        self.microservice_path = microservice_path
+            if runtime_sparse_paths is None:
+                self.runtime_sparse_paths = [microservice_path]
+            else:
+                self.runtime_sparse_paths = (
+                    runtime_sparse_paths
+                    if isinstance(runtime_sparse_paths, list)
+                    else [runtime_sparse_paths]
+                )
+
         self.runtime_image = runtime_image
         self.runtime_image_tag = runtime_image_tag
         self.private_registry = private_registry
@@ -369,7 +395,7 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
                 # Limitation: argument values that contain spaces will be word-split by
                 # the shell — avoid spaces in values or wrap them in shell quotes.
                 kwargs["arguments"] = [
-                    f"cd {_MS_MOUNT} && uv run --no-cache {' '.join(str(a) for a in kwargs['arguments'])}"
+                    f"cd {_MS_MOUNT}/{self.runtime_workdir} && uv run --no-cache {' '.join(str(a) for a in kwargs['arguments'])}"
                 ]
 
             kwargs["env_vars"]["UV_CACHE_DIR"] = f"{_MS_MOUNT}/.cache/uv"
@@ -415,7 +441,8 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
         if self.runtime_mode == "gitsynced":
             self.full_pod_spec = _make_job_worker_pod_spec(
                 self.runtime_branch,
-                self.microservice_path,
-                run_as_non_root=self.private_registry,
+                self.runtime_sparse_paths
+                if self.runtime_sparse_paths
+                else self.microservice_path,
             )
         return super().execute(context)

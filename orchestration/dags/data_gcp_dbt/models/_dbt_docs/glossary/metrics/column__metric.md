@@ -228,3 +228,31 @@ The total cumulative number of unique partners who have had at least one active 
 {% docs column__metrics__total_cumulative_activated_partners_dual_part %}
 The total cumulative number of unique partners who have had at least one active offer within both the individual part and the collective part (at any point, concurrently or sequentially) for at least 1 day since inception up to the given month.
 {% enddocs %}
+
+{% docs column__metrics__total_institutions %}
+Nombre total d'institutions (établissements scolaires) enregistrées ou éligibles sur le territoire (à la granularité géographique donnée), pour le mois et l'année scolaire donnés.
+{% enddocs %}
+
+{% docs column__metrics__total_engaged_institutions %}
+Nombre total d'institutions "engagées" (ayant réalisé au moins une réservation) sur le territoire pour le mois et l'année scolaire donnés.
+{% enddocs %}
+
+{% docs column__metrics__total_deposit %}
+Montant total du crédit mise à disposition des institutions du territoire pour le mois et l'année scolaire donnés.
+{% enddocs %}
+
+{% docs column__metrics__total_amount_spent %}
+Montant total dépensé (consommé) par les institutions du territoire au cours du mois de l'année scolaire donnés.
+{% enddocs %}
+
+{% docs column__metrics__total_bookings %}
+Nombre total de réservations effectuées par les institutions ou bénéficiaires du territoire au cours du mois de l'année scolaire donnés.
+{% enddocs %}
+
+{% docs column__metrics__cumulative_total_amount_spent %}
+Montant total cumulé dépensé sur le territoire depuis le début de l'année scolaire donnée jusqu'au mois donné (inclus).
+{% enddocs %}
+
+{% docs column__metrics__cumulative_total_bookings %}
+Nombre total cumulé de réservations effectuées sur le territoire depuis le début de l'année scolaire donnée jusqu'au mois donné (inclus).
+{% enddocs %}

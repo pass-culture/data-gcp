@@ -33,7 +33,7 @@ with
             event_series_mediation_uuid
         from event_series_delta
         where action in ("add", "update")
-    ),
+    )
 
 select
     event_series_id,

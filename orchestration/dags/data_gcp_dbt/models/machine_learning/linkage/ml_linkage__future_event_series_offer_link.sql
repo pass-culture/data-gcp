@@ -21,7 +21,7 @@ with
         select event_series_id, offer_id
         from event_series_offer_link_delta
         where action in ("add", "update")
-    ),
+    )
 
 select event_series_id, offer_id
 from future_event_series_offer_link

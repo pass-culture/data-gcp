@@ -313,6 +313,23 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
 class GCEHook(GoogleBaseHook):
     _conn = None
 
+    # A VM that reaches one of these will never become RUNNING on its own again.
+    TERMINAL_STATES = frozenset(
+        {"TERMINATED", "SUSPENDED", "SUSPENDING", "STOPPING", "STOPPED"}
+    )
+
+    # Time allowed for provisioning/boot (and, for GPU images, driver install)
+    # after an insert is submitted (or an in-flight instance is adopted), for
+    # ANY provisioning model - not flex-start-specific. GCE instances typically
+    # reach RUNNING within a few minutes; 15 min leaves comfortable room without
+    # dragging out failure detection on a genuinely stuck instance.
+    BOOT_MARGIN_SECONDS = 900
+    # GCP caps how long Dynamic Workload Scheduling (DWS) holds a FLEX_START
+    # request PENDING in queue at 2h; used as a fallback when the caller
+    # doesn't set request_valid_for_duration. Flex-start-specific: STANDARD/
+    # reservation instances have no DWS queue to wait through.
+    FLEX_START_MAX_QUEUE_SECONDS = 7200
+
     def __init__(
         self,
         gcp_project: str = GCP_PROJECT_ID,
@@ -379,14 +396,61 @@ class GCEHook(GoogleBaseHook):
         request_valid_for_duration_seconds: t.Optional[int] = None,
         reservation_name: t.Optional[str] = None,
         wait_for_running: bool = True,
-    ):
-        instances = self.list_instances()
-        instances = [x["name"] for x in instances if x["status"] == "RUNNING"]
-        if instance_name in instances:
-            self.log.info(f"Instance {instance_name} already running, pass.")
-            return
-
+    ) -> bool:
+        """Start (or no-op on) a VM. Returns True if the instance was already RUNNING."""
         is_flex_start = (provisioning_model or "STANDARD").upper() == "FLEX_START"
+        # The DWS queue-cap term only applies to flex-start; STANDARD/reservation
+        # instances only need the general boot margin.
+        wait_timeout = self.BOOT_MARGIN_SECONDS
+        if is_flex_start:
+            wait_timeout += (
+                request_valid_for_duration_seconds or self.FLEX_START_MAX_QUEUE_SECONDS
+            )
+
+        # Check for an existing instance under this name in ANY status, not just
+        # RUNNING: a retried task (e.g. after a triggerer crash orphans a deferred
+        # flex-start wait and Airflow retries execute() from scratch) would
+        # otherwise re-submit an insert for a name that's already mid-provisioning,
+        # which GCE rejects with a 409 "already exists".
+        existing = self.get_instance(instance_name)
+        if existing is not None:
+            status = existing.get("status")
+            if status == "RUNNING":
+                self.log.info(f"Instance {instance_name} already running, pass.")
+                return True
+            if status not in self.TERMINAL_STATES:
+                # Loud on purpose: this instance wasn't just inserted by this
+                # call, so it either belongs to an earlier attempt of this same
+                # task (expected, e.g. after a triggerer crash/retry) or to a
+                # completely different run/DAG that happens to share this
+                # instance_name (a race - nothing here verifies ownership).
+                # provisioning_model=STANDARD is the more suspicious case: it
+                # has no deferral-driven reason for a prior attempt to still be
+                # mid-flight, so seeing this for STANDARD is worth tracing back
+                # to whichever other task/run is targeting the same name.
+                self.log.warning(
+                    f"Instance {instance_name} already exists with status "
+                    f"{status} (a prior insert is still in flight) instead of "
+                    "being created fresh by this call. Adopting it and waiting "
+                    "for it to reach RUNNING instead of re-inserting. If this "
+                    f"is unexpected (provisioning_model={provisioning_model}), "
+                    "check whether another task or DAG run is targeting the "
+                    "same instance_name concurrently."
+                )
+                if wait_for_running:
+                    self.wait_for_instance_running(
+                        instance_name, timeout_seconds=wait_timeout
+                    )
+                return False
+            # Stale instance left over from a previous failed/expired attempt
+            # (e.g. a flex-start request that reached a terminal state before
+            # this retry) - delete it so the retry can submit a fresh insert.
+            self.log.warning(
+                f"Instance {instance_name} exists in terminal state {status}; "
+                "deleting before retrying."
+            )
+            self.__delete_instance(instance_name, wait=True)
+
         self.log.info(
             f"Launching {instance_name} on compute engine (instance: {instance_type}, "
             f"provisioning_model: {provisioning_model})"
@@ -409,7 +473,13 @@ class GCEHook(GoogleBaseHook):
             reservation_name=reservation_name,
         )
         if is_flex_start and wait_for_running:
-            self.wait_for_instance_running(instance_name)
+            # Cover the max queue wait plus provisioning/boot margin, mirroring
+            # the deadline the deferrable path gives GCEInstanceRunningTrigger,
+            # so this synchronous wait doesn't loop forever on a stuck instance.
+            self.wait_for_instance_running(
+                instance_name, timeout_seconds=wait_timeout
+            )
+        return False
 
     def wait_for_instance_running(
         self,

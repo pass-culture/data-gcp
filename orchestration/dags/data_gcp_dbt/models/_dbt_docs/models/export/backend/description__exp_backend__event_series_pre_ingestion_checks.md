@@ -8,8 +8,11 @@ description: Description of the `exp_backend__event_series_pre_ingestion_checks`
 # Table: Event Series Pre-Ingestion Checks
 
 The `exp_backend__event_series_pre_ingestion_checks` table aggregates data quality checks on the future event series and event series / offer link data before they are ingested by the backend application.
-This table will be read by the backend application to determine if the data is ready for ingestion (i.e. all checks pass).
-The `ready_for_ingestion` column is `true` when all checks pass (all counts equal zero).
+
+It can be seen as an integration test which will check integrations between the delta event series tables and the current applicative tables, as well as business rules on the future data.
+
+Moreover, this table will be read by the backend application to determine if the data is ready for ingestion (i.e. all checks pass).
+The `ready_for_ingestion` column is `true` when all checks pass.
 
 The checks cover:
 

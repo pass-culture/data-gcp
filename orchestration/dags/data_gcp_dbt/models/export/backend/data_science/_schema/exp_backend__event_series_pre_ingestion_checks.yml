@@ -4,29 +4,33 @@ models:
   - name: exp_backend__event_series_pre_ingestion_checks
     description: "{{ doc('description__exp_backend__event_series_pre_ingestion_checks') }}"
     columns:
-      - name: count_event_series_id_duplicates_in_future_event_series
-        description: "Number of duplicate event_series_id entries in the future event series data."
-      - name: count_event_series_name_null_or_empty_in_future_event_series
-        description: "Number of rows with a null or empty event_series_name in the future event series data."
+      - name: count_duplicate_event_series_id_in_future_event_series
+        description: "{{ doc('column__count_duplicate_event_series_id_in_future_event_series') }}"
+      - name: count_null_or_empty_event_series_name_in_future_event_series
+        description: "{{ doc('column__count_null_or_empty_event_series_name_in_future_event_series') }}"
       - name: count_duplicate_links_in_future_event_series_offer_link
-        description: "Number of duplicate (offer_id, event_series_id) pairs in the future event series offer link data."
+        description: "{{ doc('column__count_duplicate_links_in_future_event_series_offer_link') }}"
       - name: count_orphan_event_series_in_future_event_series_offer_link
-        description: "Number of future event series offer links whose event_series_id does not exist in the future event series data."
-      - name: count_event_series_id_null_or_empty_in_future_event_series
-        description: "Number of rows with a null or empty event_series_id in the future event series data."
+        description: "{{ doc('column__count_orphan_event_series_in_future_event_series_offer_link') }}"
+      - name: count_null_or_empty_event_series_id_in_future_event_series
+        description: "{{ doc('column__count_null_or_empty_event_series_id_in_future_event_series') }}"
       - name: count_null_or_empty_keys_in_future_event_series_offer_link
-        description: "Number of rows with a null or empty event_series_id or offer_id in the future event series offer link data."
+        description: "{{ doc('column__count_null_or_empty_keys_in_future_event_series_offer_link') }}"
       - name: count_invalid_actions_in_event_series_delta
-        description: "Number of rows in the event series delta with a null action or an action other than add, update, or remove."
+        description: "{{ doc('column__count_invalid_actions_in_event_series_delta') }}"
       - name: count_invalid_actions_in_event_series_offer_link_delta
-        description: "Number of rows in the event series offer link delta with a null action or an action other than add, update, or remove."
-      - name: count_offers_linked_to_multiple_event_series
-        description: "Number of offers linked to more than one event series in the future event series offer link data."
+        description: "{{ doc('column__count_invalid_actions_in_event_series_offer_link_delta') }}"
+      - name: count_multi_event_series_offers_in_future
+        description: "{{ doc('column__count_multi_event_series_offers_in_future') }}"
       - name: count_missing_mediation_uuid_in_event_series_delta
-        description: "Number of added or updated rows in the event series delta with an image url but a null or empty mediation uuid."
-      - name: count_future_event_series_below_shrinkage_threshold
-        description: "Flag (0 or 1) set to 1 when the future event series row count drops below 30% of the current applicative event series row count."
-      - name: count_future_event_series_offer_link_below_shrinkage_threshold
-        description: "Flag (0 or 1) set to 1 when the future event series offer link row count drops below 30% of the current applicative event series offer link row count."
+        description: "{{ doc('column__count_missing_mediation_uuid_in_event_series_delta') }}"
+      - name: count_null_or_empty_event_series_id_in_event_series_delta
+        description: "{{ doc('column__count_null_or_empty_event_series_id_in_event_series_delta') }}"
+      - name: count_null_or_empty_event_series_name_in_event_series_delta
+        description: "{{ doc('column__count_null_or_empty_event_series_name_in_event_series_delta') }}"
+      - name: is_future_event_series_below_shrinkage_threshold
+        description: "{{ doc('column__is_future_event_series_below_shrinkage_threshold') }}"
+      - name: is_future_event_series_offer_link_below_shrinkage_threshold
+        description: "{{ doc('column__is_future_event_series_offer_link_below_shrinkage_threshold') }}"
       - name: ready_for_ingestion
-        description: "Boolean flag that is true when all check counts are zero, indicating the data is ready for backend ingestion."
+        description: "{{ doc('column__ready_for_ingestion') }}"

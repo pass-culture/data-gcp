@@ -66,7 +66,7 @@ with
         select
             countif(
                 event_series_id is null or event_series_id = ""
-            ) as count_event_series_id_null_or_empty_in_event_series_delta
+            ) as count_null_or_empty_event_series_id_in_event_series_delta
         from event_series_delta
     ),
 
@@ -74,7 +74,7 @@ with
         select
             countif(
                 event_series_name is null or event_series_name = ""
-            ) as count_event_series_name_null_or_empty_in_event_series_delta
+            ) as count_null_or_empty_event_series_name_in_event_series_delta
         from event_series_delta
     ),
 
@@ -113,7 +113,7 @@ with
         select
             count(*) - count(
                 distinct event_series_id
-            ) as count_event_series_id_duplicates_in_future_event_series
+            ) as count_duplicate_event_series_id_in_future_event_series
         from future_event_series
     ),
 
@@ -121,7 +121,7 @@ with
         select
             countif(
                 event_series_name is null or event_series_name = ""
-            ) as count_event_series_name_null_or_empty_in_future_event_series
+            ) as count_null_or_empty_event_series_name_in_future_event_series
         from future_event_series
     ),
 
@@ -151,7 +151,7 @@ with
         select
             countif(
                 event_series_id is null or event_series_id = ""
-            ) as count_event_series_id_null_or_empty_in_future_event_series
+            ) as count_null_or_empty_event_series_id_in_future_event_series
         from future_event_series
     ),
 
@@ -168,29 +168,26 @@ with
 
     check_offers_linked_to_multiple_event_series_in_future as (
         select
-            count(distinct to_json_string(struct(event_series_id, offer_id))) - count(
-                distinct offer_id
-            ) as count_offers_linked_to_multiple_event_series_in_future
+            count(distinct to_json_string(struct(event_series_id, offer_id)))
+            - count(distinct offer_id) as count_multi_event_series_offers_in_future
         from future_event_series_offer_link
     ),
 
     -- -------------------- VOLUME CHECKS ----------------------
     check_future_event_series_shrinkage as (
         select
-            if(
+            (
                 (select count(*) as row_count from future_event_series) < (
                     select count(*) as row_count
                     from {{ source("raw", "applicative_database_event_series") }}
                 )
-                * {{ shrinkage_threshold }},
-                1,
-                0
-            ) as count_future_event_series_below_shrinkage_threshold
+                * {{ shrinkage_threshold }}
+            ) as is_future_event_series_below_shrinkage_threshold
     ),
 
     check_future_event_series_offer_link_shrinkage as (
         select
-            if(
+            (
                 (select count(*) as row_count from future_event_series_offer_link) < (
                     select count(*) as row_count
                     from
@@ -200,31 +197,29 @@ with
                             )
                         }}
                 )
-                * {{ shrinkage_threshold }},
-                1,
-                0
-            ) as count_future_event_series_offer_link_below_shrinkage_threshold
+                * {{ shrinkage_threshold }}
+            ) as is_future_event_series_offer_link_below_shrinkage_threshold
     ),
 
     aggregated_checks as (
         select
             -- - DELTA CHECKS ---
-            check_event_series_id_in_delta.count_event_series_id_null_or_empty_in_event_series_delta,
-            check_event_series_name_in_delta.count_event_series_name_null_or_empty_in_event_series_delta,
+            check_event_series_id_in_delta.count_null_or_empty_event_series_id_in_event_series_delta,
+            check_event_series_name_in_delta.count_null_or_empty_event_series_name_in_event_series_delta,
             check_invalid_actions_in_event_series_delta.count_invalid_actions_in_event_series_delta,
             check_invalid_actions_in_event_series_offer_link_delta.count_invalid_actions_in_event_series_offer_link_delta,
             check_missing_mediation_uuid_in_event_series_delta.count_missing_mediation_uuid_in_event_series_delta,
             -- - FUTURE CHECKS ---
-            check_event_series_id_duplicates_in_future_event_series.count_event_series_id_duplicates_in_future_event_series,
-            check_event_series_name_in_future_event_series.count_event_series_name_null_or_empty_in_future_event_series,
+            check_event_series_id_duplicates_in_future_event_series.count_duplicate_event_series_id_in_future_event_series,
+            check_event_series_name_in_future_event_series.count_null_or_empty_event_series_name_in_future_event_series,
             check_duplicate_links_in_future_event_series_offer_link.count_duplicate_links_in_future_event_series_offer_link,
             check_orphan_event_series_in_future_event_series_offer_link.count_orphan_event_series_in_future_event_series_offer_link,
-            check_event_series_id_null_or_empty_in_future_event_series.count_event_series_id_null_or_empty_in_future_event_series,
+            check_event_series_id_null_or_empty_in_future_event_series.count_null_or_empty_event_series_id_in_future_event_series,
             check_null_or_empty_keys_in_future_event_series_offer_link.count_null_or_empty_keys_in_future_event_series_offer_link,
-            check_offers_linked_to_multiple_event_series_in_future.count_offers_linked_to_multiple_event_series_in_future,
+            check_offers_linked_to_multiple_event_series_in_future.count_multi_event_series_offers_in_future,
             -- - VOLUME CHECKS ---
-            check_future_event_series_shrinkage.count_future_event_series_below_shrinkage_threshold,
-            check_future_event_series_offer_link_shrinkage.count_future_event_series_offer_link_below_shrinkage_threshold
+            check_future_event_series_shrinkage.is_future_event_series_below_shrinkage_threshold,
+            check_future_event_series_offer_link_shrinkage.is_future_event_series_offer_link_below_shrinkage_threshold
 
         from check_event_series_id_duplicates_in_future_event_series
         cross join check_event_series_name_in_future_event_series
@@ -245,20 +240,24 @@ with
 select
     *,
     (
-        count_event_series_id_duplicates_in_future_event_series
-        + count_event_series_name_null_or_empty_in_future_event_series
-        + count_duplicate_links_in_future_event_series_offer_link
-        + count_orphan_event_series_in_future_event_series_offer_link
-        + count_event_series_id_null_or_empty_in_future_event_series
-        + count_null_or_empty_keys_in_future_event_series_offer_link
-        + count_invalid_actions_in_event_series_delta
-        + count_invalid_actions_in_event_series_offer_link_delta
-        + count_offers_linked_to_multiple_event_series_in_future
-        + count_missing_mediation_uuid_in_event_series_delta
-        + count_future_event_series_below_shrinkage_threshold
-        + count_future_event_series_offer_link_below_shrinkage_threshold
-        + count_event_series_id_null_or_empty_in_event_series_delta
-        + count_event_series_name_null_or_empty_in_event_series_delta
-    )
-    = 0 as ready_for_ingestion
+        (
+            count_duplicate_event_series_id_in_future_event_series
+            + count_null_or_empty_event_series_name_in_future_event_series
+            + count_duplicate_links_in_future_event_series_offer_link
+            + count_orphan_event_series_in_future_event_series_offer_link
+            + count_null_or_empty_event_series_id_in_future_event_series
+            + count_null_or_empty_keys_in_future_event_series_offer_link
+            + count_invalid_actions_in_event_series_delta
+            + count_invalid_actions_in_event_series_offer_link_delta
+            + count_multi_event_series_offers_in_future
+            + count_missing_mediation_uuid_in_event_series_delta
+            + count_null_or_empty_event_series_id_in_event_series_delta
+            + count_null_or_empty_event_series_name_in_event_series_delta
+        )
+        = 0
+        and (
+            not is_future_event_series_below_shrinkage_threshold
+            and not is_future_event_series_offer_link_below_shrinkage_threshold
+        )
+    ) as ready_for_ingestion
 from aggregated_checks

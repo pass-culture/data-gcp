@@ -154,7 +154,7 @@ def _make_git_clone_command(
             f" && set +x"
             f" && echo '=== cleaning ==='"
             f" && rm -rf /tmp/{repo_name}"
-            f" && chown -R 50000:50000 {dest}/"
+            f" && chown -R {_AIRFLOW_USER_UUID}:{_AIRFLOW_USER_UUID} {dest}/"
             f" && echo '=== contents ==='"
             f" && ls {dest}/"
         )
@@ -326,8 +326,8 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
         self.dag_image_tag = dag_image_tag
         self.runtime_branch = runtime_branch
         self.microservice_path = microservice_path
-        self.runtime_sparse_paths: list[str] | None = None
-        self.runtime_workdir: str = ""
+        self.runtime_sparse_paths = None
+        self.runtime_workdir = runtime_workdir
 
         if runtime_mode == "gitsynced":
             if runtime_branch is None:
@@ -348,7 +348,6 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
                     else [runtime_sparse_paths]
                 )
 
-            self.runtime_workdir = runtime_workdir
         self.runtime_image = runtime_image
         self.runtime_image_tag = runtime_image_tag
         self.private_registry = private_registry

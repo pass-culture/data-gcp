@@ -101,7 +101,7 @@ def run(
     except typer.Exit:
         raise
     except Exception as e:
-        logger.exception("ETL job failed: %s", e)
+        logger.exception(f"ETL {target} job failed for {audience}: {e}")
         raise typer.Exit(code=1) from e
 
 

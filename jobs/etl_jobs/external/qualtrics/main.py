@@ -98,9 +98,10 @@ def run(
             )
 
         else:
-            raise ValueError(
+            logger.error(
                 "Task must be one of: import_opt_out_users, import_all_survey_answers, export_beneficiary, export_venue."
             )
+            raise typer.Exit(code=1)
 
         return "Success"
     except typer.Exit:

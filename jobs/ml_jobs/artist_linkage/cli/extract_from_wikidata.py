@@ -17,14 +17,14 @@ QUERIES_PATHES = {
     "music": "queries/extract_music_artists.rq",
     "gkg": "queries/extract_gkg_artists.rq",
 }
+MUSIC_IDS_QUERY_PATH = "queries/extract_music_artist_ids.rq"
 
 app = typer.Typer()
 
 
 def extract_wikidata_id(df: pd.DataFrame) -> pd.DataFrame:
-    WIKI_ID_TO_STRIP = "http://www.wikidata.org/entity/"
     return df.assign(
-        wikidata_id=lambda df: df.wikidata_id.str.strip(WIKI_ID_TO_STRIP),
+        wikidata_id=lambda df: df.wikidata_id.str.split("/").str[-1],
     )
 
 
@@ -94,6 +94,11 @@ def postprocess_data(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
+def merge_music_artist_ids(df: pd.DataFrame, ids_df: pd.DataFrame) -> pd.DataFrame:
+    """Left-join the music artist IDs (from a dedicated lightweight query) onto the main dataframe."""
+    return df.merge(ids_df, on=WIKIDATA_ID_KEY, how="left")
+
+
 def clear_qlever_cache():
     response = requests.get(
         QLEVER_ENDPOINT, params={"cmd": "clear-cache"}, headers=QLEVER_HEADERS
@@ -149,6 +154,19 @@ def main(output_file_path: str = typer.Option()) -> None:
 
     logger.info("Merging the data")
     merged_df = merge_data(df_list, wiki_ids_per_query)
+
+    logger.info("Fetching music artist IDs (dedicated lightweight query)")
+    with open(MUSIC_IDS_QUERY_PATH) as file:
+        music_ids_query_string = file.read()
+    logger.debug(f"SPARQL Query: \n{music_ids_query_string}")
+    music_ids_df = fetch_wikidata_qlever_csv(music_ids_query_string).pipe(
+        extract_wikidata_id
+    )
+    if not music_ids_df.empty:
+        logger.info(f"Retrieved {len(music_ids_df)} music artist ID rows.")
+        merged_df = merge_music_artist_ids(merged_df, music_ids_df)
+    else:
+        logger.warning("No music artist IDs retrieved — skipping ID merge.")
 
     logger.info("Postprocessing the data")
     postprocessed_df = postprocess_data(merged_df)

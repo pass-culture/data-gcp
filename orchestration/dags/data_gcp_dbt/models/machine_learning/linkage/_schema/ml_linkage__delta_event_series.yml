@@ -1,0 +1,45 @@
+version: 2
+
+models:
+  - name: ml_linkage__delta_event_series
+    description: "{{ doc('description__ml_linkage__delta_event_series') }}"
+    columns:
+      - name: event_series_id
+        description: "{{ doc('column__event_series_id') }}"
+        data_tests:
+          - not_null:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
+          - dbt_utils.not_empty_string:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
+      - name: event_series_name
+        description: "{{ doc('column__event_series_name') }}"
+        data_tests:
+          - not_null:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
+          - dbt_utils.not_empty_string:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
+      - name: event_series_description
+        description: "{{ doc('column__event_series_description') }}"
+      - name: event_series_image_url
+        description: "{{ doc('column__event_series_image_url') }}"
+      - name: event_series_mediation_uuid
+        description: "{{ doc('column__event_series_mediation_uuid') }}"
+      - name: action
+        description: "{{ doc('column__delta_action') }}"
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['add', 'update', 'remove']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
+      - name: comment
+        description: "{{ doc('column__delta_comment') }}"

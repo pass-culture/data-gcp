@@ -1,6 +1,5 @@
 from io import StringIO
 
-import numpy as np
 import pandas as pd
 import requests
 import typer
@@ -11,30 +10,50 @@ from src.utils.preprocessing_utils import normalize_string_series
 
 QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
 QLEVER_HEADERS = {"Accept": "text/csv", "Content-Type": "application/sparql-query"}
+MUSIC_IDS_KEY = "music_ids"
 QUERIES_PATHES = {
+    "music": "queries/extract_music_artists.rq",
+    MUSIC_IDS_KEY: "queries/extract_music_artist_ids.rq",
     "book": "queries/extract_book_artists.rq",
     "movie": "queries/extract_movie_artists.rq",
-    "music": "queries/extract_music_artists.rq",
     "gkg": "queries/extract_gkg_artists.rq",
 }
-MUSIC_IDS_QUERY_PATH = "queries/extract_music_artist_ids.rq"
 
 app = typer.Typer()
 
 
+WIKIDATA_ENTITY_PREFIX = r"https?://www\.wikidata\.org/entity/"
+
+
 def extract_wikidata_id(df: pd.DataFrame) -> pd.DataFrame:
     return df.assign(
-        wikidata_id=lambda df: df.wikidata_id.str.split("/").str[-1],
+        wikidata_id=lambda df: df.wikidata_id.str.replace(
+            WIKIDATA_ENTITY_PREFIX, "", regex=True
+        ),
     )
 
 
-def merge_data(
-    df_list: list[pd.DataFrame], wiki_ids_per_query: dict[str, np.ndarray]
-) -> pd.DataFrame:
-    # The drop duplicates is done on the wikidata_id column due to the fact that professions or aliases can be unsorted lists
-    merged_df = pd.concat(df_list).drop_duplicates(subset=[WIKIDATA_ID_KEY])
+def merge_data(dfs: dict[str, pd.DataFrame]) -> pd.DataFrame:
+    # Pre-merge music metadata and music IDs so the resulting music df has the same
+    # structure (including matching_score and platform IDs) as the other dfs before concat.
+    if "music" in dfs and MUSIC_IDS_KEY in dfs:
+        dfs = {
+            **dfs,
+            "music": dfs["music"].merge(
+                dfs[MUSIC_IDS_KEY], on=WIKIDATA_ID_KEY, how="left"
+            ),
+        }
+    elif MUSIC_IDS_KEY in dfs:
+        logger.warning(
+            "music_ids retrieved but no music df found — skipping ID pre-merge."
+        )
 
-    for query_name, wiki_ids in wiki_ids_per_query.items():
+    # The drop duplicates is done on the wikidata_id column due to the fact that professions or aliases can be unsorted lists
+    main_dfs = {name: df for name, df in dfs.items() if name != MUSIC_IDS_KEY}
+    merged_df = pd.concat(main_dfs.values()).drop_duplicates(subset=[WIKIDATA_ID_KEY])
+
+    for query_name, df in main_dfs.items():
+        wiki_ids = df[WIKIDATA_ID_KEY].unique()
         merged_df = merged_df.assign(
             **{
                 query_name: lambda df, wiki_ids=wiki_ids: df[WIKIDATA_ID_KEY].isin(
@@ -94,11 +113,6 @@ def postprocess_data(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def merge_music_artist_ids(df: pd.DataFrame, ids_df: pd.DataFrame) -> pd.DataFrame:
-    """Left-join the music artist IDs (from a dedicated lightweight query) onto the main dataframe."""
-    return df.merge(ids_df, on=WIKIDATA_ID_KEY, how="left")
-
-
 def clear_qlever_cache():
     response = requests.get(
         QLEVER_ENDPOINT, params={"cmd": "clear-cache"}, headers=QLEVER_HEADERS
@@ -130,43 +144,30 @@ def fetch_wikidata_qlever_csv(sparql_query):
 
 @app.command()
 def main(output_file_path: str = typer.Option()) -> None:
-    df_list = []
-    wiki_ids_per_query = {}
+    dfs: dict[str, pd.DataFrame] = {}
 
     # Clear cache on qlever to prevent any resource issues
     clear_qlever_cache()
 
-    for query_name, query_content in QUERIES_PATHES.items():
+    for query_name, query_path in QUERIES_PATHES.items():
         logger.info(f"Fetch the data in CSV format for {query_name}")
 
-        with open(query_content) as file:
+        with open(query_path) as file:
             query_string = file.read()
         logger.debug(f"SPARQL Query: \n{query_string}")
 
-        data_df = fetch_wikidata_qlever_csv(query_string).pipe(extract_wikidata_id)
+        df = fetch_wikidata_qlever_csv(query_string).pipe(extract_wikidata_id)
 
-        if not data_df.empty:
-            logger.info(f"Retrieved {len(data_df)} rows.")
-            df_list.append(data_df)
-            wiki_ids_per_query[query_name] = data_df[WIKIDATA_ID_KEY].unique()
+        if not df.empty:
+            logger.info(f"Retrieved {len(df)} rows.")
+            dfs[query_name] = df
+        elif query_name == MUSIC_IDS_KEY:
+            logger.warning("No music artist IDs retrieved — skipping ID merge.")
         else:
-            raise ValueError("No data retrieved.")
+            raise ValueError(f"No data retrieved for {query_name}.")
 
     logger.info("Merging the data")
-    merged_df = merge_data(df_list, wiki_ids_per_query)
-
-    logger.info("Fetching music artist IDs (dedicated lightweight query)")
-    with open(MUSIC_IDS_QUERY_PATH) as file:
-        music_ids_query_string = file.read()
-    logger.debug(f"SPARQL Query: \n{music_ids_query_string}")
-    music_ids_df = fetch_wikidata_qlever_csv(music_ids_query_string).pipe(
-        extract_wikidata_id
-    )
-    if not music_ids_df.empty:
-        logger.info(f"Retrieved {len(music_ids_df)} music artist ID rows.")
-        merged_df = merge_music_artist_ids(merged_df, music_ids_df)
-    else:
-        logger.warning("No music artist IDs retrieved — skipping ID merge.")
+    merged_df = merge_data(dfs)
 
     logger.info("Postprocessing the data")
     postprocessed_df = postprocess_data(merged_df)

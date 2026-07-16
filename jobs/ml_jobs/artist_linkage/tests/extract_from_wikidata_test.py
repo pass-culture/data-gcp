@@ -4,9 +4,9 @@ import pandas as pd
 import pytest
 
 from cli.extract_from_wikidata import (
+    MUSIC_IDS_KEY,
     extract_wikidata_id,
     merge_data,
-    merge_music_artist_ids,
     postprocess_data,
 )
 
@@ -90,8 +90,7 @@ class TestExtractWikidataId:
 class TestMergeData:
     def test_adds_boolean_source_columns(self):
         df = _make_raw_df().pipe(extract_wikidata_id)
-        wiki_ids = df["wikidata_id"].unique()
-        merged = merge_data([df], {"music": wiki_ids})
+        merged = merge_data({"music": df})
 
         assert "music" in merged.columns
         assert merged["music"].dtype == bool or merged["music"].dtype == object
@@ -99,53 +98,33 @@ class TestMergeData:
     def test_deduplicates_on_wikidata_id(self):
         df = _make_raw_df().pipe(extract_wikidata_id)
         # Duplicate the dataframe — should be deduplicated
-        merged = merge_data([df, df], {"music": df["wikidata_id"].unique()})
+        merged = merge_data({"music": pd.concat([df, df])})
         assert len(merged) == len(df)
 
-
-class TestMergeMusicArtistIds:
-    def test_adds_id_columns(self):
+    def test_merges_music_ids_when_present(self):
         df = _make_raw_df().pipe(extract_wikidata_id)
         ids_df = _make_ids_df().pipe(extract_wikidata_id)
-        result = merge_music_artist_ids(df, ids_df)
+        merged = merge_data({"music": df, MUSIC_IDS_KEY: ids_df})
 
-        for col in NEW_ID_COLUMNS:
-            assert col in result.columns, f"Column '{col}' missing after merge"
+        assert "spotify_id" in merged.columns
+        assert len(merged) == len(df)
 
-    def test_left_join_preserves_all_main_rows(self):
-        """Artists without IDs in ids_df must still appear in the result."""
-        df = _make_raw_df().pipe(extract_wikidata_id)
-        # ids_df only has Q1
-        ids_df = _make_ids_df(
-            **{
-                "wikidata_id": ["https://www.wikidata.org/entity/Q1"],
-                "spotify_id": ["abc"],
-                "isni_id": ["0000"],
-                "apple_music_id": [None],
-                "deezer_id": [None],
-                "genius_id": [None],
-                "soundcloud_id": [None],
-                "matching_score": [2],
-            }
-        ).pipe(extract_wikidata_id)
-
-        result = merge_music_artist_ids(df, ids_df)
-        assert len(result) == len(df)
-        q2_row = result[result["wikidata_id"] == "Q2"].iloc[0]
-        assert pd.isna(q2_row["spotify_id"])
-
-    def test_id_values_correctly_joined(self):
+    def test_music_ids_matching_score_renamed_to_avoid_conflict(self):
+        """matching_score from music_ids must be merged into a single matching_score column."""
         df = _make_raw_df().pipe(extract_wikidata_id)
         ids_df = _make_ids_df().pipe(extract_wikidata_id)
-        result = merge_music_artist_ids(df, ids_df)
+        merged = merge_data({"music": df, MUSIC_IDS_KEY: ids_df})
 
-        q1 = result[result["wikidata_id"] == "Q1"].iloc[0]
-        assert q1["spotify_id"] == "3TVXtAsR1Inumwj472S9r4"
-        assert q1["isni_id"] == "0000000121239645"
+        assert "matching_score" in merged.columns
+        assert "music_ids_matching_score" not in merged.columns
+        assert "matching_score_x" not in merged.columns
+        assert "matching_score_y" not in merged.columns
 
-        q2 = result[result["wikidata_id"] == "Q2"].iloc[0]
-        assert q2["isni_id"] == "0000000121239646"
-        assert pd.isna(q2["spotify_id"])
+    def test_skips_music_ids_merge_when_absent(self):
+        df = _make_raw_df().pipe(extract_wikidata_id)
+        merged = merge_data({"music": df})
+
+        assert "spotify_id" not in merged.columns
 
 
 class TestPostprocessData:
@@ -154,8 +133,7 @@ class TestPostprocessData:
         # Simulate the full pipeline: main query + IDs merge
         df = _make_raw_df().pipe(extract_wikidata_id)
         ids_df = _make_ids_df().pipe(extract_wikidata_id)
-        df_with_ids = merge_music_artist_ids(df, ids_df)
-        return postprocess_data(df_with_ids)
+        return postprocess_data(merge_data({"music": df, MUSIC_IDS_KEY: ids_df}))
 
     def test_has_alias_column(self, processed):
         assert "alias" in processed.columns
@@ -190,6 +168,7 @@ class TestPostprocessData:
     def test_null_ids_remain_null(self, processed):
         """Optional IDs that are None in input must remain NaN (not become strings)."""
         q2_rows = processed[processed["wikidata_id"] == "Q2"]
+
         assert q2_rows["spotify_id"].isna().all()
         assert q2_rows["deezer_id"].isna().all()
         assert q2_rows["genius_id"].isna().all()

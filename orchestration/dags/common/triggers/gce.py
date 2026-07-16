@@ -1,10 +1,158 @@
 import asyncio
 from typing import Any, Dict, Tuple
+import time
+from concurrent.futures import ThreadPoolExecutor
 
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from common.config import GCP_PROJECT_ID, SSH_USER, USE_INTERNAL_IP
-from common.hooks.gce import DeferrableSSHGCEJobManager
+from common.hooks.gce import DeferrableSSHGCEJobManager, GCEHook
+from googleapiclient.errors import HttpError
+
+
+class GCEInstanceRunningTrigger(BaseTrigger):
+    """Polls a (flex-start) GCE instance until it reaches RUNNING.
+
+    Used by the deferrable ``StartGCEOperator`` so the Airflow worker slot is
+    freed while a DWS flex-start request sits queued in PENDING waiting for GPU
+    capacity (which can take up to the configured ``request_valid_for_duration``,
+    max 2h).
+    """
+
+    TERMINAL_STATES = GCEHook.TERMINAL_STATES
+    FATAL_HTTP_STATUSES = {401, 403}
+
+    def __init__(
+        self,
+        instance_name: str,
+        zone: str,
+        poll_interval: int = 120,
+        deadline: float = 0.0,
+    ):
+        super().__init__()
+        self.instance_name = instance_name
+        self.zone = zone
+        self.poll_interval = poll_interval
+        # Absolute epoch deadline (not a relative timeout): this survives a
+        # triggerer restart, which re-instantiates the trigger from `serialize()`
+        # and would otherwise silently reset a relative-duration countdown.
+        self.deadline = deadline
+
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+        return (
+            self.__class__.__module__ + "." + self.__class__.__name__,
+            {
+                "instance_name": self.instance_name,
+                "zone": self.zone,
+                "poll_interval": self.poll_interval,
+                "deadline": self.deadline,
+            },
+        )
+
+    async def run(self):
+        loop = asyncio.get_event_loop()
+        # Build the hook once, outside the poll loop: constructing GCEHook
+        # resolves credentials/discovery docs, which is wasted work (and a
+        # possible source of transient errors) if repeated every poll tick.
+        # The underlying httplib2/googleapiclient transport is NOT thread-safe,
+        # and the triggerer's default executor is a shared, multi-threaded pool
+        # used by every concurrently-running trigger in the process — so a
+        # single reused hook must be pinned to one dedicated worker thread,
+        # otherwise different poll ticks can land on different threads and
+        # crash the whole triggerer process (observed as a native.
+        hook = GCEHook(gce_zone=self.zone)
+        executor = ThreadPoolExecutor(max_workers=1)
+        try:
+            while True:
+                try:
+                    instance = await loop.run_in_executor(
+                        executor, hook.get_instance, self.instance_name
+                    )
+                except HttpError as exc:
+                    if exc.resp is not None and exc.resp.status in self.FATAL_HTTP_STATUSES:
+                        yield TriggerEvent(
+                            {
+                                "status": "error",
+                                "instance": self.instance_name,
+                                "message": (
+                                    f"Failed to check status of {self.instance_name}: "
+                                    f"{exc}"
+                                ),
+                            }
+                        )
+                        return
+                    self.log.warning(
+                        f"Transient error checking {self.instance_name} status: "
+                        f"{exc}. Retrying."
+                    )
+                    if time.time() > self.deadline:
+                        yield TriggerEvent(
+                            {
+                                "status": "error",
+                                "instance": self.instance_name,
+                                "message": (
+                                    f"Timed out waiting for {self.instance_name} to "
+                                    "reach RUNNING (last check failed with a transient "
+                                    "error)."
+                                ),
+                            }
+                        )
+                        return
+                    await asyncio.sleep(self.poll_interval)
+                    continue
+
+                if instance is None:
+                    yield TriggerEvent(
+                        {
+                            "status": "error",
+                            "instance": self.instance_name,
+                            "message": (
+                                f"Instance {self.instance_name} no longer exists: the "
+                                "flex-start request likely expired without securing "
+                                "capacity."
+                            ),
+                        }
+                    )
+                    return
+
+                status = instance.get("status")
+                self.log.info(f"Instance {self.instance_name} status: {status}")
+
+                if status == "RUNNING":
+                    yield TriggerEvent(
+                        {"status": "running_ok", "instance": self.instance_name}
+                    )
+                    return
+                if status in self.TERMINAL_STATES:
+                    yield TriggerEvent(
+                        {
+                            "status": "error",
+                            "instance": self.instance_name,
+                            "message": (
+                                f"Instance {self.instance_name} reached terminal state "
+                                f"{status} before RUNNING; flex-start failed to secure "
+                                "capacity."
+                            ),
+                        }
+                    )
+                    return
+                if time.time() > self.deadline:
+                    yield TriggerEvent(
+                        {
+                            "status": "error",
+                            "instance": self.instance_name,
+                            "message": (
+                                f"Timed out waiting for {self.instance_name} to reach "
+                                f"RUNNING (last status: {status})."
+                            ),
+                        }
+                    )
+                    return
+
+                await asyncio.sleep(self.poll_interval)
+        finally:
+            hook.close()
+            executor.shutdown(wait=False)
 
 
 class DeferrableSSHJobMonitorTrigger(BaseTrigger):

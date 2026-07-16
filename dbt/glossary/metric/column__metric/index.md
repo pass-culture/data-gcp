@@ -1,0 +1,331 @@
+**total_actual_amount_spent**: Total actual amount spent, reflecting real transactions.
+
+**total_available_stock**: Quantity of remaining stock. (stock_quantity - non cancelled bookings)
+
+**total_bookable_collective_offers**: Total number of collective offers that are bookable.
+
+**total_bookable_individual_offers**: Total number of individual offers that are bookable.
+
+**total_bookable_offers**: Total number of offers that are bookable, both individual and collective.
+
+**total_bookings**: Total number of bookings, both individual and collective.
+
+**total_cancelled_bookings**: Total number of cancelled bookings.
+
+**total_cancelled_individual_bookings**: Total number of cancelled individual bookings.
+
+**total_collective_bookings**: Total number of collective bookings.
+
+**total_collective_offers**: The total number of collective offers.
+
+**total_collective_real_revenue**: Total actual revenue from collective bookings.
+
+**total_collective_theoretic_revenue**: Total theoretical revenue from collective bookings.
+
+**total_created_collective_offers**: Total number of collective offers created.
+
+**total_created_individual_offers**: Total number of individual offers created.
+
+**total_created_offers**: Total number of offers created, both individual and collective.
+
+**total_credited_beneficiaries**: The total number of credited beneficiaries.
+
+**total_current_year_collective_real_revenue**: The total real revenue from collective bookings for the current year.
+
+**total_current_year_non_cancelled_tickets**: Total number of tickets that were not cancelled in the current year.
+
+**total_current_year_real_revenue**: Total real revenue for the current year.
+
+**total_current_scholar_year_tickets**: The total number of tickets for the current scholar year.
+
+**total_current_year_non_cancelled_collective_bookings**: The total non cancelled collective bookings for the current year.
+
+**total_current_year_collective_theoretic_revenue**: Total collective theoretical revenue for the current year.
+
+**total_current_year_used_collective_bookings**: Total collective used bookings for the current year.
+
+**total_deposit_actual_amount_spent**: Total actual amount spent from deposits.
+
+**total_deposit_amount**: Total amount deposited by the user.
+
+**total_deposits**: The total number of deposits for the educational institution.
+
+**total_grant_18_subcategory_booked**: The total number of subcategory booked on grant_18 deposit.
+
+**total_grant_15_17_subcategory_booked**: The total number of subcategory booked on grant_15_17 deposit.
+
+**total_favorites**: Total number of times this offer was favorited.
+
+**total_first_bookings**: Total number of bookings that are first bookings.
+
+**total_free_bookings**: Total number of free bookings made by the user.
+
+**total_individual_bookings**: Total number of individual bookings.
+
+**total_individual_offers**: The total number of individual offers.
+
+**total_individual_real_revenue**: Total actual revenue from individual bookings.
+
+**total_individual_theoretic_revenue**: Total theoretical revenue from individual bookings.
+
+**total_last_deposit_digital_goods_amount_spent**: Total amount spent on digital goods from the last deposit.
+
+**total_last_deposit_theoretical_amount_spent**: Total theoretical amount spent from the last deposit.
+
+**total_non_cancelled_bookings**: Total number of bookings that were not cancelled, both individual and collective.
+
+**total_non_cancelled_collective_bookings**: Total number of collective bookings that were not cancelled.
+
+**total_non_cancelled_duo_bookings**: Total number of non-cancelled duo bookings made by the user.
+
+**total_non_cancelled_individual_bookings**: Total number of non-cancelled individual bookings made by the user.
+
+**total_non_cancelled_tickets**: Total number of tickets that were not cancelled.
+
+**total_paid_bookings**: Total number of paid bookings.
+
+**total_permanent_managed_venues**: The total number of permanent venues managed by the local authority.
+
+**total_real_revenue**: Total actual revenue from all bookings.
+
+**total_reimbursement_points**: The total number of reimbursement points for the local authority.
+
+**total_stock_quantity**: Total remaining stock quantity.
+
+**total_students**: The total number of students for the educational institution.
+
+**total_theoretic_revenue**: Total theoretical revenue from all bookings.
+
+**total_theoretical_amount_spent**: Total theoretical amount that would have been spent based on expected transactions.
+
+**total_theoretical_amount_spent_in_digital_goods**: Total theoretical amount spent on digital goods based on expected transactions.
+
+**total_theoretical_digital_goods_amount_spent**: Total theoretical amount spent on digital goods by the user.
+
+**total_theoretical_outings_amount_spent**: Total theoretical amount spent on outings by the user.
+
+**total_theoretical_physical_goods_amount_spent**: Total theoretical amount spent on physical goods by the user.
+
+**total_theoretical_remaining_credit**: Total theoretical remaining credit for the user.
+
+**total_tickets**: The total number of tickets for the educational institution.
+
+**total_used_bookings**: Total number of bookings that were used.
+
+**total_used_collective_bookings**: Total number of collective bookings that were used.
+
+**total_used_individual_bookings**: Total number of used individual bookings.
+
+**total_users**: The total number of users.
+
+**total_users_last_12_months**: Rolling sum of distinct users over the last 12 months for a given age and department.
+
+**total_population**: The total number of french population.
+
+**total_population_last_12_months**: Rolling sum of french population over the last 12 months for a given age and department.
+
+**total_3_category_booked_users**: The total number of users who made bookings in three categories or more.
+
+**total_amount_spent**: The total amount of credit spent by the user.
+
+**total_item_consulted**: The total number of items consulted by the user.
+
+**total_venue_consulted**: The total number of venues consulted by the user.
+
+**total_venue_type_label_consulted**: The total number of venues type label consulted by the user.
+
+**total_day_between_deposit_and_first_booking**: The total number of days elapsed between the user deposit creation date and the user first booking date.
+
+**total_diversification_score**: The total diversification score of the users.
+
+**total_venue_id_booked**: The total number of distinct venues booked by the users. Virtual venues are excluded.
+
+**total_venue_type_booked**: The total number of distinct venue type booked by the users.
+
+**total_category_booked**: The total number of distinct categories booked by the users.
+
+**ratio_current_credit_utilization**: The ratio of current credit utilization for the educational institution based on validated bookings
+
+**ratio_beneficiary_students**: The ratio of beneficiary students for the educational institution.
+
+**mean_stock_price_per_item**: The average stock price for the item.
+
+**total_diversity_score**: The total diversity score of the user or the deposit
+
+**total_venue_20_km**: The total distinct number of venues located under a 20 kilometers area around the centroid of the IRIS.
+
+**total_venue_5_km**: The total distinct number of venues located under a 5 kilometers area around the centroid of the IRIS.
+
+**total_population_15_years_or_more**: The total population over 15 years living in the IRIS.
+
+**total_population_11_17_years**: The total population between 11 and 17 years living in the IRIS.
+
+**total_population_18_24_years**: The total population between 18 ans 24 years living in the IRIS.
+
+**pct_csp_1**: The percentage of the population, that have 15 years or more, belonging to the socio-professional category 1 - Farmers.
+
+**pct_csp_2**: The percentage of the population, that have 15 years or more, belonging to the socio-professional category 2 - Craftsmen, Traders, Business Leaders.
+
+**pct_csp_3**: The percentage of the population, that have 15 years or more, belonging to the socio-professional category 3 - Executives and Higher Intellectual Professions.
+
+**pct_csp_4**: The percentage of the population, that have 15 years or more, belonging to the socio-professional category 4 - Intermediate professions.
+
+**pct_csp_5**: The percentage of the population, that have 15 years or more, belonging to the socio-professional category 5 - Employees.
+
+**pct_csp_6**: The percentage of the population, that have 15 years or more, belonging to the socio-professional category 6 - Workers.
+
+**pct_csp_7**: The percentage of the population, that have 15 years or more, belonging to the socio-professional category 7 - Retired.
+
+**pct_csp_8**: The percentage of the population, that have 15 years or more, belonging to the socio-professional category 8 - Others without professional activity.
+
+**pct_french_population**: The percentage of the population that have French nationality, all ages included.
+
+**pct_foreign_population**: The percentage of the population that have foreign nationality, all ages included.
+
+**total_session_display**: The total number of sessions with a display of a specific object like module_id or offer_id.
+
+**total_session_with_click**: The total number of sessions with a click on a specific object like module_id or offer_id.
+
+**total_sesh_consult_offer**: The total number of sessions with a consultation related to a specific object like module_id or offer_id.
+
+**total_session_fav**: The total number of sessions which puts an offer to favorite, related to a specific object like module_id or offer_id.
+
+**total_session_with_consult_video**: The total number of sessions with a video consultation, related to a specific object like module_id.
+
+**total_click**: The total number of clicks on a specific object like module_id or offer_id.
+
+**total_visit_last_month**: Number of distinct app sessions by the user in the last 30 days, computed as count of distinct (user_pseudo_id, session_id) pairs from Firebase native events.
+
+**total_consult_offer**: The total number of offer consultations.
+
+**total_fav**: The total number of bookmark actions.
+
+**total_session_with_booking**: The total number of session which performed a booking.
+
+**total_venue_map_consult**: The total number of consultations from the venue map.
+
+**total_venue_map_preview**: The total number of previews of the venue map.
+
+**total_consult_venue**: The total number of venues consulted from the venue map.
+
+**total_distinct_venue_consult_offer**: The total distinct number of venues which led to an offer consultation.
+
+**total_session_venue_map_seen_duration_seconds**: Durée totale en seconde pendant laquelle la venue map a été affichée au cours d’une session.
+
+**total_diversification**: Total du score de diversité incrémenté par les réservations associées.
+
+**total_quantities**: Total quantities booked. A booking quantity can be 1 or 2.
+
+**total_revenue_amount**: The total revenue amount associated with the bookings.
+
+**total_reimbursed_amount**: Total amount reimbursed to the offerers.
+
+**total_contribution_amount**: Total amount contributed by the offerers on their bookings.
+
+**total_booking_amount**: Total amount generated by the bookings.
+
+**total_booking_quantity**: Total quantity of items booked.
+
+**total_booking_amount_ranked**: The rank of the total amount generated by the bookings. As opposed to the other category booked.
+
+**total_venue_booking_amount_ranked**: The rank of the venue, ordered by total amount generated by the bookings.
+
+**total_number_of_tickets**: Total number of tickets booked relative to collective bookings.
+
+**sept_dec_total_theoric_bookings**: Total non cancelled collective bookings made during sept-dec period - only for the institutions and scholar year with a split deposit.
+
+**jan_aug_total_theoric_bookings**: Total non cancelled collective bookings made during jan-aug period - only for the institutions and scholar year with a split deposit.
+
+**sept_dec_theoric_amount_spent**: Total amount associated to the number of non cancelled collective bookings made during sept-dec period - only for the institutions and scholar year with a split deposit.
+
+**jan_aug_theoric_amount_spent**: Total amount associated to the number of non cancelled collective bookings made during jan-aug period - only for the institutions and scholar year with a split deposit.
+
+**sept_dec_total_confirmed_bookings**: Total confirmed, used and reimbursed collective bookings made during sept-dec period - only for the institutions and scholar year with a split deposit.
+
+**jan_aug_total_confirmed_bookings**: Total confirmed, used and reimbursed collective bookings made during jan-aug period - only for the institutions and scholar year with a split deposit.
+
+**sept_dec_real_amount_spent**: Total amount associated to the number of used and reimbursed collective bookings made during sept-dec period - only for the institutions and scholar year with a split deposit.
+
+**jan_aug_real_amount_spent**: Total amount associated to the number of used and reimbursed collective bookings made during jan-aug period - only for the institutions and scholar year with a split deposit.
+
+**sept_dec_reimbursed_amount**: Total reimbursed amount during sept-dec period - only for the institutions and scholar year with a split deposit.
+
+**jan_aug_reimbursed_amount**: Total reimbursed amount during jan-aug period - only for the institutions and scholar year with a split deposit.
+
+**total_scholar_year_deposit**: Total amount of the educational deposit for the scholar year (if the deposit is split it is the sum of sept-dec and jan-aug deposit).
+
+**all_year_total_theoric_bookings**: Total non cancelled collective bookings made during scholar year (if the deposit is split it is the sum of sept-dec and jan-aug deposit).
+
+**all_year_theoric_amount_spent**: Total amount associated to the number of non cancelled collective bookings made during scholar year (if the deposit is split it is the sum of sept-dec and jan-aug deposit).
+
+**pct_all_year_theoric_amount_spent**: All year theoric amount spent / all year deposit.
+
+**pct_sept_dec_theoric_amount_spent**: Sept-dec theoric amount spent / sept_dec deposit (only for the institutions and scholar year with a split deposit).
+
+**pct_jan_aug_theoric_amount_spent**: Jan-aug theoric amount spent / jan-aug deposit (only for the institutions and scholar year with a split deposit).
+
+**all_year_total_confirmed_bookings**: Total confirmed, used and reimbursed collective bookings made during scholar year (if the deposit is split it is the sum of sept-dec and jan-aug deposit).
+
+**all_year_real_amount_spent**: Total amount associated to the number of used and reimbursed collective bookings made during scholar year (if the deposit is split it is the sum of sept-dec and jan-aug deposit).
+
+**pct_sept_dec_real_amount_spent**: Sept-dec real amount spent / sept-dec deposit (only for the institutions and scholar year with a split deposit).
+
+**pct_jan_aug_real_amount_spent**: Jan-aug real amount spent / jan-aug deposit (only for the institutions and scholar year with a split deposit).
+
+**pct_all_year_real_amount_spent**: Total scholar real amount spent / total scholar_year deposit (if the deposit is split it is the sum of sept-dec and jan-aug deposit).
+
+**all_year_reimbursed_amount**: Total reimbursed amount during scholar year (if the deposit is split it is the sum of sept-dec and jan-aug deposit).
+
+**is_split_deposit**: Whether or not the scholar year has one or two deposit.s associated.
+
+**sept_dec_deposit**: Amount of sept-dec deposit - only for the institutions and scholar year with a split deposit.
+
+**jan_aug_deposit**: Amount of jan-aug deposit - only for the institutions and scholar year with a split deposit.
+
+**pct_sept_dec_reimbursed_amount_spent**: Sept-dec reimbursed amount / sept-dec deposit (only for the institutions and scholar year with a split deposit).
+
+**pct_jan_aug_reimbursed_amount_spent**: Jan-aug reimbursed amount / jan-aug deposit (only for the institutions and scholar year with a split deposit).
+
+**pct_all_year_reimbursed_amount_spent**: Scholar year reimbursed amount / scholar year deposit (if the deposit is split it is the sum of sept-dec and jan-aug deposit).
+
+**total_created_mediation_individual_offers**: Total number of individual offers with mediation (cultural outreach).
+
+**has_mediation_offer**: Indicates whether the venue has at least one offer with mediation (cultural outreach).
+
+**metrics\_\_total_actual_beneficiaries**: The total count of active beneficiaries at the time of calculation. To be included, a user must have a non-expired credit and a remaining amount of credit available for booking.
+
+**metrics\_\_total_beneficiaries**: Number of beneficiaries at the end of the partition month, broken down by `age_at_calculation`. Counts every user with an active account (or suspended upon user request) who has ever received credit, regardless of whether the credit is currently active, exhausted, or expired. A user's `age_at_calculation` is recomputed each month, so the same user can appear in different age buckets across partition_months. Not a true running total — users with deactivated accounts drop from the count.
+
+**metrics\_\_total_category_booked_beneficiaries**: The number of beneficiaries who made at least one booking in the specific category by the time their credit expired.
+
+**metrics\_\_total_3plus_category_booked_beneficiaries**: The number of beneficiaries who booked across at least three different categories by the time their credit expired. This indicator is used to the diversification of cultural practices at the end of the beneficiary lifecycle.
+
+**metrics\_\_total_expired_deposit_beneficiaries**: The total number of beneficiaries whose credit expired during the specific month. This column serves as the denominator (baseline) for calculating percentages related to user behavior at the end of their eligibility period (e.g., the proportion of users who diversified their bookings).
+
+**metrics\_\_total_deposit_amount_at_expiration**: The total deposit amount allocated to beneficiaries that reached its expiration date during the given month.
+
+**metrics\_\_total_actual_amount_spent_at_expiration**: The total deposit amount effectively spent by beneficiaries before it expired.
+
+**metrics\_\_average_deposit_amount_at_expiration**: The average deposit amount allocated per beneficiary at the time of expiration.
+
+**metrics\_\_average_actual_amount_spent_at_expiration**: The average deposit amount effectively spent per beneficiary at the time of expiration.
+
+**metrics\_\_total_active_partners_individual**: The total number of unique partners who had at least one active offer within the individual part during the 365 days prior to the calculation date.
+
+**metrics\_\_total_active_partners_collective**: The total number of unique partners who had at least one active offer within the collective part during the 365 days prior to the calculation date.
+
+**metrics\_\_total_active_partners_global**: The total number of unique partners who had at least one active offer within either the individual part, the collective part, or both, during the 365 days prior to the calculation date.
+
+**metrics\_\_total_active_partners_dual_part**: The total number of unique partners who had at least one active offer within both the individual part and the collective part simultaneously during the 365 days prior to the calculation date.
+
+**metrics\_\_total_cumulative_activated_partners_individual**: The total cumulative number of unique partners who have had at least one active offer within the individual part for at least 1 day since inception up to the given month.
+
+**metrics\_\_total_cumulative_activated_partners_collective**: The total cumulative number of unique partners who have had at least one active offer within the collective part for at least 1 day since inception up to the given month.
+
+**metrics\_\_total_cumulative_activated_partners_global**: The total cumulative number of unique partners who have had at least one active offer within either the individual part, the collective part, or both, for at least 1 day since inception up to the given month.
+
+**metrics\_\_total_cumulative_activated_partners_individual_only**: The total cumulative number of unique partners who have had at least one active offer exclusively within the individual part for at least 1 day, and have never had an active offer within the collective part since inception up to the given month.
+
+**metrics\_\_total_cumulative_activated_partners_collective_only**: The total cumulative number of unique partners who have had at least one active offer exclusively within the collective part for at least 1 day, and have never had an active offer within the individual part since inception up to the given month.
+
+**metrics\_\_total_cumulative_activated_partners_dual_part**: The total cumulative number of unique partners who have had at least one active offer within both the individual part and the collective part (at any point, concurrently or sequentially) for at least 1 day since inception up to the given month.

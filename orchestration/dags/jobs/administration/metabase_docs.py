@@ -3,6 +3,7 @@ import datetime
 from airflow import DAG
 from airflow.models import Param
 from common import macros
+from common.alerts.task_fail import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -14,8 +15,6 @@ from common.operators.kubernetes import (
     CustomKubernetesPodOperator,
 )
 from common.utils import get_airflow_schedule
-
-from orchestration.dags.common.alerts.task_fail import task_fail_slack_alert
 
 MICROSERVICE_PATH = "jobs/etl_jobs/external/metabase-docs"
 DAG_NAME = "metabase_docs"

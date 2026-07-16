@@ -126,7 +126,6 @@ Documentation for Pass Culture's data repository: dbt data models, KPIs, glossar
 - [Finance daily pricing data](https://pass-culture.github.io/data-gcp/dbt/models/machine_learning/finance/description__ml_finance__daily_pricing/index.md)
 - [Finance weekly pricing data](https://pass-culture.github.io/data-gcp/dbt/models/machine_learning/finance/description__ml_finance__weekly_pricing/index.md)
 - [Artist](https://pass-culture.github.io/data-gcp/dbt/models/machine_learning/linkage/description__ml_linkage__artist/index.md)
-- [Artist Alias](https://pass-culture.github.io/data-gcp/dbt/models/machine_learning/linkage/description__ml_linkage__artist_alias/index.md)
 - [Delta Artist](https://pass-culture.github.io/data-gcp/dbt/models/machine_learning/linkage/description__ml_linkage__delta_artist/index.md)
 - [Delta Event Series](https://pass-culture.github.io/data-gcp/dbt/models/machine_learning/linkage/description__ml_linkage__delta_event_series/index.md)
 - [Delta Event Series Offer Link](https://pass-culture.github.io/data-gcp/dbt/models/machine_learning/linkage/description__ml_linkage__delta_event_series_offer_link/index.md)

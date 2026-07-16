@@ -3163,12 +3163,6 @@ The `ml_linkage__artist` table contains the artist database built from the artis
 
 ## Table description
 
-# Table: Artist Alias
-
-The `ml_linkage__artist_alias` table links artist_offer_name to an artist_id for a given artist_type and offer_category_id. It was used to generate the `ml_linkage__artist_product_link` table.
-
-## Table description
-
 # Table: Delta Artist
 
 The `ml_linkage__delta_artist` table contains the new artist data that must be synchronized with the backend application. It is an export from the ml_preproc\_\_delta_artist source computed by the artist_linkage DAG.

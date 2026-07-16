@@ -11,7 +11,7 @@ from utils import (
     BIGQUERY_RAW_DATASET,
     ENTRIES_DTYPE,
     ENV_SHORT_NAME,
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
     PREVIEW_TOKEN,
     TOKEN,
 )
@@ -35,7 +35,7 @@ def save_raw_modules_to_bq(modules_df, table_name):
     print(f"Will save {nb_rows} rows to {table_name}")
 
     bigquery_client = bigquery.Client()
-    table_id = f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{table_name}${yyyymmdd}"
+    table_id = f"{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.{table_name}${yyyymmdd}"
     job_config = bigquery.LoadJobConfig(
         write_disposition="WRITE_TRUNCATE",
         schema_update_options=[

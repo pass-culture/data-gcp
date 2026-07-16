@@ -22,7 +22,6 @@ def test_refresh_artist_metadatas_matching(tmp_path):
     product_file = tmp_path / "product.parquet"
 
     output_delta_artist = tmp_path / "delta_artist.parquet"
-    output_delta_artist_alias = tmp_path / "delta_artist_alias.parquet"
     output_delta_product_link = tmp_path / "delta_product_link.parquet"
 
     # Mock applicative database artists:
@@ -97,13 +96,11 @@ def test_refresh_artist_metadatas_matching(tmp_path):
             wiki_base_path=str(tmp_path),  # dummy path
             wiki_file_name="wiki.parquet",
             output_delta_artist_file_path=str(output_delta_artist),
-            output_delta_artist_alias_file_path=str(output_delta_artist_alias),
             output_delta_product_artist_link_file_path=str(output_delta_product_link),
         )
 
     # 4. Load outputs and verify
     delta_artist_df = pd.read_parquet(output_delta_artist)
-    delta_artist_alias_df = pd.read_parquet(output_delta_artist_alias)
     delta_product_link_df = pd.read_parquet(output_delta_product_link)
 
     # Output product link delta should be empty
@@ -124,9 +121,6 @@ def test_refresh_artist_metadatas_matching(tmp_path):
     assert artist_2[ARTIST_DESCRIPTION_KEY] == "English singer-songwriter"
     assert artist_2[IMG_KEY] == "img2.jpg"
 
-    # Delta artist alias should contain the new match for id2/Q2
-    assert len(delta_artist_alias_df) == 0
-
 
 def test_refresh_artist_metadatas_duplicate_wikidata_id_resolution(tmp_path):
     # 1. Setup mock data files
@@ -135,7 +129,6 @@ def test_refresh_artist_metadatas_duplicate_wikidata_id_resolution(tmp_path):
     product_file = tmp_path / "product.parquet"
 
     output_delta_artist = tmp_path / "delta_artist.parquet"
-    output_delta_artist_alias = tmp_path / "delta_artist_alias.parquet"
     output_delta_product_link = tmp_path / "delta_product_link.parquet"
 
     # Three unmatched artists: id2 (Ed Sheeran), id3 (Edward Sheeran), id4 (Eddie Sheeran)
@@ -212,7 +205,6 @@ def test_refresh_artist_metadatas_duplicate_wikidata_id_resolution(tmp_path):
             wiki_base_path=str(tmp_path),
             wiki_file_name="wiki.parquet",
             output_delta_artist_file_path=str(output_delta_artist),
-            output_delta_artist_alias_file_path=str(output_delta_artist_alias),
             output_delta_product_artist_link_file_path=str(output_delta_product_link),
         )
 

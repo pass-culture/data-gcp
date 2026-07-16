@@ -1,4 +1,5 @@
 import subprocess
+import time
 import typing as t
 from datetime import datetime
 
@@ -21,6 +22,7 @@ from common.hooks.image import MACHINE_TYPE
 from common.hooks.network import BASE_NETWORK_LIST, GKE_NETWORK_LIST
 from common.triggers.gce import (
     DeferrableSSHJobMonitorTrigger,
+    GCEInstanceRunningTrigger,
 )
 
 
@@ -88,6 +90,8 @@ class StartGCEOperator(BaseOperator):
         "max_run_duration",
         "request_valid_for_duration",
         "reservation_name",
+        "deferrable",
+        "poll_interval",
     ]
 
     def __init__(
@@ -106,6 +110,8 @@ class StartGCEOperator(BaseOperator):
         max_run_duration: t.Union[str, int, None] = None,
         request_valid_for_duration: t.Union[str, int, None] = None,
         reservation_name: t.Optional[str] = None,
+        deferrable: bool = True,
+        poll_interval: int = 180,
         *args,
         **kwargs,
     ):
@@ -124,6 +130,13 @@ class StartGCEOperator(BaseOperator):
         self.max_run_duration = max_run_duration
         self.request_valid_for_duration = request_valid_for_duration
         self.reservation_name = reservation_name
+        # deferrable only affects FLEX_START requests: Defaults to True; set False to force the old
+        # synchronous wait. If a caller sets execution_timeout on this task,
+        # size it comfortably above request_valid_for_duration (max 2h) plus
+        # boot margin, since the trigger's own deadline is a separate,
+        # independent bound on the same wait.
+        self.deferrable = deferrable
+        self.poll_interval = poll_interval
 
     def execute(self, context) -> None:
         self.gpu_count = int(self.gpu_count)
@@ -131,6 +144,7 @@ class StartGCEOperator(BaseOperator):
         gce_networks = (
             GKE_NETWORK_LIST if self.use_gke_network is True else BASE_NETWORK_LIST
         )
+        is_flex_start = (self.provisioning_model or "STANDARD").upper() == "FLEX_START"
         max_run_seconds = parse_duration_to_seconds(self.max_run_duration)
         request_valid_seconds = parse_duration_to_seconds(
             self.request_valid_for_duration
@@ -142,10 +156,11 @@ class StartGCEOperator(BaseOperator):
             gce_zone=self.gce_zone,
             additional_scopes=self.additional_scopes,
         ) as hook:
-            # start_vm blocks until the VM is RUNNING. For a FLEX_START request
-            # that means the task stays occupied while DWS keeps the request
-            # queued in PENDING until GPU capacity is found.
-            hook.start_vm(
+            # For a deferrable FLEX_START (the default) we submit the (async,
+            # queued) insert and hand off polling to the trigger below so the
+            # worker slot is freed while the VM is PENDING. Otherwise start_vm
+            # blocks until the VM is RUNNING.
+            already_running = hook.start_vm(
                 self.instance_name,
                 self.instance_type,
                 preemptible=self.preemptible,
@@ -156,8 +171,52 @@ class StartGCEOperator(BaseOperator):
                 max_run_duration_seconds=max_run_seconds,
                 request_valid_for_duration_seconds=request_valid_seconds,
                 reservation_name=_clean_optional_template(self.reservation_name),
-                wait_for_running=True,
+                wait_for_running=not (is_flex_start and self.deferrable),
             )
+
+        if is_flex_start and self.deferrable and not already_running:
+            # Always bound the trigger by GCP's hard queue-wait cap (not the
+            # specific request_valid_for_duration configured for this request):
+            # DWS itself already enforces the configured value and terminates/
+            # deletes the instance when it elapses without securing capacity,
+            # which the trigger detects via the terminal-state/instance-gone
+            # checks. This deadline is a separate, independent worst-case
+            # backstop, so it shouldn't be tighter than what GCP could ever
+            # legitimately take, regardless of the configured value. Stored as
+            # an absolute deadline (not a relative timeout) so it survives a
+            # triggerer restart, which re-instantiates the trigger from
+            # `serialize()` and would otherwise silently reset a relative-
+            # duration countdown.
+            deadline = (
+                time.time()
+                + GCEHook.FLEX_START_MAX_QUEUE_SECONDS
+                + GCEHook.BOOT_MARGIN_SECONDS
+            )
+            self.log.info(
+                f"Flex-start request for {self.instance_name} submitted; deferring "
+                "until the instance reaches RUNNING."
+            )
+            self.defer(
+                trigger=GCEInstanceRunningTrigger(
+                    instance_name=self.instance_name,
+                    zone=self.gce_zone,
+                    poll_interval=self.poll_interval,
+                    deadline=deadline,
+                ),
+                method_name="execute_complete",
+            )
+
+    def execute_complete(
+        self, context: t.Dict[str, t.Any], event: t.Optional[t.Dict[str, t.Any]] = None
+    ) -> None:
+        if event is None:
+            raise AirflowException("No event received in trigger callback")
+        if event.get("status") == "running_ok":
+            self.log.info(f"Instance {event.get('instance')} is RUNNING.")
+            return
+        raise AirflowException(
+            event.get("message", "Flex-start instance failed to start")
+        )
 
 
 class CleanGCEOperator(BaseOperator):

@@ -7,7 +7,10 @@ description: 'Review a pull request and rate it /10 on bugs, security, improveme
 
 ## Context Gathering
 
-1. Use `git diff master...HEAD` to get changes.
+1. Determine the main branch, then diff against it:
+   - `MAIN=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')`
+   - `git fetch origin "$MAIN"`
+   - `git --no-pager diff "origin/$MAIN...HEAD"`
 2. Read adjacent code for each modified file.
 3. Check for new/modified tests related to changes.
 4. If dependency files changed (`pyproject.toml`, `uv.lock`, `requirements.txt`), use the `validate_cves` tool.

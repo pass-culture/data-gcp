@@ -3,32 +3,31 @@ import datetime
 from airflow import DAG
 from airflow.models import Param
 from common import macros
-from common.callback import on_failure_vm_callback
+from common.alerts.task_fail import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
-from common.operators.gce import (
-    DeleteGCEOperator,
-    InstallDependenciesOperator,
-    SSHGCEOperator,
-    StartGCEOperator,
+from common.operators.kubernetes import (
+    DEFAULT_CONTAINER_RESOURCES,
+    CustomKubernetesPodOperator,
 )
 from common.utils import get_airflow_schedule
+from kubernetes.client import V1ResourceRequirements
 
 DAG_NAME = "import_qualtrics"
-GCE_INSTANCE = f"import-qualtrics-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/external/qualtrics"
-dag_config = {
-    "PROJECT_NAME": GCP_PROJECT_ID,
-    "ENV_SHORT_NAME": ENV_SHORT_NAME,
-}
+MICROSERVICE_PATH = "jobs/etl_jobs/external/qualtrics"
+QUALTRICS_ENV_VARS = {"PROJECT_NAME": GCP_PROJECT_ID}
+HEAVY_CONTAINER_RESOURCES = V1ResourceRequirements(
+    requests={"cpu": "1", "memory": "3Gi"},
+    limits={"cpu": "2", "memory": "8Gi"},
+)
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
-    "on_failure_callback": on_failure_vm_callback,
+    "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }
@@ -47,52 +46,35 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "instance_type": Param(
-            default="n1-standard-4",
-            type="string",
-        ),
     },
-    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ) as dag:
-    gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE,
-        task_id="gce_start_task",
-        instance_type="{{ params.instance_type }}",
-        labels={"job_type": "long_task", "dag_name": DAG_NAME},
+    _kpo_common = dict(
+        orchestration_mode="celery",
+        queue="k8s-watcher",
+        runtime_mode="gitsynced",
+        runtime_branch="{{ params.branch }}",
+        runtime_image="py313",
+        runtime_image_tag="v1",
+        microservice_path=MICROSERVICE_PATH,
+        env_vars=QUALTRICS_ENV_VARS,
     )
 
-    fetch_install_code = InstallDependenciesOperator(
-        task_id="fetch_install_code",
-        instance_name=GCE_INSTANCE,
-        branch="{{ params.branch }}",
-        base_dir=BASE_PATH,
-        python_version="3.13",
-        retries=2,
-    )
-
-    import_opt_out_to_bigquery = SSHGCEOperator(
+    import_opt_out_to_bigquery = CustomKubernetesPodOperator(
         task_id="import_opt_out_to_bigquery",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="uv run python main.py --task import_opt_out_users",
+        arguments=["main.py", "--task", "import_opt_out_users"],
         deferrable=True,
-        do_xcom_push=True,
+        container_resources=DEFAULT_CONTAINER_RESOURCES,
+        **_kpo_common,
     )
 
-    import_all_answers_to_bigquery = SSHGCEOperator(
+    import_all_answers_to_bigquery = CustomKubernetesPodOperator(
         task_id="import_all_answers_to_bigquery",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="uv run python main.py --task import_all_survey_answers",
+        arguments=["main.py", "--task", "import_all_survey_answers"],
         deferrable=True,
-        do_xcom_push=True,
+        container_resources=HEAVY_CONTAINER_RESOURCES,
+        **_kpo_common,
     )
 
-    gce_instance_stop = DeleteGCEOperator(
-        task_id="gce_stop_task", instance_name=GCE_INSTANCE
-    )
-    (gce_instance_start >> fetch_install_code)
-    (fetch_install_code >> import_opt_out_to_bigquery >> gce_instance_stop)
-    (fetch_install_code >> import_all_answers_to_bigquery >> gce_instance_stop)
+    import_opt_out_to_bigquery
+    import_all_answers_to_bigquery

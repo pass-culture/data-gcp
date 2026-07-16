@@ -720,7 +720,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.2.0" },
     { name = "pandas-gbq", specifier = "==0.23.1" },
     { name = "requests", specifier = "==2.33.0" },
-    { name = "typer", specifier = ">=0.7.0" },
+    { name = "typer", specifier = ">=0.24" },
     { name = "zenpy", specifier = "==2.0.56" },
 ]
 

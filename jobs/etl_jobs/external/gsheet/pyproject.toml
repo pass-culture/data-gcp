@@ -14,7 +14,7 @@ dependencies = [
     "pandas",
     "pandas-gbq==0.23.1",
     "requests>=2.33.0",
-    "typer>=0.7.0",
+    "typer>=0.24",
     "loguru>=0.7.3",
 ]
 

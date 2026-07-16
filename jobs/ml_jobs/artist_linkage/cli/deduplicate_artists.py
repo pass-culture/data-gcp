@@ -10,7 +10,6 @@ from sentence_transformers import SentenceTransformer
 
 from src.constants import (
     ACTION_KEY,
-    ARTIST_ALIASES_KEYS,
     ARTIST_ID_KEY,
     COMMENT_KEY,
     ENCODER_NAME,
@@ -113,7 +112,6 @@ def main(
     product_embeddings_filepath: str = typer.Option(),
     output_delta_artist_filepath: str = typer.Option(),
     output_delta_product_artist_link_filepath: str = typer.Option(),
-    output_delta_artist_alias_filepath: str = typer.Option(),
 ) -> None:
     # 1. Load raw data
     applicative_artist_df = pd.read_parquet(applicative_artist_filepath)
@@ -184,9 +182,6 @@ def main(
     delta_product_artist_link_df.to_parquet(
         output_delta_product_artist_link_filepath,
         index=False,
-    )
-    pd.DataFrame(columns=ARTIST_ALIASES_KEYS).to_parquet(
-        output_delta_artist_alias_filepath, index=False
     )
 
 

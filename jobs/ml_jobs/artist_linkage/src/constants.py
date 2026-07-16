@@ -65,14 +65,6 @@ OFFER_NAME_KEY = "offer_name"
 MEAN_TT_ITEM_EMBEDDING_KEY = "mean_tt_item_embedding"
 
 # Dataframe Columns List
-ARTIST_ALIASES_KEYS = [
-    ARTIST_ID_KEY,
-    OFFER_CATEGORY_ID_KEY,
-    ARTIST_TYPE_KEY,
-    ARTIST_NAME_KEY,
-    ARTIST_NAME_TO_MATCH_KEY,
-    WIKIDATA_ID_KEY,
-]
 ARTISTS_KEYS = [
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
@@ -100,7 +92,6 @@ class Comment:
     removed_linked: ClassVar[str] = "removed linked"
     linked_to_new_artist: ClassVar[str] = "linked to new artist"
     new_artist: ClassVar[str] = "new artist"
-    new_artist_alias: ClassVar[str] = "new artist_alias"
 
 
 class ProductToLinkStatus:

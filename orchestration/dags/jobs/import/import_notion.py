@@ -15,6 +15,8 @@ from common.operators.kubernetes import (
 )
 from common.utils import get_airflow_schedule
 
+from orchestration.dags.common.alerts.task_fail import task_fail_slack_alert
+
 MICROSERVICE_PATH = "jobs/etl_jobs/external/notion"
 DAG_NAME = "import_notion"
 
@@ -22,6 +24,7 @@ default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 2,
     "retry_delay": datetime.timedelta(minutes=5),
+    "on_failure_callback": task_fail_slack_alert,
     "project_id": GCP_PROJECT_ID,
 }
 

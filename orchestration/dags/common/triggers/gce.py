@@ -1,7 +1,7 @@
 import asyncio
-from typing import Any, Dict, Tuple
 import time
 from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Dict, Tuple
 
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -69,7 +69,10 @@ class GCEInstanceRunningTrigger(BaseTrigger):
                         executor, hook.get_instance, self.instance_name
                     )
                 except HttpError as exc:
-                    if exc.resp is not None and exc.resp.status in self.FATAL_HTTP_STATUSES:
+                    if (
+                        exc.resp is not None
+                        and exc.resp.status in self.FATAL_HTTP_STATUSES
+                    ):
                         yield TriggerEvent(
                             {
                                 "status": "error",

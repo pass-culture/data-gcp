@@ -476,9 +476,7 @@ class GCEHook(GoogleBaseHook):
             # Cover the max queue wait plus provisioning/boot margin, mirroring
             # the deadline the deferrable path gives GCEInstanceRunningTrigger,
             # so this synchronous wait doesn't loop forever on a stuck instance.
-            self.wait_for_instance_running(
-                instance_name, timeout_seconds=wait_timeout
-            )
+            self.wait_for_instance_running(instance_name, timeout_seconds=wait_timeout)
         return False
 
     def wait_for_instance_running(

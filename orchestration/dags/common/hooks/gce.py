@@ -55,17 +55,18 @@ class SSHGCEJobManager:
     def __init__(
         self,
         task_id: str,
-        task_instance: TaskInstance,
+        task_instance: t.Optional[TaskInstance],
         hook: ComputeEngineSSHHook,
         environment: t.Dict[str, str],
         do_xcom_push: bool = True,
+        logger=None,
     ):
         self.ssh_hook = hook
         self.task_id = task_id
         self.environment = environment
         self.task_instance = task_instance
         self.do_xcom_push = do_xcom_push
-        self.log = task_instance.log
+        self.log = logger or (task_instance.log if task_instance else None)
 
     def run_ssh_client_command(self, command: str, retry=1) -> str:
         try:
@@ -79,7 +80,7 @@ class SSHGCEJobManager:
                         get_pty=False,
                     )
                 )
-                if self.do_xcom_push:
+                if self.do_xcom_push and self.task_instance:
                     self.task_instance.xcom_push(key="ssh_exit", value=exit_status)
                     # Ensure there are enough lines in the output
                     lines_result = agg_stdout.decode("utf-8").split("\n")
@@ -131,11 +132,12 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
     def __init__(
         self,
         task_id: str,
-        task_instance: TaskInstance,
+        task_instance: t.Optional[TaskInstance],
         hook: ComputeEngineSSHHook,
         environment: t.Dict[str, str],
         run_id: str,
         do_xcom_push: bool = True,
+        logger=None,
         *args,
         **kwargs,
     ):
@@ -143,7 +145,14 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
         self.job_id = f"{task_id}_{str(run_id)}"
         self._ssh_executor = None  # Instance-level executor, not class-level
         super().__init__(
-            task_id, task_instance, hook, environment, do_xcom_push, *args, **kwargs
+            task_id,
+            task_instance,
+            hook,
+            environment,
+            do_xcom_push,
+            logger=logger,
+            *args,
+            **kwargs,
         )
 
     @property

@@ -212,9 +212,11 @@ class DeferrableSSHJobMonitorTrigger(BaseTrigger):
         job_manager = DeferrableSSHGCEJobManager(
             task_id=self.task_id,
             run_id=self.run_id,
-            task_instance=self.task_instance,
+            task_instance=None,  # Triggerer process passes no DB-backed object
             hook=hook,
             environment={},
+            do_xcom_push=False,  # Safely bypasses internal xcom_push calls
+            logger=self.log,  # Seamlessly targets the Async Trigger log pipeline
         )
         try:
             while True:

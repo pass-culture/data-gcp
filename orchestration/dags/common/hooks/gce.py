@@ -800,10 +800,11 @@ def on_failure_callback_stop_vm(context: Context):
         # Ensure any templated fields are rendered
         failing_task.render_template_fields(context)
         instance_name = failing_task.instance_name
+        zone = getattr(failing_task, "gce_zone", GCE_ZONE)
 
         failing_task.log.info(f"Stopping VM {instance_name} due to task failure.")
 
-        with GCEHook() as hook:
+        with GCEHook(gce_zone=zone) as hook:
             instance_details = hook.get_instance(instance_name)
             if instance_details:
                 labels = instance_details.get("labels", {})

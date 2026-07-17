@@ -207,21 +207,24 @@ class StartGCEOperator(BaseOperator):
 class CleanGCEOperator(BaseOperator):
     template_fields = [
         "timeout_in_minutes",
+        "gce_zone",
     ]
 
     def __init__(
         self,
         timeout_in_minutes: int,
         job_type: str,
+        gce_zone: str = GCE_ZONE,
         *args,
         **kwargs,
     ):
         super(CleanGCEOperator, self).__init__(*args, **kwargs)
         self.timeout_in_minutes = timeout_in_minutes
         self.job_type = job_type
+        self.gce_zone = gce_zone
 
     def execute(self, context) -> None:
-        with GCEHook() as hook:
+        with GCEHook(gce_zone=self.gce_zone) as hook:
             hook.delete_instances(
                 job_type=self.job_type, timeout_in_minutes=self.timeout_in_minutes
             )

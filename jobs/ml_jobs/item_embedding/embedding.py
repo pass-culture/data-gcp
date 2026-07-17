@@ -104,7 +104,8 @@ def embed_dataframe(
 
     Returns:
         DataFrame with 'item_id', 'content_hash', and one column per vector.
-        Each vector column contains embedding arrays.
+        Each vector column contains embedding arrays. Rows whose features are
+        all null get ``None`` for that vector instead of an embedding.
     """
     pools = pools or {}
     logger.info(f"Embedding {len(df)} items")
@@ -124,13 +125,27 @@ def embed_dataframe(
                 f"(same features as a previous vector)"
             )
 
-        vector_embeddings = embed_vector(
-            vector,
-            encoders[vector.encoder_name],
-            prompts=prompts_cache[features_key],
-            pool=pools.get(vector.encoder_name),
-        )
+        prompts = prompts_cache[features_key]
+        # Skip all-null rows (empty prompt): don't embed the bare instruction.
+        keep_mask = [bool(prompt) for prompt in prompts]
+        non_empty_prompts = [prompt for prompt, keep in zip(prompts, keep_mask) if keep]
 
-        df_embeddings[vector.name] = vector_embeddings.tolist()
+        if non_empty_prompts:
+            vector_embeddings = embed_vector(
+                vector,
+                encoders[vector.encoder_name],
+                prompts=non_empty_prompts,
+                pool=pools.get(vector.encoder_name),
+            )
+            embeddings_iter = iter(vector_embeddings.tolist())
+            column = [next(embeddings_iter) if keep else None for keep in keep_mask]
+        else:
+            logger.warning(
+                f"Vector '{vector.name}': all rows have empty prompts; "
+                f"writing None for every item."
+            )
+            column = [None] * len(prompts)
+
+        df_embeddings[vector.name] = column
 
     return df_embeddings

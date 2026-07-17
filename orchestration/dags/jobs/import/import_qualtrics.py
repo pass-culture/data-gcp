@@ -63,7 +63,6 @@ with DAG(
     import_opt_out_to_bigquery = CustomKubernetesPodOperator(
         task_id="import_opt_out_to_bigquery",
         arguments=["main.py", "--task", "import_opt_out_users"],
-        deferrable=True,
         container_resources=DEFAULT_CONTAINER_RESOURCES,
         **_kpo_common,
     )
@@ -71,7 +70,6 @@ with DAG(
     import_all_answers_to_bigquery = CustomKubernetesPodOperator(
         task_id="import_all_answers_to_bigquery",
         arguments=["main.py", "--task", "import_all_survey_answers"],
-        deferrable=True,
         container_resources=HEAVY_CONTAINER_RESOURCES,
         **_kpo_common,
     )

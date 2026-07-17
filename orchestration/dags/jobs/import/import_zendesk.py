@@ -11,13 +11,17 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.kubernetes import (
-    DEFAULT_CONTAINER_RESOURCES,
     CustomKubernetesPodOperator,
 )
 from common.utils import get_airflow_schedule
+from kubernetes.client import V1ResourceRequirements
 
 DAG_NAME = "import_zendesk"
 MICROSERVICE_PATH = "jobs/etl_jobs/external/zendesk"
+ZENDESK_CONTAINER_RESOURCES = V1ResourceRequirements(
+    requests={"cpu": "1", "memory": "2Gi"},
+    limits={"cpu": "2", "memory": "4Gi"},
+)
 
 
 default_dag_args = {
@@ -82,5 +86,5 @@ with DAG(
             "--prior-date",
             "{{ params.prior_date }}",
         ],
-        container_resources=DEFAULT_CONTAINER_RESOURCES,
+        container_resources=ZENDESK_CONTAINER_RESOURCES,
     )

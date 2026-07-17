@@ -10,8 +10,6 @@
 # ['query', 'document', 'BitextMining', 'Clustering', 'Classification',
 # 'InstructionRetrieval', 'MultilabelClassification', 'PairClassification',
 # 'Reranking', 'Retrieval', 'Retrieval-query', 'Retrieval-document', 'STS', 'Summarization'].
-# 'query' applies the retrieval "search result" instruction:
-#   "task: search result | query: {content}"
 # (see https://huggingface.co/google/embeddinggemma-300m)
 
 vectors:
@@ -24,7 +22,7 @@ vectors:
       - author_concat
       - offer_description
     encoder_name: "google/embeddinggemma-300m"
-    prompt_name: "query"
+    prompt_name: "document"  # "document" prompt: "title: none | text: {content}"
 
   # - name: "image_content"
   #   features:

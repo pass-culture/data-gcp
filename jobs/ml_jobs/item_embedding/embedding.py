@@ -70,6 +70,9 @@ def embed_vector(
         "show_progress_bar": False,
         "batch_size": BATCH_SIZE,
         "prompt_name": vector.prompt_name,
+        # L2-normalize so cosine similarity, dot-product indexes and
+        # Euclidean/k-means clustering all behave consistently downstream.
+        "normalize_embeddings": True,
     }
 
     if pool is not None:

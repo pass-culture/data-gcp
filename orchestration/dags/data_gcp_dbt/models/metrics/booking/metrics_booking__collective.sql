@@ -10,5 +10,7 @@ select
     venue_city_name,
     venue_city_code,
     total_collective_bookings,
-    total_collective_amount_spent
+    total_collective_amount_spent,
+    cumulative_total_collective_bookings,
+    cumulative_total_collective_amount_spent
 from {{ ref("int_kpi__booking_collective") }}

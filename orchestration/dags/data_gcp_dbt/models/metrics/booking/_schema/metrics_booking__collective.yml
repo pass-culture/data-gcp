@@ -50,3 +50,11 @@ models:
       - name: total_collective_amount_spent
         description: '{{ doc("column__total_collective_amount_spent") }}'
         data_type: FLOAT
+
+      - name: cumulative_total_collective_bookings
+        description: '{{ doc("column__cumulative_total_collective_bookings") }}'
+        data_type: INTEGER
+
+      - name: cumulative_total_collective_amount_spent
+        description: '{{ doc("column__cumulative_total_collective_amount_spent") }}'
+        data_type: FLOAT

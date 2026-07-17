@@ -182,3 +182,29 @@ class TestEmbedDataframe:
 
         # Verify encoder.encode was called
         assert mock_encoder.encode.called
+
+    def test_all_null_row_gets_none_and_is_not_embedded(self):
+        # Only the two non-empty rows should be embedded; the all-null row
+        # must not be sent to the encoder and must get None in the output.
+        mock_encoder = MagicMock()
+        mock_encoder.device = "cpu"
+        mock_encoder.encode.return_value = np.array([[1.0, 2.0], [5.0, 6.0]])
+
+        df = pd.DataFrame(
+            {
+                "item_id": ["a", "b", "c"],
+                "content_hash": ["h1", "h2", "h3"],
+                "name": ["Alice", None, "Charlie"],
+            }
+        )
+        vectors = [Vector(name="emb", features=["name"], encoder_name="test/model")]
+        encoders = {"test/model": mock_encoder}
+
+        result = embed_dataframe(df, vectors, encoders)
+
+        # Middle (all-null) row is None; the others keep their embeddings.
+        assert result["emb"].tolist() == [[1.0, 2.0], None, [5.0, 6.0]]
+
+        # The empty prompt was never passed to the encoder.
+        (called_prompts,), _ = mock_encoder.encode.call_args
+        assert called_prompts == ["name : Alice", "name : Charlie"]

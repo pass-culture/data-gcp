@@ -230,29 +230,29 @@ The total cumulative number of unique partners who have had at least one active 
 {% enddocs %}
 
 {% docs column__metrics__total_institutions %}
-Nombre total d'institutions (établissements scolaires) enregistrées ou éligibles sur le territoire (à la granularité géographique donnée), pour le mois et l'année scolaire donnés.
+Total number of institutions (schools) registered or eligible within the territory (at the given geographical granularity), for the specified month and school year.
 {% enddocs %}
 
 {% docs column__metrics__total_engaged_institutions %}
-Nombre total d'institutions "engagées" (ayant réalisé au moins une réservation) sur le territoire pour le mois et l'année scolaire donnés.
+Total number of "engaged" institutions (having made at least one booking) within the territory for the specified month and school year.
 {% enddocs %}
 
 {% docs column__metrics__total_deposit %}
-Montant total du crédit mise à disposition des institutions du territoire pour le mois et l'année scolaire donnés.
+Total credit amount allocated and made available to the institutions of the territory for the specified month and school year.
 {% enddocs %}
 
 {% docs column__metrics__total_amount_spent %}
-Montant total dépensé (consommé) par les institutions du territoire au cours du mois de l'année scolaire donnés.
+Total amount spent (consumed) by the institutions of the territory during the specified month and school year.
 {% enddocs %}
 
 {% docs column__metrics__total_bookings %}
-Nombre total de réservations effectuées par les institutions ou bénéficiaires du territoire au cours du mois de l'année scolaire donnés.
+Total number of bookings made by the institutions or beneficiaries of the territory during the specified month and school year.
 {% enddocs %}
 
 {% docs column__metrics__cumulative_total_amount_spent %}
-Montant total cumulé dépensé sur le territoire depuis le début de l'année scolaire donnée jusqu'au mois donné (inclus).
+Cumulative total amount spent within the territory from the start of the given school year up to and including the specified month.
 {% enddocs %}
 
 {% docs column__metrics__cumulative_total_bookings %}
-Nombre total cumulé de réservations effectuées sur le territoire depuis le début de l'année scolaire donnée jusqu'au mois donné (inclus).
+Cumulative total number of bookings made within the territory from the start of the given school year up to and including the specified month.
 {% enddocs %}

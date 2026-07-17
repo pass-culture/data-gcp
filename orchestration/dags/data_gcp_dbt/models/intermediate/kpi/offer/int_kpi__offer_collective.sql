@@ -11,7 +11,7 @@ with
             date_trunc(
                 date(co.collective_offer_creation_date), month
             ) as partition_month,
-            coalesce(rd.region_code, -1) as venue_region_code,
+            coalesce(cast(rd.region_code as string), '-1') as venue_region_code,
             count(co.collective_offer_id) as total_created_collective_offers
         from {{ ref("int_global__collective_offer") }} as co
         left join

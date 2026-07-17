@@ -12,7 +12,7 @@ with
             date_trunc(
                 date(cb.collective_booking_creation_date), month
             ) as partition_month,
-            coalesce(rd.region_code, -1) as venue_region_code,
+            coalesce(cast(rd.region_code as string), '-1') as venue_region_code,
             count(cb.collective_booking_id) as total_collective_bookings,
             sum(cb.booking_amount) as total_collective_amount_spent
         from {{ ref("mrt_global__collective_booking") }} as cb

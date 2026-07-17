@@ -110,6 +110,7 @@ class StartGCEOperator(BaseOperator):
         max_run_duration: t.Union[str, int, None] = None,
         request_valid_for_duration: t.Union[str, int, None] = None,
         reservation_name: t.Optional[str] = None,
+        # deferrable only affects FLEX_START requests: Defaults to True
         deferrable: bool = True,
         poll_interval: int = 180,
         *args,
@@ -130,11 +131,6 @@ class StartGCEOperator(BaseOperator):
         self.max_run_duration = max_run_duration
         self.request_valid_for_duration = request_valid_for_duration
         self.reservation_name = reservation_name
-        # deferrable only affects FLEX_START requests: Defaults to True; set False to force the old
-        # synchronous wait. If a caller sets execution_timeout on this task,
-        # size it comfortably above request_valid_for_duration (max 2h) plus
-        # boot margin, since the trigger's own deadline is a separate,
-        # independent bound on the same wait.
         self.deferrable = deferrable
         self.poll_interval = poll_interval
 
@@ -156,10 +152,8 @@ class StartGCEOperator(BaseOperator):
             gce_zone=self.gce_zone,
             additional_scopes=self.additional_scopes,
         ) as hook:
-            # For a deferrable FLEX_START (the default) we submit the (async,
-            # queued) insert and hand off polling to the trigger below so the
-            # worker slot is freed while the VM is PENDING. Otherwise start_vm
-            # blocks until the VM is RUNNING.
+            # For deferrable FLEX_START, submit asynchronously and hand off to the trigger
+            # to free the worker slot. Otherwise, start_vm blocks until the VM is RUNNING.
             already_running = hook.start_vm(
                 self.instance_name,
                 self.instance_type,
@@ -175,18 +169,9 @@ class StartGCEOperator(BaseOperator):
             )
 
         if is_flex_start and self.deferrable and not already_running:
-            # Always bound the trigger by GCP's hard queue-wait cap (not the
-            # specific request_valid_for_duration configured for this request):
-            # DWS itself already enforces the configured value and terminates/
-            # deletes the instance when it elapses without securing capacity,
-            # which the trigger detects via the terminal-state/instance-gone
-            # checks. This deadline is a separate, independent worst-case
-            # backstop, so it shouldn't be tighter than what GCP could ever
-            # legitimately take, regardless of the configured value. Stored as
-            # an absolute deadline (not a relative timeout) so it survives a
-            # triggerer restart, which re-instantiates the trigger from
-            # `serialize()` and would otherwise silently reset a relative-
-            # duration countdown.
+            # Set an absolute deadline as a worst-case backstop using GCP's hard queue cap.
+            # DWS handles the requested timeout natively, while the absolute timestamp
+            # ensures the timeout survives triggerer restarts without resetting.
             deadline = (
                 time.time()
                 + GCEHook.FLEX_START_MAX_QUEUE_SECONDS

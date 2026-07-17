@@ -150,6 +150,28 @@ class TestBuildPrompts:
         assert len(prompts) == 3
         assert prompts[1] == "x : b"
 
+    def test_labels_override_column_names(self):
+        df = pd.DataFrame({"offer_name": ["Dune"], "author_concat": ["Herbert"]})
+        vector = Vector(
+            name="test",
+            features=["offer_name", "author_concat"],
+            encoder_name="model",
+            labels={"offer_name": "titre", "author_concat": "auteur / artiste"},
+        )
+        prompts = _build_prompts(df, vector)
+        assert prompts == ["titre : Dune\nauteur / artiste : Herbert"]
+
+    def test_unmapped_feature_falls_back_to_column_name(self):
+        df = pd.DataFrame({"offer_name": ["Dune"], "category_id": ["LIVRE"]})
+        vector = Vector(
+            name="test",
+            features=["offer_name", "category_id"],
+            encoder_name="model",
+            labels={"offer_name": "titre"},
+        )
+        prompts = _build_prompts(df, vector)
+        assert prompts == ["titre : Dune\ncategory_id : LIVRE"]
+
 
 # ---------------------------------------------------------------------------
 # End-to-end embed_dataframe tests

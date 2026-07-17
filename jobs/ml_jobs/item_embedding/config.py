@@ -15,6 +15,7 @@ class Vector(BaseModel):
     features: list[str]
     encoder_name: str
     prompt_name: Optional[str] = None
+    labels: dict[str, str] = {}
 
 
 def _load_config(config_file_name: str) -> dict:

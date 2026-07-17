@@ -9,10 +9,12 @@ from sentence_transformers import SentenceTransformer
 def _build_prompts(df: pd.DataFrame, vector: Vector) -> list[str]:
     """Build text prompts for all rows using vectorized operations.
 
-    Concatenates non-null feature values as ``"feature : value"`` pairs
-    separated by newlines. Features with null values are omitted entirely.
-    Rows where all features are null produce an empty string and are logged
-    as a warning.
+    Concatenates non-null feature values as ``"label : value"`` pairs
+    separated by newlines.
+    The label defaults to the column name unless overridden in vector.labels.
+    Features with null values are omitted entirely.
+    Items with all-null features will have an empty prompt string and are logged as a warning.
+    They will later receive a ``None`` embedding without calling the model.
 
     Args:
         df: DataFrame with item metadata
@@ -21,12 +23,12 @@ def _build_prompts(df: pd.DataFrame, vector: Vector) -> list[str]:
     Returns:
         List of formatted prompt strings, one per row
     """
-    # Format each feature as "feature : value"; omit entirely if null or empty
     parts = []
     for feature in vector.features:
+        label = vector.labels.get(feature, feature)
         mask = df[feature].notna() & (df[feature].astype(str).str.strip() != "")
         formatted = pd.Series("", index=df.index)
-        formatted[mask] = feature + " : " + df[feature][mask].astype(str)
+        formatted[mask] = label + " : " + df[feature][mask].astype(str)
         parts.append(formatted)
 
     # Join non-null parts per row with a newline (null features are omitted)
@@ -70,8 +72,6 @@ def embed_vector(
         "show_progress_bar": False,
         "batch_size": BATCH_SIZE,
         "prompt_name": vector.prompt_name,
-        # L2-normalize so cosine similarity, dot-product indexes and
-        # Euclidean/k-means clustering all behave consistently downstream.
         "normalize_embeddings": True,
     }
 
@@ -93,6 +93,7 @@ def embed_dataframe(
     pools: dict[str, object] = None,
 ) -> pd.DataFrame:
     """Compute all vector embeddings for a dataframe.
+    Empty prompts are skipped and receive ``None`` for that vector.
 
     Args:
         df: DataFrame with item metadata (must contain 'item_id', 'content_hash' and all feature columns)
@@ -110,13 +111,16 @@ def embed_dataframe(
     pools = pools or {}
     logger.info(f"Embedding {len(df)} items")
 
-    # Cache prompts by feature tuple to avoid re-building identical text
-    prompts_cache: dict[tuple[str, ...], list[str]] = {}
+    # Cache prompts by (features, labels) to avoid re-building identical text
+    prompts_cache: dict[
+        tuple[tuple[str, ...], tuple[tuple[str, str], ...]], list[str]
+    ] = {}
 
     df_embeddings = df[["item_id", "content_hash"]].copy()
 
     for vector in vectors:
-        features_key = tuple(vector.features)
+        # Prompt text depends on both the columns and their labels.
+        features_key = (tuple(vector.features), tuple(sorted(vector.labels.items())))
         if features_key not in prompts_cache:
             prompts_cache[features_key] = _build_prompts(df, vector)
         else:

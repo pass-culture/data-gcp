@@ -95,7 +95,6 @@ with DAG(
             "--end-date",
             "{{ params.end_date }}",
         ],
-        deferrable=True,
         **_kpo_common,
     )
 
@@ -112,7 +111,6 @@ with DAG(
             "--end-date",
             "{{ params.end_date }}",
         ],
-        deferrable=True,
         **_kpo_common,
     )
 

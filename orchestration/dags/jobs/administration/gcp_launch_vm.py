@@ -63,7 +63,7 @@ DAG_DOC = """
       available instead of failing on stockout — handy for GPUs that frequently stock out.
       With FLEX_START you must set `max_run_duration` (the VM is auto-deleted after it), and
       `request_valid_for_duration` controls how long the request stays queued (max 2h). The
-      task does not defer while the request is queued.
+      task defers (frees its worker slot) while the request is queued.
       FLEX_START is incompatible with `reservation_name` and preemptible.
     * reservation_name: if you have a specific Compute Engine reservation to consume, set this parameter to the name of the reservation. When set, the VM targets this reservation via SPECIFIC_RESERVATION and requires provisioning_model=STANDARD (incompatible with FLEX_START). The instance_type, gpu_type, gpu_count and gce_zone must match the reservation exactly. Leave empty to not target any reservation.
     * use_gke_network: if you need your VM to comminicate with the Clickhouse cluster, set this parameter to True

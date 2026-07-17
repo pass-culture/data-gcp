@@ -313,6 +313,19 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
 class GCEHook(GoogleBaseHook):
     _conn = None
 
+    # A VM that reaches one of these will never become RUNNING on its own again.
+    TERMINAL_STATES = frozenset(
+        {"TERMINATED", "SUSPENDED", "SUSPENDING", "STOPPING", "STOPPED"}
+    )
+
+    # General margin for VM provisioning and driver installation across all models.
+    # 15 minutes allows a comfortable buffer without delaying failure detection.
+    BOOT_MARGIN_SECONDS = 900
+
+    # Fallback matching GCP's maximum 2-hour queue limit for Dynamic Workload
+    # Scheduling (DWS). Only applies to FLEX_START provisioning models.
+    FLEX_START_MAX_QUEUE_SECONDS = 7200
+
     def __init__(
         self,
         gcp_project: str = GCP_PROJECT_ID,
@@ -379,22 +392,60 @@ class GCEHook(GoogleBaseHook):
         request_valid_for_duration_seconds: t.Optional[int] = None,
         reservation_name: t.Optional[str] = None,
         wait_for_running: bool = True,
-    ):
-        instances = self.list_instances()
-        instances = [x["name"] for x in instances if x["status"] == "RUNNING"]
-        if instance_name in instances:
-            self.log.info(f"Instance {instance_name} already running, pass.")
-            return
-
+    ) -> bool:
+        """Start (or no-op on) a VM. Returns True if the instance was already RUNNING."""
         is_flex_start = (provisioning_model or "STANDARD").upper() == "FLEX_START"
+        # The DWS queue-cap term only applies to flex-start; STANDARD/reservation
+        # instances only need the general boot margin.
+        wait_timeout = self.BOOT_MARGIN_SECONDS
+        if is_flex_start:
+            wait_timeout += (
+                request_valid_for_duration_seconds or self.FLEX_START_MAX_QUEUE_SECONDS
+            )
+
+        # Check all statuses to prevent a retried task (e.g., after an Airflow
+        # triggerer crash) from attempting a duplicate insert and hitting a 409 conflict.
+        existing = self.get_instance(instance_name)
+        if existing is not None:
+            status = existing.get("status")
+            if status == "RUNNING":
+                self.log.info(f"Instance {instance_name} already running, pass.")
+                return True
+            if status not in self.TERMINAL_STATES:
+                # Warn if an existing instance is found mid-flight. While expected on task
+                # retry, it could signal a naming collision/race condition with another
+                # run, which is particularly suspicious for STANDARD provisioning.
+                self.log.warning(...)
+                self.log.warning(
+                    f"Instance {instance_name} already exists with status "
+                    f"{status} (a prior insert is still in flight) instead of "
+                    "being created fresh by this call. Adopting it and waiting "
+                    "for it to reach RUNNING instead of re-inserting. If this "
+                    f"is unexpected (provisioning_model={provisioning_model}), "
+                    "check whether another task or DAG run is targeting the "
+                    "same instance_name concurrently."
+                )
+                if wait_for_running:
+                    self.wait_for_instance_running(
+                        instance_name, timeout_seconds=wait_timeout
+                    )
+                return False
+
+            # Clear any stale, terminally-failed instance from a previous run
+            # to allow a clean, fresh insertion on retry.
+            self.log.warning(
+                f"Instance {instance_name} exists in terminal state {status}; "
+                "deleting before retrying."
+            )
+            self.__delete_instance(instance_name, wait=True)
+
         self.log.info(
             f"Launching {instance_name} on compute engine (instance: {instance_type}, "
             f"provisioning_model: {provisioning_model})"
         )
-        # For STANDARD/preemptible VMs the insert operation completes only once the
-        # VM is provisioned, so we wait on it. FLEX_START inserts are async: the
-        # request is queued by DWS and the VM sits in PENDING until capacity is
-        # found, so we submit without waiting and poll the instance status instead.
+
+        # Wait for STANDARD/preemptible insertions synchronously. FLEX_START
+        # inserts are async queue placements, so we submit immediately and poll.
         self.__create_instance(
             instance_type,
             instance_name,
@@ -409,7 +460,11 @@ class GCEHook(GoogleBaseHook):
             reservation_name=reservation_name,
         )
         if is_flex_start and wait_for_running:
-            self.wait_for_instance_running(instance_name)
+            # Cover the max queue wait plus provisioning/boot margin, mirroring
+            # the deadline the deferrable path gives GCEInstanceRunningTrigger,
+            # so this synchronous wait doesn't loop forever on a stuck instance.
+            self.wait_for_instance_running(instance_name, timeout_seconds=wait_timeout)
+        return False
 
     def wait_for_instance_running(
         self,
@@ -491,10 +546,8 @@ class GCEHook(GoogleBaseHook):
         """Set the scheduling (and, for flex-start, params/reservation) block."""
         provisioning_model = (provisioning_model or "STANDARD").upper()
 
-        # Consume a specific (future) reservation: capacity is already secured,
-        # so we run STANDARD and target the reservation by name. This is mutually
-        # exclusive with FLEX_START/DWS, which queues for on-demand capacity and
-        # requires NO_RESERVATION.
+        # Target a specific reservation using STANDARD provisioning where capacity is
+        # pre-secured. This is mutually exclusive with FLEX_START queueing.
         if reservation_name:
             if provisioning_model == "FLEX_START":
                 raise AirflowException(
@@ -517,10 +570,9 @@ class GCEHook(GoogleBaseHook):
                 config["scheduling"]["preemptible"] = True
             return
 
-        # Flex-start (DWS) queues the request until GPU capacity is available
-        # instead of failing immediately on a stockout. It requires a max run
-        # duration and consumes preemptible quota; it is mutually exclusive with
-        # the preemptible flag.
+        # FLEX_START queues the request via DWS until capacity is available.
+        # It requires a max run duration and consumes preemptible quota, but
+        # cannot be combined with the explicit preemptible flag.
         if preemptible:
             raise AirflowException(
                 "preemptible=True is incompatible with FLEX_START provisioning."

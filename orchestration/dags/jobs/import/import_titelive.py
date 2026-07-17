@@ -112,7 +112,6 @@ with DAG(
             "{{ '--resume' if params.resume else '' }}",
             "{{ '--reprocess-failed' if params.reprocess_failed else '' }}",
         ],
-        deferrable=True,
         **_kpo_common,
     )
 
@@ -129,7 +128,6 @@ with DAG(
             "download-images",
             "{{ '--reprocess-failed' if params.download_images_reprocess_failed else '' }}",
         ],
-        deferrable=True,
         **_kpo_common,
     )
 

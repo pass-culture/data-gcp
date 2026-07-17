@@ -49,17 +49,83 @@ class GCEInstanceRunningTrigger(BaseTrigger):
             },
         )
 
+    def _handle_http_error(self, exc) -> TriggerEvent | None:
+        """Handles HTTP errors during polling, distinguishing between fatal and transient errors."""
+        if exc.resp is not None and exc.resp.status in self.FATAL_HTTP_STATUSES:
+            return TriggerEvent(
+                {
+                    "status": "error",
+                    "instance": self.instance_name,
+                    "message": f"Failed to check status of {self.instance_name}: {exc}",
+                }
+            )
+
+        self.log.warning(
+            f"Transient error checking {self.instance_name} status: {exc}. Retrying."
+        )
+        if time.time() > self.deadline:
+            return TriggerEvent(
+                {
+                    "status": "error",
+                    "instance": self.instance_name,
+                    "message": (
+                        f"Timed out waiting for {self.instance_name} to "
+                        "reach RUNNING (last check failed with a transient error)."
+                    ),
+                }
+            )
+        return None
+
+    def _evaluate_status(self, instance) -> TriggerEvent | None:
+        """Evaluates the state of the GCE instance and returns a TriggerEvent if terminal."""
+        if instance is None:
+            return TriggerEvent(
+                {
+                    "status": "error",
+                    "instance": self.instance_name,
+                    "message": (
+                        f"Instance {self.instance_name} no longer exists: the "
+                        "flex-start request likely expired without securing capacity."
+                    ),
+                }
+            )
+
+        status = instance.get("status")
+        self.log.info(f"Instance {self.instance_name} status: {status}")
+
+        if status == "RUNNING":
+            return TriggerEvent(
+                {"status": "running_ok", "instance": self.instance_name}
+            )
+
+        if status in self.TERMINAL_STATES:
+            return TriggerEvent(
+                {
+                    "status": "error",
+                    "instance": self.instance_name,
+                    "message": (
+                        f"Instance {self.instance_name} reached terminal state "
+                        f"{status} before RUNNING; flex-start failed to secure capacity."
+                    ),
+                }
+            )
+
+        if time.time() > self.deadline:
+            return TriggerEvent(
+                {
+                    "status": "error",
+                    "instance": self.instance_name,
+                    "message": f"Timed out waiting for {self.instance_name} to reach RUNNING (last status: {status}).",
+                }
+            )
+        return None
+
     async def run(self):
         loop = asyncio.get_event_loop()
-        # Build the hook once, outside the poll loop: constructing GCEHook
-        # resolves credentials/discovery docs, which is wasted work (and a
-        # possible source of transient errors) if repeated every poll tick.
-        # The underlying httplib2/googleapiclient transport is NOT thread-safe,
-        # and the triggerer's default executor is a shared, multi-threaded pool
-        # used by every concurrently-running trigger in the process — so a
-        # single reused hook must be pinned to one dedicated worker thread,
-        # otherwise different poll ticks can land on different threads and
-        # crash the whole triggerer process (observed as a native.
+
+        # Build the hook once. Because the underlying googleapiclient transport is
+        # thread-unsafe, we pin it to a dedicated single-threaded executor to
+        # prevent cross-thread access and native crashes in the shared triggerer pool.
         hook = GCEHook(gce_zone=self.zone)
         executor = ThreadPoolExecutor(max_workers=1)
         try:
@@ -69,87 +135,16 @@ class GCEInstanceRunningTrigger(BaseTrigger):
                         executor, hook.get_instance, self.instance_name
                     )
                 except HttpError as exc:
-                    if (
-                        exc.resp is not None
-                        and exc.resp.status in self.FATAL_HTTP_STATUSES
-                    ):
-                        yield TriggerEvent(
-                            {
-                                "status": "error",
-                                "instance": self.instance_name,
-                                "message": (
-                                    f"Failed to check status of {self.instance_name}: "
-                                    f"{exc}"
-                                ),
-                            }
-                        )
-                        return
-                    self.log.warning(
-                        f"Transient error checking {self.instance_name} status: "
-                        f"{exc}. Retrying."
-                    )
-                    if time.time() > self.deadline:
-                        yield TriggerEvent(
-                            {
-                                "status": "error",
-                                "instance": self.instance_name,
-                                "message": (
-                                    f"Timed out waiting for {self.instance_name} to "
-                                    "reach RUNNING (last check failed with a transient "
-                                    "error)."
-                                ),
-                            }
-                        )
+                    event = self._handle_http_error(exc)
+                    if event:
+                        yield event
                         return
                     await asyncio.sleep(self.poll_interval)
                     continue
 
-                if instance is None:
-                    yield TriggerEvent(
-                        {
-                            "status": "error",
-                            "instance": self.instance_name,
-                            "message": (
-                                f"Instance {self.instance_name} no longer exists: the "
-                                "flex-start request likely expired without securing "
-                                "capacity."
-                            ),
-                        }
-                    )
-                    return
-
-                status = instance.get("status")
-                self.log.info(f"Instance {self.instance_name} status: {status}")
-
-                if status == "RUNNING":
-                    yield TriggerEvent(
-                        {"status": "running_ok", "instance": self.instance_name}
-                    )
-                    return
-                if status in self.TERMINAL_STATES:
-                    yield TriggerEvent(
-                        {
-                            "status": "error",
-                            "instance": self.instance_name,
-                            "message": (
-                                f"Instance {self.instance_name} reached terminal state "
-                                f"{status} before RUNNING; flex-start failed to secure "
-                                "capacity."
-                            ),
-                        }
-                    )
-                    return
-                if time.time() > self.deadline:
-                    yield TriggerEvent(
-                        {
-                            "status": "error",
-                            "instance": self.instance_name,
-                            "message": (
-                                f"Timed out waiting for {self.instance_name} to reach "
-                                f"RUNNING (last status: {status})."
-                            ),
-                        }
-                    )
+                event = self._evaluate_status(instance)
+                if event:
+                    yield event
                     return
 
                 await asyncio.sleep(self.poll_interval)

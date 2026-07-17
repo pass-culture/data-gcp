@@ -479,7 +479,6 @@ class GCEHook(GoogleBaseHook):
         moves to a terminal state; both are treated as failures.
         """
         deadline = time.time() + timeout_seconds if timeout_seconds else None
-        terminal_states = {"TERMINATED", "SUSPENDED", "SUSPENDING", "STOPPING"}
         while True:
             instance = self.get_instance(instance_name)
             if instance is None:
@@ -495,7 +494,7 @@ class GCEHook(GoogleBaseHook):
                 if self.source_image_type.startup_script_wait_time > 0:
                     time.sleep(self.source_image_type.startup_script_wait_time)
                 return
-            if status in terminal_states:
+            if status in self.TERMINAL_STATES:
                 raise AirflowException(
                     f"Instance {instance_name} reached terminal state {status} "
                     "before RUNNING; flex-start failed to secure capacity."

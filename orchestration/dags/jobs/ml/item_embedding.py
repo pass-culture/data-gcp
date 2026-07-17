@@ -156,7 +156,7 @@ with DAG(
         ),
         "gce_zone": Param(default="europe-west1-c", enum=GCE_ZONES),
         "provisioning_model": Param(
-            default="STANDARD",
+            default="FLEX_START",
             enum=["STANDARD", "FLEX_START"],
             description="""VM provisioning model. STANDARD requests capacity
                         immediately (fails on stockout). FLEX_START uses Dynamic

@@ -21,6 +21,9 @@ with
             ei.institution_program_name,
             ei.institution_macro_density_label,
             ed.scholar_year,
+            ed.is_current_scholar_year,
+            ed.is_current_calendar_year,
+            ed.is_current_deposit,
             sum(
                 case
                     when ed.educational_deposit_period = '{{ p1 }}'
@@ -237,6 +240,9 @@ select
     flattened_deposits.institution_program_name,
     flattened_deposits.institution_macro_density_label,
     flattened_deposits.scholar_year,
+    flattened_deposits.is_current_scholar_year
+    flattened_deposits.is_current_calendar_year,
+    flattened_deposits.is_current_deposit
     flattened_deposits.sept_dec_deposit,
     flattened_deposits.jan_aug_deposit,
     bookings.sept_dec_total_theoric_bookings,

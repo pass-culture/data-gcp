@@ -250,7 +250,7 @@ Total number of bookings made by the institutions or beneficiaries of the territ
 {% enddocs %}
 
 {% docs column__metrics__cumulative_total_amount_spent %}
-Cumulative total amount spent within the territory from the start of the given school year up to and including the specified month.
+Cumulative total amount spent by the institutions of the territory from the start of the given school year up to and including the specified month.
 {% enddocs %}
 
 {% docs column__metrics__cumulative_total_bookings %}

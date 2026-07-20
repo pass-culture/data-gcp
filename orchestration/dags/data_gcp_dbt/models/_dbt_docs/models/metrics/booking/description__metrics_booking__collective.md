@@ -4,7 +4,14 @@ description: Key indicators from the `metrics_booking__collective` model.
 ---
 
 {% docs description__metrics_booking__collective %}
-The `metrics_booking__collective` model exposes collective booking KPIs for reporting.
-It is a direct projection of [`int_kpi__booking_collective`](#!/model/model.data_gcp_dbt.int_kpi__booking_collective).
-It includes both monthly and cumulative booking indicators.
+
+The `metrics_booking__collective` model provides aggregated key indicators related to collective bookings by venue geography and school year.
+It is designed to be the central model providing collective booking indicators for export, monitoring and governance.
+
 {% enddocs %}
+
+## Table Description
+
+Each row represents the key indicators related to collective bookings, calculated for a specific month, school year and venue geographic level (department / region / city / EPCI).
+
+{% docs table__metrics_booking__collective %}{% enddocs %}

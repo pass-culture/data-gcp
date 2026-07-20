@@ -223,20 +223,24 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
                 if [ "$status" = "running" ] && ! kill -0 $pid 2>/dev/null; then
                     echo "failed" > $JOB_DIR/status
                     echo "Process died unexpectedly" >> $JOB_DIR/output
+                    status="failed"
                 fi
 
-                # Only tail the last 1000 lines to prevent memory bloat
-                output=$(tail -n 1000 $JOB_DIR/output 2>/dev/null || echo "No output yet")
-                echo "STATUS:$(cat $JOB_DIR/status)"
-                echo "OUTPUT:$output"
+                # The full job output is fetched once, in one shot, after the
+                # trigger reports a terminal status (see fetch_full_log) - no
+                # need to shuttle a tail of it through every poll interval.
+                echo "STATUS:$status"
+                echo "OUTPUT:"
                 echo "PID:$pid"
             elif [ -f "$ARCHIVE_LOG" ]; then
-                # Job directory was already cleaned up after a successful run.
+                # Job directory was already cleaned up after a terminal run.
                 # This happens when the triggerer restarts after cleanup but before
-                # the TriggerEvent was delivered to the Airflow scheduler.
-                output=$(tail -n 1000 "$ARCHIVE_LOG" 2>/dev/null || echo "No archived output")
-                echo "STATUS:completed"
-                echo "OUTPUT:$output"
+                # the TriggerEvent was delivered to the Airflow scheduler. Report
+                # the archived status rather than assuming success; fall back to
+                # "completed" only for archives written before this field existed.
+                archived_status=$(cat {self._job_base_dir}/archive/{self.job_id}_status 2>/dev/null || echo "completed")
+                echo "STATUS:$archived_status"
+                echo "OUTPUT:"
                 echo "PID:0"
             else
                 echo "STATUS:failed"
@@ -272,9 +276,13 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
             if [ -f "$JOB_DIR/status" ]; then
                 status=$(cat $JOB_DIR/status)
                 if [ "$status" != "running" ]; then
-                    # Archive the output before cleaning
+                    # Archive the output and final status before cleaning, so a
+                    # status check that only finds the archive (triggerer restart
+                    # between cleanup and event delivery) can report the real
+                    # outcome instead of assuming success.
                     mkdir -p {self._job_base_dir}/archive
                     cp $JOB_DIR/output {self._job_base_dir}/archive/{self.job_id}_output.log 2>/dev/null || true
+                    cp $JOB_DIR/status {self._job_base_dir}/archive/{self.job_id}_status 2>/dev/null || true
                     rm -rf $JOB_DIR
                 fi
             fi
@@ -293,6 +301,65 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
         return await loop.run_in_executor(
             self._ssh_executor, super().run_ssh_client_command, command, retry
         )
+
+    def fetch_full_log(self, retry: int = 1) -> str:
+        """Return the job's complete archived output, uncut, as plain text.
+
+        The trigger's cleanup step archives the full command output to
+        ARCHIVE_LOG before removing the job directory; the status-check
+        polling only ever sees a `tail`-ed, length-capped view of it to keep
+        the persisted TriggerEvent small. This retrieves the whole thing and
+        deletes the archive since it's no longer needed once fetched.
+
+        Deliberately bypasses `run_ssh_client_command`/`_decode_result`: that
+        path is xcom-oriented and base64-encodes the output whenever
+        `enable_xcom_pickling` is off (the Airflow default), which would
+        corrupt a human-readable log.
+        """
+        command = f"""
+            ARCHIVE_LOG={self._job_base_dir}/archive/{self.job_id}_output.log
+            ARCHIVE_STATUS={self._job_base_dir}/archive/{self.job_id}_status
+            if [ -f "$ARCHIVE_LOG" ]; then
+                cat "$ARCHIVE_LOG"
+                rm -f "$ARCHIVE_LOG" "$ARCHIVE_STATUS"
+            else
+                echo "Archive log not found: $ARCHIVE_LOG" >&2
+                exit 1
+            fi
+        """
+        try:
+            with self.ssh_hook.get_conn() as ssh_client:
+                exit_status, agg_stdout, agg_stderr = (
+                    self.ssh_hook.exec_ssh_client_command(
+                        ssh_client,
+                        command,
+                        timeout=3600,
+                        environment=self.environment,
+                        get_pty=False,
+                    )
+                )
+                if exit_status != 0:
+                    raise AirflowException(
+                        f"Failed to fetch full log for job {self.job_id}: "
+                        f"{self._decode_text(agg_stderr)}"
+                    )
+                return self._decode_text(agg_stdout)
+        except SSHException as e:
+            self.log.info(
+                f"Cannot connect to instance {self.ssh_hook.instance_name}. "
+                f"Retry: {retry}."
+            )
+            if retry > self.MAX_RETRY:
+                raise e
+            sleep(retry * self.SSH_TIMEOUT)
+            return self.fetch_full_log(retry=retry + 1)
+
+    @staticmethod
+    def _decode_text(data: bytes | str) -> str:
+        """Decode raw SSH output as plain UTF-8 text (no xcom encoding)."""
+        if isinstance(data, bytes):
+            return data.decode("utf-8", errors="replace")
+        return str(data)
 
     def __del__(self):
         """Cleanup thread pool on instance destruction to prevent memory leak."""

@@ -302,8 +302,8 @@ class BaseSSHGCEOperator(BaseOperator):
         self.poll_interval = poll_interval
         super(BaseSSHGCEOperator, self).__init__(*args, **kwargs)
 
-    def execute(self, context):
-        ssh_hook = ComputeEngineSSHHook(
+    def _build_ssh_hook(self) -> ComputeEngineSSHHook:
+        return ComputeEngineSSHHook(
             instance_name=self.instance_name,
             zone=self.gce_zone,
             project_id=GCP_PROJECT_ID,
@@ -314,6 +314,9 @@ class BaseSSHGCEOperator(BaseOperator):
             gcp_conn_id="google_cloud_default",
             expire_time=300,
         )
+
+    def execute(self, context):
+        ssh_hook = self._build_ssh_hook()
         self.log.info(
             f"Connecting to instance {self.instance_name} in zone {self.gce_zone} with project {GCP_PROJECT_ID}"
         )
@@ -427,6 +430,38 @@ class BaseSSHGCEOperator(BaseOperator):
             method_name="execute_complete",
         )
 
+    def _stream_full_remote_log(self, run_id: str) -> None:
+        """Fetch the job's complete archived output from the VM.
+
+        This runs back in the worker (post-resume from deferral). We don't
+        manually re-log the returned text: `ComputeEngineSSHHook`'s own
+        `exec_ssh_client_command` already logs every line of remote stdout in
+        real time as it streams it back, in the correct per-line order, via
+        this task attempt's normal log handler (including remote logging) -
+        exactly like a non-deferred task's output. Re-logging the same text
+        ourselves would just duplicate it, and bundling it into one giant
+        multi-line record is what caused it to show up out of order/short in
+        the webserver's merged log view. Calling fetch_full_log() purely for
+        that streaming side effect is what recovers the full log; the trigger
+        only ever sees a truncated tail to keep the persisted TriggerEvent
+        small.
+        """
+        job_manager = DeferrableSSHGCEJobManager(
+            task_id=self.task_id,
+            run_id=run_id,
+            task_instance=None,
+            hook=self._build_ssh_hook(),
+            environment={},
+            do_xcom_push=False,
+            logger=self.log,
+        )
+        self.log.info(f"----- Begin full remote job log ({run_id}) -----")
+        try:
+            job_manager.fetch_full_log()
+        except Exception as exc:
+            self.log.warning(f"Could not fetch full remote log for job {run_id}: {exc}")
+        self.log.info(f"----- End full remote job log ({run_id}) -----")
+
     def execute_complete(
         self, context: t.Dict[str, t.Any], event: t.Optional[t.Dict[str, t.Any]] = None
     ) -> None:
@@ -442,11 +477,13 @@ class BaseSSHGCEOperator(BaseOperator):
         status = event.get("status", "error")
         logs = event.get("logs", "")
         message = event.get("message", "")
+        run_id = event.get("run_id")
+
+        if run_id:
+            self._stream_full_remote_log(run_id)
 
         if status == "completed":
             self.log.info("Job completed successfully")
-            if logs:
-                self.log.info(f"Job logs: {logs}")
             if message:
                 self.log.info(f"Job message: {message}")
             return

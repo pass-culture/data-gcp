@@ -42,6 +42,8 @@ jobs:
       id-token: write
       contents: write
     runs-on: ubuntu-latest
+    env:
+      CD_SERVICE_ACCOUNT: ${{ vars.AIRFLOW_CD_SERVICE_ACCOUNT }}
     environment: ${{ inputs.GITHUB_ENV_NAME }}
     defaults:
       run:
@@ -76,7 +78,7 @@ jobs:
           project_id: ${{ inputs.DATA_GCP_PROJECT }}
           token_format: "access_token"
           workload_identity_provider: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
+          service_account: ${{ env.CD_SERVICE_ACCOUNT }}
       - name: "Set up Cloud SDK"
         uses: "google-github-actions/setup-gcloud@v2"
 

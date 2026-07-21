@@ -2,6 +2,16 @@ name: "3. [on_cd] Deployement workflow"
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
   push:
     branches:
       - master
@@ -60,6 +70,7 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/production' }}
     uses: ./.github/workflows/reusable_deploy_airflow.yml
     needs: [test-orchestration, test-jobs, linter]
+    environment: ${{ inputs.environment }}
     with:
       GITHUB_ENV_NAME: "dev"
       ENV_SHORT_NAME: "dev"

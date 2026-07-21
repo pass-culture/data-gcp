@@ -10,6 +10,12 @@ select
     wikidata_image_author,
     wikidata_image_license,
     wikidata_image_license_url,
+    spotify_id,
+    isni_id,
+    apple_music_id,
+    deezer_id,
+    genius_id,
+    soundcloud_id,
     action,
     comment
 from {{ ref("ml_linkage__delta_artist") }}

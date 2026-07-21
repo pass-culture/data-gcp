@@ -5,7 +5,7 @@ with
             max(date) as last_date,
             max(cast(adage_id as int)) as last_adage_id
         from {{ ref("adage_involved_student") }}
-        group by 1
+        group by date_trunc(date, month)
     ),
 
     coverage_aggregated as (
@@ -18,7 +18,7 @@ with
             date_trunc(involved.date, month) as partition_month,
             coalesce(rd.region_code, -1) as region_code,
             sum(involved.total_involved_students) as total_eligible_students,
-            sum(involved.involved_students) as total_eac_students
+            sum(involved.involved_students) as total_engaged_students
         from {{ ref("adage_involved_student") }} as involved
         inner join
             last_day_of_month
@@ -29,7 +29,14 @@ with
             {{ source("seed", "region_department") }} as rd
             on involved.department_code = rd.num_dep
         where involved.department_code != '-1'
-        group by 1, 2, 3, 4, 5, 6, 7
+        group by
+            involved.scholar_year,
+            rd.region_name,
+            rd.academy_name,
+            involved.department_code,
+            rd.dep_name,
+            date_trunc(involved.date, month),
+            coalesce(rd.region_code, -1)
     )
 
 select
@@ -41,5 +48,5 @@ select
     coverage_aggregated.department_code,
     coverage_aggregated.department_name,
     coverage_aggregated.total_eligible_students,
-    coverage_aggregated.total_eac_students
+    coverage_aggregated.total_engaged_students
 from coverage_aggregated

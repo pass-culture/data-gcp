@@ -33,8 +33,8 @@ models:
 
       - name: total_eligible_students
         description: '{{ doc("column__total_eligible_students") }}'
-        data_type: FLOAT
+        data_type: INTEGER
 
-      - name: total_eac_students
-        description: '{{ doc("column__total_eac_students") }}'
-        data_type: FLOAT
+      - name: total_engaged_students
+        description: '{{ doc("column__total_engaged_students") }}'
+        data_type: INTEGER

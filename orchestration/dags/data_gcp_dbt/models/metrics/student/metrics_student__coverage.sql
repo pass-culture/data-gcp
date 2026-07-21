@@ -7,5 +7,5 @@ select
     department_code,
     department_name,
     total_eligible_students,
-    total_eac_students
+    total_engaged_students
 from {{ ref("int_kpi__student_coverage") }}

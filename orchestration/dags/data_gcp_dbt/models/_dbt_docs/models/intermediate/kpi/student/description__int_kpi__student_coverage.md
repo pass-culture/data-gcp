@@ -11,6 +11,6 @@ and takes the snapshot of the last day of each month per school year.
 
 It exposes:
 - `total_eligible_students`: total number of students eligible for EAC in the territory
-- `total_eac_students`: total number of students who actually participated in at least one EAC activity
+- `total_engaged_students`: total number of students who actually participated in at least one EAC activity
 
 {% enddocs %}

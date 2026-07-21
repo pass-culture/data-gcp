@@ -56,7 +56,7 @@ title: Metrics
 Total number of students eligible for EAC (Education Artistique et Culturelle) within the territory for the specified month and school year.
 {% enddocs %}
 
-{% docs column__total_eac_students %}
+{% docs column__total_engaged_students %}
 Total number of students who participated in at least one EAC activity within the territory for the specified month and school year.
 {% enddocs %}
 {% docs column__total_theoretic_revenue %} Total theoretical revenue from all bookings. {% enddocs %}

@@ -102,6 +102,7 @@ Documentation for Pass Culture's data repository: dbt data models, KPIs, glossar
 - [Instagram publication detail](https://pass-culture.github.io/data-gcp/dbt/models/intermediate/instagram/description__int_instagram__publication_detail/index.md)
 - [INSEE Population Estimation Coverage KPI](https://pass-culture.github.io/data-gcp/dbt/models/intermediate/kpi/description__int_kpi__insee_population_estimation/index.md)
 - [Metabase Asset Catalog](https://pass-culture.github.io/data-gcp/dbt/models/intermediate/metabase/description__int_metabase__asset_catalog/index.md)
+- [Metabase Card Canonicalization](https://pass-culture.github.io/data-gcp/dbt/models/intermediate/metabase/description__int_metabase__card_canonical/index.md)
 - [Metabase Dashboard Markdown](https://pass-culture.github.io/data-gcp/dbt/models/intermediate/metabase/description__int_metabase__dashboard_markdown/index.md)
 - [Metabase Dashboard Parameters](https://pass-culture.github.io/data-gcp/dbt/models/intermediate/metabase/description__int_metabase__dashboard_parameters/index.md)
 - [Metabase Exposure Candidates](https://pass-culture.github.io/data-gcp/dbt/models/intermediate/metabase/description__int_metabase__exposure_candidates/index.md)

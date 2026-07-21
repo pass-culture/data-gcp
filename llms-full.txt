@@ -2680,6 +2680,20 @@ One row per Metabase asset (dashboard or card) with its placement in the collect
 | in_scope             |           | True when the asset's root collection is in scope and the asset is neither archived nor personal. In-scope rows are never excluded.                                                   |
 | dashboard_parameters |           | Dashboard filter widgets as an array of {name, slug, type}; `slug` is the URL key for deep-linking (`/dashboard/<id>?<slug>=<value>`). Empty array when the dashboard has no filters. |
 
+One row per in-scope Metabase card, mapping each card to the canonical card and canonical home dashboard of its metric so downstream retrieval can collapse duplicate copies to a single card and route to its governed home. Cards are grouped by `metric_key` (normalized title); within a group the canonical card is the one whose best in-scope home ranks highest under the quality-first rule — certified, then doc-backed (`dashboard_documentation`), then tier (`key_dashboard` > `thematique` > `chantier`), with 3-month views only as a tiebreak — then the lowest card id. Also emits `card_quality`, a governance-first score for ranking which cards the index should trust. Deterministic and tested; consumed as extra columns on `int_metabase__asset_catalog`.
+
+## Table description
+
+| name                   | data_type | description                                                                                                                                                                                                                                                                 |
+| ---------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| card_id                |           | Metabase id of the card or dashboard.                                                                                                                                                                                                                                       |
+| metric_key             |           | Normalized card title (lowercased, deaccented) used to group duplicate cards of the same metric.                                                                                                                                                                            |
+| canonical_card_id      |           | The single card chosen to represent the metric (`metric_key`) group; equals `card_id` for the canonical card. Chosen by the quality-first rule: best home (certified > doc-backed > tier > views), then lowest card id.                                                     |
+| canonical_dashboard_id |           | The metric's canonical home dashboard, i.e. the best in-scope home of the `canonical_card_id`. Copies inherit this so all point to one home. Null when the canonical card is on no in-scope dashboard.                                                                      |
+| is_canonical           |           | True when this card is its metric group's `canonical_card_id`.                                                                                                                                                                                                              |
+| is_duplicate           |           | True when this card is a non-canonical copy of its metric (`card_id != canonical_card_id`). Downstream collapses these to the canonical card.                                                                                                                               |
+| card_quality           |           | Governance-first quality score in [0, 1] for ranking cards: 0.45 certified (card or its canonical home) + 0.30 tier (max of card/home, normalized) + 0.15 canonical home doc-backed + 0.10 has an in-scope home. Views are not folded in (they stay a downstream tiebreak). |
+
 Aggregates the in-dashboard markdown text widgets (`visualization_settings.text` of card-less dashboard cards) into one markdown blob per dashboard. Populated once `raw.metabase_report_dashboard_card` is replicated.
 
 ## Table description
@@ -7156,6 +7170,18 @@ Work in progress
 **collection_name**: Name of the asset's collection (used as the export collection filter).
 
 **selection_reason**: Why the asset was selected ('classified' or 'usage_safety_net').
+
+**metric_key**: Normalized card title (lowercased, deaccented) used to group duplicate cards of the same metric.
+
+**canonical_card_id**: The single card chosen to represent the metric (`metric_key`) group; equals `card_id` for the canonical card. Chosen by the quality-first rule: best home (certified > doc-backed > tier > views), then lowest card id.
+
+**canonical_dashboard_id**: The metric's canonical home dashboard, i.e. the best in-scope home of the `canonical_card_id`. Copies inherit this so all point to one home. Null when the canonical card is on no in-scope dashboard.
+
+**is_canonical**: True when this card is its metric group's `canonical_card_id`.
+
+**is_duplicate**: True when this card is a non-canonical copy of its metric (`card_id != canonical_card_id`). Downstream collapses these to the canonical card.
+
+**card_quality**: Governance-first quality score in [0, 1] for ranking cards: 0.45 certified (card or its canonical home) + 0.30 tier (max of card/home, normalized) + 0.15 canonical home doc-backed + 0.10 has an in-scope home. Views are not folded in (they stay a downstream tiebreak).
 
 **total_actual_amount_spent**: Total actual amount spent, reflecting real transactions.
 

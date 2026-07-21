@@ -7,18 +7,14 @@ models:
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"
         data_tests:
-          - not_null:
-              config:
-                tags: ['critical']
-          - unique:
-              config:
-                tags: ['critical']
+          - not_null
+          - unique
+          - dbt_utils.not_empty_string
       - name: artist_name
         description: "{{ doc('column__artist_name') }}"
         data_tests:
-          - not_null:
-              config:
-                tags: ['critical']
+          - not_null
+          - dbt_utils.not_empty_string
       - name: artist_description
         description: "{{ doc('column__artist_description') }}"
       - name: artist_biography
@@ -39,5 +35,9 @@ models:
         description: "{{ doc('column__wikidata_image_license_url') }}"
       - name: action
         description: "{{ doc('column__delta_action') }}"
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['add', 'update', 'remove']
       - name: comment
         description: "{{ doc('column__delta_comment') }}"

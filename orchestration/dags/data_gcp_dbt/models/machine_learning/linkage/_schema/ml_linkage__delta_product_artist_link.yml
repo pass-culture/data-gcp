@@ -7,22 +7,25 @@ models:
       - name: offer_product_id
         description: "{{ doc('column__offer_product_id') }}"
         data_tests:
-          - not_null:
-              config:
-                tags: ['critical']
+          - not_null
+          - dbt_utils.not_empty_string
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"
         data_tests:
-          - not_null:
-              config:
-                tags: ['critical']
+          - not_null
+          - dbt_utils.not_empty_string
       - name: artist_type
         description: "{{ doc('column__artist_type') }}"
         data_tests:
-          - not_null:
-              config:
-                tags: ['critical']
+          - not_null
       - name: action
         description: "{{ doc('column__delta_action') }}"
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['add', 'update', 'remove']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: comment
         description: "{{ doc('column__delta_comment') }}"

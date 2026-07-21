@@ -5,9 +5,15 @@ import pandas as pd
 
 from cli.link_new_products_to_artists import main
 from src.constants import (
+    APPLE_MUSIC_ID_KEY,
     ARTIST_DESCRIPTION_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
+    DEEZER_ID_KEY,
+    GENIUS_ID_KEY,
+    ISNI_ID_KEY,
+    SOUNDCLOUD_ID_KEY,
+    SPOTIFY_ID_KEY,
     WIKIDATA_ID_KEY,
     WIKIPEDIA_URL_KEY,
 )
@@ -76,6 +82,12 @@ def test_link_new_products_to_artists(tmp_path):
             "https://wikipedia.org/wiki/Artist_One",
             "https://wikipedia.org/wiki/Ed_Sheeran",
         ],
+        SPOTIFY_ID_KEY: [None, "6eUKZXaKkcviH0Ku9w2n3V"],
+        ISNI_ID_KEY: [None, "0000000114431409"],
+        APPLE_MUSIC_ID_KEY: [None, "183313439"],
+        DEEZER_ID_KEY: [None, "384236"],
+        GENIUS_ID_KEY: [None, "45789"],
+        SOUNDCLOUD_ID_KEY: [None, "17954600"],
     }
 
     # Run in dev environment

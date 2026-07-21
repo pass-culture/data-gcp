@@ -5,11 +5,17 @@ import pandas as pd
 
 from cli.refresh_artist_metadatas import main
 from src.constants import (
+    APPLE_MUSIC_ID_KEY,
     ARTIST_DESCRIPTION_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
     ARTIST_PRO_SEARCH_SCORE_KEY,
+    DEEZER_ID_KEY,
+    GENIUS_ID_KEY,
     IMG_KEY,
+    ISNI_ID_KEY,
+    SOUNDCLOUD_ID_KEY,
+    SPOTIFY_ID_KEY,
     WIKIDATA_ID_KEY,
     WIKIPEDIA_URL_KEY,
 )
@@ -79,6 +85,12 @@ def test_refresh_artist_metadatas_matching(tmp_path):
             "https://wikipedia.org/wiki/Artist_One",
             "https://wikipedia.org/wiki/Ed_Sheeran",
         ],
+        SPOTIFY_ID_KEY: [None, "6eUKZXaKkcviH0Ku9w2n3V"],
+        ISNI_ID_KEY: [None, "0000000114431409"],
+        APPLE_MUSIC_ID_KEY: [None, "183313439"],
+        DEEZER_ID_KEY: [None, "384236"],
+        GENIUS_ID_KEY: [None, "45789"],
+        SOUNDCLOUD_ID_KEY: [None, "17954600"],
     }
 
     # Mock environment variable to bypass ENV_SHORT_NAME check if needed, but we can set it to dev
@@ -191,6 +203,16 @@ def test_refresh_artist_metadatas_duplicate_wikidata_id_resolution(tmp_path):
             "https://wikipedia.org/wiki/Edward_Sheeran",
             "https://wikipedia.org/wiki/Eddie_Sheeran",
         ],
+        SPOTIFY_ID_KEY: [
+            "6eUKZXaKkcviH0Ku9w2n3V",
+            "6eUKZXaKkcviH0Ku9w2n3V",
+            "6eUKZXaKkcviH0Ku9w2n3V",
+        ],
+        ISNI_ID_KEY: [None, None, None],
+        APPLE_MUSIC_ID_KEY: [None, None, None],
+        DEEZER_ID_KEY: [None, None, None],
+        GENIUS_ID_KEY: [None, None, None],
+        SOUNDCLOUD_ID_KEY: [None, None, None],
     }
 
     os.environ["ENV_SHORT_NAME"] = "dev"

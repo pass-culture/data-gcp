@@ -38,6 +38,12 @@ OFFER_CATEGORY_ID_KEY = "offer_category_id"
 WIKIDATA_ID_KEY = "wikidata_id"
 ARTIST_DESCRIPTION_KEY = "artist_description"
 IMG_KEY = "img"
+SPOTIFY_ID_KEY = "spotify_id"
+ISNI_ID_KEY = "isni_id"
+APPLE_MUSIC_ID_KEY = "apple_music_id"
+DEEZER_ID_KEY = "deezer_id"
+GENIUS_ID_KEY = "genius_id"
+SOUNDCLOUD_ID_KEY = "soundcloud_id"
 WIKIDATA_IMAGE_FILE_URL_KEY = "wikidata_image_file_url"
 WIKIDATA_IMAGE_AUTHOR_KEY = "wikidata_image_author"
 WIKIDATA_IMAGE_LICENSE_KEY = "wikidata_image_license"
@@ -72,6 +78,12 @@ ARTISTS_KEYS = [
     IMG_KEY,
     WIKIDATA_ID_KEY,
     WIKIPEDIA_URL_KEY,
+    SPOTIFY_ID_KEY,
+    ISNI_ID_KEY,
+    APPLE_MUSIC_ID_KEY,
+    DEEZER_ID_KEY,
+    GENIUS_ID_KEY,
+    SOUNDCLOUD_ID_KEY,
 ]
 PRODUCTS_KEYS = [
     PRODUCT_ID_KEY,

@@ -195,6 +195,12 @@ sources:
       - name: dms_pro_cleaned
       - name: siren_data
 
+  - name: int_metabase
+    schema: int_metabase_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
+    tables:
+      - name: dashboard_documentation
+
   - name: analytics
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"

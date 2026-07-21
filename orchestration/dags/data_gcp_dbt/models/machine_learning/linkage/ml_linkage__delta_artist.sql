@@ -19,6 +19,12 @@ with
             artist.wikidata_image_license,
             artist.wikidata_image_license_url,
             artist.wikidata_image_author,
+            cast(null as string) as spotify_id,
+            cast(null as string) as isni_id,
+            cast(null as string) as apple_music_id,
+            cast(null as string) as deezer_id,
+            cast(null as string) as genius_id,
+            cast(null as string) as soundcloud_id,
             'remove' as action,  -- noqa: RF04
             'artist not linked to any product' as comment  -- noqa: RF04
         from {{ ref("int_applicative__artist") }} as artist
@@ -39,6 +45,12 @@ select
     cast(wikidata_image_author as string) as wikidata_image_author,
     cast(wikidata_image_license as string) as wikidata_image_license,
     cast(wikidata_image_license_url as string) as wikidata_image_license_url,
+    cast(spotify_id as string) as spotify_id,
+    cast(isni_id as string) as isni_id,
+    cast(apple_music_id as string) as apple_music_id,
+    cast(deezer_id as string) as deezer_id,
+    cast(genius_id as string) as genius_id,
+    cast(soundcloud_id as string) as soundcloud_id,
     cast(action as string) as action,  -- noqa: RF04
     cast(comment as string) as comment  -- noqa: RF04
 from {{ source("ml_preproc", "delta_artist") }}
@@ -55,6 +67,12 @@ select
     wikidata_image_author,
     wikidata_image_license,
     wikidata_image_license_url,
+    spotify_id,
+    isni_id,
+    apple_music_id,
+    deezer_id,
+    genius_id,
+    soundcloud_id,
     action,
     comment
 from artists_to_remove

@@ -135,6 +135,11 @@ select
     a.total_views_3_months,
     a.last_execution_date,
     a.is_archived,
+    cc.metric_key,
+    cc.canonical_card_id,
+    cc.canonical_dashboard_id,
+    cc.is_canonical,
+    cc.card_quality,
     coalesce(anc.ancestor_collection_ids, []) as ancestor_collection_ids,
     coalesce(anc.ancestor_collection_names, []) as ancestor_collection_names,
     coalesce(t.certified, false) as certified,
@@ -142,7 +147,8 @@ select
     coalesce(t.is_excluded, true) or a.is_archived as is_excluded,
     coalesce(dmem.member_cards, []) as member_cards,
     coalesce(dp.dashboard_parameters, []) as dashboard_parameters,
-    a.total_views_3_months > 0 as is_active
+    a.total_views_3_months > 0 as is_active,
+    coalesce(cc.is_duplicate, false) as is_duplicate
 from assets as a
 left join taxonomy as t on a.collection_id = t.collection_id
 left join public_collections as pc on a.collection_id = pc.collection_id
@@ -155,3 +161,7 @@ left join
     {{ ref("int_metabase__dashboard_parameters") }} as dp
     on a.asset_kind = 'dashboard'
     and a.asset_id = dp.dashboard_id
+left join
+    {{ ref("int_metabase__card_canonical") }} as cc
+    on a.asset_kind = 'card'
+    and a.asset_id = cc.card_id

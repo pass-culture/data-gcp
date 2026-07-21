@@ -118,11 +118,13 @@ jobs:
           AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
         run: gsutil -m rsync -d -r target/dbt_packages "gs://$AIRFLOW_DAGS_BUCKET/data/target/dbt_packages"
 
-      - name: "Push manifest (dbt) to GCS (data/target)"
+      - name: "Push manifest & catalog (dbt) to GCS (data/target)"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
-        run: gsutil cp target/manifest.json "gs://$AIRFLOW_DAGS_BUCKET/data/target/manifest.json"
+        run: |
+          gsutil cp target/manifest.json "gs://$AIRFLOW_DAGS_BUCKET/data/target/manifest.json"
+          gsutil cp target/catalog.json "gs://$AIRFLOW_DAGS_BUCKET/data/target/catalog.json"
 
       # Compute exclusion regex from .rsyncignore
       - name: "Compute EXCLUDE_REGEX from .rsyncignore file"

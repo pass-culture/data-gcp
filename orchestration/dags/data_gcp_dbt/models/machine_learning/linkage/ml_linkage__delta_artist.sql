@@ -23,66 +23,13 @@ with
         from {{ source("ml_preproc", "delta_artist") }}
     ),
 
-    added_delta_artist as (
-        select
-            artist_id,
-            artist_name,
-            artist_description,
-            artist_biography,
-            artist_mediation_uuid,
-            wikidata_id,
-            wikipedia_url,
-            wikidata_image_file_url,
-            wikidata_image_author,
-            wikidata_image_license,
-            wikidata_image_license_url,
-            spotify_id,
-            isni_id,
-            apple_music_id,
-            deezer_id,
-            genius_id,
-            soundcloud_id,
-            action,
-            comment
-        from casted_delta_artist
-        where action = 'add'
-    ),
-
-    removed_or_updated_delta_artist as (
-        select
-            casted_delta_artist.artist_id,
-            casted_delta_artist.artist_name,
-            casted_delta_artist.artist_description,
-            casted_delta_artist.artist_biography,
-            casted_delta_artist.artist_mediation_uuid,
-            casted_delta_artist.wikidata_id,
-            casted_delta_artist.wikipedia_url,
-            casted_delta_artist.wikidata_image_file_url,
-            casted_delta_artist.wikidata_image_author,
-            casted_delta_artist.wikidata_image_license,
-            casted_delta_artist.wikidata_image_license_url,
-            casted_delta_artist.spotify_id,
-            casted_delta_artist.isni_id,
-            casted_delta_artist.apple_music_id,
-            casted_delta_artist.deezer_id,
-            casted_delta_artist.genius_id,
-            casted_delta_artist.soundcloud_id,
-            casted_delta_artist.action,
-            casted_delta_artist.comment
-        from casted_delta_artist
-        inner join
-            {{ source("raw", "applicative_database_artist") }}
-            as applicative_database_artist
-            on casted_delta_artist.artist_id = applicative_database_artist.artist_id
-        where casted_delta_artist.action in ('update', 'remove')
-    ),
-
     artist_linked as (
         select distinct artist_id, true as is_linked
         from {{ ref("int_applicative__product_artist_link") }}
     ),
 
-    artists_to_remove as (
+    -- remove artist with no product link and no wikidata id
+    orphan_artist_to_remove as (
         select
             artist.artist_id,
             artist.artist_name,
@@ -114,70 +61,62 @@ with
                 from casted_delta_artist as delta
                 where delta.artist_id = artist.artist_id
             )
+    ),
+
+    delta_artist as (
+        select *
+        from casted_delta_artist
+        union all
+        select *
+        from orphan_artist_to_remove
+    ),
+
+    added_delta_artist as (select * from delta_artist where action = 'add'),
+
+    removed_or_updated_delta_artist as (
+        select
+            delta_artist.* replace (
+                -- on a remove the delta may not carry the name, take it from
+                -- applicative
+                case
+                    when delta_artist.action = 'remove'
+                    then artist.artist_name
+                    else delta_artist.artist_name
+                end as artist_name
+            )
+        from delta_artist
+        inner join
+            {{ ref("int_applicative__artist") }} as artist
+            on delta_artist.artist_id = artist.artist_id
+        where delta_artist.action in ('update', 'remove')
+    ),
+
+    final_delta_artist as (
+        select *
+        from added_delta_artist
+        union all
+        select *
+        from removed_or_updated_delta_artist
     )
 
 select
-    added_delta_artist.artist_id,
-    added_delta_artist.artist_name,
-    added_delta_artist.artist_description,
-    added_delta_artist.artist_biography,
-    added_delta_artist.artist_mediation_uuid,
-    added_delta_artist.wikidata_id,
-    added_delta_artist.wikipedia_url,
-    added_delta_artist.wikidata_image_file_url,
-    added_delta_artist.wikidata_image_author,
-    added_delta_artist.wikidata_image_license,
-    added_delta_artist.wikidata_image_license_url,
-    added_delta_artist.spotify_id,
-    added_delta_artist.isni_id,
-    added_delta_artist.apple_music_id,
-    added_delta_artist.deezer_id,
-    added_delta_artist.genius_id,
-    added_delta_artist.soundcloud_id,
-    added_delta_artist.action,
-    added_delta_artist.comment
-from added_delta_artist
-union all
-select
-    removed_or_updated_delta_artist.artist_id,
-    removed_or_updated_delta_artist.artist_name,
-    removed_or_updated_delta_artist.artist_description,
-    removed_or_updated_delta_artist.artist_biography,
-    removed_or_updated_delta_artist.artist_mediation_uuid,
-    removed_or_updated_delta_artist.wikidata_id,
-    removed_or_updated_delta_artist.wikipedia_url,
-    removed_or_updated_delta_artist.wikidata_image_file_url,
-    removed_or_updated_delta_artist.wikidata_image_author,
-    removed_or_updated_delta_artist.wikidata_image_license,
-    removed_or_updated_delta_artist.wikidata_image_license_url,
-    removed_or_updated_delta_artist.spotify_id,
-    removed_or_updated_delta_artist.isni_id,
-    removed_or_updated_delta_artist.apple_music_id,
-    removed_or_updated_delta_artist.deezer_id,
-    removed_or_updated_delta_artist.genius_id,
-    removed_or_updated_delta_artist.soundcloud_id,
-    removed_or_updated_delta_artist.action,
-    removed_or_updated_delta_artist.comment
-from removed_or_updated_delta_artist
-union all
-select
-    artists_to_remove.artist_id,
-    artists_to_remove.artist_name,
-    artists_to_remove.artist_description,
-    artists_to_remove.artist_biography,
-    artists_to_remove.artist_mediation_uuid,
-    artists_to_remove.wikidata_id,
-    artists_to_remove.wikipedia_url,
-    artists_to_remove.wikidata_image_file_url,
-    artists_to_remove.wikidata_image_author,
-    artists_to_remove.wikidata_image_license,
-    artists_to_remove.wikidata_image_license_url,
-    artists_to_remove.spotify_id,
-    artists_to_remove.isni_id,
-    artists_to_remove.apple_music_id,
-    artists_to_remove.deezer_id,
-    artists_to_remove.genius_id,
-    artists_to_remove.soundcloud_id,
-    artists_to_remove.action,
-    artists_to_remove.comment
-from artists_to_remove
+    artist_id,
+    artist_name,
+    artist_description,
+    artist_biography,
+    artist_mediation_uuid,
+    wikidata_id,
+    wikipedia_url,
+    wikidata_image_file_url,
+    wikidata_image_author,
+    wikidata_image_license,
+    wikidata_image_license_url,
+    spotify_id,
+    isni_id,
+    apple_music_id,
+    deezer_id,
+    genius_id,
+    soundcloud_id,
+    action,
+    comment
+from final_delta_artist

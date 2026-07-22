@@ -14,7 +14,7 @@ def _build_prompts(df: pd.DataFrame, vector: Vector) -> list[str]:
     The label defaults to the column name unless overridden in vector.labels.
     Features with null values are omitted entirely.
     Items with all-null features will have an empty prompt string and are logged as a warning.
-    They will later receive a ``None`` embedding without calling the model.
+    They are skipped entirely by the caller and excluded from the output (no null vectors).
 
     Args:
         df: DataFrame with item metadata
@@ -93,7 +93,11 @@ def embed_dataframe(
     pools: dict[str, object] = None,
 ) -> pd.DataFrame:
     """Compute all vector embeddings for a dataframe.
-    Empty prompts are skipped and receive ``None`` for that vector.
+
+    Items with no metadata to embed for one or more vectors (all-null features,
+    i.e. an empty prompt) are skipped entirely and logged, so every vector
+    column in the returned DataFrame is fully populated with real embeddings —
+    the output never contains null vectors.
 
     Args:
         df: DataFrame with item metadata (must contain 'item_id', 'content_hash' and all feature columns)
@@ -105,8 +109,8 @@ def embed_dataframe(
 
     Returns:
         DataFrame with 'item_id', 'content_hash', and one column per vector.
-        Each vector column contains embedding arrays. Rows whose features are
-        all null get ``None`` for that vector instead of an embedding.
+        Each vector column contains an embedding array for every row; items
+        lacking metadata for any vector are excluded from the result.
     """
     pools = pools or {}
     logger.info(f"Embedding {len(df)} items")
@@ -116,8 +120,7 @@ def embed_dataframe(
         tuple[tuple[str, ...], tuple[tuple[str, str], ...]], list[str]
     ] = {}
 
-    df_embeddings = df[["item_id", "content_hash"]].copy()
-
+    prompts_by_vector: dict[str, list[str]] = {}
     for vector in vectors:
         # Prompt text depends on both the columns and their labels.
         features_key = (tuple(vector.features), tuple(sorted(vector.labels.items())))
@@ -128,28 +131,45 @@ def embed_dataframe(
                 f"Vector '{vector.name}': reusing cached prompts "
                 f"(same features as a previous vector)"
             )
+        prompts_by_vector[vector.name] = prompts_cache[features_key]
 
-        prompts = prompts_cache[features_key]
-        # Skip all-null rows (empty prompt): don't embed the bare instruction.
-        keep_mask = [bool(prompt) for prompt in prompts]
-        non_empty_prompts = [prompt for prompt, keep in zip(prompts, keep_mask) if keep]
+    # Keep only items that have metadata for *every* vector (non-empty prompt),
+    # so no vector column ends up with a null embedding. An empty prompt means
+    # all of that vector's features are null for the item.
+    keep_mask = np.ones(len(df), dtype=bool)
+    for prompts in prompts_by_vector.values():
+        keep_mask &= np.array([bool(prompt) for prompt in prompts], dtype=bool)
 
-        if non_empty_prompts:
-            vector_embeddings = embed_vector(
-                vector,
-                encoders[vector.encoder_name],
-                prompts=non_empty_prompts,
-                pool=pools.get(vector.encoder_name),
-            )
-            embeddings_iter = iter(vector_embeddings.tolist())
-            column = [next(embeddings_iter) if keep else None for keep in keep_mask]
-        else:
-            logger.warning(
-                f"Vector '{vector.name}': all rows have empty prompts; "
-                f"writing None for every item."
-            )
-            column = [None] * len(prompts)
+    dropped_items = df.loc[~keep_mask, "item_id"].tolist()
+    if dropped_items:
+        logger.warning(
+            f"Skipping {len(dropped_items)} item(s) with no metadata to embed; "
+            f"they are excluded from the output. Item ids:\n{dropped_items}"
+        )
+    if not keep_mask.any():
+        logger.warning("No item has metadata to embed; returning an empty result.")
 
-        df_embeddings[vector.name] = column
+    df_embeddings = df.loc[keep_mask, ["item_id", "content_hash"]].reset_index(
+        drop=True
+    )
+
+    for vector in vectors:
+        prompts = [
+            prompt
+            for prompt, keep in zip(prompts_by_vector[vector.name], keep_mask)
+            if keep
+        ]
+        if not prompts:
+            df_embeddings[vector.name] = pd.Series(dtype=object)
+            continue
+
+        vector_embeddings = embed_vector(
+            vector,
+            encoders[vector.encoder_name],
+            prompts=prompts,
+            pool=pools.get(vector.encoder_name),
+        )
+        # Positional assignment: prompts and embeddings align with the kept rows.
+        df_embeddings[vector.name] = vector_embeddings.tolist()
 
     return df_embeddings

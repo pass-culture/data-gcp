@@ -205,9 +205,10 @@ class TestEmbedDataframe:
         # Verify encoder.encode was called
         assert mock_encoder.encode.called
 
-    def test_all_null_row_gets_none_and_is_not_embedded(self):
+    def test_all_null_row_is_skipped_and_not_embedded(self):
         # Only the two non-empty rows should be embedded; the all-null row
-        # must not be sent to the encoder and must get None in the output.
+        # must not be sent to the encoder and must be dropped from the output,
+        # so no null vector ever reaches the parquet.
         mock_encoder = MagicMock()
         mock_encoder.device = "cpu"
         mock_encoder.encode.return_value = np.array([[1.0, 2.0], [5.0, 6.0]])
@@ -224,8 +225,10 @@ class TestEmbedDataframe:
 
         result = embed_dataframe(df, vectors, encoders)
 
-        # Middle (all-null) row is None; the others keep their embeddings.
-        assert result["emb"].tolist() == [[1.0, 2.0], None, [5.0, 6.0]]
+        # The all-null item ("b") is excluded; survivors keep their embeddings.
+        assert result["item_id"].tolist() == ["a", "c"]
+        assert result["emb"].tolist() == [[1.0, 2.0], [5.0, 6.0]]
+        assert result["emb"].notna().all()
 
         # The empty prompt was never passed to the encoder.
         (called_prompts,), _ = mock_encoder.encode.call_args

@@ -23,7 +23,7 @@ def _resolve_precision(gpu_count: int) -> torch.dtype:
         return torch.bfloat16
 
     logger.info("GPU does not support bfloat16 or no GPU: using float32 precision")
-    return torch.float32
+    # return torch.float32
 
 
 def _bf16_supported() -> bool:
@@ -48,8 +48,8 @@ def load_encoders(
     token = get_secret(HF_TOKEN_SECRET_NAME)
     precision = _resolve_precision(gpu_count)
 
-    # With >1 GPU, the multi-process pool loads a full model copy onto every GPU.
-    # Keep the main-process copy on CPU so GPU 0 does not hold two copies (OOM).
+    # With >1 GPU, the multi-process pool loads a full model copy onto **every** GPU.
+    # so we keep the main-process copy on CPU so GPU 0 does not hold two copies (risk of OOM).
     device = "cpu" if gpu_count > 1 else None
 
     encoders = {}
@@ -72,6 +72,7 @@ def start_encoder_pools(
     encoders: dict[str, SentenceTransformer], gpu_count: int
 ) -> dict[str, object]:
     """Start one multi-process encoding pool per encoder, once for the whole run.
+    If no GPUs are available, returns an empty dict (single-device encoding will be used).
 
     Args:
         encoders: Pre-loaded encoders keyed by encoder name

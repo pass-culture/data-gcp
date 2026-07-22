@@ -170,6 +170,44 @@ You can find all dependencies in the `api-requirements.in` file.
       - ⚠️ If an index has been built for this vector search as it is recommended, then the search metric is overriden by the one used to build the index (see above section "About vector search metrics").
       - ⚠️ If you do a vector search but find no results, then the fallback will be the top recommendations, giving you a `"_distance"` > 1
 
+## Current strategy: tops and cold start
+
+### Tops strategy (current behavior)
+
+- `tops` and `filter` use trend-like vector columns only:
+   - `booking_number_desc`
+   - `booking_trend_desc`
+   - `booking_creation_trend_desc`
+   - `booking_release_trend_desc`
+- The default tops fallback column in handlers is `booking_number_desc`.
+- Ranking is done by vector search with a fixed query vector `[-0.0001]` on the selected trend column.
+- Returned tops are sorted by ascending `"_distance"` (lowest value first).
+- The number of returned tops is controlled by `size`.
+
+### Categories and top content
+
+- There is no hardcoded list of business categories inside the tops handler.
+- Categories are constrained through request filters (`params`) and the filter parser.
+- Existing indexed/filterable category-like fields include:
+   - `category`
+   - `subcategory_id`
+   - `search_group_name`
+- Response content depends on `debug`:
+   - `debug = false`: minimal payload (`idx`, `item_id`)
+   - `debug = true`: detailed payload including metadata columns + metrics (`_distance`, `_search_type`, etc.)
+
+### Cold start strategy (current behavior)
+
+- In recommendation mode, the service first tries user-vector retrieval (`model_type = recommendation`).
+- A user is considered effectively "warm" only if a user vector exists in `metadata/user.docs` and the vector search returns at least one result.
+- Otherwise, the request falls back to tops (`model_type = tops`, default `booking_number_desc`).
+
+### Interactions threshold: where it is defined
+
+- This service does not define or enforce a numeric "cold -> warm" interactions threshold.
+- The threshold, if any, is upstream in the embedding/training pipeline that generates `user.docs`.
+- Operationally here, the rule is binary: "user vector available and usable" vs "fallback to tops".
+
 ### Testing
 
 To run the tests, including unit tests and integration tests, use:

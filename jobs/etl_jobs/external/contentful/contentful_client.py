@@ -277,7 +277,9 @@ class ContentfulClient:
 
     def fetch_all_tags(self) -> dict[str, str]:
         tags = {}
-        response = self.client._http_get(self.client.environment_url("/tags")).json()
+        response = self.client._http_get(
+            self.client.environment_url("/tags"), {}
+        ).json()
         for tag in response.get("items", []):
             tags[tag["sys"]["id"]] = tag["name"]
         print(f"Fetch {len(tags)} tags from Contentful")

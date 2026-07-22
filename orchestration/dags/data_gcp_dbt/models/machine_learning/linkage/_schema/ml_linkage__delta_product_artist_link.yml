@@ -24,8 +24,5 @@ models:
           - accepted_values:
               arguments:
                 values: ['add', 'update', 'remove']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
-                tags: ['critical']
       - name: comment
         description: "{{ doc('column__delta_comment') }}"

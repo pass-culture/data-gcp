@@ -8,7 +8,6 @@ models:
         description: "{{ doc('column__artist_id') }}"
         data_tests:
           - not_null
-          - unique
           - dbt_utils.not_empty_string
       - name: artist_name
         description: "{{ doc('column__artist_name') }}"

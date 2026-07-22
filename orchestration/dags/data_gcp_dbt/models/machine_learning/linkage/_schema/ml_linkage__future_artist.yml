@@ -10,13 +10,11 @@ models:
           - not_null
           - dbt_utils.not_empty_string
           - unique
-
       - name: artist_name
         description: "{{ doc('column__artist_name') }}"
         data_tests:
           - not_null
           - dbt_utils.not_empty_string
-
       - name: artist_description
         description: "{{ doc('column__artist_description') }}"
       - name: artist_biography
@@ -25,6 +23,8 @@ models:
         description: "{{ doc('column__artist_mediation_uuid') }}"
       - name: wikidata_id
         description: "{{ doc('column__artist_wiki_id') }}"
+        data_tests:
+          - unique
       - name: wikipedia_url
         description: "{{ doc('column__artist_wikipedia_url') }}"
       - name: wikidata_image_file_url

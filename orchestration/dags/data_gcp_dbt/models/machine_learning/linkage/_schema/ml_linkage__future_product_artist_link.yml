@@ -1,28 +1,33 @@
 version: 2
 
 models:
-  - name: ml_linkage__delta_product_artist_link
-    description: "{{ doc('description__ml_linkage__delta_product_artist_link') }}"
+  - name: ml_linkage__future_product_artist_link
+    description: "{{ doc('description__ml_linkage__future_product_artist_link') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - offer_product_id
+              - artist_id
+              - artist_type
     columns:
       - name: offer_product_id
         description: "{{ doc('column__offer_product_id') }}"
         data_tests:
           - not_null
           - dbt_utils.not_empty_string
+
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"
         data_tests:
           - not_null
           - dbt_utils.not_empty_string
+          - relationships:
+              arguments:
+                to: ref('ml_linkage__future_artist')
+                field: artist_id
+
       - name: artist_type
         description: "{{ doc('column__artist_type') }}"
         data_tests:
           - not_null
-      - name: action
-        description: "{{ doc('column__delta_action') }}"
-        data_tests:
-          - accepted_values:
-              arguments:
-                values: ['add', 'update', 'remove']
-      - name: comment
-        description: "{{ doc('column__delta_comment') }}"

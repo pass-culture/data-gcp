@@ -7,25 +7,13 @@ models:
       - name: event_series_id
         description: "{{ doc('column__event_series_id') }}"
         data_tests:
-          - not_null:
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
-                tags: ['critical']
-          - dbt_utils.not_empty_string:
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
-                tags: ['critical']
+          - not_null
+          - dbt_utils.not_empty_string
       - name: event_series_name
         description: "{{ doc('column__event_series_name') }}"
         data_tests:
-          - not_null:
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
-                tags: ['critical']
-          - dbt_utils.not_empty_string:
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
-                tags: ['critical']
+          - not_null
+          - dbt_utils.not_empty_string
       - name: event_series_description
         description: "{{ doc('column__event_series_description') }}"
       - name: event_series_image_url
@@ -38,8 +26,5 @@ models:
           - accepted_values:
               arguments:
                 values: ['add', 'update', 'remove']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
-                tags: ['critical']
       - name: comment
         description: "{{ doc('column__delta_comment') }}"

@@ -1,14 +1,15 @@
 version: 2
 
 models:
-  - name: ml_linkage__delta_artist
-    description: "{{ doc('description__ml_linkage__delta_artist') }}"
+  - name: ml_linkage__future_artist
+    description: "{{ doc('description__ml_linkage__future_artist') }}"
     columns:
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"
         data_tests:
           - not_null
           - dbt_utils.not_empty_string
+          - unique
       - name: artist_name
         description: "{{ doc('column__artist_name') }}"
         data_tests:
@@ -22,6 +23,8 @@ models:
         description: "{{ doc('column__artist_mediation_uuid') }}"
       - name: wikidata_id
         description: "{{ doc('column__artist_wiki_id') }}"
+        data_tests:
+          - unique
       - name: wikipedia_url
         description: "{{ doc('column__artist_wikipedia_url') }}"
       - name: wikidata_image_file_url
@@ -32,11 +35,3 @@ models:
         description: "{{ doc('column__wikidata_image_license') }}"
       - name: wikidata_image_license_url
         description: "{{ doc('column__wikidata_image_license_url') }}"
-      - name: action
-        description: "{{ doc('column__delta_action') }}"
-        data_tests:
-          - accepted_values:
-              arguments:
-                values: ['add', 'update', 'remove']
-      - name: comment
-        description: "{{ doc('column__delta_comment') }}"

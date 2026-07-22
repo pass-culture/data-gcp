@@ -10,8 +10,9 @@ models:
           - not_null
           - dbt_utils.not_empty_string
           - relationships:
-              to: ref('ml_linkage__future_event_series')
-              field: event_series_id
+              arguments:
+                to: ref('ml_linkage__future_event_series')
+                field: event_series_id
 
       - name: offer_id
         description: "{{ doc('column__offer_id') }}"

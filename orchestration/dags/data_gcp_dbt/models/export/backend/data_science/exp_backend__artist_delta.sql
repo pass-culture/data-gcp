@@ -1,3 +1,5 @@
+-- depends_on: {{ ref('ml_linkage__future_artist') }}
+-- depends_on: {{ ref('ml_linkage__future_product_artist_link') }}
 select
     artist_id,
     artist_name,

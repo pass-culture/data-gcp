@@ -95,7 +95,7 @@ with DAG(
                         external_dag_id="dbt_run_dag",
                         external_task_id=f"data_transformation.{f.replace('.sql','')}",
                         skip_manually_triggered=True,
-                        offset_days=6,
+                        offset_days=7,
                         window_days=2,
                     )
 

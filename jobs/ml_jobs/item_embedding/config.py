@@ -19,7 +19,7 @@ class Vector(BaseModel):
 
 
 def _load_config(config_file_name: str) -> dict:
-    """Load YAML configuration file.
+    """Load YAML configuration file of vectors to embed.
 
     Args:
         config_file_name: Name of the config file (without .yaml extension)

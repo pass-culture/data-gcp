@@ -5,6 +5,9 @@ run-name: "Build image ${{ github.event.inputs.ENV }}"
 on:
   workflow_call:
     inputs:
+      GITHUB_ENV_NAME:
+        type: string
+        required: true
       TARGET_ENV:
         type: string
         required: true
@@ -35,8 +38,6 @@ on:
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER:
         required: true
-      GCP_EHP_SERVICE_ACCOUNT:
-        required: true
       PASSCULTURE_GITHUB_ACTION_APP_ID:
         required: true
       PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY:
@@ -56,6 +57,9 @@ jobs:
   build-and-push-docker-image:
     name: "Build image job"
     runs-on: ubuntu-latest
+    environment: ${{ inputs.GITHUB_ENV_NAME }}
+    env:
+      CD_SERVICE_ACCOUNT: ${{ vars.AIRFLOW_CD_SERVICE_ACCOUNT }}
     permissions:
       id-token: write
       contents: write
@@ -82,7 +86,7 @@ jobs:
         uses: 'google-github-actions/auth@v2'
         with:
           workload_identity_provider: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+          service_account: ${{ env.CD_SERVICE_ACCOUNT }}
       - name: "Set up Docker Buildx"
         uses: docker/setup-buildx-action@v2.2.1
         with:

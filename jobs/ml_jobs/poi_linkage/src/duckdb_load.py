@@ -4,7 +4,7 @@ from loguru import logger
 
 from src.constants import (
     H3_RESOLUTION,
-    POI_SOURCE,
+    POI_SOURCE_TABLE,
     POI_H3_INDEX_COL,
     POI_LATITUDE_COL,
     POI_LONGITUDE_COL,
@@ -30,7 +30,7 @@ def load_dataframe(con: duckdb.DuckDBPyConnection, df: pd.DataFrame, table_name:
 
 def add_h3_index(
     con: duckdb.DuckDBPyConnection,
-    table_name: str = POI_SOURCE,
+    table_name: str = POI_SOURCE_TABLE,
     resolution: int = H3_RESOLUTION,
     latitude_col: str = POI_LATITUDE_COL,
     longitude_col: str = POI_LONGITUDE_COL,

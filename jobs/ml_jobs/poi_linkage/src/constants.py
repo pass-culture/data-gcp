@@ -4,11 +4,11 @@ GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "stg")
 
 H3_RESOLUTION = 9
-
+SEARCH_RADIUS_METERS = 500
 
 # External POI data : base_lieux_culturels_ouverts
-POI_SOURCE = "base_lieux_culturels_ouverts"
-POI_TABLE = f"raw_{ENV_SHORT_NAME}.{POI_SOURCE}"
+POI_SOURCE_TABLE = "base_lieux_culturels_ouverts"
+POI_TABLE = f"raw_{ENV_SHORT_NAME}.{POI_SOURCE_TABLE}"
 
 POI_CSV_ID_COL = "id"
 POI_ID_COL = "poi_id"
@@ -21,8 +21,8 @@ POI_LONGITUDE_COL = "longitude"
 POI_H3_INDEX_COL = "h3_index"
 
 # Applicative table: offerer_address
-APPLICATIVE_SOURCE = "offerer_address"
-OFFERER_ADDRESS_TABLE = f"int_applicative_{ENV_SHORT_NAME}.{APPLICATIVE_SOURCE}"
+APPLICATIVE_SOURCE_TABLE = "offerer_address"
+OFFERER_ADDRESS_TABLE = f"int_applicative_{ENV_SHORT_NAME}.{APPLICATIVE_SOURCE_TABLE}"
 
 OFFERER_ADDRESS_ID_COL = "offerer_address_id"
 OFFERER_ADDRESS_LABEL_COL = "offerer_address_label"
@@ -36,3 +36,8 @@ ADDRESS_DEPARTMENT_CODE_COL = "address_department_code"
 ADDRESS_LATITUDE_COL = "address_latitude"
 ADDRESS_LONGITUDE_COL = "address_longitude"
 VENUE_ID_FK_COL = "venue_id"
+ADDRESS_H3_INDEX_COL = "h3_index"
+
+# Candidate search
+DISTANCE_METERS_COL = "distance_meters"
+BATCH_SIZE = 50000

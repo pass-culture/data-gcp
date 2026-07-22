@@ -282,7 +282,7 @@ class ContentfulClient:
         ).json()
         for tag in response.get("items", []):
             tags[tag["sys"]["id"]] = tag["name"]
-        print(f"Fetch {len(tags)} tags from Contentful")
+        print(f"Fetched {len(tags)} tags from Contentful")
         return tags
 
     def set_contentful_modules(self, playlists_names):

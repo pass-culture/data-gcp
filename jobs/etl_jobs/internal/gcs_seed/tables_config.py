@@ -234,6 +234,9 @@ REF_TABLES = {
     "region_department": {
         "file_type": "parquet",
     },
+    "deps_cultural_practices_2018": {
+        "file_type": "parquet",
+    },
     "2020_insee_iris_socio_demographics": {
         "file_type": "csv",
         "schema": {

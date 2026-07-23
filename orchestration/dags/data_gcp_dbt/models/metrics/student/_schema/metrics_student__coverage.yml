@@ -1,0 +1,40 @@
+version: 2
+models:
+  - name: metrics_student__coverage
+    description: '{{ doc("description__metrics_student__coverage") }}'
+    columns:
+      - name: partition_month
+        description: '{{ doc("column__partition_month") }}'
+        data_type: STRING
+
+      - name: scholar_year
+        description: '{{ doc("column__scholar_year") }}'
+        data_type: STRING
+
+      - name: region_code
+        description: '{{ doc("column__region_code") }}'
+        data_type: INTEGER
+
+      - name: region_name
+        description: '{{ doc("column__region_name") }}'
+        data_type: STRING
+
+      - name: academy_name
+        description: '{{ doc("column__academy_name") }}'
+        data_type: STRING
+
+      - name: department_code
+        description: '{{ doc("column__department_code") }}'
+        data_type: STRING
+
+      - name: department_name
+        description: '{{ doc("column__department_name") }}'
+        data_type: STRING
+
+      - name: total_eligible_students
+        description: '{{ doc("column__total_eligible_students") }}'
+        data_type: INTEGER
+
+      - name: total_engaged_students
+        description: '{{ doc("column__total_engaged_students") }}'
+        data_type: INTEGER

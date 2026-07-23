@@ -21,6 +21,7 @@
 {% docs column__venue_humanized_id %} Unique identifier of the venue. {% enddocs %}
 {% docs column__venue_backoffice_link %} Backoffice link for the venue. {% enddocs %}
 {% docs column__venue_region_name %} Region name where the venue is located. {% enddocs %}
+{% docs column__venue_region_code %} Region code where the venue is located. {% enddocs %}
 {% docs column__venue_epci %} EPCI name of the venue. {% enddocs %}
 {% docs column__venue_epci_code %} EPCI code of the venue. {% enddocs %}
 {% docs column__venue_density_label %} Detailed density label of the venue's location. {% enddocs %}

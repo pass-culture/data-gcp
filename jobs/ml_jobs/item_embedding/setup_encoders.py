@@ -23,7 +23,7 @@ def _resolve_precision(gpu_count: int) -> torch.dtype:
         return torch.bfloat16
 
     logger.info("GPU does not support bfloat16 or no GPU: using float32 precision")
-    # return torch.float32
+    return torch.float32
 
 
 def _bf16_supported() -> bool:

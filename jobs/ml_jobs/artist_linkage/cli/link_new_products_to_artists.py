@@ -12,6 +12,7 @@ from src.constants import (
     ARTIST_NAME_TO_MATCH_KEY,
     ARTIST_TYPE_KEY,
     COMMENT_KEY,
+    MUSIC_PLATFORM_IDS_KEYS,
     OFFER_CATEGORY_ID_KEY,
     PRODUCT_ID_KEY,
     PRODUCTS_KEYS,
@@ -225,6 +226,7 @@ app = typer.Typer()
 def main(
     # Input files
     artist_filepath: str = typer.Option(),
+    artist_music_platform_filepath: str = typer.Option(),
     product_artist_link_filepath: str = typer.Option(),
     product_filepath: str = typer.Option(),
     wiki_base_path: str = typer.Option(),
@@ -242,7 +244,12 @@ def main(
         .astype({PRODUCT_ID_KEY: int})
         .pipe(filter_products)
     )
-    artist_df = pd.read_parquet(artist_filepath)
+    artist_music_platform_df = pd.read_parquet(artist_music_platform_filepath).loc[
+        :, [ARTIST_ID_KEY, *MUSIC_PLATFORM_IDS_KEYS]
+    ]
+    artist_df = pd.read_parquet(artist_filepath).merge(
+        artist_music_platform_df, on=ARTIST_ID_KEY, how="left"
+    )
     artist_with_wiki_ids_df = artist_df.rename(
         columns={
             "wikidata_id": WIKIDATA_ID_KEY,

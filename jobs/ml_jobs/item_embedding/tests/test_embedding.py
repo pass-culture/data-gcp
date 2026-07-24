@@ -134,9 +134,18 @@ class TestBuildPrompts:
         assert prompts == ["x : hello"]
 
     def test_all_null_produces_empty_string(self):
+        # The empty prompt is kept in place so the result stays row-aligned
+        # with the input; embed_dataframe is what drops the item later.
         df = pd.DataFrame({"x": [None], "y": [None]})
         prompts = _build_prompts(df, self.make_vector(["x", "y"]))
         assert prompts == [""]
+
+    def test_empty_prompt_stays_in_position(self):
+        # An all-null row in the middle must keep its slot so the list stays
+        # aligned row-for-row with the DataFrame.
+        df = pd.DataFrame({"x": ["hello", None, "world"]})
+        prompts = _build_prompts(df, self.make_vector(["x"]))
+        assert prompts == ["x : hello", "", "x : world"]
 
     def test_no_double_spaces_with_middle_null(self):
         df = pd.DataFrame({"a": ["v1"], "b": [None], "c": ["v3"]})
@@ -149,6 +158,28 @@ class TestBuildPrompts:
         prompts = _build_prompts(df, self.make_vector(["x"]))
         assert len(prompts) == 3
         assert prompts[1] == "x : b"
+
+    def test_labels_override_column_names(self):
+        df = pd.DataFrame({"offer_name": ["Dune"], "author_concat": ["Herbert"]})
+        vector = Vector(
+            name="test",
+            features=["offer_name", "author_concat"],
+            encoder_name="model",
+            labels={"offer_name": "titre", "author_concat": "auteur / artiste"},
+        )
+        prompts = _build_prompts(df, vector)
+        assert prompts == ["titre : Dune\nauteur / artiste : Herbert"]
+
+    def test_unmapped_feature_falls_back_to_column_name(self):
+        df = pd.DataFrame({"offer_name": ["Dune"], "category_id": ["LIVRE"]})
+        vector = Vector(
+            name="test",
+            features=["offer_name", "category_id"],
+            encoder_name="model",
+            labels={"offer_name": "titre"},
+        )
+        prompts = _build_prompts(df, vector)
+        assert prompts == ["titre : Dune\ncategory_id : LIVRE"]
 
 
 # ---------------------------------------------------------------------------
@@ -182,3 +213,70 @@ class TestEmbedDataframe:
 
         # Verify encoder.encode was called
         assert mock_encoder.encode.called
+
+    def test_all_null_row_is_skipped_and_not_embedded(self):
+        # Only the two non-empty rows should be embedded; the all-null row
+        # must not be sent to the encoder and must be dropped from the output,
+        # so no null vector ever reaches the parquet.
+        mock_encoder = MagicMock()
+        mock_encoder.device = "cpu"
+        mock_encoder.encode.return_value = np.array([[1.0, 2.0], [5.0, 6.0]])
+
+        df = pd.DataFrame(
+            {
+                "item_id": ["a", "b", "c"],
+                "content_hash": ["h1", "h2", "h3"],
+                "name": ["Alice", None, "Charlie"],
+            }
+        )
+        vectors = [Vector(name="emb", features=["name"], encoder_name="test/model")]
+        encoders = {"test/model": mock_encoder}
+
+        result = embed_dataframe(df, vectors, encoders)
+
+        # The all-null item ("b") is excluded; survivors keep their embeddings.
+        assert result["item_id"].tolist() == ["a", "c"]
+        assert result["emb"].tolist() == [[1.0, 2.0], [5.0, 6.0]]
+        assert result["emb"].notna().all()
+
+        # The empty prompt was never passed to the encoder.
+        (called_prompts,), _ = mock_encoder.encode.call_args
+        assert called_prompts == ["name : Alice", "name : Charlie"]
+
+    def test_each_item_keeps_its_own_embedding(self):
+        # The embedding an item ends up with must be the one built from *that*
+        # item's prompt, even when a middle item is dropped and the input has a
+        # non-default index.
+        def encode_from_prompts(prompts, **kwargs):
+            # Turn each prompt into a distinct, content-derived vector so any
+            # mismatch between items and embeddings would show up.
+            return np.array([[float(len(p)), float(ord(p[-1]))] for p in prompts])
+
+        mock_encoder = MagicMock()
+        mock_encoder.device = "cpu"
+        mock_encoder.encode.side_effect = encode_from_prompts
+
+        df = pd.DataFrame(
+            {
+                "item_id": ["a", "b", "c", "d"],
+                "content_hash": ["h1", "h2", "h3", "h4"],
+                "name": ["Alice", "Bob", None, "Dana"],
+            },
+            index=[10, 20, 30, 40],  # non-default index must not break alignment
+        )
+        vectors = [Vector(name="emb", features=["name"], encoder_name="test/model")]
+        encoders = {"test/model": mock_encoder}
+
+        result = embed_dataframe(df, vectors, encoders)
+
+        # "c" is dropped; the survivors keep their order and identity.
+        assert result["item_id"].tolist() == ["a", "b", "d"]
+
+        # Each surviving item maps to the embedding built from its own prompt.
+        expected = {
+            "a": [float(len("name : Alice")), float(ord("e"))],
+            "b": [float(len("name : Bob")), float(ord("b"))],
+            "d": [float(len("name : Dana")), float(ord("a"))],
+        }
+        for item_id, embedding in zip(result["item_id"], result["emb"]):
+            assert embedding == expected[item_id]

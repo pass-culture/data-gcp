@@ -299,6 +299,8 @@ class DriveUploadService:
     def _format_export_folder_name(self, ds: str) -> str:
         """
         Convert consolidation date to Drive folder name.
+        The folder is named after the execution month (ds),
+        and contains data from the previous complete month (ds - 1).
 
         Args:
             ds: Date string in YYYY-MM-DD format

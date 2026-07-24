@@ -24,6 +24,7 @@ from src.constants import (
 def test_refresh_artist_metadatas_matching(tmp_path):
     # 1. Setup mock data files
     artist_file = tmp_path / "applicative_artist.parquet"
+    artist_music_platform_file = tmp_path / "artist_music_platform.parquet"
     product_artist_link_file = tmp_path / "product_artist_link.parquet"
     product_file = tmp_path / "product.parquet"
 
@@ -43,6 +44,19 @@ def test_refresh_artist_metadatas_matching(tmp_path):
         ARTIST_PRO_SEARCH_SCORE_KEY: [10.0, 20.0],
     }
     pd.DataFrame(artist_data).to_parquet(artist_file, index=False)
+
+    # Mock artist_music_platform table (no platform IDs stored yet for these artists)
+    pd.DataFrame(
+        {
+            ARTIST_ID_KEY: [],
+            SPOTIFY_ID_KEY: [],
+            ISNI_ID_KEY: [],
+            APPLE_MUSIC_ID_KEY: [],
+            DEEZER_ID_KEY: [],
+            GENIUS_ID_KEY: [],
+            SOUNDCLOUD_ID_KEY: [],
+        }
+    ).to_parquet(artist_music_platform_file, index=False)
 
     # Mock product-artist links:
     # Link unmatched artist id2 to product 10
@@ -103,6 +117,7 @@ def test_refresh_artist_metadatas_matching(tmp_path):
 
         main(
             artist_file_path=str(artist_file),
+            artist_music_platform_file_path=str(artist_music_platform_file),
             product_artist_link_filepath=str(product_artist_link_file),
             product_filepath=str(product_file),
             wiki_base_path=str(tmp_path),  # dummy path
@@ -137,6 +152,7 @@ def test_refresh_artist_metadatas_matching(tmp_path):
 def test_refresh_artist_metadatas_duplicate_wikidata_id_resolution(tmp_path):
     # 1. Setup mock data files
     artist_file = tmp_path / "applicative_artist.parquet"
+    artist_music_platform_file = tmp_path / "artist_music_platform.parquet"
     product_artist_link_file = tmp_path / "product_artist_link.parquet"
     product_file = tmp_path / "product.parquet"
 
@@ -154,6 +170,19 @@ def test_refresh_artist_metadatas_duplicate_wikidata_id_resolution(tmp_path):
         ARTIST_PRO_SEARCH_SCORE_KEY: [10.0, 50.0, 5.0],
     }
     pd.DataFrame(artist_data).to_parquet(artist_file, index=False)
+
+    # Mock artist_music_platform table (empty — no platform IDs stored yet)
+    pd.DataFrame(
+        {
+            ARTIST_ID_KEY: [],
+            SPOTIFY_ID_KEY: [],
+            ISNI_ID_KEY: [],
+            APPLE_MUSIC_ID_KEY: [],
+            DEEZER_ID_KEY: [],
+            GENIUS_ID_KEY: [],
+            SOUNDCLOUD_ID_KEY: [],
+        }
+    ).to_parquet(artist_music_platform_file, index=False)
 
     # Link unmatched artists to products to create different product counts:
     # id2 (Ed Sheeran) has 1 product
@@ -222,6 +251,7 @@ def test_refresh_artist_metadatas_duplicate_wikidata_id_resolution(tmp_path):
 
         main(
             artist_file_path=str(artist_file),
+            artist_music_platform_file_path=str(artist_music_platform_file),
             product_artist_link_filepath=str(product_artist_link_file),
             product_filepath=str(product_file),
             wiki_base_path=str(tmp_path),

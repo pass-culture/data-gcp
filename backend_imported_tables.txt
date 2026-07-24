@@ -5,6 +5,7 @@ public.address
 public.allocine_pivot
 public.allocine_venue_provider
 public.artist
+public.artist_music_platform
 public.artist_offer_link
 public.artist_product_link
 public.bank_account

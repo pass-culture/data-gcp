@@ -16,6 +16,7 @@ from src.constants import (
     ARTISTS_KEYS,
     COMMENT_KEY,
     IMG_KEY,
+    MUSIC_PLATFORM_IDS_KEYS,
     OFFER_CATEGORY_ID_KEY,
     PRODUCT_ID_KEY,
     PRODUCTS_KEYS,
@@ -317,6 +318,7 @@ app = typer.Typer()
 def main(
     # Input files
     artist_file_path: str = typer.Option(),
+    artist_music_platform_file_path: str = typer.Option(),
     product_artist_link_filepath: str = typer.Option(),
     product_filepath: str = typer.Option(),
     wiki_base_path: str = typer.Option(),
@@ -328,7 +330,7 @@ def main(
     """Main function to refresh artist metadata from wikidata.
 
     This function orchestrates the complete metadata refresh process:
-    1. Loads artist, artist alias, and wikidata files
+    1. Loads artist + artist_music_platform tables and merges them, then loads wikidata
     2. Retrieves wikidata IDs for existing artists
     3. Matches unmatched artists with wikidata to find new matches
     4. Matches artists with wikidata to refresh metadata
@@ -337,9 +339,11 @@ def main(
     7. Saves the delta dataframes for downstream processing
 
     Args:
-        artist_file_path (str): Path to the parquet file containing artist data.
-        product_artist_link_filepath (str): Optional path to product artist link parquet file.
-        product_filepath (str): Optional path to products parquet file.
+        artist_file_path (str): Path to the parquet file containing artist data (applicative_database_artist).
+        artist_music_platform_file_path (str): Path to the parquet file containing music platform IDs
+            (applicative_database_artist_music_platform). Merged with artist data on artist_id.
+        product_artist_link_filepath (str): Path to product artist link parquet file.
+        product_filepath (str): Path to products parquet file.
         wiki_base_path (str): Base path for wikidata files.
         wiki_file_name (str): Name of the wikidata file to load.
         output_delta_artist_file_path (str): Output path for delta artist dataframe.
@@ -350,11 +354,18 @@ def main(
     """
     # 1. Load data
     logger.info("Loading artist data...")
-    applicative_artist_df = pd.read_parquet(artist_file_path).rename(
-        columns={
-            "wikidata_image_file_url": IMG_KEY,
-            "wikidata_id": WIKIDATA_ID_KEY,
-        }
+    artist_music_platform_df = pd.read_parquet(artist_music_platform_file_path).loc[
+        :, [ARTIST_ID_KEY, *MUSIC_PLATFORM_IDS_KEYS]
+    ]
+    applicative_artist_df = (
+        pd.read_parquet(artist_file_path)
+        .rename(
+            columns={
+                "wikidata_image_file_url": IMG_KEY,
+                "wikidata_id": WIKIDATA_ID_KEY,
+            }
+        )
+        .merge(artist_music_platform_df, on=ARTIST_ID_KEY, how="left")
     )
     artist_with_wikidata_ids_df = applicative_artist_df.loc[
         lambda df: df[WIKIDATA_ID_KEY].notna()

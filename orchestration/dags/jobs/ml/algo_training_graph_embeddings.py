@@ -17,6 +17,7 @@ from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
+    GCE_ZONES,
     GCP_PROJECT_ID,
     INSTANCES_TYPES,
     ML_BUCKET_TEMP,
@@ -48,6 +49,7 @@ INSTANCE_TYPE = {
     "stg": "n1-standard-16",
     "prod": "n1-standard-16",
 }[ENV_SHORT_NAME]
+GCE_ZONE_TEMPLATE = "{{ params.gce_zone }}"
 
 # Path and filenames
 GCS_FOLDER_PATH = f"algo_training_{ENV_SHORT_NAME}/{DAG_NAME}_{DATE}"
@@ -83,6 +85,30 @@ with DAG(
             default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
         ),
         "gpu_count": Param(default=1, enum=INSTANCES_TYPES["gpu"]["count"]),
+        "gce_zone": Param(default="europe-west1-b", enum=GCE_ZONES),
+        "provisioning_model": Param(
+            default="FLEX_START",
+            enum=["STANDARD", "FLEX_START"],
+            description="""VM provisioning model. STANDARD requests capacity
+                        immediately (fails on stockout). FLEX_START uses Dynamic
+                        Workload Scheduler (DWS) to queue the GPU request until
+                        capacity is available (queue held for up to
+                        request_valid_for_duration, max 2h).""",
+        ),
+        "max_run_duration": Param(
+            default="12h",
+            type="string",
+            description="""(FLEX_START only) Max VM run duration before it is
+                        auto-deleted. Accepts e.g. '12h', '1d2h', or seconds.
+                        Max 7 days.""",
+        ),
+        "request_valid_for_duration": Param(
+            default="2h",
+            type="string",
+            description="""(FLEX_START only) How long DWS holds the request in
+                        queue while the VM is PENDING. Accepts e.g. '2h', '90m'.
+                        Must be 0 or between 90s and 2h.""",
+        ),
         "experiment_name": Param(
             default=f"algo_training_graph_embeddings_v1.1_{ENV_SHORT_NAME}",
             type="string",
@@ -118,7 +144,11 @@ with DAG(
         instance_type="{{ params.instance_type }}",
         gpu_type="{{ params.gpu_type }}",
         gpu_count="{{ params.gpu_count }}",
+        gce_zone=GCE_ZONE_TEMPLATE,
         labels={"job_type": "long_ml", "dag_name": DAG_NAME},
+        provisioning_model="{{ params.provisioning_model }}",
+        max_run_duration="{{ params.max_run_duration }}",
+        request_valid_for_duration="{{ params.request_valid_for_duration }}",
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -127,6 +157,7 @@ with DAG(
         branch="{{ params.branch }}",
         python_version="3.12",
         base_dir=BASE_DIR,
+        gce_zone=GCE_ZONE_TEMPLATE,
         retries=2,
     )
 
@@ -134,6 +165,7 @@ with DAG(
         task_id="train",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
+        gce_zone=GCE_ZONE_TEMPLATE,
         command="cli train-metapath2vec "
         "{{ params.experiment_name }} "
         f"{STORAGE_BASE_PATH}/raw_input/ "
@@ -157,6 +189,7 @@ with DAG(
         task_id="evaluate",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
+        gce_zone=GCE_ZONE_TEMPLATE,
         command="cli evaluate-metapath2vec "
         f"{STORAGE_BASE_PATH}/raw_input/ "
         f"{STORAGE_BASE_PATH}/{EMBEDDINGS_FILENAME} "
@@ -166,7 +199,9 @@ with DAG(
     )
 
     gce_instance_stop = DeleteGCEOperator(
-        task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
+        task_id="gce_stop_task",
+        instance_name="{{ params.instance_name }}",
+        gce_zone=GCE_ZONE_TEMPLATE,  # delete in the zone the VM was created in
     )
 
     (

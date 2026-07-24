@@ -123,7 +123,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run main.py generate --stakeholder all --ds {{ ds }} --concurrency 60",  # internally ajusted to 0.9 of CPU cores
+        command="uv run main.py generate --stakeholder all --ds {{ data_interval_end | ds }} --concurrency 60",  # internally ajusted to 0.9 of CPU cores
         priority_weight=PRIORITY_WEIGHT,
         weight_rule=WEIGHT_RULE,
     )
@@ -133,7 +133,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run main.py compress --ds {{ ds }}",  # add --clean flag after testing
+        command="uv run main.py compress --ds {{ data_interval_end | ds }}",  # add --clean flag after testing
         priority_weight=PRIORITY_WEIGHT,
         weight_rule=WEIGHT_RULE,
         trigger_rule="none_failed",
@@ -144,7 +144,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command=f"uv run main.py upload --ds {{{{ ds }}}} --bucket {DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME} --destination external_reporting",
+        command=f"uv run main.py upload --ds {{{{ data_interval_end | ds }}}} --bucket {DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME} --destination external_reporting",
         priority_weight=PRIORITY_WEIGHT,
         weight_rule=WEIGHT_RULE,
     )
@@ -154,7 +154,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="uv run main.py upload-drive --ds {{ ds }}",
+        command="uv run main.py upload-drive --ds {{ data_interval_end | ds }}",
         priority_weight=PRIORITY_WEIGHT,
         weight_rule=WEIGHT_RULE,
     )

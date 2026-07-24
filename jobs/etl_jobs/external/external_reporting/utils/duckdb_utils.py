@@ -146,16 +146,10 @@ def query_monthly_kpi(
         ref_date = datetime.strptime(ds, "%Y-%m-%d").date()
     else:
         ref_date = date.today()
-    last_month = ref_date.replace(day=1) - relativedelta(months=1)
-
-    # periods = [
-    #     last_month - relativedelta(months=1),  # prev-2
-    #     last_month,  # prev-1
-    #     last_month - relativedelta(months=12),  # prev-13
-    # ]
+    ref_month = ref_date.replace(day=1)
 
     periods = [
-        last_month + relativedelta(months=shift + 1)
+        ref_month + relativedelta(months=shift + 1)
         for shift in KPI_MONTHS_SHIFT_DISPLAYED
     ]
 

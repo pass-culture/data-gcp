@@ -1,7 +1,7 @@
 import re
 import shutil
 import unicodedata
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Dict, List
 
@@ -15,8 +15,14 @@ class FileUtilsError(Exception):
 
 
 def start_of_current_month() -> str:
+    """Return the first day of the previous month (last complete month).
+
+    Used as CLI default: when running manually in July, we want June data.
+    """
     today = date.today()
-    return f"{today.year}-{today.month:02d}-01"
+    first_of_this_month = date(today.year, today.month, 1)
+    last_month = first_of_this_month - timedelta(days=1)
+    return f"{last_month.year}-{last_month.month:02d}-01"
 
 
 def to_first_of_month(ds: str) -> str:

@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
-from dateutil.relativedelta import relativedelta
 from duckdb import DuckDBPyConnection
 
 from utils.duckdb_utils import aggregate_kpi_data, query_monthly_kpi, query_yearly_kpi
@@ -264,10 +263,8 @@ class DataService:
             if item["field"] not in select_fields
         ]
 
-        # Compute previous month
         ds_date = datetime.strptime(ds, "%Y-%m-%d").date()
-        previous_month = ds_date - relativedelta(months=1)
-        previous_month_str = previous_month.strftime("%Y-%m-%d")
+        target_month_str = ds_date.replace(day=1).strftime("%Y-%m-%d")
 
         try:
             query = f"""
@@ -281,7 +278,7 @@ class DataService:
                 WHERE rank <= ?
                 ORDER BY {order_clause}
             """
-            params = [dimension_name, dimension_value, previous_month_str, top_n]
+            params = [dimension_name, dimension_value, target_month_str, top_n]
 
             log_print.debug(
                 f"""Executing top rankings query: {query.replace('?', '{}').format(*[f"'{p}'" if isinstance(p, str) else str(p) for p in params])}"""

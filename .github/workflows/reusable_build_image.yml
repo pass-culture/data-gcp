@@ -82,6 +82,17 @@ jobs:
         run: |
           uv tool install --from "git+https://x-access-token:${{ steps.github-token.outputs.token }}@github.com/pass-culture/passdirector@main" passdirector
           echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: "Decode GitHub OIDC Token Payload"
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = await core.getIDToken();
+            const payload = token.split('.')[1];
+            const decoded = Buffer.from(payload, 'base64').toString('utf8');
+            const claims = JSON.parse(decoded);
+            console.log("Repository Claim:", claims.repository);
+            console.log("Environment Claim:", claims.environment);
+            console.log("Full Payload:", claims);
       - name: "Authenticate with Google Cloud"
         uses: 'google-github-actions/auth@v2'
         with:

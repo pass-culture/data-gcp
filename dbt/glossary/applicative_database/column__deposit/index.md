@@ -14,7 +14,7 @@
 
 **deposit_expiration_date**: The expiration date of the deposit. GRANT_18: 24 months after creation; GRANT_15_17: On the user’s 18th birthday; GRANT_17_18: The day before the user turns 21.
 
-**deposit_type**: Type of the deposit, can be GRANT_18, GRANT_15_17, GRANT_17_18, GRANT_FREE.
+**deposit_type**: Type of the deposit, can be GRANT_18, GRANT_15_17, GRANT_17_18, GRANT_FREE. Since the March 2025 reform, new adult credits are issued as GRANT_17_18 (GRANT_18 is pre-reform/legacy): to measure adult-credit conversion across the reform, count GRANT_18 OR GRANT_17_18, not GRANT_18 alone.
 
 **deposit_reform_category**: Categorizes deposits following the reform, allowing distinction between 17 and 18-year-old beneficiaries for the new GRANT_17_18 credit. This field also differentiates between deposits granted before and after the reform. Values are : 15_17_pre_reform, 18_pre_reform, 18_experiment_phase, 17_post_reform, 18_post_reform.
 

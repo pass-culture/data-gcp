@@ -1,6 +1,6 @@
 # Table: Delta Event Series
 
-The `ml_linkage__delta_event_series` table contains the new event series data that must be synchronized with the backend application. It is an export from the ml_preproc\_\_delta_event_series source computed by the event_linkage DAG.
+The `ml_linkage__delta_event_series` table contains the new event series data that must be synchronized with the backend application. It is an export from the ml_preproc\_\_delta_event_series source computed by the event_linkage DAG. `add` rows already present in the applicative database (already ingested by the backend) are excluded, so the table only carries changes still to be applied.
 
 ## Table description
 

@@ -10825,6 +10825,7 @@
 <p>This model aggregates data on cultural credits (or financial deposits) allocated to users, based on their age, eligibility, location, and activity within the cultural application. It draws from both the deposit and user tables, providing a comprehensive view of each user's deposit details alongside demographic and engagement information.</p>
 <p><em>GRANT_15_17</em> refers to credits for users aged 15 to 17, capped at €80. This amount reflects specific age-based offers: €20 for users aged 15 and €30 for users aged 16 and 17.</p>
 <p><em>GRANT_18</em> covers credits for users aged 18, ranging between €300 and €500, with a duration of two years, offering an extended cultural allowance for this age group.</p>
+<p><em>Since the March 2025 reform</em>, GRANT_15_17 and GRANT_18 are being replaced, for new cohorts, by a single <em>GRANT_17_18</em> credit (150€, valid until the day before the beneficiary turns 21); 15–16-year-olds now receive <em>GRANT_FREE</em> (0€, granting access to free bookings only). GRANT_18 is therefore a legacy (pre-reform) credit: to measure conversion to an adult credit <strong>across</strong> the reform, count <code>GRANT_18</code> OR <code>GRANT_17_18</code> — never GRANT_18 alone, whose fall after March 2025 reflects the renaming, not a change in behaviour. Use <code>deposit_reform_category</code> to separate pre- and post-reform cohorts.</p>
 <p>In this context, a "deposit" signifies a cultural credit allocated individually to users aged 15-18 through the application, granting access to cultural resources like books, digital goods, and various experiences. These deposits serve as financial allowances that differ by age and grant type (e.g., individual or duo offers), empowering users to engage with cultural activities either alone or with a companion.</p>
 
 <h2 id="table-description">Table description</h2>
@@ -10970,7 +10971,7 @@
 <tr>
 <td style="text-align: left;">deposit_type</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Type of the deposit, can be GRANT_18, GRANT_15_17, GRANT_17_18, GRANT_FREE.</td>
+<td style="text-align: left;">Type of the deposit, can be GRANT_18, GRANT_15_17, GRANT_17_18, GRANT_FREE. Since the March 2025 reform, new adult credits are issued as GRANT_17_18 (GRANT_18 is pre-reform/legacy): to measure adult-credit conversion across the reform, count GRANT_18 OR GRANT_17_18, not GRANT_18 alone.</td>
 </tr>
 <tr>
 <td style="text-align: left;">deposit_reform_category</td>

@@ -8,10 +8,47 @@ with
         from {{ source("ml_preproc", "delta_event_series_offer_link") }}
     ),
 
+    -- applicative event series/offer links this delta does not remove: they
+    -- will still be there when the backend ingests, so an "add" is a no-op
+    already_ingested_event_series_offer_link as (
+        select
+            applicative_database_event_series_offer_link.event_series_id,
+            cast(
+                applicative_database_event_series_offer_link.offer_id as string
+            ) as offer_id
+        from
+            {{ source("raw", "applicative_database_event_series_offer_link") }}
+            as applicative_database_event_series_offer_link
+        where
+            not exists (
+                select 1 as found
+                from casted_delta_event_series_offer_link as delta
+                where
+                    delta.action in ('remove', 'update')
+                    and delta.event_series_id
+                    = applicative_database_event_series_offer_link.event_series_id
+                    and delta.offer_id = cast(
+                        applicative_database_event_series_offer_link.offer_id as string
+                    )
+            )
+    ),
+
     added_delta_event_series_offer_link as (
         select event_series_id, offer_id, action, comment
         from casted_delta_event_series_offer_link
-        where action = 'add'
+        where
+            action = 'add'
+            -- these models are rebuilt daily while ingestion runs weekly: do not
+            -- re-send a link already ingested in the applicative database
+            and not exists (
+                select 1 as found
+                from already_ingested_event_series_offer_link as ingested
+                where
+                    ingested.event_series_id
+                    = casted_delta_event_series_offer_link.event_series_id
+                    and ingested.offer_id
+                    = casted_delta_event_series_offer_link.offer_id
+            )
     ),
 
     removed_or_updated_delta_event_series_offer_link as (

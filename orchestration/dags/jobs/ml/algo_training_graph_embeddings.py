@@ -201,7 +201,7 @@ with DAG(
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
-        gce_zone=GCE_ZONE_TEMPLATE,  # delete in the zone the VM was created in
+        gce_zone=GCE_ZONE_TEMPLATE,
     )
 
     (

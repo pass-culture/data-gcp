@@ -64,6 +64,11 @@ def search_candidates(
     addresses_df = pd.concat(addresses_dfs, ignore_index=True)
 
     logger.info(f"Candidates df summary:\n{candidates_df.describe(include='all')}")
+
+    logger.info(f"closest Candidates df summary:\n{candidates_df.loc[lambda df : df['distance_meters'] <= 50].groupby('offerer_address_id').min().describe(include='all')}")
+
+
+
     Path(candidates_output_path).parent.mkdir(parents=True, exist_ok=True)
     Path(addresses_output_path).parent.mkdir(parents=True, exist_ok=True)
     candidates_df.to_parquet(candidates_output_path, index=False)
@@ -72,7 +77,6 @@ def search_candidates(
         f"Wrote {len(candidates_df)} candidates to {candidates_output_path} "
         f"and {len(addresses_df)} offerer addresses to {addresses_output_path}"
     )
-
 
 
 if __name__ == "__main__":

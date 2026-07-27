@@ -292,3 +292,5 @@ Retention segment of the partner: `active`, `at_risk`, `churned`, or `not-activa
 {% docs column__nb_monthly_favorites_consult %} Number of the item's monthly consultations that originated from the user's favorites. {% enddocs %}
 {% docs column__nb_monthly_similar_offer_consult %} Number of the item's monthly consultations that originated from a similar-offer or same-artist-playlist recommendation. {% enddocs %}
 {% docs column__nb_monthly_other_channel_offer_consult %} Number of the item's monthly consultations that originated from any channel other than search, home, venue, favorites or similar-offer recommendations. {% enddocs %}
+
+{% docs column__cnt_events %} Number of consultation events matching this row's dimensions (event date, offer, origin, traffic attribution, user role/age). {% enddocs %}

@@ -419,7 +419,7 @@ with
                     end
                 )
             ) as consult_6_month_before_last_bookable
-        from {{ ref("aggregated_daily_offer_consultation_data") }} as consult
+        from {{ ref("mrt_native__daily_offer_consultation") }} as consult
         left join
             {{ ref("mrt_global__venue") }} as venue on consult.venue_id = venue.venue_id
         left join

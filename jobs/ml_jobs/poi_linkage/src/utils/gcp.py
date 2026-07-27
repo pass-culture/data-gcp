@@ -15,6 +15,7 @@ from src.constants import (
     OFFERER_ADDRESS_LABEL_COL,
     OFFERER_ADDRESS_TABLE,
     POI_ADDRESS_COL,
+    POI_COMMON_NAME_COL,
     POI_COMMUNE_COL,
     POI_CSV_ID_COL,
     POI_ID_COL,
@@ -83,6 +84,7 @@ POI_SOURCE = BigQuerySource(
     columns=[
         f"{POI_CSV_ID_COL} AS {POI_ID_COL}",
         POI_NAME_COL,
+        POI_COMMON_NAME_COL,
         POI_ADDRESS_COL,
         POI_POSTAL_CODE_COL,
         POI_COMMUNE_COL,

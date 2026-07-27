@@ -15,6 +15,9 @@ from src.constants import (
     SEARCH_RADIUS_METERS,
 )
 from src.duckdb_load import add_h3_index, get_connection, load_dataframe
+from src.matching import (
+    build_offerer_address_poi_link as compute_offerer_address_poi_link,
+)
 from src.utils.gcp import fetch_poi, iter_offerer_address_batches
 
 app = typer.Typer()
@@ -77,6 +80,33 @@ def search_candidates(
         f"Wrote {len(candidates_df)} candidates to {candidates_output_path} "
         f"and {len(addresses_df)} offerer addresses to {addresses_output_path}"
     )
+
+
+@app.command()
+def build_offerer_address_poi_link(
+    candidates_path: str = typer.Option("data/output/candidates.parquet"),
+    addresses_path: str = typer.Option("data/output/addresses.parquet"),
+    link_output_path: str = typer.Option("data/output/offerer_address_poi_link.parquet"),
+) -> None:
+    """Score geographic candidates for labeled offerer addresses and write the OffererAddressPOILink table.
+
+    Reads the candidates/addresses parquet files produced by `search-candidates`,
+    re-fetches POI data, and scores every remaining candidate pair on name similarity
+    against both POI name columns -- no filtering beyond a non-empty offerer_address_label.
+    """
+    logger.info(f"Loading candidates from {candidates_path} and addresses from {addresses_path}...")
+    candidates_df = pd.read_parquet(candidates_path)
+    addresses_df = pd.read_parquet(addresses_path)
+
+    logger.info("Fetching POIs from BigQuery...")
+    poi_df = fetch_poi()
+
+    link_df = compute_offerer_address_poi_link(candidates_df, addresses_df, poi_df)
+    logger.info(f"Built OffererAddressPOILink table with {len(link_df)} rows.")
+
+    Path(link_output_path).parent.mkdir(parents=True, exist_ok=True)
+    link_df.to_parquet(link_output_path, index=False)
+    logger.info(f"Wrote {len(link_df)} offerer_address/poi pairs to {link_output_path}")
 
 
 if __name__ == "__main__":

@@ -10,6 +10,24 @@ with
         from {{ source("ml_preproc", "delta_event_series") }}
     ),
 
+    -- applicative event series this delta does not remove: they will still be
+    -- there when the backend ingests, so an "add" on them is a no-op
+    already_ingested_event_series as (
+        select applicative_database_event_series.event_series_id
+        from
+            {{ source("raw", "applicative_database_event_series") }}
+            as applicative_database_event_series
+        where
+            not exists (
+                select 1 as found
+                from casted_delta_event_series as delta
+                where
+                    delta.action in ('remove', 'update')
+                    and delta.event_series_id
+                    = applicative_database_event_series.event_series_id
+            )
+    ),
+
     added_delta_event_series as (
         select
             event_series_id,
@@ -22,7 +40,16 @@ with
                 event_series_image_url, r'/mediations/([^/]+)'
             ) as event_series_mediation_uuid
         from casted_delta_event_series
-        where action = 'add'
+        where
+            action = 'add'
+            -- these models are rebuilt daily while ingestion runs weekly: do not
+            -- re-send an event series already ingested in the applicative database
+            and not exists (
+                select 1 as found
+                from already_ingested_event_series as ingested
+                where
+                    ingested.event_series_id = casted_delta_event_series.event_series_id
+            )
     ),
 
     removed_or_updated_delta_event_series as (

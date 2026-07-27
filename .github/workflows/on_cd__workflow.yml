@@ -156,7 +156,7 @@ jobs:
       IS_MANUAL_DISPATCH: false
       CUSTOM_TAG: "dev"
     secrets:
-      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      WORKLOAD_IDENTITY_PRD: ${{ secrets.WORKLOAD_IDENTITY_PRD }}
       PASSCULTURE_GITHUB_ACTION_APP_ID: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
       PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
   k8s-deploy-on-stg:
@@ -169,12 +169,12 @@ jobs:
       IS_MANUAL_DISPATCH: false
       CUSTOM_TAG: "v1"
     secrets:
-      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      WORKLOAD_IDENTITY_PRD: ${{ secrets.WORKLOAD_IDENTITY_PRD }}
       PASSCULTURE_GITHUB_ACTION_APP_ID: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
       PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
   k8s-deploy-on-prod:
     needs: [find-build-job]
-    if: ${{ needs.find-build-job.outputs.has-changed == 'true' && ( github.ref == 'refs/heads/prod' || github.event_name == 'workflow_dispatch' )}}
+    if: ${{ needs.find-build-job.outputs.has-changed == 'true' && ( github.ref == 'refs/heads/production' || github.event_name == 'workflow_dispatch' )}}
     uses: ./.github/workflows/reusable_build_image.yml
     with:
       GITHUB_ENV_NAME: "prd"
@@ -182,6 +182,6 @@ jobs:
       IS_MANUAL_DISPATCH: false
       CUSTOM_TAG: "v1"
     secrets:
-      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      WORKLOAD_IDENTITY_PRD: ${{ secrets.WORKLOAD_IDENTITY_PRD }}
       PASSCULTURE_GITHUB_ACTION_APP_ID: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
       PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}

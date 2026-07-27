@@ -13,10 +13,10 @@
 with
     monthly_bookable_items as (
         select
-            date_trunc(partition_date, month) as month,
             item_id,
             offer_subcategory_id,
             offer_category_id,
+            date_trunc(partition_date, month) as month,
             count(distinct offer_id) as nb_bookable_offers,
             count(distinct partition_date) as nb_bookable_days
         from {{ ref("int_history__bookable_offer") }}
@@ -34,8 +34,8 @@ with
 
     monthly_consulted_items as (
         select
-            date_trunc(event_date, month) as month,
             item_id,
+            date_trunc(event_date, month) as month,
             sum(nb_daily_consult) as nb_monthly_consult,
             sum(
                 case when origin = 'search' then nb_daily_consult end
@@ -85,9 +85,7 @@ with
                     then nb_daily_consult
                 end
             ) as nb_monthly_other_channel_offer_consult
-        from
-            {{ ref("firebase_daily_offer_consultation_data") }}
-            as firebase_daily_offer_consultation_data
+        from {{ ref("firebase_daily_offer_consultation_data") }}
         {% if is_incremental() %}  -- recalculate latest day's DATA + previous
             where
                 date(event_date)
@@ -100,6 +98,19 @@ with
         group by 1, 2
     )
 
-select *
+select
+    monthly_bookable_items.item_id,
+    monthly_bookable_items.offer_subcategory_id,
+    monthly_bookable_items.offer_category_id,
+    monthly_bookable_items.month,
+    monthly_bookable_items.nb_bookable_offers,
+    monthly_bookable_items.nb_bookable_days,
+    monthly_consulted_items.nb_monthly_consult,
+    monthly_consulted_items.nb_monthly_search_consult,
+    monthly_consulted_items.nb_monthly_home_consult,
+    monthly_consulted_items.nb_monthly_venue_consult,
+    monthly_consulted_items.nb_monthly_favorites_consult,
+    monthly_consulted_items.nb_monthly_similar_offer_consult,
+    monthly_consulted_items.nb_monthly_other_channel_offer_consult
 from monthly_bookable_items
 left join monthly_consulted_items using (month, item_id)

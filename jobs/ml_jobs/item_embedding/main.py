@@ -32,7 +32,7 @@ def main(
         help="Path to the output parquet folder on GCS where results will be saved",
     ),
 ) -> None:
-    """Main function to load item metadata, generate embeddings, and save results.
+    """Main function to load item metadata, generate embeddings, and save results as parquets.
 
     Args:
         config_file_name: Name of the configuration file (without .yaml extension)
@@ -45,7 +45,7 @@ def main(
         f"  Input parquets folder path: {input_parquets_folder_path}\n"
         f"  Output parquets folder path: {output_parquets_folder_path}"
     )
-    # Load configuration and vectors
+    # Load vectors configuration and encoder weights
     vectors = parse_vectors(config_file_name)
 
     gpu_count = _get_gpu_count()
@@ -57,7 +57,7 @@ def main(
     parquet_files = list_parquet_files(input_parquets_folder_path)
     logger.info(f"Found {len(parquet_files)} parquet files to process")
 
-    # Start multi-GPU pools once for the whole run (loads models onto GPUs once)
+    # Start multi-GPU pools once for the whole run if available
     pools = start_encoder_pools(encoders, gpu_count)
     try:
         for i, parquet_filepath in enumerate(parquet_files):
@@ -71,7 +71,7 @@ def main(
             logger.info(
                 f"Generated embeddings for {len(df_embeddings)} items from {parquet_filepath}"
             )
-            # Upload the resulting dataframe to GCS as a parquet file
+
             output_parquet_path = (
                 f"{output_parquets_folder_path}/item_embeddings_{i}.parquet"
             )
@@ -80,7 +80,7 @@ def main(
     finally:
         stop_encoder_pools(encoders, pools)
 
-    logger.info("✔ All parquet files processed successfully")
+    logger.info("✅ All parquet files processed successfully")
 
 
 if __name__ == "__main__":

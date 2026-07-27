@@ -17,6 +17,7 @@
 with
     export_table as (
         select
+            reco_sink.resource.labels.revision_name as cloud_run_revision_name,
             cast(reco_sink.jsonpayload.extra.date as timestamp) as event_created_at,
             reco_sink.jsonpayload.extra.call_id as reco_call_id,
             reco_sink.jsonpayload.extra.context,

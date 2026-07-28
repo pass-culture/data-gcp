@@ -9,6 +9,7 @@ from loguru import logger
 from constants import (
     LANCEDB_BATCH_SIZE,
     MODEL_PATH,
+    MODEL_TYPE,
     NUM_PARTITIONS,
     NUM_SUB_VECTORS,
     PARQUET_BATCH_SIZE,
@@ -28,7 +29,7 @@ def create_items_table(items_df: pd.DataFrame, linkage_type: str) -> None:
     """
 
     class ItemModel(LanceModel):
-        vector: Vector(32)
+        vector: Vector(MODEL_TYPE["n_dim"])
         item_id: str
         offer_subcategory_id: str
         edition: Optional[str]

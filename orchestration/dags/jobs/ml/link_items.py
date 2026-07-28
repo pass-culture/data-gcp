@@ -74,7 +74,7 @@ DAG_CONFIG = {
         "ITEM_MAPPING_TABLE": "item_offer_mapping",
     },
     "PARAMS": {
-        "REDUCTION": "true",
+        "REDUCTION": "false",
         "BATCH_SIZE": 100000,
     },
 }

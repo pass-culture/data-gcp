@@ -140,7 +140,7 @@ def main(
     ),
 ):
     """
-    Process the input catalog in batches,clean and preprocess the tables and optionally reduce the embeddings
+    Process the input catalog in batches, clean and preprocess the tables and optionally reduce the embeddings
     Args:
         input_path (str): Path to the input catalog.
         output_path (str): Path to save the processed catalog.

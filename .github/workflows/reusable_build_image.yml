@@ -1,6 +1,6 @@
 name: "Build and register airflow docker image"
 
-run-name: "Build image ${{ github.event.inputs.ENV }}"
+run-name: "Build image ${{ inputs.GITHUB_ENV_NAME }}"
 
 on:
   workflow_call:

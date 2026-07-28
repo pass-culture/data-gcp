@@ -1,29 +1,19 @@
 with
     import_embeddings as (
-        select ie.item_id, ie.name_embedding
-        from `{{ bigquery_ml_preproc_dataset }}.item_embedding_reduced_32` ie
+        select
+            ie.item_id,
+            array(
+                select val
+                from unnest(ie.semantic_content) as val
+                with
+                offset pos
+                where pos < 128
+            ) as embedding
+        from `{{ bigquery_ml_feat_dataset }}.item_embedding_refactor` ie
         inner join
             `{{ bigquery_analytics_dataset }}.global_offer` go
             on go.item_id = ie.item_id
         where go.offer_product_id is not null
-        qualify
-            row_number() over (
-                partition by ie.item_id order by ie.reduction_method desc
-            )
-            = 1
-
-    ),
-    prepocess_embeddings as (
-        select
-            item_id,
-            array(
-                select cast(e as float64)
-                from
-                    unnest(
-                        split(substr(name_embedding, 2, length(name_embedding) - 2))
-                    ) e
-            ) as embedding,
-        from import_embeddings
     ),
     offers as (
         select
@@ -43,13 +33,13 @@ with
                 then concat('offer-', o.offer_id)
                 else o.item_id
             end as item_id,
-            prepocess_embeddings.embedding,
+            import_embeddings.embedding,
             o.offer_name,
             o.offer_description,
             o.performer,
             o.offer_subcategory_id
         from offers o
-        inner join prepocess_embeddings on prepocess_embeddings.item_id = o.item_id
+        inner join import_embeddings on import_embeddings.item_id = o.item_id
     )
 select *
 from sources

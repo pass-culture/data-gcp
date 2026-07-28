@@ -36,21 +36,22 @@ METADATA_FEATURES = [
 ]
 EVALUATION_FEATURES = ["item_id", "offer_subcategory_id", "booking_count"]
 RETRIEVAL_FILTERS = ["edition", "offer_subcategory_id"]
-BATCH_SIZE_RETRIEVAL = 10000
+BATCH_SIZE_RETRIEVAL = 10_000
 SEMAPHORE_RETRIEVAL = 100
 MODEL_TYPE = {
-    "n_dim": 32,
+    "n_dim": 128,
     "type": "semantic",
-    "transformer": "sentence-transformers/all-MiniLM-L6-v2",
     "reducer_pickle_path": "metadata/reducer.pkl",
 }
-PARQUET_BATCH_SIZE = 100000
+PARQUET_BATCH_SIZE = 100_000
 LANCEDB_BATCH_SIZE = 5000
 NUM_PARTITIONS = 1500 if ENV_SHORT_NAME == "prod" else 128
-NUM_SUB_VECTORS = 4 if ENV_SHORT_NAME == "prod" else 16
+NUM_SUB_VECTORS = (
+    16  # 128 dims / 16 sub-vectors = 8 dims per sub-vector (optimal PQ tradeoff)
+)
 MODEL_PATH = "metadata/vector"
 NUM_RESULTS = 5  # Number of results to retrieve
-LOGGING_INTERVAL = 50000  # Interval for logging progress
+LOGGING_INTERVAL = 50_000  # Interval for logging progress
 
 N_PROBES = 5
 REFINE_FACTOR = 10

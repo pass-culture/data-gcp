@@ -365,7 +365,12 @@ def main(
                 "wikidata_id": WIKIDATA_ID_KEY,
             }
         )
-        .merge(artist_music_platform_df, on=ARTIST_ID_KEY, how="left")
+        .merge(
+            artist_music_platform_df,
+            on=ARTIST_ID_KEY,
+            how="left",
+            validate="one_to_one",
+        )
     )
     artist_with_wikidata_ids_df = applicative_artist_df.loc[
         lambda df: df[WIKIDATA_ID_KEY].notna()

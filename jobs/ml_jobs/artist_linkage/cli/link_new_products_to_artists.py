@@ -248,7 +248,7 @@ def main(
         :, [ARTIST_ID_KEY, *MUSIC_PLATFORM_IDS_KEYS]
     ]
     artist_df = pd.read_parquet(artist_filepath).merge(
-        artist_music_platform_df, on=ARTIST_ID_KEY, how="left"
+        artist_music_platform_df, on=ARTIST_ID_KEY, how="left", validate="one_to_one"
     )
     artist_with_wiki_ids_df = artist_df.rename(
         columns={

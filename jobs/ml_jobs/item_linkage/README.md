@@ -20,6 +20,8 @@ The workflow is managed by the Airflow DAG `link_items.py`, which automates the 
 
 4. **Preprocess Data**
    - Run `preprocess.py` to clean and batch sources and candidates data.
+   - Embeddings are **not** dimensionality-reduced (HNNE is disabled, `--reduction false`).
+   - Vectors are **L2-normalized** before being written to Parquet.
 
 5. **Product Linkage Workflow**
    - Prepare product tables: `prepare_tables.py --linkage-type product`
@@ -52,7 +54,7 @@ If you want to run individual scripts manually, follow the order above and use t
 
 - Preprocess data:
   ```bash
-  python preprocess.py --input-path <input_parquet> --output-path <output_dir> --reduction true --batch-size 100000
+  python preprocess.py --input-path <input_parquet> --output-path <output_dir> --reduction false --batch-size 100000
   ```
 
 - Prepare tables:
@@ -84,6 +86,19 @@ If you want to run individual scripts manually, follow the order above and use t
   ```bash
   python evaluate.py --input-candidates-path <candidates_dir> --linkage-path <linked_dir> --linkage-type product
   ```
+
+## Embedding Specification
+
+| Property | Value |
+|---|---|
+| Source table | `passculture-data-<env>.ml_feat_<env>.item_embedding_refactor`  |
+| Model | Gemma 300M (`semantic_content` column) |
+| Original dimension | 768 |
+| Used dimension | **128** (first 128 dims, truncated in SQL via `WHERE pos < 128`) |
+| Truncation rationale | Matryoshka representation — the first 128 dims carry the most semantic information |
+| Dimensionality reduction | None (`--reduction false`) |
+| Normalization | L2 (applied in `preprocess.py`) |
+| LanceDB index | IVF_PQ, cosine distance, `Vector(128)` |
 
 ## Notes
 

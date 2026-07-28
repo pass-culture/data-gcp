@@ -17,6 +17,10 @@ on:
         required: true
       GCP_EHP_SERVICE_ACCOUNT:
         required: true
+      PASSCULTURE_GITHUB_ACTION_APP_ID:
+        required: true
+      PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY:
+        required: true
 
 
 jobs:
@@ -81,30 +85,29 @@ jobs:
         uses: 'google-github-actions/get-secretmanager-secrets@v2'
         with:
           secrets: |-
-            SLACK_BOT_TOKEN:passculture-metier-ehp/passculture-ci-slack-bot-token
+            PASSDIRECTOR_SLACK_BOT_TOKEN:passculture-metier-ehp/passculture-ci-slack-bot-token
+
+      - name: "Authenticate through github app ghactionci"
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf
+        id: github-token
+        with:
+          app-id: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
+          private-key: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: passdirector
+          permission-contents: read
+      - name: "Install passdirector"
+        run: |
+          uv tool install --from "git+https://x-access-token:${{ steps.github-token.outputs.token }}@github.com/pass-culture/passdirector@main" passdirector
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: "Post to a Slack channel"
         id: "slack"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
-        uses: slackapi/slack-github-action@v1.23.0
         env:
-          SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.SLACK_BOT_TOKEN }}
-        with:
-          channel-id: ${{ inputs.NOTIF_CHANNEL_ID }}
-          payload: |
-            {
-              "attachments": [
-                {
-                  "mrkdwn_in": ["text"],
-                  "color": "#A30002",
-                  "author_name": "${{github.actor}}",
-                  "author_link": "https://github.com/${{github.actor}}",
-                  "author_icon": "https://github.com/${{github.actor}}.png",
-                  "title": "MkDocs Deploy Job Failed",
-                  "title_link": "https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}",
-                  "text": ":fire: Deploy Job échoué :no_entry:"
-                }
-              ],
-              "unfurl_links": false,
-              "unfurl_media": false
-            }
+          PASSDIRECTOR_SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.PASSDIRECTOR_SLACK_BOT_TOKEN }}
+        run: |
+          passdirector slack post \
+            --channel "${{ inputs.NOTIF_CHANNEL_ID }}" \
+            --message ":fire: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Deploy Job échoué> :no_entry:" \
+            --github-actor "${{ github.actor }}"

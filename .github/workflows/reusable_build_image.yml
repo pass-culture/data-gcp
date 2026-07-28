@@ -159,7 +159,6 @@ jobs:
               passdirector docker push \
                 --source "k8s-worker:latest" \
                 --destination "$image_name" \
-                --tag "$TAG" \
-                --no-sign
+                --tag "$TAG"
             fi
           done

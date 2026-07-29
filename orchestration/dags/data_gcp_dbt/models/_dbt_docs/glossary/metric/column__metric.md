@@ -52,6 +52,13 @@ title: Metrics
 {% docs column__total_reimbursement_points %}The total number of reimbursement points for the local authority.{% enddocs %}
 {% docs column__total_stock_quantity %} Total remaining stock quantity. {% enddocs %}
 {% docs column__total_students %}The total number of students for the educational institution.{% enddocs %}
+{% docs column__total_eligible_students %}
+Total number of students eligible for EAC (Education Artistique et Culturelle) within the territory for the specified month and school year.
+{% enddocs %}
+
+{% docs column__total_engaged_students %}
+Total number of students who participated in at least one EAC activity within the territory for the specified month and school year.
+{% enddocs %}
 {% docs column__total_theoretic_revenue %} Total theoretical revenue from all bookings. {% enddocs %}
 {% docs column__total_theoretical_amount_spent %} Total theoretical amount that would have been spent based on expected transactions. {% enddocs %}
 {% docs column__total_theoretical_amount_spent_in_digital_goods %} Total theoretical amount spent on digital goods based on expected transactions. {% enddocs %}

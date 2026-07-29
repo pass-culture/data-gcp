@@ -6,4 +6,5 @@
 {% docs column__two_tower_item_embedding %}Two tower model item embedding.{% enddocs %}
 {% docs column__two_tower_user_embedding %}Two tower model user embedding.{% enddocs %}
 {% docs column__content_hash %}Hash of item's metadata.{% enddocs %}
-{% docs column__semantic_content %}Embedding of item's metadata with "query" prompt name. Encoded with embedding-gemma-300m model.{% enddocs %}
+{% docs column__semantic_content %}Embedding of item's metadata with "document" prompt name. Encoded with embedding-gemma-300m model.{% enddocs %}
+{% docs column__semantic_content_128 %}Truncated embedding of item's metadata with "document" prompt name of size 128. Encoded with embedding-gemma-300m model. Truncated with Matryoshka Representation Learning. NOT NORMALIZED! {% enddocs %}

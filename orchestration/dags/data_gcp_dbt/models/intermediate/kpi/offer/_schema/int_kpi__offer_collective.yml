@@ -1,0 +1,44 @@
+version: 2
+models:
+  - name: int_kpi__offer_collective
+    description: '{{ doc("description__int_kpi__offer_collective") }}'
+    columns:
+      - name: partition_month
+        description: '{{ doc("column__partition_month") }}'
+        data_type: STRING
+
+      - name: venue_region_name
+        description: '{{ doc("column__venue_region_name") }}'
+        data_type: STRING
+
+      - name: venue_region_code
+        description: '{{ doc("column__venue_region_code") }}'
+        data_type: STRING
+
+      - name: venue_department_name
+        description: '{{ doc("column__venue_department_name") }}'
+        data_type: STRING
+
+      - name: venue_department_code
+        description: '{{ doc("column__venue_department_code") }}'
+        data_type: STRING
+
+      - name: venue_epci_name
+        description: '{{ doc("column__venue_epci") }}'
+        data_type: STRING
+
+      - name: venue_epci_code
+        description: '{{ doc("column__venue_epci_code") }}'
+        data_type: STRING
+
+      - name: venue_city_name
+        description: '{{ doc("column__venue_city") }}'
+        data_type: STRING
+
+      - name: venue_city_code
+        description: '{{ doc("column__venue_city_code") }}'
+        data_type: STRING
+
+      - name: total_created_collective_offers
+        description: '{{ doc("column__total_created_collective_offers") }}'
+        data_type: INTEGER

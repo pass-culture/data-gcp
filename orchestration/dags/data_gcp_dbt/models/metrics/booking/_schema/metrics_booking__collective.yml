@@ -1,0 +1,60 @@
+version: 2
+models:
+  - name: metrics_booking__collective
+    description: '{{ doc("description__metrics_booking__collective") }}'
+    columns:
+      - name: partition_month
+        description: '{{ doc("column__partition_month") }}'
+        data_type: STRING
+
+      - name: scholar_year
+        description: '{{ doc("column__scholar_year") }}'
+        data_type: STRING
+
+      - name: venue_region_name
+        description: '{{ doc("column__venue_region_name") }}'
+        data_type: STRING
+
+      - name: venue_region_code
+        description: '{{ doc("column__venue_region_code") }}'
+        data_type: STRING
+
+      - name: venue_department_name
+        description: '{{ doc("column__venue_department_name") }}'
+        data_type: STRING
+
+      - name: venue_department_code
+        description: '{{ doc("column__venue_department_code") }}'
+        data_type: STRING
+
+      - name: venue_epci_name
+        description: '{{ doc("column__venue_epci") }}'
+        data_type: STRING
+
+      - name: venue_epci_code
+        description: '{{ doc("column__venue_epci_code") }}'
+        data_type: STRING
+
+      - name: venue_city_name
+        description: '{{ doc("column__venue_city") }}'
+        data_type: STRING
+
+      - name: venue_city_code
+        description: '{{ doc("column__venue_city_code") }}'
+        data_type: STRING
+
+      - name: total_collective_bookings
+        description: '{{ doc("column__total_collective_bookings") }}'
+        data_type: INTEGER
+
+      - name: total_collective_amount_spent
+        description: '{{ doc("column__total_collective_amount_spent") }}'
+        data_type: FLOAT
+
+      - name: cumulative_total_collective_bookings
+        description: '{{ doc("column__cumulative_total_collective_bookings") }}'
+        data_type: INTEGER
+
+      - name: cumulative_total_collective_amount_spent
+        description: '{{ doc("column__cumulative_total_collective_amount_spent") }}'
+        data_type: FLOAT

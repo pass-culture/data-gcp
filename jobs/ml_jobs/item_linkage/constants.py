@@ -41,7 +41,6 @@ SEMAPHORE_RETRIEVAL = 100
 MODEL_TYPE = {
     "n_dim": 128,
     "type": "semantic",
-    "reducer_pickle_path": "metadata/reducer.pkl",
 }
 PARQUET_BATCH_SIZE = 100_000
 LANCEDB_BATCH_SIZE = 5000

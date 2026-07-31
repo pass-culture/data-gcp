@@ -24,6 +24,6 @@
 {% docs column__playlist_reach %}The reach of the playlist associated with the entry.{% enddocs %}
 {% docs column__playlist_recurrence %}The recurrence pattern of the playlist.{% enddocs %}
 {% docs column__displayed_position %}The position at which the offer was displayed on the home screen.{% enddocs %}
-{% docs column__offer_display_order %}The display order (position) of the offer within its recommendation playlist.{% enddocs %}
+{% docs column__offer_display_order %}The display order (0-based index) of the offer within its recommendation playlist.{% enddocs %}
 
 {% endhide %}

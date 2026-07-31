@@ -80,6 +80,11 @@ def create_index_on_items_table(linkage_type: str) -> None:
         logger.info(f"Creating index on feature: {feature}")
         table.create_scalar_index(feature, index_type="BITMAP")
 
+    # Compact table fragments so each search opens fewer files at query time (avoids "Too many open files" EMFILE).
+    logger.info("Compacting table fragments...")
+    table.optimize()
+    logger.info("Table compaction complete.")
+
 
 def main(
     input_path: str = typer.Option(
@@ -116,7 +121,6 @@ def main(
         total_count += len(chunk)
     logger.info(f"Total rows processed: {total_count}")
     create_index_on_items_table(linkage_type)
-    logger.info
     logger.info("LanceDB table and index created!")
 
 

@@ -37,7 +37,9 @@ METADATA_FEATURES = [
 EVALUATION_FEATURES = ["item_id", "offer_subcategory_id", "booking_count"]
 RETRIEVAL_FILTERS = ["edition", "offer_subcategory_id"]
 BATCH_SIZE_RETRIEVAL = 10_000
-SEMAPHORE_RETRIEVAL = 100
+# Cap concurrent LanceDB queries at 90% of available CPUs. Concurrency above the
+# core count yields no throughput gain and leads to resource exhaustion.
+SEMAPHORE_RETRIEVAL = max(1, int((os.cpu_count() or 1) * 0.9))
 MODEL_TYPE = {
     "n_dim": 128,
     "type": "semantic",

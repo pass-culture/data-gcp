@@ -128,6 +128,7 @@ Total number of students who participated in at least one EAC activity within th
 {% docs column__total_session_venue_map_seen_duration_seconds %} Durée totale en seconde pendant laquelle la venue map a été affichée au cours d’une session. {% enddocs %}
 {% docs column__total_diversification %} Total du score de diversité incrémenté par les réservations associées. {% enddocs %}
 {% docs column__total_quantities %} Total quantities booked. A booking quantity can be 1 or 2. {% enddocs %}
+{% docs column__institution_region_code %} INSEE region code of the educational institution, derived from the department code via the region_department seed. Defaults to '-1' when not found. {% enddocs %}
 {% docs column__total_revenue_amount %} The total revenue amount associated with the bookings. {% enddocs %}
 {% docs column__total_reimbursed_amount %} Total amount reimbursed to the offerers.  {% enddocs %}
 {% docs column__total_contribution_amount %} Total amount contributed by the offerers on their bookings.  {% enddocs %}
@@ -243,3 +244,13 @@ The total cumulative number of unique partners who have had at least one active 
 {% docs column__metrics__total_cumulative_activated_partners_dual_part %}
 The total cumulative number of unique partners who have had at least one active offer within both the individual part and the collective part (at any point, concurrently or sequentially) for at least 1 day since inception up to the given month.
 {% enddocs %}
+{% docs column__total_institutions %} Total number of distinct educational institutions that made at least one collective booking. {% enddocs %}
+{% docs column__total_collective_bookings_by_domain %} Total number of EAC collective bookings for the given institution geography and educational domain in the specified month. {% enddocs %}
+{% docs column__total_collective_booking_amount_by_domain %} Total booking amount for EAC collective bookings for the given institution geography and educational domain in the specified month. {% enddocs %}
+{% docs column__total_collective_tickets_by_domain %} Total number of tickets generated for EAC collective bookings for the given institution geography and educational domain in the specified month. {% enddocs %}
+{% docs column__total_collective_institutions_by_domain %} Total number of distinct educational institutions with at least one EAC collective booking for the given geography and educational domain in the specified month. {% enddocs %}
+
+{% docs column__cumulative_total_collective_bookings_by_domain %} Cumulative total number of EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month. {% enddocs %}
+{% docs column__cumulative_total_collective_booking_amount_by_domain %} Cumulative total booking amount for EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month. {% enddocs %}
+{% docs column__cumulative_total_collective_tickets_by_domain %} Cumulative total number of tickets generated for EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month. {% enddocs %}
+{% docs column__cumulative_total_collective_institutions_by_domain %} Cumulative total number of distinct educational institutions involved in EAC collective bookings for the same geography and domain from the beginning of the data history up to and including the specified month. {% enddocs %}

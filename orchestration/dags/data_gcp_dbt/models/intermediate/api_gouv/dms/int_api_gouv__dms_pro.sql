@@ -14,20 +14,18 @@ with
             nullif(instructors, '') as dms_application_instructors,
 
             datetime(
-                timestamp_micros(safe_cast((application_submitted_at / 1000) as int64)),
+                timestamp_micros(safe_cast((application_submitted_at) as int64)),
                 'Europe/Paris'
             ) as dms_application_submitted_date,
             datetime(
-                timestamp_micros(safe_cast((processed_at / 1000) as int64)),
-                'Europe/Paris'
+                timestamp_micros(safe_cast((processed_at) as int64)), 'Europe/Paris'
             ) as dms_application_processed_date,
             datetime(
-                timestamp_micros(safe_cast((passed_in_instruction_at / 1000) as int64)),
+                timestamp_micros(safe_cast((passed_in_instruction_at) as int64)),
                 'Europe/Paris'
             ) as dms_application_instruction_passed_date,
             datetime(
-                timestamp_micros(safe_cast((last_update_at / 1000) as int64)),
-                'Europe/Paris'
+                timestamp_micros(safe_cast((last_update_at) as int64)), 'Europe/Paris'
             ) as dms_application_last_updated_at,
 
             -- pro fields only
@@ -73,7 +71,6 @@ with
             application_submitted_at > 0
             and (processed_at > 0 or processed_at is null)
             and (passed_in_instruction_at > 0 or passed_in_instruction_at is null)
-
     )
 
 select distinct

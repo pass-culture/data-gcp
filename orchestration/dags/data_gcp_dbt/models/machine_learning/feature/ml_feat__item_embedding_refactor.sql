@@ -13,10 +13,7 @@ select
     ie.item_id,
     ie.content_hash,
     array(
-        select e.element from unnest(ie.semantic_content_sts.list) as e
-    ) as semantic_content_sts,
-    array(
-        select e.element from unnest(ie.semantic_content_clustering.list) as e
-    ) as semantic_content_clustering
+        select e.element from unnest(ie.semantic_content.list) as e
+    ) as semantic_content
 from {{ source("ml_feat", "item_embedding_tmp") }} as ie
 inner join {{ ref("ml_input__item_metadata") }} as im on ie.item_id = im.item_id

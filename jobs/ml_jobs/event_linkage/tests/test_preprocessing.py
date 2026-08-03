@@ -10,27 +10,27 @@ from src.preprocessing import (
 class TestDescriptionPreprocessing:
     def test_lowercases_and_strips(self):
         series = pd.Series(["  Hello World this is a long description  "])
-        result = description_preprocessing(series)
+        result = description_preprocessing(series, min_length=30)
         assert result.iloc[0] == "hello world this is a long description"
 
     def test_removes_accents(self):
         series = pd.Series(["Événement spécial avec des artistes célèbres"])
-        result = description_preprocessing(series)
+        result = description_preprocessing(series, min_length=30)
         assert result.iloc[0] == "evenement special avec des artistes celebres"
 
     def test_short_descriptions_become_na(self):
         series = pd.Series(["Too short"])
-        result = description_preprocessing(series)
+        result = description_preprocessing(series, min_length=30)
         assert pd.isna(result.iloc[0])
 
     def test_exactly_min_length_is_kept(self):
         series = pd.Series(["a" * 30])
-        result = description_preprocessing(series)
+        result = description_preprocessing(series, min_length=30)
         assert result.iloc[0] == "a" * 30
 
     def test_below_min_length_is_na(self):
         series = pd.Series(["a" * 29])
-        result = description_preprocessing(series)
+        result = description_preprocessing(series, min_length=30)
         assert pd.isna(result.iloc[0])
 
     def test_multiple_values(self):
@@ -41,7 +41,7 @@ class TestDescriptionPreprocessing:
                 "Another valid description that is long enough",
             ]
         )
-        result = description_preprocessing(series)
+        result = description_preprocessing(series, min_length=30)
         assert result.iloc[0] == "this is a valid long description text!"
         assert pd.isna(result.iloc[1])
         assert result.iloc[2] == "another valid description that is long enough"

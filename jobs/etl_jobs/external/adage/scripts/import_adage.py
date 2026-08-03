@@ -39,7 +39,7 @@ def access_secret(project_id, secret_id, version_id=1, default=None):
 
 
 ENDPOINT = get_endpoint()
-project_name = os.environ["PROJECT_NAME"]
+project_name = os.environ["GCP_PROJECT_ID"]
 
 
 if os.environ["ENV_SHORT_NAME"] == "dev":

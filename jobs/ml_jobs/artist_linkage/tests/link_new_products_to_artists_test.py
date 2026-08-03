@@ -5,9 +5,15 @@ import pandas as pd
 
 from cli.link_new_products_to_artists import main
 from src.constants import (
+    APPLE_MUSIC_ID_KEY,
     ARTIST_DESCRIPTION_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
+    DEEZER_ID_KEY,
+    GENIUS_ID_KEY,
+    ISNI_ID_KEY,
+    SOUNDCLOUD_ID_KEY,
+    SPOTIFY_ID_KEY,
     WIKIDATA_ID_KEY,
     WIKIPEDIA_URL_KEY,
 )
@@ -20,7 +26,6 @@ def test_link_new_products_to_artists(tmp_path):
     product_file = tmp_path / "product.parquet"
 
     output_delta_artist = tmp_path / "delta_artist.parquet"
-    output_delta_artist_alias = tmp_path / "delta_artist_alias.parquet"
     output_delta_product_link = tmp_path / "delta_product_link.parquet"
 
     # Existing database artist:
@@ -77,6 +82,12 @@ def test_link_new_products_to_artists(tmp_path):
             "https://wikipedia.org/wiki/Artist_One",
             "https://wikipedia.org/wiki/Ed_Sheeran",
         ],
+        SPOTIFY_ID_KEY: [None, "6eUKZXaKkcviH0Ku9w2n3V"],
+        ISNI_ID_KEY: [None, "0000000114431409"],
+        APPLE_MUSIC_ID_KEY: [None, "183313439"],
+        DEEZER_ID_KEY: [None, "384236"],
+        GENIUS_ID_KEY: [None, "45789"],
+        SOUNDCLOUD_ID_KEY: [None, "17954600"],
     }
 
     # Run in dev environment
@@ -92,17 +103,12 @@ def test_link_new_products_to_artists(tmp_path):
             wiki_base_path=str(tmp_path),
             wiki_file_name="wiki.parquet",
             output_delta_artist_file_path=str(output_delta_artist),
-            output_delta_artist_alias_file_path=str(output_delta_artist_alias),
             output_delta_product_artist_link_filepath=str(output_delta_product_link),
         )
 
     # 4. Load outputs and verify
     delta_artist_df = pd.read_parquet(output_delta_artist)
-    delta_artist_alias_df = pd.read_parquet(output_delta_artist_alias)
     delta_product_link_df = pd.read_parquet(output_delta_product_link)
-
-    # Verify artist aliases:
-    assert len(delta_artist_alias_df) >= 2
 
     # Verify products:
     # 2 new products should be in delta_product_link_df (product 2 and product 3)

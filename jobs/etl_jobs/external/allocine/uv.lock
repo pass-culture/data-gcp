@@ -22,7 +22,7 @@ requires-dist = [
     { name = "google-cloud-storage", specifier = ">=2.16.0" },
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "pyarrow", specifier = ">=21.0.0" },
-    { name = "typer", specifier = ">=0.12.3" },
+    { name = "typer", specifier = ">=0.24" },
 ]
 
 [[package]]

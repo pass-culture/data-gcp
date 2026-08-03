@@ -17,7 +17,7 @@ uv run python main.py \
   --lancedb-uri "gs://bucket/lancedb/env" \
   --lancedb-table "item_embeddings" \
   --batch-size 10000 \
-  --vector-column-name "semantic_content_sts"
+  --vector-column-name "semantic_content"
 ```
 
 ### Parameters

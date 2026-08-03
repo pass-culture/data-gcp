@@ -13,6 +13,7 @@ sources:
       - name: applicative_database_allocine_pivot
       - name: applicative_database_allocine_venue_provider
       - name: applicative_database_artist
+      - name: applicative_database_artist_music_platform
       - name: applicative_database_bank_account
       - name: applicative_database_beneficiary_fraud_check
       - name: applicative_database_beneficiary_fraud_review
@@ -68,6 +69,8 @@ sources:
       - name: applicative_database_educational_redactor
       - name: applicative_database_educational_year
       - name: applicative_database_ems_cinema_details
+      - name: applicative_database_event_series
+      - name: applicative_database_event_series_offer_link
       - name: applicative_database_favorite
       - name: applicative_database_feature
       - name: applicative_database_finance_event
@@ -148,6 +151,7 @@ sources:
       - name: gsheet_tiktok_campaign_tag
       - name: gsheet_company_contact
       - name: instagram_post_detail
+      - name: metabase_collection_taxonomy
       - name: metabase_collection
       - name: metabase_core_user
       - name: metabase_query_execution
@@ -191,6 +195,12 @@ sources:
       - name: dms_jeunes_cleaned
       - name: dms_pro_cleaned
       - name: siren_data
+
+  - name: int_metabase
+    schema: int_metabase_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
+    tables:
+      - name: dashboard_documentation
 
   - name: analytics
     schema: analytics_{{ var('ENV_SHORT_NAME') }}

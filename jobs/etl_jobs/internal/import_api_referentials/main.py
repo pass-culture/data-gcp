@@ -3,6 +3,7 @@ import unicodedata
 
 import numpy as np
 import pandas as pd
+import pandas_gbq
 import requests
 
 BACKEND_API_URL = {
@@ -103,8 +104,9 @@ def get_subcategories(gcp_project_id: str, env_short_name: str, url: str) -> Non
         if k in dtype_list:
             merged_df[k] = merged_df[k].astype(v)
 
-    merged_df.to_gbq(
-        f"""raw_{env_short_name}.subcategories""",
+    pandas_gbq.to_gbq(
+        merged_df,
+        f"raw_{env_short_name}.subcategories",
         project_id=gcp_project_id,
         if_exists="replace",
     )
@@ -164,8 +166,9 @@ def get_types(gcp_project_id: str, env_short_name: str, url: str) -> None:
     for k, v in TYPES_DTYPES.items():
         if k in dtype_list:
             offer_types[k] = offer_types[k].astype(v)
-    offer_types.to_gbq(
-        f"""raw_{env_short_name}.offer_types""",
+    pandas_gbq.to_gbq(
+        offer_types,
+        f"raw_{env_short_name}.offer_types",
         project_id=gcp_project_id,
         if_exists="replace",
     )

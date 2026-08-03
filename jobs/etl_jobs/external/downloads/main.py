@@ -95,21 +95,27 @@ def run(
         help="Execution date (YYYY-MM-DD). Defaults to today.",
     ),
 ):
-    date = (
-        datetime.strptime(execution_date, "%Y-%m-%d")
-        if execution_date
-        else datetime.today()
-    )
-    logger.info(
-        f"Running downloads job | provider={provider.value} | date={date.date()}"
-    )
+    try:
+        date = (
+            datetime.strptime(execution_date, "%Y-%m-%d")
+            if execution_date
+            else datetime.today()
+        )
+        logger.info(
+            f"Running downloads job | provider={provider.value} | date={date.date()}"
+        )
 
-    if provider == Target.google:
-        get_google(date)
-    elif provider == Target.apple:
-        get_apple(date)
+        if provider == Target.google:
+            get_google(date)
+        elif provider == Target.apple:
+            get_apple(date)
 
-    logger.info("Done")
+        logger.info("Done")
+    except typer.Exit:
+        raise
+    except Exception as e:
+        logger.exception(f"ETL job failed: {e}")
+        raise typer.Exit(code=1) from e
 
 
 if __name__ == "__main__":

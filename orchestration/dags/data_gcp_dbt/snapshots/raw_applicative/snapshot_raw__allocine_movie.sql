@@ -11,7 +11,7 @@
                 tags=["external_dependency"],
                 meta={
                     "external_dag_id": "import_allocine_movies",
-                    "external_task_id": "gce_stop_task",
+                    "external_task_id": "end",
                 },
             )
         )

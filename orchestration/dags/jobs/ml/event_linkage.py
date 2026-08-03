@@ -14,6 +14,7 @@ from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_LINKAGE_DATASET,
     BIGQUERY_ML_PREPROCESSING_DATASET,
+    BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -69,14 +70,21 @@ class GCSConfig(DagBaseConfig):
     delta_event_series_offer_link_gcs_path: str = (
         f"{STORAGE_BASE_PATH}/03_delta_event_series_offer_link.parquet"
     )
+    applicative_event_series_offer_link_gcs_path: str = (
+        f"{STORAGE_BASE_PATH}/applicative_event_series_offer_link.parquet"
+    )
 
 
 class BigQueryConfig(DagBaseConfig):
     event_offer_to_link_table: str = "event_offer_to_link"
     delta_event_series_table: str = "delta_event_series"
     delta_event_series_offer_link_table: str = "delta_event_series_offer_link"
+    applicative_event_series_offer_link_table: str = (
+        "applicative_database_event_series_offer_link"
+    )
     linkage_dataset: str = BIGQUERY_ML_LINKAGE_DATASET
     preprocessing_dataset: str = BIGQUERY_ML_PREPROCESSING_DATASET
+    raw_dataset: str = BIGQUERY_RAW_DATASET
 
 
 class DagConfig(DagBaseConfig):
@@ -121,6 +129,11 @@ with DAG(
             default=DAG_CONFIG.gce.instance_type,
             enum=list(chain(*INSTANCES_TYPES["cpu"].values())),
         ),
+        "linkage_mode": Param(
+            default="incremental",
+            enum=["incremental", "from_scratch"],
+            type="string",
+        ),
     },
 ) as dag:
     with TaskGroup("dag_init") as dag_init:
@@ -131,22 +144,40 @@ with DAG(
             ),
         )
 
-    import_event_offer_to_link_to_gcs = BigQueryInsertJobOperator(
-        project_id=GCP_PROJECT_ID,
-        task_id="import_event_offer_to_link_to_gcs",
-        configuration={
-            "extract": {
-                "sourceTable": {
-                    "projectId": GCP_PROJECT_ID,
-                    "datasetId": DAG_CONFIG.bq.linkage_dataset,
-                    "tableId": DAG_CONFIG.bq.event_offer_to_link_table,
-                },
-                "compression": None,
-                "destinationUris": DAG_CONFIG.gcs.event_offer_to_link_gcs_path,
-                "destinationFormat": "PARQUET",
-            }
-        },
-    )
+    with TaskGroup("import_data_to_gcs") as import_data_to_gcs:
+        import_event_offer_to_link_to_gcs = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
+            task_id="import_event_offer_to_link_to_gcs",
+            configuration={
+                "extract": {
+                    "sourceTable": {
+                        "projectId": GCP_PROJECT_ID,
+                        "datasetId": DAG_CONFIG.bq.linkage_dataset,
+                        "tableId": DAG_CONFIG.bq.event_offer_to_link_table,
+                    },
+                    "compression": None,
+                    "destinationUris": DAG_CONFIG.gcs.event_offer_to_link_gcs_path,
+                    "destinationFormat": "PARQUET",
+                }
+            },
+        )
+
+        import_applicative_event_series_offer_link_to_gcs = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
+            task_id="import_applicative_event_series_offer_link_to_gcs",
+            configuration={
+                "extract": {
+                    "sourceTable": {
+                        "projectId": GCP_PROJECT_ID,
+                        "datasetId": DAG_CONFIG.bq.raw_dataset,
+                        "tableId": DAG_CONFIG.bq.applicative_event_series_offer_link_table,
+                    },
+                    "compression": None,
+                    "destinationUris": DAG_CONFIG.gcs.applicative_event_series_offer_link_gcs_path,
+                    "destinationFormat": "PARQUET",
+                }
+            },
+        )
 
     with TaskGroup("vm_init") as vm_init:
         gce_instance_start = StartGCEOperator(
@@ -191,16 +222,18 @@ with DAG(
             """,
     )
 
+    # The linkage_mode param is used to determine whether to re-cluster all offers from scratch or to perform an incremental update.
     create_delta_event_series = SSHGCEOperator(
         task_id="create_delta_event_series",
         instance_name=DAG_CONFIG.gce.instance_name,
         base_dir=DAG_CONFIG.base_dir,
-        command=f"""             uv run python cli/3_create_delta_event_tables.py \
-                --offer-event-filepath {DAG_CONFIG.gcs.event_offer_to_link_gcs_path} \
-                --similarities-filepath {DAG_CONFIG.gcs.similarities_gcs_path} \
-                --delta-events-filepath {DAG_CONFIG.gcs.delta_event_series_gcs_path} \
-                --delta-event-offer-link-filepath {DAG_CONFIG.gcs.delta_event_series_offer_link_gcs_path}
-            """,
+        command="uv run python cli/3_create_delta_event_tables.py "
+        f"--offer-event-filepath {DAG_CONFIG.gcs.event_offer_to_link_gcs_path} "
+        f"--similarities-filepath {DAG_CONFIG.gcs.similarities_gcs_path} "
+        f"--event-series-offer-link-filepath {DAG_CONFIG.gcs.applicative_event_series_offer_link_gcs_path} "
+        f"--delta-events-filepath {DAG_CONFIG.gcs.delta_event_series_gcs_path} "
+        f"--delta-event-offer-link-filepath {DAG_CONFIG.gcs.delta_event_series_offer_link_gcs_path} "
+        "{%- if params['linkage_mode'] == 'from_scratch'  %} --from-scratch{%- endif %}",
     )
 
     with TaskGroup(
@@ -229,7 +262,7 @@ with DAG(
 
     (
         dag_init
-        >> import_event_offer_to_link_to_gcs
+        >> import_data_to_gcs
         >> vm_init
         >> embed_offer_images
         >> compute_similarities

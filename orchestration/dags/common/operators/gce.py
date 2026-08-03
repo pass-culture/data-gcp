@@ -1,4 +1,5 @@
 import subprocess
+import time
 import typing as t
 from datetime import datetime
 
@@ -19,7 +20,58 @@ from common.config import (
 from common.hooks.gce import DeferrableSSHGCEJobManager, GCEHook, SSHGCEJobManager
 from common.hooks.image import MACHINE_TYPE
 from common.hooks.network import BASE_NETWORK_LIST, GKE_NETWORK_LIST
-from common.triggers.gce import DeferrableSSHJobMonitorTrigger
+from common.triggers.gce import (
+    DeferrableSSHJobMonitorTrigger,
+    GCEInstanceRunningTrigger,
+)
+
+
+def _clean_optional_template(value: t.Optional[str]) -> t.Optional[str]:
+    """Normalize a rendered optional template field to None when unset.
+
+    A Param defaulting to None renders through Jinja as the literal string
+    "None", which is truthy and would otherwise be treated as a real value.
+    """
+    if value is None:
+        return None
+    value = str(value).strip()
+    if value.lower() in ("", "none", "null"):
+        return None
+    return value
+
+
+def parse_duration_to_seconds(value: t.Union[str, int, None]) -> t.Optional[int]:
+    """Parse a duration into seconds.
+
+    Accepts an int (seconds), a plain numeric string ("3600"), or a compound
+    duration string like "1d2h3m4s", "12h", "90m". Returns None for empty input.
+    """
+    if value is None or value == "":
+        return None
+    if isinstance(value, int):
+        return value
+    value = str(value).strip()
+    if value.isdigit():
+        return int(value)
+    units = {"d": 86400, "h": 3600, "m": 60, "s": 1}
+    total = 0
+    num = ""
+    matched = False
+    for char in value:
+        if char.isdigit():
+            num += char
+        elif char in units and num:
+            total += int(num) * units[char]
+            num = ""
+            matched = True
+        else:
+            raise ValueError(f"Invalid duration string: {value!r}")
+    if num:  # trailing bare number is treated as seconds
+        total += int(num)
+        matched = True
+    if not matched:
+        raise ValueError(f"Invalid duration string: {value!r}")
+    return total
 
 
 class StartGCEOperator(BaseOperator):
@@ -34,6 +86,12 @@ class StartGCEOperator(BaseOperator):
         "gpu_type",
         "gpu_count",
         "additional_scopes",
+        "provisioning_model",
+        "max_run_duration",
+        "request_valid_for_duration",
+        "reservation_name",
+        "deferrable",
+        "poll_interval",
     ]
 
     def __init__(
@@ -48,6 +106,13 @@ class StartGCEOperator(BaseOperator):
         gpu_type: t.Optional[str] = None,
         gpu_count: int = 0,
         additional_scopes: t.List[str] = None,
+        provisioning_model: str = "STANDARD",
+        max_run_duration: t.Union[str, int, None] = None,
+        request_valid_for_duration: t.Union[str, int, None] = None,
+        reservation_name: t.Optional[str] = None,
+        # deferrable only affects FLEX_START requests: Defaults to True
+        deferrable: bool = True,
+        poll_interval: int = 180,
         *args,
         **kwargs,
     ):
@@ -62,12 +127,23 @@ class StartGCEOperator(BaseOperator):
         self.use_gke_network = use_gke_network
         self.gce_zone = gce_zone
         self.additional_scopes = additional_scopes or []
+        self.provisioning_model = provisioning_model
+        self.max_run_duration = max_run_duration
+        self.request_valid_for_duration = request_valid_for_duration
+        self.reservation_name = reservation_name
+        self.deferrable = deferrable
+        self.poll_interval = poll_interval
 
     def execute(self, context) -> None:
         self.gpu_count = int(self.gpu_count)
         image_type = MACHINE_TYPE["cpu"] if self.gpu_count == 0 else MACHINE_TYPE["gpu"]
         gce_networks = (
             GKE_NETWORK_LIST if self.use_gke_network is True else BASE_NETWORK_LIST
+        )
+        is_flex_start = (self.provisioning_model or "STANDARD").upper() == "FLEX_START"
+        max_run_seconds = parse_duration_to_seconds(self.max_run_duration)
+        request_valid_seconds = parse_duration_to_seconds(
+            self.request_valid_for_duration
         )
         with GCEHook(
             source_image_type=image_type,
@@ -76,14 +152,56 @@ class StartGCEOperator(BaseOperator):
             gce_zone=self.gce_zone,
             additional_scopes=self.additional_scopes,
         ) as hook:
-            hook.start_vm(
+            # For deferrable FLEX_START, submit asynchronously and hand off to the trigger
+            # to free the worker slot. Otherwise, start_vm blocks until the VM is RUNNING.
+            already_running = hook.start_vm(
                 self.instance_name,
                 self.instance_type,
                 preemptible=self.preemptible,
                 labels=self.labels,
                 gpu_type=self.gpu_type,
                 gpu_count=self.gpu_count,
+                provisioning_model=self.provisioning_model,
+                max_run_duration_seconds=max_run_seconds,
+                request_valid_for_duration_seconds=request_valid_seconds,
+                reservation_name=_clean_optional_template(self.reservation_name),
+                wait_for_running=not (is_flex_start and self.deferrable),
             )
+
+        if is_flex_start and self.deferrable and not already_running:
+            # Set an absolute deadline as a worst-case backstop using GCP's hard queue cap.
+            # DWS handles the requested timeout natively, while the absolute timestamp
+            # ensures the timeout survives triggerer restarts without resetting.
+            deadline = (
+                time.time()
+                + GCEHook.FLEX_START_MAX_QUEUE_SECONDS
+                + GCEHook.BOOT_MARGIN_SECONDS
+            )
+            self.log.info(
+                f"Flex-start request for {self.instance_name} submitted; deferring "
+                "until the instance reaches RUNNING."
+            )
+            self.defer(
+                trigger=GCEInstanceRunningTrigger(
+                    instance_name=self.instance_name,
+                    zone=self.gce_zone,
+                    poll_interval=self.poll_interval,
+                    deadline=deadline,
+                ),
+                method_name="execute_complete",
+            )
+
+    def execute_complete(
+        self, context: t.Dict[str, t.Any], event: t.Optional[t.Dict[str, t.Any]] = None
+    ) -> None:
+        if event is None:
+            raise AirflowException("No event received in trigger callback")
+        if event.get("status") == "running_ok":
+            self.log.info(f"Instance {event.get('instance')} is RUNNING.")
+            return
+        raise AirflowException(
+            event.get("message", "Flex-start instance failed to start")
+        )
 
 
 class CleanGCEOperator(BaseOperator):
@@ -110,11 +228,12 @@ class CleanGCEOperator(BaseOperator):
 
 
 class DeleteGCEOperator(BaseOperator):
-    template_fields = ["instance_name"]
+    template_fields = ["instance_name", "gce_zone"]
 
     def __init__(
         self,
         instance_name: str,
+        gce_zone: str = GCE_ZONE,
         *args,
         **kwargs,
     ):
@@ -123,26 +242,31 @@ class DeleteGCEOperator(BaseOperator):
         kwargs.setdefault("weight_rule", "absolute")
         super(DeleteGCEOperator, self).__init__(*args, **kwargs)
         self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
+        self.gce_zone = gce_zone
 
     def execute(self, context):
-        with GCEHook() as hook:
+        # Delete in the zone the VM was created in: deleting in the wrong zone
+        # 404s silently and leaves a billable instance running.
+        with GCEHook(gce_zone=self.gce_zone) as hook:
             hook.delete_vm(self.instance_name)
 
 
 class StopGCEOperator(BaseOperator):
-    template_fields = ["instance_name"]
+    template_fields = ["instance_name", "gce_zone"]
 
     def __init__(
         self,
         instance_name: str,
+        gce_zone: str = GCE_ZONE,
         *args,
         **kwargs,
     ):
         super(StopGCEOperator, self).__init__(*args, **kwargs)
         self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
+        self.gce_zone = gce_zone
 
     def execute(self, context):
-        with GCEHook() as hook:
+        with GCEHook(gce_zone=self.gce_zone) as hook:
             hook.stop_vm(self.instance_name)
 
 

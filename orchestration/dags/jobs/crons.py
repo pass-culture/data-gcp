@@ -5,9 +5,9 @@ SCHEDULE_DICT = {
         "stg": "0 12 * * 3",  # every Wednesday at 12:00 PM
     },
     "algo_training_graph_embeddings": {
-        "prod": "0 10 * * 4",  # every Thursday at 10:00 AM
-        "stg": "0 10 * * 3",  # every Wednesday at 10:00 AM
-        "dev": "0 10 * * 2",  # every Tuesday at 10:00 AM
+        "prod": "0 5 * * 4",  # every Thursday at 5:00 AM
+        "stg": "0 5 * * 3",  # every Wednesday at 5:00 AM
+        "dev": "0 5 * * 2",  # every Tuesday at 5:00 AM
     },
     "algo_default_deployment": "0 6 * * *",
     "artist_linkage": "0 12 * * *",
@@ -75,7 +75,7 @@ SCHEDULE_DICT = {
         "dev": None,
     },
     "item_embedding": {
-        "prod": "0 7 * * *",  # every day at 7:00 AM
+        "prod": "0 4 * * *",  # every day at 4:00 AM
         "stg": "0 7 * * *",  # every day at 7:00 AM
         "dev": "0 7 * * 1",  # every Monday at 7:00 AM
     },

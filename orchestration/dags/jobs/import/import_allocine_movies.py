@@ -4,35 +4,26 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
 from common import macros
-from common.callback import on_failure_vm_callback
+from common.alerts.task_fail import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
 )
-from common.operators.gce import (
-    DeleteGCEOperator,
-    InstallDependenciesOperator,
-    SSHGCEOperator,
-    StartGCEOperator,
+from common.operators.kubernetes import (
+    DEFAULT_CONTAINER_RESOURCES,
+    CustomKubernetesPodOperator,
 )
 from common.utils import get_airflow_schedule
 
-GCE_INSTANCE = f"import-allocine-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/external/allocine"
+MICROSERVICE_PATH = "jobs/etl_jobs/external/allocine"
 DAG_NAME = "import_allocine_movies"
 
 default_args = {
     "start_date": datetime.datetime(2026, 1, 1),
-    "on_failure_callback": on_failure_vm_callback,
+    "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": datetime.timedelta(minutes=2),
-}
-
-dag_config = {
-    "GCP_PROJECT_ID": GCP_PROJECT_ID,
-    "ENV_SHORT_NAME": ENV_SHORT_NAME,
 }
 
 with DAG(
@@ -65,54 +56,45 @@ with DAG(
     },
     template_searchpath=DAG_FOLDER,
     user_defined_macros=macros.default,
-    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ) as dag:
     start = EmptyOperator(task_id="start")
 
-    gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE,
-        task_id="gce_start_task",
-        labels={"dag_name": DAG_NAME},
-    )
-
-    fetch_install_code = InstallDependenciesOperator(
-        task_id="fetch_install_code",
-        instance_name=GCE_INSTANCE,
-        branch="{{ params.branch }}",
-        python_version="3.13",
-        base_dir=BASE_PATH,
-        dag=dag,
-        retries=2,
-    )
-
-    synchronize_movies = SSHGCEOperator(
+    synchronize_movies = CustomKubernetesPodOperator(
         task_id="synchronize_movies",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="uv run main.py sync-movies",
+        orchestration_mode="celery",
+        queue="k8s-watcher",
+        runtime_mode="gitsynced",
+        runtime_branch="{{ params.branch }}",
+        runtime_image="py313",
+        runtime_image_tag="v1",
+        microservice_path=MICROSERVICE_PATH,
+        arguments=["main.py", "sync-movies"],
+        container_resources=DEFAULT_CONTAINER_RESOURCES,
     )
 
-    synchronize_posters = SSHGCEOperator(
+    synchronize_posters = CustomKubernetesPodOperator(
         task_id="synchronize_posters",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="uv run main.py sync-posters --max-retries {{ params.poster_retries }} --poster-download-backoff {{ params.poster_download_backoff }} --poster-download-backoff-unit {{ params.poster_download_backoff_unit }}",
-    )
-
-    gce_instance_stop = DeleteGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_stop_task"
+        orchestration_mode="celery",
+        queue="k8s-watcher",
+        runtime_mode="gitsynced",
+        runtime_branch="{{ params.branch }}",
+        runtime_image="py313",
+        runtime_image_tag="v1",
+        microservice_path=MICROSERVICE_PATH,
+        arguments=[
+            "main.py",
+            "sync-posters",
+            "--max-retries",
+            "{{ params.poster_retries }}",
+            "--poster-download-backoff",
+            "{{ params.poster_download_backoff }}",
+            "--poster-download-backoff-unit",
+            "{{ params.poster_download_backoff_unit }}",
+        ],
+        container_resources=DEFAULT_CONTAINER_RESOURCES,
     )
 
     end = EmptyOperator(task_id="end", dag=dag)
 
-    (
-        start
-        >> gce_instance_start
-        >> fetch_install_code
-        >> synchronize_movies
-        >> synchronize_posters
-        >> gce_instance_stop
-        >> end
-    )
+    start >> synchronize_movies >> synchronize_posters >> end

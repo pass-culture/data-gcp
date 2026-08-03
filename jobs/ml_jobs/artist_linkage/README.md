@@ -19,48 +19,7 @@ to their respective artists by:
 
 ## Main Scripts
 
-### 1. `link_products_to_artists_from_scratch.py`
-
-**Purpose**: Creates initial artist-product links when starting from an empty
-database or completely rebuilding the linkage system.
-
-**What it does**:
-
-- Loads product data and filters it according to configured rules
-- Preprocesses artist names for matching (removes common noise words like
-  "multi-artistes", "compilation", etc.)
-- Creates artist clusters by grouping products with similar artist names
-  within the same category
-- Matches new artist clusters against Wikidata to identify existing artists
-- Generates three output tables:
-  - `artist_df`: New artist entities with metadata
-  - `artist_alias_df`: Artist name variations and aliases
-  - `product_artist_link_df`: Product-to-artist mappings
-
-**Input files**:
-
-- `product_filepath`: Parquet file containing product data
-- `wiki_base_path` + `wiki_file_name`: Wikidata extraction for artist matching
-
-**Output files**:
-
-- `output_artist_file_path`: Artists table
-- `output_artist_alias_file_path`: Artist aliases table
-- `output_product_artist_link_filepath`: Product-artist links table
-
-**Usage**:
-
-```bash
-python link_products_to_artists_from_scratch.py \
-  --product-filepath /path/to/products.parquet \
-  --wiki-base-path /path/to/wiki/ \
-  --wiki-file-name wikidata_artists.parquet \
-  --output-artist-file-path /path/to/output_artists.parquet \
-  --output-artist-alias-file-path /path/to/output_aliases.parquet \
-  --output-product-artist-link-filepath /path/to/output_links.parquet
-```
-
-### 2. `link_new_products_to_artists.py`
+### 1. `link_new_products_to_artists.py`
 
 **Purpose**: Incremental updates to existing artist-product links when new
 products are added to the system.
@@ -80,7 +39,6 @@ products are added to the system.
 **Input files**:
 
 - `artist_filepath`: Existing artists table
-- `artist_alias_file_path`: Existing artist aliases table
 - `product_artist_link_filepath`: Current product-artist links
 - `product_filepath`: Current products data
 - `wiki_base_path` + `wiki_file_name`: Wikidata extraction
@@ -88,7 +46,6 @@ products are added to the system.
 **Output files**:
 
 - `output_delta_artist_file_path`: New artists to add
-- `output_delta_artist_alias_file_path`: New artist aliases to add
 - `output_delta_product_artist_link_filepath`: Product link changes
   (additions/removals)
 
@@ -97,25 +54,24 @@ products are added to the system.
 ```bash
 python link_new_products_to_artists.py \
   --artist-filepath /path/to/existing_artists.parquet \
-  --artist-alias-file-path /path/to/existing_aliases.parquet \
   --product-artist-link-filepath /path/to/existing_links.parquet \
   --product-filepath /path/to/current_products.parquet \
   --wiki-base-path /path/to/wiki/ \
   --wiki-file-name wikidata_artists.parquet \
   --output-delta-artist-file-path /path/to/new_artists.parquet \
-  --output-delta-artist-alias-file-path /path/to/new_aliases.parquet \
   --output-delta-product-artist-link-filepath /path/to/link_changes.parquet
 ```
 
-### 3. `refresh_artist_metadatas.py`
+### 2. `refresh_artist_metadatas.py`
 
 **Purpose**: Refresh artist metadata (descriptions, images, etc.) from
 Wikidata for existing artists without modifying product-artist links.
 
 **What it does**:
 
-- Loads existing artist and artist alias tables
-- Retrieves Wikidata IDs for artists from the artist alias table
+- Loads existing artist and rebuild artist aliases based on artists, artist names
+  in products and product artists links
+- Retrieves Wikidata IDs for artists from the artist aliases
 - Matches artists against the latest Wikidata extraction to refresh metadata
 - Updates artist descriptions and images while preserving existing links
 - Generates delta tables for metadata updates only (no product link changes)
@@ -124,13 +80,11 @@ Wikidata for existing artists without modifying product-artist links.
 **Input files**:
 
 - `artist_file_path`: Existing artists table
-- `artist_alias_file_path`: Existing artist aliases table
 - `wiki_base_path` + `wiki_file_name`: Wikidata extraction for metadata refresh
 
 **Output files**:
 
 - `output_delta_artist_file_path`: Artist metadata updates
-- `output_delta_artist_alias_file_path`: Empty (no alias changes)
 - `output_delta_product_artist_link_file_path`: Empty (no link changes)
 
 **Usage**:
@@ -138,11 +92,9 @@ Wikidata for existing artists without modifying product-artist links.
 ```bash
 python refresh_artist_metadatas.py \
   --artist-file-path /path/to/existing_artists.parquet \
-  --artist-alias-file-path /path/to/existing_aliases.parquet \
   --wiki-base-path /path/to/wiki/ \
   --wiki-file-name wikidata_artists.parquet \
   --output-delta-artist-file-path /path/to/metadata_updates.parquet \
-  --output-delta-artist-alias-file-path /path/to/empty_aliases.parquet \
   --output-delta-product-artist-link-file-path /path/to/empty_links.parquet
 ```
 
@@ -168,7 +120,6 @@ Both scripts include comprehensive sanity checks:
 - Validates all products are successfully linked to artists
 - Prevents duplicate entries in output tables
 - Ensures new artists don't conflict with existing ones
-- Validates artist aliases don't already exist
 
 ### Incremental Processing
 
@@ -177,7 +128,6 @@ handles:
 
 - Product additions
 - Product removals
-- Artist alias expansion
 - Minimal data processing for better performance
 
 ## Configuration

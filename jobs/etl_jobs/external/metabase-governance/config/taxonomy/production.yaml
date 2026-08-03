@@ -1,0 +1,28 @@
+# Collection taxonomy rules — classify every public Metabase collection into
+# {squad, tier, certified, in_scope}. Applied by domain/taxonomy.py over the
+
+# Root collections (location='/') that are in scope for classification.
+# (internal only; everything else is out of scope)
+in_scope_root_collection_ids: [608]
+
+# Any collection with this id in its ancestor chain is "certified"
+# ("# Chiffres clés).
+certified_ancestor_collection_id: 617
+
+# Squads = direct children of {in_scope_root_collection_ids}.
+# Matched by collection_id in the ancestor chain (only depth-1 under the in-scope root).
+squads:
+  - {collection_id: 617, label: global}
+  - {collection_id: 622, label: produit}
+  - {collection_id: 618, label: developpement}
+  - {collection_id: 619, label: crem}
+  - {collection_id: 623, label: pilotage}
+  - {collection_id: 2193, label: cabinet}
+
+# Tier resolved by matching ancestor collection *titles* (SQL-LIKE patterns,
+# same mechanism as the archiving rules). The deepest matching ancestor wins.
+tier_rules:
+  - {tier: key_dashboard, ancestor_title_pattern: "%tableau de bord clé%"}
+  - {tier: key_dashboard, ancestor_title_pattern: "%indicateurs clés%"}
+  - {tier: thematique, ancestor_title_pattern: "%thématique%"}
+  - {tier: chantier, ancestor_title_pattern: "%chantier%"}

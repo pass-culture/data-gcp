@@ -9,7 +9,7 @@ dependencies = [
     "pandas>=2.2.0",
     "pandas-gbq>=0.26.0",
     "requests>=2.32.3",
-    "typer>=0.15.0",
+    "typer>=0.24",
 ]
 
 [tool.ruff]

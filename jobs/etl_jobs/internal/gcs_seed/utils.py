@@ -2,7 +2,7 @@ import os
 
 from google.cloud import bigquery
 
-PROJECT_NAME = os.environ.get("PROJECT_NAME")
+PROJECT_NAME = os.environ.get("GCP_PROJECT_ID")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 SEED_DATASET = f"seed_{ENVIRONMENT_SHORT_NAME}"
 DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME = (

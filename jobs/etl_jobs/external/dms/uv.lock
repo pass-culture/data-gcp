@@ -231,7 +231,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=3.0.2" },
     { name = "pyarrow", specifier = ">=24.0.0" },
     { name = "requests", specifier = ">=2.33.1" },
-    { name = "typer", specifier = ">=0.7.0" },
+    { name = "typer", specifier = ">=0.24" },
     { name = "urllib3", specifier = ">=2.6.3" },
 ]
 

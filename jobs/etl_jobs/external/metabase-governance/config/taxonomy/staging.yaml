@@ -1,0 +1,11 @@
+in_scope_root_collection_ids: [47] # internal (whitelist; everything else is out of scope)
+
+certified_ancestor_collection_id: null
+
+squads: []
+
+tier_rules:
+  - {tier: key_dashboard, ancestor_title_pattern: "%tableau de bord clé%"}
+  - {tier: key_dashboard, ancestor_title_pattern: "%indicateurs clés%"}
+  - {tier: thematique, ancestor_title_pattern: "%thématique%"}
+  - {tier: chantier, ancestor_title_pattern: "%chantier%"}

@@ -11,6 +11,13 @@ from constants import (
     destination_table_schema_pro,
 )
 
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+app = typer.Typer()
+
 # Constants for targets
 SCHEMAS = {
     "jeunes": destination_table_schema_jeunes,
@@ -27,7 +34,7 @@ def load_json_from_gcs(bucket_name, file_path):
 
 def parse_api_result(updated_since, dms_target, bucket_name):
     """Parse API result based on target type."""
-    logging.info(f"Start parsing API result for {dms_target} since {updated_since}")
+    logger.info(f"Start parsing API result for {dms_target} since {updated_since}")
 
     # Load appropriate schema
     schema = SCHEMAS.get(dms_target)
@@ -50,7 +57,7 @@ def parse_api_result(updated_since, dms_target, bucket_name):
 
 def parse_result(result, df_applications, dms_target):
     """General parser that delegates to target-specific logic."""
-    logging.info(f"Parsing data for target: {dms_target}")
+    logger.info(f"Parsing data for target: {dms_target}")
     for data in result["data"]:
         for node in data["demarche"]["dossiers"]["edges"]:
             dossier = node.get("node")
@@ -146,16 +153,21 @@ def save_results(df_applications, dms_target, updated_since, bucket_name):
         f"gs://{bucket_name}/dms_export/dms_{dms_target}_{updated_since}.parquet"
     )
     df_applications.to_parquet(output_path, engine="pyarrow", index=False)
-    logging.info(f"Results saved to {output_path}")
+    logger.info(f"Results saved to {output_path}")
 
 
+@app.command()
 def parse_results_to_table(
-    target: str = typer.Option(None, help="pro or jeunes"),
-    updated_since: str = typer.Option(None, help="updated since"),
-    bucket_name: str = typer.Option(None, help="data GCS bucket name"),
+    target: str = typer.Option(..., help="pro or jeunes"),
+    updated_since: str = typer.Option(..., help="updated since"),
+    bucket_name: str = typer.Option(..., help="data GCS bucket name"),
 ):
-    parse_api_result(updated_since, target, bucket_name)
+    try:
+        parse_api_result(updated_since, target, bucket_name)
+    except Exception as e:
+        logger.error(f"Failed to parse DMS subscriptions: {e}")
+        raise typer.Exit(code=1)
 
 
 if __name__ == "__main__":
-    typer.run(parse_results_to_table)
+    app()

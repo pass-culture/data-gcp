@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: int_metabase__card_canonical
+    description: "{{ doc('description__int_metabase__card_canonical') }}"
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "is_canonical = (card_id = canonical_card_id)"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "is_duplicate = (card_id != canonical_card_id)"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "has_duplicates = (group_size >= 2)"
+    columns:
+      - name: card_id
+        description: "{{ doc('column__asset_id') }}"
+        data_tests:
+          - not_null
+          - unique
+      - name: metric_key
+        description: "{{ doc('column__metric_key') }}"
+        data_tests:
+          - not_null
+          # Exactly one canonical card per metric group (dedup is deterministic).
+          - unique:
+              config:
+                where: "is_canonical"
+      - name: canonical_card_id
+        description: "{{ doc('column__canonical_card_id') }}"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('int_metabase__card_canonical')
+                field: card_id
+      - name: canonical_dashboard_id
+        description: "{{ doc('column__canonical_dashboard_id') }}"
+      - name: is_canonical
+        description: "{{ doc('column__is_canonical') }}"
+        data_tests:
+          - not_null
+      - name: is_duplicate
+        description: "{{ doc('column__is_duplicate') }}"
+        data_tests:
+          - not_null
+      - name: card_quality
+        description: "{{ doc('column__card_quality') }}"
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1

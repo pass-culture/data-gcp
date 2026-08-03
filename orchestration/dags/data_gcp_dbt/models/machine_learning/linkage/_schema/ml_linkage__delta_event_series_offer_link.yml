@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: ml_linkage__delta_event_series_offer_link
+    description: "{{ doc('description__ml_linkage__delta_event_series_offer_link') }}"
+    columns:
+      - name: event_series_id
+        description: "{{ doc('column__event_series_id') }}"
+        data_tests:
+          - not_null
+          - dbt_utils.not_empty_string
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+        data_tests:
+          - not_null
+          - dbt_utils.not_empty_string
+      - name: action
+        description: "{{ doc('column__delta_action') }}"
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['add', 'update', 'remove']
+      - name: comment
+        description: "{{ doc('column__delta_comment') }}"

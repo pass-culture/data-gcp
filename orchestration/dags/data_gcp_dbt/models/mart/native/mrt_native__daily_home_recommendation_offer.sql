@@ -51,6 +51,7 @@ with
             doe.event_date as module_displayed_date,
             mc.user_id,
             mc.unique_session_id,
+            doe.cloud_run_revision_name,
             doe.reco_call_id,
             doe.playlist_origin,
             doe.context,
@@ -66,21 +67,21 @@ with
             mc.parent_entry_id,
             mc.parent_home_type,
             mc.module_type
-        from {{ ref("int_pcreco__displayed_offer_event") }} doe
+        from {{ ref("int_pcreco__displayed_offer_event") }} as doe
         inner join
-            module_context mc
-            on mc.module_displayed_date = doe.event_date
-            and mc.reco_call_id = doe.reco_call_id
-            and mc.user_id = doe.user_id
+            module_context as mc
+            on doe.event_date = mc.module_displayed_date
+            and doe.reco_call_id = mc.reco_call_id
+            and doe.user_id = mc.user_id
         where
-            playlist_origin = "recommendation"
+            doe.playlist_origin = 'recommendation'
             {% if is_incremental() %}
-                and event_date
+                and doe.event_date
                 between date_sub(date('{{ ds() }}'), interval 3 day) and date(
                     '{{ ds() }}'
                 )
             {% else %}
-                and event_date
+                and doe.event_date
                 between date_sub(date('{{ ds() }}'), interval 60 day) and date(
                     '{{ ds() }}'
                 )
@@ -90,6 +91,7 @@ with
 select
     oc.module_displayed_date,
     oc.reco_call_id,
+    oc.cloud_run_revision_name,
     oc.playlist_origin,
     oc.context,
     oc.user_id,
@@ -110,30 +112,31 @@ select
     max(mc.consult_offer_timestamp) as consult_offer_timestamp,
     max(mc.booking_timestamp) as booking_timestamp,
     max(mc.fav_timestamp) as fav_timestamp
-from offer_context oc
+from offer_context as oc
 left join
-    {{ ref("mrt_native__daily_user_home_module") }} mc
+    {{ ref("mrt_native__daily_user_home_module") }} as mc
     on oc.module_displayed_date = mc.module_displayed_date
     and oc.reco_call_id = mc.reco_call_id
     and oc.playlist_origin = mc.module_type
     and oc.offer_id = mc.offer_id
 group by
-    module_displayed_date,
-    reco_call_id,
-    playlist_origin,
-    context,
-    user_id,
-    offer_id,
-    offer_display_order,
-    user_location_type,
-    entry_id,
-    entry_name,
-    module_id,
-    module_name,
-    parent_module_id,
-    parent_module_type,
-    parent_entry_id,
-    parent_home_type,
-    module_type,
-    unique_session_id,
-    booking_id
+    oc.module_displayed_date,
+    oc.reco_call_id,
+    oc.cloud_run_revision_name,
+    oc.playlist_origin,
+    oc.context,
+    oc.user_id,
+    oc.offer_id,
+    oc.offer_display_order,
+    oc.user_location_type,
+    oc.entry_id,
+    oc.entry_name,
+    oc.module_id,
+    oc.module_name,
+    oc.parent_module_id,
+    oc.parent_module_type,
+    oc.parent_entry_id,
+    oc.parent_home_type,
+    oc.module_type,
+    oc.unique_session_id,
+    mc.booking_id

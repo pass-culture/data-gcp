@@ -1,0 +1,47 @@
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+
+SELECT
+  ?wikidata_id
+  (MIN(?spotify_id_raw) AS ?spotify_id)
+  (MIN(?isni_id_raw) AS ?isni_id)
+  (MIN(?apple_music_id_raw) AS ?apple_music_id)
+  (MIN(?deezer_id_raw) AS ?deezer_id)
+  (MIN(?genius_id_raw) AS ?genius_id)
+  (MIN(?soundcloud_id_raw) AS ?soundcloud_id)
+  (
+    IF(COUNT(DISTINCT ?genius_id_raw) > 0, 1, 0) +
+    IF(COUNT(DISTINCT ?spotify_id_raw) > 0, 1, 0) +
+    IF(COUNT(DISTINCT ?deezer_id_raw) > 0, 1, 0) +
+    IF(COUNT(DISTINCT ?isni_id_raw) > 0, 1, 0) +
+    IF(COUNT(DISTINCT ?apple_music_id_raw) > 0, 1, 0) +
+    IF(COUNT(DISTINCT ?soundcloud_id_raw) > 0, 1, 0)
+  AS ?matching_score)
+WHERE {
+  # 1. OPTIMIZATION: Filter first using UNION (checks existence only) and blank nodes ([]).
+  # Must be identical to extract_music_artists.rq to ensure the same set of artists is targeted.
+  {
+    { ?wikidata_id wdt:P2373 [] . } # Has Genius ID
+    UNION
+    { ?wikidata_id wdt:P1902 [] . } # Has Spotify ID
+    UNION
+    { ?wikidata_id wdt:P2722 [] . } # Has Deezer ID
+    UNION
+    { ?wikidata_id wdt:P2850 [] . } # Has Apple Music ID
+    UNION
+    { ?wikidata_id wdt:P3040 [] . } # Has SoundCloud ID
+  }
+
+  # 2. FILTER: Ensure it is the right type
+  ?wikidata_id wdt:P31 ?type .
+  VALUES ?type { wd:Q5 wd:Q215380 wd:Q216337 wd:Q641066 } # Human, Musical Group, Boys Band or Girls Band
+
+  # 3. FETCH IDs
+  OPTIONAL { ?wikidata_id wdt:P2373 ?genius_id_raw . }
+  OPTIONAL { ?wikidata_id wdt:P1902 ?spotify_id_raw . }
+  OPTIONAL { ?wikidata_id wdt:P2722 ?deezer_id_raw . }
+  OPTIONAL { ?wikidata_id wdt:P213 ?isni_id_raw . }
+  OPTIONAL { ?wikidata_id wdt:P2850 ?apple_music_id_raw . }
+  OPTIONAL { ?wikidata_id wdt:P3040 ?soundcloud_id_raw . }
+}
+GROUP BY ?wikidata_id

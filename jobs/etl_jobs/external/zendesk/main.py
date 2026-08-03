@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -17,6 +18,8 @@ from utils import (
     save_multiple_partitions_to_bq,
     save_to_bq,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def main(
@@ -44,57 +47,63 @@ def main(
         job (str): Specify which job to run ('macro_stat', 'ticket_stat', or 'both').
         prior_date (str): Optional prior date (YYYY-MM-DD) to calculate the ndays range.
     """
-    # Determine the reference date (either provided prior_date or today)
-    reference_date = (
-        datetime.strptime(prior_date, "%Y-%m-%d") if prior_date else datetime.now()
-    )
-    export_date = reference_date.strftime("%Y-%m-%d")
-
-    # Initialize the Zendesk API client
-    zendesk_api = ZendeskAPI(
-        {
-            "subdomain": ZENDESK_SUBDOMAIN,
-            "email": ZENDESK_API_EMAIL,
-            "token": ZENDESK_API_KEY,
-        }
-    )
-    from_date = (reference_date - timedelta(days=ndays)).strftime("%Y-%m-%d")
-    to_date = prior_date
-
-    # Run macro usage statistics job
-    if job in ("macro_stat", "both"):
-        macro_df = zendesk_api.create_macro_stat_df()
-        print("Running macro usage statistics job")
-        save_to_bq(
-            df=macro_df,
-            table_name="zendesk_macro_usage",
-            schema_field=MACRO_ACTIONS_COLUMNS_BQ_SCHEMA_FIELD,
-            event_date=export_date,
-            date_column="export_date",
+    try:
+        # Determine the reference date (either provided prior_date or today)
+        reference_date = (
+            datetime.strptime(prior_date, "%Y-%m-%d") if prior_date else datetime.now()
         )
+        export_date = reference_date.strftime("%Y-%m-%d")
 
-    if job in ("ticket_stat", "both"):
-        print("Running ticket statistics job")
-        run_ticket_stat_job(
-            zendesk_api=zendesk_api,
-            from_date=from_date,
-            to_date=to_date,
-            export_date=export_date,
-            status=None,
-            table_name="zendesk_ticket",
-            filter_field="updated_at",
+        # Initialize the Zendesk API client
+        zendesk_api = ZendeskAPI(
+            {
+                "subdomain": ZENDESK_SUBDOMAIN,
+                "email": ZENDESK_API_EMAIL,
+                "token": ZENDESK_API_KEY,
+            }
         )
+        from_date = (reference_date - timedelta(days=ndays)).strftime("%Y-%m-%d")
+        to_date = prior_date
 
-    if job in ("survey_response_stat", "both"):
-        print("Running survey response statistics job")
-        run_satisfaction_stat_job(
-            zendesk_api=zendesk_api,
-            from_date=from_date,
-            to_date=to_date,
-            export_date=export_date,
-        )
+        # Run macro usage statistics job
+        if job in ("macro_stat", "both"):
+            macro_df = zendesk_api.create_macro_stat_df()
+            print("Running macro usage statistics job")
+            save_to_bq(
+                df=macro_df,
+                table_name="zendesk_macro_usage",
+                schema_field=MACRO_ACTIONS_COLUMNS_BQ_SCHEMA_FIELD,
+                event_date=export_date,
+                date_column="export_date",
+            )
 
-    print("All jobs completed")
+        if job in ("ticket_stat", "both"):
+            print("Running ticket statistics job")
+            run_ticket_stat_job(
+                zendesk_api=zendesk_api,
+                from_date=from_date,
+                to_date=to_date,
+                export_date=export_date,
+                status=None,
+                table_name="zendesk_ticket",
+                filter_field="updated_at",
+            )
+
+        if job in ("survey_response_stat", "both"):
+            print("Running survey response statistics job")
+            run_satisfaction_stat_job(
+                zendesk_api=zendesk_api,
+                from_date=from_date,
+                to_date=to_date,
+                export_date=export_date,
+            )
+
+        print("All jobs completed")
+    except typer.Exit:
+        raise
+    except Exception as e:
+        logger.exception(f"ETL job failed: {e}")
+        raise typer.Exit(code=1) from e
 
 
 def run_ticket_stat_job(

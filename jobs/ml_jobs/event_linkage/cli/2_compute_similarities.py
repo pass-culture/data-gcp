@@ -11,6 +11,7 @@ from src.constants import (
     FULL_NAME_SIMILARITY_COL,
     IMAGE_EMBEDDING_COL,
     IMAGE_SIMILARITY_COL,
+    MIN_DESCRIPTION_LENGTH,
     NAME_SIMILARITY_COL,
     OFFER_DESCRIPTION_COL,
     OFFER_ID_COL,
@@ -124,12 +125,12 @@ def compute_similarities(selected_df: pd.DataFrame) -> pd.DataFrame:
     preprocessed_descriptions_1 = (
         filtered_df[f"{OFFER_ID_COL}_1"]
         .map(offer_id_to_description)
-        .pipe(description_preprocessing)
+        .pipe(description_preprocessing, min_length=MIN_DESCRIPTION_LENGTH)
     )
     preprocessed_descriptions_2 = (
         filtered_df[f"{OFFER_ID_COL}_2"]
         .map(offer_id_to_description)
-        .pipe(description_preprocessing)
+        .pipe(description_preprocessing, min_length=MIN_DESCRIPTION_LENGTH)
     )
     description_similarity = rapidfuzz.process.cpdist(
         preprocessed_descriptions_1,

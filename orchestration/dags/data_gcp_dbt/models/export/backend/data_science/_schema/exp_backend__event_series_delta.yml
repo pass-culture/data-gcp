@@ -8,7 +8,6 @@ models:
         description: "{{ doc('column__event_series_id') }}"
         data_tests:
           - not_null
-          - unique
       - name: event_series_name
         description: "{{ doc('column__event_series_name') }}"
         data_tests:

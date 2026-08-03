@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 import pandas as pd
@@ -6,6 +7,8 @@ import typer
 from utils import chunks, query, save
 from utils.constant import GEOPF_EXPECTED_ADDRESS_COLUMNS as EXPECTED_ADDRESS_COLUMNS
 from utils.geocoding import AddressGeocoder
+
+logger = logging.getLogger(__name__)
 
 run = typer.Typer()
 
@@ -19,29 +22,35 @@ def user_adress(
     max_rows: int = typer.Option(1000, help="Max rows to process"),
     chunk_size: int = typer.Option(500, help="Chunk size"),
 ) -> None:
-    df = query(source_dataset_id, source_table_name, limit=max_rows)
-    if df.shape[0] == 0:
-        typer.echo("No data to process")
-        return
+    try:
+        df = query(source_dataset_id, source_table_name, limit=max_rows)
+        if df.shape[0] == 0:
+            typer.echo("No data to process")
+            return
 
-    print(f"Processing {df.shape[0]} rows... ")
-    geocoder = AddressGeocoder()
-    results = []
-    for chunk in chunks(
-        df[["user_id", "user_full_address"]].to_dict(orient="records"), chunk_size
-    ):
-        r = geocoder.geocode_batch(
-            addresses=chunk, address_columns=["user_full_address"]
-        )
-        results.extend(r)
-        print(f"Processed {len(r)} rows... ")
+        print(f"Processing {df.shape[0]} rows... ")
+        geocoder = AddressGeocoder()
+        results = []
+        for chunk in chunks(
+            df[["user_id", "user_full_address"]].to_dict(orient="records"), chunk_size
+        ):
+            r = geocoder.geocode_batch(
+                addresses=chunk, address_columns=["user_full_address"]
+            )
+            results.extend(r)
+            print(f"Processed {len(r)} rows... ")
 
-    df_results = pd.DataFrame(results, columns=EXPECTED_ADDRESS_COLUMNS)
-    df_results["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"Saving {df_results.shape[0]} rows... ")
-    save(df_results, destination_dataset_id, destination_table_name)
+        df_results = pd.DataFrame(results, columns=EXPECTED_ADDRESS_COLUMNS)
+        df_results["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f"Saving {df_results.shape[0]} rows... ")
+        save(df_results, destination_dataset_id, destination_table_name)
 
-    print(f"Done processing {df.shape[0]} rows")
+        print(f"Done processing {df.shape[0]} rows")
+    except typer.Exit:
+        raise
+    except Exception as e:
+        logger.exception(f"ETL job failed: {e}")
+        raise typer.Exit(code=1) from e
 
 
 if __name__ == "__main__":

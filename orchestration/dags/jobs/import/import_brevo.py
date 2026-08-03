@@ -4,7 +4,7 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
 from common import macros
-from common.callback import on_failure_vm_callback
+from common.alerts.task_fail import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -12,11 +12,9 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.bigquery import bigquery_job_task
-from common.operators.gce import (
-    DeleteGCEOperator,
-    InstallDependenciesOperator,
-    SSHGCEOperator,
-    StartGCEOperator,
+from common.operators.kubernetes import (
+    DEFAULT_CONTAINER_RESOURCES,
+    CustomKubernetesPodOperator,
 )
 from common.utils import (
     depends_loop,
@@ -29,19 +27,19 @@ from dependencies.brevo.import_brevo import (
 )
 
 DAG_NAME = "import_brevo_v2"
-GCE_INSTANCE = f"import-brevo-2-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/jobs/brevo/"
+MICROSERVICE_PATH = "jobs/etl_jobs/jobs/brevo"
+SPARSE_PATHS = [
+    MICROSERVICE_PATH,
+    "jobs/etl_jobs/connectors",
+    "jobs/etl_jobs/http_tools",
+]
 yesterday = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-dag_config = {
-    "GCP_PROJECT": GCP_PROJECT_ID,
-    "ENV_SHORT_NAME": ENV_SHORT_NAME,
-}
 
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
-    "on_failure_callback": on_failure_vm_callback,
+    "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }
@@ -72,53 +70,56 @@ with DAG(
         "async": Param(default=True, type="boolean"),
         "async_concurent": Param(default=5, type="integer"),
     },
-    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ) as dag:
-    gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE,
-        task_id="gce_start_task",
-        labels={"job_type": "long_task", "dag_name": DAG_NAME},
-    )
+    _kpo_common = {
+        "orchestration_mode": "celery",
+        "queue": "k8s-watcher",
+        "runtime_mode": "gitsynced",
+        "runtime_branch": "{{ params.branch }}",
+        "runtime_image": "py313",
+        "runtime_image_tag": "v1",
+        "microservice_path": MICROSERVICE_PATH,
+        "runtime_sparse_paths": SPARSE_PATHS,
+        "runtime_workdir": MICROSERVICE_PATH,
+        "env_vars": {"PYTHONPATH": "/app/jobs/etl_jobs", "GCP_PROJECT": GCP_PROJECT_ID},
+        "container_resources": DEFAULT_CONTAINER_RESOURCES,
+    }
 
-    fetch_install_code = InstallDependenciesOperator(
-        task_id="fetch_install_code",
-        instance_name=GCE_INSTANCE,
-        branch="{{ params.branch }}",
-        python_version="'3.10'",
-        base_dir=BASE_PATH,
-        retries=2,
-    )
-
-    import_pro_transactional_data_to_tmp = SSHGCEOperator(
+    import_pro_transactional_data_to_tmp = CustomKubernetesPodOperator(
         task_id="import_pro_transactional_data_to_tmp",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="""
-            uv run python main.py \
-            --target transactional \
-            --audience pro \
-            --start-date {{ params.start_date }} \
-            --end-date {{ params.end_date }}{% if params['async'] %} \
-            --async --max-concurrent {{ params.async_concurent }}{% endif %}
-        """,
+        arguments=[
+            "main.py",
+            "--target",
+            "transactional",
+            "--audience",
+            "pro",
+            "--start-date",
+            "{{ params.start_date }}",
+            "--end-date",
+            "{{ params.end_date }}",
+            "{{ '--async --max-concurrent ' + params.async_concurent|string if params['async'] else '' }}",
+        ],
         do_xcom_push=True,
+        **_kpo_common,
     )
 
-    import_native_transactional_data_to_tmp = SSHGCEOperator(
+    import_native_transactional_data_to_tmp = CustomKubernetesPodOperator(
         task_id="import_native_transactional_data_to_tmp",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="""
-            python -m jobs.brevo.main \
-            --target transactional \
-            --audience native \
-            --start-date {{ params.start_date }} \
-            --end-date {{ params.end_date }}{% if params['async'] %} \
-            --async --max-concurrent {{ params.async_concurent }}{% endif %}
-        """,
+        arguments=[
+            "main.py",
+            "--target",
+            "transactional",
+            "--audience",
+            "native",
+            "--start-date",
+            "{{ params.start_date }}",
+            "--end-date",
+            "{{ params.end_date }}",
+            "{{ '--async --max-concurrent ' + params.async_concurent|string if params['async'] else '' }}",
+        ],
         do_xcom_push=True,
+        **_kpo_common,
     )
 
     ### jointure avec pcapi pour retirer les emails
@@ -141,26 +142,38 @@ with DAG(
         default_end_operator=end_raw,
     )
 
-    import_pro_newsletter_data_to_raw = SSHGCEOperator(
+    import_pro_newsletter_data_to_raw = CustomKubernetesPodOperator(
         task_id="import_pro_newsletter_data_to_raw",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="python -m jobs.brevo.main --target newsletter --audience pro --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
+        arguments=[
+            "main.py",
+            "--target",
+            "newsletter",
+            "--audience",
+            "pro",
+            "--start-date",
+            "{{ params.start_date }}",
+            "--end-date",
+            "{{ params.end_date }}",
+        ],
         do_xcom_push=True,
+        **_kpo_common,
     )
 
-    import_native_newsletter_data_to_raw = SSHGCEOperator(
+    import_native_newsletter_data_to_raw = CustomKubernetesPodOperator(
         task_id="import_native_newsletter_data_to_raw",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="python -m jobs.brevo.main --target newsletter --audience native --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
+        arguments=[
+            "main.py",
+            "--target",
+            "newsletter",
+            "--audience",
+            "native",
+            "--start-date",
+            "{{ params.start_date }}",
+            "--end-date",
+            "{{ params.end_date }}",
+        ],
         do_xcom_push=True,
-    )
-
-    gce_instance_stop = DeleteGCEOperator(
-        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+        **_kpo_common,
     )
 
     clean_table_jobs = {}
@@ -201,25 +214,20 @@ with DAG(
         default_end_operator=end,
     )
 
-    (gce_instance_start >> fetch_install_code)
-
     (
-        fetch_install_code
-        >> import_pro_transactional_data_to_tmp
+        import_pro_transactional_data_to_tmp
         >> import_pro_newsletter_data_to_raw
-        >> gce_instance_stop
-    )
-
-    (
-        fetch_install_code
-        >> import_native_transactional_data_to_tmp
-        >> import_native_newsletter_data_to_raw
-        >> gce_instance_stop
-    )
-
-    (
-        gce_instance_stop
         >> end_job
+    )
+
+    (
+        import_native_transactional_data_to_tmp
+        >> import_native_newsletter_data_to_raw
+        >> end_job
+    )
+
+    (
+        end_job
         >> raw_table_tasks
         >> end_raw
         >> clean_table_tasks

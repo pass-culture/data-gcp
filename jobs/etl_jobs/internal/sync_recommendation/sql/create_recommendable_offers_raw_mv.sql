@@ -76,6 +76,9 @@ USING gist(venue_geo);
 CREATE INDEX IF NOT EXISTS venue_idx_offer_recommendable_raw_{{ ts_nodash }}
 ON public.recommendable_offers_raw_mv_tmp(venue_id);
 
+CREATE INDEX IF NOT EXISTS item_venue_idx_offer_recommendable_raw_{{ ts_nodash }}
+ON public.recommendable_offers_raw_mv_tmp(item_id, venue_id);
+
 -- Refresh state
 refresh materialized view recommendable_offers_raw_mv_tmp
 ;

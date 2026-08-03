@@ -7,9 +7,15 @@ import typer
 from core.fs import load_sql
 from core.utils import ENV_SHORT_NAME, get_clickhouse_client
 
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 logger = logging.getLogger(__name__)
 
+app = typer.Typer()
 
+
+@app.command()
 def run(
     table_name: str = typer.Option(
         ...,
@@ -51,4 +57,4 @@ def run(
 
 
 if __name__ == "__main__":
-    typer.run(run)
+    app()

@@ -166,9 +166,7 @@ def build_artist_alias(
 def sanity_checks(
     delta_product_df: pd.DataFrame,
     delta_artist_df: pd.DataFrame,
-    delta_artist_alias_df: pd.DataFrame,
     artist_df: pd.DataFrame,
-    artist_alias_df: pd.DataFrame,
 ) -> None:
     """
     Perform sanity checks on delta dataframes before updating the database.
@@ -176,7 +174,6 @@ def sanity_checks(
     1. No duplicate entries exist in any delta dataframe
     2. All products have been successfully linked to artists (no null artist_id)
     3. No new artists being added already exist in the database
-    4. No new artist aliases being added already exist in the database
     Args:
         delta_product_df (pd.DataFrame): DataFrame containing new/updated products
         delta_artist_df (pd.DataFrame): DataFrame containing new artists to be added
@@ -219,25 +216,6 @@ def sanity_checks(
         not delta_artist_df.drop(columns=[ACTION_KEY, COMMENT_KEY]).duplicated().any()
     ), "Duplicate entries in delta_artist_df"
 
-    # 3. Artist Aliases
-    already_existing_artist_aliases = delta_artist_alias_df.merge(
-        artist_alias_df,
-        how="outer",
-        on=ALIAS_MERGE_COLUMNS,
-        indicator=True,
-    ).loc[lambda df: df._merge == "both"]
-    if len(already_existing_artist_aliases) > 0:
-        logger.error("Found existing artist aliases after matching.")
-        logger.error(already_existing_artist_aliases)
-        raise ValueError(
-            "There are artist aliases that already exist in the database after matching."
-        )
-    assert (
-        not delta_artist_alias_df.drop(columns=[ACTION_KEY, COMMENT_KEY])
-        .duplicated()
-        .any()
-    ), "Duplicate entries in delta_artist_alias_df"
-
 
 # %%
 app = typer.Typer()
@@ -253,7 +231,6 @@ def main(
     wiki_file_name: str = typer.Option(),
     # Output files
     output_delta_artist_file_path: str = typer.Option(),
-    output_delta_artist_alias_file_path: str = typer.Option(),
     output_delta_product_artist_link_filepath: str = typer.Option(),
 ) -> None:
     # 1. Load data
@@ -324,7 +301,7 @@ def main(
     )
 
     # 6. Create new artists and artist aliases
-    delta_product_df, delta_artist_df, delta_artist_alias_df = create_artists_tables(
+    delta_product_df, delta_artist_df = create_artists_tables(
         preproc_unlinked_products_df=preproc_unlinked_products_df,
         exploded_artist_alias_df=exploded_artist_alias_df,
         products_to_remove_df=products_to_remove_df,
@@ -336,14 +313,11 @@ def main(
     sanity_checks(
         delta_product_df,
         delta_artist_df,
-        delta_artist_alias_df,
         artist_df,
-        artist_alias_df,
     )
 
     # 8. Save files
     delta_artist_df.to_parquet(output_delta_artist_file_path, index=False)
-    delta_artist_alias_df.to_parquet(output_delta_artist_alias_file_path, index=False)
     delta_product_df.to_parquet(output_delta_product_artist_link_filepath, index=False)
 
 

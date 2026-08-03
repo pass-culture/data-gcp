@@ -273,6 +273,17 @@ class ContentfulClient:
         self.datetime = datetime.today()
         self.page_size = 500
         self.contentful_modules = self.set_contentful_modules(playlists_names)
+        self._tag_name_cache: dict[str, str] = self.fetch_all_tags()
+
+    def fetch_all_tags(self) -> dict[str, str]:
+        tags = {}
+        response = self.client._http_get(
+            self.client.environment_url("/tags"), {}
+        ).json()
+        for tag in response.get("items", []):
+            tags[tag["sys"]["id"]] = tag["name"]
+        print(f"Fetched {len(tags)} tags from Contentful")
+        return tags
 
     def set_contentful_modules(self, playlists_names):
         return (
@@ -324,9 +335,7 @@ class ContentfulClient:
         contentful_tags_id = []
         contentful_tags_name = []
         for tag in module._metadata["tags"]:
-            tag_name = self.client._http_get(
-                self.client.environment_url(f"/tags/{tag.id}"), {}
-            ).json()["name"]
+            tag_name = self._tag_name_cache[tag.id]
             contentful_tags_id.append(tag.id)
             self.add_tag_to_df(tag.id, tag_name, module.id)
             contentful_tags_name.append(tag_name)

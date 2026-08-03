@@ -2,3 +2,4 @@
 {% docs column__event_series_name %}Name of the event series.{% enddocs %}
 {% docs column__event_series_description %}Short description of the event series.{% enddocs %}
 {% docs column__event_series_image_url %}URL of the image associated with the event series.{% enddocs %}
+{% docs column__event_series_mediation_uuid %}Name of the image file related to the event series. Is a deterministic UUID based on the file URL.{% enddocs %}

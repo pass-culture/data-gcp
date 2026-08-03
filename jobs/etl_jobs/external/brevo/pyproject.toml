@@ -73,3 +73,8 @@ python_version = "3.13"
 show_column_numbers = true
 follow_imports = "normal"
 ignore_missing_imports = true
+
+[tool.uv]
+constraint-dependencies = [
+    "urllib3 >= 2.7.0", # CVE-2026-44432, CVE-2026-44431, PYSEC-2026-141, PYSEC-2026-142
+]

@@ -7,7 +7,7 @@ ID_COLUMN = "item_id"
 
 
 def parquet_batch_generator(
-    parquet_uri: str, batch_size: int, vector_column_name: str = "semantic_content_sts"
+    parquet_uri: str, batch_size: int, vector_column_name: str = "semantic_content"
 ):
     """Yields pyarrow.RecordBatch from a Parquet directory stored on GCS or local."""
     try:

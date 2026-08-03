@@ -9,7 +9,12 @@ from core.utils import (
     get_clickhouse_client,
 )
 
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 logger = logging.getLogger(__name__)
+
+app = typer.Typer()
 
 DATABASE = ["tmp", "intermediate", "analytics"]
 
@@ -44,9 +49,10 @@ def init() -> None:
         raise RuntimeError("Failed to create GCS named collection") from e
 
 
+@app.command()
 def run():
     init()
 
 
 if __name__ == "__main__":
-    typer.run(run)
+    app()

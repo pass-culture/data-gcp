@@ -12,6 +12,14 @@ title: Metrics
 {% docs column__total_cancelled_bookings %}Total number of cancelled bookings.{% enddocs %}
 {% docs column__total_cancelled_individual_bookings %} Total number of cancelled individual bookings. {% enddocs %}
 {% docs column__total_collective_bookings %} Total number of collective bookings. {% enddocs %}
+{% docs column__total_collective_amount_spent %} Total amount spent for collective bookings. {% enddocs %}
+{% docs column__cumulative_total_collective_bookings %}
+Cumulative total number of collective bookings for the same venue geography from the start of the given school year up to and including the specified month.
+{% enddocs %}
+
+{% docs column__cumulative_total_collective_amount_spent %}
+Cumulative total amount spent for collective bookings for the same venue geography from the start of the given school year up to and including the specified month.
+{% enddocs %}
 {% docs column__total_collective_offers %}The total number of collective offers.{% enddocs %}
 {% docs column__total_collective_real_revenue %} Total actual revenue from collective bookings. {% enddocs %}
 {% docs column__total_collective_theoretic_revenue %} Total theoretical revenue from collective bookings. {% enddocs %}
@@ -52,6 +60,13 @@ title: Metrics
 {% docs column__total_reimbursement_points %}The total number of reimbursement points for the local authority.{% enddocs %}
 {% docs column__total_stock_quantity %} Total remaining stock quantity. {% enddocs %}
 {% docs column__total_students %}The total number of students for the educational institution.{% enddocs %}
+{% docs column__total_eligible_students %}
+Total number of students eligible for EAC (Education Artistique et Culturelle) within the territory for the specified month and school year.
+{% enddocs %}
+
+{% docs column__total_engaged_students %}
+Total number of students who participated in at least one EAC activity within the territory for the specified month and school year.
+{% enddocs %}
 {% docs column__total_theoretic_revenue %} Total theoretical revenue from all bookings. {% enddocs %}
 {% docs column__total_theoretical_amount_spent %} Total theoretical amount that would have been spent based on expected transactions. {% enddocs %}
 {% docs column__total_theoretical_amount_spent_in_digital_goods %} Total theoretical amount spent on digital goods based on expected transactions. {% enddocs %}

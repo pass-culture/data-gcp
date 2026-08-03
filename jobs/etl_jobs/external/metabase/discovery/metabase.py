@@ -12,10 +12,73 @@ import re
 from pathlib import Path
 from typing import Any
 
-from api.client import CARD_DEPENDENCIES_CACHE_PATH, MetabaseClient
+from api.client import CARD_DEPENDENCIES_CACHE_PATH, DASHBOARD_DEPENDENCIES_CACHE_PATH, MetabaseClient
 from api.models import CardDependencyInfo, TableDependency
 
 logger = logging.getLogger(__name__)
+
+
+def build_dashboard_dependency_cache(
+    client: MetabaseClient,
+    impacted_card_ids: set[str],
+    *,
+    cache_path: Path = DASHBOARD_DEPENDENCIES_CACHE_PATH,
+) -> dict[str, list[dict[str, Any]]]:
+    """
+    Iterates over every dashboard, fetches its details, and records which
+    dashboards reference any of the provided card IDs.
+
+    Args:
+        client: Authenticated MetabaseClient.
+        impacted_card_ids: Set of card IDs to track.
+        cache_path: Where to write the JSON cache.
+
+    Returns:
+        A dict mapping each impacted card ID to the dashboards that contain it,
+    as a list of ``{"id": int, "name": str}`` descriptors.
+    """
+    logger.info("Fetching all dashboards from Metabase API...")
+    dashboards_list = client.fetch_all_dashboards().get("data", [])
+    logger.info("Fetched %d dashboards", len(dashboards_list))
+
+    cache: dict[str, list[dict[str, Any]]] = {}
+    fetch_errors = 0
+
+    for item in dashboards_list:
+        dash_id = item.get("id")
+        dash_name = item.get("name", "")
+
+        try:
+            dashboard_details = client.fetch_dashboard_details(dash_id)
+        except Exception as e:
+            logger.warning("Could not read dashboard %s (%s): %s", dash_id, dash_name, e)
+            fetch_errors += 1
+            continue
+
+        for dashcard in dashboard_details.get("dashcards", []):
+            card_id = dashcard.get("card_id")
+            if card_id is None:
+                continue
+
+            card_id_str = str(card_id)
+            if card_id_str not in impacted_card_ids:
+                continue
+
+            cache.setdefault(card_id_str, []).append({"id": dash_id, "name": dash_name})
+
+    if fetch_errors:
+        logger.warning("%d dashboard(s) could not be fetched and were skipped", fetch_errors)
+
+    _persist_cache(cache, cache_path)
+    return cache
+
+
+def _persist_cache(cache: dict[str, Any], cache_path: Path) -> None:
+    """Write cache on disk in JSON format."""
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(cache_path, "w") as f:
+        json.dump(cache, f, indent=2)
+    logger.info("Saved dashboard dependency cache to %s", cache_path)
 
 
 def build_card_dependency_cache(
@@ -110,10 +173,8 @@ def build_card_dependency_cache(
             cache[table_name].cards_using_table[str(card_id)] = info
 
     # Write cache to disk
-    cache_path.parent.mkdir(parents=True, exist_ok=True)
     serialized = {name: dep.model_dump(by_alias=True) for name, dep in cache.items()}
-    with open(cache_path, "w") as f:
-        json.dump(serialized, f, indent=2)
+    _persist_cache(serialized, cache_path)
 
     logger.info(
         "Built card dependency cache: %d tables, %d total card references → %s",

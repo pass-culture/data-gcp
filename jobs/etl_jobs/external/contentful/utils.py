@@ -3,7 +3,7 @@ import os
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 
-GCP_PROJECT = os.environ.get("GCP_PROJECT")
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 BIGQUERY_RAW_DATASET = f"raw_{ENV_SHORT_NAME}"
 BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
@@ -19,9 +19,9 @@ def access_secret_data(project_id, secret_id, version_id=1, default=None):
         return default
 
 
-PREVIEW_TOKEN = access_secret_data(GCP_PROJECT, "contentful-preview-token")
-TOKEN = access_secret_data(GCP_PROJECT, "contentful-token")
-SPACE_ID = access_secret_data(GCP_PROJECT, "contentful-space-id")
+PREVIEW_TOKEN = access_secret_data(GCP_PROJECT_ID, "contentful-preview-token")
+TOKEN = access_secret_data(GCP_PROJECT_ID, "contentful-token")
+SPACE_ID = access_secret_data(GCP_PROJECT_ID, "contentful-space-id")
 
 ENTRIES_DTYPE = {
     "title": str,

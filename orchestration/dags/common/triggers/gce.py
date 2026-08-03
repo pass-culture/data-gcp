@@ -1,10 +1,156 @@
 import asyncio
+import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, Tuple
 
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from common.config import GCP_PROJECT_ID, SSH_USER, USE_INTERNAL_IP
-from common.hooks.gce import DeferrableSSHGCEJobManager
+from common.hooks.gce import DeferrableSSHGCEJobManager, GCEHook
+from googleapiclient.errors import HttpError
+
+
+class GCEInstanceRunningTrigger(BaseTrigger):
+    """Polls a (flex-start) GCE instance until it reaches RUNNING.
+
+    Used by the deferrable ``StartGCEOperator`` so the Airflow worker slot is
+    freed while a DWS flex-start request sits queued in PENDING waiting for GPU
+    capacity (which can take up to the configured ``request_valid_for_duration``,
+    max 2h).
+    """
+
+    TERMINAL_STATES = GCEHook.TERMINAL_STATES
+    FATAL_HTTP_STATUSES = {401, 403}
+
+    def __init__(
+        self,
+        instance_name: str,
+        zone: str,
+        poll_interval: int = 120,
+        deadline: float = 0.0,
+    ):
+        super().__init__()
+        self.instance_name = instance_name
+        self.zone = zone
+        self.poll_interval = poll_interval
+        # Absolute epoch deadline (not a relative timeout): this survives a
+        # triggerer restart, which re-instantiates the trigger from `serialize()`
+        # and would otherwise silently reset a relative-duration countdown.
+        self.deadline = deadline
+
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+        return (
+            self.__class__.__module__ + "." + self.__class__.__name__,
+            {
+                "instance_name": self.instance_name,
+                "zone": self.zone,
+                "poll_interval": self.poll_interval,
+                "deadline": self.deadline,
+            },
+        )
+
+    def _handle_http_error(self, exc) -> TriggerEvent | None:
+        """Handles HTTP errors during polling, distinguishing between fatal and transient errors."""
+        if exc.resp is not None and exc.resp.status in self.FATAL_HTTP_STATUSES:
+            return TriggerEvent(
+                {
+                    "status": "error",
+                    "instance": self.instance_name,
+                    "message": f"Failed to check status of {self.instance_name}: {exc}",
+                }
+            )
+
+        self.log.warning(
+            f"Transient error checking {self.instance_name} status: {exc}. Retrying."
+        )
+        if time.time() > self.deadline:
+            return TriggerEvent(
+                {
+                    "status": "error",
+                    "instance": self.instance_name,
+                    "message": (
+                        f"Timed out waiting for {self.instance_name} to "
+                        "reach RUNNING (last check failed with a transient error)."
+                    ),
+                }
+            )
+        return None
+
+    def _evaluate_status(self, instance) -> TriggerEvent | None:
+        """Evaluates the state of the GCE instance and returns a TriggerEvent if terminal."""
+        if instance is None:
+            return TriggerEvent(
+                {
+                    "status": "error",
+                    "instance": self.instance_name,
+                    "message": (
+                        f"Instance {self.instance_name} no longer exists: the "
+                        "flex-start request likely expired without securing capacity."
+                    ),
+                }
+            )
+
+        status = instance.get("status")
+        self.log.info(f"Instance {self.instance_name} status: {status}")
+
+        if status == "RUNNING":
+            return TriggerEvent(
+                {"status": "running_ok", "instance": self.instance_name}
+            )
+
+        if status in self.TERMINAL_STATES:
+            return TriggerEvent(
+                {
+                    "status": "error",
+                    "instance": self.instance_name,
+                    "message": (
+                        f"Instance {self.instance_name} reached terminal state "
+                        f"{status} before RUNNING; flex-start failed to secure capacity."
+                    ),
+                }
+            )
+
+        if time.time() > self.deadline:
+            return TriggerEvent(
+                {
+                    "status": "error",
+                    "instance": self.instance_name,
+                    "message": f"Timed out waiting for {self.instance_name} to reach RUNNING (last status: {status}).",
+                }
+            )
+        return None
+
+    async def run(self):
+        loop = asyncio.get_event_loop()
+
+        # Build the hook once. Because the underlying googleapiclient transport is
+        # thread-unsafe, we pin it to a dedicated single-threaded executor to
+        # prevent cross-thread access and native crashes in the shared triggerer pool.
+        hook = GCEHook(gce_zone=self.zone)
+        executor = ThreadPoolExecutor(max_workers=1)
+        try:
+            while True:
+                try:
+                    instance = await loop.run_in_executor(
+                        executor, hook.get_instance, self.instance_name
+                    )
+                except HttpError as exc:
+                    event = self._handle_http_error(exc)
+                    if event:
+                        yield event
+                        return
+                    await asyncio.sleep(self.poll_interval)
+                    continue
+
+                event = self._evaluate_status(instance)
+                if event:
+                    yield event
+                    return
+
+                await asyncio.sleep(self.poll_interval)
+        finally:
+            hook.close()
+            executor.shutdown(wait=False)
 
 
 class DeferrableSSHJobMonitorTrigger(BaseTrigger):

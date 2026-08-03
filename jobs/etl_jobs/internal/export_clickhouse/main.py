@@ -14,7 +14,12 @@ from core.update import (
 )
 from core.utils import get_clickhouse_client
 
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 logger = logging.getLogger(__name__)
+
+app = typer.Typer()
 
 
 def main_update(
@@ -60,6 +65,7 @@ def main_update(
         raise ValueError(f"Mode unknown, got {mode!r}")
 
 
+@app.command()
 def run(
     table_name: str = typer.Option(
         ...,
@@ -109,4 +115,4 @@ def run(
 
 
 if __name__ == "__main__":
-    typer.run(run)
+    app()

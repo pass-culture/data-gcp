@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from typing import Optional
 
@@ -10,10 +11,12 @@ from utils import (
     BIGQUERY_RAW_DATASET,
     ENTRIES_DTYPE,
     ENV_SHORT_NAME,
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
     PREVIEW_TOKEN,
     TOKEN,
 )
+
+logger = logging.getLogger(__name__)
 
 CONTENTFUL_ENTRIES_TABLE_NAME = "contentful_entry"
 CONTENTFUL_RELATIONSHIP_TABLE_NAME = "contentful_relationship"
@@ -32,7 +35,7 @@ def save_raw_modules_to_bq(modules_df, table_name):
     print(f"Will save {nb_rows} rows to {table_name}")
 
     bigquery_client = bigquery.Client()
-    table_id = f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{table_name}${yyyymmdd}"
+    table_id = f"{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.{table_name}${yyyymmdd}"
     job_config = bigquery.LoadJobConfig(
         write_disposition="WRITE_TRUNCATE",
         schema_update_options=[
@@ -67,47 +70,53 @@ def run(
     Args:
         request (flask.Request): The request object.
     """
-    contentful_envs = {
-        "prod": {
-            "env": "production",
-            "access_token": PREVIEW_TOKEN,
-            "api_url": "preview.contentful.com",
-        },
-        "stg": {
-            "env": "testing",
-            "access_token": TOKEN,
-            "api_url": "cdn.contentful.com",
-        },
-        "dev": {
-            "env": "testing",
-            "access_token": TOKEN,
-            "api_url": "cdn.contentful.com",
-        },
-    }
-    playlists_names = parse_playlist_names(playlists_names)
+    try:
+        contentful_envs = {
+            "prod": {
+                "env": "production",
+                "access_token": PREVIEW_TOKEN,
+                "api_url": "preview.contentful.com",
+            },
+            "stg": {
+                "env": "testing",
+                "access_token": TOKEN,
+                "api_url": "cdn.contentful.com",
+            },
+            "dev": {
+                "env": "testing",
+                "access_token": TOKEN,
+                "api_url": "cdn.contentful.com",
+            },
+        }
+        playlists_names = parse_playlist_names(playlists_names)
 
-    config_env = contentful_envs[ENV_SHORT_NAME]
-    contentful_client = ContentfulClient(config_env, playlists_names)
-    df_modules, links_df, tags_df = contentful_client.get_playlists()
+        config_env = contentful_envs[ENV_SHORT_NAME]
+        contentful_client = ContentfulClient(config_env, playlists_names)
+        df_modules, links_df, tags_df = contentful_client.get_playlists()
 
-    for k, v in ENTRIES_DTYPE.items():
-        if k in df_modules.columns:
-            df_modules[k] = df_modules[k].astype(v)
+        for k, v in ENTRIES_DTYPE.items():
+            if k in df_modules.columns:
+                df_modules[k] = df_modules[k].astype(v)
 
-    save_raw_modules_to_bq(
-        df_modules.drop_duplicates(),
-        CONTENTFUL_ENTRIES_TABLE_NAME,
-    )
-    save_raw_modules_to_bq(
-        links_df.drop_duplicates(),
-        CONTENTFUL_RELATIONSHIP_TABLE_NAME,
-    )
-    save_raw_modules_to_bq(
-        tags_df.drop_duplicates(),
-        CONTENTFUL_TAG_TABLE_NAME,
-    )
+        save_raw_modules_to_bq(
+            df_modules.drop_duplicates(),
+            CONTENTFUL_ENTRIES_TABLE_NAME,
+        )
+        save_raw_modules_to_bq(
+            links_df.drop_duplicates(),
+            CONTENTFUL_RELATIONSHIP_TABLE_NAME,
+        )
+        save_raw_modules_to_bq(
+            tags_df.drop_duplicates(),
+            CONTENTFUL_TAG_TABLE_NAME,
+        )
 
-    return "Done"
+        return "Done"
+    except typer.Exit:
+        raise
+    except Exception as e:
+        logger.exception(f"ETL job failed: {e}")
+        raise typer.Exit(code=1) from e
 
 
 if __name__ == "__main__":

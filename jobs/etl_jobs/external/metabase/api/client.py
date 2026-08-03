@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 DATABASE_TABLES_CACHE_PATH = Path("data/cache_database_tables.json")
 CARD_DEPENDENCIES_CACHE_PATH = Path("data/cache_card_dependencies.json")
+DASHBOARD_DEPENDENCIES_CACHE_PATH = Path("data/cache_dashboard_dependencies.json")
 
 # Retry config: 3 attempts, 2–10s exponential backoff
 _RETRY = retry(
@@ -336,6 +337,29 @@ class MetabaseClient:
             A list of card dicts from GET /api/card.
         """
         response = self.session.get(f"{self.host}/api/card")
+        response.raise_for_status()
+        result: list[dict[str, Any]] = response.json()
+        return result
+
+    @_RETRY
+    def fetch_all_dashboards(self) -> list[dict[str, Any]]:
+        """
+        Fetch all dashboards from the Metabase API.
+
+        Returns:
+            A list of dashboard dicts from GET /api/search?type=dashboard.
+        """
+        response = self.session.get(
+            f"{self.host}/api/search",
+            params={"models": "dashboard"},
+        )
+        response.raise_for_status()
+        result: list[dict[str, Any]] = response.json()
+        return result
+
+    @_RETRY
+    def fetch_dashboard_details(self, dash_id: str):
+        response = self.session.get(f"{self.host}/api/dashboard/{dash_id}")
         response.raise_for_status()
         result: list[dict[str, Any]] = response.json()
         return result

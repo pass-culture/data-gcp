@@ -62,9 +62,16 @@ def mock_contentful_client():
             return_value="https://cdn.contentful.com/spaces/test-space-id/environments/test"
         )
 
-        # Mock _http_get method for tag name retrieval
+        # Mock _http_get for prefetch_all_tags
         mock_http_response = MagicMock()
-        mock_http_response.json.return_value = {"name": "test-tag-name"}
+        mock_http_response.json.return_value = {
+            "items": [
+                {
+                    "sys": {"id": "test-tag-123"},
+                    "name": "test-tag-name",
+                }
+            ]
+        }
         mock_client._http_get.return_value = mock_http_response
 
         yield mock_client

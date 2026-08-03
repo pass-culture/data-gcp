@@ -2,35 +2,29 @@ import datetime
 
 from airflow import DAG
 from airflow.models import Param
-from common.callback import on_failure_vm_callback
+from common import macros
+from common.alerts.task_fail import task_fail_slack_alert
 from common.config import (
+    DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
-from common.operators.gce import (
-    DeleteGCEOperator,
-    InstallDependenciesOperator,
-    SSHGCEOperator,
-    StartGCEOperator,
+from common.operators.kubernetes import (
+    DEFAULT_CONTAINER_RESOURCES,
+    CustomKubernetesPodOperator,
 )
 from common.utils import get_airflow_schedule
 
 DAG_NAME = "import_gsheet"
-GCE_INSTANCE = f"import-gsheet-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/external/gsheet"
-dag_config = {
-    "PROJECT_NAME": GCP_PROJECT_ID,
-    "ENV_SHORT_NAME": ENV_SHORT_NAME,
-}
+MICROSERVICE_PATH = "jobs/etl_jobs/external/gsheet"
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
-    "on_failure_callback": on_failure_vm_callback,
+    "on_failure_callback": task_fail_slack_alert,
     "retries": 1,
     "project_id": GCP_PROJECT_ID,
 }
-
 
 with DAG(
     DAG_NAME,
@@ -40,40 +34,26 @@ with DAG(
     schedule=get_airflow_schedule("0 1 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
+    user_defined_macros=macros.default,
+    template_searchpath=DAG_FOLDER,
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         )
     },
-    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ) as dag:
-    gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE,
-        task_id="gce_start_task",
-        labels={"dag_name": DAG_NAME},
-    )
-
-    fetch_install_code = InstallDependenciesOperator(
-        task_id="fetch_install_code",
-        instance_name=GCE_INSTANCE,
-        branch="{{ params.branch }}",
-        python_version="3.13",
-        base_dir=BASE_PATH,
-        retries=2,
-    )
-
-    gsheet_to_bq = SSHGCEOperator(
+    gsheet_to_bq = CustomKubernetesPodOperator(
         task_id="gsheet_to_bq",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="uv run main.py ",
-        do_xcom_push=True,
+        orchestration_mode="celery",
+        queue="k8s-watcher",
+        runtime_mode="gitsynced",
+        runtime_branch="{{ params.branch }}",
+        runtime_image="py313",
+        runtime_image_tag="v1",
+        microservice_path=MICROSERVICE_PATH,
+        arguments=["main.py"],
+        env_vars={"PROJECT_NAME": GCP_PROJECT_ID},
+        container_resources=DEFAULT_CONTAINER_RESOURCES,
     )
-
-    gce_instance_stop = DeleteGCEOperator(
-        task_id="gce_stop_task", instance_name=GCE_INSTANCE
-    )
-
-    (gce_instance_start >> fetch_install_code >> gsheet_to_bq >> gce_instance_stop)

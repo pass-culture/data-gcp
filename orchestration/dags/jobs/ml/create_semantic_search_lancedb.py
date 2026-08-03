@@ -35,7 +35,7 @@ INPUT_FILENAME = "item_embeddings_*.parquet"
 
 ## BigQuery CONSTANTS
 INPUT_BQ_TABLE_NAME = "item_embedding_refactor"
-DEFAULT_VECTOR_COLUMN_NAME = "semantic_content_sts"
+DEFAULT_VECTOR_COLUMN_NAME = "semantic_content"
 
 ## GCS LanceDB CONSTANTS
 LANCEDB_GCS_URI = f"gs://{DATA_GCS_BUCKET_NAME}/semantic_search_lancedb/"
@@ -63,7 +63,7 @@ This DAG creates a LanceDB table with item embeddings for semantic search. It pe
 3. Creates LanceDB table indexed on the vector_embedding_column_name. Stored in GCS at gs://{DATA_GCS_BUCKET_NAME}/semantic_search_lancedb/{ENV_SHORT_NAME}.
 
 Parameters:
-- vector_embedding_column_name: Name of the column containing the vector embeddings in the BigQuery table (default: 'semantic_content_sts').
+- vector_embedding_column_name: Name of the column containing the vector embeddings in the BigQuery table (default: 'semantic_content').
 Make sure this column exists in `ml_feat_<env>_item_embedding_refactor` .
 """
 

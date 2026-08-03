@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: int_metabase__exposure_candidates
+    description: "{{ doc('description__int_metabase__exposure_candidates') }}"
+    columns:
+      - name: asset_id
+        description: "{{ doc('column__asset_id') }}"
+        data_tests:
+          - not_null
+      - name: collection_name
+        description: "{{ doc('column__collection_name') }}"
+        data_tests:
+          - not_null
+      - name: selection_reason
+        description: "{{ doc('column__selection_reason') }}"
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['classified', 'usage_safety_net']

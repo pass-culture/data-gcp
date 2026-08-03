@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: int_metabase__dashboard_markdown
+    description: "{{ doc('description__int_metabase__dashboard_markdown') }}"
+    columns:
+      - name: dashboard_id
+        description: "{{ doc('column__dashboard_id') }}"
+        data_tests:
+          - not_null
+          - unique
+      - name: dashboard_markdown
+        description: "{{ doc('column__dashboard_markdown') }}"

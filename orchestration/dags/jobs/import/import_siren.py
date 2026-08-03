@@ -4,37 +4,29 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
 from common import macros
-from common.callback import on_failure_vm_callback
+from common.alerts.task_fail import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
-from common.operators.gce import (
-    DeleteGCEOperator,
-    InstallDependenciesOperator,
-    SSHGCEOperator,
-    StartGCEOperator,
+from common.operators.kubernetes import (
+    DEFAULT_CONTAINER_RESOURCES,
+    CustomKubernetesPodOperator,
 )
 from common.utils import get_airflow_schedule
 
-FUNCTION_NAME = f"siren_import_{ENV_SHORT_NAME}"
-SIREN_FILENAME = "siren_data.csv"
 schedule = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 */6 * * *"
 
 DAG_NAME = "import_siren_v1"
-GCE_INSTANCE = f"import-siren-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/external/siren"
-dag_config = {
-    "PROJECT_NAME": GCP_PROJECT_ID,
-    "ENV_SHORT_NAME": ENV_SHORT_NAME,
-}
+MICROSERVICE_PATH = "jobs/etl_jobs/external/siren"
+SIREN_ENV_VARS = {"PROJECT_NAME": GCP_PROJECT_ID}
 
 default_dag_args = {
     "start_date": datetime.datetime(2021, 8, 25),
     "retries": 1,
-    "on_failure_callback": on_failure_vm_callback,
+    "on_failure_callback": task_fail_slack_alert,
     "project_id": GCP_PROJECT_ID,
 }
 
@@ -54,45 +46,24 @@ with DAG(
             type="string",
         )
     },
-    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ) as dag:
-    gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE,
-        task_id="gce_start_task",
-        labels={"dag_name": DAG_NAME},
-    )
-
-    fetch_install_code = InstallDependenciesOperator(
-        task_id="fetch_install_code",
-        instance_name=GCE_INSTANCE,
-        branch="{{ params.branch }}",
-        python_version="3.13",
-        base_dir=BASE_PATH,
-        retries=2,
-    )
-
-    siren_to_bq = SSHGCEOperator(
+    siren_to_bq = CustomKubernetesPodOperator(
         task_id="siren_to_bq",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="uv run main.py ",
-        do_xcom_push=True,
-    )
-
-    gce_instance_stop = DeleteGCEOperator(
-        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+        orchestration_mode="celery",
+        queue="k8s-watcher",
+        runtime_mode="gitsynced",
+        runtime_branch="{{ params.branch }}",
+        runtime_image="py313",
+        runtime_image_tag="v1",
+        microservice_path=MICROSERVICE_PATH,
+        arguments=["main.py"],
+        env_vars=SIREN_ENV_VARS,
+        container_resources=DEFAULT_CONTAINER_RESOURCES,
     )
 
     start = EmptyOperator(task_id="start", dag=dag)
 
     end = EmptyOperator(task_id="end", dag=dag)
 
-    (
-        start
-        >> gce_instance_start
-        >> fetch_install_code
-        >> siren_to_bq
-        >> gce_instance_stop
-        >> end
-    )
+    start >> siren_to_bq >> end

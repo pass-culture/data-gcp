@@ -18,7 +18,6 @@ SELECT
   (GROUP_CONCAT(DISTINCT ?genreLabel; separator="|") AS ?genres)
   (GROUP_CONCAT(DISTINCT ?langLabel; separator="|") AS ?languages_spoken)
   (MIN(?birth_date) AS ?birth_date_val)
-  ?matching_score
 WHERE {
   # 1. OPTIMIZATION: Filter first using UNION (checks existence only) and blank nodes ([]). This is much faster than fetching all artists and then filtering them.
   {
@@ -27,6 +26,10 @@ WHERE {
     { ?wikidata_id wdt:P1902 [] . } # Has Spotify ID
     UNION
     { ?wikidata_id wdt:P2722 [] . } # Has Deezer ID
+    UNION
+    { ?wikidata_id wdt:P2850 [] . } # Has Apple Music ID
+    UNION
+    { ?wikidata_id wdt:P3040 [] . } # Has SoundCloud ID
   }
 
   # 2. FILTER: Ensure it is the right type
@@ -64,14 +67,7 @@ WHERE {
   OPTIONAL { ?wikipedia_url_en schema:about ?wikidata_id ; schema:isPartOf <https://en.wikipedia.org/> . }
   BIND(COALESCE(?wikipedia_url_fr, ?wikipedia_url_en) AS ?wikipedia_url)
 
-  # 7. CALCULATE SCORE
-  BIND(
-    (IF(BOUND(?genius_id), 1, 0) +
-     IF(BOUND(?spotify_id), 1, 0) +
-     IF(BOUND(?deezer_id), 1, 0))
-  AS ?matching_score)
-
-  # 8. FILTER: Ensure we have at least one name and one ID
+  # 7. FILTER: Ensure we have at least one name and one ID
   FILTER ((?artist_name_fr != "") || (?artist_name_en != ""))
 }
-GROUP BY ?wikidata_id ?artist_name_fr ?artist_name_en ?artist_description ?wikipedia_url ?img ?gkg_id ?matching_score
+GROUP BY ?wikidata_id ?artist_name_fr ?artist_name_en ?artist_description ?wikipedia_url ?img ?gkg_id

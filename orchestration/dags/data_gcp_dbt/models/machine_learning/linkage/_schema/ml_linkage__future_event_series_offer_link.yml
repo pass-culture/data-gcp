@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: ml_linkage__future_event_series_offer_link
+    description: "{{ doc('description__ml_linkage__future_event_series_offer_link') }}"
+    columns:
+      - name: event_series_id
+        description: "{{ doc('column__event_series_id') }}"
+        data_tests:
+          - not_null
+          - dbt_utils.not_empty_string
+          - relationships:
+              arguments:
+                to: ref('ml_linkage__future_event_series')
+                field: event_series_id
+
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+        data_tests:
+          - not_null
+          - dbt_utils.not_empty_string
+          - unique

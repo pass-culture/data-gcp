@@ -64,3 +64,22 @@ You will find technical related documentation about models and architectural des
         </div>
     </a>
 </div>
+
+# For AI Agents & LLMs
+
+This documentation is available in the [llms.txt](https://llmstxt.org/) format so AI agents can fetch it directly.
+
+<div class="home-features">
+    <a href="/data-gcp/llms.txt">
+        <div class="feature">
+            <h2>🤖 llms.txt</h2>
+            <p>Structured index of all documentation pages.</p>
+        </div>
+    </a>
+    <a href="/data-gcp/llms-full.txt">
+        <div class="feature">
+            <h2>📚 llms-full.txt</h2>
+            <p>Full documentation content in a single file.</p>
+        </div>
+    </a>
+</div>

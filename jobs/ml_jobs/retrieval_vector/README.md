@@ -2,37 +2,66 @@
 
 ## Overview
 
-This API is designed to provide recommendations based on user preferences and vector embeddings. The API leverages **LanceDB** for vector search and supports similar offer, recommendation, semantic search, and filtering mechanisms to deliver personalized results.
+This API is designed to provide recommendations based on two tower embeddings hosted on a vector database. The API leverages **LanceDB** for vector search and supports different request modes including : user recommendation, similar offer retrieval, and trend-based filtering.
 
 ## Key Features
 
-- **User Recommendation** engine: Suggests similar items based on user preferences calculated through vector embeddings (Two Tower Logic).
-- **In the Same Category** engine: Suggests similar items based on a set of provided items calculated through custom vector embeddings or semantics from sentence transformers.
+- **User Recommendation** engine: Suggests similar items based on user preferences. It computes similarity score between user two-tower embeddings and items two tower embeddings, and so returns most similar items to the user.
+- **Similar Offer** engine: Suggests items similar to a given set of items using **only** Two-Tower item vector embeddings.
 - **Vector Search**: Uses **LanceDB** to store and search vectors for items and users.
 - **Filtering**: Applies filtering criteria to narrow down recommendations and get top associated items.
 - **Re-ranking**: Supports re-ranking of results based on additional metrics.
 
-##  About vector search metrics
+## Data model
 
-The vector search is implemented using **LanceDB**, a high-performance vector database.
+### Storage layout
 
-The default similarity metric used for vector search is the **dot product**.
+There is **one** LanceDB table (`metadata/vector/items.lance`) and **two** flat document stores:
 
-**However, if an index has been built for a specific vector search, the metric used to build the index will override the default similarity metric.**
+| Store | Path | Contents |
+|-------|------|----------|
+| LanceDB table | `metadata/vector/` | All item vectors + metadata, searched at query time |
+| Item document store | `metadata/item.docs` | Item id → embedding mapping, used to look up input item vectors in-process |
+| User document store | `metadata/user.docs` | User id → embedding mapping, used to look up the requesting user's vector in-process |
 
-> [LanceDB Doc](https://lancedb.com/docs/search/vector-search/#configure-distance-metric): You can configure the distance metric during search only if there’s no vector index. If a vector index exists, the distance metric will always be the one you specified when creating the index.
+Users are **not** stored in LanceDB. The user vector is retrieved from `user.docs` and then used as the query vector against the LanceDB `items` table.
 
-=> Check create_items_table function in `create_vector_database.py` to see which metric is used.
+### `items` table schema
+
+The table has the following column types:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `vector` | `float32[N]` | Two Tower item embedding. **Has a vector index** (metric set at build time in `cli/create_vector_database.py`). |
+| `raw_embeddings` | `float32[N]` | Identical copy of the Two Tower embedding. **No vector index** — always uses default `dot` product, never overridden by an index metric. |
+| `item_id` | `string` | Item identifier |
+| `booking_number_desc` | `float32[1]` | Pre-computed booking rank (1D vector, used for tops search) |
+| `booking_trend_desc` | `float32[1]` | Booking trend rank (1D vector) |
+| `booking_creation_trend_desc` | `float32[1]` | Creation trend rank (1D vector) |
+| `booking_release_trend_desc` | `float32[1]` | Release trend rank (1D vector) |
+| `category`, `subcategory_id`, `search_group_name` | `string` | **Scalar-indexed** — used for `params` filtering |
+| `stock_price` | `float32` | **Scalar-indexed** (BTREE) |
+| Other metadata | various | `topic_id`, `cluster_id`, `gtl_*`, `is_geolocated`, `booking_number*`, `stock_*`, `offer_*`, `example_*` |
+
+The 1D trend columns (`booking_number_desc`, etc.) are vector columns so they can be searched with the same LanceDB vector search interface as the embeddings — this is how `tops` ranking works.
+
+### About `vector` vs `raw_embeddings`
+
+Both columns store the same Two Tower item embedding. The distinction is:
+
+- **`vector`**: has a vector index built on it (ANN index, metric set at build time). Searching it is fast but the metric is fixed to whatever was used at index creation.
+- **`raw_embeddings`**: no index. Searching it always uses exact `dot` product. Use this if you want to force exact dot product regardless of the index.
+
+> **⚠️ Warning about lancedb distances**: [LanceDB Doc](https://lancedb.github.io/lancedb/search/): If a vector index exists, the distance metric will always be the one you specified when creating the index — the metric parameter in the search call is ignored.
 
 ## Requirements
 
-- **Python 3.10+**
+- **Python 3.11**
 - **LanceDB** for vector database operations.
 - **Flask** for the API.
-- **DocArray** for managing documents and embeddings.
 - **Pytest** for testing.
 
-You can find all dependencies in the `api-requirements.in` file.
+All dependencies are managed via `pyproject.toml` and `uv`.
 
 ## How to Run the API locally
 
@@ -48,20 +77,20 @@ You can find all dependencies in the `api-requirements.in` file.
    - For a dummy model:
 
       ```sh
-      python create_vector_database.py dummy-database
+      python cli/create_vector_database.py dummy-database
       ```
 
    - For a production model:
 
       ```sh
-      python create_vector_database.py default-database --source-artifact-uri <source_artifact_uri>
+      python cli/create_vector_database.py default-database --source-artifact-uri <source_artifact_uri>
       ```
 
       where `<source_artifact_uri>` is the GS URI of the source artifact of the Two Tower training you want to use (don't forget the `/model` suffix). You can find it on [MLFlow](https://mlflow.passculture.team/#/experiments/35).
       Example:
 
       ```sh
-      python create_vector_database.py default-database --source-artifact-uri gs://mlflow-bucket-prod/artifacts/35/e894fb5e2b5248feb4114bb2473571ff/artifacts/model
+      python cli/create_vector_database.py default-database --source-artifact-uri gs://mlflow-bucket-prod/artifacts/35/e894fb5e2b5248feb4114bb2473571ff/artifacts/model
       ```
 
 3. **Start the API using**:
@@ -76,99 +105,207 @@ You can find all dependencies in the `api-requirements.in` file.
 4. **Make a prediction**:
 
    ```sh
-   curl -X POST localhost:8080/predict -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{
-   "instances": [
-       {
-       "model_type": "recommendation",
-       "user_id": "3734607",
-       "size": 50,
-       "params": {},
-       "call_id": "1234567890",
-       "debug": 1,
-       "prefilter": 1,
-       }
-   ]
-   }'
+   curl -X POST localhost:8080/predict \
+     -H 'Content-Type: application/json' \
+     -d '{"instances": [{"model_type": "recommendation", "user_id": "3734607", "size": 10}]}'
    ```
 
-   There are several use cases for which you can use the API:
-   - `for user recommendation :
+   See [API reference](#api-reference) for the full request schema and per-mode payloads.
 
-      ```json
-      {
-         "model_type": "recommendation",
-         "user_id": "3734607",
-         "size": 10,
-         "params": {},
-         "call_id": "1234567890",
-         "debug": 1,
-         "prefilter": 1,
-      }
-      ```
+## API reference
+This API is built with FastAPI.
+### Endpoints
 
-   - for similar offer recommendation :
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/predict` | Run a prediction |
+| `GET` | `/isalive` | Health check — returns `200` if the service is up |
 
-      ```json
+### Request envelope
 
-      {
-         "model_type": "similar_offer",
-         "items": ["product-6344516"],
-         "size": 10,
-         "params": {},
-         "call_id": "1234567890",
-         "debug": 1,
-         "prefilter": 1,
-      }
-      ```
+All prediction requests use the same envelope. Only the first element of `instances` is processed.
 
-   - for playlist recommendation constructions (with multiple items) :
+```json
+{
+  "instances": [
+    { ...request fields... }
+  ]
+}
+```
 
-      ```json
-      {
-         "model_type": "similar_offer",
-         "items": ["product-6344516", "product-6344517"],
-         "size": 10,
-         "params": {},
-         "call_id": "1234567890",
-         "debug": 1,
-         "prefilter": 1,
-      }
-      ```
+### Request fields
 
-   - for top recommendations
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `model_type` | string | **required** | One of `recommendation`, `similar_offer`, `tops`, `filter` |
+| `user_id` | string | `null` | Required for `recommendation` |
+| `items` | string[] | `[]` | Required for `similar_offer`. List of item IDs to use as input vectors |
+| `size` | int ≥ 1 | `500` | Number of results to return |
+| `params` | object | `{}` | Filter expressions (see [Filtering](#filtering-params)). Setting this automatically enables `prefilter` |
+| `vector_column_name` | string | `"vector"` | Which vector column to search. Must be valid for the given `model_type` (see table below) |
+| `debug` | bool | `false` | Include full metadata and metric fields in the response |
+| `prefilter` | bool | `false` | Apply `params` filter before the vector search (post-filter if `false`). Automatically `true` when `params` is non-empty |
+| `re_rank` | bool | `false` | Apply secondary re-ranking after the vector search |
+| `excluded_items` | string[] | `[]` | Item IDs to exclude from results |
+| `call_id` | string | auto UUID | Request identifier for tracing |
 
-      ```json
-      {
-         "model_type": "tops",
-         "size": 10,
-         "params": {},
-         "call_id": "1234567890",
-         "debug": 1,
-         "prefilter": 1,
-         "vector_column_name": "booking_number_desc"
-      }
-      ```
+> `offer_id` (string) is a **deprecated** alias for `items`. If `items` is empty and `offer_id` is provided, it is automatically promoted to `items: [offer_id]`. Always use `items`.
 
-   - If you built a semantic retrieval textclient :
+### Valid `vector_column_name` per `model_type`
 
-      ```json
-      {
-         "model_type": "semantic",
-         "size": 10,
-         "params": {},
-         "call_id": "1234567890",
-         "debug": 1,
-         "prefilter": 1,
-         "text": "YOUR TEXT HERE"
-      }
-      ```
+| `model_type`   | Valid `vector_column_name` values |
+|----------------|-----------------------------------|
+| `recommendation` | `vector` *(default, ANN index)*, `raw_embeddings` *(exact dot, no index)* |
+| `similar_offer`  | `vector` *(default, ANN index)*, `raw_embeddings` *(exact dot, no index)* |
+| `tops`           | `booking_number_desc` *(default)*, `booking_trend_desc`, `booking_creation_trend_desc`, `booking_release_trend_desc` |
+| `filter`         | same as `tops` |
 
-   In the above examples, you will get a dictionnary with a key "predictions" containing the list of recommended items.
-   > Note that the `"_distance"` field is to improved :
-   - for top recommendations, it will return a number > 1, the lowest being the best recommendation.
-   - for vector search, it will return the distance between the input vector and the closest vector in the database for the `dot` distance (i.e. `1 - dot_product`).
-      - ⚠️ If an index has been built for this vector search as it is recommended, then the search metric is overriden by the one used to build the index (see above section "About vector search metrics").
-      - ⚠️ If you do a vector search but find no results, then the fallback will be the top recommendations, giving you a `"_distance"` > 1
+### Response
+
+```json
+{
+  "predictions": [
+    { "idx": 0, "item_id": "product-123" },
+    ...
+  ]
+}
+```
+
+When `debug=true`, each prediction also includes all metadata columns from the `items` table plus:
+
+| Field | Description |
+|-------|-------------|
+| `_distance` | Distance to the query vector. Lower is better. Values > 1 indicate a `tops` fallback result |
+| `_search_type` | `vector`, `tops`, or `aggregated_vectors` |
+| `_user_item_dot_similarity` | Dot product between the user vector and the result item vector (present when `user_id` is provided) |
+| `_item_item_dot_similarity` | Map of `{input_item_id → dot_product}` between each input item and the result item (present when `items` is provided) |
+
+### Error responses
+
+| HTTP | Cause |
+|------|-------|
+| `400` | Missing or malformed JSON body, or missing `instances` key |
+| `403` | Field validation error (e.g. invalid `model_type`, wrong `vector_column_name`) or logic error (e.g. missing `user_id` for `recommendation`) |
+| `500` | Unexpected server error |
+
+---
+
+## `model_type` modes
+
+### `recommendation`
+
+Retrieves items similar to the requesting user by searching the `vector` column using the user's Two Tower embedding from `metadata/user.docs`.
+
+**Minimal payload:**
+```json
+{
+  "model_type": "recommendation",
+  "user_id": "3734607"
+}
+```
+
+**Logic:**
+1. Looks up the user vector in `metadata/user.docs`.
+2. Runs a vector search against the LanceDB `items` table.
+3. If no user vector exists or the search returns no results, falls back to `tops` with `vector_column_name=booking_number_desc`.
+
+> Only available when the deployed model is of type `two_tower`.
+
+---
+
+### `similar_offer`
+
+Retrieves items similar to one or more input items by searching the `vector` column using each item's Two Tower embedding from `metadata/item.docs`. Input items are automatically excluded from the results.
+
+**Minimal payload (single item):**
+```json
+{
+  "model_type": "similar_offer",
+  "items": ["product-6344516"]
+}
+```
+
+**Minimal payload (multiple items — results are aggregated and re-ranked by mean `_distance`):**
+```json
+{
+  "model_type": "similar_offer",
+  "items": ["product-6344516", "product-6344517"]
+}
+```
+
+**Logic:**
+1. For each item in `items`, looks up its vector in `metadata/item.docs` and runs a vector search.
+2. If multiple items are given, results are merged and sorted by mean `_distance` across items.
+3. If no vector is found for any input item, falls back to `tops` with `vector_column_name=booking_number_desc` (no fallback when using the `metadata_graph` embedding model).
+
+---
+
+### `tops`
+
+Returns items ranked by a trend column. Ranking is done by dot product against a fixed approximate vector `[-0.0001]`, which surfaces items with the lowest pre-computed rank value first (= most booked / most trending).
+
+**Minimal payload:**
+```json
+{
+  "model_type": "tops"
+}
+```
+
+**With a specific trend column:**
+```json
+{
+  "model_type": "tops",
+  "vector_column_name": "booking_trend_desc"
+}
+```
+
+Default `vector_column_name` is `booking_number_desc`.
+
+---
+
+### `filter`
+
+Alias for `tops` — identical behaviour, same handler. Intended to signal intent when the primary goal is filtered retrieval rather than trend ranking.
+
+**Minimal payload:**
+```json
+{
+  "model_type": "filter",
+  "params": { "category": { "$eq": "LIVRE" } }
+}
+```
+
+---
+
+### Filtering (`params`)
+
+All modes support the `params` field. Filters are translated into a SQL `WHERE` clause on the LanceDB `items` table.
+
+**Scalar-indexed columns** (efficient filtering): `category`, `subcategory_id`, `search_group_name`, `stock_price`.
+
+Any other column in the items table can also be filtered, but without a scalar index.
+
+**Supported operators:**
+
+| Operator | SQL equivalent |
+|----------|----------------|
+| `$eq` | `=` |
+| `$neq` | `!=` |
+| `$lt` / `$gt` / `$lte` / `$gte` | `<` / `>` / `<=` / `>=` |
+| `$in` / `$nin` | `IN` / `NOT IN` |
+| `$and` / `$or` | `AND` / `OR` |
+
+**Examples:**
+```json
+{ "category": { "$eq": "LIVRE" } }
+
+{ "stock_price": { "$lte": 10 } }
+
+{ "$and": [
+    { "category": { "$eq": "MUSIQUE" } },
+    { "is_geolocated": { "$eq": 1 } }
+] }
+```
 
 ### Testing
 
@@ -201,15 +338,15 @@ pytest tests/retrieval/test_similar_offer.py
    To do this, run:
 
    ```sh
-   DOCKER_IMAGE_TAG=<docker_image_tag> make install-api
+   DOCKER_IMAGE_TAG=<docker_image_tag> make download-vector-database
    ```
 
    where `<docker_image_tag>` is the tag of the docker image you want to use. You can find those in [Artifact Registry](https://console.cloud.google.com/artifacts/docker/passculture-infra-prod/europe-west1/pass-culture-artifact-registry?authuser=2&project=passculture-infra-prod).
 
-   - For instance :
+   - For instance:
 
      ```sh
-     DOCKER_IMAGE_TAG=europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/prod/retrieval_recommendation_v1_2_prod:two_towers_user_recommendation_prod_v20250428 make install-api
+     DOCKER_IMAGE_TAG=europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/prod/retrieval_recommendation_v1_2_prod:two_towers_user_recommendation_prod_v20250428 make download-vector-database
      ```
 
    - ⚠️ If you use a production model, please delete the Docker image locally after use. ⚠️

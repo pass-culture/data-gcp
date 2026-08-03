@@ -39,6 +39,95 @@ def _get_stage_type(card: Card) -> str | None:
     return dq.stages[0].get("lib/type")
 
 
+def migrate_dashboard(
+    dashboard_detail: dict[str, Any],
+    card_id: int,
+    field_mapping: dict[int, int],
+) -> dict[str, Any]:
+    """
+    Migrate parameter mappings in a dashboard for a a specific migrated card.
+
+    Args:
+        dashboard_detail: The original dashboard detail dictionary.
+        card_id: ID of the migrated card.
+        field_mapping: {old_field_id: new_field_id}.
+
+    Returns:
+        An updated dashboard detail dictionary with migrated filter targets.
+    """
+    new_dash_data = copy.deepcopy(dashboard_detail)
+
+    remapped_count = 0
+    unchanged_count = 0
+    skipped_count = 0
+
+    for dashcard in new_dash_data.get("dashcards", []):
+        if dashcard.get("card_id") != card_id:
+            continue
+
+        for mapping in dashcard.get("parameter_mappings", []):
+            target = mapping.get("target")
+            old_field_id = _extract_field_id_from_target(target)
+
+            if old_field_id is None:
+                continue
+
+            if old_field_id not in field_mapping:
+                logger.warning(
+                    "Dashboard card %d: field %d not in field_mapping — skipping",
+                    card_id,
+                    old_field_id,
+                )
+                skipped_count += 1
+                continue
+
+            new_field_id = field_mapping[old_field_id]
+            target[1][1] = new_field_id
+            if old_field_id != new_field_id:
+                logger.info(
+                    "Dashboard card %d: remapped field %d → %d",
+                    card_id,
+                    old_field_id,
+                    new_field_id,
+                )
+                remapped_count += 1
+            else:
+                unchanged_count += 1
+
+    if remapped_count or unchanged_count or skipped_count:
+        logger.info(
+            "Dashboard card %d: %d field(s) remapped, %d unchanged, %d skipped",
+            card_id,
+            remapped_count,
+            unchanged_count,
+            skipped_count,
+        )
+
+    return new_dash_data
+
+
+def _extract_field_id_from_target(target: Any) -> int | None:
+    """
+    Extract field_id of a Metabase target
+
+    Args:
+        target: Target Metabase
+    Returns:
+        field_id: The extracted field_id or None if not found.
+    """
+    if not isinstance(target, list) or len(target) < 2:
+        return None
+    field_clause = target[1]
+    if not isinstance(field_clause, list) or len(field_clause) < 2:
+        return None
+    if field_clause[0] != "field":
+        return None
+    field_id = field_clause[1]
+    if not isinstance(field_id, int):
+        return None
+    return field_id
+
+
 def migrate_card(
     card: Card,
     field_mapping: dict[int, int],

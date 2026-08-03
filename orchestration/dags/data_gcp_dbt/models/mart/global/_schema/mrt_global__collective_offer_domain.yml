@@ -1,0 +1,12 @@
+version: 2
+
+models:
+  - name: mrt_global__collective_offer_domain
+    description: "{{ doc('description__mrt_global__collective_offer_domain') }}"
+    columns:
+      - name: collective_offer_id
+        description: "{{ doc('column__collective_offer_id') }}"
+      - name: educational_domain_id
+        description: "{{ doc('column__educational_domain_id') }}"
+      - name: educational_domain_name
+        description: "{{ doc('column__educational_domain_name') }}"

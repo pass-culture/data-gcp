@@ -2667,6 +2667,23 @@ It restricts the population to the milestone ages 15-20 and adds, for each `mile
 
 This model is the counterpart of the legacy [`int_kpi__population_coverage`](#!/model/model.data_gcp_dbt.int_kpi__population_coverage) and is kept in parallel to compare both estimations before migration.
 
+KPI table aggregating collective bookings by month and venue geography.
+
+Each row represents a `partition_month` / `scholar_year` / venue geography combination. The model is built from [`mrt_global__collective_booking`](#!/model/model.data_gcp_dbt.mrt_global__collective_booking) and keeps only confirmed booking statuses. It exposes monthly metrics (`total_collective_bookings`, `total_collective_amount_spent`) and cumulative metrics over the scholar year (`cumulative_total_collective_bookings`, `cumulative_total_collective_amount_spent`).
+
+KPI table aggregating created collective offers by month and venue geography.
+
+Each row represents a `partition_month` / venue geography combination. The model is built from [`int_global__collective_offer`](#!/model/model.data_gcp_dbt.int_global__collective_offer).
+
+KPI table aggregating EAC student coverage by month, school year, and territory geography.
+
+The model is built from [`adage_involved_student`](#!/model/model.data_gcp_dbt.adage_involved_student) and takes the snapshot of the last day of each month per school year.
+
+It exposes:
+
+- `total_eligible_students`: total number of students eligible for EAC in the territory
+- `total_engaged_students`: total number of students who actually participated in at least one EAC activity
+
 One row per Metabase asset (dashboard or card) with its placement in the collection tree, the squad/tier/certified classification resolved by the metabase-governance `taxonomy` job, usage signals, and (for dashboards) the markdown / member-card context. The classified asset catalog used downstream for retrieval routing and exposure selection.
 
 ## Table description
@@ -3970,9 +3987,21 @@ Cultural partners can create two types of collective offers :
 
 The `mrt_global__collective_offer_domain` table is designed to store the list of the educational domains associated to collective offers.
 
+One row is one (collective offer, educational domain) pair: an offer can carry several domains, so counting offers requires `COUNT(DISTINCT collective_offer_id)` — a plain `COUNT(*)` counts pairs, not offers.
+
+`collective_offer_id` holds ids from two different entities: the model is a `UNION ALL` of `collective_offer_domain` (real offers) and `collective_offer_template_domain`, whose `collective_offer_template_id` is aliased into the same column. A template is a reusable draft, not a bookable offer, so joining directly to `mrt_global__collective_offer` matches only part of the rows and silently drops the template ones — filter to the population you actually mean.
+
+The referential is specific to the collective (EAC) side: there is no equivalent governed domain taxonomy for individual offers, so this table cannot answer "by cultural domain" questions about individual bookings.
+
 Collective offers can be related to several educational domain. The table is the corresponding table used to find the exhautive educational domain list of each collective offer.
 
 ## Table description
+
+| name                    | data_type | description                                                                                                                      |
+| ----------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| collective_offer_id     |           | Identifier for the collective offer.                                                                                             |
+| educational_domain_id   |           | Unique id of the educational domain of the collective offer or venue. An offer or a venue can have multiple educational domains. |
+| educational_domain_name |           | Unique name corresponding to the id of the educational domain of the collective offer or venue.                                  |
 
 # Table: Cultural Partner
 
@@ -5305,6 +5334,43 @@ The `mrt_native__daily_home_offer_displayed` table provides detailed insights in
 | total_position_31_40_consultations |           | The number of distinct consultation occurences of an offer from home playlists diplayed in positions 31 to 40 on a given date.                                                                                                                                                                                                                                                                                  |
 | total_position_41_50_consultations |           | The number of distinct consultation occurences of an offer from home playlists diplayed in positions 41 to 50 on a given date.                                                                                                                                                                                                                                                                                  |
 
+# Table: Daily Home Recommendation Offer
+
+The `mrt_native__daily_home_recommendation_offer` table tracks offers displayed to users through recommendation modules on the native app home screen. For each recommendation call, it links the displayed offers with their associated user interactions (consultations, favorites, bookings), enabling analysis of recommendation performance and user engagement at the offer level.
+
+This table is filtered to `playlist_origin = 'recommendation'` only. As a result, the effective values in this table are:
+
+- `playlist_origin`: `recommendation`
+- `context`: `recommendation:user_based`, `recommendation:tops`
+
+## Table description
+
+| name                    | data_type | description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ----------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| module_displayed_date   |           | The date when the module was displayed to the user.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| reco_call_id            |           | The identifier for the recommendation call.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| cloud_run_revision_name |           | The Cloud Run revision name of the recommendation service that served the call.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| playlist_origin         |           | The origin playlist endpoint that served the offers. Possible values: `recommendation` (from the recommendation endpoint), `similar_offer` (from the similar offer endpoint, including fallback cases).                                                                                                                                                                                                                                                                                                                                           |
+| context                 |           | The full context identifier of the recommendation call, combining the algorithm pipeline and strategy. Possible values: `recommendation:user_based`, `recommendation:tops`, `recommendation_fallback:user_based`, `recommendation_fallback:tops`, `similar_offer:user_based`, `similar_offer:tops`, `similar_offer:graph`. Note: `recommendation_fallback` is a fallback mechanism triggered when the `similar_offer` pipeline returns no results — it falls back to the recommendation endpoint and maps to `playlist_origin = 'similar_offer'`. |
+| user_id                 |           | Unique identifier for a user.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| offer_id                |           | Unique identifier for the offer.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| offer_display_order     |           | The display order (0-based index) of the offer within its recommendation playlist.                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| user_location_type      |           | The type of geolocation used by the user during the session (via geolocation data, manually entered by the user, or information unavailable).                                                                                                                                                                                                                                                                                                                                                                                                     |
+| entry_id                |           | The identifier for the entry associated with the consultation.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| entry_name              |           | The name of the entry displayed to the user.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| module_id               |           | The identifier for the module associated with the consultation.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| module_name             |           | The name of the module in which the entry is displayed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| parent_module_id        |           | The identifier for the parent module of the current module.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| parent_module_type      |           | The type of the parent module.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| parent_entry_id         |           | The identifier for the parent entry of the current entry.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| parent_home_type        |           | The type of home associated with the parent entry.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| module_type             |           | The type of the module in which the entry is displayed (algolia, recommendation, video...)                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| unique_session_id       |           | A unique identifier for the session, ensuring no duplicates.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| booking_id              |           | Unique identifier for a booking.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| consult_offer_timestamp |           | The timestamp when the offer was consulted by the user.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| booking_timestamp       |           | The timestamp when the booking was made by the user.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| fav_timestamp           |           | The timestamp when the entry was marked as favorite by the user.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+
 # Table: Daily User Home Module
 
 The `mrt_native__daily_user_home_module` table provides detailed insights into user interactions with home modules on a daily basis. It captures various user activities, module metadata, and associated timestamps, enabling comprehensive analysis of user behavior and module performance.
@@ -5790,6 +5856,29 @@ Each row represents a key indicator calculated for a specific month, geographic 
 | total_actual_amount_spent_at_expiration   |           | The total deposit amount effectively spent by beneficiaries before it expired.                                                                                                                                                                                                                 |
 | average_actual_amount_spent_at_expiration |           | The average deposit amount effectively spent per beneficiary at the time of expiration.                                                                                                                                                                                                        |
 
+The `metrics_booking__collective` model provides aggregated key indicators related to collective bookings by venue geography and school year. It is designed to be the central model providing collective booking indicators for export, monitoring and governance.
+
+## Table Description
+
+Each row represents the key indicators related to collective bookings, calculated for a specific month, school year and venue geographic level (department / region / city / EPCI).
+
+| name                                     | data_type | description                                                                                                                                                         |
+| ---------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| partition_month                          | STRING    | Indicates the first day of the month the KPI refers to.                                                                                                             |
+| scholar_year                             | STRING    | Scholar year of the deposit.                                                                                                                                        |
+| venue_region_name                        | STRING    | Region name where the venue is located.                                                                                                                             |
+| venue_region_code                        | STRING    | Region code where the venue is located.                                                                                                                             |
+| venue_department_name                    | STRING    | Department name where of the venue.                                                                                                                                 |
+| venue_department_code                    | STRING    | Department code of the venue.                                                                                                                                       |
+| venue_epci_name                          | STRING    | EPCI name of the venue.                                                                                                                                             |
+| venue_epci_code                          | STRING    | EPCI code of the venue.                                                                                                                                             |
+| venue_city_name                          | STRING    | City where the venue is located.                                                                                                                                    |
+| venue_city_code                          | STRING    | City code where the venue is located.                                                                                                                               |
+| total_collective_bookings                | INTEGER   | Total number of collective bookings.                                                                                                                                |
+| total_collective_amount_spent            | FLOAT     | Total amount spent for collective bookings.                                                                                                                         |
+| cumulative_total_collective_bookings     | INTEGER   | Cumulative total number of collective bookings for the same venue geography from the start of the given school year up to and including the specified month.        |
+| cumulative_total_collective_amount_spent | FLOAT     | Cumulative total amount spent for collective bookings for the same venue geography from the start of the given school year up to and including the specified month. |
+
 The `metrics_cultural_partner__activation` model provides aggregated key indicators related to pass Culture cultural partner activations. It is designed to be the central model providing cultural partners activation indicators for export, monitoring and gouvernance.
 
 ## Table Description
@@ -5890,6 +5979,25 @@ Each row represents a key indicator calculated for a specific month, geographic 
 | micro_density_label                 |           | String column.Density label (urban, rural) of the user's registered address.                                                                                                                                                                  |
 | total_category_booked_beneficiaries |           | The number of beneficiaries who made at least one booking in the specific category by the time their credit expired.                                                                                                                          |
 
+The `metrics_offer__collective` model provides aggregated key indicators related to collective offer creation by venue geography. It is designed to be the central model providing collective offer creation indicators for export, monitoring and governance.
+
+## Table Description
+
+Each row represents the key indicators related to collective offer creation, calculated for a specific month and venue geographic level (department / region / city / EPCI).
+
+| name                            | data_type | description                                             |
+| ------------------------------- | --------- | ------------------------------------------------------- |
+| partition_month                 | STRING    | Indicates the first day of the month the KPI refers to. |
+| venue_region_name               | STRING    | Region name where the venue is located.                 |
+| venue_region_code               | STRING    | Region code where the venue is located.                 |
+| venue_department_name           | STRING    | Department name where of the venue.                     |
+| venue_department_code           | STRING    | Department code of the venue.                           |
+| venue_epci_name                 | STRING    | EPCI name of the venue.                                 |
+| venue_epci_code                 | STRING    | EPCI code of the venue.                                 |
+| venue_city_name                 | STRING    | City where the venue is located.                        |
+| venue_city_code                 | STRING    | City code where the venue is located.                   |
+| total_created_collective_offers | INTEGER   | Total number of collective offers created.              |
+
 The `metrics_population__coverage` model aggregates key performance indicators to quantify population coverage at department level. It is designed to be the central model providing population coverage indicators for export, monitoring and gouvernance.
 
 ## Table Description
@@ -5906,6 +6014,24 @@ Each row represents a key indicator calculated for a specific month and a geogra
 | region_name                     |           | The official name of the region containing the IRIS area.                                     |
 | region_code                     |           | The official code of the region (région) containing the IRIS area.                            |
 | total_population_last_12_months |           | Rolling sum of french population over the last 12 months for a given age and department.      |
+
+The `metrics_student__coverage` model provides aggregated key indicators related to student participation in EAC (Education Artistique et Culturelle). It is designed to be the central model providing student coverage indicators for export, monitoring and governance.
+
+## Table Description
+
+Each row represents the key indicators related to student EAC participation, calculated for a specific month, school year and geographic aggregation level.
+
+| name                    | data_type | description                                                                                                                                  |
+| ----------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| partition_month         | STRING    | Indicates the first day of the month the KPI refers to.                                                                                      |
+| scholar_year            | STRING    | Scholar year of the deposit.                                                                                                                 |
+| region_code             | INTEGER   | The official code of the region (région) containing the IRIS area.                                                                           |
+| region_name             | STRING    | The official name of the region containing the IRIS area.                                                                                    |
+| academy_name            | STRING    | The name of the educational academy (académie) associated with the IRIS area.                                                                |
+| department_code         | STRING    | The official code of the department (département) containing the IRIS area.                                                                  |
+| department_name         | STRING    | The official name of the department containing the IRIS area.                                                                                |
+| total_eligible_students | INTEGER   | Total number of students eligible for EAC (Education Artistique et Culturelle) within the territory for the specified month and school year. |
+| total_engaged_students  | INTEGER   | Total number of students who participated in at least one EAC activity within the territory for the specified month and school year.         |
 # Glossary
 
 ## Introduction
@@ -6883,6 +7009,8 @@ Boolean field that indicates whether a reservation in this category will impact 
 
 **venue_region_name**: Region name where the venue is located.
 
+**venue_region_code**: Region code where the venue is located.
+
 **venue_epci**: EPCI name of the venue.
 
 **venue_epci_code**: EPCI code of the venue.
@@ -7239,6 +7367,12 @@ Work in progress
 
 **total_collective_bookings**: Total number of collective bookings.
 
+**total_collective_amount_spent**: Total amount spent for collective bookings.
+
+**cumulative_total_collective_bookings**: Cumulative total number of collective bookings for the same venue geography from the start of the given school year up to and including the specified month.
+
+**cumulative_total_collective_amount_spent**: Cumulative total amount spent for collective bookings for the same venue geography from the start of the given school year up to and including the specified month.
+
 **total_collective_offers**: The total number of collective offers.
 
 **total_collective_real_revenue**: Total actual revenue from collective bookings.
@@ -7316,6 +7450,10 @@ Work in progress
 **total_stock_quantity**: Total remaining stock quantity.
 
 **total_students**: The total number of students for the educational institution.
+
+**total_eligible_students**: Total number of students eligible for EAC (Education Artistique et Culturelle) within the territory for the specified month and school year.
+
+**total_engaged_students**: Total number of students who participated in at least one EAC activity within the territory for the specified month and school year.
 
 **total_theoretic_revenue**: Total theoretical revenue from all bookings.
 
@@ -7756,6 +7894,12 @@ This file is auto-generated
 Work in progress
 
 **reco_call_id**: The identifier for the recommendation call.
+
+**cloud_run_revision_name**: The Cloud Run revision name of the recommendation service that served the call.
+
+**playlist_origin**: The origin playlist endpoint that served the offers. Possible values: `recommendation` (from the recommendation endpoint), `similar_offer` (from the similar offer endpoint, including fallback cases).
+
+**reco_context**: The full context identifier of the recommendation call, combining the algorithm pipeline and strategy. Possible values: `recommendation:user_based`, `recommendation:tops`, `recommendation_fallback:user_based`, `recommendation_fallback:tops`, `similar_offer:user_based`, `similar_offer:tops`, `similar_offer:graph`. Note: `recommendation_fallback` is a fallback mechanism triggered when the `similar_offer` pipeline returns no results — it falls back to the recommendation endpoint and maps to `playlist_origin = 'similar_offer'`.
 
 **partition_month**: Indicates the first day of the month the KPI refers to.
 

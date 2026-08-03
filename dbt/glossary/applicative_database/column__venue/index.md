@@ -44,6 +44,8 @@
 
 **venue_region_name**: Region name where the venue is located.
 
+**venue_region_code**: Region code where the venue is located.
+
 **venue_epci**: EPCI name of the venue.
 
 **venue_epci_code**: EPCI code of the venue.

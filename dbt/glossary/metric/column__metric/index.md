@@ -16,6 +16,12 @@
 
 **total_collective_bookings**: Total number of collective bookings.
 
+**total_collective_amount_spent**: Total amount spent for collective bookings.
+
+**cumulative_total_collective_bookings**: Cumulative total number of collective bookings for the same venue geography from the start of the given school year up to and including the specified month.
+
+**cumulative_total_collective_amount_spent**: Cumulative total amount spent for collective bookings for the same venue geography from the start of the given school year up to and including the specified month.
+
 **total_collective_offers**: The total number of collective offers.
 
 **total_collective_real_revenue**: Total actual revenue from collective bookings.
@@ -93,6 +99,10 @@
 **total_stock_quantity**: Total remaining stock quantity.
 
 **total_students**: The total number of students for the educational institution.
+
+**total_eligible_students**: Total number of students eligible for EAC (Education Artistique et Culturelle) within the territory for the specified month and school year.
+
+**total_engaged_students**: Total number of students who participated in at least one EAC activity within the territory for the specified month and school year.
 
 **total_theoretic_revenue**: Total theoretical revenue from all bookings.
 

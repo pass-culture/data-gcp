@@ -32,3 +32,9 @@ max-doc-length = 100
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
+
+[tool.uv]
+constraint-dependencies = [
+    "setuptools >= 83.0.0", # GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c,
+    "pyasn1 >= 0.6.4", # GHSA-8ppf-4f7h-5ppj, GHSA-hm4w-wwcw-mr6r, GHSA-m4p7-r5rc-7g4j, GHSA-jr27-m4p2-rc6r,
+]

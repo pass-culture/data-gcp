@@ -16,7 +16,7 @@ dependencies = [
     "pandas-gbq>=0.19.0",
     "pyarrow>=21.0.0",
     "pytest>=8.2.2",
-    "requests>=2.31.0",
+    "requests>=2.33.0",
     "tqdm>=4.67.0",
     "typer>=0.24",
 ]
@@ -41,3 +41,13 @@ convention = "google"
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
+
+[tool.uv]
+constraint-dependencies = [
+    "cryptography >= 48.0.1", # GHSA-537c-gmf6-5ccf,
+    "pygments >= 2.20.0", # GHSA-5239-wwwm-4pmq,
+    "setuptools >= 83.0.0", # GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c,
+    "idna >= 3.15", # GHSA-65pc-fj4g-8rjx,
+    "urllib3 >= 2.7.0", # GHSA-2xpw-w6gg-jr37, GHSA-38jv-5279-wg99, GHSA-48p4-8xcf-vxj5, GHSA-gm62-xv2j-4w53, GHSA-pq67-6m6q-mj2v, GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j,
+    "pyasn1 >= 0.6.4", # GHSA-8ppf-4f7h-5ppj, GHSA-hm4w-wwcw-mr6r, GHSA-m4p7-r5rc-7g4j, GHSA-jr27-m4p2-rc6r,
+]

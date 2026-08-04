@@ -12,7 +12,7 @@ dependencies = [
     "google-cloud-bigquery>=3.12.0",
     "google-cloud-secret-manager>=2.2.0",
     "hdbscan>=0.8.28",
-    "keras>=3.13.2",
+    "keras >= 3.14.0",
     "loguru>=0.7.0",
     "numba>=0.60.0",
     "numpy>=1.26.4",
@@ -21,7 +21,7 @@ dependencies = [
     "pandas-gbq>=0.17.1",
     "polars>=0.19.12",
     "polyfuzz>=0.4.2",
-    "pyarrow>=14.0.1",
+    "pyarrow >= 23.0.1",
     "pynndescent>=0.5.13",
     "scipy>=1.13",
     "setuptools>=78.1.1",
@@ -34,6 +34,13 @@ dependencies = [
     "matplotlib>=3.10.1",
 ]
 [tool.uv]
+constraint-dependencies = [
+    "torch >= 2.13.0", # GHSA-rrmf-rvhw-rf47, PYSEC-2026-139
+    "transformers >= 5.5.0", # GHSA-69w3-r845-3855, GHSA-29pf-2h5f-8g72, GHSA-fgcw-684q-jj6r, PYSEC-2025-217
+    "click >= 8.3.3", # PYSEC-2026-2132
+    "aiohttp >= 3.14.3", # GHSA-mq44-7p77-q5h7, GHSA-mfx4-hv73-q22v, GHSA-cq5v-8q36-5273
+    "cryptography >= 49.0.0", # GHSA-537c-gmf6-5ccf, GHSA-m2h6-j472-rp4c, GHSA-jwv3-5hgf-82ww
+]
 environments = [
     "sys_platform == 'darwin'",
     "sys_platform == 'linux'",

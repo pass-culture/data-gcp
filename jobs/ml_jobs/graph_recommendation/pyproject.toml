@@ -39,8 +39,11 @@ environments = [
     "sys_platform == 'linux'",
 ]
 constraint-dependencies = [
+    "keras >= 3.14.0", # PYSEC-2026-2324
+    "click >= 8.3.3", # PYSEC-2026-2132
+    "cryptography >= 49.0.0", # GHSA-537c-gmf6-5ccf, GHSA-m2h6-j472-rp4c, GHSA-jwv3-5hgf-82ww
     "mlflow >= 3.12.0", # CVE-2026-0545
-    "aiohttp >= 3.14.0", # CVE-2026-47265, CVE-2026-34993
+    "aiohttp >= 3.14.3", # CVE-2026-47265, CVE-2026-34993
     "gitpython >= 3.1.50", # CVE-2026-44243, GHSA-mv93-w799-cj2w, CVE-2026-42215, CVE-2026-44244, CVE-2026-42284
     "idna >= 3.15", # CVE-2026-45409
     "jupyter-server >= 2.20.0", # CVE-2026-40110, CVE-2026-35397, CVE-2026-40934, CVE-2025-61669, CVE-2026-44727

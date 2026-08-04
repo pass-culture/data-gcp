@@ -17,3 +17,11 @@ dev = [
     "pandas>=3.0.1",
     "pytest>=9.0.3",
 ]
+
+[tool.uv]
+constraint-dependencies = [
+    "keras >= 3.14.0", # PYSEC-2026-2324
+    "click >= 8.3.3", # PYSEC-2026-2132
+    "aiohttp >= 3.14.3", # GHSA-mq44-7p77-q5h7, GHSA-mfx4-hv73-q22v, GHSA-cq5v-8q36-5273
+    "cryptography >= 49.0.0", # GHSA-537c-gmf6-5ccf, GHSA-m2h6-j472-rp4c, GHSA-jwv3-5hgf-82ww
+]

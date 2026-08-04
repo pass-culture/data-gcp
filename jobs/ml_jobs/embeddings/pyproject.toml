@@ -21,7 +21,7 @@ dependencies = [
     "requests>=2.31.0",
     "sentence-transformers>=2.3",
     "setuptools>=78.1.1",
-    "torch>=2.6.0",
+    "torch >= 2.13.0",
     "tqdm>=4.66.4",
     "typer>=0.7.0",
     "jinja2>=3.1.4",
@@ -67,6 +67,14 @@ runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 # see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation
 
 [tool.uv]
+constraint-dependencies = [
+    "transformers >= 5.5.0", # GHSA-69w3-r845-3855, GHSA-29pf-2h5f-8g72, GHSA-fgcw-684q-jj6r, PYSEC-2025-217
+    "keras >= 3.14.0", # PYSEC-2026-2324
+    "click >= 8.3.3", # PYSEC-2026-2132
+    "aiohttp >= 3.14.3", # GHSA-mq44-7p77-q5h7, GHSA-mfx4-hv73-q22v, GHSA-cq5v-8q36-5273
+    "pyarrow >= 23.0.1", # GHSA-rgxp-2hwp-jwgg, PYSEC-2026-113
+    "cryptography >= 49.0.0", # GHSA-537c-gmf6-5ccf, GHSA-m2h6-j472-rp4c, GHSA-jwv3-5hgf-82ww
+]
 environments = [
     "sys_platform == 'darwin'",
     "sys_platform == 'linux'",

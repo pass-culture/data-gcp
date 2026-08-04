@@ -37,9 +37,11 @@ dev = [
 
 [tool.uv]
 constraint-dependencies = [
-    "aiohttp >= 3.14.0", # CVE-2026-34993, CVE-2026-47265, GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8
+    "keras >= 3.14.0", # PYSEC-2026-2324
+    "click >= 8.3.3", # PYSEC-2026-2132
+    "aiohttp >= 3.14.3", # CVE-2026-34993, CVE-2026-47265, GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8
     "authlib >= 1.6.12", # CVE-2026-41425, CVE-2026-41479, CVE-2026-44681, GHSA-jj8c-mmj3-mmgv, GHSA-r95x-qfjj-fjj2, GHSA-w8p2-r796-3vmq
-    "cryptography >= 46.0.7", # CVE-2026-39892, GHSA-p423-j2cm-9vmq
+    "cryptography >= 49.0.0", # CVE-2026-39892, GHSA-p423-j2cm-9vmq
     "gitpython >= 3.1.50", # CVE-2026-42215, CVE-2026-42284, CVE-2026-44243, CVE-2026-44244, GHSA-7545-fcxq-7j24, GHSA-mv93-w799-cj2w, GHSA-rpm5-65cw-6hj4, GHSA-v87r-6q3f-2j67, GHSA-x2qx-6953-8485
     "idna >= 3.15", # CVE-2026-45409, GHSA-65pc-fj4g-8rjx
     "pydantic-ai-slim >= 1.99.0", # CVE-2026-46678, GHSA-cqp8-fcvh-x7r3

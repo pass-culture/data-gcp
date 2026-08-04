@@ -74,7 +74,8 @@ environments = [
     "sys_platform == 'linux'",
 ]
 constraint-dependencies = [
-    "transformers >= 5.5.0", # GHSA-69w3-r845-3855, GHSA-29pf-2h5f-8g72, GHSA-fgcw-684q-jj6r, PYSEC-2025-217
+    # transformers skipped: recommenders>=1.2.1 hard-requires transformers<5, incompatible with >=5.5.0
+    # (GHSA-69w3-r845-3855, GHSA-29pf-2h5f-8g72, GHSA-fgcw-684q-jj6r cannot be resolved while recommenders is a direct dep)
     "click >= 8.3.3", # PYSEC-2026-2132
     "cryptography >= 49.0.0", # GHSA-537c-gmf6-5ccf, GHSA-m2h6-j472-rp4c, GHSA-jwv3-5hgf-82ww
     "mlflow >= 3.12.0", # CVE-2026-0545
@@ -88,6 +89,5 @@ constraint-dependencies = [
     "notebook >= 7.5.6", # GHSA-rch3-82jr-f9w9
     "python-dotenv >= 1.2.2", # GHSA-mf9w-mj56-hr94
     "starlette >= 1.0.1", # PYSEC-2026-161, GHSA-86qp-5c8j-p5mr
-    # "transformers >= 5.0.0rc3", # PYSEC-2025-217, GHSA-69w3-r845-3855 (blocked by recommenders < 5)
     "urllib3 >= 2.7.0", # GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j, PYSEC-2026-142, PYSEC-2026-141
 ]

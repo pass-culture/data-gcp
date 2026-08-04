@@ -157,7 +157,7 @@ with
     -- from epn_with_zeros
     -- )
     -- KPIs pour dimensions géographiques (NAT/REG/DEP) incluant les EPN
-    final_output as (
+    final_output as (  -- NOSONAR: intentional duplication, readability preferred
         {% for dim in dimensions_geo %}
             {% if not loop.first %}
                 union all

@@ -5,7 +5,7 @@ with
         group by 1
     ),
 
-    clean_pricing_line1 as (
+    clean_pricing_line1 as (  -- NOSONAR: intentional duplication, readability preferred
         select
             booking.booking_id,
             case

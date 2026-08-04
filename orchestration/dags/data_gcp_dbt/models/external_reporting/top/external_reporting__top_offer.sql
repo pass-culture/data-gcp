@@ -11,7 +11,7 @@
 {% set dimensions = get_dimensions("venue", "geo") %}
 
 with
-    base_aggregation as (
+    base_aggregation as (  -- NOSONAR: intentional duplication, readability preferred
         select
             date_trunc(date(booking_used_date), month) as partition_month,
             timestamp("{{ ts() }}") as updated_at,

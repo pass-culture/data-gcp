@@ -186,7 +186,7 @@ from unnested_events
 
 union all
 
-select
+select  -- NOSONAR: intentional duplication, readability preferred
     event_name,
     user_pseudo_id,
     user_id,

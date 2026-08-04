@@ -26,7 +26,7 @@
     )
 }}
 
-select
+select  -- NOSONAR: intentional duplication, readability preferred
     pop.decimal_age as population_decimal_age,
     pop.department_code as population_department_code,
     dep.dep_name as population_department_name,

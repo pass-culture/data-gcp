@@ -30,7 +30,7 @@ dev = [
 constraint-dependencies = [
     "cryptography >= 46.0.7", # GHSA-79v7-f9g7-gm4r
     "urllib3 >= 2.7.0", # GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j
-    "setuptools >= 83.0.0", # GHSA-6j4f-hj78-v4c9
+    # setuptools skipped: torch>=2.11 (cu128/linux) hard-requires setuptools<82, incompatible with >=83
     "pygments >= 2.20.0", # GHSA-x233-2p5x-gpf5
     "bleach >= 6.4.0", # GHSA-8jxr-4gfq-qg7h, GHSA-q4r7-2j3p-rxmx
     "python-dotenv >= 1.2.2", # GHSA-mf9w-mj56-hr94

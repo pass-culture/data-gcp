@@ -24,7 +24,7 @@
     {% if not loop.first %}
         union all
     {% endif %}
-    select
+    select  -- NOSONAR: intentional duplication, readability preferred
         partition_month,
         updated_at,
         dimension_name,

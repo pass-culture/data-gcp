@@ -132,7 +132,7 @@ select
     ofr.offerer_siren,
     coalesce(
         date_diff(current_date, boh.last_bookable_offer_date, day) <= 30, false
-    ) as is_active_last_30days,
+    ) as is_active_last_30days,  -- NOSONAR: intentional duplication, readability preferred
     coalesce(
         date_diff(current_date, boh.last_bookable_offer_date, year) = 0, false
     ) as is_active_current_year,

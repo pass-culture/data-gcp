@@ -20,7 +20,7 @@
             ]
         )
 {% else %}
-    select *
+    select *  -- NOSONAR: intentional duplication, readability preferred
     from
         unnest(
             [

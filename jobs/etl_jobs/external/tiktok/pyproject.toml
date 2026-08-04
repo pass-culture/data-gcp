@@ -59,7 +59,6 @@ runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 
 [tool.uv]
 constraint-dependencies = [
-    "setuptools >= 83.0.0", # GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c,
-    "idna >= 3.15", # GHSA-65pc-fj4g-8rjx,
-    "pyasn1 >= 0.6.4", # GHSA-8ppf-4f7h-5ppj, GHSA-hm4w-wwcw-mr6r, GHSA-m4p7-r5rc-7g4j, GHSA-jr27-m4p2-rc6r,
+    "click >= 8.3.3", # PYSEC-2026-2132,
+    "pyarrow >= 23.0.1", # GHSA-rgxp-2hwp-jwgg,
 ]

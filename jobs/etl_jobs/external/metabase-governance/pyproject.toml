@@ -43,3 +43,9 @@ ban-relative-imports = "all"
 [tool.ruff.lint.flake8-type-checking]
 strict = true
 runtime-evaluated-base-classes = ["pydantic.BaseModel"]
+
+[tool.uv]
+constraint-dependencies = [
+    "pytest >= 9.0.3", # GHSA-6w46-j5rx-g56g,
+    "click >= 8.3.3", # PYSEC-2026-2132,
+]

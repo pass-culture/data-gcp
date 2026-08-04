@@ -76,5 +76,7 @@ ignore_missing_imports = true
 
 [tool.uv]
 constraint-dependencies = [
+    "pytest >= 9.0.3", # GHSA-6w46-j5rx-g56g,
+    "click >= 8.3.3", # PYSEC-2026-2132,
     "urllib3 >= 2.7.0", # CVE-2026-44432, CVE-2026-44431, PYSEC-2026-141, PYSEC-2026-142
 ]

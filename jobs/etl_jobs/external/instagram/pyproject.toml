@@ -19,3 +19,8 @@ dependencies = [
     "loguru>=0.7.3",
     "urllib3>=2.2.2",
 ]
+
+[tool.uv]
+constraint-dependencies = [
+    "click >= 8.3.3", # PYSEC-2026-2132,
+]

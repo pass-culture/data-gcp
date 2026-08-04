@@ -10,13 +10,13 @@ dependencies = [
     "google-cloud-secret-manager>=2.4.0",
     "ipykernel>=6.30.0",
     "pandas==2.2.0",
-    "pyarrow>=13.0.0",
+    "pyarrow >= 23.0.1",
     "pytest==9.0.3",
     "ruff>=0.12.4",
     "tornado==6.5.5",
     "typer>=0.21.2",
     "tensorflow>=2.14.0",
-    "keras>=3.13.2",
+    "keras >= 3.14.0",
     "loguru==0.6.0",
     "mlflow>=3.8.1",
     "numpy==1.26.4",
@@ -72,5 +72,9 @@ environments = [
     "sys_platform == 'linux'",
 ]
 constraint-dependencies = [
+    "starlette >= 1.3.1", # GHSA-86qp-5c8j-p5mr, GHSA-wqp7-x3pw-xc5r, GHSA-x746-7m8f-x49c, PYSEC-2026-161
+    "click >= 8.3.3", # PYSEC-2026-2132
+    "aiohttp >= 3.14.3", # GHSA-mq44-7p77-q5h7, GHSA-mfx4-hv73-q22v, GHSA-cq5v-8q36-5273
+    "cryptography >= 49.0.0", # GHSA-537c-gmf6-5ccf, GHSA-m2h6-j472-rp4c, GHSA-jwv3-5hgf-82ww
     "mlflow >= 3.12.0", # CVE-2026-0545
 ]

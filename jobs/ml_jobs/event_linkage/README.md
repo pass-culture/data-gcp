@@ -10,6 +10,59 @@ The pipeline is composed of three sequential CLI scripts located in `cli/`, each
 1_embed_offer_images.py  →  2_compute_similarities.py  →  3_create_delta_event_tables.py
 ```
 
+```mermaid
+flowchart TD
+    GCS[("BigQuery / GCS<br/>Offer Event Data")]
+    GCPSecret[/"GCP Secret Manager<br/>HuggingFace Token"/]
+
+    subgraph Step1["Step 1 - Embed Images"]
+        S1A["Batch load images<br/>500 offers per batch"]
+        S1B[/"Download image URLs<br/>custom_load_image"/]
+        S1C["DINOv3 CLS encoding<br/>dinov3-vitb16, GPU"]
+        S1D["L2 normalize embeddings"]
+        S1E[("image_embeddings.parquet")]
+    end
+
+    subgraph Step2["Step 2 - Compute Similarities"]
+        S2A["Text preprocessing<br/>name + description"]
+        S2B["Fuzzy name similarity<br/>fuzz.ratio + partial_ratio"]
+        S2C["Image cosine similarity<br/>np.dot on embeddings"]
+        S2D{"Pre-filter<br/>partial_name >= 60"}
+        S2E[("similarities.parquet")]
+    end
+
+    subgraph Step3["Step 3 - Create Delta Event Tables"]
+        S3A["Build cross-join DataFrame"]
+        S3B["Per-subcategory loop"]
+        S3C{"Match thresholds<br/>name>=90 OR desc>=95<br/>OR image>=0.8"}
+        S3D["Graph clustering<br/>connected_components"]
+        S3E["Deterministic UUID<br/>SHA-256 of offer IDs"]
+        S3F["Extract cluster metadata"]
+        S3G[("delta_events.parquet")]
+        S3H[("delta_event_offer_links.parquet")]
+    end
+
+    GCPSecret -->|HF token| S1A
+    GCS --> S1A
+    GCS --> S2A
+    GCS --> S3A
+
+    S1A --> S1B --> S1C --> S1D --> S1E
+
+    S1E --> S2C
+    S2A --> S2B --> S2D
+    S2C --> S2D --> S2E
+
+    S2E --> S3A
+    S3A --> S3B --> S3C --> S3D --> S3E --> S3F
+    S3F --> S3G
+    S3F --> S3H
+
+    style S1A fill:#cce5ff,stroke:#004085,color:#004085,stroke-width:2px
+    style S2A fill:#cce5ff,stroke:#004085,color:#004085,stroke-width:2px
+    style S3A fill:#cce5ff,stroke:#004085,color:#004085,stroke-width:2px
+```
+
 ### Step 1 — Embed Offer Images
 
 ```bash

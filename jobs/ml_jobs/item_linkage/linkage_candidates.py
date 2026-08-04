@@ -29,7 +29,7 @@ def load_model(model_path: str, linkage_type: str) -> SemanticSpace:
 
     Args:
         model_path (str): Path to the model.
-        reduction (bool): Whether to reduce the embeddings.
+        linkage_type (str): Type of linkage to perform.
 
     Returns:
         SemanticSpace: The loaded model.

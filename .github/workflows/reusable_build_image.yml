@@ -160,6 +160,6 @@ jobs:
                 --source "k8s-worker:latest" \
                 --destination "$image_name" \
                 --tag "$TAG" \
-                --sign false
+                --sign=false
             fi
           done

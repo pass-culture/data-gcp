@@ -13,7 +13,7 @@ dependencies = [
     "google-cloud-storage>=1.38.0",
     "pandas-gbq>=0.23.1",
     "requests==2.32.3",
-    "Authlib==0.15.4",
+    "authlib>=1.6.12",
     "fsspec==2021.4.0",
 ]
 

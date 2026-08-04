@@ -9,7 +9,7 @@ authors = [
 requires-python = ">=3.13,<3.14"
 
 dependencies = [
-    "authlib>=0.15.4",
+    "authlib>=1.6.12",
     "contentful>=1.13.1",
     "pandas>=2.0.3",
     "google-auth-oauthlib>=0.4.6",
@@ -19,14 +19,14 @@ dependencies = [
     "google-cloud-secret-manager>=2.2.0",
     "google-cloud-storage>=1.38.0",
     "requests>=2.32.3",
-    "pyarrow>=21.0.0",
+    "pyarrow>=23.0.1",
     "gcsfs>=2021.9.0",
     "typer>=0.24",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest==8.2.2",
+    "pytest>=9.0.3",
 ]
 
 ## ruff
@@ -75,3 +75,9 @@ testpaths = ["tests"]
 addopts = "-v --tb=short"
 log_cli = true
 log_cli_level = "INFO"
+
+[tool.uv]
+constraint-dependencies = [
+    "pytest >= 9.0.3", # GHSA-6w46-j5rx-g56g,
+    "aiohttp >= 3.14.3", # GHSA-cq5v-8q36-5273, GHSA-mfx4-hv73-q22v, GHSA-mq44-7p77-q5h7,
+]

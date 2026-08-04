@@ -51,5 +51,6 @@ runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 
 [tool.uv]
 constraint-dependencies = [
+    "aiohttp >= 3.14.3", # GHSA-cq5v-8q36-5273, GHSA-mfx4-hv73-q22v, GHSA-mq44-7p77-q5h7,
     "urllib3 >= 2.7.0", # CVE-2026-44432, CVE-2026-44431, PYSEC-2026-141, PYSEC-2026-142
 ]

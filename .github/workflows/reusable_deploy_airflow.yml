@@ -305,13 +305,16 @@ jobs:
         env:
           PASSDIRECTOR_SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.PASSDIRECTOR_SLACK_BOT_TOKEN }}
           AIRFLOW_NAME: ${{ inputs.AIRFLOW_NAME }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          JOB_STATUS: ${{ job.status }}
+          NOTIF_CHANNEL_ID: ${{ vars.NOTIF_CHANNEL_ID }}
         run: |
-          if [ "${{ job.status }}" = "success" ]; then
+          if [ "$JOB_STATUS" = "success" ]; then
             EMOJI="✅"
           else
             EMOJI="❌"
           fi
           passdirector slack post \
-            --channel "${{ vars.NOTIF_CHANNEL_ID }}" \
+            --channel "$NOTIF_CHANNEL_ID" \
             --message "${EMOJI} <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Airflow déployé> sur l'environnement $AIRFLOW_NAME" \
-            --github-actor "${{ github.actor }}"
+            --github-actor "$GITHUB_ACTOR"

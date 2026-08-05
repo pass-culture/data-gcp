@@ -206,8 +206,9 @@ jobs:
         env:
           PASSDIRECTOR_SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.PASSDIRECTOR_SLACK_BOT_TOKEN }}
           NOTIF_CHANNEL_ID: ${{ inputs.NOTIF_CHANNEL_ID }}
+          GITHUB_ACTOR: ${{ github.actor }}
         run: |
           passdirector slack post \
             --channel "$NOTIF_CHANNEL_ID" \
             --message "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|La compilation dbt a échoué>" \
-            --github-actor "${{ github.actor }}"
+            --github-actor "$GITHUB_ACTOR"

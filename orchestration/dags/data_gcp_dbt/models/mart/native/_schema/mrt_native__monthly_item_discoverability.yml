@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: mrt_native__monthly_item_discoverability
+    description: "{{ doc('description__mrt_native__monthly_item_discoverability') }}"
+    columns:
+      - name: item_id
+        description: "{{ doc('column__item_id') }}"
+      - name: offer_subcategory_id
+        description: "{{ doc('column__offer_subcategory_id') }}"
+      - name: offer_category_id
+        description: "{{ doc('column__offer_category_id') }}"
+      - name: month
+        description: "{{ doc('column__discoverability_month') }}"
+      - name: nb_bookable_offers
+        description: "{{ doc('column__nb_bookable_offers') }}"
+      - name: nb_bookable_days
+        description: "{{ doc('column__nb_bookable_days') }}"
+      - name: nb_monthly_consult
+        description: "{{ doc('column__nb_monthly_consult') }}"
+      - name: nb_monthly_search_consult
+        description: "{{ doc('column__nb_monthly_search_consult') }}"
+      - name: nb_monthly_home_consult
+        description: "{{ doc('column__nb_monthly_home_consult') }}"
+      - name: nb_monthly_venue_consult
+        description: "{{ doc('column__nb_monthly_venue_consult') }}"
+      - name: nb_monthly_favorites_consult
+        description: "{{ doc('column__nb_monthly_favorites_consult') }}"
+      - name: nb_monthly_similar_offer_consult
+        description: "{{ doc('column__nb_monthly_similar_offer_consult') }}"
+      - name: nb_monthly_other_channel_offer_consult
+        description: "{{ doc('column__nb_monthly_other_channel_offer_consult') }}"

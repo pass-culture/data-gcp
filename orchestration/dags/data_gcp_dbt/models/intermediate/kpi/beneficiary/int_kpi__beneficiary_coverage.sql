@@ -2,11 +2,21 @@ with
     user_deposit as (
         select
             dud.user_id,
-            dud.user_department_code as department_code,
+            -- Historized department (address on file at the end of this
+            -- month), not dud.user_department_code (current address) --
+            -- see int_kpi__beneficiary_department_by_month for why: a
+            -- beneficiary who moves gets reattributed to their new
+            -- department retroactively for their whole deposit history
+            -- otherwise.
+            bdm.department_code,
             date(date_trunc(dud.deposit_active_date, month)) as deposit_active_month,
             date_diff(dud.deposit_active_date, dud.user_birth_date, month)
             / 12.0 as user_decimal_age
         from {{ ref("int_global__daily_deposit") }} as dud
+        inner join
+            {{ ref("int_kpi__beneficiary_department_by_month") }} as bdm
+            on bdm.user_id = dud.user_id
+            and bdm.reference_month = date_trunc(dud.deposit_active_date, month)
         where dud.deposit_active_date > date_sub(current_date(), interval 48 month)
     ),
 

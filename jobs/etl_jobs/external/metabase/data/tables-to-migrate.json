@@ -479,5 +479,17 @@
       "nb_venues_consulted": "total_venues_consulted",
       "nb_offers_booked": "total_offers_booked"
     }
+  },
+  "analytics_prod.aggregated_daily_offer_consultation_data": {
+    "target_table": "analytics_prod.native_daily_offer_consultation"
+  },
+  "analytics_prod.firebase_daily_offer_consultation_data": {
+    "target_table": "int_firebase_prod.native_daily_offer_consultation"
+  },
+  "analytics_prod.enriched_monthly_bookable_item_discoverability": {
+    "target_table": "analytics_prod.native_monthly_item_discoverability"
+  },
+  "analytics_prod.enriched_reimbursement_data": {
+    "target_table": "analytics_prod.finance_booking_reimbursement"
   }
 }

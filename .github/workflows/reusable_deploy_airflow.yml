@@ -84,7 +84,7 @@ jobs:
       - name: "Install passdirector"
         run: |
           uv tool install --from "git+https://x-access-token:${{ steps.github-token.outputs.token }}@github.com/pass-culture/passdirector@main" passdirector
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: "Install Python requirements"
         run: uv sync --frozen
       - id: auth
@@ -304,6 +304,7 @@ jobs:
         if: always()
         env:
           PASSDIRECTOR_SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.PASSDIRECTOR_SLACK_BOT_TOKEN }}
+          AIRFLOW_NAME: ${{ inputs.AIRFLOW_NAME }}
         run: |
           if [ "${{ job.status }}" = "success" ]; then
             EMOJI="✅"
@@ -312,5 +313,5 @@ jobs:
           fi
           passdirector slack post \
             --channel "${{ vars.NOTIF_CHANNEL_ID }}" \
-            --message "${EMOJI} <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Airflow déployé> sur l'environnement ${{ inputs.AIRFLOW_NAME }}" \
+            --message "${EMOJI} <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Airflow déployé> sur l'environnement $AIRFLOW_NAME" \
             --github-actor "${{ github.actor }}"

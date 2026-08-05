@@ -68,7 +68,7 @@ jobs:
       - name: "Install passdirector"
         run: |
           uv tool install --from "git+https://x-access-token:${{ steps.github-token.outputs.token }}@github.com/pass-culture/passdirector@main" passdirector
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: "Run tests"
         run: pytest tests || uv run pytest tests
         env:
@@ -77,8 +77,10 @@ jobs:
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
         env:
           PASSDIRECTOR_SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.PASSDIRECTOR_SLACK_BOT_TOKEN }}
+          NOTIF_CHANNEL_ID: ${{ inputs.NOTIF_CHANNEL_ID }}
+          JOB_PATH: ${{ inputs.JOB_PATH }}
         run: |
           passdirector slack post \
-            --channel "${{ inputs.NOTIF_CHANNEL_ID }}" \
-            --message ":fire: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Les tests sur le job ${{ inputs.JOB_PATH }} ont échoués> :no_entry:" \
+            --channel "$NOTIF_CHANNEL_ID" \
+            --message ":fire: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Les tests sur le job $JOB_PATH ont échoués> :no_entry:" \
             --github-actor "${{ github.actor }}"

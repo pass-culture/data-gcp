@@ -55,7 +55,7 @@ jobs:
       - name: "Install passdirector"
         run: |
           uv tool install --from "git+https://x-access-token:${{ steps.github-token.outputs.token }}@github.com/pass-culture/passdirector@main" passdirector
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name : "Install linters (Ruff & sqlfmt)"
         run: uv sync
       - name: "Run linter (Ruff)"
@@ -67,8 +67,9 @@ jobs:
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
         env:
           PASSDIRECTOR_SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.PASSDIRECTOR_SLACK_BOT_TOKEN }}
+          NOTIF_CHANNEL_ID: ${{ inputs.NOTIF_CHANNEL_ID }}
         run: |
           passdirector slack post \
-            --channel "${{ inputs.NOTIF_CHANNEL_ID }}" \
+            --channel "$NOTIF_CHANNEL_ID" \
             --message ":fire: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Linter job échoué> :no_entry:" \
             --github-actor "${{ github.actor }}"

@@ -83,7 +83,7 @@ jobs:
       - name: "Install passdirector"
         run: |
           uv tool install --from "git+https://x-access-token:${{ steps.github-token.outputs.token }}@github.com/pass-culture/passdirector@v0.7.4" passdirector
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: "Authenticate with Google Cloud"
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         id: auth
@@ -139,11 +139,15 @@ jobs:
           # Output tags
           echo -e "tags<<EOF\n$tags\nEOF" >> "$GITHUB_OUTPUT"
       - name: "Build local Docker image"
+        env:
+          SOURCE_PATH: ${{ inputs.SOURCE_PATH }}
+          DOCKERFILE: ${{ inputs.DOCKERFILE }}
+          CONTEXT_PATH: ${{ inputs.CONTEXT_PATH }}
         run: |
           docker build \
-          -f ${{ inputs.SOURCE_PATH }}/${{ inputs.DOCKERFILE }} \
+          -f "$SOURCE_PATH/$DOCKERFILE" \
           -t k8s-worker:latest \
-          ${{ inputs.CONTEXT_PATH }}
+          "$CONTEXT_PATH"
 
       - name: "Push image with passdirector"
         env:

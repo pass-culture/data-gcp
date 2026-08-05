@@ -12,6 +12,7 @@ from src.constants import (
     DEEZER_ID_KEY,
     GENIUS_ID_KEY,
     ISNI_ID_KEY,
+    MUSIC_PLATFORM_IDS_KEYS,
     SOUNDCLOUD_ID_KEY,
     SPOTIFY_ID_KEY,
     WIKIDATA_ID_KEY,
@@ -22,6 +23,7 @@ from src.constants import (
 def test_link_new_products_to_artists(tmp_path):
     # 1. Setup mock data files
     artist_file = tmp_path / "applicative_artist.parquet"
+    artist_music_platform_file = tmp_path / "artist_music_platform.parquet"
     product_artist_link_file = tmp_path / "product_artist_link.parquet"
     product_file = tmp_path / "product.parquet"
 
@@ -39,6 +41,11 @@ def test_link_new_products_to_artists(tmp_path):
         WIKIPEDIA_URL_KEY: [None],
     }
     pd.DataFrame(artist_data).to_parquet(artist_file, index=False)
+
+    # Mock artist_music_platform table (empty — no platform IDs stored yet)
+    pd.DataFrame(
+        {ARTIST_ID_KEY: [], **{k: [] for k in MUSIC_PLATFORM_IDS_KEYS}}
+    ).to_parquet(artist_music_platform_file, index=False)
 
     # Current links: product 1 linked to id1
     link_data = {
@@ -98,6 +105,7 @@ def test_link_new_products_to_artists(tmp_path):
 
         main(
             artist_filepath=str(artist_file),
+            artist_music_platform_filepath=str(artist_music_platform_file),
             product_artist_link_filepath=str(product_artist_link_file),
             product_filepath=str(product_file),
             wiki_base_path=str(tmp_path),

@@ -71,6 +71,14 @@ OFFER_NAME_KEY = "offer_name"
 MEAN_TT_ITEM_EMBEDDING_KEY = "mean_tt_item_embedding"
 
 # Dataframe Columns List
+MUSIC_PLATFORM_IDS_KEYS = [
+    SPOTIFY_ID_KEY,
+    ISNI_ID_KEY,
+    APPLE_MUSIC_ID_KEY,
+    DEEZER_ID_KEY,
+    GENIUS_ID_KEY,
+    SOUNDCLOUD_ID_KEY,
+]
 ARTISTS_KEYS = [
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,

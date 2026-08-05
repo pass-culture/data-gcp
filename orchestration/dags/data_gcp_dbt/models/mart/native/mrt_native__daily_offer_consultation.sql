@@ -54,7 +54,7 @@ where
         and fe.event_date
         between date_sub(date('{{ ds() }}'), interval 3 day) and date('{{ ds() }}')
     {% else %}
-        and date(event_date)
+        and date(fe.event_date)
         >= date_sub('{{ ds() }}', interval {{ var("full_refresh_lookback") }})
     {% endif %}
 group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14

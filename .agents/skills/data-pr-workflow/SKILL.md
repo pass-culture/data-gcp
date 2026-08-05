@@ -136,6 +136,20 @@ The PR description should be concise but informative. Remember: the code is publ
 
 **Keep it brief.** If more context is needed, reference the Notion ticket.
 
+## Step 4.5: Optional Architecture Schema (code-logic-schema)
+
+After drafting the PR description, ask the user:
+
+> "Would you like me to generate an architecture diagram for this PR? It will be added to the PR description and README."
+
+- If **yes**: load and execute the `code-logic-schema` skill on the current git diff or changed files. Append the generated **Impact Architecture Schema** to the PR description body under a `## Architecture` heading, and include the README.md output block separately for the user to paste.
+- If **no**: proceed directly to Step 5.
+
+**How to invoke:**
+Use the diff from `git diff master...HEAD` as input to `code-logic-schema`. If the diff is large, scope it to the structurally significant files (skip test files, lock files, config-only changes).
+
+---
+
 ## Step 5: Definition of Ready (DOR) Checklist
 
 Before creating the PR, verify:

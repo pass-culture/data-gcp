@@ -15,7 +15,7 @@
 with
     consult_per_offer_last_30_days as (
         select offerer_id, offer_id, sum(cnt_events) as nb_consult_last_30_days
-        from {{ ref("aggregated_daily_offer_consultation_data") }}
+        from {{ ref("mrt_native__daily_offer_consultation") }}
         where
             event_date
             between date_sub(current_date, interval 30 day) and date(current_date)

@@ -18,6 +18,10 @@ build-backend = "hatchling.build"
 packages = ["."]
 
 [tool.uv]
+constraint-dependencies = [
+    "idna >= 3.15", # GHSA-65pc-fj4g-8rjx
+    "pyasn1 >= 0.6.4", # GHSA-8ppf-4f7h-5ppj, GHSA-hm4w-wwcw-mr6r, GHSA-m4p7-r5rc-7g4j, GHSA-jr27-m4p2-rc6r
+]
 environments = [
     "sys_platform == 'linux'",
     "sys_platform == 'darwin'",

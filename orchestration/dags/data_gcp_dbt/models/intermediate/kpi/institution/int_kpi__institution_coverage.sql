@@ -1,12 +1,17 @@
 -- depends_on: {{ ref('mrt_global__educational_deposit') }}
-with recursive
+with
     static_months as (
-        -- Génération statique des mois depuis 2021-01-01
-        select date('2021-01-01') as month_date
-        union all
-        select date(date_add(month_date, interval 1 month))
-        from static_months
-        where month_date < current_date()
+        select cast(date_month as date) as month_date
+        from
+            (
+                {{
+                    dbt_utils.date_spine(
+                        datepart="month",
+                        start_date="cast('2021-01-01' as date)",
+                        end_date="current_date()",
+                    )
+                }}
+            )
     ),
 
     year_mapping as (
@@ -39,11 +44,11 @@ with recursive
             inst.institution_epci_code,
             inst.institution_city_code
         from {{ ref("mrt_global__educational_deposit") }} as dep
+        inner join
+            months_spine as ms on dep.educational_year_id = ms.educational_year_id
         left join
             {{ ref("mrt_global__educational_institution") }} as inst
             on dep.institution_id = inst.institution_id
-        inner join
-            months_spine as ms on dep.educational_year_id = ms.educational_year_id
     ),
 
     first_bookings as (
@@ -66,11 +71,15 @@ select
     base.institution_department_name,
     base.institution_epci_code,
     base.institution_city_code,
-    count(distinct base.institution_id) as total_institutions,
-    count(
-        distinct case
-            when fb.first_booking_month <= base.partition_month then base.institution_id
-        end
+    coalesce(count(distinct base.institution_id), 0) as total_institutions,
+    coalesce(
+        count(
+            distinct case
+                when fb.first_booking_month <= base.partition_month
+                then base.institution_id
+            end
+        ),
+        0
     ) as total_engaged_institutions
 from institution_monthly_base as base
 left join

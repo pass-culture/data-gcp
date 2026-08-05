@@ -1,18 +1,13 @@
 with
-    clean_payment_status as (
-        select paymentid, max(date) as last_status_date
-        from {{ ref("int_finance__payment_status") }}
-        group by 1
-    ),
-
     clean_pricing_line1 as (
         select
             booking.booking_id,
             case
-                when category = 'offerer revenue' then pricing_line.amount
+                when pricing_line.category = 'offerer revenue' then pricing_line.amount
             end as offerer_revenue,
             case
-                when category = 'offerer contribution' then pricing_line.amount
+                when pricing_line.category = 'offerer contribution'
+                then pricing_line.amount
             end as offerer_contribution
         from {{ ref("int_applicative__booking") }} as booking
         left join
@@ -33,14 +28,14 @@ with
     ),
 
     individuel as (
-        select distinct
+        select distinct  -- noqa: ST06
             deposit.deposit_type as booking_type,
             '' as collective_booking_id,
             booking.booking_id,
             booking.booking_status,
             booking.booking_creation_date,
-            booking_cancellation_date,
-            booking_used_date,
+            booking.booking_cancellation_date,
+            booking.booking_used_date,
             booking.venue_id,
             booking.offerer_id,
             '' as educational_institution_id,
@@ -87,9 +82,6 @@ with
         left join
             {{ ref("int_finance__invoice") }} as invoice
             on invoice_cashflow.invoice_id = invoice.invoice_id
-        left join
-            {{ source("raw", "applicative_database_invoice_line") }} as invoice_line
-            on invoice.invoice_id = invoice_line.invoice_id
         where not invoice.invoice_reference like '%.2'
     ),
 
@@ -97,10 +89,11 @@ with
         select
             collective_booking.collective_booking_id,
             case
-                when category = 'offerer revenue' then pricing_line.amount
+                when pricing_line.category = 'offerer revenue' then pricing_line.amount
             end as offerer_revenue,
             case
-                when category = 'offerer contribution' then pricing_line.amount
+                when pricing_line.category = 'offerer contribution'
+                then pricing_line.amount
             end as offerer_contribution
         from {{ ref("mrt_global__collective_booking") }} as collective_booking
         left join
@@ -121,7 +114,7 @@ with
     ),
 
     collective as (
-        select
+        select  -- noqa: ST06
             'collective' as booking_type,
             collective_booking.collective_booking_id,
             '' as booking_id,
@@ -137,8 +130,8 @@ with
             pricing.creationdate as pricing_creation_date,
             - pricing.amount / 100 as pricing_amount,
             pricing.standardrule as pricing_rule,
-            offerer_revenue,
-            offerer_contribution,
+            coll_clean_pricing_line2.offerer_revenue,
+            coll_clean_pricing_line2.offerer_contribution,
             cashflow.id as cashflow_id,
             cashflow.creationdate as cashflow_creation_date,
             cashflow.status as cashflow_status,
@@ -149,9 +142,7 @@ with
             invoice.invoice_reference,
             invoice.invoice_creation_date,
             invoice.amount as invoice_amount
-        from
-            {{ source("raw", "applicative_database_collective_booking") }}
-            as collective_booking
+        from {{ ref("int_applicative__collective_booking") }} as collective_booking
         left join
             {{ ref("int_finance__pricing") }} as pricing
             on collective_booking.collective_booking_id = pricing.collective_booking_id
@@ -174,9 +165,6 @@ with
         left join
             {{ ref("int_finance__invoice") }} as invoice
             on invoice_cashflow.invoice_id = invoice.invoice_id
-        left join
-            {{ source("raw", "applicative_database_invoice_line") }} as invoice_line
-            on invoice.invoice_id = invoice_line.invoice_id
         where not invoice.invoice_reference like '%.2'
     )
 

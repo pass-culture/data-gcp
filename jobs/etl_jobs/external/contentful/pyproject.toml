@@ -18,7 +18,7 @@ dependencies = [
     "google-cloud-core>=1.6.0",
     "google-cloud-secret-manager>=2.2.0",
     "google-cloud-storage>=1.38.0",
-    "requests>=2.32.3",
+    "requests>=2.33.0",
     "pyarrow>=21.0.0",
     "gcsfs>=2021.9.0",
     "typer>=0.24",
@@ -75,3 +75,12 @@ testpaths = ["tests"]
 addopts = "-v --tb=short"
 log_cli = true
 log_cli_level = "INFO"
+
+[tool.uv]
+constraint-dependencies = [
+    "cryptography >= 48.0.1", # GHSA-537c-gmf6-5ccf,
+    "pygments >= 2.20.0", # GHSA-5239-wwwm-4pmq,
+    "idna >= 3.15", # GHSA-65pc-fj4g-8rjx,
+    "urllib3 >= 2.7.0", # GHSA-2xpw-w6gg-jr37, GHSA-38jv-5279-wg99, GHSA-48p4-8xcf-vxj5, GHSA-gm62-xv2j-4w53, GHSA-pq67-6m6q-mj2v, GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j,
+    "pyasn1 >= 0.6.4", # GHSA-8ppf-4f7h-5ppj, GHSA-hm4w-wwcw-mr6r, GHSA-m4p7-r5rc-7g4j, GHSA-jr27-m4p2-rc6r,
+]

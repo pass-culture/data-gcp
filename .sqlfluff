@@ -3,7 +3,7 @@ dialect = bigquery
 templater = dbt
 exclude_rules = layout.indent, layout.cte_bracket, layout.select_targets, layout.spacing, layout.keyword_newline, structure.using
 max_line_length = 0
-; large_file_skip_byte_limit = 25000
+large_file_skip_byte_limit = 40000
 ; ignore_templated_areas = False
 ; processes = 1
 

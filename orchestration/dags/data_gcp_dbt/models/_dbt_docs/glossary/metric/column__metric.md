@@ -128,7 +128,6 @@ Total number of students who participated in at least one EAC activity within th
 {% docs column__total_session_venue_map_seen_duration_seconds %} Durée totale en seconde pendant laquelle la venue map a été affichée au cours d’une session. {% enddocs %}
 {% docs column__total_diversification %} Total du score de diversité incrémenté par les réservations associées. {% enddocs %}
 {% docs column__total_quantities %} Total quantities booked. A booking quantity can be 1 or 2. {% enddocs %}
-{% docs column__institution_region_code %} INSEE region code of the educational institution, derived from the department code via the region_department seed. Defaults to '-1' when not found. {% enddocs %}
 {% docs column__total_revenue_amount %} The total revenue amount associated with the bookings. {% enddocs %}
 {% docs column__total_reimbursed_amount %} Total amount reimbursed to the offerers.  {% enddocs %}
 {% docs column__total_contribution_amount %} Total amount contributed by the offerers on their bookings.  {% enddocs %}

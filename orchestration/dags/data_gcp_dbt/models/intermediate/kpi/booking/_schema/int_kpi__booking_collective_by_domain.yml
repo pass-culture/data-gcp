@@ -7,7 +7,7 @@ models:
         description: '{{ doc("column__partition_month") }}'
         data_type: DATE
 
-      - name: domain_name
+      - name: educational_domain_name
         description: '{{ doc("column__educational_domain_name") }}'
         data_type: STRING
 
@@ -39,34 +39,34 @@ models:
         description: '{{ doc("column__institution_city_code") }}'
         data_type: STRING
 
-      - name: total_collective_bookings_by_domain
-        description: '{{ doc("column__total_collective_bookings_by_domain") }}'
+      - name: total_collective_bookings
+        description: '{{ doc("column__total_collective_bookings") }}'
         data_type: INTEGER
 
-      - name: total_collective_booking_amount_by_domain
-        description: '{{ doc("column__total_collective_booking_amount_by_domain") }}'
+      - name: total_collective_booking_amount
+        description: '{{ doc("column__total_booking_amount") }}'
         data_type: FLOAT
 
-      - name: total_collective_tickets_by_domain
-        description: '{{ doc("column__total_collective_tickets_by_domain") }}'
+      - name: total_collective_tickets
+        description: '{{ doc("column__total_tickets") }}'
         data_type: INTEGER
 
-      - name: total_collective_institutions_by_domain
-        description: '{{ doc("column__total_collective_institutions_by_domain") }}'
+      - name: total_collective_institutions
+        description: '{{ doc("column__total_institutions") }}'
         data_type: INTEGER
 
-      - name: cumulative_total_collective_bookings_by_domain
+      - name: cumulative_total_collective_bookings
         description: '{{ doc("column__cumulative_total_collective_bookings_by_domain") }}'
         data_type: INTEGER
 
-      - name: cumulative_total_collective_booking_amount_by_domain
+      - name: cumulative_total_collective_booking_amount
         description: '{{ doc("column__cumulative_total_collective_booking_amount_by_domain") }}'
         data_type: FLOAT
 
-      - name: cumulative_total_collective_tickets_by_domain
+      - name: cumulative_total_collective_tickets
         description: '{{ doc("column__cumulative_total_collective_tickets_by_domain") }}'
         data_type: INTEGER
 
-      - name: cumulative_total_collective_institutions_by_domain
+      - name: cumulative_total_collective_institutions
         description: '{{ doc("column__cumulative_total_collective_institutions_by_domain") }}'
         data_type: INTEGER

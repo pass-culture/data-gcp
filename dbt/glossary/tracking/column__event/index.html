@@ -5983,6 +5983,8 @@
       
         
       
+        
+      
     
     
       
@@ -6028,6 +6030,27 @@
   
   <span class="md-ellipsis">
     Finance reimbursement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/mart/finance/description__mrt_finance__booking_reimbursement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Booking Reimbursement
   </span>
   
 
@@ -7031,6 +7054,10 @@
       
         
       
+        
+      
+        
+      
     
     
       
@@ -7176,6 +7203,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../models/mart/native/description__mrt_native__daily_offer_consultation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Daily Offer Consultation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../models/mart/native/description__mrt_native__daily_user_home_module/" class="md-nav__link">
         
   
@@ -7244,6 +7292,27 @@
   
   <span class="md-ellipsis">
     Native Monthly Beneficiary Coverage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/mart/native/description__mrt_native__monthly_item_discoverability/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Monthly Item Discoverability
   </span>
   
 
@@ -11245,6 +11314,9 @@
 <p><strong>traffic_medium</strong>: The medium of the marketing campaign (email, push notification ...)that generated the session.</p>
 <p><strong>session_id</strong>: Deprecated: use unique_session_id. The session identifier during which the event was recorded.</p>
 <p><strong>unique_session_id</strong>: A unique identifier for the session, ensuring no duplicates.</p>
+<p><strong>consultation_module_tag_name</strong>: Name of the Algolia/home module tag associated with the consultation, when the consultation originated from a tagged module. Null otherwise.</p>
+<p><strong>consultation_user_role</strong>: Role of the user at the time of the event, derived from their deposit status: 'Bénéficiaire' (has an active deposit), 'Ancien bénéficiaire' (deposit expired), 'Non bénéficiaire' (logged in, no deposit), or 'Non loggué' (not logged in).</p>
+<p><strong>consultation_user_age</strong>: Age of the user at the time of the event, computed from their birth date and the event date.</p>
 
 
 

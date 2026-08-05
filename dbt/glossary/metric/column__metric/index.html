@@ -5983,6 +5983,8 @@
       
         
       
+        
+      
     
     
       
@@ -6028,6 +6030,27 @@
   
   <span class="md-ellipsis">
     Finance reimbursement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/mart/finance/description__mrt_finance__booking_reimbursement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Booking Reimbursement
   </span>
   
 
@@ -7031,6 +7054,10 @@
       
         
       
+        
+      
+        
+      
     
     
       
@@ -7176,6 +7203,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../models/mart/native/description__mrt_native__daily_offer_consultation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Daily Offer Consultation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../models/mart/native/description__mrt_native__daily_user_home_module/" class="md-nav__link">
         
   
@@ -7244,6 +7292,27 @@
   
   <span class="md-ellipsis">
     Native Monthly Beneficiary Coverage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/mart/native/description__mrt_native__monthly_item_discoverability/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Monthly Item Discoverability
   </span>
   
 
@@ -11442,6 +11511,21 @@ The total cumulative number of unique partners who have had at least one active 
 
 <p><strong>metrics__total_cumulative_activated_partners_dual_part</strong>: 
 The total cumulative number of unique partners who have had at least one active offer within both the individual part and the collective part (at any point, concurrently or sequentially) for at least 1 day since inception up to the given month.</p>
+
+<p><strong>discoverability_month</strong>:  First day of the calendar month the row aggregates (bookability and consultation counts are computed per month). </p>
+
+<p><strong>nb_bookable_offers</strong>:  Number of distinct offers of this item that were bookable at least once during the month. </p>
+<p><strong>nb_bookable_days</strong>:  Number of distinct days during the month on which at least one offer of this item was bookable. </p>
+
+<p><strong>nb_monthly_consult</strong>:  Total number of consultations of this item recorded during the month, all origins combined (Firebase offer-consultation events). </p>
+<p><strong>nb_monthly_search_consult</strong>:  Number of the item's monthly consultations that originated from search. </p>
+<p><strong>nb_monthly_home_consult</strong>:  Number of the item's monthly consultations that originated from the home page (<code>home</code>, <code>video</code>, <code>videoModal</code>, <code>highlightOffer</code>, <code>thematicHighlight</code> or <code>exclusivity</code> origins). </p>
+<p><strong>nb_monthly_venue_consult</strong>:  Number of the item's monthly consultations that originated from a venue page. </p>
+<p><strong>nb_monthly_favorites_consult</strong>:  Number of the item's monthly consultations that originated from the user's favorites. </p>
+<p><strong>nb_monthly_similar_offer_consult</strong>:  Number of the item's monthly consultations that originated from a similar-offer or same-artist-playlist recommendation. </p>
+<p><strong>nb_monthly_other_channel_offer_consult</strong>:  Number of the item's monthly consultations that originated from any channel other than search, home, venue, favorites or similar-offer recommendations. </p>
+
+<p><strong>cnt_events</strong>:  Number of consultation events matching this row's dimensions (event date, offer, origin, traffic attribution, user role/age). </p>
 
 
 

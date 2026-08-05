@@ -5983,6 +5983,8 @@
       
         
       
+        
+      
     
     
       
@@ -6028,6 +6030,27 @@
   
   <span class="md-ellipsis">
     Finance reimbursement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/mart/finance/description__mrt_finance__booking_reimbursement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Booking Reimbursement
   </span>
   
 
@@ -7031,6 +7054,10 @@
       
         
       
+        
+      
+        
+      
     
     
       
@@ -7176,6 +7203,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../models/mart/native/description__mrt_native__daily_offer_consultation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Daily Offer Consultation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../models/mart/native/description__mrt_native__daily_user_home_module/" class="md-nav__link">
         
   
@@ -7244,6 +7292,27 @@
   
   <span class="md-ellipsis">
     Native Monthly Beneficiary Coverage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/mart/native/description__mrt_native__monthly_item_discoverability/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Monthly Item Discoverability
   </span>
   
 
@@ -11291,6 +11360,23 @@
 <p><strong>payment_status_detail</strong>:  Details about the status change. </p>
 
 <p><strong>bank_account_id</strong>:  Unique identifier for the bank account linked to reimbursements. </p>
+
+<p><strong>reimbursement_booking_type</strong>:  Distinguishes the origin of the row: the individual deposit type (<code>GRANT_18</code>, <code>GRANT_15_17</code>, <code>GRANT_17_18</code>, <code>GRANT_FREE</code>...) for an individual booking, or the literal <code>collective</code> for a collective booking. </p>
+
+<p><strong>reimbursement_pricing_rule</strong>:  Identifier of the standard reimbursement rule applied to the pricing (<code>pricing.standardRule</code>). Null when a custom reimbursement rule was applied instead. </p>
+
+<p><strong>reimbursement_pricing_amount</strong>: 
+Reimbursement amount in euros, with sign inverted from the raw pricing amount: positive = paid by pass Culture to the offerer. Broken down by pricing-line category into <code>offerer_revenue</code> and <code>offerer_contribution</code> (see <code>column__pricing_line_category</code>).</p>
+
+<p><strong>offerer_revenue</strong>: 
+Portion of the pricing amount classified as "offerer revenue" (the main reimbursement paid to the offerer), in euros. See <code>column__pricing_line_category</code> for the category definition.</p>
+
+<p><strong>offerer_contribution</strong>: 
+Portion of the pricing amount classified as "offerer contribution" (the offerer's own participation), in euros. See <code>column__pricing_line_category</code> for the category definition.</p>
+
+<p><strong>reimbursement_cashflow_amount</strong>:  Total amount of the cashflow in euros, with sign inverted from the raw cashflow amount: positive = paid to the offerer. </p>
+
+<p><strong>cashflow_batch_creation_date</strong>:  Date when the cashflow batch was created. </p>
 
 
 

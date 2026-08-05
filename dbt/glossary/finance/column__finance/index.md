@@ -107,3 +107,17 @@
 **payment_status_detail**: Details about the status change.
 
 **bank_account_id**: Unique identifier for the bank account linked to reimbursements.
+
+**reimbursement_booking_type**: Distinguishes the origin of the row: the individual deposit type (`GRANT_18`, `GRANT_15_17`, `GRANT_17_18`, `GRANT_FREE`...) for an individual booking, or the literal `collective` for a collective booking.
+
+**reimbursement_pricing_rule**: Identifier of the standard reimbursement rule applied to the pricing (`pricing.standardRule`). Null when a custom reimbursement rule was applied instead.
+
+**reimbursement_pricing_amount**: Reimbursement amount in euros, with sign inverted from the raw pricing amount: positive = paid by pass Culture to the offerer. Broken down by pricing-line category into `offerer_revenue` and `offerer_contribution` (see `column__pricing_line_category`).
+
+**offerer_revenue**: Portion of the pricing amount classified as "offerer revenue" (the main reimbursement paid to the offerer), in euros. See `column__pricing_line_category` for the category definition.
+
+**offerer_contribution**: Portion of the pricing amount classified as "offerer contribution" (the offerer's own participation), in euros. See `column__pricing_line_category` for the category definition.
+
+**reimbursement_cashflow_amount**: Total amount of the cashflow in euros, with sign inverted from the raw cashflow amount: positive = paid to the offerer.
+
+**cashflow_batch_creation_date**: Date when the cashflow batch was created.

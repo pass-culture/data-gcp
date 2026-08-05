@@ -3689,6 +3689,44 @@ The `int_finance__reimbursement` table computes finance amounts by booking_used_
 | total_reimbursed_amount   |           | Total amount reimbursed to the offerers.                                                                                        |
 | total_contribution_amount |           | Total amount contributed by the offerers on their bookings.                                                                     |
 
+The `mrt_finance__booking_reimbursement` table unions individual and collective bookings with their full finance reconciliation chain: pricing (valorisation), cashflow and invoice. It is a finance-facing table used to reconcile what a booking generated for the offerer against what was actually paid out and invoiced, at the individual booking grain.
+
+Each row is a booking (individual or collective, identified by `booking_type`) joined to at most one pricing, one cashflow and one invoice; the `booking_id` / `collective_booking_id` and `educational_institution_id` columns are populated only for the row type they apply to (empty string on the other type). `offerer_revenue` and `offerer_contribution` are the two components of `pricing_amount` (per the reimbursement rule's `offerer revenue` / `offerer contribution` pricing-line categories).
+
+Rows are restricted to bookings that reached at least the pricing step; a booking with no pricing yet (not priceable) will not appear here.
+
+## Table description
+
+| name                         | data_type | description                                                                                                                                                                                                                                                  |
+| ---------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| booking_type                 |           | Distinguishes the origin of the row: the individual deposit type (`GRANT_18`, `GRANT_15_17`, `GRANT_17_18`, `GRANT_FREE`...) for an individual booking, or the literal `collective` for a collective booking.                                                |
+| collective_booking_id        |           | Unique identifier for a collective booking.                                                                                                                                                                                                                  |
+| booking_id                   |           | Unique identifier for a booking.                                                                                                                                                                                                                             |
+| booking_status               |           | Current status of the booking.                                                                                                                                                                                                                               |
+| booking_creation_date        |           | Date when the booking was created.                                                                                                                                                                                                                           |
+| booking_cancellation_date    |           | Date when the booking was cancelled.                                                                                                                                                                                                                         |
+| booking_used_date            |           | Date when the booking was used.                                                                                                                                                                                                                              |
+| venue_id                     |           | Unique identifier for the venue.                                                                                                                                                                                                                             |
+| offerer_id                   |           | Unique identifier of the offerer.                                                                                                                                                                                                                            |
+| educational_institution_id   |           | Id of the educational institution.                                                                                                                                                                                                                           |
+| pricing_id                   |           | Unique identifier for a pricing (valorisation).                                                                                                                                                                                                              |
+| pricing_status               |           | Status of the pricing: VALIDATED (created), PROCESSED (included in cashflow), or INVOICED (invoice generated).                                                                                                                                               |
+| pricing_creation_date        |           | Date when the pricing was created.                                                                                                                                                                                                                           |
+| pricing_amount               |           | Reimbursement amount in euros, with sign inverted from the raw pricing amount: positive = paid by pass Culture to the offerer. Broken down by pricing-line category into `offerer_revenue` and `offerer_contribution` (see `column__pricing_line_category`). |
+| pricing_rule                 |           | Identifier of the standard reimbursement rule applied to the pricing (`pricing.standardRule`). Null when a custom reimbursement rule was applied instead.                                                                                                    |
+| offerer_revenue              |           | Portion of the pricing amount classified as "offerer revenue" (the main reimbursement paid to the offerer), in euros. See `column__pricing_line_category` for the category definition.                                                                       |
+| offerer_contribution         |           | Portion of the pricing amount classified as "offerer contribution" (the offerer's own participation), in euros. See `column__pricing_line_category` for the category definition.                                                                             |
+| cashflow_id                  |           | Unique identifier for a cashflow (monetary flow).                                                                                                                                                                                                            |
+| cashflow_creation_date       |           | Date when the cashflow was created.                                                                                                                                                                                                                          |
+| cashflow_status              |           | Status of the cashflow: PENDING (created), UNDER_REVIEW (files generated), or ACCEPTED (invoice generated).                                                                                                                                                  |
+| cashflow_amount              |           | Total amount of the cashflow in euros, with sign inverted from the raw cashflow amount: positive = paid to the offerer.                                                                                                                                      |
+| cashflow_batch_creation_date |           | Date when the cashflow batch was created.                                                                                                                                                                                                                    |
+| cashflow_batch_label         |           | Label description of the cashflow batch.                                                                                                                                                                                                                     |
+| invoice_id                   |           | Unique identifier for an invoice (reimbursement receipt).                                                                                                                                                                                                    |
+| invoice_reference            |           | Unique reference of the invoice.                                                                                                                                                                                                                             |
+| invoice_creation_date        |           | Date when the invoice was created.                                                                                                                                                                                                                           |
+| invoice_amount               |           | Total amount of the invoice in euros.                                                                                                                                                                                                                        |
+
 The `mrt_global__address` table captures detailed address data, including street, postal code, city, and geographical coordinates. Offerers can create offers at distinct address places.
 
 ## Table description
@@ -5371,6 +5409,30 @@ This table is filtered to `playlist_origin = 'recommendation'` only. As a result
 | booking_timestamp       |           | The timestamp when the booking was made by the user.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | fav_timestamp           |           | The timestamp when the entry was marked as favorite by the user.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
+The `mrt_native__daily_offer_consultation` table aggregates offer-consultation events (`ConsultOffer`, `ConsultWholeOffer`, `ConsultDescriptionDetails`) by day, offer, traffic attribution, discovery module and user role/age, with `cnt_events` as the count of matching events.
+
+It is used to analyse consultation volumes at the offer/offerer/venue level over time, broken down by acquisition channel (`origin`, `traffic_medium`, `traffic_campaign`), discovery module (`name`), and the consulting user's beneficiary status and age at the time of the event.
+
+## Table description
+
+| name             | data_type | description                                                                                                                                                                                                                                 |
+| ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| event_date       |           | The date when the event occurred, used for partitioning the data.                                                                                                                                                                           |
+| offerer_id       |           | Unique identifier of the offerer.                                                                                                                                                                                                           |
+| offerer_name     |           | Name of the offerer.                                                                                                                                                                                                                        |
+| venue_id         |           | Unique identifier for the venue.                                                                                                                                                                                                            |
+| venue_name       |           | Name of the venue.                                                                                                                                                                                                                          |
+| offer_id         |           | Unique identifier for the offer.                                                                                                                                                                                                            |
+| offer_name       |           | Name of the offer as it appears in the application.                                                                                                                                                                                         |
+| name             |           | Name of the Algolia/home module tag associated with the consultation, when the consultation originated from a tagged module. Null otherwise.                                                                                                |
+| event_name       |           | The name of the event. For screen views, it concatenates the event name with the Firebase screen name.                                                                                                                                      |
+| traffic_medium   |           | The medium of the marketing campaign (email, push notification ...)that generated the session.                                                                                                                                              |
+| traffic_campaign |           | The name of the marketing campaign that generated the session.                                                                                                                                                                              |
+| origin           |           | The origin of the event, indicating where it was triggered from.                                                                                                                                                                            |
+| user_role        |           | Role of the user at the time of the event, derived from their deposit status: 'Bénéficiaire' (has an active deposit), 'Ancien bénéficiaire' (deposit expired), 'Non bénéficiaire' (logged in, no deposit), or 'Non loggué' (not logged in). |
+| user_age         |           | Age of the user at the time of the event, computed from their birth date and the event date.                                                                                                                                                |
+| cnt_events       |           | Number of consultation events matching this row's dimensions (event date, offer, origin, traffic attribution, user role/age).                                                                                                               |
+
 # Table: Daily User Home Module
 
 The `mrt_native__daily_user_home_module` table provides detailed insights into user interactions with home modules on a daily basis. It captures various user activities, module metadata, and associated timestamps, enabling comprehensive analysis of user behavior and module performance.
@@ -5537,6 +5599,28 @@ This table is used to:
 | total_population                | INTEGER   | The total number of french population.                                                                                     |
 | total_users_last_12_months      | INTEGER   | Rolling sum of distinct users over the last 12 months for a given age and department.                                      |
 | total_population_last_12_months | INTEGER   | Rolling sum of french population over the last 12 months for a given age and department.                                   |
+
+The `mrt_native__monthly_item_discoverability` table is a one-row-per-item-per-month aggregate combining bookable-offer inventory (how many offers of an item were bookable, and on how many days) with how often that item was consulted, broken down by discovery channel (search, home, venue, favorites, similar-offer recommendations, other).
+
+It is used to study how discoverable an item is relative to how much inventory of it is actually bookable, and through which channels users find it. An "item" is a generic content grouping used internally by the data team (`item_id`), shared across offer versions/providers of the same underlying content.
+
+## Table description
+
+| name                                   | data_type | description                                                                                                                                                                    |
+| -------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| item_id                                |           | Identifier for the item associated with the offer used internally by the data science team.                                                                                    |
+| offer_subcategory_id                   |           | Identifier for the subcategory of the offer. Determined by the cultural partner via a list of pre-set options.                                                                 |
+| offer_category_id                      |           | Identifier for the category of the offer. Determined by the cultural partner via a list of pre-set options in a drop down menu.                                                |
+| month                                  |           | First day of the calendar month the row aggregates (bookability and consultation counts are computed per month).                                                               |
+| nb_bookable_offers                     |           | Number of distinct offers of this item that were bookable at least once during the month.                                                                                      |
+| nb_bookable_days                       |           | Number of distinct days during the month on which at least one offer of this item was bookable.                                                                                |
+| nb_monthly_consult                     |           | Total number of consultations of this item recorded during the month, all origins combined (Firebase offer-consultation events).                                               |
+| nb_monthly_search_consult              |           | Number of the item's monthly consultations that originated from search.                                                                                                        |
+| nb_monthly_home_consult                |           | Number of the item's monthly consultations that originated from the home page (`home`, `video`, `videoModal`, `highlightOffer`, `thematicHighlight` or `exclusivity` origins). |
+| nb_monthly_venue_consult               |           | Number of the item's monthly consultations that originated from a venue page.                                                                                                  |
+| nb_monthly_favorites_consult           |           | Number of the item's monthly consultations that originated from the user's favorites.                                                                                          |
+| nb_monthly_similar_offer_consult       |           | Number of the item's monthly consultations that originated from a similar-offer or same-artist-playlist recommendation.                                                        |
+| nb_monthly_other_channel_offer_consult |           | Number of the item's monthly consultations that originated from any channel other than search, home, venue, favorites or similar-offer recommendations.                        |
 
 The `mrt_native__nps_beneficiary` table captures Net Promoter Score (NPS) data from beneficiaries in the native application. It includes information about user responses, ratings, demographics, and engagement metrics like deposit type and booking history. This table is essential for analyzing user satisfaction, regional trends, and the relationship between user activity and NPS ratings.
 
@@ -7317,6 +7401,20 @@ Work in progress
 
 **bank_account_id**: Unique identifier for the bank account linked to reimbursements.
 
+**reimbursement_booking_type**: Distinguishes the origin of the row: the individual deposit type (`GRANT_18`, `GRANT_15_17`, `GRANT_17_18`, `GRANT_FREE`...) for an individual booking, or the literal `collective` for a collective booking.
+
+**reimbursement_pricing_rule**: Identifier of the standard reimbursement rule applied to the pricing (`pricing.standardRule`). Null when a custom reimbursement rule was applied instead.
+
+**reimbursement_pricing_amount**: Reimbursement amount in euros, with sign inverted from the raw pricing amount: positive = paid by pass Culture to the offerer. Broken down by pricing-line category into `offerer_revenue` and `offerer_contribution` (see `column__pricing_line_category`).
+
+**offerer_revenue**: Portion of the pricing amount classified as "offerer revenue" (the main reimbursement paid to the offerer), in euros. See `column__pricing_line_category` for the category definition.
+
+**offerer_contribution**: Portion of the pricing amount classified as "offerer contribution" (the offerer's own participation), in euros. See `column__pricing_line_category` for the category definition.
+
+**reimbursement_cashflow_amount**: Total amount of the cashflow in euros, with sign inverted from the raw cashflow amount: positive = paid to the offerer.
+
+**cashflow_batch_creation_date**: Date when the cashflow batch was created.
+
 **dashboard_id**: Metabase dashboard id.
 
 **dashboard_markdown**: Concatenated markdown of the dashboard's text widgets, in layout order.
@@ -7690,6 +7788,28 @@ Work in progress
 **metrics\_\_total_cumulative_activated_partners_collective_only**: The total cumulative number of unique partners who have had at least one active offer exclusively within the collective part for at least 1 day, and have never had an active offer within the individual part since inception up to the given month.
 
 **metrics\_\_total_cumulative_activated_partners_dual_part**: The total cumulative number of unique partners who have had at least one active offer within both the individual part and the collective part (at any point, concurrently or sequentially) for at least 1 day since inception up to the given month.
+
+**discoverability_month**: First day of the calendar month the row aggregates (bookability and consultation counts are computed per month).
+
+**nb_bookable_offers**: Number of distinct offers of this item that were bookable at least once during the month.
+
+**nb_bookable_days**: Number of distinct days during the month on which at least one offer of this item was bookable.
+
+**nb_monthly_consult**: Total number of consultations of this item recorded during the month, all origins combined (Firebase offer-consultation events).
+
+**nb_monthly_search_consult**: Number of the item's monthly consultations that originated from search.
+
+**nb_monthly_home_consult**: Number of the item's monthly consultations that originated from the home page (`home`, `video`, `videoModal`, `highlightOffer`, `thematicHighlight` or `exclusivity` origins).
+
+**nb_monthly_venue_consult**: Number of the item's monthly consultations that originated from a venue page.
+
+**nb_monthly_favorites_consult**: Number of the item's monthly consultations that originated from the user's favorites.
+
+**nb_monthly_similar_offer_consult**: Number of the item's monthly consultations that originated from a similar-offer or same-artist-playlist recommendation.
+
+**nb_monthly_other_channel_offer_consult**: Number of the item's monthly consultations that originated from any channel other than search, home, venue, favorites or similar-offer recommendations.
+
+**cnt_events**: Number of consultation events matching this row's dimensions (event date, offer, origin, traffic attribution, user role/age).
 
 **is_statistic_secret**: A boolean flag indicating whether the data point is subject to statistical confidentiality (true) or not (false). This is triggered when the KPI falls below a minimum threshold to protect individual privacy and prevent re-identification.
 
@@ -8256,6 +8376,12 @@ Work in progress
 **session_id**: Deprecated: use unique_session_id. The session identifier during which the event was recorded.
 
 **unique_session_id**: A unique identifier for the session, ensuring no duplicates.
+
+**consultation_module_tag_name**: Name of the Algolia/home module tag associated with the consultation, when the consultation originated from a tagged module. Null otherwise.
+
+**consultation_user_role**: Role of the user at the time of the event, derived from their deposit status: 'Bénéficiaire' (has an active deposit), 'Ancien bénéficiaire' (deposit expired), 'Non bénéficiaire' (logged in, no deposit), or 'Non loggué' (not logged in).
+
+**consultation_user_age**: Age of the user at the time of the event, computed from their birth date and the event date.
 
 Note
 

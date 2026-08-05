@@ -33,3 +33,9 @@ Work in progress
 **session_id**: Deprecated: use unique_session_id. The session identifier during which the event was recorded.
 
 **unique_session_id**: A unique identifier for the session, ensuring no duplicates.
+
+**consultation_module_tag_name**: Name of the Algolia/home module tag associated with the consultation, when the consultation originated from a tagged module. Null otherwise.
+
+**consultation_user_role**: Role of the user at the time of the event, derived from their deposit status: 'Bénéficiaire' (has an active deposit), 'Ancien bénéficiaire' (deposit expired), 'Non bénéficiaire' (logged in, no deposit), or 'Non loggué' (not logged in).
+
+**consultation_user_age**: Age of the user at the time of the event, computed from their birth date and the event date.

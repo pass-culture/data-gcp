@@ -339,3 +339,25 @@
 **metrics\_\_total_cumulative_activated_partners_collective_only**: The total cumulative number of unique partners who have had at least one active offer exclusively within the collective part for at least 1 day, and have never had an active offer within the individual part since inception up to the given month.
 
 **metrics\_\_total_cumulative_activated_partners_dual_part**: The total cumulative number of unique partners who have had at least one active offer within both the individual part and the collective part (at any point, concurrently or sequentially) for at least 1 day since inception up to the given month.
+
+**discoverability_month**: First day of the calendar month the row aggregates (bookability and consultation counts are computed per month).
+
+**nb_bookable_offers**: Number of distinct offers of this item that were bookable at least once during the month.
+
+**nb_bookable_days**: Number of distinct days during the month on which at least one offer of this item was bookable.
+
+**nb_monthly_consult**: Total number of consultations of this item recorded during the month, all origins combined (Firebase offer-consultation events).
+
+**nb_monthly_search_consult**: Number of the item's monthly consultations that originated from search.
+
+**nb_monthly_home_consult**: Number of the item's monthly consultations that originated from the home page (`home`, `video`, `videoModal`, `highlightOffer`, `thematicHighlight` or `exclusivity` origins).
+
+**nb_monthly_venue_consult**: Number of the item's monthly consultations that originated from a venue page.
+
+**nb_monthly_favorites_consult**: Number of the item's monthly consultations that originated from the user's favorites.
+
+**nb_monthly_similar_offer_consult**: Number of the item's monthly consultations that originated from a similar-offer or same-artist-playlist recommendation.
+
+**nb_monthly_other_channel_offer_consult**: Number of the item's monthly consultations that originated from any channel other than search, home, venue, favorites or similar-offer recommendations.
+
+**cnt_events**: Number of consultation events matching this row's dimensions (event date, offer, origin, traffic attribution, user role/age).

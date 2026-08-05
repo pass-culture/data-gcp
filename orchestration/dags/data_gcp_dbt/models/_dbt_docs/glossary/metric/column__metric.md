@@ -253,3 +253,18 @@ The total cumulative number of unique partners who have had at least one active 
 {% docs column__cumulative_total_collective_booking_amount_by_domain %} Cumulative total booking amount for EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month. {% enddocs %}
 {% docs column__cumulative_total_collective_tickets_by_domain %} Cumulative total number of tickets generated for EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month. {% enddocs %}
 {% docs column__cumulative_total_collective_institutions_by_domain %} Cumulative total number of distinct educational institutions involved in EAC collective bookings for the same geography and domain from the beginning of the data history up to and including the specified month. {% enddocs %}
+
+{% docs column__discoverability_month %} First day of the calendar month the row aggregates (bookability and consultation counts are computed per month). {% enddocs %}
+
+{% docs column__nb_bookable_offers %} Number of distinct offers of this item that were bookable at least once during the month. {% enddocs %}
+{% docs column__nb_bookable_days %} Number of distinct days during the month on which at least one offer of this item was bookable. {% enddocs %}
+
+{% docs column__nb_monthly_consult %} Total number of consultations of this item recorded during the month, all origins combined (Firebase offer-consultation events). {% enddocs %}
+{% docs column__nb_monthly_search_consult %} Number of the item's monthly consultations that originated from search. {% enddocs %}
+{% docs column__nb_monthly_home_consult %} Number of the item's monthly consultations that originated from the home page (`home`, `video`, `videoModal`, `highlightOffer`, `thematicHighlight` or `exclusivity` origins). {% enddocs %}
+{% docs column__nb_monthly_venue_consult %} Number of the item's monthly consultations that originated from a venue page. {% enddocs %}
+{% docs column__nb_monthly_favorites_consult %} Number of the item's monthly consultations that originated from the user's favorites. {% enddocs %}
+{% docs column__nb_monthly_similar_offer_consult %} Number of the item's monthly consultations that originated from a similar-offer or same-artist-playlist recommendation. {% enddocs %}
+{% docs column__nb_monthly_other_channel_offer_consult %} Number of the item's monthly consultations that originated from any channel other than search, home, venue, favorites or similar-offer recommendations. {% enddocs %}
+
+{% docs column__cnt_events %} Number of consultation events matching this row's dimensions (event date, offer, origin, traffic attribution, user role/age). {% enddocs %}

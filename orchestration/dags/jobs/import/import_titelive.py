@@ -14,6 +14,7 @@ from common.operators.kubernetes import (
     CustomKubernetesPodOperator,
 )
 from common.utils import delayed_waiting_operator, get_airflow_schedule
+from kubernetes.client import V1ResourceRequirements
 
 from jobs.crons import SCHEDULE_DICT
 
@@ -24,6 +25,11 @@ MAIN_SCRIPT = "main.py"
 
 PRIORITY_WEIGHT = 1000
 WEIGHT_RULE = "absolute"
+
+CONTAINER_RESOURCES = V1ResourceRequirements(
+    requests={"cpu": "0.5", "memory": "500Mi"},
+    limits={"cpu": "1", "memory": "2Gi"},
+)
 
 default_dag_args = {
     "start_date": datetime.datetime(2025, 1, 1),
@@ -128,7 +134,7 @@ with DAG(
             "download-images",
             "{{ '--reprocess-failed' if params.download_images_reprocess_failed else '' }}",
         ],
-        **_kpo_common,
+        **(_kpo_common | {"container_resources": CONTAINER_RESOURCES}),
     )
 
     download_images_incremental = CustomKubernetesPodOperator(
@@ -138,7 +144,7 @@ with DAG(
             "download-images",
             "{{ '--reprocess-failed' if params.download_images_reprocess_failed else '' }}",
         ],
-        **_kpo_common,
+        **(_kpo_common | {"container_resources": CONTAINER_RESOURCES}),
     )
 
     end = EmptyOperator(

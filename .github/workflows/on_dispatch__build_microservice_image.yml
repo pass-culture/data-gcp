@@ -33,6 +33,7 @@ jobs:
   register-microservice-image:
     uses: ./.github/workflows/reusable_build_image.yml
     with:
+      GITHUB_ENV_NAME: "dev"
       TARGET_ENV: "dev"
       IS_MANUAL_DISPATCH: true
       CUSTOM_TAG: ${{ inputs.CUSTOM_TAG }}
@@ -41,5 +42,6 @@ jobs:
       DOCKERFILE: ${{ inputs.DOCKERFILE }}
       REGISTRY_BASE_NAME: ${{ inputs.REGISTRY_BASE_NAME }}
     secrets:
-      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
-      GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+      WORKLOAD_IDENTITY_PRD: ${{ secrets.WORKLOAD_IDENTITY_PRD }}
+      PASSCULTURE_GITHUB_ACTION_APP_ID: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
+      PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}

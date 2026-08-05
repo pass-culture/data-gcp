@@ -20,6 +20,9 @@ Tracking that are not related to specific concepts for now
 {% docs column__traffic_medium %}The medium of the marketing campaign (email, push notification ...)that generated the session.{% enddocs %}
 {% docs column__session_id %}Deprecated: use unique_session_id. The session identifier during which the event was recorded.{% enddocs %}
 {% docs column__unique_session_id %}A unique identifier for the session, ensuring no duplicates.{% enddocs %}
+{% docs column__consultation_module_tag_name %}Name of the Algolia/home module tag associated with the consultation, when the consultation originated from a tagged module. Null otherwise.{% enddocs %}
+{% docs column__consultation_user_role %}Role of the user at the time of the event, derived from their deposit status: 'Bénéficiaire' (has an active deposit), 'Ancien bénéficiaire' (deposit expired), 'Non bénéficiaire' (logged in, no deposit), or 'Non loggué' (not logged in).{% enddocs %}
+{% docs column__consultation_user_age %}Age of the user at the time of the event, computed from their birth date and the event date.{% enddocs %}
 
 
 {% hide columns %}

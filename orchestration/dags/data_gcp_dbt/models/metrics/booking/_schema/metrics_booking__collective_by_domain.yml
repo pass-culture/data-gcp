@@ -7,6 +7,10 @@ models:
         description: '{{ doc("column__partition_month") }}'
         data_type: DATE
 
+      - name: scholar_year
+        description: '{{ doc("column__scholar_year") }}'
+        data_type: STRING
+
       - name: educational_domain_name
         description: '{{ doc("column__educational_domain_name") }}'
         data_type: STRING

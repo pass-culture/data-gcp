@@ -5,6 +5,7 @@ with
             date_trunc(
                 date(cb.collective_booking_creation_date), month
             ) as partition_month,
+            cb.scholar_year,
             cod.educational_domain_name,
             cb.institution_region_name,
             coalesce(cast(rd.region_code as string), '-1') as institution_region_code,
@@ -33,6 +34,7 @@ with
             in ('CONFIRMED', 'USED', 'PENDING_REIMBURSEMENT', 'REIMBURSED')
         group by
             date_trunc(date(cb.collective_booking_creation_date), month),
+            cb.scholar_year,
             cod.educational_domain_name,
             cb.institution_region_name,
             rd.region_code,
@@ -45,6 +47,7 @@ with
 
 select
     partition_month,
+    scholar_year,
     educational_domain_name,
     institution_region_name,
     institution_region_code,
@@ -67,6 +70,7 @@ from booking_aggregated
 window
     w as (
         partition by
+            scholar_year,
             educational_domain_name,
             institution_region_name,
             institution_region_code,

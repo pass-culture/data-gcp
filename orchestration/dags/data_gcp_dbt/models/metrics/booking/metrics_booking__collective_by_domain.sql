@@ -1,6 +1,7 @@
 /* Metrics-layer view of collective bookings by educational domain and institution geography. */
 select
     partition_month,
+    scholar_year,
     educational_domain_name,
     institution_region_name,
     institution_region_code,

@@ -34,7 +34,7 @@ with
             as scorer_ranking_model_display_name,
             reco_sink.jsonpayload.extra.context_extra_data.scorer.ranking.model_version
             as scorer_ranking_model_version,
-            date(reco_sink.jsonpayload.extra.date) as event_date,
+            date(reco_sink.timestamp) as event_date,
             case
                 when reco_sink.jsonpayload.extra.context like "similar_offer:%"
                 then "similar_offer"
@@ -118,11 +118,11 @@ with
 
             and (
                 {% if is_incremental() %}
-                    date(reco_sink.jsonpayload.extra.date) between date_sub(
+                    date(reco_sink.timestamp) between date_sub(
                         date("{{ ds() }}"), interval {{ var("lookback_days", 3) }} day
                     ) and date("{{ ds() }}")
                 {% else %}
-                    date(reco_sink.jsonpayload.extra.date)
+                    date(reco_sink.timestamp)
                     >= date_sub(date("{{ ds() }}"), interval 60 day)
                 {% endif %}
             )
@@ -133,7 +133,7 @@ with
                     reco_sink.jsonpayload.extra.user_id,
                     reco_sink.jsonpayload.extra.call_id,
                     reco_sink.jsonpayload.extra.offer_id
-                order by reco_sink.jsonpayload.extra.date desc
+                order by reco_sink.timestamp desc
             )
             = 1
     )

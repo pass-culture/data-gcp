@@ -244,6 +244,34 @@ The total cumulative number of unique partners who have had at least one active 
 The total cumulative number of unique partners who have had at least one active offer within both the individual part and the collective part (at any point, concurrently or sequentially) for at least 1 day since inception up to the given month.
 {% enddocs %}
 
+{% docs column__metrics__total_institutions %}
+Total number of institutions (schools) registered or eligible within the territory (at the given geographical granularity), for the specified month and school year.
+{% enddocs %}
+
+{% docs column__metrics__total_engaged_institutions %}
+Total number of "engaged" institutions (having made at least one booking) within the territory for the specified month and school year.
+{% enddocs %}
+
+{% docs column__metrics__total_deposit %}
+Total credit amount allocated and made available to the institutions of the territory for the specified month and school year.
+{% enddocs %}
+
+{% docs column__metrics__total_amount_spent %}
+Total amount spent (consumed) by the institutions of the territory during the specified month and school year.
+{% enddocs %}
+
+{% docs column__metrics__total_bookings %}
+Total number of bookings made by the institutions or beneficiaries of the territory during the specified month and school year.
+{% enddocs %}
+
+{% docs column__metrics__cumulative_total_amount_spent %}
+Cumulative total amount spent by the institutions of the territory from the start of the given school year up to and including the specified month.
+{% enddocs %}
+
+{% docs column__metrics__cumulative_total_bookings %}
+Cumulative total number of bookings made within the territory from the start of the given school year up to and including the specified month.
+{% enddocs %}
+
 {% docs column__discoverability_month %} First day of the calendar month the row aggregates (bookability and consultation counts are computed per month). {% enddocs %}
 
 {% docs column__nb_bookable_offers %} Number of distinct offers of this item that were bookable at least once during the month. {% enddocs %}

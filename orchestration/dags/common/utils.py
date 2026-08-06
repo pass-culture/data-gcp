@@ -16,6 +16,7 @@ from common.config import (
     LOCAL_ENV,
 )
 from google.api_core.exceptions import NotFound
+from google.api_core.retry import Retry
 from google.auth.transport.requests import Request
 from google.cloud import storage
 from google.oauth2 import id_token
@@ -510,8 +511,8 @@ def save_json_to_gcs(data_dict, bucket_name, blob_name):
         blob.upload_from_string(
             data=json_data,
             content_type="application/json",
-            num_retries=3,  # Add retries
-            timeout=120,  # Add timeout in seconds
+            retry=Retry(deadline=300),  # Seconds
+            timeout=120,
         )
         print(f"Successfully uploaded to gs://{bucket_name}/{blob_name}")
 

@@ -96,7 +96,7 @@ def get_table_infos(metabase):
 
     tables_df = pd.DataFrame.from_dict(table_infos, orient="index")
 
-    # --- Debug : identifier les doublons ---
+    # --- Debug : identifier les doublons avant que ça casse ---
     duplicates = tables_df[
         tables_df.duplicated(subset=["table_schema", "table_name"], keep=False)
     ]
@@ -110,16 +110,7 @@ def get_table_infos(metabase):
     else:
         logger.info("No duplicate (table_schema, table_name) found in tables_df")
 
-    # Filtrer les inactives et dédupliquer pour ne pas planter
-    inactive_count = (~tables_df["active"]).sum()
-    if inactive_count:
-        logger.warning("Filtering out %d inactive tables", inactive_count)
-    tables_df = tables_df[tables_df["active"]].drop(columns=["active", "db_id"])
-    tables_df = tables_df.drop_duplicates(
-        subset=["table_schema", "table_name"], keep="first"
-    )
-
-    return tables_df
+    return tables_df.drop(columns=["active", "db_id"])
 
 
 def get_native_dependencies(cards_list, tables_df):

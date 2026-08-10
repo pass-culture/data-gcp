@@ -8,6 +8,7 @@ select
     offerer_is_epn,
     offer_category_id,
     total_bookings,
+    cell_key_bookings,
     total_quantities,
     total_revenue_amount,
     total_reimbursed_amount,

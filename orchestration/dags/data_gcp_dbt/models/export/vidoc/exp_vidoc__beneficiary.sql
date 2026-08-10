@@ -49,7 +49,10 @@ from
     source as s
     {{
         perturbation_join(
-            "pt_benef", "s.total_beneficiaries", "s.cell_key_beneficiaries"
+            "pt_benef",
+            "s.total_beneficiaries",
+            "s.cell_key_beneficiaries",
+            "perturbation_table__beneficiary",
         )
     }}
     {{
@@ -57,5 +60,6 @@ from
             "pt_actual",
             "s.total_actual_beneficiaries",
             "s.cell_key_actual_beneficiaries",
+            "perturbation_table__beneficiary",
         )
     }}

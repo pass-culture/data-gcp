@@ -77,6 +77,9 @@ select
     booking_amount.offerer_is_epn,
     booking_amount.offer_category_id,
     count(distinct booking_amount.booking_id) as total_bookings,
+    mod(
+        abs(sum(distinct {{ record_key("booking_amount.booking_id") }})), 256
+    ) as cell_key_bookings,
     sum(booking_amount.booking_quantity) as total_quantities,
     sum(booking_amount.booking_intermediary_amount) as total_revenue_amount,
     sum(aggregated_amounts.total_reimbursed_amount) as total_reimbursed_amount,

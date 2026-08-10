@@ -5,7 +5,6 @@ with
     )
 
 select
-    date_trunc(r.booking_used_date, month) as partition_month,
     r.venue_department_code,
     r.venue_department_name,
     r.venue_region_name,
@@ -16,7 +15,9 @@ select
     gi.city_label as venue_city_name,
     r.offerer_is_epn,
     r.offer_category_id,
+    date_trunc(r.booking_used_date, month) as partition_month,
     sum(r.total_bookings) as total_bookings,
+    mod(abs(sum(r.cell_key_bookings)), 256) as cell_key_bookings,
     sum(r.total_quantities) as total_quantities,
     sum(r.total_revenue_amount) as total_revenue_amount,
     sum(r.total_reimbursed_amount) as total_reimbursed_amount,

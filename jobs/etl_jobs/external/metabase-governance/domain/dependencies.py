@@ -88,29 +88,20 @@ def get_table_infos(metabase):
         info["table_id"] = table_info["id"]
         info["table_schema"] = table_info["schema"]
         info["table_name"] = table_info["name"]
-        info["active"] = table_info.get("active", True)
-        info["db_id"] = table_info.get("db_id")
 
         table_infos[i] = info
         i += 1
 
     tables_df = pd.DataFrame.from_dict(table_infos, orient="index")
 
-    # --- Debug : identifier les doublons avant que ça casse ---
-    duplicates = tables_df[
-        tables_df.duplicated(subset=["table_schema", "table_name"], keep=False)
-    ]
-    if not duplicates.empty:
-        logger.warning(
-            "Found %d duplicate (table_schema, table_name) rows across %d unique combos:\n%s",
-            len(duplicates),
-            duplicates[["table_schema", "table_name"]].drop_duplicates().shape[0],
-            duplicates.to_string(),
-        )
-    else:
-        logger.info("No duplicate (table_schema, table_name) found in tables_df")
+    # Deduplicate: multiple Metabase databases can expose the same BQ dataset,
+    # causing (table_schema, table_name) duplicates. Keep the lowest table_id
+    # (oldest/primary database connection).
+    tables_df = tables_df.sort_values("table_id").drop_duplicates(
+        subset=["table_schema", "table_name"], keep="first"
+    )
 
-    return tables_df.drop(columns=["active", "db_id"])
+    return tables_df
 
 
 def get_native_dependencies(cards_list, tables_df):

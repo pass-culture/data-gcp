@@ -1,13 +1,19 @@
+{% set partner_kpi_start_date = "2022-01-01" %}
+
 with
     monthly_partner_activity as (
         select
             gcp.venue_id,
             date_trunc(
-                date_add(date('2022-01-01'), interval offset month), month
+                date_add('{{ partner_kpi_start_date }}', interval offset month), month
             ) as partition_month
         from {{ ref("mrt_global__cultural_partner") }} as gcp
         cross join
-            unnest(generate_array(0, date_diff(current_date(), '2022-01-01', month))) as
+            unnest(
+                generate_array(
+                    0, date_diff(current_date(), '{{ partner_kpi_start_date }}', month)
+                )
+            ) as
         offset
         where
             gcp.first_individual_offer_creation_date is not null
@@ -197,7 +203,7 @@ with
         from {{ ref("mrt_global__cultural_partner") }} as gcp
         inner join {{ ref("mrt_global__offerer") }} as gof using (offerer_id)
         left join offerer_first_consultation as fc using (offerer_id)
-        where gof.offerer_creation_date > '2022-01-01'
+        where gof.offerer_creation_date > '{{ partner_kpi_start_date }}'
         qualify
             row_number() over (
                 partition by gcp.offerer_id order by gcp.partner_creation_date asc

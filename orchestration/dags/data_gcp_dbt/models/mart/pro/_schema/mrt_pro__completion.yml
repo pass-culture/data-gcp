@@ -1,0 +1,69 @@
+version: 2
+
+models:
+  - name: mrt_pro__completion
+    description: "{{ doc('description__mrt_pro__completion') }}"
+    columns:
+      - name: offer_id
+        data_type: STRING
+        description: "{{ doc('column__offer_id') }}"
+        data_tests:
+          - not_null:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
+          - unique:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
+      - name: offer_category_id
+        data_type: STRING
+        description: "{{ doc('column__offer_category_id') }}"
+      - name: offer_subcategory_id
+        data_type: STRING
+        description: "{{ doc('column__offer_subcategory_id') }}"
+      - name: venue_type_label
+        data_type: STRING
+        description: "{{ doc('column__venue_type_label') }}"
+      - name: is_synchronised
+        data_type: BOOLEAN
+        description: "{{ doc('column__offer_is_synchronised') }}"
+      - name: offerer_id
+        data_type: STRING
+        description: "{{ doc('column__offerer_id') }}"
+      - name: venue_id
+        data_type: STRING
+        description: "{{ doc('column__venue_id') }}"
+      - name: offer_creation_date
+        data_type: DATE
+        description: "{{ doc('column__offer_creation_date') }}"
+      - name: offer_is_bookable
+        data_type: BOOLEAN
+        description: "{{ doc('column__offer_is_bookable') }}"
+      - name: is_active
+        data_type: BOOLEAN
+        description: "{{ doc('column__offer_is_active') }}"
+      - name: partner_id
+        data_type: STRING
+        description: "{{ doc('column__partner_id') }}"
+      - name: completion_score
+        data_type: FLOAT64
+        description: "{{ doc('column__completion_score') }}"
+      - name: absence_image
+        data_type: BOOLEAN
+        description: "{{ doc('column__absence_image') }}"
+      - name: absence_video
+        data_type: BOOLEAN
+        description: "{{ doc('column__absence_video') }}"
+      - name: absence_description
+        data_type: BOOLEAN
+        description: "{{ doc('column__absence_description') }}"
+      - name: livre_cd_vinyle_artiste_manquant
+        data_type: BOOLEAN
+        description: "{{ doc('column__livre_cd_vinyle_artiste_manquant') }}"
+      - name: livre_cd_vinyle_gtl_manquant
+        data_type: BOOLEAN
+        description: "{{ doc('column__livre_cd_vinyle_gtl_manquant') }}"
+      - name: livre_cd_vinyle_createur_manquant
+        data_type: BOOLEAN
+        description: "{{ doc('column__livre_cd_vinyle_createur_manquant') }}"

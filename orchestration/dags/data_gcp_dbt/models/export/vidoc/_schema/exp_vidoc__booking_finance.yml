@@ -1,10 +1,11 @@
 version: 2
+
 models:
-  - name: metrics_booking__finance_individual
-    description: '{{ doc("description__int_finance__reimbursement") }}'
+  - name: exp_vidoc__booking_finance
+    description: "Export VIDOC des KPIs financiers de réservation. Les KPIs sont nullifiés lorsque le secret statistique s'applique (nombre de partenaires culturels actifs <= 3 au niveau commune)."
     columns:
-      - name: booking_used_date
-        description: '{{ doc("column__booking_used_date") }}'
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
       - name: venue_department_code
         description: '{{ doc("column__venue_department_code") }}'
       - name: venue_department_name
@@ -20,14 +21,14 @@ models:
       - name: offer_category_id
         description: '{{ doc("column__offer_category_id") }}'
       - name: total_bookings
-        description: '{{ doc("column__total_bookings") }}'
+        description: "Nombre total de réservations. Nullifié si le secret statistique s'applique."
       - name: total_quantities
-        description: '{{ doc("column__total_quantities") }}'
+        description: "Quantité totale réservée. Nullifié si le secret statistique s'applique."
       - name: total_revenue_amount
-        description: '{{ doc("column__total_revenue_amount") }}'
+        description: "Montant total du chiffre d'affaires. Nullifié si le secret statistique s'applique."
       - name: total_reimbursed_amount
-        description: '{{ doc("column__total_reimbursed_amount") }}'
+        description: "Montant total remboursé. Nullifié si le secret statistique s'applique."
       - name: total_contribution_amount
-        description: '{{ doc("column__total_contribution_amount") }}'
+        description: "Montant total de la contribution offreur. Nullifié si le secret statistique s'applique."
       - name: is_statistical_secret
         description: '{{ doc("column__is_statistical_secret") }}'

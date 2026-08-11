@@ -55,9 +55,9 @@ jobs:
           - registry: europe-west1-docker.pkg.dev
             project: passculture-infra-prod
             repository: pass-culture-artifact-registry/data-gcp
-          - registry: europe-docker.pkg.dev
-            project: pc-infra-prd
-            repository: data
+          # - registry: europe-docker.pkg.dev
+          #   project: pc-infra-prd
+          #   repository: data
     env:
       CD_SERVICE_ACCOUNT: ${{ vars.AIRFLOW_CD_SERVICE_ACCOUNT }}
     permissions:

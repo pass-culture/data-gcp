@@ -30,10 +30,10 @@ on:
         type: string
         required: false
         default: "Dockerfile.k8s-worker"
-      REGISTRY_BASE_NAME:
+      IMAGE:
         type: string
         required: false
-        default: "data-gcp/airflow"
+        default: "airflow"
 
     secrets:
       WORKLOAD_IDENTITY_PRD:
@@ -43,21 +43,21 @@ on:
       PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY:
         required: true
 
-env:
-  DOCKER_REGISTRY_PROJECT_ID: "passculture-infra-prod"
-  DOCKER_REGISTRY_REGION: "europe-west1"
-  DOCKER_REGISTRY_REPOSITORY: "pass-culture-artifact-registry"
-  SOURCE_PATH: ${{ inputs.SOURCE_PATH }}
-  CONTEXT_PATH: ${{ inputs.CONTEXT_PATH }}
-  TARGET_ENV: ${{ inputs.TARGET_ENV }}
-  DOCKERFILE: ${{ inputs.DOCKERFILE }}
-  REGISTRY_BASE_NAME: ${{ inputs.REGISTRY_BASE_NAME }}
-
 jobs:
   build-and-push-docker-image:
-    name: "Build image job"
+    name: "Build image job (${{ matrix.registry_base.project }})"
     runs-on: ubuntu-latest
     environment: ${{ inputs.GITHUB_ENV_NAME }}
+    strategy:
+      fail-fast: false
+      matrix:
+        registry_base:
+          - registry: europe-west1-docker.pkg.dev
+            project: passculture-infra-prod
+            repository: pass-culture-artifact-registry/data-gcp
+          - registry: europe-docker.pkg.dev
+            project: pc-infra-prd
+            repository: data
     env:
       CD_SERVICE_ACCOUNT: ${{ vars.AIRFLOW_CD_SERVICE_ACCOUNT }}
     permissions:
@@ -92,12 +92,12 @@ jobs:
           service_account: ${{ env.CD_SERVICE_ACCOUNT }}
           token_format: access_token
       - name: Docker login
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         id: docker-login
-        with:
-          registry: "${{ env.DOCKER_REGISTRY_REGION }}-docker.pkg.dev"
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
+        env:
+          ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          REGISTRY_HOST: ${{ matrix.registry_base.registry }}
+        run: |
+          echo "${ACCESS_TOKEN}" | docker login -u oauth2accesstoken --password-stdin "$REGISTRY_HOST"
       - name: "Set up Docker Buildx"
         uses: docker/setup-buildx-action@v2.2.1
         with:
@@ -105,26 +105,26 @@ jobs:
       - name: "Get short SHA"
         id: "sha"
         run: echo "short_sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-      - name: "Output variables"
-        id: "vars"
-        run: echo "DOCKER_REPO=${DOCKER_REGISTRY_REGION}-docker.pkg.dev/${DOCKER_REGISTRY_PROJECT_ID}/${DOCKER_REGISTRY_REPOSITORY}" | tee -a "$GITHUB_OUTPUT"
       - name: "Set Docker Tags"
         id: docker_tags
         env:
           CUSTOM_TAG: ${{ inputs.CUSTOM_TAG }}
           IS_MANUAL_DISPATCH: ${{ inputs.IS_MANUAL_DISPATCH }}
+          SHORT_SHA: ${{ steps.sha.outputs.short_sha }}
+          TARGET_ENV: ${{ inputs.TARGET_ENV }}
+          IMAGE: ${{ matrix.registry_base.registry }}/${{ matrix.registry_base.project }}/${{ matrix.registry_base.repository }}/${{ inputs.IMAGE }}"
         run: |
-          # Start with short SHA
-          tags="${{ steps.vars.outputs.DOCKER_REPO }}/${REGISTRY_BASE_NAME}:${{ steps.sha.outputs.short_sha }}"
+          # Always tag with the short SHA
+          tags="${IMAGE}:${SHORT_SHA}"
 
           # Add v1 tag if not manual
           if [ "${IS_MANUAL_DISPATCH}" != "true" ]; then
-            tags="${tags}\n${{ steps.vars.outputs.DOCKER_REPO }}/${REGISTRY_BASE_NAME}:v1"
+            tags="${tags}\n${IMAGE}:v1"
           fi
 
           # Add dev tag if dev environment
           if [ "${TARGET_ENV}" == "dev" ]; then
-            tags="${tags}\n${{ steps.vars.outputs.DOCKER_REPO }}/${REGISTRY_BASE_NAME}:dev"
+            tags="${tags}\n${IMAGE}:dev"
           fi
 
           # Add CUSTOM_TAG safely (user input) - supports comma-separated tags
@@ -132,11 +132,10 @@ jobs:
             IFS=',' read -ra CUSTOM_TAGS <<< "$CUSTOM_TAG"
             for tag in "${CUSTOM_TAGS[@]}"; do
               sanitized_tag=$(printf '%s' "$tag" | tr '/ ' '--' | xargs)
-              tags="${tags}\n${{ steps.vars.outputs.DOCKER_REPO }}/${REGISTRY_BASE_NAME}:${sanitized_tag}"
+              tags="${tags}\n${IMAGE}:${sanitized_tag}"
             done
           fi
 
-          # Output tags
           echo -e "tags<<EOF\n$tags\nEOF" >> "$GITHUB_OUTPUT"
       - name: "Build local Docker image"
         env:
@@ -145,9 +144,9 @@ jobs:
           CONTEXT_PATH: ${{ inputs.CONTEXT_PATH }}
         run: |
           docker build \
-          -f "$SOURCE_PATH/$DOCKERFILE" \
+          -f "${SOURCE_PATH}/${DOCKERFILE}" \
           -t k8s-worker:latest \
-          "$CONTEXT_PATH"
+          "${CONTEXT_PATH}"
 
       - name: "Push image with passdirector"
         env:

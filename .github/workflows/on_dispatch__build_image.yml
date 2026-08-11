@@ -27,13 +27,13 @@ jobs:
     uses: ./.github/workflows/reusable_build_image.yml
     with:
       GITHUB_ENV_NAME: ${{ inputs.environment }}
-      TARGET_ENV: "dev"
+      TARGET_ENV: dev
       IS_MANUAL_DISPATCH: true
       CUSTOM_TAG: ${{ inputs.CUSTOM_TAG }}
-      SOURCE_PATH: "orchestration/k8s-airflow"
+      SOURCE_PATH: orchestration/k8s-airflow
       CONTEXT_PATH: .
-      DOCKERFILE: "Dockerfile.k8s-worker"
-      REGISTRY_BASE_NAME: "data-gcp/airflow"
+      DOCKERFILE: Dockerfile.k8s-worker
+      IMAGE: airflow
     secrets:
       WORKLOAD_IDENTITY_PRD: ${{ secrets.WORKLOAD_IDENTITY_PRD }}
       PASSCULTURE_GITHUB_ACTION_APP_ID: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}

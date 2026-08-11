@@ -95,15 +95,6 @@ with DAG(
         do_xcom_push=True,
     )
 
-    audit_duplicate_tables_op = SSHGCEOperator(
-        task_id="audit_duplicate_tables_op",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="uv run python main.py audit-duplicates ",
-        do_xcom_push=True,
-    )
-
     compute_metabase_dependencies_op = SSHGCEOperator(
         task_id="compute_metabase_dependencies_op",
         instance_name=GCE_INSTANCE,
@@ -137,7 +128,6 @@ with DAG(
         >> fetch_install_code
         >> archive_metabase_cards_op
         >> sync_permissions_op
-        >> audit_duplicate_tables_op
         >> compute_metabase_dependencies_op
         >> compute_metabase_taxonomy_op
         >> gce_instance_stop

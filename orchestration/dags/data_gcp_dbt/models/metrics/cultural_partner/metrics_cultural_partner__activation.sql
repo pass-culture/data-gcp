@@ -15,5 +15,11 @@ select
     total_cumulative_activated_partners_global,
     total_cumulative_activated_partners_individual_only,
     total_cumulative_activated_partners_collective_only,
-    total_cumulative_activated_partners_dual_part
+    total_cumulative_activated_partners_dual_part,
+    total_offerers_created,
+    total_activated_offerer_consultation_or_adage_30d,
+    total_activated_offerer_offer_or_adage_30d,
+    total_activated_offerer_any_30d,
+    total_activated_offerer_individual_30d,
+    total_activated_offerer_collective_30d
 from {{ ref("int_kpi__cultural_partner_activation") }}

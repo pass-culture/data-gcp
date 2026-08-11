@@ -29,5 +29,5 @@ models:
         description: '{{ doc("column__total_reimbursed_amount") }}'
       - name: total_contribution_amount
         description: '{{ doc("column__total_contribution_amount") }}'
-      - name: is_statistical_secret
-        description: '{{ doc("column__is_statistical_secret") }}'
+      - name: is_statistic_secret
+        description: "{{ doc('column__is_statistic_secret') }}"

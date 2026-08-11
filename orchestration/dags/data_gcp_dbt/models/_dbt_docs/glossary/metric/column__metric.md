@@ -258,5 +258,3 @@ The total cumulative number of unique partners who have had at least one active 
 {% docs column__nb_monthly_other_channel_offer_consult %} Number of the item's monthly consultations that originated from any channel other than search, home, venue, favorites or similar-offer recommendations. {% enddocs %}
 
 {% docs column__cnt_events %} Number of consultation events matching this row's dimensions (event date, offer, origin, traffic attribution, user role/age). {% enddocs %}
-
-{% docs column__is_statistical_secret %} Boolean flag indicating whether statistical secrecy applies. {% enddocs %}

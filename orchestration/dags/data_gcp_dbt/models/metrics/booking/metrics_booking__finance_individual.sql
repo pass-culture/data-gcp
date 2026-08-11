@@ -12,9 +12,9 @@ select
     bf.total_revenue_amount,
     bf.total_reimbursed_amount,
     bf.total_contribution_amount,
-    coalesce(cp.total_active_partners_global <= 3, true) as is_statistical_secret
+    coalesce(cp.total_active_partners_global <= 3, true) as is_statistic_secret
 from {{ ref("int_kpi__booking_finance_individual") }} as bf
 left join
-    {{ ref("metrics_cultural_partner__activation") }} as cp
+    {{ ref("int_kpi__cultural_partner_activation") }} as cp
     on bf.venue_city_code = cp.partner_city_code
     and bf.partition_month = cp.partition_month

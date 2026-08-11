@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+from collections import defaultdict
 
 import pandas as pd
 
@@ -92,7 +93,16 @@ def get_table_infos(metabase):
         table_infos[i] = info
         i += 1
 
-    return pd.DataFrame.from_dict(table_infos, orient="index")
+    tables_df = pd.DataFrame.from_dict(table_infos, orient="index")
+
+    # Deduplicate: multiple Metabase databases can expose the same BQ dataset,
+    # causing (table_schema, table_name) duplicates. Keep the lowest table_id
+    # (oldest/primary database connection).
+    tables_df = tables_df.sort_values("table_id").drop_duplicates(
+        subset=["table_schema", "table_name"], keep="first"
+    )
+
+    return tables_df
 
 
 def get_native_dependencies(cards_list, tables_df):
@@ -152,7 +162,74 @@ def get_native_dependencies(cards_list, tables_df):
     return dependencies_native_df
 
 
+def _audit_duplicate_tables(metabase):
+    """Log which query-builder cards reference each duplicate table_id."""
+    all_tables = metabase.get_table()
+    tables_by_key = defaultdict(list)
+    for t in all_tables:
+        tables_by_key[(t["schema"], t["name"])].append(
+            {"table_id": t["id"], "db_id": t.get("db_id")}
+        )
+
+    duplicates = {k: v for k, v in tables_by_key.items() if len(v) > 1}
+    if not duplicates:
+        logger.info("No duplicate tables found.")
+        return
+
+    dup_table_ids = {}
+    for (schema, name), entries in duplicates.items():
+        for entry in entries:
+            dup_table_ids[entry["table_id"]] = {
+                "schema": schema,
+                "name": name,
+                "db_id": entry["db_id"],
+            }
+
+    cards = metabase.get_cards()
+    card_usage = defaultdict(list)
+    for card in cards:
+        legacy_query = card.get("legacy_query")
+        if legacy_query and isinstance(legacy_query, str):
+            try:
+                legacy_query = json.loads(legacy_query)
+            except Exception:
+                legacy_query = None
+        if legacy_query and isinstance(legacy_query, dict):
+            query_block = legacy_query.get("query", {})
+            if isinstance(query_block, dict):
+                source_table = query_block.get("source-table")
+                if source_table and source_table in dup_table_ids:
+                    card_usage[source_table].append(
+                        {"card_id": card["id"], "card_name": card["name"]}
+                    )
+                for join in query_block.get("joins", []):
+                    jt = join.get("source-table")
+                    if jt and jt in dup_table_ids:
+                        card_usage[jt].append(
+                            {"card_id": card["id"], "card_name": card["name"]}
+                        )
+
+    logger.info("=== DUPLICATE TABLE AUDIT ===")
+    for (schema, name), entries in sorted(duplicates.items()):
+        logger.info("--- %s.%s ---", schema, name)
+        for entry in entries:
+            tid = entry["table_id"]
+            cards_for_tid = card_usage.get(tid, [])
+            logger.info(
+                "  db_id=%s  table_id=%s  -> %d card(s)",
+                entry["db_id"],
+                tid,
+                len(cards_for_tid),
+            )
+            for c in cards_for_tid[:5]:
+                logger.info("    card_id=%s  name=%r", c["card_id"], c["card_name"])
+            if len(cards_for_tid) > 5:
+                logger.info("    ... and %d more", len(cards_for_tid) - 5)
+    logger.info("=== END AUDIT ===")
+
+
 def run_dependencies(metabase):
+    _audit_duplicate_tables(metabase)
     tables_df = get_table_infos(metabase)
     native_cards, other_cards = get_card_lists(metabase)
     dependencies_native_df = get_native_dependencies(native_cards, tables_df)

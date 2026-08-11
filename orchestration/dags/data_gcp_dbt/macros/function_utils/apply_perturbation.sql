@@ -2,9 +2,9 @@
     greatest({{ count_col }} + {{ join_alias }}.perturbation, 0) as {{ output_alias }}
 {% endmacro %}
 
-{% macro perturbation_join(join_alias, count_col, cell_key_col) %}
+{% macro perturbation_join(join_alias, count_col, cell_key_col, perturbation_table) %}
     inner join
-        {{ ref("perturbation_table__individual") }} as {{ join_alias }}
+        {{ ref(perturbation_table) }} as {{ join_alias }}
         on {{ count_col }}
         between {{ join_alias }}.count_min and {{ join_alias }}.count_max
         and {{ cell_key_col }}

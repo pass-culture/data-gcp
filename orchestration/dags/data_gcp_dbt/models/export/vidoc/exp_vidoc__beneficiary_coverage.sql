@@ -18,6 +18,9 @@ from
     source as s
     {{
         perturbation_join(
-            "pt", "s.total_beneficiaries_last_12_months", "s.cell_key_beneficiaries"
+            "pt",
+            "s.total_beneficiaries_last_12_months",
+            "s.cell_key_beneficiaries",
+            "perturbation_table__beneficiary",
         )
     }}

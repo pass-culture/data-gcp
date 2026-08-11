@@ -48,7 +48,10 @@ from
     source as s
     {{
         perturbation_join(
-            "pt", "s.total_category_booked_beneficiaries", "s.cell_key_category"
+            "pt",
+            "s.total_category_booked_beneficiaries",
+            "s.cell_key_category",
+            "perturbation_table__beneficiary",
         )
     }}
 where s.deposit_expiration_month > "2021-01-01"

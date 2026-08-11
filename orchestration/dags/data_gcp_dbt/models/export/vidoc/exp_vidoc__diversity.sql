@@ -59,6 +59,7 @@ from
             "pt_3plus",
             "s.total_3plus_category_booked_beneficiaries",
             "s.cell_key_3plus",
+            "perturbation_table__beneficiary",
         )
     }}
     {{
@@ -66,6 +67,7 @@ from
             "pt_expired",
             "s.total_expired_deposit_beneficiaries",
             "s.cell_key_expired",
+            "perturbation_table__beneficiary",
         )
     }}
 where s.deposit_expiration_month > "2021-01-01"

@@ -1,5 +1,6 @@
 import logging
 import time
+from collections import defaultdict
 
 import typer
 
@@ -264,6 +265,86 @@ def taxonomy(
         destination_table=destination_table,
     )
     logger.info("Taxonomy resolution complete")
+
+
+@app.command()
+def audit_duplicates():
+    """Check which cards reference duplicate int_firebase_prod tables (Analytics vs Int Firebase Prod)."""
+    logger.info("Starting duplicate table audit")
+    metabase = _get_metabase_client()
+
+    # 1. Get all tables and find duplicates
+    all_tables = metabase.get_table()
+    tables_by_key = defaultdict(list)
+    for t in all_tables:
+        key = (t["schema"], t["name"])
+        tables_by_key[key].append({"table_id": t["id"], "db_id": t.get("db_id"), "active": t.get("active")})
+
+    duplicates = {k: v for k, v in tables_by_key.items() if len(v) > 1}
+    if not duplicates:
+        logger.info("No duplicate tables found.")
+        return
+
+    logger.info("Found %d duplicate (schema, table) combos", len(duplicates))
+
+    # Collect all duplicate table_ids
+    dup_table_ids = {}
+    for (schema, name), entries in duplicates.items():
+        for entry in entries:
+            dup_table_ids[entry["table_id"]] = {"schema": schema, "name": name, "db_id": entry["db_id"]}
+
+    # 2. Get all cards and check which reference duplicate table_ids
+    cards = metabase.get_cards()
+    card_usage = defaultdict(list)  # table_id -> list of card info
+
+    for card in cards:
+        card_db_id = card.get("database_id")
+        card_id = card["id"]
+        card_name = card["name"]
+
+        # Query builder cards: check source-table
+        legacy_query = card.get("legacy_query")
+        if legacy_query and isinstance(legacy_query, str):
+            import json as _json
+            try:
+                legacy_query = _json.loads(legacy_query)
+            except Exception:
+                legacy_query = None
+
+        if legacy_query and isinstance(legacy_query, dict):
+            query_block = legacy_query.get("query", {})
+            if isinstance(query_block, dict):
+                source_table = query_block.get("source-table")
+                if source_table and source_table in dup_table_ids:
+                    card_usage[source_table].append({"card_id": card_id, "card_name": card_name, "card_db_id": card_db_id})
+                # Check joins
+                for join in query_block.get("joins", []):
+                    jt = join.get("source-table")
+                    if jt and jt in dup_table_ids:
+                        card_usage[jt].append({"card_id": card_id, "card_name": card_name, "card_db_id": card_db_id, "via": "join"})
+
+    # 3. Print results grouped by (schema, table) and db_id
+    logger.info("=== AUDIT RESULTS ===")
+    for (schema, name), entries in sorted(duplicates.items()):
+        logger.info("--- %s.%s ---", schema, name)
+        for entry in entries:
+            tid = entry["table_id"]
+            db_id = entry["db_id"]
+            cards_for_tid = card_usage.get(tid, [])
+            logger.info(
+                "  db_id=%s  table_id=%s  -> %d card(s) using it",
+                db_id, tid, len(cards_for_tid),
+            )
+            for c in cards_for_tid[:5]:
+                logger.info(
+                    "    card_id=%s  name=%r  db=%s%s",
+                    c["card_id"], c["card_name"], c["card_db_id"],
+                    f"  (via {c['via']})" if "via" in c else "",
+                )
+            if len(cards_for_tid) > 5:
+                logger.info("    ... and %d more", len(cards_for_tid) - 5)
+
+    logger.info("=== END AUDIT ===")
 
 
 if __name__ == "__main__":

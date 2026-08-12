@@ -38,6 +38,3 @@ package_versions.diff
 
 # dist
 dist/
-
-# Claude
-CLAUDE.md

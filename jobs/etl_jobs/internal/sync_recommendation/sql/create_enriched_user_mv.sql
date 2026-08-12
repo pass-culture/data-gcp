@@ -7,11 +7,14 @@ returns
         user_id varchar,
         user_deposit_creation_date timestamp,
         user_birth_date timestamp,
+        user_department_code varchar,
         user_deposit_initial_amount real,
         user_theoretical_remaining_credit real,
         booking_cnt integer,
         consult_offer integer,
-        has_added_offer_to_favorites integer
+        has_added_offer_to_favorites integer,
+        user_subscription_latitude double precision,
+        user_subscription_longitude double precision
     )
 as $body$
 BEGIN

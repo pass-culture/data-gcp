@@ -18,11 +18,11 @@ on:
         type: string
         required: false
         default: "Dockerfile.instagram"
-      REGISTRY_BASE_NAME:
-        description: "Base name for the Docker image in the registry (default: data-gcp/etl/instagram)"
+      IMAGE:
+        description: "Name of the Docker image (default: etl/instagram)"
         type: string
         required: false
-        default: "data-gcp/etl/instagram"
+        default: "etl/instagram"
 
 
 permissions:
@@ -40,7 +40,7 @@ jobs:
       SOURCE_PATH: ${{ inputs.SOURCE_PATH }}
       CONTEXT_PATH: ${{ inputs.SOURCE_PATH }}
       DOCKERFILE: ${{ inputs.DOCKERFILE }}
-      REGISTRY_BASE_NAME: ${{ inputs.REGISTRY_BASE_NAME }}
+      IMAGE: ${{ inputs.IMAGE }}
     secrets:
       WORKLOAD_IDENTITY_PRD: ${{ secrets.WORKLOAD_IDENTITY_PRD }}
       PASSCULTURE_GITHUB_ACTION_APP_ID: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}

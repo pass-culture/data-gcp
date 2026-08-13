@@ -16,11 +16,24 @@ returns
         user_subscription_latitude double precision,
         user_subscription_longitude double precision
     )
-as $body$
+as
+    $body$
 BEGIN
     RETURN QUERY
-    SELECT *
-    FROM public.enriched_user;
+    -- Select columns explicitly to avoid any issues with column order changes in the future
+    SELECT
+        eu.user_id,
+        eu.user_deposit_creation_date,
+        eu.user_birth_date,
+        eu.user_department_code,
+        eu.user_deposit_initial_amount,
+        eu.user_theoretical_remaining_credit,
+        eu.booking_cnt,
+        eu.consult_offer,
+        eu.has_added_offer_to_favorites,
+        eu.user_subscription_latitude,
+        eu.user_subscription_longitude
+    FROM public.enriched_user eu;
 END;
 $body$
 language plpgsql

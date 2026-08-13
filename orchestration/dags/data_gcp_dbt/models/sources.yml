@@ -206,6 +206,7 @@ sources:
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: agg_partner_cultural_sector
+      - name: base_lieux_culturels_ouverts
       - name: epci
       - name: geo_iris
       - name: institution_metadata_aggregated_type

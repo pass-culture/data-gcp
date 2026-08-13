@@ -10,7 +10,9 @@ select
     a.address_city,
     a.address_department_code,
     a.address_latitude,
-    a.address_longitude
+    a.address_longitude,
+    a.address_ban_id,
+    a.address_insee_code,
 
 from {{ source("raw", "applicative_database_offerer_address") }} as oa
 left join

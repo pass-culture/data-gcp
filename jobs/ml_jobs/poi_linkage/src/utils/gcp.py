@@ -9,11 +9,16 @@ from src.constants import (
     ADDRESS_CITY_COL,
     ADDRESS_LATITUDE_COL,
     ADDRESS_LONGITUDE_COL,
+    ADDRESS_POSTAL_CODE_COL,
     ADDRESS_STREET_COL,
     GCP_PROJECT_ID,
     OFFERER_ADDRESS_ID_COL,
     OFFERER_ADDRESS_LABEL_COL,
+    OFFERER_ADDRESS_POI_LINK_TABLE,
     OFFERER_ADDRESS_TABLE,
+    OFFERER_ID_COL,
+    OFFERER_SIREN_COL,
+    OFFERER_TABLE,
     POI_ADDRESS_COL,
     POI_COMMON_NAME_COL,
     POI_COMMUNE_COL,
@@ -23,6 +28,8 @@ from src.constants import (
     POI_LONGITUDE_COL,
     POI_NAME_COL,
     POI_POSTAL_CODE_COL,
+    POI_PUBLIC_ENTRANCE_ADDRESS_COL,
+    POI_SIRET_COL,
     POI_TABLE,
     VENUE_ID_FK_COL,
 )
@@ -85,7 +92,9 @@ POI_SOURCE = BigQuerySource(
         f"{POI_CSV_ID_COL} AS {POI_ID_COL}",
         POI_NAME_COL,
         POI_COMMON_NAME_COL,
+        POI_SIRET_COL,
         POI_ADDRESS_COL,
+        POI_PUBLIC_ENTRANCE_ADDRESS_COL,
         POI_POSTAL_CODE_COL,
         POI_COMMUNE_COL,
         POI_LATITUDE_COL,
@@ -103,6 +112,7 @@ OFFERER_ADDRESS_SOURCE = BigQuerySource(
         OFFERER_ADDRESS_LABEL_COL,
         VENUE_ID_FK_COL,
         ADDRESS_STREET_COL,
+        ADDRESS_POSTAL_CODE_COL,
         ADDRESS_CITY_COL,
         ADDRESS_LATITUDE_COL,
         ADDRESS_LONGITUDE_COL,
@@ -110,6 +120,18 @@ OFFERER_ADDRESS_SOURCE = BigQuerySource(
     order_by=OFFERER_ADDRESS_ID_COL,
     not_null_columns=(ADDRESS_LATITUDE_COL, ADDRESS_LONGITUDE_COL),
     float_cast_columns=(ADDRESS_LATITUDE_COL, ADDRESS_LONGITUDE_COL),
+)
+
+OFFERER_SOURCE = BigQuerySource(
+    table=OFFERER_TABLE,
+    columns=[OFFERER_ID_COL, OFFERER_SIREN_COL],
+    order_by=OFFERER_ID_COL,
+)
+
+OFFERER_ADDRESS_OFFERER_SOURCE = BigQuerySource(
+    table=OFFERER_ADDRESS_TABLE,
+    columns=[OFFERER_ADDRESS_ID_COL, OFFERER_ID_COL],
+    order_by=OFFERER_ADDRESS_ID_COL,
 )
 
 
@@ -121,3 +143,21 @@ def iter_offerer_address_batches(batch_size: int = 5000) -> Iterator[pd.DataFram
 def fetch_poi() -> pd.DataFrame:
     """Fetch POI rows from BigQuery."""
     return POI_SOURCE.fetch()
+
+
+def fetch_offerers() -> pd.DataFrame:
+    """Fetch offerer_id/offerer_siren rows from BigQuery."""
+    return OFFERER_SOURCE.fetch()
+
+
+def fetch_offerer_address_offerer_mapping() -> pd.DataFrame:
+    """Fetch the offerer_address_id -> offerer_id mapping from BigQuery."""
+    return OFFERER_ADDRESS_OFFERER_SOURCE.fetch()
+
+
+def fetch_offerer_address_poi_link() -> pd.DataFrame:
+    """Fetch the OffererAddressPOILink table (see src.matching.build_offerer_address_poi_link)."""
+    return pandas_gbq.read_gbq(
+        f"SELECT * FROM `{GCP_PROJECT_ID}.{OFFERER_ADDRESS_POI_LINK_TABLE}`",
+        project_id=GCP_PROJECT_ID,
+    )

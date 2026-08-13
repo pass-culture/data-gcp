@@ -4,6 +4,8 @@ select
     oa.address_longitude as venue_longitude,
     oa.address_latitude as venue_latitude,
     oa.address_street as venue_street,
+    oa.address_ban_id as venue_ban_id,
+    oa.address_insee_code as venue_insee_code,
     coalesce(
         case
             when oa.address_postal_code = "97150"

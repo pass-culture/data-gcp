@@ -15,10 +15,23 @@ from src.constants import (
     SEARCH_RADIUS_METERS,
 )
 from src.duckdb_load import add_h3_index, get_connection, load_dataframe
+from src.evaluation import (
+    HAS_GROUND_TRUTH_COL,
+    add_ground_truth_labels,
+    evaluate_heuristics,
+    plot_score_distributions,
+    sample_for_manual_review,
+)
 from src.matching import (
     build_offerer_address_poi_link as compute_offerer_address_poi_link,
 )
-from src.utils.gcp import fetch_poi, iter_offerer_address_batches
+from src.utils.gcp import (
+    fetch_offerer_address_offerer_mapping,
+    fetch_offerer_address_poi_link,
+    fetch_offerers,
+    fetch_poi,
+    iter_offerer_address_batches,
+)
 
 app = typer.Typer()
 
@@ -107,6 +120,44 @@ def build_offerer_address_poi_link(
     Path(link_output_path).parent.mkdir(parents=True, exist_ok=True)
     link_df.to_parquet(link_output_path, index=False)
     logger.info(f"Wrote {len(link_df)} offerer_address/poi pairs to {link_output_path}")
+
+
+@app.command()
+def evaluate(
+    metrics_output_path: str = typer.Option("data/output/evaluation/heuristic_metrics.csv"),
+    plots_output_dir: str = typer.Option("data/output/evaluation/plots"),
+    manual_review_output_path: str = typer.Option("data/output/evaluation/manual_review_sample.csv"),
+    manual_review_sample_size: int = typer.Option(200),
+) -> None:
+    """Compare candidate matching heuristics (distance vs. POI name columns) on a SIREN/SIRET-labeled subset.
+
+    Reads the OffererAddressPOILink table directly from BigQuery (sandbox), along
+    with offerer/offerer_address/POI identifiers, to build a silver-standard set of
+    confirmed true matches, then reports Hit@1/Hit@3/MRR and best-F1 per heuristic so
+    the importance of distance and the choice between POI name columns can be assessed
+    from real evidence. Also exports score-distribution plots and a sample of
+    unlabeled candidates for manual review.
+    """
+    logger.info("Fetching OffererAddressPOILink, offerer, and POI data from BigQuery...")
+    link_df = fetch_offerer_address_poi_link()
+    offerer_address_offerer_df = fetch_offerer_address_offerer_mapping()
+    offerers_df = fetch_offerers()
+    poi_df = fetch_poi()
+
+    labeled_df = add_ground_truth_labels(link_df, offerer_address_offerer_df, offerers_df, poi_df)
+    ground_truth_df = labeled_df[labeled_df[HAS_GROUND_TRUTH_COL]]
+
+    metrics_df = evaluate_heuristics(ground_truth_df)
+    logger.info(f"Heuristic comparison:\n{metrics_df}")
+
+    Path(metrics_output_path).parent.mkdir(parents=True, exist_ok=True)
+    metrics_df.to_csv(metrics_output_path, index=False)
+    logger.info(f"Wrote heuristic metrics to {metrics_output_path}")
+
+    plot_score_distributions(ground_truth_df, plots_output_dir)
+    logger.info(f"Wrote score-distribution plots to {plots_output_dir}")
+
+    sample_for_manual_review(labeled_df, n=manual_review_sample_size, output_path=manual_review_output_path)
 
 
 if __name__ == "__main__":

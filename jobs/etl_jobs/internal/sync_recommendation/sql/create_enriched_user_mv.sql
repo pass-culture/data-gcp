@@ -7,6 +7,7 @@ returns
         user_id varchar,
         user_deposit_creation_date timestamp,
         user_birth_date timestamp,
+        user_department_code varchar,
         user_deposit_initial_amount real,
         user_theoretical_remaining_credit real,
         booking_cnt integer,
@@ -24,13 +25,14 @@ BEGIN
         eu.user_id,
         eu.user_deposit_creation_date,
         eu.user_birth_date,
+        eu.user_department_code,
         eu.user_deposit_initial_amount,
         eu.user_theoretical_remaining_credit,
         eu.booking_cnt,
         eu.consult_offer,
         eu.has_added_offer_to_favorites,
-        eu.user_subscription_latitude,
-        eu.user_subscription_longitude
+        eu.user_subscription_latitude::double precision,
+        eu.user_subscription_longitude::double precision
     FROM public.enriched_user eu;
 END;
 $body$

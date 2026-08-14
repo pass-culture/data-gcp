@@ -45,12 +45,12 @@ repos:
           ["dbt-bigquery==1.8.1", "sqlfluff-templater-dbt"]
         stages: [pre-commit]
 
-  - repo: https://github.com/gitguardian/ggshield
-    rev: v1.42.0
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.2
     hooks:
-      - id: ggshield
-        language_version: python3
-        stages: [pre-commit]
+      - id: gitleaks
+        language: system
+        entry: gitleaks git --max-archive-depth=2 --max-decode-depth=2 --staged --verbose --exit-code 1
 
   - repo: https://github.com/owenlamont/uv-secure
     rev: 0.16.0

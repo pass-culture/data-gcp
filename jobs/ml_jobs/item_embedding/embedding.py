@@ -32,13 +32,9 @@ def _build_prompts(df: pd.DataFrame, vector: Vector) -> list[str]:
         formatted[mask] = label + " : " + df[feature][mask].astype(str)
         parts.append(formatted)
 
-    # Join non-null parts per row with a newline (null features are omitted).
-    # result_type="reduce" forces a Series even when df has zero rows; without
-    # it, .apply()/.agg() on an empty DataFrame return the DataFrame itself,
-    # which turns `combined == ""` below into a 2D comparison and breaks
-    # `df.index[...]` boolean indexing.
-    combined = pd.concat(parts, axis=1).apply(
-        lambda row: "\n".join(filter(None, row)), axis=1, result_type="reduce"
+    # Join non-null parts per row with a newline (null features are omitted)
+    combined = pd.concat(parts, axis=1).agg(
+        lambda row: "\n".join(filter(None, row)), axis=1
     )
 
     empty_items = df.index[combined == ""]

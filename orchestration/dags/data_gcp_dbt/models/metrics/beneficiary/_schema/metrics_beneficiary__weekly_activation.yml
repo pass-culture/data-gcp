@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: metrics_beneficiary__weekly_onboarding_activation
+    description: "{{ doc('description__metrics_beneficiary__weekly_onboarding_activation') }}"
+    columns:
+      - name: signup_week
+        description: "{{ doc('column__signup_week') }}"
+      - name: age_at_signup
+        description: "{{ doc('column__age_at_signup') }}"
+      - name: total_onboarding_users
+        description: "{{ doc('column__total_onboarding_users') }}"
+      - name: total_validated_7d_users
+        description: "{{ doc('column__total_validated_7d_users') }}"
+      - name: total_registered_beneficiaries
+        description: "{{ doc('column__total_registered_beneficiaries') }}"
+      - name: total_activated_7d_beneficiaries
+        description: "{{ doc('column__total_activated_7d_beneficiaries') }}"
+      - name: pct_activated_7d_beneficiaries
+        description: "{{ doc('column__pct_activated_7d_beneficiaries') }}"
+      - name: pct_validated_7d_users
+        description: "{{ doc('column__pct_validated_7d_users') }}"

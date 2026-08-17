@@ -272,6 +272,54 @@ Cumulative total amount spent by the institutions of the territory from the star
 Cumulative total number of bookings made within the territory from the start of the given school year up to and including the specified month.
 {% enddocs %}
 
+{% docs column__total_mau %}
+Total Monthly Active Users (MAU): the count of unique beneficiaries who performed at least one active action on the platform during the month.
+{% enddocs %}
+
+{% docs column__avg_dau %}
+Average Daily Active Users (DAU): the average number of unique active beneficiaries per day over the course of the month.
+{% enddocs %}
+
+{% docs column__pct_stickiness_dau_mau_ratio %}
+User stickiness ratio calculated as `(avg_dau / total_mau)`, representing how frequently monthly active users return to the platform on a daily basis.
+{% enddocs %}
+
+{% docs column__total_eligible_users %}
+Total number of beneficiaries eligible to connect and use their pass Culture credit during the month.
+{% enddocs %}
+
+{% docs column__total_connected_users %}
+Total number of eligible beneficiaries who successfully logged in or connected to the platform at least once during the month.
+{% enddocs %}
+
+{% docs column__pct_connected_users %}
+Percentage of eligible beneficiaries who connected to the platform during the month (`total_connected_users / total_eligible_users`).
+{% enddocs %}
+
+{% docs column__total_onboarding_users %}
+Total number of users who initiated the onboarding process during the signup week.
+{% enddocs %}
+
+{% docs column__total_validated_7d_users %}
+Total number of users who successfully completed and validated their identity/onboarding within 7 days of initiating it.
+{% enddocs %}
+
+{% docs column__total_registered_beneficiaries %}
+Total number of fully registered beneficiaries whose accounts became active during the signup week.
+{% enddocs %}
+
+{% docs column__total_activated_7d_beneficiaries %}
+Total number of registered beneficiaries who made their first booking or active action within 7 days following their registration.
+{% enddocs %}
+
+{% docs column__pct_activated_7d_beneficiaries %}
+Percentage of registered beneficiaries who were activated within 7 days (`total_activated_7d_beneficiaries / total_registered_beneficiaries`).
+{% enddocs %}
+
+{% docs column__pct_validated_7d_users %}
+Percentage of onboarding users who validated their onboarding process within 7 days (`total_validated_7d_users / total_onboarding_users`).
+{% enddocs %}
+
 {% docs column__discoverability_month %} First day of the calendar month the row aggregates (bookability and consultation counts are computed per month). {% enddocs %}
 
 {% docs column__nb_bookable_offers %} Number of distinct offers of this item that were bookable at least once during the month. {% enddocs %}

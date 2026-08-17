@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: metrics_beneficiary__monthly_retention
+    description: "{{ doc('description__metrics_beneficiary__monthly_retention') }}"
+    columns:
+      - name: activity_month
+        description: "{{ doc('column__activity_month') }}"
+      - name: deposit_reform_category
+        description: "{{ doc('column__deposit_reform_category') }}"
+      - name: total_mau
+        description: "{{ doc('column__total_mau') }}"
+      - name: avg_dau
+        description: "{{ doc('column__avg_dau') }}"
+      - name: pct_stickiness_dau_mau_ratio
+        description: "{{ doc('column__pct_stickiness_dau_mau_ratio') }}"
+      - name: total_eligible_users
+        description: "{{ doc('column__total_eligible_users') }}"
+      - name: total_connected_users
+        description: "{{ doc('column__total_connected_users') }}"
+      - name: pct_connected_users
+        description: "{{ doc('column__pct_connected_users') }}"

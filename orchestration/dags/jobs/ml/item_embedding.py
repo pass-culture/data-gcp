@@ -257,7 +257,7 @@ with DAG(
             FROM `{GCP_PROJECT_ID}.{INPUT_DATASET_NAME}.{TEMP_INT_TABLE_NAME}`
         """
         result = bq_hook.get_first(query)
-      
+
         return bool(result and result[0] > 0)
 
     check_items_to_embed = ShortCircuitOperator(

@@ -100,5 +100,5 @@ select
         count(distinct case when is_validated_within_7d = 1 then user_pseudo_id end), 0
     ) as total_validated_7d_users
 from validated_users
-where age_at_onboarding not in ('15', '16') and age_at_onboarding is not null
+where age_at_onboarding is not null
 group by signup_week, age_at_onboarding

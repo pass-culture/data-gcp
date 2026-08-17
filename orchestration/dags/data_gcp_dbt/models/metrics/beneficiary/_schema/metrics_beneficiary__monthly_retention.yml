@@ -3,20 +3,35 @@ version: 2
 models:
   - name: metrics_beneficiary__monthly_retention
     description: "{{ doc('description__metrics_beneficiary__monthly_retention') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - activity_month
+            - deposit_reform_category
     columns:
       - name: activity_month
         description: "{{ doc('column__activity_month') }}"
+        data_tests:
+          - not_null
       - name: deposit_reform_category
         description: "{{ doc('column__deposit_reform_category') }}"
+        data_tests:
+          - not_null
       - name: total_mau
         description: "{{ doc('column__total_mau') }}"
+        data_tests:
+          - not_null
       - name: avg_dau
         description: "{{ doc('column__avg_dau') }}"
+        data_tests:
+          - not_null
       - name: pct_stickiness_dau_mau_ratio
         description: "{{ doc('column__pct_stickiness_dau_mau_ratio') }}"
       - name: total_eligible_users
         description: "{{ doc('column__total_eligible_users') }}"
+        data_tests:
+          - not_null
       - name: total_connected_users
         description: "{{ doc('column__total_connected_users') }}"
-      - name: pct_connected_users
-        description: "{{ doc('column__pct_connected_users') }}"
+        data_tests:
+          - not_null

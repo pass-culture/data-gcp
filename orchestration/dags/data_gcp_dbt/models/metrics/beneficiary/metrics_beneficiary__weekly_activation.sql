@@ -4,7 +4,7 @@ with
             signup_week,
             total_onboarding_users,
             total_validated_7d_users,
-            safe_cast(age_at_onboarding as int64) as age_at_signup
+            age_at_onboarding as age_at_signup
         from {{ ref("int_kpi__beneficiary_weekly_onboarding") }}
     ),
 

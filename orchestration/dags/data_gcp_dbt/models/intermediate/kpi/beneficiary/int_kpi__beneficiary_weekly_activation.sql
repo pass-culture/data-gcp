@@ -4,7 +4,7 @@ with
             user_id,
             user_creation_date,
             user_birth_date,
-            user_age_at_creation as age_at_signup,
+            safe_cast(user_age_at_creation as string) as age_at_signup,
             date_trunc(date(user_creation_date), week(monday)) as signup_week
         from {{ ref("int_applicative__user") }}
     ),
@@ -48,7 +48,7 @@ with
         from source_users as usr
         left join fraud_checks as fraud on usr.user_id = fraud.user_id
         left join beneficiaries as ben on usr.user_id = ben.user_id
-        where fraud.user_id is null and usr.age_at_signup between 15 and 18
+        where fraud.user_id is null and usr.age_at_signup in ('15', '16', '17', '18')
     )
 
 select
@@ -59,5 +59,5 @@ select
         count(distinct case when is_activated_within_7d = 1 then user_id end), 0
     ) as total_activated_7d_beneficiaries
 from eligible_user_activations
-where age_at_signup between 15 and 18
+where age_at_signup is not null
 group by signup_week, age_at_signup

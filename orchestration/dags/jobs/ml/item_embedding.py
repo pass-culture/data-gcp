@@ -301,7 +301,7 @@ with DAG(
         trigger_rule="all_done",  # always delete the VM, even on upstream failure
     )
 
-    stop = EmptyOperator(task_id="stop")
+    stop = EmptyOperator(task_id="stop", trigger_rule="all_success")
 
     start >> [gce_instance_start, bigquery_select_items_to_embed]
     gce_instance_start >> install_dependencies
@@ -312,4 +312,4 @@ with DAG(
     ] >> embed_items
     embed_items >> export_item_embeddings_to_bigquery
     export_item_embeddings_to_bigquery >> gce_instance_delete
-    gce_instance_delete >> stop
+    [export_item_embeddings_to_bigquery, gce_instance_delete] >> stop

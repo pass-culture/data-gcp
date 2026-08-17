@@ -252,13 +252,13 @@ with DAG(
     # Step 1b: Short-circuit the run when the selection is empty.
     def _has_items_to_embed() -> bool:
         bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
-        bq_client = bq_hook.get_client(project_id=GCP_PROJECT_ID)
         query = f"""
             SELECT COUNT(*) AS count
             FROM `{GCP_PROJECT_ID}.{INPUT_DATASET_NAME}.{TEMP_INT_TABLE_NAME}`
         """
-        count = int(bq_client.query(query).to_dataframe()["count"].values[0])
-        return count > 0
+        result = bq_hook.get_first(query)
+      
+        return bool(result and result[0] > 0)
 
     check_items_to_embed = ShortCircuitOperator(
         task_id="check_items_to_embed",

@@ -4,6 +4,8 @@ from itertools import chain
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import ShortCircuitOperator
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
@@ -16,6 +18,7 @@ from common.config import (
     ENV_SHORT_NAME,
     GCE_ZONES,
     GCP_PROJECT_ID,
+    GCP_REGION,
     INSTANCES_TYPES,
     ML_BUCKET_TEMP,
 )
@@ -223,7 +226,7 @@ with DAG(
         retries=2,
     )
 
-    # Step 1: Select items to embed and save to a temp table in BigQuery
+    # Step 1a: Select items to embed and save to a temp table in BigQuery
     bigquery_select_items_to_embed = BigQueryInsertJobOperator(
         project_id=GCP_PROJECT_ID,
         task_id="bigquery_select_items_to_embed",
@@ -244,6 +247,22 @@ with DAG(
                 "writeDisposition": "WRITE_TRUNCATE",
             }
         },
+    )
+
+    # Step 1b: Short-circuit the run when the selection is empty.
+    def _has_items_to_embed() -> bool:
+        bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
+        bq_client = bq_hook.get_client(project_id=GCP_PROJECT_ID)
+        query = f"""
+            SELECT COUNT(*) AS count
+            FROM `{GCP_PROJECT_ID}.{INPUT_DATASET_NAME}.{TEMP_INT_TABLE_NAME}`
+        """
+        count = int(bq_client.query(query).to_dataframe()["count"].values[0])
+        return count > 0
+
+    check_items_to_embed = ShortCircuitOperator(
+        task_id="check_items_to_embed",
+        python_callable=_has_items_to_embed,
     )
 
     # Step 2: Export temp table to GCS as a parquet file (to be used as input for the embedding script)
@@ -303,9 +322,9 @@ with DAG(
 
     stop = EmptyOperator(task_id="stop", trigger_rule="all_success")
 
-    start >> [gce_instance_start, bigquery_select_items_to_embed]
+    start >> bigquery_select_items_to_embed >> check_items_to_embed
+    check_items_to_embed >> [gce_instance_start, export_item_metadata_to_gcs]
     gce_instance_start >> install_dependencies
-    bigquery_select_items_to_embed >> export_item_metadata_to_gcs
     [
         install_dependencies,
         export_item_metadata_to_gcs,

@@ -5,10 +5,12 @@
 with
     -- First individual offer consultation date per offerer
     first_consultation as (
-        select offerer_id, min(event_date) as offerer_first_consultation_date
-        from {{ ref("mrt_native__daily_offer_consultation") }}
-        where event_name = 'ConsultOffer' and user_role = 'Bénéficiaire'
-        group by offerer_id
+        select
+            o.offerer_id, min(nc.consultation_date) as offerer_first_consultation_date
+        from {{ ref("int_firebase__native_consultation") }} as nc
+        inner join {{ ref("int_global__offer") }} as o on nc.offer_id = o.offer_id
+        where nc.consultation_date >= '{{ partner_kpi_start_date }}'
+        group by o.offerer_id
     ),
 
     -- First venue per offerer, with geography and all relevant activation dates

@@ -133,22 +133,22 @@ select
     partner_department_name,
     partner_region_name,
     partner_region_code,
-    count(distinct offerer_id) as total_offerers_created,
+    count(distinct offerer_id) as total_offerers_created_by_cohort,
     count(
         distinct case when days_to_consultation_or_adage <= 30 then offerer_id end
-    ) as total_activated_offerer_consultation_or_adage_30d,
+    ) as total_activated_offerer_consultation_or_adage_30d_by_cohort,
     count(
         distinct case when days_to_offer_or_adage <= 30 then offerer_id end
-    ) as total_activated_offerer_offer_or_adage_30d,
+    ) as total_activated_offerer_offer_or_adage_30d_by_cohort,
     count(
         distinct case when days_to_any <= 30 then offerer_id end
-    ) as total_activated_offerer_any_30d,
+    ) as total_activated_offerer_any_30d_by_cohort,
     count(
         distinct case when days_to_individual <= 30 then offerer_id end
-    ) as total_activated_offerer_individual_30d,
+    ) as total_activated_offerer_individual_30d_by_cohort,
     count(
         distinct case when days_to_collective <= 30 then offerer_id end
-    ) as total_activated_offerer_collective_30d
+    ) as total_activated_offerer_collective_30d_by_cohort
 from time_to_activation
 group by
     date_trunc(offerer_creation_date, month),

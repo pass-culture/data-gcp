@@ -20,16 +20,12 @@ select
     m.total_cumulative_activated_partners_individual_only,
     m.total_cumulative_activated_partners_collective_only,
     m.total_cumulative_activated_partners_dual_part,
-    s.total_offerers_created as total_offerers_created_by_cohort,
-    s.total_activated_offerer_consultation_or_adage_30d
-    as total_activated_offerer_consultation_or_adage_30d_by_cohort,
-    s.total_activated_offerer_offer_or_adage_30d
-    as total_activated_offerer_offer_or_adage_30d_by_cohort,
-    s.total_activated_offerer_any_30d as total_activated_offerer_any_30d_by_cohort,
-    s.total_activated_offerer_individual_30d
-    as total_activated_offerer_individual_30d_by_cohort,
-    s.total_activated_offerer_collective_30d
-    as total_activated_offerer_collective_30d_by_cohort
+    s.total_offerers_created_by_cohort,
+    s.total_activated_offerer_consultation_or_adage_30d_by_cohort,
+    s.total_activated_offerer_offer_or_adage_30d_by_cohort,
+    s.total_activated_offerer_any_30d_by_cohort,
+    s.total_activated_offerer_individual_30d_by_cohort,
+    s.total_activated_offerer_collective_30d_by_cohort
 from {{ ref("int_kpi__cultural_partner_activation") }} as m
 full outer join
     {{ ref("int_kpi__cultural_partner_time_to_activation") }} as s

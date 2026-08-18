@@ -17,4 +17,7 @@ from {{ ref("int_kpi__booking_finance_individual") }} as bf
 left join
     {{ ref("int_kpi__cultural_partner_activation") }} as cp
     on bf.venue_city_code = cp.partner_city_code
+    and bf.venue_department_code = cp.partner_department_code
+    and bf.venue_region_name = cp.partner_region_name
+    and bf.venue_epci_code = cp.partner_epci_code
     and bf.partition_month = cp.partition_month

@@ -236,49 +236,94 @@ def run_incremental(
                 run_stats.add_daily_stats(daily_stats)
                 continue
 
-            # Validate against API limit
-            if total_results >= MAX_SEARCH_RESULTS:
-                msg = (
-                    f"Total results for {base} on {date_str} ({total_results}) "
-                    f"exceeds API limit ({MAX_SEARCH_RESULTS})."
-                )
-                raise ValueError(msg)
-
-            # Phase 1: Collect all gencods from search pages
-            total_pages = calculate_total_pages(total_results, results_per_page)
             all_gencods = []
             total_filtered = 0
             filtered_samples = []
 
-            for page in range(1, total_pages + 1):
-                try:
-                    response = api_client.search_by_date(
+            # If the daily volume exceeds API hard cap, split by availability code.
+            dispo_values: list[int | None] = [None]
+            if total_results >= MAX_SEARCH_RESULTS:
+                dispo_legend = initial_response.get("dispo", {})
+                dispo_values = sorted(int(k) for k in dispo_legend)
+                if not dispo_values:
+                    msg = (
+                        f"Total results for {base} on {date_str} ({total_results}) "
+                        "exceeds API limit "
+                        f"({MAX_SEARCH_RESULTS}) and no dispo split values were found."
+                    )
+                    raise ValueError(msg)
+
+                logger.warning(
+                    f"API cap reached for {base}/{date_str} ({total_results}). "
+                    f"Splitting by dispo values: {dispo_values}"
+                )
+
+            if dispo_values == [None]:
+                dispo_shard_totals: list[tuple[int | None, int]] = [
+                    (None, total_results)
+                ]
+            else:
+                dispo_shard_totals = []
+                for dispo_value in dispo_values:
+                    dispo_first_page_response = api_client.search_by_date(
                         base=base,
                         min_date=min_date_formatted,
                         max_date=max_date_formatted,
-                        page=page,
+                        page=1,
                         results_per_page=results_per_page,
+                        dispo=dispo_value,
                     )
 
-                    results = response.get("result", [])
-                    if results:
-                        page_gencods, filter_stats = (
-                            extract_gencods_from_search_response(
-                                response, from_date=min_date_formatted
-                            )
+                    dispo_total_results = dispo_first_page_response.get("nbreponses", 0)
+                    if dispo_total_results == 0:
+                        continue
+
+                    if dispo_total_results >= MAX_SEARCH_RESULTS:
+                        msg = (
+                            f"Split shard for {base} on {date_str} "
+                            f"with dispo={dispo_value} still exceeds API limit "
+                            f"({dispo_total_results} >= {MAX_SEARCH_RESULTS})."
                         )
-                        all_gencods.extend(page_gencods)
+                        raise ValueError(msg)
+                    dispo_shard_totals.append((dispo_value, dispo_total_results))
 
-                        # Aggregate filter stats
-                        total_filtered += filter_stats["filtered_count"]
-                        if len(filtered_samples) < 5:
-                            filtered_samples.extend(filter_stats["filtered_samples"])
+            for dispo_value, dispo_total_results in dispo_shard_totals:
+                total_pages = calculate_total_pages(
+                    dispo_total_results, results_per_page
+                )
+                for page in range(1, total_pages + 1):
+                    try:
+                        response = api_client.search_by_date(
+                            base=base,
+                            min_date=min_date_formatted,
+                            max_date=max_date_formatted,
+                            page=page,
+                            results_per_page=results_per_page,
+                            dispo=dispo_value,
+                        )
 
-                except Exception as e:
-                    logger.error(
-                        f"Error fetching page {page} for {base}/{date_str}: {e}"
-                    )
-                    continue
+                        results = response.get("result", [])
+                        if results:
+                            page_gencods, filter_stats = (
+                                extract_gencods_from_search_response(
+                                    response, from_date=min_date_formatted
+                                )
+                            )
+                            all_gencods.extend(page_gencods)
+
+                            # Aggregate filter stats
+                            total_filtered += filter_stats["filtered_count"]
+                            if len(filtered_samples) < 5:
+                                filtered_samples.extend(
+                                    filter_stats["filtered_samples"]
+                                )
+
+                    except Exception as e:
+                        logger.error(
+                            f"Error fetching page {page} for {base}/{date_str} "
+                            f"(dispo={dispo_value}): {e}"
+                        )
+                        continue
 
             # Log filtered gencods if any
             daily_stats.filtered_by_date = total_filtered

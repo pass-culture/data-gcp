@@ -9,7 +9,7 @@ dependencies = [
     "google-cloud-aiplatform>=1.22.0",
     "google-cloud-iam>=2.22.0",
     "h11>=0.16.0",
-    "keras>=3.13.1",
+    "keras >= 3.14.0",
     "loguru>=0.6.0",
     "matplotlib>=3.8.4",
     "mlflow>=3.10.1",
@@ -74,7 +74,9 @@ environments = [
     "sys_platform == 'linux'",
 ]
 constraint-dependencies = [
-    "cryptography >= 46.0.7", # GHSA-79v7-f9g7-gm4r
+    # (GHSA-69w3-r845-3855, GHSA-29pf-2h5f-8g72, GHSA-fgcw-684q-jj6r cannot be resolved while recommenders is a direct dep)
+    # transformers skipped: recommenders>=1.2.1 hard-requires transformers<5, incompatible with >=5.5.0
+    "cryptography >= 49.0.0", # GHSA-537c-gmf6-5ccf, GHSA-m2h6-j472-rp4c, GHSA-jwv3-5hgf-82ww
     "pygments >= 2.20.0", # GHSA-x233-2p5x-gpf5
     "bleach >= 6.4.0", # GHSA-8jxr-4gfq-qg7h, GHSA-q4r7-2j3p-rxmx
     "requests >= 2.33.0", # GHSA-35cv-6p6j-x96x
@@ -88,8 +90,9 @@ constraint-dependencies = [
     "pillow >= 12.3.0", # GHSA-jw5h-h276-9jcc, GHSA-2jxr-v4xp-q87w, GHSA-9m85-6jwx-3479
     "pyasn1 >= 0.6.4", # GHSA-5q8p-9xrr-4jqm, GHSA-gqpq-g87q-wr6g, GHSA-f39v-xm4p-9hm7
     "mlflow >= 3.12.0", # CVE-2026-0545
-    "aiohttp >= 3.14.1", # GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg, GHSA-9gh4-3mxq-6h5c
+    "aiohttp >= 3.14.3", # GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg
     "gitpython >= 3.1.55", # GHSA-rwj8-pgh3-r573, GHSA-hxwm-x553-x359, GHSA-wfm5-v35h-vwf4, GHSA-cjjc-xp8v-855w, GHSA-j4jw-m6xq-5x6x, GHSA-63pj-vm49-gjx3, GHSA-xm45-vr68-g3jr, GHSA-9vhm-6c77-rvj4, GHSA-rpm5-65cw-6hj4
+    "click >= 8.3.3", # PYSEC-2026-2132
     "idna >= 3.15", # GHSA-65pc-fj4g-8rjx
     "jupyter-server >= 2.20.0", # GHSA-qh7q-6qm3-653w, GHSA-24qx-w28j-9m6p, GHSA-5789-5fc7-67v3, GHSA-5mrq-x3x5-8v8f, PYSEC-2026-67, PYSEC-2026-69, PYSEC-2026-68, CVE-2026-44727
     "jupyterlab >= 4.5.10", # GHSA-37w4-hwhx-4rc4, GHSA-mqcg-5x36-vfcg, GHSA-vp7x-m4p5-jhq3, GHSA-hcgh-g6vc-6fg3

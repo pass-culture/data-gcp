@@ -212,7 +212,7 @@ class TiteliveClient:
         if max_date:
             params["datemaxm"] = max_date
 
-        if dispo is not None:
+        if dispo:
             params["dispo"] = str(dispo)
 
         return self._make_request("GET", url, params=params)

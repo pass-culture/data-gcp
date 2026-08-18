@@ -240,8 +240,8 @@ def run_incremental(
             total_filtered = 0
             filtered_samples = []
 
-            # If the daily volume exceeds API hard cap, split by availability code.
-            dispo_values: list[int | None] = [None]
+            # If the volume exceeds API max search result, split by dispo code
+            dispo_values = [None]
             if total_results >= MAX_SEARCH_RESULTS:
                 dispo_legend = initial_response.get("dispo", {})
                 dispo_values = sorted(int(k) for k in dispo_legend)
@@ -259,13 +259,11 @@ def run_incremental(
                 )
 
             if dispo_values == [None]:
-                dispo_shard_totals: list[tuple[int | None, int]] = [
-                    (None, total_results)
-                ]
+                split_plan = [(None, total_results)]
             else:
-                dispo_shard_totals = []
+                split_plan = []
                 for dispo_value in dispo_values:
-                    dispo_first_page_response = api_client.search_by_date(
+                    dispo_response = api_client.search_by_date(
                         base=base,
                         min_date=min_date_formatted,
                         max_date=max_date_formatted,
@@ -274,22 +272,21 @@ def run_incremental(
                         dispo=dispo_value,
                     )
 
-                    dispo_total_results = dispo_first_page_response.get("nbreponses", 0)
-                    if dispo_total_results == 0:
+                    split_total_results = dispo_response.get("nbreponses", 0)
+                    if split_total_results == 0:
                         continue
 
-                    if dispo_total_results >= MAX_SEARCH_RESULTS:
+                    if split_total_results >= MAX_SEARCH_RESULTS:
                         msg = (
-                            f"Split shard for {base} on {date_str} "
-                            f"with dispo={dispo_value} still exceeds API limit "
-                            f"({dispo_total_results} >= {MAX_SEARCH_RESULTS})."
+                            f"Split with dispo={dispo_value} still exceeds API limit "
+                            f"({split_total_results} >= {MAX_SEARCH_RESULTS})."
                         )
                         raise ValueError(msg)
-                    dispo_shard_totals.append((dispo_value, dispo_total_results))
+                    split_plan.append((dispo_value, split_total_results))
 
-            for dispo_value, dispo_total_results in dispo_shard_totals:
+            for dispo_value, split_total_results in split_plan:
                 total_pages = calculate_total_pages(
-                    dispo_total_results, results_per_page
+                    split_total_results, results_per_page
                 )
                 for page in range(1, total_pages + 1):
                     try:

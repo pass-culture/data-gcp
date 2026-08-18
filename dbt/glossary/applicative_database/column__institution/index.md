@@ -12,6 +12,8 @@
 
 **institution_region_name**: Region name of the educational institution.
 
+**institution_region_code**: INSEE region code of the educational institution, derived from the department code via the region_department seed. Defaults to '-1' when not found.
+
 **institution_department_code**: Department code of the educational institution.
 
 **institution_department_name**: Department name of the educational institution.

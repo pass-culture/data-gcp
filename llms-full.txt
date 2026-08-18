@@ -1631,6 +1631,16 @@ Each row represents a key indicator calculated for a specific month, geographic 
 | milestone_age                      |           | The age reached by the user at a specific key milestone, used to determine users eligibility. |
 | total_beneficiaries_last_12_months |           | Rolling sum of distinct users over the last 12 months for a given age and department.         |
 
+The `exp_vidoc_booking_finance_individual` model provides aggregated financial KPIs related to individual bookings. It is designed to be exported to the ministry for vidoc visualisation. Financial KPIs are nullified when statistical secrecy applies (fewer than 3 active cultural partners in the commune for the given month).
+
+## Table Description
+
+Each row represents financial indicators calculated for a specific month, geographic area, offer category and EPN status.
+
+**Grain**: `partition_month`, `venue_department_code`, `venue_epci_code`, `venue_city_code`, `offerer_is_epn`, `offer_category_id`.
+
+When `is_statistic_secret` is TRUE, all financial KPIs (`total_bookings`, `total_quantities`, `total_revenue_amount`, `total_reimbursed_amount`, `total_contribution_amount`) are set to NULL.
+
 The `exp_vidoc_diversity` model aggregates key performance indicators to quantify diversity within beneficiary bookings on the pass Culture app. It is designed to be exported to ministry for vidoc visualisation.
 
 ## Table Description
@@ -2670,6 +2680,12 @@ This model is the counterpart of the legacy [`int_kpi__population_coverage`](#!/
 KPI table aggregating collective bookings by month and venue geography.
 
 Each row represents a `partition_month` / `scholar_year` / venue geography combination. The model is built from [`mrt_global__collective_booking`](#!/model/model.data_gcp_dbt.mrt_global__collective_booking) and keeps only confirmed booking statuses. It exposes monthly metrics (`total_collective_bookings`, `total_collective_amount_spent`) and cumulative metrics over the scholar year (`cumulative_total_collective_bookings`, `cumulative_total_collective_amount_spent`).
+
+KPI table aggregating collective bookings by month, educational domain and institution geography.
+
+Each row represents a `partition_month` / `educational_domain_name` / institution geography combination. The model is built from [`mrt_global__collective_booking`](#!/model/model.data_gcp_dbt.mrt_global__collective_booking) joined with [`mrt_global__collective_offer_domain`](#!/model/model.data_gcp_dbt.mrt_global__collective_offer_domain) and keeps only confirmed booking statuses. It exposes monthly metrics (`total_collective_bookings`, `total_collective_booking_amount`, `total_collective_tickets`, `total_collective_institutions`) and cumulative metrics over the full history (`cumulative_total_collective_bookings`, `cumulative_total_collective_booking_amount`, `cumulative_total_collective_tickets`, `cumulative_total_collective_institutions`).
+
+> **Warning**: domains are not summable across each other — a collective offer can belong to multiple domains simultaneously. Aggregating across `educational_domain_name` will double-count bookings.
 
 KPI table aggregating created collective offers by month and venue geography.
 
@@ -5963,6 +5979,33 @@ Each row represents the key indicators related to collective bookings, calculate
 | cumulative_total_collective_bookings     | INTEGER   | Cumulative total number of collective bookings for the same venue geography from the start of the given school year up to and including the specified month.        |
 | cumulative_total_collective_amount_spent | FLOAT     | Cumulative total amount spent for collective bookings for the same venue geography from the start of the given school year up to and including the specified month. |
 
+The `metrics_booking__collective_by_domain` model provides aggregated key indicators related to collective bookings by educational domain and institution geography. It is designed to be the central model providing collective booking indicators broken down by cultural domain for export, monitoring and governance.
+
+## Table Description
+
+Each row represents the key indicators related to collective bookings, calculated for a specific month, educational domain and institution geographic level (department / region / city / EPCI).
+
+| name                                       | data_type | description                                                                                                                                                                                                        |
+| ------------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| partition_month                            | DATE      | Indicates the first day of the month the KPI refers to.                                                                                                                                                            |
+| scholar_year                               | STRING    | Scholar year of the deposit.                                                                                                                                                                                       |
+| educational_domain_name                    | STRING    | Unique name corresponding to the id of the educational domain of the collective offer or venue.                                                                                                                    |
+| institution_region_name                    | STRING    | Region name of the educational institution.                                                                                                                                                                        |
+| institution_region_code                    | STRING    | INSEE region code of the educational institution, derived from the department code via the region_department seed. Defaults to '-1' when not found.                                                                |
+| institution_department_name                | STRING    | Department name of the educational institution.                                                                                                                                                                    |
+| institution_department_code                | STRING    | Department code of the educational institution.                                                                                                                                                                    |
+| institution_epci_name                      | STRING    | EPCI name of the educational institution.                                                                                                                                                                          |
+| institution_epci_code                      | STRING    | EPCI code of the educational institution.                                                                                                                                                                          |
+| institution_city_code                      | STRING    | City code where the educational institution is located.                                                                                                                                                            |
+| total_collective_bookings                  | INTEGER   | Total number of collective bookings.                                                                                                                                                                               |
+| total_collective_booking_amount            | FLOAT     | Total amount generated by the bookings.                                                                                                                                                                            |
+| total_collective_tickets                   | INTEGER   | The total number of tickets for the educational institution.                                                                                                                                                       |
+| total_collective_institutions              | INTEGER   | Total number of distinct educational institutions that made at least one collective booking.                                                                                                                       |
+| cumulative_total_collective_bookings       | INTEGER   | Cumulative total number of EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month.                                   |
+| cumulative_total_collective_booking_amount | FLOAT     | Cumulative total booking amount for EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month.                          |
+| cumulative_total_collective_tickets        | INTEGER   | Cumulative total number of tickets generated for EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month.             |
+| cumulative_total_collective_institutions   | INTEGER   | Cumulative total number of distinct educational institutions involved in EAC collective bookings for the same geography and domain from the beginning of the data history up to and including the specified month. |
+
 The `metrics_cultural_partner__activation` model provides aggregated key indicators related to pass Culture cultural partner activations. It is designed to be the central model providing cultural partners activation indicators for export, monitoring and gouvernance.
 
 ## Table Description
@@ -6485,6 +6528,8 @@ If you have any questions or need further assistance.
 **institution_academy_name**: Academy name of the educational institution.
 
 **institution_region_name**: Region name of the educational institution.
+
+**institution_region_code**: INSEE region code of the educational institution, derived from the department code via the region_department seed. Defaults to '-1' when not found.
 
 **institution_department_code**: Department code of the educational institution.
 
@@ -7788,6 +7833,24 @@ Work in progress
 **metrics\_\_total_cumulative_activated_partners_collective_only**: The total cumulative number of unique partners who have had at least one active offer exclusively within the collective part for at least 1 day, and have never had an active offer within the individual part since inception up to the given month.
 
 **metrics\_\_total_cumulative_activated_partners_dual_part**: The total cumulative number of unique partners who have had at least one active offer within both the individual part and the collective part (at any point, concurrently or sequentially) for at least 1 day since inception up to the given month.
+
+**total_institutions**: Total number of distinct educational institutions that made at least one collective booking.
+
+**total_collective_bookings_by_domain**: Total number of EAC collective bookings for the given institution geography and educational domain in the specified month.
+
+**total_collective_booking_amount_by_domain**: Total booking amount for EAC collective bookings for the given institution geography and educational domain in the specified month.
+
+**total_collective_tickets_by_domain**: Total number of tickets generated for EAC collective bookings for the given institution geography and educational domain in the specified month.
+
+**total_collective_institutions_by_domain**: Total number of distinct educational institutions with at least one EAC collective booking for the given geography and educational domain in the specified month.
+
+**cumulative_total_collective_bookings_by_domain**: Cumulative total number of EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month.
+
+**cumulative_total_collective_booking_amount_by_domain**: Cumulative total booking amount for EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month.
+
+**cumulative_total_collective_tickets_by_domain**: Cumulative total number of tickets generated for EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month.
+
+**cumulative_total_collective_institutions_by_domain**: Cumulative total number of distinct educational institutions involved in EAC collective bookings for the same geography and domain from the beginning of the data history up to and including the specified month.
 
 **discoverability_month**: First day of the calendar month the row aggregates (bookability and consultation counts are computed per month).
 

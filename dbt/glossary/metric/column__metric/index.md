@@ -340,6 +340,24 @@
 
 **metrics\_\_total_cumulative_activated_partners_dual_part**: The total cumulative number of unique partners who have had at least one active offer within both the individual part and the collective part (at any point, concurrently or sequentially) for at least 1 day since inception up to the given month.
 
+**total_institutions**: Total number of distinct educational institutions that made at least one collective booking.
+
+**total_collective_bookings_by_domain**: Total number of EAC collective bookings for the given institution geography and educational domain in the specified month.
+
+**total_collective_booking_amount_by_domain**: Total booking amount for EAC collective bookings for the given institution geography and educational domain in the specified month.
+
+**total_collective_tickets_by_domain**: Total number of tickets generated for EAC collective bookings for the given institution geography and educational domain in the specified month.
+
+**total_collective_institutions_by_domain**: Total number of distinct educational institutions with at least one EAC collective booking for the given geography and educational domain in the specified month.
+
+**cumulative_total_collective_bookings_by_domain**: Cumulative total number of EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month.
+
+**cumulative_total_collective_booking_amount_by_domain**: Cumulative total booking amount for EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month.
+
+**cumulative_total_collective_tickets_by_domain**: Cumulative total number of tickets generated for EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month.
+
+**cumulative_total_collective_institutions_by_domain**: Cumulative total number of distinct educational institutions involved in EAC collective bookings for the same geography and domain from the beginning of the data history up to and including the specified month.
+
 **discoverability_month**: First day of the calendar month the row aggregates (bookability and consultation counts are computed per month).
 
 **nb_bookable_offers**: Number of distinct offers of this item that were bookable at least once during the month.

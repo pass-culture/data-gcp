@@ -13,8 +13,8 @@ returns
         booking_cnt integer,
         consult_offer integer,
         has_added_offer_to_favorites integer,
-        user_subscription_latitude double precision,
-        user_subscription_longitude double precision
+        user_subscription_latitude real,
+        user_subscription_longitude real
     )
 as
     $body$
@@ -31,8 +31,8 @@ BEGIN
         eu.booking_cnt,
         eu.consult_offer,
         eu.has_added_offer_to_favorites,
-        eu.user_subscription_latitude::double precision,
-        eu.user_subscription_longitude::double precision
+        eu.user_subscription_latitude,
+        eu.user_subscription_longitude
     FROM public.enriched_user eu;
 END;
 $body$

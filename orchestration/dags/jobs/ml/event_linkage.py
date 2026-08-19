@@ -187,7 +187,7 @@ with DAG(
             gpu_type="nvidia-tesla-t4",
             gpu_count=1,
             preemptible=False,
-            labels={"dag_name": DAG_CONFIG.dag_id},
+            labels={"dag_name": DAG_CONFIG.dag_id, "job_type": "ml"},
         )
 
         fetch_install_code = InstallDependenciesOperator(

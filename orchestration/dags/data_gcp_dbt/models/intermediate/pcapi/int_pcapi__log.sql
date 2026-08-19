@@ -6,7 +6,7 @@ select
     jsonpayload.technical_message_id,
     jsonpayload.extra.choice_datetime,
     jsonpayload.extra.source,
-    jsonpayload.extra.method,
+    jsonpayload.extra.method as method,
     jsonpayload.extra.analyticssource as analytics_source,
     labels.k8s_pod_role,
     jsonpayload.extra.consent.mandatory as cookies_consent_mandatory,
@@ -90,6 +90,11 @@ select
     jsonpayload.extra.ispleasant as beta_test_new_nav_is_pleasant,
     jsonpayload.extra.comment as beta_test_new_nav_comment,
     jsonpayload.extra.searchquery as search_query,
+    jsonpayload.extra.searchmode as search_mode,
+    cast(jsonpayload.extra.nbresults as int) as cast(
+        jsonpayload.extra.searchnbresults as int
+    ) as search_nb_results,
+    nb_results,
     cast(jsonpayload.extra.searchnbresults as int) as search_nb_results,
     cast(jsonpayload.extra.searchrank as int) as card_clicked_rank,
     trace,

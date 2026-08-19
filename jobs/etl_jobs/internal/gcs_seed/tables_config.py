@@ -281,5 +281,10 @@ REF_TABLES = {
             "housing_benefits_share": "FLOAT64",
             "tax_share": "FLOAT64",
         },
+        "backoffice_log_reference": {
+            "log_extract": "STRING",
+            "log_type": "STRING",
+            "log_name": "STRING",
+        },
     },
 }

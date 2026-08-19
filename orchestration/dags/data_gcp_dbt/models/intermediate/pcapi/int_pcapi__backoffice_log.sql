@@ -19,6 +19,9 @@ with
             search_type,
             search_nb_results,
             card_clicked_rank,
+            method,
+            search_mode,
+            nb_results
             case
                 when message like 'HTTP request%'
                 then
@@ -30,7 +33,10 @@ with
             coalesce(search_sub_type, lower(search_pro_type)) as search_protype,
             case
                 when search_query like '%@%' then 'xxx@xxx.com' else search_query
-            end as search_query
+            end as search_query,
+            method,
+            search_mode,
+            nb_results
 
         from {{ ref("int_pcapi__log") }}
         where

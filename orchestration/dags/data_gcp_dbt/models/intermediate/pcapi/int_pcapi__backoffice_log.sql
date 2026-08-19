@@ -21,7 +21,7 @@ with
             card_clicked_rank,
             method,
             search_mode,
-            nb_results
+            nb_results,
             case
                 when message like 'HTTP request%'
                 then

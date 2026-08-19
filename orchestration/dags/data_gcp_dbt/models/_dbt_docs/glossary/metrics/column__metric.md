@@ -249,7 +249,7 @@ Total number of institutions (schools) registered or eligible within the territo
 {% enddocs %}
 
 {% docs column__metrics__total_engaged_institutions %}
-Total number of "engaged" institutions (having made at least one booking) within the territory for the specified month and school year.
+Total cumulative number of "engaged" institutions (having made at least one booking) within the territory for the specified month and school year.
 {% enddocs %}
 
 {% docs column__metrics__total_deposit %}
@@ -273,7 +273,7 @@ Cumulative total number of bookings made within the territory from the start of 
 {% enddocs %}
 
 {% docs column__total_mau %}
-Total Monthly Active Users (MAU): the count of unique beneficiaries who performed at least one active action on the platform during the month.
+Total Monthly Active Users (MAU): the count of unique beneficiaries who visited the platform during the month.
 {% enddocs %}
 
 {% docs column__avg_dau %}
@@ -285,7 +285,7 @@ User stickiness ratio calculated as `(avg_dau / total_mau)`, representing how fr
 {% enddocs %}
 
 {% docs column__total_eligible_users %}
-Total number of beneficiaries eligible to connect and use their pass Culture credit during the month.
+Total number of beneficiaries eligible with at least 5 euros remaining credit to connect and use their pass Culture credit during the month.
 {% enddocs %}
 
 {% docs column__total_connected_users %}
@@ -309,7 +309,7 @@ Total number of fully registered beneficiaries whose accounts became active duri
 {% enddocs %}
 
 {% docs column__total_activated_7d_beneficiaries %}
-Total number of registered beneficiaries who made their first booking or active action within 7 days following their registration.
+Total number of registered beneficiaries who received their deposit within 7 days following their registration.
 {% enddocs %}
 
 {% docs column__pct_activated_7d_beneficiaries %}

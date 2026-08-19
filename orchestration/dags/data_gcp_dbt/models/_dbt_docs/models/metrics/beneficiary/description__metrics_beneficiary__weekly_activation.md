@@ -11,7 +11,7 @@ It consolidates data from weekly onboarding tracking (started onboarding vs. val
 
 ## Table Description
 
-Each row represents weekly aggregated onboarding, validation, registration, and 7-day activation metrics for a specific signup week and beneficiary age at signup.
+Each row represents weekly aggregated onboarding, validation, registration, and 7-day activation metrics for a specific signup week and beneficiary age at signup. We exclude users that had ineligble reasons: age not valid, duplicate ID or INE.
 
 {% docs table__metrics_beneficiary__weekly_activation %}
 Each row represents weekly aggregated onboarding, validation, registration, and 7-day activation metrics for a specific signup week and beneficiary age at signup.

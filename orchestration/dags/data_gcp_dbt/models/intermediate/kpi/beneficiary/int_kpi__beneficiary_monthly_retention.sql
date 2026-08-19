@@ -21,7 +21,7 @@ with
             coalesce(usr.deposit_reform_category, 'unknown') as deposit_reform_category,
             count(distinct vis.user_id) as total_mau
         from source_visits as vis
-        left join users_metadata as usr on vis.user_id = usr.user_id
+        inner join users_metadata as usr on vis.user_id = usr.user_id
         group by vis.activity_month, coalesce(usr.deposit_reform_category, 'unknown')
     ),
 
@@ -32,7 +32,7 @@ with
             date_trunc(vis.activity_date, month) as activity_month,
             coalesce(usr.deposit_reform_category, 'unknown') as deposit_reform_category
         from source_visits as vis
-        left join users_metadata as usr on vis.user_id = usr.user_id
+        inner join users_metadata as usr on vis.user_id = usr.user_id
     ),
 
     daily_user_dau as (

@@ -3,7 +3,6 @@ with
         select
             user_id,
             user_creation_date,
-            user_birth_date,
             safe_cast(user_age_at_creation as string) as age_at_signup,
             date_trunc(date(user_creation_date), week(monday)) as signup_week
         from {{ ref("int_applicative__user") }}

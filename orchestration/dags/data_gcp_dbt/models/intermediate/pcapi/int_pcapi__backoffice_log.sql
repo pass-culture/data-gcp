@@ -17,7 +17,6 @@ with
             technical_message_id,
             user_id,
             search_type,
-            search_nb_results,
             card_clicked_rank,
             method,
             search_mode,

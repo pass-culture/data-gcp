@@ -86,7 +86,6 @@ select
     jsonpayload.extra.searchquery as search_query,
     jsonpayload.extra.searchmode as search_mode,
     cast(jsonpayload.extra.nbresults as int) as nb_results,
-    cast(jsonpayload.extra.searchnbresults as int) as search_nb_results,
     cast(jsonpayload.extra.searchrank as int) as card_clicked_rank,
     trace,
     cast(jsonpayload.extra.newlysubscribedto.email as string) as newly_subscribed_email,

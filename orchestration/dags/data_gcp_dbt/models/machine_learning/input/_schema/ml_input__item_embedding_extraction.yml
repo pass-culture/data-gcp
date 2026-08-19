@@ -11,10 +11,10 @@ models:
             where_expression: "to_embed = true"
             training_period:
               period: day
-              count: 28
+              count: 5
             detection_period:
               period: day
-              count: 7
+              count: 2
     columns:
       - name: item_id
         data_tests:

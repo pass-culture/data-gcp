@@ -5,6 +5,7 @@
 {% docs column__institution_name %} Name of the educational institution. {% enddocs %}
 {% docs column__institution_academy_name %} Academy name of the educational institution. {% enddocs %}
 {% docs column__institution_region_name %} Region name of the educational institution. {% enddocs %}
+{% docs column__institution_region_code %} INSEE region code of the educational institution, derived from the department code via the region_department seed. Defaults to '-1' when not found. {% enddocs %}
 {% docs column__institution_department_code %} Department code of the educational institution. {% enddocs %}
 {% docs column__institution_department_name %} Department name of the educational institution. {% enddocs %}
 {% docs column__institution_postal_code %} Postal code of the educational institution. {% enddocs %}

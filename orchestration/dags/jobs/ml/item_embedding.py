@@ -168,7 +168,7 @@ with DAG(
                         request_valid_for_duration, max 2h).""",
         ),
         "max_run_duration": Param(
-            default="12h",
+            default="30h",
             type="string",
             description="""(FLEX_START only) Max VM run duration before it is
                         auto-deleted. Accepts e.g. '12h', '1d2h', or seconds.

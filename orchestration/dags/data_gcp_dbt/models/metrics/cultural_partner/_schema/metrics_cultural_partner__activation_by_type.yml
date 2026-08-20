@@ -92,3 +92,21 @@ models:
         description: "{{ doc('column__metrics__total_cumulative_activated_partners_dual_part') }}"
         data_tests:
           - not_null
+
+      - name: total_offerers_created_by_cohort
+        description: "{{ doc('column__metrics__total_offerers_created_by_cohort') }}"
+
+      - name: total_activated_offerer_consultation_or_adage_30d_by_cohort
+        description: "{{ doc('column__metrics__total_activated_offerer_consultation_or_adage_30d_by_cohort') }}"
+
+      - name: total_activated_offerer_offer_or_adage_30d_by_cohort
+        description: "{{ doc('column__metrics__total_activated_offerer_offer_or_adage_30d_by_cohort') }}"
+
+      - name: total_activated_offerer_global_30d_by_cohort
+        description: "{{ doc('column__metrics__total_activated_offerer_global_30d_by_cohort') }}"
+
+      - name: total_activated_offerer_individual_30d_by_cohort
+        description: "{{ doc('column__metrics__total_activated_offerer_individual_30d_by_cohort') }}"
+
+      - name: total_activated_offerer_collective_30d_by_cohort
+        description: "{{ doc('column__metrics__total_activated_offerer_collective_30d_by_cohort') }}"

@@ -23,7 +23,7 @@ select
     s.total_offerers_created_by_cohort,
     s.total_activated_offerer_consultation_or_adage_30d_by_cohort,
     s.total_activated_offerer_offer_or_adage_30d_by_cohort,
-    s.total_activated_offerer_global_30d_by_cohort,
+    s.total_activated_offerer_any_30d_by_cohort,
     s.total_activated_offerer_individual_30d_by_cohort,
     s.total_activated_offerer_collective_30d_by_cohort
 from {{ ref("int_kpi__cultural_partner_activation") }} as m

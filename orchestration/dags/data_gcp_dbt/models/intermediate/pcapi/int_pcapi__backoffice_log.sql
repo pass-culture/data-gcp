@@ -17,8 +17,10 @@ with
             technical_message_id,
             user_id,
             search_type,
-            search_nb_results,
             card_clicked_rank,
+            method,
+            search_mode,
+            nb_results as total_results,
             case
                 when message like 'HTTP request%'
                 then

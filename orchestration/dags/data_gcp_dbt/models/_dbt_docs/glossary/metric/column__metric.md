@@ -268,3 +268,27 @@ The total cumulative number of unique partners who have had at least one active 
 {% docs column__nb_monthly_other_channel_offer_consult %} Number of the item's monthly consultations that originated from any channel other than search, home, venue, favorites or similar-offer recommendations. {% enddocs %}
 
 {% docs column__cnt_events %} Number of consultation events matching this row's dimensions (event date, offer, origin, traffic attribution, user role/age). {% enddocs %}
+
+{% docs column__metrics__total_offerers_created_by_cohort %}
+Total number of offerers registered during the cohort month, anchored to the geography of their first venue. Cohorts whose 30-day activation window has not yet closed are excluded.
+{% enddocs %}
+
+{% docs column__metrics__total_activated_offerer_consultation_or_adage_30d_by_cohort %}
+Number of offerers from the cohort who, within 30 days of registration, either had their first offer consulted by a beneficiary OR submitted a first Adage DMS application. Offerers already referenced in Adage without a DMS application count as activated at day 0.
+{% enddocs %}
+
+{% docs column__metrics__total_activated_offerer_offer_or_adage_30d_by_cohort %}
+Number of offerers from the cohort who, within 30 days of registration, either created their first individual offer OR submitted a first Adage DMS application. Offerers already referenced in Adage without a DMS application count as activated at day 0.
+{% enddocs %}
+
+{% docs column__metrics__total_activated_offerer_global_30d_by_cohort %}
+Number of offerers from the cohort who created at least one individual or collective offer within 30 days of registration.
+{% enddocs %}
+
+{% docs column__metrics__total_activated_offerer_individual_30d_by_cohort %}
+Number of offerers from the cohort who created at least one individual offer within 30 days of registration.
+{% enddocs %}
+
+{% docs column__metrics__total_activated_offerer_collective_30d_by_cohort %}
+Number of offerers from the cohort who created at least one collective offer within 30 days of registration.
+{% enddocs %}

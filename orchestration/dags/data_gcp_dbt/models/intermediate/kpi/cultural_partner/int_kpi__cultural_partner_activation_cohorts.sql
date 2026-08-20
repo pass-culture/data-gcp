@@ -116,7 +116,7 @@ with
                 ),
                 offerer_creation_date,
                 day
-            ) as days_to_any,
+            ) as days_to_global,
             date_diff(
                 first_individual_offer_date, offerer_creation_date, day
             ) as days_to_individual,
@@ -128,7 +128,7 @@ with
     )
 
 select
-    date_trunc(offerer_creation_date, month) as creation_month,
+    date_trunc(offerer_creation_date, month) as partition_month,
     partner_city_code,
     partner_epci_code,
     partner_department_code,
@@ -143,8 +143,8 @@ select
         distinct case when days_to_offer_or_adage <= 30 then offerer_id end
     ) as total_activated_offerer_offer_or_adage_30d_by_cohort,
     count(
-        distinct case when days_to_any <= 30 then offerer_id end
-    ) as total_activated_offerer_any_30d_by_cohort,
+        distinct case when days_to_global <= 30 then offerer_id end
+    ) as total_activated_offerer_global_30d_by_cohort,
     count(
         distinct case when days_to_individual <= 30 then offerer_id end
     ) as total_activated_offerer_individual_30d_by_cohort,

@@ -31,7 +31,7 @@ environments = [
     "sys_platform == 'linux'",
 ]
 constraint-dependencies = [
-    "cryptography >= 46.0.7", # GHSA-79v7-f9g7-gm4r
+    # cryptography skipped: mlflow>=3.12.0 hard-requires cryptography<50, incompatible with >=50.0.0 (GHSA-g6cj-pr64-35w5, PYSEC-2026-3552)
     "urllib3 >= 2.7.0", # GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j
     "pygments >= 2.20.0", # GHSA-x233-2p5x-gpf5
     "bleach >= 6.4.0", # GHSA-8jxr-4gfq-qg7h, GHSA-q4r7-2j3p-rxmx
@@ -39,7 +39,7 @@ constraint-dependencies = [
     "requests >= 2.33.0", # GHSA-35cv-6p6j-x96x
     "pydantic-settings >= 2.14.2", # GHSA-87rw-pf2v-x3x9
     "idna >= 3.15", # GHSA-65pc-fj4g-8rjx
-    "aiohttp >= 3.14.1", # GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg, GHSA-9gh4-3mxq-6h5c
+    "aiohttp >= 3.14.3", # GHSA-mq44-7p77-q5h7, GHSA-mfx4-hv73-q22v, GHSA-cq5v-8q36-5273
     "jupyterlab >= 4.5.10", # GHSA-37w4-hwhx-4rc4, GHSA-mqcg-5x36-vfcg, GHSA-vp7x-m4p5-jhq3, GHSA-hcgh-g6vc-6fg3
     "tornado >= 6.5.7", # GHSA-4gh8-x3vv-phhg, GHSA-qrcp-jww8-49hg, GHSA-xf96-mx7x-9q66
     "msgpack >= 1.2.1", # GHSA-qmhj-6hxf-p4j8
@@ -52,8 +52,13 @@ constraint-dependencies = [
     "nltk >= 3.10.0", # GHSA-cgvg-3q2f-4gxm, GHSA-p9pp-j76j-8x4v, GHSA-5j2p-q7q8-hcc7
     "pillow >= 12.3.0", # GHSA-jw5h-h276-9jcc, GHSA-2jxr-v4xp-q87w, GHSA-9m85-6jwx-3479
     "pyasn1 >= 0.6.4", # GHSA-5q8p-9xrr-4jqm, GHSA-gqpq-g87q-wr6g, GHSA-f39v-xm4p-9hm7
-    "gitpython >= 3.1.55", # GHSA-rwj8-pgh3-r573, GHSA-hxwm-x553-x359, GHSA-wfm5-v35h-vwf4, GHSA-cjjc-xp8v-855w, GHSA-j4jw-m6xq-5x6x, GHSA-63pj-vm49-gjx3, GHSA-xm45-vr68-g3jr, GHSA-9vhm-6c77-rvj4, GHSA-rpm5-65cw-6hj4
-    "mlflow >= 3.12.0", # CVE-2026-0545
+    "gitpython >= 3.1.58", # GHSA-4gmw-gg2m-w46p, GHSA-9rj7-rf2p-w77r, GHSA-hh9p-6wh2-4mfc, GHSA-jm78-9fvv-mhgr, GHSA-wvpp-8hx9-p66j
+    "sqlparse >= 0.6.0", # GHSA-3496-9g83-7v6x, GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-pwgv-4x5q-6m9f
+    "starlette >= 1.3.1", # GHSA-86qp-5c8j-p5mr, GHSA-wqp7-x3pw-xc5r, GHSA-x746-7m8f-x49c, PYSEC-2026-161
+    "keras >= 3.14.0", # PYSEC-2026-2324
+    "click >= 8.3.3", # PYSEC-2026-2132
+    "pyarrow >= 23.0.1", # GHSA-rgxp-2hwp-jwgg, PYSEC-2026-113
+    "mlflow >= 3.15.0", # CVE-2026-0545, CVE-2026-64849 (GHSA-7gwp-5pfp-969j)
 ]
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.

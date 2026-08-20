@@ -59,12 +59,6 @@ select
             jsonpayload.extra.stock_quantity
         ) as int64
     ) as stock_new_quantity,
-    coalesce(
-        jsonpayload.extra.changes.price.old_value, jsonpayload.extra.old_price
-    ) as stock_old_price,
-    coalesce(
-        jsonpayload.extra.changes.price.new_value, jsonpayload.extra.stock_price
-    ) as stock_new_price,
     cast(jsonpayload.extra.stock_dnbookedquantity as int64) as stock_booking_quantity,
     jsonpayload.extra.changes.publicationdatetime.oldvalue
     as publication_date_old_value,
@@ -90,7 +84,8 @@ select
     jsonpayload.extra.ispleasant as beta_test_new_nav_is_pleasant,
     jsonpayload.extra.comment as beta_test_new_nav_comment,
     jsonpayload.extra.searchquery as search_query,
-    cast(jsonpayload.extra.searchnbresults as int) as search_nb_results,
+    jsonpayload.extra.searchmode as search_mode,
+    cast(jsonpayload.extra.nbresults as int) as nb_results,
     cast(jsonpayload.extra.searchrank as int) as card_clicked_rank,
     trace,
     cast(jsonpayload.extra.newlysubscribedto.email as string) as newly_subscribed_email,
@@ -117,6 +112,16 @@ select
     cast(
         jsonpayload.extra.offer_subcategory as string
     ) as suggested_offer_api_subcategory,
+    jsonpayload.extra.filtervalues.geolocradius as geoloc_radius_filter,
+    jsonpayload.extra.provider_id,
+    jsonpayload.extra.siret,
+    cast(jsonpayload.extra.is_diffusible as boolean) as siret_is_diffusible,
+    coalesce(
+        jsonpayload.extra.changes.price.old_value, jsonpayload.extra.old_price
+    ) as stock_old_price,
+    coalesce(
+        jsonpayload.extra.changes.price.new_value, jsonpayload.extra.stock_price
+    ) as stock_new_price,
     date(timestamp) as partition_date,
     coalesce(
         cast(jsonpayload.extra.stockid as string),
@@ -132,7 +137,6 @@ select
         jsonpayload.extra.filtervalues.departments, ','
     ) as department_filter,
     array_to_string(jsonpayload.extra.filtervalues.academies, ',') as academy_filter,
-    jsonpayload.extra.filtervalues.geolocradius as geoloc_radius_filter,
     array_to_string(
         array(
             select cast(value as string)
@@ -178,8 +182,5 @@ select
     ) as user_first_deposit_activation_date,
     array_to_string(
         jsonpayload.extra.offer_subcategories, ','
-    ) as suggested_offer_api_subcategories,
-    jsonpayload.extra.provider_id,
-    jsonpayload.extra.siret,
-    cast(jsonpayload.extra.is_diffusible as boolean) as siret_is_diffusible
+    ) as suggested_offer_api_subcategories
 from {{ source("raw", "stdout") }}

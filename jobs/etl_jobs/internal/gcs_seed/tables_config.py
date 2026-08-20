@@ -282,4 +282,9 @@ REF_TABLES = {
             "tax_share": "FLOAT64",
         },
     },
+    "backoffice_log_reference": {
+        "log_extract": "STRING",
+        "log_type": "STRING",
+        "log_name": "STRING",
+    },
 }

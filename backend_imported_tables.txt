@@ -1,106 +1,116 @@
-public.accessibility_provider
-public.achievement
-public.action_history
-public.address
-public.allocine_pivot
-public.allocine_venue_provider
-public.artist
-public.artist_music_platform
-public.artist_offer_link
-public.artist_product_link
-public.bank_account
-public.beneficiary_fraud_check
-public.beneficiary_fraud_review
-public.beneficiary_import
-public.beneficiary_import_status
-public.beneficiary_import_status
-public.booking
-public.booking_finance_incident
-public.boost_cinema_details
-public.cashflow
-public.cashflow_batch
-public.cashflow_pricing
-public.cds_cinema_details
-public.cgr_cinema_details
-public.chronicle
-public.cinema_provider_pivot
-public.collective_booking
-public.collective_offer
-public.collective_offer_template
-public.collective_offer_template_domain
-public.collective_stock
-public.criterion
-public.cultural_outreach
-public.custom_reimbursement_rule
-public.deposit
-public.discord_user
-public.educational_institution
-public.educational_institution_program
-public.educational_institution_program_association
-public.ems_cinema_details
-public.event_series
-public.event_series_offer_link
-public.favorite
-public.feature
-public.finance_incident
-public.fraudulent_booking_tag
-public.google_places_info
-public.headline_offer
-public.highlight
-public.highlight_request
-public.invoice
-public.invoice_cashflow
-public.invoice_line
-public.local_provider_event
-public.login_device_history
-public.mediation
-public.national_program
-public.offer
-public.offer
-public.offer_criterion
-public.offer_meta_data
-public.offer_quality
-public.offer_reminder
-public.offer_validation_rule
-public.offer_validation_sub_rule
-public.offerer_address
-public.offerer_tag
-public.offerer_tag_category
-public.offerer_tag_category_mapping
-public.opening_hours
-public.opening_hours
-public.payment
-public.payment_message
-public.payment_status
-public.price_category
-public.pricing
-public.pricing_line
-public.pricing_log
-public.pro_advice
-public.product
-public.product_chronicle
-public.product_mediation
-public.product_whitelist
-public.provider
-public.recredit
-public.special_event
-public.special_event_response
-public.stock
-public.stock
-public.titelive_gtl_mapping
-public.transaction
-public.trusted_device
-public.user
-public.user
-public.user_offerer
-public.validation_rule_collective_offer_link
-public.validation_rule_collective_offer_template_link
-public.validation_rule_offer_link
-public.venue
-public.venue_bank_account_link
-public.venue_contact
-public.venue_label
-public.venue_pricing_point_link
-public.venue_provider
-public.venue_provider_external_urls
-public.venue_registration
+applicative_database_offer_legacy: booking_contact, booking_email, offer, offer_audio_disability_compliant, offer_creation_date, offer_description, offer_ean, offer_external_ticket_office_url, offer_extra_data, offer_fields_updated, offer_finalization_date, offer_id, offer_id_at_providers, offer_is_active, offer_is_duo, offer_is_national, offer_last_provider_id, offer_last_validation_type, offer_mental_disability_compliant, offer_modified_at_last_provider_date, offer_motor_disability_compliant, offer_name, offer_product_id, offer_publication_date, offer_subcategoryid, offer_updated_date, offer_url, offer_validation, offer_visual_disability_compliant, offer_withdrawal_delay, offer_withdrawal_details, offer_withdrawal_type, offerer_address_id, scheduled_offer_bookability_date, venue_id
+collective_offer_domain: collectiveOfferId, educationalDomainId
+collective_offer_request: collectiveOfferTemplateId, comment, dateCreated, educationalInstitutionId, educationalRedactorId, id, requestedDate, totalStudents, totalTeachers
+criterion_category: id, label
+criterion_category_mapping: categoryId, criterionId, id
+educational_deposit: amount, dateCreated, educationalInstitutionId, educationalYearId, id, ministry, period
+educational_domain: id, name
+educational_domain_venue: educationalDomainId, id, venueId
+educational_redactor: civility, email, id
+educational_year: adageId, beginningDate, expirationDate, id
+finance_event: bookingFinanceIncidentId, bookingId, collectiveBookingId, creationDate, id, motive, pricingOrderingDate, pricingPointId, status, valueDate, venueId
+offer_compliance: compliance_reasons, compliance_score, id, offerId, validation_status_prediction, validation_status_prediction_reason
+offerer_tag_mapping: id, offererId, tagId
+public.accessibility_provider: externalAccessibilityData, externalAccessibilityId, id, lastUpdateAtProvider, venueId
+public.achievement: bookingId, id, name, seenDate, unlockedDate, userId
+public.action_history: actionDate, actionType, authorUserId, comment, id, jsonData, offererId, userId, venueId
+public.address: banId, city, departmentCode, id, inseeCode, latitude, longitude, postalCode, street
+public.allocine_pivot: id, internalId, theaterId, venueId
+public.allocine_venue_provider: id, isDuo, quantity
+public.artist: app_search_score, biography, date_created, date_modified, description, id, image, image_author, image_license, image_license_url, mediation_uuid, name, pro_search_score, wikidata_id, wikipedia_url
+public.artist_music_platform: apple_music_id, artist_id, deezer_id, genius_id, id, isni_id, soundcloud_id, spotify_id
+public.artist_offer_link: artist_id, artist_type, custom_name, id, offer_id
+public.artist_product_link: artist_id, artist_type, date_created, date_modified, id, product_id
+public.bank_account: dateCreated, dsApplicationId, iban, id, isActive, label, offererId, status
+public.beneficiary_fraud_check: content, datecreated, eligibility_type, id, reason, reasonCodes, status, thirdpartyid, type, user_id
+public.beneficiary_fraud_review: authorId, dateReviewed, eligibilityType, id, reason, review, userId
+public.beneficiary_import: applicationId, beneficiaryId, id, source, sourceId
+public.beneficiary_import_status: authorId, beneficiaryImportId, date, detail, id, status
+public.booking: amount, cancellationDate, cancellationReason, dateCreated, dateUsed, depositId, id, offererId, priceCategoryLabel, quantity, reimbursementDate, status, stockId, usedRecreditType, userId, venueId
+public.booking_finance_incident: beneficiaryId, bookingId, collectiveBookingId, id, incidentId, newTotalAmount
+public.boost_cinema_details: cinemaProviderPivotId, cinemaUrl, id
+public.cashflow: amount, batchId, creationDate, id, status
+public.cashflow_batch: creationDate, cutoff, id, label
+public.cashflow_pricing: cashflowId, pricingId
+public.cds_cinema_details: accountId, cinemaApiToken, cinemaProviderPivotId, id
+public.cgr_cinema_details: cinemaProviderPivotId, cinemaUrl, id
+public.chronicle: clubType, content, dateCreated, id, isActive, userId
+public.cinema_provider_pivot: id, idAtProvider, providerId, venueId
+public.collective_booking: cancellationDate, cancellationLimitDate, cancellationReason, collectiveStockId, confirmationDate, confirmationLimitDate, dateCreated, dateUsed, educationalDepositId, educationalInstitutionId, educationalRedactorId, educationalYearId, id, offererId, reimbursementDate, status, venueId
+public.collective_offer: audioDisabilityCompliant, bookingEmails, contactEmail, contactPhone, dateCreated, dateUpdated, description, durationMinutes, formats, id, imageId, institutionId, interventionArea, isActive, lastValidationDate, lastValidationType, locationType, mentalDisabilityCompliant, motorDisabilityCompliant, name, nationalProgramId, offererAddressId, providerId, rejectionReason, students, templateId, validation, venueId, visualDisabilityCompliant
+public.collective_offer_template: audioDisabilityCompliant, bookingEmails, contactEmail, contactForm, contactPhone, contactUrl, dateCreated, dateRange, dateUpdated, description, durationMinutes, formats, id, imageId, interventionArea, isActive, lastValidationDate, lastValidationType, locationType, mentalDisabilityCompliant, motorDisabilityCompliant, name, nationalProgramId, offererAddressId, priceDetail, rejectionReason, students, validation, venueId, visualDisabilityCompliant
+public.collective_offer_template_domain: collectiveOfferTemplateId, educationalDomainId
+public.collective_stock: bookingLimitDatetime, collectiveOfferId, dateCreated, dateModified, endDatetime, id, numberOfTickets, price, priceDetail, startDatetime
+public.criterion: description, endDateTime, highlightId, id, name, startDateTime
+public.cultural_outreach: claimedDatetime, id, offerId, status
+public.custom_reimbursement_rule: amount, id, offerId, offererId, rate, subcategories, timespan, venueId
+public.deposit: amount, dateCreated, dateUpdated, expirationDate, id, source, type, userId
+public.discord_user: discordId, hasAccess, id, isBanned, lastUpdated, userId
+public.educational_institution: Id, city, institutionId, institutionType, latitude, longitude, name, postalCode, ruralLevel
+public.educational_institution_program: description, id, label, name
+public.educational_institution_program_association: institutionId, programId
+public.ems_cinema_details: cinemaProviderPivotId, id, lastVersion
+public.event_series: dateCreated, dateModified, description, id, mediationUuid, name
+public.event_series_offer_link: dateCreated, dateModified, eventSeriesId, id, offerId
+public.favorite: dateCreated, id, offerId, userId
+public.feature: description, id, isActive, name
+public.finance_incident: details, id, kind, status, venueId
+public.fraudulent_booking_tag: authorId, bookingId, dateCreated, id
+public.google_places_info: bannerUrl, id, venueId
+public.headline_offer: id, offerId, timespan, venueId
+public.highlight: availability_datespan, communication_date, description, highlight_datespan, id, mediation_uuid, name
+public.highlight_request: highlightId, id, offerId
+public.invoice: amount, bankAccountId, date, id, reference
+public.invoice_cashflow: cashflowId, invoiceId
+public.invoice_line: contributionAmount, group, id, invoiceId, label, rate, reimbursedAmount
+public.local_provider_event: date, id, payload, providerId, type
+public.login_device_history: dateCreated, deviceId, id, location, os, source, userId
+public.mediation: authorId, credit, dateCreated, dateModifiedAtLastProvider, id, isActive, lastProviderId, offerId, thumbCount
+public.national_program: dateCreated, id, name
+public.offer: audioDisabilityCompliant, bookingAllowedDatetime, bookingContact, bookingEmail, dateCreated, dateModifiedAtLastProvider, dateUpdated, description, ean, externalTicketOfficeUrl, fieldsUpdated, finalizationDatetime, id, idAtProvider, isActive, isDuo, isNational, jsonData, lastProviderId, lastValidationType, mentalDisabilityCompliant, motorDisabilityCompliant, name, offererAddressId, productId, publicationDatetime, subcategoryId, url, validation, venueId, visualDisabilityCompliant, withdrawalDelay, withdrawalDetails, withdrawalType
+public.offer_criterion: criterionId, id, offerId
+public.offer_meta_data: id, offerId, videoUrl
+public.offer_quality: completionScore, id, offerId, updatedAt
+public.offer_reminder: id, offerId, userId
+public.offer_validation_rule: id, name
+public.offer_validation_sub_rule: attribute, comparated, id, model, operator, validationRuleId
+public.offerer_address: addressId, id, label, offererId, type, venueId
+public.offerer_tag: description, id, label, name
+public.offerer_tag_category: id, label, name
+public.offerer_tag_category_mapping: categoryId, id, tagId
+public.opening_hours: afternoon_opening_hours, id, morning_opening_hours, venueId, weekday
+public.payment: amount, author, bookingId, comment, id, paymentMessageId, recipientName, recipientSiren, reimbursementRate, reimbursementRule, transactionEndToEndId, transactionLabel
+public.payment_message: checksum, id, name
+public.payment_status: date, detail, id, paymentId, status
+public.price_category: id, label, offerId, price
+public.pricing: amount, bookingId, collectiveBookingId, creationDate, customRuleId, eventId, id, pricingPointId, revenue, standardRule, status, valueDate, venueId
+public.pricing_line: amount, category, id, pricingId
+public.pricing_log: id, pricingId, reason, statusAfter, statusBefore, timestamp
+public.pro_advice: author, content, id, offerId, updatedAt, venueId
+public.product: dateModifiedAtLastProvider, description, ean, gcuCompatibilityType, id, jsonData, lastProviderId, last_30_days_booking, name, subcategoryId, thumbCount
+public.product_chronicle: chronicleId, id, productId
+public.product_mediation: dateModifiedAtLastProvider, id, imageType, lastProviderId, productId, uuid
+public.product_whitelist: authorId, comment, dateCreated, ean, id, title
+public.provider: enabledForPro, id, isActive, localClass, name
+public.recredit: amount, dateCreated, depositId, id, recreditType
+public.special_event: dateCreated, endImportDate, eventDate, externalId, id, offererId, title, venueId
+public.special_event_response: dateSubmitted, eventId, id, status, userId
+public.stock: beginningDatetime, bookingLimitDatetime, dateCreated, dateModified, dateModifiedAtLastProvider, features, fieldsUpdated, id, idAtProviders, isSoftDeleted, lastProviderId, offerId, price, priceCategoryId, quantity
+public.titelive_gtl_mapping: gtlId, gtlLabelLevel1, gtlLabelLevel2, gtlLabelLevel3, gtlLabelLevel4, gtlType
+public.transaction: actor_id, client_addr, id, issued_at, native_transaction_id
+public.trusted_device: dateCreated, deviceId, os, source, userId
+public.user: activity, address, city, civility, culturalSurveyFilledDate, culturalSurveyId, dateCreated, dateOfBirth, departementCode, email, id, isActive, isEmailValidated, lastConnectionDate, needsToFillCulturalSurvey, notificationSubscriptions, phoneValidationStatus, postalCode, roles, schoolType, validatedBirthDate
+public.user_offerer: dateCreated, id, offererId, userId, validationStatus
+public.validation_rule_collective_offer_link: collectiveOfferId, id, ruleId
+public.validation_rule_collective_offer_template_link: collectiveOfferTemplateId, id, ruleId
+public.validation_rule_offer_link: id, offerId, ruleId
+public.venue: activity, adageId, adageInscriptionDate, audioDisabilityCompliant, bannerUrl, bookingEmail, collectiveDescription, collectiveEmail, collectiveInterventionArea, collectiveNetwork, collectivePhone, collectiveStudents, collectiveWebsite, comment, dateCreated, description, dmsToken, id, isOpenToPublic, isPermanent, isSoftDeleted, managingOffererId, mentalDisabilityCompliant, motorDisabilityCompliant, name, publicName, siret, state, thumbCount, venueEducationalStatusId, venueLabelId, venueTypeCode, visualDisabilityCompliant, volunteeringUrl, withdrawalDetails
+public.venue_bank_account_link: bankAccountId, id, timespan, venueId
+public.venue_contact: email, id, phone_number, social_medias, venueId, website
+public.venue_label: id, label
+public.venue_pricing_point_link: id, pricingPointId, timespan, venueId
+public.venue_provider: dateCreated, id, isActive, lastSyncDate, providerId, venueId, venueIdAtOfferProvider
+public.venue_provider_external_urls: bookingExternalUrl, cancelExternalUrl, id, isActive, notificationExternalUrl, venueProviderId
+public.venue_registration: id, target, venueId, webPresence
+venue_criterion: criterionId, id, venueId
+venue_educational_status: id, name

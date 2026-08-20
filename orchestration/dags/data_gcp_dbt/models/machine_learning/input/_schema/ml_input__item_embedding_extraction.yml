@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: ml_input__item_embedding_extraction
+    data_tests:
+      # Tracks the number of items flagged to_embed = true run-over-run.
+      - elementary.volume_anomalies:
+          config:
+            tags: [elementary]
+          arguments:
+            where_expression: "to_embed = true"
+            training_period:
+              period: day
+              count: 5
+            detection_period:
+              period: day
+              count: 2
+    columns:
+      - name: item_id
+        data_tests:
+          - not_null
+          - unique
+      - name: to_embed
+        data_tests:
+          - not_null

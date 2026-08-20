@@ -11452,11 +11452,6 @@ It is designed to be the central model providing beneficiaries indicators for ex
 <td style="text-align: left;">Indicates the first day of the month the KPI refers to.</td>
 </tr>
 <tr>
-<td style="text-align: left;">is_statistic_secret</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">A boolean flag indicating whether the data point is subject to statistical confidentiality (true) or not (false). This is triggered when the KPI falls below a minimum threshold to protect individual privacy and prevent re-identification.</td>
-</tr>
-<tr>
 <td style="text-align: left;">region_name</td>
 <td style="text-align: left;"></td>
 <td style="text-align: left;">The official name of the region containing the IRIS area.</td>
@@ -11525,6 +11520,16 @@ It is designed to be the central model providing beneficiaries indicators for ex
 <td style="text-align: left;">total_beneficiaries</td>
 <td style="text-align: left;"></td>
 <td style="text-align: left;">Number of beneficiaries at the end of the partition month, broken down by <code>age_at_calculation</code>. Counts every user with an active account (or suspended upon user request) who has ever received credit, regardless of whether the credit is currently active, exhausted, or expired. A user's <code>age_at_calculation</code> is recomputed each month, so the same user can appear in different age buckets across partition_months. Not a true running total — users with deactivated accounts drop from the count.</td>
+</tr>
+<tr>
+<td style="text-align: left;">cell_key_beneficiaries</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;">cell_key_actual_beneficiaries</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
 </tr>
 </tbody>
 </table>

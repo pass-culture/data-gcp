@@ -21,6 +21,7 @@ with
             gcp.partner_region_name,
             gcp.partner_region_code,
             gcp.partner_type,
+            gvt.venue_tag_name,
             gof.offerer_creation_date,
             gof.is_reference_adage,
             date(gof.dms_submitted_at) as first_adage_application_date,
@@ -40,6 +41,10 @@ with
         from {{ ref("mrt_global__cultural_partner") }} as gcp
         inner join {{ ref("mrt_global__offerer") }} as gof using (offerer_id)
         left join first_consultation as fc using (offerer_id)
+        left join
+            {{ ref("mrt_global__venue_tag") }} as gvt
+            on gcp.venue_id = gvt.venue_id
+            and gvt.venue_tag_category_id = '1'
         where gof.offerer_creation_date > '{{ partner_kpi_start_date }}'
         qualify
             row_number() over (
@@ -58,6 +63,7 @@ with
             partner_region_name,
             partner_region_code,
             partner_type,
+            venue_tag_name,
             offerer_creation_date,
             case
                 when is_reference_adage and first_adage_application_date is null
@@ -132,6 +138,7 @@ with
                 partner_region_name,
                 partner_region_code,
                 '{{ partner_type.name }}' as partner_type,
+                venue_tag_name,
                 offerer_creation_date,
                 days_to_consultation_or_adage,
                 days_to_offer_or_adage,

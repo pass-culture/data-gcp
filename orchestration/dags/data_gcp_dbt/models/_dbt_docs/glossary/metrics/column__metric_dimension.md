@@ -19,3 +19,15 @@ The user's age calculated at the specific reference date of the record (usually 
 {% docs column__deposit_expiration_month %}
 The month when the beneficiary's deposit expires.
 {% enddocs %}
+
+{% docs column__activity_month %}
+The month during which the connection and engagement metrics are measured (format: YYYY-MM-01).
+{% enddocs %}
+
+{% docs column__signup_week %}
+The start date of the week during which the beneficiary initiated their registration or onboarding process (format: YYYY-MM-DD, starting on Monday).
+{% enddocs %}
+
+{% docs column__age_at_signup %}
+The age reached by the beneficiary at the time of signup/onboarding initiation.
+{% enddocs %}

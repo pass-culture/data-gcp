@@ -21,6 +21,10 @@ packages = ["."]
 constraint-dependencies = [
     "idna >= 3.15", # GHSA-65pc-fj4g-8rjx
     "pyasn1 >= 0.6.4", # GHSA-8ppf-4f7h-5ppj, GHSA-hm4w-wwcw-mr6r, GHSA-m4p7-r5rc-7g4j, GHSA-jr27-m4p2-rc6r
+    "cryptography >= 50.0.0", # GHSA-537c-gmf6-5ccf, GHSA-jwv3-5hgf-82ww, GHSA-m2h6-j472-rp4c, GHSA-g6cj-pr64-35w5
+    # NOTE: pyarrow >= 23.0.1 (GHSA-rgxp-2hwp-jwgg) cannot be applied: pyarrow>=23 requires Python>=3.10.
+    # NOTE: setuptools >= 83.0.0 (GHSA-h35f-9h28-mq5c) cannot be applied: setuptools>=83 requires Python>=3.10.
+    # Both CVEs accepted as known limitations until this job is upgraded to Python>=3.10.
 ]
 environments = [
     "sys_platform == 'linux'",

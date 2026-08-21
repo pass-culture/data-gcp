@@ -74,7 +74,7 @@ public.offer_quality: completionScore, id, offerId, updatedAt
 public.offer_reminder: id, offerId, userId
 public.offer_validation_rule: id, name
 public.offer_validation_sub_rule: attribute, comparated, id, model, operator, validationRuleId
-public.offerer_address: addressId, id, label, offererId, type, venueId
+public.offerer_address: addressId, id, label, type, venueId
 public.offerer_tag: description, id, label, name
 public.offerer_tag_category: id, label, name
 public.offerer_tag_category_mapping: categoryId, id, tagId

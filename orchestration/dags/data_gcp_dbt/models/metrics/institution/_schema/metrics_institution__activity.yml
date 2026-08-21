@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: metrics_institution__activity
+    description: "{{ doc('description__metrics_institution__activity') }}"
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+      - name: scholar_year
+        description: "{{ doc('column__scholar_year') }}"
+      - name: institution_region_name
+        description: "{{ doc('column__institution_region_name') }}"
+      - name: institution_academy_name
+        description: "{{ doc('column__institution_academy_name') }}"
+      - name: institution_department_name
+        description: "{{ doc('column__institution_department_name') }}"
+      - name: institution_epci_code
+        description: "{{ doc('column__institution_epci_code') }}"
+      - name: institution_city_code
+        description: "{{ doc('column__institution_city_code') }}"
+      - name: total_institutions
+        description: "{{ doc('column__metrics__total_institutions') }}"
+      - name: total_engaged_institutions
+        description: "{{ doc('column__metrics__total_engaged_institutions') }}"
+      - name: total_deposit
+        description: "{{ doc('column__metrics__total_deposit') }}"
+      - name: total_amount_spent
+        description: "{{ doc('column__metrics__total_amount_spent') }}"
+      - name: total_bookings
+        description: "{{ doc('column__metrics__total_bookings') }}"
+      - name: cumulative_total_amount_spent
+        description: "{{ doc('column__metrics__cumulative_total_amount_spent') }}"
+      - name: cumulative_total_bookings
+        description: "{{ doc('column__metrics__cumulative_total_bookings') }}"

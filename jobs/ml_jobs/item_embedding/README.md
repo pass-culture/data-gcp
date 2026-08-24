@@ -66,6 +66,9 @@ vectors:
 | `features` | Yes | List of input DataFrame columns to concatenate as prompt |
 | `encoder_name` | Yes | HuggingFace model name or path |
 | `prompt_name` | No | Prompt template name (model-dependent) |
+| `category_filter` | No — defaults preserve current behavior | Restricts the vector to a subset of items via `all_of` (AND'd conditions) and/or `any_of` (OR'd groups of AND'd conditions), each condition matching a `column` by `values` (exact match) or `prefix` (startswith). See [Category-scoped vectors](#category-scoped-vectors). |
+| `prompt_template` | No — defaults preserve current behavior | A `str.format`-style template rendered per item instead of the default `"label : value"` concatenation. See [Prompt templates & preprocessors](#prompt-templates--preprocessors). |
+| `preprocessors` | No — defaults preserve current behavior | Maps a feature name to a registered preprocessor function name (see `preprocessing.py`), applied before the prompt is built. |
 
 ## Input Format
 
@@ -93,6 +96,93 @@ offer_description : Le chamanisme est le monde de la sensibilité construite et 
 
 A prompt longer than the model's `max_sequence_length` (2048 tokens for `embeddinggemma-300m`) is truncated by the model, dropping the **end** of the prompt first. Keep the longest feature (typically `offer_description`) **last** so truncation only trims that field and never the identifying ones.
 
+### Category-scoped vectors
+
+A vector can be restricted to a subset of items via `category_filter`, built from two composable layers, ANDed together:
+
+- **`all_of`** — a list of conditions that must *all* hold (AND), applied unconditionally.
+- **`any_of`** — a list of condition groups; an item matches if it satisfies *at least one* group (OR across groups), where each group's own conditions are combined with AND.
+
+Each condition matches on a free-form `column` (e.g. `category_id`, `subcategory_id`, `item_id`) by exactly one of:
+- `values` — kept if the column value is in this list.
+- `prefix` — kept if the column value starts with this string, e.g. the SQL equivalent `LEFT(item_id, LEN('product')) = 'product'`.
+
+Simple case — a single condition (movies only):
+
+```yaml
+vectors:
+  - name: "movies_content"
+    category_filter:
+      any_of:
+        - conditions:
+            - column: "category_id"
+              values: ["CINEMA"]
+    features: [offer_name, offer_description, offer_label_concat]
+    encoder_name: "google/embeddinggemma-300m"
+```
+
+Combined case — only `product-*` items that are either a movie, or a book restricted to specific subcategories:
+
+```yaml
+vectors:
+  - name: "products_content"
+    category_filter:
+      all_of:
+        - column: "item_id"
+          prefix: "product"
+      any_of:
+        - conditions:
+            - column: "category_id"
+              values: ["CINEMA"]
+        - conditions:
+            - column: "category_id"
+              values: ["LIVRE"]
+            - column: "subcategory_id"
+              values: ["LIVRE_PAPIER", "LIVRE_NUMERIQUE"]
+    features: [offer_name, offer_description]
+    encoder_name: "google/embeddinggemma-300m"
+```
+
+A condition's `values`/`prefix` are mutually exclusive (exactly one must be set), and a `CategoryFilter` needs at least one of `all_of`/`any_of` non-empty — both fail fast at config-parse time.
+
+See `configs/category_embeddings.yaml` for a full worked example (movies, books, and the combined `all_of`/`any_of` case).
+
+- Vectors **without** `category_filter` ("global" vectors) keep the original behavior exactly: an item must have non-null data for *every* global vector to be embedded at all — this is unchanged.
+- Vectors **with** `category_filter` ("scoped" vectors) are filtered to their matching items first and embedded independently of every other vector. An item outside a scoped vector's filter simply gets a missing value (`NaN`) in that vector's column instead of being excluded from the whole output.
+- An item appears in the output if it has a value for **at least one** configured vector (global or scoped). In a category-only config (no global vectors), items matching none of the configured filters are dropped entirely rather than kept with all-null columns.
+- Add a new category by copying a vector block and changing `name`, `category_filter`, `features`, and (if used) `prompt_template`/`preprocessors` — no code changes needed.
+
+### Prompt templates & preprocessors
+
+By default, features are concatenated as `"label : value"` pairs. A vector can instead render a natural-language `prompt_template` (Python `str.format` syntax) to give the encoder more context:
+
+```yaml
+prompt_template: >-
+  This is a movie titled "{offer_name}". Description: {offer_description}.
+  Genre: {offer_label_concat}.
+```
+
+- Every `{field}` in the template must be one of the vector's `features` — an unknown field fails fast at embedding time with a clear error.
+- A missing/null feature value renders as an empty string (not the literal text `"None"`).
+- An item with all templated features null still gets an empty prompt (dropped, same contract as the default path).
+
+`preprocessors` maps a feature name to a function registered in `preprocessing.py`, applied to that column before the prompt (template or default) is built:
+
+```yaml
+preprocessors:
+  offer_name: "normalize_whitespace"
+  offer_description: "clean_description"
+```
+
+An unknown preprocessor name fails fast when the config is loaded (`parse_vectors`), before any model is loaded.
+
+Registered preprocessors:
+
+| Name | Status | Description |
+|------|--------|--------------|
+| `normalize_whitespace` | ⚠️ **Dummy placeholder** — only collapses whitespace. Real title cleaning/normalization logic (accents, punctuation, casing, etc.) is to be detailed and added later. | Collapses all whitespace runs to a single space and strips ends. |
+| `clean_description` | Real cleaning logic | Strips `http(s)://` / `www.` URLs and known boilerplate phrases (`"Tous les détails du film sur AlloCiné:"`, `"Pour plus d informations, rendez-vous sur"`, `"Pour plus d'informations, rendez-vous sur"`), then applies `normalize_whitespace` — collapsing all remaining whitespace, including line breaks, to single spaces and trimming the ends. |
+
 ## Output Format
 
 Output parquet file contains:
@@ -104,8 +194,9 @@ Output parquet file contains:
 
 ```
 main.py           — CLI entry point, orchestrates load → embed → upload
-config.py         — YAML config loading, schema validation, Vector model
-embedding.py      — Core embedding logic: prompt building, encoder management, GPU dispatch
+config.py         — YAML config loading, schema validation, Vector/CategoryFilter models
+embedding.py      — Core embedding logic: prompt building, category-scoped filtering, encoder management, GPU dispatch
+preprocessing.py  — Registry of named feature preprocessors (currently placeholder/dummy logic)
 gcs_utils.py      — GCS parquet I/O with retry logic
 constants.py      — Environment variables and secret name mapping
 gcp_secrets.py    — Secret Manager access with caching

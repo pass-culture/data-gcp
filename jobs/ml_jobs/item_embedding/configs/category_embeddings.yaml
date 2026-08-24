@@ -1,0 +1,109 @@
+# Example config demonstrating category-scoped vectors: each vector below
+# only applies to a subset of items (movies, books), uses its own feature
+# set, and renders a natural-language prompt_template for extra context
+# around the title/description instead of the generic "label : value" dump
+# used by default.yaml.
+#
+# `category_filter` has two composable, ANDed layers:
+#   - `all_of`: conditions that must always hold (AND).
+#   - `any_of`: groups of conditions; an item matches if it satisfies at
+#     least one group (OR across groups), each group's own conditions being
+#     ANDed together.
+# Each condition matches on a free-form `column` by exactly one of `values`
+# (isin) or `prefix` (startswith). This is fully variabilized: add a new
+# category by copying one block below.
+#
+# `preprocessors` maps a feature to a registered function name in
+# preprocessing.py. `clean_description` mirrors the BigQuery
+# cleaned_offer_description SQL (strips URLs/AlloCiné boilerplate, collapses
+# line breaks and spaces). `normalize_whitespace` (used here for offer_name)
+# is still a dummy placeholder — real title cleaning logic is to be detailed
+# later.
+
+vectors:
+  - name: "movies_content"
+    category_filter:
+      all_of:
+        - column: "item_id"
+          prefix: "product"
+      any_of:
+        - conditions:
+            - column: "item_id"
+              prefix: "product"
+            - column: "category_id"
+              values: ["CINEMA"]
+            - column: "subcategory_id"
+              values: ["SEANCE_CINE"]
+        - conditions:
+            - column: "category_id"
+              values: ["CINEMA"]
+            - column: "subcategory_id"
+              values: ["CINE_PLEIN_AIR","EVENEMENT_CINE","FESTIVAL_CINE"]
+        - conditions:
+            - column: "category_id"
+              values: ["FILM"]
+            - column: "subcategory_id"
+              values: ["SUPPORT_PHYSIQUE_FILM","VOD","AUTRE_SUPPORT_NUMERIQUE"]
+    features:
+      - offer_name
+      - offer_description
+      # - offer_label_concat
+    encoder_name: "google/embeddinggemma-300m"
+    prompt_name: "document"
+    preprocessors:
+      offer_name: "normalize_whitespace"
+      offer_description: "clean_description"
+    prompt_template: >-
+      Ce film est intitulé "{offer_name}". Synopsis: {offer_description}.
+# Genres: {offer_label_concat}.
+
+  - name: "books_content"
+    category_filter:
+      all_of:
+        - column: "item_id"
+          prefix: "product"
+        - column: "category_id"
+          values: ["LIVRE"]
+        - column: "subcategory_id"
+          values: ["LIVRE_PAPIER"]
+    features:
+      - offer_name
+      - offer_description
+      - author_concat
+    encoder_name: "google/embeddinggemma-300m"
+    prompt_name: "document"
+    preprocessors:
+      offer_name: "normalize_whitespace"
+      offer_description: "clean_description"
+    prompt_template: >-
+      Ce livre est intitulé "{offer_name}" par {author_concat}.
+      Résumé: {offer_description}.
+
+  # Demonstrates the generic filter: all_of (AND, applied unconditionally)
+  # combined with any_of (OR of AND-groups). Matches "product-*" items that
+  # are EITHER a movie, OR a book restricted to specific subcategories.
+  - name: "products_content"
+    category_filter:
+      all_of:
+        - column: "item_id"
+          prefix: "product"
+      any_of:
+        - conditions:
+            - column: "category_id"
+              values: ["CINEMA"]
+        - conditions:
+            - column: "category_id"
+              values: ["LIVRE"]
+            - column: "subcategory_id"
+              values: ["LIVRE_PAPIER", "LIVRE_NUMERIQUE"]
+    features:
+      - offer_name
+      - offer_description
+    encoder_name: "google/embeddinggemma-300m"
+    prompt_name: "document"
+    preprocessors:
+      offer_name: "normalize_whitespace"
+      offer_description: "clean_description"
+
+  # Add a new category vector by copying a block above and changing:
+  # name, category_filter, features, prompt_template, preprocessors.

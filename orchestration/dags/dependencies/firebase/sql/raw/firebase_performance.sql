@@ -16,7 +16,11 @@ select
     timestamp_trunc(event_timestamp, day) as event_date
 from `{{ params.gcp_project_env }}.app_passculture_{{ params.suffix }}`
 {% if params.dag_type == "intraday" %}
-    where timestamp_trunc(event_timestamp, day) = timestamp("{{ ds }}")
+    where
+        event_timestamp >= timestamp("{{ ds }}")
+        and event_timestamp < timestamp("{{ add_days(ds, 1) }}")
 {% else %}
-    where timestamp_trunc(event_timestamp, day) = timestamp("{{ add_days(ds, -1) }}")
+    where
+        event_timestamp >= timestamp("{{ add_days(ds, -1) }}")
+        and event_timestamp < timestamp("{{ ds }}")
 {% endif %}

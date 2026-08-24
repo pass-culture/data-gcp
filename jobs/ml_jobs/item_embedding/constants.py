@@ -15,3 +15,9 @@ HF_TOKEN_SECRET_NAME = _HF_TOKEN_SECRET_NAMES.get(
 
 # HF constants
 BATCH_SIZE = 32
+
+# Prompts longer than this many tokens are silently truncated by the encoder
+# (see SentenceTransformer.max_seq_length; 2048 for embeddinggemma-300m).
+# Used as a fallback when an encoder doesn't expose max_seq_length (e.g. a
+# test double); the real per-encoder value is preferred at runtime.
+MAX_PROMPT_TOKENS = 2048

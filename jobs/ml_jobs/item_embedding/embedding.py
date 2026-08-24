@@ -1,10 +1,39 @@
+from dataclasses import dataclass, field
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 from config import CategoryFilter, FilterCondition, Vector
-from constants import BATCH_SIZE
+from constants import BATCH_SIZE, MAX_PROMPT_TOKENS
 from loguru import logger
 from preprocessing import PREPROCESSORS
 from sentence_transformers import SentenceTransformer
+
+
+@dataclass
+class LongPromptTracker:
+    """Accumulates items whose prompt exceeded the encoder's token limit
+    across an entire job run (all parquet files, all vectors), so they can be
+    reported once as a single end-of-job summary instead of scattered across
+    many per-file log lines.
+    """
+
+    max_tokens: int = MAX_PROMPT_TOKENS
+    long_item_ids: dict[str, list] = field(default_factory=dict)
+
+    def record(self, vector_name: str, item_id: object) -> None:
+        self.long_item_ids.setdefault(vector_name, []).append(item_id)
+
+    def log_summary(self) -> None:
+        if not self.long_item_ids:
+            logger.info("No prompts exceeded the token limit.")
+            return
+        for vector_name, item_ids in self.long_item_ids.items():
+            logger.warning(
+                f"Vector '{vector_name}': {len(item_ids)} item(s) had a prompt "
+                f"exceeding the token limit and were silently truncated by the "
+                f"encoder. Item ids:\n{item_ids}"
+            )
 
 
 def _condition_mask(df: pd.DataFrame, condition: FilterCondition) -> pd.Series:
@@ -50,6 +79,23 @@ def _category_filter_mask(
     return mask
 
 
+def _is_missing(value: object) -> bool:
+    """True if `value` should be treated as missing.
+
+    Unlike ``pd.notna``, this is safe on list/dict values: ``pd.notna`` on a
+    list vectorizes elementwise and returns an array (raising when used as a
+    plain bool) instead of a single True/False, which breaks on JSON columns
+    holding lists (e.g. a movie's genre list). Only ``None`` and float
+    ``NaN`` are treated as missing; any other value (including lists/dicts)
+    is considered present.
+    """
+    if value is None:
+        return True
+    if isinstance(value, float):
+        return bool(np.isnan(value))
+    return False
+
+
 def _apply_preprocessors(df: pd.DataFrame, vector: Vector) -> pd.DataFrame:
     """Apply the vector's configured preprocessors to a copy of ``df``.
 
@@ -63,7 +109,9 @@ def _apply_preprocessors(df: pd.DataFrame, vector: Vector) -> pd.DataFrame:
     working = df.copy()
     for feature, preprocessor_name in vector.preprocessors.items():
         fn = PREPROCESSORS[preprocessor_name]
-        working[feature] = working[feature].map(lambda v: fn(v) if pd.notna(v) else v)
+        working[feature] = working[feature].map(
+            lambda v: v if _is_missing(v) else fn(v)
+        )
     return working
 
 
@@ -82,7 +130,7 @@ def _build_prompts_from_template(df: pd.DataFrame, vector: Vector) -> list[str]:
 
     def render(row: pd.Series) -> str:
         values = {
-            feature: (row[feature] if pd.notna(row[feature]) else "")
+            feature: ("" if _is_missing(row[feature]) else row[feature])
             for feature in vector.features
         }
         try:
@@ -163,6 +211,71 @@ def _build_prompts(df: pd.DataFrame, vector: Vector) -> list[str]:
     return combined.tolist()
 
 
+def _resolve_prompt_prefix(encoder: SentenceTransformer, vector: Vector) -> str:
+    """Returns the fixed prefix ``encoder.encode()`` prepends for
+    ``vector.prompt_name`` (e.g. embeddinggemma's "document" prompt), or
+    ``""`` if no prompt_name is configured. Mirrors the resolution
+    SentenceTransformer does internally, so the text tokenized to check
+    length matches what is actually sent to the model.
+    """
+    if vector.prompt_name is None:
+        return ""
+    return encoder.prompts.get(vector.prompt_name, "")
+
+
+def _find_long_prompts(
+    vector: Vector,
+    encoder: SentenceTransformer,
+    item_ids: list,
+    prompts: list[str],
+    tracker: LongPromptTracker,
+) -> None:
+    """Flags prompts likely to exceed the encoder's max sequence length.
+
+    SentenceTransformers silently truncates any prompt longer than
+    ``max_seq_length`` (dropping the end, no error/warning of its own), so
+    truncation is otherwise invisible. Tokenizing every prompt to get an
+    exact length is expensive at catalogue scale, so this first applies a
+    cheap character-length pre-filter (character count > 2x the token limit
+    -- a generous overestimate, since one token is rarely under ~2
+    characters) to shortlist candidates, then tokenizes only those (batched,
+    without truncation) to get an exact token count. Prompts confirmed over
+    the limit are logged and recorded on ``tracker``.
+    """
+    encoder_max_seq_length = getattr(encoder, "max_seq_length", None)
+    max_tokens = (
+        encoder_max_seq_length
+        if isinstance(encoder_max_seq_length, int)
+        else tracker.max_tokens
+    )
+    length_threshold = 2 * max_tokens
+
+    candidate_indices = [
+        i for i, prompt in enumerate(prompts) if len(prompt) > length_threshold
+    ]
+    if not candidate_indices:
+        return
+
+    prefix = _resolve_prompt_prefix(encoder, vector)
+    candidate_texts = [prefix + prompts[i] for i in candidate_indices]
+    token_counts = [
+        len(input_ids)
+        for input_ids in encoder.tokenizer(
+            candidate_texts, truncation=False, padding=False
+        )["input_ids"]
+    ]
+
+    for i, token_count in zip(candidate_indices, token_counts):
+        if token_count > max_tokens:
+            item_id = item_ids[i]
+            logger.warning(
+                f"Vector '{vector.name}': item '{item_id}' prompt has "
+                f"{token_count} tokens, exceeding max_seq_length={max_tokens}; "
+                f"it will be silently truncated by the encoder."
+            )
+            tracker.record(vector.name, item_id)
+
+
 def embed_vector(
     vector: Vector,
     encoder: SentenceTransformer,
@@ -209,6 +322,7 @@ def _embed_vector_group(
     encoders: dict[str, SentenceTransformer],
     pools: dict[str, object],
     base_columns: list[str],
+    tracker: LongPromptTracker,
 ) -> pd.DataFrame:
     """Compute embeddings for a group of vectors sharing the same item set.
 
@@ -227,6 +341,8 @@ def _embed_vector_group(
         base_columns: Identifier columns to carry through (must include
             "item_id"; "content_hash" is only needed on the caller's global
             call, since the final identity frame owns it otherwise).
+        tracker: Accumulates items whose prompt exceeds the encoder's token
+            limit (see ``_find_long_prompts``).
 
     Returns:
         DataFrame with ``base_columns`` and one column per vector in
@@ -257,9 +373,14 @@ def _embed_vector_group(
             df_embeddings[vector.name] = pd.Series(dtype=object)
             continue
 
+        encoder = encoders[vector.encoder_name]
+        _find_long_prompts(
+            vector, encoder, prompts_df["item_id"].tolist(), prompts, tracker
+        )
+
         vector_embeddings = embed_vector(
             vector,
-            encoders[vector.encoder_name],
+            encoder,
             prompts=prompts,
             pool=pools.get(vector.encoder_name),
         )
@@ -273,6 +394,7 @@ def embed_dataframe(
     vectors: list[Vector],
     encoders: dict[str, SentenceTransformer],
     pools: dict[str, object] = None,
+    tracker: Optional[LongPromptTracker] = None,
 ) -> pd.DataFrame:
     """Compute all vector embeddings for a dataframe.
 
@@ -303,6 +425,12 @@ def embed_dataframe(
         pools: Pre-started multi-process pools keyed by encoder name. When a
             pool exists for a vector's encoder it is reused; otherwise the
             vector is encoded on a single device.
+        tracker: Accumulates items whose prompt exceeds the encoder's token
+            limit (silently truncated otherwise). Pass the same tracker
+            across multiple ``embed_dataframe`` calls (e.g. once per input
+            parquet file) to get one aggregated end-of-job summary via
+            ``tracker.log_summary()``; defaults to a fresh, unreported
+            tracker when omitted.
 
     Returns:
         DataFrame with 'item_id', 'content_hash', and one column per vector.
@@ -311,6 +439,7 @@ def embed_dataframe(
         that vector's own empty-prompt rows).
     """
     pools = pools or {}
+    tracker = tracker if tracker is not None else LongPromptTracker()
     logger.info(f"Embedding {len(df)} items")
 
     if df["item_id"].duplicated().any():
@@ -327,7 +456,12 @@ def embed_dataframe(
     result = df[["item_id", "content_hash"]].copy()
 
     global_result = _embed_vector_group(
-        df, global_vectors, encoders, pools, base_columns=["item_id", "content_hash"]
+        df,
+        global_vectors,
+        encoders,
+        pools,
+        base_columns=["item_id", "content_hash"],
+        tracker=tracker,
     )
     result = result.merge(
         global_result.drop(columns=["content_hash"]), on="item_id", how="left"
@@ -336,7 +470,7 @@ def embed_dataframe(
     for vector in scoped_vectors:
         subset = df[_category_filter_mask(df, vector.category_filter)]
         scoped_result = _embed_vector_group(
-            subset, [vector], encoders, pools, base_columns=["item_id"]
+            subset, [vector], encoders, pools, base_columns=["item_id"], tracker=tracker
         )
         result = result.merge(scoped_result, on="item_id", how="left")
 

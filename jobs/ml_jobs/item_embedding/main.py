@@ -1,7 +1,7 @@
 import torch
 import typer
 from config import parse_vectors
-from embedding import embed_dataframe
+from embedding import LongPromptTracker, embed_dataframe
 from gcs_utils import list_parquet_files, load_parquet_file
 from loguru import logger
 from setup_encoders import (
@@ -59,6 +59,9 @@ def main(
 
     # Start multi-GPU pools once for the whole run if available
     pools = start_encoder_pools(encoders, gpu_count)
+    # Shared across every parquet file so over-length prompts are reported
+    # once, at the end of the whole run, instead of scattered per file.
+    long_prompt_tracker = LongPromptTracker()
     try:
         for i, parquet_filepath in enumerate(parquet_files):
             logger.info(
@@ -67,7 +70,13 @@ def main(
 
             df_metadata = load_parquet_file(parquet_filepath, vectors)
 
-            df_embeddings = embed_dataframe(df_metadata, vectors, encoders, pools=pools)
+            df_embeddings = embed_dataframe(
+                df_metadata,
+                vectors,
+                encoders,
+                pools=pools,
+                tracker=long_prompt_tracker,
+            )
             logger.info(
                 f"Generated embeddings for {len(df_embeddings)} items from {parquet_filepath}"
             )
@@ -80,6 +89,7 @@ def main(
     finally:
         stop_encoder_pools(encoders, pools)
 
+    long_prompt_tracker.log_summary()
     logger.info("✅ All parquet files processed successfully")
 
 

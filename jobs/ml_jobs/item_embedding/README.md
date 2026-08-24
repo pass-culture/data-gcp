@@ -94,7 +94,14 @@ offer_description : Le chamanisme est le monde de la sensibilité construite et 
 
 ### Sequence length and truncation
 
-A prompt longer than the model's `max_sequence_length` (2048 tokens for `embeddinggemma-300m`) is truncated by the model, dropping the **end** of the prompt first. Keep the longest feature (typically `offer_description`) **last** so truncation only trims that field and never the identifying ones.
+A prompt longer than the model's `max_sequence_length` (2048 tokens for `embeddinggemma-300m`) is truncated by the model, dropping the **end** of the prompt first, silently — the encoder does not raise or warn on its own. Keep the longest feature (typically `offer_description`) **last** so truncation only trims that field and never the identifying ones.
+
+To make this otherwise-invisible truncation visible, the job flags items whose prompt is likely to exceed the limit and reports them once at the end of the run:
+
+- A cheap character-length pre-filter (character count > 2x the model's token limit — a generous overestimate, since a token is rarely under ~2 characters) shortlists candidates without tokenizing every prompt, which would be too slow at catalogue scale.
+- Each candidate is then tokenized for real (batched, no truncation) to get an exact token count. Prompts confirmed over the limit are logged immediately, and the affected `item_id` is recorded per vector on a `LongPromptTracker` (`embedding.py`) shared across the whole run (every parquet file, every vector).
+- The flagged item is **not** dropped or excluded — it's still embedded (truncated by the encoder as usual); the tracker only adds visibility into which items were affected.
+- At the end of the job, `LongPromptTracker.log_summary()` logs, per vector, the count and full `item_id` list of every over-length prompt in the run — use this list to go inspect those items' descriptions.
 
 ### Category-scoped vectors
 
@@ -166,6 +173,8 @@ prompt_template: >-
 - A missing/null feature value renders as an empty string (not the literal text `"None"`).
 - An item with all templated features null still gets an empty prompt (dropped, same contract as the default path).
 
+`prompt_template` does **not** disable or replace `prompt_name`. `prompt_name` is a SentenceTransformers-level mechanism, independent of how the text is built: at encode time the library resolves it to a fixed prefix registered on the model (e.g. embeddinggemma's `"document"` prompt is `"title: none | text: "`) and prepends it to whatever text is passed in — the `prompt_template` output becomes that text. So with both set, the model actually sees `"title: none | text: " + <rendered prompt_template>`; nothing is deleted.
+
 `preprocessors` maps a feature name to a function registered in `preprocessing.py`, applied to that column before the prompt (template or default) is built:
 
 ```yaml
@@ -182,6 +191,30 @@ Registered preprocessors:
 |------|--------|--------------|
 | `normalize_whitespace` | ⚠️ **Dummy placeholder** — only collapses whitespace. Real title cleaning/normalization logic (accents, punctuation, casing, etc.) is to be detailed and added later. | Collapses all whitespace runs to a single space and strips ends. |
 | `clean_description` | Real cleaning logic | Strips `http(s)://` / `www.` URLs and known boilerplate phrases (`"Tous les détails du film sur AlloCiné:"`, `"Pour plus d informations, rendez-vous sur"`, `"Pour plus d'informations, rendez-vous sur"`), then applies `normalize_whitespace` — collapsing all remaining whitespace, including line breaks, to single spaces and trimming the ends. |
+| `format_movie_genres` | Real formatting logic | Formats a genre list (e.g. `["DRAMA", "ACTION"]`) as `"DRAMA, ACTION"`. Accepts a native list or a JSON-encoded string. |
+| `format_book_classification` | Real formatting logic | Formats a hierarchical GTL dict (e.g. `{"gtl1": "roman", "gtl2": "19eme siecle", "gtl3": "tragedie", "gtl4": null}`) as a labeled chevron chain: `"niveau 1 : roman > niveau 2 : 19eme siecle > niveau 3 : tragedie"`. GTL is a generic 4-level classification with no fixed meaning per level (it can stop at any depth, and isn't always genre > sub-genre > type), so levels are tagged by position rather than an invented category name; the `>` separator (a common breadcrumb/taxonomy convention) reinforces the parent-to-child order on top of the explicit tag, more compactly than a comma-separated list. Together they disambiguate a term at different depths — e.g. `"tragedie"` at `niveau 3` here vs. `niveau 2` for a book classified `theatre > tragedie > grecque`. Missing levels are skipped. Accepts a native dict or a JSON-encoded string. |
+
+#### Using a JSON/structured column whose shape differs by category
+
+A single JSON column can hold a different shape per category (e.g. `extra_semantic_metadata` is a genre list for movies but a hierarchical dict for books). Since preprocessors are per-vector, each category-scoped vector applies its own preprocessor to turn the raw value into a plain string before it's referenced in `prompt_template`, e.g.:
+
+```yaml
+- name: "movies_content"
+  features: [offer_name, offer_description, extra_semantic_metadata]
+  preprocessors:
+    extra_semantic_metadata: "format_movie_genres"
+  prompt_template: >-
+    ... Genres: {extra_semantic_metadata}.
+
+- name: "books_content"
+  features: [offer_name, offer_description, extra_semantic_metadata]
+  preprocessors:
+    extra_semantic_metadata: "format_book_classification"
+  prompt_template: >-
+    ... Classification: {extra_semantic_metadata}.
+```
+
+See `configs/category_embeddings.yaml` for the full worked example. A preprocessor for a list/dict-shaped column must return a plain string (or `None`) — `prompt_template` renders it with `str.format` like any other feature, so it can't receive a raw list/dict.
 
 ## Output Format
 
@@ -195,10 +228,10 @@ Output parquet file contains:
 ```
 main.py           — CLI entry point, orchestrates load → embed → upload
 config.py         — YAML config loading, schema validation, Vector/CategoryFilter models
-embedding.py      — Core embedding logic: prompt building, category-scoped filtering, encoder management, GPU dispatch
+embedding.py      — Core embedding logic: prompt building, category-scoped filtering, encoder management, GPU dispatch, over-length prompt tracking (LongPromptTracker)
 preprocessing.py  — Registry of named feature preprocessors (currently placeholder/dummy logic)
 gcs_utils.py      — GCS parquet I/O with retry logic
-constants.py      — Environment variables and secret name mapping
+constants.py      — Environment variables, secret name mapping, MAX_PROMPT_TOKENS
 gcp_secrets.py    — Secret Manager access with caching
 setup_encoders.py - load encoder models, set the precision and pooling if available
 ```
@@ -302,6 +335,7 @@ then the day of the start of the reserbation trigger the `item_embedding` DAG wi
 | Slow processing | Raise `BATCH_SIZE` in `constants.py`; verify the GPU is used (`nvidia-smi`) |
 | Missing features error | Check that input parquet columns match config `features` |
 | Upload failures | Automatic retry (3 attempts). Check GCS permissions if persistent |
+| Items with truncated embeddings | Check the end-of-job `LongPromptTracker` summary log for the affected `item_id`s and vector, then inspect their `offer_description`/features (see [Sequence length and truncation](#sequence-length-and-truncation)) |
 
 ## Dependencies
 

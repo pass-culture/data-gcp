@@ -19,6 +19,12 @@
 # line breaks and spaces). `normalize_whitespace` (used here for offer_name)
 # is still a dummy placeholder — real title cleaning logic is to be detailed
 # later.
+#
+# `extra_semantic_metadata` is a shared JSON column whose shape differs by
+# category (a genre list for movies, a hierarchical GTL dict for books) — a
+# category-specific preprocessor (`format_movie_genres` /
+# `format_book_classification`) turns it into a plain string before it's
+# used in `prompt_template`, same as any other feature.
 
 vectors:
   - name: "movies_content"
@@ -47,15 +53,16 @@ vectors:
     features:
       - offer_name
       - offer_description
-      # - offer_label_concat
+      # - extra_semantic_metadata # KEEP COMMENTED OUT for future integration
     encoder_name: "google/embeddinggemma-300m"
     prompt_name: "document"
     preprocessors:
       offer_name: "normalize_whitespace"
       offer_description: "clean_description"
+      # extra_semantic_metadata: "format_movie_genres"
     prompt_template: >-
       Ce film est intitulé "{offer_name}". Synopsis: {offer_description}.
-# Genres: {offer_label_concat}.
+    # Genres: {extra_semantic_metadata}.
 
   - name: "books_content"
     category_filter:
@@ -70,40 +77,27 @@ vectors:
       - offer_name
       - offer_description
       - author_concat
+      # - extra_semantic_metadata
     encoder_name: "google/embeddinggemma-300m"
     prompt_name: "document"
     preprocessors:
       offer_name: "normalize_whitespace"
       offer_description: "clean_description"
+      # For books, extra_semantic_metadata holds a hierarchical GTL
+      # classification dict (a generic 4-level taxonomy that may stop at any
+      # depth, no fixed per-level meaning), e.g. {"gtl1": "roman", "gtl2":
+      # "19eme siecle", "gtl3": "tragedie", "gtl4": null}.
+      # format_book_classification labels each level by position and joins
+      # them with ">" ("niveau 1 : roman > niveau 2 : 19eme siecle > niveau
+      # 3 : tragedie"), so the same term at a different depth (e.g.
+      # "tragedie" at niveau 2 for a play vs. niveau 3 here) isn't collapsed
+      # into an ambiguous sequence for the model.
+      extra_semantic_metadata: "format_book_classification"
     prompt_template: >-
       Ce livre est intitulé "{offer_name}" par {author_concat}.
       Résumé: {offer_description}.
+    # Classification: {extra_semantic_metadata}.
 
-  # Demonstrates the generic filter: all_of (AND, applied unconditionally)
-  # combined with any_of (OR of AND-groups). Matches "product-*" items that
-  # are EITHER a movie, OR a book restricted to specific subcategories.
-  - name: "products_content"
-    category_filter:
-      all_of:
-        - column: "item_id"
-          prefix: "product"
-      any_of:
-        - conditions:
-            - column: "category_id"
-              values: ["CINEMA"]
-        - conditions:
-            - column: "category_id"
-              values: ["LIVRE"]
-            - column: "subcategory_id"
-              values: ["LIVRE_PAPIER", "LIVRE_NUMERIQUE"]
-    features:
-      - offer_name
-      - offer_description
-    encoder_name: "google/embeddinggemma-300m"
-    prompt_name: "document"
-    preprocessors:
-      offer_name: "normalize_whitespace"
-      offer_description: "clean_description"
 
   # Add a new category vector by copying a block above and changing:
   # name, category_filter, features, prompt_template, preprocessors.

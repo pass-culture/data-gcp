@@ -22,7 +22,7 @@ public.artist_music_platform: apple_music_id, artist_id, deezer_id, genius_id, i
 public.artist_offer_link: artist_id, artist_type, custom_name, id, offer_id
 public.artist_product_link: artist_id, artist_type, date_created, date_modified, id, product_id
 public.bank_account: dateCreated, dsApplicationId, iban, id, isActive, label, offererId, status
-public.beneficiary_fraud_check: content, datecreated, eligibility_type, id, reason, reasonCodes, status, thirdpartyid, type, user_id
+public.beneficiary_fraud_check: dateCreated, eligibilityType, id, reason, reasonCodes, resultContent, status, thirdPartyId, type, userId
 public.beneficiary_fraud_review: authorId, dateReviewed, eligibilityType, id, reason, review, userId
 public.beneficiary_import: applicationId, beneficiaryId, id, source, sourceId
 public.beneficiary_import_status: authorId, beneficiaryImportId, date, detail, id, status
@@ -78,7 +78,7 @@ public.offerer_address: addressId, id, label, type, venueId
 public.offerer_tag: description, id, label, name
 public.offerer_tag_category: id, label, name
 public.offerer_tag_category_mapping: categoryId, id, tagId
-public.opening_hours: afternoon_opening_hours, id, morning_opening_hours, venueId, weekday
+public.opening_hours: id, timespan, venueId, weekday
 public.payment: amount, author, bookingId, comment, id, paymentMessageId, recipientName, recipientSiren, reimbursementRate, reimbursementRule, transactionEndToEndId, transactionLabel
 public.payment_message: checksum, id, name
 public.payment_status: date, detail, id, paymentId, status

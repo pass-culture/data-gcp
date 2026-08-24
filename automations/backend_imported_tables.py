@@ -54,15 +54,36 @@ def get_tables_from_sql(sql_content):
 def get_columns_from_sql(sql_content):
     try:
         tree = _parse_sql(sql_content)
-        select = tree.find(exp.Select)
-        if select is None:
+
+        all_tables = list(tree.find_all(exp.Table))
+        if not all_tables:
             return []
-        columns = []
-        for selection in select.expressions:
-            col = selection.find(exp.Column)
-            if col:
-                columns.append(col.name)
-        return columns
+
+        first_table = tree.find(exp.Table)
+        target_name = first_table.name
+        target_db = first_table.db
+
+        candidates = [
+            t for t in all_tables if t.name == target_name and t.db == target_db
+        ]
+
+        columns = set()
+        for table_node in candidates:
+            alias = table_node.alias or None
+            table_name = table_node.name
+            select = table_node.find_ancestor(exp.Select)
+            if select is None:
+                continue
+            for selection in select.expressions:
+                for col in selection.find_all(exp.Column):
+                    if (
+                        not col.table
+                        or col.table == alias
+                        or (alias is None and col.table == table_name)
+                    ):
+                        columns.add(col.name)
+
+        return list(columns)
     except sqlglot.ParseError:
         return []
 

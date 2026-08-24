@@ -2,7 +2,6 @@ select
     oa.offerer_address_id,
     oa.offerer_address_label,
     oa.address_id,
-    oa.offerer_id,
     oa.venue_id,
     oa.offerer_address_type,
     a.address_street,

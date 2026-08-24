@@ -2,7 +2,7 @@ select
     offerer_address_id,
     offerer_address_label,
     address_id,
-    offerer_id,
+    venue_id,
     address_street,
     address_postal_code,
     address_city,

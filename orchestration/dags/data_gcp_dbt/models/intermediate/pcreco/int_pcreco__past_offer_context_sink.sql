@@ -24,8 +24,6 @@ with
             cast(reco_sink.jsonpayload.extra.user_id as string) as user_id,
             cast(reco_sink.jsonpayload.extra.offer_id as string) as offer_id,
             int_applicative__offer_item_id.item_id,
-            reco_sink.jsonpayload.extra.context_extra_data.offer_origin_ids
-            as offer_origin_id,
             reco_sink.jsonpayload.extra.context_extra_data.model_params.name
             as model_params_name,
             reco_sink.jsonpayload.extra.context_extra_data.model_params.description
@@ -34,16 +32,24 @@ with
             as scorer_ranking_model_display_name,
             reco_sink.jsonpayload.extra.context_extra_data.scorer.ranking.model_version
             as scorer_ranking_model_version,
+            coalesce(
+                nullif(
+                    reco_sink.jsonpayload.extra.context_extra_data.offer_origin_ids, ''
+                ),
+                regexp_extract(
+                    reco_sink.httprequest.requesturl, r'/similar_offers/(\d+)'
+                )
+            ) as offer_origin_id,
             date(reco_sink.timestamp) as event_date,
             case
-                when reco_sink.jsonpayload.extra.context like "similar_offer:%"
-                then "similar_offer"
+                when reco_sink.jsonpayload.extra.context like 'similar_offer:%'
+                then 'similar_offer'
                 when
-                    reco_sink.jsonpayload.extra.context like "recommendation_fallback:%"
-                then "similar_offer"
-                when reco_sink.jsonpayload.extra.context like "recommendation:%"
-                then "recommendation"
-                else "unknown"
+                    reco_sink.jsonpayload.extra.context like 'recommendation_fallback:%'
+                then 'similar_offer'
+                when reco_sink.jsonpayload.extra.context like 'recommendation:%'
+                then 'recommendation'
+                else 'unknown'
             end as playlist_origin,
             round(reco_sink.jsonpayload.extra.offer_order) as offer_display_order,
             struct(
@@ -112,15 +118,15 @@ with
             {{ ref("int_seed__iris_france") }} as ii
             on reco_sink.jsonpayload.extra.user_iris_id = ii.id
         where
-            reco_sink.resource.type = "cloud_run_revision"
+            reco_sink.resource.type = 'cloud_run_revision'
             and reco_sink.jsonpayload.extra.labels.event_type
-            = "recommendation_past_offer_context_sink"
+            = 'recommendation_past_offer_context_sink'
 
             and (
                 {% if is_incremental() %}
                     date(reco_sink.timestamp) between date_sub(
-                        date("{{ ds() }}"), interval {{ var("lookback_days", 3) }} day
-                    ) and date("{{ ds() }}")
+                        date('{{ ds() }}'), interval {{ var("lookback_days", 3) }} day
+                    ) and date('{{ ds() }}')
                 {% else %}
                     date(reco_sink.timestamp)
                     >= date_sub(date("{{ ds() }}"), interval 60 day)
@@ -143,7 +149,7 @@ from export_table as et
 {% if is_incremental() %}
     where
         et.event_date between date_sub(
-            date("{{ ds() }}"), interval {{ var("lookback_days", 3) }} day
-        ) and date("{{ ds() }}")
+            date('{{ ds() }}'), interval {{ var("lookback_days", 3) }} day
+        ) and date('{{ ds() }}')
 {% else %} where et.event_date >= date_sub(date("{{ ds() }}"), interval 60 day)
 {% endif %}

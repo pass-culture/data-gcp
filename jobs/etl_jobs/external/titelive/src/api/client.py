@@ -182,6 +182,7 @@ class TiteliveClient:
         max_date: str | None = None,
         page: int = 1,
         results_per_page: int = 120,
+        dispo: int | None = None,
     ) -> dict[str, Any]:
         """
         Search products by modification date range.
@@ -192,6 +193,7 @@ class TiteliveClient:
             max_date: Maximum modification date (DD/MM/YYYY format), optional
             page: Page number (starts at 1)
             results_per_page: Number of results per page
+            dispo: Optional availability filter
 
         Returns:
             API response as dictionary with 'result' and metadata
@@ -209,5 +211,8 @@ class TiteliveClient:
 
         if max_date:
             params["datemaxm"] = max_date
+
+        if dispo:
+            params["dispo"] = str(dispo)
 
         return self._make_request("GET", url, params=params)

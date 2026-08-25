@@ -170,8 +170,10 @@ jobs:
               # shellcheck disable=SC2001
               safe_pattern="$(echo "$safe_pattern" | sed 's/\*/.*/g')"
 
-              # Ensure pattern is relative to source_dir
-              EXCLUDE_REGEX="${EXCLUDE_REGEX}${source_dir}/${safe_pattern}|"
+              # gsutil rsync -x matches paths relative to source_dir itself
+              # (source_dir is not part of the tested path), so patterns
+              # must NOT be prefixed with source_dir/ or they can never match.
+              EXCLUDE_REGEX="${EXCLUDE_REGEX}${safe_pattern}|"
             done < $ignore_file
 
             # Remove trailing |

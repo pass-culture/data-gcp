@@ -58,16 +58,16 @@ vectors:
     features:
       - offer_name
       - offer_description
-      # - extra_semantic_metadata # KEEP COMMENTED OUT for future integration
+      - extra_semantic_metadata
     encoder_name: "google/embeddinggemma-300m"
     prompt_name: "document"
     preprocessors:
       offer_name: "normalize_whitespace"
       offer_description: "clean_description"
-      # extra_semantic_metadata: "format_movie_genres"
+      extra_semantic_metadata: "format_movie_genres"
     prompt_template: >-
       Ce film est intitulé "{offer_name}". Synopsis: {offer_description}.
-    # Genres: {extra_semantic_metadata}.
+      Genres: {extra_semantic_metadata}.
 
   - name: "books_content"
     category_filter:
@@ -82,7 +82,7 @@ vectors:
       - offer_name
       - offer_description
       - author_concat
-      # - extra_semantic_metadata
+      - extra_semantic_metadata
     encoder_name: "google/embeddinggemma-300m"
     prompt_name: "document"
     preprocessors:
@@ -101,7 +101,7 @@ vectors:
     prompt_template: >-
       Ce livre est intitulé "{offer_name}" par {author_concat}.
       Résumé: {offer_description}.
-    # Classification: {extra_semantic_metadata}.
+      Classification: {extra_semantic_metadata}.
 
 
   # Add a new category vector by copying a block above and changing:

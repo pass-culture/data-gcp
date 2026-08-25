@@ -191,12 +191,19 @@ Registered preprocessors:
 |------|--------|--------------|
 | `normalize_whitespace` | ⚠️ **Dummy placeholder** — only collapses whitespace. Real title cleaning/normalization logic (accents, punctuation, casing, etc.) is to be detailed and added later. | Collapses all whitespace runs to a single space and strips ends. |
 | `clean_description` | Real cleaning logic | Strips `http(s)://` / `www.` URLs and known boilerplate phrases (`"Tous les détails du film sur AlloCiné:"`, `"Pour plus d informations, rendez-vous sur"`, `"Pour plus d'informations, rendez-vous sur"`), then applies `normalize_whitespace` — collapsing all remaining whitespace, including line breaks, to single spaces and trimming the ends. |
-| `format_movie_genres` | Real formatting logic | Formats a genre list (e.g. `["DRAMA", "ACTION"]`) as `"DRAMA, ACTION"`. Accepts a native list or a JSON-encoded string. |
-| `format_book_classification` | Real formatting logic | Formats a hierarchical GTL dict (e.g. `{"gtl1": "roman", "gtl2": "19eme siecle", "gtl3": "tragedie", "gtl4": null}`) as a labeled chevron chain: `"niveau 1 : roman > niveau 2 : 19eme siecle > niveau 3 : tragedie"`. GTL is a generic 4-level classification with no fixed meaning per level (it can stop at any depth, and isn't always genre > sub-genre > type), so levels are tagged by position rather than an invented category name; the `>` separator (a common breadcrumb/taxonomy convention) reinforces the parent-to-child order on top of the explicit tag, more compactly than a comma-separated list. Together they disambiguate a term at different depths — e.g. `"tragedie"` at `niveau 3` here vs. `niveau 2` for a book classified `theatre > tragedie > grecque`. Missing levels are skipped. Accepts a native dict or a JSON-encoded string. |
+| `format_movie_genres` | Real formatting logic | Reads the `"movies"` entry of the `extra_semantic_metadata` envelope (see below), e.g. `{"movies": {"genres": ["DRAMA", "ACTION"]}}`, and formats the genre list as `"DRAMA, ACTION"`. Accepts a native dict or a JSON-encoded string; returns `None` if the `"movies"` entry or `"genres"` list is absent/empty. |
+| `format_book_classification` | Real formatting logic | Reads the `"books"` entry of the `extra_semantic_metadata` envelope, e.g. `{"books": {"gtl1": "roman", "gtl2": "19eme siecle", "gtl3": "tragedie", "gtl4": null}}`, and formats it as a labeled chevron chain: `"niveau 1 : roman > niveau 2 : 19eme siecle > niveau 3 : tragedie"`. GTL is a generic 4-level classification with no fixed meaning per level (it can stop at any depth, and isn't always genre > sub-genre > type), so levels are tagged by position rather than an invented category name; the `>` separator (a common breadcrumb/taxonomy convention) reinforces the parent-to-child order on top of the explicit tag, more compactly than a comma-separated list. Together they disambiguate a term at different depths — e.g. `"tragedie"` at `niveau 3` here vs. `niveau 2` for a book classified `theatre > tragedie > grecque`. Missing levels are skipped. Accepts a native dict or a JSON-encoded string. |
 
-#### Using a JSON/structured column whose shape differs by category
+#### Using one shared JSON column across categories
 
-A single JSON column can hold a different shape per category (e.g. `extra_semantic_metadata` is a genre list for movies but a hierarchical dict for books). Since preprocessors are per-vector, each category-scoped vector applies its own preprocessor to turn the raw value into a plain string before it's referenced in `prompt_template`, e.g.:
+A single column can carry different metadata per category (e.g. `extra_semantic_metadata`: a genre list for movies, a hierarchical GTL dict for books) via a **uniform envelope**, keyed by a fixed content-type identifier:
+
+```json
+{"movies": {"genres": ["DRAMA", "ACTION"]}}
+{"books": {"gtl1": "roman", "gtl2": "19eme siecle", "gtl3": "tragedie", "gtl4": null}}
+```
+
+The content-type key (`"movies"` / `"books"`) is hardcoded inside each `format_*` preprocessor in `preprocessing.py`, **independent of whatever `name` a vector is given in the YAML config** — renaming `movies_content` to something else doesn't silently break metadata extraction, since the preprocessor never looks at the vector's name. Each category-scoped vector applies its own preprocessor to extract and format its own entry before it's referenced in `prompt_template`:
 
 ```yaml
 - name: "movies_content"
@@ -214,7 +221,9 @@ A single JSON column can hold a different shape per category (e.g. `extra_semant
     ... Classification: {extra_semantic_metadata}.
 ```
 
-See `configs/category_embeddings.yaml` for the full worked example. A preprocessor for a list/dict-shaped column must return a plain string (or `None`) — `prompt_template` renders it with `str.format` like any other feature, so it can't receive a raw list/dict.
+A row that isn't the preprocessor's content type (or has no envelope at all) simply renders blank, not an error — e.g. `format_movie_genres` on a book row (envelope `{"books": {...}}`, no `"movies"` key) returns `None`.
+
+See `configs/category_embeddings.yaml` for the full worked example. In practice this column is expected to arrive as a **JSON-encoded string** (a single BigQuery column can't natively be `ARRAY<STRING>` for some rows and `STRUCT` for others, so a `JSON`/`STRING` BigQuery column — built with `TO_JSON_STRING(...)` — is the only way to hold both shapes; native list/dict envelopes are accepted mainly for convenience in local/test data). A preprocessor must always return a plain string (or `None`) — `prompt_template` renders it with `str.format` like any other feature, so it can't receive a raw list/dict.
 
 ## Output Format
 

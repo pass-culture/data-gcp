@@ -20,11 +20,16 @@
 # is still a dummy placeholder — real title cleaning logic is to be detailed
 # later.
 #
-# `extra_semantic_metadata` is a shared JSON column whose shape differs by
-# category (a genre list for movies, a hierarchical GTL dict for books) — a
-# category-specific preprocessor (`format_movie_genres` /
-# `format_book_classification`) turns it into a plain string before it's
-# used in `prompt_template`, same as any other feature.
+# `extra_semantic_metadata` is a single shared JSON column, uniform across
+# categories: {"<content_type>": {...category-specific payload...}}, e.g.
+# {"movies": {"genres": ["DRAMA", "ACTION"]}} or {"books": {"gtl1": "roman",
+# "gtl2": "19eme siecle", "gtl3": "tragedie", "gtl4": null}}. The
+# content-type key ("movies"/"books") is fixed in preprocessing.py,
+# independent of whatever name a vector is given below, so renaming a
+# vector doesn't silently break metadata extraction. A category-specific
+# preprocessor (`format_movie_genres` / `format_book_classification`)
+# extracts its own entry and turns it into a plain string before it's used
+# in `prompt_template`, same as any other feature.
 
 vectors:
   - name: "movies_content"
@@ -83,15 +88,15 @@ vectors:
     preprocessors:
       offer_name: "normalize_whitespace"
       offer_description: "clean_description"
-      # For books, extra_semantic_metadata holds a hierarchical GTL
-      # classification dict (a generic 4-level taxonomy that may stop at any
-      # depth, no fixed per-level meaning), e.g. {"gtl1": "roman", "gtl2":
-      # "19eme siecle", "gtl3": "tragedie", "gtl4": null}.
-      # format_book_classification labels each level by position and joins
-      # them with ">" ("niveau 1 : roman > niveau 2 : 19eme siecle > niveau
-      # 3 : tragedie"), so the same term at a different depth (e.g.
-      # "tragedie" at niveau 2 for a play vs. niveau 3 here) isn't collapsed
-      # into an ambiguous sequence for the model.
+      # For books, format_book_classification reads the "books" entry of the
+      # extra_semantic_metadata envelope, e.g. {"books": {"gtl1": "roman",
+      # "gtl2": "19eme siecle", "gtl3": "tragedie", "gtl4": null}} (a generic
+      # 4-level GTL taxonomy that may stop at any depth, no fixed per-level
+      # meaning). It labels each level by position and joins them with ">"
+      # ("niveau 1 : roman > niveau 2 : 19eme siecle > niveau 3 : tragedie"),
+      # so the same term at a different depth (e.g. "tragedie" at niveau 2
+      # for a play vs. niveau 3 here) isn't collapsed into an ambiguous
+      # sequence for the model.
       extra_semantic_metadata: "format_book_classification"
     prompt_template: >-
       Ce livre est intitulé "{offer_name}" par {author_concat}.

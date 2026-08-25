@@ -39,17 +39,36 @@ def clean_description(value: Optional[str]) -> Optional[str]:
     return normalize_whitespace(text)
 
 
-def format_movie_genres(value: Any) -> Optional[str]:
-    """Formats a movie genre list (e.g. ``["DRAMA", "ACTION"]``) as a
-    comma-separated string: ``"DRAMA, ACTION"``. Accepts either a native
-    list or a JSON-encoded string, in case the source column serializes JSON
-    as text rather than a native array. Returns `None` for a `None`/empty
-    list, so the field renders blank in a template instead of an artifact
-    like an empty pair of brackets.
+def _parse_extra_semantic_metadata(value: Any) -> Optional[dict]:
+    """Parses the ``extra_semantic_metadata`` envelope, accepting either a
+    native dict or a JSON-encoded string (the more likely production shape,
+    since BigQuery can't natively hold a different type per row in one
+    column -- see ``format_movie_genres``/``format_book_classification``).
+    Returns `None` for `None` input.
     """
     if value is None:
         return None
-    genres = json.loads(value) if isinstance(value, str) else value
+    return json.loads(value) if isinstance(value, str) else value
+
+
+def format_movie_genres(value: Any) -> Optional[str]:
+    """Formats the movie genre list from a uniform ``extra_semantic_metadata``
+    envelope -- ``{"movies": {"genres": ["DRAMA", "ACTION"]}}`` (or the
+    JSON-encoded string equivalent) -- as a comma-separated string:
+    ``"DRAMA, ACTION"``.
+
+    ``"movies"`` is a fixed content-type key, independent of whatever name
+    the movies-scoped vector happens to be given in config, so renaming that
+    vector doesn't silently break metadata extraction.
+
+    Returns `None` if the envelope, the "movies" entry, or its "genres" list
+    is absent/empty, so the field renders blank in a template instead of an
+    artifact like an empty pair of brackets.
+    """
+    envelope = _parse_extra_semantic_metadata(value)
+    if envelope is None:
+        return None
+    genres = (envelope.get("movies") or {}).get("genres")
     if not genres:
         return None
     return ", ".join(str(genre) for genre in genres)
@@ -64,10 +83,15 @@ _GTL_LEVEL_LABELS = {
 
 
 def format_book_classification(value: Any) -> Optional[str]:
-    """Formats a hierarchical GTL classification dict (e.g.
-    ``{"gtl1": "roman", "gtl2": "19eme siecle", "gtl3": "tragedie", "gtl4":
-    None}``) as a labeled chevron chain: ``"niveau 1 : roman > niveau 2 :
-    19eme siecle > niveau 3 : tragedie"``.
+    """Formats the hierarchical GTL classification from a uniform
+    ``extra_semantic_metadata`` envelope -- ``{"books": {"gtl1": "roman",
+    "gtl2": "19eme siecle", "gtl3": "tragedie", "gtl4": None}}`` (or the
+    JSON-encoded string equivalent) -- as a labeled chevron chain:
+    ``"niveau 1 : roman > niveau 2 : 19eme siecle > niveau 3 : tragedie"``.
+
+    ``"books"`` is a fixed content-type key, independent of whatever name
+    the books-scoped vector happens to be given in config, so renaming that
+    vector doesn't silently break metadata extraction.
 
     GTL (`gtl1`..`gtl4`, matching the `gtl_label_level_1`..`_4` columns used
     elsewhere in the codebase) is a generic 4-level hierarchical
@@ -82,12 +106,13 @@ def format_book_classification(value: Any) -> Optional[str]:
     book classified roman > 19eme siecle > tragedie, but as "niveau 2 :
     tragedie" for one classified theatre > tragedie > grecque.
 
-    Missing/`None` levels are skipped. Accepts either a native dict or a
-    JSON-encoded string. Returns `None` if no level is populated.
+    Missing/`None` levels (and a missing/`None` "books" entry) are skipped.
+    Returns `None` if no level is populated.
     """
-    if value is None:
+    envelope = _parse_extra_semantic_metadata(value)
+    if envelope is None:
         return None
-    classification = json.loads(value) if isinstance(value, str) else value
+    classification = envelope.get("books") or {}
     parts = [
         f"{_GTL_LEVEL_LABELS[key]} : {classification[key]}"
         for key in _GTL_LEVEL_LABELS

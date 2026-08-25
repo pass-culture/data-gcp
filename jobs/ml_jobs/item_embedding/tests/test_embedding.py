@@ -476,15 +476,18 @@ class TestPromptTemplate:
         prompts = _build_prompts(df, vector)
         assert prompts == ["Title: Dune Messiah"]
 
-    def test_json_list_feature_with_preprocessor(self):
-        # Regression test: a raw JSON column holding a list (e.g. a movie's
-        # genre list) must not crash the pd.notna-on-a-list ambiguity bug in
-        # preprocessing/templating; it should be preprocessed to a string
-        # before being rendered into the template.
+    def test_json_envelope_feature_with_movie_preprocessor(self):
+        # extra_semantic_metadata holds the uniform envelope shape
+        # ({"movies": {...}} / {"books": {...}}); the movies preprocessor
+        # must extract its own "movies" entry and render blank (not crash or
+        # render "None") when it's absent, e.g. for a non-movie row.
         df = pd.DataFrame(
             {
                 "offer_name": ["Dune", "Book"],
-                "extra_semantic_metadata": [["DRAMA", "ACTION"], None],
+                "extra_semantic_metadata": [
+                    {"movies": {"genres": ["DRAMA", "ACTION"]}},
+                    None,
+                ],
             }
         )
         vector = Vector(
@@ -497,16 +500,18 @@ class TestPromptTemplate:
         prompts = _build_prompts(df, vector)
         assert prompts == ["Dune - Genres: DRAMA, ACTION", "Book - Genres: "]
 
-    def test_json_dict_feature_with_preprocessor(self):
+    def test_json_envelope_feature_with_book_preprocessor(self):
         df = pd.DataFrame(
             {
                 "offer_name": ["Dune"],
                 "extra_semantic_metadata": [
                     {
-                        "gtl1": "roman",
-                        "gtl2": "19eme siecle",
-                        "gtl3": None,
-                        "gtl4": None,
+                        "books": {
+                            "gtl1": "roman",
+                            "gtl2": "19eme siecle",
+                            "gtl3": None,
+                            "gtl4": None,
+                        }
                     }
                 ],
             }

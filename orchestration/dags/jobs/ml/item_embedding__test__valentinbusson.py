@@ -1,0 +1,342 @@
+from datetime import datetime, timedelta
+from itertools import chain
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import ShortCircuitOperator
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
+from common import macros
+from common.callback import on_failure_vm_callback
+from common.config import (
+    BIGQUERY_ML_FEATURES_DATASET,
+    DAG_FOLDER,
+    ENV_SHORT_NAME,
+    GCE_ZONES,
+    GCP_PROJECT_ID,
+    GCP_REGION,
+    INSTANCES_TYPES,
+    ML_BUCKET_TEMP,
+)
+from common.operators.bigquery import BigQueryInsertJobOperator
+from common.operators.gce import (
+    DeleteGCEOperator,
+    InstallDependenciesOperator,
+    SSHGCEOperator,
+    StartGCEOperator,
+)
+
+###########################################################################
+## GCS CONSTANTS
+# Distinct top-level prefix (not just the ts_nodash suffix) so test runs are
+# clearly separated from the scheduled item_embedding DAG's GCS output.
+GCS_FOLDER_PATH = (
+    f"item_embedding_test_valentinbusson_{ENV_SHORT_NAME}/{{{{ ts_nodash }}}}"
+)
+INPUT_FOLDER = "input_item_metadata"
+OUTPUT_FOLDER = "output_item_embeddings"
+TEMP_OUTPUT_FILE_NAME = "item_embeddings_*.parquet"
+TEMP_INPUT_FILE_NAME = "item_metadata_*.parquet"
+
+## BigQuery CONSTANTS
+INPUT_DATASET_NAME = f"ml_input_{ENV_SHORT_NAME}"
+INPUT_TABLE_NAME = "item_embedding_extraction_enriched"
+# Distinct name: the scheduled item_embedding DAG WRITE_TRUNCATEs this same
+# table name, so sharing it risks clobbering/racing with a concurrent run.
+TEMP_INT_TABLE_NAME = "tmp_item_metadata_test_valentinbusson"
+
+OUTPUT_DATASET_NAME = BIGQUERY_ML_FEATURES_DATASET
+# Distinct name: item_embedding_tmp is WRITE_TRUNCATEd by the scheduled DAG
+# and read by the ml_feat__item_embedding_refactor dbt model -- never point
+# a test run at it.
+TEMP_OUTPUT_TABLE_NAME = "item_embedding_tmp_test_valentinbusson"
+
+## DAG CONFIG
+DAG_NAME = "item_embedding__test__valentinbusson"
+BASE_DIR = "data-gcp/jobs/ml_jobs/item_embedding"
+# Distinct instance name so a concurrent run of the scheduled item_embedding
+# DAG doesn't collide on the same GCE VM.
+INSTANCE_NAME = "item-embedding-test-valentinbusson"
+GCE_ZONE_TEMPLATE = "{{ params.gce_zone }}"
+INSTANCE_TYPE = {
+    "dev": "n1-standard-4",
+    "stg": "n1-standard-16",
+    "prod": "n1-standard-16",
+}[ENV_SHORT_NAME]
+
+DEFAULT_ARGS = {
+    "start_date": datetime(2025, 12, 1),
+    "on_failure_callback": on_failure_vm_callback,
+    "retries": 1,
+    "retry_delay": timedelta(minutes=2),
+}
+
+############################################################################
+DAG_DOC = """
+    ### Item embedding DAG
+
+    #### Parameters:
+    * *embed_all* : whether to embed all items or only the ones that need embedding (to_embed = true in the input table)
+    * *config_file_name* : name of the configuration file (without .yaml extension) in the `config` folder, which contains the vector configurations and other parameters for the embedding process.
+    * *instance_type* : GCE instance type to use for embedding. For L4 GPU instances, make sure to select a compatible machine type with the number of GPUs you want to use. Check hint below.
+    * *instance_name* : name of the GCE instance to create for embedding.
+    * *gpu_type* : If you decide to embedd all the catalogue, we highly recommend to use 4 L4 GPUs, in europe-west1-c (to avoid stockout issues in europe-west1-b). If you have a smaller catalogue or if you want to embed only the new items, you can use 4 T4 GPU, which is more widely available across zones.
+    * *gpu_count* : number of GPUs to use for embedding (only applicable for GPU instance types). Make sure to select a machine type that supports the number of GPUs you want to use.
+    * *gce_zone* : GCE zone to use for embedding. Only europe-west1-c and europe-west1-b have L4 GPUs. europe-west1-d has T4 GPUs. Stockout are very frequent.
+    * *provisioning_model* : STANDARD (default) requests the GPU immediately and fails on stockout. FLEX_START uses Dynamic Workload Scheduler (DWS): instead of failing, the request is queued until GPU capacity frees up (queue held for up to *request_valid_for_duration*, hard-capped at 2h by GCP). Uses preemptible quota. Best for the full-catalogue L4 run given frequent stockouts.
+    * *max_run_duration* / *request_valid_for_duration* : FLEX_START only. See parameter descriptions.
+    * *reservation_name* : Consume a specific Compute Engine reservation (e.g. the one auto-created by a future reservation on its start date). When set, use provisioning_model=STANDARD (incompatible with FLEX_START) and make sure instance_type/gpu_type/gpu_count/gce_zone match the reservation exactly.
+
+    *Hint:* For L4 GPUs, make sure to select a compatible g2 machine. The Number of L4 GPUs you can attach to a G2 depends on its RAM.
+    Here is the breakdown:
+           * "g2-standard-4/8/12/16/32": 1 L4,
+           * "g2-standard-24": 2 L4s,
+           * "g2-standard-48": 4 L4s,
+           * "g2-standard-96": 8 L4s,
+    ⚠️ caution: frequent stockouts on **L4 GPUs**, especially in europe-west1-b, try europe-west1-c if you encounter stockouts.
+
+    **If you want to embed the whole catalog**:
+    * Enable the *embed_all* toggle in the DAG parameters.
+    * The default 1*T4 machine would take ~27 hours to complete. So to accelerate:
+        * Try to get an 1*L4, 2*L4 or 4*T4 machine.
+        * Select *FLEX_START* provisioning model which will queue your VM request in GCP until it is provisioned (max request_valid_for_duration param defaults to2h queue). Note that the airflow worker will hang on until it is provisioned. It lasts till max_run_duration (max 7 days) or until the job is completed, whichever comes first.
+        * You can also try to change the *gce_zone* to *europe-west1-b* if you encounter stockouts in *europe-west1-c*.
+        * Finally, you can also try to reserve a GCE instance with the desired configuration in advance (87 hours prior), and then use the *reservation_name* parameter to consume it on d-day.
+"""
+
+with DAG(
+    DAG_NAME,
+    default_args=DEFAULT_ARGS,
+    description="Embed items metadata",
+    doc_md=DAG_DOC,
+    schedule=None,
+    catchup=False,
+    dagrun_timeout=timedelta(hours=30),
+    user_defined_macros=macros.default,
+    template_searchpath=DAG_FOLDER,
+    tags=["TEST", "valentinbusson"],
+    params={
+        "branch": Param(
+            default="algo-cine-embeddings",
+            type="string",
+        ),
+        "embed_all": Param(
+            default=False,
+            type="boolean",
+            description="Whether to embed all items or only the ones that need embedding (to_embed = true in the input table). See DAG docs for VM setup recommendations.",
+        ),
+        "config_file_name": Param(
+            default="category_embeddings",
+            type="string",
+            description="Name of the configuration file (without .yaml extension)",
+        ),
+        "output_dataset_name": Param(
+            default=OUTPUT_DATASET_NAME,
+            type="string",
+            description="BigQuery dataset name for the output embeddings",
+        ),
+        "output_table_name": Param(
+            default=TEMP_OUTPUT_TABLE_NAME,
+            type="string",
+            description="BigQuery table name for the output embeddings",
+        ),
+        "instance_type": Param(
+            default=INSTANCE_TYPE,
+            type="string",
+            enum=list(chain(*INSTANCES_TYPES["cpu"].values())),
+            description="GCE instance type",
+        ),
+        "instance_name": Param(
+            default=INSTANCE_NAME,
+            type="string",
+            description="GCE instance name",
+        ),
+        "gpu_type": Param(
+            default="nvidia-tesla-t4",
+            enum=INSTANCES_TYPES["gpu"]["name"],
+        ),
+        "gpu_count": Param(
+            default=1,
+            enum=INSTANCES_TYPES["gpu"]["count"],
+            description="""Number of GPUs to use for embedding
+                        (only applicable for GPU instance types).
+                        """,
+        ),
+        "gce_zone": Param(default="europe-west1-c", enum=GCE_ZONES),
+        "provisioning_model": Param(
+            default="FLEX_START",
+            enum=["STANDARD", "FLEX_START"],
+            description="""VM provisioning model. STANDARD requests capacity
+                        immediately (fails on stockout). FLEX_START uses Dynamic
+                        Workload Scheduler (DWS) to queue the GPU request until
+                        capacity is available (queue held for up to
+                        request_valid_for_duration, max 2h).""",
+        ),
+        "max_run_duration": Param(
+            default="30h",
+            type="string",
+            description="""(FLEX_START only) Max VM run duration before it is
+                        auto-deleted. Accepts e.g. '12h', '1d2h', or seconds.
+                        Max 7 days.""",
+        ),
+        "request_valid_for_duration": Param(
+            default="2h",
+            type="string",
+            description="""(FLEX_START only) How long DWS holds the request in
+                        queue while the VM is PENDING. Accepts e.g. '2h', '90m'.
+                        Must be 0 or between 90s and 2h.""",
+        ),
+        "reservation_name": Param(
+            default=None,
+            type=["string", "null"],
+            description="""Name of a specific Compute Engine reservation to
+                        consume (e.g. the reservation auto-created by a future
+                        reservation on its start date). When set, the VM targets
+                        this reservation via SPECIFIC_RESERVATION and requires
+                        provisioning_model=STANDARD (incompatible with
+                        FLEX_START). The instance_type, gpu_type, gpu_count and
+                        gce_zone must match the reservation exactly. Leave empty
+                        to not target any reservation.""",
+        ),
+    },
+) as dag:
+    start = EmptyOperator(task_id="start")
+
+    gce_instance_start = StartGCEOperator(
+        task_id="gce_start_task",
+        preemptible=False,
+        instance_name="{{ params.instance_name }}",
+        instance_type="{{ params.instance_type }}",
+        gpu_type="{{ params.gpu_type }}",
+        gpu_count="{{ params.gpu_count }}",
+        gce_zone=GCE_ZONE_TEMPLATE,
+        labels={"job_type": "extra_long_ml", "dag_name": DAG_NAME},
+        provisioning_model="{{ params.provisioning_model }}",
+        max_run_duration="{{ params.max_run_duration }}",
+        request_valid_for_duration="{{ params.request_valid_for_duration }}",
+        reservation_name="{{ params.reservation_name }}",
+        # A FLEX_START request always defers while DWS keeps it queued, freeing
+        # the worker slot; cover the max 2h queue wait plus provisioning/boot
+        # margin regardless.
+        execution_timeout=timedelta(hours=3),
+        retries=3,
+    )
+
+    install_dependencies = InstallDependenciesOperator(
+        task_id="install_dependencies",
+        instance_name="{{ params.instance_name }}",
+        base_dir=BASE_DIR,
+        branch="{{ params.branch }}",
+        gce_zone=GCE_ZONE_TEMPLATE,
+        retries=2,
+    )
+
+    # Step 1a: Select items to embed and save to a temp table in BigQuery
+    bigquery_select_items_to_embed = BigQueryInsertJobOperator(
+        project_id=GCP_PROJECT_ID,
+        task_id="bigquery_select_items_to_embed",
+        configuration={
+            "query": {
+                "query": f"""
+                    SELECT * FROM `{GCP_PROJECT_ID}.{INPUT_DATASET_NAME}.{INPUT_TABLE_NAME}`
+                    {{% if not params.embed_all %}}
+                    WHERE to_embed is true
+                    {{% endif %}}
+                """,
+                "useLegacySql": False,
+                "destinationTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": INPUT_DATASET_NAME,
+                    "tableId": TEMP_INT_TABLE_NAME,
+                },
+                "writeDisposition": "WRITE_TRUNCATE",
+            }
+        },
+    )
+
+    # Step 1b: Short-circuit the run when the selection is empty.
+    def _has_items_to_embed() -> bool:
+        bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
+        query = f"""
+            SELECT COUNT(*) AS count
+            FROM `{GCP_PROJECT_ID}.{INPUT_DATASET_NAME}.{TEMP_INT_TABLE_NAME}`
+        """
+        result = bq_hook.get_first(query)
+
+        return bool(result and result[0] > 0)
+
+    check_items_to_embed = ShortCircuitOperator(
+        task_id="check_items_to_embed",
+        python_callable=_has_items_to_embed,
+    )
+
+    # Step 2: Export temp table to GCS as a parquet file (to be used as input for the embedding script)
+    export_item_metadata_to_gcs = BigQueryInsertJobOperator(
+        project_id=GCP_PROJECT_ID,
+        task_id="export_item_metadata_to_gcs",
+        configuration={
+            "extract": {
+                "sourceTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": INPUT_DATASET_NAME,
+                    "tableId": TEMP_INT_TABLE_NAME,
+                },
+                "destinationUris": [
+                    f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{INPUT_FOLDER}/{TEMP_INPUT_FILE_NAME}"
+                ],
+                "destinationFormat": "PARQUET",
+            }
+        },
+    )
+
+    # Step 3: Run the embedding script on the GCE instance, with the exported parquet file as input,
+    # and save the output embeddings as a parquet file in GCS (temp because output parquet only contains to_embed items)
+    embed_items = SSHGCEOperator(
+        task_id="embed_items",
+        instance_name="{{ params.instance_name }}",
+        base_dir=BASE_DIR,
+        gce_zone=GCE_ZONE_TEMPLATE,
+        command=f"""
+            uv run python main.py \
+                --config-file-name {{{{ params.config_file_name }}}} \
+                --input-parquets-folder-path gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{INPUT_FOLDER} \
+                --output-parquets-folder-path gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{OUTPUT_FOLDER} \
+        """,
+        deferrable=True,
+    )
+
+    # Step 4: Export the output embeddings from GCS to BigQuery temp table
+    # (to be merged with the items table in a separate process after the DAG run)
+    export_item_embeddings_to_bigquery = GCSToBigQueryOperator(
+        task_id="export_item_embeddings_to_bigquery",
+        project_id=GCP_PROJECT_ID,
+        bucket=ML_BUCKET_TEMP,
+        source_objects=[f"{GCS_FOLDER_PATH}/{OUTPUT_FOLDER}/*.parquet"],
+        destination_project_dataset_table="{{ params.output_dataset_name }}.{{ params.output_table_name }}",
+        source_format="PARQUET",
+        write_disposition="WRITE_TRUNCATE",
+        autodetect=True,
+    )
+
+    gce_instance_delete = DeleteGCEOperator(
+        task_id="gce_stop_task",
+        instance_name="{{ params.instance_name }}",
+        gce_zone=GCE_ZONE_TEMPLATE,  # delete in the zone the VM was created in
+        trigger_rule="all_done",  # always delete the VM, even on upstream failure
+    )
+
+    stop = EmptyOperator(task_id="stop", trigger_rule="all_success")
+
+    start >> bigquery_select_items_to_embed >> check_items_to_embed
+    check_items_to_embed >> [gce_instance_start, export_item_metadata_to_gcs]
+    gce_instance_start >> install_dependencies
+    [
+        install_dependencies,
+        export_item_metadata_to_gcs,
+    ] >> embed_items
+    embed_items >> export_item_embeddings_to_bigquery
+    export_item_embeddings_to_bigquery >> gce_instance_delete
+    [export_item_embeddings_to_bigquery, gce_instance_delete] >> stop

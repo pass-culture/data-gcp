@@ -19,8 +19,12 @@ packages = ["."]
 
 [tool.uv]
 constraint-dependencies = [
+    "cryptography >= 50.0.0", # GHSA-g6cj-pr64-35w5, GHSA-jwv3-5hgf-82ww, GHSA-m2h6-j472-rp4c, GHSA-537c-gmf6-5ccf
     "idna >= 3.15", # GHSA-65pc-fj4g-8rjx
     "pyasn1 >= 0.6.4", # GHSA-8ppf-4f7h-5ppj, GHSA-hm4w-wwcw-mr6r, GHSA-m4p7-r5rc-7g4j, GHSA-jr27-m4p2-rc6r
+    # NOTE: pyarrow >= 23.0.1 (GHSA-rgxp-2hwp-jwgg) cannot be applied — pyarrow>=23.0.1 requires Python>=3.10
+    # NOTE: setuptools >= 83.0.0 (GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c) cannot be applied — setuptools>=83.0.0 requires Python>=3.10
+    # Both blocked by this job's Python 3.9 pin. Upgrade requires-python to >=3.10 to resolve.
 ]
 environments = [
     "sys_platform == 'linux'",

@@ -1,8 +1,9 @@
 import torch
 import typer
 from config import parse_vectors
+from constants import ROWS_PER_CHUNK
 from embedding import LongPromptTracker, embed_dataframe
-from gcs_utils import list_parquet_files, load_parquet_file
+from gcs_utils import iter_metadata_chunks, list_parquet_files
 from loguru import logger
 from setup_encoders import (
     load_encoders,
@@ -31,6 +32,12 @@ def main(
         ...,
         help="Path to the output parquet folder on GCS where results will be saved",
     ),
+    rows_per_chunk: int = typer.Option(
+        ROWS_PER_CHUNK,
+        help="Target number of rows per uniform embedding chunk, streamed "
+        "across all input parquet files regardless of how BigQuery sharded "
+        "them (tune for GPU throughput).",
+    ),
 ) -> None:
     """Main function to load item metadata, generate embeddings, and save results as parquets.
 
@@ -38,6 +45,7 @@ def main(
         config_file_name: Name of the configuration file (without .yaml extension)
         input_parquets_folder_path: Path to the input parquet files containing item metadata on GCS
         output_parquets_folder_path: Path to the output parquet folder on GCS where results will be saved
+        rows_per_chunk: Target number of rows per uniform embedding chunk
     """
     logger.info(
         f"Starting embedding process with the following parameters:\n"
@@ -53,22 +61,25 @@ def main(
 
     encoders = load_encoders(vectors, gpu_count)
 
-    ## List all parquet files matching the input path
+    ## List all parquet files matching the input path (for visibility only;
+    ## iter_metadata_chunks streams across them as one unified dataset).
     parquet_files = list_parquet_files(input_parquets_folder_path)
-    logger.info(f"Found {len(parquet_files)} parquet files to process")
+    logger.info(
+        f"Found {len(parquet_files)} parquet files to process, "
+        f"streaming as uniform chunks of up to {rows_per_chunk} rows"
+    )
 
     # Start multi-GPU pools once for the whole run if available
     pools = start_encoder_pools(encoders, gpu_count)
-    # Shared across every parquet file so over-length prompts are reported
-    # once, at the end of the whole run, instead of scattered per file.
+    # Shared across every chunk so over-length prompts are reported once, at
+    # the end of the whole run, instead of scattered per chunk.
     long_prompt_tracker = LongPromptTracker()
     try:
-        for i, parquet_filepath in enumerate(parquet_files):
-            logger.info(
-                f"Processing parquet file {i + 1}/{len(parquet_files)}: {parquet_filepath}"
-            )
-
-            df_metadata = load_parquet_file(parquet_filepath, vectors)
+        chunks = iter_metadata_chunks(
+            input_parquets_folder_path, vectors, rows_per_chunk=rows_per_chunk
+        )
+        for i, df_metadata in enumerate(chunks):
+            logger.info(f"Processing chunk {i + 1} ({len(df_metadata)} items)")
 
             df_embeddings = embed_dataframe(
                 df_metadata,
@@ -78,7 +89,7 @@ def main(
                 tracker=long_prompt_tracker,
             )
             logger.info(
-                f"Generated embeddings for {len(df_embeddings)} items from {parquet_filepath}"
+                f"Generated embeddings for {len(df_embeddings)} items in chunk {i + 1}"
             )
 
             output_parquet_path = (

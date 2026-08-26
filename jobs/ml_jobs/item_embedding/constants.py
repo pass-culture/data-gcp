@@ -21,3 +21,11 @@ BATCH_SIZE = 32
 # Used as a fallback when an encoder doesn't expose max_seq_length (e.g. a
 # test double); the real per-encoder value is preferred at runtime.
 MAX_PROMPT_TOKENS = 2048
+
+# Target number of rows per uniform input chunk when streaming the input
+# dataset (see gcs_utils.iter_metadata_chunks). Distinct from BATCH_SIZE:
+# this controls how many rows are read from GCS before a single
+# embed_dataframe()/encode() call, independent of BigQuery's arbitrary,
+# uneven per-file export sharding; BATCH_SIZE controls SentenceTransformer's
+# internal batching within one encode() call.
+ROWS_PER_CHUNK = 50_000

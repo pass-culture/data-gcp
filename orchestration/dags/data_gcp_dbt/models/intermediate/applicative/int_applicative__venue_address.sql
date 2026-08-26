@@ -8,6 +8,8 @@ select
         case
             when oa.address_postal_code = "97150"
             then "978"
+            when left(oa.address_postal_code, 3) = "978"
+            then "974"
             when left(oa.address_postal_code, 2) in ("97", "98")
             then left(oa.address_postal_code, 3)
             when left(oa.address_postal_code, 3) in ("200", "201", "209", "205")

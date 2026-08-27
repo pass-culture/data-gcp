@@ -1,0 +1,60 @@
+version: 2
+models:
+  - name: int_kpi__cultural_partner_activation_cohorts_by_type
+    description: '{{ doc("description__int_kpi__cultural_partner_activation_cohorts_by_type") }}'
+    columns:
+      - name: partition_month
+        description: First day of the month in which the offerer was registered. Defines the cohort.
+        data_type: DATE
+
+      - name: partner_region_name
+        description: '{{ doc("column__partner_region_name") }}'
+        data_type: STRING
+
+      - name: partner_region_code
+        description: '{{ doc("column__partner_region_code") }}'
+        data_type: STRING
+
+      - name: partner_department_name
+        description: '{{ doc("column__partner_department_name") }}'
+        data_type: STRING
+
+      - name: partner_department_code
+        description: '{{ doc("column__partner_department_code") }}'
+        data_type: STRING
+
+      - name: partner_epci_code
+        description: '{{ doc("column__partner_epci_code") }}'
+        data_type: STRING
+
+      - name: partner_city_code
+        description: '{{ doc("column__partner_city_code") }}'
+        data_type: STRING
+
+      - name: partner_type
+        description: '{{ doc("column__partner_type") }}'
+        data_type: STRING
+
+      - name: total_offerers_created_by_cohort
+        description: '{{ doc("column__metrics__total_offerers_created_by_cohort") }}'
+        data_type: INT64
+
+      - name: total_activated_offerer_consultation_or_adage_30d_by_cohort
+        description: '{{ doc("column__metrics__total_activated_offerer_consultation_or_adage_30d_by_cohort") }}'
+        data_type: INT64
+
+      - name: total_activated_offerer_offer_or_adage_30d_by_cohort
+        description: '{{ doc("column__metrics__total_activated_offerer_offer_or_adage_30d_by_cohort") }}'
+        data_type: INT64
+
+      - name: total_activated_offerer_global_30d_by_cohort
+        description: '{{ doc("column__metrics__total_activated_offerer_global_30d_by_cohort") }}'
+        data_type: INT64
+
+      - name: total_activated_offerer_individual_30d_by_cohort
+        description: '{{ doc("column__metrics__total_activated_offerer_individual_30d_by_cohort") }}'
+        data_type: INT64
+
+      - name: total_activated_offerer_collective_30d_by_cohort
+        description: '{{ doc("column__metrics__total_activated_offerer_collective_30d_by_cohort") }}'
+        data_type: INT64

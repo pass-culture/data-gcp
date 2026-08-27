@@ -8,8 +8,40 @@ TEMPLATES = {
 set -euo pipefail
 
 echo 'CC=gcc' | sudo tee -a /etc/environment
+
+# The SSH login user (airflow) is created by the guest agent, which adds it to
+# the groups below; `docker` lets it reach the docker socket without sudo.
+# Create the group first so it exists before the user is provisioned.
+sudo groupadd -f docker
+sudo tee /etc/default/instance_configs.cfg > /dev/null <<'EOF'
+[Accounts]
+groups = adm,dip,docker,lxd,plugdev,video
+EOF
+
+sudo systemctl restart google-guest-agent || true
+
+# Install Docker Engine from Docker's official apt repo (docker.io is unofficial).
+# https://docs.docker.com/engine/install/ubuntu/
 sudo apt-get update -qq
-sudo apt-get install -y -qq build-essential git curl
+sudo apt-get install -y -qq build-essential git ca-certificates curl gnupg
+
+# Drop distro docker packages that would conflict with docker-ce (no-op if absent).
+sudo apt-get remove -y -qq docker.io docker-doc docker-compose podman-docker containerd runc || true
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+sudo tee /etc/apt/sources.list.d/docker.sources > /dev/null <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+sudo apt-get update -qq
+sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl enable --now docker.service containerd.service
 
 {% if enable_monitoring %}
 {% include 'ops_agent_basic' %}
@@ -88,13 +120,6 @@ def _render_script(template_name: str, **kwargs) -> str:
 
 @dataclass
 class CPUImage:
-    # tf-ent-2-14-cpu was deprecated by Google, and no non-deprecated CPU-only
-    # DLVM family exists anymore in this image generation. Jobs here only ever
-    # relied on `uv`-managed venvs (no conda/preinstalled framework
-    # dependency), so moving to a plain, continuously-maintained OS image
-    # removes the DLVM deprecation-cycle risk entirely. Confirmed via a live
-    # GCE spike: curl/git present by default, gcc needs an explicit install,
-    # and `uv sync` (including a from-source pandas build on 3.13) succeeds.
     source_image: str = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
     startup_script_wait_time: int = 90
     enable_monitoring: bool = True
@@ -103,12 +128,6 @@ class CPUImage:
 
 @dataclass
 class TFGPUImage:
-    # tf-ent-2-14-cu118 was deprecated by Google and pinned torch to CUDA-13
-    # wheels its driver couldn't run, silently falling back to CPU (~15x
-    # slower). This family/nvidia-580 image ships a matching driver already
-    # baked in (confirmed via a live GCE spike: nvidia-smi works cold, no
-    # install-driver.sh present), and is a rolling `family/` reference so it
-    # won't silently freeze in time again.
     source_image: str = "projects/deeplearning-platform-release/global/images/family/common-cu129-ubuntu-2204-nvidia-580"
     startup_script_wait_time: int = 240
     enable_monitoring: bool = True

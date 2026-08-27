@@ -283,8 +283,11 @@ REF_TABLES = {
         },
     },
     "backoffice_log_reference": {
-        "log_extract": "STRING",
-        "log_type": "STRING",
-        "log_name": "STRING",
+        "file_type": "csv",
+        "schema": {
+            "log_extract": "STRING",
+            "log_type": "STRING",
+            "log_name": "STRING",
+        },
     },
 }

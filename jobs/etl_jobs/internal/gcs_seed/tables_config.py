@@ -285,6 +285,7 @@ REF_TABLES = {
     "backoffice_log_reference": {
         "file_type": "csv",
         "schema": {
+            "full_log": "STRING",
             "log_extract": "STRING",
             "log_type": "STRING",
             "log_name": "STRING",

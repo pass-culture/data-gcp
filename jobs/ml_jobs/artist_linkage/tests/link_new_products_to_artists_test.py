@@ -23,6 +23,7 @@ from src.constants import (
 def test_link_new_products_to_artists(tmp_path):
     # 1. Setup mock data files
     artist_file = tmp_path / "applicative_artist.parquet"
+    future_artist_file = tmp_path / "future_artist.parquet"
     artist_music_platform_file = tmp_path / "artist_music_platform.parquet"
     product_artist_link_file = tmp_path / "product_artist_link.parquet"
     product_file = tmp_path / "product.parquet"
@@ -41,6 +42,10 @@ def test_link_new_products_to_artists(tmp_path):
         WIKIPEDIA_URL_KEY: [None],
     }
     pd.DataFrame(artist_data).to_parquet(artist_file, index=False)
+
+    # future_artist mirrors the applicative state here (no not-yet-round-tripped
+    # artist in this scenario).
+    pd.DataFrame(artist_data).to_parquet(future_artist_file, index=False)
 
     # Mock artist_music_platform table (empty — no platform IDs stored yet)
     pd.DataFrame(
@@ -105,6 +110,7 @@ def test_link_new_products_to_artists(tmp_path):
 
         main(
             artist_filepath=str(artist_file),
+            future_artist_filepath=str(future_artist_file),
             artist_music_platform_filepath=str(artist_music_platform_file),
             product_artist_link_filepath=str(product_artist_link_file),
             product_filepath=str(product_file),
@@ -147,3 +153,118 @@ def test_link_new_products_to_artists(tmp_path):
         delta_artist_df[ARTIST_NAME_KEY] == "Unknown Band"
     ].iloc[0]
     assert pd.isna(unknown_band[WIKIDATA_ID_KEY])
+
+
+def test_does_not_recreate_artist_not_yet_round_tripped(tmp_path):
+    """An artist created by a recent run lives in future_artist before it round-trips
+    back into the applicative database. A new product for that artist must reuse its
+    existing artist_id instead of minting a new one for the same wikidata_id."""
+    # 1. Setup mock data files
+    artist_file = tmp_path / "applicative_artist.parquet"
+    future_artist_file = tmp_path / "future_artist.parquet"
+    artist_music_platform_file = tmp_path / "artist_music_platform.parquet"
+    product_artist_link_file = tmp_path / "product_artist_link.parquet"
+    product_file = tmp_path / "product.parquet"
+
+    output_delta_artist = tmp_path / "delta_artist.parquet"
+    output_delta_product_link = tmp_path / "delta_product_link.parquet"
+
+    # Applicative database only knows id1/Q1: idX/Q2 was created by a recent run
+    # and has NOT yet round-tripped back into the applicative artist table.
+    pd.DataFrame(
+        {
+            ARTIST_ID_KEY: ["id1"],
+            ARTIST_NAME_KEY: ["Artist One"],
+            ARTIST_DESCRIPTION_KEY: ["Description One"],
+            "wikidata_image_file_url": [None],
+            WIKIDATA_ID_KEY: ["Q1"],
+            WIKIPEDIA_URL_KEY: [None],
+        }
+    ).to_parquet(artist_file, index=False)
+
+    # future_artist is up to date: it already contains idX/Q2 (Ed Sheeran).
+    pd.DataFrame(
+        {
+            ARTIST_ID_KEY: ["id1", "idX"],
+            ARTIST_NAME_KEY: ["Artist One", "Ed Sheeran"],
+            WIKIDATA_ID_KEY: ["Q1", "Q2"],
+        }
+    ).to_parquet(future_artist_file, index=False)
+
+    pd.DataFrame(
+        {ARTIST_ID_KEY: [], **{k: [] for k in MUSIC_PLATFORM_IDS_KEYS}}
+    ).to_parquet(artist_music_platform_file, index=False)
+
+    # Only product 1 is linked (to id1); idX has no link in the applicative snapshot.
+    pd.DataFrame(
+        {
+            "offer_product_id": [1],
+            ARTIST_ID_KEY: ["id1"],
+            "artist_type": ["music"],
+        }
+    ).to_parquet(product_artist_link_file, index=False)
+
+    # New product 2 is Ed Sheeran (matches Wikidata Q2, i.e. idX).
+    pd.DataFrame(
+        {
+            "offer_product_id": [1, 2],
+            ARTIST_NAME_KEY: ["Artist One", "Ed Sheeran"],
+            "artist_type": ["music", "music"],
+            "offer_category_id": ["SPECTACLE", "SPECTACLE"],
+        }
+    ).to_parquet(product_file, index=False)
+
+    wiki_data = {
+        WIKIDATA_ID_KEY: ["Q1", "Q2"],
+        "artist_name": ["Artist One", "Ed Sheeran"],
+        "alias": ["Artist One", "Ed Sheeran"],
+        "raw_alias": ["Artist One", "Ed Sheeran"],
+        "matching_score": [1.0, 1.0],
+        "gkg": [100, 200],
+        "music": [True, True],
+        "book": [False, False],
+        "movie": [False, False],
+        ARTIST_DESCRIPTION_KEY: ["Description One", "English singer-songwriter"],
+        "img": ["img1.jpg", "img2.jpg"],
+        WIKIPEDIA_URL_KEY: [
+            "https://wikipedia.org/wiki/Artist_One",
+            "https://wikipedia.org/wiki/Ed_Sheeran",
+        ],
+        SPOTIFY_ID_KEY: [None, "6eUKZXaKkcviH0Ku9w2n3V"],
+        ISNI_ID_KEY: [None, "0000000114431409"],
+        APPLE_MUSIC_ID_KEY: [None, "183313439"],
+        DEEZER_ID_KEY: [None, "384236"],
+        GENIUS_ID_KEY: [None, "45789"],
+        SOUNDCLOUD_ID_KEY: [None, "17954600"],
+    }
+
+    os.environ["ENV_SHORT_NAME"] = "dev"
+
+    with patch("cli.link_new_products_to_artists.load_wikidata") as mock_load:
+        mock_load.return_value = pd.DataFrame(wiki_data)
+
+        # Must not raise the wikidata reuse guard in sanity_checks.
+        main(
+            artist_filepath=str(artist_file),
+            future_artist_filepath=str(future_artist_file),
+            artist_music_platform_filepath=str(artist_music_platform_file),
+            product_artist_link_filepath=str(product_artist_link_file),
+            product_filepath=str(product_file),
+            wiki_base_path=str(tmp_path),
+            wiki_file_name="wiki.parquet",
+            output_delta_artist_file_path=str(output_delta_artist),
+            output_delta_product_artist_link_filepath=str(output_delta_product_link),
+        )
+
+    delta_artist_df = pd.read_parquet(output_delta_artist)
+    delta_product_link_df = pd.read_parquet(output_delta_product_link)
+
+    # No new artist is created for Q2: idX already exists in future_artist.
+    assert "Q2" not in set(delta_artist_df[WIKIDATA_ID_KEY].dropna())
+    assert "idX" not in set(delta_artist_df[ARTIST_ID_KEY])
+
+    # Product 2 is linked to the existing idX, not to a freshly minted artist_id.
+    product_2_link = delta_product_link_df[
+        delta_product_link_df["offer_product_id"] == 2
+    ].iloc[0]
+    assert product_2_link[ARTIST_ID_KEY] == "idX"

@@ -52,6 +52,7 @@ WIKIDATA_STORAGE_BASE_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/dump_wikidata"
 WIKIDATA_EXTRACTION_GCS_FILENAME = "wikidata_extraction.parquet"
 PRODUCTS_TO_LINK_GCS_FILENAME = "products_to_link.parquet"
 APPLICATIVE_ARTISTS_GCS_FILENAME = "applicative_database_artist.parquet"
+FUTURE_ARTISTS_GCS_FILENAME = "future_artist.parquet"
 APPLICATIVE_ARTIST_MUSIC_PLATFORM_GCS_FILENAME = (
     "applicative_database_artist_music_platform.parquet"
 )
@@ -79,6 +80,11 @@ TABLES_TO_IMPORT_TO_GCS = [
         "dataset_id": BIGQUERY_RAW_DATASET,
         "table_id": "applicative_database_artist",
         "filename": APPLICATIVE_ARTISTS_GCS_FILENAME,
+    },
+    {
+        "dataset_id": BIGQUERY_ML_LINKAGE_DATASET,
+        "table_id": "future_artist",
+        "filename": FUTURE_ARTISTS_GCS_FILENAME,
     },
     {
         "dataset_id": BIGQUERY_RAW_DATASET,
@@ -336,6 +342,7 @@ with DAG(
         command=f"""
              uv run cli/link_new_products_to_artists.py \
             --artist-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
+            --future-artist-filepath {os.path.join(STORAGE_BASE_PATH, FUTURE_ARTISTS_GCS_FILENAME)} \
             --artist-music-platform-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTIST_MUSIC_PLATFORM_GCS_FILENAME)} \
             --product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
             --product-filepath {os.path.join(STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME)} \

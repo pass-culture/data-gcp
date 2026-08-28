@@ -213,6 +213,25 @@ def sanity_checks(
         raise ValueError(
             "There are artists that already exist in the database after matching."
         )
+
+    # A new artist must never reuse a wikidata_id already assigned to an existing
+    # artist: that would duplicate the wikidata_id in future_artist. This guards
+    # against the wikidata reuse failing to map a cluster back to its existing
+    # artist_id (see match_artists_with_wikidata).
+    existing_wikidata_ids = artist_df.loc[
+        lambda df: df[WIKIDATA_ID_KEY].notna(), WIKIDATA_ID_KEY
+    ]
+    recreated_wikidata_ids = delta_artist_df.loc[
+        lambda df: df[WIKIDATA_ID_KEY].notna()
+        & df[WIKIDATA_ID_KEY].isin(existing_wikidata_ids)
+    ]
+    if len(recreated_wikidata_ids) > 0:
+        logger.error("Found new artists reusing an existing wikidata_id.")
+        logger.error(recreated_wikidata_ids)
+        raise ValueError(
+            "There are new artists that reuse a wikidata_id already assigned to an existing artist."
+        )
+
     assert (
         not delta_artist_df.drop(columns=[ACTION_KEY, COMMENT_KEY]).duplicated().any()
     ), "Duplicate entries in delta_artist_df"
@@ -226,6 +245,7 @@ app = typer.Typer()
 def main(
     # Input files
     artist_filepath: str = typer.Option(),
+    future_artist_filepath: str = typer.Option(),
     artist_music_platform_filepath: str = typer.Option(),
     product_artist_link_filepath: str = typer.Option(),
     product_filepath: str = typer.Option(),
@@ -250,14 +270,13 @@ def main(
     artist_df = pd.read_parquet(artist_filepath).merge(
         artist_music_platform_df, on=ARTIST_ID_KEY, how="left", validate="one_to_one"
     )
-    artist_with_wiki_ids_df = artist_df.rename(
-        columns={
-            "wikidata_id": WIKIDATA_ID_KEY,
-        }
-    ).loc[
+    # future_artist is the authoritative, up-to-date artist state
+    # even if that artist has not yet been ingested by the backend.
+    future_artist_df = pd.read_parquet(future_artist_filepath)
+    artist_with_wiki_ids_df = future_artist_df.loc[
         lambda df: df[WIKIDATA_ID_KEY].notna(),
         [ARTIST_ID_KEY, WIKIDATA_ID_KEY],
-    ]
+    ].drop_duplicates()
     wiki_df = load_wikidata(
         wiki_base_path=wiki_base_path, wiki_file_name=wiki_file_name
     ).reset_index(drop=True)
@@ -313,14 +332,14 @@ def main(
         exploded_artist_alias_df=exploded_artist_alias_df,
         products_to_remove_df=products_to_remove_df,
         preproc_linked_products_df=preproc_linked_products_df,
-        artist_df=artist_df,
+        artist_df=future_artist_df,
     )
 
     # 7. Sanity check for consistency
     sanity_checks(
         delta_product_df,
         delta_artist_df,
-        artist_df,
+        future_artist_df,
     )
 
     # 8. Save files

@@ -54,6 +54,7 @@ products are added to the system.
 ```bash
 python link_new_products_to_artists.py \
   --artist-filepath /path/to/existing_artists.parquet \
+  --future-artist-filepath /path/to/future_artist.parquet \
   --product-artist-link-filepath /path/to/existing_links.parquet \
   --product-filepath /path/to/current_products.parquet \
   --wiki-base-path /path/to/wiki/ \

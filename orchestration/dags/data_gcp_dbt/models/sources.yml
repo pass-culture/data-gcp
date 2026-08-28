@@ -46,6 +46,7 @@ sources:
       - name: applicative_database_cds_cinema_details
       - name: applicative_database_cgr_cinema_details
       - name: applicative_database_cinema_provider_pivot
+      - name: applicative_database_collective_additional_fee
       - name: applicative_database_collective_booking
       - name: applicative_database_collective_offer
       - name: applicative_database_collective_offer_domain

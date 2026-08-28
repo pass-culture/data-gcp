@@ -36,11 +36,12 @@ public.cds_cinema_details: accountId, cinemaApiToken, cinemaProviderPivotId, id
 public.cgr_cinema_details: cinemaProviderPivotId, cinemaUrl, id
 public.chronicle: clubType, content, dateCreated, id, isActive, userId
 public.cinema_provider_pivot: id, idAtProvider, providerId, venueId
+public.collective_additional_fee: amount, collectiveStockId, id, label, type
 public.collective_booking: cancellationDate, cancellationLimitDate, cancellationReason, collectiveStockId, confirmationDate, confirmationLimitDate, dateCreated, dateUsed, educationalDepositId, educationalInstitutionId, educationalRedactorId, educationalYearId, id, offererId, reimbursementDate, status, venueId
 public.collective_offer: audioDisabilityCompliant, bookingEmails, contactEmail, contactPhone, dateCreated, dateUpdated, description, durationMinutes, formats, id, imageId, institutionId, interventionArea, isActive, lastValidationDate, lastValidationType, locationType, mentalDisabilityCompliant, motorDisabilityCompliant, name, nationalProgramId, offererAddressId, providerId, rejectionReason, students, templateId, validation, venueId, visualDisabilityCompliant
 public.collective_offer_template: audioDisabilityCompliant, bookingEmails, contactEmail, contactForm, contactPhone, contactUrl, dateCreated, dateRange, dateUpdated, description, durationMinutes, formats, id, imageId, interventionArea, isActive, lastValidationDate, lastValidationType, locationType, mentalDisabilityCompliant, motorDisabilityCompliant, name, nationalProgramId, offererAddressId, priceDetail, rejectionReason, students, validation, venueId, visualDisabilityCompliant
 public.collective_offer_template_domain: collectiveOfferTemplateId, educationalDomainId
-public.collective_stock: bookingLimitDatetime, collectiveOfferId, dateCreated, dateModified, endDatetime, id, numberOfTickets, price, priceDetail, startDatetime
+public.collective_stock: bookingLimitDatetime, collectiveOfferId, dateCreated, dateModified, endDatetime, id, numberOfTeachers, numberOfTickets, price, priceDetail, servicePrice, startDatetime
 public.criterion: description, endDateTime, highlightId, id, name, startDateTime
 public.cultural_outreach: claimedDatetime, id, offerId, status
 public.custom_reimbursement_rule: amount, id, offerId, offererId, rate, subcategories, timespan, venueId

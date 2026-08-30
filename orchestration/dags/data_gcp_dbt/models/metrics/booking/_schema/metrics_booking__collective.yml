@@ -1,15 +1,29 @@
 version: 2
+
 models:
   - name: metrics_booking__collective
     description: '{{ doc("description__metrics_booking__collective") }}'
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - partition_month
+            - scholar_year
+            - venue_region_name
+            - venue_department_code
+            - venue_epci_code
+            - venue_city_code
     columns:
       - name: partition_month
         description: '{{ doc("column__partition_month") }}'
-        data_type: STRING
+        data_type: DATE
+        data_tests:
+          - not_null
 
       - name: scholar_year
         description: '{{ doc("column__scholar_year") }}'
         data_type: STRING
+        data_tests:
+          - not_null
 
       - name: venue_region_name
         description: '{{ doc("column__venue_region_name") }}'
@@ -42,19 +56,29 @@ models:
       - name: venue_city_code
         description: '{{ doc("column__venue_city_code") }}'
         data_type: STRING
+        data_tests:
+          - not_null
 
       - name: total_collective_bookings
         description: '{{ doc("column__total_collective_bookings") }}'
         data_type: INTEGER
+        data_tests:
+          - not_null
 
       - name: total_collective_amount_spent
         description: '{{ doc("column__total_collective_amount_spent") }}'
         data_type: FLOAT
+        data_tests:
+          - not_null
 
       - name: cumulative_total_collective_bookings
         description: '{{ doc("column__cumulative_total_collective_bookings") }}'
         data_type: INTEGER
+        data_tests:
+          - not_null
 
       - name: cumulative_total_collective_amount_spent
         description: '{{ doc("column__cumulative_total_collective_amount_spent") }}'
         data_type: FLOAT
+        data_tests:
+          - not_null

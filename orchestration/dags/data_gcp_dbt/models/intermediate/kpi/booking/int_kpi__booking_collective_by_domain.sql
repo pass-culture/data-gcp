@@ -2,18 +2,18 @@
 with
     booking_aggregated as (
         select
-            date_trunc(
-                date(cb.collective_booking_creation_date), month
-            ) as partition_month,
             cb.scholar_year,
             cod.educational_domain_name,
             cb.institution_region_name,
-            coalesce(cast(rd.region_code as string), '-1') as institution_region_code,
             cb.institution_department_name,
             cb.institution_department_code,
             cb.institution_epci as institution_epci_name,
             cb.institution_epci_code,
             cb.institution_city_code,
+            date_trunc(
+                date(cb.collective_booking_creation_date), month
+            ) as partition_month,
+            coalesce(cast(rd.region_code as string), '-1') as institution_region_code,
             coalesce(count(cb.collective_booking_id), 0) as total_collective_bookings,
             coalesce(sum(cb.booking_amount), 0) as total_collective_booking_amount,
             coalesce(
@@ -67,6 +67,7 @@ select
     sum(total_collective_institutions) over w
     as cumulative_total_collective_institutions
 from booking_aggregated
+where educational_domain_name is not null
 window
     w as (
         partition by

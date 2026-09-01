@@ -53,3 +53,15 @@ ITEM_COLUMNS = [
     "example_venue_latitude",
     "example_venue_longitude",
 ]
+
+# Columns of the LanceDB `items` table for the semantic retrieval flavor.
+# Kept intentionally small: ids + textual metadata (for FTS) + filterable metadata.
+SEMANTIC_ITEM_COLUMNS = [
+    "vector",
+    "item_id",
+    "item_name",
+    "item_description",
+    "search_text",
+    "category",
+    "subcategory_id",
+]

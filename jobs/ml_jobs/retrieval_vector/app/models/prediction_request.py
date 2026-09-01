@@ -4,6 +4,8 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 DEFAULT_VECTOR_FIELDS = ["vector", "raw_embeddings"]
+# The semantic items table only carries a single (indexed) `vector` column.
+SEMANTIC_VECTOR_FIELDS = ["vector"]
 DEFAULT_TREND_FIELDS = [
     "booking_number_desc",
     "booking_trend_desc",
@@ -13,6 +15,9 @@ DEFAULT_TREND_FIELDS = [
 MODEL_TYPES = {
     "recommendation": DEFAULT_VECTOR_FIELDS,
     "similar_offer": DEFAULT_VECTOR_FIELDS,
+    # semantic flavor: vector (semantic) search + keyword full-text search
+    "semantic_search": SEMANTIC_VECTOR_FIELDS,
+    "text_search": [],  # full-text search: no vector column to validate
     "filter": DEFAULT_TREND_FIELDS,
     "tops": DEFAULT_TREND_FIELDS,
 }

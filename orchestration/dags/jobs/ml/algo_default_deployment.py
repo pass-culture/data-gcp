@@ -47,6 +47,11 @@ GRAPH_RETRIEVAL_DICT = {
     "stg": "n1-standard-2",
     "dev": "n1-standard-2",
 }
+SEMANTIC_RETRIEVAL_DICT = {
+    "prod": "n1-standard-4",
+    "stg": "n1-standard-2",
+    "dev": "n1-standard-2",
+}
 
 
 models_to_deploy = [
@@ -74,6 +79,15 @@ models_to_deploy = [
         "endpoint_name": f"recommendation_graph_retrieval_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
         "instance_type": GRAPH_RETRIEVAL_DICT[ENV_SHORT_NAME],
+        "min_nodes": {"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
+        "max_nodes": {"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
+    },
+    # semantic item retrieval endpoint
+    {
+        "experiment_name": f"semantic_item_retrieval_v1.0_{ENV_SHORT_NAME}",
+        "endpoint_name": f"semantic_item_retrieval_{ENV_SHORT_NAME}",
+        "version_name": "v_{{ ts_nodash }}",
+        "instance_type": SEMANTIC_RETRIEVAL_DICT[ENV_SHORT_NAME],
         "min_nodes": {"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
         "max_nodes": {"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
     },

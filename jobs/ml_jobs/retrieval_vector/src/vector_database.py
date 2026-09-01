@@ -11,6 +11,7 @@ from src.constants import (
     ITEM_COLUMNS,
     LANCE_DB_BATCH_SIZE,
     OUTPUT_DATA_PATH,
+    SEMANTIC_ITEM_COLUMNS,
 )
 from src.document_processing import get_item_docs, get_user_docs
 
@@ -253,6 +254,153 @@ def create_lancedb_from_item_embeddings(
             row.item_id: row.vector for row in items_with_embeddings_df.itertuples()
         },
         items_df=items_with_embeddings_df.loc[:, lambda df: df.columns != "vector"],
+        emb_size=len(items_with_embeddings_df.iloc[0].vector),
+        uri=f"{OUTPUT_DATA_PATH}/vector",
+        vector_search_index_metric=vector_search_metric,
+    )
+
+
+def _get_semantic_table_batches(
+    items_df: pd.DataFrame, emb_size: int
+) -> pa.RecordBatch:
+    """Yield PyArrow RecordBatches for the semantic retrieval `items` table.
+
+    The schema is intentionally small (see ``SEMANTIC_ITEM_COLUMNS``): the item
+    embedding vector, the item id, textual metadata used for full-text search and
+    a couple of filterable categorical columns.
+
+    Args:
+        items_df (pd.DataFrame): Items with a ``vector`` column plus the textual
+            and categorical metadata columns.
+        emb_size (int): Dimensionality of the embedding vectors.
+
+    Yields:
+        pa.RecordBatch: One record batch per item.
+    """
+    preprocessed_items_df = items_df.fillna(
+        {
+            "item_name": "",
+            "item_description": "",
+            "search_text": "",
+            "category": "",
+            "subcategory_id": "",
+        }
+    )
+
+    for row in preprocessed_items_df.itertuples():
+        yield pa.RecordBatch.from_arrays(
+            [
+                pa.array([row.vector], pa.list_(pa.float32(), emb_size)),
+                pa.array([str(row.item_id)], pa.utf8()),
+                pa.array([str(row.item_name)], pa.utf8()),
+                pa.array([str(row.item_description)], pa.utf8()),
+                pa.array([str(row.search_text)], pa.utf8()),
+                pa.array([str(row.category)], pa.utf8()),
+                pa.array([str(row.subcategory_id)], pa.utf8()),
+            ],
+            SEMANTIC_ITEM_COLUMNS,
+        )
+
+
+def _create_semantic_items_table(
+    items_df: pd.DataFrame,
+    emb_size: int,
+    uri: str,
+    vector_search_index_metric: str,
+) -> None:
+    """Create the LanceDB `items` table for the semantic retrieval flavor.
+
+    Builds the table in batches, then creates the three index types the serving
+    app relies on:
+
+    - a vector (IVF_PQ) index on ``vector`` for similar-item search,
+    - a full-text-search (FTS) index on ``search_text`` for keyword search,
+    - scalar (BITMAP) indexes on ``category`` / ``subcategory_id`` for filtering.
+
+    Index sizing follows the same heuristics as the ``semantic_search_lancedb``
+    job: ``num_partitions`` scales with ``sqrt(num_rows)`` (capped at 256) and
+    ``num_sub_vectors`` divides the embedding dimension.
+
+    Args:
+        items_df (pd.DataFrame): Items with vectors + metadata.
+        emb_size (int): Dimensionality of the embedding vectors.
+        uri (str): LanceDB database URI/path.
+        vector_search_index_metric (str): Metric for the vector index (``cosine``).
+    """
+    if len(items_df) == 0:
+        raise ValueError("Cannot build a semantic items table from an empty dataframe.")
+
+    num_batches = ceil(len(items_df) / LANCE_DB_BATCH_SIZE)
+    db = lancedb.connect(uri)
+
+    table: lancedb.table.Table | None = None
+    for i in range(num_batches):
+        logger.info(
+            f"Processing batch {i + 1} // {num_batches} of batch_size {LANCE_DB_BATCH_SIZE}"
+        )
+        start_idx = i * LANCE_DB_BATCH_SIZE
+        end_idx = min((i + 1) * LANCE_DB_BATCH_SIZE, len(items_df))
+        batch_df = items_df.iloc[start_idx:end_idx, :]
+
+        data_batch = pa.Table.from_batches(
+            _get_semantic_table_batches(batch_df, emb_size)
+        )
+
+        if table is None:
+            # mode="overwrite" drops any pre-existing `items` table and recreates it.
+            table = db.create_table("items", data=data_batch, mode="overwrite")
+        else:
+            table.add(data_batch)
+
+    assert table is not None  # guaranteed: items_df is non-empty
+    num_rows = table.count_rows()
+    num_partitions = min(256, max(2, int(num_rows**0.5)))
+    num_sub_vectors = max(1, emb_size // 16)
+
+    logger.info(
+        f"Creating vector index ('{vector_search_index_metric}', {num_partitions} "
+        f"partitions, {num_sub_vectors} sub-vectors) on {num_rows} rows..."
+    )
+    table.create_index(
+        metric=vector_search_index_metric,
+        num_partitions=num_partitions,
+        num_sub_vectors=num_sub_vectors,
+        vector_column_name="vector",
+    )
+
+    logger.info("Creating FTS index on 'search_text'...")
+    table.create_fts_index("search_text", replace=True)
+
+    logger.info(
+        "Creating scalar indexes on 'item_id', 'category' and 'subcategory_id'..."
+    )
+    # BTREE on item_id so the query-item vector lookup (semantic_search) is a fast
+    # indexed point-lookup instead of a full scan.
+    table.create_scalar_index("item_id", index_type="BTREE")
+    table.create_scalar_index("category", index_type="BITMAP")
+    table.create_scalar_index("subcategory_id", index_type="BITMAP")
+    logger.info("Semantic items table and indexes created.")
+
+
+def create_lancedb_from_semantic_embeddings(
+    items_with_embeddings_df: pd.DataFrame,
+    vector_search_metric: str,
+) -> None:
+    """Create the LanceDB table for the semantic retrieval flavor.
+
+    Unlike the two-tower / graph flavors, no ``item.docs`` store is written: at
+    768 dimensions a JSON id→vector dump would be prohibitively large, so the
+    serving ``SemanticClient`` looks the query item's vector up directly from the
+    LanceDB table instead.
+
+    Args:
+        items_with_embeddings_df (pd.DataFrame): Items with a ``vector`` column
+            and the ``item_id`` / ``item_name`` / ``item_description`` /
+            ``search_text`` / ``category`` / ``subcategory_id`` metadata columns.
+        vector_search_metric (str): Metric for the vector index (``cosine``).
+    """
+    _create_semantic_items_table(
+        items_df=items_with_embeddings_df,
         emb_size=len(items_with_embeddings_df.iloc[0].vector),
         uri=f"{OUTPUT_DATA_PATH}/vector",
         vector_search_index_metric=vector_search_metric,

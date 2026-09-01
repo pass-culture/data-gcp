@@ -54,6 +54,63 @@ Both columns store the same Two Tower item embedding. The distinction is:
 
 > **⚠️ Warning about lancedb distances**: [LanceDB Doc](https://lancedb.github.io/lancedb/search/): If a vector index exists, the distance metric will always be the one you specified when creating the index — the metric parameter in the search call is ignored.
 
+## Semantic retrieval flavor (`semantic`)
+
+This codebase serves several **flavors** (each built into its own container and
+deployed to its own Vertex AI endpoint): `two_tower` recommendation, `metadata_graph`
+retrieval, and **`semantic`**. The semantic flavor serves the item semantic
+embeddings produced by the `item_embedding` microservice (`google/embeddinggemma-300m`).
+
+It is configured by `metadata/model_type.json`:
+
+```json
+{ "type": "semantic", "vector_search_metric": "cosine" }
+```
+
+which loads a `SemanticClient`. **No embedding model is bundled** in the container.
+
+### `items` table schema (semantic)
+
+| Column | Type | Index |
+|--------|------|-------|
+| `vector` | `float32[768]` | Vector (IVF_PQ, **cosine**) — used for `semantic_search` |
+| `item_id` | `string` | Scalar (BTREE) — output id + fast query-vector lookup |
+| `item_name`, `item_description` | `string` | Returned metadata |
+| `search_text` (`item_name` + `item_description`) | `string` | **FTS** — used for `text_search` |
+| `category`, `subcategory_id` | `string` | Scalar (BITMAP) — `params` filtering |
+
+No `item.docs` / `user.docs` are baked: the query item's vector is read straight
+from the table (a 768-dim id→vector dump would be far too large to bake).
+
+### Search modes
+
+**`semantic_search`** ⭐ — item-to-item vector search. Looks the input item's vector up
+in the table and returns nearest neighbors (cosine). Input items are excluded. No
+`tops` fallback (the semantic table has no booking columns).
+
+```sh
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-123"], "size": 10}]}'
+```
+
+**`text_search`** — keyword full-text search over `search_text`.
+
+```sh
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "text_search", "text": "roman policier", "size": 10}]}'
+```
+
+Both modes accept `params` (filtering on `category` / `subcategory_id`) and `debug`
+(returns the metadata columns plus `_distance` / `_score`). Output is `item_id` + metadata.
+
+### Build & deploy
+
+- Build the DB: `python cli/create_vector_database.py semantic-database --item-embedding-gs-path <…> --item-metadata-gs-path <…>`
+  from BigQuery exports of `item_embedding_refactor` + `item_metadata`.
+- The `build_and_push_semantic_retrieval_api` Airflow DAG builds & pushes the container
+  (MLFlow experiment `semantic_item_retrieval_v1.0_<env>`); `algo_default_deployment`
+  deploys it to the `semantic_item_retrieval_<env>` endpoint.
+
 ## Requirements
 
 - **Python 3.11**

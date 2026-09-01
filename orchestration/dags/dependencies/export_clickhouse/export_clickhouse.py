@@ -69,7 +69,9 @@ CLICKHOUSE_LOADING_CONFIGS = [
         model_name="native_event", mode="incremental", partition_key="partition_date"
     ),
     TableConfig(
-        model_name="venue_offer_statistic", mode="overwrite", partition_key=None
+        model_name="venue_offer_statistic",
+        mode="overwrite",
+        partition_key="update_date",
     ),
 ]
 

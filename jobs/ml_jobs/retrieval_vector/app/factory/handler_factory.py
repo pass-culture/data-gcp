@@ -1,6 +1,7 @@
 from app.factory.handler import PredictionHandler
 from app.factory.recommendation import RecommendationHandler
 from app.factory.similar_offer import SimilarOfferHandler
+from app.factory.text_search import TextSearchHandler
 from app.factory.tops import SearchByTopsHandler
 from app.retrieval.constants import EmbeddingModelTypes
 
@@ -28,6 +29,19 @@ class PredictionHandlerFactory:
 
             # TODO: Test if we want to keep fallback for regular similar offer handler
             return SimilarOfferHandler(fallback_client=SearchByTopsHandler())
+
+        elif request_type == "semantic_search":
+            # Semantic (vector) search: nearest items to the query item's semantic
+            # embedding. No `tops` fallback: the semantic table has no booking/trend
+            # columns to fall back on.
+            return SimilarOfferHandler(fallback_client=None)
+
+        elif request_type == "text_search":
+            if embedding_model_type != EmbeddingModelTypes.SEMANTIC:
+                raise ValueError(
+                    f"Request type '{request_type}' is only supported for {EmbeddingModelTypes.SEMANTIC} models. Currently using '{embedding_model_type}' model."
+                )
+            return TextSearchHandler()
 
         elif request_type in ("filter", "tops"):
             return SearchByTopsHandler()

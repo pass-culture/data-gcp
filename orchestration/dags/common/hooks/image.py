@@ -9,17 +9,6 @@ set -euo pipefail
 
 echo 'CC=gcc' | sudo tee -a /etc/environment
 
-# The SSH login user (airflow) is created by the guest agent, which adds it to
-# the groups below; `docker` lets it reach the docker socket without sudo.
-# Create the group first so it exists before the user is provisioned.
-sudo groupadd -f docker
-sudo tee /etc/default/instance_configs.cfg > /dev/null <<'EOF'
-[Accounts]
-groups = adm,dip,docker,lxd,plugdev,video
-EOF
-
-sudo systemctl restart google-guest-agent || true
-
 # Install Docker Engine from Docker's official apt repo (docker.io is unofficial).
 # https://docs.docker.com/engine/install/ubuntu/
 sudo apt-get update -qq
@@ -42,6 +31,12 @@ EOF
 sudo apt-get update -qq
 sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 sudo systemctl enable --now docker.service containerd.service
+
+# Add the SSH login user to the `docker` group so it can reach the docker socket
+# without sudo. This must happen here, after the docker install
+if id -u airflow >/dev/null 2>&1; then
+  sudo usermod -aG docker airflow
+fi
 
 {% if enable_monitoring %}
 {% include 'ops_agent_basic' %}

@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: mrt_collective__additional_fee
+    description: "{{ doc('description__mrt_collective__additional_fee') }}"
+    columns:
+      - name: collective_additional_fee_id
+        description: "{{ doc('column__collective_additional_fee_id') }}"
+      - name: collective_stock_id
+        description: "{{ doc('column__collective_stock_id') }}"
+      - name: collective_additional_fee_type
+        description: "{{ doc('column__collective_additional_fee_type') }}"
+      - name: collective_additional_fee_label
+        description: "{{ doc('column__collective_additional_fee_label') }}"
+      - name: collective_additional_fee_amount
+        description: "{{ doc('column__collective_additional_fee_amount') }}"

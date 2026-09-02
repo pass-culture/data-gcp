@@ -9,6 +9,8 @@ set -euo pipefail
 
 echo 'CC=gcc' | sudo tee -a /etc/environment
 
+sudo systemctl restart google-guest-agent || true
+
 # Install Docker Engine from Docker's official apt repo (docker.io is unofficial).
 # https://docs.docker.com/engine/install/ubuntu/
 sudo apt-get update -qq

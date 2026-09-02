@@ -237,3 +237,7 @@ def semantic_database(
     )
     save_model_type(model_type=SEMANTIC_MODEL_TYPE, output_dir=OUTPUT_DATA_PATH)
     logger.info("Semantic lanceDB table built and model type saved.")
+
+
+if __name__ == "__main__":
+    app()

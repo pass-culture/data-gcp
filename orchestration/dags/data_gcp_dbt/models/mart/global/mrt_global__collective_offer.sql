@@ -52,6 +52,8 @@ select
     collective_stock_price,
     collective_stock_price_detail,
     collective_stock_number_of_tickets,
+    collective_stock_number_of_teachers,
+    collective_stock_service_price,
     offerer_address_id
 from {{ ref("int_global__collective_offer") }}
 where collective_offer_validation = 'APPROVED'

@@ -125,3 +125,7 @@ models:
         description: "{{ doc('column__offerer_address_id') }}"
       - name: collective_stock_price_detail
         description: "{{ doc('column__collective_stock_price_detail') }}"
+      - name: collective_stock_number_of_teachers
+        description: "{{ doc('column__collective_stock_number_of_teachers') }}"
+      - name: collective_stock_service_price
+        description: "{{ doc('column__collective_stock_service_price') }}"

@@ -23,8 +23,8 @@ SCHEDULE_DICT = {
         "stg": "0 8 * * 3",  # every Wednesday at 8:00 AM
     },
     "build_and_push_semantic_retrieval_api": {
-        "prod": "0 5 * * 6",  # every Saturday at 5:00 AM
-        "stg": "0 5 * * 5",  # every Friday at 5:00 AM
+        "prod": "0 5 * * 4",  # every Thursday at 5:00 AM
+        "stg": "0 5 * * 4",  # every Thursday at 5:00 AM
         "dev": "0 5 * * 4",  # every Thursday at 5:00 AM
     },
     "bigquery_archive_partition": "0 7 * * *",

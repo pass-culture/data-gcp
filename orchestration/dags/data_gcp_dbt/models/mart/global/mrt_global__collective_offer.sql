@@ -54,6 +54,9 @@ select
     collective_stock_number_of_tickets,
     collective_stock_number_of_teachers,
     collective_stock_service_price,
-    offerer_address_id
+    offerer_address_id,
+    total_additional_fee_amount,
+    total_additional_fee_types,
+    collective_stock_has_additional_fee
 from {{ ref("int_global__collective_offer") }}
 where collective_offer_validation = 'APPROVED'

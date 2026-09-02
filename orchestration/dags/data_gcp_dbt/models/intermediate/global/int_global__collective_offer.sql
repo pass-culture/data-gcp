@@ -7,6 +7,19 @@
 {% set target_name = var("ENV_SHORT_NAME") %}
 {% set target_schema = generate_schema_name("analytics_" ~ target_name) %}
 
+with
+    additional_fees as (
+        select
+            collective_stock_id,
+            sum(collective_additional_fee_amount) as total_additional_fee_amount,
+            count(
+                distinct collective_additional_fee_type
+            ) as total_additional_fee_types,
+            true as collective_stock_has_additional_fee
+        from {{ ref("int_applicative__collective_additional_fee") }}
+        group by collective_stock_id
+    )
+
 select
     co.collective_offer_id,
     case  -- noqa: PRS
@@ -97,7 +110,12 @@ select
     cs.collective_stock_service_price,
     cs.collective_stock_id,
     co.collective_offer_location_type,
-    co.offerer_address_id
+    co.offerer_address_id,
+    coalesce(af.total_additional_fee_amount, 0) as total_additional_fee_amount,
+    coalesce(af.total_additional_fee_types, 0) as total_additional_fee_types,
+    coalesce(
+        af.collective_stock_has_additional_fee, false
+    ) as collective_stock_has_additional_fee
 from {{ ref("int_applicative__collective_offer") }} as co
 inner join {{ ref("int_global__venue") }} as v on v.venue_id = co.venue_id
 left join
@@ -109,3 +127,4 @@ left join
 left join
     {{ ref("int_applicative__collective_stock") }} as cs
     on cs.collective_offer_id = co.collective_offer_id
+left join additional_fees as af on af.collective_stock_id = cs.collective_stock_id

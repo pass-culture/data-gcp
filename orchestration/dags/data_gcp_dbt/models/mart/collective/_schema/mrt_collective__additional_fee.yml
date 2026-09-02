@@ -6,11 +6,16 @@ models:
     columns:
       - name: collective_additional_fee_id
         description: "{{ doc('column__collective_additional_fee_id') }}"
+        data_type: STRING
       - name: collective_stock_id
         description: "{{ doc('column__collective_stock_id') }}"
+        data_type: STRING
       - name: collective_additional_fee_type
         description: "{{ doc('column__collective_additional_fee_type') }}"
+        data_type: STRING
       - name: collective_additional_fee_label
         description: "{{ doc('column__collective_additional_fee_label') }}"
+        data_type: STRING
       - name: collective_additional_fee_amount
         description: "{{ doc('column__collective_additional_fee_amount') }}"
+        data_type: FLOAT64

@@ -630,29 +630,31 @@ class InstallDependenciesOperator(SSHGCEOperator):
         # Define the directory where the repo will be cloned
         REPO_DIR = "data-gcp"
 
-        # Git clone command
+        # Fail loudly and concisely: `set -eo pipefail` aborts on the first
+        # failing command, and a single ERR trap prints one FATAL line naming
+        # the exact command and exit code.
         clone_command = f"""
-            cd ~/ &&
-            DIR={REPO_DIR} &&
+            cd ~/
+            DIR={REPO_DIR}
             if [ -d "$DIR" ]; then
-                echo "Directory exists. Fetching updates..." &&
-                cd $DIR &&
-                git fetch --all &&
-                git reset --hard origin/{branch};
+                echo "Directory exists. Fetching updates..."
+                cd "$DIR"
+                git fetch --all
+                git reset --hard origin/{branch}
             else
-                echo "Cloning repository..." &&
-                git clone {self.REPO} $DIR &&
-                cd $DIR &&
-                git checkout {branch};
-            fi &&
+                echo "Cloning repository..."
+                git clone {self.REPO} "$DIR"
+                cd "$DIR"
+                git checkout {branch}
+            fi
             cd ~/
         """
 
         install_command = f"""
-            curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh &&
-            cd {base_dir} &&
-            uv venv --python {self.python_version} &&
-            source .venv/bin/activate &&
+            curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh
+            cd {base_dir}
+            uv venv --python {self.python_version}
+            source .venv/bin/activate
             if [ -f "{requirement_file}" ]; then
                 uv pip sync {requirement_file}
             else
@@ -664,9 +666,9 @@ class InstallDependenciesOperator(SSHGCEOperator):
             "echo 'conda config --set auto_activate_base false' >> ~/.bashrc"
         )
 
-        # Combine the git clone and installation commands
         return f"""
-            set -e
+            set -eo pipefail
+            trap 'echo "FATAL: install step failed (exit $?): $BASH_COMMAND" >&2' ERR
             {clone_command}
             {install_command}
             {deactivate_conda}

@@ -16,10 +16,12 @@ from config import (
 )
 from embedding import (
     LongPromptTracker,
+    _batch_encode,
     _build_prompts,
     _category_filter_mask,
     _find_long_prompts,
     _is_missing,
+    _PendingVectorEmbed,
     embed_dataframe,
 )
 
@@ -803,6 +805,178 @@ class TestEmbedDataframeCategoryScoped:
             "movies_content",
             "semantic_content",
         ]
+
+
+# ---------------------------------------------------------------------------
+# Encoder batching: vectors sharing (encoder_name, prompt_name) are merged
+# into a single encode() call to avoid GPU underutilization when a scoped
+# vector's subset is small relative to a sibling sharing its encoder.
+# ---------------------------------------------------------------------------
+class TestEmbedDataframeEncoderBatching:
+    def test_scoped_vectors_sharing_encoder_and_prompt_name_merge_into_one_call(self):
+        # movies_content/books_content-shaped setup: two scoped vectors on
+        # the same encoder and prompt_name must be encoded in a single call.
+        def encode_from_prompts(prompts, **kwargs):
+            return np.array([[float(len(p)), float(ord(p[-1]))] for p in prompts])
+
+        mock_encoder = MagicMock()
+        mock_encoder.device = "cpu"
+        mock_encoder.encode.side_effect = encode_from_prompts
+
+        df = pd.DataFrame(
+            {
+                "item_id": ["a", "b", "c", "d"],
+                "content_hash": ["h1", "h2", "h3", "h4"],
+                "category_id": ["CINEMA", "LIVRE", "CINEMA", "LIVRE"],
+                "title": ["Movie A", "Book B", "Movie C", "Book D"],
+            }
+        )
+        movie_vector = Vector(
+            name="movies_content",
+            features=["title"],
+            encoder_name="shared/model",
+            prompt_name="document",
+            category_filter=_simple_filter("category_id", values=["CINEMA"]),
+        )
+        book_vector = Vector(
+            name="books_content",
+            features=["title"],
+            encoder_name="shared/model",
+            prompt_name="document",
+            category_filter=_simple_filter("category_id", values=["LIVRE"]),
+        )
+        encoders = {"shared/model": mock_encoder}
+
+        result = embed_dataframe(df, [movie_vector, book_vector], encoders)
+
+        assert mock_encoder.encode.call_count == 1
+        (called_prompts,), _ = mock_encoder.encode.call_args
+        assert sorted(called_prompts) == sorted(
+            ["title : Movie A", "title : Movie C", "title : Book B", "title : Book D"]
+        )
+
+        # Each item keeps the embedding built from its own prompt, proving
+        # the merged result was split back correctly, not just that fewer
+        # calls happened.
+        by_id = result.set_index("item_id")
+        for item_id, prompt, column in [
+            ("a", "title : Movie A", "movies_content"),
+            ("c", "title : Movie C", "movies_content"),
+            ("b", "title : Book B", "books_content"),
+            ("d", "title : Book D", "books_content"),
+        ]:
+            expected = [float(len(prompt)), float(ord(prompt[-1]))]
+            assert by_id.loc[item_id, column] == expected
+
+    def test_shared_encoder_different_prompt_name_does_not_merge(self):
+        # Merging prompts across different prompt_names would silently
+        # corrupt one vector's prefix, so they must stay separate calls.
+        mock_encoder = MagicMock()
+        mock_encoder.device = "cpu"
+        mock_encoder.encode.side_effect = lambda prompts, **kwargs: np.array(
+            [[float(len(p)), 0.0] for p in prompts]
+        )
+
+        df = pd.DataFrame(
+            {
+                "item_id": ["a", "b"],
+                "content_hash": ["h1", "h2"],
+                "category_id": ["CINEMA", "LIVRE"],
+                "title": ["Movie A", "Book B"],
+            }
+        )
+        movie_vector = Vector(
+            name="movies_content",
+            features=["title"],
+            encoder_name="shared/model",
+            prompt_name="document",
+            category_filter=_simple_filter("category_id", values=["CINEMA"]),
+        )
+        book_vector = Vector(
+            name="books_content",
+            features=["title"],
+            encoder_name="shared/model",
+            prompt_name="query",
+            category_filter=_simple_filter("category_id", values=["LIVRE"]),
+        )
+        encoders = {"shared/model": mock_encoder}
+
+        embed_dataframe(df, [movie_vector, book_vector], encoders)
+
+        assert mock_encoder.encode.call_count == 2
+        seen_prompt_names = {
+            call.kwargs["prompt_name"] for call in mock_encoder.encode.call_args_list
+        }
+        assert seen_prompt_names == {"document", "query"}
+        for call in mock_encoder.encode.call_args_list:
+            (prompts,) = call.args
+            if call.kwargs["prompt_name"] == "document":
+                assert prompts == ["title : Movie A"]
+            else:
+                assert prompts == ["title : Book B"]
+
+    def test_global_and_scoped_vector_sharing_encoder_merge_into_one_call(self):
+        mock_encoder = MagicMock()
+        mock_encoder.device = "cpu"
+        mock_encoder.encode.side_effect = lambda prompts, **kwargs: np.array(
+            [[float(len(p)), 0.0] for p in prompts]
+        )
+
+        df = pd.DataFrame(
+            {
+                "item_id": ["a", "b"],
+                "content_hash": ["h1", "h2"],
+                "category_id": ["CINEMA", "LIVRE"],
+                "name": ["Alice", "Bob"],
+                "title": ["Movie A", "Book B"],
+            }
+        )
+        global_vector = Vector(
+            name="semantic_content",
+            features=["name"],
+            encoder_name="shared/model",
+            prompt_name="document",
+        )
+        movie_vector = Vector(
+            name="movies_content",
+            features=["title"],
+            encoder_name="shared/model",
+            prompt_name="document",
+            category_filter=_simple_filter("category_id", values=["CINEMA"]),
+        )
+        encoders = {"shared/model": mock_encoder}
+
+        result = embed_dataframe(df, [global_vector, movie_vector], encoders)
+
+        assert mock_encoder.encode.call_count == 1
+        (called_prompts,), _ = mock_encoder.encode.call_args
+        assert sorted(called_prompts) == sorted(
+            ["name : Alice", "name : Bob", "title : Movie A"]
+        )
+
+        by_id = result.set_index("item_id")
+        assert by_id["semantic_content"].notna().all()
+        assert isinstance(by_id.loc["a", "movies_content"], list)
+        assert pd.isna(by_id.loc["b", "movies_content"])
+
+    def test_singleton_group_reuses_prompts_list_without_copying(self):
+        # Unfiltered/no-sharing configs (e.g. default.yaml's single vector)
+        # must do zero extra per-item work: the same prompts list built
+        # during preparation is passed straight to encode(), not rebuilt.
+        mock_encoder = MagicMock()
+        mock_encoder.device = "cpu"
+        mock_encoder.encode.return_value = np.array([[1.0, 2.0]])
+
+        vector = Vector(
+            name="semantic_content", features=["name"], encoder_name="model"
+        )
+        prompts = ["name : Alice"]
+        entry = _PendingVectorEmbed(vector=vector, prompts=prompts)
+
+        _batch_encode([entry], {"model": mock_encoder}, pools={})
+
+        (called_prompts,), _ = mock_encoder.encode.call_args
+        assert called_prompts is prompts
 
 
 # ---------------------------------------------------------------------------

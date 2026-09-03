@@ -277,31 +277,39 @@ def _find_long_prompts(
 
 
 def embed_vector(
-    vector: Vector,
+    label: str,
     encoder: SentenceTransformer,
     prompts: list[str],
+    prompt_name: Optional[str] = None,
     pool: object = None,
 ) -> np.ndarray:
-    """Generate embeddings for a single vector configuration.
+    """Generate embeddings for a batch of prompts.
 
-    Uses multi-GPU encoding when a pre-started ``pool`` is provided, otherwise
-    falls back to single-device encoding.
+    The batch may be a single vector's prompts, or several vectors' prompts
+    merged together by ``_batch_encode`` (they share an encoder and
+    prompt_name, so one encode() call is equivalent to -- but far cheaper
+    than -- issuing one per vector). Uses multi-GPU encoding when a
+    pre-started ``pool`` is provided, otherwise falls back to single-device
+    encoding.
 
     Args:
-        vector: Vector configuration
+        label: Human-readable label for log lines (e.g. a vector name, or
+            several joined together when prompts were merged).
         encoder: Pre-loaded SentenceTransformer encoder
         prompts: Pre-built prompts
+        prompt_name: The encoder's named prompt to prepend (shared by every
+            vector contributing to this batch; see ``_batch_encode``).
         pool: Pre-started multi-process pool, or ``None`` for single-device
 
     Returns:
         Numpy array of shape (n_items, embedding_dim)
     """
-    logger.info(f"Processing vector '{vector.name}' (batch_size={BATCH_SIZE})")
+    logger.info(f"Processing '{label}' (batch_size={BATCH_SIZE})")
     encode_kwargs = {
         "convert_to_numpy": True,
         "show_progress_bar": False,
         "batch_size": BATCH_SIZE,
-        "prompt_name": vector.prompt_name,
+        "prompt_name": prompt_name,
         "normalize_embeddings": True,
     }
 
@@ -316,28 +324,38 @@ def embed_vector(
     return embeddings
 
 
-def _embed_vector_group(
+@dataclass
+class _PendingVectorEmbed:
+    """One vector's prompts, prepared and ready to be merged into a batched
+    ``encode()`` call by ``_batch_encode``.
+    """
+
+    vector: Vector
+    prompts: list[str]
+
+
+def _build_vector_prompts(
     df: pd.DataFrame,
     vectors: list[Vector],
     encoders: dict[str, SentenceTransformer],
-    pools: dict[str, object],
     base_columns: list[str],
     tracker: LongPromptTracker,
-) -> pd.DataFrame:
-    """Compute embeddings for a group of vectors sharing the same item set.
+) -> tuple[pd.DataFrame, list[_PendingVectorEmbed]]:
+    """Builds prompts and applies row-filtering for a group of vectors
+    sharing the same item set, stopping short of calling the encoder so the
+    actual GPU dispatch can be batched across groups by ``_batch_encode``.
 
     Items with no metadata to embed for one or more of ``vectors`` (all-null
     features, i.e. an empty prompt) are skipped entirely and logged, so every
-    vector column in the returned DataFrame is fully populated with real
-    embeddings for the rows it contains (non-null vectors). With an empty
-    ``vectors`` list, every row of ``df`` passes through unchanged (the
-    AND-check over zero columns is trivially true).
+    vector's prompts are aligned with the identity frame's surviving rows.
+    With an empty ``vectors`` list, every row of ``df`` passes through
+    unchanged (the AND-check over zero columns is trivially true).
 
     Args:
         df: DataFrame with item metadata for this group's item set.
         vectors: Vector configurations sharing this item set.
-        encoders: Pre-loaded encoders keyed by encoder name.
-        pools: Pre-started multi-process pools keyed by encoder name.
+        encoders: Pre-loaded encoders keyed by encoder name (used only to
+            run the token-length check, not to encode).
         base_columns: Identifier columns to carry through (must include
             "item_id"; "content_hash" is only needed on the caller's global
             call, since the final identity frame owns it otherwise).
@@ -345,8 +363,11 @@ def _embed_vector_group(
             limit (see ``_find_long_prompts``).
 
     Returns:
-        DataFrame with ``base_columns`` and one column per vector in
-        ``vectors``.
+        Tuple of (identity_df, pending):
+        - identity_df: ``base_columns`` for the surviving rows only.
+        - pending: one ``_PendingVectorEmbed`` per vector in ``vectors``,
+          whose ``prompts`` are row-aligned with identity_df (empty when no
+          row survives).
     """
     prompts_df = df[base_columns].reset_index(drop=True)
     for vector in vectors:
@@ -366,27 +387,93 @@ def _embed_vector_group(
 
     prompts_df = prompts_df[complete].reset_index(drop=True)
 
-    df_embeddings = prompts_df[base_columns].copy()
+    identity_df = prompts_df[base_columns].copy()
+    pending = []
     for vector in vectors:
+        item_ids = prompts_df["item_id"].tolist()
         prompts = prompts_df[vector.name].tolist()
-        if not prompts:
-            df_embeddings[vector.name] = pd.Series(dtype=object)
+        if prompts:
+            _find_long_prompts(
+                vector, encoders[vector.encoder_name], item_ids, prompts, tracker
+            )
+        pending.append(_PendingVectorEmbed(vector=vector, prompts=prompts))
+
+    return identity_df, pending
+
+
+def _batch_encode(
+    pending: list[_PendingVectorEmbed],
+    encoders: dict[str, SentenceTransformer],
+    pools: dict[str, object],
+) -> dict[str, np.ndarray]:
+    """Groups ``pending`` entries by ``(encoder_name, prompt_name)`` and
+    issues one ``encoder.encode()`` call per group, merging every group
+    member's prompts into a single call.
+
+    This is the fix for GPU underutilization when a category-scoped vector's
+    subset is small relative to a sibling vector sharing the same encoder
+    (e.g. ``movies_content`` vs. ``books_content`` in
+    configs/category_embeddings.yaml): instead of one near-idle multi-GPU
+    dispatch for a couple hundred prompts and a separate one for tens of
+    thousands, both ride in a single dispatch. Grouping is keyed on
+    ``prompt_name`` too (not just ``encoder_name``) because it selects a
+    fixed prefix string that ``encode()`` applies to every prompt in the
+    call -- merging vectors with different prompt_names would silently
+    corrupt one of them.
+
+    Entries with no prompts (e.g. a scoped vector whose category is absent
+    from this chunk) contribute nothing and are skipped before grouping, so
+    they never trigger an encode() call, matching the previous per-vector
+    short-circuit. A group with a single member reuses its prompt list
+    as-is (no concatenation copy), so a config with no shared
+    ``(encoder_name, prompt_name)`` pairs -- e.g. default.yaml's single,
+    unfiltered vector -- does zero additional per-item work versus before.
+
+    Args:
+        pending: Vectors' prepared prompts to encode, flattened across every
+            vector group in the current chunk (global vectors plus every
+            scoped vector), from one or more prior calls to
+            ``_build_vector_prompts``.
+        encoders: Pre-loaded encoders keyed by encoder name.
+        pools: Pre-started multi-process pools keyed by encoder name.
+
+    Returns:
+        Mapping of vector.name -> embeddings array, row-aligned with that
+        vector's ``prompts`` in ``pending``. A vector with no prompts is
+        absent from the returned dict.
+    """
+    groups: dict[tuple[str, Optional[str]], list[_PendingVectorEmbed]] = {}
+    for entry in pending:
+        if not entry.prompts:
             continue
+        key = (entry.vector.encoder_name, entry.vector.prompt_name)
+        groups.setdefault(key, []).append(entry)
 
-        encoder = encoders[vector.encoder_name]
-        _find_long_prompts(
-            vector, encoder, prompts_df["item_id"].tolist(), prompts, tracker
+    results: dict[str, np.ndarray] = {}
+    for (encoder_name, prompt_name), members in groups.items():
+        encoder = encoders[encoder_name]
+        merged_prompts = (
+            members[0].prompts
+            if len(members) == 1
+            else [p for member in members for p in member.prompts]
         )
+        label = "+".join(member.vector.name for member in members)
 
-        vector_embeddings = embed_vector(
-            vector,
+        embeddings = embed_vector(
+            label,
             encoder,
-            prompts=prompts,
-            pool=pools.get(vector.encoder_name),
+            prompts=merged_prompts,
+            prompt_name=prompt_name,
+            pool=pools.get(encoder_name),
         )
-        df_embeddings[vector.name] = vector_embeddings.tolist()
 
-    return df_embeddings
+        offset = 0
+        for member in members:
+            n = len(member.prompts)
+            results[member.vector.name] = embeddings[offset : offset + n]
+            offset += n
+
+    return results
 
 
 def embed_dataframe(
@@ -455,24 +542,48 @@ def embed_dataframe(
     # correct even for items only reached by a scoped vector.
     result = df[["item_id", "content_hash"]].copy()
 
-    global_result = _embed_vector_group(
+    global_identity, global_pending = _build_vector_prompts(
         df,
         global_vectors,
         encoders,
-        pools,
         base_columns=["item_id", "content_hash"],
         tracker=tracker,
     )
-    result = result.merge(
-        global_result.drop(columns=["content_hash"]), on="item_id", how="left"
-    )
 
+    scoped_prepared = []
     for vector in scoped_vectors:
         subset = df[_category_filter_mask(df, vector.category_filter)]
-        scoped_result = _embed_vector_group(
-            subset, [vector], encoders, pools, base_columns=["item_id"], tracker=tracker
+        scoped_identity, scoped_pending = _build_vector_prompts(
+            subset, [vector], encoders, base_columns=["item_id"], tracker=tracker
         )
-        result = result.merge(scoped_result, on="item_id", how="left")
+        scoped_prepared.append((scoped_identity, scoped_pending))
+
+    # Batching across every vector prepared above -- global and scoped alike
+    # -- is what lets a small scoped vector's prompts (e.g. movies_content)
+    # ride inside the same encode() dispatch as a sibling sharing its
+    # (encoder_name, prompt_name) (e.g. books_content), instead of paying
+    # multi-GPU dispatch overhead on its own for a near-empty batch.
+    all_pending = global_pending + [
+        entry for _, pending in scoped_prepared for entry in pending
+    ]
+    embeddings_by_vector_name = _batch_encode(all_pending, encoders, pools)
+
+    for vector in global_vectors:
+        embeddings = embeddings_by_vector_name.get(vector.name)
+        global_identity[vector.name] = (
+            embeddings.tolist() if embeddings is not None else pd.Series(dtype=object)
+        )
+    result = result.merge(
+        global_identity.drop(columns=["content_hash"]), on="item_id", how="left"
+    )
+
+    for scoped_identity, pending in scoped_prepared:
+        vector = pending[0].vector
+        embeddings = embeddings_by_vector_name.get(vector.name)
+        scoped_identity[vector.name] = (
+            embeddings.tolist() if embeddings is not None else pd.Series(dtype=object)
+        )
+        result = result.merge(scoped_identity, on="item_id", how="left")
 
     vector_names = [vector.name for vector in vectors]
     if vector_names:

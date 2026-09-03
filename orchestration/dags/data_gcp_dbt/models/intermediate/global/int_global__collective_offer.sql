@@ -44,6 +44,7 @@ select
     v.is_local_authority,
     v.venue_type_label,
     v.venue_is_permanent,
+    v.legal_unit_business_activity_code,
     co.collective_offer_creation_date,
     co.collective_offer_date_updated,
     co.collective_offer_format,

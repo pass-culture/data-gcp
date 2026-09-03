@@ -123,6 +123,7 @@ select
     ofr.is_synchro_adage,
     ofr.total_reimbursement_points,
     ofr.is_local_authority,
+    ofr.legal_unit_business_activity_code,
     v.venue_id as partner_id,
     ofr.offerer_is_epn,
     coalesce(

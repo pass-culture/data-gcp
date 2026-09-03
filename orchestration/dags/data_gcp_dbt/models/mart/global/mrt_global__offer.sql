@@ -97,7 +97,8 @@ select
     offer_advice_content,
     offer_has_mediation,
     cultural_outreach_status,
-    cultural_outreach_claimed_date
+    cultural_outreach_claimed_date,
+    legal_unit_business_activity_code
 from {{ ref("int_global__offer") }}
 where
     true

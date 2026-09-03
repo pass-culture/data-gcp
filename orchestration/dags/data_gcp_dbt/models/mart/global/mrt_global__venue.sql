@@ -105,7 +105,8 @@ select
     total_created_mediation_individual_offers,
     has_mediation_offer,
     venue_adage_inscription_date,
-    offerer_is_epn
+    offerer_is_epn,
+    legal_unit_business_activity_code
 from {{ ref("int_global__venue") }}
 where
     offerer_validation_status = 'VALIDATED'

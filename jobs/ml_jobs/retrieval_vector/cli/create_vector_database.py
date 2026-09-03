@@ -179,60 +179,22 @@ def graph_database(
 
 @app.command()
 def semantic_database(
-    item_embedding_gs_path: str = typer.Option(
+    item_data_gs_path: str = typer.Option(
         ...,
         help="Path (GCS or local) to the parquet dir with the item semantic "
-        "embeddings (BQ export of `item_embedding_refactor`: item_id + semantic_content).",
-    ),
-    item_metadata_gs_path: str = typer.Option(
-        ...,
-        help="Path (GCS or local) to the parquet dir with the item metadata "
-        "(BQ export of `ml_input__item_metadata`).",
+        "embeddings already joined with metadata (BQ export joining "
+        "`item_embedding_refactor` and `item_metadata`: item_id + semantic_content "
+        "+ offer_name + offer_description + offer_category_id + offer_subcategory_id).",
     ),
 ) -> None:
-    """Build the semantic retrieval LanceDB table from precomputed embeddings."""
-    # Load precomputed semantic embeddings (item_id + vector).
-    logger.info(f"Load semantic embeddings from {item_embedding_gs_path}...")
-    embeddings_df = load_embeddings_from_parquet(
-        item_embedding_gs_path,
-        column_renaming_mapping={"semantic_content": "vector"},
-    )
-    logger.info(f"Loaded {len(embeddings_df)} item embeddings.")
+    """Build the semantic retrieval LanceDB table from precomputed embeddings.
 
-    # Load textual + categorical metadata used for FTS and filtering.
-    logger.info(f"Load item metadata from {item_metadata_gs_path}...")
-    metadata_df = pd.read_parquet(
-        item_metadata_gs_path,
-        columns=[
-            "item_id",
-            "offer_name",
-            "offer_description",
-            "offer_category_id",
-            "offer_subcategory_id",
-        ],
-    ).rename(
-        columns={
-            "offer_name": "item_name",
-            "offer_description": "item_description",
-            "offer_category_id": "category",
-            "offer_subcategory_id": "subcategory_id",
-        }
-    )
-    logger.info(f"Loaded metadata for {len(metadata_df)} items.")
-
-    # Keep only items that have both an embedding and metadata.
-    items_df = embeddings_df.merge(
-        metadata_df, on="item_id", how="inner", validate="one_to_one"
-    )
-    items_df["search_text"] = (
-        items_df["item_name"].fillna("").astype(str)
-        + " "
-        + items_df["item_description"].fillna("").astype(str)
-    ).str.strip()
-    logger.info(f"Building semantic lanceDB table for {len(items_df)} items...")
-
+    The joined embeddings + metadata parquet is streamed straight from GCS into
+    LanceDB in batches, so the full ~5M-row table is never materialised in memory.
+    """
+    logger.info(f"Building semantic lanceDB table from {item_data_gs_path}...")
     create_lancedb_from_semantic_embeddings(
-        items_df,
+        item_data_gs_path=item_data_gs_path,
         vector_search_metric=SEMANTIC_MODEL_TYPE["vector_search_metric"],
     )
     save_model_type(model_type=SEMANTIC_MODEL_TYPE, output_dir=OUTPUT_DATA_PATH)

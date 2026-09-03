@@ -66,6 +66,9 @@ vectors:
 | `features` | Yes | List of input DataFrame columns to concatenate as prompt |
 | `encoder_name` | Yes | HuggingFace model name or path |
 | `prompt_name` | No | Prompt template name (model-dependent) |
+| `category_filter` | No — defaults preserve current behavior | Restricts the vector to a subset of items via `all_of` (AND'd conditions) and/or `any_of` (OR'd groups of AND'd conditions), each condition matching a `column` by `values` (exact match) or `prefix` (startswith). See [Category-scoped vectors](#category-scoped-vectors). |
+| `prompt_template` | No — defaults preserve current behavior | A `str.format`-style template rendered per item instead of the default `"label : value"` concatenation. See [Prompt templates & preprocessors](#prompt-templates--preprocessors). |
+| `preprocessors` | No — defaults preserve current behavior | Maps a feature name to a registered preprocessor function name (see `preprocessing.py`), applied before the prompt is built. |
 
 ## Input Format
 
@@ -91,7 +94,136 @@ offer_description : Le chamanisme est le monde de la sensibilité construite et 
 
 ### Sequence length and truncation
 
-A prompt longer than the model's `max_sequence_length` (2048 tokens for `embeddinggemma-300m`) is truncated by the model, dropping the **end** of the prompt first. Keep the longest feature (typically `offer_description`) **last** so truncation only trims that field and never the identifying ones.
+A prompt longer than the model's `max_sequence_length` (2048 tokens for `embeddinggemma-300m`) is truncated by the model, dropping the **end** of the prompt first, silently — the encoder does not raise or warn on its own. Keep the longest feature (typically `offer_description`) **last** so truncation only trims that field and never the identifying ones.
+
+To make this otherwise-invisible truncation visible, the job flags items whose prompt is likely to exceed the limit and reports them once at the end of the run:
+
+- A cheap character-length pre-filter (character count > 2x the model's token limit — a generous overestimate, since a token is rarely under ~2 characters) shortlists candidates without tokenizing every prompt, which would be too slow at catalogue scale.
+- Each candidate is then tokenized for real (batched, no truncation) to get an exact token count. Prompts confirmed over the limit are logged immediately, and the affected `item_id` is recorded per vector on a `LongPromptTracker` (`embedding.py`) shared across the whole run (every parquet file, every vector).
+- The flagged item is **not** dropped or excluded — it's still embedded (truncated by the encoder as usual); the tracker only adds visibility into which items were affected.
+- At the end of the job, `LongPromptTracker.log_summary()` logs, per vector, the count and full `item_id` list of every over-length prompt in the run — use this list to go inspect those items' descriptions.
+
+### Category-scoped vectors
+
+A vector can be restricted to a subset of items via `category_filter`, built from two composable layers, ANDed together:
+
+- **`all_of`** — a list of conditions that must *all* hold (AND), applied unconditionally.
+- **`any_of`** — a list of condition groups; an item matches if it satisfies *at least one* group (OR across groups), where each group's own conditions are combined with AND.
+
+Each condition matches on a free-form `column` (e.g. `category_id`, `subcategory_id`, `item_id`) by exactly one of:
+- `values` — kept if the column value is in this list.
+- `prefix` — kept if the column value starts with this string, e.g. the SQL equivalent `LEFT(item_id, LEN('product')) = 'product'`.
+
+Simple case — a single condition (movies only):
+
+```yaml
+vectors:
+  - name: "movies_content"
+    category_filter:
+      any_of:
+        - conditions:
+            - column: "category_id"
+              values: ["CINEMA"]
+    features: [offer_name, offer_description, offer_label_concat]
+    encoder_name: "google/embeddinggemma-300m"
+```
+
+Combined case — only `product-*` items that are either a movie, or a book restricted to specific subcategories:
+
+```yaml
+vectors:
+  - name: "products_content"
+    category_filter:
+      all_of:
+        - column: "item_id"
+          prefix: "product"
+      any_of:
+        - conditions:
+            - column: "category_id"
+              values: ["CINEMA"]
+        - conditions:
+            - column: "category_id"
+              values: ["LIVRE"]
+            - column: "subcategory_id"
+              values: ["LIVRE_PAPIER", "LIVRE_NUMERIQUE"]
+    features: [offer_name, offer_description]
+    encoder_name: "google/embeddinggemma-300m"
+```
+
+A condition's `values`/`prefix` are mutually exclusive (exactly one must be set), and a `CategoryFilter` needs at least one of `all_of`/`any_of` non-empty — both fail fast at config-parse time.
+
+See `configs/category_embeddings.yaml` for a full worked example (movies, books, and the combined `all_of`/`any_of` case).
+
+- Vectors **without** `category_filter` ("global" vectors) keep the original behavior exactly: an item must have non-null data for *every* global vector to be embedded at all — this is unchanged.
+- Vectors **with** `category_filter` ("scoped" vectors) are filtered to their matching items first and embedded independently of every other vector. An item outside a scoped vector's filter simply gets a missing value (`NaN`) in that vector's column instead of being excluded from the whole output.
+- An item appears in the output if it has a value for **at least one** configured vector (global or scoped). In a category-only config (no global vectors), items matching none of the configured filters are dropped entirely rather than kept with all-null columns.
+- Add a new category by copying a vector block and changing `name`, `category_filter`, `features`, and (if used) `prompt_template`/`preprocessors` — no code changes needed.
+
+### Prompt templates & preprocessors
+
+By default, features are concatenated as `"label : value"` pairs. A vector can instead render a natural-language `prompt_template` (Python `str.format` syntax) to give the encoder more context:
+
+```yaml
+prompt_template: >-
+  This is a movie titled "{offer_name}". Description: {offer_description}.
+  Genre: {offer_label_concat}.
+```
+
+- Every `{field}` in the template must be one of the vector's `features` — an unknown field fails fast at embedding time with a clear error.
+- A missing/null feature value renders as an empty string (not the literal text `"None"`).
+- An item with all templated features null still gets an empty prompt (dropped, same contract as the default path).
+
+`prompt_template` does **not** disable or replace `prompt_name`. `prompt_name` is a SentenceTransformers-level mechanism, independent of how the text is built: at encode time the library resolves it to a fixed prefix registered on the model (e.g. embeddinggemma's `"document"` prompt is `"title: none | text: "`) and prepends it to whatever text is passed in — the `prompt_template` output becomes that text. So with both set, the model actually sees `"title: none | text: " + <rendered prompt_template>`; nothing is deleted.
+
+`preprocessors` maps a feature name to a function registered in `preprocessing.py`, applied to that column before the prompt (template or default) is built:
+
+```yaml
+preprocessors:
+  offer_name: "normalize_whitespace"
+  offer_description: "clean_description"
+```
+
+An unknown preprocessor name fails fast when the config is loaded (`parse_vectors`), before any model is loaded.
+
+Registered preprocessors:
+
+| Name | Status | Description |
+|------|--------|--------------|
+| `normalize_whitespace` | ⚠️ **Dummy placeholder** — only collapses whitespace. Real title cleaning/normalization logic (accents, punctuation, casing, etc.) is to be detailed and added later. | Collapses all whitespace runs to a single space and strips ends. |
+| `clean_description` | Real cleaning logic | Strips `http(s)://` / `www.` URLs and known boilerplate phrases (`"Tous les détails du film sur AlloCiné:"`, `"Pour plus d informations, rendez-vous sur"`, `"Pour plus d'informations, rendez-vous sur"`), then applies `normalize_whitespace` — collapsing all remaining whitespace, including line breaks, to single spaces and trimming the ends. |
+| `format_movie_genres` | Real formatting logic | Reads the `"movies"` entry of the `extra_semantic_metadata` envelope (see below), e.g. `{"movies": {"genres": ["DRAMA", "ACTION"]}}`, and formats the genre list as `"DRAMA, ACTION"`. Accepts a native dict or a JSON-encoded string; returns `None` if the `"movies"` entry or `"genres"` list is absent/empty. |
+| `format_book_classification` | Real formatting logic | Reads the `"books"` entry of the `extra_semantic_metadata` envelope, e.g. `{"books": {"gtl1": "roman", "gtl2": "19eme siecle", "gtl3": "tragedie", "gtl4": null}}`, and formats it as a labeled chevron chain: `"niveau 1 : roman > niveau 2 : 19eme siecle > niveau 3 : tragedie"`. GTL is a generic 4-level classification with no fixed meaning per level (it can stop at any depth, and isn't always genre > sub-genre > type), so levels are tagged by position rather than an invented category name; the `>` separator (a common breadcrumb/taxonomy convention) reinforces the parent-to-child order on top of the explicit tag, more compactly than a comma-separated list. Together they disambiguate a term at different depths — e.g. `"tragedie"` at `niveau 3` here vs. `niveau 2` for a book classified `theatre > tragedie > grecque`. Missing levels are skipped. Accepts a native dict or a JSON-encoded string. |
+
+#### Using one shared JSON column across categories
+
+A single column can carry different metadata per category (e.g. `extra_semantic_metadata`: a genre list for movies, a hierarchical GTL dict for books) via a **uniform envelope**, keyed by a fixed content-type identifier:
+
+```json
+{"movies": {"genres": ["DRAMA", "ACTION"]}}
+{"books": {"gtl1": "roman", "gtl2": "19eme siecle", "gtl3": "tragedie", "gtl4": null}}
+```
+
+The content-type key (`"movies"` / `"books"`) is hardcoded inside each `format_*` preprocessor in `preprocessing.py`, **independent of whatever `name` a vector is given in the YAML config** — renaming `movies_content` to something else doesn't silently break metadata extraction, since the preprocessor never looks at the vector's name. Each category-scoped vector applies its own preprocessor to extract and format its own entry before it's referenced in `prompt_template`:
+
+```yaml
+- name: "movies_content"
+  features: [offer_name, offer_description, extra_semantic_metadata]
+  preprocessors:
+    extra_semantic_metadata: "format_movie_genres"
+  prompt_template: >-
+    ... Genres: {extra_semantic_metadata}.
+
+- name: "books_content"
+  features: [offer_name, offer_description, extra_semantic_metadata]
+  preprocessors:
+    extra_semantic_metadata: "format_book_classification"
+  prompt_template: >-
+    ... Classification: {extra_semantic_metadata}.
+```
+
+A row that isn't the preprocessor's content type (or has no envelope at all) simply renders blank, not an error — e.g. `format_movie_genres` on a book row (envelope `{"books": {...}}`, no `"movies"` key) returns `None`.
+
+See `configs/category_embeddings.yaml` for the full worked example. In practice this column is expected to arrive as a **JSON-encoded string** (a single BigQuery column can't natively be `ARRAY<STRING>` for some rows and `STRUCT` for others, so a `JSON`/`STRING` BigQuery column — built with `TO_JSON_STRING(...)` — is the only way to hold both shapes; native list/dict envelopes are accepted mainly for convenience in local/test data). A preprocessor must always return a plain string (or `None`) — `prompt_template` renders it with `str.format` like any other feature, so it can't receive a raw list/dict.
 
 ## Output Format
 
@@ -104,10 +236,11 @@ Output parquet file contains:
 
 ```
 main.py           — CLI entry point, orchestrates load → embed → upload
-config.py         — YAML config loading, schema validation, Vector model
-embedding.py      — Core embedding logic: prompt building, encoder management, GPU dispatch
+config.py         — YAML config loading, schema validation, Vector/CategoryFilter models
+embedding.py      — Core embedding logic: prompt building, category-scoped filtering, encoder management, GPU dispatch, over-length prompt tracking (LongPromptTracker)
+preprocessing.py  — Registry of named feature preprocessors (currently placeholder/dummy logic)
 gcs_utils.py      — GCS parquet I/O with retry logic
-constants.py      — Environment variables and secret name mapping
+constants.py      — Environment variables, secret name mapping, MAX_PROMPT_TOKENS
 gcp_secrets.py    — Secret Manager access with caching
 setup_encoders.py - load encoder models, set the precision and pooling if available
 ```
@@ -211,6 +344,7 @@ then the day of the start of the reserbation trigger the `item_embedding` DAG wi
 | Slow processing | Raise `BATCH_SIZE` in `constants.py`; verify the GPU is used (`nvidia-smi`) |
 | Missing features error | Check that input parquet columns match config `features` |
 | Upload failures | Automatic retry (3 attempts). Check GCS permissions if persistent |
+| Items with truncated embeddings | Check the end-of-job `LongPromptTracker` summary log for the affected `item_id`s and vector, then inspect their `offer_description`/features (see [Sequence length and truncation](#sequence-length-and-truncation)) |
 
 ## Dependencies
 

@@ -108,35 +108,27 @@ with DAG(
     ) as import_data_from_bq_to_gcs:
         BigQueryInsertJobOperator(
             project_id=GCP_PROJECT_ID,
-            task_id="import_item_embedding_data",
+            task_id="import_item_data",
             configuration={
-                "extract": {
-                    "sourceTable": {
-                        "projectId": GCP_PROJECT_ID,
-                        "datasetId": BIGQUERY_ML_FEATURES_DATASET,
-                        "tableId": ITEM_EMBEDDING_TABLE,
-                    },
-                    "compression": None,
-                    "destinationUris": f"{STORAGE_BASE_PATH}/raw_item_embedding/data-*.parquet",
-                    "destinationFormat": "PARQUET",
-                }
-            },
-            dag=dag,
-        )
-
-        BigQueryInsertJobOperator(
-            project_id=GCP_PROJECT_ID,
-            task_id="import_item_metadata_data",
-            configuration={
-                "extract": {
-                    "sourceTable": {
-                        "projectId": GCP_PROJECT_ID,
-                        "datasetId": BIGQUERY_ML_INPUT_DATASET,
-                        "tableId": ITEM_METADATA_TABLE,
-                    },
-                    "compression": None,
-                    "destinationUris": f"{STORAGE_BASE_PATH}/raw_item_metadata/data-*.parquet",
-                    "destinationFormat": "PARQUET",
+                "query": {
+                    "query": f"""
+                        EXPORT DATA OPTIONS(
+                            uri='{STORAGE_BASE_PATH}/raw_item_data/data-*.parquet',
+                            format='PARQUET',
+                            overwrite=true
+                        ) AS
+                        SELECT
+                            emb.item_id,
+                            emb.semantic_content,
+                            meta.offer_name,
+                            meta.offer_description,
+                            meta.offer_category_id,
+                            meta.offer_subcategory_id
+                        FROM `{GCP_PROJECT_ID}.{BIGQUERY_ML_FEATURES_DATASET}.{ITEM_EMBEDDING_TABLE}` AS emb
+                        INNER JOIN `{GCP_PROJECT_ID}.{BIGQUERY_ML_INPUT_DATASET}.{ITEM_METADATA_TABLE}` AS meta
+                            ON emb.item_id = meta.item_id
+                    """,
+                    "useLegacySql": False,
                 }
             },
             dag=dag,
@@ -165,8 +157,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
         command="PYTHONPATH=. uv run cli/create_vector_database.py semantic-database "
-        f"--item-embedding-gs-path {STORAGE_BASE_PATH}/raw_item_embedding "
-        f"--item-metadata-gs-path {STORAGE_BASE_PATH}/raw_item_metadata ",
+        f"--item-data-gs-path {STORAGE_BASE_PATH}/raw_item_data ",
         dag=dag,
     )
 

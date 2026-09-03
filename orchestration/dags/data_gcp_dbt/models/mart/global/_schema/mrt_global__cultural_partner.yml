@@ -96,6 +96,3 @@ models:
         description: "{{ doc('column__partner_epci') }}"
       - name: partner_city
         description: "{{ doc('column__partner_city') }}"
-      - name: legal_unit_business_activity_code
-        description: "{{ doc('column__legal_unit_business_activity_code') }}"
-        data_type: STRING

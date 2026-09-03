@@ -53,7 +53,6 @@ select
     v.total_individual_real_revenue,
     v.total_collective_real_revenue,
     v.total_real_revenue,
-    v.legal_unit_business_activity_code,
     case when v.venue_is_open_to_public then "ERP" else "non ERP" end as partner_status
 from {{ ref("int_global__venue") }} as v
 left join

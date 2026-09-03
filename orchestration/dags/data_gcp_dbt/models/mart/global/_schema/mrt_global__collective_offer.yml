@@ -125,6 +125,3 @@ models:
         description: "{{ doc('column__offerer_address_id') }}"
       - name: collective_stock_price_detail
         description: "{{ doc('column__collective_stock_price_detail') }}"
-      - name: legal_unit_business_activity_code
-        description: "{{ doc('column__legal_unit_business_activity_code') }}"
-        data_type: STRING

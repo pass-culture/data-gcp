@@ -307,6 +307,3 @@ models:
       - name: cultural_outreach_claimed_date
         description: "{{ doc('column__cultural_outreach_claimed_date') }}"
         data_type: DATETIME
-      - name: legal_unit_business_activity_code
-        description: "{{ doc('column__offerer_legal_unit_business_activity_code') }}"
-        data_type: STRING

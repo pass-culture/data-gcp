@@ -34,14 +34,14 @@ select
     selected_users.booking_cnt,
     au.consult_offer,
     au.has_added_offer_to_favorites,
-    dept_loc.department_latitude as user_subscription_latitude,
-    dept_loc.department_longitude as user_subscription_longitude
+    user_loc.user_latitude as user_subscription_latitude,
+    user_loc.user_longitude as user_subscription_longitude
 from selected_users
 left join
     {{ ref("firebase_aggregated_users") }} as au on selected_users.user_id = au.user_id
 left join
-    {{ ref("int_seed__department_location") }} as dept_loc
-    on selected_users.user_department_code = dept_loc.department_code
+    {{ ref("int_geo__user_location") }} as user_loc
+    on selected_users.user_id = user_loc.user_id
 qualify
     row_number() over (
         partition by selected_users.user_id order by selected_users.booking_cnt desc

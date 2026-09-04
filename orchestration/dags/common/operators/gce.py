@@ -653,7 +653,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
         install_command = f"""
             curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh
             cd {base_dir}
-            uv venv --python {self.python_version}
+            uv venv --python {self.python_version} --clear
             source .venv/bin/activate
             if [ -f "{requirement_file}" ]; then
                 uv pip sync {requirement_file}

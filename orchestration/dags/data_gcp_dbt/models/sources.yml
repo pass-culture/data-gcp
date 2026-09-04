@@ -196,6 +196,7 @@ sources:
       - name: dms_jeunes_cleaned
       - name: dms_pro_cleaned
       - name: siren_data
+      - name: siret_data
 
   - name: int_metabase
     schema: int_metabase_{{ var('ENV_SHORT_NAME') }}

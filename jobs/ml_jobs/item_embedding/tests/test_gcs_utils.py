@@ -1,9 +1,15 @@
 """Unit tests for gcs_utils module."""
 
+import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 import pytest
 from config import Vector
-from gcs_utils import _validate_parquet_file, iter_metadata_chunks
+from gcs_utils import (
+    _validate_parquet_file,
+    iter_metadata_chunks,
+    write_embeddings_parquet,
+)
 
 
 class TestValidateParquetFile:
@@ -105,3 +111,87 @@ class TestIterMetadataChunks:
     def test_empty_input_raises_file_not_found(self, tmp_path):
         with pytest.raises(FileNotFoundError):
             list(iter_metadata_chunks(str(tmp_path), self._vectors(), rows_per_chunk=4))
+
+
+class TestWriteEmbeddingsParquet:
+    def _vectors(self):
+        return [Vector(name="movies_content", features=["title"], encoder_name="model")]
+
+    def test_populated_column_is_list_of_double(self, tmp_path):
+        df = pd.DataFrame(
+            {
+                "item_id": ["a", "b"],
+                "content_hash": ["h1", "h2"],
+                "movies_content": [[1.0, 2.0], [3.0, 4.0]],
+            }
+        )
+        path = tmp_path / "chunk_0.parquet"
+
+        write_embeddings_parquet(df, self._vectors(), str(path))
+
+        arrow_type = pq.read_schema(str(path)).field("movies_content").type
+        assert str(arrow_type) == "list<element: double>"
+
+    def test_all_null_column_is_still_list_of_double_not_null_type(self, tmp_path):
+        # A chunk where the scoped vector matches zero items (e.g. a chunk
+        # with no movies) has no non-null value to infer the list's element
+        # type from; without an explicit schema pyarrow would fall back to
+        # Arrow's `null` type here instead of `list<double>`.
+        df = pd.DataFrame(
+            {
+                "item_id": ["a", "b"],
+                "content_hash": ["h1", "h2"],
+                "movies_content": pd.Series([np.nan, np.nan], dtype=object),
+            }
+        )
+        path = tmp_path / "chunk_1.parquet"
+
+        write_embeddings_parquet(df, self._vectors(), str(path))
+
+        arrow_type = pq.read_schema(str(path)).field("movies_content").type
+        assert str(arrow_type) == "list<element: double>"
+
+    def test_populated_and_empty_chunks_share_identical_schema(self, tmp_path):
+        # This is what actually fixes GCSToBigQueryOperator's autodetect:
+        # every chunk file must agree on the column's Arrow type, or
+        # BigQuery can't unify them into a single REPEATED FLOAT field.
+        populated = pd.DataFrame(
+            {
+                "item_id": ["a"],
+                "content_hash": ["h1"],
+                "movies_content": [[1.0, 2.0]],
+            }
+        )
+        empty = pd.DataFrame(
+            {
+                "item_id": ["b"],
+                "content_hash": ["h2"],
+                "movies_content": pd.Series([np.nan], dtype=object),
+            }
+        )
+        populated_path = tmp_path / "chunk_populated.parquet"
+        empty_path = tmp_path / "chunk_empty.parquet"
+
+        write_embeddings_parquet(populated, self._vectors(), str(populated_path))
+        write_embeddings_parquet(empty, self._vectors(), str(empty_path))
+
+        assert pq.read_schema(str(populated_path)) == pq.read_schema(str(empty_path))
+
+    def test_round_trips_values_and_missing_rows(self, tmp_path):
+        df = pd.DataFrame(
+            {
+                "item_id": ["a", "b"],
+                "content_hash": ["h1", "h2"],
+                "movies_content": [[1.0, 2.0], np.nan],
+            }
+        )
+        path = tmp_path / "chunk.parquet"
+
+        write_embeddings_parquet(df, self._vectors(), str(path))
+
+        result = pd.read_parquet(str(path))
+        assert result.set_index("item_id").loc["a", "movies_content"].tolist() == [
+            1.0,
+            2.0,
+        ]
+        assert result.set_index("item_id").loc["b", "movies_content"] is None

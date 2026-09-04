@@ -2,7 +2,10 @@ from typing import Iterator
 
 import gcsfs
 import pandas as pd
+import pyarrow as pa
 import pyarrow.dataset as ds
+import pyarrow.parquet as pq
+from config import Vector
 from constants import ROWS_PER_CHUNK
 from loguru import logger
 
@@ -128,3 +131,58 @@ def _validate_parquet_file(df: pd.DataFrame, vectors: list) -> None:
     missing = [c for c in _required_columns(vectors) if c not in available]
     if missing:
         raise ValueError(f"DataFrame is missing required columns: {', '.join(missing)}")
+
+
+def _embeddings_schema(vectors: list[Vector]) -> pa.Schema:
+    """Explicit Arrow schema for an embeddings output chunk: ``item_id``/
+    ``content_hash`` strings plus one ``list<double>`` field per vector.
+    """
+    fields = [
+        pa.field("item_id", pa.string()),
+        pa.field("content_hash", pa.string()),
+    ]
+    fields += [
+        pa.field(vector.name, pa.list_(pa.field("element", pa.float64())))
+        for vector in vectors
+    ]
+    return pa.schema(fields)
+
+
+def write_embeddings_parquet(
+    df: pd.DataFrame, vectors: list[Vector], gcs_path: str
+) -> None:
+    """Writes an embeddings output chunk to a parquet file with an explicit,
+    uniform schema, so every chunk's vector columns land in BigQuery as a
+    plain ``REPEATED FLOAT`` rather than a nested RECORD.
+
+    Without an explicit schema, pyarrow infers each column's Arrow type from
+    its own non-null values. A chunk where a category-scoped vector (e.g.
+    ``movies_content``) matches zero items has no non-null value to infer
+    the list's element type from, so that column is written as Arrow's
+    ``null`` type instead of ``list<double>`` -- while every other chunk
+    (where the vector does match items) writes it as ``list<double>``. Since
+    ``GCSToBigQueryOperator`` loads every chunk's file together via a
+    wildcard glob with ``autodetect=True``, that per-chunk type
+    inconsistency stops BigQuery from unifying the column into
+    ``REPEATED FLOAT`` across all files, and it falls back to a nested
+    RECORD (list/element) representation instead. Forcing the same schema on
+    every chunk removes that inconsistency: items with no embedding for a
+    vector simply load as an empty array (BigQuery REPEATED fields can't be
+    NULL at the row level), which is what "no value" naturally means for a
+    repeated column.
+
+    Args:
+        df: Embeddings DataFrame (item_id, content_hash, one column per
+            vector; each vector column holds either a list[float] or NaN).
+        vectors: Vector configurations, used to build the column list.
+        gcs_path: Destination parquet file path (local or ``gs://...``).
+    """
+    table = pa.Table.from_pandas(
+        df, schema=_embeddings_schema(vectors), preserve_index=False
+    )
+    if gcs_path.startswith("gs://"):
+        fs = gcsfs.GCSFileSystem()
+        with fs.open(gcs_path, "wb") as f:
+            pq.write_table(table, f, compression="snappy")
+    else:
+        pq.write_table(table, gcs_path, compression="snappy")

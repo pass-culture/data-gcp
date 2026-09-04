@@ -3,7 +3,7 @@ import typer
 from config import parse_vectors
 from constants import ROWS_PER_CHUNK
 from embedding import LongPromptTracker, embed_dataframe
-from gcs_utils import iter_metadata_chunks, list_parquet_files
+from gcs_utils import iter_metadata_chunks, list_parquet_files, write_embeddings_parquet
 from loguru import logger
 from setup_encoders import (
     load_encoders,
@@ -95,7 +95,7 @@ def main(
             output_parquet_path = (
                 f"{output_parquets_folder_path}/item_embeddings_{i}.parquet"
             )
-            df_embeddings.to_parquet(output_parquet_path, index=False)
+            write_embeddings_parquet(df_embeddings, vectors, output_parquet_path)
             logger.info(f"Saved embeddings to {output_parquet_path}")
     finally:
         stop_encoder_pools(encoders, pools)

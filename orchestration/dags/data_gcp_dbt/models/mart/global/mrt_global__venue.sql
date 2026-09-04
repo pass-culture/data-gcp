@@ -106,7 +106,7 @@ select
     has_mediation_offer,
     venue_adage_inscription_date,
     offerer_is_epn,
-    legal_unit_business_activity_code
+    venue_business_activity_code
 from {{ ref("int_global__venue") }}
 where
     offerer_validation_status = 'VALIDATED'

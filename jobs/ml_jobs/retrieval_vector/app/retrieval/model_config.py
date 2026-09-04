@@ -5,11 +5,13 @@ from enum import StrEnum
 from app.retrieval.client import DefaultClient
 from app.retrieval.metadata_graph_client import MetadataGraphClient
 from app.retrieval.reco_client import RecoClient
+from app.retrieval.semantic_client import SemanticClient
 
 
 class ModelType(StrEnum):
     RECOMMENDATION = "recommendation"
     METADATA_GRAPH = "metadata_graph"
+    SEMANTIC = "semantic"
 
 
 class VectorSearchMetric(StrEnum):
@@ -38,5 +40,7 @@ def load_model() -> DefaultClient:
         return RecoClient(vector_search_metric=config.vector_search_metric)
     elif config.type == ModelType.METADATA_GRAPH:
         return MetadataGraphClient(vector_search_metric=config.vector_search_metric)
+    elif config.type == ModelType.SEMANTIC:
+        return SemanticClient(vector_search_metric=config.vector_search_metric)
     else:
         raise ValueError("Invalid model type")

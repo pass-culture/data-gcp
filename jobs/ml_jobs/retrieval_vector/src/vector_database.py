@@ -4,6 +4,8 @@ import lancedb
 import numpy as np
 import pandas as pd
 import pyarrow as pa
+import pyarrow.compute as pc
+import pyarrow.dataset as ds
 from loguru import logger
 
 from app.retrieval.documents import Document, DocumentArray
@@ -257,3 +259,149 @@ def create_lancedb_from_item_embeddings(
         uri=f"{OUTPUT_DATA_PATH}/vector",
         vector_search_index_metric=vector_search_metric,
     )
+
+
+# Columns read from the joined BigQuery export (item_embedding ⋈ item_metadata).
+_SEMANTIC_SOURCE_COLUMNS = [
+    "item_id",
+    "semantic_content",
+    "offer_name",
+    "offer_description",
+    "offer_category_id",
+    "offer_subcategory_id",
+]
+
+
+def _stream_semantic_item_batches(
+    item_data_gs_path: str, emb_size: int, batch_size: int
+):
+    """Stream the semantic `items` table from a joined parquet dir, batch by batch.
+
+    The BigQuery export (``item_id`` + ``semantic_content`` + ``offer_*`` metadata)
+    is read straight from GCS through a pyarrow dataset so the ~5M-row table is
+    never fully materialised in memory. Each batch is reshaped to the LanceDB
+    schema (see ``SEMANTIC_ITEM_COLUMNS``): the embedding becomes a fixed-size
+    ``float32`` ``vector`` column, the ``offer_*`` metadata is renamed and cast to
+    string, and ``search_text`` is derived (name + description) for the FTS index.
+
+    Args:
+        item_data_gs_path (str): Path (GCS or local) to the parquet dir.
+        emb_size (int): Dimensionality of the embedding vectors.
+        batch_size (int): Number of rows per streamed batch.
+
+    Yields:
+        pa.Table: One reshaped batch ready to be written to LanceDB.
+    """
+    dataset = ds.dataset(item_data_gs_path, format="parquet")
+    logger.info(
+        f"Streaming {len(dataset.files)} parquet file(s) in batches of {batch_size:,}..."
+    )
+
+    for i, batch in enumerate(
+        dataset.to_batches(batch_size=batch_size, columns=_SEMANTIC_SOURCE_COLUMNS)
+    ):
+        logger.info(f"Processing batch {i + 1} ({batch.num_rows:,} rows)...")
+
+        vector = pc.cast(
+            batch.column("semantic_content"), pa.list_(pa.float32(), emb_size)
+        )
+        item_id = pc.cast(batch.column("item_id"), pa.string())
+        item_name = pc.fill_null(pc.cast(batch.column("offer_name"), pa.string()), "")
+        item_description = pc.fill_null(
+            pc.cast(batch.column("offer_description"), pa.string()), ""
+        )
+        category = pc.fill_null(
+            pc.cast(batch.column("offer_category_id"), pa.string()), ""
+        )
+        subcategory_id = pc.fill_null(
+            pc.cast(batch.column("offer_subcategory_id"), pa.string()), ""
+        )
+        search_text = pc.utf8_trim_whitespace(
+            pc.binary_join_element_wise(item_name, item_description, " ")
+        )
+
+        yield pa.table(
+            {
+                "vector": vector,
+                "item_id": item_id,
+                "item_name": item_name,
+                "item_description": item_description,
+                "search_text": search_text,
+                "category": category,
+                "subcategory_id": subcategory_id,
+            }
+        )
+
+
+def create_lancedb_from_semantic_embeddings(
+    item_data_gs_path: str,
+    vector_search_metric: str,
+    batch_size: int = LANCE_DB_BATCH_SIZE,
+) -> None:
+    """Create the LanceDB table for the semantic retrieval flavor.
+
+    The joined embeddings + metadata parquet is streamed directly from GCS in
+    batches (see ``_stream_semantic_item_batches``) so the full ~5M-row table is
+    never loaded into memory. After the table is written, the three indexes the
+    serving app relies on are created:
+
+    - a vector (IVF_PQ) index on ``vector`` for similar-item search,
+    - a full-text-search (FTS) index on ``search_text`` for keyword search,
+    - scalar indexes on ``item_id`` / ``category`` / ``subcategory_id``.
+
+    Unlike the two-tower / graph flavors, no ``item.docs`` store is written: at
+    768 dimensions a JSON id→vector dump would be prohibitively large, so the
+    serving ``SemanticClient`` looks the query item's vector up directly from the
+    LanceDB table instead.
+
+    Args:
+        item_data_gs_path (str): Path (GCS or local) to the parquet dir holding
+            the BigQuery export (item_id + semantic_content + offer_* metadata).
+        vector_search_metric (str): Metric for the vector index (``cosine``).
+        batch_size (int): Number of rows per streamed batch.
+    """
+    dataset = ds.dataset(item_data_gs_path, format="parquet")
+    # Peek a single row to size the fixed-length vector column.
+    first_batch = next(
+        dataset.to_batches(batch_size=1, columns=["semantic_content"]), None
+    )
+    if first_batch is None or first_batch.num_rows == 0:
+        raise ValueError("Cannot build a semantic items table from an empty dataset.")
+    emb_size = len(first_batch.column("semantic_content")[0])
+    logger.info(f"Detected embedding dimension: {emb_size}")
+
+    db = lancedb.connect(f"{OUTPUT_DATA_PATH}/vector")
+    # mode="overwrite" drops any pre-existing `items` table and recreates it.
+    table = db.create_table(
+        "items",
+        data=_stream_semantic_item_batches(item_data_gs_path, emb_size, batch_size),
+        mode="overwrite",
+    )
+
+    num_rows = table.count_rows()
+    num_partitions = min(256, max(2, int(num_rows**0.5)))
+    num_sub_vectors = max(1, emb_size // 16)
+
+    logger.info(
+        f"Creating vector index ('{vector_search_metric}', {num_partitions} "
+        f"partitions, {num_sub_vectors} sub-vectors) on {num_rows:,} rows..."
+    )
+    table.create_index(
+        metric=vector_search_metric,
+        num_partitions=num_partitions,
+        num_sub_vectors=num_sub_vectors,
+        vector_column_name="vector",
+    )
+
+    logger.info("Creating FTS index on 'search_text'...")
+    table.create_fts_index("search_text", replace=True)
+
+    logger.info(
+        "Creating scalar indexes on 'item_id', 'category' and 'subcategory_id'..."
+    )
+    # BTREE on item_id so the query-item vector lookup (semantic_search) is a fast
+    # indexed point-lookup instead of a full scan.
+    table.create_scalar_index("item_id", index_type="BTREE")
+    table.create_scalar_index("category", index_type="BITMAP")
+    table.create_scalar_index("subcategory_id", index_type="BITMAP")
+    logger.info("Semantic items table and indexes created.")

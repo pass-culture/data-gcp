@@ -24,7 +24,6 @@ from src.utils import (
 from src.vector_database import (
     create_lancedb_from_coreservation,
     create_lancedb_from_item_embeddings,
-    create_lancedb_from_semantic_embeddings,
 )
 
 SEMANTIC_MODEL_TYPE = {
@@ -178,27 +177,17 @@ def graph_database(
 
 
 @app.command()
-def semantic_database(
-    item_data_gs_path: str = typer.Option(
-        ...,
-        help="Path (GCS or local) to the parquet dir with the item semantic "
-        "embeddings already joined with metadata (BQ export joining "
-        "`item_embedding_refactor` and `item_metadata`: item_id + semantic_content "
-        "+ offer_name + offer_description + offer_category_id + offer_subcategory_id).",
-    ),
-) -> None:
-    """Build the semantic retrieval LanceDB table from precomputed embeddings.
+def semantic_metadata() -> None:
+    """Write only the semantic ``model_type.json`` for the serving image.
 
-    The joined embeddings + metadata parquet is streamed straight from GCS into
-    LanceDB in batches, so the full ~5M-row table is never materialised in memory.
+    The semantic LanceDB table itself is no longer built here: it is produced and
+    indexed by the standalone ``semantic_search_lancedb`` job, published to GCS,
+    and downloaded by the serving container at startup. This command just drops
+    the tiny ``model_type.json`` that ``load_model()`` reads to select the
+    ``SemanticClient``.
     """
-    logger.info(f"Building semantic lanceDB table from {item_data_gs_path}...")
-    create_lancedb_from_semantic_embeddings(
-        item_data_gs_path=item_data_gs_path,
-        vector_search_metric=SEMANTIC_MODEL_TYPE["vector_search_metric"],
-    )
     save_model_type(model_type=SEMANTIC_MODEL_TYPE, output_dir=OUTPUT_DATA_PATH)
-    logger.info("Semantic lanceDB table built and model type saved.")
+    logger.info("Semantic model_type.json written (no DB baked; served from GCS).")
 
 
 if __name__ == "__main__":

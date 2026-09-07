@@ -1,22 +1,14 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
-from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
-    BIGQUERY_ML_FEATURES_DATASET,
-    BIGQUERY_ML_INPUT_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
-    ML_BUCKET_TEMP,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -31,7 +23,6 @@ from jobs.crons import SCHEDULE_DICT
 # Airflow params
 DAG_NAME = "build_and_push_semantic_retrieval_api"
 default_args = {
-    "start_date": datetime(2022, 11, 30),
     "on_failure_callback": on_failure_vm_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
@@ -39,19 +30,13 @@ default_args = {
 
 # GCS Paths / Filenames
 BASE_DIR = "data-gcp/jobs/ml_jobs/retrieval_vector/"
-GCS_FOLDER_PATH = f"{DAG_NAME}_{ENV_SHORT_NAME}/{{{{ ts_nodash }}}}"
-STORAGE_BASE_PATH = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}"
-
-# BigQuery source tables (precomputed semantic embeddings + item metadata)
-ITEM_EMBEDDING_TABLE = "item_embedding_refactor"
-ITEM_METADATA_TABLE = "item_metadata"
 
 # GCE
-INSTANCE_NAME = f"{DAG_NAME.replace('_', '-')}-{ENV_SHORT_NAME}"
+INSTANCE_NAME = f"build-and-push-semantic-retrieval-api-{ENV_SHORT_NAME}"
 INSTANCE_TYPE = {
     "dev": "n1-standard-2",
-    "stg": "n1-standard-8",
-    "prod": "n1-standard-16",
+    "stg": "n1-standard-2",
+    "prod": "n1-standard-2",
 }[ENV_SHORT_NAME]
 DEFAULT_CONTAINER_WORKER = "1"
 
@@ -63,10 +48,9 @@ SEMANTIC_MODEL_VERSION = f"semantic_item_retrieval_v1.0_{ENV_SHORT_NAME}"
 with DAG(
     DAG_NAME,
     default_args=default_args,
-    description="Build & push the semantic item retrieval API (LanceDB) container",
+    description="Build & push the semantic item retrieval API container ",
     schedule=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME]),
     catchup=False,
-    dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
@@ -103,37 +87,6 @@ with DAG(
 ) as dag:
     start = EmptyOperator(task_id="start", dag=dag)
 
-    with TaskGroup(
-        "import_data_from_bq_to_gcs", tooltip="Data Preparation"
-    ) as import_data_from_bq_to_gcs:
-        BigQueryInsertJobOperator(
-            project_id=GCP_PROJECT_ID,
-            task_id="import_item_data",
-            configuration={
-                "query": {
-                    "query": f"""
-                        EXPORT DATA OPTIONS(
-                            uri='{STORAGE_BASE_PATH}/raw_item_data/data-*.parquet',
-                            format='PARQUET',
-                            overwrite=true
-                        ) AS
-                        SELECT
-                            emb.item_id,
-                            emb.semantic_content,
-                            meta.offer_name,
-                            meta.offer_description,
-                            meta.offer_category_id,
-                            meta.offer_subcategory_id
-                        FROM `{GCP_PROJECT_ID}.{BIGQUERY_ML_FEATURES_DATASET}.{ITEM_EMBEDDING_TABLE}` AS emb
-                        INNER JOIN `{GCP_PROJECT_ID}.{BIGQUERY_ML_INPUT_DATASET}.{ITEM_METADATA_TABLE}` AS meta
-                            ON emb.item_id = meta.item_id
-                    """,
-                    "useLegacySql": False,
-                }
-            },
-            dag=dag,
-        )
-
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         preemptible=False,
@@ -152,12 +105,14 @@ with DAG(
         retries=2,
     )
 
-    create_semantic_database = SSHGCEOperator(
-        task_id="create_semantic_database",
+    # No DB is built here any more: the semantic LanceDB is produced/indexed by
+    # the `semantic_search_lancedb` job and served from GCS. This step only writes
+    # the tiny model_type.json that load_model() reads to pick the SemanticClient.
+    write_semantic_metadata = SSHGCEOperator(
+        task_id="write_semantic_metadata",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
-        command="PYTHONPATH=. uv run cli/create_vector_database.py semantic-database "
-        f"--item-data-gs-path {STORAGE_BASE_PATH}/raw_item_data ",
+        command="PYTHONPATH=. uv run cli/create_vector_database.py semantic-metadata",
         dag=dag,
     )
 
@@ -178,12 +133,11 @@ with DAG(
         trigger_rule="all_done",
     )
 
-    (start >> import_data_from_bq_to_gcs >> create_semantic_database)
     (
         start
         >> gce_instance_start
         >> fetch_install_code
-        >> create_semantic_database
+        >> write_semantic_metadata
         >> build_and_push_docker_image
         >> gce_instance_stop
     )

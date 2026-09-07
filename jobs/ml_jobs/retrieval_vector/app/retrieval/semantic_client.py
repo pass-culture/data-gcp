@@ -1,3 +1,4 @@
+import os
 import time
 from typing import Dict, List, Optional
 
@@ -11,24 +12,29 @@ from app.retrieval.constants import (
     SEMANTIC_OUTPUT_METRIC_COLUMNS,
     EmbeddingModelTypes,
 )
+from app.retrieval.db_bootstrap import ensure_local_semantic_db
 from app.retrieval.documents import Document
 
 SEMANTIC_VECTOR_SEARCH_METRIC = "cosine"
+# GCS directory (published by the `semantic_search_lancedb` job) holding the
+# LanceDB database. When set, it is downloaded to the local `lance_db_uri` at
+# startup; when unset the DB is assumed to already be at the local path (tests).
+SEMANTIC_LANCE_DB_URI_ENV = "SEMANTIC_LANCE_DB_URI"
 
 
 class SemanticClient(DefaultClient):
     """Retrieval client for the semantic-embeddings flavor.
 
-    Serves item semantic embeddings (produced by the `item_embedding` service)
+    Serves the item semantic embeddings (produced by the `item_embedding` job)
     for two search modes:
 
-    - ``semantic_search``: look the query item's embedding up in the LanceDB table
-      and return its nearest neighbors (cosine),
+    - ``semantic_search``: nearest neighbors of a query *item*'s embedding,
     - ``text_search``: keyword full-text search over ``search_text``.
 
-    Unlike the two-tower / graph clients there are no user documents, and no
-    ``item.docs`` store: the query item's vector is fetched straight from the
-    table (a 768-dim id→vector JSON dump would be far too large to bake).
+    The LanceDB table is built + indexed by the standalone ``semantic_search_lancedb``
+    job and published to GCS; it is downloaded to local disk at startup rather
+    than baked into the docker image. There are no user documents and no ``item.docs``
+    store: the query item's vector is fetched straight from the table.
     """
 
     EMBEDDING_MODEL_TYPE = EmbeddingModelTypes.SEMANTIC
@@ -54,8 +60,16 @@ class SemanticClient(DefaultClient):
         )
 
     def load(self) -> None:
-        """Connect to the LanceDB table. No item/user documents to load."""
+        """Download the LanceDB from GCS (if configured) then connect to it."""
         start_time = time.time()
+        gcs_uri = os.environ.get(SEMANTIC_LANCE_DB_URI_ENV)
+        if gcs_uri:
+            ensure_local_semantic_db(gcs_uri, self.lance_db_uri)
+        else:
+            logger.info(
+                f"{SEMANTIC_LANCE_DB_URI_ENV} unset; using existing DB at "
+                f"{self.lance_db_uri}"
+            )
         self.table = self.connect_db()
         logger.info(
             f"Connected to semantic database in {time.time() - start_time:.2f} seconds."
@@ -64,9 +78,7 @@ class SemanticClient(DefaultClient):
     def item_vector(self, item_id: str) -> Optional[Document]:
         """Fetch an item's semantic embedding directly from the LanceDB table.
 
-        Uses the ``item_id`` scalar (BTREE) index for a fast point lookup instead
-        of relying on a baked ``item.docs`` store.
-
+        Uses the ``item_id`` scalar (BTREE) index for a fast point lookup.
         Args:
             item_id (str): The item identifier.
 

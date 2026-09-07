@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta
 
 from airflow import DAG
@@ -8,6 +9,7 @@ from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
+    DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
 )
 from common.operators.gce import (
@@ -90,6 +92,12 @@ models_to_deploy = [
         "instance_type": SEMANTIC_RETRIEVAL_DICT[ENV_SHORT_NAME],
         "min_nodes": {"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
         "max_nodes": {"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
+        # The LanceDB is not baked into the image: it is built by the
+        # `semantic_search_lancedb` job and downloaded from this GCS dir at
+        # container startup.
+        "serving_env_vars": {
+            "SEMANTIC_LANCE_DB_URI": f"gs://{DATA_GCS_BUCKET_NAME}/semantic_search_lancedb/",
+        },
     },
 ]
 
@@ -135,6 +143,13 @@ with DAG(
             instance_type = model_params["instance_type"]
             min_nodes = model_params["min_nodes"]
             max_nodes = model_params["max_nodes"]
+            serving_env_vars = model_params.get("serving_env_vars")
+            # Single-quote the JSON so the shell passes it as one argument.
+            serving_env_vars_arg = (
+                f" --serving-env-vars '{json.dumps(serving_env_vars)}'"
+                if serving_env_vars
+                else ""
+            )
             deploy_command = f"""
                 python deploy_model.py \
                     --region {DEFAULT_REGION} \
@@ -143,7 +158,7 @@ with DAG(
                     --version-name {version_name} \
                     --instance-type {instance_type} \
                     --min-nodes {min_nodes} \
-                    --max-nodes {max_nodes}
+                    --max-nodes {max_nodes}{serving_env_vars_arg}
             """
 
             SSHGCEOperator(

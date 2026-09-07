@@ -1,23 +1,67 @@
 """Integration tests for the semantic retrieval flavor.
 
-These build a real (small) LanceDB `items` table — exercising the vector,
-full-text-search and scalar indexes created by ``_create_semantic_items_table``
-— and query it through :class:`SemanticClient`.
+These build a real (small) LanceDB `items` table — mirroring the schema and the
+vector / full-text-search / scalar indexes produced by the ``semantic_search_lancedb``
+job — and query it through :class:`SemanticClient`.
 """
 
+import lancedb
 import numpy as np
 import pandas as pd
+import pyarrow as pa
 import pytest
 
 from app.retrieval.constants import DISTANCE_COLUMN_NAME, SCORE_COLUMN_NAME
 from app.retrieval.semantic_client import SemanticClient
-from src.vector_database import _create_semantic_items_table
 
 EMB_SIZE = 16
 N_ITEMS = 512  # >= 256 so IVF_PQ / FTS training has enough rows
 CATEGORIES = ["LIVRE", "MUSIQUE"]
 SUBCATEGORIES = ["LIVRE_PAPIER", "SUPPORT_PHYSIQUE_MUSIQUE"]
 KEYWORDS = ["roman policier", "concert jazz"]
+
+
+def _build_items_table(df: pd.DataFrame, emb_size: int, uri: str) -> None:
+    """Build a small `items` LanceDB table with the served schema + indexes.
+
+    Mirrors ``semantic_search_lancedb.build_lancedb_table`` (vector IVF_PQ +
+    native FTS on ``search_text`` + scalar indexes) at test scale.
+    """
+    schema = pa.schema(
+        [
+            pa.field("vector", pa.list_(pa.float32(), emb_size)),
+            pa.field("item_id", pa.string()),
+            pa.field("item_name", pa.string()),
+            pa.field("item_description", pa.string()),
+            pa.field("search_text", pa.string()),
+            pa.field("category", pa.string()),
+            pa.field("subcategory_id", pa.string()),
+        ]
+    )
+    data = pa.Table.from_pydict(
+        {
+            "vector": list(df["vector"]),
+            "item_id": df["item_id"].tolist(),
+            "item_name": df["item_name"].tolist(),
+            "item_description": df["item_description"].tolist(),
+            "search_text": df["search_text"].tolist(),
+            "category": df["category"].tolist(),
+            "subcategory_id": df["subcategory_id"].tolist(),
+        },
+        schema=schema,
+    )
+    db = lancedb.connect(uri)
+    table = db.create_table("items", data=data, mode="overwrite")
+    table.create_index(
+        metric="cosine",
+        num_partitions=2,
+        num_sub_vectors=emb_size // 8,
+        vector_column_name="vector",
+    )
+    table.create_fts_index("search_text", use_tantivy=False, replace=True)
+    table.create_scalar_index("item_id", index_type="BTREE")
+    table.create_scalar_index("category", index_type="BITMAP")
+    table.create_scalar_index("subcategory_id", index_type="BITMAP")
 
 
 @pytest.fixture(scope="module")
@@ -40,19 +84,17 @@ def semantic_db_uri(tmp_path_factory) -> str:
         )
     df = pd.DataFrame(rows)
     df["search_text"] = df["item_name"] + " " + df["item_description"]
-    _create_semantic_items_table(
-        items_df=df,
-        emb_size=EMB_SIZE,
-        uri=uri,
-        vector_search_index_metric="cosine",
-    )
+    _build_items_table(df, EMB_SIZE, uri)
     return uri
 
 
 @pytest.fixture()
 def client(semantic_db_uri: str) -> SemanticClient:
     client = SemanticClient(lance_db_uri=semantic_db_uri)
-    client.load()
+    # Connect the table directly rather than via ``load()``: the session-scoped
+    # ``mock_connect_db`` fixture patches ``DefaultClient.connect_db`` for the
+    # whole session, which would otherwise hand back the reco fake table.
+    client.table = lancedb.connect(semantic_db_uri).open_table("items")
     return client
 
 

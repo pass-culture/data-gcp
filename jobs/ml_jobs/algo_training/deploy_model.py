@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 
 import pandas as pd
@@ -16,6 +17,9 @@ from commons.constants import (
 class TFContainer:
     serving_container: str
     artifact_uri: str = None
+    # Optional {name: value} env vars injected into the serving container. Used
+    # e.g. by the semantic retrieval endpoint to receive the GCS LanceDB URI.
+    serving_container_environment_variables: dict = None
     serving_container_predict_route = None
     serving_container_health_route = None
     serving_container_ports = None
@@ -88,6 +92,7 @@ class ModelHandler:
             serving_container_predict_route=self.model_params.container_type.serving_container_predict_route,
             serving_container_health_route=self.model_params.container_type.serving_container_health_route,
             serving_container_ports=self.model_params.container_type.serving_container_ports,
+            serving_container_environment_variables=self.model_params.container_type.serving_container_environment_variables,
         )
         return model
 
@@ -203,8 +208,14 @@ def main(
         10,
         help="Total max nodes to deploy",
     ),
+    serving_env_vars: str = typer.Option(
+        None,
+        help="Optional JSON object of env vars to inject into the serving container, "
+        'e.g. \'{"SEMANTIC_LANCE_DB_URI": "gs://.../semantic_search_lancedb/"}\'.',
+    ),
 ) -> None:
     MODEL_TYPE_CONFIG = {"tensorflow": TFContainer, "custom": CustomContainer}
+    env_vars = json.loads(serving_env_vars) if serving_env_vars else None
     # Load model stats from BQ
     if artifact_uri is None or serving_container is None:
         if run_id is None or len(run_id) <= 2:
@@ -228,7 +239,9 @@ def main(
                 model_description = f"""{model_type} {experiment_name}."""
 
     container_type = MODEL_TYPE_CONFIG[model_type](
-        serving_container=serving_container, artifact_uri=artifact_uri
+        serving_container=serving_container,
+        artifact_uri=artifact_uri,
+        serving_container_environment_variables=env_vars,
     )
     model_params = ModelParams(
         experiment_name.replace(".", "_"),

@@ -69,7 +69,14 @@ It is configured by `metadata/model_type.json`:
 
 which loads a `SemanticClient`. **No embedding model is bundled** in the container.
 
+The LanceDB is **not baked into the image** (a full-catalogue table is ~20 GB).
+It is built and indexed by the standalone **`semantic_search_lancedb`** job,
+published to GCS, and **downloaded to local disk at container startup** (from the
+`SEMANTIC_LANCE_DB_URI` env var, with a free-disk pre-check).
+
 ### `items` table schema (semantic)
+
+Produced by `semantic_search_lancedb` (see that job's README):
 
 | Column | Type | Index |
 |--------|------|-------|
@@ -80,13 +87,12 @@ which loads a `SemanticClient`. **No embedding model is bundled** in the contain
 | `category`, `subcategory_id` | `string` | Scalar (BITMAP) — `params` filtering |
 
 No `item.docs` / `user.docs` are baked: the query item's vector is read straight
-from the table (a 768-dim id→vector dump would be far too large to bake).
+from the table.
 
 ### Search modes
 
-**`semantic_search`** ⭐ — item-to-item vector search. Looks the input item's vector up
-in the table and returns nearest neighbors (cosine). Input items are excluded. No
-`tops` fallback (the semantic table has no booking columns).
+**`semantic_search`** ⭐ — item-to-item vector search (nearest neighbors of an input
+item's vector, cosine; input items excluded; no `tops` fallback).
 
 ```sh
 curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
@@ -103,13 +109,19 @@ curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
 Both modes accept `params` (filtering on `category` / `subcategory_id`) and `debug`
 (returns the metadata columns plus `_distance` / `_score`). Output is `item_id` + metadata.
 
+> Free-text **semantic** queries (embedding the query with EmbeddingGemma) are
+> intentionally **not** handled here — that will be a separate embed endpoint that
+> returns a query vector, keeping this service model-free and lightweight.
+
 ### Build & deploy
 
-- Build the DB: `python cli/create_vector_database.py semantic-database --item-embedding-gs-path <…> --item-metadata-gs-path <…>`
-  from BigQuery exports of `item_embedding_refactor` + `item_metadata`.
-- The `build_and_push_semantic_retrieval_api` Airflow DAG builds & pushes the container
-  (MLFlow experiment `semantic_item_retrieval_v1.0_<env>`); `algo_default_deployment`
-  deploys it to the `semantic_item_retrieval_<env>` endpoint.
+- The LanceDB is built by the **`semantic_search_lancedb`** DAG (BQ join export →
+  LanceDB on GCS). It is independent of the container build.
+- `build_and_push_semantic_retrieval_api` builds & pushes the (code-only) container
+  — `cli/create_vector_database.py semantic-metadata` writes just the `model_type.json`
+  — under MLFlow experiment `semantic_item_retrieval_v1.0_<env>`.
+- `algo_default_deployment` deploys it to the `semantic_item_retrieval_<env>` endpoint,
+  passing `SEMANTIC_LANCE_DB_URI` (the GCS DB dir) as a container env var.
 
 ## Requirements
 

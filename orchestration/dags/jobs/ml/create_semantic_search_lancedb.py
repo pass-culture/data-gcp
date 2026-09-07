@@ -8,6 +8,7 @@ from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_FEATURES_DATASET,
+    BIGQUERY_ML_INPUT_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
@@ -34,12 +35,14 @@ INPUT_GCS_FOLDER_URI = (
 INPUT_FILENAME = "item_embeddings_*.parquet"
 
 ## BigQuery CONSTANTS
-INPUT_BQ_TABLE_NAME = "item_embedding_refactor"
+ITEM_EMBEDDING_TABLE = "item_embedding_refactor"
+ITEM_METADATA_TABLE = "item_metadata"
 DEFAULT_VECTOR_COLUMN_NAME = "semantic_content"
 
 ## GCS LanceDB CONSTANTS
 LANCEDB_GCS_URI = f"gs://{DATA_GCS_BUCKET_NAME}/semantic_search_lancedb/"
-LANCEDB_TABLE = "item_embeddings"
+# Table name the retrieval_vector SemanticClient opens (open_table("items")).
+LANCEDB_TABLE = "items"
 
 ## DAG CONFIG
 DAG_ID = "semantic_search_lancedb"
@@ -125,14 +128,25 @@ with DAG(
         project_id=GCP_PROJECT_ID,
         task_id="export_item_embeddings_to_gcs",
         configuration={
-            "extract": {
-                "sourceTable": {
-                    "projectId": GCP_PROJECT_ID,
-                    "datasetId": BIGQUERY_ML_FEATURES_DATASET,
-                    "tableId": INPUT_BQ_TABLE_NAME,
-                },
-                "destinationUris": [f"{INPUT_GCS_FOLDER_URI}/{INPUT_FILENAME}"],
-                "destinationFormat": "PARQUET",
+            "query": {
+                "query": f"""
+                    EXPORT DATA OPTIONS(
+                        uri='{INPUT_GCS_FOLDER_URI}/{INPUT_FILENAME}',
+                        format='PARQUET',
+                        overwrite=true
+                    ) AS
+                    SELECT
+                        emb.item_id,
+                        emb.{{{{ params.vector_embedding_column_name }}}},
+                        im.offer_name,
+                        im.offer_description,
+                        im.offer_category_id,
+                        im.offer_subcategory_id
+                    FROM `{GCP_PROJECT_ID}.{BIGQUERY_ML_FEATURES_DATASET}.{ITEM_EMBEDDING_TABLE}` AS emb
+                    INNER JOIN `{GCP_PROJECT_ID}.{BIGQUERY_ML_INPUT_DATASET}.{ITEM_METADATA_TABLE}` AS im
+                        ON emb.item_id = im.item_id
+                """,
+                "useLegacySql": False,
             }
         },
     )

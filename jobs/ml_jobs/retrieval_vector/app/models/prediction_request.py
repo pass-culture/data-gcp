@@ -15,9 +15,8 @@ DEFAULT_TREND_FIELDS = [
 MODEL_TYPES = {
     "recommendation": DEFAULT_VECTOR_FIELDS,
     "similar_offer": DEFAULT_VECTOR_FIELDS,
-    # semantic : item-to-item vector search + keyword full-text search
     "semantic_search": SEMANTIC_VECTOR_FIELDS,
-    "text_search": [],  # full-text search: no vector column to validate
+    "text_search": [],
     "filter": DEFAULT_TREND_FIELDS,
     "tops": DEFAULT_TREND_FIELDS,
 }

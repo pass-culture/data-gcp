@@ -178,16 +178,17 @@ def graph_database(
 
 @app.command()
 def semantic_metadata() -> None:
-    """Write only the semantic ``model_type.json`` for the serving image.
+    """This function does not build the semantic LanceDB table.
+    It only writes the semantic ``model_type.json`` for the serving image to comply with the expected interface.
 
-    The semantic LanceDB table itself is no longer built here: it is produced and
-    indexed by the standalone ``semantic_search_lancedb`` job, published to GCS,
-    and downloaded by the serving container at startup. This command just drops
+    The semantic LanceDB table itself is produced and indexed by the standalone
+    ``semantic_search_lancedb`` job, published to GCS,
+    then downloaded by the serving container at startup. This command just drops
     the tiny ``model_type.json`` that ``load_model()`` reads to select the
     ``SemanticClient``.
     """
     save_model_type(model_type=SEMANTIC_MODEL_TYPE, output_dir=OUTPUT_DATA_PATH)
-    logger.info("Semantic model_type.json written (no DB baked; served from GCS).")
+    logger.info("Semantic model_type.json written to /metadata (DB served from GCS).")
 
 
 if __name__ == "__main__":

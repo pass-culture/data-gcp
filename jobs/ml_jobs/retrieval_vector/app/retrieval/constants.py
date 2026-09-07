@@ -47,8 +47,7 @@ DEFAULT_ITEM_DOCS_PATH: str = "./metadata/item.docs"
 DEFAULT_USER_DOCS_PATH: str = "./metadata/user.docs"
 DEFAULT_LANCE_DB_URI: str = "./metadata/vector"
 
-# --- Semantic retrieval flavor ---------------------------------------------
-# Output id + textual/categorical metadata returned by the semantic endpoint.
+# --- Semantic retrieval  ---------------------------------------------
 SEMANTIC_BASE_COLUMNS: List[str] = ["item_id"]
 SEMANTIC_DETAIL_COLUMNS: List[str] = [
     "item_name",

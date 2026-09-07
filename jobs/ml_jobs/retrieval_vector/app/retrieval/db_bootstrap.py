@@ -1,16 +1,7 @@
 """Startup helper that materialises the semantic LanceDB on local disk.
 
-The semantic ``items`` table is built and indexed by the standalone
-``semantic_search_lancedb`` job and published to GCS. It is **not** baked into
-the serving image any more (a full-catalogue table is ~20 GB). At container
-startup the ``SemanticClient`` downloads that GCS directory to local disk once,
-then opens it locally — full-text search and the query-item vector lookup then
-run against fast local storage instead of over the network.
-
-Because Vertex online-prediction nodes give no contractual local-disk figure,
-``ensure_local_semantic_db`` first logs the free space and **fails fast** with a
-clear message if the download would not fit (with a safety margin). The first
-deploy's logs therefore reveal the real available disk for the machine type.
+At container startup the `SemanticClient` downloads that GCS directory to local disk once,
+then opens it locally. Vector search is run against fast local storage instead of over the network.
 """
 
 import os
@@ -26,29 +17,29 @@ DISK_SAFETY_FACTOR = 1.3
 
 
 def _gcs_key(gcs_uri: str) -> str:
-    """Strip the ``gs://`` scheme; pyarrow's GcsFileSystem wants ``bucket/key``."""
+    """Strip the `gs://` scheme; pyarrow's GcsFileSystem wants `bucket/key`."""
     if not gcs_uri.startswith("gs://"):
         raise ValueError(f"Expected a gs:// URI, got: {gcs_uri!r}")
     return gcs_uri[len("gs://") :].rstrip("/")
 
 
 def _remote_size_bytes(fs: pafs.FileSystem, root: str) -> int:
-    """Total size of every file under ``root`` on the given filesystem."""
+    """Total size of every file under `root` on the given filesystem."""
     infos = fs.get_file_info(pafs.FileSelector(root, recursive=True))
     return sum(info.size for info in infos if info.type == pafs.FileType.File)
 
 
 def ensure_local_semantic_db(gcs_uri: str, local_path: str) -> str:
-    """Download the semantic LanceDB directory from GCS to ``local_path`` once.
+    """Download the semantic LanceDB directory from GCS to `local_path` once.
 
     Args:
-        gcs_uri: ``gs://…`` directory holding the LanceDB database (the dir that
-            contains ``items.lance/``), as published by ``semantic_search_lancedb``.
+        gcs_uri: `gs://…` directory holding the LanceDB database (the dir that
+            contains `items.lance/`), as published by `semantic_search_lancedb`.
         local_path: Local directory to populate (opened afterwards with
-            ``lancedb.connect(local_path)``).
+            `lancedb.connect(local_path)`).
 
     Returns:
-        ``local_path`` (for convenience).
+        `local_path` (for convenience).
 
     Raises:
         RuntimeError: If the local disk lacks room for the download + margin.

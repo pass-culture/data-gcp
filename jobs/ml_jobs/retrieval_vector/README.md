@@ -54,12 +54,17 @@ Both columns store the same Two Tower item embedding. The distinction is:
 
 > **⚠️ Warning about lancedb distances**: [LanceDB Doc](https://lancedb.github.io/lancedb/search/): If a vector index exists, the distance metric will always be the one you specified when creating the index — the metric parameter in the search call is ignored.
 
-## Semantic retrieval flavor (`semantic`)
 
+## Retriveal client options:
 This codebase serves several **flavors** (each built into its own container and
-deployed to its own Vertex AI endpoint): `two_tower` recommendation, `metadata_graph`
-retrieval, and **`semantic`**. The semantic flavor serves the item semantic
-embeddings produced by the `item_embedding` microservice (`google/embeddinggemma-300m`).
+deployed to its own Vertex AI endpoint):
+1. `two_tower` recommendation,
+2. `metadata_graph` retrieval
+3. **`semantic`** retrieval
+
+### Semantic retrieval client (`semantic`)
+
+The semantic flavor serves the item semantic embeddings produced by the `item_embedding` microservice.
 
 It is configured by `metadata/model_type.json`:
 
@@ -67,14 +72,15 @@ It is configured by `metadata/model_type.json`:
 { "type": "semantic", "vector_search_metric": "cosine" }
 ```
 
-which loads a `SemanticClient`. **No embedding model is bundled** in the container.
+which loads a `SemanticClient` enpoint that queries a lancedb containing item embeddings and metadata.
+Note that **No embedding model is bundled** in the container.
 
 The LanceDB is **not baked into the image** (a full-catalogue table is ~20 GB).
 It is built and indexed by the standalone **`semantic_search_lancedb`** job,
 published to GCS, and **downloaded to local disk at container startup** (from the
 `SEMANTIC_LANCE_DB_URI` env var, with a free-disk pre-check).
 
-### `items` table schema (semantic)
+#### `items` table schema (semantic)
 
 Produced by `semantic_search_lancedb` (see that job's README):
 
@@ -86,10 +92,10 @@ Produced by `semantic_search_lancedb` (see that job's README):
 | `search_text` (`item_name` + `item_description`) | `string` | **FTS** — used for `text_search` |
 | `category`, `subcategory_id` | `string` | Scalar (BITMAP) — `params` filtering |
 
-No `item.docs` / `user.docs` are baked: the query item's vector is read straight
+No `item.docs` / `user.docs` are baked like in the Two Tower retrieval client: the query item's vector is read straight
 from the table.
 
-### Search modes
+#### Search modes
 
 **`semantic_search`** ⭐ — item-to-item vector search (nearest neighbors of an input
 item's vector, cosine; input items excluded; no `tops` fallback).

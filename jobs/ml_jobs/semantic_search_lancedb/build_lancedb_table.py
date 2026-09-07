@@ -1,3 +1,7 @@
+import os
+
+os.environ.setdefault("LANCE_BYPASS_SPILLING", "true")
+
 import lancedb
 import pyarrow as pa
 import pyarrow.compute as pc

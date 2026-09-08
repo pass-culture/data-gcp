@@ -31,10 +31,18 @@ _MS_REPO_NAME = "data-gcp"
 _MS_VOLUME = "microservice-volume"
 _MS_MOUNT = "/app"
 
-_REGISTRY = (
-    "europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry"
-)
-_REGISTRY_FOLDER = "data-gcp"
+_LEGACY_IMAGE_REGISTRY = "europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp"
+_NEW_IMAGE_REGISTRY = "europe-docker.pkg.dev/pc-infra-prd/data"
+
+
+def _default_image_registry() -> str:
+    if GCP_PROJECT_ID.startswith("pc-data-"):
+        return _NEW_IMAGE_REGISTRY
+
+    return _LEGACY_IMAGE_REGISTRY
+
+
+_IMAGE_REGISTRY = _default_image_registry()
 _BASE_PYTHON_IMAGE_NAME = "py312"
 _CELERY_WORKER_IMAGE_NAME = "airflow"
 
@@ -83,7 +91,13 @@ def make_pod_name(name: str) -> str:
 
 
 def get_registry_image(image_name: str) -> str:
-    return f"{_REGISTRY}/{_REGISTRY_FOLDER}/{image_name}"
+    return f"{_IMAGE_REGISTRY}/{image_name}"
+
+
+def _is_known_private_registry_image(image_name: str) -> bool:
+    return image_name.startswith(_LEGACY_IMAGE_REGISTRY) or image_name.startswith(
+        _NEW_IMAGE_REGISTRY
+    )
 
 
 def _make_git_clone_command(
@@ -378,7 +392,7 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
         if runtime_mode == "gitsynced":
             if runtime_image is not None:
                 kwargs["image"] = (
-                    f"{runtime_image if runtime_image.startswith(_REGISTRY) else get_registry_image(runtime_image)}:{runtime_image_tag}"
+                    f"{runtime_image if _is_known_private_registry_image(runtime_image) else get_registry_image(runtime_image)}:{runtime_image_tag}"
                 )
             else:
                 kwargs.setdefault(
@@ -407,7 +421,7 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
                 )
             if not private_registry:
                 kwargs["image"] = f"{runtime_image}:{runtime_image_tag}"
-            elif runtime_image.startswith(_REGISTRY):
+            elif _is_known_private_registry_image(runtime_image):
                 kwargs["image"] = f"{runtime_image}:{runtime_image_tag}"
             else:
                 kwargs["image"] = (

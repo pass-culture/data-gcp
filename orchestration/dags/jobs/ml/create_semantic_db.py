@@ -30,7 +30,7 @@ from jobs.crons import SCHEDULE_DICT
 ###########################################################################
 ## GCS TEMP CONSTANTS
 INPUT_GCS_FOLDER_URI = (
-    f"gs://{ML_BUCKET_TEMP}/semantic_search_lancedb/item_embeddings_{{{{ ts_nodash }}}}"
+    f"gs://{ML_BUCKET_TEMP}/semantic_db_creation/item_embeddings_{{{{ ts_nodash }}}}"
 )
 INPUT_FILENAME = "item_embeddings_*.parquet"
 
@@ -40,14 +40,14 @@ ITEM_METADATA_TABLE = "item_metadata"
 DEFAULT_VECTOR_COLUMN_NAME = "semantic_content"
 
 ## GCS LanceDB CONSTANTS
-LANCEDB_GCS_URI = f"gs://{DATA_GCS_BUCKET_NAME}/semantic_search_lancedb/"
+LANCEDB_GCS_URI = f"gs://{DATA_GCS_BUCKET_NAME}/semantic_db_creation/"
 # Table name the retrieval_vector SemanticClient opens (open_table("items")).
 LANCEDB_TABLE = "items"
 
 ## DAG CONFIG
-DAG_ID = "semantic_search_lancedb"
-BASE_DIR = "data-gcp/jobs/ml_jobs/semantic_search_lancedb"
-INSTANCE_NAME = "semantic-search-lancedb"
+DAG_ID = "semantic_db_creation"
+BASE_DIR = "data-gcp/jobs/ml_jobs/semantic_db_creation"
+INSTANCE_NAME = "semantic-db-creation"
 INSTANCE_TYPE = "n1-standard-4"
 
 

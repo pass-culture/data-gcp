@@ -23,10 +23,10 @@ def _gcs_key(gcs_uri: str) -> str:
     return gcs_uri[len("gs://") :].rstrip("/")
 
 
-def _remote_size_bytes(fs: pafs.FileSystem, root: str) -> int:
-    """Total size of every file under `root` on the given filesystem."""
+def _remote_files(fs: pafs.FileSystem, root: str) -> list[pafs.FileInfo]:
+    """Every file (not directory) under `root` on the given filesystem."""
     infos = fs.get_file_info(pafs.FileSelector(root, recursive=True))
-    return sum(info.size for info in infos if info.type == pafs.FileType.File)
+    return [info for info in infos if info.type == pafs.FileType.File]
 
 
 def ensure_local_semantic_db(gcs_uri: str, local_path: str) -> str:
@@ -47,7 +47,8 @@ def ensure_local_semantic_db(gcs_uri: str, local_path: str) -> str:
     root = _gcs_key(gcs_uri)
     gcs = pafs.GcsFileSystem()
 
-    needed = _remote_size_bytes(gcs, root)
+    files = _remote_files(gcs, root)
+    needed = sum(info.size for info in files)
     parent = os.path.dirname(os.path.abspath(local_path)) or "."
     os.makedirs(parent, exist_ok=True)
     free = shutil.disk_usage(parent).free
@@ -67,6 +68,15 @@ def ensure_local_semantic_db(gcs_uri: str, local_path: str) -> str:
     if os.path.exists(local_path):
         shutil.rmtree(local_path)
     os.makedirs(local_path, exist_ok=True)
+
+    # GCS has no real directories, so the recursive listing returns only files
+    # and copy_files won't create the nested local subdirs for us. Pre-create
+    # every destination directory to avoid a FileNotFoundError when copy_files
+    # writes into deep paths (e.g. items.lance/_indices/<uuid>/auxiliary.idx).
+    for info in files:
+        rel = os.path.relpath(info.path, root)
+        dest_dir = os.path.dirname(os.path.join(local_path, rel))
+        os.makedirs(dest_dir, exist_ok=True)
 
     start = time.time()
     logger.info(f"Downloading semantic LanceDB to {local_path}...")

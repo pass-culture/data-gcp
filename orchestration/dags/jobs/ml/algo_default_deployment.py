@@ -11,6 +11,8 @@ from common.config import (
     DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
+    GCE_SA,
+    GCP_PROJECT_ID,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -31,6 +33,7 @@ default_args = {
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"algo-default-deployment-{ENV_SHORT_NAME}"
+ALGO_TRAINING_SA = f"{GCE_SA}@{GCP_PROJECT_ID}.iam.gserviceaccount.com"
 BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
 DAG_NAME = "algo_default_deployment"
 
@@ -94,10 +97,12 @@ models_to_deploy = [
         "max_nodes": {"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
         # The LanceDB is not baked into the image: it is built by the
         # `semantic_search_lancedb` job and downloaded from this GCS dir at
-        # container startup.
+        # container startup. Run the deployed model as the algo-training SA so
+        # it has GCS read access for that download. Only this endpoint uses algo-training SA.
         "serving_env_vars": {
             "SEMANTIC_LANCE_DB_URI": f"gs://{DATA_GCS_BUCKET_NAME}/semantic_search_lancedb/",
         },
+        "service_account": ALGO_TRAINING_SA,
     },
 ]
 
@@ -150,6 +155,10 @@ with DAG(
                 if serving_env_vars
                 else ""
             )
+            service_account = model_params.get("service_account")
+            service_account_arg = (
+                f" --service-account {service_account}" if service_account else ""
+            )
             deploy_command = f"""
                 python deploy_model.py \
                     --region {DEFAULT_REGION} \
@@ -158,7 +167,8 @@ with DAG(
                     --version-name {version_name} \
                     --instance-type {instance_type} \
                     --min-nodes {min_nodes} \
-                    --max-nodes {max_nodes}{serving_env_vars_arg}
+                    --max-nodes {max_nodes}{serving_env_vars_arg} \
+                    {service_account_arg}
             """
 
             SSHGCEOperator(

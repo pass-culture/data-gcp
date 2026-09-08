@@ -1,5 +1,6 @@
 import json
 from dataclasses import dataclass
+from typing import Optional
 
 import pandas as pd
 import typer
@@ -47,6 +48,9 @@ class EndpointParams:
     max_nodes: int
     instance_type: str = "n1-standard-2"
     traffic_percentage: int = 100
+    # Optional service account the deployed model runs as.
+    # Added to give access to the semantic vertex endpont to get lancedb from GCS.
+    service_account: Optional[str] = None
 
 
 class ModelHandler:
@@ -127,6 +131,7 @@ class ModelHandler:
             machine_type=self.endpoint_params.instance_type,
             traffic_percentage=self.endpoint_params.traffic_percentage,
             autoscaling_target_cpu_utilization=50,
+            service_account=self.endpoint_params.service_account,
         )
         model.wait()
 
@@ -213,6 +218,9 @@ def main(
         help="Optional JSON object of env vars to inject into the serving container, "
         'e.g. \'{"SEMANTIC_LANCE_DB_URI": "gs://.../semantic_search_lancedb/"}\'.',
     ),
+    service_account: str = typer.Option(
+        None, help="Optional service account the deployed model runs as."
+    ),
 ) -> None:
     MODEL_TYPE_CONFIG = {"tensorflow": TFContainer, "custom": CustomContainer}
     env_vars = json.loads(serving_env_vars) if serving_env_vars else None
@@ -256,6 +264,7 @@ def main(
         max_nodes=int(max_nodes),
         instance_type=instance_type,
         traffic_percentage=int(traffic_percentage),
+        service_account=service_account,
     )
     handler = ModelHandler(region, GCP_PROJECT_ID, model_params, endpoint_params)
     # Upload new model to registery

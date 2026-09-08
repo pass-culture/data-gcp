@@ -47,6 +47,11 @@ SCHEDULE_DICT = {
         "stg": "0 11 * * 2",  # every Tuesday at 11:00 AM
         "dev": "0 11 * * 2",  # every Tuesday at 11:00 AM
     },
+    "import_harvestr": {
+        "prod": "0 3 * * *",  # every day at 3:00 AM
+        "stg": "0 3 * * *",  # every day at 3:00 AM
+        "dev": "0 3 * * *",  # every day at 3:00 AM
+    },
     "import_appfollow": {
         "prod": "0 2 * * 1",
         "stg": "0 3 * * 1",

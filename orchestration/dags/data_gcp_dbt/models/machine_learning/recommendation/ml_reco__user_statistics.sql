@@ -32,10 +32,10 @@ select
     selected_users.user_deposit_initial_amount,
     selected_users.user_theoretical_remaining_credit,
     selected_users.booking_cnt,
-    au.consult_offer,
-    au.has_added_offer_to_favorites,
     user_loc.user_latitude as user_subscription_latitude,
-    user_loc.user_longitude as user_subscription_longitude
+    user_loc.user_longitude as user_subscription_longitude,
+    coalesce(au.consult_offer, 0) as consult_offer,
+    coalesce(au.has_added_offer_to_favorites, 0) as has_added_offer_to_favorites
 from selected_users
 left join
     {{ ref("firebase_aggregated_users") }} as au on selected_users.user_id = au.user_id

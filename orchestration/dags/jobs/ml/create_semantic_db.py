@@ -40,12 +40,12 @@ ITEM_METADATA_TABLE = "item_metadata"
 DEFAULT_VECTOR_COLUMN_NAME = "semantic_content"
 
 ## GCS LanceDB CONSTANTS
-LANCEDB_GCS_URI = f"gs://{DATA_GCS_BUCKET_NAME}/semantic_db_creation/"
+LANCEDB_GCS_URI = f"gs://{DATA_GCS_BUCKET_NAME}/semantic_search_lancedb/"
 # Table name the retrieval_vector SemanticClient opens (open_table("items")).
 LANCEDB_TABLE = "items"
 
 ## DAG CONFIG
-DAG_ID = "semantic_db_creation"
+DAG_ID = "create_semantic_db"
 BASE_DIR = "data-gcp/jobs/ml_jobs/semantic_db_creation"
 INSTANCE_NAME = "semantic-db-creation"
 INSTANCE_TYPE = "n1-standard-4"

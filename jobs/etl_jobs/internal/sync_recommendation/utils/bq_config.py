@@ -102,8 +102,6 @@ BQ_TABLES_CONFIG: Dict[str, Dict] = {
     "offer_metadata": {
         "columns": {
             "offer_id": "character varying",
-            "category": "character varying",
-            "subcategory_id": "character varying",
             "search_group_name": "character varying",
         },
         "bigquery_table_name": "offer_metadata",

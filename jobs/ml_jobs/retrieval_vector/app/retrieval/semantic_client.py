@@ -46,8 +46,6 @@ class SemanticClient(DefaultClient):
         output_metric_columns: List[str] = SEMANTIC_OUTPUT_METRIC_COLUMNS,
         lance_db_uri: str = DEFAULT_LANCE_DB_URI,
         vector_search_metric: str = SEMANTIC_VECTOR_SEARCH_METRIC,
-        *args,
-        **kwargs,
     ) -> None:
         super().__init__(
             base_columns=base_columns,
@@ -55,8 +53,6 @@ class SemanticClient(DefaultClient):
             output_metric_columns=output_metric_columns,
             lance_db_uri=lance_db_uri,
             vector_search_metric=vector_search_metric,
-            *args,
-            **kwargs,
         )
 
     def load(self) -> None:

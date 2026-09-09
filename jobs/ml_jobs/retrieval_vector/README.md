@@ -112,8 +112,78 @@ curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
   -d '{"instances": [{"model_type": "text_search", "text": "roman policier", "size": 10}]}'
 ```
 
-Both modes accept `params` (filtering on `category` / `subcategory_id`) and `debug`
-(returns the metadata columns plus `_distance` / `_score`). Output is `item_id` + metadata.
+Both modes also accept:
+
+- `params` — metadata filter on the indexed scalar columns `category` / `subcategory_id` (see below).
+- `size` — max results to return (default `500`).
+- `excluded_items` — list of item ids to drop from the results.
+- `debug` — when `true`, each hit also includes the metadata columns plus `_distance` (semantic) / `_score` (text).
+- `offer_id` — single-item shorthand for `items` (used as a fallback when `items` is empty).
+
+Output is `item_id` + metadata.
+
+#### Filtering with `params`
+
+`params` is a MongoDB-style filter tree compiled to a LanceDB `WHERE` clause. Filter only
+on the indexed scalar columns (`category`, `subcategory_id`). Supported operators:
+
+| Kind | Operators |
+| ---- | --------- |
+| Comparison | `$eq`, `$neq`, `$lt`, `$lte`, `$gt`, `$gte` |
+| Membership | `$in`, `$nin` (value is a list) |
+| Logical | `$and`, `$or` (value is a list of sub-filters) |
+
+Several fields in one object are combined with `AND`. Whenever `params` is present the
+filter is applied as a **prefilter** (before the vector / FTS search) automatically — you
+don't need to set `prefilter` yourself. Category/subcategory values below are illustrative.
+
+```sh
+# semantic_search restricted to a single category ($eq)
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-123"], "size": 10,
+       "params": {"category": {"$eq": "LIVRE"}}}]}'
+
+# only certain subcategories ($in)
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-123"], "size": 10,
+       "params": {"subcategory_id": {"$in": ["LIVRE_PAPIER", "LIVRE_AUDIO_PHYSIQUE"]}}}]}'
+
+# exclude a category ($neq) AND keep only some subcategories (implicit AND across fields)
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-123"], "size": 10,
+       "params": {"category": {"$neq": "INSTRUMENT"}, "subcategory_id": {"$in": ["SEANCE_CINE"]}}}]}'
+
+# OR across categories ($or)
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-123"], "size": 10,
+       "params": {"$or": [{"category": {"$eq": "LIVRE"}}, {"category": {"$eq": "MUSIQUE_LIVE"}}]}}]}'
+
+# text_search with a category filter
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "text_search", "text": "roman policier", "size": 10,
+       "params": {"category": {"$in": ["LIVRE"]}}}]}'
+```
+
+#### Other examples
+
+```sh
+# exclude specific items from the neighbors (on top of the query items, always excluded)
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-123"],
+       "excluded_items": ["product-999", "product-888"], "size": 10}]}'
+
+# debug: return metadata columns + _distance for inspection
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-123"], "size": 5, "debug": true}]}'
+
+# offer_id shorthand (equivalent to items: ["product-123"])
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "offer_id": "product-123", "size": 10}]}'
+
+# multi-item query: neighbors of several items at once
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-123", "product-456"], "size": 20}]}'
+```
 
 > Free-text **semantic** queries (embedding the query with EmbeddingGemma) are
 > intentionally **not** handled here — that will be a separate embed endpoint that

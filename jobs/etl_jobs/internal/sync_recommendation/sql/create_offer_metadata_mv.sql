@@ -2,20 +2,12 @@ drop function if exists get_offer_metadata_{{ ts_nodash }}
 cascade
 ;
 create or replace function get_offer_metadata_{{ ts_nodash }} ()
-returns
-    table(
-        offer_id varchar,
-        category varchar,
-        subcategory_id varchar,
-        search_group_name varchar
-    )
+returns table(offer_id varchar, search_group_name varchar)
 as $body$
 BEGIN
     RETURN QUERY
     SELECT
         offer_metadata.offer_id::varchar as offer_id,
-        offer_metadata.category::varchar as category,
-        offer_metadata.subcategory_id::varchar as subcategory_id,
         offer_metadata.search_group_name::varchar as search_group_name
     FROM public.offer_metadata offer_metadata;
 END;

@@ -47,7 +47,6 @@ TABLES_TO_PROCESS = [
 
 MATERIALIZED_VIEWS = [
     "enriched_user_mv",
-    "item_ids_mv",
     "non_recommendable_items_mv",
     "iris_france_mv",
     "recommendable_offers_raw_mv",

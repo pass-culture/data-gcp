@@ -48,6 +48,12 @@ def ensure_local_semantic_db(gcs_uri: str, local_path: str) -> str:
     gcs = pafs.GcsFileSystem()
 
     files = _remote_files(gcs, root)
+    # Fail fast on a misconfigured / empty source.
+    if not files:
+        raise RuntimeError(
+            f"No files found under {gcs_uri}. Check the SEMANTIC_LANCE_DB_URI "
+            f"config; the semantic LanceDB may not have been published yet."
+        )
     needed = sum(info.size for info in files)
     parent = os.path.dirname(os.path.abspath(local_path)) or "."
     os.makedirs(parent, exist_ok=True)

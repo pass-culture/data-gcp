@@ -17,10 +17,10 @@ from commons.constants import (
 @dataclass
 class TFContainer:
     serving_container: str
-    artifact_uri: str = None
+    artifact_uri: Optional[str] = None
     # Optional {name: value} env vars injected into the serving container. Used
     # e.g. by the semantic retrieval endpoint to receive the GCS LanceDB URI.
-    serving_container_environment_variables: dict = None
+    serving_container_environment_variables: Optional[dict] = None
     serving_container_predict_route = None
     serving_container_health_route = None
     serving_container_ports = None
@@ -48,8 +48,6 @@ class EndpointParams:
     max_nodes: int
     instance_type: str = "n1-standard-2"
     traffic_percentage: int = 100
-    # Optional service account the deployed model runs as.
-    # Added to give access to the semantic vertex endpont to get lancedb from GCS.
     service_account: Optional[str] = None
 
 

@@ -94,7 +94,7 @@ def get_registry_image(image_name: str) -> str:
     return f"{_IMAGE_REGISTRY}/{image_name}"
 
 
-def _is_known_private_registry_image(image_name: str) -> bool:
+def _is_valid_registry_image(image_name: str) -> bool:
     return image_name.startswith(_LEGACY_IMAGE_REGISTRY) or image_name.startswith(
         _NEW_IMAGE_REGISTRY
     )
@@ -392,7 +392,7 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
         if runtime_mode == "gitsynced":
             if runtime_image is not None:
                 kwargs["image"] = (
-                    f"{runtime_image if _is_known_private_registry_image(runtime_image) else get_registry_image(runtime_image)}:{runtime_image_tag}"
+                    f"{runtime_image if _is_valid_registry_image(runtime_image) else get_registry_image(runtime_image)}:{runtime_image_tag}"
                 )
             else:
                 kwargs.setdefault(
@@ -421,7 +421,7 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
                 )
             if not private_registry:
                 kwargs["image"] = f"{runtime_image}:{runtime_image_tag}"
-            elif _is_known_private_registry_image(runtime_image):
+            elif _is_valid_registry_image(runtime_image):
                 kwargs["image"] = f"{runtime_image}:{runtime_image_tag}"
             else:
                 kwargs["image"] = (

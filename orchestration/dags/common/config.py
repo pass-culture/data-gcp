@@ -26,7 +26,9 @@ GCS_AIRFLOW_BUCKET = os.environ.get(
 
 
 def _default_airflow_namespace() -> str:
-    """Return the Kubernetes namespace used by Airflow pods."""
+    """Return the Kubernetes namespace used by Airflow pods.
+    This function will be removed once all projects are migrated to the new namespace.
+    """
 
     if GCP_PROJECT_ID.startswith("pc-data-"):
         return f"airflow-{ENV_SHORT_NAME}"

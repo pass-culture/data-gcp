@@ -36,6 +36,9 @@ _NEW_IMAGE_REGISTRY = "europe-docker.pkg.dev/pc-infra-prd/data"
 
 
 def _default_image_registry() -> str:
+    """Determine the default image registry based on the GCP project ID.
+    This function will be removed once all projects are migrated to the new image registry.
+    """
     if GCP_PROJECT_ID.startswith("pc-data-"):
         return _NEW_IMAGE_REGISTRY
 

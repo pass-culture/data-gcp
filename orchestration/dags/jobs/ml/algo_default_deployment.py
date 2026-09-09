@@ -1,5 +1,7 @@
 import json
+from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import Optional
 
 from airflow import DAG
 from airflow.models import Param
@@ -59,51 +61,55 @@ SEMANTIC_RETRIEVAL_DICT = {
 }
 
 
+@dataclass
+class ModelDeployment:
+    experiment_name: str
+    endpoint_name: str
+    instance_type: str
+    min_nodes: int
+    max_nodes: int
+    version_name: str = "v_{{ ts_nodash }}"
+    serving_env_vars: Optional[dict] = None
+    service_account: Optional[str] = None
+
+
 models_to_deploy = [
     # ranking endpoint
-    {
-        "experiment_name": f"ranking_endpoint_v1.1_{ENV_SHORT_NAME}",
-        "endpoint_name": f"recommendation_user_ranking_{ENV_SHORT_NAME}",
-        "version_name": "v_{{ ts_nodash }}",
-        "instance_type": RANKING_DICT[ENV_SHORT_NAME],
-        "min_nodes": {"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
-        "max_nodes": {"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
-    },
+    ModelDeployment(
+        experiment_name=f"ranking_endpoint_v1.1_{ENV_SHORT_NAME}",
+        endpoint_name=f"recommendation_user_ranking_{ENV_SHORT_NAME}",
+        instance_type=RANKING_DICT[ENV_SHORT_NAME],
+        min_nodes={"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
+        max_nodes={"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
+    ),
     # two-tower retrieval endpoint
-    {
-        "experiment_name": f"retrieval_recommendation_v1.2_{ENV_SHORT_NAME}",
-        "endpoint_name": f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
-        "version_name": "v_{{ ts_nodash }}",
-        "instance_type": CORESERVATION_RETRIEVAL_DICT[ENV_SHORT_NAME],
-        "min_nodes": {"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
-        "max_nodes": {"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
-    },
+    ModelDeployment(
+        experiment_name=f"retrieval_recommendation_v1.2_{ENV_SHORT_NAME}",
+        endpoint_name=f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
+        instance_type=CORESERVATION_RETRIEVAL_DICT[ENV_SHORT_NAME],
+        min_nodes={"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
+        max_nodes={"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
+    ),
     # graph retrieval endpoint
-    {
-        "experiment_name": f"graph_retrieval_recommendation_v1.1_{ENV_SHORT_NAME}",
-        "endpoint_name": f"recommendation_graph_retrieval_{ENV_SHORT_NAME}",
-        "version_name": "v_{{ ts_nodash }}",
-        "instance_type": GRAPH_RETRIEVAL_DICT[ENV_SHORT_NAME],
-        "min_nodes": {"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
-        "max_nodes": {"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
-    },
+    ModelDeployment(
+        experiment_name=f"graph_retrieval_recommendation_v1.1_{ENV_SHORT_NAME}",
+        endpoint_name=f"recommendation_graph_retrieval_{ENV_SHORT_NAME}",
+        instance_type=GRAPH_RETRIEVAL_DICT[ENV_SHORT_NAME],
+        min_nodes={"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
+        max_nodes={"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
+    ),
     # semantic item retrieval endpoint
-    {
-        "experiment_name": f"semantic_item_retrieval_v1.0_{ENV_SHORT_NAME}",
-        "endpoint_name": f"semantic_item_retrieval_{ENV_SHORT_NAME}",
-        "version_name": "v_{{ ts_nodash }}",
-        "instance_type": SEMANTIC_RETRIEVAL_DICT[ENV_SHORT_NAME],
-        "min_nodes": {"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
-        "max_nodes": {"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
-        # The LanceDB is not baked into the image: it is built by the
-        # `semantic_search_lancedb` job and downloaded from this GCS dir at
-        # container startup. Run the deployed model as the algo-training SA so
-        # it has GCS read access for that download. Only this endpoint uses algo-training SA.
-        "serving_env_vars": {
+    ModelDeployment(
+        experiment_name=f"semantic_item_retrieval_v1.0_{ENV_SHORT_NAME}",
+        endpoint_name=f"semantic_item_retrieval_{ENV_SHORT_NAME}",
+        instance_type=SEMANTIC_RETRIEVAL_DICT[ENV_SHORT_NAME],
+        min_nodes={"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
+        max_nodes={"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
+        serving_env_vars={
             "SEMANTIC_LANCE_DB_URI": f"gs://{DATA_GCS_BUCKET_NAME}/semantic_search_lancedb/",
         },
-        "service_account": ALGO_TRAINING_SA,
-    },
+        service_account=ALGO_TRAINING_SA,
+    ),
 ]
 
 
@@ -142,37 +148,31 @@ with DAG(
 
     with TaskGroup("deploy_models", dag=dag) as deploy_models:
         for model_params in models_to_deploy:
-            experiment_name = model_params["experiment_name"]
-            endpoint_name = model_params["endpoint_name"]
-            version_name = model_params["version_name"]
-            instance_type = model_params["instance_type"]
-            min_nodes = model_params["min_nodes"]
-            max_nodes = model_params["max_nodes"]
-            serving_env_vars = model_params.get("serving_env_vars")
             # Single-quote the JSON so the shell passes it as one argument.
             serving_env_vars_arg = (
-                f" --serving-env-vars '{json.dumps(serving_env_vars)}'"
-                if serving_env_vars
+                f" --serving-env-vars '{json.dumps(model_params.serving_env_vars)}'"
+                if model_params.serving_env_vars
                 else ""
             )
-            service_account = model_params.get("service_account")
             service_account_arg = (
-                f" --service-account {service_account}" if service_account else ""
+                f" --service-account {model_params.service_account}"
+                if model_params.service_account
+                else ""
             )
             deploy_command = f"""
                 python deploy_model.py \
                     --region {DEFAULT_REGION} \
-                    --experiment-name {experiment_name} \
-                    --endpoint-name {endpoint_name} \
-                    --version-name {version_name} \
-                    --instance-type {instance_type} \
-                    --min-nodes {min_nodes} \
-                    --max-nodes {max_nodes}{serving_env_vars_arg} \
+                    --experiment-name {model_params.experiment_name} \
+                    --endpoint-name {model_params.endpoint_name} \
+                    --version-name {model_params.version_name} \
+                    --instance-type {model_params.instance_type} \
+                    --min-nodes {model_params.min_nodes} \
+                    --max-nodes {model_params.max_nodes}{serving_env_vars_arg} \
                     {service_account_arg}
             """
 
             SSHGCEOperator(
-                task_id=f"deploy_model_{experiment_name}_{endpoint_name}",
+                task_id=f"deploy_model_{model_params.experiment_name}_{model_params.endpoint_name}",
                 instance_name=GCE_INSTANCE,
                 base_dir=BASE_DIR,
                 command=deploy_command,

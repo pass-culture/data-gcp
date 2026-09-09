@@ -29,6 +29,62 @@ def _remote_files(fs: pafs.FileSystem, root: str) -> list[pafs.FileInfo]:
     return [info for info in infos if info.type == pafs.FileType.File]
 
 
+def _validate_remote_files(files: list[pafs.FileInfo], gcs_uri: str) -> None:
+    """Fail fast when the configured source does not contain any files."""
+    if not files:
+        raise RuntimeError(
+            f"No files found under {gcs_uri}. Check the SEMANTIC_LANCE_DB_URI "
+            f"config; the semantic LanceDB may not have been published yet."
+        )
+
+
+def _check_disk_space(
+    files: list[pafs.FileInfo], gcs_uri: str, local_path: str
+) -> None:
+    """Ensure the destination has room for the database and safety margin."""
+    needed = sum(info.size for info in files)
+    parent = os.path.dirname(os.path.abspath(local_path)) or "."
+    os.makedirs(parent, exist_ok=True)
+    free = shutil.disk_usage(parent).free
+    logger.info(
+        f"Semantic DB download: source={gcs_uri} size={needed / 1e9:.2f} GB, "
+        f"free disk at {parent}={free / 1e9:.2f} GB "
+        f"(need {needed * DISK_SAFETY_FACTOR / 1e9:.2f} GB incl. x{DISK_SAFETY_FACTOR} margin)"
+    )
+    if free < needed * DISK_SAFETY_FACTOR:
+        raise RuntimeError(
+            f"Not enough local disk to download the semantic LanceDB: need "
+            f"~{needed * DISK_SAFETY_FACTOR / 1e9:.2f} GB, only {free / 1e9:.2f} GB free "
+            f"at {parent}. Use a larger machine type or read the DB directly from GCS."
+        )
+
+
+def _prepare_local_directory(
+    files: list[pafs.FileInfo], root: str, local_path: str
+) -> None:
+    """Create a clean local directory with all nested destination directories."""
+    if os.path.exists(local_path):
+        shutil.rmtree(local_path)
+    os.makedirs(local_path, exist_ok=True)
+    for info in files:
+        rel = os.path.relpath(info.path, root)
+        dest_dir = os.path.dirname(os.path.join(local_path, rel))
+        os.makedirs(dest_dir, exist_ok=True)
+
+
+def _download_files(root: str, local_path: str, gcs: pafs.FileSystem) -> None:
+    """Copy the remote database files into the prepared local directory."""
+    start = time.time()
+    logger.info(f"Downloading semantic LanceDB to {local_path}...")
+    pafs.copy_files(
+        source=root,
+        destination=local_path,
+        source_filesystem=gcs,
+        destination_filesystem=pafs.LocalFileSystem(),
+    )
+    logger.info(f"Semantic LanceDB downloaded in {time.time() - start:.1f}s.")
+
+
 def ensure_local_semantic_db(gcs_uri: str, local_path: str) -> str:
     """Download the semantic LanceDB directory from GCS to `local_path` once.
 
@@ -48,52 +104,8 @@ def ensure_local_semantic_db(gcs_uri: str, local_path: str) -> str:
     gcs = pafs.GcsFileSystem()
 
     files = _remote_files(gcs, root)
-    # Fail fast on a misconfigured / empty source.
-    if not files:
-        raise RuntimeError(
-            f"No files found under {gcs_uri}. Check the SEMANTIC_LANCE_DB_URI "
-            f"config; the semantic LanceDB may not have been published yet."
-        )
-    needed = sum(info.size for info in files)
-    parent = os.path.dirname(os.path.abspath(local_path)) or "."
-    os.makedirs(parent, exist_ok=True)
-    free = shutil.disk_usage(parent).free
-    logger.info(
-        f"Semantic DB download: source={gcs_uri} size={needed / 1e9:.2f} GB, "
-        f"free disk at {parent}={free / 1e9:.2f} GB "
-        f"(need {needed * DISK_SAFETY_FACTOR / 1e9:.2f} GB incl. x{DISK_SAFETY_FACTOR} margin)"
-    )
-    if free < needed * DISK_SAFETY_FACTOR:
-        raise RuntimeError(
-            f"Not enough local disk to download the semantic LanceDB: need "
-            f"~{needed * DISK_SAFETY_FACTOR / 1e9:.2f} GB, only {free / 1e9:.2f} GB free "
-            f"at {parent}. Use a larger machine type or read the DB directly from GCS."
-        )
-
-    # Start from a clean directory so a partial previous download can't linger.
-    if os.path.exists(local_path):
-        shutil.rmtree(local_path)
-    os.makedirs(local_path, exist_ok=True)
-
-    # GCS has no real directories, so the recursive listing returns only files
-    # and copy_files won't create the nested local subdirs for us. Pre-create
-    # every destination directory to avoid a FileNotFoundError when copy_files
-    # writes into deep paths (e.g. items.lance/_indices/<uuid>/auxiliary.idx).
-    for info in files:
-        rel = os.path.relpath(info.path, root)
-        dest_dir = os.path.dirname(os.path.join(local_path, rel))
-        os.makedirs(dest_dir, exist_ok=True)
-
-    start = time.time()
-    logger.info(f"Downloading semantic LanceDB to {local_path}...")
-    pafs.copy_files(
-        source=root,
-        destination=local_path,
-        source_filesystem=gcs,
-        destination_filesystem=pafs.LocalFileSystem(),
-    )
-    logger.info(
-        f"Semantic LanceDB downloaded in {time.time() - start:.1f}s "
-        f"({needed / 1e9:.2f} GB)."
-    )
+    _validate_remote_files(files, gcs_uri)
+    _check_disk_space(files, gcs_uri, local_path)
+    _prepare_local_directory(files, root, local_path)
+    _download_files(root, local_path, gcs)
     return local_path

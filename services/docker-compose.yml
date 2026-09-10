@@ -1,0 +1,22 @@
+services:
+  cube:
+    image: cubejs/cube:latest
+    ports:
+      - 4000:4000   # Playground UI
+      - 3000:3000   # REST API
+      - 15432:15432 # SQL API (Postgres protocol)
+    environment:
+      NODE_EXTRA_CA_CERTS: /cube/conf/certs/nscacert_combined.pem
+      CUBEJS_DB_TYPE: bigquery
+      CUBEJS_DB_BQ_PROJECT_ID: "${CUBEJS_DB_BQ_PROJECT_ID:-passculture-data-prod}"
+      CUBEJS_DB_BQ_DATASET: "${CUBEJS_DB_BQ_DATASET:-analytics_prod}"
+      GOOGLE_APPLICATION_CREDENTIALS: /cube/conf/application_default_credentials.json
+      CUBEJS_DEV_MODE: "true"
+      CUBEJS_API_SECRET: "${CUBEJS_API_SECRET:-secret}"
+      CUBEJS_PG_SQL_PORT: "15432"
+    volumes:
+      - ./cubejs/schema:/cube/conf/schema
+      - ./cubejs/schema:/cube/conf/model
+      - ./cubejs/cube.js:/cube/conf/cube.js
+      - ./cubejs/conf/nscacert_combined.pem:/cube/conf/nscacert_combined.pem:ro
+      - ${HOME}/.config/gcloud/application_default_credentials.json:/cube/conf/application_default_credentials.json:ro

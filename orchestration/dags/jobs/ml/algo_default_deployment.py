@@ -13,7 +13,6 @@ from common.config import (
     DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
-    GCE_SA,
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
@@ -35,9 +34,16 @@ default_args = {
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"algo-default-deployment-{ENV_SHORT_NAME}"
-ALGO_TRAINING_SA = f"{GCE_SA}@{GCP_PROJECT_ID}.iam.gserviceaccount.com"
 BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
 DAG_NAME = "algo_default_deployment"
+
+## SA for Vertex Endpoints Continuous Deployment, map env names for new infra
+env_short_name_mapping = {
+    "prod": "prd",
+    "stg": "stg",
+    "dev": "dev",
+}
+VERTEX_ENDPOINTS_CD_SA = f"sa-vertex-endpoints-{env_short_name_mapping[ENV_SHORT_NAME]}@{GCP_PROJECT_ID}.iam.gserviceaccount.com"
 
 RANKING_DICT = {
     "prod": "n1-highcpu-4",
@@ -108,7 +114,7 @@ models_to_deploy = [
         serving_env_vars={
             "SEMANTIC_LANCE_DB_URI": f"gs://{DATA_GCS_BUCKET_NAME}/semantic_search_lancedb/",
         },
-        service_account=ALGO_TRAINING_SA,
+        service_account=VERTEX_ENDPOINTS_CD_SA,
     ),
 ]
 

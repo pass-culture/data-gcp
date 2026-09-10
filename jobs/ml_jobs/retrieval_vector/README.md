@@ -54,6 +54,159 @@ Both columns store the same Two Tower item embedding. The distinction is:
 
 > **⚠️ Warning about lancedb distances**: [LanceDB Doc](https://lancedb.github.io/lancedb/search/): If a vector index exists, the distance metric will always be the one you specified when creating the index — the metric parameter in the search call is ignored.
 
+
+## Retriveal client options:
+This codebase serves several **flavors** (each built into its own container and
+deployed to its own Vertex AI endpoint):
+1. `two_tower` recommendation,
+2. `metadata_graph` retrieval
+3. **`semantic`** retrieval
+
+### Semantic retrieval client (`semantic`)
+
+The semantic flavor serves the item semantic embeddings produced by the `item_embedding` microservice.
+
+It is configured by `metadata/model_type.json`:
+
+```json
+{ "type": "semantic", "vector_search_metric": "cosine" }
+```
+
+which loads a `SemanticClient` enpoint that queries a lancedb containing item embeddings and metadata.
+Note that **No embedding model is bundled** in the container.
+
+The LanceDB is **not baked into the image** (a full-catalogue table is ~20 GB).
+It is built and indexed by the standalone **`semantic_search_lancedb`** job,
+published to GCS, and **downloaded to local disk at container startup** (from the
+`SEMANTIC_LANCE_DB_URI` env var, with a free-disk pre-check).
+
+#### `items` table schema (semantic)
+
+Produced by `semantic_search_lancedb` (see that job's README):
+
+| Column | Type | Index |
+|--------|------|-------|
+| `vector` | `float32[768]` | Vector (IVF_PQ, **cosine**) — used for `semantic_search` |
+| `item_id` | `string` | Scalar (BTREE) — output id + fast query-vector lookup |
+| `item_name`, `item_description` | `string` | Returned metadata |
+| `search_text` (`item_name` + `item_description`) | `string` | **FTS** — used for `text_search` |
+| `category`, `subcategory_id` | `string` | Scalar (BITMAP) — `params` filtering |
+
+No `item.docs` / `user.docs` are baked like in the Two Tower retrieval client: the query item's vector is read straight
+from the table.
+
+#### Search modes
+
+**`semantic_search`** ⭐ — item-to-item vector search (nearest neighbors of an input
+item's vector, cosine; input items excluded; no `tops` fallback).
+
+```sh
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-2323205"], "size": 10}]}'
+```
+
+**`text_search`** — keyword full-text search over `search_text`.
+
+```sh
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "text_search", "text": "roman policier", "size": 10}]}'
+```
+
+Both modes also accept:
+
+- `params` — metadata filter on the indexed scalar columns `category` / `subcategory_id` (see below).
+- `size` — max results to return (default `500`).
+- `excluded_items` — list of item ids to drop from the results.
+- `debug` — when `true`, each hit also includes the metadata columns plus `_distance` (semantic) / `_score` (text).
+- `offer_id` — single-item shorthand for `items` (used as a fallback when `items` is empty).
+
+Output is `item_id` + metadata.
+
+If you want to get all the item's metadata in the response, add the paramater `"debug":"true"` to your request body.
+e.g.:
+````
+sh
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "text_search", "text": "roman policier", "size": 10, "debug":"true"}]}'
+```
+
+#### Filtering with `params`
+
+`params` is a MongoDB-style filter tree compiled to a LanceDB `WHERE` clause. Filter only
+on the indexed scalar columns (`category`, `subcategory_id`). Supported operators:
+
+| Kind | Operators |
+| ---- | --------- |
+| Comparison | `$eq`, `$neq`, `$lt`, `$lte`, `$gt`, `$gte` |
+| Membership | `$in`, `$nin` (value is a list) |
+| Logical | `$and`, `$or` (value is a list of sub-filters) |
+
+Several fields in one object are combined with `AND`. Whenever `params` is present the
+filter is applied as a **prefilter** (before the vector / FTS search) automatically — you
+don't need to set `prefilter` yourself. Category/subcategory values below are illustrative.
+
+```sh
+# semantic_search restricted to a single category ($eq)
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-2323205"], "size": 10,
+       "params": {"category": {"$eq": "LIVRE"}}}]}'
+
+# only certain subcategories ($in)
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-2323205"], "size": 10,
+       "params": {"subcategory_id": {"$in": ["LIVRE_PAPIER", "LIVRE_AUDIO_PHYSIQUE"]}}}]}'
+
+# exclude a category ($neq) AND keep only some subcategories (implicit AND across fields)
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-2323205"], "size": 10,
+       "params": {"category": {"$neq": "INSTRUMENT"}, "subcategory_id": {"$in": ["SEANCE_CINE"]}}}]}'
+
+# OR across categories ($or)
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-2323205"], "size": 10,
+       "params": {"$or": [{"category": {"$eq": "LIVRE"}}, {"category": {"$eq": "MUSIQUE_LIVE"}}]}}]}'
+
+# text_search with a category filter
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "text_search", "text": "roman policier", "size": 10,
+       "params": {"category": {"$in": ["LIVRE"]}}}]}'
+```
+
+#### Other examples
+
+```sh
+# exclude specific items from the neighbors (on top of the query items, always excluded)
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-2323205"],
+       "excluded_items": ["product-999", "product-888"], "size": 10}]}'
+
+# debug: return metadata columns + _distance for inspection
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-2323205"], "size": 5, "debug": true}]}'
+
+# offer_id shorthand (equivalent to items: ["product-2323205"])
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "offer_id": "product-2323205", "size": 10}]}'
+
+# multi-item query: neighbors of several items at once
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-2323205", "product-456"], "size": 20}]}'
+```
+
+> Free-text **semantic** queries (embedding the query with EmbeddingGemma) are
+> intentionally **not** handled here — that will be a separate embed endpoint that
+> returns a query vector, keeping this service model-free and lightweight.
+
+### Build & deploy
+
+- The LanceDB is built by the **`semantic_search_lancedb`** DAG (BQ join export →
+  LanceDB on GCS). It is independent of the container build.
+- `build_and_push_semantic_retrieval_api` builds & pushes the (code-only) container
+  — `cli/create_vector_database.py semantic-metadata` writes just the `model_type.json`
+  — under MLFlow experiment `semantic_item_retrieval_v1.0_<env>`.
+- `algo_default_deployment` deploys it to the `semantic_item_retrieval_<env>` endpoint,
+  passing `SEMANTIC_LANCE_DB_URI` (the GCS DB dir) as a container env var.
+
 ## Requirements
 
 - **Python 3.11**
@@ -165,7 +318,7 @@ All prediction requests use the same envelope. Only the first element of `instan
 ```json
 {
   "predictions": [
-    { "idx": 0, "item_id": "product-123" },
+    { "idx": 0, "item_id": "product-2323205" },
     ...
   ]
 }

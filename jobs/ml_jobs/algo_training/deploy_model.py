@@ -1,4 +1,6 @@
+import json
 from dataclasses import dataclass
+from typing import Optional
 
 import pandas as pd
 import typer
@@ -15,7 +17,10 @@ from commons.constants import (
 @dataclass
 class TFContainer:
     serving_container: str
-    artifact_uri: str = None
+    artifact_uri: Optional[str] = None
+    # Optional {name: value} env vars injected into the serving container. Used
+    # e.g. by the semantic retrieval endpoint to receive the GCS LanceDB URI.
+    serving_container_environment_variables: Optional[dict] = None
     serving_container_predict_route = None
     serving_container_health_route = None
     serving_container_ports = None
@@ -43,6 +48,7 @@ class EndpointParams:
     max_nodes: int
     instance_type: str = "n1-standard-2"
     traffic_percentage: int = 100
+    service_account: Optional[str] = None
 
 
 class ModelHandler:
@@ -88,6 +94,7 @@ class ModelHandler:
             serving_container_predict_route=self.model_params.container_type.serving_container_predict_route,
             serving_container_health_route=self.model_params.container_type.serving_container_health_route,
             serving_container_ports=self.model_params.container_type.serving_container_ports,
+            serving_container_environment_variables=self.model_params.container_type.serving_container_environment_variables,
         )
         return model
 
@@ -122,6 +129,7 @@ class ModelHandler:
             machine_type=self.endpoint_params.instance_type,
             traffic_percentage=self.endpoint_params.traffic_percentage,
             autoscaling_target_cpu_utilization=50,
+            service_account=self.endpoint_params.service_account,
         )
         model.wait()
 
@@ -203,8 +211,17 @@ def main(
         10,
         help="Total max nodes to deploy",
     ),
+    serving_env_vars: str = typer.Option(
+        None,
+        help="Optional JSON object of env vars to inject into the serving container, "
+        'e.g. \'{"SEMANTIC_LANCE_DB_URI": "gs://.../semantic_search_lancedb/"}\'.',
+    ),
+    service_account: str = typer.Option(
+        None, help="Optional service account the deployed model runs as."
+    ),
 ) -> None:
     MODEL_TYPE_CONFIG = {"tensorflow": TFContainer, "custom": CustomContainer}
+    env_vars = json.loads(serving_env_vars) if serving_env_vars else None
     # Load model stats from BQ
     if artifact_uri is None or serving_container is None:
         if run_id is None or len(run_id) <= 2:
@@ -228,7 +245,9 @@ def main(
                 model_description = f"""{model_type} {experiment_name}."""
 
     container_type = MODEL_TYPE_CONFIG[model_type](
-        serving_container=serving_container, artifact_uri=artifact_uri
+        serving_container=serving_container,
+        artifact_uri=artifact_uri,
+        serving_container_environment_variables=env_vars,
     )
     model_params = ModelParams(
         experiment_name.replace(".", "_"),
@@ -243,6 +262,7 @@ def main(
         max_nodes=int(max_nodes),
         instance_type=instance_type,
         traffic_percentage=int(traffic_percentage),
+        service_account=service_account,
     )
     handler = ModelHandler(region, GCP_PROJECT_ID, model_params, endpoint_params)
     # Upload new model to registery

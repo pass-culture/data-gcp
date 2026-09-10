@@ -156,12 +156,9 @@ def create_index(lancedb_table: lancedb.Table) -> None:
       ``num_partitions`` ≈ sqrt(num_rows) capped at 256 (avoids "too many open
       files"); ``num_sub_vectors`` must evenly divide the vector dimension.
     - FTS on ``search_text``: keyword search and the FTS side of hybrid search.
-      ``use_tantivy=False`` uses the native (Lance) FTS index, which is safe on
-      object storage.
+     ``language="French"`` enables French stemming/stop-words;
     - Scalar indexes: BTREE on ``item_id`` for the fast query-item vector lookup,
       BITMAP on the low-cardinality ``category`` / ``subcategory_id`` filters.
-
-    see doc here https://docs.lancedb.com/indexing/vector-index
     """
     num_rows = lancedb_table.count_rows()
     vector_dim = lancedb_table.schema.field("vector").type.list_size
@@ -183,8 +180,13 @@ def create_index(lancedb_table: lancedb.Table) -> None:
         replace=True,
     )
 
-    logger.info("Creating native FTS index on 'search_text'")
-    lancedb_table.create_fts_index("search_text", use_tantivy=False, replace=True)
+    logger.info("Creating native FTS index on 'search_text' (French)")
+    lancedb_table.create_fts_index(
+        "search_text",
+        use_tantivy=False,
+        language="French",
+        replace=True,
+    )
 
     logger.info("Creating scalar indexes on 'item_id', 'category', 'subcategory_id'")
     lancedb_table.create_scalar_index("item_id", index_type="BTREE")

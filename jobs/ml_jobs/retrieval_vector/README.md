@@ -102,7 +102,7 @@ item's vector, cosine; input items excluded; no `tops` fallback).
 
 ```sh
 curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
-  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-123"], "size": 10}]}'
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-2323205"], "size": 10}]}'
 ```
 
 **`text_search`** — keyword full-text search over `search_text`.
@@ -122,6 +122,14 @@ Both modes also accept:
 
 Output is `item_id` + metadata.
 
+If you want to get all the item's metadata in the response, add the paramater `"debug":"true"` to your request body.
+e.g.:
+````
+sh
+curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
+  -d '{"instances": [{"model_type": "text_search", "text": "roman policier", "size": 10, "debug":"true"}]}'
+```
+
 #### Filtering with `params`
 
 `params` is a MongoDB-style filter tree compiled to a LanceDB `WHERE` clause. Filter only
@@ -140,22 +148,22 @@ don't need to set `prefilter` yourself. Category/subcategory values below are il
 ```sh
 # semantic_search restricted to a single category ($eq)
 curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
-  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-123"], "size": 10,
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-2323205"], "size": 10,
        "params": {"category": {"$eq": "LIVRE"}}}]}'
 
 # only certain subcategories ($in)
 curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
-  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-123"], "size": 10,
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-2323205"], "size": 10,
        "params": {"subcategory_id": {"$in": ["LIVRE_PAPIER", "LIVRE_AUDIO_PHYSIQUE"]}}}]}'
 
 # exclude a category ($neq) AND keep only some subcategories (implicit AND across fields)
 curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
-  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-123"], "size": 10,
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-2323205"], "size": 10,
        "params": {"category": {"$neq": "INSTRUMENT"}, "subcategory_id": {"$in": ["SEANCE_CINE"]}}}]}'
 
 # OR across categories ($or)
 curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
-  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-123"], "size": 10,
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-2323205"], "size": 10,
        "params": {"$or": [{"category": {"$eq": "LIVRE"}}, {"category": {"$eq": "MUSIQUE_LIVE"}}]}}]}'
 
 # text_search with a category filter
@@ -169,20 +177,20 @@ curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
 ```sh
 # exclude specific items from the neighbors (on top of the query items, always excluded)
 curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
-  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-123"],
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-2323205"],
        "excluded_items": ["product-999", "product-888"], "size": 10}]}'
 
 # debug: return metadata columns + _distance for inspection
 curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
-  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-123"], "size": 5, "debug": true}]}'
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-2323205"], "size": 5, "debug": true}]}'
 
-# offer_id shorthand (equivalent to items: ["product-123"])
+# offer_id shorthand (equivalent to items: ["product-2323205"])
 curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
-  -d '{"instances": [{"model_type": "semantic_search", "offer_id": "product-123", "size": 10}]}'
+  -d '{"instances": [{"model_type": "semantic_search", "offer_id": "product-2323205", "size": 10}]}'
 
 # multi-item query: neighbors of several items at once
 curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
-  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-123", "product-456"], "size": 20}]}'
+  -d '{"instances": [{"model_type": "semantic_search", "items": ["product-2323205", "product-456"], "size": 20}]}'
 ```
 
 > Free-text **semantic** queries (embedding the query with EmbeddingGemma) are
@@ -310,7 +318,7 @@ All prediction requests use the same envelope. Only the first element of `instan
 ```json
 {
   "predictions": [
-    { "idx": 0, "item_id": "product-123" },
+    { "idx": 0, "item_id": "product-2323205" },
     ...
   ]
 }

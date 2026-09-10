@@ -24,7 +24,19 @@ GCS_AIRFLOW_BUCKET = os.environ.get(
     "GCS_BUCKET", f"airflow-data-bucket-{ENV_SHORT_NAME}"
 )
 
-AIRFLOW_NAMESPACE = f"airflow-{ENVIRONMENT_NAME}"
+
+def _default_airflow_namespace() -> str:
+    """Return the Kubernetes namespace used by Airflow pods.
+    This function will be removed once all projects are migrated to the new namespace.
+    """
+
+    if GCP_PROJECT_ID.startswith("pc-data-"):
+        return f"airflow-{ENV_SHORT_NAME}"
+
+    return f"airflow-{ENVIRONMENT_NAME}"
+
+
+AIRFLOW_NAMESPACE = os.environ.get("AIRFLOW_NAMESPACE", _default_airflow_namespace())
 
 SSH_USER = os.environ.get("SSH_USER", "airflow")
 

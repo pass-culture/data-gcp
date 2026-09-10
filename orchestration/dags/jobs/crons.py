@@ -85,7 +85,7 @@ SCHEDULE_DICT = {
         "stg": "0 3,18 * * *",
         "prod": "0 3,18 * * *",
     },
-    "semantic_search_lancedb": {
+    "create_semantic_db": {
         "prod": "0 12 * * *",  # every day at 12:00 PM
         "stg": "0 12 * * *",  # every day at 12:00 PM
         "dev": "0 12 * * 1",  # every Monday at 12:00 PM

@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Param
@@ -23,6 +23,7 @@ from jobs.crons import SCHEDULE_DICT
 # Airflow params
 DAG_NAME = "build_and_push_semantic_retrieval_api"
 default_args = {
+    "start_date": datetime(2026, 9, 1),
     "on_failure_callback": on_failure_vm_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),

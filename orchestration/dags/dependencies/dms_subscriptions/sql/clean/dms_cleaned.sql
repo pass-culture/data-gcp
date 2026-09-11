@@ -1,3 +1,22 @@
+create temp function parse_timestamp(val int64)
+as
+    (
+        case
+            when val is null
+            then null
+            when length(cast(val as string)) = 19
+            then timestamp_micros(cast(val / 1000 as int64))
+            when length(cast(val as string)) = 16
+            then timestamp_micros(val)
+            when length(cast(val as string)) = 13
+            then timestamp_millis(val)
+            when length(cast(val as string)) = 10
+            then timestamp_seconds(val)
+            else null
+        end
+    )
+;
+
 select
     {% if params.target == "pro" %}
         procedure_id,
@@ -45,14 +64,10 @@ select
         application_number,
         application_archived,
         application_status,
-        timestamp_micros(cast((last_update_at / 1000) as integer)) as last_update_at,
-        timestamp_micros(
-            cast((application_submitted_at / 1000) as integer)
-        ) as application_submitted_at,
-        timestamp_micros(
-            cast((passed_in_instruction_at / 1000) as integer)
-        ) as passed_in_instruction_at,
-        timestamp_micros(cast((processed_at / 1000) as integer)) as processed_at,
+        parse_timestamp(last_update_at) as last_update_at,
+        parse_timestamp(application_submitted_at) as application_submitted_at,
+        parse_timestamp(passed_in_instruction_at) as passed_in_instruction_at,
+        parse_timestamp(processed_at) as processed_at,
         instructors,
         applicant_department,
         applicant_postal_code

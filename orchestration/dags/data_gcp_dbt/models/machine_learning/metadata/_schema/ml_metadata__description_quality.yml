@@ -1,0 +1,94 @@
+version: 1
+
+models:
+  - name: ml_metadata__description_quality
+    description: >
+      Phase 0 diagnostic for the Catalogue Description Quality project.
+      Deterministic per-offer profiling of `offer_description` that flags text
+      problems (dirtiness, boilerplate, duplication, thinness) degrading item
+      embeddings. One row per bookable offer_id; join to
+      ml_metadata__offer_quality on offer_id.
+    columns:
+      - name: offer_id
+        description: "Unique identifier for the bookable offer."
+        data_type: STRING
+        data_tests:
+          - not_null
+          - unique
+      - name: item_id
+        description: "Item identifier (embedding grain) the offer maps to."
+        data_type: STRING
+      - name: offer_product_id
+        description: "Product ID associated with the offer."
+        data_type: STRING
+      - name: offer_category_id
+        description: "Category ID of the offer."
+        data_type: STRING
+      - name: offer_subcategory_id
+        description: "Subcategory ID of the offer."
+        data_type: STRING
+      - name: offer_description
+        description: "Raw trimmed offer description profiled by this model."
+        data_type: STRING
+      - name: normalized_description
+        description: "Accent/case/punctuation-normalized description; the dedup/boilerplate key (null when empty)."
+        data_type: STRING
+      - name: description_char_length
+        description: "Character length of the raw description."
+        data_type: INT64
+      - name: description_word_count
+        description: "Whitespace-delimited word count of the raw description."
+        data_type: INT64
+      - name: items_sharing_description
+        description: "Number of distinct items (embedding grain) sharing this exact normalized description."
+        data_type: INT64
+      - name: offers_sharing_description
+        description: "Number of bookable offers sharing this exact normalized description."
+        data_type: INT64
+      - name: is_missing
+        description: "True if the description is null or empty."
+        data_type: BOOLEAN
+      - name: is_too_short
+        description: "True if the description is <= 30 chars (matches absence_description)."
+        data_type: BOOLEAN
+      - name: is_thin
+        description: "True if the description is < 150 chars or < 25 words."
+        data_type: BOOLEAN
+      - name: has_html
+        description: "True if the description contains HTML tags or entities."
+        data_type: BOOLEAN
+      - name: has_url
+        description: "True if the description contains a URL."
+        data_type: BOOLEAN
+      - name: has_email
+        description: "True if the description contains an email address."
+        data_type: BOOLEAN
+      - name: has_phone
+        description: "True if the description contains a French phone number."
+        data_type: BOOLEAN
+      - name: has_emoji
+        description: "True if the description contains emoji characters."
+        data_type: BOOLEAN
+      - name: has_promo_boilerplate
+        description: "True if the description contains promo/marketing boilerplate phrases."
+        data_type: BOOLEAN
+      - name: has_punctuation_spam
+        description: "True if the description contains runs of repeated punctuation."
+        data_type: BOOLEAN
+      - name: is_duplicated
+        description: "True if 2+ distinct items share this exact normalized description."
+        data_type: BOOLEAN
+      - name: is_templated_boilerplate
+        description: "True if 50+ distinct items share this exact normalized description."
+        data_type: BOOLEAN
+      - name: needs_cleaning
+        description: "True if any dirtiness flag (html/url/email/phone/emoji/promo/punctuation) is set."
+        data_type: BOOLEAN
+      - name: needs_enrichment
+        description: "True if the description is missing or thin (candidate for enrichment)."
+        data_type: BOOLEAN
+      - name: description_quality_tier
+        description: >
+          Priority-ranked quality bucket: missing, too_short,
+          templated_boilerplate, dirty, duplicated, thin, or ok.
+        data_type: STRING

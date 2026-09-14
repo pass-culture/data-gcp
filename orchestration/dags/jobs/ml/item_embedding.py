@@ -311,6 +311,11 @@ with DAG(
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,
+        # Without this, BigQuery keeps a Parquet LIST column's raw 3-level
+        # encoding (RECORD > list > element) instead of collapsing it into a
+        # native REPEATED field -- this is what turns each vector's
+        # embedding into a plain REPEATED FLOAT column.
+        extra_config={"parquetOptions": {"enableListInference": True}},
     )
 
     gce_instance_delete = DeleteGCEOperator(

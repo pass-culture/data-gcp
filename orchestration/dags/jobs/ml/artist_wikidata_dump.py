@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import datetime
 
@@ -22,6 +23,8 @@ from common.operators.gce import (
 )
 from common.utils import get_airflow_schedule, sparkql_health_check
 
+logger = logging.getLogger(__name__)
+
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"artist-wikidata-dump-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
@@ -37,13 +40,18 @@ DAG_NAME = "artist_wikidata_dump"
 # Path pinned to the first day of the month (resolved at runtime via
 # Jinja), not `datetime.now()` (evaluated at DAG parse time). Every nightly
 # attempt of the same month reads/writes the same path, enabling idempotency.
+# Uses `data_interval_end` (not `data_interval_start`): for a daily schedule,
+# the run on the 1st of the month has `data_interval_start` set to the last
+# day of the *previous* month (interval is [start, end) = [J-1, J)), which
+# would wrongly pin that run to the previous month. `data_interval_end`
+# always matches the actual day the run is for.
 # Format stays `YYYYMMDD` (not `YYYYMM`) to stay compatible with
 # `get_last_date_from_bucket` in artist_linkage, which picks the latest
 # dump via plain string sort (a shorter folder name could sort incorrectly
 # against legacy `YYYYMMDD` folders from the same month).
 STORAGE_PATH_TEMPLATE = (
     f"gs://{DATA_GCS_BUCKET_NAME}/dump_wikidata/"
-    + "{{ data_interval_start.strftime('%Y%m01') }}"
+    + "{{ data_interval_end.strftime('%Y%m01') }}"
 )
 WIKIDATA_EXTRACTION_GCS_FILENAME = "wikidata_extraction.parquet"
 QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
@@ -85,8 +93,11 @@ with DAG(
         )
         logging_task = PythonOperator(
             task_id="logging_task",
-            python_callable=lambda: print(
-                f"Task executed for branch : {dag.params.get('branch')} and instance : {dag.params.get('instance_type')} on env : {ENV_SHORT_NAME}"
+            python_callable=lambda: logger.info(
+                "Task executed for branch : %s and instance : %s on env : %s",
+                dag.params.get("branch"),
+                dag.params.get("instance_type"),
+                ENV_SHORT_NAME,
             ),
             dag=dag,
         )
@@ -102,14 +113,16 @@ with DAG(
             bucket_name=bucket_name, object_name=blob_name
         )
         if already_extracted:
-            print(
-                f"Extraction {blob_name} already exists for this month, skipping run."
+            logger.info(
+                "Extraction %s already exists for this month, skipping run.",
+                blob_name,
             )
         return not already_extracted
 
     check_already_extracted = ShortCircuitOperator(
         task_id="check_already_extracted",
         python_callable=_is_extraction_missing,
+        ignore_downstream_trigger_rules=True,
     )
 
     with TaskGroup("vm_init") as vm_init:
@@ -146,8 +159,7 @@ with DAG(
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name=GCE_INSTANCE,
-        # Skip instead of failing if the check short-circuited (no VM started)
-        trigger_rule="none_failed_min_one_success",
+        trigger_rule="none_failed",
     )
 
     (

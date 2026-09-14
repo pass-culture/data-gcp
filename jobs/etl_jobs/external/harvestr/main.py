@@ -6,10 +6,11 @@ using the class-based architecture for better organization and maintainability.
 """
 
 import typer
-from harvestr.client import HarvestrClient
-from harvestr.etl import HarvestrETL
-from harvestr.utils import API_TOKEN
 from loguru import logger
+
+from client import HarvestrClient
+from etl import HarvestrETL
+from utils import API_TOKEN
 
 
 def main(

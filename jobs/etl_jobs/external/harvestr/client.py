@@ -1,9 +1,10 @@
 from typing import Any, Dict, List
 
 import requests
-from harvestr.utils import SecretStr
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
+
+from utils import SecretStr
 
 
 class HarvestrAPIError(Exception):

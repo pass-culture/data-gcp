@@ -9,13 +9,14 @@ import json
 from typing import Any
 
 import pandas as pd
-from harvestr.client import HarvestrAPIError, HarvestrClient
-from harvestr.utils import (
+from loguru import logger
+
+from client import HarvestrAPIError, HarvestrClient
+from utils import (
     HARVESTR_MESSAGES,
     HARVESTR_MESSAGES_SCHEMA,
     save_to_bq,
 )
-from loguru import logger
 
 
 class HarvestrETL:

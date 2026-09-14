@@ -62,7 +62,7 @@ with DAG(
         arguments=[
             "main.py",
             "--start-date",
-            "{{ params.start_date or (ds | add_days(-1)) }}",
+            "{{ params.start_date or add_days(ds, -1) }}",
             "--end-date",
             "{{ params.end_date or ds }}",
         ],

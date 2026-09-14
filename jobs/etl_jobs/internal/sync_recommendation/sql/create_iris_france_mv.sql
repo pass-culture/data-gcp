@@ -16,12 +16,12 @@ drop function if exists get_iris_france_{{ ts_nodash }}
 cascade
 ;
 create or replace function get_iris_france_{{ ts_nodash }} ()
-returns table(id int, iriscode int, centroid geography, shape geometry)
+returns table(id varchar, iriscode int, centroid geography, shape geometry)
 as $body$
 BEGIN
     RETURN QUERY
     SELECT
-    irf.id::int as id,
+    irf.id::varchar as id,
     cast_to_int(irf."irisCode",0) as iriscode,
     irf.centroid::geography as centroid,
     ST_SetSRID(irf.shape::geometry, 0) as shape

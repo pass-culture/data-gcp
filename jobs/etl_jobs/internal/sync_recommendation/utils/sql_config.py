@@ -83,6 +83,7 @@ class MaterializedView(Enum):
     RECOMMENDABLE_OFFERS = "recommendable_offers_raw_mv"
     VENUE_H3_MAPPING = "venue_h3_mapping_mv"
     SIMILAR_ARTIST = "similar_artist_mv"
+    OFFER_METADATA = "offer_metadata_mv"
 
 
 class SQLTableConfig:

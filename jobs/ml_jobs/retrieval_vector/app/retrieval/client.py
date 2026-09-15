@@ -257,7 +257,6 @@ class DefaultClient:
 
         query = self.build_query(query_filter)
         logger.debug(f"Build Query {query}")
-
         results = (
             self.table.search(
                 query=vector.embedding,
@@ -338,22 +337,12 @@ class DefaultClient:
         Returns:
             List[Dict]: A list of formatted results.
         """
-        predictions = []
-        for idx, row in enumerate(results):
-            if not details:
-                predictions.append({"idx": idx, "item_id": row["item_id"]})
-            else:
-                predictions.append(
-                    {
-                        k: row.get(k)
-                        for k in (
-                            self.base_columns
-                            + self.detail_columns
-                            + self.output_metric_columns
-                        )
-                        if k in row
-                    }
-                    | {"idx": idx}
-                )
-
-        return predictions
+        columns = (
+            self.base_columns
+            + (self.detail_columns if details else [])
+            + self.output_metric_columns
+        )
+        return [
+            {k: row.get(k) for k in columns if k in row} | {"idx": idx}
+            for idx, row in enumerate(results)
+        ]

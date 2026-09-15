@@ -124,7 +124,7 @@ Output is `item_id` + metadata.
 
 If you want to get all the item's metadata in the response, add the paramater `"debug":"true"` to your request body.
 e.g.:
-````
+```
 sh
 curl -X POST localhost:8080/predict -H 'Content-Type: application/json' \
   -d '{"instances": [{"model_type": "text_search", "text": "roman policier", "size": 10, "debug":"true"}]}'

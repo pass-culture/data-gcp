@@ -14,7 +14,6 @@
 -- ml_metadata__offer_quality so both can be joined on offer_id.
 -- Duplication/templating are measured across distinct item_id (the embedding
 -- grain), so the same product sold by many shops is not mistaken for boilerplate.
-
 with
     offers as (
         select
@@ -53,7 +52,10 @@ with
             case
                 when offer_description is null or offer_description = ''
                 then 0
-                else array_length(split(regexp_replace(offer_description, r'\s+', ' '), ' '))
+                else
+                    array_length(
+                        split(regexp_replace(offer_description, r'\s+', ' '), ' ')
+                    )
             end as description_word_count
         from offers
     ),
@@ -99,7 +101,9 @@ with
                 offer_description,
                 r'(?i)(code\s?promo|bon\s?de\s?r[ée]duction|livraison\s?(offerte|gratuite)|suivez[- ]nous|retrouvez[- ]nous)'
             ) as has_promo_boilerplate,
-            regexp_contains(offer_description, r'[!?.\-_=*~]{4,}') as has_punctuation_spam
+            regexp_contains(
+                offer_description, r'[!?.\-_=*~]{4,}'
+            ) as has_punctuation_spam
         from normalized
         left join description_reuse as reuse using (normalized_description)
     ),

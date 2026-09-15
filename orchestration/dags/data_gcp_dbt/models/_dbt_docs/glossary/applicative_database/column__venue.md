@@ -48,6 +48,7 @@
 {% docs column__has_headline_offer %}Indicates if an offer is currently headlined on the app venue page.{% enddocs %}
 {% docs column__first_headline_offer_date %}First date of headline offer on the app venue page.{% enddocs %}
 {% docs column__last_headline_offer_date %}Last date of headline offer on the app venue page.{% enddocs %}
+{% docs column__venue_business_activity_code %} Code of the business activity of the venue. {% enddocs %}
 
 /* To rename into venue_*** */
 {% docs column__is_active_last_30days %} Analytical field: Indicates if it was active in the last 30 days. {% enddocs %}

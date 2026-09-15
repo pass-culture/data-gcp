@@ -172,7 +172,15 @@ class CloudSQLService(DatabaseService):
                 self._connection = self._get_connection()
                 self._cursor = self._connection.cursor()
 
-            self._cursor.execute(query, params or {})
+            if params:
+                self._cursor.execute(query, params)
+            else:
+                # psycopg2 only scans the query for %s/%(name)s placeholders
+                # when a non-None params argument is provided. Passing an
+                # empty dict here would make it try (and fail) to interpret
+                # any literal '%' in the query (e.g. in PL/pgSQL
+                # `RAISE NOTICE '...', var;` statements) as a placeholder.
+                self._cursor.execute(query)
             if self._cursor.description:  # Query returns rows
                 self._last_result = self._cursor.fetchall()
             else:  # Query does not return rows (DDL, INSERT, UPDATE, DELETE)

@@ -15,3 +15,6 @@ HF_TOKEN_SECRET_NAME = _HF_TOKEN_SECRET_NAMES.get(
 
 # HF constants
 BATCH_SIZE = 32
+# Cap the tokenized prompt length. embeddinggemma-300m defaults to 2048,
+# but only ~2% of items exceed 512.
+MAX_SEQ_LENGTH = 512

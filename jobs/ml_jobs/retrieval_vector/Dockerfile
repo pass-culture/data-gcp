@@ -17,7 +17,9 @@ RUN uv venv && uv sync --locked
 
 # Copy application code and metadata
 COPY ./app /base_app/app
-COPY ./metadata /base_app/metadata
+# Ensure the metadata directory is accessible to the non-root user
+# so it can download artifacts to it from GCS
+COPY --chown=appuser:appuser ./metadata /base_app/metadata
 
 # Expose the application port and set environment variable for workers
 EXPOSE 8080

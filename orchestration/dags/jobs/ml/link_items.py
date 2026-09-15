@@ -74,7 +74,6 @@ DAG_CONFIG = {
         "ITEM_MAPPING_TABLE": "item_offer_mapping",
     },
     "PARAMS": {
-        "REDUCTION": "true",
         "BATCH_SIZE": 100000,
     },
 }
@@ -138,10 +137,6 @@ with DAG(
         ),
         "instance_name": Param(
             default=GCE_PARAMS["instance_name"],
-            type="string",
-        ),
-        "reduction": Param(
-            default=DAG_CONFIG["PARAMS"]["REDUCTION"],
             type="string",
         ),
         "batch_size": Param(
@@ -280,7 +275,6 @@ with DAG(
             command="python preprocess.py "
             f"--input-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['INPUT_SOURCES'])}/data-*.parquet "
             f"--output-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['SOURCES_CLEAN'])} "
-            f"--reduction {DAG_CONFIG['PARAMS']['REDUCTION']} "
             f"--batch-size {DAG_CONFIG['PARAMS']['BATCH_SIZE']} ",
             instance_name="{{ params.instance_name }}",
             base_dir=DAG_CONFIG["DIRS"]["BASE"],
@@ -291,7 +285,6 @@ with DAG(
             command="python preprocess.py "
             f"--input-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['INPUT_CANDIDATES'])}/data-*.parquet "
             f"--output-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['CANDIDATES_CLEAN'])} "
-            f"--reduction {DAG_CONFIG['PARAMS']['REDUCTION']} "
             f"--batch-size {DAG_CONFIG['PARAMS']['BATCH_SIZE']} ",
             instance_name="{{ params.instance_name }}",
             base_dir=DAG_CONFIG["DIRS"]["BASE"],

@@ -1,12 +1,8 @@
-import os
-
 import gcsfs
-import joblib
 import numpy as np
 import pandas as pd
 import polars as pl
 import pyarrow.parquet as pq
-from hnne import HNNE
 from loguru import logger
 from tqdm import tqdm
 
@@ -80,44 +76,6 @@ def read_parquet_files_from_gcs_directory(gcs_directory_path, columns=None):
     combined_df = pd.concat(df_list, ignore_index=True)
 
     return combined_df
-
-
-def reduce_embeddings_and_store_reducer(embeddings: list, n_dim, reducer_path):
-    """
-    Preprocess embeddings from a given bucket path by normalizing them.
-
-    Parameters:
-    bucket_path (str): Path to the bucket containing the embeddings.
-
-    Returns:
-    DataFrame: DataFrame containing item IDs and normalized embeddings.
-    """
-    logger.info("Reducing embeddings and storing reducer...")
-    hnne = HNNE(dim=n_dim)
-    if os.path.exists(reducer_path):
-        hnne = joblib.load(reducer_path)
-        reduced_embeddings = list(hnne.transform(embeddings).astype(np.float32))
-    else:
-        reduced_embeddings = list(
-            hnne.fit_transform(embeddings, dim=n_dim).astype(np.float32)
-        )
-        joblib.dump(hnne, reducer_path)
-
-    return reduced_embeddings
-
-
-def reduce_embeddings(embeddings: list, hnne_reducer: HNNE) -> list:
-    """
-    Preprocess embeddings from a given bucket path by normalizing them.
-
-    Parameters:
-    bucket_path (str): Path to the bucket containing the embeddings.
-
-    Returns:
-    DataFrame: DataFrame containing item IDs and normalized embeddings.
-    """
-    logger.info("Reducing embeddings...")
-    return list(hnne_reducer.transform(embeddings).astype(np.float32))
 
 
 def preprocess_embeddings_by_chunk(

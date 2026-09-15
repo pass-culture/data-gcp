@@ -9,6 +9,7 @@ from loguru import logger
 from constants import (
     LANCEDB_BATCH_SIZE,
     MODEL_PATH,
+    MODEL_TYPE,
     NUM_PARTITIONS,
     NUM_SUB_VECTORS,
     PARQUET_BATCH_SIZE,
@@ -28,7 +29,7 @@ def create_items_table(items_df: pd.DataFrame, linkage_type: str) -> None:
     """
 
     class ItemModel(LanceModel):
-        vector: Vector(32)
+        vector: Vector(MODEL_TYPE["n_dim"])
         item_id: str
         offer_subcategory_id: str
         edition: Optional[str]
@@ -48,7 +49,13 @@ def create_items_table(items_df: pd.DataFrame, linkage_type: str) -> None:
             yield df[i : i + batch_size]
 
     db = lancedb.connect(MODEL_PATH)
-    try:
+    if linkage_type in db.table_names():
+        logger.info("LanceDB table already exists, inserting data...")
+        tbl = db.open_table(linkage_type)
+        tbl.add(
+            make_batches(df=items_df, batch_size=LANCEDB_BATCH_SIZE),
+        )
+    else:
         logger.info("Creating LanceDB table...")
         db.create_table(
             linkage_type,
@@ -56,13 +63,6 @@ def create_items_table(items_df: pd.DataFrame, linkage_type: str) -> None:
             schema=ItemModel,
         )
         logger.info("LanceDB table created!")
-    except Exception:
-        logger.info("LanceDB table already exists...")
-        tbl = db.open_table(linkage_type)
-        logger.info("Inserting data into LanceDB table...")
-        tbl.add(
-            make_batches(df=items_df, batch_size=LANCEDB_BATCH_SIZE),
-        )
 
 
 def create_index_on_items_table(linkage_type: str) -> None:
@@ -79,6 +79,11 @@ def create_index_on_items_table(linkage_type: str) -> None:
     for feature in RETRIEVAL_FILTERS:
         logger.info(f"Creating index on feature: {feature}")
         table.create_scalar_index(feature, index_type="BITMAP")
+
+    # Compact table fragments so each search opens fewer files at query time (avoids "Too many open files" EMFILE).
+    logger.info("Compacting table fragments...")
+    table.optimize()
+    logger.info("Table compaction complete.")
 
 
 def main(
@@ -116,7 +121,6 @@ def main(
         total_count += len(chunk)
     logger.info(f"Total rows processed: {total_count}")
     create_index_on_items_table(linkage_type)
-    logger.info
     logger.info("LanceDB table and index created!")
 
 

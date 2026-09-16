@@ -3,7 +3,7 @@ with
         select
             go.item_id as raw_item_id,
             case
-                when go.item_id like 'link-%'
+                when go.item_id like 'item_cluster%'
                 then concat('offer-', go.offer_id)
                 else go.item_id
             end as item_id,
@@ -18,7 +18,7 @@ with
             row_number() over (
                 partition by
                     case
-                        when go.item_id like 'link-%'
+                        when go.item_id like 'item_cluster%'
                         then concat('offer-', go.offer_id)
                         else go.item_id
                     end

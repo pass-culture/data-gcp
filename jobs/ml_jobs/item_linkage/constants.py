@@ -52,6 +52,8 @@ NUM_SUB_VECTORS = (
 )
 MODEL_PATH = "metadata/vector"
 NUM_RESULTS = 5  # Number of results to retrieve
+# Only consider results with lancedb _distance (to minimize) less than this threshold
+SEMANTIC_RETRIEVAL_UPPER_BOUND = 0.1
 LOGGING_INTERVAL = 50_000  # Interval for logging progress
 
 N_PROBES = 5

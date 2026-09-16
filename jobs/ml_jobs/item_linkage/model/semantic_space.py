@@ -3,7 +3,13 @@ import typing as t
 
 from lancedb import connect_async
 
-from constants import DETAIL_COLUMNS, N_PROBES, NUM_RESULTS, REFINE_FACTOR
+from constants import (
+    DETAIL_COLUMNS,
+    N_PROBES,
+    NUM_RESULTS,
+    REFINE_FACTOR,
+    SEMANTIC_RETRIEVAL_UPPER_BOUND,
+)
 
 DEFAULTS = ["_distance"]
 
@@ -42,6 +48,7 @@ class SemanticSpace:
             .nprobes(N_PROBES)
             .refine_factor(REFINE_FACTOR)
             .select(columns=DETAIL_COLUMNS + DEFAULTS)
+            .distance_range(upper_bound=SEMANTIC_RETRIEVAL_UPPER_BOUND)
             .limit(n)
         )
         results = await query.to_pandas(flatten=True)

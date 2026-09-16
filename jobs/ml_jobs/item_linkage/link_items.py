@@ -74,7 +74,7 @@ def get_links(
         pd.DataFrame: Dataframe containing matched pairs.
     """
 
-    def threshold(value, thr=0.70):
+    def threshold(value, thr):
         if value < thr:
             return 0
         else:

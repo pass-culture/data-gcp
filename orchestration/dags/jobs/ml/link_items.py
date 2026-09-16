@@ -34,13 +34,13 @@ from jobs.crons import SCHEDULE_DICT
 from jobs.ml.constants import IMPORT_LINKAGE_SQL_PATH
 
 DATE = "{{ ts_nodash }}"
-
+DAG_ID = "link_items"
 # -------------------------------------------------------------------------
 # DAG CONFIG
 # -------------------------------------------------------------------------
 
 DAG_CONFIG = {
-    "ID": "link_items",
+    "ID": DAG_ID,
     "ENVIROMENT": {
         "GCP_PROJECT": GCP_PROJECT_ID,
         "ENV_SHORT_NAME": ENV_SHORT_NAME,

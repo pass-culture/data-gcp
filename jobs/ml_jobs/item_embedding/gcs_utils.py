@@ -24,7 +24,7 @@ def list_parquet_files(gcs_path: str) -> list[str]:
 
 def load_parquet_file(
     parquet_filename: str,
-    vectors: list,
+    vector,
 ) -> pd.DataFrame:
     """Load a Parquet file and validate required columns.
 
@@ -33,7 +33,7 @@ def load_parquet_file(
 
     Args:
         parquet_filename: Local or GCS (``gs://…``) path — file, directory, or glob.
-        vectors: List of vector configurations used to determine required columns.
+        vector: Vector configuration used to determine required columns.
 
     Returns:
         pd.DataFrame containing the loaded data.
@@ -45,7 +45,7 @@ def load_parquet_file(
 
     df = pd.read_parquet(parquet_filename)
 
-    _validate_parquet_file(df, vectors)
+    _validate_parquet_file(df, vector)
 
     logger.info(
         f"Loaded {len(df)} items from {parquet_filename}, and validated required columns for embedding"
@@ -53,22 +53,17 @@ def load_parquet_file(
     return df
 
 
-def _validate_parquet_file(df: pd.DataFrame, vectors: list) -> None:
+def _validate_parquet_file(df: pd.DataFrame, vector) -> None:
     """Validate that a DataFrame contains all required columns.
 
     Args:
         df: DataFrame to validate.
-        vectors: List of vector configurations.
+        vector: Vector configuration.
 
     Raises:
         ValueError: If any required column is missing from the DataFrame.
     """
-    required_columns = list(
-        set(
-            ["item_id", "content_hash"]
-            + [feature for vector in vectors for feature in vector.features]
-        )
-    )
+    required_columns = list(set(["item_id", "content_hash"] + vector.features))
     available = set(df.columns)
     missing = [c for c in required_columns if c not in available]
     if missing:

@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 CONFIGS_PATH = pathlib.Path(__file__).parent / "configs"
 
-REQUIRED_CONFIG_KEYS = {"vectors"}
+REQUIRED_CONFIG_KEYS = {"name", "features", "encoder_name"}
 
 
 class Vector(BaseModel):
@@ -19,7 +19,7 @@ class Vector(BaseModel):
 
 
 def _load_config(config_file_name: str) -> dict:
-    """Load YAML configuration file of vectors to embed.
+    """Load the YAML configuration file describing the vector to embed.
 
     Args:
         config_file_name: Name of the config file (without .yaml extension)
@@ -46,26 +46,19 @@ def _load_config(config_file_name: str) -> dict:
     return config
 
 
-def parse_vectors(config_filename: str) -> list[Vector]:
-    """Parse vector configurations from config dictionary.
+def parse_vector(config_filename: str) -> Vector:
+    """Parse the vector configuration from a config file.
+
+    The entire config file describes a single vector.
 
     Args:
-        config_filename: Configuration filename (without .yaml extension) to load and parse vector configurations from.
+        config_filename: Configuration filename (without .yaml extension) to load and parse the vector configuration from.
 
     Returns:
-        List of Vector objects
+        a vector object containing the parsed vector configuration
 
     Raises:
-        ValueError: If no vectors are configured or vector config is invalid
+        ValueError: If the vector config is invalid
     """
     config = _load_config(config_filename)
-    raw_vectors = config.get("vectors")
-
-    if raw_vectors is None or (isinstance(raw_vectors, list) and not raw_vectors):
-        raise ValueError("No vectors configured")
-
-    if not isinstance(raw_vectors, list):
-        raise ValueError("vectors config must be a list")
-
-    vectors = [Vector(**vector_config) for vector_config in raw_vectors]
-    return vectors
+    return Vector(**config)

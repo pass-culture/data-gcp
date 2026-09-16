@@ -1,3 +1,5 @@
+from typing import Optional
+
 import torch
 from config import Vector
 from constants import HF_TOKEN_SECRET_NAME, MAX_SEQ_LENGTH
@@ -32,19 +34,16 @@ def _bf16_supported() -> bool:
     return major >= 8
 
 
-def load_encoders(
-    vectors: list[Vector], gpu_count: int
-) -> dict[str, SentenceTransformer]:
-    """Load each unique encoder once with the appropriate precision.
+def load_encoder(vector: Vector, gpu_count: int) -> SentenceTransformer:
+    """Load the vector's encoder with the appropriate precision.
 
     Args:
-        vectors: List of vector configurations
+        vector: Vector configuration
         gpu_count: Number of available GPUs
 
     Returns:
-        Dictionary mapping encoder names to loaded SentenceTransformer instances
+        Loaded SentenceTransformer instance
     """
-    unique_encoder_names = {v.encoder_name for v in vectors}
     token = get_secret(HF_TOKEN_SECRET_NAME)
     precision = _resolve_precision(gpu_count)
 
@@ -52,50 +51,44 @@ def load_encoders(
     # so we keep the main-process copy on CPU so GPU 0 does not hold two copies (risk of OOM).
     device = "cpu" if gpu_count > 1 else None
 
-    encoders = {}
-    for name in unique_encoder_names:
-        logger.info(
-            f"Loading encoder: {name} (precision={precision}, "
-            f"main-process device={device or 'auto'})"
-        )
-        encoder = SentenceTransformer(
-            name,
-            token=token,
-            device=device,
-            model_kwargs={"torch_dtype": precision},
-        )
-        encoder.max_seq_length = MAX_SEQ_LENGTH
-        encoders[name] = encoder
-    return encoders
+    logger.info(
+        f"Loading encoder: {vector.encoder_name} (precision={precision}, "
+        f"main-process device={device or 'auto'})"
+    )
+    encoder = SentenceTransformer(
+        vector.encoder_name,
+        token=token,
+        device=device,
+        model_kwargs={"torch_dtype": precision},
+    )
+    encoder.max_seq_length = MAX_SEQ_LENGTH
+    return encoder
 
 
-def start_encoder_pools(
-    encoders: dict[str, SentenceTransformer], gpu_count: int
-) -> dict[str, object]:
-    """Start one multi-process encoding pool per encoder, once for the whole run.
-    If no GPUs are available, returns an empty dict (single-device encoding will be used).
+def start_encoder_pool(
+    encoder: SentenceTransformer, gpu_count: int
+) -> Optional[object]:
+    """Start a multi-process encoding pool for the encoder, once for the whole run.
+    If more than one GPU is not available, returns ``None`` (single-device encoding
+    will be used).
 
     Args:
-        encoders: Pre-loaded encoders keyed by encoder name
+        encoder: Pre-loaded encoder
         gpu_count: Number of available GPUs
 
     Returns:
-        Mapping of encoder name -> multi-process pool (empty if single-device)
+        Multi-process pool, or ``None`` if single-device
     """
     if gpu_count <= 1:
-        return {}
+        return None
 
-    pools: dict[str, object] = {}
-    for name, encoder in encoders.items():
-        logger.info(f"Starting multi-GPU pool for encoder '{name}' on {gpu_count} GPUs")
-        pools[name] = encoder.start_multi_process_pool()
-    return pools
+    logger.info(f"Starting multi-GPU pool for encoder on {gpu_count} GPUs")
+    return encoder.start_multi_process_pool()
 
 
-def stop_encoder_pools(
-    encoders: dict[str, SentenceTransformer], pools: dict[str, object]
-) -> None:
-    """Shut down all multi-process encoding pools started by ``start_encoder_pools``."""
-    for name, pool in pools.items():
-        logger.info(f"Stopping multi-GPU pool for encoder '{name}'")
-        encoders[name].stop_multi_process_pool(pool)
+def stop_encoder_pool(encoder: SentenceTransformer, pool: Optional[object]) -> None:
+    """Shut down the multi-process encoding pool started by ``start_encoder_pool``."""
+    if pool is None:
+        return
+    logger.info("Stopping multi-GPU pool for encoder")
+    encoder.stop_multi_process_pool(pool)

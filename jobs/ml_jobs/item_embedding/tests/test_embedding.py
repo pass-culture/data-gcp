@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import yaml
-from config import Vector, _load_config, parse_vectors
+from config import Vector, _load_config, parse_vector
 from embedding import (
     _build_prompts,
     embed_dataframe,
@@ -54,66 +54,44 @@ class TestLoadConfig:
 
     def test_load_valid_config(self, tmp_path):
         config_content = {
-            "vectors": [
-                {
-                    "name": "test_vec",
-                    "features": ["col_a"],
-                    "encoder_name": "test/model",
-                }
-            ]
+            "name": "test_vec",
+            "features": ["col_a"],
+            "encoder_name": "test/model",
         }
         config_file = tmp_path / "test.yaml"
         config_file.write_text(yaml.dump(config_content), encoding="utf-8")
         with patch("config.CONFIGS_PATH", tmp_path):
             config = _load_config("test")
-        assert "vectors" in config
+        assert config["name"] == "test_vec"
 
-    def test_load_config_missing_vectors_key(self, tmp_path):
-        config_file = tmp_path / "no_vectors.yaml"
-        config_file.write_text(yaml.dump({"other_key": 123}), encoding="utf-8")
+    def test_load_config_missing_required_key(self, tmp_path):
+        config_file = tmp_path / "incomplete.yaml"
+        config_file.write_text(yaml.dump({"name": "v"}), encoding="utf-8")
         with patch("config.CONFIGS_PATH", tmp_path):
             with pytest.raises(ValueError, match="missing required keys"):
-                _load_config("no_vectors")
+                _load_config("incomplete")
 
 
-class TestParseVectors:
+class TestParseVector:
     def test_parse_valid(self, tmp_path):
         config_content = {
-            "vectors": [
-                {
-                    "name": "v1",
-                    "features": ["a", "b"],
-                    "encoder_name": "model/x",
-                }
-            ]
+            "name": "v1",
+            "features": ["a", "b"],
+            "encoder_name": "model/x",
         }
         config_file = tmp_path / "test.yaml"
         config_file.write_text(yaml.dump(config_content), encoding="utf-8")
         with patch("config.CONFIGS_PATH", tmp_path):
-            vectors = parse_vectors("test")
-        assert len(vectors) == 1
-        assert vectors[0].name == "v1"
+            vector = parse_vector("test")
+        assert vector.name == "v1"
+        assert vector.features == ["a", "b"]
 
-    def test_parse_empty_vectors(self, tmp_path):
-        config_file = tmp_path / "empty.yaml"
-        config_file.write_text(yaml.dump({"vectors": []}), encoding="utf-8")
-        with patch("config.CONFIGS_PATH", tmp_path):
-            with pytest.raises(ValueError, match="No vectors configured"):
-                parse_vectors("empty")
-
-    def test_parse_no_vectors_key(self, tmp_path):
-        config_file = tmp_path / "no_vectors.yaml"
-        config_file.write_text(yaml.dump({}), encoding="utf-8")
+    def test_parse_missing_required_key(self, tmp_path):
+        config_file = tmp_path / "incomplete.yaml"
+        config_file.write_text(yaml.dump({"name": "v"}), encoding="utf-8")
         with patch("config.CONFIGS_PATH", tmp_path):
             with pytest.raises(ValueError, match="missing required keys"):
-                parse_vectors("no_vectors")
-
-    def test_parse_invalid_vectors_type(self, tmp_path):
-        config_file = tmp_path / "invalid.yaml"
-        config_file.write_text(yaml.dump({"vectors": "not_a_list"}), encoding="utf-8")
-        with patch("config.CONFIGS_PATH", tmp_path):
-            with pytest.raises(ValueError, match="must be a list"):
-                parse_vectors("invalid")
+                parse_vector("incomplete")
 
 
 # ---------------------------------------------------------------------------
@@ -201,10 +179,9 @@ class TestEmbedDataframe:
                 "name": ["Alice", "Bob", "Charlie"],
             }
         )
-        vectors = [Vector(name="emb", features=["name"], encoder_name="test/model")]
-        encoders = {"test/model": mock_encoder}
+        vector = Vector(name="emb", features=["name"], encoder_name="test/model")
 
-        result = embed_dataframe(df, vectors, encoders)
+        result = embed_dataframe(df, vector, mock_encoder)
 
         assert "item_id" in result.columns
         assert "content_hash" in result.columns
@@ -229,10 +206,9 @@ class TestEmbedDataframe:
                 "name": ["Alice", None, "Charlie"],
             }
         )
-        vectors = [Vector(name="emb", features=["name"], encoder_name="test/model")]
-        encoders = {"test/model": mock_encoder}
+        vector = Vector(name="emb", features=["name"], encoder_name="test/model")
 
-        result = embed_dataframe(df, vectors, encoders)
+        result = embed_dataframe(df, vector, mock_encoder)
 
         # The all-null item ("b") is excluded; survivors keep their embeddings.
         assert result["item_id"].tolist() == ["a", "c"]
@@ -264,10 +240,9 @@ class TestEmbedDataframe:
             },
             index=[10, 20, 30, 40],  # non-default index must not break alignment
         )
-        vectors = [Vector(name="emb", features=["name"], encoder_name="test/model")]
-        encoders = {"test/model": mock_encoder}
+        vector = Vector(name="emb", features=["name"], encoder_name="test/model")
 
-        result = embed_dataframe(df, vectors, encoders)
+        result = embed_dataframe(df, vector, mock_encoder)
 
         # "c" is dropped; the survivors keep their order and identity.
         assert result["item_id"].tolist() == ["a", "b", "d"]

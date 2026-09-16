@@ -1,0 +1,7 @@
+name: "name_embedding"
+features:
+  - offer_name
+encoder_name: "google/embeddinggemma-300m"
+prompt_name: "document"
+labels:
+  offer_name: "titre de l'offre"

@@ -1,13 +1,13 @@
 import torch
 import typer
-from config import parse_vectors
+from config import parse_vector
 from embedding import embed_dataframe
 from gcs_utils import list_parquet_files, load_parquet_file
 from loguru import logger
 from setup_encoders import (
-    load_encoders,
-    start_encoder_pools,
-    stop_encoder_pools,
+    load_encoder,
+    start_encoder_pool,
+    stop_encoder_pool,
 )
 
 app = typer.Typer(
@@ -45,29 +45,29 @@ def main(
         f"  Input parquets folder path: {input_parquets_folder_path}\n"
         f"  Output parquets folder path: {output_parquets_folder_path}"
     )
-    # Load vectors configuration and encoder weights
-    vectors = parse_vectors(config_file_name)
+    # Load vector configuration and encoder weights
+    vector = parse_vector(config_file_name)
 
     gpu_count = _get_gpu_count()
     logger.info(f"Detected {gpu_count} GPU(s) available")
 
-    encoders = load_encoders(vectors, gpu_count)
+    encoder = load_encoder(vector, gpu_count)
 
     ## List all parquet files matching the input path
     parquet_files = list_parquet_files(input_parquets_folder_path)
     logger.info(f"Found {len(parquet_files)} parquet files to process")
 
-    # Start multi-GPU pools once for the whole run if available
-    pools = start_encoder_pools(encoders, gpu_count)
+    # Start the multi-GPU pool once for the whole run if available
+    pool = start_encoder_pool(encoder, gpu_count)
     try:
         for i, parquet_filepath in enumerate(parquet_files):
             logger.info(
                 f"Processing parquet file {i + 1}/{len(parquet_files)}: {parquet_filepath}"
             )
 
-            df_metadata = load_parquet_file(parquet_filepath, vectors)
+            df_metadata = load_parquet_file(parquet_filepath, vector)
 
-            df_embeddings = embed_dataframe(df_metadata, vectors, encoders, pools=pools)
+            df_embeddings = embed_dataframe(df_metadata, vector, encoder, pool=pool)
             logger.info(
                 f"Generated embeddings for {len(df_embeddings)} items from {parquet_filepath}"
             )
@@ -78,7 +78,7 @@ def main(
             df_embeddings.to_parquet(output_parquet_path, index=False)
             logger.info(f"Saved embeddings to {output_parquet_path}")
     finally:
-        stop_encoder_pools(encoders, pools)
+        stop_encoder_pool(encoder, pool)
 
     logger.info("✅ All parquet files processed successfully")
 

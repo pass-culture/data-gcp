@@ -89,45 +89,41 @@ def embed_vector(
 
 def embed_dataframe(
     df: pd.DataFrame,
-    vectors: list[Vector],
-    encoders: dict[str, SentenceTransformer],
-    pools: dict[str, object] = None,
+    vector: Vector,
+    encoder: SentenceTransformer,
+    pool: object = None,
 ) -> pd.DataFrame:
-    """Compute all vector embeddings for a dataframe.
+    """Compute the vector embedding for a dataframe.
 
-    Items with no metadata to embed for one or more vectors (all-null features,
-    i.e. an empty prompt) are skipped entirely and logged, so every vector
-    column in the returned DataFrame is fully populated with real embeddings (non-null vectors).
+    Items with no metadata to embed (all-null features, i.e. an empty prompt)
+    are skipped entirely and logged, so the vector column in the returned
+    DataFrame is fully populated with real embeddings (non-null vectors).
 
     Args:
         df: DataFrame with item metadata (must contain 'item_id', 'content_hash'
-            and all feature columns required by the vectors in the config file)
-        vectors: Vector configurations
-        encoders: Pre-loaded encoders keyed by encoder name
-        pools: Pre-started multi-process pools keyed by encoder name. When a
-            pool exists for a vector's encoder it is reused; otherwise the
-            vector is encoded on a single device.
+            and all feature columns required by the vector in the config file)
+        vector: Vector configuration
+        encoder: Pre-loaded encoder
+        pool: Pre-started multi-process pool. When a pool is provided it is
+            reused; otherwise the vector is encoded on a single device.
 
     Returns:
-        DataFrame with 'item_id', 'content_hash', and one column per vector.
-        Each vector column contains an embedding array for every row; items
-        lacking metadata for any vector are excluded from the result.
+        DataFrame with 'item_id', 'content_hash', and the vector column.
+        The vector column contains an embedding array for every row; items
+        lacking metadata are excluded from the result.
     """
-    pools = pools or {}
     logger.info(f"Embedding {len(df)} items")
 
-    # Put each vector's prompts in a column next to the item identifiers. Every
-    # column has one entry per input row, so item_id, content_hash and all
+    # Put the vector's prompts in a column next to the item identifiers. Every
+    # column has one entry per input row, so item_id, content_hash and the
     # prompts stay aligned on the same DataFrame row.
     prompts_df = df[["item_id", "content_hash"]].reset_index(drop=True)
-    for vector in vectors:
-        prompts_df[vector.name] = _build_prompts(df, vector)
+    prompts_df[vector.name] = _build_prompts(df, vector)
 
-    # Keep only items that have a non-empty prompt for *every* vector, so no
-    # vector column ends up with a null embedding. An empty prompt means all of
-    # that vector's features are null for the item.
-    vector_names = [vector.name for vector in vectors]
-    complete = (prompts_df[vector_names] != "").all(axis=1)
+    # Keep only items that have a non-empty prompt, so the vector column never
+    # ends up with a null embedding. An empty prompt means all of the vector's
+    # features are null for the item.
+    complete = prompts_df[vector.name] != ""
 
     dropped_items = prompts_df.loc[~complete, "item_id"].tolist()
     if dropped_items:
@@ -141,18 +137,12 @@ def embed_dataframe(
     prompts_df = prompts_df[complete].reset_index(drop=True)
 
     df_embeddings = prompts_df[["item_id", "content_hash"]].copy()
-    for vector in vectors:
-        prompts = prompts_df[vector.name].tolist()
-        if not prompts:
-            df_embeddings[vector.name] = pd.Series(dtype=object)
-            continue
+    prompts = prompts_df[vector.name].tolist()
+    if not prompts:
+        df_embeddings[vector.name] = pd.Series(dtype=object)
+        return df_embeddings
 
-        vector_embeddings = embed_vector(
-            vector,
-            encoders[vector.encoder_name],
-            prompts=prompts,
-            pool=pools.get(vector.encoder_name),
-        )
-        df_embeddings[vector.name] = vector_embeddings.tolist()
+    vector_embeddings = embed_vector(vector, encoder, prompts=prompts, pool=pool)
+    df_embeddings[vector.name] = vector_embeddings.tolist()
 
     return df_embeddings

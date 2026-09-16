@@ -161,4 +161,4 @@ def test_search_by_vector_details_include_distance(client: SemanticClient):
 def test_non_detail_results_are_minimal(client: SemanticClient):
     results = client.search_by_text(text="concert", n=3, details=False)
     assert len(results) > 0
-    assert set(results[0].keys()) == {"idx", "item_id"}
+    assert set(results[0].keys()) == {"idx", "item_id", "_score"}

@@ -52,8 +52,7 @@ NUM_SUB_VECTORS = (
 )
 MODEL_PATH = "metadata/vector"
 NUM_RESULTS = 5  # Number of results to retrieve
-# Only consider results with lancedb _distance (to minimize) less than this threshold
-SEMANTIC_RETRIEVAL_UPPER_BOUND = 0.1
+SEMANTIC_RETRIEVAL_UPPER_BOUND = 0.3
 LOGGING_INTERVAL = 50_000  # Interval for logging progress
 
 N_PROBES = 5
@@ -62,11 +61,9 @@ REFINE_FACTOR = 10
 MATCHING_FEATURES = {
     "product": {
         "oeuvre": {"method": "jarowinkler", "threshold": 0.90, "missing_value": 0},
-        "edition": {"method": "exact", "missing_value": -1},
     },
     "offer": {
         "oeuvre": {"method": "jarowinkler", "threshold": 0.95, "missing_value": 0},
-        "edition": {"method": "exact", "missing_value": -1},
     },
 }
 MATCHES_REQUIRED = 1

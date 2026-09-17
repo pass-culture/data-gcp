@@ -2,9 +2,10 @@ import torch
 import typer
 from config import parse_vectors
 from constants import ROWS_PER_CHUNK
-from embedding import LongPromptTracker, embed_dataframe
+from embedding import embed_dataframe
 from gcs_utils import iter_metadata_chunks, list_parquet_files, write_embeddings_parquet
 from loguru import logger
+from prompt_building import LongPromptTracker
 from setup_encoders import (
     load_encoders,
     start_encoder_pools,

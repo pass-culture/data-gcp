@@ -49,7 +49,7 @@ select
     end as `source`
 from {{ ref("int_pcapi__log") }}
 where
-    log_timestamp >= date_sub(current_timestamp(), interval 365 day)
+    log_timestamp >= "2021-07-01"
     and url_path in ("/users/current", "/native/v1/me", "/native/v1/signin")
     {% if is_incremental() %}
         and date(log_timestamp)

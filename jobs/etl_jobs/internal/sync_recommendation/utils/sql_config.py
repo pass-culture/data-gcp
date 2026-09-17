@@ -78,12 +78,12 @@ CLOUD_SQL_TABLES_CONFIG: Dict[str, Dict] = {
 
 class MaterializedView(Enum):
     ENRICHED_USER = "enriched_user_mv"
-    ITEM_IDS = "item_ids_mv"
     NON_RECOMMENDABLE_ITEMS = "non_recommendable_items_mv"
     IRIS_FRANCE = "iris_france_mv"
     RECOMMENDABLE_OFFERS = "recommendable_offers_raw_mv"
     VENUE_H3_MAPPING = "venue_h3_mapping_mv"
     SIMILAR_ARTIST = "similar_artist_mv"
+    OFFER_METADATA = "offer_metadata_mv"
 
 
 class SQLTableConfig:

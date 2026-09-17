@@ -84,6 +84,8 @@ select
     cs.collective_stock_booking_limit_date_time,
     cs.collective_stock_number_of_tickets,
     cs.collective_stock_price_detail,
+    cs.collective_stock_number_of_teachers,
+    cs.collective_stock_service_price,
     bcs.total_non_cancelled_collective_bookings,
     bcs.total_collective_bookings,
     bcs.total_used_collective_bookings,

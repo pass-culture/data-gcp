@@ -1,6 +1,6 @@
 import torch
 from config import Vector
-from constants import HF_TOKEN_SECRET_NAME, MAX_PROMPT_TOKENS
+from constants import HF_TOKEN_SECRET_NAME, MAX_SEQ_LENGTH
 from gcp_secrets import get_secret
 from loguru import logger
 from sentence_transformers import SentenceTransformer
@@ -64,7 +64,7 @@ def load_encoders(
             device=device,
             model_kwargs={"torch_dtype": precision},
         )
-        encoder.max_seq_length = MAX_PROMPT_TOKENS
+        encoder.max_seq_length = MAX_SEQ_LENGTH
         encoders[name] = encoder
     return encoders
 

@@ -36,3 +36,6 @@ MAX_PROMPT_TOKENS = 512
 # uneven per-file export sharding; BATCH_SIZE controls SentenceTransformer's
 # internal batching within one encode() call.
 ROWS_PER_CHUNK = 50_000
+# Cap the tokenized prompt length. embeddinggemma-300m defaults to 2048,
+# but only ~2% of items exceed 512.
+MAX_SEQ_LENGTH = 512

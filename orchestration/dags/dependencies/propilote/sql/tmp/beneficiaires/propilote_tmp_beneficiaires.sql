@@ -4,7 +4,7 @@ with
         select
             date_trunc(deposit_active_date, month) as month,
             max(deposit_active_date) as last_active_date
-        from `{{ bigquery_analytics_dataset }}.native_daily_user_deposit`
+        from `{{ bigquery_int_global_dataset }}.daily_deposit`
         where deposit_active_date > date('2021-01-01')
         group by date_trunc(deposit_active_date, month)
     ),
@@ -22,7 +22,7 @@ with
                 then "GRANT_18"
                 else uua.deposit_type
             end as deposit_type
-        from `{{ bigquery_analytics_dataset }}.native_daily_user_deposit` uua
+        from `{{ bigquery_int_global_dataset }}.daily_deposit` uua
         left join
             `{{ bigquery_analytics_dataset }}.global_booking` ebd
             on ebd.deposit_id = uua.deposit_id

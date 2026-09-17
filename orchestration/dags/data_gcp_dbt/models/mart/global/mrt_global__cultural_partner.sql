@@ -60,5 +60,5 @@ left join
     on v.venue_type_label = agg_partner_cultural_sector.partner_type
 where
     (v.venue_is_open_to_public or v.venue_siret is not null or v.venue_is_permanent)
-    and offerer_validation_status = "VALIDATED"
-    and offerer_is_active
+    and v.offerer_validation_status = "VALIDATED"
+    and v.offerer_is_active

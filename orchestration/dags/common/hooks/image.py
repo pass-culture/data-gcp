@@ -3,12 +3,24 @@ from dataclasses import dataclass
 from jinja2 import DictLoader, Environment
 
 TEMPLATES = {
-    "cpu_startup": """
+    # --- Reusable Sub-Templates ---
+    "preamble": """
 #!/bin/bash
 set -euo pipefail
 
 echo 'CC=gcc' | sudo tee -a /etc/environment
+""",
+    "setup_airflow_user": """
+# Ensure airflow user exists, create home dir, and set permissions
+if ! id -u airflow >/dev/null 2>&1; then
+  sudo useradd -m -s /bin/bash airflow
+fi
 
+sudo mkdir -p /home/airflow
+sudo chown -R airflow:airflow /home/airflow
+sudo usermod -aG docker airflow 2>/dev/null || true
+""",
+    "install_docker": """
 sudo systemctl restart google-guest-agent || true
 
 # Install Docker Engine from Docker's official apt repo (docker.io is unofficial).
@@ -33,35 +45,8 @@ EOF
 sudo apt-get update -qq
 sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 sudo systemctl enable --now docker.service containerd.service
-
-# Add the SSH login user to the `docker` group so it can reach the docker socket
-# without sudo. This must happen here, after the docker install
-if id -u airflow >/dev/null 2>&1; then
-  sudo usermod -aG docker airflow
-fi
-
-{% if enable_monitoring %}
-{% include 'ops_agent_basic' %}
-{% endif %}
 """,
-    "gpu_startup": """
-#!/bin/bash
-set -euo pipefail
-
-echo 'CC=gcc' | sudo tee -a /etc/environment
-
-# Required for Triton's JIT compilation of custom CUDA kernels (e.g. the
-# torch._native bmm_outer_product op used by Gemma3 RoPE): triton shells out
-# to gcc with -I<python include dir>, which fails with "Python.h: No such
-# file or directory" if the -dev headers aren't installed. The DLVM base
-# image doesn't ship them by default.
-sudo apt-get update -qq
-sudo apt-get install -y -qq build-essential python3.10-dev
-
-{% if enable_monitoring %}
-{% include 'ops_agent_dcgm' %}
-{% endif %}
-""",
+    # --- Monitoring Blocks ---
     "ops_agent_basic": """
 curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
 sudo bash add-google-cloud-ops-agent-repo.sh --also-install
@@ -69,17 +54,10 @@ sudo bash add-google-cloud-ops-agent-repo.sh --also-install
     "ops_agent_dcgm": """
 {% include 'ops_agent_basic' %}
 
-# Best-effort: a failure setting up DCGM/GPU monitoring shouldn't abort the
-# whole startup script (the job itself doesn't depend on it). Everything below
-# runs with `set +e` for that reason; check `journalctl -u google-startup-scripts`
-# / `systemctl status nvidia-dcgm google-cloud-ops-agent` on the VM to debug.
+# Non-blocking DCGM setup (`set +e` prevents monitoring failures from breaking VM boot).
+# DLVM base image lacks `datacenter-gpu-manager` by default, so we attach NVIDIA's CUDA repo.
+# Debug via `journalctl -u google-startup-scripts` or `systemctl status nvidia-dcgm`
 set +e
-
-# datacenter-gpu-manager isn't in any repo this image ships by default
-# (confirmed via a live GCE spike: apt-cache madison returned nothing,
-# which — combined with the old unconditional `set -e` — silently aborted
-# the entire startup script before the DCGM install or the ops-agent config
-# below ever ran). NVIDIA's CUDA network repo is what actually hosts it.
 if ! apt-cache madison datacenter-gpu-manager | grep -q '3.3.'; then
     wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb -O /tmp/cuda-keyring.deb
     sudo dpkg -i /tmp/cuda-keyring.deb
@@ -104,6 +82,29 @@ EOF
 
 sudo systemctl restart google-cloud-ops-agent
 set -e
+""",
+    # --- Main Entrypoints ---
+    "cpu_startup": """
+{% include 'preamble' %}
+{% include 'install_docker' %}
+{% include 'setup_airflow_user' %}
+
+{% if enable_monitoring %}
+{% include 'ops_agent_basic' %}
+{% endif %}
+""",
+    "gpu_startup": """
+{% include 'preamble' %}
+
+# Required for Triton's JIT compilation of custom CUDA kernels
+sudo apt-get update -qq
+sudo apt-get install -y -qq build-essential python3.10-dev
+
+{% include 'setup_airflow_user' %}
+
+{% if enable_monitoring %}
+{% include 'ops_agent_dcgm' %}
+{% endif %}
 """,
 }
 

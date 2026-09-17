@@ -17,7 +17,7 @@ from common.operators.kubernetes import (
 )
 from common.utils import get_airflow_schedule
 
-schedule = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 */6 * * *"
+schedule = "15 */6 * * *" if ENV_SHORT_NAME == "prod" else "45 */6 * * *"
 
 DAG_NAME = "import_siret_v1"
 MICROSERVICE_PATH = "jobs/etl_jobs/external/siret"

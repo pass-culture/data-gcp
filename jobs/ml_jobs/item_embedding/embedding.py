@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 from config import CategoryFilter, FilterCondition, Vector
-from constants import BATCH_SIZE, MAX_PROMPT_TOKENS
+from constants import BATCH_SIZE, MAX_SEQ_LENGTH
 from loguru import logger
 from preprocessing import PREPROCESSORS
 from sentence_transformers import SentenceTransformer
@@ -18,7 +18,7 @@ class LongPromptTracker:
     many per-file log lines.
     """
 
-    max_tokens: int = MAX_PROMPT_TOKENS
+    max_tokens: int = MAX_SEQ_LENGTH
     long_item_ids: dict[str, list] = field(default_factory=dict)
 
     def record(self, vector_name: str, item_id: object) -> None:

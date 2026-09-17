@@ -94,7 +94,7 @@ offer_description : Le chamanisme est le monde de la sensibilité construite et 
 
 ### Sequence length and truncation
 
-A prompt longer than `MAX_PROMPT_TOKENS` (`constants.py`; currently 512, capped down from `embeddinggemma-300m`'s native 2048 to bound per-batch GPU memory and avoid OOMs — see "Sequence length and truncation" rationale in `constants.py`) is truncated by the model, dropping the **end** of the prompt first, silently — the encoder does not raise or warn on its own. Keep the longest feature (typically `offer_description`) **last** so truncation only trims that field and never the identifying ones.
+A prompt longer than `SEQ_LENGTH` (`constants.py`; currently 512, capped down from `embeddinggemma-300m`'s native 2048 to bound per-batch GPU memory and avoid OOMs — see "Sequence length and truncation" rationale in `constants.py`) is truncated by the model, dropping the **end** of the prompt first, silently — the encoder does not raise or warn on its own. Keep the longest feature (typically `offer_description`) **last** so truncation only trims that field and never the identifying ones.
 
 To make this otherwise-invisible truncation visible, the job flags items whose prompt is likely to exceed the limit and reports them once at the end of the run:
 
@@ -240,7 +240,7 @@ config.py         — YAML config loading, schema validation, Vector/CategoryFil
 embedding.py      — Core embedding logic: prompt building, category-scoped filtering, encoder management, GPU dispatch, over-length prompt tracking (LongPromptTracker)
 preprocessing.py  — Registry of named feature preprocessors (currently placeholder/dummy logic)
 gcs_utils.py      — GCS parquet I/O with retry logic
-constants.py      — Environment variables, secret name mapping, MAX_PROMPT_TOKENS
+constants.py      — Environment variables, secret name mapping, MAX_SEQ_LENGTH
 gcp_secrets.py    — Secret Manager access with caching
 setup_encoders.py - load encoder models, set the precision and pooling if available
 ```
@@ -304,7 +304,7 @@ Note that the run still overwrites the shared intermediate table
 
 - **Precision** is selected automatically: `bfloat16` on Ampere+ GPUs (compute capability ≥ 8, e.g. L4), `float32` otherwise (e.g. T4). `float16` is never used (the default Gemma models overflow in fp16 and produce NaN embeddings).
 - **Machine sizing**: the model is small (~300M params) and prompts are short (mean ~167 tokens), so a single T4 handles the workload. Extra GPUs (T4 or L4) speed up large runs through the multi-process pool; prefer L4 for full-catalogue runs, where bf16 halves memory and improves throughput.
-- **Batch size** is set by `BATCH_SIZE` in `constants.py`. It is the main memory/speed lever; sequence length is capped at `MAX_PROMPT_TOKENS` (512, enforced on every loaded encoder in `setup_encoders.load_encoders`) rather than the model's native 2048, since `encode()` sorts prompts by length before batching and an uncapped batch of near-max-length prompts can OOM the GPU.
+- **Batch size** is set by `BATCH_SIZE` in `constants.py`. It is the main memory/speed lever; sequence length is capped at `MAX_SEQ_LENGTH` (512, enforced on every loaded encoder in `setup_encoders.load_encoders`) rather than the model's native 2048, since `encode()` sorts prompts by length before batching and an uncapped batch of near-max-length prompts can OOM the GPU.
 
 ## Capacity & sizing
 

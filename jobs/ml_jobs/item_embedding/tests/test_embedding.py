@@ -994,9 +994,9 @@ class TestLongPromptTracker:
         }
 
     def test_default_max_tokens_matches_constant(self):
-        from constants import MAX_PROMPT_TOKENS
+        from constants import MAX_SEQ_LENGTH
 
-        assert LongPromptTracker().max_tokens == MAX_PROMPT_TOKENS
+        assert LongPromptTracker().max_tokens == MAX_SEQ_LENGTH
 
     def test_log_summary_does_not_raise_when_empty(self):
         LongPromptTracker().log_summary()

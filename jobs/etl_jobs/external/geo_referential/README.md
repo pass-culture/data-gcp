@@ -64,8 +64,8 @@ GCP_PROJECT_ID=passculture-data-ehp make dry-run                      # download
 GCP_PROJECT_ID=passculture-data-ehp make run DATASET=raw_dev          # write to BigQuery
 ```
 
-Downloads are cached in `CACHE_DIR` (default `/tmp/geo_referential`). The job needs ~1.5 GB RAM
-(WKT conversion of 49k IRIS polygons).
+Source files (~150 MB) are downloaded to a temporary directory on each run. The job needs
+~1.5 GB RAM (WKT conversion of 49k IRIS polygons).
 
 Scheduled by `import_geo_referential` (yearly, 1 September, once the IGN edition of the year is
 out); vintages are DAG params for manual reruns.

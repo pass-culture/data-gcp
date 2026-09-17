@@ -1,4 +1,5 @@
 import logging
+import tempfile
 from pathlib import Path
 
 import pandas as pd
@@ -100,14 +101,14 @@ def import_geo_referential(
     destination_dataset_id: str = typer.Option(
         ..., help="Destination dataset id (raw_<env>)"
     ),
-    cache_dir: Path = typer.Option(Path("/tmp/geo_referential"), help="Download cache"),
     dry_run: bool = typer.Option(
         False, help="Download and validate without writing to BigQuery"
     ),
 ) -> None:
     try:
         vintages = Vintages(year=year, density_year=density_year, frr_year=frr_year)
-        extracts = load_all(vintages, cache_dir)
+        with tempfile.TemporaryDirectory() as download_dir:
+            extracts = load_all(vintages, Path(download_dir))
         for extract in extracts.values():
             logger.info("%s: %s rows", extract.table_name, len(extract.df))
         validate(extracts)

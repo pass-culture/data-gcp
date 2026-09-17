@@ -44,35 +44,35 @@ class Extract:
     df: pd.DataFrame
 
 
-def load_contour_iris(vintages: Vintages, cache_dir: Path) -> Extract:
+def load_contour_iris(vintages: Vintages, download_dir: Path) -> Extract:
     path = download(
         config.contour_iris_url(vintages.year),
-        cache_dir / f"contours_iris_{vintages.year}.parquet",
+        download_dir / f"contours_iris_{vintages.year}.parquet",
     )
     return Extract(
         "ign_contour_iris", vintages.year, parse_contour_iris(pq.read_table(path))
     )
 
 
-def load_cog(vintages: Vintages, cache_dir: Path) -> list[Extract]:
+def load_cog(vintages: Vintages, download_dir: Path) -> list[Extract]:
     zip_path = download(
-        config.cog_url(vintages.year), cache_dir / f"cog_{vintages.year}.zip"
+        config.cog_url(vintages.year), download_dir / f"cog_{vintages.year}.zip"
     )
     extracts = []
     for table_name, member in COG_TABLES.items():
         csv_path = extract_member(
-            zip_path, member.format(year=vintages.year), cache_dir
+            zip_path, member.format(year=vintages.year), download_dir
         )
         raw = pd.read_csv(csv_path, dtype=str, keep_default_na=False)
         extracts.append(Extract(table_name, vintages.year, parse_cog_table(raw)))
     return extracts
 
 
-def load_epci(vintages: Vintages, cache_dir: Path) -> list[Extract]:
+def load_epci(vintages: Vintages, download_dir: Path) -> list[Extract]:
     zip_path = download(
-        config.epci_url(vintages.year), cache_dir / f"epci_{vintages.year}.zip"
+        config.epci_url(vintages.year), download_dir / f"epci_{vintages.year}.zip"
     )
-    xlsx_path = extract_member(zip_path, single_member(zip_path, ".xlsx"), cache_dir)
+    xlsx_path = extract_member(zip_path, single_member(zip_path, ".xlsx"), download_dir)
     return [
         Extract(
             "insee_epci",
@@ -91,30 +91,31 @@ def load_epci(vintages: Vintages, cache_dir: Path) -> list[Extract]:
     ]
 
 
-def load_density_grid(vintages: Vintages, cache_dir: Path) -> Extract:
+def load_density_grid(vintages: Vintages, download_dir: Path) -> Extract:
     path = download(
         config.density_grid_url(vintages.density_year),
-        cache_dir / f"density_grid_{vintages.density_year}.xlsx",
+        download_dir / f"density_grid_{vintages.density_year}.xlsx",
     )
     raw = read_table(path, sheet="Grille_Densite", header_key="CODGEO")
     return Extract("insee_density_grid", vintages.density_year, parse_density_grid(raw))
 
 
-def load_zrr(vintages: Vintages, cache_dir: Path) -> Extract:
-    path = download(config.ZRR_URL, cache_dir / "zrr_cog2021.xls")
+def load_zrr(vintages: Vintages, download_dir: Path) -> Extract:
+    path = download(config.ZRR_URL, download_dir / "zrr_cog2021.xls")
     raw = read_table(path, sheet=config.ZRR_SHEET, header_key="CODGEO")
     return Extract("anct_zrr", ZRR_VINTAGE_YEAR, parse_zrr(raw))
 
 
-def load_frr(vintages: Vintages, cache_dir: Path) -> Extract:
+def load_frr(vintages: Vintages, download_dir: Path) -> Extract:
     path = download(
-        config.frr_url(vintages.frr_year), cache_dir / f"frr_{vintages.frr_year}.xlsx"
+        config.frr_url(vintages.frr_year),
+        download_dir / f"frr_{vintages.frr_year}.xlsx",
     )
     raw = read_table(path, sheet=config.FRR_SHEET, header_key="codgeo")
     return Extract("dgcl_frr", vintages.frr_year, parse_frr(raw))
 
 
-def load_geo_api_communes(vintages: Vintages, cache_dir: Path) -> Extract:
+def load_geo_api_communes(vintages: Vintages, download_dir: Path) -> Extract:
     records = []
     for department_code in config.GEO_API_DEPARTMENTS:
         records.extend(download_json(config.geo_api_communes_url(department_code)))
@@ -123,14 +124,14 @@ def load_geo_api_communes(vintages: Vintages, cache_dir: Path) -> Extract:
     )
 
 
-def load_all(vintages: Vintages, cache_dir: Path) -> dict[str, Extract]:
+def load_all(vintages: Vintages, download_dir: Path) -> dict[str, Extract]:
     extracts = [
-        load_contour_iris(vintages, cache_dir),
-        *load_cog(vintages, cache_dir),
-        *load_epci(vintages, cache_dir),
-        load_density_grid(vintages, cache_dir),
-        load_zrr(vintages, cache_dir),
-        load_frr(vintages, cache_dir),
-        load_geo_api_communes(vintages, cache_dir),
+        load_contour_iris(vintages, download_dir),
+        *load_cog(vintages, download_dir),
+        *load_epci(vintages, download_dir),
+        load_density_grid(vintages, download_dir),
+        load_zrr(vintages, download_dir),
+        load_frr(vintages, download_dir),
+        load_geo_api_communes(vintages, download_dir),
     ]
     return {extract.table_name: extract for extract in extracts}

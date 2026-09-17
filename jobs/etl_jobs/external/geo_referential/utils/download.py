@@ -10,19 +10,14 @@ logger = logging.getLogger(__name__)
 
 
 def download(url: str, dest: Path) -> Path:
-    """Stream `url` to `dest`, reusing an existing file (the sources are yearly snapshots)."""
-    if dest.exists() and dest.stat().st_size > 0:
-        logger.info("Reusing %s", dest)
-        return dest
+    """Stream `url` to `dest`."""
     dest.parent.mkdir(parents=True, exist_ok=True)
     logger.info("Downloading %s", url)
     with requests.get(url, stream=True, timeout=DOWNLOAD_TIMEOUT) as response:
         response.raise_for_status()
-        tmp = dest.with_suffix(dest.suffix + ".part")
-        with tmp.open("wb") as f:
+        with dest.open("wb") as f:
             for chunk in response.iter_content(chunk_size=1 << 20):
                 f.write(chunk)
-        tmp.replace(dest)
     return dest
 
 

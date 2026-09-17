@@ -2,7 +2,6 @@ YEAR ?= 2026
 DENSITY_YEAR ?= 2024
 FRR_YEAR ?= 2025
 DATASET ?= raw_dev
-CACHE_DIR ?= /tmp/geo_referential
 
 .PHONY: install test lint dry-run run
 
@@ -17,8 +16,8 @@ lint:
 
 dry-run:
 	uv run main.py --year $(YEAR) --density-year $(DENSITY_YEAR) --frr-year $(FRR_YEAR) \
-		--destination-dataset-id $(DATASET) --cache-dir $(CACHE_DIR) --dry-run
+		--destination-dataset-id $(DATASET) --dry-run
 
 run:
 	uv run main.py --year $(YEAR) --density-year $(DENSITY_YEAR) --frr-year $(FRR_YEAR) \
-		--destination-dataset-id $(DATASET) --cache-dir $(CACHE_DIR)
+		--destination-dataset-id $(DATASET)

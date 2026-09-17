@@ -1,6 +1,7 @@
 import asyncio
 import typing as t
 
+import pandas as pd
 from lancedb import connect_async
 
 from constants import (
@@ -27,12 +28,20 @@ class SemanticSpace:
         return await self.db.open_table(linkage_type)
 
     def build_filter(self, filters: dict) -> str:
-        return " AND ".join(
-            [
-                f"({k} = {v})" if isinstance(v, int) else f"({k} = '{v}')"
-                for k, v in filters.items()
-            ]
-        )
+        def predicate(k, v):
+            # A missing value must be matched with `IS NULL`, not `= 'None'`:
+            # the latter compares against the literal string "None" and never
+            # matches a real SQL NULL, silently dropping every null-valued row.
+            if v is None or (isinstance(v, float) and pd.isna(v)):
+                return f"({k} IS NULL)"
+            if isinstance(v, bool):
+                return f"({k} = {str(v).lower()})"
+            if isinstance(v, int):
+                return f"({k} = {v})"
+            escaped = str(v).replace("'", "''")
+            return f"({k} = '{escaped}')"
+
+        return " AND ".join(predicate(k, v) for k, v in filters.items())
 
     async def search(
         self,

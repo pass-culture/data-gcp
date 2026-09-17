@@ -14,7 +14,6 @@ from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_FEATURES_DATASET,
     DAG_FOLDER,
-    DAG_TAGS,
     ENV_SHORT_NAME,
     GCE_ZONES,
     GCP_PROJECT_ID,
@@ -30,11 +29,13 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 
-from jobs.crons import SCHEDULE_DICT
-
 ###########################################################################
 ## GCS CONSTANTS
-GCS_FOLDER_PATH = f"item_embedding_{ENV_SHORT_NAME}/{{{{ ts_nodash }}}}"
+# Distinct top-level prefix (not just the ts_nodash suffix) so test runs are
+# clearly separated from the scheduled item_embedding DAG's GCS output.
+GCS_FOLDER_PATH = (
+    f"item_embedding_test_valentinbusson_{ENV_SHORT_NAME}/{{{{ ts_nodash }}}}"
+)
 INPUT_FOLDER = "input_item_metadata"
 OUTPUT_FOLDER = "output_item_embeddings"
 TEMP_OUTPUT_FILE_NAME = "item_embeddings_*.parquet"
@@ -42,16 +43,23 @@ TEMP_INPUT_FILE_NAME = "item_metadata_*.parquet"
 
 ## BigQuery CONSTANTS
 INPUT_DATASET_NAME = f"ml_input_{ENV_SHORT_NAME}"
-INPUT_TABLE_NAME = "item_embedding_extraction"
-TEMP_INT_TABLE_NAME = "tmp_item_metadata"
+INPUT_TABLE_NAME = "item_embedding_extraction_enriched"
+# Distinct name: the scheduled item_embedding DAG WRITE_TRUNCATEs this same
+# table name, so sharing it risks clobbering/racing with a concurrent run.
+TEMP_INT_TABLE_NAME = "tmp_item_metadata_test_valentinbusson"
 
 OUTPUT_DATASET_NAME = BIGQUERY_ML_FEATURES_DATASET
-TEMP_OUTPUT_TABLE_NAME = "item_embedding_tmp"
+# Distinct name: item_embedding_tmp is WRITE_TRUNCATEd by the scheduled DAG
+# and read by the ml_feat__item_embedding_refactor dbt model -- never point
+# a test run at it.
+TEMP_OUTPUT_TABLE_NAME = "item_embedding_tmp_test_valentinbusson"
 
 ## DAG CONFIG
-DAG_NAME = "item_embedding"
+DAG_NAME = "item_embedding__test__valentinbusson"
 BASE_DIR = "data-gcp/jobs/ml_jobs/item_embedding"
-INSTANCE_NAME = "item-embedding"
+# Distinct instance name so a concurrent run of the scheduled item_embedding
+# DAG doesn't collide on the same GCE VM.
+INSTANCE_NAME = "item-embedding-test-valentinbusson"
 GCE_ZONE_TEMPLATE = "{{ params.gce_zone }}"
 INSTANCE_TYPE = {
     "dev": "n1-standard-4",
@@ -104,15 +112,15 @@ with DAG(
     default_args=DEFAULT_ARGS,
     description="Embed items metadata",
     doc_md=DAG_DOC,
-    schedule=SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME],
+    schedule=None,
     catchup=False,
     dagrun_timeout=timedelta(hours=30),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
+    tags=["TEST", "valentinbusson"],
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="algo-cine-embeddings",
             type="string",
         ),
         "embed_all": Param(
@@ -121,7 +129,7 @@ with DAG(
             description="Whether to embed all items or only the ones that need embedding (to_embed = true in the input table). See DAG docs for VM setup recommendations.",
         ),
         "config_file_name": Param(
-            default="default",
+            default="category_embeddings",
             type="string",
             description="Name of the configuration file (without .yaml extension)",
         ),
@@ -298,6 +306,7 @@ with DAG(
                 --output-parquets-folder-path gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{OUTPUT_FOLDER} \
         """,
         deferrable=True,
+        poll_interval=600,
     )
 
     # Step 4: Export the output embeddings from GCS to BigQuery temp table

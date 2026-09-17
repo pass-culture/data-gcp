@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: ml_input__item_embedding_extraction_enriched
+    description: >
+      ml_input__item_embedding_extraction enriched with category-specific
+      semantic metadata (AlloCiné genres for movies, Titelive GTL
+      classification for books), packaged into a single
+      extra_semantic_metadata JSON string column shared across categories:
+      {"movies": {"genres": [...]}} for FILM/CINEMA, {"books": {"gtl1": ...,
+      "gtl2": ..., "gtl3": ..., "gtl4": ...}} for LIVRE, null otherwise.
+    columns:
+      - name: item_id
+        data_tests:
+          - not_null
+          - unique
+      - name: to_embed
+        data_tests:
+          - not_null

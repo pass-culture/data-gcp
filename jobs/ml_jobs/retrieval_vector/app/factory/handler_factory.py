@@ -24,17 +24,15 @@ class PredictionHandlerFactory:
 
         elif request_type == "similar_offer":
             if embedding_model_type == EmbeddingModelTypes.METADATA_GRAPH:
-                # For graph models, we do not want fallback
-                return SimilarOfferHandler(fallback_client=None)
+                return SimilarOfferHandler()
 
-            # TODO: Test if we want to keep fallback for regular similar offer handler
-            return SimilarOfferHandler(fallback_client=SearchByTopsHandler())
+            return SimilarOfferHandler()
 
         elif request_type == "semantic_search":
             # Semantic (vector) search: nearest items to the query item's semantic
             # embedding. No `tops` fallback: the semantic table has no booking/trend
             # columns to fall back on.
-            return SimilarOfferHandler(fallback_client=None)
+            return SimilarOfferHandler()
 
         elif request_type == "text_search":
             if embedding_model_type != EmbeddingModelTypes.SEMANTIC:

@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 import pytest
+from lancedb.index import FTS, BTree, IvfPq
 
 from app.retrieval.constants import DISTANCE_COLUMN_NAME, SCORE_COLUMN_NAME
 from app.retrieval.semantic_client import SemanticClient
@@ -53,15 +54,18 @@ def _build_items_table(df: pd.DataFrame, emb_size: int, uri: str) -> None:
     db = lancedb.connect(uri)
     table = db.create_table("items", data=data, mode="overwrite")
     table.create_index(
-        metric="cosine",
-        num_partitions=2,
-        num_sub_vectors=emb_size // 8,
-        vector_column_name="vector",
+        "vector",
+        config=IvfPq(
+            distance_type="cosine",
+            num_partitions=2,
+            num_sub_vectors=emb_size // 8,
+        ),
+        replace=True,
     )
-    table.create_fts_index("search_text", use_tantivy=False, replace=True)
-    table.create_scalar_index("item_id", index_type="BTREE")
-    table.create_scalar_index("category", index_type="BITMAP")
-    table.create_scalar_index("subcategory_id", index_type="BITMAP")
+    table.create_index("search_text", config=FTS(), replace=True)
+    table.create_index("item_id", config=BTree(), replace=True)
+    table.create_index("category", config=BTree(), replace=True)
+    table.create_index("subcategory_id", config=BTree(), replace=True)
 
 
 @pytest.fixture(scope="module")

@@ -37,13 +37,10 @@ GCE_INSTANCE = f"algo-default-deployment-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
 DAG_NAME = "algo_default_deployment"
 
-## SA for Vertex Endpoints Continuous Deployment, map env names for new infra
-env_short_name_mapping = {
-    "prod": "prd",
-    "stg": "stg",
-    "dev": "dev",
-}
-VERTEX_ENDPOINTS_CD_SA = f"sa-vertex-endpoints-{env_short_name_mapping[ENV_SHORT_NAME]}@{GCP_PROJECT_ID}.iam.gserviceaccount.com"
+## SA for Vertex Endpoints Continuous Deployment
+VERTEX_ENDPOINTS_CD_SA = (
+    f"sa-vertex-endpoints-{ENV_SHORT_NAME}@{GCP_PROJECT_ID}.iam.gserviceaccount.com"
+)
 
 RANKING_DICT = {
     "prod": "n1-highcpu-4",

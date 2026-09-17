@@ -43,6 +43,7 @@ TABLES_TO_PROCESS = [
     "iris_france",
     "venue_h3_mapping",
     "similar_artist",
+    "offer_metadata",
 ]
 
 MATERIALIZED_VIEWS = [
@@ -52,6 +53,7 @@ MATERIALIZED_VIEWS = [
     "recommendable_offers_raw_mv",
     "venue_h3_mapping_mv",
     "similar_artist_mv",
+    "offer_metadata_mv",
 ]
 
 INSTANCE_TYPE = {

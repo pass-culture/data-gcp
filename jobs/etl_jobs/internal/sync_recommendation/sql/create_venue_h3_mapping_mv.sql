@@ -1,6 +1,3 @@
-drop function if exists get_venue_h3_mapping_{{ ts_nodash }}
-cascade
-;
 create or replace function get_venue_h3_mapping_{{ ts_nodash }} ()
 returns
     table(
@@ -76,4 +73,38 @@ ALTER MATERIALIZED VIEW IF EXISTS venue_h3_mapping_mv RENAME TO venue_h3_mapping
 ALTER MATERIALIZED VIEW IF EXISTS venue_h3_mapping_mv_tmp RENAME TO venue_h3_mapping_mv;
 DROP MATERIALIZED VIEW IF EXISTS venue_h3_mapping_mv_old;
 commit
+;
+
+-- Cleanup orphaned functions left by previous runs (scheduled or manual).
+-- The function still backing the freshly renamed materialized view is
+-- automatically preserved: DROP FUNCTION without CASCADE fails while a
+-- dependent object exists, so it is simply skipped.
+create or replace function cleanup_get_venue_h3_mapping_functions_{{ ts_nodash }} ()
+returns void
+as $body$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN
+        SELECT p.oid::regprocedure AS func_sig
+        FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+          AND p.proname ~ '^get_venue_h3_mapping_[0-9]{14}$'
+    LOOP
+        BEGIN
+            EXECUTE format('DROP FUNCTION %s', r.func_sig);
+        EXCEPTION WHEN dependent_objects_still_exist THEN
+            -- still referenced by the current materialized view, skip it
+            NULL;
+        END;
+    END LOOP;
+END;
+$body$
+language plpgsql
+;
+
+select cleanup_get_venue_h3_mapping_functions_{{ ts_nodash }} ()
+;
+drop function cleanup_get_venue_h3_mapping_functions_{{ ts_nodash }} ()
 ;

@@ -1,23 +1,36 @@
-drop function if exists get_enriched_user_{{ ts_nodash }}
-cascade
-;
 create or replace function get_enriched_user_{{ ts_nodash }} ()
 returns
     table(
         user_id varchar,
         user_deposit_creation_date timestamp,
         user_birth_date timestamp,
+        user_department_code varchar,
         user_deposit_initial_amount real,
         user_theoretical_remaining_credit real,
         booking_cnt integer,
         consult_offer integer,
-        has_added_offer_to_favorites integer
+        has_added_offer_to_favorites integer,
+        user_subscription_latitude real,
+        user_subscription_longitude real
     )
-as $body$
+as
+    $body$
 BEGIN
     RETURN QUERY
-    SELECT *
-    FROM public.enriched_user;
+    -- Select columns explicitly to avoid any issues with column order changes in the future
+    SELECT
+        eu.user_id,
+        eu.user_deposit_creation_date,
+        eu.user_birth_date,
+        eu.user_department_code,
+        eu.user_deposit_initial_amount,
+        eu.user_theoretical_remaining_credit,
+        eu.booking_cnt,
+        eu.consult_offer,
+        eu.has_added_offer_to_favorites,
+        eu.user_subscription_latitude,
+        eu.user_subscription_longitude
+    FROM public.enriched_user eu;
 END;
 $body$
 language plpgsql
@@ -47,4 +60,38 @@ ALTER MATERIALIZED VIEW IF EXISTS enriched_user_mv_tmp
     RENAME TO enriched_user_mv;
 DROP MATERIALIZED VIEW IF EXISTS enriched_user_mv_old;
 commit
+;
+
+-- Cleanup orphaned functions left by previous runs (scheduled or manual).
+-- The function still backing the freshly renamed materialized view is
+-- automatically preserved: DROP FUNCTION without CASCADE fails while a
+-- dependent object exists, so it is simply skipped.
+create or replace function cleanup_get_enriched_user_functions_{{ ts_nodash }} ()
+returns void
+as $body$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN
+        SELECT p.oid::regprocedure AS func_sig
+        FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+          AND p.proname ~ '^get_enriched_user_[0-9]{14}$'
+    LOOP
+        BEGIN
+            EXECUTE format('DROP FUNCTION %s', r.func_sig);
+        EXCEPTION WHEN dependent_objects_still_exist THEN
+            -- still referenced by the current materialized view, skip it
+            NULL;
+        END;
+    END LOOP;
+END;
+$body$
+language plpgsql
+;
+
+select cleanup_get_enriched_user_functions_{{ ts_nodash }} ()
+;
+drop function cleanup_get_enriched_user_functions_{{ ts_nodash }} ()
 ;

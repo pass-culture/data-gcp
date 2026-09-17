@@ -1,33 +1,77 @@
 version: 2
+
 models:
   - name: metrics_booking__finance_individual
     description: '{{ doc("description__int_finance__reimbursement") }}'
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - partition_month
+            - venue_department_code
+            - venue_region_name
+            - venue_epci_code
+            - venue_city_code
+            - offerer_is_epn
+            - offer_category_id
     columns:
-      - name: booking_used_date
+      - name: partition_month
         description: '{{ doc("column__booking_used_date") }}'
+        data_tests:
+          - not_null
+
       - name: venue_department_code
         description: '{{ doc("column__venue_department_code") }}'
+
       - name: venue_department_name
         description: '{{ doc("column__venue_department_name") }}'
+
       - name: venue_region_name
         description: '{{ doc("column__venue_region_name") }}'
+
       - name: venue_epci_code
         description: '{{ doc("column__venue_epci_code") }}'
+
       - name: venue_city_code
         description: '{{ doc("column__venue_city_code") }}'
+        data_tests:
+          - not_null
+
       - name: offerer_is_epn
         description: '{{ doc("column__offerer_is_epn") }}'
+        data_tests:
+          - not_null
+
       - name: offer_category_id
         description: '{{ doc("column__offer_category_id") }}'
+        data_tests:
+          - not_null
+
       - name: total_bookings
         description: '{{ doc("column__total_bookings") }}'
+        data_tests:
+          - not_null
+
       - name: total_quantities
         description: '{{ doc("column__total_quantities") }}'
+        data_tests:
+          - not_null
+
       - name: total_revenue_amount
         description: '{{ doc("column__total_revenue_amount") }}'
+        data_tests:
+          - not_null
+
       - name: total_reimbursed_amount
         description: '{{ doc("column__total_reimbursed_amount") }}'
+        data_tests:
+          - not_null
+
       - name: total_contribution_amount
         description: '{{ doc("column__total_contribution_amount") }}'
+        data_tests:
+          - not_null
+
       - name: is_statistic_secret
         description: "{{ doc('column__is_statistic_secret') }}"
+        data_tests:
+          - not_null

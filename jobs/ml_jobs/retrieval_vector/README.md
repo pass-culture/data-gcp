@@ -74,6 +74,36 @@ flowchart TD
   class A entry;
 ```
 
+### Fallback contract after this PR
+
+The handler no longer falls back silently to `tops`. A missing item is skipped, and a failed search returns an empty `PredictionResult` instead of triggering an alternate retrieval mode.
+
+```mermaid
+flowchart TD
+  subgraph Before[Before]
+    B1[RecommendationHandler] --> B2{Results found?}
+    B2 -- no --> B3[SearchByTopsHandler]
+    B3 --> B4[Return tops results]
+
+    B5[SimilarOfferHandler] --> B6{Results found?}
+    B6 -- no --> B7[SearchByTopsHandler]
+    B7 --> B8[Return tops results]
+  end
+
+  subgraph After[After]
+    A1[RecommendationHandler] --> A2{User vector found?}
+    A2 -- no --> A3[Return empty PredictionResult]
+    A2 -- yes --> A4{Results found?}
+    A4 -- no --> A5[Return empty PredictionResult]
+
+    A6[SimilarOfferHandler] --> A7{Item vector found?}
+    A7 -- missing --> A8[Skip item and continue]
+    A7 -- all missing --> A9[Return empty PredictionResult]
+    A7 -- some valid --> A10[Aggregate valid item results]
+    A10 --> A11[Return PredictionResult]
+  end
+```
+
 ## Data model
 
 ### Storage layout

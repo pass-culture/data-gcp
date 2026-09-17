@@ -186,30 +186,6 @@ REF_TABLES = {
             "department": "STRING",
         },
     },
-    "geo_iris": {
-        "file_type": "parquet",
-    },
-    "deps_qpv_2017": {
-        "file_type": "parquet",
-    },
-    "deps_statuts_2017": {
-        "file_type": "parquet",
-    },
-    "deps_zrr_2017": {
-        "file_type": "parquet",
-    },
-    "communes_population_data_insee_2018": {
-        "file_type": "parquet",
-    },
-    "epci": {
-        "file_type": "avro",
-    },
-    "zrr": {
-        "file_type": "avro",
-    },
-    "qpv": {
-        "file_type": "avro",
-    },
     "2024_insee_qpv": {
         "file_type": "avro",
     },
@@ -218,9 +194,6 @@ REF_TABLES = {
     },
     "2025_insee_code": {
         "file_type": "parquet",
-    },
-    "qpv_eligible_pop": {
-        "file_type": "avro",
     },
     "siren_main_business_labels": {
         "file_type": "parquet",

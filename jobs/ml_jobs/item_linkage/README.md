@@ -135,7 +135,7 @@ flowchart TD
 
 ### The output vocabulary: every `item_id` is one of three things
 
-Priority chain in `int_applicative__offer_item_id`: we prioritize linking an offer to a catalog product **"product-"** first (products are created in the backend). If we cannot find a predetermined **product-** then we try to create a cluster **item-cluster-"** containing multiple offers. these offers will have an item-id = "item-cluster-*" (in the v1 these cluster were named "link-"). If the previous two attempts failed, then the item-id is equal to the offer-id as a standalone offer **"offer-"**.
+Priority chain in `int_applicative__offer_item_id`: we prioritize linking an offer to a catalog product **"product-"** first (products are created in the backend). If we cannot find a predetermined **product-** then we try to create a cluster **item-cluster-"** containing multiple offers. these offers will have an item-id = "item_cluster_*" (in the v1 these cluster were named "link-"). If the previous two attempts failed, then the item-id is equal to the offer-id as a standalone offer **"offer-"**.
 
 | item_id | When | Grouping | Stable? |
 |---|---|---|---|
@@ -143,7 +143,7 @@ Priority chain in `int_applicative__offer_item_id`: we prioritize linking an off
 | `item_cluster_*` | No product, but the ML job matched it to other offers. | Inferred — semantic + fuzzy + graph. | **No** — positional index *|
 | `offer-*` | No product and no match — a singleton. | None — one offer, one item. | **Yes** — the offer id |
 
->  \* at each run, new item-cluster are creted and are indexed incerementally. One offer can have an item-id='item-cluster-x' on last week's run, may have a new cluster "item-cluster-y" in this week's run. This is a known caveat and should be resolved soon.
+>  \* at each run, new item-cluster are creted and are indexed incerementally. One offer can have an item-id='item-cluster-x' on last week's run, may have a new cluster "item_cluster_y" in this week's run. This is a known caveat and should be resolved soon.
 
 ### Thresholds & parameters
 
@@ -166,5 +166,5 @@ Both live in the sandbox dataset, rebuilt every run. They are *not* the same sha
 
 | `linked_product` | `linked_offer` |
 |---|---|
-| **Pairwise** — one row per matched pair to a real **"product-\*"** from the catalog. | **Flattened** — one row per offer → its cluster **"item-cluster-\*"** created by this job. |
+| **Pairwise** — one row per matched pair to a real **"product-\*"** from the catalog. | **Flattened** — one row per offer → its cluster **"item_cluster_\*"** created by this job. |
 | Direct output of `link_items.py`. | Post `assign_linked_ids.py` (graph). |

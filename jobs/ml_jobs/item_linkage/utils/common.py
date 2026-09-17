@@ -92,5 +92,5 @@ def preprocess_embeddings_by_chunk(
     """
     logger.info("Loading embeddings...")
     data_pl = pl.from_pandas(chunk)
-    embedding = np.vstack(np.vstack(data_pl.select("embedding"))[0]).astype(np.float32)
+    embedding = np.asarray(data_pl["embedding"].to_list(), dtype=np.float32)
     return embedding

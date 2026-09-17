@@ -1,5 +1,4 @@
 import asyncio
-import typing as t
 
 import pandas as pd
 from lancedb import connect_async
@@ -48,7 +47,7 @@ class SemanticSpace:
         vector,
         filters: dict,
         n=NUM_RESULTS,
-    ) -> t.List[t.Dict]:
+    ) -> pd.DataFrame:
         query = (
             self.table.query()
             .where(self.build_filter(filters))

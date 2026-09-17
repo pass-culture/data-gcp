@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from itertools import chain
 
 from airflow import DAG
+from airflow.decorators import task
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import ShortCircuitOperator
@@ -34,7 +35,7 @@ from jobs.crons import SCHEDULE_DICT
 
 ###########################################################################
 ## GCS CONSTANTS
-GCS_FOLDER_PATH = f"item_embedding_{ENV_SHORT_NAME}/{{{{ ts_nodash }}}}"
+# Per-run GCS folder is built at runtime by _gcs_folder() (needs ts_nodash).
 INPUT_FOLDER = "input_item_metadata"
 OUTPUT_FOLDER = "output_item_embeddings"
 TEMP_OUTPUT_FILE_NAME = "item_embeddings_*.parquet"
@@ -47,6 +48,39 @@ TEMP_INT_TABLE_NAME = "tmp_item_metadata"
 
 OUTPUT_DATASET_NAME = BIGQUERY_ML_FEATURES_DATASET
 TEMP_OUTPUT_TABLE_NAME = "item_embedding_tmp"
+
+## CONFIGS
+# Declarative registry of the embedding vectors this DAG can produce, one entry
+# per vector. `vector_name` MUST match a config file in
+# jobs/ml_jobs/item_embedding/configs/<vector_name>.yaml (that folder is NOT
+# deployed to Composer — only orchestration/dags is rsynced — so the DAG cannot
+# discover the config names from the filesystem at parse time; keep this list in
+# sync by hand). Each vector declares its own input and output table/dataset so
+# the full data path per vector is visible in one place.
+CONFIG = [
+    {
+        "vector_name": "offer_name",
+        "input_dataset": INPUT_DATASET_NAME,
+        "input_table": INPUT_TABLE_NAME,
+        "output_dataset": OUTPUT_DATASET_NAME,
+        "output_table": f"{TEMP_OUTPUT_TABLE_NAME}_offer_name",
+    },
+    {
+        "vector_name": "semantic_content",
+        "input_dataset": INPUT_DATASET_NAME,
+        "input_table": INPUT_TABLE_NAME,
+        "output_dataset": OUTPUT_DATASET_NAME,
+        "output_table": f"{TEMP_OUTPUT_TABLE_NAME}_semantic_content",
+    },
+]
+CONFIG_NAMES = [vector["vector_name"] for vector in CONFIG]
+
+
+def _selected_configs(config_file_names: list[str]) -> list[dict]:
+    """Return the CONFIG entries for the selected vector names, in CONFIG order."""
+    selected = set(config_file_names)
+    return [vector for vector in CONFIG if vector["vector_name"] in selected]
+
 
 ## DAG CONFIG
 DAG_NAME = "item_embedding"
@@ -72,7 +106,7 @@ DAG_DOC = """
 
     #### Parameters:
     * *embed_all* : whether to embed all items or only the ones that need embedding (to_embed = true in the input table)
-    * *config_file_name* : name of the configuration file (without .yaml extension) in the `config` folder, which contains the vector configurations and other parameters for the embedding process.
+    * *config_file_names* : one or more vectors to embed. Each name matches a config file `configs/<name>.yaml` and a `CONFIG` entry (defined at the top of this DAG) that declares the vector's input and output table/dataset. One embedding run happens per selected vector, reading its own input table and writing its own output table. Defaults to all vectors; deselect to embed only a subset.
     * *instance_type* : GCE instance type to use for embedding. For L4 GPU instances, make sure to select a compatible machine type with the number of GPUs you want to use. Check hint below.
     * *instance_name* : name of the GCE instance to create for embedding.
     * *gpu_type* : If you decide to embedd all the catalogue, we highly recommend to use 4 L4 GPUs, in europe-west1-c (to avoid stockout issues in europe-west1-b). If you have a smaller catalogue or if you want to embed only the new items, you can use 4 T4 GPU, which is more widely available across zones.
@@ -120,20 +154,15 @@ with DAG(
             type="boolean",
             description="Whether to embed all items or only the ones that need embedding (to_embed = true in the input table). See DAG docs for VM setup recommendations.",
         ),
-        "config_file_name": Param(
-            default="default",
-            type="string",
-            description="Name of the configuration file (without .yaml extension)",
-        ),
-        "output_dataset_name": Param(
-            default=OUTPUT_DATASET_NAME,
-            type="string",
-            description="BigQuery dataset name for the output embeddings",
-        ),
-        "output_table_name": Param(
-            default=TEMP_OUTPUT_TABLE_NAME,
-            type="string",
-            description="BigQuery table name for the output embeddings",
+        "config_file_names": Param(
+            default=CONFIG_NAMES,
+            type="array",
+            items={"type": "string", "enum": CONFIG_NAMES},
+            description="Vector(s) to embed. Each name matches a config file "
+            "configs/<name>.yaml and a CONFIG entry declaring its input/output "
+            "tables. One embedding run happens per selected vector, each reading "
+            "its own input table and writing its own output table. Defaults to "
+            "all vectors; deselect to embed only a subset.",
         ),
         "instance_type": Param(
             default=INSTANCE_TYPE,
@@ -226,92 +255,160 @@ with DAG(
         retries=2,
     )
 
-    # Step 1a: Select items to embed and save to a temp table in BigQuery
-    bigquery_select_items_to_embed = BigQueryInsertJobOperator(
-        project_id=GCP_PROJECT_ID,
-        task_id="bigquery_select_items_to_embed",
-        configuration={
-            "query": {
-                "query": f"""
-                    SELECT * FROM `{GCP_PROJECT_ID}.{INPUT_DATASET_NAME}.{INPUT_TABLE_NAME}`
-                    {{% if not params.embed_all %}}
-                    WHERE to_embed is true
-                    {{% endif %}}
-                """,
-                "useLegacySql": False,
-                "destinationTable": {
-                    "projectId": GCP_PROJECT_ID,
-                    "datasetId": INPUT_DATASET_NAME,
-                    "tableId": TEMP_INT_TABLE_NAME,
-                },
-                "writeDisposition": "WRITE_TRUNCATE",
+    # ---- Per-vector fan-out helpers -------------------------------------
+    # Each selected vector runs the full data path independently: it reads its
+    # own input table, embeds with its own config file, and writes its own
+    # output table. All values are resolved in Python here (ts_nodash, embed_all,
+    # per-vector tables from CONFIG) so the mapped kwargs are concrete rather
+    # than un-rendered Jinja. Each vector uses its own BigQuery temp table and
+    # GCS subfolder so runs never collide.
+    def _gcs_folder(context) -> str:
+        return f"item_embedding_{ENV_SHORT_NAME}/{context['ts_nodash']}"
+
+    @task
+    def build_select_kwargs(**context) -> list[dict]:
+        where_clause = (
+            "" if context["params"]["embed_all"] else "WHERE to_embed is true"
+        )
+        return [
+            {
+                "configuration": {
+                    "query": {
+                        "query": (
+                            "SELECT * FROM "
+                            f"`{GCP_PROJECT_ID}.{vector['input_dataset']}.{vector['input_table']}` "
+                            f"{where_clause}"
+                        ),
+                        "useLegacySql": False,
+                        "destinationTable": {
+                            "projectId": GCP_PROJECT_ID,
+                            "datasetId": vector["input_dataset"],
+                            "tableId": f"{TEMP_INT_TABLE_NAME}_{vector['vector_name']}",
+                        },
+                        "writeDisposition": "WRITE_TRUNCATE",
+                    }
+                }
             }
-        },
-    )
+            for vector in _selected_configs(context["params"]["config_file_names"])
+        ]
 
-    # Step 1b: Short-circuit the run when the selection is empty.
-    def _has_items_to_embed() -> bool:
+    @task
+    def build_metadata_export_kwargs(**context) -> list[dict]:
+        folder = _gcs_folder(context)
+        return [
+            {
+                "configuration": {
+                    "extract": {
+                        "sourceTable": {
+                            "projectId": GCP_PROJECT_ID,
+                            "datasetId": vector["input_dataset"],
+                            "tableId": f"{TEMP_INT_TABLE_NAME}_{vector['vector_name']}",
+                        },
+                        "destinationUris": [
+                            f"gs://{ML_BUCKET_TEMP}/{folder}/{INPUT_FOLDER}/"
+                            f"{vector['vector_name']}/{TEMP_INPUT_FILE_NAME}"
+                        ],
+                        "destinationFormat": "PARQUET",
+                    }
+                }
+            }
+            for vector in _selected_configs(context["params"]["config_file_names"])
+        ]
+
+    @task
+    def build_embed_commands(**context) -> list[dict]:
+        folder = _gcs_folder(context)
+        return [
+            {
+                "command": (
+                    "uv run python main.py "
+                    f"--config-file-name {vector['vector_name']} "
+                    f"--input-parquets-folder-path "
+                    f"gs://{ML_BUCKET_TEMP}/{folder}/{INPUT_FOLDER}/{vector['vector_name']} "
+                    f"--output-parquets-folder-path "
+                    f"gs://{ML_BUCKET_TEMP}/{folder}/{OUTPUT_FOLDER}/{vector['vector_name']}"
+                )
+            }
+            for vector in _selected_configs(context["params"]["config_file_names"])
+        ]
+
+    @task
+    def build_embeddings_export_kwargs(**context) -> list[dict]:
+        folder = _gcs_folder(context)
+        return [
+            {
+                "source_objects": [
+                    f"{folder}/{OUTPUT_FOLDER}/{vector['vector_name']}/*.parquet"
+                ],
+                "destination_project_dataset_table": (
+                    f"{vector['output_dataset']}.{vector['output_table']}"
+                ),
+            }
+            for vector in _selected_configs(context["params"]["config_file_names"])
+        ]
+
+    # Step 0: Short-circuit the run when none of the selected vectors' input
+    # tables have items to embed (checked pre-VM to avoid booting for nothing).
+    def _has_items_to_embed(**context) -> bool:
+        where_clause = (
+            "" if context["params"]["embed_all"] else "WHERE to_embed is true"
+        )
         bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
-        query = f"""
-            SELECT COUNT(*) AS count
-            FROM `{GCP_PROJECT_ID}.{INPUT_DATASET_NAME}.{TEMP_INT_TABLE_NAME}`
-        """
-        result = bq_hook.get_first(query)
-
-        return bool(result and result[0] > 0)
+        checked = set()
+        for vector in _selected_configs(context["params"]["config_file_names"]):
+            source = (vector["input_dataset"], vector["input_table"])
+            if source in checked:
+                continue
+            checked.add(source)
+            result = bq_hook.get_first(
+                f"SELECT COUNT(*) FROM `{GCP_PROJECT_ID}.{source[0]}.{source[1]}` "
+                f"{where_clause}"
+            )
+            if result and result[0] > 0:
+                return True
+        return False
 
     check_items_to_embed = ShortCircuitOperator(
         task_id="check_items_to_embed",
         python_callable=_has_items_to_embed,
     )
 
-    # Step 2: Export temp table to GCS as a parquet file (to be used as input for the embedding script)
-    export_item_metadata_to_gcs = BigQueryInsertJobOperator(
+    # Step 1: Select items to embed into a per-vector temp table in BigQuery.
+    bigquery_select_items_to_embed = BigQueryInsertJobOperator.partial(
+        task_id="bigquery_select_items_to_embed",
         project_id=GCP_PROJECT_ID,
-        task_id="export_item_metadata_to_gcs",
-        configuration={
-            "extract": {
-                "sourceTable": {
-                    "projectId": GCP_PROJECT_ID,
-                    "datasetId": INPUT_DATASET_NAME,
-                    "tableId": TEMP_INT_TABLE_NAME,
-                },
-                "destinationUris": [
-                    f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{INPUT_FOLDER}/{TEMP_INPUT_FILE_NAME}"
-                ],
-                "destinationFormat": "PARQUET",
-            }
-        },
-    )
+    ).expand_kwargs(build_select_kwargs())
 
-    # Step 3: Run the embedding script on the GCE instance, with the exported parquet file as input,
-    # and save the output embeddings as a parquet file in GCS (temp because output parquet only contains to_embed items)
-    embed_items = SSHGCEOperator(
+    # Step 2: Export each vector's temp table to its own GCS subfolder as
+    # parquet (the input for the embedding script).
+    export_item_metadata_to_gcs = BigQueryInsertJobOperator.partial(
+        task_id="export_item_metadata_to_gcs",
+        project_id=GCP_PROJECT_ID,
+    ).expand_kwargs(build_metadata_export_kwargs())
+
+    # Step 3: Run the embedding script on the GCE instance once per selected
+    # vector. max_active_tis_per_dagrun=1 serialises the runs so they don't
+    # contend for the single VM's GPU(s).
+    embed_items = SSHGCEOperator.partial(
         task_id="embed_items",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
         gce_zone=GCE_ZONE_TEMPLATE,
-        command=f"""
-            uv run python main.py \
-                --config-file-name {{{{ params.config_file_name }}}} \
-                --input-parquets-folder-path gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{INPUT_FOLDER} \
-                --output-parquets-folder-path gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{OUTPUT_FOLDER} \
-        """,
         deferrable=True,
-    )
+        max_active_tis_per_dagrun=1,
+    ).expand_kwargs(build_embed_commands())
 
-    # Step 4: Export the output embeddings from GCS to BigQuery temp table
-    # (to be merged with the items table in a separate process after the DAG run)
-    export_item_embeddings_to_bigquery = GCSToBigQueryOperator(
+    # Step 4: Export each vector's output embeddings from GCS to its own
+    # BigQuery output table (merged with the items table in a separate process
+    # after the DAG run).
+    export_item_embeddings_to_bigquery = GCSToBigQueryOperator.partial(
         task_id="export_item_embeddings_to_bigquery",
         project_id=GCP_PROJECT_ID,
         bucket=ML_BUCKET_TEMP,
-        source_objects=[f"{GCS_FOLDER_PATH}/{OUTPUT_FOLDER}/*.parquet"],
-        destination_project_dataset_table="{{ params.output_dataset_name }}.{{ params.output_table_name }}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,
-    )
+    ).expand_kwargs(build_embeddings_export_kwargs())
 
     gce_instance_delete = DeleteGCEOperator(
         task_id="gce_stop_task",
@@ -322,9 +419,10 @@ with DAG(
 
     stop = EmptyOperator(task_id="stop", trigger_rule="all_success")
 
-    start >> bigquery_select_items_to_embed >> check_items_to_embed
-    check_items_to_embed >> [gce_instance_start, export_item_metadata_to_gcs]
+    start >> check_items_to_embed
+    check_items_to_embed >> [gce_instance_start, bigquery_select_items_to_embed]
     gce_instance_start >> install_dependencies
+    bigquery_select_items_to_embed >> export_item_metadata_to_gcs
     [
         install_dependencies,
         export_item_metadata_to_gcs,

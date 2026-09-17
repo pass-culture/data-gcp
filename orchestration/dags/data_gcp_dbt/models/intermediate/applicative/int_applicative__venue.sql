@@ -170,6 +170,8 @@ select
     v_loc.venue_academy_name,
     v_loc.venue_in_qpv,
     v_loc.venue_in_zrr,
+    v_loc.venue_in_frr,
+    v_loc.venue_in_frr_plus,
     v_loc.venue_rural_city_type,
     vr.venue_target as venue_targeted_audience,
     vc.venue_contact_phone_number,
@@ -177,8 +179,8 @@ select
     vc.venue_contact_website,
     vl.venue_label,
     va.venue_id is not null as venue_is_acessibility_synched,
-    o.total_individual_bookings as total_individual_bookings,
-    co.total_collective_bookings as total_collective_bookings,
+    o.total_individual_bookings,
+    co.total_collective_bookings,
     coalesce(o.total_individual_bookings, 0)
     + coalesce(co.total_collective_bookings, 0) as total_bookings,
     coalesce(
@@ -230,7 +232,7 @@ select
             o.first_individual_booking_date is not null
             and co.first_collective_booking_date is not null
         then least(co.first_collective_booking_date, o.first_individual_booking_date)
-        else coalesce(first_individual_booking_date, first_collective_booking_date)
+        else coalesce(o.first_individual_booking_date, co.first_collective_booking_date)
     end as first_booking_date,
     case
         when
@@ -281,23 +283,23 @@ select
         co.total_current_year_non_cancelled_tickets, 0
     ) as total_current_year_non_cancelled_tickets,
     row_number() over (
-        partition by venue_managing_offerer_id
+        partition by v.venue_managing_offerer_id
         order by
             coalesce(o.total_individual_real_revenue, 0)
             + coalesce(co.total_collective_real_revenue, 0) desc
     ) as offerer_real_revenue_rank,
     row_number() over (
-        partition by venue_managing_offerer_id
+        partition by v.venue_managing_offerer_id
         order by
             coalesce(o.total_used_individual_bookings, 0)
             + coalesce(co.total_used_collective_bookings, 0) desc
     ) as offerer_bookings_rank,
     case
         when gp.banner_url is not null
-        then "offerer"
+        then 'offerer'
         when gp.venue_id is not null
-        then "google"
-        else "default_category"
+        then 'google'
+        else 'default_category'
     end as venue_image_source,
     coalesce(o.total_distinct_headline_offers, 0) as total_distinct_headline_offers,
     coalesce(o.has_headline_offer, false) as has_headline_offer,
@@ -308,9 +310,9 @@ select
     ) as total_created_mediation_individual_offers,
     coalesce(o.has_mediation_offer, false) as has_mediation_offer
 from {{ source("raw", "applicative_database_venue") }} as v
-left join {{ ref("int_geo__venue_location") }} as v_loc on v_loc.venue_id = v.venue_id
-left join offers_grouped_by_venue as o on o.venue_id = v.venue_id
-left join collective_offers_grouped_by_venue as co on co.venue_id = v.venue_id
+left join {{ ref("int_geo__venue_location") }} as v_loc on v.venue_id = v_loc.venue_id
+left join offers_grouped_by_venue as o on v.venue_id = o.venue_id
+left join collective_offers_grouped_by_venue as co on v.venue_id = co.venue_id
 left join
     {{ source("raw", "applicative_database_venue_registration") }} as vr
     on v.venue_id = vr.venue_id
@@ -319,10 +321,10 @@ left join
     on v.venue_id = vc.venue_id
 left join
     {{ source("raw", "applicative_database_venue_label") }} as vl
-    on vl.venue_label_id = v.venue_label_id
+    on v.venue_label_id = vl.venue_label_id
 left join
     {{ source("raw", "applicative_database_accessibility_provider") }} as va
-    on va.venue_id = v.venue_id
+    on v.venue_id = va.venue_id
 left join
     {{ source("raw", "applicative_database_google_places_info") }} as gp
     on v.venue_id = gp.venue_id

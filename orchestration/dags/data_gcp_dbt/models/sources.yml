@@ -177,6 +177,8 @@ sources:
       - name: tiktok_video_detail
       - name: offer_types
       - name: population_department
+      - name: geo_commune
+      - name: geo_iris
       - name: user_address
       - name: zendesk_macro_usage
       - name: zendesk_ticket
@@ -215,8 +217,6 @@ sources:
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: agg_partner_cultural_sector
-      - name: epci
-      - name: geo_iris
       - name: institution_metadata_aggregated_type
       - name: institutional_scholar_level
       - name: iris_france
@@ -233,7 +233,6 @@ sources:
       - name: region_department
       - name: siren_main_business_labels
       - name: siren_legal_category_labels
-      - name: zrr
       - name: qpi_answers_v1
         external:
           location: "gs://de-bigquery-data-archive-{{var('ENV_SHORT_NAME')}}/archive/2024/08/raw_{{var('ENV_SHORT_NAME')}}/qpi_answers_v1.jsonl"

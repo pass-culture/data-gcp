@@ -6,7 +6,7 @@ services:
       - 3000:3000   # REST API
       - 15432:15432 # SQL API (Postgres protocol)
     environment:
-      NODE_EXTRA_CA_CERTS: /cube/conf/certs/nscacert_combined.pem
+      NODE_EXTRA_CA_CERTS: /cube/conf/nscacert_combined.pem
       CUBEJS_DB_TYPE: bigquery
       CUBEJS_DB_BQ_PROJECT_ID: "${CUBEJS_DB_BQ_PROJECT_ID:-passculture-data-prod}"
       CUBEJS_DB_BQ_DATASET: "${CUBEJS_DB_BQ_DATASET:-analytics_prod}"

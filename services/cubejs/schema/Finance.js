@@ -53,35 +53,6 @@ cube(`Finance`, {
       type: `string`,
       description: `Unique identifier for the booking.`,
     },
-    // Venue
-    venueDepartmentCode: {
-      sql: `venue_department_code`,
-      type: `string`,
-      description: `Department code where the venue is located.`,
-    },
-    venueDepartmentName: {
-      sql: `venue_department_name`,
-      type: `string`,
-      description: `Department name where the venue is located.`,
-    },
-    venueRegion: {
-      sql: `venue_region_name`,
-      type: `string`,
-      title: `Venue region`,
-      description: `Administrative region where the venue is located.`,
-    },
-    venueEpciCode: {
-      sql: `venue_epci_code`,
-      type: `string`,
-      title: `Venue EPCI code`,
-      description: `EPCI code where the venue is located.`,
-    },
-    venueCityCode: {
-      sql: `venue_city_code`,
-      type: `string`,
-      title: `Venue city code`,
-      description: `INSEE city code where the venue is located.`,
-    },
 
     // Offer
     offerCategoryId: {

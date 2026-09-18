@@ -299,7 +299,7 @@ def main(
         input_candidates_path, columns=METADATA_FEATURES
     )
     logger.info(f"Loaded {len(candidates)} items from candidates")
-    catalog = pd.concat([sources, candidates]).drop_duplicates()
+    catalog = pd.concat([sources, candidates]).drop_duplicates(subset="item_id")
     logger.info(f"catalog: {len(catalog)} items")
     logger.info(f"catalog columns: {catalog.columns}")
     linkage_candidates = read_parquet_files_from_gcs_directory(linkage_candidates_path)

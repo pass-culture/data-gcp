@@ -107,8 +107,34 @@ def _former_codes(
     return former
 
 
-def _by_commune(attributes: pd.DataFrame) -> pd.DataFrame:
-    return attributes.rename(columns={"city_code": "commune_code"})
+def _join_commune_attributes(
+    cities: pd.DataFrame, attributes: list[pd.DataFrame]
+) -> pd.DataFrame:
+    """Attach attribute tables keyed by `city_code` to the commune of each row."""
+    df = cities
+    for attribute in attributes:
+        df = df.merge(
+            attribute.rename(columns={"city_code": "commune_code"}),
+            on="commune_code",
+            how="left",
+        )
+    return df
+
+
+def _join_cog_labels(
+    df: pd.DataFrame, labels: dict[str, tuple[pd.DataFrame, str]]
+) -> pd.DataFrame:
+    """Attach the label of each COG level, keyed by its code column."""
+    for code_column, (cog_table, cog_code_column) in labels.items():
+        label_column = code_column.replace("_code", "_label")
+        df = df.merge(
+            cog_table[[cog_code_column, "libelle"]].rename(
+                columns={cog_code_column: code_column, "libelle": label_column}
+            ),
+            on=code_column,
+            how="left",
+        )
+    return df
 
 
 def _combine_zrr(rows: pd.DataFrame) -> pd.DataFrame:
@@ -191,36 +217,15 @@ def build_geo_commune(
         combine=lambda r: r.head(1),
     )
 
-    df = (
-        cities.merge(commune_labels, on="commune_code", how="left")
-        .merge(_by_commune(epci), on="commune_code", how="left")
-        .merge(_by_commune(density), on="commune_code", how="left")
-        .merge(_by_commune(zrr), on="commune_code", how="left")
-        .merge(_by_commune(frr), on="commune_code", how="left")
-        .merge(
-            cog_arrondissement[["arr", "libelle"]].rename(
-                columns={"arr": "district_code", "libelle": "district_label"}
-            ),
-            on="district_code",
-            how="left",
-        )
-        .merge(
-            cog_canton[["can", "libelle"]].rename(
-                columns={"can": "sub_district_code", "libelle": "sub_district_label"}
-            ),
-            on="sub_district_code",
-            how="left",
-        )
-        .merge(
-            cog_ctcd[["ctcd", "libelle"]].rename(
-                columns={
-                    "ctcd": "territorial_authority_code",
-                    "libelle": "territorial_authority_label",
-                }
-            ),
-            on="territorial_authority_code",
-            how="left",
-        )
+    df = cities.merge(commune_labels, on="commune_code", how="left")
+    df = _join_commune_attributes(df, [epci, density, zrr, frr])
+    df = _join_cog_labels(
+        df,
+        {
+            "district_code": (cog_arrondissement, "arr"),
+            "sub_district_code": (cog_canton, "can"),
+            "territorial_authority_code": (cog_ctcd, "ctcd"),
+        },
     )
     df["epci_code"] = df["epci_code"].fillna(NO_EPCI_CODE)
     df["epci_label"] = df["epci_label"].fillna(NO_EPCI_LABEL)

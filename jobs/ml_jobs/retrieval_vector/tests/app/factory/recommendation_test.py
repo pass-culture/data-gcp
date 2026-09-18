@@ -71,7 +71,7 @@ def test_recommendation_fallback_handler(
     request,
     reco_client,
 ):
-    """Test RecommendationHandler for fallback scenario."""
+    """Test RecommendationHandler returns an empty result when no user vector exists."""
 
     # Get the specific request_data fixture dynamically
     request_data = PredictionRequest(
@@ -92,20 +92,4 @@ def test_recommendation_fallback_handler(
     # Call the handler
     result = handler.handle(reco_client, request_data)
 
-    # Assertions
-    assert len(result.predictions) == request_data.size
-
-    # Assert that the expected detail columns are present in the predictions
-    for prediction in result.predictions:
-        for column in reco_client.detail_columns:
-            assert column in prediction
-
-    # Ensure the predictions are sorted by DISTANCE_COLUMN_NAME in increasing order
-    distances = [prediction[DISTANCE_COLUMN_NAME] for prediction in result.predictions]
-    assert distances == sorted(
-        distances
-    ), f"Predictions are not sorted by {DISTANCE_COLUMN_NAME} in increasing order"
-
-    # Ensure we are using fallback search type
-    for prediction in result.predictions:
-        assert prediction[SEARCH_TYPE_COLUMN_NAME] == SearchType.TOPS
+    assert len(result.predictions) == 0

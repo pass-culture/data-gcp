@@ -17,10 +17,6 @@ class SimilarOfferHandler(PredictionHandler):
     Supports both single and multiple items.
     """
 
-    def __init__(self, fallback_client: PredictionHandler | None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fallback_client: PredictionHandler | None = fallback_client
-
     def handle(
         self,
         model: DefaultClient,
@@ -32,7 +28,6 @@ class SimilarOfferHandler(PredictionHandler):
         Args:
             model (DefaultClient): The model that performs the search.
             request_data (PredictionRequest): The request data containing parameters and item IDs.
-            fallback_client (PredictionHandler): In case something gets wrong (items not found), fallback to this handler.
 
         Returns:
             PredictionResult: An object containing the predicted similar items.
@@ -62,28 +57,11 @@ class SimilarOfferHandler(PredictionHandler):
         # If we have predictions, return them
         if len(prediction_result.predictions) > 0:
             return prediction_result
-
-        # If no predictions were found
-        return (
-            self.fallback_client.handle(
-                model,
-                request_data=PredictionRequest(
-                    model_type="tops",
-                    size=request_data.size,
-                    debug=request_data.debug,
-                    prefilter=request_data.is_prefilter,
-                    re_rank=request_data.re_rank,
-                    vector_column_name="booking_number_desc",
-                    params=request_data.params,
-                    call_id=request_data.call_id,
-                    user_id=request_data.user_id,
-                    items=request_data.items,
-                    excluded_items=excluded_items,
-                ),
-            )
-            if self.fallback_client is not None
-            else PredictionResult(predictions=[])
+        logger.debug(
+            "No recommendations found, returning empty list",
+            extra={"uuid": request_data.call_id, "items": request_data.items},
         )
+        return PredictionResult(predictions=[])
 
     def _get_predictions_for_items(
         self,
@@ -118,7 +96,10 @@ class SimilarOfferHandler(PredictionHandler):
                 if len(results.predictions) > 0:
                     predictions_list += results.predictions
             else:
-                logger.debug(f"No vector found for item_id: {item_id}")
+                logger.warning(
+                    "No vector found for item_id; skipping item",
+                    extra={"uuid": request_data.call_id, "item_id": item_id},
+                )
 
         # If we have multiple predictions, compute the bests items by calculating the mean distance and selecting top N
         if len(request_data.items) > 1:

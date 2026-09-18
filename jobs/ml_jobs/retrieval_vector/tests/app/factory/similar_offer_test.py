@@ -1,7 +1,6 @@
 import pytest
 
 from app.factory.similar_offer import SimilarOfferHandler
-from app.factory.tops import SearchByTopsHandler
 from app.models.prediction_request import PredictionRequest
 from app.models.prediction_result import SearchType
 from app.retrieval.constants import DISTANCE_COLUMN_NAME, SEARCH_TYPE_COLUMN_NAME
@@ -80,7 +79,7 @@ def test_similar_offer_handler(
     request_data: PredictionRequest = request.getfixturevalue(request_data_fixture)
 
     # Initialize the handler
-    handler = SimilarOfferHandler(fallback_client=SearchByTopsHandler())
+    handler = SimilarOfferHandler()
 
     # Call the handler
     result = handler.handle(reco_client, request_data)
@@ -103,7 +102,7 @@ def test_similar_offer_handler(
         distances
     ), f"Predictions are not sorted by {DISTANCE_COLUMN_NAME} in increasing order"
 
-    # Ensure we are using fallback search type
+    # Ensure we are using the expected search type
     for prediction in result.predictions:
         if len(request_data.items) == 1:
             assert prediction[SEARCH_TYPE_COLUMN_NAME] == SearchType.VECTOR
@@ -111,19 +110,17 @@ def test_similar_offer_handler(
             assert prediction[SEARCH_TYPE_COLUMN_NAME] == SearchType.AGGREGATED_VECTORS
 
 
-def test_similar_offer_fallback_handler(
+def test_similar_offer_missing_item_skips_only_that_item(
     mock_connect_db,
     mock_user_document_loading,
     mock_generate_fake_load_item_document,
-    request,
     reco_client,
 ):
-    """Test SimilarOfferHandler for fallback scenario."""
+    """Test SimilarOfferHandler skips missing items and keeps processing the rest."""
 
-    # Get data with unknown item and fallback client
     request_data = PredictionRequest(
         model_type="similar_offer",
-        items=["unknown_item_x"],
+        items=["item_1", "unknown_item_x"],
         size=5,
         params={},
         call_id="test-call-id",
@@ -134,29 +131,23 @@ def test_similar_offer_fallback_handler(
         user_id="unknown_user_1",
     )
 
-    # Initialize the handler
-    handler = SimilarOfferHandler(fallback_client=SearchByTopsHandler())
+    handler = SimilarOfferHandler()
 
-    # Call the handler
     result = handler.handle(reco_client, request_data)
 
-    # Assertions
     assert len(result.predictions) == request_data.size
 
-    # Assert that the expected detail columns are present in the predictions
     for prediction in result.predictions:
         for column in reco_client.detail_columns:
             assert column in prediction
 
-    # Ensure the predictions are sorted by DISTANCE_COLUMN_NAME in increasing order
     distances = [prediction[DISTANCE_COLUMN_NAME] for prediction in result.predictions]
     assert distances == sorted(
         distances
     ), f"Predictions are not sorted by {DISTANCE_COLUMN_NAME} in increasing order"
 
-    # Ensure we are using fallback search type
     for prediction in result.predictions:
-        assert prediction[SEARCH_TYPE_COLUMN_NAME] == SearchType.TOPS
+        assert prediction[SEARCH_TYPE_COLUMN_NAME] == SearchType.AGGREGATED_VECTORS
 
 
 def test_similar_offer_no_fallback(
@@ -166,9 +157,8 @@ def test_similar_offer_no_fallback(
     request,
     reco_client,
 ):
-    """Test SimilarOfferHandler for fallback scenario."""
+    """Test SimilarOfferHandler returns an empty result when every item is missing."""
 
-    # Get data with unknown item and no fallback client
     request_data = PredictionRequest(
         model_type="similar_offer",
         items=["unknown_item_x"],
@@ -182,13 +172,16 @@ def test_similar_offer_no_fallback(
         user_id="unknown_user_1",
     )
 
-    # Initialize the handler
-    handler = SimilarOfferHandler(fallback_client=None)
+    handler = SimilarOfferHandler()
 
-    # Call the handler
     result = handler.handle(reco_client, request_data)
 
-    # Assertions
-    assert (
-        len(result.predictions) == 0
-    ), "Expected no predictions when fallback client is None"
+    assert len(result.predictions) == 0
+
+
+def test_prediction_request_uses_offer_id_as_items():
+    request_data = PredictionRequest.model_validate(
+        {"model_type": "similar_offer", "offer_id": "item_1"}
+    )
+
+    assert request_data.items == ["item_1"]

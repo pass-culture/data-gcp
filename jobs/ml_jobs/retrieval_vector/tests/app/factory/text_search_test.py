@@ -34,7 +34,6 @@ def test_factory_routes_semantic_search_without_fallback():
         embedding_model_type=EmbeddingModelTypes.SEMANTIC,
     )
     assert isinstance(handler, SimilarOfferHandler)
-    assert handler.fallback_client is None
 
 
 def test_prediction_request_accepts_text_search():

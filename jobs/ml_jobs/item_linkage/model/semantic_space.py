@@ -1,9 +1,15 @@
 import asyncio
-import typing as t
 
+import pandas as pd
 from lancedb import connect_async
 
-from constants import DETAIL_COLUMNS, N_PROBES, NUM_RESULTS, REFINE_FACTOR
+from constants import (
+    DETAIL_COLUMNS,
+    N_PROBES,
+    NUM_RESULTS,
+    REFINE_FACTOR,
+    SEMANTIC_RETRIEVAL_UPPER_BOUND,
+)
 
 DEFAULTS = ["_distance"]
 
@@ -21,19 +27,27 @@ class SemanticSpace:
         return await self.db.open_table(linkage_type)
 
     def build_filter(self, filters: dict) -> str:
-        return " AND ".join(
-            [
-                f"({k} = {v})" if isinstance(v, int) else f"({k} = '{v}')"
-                for k, v in filters.items()
-            ]
-        )
+        def predicate(k, v):
+            # A missing value must be matched with `IS NULL`, not `= 'None'`:
+            # the latter compares against the literal string "None" and never
+            # matches a real SQL NULL, silently dropping every null-valued row.
+            if v is None or (isinstance(v, float) and pd.isna(v)):
+                return f"({k} IS NULL)"
+            if isinstance(v, bool):
+                return f"({k} = {str(v).lower()})"
+            if isinstance(v, int):
+                return f"({k} = {v})"
+            escaped = str(v).replace("'", "''")
+            return f"({k} = '{escaped}')"
+
+        return " AND ".join(predicate(k, v) for k, v in filters.items())
 
     async def search(
         self,
         vector,
         filters: dict,
         n=NUM_RESULTS,
-    ) -> t.List[t.Dict]:
+    ) -> pd.DataFrame:
         query = (
             self.table.query()
             .where(self.build_filter(filters))
@@ -42,6 +56,7 @@ class SemanticSpace:
             .nprobes(N_PROBES)
             .refine_factor(REFINE_FACTOR)
             .select(columns=DETAIL_COLUMNS + DEFAULTS)
+            .distance_range(upper_bound=SEMANTIC_RETRIEVAL_UPPER_BOUND)
             .limit(n)
         )
         results = await query.to_pandas(flatten=True)

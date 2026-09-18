@@ -26,6 +26,7 @@ GEO_API_COMMUNES_URL = "https://geo.api.gouv.fr/communes"
 GEO_API_DEPARTMENTS = ["986", "987", "988"]
 
 DOWNLOAD_TIMEOUT = 300
+DOWNLOAD_ATTEMPTS = 5
 
 
 def cog_url(year: int) -> str:

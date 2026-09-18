@@ -1,12 +1,13 @@
+import logging
+import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 import pyarrow.parquet as pq
+import requests
 
 from utils import config
-from utils.download import download, download_json, extract_member, single_member
-from utils.excel import read_table
 from utils.parsers import (
     parse_cog_table,
     parse_contour_iris,
@@ -16,7 +17,10 @@ from utils.parsers import (
     parse_frr,
     parse_geo_api_communes,
     parse_zrr,
+    read_table,
 )
+
+logger = logging.getLogger(__name__)
 
 ZRR_VINTAGE_YEAR = 2021
 
@@ -28,6 +32,70 @@ COG_TABLES = {
     "insee_cog_ctcd": "v_ctcd_{year}.csv",
     "insee_cog_mvt_commune": "v_mvt_commune_{year}.csv",
 }
+
+
+def download(url: str, dest: Path) -> Path:
+    """Stream `url` to `dest`. The IGN parquet is 130+ MB and the connection regularly
+    breaks mid-stream, so truncated downloads are retried, resuming with a range request
+    when the server supports it."""
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.unlink(missing_ok=True)
+    for attempt in range(1, config.DOWNLOAD_ATTEMPTS + 1):
+        downloaded = dest.stat().st_size if dest.exists() else 0
+        logger.info(
+            "Downloading %s (attempt %s, from byte %s)", url, attempt, downloaded
+        )
+        try:
+            return _stream_to_file(url, dest, downloaded)
+        except (OSError, requests.RequestException) as error:
+            if attempt == config.DOWNLOAD_ATTEMPTS:
+                raise
+            logger.warning("Download of %s failed (%s), retrying", url, error)
+    raise AssertionError("unreachable")
+
+
+def _stream_to_file(url: str, dest: Path, downloaded: int) -> Path:
+    headers = {"Range": f"bytes={downloaded}-"} if downloaded else {}
+    with requests.get(
+        url, stream=True, timeout=config.DOWNLOAD_TIMEOUT, headers=headers
+    ) as response:
+        response.raise_for_status()
+        resumed = response.status_code == 206
+        expected_size = _expected_size(response, resumed, downloaded)
+        with dest.open("ab" if resumed else "wb") as f:
+            for chunk in response.iter_content(chunk_size=1 << 20):
+                f.write(chunk)
+    written = dest.stat().st_size
+    if expected_size and written != expected_size:
+        raise OSError(f"truncated download from {url}: {written}/{expected_size} bytes")
+    return dest
+
+
+def _expected_size(response: requests.Response, resumed: bool, downloaded: int) -> int:
+    """Total size of the file, from Content-Length (or the range total on a resume)."""
+    content_length = int(response.headers.get("Content-Length", 0))
+    if not content_length:
+        return 0
+    return content_length + downloaded if resumed else content_length
+
+
+def download_json(url: str) -> list[dict]:
+    response = requests.get(url, timeout=config.DOWNLOAD_TIMEOUT)
+    response.raise_for_status()
+    return response.json()
+
+
+def extract_member(zip_path: Path, member: str, dest_dir: Path) -> Path:
+    with zipfile.ZipFile(zip_path) as archive:
+        return Path(archive.extract(member, dest_dir))
+
+
+def single_member(zip_path: Path, suffix: str) -> str:
+    with zipfile.ZipFile(zip_path) as archive:
+        members = [m for m in archive.namelist() if m.lower().endswith(suffix)]
+    if len(members) != 1:
+        raise ValueError(f"expected one '{suffix}' member in {zip_path}, got {members}")
+    return members[0]
 
 
 @dataclass(frozen=True)

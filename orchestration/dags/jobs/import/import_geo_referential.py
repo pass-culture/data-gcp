@@ -41,7 +41,7 @@ with DAG(
     description="Import the geographic referential (IRIS, communes, EPCI, zonings) into raw.",
     schedule=get_airflow_schedule(schedule),
     catchup=False,
-    dagrun_timeout=timedelta(minutes=60),
+    dagrun_timeout=timedelta(minutes=120),
     template_searchpath=DAG_FOLDER,
     user_defined_macros=macros.default,
     params={

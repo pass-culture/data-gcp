@@ -25,6 +25,7 @@ BQ_TABLES_CONFIG: Dict[str, Dict] = {
             "user_department_code": "character varying",
             "user_subscription_latitude": "real",
             "user_subscription_longitude": "real",
+            "user_is_embedded": "boolean",
         },
         "bigquery_table_name": "user_statistics",
         "cloud_sql_table_name": "enriched_user",

@@ -67,5 +67,10 @@ GCP_PROJECT_ID=passculture-data-ehp make run DATASET=raw_dev          # write to
 Source files (~150 MB) are downloaded to a temporary directory on each run. The job needs
 ~1.5 GB RAM (WKT conversion of 49k IRIS polygons).
 
-Scheduled by `import_geo_referential` (yearly, 1 September, once the IGN edition of the year is
-out); vintages are DAG params for manual reruns.
+Scheduled by `import_geo_referential` **monthly**: the sources are yearly, but re-running the
+whole pipeline catches a moved URL or a changed file format long before the vintage bump. Each
+run rewrites the two tables with the same content (`WRITE_TRUNCATE`), so it is idempotent.
+
+The vintages are DAG params, defaulting to the latest published ones (constants at the top of
+the DAG). When a producer publishes a new vintage, bump the default there — and, for a new COG
+year, add its page id to `utils/config.py::COG_PAGE_IDS`.

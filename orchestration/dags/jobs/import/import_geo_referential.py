@@ -18,10 +18,17 @@ from kubernetes.client import V1ResourceRequirements
 MICROSERVICE_PATH = "jobs/etl_jobs/external/geo_referential"
 DAG_NAME = "import_geo_referential"
 
-# IGN publishes the Contours IRIS edition of the year around July; INSEE COG in February,
-# EPCI in March. The density grid and the FRR zoning lag by one to two years.
-schedule = "0 3 1 9 *"
-CURRENT_YEAR = datetime.now().year
+# The sources are yearly, but the job runs monthly to catch a moved URL or a changed file
+# format long before the vintage bump, when nobody is watching.
+schedule = "0 3 5 * *"
+
+# Latest vintages published by each producer. Bump them when a new one is out: IGN publishes
+# the Contours IRIS edition of the year around July, INSEE the COG in February and the EPCI
+# composition in March; the density grid and the FRR zoning lag by one to two years. A new COG
+# year also needs its page id in the job's utils/config.py::COG_PAGE_IDS.
+COG_YEAR = 2026
+DENSITY_GRID_YEAR = 2024
+FRR_YEAR = 2025
 
 GEO_REFERENTIAL_CONTAINER_RESOURCES = V1ResourceRequirements(
     requests={"cpu": "1", "memory": "2Gi"},
@@ -50,17 +57,17 @@ with DAG(
             type="string",
         ),
         "year": Param(
-            default=CURRENT_YEAR,
+            default=COG_YEAR,
             type="integer",
             description="COG / EPCI / IGN Contours IRIS vintage",
         ),
         "density_year": Param(
-            default=CURRENT_YEAR - 2,
+            default=DENSITY_GRID_YEAR,
             type="integer",
             description="INSEE density grid vintage",
         ),
         "frr_year": Param(
-            default=CURRENT_YEAR - 1,
+            default=FRR_YEAR,
             type="integer",
             description="FRR zoning vintage",
         ),

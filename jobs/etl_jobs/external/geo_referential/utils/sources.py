@@ -47,7 +47,7 @@ def download(url: str, dest: Path) -> Path:
         )
         try:
             return _stream_to_file(url, dest, downloaded)
-        except (OSError, requests.RequestException) as error:
+        except OSError as error:
             if attempt == config.DOWNLOAD_ATTEMPTS:
                 raise
             logger.warning("Download of %s failed (%s), retrying", url, error)
@@ -168,7 +168,7 @@ def load_density_grid(vintages: Vintages, download_dir: Path) -> Extract:
     return Extract("insee_density_grid", vintages.density_year, parse_density_grid(raw))
 
 
-def load_zrr(vintages: Vintages, download_dir: Path) -> Extract:
+def load_zrr(download_dir: Path) -> Extract:
     path = download(config.ZRR_URL, download_dir / "zrr_cog2021.xls")
     raw = read_table(path, sheet=config.ZRR_SHEET, header_key="CODGEO")
     return Extract("anct_zrr", ZRR_VINTAGE_YEAR, parse_zrr(raw))
@@ -183,7 +183,7 @@ def load_frr(vintages: Vintages, download_dir: Path) -> Extract:
     return Extract("dgcl_frr", vintages.frr_year, parse_frr(raw))
 
 
-def load_geo_api_communes(vintages: Vintages, download_dir: Path) -> Extract:
+def load_geo_api_communes(vintages: Vintages) -> Extract:
     records = []
     for department_code in config.GEO_API_DEPARTMENTS:
         records.extend(download_json(config.geo_api_communes_url(department_code)))
@@ -198,8 +198,8 @@ def load_all(vintages: Vintages, download_dir: Path) -> dict[str, Extract]:
         *load_cog(vintages, download_dir),
         *load_epci(vintages, download_dir),
         load_density_grid(vintages, download_dir),
-        load_zrr(vintages, download_dir),
+        load_zrr(download_dir),
         load_frr(vintages, download_dir),
-        load_geo_api_communes(vintages, download_dir),
+        load_geo_api_communes(vintages),
     ]
     return {extract.table_name: extract for extract in extracts}

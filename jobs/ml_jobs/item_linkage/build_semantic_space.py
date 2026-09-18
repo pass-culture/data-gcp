@@ -32,7 +32,7 @@ def create_items_table(items_df: pd.DataFrame, linkage_type: str) -> None:
         vector: Vector(MODEL_TYPE["n_dim"])
         item_id: str
         offer_subcategory_id: str
-        edition: Optional[str]
+        edition: Optional[int]
 
     def make_batches(df: pd.DataFrame, batch_size: int):
         """

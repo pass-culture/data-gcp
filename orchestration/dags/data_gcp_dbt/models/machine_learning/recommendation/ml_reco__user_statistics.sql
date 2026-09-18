@@ -35,13 +35,17 @@ select
     user_loc.user_latitude as user_subscription_latitude,
     user_loc.user_longitude as user_subscription_longitude,
     coalesce(au.consult_offer, 0) as consult_offer,
-    coalesce(au.has_added_offer_to_favorites, 0) as has_added_offer_to_favorites
+    coalesce(au.has_added_offer_to_favorites, 0) as has_added_offer_to_favorites,
+    ue.user_id is not null as user_is_embedded
 from selected_users
 left join
     {{ ref("firebase_aggregated_users") }} as au on selected_users.user_id = au.user_id
 left join
     {{ ref("int_geo__user_location") }} as user_loc
     on selected_users.user_id = user_loc.user_id
+left join
+    {{ ref("ml_feat__two_tower_last_user_embedding") }} as ue
+    on selected_users.user_id = ue.user_id
 qualify
     row_number() over (
         partition by selected_users.user_id order by selected_users.booking_cnt desc

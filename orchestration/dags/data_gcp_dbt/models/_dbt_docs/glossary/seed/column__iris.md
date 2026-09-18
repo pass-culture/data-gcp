@@ -8,6 +8,10 @@ The official INSEE code identifying the IRIS (Îlots Regroupés pour l'Informati
 The descriptive name or label of the IRIS area.
 {% enddocs %}
 
+{% docs column__iris_type %}
+INSEE type of the IRIS: `H` (habitat), `A` (activité), `D` (divers) or `Z` (commune non irisée, the IRIS is the whole municipality). Overseas collectivities without IRIS (Wallis-et-Futuna, Polynésie française, Nouvelle-Calédonie) are represented as one `Z` pseudo-IRIS per municipality, coded `<city_code>0000`.
+{% enddocs %}
+
 {% docs column__city_code %}
 The official INSEE code of the municipality (commune) containing the IRIS area.
 {% enddocs %}
@@ -85,7 +89,7 @@ The broader categorization of population density for the IRIS area.
 {% enddocs %}
 
 {% docs column__geo_code %}
-The unique geographic code identifying the IRIS area.
+The INSEE code of the municipality the IRIS belongs to, at the level where municipal attributes (EPCI, density grid, rural typology, zonings) are published: the parent municipality for the arrondissements of Paris, Lyon and Marseille, otherwise the same as `city_code`.
 {% enddocs %}
 
 {% docs column__rural_city_type %}

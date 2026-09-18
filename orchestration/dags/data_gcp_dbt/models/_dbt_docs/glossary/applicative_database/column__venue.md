@@ -39,7 +39,9 @@
 {% docs column__venue_department_name %} Department name where of the venue. {% enddocs %}
 {% docs column__venue_has_siret %}Indicates whether the venue has a SIRET.{% enddocs %}
 {% docs column__venue_in_qpv %}Indicates whether the venue is in a City Policy Priority Neighborhood.{% enddocs %}
-{% docs column__venue_in_zrr %}Indicates whether the venue is in a ZRR.{% enddocs %}
+{% docs column__venue_in_zrr %}Indicates whether the venue is in a municipality classified (fully or partially) in the last ZRR zoning (Zone de Revitalisation Rurale, ended on 2024-06-30). Null when the venue is not located.{% enddocs %}
+{% docs column__venue_in_frr %}Indicates whether the venue is in a municipality classified in the France Ruralités Revitalisation zoning (FRR socle, FRR+, partial or La Réunion special rural zone), the zoning that replaced the ZRR on 2024-07-01. Null when the venue is not located.{% enddocs %}
+{% docs column__venue_in_frr_plus %}Indicates whether the venue is in a municipality classified FRR+ (reinforced level of the France Ruralités Revitalisation zoning). Null when the venue is not located.{% enddocs %}
 {% docs column__venue_rural_city_type %}Type of rural city of the venue.{% enddocs %}
 {% docs column__venue_seniority %}Seniority of the venue in days.{% enddocs %}
 {% docs column__venue_image_source %}Origin of venue image : google, offerer, default_category.{% enddocs %}

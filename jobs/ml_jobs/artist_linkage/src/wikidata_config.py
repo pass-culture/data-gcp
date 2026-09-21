@@ -58,38 +58,11 @@ GKG_ID_PROPERTIES = [
     IdProperty("gkg_id", "wdt:P2671"),
 ]
 
-# The isolated-subquery template, for `render_query`'s `template` override — used as
-# a fallback by cli/extract_from_wikidata.py's batch fetcher when a range narrowed
-# all the way to its minimum width is *still* rejected by QLever: at that point the
-# cost is coming from one richly-aliased entity's cross-product of multi-valued
-# fields, not candidate count, which is exactly what this template avoids (each
-# field computed in its own subquery) — the flat template used for gkg's broader,
-# lower-richness bulk doesn't.
-ISOLATED_SUBQUERY_TEMPLATE = "extract_artists.rq.j2"
-
-# Starting points for gkg's adaptive batch fetch (see cli/extract_from_wikidata.py).
-# Density-informed, not uniform: a live count of wd:Q5 entities with wdt:P2671 by
-# numeric-ID range (2026-09-21) showed the population is very unevenly distributed
-# (~90K/million in Q1-5M down to ~1K/million past Q130M), so the ranges are narrow
-# where it's dense and wide where it's sparse. Any range QLever still rejects as too
-# expensive gets bisected and retried at runtime — this is just a reasonable start,
-# not a guarantee; candidate count alone doesn't reliably predict cost (see the
-# extract_artists_flat.rq.j2 docstring). (200M, 300M) is a future-growth margin.
-GKG_ID_BATCH_RANGES = [
-    (1, 2_500_000),
-    (2_500_000, 5_000_000),
-    (5_000_000, 10_000_000),
-    (10_000_000, 15_000_000),
-    (15_000_000, 20_000_000),
-    (20_000_000, 35_000_000),
-    (35_000_000, 50_000_000),
-    (50_000_000, 75_000_000),
-    (75_000_000, 100_000_000),
-    (100_000_000, 115_000_000),
-    (115_000_000, 130_000_000),
-    (130_000_000, 200_000_000),
-    (200_000_000, 300_000_000),
-]
+# Two-pass discovery+hydration templates (see QueryConfig.hydration_batch_size and
+# extract_discovery.rq.j2 / extract_hydration.rq.j2 for the rationale). Reusable by
+# any domain, not just gkg.
+DISCOVERY_TEMPLATE = "extract_discovery.rq.j2"
+HYDRATION_TEMPLATE = "extract_hydration.rq.j2"
 
 
 @dataclass(frozen=True)
@@ -104,17 +77,20 @@ class QueryConfig:
         filter in one subquery, and no `?matching_score` column is produced (used by
         `music`, whose matching score is computed separately by `music_ids`).
 
-    `batch_ranges`, when set, tells `extract` to fetch this query in numeric-ID
-    pieces (see GKG_ID_BATCH_RANGES) instead of one shot — for a domain whose
-    candidate population is too large/costly for QLever to complete in a single
-    request even with the flat template.
+    `hydration_batch_size`, when set, switches `extract` to the two-pass
+    discovery+hydration pattern instead of a single-shot query: `template` becomes
+    the Pass 1 discovery query (DISCOVERY_TEMPLATE), which cheaply enumerates every
+    matching entity, and Pass 2 hydrates them in VALUES-scoped batches of this size
+    (HYDRATION_TEMPLATE) — for a domain whose candidate population is too large, or
+    contains entities too rich, for a single-shot query to complete. Reusable by
+    any domain, not just `gkg`.
     """
 
     template: str
     entity_types: list[str]
     id_properties: list[IdProperty] = field(default_factory=list)
     base_mode: Literal["scored", "grouped"] = "scored"
-    batch_ranges: list[tuple[int, int]] | None = None
+    hydration_batch_size: int | None = None
 
 
 MUSIC_IDS_KEY = "music_ids"
@@ -142,14 +118,24 @@ QUERY_CONFIGS: dict[str, QueryConfig] = {
         id_properties=MOVIE_ID_PROPERTIES,
     ),
     "gkg": QueryConfig(
-        # Not extract_artists.rq.j2: gkg's ~2.9M-candidate population (wdt:P2671
-        # is far broader than movie's IMDb/Allociné) is too large for that
-        # template's isolated-subquery pattern — QLever silently truncates the
-        # response instead of erroring. See extract_artists_flat.rq.j2 docstring.
-        template="extract_artists_flat.rq.j2",
+        # Two-pass discovery+hydration: gkg's ~2.9M-candidate population (wdt:P2671
+        # is far broader than movie's IMDb/Allociné) is too large for a single-shot
+        # query, and guessing safe ID-range batch widths doesn't work either —
+        # density varies ~90x across the ID space, and even a single richly-aliased
+        # entity can blow the budget regardless of batch width. Pass 1 cheaply
+        # enumerates every match (2.89M rows in 18s, live-measured); Pass 2
+        # hydrates them in VALUES-scoped batches instead.
+        # 5000, not the 200-500 usually recommended for VALUES batches: that
+        # guidance is about GET URI-length limits, which doesn't apply here since
+        # extract uses POST (query in the body, no URI-length ceiling — see
+        # cli/extract_from_wikidata.py's fetch_wikidata_qlever_csv_batch). Our real
+        # constraint is QLever's ~30s time budget: 2,000 real entities measured at
+        # 3.6s with HYDRATION_TEMPLATE, so 5,000 has a wide safety margin while
+        # cutting the ~2.89M/5000 ≈ 578 batches needed (vs. ~1,450 at 2,000).
+        template=DISCOVERY_TEMPLATE,
         entity_types=PERSON_ENTITY_TYPES,
         id_properties=GKG_ID_PROPERTIES,
-        batch_ranges=GKG_ID_BATCH_RANGES,
+        hydration_batch_size=5_000,
     ),
 }
 
@@ -167,14 +153,25 @@ _jinja_env = Environment(
 
 def render_query(
     query_name: str,
-    id_range: tuple[int, int] | None = None,
+    wikidata_ids: list[str] | None = None,
     template: str | None = None,
 ) -> str:
+    """Render a query for `query_name`.
+
+    `wikidata_ids`, for the Pass 2 hydration templates, is a list of bare IDs
+    (e.g. "Q123") to inject as a `VALUES ?wikidata_id { wd:Q123 ... }` clause —
+    formatted into CURIEs here so callers only ever deal with bare IDs (matching
+    `extract_wikidata_id`'s output).
+    """
     config = QUERY_CONFIGS[query_name]
     rendered_template = _jinja_env.get_template(template or config.template)
     return rendered_template.render(
         entity_types=config.entity_types,
         id_properties=config.id_properties,
         base_mode=config.base_mode,
-        id_range=id_range,
+        wikidata_ids=(
+            [f"wd:{wikidata_id}" for wikidata_id in wikidata_ids]
+            if wikidata_ids
+            else None
+        ),
     )

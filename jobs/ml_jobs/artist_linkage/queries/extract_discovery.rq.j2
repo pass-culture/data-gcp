@@ -1,0 +1,33 @@
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+{% set clauses = [] %}
+{% for p in id_properties if p.filter %}
+{% set _ = clauses.append('{ ?wikidata_id ' ~ p.property ~ ' [] . }') %}
+{% endfor %}
+{% set bound_checks = [] %}
+{% for p in id_properties %}
+{% set _ = bound_checks.append('IF(BOUND(?' ~ p.var ~ '), 1, 0)') %}
+{% endfor %}
+
+{#
+  Pass 1 (Discovery) of the two-pass discovery+hydration pattern (see
+  extract_hydration.rq.j2 / extract_hydration_isolated.rq.j2 for Pass 2). A cheap,
+  single index-scan-and-join that just enumerates which entities match the entity
+  filter and their external-ID values — no multi-valued joins, no GROUP_CONCAT, no
+  sort — so it stays fast no matter how large the candidate population is. Pass 2
+  fetches the expensive multi-valued attributes afterwards, in small VALUES-scoped
+  batches of exactly the entities this pass found, instead of guessing how wide an
+  ID range can safely be (candidate count alone doesn't predict that cost
+  reliably — see extract_hydration_isolated.rq.j2's docstring).
+#}
+SELECT DISTINCT ?wikidata_id {% for p in id_properties %}?{{ p.var }} {% endfor %}?matching_score WHERE {
+  ?wikidata_id wdt:P31 ?type .
+  VALUES ?type { {{ entity_types | join(' ') }} }
+  { {{ clauses | join(' UNION ') }} }
+  {% for p in id_properties %}
+  OPTIONAL { ?wikidata_id {{ p.property }} ?{{ p.var }} . }
+  {% endfor %}
+  BIND(
+    ({{ bound_checks | join(' +\n     ') }})
+  AS ?matching_score)
+}

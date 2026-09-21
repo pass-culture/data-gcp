@@ -29,15 +29,15 @@ def _mock_response(status_code: int, text: str = "", json_data=None) -> Mock:
 @pytest.fixture(autouse=True)
 def _no_real_sleep():
     """Tenacity's default sleep strategy is a real time.sleep — patch it out so
-    tests exercising the retry decorator (stop_after_attempt(3), exponential
-    backoff up to 40s) don't actually block for tens of seconds."""
+    tests exercising the retry decorator (stop_after_attempt(5), exponential
+    backoff up to 60s) don't actually block for tens of seconds."""
     with patch("tenacity.nap.time.sleep"):
         yield
 
 
 class TestQleverRetry:
     """src/utils/qlever.py's qlever_retry (tenacity) decorates every QLever HTTP
-    call: 3 attempts, exponential backoff, retrying only on
+    call: 5 attempts, exponential backoff, retrying only on
     requests.RequestException — see qlever_retry's docstring/comment."""
 
     def test_clear_cache_once_raises_after_exhausting_retries(self):
@@ -49,7 +49,7 @@ class TestQleverRetry:
             pytest.raises(requests.RequestException),
         ):
             _clear_qlever_cache_once()
-        assert mock_get.call_count == 3
+        assert mock_get.call_count == 5
 
     def test_clear_cache_succeeds_without_retry(self):
         with patch(
@@ -67,7 +67,7 @@ class TestQleverRetry:
             return_value=_mock_response(500, "boom"),
         ) as mock_get:
             clear_qlever_cache()  # must not raise
-        assert mock_get.call_count == 3
+        assert mock_get.call_count == 5
 
     def test_fetch_csv_retries_then_succeeds(self):
         responses = [
@@ -91,7 +91,7 @@ class TestQleverRetry:
             pytest.raises(requests.RequestException),
         ):
             fetch_wikidata_qlever_csv("SELECT ...")
-        assert mock_post.call_count == 3
+        assert mock_post.call_count == 5
 
     def test_fetch_csv_batch_raises_cost_rejection_without_retrying(self):
         """A genuine cost rejection (QLeverQueryTooExpensive) must propagate
@@ -116,6 +116,22 @@ class TestQleverRetry:
         ) as mock_post:
             df = fetch_wikidata_qlever_csv_batch("SELECT ...")
         assert mock_post.call_count == 2
+        assert list(df["wikidata_id"]) == ["Q1"]
+
+    def test_fetch_csv_batch_recovers_from_a_sustained_rate_limit_burst(self):
+        """Regression for failure_log.txt: QLever's nginx front-end can 429 a
+        burst of requests (plain HTML body, not a cost-rejection JSON one) for
+        several attempts in a row before recovering. The old 3-attempt policy
+        exhausted retries on exactly this pattern and crashed the whole extract
+        task; 5 attempts must ride it out."""
+        rate_limited = _mock_response(429, text="<html>429 Too Many Requests</html>")
+        responses = [rate_limited, rate_limited, rate_limited, rate_limited]
+        responses.append(_mock_response(200, "wikidata_id\nQ1\n"))
+        with patch(
+            "src.utils.qlever.requests.post", side_effect=responses
+        ) as mock_post:
+            df = fetch_wikidata_qlever_csv_batch("SELECT ...")
+        assert mock_post.call_count == 5
         assert list(df["wikidata_id"]) == ["Q1"]
 
 

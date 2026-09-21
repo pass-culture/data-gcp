@@ -39,13 +39,24 @@ def _log_retry_attempt(retry_state) -> None:
     )
 
 
-# Shared retry policy for every QLever request: 3 attempts total, exponential
-# backoff (10s, 20s, capped at 40s) between them. Exponential, not linear — a
-# retry means something actually went wrong, so give the shared endpoint real
+# Shared retry policy for every QLever request: 5 attempts total, exponential
+# backoff (10s, 20s, 40s, capped at 60s) between them. Exponential, not linear —
+# a retry means something actually went wrong, so give the shared endpoint real
 # room to recover instead of coming back quickly.
+#
+# 5 attempts (not 3): live production traffic shows QLever's own nginx
+# front-end plain-HTTP-429 rate-limiting a fresh burst of requests (cache
+# clear, then Pass 1, then Pass 2's first batch, fired back to back) — every
+# one of those got a 429 on its very first attempt, but recovered within 2-3
+# retries once several seconds apart. 3 attempts (30s of cumulative backoff)
+# was enough for the lighter calls but not quite enough for the heaviest one
+# (a ~480KB hydration batch POST), which then exhausted retries and crashed
+# the whole extract task — see failure_log.txt. 5 attempts (~130s of
+# cumulative backoff) gives real margin against that same rate limit without
+# blocking indefinitely if a batch is genuinely stuck.
 qlever_retry = retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=10, max=40),
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=10, max=60),
     retry=retry_if_exception_type(requests.RequestException),
     before_sleep=_log_retry_attempt,
     reraise=True,

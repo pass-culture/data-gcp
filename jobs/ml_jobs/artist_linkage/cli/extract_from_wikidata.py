@@ -1,3 +1,4 @@
+import os
 import time
 from io import StringIO
 
@@ -161,27 +162,66 @@ def fetch_wikidata_qlever_csv(
 
 
 @app.command()
-def main(output_file_path: str = typer.Option()) -> None:
-    dfs: dict[str, pd.DataFrame] = {}
+def extract(
+    query_name: str = typer.Option(),
+    output_file_path: str = typer.Option(),
+) -> None:
+    """Fetch one extraction target from Wikidata and save its raw rows.
+
+    Run once per key of QUERY_CONFIGS so a target-specific QLever failure only
+    retries/fails that target instead of every other already-fetched target.
+    """
+    if query_name not in QUERY_CONFIGS:
+        raise typer.BadParameter(
+            f"Unknown query_name {query_name!r}. Expected one of {list(QUERY_CONFIGS)}."
+        )
 
     # Clear cache on qlever to prevent any resource issues
     clear_qlever_cache()
 
+    logger.info(f"Fetch the data in CSV format for {query_name}")
+    query_string = render_query(query_name)
+    logger.debug(f"SPARQL Query: \n{query_string}")
+
+    df = fetch_wikidata_qlever_csv(query_string).pipe(extract_wikidata_id)
+
+    if df.empty:
+        if query_name == MUSIC_IDS_KEY:
+            logger.warning("No music artist IDs retrieved — skipping raw file.")
+            return
+        error_message = f"No data retrieved for {query_name}."
+        logger.error(error_message)
+        raise ValueError(error_message)
+
+    logger.info(f"Retrieved {len(df)} rows.")
+    logger.info(f"Saving raw results to {output_file_path}")
+    df.to_parquet(output_file_path, index=False)
+    logger.info(f"Raw results saved successfully to {output_file_path}")
+
+
+@app.command()
+def merge(
+    input_dir_path: str = typer.Option(
+        help="Directory holding one <query_name>.parquet raw file per `extract` target."
+    ),
+    output_file_path: str = typer.Option(),
+) -> None:
+    """Merge and postprocess the raw per-target files produced by `extract`."""
+    dfs: dict[str, pd.DataFrame] = {}
+
     for query_name in QUERY_CONFIGS:
-        logger.info(f"Fetch the data in CSV format for {query_name}")
-
-        query_string = render_query(query_name)
-        logger.debug(f"SPARQL Query: \n{query_string}")
-
-        df = fetch_wikidata_qlever_csv(query_string).pipe(extract_wikidata_id)
-
-        if not df.empty:
-            logger.info(f"Retrieved {len(df)} rows.")
-            dfs[query_name] = df
-        elif query_name == MUSIC_IDS_KEY:
-            logger.warning("No music artist IDs retrieved — skipping ID merge.")
-        else:
-            raise ValueError(f"No data retrieved for {query_name}.")
+        raw_file_path = os.path.join(input_dir_path, f"{query_name}.parquet")
+        try:
+            dfs[query_name] = pd.read_parquet(raw_file_path)
+        except FileNotFoundError:
+            if query_name == MUSIC_IDS_KEY:
+                logger.warning(f"{raw_file_path} not found — skipping music_ids merge.")
+                continue
+            error_message = (
+                f"Missing raw extraction for {query_name} at {raw_file_path}."
+            )
+            logger.error(error_message)
+            raise ValueError(error_message) from None
 
     logger.info("Merging the data")
     merged_df = merge_data(dfs)

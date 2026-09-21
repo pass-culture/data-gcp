@@ -54,6 +54,10 @@ MOVIE_ID_PROPERTIES = [
     IdProperty("allocine_id", "wdt:P1266"),
 ]
 
+GKG_ID_PROPERTIES = [
+    IdProperty("gkg_id", "wdt:P2671"),
+]
+
 
 @dataclass(frozen=True)
 class QueryConfig:
@@ -101,7 +105,7 @@ QUERY_CONFIGS: dict[str, QueryConfig] = {
     "gkg": QueryConfig(
         template="extract_artists.rq.j2",
         entity_types=PERSON_ENTITY_TYPES,
-        id_properties=MOVIE_ID_PROPERTIES,
+        id_properties=GKG_ID_PROPERTIES,
     ),
 }
 

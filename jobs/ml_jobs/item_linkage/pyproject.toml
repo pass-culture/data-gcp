@@ -17,6 +17,7 @@ dependencies = [
     "pandas>=2.2.2",
     "pandas-gbq>=0.23.1",
     "polars>=0.18.6",
+    "pytest>=9.0.3",
     "recordlinkage>=0.16",
     "seaborn>=0.13.2",
     "sentence-transformers>=3.3.1",

@@ -7,4 +7,4 @@ select
     region_name,
     region_code,
     total_population_last_12_months
-from {{ ref("int_kpi__population_coverage") }}
+from {{ ref("int_kpi__insee_population_estimation") }}

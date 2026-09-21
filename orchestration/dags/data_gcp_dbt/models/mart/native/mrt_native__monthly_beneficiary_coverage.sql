@@ -36,7 +36,7 @@ with
             pop.population_decimal_age in (
                 15, 15.5, 16, 16.5, 17, 17.5, 18, 18.5, 19
             ) as population_age_decimal_set
-        from {{ ref("int_seed__monthly_france_population") }} as pop
+        from {{ ref("int_seed__monthly_insee_population_estimation") }} as pop
         left join
             user_deposit as ub
             on pop.population_snapshot_month = ub.deposit_active_month

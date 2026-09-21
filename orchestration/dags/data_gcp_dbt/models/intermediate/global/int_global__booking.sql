@@ -39,6 +39,7 @@ select
     s.venue_region_name,
     s.venue_city,
     s.venue_city_code,
+    s.venue_municipality_code,
     s.venue_epci,
     s.venue_epci_code,
     s.venue_density_label,

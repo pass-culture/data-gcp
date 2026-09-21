@@ -92,6 +92,7 @@ select
     coalesce(ui.user_department_name, "non localisé") as user_department_name,
     coalesce(ui.user_city, "non localisé") as user_city,
     coalesce(ui.user_city_code, "-1") as user_city_code,
+    coalesce(ui.user_municipality_code, "-1") as user_municipality_code,
     coalesce(ui.user_epci, "non localisé") as user_epci,
     coalesce(ui.user_epci_code, "-1") as user_epci_code,
     coalesce(ui.user_academy_name, "non localisé") as user_academy_name,

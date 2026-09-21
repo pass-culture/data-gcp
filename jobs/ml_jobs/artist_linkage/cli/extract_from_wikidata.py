@@ -6,6 +6,12 @@ import pandas as pd
 import requests
 import typer
 from loguru import logger
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from src.constants import WIKIDATA_ID_KEY
 from src.utils.preprocessing_utils import normalize_string_series
@@ -35,6 +41,26 @@ app = typer.Typer()
 class QLeverQueryTooExpensive(Exception):
     """QLever rejected a query as too costly to run — split it and retry, don't
     just retry the identical (deterministically doomed) query."""
+
+
+def _log_retry_attempt(retry_state) -> None:
+    logger.warning(
+        f"Attempt {retry_state.attempt_number} failed: {retry_state.outcome.exception()}"
+    )
+
+
+# Shared retry policy for every QLever request: 3 attempts total, exponential
+# backoff (10s, 20s, capped at 40s) between them. Exponential, not linear — a
+# retry means something actually went wrong (unlike HYDRATION_BATCH_DELAY_SECONDS'
+# light pacing between healthy requests above), so give the shared endpoint real
+# room to recover instead of coming back quickly.
+qlever_retry = retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=10, max=40),
+    retry=retry_if_exception_type(requests.RequestException),
+    before_sleep=_log_retry_attempt,
+    reraise=True,
+)
 
 
 WIKIDATA_ENTITY_PREFIX = r"https?://www\.wikidata\.org/entity/"
@@ -128,64 +154,50 @@ def postprocess_data(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def clear_qlever_cache(retries: int = 3, backoff_factor: int = 10) -> None:
-    for attempt in range(retries):
-        try:
-            response = requests.get(
-                QLEVER_ENDPOINT,
-                params={"cmd": "clear-cache"},
-                headers=QLEVER_HEADERS,
-                timeout=30,
-            )
-            if response.status_code == 200:
-                logger.info(f"Cache cleared for {QLEVER_ENDPOINT}")
-                return
-            logger.warning(
-                f"Cache clear attempt {attempt + 1} failed ({response.status_code}): {response.text[:150]}"
-            )
-        except requests.RequestException as e:
-            logger.warning(f"Cache clear attempt {attempt + 1} request error: {e}")
-
-        # Exponential backoff
-        time.sleep(backoff_factor * (2**attempt))
-
-    logger.warning(
-        "Failed to reset QLever cache after retries. Proceeding with execution..."
+@qlever_retry
+def _clear_qlever_cache_once() -> None:
+    response = requests.get(
+        QLEVER_ENDPOINT,
+        params={"cmd": "clear-cache"},
+        headers=QLEVER_HEADERS,
+        timeout=30,
     )
+    if response.status_code != 200:
+        raise requests.RequestException(
+            f"Cache clear failed ({response.status_code}): {response.text[:150]}"
+        )
 
 
-def fetch_wikidata_qlever_csv(
-    sparql_query: str, retries: int = 3, backoff_factor: int = 10
-) -> pd.DataFrame:
+def clear_qlever_cache() -> None:
+    try:
+        _clear_qlever_cache_once()
+        logger.info(f"Cache cleared for {QLEVER_ENDPOINT}")
+    except requests.RequestException:
+        logger.warning(
+            "Failed to reset QLever cache after retries. Proceeding with execution..."
+        )
+
+
+@qlever_retry
+def fetch_wikidata_qlever_csv(sparql_query: str) -> pd.DataFrame:
     # POST, not GET: a large VALUES-scoped hydration query can run to tens of KB,
     # well past a GET URI's length limit (confirmed live: 414 Request-URI Too
     # Large at ~30KB). POST puts the query in the body instead, with no such
     # ceiling — QLEVER_HEADERS' Content-Type is exactly the SPARQL-protocol
     # "query is the raw POST body" convention this relies on.
-    for attempt in range(retries):
-        try:
-            response = requests.post(
-                QLEVER_ENDPOINT,
-                data=sparql_query.encode("utf-8"),
-                headers=QLEVER_HEADERS,
-                timeout=120,
-            )
-            if response.status_code == 200:
-                response.encoding = "utf-8"
-                return pd.read_csv(StringIO(response.text))
-
-            logger.warning(
-                f"Attempt {attempt + 1} failed ({response.status_code}): {response.text[:200]}"
-            )
-        except requests.RequestException as e:
-            logger.warning(f"Attempt {attempt + 1} request error: {e}")
-
-        # Exponential backoff
-        time.sleep(backoff_factor * (2**attempt))
-
-    raise requests.RequestException(
-        f"Failed to fetch data from {QLEVER_ENDPOINT} after {retries} attempts."
+    response = requests.post(
+        QLEVER_ENDPOINT,
+        data=sparql_query.encode("utf-8"),
+        headers=QLEVER_HEADERS,
+        timeout=120,
     )
+    if response.status_code != 200:
+        raise requests.RequestException(
+            f"Failed to fetch data from {QLEVER_ENDPOINT} "
+            f"({response.status_code}): {response.text[:200]}"
+        )
+    response.encoding = "utf-8"
+    return pd.read_csv(StringIO(response.text))
 
 
 def _is_cost_rejection(response: requests.Response) -> bool:
@@ -206,39 +218,30 @@ def _is_cost_rejection(response: requests.Response) -> bool:
     )
 
 
+@qlever_retry
 def fetch_wikidata_qlever_csv_batch(sparql_query: str) -> pd.DataFrame:
-    """Single-attempt fetch for one Pass 2 hydration batch.
+    """Fetch one Pass 2 hydration batch.
 
-    Raises QLeverQueryTooExpensive (no retry — see `_is_cost_rejection`) so the
-    caller can bisect the batch instead; retries transient failures like
-    `fetch_wikidata_qlever_csv` does.
+    Raises QLeverQueryTooExpensive without retrying (`retry_if_exception_type`
+    on `qlever_retry` only matches `requests.RequestException` — this doesn't
+    subclass it) so the caller can bisect the batch instead; transient failures
+    still retry like `fetch_wikidata_qlever_csv` does.
     """
-    retries, backoff_factor = 3, 5
-    for attempt in range(retries):
-        try:
-            response = requests.post(
-                QLEVER_ENDPOINT,
-                data=sparql_query.encode("utf-8"),
-                headers=QLEVER_HEADERS,
-                timeout=120,
-            )
-            if response.status_code == 200:
-                response.encoding = "utf-8"
-                return pd.read_csv(StringIO(response.text))
-            if _is_cost_rejection(response):
-                raise QLeverQueryTooExpensive(response.text[:300])
-
-            logger.warning(
-                f"Attempt {attempt + 1} failed ({response.status_code}): {response.text[:200]}"
-            )
-        except requests.RequestException as e:
-            logger.warning(f"Attempt {attempt + 1} request error: {e}")
-
-        # Exponential backoff
-        time.sleep(backoff_factor * (2**attempt))
+    response = requests.post(
+        QLEVER_ENDPOINT,
+        data=sparql_query.encode("utf-8"),
+        headers=QLEVER_HEADERS,
+        timeout=120,
+    )
+    if response.status_code == 200:
+        response.encoding = "utf-8"
+        return pd.read_csv(StringIO(response.text))
+    if _is_cost_rejection(response):
+        raise QLeverQueryTooExpensive(response.text[:300])
 
     raise requests.RequestException(
-        f"Failed to fetch data from {QLEVER_ENDPOINT} after {retries} attempts."
+        f"Failed to fetch data from {QLEVER_ENDPOINT} "
+        f"({response.status_code}): {response.text[:200]}"
     )
 
 

@@ -9,7 +9,12 @@ from loguru import logger
 
 from src.constants import WIKIDATA_ID_KEY
 from src.utils.preprocessing_utils import normalize_string_series
-from src.wikidata_config import MUSIC_IDS_KEY, QUERY_CONFIGS, render_query
+from src.wikidata_config import (
+    ISOLATED_SUBQUERY_TEMPLATE,
+    MUSIC_IDS_KEY,
+    QUERY_CONFIGS,
+    render_query,
+)
 
 QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
 QLEVER_HEADERS = {"Accept": "text/csv", "Content-Type": "application/sparql-query"}
@@ -239,10 +244,7 @@ def fetch_batch_range(
         df = fetch_wikidata_qlever_csv_range(query)
     except QLeverQueryTooExpensive:
         if hi - lo <= min_width:
-            raise ValueError(
-                f"QLever still rejects {query_name} batch Q{lo}-Q{hi} as too "
-                f"expensive even at the minimum batch width ({min_width})."
-            ) from None
+            return fetch_batch_range_isolated(query_name, lo, hi)
         mid = (lo + hi) // 2
         logger.info(
             f"{query_name} batch Q{lo}-Q{hi} too expensive for QLever — "
@@ -253,6 +255,48 @@ def fetch_batch_range(
         )
 
     logger.info(f"{query_name} batch Q{lo}-Q{hi}: retrieved {len(df)} rows.")
+    return [df] if not df.empty else []
+
+
+def fetch_batch_range_isolated(query_name: str, lo: int, hi: int) -> list[pd.DataFrame]:
+    """Fetch a range the flat template couldn't handle even at `BATCH_MIN_WIDTH`,
+    using the isolated-subquery template instead — and keep bisecting with it if
+    it's *still* rejected, all the way down to a single entity if need be.
+
+    At `BATCH_MIN_WIDTH` the cost can no longer be candidate count; it's one (or a
+    few) richly-aliased entities' cross-product of simultaneously-joined
+    multi-valued fields, which the isolated-subquery template avoids by computing
+    each field in its own subquery (see ISOLATED_SUBQUERY_TEMPLATE). But that
+    template has its own ceiling too — a single entity can carry enough aliases in
+    one field alone to blow even an isolated GROUP_CONCAT's sort. So this floors at
+    one numeric ID: if QLever rejects a lone entity under both templates, that one
+    entity is skipped (loudly) rather than either blocking the whole extraction or
+    silently dropping a wider range around it.
+    """
+    query = render_query(
+        query_name, id_range=(lo, hi), template=ISOLATED_SUBQUERY_TEMPLATE
+    )
+    try:
+        df = fetch_wikidata_qlever_csv_range(query)
+    except QLeverQueryTooExpensive:
+        if hi - lo <= 1:
+            logger.warning(
+                f"{query_name}: Q{lo} rejected by QLever as too expensive even in "
+                "isolation (both templates) — skipping this one entity."
+            )
+            return []
+        mid = (lo + hi) // 2
+        logger.info(
+            f"{query_name} batch Q{lo}-Q{hi} (isolated-subquery) still too "
+            f"expensive — splitting into Q{lo}-Q{mid} and Q{mid}-Q{hi}."
+        )
+        return fetch_batch_range_isolated(
+            query_name, lo, mid
+        ) + fetch_batch_range_isolated(query_name, mid, hi)
+
+    logger.info(
+        f"{query_name} batch Q{lo}-Q{hi} (isolated-subquery): retrieved {len(df)} rows."
+    )
     return [df] if not df.empty else []
 
 

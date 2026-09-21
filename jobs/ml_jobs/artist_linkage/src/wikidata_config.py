@@ -58,6 +58,15 @@ GKG_ID_PROPERTIES = [
     IdProperty("gkg_id", "wdt:P2671"),
 ]
 
+# The isolated-subquery template, for `render_query`'s `template` override — used as
+# a fallback by cli/extract_from_wikidata.py's batch fetcher when a range narrowed
+# all the way to its minimum width is *still* rejected by QLever: at that point the
+# cost is coming from one richly-aliased entity's cross-product of multi-valued
+# fields, not candidate count, which is exactly what this template avoids (each
+# field computed in its own subquery) — the flat template used for gkg's broader,
+# lower-richness bulk doesn't.
+ISOLATED_SUBQUERY_TEMPLATE = "extract_artists.rq.j2"
+
 # Starting points for gkg's adaptive batch fetch (see cli/extract_from_wikidata.py).
 # Density-informed, not uniform: a live count of wd:Q5 entities with wdt:P2671 by
 # numeric-ID range (2026-09-21) showed the population is very unevenly distributed
@@ -156,10 +165,14 @@ _jinja_env = Environment(
 )
 
 
-def render_query(query_name: str, id_range: tuple[int, int] | None = None) -> str:
+def render_query(
+    query_name: str,
+    id_range: tuple[int, int] | None = None,
+    template: str | None = None,
+) -> str:
     config = QUERY_CONFIGS[query_name]
-    template = _jinja_env.get_template(config.template)
-    return template.render(
+    rendered_template = _jinja_env.get_template(template or config.template)
+    return rendered_template.render(
         entity_types=config.entity_types,
         id_properties=config.id_properties,
         base_mode=config.base_mode,

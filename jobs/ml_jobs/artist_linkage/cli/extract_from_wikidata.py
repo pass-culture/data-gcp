@@ -10,18 +10,24 @@ from loguru import logger
 from src.constants import WIKIDATA_ID_KEY
 from src.utils.preprocessing_utils import normalize_string_series
 from src.wikidata_config import (
-    ISOLATED_SUBQUERY_TEMPLATE,
+    HYDRATION_TEMPLATE,
     MUSIC_IDS_KEY,
     QUERY_CONFIGS,
     render_query,
 )
 
 QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
-QLEVER_HEADERS = {"Accept": "text/csv", "Content-Type": "application/sparql-query"}
+QLEVER_HEADERS = {
+    "Accept": "text/csv",
+    "Content-Type": "application/sparql-query",
+    # Same identification string used for other external APIs (see
+    # src.constants.WIKIMEDIA_REQUEST_HEADER) — good practice for any shared
+    # third-party endpoint, and QLever's own docs ask for one explicitly.
+    "User-Agent": "PassCulture/1.0 (https://passculture.app; contact@passculture.app) Python/requests",
+}
 
-# Below this width (in numeric Wikidata IDs), give up on splitting a batch further
-# and surface it as a real failure instead of recursing indefinitely.
-BATCH_MIN_WIDTH = 50_000
+# Pause between Pass 2 (hydration) batch requests — see QueryConfig.hydration_batch_size.
+HYDRATION_BATCH_DELAY_SECONDS = 0.2
 
 app = typer.Typer()
 
@@ -122,7 +128,7 @@ def postprocess_data(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def clear_qlever_cache(retries: int = 3, backoff_factor: int = 5) -> None:
+def clear_qlever_cache(retries: int = 3, backoff_factor: int = 10) -> None:
     for attempt in range(retries):
         try:
             response = requests.get(
@@ -140,7 +146,8 @@ def clear_qlever_cache(retries: int = 3, backoff_factor: int = 5) -> None:
         except requests.RequestException as e:
             logger.warning(f"Cache clear attempt {attempt + 1} request error: {e}")
 
-        time.sleep(backoff_factor * (attempt + 1))
+        # Exponential backoff
+        time.sleep(backoff_factor * (2**attempt))
 
     logger.warning(
         "Failed to reset QLever cache after retries. Proceeding with execution..."
@@ -148,13 +155,18 @@ def clear_qlever_cache(retries: int = 3, backoff_factor: int = 5) -> None:
 
 
 def fetch_wikidata_qlever_csv(
-    sparql_query: str, retries: int = 3, backoff_factor: int = 5
+    sparql_query: str, retries: int = 3, backoff_factor: int = 10
 ) -> pd.DataFrame:
+    # POST, not GET: a large VALUES-scoped hydration query can run to tens of KB,
+    # well past a GET URI's length limit (confirmed live: 414 Request-URI Too
+    # Large at ~30KB). POST puts the query in the body instead, with no such
+    # ceiling — QLEVER_HEADERS' Content-Type is exactly the SPARQL-protocol
+    # "query is the raw POST body" convention this relies on.
     for attempt in range(retries):
         try:
-            response = requests.get(
+            response = requests.post(
                 QLEVER_ENDPOINT,
-                params={"query": sparql_query},
+                data=sparql_query.encode("utf-8"),
                 headers=QLEVER_HEADERS,
                 timeout=120,
             )
@@ -168,7 +180,8 @@ def fetch_wikidata_qlever_csv(
         except requests.RequestException as e:
             logger.warning(f"Attempt {attempt + 1} request error: {e}")
 
-        time.sleep(backoff_factor * (attempt + 1))
+        # Exponential backoff
+        time.sleep(backoff_factor * (2**attempt))
 
     raise requests.RequestException(
         f"Failed to fetch data from {QLEVER_ENDPOINT} after {retries} attempts."
@@ -193,19 +206,19 @@ def _is_cost_rejection(response: requests.Response) -> bool:
     )
 
 
-def fetch_wikidata_qlever_csv_range(sparql_query: str) -> pd.DataFrame:
-    """Single-attempt fetch for one batch of a range-partitioned query.
+def fetch_wikidata_qlever_csv_batch(sparql_query: str) -> pd.DataFrame:
+    """Single-attempt fetch for one Pass 2 hydration batch.
 
     Raises QLeverQueryTooExpensive (no retry — see `_is_cost_rejection`) so the
-    caller can bisect the range instead; retries transient failures like
+    caller can bisect the batch instead; retries transient failures like
     `fetch_wikidata_qlever_csv` does.
     """
     retries, backoff_factor = 3, 5
     for attempt in range(retries):
         try:
-            response = requests.get(
+            response = requests.post(
                 QLEVER_ENDPOINT,
-                params={"query": sparql_query},
+                data=sparql_query.encode("utf-8"),
                 headers=QLEVER_HEADERS,
                 timeout=120,
             )
@@ -221,81 +234,78 @@ def fetch_wikidata_qlever_csv_range(sparql_query: str) -> pd.DataFrame:
         except requests.RequestException as e:
             logger.warning(f"Attempt {attempt + 1} request error: {e}")
 
-        time.sleep(backoff_factor * (attempt + 1))
+        # Exponential backoff
+        time.sleep(backoff_factor * (2**attempt))
 
     raise requests.RequestException(
         f"Failed to fetch data from {QLEVER_ENDPOINT} after {retries} attempts."
     )
 
 
-def fetch_batch_range(
-    query_name: str, lo: int, hi: int, min_width: int = BATCH_MIN_WIDTH
-) -> list[pd.DataFrame]:
-    """Fetch one numeric-ID range of a batched query, splitting it in half and
-    recursing whenever QLever rejects it as too expensive, down to `min_width`.
-
-    Candidate count alone doesn't predict cost reliably (older, lower-numbered
-    Wikidata entities carry richer multi-valued data), so this adapts to whatever
-    the real cost distribution turns out to be instead of trusting a fixed
-    partition — see GKG_ID_BATCH_RANGES and extract_artists_flat.rq.j2.
+def fetch_discovery(query_name: str) -> pd.DataFrame:
+    """Pass 1 of the two-pass discovery+hydration pattern (see
+    QueryConfig.hydration_batch_size): a cheap, single query enumerating every
+    entity matching `query_name`'s entity filter, with its external-ID value(s)
+    and matching score. No multi-valued joins, no GROUP_CONCAT, no sort — so this
+    stays fast no matter how large the candidate population is. Pass 2
+    (`hydrate_batch`) fetches the expensive multi-valued attributes afterwards, in
+    small VALUES-scoped batches of exactly the entities this pass found.
     """
-    query = render_query(query_name, id_range=(lo, hi))
-    try:
-        df = fetch_wikidata_qlever_csv_range(query)
-    except QLeverQueryTooExpensive:
-        if hi - lo <= min_width:
-            return fetch_batch_range_isolated(query_name, lo, hi)
-        mid = (lo + hi) // 2
-        logger.info(
-            f"{query_name} batch Q{lo}-Q{hi} too expensive for QLever — "
-            f"splitting into Q{lo}-Q{mid} and Q{mid}-Q{hi}."
-        )
-        return fetch_batch_range(query_name, lo, mid, min_width) + fetch_batch_range(
-            query_name, mid, hi, min_width
-        )
-
-    logger.info(f"{query_name} batch Q{lo}-Q{hi}: retrieved {len(df)} rows.")
-    return [df] if not df.empty else []
+    query = render_query(query_name)
+    logger.debug(f"SPARQL Query (discovery): \n{query}")
+    return fetch_wikidata_qlever_csv(query)
 
 
-def fetch_batch_range_isolated(query_name: str, lo: int, hi: int) -> list[pd.DataFrame]:
-    """Fetch a range the flat template couldn't handle even at `BATCH_MIN_WIDTH`,
-    using the isolated-subquery template instead — and keep bisecting with it if
-    it's *still* rejected, all the way down to a single entity if need be.
+def hydrate_batch(
+    query_name: str, wikidata_ids: list[str], dropped_ids: list[str]
+) -> list[pd.DataFrame]:
+    """Fetch Pass 2 attributes for a batch of entities via a VALUES-scoped query
+    (HYDRATION_TEMPLATE), bisecting the batch and recursing whenever QLever
+    rejects it as too expensive, down to a single entity.
 
-    At `BATCH_MIN_WIDTH` the cost can no longer be candidate count; it's one (or a
-    few) richly-aliased entities' cross-product of simultaneously-joined
-    multi-valued fields, which the isolated-subquery template avoids by computing
-    each field in its own subquery (see ISOLATED_SUBQUERY_TEMPLATE). But that
-    template has its own ceiling too — a single entity can carry enough aliases in
-    one field alone to blow even an isolated GROUP_CONCAT's sort. So this floors at
-    one numeric ID: if QLever rejects a lone entity under both templates, that one
-    entity is skipped (loudly) rather than either blocking the whole extraction or
-    silently dropping a wider range around it.
+    Unlike the old ID-range batching this replaces, a VALUES batch's cost is
+    bounded by exactly how many (known, real) entities are in it — not by guessing
+    how dense an unknown ID range might be — so batches can be a simple fixed size
+    (QueryConfig.hydration_batch_size) instead of a density-informed partition.
+    HYDRATION_TEMPLATE computes each multi-valued field in its own subquery for
+    exactly this reason — see its docstring for the measured 42s-timeout-vs-3.6s
+    comparison against the flat alternative that was tried and dropped.
+
+    Even so, a single entity's own fields (aliases_fr x aliases_en x professions x
+    genres x languages) could in principle still exceed the budget on their own —
+    at that floor, if QLever still rejects it, that one entity is skipped (loudly,
+    and recorded in `dropped_ids`) rather than blocking the whole extraction.
+
+    `dropped_ids` is a caller-owned accumulator (not a return value) so every
+    recursive call appends to the same list; the caller reports it once the whole
+    hydration pass is done.
     """
     query = render_query(
-        query_name, id_range=(lo, hi), template=ISOLATED_SUBQUERY_TEMPLATE
+        query_name, wikidata_ids=wikidata_ids, template=HYDRATION_TEMPLATE
     )
     try:
-        df = fetch_wikidata_qlever_csv_range(query)
+        df = fetch_wikidata_qlever_csv_batch(query)
     except QLeverQueryTooExpensive:
-        if hi - lo <= 1:
+        if len(wikidata_ids) <= 1:
             logger.warning(
-                f"{query_name}: Q{lo} rejected by QLever as too expensive even in "
-                "isolation (both templates) — skipping this one entity."
+                f"{query_name}: {wikidata_ids[0]} rejected by QLever as too "
+                "expensive even alone — skipping this one entity."
             )
+            dropped_ids.append(wikidata_ids[0])
             return []
-        mid = (lo + hi) // 2
+        mid = len(wikidata_ids) // 2
+        left, right = wikidata_ids[:mid], wikidata_ids[mid:]
         logger.info(
-            f"{query_name} batch Q{lo}-Q{hi} (isolated-subquery) still too "
-            f"expensive — splitting into Q{lo}-Q{mid} and Q{mid}-Q{hi}."
+            f"{query_name} hydration batch of {len(wikidata_ids)} too expensive "
+            f"for QLever — splitting into batches of {len(left)} and {len(right)}."
         )
-        return fetch_batch_range_isolated(
-            query_name, lo, mid
-        ) + fetch_batch_range_isolated(query_name, mid, hi)
+        time.sleep(HYDRATION_BATCH_DELAY_SECONDS)
+        return hydrate_batch(query_name, left, dropped_ids) + hydrate_batch(
+            query_name, right, dropped_ids
+        )
 
     logger.info(
-        f"{query_name} batch Q{lo}-Q{hi} (isolated-subquery): retrieved {len(df)} rows."
+        f"{query_name} hydration batch of {len(wikidata_ids)}: retrieved {len(df)} rows."
     )
     return [df] if not df.empty else []
 
@@ -315,24 +325,48 @@ def extract(
             f"Unknown query_name {query_name!r}. Expected one of {list(QUERY_CONFIGS)}."
         )
 
+    start_time = time.time()
+
     # Clear cache on qlever to prevent any resource issues
     clear_qlever_cache()
 
     logger.info(f"Fetch the data in CSV format for {query_name}")
 
     config = QUERY_CONFIGS[query_name]
-    if config.batch_ranges:
-        dfs = [
-            batch_df
-            for lo, hi in config.batch_ranges
-            for batch_df in fetch_batch_range(query_name, lo, hi)
+    dropped_ids: list[str] = []
+    if config.hydration_batch_size:
+        logger.info(f"[{query_name}] Pass 1: discovering candidate entities")
+        discovery_df = fetch_discovery(query_name).pipe(extract_wikidata_id)
+        logger.info(
+            f"[{query_name}] Pass 1: found {len(discovery_df)} candidate entities"
+        )
+
+        wikidata_ids = discovery_df["wikidata_id"].tolist()
+        batch_size = config.hydration_batch_size
+        batches = [
+            wikidata_ids[i : i + batch_size]
+            for i in range(0, len(wikidata_ids), batch_size)
         ]
-        # No .pipe(extract_wikidata_id) when empty: an empty concat result has no
-        # wikidata_id column to strip the URI prefix from. Falls through to the
-        # empty-data check below either way.
+        logger.info(
+            f"[{query_name}] Pass 2: hydrating {len(wikidata_ids)} entities in "
+            f"{len(batches)} batches of up to {batch_size}"
+        )
+
+        hydration_dfs: list[pd.DataFrame] = []
+        for i, batch in enumerate(batches, start=1):
+            hydration_dfs.extend(hydrate_batch(query_name, batch, dropped_ids))
+            if i < len(batches):
+                time.sleep(HYDRATION_BATCH_DELAY_SECONDS)
+
+        # Inner merge: entities in dropped_ids simply have no row in hydration_df,
+        # so they're naturally excluded here without extra filtering logic.
         df = (
-            pd.concat(dfs, ignore_index=True).pipe(extract_wikidata_id)
-            if dfs
+            discovery_df.merge(
+                pd.concat(hydration_dfs, ignore_index=True).pipe(extract_wikidata_id),
+                on="wikidata_id",
+                how="inner",
+            )
+            if hydration_dfs
             else pd.DataFrame()
         )
     else:
@@ -352,6 +386,21 @@ def extract(
     logger.info(f"Saving raw results to {output_file_path}")
     df.to_parquet(output_file_path, index=False)
     logger.info(f"Raw results saved successfully to {output_file_path}")
+
+    if dropped_ids:
+        logger.warning(
+            f"{query_name}: dropped {len(dropped_ids)} entit"
+            f"{'y' if len(dropped_ids) == 1 else 'ies'} QLever rejected as too "
+            f"expensive even alone: {', '.join(dropped_ids)}"
+        )
+
+    elapsed = time.time() - start_time
+    dropped_entity_word = "entity" if len(dropped_ids) == 1 else "entities"
+    logger.info(
+        f"[{query_name}] summary: {len(df)} rows, {len(dropped_ids)} "
+        f"{dropped_entity_word} dropped, {elapsed:.1f}s elapsed, "
+        f"saved to {output_file_path}"
+    )
 
 
 @app.command()

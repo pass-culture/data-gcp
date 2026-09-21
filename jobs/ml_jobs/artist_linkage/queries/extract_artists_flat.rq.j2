@@ -1,0 +1,86 @@
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX schema: <http://schema.org/>
+{% set clauses = [] %}
+{% for p in id_properties if p.filter %}
+{% set _ = clauses.append('{ ?wikidata_id ' ~ p.property ~ ' [] . }') %}
+{% endfor %}
+{% set bound_checks = [] %}
+{% for p in id_properties %}
+{% set _ = bound_checks.append('IF(BOUND(?' ~ p.var ~ '), 1, 0)') %}
+{% endfor %}
+
+{#
+  Flat variant of extract_artists.rq.j2: every OPTIONAL (single- and multi-valued
+  alike) joins directly in ONE scope instead of isolated per-field subqueries, with
+  a single outer GROUP BY collapsing the multi-valued fields via GROUP_CONCAT.
+
+  Use this ONLY for a domain whose candidate population is too large for the
+  isolated-subquery pattern to finish without QLever silently truncating the
+  response (re-scanning millions of candidates once per multi-valued field gets
+  prohibitively expensive at that scale) — e.g. `gkg` (~2.9M candidates via
+  wdt:P2671), unlike music/book/movie (90K-583K) where the isolated-subquery
+  template is what actually fixed their QLever timeouts. This flat shape risks
+  the opposite failure mode (a per-entity Cartesian product across simultaneously
+  OPTIONAL-joined multi-valued fields) that motivated that other template, but it
+  is what's proven, at this scale, to actually complete: a pre-optimization run of
+  this exact shape returned ~2.69M gkg rows in ~103s with no truncation.
+#}
+SELECT
+  ?wikidata_id
+  ?artist_name_fr
+  ?artist_name_en
+  ?artist_description
+  ?wikipedia_url
+  ?img
+  ?gkg_id
+  (GROUP_CONCAT(DISTINCT ?alias_fr; separator="|") AS ?aliases_fr)
+  (GROUP_CONCAT(DISTINCT ?alias_en; separator="|") AS ?aliases_en)
+  (GROUP_CONCAT(DISTINCT ?profLbl; separator="|") AS ?professions)
+  (GROUP_CONCAT(DISTINCT ?genreLbl; separator="|") AS ?genres)
+  (GROUP_CONCAT(DISTINCT ?langLbl; separator="|") AS ?languages_spoken)
+  (MIN(?birth_date) AS ?birth_date_val)
+  ?matching_score
+WHERE {
+  # 1. Entity filter
+  ?wikidata_id wdt:P31 ?type .
+  VALUES ?type { {{ entity_types | join(' ') }} }
+  { {{ clauses | join(' UNION ') }} }
+
+  # 2. Fetch IDs & matching score
+  {% for p in id_properties %}
+  OPTIONAL { ?wikidata_id {{ p.property }} ?{{ p.var }} . }
+  {% endfor %}
+  BIND(
+    ({{ bound_checks | join(' +\n     ') }})
+  AS ?matching_score)
+
+  # 3. Single-valued labels & attributes
+  OPTIONAL { ?wikidata_id rdfs:label ?lbl_fr . FILTER(LANG(?lbl_fr) = "fr") }
+  OPTIONAL { ?wikidata_id rdfs:label ?lbl_en . FILTER(LANG(?lbl_en) = "en") }
+  OPTIONAL { ?wikidata_id rdfs:label ?lbl_mul . FILTER(LANG(?lbl_mul) = "mul") }
+  BIND(COALESCE(?lbl_fr, ?lbl_mul, ?lbl_en) AS ?artist_name_fr)
+  BIND(?lbl_en AS ?artist_name_en)
+
+  OPTIONAL { ?wikidata_id schema:description ?artist_description . FILTER(LANG(?artist_description) = "fr") }
+  OPTIONAL { ?wikidata_id wdt:P18 ?img . }
+  OPTIONAL { ?wikidata_id wdt:P2671 ?gkg_id . }
+  OPTIONAL { ?wikidata_id wdt:P569 ?birth_date . }
+
+  # 4. Multi-valued attributes (flat OPTIONAL, collapsed by the outer GROUP BY)
+  OPTIONAL { ?wikidata_id wdt:P106/rdfs:label ?profLbl . FILTER(LANG(?profLbl) = "fr") }
+  OPTIONAL { ?wikidata_id wdt:P136/rdfs:label ?genreLbl . FILTER(LANG(?genreLbl) = "fr") }
+  OPTIONAL { ?wikidata_id wdt:P1412/rdfs:label ?langLbl . FILTER(LANG(?langLbl) = "fr") }
+  OPTIONAL { ?wikidata_id skos:altLabel ?alias_fr . FILTER(LANG(?alias_fr) = "fr") }
+  OPTIONAL { ?wikidata_id skos:altLabel ?alias_en . FILTER(LANG(?alias_en) = "en") }
+
+  # 5. Wikipedia
+  OPTIONAL { ?wikipedia_url_fr schema:about ?wikidata_id ; schema:isPartOf <https://fr.wikipedia.org/> . }
+  OPTIONAL { ?wikipedia_url_en schema:about ?wikidata_id ; schema:isPartOf <https://en.wikipedia.org/> . }
+  BIND(COALESCE(?wikipedia_url_fr, ?wikipedia_url_en) AS ?wikipedia_url)
+
+  FILTER ((?artist_name_fr != "") || (?artist_name_en != ""))
+}
+GROUP BY ?wikidata_id ?artist_name_fr ?artist_name_en ?artist_description ?wikipedia_url ?img ?gkg_id ?matching_score

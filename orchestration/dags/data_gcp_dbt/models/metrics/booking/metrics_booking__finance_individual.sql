@@ -35,7 +35,7 @@ with
             bf.total_revenue_amount,
             bf.total_reimbursed_amount,
             bf.total_contribution_amount,
-            tr.max_total_revenue_amount_by_territory,
+            tr.max_revenue_amount_by_territory,
             tr.total_revenue_amount_by_territory
         from {{ ref("int_kpi__booking_finance_individual") }} as bf
         left join

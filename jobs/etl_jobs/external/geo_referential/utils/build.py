@@ -14,10 +14,10 @@ ZRR_PARTIAL = {
     "zrr_detail": "P - Commune partiellement classée en ZRR",
 }
 
-GEO_COMMUNE_COLUMNS = [
+GEO_MUNICIPALITY_COLUMNS = [
     "city_code",
-    "city_label",
-    "commune_code",
+    "municipality_label",
+    "municipality_code",
     "department_code",
     "region_code",
     "territorial_authority_code",
@@ -38,28 +38,28 @@ GEO_COMMUNE_COLUMNS = [
 
 
 def build_geo_iris(
-    contour_iris: pd.DataFrame, overseas_communes: pd.DataFrame
+    contour_iris: pd.DataFrame, overseas_municipalities: pd.DataFrame
 ) -> pd.DataFrame:
-    """One row per IRIS. Overseas collectivities without IRIS get one pseudo-IRIS per commune
-    (INSEE convention: commune code + "0000", type Z = commune non irisée)."""
+    """One row per IRIS. Overseas collectivities without IRIS get one pseudo-IRIS per municipality
+    (INSEE convention: municipality code + "0000", type Z = commune non irisée)."""
     iris = contour_iris.rename(columns={"iris_name": "iris_label"})
     pseudo_iris = pd.DataFrame(
         {
-            "iris_code": overseas_communes["city_code"] + "0000",
-            "iris_label": overseas_communes["city_name"],
+            "iris_code": overseas_municipalities["city_code"] + "0000",
+            "iris_label": overseas_municipalities["city_name"],
             "iris_type": "Z",
-            "city_code": overseas_communes["city_code"],
-            "geometry_wkt": overseas_communes["geometry_wkt"],
+            "city_code": overseas_municipalities["city_code"],
+            "geometry_wkt": overseas_municipalities["geometry_wkt"],
         }
     )
     columns = ["iris_code", "iris_label", "iris_type", "city_code", "geometry_wkt"]
     return pd.concat([iris[columns], pseudo_iris[columns]], ignore_index=True)
 
 
-def commune_predecessors(
+def municipality_predecessors(
     mvt_commune: pd.DataFrame, since_year: int
 ) -> dict[str, list[str]]:
-    """Commune code -> codes it comes from (merged or re-established communes), for the
+    """Municipality code -> codes it comes from (merged or re-established municipalities), for the
     COG movements effective after `since_year`."""
     recent = mvt_commune[
         (mvt_commune["date_eff"] > f"{since_year}-12-31")
@@ -72,15 +72,15 @@ def commune_predecessors(
     )
 
 
-def fill_missing_communes(
+def fill_missing_municipalities(
     attributes: pd.DataFrame,
     current_city_codes: pd.Series,
     predecessors: dict[str, list[str]],
     combine: Callable[[pd.DataFrame], pd.DataFrame],
 ) -> pd.DataFrame:
-    """Align an attribute table published for an older COG on the current commune codes:
-    a current commune with no row of its own inherits from its predecessors (the communes
-    it merged, or the commune it was re-established from), `combine` picking one row out of
+    """Align an attribute table published for an older COG on the current municipality codes:
+    a current municipality with no row of its own inherits from its predecessors (the ones
+    it merged, or the municipality it was re-established from), `combine` picking one row out of
     several. Rows of codes that no longer exist are dropped."""
     by_code = attributes.set_index("city_code")
     known = attributes[attributes["city_code"].isin(set(current_city_codes))]
@@ -107,15 +107,15 @@ def _former_codes(
     return former
 
 
-def _join_commune_attributes(
+def _join_municipality_attributes(
     cities: pd.DataFrame, attributes: list[pd.DataFrame]
 ) -> pd.DataFrame:
-    """Attach attribute tables keyed by `city_code` to the commune of each row."""
+    """Attach attribute tables keyed by `city_code` to the municipality of each row."""
     df = cities
     for attribute in attributes:
         df = df.merge(
-            attribute.rename(columns={"city_code": "commune_code"}),
-            on="commune_code",
+            attribute.rename(columns={"city_code": "municipality_code"}),
+            on="municipality_code",
             how="left",
         )
     return df
@@ -147,21 +147,21 @@ def _combine_densest(rows: pd.DataFrame) -> pd.DataFrame:
     return rows.nsmallest(1, "density_level")
 
 
-def build_geo_commune(
+def build_geo_municipality(
     cog_commune: pd.DataFrame,
     cog_commune_comer: pd.DataFrame,
     cog_arrondissement: pd.DataFrame,
     cog_canton: pd.DataFrame,
     cog_ctcd: pd.DataFrame,
-    epci_communes: pd.DataFrame,
+    epci_municipalities: pd.DataFrame,
     density_grid: pd.DataFrame,
     zrr: pd.DataFrame,
     frr: pd.DataFrame,
     predecessors: dict[str, list[str]],
 ) -> pd.DataFrame:
-    """One row per commune and per arrondissement (Paris, Lyon, Marseille), including the
+    """One row per municipality and per arrondissement (Paris, Lyon, Marseille), including the
     inhabited overseas collectivities. Municipal attributes (EPCI, density, zonings) are those
-    of `commune_code`: the parent commune for arrondissements, the commune itself otherwise."""
+    of `municipality_code`: the parent municipality for arrondissements, the municipality itself otherwise."""
     cities = cog_commune[cog_commune["typecom"].isin(["COM", "ARM"])].rename(
         columns={
             "com": "city_code",
@@ -172,7 +172,9 @@ def build_geo_commune(
             "can": "sub_district_code",
         }
     )
-    cities = cities.assign(commune_code=cities["comparent"].fillna(cities["city_code"]))
+    cities = cities.assign(
+        municipality_code=cities["comparent"].fillna(cities["city_code"])
+    )
 
     comer = cog_commune_comer[
         cog_commune_comer["nature_zonage"].isin(INHABITED_COMER_ZONING)
@@ -180,45 +182,46 @@ def build_geo_commune(
     comer = pd.DataFrame(
         {
             "city_code": comer["com_comer"],
-            "commune_code": comer["com_comer"],
+            "municipality_code": comer["com_comer"],
             "libelle": comer["libelle"],
             "department_code": comer["comer"],
         }
     )
     cities = pd.concat([cities, comer], ignore_index=True)
 
-    commune_labels = cities.loc[
-        cities["city_code"] == cities["commune_code"], ["commune_code", "libelle"]
-    ].rename(columns={"libelle": "city_label"})
+    municipality_labels = cities.loc[
+        cities["city_code"] == cities["municipality_code"],
+        ["municipality_code", "libelle"],
+    ].rename(columns={"libelle": "municipality_label"})
 
-    current_codes = cities["commune_code"].drop_duplicates()
-    epci = fill_missing_communes(
-        epci_communes[["city_code", "epci_code", "epci_name"]],
+    current_codes = cities["municipality_code"].drop_duplicates()
+    epci = fill_missing_municipalities(
+        epci_municipalities[["city_code", "epci_code", "epci_name"]],
         current_codes,
         predecessors,
         combine=lambda rows: rows.head(1),
     ).rename(columns={"epci_name": "epci_label"})
-    density = fill_missing_communes(
+    density = fill_missing_municipalities(
         density_grid[["city_code", "density_level", "density_label"]],
         current_codes,
         predecessors,
         combine=_combine_densest,
     )
-    zrr = fill_missing_communes(
+    zrr = fill_missing_municipalities(
         zrr[["city_code", "zrr_code", "zrr_label", "zrr_detail"]],
         current_codes,
         predecessors,
         combine=_combine_zrr,
     )
-    frr = fill_missing_communes(
+    frr = fill_missing_municipalities(
         frr[["city_code", "frr_code"]],
         current_codes,
         predecessors,
         combine=lambda r: r.head(1),
     )
 
-    df = cities.merge(commune_labels, on="commune_code", how="left")
-    df = _join_commune_attributes(df, [epci, density, zrr, frr])
+    df = cities.merge(municipality_labels, on="municipality_code", how="left")
+    df = _join_municipality_attributes(df, [epci, density, zrr, frr])
     df = _join_cog_labels(
         df,
         {
@@ -230,4 +233,4 @@ def build_geo_commune(
     df["epci_code"] = df["epci_code"].fillna(NO_EPCI_CODE)
     df["epci_label"] = df["epci_label"].fillna(NO_EPCI_LABEL)
     df["density_level"] = df["density_level"].astype("Int64")
-    return df.reindex(columns=GEO_COMMUNE_COLUMNS)
+    return df.reindex(columns=GEO_MUNICIPALITY_COLUMNS)

@@ -28,7 +28,7 @@ budget.
     together with the entity filter in one subquery, and no `?matching_score`
     column is produced — music's matching score is computed separately by
     `music_ids` (see below) and merged in client-side
-    (`cli/extract_from_wikidata.py::merge_data`).
+    (`src/utils/wikidata_merge.py::merge_data`).
 
   Every multi-valued field (aliases_fr, aliases_en, professions, genres,
   languages_spoken) is computed in its **own** subquery (the `entity_filter()`
@@ -81,12 +81,14 @@ then becomes the Pass 1 (discovery) template.
   *always* cheap, because it's just re-stating the same small `VALUES` list,
   not re-scanning a multi-million-candidate population. 
 
-  Orchestration (`cli/extract_from_wikidata.py`):
-  - `extract`'s two-pass branch: runs Pass 1 once, chunks the discovered IDs
-    into batches of `hydration_batch_size`, calls `hydrate_batch` per batch
-    (with `HYDRATION_BATCH_DELAY_SECONDS` between them), then inner-merges
-    Pass 1 (id + matching_score) with the concatenated Pass 2 results on
-    `wikidata_id`.
+  Orchestration: `cli/extract_from_wikidata.py`'s `extract` command drives the
+  two-pass branch (runs Pass 1 once, chunks the discovered IDs into batches of
+  `hydration_batch_size`, calls `hydrate_batch` per batch with
+  `HYDRATION_BATCH_DELAY_SECONDS` between them, then inner-merges Pass 1 —
+  id + matching_score — with the concatenated Pass 2 results on
+  `wikidata_id`); the underlying two-pass logic it calls into lives in
+  `src/utils/wikidata_extraction.py`, and the raw QLever HTTP fetch/retry
+  client that in turn calls into lives in `src/utils/qlever.py`.
   - `hydrate_batch` bisects a batch and recurses whenever QLever rejects it
     as too expensive (`QLeverQueryTooExpensive`, detected via
     `_is_cost_rejection` — an HTTP 429 whose body names a timeout/cost
@@ -123,22 +125,43 @@ trusting it, not a guarantee — `hydrate_batch`'s bisection self-heals at
 runtime regardless, so getting it slightly wrong just costs some wasted
 first-attempt time, not correctness.
 
+### Resuming after a mid-run failure
+
+Per the pipeline specification's "Checkpointing" section, `extract` persists
+Pass 1's result and each hydrated Pass 2 batch to a local directory
+(`CHECKPOINT_ROOT_DIR/<query_name>`, via `src/utils/wikidata_checkpoint.py`) as it
+goes:
+- `discovery.parquet` — Pass 1's output, so an Airflow-level retry of this
+  same task doesn't re-run it.
+- `batches/<index>.parquet` + `processed_batches.log` — one file per
+  successfully hydrated batch, plus a log of which batch indexes are done.
+  `extract` skips straight to loading the file for any index already in the
+  log instead of re-fetching it.
+- `dropped_ids.json` — the `dropped_ids` accumulator, so entities dropped in
+  an earlier attempt are still reported (and still excluded) after a resume.
+
+This works because of how the DAG runs `extract`: `InstallDependenciesOperator`
+clones the repo once per DAG run (`vm_init`, before any `extract_{target}`
+task), and an Airflow-level retry of `extract_{target}` re-SSHes into the
+*same* VM without re-cloning — so the checkpoint directory survives exactly
+the retries it needs to. The checkpoint is deleted once `extract` finishes
+successfully, so a fresh month's run (a fresh VM) always starts clean, and
+there's no cross-month state to go stale.
+
+This only applies to two-pass targets — Strategy 1 already gets Airflow-level
+retry safety "for free" (a single-shot query is cheap and fast enough that
+redoing it from scratch isn't a real cost), and doesn't have a Pass 2 to
+checkpoint into.
+
 ### What this deliberately does not implement
 
 The two-pass pattern was adapted from a fuller pipeline specification that
-also called for local-disk checkpointing (resume Pass 2 from a
-`processed_batches.log` after a crash) and streaming each batch straight to
-disk instead of holding results in memory. Both were left out here:
-- **Checkpointing**: `extract` already gets coarser-grained retry safety for
-  free from Airflow's task-level `retries` in the DAG, and Pass 1 is cheap
-  enough (18s) that redoing it from scratch on a retry isn't a real cost.
-  Worth adding if `gkg`'s Pass 2 ever grows expensive enough, or flaky enough,
-  that redoing already-completed batches becomes the dominant cost of a retry.
-- **Disk streaming**: `gkg`'s full hydrated population is a few hundred MB in
-  memory at most, well within the extraction VM's RAM — the concern the spec
-  raises doesn't bite at this scale. Revisit if a future two-pass domain's
-  population is large enough that holding all its batches in memory
-  simultaneously becomes the actual bottleneck.
+also called for streaming each batch straight to disk instead of holding
+results in memory. `gkg`'s full hydrated population is a few hundred MB in
+memory at most, well within the extraction VM's RAM — the concern the spec
+raises doesn't bite at this scale. Revisit if a future two-pass domain's
+population is large enough that holding all its batches in memory
+simultaneously becomes the actual bottleneck.
 
 ## Adding a new domain
 

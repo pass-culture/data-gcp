@@ -12,7 +12,5 @@ It restricts the population to the milestone ages 15-20 and adds, for each
 `milestone_age` / `department_code`, a 12-month rolling sum of the estimated population.
 
 It is the population denominator feeding
-[`metrics_population__coverage`](#!/model/model.data_gcp_dbt.metrics_population__coverage)
-and replaces the legacy
-[`int_kpi__population_coverage`](#!/model/model.data_gcp_dbt.int_kpi__population_coverage).
+[`metrics_population__coverage`](#!/model/model.data_gcp_dbt.metrics_population__coverage).
 {% enddocs %}

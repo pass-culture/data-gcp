@@ -3,6 +3,7 @@ PREFIX wdt: <http://www.wikidata.org/prop/direct/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX schema: <http://schema.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 {% macro entity_filter(properties=id_properties) -%}
 {% set clauses = [] %}
 {% for p in properties if p.filter %}
@@ -11,6 +12,10 @@ PREFIX schema: <http://schema.org/>
 ?wikidata_id wdt:P31 ?type .
       VALUES ?type { {{ entity_types | join(' ') }} }
       { {{ clauses | join('\n        UNION ') }} }
+{%- if id_range %}
+      BIND(xsd:integer(STRAFTER(STR(?wikidata_id), "Q")) AS ?qnum)
+      FILTER(?qnum >= {{ id_range[0] }} && ?qnum < {{ id_range[1] }})
+{%- endif %}
 {%- endmacro %}
 
 SELECT

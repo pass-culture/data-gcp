@@ -8,6 +8,12 @@ match, which template(s) to render them with, and (for domains that need it) how
 to batch the work. Nothing here is domain-specific by construction — a new domain
 is just a new entry in `QUERY_CONFIGS`.
 
+`_macros.rq.j2` holds the Jinja macros shared by all four query templates below
+(entity/ID-property filtering, the `matching_score` expression, the
+single-valued label/description/image/Wikipedia fetch, and the isolated
+multi-valued-attribute subquery pattern) — see "Shared macros" further down.
+It isn't a template itself and is never passed to `render_query`.
+
 There are two extraction strategies, used depending on how large and how
 "rich" (in multi-valued data) a domain's candidate population is.
 
@@ -31,9 +37,10 @@ budget.
     (`src/utils/wikidata_merge.py::merge_data`).
 
   Every multi-valued field (aliases_fr, aliases_en, professions, genres,
-  languages_spoken) is computed in its **own** subquery (the `entity_filter()`
-  macro re-applies the same entity-type + ID-property filter inside each one)
-  rather than joined together in one scope. This is deliberate: joining
+  languages_spoken) is computed in its **own** subquery, via `_macros.rq.j2`'s
+  `multi_valued_literal()`/`multi_valued_labeled()` macros — each re-applies
+  the same `entity_filter()` scope inside its own subquery — rather than
+  joined together in one scope. This is deliberate: joining
   multiple multi-valued `OPTIONAL`s in one scope makes SPARQL compute their
   full cross-product per entity (aliases_fr × aliases_en × professions ×
   genres × languages) before `GROUP_CONCAT(DISTINCT ...)` collapses it back
@@ -50,9 +57,17 @@ budget.
   platform ID (Spotify, Deezer, Apple Music, Genius, SoundCloud, ISNI) and a
   computed `matching_score`, keyed by `music_ids` in `QUERY_CONFIGS`. Exists
   because `music`'s own query (`base_mode="grouped"`) doesn't compute a score;
-  this one does, using the same isolated-candidate-then-`OPTIONAL`-fetch
-  pattern, restricted to the ID properties themselves (no multi-valued
-  attributes to isolate).
+  this one does, reusing `_macros.rq.j2`'s `entity_filter()` and
+  `matching_score_expr()`, restricted to the ID properties themselves (no
+  multi-valued attributes to isolate). It isn't just `extract_discovery.rq.j2`
+  under another name: it wraps the ID-property fetch in `GROUP BY ?wikidata_id`
+  + `MIN(...)` per property so an entity with more than one value on a given
+  property (real and non-rare for `isni_id` in particular) still yields
+  exactly one row — required because `merge_data` left-merges this query's
+  output onto `music`'s own rows on `wikidata_id` and a duplicate row there
+  would fan out `music`'s rows too. `extract_discovery.rq.j2` skips that
+  aggregation on purpose (see its own entry below), so it can't stand in for
+  this template as-is.
 
 ## Strategy 2: two-pass discovery + hydration (`gkg`)
 
@@ -67,19 +82,27 @@ A `QueryConfig` opts into this by setting `hydration_batch_size`; `template`
 then becomes the Pass 1 (discovery) template.
 
 - **`extract_discovery.rq.j2`** (Pass 1) — a cheap, single query enumerating
-  *every* entity matching the domain's entity filter, with its external-ID
-  value(s) and matching score. No multi-valued joins, no `GROUP_CONCAT`, no
-  sort — just an index scan and a hash join, which is exactly what QLever is
-  built to do fast at scale.
+  *every* entity matching the domain's entity filter (`_macros.rq.j2`'s
+  `entity_filter()`), with its external-ID value(s) and matching score
+  (`matching_score_expr()`). No multi-valued joins, no `GROUP_CONCAT`, no
+  sort, and — unlike `extract_artist_ids.rq.j2` — deliberately no `GROUP BY`
+  aggregation either: it's just an index scan and a hash join, which is
+  exactly what QLever is built to do fast at scale. The tradeoff is that an
+  entity with more than one value on a given ID property yields more than one
+  row here; that's a non-issue for `gkg` (a single ID property) but is exactly
+  why `music_ids` needs its own template instead of pointing at this one (see
+  `extract_artist_ids.rq.j2` above).
 
 - **`extract_hydration.rq.j2`** (Pass 2) — fetches the expensive multi-valued
   attributes for an explicit, client-supplied batch of entities
-  (`wikidata_ids`), scoped via `VALUES ?wikidata_id { wd:Q1 wd:Q2 ... }`
-  instead of re-deriving the entity filter (Pass 1 already found these
-  entities). Like `extract_artists.rq.j2`, each multi-valued field is
-  computed in its own subquery — but here, re-stating the filter per field is
-  *always* cheap, because it's just re-stating the same small `VALUES` list,
-  not re-scanning a multi-million-candidate population. 
+  (`wikidata_ids`), scoped via `_macros.rq.j2`'s `values_scope()`
+  (`VALUES ?wikidata_id { wd:Q1 wd:Q2 ... }`) instead of re-deriving the
+  entity filter (Pass 1 already found these entities). Like
+  `extract_artists.rq.j2`, each multi-valued field is computed in its own
+  subquery via the same `multi_valued_literal()`/`multi_valued_labeled()`
+  macros — but here, re-stating the filter per field is *always* cheap,
+  because it's just re-stating the same small `VALUES` list, not re-scanning
+  a multi-million-candidate population. 
 
   Orchestration: `cli/extract_from_wikidata.py`'s `extract` command drives the
   two-pass branch (runs Pass 1 once, chunks the discovered IDs into batches of
@@ -162,6 +185,47 @@ memory at most, well within the extraction VM's RAM — the concern the spec
 raises doesn't bite at this scale. Revisit if a future two-pass domain's
 population is large enough that holding all its batches in memory
 simultaneously becomes the actual bottleneck.
+
+## Shared macros (`_macros.rq.j2`)
+
+All four templates `{% import "_macros.rq.j2" as m %}` rather than each
+redefining the same SPARQL fragments (as they used to — see git history prior
+to this factoring). What's in there:
+
+- `entity_filter(entity_types, id_properties)` — the entity-type +
+  "has at least one filterable ID property" filter. Used by
+  `extract_artists.rq.j2`, `extract_artist_ids.rq.j2`, and
+  `extract_discovery.rq.j2` to discover candidates from scratch.
+- `values_scope(wikidata_ids)` — the `VALUES ?wikidata_id { ... }` equivalent,
+  used only by `extract_hydration.rq.j2`, which is handed an explicit id list
+  instead of deriving one.
+- `matching_score_expr(id_properties)` — the bare `IF(BOUND(?x), 1, 0) + ...`
+  sum, used by `extract_artist_ids.rq.j2`'s outer `SELECT` list,
+  `extract_artists.rq.j2`'s `base_mode="scored"` branch, and
+  `extract_discovery.rq.j2`, each wrapping it in whatever their own context
+  needs (a `SELECT`-list alias vs. a `BIND`).
+- `labels_description_image()` / `wikipedia_url()` — the label
+  (fr/en/mul, coalesced) + description + image, and Wikipedia-URL-via-
+  `schema:about` blocks, shared verbatim by `extract_artists.rq.j2` (both
+  `base_mode`s) and `extract_hydration.rq.j2`.
+- `birth_date(scope="")` — the isolated `MIN(?birth_date)` subquery, shared
+  by `extract_artists.rq.j2`'s `base_mode="scored"` branch (no `scope`: the
+  entity is already bound by the base subquery there) and
+  `extract_hydration.rq.j2` (scoped via `values_scope()`).
+- `multi_valued_literal(...)` / `multi_valued_labeled(...)` — the isolated
+  multi-valued-attribute subquery pattern described under Strategy 1 above,
+  parameterized by predicate and (for the "labeled" variant, used by
+  professions/genres/languages_spoken) the intermediate entity + label
+  variable names. Shared by `extract_artists.rq.j2` and
+  `extract_hydration.rq.j2`; each passes its own `scope` (`entity_filter()`
+  or `values_scope()`).
+
+What's deliberately **not** factored: `extract_discovery.rq.j2`'s lack of a
+`GROUP BY`/`MIN` dedup step (see its entry above) and `extract_artists.rq.j2`'s
+`base_mode="grouped"` vs `"scored"` branching aren't pushed into a shared
+macro, because they're real behavioral differences between templates, not
+copy-pasted boilerplate — a macro would just hide the difference behind a
+flag instead of removing any duplication.
 
 ## Adding a new domain
 

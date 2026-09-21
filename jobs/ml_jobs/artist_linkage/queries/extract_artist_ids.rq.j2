@@ -1,26 +1,14 @@
 PREFIX wd: <http://www.wikidata.org/entity/>
 PREFIX wdt: <http://www.wikidata.org/prop/direct/>
-{% macro entity_filter(properties=id_properties) -%}
-{% set clauses = [] %}
-{% for p in properties if p.filter %}
-{% set _ = clauses.append('{ ?wikidata_id ' ~ p.property ~ ' [] . }') %}
-{% endfor %}
-?wikidata_id wdt:P31 ?type .
-      VALUES ?type { {{ entity_types | join(' ') }} }
-      { {{ clauses | join('\n        UNION ') }} }
-{%- endmacro %}
+{% import "_macros.rq.j2" as m %}
 
 SELECT
   ?wikidata_id
 {% for p in id_properties %}
   ?{{ p.var }}
 {% endfor %}
-{% set bound_checks = [] %}
-{% for p in id_properties %}
-{% set _ = bound_checks.append('IF(BOUND(?' ~ p.var ~ '), 1, 0)') %}
-{% endfor %}
   (
-    {{ bound_checks | join(' +\n    ') }}
+    {{ m.matching_score_expr(id_properties) }}
   AS ?matching_score)
 WHERE {
   {
@@ -30,7 +18,7 @@ WHERE {
       (MIN(?{{ p.var }}_raw) AS ?{{ p.var }})
 {% endfor %}
     WHERE {
-      {{ entity_filter() }}
+      {{ m.entity_filter(entity_types, id_properties) }}
 
 {% for p in id_properties %}
       OPTIONAL { ?wikidata_id {{ p.property }} ?{{ p.var }}_raw . }

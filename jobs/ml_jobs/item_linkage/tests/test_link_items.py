@@ -61,8 +61,19 @@ class TestChunkify:
 
 class TestPostprocessMatching:
     def _run(self, matches):
-        candidates = pd.DataFrame({"item_id_candidate": ["cand0", "cand1"]})
-        sources = pd.DataFrame({"item_id_synchro": ["syn0", "syn1"]})
+        # editions are all-NA so the edition veto is a no-op for these tests.
+        candidates = pd.DataFrame(
+            {
+                "item_id_candidate": ["cand0", "cand1"],
+                "edition": pd.array([pd.NA, pd.NA], dtype="Int64"),
+            }
+        )
+        sources = pd.DataFrame(
+            {
+                "item_id_synchro": ["syn0", "syn1"],
+                "edition": pd.array([pd.NA, pd.NA], dtype="Int64"),
+            }
+        )
         return postprocess_matching(matches, candidates, sources)
 
     def test_maps_indices_back_to_item_ids(self):
@@ -107,6 +118,40 @@ class TestPostprocessMatching:
         )
         final, _ = self._run(matches)
         assert len(final) == 1
+
+
+class TestPostprocessMatchingEditionVeto:
+    """The edition guard drops pairs whose editions are both present and differ."""
+
+    def _run(self, matches, cand_editions, src_editions):
+        candidates = pd.DataFrame(
+            {
+                "item_id_candidate": ["cand0", "cand1"],
+                "edition": pd.array(cand_editions, dtype="Int64"),
+            }
+        )
+        sources = pd.DataFrame(
+            {
+                "item_id_synchro": ["syn0", "syn1"],
+                "edition": pd.array(src_editions, dtype="Int64"),
+            }
+        )
+        return postprocess_matching(matches, candidates, sources)
+
+    def test_drops_pair_with_conflicting_editions(self):
+        matches = pd.DataFrame({"index_1": [0], "index_2": [0], "oeuvre_score": [1]})
+        final, _ = self._run(matches, cand_editions=[3, pd.NA], src_editions=[5, pd.NA])
+        assert final.empty
+
+    def test_keeps_pair_when_one_edition_is_missing(self):
+        matches = pd.DataFrame({"index_1": [1], "index_2": [1], "oeuvre_score": [1]})
+        final, _ = self._run(matches, cand_editions=[3, pd.NA], src_editions=[5, 3])
+        assert final["item_id_candidate"].tolist() == ["cand1"]
+
+    def test_keeps_pair_with_equal_editions(self):
+        matches = pd.DataFrame({"index_1": [0], "index_2": [0], "oeuvre_score": [1]})
+        final, _ = self._run(matches, cand_editions=[3, pd.NA], src_editions=[3, pd.NA])
+        assert final["item_id_candidate"].tolist() == ["cand0"]
 
 
 class TestExtractUnmatchedElements:

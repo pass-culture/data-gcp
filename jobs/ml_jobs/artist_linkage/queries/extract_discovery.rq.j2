@@ -1,13 +1,6 @@
 PREFIX wd: <http://www.wikidata.org/entity/>
 PREFIX wdt: <http://www.wikidata.org/prop/direct/>
-{% set clauses = [] %}
-{% for p in id_properties if p.filter %}
-{% set _ = clauses.append('{ ?wikidata_id ' ~ p.property ~ ' [] . }') %}
-{% endfor %}
-{% set bound_checks = [] %}
-{% for p in id_properties %}
-{% set _ = bound_checks.append('IF(BOUND(?' ~ p.var ~ '), 1, 0)') %}
-{% endfor %}
+{% import "_macros.rq.j2" as m %}
 
 {#
   Pass 1 (Discovery) of the two-pass discovery+hydration pattern (see
@@ -21,13 +14,11 @@ PREFIX wdt: <http://www.wikidata.org/prop/direct/>
   reliably — see extract_hydration_isolated.rq.j2's docstring).
 #}
 SELECT DISTINCT ?wikidata_id {% for p in id_properties %}?{{ p.var }} {% endfor %}?matching_score WHERE {
-  ?wikidata_id wdt:P31 ?type .
-  VALUES ?type { {{ entity_types | join(' ') }} }
-  { {{ clauses | join(' UNION ') }} }
+  {{ m.entity_filter(entity_types, id_properties) }}
   {% for p in id_properties %}
   OPTIONAL { ?wikidata_id {{ p.property }} ?{{ p.var }} . }
   {% endfor %}
   BIND(
-    ({{ bound_checks | join(' +\n     ') }})
+    ({{ m.matching_score_expr(id_properties) }})
   AS ?matching_score)
 }

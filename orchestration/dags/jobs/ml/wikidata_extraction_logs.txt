@@ -1,0 +1,591 @@
+                     uv run python cli/extract_from_wikidata.py extract                     --query-name music                     --output-file-path gs://data-bucket-prod/dump_wikidata/20260901/raw/music.parquet
+                    
+[2026-09-21T12:28:18.393+0000] {ssh.py:490} WARNING - 2026-09-21 12:28:18.389 | INFO     | __main__:clear_qlever_cache:121 - Cache cleared for https://qlever.cs.uni-freiburg.de/api/wikidata
+[2026-09-21T12:28:18.393+0000] {ssh.py:490} WARNING - 2026-09-21 12:28:18.391 | INFO     | __main__:extract:182 - Fetch the data in CSV format for music
+[2026-09-21T12:28:18.405+0000] {ssh.py:490} WARNING - 2026-09-21 12:28:18.402 | DEBUG    | __main__:extract:184 - SPARQL Query: 
+[2026-09-21T12:28:18.406+0000] {ssh.py:490} WARNING - PREFIX wd: <http://www.wikidata.org/entity/>
+[2026-09-21T12:28:18.406+0000] {ssh.py:490} WARNING - PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+[2026-09-21T12:28:18.406+0000] {ssh.py:490} WARNING - PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+[2026-09-21T12:28:18.406+0000] {ssh.py:490} WARNING - PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+[2026-09-21T12:28:18.406+0000] {ssh.py:490} WARNING - PREFIX schema: <http://schema.org/>
+[2026-09-21T12:28:18.406+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:28:18.407+0000] {ssh.py:490} WARNING - SELECT
+[2026-09-21T12:28:18.407+0000] {ssh.py:490} WARNING -   ?wikidata_id
+[2026-09-21T12:28:18.407+0000] {ssh.py:490} WARNING -   ?artist_name_fr
+[2026-09-21T12:28:18.407+0000] {ssh.py:490} WARNING -   ?artist_name_en
+[2026-09-21T12:28:18.407+0000] {ssh.py:490} WARNING -   ?artist_description
+[2026-09-21T12:28:18.407+0000] {ssh.py:490} WARNING -   ?wikipedia_url
+[2026-09-21T12:28:18.407+0000] {ssh.py:490} WARNING -   ?img
+[2026-09-21T12:28:18.407+0000] {ssh.py:490} WARNING -   ?gkg_id
+[2026-09-21T12:28:18.408+0000] {ssh.py:490} WARNING -   ?aliases_fr
+[2026-09-21T12:28:18.408+0000] {ssh.py:490} WARNING -   ?aliases_en
+[2026-09-21T12:28:18.408+0000] {ssh.py:490} WARNING -   ?professions
+[2026-09-21T12:28:18.408+0000] {ssh.py:490} WARNING -   ?genres
+[2026-09-21T12:28:18.408+0000] {ssh.py:490} WARNING -   ?languages_spoken
+[2026-09-21T12:28:18.408+0000] {ssh.py:490} WARNING -   ?birth_date_val
+[2026-09-21T12:28:18.408+0000] {ssh.py:490} WARNING - WHERE {
+[2026-09-21T12:28:18.408+0000] {ssh.py:490} WARNING -   # 1. Base Selection & Single-Valued Attributes
+[2026-09-21T12:28:18.408+0000] {ssh.py:490} WARNING -   {
+[2026-09-21T12:28:18.408+0000] {ssh.py:490} WARNING -     SELECT DISTINCT ?wikidata_id ?artist_name_fr ?artist_name_en ?artist_description ?wikipedia_url ?img ?gkg_id (MIN(?birth_date) AS ?birth_date_val) WHERE {
+[2026-09-21T12:28:18.409+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:28:18.409+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 wd:Q215380 wd:Q216337 wd:Q641066 }
+[2026-09-21T12:28:18.409+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P1902 [] . }
+[2026-09-21T12:28:18.409+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2850 [] . }
+[2026-09-21T12:28:18.409+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2722 [] . }
+[2026-09-21T12:28:18.409+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2373 [] . }
+[2026-09-21T12:28:18.409+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P3040 [] . } }
+[2026-09-21T12:28:18.409+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:28:18.409+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id rdfs:label ?lbl_fr . FILTER(LANG(?lbl_fr) = "fr") }
+[2026-09-21T12:28:18.410+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id rdfs:label ?lbl_en . FILTER(LANG(?lbl_en) = "en") }
+[2026-09-21T12:28:18.410+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id rdfs:label ?lbl_mul . FILTER(LANG(?lbl_mul) = "mul") }
+[2026-09-21T12:28:18.410+0000] {ssh.py:490} WARNING -       BIND(COALESCE(?lbl_fr, ?lbl_mul, ?lbl_en) AS ?artist_name_fr)
+[2026-09-21T12:28:18.410+0000] {ssh.py:490} WARNING -       BIND(?lbl_en AS ?artist_name_en)
+[2026-09-21T12:28:18.410+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:28:18.410+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id schema:description ?artist_description . FILTER(LANG(?artist_description) = "fr") }
+[2026-09-21T12:28:18.410+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id wdt:P18 ?img . }
+[2026-09-21T12:28:18.410+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id wdt:P2671 ?gkg_id . }
+[2026-09-21T12:28:18.410+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id wdt:P569 ?birth_date . }
+[2026-09-21T12:28:18.411+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:28:18.411+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikipedia_url_fr schema:about ?wikidata_id ; schema:isPartOf <https://fr.wikipedia.org/> . }
+[2026-09-21T12:28:18.411+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikipedia_url_en schema:about ?wikidata_id ; schema:isPartOf <https://en.wikipedia.org/> . }
+[2026-09-21T12:28:18.411+0000] {ssh.py:490} WARNING -       BIND(COALESCE(?wikipedia_url_fr, ?wikipedia_url_en) AS ?wikipedia_url)
+[2026-09-21T12:28:18.411+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:28:18.411+0000] {ssh.py:490} WARNING -       FILTER ((?artist_name_fr != "") || (?artist_name_en != ""))
+[2026-09-21T12:28:18.411+0000] {ssh.py:490} WARNING -     }
+[2026-09-21T12:28:18.411+0000] {ssh.py:490} WARNING -     GROUP BY ?wikidata_id ?artist_name_fr ?artist_name_en ?artist_description ?wikipedia_url ?img ?gkg_id
+[2026-09-21T12:28:18.411+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:28:18.412+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:28:18.412+0000] {ssh.py:490} WARNING -   # 3. Restricted Subqueries for Multi-Valued Attributes
+[2026-09-21T12:28:18.412+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:28:18.412+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?alias_fr; separator="|") AS ?aliases_fr) WHERE {
+[2026-09-21T12:28:18.412+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:28:18.412+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 wd:Q215380 wd:Q216337 wd:Q641066 }
+[2026-09-21T12:28:18.412+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P1902 [] . }
+[2026-09-21T12:28:18.412+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2850 [] . }
+[2026-09-21T12:28:18.412+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2722 [] . }
+[2026-09-21T12:28:18.413+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2373 [] . }
+[2026-09-21T12:28:18.413+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P3040 [] . } }
+[2026-09-21T12:28:18.413+0000] {ssh.py:490} WARNING -       ?wikidata_id skos:altLabel ?alias_fr .
+[2026-09-21T12:28:18.413+0000] {ssh.py:490} WARNING -       FILTER(LANG(?alias_fr) = "fr")
+[2026-09-21T12:28:18.413+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:28:18.413+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:28:18.413+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:28:18.413+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:28:18.414+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?alias_en; separator="|") AS ?aliases_en) WHERE {
+[2026-09-21T12:28:18.414+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:28:18.414+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 wd:Q215380 wd:Q216337 wd:Q641066 }
+[2026-09-21T12:28:18.414+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P1902 [] . }
+[2026-09-21T12:28:18.414+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2850 [] . }
+[2026-09-21T12:28:18.414+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2722 [] . }
+[2026-09-21T12:28:18.414+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2373 [] . }
+[2026-09-21T12:28:18.414+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P3040 [] . } }
+[2026-09-21T12:28:18.414+0000] {ssh.py:490} WARNING -       ?wikidata_id skos:altLabel ?alias_en .
+[2026-09-21T12:28:18.415+0000] {ssh.py:490} WARNING -       FILTER(LANG(?alias_en) = "en")
+[2026-09-21T12:28:18.415+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:28:18.415+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:28:18.415+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:28:18.415+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:28:18.415+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?profLbl; separator="|") AS ?professions) WHERE {
+[2026-09-21T12:28:18.415+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:28:18.415+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 wd:Q215380 wd:Q216337 wd:Q641066 }
+[2026-09-21T12:28:18.415+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P1902 [] . }
+[2026-09-21T12:28:18.416+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2850 [] . }
+[2026-09-21T12:28:18.416+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2722 [] . }
+[2026-09-21T12:28:18.416+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2373 [] . }
+[2026-09-21T12:28:18.416+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P3040 [] . } }
+[2026-09-21T12:28:18.416+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P106 ?prof .
+[2026-09-21T12:28:18.416+0000] {ssh.py:490} WARNING -       ?prof rdfs:label ?profLbl .
+[2026-09-21T12:28:18.416+0000] {ssh.py:490} WARNING -       FILTER(LANG(?profLbl) = "fr")
+[2026-09-21T12:28:18.416+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:28:18.416+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:28:18.417+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:28:18.417+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:28:18.417+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?genreLbl; separator="|") AS ?genres) WHERE {
+[2026-09-21T12:28:18.417+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:28:18.417+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 wd:Q215380 wd:Q216337 wd:Q641066 }
+[2026-09-21T12:28:18.417+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P1902 [] . }
+[2026-09-21T12:28:18.417+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2850 [] . }
+[2026-09-21T12:28:18.417+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2722 [] . }
+[2026-09-21T12:28:18.418+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2373 [] . }
+[2026-09-21T12:28:18.418+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P3040 [] . } }
+[2026-09-21T12:28:18.418+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P136 ?genre .
+[2026-09-21T12:28:18.418+0000] {ssh.py:490} WARNING -       ?genre rdfs:label ?genreLbl .
+[2026-09-21T12:28:18.418+0000] {ssh.py:490} WARNING -       FILTER(LANG(?genreLbl) = "fr")
+[2026-09-21T12:28:18.418+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:28:18.418+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:28:18.418+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:28:18.418+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:28:18.419+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?langLbl; separator="|") AS ?languages_spoken) WHERE {
+[2026-09-21T12:28:18.419+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:28:18.419+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 wd:Q215380 wd:Q216337 wd:Q641066 }
+[2026-09-21T12:28:18.419+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P1902 [] . }
+[2026-09-21T12:28:18.419+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2850 [] . }
+[2026-09-21T12:28:18.419+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2722 [] . }
+[2026-09-21T12:28:18.419+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2373 [] . }
+[2026-09-21T12:28:18.419+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P3040 [] . } }
+[2026-09-21T12:28:18.419+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P1412 ?lang .
+[2026-09-21T12:28:18.419+0000] {ssh.py:490} WARNING -       ?lang rdfs:label ?langLbl .
+[2026-09-21T12:28:18.420+0000] {ssh.py:490} WARNING -       FILTER(LANG(?langLbl) = "fr")
+[2026-09-21T12:28:18.420+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:28:18.420+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:28:18.420+0000] {ssh.py:490} WARNING - }
+[2026-09-21T12:28:28.605+0000] {ssh.py:490} WARNING - 2026-09-21 12:28:28.597 | INFO     | __main__:extract:196 - Retrieved 91102 rows.
+[2026-09-21T12:28:28.606+0000] {ssh.py:490} WARNING - 2026-09-21 12:28:28.598 | INFO     | __main__:extract:197 - Saving raw results to gs://data-bucket-prod/dump_wikidata/20260901/raw/music.parquet
+[2026-09-21T12:28:30.161+0000] {ssh.py:490} WARNING - 2026-09-21 12:28:30.156 | INFO     | __main__:extract:199 - Raw results saved successfully to gs://data-bucket-prod/dump_wikidata/20260901/raw/music.parquet
+
+
+uv run python cli/extract_from_wikidata.py extract                     --query-name music_ids                     --output-file-path gs://data-bucket-prod/dump_wikidata/20260901/raw/music_ids.parquet
+                    
+[2026-09-21T12:28:49.931+0000] {ssh.py:490} WARNING - 2026-09-21 12:28:49.923 | INFO     | __main__:clear_qlever_cache:121 - Cache cleared for https://qlever.cs.uni-freiburg.de/api/wikidata
+[2026-09-21T12:28:49.932+0000] {ssh.py:490} WARNING - 2026-09-21 12:28:49.926 | INFO     | __main__:extract:182 - Fetch the data in CSV format for music_ids
+[2026-09-21T12:28:49.937+0000] {ssh.py:490} WARNING - 2026-09-21 12:28:49.934 | DEBUG    | __main__:extract:184 - SPARQL Query: 
+[2026-09-21T12:28:49.937+0000] {ssh.py:490} WARNING - PREFIX wd: <http://www.wikidata.org/entity/>
+[2026-09-21T12:28:49.937+0000] {ssh.py:490} WARNING - PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+[2026-09-21T12:28:49.937+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:28:49.937+0000] {ssh.py:490} WARNING - SELECT
+[2026-09-21T12:28:49.938+0000] {ssh.py:490} WARNING -   ?wikidata_id
+[2026-09-21T12:28:49.938+0000] {ssh.py:490} WARNING -   ?spotify_id
+[2026-09-21T12:28:49.938+0000] {ssh.py:490} WARNING -   ?isni_id
+[2026-09-21T12:28:49.938+0000] {ssh.py:490} WARNING -   ?apple_music_id
+[2026-09-21T12:28:49.938+0000] {ssh.py:490} WARNING -   ?deezer_id
+[2026-09-21T12:28:49.938+0000] {ssh.py:490} WARNING -   ?genius_id
+[2026-09-21T12:28:49.938+0000] {ssh.py:490} WARNING -   ?soundcloud_id
+[2026-09-21T12:28:49.938+0000] {ssh.py:490} WARNING -   (
+[2026-09-21T12:28:49.938+0000] {ssh.py:490} WARNING -     IF(BOUND(?spotify_id), 1, 0) +
+[2026-09-21T12:28:49.939+0000] {ssh.py:490} WARNING -     IF(BOUND(?isni_id), 1, 0) +
+[2026-09-21T12:28:49.939+0000] {ssh.py:490} WARNING -     IF(BOUND(?apple_music_id), 1, 0) +
+[2026-09-21T12:28:49.939+0000] {ssh.py:490} WARNING -     IF(BOUND(?deezer_id), 1, 0) +
+[2026-09-21T12:28:49.939+0000] {ssh.py:490} WARNING -     IF(BOUND(?genius_id), 1, 0) +
+[2026-09-21T12:28:49.939+0000] {ssh.py:490} WARNING -     IF(BOUND(?soundcloud_id), 1, 0)
+[2026-09-21T12:28:49.939+0000] {ssh.py:490} WARNING -   AS ?matching_score)
+[2026-09-21T12:28:49.939+0000] {ssh.py:490} WARNING - WHERE {
+[2026-09-21T12:28:49.939+0000] {ssh.py:490} WARNING -   {
+[2026-09-21T12:28:49.939+0000] {ssh.py:490} WARNING -     SELECT
+[2026-09-21T12:28:49.940+0000] {ssh.py:490} WARNING -       ?wikidata_id
+[2026-09-21T12:28:49.940+0000] {ssh.py:490} WARNING -       (MIN(?spotify_id_raw) AS ?spotify_id)
+[2026-09-21T12:28:49.940+0000] {ssh.py:490} WARNING -       (MIN(?isni_id_raw) AS ?isni_id)
+[2026-09-21T12:28:49.940+0000] {ssh.py:490} WARNING -       (MIN(?apple_music_id_raw) AS ?apple_music_id)
+[2026-09-21T12:28:49.940+0000] {ssh.py:490} WARNING -       (MIN(?deezer_id_raw) AS ?deezer_id)
+[2026-09-21T12:28:49.940+0000] {ssh.py:490} WARNING -       (MIN(?genius_id_raw) AS ?genius_id)
+[2026-09-21T12:28:49.940+0000] {ssh.py:490} WARNING -       (MIN(?soundcloud_id_raw) AS ?soundcloud_id)
+[2026-09-21T12:28:49.940+0000] {ssh.py:490} WARNING -     WHERE {
+[2026-09-21T12:28:49.941+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:28:49.941+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 wd:Q215380 wd:Q216337 wd:Q641066 }
+[2026-09-21T12:28:49.941+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P1902 [] . }
+[2026-09-21T12:28:49.941+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2850 [] . }
+[2026-09-21T12:28:49.941+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2722 [] . }
+[2026-09-21T12:28:49.941+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2373 [] . }
+[2026-09-21T12:28:49.941+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P3040 [] . } }
+[2026-09-21T12:28:49.941+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:28:49.941+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id wdt:P1902 ?spotify_id_raw . }
+[2026-09-21T12:28:49.942+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id wdt:P213 ?isni_id_raw . }
+[2026-09-21T12:28:49.942+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id wdt:P2850 ?apple_music_id_raw . }
+[2026-09-21T12:28:49.942+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id wdt:P2722 ?deezer_id_raw . }
+[2026-09-21T12:28:49.942+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id wdt:P2373 ?genius_id_raw . }
+[2026-09-21T12:28:49.942+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id wdt:P3040 ?soundcloud_id_raw . }
+[2026-09-21T12:28:49.942+0000] {ssh.py:490} WARNING -     }
+[2026-09-21T12:28:49.942+0000] {ssh.py:490} WARNING -     GROUP BY ?wikidata_id
+[2026-09-21T12:28:49.942+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:28:49.942+0000] {ssh.py:490} WARNING - }
+[2026-09-21T12:28:51.969+0000] {ssh.py:490} WARNING - 2026-09-21 12:28:51.963 | INFO     | __main__:extract:196 - Retrieved 90514 rows.
+[2026-09-21T12:28:51.970+0000] {ssh.py:490} WARNING - 2026-09-21 12:28:51.964 | INFO     | __main__:extract:197 - Saving raw results to gs://data-bucket-prod/dump_wikidata/20260901/raw/music_ids.parquet
+[2026-09-21T12:28:52.757+0000] {ssh.py:490} WARNING - 2026-09-21 12:28:52.755 | INFO     | __main__:extract:199 - Raw results saved successfully to gs://data-bucket-prod/dump_wikidata/20260901/raw/music_ids.parquet
+
+
+                     uv run python cli/extract_from_wikidata.py extract                     --query-name book                     --output-file-path gs://data-bucket-prod/dump_wikidata/20260901/raw/book.parquet
+                    
+[2026-09-21T12:29:14.794+0000] {ssh.py:490} WARNING - 2026-09-21 12:29:14.793 | INFO     | __main__:clear_qlever_cache:121 - Cache cleared for https://qlever.cs.uni-freiburg.de/api/wikidata
+[2026-09-21T12:29:14.796+0000] {ssh.py:490} WARNING - 2026-09-21 12:29:14.795 | INFO     | __main__:extract:182 - Fetch the data in CSV format for book
+[2026-09-21T12:29:14.809+0000] {ssh.py:490} WARNING - 2026-09-21 12:29:14.806 | DEBUG    | __main__:extract:184 - SPARQL Query: 
+[2026-09-21T12:29:14.810+0000] {ssh.py:490} WARNING - PREFIX wd: <http://www.wikidata.org/entity/>
+[2026-09-21T12:29:14.810+0000] {ssh.py:490} WARNING - PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+[2026-09-21T12:29:14.810+0000] {ssh.py:490} WARNING - PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+[2026-09-21T12:29:14.810+0000] {ssh.py:490} WARNING - PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+[2026-09-21T12:29:14.810+0000] {ssh.py:490} WARNING - PREFIX schema: <http://schema.org/>
+[2026-09-21T12:29:14.810+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:14.810+0000] {ssh.py:490} WARNING - SELECT
+[2026-09-21T12:29:14.811+0000] {ssh.py:490} WARNING -   ?wikidata_id
+[2026-09-21T12:29:14.811+0000] {ssh.py:490} WARNING -   ?artist_name_fr
+[2026-09-21T12:29:14.811+0000] {ssh.py:490} WARNING -   ?artist_name_en
+[2026-09-21T12:29:14.811+0000] {ssh.py:490} WARNING -   ?artist_description
+[2026-09-21T12:29:14.811+0000] {ssh.py:490} WARNING -   ?wikipedia_url
+[2026-09-21T12:29:14.811+0000] {ssh.py:490} WARNING -   ?img
+[2026-09-21T12:29:14.811+0000] {ssh.py:490} WARNING -   ?gkg_id
+[2026-09-21T12:29:14.811+0000] {ssh.py:490} WARNING -   ?aliases_fr
+[2026-09-21T12:29:14.812+0000] {ssh.py:490} WARNING -   ?aliases_en
+[2026-09-21T12:29:14.812+0000] {ssh.py:490} WARNING -   ?professions
+[2026-09-21T12:29:14.812+0000] {ssh.py:490} WARNING -   ?genres
+[2026-09-21T12:29:14.812+0000] {ssh.py:490} WARNING -   ?languages_spoken
+[2026-09-21T12:29:14.812+0000] {ssh.py:490} WARNING -   ?birth_date_val
+[2026-09-21T12:29:14.812+0000] {ssh.py:490} WARNING -   ?matching_score
+[2026-09-21T12:29:14.812+0000] {ssh.py:490} WARNING - WHERE {
+[2026-09-21T12:29:14.812+0000] {ssh.py:490} WARNING -   # 1. Base Selection & Matching Score Calculation
+[2026-09-21T12:29:14.812+0000] {ssh.py:490} WARNING -   {
+[2026-09-21T12:29:14.813+0000] {ssh.py:490} WARNING -     SELECT DISTINCT ?wikidata_id ?matching_score WHERE {
+[2026-09-21T12:29:14.813+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:29:14.813+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:29:14.813+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P5365 [] . }
+[2026-09-21T12:29:14.813+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P3630 [] . }
+[2026-09-21T12:29:14.813+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2963 [] . }
+[2026-09-21T12:29:14.813+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P4084 [] . } }
+[2026-09-21T12:29:14.813+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id wdt:P5365 ?ibdbfw_id . }
+[2026-09-21T12:29:14.814+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id wdt:P3630 ?babelio_id . }
+[2026-09-21T12:29:14.814+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id wdt:P2963 ?goodreads_id . }
+[2026-09-21T12:29:14.814+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id wdt:P4084 ?myanimelist_id . }
+[2026-09-21T12:29:14.814+0000] {ssh.py:490} WARNING -       BIND(
+[2026-09-21T12:29:14.814+0000] {ssh.py:490} WARNING -         (IF(BOUND(?ibdbfw_id), 1, 0) +
+[2026-09-21T12:29:14.814+0000] {ssh.py:490} WARNING -          IF(BOUND(?babelio_id), 1, 0) +
+[2026-09-21T12:29:14.814+0000] {ssh.py:490} WARNING -          IF(BOUND(?goodreads_id), 1, 0) +
+[2026-09-21T12:29:14.814+0000] {ssh.py:490} WARNING -          IF(BOUND(?myanimelist_id), 1, 0))
+[2026-09-21T12:29:14.814+0000] {ssh.py:490} WARNING -       AS ?matching_score)
+[2026-09-21T12:29:14.815+0000] {ssh.py:490} WARNING -     }
+[2026-09-21T12:29:14.815+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:29:14.815+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:14.815+0000] {ssh.py:490} WARNING -   # 2. Single-valued Labels & Attributes
+[2026-09-21T12:29:14.815+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id rdfs:label ?lbl_fr . FILTER(LANG(?lbl_fr) = "fr") }
+[2026-09-21T12:29:14.815+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id rdfs:label ?lbl_en . FILTER(LANG(?lbl_en) = "en") }
+[2026-09-21T12:29:14.815+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id rdfs:label ?lbl_mul . FILTER(LANG(?lbl_mul) = "mul") }
+[2026-09-21T12:29:14.815+0000] {ssh.py:490} WARNING -   BIND(COALESCE(?lbl_fr, ?lbl_mul, ?lbl_en) AS ?artist_name_fr)
+[2026-09-21T12:29:14.816+0000] {ssh.py:490} WARNING -   BIND(?lbl_en AS ?artist_name_en)
+[2026-09-21T12:29:14.816+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:14.816+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id schema:description ?artist_description . FILTER(LANG(?artist_description) = "fr") }
+[2026-09-21T12:29:14.816+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id wdt:P18 ?img . }
+[2026-09-21T12:29:14.816+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id wdt:P2671 ?gkg_id . }
+[2026-09-21T12:29:14.816+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:14.816+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:29:14.816+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (MIN(?birth_date) AS ?birth_date_val) WHERE {
+[2026-09-21T12:29:14.817+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P569 ?birth_date .
+[2026-09-21T12:29:14.817+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:29:14.817+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:29:14.817+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:14.817+0000] {ssh.py:490} WARNING -   # 3. Restricted Subqueries for Multi-Valued Attributes
+[2026-09-21T12:29:14.817+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:29:14.817+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?alias_fr; separator="|") AS ?aliases_fr) WHERE {
+[2026-09-21T12:29:14.817+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:29:14.817+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:29:14.818+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P5365 [] . }
+[2026-09-21T12:29:14.818+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P3630 [] . }
+[2026-09-21T12:29:14.818+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2963 [] . }
+[2026-09-21T12:29:14.818+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P4084 [] . } }
+[2026-09-21T12:29:14.818+0000] {ssh.py:490} WARNING -       ?wikidata_id skos:altLabel ?alias_fr .
+[2026-09-21T12:29:14.818+0000] {ssh.py:490} WARNING -       FILTER(LANG(?alias_fr) = "fr")
+[2026-09-21T12:29:14.818+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:29:14.818+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:29:14.818+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:14.819+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:29:14.819+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?alias_en; separator="|") AS ?aliases_en) WHERE {
+[2026-09-21T12:29:14.819+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:29:14.819+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:29:14.819+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P5365 [] . }
+[2026-09-21T12:29:14.819+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P3630 [] . }
+[2026-09-21T12:29:14.819+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2963 [] . }
+[2026-09-21T12:29:14.819+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P4084 [] . } }
+[2026-09-21T12:29:14.820+0000] {ssh.py:490} WARNING -       ?wikidata_id skos:altLabel ?alias_en .
+[2026-09-21T12:29:14.820+0000] {ssh.py:490} WARNING -       FILTER(LANG(?alias_en) = "en")
+[2026-09-21T12:29:14.820+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:29:14.820+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:29:14.820+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:14.820+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:29:14.820+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?profLbl; separator="|") AS ?professions) WHERE {
+[2026-09-21T12:29:14.821+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:29:14.821+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:29:14.821+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P5365 [] . }
+[2026-09-21T12:29:14.821+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P3630 [] . }
+[2026-09-21T12:29:14.821+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2963 [] . }
+[2026-09-21T12:29:14.821+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P4084 [] . } }
+[2026-09-21T12:29:14.822+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P106 ?prof .
+[2026-09-21T12:29:14.822+0000] {ssh.py:490} WARNING -       ?prof rdfs:label ?profLbl .
+[2026-09-21T12:29:14.822+0000] {ssh.py:490} WARNING -       FILTER(LANG(?profLbl) = "fr")
+[2026-09-21T12:29:14.822+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:29:14.822+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:29:14.822+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:14.822+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:29:14.822+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?genreLbl; separator="|") AS ?genres) WHERE {
+[2026-09-21T12:29:14.822+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:29:14.823+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:29:14.823+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P5365 [] . }
+[2026-09-21T12:29:14.823+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P3630 [] . }
+[2026-09-21T12:29:14.823+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2963 [] . }
+[2026-09-21T12:29:14.823+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P4084 [] . } }
+[2026-09-21T12:29:14.823+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P136 ?genre .
+[2026-09-21T12:29:14.823+0000] {ssh.py:490} WARNING -       ?genre rdfs:label ?genreLbl .
+[2026-09-21T12:29:14.823+0000] {ssh.py:490} WARNING -       FILTER(LANG(?genreLbl) = "fr")
+[2026-09-21T12:29:14.824+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:29:14.824+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:29:14.824+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:14.824+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:29:14.824+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?langLbl; separator="|") AS ?languages_spoken) WHERE {
+[2026-09-21T12:29:14.824+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:29:14.824+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:29:14.824+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P5365 [] . }
+[2026-09-21T12:29:14.825+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P3630 [] . }
+[2026-09-21T12:29:14.825+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P2963 [] . }
+[2026-09-21T12:29:14.825+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P4084 [] . } }
+[2026-09-21T12:29:14.825+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P1412 ?lang .
+[2026-09-21T12:29:14.825+0000] {ssh.py:490} WARNING -       ?lang rdfs:label ?langLbl .
+[2026-09-21T12:29:14.825+0000] {ssh.py:490} WARNING -       FILTER(LANG(?langLbl) = "fr")
+[2026-09-21T12:29:14.825+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:29:14.825+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:29:14.825+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:14.826+0000] {ssh.py:490} WARNING -   # 4. Wikipedia
+[2026-09-21T12:29:14.826+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikipedia_url_fr schema:about ?wikidata_id ; schema:isPartOf <https://fr.wikipedia.org/> . }
+[2026-09-21T12:29:14.826+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikipedia_url_en schema:about ?wikidata_id ; schema:isPartOf <https://en.wikipedia.org/> . }
+[2026-09-21T12:29:14.826+0000] {ssh.py:490} WARNING -   BIND(COALESCE(?wikipedia_url_fr, ?wikipedia_url_en) AS ?wikipedia_url)
+[2026-09-21T12:29:14.826+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:14.826+0000] {ssh.py:490} WARNING -   FILTER ((?artist_name_fr != "") || (?artist_name_en != ""))
+[2026-09-21T12:29:14.826+0000] {ssh.py:490} WARNING - }
+[2026-09-21T12:29:25.267+0000] {ssh.py:490} WARNING - 2026-09-21 12:29:25.265 | INFO     | __main__:extract:196 - Retrieved 113603 rows.
+[2026-09-21T12:29:25.268+0000] {ssh.py:490} WARNING - 2026-09-21 12:29:25.265 | INFO     | __main__:extract:197 - Saving raw results to gs://data-bucket-prod/dump_wikidata/20260901/raw/book.parquet
+[2026-09-21T12:29:27.495+0000] {ssh.py:490} WARNING - 2026-09-21 12:29:27.493 | INFO     | __main__:extract:199 - Raw results saved successfully to gs://data-bucket-prod/dump_wikidata/20260901/raw/book.parquet
+
+                     uv run python cli/extract_from_wikidata.py extract                     --query-name movie                     --output-file-path gs://data-bucket-prod/dump_wikidata/20260901/raw/movie.parquet
+                    
+[2026-09-21T12:29:47.929+0000] {ssh.py:490} WARNING - 2026-09-21 12:29:47.927 | INFO     | __main__:clear_qlever_cache:121 - Cache cleared for https://qlever.cs.uni-freiburg.de/api/wikidata
+[2026-09-21T12:29:47.932+0000] {ssh.py:490} WARNING - 2026-09-21 12:29:47.929 | INFO     | __main__:extract:182 - Fetch the data in CSV format for movie
+[2026-09-21T12:29:47.941+0000] {ssh.py:490} WARNING - 2026-09-21 12:29:47.940 | DEBUG    | __main__:extract:184 - SPARQL Query: 
+[2026-09-21T12:29:47.942+0000] {ssh.py:490} WARNING - PREFIX wd: <http://www.wikidata.org/entity/>
+[2026-09-21T12:29:47.942+0000] {ssh.py:490} WARNING - PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+[2026-09-21T12:29:47.942+0000] {ssh.py:490} WARNING - PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+[2026-09-21T12:29:47.942+0000] {ssh.py:490} WARNING - PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+[2026-09-21T12:29:47.942+0000] {ssh.py:490} WARNING - PREFIX schema: <http://schema.org/>
+[2026-09-21T12:29:47.942+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:47.943+0000] {ssh.py:490} WARNING - SELECT
+[2026-09-21T12:29:47.943+0000] {ssh.py:490} WARNING -   ?wikidata_id
+[2026-09-21T12:29:47.943+0000] {ssh.py:490} WARNING -   ?artist_name_fr
+[2026-09-21T12:29:47.943+0000] {ssh.py:490} WARNING -   ?artist_name_en
+[2026-09-21T12:29:47.943+0000] {ssh.py:490} WARNING -   ?artist_description
+[2026-09-21T12:29:47.943+0000] {ssh.py:490} WARNING -   ?wikipedia_url
+[2026-09-21T12:29:47.943+0000] {ssh.py:490} WARNING -   ?img
+[2026-09-21T12:29:47.943+0000] {ssh.py:490} WARNING -   ?gkg_id
+[2026-09-21T12:29:47.943+0000] {ssh.py:490} WARNING -   ?aliases_fr
+[2026-09-21T12:29:47.944+0000] {ssh.py:490} WARNING -   ?aliases_en
+[2026-09-21T12:29:47.944+0000] {ssh.py:490} WARNING -   ?professions
+[2026-09-21T12:29:47.944+0000] {ssh.py:490} WARNING -   ?genres
+[2026-09-21T12:29:47.944+0000] {ssh.py:490} WARNING -   ?languages_spoken
+[2026-09-21T12:29:47.944+0000] {ssh.py:490} WARNING -   ?birth_date_val
+[2026-09-21T12:29:47.944+0000] {ssh.py:490} WARNING -   ?matching_score
+[2026-09-21T12:29:47.944+0000] {ssh.py:490} WARNING - WHERE {
+[2026-09-21T12:29:47.944+0000] {ssh.py:490} WARNING -   # 1. Base Selection & Matching Score Calculation
+[2026-09-21T12:29:47.945+0000] {ssh.py:490} WARNING -   {
+[2026-09-21T12:29:47.945+0000] {ssh.py:490} WARNING -     SELECT DISTINCT ?wikidata_id ?matching_score WHERE {
+[2026-09-21T12:29:47.945+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:29:47.945+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:29:47.945+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P345 [] . }
+[2026-09-21T12:29:47.945+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P1266 [] . } }
+[2026-09-21T12:29:47.945+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id wdt:P345 ?imdb_id . }
+[2026-09-21T12:29:47.945+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id wdt:P1266 ?allocine_id . }
+[2026-09-21T12:29:47.945+0000] {ssh.py:490} WARNING -       BIND(
+[2026-09-21T12:29:47.946+0000] {ssh.py:490} WARNING -         (IF(BOUND(?imdb_id), 1, 0) +
+[2026-09-21T12:29:47.946+0000] {ssh.py:490} WARNING -          IF(BOUND(?allocine_id), 1, 0))
+[2026-09-21T12:29:47.946+0000] {ssh.py:490} WARNING -       AS ?matching_score)
+[2026-09-21T12:29:47.946+0000] {ssh.py:490} WARNING -     }
+[2026-09-21T12:29:47.946+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:29:47.946+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:47.946+0000] {ssh.py:490} WARNING -   # 2. Single-valued Labels & Attributes
+[2026-09-21T12:29:47.946+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id rdfs:label ?lbl_fr . FILTER(LANG(?lbl_fr) = "fr") }
+[2026-09-21T12:29:47.946+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id rdfs:label ?lbl_en . FILTER(LANG(?lbl_en) = "en") }
+[2026-09-21T12:29:47.947+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id rdfs:label ?lbl_mul . FILTER(LANG(?lbl_mul) = "mul") }
+[2026-09-21T12:29:47.947+0000] {ssh.py:490} WARNING -   BIND(COALESCE(?lbl_fr, ?lbl_mul, ?lbl_en) AS ?artist_name_fr)
+[2026-09-21T12:29:47.947+0000] {ssh.py:490} WARNING -   BIND(?lbl_en AS ?artist_name_en)
+[2026-09-21T12:29:47.947+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:47.947+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id schema:description ?artist_description . FILTER(LANG(?artist_description) = "fr") }
+[2026-09-21T12:29:47.947+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id wdt:P18 ?img . }
+[2026-09-21T12:29:47.947+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id wdt:P2671 ?gkg_id . }
+[2026-09-21T12:29:47.947+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:47.947+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:29:47.948+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (MIN(?birth_date) AS ?birth_date_val) WHERE {
+[2026-09-21T12:29:47.948+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P569 ?birth_date .
+[2026-09-21T12:29:47.948+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:29:47.948+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:29:47.948+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:47.948+0000] {ssh.py:490} WARNING -   # 3. Restricted Subqueries for Multi-Valued Attributes
+[2026-09-21T12:29:47.948+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:29:47.948+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?alias_fr; separator="|") AS ?aliases_fr) WHERE {
+[2026-09-21T12:29:47.948+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:29:47.949+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:29:47.949+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P345 [] . }
+[2026-09-21T12:29:47.949+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P1266 [] . } }
+[2026-09-21T12:29:47.949+0000] {ssh.py:490} WARNING -       ?wikidata_id skos:altLabel ?alias_fr .
+[2026-09-21T12:29:47.949+0000] {ssh.py:490} WARNING -       FILTER(LANG(?alias_fr) = "fr")
+[2026-09-21T12:29:47.949+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:29:47.949+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:29:47.949+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:47.949+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:29:47.949+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?alias_en; separator="|") AS ?aliases_en) WHERE {
+[2026-09-21T12:29:47.950+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:29:47.950+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:29:47.950+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P345 [] . }
+[2026-09-21T12:29:47.950+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P1266 [] . } }
+[2026-09-21T12:29:47.950+0000] {ssh.py:490} WARNING -       ?wikidata_id skos:altLabel ?alias_en .
+[2026-09-21T12:29:47.950+0000] {ssh.py:490} WARNING -       FILTER(LANG(?alias_en) = "en")
+[2026-09-21T12:29:47.950+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:29:47.950+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:29:47.950+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:47.951+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:29:47.951+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?profLbl; separator="|") AS ?professions) WHERE {
+[2026-09-21T12:29:47.951+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:29:47.951+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:29:47.951+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P345 [] . }
+[2026-09-21T12:29:47.951+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P1266 [] . } }
+[2026-09-21T12:29:47.951+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P106 ?prof .
+[2026-09-21T12:29:47.951+0000] {ssh.py:490} WARNING -       ?prof rdfs:label ?profLbl .
+[2026-09-21T12:29:47.951+0000] {ssh.py:490} WARNING -       FILTER(LANG(?profLbl) = "fr")
+[2026-09-21T12:29:47.952+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:29:47.952+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:29:47.952+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:47.952+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:29:47.952+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?genreLbl; separator="|") AS ?genres) WHERE {
+[2026-09-21T12:29:47.952+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:29:47.952+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:29:47.952+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P345 [] . }
+[2026-09-21T12:29:47.952+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P1266 [] . } }
+[2026-09-21T12:29:47.953+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P136 ?genre .
+[2026-09-21T12:29:47.953+0000] {ssh.py:490} WARNING -       ?genre rdfs:label ?genreLbl .
+[2026-09-21T12:29:47.953+0000] {ssh.py:490} WARNING -       FILTER(LANG(?genreLbl) = "fr")
+[2026-09-21T12:29:47.953+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:29:47.953+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:29:47.953+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:47.953+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:29:47.953+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?langLbl; separator="|") AS ?languages_spoken) WHERE {
+[2026-09-21T12:29:47.953+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:29:47.953+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:29:47.954+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P345 [] . }
+[2026-09-21T12:29:47.954+0000] {ssh.py:490} WARNING -         UNION { ?wikidata_id wdt:P1266 [] . } }
+[2026-09-21T12:29:47.954+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P1412 ?lang .
+[2026-09-21T12:29:47.954+0000] {ssh.py:490} WARNING -       ?lang rdfs:label ?langLbl .
+[2026-09-21T12:29:47.954+0000] {ssh.py:490} WARNING -       FILTER(LANG(?langLbl) = "fr")
+[2026-09-21T12:29:47.954+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:29:47.954+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:29:47.954+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:47.954+0000] {ssh.py:490} WARNING -   # 4. Wikipedia
+[2026-09-21T12:29:47.954+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikipedia_url_fr schema:about ?wikidata_id ; schema:isPartOf <https://fr.wikipedia.org/> . }
+[2026-09-21T12:29:47.955+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikipedia_url_en schema:about ?wikidata_id ; schema:isPartOf <https://en.wikipedia.org/> . }
+[2026-09-21T12:29:47.955+0000] {ssh.py:490} WARNING -   BIND(COALESCE(?wikipedia_url_fr, ?wikipedia_url_en) AS ?wikipedia_url)
+[2026-09-21T12:29:47.955+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:29:47.955+0000] {ssh.py:490} WARNING -   FILTER ((?artist_name_fr != "") || (?artist_name_en != ""))
+[2026-09-21T12:29:47.955+0000] {ssh.py:490} WARNING - }
+[2026-09-21T12:30:12.153+0000] {ssh.py:490} WARNING - 2026-09-21 12:30:12.151 | INFO     | __main__:extract:196 - Retrieved 583712 rows.
+[2026-09-21T12:30:12.153+0000] {ssh.py:490} WARNING - 2026-09-21 12:30:12.151 | INFO     | __main__:extract:197 - Saving raw results to gs://data-bucket-prod/dump_wikidata/20260901/raw/movie.parquet
+[2026-09-21T12:30:20.080+0000] {ssh.py:490} WARNING - 2026-09-21 12:30:20.077 | INFO     | __main__:extract:199 - Raw results saved successfully to gs://data-bucket-prod/dump_wikidata/20260901/raw/movie.parquet
+
+                     uv run python cli/extract_from_wikidata.py extract                     --query-name gkg                     --output-file-path gs://data-bucket-prod/dump_wikidata/20260901/raw/gkg.parquet
+                    
+[2026-09-21T12:30:41.287+0000] {ssh.py:490} WARNING - 2026-09-21 12:30:41.281 | INFO     | __main__:clear_qlever_cache:121 - Cache cleared for https://qlever.cs.uni-freiburg.de/api/wikidata
+[2026-09-21T12:30:41.287+0000] {ssh.py:490} WARNING - 2026-09-21 12:30:41.283 | INFO     | __main__:extract:182 - Fetch the data in CSV format for gkg
+[2026-09-21T12:30:41.299+0000] {ssh.py:490} WARNING - 2026-09-21 12:30:41.295 | DEBUG    | __main__:extract:184 - SPARQL Query: 
+[2026-09-21T12:30:41.299+0000] {ssh.py:490} WARNING - PREFIX wd: <http://www.wikidata.org/entity/>
+[2026-09-21T12:30:41.300+0000] {ssh.py:490} WARNING - PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+[2026-09-21T12:30:41.300+0000] {ssh.py:490} WARNING - PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+[2026-09-21T12:30:41.300+0000] {ssh.py:490} WARNING - PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+[2026-09-21T12:30:41.300+0000] {ssh.py:490} WARNING - PREFIX schema: <http://schema.org/>
+[2026-09-21T12:30:41.300+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:30:41.300+0000] {ssh.py:490} WARNING - SELECT
+[2026-09-21T12:30:41.300+0000] {ssh.py:490} WARNING -   ?wikidata_id
+[2026-09-21T12:30:41.301+0000] {ssh.py:490} WARNING -   ?artist_name_fr
+[2026-09-21T12:30:41.301+0000] {ssh.py:490} WARNING -   ?artist_name_en
+[2026-09-21T12:30:41.301+0000] {ssh.py:490} WARNING -   ?artist_description
+[2026-09-21T12:30:41.301+0000] {ssh.py:490} WARNING -   ?wikipedia_url
+[2026-09-21T12:30:41.301+0000] {ssh.py:490} WARNING -   ?img
+[2026-09-21T12:30:41.301+0000] {ssh.py:490} WARNING -   ?gkg_id
+[2026-09-21T12:30:41.301+0000] {ssh.py:490} WARNING -   ?aliases_fr
+[2026-09-21T12:30:41.301+0000] {ssh.py:490} WARNING -   ?aliases_en
+[2026-09-21T12:30:41.302+0000] {ssh.py:490} WARNING -   ?professions
+[2026-09-21T12:30:41.302+0000] {ssh.py:490} WARNING -   ?genres
+[2026-09-21T12:30:41.302+0000] {ssh.py:490} WARNING -   ?languages_spoken
+[2026-09-21T12:30:41.302+0000] {ssh.py:490} WARNING -   ?birth_date_val
+[2026-09-21T12:30:41.302+0000] {ssh.py:490} WARNING -   ?matching_score
+[2026-09-21T12:30:41.302+0000] {ssh.py:490} WARNING - WHERE {
+[2026-09-21T12:30:41.302+0000] {ssh.py:490} WARNING -   # 1. Base Selection & Matching Score Calculation
+[2026-09-21T12:30:41.302+0000] {ssh.py:490} WARNING -   {
+[2026-09-21T12:30:41.302+0000] {ssh.py:490} WARNING -     SELECT DISTINCT ?wikidata_id ?matching_score WHERE {
+[2026-09-21T12:30:41.303+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:30:41.303+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:30:41.303+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P2671 [] . } }
+[2026-09-21T12:30:41.303+0000] {ssh.py:490} WARNING -       OPTIONAL { ?wikidata_id wdt:P2671 ?gkg_id . }
+[2026-09-21T12:30:41.303+0000] {ssh.py:490} WARNING -       BIND(
+[2026-09-21T12:30:41.303+0000] {ssh.py:490} WARNING -         (IF(BOUND(?gkg_id), 1, 0))
+[2026-09-21T12:30:41.303+0000] {ssh.py:490} WARNING -       AS ?matching_score)
+[2026-09-21T12:30:41.303+0000] {ssh.py:490} WARNING -     }
+[2026-09-21T12:30:41.304+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:30:41.304+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:30:41.304+0000] {ssh.py:490} WARNING -   # 2. Single-valued Labels & Attributes
+[2026-09-21T12:30:41.304+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id rdfs:label ?lbl_fr . FILTER(LANG(?lbl_fr) = "fr") }
+[2026-09-21T12:30:41.304+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id rdfs:label ?lbl_en . FILTER(LANG(?lbl_en) = "en") }
+[2026-09-21T12:30:41.304+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id rdfs:label ?lbl_mul . FILTER(LANG(?lbl_mul) = "mul") }
+[2026-09-21T12:30:41.304+0000] {ssh.py:490} WARNING -   BIND(COALESCE(?lbl_fr, ?lbl_mul, ?lbl_en) AS ?artist_name_fr)
+[2026-09-21T12:30:41.304+0000] {ssh.py:490} WARNING -   BIND(?lbl_en AS ?artist_name_en)
+[2026-09-21T12:30:41.304+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:30:41.305+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id schema:description ?artist_description . FILTER(LANG(?artist_description) = "fr") }
+[2026-09-21T12:30:41.305+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id wdt:P18 ?img . }
+[2026-09-21T12:30:41.305+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikidata_id wdt:P2671 ?gkg_id . }
+[2026-09-21T12:30:41.305+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:30:41.305+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:30:41.305+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (MIN(?birth_date) AS ?birth_date_val) WHERE {
+[2026-09-21T12:30:41.305+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P569 ?birth_date .
+[2026-09-21T12:30:41.305+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:30:41.305+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:30:41.306+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:30:41.306+0000] {ssh.py:490} WARNING -   # 3. Restricted Subqueries for Multi-Valued Attributes
+[2026-09-21T12:30:41.306+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:30:41.306+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?alias_fr; separator="|") AS ?aliases_fr) WHERE {
+[2026-09-21T12:30:41.306+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:30:41.306+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:30:41.306+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P2671 [] . } }
+[2026-09-21T12:30:41.306+0000] {ssh.py:490} WARNING -       ?wikidata_id skos:altLabel ?alias_fr .
+[2026-09-21T12:30:41.306+0000] {ssh.py:490} WARNING -       FILTER(LANG(?alias_fr) = "fr")
+[2026-09-21T12:30:41.307+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:30:41.307+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:30:41.307+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:30:41.307+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:30:41.307+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?alias_en; separator="|") AS ?aliases_en) WHERE {
+[2026-09-21T12:30:41.307+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:30:41.307+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:30:41.307+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P2671 [] . } }
+[2026-09-21T12:30:41.307+0000] {ssh.py:490} WARNING -       ?wikidata_id skos:altLabel ?alias_en .
+[2026-09-21T12:30:41.308+0000] {ssh.py:490} WARNING -       FILTER(LANG(?alias_en) = "en")
+[2026-09-21T12:30:41.308+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:30:41.308+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:30:41.308+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:30:41.308+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:30:41.308+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?profLbl; separator="|") AS ?professions) WHERE {
+[2026-09-21T12:30:41.308+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:30:41.308+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:30:41.308+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P2671 [] . } }
+[2026-09-21T12:30:41.309+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P106 ?prof .
+[2026-09-21T12:30:41.309+0000] {ssh.py:490} WARNING -       ?prof rdfs:label ?profLbl .
+[2026-09-21T12:30:41.309+0000] {ssh.py:490} WARNING -       FILTER(LANG(?profLbl) = "fr")
+[2026-09-21T12:30:41.309+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:30:41.309+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:30:41.309+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:30:41.309+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:30:41.309+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?genreLbl; separator="|") AS ?genres) WHERE {
+[2026-09-21T12:30:41.309+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:30:41.310+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:30:41.310+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P2671 [] . } }
+[2026-09-21T12:30:41.310+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P136 ?genre .
+[2026-09-21T12:30:41.310+0000] {ssh.py:490} WARNING -       ?genre rdfs:label ?genreLbl .
+[2026-09-21T12:30:41.310+0000] {ssh.py:490} WARNING -       FILTER(LANG(?genreLbl) = "fr")
+[2026-09-21T12:30:41.310+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:30:41.310+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:30:41.310+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:30:41.310+0000] {ssh.py:490} WARNING -   OPTIONAL {
+[2026-09-21T12:30:41.311+0000] {ssh.py:490} WARNING -     SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?langLbl; separator="|") AS ?languages_spoken) WHERE {
+[2026-09-21T12:30:41.311+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P31 ?type .
+[2026-09-21T12:30:41.311+0000] {ssh.py:490} WARNING -       VALUES ?type { wd:Q5 }
+[2026-09-21T12:30:41.311+0000] {ssh.py:490} WARNING -       { { ?wikidata_id wdt:P2671 [] . } }
+[2026-09-21T12:30:41.311+0000] {ssh.py:490} WARNING -       ?wikidata_id wdt:P1412 ?lang .
+[2026-09-21T12:30:41.311+0000] {ssh.py:490} WARNING -       ?lang rdfs:label ?langLbl .
+[2026-09-21T12:30:41.311+0000] {ssh.py:490} WARNING -       FILTER(LANG(?langLbl) = "fr")
+[2026-09-21T12:30:41.311+0000] {ssh.py:490} WARNING -     } GROUP BY ?wikidata_id
+[2026-09-21T12:30:41.311+0000] {ssh.py:490} WARNING -   }
+[2026-09-21T12:30:41.311+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:30:41.312+0000] {ssh.py:490} WARNING -   # 4. Wikipedia
+[2026-09-21T12:30:41.312+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikipedia_url_fr schema:about ?wikidata_id ; schema:isPartOf <https://fr.wikipedia.org/> . }
+[2026-09-21T12:30:41.312+0000] {ssh.py:490} WARNING -   OPTIONAL { ?wikipedia_url_en schema:about ?wikidata_id ; schema:isPartOf <https://en.wikipedia.org/> . }
+[2026-09-21T12:30:41.312+0000] {ssh.py:490} WARNING -   BIND(COALESCE(?wikipedia_url_fr, ?wikipedia_url_en) AS ?wikipedia_url)
+[2026-09-21T12:30:41.312+0000] {ssh.py:490} WARNING - 
+[2026-09-21T12:30:41.312+0000] {ssh.py:490} WARNING -   FILTER ((?artist_name_fr != "") || (?artist_name_en != ""))
+[2026-09-21T12:30:41.312+0000] {ssh.py:490} WARNING - }
+[2026-09-21T12:31:16.275+0000] {ssh.py:490} WARNING - 2026-09-21 12:31:16.270 | INFO     | __main__:extract:196 - Retrieved 439545 rows.
+[2026-09-21T12:31:16.276+0000] {ssh.py:490} WARNING - 2026-09-21 12:31:16.270 | INFO     | __main__:extract:197 - Saving raw results to gs://data-bucket-prod/dump_wikidata/20260901/raw/gkg.parquet
+[2026-09-21T12:31:22.551+0000] {ssh.py:490} WARNING - 2026-09-21 12:31:22.544 | INFO     | __main__:extract:199 - Raw results saved successfully to gs://data-bucket-prod/dump_wikidata/20260901/raw/gkg.parquet

@@ -103,7 +103,11 @@ QUERY_CONFIGS: dict[str, QueryConfig] = {
         id_properties=MOVIE_ID_PROPERTIES,
     ),
     "gkg": QueryConfig(
-        template="extract_artists.rq.j2",
+        # Not extract_artists.rq.j2: gkg's ~2.9M-candidate population (wdt:P2671
+        # is far broader than movie's IMDb/Allociné) is too large for that
+        # template's isolated-subquery pattern — QLever silently truncates the
+        # response instead of erroring. See extract_artists_flat.rq.j2 docstring.
+        template="extract_artists_flat.rq.j2",
         entity_types=PERSON_ENTITY_TYPES,
         id_properties=GKG_ID_PROPERTIES,
     ),

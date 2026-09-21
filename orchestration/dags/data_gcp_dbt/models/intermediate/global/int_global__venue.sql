@@ -65,6 +65,8 @@ select
     v.venue_academy_name,
     v.venue_in_qpv,
     v.venue_in_zrr,
+    v.venue_in_frr,
+    v.venue_in_frr_plus,
     v.venue_rural_city_type,
     v.venue_density_label,
     v.venue_macro_density_label,

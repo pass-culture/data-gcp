@@ -2,18 +2,6 @@
 
 
 with
-    user_epci as (
-        {{
-            generate_seed_geolocation_query(
-                source_table="int_api_gouv__user_address",
-                referential_table="int_seed__intercommunal_public_institution",
-                id_column="user_id",
-                prefix_name="user",
-                columns=["epci_code", "epci_name"],
-            )
-        }}
-    ),
-
     user_qpv as (
         {{
             generate_seed_geolocation_query(
@@ -24,18 +12,6 @@ with
                 columns=["qpv_code", "qpv_name", "qpv_municipality"],
                 geo_shape="qpv_geo_shape",
                 geolocalisation_prefix="qpv_",
-            )
-        }}
-    ),
-
-    user_zrr as (
-        {{
-            generate_seed_geolocation_query(
-                source_table="int_api_gouv__user_address",
-                referential_table="int_seed__rural_revitalization_zone",
-                id_column="user_id",
-                prefix_name="user",
-                columns=["zrr_level", "zrr_level_detail"],
             )
         }}
     ),
@@ -58,6 +34,9 @@ with
                     "density_label",
                     "density_macro_level",
                     "density_level",
+                    "municipality_code",
+                    "epci_code",
+                    "epci_label",
                 ],
                 geo_shape="iris_shape",
             )
@@ -81,19 +60,18 @@ select
     ) as user_iris_internal_id,
     coalesce(user_geo_iris.city_label, "non localisé") as user_city,
     coalesce(cast(user_geo_iris.city_code as string), "-1") as user_city_code,
+    coalesce(user_geo_iris.municipality_code, "-1") as user_municipality_code,
     coalesce(user_geo_iris.rural_city_type, "non localisé") as user_rural_city_type,
     coalesce(user_geo_iris.density_label, "non localisé") as user_density_label,
     coalesce(
         user_geo_iris.density_macro_level, "non localisé"
     ) as user_macro_density_label,
     coalesce(user_geo_iris.density_level, -1) as user_density_level,
-    coalesce(user_epci.epci_name, "non localisé") as user_epci,
-    coalesce(cast(user_epci.epci_code as string), "-1") as user_epci_code,
+    coalesce(user_geo_iris.epci_label, "non localisé") as user_epci,
+    coalesce(user_geo_iris.epci_code, "-1") as user_epci_code,
     coalesce(user_qpv.qpv_code, "-1") as qpv_code,
     coalesce(user_qpv.qpv_name, "non localisé") as qpv_name,
     coalesce(user_qpv.qpv_municipality, "non localisé") as qpv_municipality,
-    coalesce(user_zrr.zrr_level, "non localisé") as zrr_level,
-    coalesce(user_zrr.zrr_level_detail, "non localisé") as zrr_level_detail,
     case
         when
             user_qpv.qpv_code is null
@@ -104,9 +82,7 @@ select
     end as user_is_in_qpv
 
 from {{ ref("int_api_gouv__user_address") }} as users
-left join user_epci on users.user_id = user_epci.user_id
 left join user_qpv on users.user_id = user_qpv.user_id
-left join user_zrr on users.user_id = user_zrr.user_id
 left join user_geo_iris on users.user_id = user_geo_iris.user_id
 -- ensure to have region and department name for non IRIS based regions (Wallis and
 -- Futuna, New Caledonia, etc.)

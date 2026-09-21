@@ -3,15 +3,8 @@ PREFIX wdt: <http://www.wikidata.org/prop/direct/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX schema: <http://schema.org/>
-{% macro entity_filter(properties=id_properties) -%}
-{% set clauses = [] %}
-{% for p in properties if p.filter %}
-{% set _ = clauses.append('{ ?wikidata_id ' ~ p.property ~ ' [] . }') %}
-{% endfor %}
-?wikidata_id wdt:P31 ?type .
-      VALUES ?type { {{ entity_types | join(' ') }} }
-      { {{ clauses | join('\n        UNION ') }} }
-{%- endmacro %}
+{% import "_macros.rq.j2" as m %}
+{% set scope = m.entity_filter(entity_types, id_properties) %}
 
 SELECT
   ?wikidata_id
@@ -35,22 +28,13 @@ WHERE {
   # 1. Base Selection & Single-Valued Attributes
   {
     SELECT DISTINCT ?wikidata_id ?artist_name_fr ?artist_name_en ?artist_description ?wikipedia_url ?img ?gkg_id (MIN(?birth_date) AS ?birth_date_val) WHERE {
-      {{ entity_filter() }}
+      {{ scope }}
 
-      OPTIONAL { ?wikidata_id rdfs:label ?lbl_fr . FILTER(LANG(?lbl_fr) = "fr") }
-      OPTIONAL { ?wikidata_id rdfs:label ?lbl_en . FILTER(LANG(?lbl_en) = "en") }
-      OPTIONAL { ?wikidata_id rdfs:label ?lbl_mul . FILTER(LANG(?lbl_mul) = "mul") }
-      BIND(COALESCE(?lbl_fr, ?lbl_mul, ?lbl_en) AS ?artist_name_fr)
-      BIND(?lbl_en AS ?artist_name_en)
-
-      OPTIONAL { ?wikidata_id schema:description ?artist_description . FILTER(LANG(?artist_description) = "fr") }
-      OPTIONAL { ?wikidata_id wdt:P18 ?img . }
+      {{ m.labels_description_image() }}
       OPTIONAL { ?wikidata_id wdt:P2671 ?gkg_id . }
       OPTIONAL { ?wikidata_id wdt:P569 ?birth_date . }
 
-      OPTIONAL { ?wikipedia_url_fr schema:about ?wikidata_id ; schema:isPartOf <https://fr.wikipedia.org/> . }
-      OPTIONAL { ?wikipedia_url_en schema:about ?wikidata_id ; schema:isPartOf <https://en.wikipedia.org/> . }
-      BIND(COALESCE(?wikipedia_url_fr, ?wikipedia_url_en) AS ?wikipedia_url)
+      {{ m.wikipedia_url() }}
 
       FILTER ((?artist_name_fr != "") || (?artist_name_en != ""))
     }
@@ -60,87 +44,37 @@ WHERE {
   # 1. Base Selection & Matching Score Calculation
   {
     SELECT DISTINCT ?wikidata_id ?matching_score WHERE {
-      {{ entity_filter() }}
+      {{ scope }}
       {% for p in id_properties %}
       OPTIONAL { ?wikidata_id {{ p.property }} ?{{ p.var }} . }
       {% endfor %}
-      {% set bound_checks = [] %}
-      {% for p in id_properties %}
-      {% set _ = bound_checks.append('IF(BOUND(?' ~ p.var ~ '), 1, 0)') %}
-      {% endfor %}
       BIND(
-        ({{ bound_checks | join(' +\n         ') }})
+        ({{ m.matching_score_expr(id_properties) }})
       AS ?matching_score)
     }
   }
 
   # 2. Single-valued Labels & Attributes
-  OPTIONAL { ?wikidata_id rdfs:label ?lbl_fr . FILTER(LANG(?lbl_fr) = "fr") }
-  OPTIONAL { ?wikidata_id rdfs:label ?lbl_en . FILTER(LANG(?lbl_en) = "en") }
-  OPTIONAL { ?wikidata_id rdfs:label ?lbl_mul . FILTER(LANG(?lbl_mul) = "mul") }
-  BIND(COALESCE(?lbl_fr, ?lbl_mul, ?lbl_en) AS ?artist_name_fr)
-  BIND(?lbl_en AS ?artist_name_en)
-
-  OPTIONAL { ?wikidata_id schema:description ?artist_description . FILTER(LANG(?artist_description) = "fr") }
-  OPTIONAL { ?wikidata_id wdt:P18 ?img . }
+  {{ m.labels_description_image() }}
   OPTIONAL { ?wikidata_id wdt:P2671 ?gkg_id . }
 
-  OPTIONAL {
-    SELECT ?wikidata_id (MIN(?birth_date) AS ?birth_date_val) WHERE {
-      ?wikidata_id wdt:P569 ?birth_date .
-    } GROUP BY ?wikidata_id
-  }
+  {{ m.birth_date() }}
 {% endif %}
 
   # 3. Restricted Subqueries for Multi-Valued Attributes
-  OPTIONAL {
-    SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?alias_fr; separator="|") AS ?aliases_fr) WHERE {
-      {{ entity_filter() }}
-      ?wikidata_id skos:altLabel ?alias_fr .
-      FILTER(LANG(?alias_fr) = "fr")
-    } GROUP BY ?wikidata_id
-  }
+  {{ m.multi_valued_literal(scope, "skos:altLabel", "fr", "alias_fr", "aliases_fr") }}
 
-  OPTIONAL {
-    SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?alias_en; separator="|") AS ?aliases_en) WHERE {
-      {{ entity_filter() }}
-      ?wikidata_id skos:altLabel ?alias_en .
-      FILTER(LANG(?alias_en) = "en")
-    } GROUP BY ?wikidata_id
-  }
+  {{ m.multi_valued_literal(scope, "skos:altLabel", "en", "alias_en", "aliases_en") }}
 
-  OPTIONAL {
-    SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?profLbl; separator="|") AS ?professions) WHERE {
-      {{ entity_filter() }}
-      ?wikidata_id wdt:P106 ?prof .
-      ?prof rdfs:label ?profLbl .
-      FILTER(LANG(?profLbl) = "fr")
-    } GROUP BY ?wikidata_id
-  }
+  {{ m.multi_valued_labeled(scope, "wdt:P106", "prof", "profLbl", "professions", "fr") }}
 
-  OPTIONAL {
-    SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?genreLbl; separator="|") AS ?genres) WHERE {
-      {{ entity_filter() }}
-      ?wikidata_id wdt:P136 ?genre .
-      ?genre rdfs:label ?genreLbl .
-      FILTER(LANG(?genreLbl) = "fr")
-    } GROUP BY ?wikidata_id
-  }
+  {{ m.multi_valued_labeled(scope, "wdt:P136", "genre", "genreLbl", "genres", "fr") }}
 
-  OPTIONAL {
-    SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?langLbl; separator="|") AS ?languages_spoken) WHERE {
-      {{ entity_filter() }}
-      ?wikidata_id wdt:P1412 ?lang .
-      ?lang rdfs:label ?langLbl .
-      FILTER(LANG(?langLbl) = "fr")
-    } GROUP BY ?wikidata_id
-  }
+  {{ m.multi_valued_labeled(scope, "wdt:P1412", "lang", "langLbl", "languages_spoken", "fr") }}
 {% if base_mode == "scored" %}
 
   # 4. Wikipedia
-  OPTIONAL { ?wikipedia_url_fr schema:about ?wikidata_id ; schema:isPartOf <https://fr.wikipedia.org/> . }
-  OPTIONAL { ?wikipedia_url_en schema:about ?wikidata_id ; schema:isPartOf <https://en.wikipedia.org/> . }
-  BIND(COALESCE(?wikipedia_url_fr, ?wikipedia_url_en) AS ?wikipedia_url)
+  {{ m.wikipedia_url() }}
 
   FILTER ((?artist_name_fr != "") || (?artist_name_en != ""))
 {% endif %}

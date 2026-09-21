@@ -3,6 +3,7 @@ PREFIX wdt: <http://www.wikidata.org/prop/direct/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX schema: <http://schema.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 {% set clauses = [] %}
 {% for p in id_properties if p.filter %}
 {% set _ = clauses.append('{ ?wikidata_id ' ~ p.property ~ ' [] . }') %}
@@ -24,9 +25,15 @@ PREFIX schema: <http://schema.org/>
   wdt:P2671), unlike music/book/movie (90K-583K) where the isolated-subquery
   template is what actually fixed their QLever timeouts. This flat shape risks
   the opposite failure mode (a per-entity Cartesian product across simultaneously
-  OPTIONAL-joined multi-valued fields) that motivated that other template, but it
-  is what's proven, at this scale, to actually complete: a pre-optimization run of
-  this exact shape returned ~2.69M gkg rows in ~103s with no truncation.
+  OPTIONAL-joined multi-valued fields) that motivated that other template.
+
+  `id_range`, when given, restricts to entities whose numeric Wikidata ID falls
+  in [id_range[0], id_range[1]) — used to batch `gkg` into pieces small enough
+  for QLever's cost estimator to accept. Candidate *count* alone doesn't predict
+  cost reliably: low-numbered (older, more heavily-curated) entities carry far
+  richer multi-valued data, so even a modest count there can still be rejected —
+  see cli/extract_from_wikidata.py's adaptive batch-splitting for how a rejected
+  range gets bisected and retried rather than relying on a fixed partition.
 #}
 SELECT
   ?wikidata_id
@@ -48,6 +55,10 @@ WHERE {
   ?wikidata_id wdt:P31 ?type .
   VALUES ?type { {{ entity_types | join(' ') }} }
   { {{ clauses | join(' UNION ') }} }
+{% if id_range %}
+  BIND(xsd:integer(STRAFTER(STR(?wikidata_id), "Q")) AS ?qnum)
+  FILTER(?qnum >= {{ id_range[0] }} && ?qnum < {{ id_range[1] }})
+{% endif %}
 
   # 2. Fetch IDs & matching score
   {% for p in id_properties %}

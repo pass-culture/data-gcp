@@ -4,6 +4,7 @@ import pytest
 
 from constants import MODEL_TYPE, UNKNOWN_PERFORMER
 from preprocess import (
+    _digits_to_nullable_int,
     preprocess_catalog,
     preprocess_embeddings,
     preprocess_string,
@@ -36,9 +37,9 @@ class TestPreprocessCatalogEdition:
     @pytest.mark.parametrize(
         ("offer_name", "expected_edition"),
         [
-            ("Naruto tome 3", "3"),
-            ("One Piece t3", "3"),
-            ("Album vol2", "2"),
+            ("Naruto tome 3", 3),
+            ("One Piece t3", 3),
+            ("Album vol2", 2),
         ],
     )
     def test_extracts_edition_from_keyword(self, offer_name, expected_edition):
@@ -61,6 +62,27 @@ class TestPreprocessCatalogEdition:
             }
         )
         assert pd.isna(preprocess_catalog(df)["edition"].iloc[0])
+
+
+class TestDigitsToNullableInt:
+    def test_returns_int64_dtype(self):
+        assert _digits_to_nullable_int(pd.Series(["3"])).dtype == "Int64"
+
+    def test_normalizes_leading_zeros(self):
+        # "03" and "3" must land on the same value so editions compare equal.
+        out = _digits_to_nullable_int(pd.Series(["03", "3"]))
+        assert out.iloc[0] == out.iloc[1] == 3
+
+    def test_nan_maps_to_na(self):
+        assert pd.isna(_digits_to_nullable_int(pd.Series([np.nan])).iloc[0])
+
+    def test_oversized_value_maps_to_na(self):
+        # ISBN-like numbers leaking through the regex exceed Int64 range and are nulled.
+        oversized = str(2**63)
+        assert pd.isna(_digits_to_nullable_int(pd.Series([oversized])).iloc[0])
+
+    def test_max_int64_is_kept(self):
+        assert _digits_to_nullable_int(pd.Series([str(2**63 - 1)])).iloc[0] == 2**63 - 1
 
 
 class TestPreprocessCatalogOeuvre:

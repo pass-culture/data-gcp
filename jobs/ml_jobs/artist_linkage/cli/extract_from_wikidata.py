@@ -8,17 +8,10 @@ from loguru import logger
 
 from src.constants import WIKIDATA_ID_KEY
 from src.utils.preprocessing_utils import normalize_string_series
+from src.wikidata_config import MUSIC_IDS_KEY, QUERY_CONFIGS, render_query
 
 QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
 QLEVER_HEADERS = {"Accept": "text/csv", "Content-Type": "application/sparql-query"}
-MUSIC_IDS_KEY = "music_ids"
-QUERIES_PATHES = {
-    "music": "queries/extract_music_artists.rq",
-    MUSIC_IDS_KEY: "queries/extract_music_artist_ids.rq",
-    "book": "queries/extract_book_artists.rq",
-    "movie": "queries/extract_movie_artists.rq",
-    "gkg": "queries/extract_gkg_artists.rq",
-}
 
 app = typer.Typer()
 
@@ -174,11 +167,10 @@ def main(output_file_path: str = typer.Option()) -> None:
     # Clear cache on qlever to prevent any resource issues
     clear_qlever_cache()
 
-    for query_name, query_path in QUERIES_PATHES.items():
+    for query_name in QUERY_CONFIGS:
         logger.info(f"Fetch the data in CSV format for {query_name}")
 
-        with open(query_path) as file:
-            query_string = file.read()
+        query_string = render_query(query_name)
         logger.debug(f"SPARQL Query: \n{query_string}")
 
         df = fetch_wikidata_qlever_csv(query_string).pipe(extract_wikidata_id)

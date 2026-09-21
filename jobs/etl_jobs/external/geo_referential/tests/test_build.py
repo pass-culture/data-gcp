@@ -1,11 +1,11 @@
 import pandas as pd
 
 from utils.build import (
-    GEO_COMMUNE_COLUMNS,
-    build_geo_commune,
+    GEO_MUNICIPALITY_COLUMNS,
     build_geo_iris,
-    commune_predecessors,
-    fill_missing_communes,
+    build_geo_municipality,
+    fill_missing_municipalities,
+    municipality_predecessors,
 )
 
 
@@ -48,7 +48,7 @@ def test_build_geo_iris_appends_one_pseudo_iris_per_overseas_commune():
     }
 
 
-def test_commune_predecessors_lists_former_codes_after_the_vintage():
+def test_municipality_predecessors_lists_former_codes_after_the_vintage():
     mvt = pd.DataFrame(
         {
             "mod": ["32", "32", "21", "10", "32"],
@@ -64,19 +64,19 @@ def test_commune_predecessors_lists_former_codes_after_the_vintage():
         }
     )
 
-    predecessors = commune_predecessors(mvt, since_year=2021)
+    predecessors = municipality_predecessors(mvt, since_year=2021)
 
     assert predecessors == {"01005": ["01001", "01002"], "15031": ["15084"]}
 
 
-def test_fill_missing_communes_inherits_from_merged_communes():
+def test_fill_missing_municipalities_inherits_from_merged_communes():
     density = pd.DataFrame(
         {"city_code": ["01001", "01002", "01003"], "density_level": [6, 3, 5]}
     )
     current = pd.Series(["01005", "01003"])
     predecessors = {"01005": ["01001", "01002"]}
 
-    df = fill_missing_communes(
+    df = fill_missing_municipalities(
         density,
         current,
         predecessors,
@@ -89,13 +89,13 @@ def test_fill_missing_communes_inherits_from_merged_communes():
     ]
 
 
-def test_fill_missing_communes_inherits_from_a_still_existing_predecessor():
+def test_fill_missing_municipalities_inherits_from_a_still_existing_predecessor():
     # Re-established commune: the merged commune keeps its code and its row.
     zrr = pd.DataFrame({"city_code": ["15084"], "zrr_code": ["C"]})
     current = pd.Series(["15084", "15031"])
     predecessors = {"15031": ["15084"]}
 
-    df = fill_missing_communes(
+    df = fill_missing_municipalities(
         zrr, current, predecessors, combine=lambda rows: rows.head(1)
     )
 
@@ -105,12 +105,12 @@ def test_fill_missing_communes_inherits_from_a_still_existing_predecessor():
     ]
 
 
-def test_fill_missing_communes_follows_chains_and_keeps_existing_rows():
+def test_fill_missing_municipalities_follows_chains_and_keeps_existing_rows():
     zrr = pd.DataFrame({"city_code": ["01001", "01002"], "zrr_code": ["C", "NC"]})
     current = pd.Series(["01002", "01009"])
     predecessors = {"01009": ["01007"], "01007": ["01001"], "01002": ["01001"]}
 
-    df = fill_missing_communes(
+    df = fill_missing_municipalities(
         zrr, current, predecessors, combine=lambda rows: rows.head(1)
     )
 
@@ -150,7 +150,7 @@ def _cog():
     return commune, comer, arrondissement, canton, ctcd
 
 
-def test_build_geo_commune_arrondissement_takes_parent_label_and_attributes():
+def test_build_geo_municipality_arrondissement_takes_parent_label_and_attributes():
     commune, comer, arrondissement, canton, ctcd = _cog()
     epci = pd.DataFrame(
         {
@@ -176,7 +176,7 @@ def test_build_geo_commune_arrondissement_takes_parent_label_and_attributes():
     )
     frr = pd.DataFrame({"city_code": ["59350", "75056"], "frr_code": [None, None]})
 
-    df = build_geo_commune(
+    df = build_geo_municipality(
         commune,
         comer,
         arrondissement,
@@ -189,10 +189,10 @@ def test_build_geo_commune_arrondissement_takes_parent_label_and_attributes():
         predecessors={},
     )
 
-    assert list(df.columns) == GEO_COMMUNE_COLUMNS
+    assert list(df.columns) == GEO_MUNICIPALITY_COLUMNS
     paris_1 = df[df.city_code == "75101"].iloc[0]
-    assert paris_1["commune_code"] == "75056"
-    assert paris_1["city_label"] == "Paris"
+    assert paris_1["municipality_code"] == "75056"
+    assert paris_1["municipality_label"] == "Paris"
     assert paris_1["epci_code"] == "200054781"
     assert paris_1["density_level"] == 1
     assert paris_1["territorial_authority_label"] == "Ville de Paris"
@@ -201,11 +201,11 @@ def test_build_geo_commune_arrondissement_takes_parent_label_and_attributes():
     assert "02077" not in df.city_code.tolist()
 
 
-def test_build_geo_commune_overseas_commune_has_no_epci_and_no_density():
+def test_build_geo_municipality_overseas_commune_has_no_epci_and_no_density():
     commune, comer, arrondissement, canton, ctcd = _cog()
     empty = pd.DataFrame({"city_code": []})
 
-    df = build_geo_commune(
+    df = build_geo_municipality(
         commune,
         comer,
         arrondissement,
@@ -219,7 +219,7 @@ def test_build_geo_commune_overseas_commune_has_no_epci_and_no_density():
     )
 
     noumea = df[df.city_code == "98818"].iloc[0]
-    assert noumea["city_label"] == "Nouméa"
+    assert noumea["municipality_label"] == "Nouméa"
     assert noumea["department_code"] == "988"
     assert noumea["epci_code"] == "ZZZZZZZZZ"
     assert noumea["epci_label"] == "Sans objet"
@@ -227,7 +227,7 @@ def test_build_geo_commune_overseas_commune_has_no_epci_and_no_density():
     assert "98412" not in df.city_code.tolist()
 
 
-def test_build_geo_commune_merged_commune_with_mixed_zrr_is_partially_classified():
+def test_build_geo_municipality_merged_commune_with_mixed_zrr_is_partially_classified():
     commune, comer, arrondissement, canton, ctcd = _cog()
     empty = pd.DataFrame({"city_code": []})
     zrr = pd.DataFrame(
@@ -239,7 +239,7 @@ def test_build_geo_commune_merged_commune_with_mixed_zrr_is_partially_classified
         }
     )
 
-    df = build_geo_commune(
+    df = build_geo_municipality(
         commune,
         comer,
         arrondissement,

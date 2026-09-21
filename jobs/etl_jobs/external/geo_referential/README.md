@@ -12,11 +12,11 @@ produced IRIS without geometry and two different SIREN codes for the same EPCI.
 
 | raw table | grain | columns |
 |---|---|---|
-| `geo_iris` | one row per IRIS, plus one pseudo-IRIS per commune (`<city_code>0000`, type `Z`) for Wallis-et-Futuna, Polynésie française and Nouvelle-Calédonie | `iris_code, iris_label, iris_type, city_code, geometry_wkt` |
-| `geo_commune` | one row per commune and per arrondissement of Paris / Lyon / Marseille, including inhabited overseas collectivities | `city_code, city_label, commune_code, department_code, region_code, territorial_authority_*, district_*, sub_district_*, epci_code, epci_label, density_level, density_label, zrr_code, zrr_label, zrr_detail, frr_code` |
+| `geo_iris` | one row per IRIS, plus one pseudo-IRIS per municipality (`<city_code>0000`, type `Z`) for Wallis-et-Futuna, Polynésie française and Nouvelle-Calédonie | `iris_code, iris_label, iris_type, city_code, geometry_wkt` |
+| `geo_municipality` | one row per municipality and per arrondissement of Paris / Lyon / Marseille, including inhabited overseas collectivities | `city_code, municipality_code, municipality_label, department_code, region_code, territorial_authority_*, district_*, sub_district_*, epci_code, epci_label, density_level, density_label, zrr_code, zrr_label, zrr_detail, frr_code` |
 
-Municipal attributes of an arrondissement are those of its parent commune (`commune_code`),
-whose label is also used as `city_label`. Communes with no EPCI get `ZZZZZZZZZ` / `Sans objet`
+Municipal attributes of an arrondissement are those of its parent municipality (`municipality_code`),
+exposed as `municipality_label`. Municipalities with no EPCI get `ZZZZZZZZZ` / `Sans objet`
 (INSEE convention). Both tables carry `vintage_year` (the COG year) and `imported_at`; the exact
 vintages of every source are written in the BigQuery table description. Tables are replaced on
 each run (`WRITE_TRUNCATE`): a referential is a snapshot, not a log.
@@ -26,8 +26,8 @@ each run (`WRITE_TRUNCATE`): a referential is a snapshot, not a log.
 | source | used for | vintage option |
 |---|---|---|
 | IGN Contours IRIS, GeoParquet WGS84 "FRA" (métropole, DROM, 975 / 977 / 978) | IRIS geometry, codes, labels, types | `--year` |
-| geo.api.gouv.fr commune contours for 986 / 987 / 988 (no IRIS there) | pseudo-IRIS geometry | `--year` |
-| INSEE Code officiel géographique (`cog_ensemble_<year>_csv.zip`: commune, commune_comer, arrondissement, canton, ctcd, mvt_commune) | commune list and hierarchy, code changes | `--year` |
+| geo.api.gouv.fr municipality contours for 986 / 987 / 988 (no IRIS there) | pseudo-IRIS geometry | `--year` |
+| INSEE Code officiel géographique (`cog_ensemble_<year>_csv.zip`: commune, commune_comer, arrondissement, canton, ctcd, mvt_commune) | municipality list and hierarchy, code changes | `--year` |
 | INSEE Intercommunalité-Métropole au 01-01-`<year>` | EPCI | `--year` |
 | INSEE grille communale de densité (7 niveaux) | density | `--density-year` |
 | DGCL France Ruralités Revitalisation (Observatoire des territoires export) | `frr_code` | `--frr-year` |
@@ -36,9 +36,9 @@ each run (`WRITE_TRUNCATE`): a referential is a snapshot, not a log.
 INSEE moves the COG files to a new page id every year: add the new id to
 `utils/config.py::COG_PAGE_IDS` when a vintage is released.
 
-Attribute files published on an older COG than the commune list (ZRR 2021, density grid) are
-aligned on the current codes with the COG movements: a commune with no row of its own inherits
-from its predecessors — the communes it merged, or the commune it was re-established from —,
+Attribute files published on an older COG than the municipality list (ZRR 2021, density grid) are
+aligned on the current codes with the COG movements: a municipality with no row of its own inherits
+from its predecessors — the ones it merged, or the municipality it was re-established from —,
 taking the densest level for the density grid and `P` (partially classified) for the ZRR when
 the predecessors disagree.
 
@@ -50,10 +50,10 @@ Not documented in the export; inferred from the DGCL FAQ (July 2025) and row cou
 
 ## Validation (fails the job)
 
-- every IRIS and every overseas commune has a geometry, `iris_code` / `city_code` unique
-- every commune of the COG (including inhabited overseas collectivities) has a geometry,
+- every IRIS and every overseas municipality has a geometry, `iris_code` / `city_code` unique
+- every municipality of the COG (including inhabited overseas collectivities) has a geometry,
   from IGN or geo.api.gouv.fr — Paris/Lyon/Marseille through their arrondissements
-- every EPCI code of the commune composition exists in the EPCI list
+- every EPCI code of the municipality composition exists in the EPCI list
 
 ## Run
 

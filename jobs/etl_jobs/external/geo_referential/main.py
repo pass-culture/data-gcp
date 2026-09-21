@@ -8,9 +8,9 @@ import typer
 from utils.bigquery import save
 from utils.build import (
     INHABITED_COMER_ZONING,
-    build_geo_commune,
     build_geo_iris,
-    commune_predecessors,
+    build_geo_municipality,
+    municipality_predecessors,
 )
 from utils.checks import (
     check_all_cities_have_geometry,
@@ -60,24 +60,24 @@ def build(extracts: dict[str, Extract], vintages: Vintages) -> dict[str, pd.Data
     geo_iris = build_geo_iris(
         df["ign_contour_iris"], df["geo_api_gouv_commune_contour"]
     )
-    geo_commune = build_geo_commune(
+    geo_municipality = build_geo_municipality(
         cog_commune=df["insee_cog_commune"],
         cog_commune_comer=df["insee_cog_commune_comer"],
         cog_arrondissement=df["insee_cog_arrondissement"],
         cog_canton=df["insee_cog_canton"],
         cog_ctcd=df["insee_cog_ctcd"],
-        epci_communes=df["insee_epci_commune"],
+        epci_municipalities=df["insee_epci_commune"],
         density_grid=df["insee_density_grid"],
         zrr=df["anct_zrr"],
         frr=df["dgcl_frr"],
-        predecessors=commune_predecessors(
+        predecessors=municipality_predecessors(
             df["insee_cog_mvt_commune"],
             since_year=min(ZRR_VINTAGE_YEAR, vintages.density_year, vintages.frr_year),
         ),
     )
     check_unique(geo_iris, "iris_code")
-    check_unique(geo_commune, "city_code")
-    return {"geo_iris": geo_iris, "geo_commune": geo_commune}
+    check_unique(geo_municipality, "city_code")
+    return {"geo_iris": geo_iris, "geo_municipality": geo_municipality}
 
 
 def describe(vintages: Vintages) -> str:

@@ -58,6 +58,30 @@ GKG_ID_PROPERTIES = [
     IdProperty("gkg_id", "wdt:P2671"),
 ]
 
+# Starting points for gkg's adaptive batch fetch (see cli/extract_from_wikidata.py).
+# Density-informed, not uniform: a live count of wd:Q5 entities with wdt:P2671 by
+# numeric-ID range (2026-09-21) showed the population is very unevenly distributed
+# (~90K/million in Q1-5M down to ~1K/million past Q130M), so the ranges are narrow
+# where it's dense and wide where it's sparse. Any range QLever still rejects as too
+# expensive gets bisected and retried at runtime — this is just a reasonable start,
+# not a guarantee; candidate count alone doesn't reliably predict cost (see the
+# extract_artists_flat.rq.j2 docstring). (200M, 300M) is a future-growth margin.
+GKG_ID_BATCH_RANGES = [
+    (1, 2_500_000),
+    (2_500_000, 5_000_000),
+    (5_000_000, 10_000_000),
+    (10_000_000, 15_000_000),
+    (15_000_000, 20_000_000),
+    (20_000_000, 35_000_000),
+    (35_000_000, 50_000_000),
+    (50_000_000, 75_000_000),
+    (75_000_000, 100_000_000),
+    (100_000_000, 115_000_000),
+    (115_000_000, 130_000_000),
+    (130_000_000, 200_000_000),
+    (200_000_000, 300_000_000),
+]
+
 
 @dataclass(frozen=True)
 class QueryConfig:
@@ -70,12 +94,18 @@ class QueryConfig:
       - "grouped": single-valued attributes are grouped together with the entity
         filter in one subquery, and no `?matching_score` column is produced (used by
         `music`, whose matching score is computed separately by `music_ids`).
+
+    `batch_ranges`, when set, tells `extract` to fetch this query in numeric-ID
+    pieces (see GKG_ID_BATCH_RANGES) instead of one shot — for a domain whose
+    candidate population is too large/costly for QLever to complete in a single
+    request even with the flat template.
     """
 
     template: str
     entity_types: list[str]
     id_properties: list[IdProperty] = field(default_factory=list)
     base_mode: Literal["scored", "grouped"] = "scored"
+    batch_ranges: list[tuple[int, int]] | None = None
 
 
 MUSIC_IDS_KEY = "music_ids"
@@ -110,6 +140,7 @@ QUERY_CONFIGS: dict[str, QueryConfig] = {
         template="extract_artists_flat.rq.j2",
         entity_types=PERSON_ENTITY_TYPES,
         id_properties=GKG_ID_PROPERTIES,
+        batch_ranges=GKG_ID_BATCH_RANGES,
     ),
 }
 
@@ -125,11 +156,12 @@ _jinja_env = Environment(
 )
 
 
-def render_query(query_name: str) -> str:
+def render_query(query_name: str, id_range: tuple[int, int] | None = None) -> str:
     config = QUERY_CONFIGS[query_name]
     template = _jinja_env.get_template(config.template)
     return template.render(
         entity_types=config.entity_types,
         id_properties=config.id_properties,
         base_mode=config.base_mode,
+        id_range=id_range,
     )

@@ -95,6 +95,7 @@ with DAG(
             default=["all"],
             type="array",
             items={"type": "string", "enum": ["all", *EXTRACTION_TARGETS]},
+            examples=["all", *EXTRACTION_TARGETS],
             description="Extract every target, or just re-run one or more (e.g. to "
             "redo the targets that failed last run without re-fetching the rest). "
             "`all` takes priority over any other selection.",

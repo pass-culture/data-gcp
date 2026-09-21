@@ -15,7 +15,7 @@ with
             partition_month,
             venue_city_code,
             sum(total_revenue_amount_by_venue) as total_revenue_amount_by_territory,
-            max(total_revenue_amount_by_venue) as max_total_revenue_amount_by_territory
+            max(total_revenue_amount_by_venue) as max_revenue_amount_by_territory
         from venue_revenue_by_city
         group by partition_month, venue_city_code
     ),

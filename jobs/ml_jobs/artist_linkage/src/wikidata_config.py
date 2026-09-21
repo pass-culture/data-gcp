@@ -84,6 +84,12 @@ class QueryConfig:
     (HYDRATION_TEMPLATE) — for a domain whose candidate population is too large, or
     contains entities too rich, for a single-shot query to complete. Reusable by
     any domain, not just `gkg`.
+
+    `optional`, when true, means a genuinely empty/missing result for this target
+    is expected, not a failure: `extract` skips saving a raw file instead of
+    raising, and `merge` skips it instead of hard-failing the whole merge. Used by
+    `music_ids`, whose own query can legitimately return nothing (see
+    `merge_data`'s pre-merge step in src/utils/wikidata_merge.py).
     """
 
     template: str
@@ -91,6 +97,7 @@ class QueryConfig:
     id_properties: list[IdProperty] = field(default_factory=list)
     base_mode: Literal["scored", "grouped"] = "scored"
     hydration_batch_size: int | None = None
+    optional: bool = False
 
 
 MUSIC_IDS_KEY = "music_ids"
@@ -106,6 +113,7 @@ QUERY_CONFIGS: dict[str, QueryConfig] = {
         template="extract_artist_ids.rq.j2",
         entity_types=MUSIC_ENTITY_TYPES,
         id_properties=MUSIC_ID_PROPERTIES,
+        optional=True,
     ),
     "book": QueryConfig(
         template="extract_artists.rq.j2",
@@ -128,7 +136,7 @@ QUERY_CONFIGS: dict[str, QueryConfig] = {
         # 5000, not the 200-500 usually recommended for VALUES batches: that
         # guidance is about GET URI-length limits, which doesn't apply here since
         # extract uses POST (query in the body, no URI-length ceiling — see
-        # cli/extract_from_wikidata.py's fetch_wikidata_qlever_csv_batch). Our real
+        # src/utils/qlever.py's fetch_wikidata_qlever_csv_batch). Our real
         # constraint is QLever's ~30s time budget: 2,000 real entities measured at
         # 3.6s with HYDRATION_TEMPLATE, so 5,000 has a wide safety margin while
         # cutting the ~2.89M/5000 ≈ 578 batches needed (vs. ~1,450 at 2,000).

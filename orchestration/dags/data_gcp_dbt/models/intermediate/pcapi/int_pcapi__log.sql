@@ -184,6 +184,10 @@ select
     array_to_string(
         jsonpayload.extra.offer_subcategories, ','
     ) as suggested_offer_api_subcategories,
-    timestamp(cast(jsonpayload.extra.published_at as string)) as log_ended_at,
-    timestamp(cast(jsonpayload.extra.counters_since as string)) as log_started_at
+    timestamp(
+        json_extract_scalar(to_json_string(jsonpayload.extra), '$.published_at')
+    ) as log_ended_at,
+    timestamp(
+        json_extract_scalar(to_json_string(jsonpayload.extra), '$.counters_since')
+    ) as log_started_at
 from {{ source("raw", "stdout") }}

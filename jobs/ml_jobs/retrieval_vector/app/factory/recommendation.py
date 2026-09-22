@@ -25,7 +25,7 @@ class RecommendationHandler(PredictionHandler):
         Returns:
             PredictionResult: An object containing the predicted items and the model type.
         """
-        logger.debug(
+        logger.info(
             "recommendation",
             extra={
                 "uuid": request_data.call_id,
@@ -48,7 +48,7 @@ class RecommendationHandler(PredictionHandler):
             if len(results.predictions) > 0:
                 return results
 
-        logger.debug(
+        logger.info(
             "No recommendations found, returning empty list",
             extra={"uuid": request_data.call_id, "user_id": request_data.user_id},
         )

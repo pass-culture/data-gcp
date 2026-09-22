@@ -32,7 +32,7 @@ class SimilarOfferHandler(PredictionHandler):
         Returns:
             PredictionResult: An object containing the predicted similar items.
         """
-        logger.debug(
+        logger.info(
             "similar_offers",
             extra={
                 "uuid": request_data.call_id,
@@ -57,7 +57,7 @@ class SimilarOfferHandler(PredictionHandler):
         # If we have predictions, return them
         if len(prediction_result.predictions) > 0:
             return prediction_result
-        logger.debug(
+        logger.info(
             "No recommendations found, returning empty list",
             extra={"uuid": request_data.call_id, "items": request_data.items},
         )
@@ -84,7 +84,7 @@ class SimilarOfferHandler(PredictionHandler):
         # Iterate over each item in the request_data.items and search for predictions
         predictions_list = []
         for item_id in request_data.items:
-            logger.debug(f"Searching for item_id: {item_id}")
+            logger.info(f"Searching for item_id: {item_id}")
             vector = model.item_vector(item_id)
             if vector is not None:
                 results = self.search_by_vector(
@@ -96,7 +96,7 @@ class SimilarOfferHandler(PredictionHandler):
                 if len(results.predictions) > 0:
                     predictions_list += results.predictions
             else:
-                logger.warning(
+                logger.info(
                     "No vector found for item_id; skipping item",
                     extra={"uuid": request_data.call_id, "item_id": item_id},
                 )

@@ -1,9 +1,9 @@
 ---
-title: INSEE Population Estimation Coverage KPI
-description: Description of the `int_kpi__insee_population_estimation` table.
+title: Population Coverage KPI
+description: Description of the `int_kpi__population_coverage` table.
 ---
 
-{% docs description__int_kpi__insee_population_estimation %}
+{% docs description__int_kpi__population_coverage %}
 KPI table computing the rolling 12-month French population coverage from the
 [`int_seed__monthly_insee_population_estimation`](#!/model/model.data_gcp_dbt.int_seed__monthly_insee_population_estimation)
 seed (the `data-insee-population` job estimation).

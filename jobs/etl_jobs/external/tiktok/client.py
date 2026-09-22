@@ -247,9 +247,13 @@ class TikTokClient:
                     cursor=cursor,
                     max_count=20,
                 )
-                videos = results["data"].get("videos", [])
-                cursor = results["data"].get("cursor")
-                has_more = results["data"].get("has_more", False)
+                data = results.get("data")
+                if not isinstance(data, dict):
+                    raise TikTokAPIError(f"Videos response missing data: {results}")
+
+                videos = data.get("videos", [])
+                cursor = data.get("cursor")
+                has_more = data.get("has_more", False)
 
                 videos_data.extend(videos)
                 page_count += 1

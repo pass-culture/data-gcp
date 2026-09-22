@@ -116,6 +116,7 @@ select
     jsonpayload.extra.provider_id,
     jsonpayload.extra.siret,
     cast(jsonpayload.extra.is_diffusible as boolean) as siret_is_diffusible,
+    jsonpayload.extra.counters as counters_json,
     coalesce(
         jsonpayload.extra.changes.price.old_value, jsonpayload.extra.old_price
     ) as stock_old_price,
@@ -182,5 +183,7 @@ select
     ) as user_first_deposit_activation_date,
     array_to_string(
         jsonpayload.extra.offer_subcategories, ','
-    ) as suggested_offer_api_subcategories
+    ) as suggested_offer_api_subcategories,
+    timestamp(cast(jsonpayload.extra.published_at as string)) as log_ended_at,
+    timestamp(cast(jsonpayload.extra.counters_since as string)) as log_started_at
 from {{ source("raw", "stdout") }}

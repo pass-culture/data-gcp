@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: int_cultural_practices__concert_genres
+    description: '{{ doc("description__int_cultural_practices__concert_genres") }}'
+    columns:
+      - name: respondent_id
+        description: '{{ doc("column__respondent_id") }}'
+      - name: music_genre
+        description: '{{ doc("column__music_genre") }}'
+      - name: attended_lifetime
+        description: '{{ doc("column__attended_lifetime") }}'
+      - name: attended_last_12m
+        description: '{{ doc("column__attended_last_12m") }}'

@@ -1,12 +1,6 @@
--- Grain: 1 ligne = 1 répondant
--- Variables comportementales d'écoute musicale de l'enquête PC 2018.
--- Les préférences par genre (E10/E12/E13) sont gérées à part dans
--- int_cultural_practices__music_genres (format long respondent x genre).
 select
     ident18 as respondent_id,
-    -- E7 : fréquence d'écoute de musique (code catégoriel)
-    e7 as listening_frequency,
-    -- E8 : supports utilisés pour écouter (0/1 pour chaque support)
+    e7 as listening_frequency_code,
     e81 as support_cd_cassette,
     e82 as support_vinyl,
     e83 as support_streaming_specialized,
@@ -14,12 +8,74 @@ select
     e85 as support_digital_files,
     e86 as support_radio,
     e87 as support_tv,
-    -- E15 : a écouté de la musique en langue étrangère (code catégoriel)
-    e15 as foreign_language_music,
-    -- E17 : met de la musique en rentrant chez soi (code catégoriel)
-    e17 as music_at_home_frequency,
-    -- E18 : écoute active, pour elle-même (code catégoriel)
-    e18 as active_listening,
-    -- E19 : importance émotionnelle de la musique (code catégoriel)
-    e19 as music_importance
-from `passculture-data-prod`.`seed_prod`.`deps_cultural_practices_2018`
+    e17 as music_at_home_frequency_code,
+    e18 as active_listening_code,
+    e19 as music_importance_code,
+    case
+        e7
+        when 1
+        then 'Oui, tous les jours ou presque'
+        when 2
+        then 'Oui, environ 3 ou 4 jours par semaine'
+        when 3
+        then 'Oui, environ 1 ou 2 jours par semaine'
+        when 4
+        then 'Oui, environ 1 à 3 jours par mois'
+        when 5
+        then 'Oui, plus rarement'
+        when 6
+        then 'Non, jamais ou pratiquement jamais'
+        when 7
+        then 'NSP'
+        when 8
+        then 'REF'
+    end as listening_frequency,
+    case
+        e15 when 1 then 'Oui' when 2 then 'Non' when 3 then 'NSP' when 4 then 'REF'
+    end as foreign_language_music,
+    case
+        e17
+        when 1
+        then 'Oui, tous les jours ou presque'
+        when 2
+        then 'Oui, de temps en temps'
+        when 3
+        then 'Oui, rarement'
+        when 4
+        then 'Non, jamais'
+        when 5
+        then 'NSP'
+        when 6
+        then 'REF'
+    end as music_at_home_frequency,
+    case
+        e18
+        when 1
+        then 'Oui, tous les jours ou presque'
+        when 2
+        then 'Oui, de temps en temps'
+        when 3
+        then 'Oui, rarement'
+        when 4
+        then 'Non, jamais'
+        when 5
+        then 'NSP'
+        when 6
+        then 'REF'
+    end as active_listening,
+    case
+        e19
+        when 1
+        then 'Oui, beaucoup'
+        when 2
+        then 'Oui, un peu'
+        when 3
+        then 'Non, pas tellement'
+        when 4
+        then 'Non, pas du tout'
+        when 5
+        then 'NSP'
+        when 6
+        then 'REF'
+    end as music_importance
+from {{ ref("int_seed__deps_cultural_practices_2018") }}

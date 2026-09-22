@@ -41,7 +41,7 @@ with
             e1311 as disliked_opera,
             e1312 as disliked_classical,
             e1313 as disliked_other
-        from `passculture-data-prod`.`seed_prod`.`deps_cultural_practices_2018`
+        from {{ ref("int_seed__deps_cultural_practices_2018") }}
     ),
 
     genre_preferences as (
@@ -64,9 +64,9 @@ with
             select
                 respondent_id,
                 '{{ genre }}' as music_genre,
-                listened_{{ genre }} as is_listened,
-                liked_{{ genre }} as is_liked,
-                disliked_{{ genre }} as is_disliked
+                listened_{{ genre }} as listens_to_genre,
+                liked_{{ genre }} as likes_genre,
+                disliked_{{ genre }} as dislikes_genre
             from source
             {% if not loop.last %}
                 union all
@@ -74,5 +74,5 @@ with
         {% endfor %}
     )
 
-select respondent_id, music_genre, is_listened, is_liked, is_disliked
+select respondent_id, music_genre, listens_to_genre, likes_genre, dislikes_genre
 from genre_preferences

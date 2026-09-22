@@ -1,0 +1,8 @@
+version: 2
+
+models:
+  - name: int_cultural_practices__music_behaviors
+    description: '{{ doc("description__int_cultural_practices__music_behaviors") }}'
+    columns:
+      - name: respondent_id
+        description: '{{ doc("column__respondent_id") }}'

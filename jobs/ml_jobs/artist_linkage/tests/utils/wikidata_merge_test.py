@@ -133,7 +133,7 @@ class TestMergeData:
 
 
 class TestPostprocessData:
-    @pytest.fixture
+    @pytest.fixture()
     def processed(self) -> pd.DataFrame:
         # Simulate the full pipeline: main query + IDs merge
         df = _make_raw_df().pipe(extract_wikidata_id)

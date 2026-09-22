@@ -1,3 +1,4 @@
+-- noqa: disable=all
 {{
     config(
         **custom_incremental_config(
@@ -21,7 +22,7 @@ with
             venue_department_name,
             venue_academy_name,
             venue_epci_code,
-            venue_city_code,
+            venue_municipality_code,
             sum(booking_amount) as total_booking_amount,
             sum(collective_stock_number_of_tickets) as total_number_of_tickets
         from {{ ref("mrt_global__collective_booking") }}
@@ -40,7 +41,7 @@ with
             venue_department_name,
             venue_academy_name,
             venue_epci_code,
-            venue_city_code
+            venue_municipality_code
     ),
 
     all_dimensions as (

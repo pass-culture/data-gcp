@@ -70,7 +70,7 @@ with
             rd.region_name as reg_dim,
             rd.dep_name as dep_dim,
             eud.user_epci_code as epci_dim,
-            eud.user_city_code as com_dim,
+            eud.user_municipality_code as com_dim,
             -- Segmentation fields
             eud.user_is_in_qpv,
             eud.user_macro_density_label,
@@ -105,7 +105,7 @@ with
             rd.region_name as reg_dim,
             rd.dep_name as dep_dim,
             eud.user_epci_code as epci_dim,
-            eud.user_city_code as com_dim
+            eud.user_municipality_code as com_dim
         from last_day_of_month as ldm
         inner join
             {{ ref("mrt_global__user_beneficiary") }} as eud

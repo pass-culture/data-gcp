@@ -20,6 +20,7 @@ select
     v.venue_epci_code as partner_epci_code,
     v.venue_city as partner_city,
     v.venue_city_code as partner_city_code,
+    v.venue_municipality_code as partner_municipality_code,
     v.venue_postal_code as partner_postal_code,
     v.venue_type_label as partner_type,
     "venue_type_label" as partner_type_origin,

@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Param
@@ -65,6 +65,14 @@ QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
 EXTRACTION_TARGETS = ["music", "music_ids", "book", "movie", "gkg"]
 RAW_DUMPS_GCS_PREFIX_TEMPLATE = f"{STORAGE_PATH_PREFIX_TEMPLATE}/raw"
 RAW_DUMPS_PATH_TEMPLATE = f"gs://{DATA_GCS_BUCKET_NAME}/{RAW_DUMPS_GCS_PREFIX_TEMPLATE}"
+
+# QLever is a shared, unstable public endpoint. An Airflow-level retry here means
+# something disrupted it badly enough to survive cli/extract_from_wikidata.py's own
+# tenacity retries *within* a single attempt (3 tries, exponential backoff up to
+# 40s) — so give it real time to recover instead of coming back at Airflow's
+# 5-minute default.
+EXTRACT_RETRY_DELAY = timedelta(minutes=10)
+EXTRACT_MAX_RETRY_DELAY = timedelta(minutes=30)
 
 default_args = {
     "start_date": datetime(2024, 12, 1),
@@ -176,6 +184,9 @@ with DAG(
                 task_id=f"extract_{target}",
                 instance_name=GCE_INSTANCE,
                 base_dir=BASE_DIR,
+                retry_delay=EXTRACT_RETRY_DELAY,
+                retry_exponential_backoff=True,
+                max_retry_delay=EXTRACT_MAX_RETRY_DELAY,
                 command=f"""
                      uv run python cli/extract_from_wikidata.py extract \
                     --query-name {target} \

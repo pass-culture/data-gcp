@@ -116,7 +116,7 @@ select
     jsonpayload.extra.provider_id,
     jsonpayload.extra.siret,
     cast(jsonpayload.extra.is_diffusible as boolean) as siret_is_diffusible,
-    jsonpayload.extra.counters as counters_json,
+    json_extract(to_json_string(jsonpayload.extra), '$.counters') as counters_json,
     coalesce(
         jsonpayload.extra.changes.price.old_value, jsonpayload.extra.old_price
     ) as stock_old_price,

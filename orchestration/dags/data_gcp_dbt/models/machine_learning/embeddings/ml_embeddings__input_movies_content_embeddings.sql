@@ -14,7 +14,7 @@ select
     to_embed,
     offer_label_concat,
     author_concat
-from {{ ref("ml_embedding__input_semantic_content_embeddings") }}
+from {{ ref("ml_embeddings__input_semantic_content_embeddings") }}
 where
     starts_with(item_id, 'product')
     and (

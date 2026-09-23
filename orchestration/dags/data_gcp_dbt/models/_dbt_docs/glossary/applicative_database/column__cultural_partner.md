@@ -13,6 +13,8 @@
 {% docs column__partner_status %}Status of the cultural partner, indicating whether it is a (permanent) venue or an offerer (without permanent venue).{% enddocs %}
 {% docs column__partner_cultural_sector %}Cultural sector associated with the partner type.{% enddocs %}
 {% docs column__partner_epci %} name of the EPCI where the cultural partner is located.{% enddocs %}
-{% docs column__partner_city %} name of the city where the cultural partner is located.{% enddocs %}
+{% docs column__partner_city %} Name of the city where the cultural partner is located, at the arrondissement level for Paris, Lyon and Marseille (e.g. `Paris 1er Arrondissement`). {% enddocs %}
 {% docs column__partner_epci_code %} Code of the EPCI where the cultural partner is located.{% enddocs %}
-{% docs column__partner_city_code %} Code of the city where the cultural partner is located.{% enddocs %}
+{% docs column__partner_city_code %} INSEE code of the city where the cultural partner is located, at the arrondissement level for Paris, Lyon and Marseille (e.g. `75101`). {% enddocs %}
+{% docs column__partner_municipality_code %} INSEE code of the municipality (commune) where the cultural partner is located: the parent municipality for the arrondissements of Paris, Lyon and Marseille (`75056`, `69123`, `13055`), the same as `partner_city_code` everywhere else. {% enddocs %}
+{% docs column__partner_municipality_label %} Name of the municipality (commune) of `partner_municipality_code` (e.g. `Paris` for every Paris arrondissement). {% enddocs %}

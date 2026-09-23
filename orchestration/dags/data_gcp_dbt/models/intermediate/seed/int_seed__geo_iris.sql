@@ -16,7 +16,7 @@ select
     iris.iris_label,
     iris.iris_type,
     iris.city_code,
-    city.municipality_label as city_label,
+    city.city_label,
     city.territorial_authority_code,
     city.district_code,
     city.sub_district_code,

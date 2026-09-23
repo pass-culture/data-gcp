@@ -35,7 +35,7 @@ select
     dep.territory_type as population_territory_type,
     pop.snapshot_month as population_snapshot_month,
     pop.born_date as population_birth_month,
-    sum(pop.population) as total_population
+    cast(round(sum(pop.population)) as int64) as total_population
 from {{ source("raw", "population_department") }} as pop
 left join {{ ref("region_department") }} as dep on pop.department_code = dep.num_dep
 where

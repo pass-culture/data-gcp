@@ -35,6 +35,7 @@ with
                     "density_macro_level",
                     "density_level",
                     "municipality_code",
+                    "municipality_label",
                     "epci_code",
                     "epci_label",
                 ],
@@ -61,6 +62,9 @@ select
     coalesce(user_geo_iris.city_label, "non localisé") as user_city,
     coalesce(cast(user_geo_iris.city_code as string), "-1") as user_city_code,
     coalesce(user_geo_iris.municipality_code, "-1") as user_municipality_code,
+    coalesce(
+        user_geo_iris.municipality_label, "non localisé"
+    ) as user_municipality_label,
     coalesce(user_geo_iris.rural_city_type, "non localisé") as user_rural_city_type,
     coalesce(user_geo_iris.density_label, "non localisé") as user_density_label,
     coalesce(

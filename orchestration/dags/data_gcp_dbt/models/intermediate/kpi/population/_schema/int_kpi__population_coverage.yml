@@ -1,7 +1,7 @@
 version: 2
 models:
-  - name: int_kpi__insee_population_estimation
-    description: '{{ doc("description__int_kpi__insee_population_estimation") }}'
+  - name: int_kpi__population_coverage
+    description: '{{ doc("description__int_kpi__population_coverage") }}'
     columns:
       - name: partition_month
         description: '{{ doc("column__partition_month") }}'

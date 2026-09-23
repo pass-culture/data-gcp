@@ -44,6 +44,7 @@ EMBEDDINGS_SUBFOLDER = "embeddings"
 
 ## BigQuery CONSTANTS
 EMBEDDING_DATASET_NAME = f"ml_embeddings_{ENV_SHORT_NAME}"
+SEMANTIC_EMBEDDING_DATASET_NAME = f"ml_semantic_embedding_{ENV_SHORT_NAME}"
 
 
 class VectorPipeline(BaseModel):
@@ -57,17 +58,17 @@ class VectorPipeline(BaseModel):
 AVAILABLE_VECTORS = [
     VectorPipeline(
         name="semantic_content",
-        input_table=f"{EMBEDDING_DATASET_NAME}.input_semantic_content_embeddings",
+        input_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.input_all_items",
         output_table=f"{EMBEDDING_DATASET_NAME}.semantic_content_embeddings_tmp",
     ),
     VectorPipeline(
         name="movies_content",
-        input_table=f"{EMBEDDING_DATASET_NAME}.input_movies_content_embeddings",
+        input_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.input_movies",
         output_table=f"{EMBEDDING_DATASET_NAME}.movies_content_embeddings_tmp",
     ),
     VectorPipeline(
         name="books_content",
-        input_table=f"{EMBEDDING_DATASET_NAME}.input_books_content_embeddings",
+        input_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.input_books",
         output_table=f"{EMBEDDING_DATASET_NAME}.books_content_embeddings_tmp",
     ),
 ]

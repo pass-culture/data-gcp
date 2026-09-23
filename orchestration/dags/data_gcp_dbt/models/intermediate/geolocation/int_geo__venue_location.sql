@@ -34,6 +34,7 @@ with
                     "density_macro_level",
                     "density_level",
                     "municipality_code",
+                    "municipality_label",
                     "epci_code",
                     "epci_label",
                     "zrr_code",
@@ -76,6 +77,9 @@ select
     coalesce(venue_geo_iris.city_label, "non localisé") as venue_city,
     coalesce(cast(venue_geo_iris.city_code as string), "-1") as venue_city_code,
     coalesce(venue_geo_iris.municipality_code, "-1") as venue_municipality_code,
+    coalesce(
+        venue_geo_iris.municipality_label, "non localisé"
+    ) as venue_municipality_label,
     coalesce(venue_geo_iris.rural_city_type, "non localisé") as venue_rural_city_type,
     coalesce(venue_geo_iris.density_label, "non localisé") as venue_density_label,
     coalesce(

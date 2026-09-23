@@ -48,6 +48,7 @@ select
     v.venue_city,
     v.venue_city_code,
     v.venue_municipality_code,
+    v.venue_municipality_label,
     v.venue_siret,
     v.venue_managing_offerer_id as offerer_id,
     v.venue_creation_date,

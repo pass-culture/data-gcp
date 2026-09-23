@@ -77,6 +77,7 @@ select
     v.venue_city,
     v.venue_city_code,
     v.venue_municipality_code,
+    v.venue_municipality_label,
     v.venue_epci,
     v.venue_epci_code,
     v.venue_academy_name,

@@ -6,6 +6,7 @@ select
     user_city,
     user_city_code,
     user_municipality_code,
+    user_municipality_label,
     user_activity,
     user_civility,
     user_school_type,

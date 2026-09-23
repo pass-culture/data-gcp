@@ -94,6 +94,7 @@ select
     institution_metadata_aggregated_type.macro_institution_type,
     ei.institution_city_code,
     ei.institution_municipality_code,
+    ei.institution_municipality_label,
     ei.institution_city,
     ei.institution_epci_code,
     ei.institution_epci,

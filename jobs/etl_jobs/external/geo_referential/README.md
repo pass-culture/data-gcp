@@ -13,10 +13,11 @@ produced IRIS without geometry and two different SIREN codes for the same EPCI.
 | raw table | grain | columns |
 |---|---|---|
 | `geo_iris` | one row per IRIS, plus one pseudo-IRIS per municipality (`<city_code>0000`, type `Z`) for Wallis-et-Futuna, Polynésie française and Nouvelle-Calédonie | `iris_code, iris_label, iris_type, city_code, geometry_wkt` |
-| `geo_municipality` | one row per municipality and per arrondissement of Paris / Lyon / Marseille, including inhabited overseas collectivities | `city_code, municipality_code, municipality_label, department_code, region_code, territorial_authority_*, district_*, sub_district_*, epci_code, epci_label, density_level, density_label, zrr_code, zrr_label, zrr_detail, frr_code` |
+| `geo_municipality` | one row per municipality and per arrondissement of Paris / Lyon / Marseille, including inhabited overseas collectivities | `city_code, city_label, municipality_code, municipality_label, department_code, region_code, territorial_authority_*, district_*, sub_district_*, epci_code, epci_label, density_level, density_label, zrr_code, zrr_label, zrr_detail, frr_code` |
 
-Municipal attributes of an arrondissement are those of its parent municipality (`municipality_code`),
-exposed as `municipality_label`. Municipalities with no EPCI get `ZZZZZZZZZ` / `Sans objet`
+`city_label` is the row's own name (`Paris 1er Arrondissement` for an arrondissement). Municipal
+attributes of an arrondissement are those of its parent municipality (`municipality_code`,
+`municipality_label`). Municipalities with no EPCI get `ZZZZZZZZZ` / `Sans objet`
 (INSEE convention). Both tables carry `vintage_year` (the COG year) and `imported_at`; the exact
 vintages of every source are written in the BigQuery table description. Tables are replaced on
 each run (`WRITE_TRUNCATE`): a referential is a snapshot, not a log.

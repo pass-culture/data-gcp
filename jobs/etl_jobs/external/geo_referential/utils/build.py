@@ -16,6 +16,7 @@ ZRR_PARTIAL = {
 
 GEO_MUNICIPALITY_COLUMNS = [
     "city_code",
+    "city_label",
     "municipality_label",
     "municipality_code",
     "department_code",
@@ -160,8 +161,9 @@ def build_geo_municipality(
     predecessors: dict[str, list[str]],
 ) -> pd.DataFrame:
     """One row per municipality and per arrondissement (Paris, Lyon, Marseille), including the
-    inhabited overseas collectivities. Municipal attributes (EPCI, density, zonings) are those
-    of `municipality_code`: the parent municipality for arrondissements, the municipality itself otherwise."""
+    inhabited overseas collectivities. `city_label` is the row's own name (the arrondissement's for
+    arrondissements). Municipal attributes (label, EPCI, density, zonings) are those of
+    `municipality_code`: the parent municipality for arrondissements, the municipality itself otherwise."""
     cities = cog_commune[cog_commune["typecom"].isin(["COM", "ARM"])].rename(
         columns={
             "com": "city_code",
@@ -187,12 +189,14 @@ def build_geo_municipality(
             "department_code": comer["comer"],
         }
     )
-    cities = pd.concat([cities, comer], ignore_index=True)
+    cities = pd.concat([cities, comer], ignore_index=True).rename(
+        columns={"libelle": "city_label"}
+    )
 
     municipality_labels = cities.loc[
         cities["city_code"] == cities["municipality_code"],
-        ["municipality_code", "libelle"],
-    ].rename(columns={"libelle": "municipality_label"})
+        ["municipality_code", "city_label"],
+    ].rename(columns={"city_label": "municipality_label"})
 
     current_codes = cities["municipality_code"].drop_duplicates()
     epci = fill_missing_municipalities(

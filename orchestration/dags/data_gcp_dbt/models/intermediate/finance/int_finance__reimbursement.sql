@@ -11,6 +11,7 @@ with
             b.venue_epci_code,
             b.venue_city_code,
             b.venue_municipality_code,
+            b.venue_municipality_label,
             b.offerer_is_epn,
             b.booking_used_date,
             b.booking_intermediary_amount,
@@ -76,6 +77,7 @@ select
     booking_amount.venue_epci_code,
     booking_amount.venue_city_code,
     booking_amount.venue_municipality_code,
+    booking_amount.venue_municipality_label,
     booking_amount.offerer_is_epn,
     booking_amount.offer_category_id,
     count(distinct booking_amount.booking_id) as total_bookings,
@@ -93,6 +95,7 @@ group by
     booking_amount.venue_epci_code,
     booking_amount.venue_city_code,
     booking_amount.venue_municipality_code,
+    booking_amount.venue_municipality_label,
     booking_amount.venue_region_name,
     booking_amount.offerer_is_epn,
     booking_amount.offer_category_id

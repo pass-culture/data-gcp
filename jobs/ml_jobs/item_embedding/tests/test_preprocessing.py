@@ -1,7 +1,11 @@
 """Unit tests for the preprocessing module."""
 
+import numpy as np
+import pandas as pd
 from preprocessing import (
     PREPROCESSORS,
+    _is_missing,
+    apply_preprocessors,
     clean_description,
     format_book_classification,
     format_movie_genres,
@@ -204,3 +208,46 @@ class TestPreprocessorsRegistry:
     def test_contains_format_book_classification(self):
         assert "format_book_classification" in PREPROCESSORS
         assert PREPROCESSORS["format_book_classification"] is format_book_classification
+
+
+class TestIsMissing:
+    def test_none_is_missing(self):
+        assert _is_missing(None) is True
+
+    def test_nan_is_missing(self):
+        assert _is_missing(float("nan")) is True
+
+    def test_string_is_not_missing(self):
+        assert _is_missing("hello") is False
+
+    def test_empty_string_is_not_missing(self):
+        assert _is_missing("") is False
+
+    def test_list_is_not_missing(self):
+        # pd.notna on a list raises when used as a bool; _is_missing must not.
+        assert _is_missing(["A", "B"]) is False
+
+    def test_dict_is_not_missing(self):
+        assert _is_missing({"k": "v"}) is False
+
+
+class TestApplyPreprocessors:
+    def test_applies_to_configured_columns_only(self):
+        df = pd.DataFrame(
+            {"offer_name": ["  Dune   Messiah "], "other": ["  keep  as is "]}
+        )
+        out = apply_preprocessors(df, {"offer_name": "normalize_whitespace"})
+        assert out["offer_name"].tolist() == ["Dune Messiah"]
+        assert out["other"].tolist() == ["  keep  as is "]
+
+    def test_missing_values_are_not_passed_to_the_function(self):
+        df = pd.DataFrame({"offer_description": ["http://x.com hi", None, np.nan]})
+        out = apply_preprocessors(df, {"offer_description": "clean_description"})
+        assert out["offer_description"].tolist()[0] == "hi"
+        assert out["offer_description"].isna().tolist() == [False, True, True]
+
+    def test_empty_mapping_is_a_noop_copy(self):
+        df = pd.DataFrame({"a": ["x"]})
+        out = apply_preprocessors(df, {})
+        assert out.equals(df)
+        assert out is not df

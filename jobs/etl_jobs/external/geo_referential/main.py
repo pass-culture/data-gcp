@@ -105,10 +105,10 @@ def import_geo_referential(
         ..., help="Destination dataset id (raw_<env>)"
     ),
     iris_table_name: str = typer.Option(
-        ..., help="Destination table for the IRIS referential"
+        "geo_iris", help="Destination table for the IRIS referential"
     ),
     municipality_table_name: str = typer.Option(
-        ..., help="Destination table for the municipality referential"
+        "geo_municipality", help="Destination table for the municipality referential"
     ),
     dry_run: bool = typer.Option(
         False, help="Download and validate without writing to BigQuery"

@@ -1,11 +1,15 @@
 import http.client
 import logging
 import os
+import time
+from collections import Counter
 from typing import List, Optional
 
 import pandas as pd
 import requests
 from dbtmetabase import DbtMetabase, Filter
+from dbtmetabase._models import _build_tables
+from dbtmetabase.errors import MetabaseStateError
 from google.auth.transport.requests import Request
 from google.cloud import storage
 from google.oauth2 import id_token
@@ -109,6 +113,62 @@ def _introspect_dbtmetabase_http(client, max_depth=2):
             max_depth,
             sorted(a for a in dir(client) if not a.startswith("__"))[:60],
         )
+
+
+class MetabaseExportError(Exception):
+    """Raised when the dbt -> Metabase export finished with errors."""
+
+
+class _ExportReport(logging.Handler):
+    """Collects dbtmetabase log records during an export to build a recap,
+    and hides the per-field "is up to date" lines (thousands per run)."""
+
+    def __init__(self):
+        super().__init__(level=logging.DEBUG)
+        self.counts = Counter()
+        self.warnings: List[str] = []
+        self.errors: List[str] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        # Attached as a handler on "dbtmetabase": collect warnings and errors.
+        if record.levelno >= logging.ERROR:
+            self.errors.append(record.getMessage())
+        elif record.levelno >= logging.WARNING:
+            self.warnings.append(record.getMessage())
+
+    def count_and_drop(self, record: logging.LogRecord) -> bool:
+        # Attached as a filter on "dbtmetabase._models": count progress lines
+        # and drop the noisy "is up to date" ones.
+        message = record.getMessage()
+        if message.endswith("is up to date"):
+            self.counts["up_to_date"] += 1
+            return False
+        if "will be updated" in message:
+            self.counts["planned"] += 1
+        elif "updated successfully" in message:
+            self.counts["applied"] += 1
+        return True
+
+    def log_recap(self) -> None:
+        lines = [
+            "=" * 30 + " Metabase export recap " + "=" * 30,
+            f"Up to date (tables + fields): {self.counts['up_to_date']}",
+            f"Updates planned: {self.counts['planned']} / applied: {self.counts['applied']}",
+            f"Warnings: {len(self.warnings)}",
+            *(f"  - {w}" for w in self.warnings),
+            f"Errors: {len(self.errors)}",
+            *(f"  - {e}" for e in self.errors),
+        ]
+        if any("does not exist" in e for e in self.errors):
+            lines.append(
+                "Hint: a table/field 'does not exist' when dbt documents it but "
+                "Metabase has not synced it. Either the column was added recently "
+                "and Metabase's schema sync is still running (re-run later), or the "
+                "dbt yml documents a column the model does not output (fix the yml)."
+            )
+        lines.append("=" * 83)
+        log = logger.error if self.errors else logger.info
+        log("\n".join(lines))
 
 
 class BigqueryDBTHandler:
@@ -266,33 +326,128 @@ class MetabaseDBTHandler:
             logger.error(f"Failed to download DBT manifest: {e}")
             raise
 
+    def wait_for_metabase_sync(
+        self,
+        metabase_database: str,
+        schema_filters: List[str],
+        model_names: List[str],
+        timeout: int,
+        poll_interval: int = 15,
+    ) -> None:
+        """
+        Triggers a Metabase schema sync and waits until every documented column
+        of the selected dbt models is known by Metabase, or until timeout.
+
+        dbt-metabase can do this itself (sync_timeout), but it raises on timeout
+        and then exports nothing. Here we only warn, so the export still runs and
+        the recap lists what is still missing.
+        """
+        metabase = self.client.metabase
+        database = metabase.find_database(name=metabase_database)
+        if not database:
+            raise MetabaseExportError(
+                f"Metabase database not found: {metabase_database}"
+            )
+
+        schema_filter = Filter(include=schema_filters)
+        model_filter = Filter(include=model_names)
+        expected = {
+            f"{m.schema.upper()}.{m.alias.upper()}": {c.name.upper() for c in m.columns}
+            for m in self.client.manifest.read_models()
+            if schema_filter.match(m.schema) and model_filter.match(m.name)
+        }
+
+        logger.info(
+            "Triggering Metabase schema sync on '%s' and waiting up to %ss for %s tables",
+            metabase_database,
+            timeout,
+            len(expected),
+        )
+        metabase.sync_database_schema(database["id"])
+
+        deadline = time.monotonic() + timeout
+        while True:
+            tables = _build_tables(metabase.get_database_metadata(database["id"]))
+            missing = []
+            for table_key, columns in expected.items():
+                fields = tables.get(table_key, {}).get("fields")
+                if fields is None:
+                    missing.append(table_key)
+                else:
+                    missing += [
+                        f"{table_key}.{c}" for c in sorted(columns - fields.keys())
+                    ]
+
+            if not missing:
+                logger.info("Metabase schema is in sync with dbt manifest.")
+                return
+            if time.monotonic() >= deadline:
+                logger.warning(
+                    "Metabase schema still missing %s tables/fields after %ss: %s",
+                    len(missing),
+                    timeout,
+                    missing,
+                )
+                return
+            logger.info(
+                "Waiting for Metabase sync, %s tables/fields missing (e.g. %s)",
+                len(missing),
+                missing[:3],
+            )
+            time.sleep(poll_interval)
+
     def export_model(
         self,
         metabase_database: str,
         schema_filters: List[str],
         model_names: List[str],
         docs_url: str = None,
+        sync_timeout: int = 600,
     ) -> None:
         """
         Exports the DBT models to Metabase, appending tags and filtering by specified models.
 
         Args:
             model_names (List[str]): A list of model names to export to Metabase.
+            sync_timeout (int): Seconds to wait for Metabase to sync new tables/columns
+                before exporting. 0 skips the wait.
         """
+        if sync_timeout:
+            self.wait_for_metabase_sync(
+                metabase_database, schema_filters, model_names, timeout=sync_timeout
+            )
+
         logger.info(f"Exporting models to Metabase: {model_names}")
+        report = _ExportReport()
+        dbtmetabase_logger = logging.getLogger("dbtmetabase")
+        models_logger = logging.getLogger("dbtmetabase._models")
+        dbtmetabase_logger.addHandler(report)
+        models_logger.addFilter(report.count_and_drop)
         try:
             self.client.export_models(
                 metabase_database=metabase_database,
                 schema_filter=Filter(include=schema_filters),
                 model_filter=Filter(include=model_names),
                 append_tags=False,
+                # Sync already awaited above; dbt-metabase would raise on timeout.
                 sync_timeout=0,
                 docs_url=docs_url,
             )
-            logger.info(f"Models {model_names} exported to Metabase successfully.")
-        except Exception as e:
-            logger.error(f"Failed to export models to Metabase: {e}")
-            raise
+        except MetabaseStateError:
+            # "Non-critical errors encountered": the errors were logged (and
+            # collected in the report) and all valid updates were still applied.
+            if not report.errors:
+                raise
+        finally:
+            dbtmetabase_logger.removeHandler(report)
+            models_logger.removeFilter(report.count_and_drop)
+
+        report.log_recap()
+        if report.errors:
+            raise MetabaseExportError(
+                f"Metabase export finished with {len(report.errors)} error(s), see recap above"
+            )
+        logger.info(f"Models {model_names} exported to Metabase successfully.")
 
     def export_exposures(self, collection_filters: List[str], output_path: str) -> None:
         """

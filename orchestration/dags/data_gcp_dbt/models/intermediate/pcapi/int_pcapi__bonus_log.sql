@@ -29,7 +29,9 @@ with
             partition_date,
             log_started_at,
             log_ended_at,
-            safe.parse_json(counters_json) as counters_json_obj
+            safe.parse_json(
+                json_value(safe.parse_json(counters_json))
+            ) as counters_json_obj
         from source_logs
     ),
 

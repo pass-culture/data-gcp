@@ -10,6 +10,9 @@ produced IRIS without geometry and two different SIREN codes for the same EPCI.
 
 ## Raw tables
 
+Table names are Airflow params of the `import_geo_referential` DAG (`iris_table_name`,
+`municipality_table_name`); defaults below.
+
 | raw table | grain | columns |
 |---|---|---|
 | `geo_iris` | one row per IRIS, plus one pseudo-IRIS per municipality (`<city_code>0000`, type `Z`) for Wallis-et-Futuna, Polynésie française and Nouvelle-Calédonie | `iris_code, iris_label, iris_type, city_code, geometry_wkt` |

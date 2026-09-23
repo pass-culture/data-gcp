@@ -55,7 +55,10 @@ def validate(extracts: dict[str, Extract]) -> None:
     check_epci_codes_known(extracts["insee_epci_commune"].df, extracts["insee_epci"].df)
 
 
-def build(extracts: dict[str, Extract], vintages: Vintages) -> dict[str, pd.DataFrame]:
+def build(
+    extracts: dict[str, Extract], vintages: Vintages
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Build the IRIS and municipality referentials from the source extracts."""
     df = {name: extract.df for name, extract in extracts.items()}
     geo_iris = build_geo_iris(
         df["ign_contour_iris"], df["geo_api_gouv_commune_contour"]
@@ -77,7 +80,7 @@ def build(extracts: dict[str, Extract], vintages: Vintages) -> dict[str, pd.Data
     )
     check_unique(geo_iris, "iris_code")
     check_unique(geo_municipality, "city_code")
-    return {"geo_iris": geo_iris, "geo_municipality": geo_municipality}
+    return geo_iris, geo_municipality
 
 
 def describe(vintages: Vintages) -> str:
@@ -101,6 +104,12 @@ def import_geo_referential(
     destination_dataset_id: str = typer.Option(
         ..., help="Destination dataset id (raw_<env>)"
     ),
+    iris_table_name: str = typer.Option(
+        ..., help="Destination table for the IRIS referential"
+    ),
+    municipality_table_name: str = typer.Option(
+        ..., help="Destination table for the municipality referential"
+    ),
     dry_run: bool = typer.Option(
         False, help="Download and validate without writing to BigQuery"
     ),
@@ -113,7 +122,11 @@ def import_geo_referential(
             logger.info("%s: %s rows", extract.table_name, len(extract.df))
         validate(extracts)
 
-        tables = build(extracts, vintages)
+        geo_iris, geo_municipality = build(extracts, vintages)
+        tables = {
+            iris_table_name: geo_iris,
+            municipality_table_name: geo_municipality,
+        }
         for table_name, df in tables.items():
             logger.info("%s: %s rows", table_name, len(df))
         if dry_run:

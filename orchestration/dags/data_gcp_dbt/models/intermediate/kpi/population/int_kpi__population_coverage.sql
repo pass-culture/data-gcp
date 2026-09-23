@@ -11,7 +11,7 @@ with
             pop.population_academy_name,
             pop.population_territory_type,
             pop.total_population
-        from {{ ref("int_seed__monthly_france_population") }} as pop
+        from {{ ref("int_seed__monthly_insee_population_estimation") }} as pop
         left join
             {{ ref("region_department") }} as rd
             on pop.population_department_code = rd.num_dep

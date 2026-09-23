@@ -9,5 +9,6 @@ preprocessors:
   offer_name: "normalize_whitespace"
   offer_description: "clean_description"
 prompt_template: >-
-  Ce film est intitulé "{offer_name}". Synopsis: {offer_description}.
+  Ce film est intitulé "{offer_name}".
   Genres: {offer_label_concat}.
+  Synopsis: {offer_description}.

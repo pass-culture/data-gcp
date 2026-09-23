@@ -11,5 +11,5 @@ preprocessors:
   offer_description: "clean_description"
 prompt_template: >-
   Ce livre est intitulé "{offer_name}" par {author_concat}.
-  Résumé: {offer_description}.
   Classification: {offer_label_concat}.
+  Résumé: {offer_description}.

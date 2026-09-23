@@ -9,6 +9,7 @@ from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
+from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -98,9 +99,9 @@ def _step_command(
     embed) of one vector, reading ``input_subfolder`` and writing
     ``output_subfolder`` under that vector's GCS prefix.
 
-    Only selected vectors reach this step -- the per-vector ``check_selected``
-    ShortCircuit skips an unselected vector's whole subchain -- so no in-command
-    guard is needed.
+    Only vectors kept by the plan reach this step -- the per-vector
+    ``check_in_plan`` ShortCircuit skips a dropped vector's whole subchain -- so
+    no in-command guard is needed.
     """
     base = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{vector_name}"
     return (
@@ -318,7 +319,8 @@ with DAG(
     start >> plan_vectors >> check_any_to_embed
     check_any_to_embed >> gce_instance_start >> install_dependencies
 
-    # Each vector runs a fully sequential subchain on the shared VM:
+    # Each vector's steps live in their own TaskGroup and run a fully sequential
+    # subchain on the shared VM:
     #   check_in_plan → export input → prepare (preprocess + build prompts) →
     #   embed → load into BigQuery.
     # Vectors run one after another (embeds share a single GPU), so each vector's
@@ -331,63 +333,67 @@ with DAG(
     load_tasks = []
 
     for vector in AVAILABLE_VECTORS:
-        check_in_plan = ShortCircuitOperator(
-            task_id=f"check_{vector.name}_in_plan",
-            python_callable=_vector_in_plan,
-            op_kwargs={"vector_name": vector.name},
-            # Skip only this vector's own subchain, not the following vectors.
-            ignore_downstream_trigger_rules=False,
-            # Run even when the previous vector was skipped.
-            trigger_rule="none_failed",
-        )
+        with TaskGroup(group_id=vector.name):
+            check_in_plan = ShortCircuitOperator(
+                task_id="check_in_plan",
+                python_callable=_vector_in_plan,
+                op_kwargs={"vector_name": vector.name},
+                # Skip only this vector's own subchain, not the following vectors.
+                ignore_downstream_trigger_rules=False,
+                # Run even when the previous vector was skipped.
+                trigger_rule="none_failed",
+            )
 
-        export_input = BigQueryInsertJobOperator(
-            project_id=GCP_PROJECT_ID,
-            task_id=f"export_{vector.name}_input",
-            configuration={
-                "query": {
-                    "query": _export_input_query(vector),
-                    "useLegacySql": False,
-                }
-            },
-        )
+            export_input = BigQueryInsertJobOperator(
+                project_id=GCP_PROJECT_ID,
+                task_id="export_input",
+                configuration={
+                    "query": {
+                        "query": _export_input_query(vector),
+                        "useLegacySql": False,
+                    }
+                },
+            )
 
-        prepare = SSHGCEOperator(
-            task_id=f"prepare_{vector.name}",
-            instance_name="{{ params.instance_name }}",
-            base_dir=BASE_DIR,
-            gce_zone=GCE_ZONE_TEMPLATE,
-            command=_step_command(
-                "cli.prepare", vector.name, INPUT_SUBFOLDER, PROMPTS_SUBFOLDER
-            ),
-            deferrable=True,
-        )
+            prepare = SSHGCEOperator(
+                task_id="prepare",
+                instance_name="{{ params.instance_name }}",
+                base_dir=BASE_DIR,
+                gce_zone=GCE_ZONE_TEMPLATE,
+                command=_step_command(
+                    "cli.prepare", vector.name, INPUT_SUBFOLDER, PROMPTS_SUBFOLDER
+                ),
+                deferrable=True,
+            )
 
-        embed = SSHGCEOperator(
-            task_id=f"embed_{vector.name}",
-            instance_name="{{ params.instance_name }}",
-            base_dir=BASE_DIR,
-            gce_zone=GCE_ZONE_TEMPLATE,
-            command=_step_command(
-                "cli.embed", vector.name, PROMPTS_SUBFOLDER, EMBEDDINGS_SUBFOLDER
-            ),
-            deferrable=True,
-        )
+            embed = SSHGCEOperator(
+                task_id="embed",
+                instance_name="{{ params.instance_name }}",
+                base_dir=BASE_DIR,
+                gce_zone=GCE_ZONE_TEMPLATE,
+                command=_step_command(
+                    "cli.embed", vector.name, PROMPTS_SUBFOLDER, EMBEDDINGS_SUBFOLDER
+                ),
+                deferrable=True,
+            )
 
-        load = GCSToBigQueryOperator(
-            task_id=f"load_{vector.name}",
-            project_id=GCP_PROJECT_ID,
-            bucket=ML_BUCKET_TEMP,
-            source_objects=[
-                f"{GCS_FOLDER_PATH}/{vector.name}/{EMBEDDINGS_SUBFOLDER}/*.parquet"
-            ],
-            destination_project_dataset_table=vector.output_table,
-            source_format="PARQUET",
-            write_disposition="WRITE_TRUNCATE",
-            autodetect=True,
-            # Collapse the Parquet LIST's into a native REPEATED FLOAT
-            extra_config={"parquetOptions": {"enableListInference": True}},
-        )
+            load = GCSToBigQueryOperator(
+                task_id="load",
+                project_id=GCP_PROJECT_ID,
+                bucket=ML_BUCKET_TEMP,
+                source_objects=[
+                    f"{GCS_FOLDER_PATH}/{vector.name}/{EMBEDDINGS_SUBFOLDER}/*.parquet"
+                ],
+                destination_project_dataset_table=vector.output_table,
+                source_format="PARQUET",
+                write_disposition="WRITE_TRUNCATE",
+                autodetect=True,
+                # Collapse the Parquet LIST's into a native REPEATED FLOAT
+                extra_config={"parquetOptions": {"enableListInference": True}},
+            )
+
+            check_in_plan >> export_input
+            [export_input, install_dependencies] >> prepare >> embed >> load
 
         # First vector starts once there's something to embed; each later vector
         # waits for the previous embed to free the GPU.
@@ -395,9 +401,6 @@ with DAG(
             check_any_to_embed >> check_in_plan
         else:
             previous_embed >> check_in_plan
-
-        check_in_plan >> export_input
-        [export_input, install_dependencies] >> prepare >> embed >> load
 
         previous_embed = embed
         embed_tasks.append(embed)

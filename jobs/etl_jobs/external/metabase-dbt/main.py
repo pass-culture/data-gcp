@@ -1,9 +1,9 @@
 import typer
 
-from handler import BigqueryDBTHandler, MetabaseDBTHandler
+from handler import BigqueryDBTHandler, MetabaseDBTHandler, MetabaseExportError
 from utils import ENVIRONMENT_SHORT_NAME, METABASE_DEFAULT_DATABASE
 
-app = typer.Typer()
+app = typer.Typer(pretty_exceptions_enable=False)
 
 
 @app.command()
@@ -24,11 +24,15 @@ def export_models(
     handler = MetabaseDBTHandler(
         airflow_bucket_name, airflow_bucket_manifest_path, local_manifest_path
     )
-    handler.export_model(
-        metabase_database=METABASE_DEFAULT_DATABASE,
-        schema_filters=[f"analytics_{ENVIRONMENT_SHORT_NAME}"],
-        model_names=["mrt_*"],
-    )
+    try:
+        handler.export_model(
+            metabase_database=METABASE_DEFAULT_DATABASE,
+            schema_filters=[f"analytics_{ENVIRONMENT_SHORT_NAME}"],
+            model_names=["mrt_*"],
+        )
+    except MetabaseExportError:
+        # Details already logged in the recap, no need for a traceback.
+        raise typer.Exit(code=1)
 
 
 @app.command()

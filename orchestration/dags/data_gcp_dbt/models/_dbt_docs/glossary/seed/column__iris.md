@@ -17,7 +17,7 @@ The official INSEE code of the municipality containing the IRIS area, at the fin
 {% enddocs %}
 
 {% docs column__city_label %}
-The name of the municipality containing the IRIS area. Always the name of the municipality of `municipality_code`, so the arrondissements of Paris, Lyon and Marseille all carry the name of their parent municipality (`Paris` for `city_code` `75101` to `75120`).
+The name of the city of `city_code`, at the same finest level: the *arrondissement municipal* for Paris, Lyon and Marseille (`Paris 1er Arrondissement` for `75101`), the municipality itself everywhere else. Use `municipality_label` for the name of the parent municipality (`Paris`).
 {% enddocs %}
 
 {% docs column__territorial_authority_code %}

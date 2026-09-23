@@ -16,15 +16,14 @@ from constants import (
 from utils.common import (
     preprocess_embeddings_by_chunk,
     read_parquet_in_batches_gcs,
-    reduce_embeddings_and_store_reducer,
 )
 from utils.gcs_utils import upload_parquet
 
 EXTRACT_EDITION_PATTERN = (
-    r"\b(?:tome|t|vol|episode)\s*(\d+)\b|\b(?:tome|t|vol|episode)(\d+)\b|(\d+)$"
+    r"\b(?:tome|t|vol|episode|n)\s*(\d+)\b|\b(?:tome|t|vol|episode|n)(\d+)\b|(\d+)$"
 )
 REMOVE_EDITION_PATTERN = (
-    r"\b(?:tome|t|vol|episode)\s*\d+\b|\b(?:tome|t|vol|episode)\d+\b|\d+$"
+    r"\b(?:tome|t|vol|episode|n)\s*\d+\b|\b(?:tome|t|vol|episode|n)\d+\b|\d+$"
 )
 
 app = typer.Typer()
@@ -58,6 +57,28 @@ def preprocess_string(s):
     return s
 
 
+INT64_MIN, INT64_MAX = -(2**63), 2**63 - 1
+
+
+def _digits_to_nullable_int(digits: pd.Series) -> pd.Series:
+    """
+    Convert a Series of extracted edition digit-strings (or NaN) to a nullable
+    Int64 column. We parse each string with Python's arbitrary-precision int
+    instead of pd.to_numeric, which would route through float64 and fail to cast
+    values above 2**53 (e.g. long ISBN-like numbers that leak through the regex).
+    Anything outside the Int64 range is nulled -- such values are never real
+    editions.
+    """
+
+    def cast(value):
+        if pd.isna(value):
+            return pd.NA
+        parsed = int(value)
+        return parsed if INT64_MIN <= parsed <= INT64_MAX else pd.NA
+
+    return digits.map(cast).astype("Int64")
+
+
 def preprocess_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
     """
     Preprocess the entire catalog DataFrame.
@@ -68,58 +89,48 @@ def preprocess_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Processed catalog DataFrame.
     """
+    clean_offer_name = catalog["offer_name"].apply(preprocess_string)
     return catalog.assign(
         performer=lambda df: df["performer"]
         .fillna(value=UNKNOWN_PERFORMER)
         .apply(preprocess_string),
-        offer_name=lambda df: df["offer_name"].apply(preprocess_string),
-        edition=lambda df: df["offer_name"]
-        .str.extract(EXTRACT_EDITION_PATTERN, expand=False)[0]
-        .replace("nan", "0"),
-        oeuvre=lambda df: df["offer_name"]
-        .apply(preprocess_string)
-        .str.replace(REMOVE_EDITION_PATTERN, "", regex=True),
+        offer_name=clean_offer_name,
+        edition=_digits_to_nullable_int(
+            clean_offer_name.str.extract(EXTRACT_EDITION_PATTERN, expand=False)[0]
+        ),
+        oeuvre=clean_offer_name.str.replace(REMOVE_EDITION_PATTERN, "", regex=True),
         offer_description=lambda df: df["offer_description"].apply(preprocess_string),
     )
 
 
-def preprocess_embedding_and_store_reducer(
-    chunk: pd.DataFrame, reducer_path: str, reduction: bool
-) -> pd.DataFrame:
+def preprocess_embeddings(chunk: pd.DataFrame) -> pd.DataFrame:
     """
-    Prepare the table by reading the parquet file from GCS, preprocessing embeddings,
-    and merging the embeddings with the dataframe.
+    Drop zero-vector rows, stack the (already truncated) embeddings and L2-normalize
+    them into the `vector` column consumed by LanceDB.
 
     Args:
-        chunk (pd.DataFrame): The dataframe to prepare.
-        reducer_path (str): The path to store the reducer.
-        reduction (bool): Whether to reduce the embeddings.
-        linkage_type (str): Type of linkage to perform
+        chunk (pd.DataFrame): The dataframe to prepare, with an `embedding` column.
+
     Returns:
-        pd.DataFrame: The prepared dataframe with embeddings.
+        pd.DataFrame: The prepared dataframe with a normalized `vector` column.
     """
-    item_df = chunk
-    item_df = item_df[
-        item_df["embedding"].apply(lambda vec: not np.all(np.array(vec) == 0))
+    item_df = chunk[
+        chunk["embedding"].apply(lambda vec: not np.all(np.array(vec) == 0))
     ]
 
-    if reduction:
-        item_df = item_df.assign(
-            vector=reduce_embeddings_and_store_reducer(
-                embeddings=preprocess_embeddings_by_chunk(chunk),
-                n_dim=MODEL_TYPE["n_dim"],
-                reducer_path=reducer_path,
-            )
-        ).drop(columns=["embedding"])
-    else:
-        item_df = item_df.assign(
-            vector=list(preprocess_embeddings_by_chunk(chunk))
-        ).drop(columns=["embedding"])
+    item_df = item_df.assign(vector=list(preprocess_embeddings_by_chunk(item_df))).drop(
+        columns=["embedding"]
+    )
 
     embeddings_array = np.array(item_df["vector"].tolist())
+    if embeddings_array.ndim != 2 or embeddings_array.shape[1] != MODEL_TYPE["n_dim"]:
+        raise ValueError(
+            f"Expected every embedding to have {MODEL_TYPE['n_dim']} dimensions, "
+            f"got an array of shape {embeddings_array.shape}. Check the upstream "
+            "truncation in ml_feat__item_embedding_refactor_128."
+        )
 
     normalized_embeddings = normalize(embeddings_array, norm="l2")
-
     item_df["vector"] = list(normalized_embeddings)
 
     return item_df
@@ -130,30 +141,22 @@ def preprocess_embedding_and_store_reducer(
 def main(
     input_path: str = typer.Option(..., help="Path to the input catalog"),
     output_path: str = typer.Option(..., help="Path to save the processed catalog"),
-    reduction: str = typer.Option(
-        default="true",
-        help="Reduce the embeddings",
-    ),
     batch_size: int = typer.Option(
         default=PARQUET_BATCH_SIZE,
         help="Batch size for reading the parquet file",
     ),
 ):
     """
-    Process the input catalog in batches,clean and preprocess the tables and optionally reduce the embeddings
+    Process the input catalog in batches: clean the tables and L2-normalize the embeddings.
     Args:
         input_path (str): Path to the input catalog.
         output_path (str): Path to save the processed catalog.
-        reduction (str): Flag ("true"/"false") indicating whether to reduce embeddings.
         batch_size (int): Number of rows to process per chunk when reading the Parquet file.
     """
-    reduction = True if reduction == "true" else False
     for i, chunk in enumerate(read_parquet_in_batches_gcs(input_path, batch_size)):
         logger.info(f"Processing chunk {i + 1}...")
         clean_catalog = preprocess_catalog(chunk)
-        chunk_ready = preprocess_embedding_and_store_reducer(
-            clean_catalog, MODEL_TYPE["reducer_pickle_path"], reduction
-        )
+        chunk_ready = preprocess_embeddings(clean_catalog)
         chunk_output_path = f"{output_path}/data-{i + 1}.parquet"
         logger.info(f"Saving processed chunk to {chunk_output_path}...")
         upload_parquet(

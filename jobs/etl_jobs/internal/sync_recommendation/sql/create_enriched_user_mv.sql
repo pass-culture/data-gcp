@@ -11,7 +11,8 @@ returns
         consult_offer integer,
         has_added_offer_to_favorites integer,
         user_subscription_latitude real,
-        user_subscription_longitude real
+        user_subscription_longitude real,
+        user_is_embedded boolean
     )
 as
     $body$
@@ -29,7 +30,8 @@ BEGIN
         eu.consult_offer,
         eu.has_added_offer_to_favorites,
         eu.user_subscription_latitude,
-        eu.user_subscription_longitude
+        eu.user_subscription_longitude,
+        eu.user_is_embedded
     FROM public.enriched_user eu;
 END;
 $body$

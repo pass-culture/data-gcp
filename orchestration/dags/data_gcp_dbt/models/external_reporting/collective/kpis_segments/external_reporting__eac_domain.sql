@@ -1,3 +1,4 @@
+-- noqa: disable=all
 {{
     config(
         **custom_incremental_config(
@@ -17,7 +18,7 @@ with
             cb.institution_region_name as region_name,
             cb.institution_academy_name as academy_name,
             cb.institution_epci_code as epci_code,
-            cb.institution_city_code as city_code,
+            cb.institution_municipality_code as municipality_code,
             cb.institution_department_name as dep_name,
             cod.educational_domain_name as domain_name,
             date_trunc(
@@ -48,7 +49,7 @@ with
             academy_name,
             dep_name,
             epci_code,
-            city_code,
+            municipality_code,
             domain_name,
             is_labelled_mc
     ),

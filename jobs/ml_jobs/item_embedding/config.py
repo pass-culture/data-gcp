@@ -3,11 +3,67 @@ from typing import Optional
 
 import yaml
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, model_validator
 
 CONFIGS_PATH = pathlib.Path(__file__).parent / "configs"
 
 REQUIRED_CONFIG_KEYS = {"vectors"}
+
+
+class FilterCondition(BaseModel):
+    """A single-column match, matched on `column` by exactly one of:
+    - `values`: item is kept if `column` value is in this list
+      (e.g. column="category_id", values=["CINEMA"] to scope to movies).
+    - `prefix`: item is kept if `column` value starts with this string
+      (e.g. column="item_id", prefix="product" to match ``LEFT(item_id,
+      LEN('product')) = 'product'``).
+
+    `column` is a free string (not an enum) so any catalog column can be
+    used, keeping the condition fully variabilized via config.
+    """
+
+    column: str
+    values: Optional[list[str]] = None
+    prefix: Optional[str] = None
+
+    @model_validator(mode="after")
+    def _check_exactly_one_match_mode(self) -> "FilterCondition":
+        if (self.values is None) == (self.prefix is None):
+            raise ValueError(
+                "FilterCondition requires exactly one of `values` or `prefix`"
+            )
+        return self
+
+
+class FilterGroup(BaseModel):
+    """A set of `FilterCondition`s combined with AND."""
+
+    conditions: list[FilterCondition]
+
+
+class CategoryFilter(BaseModel):
+    """Restricts a vector to a subset of items via two composable layers:
+    - `all_of`: conditions combined with AND, applied unconditionally
+      (e.g. an item_id prefix that must always hold).
+    - `any_of`: groups of conditions; an item matches if it satisfies at
+      least one group (OR across groups), where each group's own conditions
+      are combined with AND (e.g. category X, or category Y AND subcategory
+      in [...]).
+
+    Both layers are ANDed together when both are set. At least one of
+    `all_of`/`any_of` must be non-empty, otherwise the filter does nothing.
+    """
+
+    all_of: list[FilterCondition] = []
+    any_of: list[FilterGroup] = []
+
+    @model_validator(mode="after")
+    def _check_not_empty(self) -> "CategoryFilter":
+        if not self.all_of and not self.any_of:
+            raise ValueError(
+                "CategoryFilter requires at least one of `all_of` or `any_of`"
+            )
+        return self
 
 
 class Vector(BaseModel):
@@ -16,6 +72,22 @@ class Vector(BaseModel):
     encoder_name: str
     prompt_name: Optional[str] = None
     labels: dict[str, str] = {}
+    category_filter: Optional[CategoryFilter] = None
+    prompt_template: Optional[str] = None
+    preprocessors: dict[str, str] = {}
+
+    @field_validator("preprocessors")
+    @classmethod
+    def _validate_preprocessors(cls, v: dict[str, str]) -> dict[str, str]:
+        from preprocessing import PREPROCESSORS
+
+        unknown = set(v.values()) - PREPROCESSORS.keys()
+        if unknown:
+            raise ValueError(
+                f"Unknown preprocessor(s): {sorted(unknown)}. "
+                f"Registered: {sorted(PREPROCESSORS)}"
+            )
+        return v
 
 
 def _load_config(config_file_name: str) -> dict:

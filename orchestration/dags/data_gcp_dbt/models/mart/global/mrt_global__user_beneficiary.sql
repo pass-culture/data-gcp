@@ -5,6 +5,7 @@ select
     user_postal_code,
     user_city,
     user_city_code,
+    user_municipality_code,
     user_activity,
     user_civility,
     user_school_type,

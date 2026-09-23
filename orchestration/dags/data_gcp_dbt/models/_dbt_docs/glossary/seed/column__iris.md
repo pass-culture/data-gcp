@@ -8,12 +8,16 @@ The official INSEE code identifying the IRIS (Îlots Regroupés pour l'Informati
 The descriptive name or label of the IRIS area.
 {% enddocs %}
 
+{% docs column__iris_type %}
+INSEE type of the IRIS: `H` (habitat), `A` (activité), `D` (divers) or `Z` (commune non irisée, the IRIS is the whole municipality). Overseas collectivities without IRIS (Wallis-et-Futuna, Polynésie française, Nouvelle-Calédonie) are represented as one `Z` pseudo-IRIS per municipality, coded `<city_code>0000`.
+{% enddocs %}
+
 {% docs column__city_code %}
-The official INSEE code of the municipality (commune) containing the IRIS area.
+The official INSEE code of the municipality containing the IRIS area, at the finest level: the *arrondissement municipal* for Paris, Lyon and Marseille (`75101`, `69381`, `13201`…), the municipality itself everywhere else. Those arrondissement codes are absent from municipality-level reference files, so use `municipality_code` to join population, EPCI, density or zoning data.
 {% enddocs %}
 
 {% docs column__city_label %}
-The name of the municipality (commune) containing the IRIS area.
+The name of the municipality containing the IRIS area. Always the name of the municipality of `municipality_code`, so the arrondissements of Paris, Lyon and Marseille all carry the name of their parent municipality (`Paris` for `city_code` `75101` to `75120`).
 {% enddocs %}
 
 {% docs column__territorial_authority_code %}
@@ -85,7 +89,15 @@ The broader categorization of population density for the IRIS area.
 {% enddocs %}
 
 {% docs column__geo_code %}
-The unique geographic code identifying the IRIS area.
+The INSEE code of the municipality the IRIS belongs to, at the level where municipal attributes (EPCI, density grid, rural typology, zonings) are published: the parent municipality for the arrondissements of Paris, Lyon and Marseille, otherwise the same as `city_code`.
+{% enddocs %}
+
+{% docs column__municipality_code %}
+The official INSEE code of the municipality (*commune*) the IRIS belongs to: the parent municipality for the arrondissements of Paris, Lyon and Marseille (`75056`, `69123`, `13055`), the municipality itself everywhere else. This is the level at which INSEE publishes municipal data (population, EPCI, density grid, zonings), so it is the code to join a municipality referential on — unlike `city_code`, which goes down to the arrondissement. Not a postal code.
+{% enddocs %}
+
+{% docs column__municipality_label %}
+The name of the municipality of `municipality_code`.
 {% enddocs %}
 
 {% docs column__rural_city_type %}

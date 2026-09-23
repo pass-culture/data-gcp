@@ -91,6 +91,14 @@ CLICKHOUSE_ANALYTICS_TRANSFORMATION_CONFIGS = [
     ),
     AnalyticsConfig(
         clickhouse_dataset_name="analytics",
+        clickhouse_table_name="last_3months_venue_top_offer_consultation",
+    ),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="last_6months_venue_top_offer_consultation",
+    ),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
         clickhouse_table_name="monthly_aggregated_venue_collective_revenue",
     ),
     AnalyticsConfig(

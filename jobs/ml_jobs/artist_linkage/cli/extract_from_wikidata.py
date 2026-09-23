@@ -1,3 +1,4 @@
+import time
 from io import StringIO
 
 import pandas as pd
@@ -113,33 +114,57 @@ def postprocess_data(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def clear_qlever_cache():
-    response = requests.get(
-        QLEVER_ENDPOINT, params={"cmd": "clear-cache"}, headers=QLEVER_HEADERS
+def clear_qlever_cache(retries: int = 3, backoff_factor: int = 5) -> None:
+    for attempt in range(retries):
+        try:
+            response = requests.get(
+                QLEVER_ENDPOINT,
+                params={"cmd": "clear-cache"},
+                headers=QLEVER_HEADERS,
+                timeout=30,
+            )
+            if response.status_code == 200:
+                logger.info(f"Cache cleared for {QLEVER_ENDPOINT}")
+                return
+            logger.warning(
+                f"Cache clear attempt {attempt + 1} failed ({response.status_code}): {response.text[:150]}"
+            )
+        except requests.RequestException as e:
+            logger.warning(f"Cache clear attempt {attempt + 1} request error: {e}")
+
+        time.sleep(backoff_factor * (attempt + 1))
+
+    logger.warning(
+        "Failed to reset QLever cache after retries. Proceeding with execution..."
     )
 
-    if response.status_code == 200:
-        logger.info(f"Cache cleared for {QLEVER_ENDPOINT}")
-    else:
-        raise requests.RequestException(
-            f"Cannot reset cache: {response.status_code}, {response.text}"
-        )
 
+def fetch_wikidata_qlever_csv(
+    sparql_query: str, retries: int = 3, backoff_factor: int = 5
+) -> pd.DataFrame:
+    for attempt in range(retries):
+        try:
+            response = requests.get(
+                QLEVER_ENDPOINT,
+                params={"query": sparql_query},
+                headers=QLEVER_HEADERS,
+                timeout=120,
+            )
+            if response.status_code == 200:
+                response.encoding = "utf-8"
+                return pd.read_csv(StringIO(response.text))
 
-def fetch_wikidata_qlever_csv(sparql_query):
-    response = requests.get(
-        QLEVER_ENDPOINT, params={"query": sparql_query}, headers=QLEVER_HEADERS
+            logger.warning(
+                f"Attempt {attempt + 1} failed ({response.status_code}): {response.text[:200]}"
+            )
+        except requests.RequestException as e:
+            logger.warning(f"Attempt {attempt + 1} request error: {e}")
+
+        time.sleep(backoff_factor * (attempt + 1))
+
+    raise requests.RequestException(
+        f"Failed to fetch data from {QLEVER_ENDPOINT} after {retries} attempts."
     )
-
-    if response.status_code == 200:
-        response.encoding = "utf-8"
-
-        csv_content = response.text
-        return pd.read_csv(StringIO(csv_content))
-    else:
-        raise requests.RequestException(
-            f"Error while fetching data from {QLEVER_ENDPOINT}: {response.status_code}, {response.text}"
-        )
 
 
 @app.command()

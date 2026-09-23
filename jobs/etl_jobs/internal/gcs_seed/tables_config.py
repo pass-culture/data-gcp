@@ -43,16 +43,6 @@ REF_TABLES = {
             "offerer_tag": "STRING",
         },
     },
-    "propilote_zones_ref": {
-        "file_type": "csv",
-        "schema": {
-            "zone_id": "STRING",
-            "nom": "STRING",
-            "zone_code": "STRING",
-            "zone_type": "STRING",
-            "zone_parent": "STRING",
-        },
-    },
     "departmental_objectives": {
         "file_type": "csv",
         "schema": {
@@ -68,13 +58,6 @@ REF_TABLES = {
         "schema": {
             "partner_type": "STRING",
             "cultural_sector": "STRING",
-        },
-    },
-    "pilote_geographic_standards": {
-        "file_type": "csv",
-        "schema": {
-            "zone_id": "STRING",
-            "nom": "STRING",
         },
     },
     "priority_local_authorities": {
@@ -232,6 +215,9 @@ REF_TABLES = {
         "file_type": "parquet",
     },
     "region_department": {
+        "file_type": "parquet",
+    },
+    "deps_cultural_practices_2018": {
         "file_type": "parquet",
     },
     "2020_insee_iris_socio_demographics": {

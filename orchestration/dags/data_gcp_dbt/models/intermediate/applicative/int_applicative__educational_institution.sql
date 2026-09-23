@@ -50,6 +50,7 @@ select
     ei.institution_type,
     eil_loc.institution_city,
     eil_loc.institution_city_code,
+    eil_loc.institution_municipality_code,
     eil_loc.institution_epci,
     eil_loc.institution_epci_code,
     eil_loc.institution_density_label,

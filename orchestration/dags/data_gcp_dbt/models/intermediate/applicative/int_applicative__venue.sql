@@ -163,6 +163,7 @@ select
     v_loc.venue_city,
     v_loc.venue_city_code,
     v_loc.venue_municipality_code,
+    v_loc.venue_municipality_label,
     v_loc.venue_epci,
     v_loc.venue_epci_code,
     v_loc.venue_density_label,

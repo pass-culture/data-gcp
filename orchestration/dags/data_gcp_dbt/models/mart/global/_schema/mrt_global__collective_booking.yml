@@ -79,6 +79,10 @@ models:
         description: "{{ doc('column__institution_city') }}"
       - name: institution_city_code
         description: "{{ doc('column__institution_city_code') }}"
+      - name: institution_municipality_code
+        description: "{{ doc('column__institution_municipality_code') }}"
+      - name: institution_municipality_label
+        description: "{{ doc('column__institution_municipality_label') }}"
       - name: institution_epci
         description: "{{ doc('column__institution_epci') }}"
       - name: institution_epci_code
@@ -93,6 +97,10 @@ models:
         description: "{{ doc('column__venue_city') }}"
       - name: venue_city_code
         description: "{{ doc('column__venue_city_code') }}"
+      - name: venue_municipality_code
+        description: "{{ doc('column__venue_municipality_code') }}"
+      - name: venue_municipality_label
+        description: "{{ doc('column__venue_municipality_label') }}"
       - name: venue_epci
         description: "{{ doc('column__venue_epci') }}"
       - name: venue_epci_code

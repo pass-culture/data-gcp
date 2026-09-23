@@ -36,6 +36,7 @@ select
     o.venue_city,
     o.venue_city_code,
     o.venue_municipality_code,
+    o.venue_municipality_label,
     o.venue_epci,
     o.venue_epci_code,
     o.venue_academy_name,

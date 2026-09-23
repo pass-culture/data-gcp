@@ -191,6 +191,7 @@ def test_build_geo_municipality_arrondissement_takes_parent_label_and_attributes
 
     assert list(df.columns) == GEO_MUNICIPALITY_COLUMNS
     paris_1 = df[df.city_code == "75101"].iloc[0]
+    assert paris_1["city_label"] == "Paris 1er Arrondissement"
     assert paris_1["municipality_code"] == "75056"
     assert paris_1["municipality_label"] == "Paris"
     assert paris_1["epci_code"] == "200054781"
@@ -219,6 +220,7 @@ def test_build_geo_municipality_overseas_commune_has_no_epci_and_no_density():
     )
 
     noumea = df[df.city_code == "98818"].iloc[0]
+    assert noumea["city_label"] == "Nouméa"
     assert noumea["municipality_label"] == "Nouméa"
     assert noumea["department_code"] == "988"
     assert noumea["epci_code"] == "ZZZZZZZZZ"

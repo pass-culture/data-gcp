@@ -7,8 +7,10 @@
 {% docs column__venue_longitude %} Longitude coordinate of the venue. {% enddocs %}
 {% docs column__venue_department_code %} Department code of the venue. {% enddocs %}
 {% docs column__venue_postal_code %} Postal code of the venue. {% enddocs %}
-{% docs column__venue_city %} City where the venue is located. {% enddocs %}
-{% docs column__venue_city_code %} City code where the venue is located. {% enddocs %}
+{% docs column__venue_city %} Name of the city where the venue is located, at the arrondissement level for Paris, Lyon and Marseille (e.g. `Paris 1er Arrondissement`). {% enddocs %}
+{% docs column__venue_city_code %} INSEE code of the city where the venue is located, at the arrondissement level for Paris, Lyon and Marseille (e.g. `75101`). {% enddocs %}
+{% docs column__venue_municipality_code %} INSEE code of the municipality (commune) where the venue is located: the parent municipality for the arrondissements of Paris, Lyon and Marseille (`75056`, `69123`, `13055`), the same as `venue_city_code` everywhere else. {% enddocs %}
+{% docs column__venue_municipality_label %} Name of the municipality (commune) of `venue_municipality_code` (e.g. `Paris` for every Paris arrondissement). {% enddocs %}
 {% docs column__venue_siret %} SIRET number of the venue. A venue may not have a SIRET (especially when it hosts public but does not belong to the offerer. Exemple : a theater company performs a play in a concert hall they don't own.) {% enddocs %}
 {% docs column__venue_managing_offerer_id %} ID of the offerer who manage the venue. One offerer can have multiple venues. {% enddocs %}
 {% docs column__venue_creation_date %} Date when the venue was created on the application. {% enddocs %}

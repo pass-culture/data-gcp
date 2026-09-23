@@ -323,7 +323,7 @@ with DAG(
     # check hangs off the previous vector's embed. The single check just reads the
     # upstream plan: a vector not in it skips its own subchain
     # (ignore_downstream_trigger_rules=False keeps the skip local) while the next
-    # vector's check still fires (trigger_rule=none_failed tolerates the skip).
+    # vector's check still fires (trigger_rule=all_done tolerates both).
     previous_embed = None
     embed_tasks = []
     load_tasks = []
@@ -336,8 +336,8 @@ with DAG(
                 op_kwargs={"vector_name": vector.name},
                 # Skip only this vector's own subchain, not the following vectors.
                 ignore_downstream_trigger_rules=False,
-                # Run even when the previous vector was skipped.
-                trigger_rule="none_failed",
+                # Run even if the previous vector was skipped or failed.
+                trigger_rule="all_done",
             )
 
             export_input = BigQueryInsertJobOperator(

@@ -4,7 +4,7 @@ from itertools import chain
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import ShortCircuitOperator
+from airflow.operators.python import PythonOperator, ShortCircuitOperator
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
@@ -12,7 +12,6 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
-    BIGQUERY_ML_FEATURES_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -29,24 +28,49 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
+from pydantic import BaseModel
 
 from jobs.crons import SCHEDULE_DICT
 
 ###########################################################################
 ## GCS CONSTANTS
+# Each run lays out per-vector, per-step subfolders under this prefix:
+#   {GCS_FOLDER_PATH}/{vector}/{input,prompts,embeddings}/
 GCS_FOLDER_PATH = f"item_embedding_{ENV_SHORT_NAME}/{{{{ ts_nodash }}}}"
-INPUT_FOLDER = "input_item_metadata"
-OUTPUT_FOLDER = "output_item_embeddings"
-TEMP_OUTPUT_FILE_NAME = "item_embeddings_*.parquet"
-TEMP_INPUT_FILE_NAME = "item_metadata_*.parquet"
+INPUT_SUBFOLDER = "input"
+PROMPTS_SUBFOLDER = "prompts"
+EMBEDDINGS_SUBFOLDER = "embeddings"
 
 ## BigQuery CONSTANTS
-INPUT_DATASET_NAME = f"ml_input_{ENV_SHORT_NAME}"
-INPUT_TABLE_NAME = "item_embedding_extraction"
-TEMP_INT_TABLE_NAME = "tmp_item_metadata"
+EMBEDDING_DATASET_NAME = f"ml_embeddings_{ENV_SHORT_NAME}"
 
-OUTPUT_DATASET_NAME = BIGQUERY_ML_FEATURES_DATASET
-TEMP_OUTPUT_TABLE_NAME = "item_embedding_tmp"
+
+class VectorPipeline(BaseModel):
+    name: str  # embedding vector name
+    input_table: str  # dataset.table (dbt input model)
+    output_table: str  # dataset.table (this DAG's per-vector staging output)
+
+
+# List of all the vectors this DAG can run. Add a vector by creating its dbt input model + a
+# configs/<name>.yaml in the item_embeddings job + an entry here (all keyed by ``name``).
+AVAILABLE_VECTORS = [
+    VectorPipeline(
+        name="semantic_content",
+        input_table=f"{EMBEDDING_DATASET_NAME}.input_semantic_content_embeddings",
+        output_table=f"{EMBEDDING_DATASET_NAME}.semantic_content_embeddings_tmp",
+    ),
+    VectorPipeline(
+        name="movies_content",
+        input_table=f"{EMBEDDING_DATASET_NAME}.input_movies_content_embeddings",
+        output_table=f"{EMBEDDING_DATASET_NAME}.movies_content_embeddings_tmp",
+    ),
+    VectorPipeline(
+        name="books_content",
+        input_table=f"{EMBEDDING_DATASET_NAME}.input_books_content_embeddings",
+        output_table=f"{EMBEDDING_DATASET_NAME}.books_content_embeddings_tmp",
+    ),
+]
+VECTOR_NAMES = [vector.name for vector in AVAILABLE_VECTORS]
 
 ## DAG CONFIG
 DAG_NAME = "item_embedding"
@@ -66,37 +90,104 @@ DEFAULT_ARGS = {
     "retry_delay": timedelta(minutes=2),
 }
 
+
+def _step_command(
+    module: str, vector_name: str, input_subfolder: str, output_subfolder: str
+) -> str:
+    """Build an SSH command for one pipeline step (preprocess/build_prompts/
+    embed) of one vector, reading ``input_subfolder`` and writing
+    ``output_subfolder`` under that vector's GCS prefix.
+
+    Only selected vectors reach this step -- the per-vector ``check_selected``
+    ShortCircuit skips an unselected vector's whole subchain -- so no in-command
+    guard is needed.
+    """
+    base = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{vector_name}"
+    return (
+        f"uv run python -m {module} "
+        f"--config-file-name {vector_name} "
+        f"--input-parquets-folder-path {base}/{input_subfolder} "
+        f"--output-parquets-folder-path {base}/{output_subfolder}"
+    )
+
+
+def _export_input_query(vector: VectorPipeline) -> str:
+    """EXPORT DATA query writing a vector's (optionally to_embed-filtered) input
+    rows straight to GCS parquet -- no intermediate temp table needed.
+    """
+    uri = (
+        f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{vector.name}/"
+        f"{INPUT_SUBFOLDER}/item_metadata_*.parquet"
+    )
+    return f"""
+        EXPORT DATA OPTIONS(
+          uri='{uri}',
+          format='PARQUET',
+          overwrite=true
+        ) AS
+        SELECT * FROM `{GCP_PROJECT_ID}.{vector.input_table}`
+        {{% if not params.embed_all %}}WHERE to_embed{{% endif %}}
+    """
+
+
+def _plan_vectors_to_embed(**context) -> list[str]:
+    """Resolve, once and upstream of the per-vector fan-out, which vectors this
+    run should actually process: those that are *selected* and have rows to
+    embed in their own input table. embed_all forces every selected vector.
+
+    A single batched query (one ``EXISTS`` probe per selected table, UNION ALL'd)
+    replaces per-vector count queries; the result is pushed to XCom and read back
+    by each vector's ShortCircuit gate.
+    """
+    params = context["params"]
+    selected = [v for v in AVAILABLE_VECTORS if v.name in params["vectors"]]
+    if params["embed_all"]:
+        return [v.name for v in selected]
+    if not selected:
+        return []
+    bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
+    query = "\nUNION ALL\n".join(
+        f"(SELECT '{v.name}' AS vector "
+        f"FROM `{GCP_PROJECT_ID}.{v.input_table}` WHERE to_embed LIMIT 1)"
+        for v in selected
+    )
+    return [row[0] for row in bq_hook.get_records(query)]
+
+
+def _vector_in_plan(vector_name: str, **context) -> bool:
+    """ShortCircuit gate: run this vector only if the upstream plan kept it."""
+    plan = context["ti"].xcom_pull(task_ids="plan_vectors_to_embed") or []
+    return vector_name in plan
+
+
 ############################################################################
 DAG_DOC = """
     ### Item embedding DAG
 
+    Per vector (chosen via *vectors*), the DAG runs a GCS-staged pipeline:
+    export input from its dbt table → prepare (preprocess + build prompts) →
+    embed → load into its own BigQuery staging table (`<name>_embeddings_tmp`).
+    A later dbt model merges the staging tables.
+
     #### Parameters:
-    * *embed_all* : whether to embed all items or only the ones that need embedding (to_embed = true in the input table)
-    * *config_file_name* : name of the configuration file (without .yaml extension) in the `config` folder, which contains the vector configurations and other parameters for the embedding process.
-    * *instance_type* : GCE instance type to use for embedding. For L4 GPU instances, make sure to select a compatible machine type with the number of GPUs you want to use. Check hint below.
-    * *instance_name* : name of the GCE instance to create for embedding.
-    * *gpu_type* : If you decide to embedd all the catalogue, we highly recommend to use 4 L4 GPUs, in europe-west1-c (to avoid stockout issues in europe-west1-b). If you have a smaller catalogue or if you want to embed only the new items, you can use 4 T4 GPU, which is more widely available across zones.
-    * *gpu_count* : number of GPUs to use for embedding (only applicable for GPU instance types). Make sure to select a machine type that supports the number of GPUs you want to use.
-    * *gce_zone* : GCE zone to use for embedding. Only europe-west1-c and europe-west1-b have L4 GPUs. europe-west1-d has T4 GPUs. Stockout are very frequent.
-    * *provisioning_model* : STANDARD (default) requests the GPU immediately and fails on stockout. FLEX_START uses Dynamic Workload Scheduler (DWS): instead of failing, the request is queued until GPU capacity frees up (queue held for up to *request_valid_for_duration*, hard-capped at 2h by GCP). Uses preemptible quota. Best for the full-catalogue L4 run given frequent stockouts.
-    * *max_run_duration* / *request_valid_for_duration* : FLEX_START only. See parameter descriptions.
-    * *reservation_name* : Consume a specific Compute Engine reservation (e.g. the one auto-created by a future reservation on its start date). When set, use provisioning_model=STANDARD (incompatible with FLEX_START) and make sure instance_type/gpu_type/gpu_count/gce_zone match the reservation exactly.
+    * *embed_all* : whether to embed all items or only the ones that need embedding (to_embed = true in the input tables).
+    * *vectors* : which embedding vectors to run (defaults to all). Each selected vector reads its own dbt input table and writes its own output table.
+    * *instance_type* : GCE instance type. For L4 GPUs pick a compatible g2 machine (see hint).
+    * *instance_name* : GCE instance name.
+    * *gpu_type* : full catalogue → 4×L4 in europe-west1-c; incremental → 4×T4 (more widely available).
+    * *gpu_count* : number of GPUs (must match the machine type).
+    * *gce_zone* : only europe-west1-c/b have L4; europe-west1-d has T4. Stockouts are frequent.
+    * *provisioning_model* : STANDARD (fails on stockout) or FLEX_START (DWS queues the request, held up to *request_valid_for_duration*, max 2h).
+    * *max_run_duration* / *request_valid_for_duration* : FLEX_START only.
+    * *reservation_name* : consume a specific reservation (requires provisioning_model=STANDARD; instance/gpu/zone must match it exactly).
 
-    *Hint:* For L4 GPUs, make sure to select a compatible g2 machine. The Number of L4 GPUs you can attach to a G2 depends on its RAM.
-    Here is the breakdown:
-           * "g2-standard-4/8/12/16/32": 1 L4,
-           * "g2-standard-24": 2 L4s,
-           * "g2-standard-48": 4 L4s,
-           * "g2-standard-96": 8 L4s,
-    ⚠️ caution: frequent stockouts on **L4 GPUs**, especially in europe-west1-b, try europe-west1-c if you encounter stockouts.
+    ⚠️ The per-vector embeds run **sequentially on one shared VM** (chained to
+    avoid GPU contention). For *embed_all*, trigger the DAG **one vector at a
+    time** (set *vectors* to a single entry) so each full-catalogue vector gets
+    its own VM/sizing instead of queuing behind the others.
 
-    **If you want to embed the whole catalog**:
-    * Enable the *embed_all* toggle in the DAG parameters.
-    * The default 1*T4 machine would take ~27 hours to complete. So to accelerate:
-        * Try to get an 1*L4, 2*L4 or 4*T4 machine.
-        * Select *FLEX_START* provisioning model which will queue your VM request in GCP until it is provisioned (max request_valid_for_duration param defaults to2h queue). Note that the airflow worker will hang on until it is provisioned. It lasts till max_run_duration (max 7 days) or until the job is completed, whichever comes first.
-        * You can also try to change the *gce_zone* to *europe-west1-b* if you encounter stockouts in *europe-west1-c*.
-        * Finally, you can also try to reserve a GCE instance with the desired configuration in advance (87 hours prior), and then use the *reservation_name* parameter to consume it on d-day.
+    *Hint:* L4 count per g2 machine: g2-standard-4/8/12/16/32 → 1, -24 → 2,
+    -48 → 4, -96 → 8. Frequent L4 stockouts in europe-west1-b; try -c.
 """
 
 with DAG(
@@ -118,22 +209,15 @@ with DAG(
         "embed_all": Param(
             default=False,
             type="boolean",
-            description="Whether to embed all items or only the ones that need embedding (to_embed = true in the input table). See DAG docs for VM setup recommendations.",
+            description="Whether to embed all items or only the ones that need embedding (to_embed = true). See DAG docs for VM setup.",
         ),
-        "config_file_name": Param(
-            default="default",
-            type="string",
-            description="Name of the configuration file (without .yaml extension)",
-        ),
-        "output_dataset_name": Param(
-            default=OUTPUT_DATASET_NAME,
-            type="string",
-            description="BigQuery dataset name for the output embeddings",
-        ),
-        "output_table_name": Param(
-            default=TEMP_OUTPUT_TABLE_NAME,
-            type="string",
-            description="BigQuery table name for the output embeddings",
+        "vectors": Param(
+            default=VECTOR_NAMES,
+            type="array",
+            items={"type": "string", "enum": VECTOR_NAMES},
+            examples=VECTOR_NAMES,
+            description="Embedding vectors to run (subset of AVAILABLE_VECTORS). "
+            "Defaults to all.",
         ),
         "instance_type": Param(
             default=INSTANCE_TYPE,
@@ -153,9 +237,7 @@ with DAG(
         "gpu_count": Param(
             default=1,
             enum=INSTANCES_TYPES["gpu"]["count"],
-            description="""Number of GPUs to use for embedding
-                        (only applicable for GPU instance types).
-                        """,
+            description="Number of GPUs (only for GPU instance types; must match the machine type).",
         ),
         "gce_zone": Param(default="europe-west1-c", enum=GCE_ZONES),
         "provisioning_model": Param(
@@ -185,17 +267,27 @@ with DAG(
             default=None,
             type=["string", "null"],
             description="""Name of a specific Compute Engine reservation to
-                        consume (e.g. the reservation auto-created by a future
-                        reservation on its start date). When set, the VM targets
-                        this reservation via SPECIFIC_RESERVATION and requires
-                        provisioning_model=STANDARD (incompatible with
-                        FLEX_START). The instance_type, gpu_type, gpu_count and
-                        gce_zone must match the reservation exactly. Leave empty
-                        to not target any reservation.""",
+                        consume. When set, requires provisioning_model=STANDARD
+                        and instance_type/gpu_type/gpu_count/gce_zone must match
+                        the reservation exactly. Leave empty to not target one.""",
         ),
     },
 ) as dag:
     start = EmptyOperator(task_id="start")
+
+    # Resolve once which vectors will actually run (selected + non-empty), then
+    # skip the whole run (including the VM) when that plan is empty.
+    plan_vectors = PythonOperator(
+        task_id="plan_vectors_to_embed",
+        python_callable=_plan_vectors_to_embed,
+    )
+
+    check_any_to_embed = ShortCircuitOperator(
+        task_id="check_any_to_embed",
+        python_callable=lambda **c: bool(
+            c["ti"].xcom_pull(task_ids="plan_vectors_to_embed")
+        ),
+    )
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -210,9 +302,6 @@ with DAG(
         max_run_duration="{{ params.max_run_duration }}",
         request_valid_for_duration="{{ params.request_valid_for_duration }}",
         reservation_name="{{ params.reservation_name }}",
-        # A FLEX_START request always defers while DWS keeps it queued, freeing
-        # the worker slot; cover the max 2h queue wait plus provisioning/boot
-        # margin regardless.
         execution_timeout=timedelta(hours=3),
         retries=3,
     )
@@ -226,114 +315,105 @@ with DAG(
         retries=2,
     )
 
-    # Step 1a: Select items to embed and save to a temp table in BigQuery
-    bigquery_select_items_to_embed = BigQueryInsertJobOperator(
-        project_id=GCP_PROJECT_ID,
-        task_id="bigquery_select_items_to_embed",
-        configuration={
-            "query": {
-                "query": f"""
-                    SELECT * FROM `{GCP_PROJECT_ID}.{INPUT_DATASET_NAME}.{INPUT_TABLE_NAME}`
-                    {{% if not params.embed_all %}}
-                    WHERE to_embed is true
-                    {{% endif %}}
-                """,
-                "useLegacySql": False,
-                "destinationTable": {
-                    "projectId": GCP_PROJECT_ID,
-                    "datasetId": INPUT_DATASET_NAME,
-                    "tableId": TEMP_INT_TABLE_NAME,
-                },
-                "writeDisposition": "WRITE_TRUNCATE",
-            }
-        },
-    )
+    start >> plan_vectors >> check_any_to_embed
+    check_any_to_embed >> gce_instance_start >> install_dependencies
 
-    # Step 1b: Short-circuit the run when the selection is empty.
-    def _has_items_to_embed() -> bool:
-        bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
-        query = f"""
-            SELECT COUNT(*) AS count
-            FROM `{GCP_PROJECT_ID}.{INPUT_DATASET_NAME}.{TEMP_INT_TABLE_NAME}`
-        """
-        result = bq_hook.get_first(query)
+    # Each vector runs a fully sequential subchain on the shared VM:
+    #   check_in_plan → export input → prepare (preprocess + build prompts) →
+    #   embed → load into BigQuery.
+    # Vectors run one after another (embeds share a single GPU), so each vector's
+    # check hangs off the previous vector's embed. The single check just reads the
+    # upstream plan: a vector not in it skips its own subchain
+    # (ignore_downstream_trigger_rules=False keeps the skip local) while the next
+    # vector's check still fires (trigger_rule=none_failed tolerates the skip).
+    previous_embed = None
+    embed_tasks = []
+    load_tasks = []
 
-        return bool(result and result[0] > 0)
+    for vector in AVAILABLE_VECTORS:
+        check_in_plan = ShortCircuitOperator(
+            task_id=f"check_{vector.name}_in_plan",
+            python_callable=_vector_in_plan,
+            op_kwargs={"vector_name": vector.name},
+            # Skip only this vector's own subchain, not the following vectors.
+            ignore_downstream_trigger_rules=False,
+            # Run even when the previous vector was skipped.
+            trigger_rule="none_failed",
+        )
 
-    check_items_to_embed = ShortCircuitOperator(
-        task_id="check_items_to_embed",
-        python_callable=_has_items_to_embed,
-    )
+        export_input = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
+            task_id=f"export_{vector.name}_input",
+            configuration={
+                "query": {
+                    "query": _export_input_query(vector),
+                    "useLegacySql": False,
+                }
+            },
+        )
 
-    # Step 2: Export temp table to GCS as a parquet file (to be used as input for the embedding script)
-    export_item_metadata_to_gcs = BigQueryInsertJobOperator(
-        project_id=GCP_PROJECT_ID,
-        task_id="export_item_metadata_to_gcs",
-        configuration={
-            "extract": {
-                "sourceTable": {
-                    "projectId": GCP_PROJECT_ID,
-                    "datasetId": INPUT_DATASET_NAME,
-                    "tableId": TEMP_INT_TABLE_NAME,
-                },
-                "destinationUris": [
-                    f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{INPUT_FOLDER}/{TEMP_INPUT_FILE_NAME}"
-                ],
-                "destinationFormat": "PARQUET",
-            }
-        },
-    )
+        prepare = SSHGCEOperator(
+            task_id=f"prepare_{vector.name}",
+            instance_name="{{ params.instance_name }}",
+            base_dir=BASE_DIR,
+            gce_zone=GCE_ZONE_TEMPLATE,
+            command=_step_command(
+                "cli.prepare", vector.name, INPUT_SUBFOLDER, PROMPTS_SUBFOLDER
+            ),
+            deferrable=True,
+        )
 
-    # Step 3: Run the embedding script on the GCE instance, with the exported parquet file as input,
-    # and save the output embeddings as a parquet file in GCS (temp because output parquet only contains to_embed items)
-    embed_items = SSHGCEOperator(
-        task_id="embed_items",
-        instance_name="{{ params.instance_name }}",
-        base_dir=BASE_DIR,
-        gce_zone=GCE_ZONE_TEMPLATE,
-        command=f"""
-            uv run python main.py \
-                --config-file-name {{{{ params.config_file_name }}}} \
-                --input-parquets-folder-path gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{INPUT_FOLDER} \
-                --output-parquets-folder-path gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{OUTPUT_FOLDER} \
-        """,
-        deferrable=True,
-    )
+        embed = SSHGCEOperator(
+            task_id=f"embed_{vector.name}",
+            instance_name="{{ params.instance_name }}",
+            base_dir=BASE_DIR,
+            gce_zone=GCE_ZONE_TEMPLATE,
+            command=_step_command(
+                "cli.embed", vector.name, PROMPTS_SUBFOLDER, EMBEDDINGS_SUBFOLDER
+            ),
+            deferrable=True,
+        )
 
-    # Step 4: Export the output embeddings from GCS to BigQuery temp table
-    # (to be merged with the items table in a separate process after the DAG run)
-    export_item_embeddings_to_bigquery = GCSToBigQueryOperator(
-        task_id="export_item_embeddings_to_bigquery",
-        project_id=GCP_PROJECT_ID,
-        bucket=ML_BUCKET_TEMP,
-        source_objects=[f"{GCS_FOLDER_PATH}/{OUTPUT_FOLDER}/*.parquet"],
-        destination_project_dataset_table="{{ params.output_dataset_name }}.{{ params.output_table_name }}",
-        source_format="PARQUET",
-        write_disposition="WRITE_TRUNCATE",
-        autodetect=True,
-        # Without this, BigQuery keeps a Parquet LIST column's raw 3-level
-        # encoding (RECORD > list > element) instead of collapsing it into a
-        # native REPEATED field -- this is what turns each vector's
-        # embedding into a plain REPEATED FLOAT column.
-        extra_config={"parquetOptions": {"enableListInference": True}},
-    )
+        load = GCSToBigQueryOperator(
+            task_id=f"load_{vector.name}",
+            project_id=GCP_PROJECT_ID,
+            bucket=ML_BUCKET_TEMP,
+            source_objects=[
+                f"{GCS_FOLDER_PATH}/{vector.name}/{EMBEDDINGS_SUBFOLDER}/*.parquet"
+            ],
+            destination_project_dataset_table=vector.output_table,
+            source_format="PARQUET",
+            write_disposition="WRITE_TRUNCATE",
+            autodetect=True,
+            # Collapse the Parquet LIST's into a native REPEATED FLOAT
+            extra_config={"parquetOptions": {"enableListInference": True}},
+        )
+
+        # First vector starts once there's something to embed; each later vector
+        # waits for the previous embed to free the GPU.
+        if previous_embed is None:
+            check_any_to_embed >> check_in_plan
+        else:
+            previous_embed >> check_in_plan
+
+        check_in_plan >> export_input
+        [export_input, install_dependencies] >> prepare >> embed >> load
+
+        previous_embed = embed
+        embed_tasks.append(embed)
+        load_tasks.append(load)
 
     gce_instance_delete = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
-        gce_zone=GCE_ZONE_TEMPLATE,  # delete in the zone the VM was created in
+        gce_zone=GCE_ZONE_TEMPLATE,
         trigger_rule="all_done",  # always delete the VM, even on upstream failure
     )
 
-    stop = EmptyOperator(task_id="stop", trigger_rule="all_success")
+    # none_failed_min_one_success: tolerate loads skipped for unselected vectors
+    # while still failing the run if a step actually failed.
+    stop = EmptyOperator(task_id="stop", trigger_rule="none_failed_min_one_success")
 
-    start >> bigquery_select_items_to_embed >> check_items_to_embed
-    check_items_to_embed >> [gce_instance_start, export_item_metadata_to_gcs]
-    gce_instance_start >> install_dependencies
-    [
-        install_dependencies,
-        export_item_metadata_to_gcs,
-    ] >> embed_items
-    embed_items >> export_item_embeddings_to_bigquery
-    export_item_embeddings_to_bigquery >> gce_instance_delete
-    [export_item_embeddings_to_bigquery, gce_instance_delete] >> stop
+    # The VM lives until every embed is done (they share it); loads read from GCS.
+    embed_tasks >> gce_instance_delete
+    [gce_instance_delete, *load_tasks] >> stop

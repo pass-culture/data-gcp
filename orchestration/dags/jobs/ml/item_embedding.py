@@ -4,7 +4,7 @@ from itertools import chain
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import PythonOperator, ShortCircuitOperator
+from airflow.operators.python import ShortCircuitOperator
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
@@ -137,8 +137,9 @@ def _plan_vectors_to_embed(**context) -> list[str]:
     embed in their own input table. embed_all forces every selected vector.
 
     A single batched query (one ``EXISTS`` probe per selected table, UNION ALL'd)
-    replaces per-vector count queries; the result is pushed to XCom and read back
-    by each vector's ShortCircuit gate.
+    replaces per-vector count queries. Backing a ShortCircuitOperator, the
+    returned list is both the plan (read back by each vector's check via XCom)
+    and the run-level gate -- an empty list is falsy, so the whole run skips.
     """
     params = context["params"]
     selected = [v for v in AVAILABLE_VECTORS if v.name in params["vectors"]]
@@ -276,18 +277,13 @@ with DAG(
 ) as dag:
     start = EmptyOperator(task_id="start")
 
-    # Resolve once which vectors will actually run (selected + non-empty), then
-    # skip the whole run (including the VM) when that plan is empty.
-    plan_vectors = PythonOperator(
+    # Resolve once which vectors will actually run (selected + non-empty). The
+    # returned list is both the plan (read back by each vector's check) and the
+    # gate: an empty list is falsy, so this ShortCircuit skips the whole run
+    # (including the VM) when there's nothing to embed.
+    plan_vectors = ShortCircuitOperator(
         task_id="plan_vectors_to_embed",
         python_callable=_plan_vectors_to_embed,
-    )
-
-    check_any_to_embed = ShortCircuitOperator(
-        task_id="check_any_to_embed",
-        python_callable=lambda **c: bool(
-            c["ti"].xcom_pull(task_ids="plan_vectors_to_embed")
-        ),
     )
 
     gce_instance_start = StartGCEOperator(
@@ -316,8 +312,7 @@ with DAG(
         retries=2,
     )
 
-    start >> plan_vectors >> check_any_to_embed
-    check_any_to_embed >> gce_instance_start >> install_dependencies
+    start >> plan_vectors >> gce_instance_start >> install_dependencies
 
     # Each vector's steps live in their own TaskGroup and run a fully sequential
     # subchain on the shared VM:
@@ -398,7 +393,7 @@ with DAG(
         # First vector starts once there's something to embed; each later vector
         # waits for the previous embed to free the GPU.
         if previous_embed is None:
-            check_any_to_embed >> check_in_plan
+            plan_vectors >> check_in_plan
         else:
             previous_embed >> check_in_plan
 

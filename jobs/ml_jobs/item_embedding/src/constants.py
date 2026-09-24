@@ -17,7 +17,7 @@ HF_TOKEN_SECRET_NAME = _HF_TOKEN_SECRET_NAMES.get(
 BATCH_SIZE = 32
 
 # Target number of rows per uniform input chunk when streaming the input
-# dataset (see gcs_utils.iter_metadata_chunks). Distinct from BATCH_SIZE:
+# dataset (see gcs_utils.iter_parquet_chunks). Distinct from BATCH_SIZE:
 # this controls how many rows are read from GCS before a single
 # embed_dataframe()/encode() call, independent of BigQuery's arbitrary,
 # uneven per-file export sharding; BATCH_SIZE controls SentenceTransformer's
@@ -26,7 +26,7 @@ ROWS_PER_CHUNK = 50_000
 # Cap the tokenized prompt length. embeddinggemma-300m defaults to 2048,
 # but only ~2% of items exceed 512.
 # Cap applied to every loaded encoder's max_seq_length (see
-# setup_encoders.load_encoders), overriding the model's native default
+# setup_encoders.load_encoder), overriding the model's native default
 # (2048 for embeddinggemma-300m). encode() sorts prompts by length before
 # batching, so batches of long prompts each pad to the batch's own longest
 # sequence; left uncapped, a batch of near-max-length prompts can OOM the

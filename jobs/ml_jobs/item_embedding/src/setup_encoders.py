@@ -1,8 +1,8 @@
 import torch
-from constants import HF_TOKEN_SECRET_NAME, MAX_SEQ_LENGTH
-from gcp_secrets import get_secret
 from loguru import logger
 from sentence_transformers import SentenceTransformer
+from src.constants import HF_TOKEN_SECRET_NAME, MAX_SEQ_LENGTH
+from src.gcp_secrets import get_secret
 
 
 def _bf16_supported() -> bool:

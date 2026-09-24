@@ -50,14 +50,16 @@ uv run python -m cli.embed \
 ## Module map
 
 ```
-config.py           Vector model + load_vector_config (one vector per YAML)
-preprocessing.py    reusable column cleaners + apply_preprocessors
-prompt_building.py  build_prompts: template or "label : value"
-embedding.py        encode() + LongPromptTracker + find_long_prompts
-setup_encoders.py   load_encoder + multi-GPU pool
-gcs_utils.py        parquet streaming reads + writers
-cli/                prepare.py (preprocess + build prompts), embed.py — one CLI per step
-configs/            one YAML per vector (see configs/README.md)
+src/                  the library, imported as `src.<module>`
+  config.py           Vector model + load_vector_config (one vector per YAML)
+  preprocessing.py    reusable column cleaners + apply_preprocessors
+  prompt_building.py  build_prompts: template or "label : value"
+  embedding.py        encode() + LongPromptTracker + find_long_prompts
+  setup_encoders.py   load_encoder + multi-GPU pool
+  gcs_utils.py        parquet streaming reads + writers
+  gcp_secrets.py      Secret Manager access (HF token)
+cli/                  prepare.py (preprocess + build prompts), embed.py — one CLI per step
+configs/              one YAML per vector (see configs/README.md)
 ```
 
 ## Configuration

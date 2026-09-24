@@ -1,7 +1,7 @@
 """Feature preprocessing: reusable column-level cleaners plus the helper that
 applies a vector's configured preprocessors to a dataframe.
 
-This is the logic behind the ``preprocess`` step (``cli/preprocess.py``). It
+This is part of the logic behind the ``prepare`` step (``cli/prepare.py``). It
 deliberately knows nothing about prompts or encoders -- it only turns raw
 feature columns into cleaned ones.
 """

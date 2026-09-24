@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 import yaml
-from config import Vector, load_vector_config
+from src.config import Vector, load_vector_config
 
 
 class TestVector:
@@ -51,25 +51,25 @@ class TestLoadVectorConfig:
             "movies_metadata",
             {"name": "movies_metadata", "features": ["a"], "encoder_name": "m"},
         )
-        with patch("config.CONFIGS_PATH", tmp_path):
+        with patch("src.config.CONFIGS_PATH", tmp_path):
             vector = load_vector_config("movies_metadata")
         assert isinstance(vector, Vector)
         assert vector.name == "movies_metadata"
 
     def test_missing_file_raises(self, tmp_path):
-        with patch("config.CONFIGS_PATH", tmp_path):
+        with patch("src.config.CONFIGS_PATH", tmp_path):
             with pytest.raises(FileNotFoundError):
                 load_vector_config("nope")
 
     def test_invalid_yaml_raises(self, tmp_path):
         (tmp_path / "bad.yaml").write_text(": :\n  - :\n  invalid", encoding="utf-8")
-        with patch("config.CONFIGS_PATH", tmp_path):
+        with patch("src.config.CONFIGS_PATH", tmp_path):
             with pytest.raises(yaml.YAMLError):
                 load_vector_config("bad")
 
     def test_missing_required_key_raises(self, tmp_path):
         self._write(tmp_path, "incomplete", {"name": "v", "features": ["a"]})
-        with patch("config.CONFIGS_PATH", tmp_path):
+        with patch("src.config.CONFIGS_PATH", tmp_path):
             with pytest.raises(ValueError, match="missing required keys"):
                 load_vector_config("incomplete")
 
@@ -77,6 +77,6 @@ class TestLoadVectorConfig:
         (tmp_path / "list.yaml").write_text(
             yaml.dump([{"name": "v"}]), encoding="utf-8"
         )
-        with patch("config.CONFIGS_PATH", tmp_path):
+        with patch("src.config.CONFIGS_PATH", tmp_path):
             with pytest.raises(ValueError, match="must define a single vector"):
                 load_vector_config("list")

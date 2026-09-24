@@ -3,8 +3,8 @@
 from unittest.mock import MagicMock
 
 import numpy as np
-from config import Vector
-from embedding import LongPromptTracker, encode, find_long_prompts
+from src.config import Vector
+from src.embedding import LongPromptTracker, encode, find_long_prompts
 
 
 def _vector(name="v", prompt_name=None):
@@ -48,7 +48,7 @@ class TestLongPromptTracker:
         assert tracker.long_item_ids == ["item-1", "item-2"]
 
     def test_default_max_tokens_matches_constant(self):
-        from constants import MAX_SEQ_LENGTH
+        from src.constants import MAX_SEQ_LENGTH
 
         assert LongPromptTracker().max_tokens == MAX_SEQ_LENGTH
 

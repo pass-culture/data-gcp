@@ -14,12 +14,12 @@ Run from the job root:
 """
 
 import typer
-from config import load_vector_config
-from constants import ROWS_PER_CHUNK
-from gcs_utils import iter_parquet_chunks, write_parquet
 from loguru import logger
-from preprocessing import apply_preprocessors
-from prompt_building import build_prompts
+from src.config import load_vector_config
+from src.constants import ROWS_PER_CHUNK
+from src.gcs_utils import iter_parquet_chunks, write_parquet
+from src.preprocessing import apply_preprocessors
+from src.prompt_building import build_prompts
 
 app = typer.Typer(help="Preprocess a vector's metadata and build its prompts.")
 

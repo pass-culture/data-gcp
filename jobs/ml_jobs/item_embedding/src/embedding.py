@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 import numpy as np
-from config import Vector
-from constants import BATCH_SIZE, MAX_SEQ_LENGTH
 from loguru import logger
 from sentence_transformers import SentenceTransformer
+from src.config import Vector
+from src.constants import BATCH_SIZE, MAX_SEQ_LENGTH
 
 
 def encode(

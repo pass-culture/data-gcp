@@ -3,7 +3,7 @@
 import pandas as pd
 import pyarrow.parquet as pq
 import pytest
-from gcs_utils import iter_parquet_chunks, write_embeddings_parquet, write_parquet
+from src.gcs_utils import iter_parquet_chunks, write_embeddings_parquet, write_parquet
 
 
 class TestIterParquetChunks:

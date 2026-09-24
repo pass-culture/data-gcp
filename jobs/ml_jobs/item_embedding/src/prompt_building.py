@@ -2,15 +2,14 @@
 an encoder: either a natural-language ``prompt_template`` or the default
 ``"label : value"`` concatenation.
 
-This is the logic behind the ``build_prompts`` step (``cli/build_prompts.py``).
-It assumes preprocessing has already run (``cli/preprocess.py``) and knows
-nothing about encoders.
+This is part of the logic behind the ``prepare`` step (``cli/prepare.py``),
+run after the preprocessors in the same step. It knows nothing about encoders.
 """
 
 import pandas as pd
-from config import Vector
 from loguru import logger
-from preprocessing import _is_missing
+from src.config import Vector
+from src.preprocessing import _is_missing
 
 
 def _build_prompts_from_template(df: pd.DataFrame, vector: Vector) -> list[str]:

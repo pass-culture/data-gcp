@@ -2,8 +2,8 @@
 
 import pandas as pd
 import pytest
-from config import Vector
-from prompt_building import build_prompts
+from src.config import Vector
+from src.prompt_building import build_prompts
 
 
 def _vector(features, **kwargs):

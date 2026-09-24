@@ -14,12 +14,12 @@ Run from the job root:
 
 import torch
 import typer
-from config import load_vector_config
-from constants import ROWS_PER_CHUNK
-from embedding import LongPromptTracker, encode, find_long_prompts
-from gcs_utils import iter_parquet_chunks, write_embeddings_parquet
 from loguru import logger
-from setup_encoders import load_encoder, start_pool, stop_pool
+from src.config import load_vector_config
+from src.constants import ROWS_PER_CHUNK
+from src.embedding import LongPromptTracker, encode, find_long_prompts
+from src.gcs_utils import iter_parquet_chunks, write_embeddings_parquet
+from src.setup_encoders import load_encoder, start_pool, stop_pool
 
 app = typer.Typer(help="Embed prompts into vectors.")
 

@@ -5,7 +5,8 @@ import yaml
 from loguru import logger
 from pydantic import BaseModel, field_validator
 
-CONFIGS_PATH = pathlib.Path(__file__).parent / "configs"
+# configs/ lives at the job root, one level up from this file's src/ package.
+CONFIGS_PATH = pathlib.Path(__file__).parent.parent / "configs"
 
 # Each config file describes exactly one vector; these are the keys it cannot
 # be built without.
@@ -24,7 +25,7 @@ class Vector(BaseModel):
     @field_validator("preprocessors")
     @classmethod
     def _validate_preprocessors(cls, v: dict[str, str]) -> dict[str, str]:
-        from preprocessing import PREPROCESSORS
+        from src.preprocessing import PREPROCESSORS
 
         unknown = set(v.values()) - PREPROCESSORS.keys()
         if unknown:

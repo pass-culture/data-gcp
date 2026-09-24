@@ -11,8 +11,8 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.dataset as ds
 import pyarrow.parquet as pq
-from constants import ROWS_PER_CHUNK
 from loguru import logger
+from src.constants import ROWS_PER_CHUNK
 
 
 def list_parquet_files(gcs_path: str) -> list[str]:

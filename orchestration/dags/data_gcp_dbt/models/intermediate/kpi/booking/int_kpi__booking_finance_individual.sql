@@ -41,7 +41,7 @@ group by
     r.venue_city_code,
     gi.epci_label,
     r.venue_municipality_code,
-    gi.venue_municipality_label,
+    gi.municipality_label,
     gi.city_label,
     r.offerer_is_epn,
     r.offer_category_id

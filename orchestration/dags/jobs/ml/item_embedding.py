@@ -317,6 +317,7 @@ with DAG(
         base_dir=BASE_DIR,
         branch="{{ params.branch }}",
         gce_zone=GCE_ZONE_TEMPLATE,
+        python_version="3.11",
         retries=2,
     )
 
@@ -326,7 +327,7 @@ with DAG(
         base_dir=BASE_DIR,
         gce_zone=GCE_ZONE_TEMPLATE,
         command=(
-            "uv run python -m cli.mlflow_run start "
+            "uv run python -m cli.mlflow_run "
             "--airflow-run-id {{ run_id }} "
             "{{ '--embed-all' if params.embed_all else '--no-embed-all' }}"
         ),
@@ -402,7 +403,12 @@ with DAG(
             )
 
             check_in_plan >> export_input
-            [export_input, install_dependencies] >> prepare >> embed >> load
+            (
+                [export_input, install_dependencies, start_mlflow_run]
+                >> prepare
+                >> embed
+                >> load
+            )
 
         # First vector starts once there's something to embed; each later vector
         # waits for the previous embed to free the GPU.

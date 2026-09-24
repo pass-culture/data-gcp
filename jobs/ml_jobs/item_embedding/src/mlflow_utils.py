@@ -72,7 +72,7 @@ def write_run_id(run_id: str, run_id_file: str = MLFLOW_RUN_ID_FILEPATH) -> None
 
 
 def read_run_id(run_id_file: str = MLFLOW_RUN_ID_FILEPATH) -> str:
-    """Read the run_id written by ``write_run_id`` in the ``mlflow_run start`` step.
+    """Read the run_id written by ``write_run_id`` in the ``mlflow_run`` step.
 
     Missing file -> "" so ``embed`` still runs (provenance columns stamped empty,
     logging skipped); this keeps ``embed`` runnable standalone.

@@ -7,7 +7,7 @@ reads that file and resumes the same run to append its own vector's config +
 counts (they run sequentially on the same VM).
 
 Run from the job root:
-    uv run python -m cli.mlflow_run start \
+    uv run python -m cli.mlflow_run \
         --airflow-run-id manual__2026-09-24T... \
         --embed-all
 """

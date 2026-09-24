@@ -240,7 +240,7 @@ def run_incremental(
             total_filtered = 0
             filtered_samples = []
 
-            # If the volume exceeds the API max search, split by dispo and book format.
+            # If the volume exceeds the API max search, split by dispo and gtl code.
             dispo_values = [None]
             if total_results >= MAX_SEARCH_RESULTS:
                 dispo_legend = initial_response.get("dispo", {})

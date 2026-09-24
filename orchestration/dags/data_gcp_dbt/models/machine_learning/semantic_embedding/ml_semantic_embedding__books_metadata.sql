@@ -1,3 +1,16 @@
+{% if flags.FULL_REFRESH and execute %}
+    {{
+        exceptions.raise_compiler_error(
+            this
+            ~ " cannot be run with --full-refresh.\n"
+            ~ "It would remove existing embeddings from the table.\n"
+            ~ "To refresh all embeddings, you must first run the embedding DAG "
+            ~ "for all items (embed_all = True), then delete this table and "
+            ~ "rerun it without the --full-refresh flag."
+        )
+    }}
+{% endif %}
+
 {{
     config(
         **custom_incremental_config(

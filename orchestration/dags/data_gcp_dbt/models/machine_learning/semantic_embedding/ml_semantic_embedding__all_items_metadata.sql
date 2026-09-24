@@ -9,5 +9,5 @@
     )
 }}
 
-select ie.item_id, ie.content_hash, ie.embedding
+select ie.item_id, ie.content_hash, ie.embedding as all_items_metadata_embedding
 from {{ source("ml_semantic_embedding", "all_items_metadata_tmp") }} as ie

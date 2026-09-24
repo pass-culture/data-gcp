@@ -9,5 +9,5 @@
     )
 }}
 
-select bm.item_id, bm.content_hash, bm.embedding
+select bm.item_id, bm.content_hash, bm.embedding as books_metadata_embedding
 from {{ source("ml_semantic_embedding", "books_metadata_tmp") }} as bm

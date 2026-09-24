@@ -9,5 +9,5 @@
     )
 }}
 
-select mm.item_id, mm.content_hash, mm.embedding
+select mm.item_id, mm.content_hash, mm.embedding as movies_metadata_embedding
 from {{ source("ml_semantic_embedding", "movies_metadata_tmp") }} as mm

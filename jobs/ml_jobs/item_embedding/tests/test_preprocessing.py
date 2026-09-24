@@ -118,7 +118,7 @@ class TestFormatMovieGenres:
 
     def test_key_is_fixed_not_tied_to_a_vector_name(self):
         # The envelope key is "movies" regardless of what the config calls
-        # the movies-scoped vector (e.g. "movies_content", "films_content",
+        # the movies-scoped vector (e.g. "movies_metadata", "films_metadata",
         # ...) -- renaming the vector must not affect extraction.
         value = {"movies": {"genres": ["DRAMA"]}}
         assert format_movie_genres(value) == "DRAMA"

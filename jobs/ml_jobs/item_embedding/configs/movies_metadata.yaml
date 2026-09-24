@@ -1,4 +1,4 @@
-name: "movies_content"
+name: "movies_metadata"
 features:
   - offer_name
   - offer_description

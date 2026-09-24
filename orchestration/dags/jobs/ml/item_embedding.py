@@ -43,7 +43,9 @@ PROMPTS_SUBFOLDER = "prompts"
 EMBEDDINGS_SUBFOLDER = "embeddings"
 
 ## BigQuery CONSTANTS
-EMBEDDING_DATASET_NAME = f"ml_embeddings_{ENV_SHORT_NAME}"
+# dbt input models (rows to embed) live in ml_input; this DAG writes its
+# per-vector staging outputs to ml_semantic_embedding.
+INPUT_DATASET_NAME = f"ml_input_{ENV_SHORT_NAME}"
 SEMANTIC_EMBEDDING_DATASET_NAME = f"ml_semantic_embedding_{ENV_SHORT_NAME}"
 
 
@@ -57,19 +59,19 @@ class VectorPipeline(BaseModel):
 # configs/<name>.yaml in the item_embeddings job + an entry here (all keyed by ``name``).
 AVAILABLE_VECTORS = [
     VectorPipeline(
-        name="semantic_content",
-        input_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.input_all_items",
-        output_table=f"{EMBEDDING_DATASET_NAME}.semantic_content_embeddings_tmp",
+        name="all_items_metadata",
+        input_table=f"{INPUT_DATASET_NAME}.all_items_metadata_to_embed",
+        output_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.all_items_metadata_tmp",
     ),
     VectorPipeline(
-        name="movies_content",
-        input_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.input_movies",
-        output_table=f"{EMBEDDING_DATASET_NAME}.movies_content_embeddings_tmp",
+        name="movies_metadata",
+        input_table=f"{INPUT_DATASET_NAME}.movies_to_embed",
+        output_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.movies_metadata_tmp",
     ),
     VectorPipeline(
-        name="books_content",
-        input_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.input_books",
-        output_table=f"{EMBEDDING_DATASET_NAME}.books_content_embeddings_tmp",
+        name="books_metadata",
+        input_table=f"{INPUT_DATASET_NAME}.books_to_embed",
+        output_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.books_metadata_tmp",
     ),
 ]
 VECTOR_NAMES = [vector.name for vector in AVAILABLE_VECTORS]
@@ -169,7 +171,7 @@ DAG_DOC = """
 
     Per vector (chosen via *vectors*), the DAG runs a GCS-staged pipeline:
     export input from its dbt table → prepare (preprocess + build prompts) →
-    embed → load into its own BigQuery staging table (`<name>_embeddings_tmp`).
+    embed → load into its own BigQuery staging table (`<name>_metadata_tmp`).
     A later dbt model merges the staging tables.
 
     #### Parameters:

@@ -1,4 +1,4 @@
-name: "semantic_content"
+name: "all_items_metadata"
 features:
   - offer_name
   - category_id

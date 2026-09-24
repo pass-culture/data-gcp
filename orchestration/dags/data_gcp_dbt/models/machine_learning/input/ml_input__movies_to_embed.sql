@@ -1,7 +1,7 @@
 {{ config(materialized="view") }}
 
 -- Movies subset of the semantic base. Filtering lives here (dbt owns it), so
--- the job's movies_content.yaml has no category filter.
+-- the job's movies_metadata.yaml has no category filter.
 select
     item_id,
     subcategory_id,
@@ -14,7 +14,7 @@ select
     to_embed,
     offer_label_concat,
     author_concat
-from {{ ref("ml_semantic_embedding__input_all_items") }}
+from {{ ref("ml_input__all_items_metadata_to_embed") }}
 where
     starts_with(item_id, 'product')
     and (

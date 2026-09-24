@@ -1,4 +1,4 @@
-name: "books_content"
+name: "books_metadata"
 features:
   - offer_name
   - offer_description

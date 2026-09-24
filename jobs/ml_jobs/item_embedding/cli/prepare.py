@@ -8,9 +8,9 @@ for the embed step.
 
 Run from the job root:
     uv run python -m cli.prepare \
-        --config-file-name movies_content \
-        --input-parquets-folder-path  gs://.../movies_content/input \
-        --output-parquets-folder-path gs://.../movies_content/prompts
+        --config-file-name movies_metadata \
+        --input-parquets-folder-path  gs://.../movies_metadata/input \
+        --output-parquets-folder-path gs://.../movies_metadata/prompts
 """
 
 import typer

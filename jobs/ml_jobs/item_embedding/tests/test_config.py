@@ -48,13 +48,13 @@ class TestLoadVectorConfig:
     def test_loads_single_vector(self, tmp_path):
         self._write(
             tmp_path,
-            "movies_content",
-            {"name": "movies_content", "features": ["a"], "encoder_name": "m"},
+            "movies_metadata",
+            {"name": "movies_metadata", "features": ["a"], "encoder_name": "m"},
         )
         with patch("config.CONFIGS_PATH", tmp_path):
-            vector = load_vector_config("movies_content")
+            vector = load_vector_config("movies_metadata")
         assert isinstance(vector, Vector)
-        assert vector.name == "movies_content"
+        assert vector.name == "movies_metadata"
 
     def test_missing_file_raises(self, tmp_path):
         with patch("config.CONFIGS_PATH", tmp_path):

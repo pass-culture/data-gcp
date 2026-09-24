@@ -7,9 +7,9 @@ and summarized at the end of the run.
 
 Run from the job root:
     uv run python -m cli.embed \
-        --config-file-name movies_content \
-        --input-parquets-folder-path  gs://.../movies_content/prompts \
-        --output-parquets-folder-path gs://.../movies_content/embeddings
+        --config-file-name movies_metadata \
+        --input-parquets-folder-path  gs://.../movies_metadata/prompts \
+        --output-parquets-folder-path gs://.../movies_metadata/embeddings
 """
 
 import torch

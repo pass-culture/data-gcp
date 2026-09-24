@@ -2,8 +2,8 @@
 
 Generates item embeddings from catalogue metadata using Sentence Transformers.
 
-The work is split by **vector** (an embedding flavour, e.g. `semantic_content`,
-`movies_content`, `books_content`) and, within a vector, by **functionality**
+The work is split by **vector** (an embedding flavour, e.g. `all_items_metadata`,
+`movies_metadata`, `books_metadata`) and, within a vector, by **functionality**
 into GCS-staged steps. The `item_embedding` Airflow DAG runs, per selected
 vector: export input → prepare (preprocess + build prompts) → embed → load.
 
@@ -11,13 +11,13 @@ vector: export input → prepare (preprocess + build prompts) → embed → load
 
 | Fact | Owner |
 |------|-------|
-| Which items belong to a vector (filtering) + which columns exist | **dbt** — `orchestration/dags/data_gcp_dbt/models/machine_learning/embeddings/ml_embedding__input_<name>_embeddings.sql` |
+| Which items belong to a vector (filtering) + which columns exist | **dbt** — input models in `orchestration/dags/data_gcp_dbt/models/machine_learning/input/ml_input__*_to_embed.sql` (dataset `ml_input`) |
 | How columns become a prompt (features, labels, template, preprocessors) + encoder | **YAML** — `configs/<name>.yaml` |
 | Wiring (name → input table, output table) | **DAG** — `AVAILABLE_VECTORS` in `orchestration/dags/jobs/ml/item_embedding.py` |
 
-The vector **`name`** is the single join key across all three: it's the dbt
-model suffix, the YAML filename, and the value passed to every CLI via
-`--config-file-name`.
+The vector **`name`** is the YAML filename and the value passed to every CLI via
+`--config-file-name` (it also names the output staging table). Each vector's dbt
+input table is wired explicitly in `AVAILABLE_VECTORS`.
 
 ## Pipeline steps
 
@@ -28,15 +28,15 @@ the next step. Run from the job root as a module:
 # 1. prepare: apply preprocessors + render the prompt (template or "label :
 #    value"); drop items with an empty prompt
 uv run python -m cli.prepare \
-  --config-file-name movies_content \
-  --input-parquets-folder-path  gs://.../movies_content/input \
-  --output-parquets-folder-path gs://.../movies_content/prompts
+  --config-file-name movies_metadata \
+  --input-parquets-folder-path  gs://.../movies_metadata/input \
+  --output-parquets-folder-path gs://.../movies_metadata/prompts
 
 # 2. embed: encode prompts → embeddings
 uv run python -m cli.embed \
-  --config-file-name movies_content \
-  --input-parquets-folder-path  gs://.../movies_content/prompts \
-  --output-parquets-folder-path gs://.../movies_content/embeddings
+  --config-file-name movies_metadata \
+  --input-parquets-folder-path  gs://.../movies_metadata/prompts \
+  --output-parquets-folder-path gs://.../movies_metadata/embeddings
 ```
 
 ### Data contract between steps
@@ -69,7 +69,7 @@ in the YAML — it's owned by the vector's dbt input model.
 ## Output
 
 Each vector is loaded into its own BigQuery staging table
-(`ml_embeddings_<env>.<name>_embeddings_tmp`), one `embedding` column of
+(`ml_semantic_embedding_<env>.<name>_tmp`), one `embedding` column of
 `REPEATED FLOAT`. A downstream dbt model merges the staging tables (out of scope
 for this job).
 

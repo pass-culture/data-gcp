@@ -75,7 +75,7 @@ AVAILABLE_VECTORS = [
     ),
     VectorPipeline(
         name="all_items_offer_names",
-        input_table=f"{INPUT_DATASET_NAME}.all_items_metadata_tmp",  # uses the same input as all_items_metadata
+        input_table=f"{INPUT_DATASET_NAME}.all_items_metadata_to_embed",  # uses the same input as all_items_metadata
         output_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.all_items_offer_names_tmp",
     ),
 ]
@@ -87,7 +87,7 @@ BASE_DIR = "data-gcp/jobs/ml_jobs/item_embedding"
 INSTANCE_NAME = "item-embedding"
 GCE_ZONE_TEMPLATE = "{{ params.gce_zone }}"
 INSTANCE_TYPE = {
-    "dev": "n1-standard-4",
+    "dev": "n1-standard-8",
     "stg": "n1-standard-16",
     "prod": "n1-standard-16",
 }[ENV_SHORT_NAME]
@@ -245,13 +245,13 @@ with DAG(
             enum=INSTANCES_TYPES["gpu"]["name"],
         ),
         "gpu_count": Param(
-            default=1,
+            default=0 if ENV_SHORT_NAME == "dev" else 1,
             enum=INSTANCES_TYPES["gpu"]["count"],
             description="Number of GPUs (only for GPU instance types; must match the machine type).",
         ),
         "gce_zone": Param(default="europe-west1-c", enum=GCE_ZONES),
         "provisioning_model": Param(
-            default="FLEX_START",
+            default="STANDARD" if ENV_SHORT_NAME == "dev" else "FLEX_START",
             enum=["STANDARD", "FLEX_START"],
             description="""VM provisioning model. STANDARD requests capacity
                         immediately (fails on stockout). FLEX_START uses Dynamic

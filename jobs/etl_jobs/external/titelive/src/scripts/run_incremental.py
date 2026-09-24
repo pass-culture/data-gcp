@@ -276,25 +276,22 @@ def run_incremental(
                     if split_total_results == 0:
                         continue
 
-                    code_support_values = _legend_values(
-                        dispo_response.get("code_support", {}), value_type=str
+                    codegtl_values = _legend_values(
+                        dispo_response.get("codegtl", {}), value_type=str
                     )
-                    if (
-                        split_total_results >= MAX_SEARCH_RESULTS
-                        and not code_support_values
-                    ):
+                    if split_total_results >= MAX_SEARCH_RESULTS and not codegtl_values:
                         msg = (
                             f"Split with dispo={dispo_value} still exceeds API limit "
                             f"({split_total_results} >= {MAX_SEARCH_RESULTS}) and no "
-                            "code_support split values were found."
+                            "codegtl split values were found."
                         )
                         raise ValueError(msg)
 
-                    if not code_support_values:
+                    if not codegtl_values:
                         split_plan.append((dispo_value, None, split_total_results))
                         continue
 
-                    for code_support_value in code_support_values:
+                    for codegtl_value in codegtl_values:
                         support_response = api_client.search_by_date(
                             base=base,
                             min_date=min_date_formatted,
@@ -302,7 +299,7 @@ def run_incremental(
                             page=1,
                             results_per_page=results_per_page,
                             dispo=dispo_value,
-                            code_support=code_support_value,
+                            codegtl=codegtl_value,
                         )
                         support_total_results = support_response.get("nbreponses", 0)
                         if support_total_results == 0:
@@ -310,16 +307,16 @@ def run_incremental(
                         if support_total_results >= MAX_SEARCH_RESULTS:
                             msg = (
                                 f"Split with dispo={dispo_value} and "
-                                f"code_support={code_support_value} still exceeds "
+                                f"codegtl={codegtl_value} still exceeds "
                                 f"API limit ({support_total_results} >= "
                                 f"{MAX_SEARCH_RESULTS})."
                             )
                             raise ValueError(msg)
                         split_plan.append(
-                            (dispo_value, code_support_value, support_total_results)
+                            (dispo_value, codegtl_value, support_total_results)
                         )
 
-            for dispo_value, code_support_value, split_total_results in split_plan:
+            for dispo_value, codegtl_value, split_total_results in split_plan:
                 total_pages = calculate_total_pages(
                     split_total_results, results_per_page
                 )
@@ -332,7 +329,7 @@ def run_incremental(
                             page=page,
                             results_per_page=results_per_page,
                             dispo=dispo_value,
-                            code_support=code_support_value,
+                            codegtl=codegtl_value,
                         )
 
                         results = response.get("result", [])
@@ -355,7 +352,7 @@ def run_incremental(
                         logger.error(
                             f"Error fetching page {page} for {base}/{date_str} "
                             f"(dispo={dispo_value}, "
-                            f"code_support={code_support_value}): {e}"
+                            f"codegtl={codegtl_value}): {e}"
                         )
 
             # Log filtered gencods if any

@@ -142,7 +142,7 @@ class TestTiteliveClient:
             max_date="31/01/2024",
             page=2,
             results_per_page=50,
-            code_support="LIVRE_POCHE",
+            codegtl=7000000,
         )
 
         # Assert
@@ -157,7 +157,7 @@ class TestTiteliveClient:
                 "datemaxm": "31/01/2024",
                 "nombre": "50",
                 "page": "2",
-                "code_support": "LIVRE_POCHE",
+                "codegtl": 7000000,
             },
         )
 

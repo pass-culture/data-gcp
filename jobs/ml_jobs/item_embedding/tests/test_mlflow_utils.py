@@ -1,32 +1,33 @@
 """Unit tests for mlflow_utils pure helpers (no MLflow server needed)."""
 
 from src.config import Vector
-from src.mlflow_utils import _flatten_config
+from src.mlflow_utils import _config_to_params
 
 
-class TestFlattenConfig:
-    def test_flattens_full_vector_config(self):
+class TestConfigToParams:
+    def test_full_vector_config(self):
         vector = Vector(
             name="movies_metadata",
             features=["offer_name", "offer_description"],
             encoder_name="google/embeddinggemma-300m",
             prompt_name="document",
             prompt_template='Ce film "{offer_name}".',
+            labels={"offer_name": "titre", "offer_description": "description"},
             preprocessors={
                 "offer_name": "normalize_whitespace",
                 "offer_description": "clean_description",
             },
         )
 
-        params = _flatten_config(vector.model_dump(exclude={"name"}), vector.name)
+        params = _config_to_params(vector.model_dump(exclude={"name"}), vector.name)
 
         assert params == {
             "movies_metadata.features": "offer_name, offer_description",
             "movies_metadata.encoder_name": "google/embeddinggemma-300m",
             "movies_metadata.prompt_name": "document",
             "movies_metadata.prompt_template": 'Ce film "{offer_name}".',
-            "movies_metadata.preprocessors.offer_name": "normalize_whitespace",
-            "movies_metadata.preprocessors.offer_description": "clean_description",
+            "movies_metadata.labels": '{"offer_name": "titre", "offer_description": "description"}',
+            "movies_metadata.preprocessors": '{"offer_name": "normalize_whitespace", "offer_description": "clean_description"}',
         }
 
     def test_empty_mappings_and_none_scalars(self):
@@ -38,7 +39,7 @@ class TestFlattenConfig:
             encoder_name="m",
         )
 
-        params = _flatten_config(vector.model_dump(exclude={"name"}), vector.name)
+        params = _config_to_params(vector.model_dump(exclude={"name"}), vector.name)
 
         assert params == {
             "v.features": "a",

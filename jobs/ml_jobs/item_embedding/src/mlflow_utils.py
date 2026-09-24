@@ -87,18 +87,18 @@ def read_run_id(run_id_file: str = MLFLOW_RUN_ID_FILEPATH) -> str:
     return path.read_text(encoding="utf-8").strip()
 
 
-def _flatten_config(config: dict, parent_key: str) -> dict[str, str]:
-    """Flatten a nested config into dotted, ``parent_key``-prefixed param keys.
-
-    Nested mappings recurse (``preprocessors.offer_name``); lists are joined
-    (``features`` -> "a, b, c"); scalars pass through. Empty mappings contribute
-    nothing. Values are stringified by ``mlflow.log_params`` downstream.
+def _config_to_params(config: dict, parent_key: str) -> dict[str, str]:
+    """Turn a vector config into ``parent_key``-prefixed params, one per
+    top-level field -- no flattening. Mappings (``labels``, ``preprocessors``)
+    are logged whole as a single JSON param; lists are joined (``features`` ->
+    "a, b, c"); scalars pass through. Empty mappings contribute nothing.
     """
     params: dict[str, str] = {}
     for key, value in config.items():
         full_key = f"{parent_key}.{key}"
         if isinstance(value, dict):
-            params.update(_flatten_config(value, full_key))
+            if value:
+                params[full_key] = json.dumps(value, ensure_ascii=False)
         elif isinstance(value, list):
             params[full_key] = ", ".join(map(str, value))
         else:
@@ -115,8 +115,8 @@ def log_vector_to_run(
 ) -> None:
     """Resume the shared DAG-run run and append one vector's config + counts.
 
-    Logs the raw YAML as an artifact (exact source of truth) and the whole
-    config flattened into vector-prefixed params (so every field, incl.
+    Logs the raw YAML as an artifact (exact source of truth) and one
+    vector-prefixed param per top-level config field (so every field, incl.
     ``prompt_template`` and ``preprocessors``, is searchable without opening the
     artifact). Keys are vector-prefixed so a single run cleanly accumulates every
     vector embedded in the DAG run. No-op when ``run_id`` is empty.
@@ -127,7 +127,7 @@ def log_vector_to_run(
     with mlflow.start_run(run_id=run_id):
         mlflow.log_artifact(config_path, artifact_path="configs")
         mlflow.log_params(
-            _flatten_config(vector.model_dump(exclude={"name"}), vector.name)
+            _config_to_params(vector.model_dump(exclude={"name"}), vector.name)
         )
         mlflow.log_metrics(
             {

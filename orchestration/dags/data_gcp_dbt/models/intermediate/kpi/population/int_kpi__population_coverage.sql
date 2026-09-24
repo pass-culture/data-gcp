@@ -26,10 +26,12 @@ select
     population_region_name as region_name,
     population_region_code as region_code,
     population_territory_type as territory_type,
-    sum(total_population) over (
-        partition by population_decimal_age, population_department_code
-        order by population_snapshot_month
-        rows between 11 preceding and current row
+    cast(
+        sum(total_population) over (
+            partition by population_decimal_age, population_department_code
+            order by population_snapshot_month
+            rows between 11 preceding and current row
+        ) as int64
     ) as total_population_last_12_months
 from population_coverage
 where population_decimal_age in ("15", "16", "17", "18", "19", "20")

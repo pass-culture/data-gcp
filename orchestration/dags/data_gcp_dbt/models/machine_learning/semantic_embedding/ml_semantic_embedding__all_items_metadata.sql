@@ -9,5 +9,10 @@
     )
 }}
 
-select ie.item_id, ie.content_hash, ie.embedding as all_items_metadata_embedding
+select
+    ie.item_id,
+    ie.content_hash,
+    ie.embedding as all_items_metadata_embedding,
+    ie.mlflow_run_id,
+    ie.embedding_model
 from {{ source("ml_semantic_embedding", "all_items_metadata_tmp") }} as ie

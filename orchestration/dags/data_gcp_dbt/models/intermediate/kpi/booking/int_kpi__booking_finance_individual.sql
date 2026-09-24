@@ -11,7 +11,6 @@ with
     )
 
 select
-    date_trunc(r.booking_used_date, month) as partition_month,
     r.venue_department_code,
     r.venue_department_name,
     r.venue_region_name,
@@ -21,9 +20,10 @@ select
     gi.epci_label as venue_epci_name,
     r.venue_municipality_code,
     gi.city_label as venue_city_name,
-    gi.venue_municipality_label,
+    gi.municipality_label as venue_municipality_label,
     r.offerer_is_epn,
     r.offer_category_id,
+    date_trunc(r.booking_used_date, month) as partition_month,
     sum(r.total_bookings) as total_bookings,
     sum(r.total_quantities) as total_quantities,
     sum(r.total_revenue_amount) as total_revenue_amount,
@@ -41,6 +41,7 @@ group by
     r.venue_city_code,
     gi.epci_label,
     r.venue_municipality_code,
+    gi.venue_municipality_label,
     gi.city_label,
     r.offerer_is_epn,
     r.offer_category_id

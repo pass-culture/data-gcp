@@ -102,3 +102,19 @@ last so only it gets trimmed.
 make install
 uv run pytest
 ```
+
+## Need to add a new vector to embed ?
+
+1. Create a new config yaml file in `configs/`. Follow the `configs/README.md` to fill the yaml or follow the pattern in the existing yaml files. Please follow the naming convention of the vectors, ususally `name of your vector = <which items?>_<which features?>` (e.g. all_items_metadata).
+
+2. Next, you need the input data of your new vector, you can either:
+    a. use an existing model in `data-gcp/orchestration/dags/data_gcp_dbt/models/machine_learning/input/` that already contain the all items and features you want to embedd.
+
+    b. create a new input DBT model for your vector in that same directory which contans exactly the items you want to embed and their features. Please follow the naming convention: `<ml_input__<name of your vector>_to_embed>`. If you do create a new input model, make sure you run the DBT model before running the embedding job so the table is created in BigQuery. To do so run
+    ```bash
+    dbt run -s <name of your new model> -t <ENV_SHORT_NAME>
+    ```
+
+3. In the `item_embedding.py`DAG, add the new vector to the list of `AVAILABLE_VECTORS` by creating a new VectorPipeline with your vector name, input table and output table followi,g the conventions of other vectors.
+
+4. Run the DAG (on the airflow of the environmenet of your choice). You can choose to embedd only one vector during the run.

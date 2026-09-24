@@ -142,6 +142,7 @@ class TestTiteliveClient:
             max_date="31/01/2024",
             page=2,
             results_per_page=50,
+            codegtl=7000000,
         )
 
         # Assert
@@ -156,6 +157,7 @@ class TestTiteliveClient:
                 "datemaxm": "31/01/2024",
                 "nombre": "50",
                 "page": "2",
+                "codegtl": 7000000,
             },
         )
 

@@ -73,6 +73,11 @@ AVAILABLE_VECTORS = [
         input_table=f"{INPUT_DATASET_NAME}.books_to_embed",
         output_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.books_metadata_tmp",
     ),
+    VectorPipeline(
+        name="all_items_offer_names",
+        input_table=f"{INPUT_DATASET_NAME}.all_items_metadata_tmp",  # uses the same input as all_items_metadata
+        output_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.all_items_offer_names_tmp",
+    ),
 ]
 VECTOR_NAMES = [vector.name for vector in AVAILABLE_VECTORS]
 

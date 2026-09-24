@@ -1,0 +1,5 @@
+name: "all_items_offer_names"
+features:
+  - offer_name
+encoder_name: "google/embeddinggemma-300m"
+prompt_name: "document"

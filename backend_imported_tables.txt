@@ -98,7 +98,6 @@ public.special_event: dateCreated, endImportDate, eventDate, externalId, id, off
 public.special_event_response: dateSubmitted, eventId, id, status, userId
 public.stock: beginningDatetime, bookingLimitDatetime, dateCreated, dateModified, dateModifiedAtLastProvider, features, fieldsUpdated, id, idAtProviders, isSoftDeleted, lastProviderId, offerId, price, priceCategoryId, quantity
 public.titelive_gtl_mapping: gtlId, gtlLabelLevel1, gtlLabelLevel2, gtlLabelLevel3, gtlLabelLevel4, gtlType
-public.transaction: actor_id, client_addr, id, issued_at, native_transaction_id
 public.trusted_device: dateCreated, deviceId, os, source, userId
 public.user: activity, address, city, civility, culturalSurveyFilledDate, culturalSurveyId, dateCreated, dateOfBirth, departementCode, email, id, isActive, isEmailValidated, lastConnectionDate, needsToFillCulturalSurvey, notificationSubscriptions, phoneValidationStatus, postalCode, roles, schoolType, validatedBirthDate
 public.user_offerer: dateCreated, id, offererId, userId, validationStatus

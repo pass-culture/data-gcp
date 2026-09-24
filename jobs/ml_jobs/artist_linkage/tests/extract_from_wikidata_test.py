@@ -1,175 +1,249 @@
-"""Tests for cli/extract_from_wikidata.py — no network calls needed."""
+"""Tests for cli/extract_from_wikidata.py — no network calls needed.
+
+`extract`/`merge`'s own orchestration only: checkpoint resume, target
+validation, wiring fetch_discovery/hydrate_batch together, and the generalized
+`QueryConfig.optional` handling (a missing/empty result is expected for an
+optional target, a hard failure for any other). The raw QLever HTTP fetch +
+retry client lives in src/utils/qlever.py (tests in tests/utils/qlever_test.py);
+the two-pass discovery+hydration logic built on top of it lives in
+src/utils/wikidata_extraction.py (tests in
+tests/utils/wikidata_extraction_test.py); `merge`'s own merge_data/
+postprocess_data logic lives in src/utils/wikidata_merge.py (tests in
+tests/utils/wikidata_merge_test.py); checkpoint file I/O lives in
+src/utils/wikidata_checkpoint.py (tests in
+tests/utils/wikidata_checkpoint_test.py).
+"""
+
+import os
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
+import requests
 
-from cli.extract_from_wikidata import (
-    MUSIC_IDS_KEY,
-    extract_wikidata_id,
-    merge_data,
-    postprocess_data,
-)
-
-NEW_ID_COLUMNS = [
-    "spotify_id",
-    "isni_id",
-    "apple_music_id",
-    "deezer_id",
-    "genius_id",
-    "soundcloud_id",
-]
+import cli.extract_from_wikidata as wikidata_cli
+from cli.extract_from_wikidata import extract, merge
+from src.utils import wikidata_checkpoint
+from src.wikidata_config import QUERY_CONFIGS, QueryConfig
 
 
-def _make_raw_df(**kwargs) -> pd.DataFrame:
-    """Build a minimal raw DataFrame as returned by fetch_wikidata_qlever_csv (main queries)."""
-    defaults = {
-        "wikidata_id": [
-            "https://www.wikidata.org/entity/Q1",
-            "https://www.wikidata.org/entity/Q2",
-        ],
-        "artist_name_fr": ["Artiste Un", "Artiste Deux"],
-        "artist_name_en": ["Artist One", "Artist Two"],
-        "artist_description": ["desc1", "desc2"],
-        "wikipedia_url": ["https://fr.wikipedia.org/wiki/Un", None],
-        "img": ["https://commons.wikimedia.org/img1.jpg", None],
-        "gkg_id": ["/g/1234", None],
-        "aliases_fr": ["Un|Alias FR", ""],
-        "aliases_en": ["One|Alias EN", "Two"],
-        "professions": ["musicien", "chanteur"],
-        "genres": ["rock", "pop"],
-        "languages_spoken": ["français", "anglais"],
-        "birth_date_val": ["1980-01-01", "1990-06-15"],
-    }
-    defaults.update(kwargs)
-    return pd.DataFrame(defaults)
+def _make_discovery_df(ids: list[str]) -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "wikidata_id": [f"https://www.wikidata.org/entity/{qid}" for qid in ids],
+            "gkg_id": [f"/g/{qid}" for qid in ids],
+            "matching_score": [1] * len(ids),
+        }
+    )
 
 
-def _make_ids_df(**kwargs) -> pd.DataFrame:
-    """Build a minimal IDs DataFrame as returned by the music_artist_ids query."""
-    defaults = {
-        "wikidata_id": [
-            "https://www.wikidata.org/entity/Q1",
-            "https://www.wikidata.org/entity/Q2",
-        ],
-        "spotify_id": ["3TVXtAsR1Inumwj472S9r4", None],
-        "isni_id": ["0000000121239645", "0000000121239646"],
-        "apple_music_id": ["12345", None],
-        "deezer_id": ["56789", None],
-        "genius_id": ["genius-q1", None],
-        "soundcloud_id": ["soundcloud-q1", None],
-        "matching_score": [4, 1],
-    }
-    defaults.update(kwargs)
-    return pd.DataFrame(defaults)
+def _make_hydration_df(ids: list[str]) -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "wikidata_id": [f"https://www.wikidata.org/entity/{qid}" for qid in ids],
+            "artist_name_fr": [f"Name {qid}" for qid in ids],
+        }
+    )
 
 
-class TestExtractWikidataId:
-    def test_strips_wikidata_uri_prefix(self):
-        df = pd.DataFrame(
-            {
-                "wikidata_id": [
-                    "https://www.wikidata.org/entity/Q42",
-                    "https://www.wikidata.org/entity/Q123",
-                ]
-            }
+def _make_stripped_raw_df(ids: list[str]) -> pd.DataFrame:
+    """A minimal raw dataframe as `extract` would have saved it (wikidata_id
+    already stripped of its URI prefix), with every column merge_data/
+    postprocess_data need."""
+    return pd.DataFrame(
+        {
+            "wikidata_id": ids,
+            "artist_name_fr": [f"Nom {qid}" for qid in ids],
+            "artist_name_en": [f"Name {qid}" for qid in ids],
+            "artist_description": ["desc"] * len(ids),
+            "wikipedia_url": [None] * len(ids),
+            "img": [None] * len(ids),
+            "aliases_fr": [""] * len(ids),
+            "aliases_en": [""] * len(ids),
+        }
+    )
+
+
+class TestExtractTwoPassCheckpointing:
+    """End-to-end: a mid-run failure on one Pass 2 batch must leave the other,
+    already-hydrated batch checkpointed, and a subsequent `extract` call for the
+    same target must resume from it instead of redoing Pass 1 or that batch."""
+
+    QUERY_NAME = "test_two_pass"
+
+    @pytest.fixture(autouse=True)
+    def _register_test_config(self, monkeypatch):
+        monkeypatch.setitem(
+            QUERY_CONFIGS,
+            self.QUERY_NAME,
+            QueryConfig(
+                template="extract_discovery.rq.j2",
+                entity_types=["wd:Q5"],
+                id_properties=[],
+                hydration_batch_size=2,
+            ),
         )
-        result = extract_wikidata_id(df)
-        assert list(result["wikidata_id"]) == ["Q42", "Q123"]
 
-    def test_does_not_alter_other_columns(self):
-        df = pd.DataFrame(
-            {
-                "wikidata_id": ["https://www.wikidata.org/entity/Q1"],
-                "artist_name_fr": ["Test"],
-            }
+    def test_resumes_after_a_mid_run_failure(self, tmp_path, monkeypatch):
+        checkpoint_root = str(tmp_path / "checkpoints")
+        monkeypatch.setattr(wikidata_checkpoint, "CHECKPOINT_ROOT_DIR", checkpoint_root)
+        monkeypatch.setattr(wikidata_cli, "clear_qlever_cache", lambda: None)
+
+        discovery_df = _make_discovery_df(["Q1", "Q2", "Q3", "Q4"])
+        # hydration_batch_size=2 -> two batches: [Q1, Q2] and [Q3, Q4]
+
+        def hydrate_batch_fails_on_second_batch(query_name, batch, dropped_ids):
+            if batch == ["Q3", "Q4"]:
+                raise requests.RequestException("simulated QLever outage")
+            return [_make_hydration_df(batch)]
+
+        output_path = str(tmp_path / "out.parquet")
+
+        with (
+            patch.object(
+                wikidata_cli, "fetch_discovery", return_value=discovery_df
+            ) as mock_fetch_discovery,
+            patch.object(
+                wikidata_cli,
+                "hydrate_batch",
+                side_effect=hydrate_batch_fails_on_second_batch,
+            ) as mock_hydrate,
+            pytest.raises(requests.RequestException),
+        ):
+            extract(query_name=self.QUERY_NAME, output_file_path=output_path)
+
+        assert mock_fetch_discovery.call_count == 1
+        assert mock_hydrate.call_count == 2
+
+        checkpoint_dir = os.path.join(checkpoint_root, self.QUERY_NAME)
+        assert wikidata_checkpoint.load_processed_batches(checkpoint_dir) == {0}
+        assert wikidata_checkpoint.load_batch_checkpoint(checkpoint_dir, 0) is not None
+        assert wikidata_checkpoint.load_batch_checkpoint(checkpoint_dir, 1) is None
+
+        with (
+            patch.object(
+                wikidata_cli, "fetch_discovery", return_value=discovery_df
+            ) as mock_fetch_discovery_2,
+            patch.object(
+                wikidata_cli,
+                "hydrate_batch",
+                return_value=[_make_hydration_df(["Q3", "Q4"])],
+            ) as mock_hydrate_2,
+        ):
+            extract(query_name=self.QUERY_NAME, output_file_path=output_path)
+
+        assert mock_fetch_discovery_2.call_count == 0  # resumed from checkpoint
+        mock_hydrate_2.assert_called_once_with(self.QUERY_NAME, ["Q3", "Q4"], [])
+
+        result = pd.read_parquet(output_path)
+        assert sorted(result["wikidata_id"]) == ["Q1", "Q2", "Q3", "Q4"]
+
+        # Cleared only after a fully successful run.
+        assert not os.path.isdir(checkpoint_dir)
+
+
+class TestExtractOptionalTarget:
+    """QueryConfig.optional generalizes the "this target may legitimately come
+    back empty" case beyond music_ids specifically — extract must skip saving a
+    raw file (not raise) for any target configured that way."""
+
+    QUERY_NAME = "test_optional"
+
+    @pytest.fixture(autouse=True)
+    def _register_test_config(self, monkeypatch):
+        monkeypatch.setitem(
+            QUERY_CONFIGS,
+            self.QUERY_NAME,
+            QueryConfig(
+                template="extract_artists.rq.j2",
+                entity_types=["wd:Q5"],
+                optional=True,
+            ),
         )
-        result = extract_wikidata_id(df)
-        assert result["artist_name_fr"].iloc[0] == "Test"
+        monkeypatch.setattr(wikidata_cli, "clear_qlever_cache", lambda: None)
+
+    def test_empty_result_is_skipped_not_raised(self, tmp_path, monkeypatch):
+        # A real QLever CSV response always has a string-typed wikidata_id column
+        # even with zero matching rows — a bare pd.DataFrame({"wikidata_id": []})
+        # would infer float64 and break extract_wikidata_id's .str accessor before
+        # the emptiness check even runs.
+        monkeypatch.setattr(
+            wikidata_cli,
+            "fetch_wikidata_qlever_csv",
+            lambda _query: pd.DataFrame({"wikidata_id": pd.Series([], dtype="object")}),
+        )
+        output_path = str(tmp_path / "out.parquet")
+
+        extract(
+            query_name=self.QUERY_NAME, output_file_path=output_path
+        )  # must not raise
+
+        assert not os.path.exists(output_path)
+
+    def test_non_optional_target_still_raises_on_empty(self, tmp_path, monkeypatch):
+        monkeypatch.setitem(
+            QUERY_CONFIGS,
+            "test_required",
+            QueryConfig(
+                template="extract_artists.rq.j2", entity_types=["wd:Q5"], optional=False
+            ),
+        )
+        monkeypatch.setattr(
+            wikidata_cli,
+            "fetch_wikidata_qlever_csv",
+            lambda _query: pd.DataFrame({"wikidata_id": pd.Series([], dtype="object")}),
+        )
+        output_path = str(tmp_path / "out.parquet")
+
+        with pytest.raises(ValueError, match="No data retrieved for test_required"):
+            extract(query_name="test_required", output_file_path=output_path)
 
 
-class TestMergeData:
-    def test_adds_boolean_source_columns(self):
-        df = _make_raw_df().pipe(extract_wikidata_id)
-        merged = merge_data({"music": df})
+class TestMergeOptionalTargets:
+    """merge's own FileNotFoundError handling must key off QueryConfig.optional
+    for whichever targets are configured that way, not a hardcoded target name."""
 
-        assert "music" in merged.columns
-        assert merged["music"].dtype == bool or merged["music"].dtype == object
+    def test_missing_optional_target_file_is_skipped(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(
+            wikidata_cli,
+            "QUERY_CONFIGS",
+            {
+                "required_target": QueryConfig(
+                    template="extract_artists.rq.j2", entity_types=["wd:Q5"]
+                ),
+                "optional_target": QueryConfig(
+                    template="extract_artists.rq.j2",
+                    entity_types=["wd:Q5"],
+                    optional=True,
+                ),
+            },
+        )
+        input_dir = tmp_path / "raw"
+        input_dir.mkdir()
+        _make_stripped_raw_df(["Q1"]).to_parquet(
+            str(input_dir / "required_target.parquet")
+        )
+        output_path = str(tmp_path / "out.parquet")
 
-    def test_deduplicates_on_wikidata_id(self):
-        df = _make_raw_df().pipe(extract_wikidata_id)
-        # Duplicate the dataframe — should be deduplicated
-        merged = merge_data({"music": pd.concat([df, df])})
-        assert len(merged) == len(df)
+        merge(input_dir_path=str(input_dir), output_file_path=output_path)
 
-    def test_merges_music_ids_when_present(self):
-        df = _make_raw_df().pipe(extract_wikidata_id)
-        ids_df = _make_ids_df().pipe(extract_wikidata_id)
-        merged = merge_data({"music": df, MUSIC_IDS_KEY: ids_df})
+        assert os.path.exists(output_path)
 
-        assert "spotify_id" in merged.columns
-        assert len(merged) == len(df)
+    def test_missing_non_optional_target_file_raises(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(
+            wikidata_cli,
+            "QUERY_CONFIGS",
+            {
+                "required_target": QueryConfig(
+                    template="extract_artists.rq.j2", entity_types=["wd:Q5"]
+                ),
+            },
+        )
+        input_dir = tmp_path / "raw"
+        input_dir.mkdir()
+        output_path = str(tmp_path / "out.parquet")
 
-    def test_music_ids_matching_score_renamed_to_avoid_conflict(self):
-        """matching_score from music_ids must be merged into a single matching_score column."""
-        df = _make_raw_df().pipe(extract_wikidata_id)
-        ids_df = _make_ids_df().pipe(extract_wikidata_id)
-        merged = merge_data({"music": df, MUSIC_IDS_KEY: ids_df})
-
-        assert "matching_score" in merged.columns
-        assert "music_ids_matching_score" not in merged.columns
-        assert "matching_score_x" not in merged.columns
-        assert "matching_score_y" not in merged.columns
-
-    def test_skips_music_ids_merge_when_absent(self):
-        df = _make_raw_df().pipe(extract_wikidata_id)
-        merged = merge_data({"music": df})
-
-        assert "spotify_id" not in merged.columns
-
-
-class TestPostprocessData:
-    @pytest.fixture()
-    def processed(self) -> pd.DataFrame:
-        # Simulate the full pipeline: main query + IDs merge
-        df = _make_raw_df().pipe(extract_wikidata_id)
-        ids_df = _make_ids_df().pipe(extract_wikidata_id)
-        return postprocess_data(merge_data({"music": df, MUSIC_IDS_KEY: ids_df}))
-
-    def test_has_alias_column(self, processed):
-        assert "alias" in processed.columns
-
-    def test_has_raw_alias_column(self, processed):
-        assert "raw_alias" in processed.columns
-
-    def test_new_id_columns_present(self, processed):
-        """All new external ID columns must survive the postprocess pipeline."""
-        for col in NEW_ID_COLUMNS:
-            assert col in processed.columns, f"Column '{col}' missing after postprocess"
-
-    def test_no_empty_aliases(self, processed):
-        assert (processed["alias"] != "").all()
-        assert processed["alias"].notna().all()
-
-    def test_img_uses_https(self, processed):
-        imgs = processed["img"].dropna()
-        assert imgs.str.startswith("https://").all()
-
-    def test_spotify_id_value_preserved(self, processed):
-        """The Spotify ID of Q1 must be present in the output rows for that wikidata_id."""
-        q1_rows = processed[processed["wikidata_id"] == "Q1"]
-        assert not q1_rows.empty
-        assert (q1_rows["spotify_id"] == "3TVXtAsR1Inumwj472S9r4").all()
-
-    def test_isni_id_value_preserved(self, processed):
-        q2_rows = processed[processed["wikidata_id"] == "Q2"]
-        assert not q2_rows.empty
-        assert (q2_rows["isni_id"] == "0000000121239646").all()
-
-    def test_null_ids_remain_null(self, processed):
-        """Optional IDs that are None in input must remain NaN (not become strings)."""
-        q2_rows = processed[processed["wikidata_id"] == "Q2"]
-
-        assert q2_rows["spotify_id"].isna().all()
-        assert q2_rows["deezer_id"].isna().all()
-        assert q2_rows["genius_id"].isna().all()
-        assert q2_rows["soundcloud_id"].isna().all()
+        with pytest.raises(
+            ValueError, match="Missing raw extraction for required_target"
+        ):
+            merge(input_dir_path=str(input_dir), output_file_path=output_path)

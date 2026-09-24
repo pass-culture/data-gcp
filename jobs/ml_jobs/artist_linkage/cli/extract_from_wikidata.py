@@ -1,195 +1,181 @@
+import os
 import time
-from io import StringIO
 
 import pandas as pd
-import requests
 import typer
 from loguru import logger
 
-from src.constants import WIKIDATA_ID_KEY
-from src.utils.preprocessing_utils import normalize_string_series
-
-QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
-QLEVER_HEADERS = {"Accept": "text/csv", "Content-Type": "application/sparql-query"}
-MUSIC_IDS_KEY = "music_ids"
-QUERIES_PATHES = {
-    "music": "queries/extract_music_artists.rq",
-    MUSIC_IDS_KEY: "queries/extract_music_artist_ids.rq",
-    "book": "queries/extract_book_artists.rq",
-    "movie": "queries/extract_movie_artists.rq",
-    "gkg": "queries/extract_gkg_artists.rq",
-}
+from src.utils import wikidata_checkpoint as checkpoint
+from src.utils.qlever import clear_qlever_cache, fetch_wikidata_qlever_csv
+from src.utils.wikidata_extraction import (
+    HYDRATION_BATCH_DELAY_SECONDS,
+    extract_wikidata_id,
+    fetch_discovery,
+    hydrate_batch,
+)
+from src.utils.wikidata_merge import merge_data, postprocess_data
+from src.wikidata_config import QUERY_CONFIGS, render_query
 
 app = typer.Typer()
 
 
-WIKIDATA_ENTITY_PREFIX = r"https?://www\.wikidata\.org/entity/"
-
-
-def extract_wikidata_id(df: pd.DataFrame) -> pd.DataFrame:
-    return df.assign(
-        wikidata_id=lambda df: df.wikidata_id.str.replace(
-            WIKIDATA_ENTITY_PREFIX, "", regex=True
-        ),
-    )
-
-
-def merge_data(dfs: dict[str, pd.DataFrame]) -> pd.DataFrame:
-    # Pre-merge music metadata and music IDs so the resulting music df has the same
-    # structure (including matching_score and platform IDs) as the other dfs before concat.
-    if "music" in dfs and MUSIC_IDS_KEY in dfs:
-        dfs = {
-            **dfs,
-            "music": dfs["music"].merge(
-                dfs[MUSIC_IDS_KEY], on=WIKIDATA_ID_KEY, how="left"
-            ),
-        }
-    elif MUSIC_IDS_KEY in dfs:
-        logger.warning(
-            "music_ids retrieved but no music df found — skipping ID pre-merge."
-        )
-
-    # The drop duplicates is done on the wikidata_id column due to the fact that professions or aliases can be unsorted lists
-    main_dfs = {name: df for name, df in dfs.items() if name != MUSIC_IDS_KEY}
-    merged_df = pd.concat(main_dfs.values()).drop_duplicates(subset=[WIKIDATA_ID_KEY])
-
-    for query_name, df in main_dfs.items():
-        wiki_ids = df[WIKIDATA_ID_KEY].unique()
-        merged_df = merged_df.assign(
-            **{
-                query_name: lambda df, wiki_ids=wiki_ids: df[WIKIDATA_ID_KEY].isin(
-                    wiki_ids
-                )
-            }
-        )
-
-    return merged_df
-
-
-def postprocess_data(df: pd.DataFrame) -> pd.DataFrame:
-    EMPTY_ALIAS_KEYWORD = "EMPTY_ALIAS"
-    SEPARATOR_KEY = "|"  # Wikidata Queries also use the '|' separator, so be careful when changing this
-    return (
-        df.assign(
-            artist_name=lambda df: df.artist_name_fr.combine_first(df.artist_name_en),
-            aliases=lambda df: (
-                df.artist_name_fr.fillna(EMPTY_ALIAS_KEYWORD)
-                + "|"
-                + df.artist_name_en.fillna(EMPTY_ALIAS_KEYWORD)
-                + "|"
-                + df.aliases_fr.fillna(EMPTY_ALIAS_KEYWORD)
-                + "|"
-                + df.aliases_en.fillna(EMPTY_ALIAS_KEYWORD)
-            )
-            .str.replace(f"{SEPARATOR_KEY}{EMPTY_ALIAS_KEYWORD}", "")
-            .str.replace(f"{EMPTY_ALIAS_KEYWORD}{SEPARATOR_KEY}", ""),
-            aliases_list=lambda df: df.aliases.str.split(SEPARATOR_KEY),
-            img=lambda df: df.img.str.replace("http://", "https://"),
-        )
-        .drop(
-            columns=[
-                "artist_name_fr",
-                "artist_name_en",
-                "aliases_fr",
-                "aliases_en",
-                "aliases",
-            ]
-        )
-        .explode("aliases_list")
-        .rename(
-            columns={
-                "aliases_list": "alias",
-            }
-        )
-        .assign(
-            raw_alias=lambda df: df.alias,
-            alias=lambda df: df.alias.pipe(normalize_string_series),
-        )
-        .loc[
-            lambda df: (df.alias.notna())
-            & (df.alias != "")
-            & (df.alias != EMPTY_ALIAS_KEYWORD)
-        ]
-        .drop_duplicates()
-    )
-
-
-def clear_qlever_cache(retries: int = 3, backoff_factor: int = 5) -> None:
-    for attempt in range(retries):
-        try:
-            response = requests.get(
-                QLEVER_ENDPOINT,
-                params={"cmd": "clear-cache"},
-                headers=QLEVER_HEADERS,
-                timeout=30,
-            )
-            if response.status_code == 200:
-                logger.info(f"Cache cleared for {QLEVER_ENDPOINT}")
-                return
-            logger.warning(
-                f"Cache clear attempt {attempt + 1} failed ({response.status_code}): {response.text[:150]}"
-            )
-        except requests.RequestException as e:
-            logger.warning(f"Cache clear attempt {attempt + 1} request error: {e}")
-
-        time.sleep(backoff_factor * (attempt + 1))
-
-    logger.warning(
-        "Failed to reset QLever cache after retries. Proceeding with execution..."
-    )
-
-
-def fetch_wikidata_qlever_csv(
-    sparql_query: str, retries: int = 3, backoff_factor: int = 5
-) -> pd.DataFrame:
-    for attempt in range(retries):
-        try:
-            response = requests.get(
-                QLEVER_ENDPOINT,
-                params={"query": sparql_query},
-                headers=QLEVER_HEADERS,
-                timeout=120,
-            )
-            if response.status_code == 200:
-                response.encoding = "utf-8"
-                return pd.read_csv(StringIO(response.text))
-
-            logger.warning(
-                f"Attempt {attempt + 1} failed ({response.status_code}): {response.text[:200]}"
-            )
-        except requests.RequestException as e:
-            logger.warning(f"Attempt {attempt + 1} request error: {e}")
-
-        time.sleep(backoff_factor * (attempt + 1))
-
-    raise requests.RequestException(
-        f"Failed to fetch data from {QLEVER_ENDPOINT} after {retries} attempts."
-    )
-
-
 @app.command()
-def main(output_file_path: str = typer.Option()) -> None:
-    dfs: dict[str, pd.DataFrame] = {}
+def extract(
+    query_name: str = typer.Option(),
+    output_file_path: str = typer.Option(),
+) -> None:
+    """Fetch one extraction target from Wikidata and save its raw rows.
+
+    Run once per key of QUERY_CONFIGS so a target-specific QLever failure only
+    retries/fails that target instead of every other already-fetched target.
+
+    For two-pass targets (QueryConfig.hydration_batch_size), an Airflow-level
+    retry of this same task resumes from a local checkpoint (see
+    src/utils/wikidata_checkpoint.py) instead of redoing Pass 1 and every
+    already-hydrated Pass 2 batch.
+    """
+    if query_name not in QUERY_CONFIGS:
+        raise typer.BadParameter(
+            f"Unknown query_name {query_name!r}. Expected one of {list(QUERY_CONFIGS)}."
+        )
+
+    start_time = time.time()
 
     # Clear cache on qlever to prevent any resource issues
     clear_qlever_cache()
 
-    for query_name, query_path in QUERIES_PATHES.items():
-        logger.info(f"Fetch the data in CSV format for {query_name}")
+    logger.info(f"Fetch the data in CSV format for {query_name}")
 
-        with open(query_path) as file:
-            query_string = file.read()
+    config = QUERY_CONFIGS[query_name]
+    dropped_ids: list[str] = []
+    checkpoint_dir = checkpoint.checkpoint_dir_for(query_name)
+    if config.hydration_batch_size:
+        logger.info(f"[{query_name}] Pass 1: discovering candidate entities")
+        discovery_df = checkpoint.load_discovery_checkpoint(checkpoint_dir)
+        if discovery_df is not None:
+            logger.info(f"[{query_name}] Pass 1: resuming from checkpoint")
+        else:
+            discovery_df = fetch_discovery(query_name).pipe(extract_wikidata_id)
+            checkpoint.save_discovery_checkpoint(checkpoint_dir, discovery_df)
+        logger.info(
+            f"[{query_name}] Pass 1: found {len(discovery_df)} candidate entities"
+        )
+
+        wikidata_ids = discovery_df["wikidata_id"].tolist()
+        batch_size = config.hydration_batch_size
+        batches = [
+            wikidata_ids[i : i + batch_size]
+            for i in range(0, len(wikidata_ids), batch_size)
+        ]
+
+        processed_batches = checkpoint.load_processed_batches(checkpoint_dir)
+        dropped_ids = checkpoint.load_dropped_ids(checkpoint_dir)
+        if processed_batches:
+            logger.info(
+                f"[{query_name}] Pass 2: resuming — {len(processed_batches)}/"
+                f"{len(batches)} batches already hydrated in a previous attempt"
+            )
+        logger.info(
+            f"[{query_name}] Pass 2: hydrating {len(wikidata_ids)} entities in "
+            f"{len(batches)} batches of up to {batch_size}"
+        )
+
+        hydration_dfs: list[pd.DataFrame] = []
+        for i, batch in enumerate(batches):
+            if i in processed_batches:
+                batch_df = checkpoint.load_batch_checkpoint(checkpoint_dir, i)
+                if batch_df is not None:
+                    hydration_dfs.append(batch_df)
+                continue
+            batch_dfs = hydrate_batch(query_name, batch, dropped_ids)
+            if batch_dfs:
+                batch_df = pd.concat(batch_dfs, ignore_index=True).pipe(
+                    extract_wikidata_id
+                )
+                checkpoint.save_batch_checkpoint(checkpoint_dir, i, batch_df)
+                hydration_dfs.append(batch_df)
+            # Persist after every batch (not just at the end): dropped_ids and the
+            # processed-batches log must reflect exactly what's been checkpointed
+            # to disk so far, in case this attempt itself gets interrupted.
+            checkpoint.save_dropped_ids(checkpoint_dir, dropped_ids)
+            checkpoint.mark_batch_processed(checkpoint_dir, i)
+            if i < len(batches) - 1:
+                time.sleep(HYDRATION_BATCH_DELAY_SECONDS)
+
+        # Inner merge: entities in dropped_ids simply have no row in hydration_df,
+        # so they're naturally excluded here without extra filtering logic.
+        df = (
+            discovery_df.merge(
+                pd.concat(hydration_dfs, ignore_index=True),
+                on="wikidata_id",
+                how="inner",
+            )
+            if hydration_dfs
+            else pd.DataFrame()
+        )
+    else:
+        query_string = render_query(query_name)
         logger.debug(f"SPARQL Query: \n{query_string}")
-
         df = fetch_wikidata_qlever_csv(query_string).pipe(extract_wikidata_id)
 
-        if not df.empty:
-            logger.info(f"Retrieved {len(df)} rows.")
-            dfs[query_name] = df
-        elif query_name == MUSIC_IDS_KEY:
-            logger.warning("No music artist IDs retrieved — skipping ID merge.")
-        else:
-            raise ValueError(f"No data retrieved for {query_name}.")
+    if df.empty:
+        if config.optional:
+            logger.warning(f"No data retrieved for {query_name} — skipping raw file.")
+            return
+        error_message = f"No data retrieved for {query_name}."
+        logger.error(error_message)
+        raise ValueError(error_message)
+
+    logger.info(f"Retrieved {len(df)} rows.")
+    logger.info(f"Saving raw results to {output_file_path}")
+    df.to_parquet(output_file_path, index=False)
+    logger.info(f"Raw results saved successfully to {output_file_path}")
+
+    if dropped_ids:
+        logger.warning(
+            f"{query_name}: dropped {len(dropped_ids)} entit"
+            f"{'y' if len(dropped_ids) == 1 else 'ies'} QLever rejected as too "
+            f"expensive even alone: {', '.join(dropped_ids)}"
+        )
+
+    elapsed = time.time() - start_time
+    dropped_entity_word = "entity" if len(dropped_ids) == 1 else "entities"
+    logger.info(
+        f"[{query_name}] summary: {len(df)} rows, {len(dropped_ids)} "
+        f"{dropped_entity_word} dropped, {elapsed:.1f}s elapsed, "
+        f"saved to {output_file_path}"
+    )
+
+    # Only reached on success: a failed/raised attempt above leaves the checkpoint
+    # in place on purpose, for the next Airflow-level retry to resume from.
+    if config.hydration_batch_size:
+        checkpoint.clear_checkpoint(checkpoint_dir)
+        logger.info(f"[{query_name}] cleared hydration checkpoint at {checkpoint_dir}")
+
+
+@app.command()
+def merge(
+    input_dir_path: str = typer.Option(
+        help="Directory holding one <query_name>.parquet raw file per `extract` target."
+    ),
+    output_file_path: str = typer.Option(),
+) -> None:
+    """Merge and postprocess the raw per-target files produced by `extract`."""
+    dfs: dict[str, pd.DataFrame] = {}
+
+    for query_name, config in QUERY_CONFIGS.items():
+        raw_file_path = os.path.join(input_dir_path, f"{query_name}.parquet")
+        try:
+            dfs[query_name] = pd.read_parquet(raw_file_path)
+        except FileNotFoundError:
+            if config.optional:
+                logger.warning(f"{raw_file_path} not found — skipping {query_name}.")
+                continue
+            error_message = (
+                f"Missing raw extraction for {query_name} at {raw_file_path}."
+            )
+            logger.error(error_message)
+            raise ValueError(error_message) from None
 
     logger.info("Merging the data")
     merged_df = merge_data(dfs)

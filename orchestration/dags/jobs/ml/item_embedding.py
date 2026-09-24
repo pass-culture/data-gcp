@@ -323,14 +323,7 @@ with DAG(
     start >> plan_vectors >> gce_instance_start >> install_dependencies
 
     # Each vector's steps live in their own TaskGroup and run a fully sequential
-    # subchain on the shared VM:
-    #   check_in_plan → export input → prepare (preprocess + build prompts) →
-    #   embed → load into BigQuery.
-    # Vectors run one after another (embeds share a single GPU), so each vector's
-    # check hangs off the previous vector's embed. The single check just reads the
-    # upstream plan: a vector not in it skips its own subchain
-    # (ignore_downstream_trigger_rules=False keeps the skip local) while the next
-    # vector's check still fires (trigger_rule=all_done tolerates both).
+    # subchain on the shared VM.
     previous_embed = None
     embed_tasks = []
     load_tasks = []
@@ -416,9 +409,7 @@ with DAG(
         trigger_rule="all_done",  # always delete the VM, even on upstream failure
     )
 
-    # none_failed_min_one_success: tolerate loads skipped for unselected vectors
-    # while still failing the run if a step actually failed.
-    stop = EmptyOperator(task_id="stop", trigger_rule="none_failed_min_one_success")
+    stop = EmptyOperator(task_id="stop", trigger_rule="all_done")
 
     # The VM lives until every embed is done (they share it); loads read from GCS.
     embed_tasks >> gce_instance_delete

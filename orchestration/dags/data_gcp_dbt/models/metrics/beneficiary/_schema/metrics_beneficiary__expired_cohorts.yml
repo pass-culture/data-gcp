@@ -11,6 +11,7 @@ models:
             - region_name
             - epci_code
             - city_code
+            - municipality_code
             - is_in_qpv
             - macro_density_label
             - micro_density_label
@@ -29,10 +30,14 @@ models:
         description: "{{ doc('column__epci_label') }}"
       - name: epci_code
         description: "{{ doc('column__epci_code') }}"
-      - name: city_name
-        description: "{{ doc('column__city_label') }}"
       - name: city_code
-        description: "{{ doc('column__city_code') }}"
+        description: "{{ doc('column__user_city_code') }}"
+      - name: city_name
+        description: "{{ doc('column__user_city') }}"
+      - name: municipality_label
+        description: "{{ doc('column__user_municipality_label') }}"
+      - name: municipality_code
+        description: "{{ doc('column__municipality_code') }}"
       - name: is_in_qpv
         description: "{{ doc('column__user_is_in_qpv') }}"
       - name: macro_density_label

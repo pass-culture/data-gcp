@@ -13,6 +13,8 @@ with
             ub.user_epci_code as epci_code,
             ub.user_city as city_name,
             ub.user_city_code as city_code,
+            ub.user_municipality_label as municipality_label,
+            ub.user_municipality_code as municipality_code,
             date(
                 date_trunc(ub.last_deposit_expiration_date, month)
             ) as deposit_expiration_month
@@ -45,6 +47,8 @@ select
     u.epci_code,
     u.city_name,
     u.city_code,
+    u.municipality_label,
+    u.municipality_code,
     cat.offer_category_id,
     count(
         distinct case when cat.offer_category_id is not null then cat.user_id end
@@ -64,6 +68,8 @@ group by
     u.epci_code,
     u.city_name,
     u.city_code,
+    u.municipality_label,
+    u.municipality_code,
     u.department_name,
     u.department_code,
     cat.offer_category_id

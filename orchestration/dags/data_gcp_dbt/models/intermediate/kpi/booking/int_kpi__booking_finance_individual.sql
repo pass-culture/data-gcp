@@ -1,6 +1,12 @@
 with
     unique_geo_commune as (
-        select distinct city_code, city_label, epci_label, region_code
+        select distinct
+            city_code,
+            city_label,
+            municipality_code,
+            municipality_label,
+            epci_label,
+            region_code
         from {{ ref("int_seed__geo_iris") }}
     )
 
@@ -11,9 +17,11 @@ select
     r.venue_region_name,
     gi.region_code as venue_region_code,
     r.venue_epci_code,
-    gi.epci_label as venue_epci_name,
     r.venue_city_code,
+    gi.epci_label as venue_epci_name,
+    r.venue_municipality_code,
     gi.city_label as venue_city_name,
+    gi.venue_municipality_label,
     r.offerer_is_epn,
     r.offer_category_id,
     sum(r.total_bookings) as total_bookings,
@@ -30,8 +38,9 @@ group by
     r.venue_region_name,
     gi.region_code,
     r.venue_epci_code,
-    gi.epci_label,
     r.venue_city_code,
+    gi.epci_label,
+    r.venue_municipality_code,
     gi.city_label,
     r.offerer_is_epn,
     r.offer_category_id

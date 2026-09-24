@@ -5,6 +5,7 @@ select
     bf.venue_region_name,
     bf.venue_epci_code,
     bf.venue_city_code,
+    bf.venue_municipality_code,
     bf.offerer_is_epn,
     bf.offer_category_id,
     bf.total_bookings,
@@ -16,5 +17,6 @@ select
 from {{ ref("int_kpi__booking_finance_individual") }} as bf
 left join
     {{ ref("int_kpi__cultural_partner_activation") }} as cp
-    on bf.venue_city_code = cp.partner_city_code
+    on bf.venue_municipality_code = cp.partner_municipality_code
+    and bf.venue_city_code = cp.partner_city_code
     and bf.partition_month = cp.partition_month

@@ -11,6 +11,7 @@ models:
             - department_code
             - epci_code
             - city_code
+            - municipality_code
             - age_at_calculation
             - is_in_qpv
             - macro_density_label
@@ -44,6 +45,12 @@ models:
 
       - name: city_code
         description: "{{ doc('column__user_city_code') }}"
+
+      - name: municipality_label
+        description: "{{ doc('column__user_municipality_label') }}"
+
+      - name: municipality_code
+        description: "{{ doc('column__municipality_code') }}"
         data_tests:
           - not_null
 

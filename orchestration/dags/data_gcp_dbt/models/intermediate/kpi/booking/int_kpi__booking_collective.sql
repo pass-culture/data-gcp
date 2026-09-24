@@ -9,6 +9,8 @@ with
             cb.venue_epci_code,
             cb.venue_city as venue_city_name,
             cb.venue_city_code,
+            cb.venue_municipality_label as venue_municipality_label,
+            cb.venue_municipality_code,
             date_trunc(
                 date(cb.collective_booking_creation_date), month
             ) as partition_month,
@@ -32,7 +34,9 @@ with
             cb.venue_epci,
             cb.venue_epci_code,
             cb.venue_city,
-            cb.venue_city_code
+            cb.venue_city_code,
+            cb.venue_municipality_label,
+            cb.venue_municipality_code
     ),
 
     booking_with_cumul as (
@@ -47,6 +51,8 @@ with
             booking_aggregated.venue_epci_code,
             booking_aggregated.venue_city_name,
             booking_aggregated.venue_city_code,
+            booking_aggregated.venue_municipality_label,
+            booking_aggregated.venue_municipality_code,
             booking_aggregated.total_collective_bookings,
             booking_aggregated.total_collective_amount_spent,
             sum(booking_aggregated.total_collective_bookings) over (
@@ -59,7 +65,9 @@ with
                     booking_aggregated.venue_epci_name,
                     booking_aggregated.venue_epci_code,
                     booking_aggregated.venue_city_name,
-                    booking_aggregated.venue_city_code
+                    booking_aggregated.venue_city_code,
+                    booking_aggregated.venue_municipality_label,
+                    booking_aggregated.venue_municipality_code
                 order by booking_aggregated.partition_month
                 rows unbounded preceding
             ) as cumulative_total_collective_bookings,
@@ -73,7 +81,9 @@ with
                     booking_aggregated.venue_epci_name,
                     booking_aggregated.venue_epci_code,
                     booking_aggregated.venue_city_name,
-                    booking_aggregated.venue_city_code
+                    booking_aggregated.venue_city_code,
+                    booking_aggregated.venue_municipality_label,
+                    booking_aggregated.venue_municipality_code
                 order by booking_aggregated.partition_month
                 rows unbounded preceding
             ) as cumulative_total_collective_amount_spent
@@ -91,6 +101,8 @@ select
     booking_with_cumul.venue_epci_code,
     booking_with_cumul.venue_city_name,
     booking_with_cumul.venue_city_code,
+    booking_with_cumul.venue_municipality_label,
+    booking_with_cumul.venue_municipality_code,
     booking_with_cumul.total_collective_bookings,
     booking_with_cumul.total_collective_amount_spent,
     booking_with_cumul.cumulative_total_collective_bookings,

@@ -15,6 +15,7 @@ with
         select
             gcp.offerer_id,
             gcp.partner_city_code,
+            gcp.partner_municipality_code,
             gcp.partner_epci_code,
             gcp.partner_department_code,
             gcp.partner_department_name,
@@ -57,6 +58,7 @@ with
         select
             offerer_id,
             partner_city_code,
+            partner_municipality_code,
             partner_epci_code,
             partner_department_code,
             partner_department_name,
@@ -132,6 +134,7 @@ with
             select
                 offerer_id,
                 partner_city_code,
+                partner_municipality_code,
                 partner_epci_code,
                 partner_department_code,
                 partner_department_name,
@@ -157,6 +160,7 @@ with
 select
     date_trunc(offerer_creation_date, month) as partition_month,
     partner_city_code,
+    partner_municipality_code,
     partner_epci_code,
     partner_department_code,
     partner_department_name,
@@ -183,6 +187,7 @@ from union_partner_types
 group by
     date_trunc(offerer_creation_date, month),
     partner_city_code,
+    partner_municipality_code,
     partner_epci_code,
     partner_department_code,
     partner_department_name,

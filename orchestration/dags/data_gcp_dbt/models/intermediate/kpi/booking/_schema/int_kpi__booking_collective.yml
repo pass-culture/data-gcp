@@ -43,6 +43,14 @@ models:
         description: '{{ doc("column__venue_city_code") }}'
         data_type: STRING
 
+      - name: venue_municipality_label
+        description: '{{ doc("column__venue_municipality_label") }}'
+        data_type: STRING
+
+      - name: venue_municipality_code
+        description: '{{ doc("column__venue_municipality_code") }}'
+        data_type: STRING
+
       - name: total_collective_bookings
         description: '{{ doc("column__total_collective_bookings") }}'
         data_type: INTEGER

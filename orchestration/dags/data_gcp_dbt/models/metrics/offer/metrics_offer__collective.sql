@@ -8,5 +8,7 @@ select
     venue_epci_code,
     venue_city_name,
     venue_city_code,
+    venue_municipality_label,
+    venue_municipality_code,
     total_created_collective_offers
 from {{ ref("int_kpi__offer_collective") }}

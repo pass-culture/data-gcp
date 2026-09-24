@@ -9,6 +9,8 @@ select
     venue_epci_code,
     venue_city_name,
     venue_city_code,
+    venue_municipality_label,
+    venue_municipality_code,
     total_collective_bookings,
     total_collective_amount_spent,
     cumulative_total_collective_bookings,

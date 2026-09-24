@@ -15,6 +15,8 @@ models:
         description: '{{ doc("column__venue_epci_code") }}'
       - name: venue_city_code
         description: '{{ doc("column__venue_city_code") }}'
+      - name: venue_municipality_code
+        description: '{{ doc("column__venue_municipality_code") }}'
       - name: offerer_is_epn
         description: '{{ doc("column__offerer_is_epn") }}'
       - name: offer_category_id

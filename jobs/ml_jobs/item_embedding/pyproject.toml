@@ -6,8 +6,11 @@ readme = "README.md"
 requires-python = ">=3.10, <3.13"
 dependencies = [
     "gcsfs>=2026.2.0",
+    "google-auth>=2.41.1",
+    "google-cloud-iam>=2.22.0",
     "google-cloud-secret-manager>=2.26.0",
     "loguru>=0.7.3",
+    "mlflow>=3.15.0",
     "numpy>=2.2.6",
     "pandas>=2.2.0,<3.0.0",
     "pyarrow >= 23.0.1",
@@ -54,4 +57,5 @@ constraint-dependencies = [
     "gitpython >= 3.1.55", # GHSA-rwj8-pgh3-r573, GHSA-hxwm-x553-x359, GHSA-wfm5-v35h-vwf4, GHSA-cjjc-xp8v-855w, GHSA-j4jw-m6xq-5x6x, GHSA-63pj-vm49-gjx3, GHSA-xm45-vr68-g3jr, GHSA-9vhm-6c77-rvj4, GHSA-rpm5-65cw-6hj4
     "keras >= 3.14.0", # PYSEC-2026-2324
     "click >= 8.3.3", # PYSEC-2026-2132
+    "sqlparse >= 0.6.0", # GHSA-3496-9g83-7v6x, GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-pwgv-4x5q-6m9f (pulled in by mlflow)
 ]

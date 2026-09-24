@@ -320,7 +320,20 @@ with DAG(
         retries=2,
     )
 
+    start_mlflow_run = SSHGCEOperator(
+        task_id="start_mlflow_run",
+        instance_name="{{ params.instance_name }}",
+        base_dir=BASE_DIR,
+        gce_zone=GCE_ZONE_TEMPLATE,
+        command=(
+            "uv run python -m cli.mlflow_run start "
+            "--airflow-run-id {{ run_id }} "
+            "{{ '--embed-all' if params.embed_all else '--no-embed-all' }}"
+        ),
+    )
+
     start >> plan_vectors >> gce_instance_start >> install_dependencies
+    install_dependencies >> start_mlflow_run
 
     # Each vector's steps live in their own TaskGroup and run a fully sequential
     # subchain on the shared VM.

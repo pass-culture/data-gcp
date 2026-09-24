@@ -1,7 +1,22 @@
 import os
+import pathlib
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
+
+# MLflow tracking
+MLFLOW_URI = (
+    "https://mlflow.passculture.team/"
+    if ENV_SHORT_NAME == "prod"
+    else "https://mlflow.staging.passculture.team/"
+)
+SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}@{GCP_PROJECT_ID}.iam.gserviceaccount.com"
+MLFLOW_EXPERIMENT_NAME = f"item_embedding_v1.0_{ENV_SHORT_NAME}"
+MLFLOW_RUN_ID_FILEPATH = (
+    pathlib.Path(__file__).parent.parent / "mlflow_run_id.txt"
+).as_posix()
+MLFLOW_RUN_ID_COLUMN = "mlflow_run_id"
+EMBEDDING_MODEL_COLUMN = "embedding_model"
 
 # Hugging Face token secret name per environment
 _HF_TOKEN_SECRET_NAMES: dict[str, str] = {

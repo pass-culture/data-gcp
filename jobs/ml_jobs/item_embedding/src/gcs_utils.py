@@ -12,7 +12,11 @@ import pyarrow as pa
 import pyarrow.dataset as ds
 import pyarrow.parquet as pq
 from loguru import logger
-from src.constants import ROWS_PER_CHUNK
+from src.constants import (
+    EMBEDDING_MODEL_COLUMN,
+    MLFLOW_RUN_ID_COLUMN,
+    ROWS_PER_CHUNK,
+)
 
 
 def list_parquet_files(gcs_path: str) -> list[str]:
@@ -119,14 +123,17 @@ def write_parquet(df: pd.DataFrame, gcs_path: str) -> None:
 
 
 def _embeddings_schema() -> pa.Schema:
-    """Explicit Arrow schema for an embeddings chunk: string ids plus an
-    ``embedding`` ``list<float>`` field.
+    """Explicit Arrow schema for an embeddings chunk: string ids, an
+    ``embedding`` ``list<float>`` field, and the provenance columns
+    (``mlflow_run_id``, ``embedding_model``) that flow into BigQuery.
     """
     return pa.schema(
         [
             pa.field("item_id", pa.string()),
             pa.field("content_hash", pa.string()),
             pa.field("embedding", pa.list_(pa.field("element", pa.float32()))),
+            pa.field(MLFLOW_RUN_ID_COLUMN, pa.string()),
+            pa.field(EMBEDDING_MODEL_COLUMN, pa.string()),
         ]
     )
 
@@ -138,7 +145,8 @@ def write_embeddings_parquet(df: pd.DataFrame, gcs_path: str) -> None:
     autodetect unification into a single REPEATED FLOAT column across files.
 
     Args:
-        df: item_id, content_hash, embedding (list[float] per row).
+        df: item_id, content_hash, embedding (list[float] per row), plus the
+            provenance columns mlflow_run_id and embedding_model.
         gcs_path: Destination parquet path (local or ``gs://...``).
     """
     table = pa.Table.from_pandas(df, schema=_embeddings_schema(), preserve_index=False)

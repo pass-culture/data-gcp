@@ -83,6 +83,8 @@ class TestWriteEmbeddingsParquet:
                 "item_id": ["a", "b"],
                 "content_hash": ["h1", "h2"],
                 "embedding": [[1.0, 2.0], [3.0, 4.0]],
+                "mlflow_run_id": ["r1", "r1"],
+                "embedding_model": ["m", "m"],
             }
         )
         path = tmp_path / "embeddings_0.parquet"
@@ -94,13 +96,21 @@ class TestWriteEmbeddingsParquet:
         # embeddings arrive as lists (object dtype); an empty chunk must still
         # write the explicit list<float> schema, not infer a null/float column.
         populated = pd.DataFrame(
-            {"item_id": ["a"], "content_hash": ["h1"], "embedding": [[1.0, 2.0]]}
+            {
+                "item_id": ["a"],
+                "content_hash": ["h1"],
+                "embedding": [[1.0, 2.0]],
+                "mlflow_run_id": ["r1"],
+                "embedding_model": ["m"],
+            }
         )
         empty = pd.DataFrame(
             {
                 "item_id": pd.Series([], dtype=object),
                 "content_hash": pd.Series([], dtype=object),
                 "embedding": pd.Series([], dtype=object),
+                "mlflow_run_id": pd.Series([], dtype=object),
+                "embedding_model": pd.Series([], dtype=object),
             }
         )
         p_path = tmp_path / "p.parquet"
@@ -111,9 +121,17 @@ class TestWriteEmbeddingsParquet:
 
     def test_round_trips_values(self, tmp_path):
         df = pd.DataFrame(
-            {"item_id": ["a"], "content_hash": ["h1"], "embedding": [[1.0, 2.0]]}
+            {
+                "item_id": ["a"],
+                "content_hash": ["h1"],
+                "embedding": [[1.0, 2.0]],
+                "mlflow_run_id": ["r1"],
+                "embedding_model": ["m"],
+            }
         )
         path = tmp_path / "chunk.parquet"
         write_embeddings_parquet(df, str(path))
-        result = pd.read_parquet(str(path))
-        assert result.set_index("item_id").loc["a", "embedding"].tolist() == [1.0, 2.0]
+        result = pd.read_parquet(str(path)).set_index("item_id")
+        assert result.loc["a", "embedding"].tolist() == [1.0, 2.0]
+        assert result.loc["a", "mlflow_run_id"] == "r1"
+        assert result.loc["a", "embedding_model"] == "m"

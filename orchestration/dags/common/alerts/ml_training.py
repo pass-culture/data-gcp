@@ -37,6 +37,27 @@ def create_algo_training_slack_block(
     ]
 
 
+def create_item_embedding_slack_block(
+    env_short_name: str = ENV_SHORT_NAME,
+):
+    return [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": ":robot_face: Embedding des items terminé ! :rocket:\n"
+                "{{ ti.xcom_pull(task_ids='build_slack_summary') }}",
+            },
+        },
+        {
+            "type": "context",
+            "elements": [
+                {"type": "mrkdwn", "text": f"Environnement: {env_short_name}"}
+            ],
+        },
+    ]
+
+
 def create_finance_pricing_forecast_slack_block(
     models: str,
     mlflow_url: str = MLFLOW_URL,

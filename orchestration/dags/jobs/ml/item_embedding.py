@@ -65,12 +65,12 @@ AVAILABLE_VECTORS = [
     ),
     VectorPipeline(
         name="movies_metadata",
-        input_table=f"{INPUT_DATASET_NAME}.movies_to_embed",
+        input_table=f"{INPUT_DATASET_NAME}.movies_metadata_to_embed",
         output_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.movies_metadata_tmp",
     ),
     VectorPipeline(
         name="books_metadata",
-        input_table=f"{INPUT_DATASET_NAME}.books_to_embed",
+        input_table=f"{INPUT_DATASET_NAME}.books_metadata_to_embed",
         output_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.books_metadata_tmp",
     ),
     VectorPipeline(

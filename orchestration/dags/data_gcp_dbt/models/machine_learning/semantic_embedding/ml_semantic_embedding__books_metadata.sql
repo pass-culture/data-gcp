@@ -27,5 +27,6 @@ select
     bm.content_hash,
     bm.embedding as books_metadata_embedding,
     bm.mlflow_run_id,
-    bm.embedding_model
+    bm.embedding_model,
+    bm.embedding_date
 from {{ source("ml_semantic_embedding", "books_metadata_tmp") }} as bm

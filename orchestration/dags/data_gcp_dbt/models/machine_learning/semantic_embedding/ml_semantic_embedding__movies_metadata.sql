@@ -27,5 +27,6 @@ select
     mm.content_hash,
     mm.embedding as movies_metadata_embedding,
     mm.mlflow_run_id,
-    mm.embedding_model
+    mm.embedding_model,
+    mm.embedding_date
 from {{ source("ml_semantic_embedding", "movies_metadata_tmp") }} as mm

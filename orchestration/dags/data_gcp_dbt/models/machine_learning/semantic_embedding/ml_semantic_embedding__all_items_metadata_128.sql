@@ -6,5 +6,8 @@ select
     ie.content_hash,
     ie.mlflow_run_id,
     ie.embedding_model,
-    array_slice(ie.embedding, 0, 127) as all_items_metadata_embedding_128
+    ie.embedding_date,
+    array_slice(
+        ie.all_items_metadata_embedding, 0, 127
+    ) as all_items_metadata_embedding_128
 from {{ ref("ml_semantic_embedding__all_items_metadata") }} as ie

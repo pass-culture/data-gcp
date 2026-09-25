@@ -10,8 +10,7 @@
 }}
 
 -- depends_on: {{ ref('mrt_global__cultural_partner') }}
-{% set dimensions_geo = get_dimensions("partner", "geo_epci") %}
-{% set dimensions_granular_only = get_dimensions("partner", "granular_only") %}
+{% set dimensions_geo = get_dimensions("partner", "geo_full") %}
 {% set partner_types = get_partner_types() %}
 
 with

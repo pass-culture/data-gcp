@@ -2,13 +2,13 @@ import pandas as pd
 import typer
 from sentence_transformers import SentenceTransformer
 
-from src.constants import (
+from src.common.constants import (
     HF_TOKEN_SECRET_NAME,
     MEAN_TT_ITEM_EMBEDDING_KEY,
     WIKIDATA_ID_KEY,
 )
-from src.utils.gcp import get_secret
-from src.utils.loading import load_wikidata
+from src.common.gcp import get_secret
+from src.linkage.loading import load_wikidata
 
 app = typer.Typer()
 

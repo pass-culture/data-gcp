@@ -3,7 +3,7 @@ import uuid
 import pandas as pd
 from loguru import logger
 
-from src.constants import (
+from src.common.constants import (
     ACTION_KEY,
     ARTIST_DESCRIPTION_KEY,
     ARTIST_ID_KEY,
@@ -21,7 +21,7 @@ from src.constants import (
     Action,
     Comment,
 )
-from src.utils.preprocessing_utils import (
+from src.linkage.preprocessing_utils import (
     extract_artist_name,
     prepare_artist_names_for_matching,
 )

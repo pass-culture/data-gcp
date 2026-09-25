@@ -1,11 +1,11 @@
-"""Tests for src/utils/qlever.py — no network calls needed."""
+"""Tests for src/extraction/qlever.py — no network calls needed."""
 
 from unittest.mock import Mock, patch
 
 import pytest
 import requests
 
-from src.utils.qlever import (
+from src.extraction.qlever import (
     QLeverQueryTooExpensive,
     _clear_qlever_cache_once,
     _is_cost_rejection,
@@ -36,14 +36,14 @@ def _no_real_sleep():
 
 
 class TestQleverRetry:
-    """src/utils/qlever.py's qlever_retry (tenacity) decorates every QLever HTTP
+    """src/extraction/qlever.py's qlever_retry (tenacity) decorates every QLever HTTP
     call: 5 attempts, exponential backoff, retrying only on
     requests.RequestException — see qlever_retry's docstring/comment."""
 
     def test_clear_cache_once_raises_after_exhausting_retries(self):
         with (
             patch(
-                "src.utils.qlever.requests.get",
+                "src.extraction.qlever.requests.get",
                 return_value=_mock_response(500, "boom"),
             ) as mock_get,
             pytest.raises(requests.RequestException),
@@ -53,7 +53,7 @@ class TestQleverRetry:
 
     def test_clear_cache_succeeds_without_retry(self):
         with patch(
-            "src.utils.qlever.requests.get",
+            "src.extraction.qlever.requests.get",
             return_value=_mock_response(200),
         ) as mock_get:
             _clear_qlever_cache_once()
@@ -63,7 +63,7 @@ class TestQleverRetry:
         """The outer clear_qlever_cache must NOT raise even after all retries are
         exhausted — cache clearing is best-effort, extraction should proceed."""
         with patch(
-            "src.utils.qlever.requests.get",
+            "src.extraction.qlever.requests.get",
             return_value=_mock_response(500, "boom"),
         ) as mock_get:
             clear_qlever_cache()  # must not raise
@@ -76,7 +76,7 @@ class TestQleverRetry:
             _mock_response(200, "wikidata_id\nQ1\n"),
         ]
         with patch(
-            "src.utils.qlever.requests.post", side_effect=responses
+            "src.extraction.qlever.requests.post", side_effect=responses
         ) as mock_post:
             df = fetch_wikidata_qlever_csv("SELECT ...")
         assert mock_post.call_count == 3
@@ -85,7 +85,7 @@ class TestQleverRetry:
     def test_fetch_csv_raises_after_exhausting_retries(self):
         with (
             patch(
-                "src.utils.qlever.requests.post",
+                "src.extraction.qlever.requests.post",
                 return_value=_mock_response(500, "boom"),
             ) as mock_post,
             pytest.raises(requests.RequestException),
@@ -97,10 +97,12 @@ class TestQleverRetry:
         """A genuine cost rejection (QLeverQueryTooExpensive) must propagate
         immediately, on the first attempt — retrying an identical too-expensive
         query would just fail the same way every time; the caller bisects
-        instead (see src.utils.wikidata_extraction.hydrate_batch)."""
+        instead (see src.extraction.wikidata_extraction.hydrate_batch)."""
         response = _mock_response(429, json_data={"exception": "Query timed out"})
         with (
-            patch("src.utils.qlever.requests.post", return_value=response) as mock_post,
+            patch(
+                "src.extraction.qlever.requests.post", return_value=response
+            ) as mock_post,
             pytest.raises(QLeverQueryTooExpensive),
         ):
             fetch_wikidata_qlever_csv_batch("SELECT ...")
@@ -112,7 +114,7 @@ class TestQleverRetry:
             _mock_response(200, "wikidata_id\nQ1\n"),
         ]
         with patch(
-            "src.utils.qlever.requests.post", side_effect=responses
+            "src.extraction.qlever.requests.post", side_effect=responses
         ) as mock_post:
             df = fetch_wikidata_qlever_csv_batch("SELECT ...")
         assert mock_post.call_count == 2
@@ -128,7 +130,7 @@ class TestQleverRetry:
         responses = [rate_limited, rate_limited, rate_limited, rate_limited]
         responses.append(_mock_response(200, "wikidata_id\nQ1\n"))
         with patch(
-            "src.utils.qlever.requests.post", side_effect=responses
+            "src.extraction.qlever.requests.post", side_effect=responses
         ) as mock_post:
             df = fetch_wikidata_qlever_csv_batch("SELECT ...")
         assert mock_post.call_count == 5

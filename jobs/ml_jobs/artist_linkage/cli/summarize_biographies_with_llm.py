@@ -1,14 +1,14 @@
 import pandas as pd
 import typer
 
-from src.constants import (
+from src.common.constants import (
     ARTIST_BIOGRAPHY_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
     WIKIPEDIA_CONTENT_KEY,
 )
-from src.llm_config import MAX_CONCURRENT_LLM_REQUESTS
-from src.utils.llm import summarize_biographies_with_llm
+from src.similarity.llm import summarize_biographies_with_llm
+from src.similarity.llm_config import MAX_CONCURRENT_LLM_REQUESTS
 
 app = typer.Typer()
 

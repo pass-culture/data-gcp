@@ -6,13 +6,13 @@ from loguru import logger
 from pydantic_ai import Agent
 from tqdm.asyncio import tqdm
 
-from src.constants import (
+from src.common.constants import (
     ARTIST_BIOGRAPHY_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
     WIKIPEDIA_CONTENT_KEY,
 )
-from src.llm_config import (
+from src.similarity.llm_config import (
     LLM_MODEL,
     LLM_SETTINGS,
     MAX_RETRIES,

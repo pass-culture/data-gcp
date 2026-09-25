@@ -4,13 +4,13 @@
 validation, wiring fetch_discovery/hydrate_batch together, and the generalized
 `QueryConfig.optional` handling (a missing/empty result is expected for an
 optional target, a hard failure for any other). The raw QLever HTTP fetch +
-retry client lives in src/utils/qlever.py (tests in tests/utils/qlever_test.py);
+retry client lives in src/extraction/qlever.py (tests in tests/utils/qlever_test.py);
 the two-pass discovery+hydration logic built on top of it lives in
-src/utils/wikidata_extraction.py (tests in
+src/extraction/wikidata_extraction.py (tests in
 tests/utils/wikidata_extraction_test.py); `merge`'s own merge_data/
-postprocess_data logic lives in src/utils/wikidata_merge.py (tests in
+postprocess_data logic lives in src/extraction/wikidata_merge.py (tests in
 tests/utils/wikidata_merge_test.py); checkpoint file I/O lives in
-src/utils/wikidata_checkpoint.py (tests in
+src/extraction/wikidata_checkpoint.py (tests in
 tests/utils/wikidata_checkpoint_test.py).
 """
 
@@ -23,8 +23,8 @@ import requests
 
 import cli.extract_from_wikidata as wikidata_cli
 from cli.extract_from_wikidata import extract, merge
-from src.utils import wikidata_checkpoint, wikidata_extraction
-from src.wikidata_config import QUERY_CONFIGS, QueryConfig
+from src.extraction import wikidata_checkpoint, wikidata_extraction
+from src.extraction.wikidata_config import QUERY_CONFIGS, QueryConfig
 
 
 def _make_discovery_df(ids: list[str]) -> pd.DataFrame:

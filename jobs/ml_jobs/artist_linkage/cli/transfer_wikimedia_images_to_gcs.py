@@ -15,7 +15,7 @@ from requests.adapters import HTTPAdapter
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
-from src.constants import (
+from src.common.constants import (
     ARTIST_MEDIATION_UUID_KEY,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,

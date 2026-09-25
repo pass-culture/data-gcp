@@ -2,7 +2,7 @@
 
 Retry policy, cost-rejection detection, and raw CSV fetch — no Wikidata-domain
 logic (entity filters, ID properties, the two-pass discovery+hydration pattern)
-lives here; that's src/utils/wikidata_extraction.py, which calls into this.
+lives here; that's src/extraction/wikidata_extraction.py, which calls into this.
 """
 
 from io import StringIO
@@ -22,7 +22,7 @@ QLEVER_HEADERS = {
     "Accept": "text/csv",
     "Content-Type": "application/sparql-query",
     # Same identification string used for other external APIs (see
-    # src.constants.WIKIMEDIA_REQUEST_HEADER) — good practice for any shared
+    # src.common.constants.WIKIMEDIA_REQUEST_HEADER) — good practice for any shared
     # third-party endpoint, and QLever's own docs ask for one explicitly.
     "User-Agent": "PassCulture/1.0 (https://passculture.app; contact@passculture.app) Python/requests",
 }

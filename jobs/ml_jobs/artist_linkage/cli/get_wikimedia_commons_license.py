@@ -7,7 +7,7 @@ import requests
 import typer
 from tqdm import tqdm
 
-from src.constants import (
+from src.common.constants import (
     WIKIDATA_IMAGE_AUTHOR_KEY,
     WIKIDATA_IMAGE_FILE_URL_KEY,
     WIKIDATA_IMAGE_LICENSE_KEY,

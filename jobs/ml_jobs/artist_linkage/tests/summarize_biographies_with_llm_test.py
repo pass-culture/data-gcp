@@ -1,7 +1,7 @@
 import pandas as pd
 
 from cli.summarize_biographies_with_llm import merge_biographies
-from src.constants import ARTIST_BIOGRAPHY_KEY, ARTIST_ID_KEY
+from src.common.constants import ARTIST_BIOGRAPHY_KEY, ARTIST_ID_KEY
 
 NEW_BIO_1 = "new bio 1"
 NEW_BIO_2 = "new bio 2"

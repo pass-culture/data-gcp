@@ -5,7 +5,7 @@ import tqdm
 import typer
 from loguru import logger
 
-from src.constants import (
+from src.common.constants import (
     ARTIST_APP_SEARCH_SCORE_KEY,
     ARTIST_BIOGRAPHY_KEY,
     ARTIST_ID_KEY,

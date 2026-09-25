@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pandas as pd
 
 from cli.refresh_artist_metadatas import main
-from src.constants import (
+from src.common.constants import (
     APPLE_MUSIC_ID_KEY,
     ARTIST_DESCRIPTION_KEY,
     ARTIST_ID_KEY,

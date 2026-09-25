@@ -4,7 +4,7 @@ import pandas as pd
 import typer
 from loguru import logger
 
-from src.constants import (
+from src.common.constants import (
     ACTION_KEY,
     ARTIST_DESCRIPTION_KEY,
     ARTIST_ID_KEY,
@@ -23,9 +23,9 @@ from src.constants import (
     WIKIDATA_ID_KEY,
     Action,
 )
-from src.utils.loading import load_wikidata
-from src.utils.matching import perform_wikidata_category_matching
-from src.utils.preprocessing_utils import (
+from src.linkage.loading import load_wikidata
+from src.linkage.matching import perform_wikidata_category_matching
+from src.linkage.preprocessing_utils import (
     filter_products,
     prepare_artist_names_for_matching,
 )

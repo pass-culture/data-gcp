@@ -7,7 +7,7 @@ from cli.get_wikipedia_page_content import (
     fetch_clean_content,
     get_artists_to_extract_wikipedia_content_filter,
 )
-from src.constants import (
+from src.common.constants import (
     ARTIST_BIOGRAPHY_KEY,
     ARTIST_ID_KEY,
     WIKIPEDIA_URL_KEY,

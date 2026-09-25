@@ -1,14 +1,14 @@
-"""Tests for src/utils/wikidata_extraction.py — no network calls needed.
+"""Tests for src/extraction/wikidata_extraction.py — no network calls needed.
 
 fetch_discovery/hydrate_batch's own behavior (retry, bisection, cost-rejection
-handling) is exercised through src/utils/qlever.py, which they call into —
+handling) is exercised through src/extraction/qlever.py, which they call into —
 see tests/utils/qlever_test.py — and through
 tests/extract_from_wikidata_test.py's end-to-end checkpoint-resume test.
 """
 
 import pandas as pd
 
-from src.utils.wikidata_extraction import extract_wikidata_id
+from src.extraction.wikidata_extraction import extract_wikidata_id
 
 
 class TestExtractWikidataId:

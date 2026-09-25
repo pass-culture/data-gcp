@@ -148,8 +148,9 @@ def write_embeddings_parquet(df: pd.DataFrame, gcs_path: str) -> None:
     autodetect unification into a single REPEATED FLOAT column across files.
 
     Args:
-        df: item_id, content_hash, embedding (list[float] per row),
-            mlflow_run_id, embedding_model and embedding_date.
+        df: item_id, content_hash, embedding (list[float] per row), plus the
+            provenance columns mlflow_run_id, embedding_model and
+            embedding_date.
         gcs_path: Destination parquet path (local or ``gs://...``).
     """
     table = pa.Table.from_pandas(df, schema=_embeddings_schema(), preserve_index=False)

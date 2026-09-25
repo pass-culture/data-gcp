@@ -1,11 +1,11 @@
 """Step 3 of the embedding pipeline: embed prompts.
 
 Reads a vector's prompts from GCS, loads its encoder, embeds each prompt, and
-writes ``item_id, content_hash, embedding``, ``mlflow_run_id``,
-``embedding_model`` and ``embedding_date`` back to GCS for loading into BigQuery.
-Over-length prompts (silently truncated by the encoder) are flagged and summarized
-at the end of the run, which also logs this vector's config and counts to the
-shared DAG-run MLflow run.
+writes ``item_id, content_hash, embedding`` -- plus the provenance columns
+``mlflow_run_id``, ``embedding_model`` and ``embedding_date`` -- back to GCS
+for loading into BigQuery. Over-length prompts (silently truncated by the
+encoder) are flagged and summarized at the end of the run, which also logs
+this vector's config and counts to the shared DAG-run MLflow run.
 
 Run from the job root:
     uv run python -m cli.embed \

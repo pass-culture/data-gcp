@@ -32,7 +32,9 @@ HF_TOKEN_SECRET_NAME = _HF_TOKEN_SECRET_NAMES.get(
 # HF constants
 BATCH_SIZE = 32
 
-# Controls how many rows are read from GCS before a single chunk is processed.
+# Controls how many rows are read from GCS before a single
+# embed_dataframe()/encode() call, independent of BigQuery's arbitrary,
+# uneven per-file export sharding.
 ROWS_PER_CHUNK = 50_000
-# Cap the tokenized prompt length. only ~2% of items exceed 512.
+# Cap the tokenized prompt length. Only ~2% of items exceed 512.
 MAX_SEQ_LENGTH = 512

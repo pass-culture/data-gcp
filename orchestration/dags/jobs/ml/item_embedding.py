@@ -24,6 +24,7 @@ from common.config import (
     INSTANCES_TYPES,
     ML_BUCKET_TEMP,
 )
+from common.hooks.slack import SlackHook
 from common.operators.bigquery import BigQueryInsertJobOperator
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -31,7 +32,6 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from common.operators.slack import SendSlackMessageOperator
 from pydantic import BaseModel
 
 from jobs.crons import SCHEDULE_DICT
@@ -173,23 +173,22 @@ def _vector_in_plan(vector_name: str, **context) -> bool:
     return vector_name in plan
 
 
-def _build_slack_summary(**context) -> str:
-    """Build the per-vector "name: row count" lines for the success Slack
-    message, counting rows in each embedded vector's freshly-loaded output
-    table (WRITE_TRUNCATE, so the count reflects only this run).
-    """
+def _send_slack_notif_success(**context) -> None:
     plan = context["ti"].xcom_pull(task_ids="plan_vectors_to_embed") or []
     if not plan:
-        return "Aucun vecteur embeddé."
-    vectors_by_name = {v.name: v for v in AVAILABLE_VECTORS}
-    bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
-    query = "\nUNION ALL\n".join(
-        f"(SELECT '{name}' AS vector, COUNT(*) AS nb_rows "
-        f"FROM `{GCP_PROJECT_ID}.{vectors_by_name[name].output_table}`)"
-        for name in plan
-    )
-    counts = dict(bq_hook.get_records(query))
-    return "\n".join(f"• *{name}*: {counts.get(name, 0)} items" for name in plan)
+        summary = "Aucun vecteur embeddé."
+    else:
+        vectors_by_name = {v.name: v for v in AVAILABLE_VECTORS}
+        bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
+        query = "\nUNION ALL\n".join(
+            f"(SELECT '{name}' AS vector, COUNT(*) AS nb_rows "
+            f"FROM `{GCP_PROJECT_ID}.{vectors_by_name[name].output_table}`)"
+            for name in plan
+        )
+        counts = dict(bq_hook.get_records(query))
+        summary = "\n".join(f"• *{name}*: {counts.get(name, 0)} items" for name in plan)
+    block = create_item_embedding_slack_block(summary, ENV_SHORT_NAME)
+    SlackHook(SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN).send_message(None, block)
 
 
 ############################################################################
@@ -450,26 +449,14 @@ with DAG(
         trigger_rule="all_done",  # always delete the VM, even on upstream failure
     )
 
-    build_slack_summary = PythonOperator(
-        task_id="build_slack_summary",
-        python_callable=_build_slack_summary,
-        trigger_rule="none_failed",
-    )
-
-    send_slack_notif_success = SendSlackMessageOperator(
+    send_slack_notif_success = PythonOperator(
         task_id="send_slack_notif_success",
-        webhook_token=SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN,
+        python_callable=_send_slack_notif_success,
         trigger_rule="none_failed",
-        block=create_item_embedding_slack_block(ENV_SHORT_NAME),
     )
 
     stop = EmptyOperator(task_id="stop", trigger_rule="all_done")
 
     # The VM lives until every embed is done (they share it); loads read from GCS.
     embed_tasks >> gce_instance_delete
-    (
-        [gce_instance_delete, *load_tasks]
-        >> build_slack_summary
-        >> send_slack_notif_success
-        >> stop
-    )
+    ([gce_instance_delete, *load_tasks] >> send_slack_notif_success >> stop)

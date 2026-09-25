@@ -38,6 +38,7 @@ def create_algo_training_slack_block(
 
 
 def create_item_embedding_slack_block(
+    summary: str,
     env_short_name: str = ENV_SHORT_NAME,
 ):
     return [
@@ -45,8 +46,7 @@ def create_item_embedding_slack_block(
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": ":robot_face: Embedding des items terminé ! :rocket:\n"
-                "{{ ti.xcom_pull(task_ids='build_slack_summary') }}",
+                "text": f":robot_face: Embedding des items terminé ! :rocket:\n{summary}",
             },
         },
         {

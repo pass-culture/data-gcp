@@ -302,8 +302,8 @@ sources:
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: item_embedding_tmp
-  - name: ml_semantic_embedding
-    schema: ml_semantic_embedding_{{ var('ENV_SHORT_NAME') }}
+  - name: tmp
+    schema: tmp_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: all_items_metadata_tmp

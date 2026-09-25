@@ -39,7 +39,7 @@ DEFAULT_CPU_INSTANCE = "n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-stand
 
 
 # Local Paths
-BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
+BASE_DIR = "data-gcp/jobs/ml_jobs/artist"
 
 # Airflow
 DAG_ID = "artist_similarity_playlist"

@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"artist-wikidata-dump-{ENV_SHORT_NAME}"
-BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
+BASE_DIR = "data-gcp/jobs/ml_jobs/artist"
 DAG_NAME = "artist_wikidata_dump"
 
 # Schedule (see SCHEDULE_DICT in jobs/crons.py) runs once a month. Queries are
@@ -61,7 +61,7 @@ QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
 # failure on one target is isolated (its own task_id, its own retries) instead of
 # forcing every other, already-fetched target to be re-fetched too.
 # Must mirror the keys of QUERY_CONFIGS in
-# jobs/ml_jobs/artist_linkage/src/wikidata_config.py.
+# jobs/ml_jobs/artist/src/extraction/wikidata_config.py.
 EXTRACTION_TARGETS = ["music", "music_ids", "book", "movie", "gkg"]
 RAW_DUMPS_GCS_PREFIX_TEMPLATE = f"{STORAGE_PATH_PREFIX_TEMPLATE}/raw"
 RAW_DUMPS_PATH_TEMPLATE = f"gs://{DATA_GCS_BUCKET_NAME}/{RAW_DUMPS_GCS_PREFIX_TEMPLATE}"

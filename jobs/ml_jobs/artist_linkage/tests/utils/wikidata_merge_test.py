@@ -1,11 +1,11 @@
-"""Tests for src/utils/wikidata_merge.py — no network calls needed."""
+"""Tests for src/extraction/wikidata_merge.py — no network calls needed."""
 
 import pandas as pd
 import pytest
 
-from src.utils.wikidata_extraction import extract_wikidata_id
-from src.utils.wikidata_merge import merge_data, postprocess_data
-from src.wikidata_config import MUSIC_IDS_KEY
+from src.extraction.wikidata_config import MUSIC_IDS_KEY
+from src.extraction.wikidata_extraction import extract_wikidata_id
+from src.extraction.wikidata_merge import merge_data, postprocess_data
 
 NEW_ID_COLUMNS = [
     "spotify_id",

@@ -3,7 +3,7 @@
 Used by `cli/extract_from_wikidata.py::merge`: `merge_data` combines the raw
 per-target dataframes into one (music's platform IDs get pre-merged into music's
 own row), and `postprocess_data` flattens the alias columns and normalizes text.
-Kept separate from src/utils/wikidata_extraction.py and src/utils/qlever.py,
+Kept separate from src/extraction/wikidata_extraction.py and src/extraction/qlever.py,
 which handle `extract`'s own fetch/retry logic — this is a distinct concern
 with its own inputs and outputs.
 """
@@ -11,9 +11,9 @@ with its own inputs and outputs.
 import pandas as pd
 from loguru import logger
 
-from src.constants import WIKIDATA_ID_KEY
-from src.utils.preprocessing_utils import normalize_string_series
-from src.wikidata_config import MUSIC_IDS_KEY
+from src.common.constants import WIKIDATA_ID_KEY
+from src.extraction.wikidata_config import MUSIC_IDS_KEY
+from src.linkage.preprocessing_utils import normalize_string_series
 
 
 def merge_data(dfs: dict[str, pd.DataFrame]) -> pd.DataFrame:

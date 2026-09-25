@@ -5,7 +5,7 @@ import pandas as pd
 import typer
 from loguru import logger
 
-from src.constants import (
+from src.common.constants import (
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
     ARTIST_TYPE_KEY,
@@ -15,7 +15,7 @@ from src.constants import (
     PRODUCT_ID_KEY,
     WIKIDATA_ID_KEY,
 )
-from src.utils.mlflow import (
+from src.linkage.mlflow import (
     connect_remote_mlflow,
     get_mlflow_experiment,
 )

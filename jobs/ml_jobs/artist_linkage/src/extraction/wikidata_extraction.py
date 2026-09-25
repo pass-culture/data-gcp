@@ -5,7 +5,7 @@ Kept out of the CLI entrypoint so this logic can be unit-tested and reused
 directly, without going through Typer: `extract_two_pass`/`extract_single_pass`
 are the two top-level entry points `extract` dispatches to based on
 QueryConfig.hydration_batch_size. The underlying HTTP fetch/retry machinery
-against QLever itself lives in src/utils/qlever.py — this module is the
+against QLever itself lives in src/extraction/qlever.py — this module is the
 Wikidata-domain layer on top of it (entity ID normalization, Pass 1 discovery,
 Pass 2 batch hydration with bisection, and checkpoint-aware orchestration of
 both passes).
@@ -16,13 +16,13 @@ import time
 import pandas as pd
 from loguru import logger
 
-from src.utils import wikidata_checkpoint as checkpoint
-from src.utils.qlever import (
+from src.extraction import wikidata_checkpoint as checkpoint
+from src.extraction.qlever import (
     QLeverQueryTooExpensive,
     fetch_wikidata_qlever_csv,
     fetch_wikidata_qlever_csv_batch,
 )
-from src.wikidata_config import HYDRATION_TEMPLATE, render_query
+from src.extraction.wikidata_config import HYDRATION_TEMPLATE, render_query
 
 # Pause between Pass 2 (hydration) batch requests — see QueryConfig.hydration_batch_size.
 HYDRATION_BATCH_DELAY_SECONDS = 0.2

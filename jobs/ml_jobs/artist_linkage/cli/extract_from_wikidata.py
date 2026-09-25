@@ -5,11 +5,11 @@ import pandas as pd
 import typer
 from loguru import logger
 
-from src.utils import wikidata_checkpoint as checkpoint
-from src.utils.qlever import clear_qlever_cache
-from src.utils.wikidata_extraction import extract_single_pass, extract_two_pass
-from src.utils.wikidata_merge import merge_data, postprocess_data
-from src.wikidata_config import QUERY_CONFIGS
+from src.extraction import wikidata_checkpoint as checkpoint
+from src.extraction.qlever import clear_qlever_cache
+from src.extraction.wikidata_config import QUERY_CONFIGS
+from src.extraction.wikidata_extraction import extract_single_pass, extract_two_pass
+from src.extraction.wikidata_merge import merge_data, postprocess_data
 
 app = typer.Typer()
 
@@ -56,7 +56,7 @@ def extract(
 
     For two-pass targets (QueryConfig.hydration_batch_size), an Airflow-level
     retry of this same task resumes from a local checkpoint (see
-    src/utils/wikidata_checkpoint.py) instead of redoing Pass 1 and every
+    src/extraction/wikidata_checkpoint.py) instead of redoing Pass 1 and every
     already-hydrated Pass 2 batch.
     """
     if query_name not in QUERY_CONFIGS:

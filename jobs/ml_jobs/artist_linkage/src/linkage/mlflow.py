@@ -6,12 +6,12 @@ from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from mlflow.entities import Experiment
 
-from src.constants import (
+from src.common.constants import (
     MLFLOW_SECRET_NAME,
     MLFLOW_URI,
     SA_ACCOUNT,
 )
-from src.utils.gcp import get_secret
+from src.common.gcp import get_secret
 
 
 def connect_remote_mlflow() -> None:

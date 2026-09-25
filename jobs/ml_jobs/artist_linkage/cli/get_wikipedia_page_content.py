@@ -7,7 +7,7 @@ import requests
 import typer
 from loguru import logger
 
-from src.constants import (
+from src.common.constants import (
     ARTIST_BIOGRAPHY_KEY,
     ARTIST_ID_KEY,
     WIKIMEDIA_REQUEST_HEADER,

@@ -8,7 +8,7 @@ import typer
 from loguru import logger
 from sentence_transformers import SentenceTransformer
 
-from src.constants import (
+from src.common.constants import (
     ACTION_KEY,
     ARTIST_ID_KEY,
     COMMENT_KEY,
@@ -16,8 +16,8 @@ from src.constants import (
     HF_TOKEN_SECRET_NAME,
     Action,
 )
-from src.utils.deduplication import get_namesakes
-from src.utils.gcp import get_secret
+from src.common.gcp import get_secret
+from src.linkage.deduplication import get_namesakes
 
 logging.basicConfig(level=logging.INFO)
 app = typer.Typer()

@@ -1,8 +1,8 @@
-"""Tests for src/utils/wikidata_checkpoint.py — no network calls needed."""
+"""Tests for src/extraction/wikidata_checkpoint.py — no network calls needed."""
 
 import pandas as pd
 
-from src.utils.wikidata_checkpoint import (
+from src.extraction.wikidata_checkpoint import (
     checkpoint_dir_for,
     clear_checkpoint,
     load_batch_checkpoint,

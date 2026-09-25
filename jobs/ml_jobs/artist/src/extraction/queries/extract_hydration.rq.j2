@@ -26,7 +26,7 @@ PREFIX schema: <http://schema.org/>
   ID-range-scoped population), doing that here is cheap regardless: every
   subquery just re-states the same small VALUES list.
 
-  cli/extract_from_wikidata.py's hydrate_batch bisects a batch and retries if
+  src/extraction/wikidata_extraction.py's hydrate_batch bisects a batch and retries if
   QLever still rejects it (rare in practice, but a single very richly-aliased
   entity can in principle exceed even this pattern's budget on its own) — down
   to a single entity, which is skipped (loudly) rather than blocking the whole

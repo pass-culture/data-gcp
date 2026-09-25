@@ -3,7 +3,7 @@
 import pandas as pd
 import pytest
 
-from src.extraction.wikidata_config import MUSIC_IDS_KEY
+from src.extraction.constants import MUSIC_IDS_KEY
 from src.extraction.wikidata_extraction import extract_wikidata_id
 from src.extraction.wikidata_merge import merge_data, postprocess_data
 

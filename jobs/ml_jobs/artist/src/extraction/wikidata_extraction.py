@@ -17,17 +17,17 @@ import pandas as pd
 from loguru import logger
 
 from src.extraction import wikidata_checkpoint as checkpoint
+from src.extraction.constants import (
+    HYDRATION_BATCH_DELAY_SECONDS,
+    HYDRATION_TEMPLATE,
+    WIKIDATA_ENTITY_PREFIX,
+)
 from src.extraction.qlever import (
     QLeverQueryTooExpensive,
     fetch_wikidata_qlever_csv,
     fetch_wikidata_qlever_csv_batch,
 )
-from src.extraction.wikidata_config import HYDRATION_TEMPLATE, render_query
-
-# Pause between Pass 2 (hydration) batch requests — see QueryConfig.hydration_batch_size.
-HYDRATION_BATCH_DELAY_SECONDS = 0.2
-
-WIKIDATA_ENTITY_PREFIX = r"https?://www\.wikidata\.org/entity/"
+from src.extraction.wikidata_config import render_query
 
 
 def extract_wikidata_id(df: pd.DataFrame) -> pd.DataFrame:

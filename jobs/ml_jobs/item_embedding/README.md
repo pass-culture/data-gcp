@@ -45,7 +45,7 @@ uv run python -m cli.embed \
 |-------|---------|
 | input (from dbt via BQ export) | `item_id`, `content_hash`, `to_embed`, + the vector's feature columns |
 | prompts | `item_id`, `content_hash`, `prompt` |
-| embeddings | `item_id`, `content_hash`, `embedding` (`list<float>`) |
+| embeddings | `item_id`, `content_hash`, `embedding` (`list<float>`), `mlflow_run_id`, `embedding_model`, `embedding_date` |
 
 ## Module map
 
@@ -72,8 +72,9 @@ in the YAML — it's owned by the vector's dbt input model.
 
 Each vector is loaded into its own BigQuery staging table
 (`ml_semantic_embedding_<env>.<name>_tmp`), one `embedding` column of
-`REPEATED FLOAT`. A downstream dbt model merges the staging tables (out of scope
-for this job).
+`REPEATED FLOAT` plus the provenance columns `mlflow_run_id`,
+`embedding_model` and `embedding_date` (the UTC date the row was embedded). A
+downstream dbt model merges the staging tables (out of scope for this job).
 
 ## Running the whole thing
 

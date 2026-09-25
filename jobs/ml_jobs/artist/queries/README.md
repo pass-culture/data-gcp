@@ -102,7 +102,7 @@ then becomes the Pass 1 (discovery) template.
   subquery via the same `multi_valued_literal()`/`multi_valued_labeled()`
   macros — but here, re-stating the filter per field is *always* cheap,
   because it's just re-stating the same small `VALUES` list, not re-scanning
-  a multi-million-candidate population. 
+  a multi-million-candidate population.
 
   Orchestration: `cli/extract_from_wikidata.py`'s `extract` command drives the
   two-pass branch (runs Pass 1 once, chunks the discovered IDs into batches of

@@ -23,7 +23,7 @@ import requests
 
 import cli.extract_from_wikidata as wikidata_cli
 from cli.extract_from_wikidata import extract, merge
-from src.utils import wikidata_checkpoint
+from src.utils import wikidata_checkpoint, wikidata_extraction
 from src.wikidata_config import QUERY_CONFIGS, QueryConfig
 
 
@@ -101,10 +101,10 @@ class TestExtractTwoPassCheckpointing:
 
         with (
             patch.object(
-                wikidata_cli, "fetch_discovery", return_value=discovery_df
+                wikidata_extraction, "fetch_discovery", return_value=discovery_df
             ) as mock_fetch_discovery,
             patch.object(
-                wikidata_cli,
+                wikidata_extraction,
                 "hydrate_batch",
                 side_effect=hydrate_batch_fails_on_second_batch,
             ) as mock_hydrate,
@@ -122,10 +122,10 @@ class TestExtractTwoPassCheckpointing:
 
         with (
             patch.object(
-                wikidata_cli, "fetch_discovery", return_value=discovery_df
+                wikidata_extraction, "fetch_discovery", return_value=discovery_df
             ) as mock_fetch_discovery_2,
             patch.object(
-                wikidata_cli,
+                wikidata_extraction,
                 "hydrate_batch",
                 return_value=[_make_hydration_df(["Q3", "Q4"])],
             ) as mock_hydrate_2,
@@ -168,7 +168,7 @@ class TestExtractOptionalTarget:
         # would infer float64 and break extract_wikidata_id's .str accessor before
         # the emptiness check even runs.
         monkeypatch.setattr(
-            wikidata_cli,
+            wikidata_extraction,
             "fetch_wikidata_qlever_csv",
             lambda _query: pd.DataFrame({"wikidata_id": pd.Series([], dtype="object")}),
         )
@@ -189,7 +189,7 @@ class TestExtractOptionalTarget:
             ),
         )
         monkeypatch.setattr(
-            wikidata_cli,
+            wikidata_extraction,
             "fetch_wikidata_qlever_csv",
             lambda _query: pd.DataFrame({"wikidata_id": pd.Series([], dtype="object")}),
         )

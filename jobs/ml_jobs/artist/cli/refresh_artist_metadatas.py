@@ -311,10 +311,6 @@ def sanity_checks(
     ), f"Delta artist dataframe has fewer images than applicative artist dataframe with given threshold {SANITY_THRESHOLD}."
 
 
-app = typer.Typer()
-
-
-@app.command()
 def main(
     # Input files
     artist_file_path: str = typer.Option(),
@@ -439,7 +435,3 @@ def main(
     delta_artist_df.to_parquet(output_delta_artist_file_path, index=False)
     delta_product_df.to_parquet(output_delta_product_artist_link_file_path, index=False)
     logger.success("Delta dataframes saved successfully.")
-
-
-if __name__ == "__main__":
-    app()

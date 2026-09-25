@@ -38,8 +38,6 @@ PAGE_TITLE_COLUMN = "page_title"
 LANGUAGE_COLUMN = "language"
 BATCH_INDEX_COLUMN = "batch_index"
 
-app = typer.Typer()
-
 
 def fetch_clean_content(
     wikipedia_titles: list[str], wikipedia_language: str
@@ -177,7 +175,6 @@ def get_artists_to_extract_wikipedia_content_filter(
     return filters_series
 
 
-@app.command()
 def main(
     applicative_artist_file_path: str = typer.Option(),
     artists_matched_on_wikidata: str = typer.Option(),
@@ -272,7 +269,3 @@ def main(
     )
     # The default behavior of pandas merge is to use np.nan for missing values
     # We want to replace these with None to match the rest of the pipeline
-
-
-if __name__ == "__main__":
-    app()

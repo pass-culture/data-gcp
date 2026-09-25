@@ -139,7 +139,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             uv run python cli/encode_artist_biographies.py \
+             uv run python cli/similarity.py encode-biographies \
                 --artist-with-biography-file-path {ARTIST_WITH_BIOGRAPHY_GCS_PATH} \
                 --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
                 --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
@@ -152,7 +152,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             uv run python cli/create_similar_artist_parquet.py \
+             uv run python cli/similarity.py create-similar-artist-parquet \
                 --artist-with-embeddings-file-path {ARTIST_WITH_ENCODED_BIOGRAPHY_GCS_PATH} \
                 --output-file-path {SIMILART_ARTIST_GCS_PATH}
             """,

@@ -10,8 +10,6 @@ from src.common.constants import (
 from src.common.gcp import get_secret
 from src.linkage.loading import load_wikidata
 
-app = typer.Typer()
-
 GENRES_KEY = "genres"
 PROFESSIONS_KEY = "professions"
 LANGUAGES_SPOKEN_KEY = "languages_spoken"
@@ -111,7 +109,6 @@ def embed_artist_biographies(artist_biographies: pd.Series) -> pd.Series:
     return pd.Series(list(embeddings), index=artist_biographies.index)
 
 
-@app.command()
 def main(
     artist_with_biography_file_path: str = typer.Option(),
     wiki_base_path: str = typer.Option(),
@@ -144,7 +141,3 @@ def main(
             df.enriched_artist_biography
         )
     ).to_parquet(output_file_path, index=False)
-
-
-if __name__ == "__main__":
-    app()

@@ -38,7 +38,6 @@ IMAGE_JPEG_QUALITY = 80
 
 
 logging.basicConfig(level=logging.INFO)
-app = typer.Typer()
 
 
 def _get_session():
@@ -244,7 +243,6 @@ def run_parallel_image_transfers(
     return pd.DataFrame(results)
 
 
-@app.command()
 def main(
     artists_matched_on_wikidata: str = typer.Option(),
     output_file_path: str = typer.Option(),
@@ -278,7 +276,3 @@ def main(
     artists_df.merge(
         result_df, on=WIKIDATA_IMAGE_FILE_URL_KEY, how="left", validate="m:1"
     ).to_parquet(output_file_path)
-
-
-if __name__ == "__main__":
-    app()

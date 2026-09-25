@@ -18,7 +18,6 @@ PROMPT_NAME = "STS"
 BATCH_SIZE = 256
 
 logging.basicConfig(level=logging.INFO)
-app = typer.Typer()
 
 
 def preprocess_offer_name(offer_name: str) -> str:
@@ -29,7 +28,6 @@ def preprocess_offer_name(offer_name: str) -> str:
     return " ".join(without_accents.lower().strip().split())
 
 
-@app.command()
 def main(
     applicative_product_artist_link_filepath: str = typer.Option(),
     artist_score_filepath: str = typer.Option(),
@@ -81,7 +79,3 @@ def main(
         output_product_embeddings_filepath,
         index=False,
     )
-
-
-if __name__ == "__main__":
-    app()

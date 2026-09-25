@@ -157,10 +157,6 @@ def format_results_df(
     )
 
 
-app = typer.Typer()
-
-
-@app.command()
 def main(
     artist_with_embeddings_file_path: str = typer.Option(),
     output_file_path: str = typer.Option(),
@@ -231,7 +227,3 @@ def main(
         output_file_path, index=False
     )
     logger.info("Results saved to Parquet successfully.")
-
-
-if __name__ == "__main__":
-    app()

@@ -271,10 +271,6 @@ def get_matching_metrics_per_dataset(
     )
 
 
-app = typer.Typer()
-
-
-@app.command()
 def main(
     products_to_link_file_path: str = typer.Option(),
     artists_file_path: str = typer.Option(),
@@ -385,7 +381,3 @@ def main(
         plt.tight_layout()
         plt.savefig(METRICS_PER_DATASET_GRAPH_FILENAME)
         mlflow.log_artifact(METRICS_PER_DATASET_GRAPH_FILENAME)
-
-
-if __name__ == "__main__":
-    app()

@@ -114,6 +114,26 @@ class SSHGCEJobManager:
                 raise e
             sleep(retry * self.SSH_TIMEOUT)
             return self.run_ssh_client_command(command, retry=retry + 1)
+        finally:
+            # ComputeEngineSSHHook (use_oslogin=False) generates a fresh keypair
+            # and unconditionally prepends it to the instance's "ssh-keys"
+            # metadata on every get_conn() call, never pruning old entries. Since
+            # this method is the sole choke point for every SSH session made by
+            # this codebase (job submission, each poll, cleanup, sync commands),
+            # pruning here right after the connection closes keeps that metadata
+            # (and the authorized_keys file the GCE guest agent regenerates from
+            # it) from growing unbounded across a job's polls and DAG runs.
+            self._cleanup_stale_ssh_keys()
+
+    def _cleanup_stale_ssh_keys(self) -> None:
+        try:
+            with GCEHook(
+                gcp_project=self.ssh_hook.project_id or GCP_PROJECT_ID,
+                gce_zone=self.ssh_hook.zone,
+            ) as hook:
+                hook.clear_ssh_keys(self.ssh_hook.instance_name, self.ssh_hook.user)
+        except Exception as exc:
+            self.log.warning(f"Failed to prune stale SSH metadata keys: {exc}")
 
     def _decode_result(self, result: bytes | str) -> str:
         enable_pickling = conf.getboolean("core", "enable_xcom_pickling")
@@ -519,6 +539,39 @@ class GCEHook(GoogleBaseHook):
             .execute()
         )
         return result.get("items", [])
+
+    def clear_ssh_keys(self, instance_name: str, user: str) -> None:
+        """Strip stale ``ssh-keys`` metadata entries for ``user`` from an instance.
+
+        ``ComputeEngineSSHHook`` (with ``use_oslogin=False``) never removes an
+        entry it adds, so left unchecked this metadata item — and the
+        ``~/.ssh/authorized_keys`` file the GCE guest agent regenerates from it
+        — grows by one key per SSH connection ever made, forever.
+        """
+        instance = self.get_instance(instance_name)
+        if instance is None:
+            return
+        metadata = instance.get("metadata", {})
+        items = metadata.get("items", [])
+        for item in items:
+            if item.get("key") != "ssh-keys":
+                continue
+            lines = [line for line in item.get("value", "").splitlines() if line]
+            kept = [line for line in lines if not line.startswith(f"{user}:")]
+            if len(kept) == len(lines):
+                return
+            item["value"] = "\n".join(kept)
+            break
+        else:
+            return
+
+        self.log.info(f"Pruning stale '{user}' SSH keys from {instance_name} metadata")
+        self.get_conn().instances().setMetadata(
+            project=self.gcp_project,
+            zone=self.gce_zone,
+            instance=instance_name,
+            body=metadata,
+        ).execute()
 
     def get_instance(self, name):
         try:

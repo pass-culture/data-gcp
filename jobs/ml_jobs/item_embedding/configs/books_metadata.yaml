@@ -1,0 +1,15 @@
+name: "books_metadata"
+features:
+  - offer_name
+  - offer_description
+  - author_concat
+  - offer_label_concat
+encoder_name: "google/embeddinggemma-300m"
+prompt_name: "document"
+preprocessors:
+  offer_name: "normalize_whitespace"
+  offer_description: "clean_description"
+prompt_template: >-
+  Ce livre est intitulé "{offer_name}" par {author_concat}.
+  Classification: {offer_label_concat}.
+  Résumé: {offer_description}.

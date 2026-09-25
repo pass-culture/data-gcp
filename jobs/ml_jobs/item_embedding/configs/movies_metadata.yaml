@@ -1,0 +1,14 @@
+name: "movies_metadata"
+features:
+  - offer_name
+  - offer_description
+  - offer_label_concat
+encoder_name: "google/embeddinggemma-300m"
+prompt_name: "document"
+preprocessors:
+  offer_name: "normalize_whitespace"
+  offer_description: "clean_description"
+prompt_template: >-
+  Ce film est intitulé "{offer_name}".
+  Genres: {offer_label_concat}.
+  Synopsis: {offer_description}.

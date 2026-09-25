@@ -1,7 +1,7 @@
 import functools
 
-from constants import GCP_PROJECT_ID
 from google.cloud import secretmanager
+from src.constants import GCP_PROJECT_ID
 
 
 @functools.lru_cache

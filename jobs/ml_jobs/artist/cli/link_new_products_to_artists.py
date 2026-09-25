@@ -219,10 +219,8 @@ def sanity_checks(
 
 
 # %%
-app = typer.Typer()
 
 
-@app.command()
 def main(
     # Input files
     artist_filepath: str = typer.Option(),
@@ -326,7 +324,3 @@ def main(
     # 8. Save files
     delta_artist_df.to_parquet(output_delta_artist_file_path, index=False)
     delta_product_df.to_parquet(output_delta_product_artist_link_filepath, index=False)
-
-
-if __name__ == "__main__":
-    app()

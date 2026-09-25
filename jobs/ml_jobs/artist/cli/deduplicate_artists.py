@@ -20,7 +20,6 @@ from src.common.gcp import get_secret
 from src.linkage.deduplication import get_namesakes
 
 logging.basicConfig(level=logging.INFO)
-app = typer.Typer()
 
 THRESHOLD = 0.7
 MAX_OFFERS_PER_ARTIST_FOR_COMPARISON = 1000
@@ -104,7 +103,6 @@ def get_artists_to_merge_for_matched_artists(
     return list(nx.connected_components(g))
 
 
-@app.command()
 def main(
     applicative_artist_filepath: str = typer.Option(),
     applicative_product_artist_link_filepath: str = typer.Option(),
@@ -183,7 +181,3 @@ def main(
         output_delta_product_artist_link_filepath,
         index=False,
     )
-
-
-if __name__ == "__main__":
-    app()

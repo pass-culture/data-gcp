@@ -10,8 +10,6 @@ from src.common.constants import (
 from src.similarity.llm import summarize_biographies_with_llm
 from src.similarity.llm_config import MAX_CONCURRENT_LLM_REQUESTS
 
-app = typer.Typer()
-
 NEW_SUFFIX = "_new"
 
 
@@ -38,7 +36,6 @@ def merge_biographies(
     )
 
 
-@app.command()
 def main(
     artists_with_wikipedia_content: str = typer.Option(),
     output_file_path: str = typer.Option(),
@@ -69,7 +66,3 @@ def main(
     merge_biographies(artists_df, artists_with_biographies_df).to_parquet(
         output_file_path, index=False
     )
-
-
-if __name__ == "__main__":
-    app()

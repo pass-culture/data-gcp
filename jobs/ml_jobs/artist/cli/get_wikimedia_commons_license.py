@@ -16,7 +16,6 @@ from src.common.constants import (
 )
 
 logging.basicConfig(level=logging.INFO)
-app = typer.Typer()
 
 NO_AUTHOR_VALUE = "Auteur inconnu"
 NO_LICENSE_URL_VALUE = "URL de la licence inconnue"
@@ -137,7 +136,6 @@ def remove_image_with_improper_license(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-@app.command()
 def main(
     artists_matched_on_wikidata: str = typer.Option(),
     output_file_path: str = typer.Option(),
@@ -157,7 +155,3 @@ def main(
     ).pipe(remove_image_with_improper_license)
 
     artists_with_licenses_df.to_parquet(output_file_path)
-
-
-if __name__ == "__main__":
-    app()

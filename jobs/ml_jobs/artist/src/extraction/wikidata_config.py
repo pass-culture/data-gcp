@@ -12,7 +12,7 @@ from typing import Literal
 
 from jinja2 import Environment, FileSystemLoader
 
-TEMPLATE_DIR = Path(__file__).resolve().parent.parent.parent / "queries"
+TEMPLATE_DIR = Path(__file__).resolve().parent / "queries"
 
 # Human, musical group, duo, musical ensemble/collective
 MUSIC_ENTITY_TYPES = ["wd:Q5", "wd:Q215380", "wd:Q216337", "wd:Q641066"]

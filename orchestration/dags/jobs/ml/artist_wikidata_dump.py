@@ -191,7 +191,7 @@ with DAG(
                 retry_exponential_backoff=True,
                 max_retry_delay=EXTRACT_MAX_RETRY_DELAY,
                 command=f"""
-                     uv run python cli/extract_from_wikidata.py extract \
+                     uv run python main.py extraction extract \
                     --query-name {target} \
                     --output-file-path {os.path.join(RAW_DUMPS_PATH_TEMPLATE, f"{target}.parquet")}
                     """,
@@ -214,7 +214,7 @@ with DAG(
         # wikidata.py::merge) if a required target has never succeeded all month.
         trigger_rule="all_done",
         command=f"""
-             uv run python cli/extract_from_wikidata.py merge \
+             uv run python main.py extraction merge \
             --input-dir-path {RAW_DUMPS_PATH_TEMPLATE} \
             --output-file-path {os.path.join(STORAGE_PATH_TEMPLATE, WIKIDATA_EXTRACTION_GCS_FILENAME)}
             """,

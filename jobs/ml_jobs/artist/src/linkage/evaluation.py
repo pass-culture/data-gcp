@@ -1,29 +1,15 @@
-import gcsfs
-import matplotlib.pyplot as plt
-import mlflow
 import pandas as pd
-import typer
-from loguru import logger
 
 from src.common.constants import (
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
-    ARTIST_TYPE_KEY,
-    ENV_SHORT_NAME,
-    OFFER_CATEGORY_ID_KEY,
-    OFFER_IS_SYNCHRONISED,
-    PRODUCT_ID_KEY,
     WIKIDATA_ID_KEY,
 )
-from src.linkage.mlflow import (
-    connect_remote_mlflow,
-    get_mlflow_experiment,
+from src.linkage.constants import (
+    ARTIST_TYPE_KEY,
+    OFFER_CATEGORY_ID_KEY,
+    PRODUCT_ID_KEY,
 )
-
-METRICS_PER_DATASET_CSV_FILENAME = "metrics_per_dataset.csv"
-METRICS_PER_DATASET_GRAPH_FILENAME = "metrics_per_dataset.png"
-GLOBAL_METRICS_FILENAME = "global_metrics.csv"
-
 
 WIKI_MATCHED_WEIGHTED_BY_BOOKINGS_PERC = "wiki_matched_weighted_by_bookings_perc"
 WIKI_MATCHED_WEIGHTED_BY_PRODUCT_PERC = "wiki_matched_weighted_by_product_perc"
@@ -35,7 +21,6 @@ DATASET_NAME_KEY = "dataset_name"
 RAW_ARTIST_NAME_KEY = "raw_artist_name"
 
 
-### Params
 def compute_metrics_per_dataset(
     artists_per_dataset: pd.DataFrame,
 ) -> pd.Series:
@@ -113,25 +98,6 @@ def get_main_artist_per_dataset(
         .drop_duplicates(subset=[DATASET_NAME_KEY], keep="first")
         .set_index(DATASET_NAME_KEY)
         .to_dict()[ARTIST_ID_KEY]
-    )
-
-
-def get_test_sets_df(test_set_dir: str) -> pd.DataFrame:
-    fs = gcsfs.GCSFileSystem()
-    GS_PREFIX = "gs://"
-    PARQUET_EXTENSION = ".parquet"
-
-    parquet_files = [
-        GS_PREFIX + path
-        for path in fs.glob(f"{test_set_dir}/**")
-        if path.endswith(PARQUET_EXTENSION)
-    ]
-
-    return pd.concat(
-        [
-            pd.read_parquet(test_set).assign(source_file_path=test_set)
-            for test_set in parquet_files
-        ]
     )
 
 
@@ -269,115 +235,3 @@ def get_matching_metrics_per_dataset(
         .apply(compute_metrics_per_dataset)
         .reset_index()
     )
-
-
-def main(
-    products_to_link_file_path: str = typer.Option(),
-    artists_file_path: str = typer.Option(),
-    product_artist_link_file_path: str = typer.Option(),
-    test_sets_dir: str = typer.Option(),
-    experiment_name: str = typer.Option(),
-) -> None:
-    # %% Load Data
-    test_sets_df = get_test_sets_df(test_sets_dir).rename(
-        columns={"is_synchronised": OFFER_IS_SYNCHRONISED}
-    )
-    products_to_link_df = (
-        pd.read_parquet(products_to_link_file_path)
-        .astype({PRODUCT_ID_KEY: int})
-        .rename(columns={ARTIST_NAME_KEY: RAW_ARTIST_NAME_KEY})
-    )
-    artists_df = pd.read_parquet(artists_file_path)
-    product_artist_link_df = pd.read_parquet(product_artist_link_file_path).astype(
-        {PRODUCT_ID_KEY: int}
-    )
-
-    # %% Rebuild products with artists metadata
-    linked_products_df = products_to_link_df.merge(
-        product_artist_link_df,
-        how="left",
-        on=[PRODUCT_ID_KEY, ARTIST_TYPE_KEY],
-    ).merge(artists_df, how="left", on=ARTIST_ID_KEY)
-
-    # Global Metrics
-    artists_with_stats_df = (
-        linked_products_df.groupby([ARTIST_ID_KEY, OFFER_CATEGORY_ID_KEY])
-        .agg(
-            total_product_count=(PRODUCT_ID_KEY, "nunique"),
-            total_booking_count=(TOTAL_BOOKING_COUNT_KEY, "sum"),
-            artist_name=(ARTIST_NAME_KEY, "first"),
-            wikidata_id=(WIKIDATA_ID_KEY, "first"),
-        )
-        .reset_index()
-    )
-    global_wiki_matching_metrics_df = get_wiki_matching_metrics(artists_with_stats_df)
-
-    # Test Set Metrics
-    linked_products_on_test_sets_df = project_linked_artists_on_test_sets(
-        linked_products_df=linked_products_df, test_sets_df=test_sets_df
-    )
-
-    if linked_products_on_test_sets_df.empty:
-        if ENV_SHORT_NAME == "dev":
-            logger.info(
-                "No linked products found on test sets. This is normal for dev Environment."
-            )
-        else:
-            raise ValueError(
-                "No linked products found on test sets. Is normal for dev Environment but should not happen in production."
-            )
-        return
-
-    main_artist_per_dataset = get_main_artist_per_dataset(
-        linked_products_on_test_sets_df
-    )
-
-    metrics_per_dataset_df = get_matching_metrics_per_dataset(
-        linked_products_on_test_sets_df=linked_products_on_test_sets_df,
-        main_artist_per_dataset=main_artist_per_dataset,
-    )
-
-    # MLflow Logging
-    connect_remote_mlflow()
-    experiment = get_mlflow_experiment(experiment_name=experiment_name)
-    with mlflow.start_run(experiment_id=experiment.experiment_id):
-        # Log Dataset
-        dataset = mlflow.data.from_pandas(
-            linked_products_on_test_sets_df,
-            name="linked_products_on_test_sets_df",
-        )
-        mlflow.log_input(dataset, context="evaluation")
-
-        # Log Metrics
-        metrics_per_dataset_df.to_csv(METRICS_PER_DATASET_CSV_FILENAME, index=False)
-        global_wiki_matching_metrics_df.to_csv(GLOBAL_METRICS_FILENAME, index=False)
-        mlflow.log_artifact(METRICS_PER_DATASET_CSV_FILENAME)
-        mlflow.log_artifact(GLOBAL_METRICS_FILENAME)
-        mlflow.log_metrics(
-            {
-                "precision_mean": metrics_per_dataset_df.precision.mean(),
-                "precision_std": metrics_per_dataset_df.precision.std(),
-                "recall_mean": metrics_per_dataset_df.recall.mean(),
-                "recall_std": metrics_per_dataset_df.recall.std(),
-                "f1_mean": metrics_per_dataset_df.f1.mean(),
-                "f1_std": metrics_per_dataset_df.f1.std(),
-                WIKI_MATCHED_WEIGHTED_BY_BOOKINGS_PERC: global_wiki_matching_metrics_df[
-                    WIKI_MATCHED_WEIGHTED_BY_BOOKINGS_PERC
-                ]["TOTAL"],
-                WIKI_MATCHED_WEIGHTED_BY_PRODUCT_PERC: global_wiki_matching_metrics_df[
-                    WIKI_MATCHED_WEIGHTED_BY_PRODUCT_PERC
-                ]["TOTAL"],
-                WIKI_MATCHED_PERC: global_wiki_matching_metrics_df["wiki_matched_perc"][
-                    "TOTAL"
-                ],
-            }
-        )
-
-        # Create and Log Graph
-        ax = metrics_per_dataset_df.plot.barh(
-            x=DATASET_NAME_KEY, y=["precision", "recall", "f1"], rot=0, figsize=(8, 12)
-        )
-        ax.legend(loc="upper left")
-        plt.tight_layout()
-        plt.savefig(METRICS_PER_DATASET_GRAPH_FILENAME)
-        mlflow.log_artifact(METRICS_PER_DATASET_GRAPH_FILENAME)

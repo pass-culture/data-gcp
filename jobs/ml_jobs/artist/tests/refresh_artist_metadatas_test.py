@@ -3,12 +3,16 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from cli.refresh_artist_metadatas import main
+from cli.linkage import refresh_metadata as main
 from src.common.constants import (
-    APPLE_MUSIC_ID_KEY,
-    ARTIST_DESCRIPTION_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
+    WIKIDATA_ID_KEY,
+    WIKIPEDIA_URL_KEY,
+)
+from src.linkage.constants import (
+    APPLE_MUSIC_ID_KEY,
+    ARTIST_DESCRIPTION_KEY,
     ARTIST_PRO_SEARCH_SCORE_KEY,
     DEEZER_ID_KEY,
     GENIUS_ID_KEY,
@@ -16,8 +20,6 @@ from src.common.constants import (
     ISNI_ID_KEY,
     SOUNDCLOUD_ID_KEY,
     SPOTIFY_ID_KEY,
-    WIKIDATA_ID_KEY,
-    WIKIPEDIA_URL_KEY,
 )
 
 
@@ -112,7 +114,7 @@ def test_refresh_artist_metadatas_matching(tmp_path):
     os.environ["ENV_SHORT_NAME"] = "dev"
 
     # 3. Call main using direct execution with patch for load_wikidata
-    with patch("cli.refresh_artist_metadatas.load_wikidata") as mock_load:
+    with patch("cli.linkage.load_wikidata") as mock_load:
         mock_load.return_value = pd.DataFrame(wiki_data)
 
         main(
@@ -246,7 +248,7 @@ def test_refresh_artist_metadatas_duplicate_wikidata_id_resolution(tmp_path):
 
     os.environ["ENV_SHORT_NAME"] = "dev"
 
-    with patch("cli.refresh_artist_metadatas.load_wikidata") as mock_load:
+    with patch("cli.linkage.load_wikidata") as mock_load:
         mock_load.return_value = pd.DataFrame(wiki_data)
 
         main(

@@ -2,9 +2,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from cli.create_similar_artist_parquet import (
+from src.common.constants import (
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
+)
+from src.similarity.vector_search import (
     COMBINED_SCORE_KEY,
     RANK_ALPHA_CONSTANT,
     RANK_ITEM_KEY,

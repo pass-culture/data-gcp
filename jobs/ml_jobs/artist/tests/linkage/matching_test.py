@@ -10,16 +10,18 @@ import pandas as pd
 import pytest
 
 from src.common.constants import (
-    ARTIST_DESCRIPTION_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
+    WIKIDATA_ID_KEY,
+)
+from src.linkage.constants import (
+    ARTIST_DESCRIPTION_KEY,
     ARTIST_NAME_TO_MATCH_KEY,
     ARTIST_TYPE_KEY,
     IMG_KEY,
     OFFER_CATEGORY_ID_KEY,
     POSTPROCESSED_ARTIST_NAME_KEY,
     PRODUCT_ID_KEY,
-    WIKIDATA_ID_KEY,
     Action,
     Comment,
 )

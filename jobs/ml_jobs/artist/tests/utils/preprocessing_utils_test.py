@@ -1,6 +1,6 @@
 import pandas as pd
 
-from src.common.constants import TOTAL_OFFER_COUNT
+from src.linkage.constants import TOTAL_OFFER_COUNT
 from src.linkage.preprocessing_utils import (
     FilteringParamsType,
     clean_names,

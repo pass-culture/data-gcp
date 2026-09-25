@@ -5,7 +5,7 @@ from typing import TypedDict
 
 import pandas as pd
 
-from src.common.constants import (
+from src.linkage.constants import (
     ARTIST_NAME_TO_FILTER,
     PRODUCT_ID_KEY,
     TOTAL_OFFER_COUNT,
@@ -488,3 +488,11 @@ def filter_products(raw_products_df: pd.DataFrame):
         .index
     )
     return products_df.loc[lambda df: ~df[PRODUCT_ID_KEY].isin(product_ids_to_remove)]
+
+
+def preprocess_offer_name(offer_name: str) -> str:
+    normalized = unicodedata.normalize("NFD", offer_name)
+    without_accents = "".join(
+        char for char in normalized if unicodedata.category(char) != "Mn"
+    )
+    return " ".join(without_accents.lower().strip().split())

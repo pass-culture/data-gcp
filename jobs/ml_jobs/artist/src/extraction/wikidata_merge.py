@@ -1,6 +1,6 @@
 """Assembly of `extract`'s per-target raw files into the final artist table.
 
-Used by `cli/extract_from_wikidata.py::merge`: `merge_data` combines the raw
+Used by `cli/extraction.py::merge`: `merge_data` combines the raw
 per-target dataframes into one (music's platform IDs get pre-merged into music's
 own row), and `postprocess_data` flattens the alias columns and normalizes text.
 Kept separate from src/extraction/wikidata_extraction.py and src/extraction/qlever.py,

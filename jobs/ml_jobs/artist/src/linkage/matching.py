@@ -4,10 +4,13 @@ import pandas as pd
 from loguru import logger
 
 from src.common.constants import (
-    ACTION_KEY,
-    ARTIST_DESCRIPTION_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
+    WIKIDATA_ID_KEY,
+)
+from src.linkage.constants import (
+    ACTION_KEY,
+    ARTIST_DESCRIPTION_KEY,
     ARTIST_NAME_TO_MATCH_KEY,
     ARTIST_TYPE_KEY,
     ARTIST_WIKI_ID_KEY,
@@ -17,7 +20,6 @@ from src.common.constants import (
     OFFER_CATEGORY_ID_KEY,
     POSTPROCESSED_ARTIST_NAME_KEY,
     PRODUCTS_KEYS,
-    WIKIDATA_ID_KEY,
     Action,
     Comment,
 )

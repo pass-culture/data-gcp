@@ -1,21 +1,17 @@
-import logging
 import time
 from urllib.parse import unquote, urlparse
 
 import pandas as pd
 import requests
-import typer
 from tqdm import tqdm
 
-from src.common.constants import (
+from src.similarity.constants import (
     WIKIDATA_IMAGE_AUTHOR_KEY,
     WIKIDATA_IMAGE_FILE_URL_KEY,
     WIKIDATA_IMAGE_LICENSE_KEY,
     WIKIDATA_IMAGE_LICENSE_URL_KEY,
     WIKIMEDIA_REQUEST_HEADER,
 )
-
-logging.basicConfig(level=logging.INFO)
 
 NO_AUTHOR_VALUE = "Auteur inconnu"
 NO_LICENSE_URL_VALUE = "URL de la licence inconnue"
@@ -134,24 +130,3 @@ def remove_image_with_improper_license(df: pd.DataFrame) -> pd.DataFrame:
     ] = None
 
     return df
-
-
-def main(
-    artists_matched_on_wikidata: str = typer.Option(),
-    output_file_path: str = typer.Option(),
-) -> None:
-    artists_df = pd.read_parquet(artists_matched_on_wikidata).rename(
-        columns={"img": WIKIDATA_IMAGE_FILE_URL_KEY}
-    )
-
-    # Fetch the licenses from wikidata
-    image_list = (
-        artists_df[WIKIDATA_IMAGE_FILE_URL_KEY].dropna().drop_duplicates().tolist()
-    )
-    image_license_df = get_image_license(image_list)
-
-    artists_with_licenses_df = artists_df.merge(
-        image_license_df, how="left", on=WIKIDATA_IMAGE_FILE_URL_KEY
-    ).pipe(remove_image_with_improper_license)
-
-    artists_with_licenses_df.to_parquet(output_file_path)

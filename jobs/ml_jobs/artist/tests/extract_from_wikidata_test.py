@@ -1,4 +1,4 @@
-"""Tests for cli/extract_from_wikidata.py — no network calls needed.
+"""Tests for cli/extraction.py — no network calls needed.
 
 `extract`/`merge`'s own orchestration only: checkpoint resume, target
 validation, wiring fetch_discovery/hydrate_batch together, and the generalized
@@ -21,8 +21,8 @@ import pandas as pd
 import pytest
 import requests
 
-import cli.extract_from_wikidata as wikidata_cli
-from cli.extract_from_wikidata import extract, merge
+import cli.extraction as wikidata_cli
+from cli.extraction import extract, merge
 from src.extraction import wikidata_checkpoint, wikidata_extraction
 from src.extraction.wikidata_config import QUERY_CONFIGS, QueryConfig
 

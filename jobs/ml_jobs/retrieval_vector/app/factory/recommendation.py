@@ -1,5 +1,4 @@
 from app.factory.handler import PredictionHandler
-from app.factory.tops import SearchByTopsHandler
 from app.logging.logger import logger
 from app.models.prediction_request import PredictionRequest
 from app.models.prediction_result import PredictionResult
@@ -10,8 +9,6 @@ class RecommendationHandler(PredictionHandler):
     """
     Handler for recommendation predictions.
     """
-
-    fallback_client = SearchByTopsHandler()
 
     def handle(
         self,
@@ -28,7 +25,7 @@ class RecommendationHandler(PredictionHandler):
         Returns:
             PredictionResult: An object containing the predicted items and the model type.
         """
-        logger.debug(
+        logger.info(
             "recommendation",
             extra={
                 "uuid": request_data.call_id,
@@ -51,22 +48,8 @@ class RecommendationHandler(PredictionHandler):
             if len(results.predictions) > 0:
                 return results
 
-        logger.debug(
-            "No recommendations found, attempting fallback.",
+        logger.info(
+            "No recommendations found, returning empty list",
             extra={"uuid": request_data.call_id, "user_id": request_data.user_id},
         )
-        return self.fallback_client.handle(
-            model,
-            request_data=PredictionRequest(
-                model_type="tops",
-                size=request_data.size,
-                debug=request_data.debug,
-                prefilter=request_data.is_prefilter,
-                re_rank=request_data.re_rank,
-                vector_column_name="booking_number_desc",
-                params=request_data.params,
-                call_id=request_data.call_id,
-                user_id=request_data.user_id,
-                items=request_data.items,
-            ),
-        )
+        return PredictionResult(predictions=[])

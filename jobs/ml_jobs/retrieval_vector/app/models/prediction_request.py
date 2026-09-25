@@ -72,7 +72,8 @@ class PredictionRequest(BaseModel):
     def ensure_items_fallback(cls, values):
         """
         If 'items' is empty, use 'offer_id' as a fallback.
-        This can be removed once 'offer_id' is fully migrated to the 'items' list.
+        This keeps request compatibility while handlers still return empty results
+        when no search can be performed.
         """
         if not values.get("items") and values.get("offer_id"):
             values["items"] = [values["offer_id"]]

@@ -23,7 +23,7 @@ class SearchByTopsHandler(PredictionHandler):
         Returns:
             PredictionResult: An object containing the predicted items.
         """
-        logger.debug(
+        logger.info(
             "filter",
             extra={
                 "uuid": request_data.call_id,

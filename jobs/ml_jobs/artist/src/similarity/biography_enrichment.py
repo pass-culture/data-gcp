@@ -1,14 +1,7 @@
 import pandas as pd
-import typer
-from sentence_transformers import SentenceTransformer
 
-from src.common.constants import (
-    HF_TOKEN_SECRET_NAME,
-    MEAN_TT_ITEM_EMBEDDING_KEY,
-    WIKIDATA_ID_KEY,
-)
-from src.common.gcp import get_secret
-from src.linkage.loading import load_wikidata
+from src.common.constants import WIKIDATA_ID_KEY
+from src.similarity.constants import MEAN_TT_ITEM_EMBEDDING_KEY
 
 GENRES_KEY = "genres"
 PROFESSIONS_KEY = "professions"
@@ -90,54 +83,3 @@ def get_enriched_artist_df(
         )
         .reset_index(drop=True)
     )
-
-
-def embed_artist_biographies(artist_biographies: pd.Series) -> pd.Series:
-    gemma_encoder = SentenceTransformer(
-        "google/embeddinggemma-300m",
-        token=get_secret(HF_TOKEN_SECRET_NAME),
-    )
-    PROMPT_NAME = "Clustering"
-    BATCH_SIZE = 128
-
-    embeddings = gemma_encoder.encode(
-        artist_biographies.tolist(),
-        show_progress_bar=True,
-        batch_size=BATCH_SIZE,
-        prompt_name=PROMPT_NAME,
-    )
-    return pd.Series(list(embeddings), index=artist_biographies.index)
-
-
-def main(
-    artist_with_biography_file_path: str = typer.Option(),
-    wiki_base_path: str = typer.Option(),
-    wiki_file_name: str = typer.Option(),
-    output_file_path: str = typer.Option(),
-) -> None:
-    artists_df = pd.read_parquet(artist_with_biography_file_path)
-    wikidata_df = (
-        load_wikidata(wiki_base_path, wiki_file_name)
-        .loc[
-            :,
-            [
-                WIKIDATA_ID_KEY,
-                GENRES_KEY,
-                PROFESSIONS_KEY,
-                LANGUAGES_SPOKEN_KEY,
-                BIRTH_DATE_KEY,
-            ],
-        ]
-        .drop_duplicates()
-        .reset_index(drop=True)
-    )
-
-    # Enrich artist biographies with Wikidata information
-    enriched_artist_df = get_enriched_artist_df(artists_df, wikidata_df)
-
-    # Encode enriched artist biographies
-    enriched_artist_df.assign(
-        semantic_embedding=lambda df: embed_artist_biographies(
-            df.enriched_artist_biography
-        )
-    ).to_parquet(output_file_path, index=False)

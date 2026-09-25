@@ -3,20 +3,22 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from cli.link_new_products_to_artists import main
+from cli.linkage import link_new_products as main
 from src.common.constants import (
-    APPLE_MUSIC_ID_KEY,
-    ARTIST_DESCRIPTION_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
+    WIKIDATA_ID_KEY,
+    WIKIPEDIA_URL_KEY,
+)
+from src.linkage.constants import (
+    APPLE_MUSIC_ID_KEY,
+    ARTIST_DESCRIPTION_KEY,
     DEEZER_ID_KEY,
     GENIUS_ID_KEY,
     ISNI_ID_KEY,
     MUSIC_PLATFORM_IDS_KEYS,
     SOUNDCLOUD_ID_KEY,
     SPOTIFY_ID_KEY,
-    WIKIDATA_ID_KEY,
-    WIKIPEDIA_URL_KEY,
 )
 
 
@@ -100,7 +102,7 @@ def test_link_new_products_to_artists(tmp_path):
     # Run in dev environment
     os.environ["ENV_SHORT_NAME"] = "dev"
 
-    with patch("cli.link_new_products_to_artists.load_wikidata") as mock_load:
+    with patch("cli.linkage.load_wikidata") as mock_load:
         mock_load.return_value = pd.DataFrame(wiki_data)
 
         main(

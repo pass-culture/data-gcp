@@ -1,18 +1,14 @@
-import time
 from urllib.parse import unquote
 
 import mwparserfromhell
 import pandas as pd
 import requests
-import typer
 from loguru import logger
 
-from src.common.constants import (
+from src.common.constants import WIKIPEDIA_URL_KEY
+from src.similarity.constants import (
     ARTIST_BIOGRAPHY_KEY,
-    ARTIST_ID_KEY,
     WIKIMEDIA_REQUEST_HEADER,
-    WIKIPEDIA_CONTENT_KEY,
-    WIKIPEDIA_URL_KEY,
 )
 
 # Wikimedia API settings
@@ -173,99 +169,3 @@ def get_artists_to_extract_wikipedia_content_filter(
         )
     logger.info(f"{filters_series.sum()} artists with a Wikipedia URL to process.")
     return filters_series
-
-
-def main(
-    applicative_artist_file_path: str = typer.Option(),
-    artists_matched_on_wikidata: str = typer.Option(),
-    output_file_path: str = typer.Option(),
-    *,
-    extract_all_from_scratch: bool = typer.Option(False),
-) -> None:
-    # Load + Preprocess Data
-    applicative_artists_df = pd.read_parquet(applicative_artist_file_path).assign(
-        **{
-            ARTIST_BIOGRAPHY_KEY: lambda df: df[ARTIST_BIOGRAPHY_KEY]
-            if ARTIST_BIOGRAPHY_KEY in df.columns
-            else pd.NA
-        }
-    )
-    artists_df = pd.read_parquet(
-        artists_matched_on_wikidata
-    ).merge(
-        applicative_artists_df[[ARTIST_ID_KEY, ARTIST_BIOGRAPHY_KEY]],
-        on=[ARTIST_ID_KEY],
-        how="left",
-        validate="one_to_one",
-    )  # Retrieve previously fetched biographies to avoid recomputing wikipedia content + subsequent LLM summarization
-
-    # Prepare Data
-    filters_series = get_artists_to_extract_wikipedia_content_filter(
-        artists_df=artists_df, extract_all_from_scratch=extract_all_from_scratch
-    )
-    logger.info(f"{filters_series.sum()} artists with a Wikipedia URL to process.")
-    artists_with_wikipedia_url_df = artists_df.loc[filters_series].pipe(
-        extract_wikipedia_content_from_url
-    )
-
-    # Fetch the wikipedia page content from MediaWiki API
-    results_df_list = []
-    if len(artists_with_wikipedia_url_df) == 0:
-        logger.warning("No artists with Wikipedia URL found. Exiting.")
-        results_df_list.append(
-            pd.DataFrame(
-                columns=[
-                    ARTIST_ID_KEY,
-                    PAGE_TITLE_COLUMN,
-                    LANGUAGE_COLUMN,
-                    BATCH_INDEX_COLUMN,
-                    WIKIPEDIA_CONTENT_KEY,
-                ]
-            )
-        )
-    else:
-        for (language, batch_index), group in artists_with_wikipedia_url_df.groupby(
-            [LANGUAGE_COLUMN, BATCH_INDEX_COLUMN]
-        ):
-            t0 = time.time()
-            wikipedia_pages = group[PAGE_TITLE_COLUMN].to_list()
-            logger.info(f"Processing language: {language}, batch: {batch_index}...")
-            content_dict = fetch_clean_content(
-                wikipedia_titles=wikipedia_pages, wikipedia_language=language
-            )
-            content_df = pd.DataFrame(
-                {
-                    PAGE_TITLE_COLUMN: list(content_dict.keys()),
-                    WIKIPEDIA_CONTENT_KEY: list(content_dict.values()),
-                    BATCH_INDEX_COLUMN: batch_index,
-                    LANGUAGE_COLUMN: language,
-                }
-            ).merge(
-                group[[PAGE_TITLE_COLUMN, ARTIST_ID_KEY]],
-                on=PAGE_TITLE_COLUMN,
-                how="left",
-            )
-            results_df_list.append(content_df)
-            logger.success(
-                f"...Fetched {len(content_dict)} pages for language: {language}, batch: {batch_index} in {time.time() - t0:.2f} seconds."
-            )
-
-    # Merge back the wikipedia content to the original dataframe
-    artists_id_with_wikipedia_content_df = artists_with_wikipedia_url_df.merge(
-        pd.concat(results_df_list, ignore_index=True),
-        on=[ARTIST_ID_KEY, PAGE_TITLE_COLUMN, LANGUAGE_COLUMN, BATCH_INDEX_COLUMN],
-        how="left",
-    ).loc[:, [ARTIST_ID_KEY, WIKIPEDIA_CONTENT_KEY]]
-
-    # Merge back to original dataframe and save
-    artist_with_content_df = artists_df.merge(
-        artists_id_with_wikipedia_content_df,
-        on=[ARTIST_ID_KEY],
-        how="left",
-        validate="one_to_one",
-    )
-    artist_with_content_df.where(pd.notnull(artist_with_content_df), None).to_parquet(
-        output_file_path, index=False
-    )
-    # The default behavior of pandas merge is to use np.nan for missing values
-    # We want to replace these with None to match the rest of the pipeline

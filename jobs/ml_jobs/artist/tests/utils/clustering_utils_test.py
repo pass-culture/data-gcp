@@ -4,12 +4,12 @@ import pytest
 import rapidfuzz
 from rapidfuzz import fuzz
 
-from src.common.constants import TOTAL_OFFER_COUNT
 from src.linkage import clustering_utils
 from src.linkage.clustering_utils import (
     cluster_with_distance_matrices,
     get_cluster_to_nickname_dict,
 )
+from src.linkage.constants import TOTAL_OFFER_COUNT
 
 
 class TestGetClusterToNicknameDict:

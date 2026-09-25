@@ -1,16 +1,9 @@
 import lancedb
-import numpy as np
 import pandas as pd
-import tqdm
-import typer
-from loguru import logger
 
 from src.common.constants import (
-    ARTIST_APP_SEARCH_SCORE_KEY,
-    ARTIST_BIOGRAPHY_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
-    MEAN_TT_ITEM_EMBEDDING_KEY,
 )
 
 # Columns
@@ -155,75 +148,3 @@ def format_results_df(
             }
         )
     )
-
-
-def main(
-    artist_with_embeddings_file_path: str = typer.Option(),
-    output_file_path: str = typer.Option(),
-) -> None:
-    artist_df = pd.read_parquet(artist_with_embeddings_file_path).assign(
-        mean_tt_item_embedding=lambda df: df[MEAN_TT_ITEM_EMBEDDING_KEY].apply(
-            lambda x: x if isinstance(x, list | np.ndarray) and len(x) > 0 else None
-        )
-    )
-
-    # Create lance tables
-    logger.info("Creating LanceDB table and indexes...")
-    db = lancedb.connect(LANCEDB_PATH)
-    if LANCEDB_TABLE_NAME in db.list_tables().tables:
-        db.drop_table(LANCEDB_TABLE_NAME)
-    artist_table = db.create_table(LANCEDB_TABLE_NAME, artist_df)
-    logger.info("LanceDB table created successfully.")
-
-    # Create indexes for both embedding columns to speed up search
-    logger.info("Creating indexes for semantic and item embeddings...")
-    artist_table.create_index(
-        vector_column_name="semantic_embedding",
-        metric=SEARCH_METRIC,
-        num_partitions=NUM_PARTITIONS,
-    )
-    artist_table.create_index(
-        vector_column_name="mean_tt_item_embedding",
-        metric=SEARCH_METRIC,
-        num_partitions=NUM_PARTITIONS,
-    )
-    logger.info("Indexes created successfully.")
-
-    # Perform search for each artist and combine results
-    result_df_list = []
-    logger.info("Performing similarity search for each artist...")
-    for _, selected_artist_row in tqdm.tqdm(artist_df.iterrows(), total=len(artist_df)):
-        semantic_df = perform_search(
-            artist_table, selected_artist_row, "semantic_embedding"
-        )
-        if selected_artist_row["mean_tt_item_embedding"] is not None:
-            item_df = perform_search(
-                artist_table, selected_artist_row, "mean_tt_item_embedding"
-            )
-        else:
-            item_df = pd.DataFrame(
-                columns=[
-                    ARTIST_ID_KEY,
-                    ARTIST_NAME_KEY,
-                    ARTIST_APP_SEARCH_SCORE_KEY,
-                    ARTIST_BIOGRAPHY_KEY,
-                    RANK_KEY,
-                ]
-            )
-
-        results_df = merge_search_results(semantic_df=semantic_df, item_df=item_df)
-        formatted_results_df = format_results_df(
-            results_df=results_df,
-            selected_artist_id=selected_artist_row[ARTIST_ID_KEY],
-            selected_artist_name=selected_artist_row[ARTIST_NAME_KEY],
-        )
-        result_df_list.append(formatted_results_df)
-
-    if len(result_df_list) == 0:
-        raise ValueError("No results found for any artist. Exiting without saving.")
-
-    logger.info("Similarity search completed. Saving results to Parquet...")
-    pd.concat(result_df_list).loc[:, lambda df: df.columns.sort_values()].to_parquet(
-        output_file_path, index=False
-    )
-    logger.info("Results saved to Parquet successfully.")

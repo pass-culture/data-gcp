@@ -2,15 +2,15 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from cli.get_wikipedia_page_content import (
+from src.common.constants import (
+    ARTIST_ID_KEY,
+    WIKIPEDIA_URL_KEY,
+)
+from src.similarity.constants import ARTIST_BIOGRAPHY_KEY
+from src.similarity.wikipedia_content import (
     extract_wikipedia_content_from_url,
     fetch_clean_content,
     get_artists_to_extract_wikipedia_content_filter,
-)
-from src.common.constants import (
-    ARTIST_BIOGRAPHY_KEY,
-    ARTIST_ID_KEY,
-    WIKIPEDIA_URL_KEY,
 )
 
 

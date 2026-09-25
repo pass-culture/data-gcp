@@ -1,5 +1,5 @@
 """Two-pass discovery+hydration extraction logic used by
-`cli/extract_from_wikidata.py::extract`.
+`cli/extraction.py::extract`.
 
 Kept out of the CLI entrypoint so this logic can be unit-tested and reused
 directly, without going through Typer: `extract_two_pass`/`extract_single_pass`

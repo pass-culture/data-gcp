@@ -1,6 +1,6 @@
 """Local checkpointing for the two-pass discovery+hydration extraction pattern.
 
-Used by `cli/extract_from_wikidata.py::extract` to resume a two-pass target
+Used by `cli/extraction.py::extract` to resume a two-pass target
 (QueryConfig.hydration_batch_size) after a mid-run failure, per
 wikidata_extraction_pipeline_specification.md's "Checkpointing" section: Pass 1's
 result and each hydrated Pass 2 batch are persisted here as `extract` goes, so an

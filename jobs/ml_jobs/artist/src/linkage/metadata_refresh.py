@@ -1,14 +1,16 @@
 import os
 
 import pandas as pd
-import typer
 from loguru import logger
 
 from src.common.constants import (
-    ACTION_KEY,
-    ARTIST_DESCRIPTION_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
+    WIKIDATA_ID_KEY,
+)
+from src.linkage.constants import (
+    ACTION_KEY,
+    ARTIST_DESCRIPTION_KEY,
     ARTIST_NAME_TO_MATCH_KEY,
     ARTIST_PRO_SEARCH_SCORE_KEY,
     ARTIST_TYPE_KEY,
@@ -16,19 +18,15 @@ from src.common.constants import (
     ARTISTS_KEYS,
     COMMENT_KEY,
     IMG_KEY,
-    MUSIC_PLATFORM_IDS_KEYS,
     OFFER_CATEGORY_ID_KEY,
     PRODUCT_ID_KEY,
     PRODUCTS_KEYS,
-    WIKIDATA_ID_KEY,
     Action,
 )
-from src.linkage.loading import load_wikidata
 from src.linkage.matching import perform_wikidata_category_matching
-from src.linkage.preprocessing_utils import (
-    filter_products,
-    prepare_artist_names_for_matching,
-)
+from src.linkage.preprocessing_utils import prepare_artist_names_for_matching
+
+SANITY_THRESHOLD = 0.95
 
 
 def retrieve_artist_wikidata_id(
@@ -127,8 +125,8 @@ def create_delta_df_for_metadata_refresh(
 def match_unmatched_artists_with_wikidata(
     applicative_artist_df: pd.DataFrame,
     artist_with_wikidata_ids_df: pd.DataFrame,
-    product_artist_link_filepath: str,
-    product_filepath: str,
+    product_artist_link_df: pd.DataFrame,
+    product_df: pd.DataFrame,
     wiki_df: pd.DataFrame,
 ) -> pd.DataFrame:
     """Match unmatched existing artists onto Wikidata.
@@ -137,8 +135,10 @@ def match_unmatched_artists_with_wikidata(
         applicative_artist_df (pd.DataFrame): Current applicative database artists.
             Must contain ARTIST_PRO_SEARCH_SCORE_KEY column.
         artist_with_wikidata_ids_df (pd.DataFrame): Artists with wikidata_id already assigned.
-        product_artist_link_filepath (str): Path to product artist links.
-        product_filepath (str): Path to products.
+        product_artist_link_df (pd.DataFrame): Product artist links, already loaded
+            and PRODUCT_ID_KEY-typed by the caller.
+        product_df (pd.DataFrame): Products, already loaded, typed, and filtered
+            (via preprocessing_utils.filter_products) by the caller.
         wiki_df (pd.DataFrame): Wikidata dump.
 
     Returns:
@@ -151,14 +151,6 @@ def match_unmatched_artists_with_wikidata(
         return pd.DataFrame(columns=ARTISTS_KEYS)
 
     # Derive (artist_id → offer_category_id, artist_type) from product/link data
-    product_artist_link_df = pd.read_parquet(product_artist_link_filepath).astype(
-        {PRODUCT_ID_KEY: int}
-    )
-    product_df = (
-        pd.read_parquet(product_filepath)
-        .astype({PRODUCT_ID_KEY: int})
-        .pipe(filter_products)
-    )
     artist_category_type_df = (
         product_artist_link_df.merge(
             product_df[[PRODUCT_ID_KEY, OFFER_CATEGORY_ID_KEY]].drop_duplicates(),
@@ -243,7 +235,7 @@ def match_unmatched_artists_with_wikidata(
     return matched_artists_df.loc[:, ARTISTS_KEYS]
 
 
-def sanity_checks(
+def sanity_check_metadata_refresh(
     delta_product_df: pd.DataFrame,
     delta_artist_df: pd.DataFrame,
     applicative_artist_df: pd.DataFrame,
@@ -271,7 +263,6 @@ def sanity_checks(
         logger.warning("Skipping sanity checks since mocked data is not compliant.")
         return
 
-    SANITY_THRESHOLD = 0.95
     # 1. Minimal sanity checks
     assert (
         len(delta_product_df) == 0
@@ -309,129 +300,3 @@ def sanity_checks(
         delta_artist_df[IMG_KEY].notna().sum()
         >= SANITY_THRESHOLD * applicative_artist_df[IMG_KEY].notna().sum()
     ), f"Delta artist dataframe has fewer images than applicative artist dataframe with given threshold {SANITY_THRESHOLD}."
-
-
-def main(
-    # Input files
-    artist_file_path: str = typer.Option(),
-    artist_music_platform_file_path: str = typer.Option(),
-    product_artist_link_filepath: str = typer.Option(),
-    product_filepath: str = typer.Option(),
-    wiki_base_path: str = typer.Option(),
-    wiki_file_name: str = typer.Option(),
-    # Output files
-    output_delta_artist_file_path: str = typer.Option(),
-    output_delta_product_artist_link_file_path: str = typer.Option(),
-) -> None:
-    """Main function to refresh artist metadata from wikidata.
-
-    This function orchestrates the complete metadata refresh process:
-    1. Loads artist + artist_music_platform tables and merges them, then loads wikidata
-    2. Retrieves wikidata IDs for existing artists
-    3. Matches unmatched artists with wikidata to find new matches
-    4. Matches artists with wikidata to refresh metadata
-    5. Creates delta dataframes for the update operation
-    6. Performs sanity checks to ensure data quality
-    7. Saves the delta dataframes for downstream processing
-
-    Args:
-        artist_file_path (str): Path to the parquet file containing artist data (applicative_database_artist).
-        artist_music_platform_file_path (str): Path to the parquet file containing music platform IDs
-            (applicative_database_artist_music_platform). Merged with artist data on artist_id.
-        product_artist_link_filepath (str): Path to product artist link parquet file.
-        product_filepath (str): Path to products parquet file.
-        wiki_base_path (str): Base path for wikidata files.
-        wiki_file_name (str): Name of the wikidata file to load.
-        output_delta_artist_file_path (str): Output path for delta artist dataframe.
-        output_delta_product_artist_link_file_path (str): Output path for delta product link dataframe.
-
-    Returns:
-        None: Function saves output files and logs progress information.
-    """
-    # 1. Load data
-    logger.info("Loading artist data...")
-    artist_music_platform_df = pd.read_parquet(artist_music_platform_file_path).loc[
-        :, [ARTIST_ID_KEY, *MUSIC_PLATFORM_IDS_KEYS]
-    ]
-    applicative_artist_df = (
-        pd.read_parquet(artist_file_path)
-        .rename(
-            columns={
-                "wikidata_image_file_url": IMG_KEY,
-                "wikidata_id": WIKIDATA_ID_KEY,
-            }
-        )
-        .merge(
-            artist_music_platform_df,
-            on=ARTIST_ID_KEY,
-            how="left",
-            validate="one_to_one",
-        )
-    )
-    artist_with_wikidata_ids_df = applicative_artist_df.loc[
-        lambda df: df[WIKIDATA_ID_KEY].notna()
-    ]
-    wiki_df = load_wikidata(
-        wiki_base_path=wiki_base_path, wiki_file_name=wiki_file_name
-    ).reset_index(drop=True)
-    logger.success("Artist data loaded successfully.")
-    logger.info(
-        f"Number of artists: {len(applicative_artist_df)}, Number of artists with wikidata ids: {len(artist_with_wikidata_ids_df)}, Number of wikidata entries: {len(wiki_df)}"
-    )
-
-    # 2. Match on wikidata to have fresh metadatas for already matched artists
-    logger.info("Refreshing artist metadatas from wikidata...")
-    refreshed_artists_df = artist_with_wikidata_ids_df.merge(
-        wiki_df.drop(columns=["alias", "raw_alias"]).drop_duplicates(),
-        how="inner",
-        on=WIKIDATA_ID_KEY,
-        suffixes=("_old", ""),
-    )
-
-    # 3. Match existing unmatched artists on Wikidata
-    newly_matched_artists_df = match_unmatched_artists_with_wikidata(
-        applicative_artist_df=applicative_artist_df,
-        artist_with_wikidata_ids_df=artist_with_wikidata_ids_df,
-        product_artist_link_filepath=product_artist_link_filepath,
-        product_filepath=product_filepath,
-        wiki_df=wiki_df,
-    )
-
-    # 4. Refresh statistics
-    artists_with_wiki_id = artist_with_wikidata_ids_df[WIKIDATA_ID_KEY].notna().sum()
-    artists_matched_in_wiki = refreshed_artists_df[ARTIST_NAME_KEY].notna().sum()
-    artists_with_wiki_id_no_match = artists_with_wiki_id - artists_matched_in_wiki
-    logger.info(
-        f"Artists with wikidata_id: {artists_with_wiki_id}, "
-        f"Matched in wikidata: {artists_matched_in_wiki}, "
-        f"With wikidata_id but no match: {artists_with_wiki_id_no_match}"
-    )
-    logger.success("Artist metadatas refreshed successfully.")
-
-    # 5. Build delta artist dataframe
-    logger.info("Building delta artist dataframe...")
-    delta_product_df, delta_artist_df = create_delta_df_for_metadata_refresh(
-        refreshed_artists_df=refreshed_artists_df,
-        newly_matched_artists_df=newly_matched_artists_df,
-    )
-
-    logger.success("Delta artist dataframe built successfully.")
-    logger.info(f"Number of artists to update: {len(delta_artist_df)}")
-
-    # 6. Sanity check for consistency
-    logger.info("Performing sanity checks...")
-    sanity_checks(
-        delta_product_df=delta_product_df,
-        delta_artist_df=delta_artist_df,
-        applicative_artist_df=applicative_artist_df,
-    )
-    logger.success("Sanity checks passed successfully.")
-
-    # 7. Save files
-    logger.info("Saving delta dataframes...")
-    logger.info(
-        f"Saving delta artist dataframes to {output_delta_artist_file_path} and {output_delta_product_artist_link_file_path}."
-    )
-    delta_artist_df.to_parquet(output_delta_artist_file_path, index=False)
-    delta_product_df.to_parquet(output_delta_product_artist_link_file_path, index=False)
-    logger.success("Delta dataframes saved successfully.")

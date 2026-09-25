@@ -7,9 +7,11 @@ from pydantic_ai import Agent
 from tqdm.asyncio import tqdm
 
 from src.common.constants import (
-    ARTIST_BIOGRAPHY_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
+)
+from src.similarity.constants import (
+    ARTIST_BIOGRAPHY_KEY,
     WIKIPEDIA_CONTENT_KEY,
 )
 from src.similarity.llm_config import (
@@ -23,6 +25,31 @@ from src.similarity.llm_config import (
 EMPTY_PREDICTION = {
     ARTIST_BIOGRAPHY_KEY: None,
 }
+
+NEW_SUFFIX = "_new"
+
+
+def merge_biographies(
+    artists_df: pd.DataFrame, new_biographies_df: pd.DataFrame
+) -> pd.DataFrame:
+    """Merge new LLM-generated biographies with existing ones, preferring new biographies."""
+    return (
+        artists_df.merge(
+            new_biographies_df,
+            on=[ARTIST_ID_KEY],
+            how="left",
+            suffixes=("", NEW_SUFFIX),
+            validate="one_to_one",
+        )
+        .assign(
+            **{
+                ARTIST_BIOGRAPHY_KEY: lambda df: df[
+                    f"{ARTIST_BIOGRAPHY_KEY}{NEW_SUFFIX}"
+                ].combine_first(df[ARTIST_BIOGRAPHY_KEY])
+            }
+        )
+        .drop(columns=[f"{ARTIST_BIOGRAPHY_KEY}{NEW_SUFFIX}"])
+    )
 
 
 def summarize_biographies_with_llm(

@@ -1,31 +1,19 @@
-# %%
-import uuid
-
 import pandas as pd
-import typer
 from loguru import logger
 
 from src.common.constants import (
-    ACTION_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
-    ARTIST_NAME_TO_MATCH_KEY,
+)
+from src.linkage.constants import (
+    ACTION_KEY,
     ARTIST_TYPE_KEY,
     COMMENT_KEY,
-    MUSIC_PLATFORM_IDS_KEYS,
     OFFER_CATEGORY_ID_KEY,
     PRODUCT_ID_KEY,
     PRODUCTS_KEYS,
-    WIKIDATA_ID_KEY,
     ProductToLinkStatus,
 )
-from src.linkage.loading import load_wikidata
-from src.linkage.matching import (
-    create_artists_tables,
-    match_artist_on_offer_names,
-    match_artists_with_wikidata,
-)
-from src.linkage.preprocessing_utils import filter_products
 
 ALIAS_MERGE_COLUMNS = [
     ARTIST_ID_KEY,
@@ -164,7 +152,7 @@ def build_artist_alias(
     )
 
 
-def sanity_checks(
+def sanity_check_product_links(
     delta_product_df: pd.DataFrame,
     delta_artist_df: pd.DataFrame,
     artist_df: pd.DataFrame,
@@ -178,9 +166,7 @@ def sanity_checks(
     Args:
         delta_product_df (pd.DataFrame): DataFrame containing new/updated products
         delta_artist_df (pd.DataFrame): DataFrame containing new artists to be added
-        delta_artist_alias_df (pd.DataFrame): DataFrame containing new artist aliases
         artist_df (pd.DataFrame): Existing artists in the database
-        artist_alias_df (pd.DataFrame): Existing artist aliases in the database
     Returns:
         None
     Raises:
@@ -188,7 +174,6 @@ def sanity_checks(
         ValueError: If any of the following conditions are met:
             - Products with no artist_id after matching
             - Artists that already exist in the database
-            - Artist aliases that already exist in the database
     """
 
     # 1. Product Artist Links
@@ -216,111 +201,3 @@ def sanity_checks(
     assert (
         not delta_artist_df.drop(columns=[ACTION_KEY, COMMENT_KEY]).duplicated().any()
     ), "Duplicate entries in delta_artist_df"
-
-
-# %%
-
-
-def main(
-    # Input files
-    artist_filepath: str = typer.Option(),
-    artist_music_platform_filepath: str = typer.Option(),
-    product_artist_link_filepath: str = typer.Option(),
-    product_filepath: str = typer.Option(),
-    wiki_base_path: str = typer.Option(),
-    wiki_file_name: str = typer.Option(),
-    # Output files
-    output_delta_artist_file_path: str = typer.Option(),
-    output_delta_product_artist_link_filepath: str = typer.Option(),
-) -> None:
-    # 1. Load data
-    product_artist_link_df = pd.read_parquet(product_artist_link_filepath).astype(
-        {PRODUCT_ID_KEY: int}
-    )
-    product_df = (
-        pd.read_parquet(product_filepath)
-        .astype({PRODUCT_ID_KEY: int})
-        .pipe(filter_products)
-    )
-    artist_music_platform_df = pd.read_parquet(artist_music_platform_filepath).loc[
-        :, [ARTIST_ID_KEY, *MUSIC_PLATFORM_IDS_KEYS]
-    ]
-    artist_df = pd.read_parquet(artist_filepath).merge(
-        artist_music_platform_df, on=ARTIST_ID_KEY, how="left", validate="one_to_one"
-    )
-    artist_with_wiki_ids_df = artist_df.rename(
-        columns={
-            "wikidata_id": WIKIDATA_ID_KEY,
-        }
-    ).loc[
-        lambda df: df[WIKIDATA_ID_KEY].notna(),
-        [ARTIST_ID_KEY, WIKIDATA_ID_KEY],
-    ]
-    wiki_df = load_wikidata(
-        wiki_base_path=wiki_base_path, wiki_file_name=wiki_file_name
-    ).reset_index(drop=True)
-    artist_alias_df = build_artist_alias(
-        product_df=product_df,
-        product_artist_link_df=product_artist_link_df,
-        artist_df=artist_df,
-    )
-
-    # 2. Split products between to remove and to link
-    products_to_remove_df, products_to_link_df = get_products_to_remove_and_link_df(
-        product_df, product_artist_link_df
-    )
-
-    # 3. Match products to link with artists on both raw and preprocessed offer names
-    preproc_linked_products_df, preproc_unlinked_products_df = (
-        match_artist_on_offer_names(
-            products_to_link_df=products_to_link_df,
-            artist_alias_df=artist_alias_df,
-            product_artist_link_df=product_artist_link_df,
-        )
-    )
-
-    # 4. Create new artist clusters by offer_category and artist type
-    new_artist_clusters_df = (
-        preproc_unlinked_products_df.groupby(
-            [OFFER_CATEGORY_ID_KEY, ARTIST_TYPE_KEY, ARTIST_NAME_TO_MATCH_KEY]
-        )
-        .agg(
-            **{
-                ARTIST_ID_KEY: (ARTIST_NAME_KEY, lambda x: str(uuid.uuid4())),
-            },
-            artist_name_set=(ARTIST_NAME_KEY, lambda x: set(x.unique())),
-            artist_name_count=(ARTIST_NAME_KEY, "count"),
-            artist_name_nunique=(ARTIST_NAME_KEY, "nunique"),
-        )
-        .reset_index()
-    )
-    logger.info(
-        f"Created {len(new_artist_clusters_df)} new artist clusters from {len(preproc_unlinked_products_df)} unlinked products."
-    )
-
-    # 5. Match new artist clusters with existing artists on Wikidata
-    exploded_artist_alias_df = match_artists_with_wikidata(
-        new_artist_clusters_df=new_artist_clusters_df,
-        wiki_df=wiki_df,
-        artist_with_wiki_ids_df=artist_with_wiki_ids_df,
-    )
-
-    # 6. Create new artists and artist aliases
-    delta_product_df, delta_artist_df = create_artists_tables(
-        preproc_unlinked_products_df=preproc_unlinked_products_df,
-        exploded_artist_alias_df=exploded_artist_alias_df,
-        products_to_remove_df=products_to_remove_df,
-        preproc_linked_products_df=preproc_linked_products_df,
-        artist_df=artist_df,
-    )
-
-    # 7. Sanity check for consistency
-    sanity_checks(
-        delta_product_df,
-        delta_artist_df,
-        artist_df,
-    )
-
-    # 8. Save files
-    delta_artist_df.to_parquet(output_delta_artist_file_path, index=False)
-    delta_product_df.to_parquet(output_delta_product_artist_link_filepath, index=False)

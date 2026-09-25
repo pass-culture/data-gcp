@@ -7,7 +7,6 @@ from concurrent.futures import ThreadPoolExecutor
 import google.auth
 import pandas as pd
 import requests
-import typer
 from google.auth.transport.requests import AuthorizedSession
 from google.cloud import storage
 from PIL import Image, UnidentifiedImageError
@@ -16,9 +15,11 @@ from tqdm import tqdm
 from urllib3.util.retry import Retry
 
 from src.common.constants import (
-    ARTIST_MEDIATION_UUID_KEY,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+)
+from src.similarity.constants import (
+    ARTIST_MEDIATION_UUID_KEY,
     WIKIDATA_IMAGE_FILE_URL_KEY,
     WIKIMEDIA_REQUEST_HEADER,
 )
@@ -35,9 +36,6 @@ POOL_MAXSIZE = MAX_WORKERS + 5
 # Image compression and JPEG conversion settings
 IMAGE_MAX_SIZE = (800, 800)
 IMAGE_JPEG_QUALITY = 80
-
-
-logging.basicConfig(level=logging.INFO)
 
 
 def _get_session():
@@ -241,38 +239,3 @@ def run_parallel_image_transfers(
             ]
         )
     return pd.DataFrame(results)
-
-
-def main(
-    artists_matched_on_wikidata: str = typer.Option(),
-    output_file_path: str = typer.Option(),
-) -> None:
-    """Transfer Wikimedia artist images to Google Cloud Storage.
-
-    Reads a parquet file containing artist data with Wikidata matches,
-    extracts unique image URLs, downloads them from Wikimedia, and uploads
-    them to GCS. The results are merged back with the original data and
-    saved to the output file.
-
-    Args:
-        artists_matched_on_wikidata: Path to the input parquet file containing
-            artist data with Wikidata image URLs.
-        output_file_path: Path where the output parquet file with transfer
-            results will be saved.
-    """
-    # 1. Load Data
-    artists_df = pd.read_parquet(artists_matched_on_wikidata)
-    image_urls = artists_df[WIKIDATA_IMAGE_FILE_URL_KEY].dropna().unique().tolist()
-
-    # 2. Setup sessions and clients
-    session = _get_session()
-    gcs_client = _get_gcs_client()
-    bucket = gcs_client.bucket(DE_DATALAKE_BUCKET_NAME)
-
-    # 3. Run transfers in parallel
-    result_df = run_parallel_image_transfers(session, bucket, image_urls)
-
-    # 4. Merge results and save output
-    artists_df.merge(
-        result_df, on=WIKIDATA_IMAGE_FILE_URL_KEY, how="left", validate="m:1"
-    ).to_parquet(output_file_path)

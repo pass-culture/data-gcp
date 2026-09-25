@@ -12,6 +12,7 @@ SCHEDULE_DICT = {
     "algo_default_deployment": "0 6 * * *",
     "artist_linkage": "0 12 * * *",
     "artist_similarity_playlist": "0 12 * * 1",
+    "artist_wikidata_dump": "0 3 1 * *",  # 1st of the month at 3:00 AM
     "build_and_push_graph_retrieval_api": {
         "prod": "0 4 * * 5",  # every Friday at 4:00 AM
         "stg": "0 4 * * 4",  # every Thursday at 4:00 AM

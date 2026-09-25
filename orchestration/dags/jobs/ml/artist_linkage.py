@@ -36,7 +36,7 @@ from jobs.crons import SCHEDULE_DICT
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"artist-linkage-{ENV_SHORT_NAME}"
-BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
+BASE_DIR = "data-gcp/jobs/ml_jobs/artist"
 DAG_NAME = "artist_linkage"
 DAG_VERSION = "2.0"
 SUMMARIZE_BIOGRAPHY_OPTIONS = {
@@ -243,6 +243,7 @@ with DAG(
             branch="{{ params.branch }}",
             python_version="3.10",
             base_dir=BASE_DIR,
+            extras=["similarity"],
             retries=2,
         )
         gce_instance_start >> fetch_install_code
@@ -301,7 +302,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             uv run cli/embed_offer_names_on_namesakes.py \
+             uv run python main.py linkage embed-offer-names \
             --applicative-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
             --product-stats-filepath {os.path.join(STORAGE_BASE_PATH, ML_METADATA_PRODUCT_STATS_GCS_FILENAME)} \
             --artist-score-filepath {os.path.join(STORAGE_BASE_PATH, ML_METADATA_ARTIST_SCORE_GCS_FILENAME)} \
@@ -314,7 +315,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             uv run cli/deduplicate_artists.py \
+             uv run python main.py linkage deduplicate \
             --applicative-artist-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
             --applicative-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
             --product-embeddings-filepath {os.path.join(STORAGE_BASE_PATH, "product_embeddings.parquet")} \
@@ -334,7 +335,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             uv run cli/link_new_products_to_artists.py \
+             uv run python main.py linkage link-new-products \
             --artist-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
             --artist-music-platform-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTIST_MUSIC_PLATFORM_GCS_FILENAME)} \
             --product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
@@ -356,7 +357,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             uv run cli/refresh_artist_metadatas.py \
+             uv run python main.py linkage refresh-metadata \
             --artist-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
             --artist-music-platform-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTIST_MUSIC_PLATFORM_GCS_FILENAME)} \
             --product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
@@ -378,7 +379,7 @@ with DAG(
         base_dir=BASE_DIR,
         trigger_rule="none_failed_min_one_success",
         command=f"""
-             uv run cli/get_wikimedia_commons_license.py \
+             uv run python main.py similarity get-wikimedia-license \
             --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME_01)} \
             --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME_02)}
             """,
@@ -390,7 +391,7 @@ with DAG(
         base_dir=BASE_DIR,
         trigger_rule="none_failed_min_one_success",
         command=f"""
-             uv run cli/transfer_wikimedia_images_to_gcs.py \
+             uv run python main.py similarity transfer-images \
             --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME_02)} \
             --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_MEDIATION_UUID_GCS_FILENAME_03)}
             """,
@@ -401,7 +402,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         trigger_rule="none_failed_min_one_success",
-        command="uv run cli/get_wikipedia_page_content.py "
+        command="uv run python main.py similarity get-wikipedia-content "
         f"--applicative-artist-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} "
         f"--artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_MEDIATION_UUID_GCS_FILENAME_03)} "
         f"--output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_04)} "
@@ -413,7 +414,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             uv run cli/summarize_biographies_with_llm.py \
+             uv run python main.py similarity summarize-biographies \
             --artists-with-wikipedia-content {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_WIKIPEDIA_PAGE_CONTENT_GCS_FILENAME_04)} \
             --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_BIOGRAPHY_GCS_FILENAME_05)} \
             {SUMMARIZE_BIOGRAPHY_OPTIONS[ENV_SHORT_NAME]}

@@ -1,0 +1,29 @@
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+{% import "_macros.rq.j2" as m %}
+
+SELECT
+  ?wikidata_id
+{% for p in id_properties %}
+  ?{{ p.var }}
+{% endfor %}
+  (
+    {{ m.matching_score_expr(id_properties) }}
+  AS ?matching_score)
+WHERE {
+  {
+    SELECT
+      ?wikidata_id
+{% for p in id_properties %}
+      (MIN(?{{ p.var }}_raw) AS ?{{ p.var }})
+{% endfor %}
+    WHERE {
+      {{ m.entity_filter(entity_types, id_properties) }}
+
+{% for p in id_properties %}
+      OPTIONAL { ?wikidata_id {{ p.property }} ?{{ p.var }}_raw . }
+{% endfor %}
+    }
+    GROUP BY ?wikidata_id
+  }
+}

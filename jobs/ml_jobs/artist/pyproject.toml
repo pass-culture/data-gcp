@@ -1,0 +1,152 @@
+[project]
+name = "artist-linkage"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11, <3.14"
+dependencies = [
+    "async-timeout>=4.0.3",
+    "gcsfs>=2024.9.0.post1",
+    "google-cloud-secret-manager>=2.16.0",
+    "google-cloud-storage>=2.16.0",
+    "ipykernel>=6.29.4",
+    "jellyfish>=1.0.3",
+    "jinja2>=3.1.6",
+    "loguru>=0.7.2",
+    "pandas[parquet,performance]>=2.2.3",
+    "pytest>=9.0.3",
+    "ruff>=0.4.5",
+    "setuptools >= 83.0.0",
+    "tenacity>=9.1.2",
+    "tornado >= 6.5.8", # GHSA-wwv5-g3v4-889x, GHSA-8423-8fgw-73vq, GHSA-mpf4-983q-p7j4, PYSEC-2026-3928
+    "typer>=0.12.3",
+    "unidecode>=1.3.8",
+]
+
+# Split by which extraction_from_wikidata.py / artist-linkage / similarity CLI scripts
+# actually import them (see per-file `import`/`from` grep) so a plain Wikidata-extraction
+# install doesn't have to pull in the heavy matching/ML stack. sentence-transformers and
+# networkx are listed in both groups: deduplicate_artists.py/embed_offer_names_on_namesakes.py
+# (dedup matching, installed today via the similarity group — see artist_linkage.py's DAG)
+# use both, and encode_artist_biographies.py (embeddings) also needs sentence-transformers.
+[project.optional-dependencies]
+# Intentionally empty: cli/extraction.py and its whole call chain
+# (wikidata_extraction/checkpoint/merge.py, qlever.py, wikidata_config.py) only
+# import pandas/typer/loguru/requests/tenacity/jinja2, all already in the base
+# `dependencies` above. Declared anyway (and passed as extras=["extraction"] in
+# artist_wikidata_dump.py) so the split is explicit for all three domains rather
+# than extraction silently relying on "no extras passed".
+extraction = []
+linkage = [
+    "matplotlib>=3.9.2",
+    "mlflow>=3.10.1",
+    "networkx>=3.4.2",
+    "rapidfuzz>=3.9.1",
+    "scikit-learn>=1.5.0",
+    "sentence-transformers>=5.2.1",
+]
+similarity = [
+    "lancedb>=0.29.2",
+    "mwparserfromhell>=0.7.2",
+    "networkx>=3.4.2",
+    "pillow >= 12.3.0", # GHSA-jw5h-h276-9jcc, GHSA-2jxr-v4xp-q87w, GHSA-9m85-6jwx-3479,
+    "pydantic-ai>=1.99.0",
+    "sentence-transformers>=5.2.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src", "scripts"]
+
+## ruff
+# Recommended ruff config for now, to be updated as we go along.
+[tool.ruff]
+target-version = 'py310'
+
+# lint.select = ["E4", "E7", "E9", "F", "I"]
+lint.select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle
+    "F",      # Pyflakes
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "I",      # isort
+    "SIM",    # flake8-simplify
+    "TCH",    # flake8-type-checking
+    "TID",    # flake8-tidy-imports
+    "UP",     # pyupgrade
+    "PT",     # flake8-pytest-style
+    "RUF",    # Ruff-specific rules
+    "FBT001", # flake8-boolean-trap
+ ]
+lint.ignore = [
+    "W505", # doc line too long (handled by pydocstyle)
+    "E501", # line too long (handled by pycodestyle)
+]
+
+[tool.ruff.lint.pydocstyle]
+# Automatically disable rules that are incompatible with Google docstring convention
+convention = "google"
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 100
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.flake8-type-checking]
+strict = true
+runtime-evaluated-base-classes = ["pydantic.BaseModel"]
+# Pydantic needs to be able to evaluate types at runtime
+# see https://pypi.org/project/flake8-type-checking/ for flake8-type-checking documentation
+# see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation
+
+[tool.uv]
+environments = [
+    "sys_platform == 'darwin'",
+    "sys_platform == 'linux'",
+]
+constraint-dependencies = [
+    "pygments >= 2.20.0", # GHSA-x233-2p5x-gpf5
+    "bleach >= 6.4.0", # GHSA-8jxr-4gfq-qg7h, GHSA-q4r7-2j3p-rxmx
+    "requests >= 2.33.0", # GHSA-35cv-6p6j-x96x
+    "pydantic-settings >= 2.14.2", # GHSA-87rw-pf2v-x3x9
+    "jupyterlab >= 4.5.10", # GHSA-37w4-hwhx-4rc4, GHSA-mqcg-5x36-vfcg, GHSA-vp7x-m4p5-jhq3, GHSA-hcgh-g6vc-6fg3
+    "msgpack >= 1.2.1", # GHSA-qmhj-6hxf-p4j8
+    "soupsieve >= 2.8.4", # GHSA-wf34-78mc-v73j, GHSA-p7q2-5c5x-qfhw
+    "python-socketio >= 5.16.2", # GHSA-q9x8-6j69-g388
+    "python-engineio >= 4.13.2", # GHSA-5rqg-hfv6-mmr4, GHSA-j37r-j4qc-9xfm
+    "mcp >= 1.28.1", # GHSA-qq9j-2wq5-9gf3, GHSA-4cc4-g4x5-r7wf, GHSA-3gqf-j8h7-4q7g
+    "mistune >= 3.3.0", # GHSA-8mp2-v27r-99xp, GHSA-8g87-j6q8-g93x, GHSA-58cw-g322-p94v, GHSA-v87v-83h2-53w7
+    "nltk >= 3.10.0", # GHSA-cgvg-3q2f-4gxm, GHSA-p9pp-j76j-8x4v, GHSA-5j2p-q7q8-hcc7
+    "pyasn1 >= 0.6.4", # GHSA-5q8p-9xrr-4jqm, GHSA-gqpq-g87q-wr6g, GHSA-f39v-xm4p-9hm7
+    "mlflow >= 3.15.0", # CVE-2026-0545, CVE-2026-64849 (GHSA-7gwp-5pfp-969j)
+    # mlflow: GHSA-h7x2-h6g9-p789, PYSEC-2026-3865 also affect 3.15.1 (our current
+    # resolved version) but have no fixed release yet — nothing to bump to; revisit
+    # when a fix lands.
+    "aiohttp >= 3.14.3", # CVE-2026-47265, CVE-2026-34993
+    "authlib >= 1.6.12", # CVE-2026-41425, CVE-2026-44681, CVE-2026-41479
+    # cryptography skipped: mlflow>=3.12.0 hard-requires cryptography<50, incompatible with >=50.0.0 (GHSA-g6cj-pr64-35w5, PYSEC-2026-3552)
+    "gitpython >= 3.1.60", # GHSA-4gmw-gg2m-w46p, GHSA-9rj7-rf2p-w77r, GHSA-hh9p-6wh2-4mfc, GHSA-jm78-9fvv-mhgr, GHSA-wvpp-8hx9-p66j, PYSEC-2026-3982, PYSEC-2026-3983, PYSEC-2026-3984
+    "sqlparse >= 0.6.0", # GHSA-3496-9g83-7v6x, GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-pwgv-4x5q-6m9f
+    "anyio >= 4.14.2", # GHSA-82r6-8w77-94w6, GHSA-5p39-cfhj-2xmp
+    "httpcore2 >= 2.10.0", # GHSA-7mj9-2mp8-4m2p, PYSEC-2026-3844
+    "httpx2 >= 2.12.0", # GHSA-h4x7-gw46-3wm6, GHSA-pf96-p4fj-6566, GHSA-8xx6-hgc6-gc2m, PYSEC-2026-3849, PYSEC-2026-3848, PYSEC-2026-3846
+    "torch >= 2.13.0", # GHSA-rrmf-rvhw-rf47, PYSEC-2026-139
+    "keras >= 3.14.0", # PYSEC-2026-2324
+    "click >= 8.3.3", # PYSEC-2026-2132
+    "idna >= 3.15", # CVE-2026-45409
+    "mako >= 1.3.12", # CVE-2026-44307, CVE-2026-41205
+    "pillow >= 12.2.0", # CVE-2026-42309, CVE-2026-42311, CVE-2026-42310, CVE-2026-40192, CVE-2026-42308
+    "pyarrow >= 23.0.1", # CVE-2026-25087
+    "pydantic-ai-slim >= 1.99.0", # CVE-2026-46678
+    "pyjwt >= 2.13.0", # CVE-2026-48522, CVE-2026-48524, CVE-2026-48525, CVE-2026-48526
+    "python-dotenv >= 1.2.2", # CVE-2026-28684
+    "python-multipart >= 0.0.27", # CVE-2026-40347, CVE-2026-42561
+    "starlette >= 1.0.1", # CVE-2026-48710
+    "transformers >= 5.0.0rc3", # CVE-2026-1839
+    "urllib3 >= 2.7.0", # CVE-2026-44432, CVE-2026-44431
+]

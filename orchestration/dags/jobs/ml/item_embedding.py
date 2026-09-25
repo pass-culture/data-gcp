@@ -451,7 +451,7 @@ gce_instance_delete.as_teardown(setups=gce_instance_start)
     send_slack_notif_success = PythonOperator(
         task_id="send_slack_notif_success",
         python_callable=_send_slack_notif_success,
-        trigger_rule="none_failed",
+        trigger_rule="all_done",
     )
 
     stop = EmptyOperator(task_id="stop", trigger_rule="all_done")

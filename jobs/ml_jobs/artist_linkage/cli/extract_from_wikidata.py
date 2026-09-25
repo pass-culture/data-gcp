@@ -6,17 +6,42 @@ import typer
 from loguru import logger
 
 from src.utils import wikidata_checkpoint as checkpoint
-from src.utils.qlever import clear_qlever_cache, fetch_wikidata_qlever_csv
-from src.utils.wikidata_extraction import (
-    HYDRATION_BATCH_DELAY_SECONDS,
-    extract_wikidata_id,
-    fetch_discovery,
-    hydrate_batch,
-)
+from src.utils.qlever import clear_qlever_cache
+from src.utils.wikidata_extraction import extract_single_pass, extract_two_pass
 from src.utils.wikidata_merge import merge_data, postprocess_data
-from src.wikidata_config import QUERY_CONFIGS, render_query
+from src.wikidata_config import QUERY_CONFIGS
 
 app = typer.Typer()
+
+
+def _save_raw_results(df: pd.DataFrame, output_file_path: str) -> None:
+    logger.info(f"Retrieved {len(df)} rows.")
+    logger.info(f"Saving raw results to {output_file_path}")
+    df.to_parquet(output_file_path, index=False)
+    logger.info(f"Raw results saved successfully to {output_file_path}")
+
+
+def _log_extraction_summary(
+    query_name: str,
+    df: pd.DataFrame,
+    dropped_ids: list[str],
+    start_time: float,
+    output_file_path: str,
+) -> None:
+    if dropped_ids:
+        logger.warning(
+            f"{query_name}: dropped {len(dropped_ids)} entit"
+            f"{'y' if len(dropped_ids) == 1 else 'ies'} QLever rejected as too "
+            f"expensive even alone: {', '.join(dropped_ids)}"
+        )
+
+    elapsed = time.time() - start_time
+    dropped_entity_word = "entity" if len(dropped_ids) == 1 else "entities"
+    logger.info(
+        f"[{query_name}] summary: {len(df)} rows, {len(dropped_ids)} "
+        f"{dropped_entity_word} dropped, {elapsed:.1f}s elapsed, "
+        f"saved to {output_file_path}"
+    )
 
 
 @app.command()
@@ -47,76 +72,13 @@ def extract(
     logger.info(f"Fetch the data in CSV format for {query_name}")
 
     config = QUERY_CONFIGS[query_name]
-    dropped_ids: list[str] = []
     checkpoint_dir = checkpoint.checkpoint_dir_for(query_name)
     if config.hydration_batch_size:
-        logger.info(f"[{query_name}] Pass 1: discovering candidate entities")
-        discovery_df = checkpoint.load_discovery_checkpoint(checkpoint_dir)
-        if discovery_df is not None:
-            logger.info(f"[{query_name}] Pass 1: resuming from checkpoint")
-        else:
-            discovery_df = fetch_discovery(query_name).pipe(extract_wikidata_id)
-            checkpoint.save_discovery_checkpoint(checkpoint_dir, discovery_df)
-        logger.info(
-            f"[{query_name}] Pass 1: found {len(discovery_df)} candidate entities"
-        )
-
-        wikidata_ids = discovery_df["wikidata_id"].tolist()
-        batch_size = config.hydration_batch_size
-        batches = [
-            wikidata_ids[i : i + batch_size]
-            for i in range(0, len(wikidata_ids), batch_size)
-        ]
-
-        processed_batches = checkpoint.load_processed_batches(checkpoint_dir)
-        dropped_ids = checkpoint.load_dropped_ids(checkpoint_dir)
-        if processed_batches:
-            logger.info(
-                f"[{query_name}] Pass 2: resuming — {len(processed_batches)}/"
-                f"{len(batches)} batches already hydrated in a previous attempt"
-            )
-        logger.info(
-            f"[{query_name}] Pass 2: hydrating {len(wikidata_ids)} entities in "
-            f"{len(batches)} batches of up to {batch_size}"
-        )
-
-        hydration_dfs: list[pd.DataFrame] = []
-        for i, batch in enumerate(batches):
-            if i in processed_batches:
-                batch_df = checkpoint.load_batch_checkpoint(checkpoint_dir, i)
-                if batch_df is not None:
-                    hydration_dfs.append(batch_df)
-                continue
-            batch_dfs = hydrate_batch(query_name, batch, dropped_ids)
-            if batch_dfs:
-                batch_df = pd.concat(batch_dfs, ignore_index=True).pipe(
-                    extract_wikidata_id
-                )
-                checkpoint.save_batch_checkpoint(checkpoint_dir, i, batch_df)
-                hydration_dfs.append(batch_df)
-            # Persist after every batch (not just at the end): dropped_ids and the
-            # processed-batches log must reflect exactly what's been checkpointed
-            # to disk so far, in case this attempt itself gets interrupted.
-            checkpoint.save_dropped_ids(checkpoint_dir, dropped_ids)
-            checkpoint.mark_batch_processed(checkpoint_dir, i)
-            if i < len(batches) - 1:
-                time.sleep(HYDRATION_BATCH_DELAY_SECONDS)
-
-        # Inner merge: entities in dropped_ids simply have no row in hydration_df,
-        # so they're naturally excluded here without extra filtering logic.
-        df = (
-            discovery_df.merge(
-                pd.concat(hydration_dfs, ignore_index=True),
-                on="wikidata_id",
-                how="inner",
-            )
-            if hydration_dfs
-            else pd.DataFrame()
+        df, dropped_ids = extract_two_pass(
+            query_name, config.hydration_batch_size, checkpoint_dir
         )
     else:
-        query_string = render_query(query_name)
-        logger.debug(f"SPARQL Query: \n{query_string}")
-        df = fetch_wikidata_qlever_csv(query_string).pipe(extract_wikidata_id)
+        df, dropped_ids = extract_single_pass(query_name), []
 
     if df.empty:
         if config.optional:
@@ -126,25 +88,8 @@ def extract(
         logger.error(error_message)
         raise ValueError(error_message)
 
-    logger.info(f"Retrieved {len(df)} rows.")
-    logger.info(f"Saving raw results to {output_file_path}")
-    df.to_parquet(output_file_path, index=False)
-    logger.info(f"Raw results saved successfully to {output_file_path}")
-
-    if dropped_ids:
-        logger.warning(
-            f"{query_name}: dropped {len(dropped_ids)} entit"
-            f"{'y' if len(dropped_ids) == 1 else 'ies'} QLever rejected as too "
-            f"expensive even alone: {', '.join(dropped_ids)}"
-        )
-
-    elapsed = time.time() - start_time
-    dropped_entity_word = "entity" if len(dropped_ids) == 1 else "entities"
-    logger.info(
-        f"[{query_name}] summary: {len(df)} rows, {len(dropped_ids)} "
-        f"{dropped_entity_word} dropped, {elapsed:.1f}s elapsed, "
-        f"saved to {output_file_path}"
-    )
+    _save_raw_results(df, output_file_path)
+    _log_extraction_summary(query_name, df, dropped_ids, start_time, output_file_path)
 
     # Only reached on success: a failed/raised attempt above leaves the checkpoint
     # in place on purpose, for the next Airflow-level retry to resume from.

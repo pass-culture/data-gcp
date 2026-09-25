@@ -2,10 +2,13 @@
 `cli/extract_from_wikidata.py::extract`.
 
 Kept out of the CLI entrypoint so this logic can be unit-tested and reused
-directly, without going through Typer. The underlying HTTP fetch/retry
-machinery against QLever itself lives in src/utils/qlever.py — this module is
-the Wikidata-domain layer on top of it (entity ID normalization, Pass 1
-discovery, Pass 2 batch hydration with bisection).
+directly, without going through Typer: `extract_two_pass`/`extract_single_pass`
+are the two top-level entry points `extract` dispatches to based on
+QueryConfig.hydration_batch_size. The underlying HTTP fetch/retry machinery
+against QLever itself lives in src/utils/qlever.py — this module is the
+Wikidata-domain layer on top of it (entity ID normalization, Pass 1 discovery,
+Pass 2 batch hydration with bisection, and checkpoint-aware orchestration of
+both passes).
 """
 
 import time
@@ -13,6 +16,7 @@ import time
 import pandas as pd
 from loguru import logger
 
+from src.utils import wikidata_checkpoint as checkpoint
 from src.utils.qlever import (
     QLeverQueryTooExpensive,
     fetch_wikidata_qlever_csv,
@@ -100,3 +104,96 @@ def hydrate_batch(
         f"{query_name} hydration batch of {len(wikidata_ids)}: retrieved {len(df)} rows."
     )
     return [df] if not df.empty else []
+
+
+def run_discovery(query_name: str, checkpoint_dir: str) -> pd.DataFrame:
+    """Pass 1: discover candidate entities, resuming from checkpoint if present."""
+    logger.info(f"[{query_name}] Pass 1: discovering candidate entities")
+    discovery_df = checkpoint.load_discovery_checkpoint(checkpoint_dir)
+    if discovery_df is not None:
+        logger.info(f"[{query_name}] Pass 1: resuming from checkpoint")
+    else:
+        discovery_df = fetch_discovery(query_name).pipe(extract_wikidata_id)
+        checkpoint.save_discovery_checkpoint(checkpoint_dir, discovery_df)
+    logger.info(f"[{query_name}] Pass 1: found {len(discovery_df)} candidate entities")
+    return discovery_df
+
+
+def hydrate_batches(
+    query_name: str,
+    checkpoint_dir: str,
+    batches: list[list[str]],
+    processed_batches: set[int],
+    dropped_ids: list[str],
+) -> list[pd.DataFrame]:
+    """Pass 2: hydrate each batch, resuming already-processed batches from checkpoint."""
+    hydration_dfs: list[pd.DataFrame] = []
+    for i, batch in enumerate(batches):
+        if i in processed_batches:
+            batch_df = checkpoint.load_batch_checkpoint(checkpoint_dir, i)
+            if batch_df is not None:
+                hydration_dfs.append(batch_df)
+            continue
+        batch_dfs = hydrate_batch(query_name, batch, dropped_ids)
+        if batch_dfs:
+            batch_df = pd.concat(batch_dfs, ignore_index=True).pipe(extract_wikidata_id)
+            checkpoint.save_batch_checkpoint(checkpoint_dir, i, batch_df)
+            hydration_dfs.append(batch_df)
+        # Persist after every batch (not just at the end): dropped_ids and the
+        # processed-batches log must reflect exactly what's been checkpointed
+        # to disk so far, in case this attempt itself gets interrupted.
+        checkpoint.save_dropped_ids(checkpoint_dir, dropped_ids)
+        checkpoint.mark_batch_processed(checkpoint_dir, i)
+        if i < len(batches) - 1:
+            time.sleep(HYDRATION_BATCH_DELAY_SECONDS)
+    return hydration_dfs
+
+
+def extract_two_pass(
+    query_name: str, batch_size: int, checkpoint_dir: str
+) -> tuple[pd.DataFrame, list[str]]:
+    """Discovery + hydration extraction for a two-pass target
+    (QueryConfig.hydration_batch_size), resuming from a local checkpoint."""
+    discovery_df = run_discovery(query_name, checkpoint_dir)
+
+    wikidata_ids = discovery_df["wikidata_id"].tolist()
+    batches = [
+        wikidata_ids[i : i + batch_size]
+        for i in range(0, len(wikidata_ids), batch_size)
+    ]
+
+    processed_batches = checkpoint.load_processed_batches(checkpoint_dir)
+    dropped_ids = checkpoint.load_dropped_ids(checkpoint_dir)
+    if processed_batches:
+        logger.info(
+            f"[{query_name}] Pass 2: resuming — {len(processed_batches)}/"
+            f"{len(batches)} batches already hydrated in a previous attempt"
+        )
+    logger.info(
+        f"[{query_name}] Pass 2: hydrating {len(wikidata_ids)} entities in "
+        f"{len(batches)} batches of up to {batch_size}"
+    )
+
+    hydration_dfs = hydrate_batches(
+        query_name, checkpoint_dir, batches, processed_batches, dropped_ids
+    )
+
+    # Inner merge: entities in dropped_ids simply have no row in hydration_df,
+    # so they're naturally excluded here without extra filtering logic.
+    df = (
+        discovery_df.merge(
+            pd.concat(hydration_dfs, ignore_index=True),
+            on="wikidata_id",
+            how="inner",
+        )
+        if hydration_dfs
+        else pd.DataFrame()
+    )
+    return df, dropped_ids
+
+
+def extract_single_pass(query_name: str) -> pd.DataFrame:
+    """Single-query extraction for a target with no hydration pass."""
+    query_string = render_query(query_name)
+    logger.debug(f"SPARQL Query: \n{query_string}")
+    return fetch_wikidata_qlever_csv(query_string).pipe(extract_wikidata_id)

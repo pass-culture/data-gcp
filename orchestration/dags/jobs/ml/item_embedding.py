@@ -15,6 +15,8 @@ from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
 from common.alerts.ml_training import create_item_embedding_slack_block
 from common.callback import on_failure_vm_callback
 from common.config import (
+    BIGQUERY_ML_INPUT_DATASET,
+    BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -45,12 +47,6 @@ INPUT_SUBFOLDER = "input"
 PROMPTS_SUBFOLDER = "prompts"
 EMBEDDINGS_SUBFOLDER = "embeddings"
 
-## BigQuery CONSTANTS
-# dbt input models (rows to embed) live in ml_input; this DAG writes its
-# per-vector staging outputs to ml_semantic_embedding.
-INPUT_DATASET_NAME = f"ml_input_{ENV_SHORT_NAME}"
-SEMANTIC_EMBEDDING_DATASET_NAME = f"ml_semantic_embedding_{ENV_SHORT_NAME}"
-
 
 class VectorPipeline(BaseModel):
     name: str  # embedding vector name
@@ -63,23 +59,23 @@ class VectorPipeline(BaseModel):
 AVAILABLE_VECTORS = [
     VectorPipeline(
         name="all_items_metadata",
-        input_table=f"{INPUT_DATASET_NAME}.all_items_metadata_to_embed",
-        output_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.all_items_metadata_tmp",
+        input_table=f"{BIGQUERY_ML_INPUT_DATASET}.all_items_metadata_to_embed",
+        output_table=f"{BIGQUERY_TMP_DATASET}.all_items_metadata_tmp",
     ),
     VectorPipeline(
         name="movies_metadata",
-        input_table=f"{INPUT_DATASET_NAME}.movies_metadata_to_embed",
-        output_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.movies_metadata_tmp",
+        input_table=f"{BIGQUERY_ML_INPUT_DATASET}.movies_metadata_to_embed",
+        output_table=f"{BIGQUERY_TMP_DATASET}.movies_metadata_tmp",
     ),
     VectorPipeline(
         name="books_metadata",
-        input_table=f"{INPUT_DATASET_NAME}.books_metadata_to_embed",
-        output_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.books_metadata_tmp",
+        input_table=f"{BIGQUERY_ML_INPUT_DATASET}.books_metadata_to_embed",
+        output_table=f"{BIGQUERY_TMP_DATASET}.books_metadata_tmp",
     ),
     VectorPipeline(
         name="all_items_offer_names",
-        input_table=f"{INPUT_DATASET_NAME}.all_items_metadata_to_embed",  # uses the same input as all_items_metadata
-        output_table=f"{SEMANTIC_EMBEDDING_DATASET_NAME}.all_items_offer_names_tmp",
+        input_table=f"{BIGQUERY_ML_INPUT_DATASET}.all_items_metadata_to_embed",  # uses the same input as all_items_metadata
+        output_table=f"{BIGQUERY_TMP_DATASET}.all_items_offer_names_tmp",
     ),
 ]
 VECTOR_NAMES = [vector.name for vector in AVAILABLE_VECTORS]

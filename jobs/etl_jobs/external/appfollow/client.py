@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import requests
 from loguru import logger
@@ -127,3 +127,104 @@ class AppFollowClient:
             raise
 
         return all_reviews
+
+    def get_ratings_history_page(
+        self,
+        ext_id: str,
+        store: str,
+        from_date: str,
+        to_date: str,
+        offset: int,
+        limit: int,
+        countries: List[str],
+    ) -> Dict[str, Any]:
+        """
+        Get a page of daily cumulative ratings using AppFollow API.
+
+        Args:
+            ext_id: App external ID
+            store: Store code ("as" or "gp")
+            from_date: Start date
+            to_date: End date
+            offset: Index of the first item to retrieve
+            limit: Maximum number of items to retrieve
+            countries: Two-letter country codes, or ["all"] for worldwide data
+
+        Returns:
+            dict: API response containing ratings data
+        """
+
+        url = f"{self.BASE_API_URL}/meta/ratings/history"
+        params = {
+            "ext_id": ext_id,
+            "store": store,
+            "from": from_date,
+            "to": to_date,
+            "countries": countries,
+            # "all" countries is only supported for cumulative totals.
+            "type": "total",
+            "period": "daily",
+            "offset": offset,
+            "limit": limit,
+        }
+        response = self.session.get(url, params=params)
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise AppFollowAPIError(
+                f"Ratings fetch failed: {response.status_code} - {response.text}"
+            )
+
+    def get_all_ratings_history(
+        self,
+        ext_id: str,
+        store: str,
+        from_date: str,
+        to_date: str,
+        countries: Optional[List[str]] = None,
+        limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """
+        Extract daily cumulative ratings for a specific app within a date range.
+
+        Args:
+            ext_id: App external ID
+            store: Store code ("as" or "gp")
+            from_date: Start date in YYYY-MM-DD format
+            to_date: End date in YYYY-MM-DD format
+            countries: Two-letter country codes, or ["all"] for worldwide data
+            limit: Page size
+
+        Returns: List of raw ratings data (one item per day)
+        """
+        countries = countries or ["all"]
+        all_ratings = []
+        offset = 0
+
+        try:
+            while True:
+                results = self.get_ratings_history_page(
+                    ext_id=ext_id,
+                    store=store,
+                    from_date=from_date,
+                    to_date=to_date,
+                    offset=offset,
+                    limit=limit,
+                    countries=countries,
+                )
+                ratings = results.get("ratings", [])
+                all_ratings.extend(ratings)
+                logger.debug(f"Imported {len(ratings)} ratings at offset {offset}")
+
+                if len(ratings) < limit:
+                    break
+                offset += limit
+
+        except AppFollowAPIError as e:
+            logger.error(
+                f"Error fetching ratings between {from_date} and {to_date}, offset {offset}: {e}"
+            )
+            raise
+
+        return all_ratings

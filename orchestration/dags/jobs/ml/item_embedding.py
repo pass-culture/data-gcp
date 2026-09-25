@@ -442,8 +442,11 @@ with DAG(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
         gce_zone=GCE_ZONE_TEMPLATE,
-        trigger_rule="all_done",  # always delete the VM, even on upstream failure
-    )
+)
+
+# Tell Airflow these are tied together
+gce_instance_start.as_setup()
+gce_instance_delete.as_teardown(setups=gce_instance_start)
 
     send_slack_notif_success = PythonOperator(
         task_id="send_slack_notif_success",

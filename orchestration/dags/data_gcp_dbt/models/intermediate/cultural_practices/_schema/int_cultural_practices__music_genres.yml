@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: int_cultural_practices__music_genres
+    description: '{{ doc("description__int_cultural_practices__music_genres") }}'
+    columns:
+      - name: respondent_id
+        description: '{{ doc("column__respondent_id") }}'
+      - name: music_genre
+        description: '{{ doc("column__music_genre") }}'
+      - name: listens_to_genre
+        description: '{{ doc("column__listens_to_genre") }}'
+      - name: likes_genre
+        description: '{{ doc("column__likes_genre") }}'
+      - name: dislikes_genre
+        description: '{{ doc("column__dislikes_genre") }}'

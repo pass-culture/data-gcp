@@ -49,8 +49,10 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
+        # Reviews are re-imported over a rolling window so that support replies
+        # posted after the review date are captured (answer_text, answer_date).
         "n_days": Param(
-            default=-10,
+            default=-60,
             type="integer",
             description="Number of days to go back from the execution date for the start date (e.g., -1 for yesterday).",
         ),
@@ -65,6 +67,12 @@ with DAG(
             enum=["both", "ios", "android"],
             description="Platform to import",
         ),
+        "dataset": Param(
+            default="all",
+            type="string",
+            enum=["all", "reviews", "ratings"],
+            description="Data to import: reviews, ratings (store rating history) or all",
+        ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ):
@@ -72,7 +80,10 @@ with DAG(
         task_id="branch_platform",
         python_callable=choose_platform_to_run,
     )
+    previous_task = branch_platform
     for platform, ext_id in APPS.items():
+        # Platforms run sequentially: each pod deletes then appends its own app rows
+        # in shared tables, so avoid concurrent DML on the same partitions.
         task = CustomKubernetesPodOperator(
             task_id=f"appfollow_etl_{platform}",
             orchestration_mode="celery",
@@ -90,7 +101,12 @@ with DAG(
                 "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_index) }}",
                 "--ext-id",
                 ext_id,
+                "--dataset",
+                "{{ params.dataset }}",
             ],
             container_resources=DEFAULT_CONTAINER_RESOURCES,
+            trigger_rule="none_failed_min_one_success",
         )
         branch_platform >> task
+        previous_task >> task
+        previous_task = task

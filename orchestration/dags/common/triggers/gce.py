@@ -5,7 +5,12 @@ from typing import Any, Dict, Tuple
 
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.triggers.base import BaseTrigger, TriggerEvent
-from common.config import GCP_PROJECT_ID, SSH_USER, USE_INTERNAL_IP
+from common.config import (
+    GCP_PROJECT_ID,
+    SSH_HOOK_MAX_RETRIES,
+    SSH_USER,
+    USE_INTERNAL_IP,
+)
 from common.hooks.gce import DeferrableSSHGCEJobManager, GCEHook
 from googleapiclient.errors import HttpError
 
@@ -198,6 +203,7 @@ class DeferrableSSHJobMonitorTrigger(BaseTrigger):
             user=SSH_USER,
             gcp_conn_id="google_cloud_default",
             expire_time=300,
+            max_retries=SSH_HOOK_MAX_RETRIES,
         )
 
     async def run(self):

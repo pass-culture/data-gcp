@@ -12,5 +12,6 @@
 {% docs column__all_items_metadata_embedding_128 %}First 128 dimensions of the item's metadata embedding, truncated with Matryoshka Representation Learning (MRL). NOT NORMALIZED!{% enddocs %}
 {% docs column__movies_metadata_embedding %}Embedding of the movie item's metadata.{% enddocs %}
 {% docs column__books_metadata_embedding %}Embedding of the book item's metadata.{% enddocs %}
+{% docs column__all_items_offer_names_embedding %}Embedding of the offer name associated with the item.{% enddocs %}
 {% docs column__embedding_model %}Name of the model used to generate the embedding.{% enddocs %}
 {% docs column__embedding_date %}Date at which the embedding was generated.{% enddocs %}

@@ -30,7 +30,7 @@ dependencies = [
 # (dedup matching, installed today via the similarity group — see artist_linkage.py's DAG)
 # use both, and encode_artist_biographies.py (embeddings) also needs sentence-transformers.
 [project.optional-dependencies]
-# Intentionally empty: cli/extract_from_wikidata.py and its whole call chain
+# Intentionally empty: cli/extraction.py and its whole call chain
 # (wikidata_extraction/checkpoint/merge.py, qlever.py, wikidata_config.py) only
 # import pandas/typer/loguru/requests/tenacity/jinja2, all already in the base
 # `dependencies` above. Declared anyway (and passed as extras=["extraction"] in

@@ -17,15 +17,7 @@ from tenacity import (
     wait_exponential,
 )
 
-QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
-QLEVER_HEADERS = {
-    "Accept": "text/csv",
-    "Content-Type": "application/sparql-query",
-    # Same identification string used for other external APIs (see
-    # src.common.constants.WIKIMEDIA_REQUEST_HEADER) — good practice for any shared
-    # third-party endpoint, and QLever's own docs ask for one explicitly.
-    "User-Agent": "PassCulture/1.0 (https://passculture.app; contact@passculture.app) Python/requests",
-}
+from src.extraction.constants import QLEVER_ENDPOINT, QLEVER_HEADERS
 
 
 class QLeverQueryTooExpensive(Exception):

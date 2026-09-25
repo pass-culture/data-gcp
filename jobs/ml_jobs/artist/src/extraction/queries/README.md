@@ -1,12 +1,14 @@
 # Wikidata extraction query templates
 
-This folder holds the Jinja2 SPARQL templates that `cli/extract_from_wikidata.py`
-renders and sends to QLever (`https://qlever.cs.uni-freiburg.de/api/wikidata`).
-`src/wikidata_config.py` is the config layer: it defines, per domain (`music`,
-`book`, `movie`, `gkg`, ...), which entity types and external-ID properties to
-match, which template(s) to render them with, and (for domains that need it) how
-to batch the work. Nothing here is domain-specific by construction — a new domain
-is just a new entry in `QUERY_CONFIGS`.
+This folder holds the Jinja2 SPARQL templates that `cli/extraction.py` renders
+and sends to QLever (`https://qlever.cs.uni-freiburg.de/api/wikidata`).
+`src/extraction/wikidata_config.py` is the config layer: it defines, per domain
+(`music`, `book`, `movie`, `gkg`, ...), which entity types and external-ID
+properties to match, which template(s) to render them with, and (for domains
+that need it) how to batch the work — the entity-type/ID-property/template-name
+values themselves live in `src/extraction/constants.py`. Nothing here is
+domain-specific by construction — a new domain is just a new entry in
+`QUERY_CONFIGS`.
 
 `_macros.rq.j2` holds the Jinja macros shared by all four query templates below
 (entity/ID-property filtering, the `matching_score` expression, the
@@ -34,7 +36,7 @@ budget.
     together with the entity filter in one subquery, and no `?matching_score`
     column is produced — music's matching score is computed separately by
     `music_ids` (see below) and merged in client-side
-    (`src/utils/wikidata_merge.py::merge_data`).
+    (`src/extraction/wikidata_merge.py::merge_data`).
 
   Every multi-valued field (aliases_fr, aliases_en, professions, genres,
   languages_spoken) is computed in its **own** subquery, via `_macros.rq.j2`'s
@@ -104,14 +106,14 @@ then becomes the Pass 1 (discovery) template.
   because it's just re-stating the same small `VALUES` list, not re-scanning
   a multi-million-candidate population.
 
-  Orchestration: `cli/extract_from_wikidata.py`'s `extract` command drives the
+  Orchestration: `cli/extraction.py`'s `extract` command drives the
   two-pass branch (runs Pass 1 once, chunks the discovered IDs into batches of
   `hydration_batch_size`, calls `hydrate_batch` per batch with
   `HYDRATION_BATCH_DELAY_SECONDS` between them, then inner-merges Pass 1 —
   id + matching_score — with the concatenated Pass 2 results on
   `wikidata_id`); the underlying two-pass logic it calls into lives in
-  `src/utils/wikidata_extraction.py`, and the raw QLever HTTP fetch/retry
-  client that in turn calls into lives in `src/utils/qlever.py`.
+  `src/extraction/wikidata_extraction.py`, and the raw QLever HTTP fetch/retry
+  client that in turn calls into lives in `src/extraction/qlever.py`.
   - `hydrate_batch` bisects a batch and recurses whenever QLever rejects it
     as too expensive (`QLeverQueryTooExpensive`, detected via
     `_is_cost_rejection` — an HTTP 429 whose body names a timeout/cost
@@ -152,7 +154,7 @@ first-attempt time, not correctness.
 
 Per the pipeline specification's "Checkpointing" section, `extract` persists
 Pass 1's result and each hydrated Pass 2 batch to a local directory
-(`CHECKPOINT_ROOT_DIR/<query_name>`, via `src/utils/wikidata_checkpoint.py`) as it
+(`CHECKPOINT_ROOT_DIR/<query_name>`, via `src/extraction/wikidata_checkpoint.py`) as it
 goes:
 - `discovery.parquet` — Pass 1's output, so an Airflow-level retry of this
   same task doesn't re-run it.
@@ -229,7 +231,9 @@ flag instead of removing any duplication.
 
 ## Adding a new domain
 
-1. Add its `IdProperty` list and entity types to `src/wikidata_config.py`.
+1. Add its `IdProperty` list and entity types to `src/extraction/constants.py`,
+   then reference them from a new `QUERY_CONFIGS` entry in
+   `src/extraction/wikidata_config.py`.
 2. Start with Strategy 1 (`QueryConfig(template="extract_artists.rq.j2", ...)`)
    — it's simpler, and has proven reliable up to movie's ~583K candidates.
 3. Only reach for Strategy 2 if Strategy 1 actually fails against real QLever

@@ -12,57 +12,20 @@ from typing import Literal
 
 from jinja2 import Environment, FileSystemLoader
 
+from src.extraction.constants import (
+    BOOK_ID_PROPERTIES,
+    DISCOVERY_TEMPLATE,
+    GKG_ID_PROPERTIES,
+    HYDRATION_BATCH_SIZE,
+    MOVIE_ID_PROPERTIES,
+    MUSIC_ENTITY_TYPES,
+    MUSIC_ID_PROPERTIES,
+    MUSIC_IDS_KEY,
+    PERSON_ENTITY_TYPES,
+    IdProperty,
+)
+
 TEMPLATE_DIR = Path(__file__).resolve().parent / "queries"
-
-# Human, musical group, duo, musical ensemble/collective
-MUSIC_ENTITY_TYPES = ["wd:Q5", "wd:Q215380", "wd:Q216337", "wd:Q641066"]
-PERSON_ENTITY_TYPES = ["wd:Q5"]
-
-
-@dataclass(frozen=True)
-class IdProperty:
-    """A Wikidata external-ID property used to match and score candidate artists.
-
-    `filter=False` excludes it from the "has at least one ID" entity pre-filter while
-    still fetching its value and counting it towards the matching score (used for
-    isni_id, which is too broad on its own to safely restrict the candidate set).
-    """
-
-    var: str
-    property: str
-    filter: bool = True
-
-
-MUSIC_ID_PROPERTIES = [
-    IdProperty("spotify_id", "wdt:P1902"),
-    IdProperty("isni_id", "wdt:P213", filter=False),
-    IdProperty("apple_music_id", "wdt:P2850"),
-    IdProperty("deezer_id", "wdt:P2722"),
-    IdProperty("genius_id", "wdt:P2373"),
-    IdProperty("soundcloud_id", "wdt:P3040"),
-]
-
-BOOK_ID_PROPERTIES = [
-    IdProperty("ibdbfw_id", "wdt:P5365"),
-    IdProperty("babelio_id", "wdt:P3630"),
-    IdProperty("goodreads_id", "wdt:P2963"),
-    IdProperty("myanimelist_id", "wdt:P4084"),
-]
-
-MOVIE_ID_PROPERTIES = [
-    IdProperty("imdb_id", "wdt:P345"),
-    IdProperty("allocine_id", "wdt:P1266"),
-]
-
-GKG_ID_PROPERTIES = [
-    IdProperty("gkg_id", "wdt:P2671"),
-]
-
-# Two-pass discovery+hydration templates (see QueryConfig.hydration_batch_size and
-# extract_discovery.rq.j2 / extract_hydration.rq.j2 for the rationale). Reusable by
-# any domain, not just gkg.
-DISCOVERY_TEMPLATE = "extract_discovery.rq.j2"
-HYDRATION_TEMPLATE = "extract_hydration.rq.j2"
 
 
 @dataclass(frozen=True)
@@ -99,8 +62,6 @@ class QueryConfig:
     hydration_batch_size: int | None = None
     optional: bool = False
 
-
-MUSIC_IDS_KEY = "music_ids"
 
 QUERY_CONFIGS: dict[str, QueryConfig] = {
     "music": QueryConfig(
@@ -143,7 +104,7 @@ QUERY_CONFIGS: dict[str, QueryConfig] = {
         template=DISCOVERY_TEMPLATE,
         entity_types=PERSON_ENTITY_TYPES,
         id_properties=GKG_ID_PROPERTIES,
-        hydration_batch_size=5_000,
+        hydration_batch_size=HYDRATION_BATCH_SIZE,
     ),
 }
 

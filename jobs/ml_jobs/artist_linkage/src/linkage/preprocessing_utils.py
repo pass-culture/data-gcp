@@ -5,7 +5,11 @@ from typing import TypedDict
 
 import pandas as pd
 
-from src.constants import ARTIST_NAME_TO_FILTER, PRODUCT_ID_KEY, TOTAL_OFFER_COUNT
+from src.common.constants import (
+    ARTIST_NAME_TO_FILTER,
+    PRODUCT_ID_KEY,
+    TOTAL_OFFER_COUNT,
+)
 
 
 ### Cleaning

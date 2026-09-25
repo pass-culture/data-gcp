@@ -1,6 +1,6 @@
 from google.cloud import secretmanager, storage
 
-from src.constants import GCP_PROJECT_ID
+from src.common.constants import GCP_PROJECT_ID
 
 
 def get_last_date_from_bucket(gcs_path: str) -> str:

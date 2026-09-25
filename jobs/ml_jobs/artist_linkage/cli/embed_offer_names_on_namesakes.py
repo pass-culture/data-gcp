@@ -5,14 +5,14 @@ import pandas as pd
 import typer
 from sentence_transformers import SentenceTransformer
 
-from src.constants import (
+from src.common.constants import (
     ENCODER_NAME,
     HF_TOKEN_SECRET_NAME,
     OFFER_NAME_KEY,
     PRODUCT_ID_KEY,
 )
-from src.utils.deduplication import get_namesakes
-from src.utils.gcp import get_secret
+from src.common.gcp import get_secret
+from src.linkage.deduplication import get_namesakes
 
 PROMPT_NAME = "STS"
 BATCH_SIZE = 256

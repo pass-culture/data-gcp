@@ -12,7 +12,7 @@ from typing import Literal
 
 from jinja2 import Environment, FileSystemLoader
 
-TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "queries"
+TEMPLATE_DIR = Path(__file__).resolve().parent.parent.parent / "queries"
 
 # Human, musical group, duo, musical ensemble/collective
 MUSIC_ENTITY_TYPES = ["wd:Q5", "wd:Q215380", "wd:Q216337", "wd:Q641066"]
@@ -89,7 +89,7 @@ class QueryConfig:
     is expected, not a failure: `extract` skips saving a raw file instead of
     raising, and `merge` skips it instead of hard-failing the whole merge. Used by
     `music_ids`, whose own query can legitimately return nothing (see
-    `merge_data`'s pre-merge step in src/utils/wikidata_merge.py).
+    `merge_data`'s pre-merge step in src/extraction/wikidata_merge.py).
     """
 
     template: str
@@ -136,7 +136,7 @@ QUERY_CONFIGS: dict[str, QueryConfig] = {
         # 5000, not the 200-500 usually recommended for VALUES batches: that
         # guidance is about GET URI-length limits, which doesn't apply here since
         # extract uses POST (query in the body, no URI-length ceiling — see
-        # src/utils/qlever.py's fetch_wikidata_qlever_csv_batch). Our real
+        # src/extraction/qlever.py's fetch_wikidata_qlever_csv_batch). Our real
         # constraint is QLever's ~30s time budget: 2,000 real entities measured at
         # 3.6s with HYDRATION_TEMPLATE, so 5,000 has a wide safety margin while
         # cutting the ~2.89M/5000 ≈ 578 batches needed (vs. ~1,450 at 2,000).

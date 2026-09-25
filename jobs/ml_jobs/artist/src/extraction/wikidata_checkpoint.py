@@ -21,7 +21,7 @@ import shutil
 
 import pandas as pd
 
-CHECKPOINT_ROOT_DIR = ".wikidata_checkpoint"
+from src.extraction.constants import CHECKPOINT_ROOT_DIR
 
 
 def checkpoint_dir_for(query_name: str) -> str:

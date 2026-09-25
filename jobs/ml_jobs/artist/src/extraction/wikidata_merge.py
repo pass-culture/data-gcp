@@ -12,7 +12,7 @@ import pandas as pd
 from loguru import logger
 
 from src.common.constants import WIKIDATA_ID_KEY
-from src.extraction.wikidata_config import MUSIC_IDS_KEY
+from src.extraction.constants import MUSIC_IDS_KEY
 from src.linkage.preprocessing_utils import normalize_string_series
 
 

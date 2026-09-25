@@ -243,6 +243,7 @@ with DAG(
             branch="{{ params.branch }}",
             python_version="3.10",
             base_dir=BASE_DIR,
+            extras=["similarity"],
             retries=2,
         )
         gce_instance_start >> fetch_install_code

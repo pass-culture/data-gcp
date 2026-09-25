@@ -366,7 +366,7 @@ with DAG(
     for vector in AVAILABLE_VECTORS:
         with TaskGroup(group_id=vector.name):
             check_in_plan = ShortCircuitOperator(
-                task_id="check_in_plan",
+                task_id=f"check_in_plan_{vector.name}",
                 python_callable=_vector_in_plan,
                 op_kwargs={"vector_name": vector.name},
                 # Skip only this vector's own subchain, not the following vectors.
@@ -377,7 +377,7 @@ with DAG(
 
             export_input = BigQueryInsertJobOperator(
                 project_id=GCP_PROJECT_ID,
-                task_id="export_input",
+                task_id=f"export_input_{vector.name}",
                 configuration={
                     "query": {
                         "query": _export_input_query(vector),
@@ -387,7 +387,7 @@ with DAG(
             )
 
             prepare = SSHGCEOperator(
-                task_id="prepare",
+                task_id=f"prepare_{vector.name}",
                 instance_name="{{ params.instance_name }}",
                 base_dir=BASE_DIR,
                 gce_zone=GCE_ZONE_TEMPLATE,
@@ -398,7 +398,7 @@ with DAG(
             )
 
             embed = SSHGCEOperator(
-                task_id="embed",
+                task_id=f"embed_{vector.name}",
                 instance_name="{{ params.instance_name }}",
                 base_dir=BASE_DIR,
                 gce_zone=GCE_ZONE_TEMPLATE,
@@ -409,7 +409,7 @@ with DAG(
             )
 
             load = GCSToBigQueryOperator(
-                task_id="load",
+                task_id=f"load_{vector.name}",
                 project_id=GCP_PROJECT_ID,
                 bucket=ML_BUCKET_TEMP,
                 source_objects=[

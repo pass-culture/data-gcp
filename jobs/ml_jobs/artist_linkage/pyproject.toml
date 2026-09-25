@@ -18,7 +18,7 @@ dependencies = [
     "ruff>=0.4.5",
     "setuptools >= 83.0.0",
     "tenacity>=9.1.2",
-    "tornado >= 6.5.7",
+    "tornado >= 6.5.8", # GHSA-wwv5-g3v4-889x, GHSA-8423-8fgw-73vq, GHSA-mpf4-983q-p7j4, PYSEC-2026-3928
     "typer>=0.12.3",
     "unidecode>=1.3.8",
 ]
@@ -124,11 +124,17 @@ constraint-dependencies = [
     "nltk >= 3.10.0", # GHSA-cgvg-3q2f-4gxm, GHSA-p9pp-j76j-8x4v, GHSA-5j2p-q7q8-hcc7
     "pyasn1 >= 0.6.4", # GHSA-5q8p-9xrr-4jqm, GHSA-gqpq-g87q-wr6g, GHSA-f39v-xm4p-9hm7
     "mlflow >= 3.15.0", # CVE-2026-0545, CVE-2026-64849 (GHSA-7gwp-5pfp-969j)
+    # mlflow: GHSA-h7x2-h6g9-p789, PYSEC-2026-3865 also affect 3.15.1 (our current
+    # resolved version) but have no fixed release yet — nothing to bump to; revisit
+    # when a fix lands.
     "aiohttp >= 3.14.3", # CVE-2026-47265, CVE-2026-34993
     "authlib >= 1.6.12", # CVE-2026-41425, CVE-2026-44681, CVE-2026-41479
     # cryptography skipped: mlflow>=3.12.0 hard-requires cryptography<50, incompatible with >=50.0.0 (GHSA-g6cj-pr64-35w5, PYSEC-2026-3552)
-    "gitpython >= 3.1.58", # GHSA-4gmw-gg2m-w46p, GHSA-9rj7-rf2p-w77r, GHSA-hh9p-6wh2-4mfc, GHSA-jm78-9fvv-mhgr, GHSA-wvpp-8hx9-p66j
+    "gitpython >= 3.1.60", # GHSA-4gmw-gg2m-w46p, GHSA-9rj7-rf2p-w77r, GHSA-hh9p-6wh2-4mfc, GHSA-jm78-9fvv-mhgr, GHSA-wvpp-8hx9-p66j, PYSEC-2026-3982, PYSEC-2026-3983, PYSEC-2026-3984
     "sqlparse >= 0.6.0", # GHSA-3496-9g83-7v6x, GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-pwgv-4x5q-6m9f
+    "anyio >= 4.14.2", # GHSA-82r6-8w77-94w6, GHSA-5p39-cfhj-2xmp
+    "httpcore2 >= 2.10.0", # GHSA-7mj9-2mp8-4m2p, PYSEC-2026-3844
+    "httpx2 >= 2.12.0", # GHSA-h4x7-gw46-3wm6, GHSA-pf96-p4fj-6566, GHSA-8xx6-hgc6-gc2m, PYSEC-2026-3849, PYSEC-2026-3848, PYSEC-2026-3846
     "torch >= 2.13.0", # GHSA-rrmf-rvhw-rf47, PYSEC-2026-139
     "keras >= 3.14.0", # PYSEC-2026-2324
     "click >= 8.3.3", # PYSEC-2026-2132

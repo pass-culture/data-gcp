@@ -13,6 +13,7 @@ models:
         description: "{{ doc('column__content_hash') }}"
         data_tests:
           - not_null
+          - unique
       - name: mlflow_run_id
         description: "{{ doc('column__mlflow_run_id') }}"
       - name: embedding_model

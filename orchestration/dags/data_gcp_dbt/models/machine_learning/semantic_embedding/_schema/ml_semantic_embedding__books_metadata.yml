@@ -13,6 +13,7 @@ models:
         description: "{{ doc('column__content_hash') }}"
         data_tests:
           - not_null
+          - unique
       - name: books_metadata_embedding
         description: "{{ doc('column__books_metadata_embedding') }}"
         data_tests:

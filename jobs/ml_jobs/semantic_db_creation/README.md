@@ -16,7 +16,10 @@ metadata, and is indexed for vector, full-text and hybrid search.
 | `item_id` | id (BTREE scalar index) — served output + query-item lookup |
 | `item_name`, `item_description` | served metadata |
 | `search_text` (= name + description) | full-text / hybrid search |
-| `category`, `subcategory_id` | filterable metadata (BITMAP indexes) |
+| `category`, `subcategory_id`, `search_group_name` | filterable metadata (BITMAP indexes) |
+| `topic_id`, `cluster_id`, `gtl_id`, `gtl_l3`, `gtl_l4` | other item metadata (same as `two_tower` / `graph` retrievals) |
+| `is_geolocated`, `booking_number*`, `booking_number_desc`, `total_offers`, `stock_price`, `offer_creation_date`, `stock_beginning_date`, `semantic_emb_mean` | served item metadata (same as `two_tower` / `graph` retrievals) |
+| `example_offer_id`, `example_offer_name`, `example_venue_id`, `example_venue_latitude`, `example_venue_longitude` | served item metadata (same as `two_tower` / `graph` retrievals) |
 
 ## Indexes
 
@@ -24,15 +27,21 @@ metadata, and is indexed for vector, full-text and hybrid search.
   `num_sub_vectors = dim // 16`.
 - **Full-text**: native (Lance) FTS on `search_text` (`use_tantivy=False`, safe on
   object storage). Enables keyword and hybrid search.
-- **Scalar**: BTREE on `item_id`, BITMAP on `category` / `subcategory_id`.
+- **Scalar**: BTREE on `item_id`, BITMAP on `category` / `subcategory_id` /
+  `search_group_name`.
 
 ## Usage
 
 The input parquet must already join the embeddings with metadata (see the
-`semantic_search_lancedb` DAG, which exports
-`ml_feat_<env>.item_embedding_refactor ⋈ ml_input_<env>.item_metadata`):
-`item_id, semantic_content, offer_name, offer_description, offer_category_id,
-offer_subcategory_id`.
+`create_semantic_db` DAG, which exports
+`ml_feat_<env>.item_embedding_refactor ⋈ ml_input_<env>.item_metadata ⋈ ml_reco_<env>.recommendable_item`):
+`item_id, semantic_content, offer_name, offer_description` plus the
+`recommendable_item` metadata columns (`category`, `subcategory_id`,
+`search_group_name`, `topic_id`, `cluster_id`, `is_geolocated`, `gtl_id`,
+`gtl_l3`, `gtl_l4`, `booking_number*`, `total_offers`, `stock_price`,
+`offer_creation_date`, `stock_beginning_date`, `semantic_emb_mean`,
+`example_offer_id`, `example_offer_name`, `example_venue_id`,
+`example_venue_latitude`, `example_venue_longitude`).
 
 ```bash
 uv run python main.py \

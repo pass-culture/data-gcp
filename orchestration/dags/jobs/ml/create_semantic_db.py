@@ -9,6 +9,7 @@ from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_FEATURES_DATASET,
     BIGQUERY_ML_INPUT_DATASET,
+    BIGQUERY_ML_RECOMMENDATION_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
@@ -37,6 +38,7 @@ INPUT_FILENAME = "item_embeddings_*.parquet"
 ## BigQuery CONSTANTS
 ITEM_EMBEDDING_TABLE = "item_embedding_refactor"
 ITEM_METADATA_TABLE = "item_metadata"
+RECOMMENDABLE_ITEM_TABLE = "recommendable_item"
 DEFAULT_VECTOR_COLUMN_NAME = "semantic_content"
 
 ## GCS LanceDB CONSTANTS
@@ -140,11 +142,35 @@ with DAG(
                         emb.{{{{ params.vector_embedding_column_name }}}},
                         im.offer_name,
                         im.offer_description,
-                        im.offer_category_id,
-                        im.offer_subcategory_id
+                        ri.category,
+                        ri.subcategory_id,
+                        ri.search_group_name,
+                        ri.topic_id,
+                        ri.cluster_id,
+                        ri.is_geolocated,
+                        ri.gtl_id,
+                        ri.gtl_l3,
+                        ri.gtl_l4,
+                        ri.booking_number,
+                        ri.booking_number_last_7_days,
+                        ri.booking_number_last_14_days,
+                        ri.booking_number_last_28_days,
+                        ri.booking_number_desc,
+                        ri.total_offers,
+                        ri.stock_price,
+                        ri.offer_creation_date,
+                        ri.stock_beginning_date,
+                        ri.semantic_emb_mean,
+                        ri.example_offer_id,
+                        ri.example_offer_name,
+                        ri.example_venue_id,
+                        ri.example_venue_latitude,
+                        ri.example_venue_longitude
                     FROM `{GCP_PROJECT_ID}.{BIGQUERY_ML_FEATURES_DATASET}.{ITEM_EMBEDDING_TABLE}` AS emb
                     INNER JOIN `{GCP_PROJECT_ID}.{BIGQUERY_ML_INPUT_DATASET}.{ITEM_METADATA_TABLE}` AS im
                         ON emb.item_id = im.item_id
+                    LEFT JOIN `{GCP_PROJECT_ID}.{BIGQUERY_ML_RECOMMENDATION_DATASET}.{RECOMMENDABLE_ITEM_TABLE}` AS ri
+                        ON emb.item_id = ri.item_id
                 """,
                 "useLegacySql": False,
             }

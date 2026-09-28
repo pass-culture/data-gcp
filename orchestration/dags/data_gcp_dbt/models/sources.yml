@@ -302,6 +302,14 @@ sources:
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: item_embedding_tmp
+  - name: tmp
+    schema: tmp_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
+    tables:
+      - name: all_items_metadata_tmp
+      - name: books_metadata_tmp
+      - name: movies_metadata_tmp
+      - name: all_items_offer_names_tmp
   - name: ml_linkage
     schema: ml_linkage_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"

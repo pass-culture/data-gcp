@@ -13,6 +13,7 @@ from common.config import (
     GCE_ZONE,
     GCP_PROJECT_ID,
     LOCAL_ENV,
+    SSH_HOOK_MAX_RETRIES,
     SSH_USER,
     USE_INTERNAL_IP,
     UV_VERSION,
@@ -310,6 +311,7 @@ class BaseSSHGCEOperator(BaseOperator):
             user=SSH_USER,
             gcp_conn_id="google_cloud_default",
             expire_time=300,
+            max_retries=SSH_HOOK_MAX_RETRIES,
         )
         self.log.info(
             f"Connecting to instance {self.instance_name} in zone {self.gce_zone} with project {GCP_PROJECT_ID}"

@@ -46,6 +46,14 @@ def sync_movies() -> None:
         logger.info("Transforming %d movies...", len(raw_movies))
         transformed = [transform_movie(m) for m in raw_movies]
 
+        deduped = {row["movie_id"]: row for row in transformed}
+        if len(deduped) != len(transformed):
+            logger.warning(
+                "Dropped %d duplicate movie_id row(s) before staging load.",
+                len(transformed) - len(deduped),
+            )
+        transformed = list(deduped.values())
+
         logger.info("Loading %d rows into staging...", len(transformed))
         load_staging_table(transformed, GCP_PROJECT_ID, BQ_DATASET, STAGING_TABLE, bq_client=bq)
 
@@ -57,7 +65,7 @@ def sync_movies() -> None:
             len(raw_movies),
             stats["inserted"],
             stats["updated"],
-            len(raw_movies) - stats["inserted"] - stats["updated"],
+            len(transformed) - stats["inserted"] - stats["updated"],
         )
 
         logger.info("Clearing staging table...")

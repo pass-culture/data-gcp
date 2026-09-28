@@ -1,0 +1,26 @@
+# Single source of truth for what `make create_microservice_*` scaffolds.
+# Read by automations/create_microservice.py — keyed by MicroServiceType values.
+ml:
+  template_dir: jobs/ml_jobs/_template
+  destination: "jobs/ml_jobs/{ms_name}"
+  python_version: "3.12"
+  dependencies:
+    - typer>=0.24.0
+  dev_dependencies: &dev_deps
+    - pytest>=8.2.2
+    - ruff
+
+etl_external:
+  template_dir: jobs/etl_jobs/_template
+  destination: "jobs/etl_jobs/external/{ms_name}"
+  python_version: "3.12"
+  dependencies: &etl_deps
+    - typer>=0.24.0
+  dev_dependencies: *dev_deps
+
+etl_internal:
+  template_dir: jobs/etl_jobs/_template
+  destination: "jobs/etl_jobs/internal/{ms_name}"
+  python_version: "3.12"
+  dependencies: *etl_deps
+  dev_dependencies: *dev_deps

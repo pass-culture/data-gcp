@@ -1,52 +1,30 @@
 import re
 import shutil
+import subprocess
 from enum import Enum
+from pathlib import Path
 
 import typer
+import yaml
 
 app = typer.Typer()
+
+SCAFFOLD_CONFIG_PATH = Path(__file__).parent / "microservice_scaffold.yaml"
 
 
 def is_snake_case(s: str) -> bool:
     return re.fullmatch(r"^[a-z0-9_]+$", s) is not None
 
 
-def append_to_makefile(service_name):
-    with open("Makefile", "r") as file:
-        lines = file.readlines()
-
-    install_index = next(
-        i for i, line in enumerate(lines) if line.startswith("install:")
-    )
-
-    # Find the end of the install target
-    end_install_index = (
-        next(
-            (
-                i
-                for i, line in enumerate(
-                    lines[install_index + 1 :], start=install_index + 1
-                )
-                if not line.startswith("\t") and line.strip()
-            ),
-            install_index + 1,
-        )
-        - 1
-    )
-
-    service_name_kebab = service_name.replace("_", "-")
-    new_line = f"\tMICROSERVICE_PATH=jobs/ml_jobs/{service_name} PYTHON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-{service_name_kebab} REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice\n"
-
-    lines.insert(end_install_index, new_line)
-
-    with open("Makefile", "w") as file:
-        file.writelines(lines)
-
-
 class MicroServiceType(str, Enum):
     ml = "ml"
     etl_external = "etl_external"
     etl_internal = "etl_internal"
+
+
+def load_scaffold_config(ms_type: MicroServiceType) -> dict:
+    config = yaml.safe_load(SCAFFOLD_CONFIG_PATH.read_text())
+    return config[ms_type.value]
 
 
 @app.command()
@@ -72,30 +50,38 @@ def create_micro_service(
     if not is_snake_case(ms_name):
         raise ValueError("ms_name must be snake_case")
 
-    # Copying template
-    ignore_patterns = "__pycache__", ".pytest_cache", ".vscode", ".ruff_cache"
-    template_dir, destination_dir = get_template_and_destination_dir(ms_name, ms_type)
+    scaffold = load_scaffold_config(ms_type)
+    destination_dir = Path(scaffold["destination"].format(ms_name=ms_name))
 
     # Copying template directory to destination directory
+    ignore_patterns = "__pycache__", ".pytest_cache", ".vscode", ".ruff_cache"
     shutil.copytree(
-        template_dir,
+        scaffold["template_dir"],
         destination_dir,
         ignore=shutil.ignore_patterns(*ignore_patterns),
     )
 
+    subprocess.run(
+        ["uv", "init", "--no-workspace", "-p", scaffold["python_version"]],
+        cwd=destination_dir,
+        check=True,
+    )
+    subprocess.run(
+        ["uv", "add", *scaffold["dependencies"]], cwd=destination_dir, check=True
+    )
+    subprocess.run(
+        ["uv", "add", "--dev", *scaffold["dev_dependencies"]],
+        cwd=destination_dir,
+        check=True,
+    )
 
-def get_template_and_destination_dir(ms_name: str, ms_type: MicroServiceType):
-    if ms_type == MicroServiceType.ml:
-        template_dir = "jobs/ml_jobs/_template"
-        destination_dir = f"jobs/ml_jobs/{ms_name}"
-    elif ms_type == MicroServiceType.etl_external:
-        template_dir = "jobs/etl_jobs/_template"
-        destination_dir = f"jobs/etl_jobs/external/{ms_name}"
-    elif ms_type == MicroServiceType.etl_internal:
-        template_dir = "jobs/etl_jobs/_template"
-        destination_dir = f"jobs/etl_jobs/internal/{ms_name}"
+    pyproject_path = destination_dir / "pyproject.toml"
+    ruff_template_path = destination_dir / "pyproject.toml.template"
+    with pyproject_path.open("a") as pyproject_file:
+        pyproject_file.write(ruff_template_path.read_text())
+    ruff_template_path.unlink()
 
-    return template_dir, destination_dir
+    subprocess.run(["uv", "sync"], cwd=destination_dir, check=True)
 
 
 if __name__ == "__main__":

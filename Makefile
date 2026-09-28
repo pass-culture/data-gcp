@@ -128,11 +128,11 @@ _base_install:
 ########                              Automations                              ########
 #######################################################################################
 
-MS_PYTHON := 3.13
+MS_PYTHON ?= 3.13
 
 create_microservice:
 	uv run python automations/scripts/create_microservice.py --ms-name $(MS_NAME) --ms-type $(MS_TYPE) --python-version $(MS_PYTHON)
-# 	git add . && git commit -am "auto: Add $(MS_NAME) as $(MS_TYPE) microservice"
+ 	git add . && git commit -am "auto: Add $(MS_NAME) as $(MS_TYPE) microservice"
 
 create_microservice_ml:
 	MS_TYPE=ml MS_NAME=$(MS_NAME) make create_microservice

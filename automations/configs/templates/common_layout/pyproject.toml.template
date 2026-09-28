@@ -1,4 +1,11 @@
 
+# Assuming no one works on windows - if so comment out env restriction
+[tool.uv]
+environments = [
+    "sys_platform == 'darwin'",
+    "sys_platform == 'linux'",
+]
+
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.
 [tool.ruff]

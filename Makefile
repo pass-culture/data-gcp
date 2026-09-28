@@ -128,9 +128,11 @@ _base_install:
 ########                              Automations                              ########
 #######################################################################################
 
+MS_PYTHON := 3.13
+
 create_microservice:
-	uv run python automations/create_microservice.py --ms-name $(MS_NAME) --ms-type $(MS_TYPE)
-	git add . && git commit -am "auto: Add $(MS_NAME) as $(MS_TYPE) microservice"
+	uv run python automations/scripts/create_microservice.py --ms-name $(MS_NAME) --ms-type $(MS_TYPE) --python-version $(MS_PYTHON)
+# 	git add . && git commit -am "auto: Add $(MS_NAME) as $(MS_TYPE) microservice"
 
 create_microservice_ml:
 	MS_TYPE=ml MS_NAME=$(MS_NAME) make create_microservice
@@ -140,6 +142,12 @@ create_microservice_etl_external:
 
 create_microservice_etl_internal:
 	MS_TYPE=etl_internal MS_NAME=$(MS_NAME) make create_microservice
+
+sync_constraints_dry_run:
+	uv run python automations/scripts/sync_constraint_dependencies.py --all
+
+sync_constraints:
+	uv run python automations/scripts/sync_constraint_dependencies.py --all --no-dry-run
 
 #######################################################################################
 ########                              Pre-commit                              ########

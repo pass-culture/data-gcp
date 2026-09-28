@@ -601,9 +601,8 @@ class InstallDependenciesOperator(SSHGCEOperator):
         )
 
     def execute(self, context):
-        command = self.make_install_command(
-            self.requirement_file, self.branch, self.base_dir, self.extras
-        )
+        command = self.make_install_command(self.branch, self.base_dir, self.extras)
+
         self.command = command
 
         if LOCAL_ENV:

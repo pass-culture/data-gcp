@@ -5,7 +5,7 @@ import sqlglot
 import sqlglot.expressions as exp
 import typer
 
-BASE_PATH = Path(__file__).resolve().parent.parent
+BASE_PATH = Path(__file__).resolve().parent.parent.parent.parent
 
 PATHS_TO_CHECK = [
     BASE_PATH / "orchestration/dags/dependencies/applicative_database/sql/raw/parallel",

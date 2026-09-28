@@ -10,15 +10,8 @@ for arg in "$@"; do
   fi
 done
 
-# Define a list of folders to ignore
-ignored_folders=("jobs/ml_jobs/_template")
-
 # Build the find command
-find_cmd="find jobs -type d"
-for ignored in "${ignored_folders[@]}"; do
-  find_cmd="$find_cmd -not \( -path \"$ignored\" -prune \)"
-done
-find_cmd="$find_cmd -name tests -exec dirname {} \;"
+find_cmd="find jobs -type d -name tests -exec dirname {} \;"
 
 # Execute the command
 echo Find command: $find_cmd

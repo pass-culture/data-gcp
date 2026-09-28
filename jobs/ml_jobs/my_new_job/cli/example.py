@@ -4,5 +4,6 @@ app = typer.Typer()
 
 
 @app.command()
-def placeholder() -> None:
+def hello() -> None:
     """Replace with your first command."""
+    print("Hello, world!")

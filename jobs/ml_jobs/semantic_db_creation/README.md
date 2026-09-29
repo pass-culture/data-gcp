@@ -18,8 +18,18 @@ metadata, and is indexed for vector, full-text and hybrid search.
 | `search_text` (= name + description) | full-text / hybrid search |
 | `category`, `subcategory_id`, `search_group_name` | filterable metadata (BITMAP indexes) |
 | `topic_id`, `cluster_id`, `gtl_id`, `gtl_l3`, `gtl_l4` | other item metadata (same as `two_tower` / `graph` retrievals) |
-| `is_geolocated`, `booking_number*`, `booking_number_desc`, `total_offers`, `stock_price`, `offer_creation_date`, `stock_beginning_date`, `semantic_emb_mean` | served item metadata (same as `two_tower` / `graph` retrievals) |
-| `example_offer_id`, `example_offer_name`, `example_venue_id`, `example_venue_latitude`, `example_venue_longitude` | served item metadata (same as `two_tower` / `graph` retrievals) |
+| `is_geolocated`, `booking_number*`, `booking_number_desc`, `total_offers`, `stock_price` (`float32`), `offer_creation_date`, `stock_beginning_date` (`float32` unix-epoch seconds), `semantic_emb_mean` (`float32`) | served item metadata (same as `two_tower` / `graph` retrievals) |
+| `example_offer_id`, `example_offer_name`, `example_venue_id`, `example_venue_latitude`, `example_venue_longitude` (`float32`) | served item metadata (same as `two_tower` / `graph` retrievals) |
+
+> ⚠️ `offer_creation_date` / `stock_beginning_date` and the NUMERIC-typed
+> columns (`stock_price`, `example_venue_latitude/longitude`,
+> `semantic_emb_mean`) are explicitly cast to `float32` (unix-epoch seconds
+> for dates) instead of being passed through as raw BigQuery
+> TIMESTAMP/NUMERIC values. Left untouched, they leak as exotic strings
+> (e.g. RFC 2822 dates, stringified decimals) once the value crosses the
+> gRPC/JSON boundary, breaking the recommendation API's Pydantic parsing —
+> this mirrors the two_tower / graph retrieval encoding (`_to_ts` /
+> `_to_float` in `retrieval_vector/src/vector_database.py`).
 
 ## Indexes
 

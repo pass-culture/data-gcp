@@ -51,8 +51,7 @@ NUM_SUB_VECTORS = (
     16  # 128 dims / 16 sub-vectors = 8 dims per sub-vector (optimal PQ tradeoff)
 )
 MODEL_PATH = "metadata/vector"
-NUM_RESULTS = 5  # Number of results to retrieve
-SEMANTIC_RETRIEVAL_UPPER_BOUND = 0.3
+SEMANTIC_RETRIEVAL_UPPER_BOUND = 0.1
 LOGGING_INTERVAL = 50_000  # Interval for logging progress
 
 N_PROBES = 5

@@ -9,7 +9,6 @@ from tqdm import tqdm
 from constants import (
     BATCH_SIZE_RETRIEVAL,
     MODEL_PATH,
-    NUM_RESULTS,
     RETRIEVAL_FILTERS,
     SEMAPHORE_RETRIEVAL,
 )
@@ -56,12 +55,11 @@ def build_filter_dict(row: pd.Series, filter: list) -> dict:
     return filters
 
 
-async def limited_search(model, vector, filters, n):
+async def limited_search(model, vector, filters):
     async with search_semaphore:
         return await model.search(
             vector=vector,
             filters=filters,
-            n=n,
         )
 
 
@@ -90,7 +88,6 @@ async def generate_semantic_candidates(
                 model=model,
                 vector=row.vector,
                 filters=build_filter_dict(row, RETRIEVAL_FILTERS),
-                n=NUM_RESULTS,
             )
         )
 

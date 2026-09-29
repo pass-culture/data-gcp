@@ -4,7 +4,7 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 
-SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN = {
+SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN_DICT = {
     "prod": access_secret_data(
         GCP_PROJECT_ID, "slack-composer-prod-webhook-token", default=None
     ),
@@ -14,4 +14,8 @@ SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN = {
     "dev": access_secret_data(
         GCP_PROJECT_ID, "slack-composer-ehp-webhook-token", default=None
     ),
-}[ENV_SHORT_NAME]
+}
+
+SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN = SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN_DICT[
+    ENV_SHORT_NAME
+]

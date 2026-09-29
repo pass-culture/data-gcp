@@ -1,0 +1,12 @@
+version: 2
+
+models:
+  - name: mrt_cultural_practices__festival
+    description: '{{ doc("description__mrt_cultural_practices__festival") }}'
+    columns:
+      - name: respondent_id
+        description: '{{ doc("column__respondent_id") }}'
+      - name: attended_festival_last_12m
+        description: '{{ doc("column__attended_festival_last_12m") }}'
+      - name: festival_would_miss
+        description: '{{ doc("column__festival_would_miss") }}'

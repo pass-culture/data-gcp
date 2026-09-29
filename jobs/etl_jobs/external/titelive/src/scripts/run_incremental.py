@@ -11,6 +11,7 @@ from config import (
     MAX_SEARCH_RESULTS,
     PROVIDER_EVENT_TABLE,
     RESULTS_PER_PAGE,
+    GtlCodeLevel1,
     TiteliveCategory,
 )
 from src.api.auth import TokenManager
@@ -276,9 +277,7 @@ def run_incremental(
                     if split_total_results == 0:
                         continue
 
-                    codegtl_values = _legend_values(
-                        dispo_response.get("codegtl", {}), value_type=str
-                    )
+                    codegtl_values = [value.value for value in GtlCodeLevel1]
                     if split_total_results >= MAX_SEARCH_RESULTS and not codegtl_values:
                         msg = (
                             f"Split with dispo={dispo_value} still exceeds API limit "

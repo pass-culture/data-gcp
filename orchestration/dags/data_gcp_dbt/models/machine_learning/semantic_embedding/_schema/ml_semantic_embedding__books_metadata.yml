@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: ml_semantic_embedding__books_metadata
+    description: "{{ doc('description__ml_semantic_embedding__books_metadata') }}"
+    columns:
+      - name: item_id
+        description: "{{ doc('column__item_id') }}"
+        data_tests:
+          - unique
+          - not_null
+      - name: content_hash
+        description: "{{ doc('column__content_hash') }}"
+        data_tests:
+          - not_null
+          - unique
+      - name: books_metadata_embedding
+        description: "{{ doc('column__books_metadata_embedding') }}"
+        data_tests:
+          - not_null
+      - name: mlflow_run_id
+        description: "{{ doc('column__mlflow_run_id') }}"
+      - name: embedding_model
+        description: "{{ doc('column__embedding_model') }}"
+      - name: embedding_date
+        description: "{{ doc('column__embedding_date') }}"

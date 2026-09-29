@@ -56,15 +56,17 @@ select
     population_academy_name,
     total_users,
     total_population,
+    cast(
+        sum(total_population) over (
+            partition by population_decimal_age, population_department_code
+            order by population_snapshot_month
+            rows between 11 preceding and current row
+        ) as int64
+    ) as total_population_last_12_months,
     sum(total_users) over (
         partition by population_decimal_age, population_department_code
         order by population_snapshot_month
         rows between 11 preceding and current row
-    ) as total_users_last_12_months,
-    sum(total_population) over (
-        partition by population_decimal_age, population_department_code
-        order by population_snapshot_month
-        rows between 11 preceding and current row
-    ) as total_population_last_12_months
+    ) as total_users_last_12_months
 
 from beneficiary_coverage

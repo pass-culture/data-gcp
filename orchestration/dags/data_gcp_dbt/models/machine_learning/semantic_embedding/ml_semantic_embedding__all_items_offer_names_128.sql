@@ -8,6 +8,6 @@ select
     ie.embedding_model,
     ie.embedding_date,
     array_slice(
-        ie.all_items_metadata_embedding, 0, 127
-    ) as all_items_metadata_embedding_128
-from {{ ref("ml_semantic_embedding__all_items_metadata") }} as ie
+        ie.all_items_offer_names_embedding, 0, 127
+    ) as all_items_offer_names_embedding_128
+from {{ ref("ml_semantic_embedding__all_items_offer_names") }} as ie

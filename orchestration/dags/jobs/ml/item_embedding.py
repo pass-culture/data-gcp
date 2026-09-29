@@ -350,13 +350,12 @@ with DAG(
         ),
     )
 
-    start >> plan_vectors >> gce_instance_start >> install_dependencies
-    install_dependencies >> start_mlflow_run
+    start >> plan_vectors >> gce_instance_start
+    gce_instance_start >> install_dependencies >> start_mlflow_run
 
     # Each vector's steps live in their own TaskGroup and run a fully sequential
     # subchain on the shared VM.
     previous_embed = None
-    embed_tasks = []
     load_tasks = []
 
     for vector in AVAILABLE_VECTORS:
@@ -367,8 +366,6 @@ with DAG(
                 op_kwargs={"vector_name": vector.name},
                 # Skip only this vector's own subchain, not the following vectors.
                 ignore_downstream_trigger_rules=False,
-                # Run even if the previous vector was skipped or failed.
-                trigger_rule="all_done",
             )
 
             export_input = BigQueryInsertJobOperator(
@@ -380,6 +377,9 @@ with DAG(
                         "useLegacySql": False,
                     }
                 },
+                # Run even if the previous vector's embed was skipped or failed --
+                # one vector's outcome shouldn't block the next from being attempted.
+                trigger_rule="all_done",
             )
 
             prepare = SSHGCEOperator(
@@ -420,22 +420,20 @@ with DAG(
             )
 
             check_in_plan >> export_input
-            (
-                [export_input, install_dependencies, start_mlflow_run]
-                >> prepare
-                >> embed
-                >> load
-            )
+            # install_dependencies is not wired directly here: start_mlflow_run
+            # already depends on it, so the edge would be transitively redundant.
+            [export_input, start_mlflow_run] >> prepare >> embed >> load
 
-        # First vector starts once there's something to embed; each later vector
-        # waits for the previous embed to free the GPU.
-        if previous_embed is None:
-            plan_vectors >> check_in_plan
-        else:
-            previous_embed >> check_in_plan
+        # Every vector's plan check only needs the VM up, so all of them fan out
+        # in parallel as soon as it starts.
+        gce_instance_start >> check_in_plan
+
+        # The actual GPU work stays sequential on the shared VM: each vector's
+        # export waits for the previous vector's embed to free the GPU.
+        if previous_embed is not None:
+            previous_embed >> export_input
 
         previous_embed = embed
-        embed_tasks.append(embed)
         load_tasks.append(load)
 
     gce_instance_delete = DeleteGCEOperator(
@@ -447,15 +445,19 @@ with DAG(
     # Tell Airflow these are tied together
     gce_instance_start.as_setup()
     gce_instance_delete.as_teardown(setups=gce_instance_start)
+    # Keep as_teardown()'s default ALL_DONE_SETUP_SUCCESS: cleanup must run
+    # regardless of load failures, only skipping if the VM itself never started.
 
     send_slack_notif_success = PythonOperator(
         task_id="send_slack_notif_success",
         python_callable=_send_slack_notif_success,
-        trigger_rule="all_done",
+        # Checks the loads directly (not via gce_stop_task, which always runs):
+        # goes upstream_failed, failing `stop`, if any load failed.
+        trigger_rule="none_failed_min_one_success",
     )
 
-    stop = EmptyOperator(task_id="stop", trigger_rule="all_done")
+    stop = EmptyOperator(task_id="stop")
 
-    # The VM lives until every embed is done (they share it); loads read from GCS.
-    embed_tasks >> gce_instance_delete
-    ([gce_instance_delete, *load_tasks] >> send_slack_notif_success >> stop)
+    load_tasks >> gce_instance_delete >> send_slack_notif_success
+    load_tasks >> send_slack_notif_success  # direct edge to see load failures
+    send_slack_notif_success >> stop

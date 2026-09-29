@@ -11,7 +11,7 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
 )
 from airflow.utils.task_group import TaskGroup
 from common import macros
-from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
+from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN_DICT
 from common.alerts.ml_training import create_item_embedding_slack_block
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -46,6 +46,9 @@ GCS_FOLDER_PATH = f"item_embedding_{ENV_SHORT_NAME}/{{{{ ts_nodash }}}}"
 INPUT_SUBFOLDER = "input"
 PROMPTS_SUBFOLDER = "prompts"
 EMBEDDINGS_SUBFOLDER = "embeddings"
+
+# temp value before we have a dedicated ml training update channel on slack
+SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN = SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN_DICT["stg"]
 
 
 class VectorPipeline(BaseModel):
@@ -420,8 +423,6 @@ with DAG(
             )
 
             check_in_plan >> export_input
-            # install_dependencies is not wired directly here: start_mlflow_run
-            # already depends on it, so the edge would be transitively redundant.
             [export_input, start_mlflow_run] >> prepare >> embed >> load
 
         # Every vector's plan check only needs the VM up, so all of them fan out

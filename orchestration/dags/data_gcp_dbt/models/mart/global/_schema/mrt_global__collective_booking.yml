@@ -47,6 +47,16 @@ models:
         description: "{{ doc('column__booking_amount') }}"
       - name: collective_stock_number_of_tickets
         description: "{{ doc('column__collective_stock_number_of_tickets') }}"
+      - name: collective_stock_number_of_teachers
+        description: "{{ doc('column__collective_stock_number_of_teachers') }}"
+      - name: collective_stock_service_price
+        description: "{{ doc('column__collective_stock_service_price') }}"
+      - name: total_additional_fee_amount
+        description: "{{ doc('column__total_additional_fee_amount') }}"
+      - name: total_additional_fee_types
+        description: "{{ doc('column__total_additional_fee_types') }}"
+      - name: collective_stock_has_additional_fee
+        description: "{{ doc('column__collective_stock_has_additional_fee') }}"
       - name: collective_stock_beginning_date_time
         description: "{{ doc('column__collective_stock_beginning_date_time') }}"
       - name: collective_stock_end_date_time

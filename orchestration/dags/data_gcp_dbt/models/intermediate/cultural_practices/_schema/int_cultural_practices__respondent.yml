@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: int_cultural_practices__respondent
+    description: '{{ doc("description__int_cultural_practices__respondent") }}'
+    columns:
+      - name: respondent_id
+        description: '{{ doc("column__respondent_id") }}'
+      - name: gender
+        description: '{{ doc("column__gender") }}'
+      - name: age
+        description: '{{ doc("column__age") }}'
+      - name: age_group
+        description: '{{ doc("column__age_group") }}'
+      - name: income
+        description: '{{ doc("column__income") }}'
+      - name: household_type
+        description: '{{ doc("column__household_type") }}'
+      - name: household_size
+        description: '{{ doc("column__household_size") }}'

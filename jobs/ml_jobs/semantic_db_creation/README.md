@@ -18,18 +18,22 @@ metadata, and is indexed for vector, full-text and hybrid search.
 | `search_text` (= name + description) | full-text / hybrid search |
 | `category`, `subcategory_id`, `search_group_name` | filterable metadata (BITMAP indexes) |
 | `topic_id`, `cluster_id`, `gtl_id`, `gtl_l3`, `gtl_l4` | other item metadata (same as `two_tower` / `graph` retrievals) |
-| `is_geolocated`, `booking_number*`, `booking_number_desc`, `total_offers`, `stock_price` (`float32`), `offer_creation_date`, `stock_beginning_date` (`float32` unix-epoch seconds), `semantic_emb_mean` (`float32`) | served item metadata (same as `two_tower` / `graph` retrievals) |
-| `example_offer_id`, `example_offer_name`, `example_venue_id`, `example_venue_latitude`, `example_venue_longitude` (`float32`) | served item metadata (same as `two_tower` / `graph` retrievals) |
+| `is_geolocated`, `booking_number*`, `booking_number_desc`, `total_offers`, `stock_price` (`float64`), `offer_creation_date`, `stock_beginning_date` (`int64` unix-epoch seconds), `semantic_emb_mean` (`float64`) | served item metadata (same as `two_tower` / `graph` retrievals) |
+| `example_offer_id`, `example_offer_name`, `example_venue_id`, `example_venue_latitude`, `example_venue_longitude` (`float64`) | served item metadata (same as `two_tower` / `graph` retrievals) |
 
-> ⚠️ `offer_creation_date` / `stock_beginning_date` and the NUMERIC-typed
-> columns (`stock_price`, `example_venue_latitude/longitude`,
-> `semantic_emb_mean`) are explicitly cast to `float32` (unix-epoch seconds
-> for dates) instead of being passed through as raw BigQuery
-> TIMESTAMP/NUMERIC values. Left untouched, they leak as exotic strings
-> (e.g. RFC 2822 dates, stringified decimals) once the value crosses the
-> gRPC/JSON boundary, breaking the recommendation API's Pydantic parsing —
-> this mirrors the two_tower / graph retrieval encoding (`_to_ts` /
-> `_to_float` in `retrieval_vector/src/vector_database.py`).
+> ⚠️ `offer_creation_date` / `stock_beginning_date` (BQ `DATE`) and the
+> NUMERIC-typed columns (`stock_price`, `example_venue_latitude/longitude`,
+> `semantic_emb_mean`) are explicitly cast in the **`EXPORT DATA` BigQuery
+> query** (`create_semantic_db` DAG) — `UNIX_SECONDS(TIMESTAMP(...))` (native
+> `INT64`) for dates, `CAST(... AS FLOAT64)` for NUMERIC — instead of being
+> exported as raw BigQuery DATE/NUMERIC values. Left untouched, they leak as
+> exotic strings (e.g. RFC 2822 dates, stringified decimals) once the value
+> crosses the gRPC/JSON boundary, breaking the recommendation API's Pydantic
+> parsing — this mirrors the two_tower / graph retrieval encoding (`_to_ts` /
+> `_to_float` in `retrieval_vector/src/vector_database.py`, which actually
+> serves dates as a whole-number epoch, e.g. `"offer_creation_date":
+> 1727053696`). Doing the cast in SQL keeps `build_lancedb_table.py` a plain
+> passthrough: the parquet already carries the correct types.
 
 ## Indexes
 
@@ -44,7 +48,8 @@ metadata, and is indexed for vector, full-text and hybrid search.
 
 The input parquet must already join the embeddings with metadata (see the
 `create_semantic_db` DAG, which exports
-`ml_feat_<env>.item_embedding_refactor ⋈ ml_input_<env>.item_metadata ⋈ ml_reco_<env>.recommendable_item`):
+`ml_feat_<env>.item_embedding_refactor ⋈ ml_input_<env>.item_metadata ⋈ ml_reco_<env>.recommendable_item`,
+casting dates to unix-epoch seconds and NUMERIC columns to `FLOAT64`):
 `item_id, semantic_content, offer_name, offer_description` plus the
 `recommendable_item` metadata columns (`category`, `subcategory_id`,
 `search_group_name`, `topic_id`, `cluster_id`, `is_geolocated`, `gtl_id`,
@@ -52,6 +57,7 @@ The input parquet must already join the embeddings with metadata (see the
 `offer_creation_date`, `stock_beginning_date`, `semantic_emb_mean`,
 `example_offer_id`, `example_offer_name`, `example_venue_id`,
 `example_venue_latitude`, `example_venue_longitude`).
+
 
 ```bash
 uv run python main.py \

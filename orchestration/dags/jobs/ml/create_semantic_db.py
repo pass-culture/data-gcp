@@ -157,15 +157,32 @@ with DAG(
                         ri.booking_number_last_28_days,
                         ri.booking_number_desc,
                         ri.total_offers,
-                        ri.stock_price,
-                        ri.offer_creation_date,
-                        ri.stock_beginning_date,
-                        ri.semantic_emb_mean,
+                        CAST(ri.stock_price AS FLOAT64) AS stock_price,
+                        -- `offer_creation_date` / `stock_beginning_date` are BQ DATE
+                        -- columns: exported as unix-epoch seconds (INT64, the native
+                        -- return type of `UNIX_SECONDS`), matching what the
+                        -- co-reservation / graph retrieval actually serves (e.g.
+                        -- `"offer_creation_date": 1727053696`, no decimal — see
+                        -- `retrieval_vector/src/vector_database.py`'s `_to_ts`). Left
+                        -- as a raw DATE, the value leaks as an exotic string
+                        -- (RFC 2822 date) once it crosses the gRPC/JSON boundary,
+                        -- breaking the recommendation API's Pydantic `datetime`
+                        -- parsing. `IFNULL(..., 0)` mirrors `_to_ts`'s exception
+                        -- fallback.
+                        IFNULL(
+                            UNIX_SECONDS(TIMESTAMP(ri.offer_creation_date)), 0
+                        ) AS offer_creation_date,
+                        IFNULL(
+                            UNIX_SECONDS(TIMESTAMP(ri.stock_beginning_date)), 0
+                        ) AS stock_beginning_date,
+                        CAST(ri.semantic_emb_mean AS FLOAT64) AS semantic_emb_mean,
                         ri.example_offer_id,
                         ri.example_offer_name,
                         ri.example_venue_id,
-                        ri.example_venue_latitude,
-                        ri.example_venue_longitude
+                        CAST(ri.example_venue_latitude AS FLOAT64)
+                            AS example_venue_latitude,
+                        CAST(ri.example_venue_longitude AS FLOAT64)
+                            AS example_venue_longitude
                     FROM `{GCP_PROJECT_ID}.{BIGQUERY_ML_FEATURES_DATASET}.{ITEM_EMBEDDING_TABLE}` AS emb
                     INNER JOIN `{GCP_PROJECT_ID}.{BIGQUERY_ML_INPUT_DATASET}.{ITEM_METADATA_TABLE}` AS im
                         ON emb.item_id = im.item_id

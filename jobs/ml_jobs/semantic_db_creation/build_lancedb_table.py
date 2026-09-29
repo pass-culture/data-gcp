@@ -41,23 +41,15 @@ SOURCE_PASSTHROUGH_METADATA_COLUMNS = [
     "booking_number_last_28_days",
     "booking_number_desc",
     "total_offers",
-]
-# BigQuery TIMESTAMP/DATE columns: must be cast to unix-epoch seconds, exactly
-# like `_to_ts` in the two_tower / graph retrieval
-# (`retrieval_vector/src/vector_database.py`). Passing the raw Arrow timestamp
-# through leaks an exotic string repr (e.g. RFC 2822 `"Thu, 18 Jun 2026 ..."`)
-# once the value crosses the gRPC/JSON boundary, which the recommendation
-# API's Pydantic `datetime` field cannot parse.
-SOURCE_TIMESTAMP_METADATA_COLUMNS = [
+    "stock_price",
+    # `offer_creation_date` / `stock_beginning_date` are exported as
+    # unix-epoch seconds (FLOAT64) directly in the BigQuery `EXPORT DATA`
+    # query (see `create_semantic_db` DAG), like `_to_ts` in the two_tower /
+    # graph retrieval. Kept as a raw DATE, the value would leak as an exotic
+    # string (RFC 2822 date) once it crosses the gRPC/JSON boundary, breaking
+    # the recommendation API's Pydantic `datetime` parsing.
     "offer_creation_date",
     "stock_beginning_date",
-]
-# BigQuery NUMERIC/FLOAT columns: must be cast to float, exactly like
-# `_to_float` in the two_tower / graph retrieval. Left as-is, BigQuery
-# NUMERIC (decimal128) columns leak as strings (e.g. `"43.607740000"`) once
-# the value crosses the gRPC/JSON boundary instead of a plain float.
-SOURCE_FLOAT_METADATA_COLUMNS = [
-    "stock_price",
     "semantic_emb_mean",
     "example_venue_latitude",
     "example_venue_longitude",
@@ -66,8 +58,6 @@ SOURCE_METADATA_COLUMNS = (
     SOURCE_TEXT_COLUMNS
     + SOURCE_STRING_METADATA_COLUMNS
     + SOURCE_PASSTHROUGH_METADATA_COLUMNS
-    + SOURCE_TIMESTAMP_METADATA_COLUMNS
-    + SOURCE_FLOAT_METADATA_COLUMNS
 )
 
 # Final LanceDB `items` schema.
@@ -79,32 +69,7 @@ LANCEDB_COLUMNS = [
     "search_text",
     *SOURCE_STRING_METADATA_COLUMNS,
     *SOURCE_PASSTHROUGH_METADATA_COLUMNS,
-    *SOURCE_TIMESTAMP_METADATA_COLUMNS,
-    *SOURCE_FLOAT_METADATA_COLUMNS,
 ]
-
-
-def _timestamp_to_unix_seconds(column: pa.Array) -> pa.Array:
-    """Cast a BigQuery TIMESTAMP/DATE Arrow column to `float32` unix-epoch
-    seconds, mirroring `_to_ts` in the two_tower / graph retrieval. `null`
-    values fall back to `0.0`, same as `_to_ts`'s exception fallback.
-
-    `safe=False` is required: epoch seconds (~1.7e9) exceed the 24-bit
-    integer precision of `float32` (2**24), so a safe cast raises
-    `ArrowInvalid`. The two_tower / graph retrieval hits the same
-    precision loss silently (`pa.array([_to_ts(...)], pa.float32())`); a
-    few seconds of rounding is immaterial for a date used for freshness
-    ranking, but it must not fail the job.
-    """
-    seconds = pc.cast(pc.cast(column, pa.timestamp("s")), pa.int64())
-    return pc.cast(pc.fill_null(seconds, 0), pa.float32(), safe=False)
-
-
-def _to_float32(column: pa.Array) -> pa.Array:
-    """Cast a numeric (possibly BigQuery NUMERIC/decimal) Arrow column to
-    `float32`, mirroring `_to_float` in the two_tower / graph retrieval.
-    """
-    return pc.cast(column, pa.float32(), safe=False)
 
 
 def parquet_batch_generator(
@@ -120,11 +85,13 @@ def parquet_batch_generator(
     ``offer_*`` metadata is renamed / cast to string, ``search_text`` (name +
     description) is derived to feed the full-text-search index, and the
     ``recommendable_item`` metadata (booking numbers, ``search_group_name``,
-    gtl, example offer/venue, dates, prices/coordinates, ...) is passed through
-    — dates and BigQuery NUMERIC columns are explicitly cast to ``float32``
-    (unix-epoch seconds / plain float) — so the served item payload matches
-    the two_tower / graph retrievals byte-for-byte. The source is streamed so
-    the full ~5M-row table is never materialised in memory.
+    gtl, example offer/venue, dates, prices/coordinates, ...) is passed
+    through as-is: it is already exported in the correct type (unix-epoch
+    seconds for dates, ``FLOAT64`` for BigQuery NUMERIC columns) by the
+    ``EXPORT DATA`` query in the ``create_semantic_db`` DAG, so the served
+    item payload matches the two_tower / graph retrievals byte-for-byte. The
+    source is streamed so the full ~5M-row table is never materialised in
+    memory.
 
     Args:
         parquet_uri: Path (GCS or local) to the parquet dir.
@@ -159,23 +126,13 @@ def parquet_batch_generator(
             col: pc.fill_null(pc.cast(batch.column(col), pa.string()), "")
             for col in SOURCE_STRING_METADATA_COLUMNS
         }
-        # Int / bool columns are passed through as-is: their type is already
-        # correct in the BigQuery export and some (e.g. booking counts) must
-        # keep `null` rather than being zero-filled, since `null` means
-        # "no recommendable offer" downstream.
+        # Booking numbers, dates and NUMERIC columns are passed through
+        # as-is: their type is already correct in the BigQuery export (see
+        # the `EXPORT DATA` query in the `create_semantic_db` DAG) and some
+        # (e.g. booking counts) must keep `null` rather than being
+        # zero-filled, since `null` means "no recommendable offer" downstream.
         passthrough_metadata = {
             col: batch.column(col) for col in SOURCE_PASSTHROUGH_METADATA_COLUMNS
-        }
-        # Dates and BigQuery NUMERIC columns must be cast explicitly: left as
-        # Arrow timestamp/decimal, they leak as exotic strings (RFC 2822 date,
-        # stringified decimal) once the value crosses the gRPC/JSON boundary,
-        # breaking the recommendation API's Pydantic parsing.
-        timestamp_metadata = {
-            col: _timestamp_to_unix_seconds(batch.column(col))
-            for col in SOURCE_TIMESTAMP_METADATA_COLUMNS
-        }
-        float_metadata = {
-            col: _to_float32(batch.column(col)) for col in SOURCE_FLOAT_METADATA_COLUMNS
         }
 
         yield pa.table(
@@ -187,8 +144,6 @@ def parquet_batch_generator(
                 "search_text": search_text,
                 **string_metadata,
                 **passthrough_metadata,
-                **timestamp_metadata,
-                **float_metadata,
             }
         )
 

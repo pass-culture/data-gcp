@@ -79,10 +79,10 @@ If you want to run individual scripts manually, follow the order above and use t
 
 | Property | Value |
 |---|---|
-| Source table | `passculture-data-<env>.ml_feat_<env>.item_embedding_refactor_128` (pre-truncated) |
+| Source table | `passculture-data-<env>.ml_semantic_embedding_<env>.all_items_offer_names_128` (pre-truncated) |
 | Model | embedding-gemma-300m |
 | Original dimension | 768 |
-| Used dimension | **128** (first 128 dims, Matryoshka truncated upstream in the dbt model `ml_feat__item_embedding_128` via `ARRAY_SLICE`) |
+| Used dimension | **128** (first 128 dims, Matryoshka truncated upstream in the dbt model `ml_semantic_embedding__all_items_offer_names_128` via `ARRAY_SLICE`) |
 | Normalization | L2 (applied in `preprocess.py`) |
 | LanceDB index | IVF_PQ, cosine distance, `Vector(128)` |
 

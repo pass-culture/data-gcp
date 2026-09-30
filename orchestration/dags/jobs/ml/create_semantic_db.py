@@ -7,9 +7,9 @@ from airflow.operators.empty import EmptyOperator
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
-    BIGQUERY_ML_FEATURES_DATASET,
     BIGQUERY_ML_INPUT_DATASET,
     BIGQUERY_ML_RECOMMENDATION_DATASET,
+    BIGQUERY_ML_SEMANTIC_EMBEDDING_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
@@ -39,7 +39,7 @@ INPUT_FILENAME = "item_embeddings_*.parquet"
 ITEM_EMBEDDING_TABLE = "item_embedding_refactor"
 ITEM_METADATA_TABLE = "item_metadata"
 RECOMMENDABLE_ITEM_TABLE = "recommendable_item"
-DEFAULT_VECTOR_COLUMN_NAME = "semantic_content"
+DEFAULT_VECTOR_COLUMN_NAME = "all_items_metadata_embedding"
 
 ## GCS LanceDB CONSTANTS
 LANCEDB_GCS_URI = f"gs://{DATA_GCS_BUCKET_NAME}/semantic_search_lancedb/"
@@ -183,7 +183,7 @@ with DAG(
                             AS example_venue_latitude,
                         CAST(ri.example_venue_longitude AS FLOAT64)
                             AS example_venue_longitude
-                    FROM `{GCP_PROJECT_ID}.{BIGQUERY_ML_FEATURES_DATASET}.{ITEM_EMBEDDING_TABLE}` AS emb
+                    FROM `{GCP_PROJECT_ID}.{BIGQUERY_ML_SEMANTIC_EMBEDDING_DATASET}.{ITEM_EMBEDDING_TABLE}` AS emb
                     INNER JOIN `{GCP_PROJECT_ID}.{BIGQUERY_ML_INPUT_DATASET}.{ITEM_METADATA_TABLE}` AS im
                         ON emb.item_id = im.item_id
                     LEFT JOIN `{GCP_PROJECT_ID}.{BIGQUERY_ML_RECOMMENDATION_DATASET}.{RECOMMENDABLE_ITEM_TABLE}` AS ri

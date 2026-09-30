@@ -562,7 +562,6 @@ class InstallDependenciesOperator(SSHGCEOperator):
     REPO = "https://github.com/pass-culture/data-gcp.git"
     template_fields = set(
         [
-            "requirement_file",
             "branch",
             "instance_name",
             "base_dir",
@@ -574,7 +573,6 @@ class InstallDependenciesOperator(SSHGCEOperator):
     def __init__(
         self,
         instance_name: str,
-        requirement_file: str = "requirements.txt",
         branch: str = "master",  # Branch for repo
         environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
@@ -583,7 +581,6 @@ class InstallDependenciesOperator(SSHGCEOperator):
         **kwargs,
     ):
         self.instance_name = instance_name
-        self.requirement_file = requirement_file
         self.environment = environment
         self.python_version = python_version
         self.branch = branch
@@ -599,9 +596,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
         )
 
     def execute(self, context):
-        command = self.make_install_command(
-            self.requirement_file, self.branch, self.base_dir
-        )
+        command = self.make_install_command(self.branch, self.base_dir)
         self.command = command
 
         if LOCAL_ENV:
@@ -622,7 +617,6 @@ class InstallDependenciesOperator(SSHGCEOperator):
 
     def make_install_command(
         self,
-        requirement_file: str,
         branch: str,
         base_dir: str = "data-gcp",
     ) -> str:
@@ -657,11 +651,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
             cd {base_dir}
             uv venv --python {self.python_version} --clear
             source .venv/bin/activate
-            if [ -f "{requirement_file}" ]; then
-                uv pip sync {requirement_file}
-            else
-                uv sync
-            fi
+            uv sync
         """
 
         deactivate_conda = (

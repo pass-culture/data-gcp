@@ -1,0 +1,43 @@
+# Single source of truth for what `make create_microservice_*` scaffolds.
+# Read by automations/scripts/create_microservice.py — keyed by MicroServiceType values.
+#
+# YAML anchors/aliases only substitute a value verbatim — an alias can't be
+# followed by more `- item` lines to "extend" a list. So a type's own
+# additions live under `ms_dependencies`, and the loader
+# (automations/scripts/constraints.py) concatenates them with
+# `common.dependencies` in Python.
+#
+# All three types share one template (templates/common_layout) since their
+# file/folder structure is identical today — only deps/destination differ.
+# Give a type its own template_dir the day its structure actually diverges.
+#
+# python_version is the default when `create_microservice.py` isn't given
+# --python-version explicitly. The Makefile's MS_PYTHON always passes one,
+# so keep this in sync with MS_PYTHON in the Makefile.
+common:
+  python_version: "3.13"
+  dependencies:
+    - typer>=0.24.0
+    - loguru>=0.7.2
+    - ruff>=0.4.5
+  dev_dependencies: &dev_deps
+    - pytest>=8.2.2
+
+ml:
+  template_dir: automations/configs/templates/common_layout
+  destination: "jobs/ml_jobs/{ms_name}"
+  ms_dependencies:
+    - pandas>=2.1.0
+  dev_dependencies: *dev_deps
+
+etl_external:
+  template_dir: automations/configs/templates/common_layout
+  destination: "jobs/etl_jobs/external/{ms_name}"
+  ms_dependencies: []
+  dev_dependencies: *dev_deps
+
+etl_internal:
+  template_dir: automations/configs/templates/common_layout
+  destination: "jobs/etl_jobs/internal/{ms_name}"
+  ms_dependencies: []
+  dev_dependencies: *dev_deps

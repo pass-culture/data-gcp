@@ -18,15 +18,6 @@ from common.operators.gce import (
 
 DATE = "{{ ts_nodash }}"
 
-# Environment variables to export before running commands
-dag_config = {
-    "BASE_PLAYGROUND_DIR": "data-gcp/jobs/playground_vm",
-    "BASE_INSTALL_DIR": "data-gcp",
-    "COMMAND_INSTALL_PLAYGROUND": "pip install -r requirements.txt --user",
-    "COMMAND_INSTALL_PROJECT": "NO_GCP_INIT=1 make install",
-    "PREFIX_COMMAND_INSTALL_PROJECT_UV": "NO_GCP_INIT=1 make ",
-}
-
 # Params
 gce_params = {
     "instance_name": f"playground-vm-yourname-{ENV_SHORT_NAME}",
@@ -41,7 +32,6 @@ default_args = {
     "start_date": datetime(2022, 11, 30),
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
-    "dag_config": dag_config,
 }
 DAG_DOC = """
     ### Launch VM Dag
@@ -103,12 +93,8 @@ with (
             ),
             "gce_zone": Param(default="europe-west1-b", enum=GCE_ZONES),
             "keep_alive": Param(default=True, type="boolean"),
-            "install_project": Param(default=True, type="boolean"),
             "use_gke_network": Param(default=False, type="boolean"),
             "disk_size_gb": Param(default="100", type="string"),
-            "install_type": Param(
-                default="simple", enum=["simple", "engineering", "science", "analytics"]
-            ),
             "python_version": Param(
                 default="'3.10'",
                 enum=["'3.8'", "'3.9'", "'3.10'", "'3.11'", "'3.12'", "'3.13'"],
@@ -180,6 +166,5 @@ with (
         gce_zone="{{ params.gce_zone }}",
         python_version="{{ params.python_version }}",
         base_dir="{{ params.base_dir }}",
-        requirement_file="requirements.txt",
     )
     (start >> gce_instance_start >> clone_install)

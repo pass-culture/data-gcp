@@ -4,7 +4,7 @@ from pathlib import Path
 
 import typer
 
-BASE_PATH = Path(__file__).resolve().parent.parent
+BASE_PATH = Path(__file__).resolve().parent.parent.parent
 
 UV_EXPORT_CMD = [
     "uv",
@@ -60,8 +60,6 @@ def export_requirements(
     prefix: str = typer.Option("", help="The prefix to use for the output file."),
 ) -> None:
     """Compile the requirements for all jobs."""
-    import subprocess
-
     uv_lock_dirs = get_uv_lock_dir()
     output_filename = f"{prefix}requirements.txt"
     for uv_lock_dir in uv_lock_dirs:

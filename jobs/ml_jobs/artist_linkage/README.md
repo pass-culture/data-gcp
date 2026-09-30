@@ -148,7 +148,7 @@ Contains preprocessing rules, particularly artist names to filter out:
 
 ## Dependencies
 
-Key Python packages (see `requirements.txt` for full list):
+Key Python packages (see `pyproject.toml` for full list):
 
 - `pandas`: Data manipulation
 - `typer`: CLI interface
@@ -168,8 +168,7 @@ Key Python packages (see `requirements.txt` for full list):
 ├── get_wikimedia_commons_license.py          # License extraction utilities
 ├── cluster_deprecated.py                     # Legacy clustering code
 ├── pyproject.toml                            # Project configuration
-├── requirements.txt                          # Python dependencies
-├── requirements.in                           # Requirements source
+├── uv.lock                                   # Locked dependency versions
 ├── Makefile                                  # Build and test commands
 ├── __init__.py                               # Package initialization
 ├── queries/                                  # SPARQL queries for data extraction

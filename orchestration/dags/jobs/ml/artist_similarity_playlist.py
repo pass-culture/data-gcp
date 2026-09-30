@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from itertools import chain
 
 from airflow import DAG
@@ -17,6 +17,7 @@ from common.config import (
     DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
+    GCE_ZONES,
     GCP_PROJECT_ID,
     INSTANCES_TYPES,
     ML_BUCKET_TEMP,
@@ -85,6 +86,39 @@ with DAG(
             default=DEFAULT_CPU_INSTANCE,
             enum=list(chain(*INSTANCES_TYPES["cpu"].values())),
         ),
+        "gpu_type": Param(
+            default="nvidia-tesla-t4",
+            enum=INSTANCES_TYPES["gpu"]["name"],
+        ),
+        "gpu_count": Param(
+            default=0 if ENV_SHORT_NAME == "dev" else 1,
+            enum=INSTANCES_TYPES["gpu"]["count"],
+            description="Number of GPUs (only for GPU instance types; must match the machine type).",
+        ),
+        "gce_zone": Param(default="europe-west1-b", enum=GCE_ZONES),
+        "provisioning_model": Param(
+            default="STANDARD" if ENV_SHORT_NAME == "dev" else "FLEX_START",
+            enum=["STANDARD", "FLEX_START"],
+            description="""VM provisioning model. STANDARD requests capacity
+                        immediately (fails on stockout). FLEX_START uses Dynamic
+                        Workload Scheduler (DWS) to queue the GPU request until
+                        capacity is available (queue held for up to
+                        request_valid_for_duration, max 2h).""",
+        ),
+        "max_run_duration": Param(
+            default="30h",
+            type="string",
+            description="""(FLEX_START only) Max VM run duration before it is
+                        auto-deleted. Accepts e.g. '12h', '1d2h', or seconds.
+                        Max 7 days.""",
+        ),
+        "request_valid_for_duration": Param(
+            default="2h",
+            type="string",
+            description="""(FLEX_START only) How long DWS holds the request in
+                        queue while the VM is PENDING. Accepts e.g. '2h', '90m'.
+                        Must be 0 or between 90s and 2h.""",
+        ),
     },
 ) as dag:
     with TaskGroup("dag_init") as dag_init:
@@ -117,10 +151,16 @@ with DAG(
             task_id="gce_start_task",
             instance_name=GCE_INSTANCE,
             instance_type="{{ params.instance_type }}",
-            gpu_type="nvidia-tesla-t4",
-            gpu_count=1,
+            gpu_type="{{ params.gpu_type }}",
+            gpu_count=int("{{ params.gpu_count }}"),
+            gce_zone="{{ params.gce_zone }}",
+            provisioning_model="{{ params.provisioning_model }}",
+            max_run_duration="{{ params.max_run_duration }}",
+            request_valid_for_duration="{{ params.request_valid_for_duration }}",
+            execution_timeout=timedelta(hours=3),
+            retries=3,
             preemptible=False,
-            labels={"dag_name": DAG_ID, "job_type": "ml"},
+            labels={"dag_name": DAG_ID, "job_type": "long_ml"},
         )
 
         fetch_install_code = InstallDependenciesOperator(

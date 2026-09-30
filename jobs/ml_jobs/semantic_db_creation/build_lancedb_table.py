@@ -76,7 +76,7 @@ def parquet_batch_generator(
     parquet_uri: str,
     batch_size: int,
     emb_size: int,
-    vector_column_name: str = "semantic_content",
+    vector_column_name: str = "all_items_metadata_embedding",
 ):
     """Yield reshaped ``pyarrow.Table`` batches from a Parquet dir on GCS or local.
 

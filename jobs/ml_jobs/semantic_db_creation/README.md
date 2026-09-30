@@ -48,9 +48,9 @@ metadata, and is indexed for vector, full-text and hybrid search.
 
 The input parquet must already join the embeddings with metadata (see the
 `create_semantic_db` DAG, which exports
-`ml_feat_<env>.item_embedding_refactor ⋈ ml_input_<env>.item_metadata ⋈ ml_reco_<env>.recommendable_item`,
+`ml_semantic_embedding_<env>.all_items_metadata ⋈ ml_input_<env>.item_metadata ⋈ ml_reco_<env>.recommendable_item`,
 casting dates to unix-epoch seconds and NUMERIC columns to `FLOAT64`):
-`item_id, semantic_content, offer_name, offer_description` plus the
+`item_id, all_items_metadata_embedding, offer_name, offer_description` plus the
 `recommendable_item` metadata columns (`category`, `subcategory_id`,
 `search_group_name`, `topic_id`, `cluster_id`, `is_geolocated`, `gtl_id`,
 `gtl_l3`, `gtl_l4`, `booking_number*`, `total_offers`, `stock_price`,
@@ -65,7 +65,7 @@ uv run python main.py \
   --lancedb-uri "gs://bucket/semantic_search_lancedb/" \
   --lancedb-table "items" \
   --batch-size 10000 \
-  --vector-column-name "semantic_content"
+  --vector-column-name "all_items_metadata_embedding"
 ```
 
 ## Warning

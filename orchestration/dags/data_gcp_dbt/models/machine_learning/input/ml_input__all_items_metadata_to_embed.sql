@@ -22,7 +22,7 @@ with
             ) as to_embed
         from {{ ref("ml_input__item_metadata") }} as items
         left join
-            {{ source("ml_preproc", "item_embedding_extraction") }} as past
+            {{ ref("ml_semantic_embedding__all_items_metadata") }} as past
             on items.item_id = past.item_id
     )
 

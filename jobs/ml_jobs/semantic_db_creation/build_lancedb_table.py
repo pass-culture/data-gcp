@@ -10,14 +10,55 @@ from loguru import logger
 
 ID_COLUMN = "item_id"
 
-# Columns read from the joined BigQuery export (item_embedding ⋈ item_metadata).
-# The metadata columns power the full-text / hybrid search and the served payload.
-SOURCE_METADATA_COLUMNS = [
+# Columns read from the joined BigQuery export
+# (item_embedding ⋈ item_metadata ⋈ recommendable_item).
+# `offer_name` / `offer_description` build the FTS `search_text` column; the
+# rest mirrors `DEFAULT_DETAIL_COLUMNS` (two_tower / graph retrievals) so the
+# served item payload carries the same information across all 3 retrievals,
+# and `search_group_name` can be used as a filter (`params`) on every retrieval.
+SOURCE_TEXT_COLUMNS = [
     "offer_name",
     "offer_description",
-    "offer_category_id",
-    "offer_subcategory_id",
 ]
+SOURCE_STRING_METADATA_COLUMNS = [
+    "category",
+    "subcategory_id",
+    "search_group_name",
+    "topic_id",
+    "cluster_id",
+    "gtl_id",
+    "gtl_l3",
+    "gtl_l4",
+    "example_offer_id",
+    "example_offer_name",
+    "example_venue_id",
+]
+SOURCE_PASSTHROUGH_METADATA_COLUMNS = [
+    "is_geolocated",
+    "booking_number",
+    "booking_number_last_7_days",
+    "booking_number_last_14_days",
+    "booking_number_last_28_days",
+    "booking_number_desc",
+    "total_offers",
+    "stock_price",
+    # `offer_creation_date` / `stock_beginning_date` are exported as
+    # unix-epoch seconds (FLOAT64) directly in the BigQuery `EXPORT DATA`
+    # query (see `create_semantic_db` DAG), like `_to_ts` in the two_tower /
+    # graph retrieval. Kept as a raw DATE, the value would leak as an exotic
+    # string (RFC 2822 date) once it crosses the gRPC/JSON boundary, breaking
+    # the recommendation API's Pydantic `datetime` parsing.
+    "offer_creation_date",
+    "stock_beginning_date",
+    "semantic_emb_mean",
+    "example_venue_latitude",
+    "example_venue_longitude",
+]
+SOURCE_METADATA_COLUMNS = (
+    SOURCE_TEXT_COLUMNS
+    + SOURCE_STRING_METADATA_COLUMNS
+    + SOURCE_PASSTHROUGH_METADATA_COLUMNS
+)
 
 # Final LanceDB `items` schema.
 LANCEDB_COLUMNS = [
@@ -26,8 +67,8 @@ LANCEDB_COLUMNS = [
     "item_name",
     "item_description",
     "search_text",
-    "category",
-    "subcategory_id",
+    *SOURCE_STRING_METADATA_COLUMNS,
+    *SOURCE_PASSTHROUGH_METADATA_COLUMNS,
 ]
 
 
@@ -41,9 +82,16 @@ def parquet_batch_generator(
 
     Each batch is reshaped to the LanceDB ``items`` schema (``LANCEDB_COLUMNS``):
     the embedding becomes a fixed-size ``float32`` ``vector`` column, the
-    ``offer_*`` metadata is renamed / cast to string, and ``search_text`` (name +
-    description) is derived to feed the full-text-search index. The source is
-    streamed so the full ~5M-row table is never materialised in memory.
+    ``offer_*`` metadata is renamed / cast to string, ``search_text`` (name +
+    description) is derived to feed the full-text-search index, and the
+    ``recommendable_item`` metadata (booking numbers, ``search_group_name``,
+    gtl, example offer/venue, dates, prices/coordinates, ...) is passed
+    through as-is: it is already exported in the correct type (unix-epoch
+    seconds for dates, ``FLOAT64`` for BigQuery NUMERIC columns) by the
+    ``EXPORT DATA`` query in the ``create_semantic_db`` DAG, so the served
+    item payload matches the two_tower / graph retrievals byte-for-byte. The
+    source is streamed so the full ~5M-row table is never materialised in
+    memory.
 
     Args:
         parquet_uri: Path (GCS or local) to the parquet dir.
@@ -70,15 +118,22 @@ def parquet_batch_generator(
         item_description = pc.fill_null(
             pc.cast(batch.column("offer_description"), pa.string()), ""
         )
-        category = pc.fill_null(
-            pc.cast(batch.column("offer_category_id"), pa.string()), ""
-        )
-        subcategory_id = pc.fill_null(
-            pc.cast(batch.column("offer_subcategory_id"), pa.string()), ""
-        )
         search_text = pc.utf8_trim_whitespace(
             pc.binary_join_element_wise(item_name, item_description, " ")
         )
+
+        string_metadata = {
+            col: pc.fill_null(pc.cast(batch.column(col), pa.string()), "")
+            for col in SOURCE_STRING_METADATA_COLUMNS
+        }
+        # Booking numbers, dates and NUMERIC columns are passed through
+        # as-is: their type is already correct in the BigQuery export (see
+        # the `EXPORT DATA` query in the `create_semantic_db` DAG) and some
+        # (e.g. booking counts) must keep `null` rather than being
+        # zero-filled, since `null` means "no recommendable offer" downstream.
+        passthrough_metadata = {
+            col: batch.column(col) for col in SOURCE_PASSTHROUGH_METADATA_COLUMNS
+        }
 
         yield pa.table(
             {
@@ -87,8 +142,8 @@ def parquet_batch_generator(
                 "item_name": item_name,
                 "item_description": item_description,
                 "search_text": search_text,
-                "category": category,
-                "subcategory_id": subcategory_id,
+                **string_metadata,
+                **passthrough_metadata,
             }
         )
 
@@ -158,7 +213,8 @@ def create_index(lancedb_table: lancedb.Table) -> None:
     - FTS on ``search_text``: keyword search and the FTS side of hybrid search.
      ``language="French"`` enables French stemming/stop-words;
     - Scalar indexes: BTREE on ``item_id`` for the fast query-item vector lookup,
-      BITMAP on the low-cardinality ``category`` / ``subcategory_id`` filters.
+      BITMAP on the low-cardinality ``category`` / ``subcategory_id`` /
+      ``search_group_name`` filters (used by the ``params`` filter input).
     """
     num_rows = lancedb_table.count_rows()
     vector_dim = lancedb_table.schema.field("vector").type.list_size
@@ -188,9 +244,13 @@ def create_index(lancedb_table: lancedb.Table) -> None:
         replace=True,
     )
 
-    logger.info("Creating scalar indexes on 'item_id', 'category', 'subcategory_id'")
+    logger.info(
+        "Creating scalar indexes on 'item_id', 'category', 'subcategory_id', "
+        "'search_group_name'"
+    )
     lancedb_table.create_scalar_index("item_id", index_type="BTREE")
     lancedb_table.create_scalar_index("category", index_type="BITMAP")
     lancedb_table.create_scalar_index("subcategory_id", index_type="BITMAP")
+    lancedb_table.create_scalar_index("search_group_name", index_type="BITMAP")
 
     logger.success(f"Table '{lancedb_table}' indexed and ready!")

@@ -134,6 +134,29 @@ with DAG(
             enum=["incremental", "from_scratch"],
             type="string",
         ),
+        "provisioning_model": Param(
+            default="FLEX_START",
+            enum=["STANDARD", "FLEX_START"],
+            description="""VM provisioning model. STANDARD requests capacity
+                        immediately (fails on stockout). FLEX_START uses Dynamic
+                        Workload Scheduler (DWS) to queue the GPU request until
+                        capacity is available (queue held for up to
+                        request_valid_for_duration, max 2h).""",
+        ),
+        "max_run_duration": Param(
+            default="8h",
+            type="string",
+            description="""(FLEX_START only) Max VM run duration before it is
+                        auto-deleted. Accepts e.g. '12h', '1d2h', or seconds.
+                        Max 7 days.""",
+        ),
+        "request_valid_for_duration": Param(
+            default="2h",
+            type="string",
+            description="""(FLEX_START only) How long DWS holds the request in
+                        queue while the VM is PENDING. Accepts e.g. '2h', '90m'.
+                        Must be 0 or between 90s and 2h.""",
+        ),
     },
 ) as dag:
     with TaskGroup("dag_init") as dag_init:
@@ -188,6 +211,9 @@ with DAG(
             gpu_count=1,
             preemptible=False,
             labels={"dag_name": DAG_CONFIG.dag_id, "job_type": "ml"},
+            provisioning_model="{{ params.provisioning_model }}",
+            max_run_duration="{{ params.max_run_duration }}",
+            request_valid_for_duration="{{ params.request_valid_for_duration }}",
         )
 
         fetch_install_code = InstallDependenciesOperator(

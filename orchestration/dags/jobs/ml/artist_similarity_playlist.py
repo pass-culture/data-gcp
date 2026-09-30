@@ -39,7 +39,7 @@ DEFAULT_CPU_INSTANCE = "n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-stand
 
 
 # Local Paths
-BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
+BASE_DIR = "data-gcp/jobs/ml_jobs/artist"
 
 # Airflow
 DAG_ID = "artist_similarity_playlist"
@@ -129,6 +129,7 @@ with DAG(
             branch="{{ params.branch }}",
             python_version="3.10",
             base_dir=BASE_DIR,
+            extras=["similarity"],
             retries=2,
         )
         gce_instance_start >> fetch_install_code
@@ -138,7 +139,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             uv run python cli/encode_artist_biographies.py \
+             uv run python main.py similarity encode-biographies \
                 --artist-with-biography-file-path {ARTIST_WITH_BIOGRAPHY_GCS_PATH} \
                 --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
                 --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
@@ -151,7 +152,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-             uv run python cli/create_similar_artist_parquet.py \
+             uv run python main.py similarity create-similar-artist-parquet \
                 --artist-with-embeddings-file-path {ARTIST_WITH_ENCODED_BIOGRAPHY_GCS_PATH} \
                 --output-file-path {SIMILART_ARTIST_GCS_PATH}
             """,

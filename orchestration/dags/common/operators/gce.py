@@ -1,3 +1,4 @@
+import shlex
 import subprocess
 import time
 import typing as t
@@ -577,6 +578,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
         environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
         base_dir: str = "data-gcp",
+        extras: t.Optional[t.List[str]] = None,
         *args,
         **kwargs,
     ):
@@ -585,6 +587,10 @@ class InstallDependenciesOperator(SSHGCEOperator):
         self.python_version = python_version
         self.branch = branch
         self.base_dir = base_dir
+        # `uv sync` only installs [project.optional-dependencies] groups named
+        # here (as `--extra <name>`) — omit to keep today's behavior (base deps
+        # only) for every job that doesn't pass this.
+        self.extras = extras
         # Call the parent class constructor but do not pass the command yet
         super(InstallDependenciesOperator, self).__init__(
             instance_name=self.instance_name,
@@ -596,7 +602,8 @@ class InstallDependenciesOperator(SSHGCEOperator):
         )
 
     def execute(self, context):
-        command = self.make_install_command(self.branch, self.base_dir)
+        command = self.make_install_command(self.branch, self.base_dir, self.extras)
+
         self.command = command
 
         if LOCAL_ENV:
@@ -619,6 +626,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
         self,
         branch: str,
         base_dir: str = "data-gcp",
+        extras: t.Optional[str | list[str]] = None,
     ) -> str:
         """
         Construct the command to clone the repo and install dependencies.
@@ -646,12 +654,17 @@ class InstallDependenciesOperator(SSHGCEOperator):
             cd ~/
         """
 
+        if extras == "all":
+            extras_flags = "--all-extras"
+        elif extras:
+            extras_flags = " ".join(f"--extra {shlex.quote(extra)}" for extra in extras)
+        else:
+            extras_flags = ""
+
         install_command = f"""
             curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh
             cd {base_dir}
-            uv venv --python {self.python_version} --clear
-            source .venv/bin/activate
-            uv sync
+            uv sync --python {self.python_version} {extras_flags}
         """
 
         deactivate_conda = (

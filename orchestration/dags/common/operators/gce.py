@@ -1,3 +1,4 @@
+import shlex
 import subprocess
 import time
 import typing as t
@@ -625,7 +626,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
         self,
         branch: str,
         base_dir: str = "data-gcp",
-        extras: t.Optional[t.List[str]] = None,
+        extras: t.Optional[str | list[str]] = None,
     ) -> str:
         """
         Construct the command to clone the repo and install dependencies.
@@ -653,14 +654,17 @@ class InstallDependenciesOperator(SSHGCEOperator):
             cd ~/
         """
 
-        extras_flags = " ".join(f"--extra {extra}" for extra in extras or [])
+        if extras == "all":
+            extras_flags = "--all-extras"
+        elif extras:
+            extras_flags = " ".join(f"--extra {shlex.quote(extra)}" for extra in extras)
+        else:
+            extras_flags = ""
 
         install_command = f"""
             curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh
             cd {base_dir}
-            uv venv --python {self.python_version} --clear
-            source .venv/bin/activate
-            uv sync {extras_flags}
+            uv sync --python {self.python_version} {extras_flags}
         """
 
         deactivate_conda = (

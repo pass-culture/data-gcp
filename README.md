@@ -121,13 +121,13 @@ make ruff_fix / ruff_check / sqlfluff_fix / sqlfluff_check / sqlfmt_fix / sqlfmt
 uv allows to manage dependencies with a lock file. However the lock file is not really easy to read. You can generate a human readable file by uv.lock with:
 
 ```bash
-python automations/export_requirements.py export-requirements
+python automations/scripts/export_requirements.py export-requirements
 ```
 
 or with a prefix
 
 ```bash
-python automations/export_requirements.py export-requirements --prefix "new_"
+python automations/scripts/export_requirements.py export-requirements --prefix "new_"
 ```
 
 ⚠️ Don't commit these files, they are only for helping you to understand the dependencies. ⚠️
@@ -135,13 +135,13 @@ python automations/export_requirements.py export-requirements --prefix "new_"
 ### Compute diff of requirements between two branches
 
 ```bash
-python automations/export_requirements.py diff-requirements --branch1 {first_branch} --branch2 {second_branch}
+python automations/scripts/export_requirements.py diff-requirements --branch1 {first_branch} --branch2 {second_branch}
 ```
 
 or
 
 ```bash
-python automations/export_requirements.py diff-requirements --branch1 {first_branch} --branch2 {second_branch} --write-to-file
+python automations/scripts/export_requirements.py diff-requirements --branch1 {first_branch} --branch2 {second_branch} --write-to-file
 ```
 
 to write the output to a file named package_versions.diff
@@ -149,7 +149,7 @@ to write the output to a file named package_versions.diff
 Example :
 
 ```bash
-python automations/export_requirements.py diff-requirements --branch1 master --branch2 refactor/remove-hardcoded-deps-in-pyproject.toml --write-to-file
+python automations/scripts/export_requirements.py diff-requirements --branch1 master --branch2 refactor/remove-hardcoded-deps-in-pyproject.toml --write-to-file
 ```
 
 This will generate a file `package_versions.diff` with the diff of the requirements between the two branches.

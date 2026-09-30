@@ -18,7 +18,7 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from common.utils import depends_loop, get_airflow_schedule
+from common.utils import depends_loop
 from dependencies.appsflyer.import_appsflyer import dag_tables
 
 GCE_INSTANCE = f"import-appsflyer-{ENV_SHORT_NAME}"
@@ -44,7 +44,7 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Import Appsflyer tables",
-    schedule=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
+    schedule=None,
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -59,7 +59,7 @@ with DAG(
             type="integer",
         ),
     },
-    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value, "Deprecated"],
 ) as dag:
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,

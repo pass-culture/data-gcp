@@ -1,0 +1,114 @@
+{#
+  Shared Jinja macros for the Wikidata extraction templates in this directory.
+  See queries/README.md for the two extraction strategies these macros are
+  used by. Each macro documents which template(s) call it and why.
+#}
+
+{# Entity-type + "has at least one filterable ID property" filter, shared by
+   every template that discovers candidates from scratch (extract_artists.rq.j2,
+   extract_artist_ids.rq.j2, extract_discovery.rq.j2). extract_hydration.rq.j2
+   doesn't call this — it's handed an explicit id list instead (see
+   `values_scope` below), which is exactly why Pass 2 can re-scope every
+   multi-valued subquery cheaply while Pass 1 can't. #}
+{% macro entity_filter(entity_types, id_properties) -%}
+{% set clauses = [] %}
+{% for p in id_properties if p.filter %}
+{% set _ = clauses.append('{ ?wikidata_id ' ~ p.property ~ ' [] . }') %}
+{% endfor %}
+?wikidata_id wdt:P31 ?type .
+      VALUES ?type { {{ entity_types | join(' ') }} }
+      { {{ clauses | join('\n        UNION ') }} }
+{%- endmacro %}
+
+{# `VALUES ?wikidata_id { wd:Q1 wd:Q2 ... }` scope used by extract_hydration.rq.j2
+   to re-state Pass 1's already-discovered candidates instead of re-deriving
+   entity_filter(). #}
+{% macro values_scope(wikidata_ids) -%}
+VALUES ?wikidata_id { {{ wikidata_ids | join(' ') }} }
+{%- endmacro %}
+
+{# `matching_score` = count of bound ID properties. Emits the bare summed
+   expression only — callers wrap it in whatever their context needs
+   (a `(expr AS ?matching_score)` SELECT-list alias in extract_artist_ids.rq.j2,
+   or a `BIND(expr AS ?matching_score)` in extract_artists.rq.j2's "scored"
+   base_mode and extract_discovery.rq.j2). #}
+{% macro matching_score_expr(id_properties) -%}
+{% set bound_checks = [] %}
+{% for p in id_properties %}
+{% set _ = bound_checks.append('IF(BOUND(?' ~ p.var ~ '), 1, 0)') %}
+{% endfor %}
+{{ bound_checks | join(' +\n    ') }}
+{%- endmacro %}
+
+{# Labels (fr/en/mul, coalesced), description, and image — the single-valued
+   attributes shared by extract_artists.rq.j2 (both base_mode branches) and
+   extract_hydration.rq.j2. #}
+{% macro labels_description_image() -%}
+OPTIONAL { ?wikidata_id rdfs:label ?lbl_fr . FILTER(LANG(?lbl_fr) = "fr") }
+OPTIONAL { ?wikidata_id rdfs:label ?lbl_en . FILTER(LANG(?lbl_en) = "en") }
+OPTIONAL { ?wikidata_id rdfs:label ?lbl_mul . FILTER(LANG(?lbl_mul) = "mul") }
+BIND(COALESCE(?lbl_fr, ?lbl_mul, ?lbl_en) AS ?artist_name_fr)
+BIND(?lbl_en AS ?artist_name_en)
+
+OPTIONAL { ?wikidata_id schema:description ?artist_description . FILTER(LANG(?artist_description) = "fr") }
+OPTIONAL { ?wikidata_id wdt:P18 ?img . }
+{%- endmacro %}
+
+{# Wikipedia URL (fr, falling back to en) — shared by extract_artists.rq.j2
+   (both base_mode branches) and extract_hydration.rq.j2. #}
+{% macro wikipedia_url() -%}
+OPTIONAL { ?wikipedia_url_fr schema:about ?wikidata_id ; schema:isPartOf <https://fr.wikipedia.org/> . }
+OPTIONAL { ?wikipedia_url_en schema:about ?wikidata_id ; schema:isPartOf <https://en.wikipedia.org/> . }
+BIND(COALESCE(?wikipedia_url_fr, ?wikipedia_url_en) AS ?wikipedia_url)
+{%- endmacro %}
+
+{# Birth date as its own isolated subquery — used where labels_description_image()
+   isn't already inside a GROUP-BY'd base subquery that can absorb it directly
+   (extract_artists.rq.j2's "scored" base_mode, extract_hydration.rq.j2). `scope`
+   is a pre-rendered entity_filter()/values_scope() call, or omitted (as in
+   "scored" base_mode, where ?wikidata_id is already bound by the base subquery
+   and re-scoping here would be redundant). #}
+{% macro birth_date(scope="") -%}
+OPTIONAL {
+  SELECT ?wikidata_id (MIN(?birth_date) AS ?birth_date_val) WHERE {
+    {% if scope %}
+    {{ scope }}
+    {% endif %}
+    ?wikidata_id wdt:P569 ?birth_date .
+  } GROUP BY ?wikidata_id
+}
+{%- endmacro %}
+
+{# A multi-valued attribute that's itself the literal to concatenate (aliases:
+   skos:altLabel is a literal, not an entity to look up a label for). Isolated
+   in its own subquery so QLever doesn't compute a cross-product against
+   sibling multi-valued fields before GROUP_CONCAT collapses it back down (see
+   queries/README.md and extract_hydration.rq.j2's docstring for the QLever
+   429/500 incident this avoids). `scope` is entity_filter() (extract_artists.rq.j2,
+   restated per-field — cheap only up to Strategy 1's population size) or
+   values_scope() (extract_hydration.rq.j2, always cheap: same small VALUES
+   list every time). #}
+{% macro multi_valued_literal(scope, predicate, lang, var, out_var) -%}
+OPTIONAL {
+  SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?{{ var }}; separator="|") AS ?{{ out_var }}) WHERE {
+    {{ scope }}
+    ?wikidata_id {{ predicate }} ?{{ var }} .
+    FILTER(LANG(?{{ var }}) = "{{ lang }}")
+  } GROUP BY ?wikidata_id
+}
+{%- endmacro %}
+
+{# A multi-valued attribute reached through an intermediate entity whose label
+   is the value to concatenate (professions, genres, languages_spoken: the
+   predicate points at a Wikidata item, not a literal). Same isolation
+   rationale as multi_valued_literal(). #}
+{% macro multi_valued_labeled(scope, predicate, entity_var, label_var, out_var, lang) -%}
+OPTIONAL {
+  SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?{{ label_var }}; separator="|") AS ?{{ out_var }}) WHERE {
+    {{ scope }}
+    ?wikidata_id {{ predicate }} ?{{ entity_var }} .
+    ?{{ entity_var }} rdfs:label ?{{ label_var }} .
+    FILTER(LANG(?{{ label_var }}) = "{{ lang }}")
+  } GROUP BY ?wikidata_id
+}
+{%- endmacro %}

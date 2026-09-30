@@ -128,20 +128,26 @@ _base_install:
 ########                              Automations                              ########
 #######################################################################################
 
+MS_PYTHON ?= 3.13
+
 create_microservice:
-	uv run python automations/create_microservice.py --ms-name $(MS_NAME) --ms-type $(MS_TYPE)
-	cd $(MS_BASE_PATH)/$(MS_NAME) && uv init --no-workspace -p 3.12 && uv add -r requirements.in && uv sync
-	cd $(MS_BASE_PATH)/$(MS_NAME) && cat pyproject.toml.template >> pyproject.toml && rm requirements.in pyproject.toml.template
-	git add . && git commit -am "auto: Add $(MS_NAME) as $(MS_TYPE) microservice"
+	uv run python automations/scripts/create_microservice.py --ms-name $(MS_NAME) --ms-type $(MS_TYPE) --python-version $(MS_PYTHON)
+ 	git add . && git commit -am "auto: Add $(MS_NAME) as $(MS_TYPE) microservice"
 
 create_microservice_ml:
-	MS_TYPE=ml MS_NAME=$(MS_NAME) MS_BASE_PATH=jobs/ml_jobs make create_microservice
+	MS_TYPE=ml MS_NAME=$(MS_NAME) make create_microservice
 
 create_microservice_etl_external:
-	MS_TYPE=etl_external MS_NAME=$(MS_NAME) MS_BASE_PATH=jobs/etl_jobs/external make create_microservice
+	MS_TYPE=etl_external MS_NAME=$(MS_NAME) make create_microservice
 
 create_microservice_etl_internal:
-	MS_TYPE=etl_internal MS_NAME=$(MS_NAME) MS_BASE_PATH=jobs/etl_jobs/internal make create_microservice
+	MS_TYPE=etl_internal MS_NAME=$(MS_NAME) make create_microservice
+
+sync_constraints_dry_run:
+	uv run python automations/scripts/sync_constraint_dependencies.py --all
+
+sync_constraints:
+	uv run python automations/scripts/sync_constraint_dependencies.py --all --no-dry-run
 
 #######################################################################################
 ########                              Pre-commit                              ########

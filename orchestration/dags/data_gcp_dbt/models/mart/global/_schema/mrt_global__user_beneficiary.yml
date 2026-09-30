@@ -110,6 +110,12 @@ models:
       - name: user_city_code
         description: '{{ doc("column__user_city_code") }}'
         data_type: STRING
+      - name: user_municipality_code
+        description: '{{ doc("column__user_municipality_code") }}'
+        data_type: STRING
+      - name: user_municipality_label
+        description: '{{ doc("column__user_municipality_label") }}'
+        data_type: STRING
       - name: user_macro_density_label
         description: '{{ doc("column__user_macro_density_label") }}'
         data_type: STRING

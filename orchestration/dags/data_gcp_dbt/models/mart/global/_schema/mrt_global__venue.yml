@@ -324,6 +324,12 @@ models:
       - name: venue_in_zrr
         description: '{{ doc("column__venue_in_zrr") }}'
         data_type: BOOLEAN
+      - name: venue_in_frr
+        description: '{{ doc("column__venue_in_frr") }}'
+        data_type: BOOLEAN
+      - name: venue_in_frr_plus
+        description: '{{ doc("column__venue_in_frr_plus") }}'
+        data_type: BOOLEAN
       - name: venue_rural_city_type
         description: '{{ doc("column__venue_rural_city_type") }}'
         data_type: STRING

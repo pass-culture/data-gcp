@@ -13,6 +13,7 @@ from common.config import (
     GCE_ZONE,
     GCP_PROJECT_ID,
     LOCAL_ENV,
+    SSH_HOOK_MAX_RETRIES,
     SSH_USER,
     USE_INTERNAL_IP,
     UV_VERSION,
@@ -310,6 +311,7 @@ class BaseSSHGCEOperator(BaseOperator):
             user=SSH_USER,
             gcp_conn_id="google_cloud_default",
             expire_time=300,
+            max_retries=SSH_HOOK_MAX_RETRIES,
         )
         self.log.info(
             f"Connecting to instance {self.instance_name} in zone {self.gce_zone} with project {GCP_PROJECT_ID}"
@@ -560,7 +562,6 @@ class InstallDependenciesOperator(SSHGCEOperator):
     REPO = "https://github.com/pass-culture/data-gcp.git"
     template_fields = set(
         [
-            "requirement_file",
             "branch",
             "instance_name",
             "base_dir",
@@ -572,7 +573,6 @@ class InstallDependenciesOperator(SSHGCEOperator):
     def __init__(
         self,
         instance_name: str,
-        requirement_file: str = "requirements.txt",
         branch: str = "master",  # Branch for repo
         environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
@@ -582,7 +582,6 @@ class InstallDependenciesOperator(SSHGCEOperator):
         **kwargs,
     ):
         self.instance_name = instance_name
-        self.requirement_file = requirement_file
         self.environment = environment
         self.python_version = python_version
         self.branch = branch
@@ -625,7 +624,6 @@ class InstallDependenciesOperator(SSHGCEOperator):
 
     def make_install_command(
         self,
-        requirement_file: str,
         branch: str,
         base_dir: str = "data-gcp",
         extras: t.Optional[t.List[str]] = None,

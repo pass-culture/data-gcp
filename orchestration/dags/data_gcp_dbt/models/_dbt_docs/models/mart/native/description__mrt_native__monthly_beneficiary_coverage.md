@@ -19,7 +19,7 @@ This table is used to:
 
 ### **Sources**
 - `int_global__daily_deposit`: Tracks daily user deposits.
-- `int_seed__monthly_france_population`: Provides population estimates by age and department.
+- `int_seed__monthly_insee_population_estimation`: Provides population estimates by age and department.
 
 
 ## Table description

@@ -28,15 +28,12 @@ class SemanticSpace:
 
     def build_filter(self, filters: dict) -> str:
         def predicate(k, v):
-            # A missing value must be matched with `IS NULL`, not `= 'None'`:
-            # the latter compares against the literal string "None" and never
-            # matches a real SQL NULL, silently dropping every null-valued row.
-            if v is None or (isinstance(v, float) and pd.isna(v)):
+            if v is None or pd.isna(v):
                 return f"({k} IS NULL)"
             if isinstance(v, bool):
                 return f"({k} = {str(v).lower()})"
-            if isinstance(v, int):
-                return f"({k} = {v})"
+            if pd.api.types.is_integer(v):
+                return f"({k} = {int(v)})"
             escaped = str(v).replace("'", "''")
             return f"({k} = '{escaped}')"
 

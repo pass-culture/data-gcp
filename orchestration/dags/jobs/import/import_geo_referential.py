@@ -75,6 +75,16 @@ with DAG(
             default=BIGQUERY_RAW_DATASET,
             type="string",
         ),
+        "iris_table_name": Param(
+            default="geo_iris",
+            type="string",
+            description="One row per IRIS (IGN Contours IRIS + overseas pseudo-IRIS)",
+        ),
+        "municipality_table_name": Param(
+            default="geo_municipality",
+            type="string",
+            description="One row per municipality and arrondissement (INSEE COG + zonings)",
+        ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ) as dag:
@@ -99,6 +109,10 @@ with DAG(
             "{{ params.frr_year }}",
             "--destination-dataset-id",
             "{{ params.destination_dataset_id }}",
+            "--iris-table-name",
+            "{{ params.iris_table_name }}",
+            "--municipality-table-name",
+            "{{ params.municipality_table_name }}",
         ],
         container_resources=GEO_REFERENTIAL_CONTAINER_RESOURCES,
     )

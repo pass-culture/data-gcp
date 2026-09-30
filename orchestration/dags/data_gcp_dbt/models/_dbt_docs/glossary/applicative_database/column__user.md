@@ -4,8 +4,10 @@
 {% docs column__user_age %} Current age of the user. {% enddocs %}
 {% docs column__user_birth_date %} Birth date of the user. {% enddocs %}
 {% docs column__user_civility %} Registered civility of the user (male, female). Information collected during registration.{% enddocs %}
-{% docs column__user_city %} City associated with the user's registered address. {% enddocs %}
-{% docs column__user_city_code %} The INSEE code of the city associated with the user's registered address. {% enddocs %}
+{% docs column__user_city %} Name of the city associated with the user's registered address, at the arrondissement level for Paris, Lyon and Marseille (e.g. `Paris 1er Arrondissement`). {% enddocs %}
+{% docs column__user_city_code %} INSEE code of the city associated with the user's registered address, at the arrondissement level for Paris, Lyon and Marseille (e.g. `75101`). {% enddocs %}
+{% docs column__user_municipality_code %} INSEE code of the municipality (commune) associated with the user's registered address: the parent municipality for the arrondissements of Paris, Lyon and Marseille (`75056`, `69123`, `13055`), the same as `user_city_code` everywhere else. {% enddocs %}
+{% docs column__user_municipality_label %} Name of the municipality (commune) of `user_municipality_code` (e.g. `Paris` for every Paris arrondissement). {% enddocs %}
 {% docs column__user_created_at %} Date when the user account was created. {% enddocs %}
 {% docs column__user_department_code %} Department code associated with the user's registered address. {% enddocs %}
 {% docs column__user_department_name %} Department name associated with the user's registered address. {% enddocs %}

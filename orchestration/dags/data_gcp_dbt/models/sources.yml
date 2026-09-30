@@ -117,7 +117,6 @@ sources:
       - name: applicative_database_recredit
       - name: applicative_database_stock
       - name: applicative_database_titelive_gtl
-      - name: applicative_database_transaction
       - name: applicative_database_trusted_device
       - name: applicative_database_user
       - name: applicative_database_user_offerer
@@ -177,6 +176,8 @@ sources:
       - name: tiktok_video_detail
       - name: offer_types
       - name: population_department
+      - name: geo_municipality
+      - name: geo_iris
       - name: user_address
       - name: zendesk_macro_usage
       - name: zendesk_ticket
@@ -215,8 +216,7 @@ sources:
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: agg_partner_cultural_sector
-      - name: epci
-      - name: geo_iris
+      - name: deps_cultural_practices_2018
       - name: institution_metadata_aggregated_type
       - name: institutional_scholar_level
       - name: iris_france
@@ -233,7 +233,6 @@ sources:
       - name: region_department
       - name: siren_main_business_labels
       - name: siren_legal_category_labels
-      - name: zrr
       - name: qpi_answers_v1
         external:
           location: "gs://de-bigquery-data-archive-{{var('ENV_SHORT_NAME')}}/archive/2024/08/raw_{{var('ENV_SHORT_NAME')}}/qpi_answers_v1.jsonl"
@@ -304,6 +303,14 @@ sources:
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: item_embedding_tmp
+  - name: tmp
+    schema: tmp_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
+    tables:
+      - name: all_items_metadata_tmp
+      - name: books_metadata_tmp
+      - name: movies_metadata_tmp
+      - name: all_items_offer_names_tmp
   - name: ml_linkage
     schema: ml_linkage_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"

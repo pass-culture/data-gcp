@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: int_cultural_practices__concert_behaviors
+    description: '{{ doc("description__int_cultural_practices__concert_behaviors") }}'
+    columns:
+      - name: respondent_id
+        description: '{{ doc("column__respondent_id") }}'
+      - name: concert_would_miss
+        description: '{{ doc("column__concert_would_miss") }}'

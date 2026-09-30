@@ -8,9 +8,9 @@ import typer
 from utils.bigquery import save
 from utils.build import (
     INHABITED_COMER_ZONING,
-    build_geo_commune,
     build_geo_iris,
-    commune_predecessors,
+    build_geo_municipality,
+    municipality_predecessors,
 )
 from utils.checks import (
     check_all_cities_have_geometry,
@@ -55,29 +55,32 @@ def validate(extracts: dict[str, Extract]) -> None:
     check_epci_codes_known(extracts["insee_epci_commune"].df, extracts["insee_epci"].df)
 
 
-def build(extracts: dict[str, Extract], vintages: Vintages) -> dict[str, pd.DataFrame]:
+def build(
+    extracts: dict[str, Extract], vintages: Vintages
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Build the IRIS and municipality referentials from the source extracts."""
     df = {name: extract.df for name, extract in extracts.items()}
     geo_iris = build_geo_iris(
         df["ign_contour_iris"], df["geo_api_gouv_commune_contour"]
     )
-    geo_commune = build_geo_commune(
+    geo_municipality = build_geo_municipality(
         cog_commune=df["insee_cog_commune"],
         cog_commune_comer=df["insee_cog_commune_comer"],
         cog_arrondissement=df["insee_cog_arrondissement"],
         cog_canton=df["insee_cog_canton"],
         cog_ctcd=df["insee_cog_ctcd"],
-        epci_communes=df["insee_epci_commune"],
+        epci_municipalities=df["insee_epci_commune"],
         density_grid=df["insee_density_grid"],
         zrr=df["anct_zrr"],
         frr=df["dgcl_frr"],
-        predecessors=commune_predecessors(
+        predecessors=municipality_predecessors(
             df["insee_cog_mvt_commune"],
             since_year=min(ZRR_VINTAGE_YEAR, vintages.density_year, vintages.frr_year),
         ),
     )
     check_unique(geo_iris, "iris_code")
-    check_unique(geo_commune, "city_code")
-    return {"geo_iris": geo_iris, "geo_commune": geo_commune}
+    check_unique(geo_municipality, "city_code")
+    return geo_iris, geo_municipality
 
 
 def describe(vintages: Vintages) -> str:
@@ -101,6 +104,12 @@ def import_geo_referential(
     destination_dataset_id: str = typer.Option(
         ..., help="Destination dataset id (raw_<env>)"
     ),
+    iris_table_name: str = typer.Option(
+        "geo_iris", help="Destination table for the IRIS referential"
+    ),
+    municipality_table_name: str = typer.Option(
+        "geo_municipality", help="Destination table for the municipality referential"
+    ),
     dry_run: bool = typer.Option(
         False, help="Download and validate without writing to BigQuery"
     ),
@@ -113,7 +122,11 @@ def import_geo_referential(
             logger.info("%s: %s rows", extract.table_name, len(extract.df))
         validate(extracts)
 
-        tables = build(extracts, vintages)
+        geo_iris, geo_municipality = build(extracts, vintages)
+        tables = {
+            iris_table_name: geo_iris,
+            municipality_table_name: geo_municipality,
+        }
         for table_name, df in tables.items():
             logger.info("%s: %s rows", table_name, len(df))
         if dry_run:

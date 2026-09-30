@@ -183,6 +183,7 @@ class TiteliveClient:
         page: int = 1,
         results_per_page: int = 120,
         dispo: int | None = None,
+        codegtl: str | None = None,
     ) -> dict[str, Any]:
         """
         Search products by modification date range.
@@ -194,6 +195,7 @@ class TiteliveClient:
             page: Page number (starts at 1)
             results_per_page: Number of results per page
             dispo: Optional availability filter
+            codegtl: GTL (Genre Tite Live) code
 
         Returns:
             API response as dictionary with 'result' and metadata
@@ -214,5 +216,8 @@ class TiteliveClient:
 
         if dispo:
             params["dispo"] = str(dispo)
+
+        if codegtl:
+            params["codegtl"] = codegtl
 
         return self._make_request("GET", url, params=params)

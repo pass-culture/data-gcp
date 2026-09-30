@@ -13,7 +13,7 @@ with
             go.performer,
             go.offer_subcategory_id
         from `{{ bigquery_analytics_dataset }}.global_offer` go
-        where go.offer_product_id is null
+        where go.offer_product_id is null and go.item_id not like 'product-%'
         qualify
             row_number() over (
                 partition by

@@ -69,6 +69,8 @@ select
     venue_postal_code,
     venue_city,
     venue_city_code,
+    venue_municipality_code,
+    venue_municipality_label,
     venue_epci,
     venue_epci_code,
     venue_academy_name,

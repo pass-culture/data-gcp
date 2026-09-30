@@ -11,20 +11,7 @@
 }}
 
 with
-    -- CTE: Enrich with EPCI (intercommunal institution) information
-    user_epci as (
-        {{
-            generate_seed_geolocation_query(
-                source_table="int_history__user_beneficiary_information_history_base",
-                referential_table="int_seed__intercommunal_public_institution",
-                id_column=["user_id", "user_information_rank"],
-                prefix_name="user",
-                columns=["epci_code"],
-            )
-        }}
-    ),
-
-    -- CTE: Enrich with IRIS geographical data including density and region
+    -- CTE: Enrich with IRIS geographical data including EPCI, density and region
     user_geo_iris as (
         {{
             generate_seed_geolocation_query(
@@ -34,6 +21,7 @@ with
                 prefix_name="user",
                 columns=[
                     "iris_internal_id",
+                    "epci_code",
                     "region_name",
                     "department_name",
                     "density_label",
@@ -80,9 +68,8 @@ select
     source_data.user_has_modified_postal_code,
     source_data.user_longitude,
     source_data.user_latitude,
-    -- EPCI data
-    user_epci.epci_code as user_epci_code,
     -- IRIS geographical data
+    user_geo_iris.epci_code as user_epci_code,
     user_geo_iris.iris_internal_id as user_iris_internal_id,
     user_geo_iris.region_name as user_region_name,
     user_geo_iris.department_name as user_department_name,
@@ -94,10 +81,6 @@ select
     -- User age at information creation
     source_data.user_age_at_information_creation
 from {{ ref("int_history__user_beneficiary_information_history_base") }} as source_data
-left join
-    user_epci
-    on source_data.user_id = user_epci.user_id
-    and source_data.user_information_rank = user_epci.user_information_rank
 left join
     user_geo_iris
     on source_data.user_id = user_geo_iris.user_id

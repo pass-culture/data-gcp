@@ -20,10 +20,10 @@ from utils.common import (
 from utils.gcs_utils import upload_parquet
 
 EXTRACT_EDITION_PATTERN = (
-    r"\b(?:tome|t|vol|episode)\s*(\d+)\b|\b(?:tome|t|vol|episode)(\d+)\b|(\d+)$"
+    r"\b(?:tome|t|vol|episode|n)\s*(\d+)\b|\b(?:tome|t|vol|episode|n)(\d+)\b|(\d+)$"
 )
 REMOVE_EDITION_PATTERN = (
-    r"\b(?:tome|t|vol|episode)\s*\d+\b|\b(?:tome|t|vol|episode)\d+\b|\d+$"
+    r"\b(?:tome|t|vol|episode|n)\s*\d+\b|\b(?:tome|t|vol|episode|n)\d+\b|\d+$"
 )
 
 app = typer.Typer()
@@ -57,6 +57,28 @@ def preprocess_string(s):
     return s
 
 
+INT64_MIN, INT64_MAX = -(2**63), 2**63 - 1
+
+
+def _digits_to_nullable_int(digits: pd.Series) -> pd.Series:
+    """
+    Convert a Series of extracted edition digit-strings (or NaN) to a nullable
+    Int64 column. We parse each string with Python's arbitrary-precision int
+    instead of pd.to_numeric, which would route through float64 and fail to cast
+    values above 2**53 (e.g. long ISBN-like numbers that leak through the regex).
+    Anything outside the Int64 range is nulled -- such values are never real
+    editions.
+    """
+
+    def cast(value):
+        if pd.isna(value):
+            return pd.NA
+        parsed = int(value)
+        return parsed if INT64_MIN <= parsed <= INT64_MAX else pd.NA
+
+    return digits.map(cast).astype("Int64")
+
+
 def preprocess_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
     """
     Preprocess the entire catalog DataFrame.
@@ -67,17 +89,16 @@ def preprocess_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Processed catalog DataFrame.
     """
+    clean_offer_name = catalog["offer_name"].apply(preprocess_string)
     return catalog.assign(
         performer=lambda df: df["performer"]
         .fillna(value=UNKNOWN_PERFORMER)
         .apply(preprocess_string),
-        offer_name=lambda df: df["offer_name"].apply(preprocess_string),
-        edition=lambda df: df["offer_name"]
-        .str.extract(EXTRACT_EDITION_PATTERN, expand=False)[0]
-        .replace("nan", "0"),
-        oeuvre=lambda df: df["offer_name"]
-        .apply(preprocess_string)
-        .str.replace(REMOVE_EDITION_PATTERN, "", regex=True),
+        offer_name=clean_offer_name,
+        edition=_digits_to_nullable_int(
+            clean_offer_name.str.extract(EXTRACT_EDITION_PATTERN, expand=False)[0]
+        ),
+        oeuvre=clean_offer_name.str.replace(REMOVE_EDITION_PATTERN, "", regex=True),
         offer_description=lambda df: df["offer_description"].apply(preprocess_string),
     )
 

@@ -50,6 +50,27 @@
 {% docs column__offerer_address_new_value %}The new address (performance venue) of the offer/stock after modification, as updated in the system.{% enddocs %}
 {% docs column__siret %}The SIRET code by the cultural partner during subscription{% enddocs %}
 {% docs column__siret_is_diffusible %}Indicates whether SIRET with which the cultural partner subscribed is diffisuble.{% enddocs %}
+{% docs column__log_started_at %}
+UTC timestamp marking the beginning of the API counting window (counters_since).
+{% enddocs %}
+{% docs column__log_ended_at %}
+UTC timestamp marking the end and publication time of the API counting window (published_at).
+{% enddocs %}
+{% docs column__bonus_type %}
+Type of bonus credit requested (e.g., 'qf_bonus_credit', 'aah_bonus_credit', 'aeeh_bonus_credit'). NULL when status = 'attempt'.
+{% enddocs %}
+{% docs column__status %}
+Metric type of the aggregated row: 'grant' (success), 'error' (failure/rejection), or 'attempt' (friction).
+{% enddocs %}
+{% docs column__error_reason %}
+Specific error code or reason for rejection (e.g., 'not_in_tax_household', 'person_not_found', 'not_recipient'). Populated only when status = 'error', NULL otherwise.
+{% enddocs %}
+{% docs column__attempts_count %}
+Number of attempts required before successfully granting the bonus (e.g., 1, 2, 3, 4, 6). Populated only when status = 'attempt', NULL otherwise.
+{% enddocs %}
+{% docs column__total_requests %}
+Aggregated count of requests for the given dimension combination over the counting period.
+{% enddocs %}
 
 
 {% endhide %}

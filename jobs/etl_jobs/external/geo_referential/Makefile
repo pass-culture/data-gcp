@@ -2,6 +2,8 @@ YEAR ?= 2026
 DENSITY_YEAR ?= 2024
 FRR_YEAR ?= 2025
 DATASET ?= raw_dev
+IRIS_TABLE ?= geo_iris
+MUNICIPALITY_TABLE ?= geo_municipality
 
 .PHONY: install test lint dry-run run
 
@@ -16,8 +18,10 @@ lint:
 
 dry-run:
 	uv run main.py --year $(YEAR) --density-year $(DENSITY_YEAR) --frr-year $(FRR_YEAR) \
-		--destination-dataset-id $(DATASET) --dry-run
+		--destination-dataset-id $(DATASET) \
+		--iris-table-name $(IRIS_TABLE) --municipality-table-name $(MUNICIPALITY_TABLE) --dry-run
 
 run:
 	uv run main.py --year $(YEAR) --density-year $(DENSITY_YEAR) --frr-year $(FRR_YEAR) \
-		--destination-dataset-id $(DATASET)
+		--destination-dataset-id $(DATASET) \
+		--iris-table-name $(IRIS_TABLE) --municipality-table-name $(MUNICIPALITY_TABLE)

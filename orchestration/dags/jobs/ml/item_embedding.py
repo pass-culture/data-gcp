@@ -269,7 +269,7 @@ with DAG(
             enum=INSTANCES_TYPES["gpu"]["count"],
             description="Number of GPUs (only for GPU instance types; must match the machine type).",
         ),
-        "gce_zone": Param(default="europe-west1-c", enum=GCE_ZONES),
+        "gce_zone": Param(default="europe-west1-b", enum=GCE_ZONES),
         "provisioning_model": Param(
             default="STANDARD" if ENV_SHORT_NAME == "dev" else "FLEX_START",
             enum=["STANDARD", "FLEX_START"],

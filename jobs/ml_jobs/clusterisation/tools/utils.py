@@ -4,7 +4,6 @@ import io
 import json
 import os
 
-import numpy as np
 import pandas as pd
 from google.cloud import bigquery, secretmanager
 
@@ -36,14 +35,6 @@ def load_config_file(config_file_name, job_type):
         encoding="utf-8",
     ) as config_file:
         return json.load(config_file)
-
-
-def convert_str_emb_to_float(emb_list):
-    float_emb = []
-    for str_emb in emb_list:
-        emb = json.loads(str_emb)
-        float_emb.append(np.array(emb))
-    return float_emb
 
 
 def convert_arr_emb_to_str(emb_list):

@@ -1,22 +1,18 @@
-import numpy as np
 import pandas as pd
 
-from tools.utils import convert_str_emb_to_float
 
-
-def prepare_embedding(data: np.ndarray, pretrained_embedding_size: int) -> pd.DataFrame:
+def prepare_embedding(data, pretrained_embedding_size: int) -> pd.DataFrame:
     """
     Prepare the embedding data for clustering.
 
     Args:
-        data (list): The list of embeddings.
+        data (list): The list of embeddings (native arrays from BigQuery).
         pretrained_embedding_size (int): The size of the pretrained embedding.
 
     Returns:
         pd.DataFrame : A DataFrame containing the embeddings."""
-    embedding_float = convert_str_emb_to_float(data)
     embedding_df = pd.DataFrame(
-        embedding_float,
+        list(data),
         columns=[f"t{index}" for index in range(pretrained_embedding_size)],
     )
     return embedding_df

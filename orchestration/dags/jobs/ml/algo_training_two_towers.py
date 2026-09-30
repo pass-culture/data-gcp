@@ -192,7 +192,7 @@ with (
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         gce_zone="{{ params.gce_zone }}",
-        gpu_count=int("{{ params.gpu_count }}"),
+        gpu_count="{{ params.gpu_count }}",
         gpu_type="{{ params.gpu_type }}",
         labels={"job_type": "long_ml", "dag_name": DAG_NAME},
         provisioning_model="{{ params.provisioning_model }}",

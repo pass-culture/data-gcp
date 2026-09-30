@@ -152,7 +152,7 @@ with DAG(
             instance_name=GCE_INSTANCE,
             instance_type="{{ params.instance_type }}",
             gpu_type="{{ params.gpu_type }}",
-            gpu_count=int("{{ params.gpu_count }}"),
+            gpu_count="{{ params.gpu_count }}",
             gce_zone="{{ params.gce_zone }}",
             provisioning_model="{{ params.provisioning_model }}",
             max_run_duration="{{ params.max_run_duration }}",

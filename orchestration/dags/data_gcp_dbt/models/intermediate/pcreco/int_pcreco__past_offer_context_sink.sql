@@ -26,6 +26,8 @@ with
             int_applicative__offer_item_id.item_id,
             reco_sink.jsonpayload.extra.context_extra_data.offer_origin_ids
             as offer_origin_id,
+            reco_sink.jsonpayload.extra.context_extra_data.reco_origin
+            as reco_origin_request_type,
             reco_sink.jsonpayload.extra.context_extra_data.model_params.name
             as model_params_name,
             reco_sink.jsonpayload.extra.context_extra_data.model_params.description

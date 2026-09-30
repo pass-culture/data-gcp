@@ -37,7 +37,7 @@ with
     candidates as (
         select
             o.item_id,
-            ie.semantic_content_128 as embedding,
+            ie.all_items_offer_names_embedding_128 as embedding,
             o.offer_name,
             o.offer_description,
             o.performer,
@@ -45,7 +45,7 @@ with
             b.booking_count
         from offers o
         inner join
-            `{{ bigquery_ml_feat_dataset }}.item_embedding_refactor_128` ie
+            `{{ bigquery_ml_semantic_embedding_dataset }}.all_items_offer_names_128` ie
             on ie.item_id = o.raw_item_id
         left join bookings b on b.offer_id = o.offer_id
     )

@@ -7,8 +7,9 @@ from airflow.operators.empty import EmptyOperator
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
-    BIGQUERY_ML_FEATURES_DATASET,
     BIGQUERY_ML_INPUT_DATASET,
+    BIGQUERY_ML_RECOMMENDATION_DATASET,
+    BIGQUERY_ML_SEMANTIC_EMBEDDING_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
@@ -35,9 +36,10 @@ INPUT_GCS_FOLDER_URI = (
 INPUT_FILENAME = "item_embeddings_*.parquet"
 
 ## BigQuery CONSTANTS
-ITEM_EMBEDDING_TABLE = "item_embedding_refactor"
+ITEM_EMBEDDING_TABLE = "all_items_metadata"
 ITEM_METADATA_TABLE = "item_metadata"
-DEFAULT_VECTOR_COLUMN_NAME = "semantic_content"
+RECOMMENDABLE_ITEM_TABLE = "recommendable_item"
+DEFAULT_VECTOR_COLUMN_NAME = "all_items_metadata_embedding"
 
 ## GCS LanceDB CONSTANTS
 LANCEDB_GCS_URI = f"gs://{DATA_GCS_BUCKET_NAME}/semantic_search_lancedb/"
@@ -62,12 +64,12 @@ DEFAULT_ARGS = {
 DAG_DOC = f"""
 This DAG creates a LanceDB table with item embeddings for semantic search. It performs the following steps:
 1. Starts a GCE instance.
-2. Exports item embeddings from `ml_feat_<env>_item_embedding_refactor` BigQuery table to Parquet files in GCS.
+2. Exports item embeddings from `ml_semantic_embedding_<env>.all_items_metadata` BigQuery table to Parquet files in GCS.
 3. Creates LanceDB table indexed on the vector_embedding_column_name. Stored in GCS at gs://{DATA_GCS_BUCKET_NAME}/semantic_search_lancedb/{ENV_SHORT_NAME}.
 
 Parameters:
-- vector_embedding_column_name: Name of the column containing the vector embeddings in the BigQuery table (default: 'semantic_content').
-Make sure this column exists in `ml_feat_<env>_item_embedding_refactor` .
+- vector_embedding_column_name: Name of the column containing the vector embeddings in the BigQuery table (default: 'all_items_metadata_embedding').
+Make sure this column exists in `ml_semantic_embedding_<env>.all_items_metadata` .
 """
 
 with DAG(
@@ -140,11 +142,52 @@ with DAG(
                         emb.{{{{ params.vector_embedding_column_name }}}},
                         im.offer_name,
                         im.offer_description,
-                        im.offer_category_id,
-                        im.offer_subcategory_id
-                    FROM `{GCP_PROJECT_ID}.{BIGQUERY_ML_FEATURES_DATASET}.{ITEM_EMBEDDING_TABLE}` AS emb
+                        ri.category,
+                        ri.subcategory_id,
+                        ri.search_group_name,
+                        ri.topic_id,
+                        ri.cluster_id,
+                        ri.is_geolocated,
+                        ri.gtl_id,
+                        ri.gtl_l3,
+                        ri.gtl_l4,
+                        ri.booking_number,
+                        ri.booking_number_last_7_days,
+                        ri.booking_number_last_14_days,
+                        ri.booking_number_last_28_days,
+                        ri.booking_number_desc,
+                        ri.total_offers,
+                        CAST(ri.stock_price AS FLOAT64) AS stock_price,
+                        -- `offer_creation_date` / `stock_beginning_date` are BQ DATE
+                        -- columns: exported as unix-epoch seconds (INT64, the native
+                        -- return type of `UNIX_SECONDS`), matching what the
+                        -- co-reservation / graph retrieval actually serves (e.g.
+                        -- `"offer_creation_date": 1727053696`, no decimal — see
+                        -- `retrieval_vector/src/vector_database.py`'s `_to_ts`). Left
+                        -- as a raw DATE, the value leaks as an exotic string
+                        -- (RFC 2822 date) once it crosses the gRPC/JSON boundary,
+                        -- breaking the recommendation API's Pydantic `datetime`
+                        -- parsing. `IFNULL(..., 0)` mirrors `_to_ts`'s exception
+                        -- fallback.
+                        IFNULL(
+                            UNIX_SECONDS(TIMESTAMP(ri.offer_creation_date)), 0
+                        ) AS offer_creation_date,
+                        IFNULL(
+                            UNIX_SECONDS(TIMESTAMP(ri.stock_beginning_date)), 0
+                        ) AS stock_beginning_date,
+                        CAST(ri.semantic_emb_mean AS FLOAT64) AS semantic_emb_mean,
+                        ri.example_offer_id,
+                        ri.example_offer_name,
+                        ri.example_venue_id,
+                        CAST(ri.example_venue_latitude AS FLOAT64)
+                            AS example_venue_latitude,
+                        CAST(ri.example_venue_longitude AS FLOAT64)
+                            AS example_venue_longitude
+                    FROM `{GCP_PROJECT_ID}.{BIGQUERY_ML_SEMANTIC_EMBEDDING_DATASET}.{ITEM_EMBEDDING_TABLE}` AS emb
                     INNER JOIN `{GCP_PROJECT_ID}.{BIGQUERY_ML_INPUT_DATASET}.{ITEM_METADATA_TABLE}` AS im
                         ON emb.item_id = im.item_id
+                    LEFT JOIN `{GCP_PROJECT_ID}.{BIGQUERY_ML_RECOMMENDATION_DATASET}.{RECOMMENDABLE_ITEM_TABLE}` AS ri
+                        ON emb.item_id = ri.item_id
                 """,
                 "useLegacySql": False,
             }

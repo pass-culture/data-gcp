@@ -61,6 +61,7 @@ with
                 {% endif %} day
             )  -- 14 days in prod, 1 year in other environments otherwise the data could be empty in ehp
             and user_id != "-1"
+            and reco_origin_request_type != "cinema"
             and offer_display_order <= 30
             and (
                 total_module_consult_offer

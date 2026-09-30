@@ -52,8 +52,7 @@ SEMANTIC_BASE_COLUMNS: List[str] = ["item_id"]
 SEMANTIC_DETAIL_COLUMNS: List[str] = [
     "item_name",
     "item_description",
-    "category",
-    "subcategory_id",
+    *DEFAULT_DETAIL_COLUMNS,
 ]
 # `_distance` is set by vector search, `_score` by full-text search.
 SEMANTIC_OUTPUT_METRIC_COLUMNS: List[str] = [

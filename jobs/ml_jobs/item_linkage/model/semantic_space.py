@@ -6,7 +6,6 @@ from lancedb import connect_async
 from constants import (
     DETAIL_COLUMNS,
     N_PROBES,
-    NUM_RESULTS,
     REFINE_FACTOR,
     SEMANTIC_RETRIEVAL_UPPER_BOUND,
 )
@@ -19,6 +18,9 @@ class SemanticSpace:
         self.uri = model_path
         self.db = asyncio.run(self.connect_db())
         self.table = asyncio.run(self.open_table(linkage_type))
+        # LanceDB caps ANN queries at 10 results by default; use the table size as
+        # the limit so only the distance upper bound filters the neighbors.
+        self.row_count = asyncio.run(self.table.count_rows())
 
     async def connect_db(self):
         return await connect_async(self.uri)
@@ -43,7 +45,6 @@ class SemanticSpace:
         self,
         vector,
         filters: dict,
-        n=NUM_RESULTS,
     ) -> pd.DataFrame:
         query = (
             self.table.query()
@@ -54,7 +55,7 @@ class SemanticSpace:
             .refine_factor(REFINE_FACTOR)
             .select(columns=DETAIL_COLUMNS + DEFAULTS)
             .distance_range(upper_bound=SEMANTIC_RETRIEVAL_UPPER_BOUND)
-            .limit(n)
+            .limit(self.row_count)
         )
         results = await query.to_pandas(flatten=True)
         results = results.rename(columns={"item_id": "item_id_synchro"})

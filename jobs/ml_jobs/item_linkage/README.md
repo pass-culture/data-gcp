@@ -79,10 +79,10 @@ If you want to run individual scripts manually, follow the order above and use t
 
 | Property | Value |
 |---|---|
-| Source table | `passculture-data-<env>.ml_feat_<env>.item_embedding_refactor_128` (pre-truncated) |
+| Source table | `passculture-data-<env>.ml_semantic_embedding_<env>.all_items_offer_names_128` (pre-truncated) |
 | Model | embedding-gemma-300m |
 | Original dimension | 768 |
-| Used dimension | **128** (first 128 dims, Matryoshka truncated upstream in the dbt model `ml_feat__item_embedding_128` via `ARRAY_SLICE`) |
+| Used dimension | **128** (first 128 dims, Matryoshka truncated upstream in the dbt model `ml_semantic_embedding__all_items_offer_names_128` via `ARRAY_SLICE`) |
 | Normalization | L2 (applied in `preprocess.py`) |
 | LanceDB index | IVF_PQ, cosine distance, `Vector(128)` |
 
@@ -110,7 +110,7 @@ flowchart TD
     subgraph P [Product workflow → product-*]
         direction TB
         prod0["build_semantic_space.py<br/>index product sources <br/> LanceDB IVF_PQ, cosine"]
-        prod0 --> prod1["linkage_candidates.py<br/>retrieve top-5 <br/> offer → nearest products"]
+        prod0 --> prod1["linkage_candidates.py<br/>retrieve neighbors <br/> offer → nearest products"]
         prod1 --> prod2["link_items.py<br/>verify title <br/> Jaro-Winkler ≥ 0.90"]
         prod2 --> prod3["→ linked_product<br/>offer adopts the product's <br/> item_id_synchro"]
     end
@@ -118,7 +118,7 @@ flowchart TD
     subgraph O [Offer workflow → item_cluster_*]
         direction TB
         off0["build_semantic_space.py<br/>index offers <br/> non-synchro+product leftovers"]
-        off0 --> off1["linkage_candidates.py<br/>retrieve top-5 <br/> offer ↔ offer"]
+        off0 --> off1["linkage_candidates.py<br/>retrieve neighbors <br/> offer ↔ offer"]
         off1 --> off2["link_items.py<br/>verify title <br/> Jaro-Winkler ≥ 0.95"]
         off2 --> off3["assign_linked_ids.py<br/>graph → connected components <br/> → item_cluster_N"]
     end
@@ -156,8 +156,7 @@ All in `constants.py`. The Jaro-Winkler gate is the one that actually decides a 
 | Jaro-Winkler on `oeuvre` | `0.90` product · `0.95` offer | The match gate. Title similarity must clear it. |
 | `MATCHES_REQUIRED` | `1` | Features that must match — only `oeuvre` is compared, so one is enough. |
 | `RETRIEVAL_FILTERS` | `edition`, `offer_subcategory_id` | Exact-match constraints during vector search. |
-| `NUM_RESULTS` | `5` | Neighbors retrieved per candidate. |
-| `SEMANTIC_RETRIEVAL_UPPER_BOUND` | `0.3` | Cosine-distance ceiling on retrieved neighbors. |
+| `SEMANTIC_RETRIEVAL_UPPER_BOUND` | `0.1` | Cosine-distance ceiling on retrieved neighbors. All neighbors within this bound are returned (no fixed count cap). |
 | Vector dimension (`MODEL_TYPE["n_dim"]`) | `128` | Pre-truncated upstream & L2-normalized (no reduction in this job). |
 | `N_PROBES` / `REFINE_FACTOR` | `5` / `10` | ANN recall vs accuracy knobs. |
 | Cluster keep rule | edges > 1 | Drops single-edge clusters (may also drop simple pairs). |

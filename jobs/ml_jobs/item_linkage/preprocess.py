@@ -127,7 +127,7 @@ def preprocess_embeddings(chunk: pd.DataFrame) -> pd.DataFrame:
         raise ValueError(
             f"Expected every embedding to have {MODEL_TYPE['n_dim']} dimensions, "
             f"got an array of shape {embeddings_array.shape}. Check the upstream "
-            "truncation in ml_feat__item_embedding_refactor_128."
+            "truncation in ml_semantic_embedding__all_items_offer_names_128."
         )
 
     normalized_embeddings = normalize(embeddings_array, norm="l2")

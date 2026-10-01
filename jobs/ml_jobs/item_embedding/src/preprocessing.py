@@ -6,7 +6,6 @@ deliberately knows nothing about prompts or encoders -- it only turns raw
 feature columns into cleaned ones.
 """
 
-import json
 import re
 from typing import Any, Callable, Optional
 
@@ -64,70 +63,10 @@ def clean_description(value: Optional[str]) -> Optional[str]:
     return normalize_whitespace(text)
 
 
-def _parse_extra_semantic_metadata(value: Any) -> Optional[dict]:
-    """Parses the ``extra_semantic_metadata`` envelope, accepting either a
-    native dict or a JSON-encoded string. Returns ``None`` for ``None`` input.
-    """
-    if value is None:
-        return None
-    return json.loads(value) if isinstance(value, str) else value
-
-
-def format_movie_genres(value: Any) -> Optional[str]:
-    """Formats a movie genre list from a uniform ``extra_semantic_metadata``
-    envelope -- ``{"movies": {"genres": ["DRAMA", "ACTION"]}}`` (or the
-    JSON-encoded string equivalent) -- as ``"DRAMA, ACTION"``.
-
-    ``"movies"`` is a fixed content-type key, independent of the vector's
-    name. Returns ``None`` if the envelope/"movies"/"genres" is absent/empty.
-    """
-    envelope = _parse_extra_semantic_metadata(value)
-    if envelope is None:
-        return None
-    genres = (envelope.get("movies") or {}).get("genres")
-    if not genres:
-        return None
-    return ", ".join(str(genre) for genre in genres)
-
-
-_GTL_LEVEL_LABELS = {
-    "gtl1": "niveau 1",
-    "gtl2": "niveau 2",
-    "gtl3": "niveau 3",
-    "gtl4": "niveau 4",
-}
-
-
-def format_book_classification(value: Any) -> Optional[str]:
-    """Formats the hierarchical GTL classification from a uniform
-    ``extra_semantic_metadata`` envelope -- ``{"books": {"gtl1": "roman",
-    "gtl2": "19eme siecle", ...}}`` -- as a labeled chevron chain:
-    ``"niveau 1 : roman > niveau 2 : 19eme siecle"``.
-
-    GTL has no fixed per-level meaning, so each value is tagged by its raw
-    level position. Missing levels are skipped. Returns ``None`` if no level
-    is populated.
-    """
-    envelope = _parse_extra_semantic_metadata(value)
-    if envelope is None:
-        return None
-    classification = envelope.get("books") or {}
-    parts = [
-        f"{_GTL_LEVEL_LABELS[key]} : {classification[key]}"
-        for key in _GTL_LEVEL_LABELS
-        if classification.get(key)
-    ]
-    if not parts:
-        return None
-    return " > ".join(parts)
-
-
 # Registry of named preprocessors referenceable from a vector's YAML config.
 PREPROCESSORS: dict[str, Callable[[Any], Optional[str]]] = {
     "normalize_whitespace": normalize_whitespace,
     "clean_description": clean_description,
-    "format_movie_genres": format_movie_genres,
-    "format_book_classification": format_book_classification,
 }
 
 

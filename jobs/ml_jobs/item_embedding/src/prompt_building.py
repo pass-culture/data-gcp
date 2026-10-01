@@ -6,44 +6,60 @@ This is part of the logic behind the ``prepare`` step (``cli/prepare.py``),
 run after the preprocessors in the same step. It knows nothing about encoders.
 """
 
+from string import Formatter
+
 import pandas as pd
 from loguru import logger
 from src.config import Vector
 from src.preprocessing import _is_missing
 
 
+def _template_line_fields(line: str) -> list[str]:
+    """Field names referenced by the ``{placeholder}``s on one template line."""
+    return [name for _, name, _, _ in Formatter().parse(line) if name is not None]
+
+
 def _build_prompts_from_template(df: pd.DataFrame, vector: Vector) -> list[str]:
     """Build prompts by rendering ``vector.prompt_template`` per row.
 
-    Null feature values render as ``""`` (not the literal ``"None"``). Rows
-    where every declared feature is null get an empty prompt, kept in place.
+    The template is split on newlines and rendered line by line; a line is
+    dropped for a row when every ``{placeholder}`` it holds is empty/missing,
+    so an optional metadata line (e.g. ``Genres: {movie_genres}``) disappears
+    instead of leaving a dangling label. Lines with no placeholders are always
+    kept. Surviving lines are joined with a single space, so a row whose every
+    feature is null yields an empty prompt. Null values render as ``""`` (not
+    the literal ``"None"``).
 
     Raises:
         ValueError: If the template references a field not in vector.features.
     """
-    template = vector.prompt_template
+    lines = vector.prompt_template.split("\n")
 
     def render(row: pd.Series) -> str:
         values = {
             feature: ("" if _is_missing(row[feature]) else row[feature])
             for feature in vector.features
         }
-        try:
-            return template.format(**values)
-        except KeyError as e:
-            raise ValueError(
-                f"Vector '{vector.name}': prompt_template references unknown "
-                f"field {e}; declared features: {vector.features}"
-            ) from e
+        rendered_lines = []
+        for line in lines:
+            fields = _template_line_fields(line)
+            all_known_and_empty = (
+                bool(fields)
+                and all(field in values for field in fields)
+                and all(values[field] == "" for field in fields)
+            )
+            if all_known_and_empty:
+                continue
+            try:
+                rendered_lines.append(line.format(**values))
+            except KeyError as e:
+                raise ValueError(
+                    f"Vector '{vector.name}': prompt_template references unknown "
+                    f"field {e}; declared features: {vector.features}"
+                ) from e
+        return " ".join(part for part in rendered_lines if part)
 
-    rendered = df.apply(render, axis=1)
-
-    all_null_mask = df[vector.features].isna().all(axis=1)
-    if all_null_mask.any():
-        rendered = rendered.copy()
-        rendered[all_null_mask] = ""
-
-    return rendered.tolist()
+    return df.apply(render, axis=1).tolist()
 
 
 def build_prompts(df: pd.DataFrame, vector: Vector) -> list[str]:

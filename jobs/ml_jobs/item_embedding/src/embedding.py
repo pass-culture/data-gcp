@@ -117,6 +117,7 @@ def find_long_prompts(
         if isinstance(encoder_max_seq_length, int)
         else tracker.max_tokens
     )
+    tracker.max_tokens = max_tokens
     length_threshold = 2 * max_tokens
 
     candidate_indices = [

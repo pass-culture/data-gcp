@@ -111,15 +111,19 @@ def log_vector_to_run(
     vector: Vector,
     config_path: str,
     n_items_embedded: int,
-    n_truncated_prompts: int,
+    max_tokens: int,
+    truncated_item_ids: list,
 ) -> None:
     """Resume the shared DAG-run run and append one vector's config + counts.
 
     Logs the raw YAML as an artifact (exact source of truth) and one
     vector-prefixed param per top-level config field (so every field, incl.
     ``prompt_template`` and ``preprocessors``, is searchable without opening the
-    artifact). Keys are vector-prefixed so a single run cleanly accumulates every
-    vector embedded in the DAG run. No-op when ``run_id`` is empty.
+    artifact). The token limit is logged as a param and the ids of items whose
+    prompt was truncated are logged whole as a JSON artifact (lists can be large,
+    so they go to an artifact rather than a param). Keys are vector-prefixed so a
+    single run cleanly accumulates every vector embedded in the DAG run. No-op
+    when ``run_id`` is empty.
     """
     if not run_id:
         return
@@ -129,11 +133,17 @@ def log_vector_to_run(
         mlflow.log_params(
             _config_to_params(vector.model_dump(exclude={"name"}), vector.name)
         )
+        mlflow.log_param(f"{vector.name}.max_tokens", max_tokens)
         mlflow.log_metrics(
             {
                 f"{vector.name}.n_items_embedded": n_items_embedded,
-                f"{vector.name}.n_truncated_prompts": n_truncated_prompts,
+                f"{vector.name}.n_truncated_prompts": len(truncated_item_ids),
             }
         )
+        if truncated_item_ids:
+            mlflow.log_dict(
+                {"max_tokens": max_tokens, "item_ids": truncated_item_ids},
+                f"truncated_items/{vector.name}.json",
+            )
         mlflow.set_tag(f"embedded.{vector.name}", "true")
     logger.info(f"Logged vector '{vector.name}' to MLflow run {run_id}")

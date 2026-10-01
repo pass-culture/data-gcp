@@ -34,7 +34,7 @@ def prepare_catalog_data(
 
     analytics_dataset = f"analytics_{env}"
     sandbox_dataset = f"sandbox_{env}"
-    mlfeat_dataset = f"ml_feat_{env}"
+    semantic_embedding_dataset = f"ml_semantic_embedding_{env}"
     output_path = (
         f"gs://mlflow-bucket-{gcp_env}/streamlit_data/chatbot_edito/offers_{env}/"
     )
@@ -51,7 +51,7 @@ def prepare_catalog_data(
         project=gcp_project,
         analytics_dataset=analytics_dataset,
         sandbox_dataset=sandbox_dataset,
-        mlfeat_dataset=mlfeat_dataset,
+        semantic_embedding_dataset=semantic_embedding_dataset,
     )
 
     logger.info("Executing BigQuery query...")

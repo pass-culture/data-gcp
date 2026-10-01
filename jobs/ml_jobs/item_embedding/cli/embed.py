@@ -90,7 +90,12 @@ def main(
     tracker.log_summary()
     config_path = str(CONFIGS_PATH / f"{config_file_name}.yaml")
     log_vector_to_run(
-        run_id, vector, config_path, total_embedded, len(tracker.long_item_ids)
+        run_id,
+        vector,
+        config_path,
+        total_embedded,
+        tracker.max_tokens,
+        tracker.long_item_ids,
     )
     logger.info("✅ Embedding complete")
 

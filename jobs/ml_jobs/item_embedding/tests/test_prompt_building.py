@@ -81,3 +81,66 @@ class TestTemplatePrompt:
         vector = _vector(["offer_name"], prompt_template="{offer_name} by {author}")
         with pytest.raises(ValueError, match="unknown field"):
             build_prompts(df, vector)
+
+    def test_multiline_template_joined_with_space(self):
+        df = pd.DataFrame(
+            {
+                "offer_name": ["Dune"],
+                "movie_genres": ["SF, Aventure"],
+                "offer_description": ["A desert planet"],
+            }
+        )
+        vector = _vector(
+            ["offer_name", "movie_genres", "offer_description"],
+            prompt_template=(
+                'Ce film est intitulé "{offer_name}".\n'
+                "Genres: {movie_genres}.\n"
+                "Synopsis: {offer_description}."
+            ),
+        )
+        assert build_prompts(df, vector) == [
+            'Ce film est intitulé "Dune". Genres: SF, Aventure. '
+            "Synopsis: A desert planet."
+        ]
+
+    def test_optional_line_dropped_when_its_only_placeholder_is_empty(self):
+        df = pd.DataFrame(
+            {
+                "offer_name": ["Dune"],
+                "movie_genres": [None],
+                "offer_description": ["A desert planet"],
+            }
+        )
+        vector = _vector(
+            ["offer_name", "movie_genres", "offer_description"],
+            prompt_template=(
+                'Ce film est intitulé "{offer_name}".\n'
+                "Genres: {movie_genres}.\n"
+                "Synopsis: {offer_description}."
+            ),
+        )
+        assert build_prompts(df, vector) == [
+            'Ce film est intitulé "Dune". Synopsis: A desert planet.'
+        ]
+
+    def test_line_kept_when_any_placeholder_present(self):
+        df = pd.DataFrame({"offer_name": ["Dune"], "author_concat": [None]})
+        vector = _vector(
+            ["offer_name", "author_concat"],
+            prompt_template='Ce livre est intitulé "{offer_name}" par {author_concat}.',
+        )
+        assert build_prompts(df, vector) == ['Ce livre est intitulé "Dune" par .']
+
+    def test_all_optional_lines_dropped_yields_empty_prompt(self):
+        df = pd.DataFrame(
+            {"offer_name": [None], "movie_genres": [None], "offer_description": [None]}
+        )
+        vector = _vector(
+            ["offer_name", "movie_genres", "offer_description"],
+            prompt_template=(
+                'Ce film est intitulé "{offer_name}".\n'
+                "Genres: {movie_genres}.\n"
+                "Synopsis: {offer_description}."
+            ),
+        )
+        assert build_prompts(df, vector) == [""]

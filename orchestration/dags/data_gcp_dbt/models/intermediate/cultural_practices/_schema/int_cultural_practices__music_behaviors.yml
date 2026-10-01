@@ -6,3 +6,35 @@ models:
     columns:
       - name: respondent_id
         description: '{{ doc("column__respondent_id") }}'
+      - name: listening_frequency_code
+        description: '{{ doc("column__music_listening_frequency_code") }}'
+      - name: support_cd_cassette
+        description: '{{ doc("column__music_support_cd_cassette") }}'
+      - name: support_vinyl
+        description: '{{ doc("column__music_support_vinyl") }}'
+      - name: support_streaming_specialized
+        description: '{{ doc("column__music_support_streaming_specialized") }}'
+      - name: support_streaming_other
+        description: '{{ doc("column__music_support_streaming_other") }}'
+      - name: support_digital_files
+        description: '{{ doc("column__music_support_digital_files") }}'
+      - name: support_radio
+        description: '{{ doc("column__music_support_radio") }}'
+      - name: support_tv
+        description: '{{ doc("column__music_support_tv") }}'
+      - name: music_at_home_frequency_code
+        description: '{{ doc("column__music_at_home_frequency_code") }}'
+      - name: active_listening_code
+        description: '{{ doc("column__music_active_listening_code") }}'
+      - name: music_importance_code
+        description: '{{ doc("column__music_importance_code") }}'
+      - name: listening_frequency
+        description: '{{ doc("column__music_listening_frequency") }}'
+      - name: foreign_language_music
+        description: '{{ doc("column__music_foreign_language") }}'
+      - name: music_at_home_frequency
+        description: '{{ doc("column__music_at_home_frequency") }}'
+      - name: active_listening
+        description: '{{ doc("column__music_active_listening") }}'
+      - name: music_importance
+        description: '{{ doc("column__music_importance") }}'

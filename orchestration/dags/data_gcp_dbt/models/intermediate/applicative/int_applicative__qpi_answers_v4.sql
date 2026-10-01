@@ -5,7 +5,7 @@ with
             raw_answers.submitted_at,
             raw_answers.answers,
             cast(null as string) as catch_up_user_id
-        from {{ source("raw", "qpi_answers_v4") }} as raw_answers
+        from {{ source("raw_eu1", "qpi_answers_v4") }} as raw_answers
     ),
 
     base as (select * from (select * from raw_answers) as qpi, qpi.answers as answers),

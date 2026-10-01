@@ -122,8 +122,8 @@ select
     rank() over (
         partition by s.offer_id order by s.stock_creation_date desc, s.stock_id desc
     ) as stock_rk
-from {{ source("raw", "applicative_database_stock") }} as s
+from {{ source("raw_eu1", "applicative_database_stock") }} as s
 left join bookings_grouped_by_stock as bs on bs.stock_id = s.stock_id
 left join
-    {{ source("raw", "applicative_database_price_category") }} as price_category
+    {{ source("raw_eu1", "applicative_database_price_category") }} as price_category
     on price_category.price_category_id = s.price_category_id

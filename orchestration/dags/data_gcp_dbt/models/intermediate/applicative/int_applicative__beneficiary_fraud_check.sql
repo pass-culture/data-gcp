@@ -11,7 +11,7 @@ select
     bfd.result_content,
     u.user_is_active,
     ah.action_history_reason
-from {{ source("raw", "applicative_database_beneficiary_fraud_check") }} as bfd
+from {{ source("raw_eu1", "applicative_database_beneficiary_fraud_check") }} as bfd
 left join {{ ref("int_applicative__user") }} as u on u.user_id = bfd.user_id
 left join
     {{ ref("int_applicative__action_history") }} as ah

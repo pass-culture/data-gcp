@@ -20,7 +20,7 @@ with
             scholar_year,
             educational_year_beginning_date,
             educational_year_expiration_date
-        from {{ source("raw", "applicative_database_educational_year") }}
+        from {{ source("raw_eu1", "applicative_database_educational_year") }}
     ),
 
     months_spine as (

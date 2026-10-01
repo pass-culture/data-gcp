@@ -5,4 +5,4 @@ select
     imagetype as image_type,
     cast(lastproviderid as string) as last_provider_id,
     uuid as uuid
-from {{ source("raw", "applicative_database_product_mediation") }} product_mediation
+from {{ source("raw_eu1", "applicative_database_product_mediation") }} product_mediation

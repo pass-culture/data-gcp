@@ -14,4 +14,4 @@ select
     artist_pro_search_score,
     date(date_created) as creation_date,
     date(date_modified) as modification_date
-from {{ source("raw", "applicative_database_artist") }}
+from {{ source("raw_eu1", "applicative_database_artist") }}

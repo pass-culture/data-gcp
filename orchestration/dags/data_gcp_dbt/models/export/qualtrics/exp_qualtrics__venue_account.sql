@@ -1,7 +1,7 @@
 with
     previous_export as (
         select distinct email as venue_booking_email
-        from {{ source("raw", "qualtrics_exported_venue_account") }}
+        from {{ source("raw_eu1", "qualtrics_exported_venue_account") }}
         where
             calculation_month
             >= date_sub(date_trunc(date("{{ ds() }}"), month), interval 3 month)
@@ -27,7 +27,7 @@ with
             ) as venue_seniority_days
         from {{ ref("mrt_global__venue") }} as global_venue
         left join
-            {{ source("raw", "qualtrics_opt_out_users") }} as opt_out
+            {{ source("raw_eu1", "qualtrics_opt_out_users") }} as opt_out
             on global_venue.venue_id = opt_out.ext_ref
         where
             opt_out.contact_id is null and global_venue.venue_booking_email is not null

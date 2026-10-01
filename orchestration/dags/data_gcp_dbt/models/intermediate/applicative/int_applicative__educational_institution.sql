@@ -76,7 +76,7 @@ select
     dgi.total_deposits,
     institution_program.institution_program_name,
     ugi.total_credited_beneficiaries
-from {{ source("raw", "applicative_database_educational_institution") }} as ei
+from {{ source("raw_eu1", "applicative_database_educational_institution") }} as ei
 left join
     {{ ref("int_applicative__institution_program") }} as institution_program
     on ei.educational_institution_id = institution_program.institution_id

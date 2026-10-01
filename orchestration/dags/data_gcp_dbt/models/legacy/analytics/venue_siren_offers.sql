@@ -77,7 +77,7 @@ with
         left join
             {{ ref("mrt_global__offer") }} as offer on venue.venue_id = offer.venue_id
         left join
-            {{ source("raw", "subcategories") }} as subcategories
+            {{ source("raw_eu1", "subcategories") }} as subcategories
             on offer.offer_subcategory_id = subcategories.id
         left join
             {{ ref("mrt_global__booking") }} as booking

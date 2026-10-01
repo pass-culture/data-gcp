@@ -29,7 +29,7 @@ with
                 = 'Recommanderiez-vous le pass Culture à une autre structure culturelle ?',
                 false
             ) as is_nps_question
-        from {{ source("raw", "qualtrics_answers") }}
+        from {{ source("raw_eu1", "qualtrics_answers") }}
         where survey_id = '{{ survey_id_pro }}'
     )
 

@@ -4,7 +4,7 @@ with
             cast(type as string) as offer_type_id,
             label as offer_type_label,
             upper(domain) as offer_type_domain
-        from {{ source("raw", "offer_types") }}
+        from {{ source("raw_eu1", "offer_types") }}
     ),
 
     offer_sub_types as (
@@ -14,7 +14,7 @@ with
             sub_label as offer_sub_type_label,
             upper(domain) as offer_type_domain,
             safe_cast(safe_cast(sub_type as float64) as string) as offer_sub_type_id
-        from {{ source("raw", "offer_types") }}
+        from {{ source("raw_eu1", "offer_types") }}
     )
 
 select
@@ -161,6 +161,6 @@ left join
     on o.offer_product_id = pm.product_id
 left join {{ ref("int_applicative__product") }} as p on o.offer_product_id = p.id
 left join
-    {{ source("raw", "applicative_database_offer_meta_data") }} omd
+    {{ source("raw_eu1", "applicative_database_offer_meta_data") }} omd
     on omd.offerid = o.offer_id
 qualify row_number() over (partition by offer_id order by pm.image_type) = 1

@@ -19,7 +19,7 @@ select
     device_name,
     country,
     trace_info.metric_info.metric_value as home_time_to_interactive_container_in_ms
-from {{ source("raw", "firebase_ios_performance") }}
+from {{ source("raw_eu1", "firebase_ios_performance") }}
 where
     event_type = 'TRACE_METRIC' and event_name = 'home_time_to_interactive_in_ms'
     {% if is_incremental() %}
@@ -41,7 +41,7 @@ select
     device_name,
     country,
     trace_info.metric_info.metric_value as home_time_to_interactive_container_in_ms
-from {{ source("raw", "firebase_android_performance") }}
+from {{ source("raw_eu1", "firebase_android_performance") }}
 where
     event_type = 'TRACE_METRIC' and event_name = 'home_time_to_interactive_in_ms'
     {% if is_incremental() %}

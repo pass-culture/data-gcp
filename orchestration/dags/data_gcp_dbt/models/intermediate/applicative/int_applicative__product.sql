@@ -10,4 +10,4 @@ select
     datemodifiedatlastprovider,
     ean,
     case when product.thumbcount > 0 then 1 else 0 end as is_mediation
-from {{ source("raw", "applicative_database_product") }} as product
+from {{ source("raw_eu1", "applicative_database_product") }} as product

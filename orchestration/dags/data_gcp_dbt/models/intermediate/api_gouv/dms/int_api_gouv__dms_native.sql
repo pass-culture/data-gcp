@@ -33,7 +33,7 @@ with
                 'Europe/Paris'
             ) as dms_application_last_updated_at
 
-        from {{ source("raw", "raw_dms_jeunes") }}
+        from {{ source("raw_eu1", "raw_dms_jeunes") }}
         where
             application_submitted_at > 0
             and (processed_at > 0 or processed_at is null)

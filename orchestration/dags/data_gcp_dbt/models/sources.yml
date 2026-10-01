@@ -1,13 +1,13 @@
 version: 1
 
 sources:
-  - name: raw_eu9
+  - name: raw # Paris
     schema: raw_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'pc-data-prd' if var('ENV_SHORT_NAME') == 'prd' else 'pc-data-stg' }}"
     tables:
       - name: gsheet_educational_institution_student_headcount
 
-  - name: raw
+  - name: raw_eu1 # Belgique
     schema: raw_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:

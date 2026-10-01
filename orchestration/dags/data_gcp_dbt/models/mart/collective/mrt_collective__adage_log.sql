@@ -53,7 +53,7 @@ select
     a.user_role
 from {{ ref("int_pcapi__adage_log") }} as a
 left join
-    {{ source("raw", "applicative_database_collective_stock") }} as s
+    {{ source("raw_eu1", "applicative_database_collective_stock") }} as s
     on s.collective_stock_id = a.collective_stock_id
 left join
     {{ ref("mrt_global__collective_offer") }} as o

@@ -12,7 +12,7 @@ with
                     when recredit_type = 'PREVIOUS_DEPOSIT' then recredit_amount else 0
                 end
             ) as total_previous_deposit_recredit_amount
-        from {{ source("raw", "applicative_database_recredit") }}
+        from {{ source("raw_eu1", "applicative_database_recredit") }}
         group by deposit_id
     )
 
@@ -74,6 +74,6 @@ select
         when d.type = 'GRANT_FREE' and d.amount = 0
         then '15_16_post_reform'
     end as deposit_reform_category
-from {{ source("raw", "applicative_database_deposit") }} as d
+from {{ source("raw_eu1", "applicative_database_deposit") }} as d
 left join {{ ref("int_applicative__user") }} as u on d.userid = u.user_id
 left join recredits_grouped_by_deposit as rd on d.id = rd.deposit_id

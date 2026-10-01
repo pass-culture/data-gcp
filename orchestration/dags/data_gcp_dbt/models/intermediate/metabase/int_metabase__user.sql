@@ -12,5 +12,5 @@ select
     mb_users.is_superuser,
     contact.direction as user_direction,
     contact.team as user_team
-from {{ source("raw", "metabase_core_user") }} as mb_users
-left join {{ source("raw", "gsheet_company_contact") }} as contact using (email)
+from {{ source("raw_eu1", "metabase_core_user") }} as mb_users
+left join {{ source("raw_eu1", "gsheet_company_contact") }} as contact using (email)

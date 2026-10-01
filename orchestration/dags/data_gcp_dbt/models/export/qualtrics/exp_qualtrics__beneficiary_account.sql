@@ -2,14 +2,14 @@
 with
     previous_export as (
         select distinct user_id
-        from {{ source("raw", "qualtrics_exported_beneficiary_account") }}
+        from {{ source("raw_eu1", "qualtrics_exported_beneficiary_account") }}
         where
             calculation_month
             >= date_sub(date_trunc(date("{{ ds() }}"), month), interval 1 month)
 
     ),
 
-    answers as (select distinct user_id from {{ source("raw", "qualtrics_answers") }}),
+    answers as (select distinct user_id from {{ source("raw_eu1", "qualtrics_answers") }}),
 
     ir_export as (
         select
@@ -28,7 +28,7 @@ with
             {{ ref("int_geo__user_location") }} as user_location
             on user_data.user_id = user_location.user_id
         left join
-            {{ source("raw", "qualtrics_opt_out_users") }} as opt_out
+            {{ source("raw_eu1", "qualtrics_opt_out_users") }} as opt_out
             on user_data.user_id = opt_out.ext_ref
         left join answers on user_data.user_id = answers.user_id
         where

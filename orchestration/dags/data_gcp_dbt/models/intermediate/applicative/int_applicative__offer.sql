@@ -37,7 +37,7 @@ with
 
     total_favorites as (
         select offerid, count(*) as total_favorites
-        from {{ source("raw", "applicative_database_favorite") }}
+        from {{ source("raw_eu1", "applicative_database_favorite") }}
         group by offerid
     ),
 
@@ -228,7 +228,7 @@ left join stocks_grouped_by_offers on stocks_grouped_by_offers.offer_id = o.offe
 left join total_favorites on total_favorites.offerid = o.offer_id
 left join offer_last_advice on offer_last_advice.offer_id = o.offer_id
 left join
-    {{ source("raw", "subcategories") }} as subcategories
+    {{ source("raw_eu1", "subcategories") }} as subcategories
     on o.offer_subcategoryid = subcategories.id
 left join
     {{ ref("int_applicative__offer_ean") }} as offer_ean

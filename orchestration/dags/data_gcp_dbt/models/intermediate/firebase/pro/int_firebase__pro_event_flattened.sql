@@ -72,4 +72,4 @@ select
         from unnest(event_params) as event_params
         where event_params.key = 'to'
     ) as destination
-from {{ source("raw", "firebase_pro_events") }}
+from {{ source("raw_eu1", "firebase_pro_events") }}

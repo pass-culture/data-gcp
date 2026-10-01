@@ -28,5 +28,5 @@ select
     rank() over (
         partition by b.user_id order by b.booking_creation_date
     ) as booking_rank
-from {{ source("raw", "applicative_database_booking") }} as b
+from {{ source("raw_eu1", "applicative_database_booking") }} as b
 left join {{ ref("int_applicative__deposit") }} as d on b.deposit_id = d.deposit_id

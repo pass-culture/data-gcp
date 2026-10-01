@@ -15,7 +15,7 @@ with
                 "postal_code",
                 "unknown"
             ) as geocode_type
-        from {{ source("raw", "applicative_database_user") }} as adu
+        from {{ source("raw_eu1", "applicative_database_user") }} as adu
         left join
             {{ ref("int_seed__geo_postal_code") }} as pc
             on adu.user_postal_code = pc.postal_code
@@ -65,7 +65,7 @@ with
                 null
             ) as user_latitude,
             timestamp(ul.updated_at) as user_address_geocode_updated_at
-        from {{ source("raw", "user_address") }} as ul
+        from {{ source("raw_eu1", "user_address") }} as ul
         where ul.result_status = "ok"
         qualify
             row_number() over (partition by ul.user_id order by ul.updated_at desc) = 1

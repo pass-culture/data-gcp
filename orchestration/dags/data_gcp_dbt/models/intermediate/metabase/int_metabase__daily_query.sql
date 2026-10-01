@@ -12,7 +12,7 @@ with
             to_hex(mqe.hash) as metabase_hash,
             sum(mqe.running_time) as running_time,
             sum(mqe.result_rows) as result_rows
-        from {{ source("raw", "metabase_query_execution") }} as mqe
+        from {{ source("raw_eu1", "metabase_query_execution") }} as mqe
         group by 1, 2, 3, 4, 5, 6, 7, 8, 9
     )
 
@@ -31,7 +31,7 @@ select
         partition by mqe.card_id order by mqe.execution_date desc
     ) as card_id_execution_rank
 from metabase_query as mqe
-inner join {{ source("raw", "metabase_report_card") }} as mrc on mqe.card_id = mrc.id
+inner join {{ source("raw_eu1", "metabase_report_card") }} as mrc on mqe.card_id = mrc.id
 left join
-    {{ source("raw", "metabase_report_dashboard") }} as mrd on mqe.dashboard_id = mrd.id
+    {{ source("raw_eu1", "metabase_report_dashboard") }} as mrd on mqe.dashboard_id = mrd.id
 left join {{ ref("int_metabase__user") }} as mu on mqe.metabase_user_id = mu.user_id

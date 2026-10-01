@@ -18,4 +18,4 @@ select
     row_number() over (
         partition by offerid order by datemodifiedatlastprovider desc
     ) as mediation_rown
-from {{ source("raw", "applicative_database_mediation") }}
+from {{ source("raw_eu1", "applicative_database_mediation") }}

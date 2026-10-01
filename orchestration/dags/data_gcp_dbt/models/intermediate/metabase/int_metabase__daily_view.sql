@@ -5,7 +5,7 @@ with
             vl.timestamp as view_date,
             vl.model_id as card_id,
             vl.user_id as metabase_user_id
-        from {{ source("raw", "metabase_view_log") }} as vl
+        from {{ source("raw_eu1", "metabase_view_log") }} as vl
         where lower(vl.model) = 'card'
     )
 
@@ -25,5 +25,5 @@ select
         partition by mv.card_id order by mv.view_date desc
     ) as card_id_view_rank
 from metabase_view as mv
-inner join {{ source("raw", "metabase_report_card") }} as mrc on mv.card_id = mrc.id
+inner join {{ source("raw_eu1", "metabase_report_card") }} as mrc on mv.card_id = mrc.id
 left join {{ ref("int_metabase__user") }} as mu on mv.metabase_user_id = mu.user_id

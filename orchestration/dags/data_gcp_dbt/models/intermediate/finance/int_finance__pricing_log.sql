@@ -1,1 +1,1 @@
-select * from {{ source("raw", "applicative_database_pricing_log") }}
+select * from {{ source("raw_eu1", "applicative_database_pricing_log") }}

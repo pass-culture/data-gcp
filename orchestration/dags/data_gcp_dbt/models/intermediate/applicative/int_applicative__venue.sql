@@ -311,23 +311,23 @@ select
         o.total_created_mediation_individual_offers, 0
     ) as total_created_mediation_individual_offers,
     coalesce(o.has_mediation_offer, false) as has_mediation_offer
-from {{ source("raw", "applicative_database_venue") }} as v
+from {{ source("raw_eu1", "applicative_database_venue") }} as v
 left join {{ ref("int_geo__venue_location") }} as v_loc on v.venue_id = v_loc.venue_id
 left join offers_grouped_by_venue as o on v.venue_id = o.venue_id
 left join collective_offers_grouped_by_venue as co on v.venue_id = co.venue_id
 left join
-    {{ source("raw", "applicative_database_venue_registration") }} as vr
+    {{ source("raw_eu1", "applicative_database_venue_registration") }} as vr
     on v.venue_id = vr.venue_id
 left join
-    {{ source("raw", "applicative_database_venue_contact") }} as vc
+    {{ source("raw_eu1", "applicative_database_venue_contact") }} as vc
     on v.venue_id = vc.venue_id
 left join
-    {{ source("raw", "applicative_database_venue_label") }} as vl
+    {{ source("raw_eu1", "applicative_database_venue_label") }} as vl
     on v.venue_label_id = vl.venue_label_id
 left join
-    {{ source("raw", "applicative_database_accessibility_provider") }} as va
+    {{ source("raw_eu1", "applicative_database_accessibility_provider") }} as va
     on v.venue_id = va.venue_id
 left join
-    {{ source("raw", "applicative_database_google_places_info") }} as gp
+    {{ source("raw_eu1", "applicative_database_google_places_info") }} as gp
     on v.venue_id = gp.venue_id
 where not v.venue_is_soft_deleted

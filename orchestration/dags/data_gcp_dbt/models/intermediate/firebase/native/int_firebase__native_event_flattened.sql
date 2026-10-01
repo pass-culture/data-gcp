@@ -12,7 +12,7 @@
 with
     firebase_last_two_days_events as (
         select *
-        from {{ source("raw", "firebase_events") }}
+        from {{ source("raw_eu1", "firebase_events") }}
         where
             true
             {% if target.profile_name != "CI" %} and {% endif %}

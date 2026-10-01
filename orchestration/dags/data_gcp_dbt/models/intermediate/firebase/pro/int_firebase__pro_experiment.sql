@@ -19,7 +19,7 @@ select distinct
         where up.key = 'offerer_id'
     ) as offerer_id,
     safe_cast(event_params.value.string_value as boolean) as experiment_value
-from {{ source("raw", "firebase_pro_events") }}, unnest(event_params) as event_params
+from {{ source("raw_eu1", "firebase_pro_events") }}, unnest(event_params) as event_params
 where
     (
         event_params.key = 'PRO_DIDACTIC_ONBOARDING_AB_TEST'

@@ -15,7 +15,7 @@ with
     already_ingested_event_series as (
         select applicative_database_event_series.event_series_id
         from
-            {{ source("raw", "applicative_database_event_series") }}
+            {{ source("raw_eu1", "applicative_database_event_series") }}
             as applicative_database_event_series
         where
             not exists (
@@ -69,7 +69,7 @@ with
             ) as event_series_mediation_uuid
         from casted_delta_event_series
         inner join
-            {{ source("raw", "applicative_database_event_series") }}
+            {{ source("raw_eu1", "applicative_database_event_series") }}
             as applicative_database_event_series
             on casted_delta_event_series.event_series_id
             = applicative_database_event_series.event_series_id

@@ -9,5 +9,5 @@ select
     delivered_count as total_delivered,
     opened_count as total_opened,
     unsubscribed_count as total_unsubscribed
-from {{ source("raw", "sendinblue_transactional") }}
+from {{ source("raw_eu1", "sendinblue_transactional") }}
 where target = 'pro'

@@ -17,7 +17,7 @@
         )
     }}
     select ean, recto_image_uuid, verso_image_uuid, json_raw
-    from {{ source("raw", "raw_titelive_products") }}
+    from {{ source("raw_eu1", "raw_titelive_products") }}
     where true and status = 'processed'
 
 {% endsnapshot %}

@@ -9,4 +9,4 @@ select
     gtl_label_level_2,
     gtl_label_level_3,
     gtl_label_level_4
-from {{ source("raw", "applicative_database_titelive_gtl") }}
+from {{ source("raw_eu1", "applicative_database_titelive_gtl") }}

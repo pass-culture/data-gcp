@@ -6,7 +6,7 @@ with
             json_extract(result_content, '$.city') as user_city,
             json_extract(result_content, '$.address') as user_address,
             json_extract(result_content, '$.postal_code') as user_postal_code
-        from {{ source("raw", "applicative_database_beneficiary_fraud_check") }}
+        from {{ source("raw_eu1", "applicative_database_beneficiary_fraud_check") }}
         where type = 'PROFILE_COMPLETION' and status = 'OK'
     ),
 
@@ -42,7 +42,7 @@ with
                     adu.user_city
                 )
             ) as user_full_address
-        from {{ source("raw", "applicative_database_user") }} as adu
+        from {{ source("raw_eu1", "applicative_database_user") }} as adu
         where
             -- beneficiary update should have all fields
             coalesce(adu.user_address, '') <> '' and adu.user_postal_code is not null
@@ -67,7 +67,7 @@ with
 
     user_location_update as (
         select user_id, timestamp(max(updated_at)) as last_calculation_at
-        from {{ source("raw", "user_address") }}
+        from {{ source("raw_eu1", "user_address") }}
         group by user_id
     )
 
@@ -80,7 +80,7 @@ select
 from user_candidates as uc
 left join user_location_update as ulu on uc.user_id = ulu.user_id
 inner join
-    {{ source("raw", "applicative_database_user") }} as u on uc.user_id = u.user_id
+    {{ source("raw_eu1", "applicative_database_user") }} as u on uc.user_id = u.user_id
 where
     -- no location update or location update is older than last user update
     (ulu.user_id is null or ulu.last_calculation_at < uc.user_last_modified_at)

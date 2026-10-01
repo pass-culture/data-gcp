@@ -17,7 +17,7 @@ with
                 applicative_database_event_series_offer_link.offer_id as string
             ) as offer_id
         from
-            {{ source("raw", "applicative_database_event_series_offer_link") }}
+            {{ source("raw_eu1", "applicative_database_event_series_offer_link") }}
             as applicative_database_event_series_offer_link
         where
             not exists (
@@ -59,7 +59,7 @@ with
             casted_delta_event_series_offer_link.comment
         from casted_delta_event_series_offer_link
         inner join
-            {{ source("raw", "applicative_database_event_series_offer_link") }}
+            {{ source("raw_eu1", "applicative_database_event_series_offer_link") }}
             as applicative_database_event_series_offer_link
             on casted_delta_event_series_offer_link.event_series_id
             = applicative_database_event_series_offer_link.event_series_id

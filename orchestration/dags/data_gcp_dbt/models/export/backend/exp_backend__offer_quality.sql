@@ -5,7 +5,7 @@ with
 
     current_applicative_scores as (
         select offer_id, completion_score
-        from {{ source("raw", "applicative_database_offer_quality") }}
+        from {{ source("raw_eu1", "applicative_database_offer_quality") }}
     )
 
 select

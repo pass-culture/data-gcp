@@ -36,7 +36,7 @@ select
     pop.snapshot_month as population_snapshot_month,
     pop.born_date as population_birth_month,
     cast(round(sum(pop.population)) as int64) as total_population
-from {{ source("raw", "population_department") }} as pop
+from {{ source("raw_eu1", "population_department") }} as pop
 left join {{ ref("region_department") }} as dep on pop.department_code = dep.num_dep
 where
     pop.year between {{ insee_start_year }} and {{ insee_last_valid_year }}

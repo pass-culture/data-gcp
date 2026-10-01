@@ -5,7 +5,7 @@ with
             collection_name,
             location,
             concat(location, collection_id, '/') as full_path
-        from {{ source("raw", "metabase_collection") }}
+        from {{ source("raw_eu1", "metabase_collection") }}
         where personal_owner_id is null
     ),
 

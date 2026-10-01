@@ -40,9 +40,9 @@ select
         partition by cb.educational_institution_id
         order by cb.collective_booking_creation_date asc
     ) as collective_booking_rank_asc
-from {{ source("raw", "applicative_database_collective_booking") }} as cb
+from {{ source("raw_eu1", "applicative_database_collective_booking") }} as cb
 left join
-    {{ source("raw", "applicative_database_educational_year") }} as ey
+    {{ source("raw_eu1", "applicative_database_educational_year") }} as ey
     on cb.educational_year_id = ey.educational_year_id
 left join
     {{ ref("int_applicative__educational_deposit") }} as ed

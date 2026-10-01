@@ -4,4 +4,4 @@ select
     caf.collective_additional_fee_type,
     caf.collective_additional_fee_label,
     caf.collective_additional_fee_amount
-from {{ source("raw", "applicative_database_collective_additional_fee") }} as caf
+from {{ source("raw_eu1", "applicative_database_collective_additional_fee") }} as caf

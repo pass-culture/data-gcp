@@ -14,6 +14,6 @@ from
             row_number() over (
                 partition by tag_id, entry_id order by execution_date desc
             ) as row_number
-        from {{ source("raw", "contentful_tag") }}
+        from {{ source("raw_eu1", "contentful_tag") }}
     ) inn
 where row_number = 1

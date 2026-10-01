@@ -5,17 +5,23 @@ This module provides classes for extracting, transforming, and loading
 AppFollow analytics data into BigQuery.
 """
 
+from datetime import datetime, timezone
 from typing import Any
 
 import pandas as pd
 from loguru import logger
 
-from client import AppFollowAPIError, AppFollowClient
+from client import AppFollowClient
 from utils import (
+    APPFOLLOW_RATINGS,
+    APPFOLLOW_RATINGS_SCHEMA,
     APPFOLLOW_REVIEWS,
     APPFOLLOW_REVIEWS_SCHEMA,
-    save_to_bq,
+    infer_store,
+    replace_app_rows_in_bq,
 )
+
+DATASETS = ("reviews", "ratings")
 
 
 class AppFollowETL:
@@ -23,7 +29,7 @@ class AppFollowETL:
     AppFollow ETL processor for analytics data.
 
     This class handles the extraction, transformation, and loading
-    of AppFollow reviews data into BigQuery.
+    of AppFollow reviews and ratings data into BigQuery.
     """
 
     def __init__(self, client: AppFollowClient):
@@ -41,6 +47,9 @@ class AppFollowETL:
         """
         Extract all reviews for a specific app within a date range.
 
+        API errors are propagated: an empty list means the API returned no review,
+        and the window will be emptied accordingly.
+
         Args:
             ext_id: App external ID
             from_date: Start date in YYYY-MM-DD format
@@ -49,13 +58,7 @@ class AppFollowETL:
         Returns:
             list: List of raw reviews data
         """
-
-        try:
-            reviews = self.client.get_all_reviews(ext_id, from_date, to_date)
-            return reviews
-        except AppFollowAPIError as e:
-            logger.error(f"Error extracting AppFollow reviews data for: {ext_id}", e)
-            return []
+        return self.client.get_all_reviews(ext_id, from_date, to_date)
 
     def transform_reviews_data(self, reviews: list[dict[str, Any]]) -> pd.DataFrame:
         """
@@ -90,7 +93,7 @@ class AppFollowETL:
         self, reviews_df: pd.DataFrame, ext_id: str, from_date: str, to_date: str
     ) -> None:
         """
-        Load transformed reviews data to BigQuery.
+        Replace the app's reviews over the date window in BigQuery.
 
         Args:
             reviews_df: Transformed DataFrame
@@ -98,27 +101,133 @@ class AppFollowETL:
             from_date: Start date in YYYY-MM-DD format
             to_date: End date in YYYY-MM-DD format
         """
-        if reviews_df.empty:
-            logger.warning("No reviews data available to load")
-            return None
+        if not reviews_df.empty:
+            reviews_df["date"] = pd.to_datetime(reviews_df["date"]).dt.normalize()
+            reviews_df["ext_id"] = ext_id
 
-        logger.info(f"Loading {len(reviews_df)} records into BigQuery")
-
-        reviews_df["date"] = pd.to_datetime(reviews_df["date"])
-        reviews_df["ext_id"] = ext_id
-
-        logger.info("Saving.. {} -> {}", APPFOLLOW_REVIEWS, from_date)
-        save_to_bq(
+        logger.info(f"Loading {len(reviews_df)} reviews into {APPFOLLOW_REVIEWS}")
+        replace_app_rows_in_bq(
             df=reviews_df,
             table_name=APPFOLLOW_REVIEWS,
             schema_field=APPFOLLOW_REVIEWS_SCHEMA,
             start_date=from_date,
             end_date=to_date,
+            ext_id=ext_id,
             date_column="date",
         )
-        logger.success(f"Successfully loaded {len(reviews_df)} records for {ext_id}")
+        logger.success(f"Successfully loaded {len(reviews_df)} reviews for {ext_id}")
 
-    def run_etl(self, ext_id: str, from_date: str, to_date: str) -> bool:
+    def extract_ratings_data(
+        self, ext_id: str, store: str, from_date: str, to_date: str
+    ) -> list[dict[str, Any]]:
+        """
+        Extract daily cumulative worldwide ratings for a specific app.
+
+        Args:
+            ext_id: App external ID
+            store: Store code ("as" or "gp")
+            from_date: Start date in YYYY-MM-DD format
+            to_date: End date in YYYY-MM-DD format
+
+        Returns:
+            list: List of raw ratings data (one item per day)
+        """
+        return self.client.get_all_ratings_history(
+            ext_id=ext_id,
+            store=store,
+            from_date=from_date,
+            to_date=to_date,
+            countries=["all"],
+        )
+
+    def transform_ratings_data(
+        self, ratings: list[dict[str, Any]], ext_id: str, store: str
+    ) -> pd.DataFrame:
+        """
+        Transform raw AppFollow ratings history into a DataFrame.
+
+        Values are kept as returned by the API (cumulative totals); ratings received
+        per period are left to downstream SQL.
+
+        Args:
+            ratings: List of raw ratings data
+            ext_id: App external ID
+            store: Store code ("as" or "gp")
+
+        Returns:
+            pd.DataFrame: Transformed ratings data
+        """
+        imported_at = datetime.now(timezone.utc)
+        transformed_ratings = [
+            {
+                "date": rating["date"],
+                "ext_id": ext_id,
+                "store": store,
+                "country": "all",
+                "rating_avg": rating.get("avg_rating"),
+                "ratings_total": rating.get("stars"),
+                "stars_1_total": rating.get("stars1"),
+                "stars_2_total": rating.get("stars2"),
+                "stars_3_total": rating.get("stars3"),
+                "stars_4_total": rating.get("stars4"),
+                "stars_5_total": rating.get("stars5"),
+                "imported_at": imported_at,
+            }
+            for rating in ratings
+        ]
+
+        return pd.DataFrame(
+            transformed_ratings, columns=list(APPFOLLOW_RATINGS_SCHEMA.keys())
+        )
+
+    def load_ratings_data(
+        self, ratings_df: pd.DataFrame, ext_id: str, from_date: str, to_date: str
+    ) -> None:
+        """
+        Replace the app's ratings over the date window in BigQuery.
+
+        Args:
+            ratings_df: Transformed DataFrame
+            ext_id: App external ID
+            from_date: Start date in YYYY-MM-DD format
+            to_date: End date in YYYY-MM-DD format
+        """
+        logger.info(f"Loading {len(ratings_df)} ratings into {APPFOLLOW_RATINGS}")
+        replace_app_rows_in_bq(
+            df=ratings_df,
+            table_name=APPFOLLOW_RATINGS,
+            schema_field=APPFOLLOW_RATINGS_SCHEMA,
+            start_date=from_date,
+            end_date=to_date,
+            ext_id=ext_id,
+            date_column="date",
+        )
+        logger.success(f"Successfully loaded {len(ratings_df)} ratings for {ext_id}")
+
+    def run_reviews_etl(self, ext_id: str, from_date: str, to_date: str) -> None:
+        raw_reviews = self.extract_reviews_data(ext_id, from_date, to_date)
+        logger.info(f"Extracted {len(raw_reviews)} reviews for {ext_id}")
+        transformed_df = self.transform_reviews_data(raw_reviews)
+        self.load_reviews_data(transformed_df, ext_id, from_date, to_date)
+
+    def run_ratings_etl(self, ext_id: str, from_date: str, to_date: str) -> None:
+        store = infer_store(ext_id)
+        raw_ratings = self.extract_ratings_data(ext_id, store, from_date, to_date)
+        logger.info(f"Extracted {len(raw_ratings)} daily ratings for {ext_id}")
+        if not raw_ratings:
+            # Keep existing rows rather than wiping the window on an empty history.
+            logger.warning(f"No ratings history returned for {ext_id}, skipping load")
+            return
+        transformed_df = self.transform_ratings_data(raw_ratings, ext_id, store)
+        self.load_ratings_data(transformed_df, ext_id, from_date, to_date)
+
+    def run_etl(
+        self,
+        ext_id: str,
+        from_date: str,
+        to_date: str,
+        datasets: tuple[str, ...] = DATASETS,
+    ) -> bool:
         """
         Run the complete ETL process for AppFollow data.
 
@@ -126,27 +235,23 @@ class AppFollowETL:
             ext_id: App external ID
             from_date: Start date in YYYY-MM-DD format
             to_date: End date in YYYY-MM-DD format
+            datasets: Datasets to import among "reviews" and "ratings"
 
         Returns:
-            bool: True if ETL completed successfully, False otherwise
+            bool: True if every dataset was imported successfully, False otherwise
         """
+        logger.info(f"Starting AppFollow ETL process for ext_id: {ext_id}")
+        logger.info(f"Date range: {from_date} to {to_date}, datasets: {datasets}")
 
-        try:
-            logger.info(f"Starting AppFollow ETL process for ext_id: {ext_id}")
-            logger.info(f"Date range: {from_date} to {to_date}")
+        runners = {"reviews": self.run_reviews_etl, "ratings": self.run_ratings_etl}
+        success = True
+        for dataset in datasets:
+            try:
+                runners[dataset](ext_id, from_date, to_date)
+            except Exception as e:
+                logger.error(f"AppFollow {dataset} ETL failed for {ext_id}: {e}")
+                success = False
 
-            raw_reviews = self.extract_reviews_data(ext_id, from_date, to_date)
-
-            if not raw_reviews:
-                logger.info("Failed to extract reviews data")
-                return False
-
-            transformed_df = self.transform_reviews_data(raw_reviews)
-
-            self.load_reviews_data(transformed_df, ext_id, from_date, to_date)
-
+        if success:
             logger.success(f"AppFollow ETL completed successfully for ext_id: {ext_id}")
-            return True
-        except Exception as e:
-            logger.error(f"AppFollow ETL process failed for {ext_id}: {e}")
-            return False
+        return success

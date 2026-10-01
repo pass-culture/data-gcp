@@ -132,7 +132,7 @@ class AppFollowETL:
         Returns:
             list: List of raw ratings data (one item per day)
         """
-        return self.client.get_all_ratings_history(
+        return self.client.get_ratings_history(
             ext_id=ext_id,
             store=store,
             from_date=from_date,

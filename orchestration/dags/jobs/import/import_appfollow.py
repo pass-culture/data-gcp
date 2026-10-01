@@ -49,17 +49,21 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        # Reviews are re-imported over a rolling window so that support replies
-        # posted after the review date are captured (answer_text, answer_date).
-        "n_days": Param(
-            default=-60,
-            type="integer",
-            description="Number of days to go back from the execution date for the start date (e.g., -1 for yesterday).",
+        # AppFollow API is billed in credits (500/month): reviews cost 10 per page of
+        # 100 reviews, ratings cost 10 + 10 per 30 days of range per app. Scheduled runs
+        # only import the last 7 days (~60 credits/run); use start_date/end_date for
+        # backfills, ideally one month at a time to spread the credits.
+        "start_date": Param(
+            default=None,
+            type=["null", "string"],
+            format="date",
+            description="Backfill start date (YYYY-MM-DD). Empty: 7 days before the run date.",
         ),
-        "n_index": Param(
-            default=0,
-            type="integer",
-            description="Offset in days from the execution date for the end date (e.g., 0 for the execution date, -1 for yesterday).",
+        "end_date": Param(
+            default=None,
+            type=["null", "string"],
+            format="date",
+            description="Backfill end date (YYYY-MM-DD). Empty: the run date.",
         ),
         "platform": Param(
             default="both",
@@ -96,9 +100,9 @@ with DAG(
             arguments=[
                 "main.py",
                 "--start-date",
-                "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_days) }}",
+                "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ params.start_date or add_days(base, -7) }}",
                 "--end-date",
-                "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_index) }}",
+                "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ params.end_date or base }}",
                 "--ext-id",
                 ext_id,
                 "--dataset",

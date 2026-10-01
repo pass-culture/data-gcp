@@ -5,26 +5,38 @@ This module provides the main entry point for the AppFollow ETL job,
 using the class-based architecture for better organization and maintainability.
 """
 
+from enum import Enum
+
 import typer
 from loguru import logger
 
 from client import AppFollowClient
-from etl import AppFollowETL
-from utils import API_TOKEN
+from etl import DATASETS, AppFollowETL
+from utils import get_api_token
+
+
+class Dataset(str, Enum):
+    reviews = "reviews"
+    ratings = "ratings"
+    all = "all"
 
 
 def main(
     start_date: str = typer.Option(
         ...,
-        help="Start date for exporting reviews (YYYY-MM-DD format).",
+        help="Start date for exporting data (YYYY-MM-DD format).",
     ),
     end_date: str = typer.Option(
         ...,
-        help="End date for exporting reviews (YYYY-MM-DD format).",
+        help="End date for exporting data (YYYY-MM-DD format).",
     ),
     ext_id: str = typer.Option(
         ...,
         help="App external ID (package name for Android, numeric ID for IOS",
+    ),
+    dataset: Dataset = typer.Option(
+        Dataset.all,
+        help="Data to import: reviews, ratings or all.",
     ),
 ) -> None:
     """
@@ -35,10 +47,12 @@ def main(
         logger.info(f"Target App ID: {ext_id}")
         logger.info(f"Date range: {start_date} to {end_date}")
 
-        client = AppFollowClient(api_token=API_TOKEN)
+        datasets = DATASETS if dataset == Dataset.all else (dataset.value,)
+
+        client = AppFollowClient(api_token=get_api_token())
         etl_processor = AppFollowETL(client)
         success = etl_processor.run_etl(
-            ext_id=ext_id, from_date=start_date, to_date=end_date
+            ext_id=ext_id, from_date=start_date, to_date=end_date, datasets=datasets
         )
 
         if success:

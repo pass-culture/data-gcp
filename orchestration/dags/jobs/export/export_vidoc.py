@@ -28,7 +28,7 @@ from dependencies.export_vidoc.s3_utils import (
 
 from jobs.crons import SCHEDULE_DICT
 
-DAG_NAME = "export_vidoc_daily"
+DAG_NAME = "export_vidoc_weekly"
 GCS_EXPORT_ROOT = f"vidoc_export/{ENV_SHORT_NAME}"
 
 
@@ -71,7 +71,7 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Export exp_vidoc__* BigQuery tables to the SNUM OVH-S3 bucket",
-    schedule=get_airflow_schedule(SCHEDULE_DICT["export_vidoc_daily"][ENV_SHORT_NAME]),
+    schedule=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME]),
     catchup=False,
     max_active_runs=1,
     dagrun_timeout=datetime.timedelta(minutes=60),
@@ -98,6 +98,9 @@ with DAG(
                 dag,
                 external_dag_id="dbt_run_dag",
                 external_task_id=f"data_transformation.{config['dbt_model']}",
+                # weekly schedule: logical_date is one week behind the run date,
+                # shift the window forward to target the same-day dbt run
+                offset_days=-6,
             )
 
     shunt = EmptyOperator(task_id="shunt_manual")

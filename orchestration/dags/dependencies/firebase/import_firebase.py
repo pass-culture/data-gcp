@@ -45,6 +45,17 @@ GCP_PROJECT_PRO_ENV = {
     "prod": GCP_PROJECT_PRO_DEFAULT_ENV,
 }[ENV_SHORT_NAME]
 
+# No testing / staging project yet: every env imports production data.
+GCP_PROJECT_INSTITUTIONAL_WEBSITE_DEFAULT_ENV = [
+    "pc-site-instit-production.analytics_457326530"
+]
+
+GCP_PROJECT_INSTITUTIONAL_WEBSITE_ENV = {
+    "dev": GCP_PROJECT_INSTITUTIONAL_WEBSITE_DEFAULT_ENV,
+    "stg": GCP_PROJECT_INSTITUTIONAL_WEBSITE_DEFAULT_ENV,
+    "prod": GCP_PROJECT_INSTITUTIONAL_WEBSITE_DEFAULT_ENV,
+}[ENV_SHORT_NAME]
+
 GCP_PROJECT_PERFORMANCE_ENV = {
     "dev": "pc-native-testing.firebase_performance",
     "stg": "pc-native-testing.firebase_performance",
@@ -100,6 +111,24 @@ import_firebase_beneficiary_tables = {
     }
 }
 
+import_firebase_institutional_website_tables = {
+    "raw_firebase_institutional_website_events": {
+        "sql": f"{SQL_PATH}/raw/firebase_institutional_website_events.sql",
+        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_table": "firebase_institutional_website_events",
+        "partition_prefix": "$",
+        "time_partitioning": {"field": "event_date"},
+        "clustering_fields": {"fields": ["event_name"]},
+        "params": {
+            "gcp_project_env": GCP_PROJECT_INSTITUTIONAL_WEBSITE_ENV,
+        },
+        "fallback_params": {
+            "gcp_project_env": GCP_PROJECT_INSTITUTIONAL_WEBSITE_DEFAULT_ENV
+        },
+        "schemaUpdateOptions": ["ALLOW_FIELD_ADDITION"],
+    }
+}
+
 import_firebase_performance_tables = {
     # raw
     "raw_firebase_ios_performance": {
@@ -130,5 +159,9 @@ import_firebase_performance_tables = {
     },
 }
 
-import_tables = dict(import_firebase_beneficiary_tables, **import_firebase_pro_tables)
+import_tables = dict(
+    import_firebase_beneficiary_tables,
+    **import_firebase_pro_tables,
+    **import_firebase_institutional_website_tables,
+)
 import_perf_tables = dict(import_firebase_performance_tables)

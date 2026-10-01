@@ -31,3 +31,8 @@ select
     ie.embedding_model,
     ie.embedding_date
 from {{ source("tmp", "all_items_metadata_tmp") }} as ie
+where
+    ie._table_suffix = (
+        select max(latest._table_suffix) as max_table_suffix
+        from {{ source("tmp", "all_items_metadata_tmp") }} as latest
+    )

@@ -30,3 +30,8 @@ select
     mm.embedding_model,
     mm.embedding_date
 from {{ source("tmp", "movies_metadata_tmp") }} as mm
+where
+    mm._table_suffix = (
+        select max(latest._table_suffix) as max_table_suffix
+        from {{ source("tmp", "movies_metadata_tmp") }} as latest
+    )

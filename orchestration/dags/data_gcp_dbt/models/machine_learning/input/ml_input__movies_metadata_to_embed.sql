@@ -1,29 +1,123 @@
 {{ config(materialized="view") }}
 
--- Movies Genres come from AlloCiné.
+-- Movies subset of the semantic base. Genres come from the AlloCiné-sourced
+-- product_extra_data on the catalogue product, matched on the shared
+-- product-{id} item_id (theater_movie_id lives only on screening offers, not
+-- on these product items, so it can't be used here).
 with
-    allocine_dedup as (
-        select movie_id, genres
-        from {{ ref("snapshot_raw__allocine_movie") }}
-        qualify
-            row_number() over (partition by movie_id order by dbt_valid_from desc) = 1
-    ),
-
-    item_allocine_ids as (
+    product_metadata as (
+        -- All AlloCiné-sourced fields unpacked from the product_extra_data JSON
+        -- (keyed on the shared product-{id} item_id). Array fields are flattened
+        -- to comma-separated strings; null elements are filtered so the array
+        -- constructors never build a null-containing array.
         select
-            link.item_id,
-            max(
-                case
-                    when go.theater_movie_id is not null
-                    then split(go.offer_id_at_providers, '%')[safe_offset(0)]
-                end
-            ) as allocine_movie_id
-        from {{ ref("int_applicative__offer_item_id") }} as link
-        inner join {{ ref("mrt_global__offer") }} as go on link.offer_id = go.offer_id
-        group by link.item_id
+            -- cast to string so it renders as "2024", not "2024.0", in the prompt.
+            cast(
+                safe_cast(
+                    json_value(product_extra_data, '$.productionYear') as int64
+                ) as string
+            ) as production_year,
+            concat('product-', id) as item_id,
+            json_value(product_extra_data, '$.title') as product_title,
+            json_value(product_extra_data, '$.originalTitle') as original_title,
+            json_value(product_extra_data, '$.type') as product_type,
+            json_value(product_extra_data, '$.visa') as visa,
+            json_value(product_extra_data, '$.synopsis') as synopsis,
+            json_value(product_extra_data, '$.backlink') as backlink_url,
+            json_value(product_extra_data, '$.posterUrl') as poster_url,
+            json_value(product_extra_data, '$.allocineId') as allocine_id,
+            json_value(product_extra_data, '$.releaseDate') as release_date,
+            safe_cast(json_value(product_extra_data, '$.runtime') as int64) as runtime,
+            nullif(
+                array_to_string(
+                    json_extract_string_array(product_extra_data, '$.genres'), ', '
+                ),
+                ''
+            ) as allocine_genres_concat,
+            nullif(
+                array_to_string(
+                    json_extract_string_array(product_extra_data, '$.cast'), ', '
+                ),
+                ''
+            ) as cast_concat,
+            nullif(
+                array_to_string(
+                    json_extract_string_array(product_extra_data, '$.countries'), ', '
+                ),
+                ''
+            ) as countries_concat,
+            nullif(
+                array_to_string(
+                    array(
+                        select json_value(company, '$.name') as company_name
+                        from
+                            unnest(
+                                json_query_array(product_extra_data, '$.companies')
+                            ) as company
+                        where json_value(company, '$.name') is not null
+                    ),
+                    ', '
+                ),
+                ''
+            ) as companies_concat,
+            nullif(
+                array_to_string(
+                    array(
+                        select
+                            trim(
+                                concat(
+                                    coalesce(
+                                        json_value(credit, '$.person.firstName'), ''
+                                    ),
+                                    ' ',
+                                    coalesce(
+                                        json_value(credit, '$.person.lastName'), ''
+                                    )
+                                )
+                            ) as director_name
+                        from
+                            unnest(
+                                json_query_array(product_extra_data, '$.credits')
+                            ) as credit
+                        where
+                            json_value(credit, '$.position.name') = 'DIRECTOR'
+                            and trim(
+                                concat(
+                                    coalesce(
+                                        json_value(credit, '$.person.firstName'), ''
+                                    ),
+                                    ' ',
+                                    coalesce(
+                                        json_value(credit, '$.person.lastName'), ''
+                                    )
+                                )
+                            )
+                            != ''
+                    ),
+                    ', '
+                ),
+                ''
+            ) as directors_concat
+        from {{ ref("int_applicative__product") }}
     )
 
 select
+    prod.production_year,
+    prod.product_title,
+    prod.original_title,
+    prod.product_type,
+    prod.visa,
+    prod.synopsis,
+    prod.backlink_url,
+    prod.poster_url,
+    prod.allocine_id,
+    prod.release_date,
+    prod.runtime,
+    prod.allocine_genres_concat,
+    prod.cast_concat,
+    prod.countries_concat,
+    prod.companies_concat,
+    prod.directors_concat,
     base.item_id,
     base.subcategory_id,
     base.category_id,
@@ -33,13 +127,9 @@ select
     base.offer_creation_date,
     base.content_hash,
     base.to_embed,
-    base.author_concat,
-    nullif(array_to_string(allocine.genres, ', '), '') as allocine_genres_concat
+    base.author_concat
 from {{ ref("ml_input__all_items_metadata_to_embed") }} as base
-left join item_allocine_ids as ids on base.item_id = ids.item_id
-left join
-    allocine_dedup as allocine
-    on ids.allocine_movie_id = safe_cast(allocine.movie_id as string)
+left join product_metadata as prod on base.item_id = prod.item_id
 where
     starts_with(base.item_id, 'product')
     and (

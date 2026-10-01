@@ -2,14 +2,23 @@ name: "movies_metadata"
 features:
   - offer_name
   - offer_description
+  - directors_concat
+  - cast_concat
   - allocine_genres_concat
+  - countries_concat
+  - production_year
 encoder_name: "google/embeddinggemma-300m"
 prompt_name: "document"
 preprocessors:
   offer_name: "normalize_whitespace"
   offer_description: "clean_description"
-# Literal block (|-) so each line is rendered independently
+# Literal block (|-) so each line is rendered independently: a line whose
+# placeholders are all empty for a row is dropped (description kept last).
 prompt_template: |-
   Ce film est intitulé "{offer_name}".
+  Réalisé par {directors_concat}.
+  Casting: {cast_concat}.
   Genres: {allocine_genres_concat}.
+  Pays: {countries_concat}.
+  Année de production: {production_year}.
   Synopsis: {offer_description}.

@@ -54,8 +54,6 @@ def get_items_metadata():
     sql = f"""
         SELECT
         item_id,
-        topic_id,
-        cluster_id,
         category,
         subcategory_id,
         search_group_name,

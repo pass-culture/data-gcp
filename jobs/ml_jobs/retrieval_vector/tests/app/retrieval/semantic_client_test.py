@@ -27,8 +27,6 @@ KEYWORDS = ["roman policier", "concert jazz"]
 # for parity with the two_tower / graph retrievals (`DEFAULT_DETAIL_COLUMNS`).
 STRING_METADATA_COLUMNS = [
     "search_group_name",
-    "topic_id",
-    "cluster_id",
     "gtl_id",
     "gtl_l3",
     "gtl_l4",
@@ -196,8 +194,6 @@ def test_search_by_text_details_include_metadata_and_score(client: SemanticClien
         "category",
         "subcategory_id",
         "search_group_name",
-        "topic_id",
-        "cluster_id",
         "booking_number",
         "semantic_emb_mean",
     ):

@@ -41,7 +41,7 @@ The table has the following column types:
 | `booking_release_trend_desc` | `float32[1]` | Release trend rank (1D vector) |
 | `category`, `subcategory_id`, `search_group_name` | `string` | **Scalar-indexed** — used for `params` filtering |
 | `stock_price` | `float32` | **Scalar-indexed** (BTREE) |
-| Other metadata | various | `topic_id`, `cluster_id`, `gtl_*`, `is_geolocated`, `booking_number*`, `stock_*`, `offer_*`, `example_*` |
+| Other metadata | various | `gtl_*`, `is_geolocated`, `booking_number*`, `stock_*`, `offer_*`, `example_*` |
 
 The 1D trend columns (`booking_number_desc`, etc.) are vector columns so they can be searched with the same LanceDB vector search interface as the embeddings — this is how `tops` ranking works.
 

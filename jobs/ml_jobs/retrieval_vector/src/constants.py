@@ -20,8 +20,6 @@ ITEM_COLUMNS = [
     "booking_creation_trend_desc",
     "booking_release_trend_desc",
     "raw_embeddings",
-    "topic_id",
-    "cluster_id",
     "category",
     "subcategory_id",
     "search_group_name",

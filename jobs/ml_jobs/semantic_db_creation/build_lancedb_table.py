@@ -24,8 +24,6 @@ SOURCE_STRING_METADATA_COLUMNS = [
     "category",
     "subcategory_id",
     "search_group_name",
-    "topic_id",
-    "cluster_id",
     "gtl_id",
     "gtl_l3",
     "gtl_l4",

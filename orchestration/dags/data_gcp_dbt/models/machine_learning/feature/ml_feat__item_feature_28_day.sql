@@ -6,23 +6,13 @@ with
     ),
 
     embeddings as (
-        select raw_embeddings.item_id, raw_embeddings.semantic_content_embedding
-        from {{ ref("ml_feat__item_embedding") }} as raw_embeddings
+        select raw_embeddings.item_id, raw_embeddings.all_items_metadata_embedding
+        from {{ ref("ml_semantic_embedding__all_items_metadata") }} as raw_embeddings
     ),
 
     avg_embedding as (
-        select embeddings.item_id, avg(cast(e as float64)) as avg_semantic_embedding
-        from
-            embeddings,
-            unnest(
-                split(
-                    substr(
-                        embeddings.semantic_content_embedding,
-                        2,
-                        length(embeddings.semantic_content_embedding) - 2
-                    )
-                )
-            ) as e
+        select embeddings.item_id, avg(e) as avg_semantic_embedding
+        from embeddings, unnest(embeddings.all_items_metadata_embedding) as e
         group by embeddings.item_id
     ),
 

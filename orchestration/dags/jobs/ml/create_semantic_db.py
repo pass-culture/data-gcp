@@ -145,8 +145,6 @@ with DAG(
                         ri.category,
                         ri.subcategory_id,
                         ri.search_group_name,
-                        ri.topic_id,
-                        ri.cluster_id,
                         ri.is_geolocated,
                         ri.gtl_id,
                         ri.gtl_l3,

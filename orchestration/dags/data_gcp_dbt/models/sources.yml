@@ -276,7 +276,6 @@ sources:
     schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
-      - name: default_item_cluster
       - name: item_embedding_extraction
         columns:
           - name: item_id
@@ -293,7 +292,6 @@ sources:
       - name: similar_artist
       - name: delta_event_series
       - name: delta_event_series_offer_link
-      - name: unconstrained_item_cluster
       - name: two_tower_user_embedding_history
         description: Partitionned table containing the history of the two tower user emebddings
       - name: two_tower_item_embedding_history

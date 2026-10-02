@@ -48,6 +48,7 @@ with
             gcp.partner_department_code,
             gcp.partner_epci_code,
             gcp.partner_city_code,
+            gcp.partner_municipality_code,
             gcp.partner_type,
             gcp.offerer_id,
             gvt.venue_tag_name,
@@ -83,6 +84,7 @@ with
                 partner_department_code,
                 partner_epci_code,
                 partner_city_code,
+                partner_municipality_code,
                 '{{ partner_type.name }}' as partner_type,
                 venue_id,
                 days_since_last_indiv_bookable_date,
@@ -104,6 +106,7 @@ with
             partner_department_code,
             partner_epci_code,
             partner_city_code,
+            partner_municipality_code,
             partner_type,
             partition_month,
             count(
@@ -183,6 +186,7 @@ with
             partner_department_code,
             partner_epci_code,
             partner_city_code,
+            partner_municipality_code,
             partner_type
     )
 
@@ -194,6 +198,7 @@ select
     partner_department_code,
     partner_epci_code,
     partner_city_code,
+    partner_municipality_code,
     partner_type,
     total_active_partners_individual,
     total_active_partners_collective,
@@ -206,4 +211,4 @@ select
     total_cumulative_activated_partners_collective_only,
     total_cumulative_activated_partners_dual_part
 from daily_aggregated_kpis
-where partner_city_code is not null
+where partner_municipality_code is not null

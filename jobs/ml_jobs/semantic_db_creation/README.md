@@ -1,9 +1,24 @@
 # Semantic Search LanceDB
 
 Builds the **semantic item retrieval** LanceDB database from a joined BigQuery
-export and publishes it to GCS. This is the single producer of the database that
-the `retrieval_vector` semantic endpoint serves — the endpoint downloads it from
-GCS at startup instead of baking it into its image.
+export and publishes it to GCS as an **immutable, versioned artifact**. This is
+the single producer of the database that the `retrieval_vector` semantic
+endpoint serves — the endpoint resolves the manifest and downloads the current
+version from GCS at startup instead of baking it into its image.
+
+Each run writes to its own immutable directory and refreshes a manifest that
+readers resolve:
+
+```
+<root>/
+  versions/
+    <version>/        # immutable LanceDB (items.lance/, indexes, …) for this build
+  latest.json         # manifest -> { version, uri, table, row_count, created_at }
+```
+
+The manifest is published **only after** the versioned DB is fully built and
+indexed, so readers atomically switch to a complete artifact. Older versions are
+retained (default: 3, `--keep-versions`) for rollback and pruned beyond that.
 
 The output table (`items`) carries the embedding plus the textual / categorical
 metadata, and is indexed for vector, full-text and hybrid search.
@@ -65,14 +80,22 @@ uv run python main.py \
   --lancedb-uri "gs://bucket/semantic_search_lancedb/" \
   --lancedb-table "items" \
   --batch-size 10000 \
-  --vector-column-name "all_items_metadata_embedding"
+  --vector-column-name "all_items_metadata_embedding" \
+  --version "20260102T120000" \
+  --keep-versions 3
 ```
+
+`--lancedb-uri` is the artifact **root**: the DB is written to
+`<root>/versions/<version>/` and `<root>/latest.json` is refreshed to point at
+it. Use a unique, lexicographically-sortable `--version` (the DAG passes the run
+`ts_nodash`).
 
 ## Warning
 
-- This job **drops and recreates** the LanceDB table if it already exists. Since a
-  latency-sensitive endpoint downloads this DB at startup, redeploys pick up the
-  new data; in-place readers would see the swap.
+- Each run publishes a **new immutable version**; it never overwrites the DB a
+  reader may currently be serving. The `latest.json` manifest swap is a single
+  small-object write, so readers only ever see a complete artifact and can roll
+  back by repointing the manifest to a retained previous version.
 - Indexing might take ~10–15 minutes with few logs — this is expected.
 
 
@@ -120,9 +143,13 @@ uv run python main.py \
 **1. Download the lancedb table from GCS in the working directory**
 > caution: the db is about 20G, consider launching a VM if you need more space
 
-```gcloud storage cp --recursive \
-  "gs://data-bucket-<ENV_SHORT_NAME>/semantic_search_lancedb/items.lance" \
-  .
+The DB lives under the current version directory pointed at by the manifest.
+Resolve it first, then copy the `items.lance` table:
+
+```bash
+ROOT="gs://data-bucket-<ENV_SHORT_NAME>/semantic_search_lancedb"
+VERSION_URI=$(gcloud storage cat "$ROOT/latest.json" | python -c 'import json,sys; print(json.load(sys.stdin)["uri"])')
+gcloud storage cp --recursive "$VERSION_URI/items.lance" .
 ```
 **2. Connect to the lancedb**
 ```

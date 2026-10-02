@@ -54,7 +54,7 @@ SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN = SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN_DICT["stg"
 class VectorPipeline(BaseModel):
     name: str  # embedding vector name
     input_table: str  # dataset.table (dbt input model)
-    output_table: str  # dataset.table (this DAG's per-vector staging output)
+    output_table: str  # dataset.table base; each run appends ``_<ts_nodash>``
 
 
 # List of all the vectors this DAG can run. Add a vector by creating its dbt input model + a
@@ -122,6 +122,15 @@ def _step_command(
     )
 
 
+def _run_output_table(output_table: str, ts_nodash: str) -> str:
+    """Suffix the staging table with the run timestamp so each run writes its
+    own table (``<name>_tmp_<ts>``) instead of truncating -- and thus losing --
+    the previous run's output. dbt reads the latest via a ``_TABLE_SUFFIX``
+    wildcard source.
+    """
+    return f"{output_table}_{ts_nodash}"
+
+
 def _export_input_query(vector: VectorPipeline) -> str:
     """EXPORT DATA query writing a vector's (optionally to_embed-filtered) input
     rows straight to GCS parquet -- no intermediate temp table needed.
@@ -178,10 +187,12 @@ def _send_slack_notif_success(**context) -> None:
         summary = "Aucun vecteur embeddé."
     else:
         vectors_by_name = {v.name: v for v in AVAILABLE_VECTORS}
+        ts_nodash = context["ts_nodash"]
         bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
         query = "\nUNION ALL\n".join(
             f"(SELECT '{name}' AS vector, COUNT(*) AS nb_rows "
-            f"FROM `{GCP_PROJECT_ID}.{vectors_by_name[name].output_table}`)"
+            f"FROM `{GCP_PROJECT_ID}."
+            f"{_run_output_table(vectors_by_name[name].output_table, ts_nodash)}`)"
             for name in plan
         )
         counts = dict(bq_hook.get_records(query))
@@ -196,8 +207,9 @@ DAG_DOC = """
 
     Per vector (chosen via *vectors*), the DAG runs a GCS-staged pipeline:
     export input from its dbt table → prepare (preprocess + build prompts) →
-    embed → load into its own BigQuery staging table (`<name>_metadata_tmp`).
-    A later dbt model merges the staging tables.
+    embed → load into its own per-run BigQuery staging table
+    (`<name>_tmp_<ts_nodash>`, kept so runs don't overwrite each other).
+    A later dbt model merges the latest staging table.
 
     #### Parameters:
     * *embed_all* : whether to embed all items or only the ones that need embedding (to_embed = true in the input tables).
@@ -414,7 +426,9 @@ with DAG(
                 source_objects=[
                     f"{GCS_FOLDER_PATH}/{vector.name}/{EMBEDDINGS_SUBFOLDER}/*.parquet"
                 ],
-                destination_project_dataset_table=vector.output_table,
+                destination_project_dataset_table=_run_output_table(
+                    vector.output_table, "{{ ts_nodash }}"
+                ),
                 source_format="PARQUET",
                 write_disposition="WRITE_TRUNCATE",
                 autodetect=True,

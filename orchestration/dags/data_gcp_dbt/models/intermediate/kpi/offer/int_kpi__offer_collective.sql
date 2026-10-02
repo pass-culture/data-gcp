@@ -8,6 +8,8 @@ with
             co.venue_epci_code,
             co.venue_city as venue_city_name,
             co.venue_city_code,
+            co.venue_municipality_label as venue_municipality_label,
+            co.venue_municipality_code,
             date_trunc(
                 date(co.collective_offer_creation_date), month
             ) as partition_month,
@@ -26,7 +28,9 @@ with
             co.venue_epci,
             co.venue_epci_code,
             co.venue_city,
-            co.venue_city_code
+            co.venue_city_code,
+            co.venue_municipality_label,
+            co.venue_municipality_code
     )
 
 select
@@ -39,5 +43,7 @@ select
     offers.venue_epci_code,
     offers.venue_city_name,
     offers.venue_city_code,
+    offers.venue_municipality_label,
+    offers.venue_municipality_code,
     offers.total_created_collective_offers
 from offers

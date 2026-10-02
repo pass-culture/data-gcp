@@ -24,6 +24,10 @@ models:
         description: "{{ doc('column__user_city') }}"
       - name: city_code
         description: "{{ doc('column__user_city_code') }}"
+      - name: municipality_label
+        description: "{{ doc('column__user_municipality_label') }}"
+      - name: municipality_code
+        description: "{{ doc('column__municipality_code') }}"
       - name: is_in_qpv
         description: "{{ doc('column__user_is_in_qpv') }}"
       - name: macro_density_label

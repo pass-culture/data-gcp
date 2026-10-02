@@ -6,6 +6,7 @@ select
     m.partner_department_code,
     m.partner_epci_code,
     m.partner_city_code,
+    m.partner_municipality_code,
     m.total_active_partners_individual,
     m.total_active_partners_collective,
     m.total_active_partners_global,
@@ -37,6 +38,7 @@ left join
     {{ ref("int_kpi__cultural_partner_activation_cohorts") }} as s
     on m.partition_month = s.partition_month
     and m.partner_city_code = s.partner_city_code
+    and m.partner_municipality_code = s.partner_municipality_code
     and m.partner_epci_code = s.partner_epci_code
     and m.partner_department_code = s.partner_department_code
     and m.partner_region_code = s.partner_region_code

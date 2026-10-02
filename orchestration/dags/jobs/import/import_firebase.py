@@ -5,12 +5,22 @@ from airflow import DAG
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from common import macros
 from common.callback import on_failure_base_callback
-from common.config import DAG_FOLDER, DAG_TAGS, GCP_PROJECT_ID
+from common.config import (
+    BIGQUERY_TMP_DATASET,
+    DAG_FOLDER,
+    DAG_TAGS,
+    GCP_PROJECT_ID,
+)
 from common.operators.bigquery import bigquery_job_task
 from common.utils import get_airflow_schedule
-from dependencies.firebase.import_firebase import import_perf_tables, import_tables
+from dependencies.firebase.import_firebase import (
+    SQL_PATH,
+    import_perf_tables,
+    import_tables,
+)
 
 dags = {
     # Reimport the data from the last two days
@@ -87,10 +97,27 @@ for dag_type, params in dags.items():
 
     import_tables_temp = copy.deepcopy(import_tables)
     for job_name_table, job_params in import_tables_temp.items():
+        # Source exported in another region: query into a staging table in the
+        # source region, then copy it to our region and load it into the final table.
+        source_location = job_params.get("source_location", None)
+        staging_table = f"{job_params['destination_table']}_{dag_type}"
+        final_job_params = job_params
+
         # force this to include custom yyyymmdd
         if job_params.get("partition_prefix", None) is not None:
             job_params["destination_table"] = (
                 f"{job_params['destination_table']}{job_params['partition_prefix']}{yyyymmdd}"
+            )
+
+        if source_location is not None:
+            job_params = dict(
+                job_params,
+                destination_dataset=job_params["source_tmp_dataset"],
+                destination_table=staging_table,
+                location=source_location,
+                time_partitioning=None,
+                clustering_fields=None,
+                schemaUpdateOptions=None,
             )
 
         if dag_type == "intraday":
@@ -131,7 +158,49 @@ for dag_type, params in dags.items():
             task_id=f"end_{job_name_table}", dag=dag, trigger_rule="one_success"
         )
 
-        start >> check_table_task >> [default_task, fallback_task] >> end_job >> end
+        if source_location is None:
+            start >> check_table_task >> [default_task, fallback_task] >> end_job >> end
+            continue
+
+        copy_task = BigQueryInsertJobOperator(
+            dag=dag,
+            task_id=f"copy_{job_name_table}",
+            project_id=GCP_PROJECT_ID,
+            # cross-region copy jobs must run in the source location
+            location=source_location,
+            configuration={
+                "copy": {
+                    "sourceTable": {
+                        "projectId": GCP_PROJECT_ID,
+                        "datasetId": job_params["destination_dataset"],
+                        "tableId": staging_table,
+                    },
+                    "destinationTable": {
+                        "projectId": GCP_PROJECT_ID,
+                        "datasetId": BIGQUERY_TMP_DATASET,
+                        "tableId": staging_table,
+                    },
+                    "writeDisposition": "WRITE_TRUNCATE",
+                }
+            },
+        )
+
+        load_task = bigquery_job_task(
+            dag=dag,
+            table=f"load_{job_name_table}",
+            job_params=dict(final_job_params, sql=f"{SQL_PATH}/raw/load_from_tmp.sql"),
+            extra_params={"tmp_table": staging_table},
+        )
+
+        (
+            start
+            >> check_table_task
+            >> [default_task, fallback_task]
+            >> end_job
+            >> copy_task
+            >> load_task
+            >> end
+        )
 
     import_perf_tables_temp = copy.deepcopy(import_perf_tables)
     for job_name_table, job_params in import_perf_tables_temp.items():

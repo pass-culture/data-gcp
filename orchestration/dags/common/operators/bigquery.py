@@ -14,6 +14,7 @@ def bigquery_job_task(dag, table, job_params, extra_params={}):
     return BigQueryInsertJobOperator(
         project_id=GCP_PROJECT_ID,
         task_id=table,
+        location=job_params.get("location", None),
         configuration={
             "query": {
                 "query": "{% include '" + job_params["sql"] + "' %}",

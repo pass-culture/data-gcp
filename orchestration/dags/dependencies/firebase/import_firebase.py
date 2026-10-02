@@ -45,6 +45,12 @@ GCP_PROJECT_PRO_ENV = {
     "prod": GCP_PROJECT_PRO_DEFAULT_ENV,
 }[ENV_SHORT_NAME]
 
+# The institutional website GA4 export lives in europe-west9 while our datasets are in
+# europe-west1. BigQuery cannot query across regions, so we query into a staging
+# dataset located in europe-west9, copy the table to europe-west1, then load it.
+INSTITUTIONAL_SOURCE_LOCATION = "europe-west9"
+BIGQUERY_TMP_EU9_DATASET = f"tmp_eu9_{ENV_SHORT_NAME}"
+
 # No testing / staging project yet: every env imports production data.
 GCP_PROJECT_INSTITUTIONAL_DEFAULT_ENV = [
     "pc-site-instit-production.analytics_457326530"
@@ -124,6 +130,8 @@ import_firebase_institutional_tables = {
         },
         "fallback_params": {"gcp_project_env": GCP_PROJECT_INSTITUTIONAL_DEFAULT_ENV},
         "schemaUpdateOptions": ["ALLOW_FIELD_ADDITION"],
+        "source_location": INSTITUTIONAL_SOURCE_LOCATION,
+        "source_tmp_dataset": BIGQUERY_TMP_EU9_DATASET,
     }
 }
 

@@ -171,8 +171,7 @@ with DAG(
                         --backtest-days {{{{ params.backtest_days }}}} \\
                         --forecast-days {{{{ params.forecast_days }}}} \\
                         --experiment-name "{{{{ params.experiment_name }}}}" \\
-                        --dataset "{config['dataset']}" \\
-                        --n-past-runs-to-compare "{{{{ params.n_past_runs_to_compare }}}}"
+                        --dataset "{config['dataset']}"
                 """,
             )
             fit_tasks.append(fit_model)

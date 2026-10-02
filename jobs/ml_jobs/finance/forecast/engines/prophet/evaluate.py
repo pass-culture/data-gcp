@@ -7,6 +7,7 @@ from sklearn.metrics import (
 )
 
 from forecast.engines.prophet.model_config import ModelConfig
+from forecast.utils.aggregation import aggregate_to_complete_months
 from prophet import Prophet
 from prophet.diagnostics import cross_validation, performance_metrics
 
@@ -167,24 +168,29 @@ def evaluation_pipeline(
     return metrics
 
 
-def _aggregate_forecast_monthly(forecast: pd.DataFrame) -> pd.DataFrame:
+def _aggregate_forecast_monthly(forecast: pd.DataFrame, freq: str) -> pd.DataFrame:
     """
-    Aggregate forecast/actual values at monthly level.
+    Aggregate forecast/actual values at monthly level, keeping only complete months.
+
+    Partial boundary months of the backtest window are dropped: their near-zero
+    actual sums otherwise make MAPE explode and the metrics meaningless.
     """
-    df = forecast.copy()
-    df["ds"] = pd.to_datetime(df["ds"])
+    monthly = aggregate_to_complete_months(
+        forecast,
+        freq=freq,
+        value_cols=["y", "yhat", "yhat_lower", "yhat_upper"],
+        positive_col="y",
+    )
+    return monthly.sort_values("month").reset_index(drop=True)
 
-    agg_map = {col: "sum" for col in ["y", "yhat", "yhat_lower", "yhat_upper"] if col in df.columns}
 
-    monthly = df.set_index("ds").resample("MS").agg(agg_map).reset_index().sort_values("ds")
-    return monthly
-
-
-def backtest_pipeline(df_backtest: pd.DataFrame, model: Prophet) -> tuple[dict, pd.DataFrame]:
+def backtest_pipeline(df_backtest: pd.DataFrame, model: Prophet, freq: str) -> tuple[dict, pd.DataFrame]:
     """Perform backtest evaluation on monthly aggregated predictions.
     Args:
         df_backtest: DataFrame for backtest evaluation.
         model: Trained Prophet model.
+        freq: Series frequency (``"D"`` daily, ``"W-*"`` weekly) used to drop
+            incomplete boundary months before computing metrics.
     Returns:
         Tuple containing:
             - Dictionary with backtest evaluation metrics (monthly level)
@@ -194,7 +200,7 @@ def backtest_pipeline(df_backtest: pd.DataFrame, model: Prophet) -> tuple[dict, 
     backtest_forecast_df = predict_with_truth(model, df_backtest)
 
     # compute monthly aggregated metrics for backtest evaluation
-    backtest_forecast_monthly_df = _aggregate_forecast_monthly(backtest_forecast_df)
+    backtest_forecast_monthly_df = _aggregate_forecast_monthly(backtest_forecast_df, freq)
     backtest_metrics = compute_metrics(backtest_forecast_monthly_df)
 
     return backtest_metrics, backtest_forecast_df

@@ -22,6 +22,7 @@ import yaml
 from loguru import logger
 from mlflow.tracking import MlflowClient
 
+from forecast.utils.aggregation import aggregate_to_complete_months
 from forecast.utils.bigquery import get_past_runs, load_query
 from forecast.utils.constants import GCP_PROJECT_ID
 from forecast.utils.mlflow import connect_remote_mlflow
@@ -38,9 +39,9 @@ def _to_month_start(series: pd.Series) -> pd.Series:
 def _aggregate_backtest_monthly(backtest: pd.DataFrame, freq: str) -> pd.DataFrame:
     """Aggregate the backtest forecast to monthly sums, keeping only complete months.
 
-    Partial boundary months (fewer observed periods than a full month) are dropped
-    because their tiny denominators make MAPE explode and distort the metrics. If
-    every month is partial, all months are kept as a fallback.
+    Uses the same "complete month" rule as the training metrics so the report and
+    the values logged to MLflow stay consistent. Partial boundary months are
+    dropped because their tiny denominators make MAPE explode.
 
     Args:
         backtest: Backtest forecast at the model frequency (columns ds, y, yhat).
@@ -49,18 +50,8 @@ def _aggregate_backtest_monthly(backtest: pd.DataFrame, freq: str) -> pd.DataFra
     Returns:
         DataFrame with columns month (Timestamp), y, yhat.
     """
-    df = backtest.copy()
-    df["month"] = _to_month_start(df["ds"])
-    grouped = df.groupby("month")
-    monthly = grouped[["y", "yhat"]].sum(min_count=1)
-    monthly["n_periods"] = grouped.size()
-    monthly = monthly.reset_index()
-
-    min_periods = 4 if freq.upper().startswith("W") else 28
-    complete = monthly[monthly["n_periods"] >= min_periods]
-    if not complete.empty:
-        monthly = complete
-    return monthly[["month", "y", "yhat"]].reset_index(drop=True)
+    monthly = aggregate_to_complete_months(backtest, freq=freq, value_cols=["y", "yhat"], positive_col="y")
+    return monthly[["month", "y", "yhat"]]
 
 
 def _load_run_data(client: MlflowClient, run_id: str, label: str) -> rb.ModelReportData:
@@ -219,8 +210,8 @@ def main(
     out.mkdir(parents=True, exist_ok=True)
 
     # Charts are generated first so they can be embedded into the workbook sheets.
-    rb.plot_monthly(tidy, out)
-    rb.plot_quarterly(quarterly, out)
+    monthly_png = rb.plot_monthly(tidy, out)
+    quarterly_png = rb.plot_quarterly(quarterly, out)
     evolution_png = rb.plot_metrics_evolution(evolution_records, out)
     comparison_png = rb.plot_runs_comparison(past_monthly_forecasts, out)
 
@@ -228,8 +219,14 @@ def main(
     backtest_glossary = rb.backtest_metric_glossary()
 
     sheets = {
-        "Prévisions mensuelles": monthly_sheet,
-        "Totaux trim. & annuels": quarterly,
+        "Prévisions mensuelles": {
+            "blocks": [("Prévisions mensuelles vs réel", monthly_sheet)],
+            "images": [(monthly_png, None)],
+        },
+        "Totaux trim. & annuels": {
+            "blocks": [("Totaux trimestriels et annuels", quarterly)],
+            "images": [(quarterly_png, None)],
+        },
         "Backtest détail": backtest_detail,
         "Backtest métriques": {
             "blocks": [

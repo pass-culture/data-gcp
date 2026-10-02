@@ -168,6 +168,61 @@ def test_glossary_defines_every_metric():
     assert set(glossary["Métrique"]) >= {"MAE", "RMSE", "MAPE", "Biais (€)", "Biais (%)", "Tendance"}
 
 
+def test_metrics_evolution_flags_aberrant_mape():
+    records = [
+        {
+            "model": "Prophet Daily",
+            "date": pd.Timestamp("2026-04-01"),
+            "MAPE": 0.15,
+            "MAE": 1e5,
+            "RMSE": 2e5,
+            "run_name": "ok",
+        },
+        {
+            "model": "Prophet Daily",
+            "date": pd.Timestamp("2026-10-01"),
+            "MAPE": 2085.7,
+            "MAE": 2e6,
+            "RMSE": 2e6,
+            "run_name": "bad",
+        },
+    ]
+    table = rb.build_metrics_evolution(records)
+    mape_by_run = dict(zip(table["Run"], table["MAPE"], strict=True))
+    assert "⚠" in mape_by_run["bad"]  # degenerate value flagged
+    assert "⚠" not in mape_by_run["ok"]
+
+
+def test_plot_metrics_evolution_excludes_aberrant(tmp_path):
+    # Only an aberrant point -> nothing plottable -> no chart file.
+    only_bad = [
+        {
+            "model": "Prophet Daily",
+            "date": pd.Timestamp("2026-10-01"),
+            "MAPE": 2085.7,
+            "MAE": 2e6,
+            "RMSE": 2e6,
+            "run_name": "bad",
+        }
+    ]
+    assert rb.plot_metrics_evolution(only_bad, tmp_path) is None
+    # A healthy point remains -> chart produced.
+    mixed = [
+        *only_bad,
+        {
+            "model": "Prophet Daily",
+            "date": pd.Timestamp("2026-04-01"),
+            "MAPE": 0.15,
+            "MAE": 1e5,
+            "RMSE": 2e5,
+            "run_name": "ok",
+        },
+    ]
+    path = rb.plot_metrics_evolution(mixed, tmp_path)
+    assert path is not None
+    assert path.exists()
+
+
 def test_write_workbook_embeds_images(tmp_path, daily, weekly, real_df):
     import openpyxl
 

@@ -35,6 +35,11 @@ REAL_COL = "Pricing réel (€)"
 DAILY_COL = "Prophet Daily (€)"
 WEEKLY_COL = "Prophet Weekly (€)"
 
+# A backtest MAPE above this ratio is not a real accuracy signal but a degenerate
+# value caused by near-zero actuals (e.g. a stale/partial month). Such points are
+# flagged in tables and kept out of charts so they don't crush the axis scale.
+MAX_PLAUSIBLE_MAPE = 5.0  # 500 %
+
 
 @dataclass
 class ModelReportData:
@@ -64,6 +69,13 @@ def _format_pct(value: float | None) -> str:
     if value is None or pd.isna(value):
         return "n/a"
     return f"{value * 100:.1f} %".replace(".", ",")
+
+
+def _format_mape_flagged(value: float | None) -> str:
+    """Format a MAPE, flagging degenerate values driven by near-zero actuals."""
+    if pd.notna(value) and value > MAX_PLAUSIBLE_MAPE:
+        return f"{_format_pct(value)} ⚠ (données partielles)"
+    return _format_pct(value)
 
 
 def _eur_axis_formatter() -> FuncFormatter:
@@ -291,7 +303,7 @@ def build_metrics_evolution(evolution_records: list[dict]) -> pd.DataFrame:
     if not evolution_records:
         return pd.DataFrame(columns=["Modèle", "Date du run", "Run", "MAE", "RMSE", "MAPE"])
     df = pd.DataFrame(evolution_records).sort_values(["model", "date"]).reset_index(drop=True)
-    df["MAPE"] = df["MAPE"].apply(_format_pct)
+    df["MAPE"] = df["MAPE"].apply(_format_mape_flagged)
     df["MAE"] = df["MAE"].round(0)
     df["RMSE"] = df["RMSE"].round(0)
     df = df.rename(columns={"model": "Modèle", "date": "Date du run", "run_name": "Run"})
@@ -334,6 +346,8 @@ def _config_rows(data: ModelReportData) -> dict:
         "Fin entraînement": params.get("backtest_start_date", "n/a"),
         "Début backtest": params.get("backtest_start_date", "n/a"),
         "Fin backtest": params.get("backtest_end_date", "n/a"),
+        "Dernière donnée disponible": params.get("last_data_date", "n/a"),
+        "Décalage données (jours)": params.get("data_lag_days", "n/a"),
         "Horizon de prévision": params.get("forecast_horizon_date", "n/a"),
         "Fréquence": eval_cfg.get("freq", "n/a"),
         "Croissance (growth)": prophet_cfg.get("growth", "n/a"),
@@ -437,14 +451,21 @@ def plot_quarterly(quarterly: pd.DataFrame, output_dir: Path) -> Path:
 
 
 def plot_metrics_evolution(evolution_records: list[dict], output_dir: Path) -> Path | None:
-    """Line chart of MAPE across past runs, per model."""
+    """Line chart of MAPE across past runs, per model.
+
+    Degenerate MAPE points (near-zero actuals, see ``MAX_PLAUSIBLE_MAPE``) are
+    excluded so a single aberrant run does not crush the axis scale.
+    """
     if not evolution_records:
         return None
     df = pd.DataFrame(evolution_records)
+    df = df[df["MAPE"].notna() & (df["MAPE"] <= MAX_PLAUSIBLE_MAPE)]
+    if df.empty:
+        return None
     fig, ax = plt.subplots(figsize=(12, 6))
     for model, g in df.sort_values("date").groupby("model"):
         ax.plot(pd.to_datetime(g["date"]), g["MAPE"] * 100, marker="o", label=model)
-    ax.set_title("Évolution du MAPE backtest par run")
+    ax.set_title("Évolution du MAPE backtest par run (valeurs aberrantes exclues)")
     ax.set_xlabel("Date du run")
     ax.set_ylabel("MAPE (%)")
     ax.legend()
@@ -587,6 +608,22 @@ def build_summary(
 
 Rapport généré automatiquement après l'entraînement des modèles Prophet
 (daily & weekly) pour l'équipe Finance (DAF).
+
+## Où regarder (navigation)
+
+1. **Commencez par ce fichier** (`synthese.md`) : totaux, verdict sur/sous-estimation
+   et configuration en un coup d'œil.
+2. **Classeur Excel** `compte_rendu_pricing_{report_year}.xlsx` — un onglet par thème,
+   chaque onglet contient son tableau **et** son graphique :
+   `Prévisions mensuelles` → `Totaux trim. & annuels` → `Backtest détail` →
+   `Backtest métriques` → `Évolution métriques` → `Comparaison runs` → `Configuration`.
+3. **Images PNG** (`previsions_mensuelles`, `totaux_trimestriels`, `evolution_metriques`,
+   `comparaison_runs`) : simples extraits des graphiques du classeur, pratiques pour
+   un partage rapide (Slack) sans ouvrir Excel.
+
+_Les dossiers `diagnostics/`, `forecasts/` et `config/` du run MLflow sont destinés à
+l'équipe Data Science (diagnostics du modèle, sorties brutes). La table BigQuery
+`monthly_forecasts` est la source de référence pour l'historique inter-runs._
 
 ## 1. Totaux annuels prévus
 

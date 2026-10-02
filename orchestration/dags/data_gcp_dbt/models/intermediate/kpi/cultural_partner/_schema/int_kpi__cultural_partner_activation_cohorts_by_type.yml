@@ -31,6 +31,10 @@ models:
         description: '{{ doc("column__partner_city_code") }}'
         data_type: STRING
 
+      - name: partner_municipality_code
+        description: '{{ doc("column__partner_municipality_code") }}'
+        data_type: STRING
+
       - name: partner_type
         description: '{{ doc("column__partner_type") }}'
         data_type: STRING

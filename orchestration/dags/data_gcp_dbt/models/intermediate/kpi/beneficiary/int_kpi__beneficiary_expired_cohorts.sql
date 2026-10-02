@@ -6,6 +6,8 @@ select
     user_epci as epci_name,
     user_city_code as city_code,
     user_city as city_name,
+    user_municipality_code as municipality_code,
+    user_municipality_label as municipality_label,
     user_is_in_qpv as is_in_qpv,
     user_density_label as micro_density_label,
     user_macro_density_label as macro_density_label,
@@ -36,6 +38,8 @@ group by
     epci_name,
     city_code,
     city_name,
+    municipality_code,
+    municipality_label,
     is_in_qpv,
     micro_density_label,
     macro_density_label

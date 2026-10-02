@@ -17,6 +17,7 @@ with
             user_city,
             user_city_code,
             user_municipality_code,
+            user_municipality_label,
             user_activity,
             user_civility,
             total_deposit_amount,
@@ -92,6 +93,7 @@ select
     u.user_city,
     u.user_city_code,
     u.user_municipality_code,
+    u.user_municipality_label,
     u.user_activity,
     u.user_civility,
     u.user_is_theme_subscribed,
@@ -175,6 +177,7 @@ group by
     u.user_city,
     u.user_city_code,
     u.user_municipality_code,
+    u.user_municipality_label,
     u.user_activity,
     u.user_civility,
     u.user_is_theme_subscribed

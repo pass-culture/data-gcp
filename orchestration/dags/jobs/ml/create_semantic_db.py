@@ -184,7 +184,7 @@ with DAG(
                     FROM `{GCP_PROJECT_ID}.{BIGQUERY_ML_SEMANTIC_EMBEDDING_DATASET}.{ITEM_EMBEDDING_TABLE}` AS emb
                     INNER JOIN `{GCP_PROJECT_ID}.{BIGQUERY_ML_INPUT_DATASET}.{ITEM_METADATA_TABLE}` AS im
                         ON emb.item_id = im.item_id
-                    LEFT JOIN `{GCP_PROJECT_ID}.{BIGQUERY_ML_RECOMMENDATION_DATASET}.{RECOMMENDABLE_ITEM_TABLE}` AS ri
+                    INNER JOIN `{GCP_PROJECT_ID}.{BIGQUERY_ML_RECOMMENDATION_DATASET}.{RECOMMENDABLE_ITEM_TABLE}` AS ri
                         ON emb.item_id = ri.item_id
                 """,
                 "useLegacySql": False,

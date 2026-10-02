@@ -35,6 +35,34 @@ def _to_month_start(series: pd.Series) -> pd.Series:
     return pd.to_datetime(series).dt.to_period("M").dt.to_timestamp()
 
 
+def _aggregate_backtest_monthly(backtest: pd.DataFrame, freq: str) -> pd.DataFrame:
+    """Aggregate the backtest forecast to monthly sums, keeping only complete months.
+
+    Partial boundary months (fewer observed periods than a full month) are dropped
+    because their tiny denominators make MAPE explode and distort the metrics. If
+    every month is partial, all months are kept as a fallback.
+
+    Args:
+        backtest: Backtest forecast at the model frequency (columns ds, y, yhat).
+        freq: Model frequency (``"D"`` for daily, ``"W-*"`` for weekly).
+
+    Returns:
+        DataFrame with columns month (Timestamp), y, yhat.
+    """
+    df = backtest.copy()
+    df["month"] = _to_month_start(df["ds"])
+    grouped = df.groupby("month")
+    monthly = grouped[["y", "yhat"]].sum(min_count=1)
+    monthly["n_periods"] = grouped.size()
+    monthly = monthly.reset_index()
+
+    min_periods = 4 if freq.upper().startswith("W") else 28
+    complete = monthly[monthly["n_periods"] >= min_periods]
+    if not complete.empty:
+        monthly = complete
+    return monthly[["month", "y", "yhat"]].reset_index(drop=True)
+
+
 def _load_run_data(client: MlflowClient, run_id: str, label: str) -> rb.ModelReportData:
     """Load params, config and forecast/backtest artifacts for a single run."""
     run = client.get_run(run_id)
@@ -47,15 +75,15 @@ def _load_run_data(client: MlflowClient, run_id: str, label: str) -> rb.ModelRep
     with TemporaryDirectory() as tmp:
         local_root = Path(client.download_artifacts(run_id, "", tmp))
 
+        config = _read_config(local_root, model_name)
+
         full_monthly = _read_single(local_root, "*_full_year_monthly_forecast.xlsx")
         full_monthly = full_monthly.rename(columns={"ds": "month"})
         full_monthly["month"] = _to_month_start(full_monthly["month"])
 
         backtest = _read_single(local_root, "*_backtest_forecast.xlsx")
-        backtest["month"] = _to_month_start(backtest["ds"])
-        backtest_monthly = backtest.groupby("month")[["y", "yhat"]].sum(min_count=1).reset_index()
-
-        config = _read_config(local_root, model_name)
+        freq = str(config.get("evaluation", {}).get("freq", "D"))
+        backtest_monthly = _aggregate_backtest_monthly(backtest, freq)
 
     return rb.ModelReportData(
         label=label,
@@ -190,23 +218,39 @@ def main(
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
 
+    # Charts are generated first so they can be embedded into the workbook sheets.
+    rb.plot_monthly(tidy, out)
+    rb.plot_quarterly(quarterly, out)
+    evolution_png = rb.plot_metrics_evolution(evolution_records, out)
+    comparison_png = rb.plot_runs_comparison(past_monthly_forecasts, out)
+
+    backtest_info = rb.build_backtest_info(daily, weekly)
+    backtest_glossary = rb.backtest_metric_glossary()
+
     sheets = {
         "Prévisions mensuelles": monthly_sheet,
         "Totaux trim. & annuels": quarterly,
         "Backtest détail": backtest_detail,
-        "Backtest métriques": backtest_metrics_sheet,
-        "Évolution métriques": metrics_evolution,
-        "Comparaison runs": runs_comparison,
+        "Backtest métriques": {
+            "blocks": [
+                ("Métriques de backtest (agrégation mensuelle)", backtest_metrics_sheet),
+                ("Période et mois considérés", backtest_info),
+                ("Définition des métriques", backtest_glossary),
+            ],
+        },
+        "Évolution métriques": {
+            "blocks": [("Évolution des métriques backtest par run", metrics_evolution)],
+            "images": [(evolution_png, None)],
+        },
+        "Comparaison runs": {
+            "blocks": [("Prévisions mensuelles par run", runs_comparison)],
+            "images": [(comparison_png, None)],
+        },
         "Configuration": config_summary,
     }
     workbook_path = out / f"compte_rendu_pricing_{report_year}.xlsx"
-    rb.write_excel(workbook_path, sheets)
+    rb.write_workbook(workbook_path, sheets)
     logger.info(f"Workbook written to {workbook_path}")
-
-    rb.plot_monthly(tidy, out)
-    rb.plot_quarterly(quarterly, out)
-    rb.plot_metrics_evolution(evolution_records, out)
-    rb.plot_runs_comparison(past_monthly_forecasts, out)
 
     markdown, one_line = rb.build_summary(
         report_year=report_year,

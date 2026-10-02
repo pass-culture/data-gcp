@@ -128,3 +128,87 @@ def test_write_excel_creates_all_sheets(tmp_path, daily, weekly, real_df):
     assert path.exists()
     loaded = pd.read_excel(path, sheet_name=None)
     assert set(loaded.keys()) == {"Prévisions mensuelles", "Configuration"}
+
+
+def test_aggregate_backtest_monthly_drops_partial_months():
+    from reporting.generate_report import _aggregate_backtest_monthly
+
+    bt = pd.DataFrame(
+        {
+            "ds": (
+                list(pd.date_range("2026-02-27", periods=2, freq="D"))  # partial Feb -> dropped
+                + list(pd.date_range("2026-03-01", periods=31, freq="D"))
+                + list(pd.date_range("2026-04-01", periods=30, freq="D"))
+            ),
+        }
+    )
+    bt["y"] = 2e5
+    bt["yhat"] = 2.1e5
+    monthly = _aggregate_backtest_monthly(bt, "D")
+    assert monthly["month"].dt.strftime("%Y-%m").tolist() == ["2026-03", "2026-04"]
+
+
+def test_backtest_metrics_mape_is_percentage(daily, weekly):
+    table, _ = rb.build_backtest_metrics(daily, weekly)
+    for value in table["MAPE"]:
+        assert value.endswith(" %")
+        number = float(value.removesuffix(" %").replace(",", "."))
+        assert 0 <= number < 100  # sensible percentage, not an exploded ratio
+
+
+def test_backtest_info_lists_window_and_months(daily, weekly):
+    info = rb.build_backtest_info(daily, weekly)
+    values = " ".join(info["Valeur"].astype(str))
+    assert "2026-02" in values  # backtest months present in the fixtures
+    assert "→" in values  # the config window
+
+
+def test_glossary_defines_every_metric():
+    glossary = rb.backtest_metric_glossary()
+    assert set(glossary["Métrique"]) >= {"MAE", "RMSE", "MAPE", "Biais (€)", "Biais (%)", "Tendance"}
+
+
+def test_write_workbook_embeds_images(tmp_path, daily, weekly, real_df):
+    import openpyxl
+
+    records = [
+        {
+            "model": "Prophet Daily",
+            "date": pd.Timestamp("2026-04-01"),
+            "MAPE": 0.05,
+            "MAE": 1e5,
+            "RMSE": 2e5,
+            "run_name": "r",
+        }
+    ]
+    past = pd.DataFrame(
+        {
+            "forecast_date": pd.date_range("2026-06-01", periods=3, freq="MS").tolist() * 2,
+            "prediction": [6e6] * 6,
+            "run_name": ["a"] * 3 + ["b"] * 3,
+        }
+    )
+    evolution_png = rb.plot_metrics_evolution(records, tmp_path)
+    comparison_png = rb.plot_runs_comparison(past, tmp_path)
+    sheets = {
+        "Backtest métriques": {
+            "blocks": [
+                ("Métriques", rb.build_backtest_metrics(daily, weekly)[0]),
+                ("Définitions", rb.backtest_metric_glossary()),
+            ]
+        },
+        "Évolution métriques": {
+            "blocks": [("Évolution", rb.build_metrics_evolution(records))],
+            "images": [(evolution_png, None)],
+        },
+        "Comparaison runs": {
+            "blocks": [("Comparaison", rb.build_runs_comparison(past))],
+            "images": [(comparison_png, None)],
+        },
+    }
+    path = tmp_path / "workbook.xlsx"
+    rb.write_workbook(path, sheets)
+    book = openpyxl.load_workbook(path)
+    assert set(book.sheetnames) == {"Backtest métriques", "Évolution métriques", "Comparaison runs"}
+    assert len(book["Évolution métriques"]._images) == 1
+    assert len(book["Comparaison runs"]._images) == 1

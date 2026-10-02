@@ -123,11 +123,13 @@ def main(
         logger.info(f"Monthly Forecast saved to {monthly_forecast_file}")
 
         # 8b. Full-year monthly forecast for the finance report.
-        # Spans from the start of the execution year to the forecast horizon so the
-        # report can show model behaviour over the whole current year (including the
-        # in-sample training months) and the future horizon in a single series.
-        full_year_start = f"{exec_date.year}-01-01"
-        full_forecast_df = model.predict(full_year_start, forecast_horizon_date)
+        # Spans from the start of the execution year to the END of the following
+        # year so the report can show model behaviour over the whole current year
+        # (including the in-sample training months) and the entire next year,
+        # independently of the operational forecast horizon.
+        report_start_date = f"{exec_date.year}-01-01"
+        report_end_date = f"{exec_date.year + 1}-12-31"
+        full_forecast_df = model.predict(report_start_date, report_end_date)
         full_monthly_forecast_df = model.aggregate_to_monthly(full_forecast_df)
         full_monthly_forecast_file = f"{run_name}_full_year_monthly_forecast.xlsx"
         full_monthly_forecast_df.to_excel(full_monthly_forecast_file, index=False)

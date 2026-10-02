@@ -231,9 +231,53 @@ def build_backtest_metrics(daily: ModelReportData, weekly: ModelReportData) -> t
     return pd.DataFrame(rows), metrics
 
 
-# --------------------------------------------------------------------------- #
-# Metrics evolution across past runs
-# --------------------------------------------------------------------------- #
+def _backtest_months(data: ModelReportData) -> list[str]:
+    """Return the sorted list of complete backtest months (YYYY-MM) for a model."""
+    if data.backtest_monthly.empty:
+        return []
+    return sorted(data.backtest_monthly["month"].dt.strftime("%Y-%m").unique())
+
+
+def build_backtest_info(daily: ModelReportData, weekly: ModelReportData) -> pd.DataFrame:
+    """Build a small sheet block describing the backtest window and months used."""
+    months = sorted(set(_backtest_months(daily)) | set(_backtest_months(weekly)))
+    rows = [
+        {
+            "Information": "Fenêtre de backtest (config)",
+            "Valeur": f"{daily.params.get('backtest_start_date', 'n/a')} → "
+            f"{daily.params.get('backtest_end_date', 'n/a')}",
+        },
+        {
+            "Information": "Mois complets évalués",
+            "Valeur": ", ".join(months) if months else "aucun",
+        },
+        {
+            "Information": "Granularité des métriques",
+            "Valeur": "Agrégation mensuelle (sommes du réel et des prévisions par mois)",
+        },
+    ]
+    return pd.DataFrame(rows)
+
+
+def backtest_metric_glossary() -> pd.DataFrame:
+    """Return the definition of each backtest metric (French)."""
+    rows = [
+        ("MAE", "Erreur absolue moyenne : moyenne des écarts absolus mensuels entre réel et prévision (en €)."),
+        (
+            "RMSE",
+            "Racine de l'erreur quadratique moyenne : pénalise davantage les gros écarts mensuels (en €).",
+        ),
+        (
+            "MAPE",
+            "Erreur absolue moyenne en pourcentage : moyenne des écarts absolus rapportés au réel mensuel (en %).",
+        ),
+        ("Biais (€)", "Somme des prévisions moins la somme du réel sur les mois évalués ; positif = surestimation."),
+        ("Biais (%)", "Biais rapporté au total réel observé sur les mois évalués."),
+        ("Tendance", "Sens du biais : « Surestimation » si positif, « Sous-estimation » si négatif."),
+    ]
+    return pd.DataFrame(rows, columns=["Métrique", "Définition"])
+
+
 def build_metrics_evolution(evolution_records: list[dict]) -> pd.DataFrame:
     """Build the metrics-evolution sheet from past runs.
 
@@ -432,11 +476,64 @@ def plot_runs_comparison(past_monthly_forecasts: pd.DataFrame, output_dir: Path)
 # Excel + markdown
 # --------------------------------------------------------------------------- #
 def write_excel(path: Path, sheets: dict[str, pd.DataFrame]) -> None:
-    """Write all sheets to a single multi-sheet Excel workbook."""
+    """Write all sheets to a single multi-sheet Excel workbook (one table per sheet)."""
     with pd.ExcelWriter(path, engine="openpyxl") as writer:
         for sheet_name, df in sheets.items():
             # Excel sheet names are capped at 31 characters.
             df.to_excel(writer, sheet_name=sheet_name[:31], index=False)
+
+
+def _normalize_spec(spec) -> tuple[list, list]:
+    """Normalise a sheet spec into (blocks, images).
+
+    A spec is either a DataFrame (single block, no image) or a dict with optional
+    ``blocks`` (list of ``(title_or_None, DataFrame)``) and ``images`` (list of
+    ``(path_or_None, anchor_or_None)``).
+    """
+    if isinstance(spec, pd.DataFrame):
+        return [(None, spec)], []
+    blocks = spec.get("blocks", [])
+    images = spec.get("images", [])
+    return blocks, images
+
+
+def write_workbook(path: Path, sheets: dict) -> None:
+    """Write a multi-sheet workbook supporting stacked blocks and embedded charts.
+
+    Args:
+        path: Destination ``.xlsx`` path.
+        sheets: Ordered mapping ``sheet_name -> spec`` (see :func:`_normalize_spec`).
+    """
+    from openpyxl.drawing.image import Image as XLImage
+
+    with pd.ExcelWriter(path, engine="openpyxl") as writer:
+        for raw_name, spec in sheets.items():
+            name = raw_name[:31]
+            blocks, images = _normalize_spec(spec)
+            cursor = 0  # 0-indexed row for the next piece of content
+            title_cells: list[tuple[int, str]] = []
+            for title, df in blocks:
+                if title is not None:
+                    title_cells.append((cursor, title))
+                    cursor += 1
+                df.to_excel(writer, sheet_name=name, index=False, startrow=cursor)
+                cursor += len(df) + 1  # header row + data rows
+                cursor += 2  # spacer between blocks
+            if name not in writer.sheets:
+                writer.book.create_sheet(name)
+            ws = writer.sheets[name]
+            for row_0indexed, title in title_cells:
+                ws.cell(row=row_0indexed + 1, column=1, value=title)
+            for img_path, anchor in images:
+                if img_path is None:
+                    continue
+                image = XLImage(str(img_path))
+                # Scale down so wide charts fit comfortably in the sheet.
+                if image.width > 900:
+                    scale = 900 / image.width
+                    image.width = 900
+                    image.height = int(image.height * scale)
+                ws.add_image(image, anchor or f"A{cursor + 1}")
 
 
 def build_summary(
@@ -492,7 +589,8 @@ Rapport généré automatiquement après l'entraînement des modèles Prophet
 Ces totaux correspondent à la **somme des prévisions du modèle** sur l'ensemble
 de l'année. Pour {report_year}, les mois déjà écoulés sont des prévisions
 in-sample (période d'entraînement) et peuvent être comparés au réalisé observé
-dans l'onglet `Prévisions mensuelles`.
+dans l'onglet `Prévisions mensuelles`. Le rapport couvre **{report_year} et
+{next_year} en entier** (l'horizon opérationnel du modèle n'est pas utilisé ici).
 
 ## 2. Qualité des prévisions (backtest)
 
@@ -500,7 +598,8 @@ dans l'onglet `Prévisions mensuelles`.
 {_verdict(weekly.label)}
 
 Un biais positif indique une **surestimation**, un biais négatif une
-**sous-estimation** du pricing réel.
+**sous-estimation** du pricing réel. Les métriques sont calculées sur les mois
+complets de la fenêtre de backtest (voir l'onglet `Backtest métriques`).
 
 ## 3. Configuration des modèles
 
@@ -508,17 +607,18 @@ Un biais positif indique une **surestimation**, un biais négatif une
   {daily.params.get("backtest_start_date", "n/a")}
 - **Fenêtre de backtest** : {daily.params.get("backtest_start_date", "n/a")} →
   {daily.params.get("backtest_end_date", "n/a")}
-- **Horizon de prévision** : {daily.params.get("forecast_horizon_date", "n/a")}
+- **Période couverte par le rapport** : {report_year}-01 → {next_year}-12
 
 ## 4. Contenu du classeur Excel
 
 - `Prévisions mensuelles` : prévisions mensuelles des deux modèles et pricing
-  réel sur {report_year} et l'horizon suivant.
+  réel sur {report_year} et {next_year}.
 - `Totaux trim. & annuels` : totaux trimestriels et annuels {report_year}/{next_year}.
-- `Backtest détail` / `Backtest métriques` : performance sur le backtest et
-  tendance sur/sous-estimation.
-- `Évolution métriques` : évolution des métriques sur les {n_past_runs} derniers runs.
-- `Comparaison runs` : prévisions mensuelles des runs précédents.
+- `Backtest détail` / `Backtest métriques` : performance sur le backtest (mois
+  considérés, définition des métriques et tendance sur/sous-estimation).
+- `Évolution métriques` : évolution des métriques sur les {n_past_runs} derniers
+  runs (graphique inclus).
+- `Comparaison runs` : prévisions mensuelles des runs précédents (graphique inclus).
 - `Configuration` : récapitulatif de la configuration des modèles.
 
 _Note : les modèles sont entraînés sur les premiers mois de {report_year} ; les

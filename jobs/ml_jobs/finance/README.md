@@ -60,9 +60,12 @@ produces an automatic French report for the Finance team. It combines the two
 MLflow runs with observed pricing and past runs from BigQuery to generate:
 
 - a multi-sheet Excel workbook (`compte_rendu_pricing_<year>.xlsx`): monthly
-  forecasts vs observed pricing, quarterly/annual totals for the current and next
-  year, backtest detail & metrics (over/under prediction), metrics evolution across
-  runs, run-to-run forecast comparison, and the model configuration summary;
+  forecasts vs observed pricing over the report year **and the whole next year**
+  (the model's operational horizon is ignored here), quarterly/annual totals,
+  backtest detail & metrics (with the months considered, a metric glossary and the
+  over/under prediction trend), metrics evolution across runs and run-to-run
+  forecast comparison (both with an embedded chart), and the model configuration
+  summary;
 - PNG charts;
 - a French markdown summary (`synthese.md`).
 

@@ -5,10 +5,7 @@ from airflow import DAG
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryCreateEmptyDatasetOperator,
-    BigQueryInsertJobOperator,
-)
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from common import macros
 from common.callback import on_failure_base_callback
 from common.config import (
@@ -165,20 +162,12 @@ for dag_type, params in dags.items():
             start >> check_table_task >> [default_task, fallback_task] >> end_job >> end
             continue
 
-        create_tmp_dataset_task = BigQueryCreateEmptyDatasetOperator(
-            dag=dag,
-            task_id=f"create_tmp_dataset_{job_name_table}",
-            project_id=GCP_PROJECT_ID,
-            dataset_id=job_params["destination_dataset"],
-            location=source_location,
-            dataset_reference={"defaultTableExpirationMs": "86400000"},
-            if_exists="ignore",
-        )
-
         copy_task = BigQueryInsertJobOperator(
             dag=dag,
             task_id=f"copy_{job_name_table}",
             project_id=GCP_PROJECT_ID,
+            # cross-region copy jobs must run in the source location
+            location=source_location,
             configuration={
                 "copy": {
                     "sourceTable": {
@@ -205,7 +194,6 @@ for dag_type, params in dags.items():
 
         (
             start
-            >> create_tmp_dataset_task
             >> check_table_task
             >> [default_task, fallback_task]
             >> end_job

@@ -47,7 +47,8 @@ GCP_PROJECT_PRO_ENV = {
 
 # The institutional website GA4 export lives in europe-west9 while our datasets are in
 # europe-west1. BigQuery cannot query across regions, so we query into a staging
-# dataset located in europe-west9, copy the table to europe-west1, then load it.
+# dataset located in europe-west9 (created by hand, 1-day table expiration), copy
+# the table to europe-west1, then load it.
 INSTITUTIONAL_SOURCE_LOCATION = "europe-west9"
 BIGQUERY_TMP_EU9_DATASET = f"tmp_eu9_{ENV_SHORT_NAME}"
 

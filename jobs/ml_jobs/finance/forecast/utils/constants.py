@@ -20,3 +20,7 @@ MLFLOW_URI = (
 ## Plots
 PRICING_LOWER_BOUND = 5e6
 PRICING_UPPER_BOUND = 15e6
+
+# Data freshness: warn when the most recent training/backtest day lags the
+# execution date by more than this many days (e.g. source table not yet loaded).
+DATA_FRESHNESS_WARNING_DAYS = 3

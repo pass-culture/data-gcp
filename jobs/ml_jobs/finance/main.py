@@ -61,7 +61,8 @@ def main(
     forecast_horizon_date = (exec_date + timedelta(days=forecast_days)).strftime("%Y-%m-%d")
 
     experiment, run_name = setup_mlflow(experiment_name, model_type, model_name)
-    with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
+    with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name) as active_run:
+        run_id = active_run.info.run_id
         mlflow.set_tag("model_type", model_type)
         mlflow.set_tag("model_name", model_name)
 
@@ -121,6 +122,18 @@ def main(
         mlflow.log_artifact(monthly_forecast_file, artifact_path="forecasts")
         logger.info(f"Monthly Forecast saved to {monthly_forecast_file}")
 
+        # 8b. Full-year monthly forecast for the finance report.
+        # Spans from the start of the execution year to the forecast horizon so the
+        # report can show model behaviour over the whole current year (including the
+        # in-sample training months) and the future horizon in a single series.
+        full_year_start = f"{exec_date.year}-01-01"
+        full_forecast_df = model.predict(full_year_start, forecast_horizon_date)
+        full_monthly_forecast_df = model.aggregate_to_monthly(full_forecast_df)
+        full_monthly_forecast_file = f"{run_name}_full_year_monthly_forecast.xlsx"
+        full_monthly_forecast_df.to_excel(full_monthly_forecast_file, index=False)
+        mlflow.log_artifact(full_monthly_forecast_file, artifact_path="forecasts")
+        logger.info(f"Full-year monthly forecast saved to {full_monthly_forecast_file}")
+
         # 9. Log to BigQuery
         logger.info("Logging monthly forecast to BigQuery...")
         save_forecast_gbq(
@@ -153,6 +166,12 @@ def main(
         avg_forecast_df.to_excel(avg_forecast_file, index=False)
         mlflow.log_artifact(avg_forecast_file, artifact_path="forecasts")
         logger.info(f"Comparison forecast saved to {avg_forecast_file}")
+
+    # Emit the MLflow run id as the very last stdout line so the Airflow
+    # SSHGCEOperator captures it via XCom (key="result") and hands it to the
+    # downstream reporting task. Must stay after the `with` block so MLflow's
+    # end-of-run stdout messages do not overwrite it.
+    print(run_id)
 
 
 if __name__ == "__main__":

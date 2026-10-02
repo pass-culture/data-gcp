@@ -48,7 +48,36 @@ forecast/
 │                      # Handles config loading, data flow, and orchestrates the engine.
 └── engines/           # Low-level core logic for each model type (e.g., Prophet)
     └── prophet/       # specific training, prediction, plotting, and preprocessing functions.
+reporting/             # Automated French "compte rendu" for the Finance team (DAF)
+│                      # Builds a multi-sheet Excel workbook, PNG charts and a markdown summary.
 tests/                 # Unit tests
+```
+
+## Reporting (compte rendu DAF)
+
+After both models (daily & weekly) have been trained, `reporting/generate_report.py`
+produces an automatic French report for the Finance team. It combines the two
+MLflow runs with observed pricing and past runs from BigQuery to generate:
+
+- a multi-sheet Excel workbook (`compte_rendu_pricing_<year>.xlsx`): monthly
+  forecasts vs observed pricing, quarterly/annual totals for the current and next
+  year, backtest detail & metrics (over/under prediction), metrics evolution across
+  runs, run-to-run forecast comparison, and the model configuration summary;
+- PNG charts;
+- a French markdown summary (`synthese.md`).
+
+Deliverables are logged to MLflow under the `report/` artifact path of both runs,
+optionally uploaded to GCS, and a one-line summary is printed on the last stdout
+line (consumed by Airflow/Slack).
+
+```bash
+uv run python -m reporting.generate_report \
+    --daily-run-id '<daily_mlflow_run_id>' \
+    --weekly-run-id '<weekly_mlflow_run_id>' \
+    --dataset 'ml_finance_prod' \
+    --report-year 2026 \
+    --n-past-runs 6 \
+    --gcs-output-path 'gs://<bucket>/.../report'
 ```
 
 ## Configuration

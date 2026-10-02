@@ -7,7 +7,7 @@ from airflow.operators.empty import EmptyOperator
 from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
-from common.alerts.ml_training import create_finance_pricing_forecast_slack_block
+from common.alerts.ml_training import create_finance_report_slack_block
 from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
@@ -62,6 +62,13 @@ if ENV_SHORT_NAME == "dev":
     # For dev, force stg dataset
     for config in MODEL_CONFIGS.values():
         config["dataset"] = "ml_finance_stg"
+
+# Dataset holding daily_pricing and monthly_forecasts, shared by both models.
+REPORT_DATASET = MODEL_CONFIGS["prophet_daily_pricing"]["dataset"]
+# Task ids of the fit tasks (inside the fit_models TaskGroup) whose run ids the
+# reporting step consumes via XCom.
+FIT_DAILY_TASK_ID = "fit_models.fit_prophet_daily_pricing"
+FIT_WEEKLY_TASK_ID = "fit_models.fit_prophet_weekly_pricing"
 
 default_args = {
     "start_date": datetime(2025, 12, 1),
@@ -173,20 +180,36 @@ with DAG(
         # Chain tasks inside the group sequentially
         chain(*fit_tasks)
 
+    # Build the French "compte rendu" for the Finance team from both model runs.
+    # Run ids are pulled from the fit tasks' stdout (XCom key "result").
+    generate_finance_report = SSHGCEOperator(
+        task_id="generate_finance_report",
+        instance_name="{{ params.instance_name }}",
+        base_dir=dag_config["BASE_DIR"],
+        command=f"""
+            uv run python -m reporting.generate_report \\
+                --daily-run-id "{{{{ task_instance.xcom_pull(task_ids='{FIT_DAILY_TASK_ID}', key='result') }}}}" \\
+                --weekly-run-id "{{{{ task_instance.xcom_pull(task_ids='{FIT_WEEKLY_TASK_ID}', key='result') }}}}" \\
+                --dataset "{REPORT_DATASET}" \\
+                --report-year "{{{{ logical_date.year }}}}" \\
+                --n-past-runs "{{{{ params.n_past_runs_to_compare }}}}" \\
+                --gcs-output-path "{dag_config["STORAGE_PATH"]}/report"
+        """,
+    )
+
     gce_instance_delete = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
         trigger_rule="none_failed",
     )
 
-    # Note: Slack notification uses first model's experiment name
-    # Consider updating to list all experiments if needed
+    # French report summary posted to Slack for the Finance team.
     send_slack_notif_success = SendSlackMessageOperator(
         task_id="send_slack_notif_success",
         webhook_token=SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN,
         trigger_rule="none_failed",
-        block=create_finance_pricing_forecast_slack_block(
-            models=", ".join(MODEL_CONFIGS.keys()),
+        block=create_finance_report_slack_block(
+            summary="{{ task_instance.xcom_pull(task_ids='generate_finance_report', key='result') }}",
             mlflow_url=MLFLOW_URL,
             env_short_name=ENV_SHORT_NAME,
         ),
@@ -197,6 +220,7 @@ with DAG(
         gce_instance_start,
         install_dependencies,
         fit_models_group,
+        generate_finance_report,
         gce_instance_delete,
         send_slack_notif_success,
     )

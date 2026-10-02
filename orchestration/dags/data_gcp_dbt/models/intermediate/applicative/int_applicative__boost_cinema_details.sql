@@ -1,1 +1,1 @@
-select * from {{ source("raw", "applicative_database_boost_cinema_details") }}
+select * from {{ source("raw_eu1", "applicative_database_boost_cinema_details") }}

@@ -22,5 +22,5 @@ select
         title,
         offer_title
     )
-from {{ source("raw", "contentful_entry") }}
+from {{ source("raw_eu1", "contentful_entry") }}
 qualify row_number() over (partition by id order by execution_date desc) = 1

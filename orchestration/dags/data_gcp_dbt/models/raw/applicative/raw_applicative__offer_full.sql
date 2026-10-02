@@ -36,4 +36,4 @@ select
     offer_finalization_date,
     offer_publication_date,
     scheduled_offer_bookability_date
-from {{ source("raw", "applicative_database_offer_legacy") }} as offer
+from {{ source("raw_eu1", "applicative_database_offer_legacy") }} as offer

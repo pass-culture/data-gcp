@@ -4,4 +4,4 @@ select
     datecreated as favorite_created_at,
     userid as user_id,
     offerid as offer_id
-from {{ source("raw", "applicative_database_favorite") }}
+from {{ source("raw_eu1", "applicative_database_favorite") }}

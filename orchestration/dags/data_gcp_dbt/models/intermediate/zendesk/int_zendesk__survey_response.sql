@@ -9,5 +9,5 @@ select
     timestamp(zsr.created_at) as survey_response_created_at,
     timestamp(zsr.updated_at) as survey_response_updated_at,
     date(zsr.created_at) as survey_response_created_date
-from {{ source("raw", "zendesk_survey_response") }} as zsr
+from {{ source("raw_eu1", "zendesk_survey_response") }} as zsr
 qualify row_number() over (partition by zsr.id order by zsr.updated_at desc) = 1

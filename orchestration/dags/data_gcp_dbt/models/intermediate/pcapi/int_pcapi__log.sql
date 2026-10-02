@@ -190,4 +190,4 @@ select
     timestamp(
         json_extract_scalar(to_json_string(jsonpayload.extra), '$.counters_since')
     ) as log_started_at
-from {{ source("raw", "stdout") }}
+from {{ source("raw_eu1", "stdout") }}

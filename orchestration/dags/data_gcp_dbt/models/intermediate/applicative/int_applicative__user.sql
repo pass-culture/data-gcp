@@ -74,7 +74,7 @@ with
             u.user_cultural_survey_id,
             not u.user_needs_to_fill_cultural_survey as user_has_filled_cultural_survey,
             current_date as reference_date
-        from {{ source("raw", "applicative_database_user") }} as u
+        from {{ source("raw_eu1", "applicative_database_user") }} as u
         where
             u.user_role in ("UNDERAGE_BENEFICIARY", "BENEFICIARY", "FREE_BENEFICIARY")
             or u.user_role is null  -- to include general public users (no role)

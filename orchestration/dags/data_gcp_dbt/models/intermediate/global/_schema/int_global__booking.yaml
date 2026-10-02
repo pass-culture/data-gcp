@@ -9,6 +9,6 @@ models:
           - cardinality_equality:
               arguments:
                 field: booking_id
-                to: source('raw', 'applicative_database_booking')
+                to: source("raw_eu1", 'applicative_database_booking')
                 lookback_month: 6
                 lookback_fields: ['booking_creation_date','booking_creation_date']

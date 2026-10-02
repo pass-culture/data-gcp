@@ -118,7 +118,7 @@ with
             {{ ref("ml_reco__restrained_item") }} as forbidden_offer
             on offer.item_id = forbidden_offer.item_id
         left join
-            {{ source("raw", "gsheet_ml_recommendation_sensitive_item") }}
+            {{ source("raw_eu1", "gsheet_ml_recommendation_sensitive_item") }}
             as sensitive_offer
             on offer.item_id = sensitive_offer.item_id
         where

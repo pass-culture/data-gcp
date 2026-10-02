@@ -16,5 +16,5 @@ select
     row_number() over (
         partition by user_id order by cast(action_history_id as integer) desc
     ) as action_history_rk
-from {{ source("raw", "applicative_database_action_history") }}
+from {{ source("raw_eu1", "applicative_database_action_history") }}
 where action_type in ('USER_SUSPENDED', 'USER_UNSUSPENDED')

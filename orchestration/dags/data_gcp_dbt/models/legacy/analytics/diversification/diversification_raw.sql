@@ -98,7 +98,7 @@ with
         inner join bookings on users.user_id = bookings.user_id
         left join offer_metadata on bookings.offer_id = offer_metadata.offer_id
         left join
-            {{ source("raw", "subcategories") }} as subcategories
+            {{ source("raw_eu1", "subcategories") }} as subcategories
             on offer_metadata.offer_subcategory_id = subcategories.id
 
     ),

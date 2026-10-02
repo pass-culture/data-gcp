@@ -28,7 +28,7 @@ with
             us.subcategory_id
         from unnested_subcategories as us
         inner join
-            {{ source("raw", "subcategories") }} as subcat
+            {{ source("raw_eu1", "subcategories") }} as subcat
             on us.subcategory_id = subcat.id
     )
 

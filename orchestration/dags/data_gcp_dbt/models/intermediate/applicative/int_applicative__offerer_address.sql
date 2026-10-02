@@ -11,7 +11,7 @@ select
     a.address_latitude,
     a.address_longitude
 
-from {{ source("raw", "applicative_database_offerer_address") }} as oa
+from {{ source("raw_eu1", "applicative_database_offerer_address") }} as oa
 left join
-    {{ source("raw", "applicative_database_address") }} as a
+    {{ source("raw_eu1", "applicative_database_address") }} as a
     on oa.address_id = a.address_id

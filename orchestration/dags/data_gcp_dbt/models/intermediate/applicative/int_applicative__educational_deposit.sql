@@ -57,7 +57,7 @@ select
         false
     ) as is_current_calendar_year
 
-from {{ source("raw", "applicative_database_educational_deposit") }} as ed
+from {{ source("raw_eu1", "applicative_database_educational_deposit") }} as ed
 left join
-    {{ source("raw", "applicative_database_educational_year") }} as ey
+    {{ source("raw_eu1", "applicative_database_educational_year") }} as ey
     on ed.educational_year_id = ey.adage_id

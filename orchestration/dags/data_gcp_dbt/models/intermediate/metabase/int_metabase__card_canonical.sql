@@ -1,7 +1,7 @@
 with
     taxonomy as (
         select collection_id, tier, certified, in_scope
-        from {{ source("raw", "metabase_collection_taxonomy") }}
+        from {{ source("raw_eu1", "metabase_collection_taxonomy") }}
     ),
 
     dashboard_views as (
@@ -56,7 +56,7 @@ with
                 then 1
                 else 0
             end as home_score
-        from {{ source("raw", "metabase_report_dashboard") }} as rd
+        from {{ source("raw_eu1", "metabase_report_dashboard") }} as rd
         left join taxonomy as t on rd.dashboard_collection_id = t.collection_id
         left join dashboard_views as dv on rd.id = dv.dashboard_id
         left join documented_dashboards as doc on rd.id = doc.dashboard_id
@@ -64,7 +64,7 @@ with
 
     card_dashboard_edges as (
         select distinct card_id, dashboard_id
-        from {{ source("raw", "metabase_report_dashboard_card") }}
+        from {{ source("raw_eu1", "metabase_report_dashboard_card") }}
         where card_id is not null
     ),
 
@@ -109,7 +109,7 @@ with
                 else 0
             end as card_tier_rank,
             coalesce(t.in_scope, false) as in_scope
-        from {{ source("raw", "metabase_report_card") }} as rc
+        from {{ source("raw_eu1", "metabase_report_card") }} as rc
         left join taxonomy as t on rc.card_collection_id = t.collection_id
     ),
 

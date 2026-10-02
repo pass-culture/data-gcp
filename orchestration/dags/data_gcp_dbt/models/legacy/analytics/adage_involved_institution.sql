@@ -25,7 +25,7 @@ with
             ) as total_institutions
         from {{ source("clean", "adage_involved_student") }} as ais
         left join
-            {{ source("raw", "applicative_database_educational_year") }} as ey
+            {{ source("raw_eu1", "applicative_database_educational_year") }} as ey
             on safe_cast(ey.adage_id as int)
             = safe_cast(ais.educational_year_adage_id as int)
         where metric_name = "departements"

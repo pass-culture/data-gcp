@@ -84,7 +84,7 @@ with
             date_trunc(date(gcb.collective_booking_used_date), month) as partition_month
         from {{ ref("mrt_global__collective_booking") }} as gcb
         left join
-            {{ source("raw", "applicative_database_educational_year") }} as ey
+            {{ source("raw_eu1", "applicative_database_educational_year") }} as ey
             on gcb.scholar_year = ey.scholar_year
         where
             gcb.collective_booking_status = 'REIMBURSED'

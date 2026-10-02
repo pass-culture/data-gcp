@@ -65,7 +65,7 @@ with
             ) as total_involved_students
         from {{ source("clean", "adage_involved_student") }} as ais
         left join
-            {{ source("raw", "applicative_database_educational_year") }} as ey
+            {{ source("raw_eu1", "applicative_database_educational_year") }} as ey
             on safe_cast(ey.adage_id as int)
             = safe_cast(ais.educational_year_adage_id as int)
         left join institutional_scholar_level as isl on ais.level = isl.level_id

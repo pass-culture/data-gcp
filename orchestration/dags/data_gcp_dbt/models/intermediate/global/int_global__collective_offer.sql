@@ -121,7 +121,7 @@ select
 from {{ ref("int_applicative__collective_offer") }} as co
 inner join {{ ref("int_global__venue") }} as v on co.venue_id = v.venue_id
 left join
-    {{ source("raw", "applicative_database_national_program") }} as national_program
+    {{ source("raw_eu1", "applicative_database_national_program") }} as national_program
     on co.national_program_id = national_program.national_program_id
 left join
     {{ ref("int_applicative__institution_program") }} as institution_program

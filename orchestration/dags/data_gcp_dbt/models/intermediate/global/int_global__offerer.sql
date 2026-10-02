@@ -57,7 +57,7 @@ with
 
     reimbursement_points as (
         select offerer_id, count(distinct bank_account_id) as total_reimbursement_points
-        from {{ source("raw", "applicative_database_bank_account") }}
+        from {{ source("raw_eu1", "applicative_database_bank_account") }}
         where is_active
         group by offerer_id
     ),

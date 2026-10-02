@@ -1,7 +1,7 @@
 with
     raw_answers as (
         select raw_answers.user_id, raw_answers.submitted_at, raw_answers.answers
-        from {{ source("raw", "qpi_answers_v4") }} as raw_answers
+        from {{ source("raw_eu1", "qpi_answers_v4") }} as raw_answers
     ),
 
     unnested_questions as (

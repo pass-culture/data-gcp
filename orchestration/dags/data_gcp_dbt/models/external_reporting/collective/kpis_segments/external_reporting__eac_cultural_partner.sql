@@ -69,7 +69,7 @@ with
         inner join
             {{ ref("mrt_global__offerer") }} as gof on gcp.offerer_id = gof.offerer_id
         left join
-            {{ source("raw", "applicative_database_educational_year") }} as ey
+            {{ source("raw_eu1", "applicative_database_educational_year") }} as ey
             on date(bd.partition_month)
             between ey.educational_year_beginning_date
             and ey.educational_year_expiration_date

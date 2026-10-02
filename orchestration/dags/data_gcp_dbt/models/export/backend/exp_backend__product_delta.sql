@@ -11,7 +11,7 @@ with
                 ) as {{ key }}_last_sync_date
                 {% if not loop.last %}, {% endif %}
             {% endfor %}
-        from {{ source("raw", "applicative_database_local_provider_event") }}
+        from {{ source("raw_eu1", "applicative_database_local_provider_event") }}
         where
             providerid in (
                 {%- for id in cfg.provider_ids -%}

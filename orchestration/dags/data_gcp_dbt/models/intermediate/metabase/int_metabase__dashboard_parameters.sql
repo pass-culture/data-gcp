@@ -7,4 +7,4 @@ select
             json_value(parameter, '$.type') as type  -- noqa: RF04
         from unnest(json_extract_array(parameters)) as parameter
     ) as dashboard_parameters
-from {{ source("raw", "metabase_report_dashboard") }}
+from {{ source("raw_eu1", "metabase_report_dashboard") }}

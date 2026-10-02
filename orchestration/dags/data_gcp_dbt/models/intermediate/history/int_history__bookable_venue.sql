@@ -41,7 +41,7 @@ with
             and (s.dbt_valid_to is null or date(s.dbt_valid_to) > d.partition_date)
         inner join {{ ref("int_applicative__offer") }} as o using (offer_id)
         inner join
-            {{ source("raw", "applicative_database_venue") }} as v using (venue_id)
+            {{ source("raw_eu1", "applicative_database_venue") }} as v using (venue_id)
         left join
             {{ ref("int_applicative__offerer") }} as offerer
             on v.venue_managing_offerer_id = offerer.offerer_id
@@ -66,7 +66,7 @@ with
                 collective_offer_id
             )
         inner join
-            {{ source("raw", "applicative_database_venue") }} as v using (venue_id)
+            {{ source("raw_eu1", "applicative_database_venue") }} as v using (venue_id)
         group by venue_id, offerer_id, partition_date, offer_type
     ),
 

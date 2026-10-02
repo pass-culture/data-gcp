@@ -29,7 +29,7 @@ with
                     offer_subcategory_id = offer.offer_subcategory_id
                     and user_id = favorite.userid
             ) as user_bookings_for_this_subcat
-        from {{ source("raw", "applicative_database_favorite") }} as favorite
+        from {{ source("raw_eu1", "applicative_database_favorite") }} as favorite
         left join
             {{ ref("mrt_global__booking") }} as booking
             on favorite.userid = booking.user_id
@@ -37,13 +37,13 @@ with
         inner join
             {{ ref("mrt_global__offer") }} as offer on favorite.offerid = offer.offer_id
         inner join
-            {{ source("raw", "applicative_database_stock") }} as stock
+            {{ source("raw_eu1", "applicative_database_stock") }} as stock
             on favorite.offerid = stock.offer_id
         inner join
             {{ ref("mrt_global__user_beneficiary") }} as enruser
             on favorite.userid = enruser.user_id
         inner join
-            {{ source("raw", "subcategories") }} as subcategories
+            {{ source("raw_eu1", "subcategories") }} as subcategories
             on offer.offer_subcategory_id = subcategories.id
 
         where

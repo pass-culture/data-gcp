@@ -1,7 +1,7 @@
 with
     collection_status as (
         select collection_id, collection_name
-        from {{ source("raw", "metabase_collection") }}
+        from {{ source("raw_eu1", "metabase_collection") }}
         where
             -- the collection is not located in Temporary Archive directory.
             concat(location, collection_id) not like '/610%'

@@ -114,7 +114,7 @@ select
     end as collective_offer_location_type,
     false as collective_offer_is_template,
     co.offerer_address_id
-from {{ source("raw", "applicative_database_collective_offer") }} as co
+from {{ source("raw_eu1", "applicative_database_collective_offer") }} as co
 left join
     collective_stocks_grouped_by_collective_offers as cs
     on co.collective_offer_id = cs.collective_offer_id
@@ -196,4 +196,4 @@ select
     end as collective_offer_location_type,
     true as collective_offer_is_template,
     offerer_address_id
-from {{ source("raw", "applicative_database_collective_offer_template") }}
+from {{ source("raw_eu1", "applicative_database_collective_offer_template") }}

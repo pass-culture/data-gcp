@@ -26,7 +26,7 @@ with
                 = 'Recommanderais-tu le pass Culture à un ami ou un collègue ?',
                 false
             ) as is_nps_question
-        from {{ source("raw", "qualtrics_answers") }}
+        from {{ source("raw_eu1", "qualtrics_answers") }}
         where
             survey_id in ('{{ survey_id_15_17 }}', '{{ survey_id_18 }}')
             and question in ('Q1', 'Q2', 'Q3', 'Q3 - Topics')

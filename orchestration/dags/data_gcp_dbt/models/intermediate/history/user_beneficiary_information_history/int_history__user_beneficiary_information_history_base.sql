@@ -35,7 +35,7 @@ with
                     "json_value(action_history_json_data, '" ~ json_path_city ~ "')",
                 )
             }} as normalized_address
-        from {{ source("raw", "applicative_database_action_history") }}
+        from {{ source("raw_eu1", "applicative_database_action_history") }}
         where
             true
             and action_type = 'INFO_MODIFIED'
@@ -76,7 +76,7 @@ with
                 )
             }}
             as normalized_address
-        from {{ source("raw", "applicative_database_beneficiary_fraud_check") }}
+        from {{ source("raw_eu1", "applicative_database_beneficiary_fraud_check") }}
         where
             true
             and type = 'PROFILE_COMPLETION'
@@ -253,7 +253,7 @@ with
     -- CTE: Get user's geocoded address for precise coordinates
     user_adresse_clean as (
         select user_id, user_full_address, latitude, longitude
-        from {{ source("raw", "user_address") }}
+        from {{ source("raw_eu1", "user_address") }}
         where result_status = 'ok'
         qualify row_number() over (partition by user_id order by updated_at desc) = 1
     ),

@@ -104,7 +104,7 @@ with
             reco_sink.jsonpayload.extra.context_extra_data.scorer.retrievals[
                 safe_offset(0)
             ].model_version as scorer_retrieval_model_version
-        from {{ source("raw", "run_googleapis_com_stderr") }} as reco_sink
+        from {{ source("raw_eu1", "run_googleapis_com_stderr") }} as reco_sink
         inner join
             {{ ref("int_applicative__offer_item_id") }}
             as int_applicative__offer_item_id

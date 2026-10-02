@@ -38,6 +38,6 @@
         content_hash,
         poster_gcs_path,
         updated_at
-    from {{ source("raw", "allocine_movie") }}
+    from {{ source("raw_eu1", "allocine_movie") }}
 
 {% endsnapshot %}

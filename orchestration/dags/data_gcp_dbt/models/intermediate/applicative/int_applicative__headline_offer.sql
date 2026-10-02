@@ -18,7 +18,7 @@ with
             safe.parse_timestamp(
                 '%Y-%m-%d %H:%M:%E6S', regexp_extract(timespan, r',"([^"]+)"')
             ) as headline_ending_time
-        from {{ source("raw", "applicative_database_headline_offer") }}
+        from {{ source("raw_eu1", "applicative_database_headline_offer") }}
     )
 
 select distinct

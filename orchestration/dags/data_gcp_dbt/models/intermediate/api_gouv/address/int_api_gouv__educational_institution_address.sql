@@ -13,7 +13,7 @@ with
                 "municipality",
                 "unknown"
             ) as geocode_type
-        from {{ source("raw", "applicative_database_educational_institution") }} as adei
+        from {{ source("raw_eu1", "applicative_database_educational_institution") }} as adei
         left join
             {{ ref("int_seed__geo_postal_code") }} as pc
             on adei.institution_postal_code = pc.postal_code
@@ -33,7 +33,7 @@ with
                 adei.institution_postal_code,
                 null
             ) as institution_postal_code
-        from {{ source("raw", "applicative_database_educational_institution") }} as adei
+        from {{ source("raw_eu1", "applicative_database_educational_institution") }} as adei
     ),
 
     institution_combined as (

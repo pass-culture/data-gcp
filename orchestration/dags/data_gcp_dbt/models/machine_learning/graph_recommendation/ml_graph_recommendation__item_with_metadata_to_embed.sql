@@ -67,12 +67,12 @@ with
     product_artist_link as (
         select
             artist_id, artist_type, cast(offer_product_id as string) as offer_product_id
-        from {{ source("raw", "applicative_database_product_artist_link") }}
+        from {{ source("raw_eu1", "applicative_database_product_artist_link") }}
     ),
 
     artist as (
         select artist_id, artist_name
-        from {{ source("raw", "applicative_database_artist") }}
+        from {{ source("raw_eu1", "applicative_database_artist") }}
     ),
 
     book_titelive_metadata as (

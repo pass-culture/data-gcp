@@ -6,7 +6,7 @@ with
             title as home_name,
             replace(modules, '\"', "") as module_id
         from
-            {{ source("raw", "contentful_entry") }},
+            {{ source("raw_eu1", "contentful_entry") }},
             unnest(json_extract_array(modules, '$')) as modules
         where content_type = "homepageNatif"
     ),
@@ -21,7 +21,7 @@ with
             content_type
         from home
         left join
-            {{ source("raw", "contentful_entry") }} module
+            {{ source("raw_eu1", "contentful_entry") }} module
             on home.module_id = module.id
             and home.date_imported = module.date_imported
     )

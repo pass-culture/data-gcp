@@ -1,7 +1,7 @@
 with
     last_edition_card as (
         select mr.timestamp, mr.user_id, mu.email, mr.model_id as card_id
-        from {{ source("raw", "metabase_revision") }} as mr
+        from {{ source("raw_eu1", "metabase_revision") }} as mr
         left join {{ ref("int_metabase__user") }} as mu on mr.user_id = mu.user_id
         where model = "Card"
         qualify row_number() over (partition by card_id order by timestamp desc) = 1

@@ -164,7 +164,7 @@ select
         when
             exists (
                 select 1 as dummy
-                from {{ source("raw", "subcategories") }} as sc
+                from {{ source("raw_eu1", "subcategories") }} as sc
                 where
                     lower(query) like concat("%", lower(sc.category_id), "%")  -- noqa: RF02
                     or lower(query) like concat("%", lower(sc.id), "%")  -- noqa: RF02

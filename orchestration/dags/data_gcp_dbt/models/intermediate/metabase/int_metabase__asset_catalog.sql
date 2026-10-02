@@ -1,7 +1,7 @@
 with
     taxonomy as (
         select collection_id, squad, tier, certified, in_scope, is_excluded
-        from {{ source("raw", "metabase_collection_taxonomy") }}
+        from {{ source("raw_eu1", "metabase_collection_taxonomy") }}
     ),
 
     public_collections as (
@@ -10,7 +10,7 @@ with
             collection_name,
             location,
             concat(location, collection_id, '/') as full_path
-        from {{ source("raw", "metabase_collection") }}
+        from {{ source("raw_eu1", "metabase_collection") }}
         where personal_owner_id is null
     ),
 
@@ -63,9 +63,9 @@ with
         select
             dc.dashboard_id,
             array_agg(rc.card_name ignore nulls order by rc.card_name) as member_cards
-        from {{ source("raw", "metabase_report_dashboard_card") }} as dc
+        from {{ source("raw_eu1", "metabase_report_dashboard_card") }} as dc
         inner join
-            {{ source("raw", "metabase_report_card") }} as rc on dc.card_id = rc.id
+            {{ source("raw_eu1", "metabase_report_card") }} as rc on dc.card_id = rc.id
         where dc.card_id is not null
         group by 1
     ),
@@ -84,7 +84,7 @@ with
             cast(null as string) as dashboard_markdown,
             coalesce(aca.total_views_3_months, 0) as total_views_3_months,
             aca.last_execution_date
-        from {{ source("raw", "metabase_report_card") }} as rc
+        from {{ source("raw_eu1", "metabase_report_card") }} as rc
         left join
             {{ ref("int_metabase__aggregated_card_activity") }} as aca
             on rc.id = aca.card_id
@@ -104,7 +104,7 @@ with
             dmd.dashboard_markdown,
             coalesce(du.total_views_3_months, 0) as total_views_3_months,
             du.last_execution_date
-        from {{ source("raw", "metabase_report_dashboard") }} as rd
+        from {{ source("raw_eu1", "metabase_report_dashboard") }} as rd
         left join dashboard_usage as du on rd.id = du.dashboard_id
         left join
             {{ ref("int_metabase__dashboard_markdown") }} as dmd

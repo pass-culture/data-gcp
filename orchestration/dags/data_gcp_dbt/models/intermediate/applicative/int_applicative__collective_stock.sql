@@ -68,7 +68,7 @@ with
             ) as total_current_calendar_year_non_cancelled_collective_bookings
         from {{ ref("int_applicative__collective_booking") }} as cb
         left join
-            {{ source("raw", "applicative_database_collective_stock") }} as cs
+            {{ source("raw_eu1", "applicative_database_collective_stock") }} as cs
             on cb.collective_stock_id = cs.collective_stock_id
         group by cb.collective_stock_id
     )
@@ -112,7 +112,7 @@ select
         then true
         else false
     end as collective_stock_is_bookable
-from {{ source("raw", "applicative_database_collective_stock") }} as cs
+from {{ source("raw_eu1", "applicative_database_collective_stock") }} as cs
 left join
     collective_bookings_grouped_by_collective_stock as bcs
     on bcs.collective_stock_id = cs.collective_stock_id

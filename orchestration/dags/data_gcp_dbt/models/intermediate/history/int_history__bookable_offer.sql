@@ -22,7 +22,7 @@ left join
     {{ ref("int_applicative__offer_item_id") }} as int_applicative__offer_item_id
     on offer.offer_id = int_applicative__offer_item_id.offer_id
 left join
-    {{ source("raw", "subcategories") }} as subcategories
+    {{ source("raw_eu1", "subcategories") }} as subcategories
     on global_offer.offer_subcategory_id = subcategories.id
 left join
     {{ ref("int_applicative__venue") }} as venue

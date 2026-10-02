@@ -19,6 +19,6 @@
         date_created,
         date_modified,
         cast(date_modified as timestamp) as modified_at
-    from {{ source("raw", "applicative_database_event_series") }}
+    from {{ source("raw_eu1", "applicative_database_event_series") }}
 
 {% endsnapshot %}

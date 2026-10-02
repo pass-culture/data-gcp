@@ -16,7 +16,7 @@ with
             base.event_series_name,
             base.event_series_description,
             base.event_series_mediation_uuid
-        from {{ source("raw", "applicative_database_event_series") }} as base
+        from {{ source("raw_eu1", "applicative_database_event_series") }} as base
         where
             not exists (
                 select 1 as found

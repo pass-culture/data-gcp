@@ -6,5 +6,5 @@ from
         )
     }} as ipa
 inner join
-    {{ source("raw", "applicative_database_educational_institution_program") }} as ip
+    {{ source("raw_eu1", "applicative_database_educational_institution_program") }} as ip
     on ipa.program_id = ip.program_id

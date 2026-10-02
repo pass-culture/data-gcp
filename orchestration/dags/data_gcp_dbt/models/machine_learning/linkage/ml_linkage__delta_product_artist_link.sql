@@ -26,7 +26,7 @@ with
             casted_delta_product_artist_link.comment
         from casted_delta_product_artist_link
         inner join
-            {{ source("raw", "applicative_database_product_artist_link") }}
+            {{ source("raw_eu1", "applicative_database_product_artist_link") }}
             as applicative_database_product_artist_link
             on casted_delta_product_artist_link.offer_product_id
             = cast(applicative_database_product_artist_link.offer_product_id as string)

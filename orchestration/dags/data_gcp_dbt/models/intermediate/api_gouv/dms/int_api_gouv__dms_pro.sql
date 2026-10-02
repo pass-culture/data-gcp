@@ -66,7 +66,7 @@ with
                 erreur_traitement_pass_culture, 'nan'
             ) as dms_application_processing_error_pass_culture
 
-        from {{ source("raw", "raw_dms_pro") }}
+        from {{ source("raw_eu1", "raw_dms_pro") }}
         where
             application_submitted_at > 0
             and (processed_at > 0 or processed_at is null)

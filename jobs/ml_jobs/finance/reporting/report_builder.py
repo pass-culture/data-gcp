@@ -411,13 +411,22 @@ def plot_quarterly(quarterly: pd.DataFrame, output_dir: Path) -> Path:
     fig, ax = plt.subplots(figsize=(13, 6))
     x = range(len(q_only))
     width = 0.35
-    ax.bar([i - width / 2 for i in x], q_only[DAILY_COL], width=width, label="Prophet Daily")
-    ax.bar([i + width / 2 for i in x], q_only[WEEKLY_COL], width=width, label="Prophet Weekly")
+    bars_daily = ax.bar([i - width / 2 for i in x], q_only[DAILY_COL], width=width, label="Prophet Daily")
+    bars_weekly = ax.bar([i + width / 2 for i in x], q_only[WEEKLY_COL], width=width, label="Prophet Weekly")
+    for bars in (bars_daily, bars_weekly):
+        ax.bar_label(
+            bars,
+            labels=[format_eur(v) for v in bars.datavalues],
+            padding=3,
+            rotation=90,
+            fontsize=8,
+        )
     ax.set_xticks(list(x))
     ax.set_xticklabels(q_only["Période"], rotation=45, ha="right")
     ax.set_title("Totaux trimestriels prévus")
     ax.set_ylabel("Pricing (€)")
     ax.yaxis.set_major_formatter(_eur_axis_formatter())
+    ax.margins(y=0.15)
     ax.legend()
     ax.grid(True, alpha=0.3, axis="y")
     fig.tight_layout()

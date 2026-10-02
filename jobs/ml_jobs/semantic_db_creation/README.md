@@ -17,7 +17,7 @@ metadata, and is indexed for vector, full-text and hybrid search.
 | `item_name`, `item_description` | served metadata |
 | `search_text` (= name + description) | full-text / hybrid search |
 | `category`, `subcategory_id`, `search_group_name` | filterable metadata (BITMAP indexes) |
-| `topic_id`, `cluster_id`, `gtl_id`, `gtl_l3`, `gtl_l4` | other item metadata (same as `two_tower` / `graph` retrievals) |
+| `gtl_id`, `gtl_l3`, `gtl_l4` | other item metadata (same as `two_tower` / `graph` retrievals) |
 | `is_geolocated`, `booking_number*`, `booking_number_desc`, `total_offers`, `stock_price` (`float64`), `offer_creation_date`, `stock_beginning_date` (`int64` unix-epoch seconds), `semantic_emb_mean` (`float64`) | served item metadata (same as `two_tower` / `graph` retrievals) |
 | `example_offer_id`, `example_offer_name`, `example_venue_id`, `example_venue_latitude`, `example_venue_longitude` (`float64`) | served item metadata (same as `two_tower` / `graph` retrievals) |
 
@@ -52,7 +52,7 @@ The input parquet must already join the embeddings with metadata (see the
 casting dates to unix-epoch seconds and NUMERIC columns to `FLOAT64`):
 `item_id, all_items_metadata_embedding, offer_name, offer_description` plus the
 `recommendable_item` metadata columns (`category`, `subcategory_id`,
-`search_group_name`, `topic_id`, `cluster_id`, `is_geolocated`, `gtl_id`,
+`search_group_name`, `is_geolocated`, `gtl_id`,
 `gtl_l3`, `gtl_l4`, `booking_number*`, `total_offers`, `stock_price`,
 `offer_creation_date`, `stock_beginning_date`, `semantic_emb_mean`,
 `example_offer_id`, `example_offer_name`, `example_venue_id`,

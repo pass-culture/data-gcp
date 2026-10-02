@@ -36,6 +36,10 @@ select
     offer_creation_date,
     content_hash,
     to_embed,
+    gtl_label_level_1,
+    gtl_label_level_2,
+    gtl_label_level_3,
+    gtl_label_level_4,
     case
         when titelive_gtl_id is not null
         then

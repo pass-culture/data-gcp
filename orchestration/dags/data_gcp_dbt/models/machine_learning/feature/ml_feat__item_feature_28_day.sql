@@ -6,23 +6,13 @@ with
     ),
 
     embeddings as (
-        select raw_embeddings.item_id, raw_embeddings.semantic_content_embedding
-        from {{ ref("ml_feat__item_embedding") }} as raw_embeddings
+        select raw_embeddings.item_id, raw_embeddings.all_items_metadata_embedding
+        from {{ ref("ml_semantic_embedding__all_items_metadata") }} as raw_embeddings
     ),
 
     avg_embedding as (
-        select embeddings.item_id, avg(cast(e as float64)) as avg_semantic_embedding
-        from
-            embeddings,
-            unnest(
-                split(
-                    substr(
-                        embeddings.semantic_content_embedding,
-                        2,
-                        length(embeddings.semantic_content_embedding) - 2
-                    )
-                )
-            ) as e
+        select embeddings.item_id, avg(e) as avg_semantic_embedding
+        from embeddings, unnest(embeddings.all_items_metadata_embedding) as e
         group by embeddings.item_id
     ),
 
@@ -62,18 +52,6 @@ with
             booking.booking_creation_date >= date_sub(current_date(), interval 28 day)
             and not booking.booking_is_cancelled
         group by offer.item_id
-    ),
-
-    item_clusters as (
-        select
-            ic.item_id,
-            any_value(ic.semantic_cluster_id) as cluster_id,
-            any_value(it.semantic_cluster_id) as topic_id  -- TODO: temporary solution, should be removed after the refactor of topics logics.
-        from {{ source("ml_preproc", "default_item_cluster") }} as ic
-        left join
-            {{ source("ml_preproc", "unconstrained_item_cluster") }} as it
-            on ic.item_id = it.item_id
-        group by ic.item_id
     )
 
 select
@@ -82,10 +60,7 @@ select
     ae.avg_semantic_embedding,
     bn.booking_number_last_7_days,
     bn.booking_number_last_14_days,
-    bn.booking_number_last_28_days,
-    icc.cluster_id,
-    icc.topic_id
+    bn.booking_number_last_28_days
 from item_count as ic
 left join avg_embedding as ae on ic.item_id = ae.item_id
 left join booking_numbers as bn on ic.item_id = bn.item_id
-left join item_clusters as icc on ic.item_id = icc.item_id

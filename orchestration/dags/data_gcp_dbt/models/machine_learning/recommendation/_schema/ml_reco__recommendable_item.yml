@@ -36,10 +36,6 @@ models:
         data_tests:
           - not_null
           - unique
-      - name: topic_id
-        description: "{{ doc('column__clustering_topic_id') }}"
-      - name: cluster_id
-        description: "{{ doc('column__clustering_cluster_id') }}"
       - name: category
         description: "{{ doc('column__offer_category_id') }}"
         data_tests:

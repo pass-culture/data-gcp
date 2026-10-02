@@ -56,8 +56,6 @@ with
             max(
                 coalesce(ml_feat.booking_number_last_28_days, 0)
             ) as booking_number_last_28_days,
-            any_value(ml_feat.cluster_id) as cluster_id,
-            any_value(ml_feat.topic_id) as topic_id,
             max(
                 coalesce(
                     (

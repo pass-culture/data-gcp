@@ -35,8 +35,10 @@ Each vector flows through two GCS-staged steps (see `cli/`), one DAG task each:
 - **Default** (no `prompt_template`): non-null features are concatenated as
   `label : value` lines (`label` from `labels`, else the column name).
 - **Template**: a natural-language string; null features render as `""` (not
-  `"None"`); an item with all features null yields an empty prompt and is
-  dropped in the build_prompts step.
+  `"None"`). A template line whose placeholders are all empty for a row is
+  dropped (e.g. `Genres: {allocine_genres_concat}` disappears when there are no genres);
+  an item with all features null yields an empty prompt and is dropped in the
+  build_prompts step.
 
 ## Registered preprocessors
 
@@ -44,8 +46,6 @@ Each vector flows through two GCS-staged steps (see `cli/`), one DAG task each:
 |------|-------------|
 | `normalize_whitespace` | Collapse whitespace runs to single spaces, strip ends. |
 | `clean_description` | Strip URLs / known boilerplate, then `normalize_whitespace`. |
-| `format_movie_genres` | Format a `{"movies": {"genres": [...]}}` envelope as `"A, B"`. |
-| `format_book_classification` | Format a `{"books": {"gtl1": ...}}` envelope as a labeled chevron chain. |
 
 Add a vector: create a dbt input model + a YAML here + a `VectorPipeline` entry
 in the DAG. The `name` ties the three together.

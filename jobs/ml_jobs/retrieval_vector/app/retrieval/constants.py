@@ -3,8 +3,6 @@ from typing import List
 
 DEFAULT_COLUMNS: List[str] = ["item_id"]
 DEFAULT_DETAIL_COLUMNS: List[str] = [
-    "topic_id",
-    "cluster_id",
     "is_geolocated",
     "booking_number",
     "booking_number_last_7_days",

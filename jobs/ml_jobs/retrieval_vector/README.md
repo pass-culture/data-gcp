@@ -80,6 +80,15 @@ It is built and indexed by the standalone **`semantic_search_lancedb`** job,
 published to GCS, and **downloaded to local disk at container startup** (from the
 `SEMANTIC_LANCE_DB_URI` env var, with a free-disk pre-check).
 
+`SEMANTIC_LANCE_DB_URI` points at the published **artifact root**. Each build is
+written to an immutable `<root>/versions/<version>/` directory and a
+`<root>/latest.json` manifest is refreshed to point at it. At startup the
+endpoint reads the manifest, resolves the current `versions/<version>/` dir and
+downloads that — so a mid-build publish never exposes a half-written database,
+and a bad build can be rolled back by repointing the manifest to a retained
+previous version. If no manifest is present (legacy layout), the root directory
+is downloaded as-is.
+
 #### `items` table schema (semantic)
 
 Produced by `semantic_search_lancedb` (see that job's README):

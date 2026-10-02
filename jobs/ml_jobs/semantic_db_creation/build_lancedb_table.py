@@ -2,13 +2,23 @@ import os
 
 os.environ.setdefault("LANCE_BYPASS_SPILLING", "true")
 
+import json
+from datetime import datetime, timezone
+
 import lancedb
 import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.dataset as ds
+import pyarrow.fs as pafs
 from loguru import logger
 
 ID_COLUMN = "item_id"
+
+# Immutable-artifact layout published under the LanceDB root:
+#   <root>/versions/<version>/   <- one immutable DB per build
+#   <root>/latest.json           <- manifest the readers resolve to find it
+VERSIONS_DIRNAME = "versions"
+MANIFEST_FILENAME = "latest.json"
 
 # Columns read from the joined BigQuery export
 # (item_embedding ⋈ item_metadata ⋈ recommendable_item).
@@ -252,3 +262,68 @@ def create_index(lancedb_table: lancedb.Table) -> None:
     lancedb_table.create_scalar_index("search_group_name", index_type="BITMAP")
 
     logger.success(f"Table '{lancedb_table}' indexed and ready!")
+
+
+def _fs_and_path(uri: str) -> tuple[pafs.FileSystem, str]:
+    """Resolve a ``gs://`` or local URI to a ``(filesystem, path)`` pair.
+
+    ``gs://`` URIs use ``GcsFileSystem()`` directly so the container's default
+    service-account credentials are used (``from_uri`` would default to
+    anonymous access); everything else is delegated to ``from_uri`` (local /
+    tests).
+    """
+    if uri.startswith("gs://"):
+        return pafs.GcsFileSystem(), uri[len("gs://") :].rstrip("/")
+    fs, path = pafs.FileSystem.from_uri(uri)
+    return fs, path.rstrip("/")
+
+
+def versioned_uri(root_uri: str, version: str) -> str:
+    """Return the immutable ``<root>/versions/<version>/`` URI for a build."""
+    return f"{root_uri.rstrip('/')}/{VERSIONS_DIRNAME}/{version}"
+
+
+def write_latest_manifest(
+    root_uri: str,
+    version: str,
+    version_uri: str,
+    table_name: str,
+    row_count: int,
+) -> None:
+    """Publish ``<root>/latest.json`` pointing readers at the new version.
+
+    Written last, after the versioned DB is fully built and indexed, so readers
+    only ever switch to a complete artifact (atomic single-object overwrite).
+    """
+    manifest = {
+        "version": version,
+        "uri": version_uri,
+        "table": table_name,
+        "row_count": row_count,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    fs, root_path = _fs_and_path(root_uri)
+    manifest_path = f"{root_path}/{MANIFEST_FILENAME}"
+    logger.info(f"Publishing manifest {root_uri.rstrip('/')}/{MANIFEST_FILENAME}")
+    with fs.open_output_stream(manifest_path) as stream:
+        stream.write(json.dumps(manifest, indent=2).encode("utf-8"))
+
+
+def prune_old_versions(root_uri: str, keep: int) -> None:
+    """Delete all but the ``keep`` most recent ``<root>/versions/<version>/``.
+
+    Versions are named with the DAG run ``ts_nodash`` so lexicographic order is
+    chronological. ``keep <= 0`` disables pruning.
+    """
+    if keep <= 0:
+        return
+    fs, root_path = _fs_and_path(root_uri)
+    versions_path = f"{root_path}/{VERSIONS_DIRNAME}"
+    selector = pafs.FileSelector(versions_path, recursive=False, allow_not_found=True)
+    version_dirs = sorted(
+        (i for i in fs.get_file_info(selector) if i.type == pafs.FileType.Directory),
+        key=lambda i: i.base_name,
+    )
+    for info in version_dirs[:-keep]:
+        logger.info(f"Pruning old semantic DB version: {info.path}")
+        fs.delete_dir(info.path)

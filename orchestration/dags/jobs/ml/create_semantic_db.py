@@ -43,8 +43,8 @@ DEFAULT_VECTOR_COLUMN_NAME = "all_items_metadata_embedding"
 
 ## GCS LanceDB CONSTANTS
 LANCEDB_GCS_URI = f"gs://{DATA_GCS_BUCKET_NAME}/semantic_search_lancedb/"
-# Table name the retrieval_vector SemanticClient opens (open_table("items")).
 LANCEDB_TABLE = "items"
+LANCEDB_VERSIONS_TO_KEEP = 10
 
 ## DAG CONFIG
 DAG_ID = "create_semantic_db"
@@ -65,7 +65,11 @@ DAG_DOC = f"""
 This DAG creates a LanceDB table with item embeddings for semantic search. It performs the following steps:
 1. Starts a GCE instance.
 2. Exports item embeddings from `ml_semantic_embedding_<env>.all_items_metadata` BigQuery table to Parquet files in GCS.
-3. Creates LanceDB table indexed on the vector_embedding_column_name. Stored in GCS at gs://{DATA_GCS_BUCKET_NAME}/semantic_search_lancedb/{ENV_SHORT_NAME}.
+3. Creates an immutable, versioned LanceDB table indexed on the vector_embedding_column_name.
+   Each run writes to gs://{DATA_GCS_BUCKET_NAME}/semantic_search_lancedb/versions/<ts_nodash>/ and
+   refreshes the gs://{DATA_GCS_BUCKET_NAME}/semantic_search_lancedb/latest.json manifest that the
+   semantic retrieval endpoint resolves to download the current version (older versions are retained
+   for rollback and pruned beyond {LANCEDB_VERSIONS_TO_KEEP}).
 
 Parameters:
 - vector_embedding_column_name: Name of the column containing the vector embeddings in the BigQuery table (default: 'all_items_metadata_embedding').
@@ -202,7 +206,9 @@ with DAG(
                 --lancedb-uri {LANCEDB_GCS_URI} \
                 --lancedb-table {LANCEDB_TABLE} \
                 --batch-size 10000 \
-                --vector-column-name {{{{ params.vector_embedding_column_name }}}}
+                --vector-column-name {{{{ params.vector_embedding_column_name }}}} \
+                --version {{{{ ts_nodash }}}} \
+                --keep-versions {LANCEDB_VERSIONS_TO_KEEP}
         """,
         deferrable=False,
     )

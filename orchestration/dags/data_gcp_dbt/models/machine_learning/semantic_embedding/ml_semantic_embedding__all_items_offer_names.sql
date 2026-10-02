@@ -30,3 +30,8 @@ select
     aion.embedding_model,
     aion.embedding_date
 from {{ source("tmp", "all_items_offer_names_tmp") }} as aion
+where
+    aion._table_suffix = (
+        select max(latest._table_suffix) as max_table_suffix
+        from {{ source("tmp", "all_items_offer_names_tmp") }} as latest
+    )

@@ -305,10 +305,17 @@ sources:
     schema: tmp_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
+      # item_embedding DAG writes one timestamped table per run
+      # (<name>_tmp_<ts_nodash>); the wildcard identifier unions them so the
+      # consuming model can pick the latest via max(_TABLE_SUFFIX).
       - name: all_items_metadata_tmp
+        identifier: all_items_metadata_tmp_*
       - name: books_metadata_tmp
+        identifier: books_metadata_tmp_*
       - name: movies_metadata_tmp
+        identifier: movies_metadata_tmp_*
       - name: all_items_offer_names_tmp
+        identifier: all_items_offer_names_tmp_*
   - name: ml_linkage
     schema: ml_linkage_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"

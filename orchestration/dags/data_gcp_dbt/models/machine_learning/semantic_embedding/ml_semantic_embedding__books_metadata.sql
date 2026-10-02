@@ -30,3 +30,8 @@ select
     bm.embedding_model,
     bm.embedding_date
 from {{ source("tmp", "books_metadata_tmp") }} as bm
+where
+    bm._table_suffix = (
+        select max(latest._table_suffix) as max_table_suffix
+        from {{ source("tmp", "books_metadata_tmp") }} as latest
+    )

@@ -9,7 +9,9 @@ with
 
     ),
 
-    answers as (select distinct user_id from {{ source("raw_eu1", "qualtrics_answers") }}),
+    answers as (
+        select distinct user_id from {{ source("raw_eu1", "qualtrics_answers") }}
+    ),
 
     ir_export as (
         select

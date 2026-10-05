@@ -18,7 +18,9 @@ select distinct
     user_id,
     user_properties.key as experiment_name,
     user_properties.value.string_value as experiment_value
-from {{ source("raw_eu1", "firebase_events") }}, unnest(user_properties) as user_properties
+from
+    {{ source("raw_eu1", "firebase_events") }},
+    unnest(user_properties) as user_properties
 where
     user_properties.key like "%firebase_exp%"
     {% if is_incremental() %}

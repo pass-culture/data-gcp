@@ -13,7 +13,8 @@ with
             on o.venue_id = v.venue_id
             and v.venue_is_open_to_public is true
         inner join
-            {{ source("raw_eu1", "applicative_database_collective_offer_template") }} as t
+            {{ source("raw_eu1", "applicative_database_collective_offer_template") }}
+            as t
             on o.collective_offer_id = t.collective_offer_id
             and t.collective_offer_location_type != "school"
         where collective_offer_is_template is true and o.collective_offer_is_active

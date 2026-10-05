@@ -31,7 +31,8 @@ with
             oa.address_longitude as offerer_address_longitude
         from offerer_offer_info as o
         left join
-            {{ source("raw_eu1", "applicative_database_collective_offer_template") }} as a
+            {{ source("raw_eu1", "applicative_database_collective_offer_template") }}
+            as a
             on o.collective_offer_id = a.collective_offer_id
             and a.offerer_address_id is not null
         left join

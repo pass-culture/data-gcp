@@ -9,7 +9,8 @@ select
     cotd.educational_domain_id,
     ed.educational_domain_name
 from
-    {{ source("raw_eu1", "applicative_database_collective_offer_template_domain") }} as cotd
+    {{ source("raw_eu1", "applicative_database_collective_offer_template_domain") }}
+    as cotd
 left join
     {{ source("raw_eu1", "applicative_database_educational_domain") }} as ed
     on cotd.educational_domain_id = ed.educational_domain_id

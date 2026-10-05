@@ -55,7 +55,8 @@ select
     st_boundingbox(iris.iris_shape).ymax as max_latitude
 from iris
 left join
-    {{ source("raw_eu1", "geo_municipality") }} as city on iris.city_code = city.city_code
+    {{ source("raw_eu1", "geo_municipality") }} as city
+    on iris.city_code = city.city_code
 left join
     {{ source("seed", "region_department") }} as region_department
     on city.department_code = region_department.num_dep

@@ -20,4 +20,5 @@ select
     ) as highlight_availability_ending_date
 from {{ source("raw_eu1", "applicative_database_highlight_request") }} as hr
 left join
-    {{ source("raw_eu1", "applicative_database_highlight") }} as h on hr.highlight_id = h.id
+    {{ source("raw_eu1", "applicative_database_highlight") }} as h
+    on hr.highlight_id = h.id

@@ -20,4 +20,5 @@ select
         order by coalesce(u.user_creation_date, u.user_creation_date)
     ) as user_affiliation_rank
 from {{ source("raw_eu1", "applicative_database_user_offerer") }} as uo
-left join {{ source("raw_eu1", "applicative_database_user") }} as u on uo.userid = u.user_id
+left join
+    {{ source("raw_eu1", "applicative_database_user") }} as u on uo.userid = u.user_id

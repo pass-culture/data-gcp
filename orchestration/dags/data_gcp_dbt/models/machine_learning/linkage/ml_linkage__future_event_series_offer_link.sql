@@ -7,7 +7,9 @@ with
 
     future_event_series_offer_link as (
         select base.event_series_id, cast(base.offer_id as string) as offer_id
-        from {{ source("raw_eu1", "applicative_database_event_series_offer_link") }} as base
+        from
+            {{ source("raw_eu1", "applicative_database_event_series_offer_link") }}
+            as base
         where
             not exists (
                 select 1 as found

@@ -11,7 +11,21 @@ with
                 case
                     when recredit_type = 'PREVIOUS_DEPOSIT' then recredit_amount else 0
                 end
-            ) as total_previous_deposit_recredit_amount
+            ) as total_previous_deposit_recredit_amount,
+            -- Age credits received on the deposit (GRANT_17_18 is recredited at 17
+            -- and 18)
+            logical_or(recredit_type = 'RECREDIT_17') as has_received_recredit_17,
+            min(
+                case
+                    when recredit_type = 'RECREDIT_17' then date(recredit_creation_date)
+                end
+            ) as first_recredit_17_date,
+            logical_or(recredit_type = 'RECREDIT_18') as has_received_recredit_18,
+            min(
+                case
+                    when recredit_type = 'RECREDIT_18' then date(recredit_creation_date)
+                end
+            ) as first_recredit_18_date
         from {{ source("raw", "applicative_database_recredit") }}
         group by deposit_id
     )
@@ -28,6 +42,10 @@ select
     rd.last_recredit_date,
     rd.total_recredit,
     rd.total_recredit_amount,
+    rd.first_recredit_17_date,
+    rd.first_recredit_18_date,
+    coalesce(rd.has_received_recredit_17, false) as has_received_recredit_17,
+    coalesce(rd.has_received_recredit_18, false) as has_received_recredit_18,
     {{ calculate_exact_age("d.datecreated", "u.user_birth_date") }}
     as user_age_at_deposit,
     -- HOTFIX: Adjust 'amount' from 90 to 80 to correct a discrepancy (55 deposit are

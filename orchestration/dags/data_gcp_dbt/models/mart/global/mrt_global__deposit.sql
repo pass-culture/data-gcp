@@ -35,6 +35,7 @@ select
     d.first_recredit_17_date,
     d.has_received_recredit_18,
     d.first_recredit_18_date,
+    d.first_age_18_credit_date,
     d.total_theoretical_amount_spent,
     d.total_actual_amount_spent,
     d.total_theoretical_amount_spent_in_digital_goods,

@@ -104,6 +104,7 @@ select
     d.first_recredit_17_date,
     d.has_received_recredit_18,
     d.first_recredit_18_date,
+    d.first_age_18_credit_date,
     bgd.first_individual_booking_date,
     bgd.last_individual_booking_date,
     bgd.total_diversity_score,

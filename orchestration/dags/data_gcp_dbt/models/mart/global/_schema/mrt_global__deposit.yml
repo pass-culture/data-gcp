@@ -126,6 +126,9 @@ models:
       - name: first_recredit_18_date
         description: '{{ doc("column__first_recredit_18_date") }}'
         data_type: DATE
+      - name: first_age_18_credit_date
+        description: '{{ doc("column__first_age_18_credit_date") }}'
+        data_type: DATE
       - name: total_theoretical_amount_spent
         description: '{{ doc("column__total_theoretical_amount_spent") }}'
         data_type: NUMERIC

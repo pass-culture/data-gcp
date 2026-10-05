@@ -46,6 +46,14 @@ select
     rd.first_recredit_18_date,
     coalesce(rd.has_received_recredit_17, false) as has_received_recredit_17,
     coalesce(rd.has_received_recredit_18, false) as has_received_recredit_18,
+    -- Age-18 credit whatever the scheme: GRANT_18 before the March 2025 reform,
+    -- RECREDIT_18 on GRANT_17_18 after
+    case
+        when d.type = 'GRANT_18'
+        then date(d.datecreated)
+        when d.type = 'GRANT_17_18'
+        then rd.first_recredit_18_date
+    end as first_age_18_credit_date,
     {{ calculate_exact_age("d.datecreated", "u.user_birth_date") }}
     as user_age_at_deposit,
     -- HOTFIX: Adjust 'amount' from 90 to 80 to correct a discrepancy (55 deposit are

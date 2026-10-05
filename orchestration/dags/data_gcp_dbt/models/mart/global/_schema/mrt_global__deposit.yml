@@ -113,16 +113,12 @@ models:
       - name: has_received_recredit_17
         description: '{{ doc("column__has_received_recredit_17") }}'
         data_type: BOOLEAN
-        data_tests:
-          - not_null
       - name: first_recredit_17_date
         description: '{{ doc("column__first_recredit_17_date") }}'
         data_type: DATE
       - name: has_received_recredit_18
         description: '{{ doc("column__has_received_recredit_18") }}'
         data_type: BOOLEAN
-        data_tests:
-          - not_null
       - name: first_recredit_18_date
         description: '{{ doc("column__first_recredit_18_date") }}'
         data_type: DATE

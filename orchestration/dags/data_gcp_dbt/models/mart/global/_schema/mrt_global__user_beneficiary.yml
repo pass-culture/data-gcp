@@ -160,6 +160,17 @@ models:
       - name: user_current_deposit_reform_category
         description: '{{ doc("column__user_current_deposit_reform_category") }}'
         data_type: STRING
+      - name: first_age_credit_date
+        description: '{{ doc("column__user_first_age_credit_date") }}'
+        data_type: DATE
+      - name: has_received_age_credit_before_18
+        description: '{{ doc("column__user_has_received_age_credit_before_18") }}'
+        data_type: BOOLEAN
+        data_tests:
+          - not_null
+      - name: first_age_18_credit_date
+        description: '{{ doc("column__user_first_age_18_credit_date") }}'
+        data_type: DATE
       - name: first_individual_booking_date
         description: '{{ doc("column__first_individual_booking_date") }}'
         data_type: DATE

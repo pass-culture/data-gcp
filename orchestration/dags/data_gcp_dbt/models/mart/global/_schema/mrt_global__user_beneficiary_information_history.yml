@@ -115,7 +115,7 @@ models:
         data_type: STRING
 
       - name: user_density_label
-        description: '{{ doc("column__user_density_label") }}'
+        description: '{{ doc("column__user_history_density_label") }}'
         data_type: STRING
 
       - name: user_density_macro_level

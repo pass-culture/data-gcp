@@ -64,7 +64,11 @@ with
             ) as user_first_deposit_reform_category,
             max(
                 case when deposit_rank_desc = 1 then deposit_reform_category end
-            ) as user_current_deposit_reform_category
+            ) as user_current_deposit_reform_category,
+            -- credit_17 / credit_18 across the March 2025 reform
+            min(deposit_credit_17_date) as first_credit_17_date,
+            min(deposit_credit_18_date) as first_credit_18_date,
+            logical_or(deposit_has_credit_before_18) as user_has_credit_before_18
         from {{ ref("int_global__deposit") }}
         group by user_id
     )
@@ -133,6 +137,13 @@ select
     dgu.current_deposit_type,
     dgu.user_first_deposit_reform_category,
     dgu.user_current_deposit_reform_category,
+    dgu.first_credit_17_date,
+    dgu.first_credit_18_date,
+    {{ calculate_exact_age("dgu.first_credit_17_date", "date(u.user_birth_date)") }}
+    as user_age_at_first_credit_17,
+    {{ calculate_exact_age("dgu.first_credit_18_date", "date(u.user_birth_date)") }}
+    as user_age_at_first_credit_18,
+    coalesce(dgu.user_has_credit_before_18, false) as user_has_credit_before_18,
     coalesce(
         u.user_activity = "Chômeur, En recherche d'emploi", false
     ) as user_is_unemployed,

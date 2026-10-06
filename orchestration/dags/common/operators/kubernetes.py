@@ -49,9 +49,15 @@ _IMAGE_REGISTRY = _default_image_registry()
 _BASE_PYTHON_IMAGE_NAME = "py312"
 _CELERY_WORKER_IMAGE_NAME = "airflow"
 
-_DEFAULT_DAGS_BRANCH = "master" if ENV_SHORT_NAME != "prod" else "production"
-_DEFAULT_DAGS_IMAGE_TAG = "dev" if ENV_SHORT_NAME == "dev" else "v1"
-_DEFAULT_RUNTIME_IMAGE_TAG = "dev" if ENV_SHORT_NAME == "dev" else "v1"
+_DEFAULT_DAGS_BRANCH = (
+    "master" if (ENV_SHORT_NAME != "prod" and ENV_SHORT_NAME != "prd") else "production"
+)
+_DEFAULT_DAGS_IMAGE_TAG = (
+    "dev" if (ENV_SHORT_NAME == "dev" or ENV_SHORT_NAME == "tst") else "v1"
+)
+_DEFAULT_RUNTIME_IMAGE_TAG = (
+    "dev" if (ENV_SHORT_NAME == "dev" or ENV_SHORT_NAME == "tst") else "v1"
+)
 
 _AIRFLOW_USER_UUID = 50000
 # Pod-level: fs_group, run_as_non_root, run_as_user/group

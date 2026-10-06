@@ -110,20 +110,11 @@ models:
       - name: total_recredit_amount
         description: '{{ doc("column__total_recredit_amount") }}'
         data_type: FLOAT64
-      - name: has_received_recredit_17
-        description: '{{ doc("column__has_received_recredit_17") }}'
-        data_type: BOOLEAN
       - name: first_recredit_17_date
         description: '{{ doc("column__first_recredit_17_date") }}'
         data_type: DATE
-      - name: has_received_recredit_18
-        description: '{{ doc("column__has_received_recredit_18") }}'
-        data_type: BOOLEAN
       - name: first_recredit_18_date
         description: '{{ doc("column__first_recredit_18_date") }}'
-        data_type: DATE
-      - name: first_age_18_credit_date
-        description: '{{ doc("column__first_age_18_credit_date") }}'
         data_type: DATE
       - name: total_theoretical_amount_spent
         description: '{{ doc("column__total_theoretical_amount_spent") }}'

@@ -65,18 +65,10 @@ with
             max(
                 case when deposit_rank_desc = 1 then deposit_reform_category end
             ) as user_current_deposit_reform_category,
-            -- Age credits across the March 2025 reform (GRANT_FREE carries no money)
-            min(first_age_18_credit_date) as first_age_18_credit_date,
-            logical_or(
-                deposit_type = "GRANT_15_17"
-                or (deposit_type = "GRANT_17_18" and first_recredit_17_date is not null)
-            ) as has_received_age_credit_before_18,
-            min(
-                case
-                    when deposit_type in ("GRANT_15_17", "GRANT_18", "GRANT_17_18")
-                    then date(deposit_creation_date)
-                end
-            ) as first_age_credit_date
+            -- credit_17 / credit_18 across the March 2025 reform
+            min(deposit_credit_17_date) as first_credit_17_date,
+            min(deposit_credit_18_date) as first_credit_18_date,
+            logical_or(deposit_has_credit_before_18) as user_has_credit_before_18
         from {{ ref("int_global__deposit") }}
         group by user_id
     )
@@ -145,11 +137,13 @@ select
     dgu.current_deposit_type,
     dgu.user_first_deposit_reform_category,
     dgu.user_current_deposit_reform_category,
-    dgu.first_age_18_credit_date,
-    dgu.first_age_credit_date,
-    coalesce(
-        dgu.has_received_age_credit_before_18, false
-    ) as has_received_age_credit_before_18,
+    dgu.first_credit_17_date,
+    dgu.first_credit_18_date,
+    {{ calculate_exact_age("dgu.first_credit_17_date", "date(u.user_birth_date)") }}
+    as user_age_at_first_credit_17,
+    {{ calculate_exact_age("dgu.first_credit_18_date", "date(u.user_birth_date)") }}
+    as user_age_at_first_credit_18,
+    coalesce(dgu.user_has_credit_before_18, false) as user_has_credit_before_18,
     coalesce(
         u.user_activity = "Chômeur, En recherche d'emploi", false
     ) as user_is_unemployed,

@@ -14,13 +14,11 @@ with
             ) as total_previous_deposit_recredit_amount,
             -- Age credits received on the deposit (GRANT_17_18 is recredited at 17
             -- and 18)
-            logical_or(recredit_type = 'RECREDIT_17') as has_received_recredit_17,
             min(
                 case
                     when recredit_type = 'RECREDIT_17' then date(recredit_creation_date)
                 end
             ) as first_recredit_17_date,
-            logical_or(recredit_type = 'RECREDIT_18') as has_received_recredit_18,
             min(
                 case
                     when recredit_type = 'RECREDIT_18' then date(recredit_creation_date)
@@ -44,16 +42,39 @@ select
     rd.total_recredit_amount,
     rd.first_recredit_17_date,
     rd.first_recredit_18_date,
-    coalesce(rd.has_received_recredit_17, false) as has_received_recredit_17,
-    coalesce(rd.has_received_recredit_18, false) as has_received_recredit_18,
-    -- Age-18 credit whatever the scheme: GRANT_18 before the March 2025 reform,
-    -- RECREDIT_18 on GRANT_17_18 after
+    -- credit_17 / credit_18 carried by this deposit, whatever the scheme (aggregated
+    -- per user in int_global__user_beneficiary). credit_17: RECREDIT_17, or a
+    -- GRANT_15_17 created at 17 (no RECREDIT_17 then). credit_18: GRANT_18 before
+    -- the March 2025 reform, RECREDIT_18 on GRANT_17_18 after.
+    case
+        when
+            d.type = 'GRANT_15_17'
+            and {{ calculate_exact_age("d.datecreated", "u.user_birth_date") }} = 17
+        then date(d.datecreated)
+        when d.type in ('GRANT_15_17', 'GRANT_17_18')
+        then rd.first_recredit_17_date
+    end as deposit_credit_17_date,
     case
         when d.type = 'GRANT_18'
         then date(d.datecreated)
         when d.type = 'GRANT_17_18'
         then rd.first_recredit_18_date
-    end as first_age_18_credit_date,
+    end as deposit_credit_18_date,
+    -- Money received before 18: a GRANT_15_17 deposit, or a credit_17 before the
+    -- 18th birthday (a GRANT_17_18 opened at 18 can receive RECREDIT_17 and
+    -- RECREDIT_18 the same day)
+    coalesce(
+        (
+            d.type = 'GRANT_15_17'
+            and {{ calculate_exact_age("d.datecreated", "u.user_birth_date") }} < 18
+        )
+        or (
+            d.type = 'GRANT_17_18'
+            and rd.first_recredit_17_date
+            < date_add(date(u.user_birth_date), interval 18 year)
+        ),
+        false
+    ) as deposit_has_credit_before_18,
     {{ calculate_exact_age("d.datecreated", "u.user_birth_date") }}
     as user_age_at_deposit,
     -- HOTFIX: Adjust 'amount' from 90 to 80 to correct a discrepancy (55 deposit are

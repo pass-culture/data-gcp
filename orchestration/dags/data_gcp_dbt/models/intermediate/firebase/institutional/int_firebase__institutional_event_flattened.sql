@@ -18,6 +18,12 @@ with
                 event_date between date_sub(
                     date("{{ ds() }}"), interval {{ var("lookback_days", 3) }} day
                 ) and date("{{ ds() }}")
+        {% else %}
+            where
+                event_date
+                between date_sub(date("{{ ds() }}"), interval 24 month) and date(
+                    "{{ ds() }}"
+                )
         {% endif %}
     )
 
@@ -27,8 +33,6 @@ select
     user_pseudo_id,
     user_id,
     platform,
-    timestamp_micros(event_timestamp) as event_timestamp,
-    timestamp_micros(user_first_touch_timestamp) as user_first_touch_timestamp,
     device.category as device_category,
     device.operating_system as device_operating_system,
     device.operating_system_version as device_operating_system_version,
@@ -41,6 +45,8 @@ select
     traffic_source.name as user_traffic_campaign,
     traffic_source.medium as user_traffic_medium,
     traffic_source.source as user_traffic_source,
+    timestamp_micros(event_timestamp) as event_timestamp,
+    timestamp_micros(user_first_touch_timestamp) as user_first_touch_timestamp,
     {{
         extract_params_int_value(
             [
@@ -85,6 +91,6 @@ select
                 cast(event_params.value.int_value as string)
             ) as session_engaged
         from unnest(event_params) as event_params
-        where event_params.key = 'session_engaged'
+        where event_params.key = "session_engaged"
     ) as session_engaged
 from institutional_events

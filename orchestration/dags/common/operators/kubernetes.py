@@ -441,6 +441,8 @@ class CustomKubernetesPodOperator(KubernetesPodOperator):
                     dag_branch, dag_image_tag
                 )
             }
+        if not GCP_PROJECT_ID.startswith("pc-data-"):
+            service_account_name = "airflow-worker"
 
         super().__init__(
             namespace=namespace,

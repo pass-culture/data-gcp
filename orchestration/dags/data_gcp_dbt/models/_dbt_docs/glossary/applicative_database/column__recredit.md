@@ -1,3 +1,5 @@
 {% docs column__last_recredit_date %} The most recent date on which the beneficiary received a new recredit. {% enddocs %}
 {% docs column__total_recredit %} The total number of times the beneficiary received a new recredit. {% enddocs %}
 {% docs column__total_recredit_amount %} The total amount that has been recredited to the beneficiary. {% enddocs %}
+{% docs column__first_recredit_17_date %} The date of the first RECREDIT_17 on the deposit; null if none. Raw fact: on a GRANT_17_18 it is the 50€ credit_17, on a pre-reform GRANT_15_17 the 30€ top-up at 17. A GRANT_17_18 opened at 18 can receive RECREDIT_17 and RECREDIT_18 the same day (catch-up), so a RECREDIT_17 is not always received before 18. To count young people, use `first_credit_17_date` on mrt_global__user_beneficiary. {% enddocs %}
+{% docs column__first_recredit_18_date %} The date of the first RECREDIT_18 (150€) on the deposit; null if none. Recorded on a GRANT_17_18 recredited at 18 and on one opened directly at 18. Raw fact: to count young people who received the 18 credit across the reform (GRANT_18 included), use `first_credit_18_date` on mrt_global__user_beneficiary. {% enddocs %}

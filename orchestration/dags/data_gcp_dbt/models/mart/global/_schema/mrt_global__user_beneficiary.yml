@@ -175,6 +175,8 @@ models:
       - name: user_has_credit_before_18
         description: '{{ doc("column__user_has_credit_before_18") }}'
         data_type: BOOLEAN
+        data_tests:
+          - not_null
       - name: first_individual_booking_date
         description: '{{ doc("column__first_individual_booking_date") }}'
         data_type: DATE

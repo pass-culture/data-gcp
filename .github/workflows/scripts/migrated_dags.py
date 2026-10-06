@@ -1,4 +1,3 @@
-import json
 import sys
 from pathlib import Path
 
@@ -35,24 +34,18 @@ def _load_migrated_dags() -> list[str]:
         )
         raise typer.Exit(code=1)
 
-    return config[MIGRATED_DAGS_KEY] or []
-
-
-@app.command()
-def get_imported_dags():
-    """Print the list of migrated DAGs as JSON."""
-    print(json.dumps(_load_migrated_dags()))
+    return config[MIGRATED_DAGS_KEY]
 
 
 @app.command()
 def get_migrated_paths(
     jobs_dir: str = typer.Option(
         "dags/jobs",
-        help="Path (relative to CWD) to the DAG jobs directory to scan.",
+        help="Path to the DAG jobs directory to scan.",
     ),
 ):
     """
-    Print the file paths (one per line) of migrated DAGs found under jobs_dir.
+    Print the file paths of migrated DAGs found under jobs_dir.
     Only these files are synced to the EU bucket.
     """
     migrated = set(_load_migrated_dags())
@@ -64,9 +57,11 @@ def get_migrated_paths(
             migrated_paths.add(path.stem)
             print(path.as_posix())
 
-    # Warn (without failing) if a listed DAG has no matching file.
     for missing in sorted(migrated - migrated_paths):
-        print(f"Warning: migrated DAG '{missing}' has no file under {jobs_dir}", file=sys.stderr)
+        print(
+            f"Warning: migrated DAG '{missing}' has no file under {jobs_dir}",
+            file=sys.stderr,
+        )
 
 
 if __name__ == "__main__":

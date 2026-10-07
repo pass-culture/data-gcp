@@ -256,7 +256,8 @@ select
     students_headcount.total_students,
     coalesce(
         flattened_deposits.total_scholar_year_deposit,
-        flattened_deposits.sept_dec_deposit + flattened_deposits.jan_aug_deposit
+        coalesce(flattened_deposits.sept_dec_deposit, 0)
+        + coalesce(flattened_deposits.jan_aug_deposit, 0)
     ) as total_scholar_year_deposit,
     coalesce(
         (
@@ -295,7 +296,8 @@ select
         ),
         coalesce(
             flattened_deposits.total_scholar_year_deposit,
-            flattened_deposits.sept_dec_deposit + flattened_deposits.jan_aug_deposit
+            coalesce(flattened_deposits.sept_dec_deposit, 0)
+            + coalesce(flattened_deposits.jan_aug_deposit, 0)
         )
     ) as pct_all_year_theoric_amount_spent,
     coalesce(
@@ -354,7 +356,8 @@ select
         ),
         coalesce(
             flattened_deposits.total_scholar_year_deposit,
-            flattened_deposits.sept_dec_deposit + flattened_deposits.jan_aug_deposit
+            coalesce(flattened_deposits.sept_dec_deposit, 0)
+            + coalesce(flattened_deposits.jan_aug_deposit, 0)
         )
     ) as pct_all_year_real_amount_spent,
     coalesce(
@@ -391,7 +394,8 @@ select
         ),
         coalesce(
             flattened_deposits.total_scholar_year_deposit,
-            flattened_deposits.sept_dec_deposit + flattened_deposits.jan_aug_deposit,
+            coalesce(flattened_deposits.sept_dec_deposit, 0)
+            + coalesce(flattened_deposits.jan_aug_deposit, 0),
             0
         )
     ) as pct_all_year_reimbursed_amount_spent

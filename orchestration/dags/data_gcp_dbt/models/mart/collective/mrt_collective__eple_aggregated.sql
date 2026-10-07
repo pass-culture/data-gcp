@@ -252,7 +252,8 @@ select
     students_headcount.total_students,
     coalesce(
         flattened_deposits.total_scholar_year_deposit,
-        flattened_deposits.sept_dec_deposit + flattened_deposits.jan_aug_deposit
+        coalesce(flattened_deposits.sept_dec_deposit, 0)
+        + coalesce(flattened_deposits.jan_aug_deposit, 0)
     ) as total_scholar_year_deposit,
     coalesce(
         (
@@ -291,7 +292,9 @@ select
         ),
         coalesce(
             flattened_deposits.total_scholar_year_deposit,
-            flattened_deposits.sept_dec_deposit + flattened_deposits.jan_aug_deposit
+            coalesce(flattened_deposits.sept_dec_deposit, 0)
+            + coalesce(flattened_deposits.jan_aug_deposit, 0)
+
         )
     ) as pct_all_year_theoric_amount_spent,
     coalesce(
@@ -350,7 +353,9 @@ select
         ),
         coalesce(
             flattened_deposits.total_scholar_year_deposit,
-            flattened_deposits.sept_dec_deposit + flattened_deposits.jan_aug_deposit
+            coalesce(flattened_deposits.sept_dec_deposit, 0)
+            + coalesce(flattened_deposits.jan_aug_deposit, 0)
+
         )
     ) as pct_all_year_real_amount_spent,
     coalesce(
@@ -377,21 +382,21 @@ select
     safe_divide(
         coalesce(
             case
-                when bookings.all_year_reimbursed_amount = 0
+                when bookings.all_year_theoric_amount_spent = 0
                 then
-                    bookings.sept_dec_reimbursed_amount
-                    + bookings.jan_aug_reimbursed_amount
-                else bookings.all_year_reimbursed_amount
+                    bookings.sept_dec_theoric_amount_spent
+                    + bookings.jan_aug_theoric_amount_spent
+                else bookings.all_year_theoric_amount_spent
             end,
             0
         ),
         coalesce(
             flattened_deposits.total_scholar_year_deposit,
-            flattened_deposits.sept_dec_deposit + flattened_deposits.jan_aug_deposit,
-            0
+            coalesce(flattened_deposits.sept_dec_deposit, 0)
+            + coalesce(flattened_deposits.jan_aug_deposit, 0)
+
         )
     ) as pct_all_year_reimbursed_amount_spent
-
 from flattened_deposits
 left join
     bookings

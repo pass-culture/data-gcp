@@ -24,14 +24,14 @@ with
             booking.venue_epci_code as epci_code,
             booking.venue_municipality_code as municipality_code,
             booking.venue_id,
-            date_trunc(booking.booking_used_date, month) as booking_month,
-            sum(booking.booking_intermediary_amount) as total_revenue_amount_venue
-        from {{ ref("int_global__booking") }} as booking
+            date_trunc(booking.collective_booking_used_date, month) as booking_month,
+            sum(booking.booking_amount) as total_revenue_amount_venue
+        from {{ ref("mrt_global__collective_booking") }} as booking
         where
-            booking.booking_is_used is true
-            and booking.booking_used_date >= '2021-07-01'
+            booking.is_used_collective_booking = true
+            and booking.collective_booking_used_date >= '2021-07-01'
         group by
-            date_trunc(booking.booking_used_date, month),
+            date_trunc(booking.collective_booking_used_date, month),
             booking.venue_department_code,
             booking.venue_epci_code,
             booking.venue_municipality_code,
@@ -45,7 +45,7 @@ with
             partner_activation.partner_municipality_code as municipality_code,
             date_trunc(partner_activation.partition_month, month) as partner_month,
             sum(
-                partner_activation.total_active_partners_individual
+                partner_activation.total_active_partners_collective
             ) as total_active_partners_count
         from {{ ref("int_kpi__cultural_partner_activation") }} as partner_activation
         where partner_activation.partition_month >= '2021-07-01'

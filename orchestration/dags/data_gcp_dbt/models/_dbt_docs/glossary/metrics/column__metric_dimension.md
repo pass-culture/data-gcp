@@ -31,3 +31,27 @@ The start date of the week during which the beneficiary initiated their registra
 {% docs column__age_at_signup %}
 The age reached by the beneficiary at the time of signup/onboarding initiation.
 {% enddocs %}
+
+{% docs column__is_department_secret %}
+Indicates whether the department is subject to statistical secrecy over the 6-month rolling window (true if active partners <= 3 or single partner revenue share > 85%).
+{% enddocs %}
+
+{% docs column__is_epci_secret %}
+Indicates whether the EPCI is subject to statistical secrecy over the 6-month rolling window (true if active partners <= 3 or single partner revenue share > 85%).
+{% enddocs %}
+
+{% docs column__is_municipality_secret %}
+Indicates whether the municipality is subject to statistical secrecy over the 6-month rolling window (true if active partners <= 3 or single partner revenue share > 85%).
+{% enddocs %}
+
+{% docs column__department_secret_reason %}
+Specific reason for statistical secrecy at the department level ('Nombre de partenaires faible (<= 3)', 'Concentration forte du CA (> 85%)', 'Les deux raisons (<= 3 partenaires ET > 85% CA)', or 'Non soumis au secret').
+{% enddocs %}
+
+{% docs column__epci_secret_reason %}
+Specific reason for statistical secrecy at the EPCI level ('Nombre de partenaires faible (<= 3)', 'Concentration forte du CA (> 85%)', 'Les deux raisons (<= 3 partenaires ET > 85% CA)', or 'Non soumis au secret').
+{% enddocs %}
+
+{% docs column__municipality_secret_reason %}
+Specific reason for statistical secrecy at the municipality level ('Nombre de partenaires faible (<= 3)', 'Concentration forte du CA (> 85%)', 'Les deux raisons (<= 3 partenaires ET > 85% CA)', or 'Non soumis au secret').
+{% enddocs %}

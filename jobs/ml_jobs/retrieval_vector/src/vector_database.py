@@ -52,8 +52,6 @@ def _get_table_batches(
     """
     preprocessed_items_df = items_df.fillna(
         {
-            "topic_id": "",
-            "cluster_id": "",
             "category": "",
             "subcategory_id": "",
             "search_group_name": "",
@@ -97,8 +95,6 @@ def _get_table_batches(
                         pa.list_(pa.float32(), 1),
                     ),
                     pa.array([embedding_id], pa.list_(pa.float32(), emb_size)),
-                    pa.array([str(row.topic_id)], pa.utf8()),
-                    pa.array([str(row.cluster_id)], pa.utf8()),
                     pa.array([str(row.category)], pa.utf8()),
                     pa.array([str(row.subcategory_id)], pa.utf8()),
                     pa.array([str(row.search_group_name)], pa.utf8()),

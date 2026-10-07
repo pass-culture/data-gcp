@@ -7,6 +7,17 @@
 {% set target_name = var("ENV_SHORT_NAME") %}
 {% set target_schema = generate_schema_name("analytics_" ~ target_name) %}
 
+with
+    additional_fees as (
+        select
+            collective_stock_id,
+            true as collective_stock_has_additional_fee,
+            sum(collective_additional_fee_amount) as total_additional_fee_amount,
+            count(distinct collective_additional_fee_type) as total_additional_fee_types
+        from {{ ref("int_applicative__collective_additional_fee") }}
+        group by collective_stock_id
+    )
+
 select
     co.collective_offer_id,
     case  -- noqa: PRS
@@ -32,6 +43,8 @@ select
     v.venue_postal_code,
     v.venue_city,
     v.venue_city_code,
+    v.venue_municipality_code,
+    v.venue_municipality_label,
     v.venue_epci,
     v.venue_epci_code,
     v.venue_academy_name,
@@ -62,6 +75,8 @@ select
     co.institution_postal_code,
     co.institution_city,
     co.institution_city_code,
+    co.institution_municipality_code,
+    co.institution_municipality_label,
     co.institution_epci,
     co.institution_epci_code,
     co.institution_density_label,
@@ -93,17 +108,25 @@ select
     cs.collective_stock_price,
     cs.collective_stock_price_detail,
     cs.collective_stock_number_of_tickets,
+    cs.collective_stock_number_of_teachers,
+    cs.collective_stock_service_price,
     cs.collective_stock_id,
     co.collective_offer_location_type,
-    co.offerer_address_id
+    co.offerer_address_id,
+    coalesce(af.total_additional_fee_amount, 0) as total_additional_fee_amount,
+    coalesce(af.total_additional_fee_types, 0) as total_additional_fee_types,
+    coalesce(
+        af.collective_stock_has_additional_fee, false
+    ) as collective_stock_has_additional_fee
 from {{ ref("int_applicative__collective_offer") }} as co
-inner join {{ ref("int_global__venue") }} as v on v.venue_id = co.venue_id
+inner join {{ ref("int_global__venue") }} as v on co.venue_id = v.venue_id
 left join
     {{ source("raw", "applicative_database_national_program") }} as national_program
-    on national_program.national_program_id = co.national_program_id
+    on co.national_program_id = national_program.national_program_id
 left join
     {{ ref("int_applicative__institution_program") }} as institution_program
     on co.institution_id = institution_program.institution_id
 left join
     {{ ref("int_applicative__collective_stock") }} as cs
-    on cs.collective_offer_id = co.collective_offer_id
+    on co.collective_offer_id = cs.collective_offer_id
+left join additional_fees as af on cs.collective_stock_id = af.collective_stock_id

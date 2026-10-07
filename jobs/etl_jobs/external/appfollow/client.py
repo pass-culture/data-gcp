@@ -1,4 +1,5 @@
-from typing import Any, Dict, List
+from datetime import date
+from typing import Any, Dict, List, Optional
 
 import requests
 from loguru import logger
@@ -23,6 +24,9 @@ class AppFollowClient:
     """
 
     BASE_API_URL = "https://api.appfollow.io/api/v2"
+    # Workspace holding our apps (title_normalized from GET /account/apps),
+    # required by /meta endpoints.
+    COLLECTION_NAME = "my-first-workspace"
 
     def __init__(self, api_token: SecretStr):
         self.api_token = api_token
@@ -127,3 +131,56 @@ class AppFollowClient:
             raise
 
         return all_reviews
+
+    def get_ratings_history(
+        self,
+        ext_id: str,
+        store: str,
+        from_date: str,
+        to_date: str,
+        countries: Optional[List[str]] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get daily cumulative ratings for a specific app within a date range.
+
+        Billing is 10 credits per request + 10 credits per 30 days of range, and every
+        paginated request is billed again for the full range: the whole range is fetched
+        in a single request (limit = number of days).
+
+        Args:
+            ext_id: App external ID
+            store: Store code ("as" or "gp")
+            from_date: Start date in YYYY-MM-DD format
+            to_date: End date in YYYY-MM-DD format
+            countries: Two-letter country codes, or ["all"] for worldwide data
+
+        Returns: List of raw ratings data (one item per day)
+        """
+        n_days = (date.fromisoformat(to_date) - date.fromisoformat(from_date)).days + 1
+        url = f"{self.BASE_API_URL}/meta/ratings/history"
+        params = {
+            "ext_id": ext_id,
+            "store": store,
+            "collection_name": self.COLLECTION_NAME,
+            "from": from_date,
+            "to": to_date,
+            "countries": countries or ["all"],
+            # "all" countries is only supported for cumulative totals.
+            "type": "total",
+            "period": "daily",
+            "offset": 0,
+            "limit": n_days,
+        }
+        response = self.session.get(url, params=params)
+
+        if response.status_code != 200:
+            raise AppFollowAPIError(
+                f"Ratings fetch failed: {response.status_code} - {response.text}"
+            )
+
+        ratings = response.json().get("ratings", [])
+        if len(ratings) < n_days:
+            logger.warning(
+                f"Got {len(ratings)} daily ratings for {n_days} days between {from_date} and {to_date}"
+            )
+        return ratings

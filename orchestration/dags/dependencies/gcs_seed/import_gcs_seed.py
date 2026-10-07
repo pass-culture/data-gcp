@@ -18,9 +18,4 @@ ANALYTICS_TABLES = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "institutional_partners",
     },
-    "pilote_geographic_standards": {
-        "sql": f"{SQL_PATH}/analytics/pilote_geographic_standards.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "pilote_geographic_standards",
-    },
 }

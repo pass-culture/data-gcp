@@ -1,3 +1,4 @@
+import shlex
 import subprocess
 import time
 import typing as t
@@ -13,6 +14,7 @@ from common.config import (
     GCE_ZONE,
     GCP_PROJECT_ID,
     LOCAL_ENV,
+    SSH_HOOK_MAX_RETRIES,
     SSH_USER,
     USE_INTERNAL_IP,
     UV_VERSION,
@@ -310,6 +312,7 @@ class BaseSSHGCEOperator(BaseOperator):
             user=SSH_USER,
             gcp_conn_id="google_cloud_default",
             expire_time=300,
+            max_retries=SSH_HOOK_MAX_RETRIES,
         )
         self.log.info(
             f"Connecting to instance {self.instance_name} in zone {self.gce_zone} with project {GCP_PROJECT_ID}"
@@ -560,7 +563,6 @@ class InstallDependenciesOperator(SSHGCEOperator):
     REPO = "https://github.com/pass-culture/data-gcp.git"
     template_fields = set(
         [
-            "requirement_file",
             "branch",
             "instance_name",
             "base_dir",
@@ -572,20 +574,23 @@ class InstallDependenciesOperator(SSHGCEOperator):
     def __init__(
         self,
         instance_name: str,
-        requirement_file: str = "requirements.txt",
         branch: str = "master",  # Branch for repo
         environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
         base_dir: str = "data-gcp",
+        extras: t.Optional[t.List[str]] = None,
         *args,
         **kwargs,
     ):
         self.instance_name = instance_name
-        self.requirement_file = requirement_file
         self.environment = environment
         self.python_version = python_version
         self.branch = branch
         self.base_dir = base_dir
+        # `uv sync` only installs [project.optional-dependencies] groups named
+        # here (as `--extra <name>`) — omit to keep today's behavior (base deps
+        # only) for every job that doesn't pass this.
+        self.extras = extras
         # Call the parent class constructor but do not pass the command yet
         super(InstallDependenciesOperator, self).__init__(
             instance_name=self.instance_name,
@@ -597,9 +602,8 @@ class InstallDependenciesOperator(SSHGCEOperator):
         )
 
     def execute(self, context):
-        command = self.make_install_command(
-            self.requirement_file, self.branch, self.base_dir
-        )
+        command = self.make_install_command(self.branch, self.base_dir, self.extras)
+
         self.command = command
 
         if LOCAL_ENV:
@@ -620,9 +624,9 @@ class InstallDependenciesOperator(SSHGCEOperator):
 
     def make_install_command(
         self,
-        requirement_file: str,
         branch: str,
         base_dir: str = "data-gcp",
+        extras: t.Optional[str | list[str]] = None,
     ) -> str:
         """
         Construct the command to clone the repo and install dependencies.
@@ -630,43 +634,46 @@ class InstallDependenciesOperator(SSHGCEOperator):
         # Define the directory where the repo will be cloned
         REPO_DIR = "data-gcp"
 
-        # Git clone command
+        # Fail loudly and concisely: `set -eo pipefail` aborts on the first
+        # failing command, and a single ERR trap prints one FATAL line naming
+        # the exact command and exit code.
         clone_command = f"""
-            cd ~/ &&
-            DIR={REPO_DIR} &&
+            cd ~/
+            DIR={REPO_DIR}
             if [ -d "$DIR" ]; then
-                echo "Directory exists. Fetching updates..." &&
-                cd $DIR &&
-                git fetch --all &&
-                git reset --hard origin/{branch};
+                echo "Directory exists. Fetching updates..."
+                cd "$DIR"
+                git fetch --all
+                git reset --hard origin/{branch}
             else
-                echo "Cloning repository..." &&
-                git clone {self.REPO} $DIR &&
-                cd $DIR &&
-                git checkout {branch};
-            fi &&
+                echo "Cloning repository..."
+                git clone {self.REPO} "$DIR"
+                cd "$DIR"
+                git checkout {branch}
+            fi
             cd ~/
         """
 
+        if extras == "all":
+            extras_flags = "--all-extras"
+        elif extras:
+            extras_flags = " ".join(f"--extra {shlex.quote(extra)}" for extra in extras)
+        else:
+            extras_flags = ""
+
         install_command = f"""
-            curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh &&
-            cd {base_dir} &&
-            uv venv --python {self.python_version} &&
-            source .venv/bin/activate &&
-            if [ -f "{requirement_file}" ]; then
-                uv pip sync {requirement_file}
-            else
-                uv sync
-            fi
+            curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh
+            cd {base_dir}
+            uv sync --python {self.python_version} {extras_flags}
         """
 
         deactivate_conda = (
             "echo 'conda config --set auto_activate_base false' >> ~/.bashrc"
         )
 
-        # Combine the git clone and installation commands
         return f"""
-            set -e
+            set -eo pipefail
+            trap 'echo "FATAL: install step failed (exit $?): $BASH_COMMAND" >&2' ERR
             {clone_command}
             {install_command}
             {deactivate_conda}

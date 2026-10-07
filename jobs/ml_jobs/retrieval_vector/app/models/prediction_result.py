@@ -19,6 +19,7 @@ class SearchType:
     TOPS = "tops"
     ERROR = "error"
     AGGREGATED_VECTORS = "aggregated_vectors"
+    TEXT = "text"
 
 
 @dataclass

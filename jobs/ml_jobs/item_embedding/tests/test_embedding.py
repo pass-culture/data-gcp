@@ -1,282 +1,117 @@
-"""Unit tests for the item_embedding job."""
+"""Unit tests for embedding.py (encode + long-prompt tracking)."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import numpy as np
-import pandas as pd
-import pytest
-import yaml
-from config import Vector, _load_config, parse_vectors
-from embedding import (
-    _build_prompts,
-    embed_dataframe,
-)
+from src.config import Vector
+from src.embedding import LongPromptTracker, encode, find_long_prompts
 
 
-# ---------------------------------------------------------------------------
-# Vector model tests
-# ---------------------------------------------------------------------------
-class TestVector:
-    def test_valid_vector(self):
-        v = Vector(name="test", features=["a", "b"], encoder_name="model/name")
-        assert v.name == "test"
-        assert v.prompt_name is None
-
-    def test_vector_with_prompt_name(self):
-        v = Vector(
-            name="test",
-            features=["a"],
-            encoder_name="model/name",
-            prompt_name="STS",
-        )
-        assert v.prompt_name == "STS"
-
-    def test_vector_missing_required_field(self):
-        with pytest.raises(Exception):
-            Vector(name="test", features=["a"])  # missing encoder_name
+def _vector(name="v", prompt_name=None):
+    return Vector(
+        name=name, features=["a"], encoder_name="model", prompt_name=prompt_name
+    )
 
 
-# ---------------------------------------------------------------------------
-# Config loading tests
-# ---------------------------------------------------------------------------
-class TestLoadConfig:
-    def test_load_missing_file(self, tmp_path):
-        with patch("config.CONFIGS_PATH", tmp_path):
-            with pytest.raises(FileNotFoundError):
-                _load_config("nonexistent")
+class TestEncode:
+    def test_single_device_encode(self):
+        encoder = MagicMock()
+        encoder.device = "cpu"
+        encoder.encode.return_value = np.array([[1.0, 2.0], [3.0, 4.0]])
 
-    def test_load_invalid_yaml(self, tmp_path):
-        bad_file = tmp_path / "bad.yaml"
-        bad_file.write_text(": :\n  - :\n  invalid", encoding="utf-8")
-        with patch("config.CONFIGS_PATH", tmp_path):
-            with pytest.raises(yaml.YAMLError):
-                _load_config("bad")
+        out = encode(encoder, ["p1", "p2"], prompt_name="document")
 
-    def test_load_valid_config(self, tmp_path):
-        config_content = {
-            "vectors": [
-                {
-                    "name": "test_vec",
-                    "features": ["col_a"],
-                    "encoder_name": "test/model",
-                }
-            ]
-        }
-        config_file = tmp_path / "test.yaml"
-        config_file.write_text(yaml.dump(config_content), encoding="utf-8")
-        with patch("config.CONFIGS_PATH", tmp_path):
-            config = _load_config("test")
-        assert "vectors" in config
+        assert out.shape == (2, 2)
+        (called_prompts,), kwargs = encoder.encode.call_args
+        assert called_prompts == ["p1", "p2"]
+        assert kwargs["prompt_name"] == "document"
+        assert kwargs["normalize_embeddings"] is True
+        assert "pool" not in kwargs
 
-    def test_load_config_missing_vectors_key(self, tmp_path):
-        config_file = tmp_path / "no_vectors.yaml"
-        config_file.write_text(yaml.dump({"other_key": 123}), encoding="utf-8")
-        with patch("config.CONFIGS_PATH", tmp_path):
-            with pytest.raises(ValueError, match="missing required keys"):
-                _load_config("no_vectors")
+    def test_multi_gpu_encode_passes_pool(self):
+        encoder = MagicMock()
+        encoder.device = "cpu"
+        encoder.encode.return_value = np.array([[1.0, 2.0]])
+        pool = {"fake": "pool"}
+
+        encode(encoder, ["p1"], prompt_name=None, pool=pool)
+
+        _, kwargs = encoder.encode.call_args
+        assert kwargs["pool"] is pool
 
 
-class TestParseVectors:
-    def test_parse_valid(self, tmp_path):
-        config_content = {
-            "vectors": [
-                {
-                    "name": "v1",
-                    "features": ["a", "b"],
-                    "encoder_name": "model/x",
-                }
-            ]
-        }
-        config_file = tmp_path / "test.yaml"
-        config_file.write_text(yaml.dump(config_content), encoding="utf-8")
-        with patch("config.CONFIGS_PATH", tmp_path):
-            vectors = parse_vectors("test")
-        assert len(vectors) == 1
-        assert vectors[0].name == "v1"
+class TestLongPromptTracker:
+    def test_record_accumulates(self):
+        tracker = LongPromptTracker()
+        tracker.record("item-1")
+        tracker.record("item-2")
+        assert tracker.long_item_ids == ["item-1", "item-2"]
 
-    def test_parse_empty_vectors(self, tmp_path):
-        config_file = tmp_path / "empty.yaml"
-        config_file.write_text(yaml.dump({"vectors": []}), encoding="utf-8")
-        with patch("config.CONFIGS_PATH", tmp_path):
-            with pytest.raises(ValueError, match="No vectors configured"):
-                parse_vectors("empty")
+    def test_default_max_tokens_matches_constant(self):
+        from src.constants import MAX_SEQ_LENGTH
 
-    def test_parse_no_vectors_key(self, tmp_path):
-        config_file = tmp_path / "no_vectors.yaml"
-        config_file.write_text(yaml.dump({}), encoding="utf-8")
-        with patch("config.CONFIGS_PATH", tmp_path):
-            with pytest.raises(ValueError, match="missing required keys"):
-                parse_vectors("no_vectors")
+        assert LongPromptTracker().max_tokens == MAX_SEQ_LENGTH
 
-    def test_parse_invalid_vectors_type(self, tmp_path):
-        config_file = tmp_path / "invalid.yaml"
-        config_file.write_text(yaml.dump({"vectors": "not_a_list"}), encoding="utf-8")
-        with patch("config.CONFIGS_PATH", tmp_path):
-            with pytest.raises(ValueError, match="must be a list"):
-                parse_vectors("invalid")
+    def test_log_summary_empty_and_populated_do_not_raise(self):
+        LongPromptTracker().log_summary()
+        tracker = LongPromptTracker()
+        tracker.record("item-1")
+        tracker.log_summary()
 
 
-# ---------------------------------------------------------------------------
-# Prompt building tests
-# ---------------------------------------------------------------------------
-class TestBuildPrompts:
-    def make_vector(self, features):
-        return Vector(name="test", features=features, encoder_name="model")
-
-    def test_basic(self):
-        df = pd.DataFrame({"x": ["hello"], "y": ["world"]})
-        prompts = _build_prompts(df, self.make_vector(["x", "y"]))
-        assert prompts == ["x : hello\ny : world"]
-
-    def test_null_feature_skipped(self):
-        df = pd.DataFrame({"x": ["hello"], "y": [None]})
-        prompts = _build_prompts(df, self.make_vector(["x", "y"]))
-        assert prompts == ["x : hello"]
-
-    def test_all_null_produces_empty_string(self):
-        # The empty prompt is kept in place so the result stays row-aligned
-        # with the input; embed_dataframe is what drops the item later.
-        df = pd.DataFrame({"x": [None], "y": [None]})
-        prompts = _build_prompts(df, self.make_vector(["x", "y"]))
-        assert prompts == [""]
-
-    def test_empty_prompt_stays_in_position(self):
-        # An all-null row in the middle must keep its slot so the list stays
-        # aligned row-for-row with the DataFrame.
-        df = pd.DataFrame({"x": ["hello", None, "world"]})
-        prompts = _build_prompts(df, self.make_vector(["x"]))
-        assert prompts == ["x : hello", "", "x : world"]
-
-    def test_no_double_spaces_with_middle_null(self):
-        df = pd.DataFrame({"a": ["v1"], "b": [None], "c": ["v3"]})
-        prompts = _build_prompts(df, self.make_vector(["a", "b", "c"]))
-        assert "\n\n" not in prompts[0]
-        assert prompts[0] == "a : v1\nc : v3"
-
-    def test_multiple_rows(self):
-        df = pd.DataFrame({"x": ["a", "b", "c"]})
-        prompts = _build_prompts(df, self.make_vector(["x"]))
-        assert len(prompts) == 3
-        assert prompts[1] == "x : b"
-
-    def test_labels_override_column_names(self):
-        df = pd.DataFrame({"offer_name": ["Dune"], "author_concat": ["Herbert"]})
-        vector = Vector(
-            name="test",
-            features=["offer_name", "author_concat"],
-            encoder_name="model",
-            labels={"offer_name": "titre", "author_concat": "auteur / artiste"},
-        )
-        prompts = _build_prompts(df, vector)
-        assert prompts == ["titre : Dune\nauteur / artiste : Herbert"]
-
-    def test_unmapped_feature_falls_back_to_column_name(self):
-        df = pd.DataFrame({"offer_name": ["Dune"], "category_id": ["LIVRE"]})
-        vector = Vector(
-            name="test",
-            features=["offer_name", "category_id"],
-            encoder_name="model",
-            labels={"offer_name": "titre"},
-        )
-        prompts = _build_prompts(df, vector)
-        assert prompts == ["titre : Dune\ncategory_id : LIVRE"]
-
-
-# ---------------------------------------------------------------------------
-# End-to-end embed_dataframe tests
-# ---------------------------------------------------------------------------
-class TestEmbedDataframe:
-    def test_end_to_end(self):
-        # Mock encoder that returns deterministic embeddings
-        mock_encoder = MagicMock()
-        mock_encoder.device = "cpu"
-        mock_encoder.encode.return_value = np.array(
-            [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
-        )
-
-        df = pd.DataFrame(
-            {
-                "item_id": ["a", "b", "c"],
-                "content_hash": ["h1", "h2", "h3"],
-                "name": ["Alice", "Bob", "Charlie"],
+class TestFindLongPrompts:
+    def _encoder(self, max_seq_length, token_counts=None, prompts=None):
+        encoder = MagicMock()
+        encoder.max_seq_length = max_seq_length
+        encoder.prompts = prompts or {}
+        if token_counts is not None:
+            encoder.tokenizer.return_value = {
+                "input_ids": [[0] * n for n in token_counts]
             }
+        return encoder
+
+    def test_short_prompts_skip_tokenizer(self):
+        encoder = self._encoder(max_seq_length=10)
+        tracker = LongPromptTracker(max_tokens=10)
+        find_long_prompts(_vector(), encoder, ["a", "b"], ["short", "also"], tracker)
+        encoder.tokenizer.assert_not_called()
+        assert tracker.long_item_ids == []
+
+    def test_candidate_under_real_limit_not_recorded(self):
+        encoder = self._encoder(max_seq_length=5, token_counts=[4])
+        tracker = LongPromptTracker(max_tokens=5)
+        find_long_prompts(_vector(), encoder, ["only"], ["x" * 11], tracker)
+        encoder.tokenizer.assert_called_once()
+        assert tracker.long_item_ids == []
+
+    def test_candidate_over_real_limit_recorded(self):
+        encoder = self._encoder(max_seq_length=5, token_counts=[6])
+        tracker = LongPromptTracker(max_tokens=5)
+        find_long_prompts(_vector(), encoder, ["item-1"], ["x" * 11], tracker)
+        assert tracker.long_item_ids == ["item-1"]
+
+    def test_only_candidates_tokenized(self):
+        encoder = self._encoder(max_seq_length=5, token_counts=[6])
+        tracker = LongPromptTracker(max_tokens=5)
+        prompts = ["short", "x" * 11]  # only index 1 clears the pre-filter
+        find_long_prompts(_vector(), encoder, ["a", "b"], prompts, tracker)
+        assert encoder.tokenizer.call_args[0][0] == [prompts[1]]
+        assert tracker.long_item_ids == ["b"]
+
+    def test_prompt_name_prefix_included_in_tokenized_text(self):
+        encoder = self._encoder(
+            max_seq_length=5,
+            token_counts=[6],
+            prompts={"document": "title: none | text: "},
         )
-        vectors = [Vector(name="emb", features=["name"], encoder_name="test/model")]
-        encoders = {"test/model": mock_encoder}
-
-        result = embed_dataframe(df, vectors, encoders)
-
-        assert "item_id" in result.columns
-        assert "content_hash" in result.columns
-        assert "emb" in result.columns
-        assert len(result) == 3
-
-        # Verify encoder.encode was called
-        assert mock_encoder.encode.called
-
-    def test_all_null_row_is_skipped_and_not_embedded(self):
-        # Only the two non-empty rows should be embedded; the all-null row
-        # must not be sent to the encoder and must be dropped from the output,
-        # so no null vector ever reaches the parquet.
-        mock_encoder = MagicMock()
-        mock_encoder.device = "cpu"
-        mock_encoder.encode.return_value = np.array([[1.0, 2.0], [5.0, 6.0]])
-
-        df = pd.DataFrame(
-            {
-                "item_id": ["a", "b", "c"],
-                "content_hash": ["h1", "h2", "h3"],
-                "name": ["Alice", None, "Charlie"],
-            }
+        tracker = LongPromptTracker(max_tokens=5)
+        find_long_prompts(
+            _vector(prompt_name="document"), encoder, ["item-1"], ["x" * 11], tracker
         )
-        vectors = [Vector(name="emb", features=["name"], encoder_name="test/model")]
-        encoders = {"test/model": mock_encoder}
+        assert encoder.tokenizer.call_args[0][0] == ["title: none | text: " + "x" * 11]
 
-        result = embed_dataframe(df, vectors, encoders)
-
-        # The all-null item ("b") is excluded; survivors keep their embeddings.
-        assert result["item_id"].tolist() == ["a", "c"]
-        assert result["emb"].tolist() == [[1.0, 2.0], [5.0, 6.0]]
-        assert result["emb"].notna().all()
-
-        # The empty prompt was never passed to the encoder.
-        (called_prompts,), _ = mock_encoder.encode.call_args
-        assert called_prompts == ["name : Alice", "name : Charlie"]
-
-    def test_each_item_keeps_its_own_embedding(self):
-        # The embedding an item ends up with must be the one built from *that*
-        # item's prompt, even when a middle item is dropped and the input has a
-        # non-default index.
-        def encode_from_prompts(prompts, **kwargs):
-            # Turn each prompt into a distinct, content-derived vector so any
-            # mismatch between items and embeddings would show up.
-            return np.array([[float(len(p)), float(ord(p[-1]))] for p in prompts])
-
-        mock_encoder = MagicMock()
-        mock_encoder.device = "cpu"
-        mock_encoder.encode.side_effect = encode_from_prompts
-
-        df = pd.DataFrame(
-            {
-                "item_id": ["a", "b", "c", "d"],
-                "content_hash": ["h1", "h2", "h3", "h4"],
-                "name": ["Alice", "Bob", None, "Dana"],
-            },
-            index=[10, 20, 30, 40],  # non-default index must not break alignment
-        )
-        vectors = [Vector(name="emb", features=["name"], encoder_name="test/model")]
-        encoders = {"test/model": mock_encoder}
-
-        result = embed_dataframe(df, vectors, encoders)
-
-        # "c" is dropped; the survivors keep their order and identity.
-        assert result["item_id"].tolist() == ["a", "b", "d"]
-
-        # Each surviving item maps to the embedding built from its own prompt.
-        expected = {
-            "a": [float(len("name : Alice")), float(ord("e"))],
-            "b": [float(len("name : Bob")), float(ord("b"))],
-            "d": [float(len("name : Dana")), float(ord("a"))],
-        }
-        for item_id, embedding in zip(result["item_id"], result["emb"]):
-            assert embedding == expected[item_id]
+    def test_falls_back_to_tracker_max_tokens_when_encoder_has_none(self):
+        encoder = self._encoder(max_seq_length=None, token_counts=[2049])
+        tracker = LongPromptTracker(max_tokens=2048)
+        find_long_prompts(_vector(), encoder, ["item-1"], ["x" * 4100], tracker)
+        assert tracker.long_item_ids == ["item-1"]

@@ -8,12 +8,21 @@ models:
         description: "{{ doc('column__iris_code') }}"
         data_tests:
           - not_null
+          - unique
       - name: iris_label
         description: "{{ doc('column__iris_label') }}"
+      - name: iris_type
+        description: "{{ doc('column__iris_type') }}"
+        # TODO: accepted_values ["H", "A", "D", "Z"] once the column is deployed: CI tests
+        # run against the deployed table (--favor-state), where a new column does not exist yet.
       - name: city_code
         description: "{{ doc('column__city_code') }}"
+        data_tests:
+          - not_null
       - name: city_label
         description: "{{ doc('column__city_label') }}"
+        data_tests:
+          - not_null
       - name: territorial_authority_code
         description: "{{ doc('column__territorial_authority_code') }}"
       - name: district_code
@@ -22,6 +31,8 @@ models:
         description: "{{ doc('column__sub_district_code') }}"
       - name: epci_code
         description: "{{ doc('column__epci_code') }}"
+        data_tests:
+          - not_null
       - name: epci_label
         description: "{{ doc('column__epci_label') }}"
       - name: sub_district_label
@@ -30,8 +41,12 @@ models:
         description: "{{ doc('column__district_label') }}"
       - name: department_code
         description: "{{ doc('column__department_code') }}"
+        data_tests:
+          - not_null
       - name: department_name
         description: "{{ doc('column__department_name') }}"
+        data_tests:
+          - not_null
       - name: region_code
         description: "{{ doc('column__region_code') }}"
       - name: region_name
@@ -48,16 +63,33 @@ models:
         description: "{{ doc('column__density_label') }}"
       - name: density_macro_level
         description: "{{ doc('column__density_macro_level') }}"
-      - name: geo_code
-        description: "{{ doc('column__geo_code') }}"
+      - name: zrr_code
+        description: "{{ doc('column__zrr_code') }}"
+      - name: zrr_label
+        description: "{{ doc('column__zrr_label') }}"
+      - name: zrr_detail
+        description: "{{ doc('column__zrr_detail') }}"
+      - name: frr_code
+        description: "{{ doc('column__frr_code') }}"
+        # TODO: accepted_values ["1", "2", "3", "4", "5"] once the column is deployed, see iris_type.
+      - name: municipality_code
+        description: "{{ doc('column__municipality_code') }}"
+        # TODO: not_null once the column is deployed, see iris_type.
+      - name: municipality_label
+        description: "{{ doc('column__municipality_label') }}"
       - name: rural_city_type
         description: "{{ doc('column__rural_city_type') }}"
       - name: iris_internal_id
         description: "{{ doc('column__iris_internal_id') }}"
+        data_tests:
+          - not_null
+          - unique
       - name: iris_centroid
         description: "{{ doc('column__iris_centroid') }}"
       - name: iris_shape
         description: "{{ doc('column__iris_shape') }}"
+        data_tests:
+          - not_null
       - name: min_longitude
         description: "{{ doc('column__min_longitude') }}"
       - name: max_longitude

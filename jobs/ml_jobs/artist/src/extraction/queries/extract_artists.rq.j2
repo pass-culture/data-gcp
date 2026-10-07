@@ -1,0 +1,81 @@
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX schema: <http://schema.org/>
+{% import "_macros.rq.j2" as m %}
+{% set scope = m.entity_filter(entity_types, id_properties) %}
+
+SELECT
+  ?wikidata_id
+  ?artist_name_fr
+  ?artist_name_en
+  ?artist_description
+  ?wikipedia_url
+  ?img
+  ?gkg_id
+  ?aliases_fr
+  ?aliases_en
+  ?professions
+  ?genres
+  ?languages_spoken
+  ?birth_date_val
+{% if base_mode == "scored" %}
+  ?matching_score
+{% endif %}
+WHERE {
+{% if base_mode == "grouped" %}
+  # 1. Base Selection & Single-Valued Attributes
+  {
+    SELECT DISTINCT ?wikidata_id ?artist_name_fr ?artist_name_en ?artist_description ?wikipedia_url ?img ?gkg_id (MIN(?birth_date) AS ?birth_date_val) WHERE {
+      {{ scope }}
+
+      {{ m.labels_description_image() }}
+      OPTIONAL { ?wikidata_id wdt:P2671 ?gkg_id . }
+      OPTIONAL { ?wikidata_id wdt:P569 ?birth_date . }
+
+      {{ m.wikipedia_url() }}
+
+      FILTER ((?artist_name_fr != "") || (?artist_name_en != ""))
+    }
+    GROUP BY ?wikidata_id ?artist_name_fr ?artist_name_en ?artist_description ?wikipedia_url ?img ?gkg_id
+  }
+{% else %}
+  # 1. Base Selection & Matching Score Calculation
+  {
+    SELECT DISTINCT ?wikidata_id ?matching_score WHERE {
+      {{ scope }}
+      {% for p in id_properties %}
+      OPTIONAL { ?wikidata_id {{ p.property }} ?{{ p.var }} . }
+      {% endfor %}
+      BIND(
+        ({{ m.matching_score_expr(id_properties) }})
+      AS ?matching_score)
+    }
+  }
+
+  # 2. Single-valued Labels & Attributes
+  {{ m.labels_description_image() }}
+  OPTIONAL { ?wikidata_id wdt:P2671 ?gkg_id . }
+
+  {{ m.birth_date() }}
+{% endif %}
+
+  # 3. Restricted Subqueries for Multi-Valued Attributes
+  {{ m.multi_valued_literal(scope, "skos:altLabel", "fr", "alias_fr", "aliases_fr") }}
+
+  {{ m.multi_valued_literal(scope, "skos:altLabel", "en", "alias_en", "aliases_en") }}
+
+  {{ m.multi_valued_labeled(scope, "wdt:P106", "prof", "profLbl", "professions", "fr") }}
+
+  {{ m.multi_valued_labeled(scope, "wdt:P136", "genre", "genreLbl", "genres", "fr") }}
+
+  {{ m.multi_valued_labeled(scope, "wdt:P1412", "lang", "langLbl", "languages_spoken", "fr") }}
+{% if base_mode == "scored" %}
+
+  # 4. Wikipedia
+  {{ m.wikipedia_url() }}
+
+  FILTER ((?artist_name_fr != "") || (?artist_name_en != ""))
+{% endif %}
+}

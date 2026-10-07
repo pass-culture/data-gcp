@@ -56,8 +56,6 @@ with
             max(
                 coalesce(ml_feat.booking_number_last_28_days, 0)
             ) as booking_number_last_28_days,
-            any_value(ml_feat.cluster_id) as cluster_id,
-            any_value(ml_feat.topic_id) as topic_id,
             max(
                 coalesce(
                     (
@@ -134,6 +132,8 @@ with
                 offer.offer_subcategory_id = 'LIVRE_PAPIER'
                 and offer.offer_product_id is null
             )
+            and not (offer.offer_subcategory_id = 'CARTE_CINE_ILLIMITE')
+            and not (offer.offer_subcategory_id = 'CARTES_CINEMA')
         group by
             1,
             2,

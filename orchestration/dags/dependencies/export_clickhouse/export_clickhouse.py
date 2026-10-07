@@ -69,7 +69,9 @@ CLICKHOUSE_LOADING_CONFIGS = [
         model_name="native_event", mode="incremental", partition_key="partition_date"
     ),
     TableConfig(
-        model_name="venue_offer_statistic", mode="overwrite", partition_key=None
+        model_name="venue_offer_statistic",
+        mode="overwrite",
+        partition_key="update_date",
     ),
 ]
 
@@ -86,6 +88,14 @@ CLICKHOUSE_ANALYTICS_TRANSFORMATION_CONFIGS = [
     AnalyticsConfig(
         clickhouse_dataset_name="analytics",
         clickhouse_table_name="last_30_day_venue_top_offer_consultation",
+    ),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="last_3months_venue_top_offer_consultation",
+    ),
+    AnalyticsConfig(
+        clickhouse_dataset_name="analytics",
+        clickhouse_table_name="last_6months_venue_top_offer_consultation",
     ),
     AnalyticsConfig(
         clickhouse_dataset_name="analytics",

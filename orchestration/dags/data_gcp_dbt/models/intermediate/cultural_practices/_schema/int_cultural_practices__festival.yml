@@ -1,0 +1,58 @@
+version: 2
+
+models:
+  - name: int_cultural_practices__festival
+    description: '{{ doc("description__int_cultural_practices__festival") }}'
+    columns:
+      - name: respondent_id
+        description: '{{ doc("column__respondent_id") }}'
+      - name: attended_theatre_dance_street_last_12m
+        description: '{{ doc("column__festival_attended_theatre_dance_street_last_12m") }}'
+      - name: attended_classical_opera_jazz_last_12m
+        description: '{{ doc("column__festival_attended_classical_opera_jazz_last_12m") }}'
+      - name: attended_world_traditional_last_12m
+        description: '{{ doc("column__festival_attended_world_traditional_last_12m") }}'
+      - name: attended_rock_varieties_last_12m
+        description: '{{ doc("column__festival_attended_rock_varieties_last_12m") }}'
+      - name: attended_cinema_last_12m
+        description: '{{ doc("column__festival_attended_cinema_last_12m") }}'
+      - name: attended_photography_last_12m
+        description: '{{ doc("column__festival_attended_photography_last_12m") }}'
+      - name: attended_other_last_12m
+        description: '{{ doc("column__festival_attended_other_last_12m") }}'
+      - name: location_local
+        description: '{{ doc("column__festival_location_local") }}'
+      - name: location_paris
+        description: '{{ doc("column__festival_location_paris") }}'
+      - name: location_other_region
+        description: '{{ doc("column__festival_location_other_region") }}'
+      - name: location_abroad_europe
+        description: '{{ doc("column__festival_location_abroad_europe") }}'
+      - name: location_abroad_outside_europe
+        description: '{{ doc("column__festival_location_abroad_outside_europe") }}'
+      - name: with_alone
+        description: '{{ doc("column__festival_companion_alone") }}'
+      - name: with_partner
+        description: '{{ doc("column__festival_companion_partner") }}'
+      - name: with_children
+        description: '{{ doc("column__festival_companion_children") }}'
+      - name: with_grandchildren
+        description: '{{ doc("column__festival_companion_grandchildren") }}'
+      - name: with_relatives
+        description: '{{ doc("column__festival_companion_relatives") }}'
+      - name: with_friends
+        description: '{{ doc("column__festival_companion_friends") }}'
+      - name: with_organized_group
+        description: '{{ doc("column__festival_companion_organized_group") }}'
+      - name: with_no_general_rule
+        description: '{{ doc("column__festival_companion_no_general_rule") }}'
+      - name: festival_would_miss_code
+        description: '{{ doc("column__festival_would_miss_code") }}'
+      - name: attended_festival_last_12m
+        description: '{{ doc("column__attended_festival_last_12m") }}'
+      - name: timing_holidays
+        description: '{{ doc("column__festival_timing_holidays") }}'
+      - name: timing_weekend
+        description: '{{ doc("column__festival_timing_weekend") }}'
+      - name: festival_would_miss
+        description: '{{ doc("column__festival_would_miss") }}'

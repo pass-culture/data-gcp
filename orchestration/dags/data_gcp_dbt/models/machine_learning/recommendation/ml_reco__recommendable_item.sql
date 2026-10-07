@@ -27,8 +27,6 @@ with
 
         select
             ro.item_id,
-            max(ro.topic_id) as topic_id,
-            max(ro.cluster_id) as cluster_id,
             max(ro.category) as category,
             max(ro.subcategory_id) as subcategory_id,
             max(ro.search_group_name) as search_group_name,

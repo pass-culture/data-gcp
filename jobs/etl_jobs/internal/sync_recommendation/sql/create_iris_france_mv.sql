@@ -12,16 +12,13 @@ language plpgsql
 immutable
 ;
 
-drop function if exists get_iris_france_{{ ts_nodash }}
-cascade
-;
 create or replace function get_iris_france_{{ ts_nodash }} ()
-returns table(id int, iriscode int, centroid geography, shape geometry)
+returns table(id varchar, iriscode int, centroid geography, shape geometry)
 as $body$
 BEGIN
     RETURN QUERY
     SELECT
-    irf.id::int as id,
+    irf.id::varchar as id,
     cast_to_int(irf."irisCode",0) as iriscode,
     irf.centroid::geography as centroid,
     ST_SetSRID(irf.shape::geometry, 0) as shape
@@ -59,4 +56,38 @@ ALTER MATERIALIZED VIEW IF EXISTS iris_france_mv_tmp
     RENAME TO iris_france_mv;
 DROP MATERIALIZED VIEW IF EXISTS iris_france_mv_old;
 commit
+;
+
+-- Cleanup orphaned functions left by previous runs (scheduled or manual).
+-- The function still backing the freshly renamed materialized view is
+-- automatically preserved: DROP FUNCTION without CASCADE fails while a
+-- dependent object exists, so it is simply skipped.
+create or replace function cleanup_get_iris_france_functions_{{ ts_nodash }} ()
+returns void
+as $body$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN
+        SELECT p.oid::regprocedure AS func_sig
+        FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+          AND p.proname ~ '^get_iris_france_[0-9]{14}$'
+    LOOP
+        BEGIN
+            EXECUTE format('DROP FUNCTION %s', r.func_sig);
+        EXCEPTION WHEN dependent_objects_still_exist THEN
+            -- still referenced by the current materialized view, skip it
+            NULL;
+        END;
+    END LOOP;
+END;
+$body$
+language plpgsql
+;
+
+select cleanup_get_iris_france_functions_{{ ts_nodash }} ()
+;
+drop function cleanup_get_iris_france_functions_{{ ts_nodash }} ()
 ;

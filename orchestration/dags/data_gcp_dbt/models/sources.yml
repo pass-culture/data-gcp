@@ -46,6 +46,7 @@ sources:
       - name: applicative_database_cds_cinema_details
       - name: applicative_database_cgr_cinema_details
       - name: applicative_database_cinema_provider_pivot
+      - name: applicative_database_collective_additional_fee
       - name: applicative_database_collective_booking
       - name: applicative_database_collective_offer
       - name: applicative_database_collective_offer_domain
@@ -116,7 +117,6 @@ sources:
       - name: applicative_database_recredit
       - name: applicative_database_stock
       - name: applicative_database_titelive_gtl
-      - name: applicative_database_transaction
       - name: applicative_database_trusted_device
       - name: applicative_database_user
       - name: applicative_database_user_offerer
@@ -141,6 +141,7 @@ sources:
       - name: contentful_tag
       - name: firebase_android_performance
       - name: firebase_events
+      - name: firebase_institutional_events
       - name: firebase_ios_performance
       - name: firebase_pro_events
       - name: gsheet_eac_webinar
@@ -176,6 +177,8 @@ sources:
       - name: tiktok_video_detail
       - name: offer_types
       - name: population_department
+      - name: geo_municipality
+      - name: geo_iris
       - name: user_address
       - name: zendesk_macro_usage
       - name: zendesk_ticket
@@ -195,6 +198,7 @@ sources:
       - name: dms_jeunes_cleaned
       - name: dms_pro_cleaned
       - name: siren_data
+      - name: siret_data
 
   - name: int_metabase
     schema: int_metabase_{{ var('ENV_SHORT_NAME') }}
@@ -213,8 +217,7 @@ sources:
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: agg_partner_cultural_sector
-      - name: epci
-      - name: geo_iris
+      - name: deps_cultural_practices_2018
       - name: institution_metadata_aggregated_type
       - name: institutional_scholar_level
       - name: iris_france
@@ -231,7 +234,6 @@ sources:
       - name: region_department
       - name: siren_main_business_labels
       - name: siren_legal_category_labels
-      - name: zrr
       - name: qpi_answers_v1
         external:
           location: "gs://de-bigquery-data-archive-{{var('ENV_SHORT_NAME')}}/archive/2024/08/raw_{{var('ENV_SHORT_NAME')}}/qpi_answers_v1.jsonl"
@@ -275,7 +277,6 @@ sources:
     schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
-      - name: default_item_cluster
       - name: item_embedding_extraction
         columns:
           - name: item_id
@@ -292,7 +293,6 @@ sources:
       - name: similar_artist
       - name: delta_event_series
       - name: delta_event_series_offer_link
-      - name: unconstrained_item_cluster
       - name: two_tower_user_embedding_history
         description: Partitionned table containing the history of the two tower user emebddings
       - name: two_tower_item_embedding_history
@@ -302,6 +302,21 @@ sources:
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: item_embedding_tmp
+  - name: tmp
+    schema: tmp_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
+    tables:
+      # item_embedding DAG writes one timestamped table per run
+      # (<name>_tmp_<ts_nodash>); the wildcard identifier unions them so the
+      # consuming model can pick the latest via max(_TABLE_SUFFIX).
+      - name: all_items_metadata_tmp
+        identifier: all_items_metadata_tmp_*
+      - name: books_metadata_tmp
+        identifier: books_metadata_tmp_*
+      - name: movies_metadata_tmp
+        identifier: movies_metadata_tmp_*
+      - name: all_items_offer_names_tmp
+        identifier: all_items_offer_names_tmp_*
   - name: ml_linkage
     schema: ml_linkage_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"

@@ -29,6 +29,8 @@ select
     venue_academy_name,
     venue_in_qpv,
     venue_in_zrr,
+    venue_in_frr,
+    venue_in_frr_plus,
     venue_rural_city_type,
     venue_targeted_audience,
     banner_url,
@@ -105,7 +107,8 @@ select
     total_created_mediation_individual_offers,
     has_mediation_offer,
     venue_adage_inscription_date,
-    offerer_is_epn
+    offerer_is_epn,
+    venue_business_activity_code
 from {{ ref("int_global__venue") }}
 where
     offerer_validation_status = 'VALIDATED'

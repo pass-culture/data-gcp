@@ -110,6 +110,12 @@ models:
       - name: user_city_code
         description: '{{ doc("column__user_city_code") }}'
         data_type: STRING
+      - name: user_municipality_code
+        description: '{{ doc("column__user_municipality_code") }}'
+        data_type: STRING
+      - name: user_municipality_label
+        description: '{{ doc("column__user_municipality_label") }}'
+        data_type: STRING
       - name: user_macro_density_label
         description: '{{ doc("column__user_macro_density_label") }}'
         data_type: STRING
@@ -154,6 +160,21 @@ models:
       - name: user_current_deposit_reform_category
         description: '{{ doc("column__user_current_deposit_reform_category") }}'
         data_type: STRING
+      - name: first_credit_17_date
+        description: '{{ doc("column__first_credit_17_date") }}'
+        data_type: DATE
+      - name: first_credit_18_date
+        description: '{{ doc("column__first_credit_18_date") }}'
+        data_type: DATE
+      - name: user_age_at_first_credit_17
+        description: '{{ doc("column__user_age_at_first_credit_17") }}'
+        data_type: INT64
+      - name: user_age_at_first_credit_18
+        description: '{{ doc("column__user_age_at_first_credit_18") }}'
+        data_type: INT64
+      - name: user_has_credit_before_18
+        description: '{{ doc("column__user_has_credit_before_18") }}'
+        data_type: BOOLEAN
       - name: first_individual_booking_date
         description: '{{ doc("column__first_individual_booking_date") }}'
         data_type: DATE

@@ -51,5 +51,6 @@ runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 
 [tool.uv]
 constraint-dependencies = [
+    "cryptography >= 50.0.0", # GHSA-g6cj-pr64-35w5
     "urllib3 >= 2.7.0", # CVE-2026-44432, CVE-2026-44431, PYSEC-2026-141, PYSEC-2026-142
 ]

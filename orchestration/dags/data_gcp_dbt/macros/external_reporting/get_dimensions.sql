@@ -9,12 +9,14 @@
                 - 'population': population_region_name, population_department_name
                 - 'institution': institution_region_name, institution_academy_name
                 - 'partner': partner_region_name, partner_department_name, partner_academy_name
-                - none/null: region_name, dep_name, academy_name, epci_code, city_code (bare column names)
+                - none/null: region_name, dep_name, academy_name, epci_code, municipality_code (bare column names)
 
             hierarchy_type (string): The geographic hierarchy to use. Options:
                 - 'geo': National → Region → Department (NAT/REG/DEP)
                 - 'geo_epci': National → Region → Department → EPCI (NAT/REG/DEP/EPCI)
                 - 'geo_full': National → Region → Department → EPCI → COM (NAT/REG/DEP/EPCI/COM)
+                  COM is the municipality (commune) code, not the arrondissement code: Paris,
+                  Lyon and Marseille are reported as 75056, 69123 and 13055.
                 - 'granular_only': EPCI → COM only (EPCI/COM) - use with 'geo' to avoid duplicates
                 - 'academic': National → Region → Academy (NAT/REG/ACAD)
                 - 'academic_extended': National → Region → Academy → EPCI → COM (NAT/REG/ACAD/EPCI/COM)
@@ -34,13 +36,13 @@
         {% set dept_col = entity_prefix ~ "_department_name" %}
         {% set acad_col = entity_prefix ~ "_academy_name" %}
         {% set epci_col = entity_prefix ~ "_epci_code" %}
-        {% set city_col = entity_prefix ~ "_city_code" %}
+        {% set municipality_col = entity_prefix ~ "_municipality_code" %}
     {% else %}
         {% set region_col = "region_name" %}
         {% set dept_col = "dep_name" %}
         {% set acad_col = "academy_name" %}
         {% set epci_col = "epci_code" %}
-        {% set city_col = "city_code" %}
+        {% set municipality_col = "municipality_code" %}
     {% endif %}
 
     {% if hierarchy_type == "geo" %}
@@ -62,12 +64,12 @@
             {"name": "REG", "value_expr": region_col},
             {"name": "DEP", "value_expr": dept_col},
             {"name": "EPCI", "value_expr": epci_col},
-            {"name": "COM", "value_expr": city_col},
+            {"name": "COM", "value_expr": municipality_col},
         ] %}
     {% elif hierarchy_type == "granular_only" %}
         {% set dimensions = [
             {"name": "EPCI", "value_expr": epci_col},
-            {"name": "COM", "value_expr": city_col},
+            {"name": "COM", "value_expr": municipality_col},
         ] %}
     {% elif hierarchy_type == "academic" %}
         {% set dimensions = [
@@ -82,7 +84,7 @@
             {"name": "REG", "value_expr": region_col},
             {"name": "ACAD", "value_expr": acad_col},
             {"name": "EPCI", "value_expr": epci_col},
-            {"name": "COM", "value_expr": city_col},
+            {"name": "COM", "value_expr": municipality_col},
             {"name": "DEP", "value_expr": dept_col},
         ] %}
     {% else %}

@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: int_cultural_practices__concert_behaviors
+    description: '{{ doc("description__int_cultural_practices__concert_behaviors") }}'
+    columns:
+      - name: respondent_id
+        description: '{{ doc("column__respondent_id") }}'
+      - name: alone
+        description: '{{ doc("column__concert_companion_alone") }}'
+      - name: with_partner
+        description: '{{ doc("column__concert_companion_partner") }}'
+      - name: with_children
+        description: '{{ doc("column__concert_companion_children") }}'
+      - name: with_grandchildren
+        description: '{{ doc("column__concert_companion_grandchildren") }}'
+      - name: with_relatives
+        description: '{{ doc("column__concert_companion_relatives") }}'
+      - name: with_friends
+        description: '{{ doc("column__concert_companion_friends") }}'
+      - name: with_organized_group
+        description: '{{ doc("column__concert_companion_organized_group") }}'
+      - name: no_general_rule
+        description: '{{ doc("column__concert_companion_no_general_rule") }}'
+      - name: would_miss_concert
+        description: '{{ doc("column__concert_would_miss") }}'

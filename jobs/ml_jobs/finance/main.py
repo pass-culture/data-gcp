@@ -8,7 +8,8 @@ from loguru import logger
 # Import the interface and implementations
 from forecast.forecasters.forecast_model import ForecastModel
 from forecast.forecasters.prophet_model import ProphetModel
-from forecast.utils.bigquery import get_past_runs, save_forecast_gbq
+from forecast.utils.bigquery import save_forecast_gbq
+from forecast.utils.constants import DATA_FRESHNESS_WARNING_DAYS
 from forecast.utils.mlflow import setup_mlflow
 
 
@@ -42,7 +43,6 @@ def main(
     ),
     experiment_name: str = typer.Option(..., help="MLflow experiment name."),
     dataset: str = typer.Option(..., help="BigQuery dataset containing training data and forecast results."),
-    n_past_runs_to_compare: int = typer.Option(6, help="Number of past runs to include in comparison plot."),
 ) -> None:
     """
     Train, evaluate, and forecast using a sliding window approach.
@@ -61,7 +61,8 @@ def main(
     forecast_horizon_date = (exec_date + timedelta(days=forecast_days)).strftime("%Y-%m-%d")
 
     experiment, run_name = setup_mlflow(experiment_name, model_type, model_name)
-    with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
+    with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name) as active_run:
+        run_id = active_run.info.run_id
         mlflow.set_tag("model_type", model_type)
         mlflow.set_tag("model_name", model_name)
 
@@ -86,6 +87,21 @@ def main(
 
         # 2. Prepare Data
         model.prepare_data(dataset, train_start_date, backtest_start_date, backtest_end_date)
+
+        # 2b. Data freshness check: the most recent available day should be close to
+        # the execution date. A large lag means the source table is not fully loaded
+        # (stale data), which distorts the backtest of the final month.
+        last_available_date = pd.Timestamp(model.data_split.backtest["ds"].max())
+        data_lag_days = (exec_date - last_available_date.to_pydatetime()).days
+        mlflow.log_param("last_data_date", last_available_date.strftime("%Y-%m-%d"))
+        mlflow.log_param("data_lag_days", data_lag_days)
+        if data_lag_days > DATA_FRESHNESS_WARNING_DAYS:
+            mlflow.set_tag("stale_data", "true")
+            logger.warning(
+                f"Stale data: last available day {last_available_date.date()} lags the execution "
+                f"date {exec_date.date()} by {data_lag_days} days (threshold "
+                f"{DATA_FRESHNESS_WARNING_DAYS}). The most recent backtest month may be unreliable."
+            )
 
         # 3. Train
         model.train()
@@ -121,6 +137,20 @@ def main(
         mlflow.log_artifact(monthly_forecast_file, artifact_path="forecasts")
         logger.info(f"Monthly Forecast saved to {monthly_forecast_file}")
 
+        # 8b. Full-year monthly forecast for the finance report.
+        # Spans from the start of the execution year to the END of the following
+        # year so the report can show model behaviour over the whole current year
+        # (including the in-sample training months) and the entire next year,
+        # independently of the operational forecast horizon.
+        report_start_date = f"{exec_date.year}-01-01"
+        report_end_date = f"{exec_date.year + 1}-12-31"
+        full_forecast_df = model.predict(report_start_date, report_end_date)
+        full_monthly_forecast_df = model.aggregate_to_monthly(full_forecast_df)
+        full_monthly_forecast_file = f"{run_name}_full_year_monthly_forecast.xlsx"
+        full_monthly_forecast_df.to_excel(full_monthly_forecast_file, index=False)
+        mlflow.log_artifact(full_monthly_forecast_file, artifact_path="forecasts")
+        logger.info(f"Full-year monthly forecast saved to {full_monthly_forecast_file}")
+
         # 9. Log to BigQuery
         logger.info("Logging monthly forecast to BigQuery...")
         save_forecast_gbq(
@@ -138,21 +168,11 @@ def main(
         # 10. Log Backtest Plots to MLflow
         model.log_plots(backtest_forecast, monthly_forecast_df)
 
-        # 11. Plot model against past models predictions
-        past_monthly_forecasts = get_past_runs(n_past_runs_to_compare, dataset)
-
-        fig = model.plot_last_runs_forecasts(past_monthly_forecasts)
-        mlflow.log_figure(
-            fig,
-            f"forecasts/last_{n_past_runs_to_compare}_runs_forecasts_comparison_plot.png",
-        )
-
-        # 12. Compute and log average forecast of past models predictions
-        avg_forecast_df = model.compute_average_forecast(past_monthly_forecasts)
-        avg_forecast_file = f"last_{n_past_runs_to_compare}_runs_average_forecast.xlsx"
-        avg_forecast_df.to_excel(avg_forecast_file, index=False)
-        mlflow.log_artifact(avg_forecast_file, artifact_path="forecasts")
-        logger.info(f"Comparison forecast saved to {avg_forecast_file}")
+    # Emit the MLflow run id as the very last stdout line so the Airflow
+    # SSHGCEOperator captures it via XCom (key="result") and hands it to the
+    # downstream reporting task. Must stay after the `with` block so MLflow's
+    # end-of-run stdout messages do not overwrite it.
+    print(run_id)
 
 
 if __name__ == "__main__":

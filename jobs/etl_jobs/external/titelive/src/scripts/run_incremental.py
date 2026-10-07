@@ -11,6 +11,7 @@ from config import (
     MAX_SEARCH_RESULTS,
     PROVIDER_EVENT_TABLE,
     RESULTS_PER_PAGE,
+    GtlCodeLevel1,
     TiteliveCategory,
 )
 from src.api.auth import TokenManager
@@ -236,49 +237,122 @@ def run_incremental(
                 run_stats.add_daily_stats(daily_stats)
                 continue
 
-            # Validate against API limit
-            if total_results >= MAX_SEARCH_RESULTS:
-                msg = (
-                    f"Total results for {base} on {date_str} ({total_results}) "
-                    f"exceeds API limit ({MAX_SEARCH_RESULTS})."
-                )
-                raise ValueError(msg)
-
-            # Phase 1: Collect all gencods from search pages
-            total_pages = calculate_total_pages(total_results, results_per_page)
             all_gencods = []
             total_filtered = 0
             filtered_samples = []
 
-            for page in range(1, total_pages + 1):
-                try:
-                    response = api_client.search_by_date(
+            # If the volume exceeds the API max search, split by dispo and gtl code.
+            dispo_values = [None]
+            if total_results >= MAX_SEARCH_RESULTS:
+                dispo_legend = initial_response.get("dispo", {})
+                dispo_values = _legend_values(dispo_legend, value_type=int)
+                if not dispo_values:
+                    msg = (
+                        f"Total results for {base} on {date_str} ({total_results}) "
+                        "exceeds API limit "
+                        f"({MAX_SEARCH_RESULTS}) and no dispo split values were found."
+                    )
+                    raise ValueError(msg)
+
+                logger.warning(
+                    f"API cap reached for {base}/{date_str} ({total_results}). "
+                    f"Splitting by dispo values: {dispo_values}"
+                )
+
+            if dispo_values == [None]:
+                split_plan = [(None, None, total_results)]
+            else:
+                split_plan = []
+                for dispo_value in dispo_values:
+                    dispo_response = api_client.search_by_date(
                         base=base,
                         min_date=min_date_formatted,
                         max_date=max_date_formatted,
-                        page=page,
+                        page=1,
                         results_per_page=results_per_page,
+                        dispo=dispo_value,
                     )
 
-                    results = response.get("result", [])
-                    if results:
-                        page_gencods, filter_stats = (
-                            extract_gencods_from_search_response(
-                                response, from_date=min_date_formatted
-                            )
+                    split_total_results = dispo_response.get("nbreponses", 0)
+                    if split_total_results == 0:
+                        continue
+
+                    codegtl_values = [value.value for value in GtlCodeLevel1]
+                    if split_total_results >= MAX_SEARCH_RESULTS and not codegtl_values:
+                        msg = (
+                            f"Split with dispo={dispo_value} still exceeds API limit "
+                            f"({split_total_results} >= {MAX_SEARCH_RESULTS}) and no "
+                            "codegtl split values were found."
                         )
-                        all_gencods.extend(page_gencods)
+                        raise ValueError(msg)
 
-                        # Aggregate filter stats
-                        total_filtered += filter_stats["filtered_count"]
-                        if len(filtered_samples) < 5:
-                            filtered_samples.extend(filter_stats["filtered_samples"])
+                    if not codegtl_values:
+                        split_plan.append((dispo_value, None, split_total_results))
+                        continue
 
-                except Exception as e:
-                    logger.error(
-                        f"Error fetching page {page} for {base}/{date_str}: {e}"
-                    )
-                    continue
+                    for codegtl_value in codegtl_values:
+                        support_response = api_client.search_by_date(
+                            base=base,
+                            min_date=min_date_formatted,
+                            max_date=max_date_formatted,
+                            page=1,
+                            results_per_page=results_per_page,
+                            dispo=dispo_value,
+                            codegtl=codegtl_value,
+                        )
+                        support_total_results = support_response.get("nbreponses", 0)
+                        if support_total_results == 0:
+                            continue
+                        if support_total_results >= MAX_SEARCH_RESULTS:
+                            msg = (
+                                f"Split with dispo={dispo_value} and "
+                                f"codegtl={codegtl_value} still exceeds "
+                                f"API limit ({support_total_results} >= "
+                                f"{MAX_SEARCH_RESULTS})."
+                            )
+                            raise ValueError(msg)
+                        split_plan.append(
+                            (dispo_value, codegtl_value, support_total_results)
+                        )
+
+            for dispo_value, codegtl_value, split_total_results in split_plan:
+                total_pages = calculate_total_pages(
+                    split_total_results, results_per_page
+                )
+                for page in range(1, total_pages + 1):
+                    try:
+                        response = api_client.search_by_date(
+                            base=base,
+                            min_date=min_date_formatted,
+                            max_date=max_date_formatted,
+                            page=page,
+                            results_per_page=results_per_page,
+                            dispo=dispo_value,
+                            codegtl=codegtl_value,
+                        )
+
+                        results = response.get("result", [])
+                        if results:
+                            page_gencods, filter_stats = (
+                                extract_gencods_from_search_response(
+                                    response, from_date=min_date_formatted
+                                )
+                            )
+                            all_gencods.extend(page_gencods)
+
+                            # Aggregate filter stats
+                            total_filtered += filter_stats["filtered_count"]
+                            if len(filtered_samples) < 5:
+                                filtered_samples.extend(
+                                    filter_stats["filtered_samples"]
+                                )
+
+                    except Exception as e:
+                        logger.error(
+                            f"Error fetching page {page} for {base}/{date_str} "
+                            f"(dispo={dispo_value}, "
+                            f"codegtl={codegtl_value}): {e}"
+                        )
 
             # Log filtered gencods if any
             daily_stats.filtered_by_date = total_filtered
@@ -449,3 +523,18 @@ def _format_date_for_api(date_str: str) -> str:
     except ValueError as e:
         msg = f"Invalid date format: {date_str}. Expected YYYY-MM-DD."
         raise ValueError(msg) from e
+
+
+def _legend_values(legend: object, value_type: type) -> list:
+    """Extract filter values from a Titelive response legend."""
+    if isinstance(legend, dict):
+        values = legend.keys()
+    elif isinstance(legend, list):
+        values = legend
+    else:
+        return []
+
+    try:
+        return sorted(value_type(value) for value in values)
+    except (TypeError, ValueError):
+        return []

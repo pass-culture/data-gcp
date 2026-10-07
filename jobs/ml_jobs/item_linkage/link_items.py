@@ -74,7 +74,7 @@ def get_links(
         pd.DataFrame: Dataframe containing matched pairs.
     """
 
-    def threshold(value, thr=0.70):
+    def threshold(value, thr):
         if value < thr:
             return 0
         else:
@@ -211,6 +211,20 @@ def postprocess_matching(matches, item_singletons_clean, sources_clean):
         .drop(columns=["index_1", "index_2"])
     )
 
+    # Second guard for different editions in matches: veto any pair whose editions are both present and different.
+    # This could happend for very few items beacuse of indexing errors.
+    both_editions_present = (
+        linkage_raw["edition_synchro"].notna()
+        & linkage_raw["edition_candidate"].notna()
+    )
+    edition_conflict = both_editions_present & (
+        linkage_raw["edition_synchro"] != linkage_raw["edition_candidate"]
+    )
+    logger.info(
+        f"Dropping {int(edition_conflict.sum())} pairs with conflicting editions"
+    )
+    linkage_raw = linkage_raw[~edition_conflict]
+
     max_scores = linkage_raw.groupby("item_id_candidate")["oeuvre_score"].transform(
         "max"
     )
@@ -299,7 +313,7 @@ def main(
         input_candidates_path, columns=METADATA_FEATURES
     )
     logger.info(f"Loaded {len(candidates)} items from candidates")
-    catalog = pd.concat([sources, candidates]).drop_duplicates()
+    catalog = pd.concat([sources, candidates]).drop_duplicates(subset="item_id")
     logger.info(f"catalog: {len(catalog)} items")
     logger.info(f"catalog columns: {catalog.columns}")
     linkage_candidates = read_parquet_files_from_gcs_directory(linkage_candidates_path)

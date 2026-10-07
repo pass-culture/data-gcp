@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: ml_reco__user_statistics
+    description: "{{ doc('description__ml_reco__user_statistics') }}"
+    columns:
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+      - name: user_deposit_creation_date
+        description: "{{ doc('column__deposit_creation_date') }}"
+      - name: user_birth_date
+        description: "{{ doc('column__user_birth_date') }}"
+      - name: user_department_code
+        description: "{{ doc('column__user_department_code') }}"
+      - name: user_deposit_initial_amount
+        description: "{{ doc('column__deposit_amount') }}"
+      - name: user_theoretical_remaining_credit
+        description: "{{ doc('column__total_theoretical_remaining_credit') }}"
+        data_tests:
+          - not_null
+      - name: booking_cnt
+        description: "{{ doc('column__total_bookings') }}"
+        data_tests:
+          - not_null
+      - name: consult_offer
+        description: "{{ doc('column__total_item_consulted') }}"
+        data_tests:
+          - not_null
+      - name: has_added_offer_to_favorites
+        description: "{{ doc('column__user_has_added_offer_to_favorites') }}"
+        data_tests:
+          - not_null
+      - name: user_subscription_latitude
+        description: "Latitude of the centroid of the user's subscription department, computed by aggregating all IRIS centroids within the department."
+      - name: user_subscription_longitude
+        description: "Longitude of the centroid of the user's subscription department, computed by aggregating all IRIS centroids within the department."

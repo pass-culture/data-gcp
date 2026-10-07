@@ -4,13 +4,15 @@
 {% docs column__user_age %} Current age of the user. {% enddocs %}
 {% docs column__user_birth_date %} Birth date of the user. {% enddocs %}
 {% docs column__user_civility %} Registered civility of the user (male, female). Information collected during registration.{% enddocs %}
-{% docs column__user_city %} City associated with the user's registered address. {% enddocs %}
-{% docs column__user_city_code %} The INSEE code of the city associated with the user's registered address. {% enddocs %}
+{% docs column__user_city %} Name of the city associated with the user's registered address, at the arrondissement level for Paris, Lyon and Marseille (e.g. `Paris 1er Arrondissement`). {% enddocs %}
+{% docs column__user_city_code %} INSEE code of the city associated with the user's registered address, at the arrondissement level for Paris, Lyon and Marseille (e.g. `75101`). {% enddocs %}
+{% docs column__user_municipality_code %} INSEE code of the municipality (commune) associated with the user's registered address: the parent municipality for the arrondissements of Paris, Lyon and Marseille (`75056`, `69123`, `13055`), the same as `user_city_code` everywhere else. {% enddocs %}
+{% docs column__user_municipality_label %} Name of the municipality (commune) of `user_municipality_code` (e.g. `Paris` for every Paris arrondissement). {% enddocs %}
 {% docs column__user_created_at %} Date when the user account was created. {% enddocs %}
 {% docs column__user_department_code %} Department code associated with the user's registered address. {% enddocs %}
 {% docs column__user_department_name %} Department name associated with the user's registered address. {% enddocs %}
-{% docs column__user_density_label %} String column.Density label (urban, rural) of the user's registered address. {% enddocs %}
-{% docs column__user_density_level %} Integer column. Density level of the user's registered address. Ranges from 1 (highly urban) to 7 (highly rural). {% enddocs %}
+{% docs column__user_density_label %} String column. Density label (urban, rural) of the user's registered address. It reflects the user's last known address (geocoded in a full pass in February–March 2025, then re-geocoded as users change address), not necessarily their current residence. {% enddocs %}
+{% docs column__user_density_level %} Integer column. Density level of the user's registered address. Ranges from 1 (highly urban) to 7 (highly rural). It reflects the user's last known address (geocoded in a full pass in February–March 2025, then re-geocoded as users change address), not necessarily their current residence. {% enddocs %}
 {% docs column__user_epci %} EPCI code associated with the user's registered address. An EPCI is a French public body enabling municipalities to collaborate on shared local services and development. {% enddocs %}
 {% docs column__user_humanized_id %} Human-readable identifier for the user. {% enddocs %}
 {% docs column__user_id %} Unique identifier for a user. {% enddocs %}
@@ -21,7 +23,7 @@
 {% docs column__user_is_in_qpv %} Boolean. Indicates if the user's registered address is in a priority neighborhood (QPV). {% enddocs %}
 {% docs column__user_is_priority_public %} Boolean. Indicates if the user considered as a pass Culture priority public (users that are either residing in a rural area, in a QPV or are not in education). {% enddocs %}
 {% docs column__user_is_unemployed %} Boolean. Indicates if the user is unemployed as per its registered activity. {% enddocs %}
-{% docs column__user_macro_density_label %} Macro density label of the user's registered address. {% enddocs %}
+{% docs column__user_macro_density_label %} Macro density label of the user's registered address. It reflects the user's last known address (geocoded in a full pass in February–March 2025, then re-geocoded as users change address), not necessarily their current residence. {% enddocs %}
 {% docs column__user_postal_code %} Postal code of the user's registered address. {% enddocs %}
 {% docs column__user_region_name %} Region name of the user's registered address. {% enddocs %}
 {% docs column__user_school_type %} Type of school the user is enrolled in: Centre de formation apprentis, Collège privé, Collège public, Lycée agricole, Lycée maritime, Lycée militaire, Lycée privé, Lycée public, À domicile (CNED, institut de santé, etc.). {% enddocs %}
@@ -73,7 +75,8 @@
 {% docs column__user_qpv_code %} Code of the QPV (Quartier Prioritaire de la Ville) if the user is located in a priority neighborhood. {% enddocs %}
 {% docs column__user_qpv_name %} Name of the QPV (Quartier Prioritaire de la Ville) if the user is located in a priority neighborhood. {% enddocs %}
 {% docs column__user_epci_code %} Code of the EPCI (Etablissement Public de Cooperation Intercommunale) where the user is located. {% enddocs %}
-{% docs column__user_density_macro_level %} Macro-level urban density classification (Urban vs Rural). Aggregation of density_label into broader categories. {% enddocs %}
+{% docs column__user_density_macro_level %} Macro-level urban density classification (Urban vs Rural). Aggregation of density_label into broader categories. In the address history, it is localized from the city and postal code only, not the full geocoded address: see `column__user_history_density_label`. {% enddocs %}
+{% docs column__user_history_density_label %} String column. Density label of the address as entered at that point of the history, localized from the city and postal code only (not the full geocoded address). It differs from the density of the geocoded address (`user_density_label` on the beneficiary tables) in about 20% of cases even without a move, so do not compare the two. An « address at date X » density would require geocoding this history at the full address. {% enddocs %}
 {% docs column__info_history_rank %} Sequential rank of information changes for each user (0 = first record, 1 = second, etc.). {% enddocs %}
 {% docs column__has_confirmed %} Boolean flag indicating if the user confirmed their existing information (all fields remained the same compared to previous record). {% enddocs %}
 {% docs column__has_modified %} Boolean flag indicating if the user modified any of their information (at least one field changed compared to previous record). {% enddocs %}

@@ -49,8 +49,6 @@ select distinct
     user_features.qpi_subcategory_ids,
     item_features.offer_subcategory_id,
     item_features.offer_category_id,
-    item_features.item_image_embedding,
-    item_features.item_semantic_content_hybrid_embedding,
     item_features.item_names,
     item_features.item_descriptions,
     item_features.item_rayons,

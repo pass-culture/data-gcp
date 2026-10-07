@@ -36,7 +36,7 @@ with
             pop.population_decimal_age in (
                 15, 15.5, 16, 16.5, 17, 17.5, 18, 18.5, 19
             ) as population_age_decimal_set
-        from {{ ref("int_seed__monthly_france_population") }} as pop
+        from {{ ref("int_seed__monthly_insee_population_estimation") }} as pop
         left join
             user_deposit as ub
             on pop.population_snapshot_month = ub.deposit_active_month
@@ -56,15 +56,17 @@ select
     population_academy_name,
     total_users,
     total_population,
+    cast(
+        sum(total_population) over (
+            partition by population_decimal_age, population_department_code
+            order by population_snapshot_month
+            rows between 11 preceding and current row
+        ) as int64
+    ) as total_population_last_12_months,
     sum(total_users) over (
         partition by population_decimal_age, population_department_code
         order by population_snapshot_month
         rows between 11 preceding and current row
-    ) as total_users_last_12_months,
-    sum(total_population) over (
-        partition by population_decimal_age, population_department_code
-        order by population_snapshot_month
-        rows between 11 preceding and current row
-    ) as total_population_last_12_months
+    ) as total_users_last_12_months
 
 from beneficiary_coverage

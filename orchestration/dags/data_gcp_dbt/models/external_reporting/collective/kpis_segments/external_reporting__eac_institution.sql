@@ -1,3 +1,4 @@
+-- noqa: disable=all
 {{
     config(
         **custom_incremental_config(
@@ -48,7 +49,7 @@ with recursive
             inst.institution_academy_name,
             inst.institution_department_name,
             inst.institution_epci_code,
-            inst.institution_city_code
+            inst.institution_municipality_code
         from {{ ref("mrt_global__educational_deposit") }} as dep
         left join
             {{ ref("mrt_global__educational_institution") }} as inst
@@ -76,7 +77,7 @@ with recursive
             base.institution_academy_name,
             base.institution_department_name,
             base.institution_epci_code,
-            base.institution_city_code,
+            base.institution_municipality_code,
             count(distinct base.institution_id) as total_institutions,
             count(
                 distinct case
@@ -95,7 +96,7 @@ with recursive
             base.institution_academy_name,
             base.institution_department_name,
             base.institution_epci_code,
-            base.institution_city_code
+            base.institution_municipality_code
     )
 
 {% for dim in dimensions %}

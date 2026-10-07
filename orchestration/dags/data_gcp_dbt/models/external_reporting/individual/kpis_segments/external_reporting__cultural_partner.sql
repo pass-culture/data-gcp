@@ -1,3 +1,4 @@
+-- noqa: disable=all
 {{
     config(
         **custom_incremental_config(
@@ -9,8 +10,7 @@
 }}
 
 -- depends_on: {{ ref('mrt_global__cultural_partner') }}
-{% set dimensions_geo = get_dimensions("partner", "geo_epci") %}
-{% set dimensions_granular_only = get_dimensions("partner", "granular_only") %}
+{% set dimensions_geo = get_dimensions("partner", "geo_full") %}
 {% set partner_types = get_partner_types() %}
 
 with
@@ -55,6 +55,13 @@ with
         select
             bd.venue_id,
             bd.partition_month,
+            gcp.partner_region_name,
+            gcp.partner_department_name,
+            gcp.partner_epci_code,
+            gcp.partner_municipality_code,
+            gcp.partner_type,
+            gcp.offerer_id,
+            gvt.venue_tag_name,
             date_diff(
                 least(current_date(), last_day(bd.partition_month)),
                 bd.last_indiv_date,
@@ -64,14 +71,7 @@ with
                 least(current_date(), last_day(bd.partition_month)),
                 bd.last_collective_date,
                 day
-            ) as days_since_last_collective_bookable_date,
-            gcp.partner_region_name,
-            gcp.partner_department_name,
-            gcp.partner_epci_code,
-            gcp.partner_city_code,
-            gcp.partner_type,
-            gcp.offerer_id,
-            gvt.venue_tag_name
+            ) as days_since_last_collective_bookable_date
         from historical_max_dates as bd
         inner join
             {{ ref("mrt_global__cultural_partner") }} as gcp
@@ -80,7 +80,7 @@ with
             {{ ref("mrt_global__venue_tag") }} as gvt
             on gcp.venue_id = gvt.venue_id
             and gvt.venue_tag_category_label
-            = "Comptage partenaire label et appellation du MC"
+            = 'Comptage partenaire label et appellation du MC'
         inner join
             {{ ref("mrt_global__offerer") }} as gof on gcp.offerer_id = gof.offerer_id
     ),

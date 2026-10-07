@@ -12,6 +12,7 @@ SCHEDULE_DICT = {
     "algo_default_deployment": "0 6 * * *",
     "artist_linkage": "0 12 * * *",
     "artist_similarity_playlist": "0 12 * * 1",
+    "artist_wikidata_dump": "0 3 1 * *",  # 1st of the month at 3:00 AM
     "build_and_push_graph_retrieval_api": {
         "prod": "0 4 * * 5",  # every Friday at 4:00 AM
         "stg": "0 4 * * 4",  # every Thursday at 4:00 AM
@@ -21,6 +22,11 @@ SCHEDULE_DICT = {
         "prod": "0 8 * * *",  # every day at 8:00 AM
         "dev": "0 8 * * *",  # every day at 8:00 AM
         "stg": "0 8 * * 3",  # every Wednesday at 8:00 AM
+    },
+    "build_and_push_semantic_retrieval_api": {
+        "prod": "0 5 * * 4",  # every Thursday at 5:00 AM
+        "stg": "0 5 * * 4",  # every Thursday at 5:00 AM
+        "dev": "0 5 * * 4",  # every Thursday at 5:00 AM
     },
     "bigquery_archive_partition": "0 7 * * *",
     "bigquery_snapshot_backup": {
@@ -33,10 +39,10 @@ SCHEDULE_DICT = {
         "stg": "45 4 * * *",  # every day at 4:45 AM
         "dev": "45 4 * * *",  # every day at 4:45 AM
     },
-    "export_vidoc_daily": {
-        "prod": "0 7 * * *",  # every day at 7:00 AM
-        "stg": "0 6 * * *",
-        "dev": "0 6 * * *",
+    "export_vidoc_weekly": {
+        "prod": "0 12 * * 1",  # every Monday at 12:00 PM UTC
+        "stg": "0 12 * * 1",  # every Monday at 12:00 PM UTC
+        "dev": "0 12 * * 1",  # every Monday at 12:00 PM UTC
     },
     "dbt_artifacts": "0 6 * * *",
     "dbt_run_dag": "45 2 * * *",
@@ -46,6 +52,11 @@ SCHEDULE_DICT = {
         "prod": "0 11 * * 3",  # every Wednesday at 11:00 AM
         "stg": "0 11 * * 2",  # every Tuesday at 11:00 AM
         "dev": "0 11 * * 2",  # every Tuesday at 11:00 AM
+    },
+    "import_harvestr": {
+        "prod": "0 3 * * *",  # every day at 3:00 AM
+        "stg": "0 3 * * *",  # every day at 3:00 AM
+        "dev": "0 3 * * *",  # every day at 3:00 AM
     },
     "import_appfollow": {
         "prod": "0 2 * * 1",
@@ -67,7 +78,7 @@ SCHEDULE_DICT = {
     },
     "recommendation_endpoint_monitoring": "0 8 * * *",  # every day at 8:00 AM
     "export_external_reporting": {
-        "prod": "45 4 22 * *",  # every month the 22nd at 4:45 AM
+        "prod": "45 4 20 * *",  # every month the 20th at 4:45 AM
     },
     "finance_pricing_forecast": {
         "prod": "0 6 1 * *",  # every 1st day of the month at 6:00 AM
@@ -85,7 +96,7 @@ SCHEDULE_DICT = {
         "stg": "0 3,18 * * *",
         "prod": "0 3,18 * * *",
     },
-    "semantic_search_lancedb": {
+    "create_semantic_db": {
         "prod": "0 12 * * *",  # every day at 12:00 PM
         "stg": "0 12 * * *",  # every day at 12:00 PM
         "dev": "0 12 * * 1",  # every Monday at 12:00 PM

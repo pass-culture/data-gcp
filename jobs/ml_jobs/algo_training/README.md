@@ -38,3 +38,14 @@ développement dans le DAG concerné. Les deux possibilités sont de :
 
 De plus, afin de réduire les temps d'entraînement et d'évaluation, on peut réduire le volume de données utilisées en
 diminuant le nombre de jours utilisés pour l'entraînement : paramètre `event_day_number`.
+
+## Environnement (Linux / macOS)
+
+L'environnement est résolu (`uv.lock`) à la fois pour Linux et macOS :
+
+- **Linux** (VM d'entraînement) : TensorFlow est installé avec l'extra `[and-cuda]` pour bénéficier du GPU. Les wheels
+  `nvidia-*-cu12` n'existant que sous Linux, cet extra est conditionné par `sys_platform == 'linux'`.
+- **macOS** (dev local) : TensorFlow est installé en version CPU standard (`sys_platform == 'darwin'`), ce qui permet de
+  faire un `uv sync`, d'éditer le code, de linter et de lancer les tests unitaires. En revanche, **exécuter réellement
+  l'entraînement/l'évaluation sous macOS reste "best-effort"** : `tensorflow-recommenders` force une ancienne version
+  `tensorflow-macos`, potentiellement en conflit avec `tensorflow`. L'entraînement de référence se fait donc sous Linux.

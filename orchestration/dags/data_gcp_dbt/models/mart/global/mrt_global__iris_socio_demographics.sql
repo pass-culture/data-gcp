@@ -56,7 +56,7 @@ select
     gi.density_level,
     gi.density_label,
     gi.density_macro_level,
-    gi.geo_code,
+    gi.municipality_code as geo_code,
     gi.rural_city_type,
     id.iris_area_sq_km,
     id.total_venue_20_km,

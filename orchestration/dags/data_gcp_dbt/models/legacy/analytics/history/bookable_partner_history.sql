@@ -27,7 +27,7 @@ with
             partition_date,
             'collective' as offer_type,
             count(distinct collective_offer_id) as nb_bookable_offers
-        from {{ ref("bookable_collective_offer_history") }}
+        from {{ ref("int_history__bookable_collective_offer") }}
         inner join
             {{ ref("mrt_global__collective_offer") }} as mrt_global__collective_offer
             using (collective_offer_id)

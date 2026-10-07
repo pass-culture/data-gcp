@@ -8,6 +8,8 @@ select
     epci_code,
     city_name,
     city_code,
+    municipality_label,
+    municipality_code,
     is_in_qpv,
     macro_density_label,
     micro_density_label,

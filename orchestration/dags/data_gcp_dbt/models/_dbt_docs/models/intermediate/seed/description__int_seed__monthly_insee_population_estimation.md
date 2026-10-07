@@ -24,5 +24,6 @@ The detailed methodology is documented in the [`data-insee-population` method do
 
 **Related models:**
 - [`metrics_population__coverage`](#!/model/model.data_gcp_dbt.metrics_population__coverage) — central population coverage indicators built on top of this seed.
-- [`exp_vidoc_population__coverage`](#!/model/model.data_gcp_dbt.exp_vidoc_population__coverage) — export of those indicators for the ministry's vidoc visualisation.
+- [`exp_vidoc__population_coverage`](#!/model/model.data_gcp_dbt.exp_vidoc__population_coverage) — export of those indicators for the ministry's vidoc visualisation.
+- [`mrt_native__monthly_beneficiary_coverage`](#!/model/model.data_gcp_dbt.mrt_native__monthly_beneficiary_coverage) — demographic structure table (decimal age) built directly on this seed.
 {% enddocs %}

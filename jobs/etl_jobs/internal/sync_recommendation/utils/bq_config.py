@@ -22,6 +22,10 @@ BQ_TABLES_CONFIG: Dict[str, Dict] = {
             "booking_cnt": "integer",
             "consult_offer": "integer",
             "has_added_offer_to_favorites": "integer",
+            "user_department_code": "character varying",
+            "user_subscription_latitude": "real",
+            "user_subscription_longitude": "real",
+            "user_is_embedded": "boolean",
         },
         "bigquery_table_name": "user_statistics",
         "cloud_sql_table_name": "enriched_user",
@@ -41,6 +45,9 @@ BQ_TABLES_CONFIG: Dict[str, Dict] = {
             "unique_id": "character varying",
             "is_sensitive": "boolean",
             "is_geolocated": "boolean",
+            "category": "character varying",
+            "subcategory_id": "character varying",
+            "search_group_name": "character varying",
             "new_offer_is_geolocated": "boolean",
             "new_offer_creation_days": "integer",
             "new_offer_stock_price": "decimal",
@@ -53,7 +60,10 @@ BQ_TABLES_CONFIG: Dict[str, Dict] = {
         "dataset_type": DatasetType.ML_RECO,
     },
     "non_recommendable_items_data": {
-        "columns": {"user_id": "character varying", "item_id": "character varying"},
+        "columns": {
+            "user_id": "character varying",
+            "item_id": "character varying",
+        },
         "bigquery_table_name": "user_booked_item",
         "cloud_sql_table_name": "non_recommendable_items_data",
         "dataset_type": DatasetType.ML_RECO,
@@ -91,6 +101,15 @@ BQ_TABLES_CONFIG: Dict[str, Dict] = {
         },
         "bigquery_table_name": "similar_artist",
         "cloud_sql_table_name": "similar_artist",
+        "dataset_type": DatasetType.EXPORT_RECO_CLOUDSQL,
+    },
+    "offer_metadata": {
+        "columns": {
+            "offer_id": "character varying",
+            "search_group_name": "character varying",
+        },
+        "bigquery_table_name": "offer_metadata",
+        "cloud_sql_table_name": "offer_metadata",
         "dataset_type": DatasetType.EXPORT_RECO_CLOUDSQL,
     },
 }

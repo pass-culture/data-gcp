@@ -3,20 +3,39 @@ version: 2
 models:
   - name: metrics_beneficiary__coverage
     description: "{{ doc('description__metrics_beneficiary__coverage') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - partition_month
+            - region_code
+            - department_code
+            - milestone_age
     columns:
       - name: partition_month
         description: "{{ doc('column__partition_month') }}"
-      - name: is_statistic_secret
-        description: "{{ doc('column__is_statistic_secret') }}"
+        data_tests:
+          - not_null
+
       - name: region_name
         description: "{{ doc('column__region_name') }}"
+
       - name: region_code
         description: "{{ doc('column__region_code') }}"
+
       - name: department_name
         description: "{{ doc('column__department_name') }}"
+
       - name: department_code
         description: "{{ doc('column__department_code') }}"
+        data_tests:
+          - not_null
+
       - name: milestone_age
         description: "{{ doc('column__milestone_age') }}"
+        data_tests:
+          - not_null
+
       - name: total_beneficiaries_last_12_months
         description: "{{ doc('column__total_users_last_12_months') }}"
+        data_tests:
+          - not_null

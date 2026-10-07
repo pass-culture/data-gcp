@@ -45,16 +45,31 @@ def plot_graphs(
 
         # Match Frequency Histogram
         plt.figure(figsize=(16, 9))
-        sns.histplot(
-            match_frequency_df["match_count"],
-            bins=range(1, int(match_frequency_df["match_count"].max()) + 2),
-            kde=False,
-            color="skyblue",
-        )
-        plt.title("Match Frequency Distribution")
-        plt.xlabel("Number of Matches per Offer")
-        plt.ylabel("Number of Offers")
-        plt.xticks(range(1, match_frequency_df["match_count"].max() + 1))
+        if match_frequency_df.empty:
+            # No matched offers: `.max()` would be NaN and `int(NaN)` raises.
+            # Emit a placeholder page instead of crashing the whole evaluation.
+            logger.warning("No matched offers; skipping match frequency histogram.")
+            plt.text(
+                0.5,
+                0.5,
+                "No matched offers",
+                ha="center",
+                va="center",
+                fontsize=20,
+            )
+            plt.axis("off")
+        else:
+            max_match_count = int(match_frequency_df["match_count"].max())
+            sns.histplot(
+                match_frequency_df["match_count"],
+                bins=range(1, max_match_count + 2),
+                kde=False,
+                color="skyblue",
+            )
+            plt.title("Match Frequency Distribution")
+            plt.xlabel("Number of Matches per Offer")
+            plt.ylabel("Number of Offers")
+            plt.xticks(range(1, max_match_count + 1))
         plt.tight_layout()
         pdf.savefig()
         plt.close()

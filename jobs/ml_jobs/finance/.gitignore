@@ -1,4 +1,4 @@
-*.ipynb
+notebooks/
 *.png
 *.csv
 *.xlsx

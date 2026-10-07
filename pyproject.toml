@@ -16,6 +16,7 @@ airflow = [
   "flask-openid>=1.3.1",
   "flask-oidc>=2.2.2",
   "typer",
+  "sqlglot",
   "deepdiff==8.6.2",
   "pyyaml==6.0.2",
   "numpy",
@@ -30,7 +31,7 @@ dbt = [
   "deepdiff==8.6.2",
 ]
 docs = [
-  "mkdocs-material==9.5.42",
+  "mkdocs-material>=9.7.7",
   "mkdocs-awesome-pages-plugin==2.9.3",
   "mkdocs-include-markdown-plugin",
   "mkdocs-llmstxt",
@@ -48,10 +49,18 @@ dev = [
   "sqlfluff==3.1.1",
   "sqlfluff-templater-dbt==3.1.1",
   "dotenv==0.9.9",
+  "tomlkit>=0.13.2",
 ]
 
 [tool.uv]
 default-groups = ["airflow", "dbt", 'dev', 'docs']
+constraint-dependencies = [
+  "aiohttp >= 3.14.3", # GHSA-cq5v-8q36-5273, and related aiohttp advisories
+  "tornado >= 6.5.8", # tornado security advisories
+  "cryptography >= 49.0.0", # cryptography security advisories
+  "pymdown-extensions >= 11.0.0", # pymdown-extensions security advisories
+  "apache-airflow-providers-google >= 22.3.0", # apache-airflow-providers-google security advisories
+]
 
 [tool.uv.workspace]
 exclude = ["jobs"] # allow to init new uv projects in these folders without --no-workspace flag

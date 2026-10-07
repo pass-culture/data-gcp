@@ -7,7 +7,7 @@ We use DuckDB to handle the processing between GCS and CloudSQL directly in memo
 ## How to install and run the job
 
 ```bash
-uv pip install -r requirements.txt
+uv sync
 ```
 
 ## BigQuery to Cloud SQL

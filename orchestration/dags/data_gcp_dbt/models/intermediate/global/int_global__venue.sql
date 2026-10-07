@@ -18,6 +18,20 @@ with
             ) as last_collective_bookable_offer_date
         from {{ ref("int_history__bookable_venue") }}
         group by venue_id
+    ),
+
+    latest_siret_data as (
+        select *
+        from
+            (
+                select
+                    *,
+                    row_number() over (
+                        partition by siret order by update_date desc
+                    ) as row_num
+                from {{ source("clean", "siret_data") }}
+            ) as siret_ranked
+        where siret_ranked.row_num = 1
     )
 
 select
@@ -33,6 +47,8 @@ select
     v.venue_postal_code,
     v.venue_city,
     v.venue_city_code,
+    v.venue_municipality_code,
+    v.venue_municipality_label,
     v.venue_siret,
     v.venue_managing_offerer_id as offerer_id,
     v.venue_creation_date,
@@ -51,6 +67,8 @@ select
     v.venue_academy_name,
     v.venue_in_qpv,
     v.venue_in_zrr,
+    v.venue_in_frr,
+    v.venue_in_frr_plus,
     v.venue_rural_city_type,
     v.venue_density_label,
     v.venue_macro_density_label,
@@ -123,6 +141,7 @@ select
     ofr.is_synchro_adage,
     ofr.total_reimbursement_points,
     ofr.is_local_authority,
+    siret_data.activiteprincipaleetablissement as venue_business_activity_code,
     v.venue_id as partner_id,
     ofr.offerer_is_epn,
     coalesce(
@@ -171,4 +190,5 @@ from {{ ref("int_applicative__venue") }} as v
 left join
     {{ ref("int_global__offerer") }} as ofr
     on v.venue_managing_offerer_id = ofr.offerer_id
+left join latest_siret_data as siret_data on v.venue_siret = siret_data.siret
 left join bookable_offer_history as boh on v.venue_id = boh.venue_id

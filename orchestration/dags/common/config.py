@@ -24,9 +24,28 @@ GCS_AIRFLOW_BUCKET = os.environ.get(
     "GCS_BUCKET", f"airflow-data-bucket-{ENV_SHORT_NAME}"
 )
 
-AIRFLOW_NAMESPACE = f"airflow-{ENVIRONMENT_NAME}"
+
+def _default_airflow_namespace() -> str:
+    """Return the Kubernetes namespace used by Airflow pods.
+    This function will be removed once all projects are migrated to the new namespace.
+    """
+
+    if GCP_PROJECT_ID.startswith("pc-data-"):
+        return f"airflow-{ENV_SHORT_NAME}"
+
+    return f"airflow-{ENVIRONMENT_NAME}"
+
+
+AIRFLOW_NAMESPACE = os.environ.get("AIRFLOW_NAMESPACE", _default_airflow_namespace())
 
 SSH_USER = os.environ.get("SSH_USER", "airflow")
+
+# ComputeEngineSSHHook.get_conn() retries both transient SSHExceptions and 412
+# PRECONDITION FAILED errors (a fingerprint race on the instance's "ssh-keys"
+# metadata write) through this single counter, with a random 0-10s backoff
+# per attempt. The default of 10 is tuned for a normal SSH connect and is too
+# low when several concurrent tasks push keys to the same shared instance.
+SSH_HOOK_MAX_RETRIES = int(os.environ.get("SSH_HOOK_MAX_RETRIES", "20"))
 
 GCP_REGION = "europe-west1"
 GCE_ZONE = "europe-west1-b"
@@ -109,6 +128,9 @@ BIGQUERY_ANALYTICS_DATASET = os.environ.get(
 BIGQUERY_INT_APPLICATIVE_DATASET = os.environ.get(
     "BIGQUERY_INT_APPLICATIVE_DATASET", f"int_applicative_{ENV_SHORT_NAME}"
 )
+BIGQUERY_INT_GLOBAL_DATASET = os.environ.get(
+    "BIGQUERY_INT_GLOBAL_DATASET", f"int_global_{ENV_SHORT_NAME}"
+)
 BIGQUERY_INT_FIREBASE_DATASET = os.environ.get(
     "BIGQUERY_INT_FIREBASE_DATASET", f"int_firebase_{ENV_SHORT_NAME}"
 )
@@ -130,6 +152,7 @@ BIGQUERY_ML_OFFER_CATEGORIZATION_DATASET = f"ml_offer_categorization_{ENV_SHORT_
 BIGQUERY_ML_PREPROCESSING_DATASET = f"ml_preproc_{ENV_SHORT_NAME}"
 BIGQUERY_ML_RECOMMENDATION_DATASET = f"ml_reco_{ENV_SHORT_NAME}"
 BIGQUERY_ML_RETRIEVAL_DATASET = f"ml_retrieval_{ENV_SHORT_NAME}"
+BIGQUERY_ML_SEMANTIC_EMBEDDING_DATASET = f"ml_semantic_embedding_{ENV_SHORT_NAME}"
 BIGQUERY_INT_RAW_DATASET = os.environ.get(
     "BIGQUERY_INT_RAW_DATASET", f"int_raw_{ENV_SHORT_NAME}"
 )

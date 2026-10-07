@@ -1,3 +1,4 @@
+-- noqa: disable=all
 {{
     config(
         **custom_incremental_config(
@@ -49,7 +50,7 @@ with
             gcp.partner_academy_name,
             gcp.partner_department_name,
             gcp.partner_epci_code,
-            gcp.partner_city_code,
+            gcp.partner_municipality_code,
             gcp.partner_type,
             gcp.offerer_id,
             gvt.venue_tag_name,
@@ -80,7 +81,7 @@ with
             gcp.partner_region_name,
             gcp.partner_academy_name,
             gcp.partner_department_name,
-            gcp.partner_city_code,
+            gcp.partner_municipality_code,
             gcp.partner_epci_code,
             min(co.collective_offer_creation_date) as first_template_offer_creation_date
         from {{ ref("mrt_global__cultural_partner") }} as gcp
@@ -93,7 +94,7 @@ with
             partner_region_name,
             partner_academy_name,
             partner_department_name,
-            partner_city_code,
+            partner_municipality_code,
             partner_epci_code
     ),
 
@@ -103,7 +104,7 @@ with
             partner_academy_name,
             partner_department_name,
             partner_epci_code,
-            partner_city_code,
+            partner_municipality_code,
             date_trunc(first_template_offer_creation_date, month) as partition_month,
             count(distinct partner_id) as monthly_new_partners_with_template_offers
         from partner_with_template_offers
@@ -113,7 +114,7 @@ with
             partner_academy_name,
             partner_department_name,
             partner_epci_code,
-            partner_city_code
+            partner_municipality_code
     ),
 
     cumul_partner_template as (
@@ -122,7 +123,7 @@ with
             partner_region_name,
             partner_academy_name,
             partner_department_name,
-            partner_city_code,
+            partner_municipality_code,
             partner_epci_code,
             coalesce(
                 sum(monthly_new_partners_with_template_offers) over (
@@ -131,7 +132,7 @@ with
                         partner_academy_name,
                         partner_department_name,
                         partner_epci_code,
-                        partner_city_code
+                        partner_municipality_code
                     order by partition_month asc
                 ),
                 0

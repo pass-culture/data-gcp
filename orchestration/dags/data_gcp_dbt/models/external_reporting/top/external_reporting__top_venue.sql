@@ -1,3 +1,4 @@
+-- noqa: disable=all
 {{
     config(
         **custom_incremental_config(
@@ -21,7 +22,7 @@ with
             venue_region_name,
             venue_department_name,
             venue_epci_code,
-            venue_city_code,
+            venue_municipality_code,
             sum(booking_intermediary_amount) as total_venue_booking_amount
         from {{ ref("mrt_global__booking") }}
         where
@@ -39,7 +40,7 @@ with
             venue_region_name,
             venue_department_name,
             venue_epci_code,
-            venue_city_code
+            venue_municipality_code
     ),
 
     all_dimensions as (

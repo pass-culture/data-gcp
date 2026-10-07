@@ -9,4 +9,6 @@ SELECT
     , "bookingLimitDatetime" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_stock_booking_limit_date_time
     , "numberOfTickets" AS collective_stock_number_of_tickets
     , "priceDetail" AS collective_stock_price_detail
+    , "numberOfTeachers" AS collective_stock_number_of_teachers
+    , "servicePrice" AS collective_stock_service_price
 FROM public.collective_stock

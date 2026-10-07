@@ -114,7 +114,11 @@ class ProphetModel(ForecastModel):
                 - Dictionary with backtest metrics
                 - DataFrame with backtest forecast
         """
-        metrics, backtest_forecast = backtest_pipeline(df_backtest=self.data_split.backtest, model=self.model)
+        metrics, backtest_forecast = backtest_pipeline(
+            df_backtest=self.data_split.backtest,
+            model=self.model,
+            freq=self.config.evaluation.freq,
+        )
 
         return metrics, backtest_forecast
 

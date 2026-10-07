@@ -1,0 +1,53 @@
+version: 2
+
+models:
+  - name: int_pcapi__bonus_log
+    description: "{{ doc('description__int_pcapi__bonus_log') }}"
+    columns:
+      - name: partition_date
+        description: "{{ doc('column__partition_date') }}"
+        data_tests:
+          - not_null:
+              config:
+                where: "partition_date > date_sub('{{ var('ds', modules.datetime.date.today().strftime('%Y-%m-%d')) }}', interval 14 day)"
+      - name: log_started_at
+        description: "{{ doc('column__log_started_at') }}"
+        data_tests:
+          - not_null:
+              config:
+                where: "partition_date > date_sub('{{ var('ds', modules.datetime.date.today().strftime('%Y-%m-%d')) }}', interval 14 day)"
+
+      - name: log_ended_at
+        description: "{{ doc('column__log_ended_at') }}"
+        data_tests:
+          - not_null:
+              config:
+                where: "partition_date > date_sub('{{ var('ds', modules.datetime.date.today().strftime('%Y-%m-%d')) }}', interval 14 day)"
+
+      - name: bonus_type
+        description: "{{ doc('column__bonus_type') }}"
+
+      - name: status
+        description: "{{ doc('column__status') }}"
+        data_tests:
+          - not_null:
+              config:
+                where: "partition_date > date_sub('{{ var('ds', modules.datetime.date.today().strftime('%Y-%m-%d')) }}', interval 14 day)"
+          - accepted_values:
+              arguments:
+                values: ['grant', 'error', 'attempt']
+              config:
+                where: "partition_date > date_sub('{{ var('ds', modules.datetime.date.today().strftime('%Y-%m-%d')) }}', interval 14 day)"
+
+      - name: error_reason
+        description: "{{ doc('column__error_reason') }}"
+
+      - name: attempts_count
+        description: "{{ doc('column__attempts_count') }}"
+
+      - name: total_requests
+        description: "{{ doc('column__total_requests') }}"
+        data_tests:
+          - not_null:
+              config:
+                where: "partition_date > date_sub('{{ var('ds', modules.datetime.date.today().strftime('%Y-%m-%d')) }}', interval 14 day)"

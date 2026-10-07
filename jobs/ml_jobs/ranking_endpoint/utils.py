@@ -41,13 +41,23 @@ def save_experiment(experiment_name, model_name, serving_container, run_id):
 
 
 def deploy_container(serving_container):
-    command = f"sh ./deploy_to_docker_registery.sh {serving_container}"
-    results = subprocess.Popen(
-        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    """Build and push the serving container to the Docker registry.
+
+    Streams the build/push logs live, then fails loudly if the underlying
+    shell script exits non-zero,
+
+    Raises:
+        subprocess.CalledProcessError: If the deploy script exits non-zero.
+    """
+    command = ["sh", "./deploy_to_docker_registry.sh", serving_container]
+    process = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
-    # TODO handle errors
-    for line in results.stdout:
+    for line in process.stdout:
         print(line.rstrip().decode("utf-8"))
+    return_code = process.wait()
+    if return_code != 0:
+        raise subprocess.CalledProcessError(return_code, command)
 
 
 def generate_jwt_payload(service_account_email: str, resource_url: str) -> str:

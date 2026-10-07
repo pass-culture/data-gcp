@@ -20,6 +20,8 @@ select
     v.venue_epci_code as partner_epci_code,
     v.venue_city as partner_city,
     v.venue_city_code as partner_city_code,
+    v.venue_municipality_code as partner_municipality_code,
+    v.venue_municipality_label as partner_municipality_label,
     v.venue_postal_code as partner_postal_code,
     v.venue_type_label as partner_type,
     "venue_type_label" as partner_type_origin,
@@ -60,5 +62,5 @@ left join
     on v.venue_type_label = agg_partner_cultural_sector.partner_type
 where
     (v.venue_is_open_to_public or v.venue_siret is not null or v.venue_is_permanent)
-    and offerer_validation_status = "VALIDATED"
-    and offerer_is_active
+    and v.offerer_validation_status = "VALIDATED"
+    and v.offerer_is_active

@@ -1,0 +1,11 @@
+.venv/
+.git/
+__pycache__/
+*.py[cod]
+
+cli/
+src/
+tests/
+README.md
+Makefile
+deploy_to_docker_registery.sh

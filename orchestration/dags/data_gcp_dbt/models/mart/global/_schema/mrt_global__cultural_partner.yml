@@ -96,3 +96,7 @@ models:
         description: "{{ doc('column__partner_epci') }}"
       - name: partner_city
         description: "{{ doc('column__partner_city') }}"
+      - name: partner_municipality_code
+        description: "{{ doc('column__partner_municipality_code') }}"
+      - name: partner_municipality_label
+        description: "{{ doc('column__partner_municipality_label') }}"

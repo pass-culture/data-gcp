@@ -1,6 +1,3 @@
-drop function if exists get_recommendable_offers_raw_{{ ts_nodash }}
-cascade
-;
 create or replace function get_recommendable_offers_raw_{{ ts_nodash }} ()
 returns
     table(
@@ -15,6 +12,9 @@ returns
         venue_geo geography,
         default_max_distance integer,
         unique_id varchar,
+        category varchar,
+        subcategory_id varchar,
+        search_group_name varchar,
         new_offer_is_geolocated boolean,
         new_offer_creation_days integer,
         new_offer_stock_price decimal,
@@ -37,6 +37,9 @@ BEGIN
         ST_MakePoint(ro.venue_longitude, ro.venue_latitude)::geography as venue_geo,
         ro.default_max_distance,
         ro.unique_id,
+        ro.category,
+        ro.subcategory_id,
+        ro.search_group_name,
         ro.new_offer_is_geolocated,
         ro.new_offer_creation_days,
         ro.new_offer_stock_price,
@@ -94,4 +97,39 @@ ALTER MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_mv_tmp
     RENAME TO recommendable_offers_raw_mv;
 DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_mv_old;
 commit
+;
+
+-- Cleanup orphaned functions left by previous runs (scheduled or manual).
+-- The function still backing the freshly renamed materialized view is
+-- automatically preserved: DROP FUNCTION without CASCADE fails while a
+-- dependent object exists, so it is simply skipped.
+create or replace function
+    cleanup_get_recommendable_offers_raw_functions_{{ ts_nodash }} ()
+returns void
+as $body$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN
+        SELECT p.oid::regprocedure AS func_sig
+        FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+          AND p.proname ~ '^get_recommendable_offers_raw_[0-9]{14}$'
+    LOOP
+        BEGIN
+            EXECUTE format('DROP FUNCTION %s', r.func_sig);
+        EXCEPTION WHEN dependent_objects_still_exist THEN
+            -- still referenced by the current materialized view, skip it
+            NULL;
+        END;
+    END LOOP;
+END;
+$body$
+language plpgsql
+;
+
+select cleanup_get_recommendable_offers_raw_functions_{{ ts_nodash }} ()
+;
+drop function cleanup_get_recommendable_offers_raw_functions_{{ ts_nodash }} ()
 ;

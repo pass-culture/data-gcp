@@ -1,0 +1,66 @@
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX schema: <http://schema.org/>
+{% import "_macros.rq.j2" as m %}
+{% set scope = m.values_scope(wikidata_ids) %}
+
+{#
+  Pass 2 (Hydration) of the two-pass discovery+hydration pattern (see
+  extract_discovery.rq.j2 for Pass 1). Fetches labels/description/image/
+  wikipedia/birth date/professions/genres/languages/aliases for an explicit,
+  client-supplied list of entities (`wikidata_ids`), scoped via VALUES.
+
+  Each multi-valued field is computed in its own subquery rather than joined
+  together in one scope. A flat, single-scope version was tried first and
+  measured empirically: for the same 2,000 real entities, the flat form was
+  rejected by QLever after 42s ("Sort ... on ?genreLbl"), while this isolated
+  form completed in 3.6s. Joining multiple multi-valued OPTIONALs in one scope
+  makes SPARQL compute their full cross-product per entity (aliases_fr x
+  aliases_en x professions x genres x languages) before GROUP_CONCAT(DISTINCT)
+  collapses it back down — for a batch of any real size, that consistently
+  costs more than doing five separate, smaller sorts. Isolating avoids it
+  entirely, and unlike extract_artists.rq.j2 (which pays a real cost re-deriving
+  a broad entity-type+property filter inside each subquery for a huge,
+  ID-range-scoped population), doing that here is cheap regardless: every
+  subquery just re-states the same small VALUES list.
+
+  src/extraction/wikidata_extraction.py's hydrate_batch bisects a batch and retries if
+  QLever still rejects it (rare in practice, but a single very richly-aliased
+  entity can in principle exceed even this pattern's budget on its own) — down
+  to a single entity, which is skipped (loudly) rather than blocking the whole
+  extraction if it's ever rejected in isolation too.
+#}
+SELECT
+  ?wikidata_id
+  ?artist_name_fr
+  ?artist_name_en
+  ?artist_description
+  ?wikipedia_url
+  ?img
+  ?aliases_fr
+  ?aliases_en
+  ?professions
+  ?genres
+  ?languages_spoken
+  ?birth_date_val
+WHERE {
+  {{ scope }}
+
+  {{ m.labels_description_image() }}
+
+  {{ m.birth_date(scope) }}
+
+  {{ m.multi_valued_literal(scope, "skos:altLabel", "fr", "alias_fr", "aliases_fr") }}
+
+  {{ m.multi_valued_literal(scope, "skos:altLabel", "en", "alias_en", "aliases_en") }}
+
+  {{ m.multi_valued_labeled(scope, "wdt:P106", "prof", "profLbl", "professions", "fr") }}
+
+  {{ m.multi_valued_labeled(scope, "wdt:P136", "genre", "genreLbl", "genres", "fr") }}
+
+  {{ m.multi_valued_labeled(scope, "wdt:P1412", "lang", "langLbl", "languages_spoken", "fr") }}
+
+  {{ m.wikipedia_url() }}
+}

@@ -65,10 +65,6 @@ models:
         description: "{{ doc('column__offer_category_id') }}"
         data_tests:
           - not_null
-      - name: item_image_embedding
-        description: "{{ doc('column__embedding_offer_image') }}"
-      - name: item_semantic_content_hybrid_embedding
-        description: "{{ doc('column__embedding_offer_hybrid') }}"
       - name: item_names
         description: "{{ doc('column__offer_name') }}"
       - name: item_favourite_cnt

@@ -112,7 +112,7 @@ dbt_test = PythonOperator(
     python_callable=partial(
         run_dbt_quality_tests,
         select=None,  # No specific selection, will test all
-        exclude="audit tag:export tag:weekly tag:monthly",  #
+        exclude="audit tag:export tag:weekly tag:monthly tag:monthly_15",  #
     ),
     dag=dag,
 )

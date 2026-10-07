@@ -46,6 +46,7 @@ with
             gcp.partner_department_code,
             gcp.partner_epci_code,
             gcp.partner_city_code,
+            gcp.partner_municipality_code,
             gcp.partner_type,
             gcp.offerer_id,
             gvt.venue_tag_name,
@@ -79,6 +80,7 @@ with
             partner_department_code,
             partner_epci_code,
             partner_city_code,
+            partner_municipality_code,
             partition_month,
             count(
                 distinct case
@@ -157,7 +159,8 @@ with
             partner_department_name,
             partner_department_code,
             partner_epci_code,
-            partner_city_code
+            partner_city_code,
+            partner_municipality_code
     )
 
 select
@@ -168,6 +171,7 @@ select
     partner_department_code,
     partner_epci_code,
     partner_city_code,
+    partner_municipality_code,
     total_active_partners_individual,
     total_active_partners_collective,
     total_active_partners_global,
@@ -179,4 +183,4 @@ select
     total_cumulative_activated_partners_collective_only,
     total_cumulative_activated_partners_dual_part
 from monthly_aggregated_kpis
-where partner_city_code is not null
+where partner_municipality_code is not null

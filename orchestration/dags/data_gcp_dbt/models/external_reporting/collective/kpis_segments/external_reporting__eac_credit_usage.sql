@@ -1,3 +1,4 @@
+-- noqa: disable=all
 {{
     config(
         **custom_incremental_config(
@@ -26,8 +27,8 @@
     },
     {
         "name": "COM",
-        "value_expr": "institution_city_code",
-        "value_filter": "venue_city_code",
+        "value_expr": "institution_municipality_code",
+        "value_filter": "venue_municipality_code",
     },
     {
         "name": "EPCI",
@@ -66,12 +67,12 @@ with
             institution_region_name,
             institution_academy_name,
             institution_department_name,
-            institution_city_code,
+            institution_municipality_code,
             institution_epci_code,
             venue_region_name,
             venue_academy_name,
             venue_department_name,
-            venue_city_code,
+            venue_municipality_code,
             venue_epci_code
         from {{ ref("mrt_global__collective_booking") }}
         where collective_booking_status = 'REIMBURSED' and scholar_year is not null
@@ -99,12 +100,12 @@ with
             ad.institution_region_name,
             ad.institution_academy_name,
             ad.institution_department_name,
-            ad.institution_city_code,
+            ad.institution_municipality_code,
             ad.institution_epci_code,
             ad.venue_region_name,
             ad.venue_academy_name,
             ad.venue_department_name,
-            ad.venue_city_code,
+            ad.venue_municipality_code,
             ad.venue_epci_code,
             am.partition_month
         from all_dimensions as ad
@@ -117,12 +118,12 @@ with
             institution_region_name,
             institution_academy_name,
             institution_department_name,
-            institution_city_code,
+            institution_municipality_code,
             institution_epci_code,
             venue_region_name,
             venue_academy_name,
             venue_department_name,
-            venue_city_code,
+            venue_municipality_code,
             venue_epci_code,
             date_trunc(date(collective_booking_used_date), month) as partition_month,
             sum(booking_amount) as total_amount_spent_reimbursed,
@@ -134,12 +135,12 @@ with
             institution_region_name,
             institution_academy_name,
             institution_department_name,
-            institution_city_code,
+            institution_municipality_code,
             institution_epci_code,
             venue_region_name,
             venue_academy_name,
             venue_department_name,
-            venue_city_code,
+            venue_municipality_code,
             venue_epci_code,
             partition_month
     ),
@@ -151,12 +152,12 @@ with
             cg.institution_region_name,
             cg.institution_academy_name,
             cg.institution_department_name,
-            cg.institution_city_code,
+            cg.institution_municipality_code,
             cg.institution_epci_code,
             cg.venue_region_name,
             cg.venue_academy_name,
             cg.venue_department_name,
-            cg.venue_city_code,
+            cg.venue_municipality_code,
             cg.venue_epci_code,
             cg.partition_month,
             coalesce(
@@ -170,12 +171,12 @@ with
                 institution_region_name,
                 institution_academy_name,
                 institution_department_name,
-                institution_city_code,
+                institution_municipality_code,
                 institution_epci_code,
                 venue_region_name,
                 venue_academy_name,
                 venue_department_name,
-                venue_city_code,
+                venue_municipality_code,
                 venue_epci_code,
                 partition_month
             )
@@ -188,12 +189,12 @@ with
             institution_region_name,
             institution_academy_name,
             institution_department_name,
-            institution_city_code,
+            institution_municipality_code,
             institution_epci_code,
             venue_region_name,
             venue_academy_name,
             venue_department_name,
-            venue_city_code,
+            venue_municipality_code,
             venue_epci_code,
             partition_month,
             total_amount_spent_reimbursed,
@@ -204,12 +205,12 @@ with
                     institution_region_name,
                     institution_academy_name,
                     institution_department_name,
-                    institution_city_code,
+                    institution_municipality_code,
                     institution_epci_code,
                     venue_region_name,
                     venue_academy_name,
                     venue_department_name,
-                    venue_city_code,
+                    venue_municipality_code,
                     venue_epci_code
                 order by partition_month
                 rows unbounded preceding
@@ -220,12 +221,12 @@ with
                     institution_region_name,
                     institution_academy_name,
                     institution_department_name,
-                    institution_city_code,
+                    institution_municipality_code,
                     institution_epci_code,
                     venue_region_name,
                     venue_academy_name,
                     venue_department_name,
-                    venue_city_code,
+                    venue_municipality_code,
                     venue_epci_code
                 order by partition_month
                 rows unbounded preceding

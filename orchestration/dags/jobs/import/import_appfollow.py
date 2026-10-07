@@ -49,21 +49,33 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "n_days": Param(
-            default=-10,
-            type="integer",
-            description="Number of days to go back from the execution date for the start date (e.g., -1 for yesterday).",
+        # AppFollow API is billed in credits (500/month): reviews cost 10 per page of
+        # 100 reviews, ratings cost 10 + 10 per 30 days of range per app. Scheduled runs
+        # only import the last 7 days (~60 credits/run); use start_date/end_date for
+        # backfills, ideally one month at a time to spread the credits.
+        "start_date": Param(
+            default=None,
+            type=["null", "string"],
+            format="date",
+            description="Backfill start date (YYYY-MM-DD). Empty: 7 days before the run date.",
         ),
-        "n_index": Param(
-            default=0,
-            type="integer",
-            description="Offset in days from the execution date for the end date (e.g., 0 for the execution date, -1 for yesterday).",
+        "end_date": Param(
+            default=None,
+            type=["null", "string"],
+            format="date",
+            description="Backfill end date (YYYY-MM-DD). Empty: the run date.",
         ),
         "platform": Param(
             default="both",
             type="string",
             enum=["both", "ios", "android"],
             description="Platform to import",
+        ),
+        "dataset": Param(
+            default="all",
+            type="string",
+            enum=["all", "reviews", "ratings"],
+            description="Data to import: reviews, ratings (store rating history) or all",
         ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
@@ -72,7 +84,10 @@ with DAG(
         task_id="branch_platform",
         python_callable=choose_platform_to_run,
     )
+    previous_task = branch_platform
     for platform, ext_id in APPS.items():
+        # Platforms run sequentially: each pod deletes then appends its own app rows
+        # in shared tables, so avoid concurrent DML on the same partitions.
         task = CustomKubernetesPodOperator(
             task_id=f"appfollow_etl_{platform}",
             orchestration_mode="celery",
@@ -85,12 +100,17 @@ with DAG(
             arguments=[
                 "main.py",
                 "--start-date",
-                "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_days) }}",
+                "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ params.start_date or add_days(base, -7) }}",
                 "--end-date",
-                "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ add_days(base, params.n_index) }}",
+                "{% set base = yesterday() if dag_run.run_type == 'manual' else ds %}{{ params.end_date or base }}",
                 "--ext-id",
                 ext_id,
+                "--dataset",
+                "{{ params.dataset }}",
             ],
             container_resources=DEFAULT_CONTAINER_RESOURCES,
+            trigger_rule="none_failed_min_one_success",
         )
         branch_platform >> task
+        previous_task >> task
+        previous_task = task

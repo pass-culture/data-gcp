@@ -12,6 +12,10 @@ models:
         description: "{{ doc('column__institution_name') }}"
       - name: institution_city_code
         description: "{{ doc('column__institution_city_code') }}"
+      - name: institution_municipality_code
+        description: "{{ doc('column__institution_municipality_code') }}"
+      - name: institution_municipality_label
+        description: "{{ doc('column__institution_municipality_label') }}"
       - name: institution_city
         description: "{{ doc('column__institution_city') }}"
       - name: institution_department_code

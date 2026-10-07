@@ -1,2 +1,2 @@
-dag_in_paris:
-  - import_gsheet
+dags_in_paris:
+  import_gsheet:  # full refresh -> no tables to copy

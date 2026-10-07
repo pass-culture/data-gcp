@@ -6,7 +6,7 @@ import yaml
 
 app = typer.Typer()
 
-MIGRATED_DAGS_KEY = "dag_in_paris"
+MIGRATED_DAGS_KEY = "dags_in_paris"
 
 
 def _repo_root() -> Path:
@@ -34,7 +34,7 @@ def _load_migrated_dags() -> list[str]:
         )
         raise typer.Exit(code=1)
 
-    return config[MIGRATED_DAGS_KEY]
+    return list(config[MIGRATED_DAGS_KEY])
 
 
 @app.command()

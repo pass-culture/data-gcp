@@ -15,3 +15,6 @@ from {{ source("raw", "applicative_database_offerer_address") }} as oa
 left join
     {{ source("raw", "applicative_database_address") }} as a
     on oa.address_id = a.address_id
+left join
+    {{ source("raw", "applicative_database_venue") }} as v on oa.venue_id = v.venue_id
+where not v.venue_is_soft_deleted

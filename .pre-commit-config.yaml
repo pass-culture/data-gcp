@@ -5,7 +5,7 @@ default_install_hook_types:
   - pre-push
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -30,7 +30,7 @@ repos:
         stages: [pre-commit]
         additional_dependencies: [ruff==0.5.7]
   - repo: https://github.com/tconbeer/sqlfmt
-    rev: v0.29.0
+    rev: v0.32.0
     hooks:
       - id: sqlfmt
         language_version: python
@@ -38,7 +38,7 @@ repos:
         exclude: orchestration/dags/dependencies/applicative_database/sql/raw/.*\.sql$|orchestration/dags/data_gcp_dbt/snapshots/.*\.sql$
 
   - repo: https://github.com/sqlfluff/sqlfluff
-    rev: 3.3.0
+    rev: 4.4.0
     hooks:
       - id: sqlfluff-fix
         additional_dependencies:
@@ -46,14 +46,14 @@ repos:
         stages: [pre-commit]
 
   - repo: https://github.com/gitguardian/ggshield
-    rev: v1.42.0
+    rev: v1.55.0
     hooks:
       - id: ggshield
         language_version: python3
         stages: [pre-commit]
 
   - repo: https://github.com/owenlamont/uv-secure
-    rev: 0.16.0
+    rev: v0.17.2
     hooks:
       - id: uv-secure
         verbose: true
@@ -62,7 +62,7 @@ repos:
         entry: bash -c 'uv-secure "$@" || true' --
 
   - repo: https://github.com/semgrep/pre-commit
-    rev: '33d4462c25147807aaa122d613a04d9fbd5f4840' # v1.156.0
+    rev: 'v1.179.0' # v1.156.0
     hooks:
       - id: semgrep
         entry: env -u GIT_DIR -u GIT_INDEX_FILE semgrep

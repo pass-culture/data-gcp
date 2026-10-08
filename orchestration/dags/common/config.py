@@ -7,18 +7,44 @@ from pydantic import BaseModel, ConfigDict
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
-ENVIRONMENT_NAME = {
-    "dev": "development",
-    "stg": "staging",
-    "prod": "production",
-}[ENV_SHORT_NAME]
 DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags/")
 LOCAL_ENV = os.environ.get("LOCAL_ENV", None)
-AIRFLOW_URI = {
-    "dev": "airflow-dev.data.ehp.passculture.team",
-    "stg": "airflow-stg.data.ehp.passculture.team",
-    "prod": "airflow.data.passculture.team",
-}[ENV_SHORT_NAME]
+
+
+def _default_environment_name() -> str:
+    """Return the full environment name based on the short name."""
+    if GCP_PROJECT_ID.startswith("pc-data-"):
+        return {
+            "tst": "tst",
+            "stg": "stg",
+            "prd": "prd",
+        }[ENV_SHORT_NAME]
+    return {
+        "dev": "development",
+        "stg": "staging",
+        "prod": "production",
+    }[ENV_SHORT_NAME]
+
+
+ENVIRONMENT_NAME = os.environ.get("ENVIRONMENT_NAME", _default_environment_name())
+
+
+def _default_airflow_uri() -> str:
+    """Airflow web host."""
+    if GCP_PROJECT_ID.startswith("pc-data-"):
+        return {
+            "tst": "airflow.tst.data.passculture.team",
+            "stg": "airflow.stg.data.passculture.team",
+            "prd": "airflow.prd.data.passculture.team",
+        }[ENV_SHORT_NAME]
+    return {
+        "dev": "airflow-dev.data.ehp.passculture.team",
+        "stg": "airflow-stg.data.ehp.passculture.team",
+        "prod": "airflow.data.passculture.team",
+    }[ENV_SHORT_NAME]
+
+
+AIRFLOW_URI = os.environ.get("AIRFLOW_URI", _default_airflow_uri())
 
 GCS_AIRFLOW_BUCKET = os.environ.get(
     "GCS_BUCKET", f"airflow-data-bucket-{ENV_SHORT_NAME}"
@@ -162,12 +188,6 @@ BIGQUERY_TMP_DATASET = os.environ.get("BIGQUERY_TMP_DATASET", f"tmp_{ENV_SHORT_N
 
 APPLICATIVE_PREFIX = "applicative_database_"
 
-if ENV_SHORT_NAME == "prod":
-    MEDIATION_URL = "passculture-metier-prod-production"
-elif ENV_SHORT_NAME == "stg":
-    MEDIATION_URL = "passculture-metier-ehp-staging"
-else:
-    MEDIATION_URL = "passculture-metier-ehp-testing"
 
 if LOCAL_ENV is not None:
     PATH_TO_DBT_PROJECT = "/opt/airflow/dags/data_gcp_dbt"
@@ -271,8 +291,10 @@ UV_VERSION = "0.11.5"
 
 ENV_EMOJI = {
     "prod": ":volcano: *PROD* :volcano:",
+    "prd": ":volcano: *PROD* :volcano:",
     "stg": ":fire: *STAGING* :fire:",
     "dev": ":snowflake: *DEV* :snowflake:",
+    "tst": ":snowflake: *DEV* :snowflake:",
 }
 
 

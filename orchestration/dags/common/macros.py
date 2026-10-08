@@ -23,7 +23,6 @@ from common.config import (
     BIGQUERY_TMP_DATASET,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    MEDIATION_URL,
 )
 
 
@@ -121,6 +120,5 @@ default = {
     "add_days": add_days,
     "create_humanize_id_function": create_humanize_id_function,
     "create_dehumanize_id_function": create_dehumanize_id_function,
-    "mediation_url": MEDIATION_URL,
     "applicative_external_connection_id": APPLICATIVE_EXTERNAL_CONNECTION_ID,
 }

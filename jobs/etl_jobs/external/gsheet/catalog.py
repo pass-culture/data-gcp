@@ -38,6 +38,10 @@ SHEETS = {
             "1AwclRi49IJaTO3CfjegYu9siYFVobA839vNhYjsEgeM",  # MENJ Provisional (2024-2025)
             "1DVneUFuBhQTQS6I8tN1pcOuelsglwOyBnKVsQn4MlE8",  # MA Provisional (2024-2025)
             "1J5l4zsGJiKLmYV68EjnsiN_8X7BFkR48fIecFgzhdkU",  # Historical DATA
+            "11Emn8ULTkbdRwN1axONNPLh8HP6SCSjJQIAuWmpJcmk",  # MA Final (2026-2027)
+            "12sRqmsz1yZtJmLakpdvTWcizQgRlsVxH0e-XL4-BnOU",  # MASA Final (2026-2027)
+            "1kbRGnSgVeEw2RNq5VnJCigJhgQec3cCsE_8BFo36EkE",  # MENJ Final (2026-2027)
+            "1qzEO5zsCFr4IcBzBgE67dx3ZunPwC27yqNumdz82qxw",  # SEM Final (2026-2027)
         ],
         "expected_headers_dict": {
             "Année scolaire": "school_year",

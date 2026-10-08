@@ -93,7 +93,9 @@ with
     )
 
 select
-    generate_session.* except (session_num, session_start, rnk, same_session, session_sum),
+    generate_session.* except (
+        session_num, session_start, rnk, same_session, session_sum
+    ),
     ref.log_name,
     to_hex(
         md5(concat(cast(session_start as string), user_id, session_num))

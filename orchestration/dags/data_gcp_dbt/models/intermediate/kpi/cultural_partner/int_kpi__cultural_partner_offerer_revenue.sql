@@ -56,7 +56,11 @@ select
     used_bookings.municipality_code,
     -- ZZZZZZZZZ is the INSEE code for municipalities outside any EPCI
     nullif(coalesce(geo.epci_code, booking_geo.epci_code), 'ZZZZZZZZZ') as epci_code,
-    coalesce(geo.department_code, booking_geo.department_code) as department_code,
+    {{
+        statistical_secret_department_code(
+            "coalesce(geo.department_code, booking_geo.department_code)"
+        )
+    }} as department_code,
     sum(used_bookings.revenue_amount) as total_revenue_amount
 from used_bookings
 inner join

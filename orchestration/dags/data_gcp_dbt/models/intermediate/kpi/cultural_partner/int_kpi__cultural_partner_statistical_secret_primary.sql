@@ -27,7 +27,15 @@ with
                     struct(
                         'country' as geo_level, 'FR' as geo_code, 'France' as geo_label
                     ),
-                    struct('department', geo.department_code, geo.department_name),
+                    struct(
+                        'department',
+                        {{ statistical_secret_department_code("geo.department_code") }},
+                        {{
+                            statistical_secret_department_label(
+                                "geo.department_code", "geo.department_name"
+                            )
+                        }}
+                    ),
                     struct('epci', geo.epci_code, geo.epci_label),
                     struct(
                         'municipality', geo.municipality_code, geo.municipality_label

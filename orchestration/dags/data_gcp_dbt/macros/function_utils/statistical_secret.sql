@@ -68,3 +68,21 @@
         )
     group by partition_month, booking_type, parent_code
 {% endmacro %}
+
+-- Overseas collectivities (COM) have no EPCI and very few partners: they are
+-- published as a single department-level cell, as INSEE usually does.
+{% macro statistical_secret_department_code(department_code) %}
+    if(
+        {{ department_code }} in ('975', '977', '978', '986', '987', '988'),
+        'COM',
+        {{ department_code }}
+    )
+{% endmacro %}
+
+{% macro statistical_secret_department_label(department_code, department_label) %}
+    if(
+        {{ department_code }} in ('975', '977', '978', '986', '987', '988'),
+        "Collectivités d'outre-mer",
+        {{ department_label }}
+    )
+{% endmacro %}

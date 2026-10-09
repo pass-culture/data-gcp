@@ -24,6 +24,8 @@ Municipalities below `statistical_secret_min_municipality_population` inhabitant
 2. within each department: EPCIs lying in that department only, and municipalities outside any EPCI (hiding an EPCI hides its municipalities),
 3. departments within France (hiding a department hides everything below it).
 
+Overseas collectivities (975, 977, 978, 986, 987, 988), which have no EPCI and very few partners, are grouped into a single department-level cell `COM` ("Collectivités d'outre-mer"). Their municipalities are still evaluated one by one.
+
 EPCIs spanning several departments never count as covering a department or France. The INSEE pseudo-EPCI `ZZZZZZZZZ` is treated as "no EPCI".
 
 **Remainder rows** (`*_remainder` levels) publish that residual, so that published children plus the remainder add up to the parent. They are covered by a data test asserting they are never secret.

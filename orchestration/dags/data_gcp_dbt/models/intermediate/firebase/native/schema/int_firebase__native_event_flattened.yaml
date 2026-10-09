@@ -42,6 +42,10 @@ models:
               arguments:
                 where_condition: "event_name = 'BookingConfirmation' AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
                 anomaly_threshold_alert_percentage: 5
+      - name: code
+        description: >-
+          Firebase `code` parameter. On `BookingError`, the API error that blocked the booking
+          (e.g. ALREADY_BOOKED, INSUFFICIENT_CREDIT, STOCK_NOT_BOOKABLE, PROVIDER_*).
       - name: offerId
         data_tests:
           - not_null_proportion:

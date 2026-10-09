@@ -37,7 +37,7 @@ with
                 municipalities.is_department_hidden, 0, candidates.candidate_rank
             ) as candidate_rank
         from
-            {{ ref("int_kpi__cultural_partner_offerer_window_revenue") }}
+            {{ ref("int_kpi__cultural_partner_offerer_period_revenue") }}
             as window_revenue
         inner join
             {{ ref("int_kpi__cultural_partner_statistical_secret_municipality") }}
@@ -180,7 +180,7 @@ with
             window_revenue.offerer_id,
             sum(window_revenue.revenue_amount) as revenue_amount
         from
-            {{ ref("int_kpi__cultural_partner_offerer_window_revenue") }}
+            {{ ref("int_kpi__cultural_partner_offerer_period_revenue") }}
             as window_revenue
         inner join
             municipality_final as municipalities
@@ -292,6 +292,15 @@ with
 
 select
     partition_month,
+    if(
+        booking_type = 'collective',
+        format(
+            '%d-%d',
+            extract(year from partition_month),
+            extract(year from partition_month) + 1
+        ),
+        cast(extract(year from partition_month) as string)
+    ) as period_label,
     booking_type,
     geo_level,
     geo_code,

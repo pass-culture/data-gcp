@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: int_kpi__cultural_partner_offerer_window_revenue
-    description: '{{ doc("description__int_kpi__cultural_partner_offerer_window_revenue") }}'
+  - name: int_kpi__cultural_partner_offerer_period_revenue
+    description: '{{ doc("description__int_kpi__cultural_partner_offerer_period_revenue") }}'
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:

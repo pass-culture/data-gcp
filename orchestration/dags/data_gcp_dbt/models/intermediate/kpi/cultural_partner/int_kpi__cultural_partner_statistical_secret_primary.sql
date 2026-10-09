@@ -55,7 +55,7 @@ with
             window_revenue.offerer_id,
             sum(window_revenue.revenue_amount) as revenue_amount
         from
-            {{ ref("int_kpi__cultural_partner_offerer_window_revenue") }}
+            {{ ref("int_kpi__cultural_partner_offerer_period_revenue") }}
             as window_revenue
         cross join
             unnest(

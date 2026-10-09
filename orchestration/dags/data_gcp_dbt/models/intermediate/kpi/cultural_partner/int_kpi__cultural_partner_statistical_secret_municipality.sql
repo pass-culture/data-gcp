@@ -16,7 +16,7 @@ with
     epci_departments as (
         select
             epci_code, count(distinct department_code) > 1 as is_epci_cross_department
-        from {{ ref("int_kpi__cultural_partner_offerer_window_revenue") }}
+        from {{ ref("int_kpi__cultural_partner_offerer_period_revenue") }}
         where epci_code is not null
         group by epci_code
     ),
@@ -24,7 +24,7 @@ with
     municipality_tree as (
         select distinct
             partition_month, booking_type, municipality_code, epci_code, department_code
-        from {{ ref("int_kpi__cultural_partner_offerer_window_revenue") }}
+        from {{ ref("int_kpi__cultural_partner_offerer_period_revenue") }}
     ),
 
     -- one row per municipality cell with the hidden status of each level above
@@ -103,7 +103,7 @@ with
             window_revenue.offerer_id,
             window_revenue.revenue_amount
         from
-            {{ ref("int_kpi__cultural_partner_offerer_window_revenue") }}
+            {{ ref("int_kpi__cultural_partner_offerer_period_revenue") }}
             as window_revenue
         inner join
             municipality_candidates as candidates
@@ -178,7 +178,7 @@ with
             window_revenue.revenue_amount,
             coalesce(candidates.candidate_rank, 0) as candidate_rank
         from
-            {{ ref("int_kpi__cultural_partner_offerer_window_revenue") }}
+            {{ ref("int_kpi__cultural_partner_offerer_period_revenue") }}
             as window_revenue
         inner join
             municipality_department_units as municipalities

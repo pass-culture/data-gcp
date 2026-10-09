@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: int_kpi__cultural_partner_offerer_period_revenue
+    description: '{{ doc("description__int_kpi__cultural_partner_offerer_period_revenue") }}'
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - partition_month
+              - booking_type
+              - offerer_id
+              - municipality_code

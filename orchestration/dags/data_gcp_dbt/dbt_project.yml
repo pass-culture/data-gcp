@@ -170,6 +170,11 @@ vars:
   snapshot_filter: "dbt_valid_to is null"
   full_refresh_lookback: "1 year"
   not_null_anomaly_threshold_alert_percentage: 1
+  statistical_secret_min_contributors: 3
+  statistical_secret_max_dominance_share: 0.85
+  statistical_secret_period_months: 12
+  statistical_secret_min_municipality_population: 0
+  statistical_secret_hide_all_rank: 1000000
   test_severity:
     dev: warn
     stg: warn

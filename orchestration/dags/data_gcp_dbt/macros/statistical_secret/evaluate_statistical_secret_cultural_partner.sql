@@ -1,13 +1,12 @@
 {% macro evaluate_statistical_secret(
-    booking_ref, date_column, amount_column, partner_type_column
+    booking_ref, date_column, amount_column, rolling_months=6
 ) %}
 
     {% set min_partners_threshold = var("statistical_secret_min_partners", 3) %}
     {% set max_concentration_threshold = var(
         "statistical_secret_max_concentration", 0.85
     ) %}
-    {% set rolling_months_count = var("statistical_secret_rolling_months", 6) %}
-    {% set rolling_interval_offset = rolling_months_count - 1 %}
+    {% set rolling_interval_offset = rolling_months - 1 %}
 
     with
         calendar_months as (

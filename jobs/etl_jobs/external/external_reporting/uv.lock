@@ -193,7 +193,6 @@ dependencies = [
     { name = "google-cloud-bigquery-storage" },
     { name = "google-cloud-secret-manager" },
     { name = "google-cloud-storage" },
-    { name = "logging" },
     { name = "numpy" },
     { name = "openpyxl" },
     { name = "pandas" },
@@ -216,7 +215,6 @@ requires-dist = [
     { name = "google-cloud-bigquery-storage", specifier = ">=2.36.2" },
     { name = "google-cloud-secret-manager", specifier = "==2.20.0" },
     { name = "google-cloud-storage", specifier = "==2.19.0" },
-    { name = "logging", specifier = ">=0.4.9.6" },
     { name = "numpy", specifier = ">=1.21.0" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "pandas", specifier = "==2.2.3" },
@@ -505,12 +503,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/72/34/14ca021ce8e5dfedc
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cb/b1/3846dd7f199d53cb17f49cba7e651e9ce294d8497c8c150530ed11865bb8/iniconfig-2.3.0-py3-none-any.whl", hash = "sha256:f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12", size = 7484, upload-time = "2025-10-18T21:55:41.639Z" },
 ]
-
-[[package]]
-name = "logging"
-version = "0.4.9.6"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/93/4b/979db9e44be09f71e85c9c8cfc42f258adfb7d93ce01deed2788b2948919/logging-0.4.9.6.tar.gz", hash = "sha256:26f6b50773f085042d301085bd1bf5d9f3735704db9f37c1ce6d8b85c38f2417", size = 96029, upload-time = "2013-06-04T23:43:22.086Z" }
 
 [[package]]
 name = "markdown-it-py"

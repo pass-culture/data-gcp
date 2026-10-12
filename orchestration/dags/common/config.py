@@ -57,7 +57,7 @@ def _default_airflow_namespace() -> str:
     """
 
     if GCP_PROJECT_ID.startswith("pc-data-"):
-        return f"airflow-{ENV_SHORT_NAME}"
+        return f"airflow-dags-rcs-{ENV_SHORT_NAME}"
 
     return f"airflow-{ENVIRONMENT_NAME}"
 

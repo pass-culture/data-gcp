@@ -122,6 +122,7 @@ with
                         "feedbackResponse",
                         "origin_detail",
                         "adviceType",
+                        "code",
                     ],
                 )
             }},

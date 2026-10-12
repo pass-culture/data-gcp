@@ -101,6 +101,5 @@ select
         md5(concat(cast(session_start as string), user_id, session_num))
     ) as session_id
 from generate_session
-left join
-    sandbox_prod.gsheet_backoffice_log_reference as ref
+left join {{ ref("int_seed__backoffice_log_reference") }} as ref
     on generate_session.message = ref.log_extract

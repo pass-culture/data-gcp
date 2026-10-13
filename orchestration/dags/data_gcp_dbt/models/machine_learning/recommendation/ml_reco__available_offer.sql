@@ -132,8 +132,8 @@ with
                 offer.offer_subcategory_id = 'LIVRE_PAPIER'
                 and offer.offer_product_id is null
             )
-            and not (offer.offer_subcategory_id = 'CARTE_CINE_ILLIMITE')
-            and not (offer.offer_subcategory_id = 'CARTES_CINEMA')
+            and offer.offer_subcategory_id
+            not in ('CARTE_CINE_ILLIMITE', 'CARTES_CINEMA', 'CARTE_CINE_MULTISEANCES')
         group by
             1,
             2,

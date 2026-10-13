@@ -98,3 +98,5 @@ models:
         description: "{{ doc('column__pct_jan_aug_reimbursed_amount_spent') }}"
       - name: pct_all_year_reimbursed_amount_spent
         description: "{{ doc('column__pct_all_year_reimbursed_amount_spent') }}"
+      - name: institution_department_name
+        description: "{{ doc('column__institution_department_name') }}"

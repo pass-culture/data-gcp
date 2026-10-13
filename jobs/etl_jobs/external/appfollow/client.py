@@ -24,6 +24,9 @@ class AppFollowClient:
     """
 
     BASE_API_URL = "https://api.appfollow.io/api/v2"
+    # Workspace holding our apps (title_normalized from GET /account/apps),
+    # required by /meta endpoints.
+    COLLECTION_NAME = "my-first-workspace"
 
     def __init__(self, api_token: SecretStr):
         self.api_token = api_token
@@ -158,6 +161,7 @@ class AppFollowClient:
         params = {
             "ext_id": ext_id,
             "store": store,
+            "collection_name": self.COLLECTION_NAME,
             "from": from_date,
             "to": to_date,
             "countries": countries or ["all"],

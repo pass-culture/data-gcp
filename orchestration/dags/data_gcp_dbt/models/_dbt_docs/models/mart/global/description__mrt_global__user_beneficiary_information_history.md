@@ -9,6 +9,8 @@ description: Description of the `mrt_global__user_beneficiary_information_histor
 
 The `mrt_global__user_beneficiary_information_history` table tracks historical changes to user beneficiary information over time.
 
+Built on `int_history__user_beneficiary_information_history`, whose geographic attributes (IRIS, EPCI, QPV, density, region) are localized from the city and postal code only, not the full geocoded address. Its density differs from the geocoded address's (`user_density_label` on the beneficiary tables) in about 20% of cases even without a move: do not treat the two as comparable. Getting « the address at date X » would require geocoding this history at the full address.
+
 {% enddocs %}
 
 This table captures when users modify their profile information (activity status, address, city, postal code), allowing analysis of user behavior patterns while protecting privacy by excluding PII fields.

@@ -31,6 +31,8 @@ select
     d.last_recredit_date,
     d.total_recredit,
     d.total_recredit_amount,
+    d.first_recredit_17_date,
+    d.first_recredit_18_date,
     d.total_theoretical_amount_spent,
     d.total_actual_amount_spent,
     d.total_theoretical_amount_spent_in_digital_goods,

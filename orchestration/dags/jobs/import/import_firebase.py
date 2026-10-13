@@ -100,7 +100,10 @@ for dag_type, params in dags.items():
         # Source exported in another region: query into a staging table in the
         # source region, then copy it to our region and load it into the final table.
         source_location = job_params.get("source_location", None)
-        staging_table = f"{job_params['destination_table']}_{dag_type}"
+        # suffixed with the run date so a run never overwrites the staging table of
+        # another run still in progress (daily retries span more than a day)
+        staging_table_prefix = f"{job_params['destination_table']}_{dag_type}"
+        staging_table = f"{staging_table_prefix}_" + "{{ ds_nodash }}"
         final_job_params = job_params
 
         # force this to include custom yyyymmdd
@@ -189,7 +192,7 @@ for dag_type, params in dags.items():
             dag=dag,
             table=f"load_{job_name_table}",
             job_params=dict(final_job_params, sql=f"{SQL_PATH}/raw/load_from_tmp.sql"),
-            extra_params={"tmp_table": staging_table},
+            extra_params={"tmp_table_prefix": staging_table_prefix},
         )
 
         (

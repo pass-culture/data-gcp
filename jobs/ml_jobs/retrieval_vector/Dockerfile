@@ -1,5 +1,4 @@
-
-FROM astral/uv:0.11-python3.11-trixie-slim
+FROM astral/uv:0.11-python3.12-trixie-slim
 ARG WORKERS=5
 
 # Create non-root user early so COPY --chown can reference it

@@ -1,0 +1,150 @@
+version: 2
+
+models:
+  - name: int_firebase__institutional_event_flattened
+    description: "{{ doc('description__int_firebase__institutional_event_flattened') }}"
+    columns:
+      - name: event_date
+        data_type: DATE
+        description: "{{ doc('column__event_date') }}"
+        data_tests:
+          - generic_has_no_missing_partitions:
+              arguments:
+                where_condition: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)"
+      - name: event_name
+        data_type: STRING
+        description: "{{ doc('column__event_name') }}"
+        data_tests:
+          - not_null:
+              config:
+                where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
+      - name: user_pseudo_id
+        data_type: STRING
+        description: "{{ doc('column__user_pseudo_id') }}"
+        data_tests:
+          - not_null:
+              config:
+                where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
+      - name: user_id
+        data_type: STRING
+        description: "{{ doc('column__user_id') }}"
+      - name: platform
+        data_type: STRING
+        description: "{{ doc('column__platform') }}"
+      - name: event_timestamp
+        data_type: TIMESTAMP
+        description: "{{ doc('column__event_timestamp') }}"
+      - name: user_first_touch_timestamp
+        data_type: TIMESTAMP
+        description: "{{ doc('column__institutional_event_user_first_touch_timestamp') }}"
+      - name: device_category
+        data_type: STRING
+        description: "{{ doc('column__user_device_category') }}"
+      - name: device_operating_system
+        data_type: STRING
+        description: "{{ doc('column__user_device_operating_system') }}"
+      - name: device_operating_system_version
+        data_type: STRING
+        description: "{{ doc('column__user_device_operating_system_version') }}"
+      - name: device_browser
+        data_type: STRING
+        description: "{{ doc('column__user_web_browser') }}"
+      - name: device_browser_version
+        data_type: STRING
+        description: "{{ doc('column__user_web_browser_version') }}"
+      - name: device_hostname
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_device_hostname') }}"
+      - name: geo_country
+        data_type: STRING
+        description: "{{ doc('column__user_country') }}"
+      - name: geo_region
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_geo_region') }}"
+      - name: geo_city
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_geo_city') }}"
+      - name: user_traffic_campaign
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_user_traffic_campaign') }}"
+      - name: user_traffic_medium
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_user_traffic_medium') }}"
+      - name: user_traffic_source
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_user_traffic_source') }}"
+      - name: ga_session_id
+        data_type: INT64
+        description: "{{ doc('column__institutional_event_ga_session_id') }}"
+      - name: ga_session_number
+        data_type: INT64
+        description: "{{ doc('column__session_number') }}"
+      - name: engagement_time_msec
+        data_type: INT64
+        description: "{{ doc('column__institutional_event_engagement_time_msec') }}"
+      - name: entrances
+        data_type: INT64
+        description: "{{ doc('column__institutional_event_entrances') }}"
+      - name: percent_scrolled
+        data_type: INT64
+        description: "{{ doc('column__institutional_event_percent_scrolled') }}"
+      - name: engaged_session_event
+        data_type: INT64
+        description: "{{ doc('column__institutional_event_engaged_session_event') }}"
+      - name: page_location
+        data_type: STRING
+        description: "{{ doc('column__page_location') }}"
+      - name: page_title
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_page_title') }}"
+      - name: page_referrer
+        data_type: STRING
+        description: "{{ doc('column__page_referrer') }}"
+      - name: origin
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_origin') }}"
+      - name: source
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_source') }}"
+      - name: medium
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_medium') }}"
+      - name: campaign
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_campaign') }}"
+      - name: term
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_term') }}"
+      - name: ignore_referrer
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_ignore_referrer') }}"
+      - name: link_url
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_link_url') }}"
+      - name: link_domain
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_link_domain') }}"
+      - name: link_text
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_link_text') }}"
+      - name: link_classes
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_link_classes') }}"
+      - name: outbound
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_outbound') }}"
+      - name: file_name
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_file_name') }}"
+      - name: file_extension
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_file_extension') }}"
+      - name: privacy_consent_type
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_privacy_consent_type') }}"
+      - name: privacy_consent_value
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_privacy_consent_value') }}"
+      - name: session_engaged
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_session_engaged') }}"

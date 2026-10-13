@@ -86,6 +86,7 @@ select
     feedbackresponse as feedback_response,
     origin_detail,
     advicetype as advice_type,
+    displayedon as displayed_on,
     geo_located as reco_geo_located,
     reco_origin,
     ab_test as reco_ab_test,

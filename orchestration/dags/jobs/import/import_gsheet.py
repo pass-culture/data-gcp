@@ -53,7 +53,7 @@ with DAG(
         runtime_image="py313",
         runtime_image_tag="v1",
         microservice_path=MICROSERVICE_PATH,
-        service_account_name="airflow-job-etl",
+        service_account_name=f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl",
         arguments=["main.py"],
         env_vars={"PROJECT_NAME": GCP_PROJECT_ID},
         container_resources=DEFAULT_CONTAINER_RESOURCES,

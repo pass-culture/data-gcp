@@ -58,6 +58,11 @@ def get_request(ENDPOINT, API_KEY, route, params={}):
         )
         if req.status_code == 200:
             return req.json()
+        print(
+            "Adage API {} returned HTTP {}: {}".format(
+                route, req.status_code, req.text[:500]
+            )
+        )
 
     except Exception as e:
         print("An unexpected error has happened {}".format(e))
@@ -239,6 +244,9 @@ def get_adage_stats():
                                 }
                             )
                         )
+
+    if not export:
+        raise ValueError(f"Adage API returned no stats for school year ids {ids}")
 
     df = pd.DataFrame(export)
     # force types

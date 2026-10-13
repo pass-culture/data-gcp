@@ -1,12 +1,12 @@
 {% macro evaluate_statistical_secret(
-    booking_ref, date_column, amount_column, rolling_months=6
+    booking_ref,
+    date_column,
+    amount_column,
+    is_used_column="booking_is_used",
+    rolling_months_list=[6, 48],
+    min_partners_threshold=3,
+    max_concentration_threshold=0.85
 ) %}
-
-    {% set min_partners_threshold = var("statistical_secret_min_partners", 3) %}
-    {% set max_concentration_threshold = var(
-        "statistical_secret_max_concentration", 0.85
-    ) %}
-    {% set rolling_interval_offset = rolling_months - 1 %}
 
     with
         calendar_months as (
@@ -25,7 +25,7 @@
                 sum(booking.{{ amount_column }}) as total_revenue_amount_venue
             from {{ booking_ref }} as booking
             where
-                booking.booking_is_used is true
+                booking.{{ is_used_column }} is true
                 and booking.{{ date_column }} >= '2021-07-01'
             group by
                 date_trunc(booking.{{ date_column }}, month),
@@ -35,7 +35,6 @@
                 booking.venue_id
         ),
 
-        -- Unpivot des mailles géographiques pour traitement unifié
         unpivoted_revenue as (
             select
                 base_rev.booking_month,
@@ -61,104 +60,6 @@
             where geo.geo_code is not null
         ),
 
-        -- Fenêtre glissante sur 6 mois au grain (partition_month, geo_level,
-        -- geo_code, venue_id)
-        venue_rolling_revenue as (
-            select
-                months.partition_month,
-                unpivoted.geo_level,
-                unpivoted.geo_code,
-                unpivoted.venue_id,
-                sum(unpivoted.total_revenue_amount_venue) as rolling_venue_revenue
-            from calendar_months as months
-            inner join
-                unpivoted_revenue as unpivoted
-                on months.partition_month >= unpivoted.booking_month
-                and unpivoted.booking_month >= date_sub(
-                    months.partition_month, interval {{ rolling_interval_offset }} month
-                )
-            group by
-                months.partition_month,
-                unpivoted.geo_level,
-                unpivoted.geo_code,
-                unpivoted.venue_id
-        ),
-
-        -- Calcul des métriques agrégées par maille
-        geo_rolling_metrics as (
-            select
-                partition_month,
-                geo_level,
-                geo_code,
-                sum(rolling_venue_revenue) as total_revenue_amount,
-                max(rolling_venue_revenue) as max_venue_revenue_amount,
-                safe_divide(
-                    max(rolling_venue_revenue), sum(rolling_venue_revenue)
-                ) as max_partner_revenue_share,
-                count(
-                    distinct case when rolling_venue_revenue > 0 then venue_id end
-                ) as active_partners_count
-            from venue_rolling_revenue
-            group by partition_month, geo_level, geo_code
-        ),
-
-        -- Évaluation des règles
-        geo_secret_evaluation as (
-            select
-                partition_month,
-                geo_level,
-                geo_code,
-                total_revenue_amount,
-                max_venue_revenue_amount,
-                max_partner_revenue_share,
-                active_partners_count,
-
-                coalesce(
-                    active_partners_count <= {{ min_partners_threshold }}, true
-                ) as is_secret_by_low_partners,
-                coalesce(
-                    max_partner_revenue_share > {{ max_concentration_threshold }}, false
-                ) as is_secret_by_high_concentration,
-
-                (
-                    coalesce(
-                        active_partners_count <= {{ min_partners_threshold }}, true
-                    )
-                    or coalesce(
-                        max_partner_revenue_share > {{ max_concentration_threshold }},
-                        false
-                    )
-                ) as is_secret,
-
-                case
-                    when
-                        coalesce(
-                            active_partners_count <= {{ min_partners_threshold }}, true
-                        )
-                        and coalesce(
-                            max_partner_revenue_share
-                            > {{ max_concentration_threshold }},
-                            false
-                        )
-                    then 'both'
-                    when
-                        coalesce(
-                            active_partners_count <= {{ min_partners_threshold }}, true
-                        )
-                    then 'low_partners'
-                    when
-                        coalesce(
-                            max_partner_revenue_share
-                            > {{ max_concentration_threshold }},
-                            false
-                        )
-                    then 'high_concentration'
-                    else 'none'
-                end as secret_reason_code
-            from geo_rolling_metrics
-        ),
-
-        -- Référentiel géographique dédoublonné
         geo_labels as (
             select
                 geo.municipality_code,
@@ -172,69 +73,220 @@
             group by geo.municipality_code
         ),
 
-        -- Projection plate sur la grille communale
-        final_pivot as (
-            select
-                months.partition_month,
-                geo.department_code,
-                geo.department_label,
-                geo.epci_code,
-                geo.epci_label,
-                geo.municipality_code,
-                geo.municipality_label,
+        {% for months_count in rolling_months_list %}
+            {% set offset = months_count - 1 %}
 
-                -- Métriques Département
-                dept.active_partners_count as department_active_partners_count,
-                dept.max_partner_revenue_share as department_max_partner_revenue_share,
-                dept.total_revenue_amount as department_total_revenue_amount,
-                coalesce(dept.is_secret, true) as is_department_secret,
-                coalesce(
-                    dept.secret_reason_code, 'low_partners'
-                ) as department_secret_reason_code,
+            venue_rolling_revenue_{{ months_count }}m as (
+                select
+                    months.partition_month,
+                    unpivoted.geo_level,
+                    unpivoted.geo_code,
+                    unpivoted.venue_id,
+                    sum(
+                        unpivoted.total_revenue_amount_venue
+                    ) as total_revenue_amount_venue
+                from calendar_months as months
+                inner join
+                    unpivoted_revenue as unpivoted
+                    on months.partition_month >= unpivoted.booking_month
+                    and unpivoted.booking_month
+                    >= date_sub(months.partition_month, interval {{ offset }} month)
+                group by
+                    months.partition_month,
+                    unpivoted.geo_level,
+                    unpivoted.geo_code,
+                    unpivoted.venue_id
+            ),
 
-                -- Métriques EPCI
-                epci.active_partners_count as epci_active_partners_count,
-                epci.max_partner_revenue_share as epci_max_partner_revenue_share,
-                epci.total_revenue_amount as epci_total_revenue_amount,
-                coalesce(epci.is_secret, true) as is_epci_secret,
-                coalesce(
-                    epci.secret_reason_code, 'low_partners'
-                ) as epci_secret_reason_code,
+            geo_rolling_metrics_{{ months_count }}m as (
+                select
+                    partition_month,
+                    geo_level,
+                    geo_code,
+                    sum(total_revenue_amount_venue) as total_revenue_amount,
+                    max(total_revenue_amount_venue) as max_revenue_amount_venue,
+                    safe_divide(
+                        max(total_revenue_amount_venue), sum(total_revenue_amount_venue)
+                    ) as max_partner_revenue_share,
+                    count(
+                        distinct case
+                            when total_revenue_amount_venue > 0 then venue_id
+                        end
+                    ) as total_active_partners_count
+                from venue_rolling_revenue_{{ months_count }}m
+                group by partition_month, geo_level, geo_code
+            ),
 
-                -- Métriques Commune
-                muni.active_partners_count as municipality_active_partners_count,
-                muni.max_partner_revenue_share
-                as municipality_max_partner_revenue_share,
-                muni.total_revenue_amount as municipality_total_revenue_amount,
-                coalesce(muni.is_secret, true) as is_municipality_secret,
-                coalesce(
-                    muni.secret_reason_code, 'low_partners'
-                ) as municipality_secret_reason_code
+            geo_secret_evaluation_{{ months_count }}m as (
+                select
+                    partition_month,
+                    geo_level,
+                    geo_code,
+                    total_revenue_amount,
+                    max_revenue_amount_venue,
+                    max_partner_revenue_share,
+                    total_active_partners_count,
 
-            from calendar_months as months
-            cross join geo_labels as geo
+                    coalesce(
+                        total_active_partners_count < {{ min_partners_threshold }}, true
+                    ) as is_secret_by_low_partners,
+                    coalesce(
+                        max_partner_revenue_share > {{ max_concentration_threshold }},
+                        false
+                    ) as is_secret_by_high_concentration,
 
-            left join
-                geo_secret_evaluation as dept
-                on dept.partition_month = months.partition_month
-                and dept.geo_level = 'department'
-                and dept.geo_code = geo.department_code
+                    (
+                        coalesce(
+                            total_active_partners_count < {{ min_partners_threshold }},
+                            true
+                        )
+                        or coalesce(
+                            max_partner_revenue_share
+                            > {{ max_concentration_threshold }},
+                            false
+                        )
+                    ) as is_secret,
 
-            left join
-                geo_secret_evaluation as epci
-                on epci.partition_month = months.partition_month
-                and epci.geo_level = 'epci'
-                and epci.geo_code = geo.epci_code
+                    case
+                        when coalesce(total_revenue_amount, 0) = 0
+                        then 'no_revenue'
+                        when
+                            coalesce(
+                                total_active_partners_count
+                                < {{ min_partners_threshold }},
+                                true
+                            )
+                            and coalesce(
+                                max_partner_revenue_share
+                                > {{ max_concentration_threshold }},
+                                false
+                            )
+                        then 'both'
+                        when
+                            coalesce(
+                                total_active_partners_count
+                                < {{ min_partners_threshold }},
+                                true
+                            )
+                        then 'low_partners'
+                        when
+                            coalesce(
+                                max_partner_revenue_share
+                                > {{ max_concentration_threshold }},
+                                false
+                            )
+                        then 'high_concentration'
+                        else 'none'
+                    end as secret_reason_code
+                from geo_rolling_metrics_{{ months_count }}m
+            ),
 
-            left join
-                geo_secret_evaluation as muni
-                on muni.partition_month = months.partition_month
-                and muni.geo_level = 'municipality'
-                and muni.geo_code = geo.municipality_code
+            final_pivot_{{ months_count }}m as (
+                select
+                    months.partition_month,
+                    cast({{ months_count }} as int64) as rolling_window_months_count,
+                    geo.department_code,
+                    geo.department_label,
+                    geo.epci_code,
+                    geo.epci_label,
+                    geo.municipality_code,
+                    geo.municipality_label,
+
+                    -- Département
+                    dept.total_active_partners_count
+                    as total_active_partners_count_department,
+                    dept.max_partner_revenue_share
+                    as max_partner_revenue_share_department,
+                    coalesce(
+                        dept.total_revenue_amount, 0
+                    ) as total_revenue_amount_department,
+                    coalesce(dept.is_secret, true) as is_department_secret,
+                    coalesce(
+                        dept.secret_reason_code, 'no_revenue'
+                    ) as department_secret_reason_code,
+
+                    -- EPCI
+                    epci.total_active_partners_count
+                    as total_active_partners_count_epci,
+                    epci.max_partner_revenue_share as max_partner_revenue_share_epci,
+                    coalesce(epci.total_revenue_amount, 0) as total_revenue_amount_epci,
+                    coalesce(epci.is_secret, true) as is_epci_secret,
+                    coalesce(
+                        epci.secret_reason_code, 'no_revenue'
+                    ) as epci_secret_reason_code,
+
+                    -- Commune
+                    muni.total_active_partners_count
+                    as total_active_partners_count_municipality,
+                    muni.max_partner_revenue_share
+                    as max_partner_revenue_share_municipality,
+                    coalesce(
+                        muni.total_revenue_amount, 0
+                    ) as total_revenue_amount_municipality,
+                    coalesce(muni.is_secret, true) as is_municipality_secret,
+                    coalesce(
+                        muni.secret_reason_code, 'no_revenue'
+                    ) as municipality_secret_reason_code
+
+                from calendar_months as months
+                cross join geo_labels as geo
+
+                left join
+                    geo_secret_evaluation_{{ months_count }}m as dept
+                    on dept.partition_month = months.partition_month
+                    and dept.geo_level = 'department'
+                    and dept.geo_code = geo.department_code
+
+                left join
+                    geo_secret_evaluation_{{ months_count }}m as epci
+                    on epci.partition_month = months.partition_month
+                    and epci.geo_level = 'epci'
+                    and epci.geo_code = geo.epci_code
+
+                left join
+                    geo_secret_evaluation_{{ months_count }}m as muni
+                    on muni.partition_month = months.partition_month
+                    and muni.geo_level = 'municipality'
+                    and muni.geo_code = geo.municipality_code
+            ),
+        {% endfor %}
+
+        combined_windows as (
+            {% for months_count in rolling_months_list %}
+                select
+                    partition_month,
+                    rolling_window_months_count,
+                    department_code,
+                    department_label,
+                    epci_code,
+                    epci_label,
+                    municipality_code,
+                    municipality_label,
+                    total_active_partners_count_department,
+                    max_partner_revenue_share_department,
+                    total_revenue_amount_department,
+                    is_department_secret,
+                    department_secret_reason_code,
+                    total_active_partners_count_epci,
+                    max_partner_revenue_share_epci,
+                    total_revenue_amount_epci,
+                    is_epci_secret,
+                    epci_secret_reason_code,
+                    total_active_partners_count_municipality,
+                    max_partner_revenue_share_municipality,
+                    total_revenue_amount_municipality,
+                    is_municipality_secret,
+                    municipality_secret_reason_code
+                from final_pivot_{{ months_count }}m
+                {% if not loop.last %}
+                    union all
+                {% endif %}
+            {% endfor %}
         )
 
     select
-        date(partition_month) as partition_month,
+        partition_month,
+        rolling_window_months_count,
         department_code,
         department_label,
         epci_code,
@@ -243,15 +295,15 @@
         municipality_label,
 
         -- Métriques
-        department_active_partners_count,
-        department_max_partner_revenue_share,
-        department_total_revenue_amount,
-        epci_active_partners_count,
-        epci_max_partner_revenue_share,
-        epci_total_revenue_amount,
-        municipality_active_partners_count,
-        municipality_max_partner_revenue_share,
-        municipality_total_revenue_amount,
+        total_active_partners_count_department,
+        max_partner_revenue_share_department,
+        total_revenue_amount_department,
+        total_active_partners_count_epci,
+        max_partner_revenue_share_epci,
+        total_revenue_amount_epci,
+        total_active_partners_count_municipality,
+        max_partner_revenue_share_municipality,
+        total_revenue_amount_municipality,
 
         -- Flags
         is_department_secret,
@@ -266,10 +318,12 @@
         -- Libellés d'affichage
         case
             department_secret_reason_code
+            when 'no_revenue'
+            then "Pas de chiffre d'affaire"
             when 'both'
-            then 'Les deux raisons (<= 3 partenaires ET > 85% CA)'
+            then 'Les deux raisons (< 3 partenaires ET > 85% CA)'
             when 'low_partners'
-            then 'Nombre de partenaires faible (<= 3)'
+            then 'Nombre de partenaires faible (< 3)'
             when 'high_concentration'
             then 'Concentration forte du CA (> 85%)'
             else 'Non soumis au secret'
@@ -277,10 +331,12 @@
 
         case
             epci_secret_reason_code
+            when 'no_revenue'
+            then "Pas de chiffre d'affaire"
             when 'both'
-            then 'Les deux raisons (<= 3 partenaires ET > 85% CA)'
+            then 'Les deux raisons (< 3 partenaires ET > 85% CA)'
             when 'low_partners'
-            then 'Nombre de partenaires faible (<= 3)'
+            then 'Nombre de partenaires faible (< 3)'
             when 'high_concentration'
             then 'Concentration forte du CA (> 85%)'
             else 'Non soumis au secret'
@@ -288,15 +344,17 @@
 
         case
             municipality_secret_reason_code
+            when 'no_revenue'
+            then "Pas de chiffre d'affaire"
             when 'both'
-            then 'Les deux raisons (<= 3 partenaires ET > 85% CA)'
+            then 'Les deux raisons (< 3 partenaires ET > 85% CA)'
             when 'low_partners'
-            then 'Nombre de partenaires faible (<= 3)'
+            then 'Nombre de partenaires faible (< 3)'
             when 'high_concentration'
             then 'Concentration forte du CA (> 85%)'
             else 'Non soumis au secret'
         end as municipality_secret_reason_label
 
-    from final_pivot
+    from combined_windows
 
 {% endmacro %}

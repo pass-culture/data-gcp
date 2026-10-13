@@ -6,7 +6,12 @@
             "data_type": "date",
             "granularity": "month",
         },
-        cluster_by=["department_code", "epci_code", "municipality_code"],
+        cluster_by=[
+            "rolling_window_months_count",
+            "department_code",
+            "epci_code",
+            "municipality_code",
+        ],
     )
 }}
 
@@ -15,5 +20,6 @@
         booking_ref=ref("int_global__booking"),
         date_column="booking_used_date",
         amount_column="booking_intermediary_amount",
+        rolling_months_list=[6, 48],
     )
 }}

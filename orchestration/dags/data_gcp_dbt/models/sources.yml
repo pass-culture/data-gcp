@@ -1,7 +1,13 @@
 version: 1
 
 sources:
-  - name: raw
+  - name: raw_eu9 # Paris
+    schema: raw_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'pc-data-prd' if var('ENV_SHORT_NAME') == 'prd' else 'pc-data-stg' }}"
+    tables:
+      - name: gsheet_educational_institution_student_headcount
+
+  - name: raw # Belgique (legacy)
     schema: raw_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
@@ -145,7 +151,6 @@ sources:
       - name: firebase_ios_performance
       - name: firebase_pro_events
       - name: gsheet_eac_webinar
-      - name: gsheet_educational_institution_student_headcount
       - name: gsheet_instagram_campaign_tag
       - name: gsheet_ml_recommendation_sensitive_item
       - name: gsheet_fraudulent_device

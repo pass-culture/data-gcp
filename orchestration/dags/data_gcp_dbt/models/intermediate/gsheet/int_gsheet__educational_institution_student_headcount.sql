@@ -6,7 +6,7 @@ select
     safe_cast(is_provisional as bool) as is_provisional,
     safe_cast(amount_per_student as float64) as amount_per_student,
     safe_cast(headcount as float64) as headcount
-from {{ source("raw", "gsheet_educational_institution_student_headcount") }}
+from {{ source("raw_eu9", "gsheet_educational_institution_student_headcount") }}
 qualify
     row_number() over (
         partition by ministry, uai, class

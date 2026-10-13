@@ -101,5 +101,5 @@ select
         md5(concat(cast(session_start as string), user_id, session_num))
     ) as session_id
 from generate_session
-left join {{ ref("seed_prod__backoffice_log_reference") }} as ref
+left join {{ source("seed", "backoffice_log_reference") }} as ref
     on generate_session.message = ref.log_extract

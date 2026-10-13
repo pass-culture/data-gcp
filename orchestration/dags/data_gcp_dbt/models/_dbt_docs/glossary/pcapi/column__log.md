@@ -73,4 +73,19 @@ Aggregated count of requests for the given dimension combination over the counti
 {% enddocs %}
 
 
+{% docs column__severity %}Log level of the backend log entry (e.g. 'INFO', 'WARNING'). Booking failures are logged as 'WARNING'.{% enddocs %}
+{% docs column__exception_class %}Python exception class raised by the backend when the action failed (e.g. 'OfferIsAlreadyBooked', 'CineOfficeAPIException'). NULL on success.{% enddocs %}
+{% docs column__exception_message %}Message of the exception raised by the backend, often empty for business rule refusals and detailed for provider API errors. NULL on success.{% enddocs %}
+{% docs column__trace %}Cloud Logging trace identifier, used to link log entries emitted by the same backend request.{% enddocs %}
+{% docs column__booking_action %}Action attempted by the young user from the app, taken from the `native.bookings.<action>` technical message id (e.g. 'book', 'cancel'). New actions logged by the backend are picked up automatically.{% enddocs %}
+{% docs column__extra_json %}Full `extra` payload of the backend log entry as JSON (null fields removed), to access fields not yet extracted as columns, e.g. `json_value(extra_json.provider_id)`.{% enddocs %}
+{% docs column__is_success %}True when the booking action succeeded, false when the backend refused or failed it.{% enddocs %}
+{% docs column__failure_reason %}Human readable reason of a booking failure, parsed from the log message (e.g. 'offer already booked', 'booking external ticket failed'). NULL for cancellations and successes.{% enddocs %}
+{% docs column__failure_type %}
+Category of the failure, derived from `exception_class`:
+- 'business': expected refusal enforcing a business rule (already booked, insufficient credit, sold out, booking already used...).
+- 'technical': unexpected error (provider API error, timeout, unknown exception). New exception classes default to 'technical'.
+NULL on success.
+{% enddocs %}
+
 {% endhide %}

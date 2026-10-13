@@ -50,6 +50,7 @@ select
     fromofferid as similar_offer_id,
     playlisttype as similar_offer_playlist_type,
     step as booking_cancellation_step,
+    if(event_name = "BookingError", code, null) as booking_error_code,
     filtertypes as search_filter_types,
     searchid as search_id,
     filter,

@@ -133,6 +133,21 @@ def run_ticket_stat_job(
     ticket_df["updated_date"] = pd.to_datetime(ticket_df["updated_at"]).dt.date
     ticket_df["export_date"] = export_date
 
+    # Zendesk reads the search dates in the account timezone (Europe/Paris) while updated_at is UTC:
+    # the window starts at (from_date - 1) 22:00 UTC, so the UTC day before from_date is only partially
+    # fetched. Partitions are overwritten (WRITE_TRUNCATE), so saving that day would replace all its
+    # tickets with the last hours only. Previous runs saved it in full: skip it.
+    partial_day = ticket_df["updated_date"] < pd.to_datetime(from_date).date()
+    if partial_day.any():
+        print(
+            f"Skipping {partial_day.sum()} tickets updated before {from_date} (UTC): "
+            "partial day, already saved by previous runs"
+        )
+        ticket_df = ticket_df[~partial_day]
+    if ticket_df.empty:
+        print(f"No tickets left to save for the date range {from_date} to {to_date}")
+        return
+
     # Save the ticket data with partitioning by updated date
     save_multiple_partitions_to_bq(
         df=ticket_df,

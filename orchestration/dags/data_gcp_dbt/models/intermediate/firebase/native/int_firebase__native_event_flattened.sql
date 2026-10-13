@@ -123,6 +123,7 @@ with
                         "origin_detail",
                         "adviceType",
                         "displayedOn",
+                        "code",
                     ],
                 )
             }},

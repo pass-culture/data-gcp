@@ -149,11 +149,47 @@ with
                 else cast(rank_in_group = 1 as int64)
             end as namesake_score
         from namesake_computations
+    ),
+
+    -- "Trending" ranking score (not a replacement for app/pro search scores),
+    -- based on recent consultations/bookings on the artist's main category.
+    bookable_artist_consultation_and_booking_counts_last_30d as (
+        select
+            artist_id,
+            artist_total_bookable_offers,
+            artist_total_offer_consultations_main_category_last_30d,
+            artist_total_bookings_main_category_last_30d
+        from {{ ref("mrt_global__artist") }}
+        where artist_total_bookable_offers >= 1
+    ),
+
+    artist_trending_score_from_recent_consultations_and_bookings as (
+        select
+            r.artist_id,
+            round(
+                ln(
+                    1
+                    + r.artist_total_offer_consultations_main_category_last_30d
+                    + r.artist_total_bookings_main_category_last_30d
+                ),
+                4
+            ) as artist_score_log_consultations_plus_bookings_main_category_last_30d
+        from bookable_artist_consultation_and_booking_counts_last_30d as r
     )
 
 select
-    *,
-    (artist_raw_score * namesake_score * bookable_score) as artist_app_search_score,
-    ((artist_raw_score + bookable_score) * namesake_score) as artist_pro_search_score
-from artist_with_final_score
-order by normalized_artist_name asc, artist_app_search_score desc
+    f.*,  -- noqa: AM04
+    (
+        f.artist_raw_score * f.namesake_score * f.bookable_score
+    ) as artist_app_search_score,
+    (
+        (f.artist_raw_score + f.bookable_score) * f.namesake_score
+    ) as artist_pro_search_score,
+    coalesce(
+        s.artist_score_log_consultations_plus_bookings_main_category_last_30d, 0
+    ) as artist_score_log_consultations_plus_bookings_main_category_last_30d
+from artist_with_final_score as f
+left join
+    artist_trending_score_from_recent_consultations_and_bookings as s
+    on f.artist_id = s.artist_id
+order by f.normalized_artist_name asc, artist_app_search_score desc

@@ -171,6 +171,17 @@ def adding_value():
                                  domaines)"""
 
 
+def get_current_adage_ids(now):
+    # ADAGE school year ids: 7 = 2021-2022, 8 = 2022-2023, ...
+    # Each year runs from 09-01 to 09-10 of the next year (overlap is intended).
+    current_year = int(now[:4])
+    return [
+        start_year - 2014
+        for start_year in (current_year - 1, current_year)
+        if f"{start_year}-09-01" < now <= f"{start_year + 1}-09-10"
+    ]
+
+
 def get_adage_stats():
     _now = datetime.now().strftime("%Y-%m-%d")
     stats_dict = {
@@ -178,14 +189,7 @@ def get_adage_stats():
         "academies": "academie",
         "regions": "region",
     }
-    adage_ids = {
-        7: ("2021-09-01", "2022-09-10"),
-        8: ("2022-09-01", "2023-09-10"),
-        9: ("2023-09-01", "2024-09-10"),
-        10: ("2024-09-01", "2025-09-10"),
-        11: ("2025-09-01", "2026-09-10"),
-    }
-    ids = [k for k, v in adage_ids.items() if (_now > v[0] and _now <= v[1])]
+    ids = get_current_adage_ids(_now)
 
     export = []
     for _id in ids:

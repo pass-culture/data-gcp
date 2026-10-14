@@ -114,10 +114,9 @@ with
             count(distinct e.unique_session_id) as total_consultations_last_30d
         from artist_product_offers as apo
         inner join
-            {{ ref("int_firebase__native_event") }} as e on apo.offer_id = e.offer_id
-        where
-            e.event_name = "ConsultOffer"
-            and e.event_date >= date_sub(current_date(), interval 30 day)
+            {{ ref("int_firebase__native_consultation") }} as e
+            on apo.offer_id = e.offer_id
+        where e.consultation_date >= date_sub(current_date(), interval 30 day)
         group by apo.artist_id, apo.search_group_name
     ),
 

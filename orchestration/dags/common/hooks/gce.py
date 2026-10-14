@@ -39,6 +39,23 @@ DEFAULT_LABELS = {
     "job_type": "default",
 }
 
+# GCE label values must be lowercase letters, numbers, underscores or dashes,
+# and at most 63 characters long. DAG ids (e.g. suffixed test copies like
+# "<dag_id>__test__<username>") can easily exceed that limit, which makes the
+# instances().insert() call fail with a 400 "violates format constraints" error.
+_GCE_LABEL_MAX_LENGTH = 63
+_GCE_LABEL_INVALID_CHARS_RE = re.compile(r"[^a-z0-9_-]")
+
+
+def _sanitize_gce_label_value(value: str) -> str:
+    """Lowercase, strip invalid characters and truncate to fit GCE label constraints."""
+    sanitized = _GCE_LABEL_INVALID_CHARS_RE.sub("-", str(value).lower())
+    return sanitized[:_GCE_LABEL_MAX_LENGTH]
+
+
+def _sanitize_gce_labels(labels: dict) -> dict:
+    return {key: _sanitize_gce_label_value(value) for key, value in labels.items()}
+
 
 @dataclass
 class DeferrableSSHJobStatus:
@@ -714,7 +731,7 @@ class GCEHook(GoogleBaseHook):
             ],
             "metadata": {"items": metadata},
             "tags": {"items": ["training"]},
-            "labels": dict({**DEFAULT_LABELS, **labels}),
+            "labels": _sanitize_gce_labels({**DEFAULT_LABELS, **labels}),
         }
 
         # GPUs

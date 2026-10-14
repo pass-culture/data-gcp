@@ -44,8 +44,8 @@ SHEETS = {
             "1qzEO5zsCFr4IcBzBgE67dx3ZunPwC27yqNumdz82qxw",  # SEM Final (2026-2027)
         ],
         "expected_headers_dict": {
-            "Annee scolaire": "school_year",
-            "Ministere": "ministry",
+            "Année scolaire": "school_year",
+            "Ministère": "ministry",
             "UAI": "uai",
             "Nom": "name",
             "Provisoire": "is_provisional",

@@ -12,6 +12,12 @@ models:
       - name: artist_description
         description: '{{ doc("column__artist_description") }}'
         data_type: STRING
+      - name: artist_mediation_uuid
+        description: '{{ doc("column__artist_mediation_uuid") }}'
+        data_type: STRING
+      - name: artist_computed_image
+        description: '{{ doc("column__artist_computed_image") }}'
+        data_type: STRING
       - name: wikidata_image_file_url
         description: '{{ doc("column__wikidata_image_file_url") }}'
         data_type: STRING

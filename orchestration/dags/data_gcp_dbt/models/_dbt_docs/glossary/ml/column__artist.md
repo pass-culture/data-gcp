@@ -6,6 +6,7 @@
 {% docs column__artist_description %}Short description of the artist.{% enddocs %}
 {% docs column__artist_biography %}Biography of the artist.{% enddocs %}
 {% docs column__artist_mediation_uuid %}Name of the image file related to the artist. Is a deterministic UUID based on the file URL.{% enddocs %}
+{% docs column__artist_computed_image %}URL of the most relevant image computed for the artist. It is the artist's own image if available (e.g. Wikidata image), otherwise it falls back to the image of the artist's most popular product (poster or recto mediation) based on bookings over the last 30 days.{% enddocs %}
 {% docs column__artist_wikipedia_url %}URL of the artist Wikipedia page.{% enddocs %}
 {% docs column__artist_type %}Whether the artist is a performer or an author.{% enddocs %}
 {% docs column__artist_creation_date %} Creation date of the artist.{% enddocs %}

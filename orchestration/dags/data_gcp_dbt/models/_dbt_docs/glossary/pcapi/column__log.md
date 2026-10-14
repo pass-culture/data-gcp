@@ -81,7 +81,7 @@ Log level of the backend log entry:
 {% enddocs %}
 {% docs column__log_origin %}Application emitting the log, from `technical_origin.origin`: 'native' (young users app), 'pro' (pro portal), 'provider' (public API used by providers), 'backoffice', 'cron' (scheduled jobs), 'discord'.{% enddocs %}
 {% docs column__log_feature %}Backend feature the log relates to, from `technical_origin.feature` (e.g. 'bookings', 'external_providers', 'users').{% enddocs %}
-{% docs column__log_action %}Action performed on the feature, from `technical_origin.action` (e.g. 'book', 'cancel', 'login'). Successful cancellations from the app (`booking.cancelled` with reason BENEFICIARY) are mapped to feature 'bookings' / action 'cancel'.{% enddocs %}
+{% docs column__log_action %}Action performed on the feature, from `technical_origin.action` (e.g. 'book', 'cancel', 'login').{% enddocs %}
 {% docs column__cron_name %}Name of the scheduled job emitting the log, when origin is 'cron'.{% enddocs %}
 {% docs column__exception_class %}Python exception class raised by the backend when the action failed (e.g. 'OfferIsAlreadyBooked', 'BoostAPIException'). NULL on success.{% enddocs %}
 {% docs column__exception_message %}Message of the exception raised by the backend, often empty for business rule refusals and detailed for provider API errors. NULL on success.{% enddocs %}

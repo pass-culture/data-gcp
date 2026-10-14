@@ -70,7 +70,6 @@ select
     jsonpayload.extra.exception_type,
     jsonpayload.extra.success,
     jsonpayload.extra.exception_message,
-    jsonpayload.extra.reason,
     jsonpayload.extra.changes.publicationdatetime.oldvalue
     as publication_date_old_value,
     jsonpayload.extra.changes.publicationdatetime.newvalue

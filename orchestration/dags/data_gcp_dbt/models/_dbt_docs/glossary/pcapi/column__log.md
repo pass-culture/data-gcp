@@ -73,19 +73,23 @@ Aggregated count of requests for the given dimension combination over the counti
 {% enddocs %}
 
 
-{% docs column__severity %}Log level of the backend log entry (e.g. 'INFO', 'WARNING'). Booking failures are logged as 'WARNING'.{% enddocs %}
-{% docs column__exception_class %}Python exception class raised by the backend when the action failed (e.g. 'OfferIsAlreadyBooked', 'CineOfficeAPIException'). NULL on success.{% enddocs %}
+{% docs column__severity %}
+Log level of the backend log entry:
+- 'INFO': the action succeeded.
+- 'WARNING': the action failed in an expected way (e.g. business rule refusal). Today all handled failures are logged as 'WARNING', provider API errors included.
+- 'ERROR': the action failed in an unexpected way.
+{% enddocs %}
+{% docs column__log_origin %}Application emitting the log, from `technical_origin.origin`: 'native' (young users app), 'pro' (pro portal), 'provider' (public API used by providers), 'backoffice', 'cron' (scheduled jobs), 'discord'.{% enddocs %}
+{% docs column__log_feature %}Backend feature the log relates to, from `technical_origin.feature` (e.g. 'bookings', 'external_providers', 'users').{% enddocs %}
+{% docs column__log_action %}Action performed on the feature, from `technical_origin.action` (e.g. 'book', 'cancel', 'login'). Successful cancellations from the app (`booking.cancelled` with reason BENEFICIARY) are mapped to feature 'bookings' / action 'cancel'.{% enddocs %}
+{% docs column__cron_name %}Name of the scheduled job emitting the log, when origin is 'cron'.{% enddocs %}
+{% docs column__exception_class %}Python exception class raised by the backend when the action failed (e.g. 'OfferIsAlreadyBooked', 'BoostAPIException'). NULL on success.{% enddocs %}
 {% docs column__exception_message %}Message of the exception raised by the backend, often empty for business rule refusals and detailed for provider API errors. NULL on success.{% enddocs %}
 {% docs column__trace %}Cloud Logging trace identifier, used to link log entries emitted by the same backend request.{% enddocs %}
-{% docs column__booking_action %}Action attempted by the young user from the app, taken from the `native.bookings.<action>` technical message id (e.g. 'book', 'cancel'). New actions logged by the backend are picked up automatically.{% enddocs %}
-{% docs column__extra_json %}Full `extra` payload of the backend log entry as JSON (null fields removed), to access fields not yet extracted as columns, e.g. `json_value(extra_json.provider_id)`.{% enddocs %}
-{% docs column__is_success %}True when the booking action succeeded, false when the backend refused or failed it.{% enddocs %}
-{% docs column__failure_reason %}Human readable reason of a booking failure, parsed from the log message (e.g. 'offer already booked', 'booking external ticket failed'). NULL for cancellations and successes.{% enddocs %}
-{% docs column__failure_type %}
-Category of the failure, derived from `exception_class`:
-- 'business': expected refusal enforcing a business rule (already booked, insufficient credit, sold out, booking already used...).
-- 'technical': unexpected error (provider API error, timeout, unknown exception). New exception classes default to 'technical'.
-NULL on success.
-{% enddocs %}
+{% docs column__extra_json %}Full `extra` payload of the backend log entry as JSON (null and empty fields removed), to access fields not yet extracted as columns, e.g. `json_value(extra_json.stock_id_at_providers)`.{% enddocs %}
+{% docs column__is_success %}True when the action succeeded. Uses the explicit `success` flag when the log has one (e.g. users.login), otherwise the log level ('INFO' = success, 'WARNING' / 'ERROR' = failure).{% enddocs %}
+{% docs column__total_count %}Number of logged actions for the given dimension combination.{% enddocs %}
+{% docs column__success_count %}Number of successful actions for the given dimension combination.{% enddocs %}
+{% docs column__error_count %}Number of failed actions for the given dimension combination.{% enddocs %}
 
 {% endhide %}

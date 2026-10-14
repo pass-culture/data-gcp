@@ -7,14 +7,29 @@ models:
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"
         data_tests:
-          - not_null
-          - dbt_utils.not_empty_string
-          - unique
+          - not_null:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
+          - dbt_utils.not_empty_string:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
+          - unique:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: artist_name
         description: "{{ doc('column__artist_name') }}"
         data_tests:
-          - not_null
-          - dbt_utils.not_empty_string
+          - not_null:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
+          - dbt_utils.not_empty_string:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: artist_description
         description: "{{ doc('column__artist_description') }}"
       - name: artist_biography
@@ -24,7 +39,10 @@ models:
       - name: wikidata_id
         description: "{{ doc('column__artist_wiki_id') }}"
         data_tests:
-          - unique
+          - unique:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
       - name: wikipedia_url
         description: "{{ doc('column__artist_wikipedia_url') }}"
       - name: wikidata_image_file_url

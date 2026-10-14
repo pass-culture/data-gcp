@@ -17,7 +17,7 @@ public.action_history: actionDate, actionType, authorUserId, comment, id, jsonDa
 public.address: banId, city, departmentCode, id, inseeCode, latitude, longitude, postalCode, street
 public.allocine_pivot: id, internalId, theaterId, venueId
 public.allocine_venue_provider: id, isDuo, quantity
-public.artist: app_search_score, biography, date_created, date_modified, description, id, image, image_author, image_license, image_license_url, mediation_uuid, name, pro_search_score, wikidata_id, wikipedia_url
+public.artist: app_search_score, biography, computed_image, date_created, date_modified, description, id, image, image_author, image_license, image_license_url, mediation_uuid, name, pro_search_score, wikidata_id, wikipedia_url
 public.artist_music_platform: apple_music_id, artist_id, deezer_id, genius_id, id, isni_id, soundcloud_id, spotify_id
 public.artist_offer_link: artist_id, artist_type, custom_name, id, offer_id
 public.artist_product_link: artist_id, artist_type, date_created, date_modified, id, product_id

@@ -54,7 +54,7 @@ select
     ) as instagram_publication_profile_activity
 from {{ source("raw", "instagram_post_detail") }} as post_detail
 left join
-    {{ source("raw", "gsheet_instagram_campaign_tag") }} as campaign_tag
+    {{ source("raw_eu9", "gsheet_instagram_campaign_tag") }} as campaign_tag
     on post_detail.url_id = campaign_tag.media_id
 {% if is_incremental() %}
     where

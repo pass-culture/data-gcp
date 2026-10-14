@@ -42,7 +42,7 @@ select
     ) as total_tiktok_publication_time_watched
 from {{ source("raw", "tiktok_video_detail") }} as video_detail
 left join
-    {{ source("raw", "gsheet_tiktok_campaign_tag") }} as campaign_tag
+    {{ source("raw_eu9", "gsheet_tiktok_campaign_tag") }} as campaign_tag
     on video_detail.item_id = campaign_tag.tiktotk_id
 {% if is_incremental() %}
     where

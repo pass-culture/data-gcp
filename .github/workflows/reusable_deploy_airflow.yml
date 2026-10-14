@@ -11,6 +11,9 @@ on:
       AIRFLOW_DAGS_BUCKET:
         type: string
         required: true
+      AIRFLOW_DAGS_BUCKET_EU:
+        type: string
+        required: true
       AIRFLOW_NAME:
         type: string
         required: true
@@ -177,6 +180,7 @@ jobs:
           echo "EXCLUDE_REGEX=$EXCLUDE_REGEX" >> "$GITHUB_ENV"
           echo "Final EXCLUDE_REGEX=$EXCLUDE_REGEX"
         shell: bash
+
       # Deploy DAGs to GCS, using computed EXCLUDE_REGEX
       - name: "Deploy Airflow (dags)"
         env:
@@ -192,6 +196,32 @@ jobs:
             echo "Excluding folders matching: $EXCLUDE_REGEX"
             gsutil -m rsync -d -r -x "$EXCLUDE_REGEX" "$source_dir" "gs://${bucket}/dags"
           fi
+        shell: bash
+
+      # Deploy migrated DAGs to EU bucket
+      - name: "Deploy Airflow (migrated dags on EU bucket)"
+        env:
+          AIRFLOW_DAGS_BUCKET_EU: ${{ inputs.AIRFLOW_DAGS_BUCKET_EU }}
+        run: |
+          readonly bucket="$AIRFLOW_DAGS_BUCKET_EU"
+
+          echo "Deploying common config to EU bucket..."
+          gsutil -m rsync -d -r dags/common "gs://${bucket}/dags/common"
+
+          echo "Resolving migrated DAG files..."
+          migrated_paths="$(uv run python ../.github/workflows/scripts/migrated_dags.py --jobs-dir dags/jobs)"
+
+          if [ -z "$migrated_paths" ]; then
+            echo "No migrated DAGs to deploy to EU bucket."
+            exit 0
+          fi
+
+          echo "Deploying migrated DAGs to EU bucket:"
+          echo "$migrated_paths"
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            gsutil cp "$file" "gs://${bucket}/${file}"
+          done <<< "$migrated_paths"
         shell: bash
 
       - name: "Generate dbt lineage data"

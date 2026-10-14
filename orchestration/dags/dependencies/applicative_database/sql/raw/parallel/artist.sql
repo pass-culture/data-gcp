@@ -4,6 +4,7 @@ SELECT
     ,"description" as artist_description
     ,"biography" as artist_biography
     ,"mediation_uuid" as artist_mediation_uuid
+    ,"computed_image" as artist_computed_image
     ,"wikidata_id"
     ,"wikipedia_url"
     ,"image" as wikidata_image_file_url

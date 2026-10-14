@@ -178,7 +178,34 @@ with
     )
 
 select
-    f.*,  -- noqa: AM04
+    f.artist_id,
+    f.artist_name,
+    f.artist_description,
+    f.artist_biography,
+    f.artist_mediation_uuid,
+    f.wikidata_id,
+    f.wikipedia_url,
+    f.wikidata_image_file_url,
+    f.wikidata_image_license,
+    f.wikidata_image_license_url,
+    f.wikidata_image_author,
+    f.date_created,
+    f.date_modified,
+    f.previous_artist_app_search_score,
+    f.previous_artist_pro_search_score,
+    f.normalized_artist_name,
+    f.artist_product_count,
+    f.artist_booking_count,
+    f.artist_bookable_product_count,
+    f.wikidata_score,
+    f.image_score,
+    f.bookable_score,
+    f.booking_score,
+    f.product_score,
+    f.artist_raw_score,
+    f.group_has_wiki,
+    f.rank_in_group,
+    f.namesake_score,
     (
         f.artist_raw_score * f.namesake_score * f.bookable_score
     ) as artist_app_search_score,

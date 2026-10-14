@@ -3,7 +3,7 @@ version: 1
 sources:
   - name: raw_eu9 # Paris
     schema: raw_{{ var('ENV_SHORT_NAME') }}
-    database: "{{ 'pc-data-prd' if var('ENV_SHORT_NAME') == 'prd' else 'pc-data-stg' }}"
+    database: "{{ 'pc-data-prd' if var('ENV_SHORT_NAME') == 'prd' or var('ENV_SHORT_NAME') == 'prod' else 'pc-data-stg' }}"
     tables:
       - name: gsheet_educational_institution_student_headcount
 

@@ -105,6 +105,14 @@ select
     coalesce(ui.user_macro_density_label, "non localisé") as user_macro_density_label,
     coalesce(ui.user_density_level, null) as user_density_level,
     coalesce(ui.user_is_in_qpv, false) as user_is_in_qpv,
+    case when ui.user_is_in_qpv then ui.qpv_code end as user_qpv_code,
+    case
+        when ui.user_is_in_qpv
+        then ui.qpv_name
+        when ui.user_latitude is not null and ui.user_longitude is not null
+        then "hors QPV"
+        else "non localisé"
+    end as user_qpv_name,
     u.user_humanized_id,
     dgu.user_age_at_first_deposit,
     dgu.user_age_at_last_deposit,

@@ -21,6 +21,8 @@ select
     user_is_unemployed,
     user_is_in_education,
     user_is_in_qpv,
+    user_qpv_code,
+    user_qpv_name,
     user_epci,
     user_epci_code,
     user_density_label,

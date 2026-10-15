@@ -1,7 +1,20 @@
 version: 1
 
 sources:
-  - name: raw
+  - name: raw_eu9 # Paris
+    schema: "{{ 'raw_prd' if var('ENV_SHORT_NAME') == 'prd' or var('ENV_SHORT_NAME') == 'prod' else 'raw_stg' }}"
+    database: "{{ 'pc-data-prd' if var('ENV_SHORT_NAME') == 'prd' or var('ENV_SHORT_NAME') == 'prod' else 'pc-data-stg' }}"
+    tables:
+      - name: gsheet_company_contact
+      - name: gsheet_eac_webinar
+      - name: gsheet_educational_institution_student_headcount
+      - name: gsheet_fraudulent_device
+      - name: gsheet_instagram_campaign_tag
+      - name: gsheet_ml_recommendation_sensitive_item
+      - name: gsheet_tiktok_campaign_tag
+
+
+  - name: raw # Belgique (legacy)
     schema: raw_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
@@ -145,7 +158,6 @@ sources:
       - name: firebase_ios_performance
       - name: firebase_pro_events
       - name: gsheet_eac_webinar
-      - name: gsheet_educational_institution_student_headcount
       - name: gsheet_instagram_campaign_tag
       - name: gsheet_ml_recommendation_sensitive_item
       - name: gsheet_fraudulent_device
@@ -223,7 +235,7 @@ sources:
       - name: iris_france
       - name: iris_nesting
       - name: macro_rayons
-      - name: population_age_and_department_france_details
+      - name: population_age_and_department_france_legacy
       - name: priority_local_authorities
       - name: 2020_insee_iris_socio_demographics
       - name: 2024_insee_qpv
@@ -234,6 +246,7 @@ sources:
       - name: region_department
       - name: siren_main_business_labels
       - name: siren_legal_category_labels
+      - name : backoffice_log_reference
       - name: qpi_answers_v1
         external:
           location: "gs://de-bigquery-data-archive-{{var('ENV_SHORT_NAME')}}/archive/2024/08/raw_{{var('ENV_SHORT_NAME')}}/qpi_answers_v1.jsonl"

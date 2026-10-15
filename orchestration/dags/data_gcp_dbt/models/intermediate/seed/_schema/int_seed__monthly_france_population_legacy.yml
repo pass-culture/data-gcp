@@ -1,7 +1,8 @@
 version: 2
 models:
-  - name: int_seed__monthly_france_population
-    description: '{{ doc("description__population_estimation") }}'
+  - name: int_seed__monthly_france_population_legacy
+    description: 'Deprecated Table, use int_seed__monthly_insee_population_estimation'
+    deprecation_date: '2026-10-13'
     columns:
       - name: population_snapshot_month
         description: '{{ doc("column__population_snapshot_month") }}'

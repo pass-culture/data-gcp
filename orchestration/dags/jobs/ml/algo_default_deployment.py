@@ -5,7 +5,9 @@ from typing import Optional
 
 from airflow import DAG
 from airflow.models import Param
+from airflow.operators.python import BranchPythonOperator
 from airflow.utils.task_group import TaskGroup
+from airflow.utils.trigger_rule import TriggerRule
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -66,6 +68,7 @@ SEMANTIC_RETRIEVAL_DICT = {
 
 @dataclass
 class ModelDeployment:
+    key: str
     experiment_name: str
     endpoint_name: str
     instance_type: str
@@ -79,6 +82,7 @@ class ModelDeployment:
 models_to_deploy = [
     # ranking endpoint
     ModelDeployment(
+        key="ranking",
         experiment_name=f"ranking_endpoint_v1.1_{ENV_SHORT_NAME}",
         endpoint_name=f"recommendation_user_ranking_{ENV_SHORT_NAME}",
         instance_type=RANKING_DICT[ENV_SHORT_NAME],
@@ -87,6 +91,7 @@ models_to_deploy = [
     ),
     # two-tower retrieval endpoint
     ModelDeployment(
+        key="coreservation_retrieval",
         experiment_name=f"retrieval_recommendation_v1.2_{ENV_SHORT_NAME}",
         endpoint_name=f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
         instance_type=CORESERVATION_RETRIEVAL_DICT[ENV_SHORT_NAME],
@@ -95,6 +100,7 @@ models_to_deploy = [
     ),
     # graph retrieval endpoint
     ModelDeployment(
+        key="graph_retrieval",
         experiment_name=f"graph_retrieval_recommendation_v1.1_{ENV_SHORT_NAME}",
         endpoint_name=f"recommendation_graph_retrieval_{ENV_SHORT_NAME}",
         instance_type=GRAPH_RETRIEVAL_DICT[ENV_SHORT_NAME],
@@ -103,6 +109,7 @@ models_to_deploy = [
     ),
     # semantic item retrieval endpoint
     ModelDeployment(
+        key="semantic_retrieval",
         experiment_name=f"semantic_item_retrieval_v1.0_{ENV_SHORT_NAME}",
         endpoint_name=f"semantic_item_retrieval_{ENV_SHORT_NAME}",
         instance_type=SEMANTIC_RETRIEVAL_DICT[ENV_SHORT_NAME],
@@ -114,6 +121,18 @@ models_to_deploy = [
         service_account=VERTEX_ENDPOINTS_CD_SA,
     ),
 ]
+
+ALL_MODEL_KEYS = [model.key for model in models_to_deploy]
+
+
+def choose_models_to_deploy(**context):
+    selected_models = context["params"].get("models") or ALL_MODEL_KEYS
+    tasks_to_run = []
+    for model_params in models_to_deploy:
+        task_id = f"deploy_models.deploy_model_{model_params.experiment_name}_{model_params.endpoint_name}"
+        if model_params.key in selected_models:
+            tasks_to_run.append(task_id)
+    return tasks_to_run
 
 
 with DAG(
@@ -130,7 +149,16 @@ with DAG(
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        )
+        ),
+        "models": Param(
+            default=ALL_MODEL_KEYS,
+            type="array",
+            examples=ALL_MODEL_KEYS,
+            description=(
+                "List of Vertex models to redeploy. By default, all models "
+                f"are redeployed. Possible values: {ALL_MODEL_KEYS}."
+            ),
+        ),
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
@@ -149,6 +177,11 @@ with DAG(
         retries=2,
     )
 
+    branch_models = BranchPythonOperator(
+        task_id="branch_models",
+        python_callable=choose_models_to_deploy,
+    )
+
     with TaskGroup("deploy_models", dag=dag) as deploy_models:
         for model_params in models_to_deploy:
             # Single-quote the JSON so the shell passes it as one argument.
@@ -162,7 +195,7 @@ with DAG(
                 if model_params.service_account
                 else ""
             )
-            deploy_command = f"""
+            command = f"""
                 python deploy_model.py \
                     --region {DEFAULT_REGION} \
                     --experiment-name {model_params.experiment_name} \
@@ -178,12 +211,20 @@ with DAG(
                 task_id=f"deploy_model_{model_params.experiment_name}_{model_params.endpoint_name}",
                 instance_name=GCE_INSTANCE,
                 base_dir=BASE_DIR,
-                command=deploy_command,
+                command=command,
                 dag=dag,
             )
 
     gce_instance_stop = DeleteGCEOperator(
-        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+        task_id="gce_stop_task",
+        instance_name=GCE_INSTANCE,
+        trigger_rule=TriggerRule.NONE_FAILED_MIN_ONE_SUCCESS,
     )
 
-    gce_instance_start >> fetch_install_code >> deploy_models >> gce_instance_stop
+    (
+        gce_instance_start
+        >> fetch_install_code
+        >> branch_models
+        >> deploy_models
+        >> gce_instance_stop
+    )

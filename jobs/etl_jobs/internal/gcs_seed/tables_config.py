@@ -211,7 +211,7 @@ REF_TABLES = {
     "siren_legal_category_labels": {
         "file_type": "parquet",
     },
-    "population_age_and_department_france_details": {
+    "population_age_and_department_france_legacy": {
         "file_type": "parquet",
     },
     "region_department": {

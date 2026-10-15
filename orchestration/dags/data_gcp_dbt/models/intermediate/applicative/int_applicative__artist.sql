@@ -4,6 +4,7 @@ select
     artist_description,
     artist_biography,
     artist_mediation_uuid,
+    artist_computed_image,
     wikidata_id,
     wikipedia_url,
     wikidata_image_file_url,

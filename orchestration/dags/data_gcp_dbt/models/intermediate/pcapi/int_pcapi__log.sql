@@ -4,6 +4,11 @@ select
     resource.labels.namespace_name as environement,
     jsonpayload.message,
     jsonpayload.technical_message_id,
+    jsonpayload.technical_origin.origin as technical_origin,
+    jsonpayload.technical_origin.feature as technical_feature,
+    jsonpayload.technical_origin.action as technical_action,
+    jsonpayload.technical_origin.cron as technical_cron,
+    severity,
     jsonpayload.extra.choice_datetime,
     jsonpayload.extra.source,
     jsonpayload.extra.method,
@@ -60,6 +65,11 @@ select
         ) as int64
     ) as stock_new_quantity,
     cast(jsonpayload.extra.stock_dnbookedquantity as int64) as stock_booking_quantity,
+    cast(jsonpayload.extra.booking_quantity as int64) as booking_quantity,
+    jsonpayload.extra.exception_class,
+    jsonpayload.extra.exception_type,
+    jsonpayload.extra.success,
+    jsonpayload.extra.exception_message,
     jsonpayload.extra.changes.publicationdatetime.oldvalue
     as publication_date_old_value,
     jsonpayload.extra.changes.publicationdatetime.newvalue
@@ -116,6 +126,7 @@ select
     jsonpayload.extra.provider_id,
     jsonpayload.extra.siret,
     cast(jsonpayload.extra.is_diffusible as boolean) as siret_is_diffusible,
+    json_strip_nulls(to_json(jsonpayload.extra), remove_empty => true) as extra_json,
     json_extract(to_json_string(jsonpayload.extra), '$.counters') as counters_json,
     coalesce(
         jsonpayload.extra.changes.price.old_value, jsonpayload.extra.old_price
@@ -140,22 +151,22 @@ select
     array_to_string(jsonpayload.extra.filtervalues.academies, ',') as academy_filter,
     array_to_string(
         array(
-            select cast(value as string)
-            from unnest(jsonpayload.extra.filtervalues.venue) as value
+            select cast(filter_value as string) as filter_value
+            from unnest(jsonpayload.extra.filtervalues.venue) as filter_value
         ),
         ','
     ) as venue_filter,
     array_to_string(
         array(
-            select cast(value as string)
-            from unnest(jsonpayload.extra.filtervalues.domains) as value
+            select cast(filter_value as string) as filter_value
+            from unnest(jsonpayload.extra.filtervalues.domains) as filter_value
         ),
         ','
     ) as artistic_domain_filter,
     array_to_string(
         array(
-            select cast(value as string)
-            from unnest(jsonpayload.extra.filtervalues.students) as value
+            select cast(filter_value as string) as filter_value
+            from unnest(jsonpayload.extra.filtervalues.students) as filter_value
         ),
         ','
     ) as student_filter,

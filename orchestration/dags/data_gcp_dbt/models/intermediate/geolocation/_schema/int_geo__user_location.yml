@@ -1,0 +1,4 @@
+version: 2
+models:
+  - name: int_geo__user_location
+    description: '{{ doc("description__int_geo__user_location") }}'

@@ -18,3 +18,7 @@
 {% docs column__partner_city_code %} INSEE code of the city where the cultural partner is located, at the arrondissement level for Paris, Lyon and Marseille (e.g. `75101`). {% enddocs %}
 {% docs column__partner_municipality_code %} INSEE code of the municipality (commune) where the cultural partner is located: the parent municipality for the arrondissements of Paris, Lyon and Marseille (`75056`, `69123`, `13055`), the same as `partner_city_code` everywhere else. {% enddocs %}
 {% docs column__partner_municipality_label %} Name of the municipality (commune) of `partner_municipality_code` (e.g. `Paris` for every Paris arrondissement). {% enddocs %}
+{% docs column__cultural_partner_is_in_qpv %}Boolean. Indicates whether the cultural partner's geocoded address is in a QPV (Quartier Prioritaire de la Ville); null if the address is not geocoded.{% enddocs %}
+{% docs column__partner_qpv_code %}Code of the QPV containing the cultural partner's geocoded address, null otherwise.{% enddocs %}
+{% docs column__partner_qpv_name %}Name of the QPV containing the cultural partner's geocoded address; `hors QPV` if geocoded outside any QPV; `non localisé` if not geocoded.{% enddocs %}
+{% docs column__partner_qpv_municipality %}Municipality (commune) label of the QPV containing the cultural partner, null if the partner is not in a QPV.{% enddocs %}

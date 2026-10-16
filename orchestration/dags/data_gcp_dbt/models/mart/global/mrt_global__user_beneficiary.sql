@@ -23,6 +23,7 @@ select
     user_is_in_qpv,
     user_qpv_code,
     user_qpv_name,
+    user_qpv_municipality,
     user_epci,
     user_epci_code,
     user_density_label,

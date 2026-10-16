@@ -113,6 +113,7 @@ select
         then "hors QPV"
         else "non localisé"
     end as user_qpv_name,
+    case when ui.user_is_in_qpv then ui.qpv_municipality end as user_qpv_municipality,
     u.user_humanized_id,
     dgu.user_age_at_first_deposit,
     dgu.user_age_at_last_deposit,

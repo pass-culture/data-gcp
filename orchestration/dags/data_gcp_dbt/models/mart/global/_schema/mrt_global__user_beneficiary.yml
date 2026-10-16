@@ -107,6 +107,9 @@ models:
       - name: user_qpv_name
         description: '{{ doc("column__user_beneficiary_qpv_name") }}'
         data_type: STRING
+      - name: user_qpv_municipality
+        description: '{{ doc("column__user_qpv_municipality") }}'
+        data_type: STRING
       - name: user_epci
         description: '{{ doc("column__user_epci") }}'
         data_type: STRING

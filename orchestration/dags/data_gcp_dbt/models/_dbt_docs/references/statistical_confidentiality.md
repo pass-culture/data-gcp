@@ -19,7 +19,7 @@ The method works in three steps:
 
 Each individual (beneficiary) is assigned a deterministic numeric key derived from their identifier using a **salted** hash function. This key is stable: the same individual always produces the same key, regardless of which table they appear in.
 
-The salt is stored in Secret Manager (`dbt_record_key_salt`, one per environment) and injected by Airflow as the `DBT_RECORD_KEY_SALT` environment variable. Since the code and the perturbation table are public, the salt is what prevents anyone knowing user identifiers from recomputing cell keys and removing the noise. **The salt must never be rotated**: a new salt re-draws every published perturbation, and comparing releases would allow averaging the noise away.
+The salt is stored in Secret Manager (`dbt-record-key-salt-{env}`, e.g. `dbt-record-key-salt-prod`) and injected by Airflow as the `DBT_RECORD_KEY_SALT` environment variable. Since the code and the perturbation table are public, the salt is what prevents anyone knowing user identifiers from recomputing cell keys and removing the noise. **The salt must never be rotated**: a new salt re-draws every published perturbation, and comparing releases would allow averaging the noise away.
 
 #### 2. Cell key computation
 

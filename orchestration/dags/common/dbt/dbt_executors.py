@@ -23,7 +23,7 @@ from common.config import (
 )
 from dbt.cli.main import dbtRunner, dbtRunnerResult
 
-RECORD_KEY_SALT_SECRET_ID = "dbt_record_key_salt"
+RECORD_KEY_SALT_SECRET_ID = f"dbt-record-key-salt-{ENV_SHORT_NAME}"
 
 
 def should_skip_scheduled_node(node_tags: List[str], ds: str) -> Optional[str]:

@@ -181,6 +181,37 @@ with
                 )
             ) as origin
         from firebase_last_two_days_events
+    ),
+
+    deduplicated_consult_offers as (
+        select *
+        from native_unnest
+        where event_name = 'ConsultOffer'
+        qualify
+            lag(event_timestamp) over (
+                partition by user_pseudo_id, ga_session_id, offerId
+                order by event_timestamp
+            ) is null
+            or timestamp_diff(
+                event_timestamp,
+                lag(event_timestamp) over (
+                    partition by user_pseudo_id, ga_session_id, offerId
+                    order by event_timestamp
+                ),
+                second
+            ) > 3
+    ),
+
+    other_events as (
+        select *
+        from native_unnest
+        where event_name != 'ConsultOffer' or event_name is null
+    ),
+
+    unified_events as (
+        select * from deduplicated_consult_offers
+        union all
+        select * from other_events
     )
 
 select
@@ -207,4 +238,4 @@ select
         then true
         else false
     end as is_anomaly
-from native_unnest
+from unified_events

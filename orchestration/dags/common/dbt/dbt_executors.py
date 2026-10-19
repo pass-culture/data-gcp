@@ -14,12 +14,16 @@ from typing import List, Optional
 
 import yaml
 from airflow.exceptions import AirflowSkipException
+from common.access_gcp_secrets import access_secret_data
 from common.config import (
     ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
     PATH_TO_DBT_TARGET,
 )
 from dbt.cli.main import dbtRunner, dbtRunnerResult
+
+RECORD_KEY_SALT_SECRET_ID = "dbt_record_key_salt"
 
 
 def should_skip_scheduled_node(node_tags: List[str], ds: str) -> Optional[str]:
@@ -54,6 +58,23 @@ def should_skip_scheduled_node(node_tags: List[str], ds: str) -> Optional[str]:
         logging.warning(f"Invalid date format for ds: {ds}")
 
     return None
+
+
+def get_record_key_salt() -> str:
+    """
+    Fetch the salt of the statistical secret record keys (see record_key macro).
+
+    The secret is created once per environment and must never be rotated:
+    a new salt re-draws every published perturbation, which allows averaging
+    the noise away across releases.
+    """
+    salt = access_secret_data(GCP_PROJECT_ID, RECORD_KEY_SALT_SECRET_ID)
+    if salt:
+        return salt
+    if ENV_SHORT_NAME == "prod":
+        raise ValueError(f"Missing secret {RECORD_KEY_SALT_SECRET_ID} in prod")
+    logging.warning(f"Secret {RECORD_KEY_SALT_SECRET_ID} not found, using no salt")
+    return ""
 
 
 def create_tmp_folder(base_path: str) -> str:
@@ -101,6 +122,9 @@ def run_dbt_command(
         temp_target_dir = PATH_TO_DBT_TARGET
 
     try:
+        # Passed as env var rather than dbt var to keep it out of the logged command
+        os.environ["DBT_RECORD_KEY_SALT"] = get_record_key_salt()
+
         # Initialize dbt runner
         dbt = dbtRunner()
 

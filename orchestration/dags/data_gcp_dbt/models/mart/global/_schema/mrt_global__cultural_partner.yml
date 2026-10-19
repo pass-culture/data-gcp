@@ -26,6 +26,14 @@ models:
         description: "{{ doc('column__partner_department_name') }}"
       - name: partner_postal_code
         description: "{{ doc('column__partner_postal_code') }}"
+      - name: cultural_partner_is_in_qpv
+        description: "{{ doc('column__cultural_partner_is_in_qpv') }}"
+      - name: partner_qpv_code
+        description: "{{ doc('column__partner_qpv_code') }}"
+      - name: partner_qpv_name
+        description: "{{ doc('column__partner_qpv_name') }}"
+      - name: partner_qpv_municipality
+        description: "{{ doc('column__partner_qpv_municipality') }}"
       - name: partner_type
         description: "{{ doc('column__partner_type') }}"
       - name: partner_type_origin

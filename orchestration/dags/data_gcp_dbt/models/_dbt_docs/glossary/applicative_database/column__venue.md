@@ -41,6 +41,9 @@
 {% docs column__venue_department_name %} Department name where of the venue. {% enddocs %}
 {% docs column__venue_has_siret %}Indicates whether the venue has a SIRET.{% enddocs %}
 {% docs column__venue_in_qpv %}Indicates whether the venue is in a City Policy Priority Neighborhood.{% enddocs %}
+{% docs column__venue_qpv_code %}Code of the QPV (Quartier Prioritaire de la Ville) containing the venue's geocoded address, null otherwise. QPV membership is computed on the geocoded address, not derived from the IRIS.{% enddocs %}
+{% docs column__venue_qpv_name %}Name of the QPV containing the venue's geocoded address; `hors QPV` if the venue is geocoded outside any QPV; `non localisé` if the venue is not geocoded (same convention as `venue_in_qpv`: true / false / null).{% enddocs %}
+{% docs column__venue_qpv_municipality %}Municipality (commune) label of the QPV containing the venue, null if the venue is not in a QPV.{% enddocs %}
 {% docs column__venue_in_zrr %}Indicates whether the venue is in a municipality classified (fully or partially) in the last ZRR zoning (Zone de Revitalisation Rurale, ended on 2024-06-30). Null when the venue is not located.{% enddocs %}
 {% docs column__venue_in_frr %}Indicates whether the venue is in a municipality classified in the France Ruralités Revitalisation zoning (FRR socle, FRR+, partial or La Réunion special rural zone), the zoning that replaced the ZRR on 2024-07-01. Null when the venue is not located.{% enddocs %}
 {% docs column__venue_in_frr_plus %}Indicates whether the venue is in a municipality classified FRR+ (reinforced level of the France Ruralités Revitalisation zoning). Null when the venue is not located.{% enddocs %}

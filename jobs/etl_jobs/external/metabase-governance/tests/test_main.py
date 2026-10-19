@@ -36,8 +36,14 @@ class TestArchiveCommand:
             patch("main.compute_archive_stats", return_value={}) as compute,
             patch("main.log_archive_stats") as log,
             patch("main.load_recently_failed_card_ids", return_value=set()) as failed,
+            patch("main.load_trashed_card_ids", return_value=set()) as trashed,
         ):
-            yield {"compute": compute, "log": log, "failed": failed}
+            yield {
+                "compute": compute,
+                "log": log,
+                "failed": failed,
+                "trashed": trashed,
+            }
 
     @patch("main.append_archiving_logs")
     @patch("main.load_activity_dataframe")
@@ -169,6 +175,9 @@ class TestArchiveCommand:
         # Both should be called with min_age_days=15
         assert mock_dead.call_args.kwargs["min_age_days"] == 15
         assert mock_empty.call_args.kwargs["min_age_days"] == 15
+        # Archived dashboards/collections are moved under the archive first.
+        assert mock_dead.call_args.kwargs["archive_collection_id"] == 99
+        assert mock_empty.call_args.kwargs["archive_collection_id"] == 99
 
     @patch("main.load_archiving_config")
     def test_archive_no_cleanup_config(self, mock_config, runner):
@@ -214,6 +223,7 @@ class TestArchiveCommand:
             # Absent from config → default cooldown applied.
             failure_cooldown_days=30,
             dry_run=False,
+            archive_collection_id=99,
         )
 
     @patch("main.hard_archive_stale_cards")
@@ -341,7 +351,10 @@ class TestArchiveCommand:
 class TestStatsCommand:
     @pytest.fixture(autouse=True)
     def _mock_failed(self):
-        with patch("main.load_recently_failed_card_ids", return_value=set()) as failed:
+        with (
+            patch("main.load_recently_failed_card_ids", return_value=set()) as failed,
+            patch("main.load_trashed_card_ids", return_value=set()),
+        ):
             yield failed
 
     @patch("main.log_archive_stats")
@@ -432,3 +445,63 @@ class TestDependenciesCommand:
         result = runner.invoke(app, ["dependencies"])
         assert result.exit_code == 0
         mock_run.assert_called_once_with(mock_metabase_client.return_value)
+
+
+ADHOC = {
+    "name": "adhoc",
+    "ancestor_title_pattern": "%adhoc%",
+    "min_age_days": 15,
+    "views_window_months": 3,
+    "max_views": 5,
+}
+
+
+class TestArchiveSkipsTrashedAndArchived:
+    @pytest.fixture(autouse=True)
+    def _mock_offline(self):
+        with (
+            patch("main.compute_archive_stats", return_value={}),
+            patch("main.log_archive_stats"),
+            patch("main.load_recently_failed_card_ids", return_value={1}),
+            patch("main.load_trashed_card_ids", return_value={2}),
+            patch("main.load_activity_dataframe", return_value=pd.DataFrame()),
+            patch("main.append_archiving_logs"),
+            patch("main.time.sleep"),
+        ):
+            yield
+
+    @patch("main.select_soft_archive_candidates", return_value=[])
+    @patch("main.load_archiving_config")
+    def test_selection_excludes_trashed_and_archive_tree(
+        self, mock_config, mock_select, runner
+    ):
+        mock_config.return_value = _base_config(soft_archive_rules=[ADHOC])
+        from main import app
+
+        result = runner.invoke(app, ["archive"])
+        assert result.exit_code == 0
+        kwargs = mock_select.call_args.kwargs
+        assert kwargs["excluded_ids"] == {1, 2}
+        assert kwargs["archive_collection_id"] == 99
+
+    @patch("main.select_soft_archive_candidates")
+    @patch("main.load_archiving_config")
+    def test_trashed_card_is_neither_renamed_nor_failed(
+        self, mock_config, mock_select, runner, caplog
+    ):
+        mock_config.return_value = _base_config(soft_archive_rules=[ADHOC])
+        mock_select.return_value = [
+            {"id": 3, "name": "Card", "collection_id": 10, "rule_name": "adhoc"}
+        ]
+        with patch("main.MoveToArchive") as MockMoveToArchive:
+            move = MagicMock()
+            move.move_object.return_value = {"id": 3, "status": "already_archived"}
+            MockMoveToArchive.return_value = move
+            from main import app
+
+            with caplog.at_level("INFO"):
+                result = runner.invoke(app, ["archive"])
+
+        assert result.exit_code == 0
+        move.rename_archive_object.assert_not_called()
+        assert "0 moved, 0 failed, 1 already in the Trash" in caplog.text

@@ -21,6 +21,7 @@ from domain.archiving import (
     hard_archive_stale_cards,
     load_activity_dataframe,
     load_recently_failed_card_ids,
+    load_trashed_card_ids,
     log_archive_stats,
     select_soft_archive_candidates,
 )
@@ -84,7 +85,10 @@ def archive(
     excluded_ids = set()
     if soft_rules:
         activity_df = load_activity_dataframe(dataset=dataset_name, table=table_name)
-        excluded_ids = load_recently_failed_card_ids(failure_cooldown_days)
+        excluded_ids = (
+            load_recently_failed_card_ids(failure_cooldown_days)
+            | load_trashed_card_ids()
+        )
 
     log_archive_stats(
         compute_archive_stats(activity_df, config, excluded_ids=excluded_ids)
@@ -92,11 +96,15 @@ def archive(
 
     if soft_rules:
         candidates = select_soft_archive_candidates(
-            activity_df, soft_rules, excluded_ids=excluded_ids
+            activity_df,
+            soft_rules,
+            excluded_ids=excluded_ids,
+            archive_collection_id=archive_collection_id,
         )
 
         log_entries = []
         moved = 0
+        trashed = 0
         failed = []
         for card in candidates[:max_cards]:
             archiving = MoveToArchive(
@@ -108,6 +116,9 @@ def archive(
             log_entry = archiving.move_object()
             if log_entry is not None:
                 log_entries.append(log_entry)
+            if log_entry and log_entry.get("status") == "already_archived":
+                trashed += 1
+                continue
             # Only rename when the move actually succeeded — otherwise the card
             # stays in its original collection with a "[Archive] - ..." prefix.
             if dry_run or (log_entry and log_entry.get("status") == "success"):
@@ -120,7 +131,12 @@ def archive(
         if not dry_run:
             append_archiving_logs(log_entries)
 
-        logger.info("Soft-archive run: %d moved, %d failed", moved, len(failed))
+        logger.info(
+            "Soft-archive run: %d moved, %d failed, %d already in the Trash",
+            moved,
+            len(failed),
+            trashed,
+        )
         if failed:
             sample = failed[:5]
             logger.warning(
@@ -140,6 +156,7 @@ def archive(
             max_cards=hard_archive_config["max_cards"],
             failure_cooldown_days=hard_archive_config.get("failure_cooldown_days", 30),
             dry_run=dry_run,
+            archive_collection_id=archive_collection_id,
         )
 
     cleanup_config = config.get("empty_cleanup")
@@ -154,6 +171,7 @@ def archive(
             min_age_days=min_age_days,
             min_days_since_update=min_days_since_update,
             dry_run=dry_run,
+            archive_collection_id=archive_collection_id,
         )
         logger.info("Cleaning up empty collections...")
         archive_empty_collections(
@@ -162,6 +180,7 @@ def archive(
             min_age_days=min_age_days,
             min_days_since_update=min_days_since_update,
             dry_run=dry_run,
+            archive_collection_id=archive_collection_id,
         )
 
     logger.info("Archiving complete")
@@ -188,7 +207,9 @@ def stats(
     excluded_ids = set()
     if soft_rules:
         activity_df = load_activity_dataframe(dataset=dataset_name, table=table_name)
-        excluded_ids = load_recently_failed_card_ids(cooldown_days)
+        excluded_ids = (
+            load_recently_failed_card_ids(cooldown_days) | load_trashed_card_ids()
+        )
     log_archive_stats(
         compute_archive_stats(activity_df, config, excluded_ids=excluded_ids)
     )

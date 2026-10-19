@@ -15,6 +15,8 @@ Key components:
 
 This mart table combines data from both Instagram and TikTok intermediate tables, providing a unified view of social media performance across platforms. The data is partitioned by export date and clustered by account name for optimal query performance.
 
+For each account and publication ID, the table keeps the most recent observation available across all exports. Publications missing from the latest export remain present, including potentially deleted publications. Their metrics reflect their last available export, identified by `publication_export_date`, and are not necessarily up to date with the latest export.
+
 {% enddocs %}
 
 ## Table description

@@ -124,6 +124,7 @@ with
                         "adviceType",
                         "displayedOn",
                         "code",
+                        "mapType",
                     ],
                 )
             }},

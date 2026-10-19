@@ -100,6 +100,7 @@ select
     coalesce(query, searchquery) as query,
     concat(user_pseudo_id, "-", ga_session_id, "-", searchid) as unique_search_id,
     coalesce(entryid, homeentryid) as entry_id,
+    maptype as map_type,
     case
         when entryid in ("4XbgmX7fVVgBMoCJiLiY9n", "1ZmUjN7Za1HfxlbAOJpik2")
         then "generale"

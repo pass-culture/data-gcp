@@ -38,7 +38,7 @@
         publication_link,
         is_publication_tagged,
         {% if social_network == "instagram" %} instagram_publication_media_type
-        {% else %} null as instagram_publication_media_type
+        {% else %} cast(null as string) as instagram_publication_media_type
         {% endif %},
 
         -- Campaign tags
@@ -74,16 +74,12 @@
         {% endfor %}
 
     from {{ ref("int_" ~ social_network ~ "__publication_detail") }}
-    where
-        publication_export_date = (
-            select
-                max(
-                    social_network_publication_detail.publication_export_date
-                ) as max_export_date
-            from
-                {{ ref("int_" ~ social_network ~ "__publication_detail") }}
-                as social_network_publication_detail
+    qualify
+        row_number() over (
+            partition by publication_account_name, publication_id
+            order by publication_export_date desc
         )
+        = 1
 
     {% if not loop.last %}
         union all

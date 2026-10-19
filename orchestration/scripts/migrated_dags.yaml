@@ -1,2 +1,32 @@
+environments:
+  tst:
+    source_project: passculture-data-ehp
+    source_suffix: dev
+    destination_project: pc-data-tst
+    destination_suffix: tst
+  stg:
+    source_project: passculture-data-ehp
+    source_suffix: stg
+    destination_project: pc-data-stg
+    destination_suffix: stg
+  prd:
+    source_project: passculture-data-prod
+    source_suffix: prod
+    destination_project: pc-data-prd
+    destination_suffix: prd
+
 dags_in_paris:
-  import_gsheet:  # full refresh -> no tables to copy
+  import_gsheet:
+    source_dataset: raw
+    tables_to_copy: [] # full refresh -> no tables to copy
+
+  test_copy_company_contact:
+    source_dataset: raw
+    tables_to_copy:
+      - gsheet_company_contact
+
+  # import_qualtrics:
+  #   source_dataset: raw
+  #   tables_to_copy:
+  #     - qualtrics_answers
+  #     - qualtrics_events

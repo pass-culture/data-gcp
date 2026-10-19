@@ -2,8 +2,22 @@ version: 1
 
 sources:
   - name: raw_eu9 # Paris
-    schema: "{{ 'raw_prd' if var('ENV_SHORT_NAME') == 'prd' or var('ENV_SHORT_NAME') == 'prod' else 'raw_stg' }}"
-    database: "{{ 'pc-data-prd' if var('ENV_SHORT_NAME') == 'prd' or var('ENV_SHORT_NAME') == 'prod' else 'pc-data-stg' }}"
+    schema: >
+      {%- if var('ENV_SHORT_NAME') in ['prd', 'prod'] -%}
+        raw_prd
+      {%- elif var('ENV_SHORT_NAME') in ['dev', 'tst'] -%}
+        raw_tst
+      {%- else -%}
+        raw_stg
+      {%- endif -%}
+    database: >
+      {%- if var('ENV_SHORT_NAME') in ['prd', 'prod'] -%}
+        pc-data-prd
+      {%- elif var('ENV_SHORT_NAME') in ['dev', 'tst'] -%}
+        pc-data-tst
+      {%- else -%}
+        pc-data-stg
+      {%- endif -%}
     tables:
       - name: gsheet_company_contact
       - name: gsheet_eac_webinar

@@ -62,7 +62,7 @@
         {
             "name": "bibliotheques_ou_mediatheques",
             "label": "Bibliothèques ou médiathèques",
-            "condition": "partner_type IN ('Bibliothèque ou médiathèques')",
+            "condition": "partner_type IN ('Bibliothèque ou médiathèque')",
         },
         {
             "name": "centre_culturel",

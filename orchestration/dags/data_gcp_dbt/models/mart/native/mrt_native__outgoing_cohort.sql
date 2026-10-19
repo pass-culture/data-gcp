@@ -33,7 +33,34 @@ with
             first_deposit_creation_date,
             date_diff(
                 last_deposit_expiration_date, first_deposit_creation_date, day
-            ) as seniority_days
+            ) as seniority_days,
+            -- null-safe key of the cohort grouping columns
+            farm_fingerprint(
+                to_json_string(
+                    struct(
+                        date_trunc(last_deposit_expiration_date, month),
+                        total_deposit_amount,
+                        user_is_priority_public,
+                        user_is_in_qpv,
+                        user_is_unemployed,
+                        user_is_in_education,
+                        user_density_label,
+                        user_macro_density_label,
+                        user_region_name,
+                        user_department_code,
+                        user_department_name,
+                        user_epci,
+                        user_epci_code,
+                        user_city,
+                        user_city_code,
+                        user_municipality_code,
+                        user_municipality_label,
+                        user_activity,
+                        user_civility,
+                        is_theme_subscribed
+                    )
+                )
+            ) as cohort_key
         from {{ ref("mrt_global__user_beneficiary") }}
         where
             current_deposit_type in ("GRANT_18", "GRANT_17_18")
@@ -59,6 +86,34 @@ with
             users_expired_monthly.deposit_expiration_date, users_expired_monthly.user_id
     ),
 
+    category_bookings as (
+        select
+            users_expired_monthly.cohort_key,
+            booking.offer_category_id,
+            count(distinct users_expired_monthly.user_id) as total_users,
+            mod(
+                abs(sum(distinct {{ record_key("users_expired_monthly.user_id") }})),
+                256
+            ) as cell_key
+        from users_expired_monthly
+        inner join
+            {{ ref("mrt_global__booking") }} as booking
+            on users_expired_monthly.user_id = booking.user_id
+        where not booking.booking_is_cancelled and booking.offer_category_id is not null
+        group by users_expired_monthly.cohort_key, booking.offer_category_id
+    ),
+
+    category_booked_users as (
+        select
+            cohort_key,
+            array_agg(
+                struct(offer_category_id, total_users, cell_key)
+                order by offer_category_id
+            ) as category_booked_users
+        from category_bookings
+        group by cohort_key
+    ),
+
     consultations as (
         select
             u.deposit_expiration_date,
@@ -73,7 +128,7 @@ with
             on c.user_id = u.user_id
             and date_sub(u.deposit_expiration_date, interval 2 year)
             <= c.consultation_date
-            and u.deposit_expiration_date >= c.consultation_date
+            and c.consultation_date <= u.deposit_expiration_date
         group by u.deposit_expiration_date, u.user_id
     )
 
@@ -150,7 +205,8 @@ select
     coalesce(sum(b.total_diversification), 0) as total_diversification_score,
     coalesce(sum(b.total_distinct_venue_booked), 0) as total_venue_id_booked,
     coalesce(sum(b.total_distinct_venue_type_booked), 0) as total_venue_type_booked,
-    coalesce(sum(b.total_distinct_category_booked), 0) as total_category_booked
+    coalesce(sum(b.total_distinct_category_booked), 0) as total_category_booked,
+    any_value(cbu.category_booked_users) as category_booked_users
 from users_expired_monthly as u
 left join
     consultations as c
@@ -160,6 +216,7 @@ left join
     bookings_info as b
     on u.user_id = b.user_id
     and u.deposit_expiration_date = b.deposit_expiration_date
+left join category_booked_users as cbu on u.cohort_key = cbu.cohort_key
 group by
     date_trunc(u.deposit_expiration_date, month),
     u.total_deposit_amount,

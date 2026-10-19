@@ -91,7 +91,7 @@ jobs:
           username: oauth2accesstoken
           password: ${{ steps.auth.outputs.access_token }}
       - name: "Set up Docker Buildx"
-        uses: docker/setup-buildx-action@v2.2.1
+        uses: docker/setup-buildx-action@8c0edbc76e98fa90f69d9a2c020dcb50019dc325 # v2.2.1
         with:
           driver: docker
       - name: "Get short SHA"

@@ -12,7 +12,6 @@
 select
     partition_date,
     log_timestamp,
-    technical_message_id,
     technical_origin as origin,
     technical_feature as feature,
     technical_action as action,

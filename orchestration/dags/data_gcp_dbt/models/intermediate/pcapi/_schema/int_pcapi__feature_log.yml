@@ -12,8 +12,6 @@ models:
                 where: "partition_date > date_sub('{{ var('ds', modules.datetime.date.today().strftime('%Y-%m-%d')) }}', interval 14 day)"
       - name: log_timestamp
         description: "{{ doc('column__log_timestamp') }}"
-      - name: technical_message_id
-        description: "{{ doc('column__technical_message_id') }}"
       - name: origin
         description: "{{ doc('column__log_origin') }}"
         data_tests:

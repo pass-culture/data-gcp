@@ -16,8 +16,6 @@ models:
         description: "{{ doc('column__log_feature') }}"
       - name: action
         description: "{{ doc('column__log_action') }}"
-      - name: technical_message_id
-        description: "{{ doc('column__technical_message_id') }}"
       - name: severity
         description: "{{ doc('column__severity') }}"
       - name: exception_class

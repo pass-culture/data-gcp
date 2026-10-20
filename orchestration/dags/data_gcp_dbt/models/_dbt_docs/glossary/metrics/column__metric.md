@@ -177,7 +177,7 @@ Number of beneficiaries at the end of the partition month, broken down by `age_a
 {% enddocs %}
 
 {% docs column__metrics__total_category_booked_beneficiaries %}
-The number of beneficiaries who made at least one booking in the specific category by the time their credit expired.
+The number of beneficiaries who made at least one non-cancelled booking in the specific category by the time their credit expired.
 {% enddocs %}
 
 {% docs column__metrics__total_3plus_category_booked_beneficiaries %}

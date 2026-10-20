@@ -67,4 +67,4 @@ inner join
 left join
     collection_ancestor_names
     on rank_execution.card_collection_id = collection_ancestor_names.collection_id
-where rank_execution.card_id_execution_rank = 1
+where rank_execution.card_id_execution_rank = 1 and not rank_execution.card_archived

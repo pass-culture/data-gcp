@@ -40,7 +40,7 @@ Cards that have failed in the last `soft_archive_failure_cooldown_days` days are
 
 Cards already under `archive_collection_id` are never candidates: archive sub-folders such as `Adhoc (>1 Mois) - Archive` match the rule patterns too, and re-selecting them only produced no-op moves.
 
-Cards already in the Metabase Trash are skipped. The BigQuery mirror of `report_card` has no `archived` flag, so before each move the job checks the card through the API; a trashed card is logged `already_archived` and, like every hard-archived card, excluded from later runs.
+Cards already in the Metabase Trash are skipped. `int_metabase__activity` drops cards the nightly `report_card` mirror flags as `archived`, and the job excludes them too. Because the mirror can be a day stale, the job also checks each card through the API before moving it; a trashed card is logged `already_archived` and, like every hard-archived card, excluded from later runs.
 
 Personal collections are never touched: the dbt model already filters `personal_owner_id IS NULL`.
 

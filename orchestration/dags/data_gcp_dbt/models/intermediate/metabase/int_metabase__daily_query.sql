@@ -27,6 +27,7 @@ select
     mrd.dashboard_name,
     mrc.query_type,
     mrc.dataset_query,
+    coalesce(mrc.archived, false) as card_archived,
     row_number() over (
         partition by mqe.card_id order by mqe.execution_date desc
     ) as card_id_execution_rank

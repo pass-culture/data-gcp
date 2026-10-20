@@ -1316,8 +1316,8 @@ class TestMoveToArchiveStatus:
         assert entry["archived_at"] is None
 
     def test_trashed_card_is_skipped_and_logged(self, metabase):
-        # The BQ mirror of report_card has no `archived` flag, so trashed cards
-        # reach the candidate list; moving them fails and retries forever.
+        # The BQ mirror of report_card is a day stale, so a card trashed since
+        # the last import still reaches the candidate list.
         metabase.get_cards.return_value = {"archived": True}
         entry = MoveToArchive(self._card(), ARCHIVE_ID, metabase).move_object()
         metabase.update_card_collections.assert_not_called()
@@ -1333,6 +1333,29 @@ class TestLoadTrashedCardIds:
         assert "already_archived" in query
         assert "card_hard_archive" in query
         assert "int_metabase_dev.archiving_log" in query
+
+    @patch("domain.archiving.pd.read_gbq")
+    def test_reads_raw_archived_flag(self, mock_read_gbq):
+        # Cards trashed by hand never reach archiving_log (e.g. 1979).
+        mock_read_gbq.return_value = pd.DataFrame({"id": []})
+        load_trashed_card_ids()
+        query = mock_read_gbq.call_args[0][0]
+        assert "raw_dev.metabase_report_card" in query
+        assert "WHERE archived" in query
+
+
+class TestHardArchiveSkipsTrashedCards:
+    @patch("domain.archiving.pd.read_gbq")
+    def test_query_excludes_raw_archived(self, mock_read_gbq, metabase):
+        mock_read_gbq.return_value = pd.DataFrame({"id": [], "card_collection_id": []})
+        hard_archive_stale_cards(
+            metabase,
+            name_pattern=r"^\[Archive\]",
+            min_days_since_update=30,
+            max_cards=25,
+        )
+        query = mock_read_gbq.call_args[0][0]
+        assert "NOT COALESCE(rc.archived, FALSE)" in query
 
 
 class TestHardArchiveOnlyUnderArchive:

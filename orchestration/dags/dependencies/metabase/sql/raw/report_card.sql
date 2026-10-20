@@ -2,6 +2,7 @@ select
     id,
     created_at,
     updated_at,
+    archived,
     name as card_name,
     description as card_description,
     creator_id as card_creator_id,

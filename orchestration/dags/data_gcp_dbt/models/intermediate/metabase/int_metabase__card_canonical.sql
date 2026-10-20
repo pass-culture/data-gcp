@@ -108,7 +108,7 @@ with
                 then 1
                 else 0
             end as card_tier_rank,
-            coalesce(t.in_scope, false) as in_scope
+            coalesce(t.in_scope, false) and not coalesce(rc.archived, false) as in_scope
         from {{ source("raw", "metabase_report_card") }} as rc
         left join taxonomy as t on rc.card_collection_id = t.collection_id
     ),

@@ -17,7 +17,9 @@ The method works in three steps:
 
 #### 1. Record key assignment
 
-Each individual (beneficiary) is assigned a deterministic numeric key derived from their identifier using a hash function. This key is stable: the same individual always produces the same key, regardless of which table they appear in.
+Each individual (beneficiary) is assigned a deterministic numeric key derived from their identifier using a **salted** hash function. This key is stable: the same individual always produces the same key, regardless of which table they appear in.
+
+The salt is stored in Secret Manager (`dbt-record-key-salt-{env}`, e.g. `dbt-record-key-salt-prod`) and injected by Airflow as the `DBT_RECORD_KEY_SALT` environment variable. Since the code and the perturbation table are public, the salt is what prevents anyone knowing user identifiers from recomputing cell keys and removing the noise. **The salt must never be rotated**: a new salt re-draws every published perturbation, and comparing releases would allow averaging the noise away.
 
 #### 2. Cell key computation
 
@@ -30,10 +32,12 @@ A fixed **perturbation table** maps each `(count range, cell key range)` pair to
 | Count range | Perturbation behaviour | Published count |
 |-------------|----------------------|-----------------|
 | 0 | Never perturbed | Always 0 |
-| 1-4 | **Always perturbed** — large noise to push below 0 or above 5 | 0 or 5+ |
-| 5-10 | Often perturbed — moderate noise | 0 or 5+ |
-| 11-20 | Sometimes perturbed — small noise (+/- 1) | Near original |
-| 21+ | Rarely perturbed (+/- 1) | Near original |
+| 1-4 | **Always perturbed** — goes to 5 with probability count/5, to 0 otherwise | 0 or 5 |
+| 5 | Often perturbed — 0 (10%), 5 (39%) or 6 (51%) | 0, 5 or 6 |
+| 6-10 | Sometimes perturbed — +/- 1 (37.5%) | Near original |
+| 11+ | Rarely perturbed — +/- 1 (25%) | Near original |
+
+For every count, the expected perturbation over the 256 cell keys is zero (see Properties).
 
 The perturbation table for individual (beneficiary) data is defined in the `perturbation_table__individual` dbt model. A separate `perturbation_table__business` model will be used for business data (with a threshold of 3 entities and 80% revenue dominance rule).
 
@@ -45,16 +49,16 @@ Following the INSEE standard, **a published count is always either 0 or >= 5**. 
 - A consumer seeing 5 or 6 cannot tell if the original was 1, 2, 5, 6, or 10
 - It is **impossible** to know with certainty whether a cell contains fewer than 5 individuals
 
-This is enforced by the perturbation table: for original counts of 1-4, the noise is large enough to always push the result to 0 or to 5+.
+This is enforced by the perturbation table: for original counts of 1-4, the noise is large enough to always push the result to 0 or to 5.
 
 ### Properties
 
 - **Small counts are always heavily modified**: original counts of 1-4 are pushed to 0 or >= 5.
-- **Large counts are virtually exact**: counts above 20 are rarely changed, and at most by +/- 1.
+- **Large counts are virtually exact**: counts above 10 are rarely changed, and at most by +/- 1.
 - **Consistency across tables**: the same individuals in different tables always receive the same perturbation, because the cell key depends only on who is in the cell, not on which table is being built.
 - **Zero preservation**: empty cells are never perturbed. A count of 0 means exactly 0.
 - **No suppressed cells**: every cell is published, so consumers can aggregate freely without missing data.
-- **Unbiased**: the perturbation has zero mean — no systematic upward or downward bias across cells.
+- **Unbiased**: the perturbation has zero mean for every count — no systematic upward or downward bias across cells. This matters because published tables are mostly summed over many small cells: a table pushing small counts up on average (e.g. +2.3 for a count of 1) inflates aggregates of rare categories by tens of percent.
 
 ### Impact on aggregations
 
@@ -83,7 +87,7 @@ Practical consequences:
 |-----------|-------|-------------|
 | D (max noise) | 5 | Maximum absolute perturbation applied |
 | js (threshold) | 5 | No published count between 1 and js-1 |
-| Cell key range | 0-255 | Derived from `farm_fingerprint(user_id) mod 256` |
+| Cell key range | 0-255 | Derived from `farm_fingerprint(salt \|\| user_id) mod 256` |
 
 ### References
 

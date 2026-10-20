@@ -6,3 +6,4 @@ package-lock.yml
 edr_target/
 env-run-artifacts/
 exposures.yml
+dbt_internal_packages/

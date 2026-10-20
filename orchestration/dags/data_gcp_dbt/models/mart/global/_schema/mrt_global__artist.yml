@@ -57,9 +57,6 @@ models:
       - name: main_search_group_name
         description: '{{ doc("column__artist_main_search_group_name") }}'
         data_type: STRING
-      - name: main_search_group_name_has_bookable_offer
-        description: '{{ doc("column__artist_main_search_group_name_has_bookable_offer") }}'
-        data_type: BOOLEAN
       - name: associated_search_group_names
         description: '{{ doc("column__artist_associated_search_group_names") }}'
         data_type: ARRAY<STRING>

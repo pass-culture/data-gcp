@@ -52,10 +52,7 @@ with
         select
             apo.artist_id,
             apo.search_group_name,
-            count(distinct apo.offer_id) as total_offers,
-            count(
-                distinct case when apo.offer_is_bookable then apo.offer_id end
-            ) as total_bookable_offers
+            count(distinct apo.offer_id) as total_offers
         from artist_product_offers as apo
         inner join
             supported_artist_categorization_search_group_names as hsg
@@ -68,18 +65,14 @@ with
             artist_id,
             search_group_name,
             total_offers,
-            total_bookable_offers,
             row_number() over (
                 partition by artist_id order by total_offers desc, search_group_name asc
             ) as category_rank
         from artist_offer_counts_per_search_group_name
     ),
 
-    artist_main_search_group_name_and_bookable_flag as (
-        select
-            artist_id,
-            search_group_name as main_search_group_name,
-            total_bookable_offers > 0 as main_search_group_name_has_bookable_offer
+    artist_main_search_group_name as (
+        select artist_id, search_group_name as main_search_group_name
         from artist_search_group_names_ranked_by_offer_count
         where category_rank = 1
     ),
@@ -148,7 +141,6 @@ select
     a.creation_date as artist_creation_date,
     a.modification_date as artist_modification_date,
     amc.main_search_group_name,
-    amc.main_search_group_name_has_bookable_offer,
     any_value(aac.associated_search_group_names) as associated_search_group_names,
     coalesce(sum(ac.total_consultations), 0) as artist_total_consultations,
     coalesce(
@@ -185,9 +177,7 @@ select
 from {{ ref("int_applicative__artist") }} as a
 left join artist_product_offers as apo on a.artist_id = apo.artist_id
 left join artist_consultations as ac on a.artist_id = ac.artist_id
-left join
-    artist_main_search_group_name_and_bookable_flag as amc
-    on a.artist_id = amc.artist_id
+left join artist_main_search_group_name as amc on a.artist_id = amc.artist_id
 left join
     artist_associated_search_group_names_array as aac on a.artist_id = aac.artist_id
 left join
@@ -216,5 +206,4 @@ group by
     a.artist_pro_search_score,
     a.creation_date,
     a.modification_date,
-    amc.main_search_group_name,
-    amc.main_search_group_name_has_bookable_offer
+    amc.main_search_group_name

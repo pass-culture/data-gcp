@@ -1,0 +1,99 @@
+version: 2
+
+models:
+  - name: exp_vidoc__cultural_partner
+    description: "Monthly cultural partner activation indicators exported to Vidoc, by geography and partner type."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - partition_month
+            - partner_department_code
+            - partner_region_name
+            - partner_epci_code
+            - partner_city_code
+            - partner_municipality_code
+            - partner_type
+    columns:
+      - name: partition_month
+        data_type: DATE
+        description: "{{ doc('column__partition_month') }}"
+        data_tests:
+          - not_null
+
+      - name: partner_region_name
+        data_type: STRING
+        description: "{{ doc('column__partner_region_name') }}"
+
+      - name: partner_region_code
+        data_type: STRING
+        description: "{{ doc('column__partner_region_code') }}"
+
+      - name: partner_department_name
+        data_type: STRING
+        description: "{{ doc('column__partner_department_name') }}"
+
+      - name: partner_department_code
+        data_type: STRING
+        description: "{{ doc('column__partner_department_code') }}"
+
+      - name: partner_epci_code
+        data_type: STRING
+        description: "{{ doc('column__partner_epci_code') }}"
+
+      - name: partner_city_code
+        data_type: STRING
+        description: "{{ doc('column__partner_city_code') }}"
+        data_tests:
+          - not_null
+
+      - name: partner_municipality_code
+        data_type: STRING
+        description: "{{ doc('column__partner_municipality_code') }}"
+        data_tests:
+          - not_null
+
+      - name: partner_type
+        data_type: STRING
+        description: "{{ doc('column__partner_type') }}"
+        data_tests:
+          - not_null
+
+      - name: total_active_partners_individual
+        data_type: INT64
+        description: "{{ doc('column__metrics__total_active_partners_individual') }}"
+
+      - name: total_active_partners_collective
+        data_type: INT64
+        description: "{{ doc('column__metrics__total_active_partners_collective') }}"
+
+      - name: total_active_partners_global
+        data_type: INT64
+        description: "{{ doc('column__metrics__total_active_partners_global') }}"
+
+      - name: total_active_partners_dual_part
+        data_type: INT64
+        description: "{{ doc('column__metrics__total_active_partners_dual_part') }}"
+
+      - name: total_cumulative_activated_partners_individual
+        data_type: INT64
+        description: "{{ doc('column__metrics__total_cumulative_activated_partners_individual') }}"
+
+      - name: total_cumulative_activated_partners_collective
+        data_type: INT64
+        description: "{{ doc('column__metrics__total_cumulative_activated_partners_collective') }}"
+
+      - name: total_cumulative_activated_partners_global
+        data_type: INT64
+        description: "{{ doc('column__metrics__total_cumulative_activated_partners_global') }}"
+
+      - name: total_cumulative_activated_partners_individual_only
+        data_type: INT64
+        description: "{{ doc('column__metrics__total_cumulative_activated_partners_individual_only') }}"
+
+      - name: total_cumulative_activated_partners_collective_only
+        data_type: INT64
+        description: "{{ doc('column__metrics__total_cumulative_activated_partners_collective_only') }}"
+
+      - name: total_cumulative_activated_partners_dual_part
+        data_type: INT64
+        description: "{{ doc('column__metrics__total_cumulative_activated_partners_dual_part') }}"

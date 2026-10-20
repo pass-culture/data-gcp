@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: int_pcapi__feature_log
+    description: "{{ doc('description__int_pcapi__feature_log') }}"
+    columns:
+      - name: partition_date
+        description: "{{ doc('column__partition_date') }}"
+        data_tests:
+          - not_null:
+              config:
+                where: "partition_date > date_sub('{{ var('ds', modules.datetime.date.today().strftime('%Y-%m-%d')) }}', interval 14 day)"
+      - name: log_timestamp
+        description: "{{ doc('column__log_timestamp') }}"
+      - name: origin
+        description: "{{ doc('column__log_origin') }}"
+        data_tests:
+          - not_null:
+              config:
+                where: "partition_date > date_sub('{{ var('ds', modules.datetime.date.today().strftime('%Y-%m-%d')) }}', interval 14 day)"
+      - name: feature
+        description: "{{ doc('column__log_feature') }}"
+      - name: action
+        description: "{{ doc('column__log_action') }}"
+      - name: cron_name
+        description: "{{ doc('column__cron_name') }}"
+      - name: severity
+        description: "{{ doc('column__severity') }}"
+      - name: is_success
+        description: "{{ doc('column__is_success') }}"
+        data_tests:
+          - not_null:
+              config:
+                where: "partition_date > date_sub('{{ var('ds', modules.datetime.date.today().strftime('%Y-%m-%d')) }}', interval 14 day)"
+      - name: message
+        description: "{{ doc('column__message') }}"
+      - name: exception_class
+        description: "{{ doc('column__exception_class') }}"
+      - name: exception_message
+        description: "{{ doc('column__exception_message') }}"
+      - name: provider_id
+        description: "{{ doc('column__provider_id') }}"
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+      - name: booking_id
+        description: "{{ doc('column__booking_id') }}"
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+      - name: stock_id
+        description: "{{ doc('column__stock_id') }}"
+      - name: venue_id
+        description: "{{ doc('column__venue_id') }}"
+      - name: trace
+        description: "{{ doc('column__trace') }}"
+      - name: extra_json
+        description: "{{ doc('column__extra_json') }}"

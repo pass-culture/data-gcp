@@ -1,8 +1,9 @@
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import numpy as np
 import pandas as pd
 import pytest
+import requests
 from google.cloud import bigquery
 
 from domain.archiving import (
@@ -21,6 +22,7 @@ from domain.archiving import (
     hard_archive_stale_cards,
     load_activity_dataframe,
     load_recently_failed_card_ids,
+    load_trashed_card_ids,
     log_archive_stats,
     select_soft_archive_candidates,
 )
@@ -361,7 +363,7 @@ class TestMoveToArchive:
         }
         m = MoveToArchive(self._card(), 99, metabase)
         log_entry = m.move_object()
-        assert log_entry["status"] is None
+        assert log_entry["status"] == "error"
         assert "not remote synced" in log_entry["error_reason"]
 
     def test_move_object_null_status_captures_http_body(self, metabase):
@@ -374,7 +376,7 @@ class TestMoveToArchive:
         }
         m = MoveToArchive(self._card(), 99, metabase)
         log_entry = m.move_object()
-        assert log_entry["status"] is None
+        assert log_entry["status"] == "error"
         assert log_entry["http_status"] == 302
         assert "Sign in" in log_entry["error_reason"]
 
@@ -1263,3 +1265,174 @@ class TestArchiveEmptyCollections:
         result = archive_empty_collections(metabase, [100], min_age_days=15)
         assert result == []
         metabase.put_collection.assert_not_called()
+
+
+ARCHIVE_ID = 610
+
+
+class TestSoftArchiveSkipsArchiveTree:
+    """Cards already under the archive collection must not be re-selected: the
+    `%adhoc%` pattern also matches archive sub-folders such as
+    "Adhoc (>1 Mois) - Archive", which produced ~1,150 no-op moves in 05/2026."""
+
+    def _df(self):
+        rows = [
+            _activity_row(card_id=1, collection_id=10),
+            _activity_row(card_id=2, collection_id=ARCHIVE_ID),
+            _activity_row(
+                card_id=3,
+                collection_id=1911,
+                ancestors=["5. archive", "adhoc (>1 mois) - archive"],
+            ),
+        ]
+        rows[0]["card_collection_location"] = "/606/"
+        rows[1]["card_collection_location"] = "/"
+        rows[2]["card_collection_location"] = f"/{ARCHIVE_ID}/"
+        return pd.DataFrame(rows)
+
+    def test_excludes_cards_under_archive_collection(self):
+        result = select_soft_archive_candidates(
+            self._df(), [ADHOC_RULE], archive_collection_id=ARCHIVE_ID
+        )
+        assert [c["id"] for c in result] == [1]
+
+    def test_without_archive_id_keeps_previous_behaviour(self):
+        result = select_soft_archive_candidates(self._df(), [ADHOC_RULE])
+        assert {c["id"] for c in result} == {1, 2, 3}
+
+
+class TestMoveToArchiveStatus:
+    def _card(self):
+        return {"id": 7, "name": "Card", "collection_id": 10, "rule_name": "adhoc"}
+
+    def test_failed_move_is_logged_as_error_not_null(self, metabase):
+        metabase.get_cards.return_value = {"archived": False}
+        metabase.update_card_collections.return_value = {
+            "message": "Utilise du contenu qui n'est pas synchronisé à distance.",
+            "data": {"status-code": 400},
+        }
+        entry = MoveToArchive(self._card(), ARCHIVE_ID, metabase).move_object()
+        assert entry["status"] == "error"
+        assert entry["archived_at"] is None
+
+    def test_trashed_card_is_skipped_and_logged(self, metabase):
+        # The BQ mirror of report_card has no `archived` flag, so trashed cards
+        # reach the candidate list; moving them fails and retries forever.
+        metabase.get_cards.return_value = {"archived": True}
+        entry = MoveToArchive(self._card(), ARCHIVE_ID, metabase).move_object()
+        metabase.update_card_collections.assert_not_called()
+        assert entry["status"] == "already_archived"
+
+
+class TestLoadTrashedCardIds:
+    @patch("domain.archiving.pd.read_gbq")
+    def test_reads_already_archived_and_hard_archived(self, mock_read_gbq):
+        mock_read_gbq.return_value = pd.DataFrame({"id": [4, 5]})
+        assert load_trashed_card_ids() == {4, 5}
+        query = mock_read_gbq.call_args[0][0]
+        assert "already_archived" in query
+        assert "card_hard_archive" in query
+        assert "int_metabase_dev.archiving_log" in query
+
+
+class TestHardArchiveOnlyUnderArchive:
+    @patch("domain.archiving.pd.read_gbq")
+    def test_query_restricted_to_archive_tree(self, mock_read_gbq, metabase):
+        # Name-only matching trashed 91 renamed cards in place in Interne/Adhoc,
+        # where non-admin groups still see them in the Trash.
+        mock_read_gbq.return_value = pd.DataFrame({"id": [], "card_collection_id": []})
+        hard_archive_stale_cards(
+            metabase,
+            name_pattern=r"^\[Archive\]",
+            min_days_since_update=30,
+            max_cards=25,
+            archive_collection_id=ARCHIVE_ID,
+        )
+        query = mock_read_gbq.call_args[0][0]
+        assert f"coll_root.root_id = {ARCHIVE_ID}" in query
+
+
+class TestCleanupMovesIntoArchive:
+    """Dashboards/collections archived in place stay visible (and restorable) in
+    the Trash for every group with access to their original collection."""
+
+    @pytest.fixture(autouse=True)
+    def _mock_gbq(self):
+        with patch("domain.archiving.bigquery.Client") as mock_bq_client:
+            self.mock_bq_client = mock_bq_client
+            yield mock_bq_client
+
+    def _old(self):
+        return (pd.Timestamp.utcnow() - pd.Timedelta(days=30)).isoformat()
+
+    def test_dead_dashboard_moved_then_archived(self, metabase):
+        metabase.get_collection_children.return_value = {
+            "data": [{"model": "dashboard", "id": 5, "created_at": self._old()}]
+        }
+        metabase.get_dashboards.return_value = {"dashcards": []}
+        result = archive_dead_dashboards(
+            metabase, [606], min_age_days=15, archive_collection_id=ARCHIVE_ID
+        )
+        assert result == [5]
+        assert metabase.put_dashboard.call_args_list == [
+            call(5, {"collection_id": ARCHIVE_ID}),
+            call(5, {"archived": True}),
+        ]
+
+    def test_dashboard_already_under_archive_is_not_moved(self, metabase):
+        metabase.get_collection_children.return_value = {
+            "data": [{"model": "dashboard", "id": 5, "created_at": self._old()}]
+        }
+        metabase.get_dashboards.return_value = {"dashcards": []}
+        archive_dead_dashboards(
+            metabase, [ARCHIVE_ID], min_age_days=15, archive_collection_id=ARCHIVE_ID
+        )
+        metabase.put_dashboard.assert_called_once_with(5, {"archived": True})
+
+    def test_failed_move_does_not_archive_in_place(self, metabase):
+        metabase.get_collection_children.return_value = {
+            "data": [{"model": "dashboard", "id": 5, "created_at": self._old()}]
+        }
+        metabase.get_dashboards.return_value = {"dashcards": []}
+        metabase.put_dashboard.side_effect = requests.HTTPError("400")
+        result = archive_dead_dashboards(
+            metabase, [606], min_age_days=15, archive_collection_id=ARCHIVE_ID
+        )
+        assert result == []
+        metabase.put_dashboard.assert_called_once_with(5, {"collection_id": ARCHIVE_ID})
+
+    def test_empty_collection_moved_then_archived(self, metabase):
+        def children(collection_id, **kwargs):
+            if collection_id == 606:
+                return {
+                    "data": [
+                        {"model": "collection", "id": 42, "created_at": self._old()}
+                    ]
+                }
+            return {"data": []}
+
+        metabase.get_collection_children.side_effect = children
+        result = archive_empty_collections(
+            metabase, [606], min_age_days=15, archive_collection_id=ARCHIVE_ID
+        )
+        assert result == [42]
+        assert metabase.put_collection.call_args_list == [
+            call(42, {"parent_id": ARCHIVE_ID}),
+            call(42, {"archived": True}),
+        ]
+
+    def test_empty_collection_under_archive_is_not_moved(self, metabase):
+        def children(collection_id, **kwargs):
+            if collection_id == ARCHIVE_ID:
+                return {
+                    "data": [
+                        {"model": "collection", "id": 43, "created_at": self._old()}
+                    ]
+                }
+            return {"data": []}
+
+        metabase.get_collection_children.side_effect = children
+        archive_empty_collections(
+            metabase, [ARCHIVE_ID], min_age_days=15, archive_collection_id=ARCHIVE_ID
+        )
+        metabase.put_collection.assert_called_once_with(43, {"archived": True})

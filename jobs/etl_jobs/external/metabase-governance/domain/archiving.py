@@ -148,6 +148,7 @@ def _hard_archive_breakdown_query(
               AND coll_root.own_personal_owner_id IS NULL
               AND root_coll.personal_owner_id IS NULL
               AND rc.id NOT IN (SELECT id FROM already_hard_archived)
+              AND NOT COALESCE(rc.archived, FALSE)
               {_archive_tree_filter(archive_collection_id)}
         )
         SELECT
@@ -304,14 +305,19 @@ def load_recently_failed_card_ids(cooldown_days=30):
 
 
 def load_trashed_card_ids():
-    """Card IDs this job knows are in the Metabase Trash.
+    """Card IDs known to be in the Metabase Trash.
 
-    The BigQuery mirror of report_card carries no `archived` flag, so trashed
-    cards keep showing up in the activity table. Without this exclusion the
-    soft archive tries to move them every cooldown window and fails.
+    Reads the `archived` flag of the raw report_card mirror (refreshed nightly,
+    so it also covers cards trashed by hand), plus what this job trashed or
+    found trashed since the last import. Without this exclusion the soft
+    archive tries to move them every cooldown window and fails.
     """
     query = f"""
-        SELECT DISTINCT id
+        SELECT id
+        FROM `{RAW_METABASE_DATASET}.metabase_report_card`
+        WHERE archived
+        UNION DISTINCT
+        SELECT id
         FROM `{INT_METABASE_DATASET}.archiving_log`
         WHERE (object_type = 'card' AND status = 'already_archived')
            OR (object_type = 'card_hard_archive'
@@ -637,8 +643,9 @@ def hard_archive_stale_cards(
     `archive_collection_id`, only cards under that collection are considered.
 
     Candidate selection is done in BigQuery on `raw.metabase_report_card`
-    (no API pagination). The per-card `archived` flag is verified via the API
-    before flipping it, since the raw mirror does not expose `archived`.
+    (no API pagination), skipping cards the nightly mirror already flags as
+    `archived`. The flag is re-checked via the API before flipping it, since
+    the mirror can be up to a day stale.
 
     Cards that failed to hard-archive in the last `failure_cooldown_days` (e.g.
     Metabase remote-sync rejections) are skipped so a fixed-size batch isn't
@@ -688,6 +695,7 @@ def hard_archive_stale_cards(
           AND coll_root.own_personal_owner_id IS NULL
           AND root_coll.personal_owner_id IS NULL
           AND rc.id NOT IN (SELECT id FROM already_hard_archived)
+          AND NOT COALESCE(rc.archived, FALSE)
           {cooldown_filter}
           {_archive_tree_filter(archive_collection_id)}
         ORDER BY rc.id

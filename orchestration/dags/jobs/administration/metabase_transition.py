@@ -93,8 +93,23 @@ with DAG(
         """,
     )
 
+    # After a real migration: no card left on a legacy table, every card on the new table runs.
+    verify_metabase_cards_op = SSHGCEOperator(
+        task_id="verify_metabase_cards_op",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="""
+        {% if params.dry_run %}echo "dry run: verification skipped"{% else %}
+        uv run python main.py verify \
+        --database-name "{{ params.database_name }}" \
+        {% if params.card_ids %}--card-ids "{{ params.card_ids }}"{% endif %}
+        {% endif %}
+        """,
+    )
+
     gce_instance_stop = DeleteGCEOperator(
-        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+        task_id="gce_stop_task", instance_name=GCE_INSTANCE, trigger_rule="all_done"
     )
 
     (
@@ -102,5 +117,6 @@ with DAG(
         >> gce_instance_start
         >> fetch_install_code
         >> switch_metabase_cards_op
+        >> verify_metabase_cards_op
         >> gce_instance_stop
     )

@@ -155,3 +155,22 @@ class TablesToMigrate(RootModel[dict[str, TableMigrationEntry]]):
                 raise ValueError(msg)
 
         return self
+
+    def resolve_environment(self, env_short_name: str) -> TablesToMigrate:
+        """Replace the ``{env}`` placeholder in keys and target tables (e.g. ``analytics_{env}.t``).
+
+        One file can then drive the staging run, then the production run.
+        """
+
+        def resolve(name: str) -> str:
+            return name.replace("{env}", env_short_name)
+
+        return TablesToMigrate.model_validate(
+            {
+                resolve(key): {
+                    "target_table": resolve(entry.target_table) if entry.target_table else None,
+                    "columns_to_migrate": entry.columns_to_migrate,
+                }
+                for key, entry in self.root.items()
+            }
+        )

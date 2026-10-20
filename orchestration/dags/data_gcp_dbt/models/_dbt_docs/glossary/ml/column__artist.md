@@ -2,6 +2,7 @@
 {% docs column__artist_cluster_id %}Internal identifier of artist names cluster.{% enddocs %}
 {% docs column__artist_wiki_id %}Wikidata ID (can be null if not matched).{% enddocs %}
 {% docs column__artist_name %}Name of the artist.{% enddocs %}
+{% docs column__normalized_artist_name %}Normalized name of the artist (lowercased, accents removed, tokens sorted alphabetically and joined with `|`), used for namesake deduplication.{% enddocs %}
 {% docs column__artist_offer_name %}Name of the artist as it is written in the offer.{% enddocs %}
 {% docs column__artist_description %}Short description of the artist.{% enddocs %}
 {% docs column__artist_biography %}Biography of the artist.{% enddocs %}

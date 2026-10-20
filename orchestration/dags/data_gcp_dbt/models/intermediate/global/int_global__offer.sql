@@ -14,6 +14,7 @@ select
     o.offer_name,
     o.offer_description,
     o.offer_category_id,
+    o.search_group_name,
     o.last_stock_price,
     o.offer_creation_date,
     o.offer_created_at,

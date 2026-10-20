@@ -107,7 +107,9 @@ def _scope_breakdown_query():
     """
 
 
-def _hard_archive_breakdown_query(name_pattern, min_days_since_update):
+def _hard_archive_breakdown_query(
+    name_pattern, min_days_since_update, archive_collection_id=None
+):
     """Hard-archive candidates grouped by top-level (root-child) collection.
 
     Excludes cards in personal collections AND cards living in any descendant
@@ -146,6 +148,8 @@ def _hard_archive_breakdown_query(name_pattern, min_days_since_update):
               AND coll_root.own_personal_owner_id IS NULL
               AND root_coll.personal_owner_id IS NULL
               AND rc.id NOT IN (SELECT id FROM already_hard_archived)
+              AND NOT COALESCE(rc.archived, FALSE)
+              {_archive_tree_filter(archive_collection_id)}
         )
         SELECT
             COALESCE(LOWER(top_c.collection_name), '(no collection)') AS top_folder,
@@ -156,6 +160,15 @@ def _hard_archive_breakdown_query(name_pattern, min_days_since_update):
         GROUP BY 1
         ORDER BY cards DESC
     """
+
+
+def _archive_tree_filter(archive_collection_id):
+    """Restrict the hard archive to cards under the archive collection: trashing
+    a card in place leaves it in the Trash of every group that can read its
+    original collection."""
+    if archive_collection_id is None:
+        return ""
+    return f"AND coll_root.root_id = {int(archive_collection_id)}"
 
 
 def compute_archive_stats(activity_df, config, excluded_ids=None):
@@ -178,7 +191,10 @@ def compute_archive_stats(activity_df, config, excluded_ids=None):
     soft_rules = config.get("soft_archive_rules", [])
     if soft_rules and activity_df is not None and not activity_df.empty:
         candidates = select_soft_archive_candidates(
-            activity_df, soft_rules, excluded_ids=excluded_ids
+            activity_df,
+            soft_rules,
+            excluded_ids=excluded_ids,
+            archive_collection_id=config.get("archive_collection_id"),
         )
         if candidates:
             cand_df = pd.DataFrame(candidates)
@@ -208,7 +224,9 @@ def compute_archive_stats(activity_df, config, excluded_ids=None):
     if hard_cfg:
         hard_df = pd.read_gbq(
             _hard_archive_breakdown_query(
-                hard_cfg["name_pattern"], hard_cfg["min_days_since_update"]
+                hard_cfg["name_pattern"],
+                hard_cfg["min_days_since_update"],
+                config.get("archive_collection_id"),
             )
         )
         stats["hard_by_folder"] = hard_df
@@ -279,6 +297,31 @@ def load_recently_failed_card_ids(cooldown_days=30):
           AND date(COALESCE(logged_at, archived_at)) >= date_sub(
               current_date(), interval {int(cooldown_days)} day
           )
+    """
+    df = pd.read_gbq(query)
+    if df.empty:
+        return set()
+    return set(df["id"].astype(int).tolist())
+
+
+def load_trashed_card_ids():
+    """Card IDs known to be in the Metabase Trash.
+
+    Reads the `archived` flag of the raw report_card mirror (refreshed nightly,
+    so it also covers cards trashed by hand), plus what this job trashed or
+    found trashed since the last import. Without this exclusion the soft
+    archive tries to move them every cooldown window and fails.
+    """
+    query = f"""
+        SELECT id
+        FROM `{RAW_METABASE_DATASET}.metabase_report_card`
+        WHERE archived
+        UNION DISTINCT
+        SELECT id
+        FROM `{INT_METABASE_DATASET}.archiving_log`
+        WHERE (object_type = 'card' AND status = 'already_archived')
+           OR (object_type = 'card_hard_archive'
+               AND status IN ('success', 'already_archived'))
     """
     df = pd.read_gbq(query)
     if df.empty:
@@ -388,10 +431,23 @@ def append_archiving_logs(log_entries):
     logger.info("Wrote %d archiving log entries to BQ", len(log_entries))
 
 
-def select_soft_archive_candidates(df, rules, excluded_ids=None):
+def _under_collection(df, collection_id):
+    """Mask of cards living in `collection_id` or any of its descendants."""
+    in_collection = df["card_collection_id"] == collection_id
+    if "card_collection_location" not in df.columns:
+        return in_collection
+    location = df["card_collection_location"].fillna("").astype(str)
+    return in_collection | location.str.startswith(f"/{collection_id}/")
+
+
+def select_soft_archive_candidates(
+    df, rules, excluded_ids=None, archive_collection_id=None
+):
     """Pick cards to soft-archive. First matching rule wins (rules order = YAML order).
 
     A card is a candidate for a rule when:
+      * it is NOT already under `archive_collection_id` (archive sub-folders such
+        as "Adhoc (>1 Mois) - Archive" match the rule patterns too),
       * its id is NOT in `excluded_ids` (e.g. recent failure cooldown),
       * any of its ancestor collection names matches the rule's title pattern,
       * its card_creation_date is older than rule.min_age_days,
@@ -420,6 +476,11 @@ def select_soft_archive_candidates(df, rules, excluded_ids=None):
 
     candidates = []
     matched_ids = set()
+    already_archived = (
+        _under_collection(df, archive_collection_id)
+        if archive_collection_id is not None
+        else pd.Series(False, index=df.index)
+    )
 
     for rule in rules:
         regex = _like_to_regex(rule["ancestor_title_pattern"])
@@ -438,6 +499,7 @@ def select_soft_archive_candidates(df, rules, excluded_ids=None):
             & (age_days >= rule["min_age_days"])
             & (df[views_col] < rule["max_views"])
             & (~df["card_id"].isin(excluded_ids))
+            & (~already_archived)
         )
         min_update_age = rule.get("min_days_since_update")
         if min_update_age is not None:
@@ -509,11 +571,27 @@ class MoveToArchive:
             )
             return None
 
+        card = self.metabase.get_cards(self.id)
+        if isinstance(card, dict) and card.get("archived"):
+            logger.info(
+                "Card %s already in the Metabase Trash, recording skip", self.id
+            )
+            return _build_log_entry(
+                self.id,
+                "card",
+                "already_archived",
+                parent_folder=self.rule_name,
+                previous_collection_id=self.collection_id,
+                last_execution_date=self.last_execution_date,
+                last_execution_context=self.last_execution_context,
+            )
+
         result = self.metabase.update_card_collections(
             [self.id], self.archive_collection_id
         )
         raw_status = result.get("status") if isinstance(result, dict) else None
-        status = "success" if raw_status == "ok" else raw_status
+        # Error bodies carry no `status`: log them as 'error', never NULL.
+        status = "success" if raw_status == "ok" else (raw_status or "error")
 
         log_entry = _build_log_entry(
             self.id,
@@ -558,13 +636,16 @@ def hard_archive_stale_cards(
     max_cards,
     failure_cooldown_days=30,
     dry_run=False,
+    archive_collection_id=None,
 ):
     """Hard-archive cards whose name matches `name_pattern` (regex) and that have
-    not been updated for at least `min_days_since_update` days.
+    not been updated for at least `min_days_since_update` days. With
+    `archive_collection_id`, only cards under that collection are considered.
 
     Candidate selection is done in BigQuery on `raw.metabase_report_card`
-    (no API pagination). The per-card `archived` flag is verified via the API
-    before flipping it, since the raw mirror does not expose `archived`.
+    (no API pagination), skipping cards the nightly mirror already flags as
+    `archived`. The flag is re-checked via the API before flipping it, since
+    the mirror can be up to a day stale.
 
     Cards that failed to hard-archive in the last `failure_cooldown_days` (e.g.
     Metabase remote-sync rejections) are skipped so a fixed-size batch isn't
@@ -614,7 +695,9 @@ def hard_archive_stale_cards(
           AND coll_root.own_personal_owner_id IS NULL
           AND root_coll.personal_owner_id IS NULL
           AND rc.id NOT IN (SELECT id FROM already_hard_archived)
+          AND NOT COALESCE(rc.archived, FALSE)
           {cooldown_filter}
+          {_archive_tree_filter(archive_collection_id)}
         ORDER BY rc.id
         LIMIT {int(max_cards)}
     """
@@ -797,7 +880,12 @@ def _required_meta_fields(min_days_since_update):
 
 
 def _record_cleanup_archive(
-    log_entries, object_id, object_type, parent_collection_id, meta=None
+    log_entries,
+    object_id,
+    object_type,
+    parent_collection_id,
+    meta=None,
+    new_collection_id=None,
 ):
     """Append one archiving_log row for a collection/dashboard we archived.
 
@@ -815,11 +903,35 @@ def _record_cleanup_archive(
             object_type,
             "success",
             parent_folder=f"{object_type}_cleanup",
+            new_collection_id=new_collection_id,
             previous_collection_id=parent_collection_id,
             object_created_at=meta.get("created_at"),
             object_updated_at=meta.get("updated_at"),
         )
     )
+
+
+def _move_then_archive(put, object_id, move_params, skip_move, dry_run, label):
+    """Archive one dashboard/collection, moving it under the archive collection
+    first so its Trash entry inherits the archive's admin-only permissions.
+
+    Returns True when archived. A failed move leaves the object untouched:
+    archiving it in place would keep it in the Trash of every group that can
+    read its current collection.
+    """
+    if dry_run:
+        where = "" if skip_move else f" after moving it ({move_params})"
+        logger.info("[DRY-RUN] Would archive %s %s%s", label, object_id, where)
+        return True
+    try:
+        if not skip_move:
+            put(object_id, move_params)
+        put(object_id, {"archived": True})
+    except Exception as exc:
+        logger.error("Failed to archive %s %s: %s", label, object_id, exc)
+        return False
+    logger.info("Archived %s %s", label, object_id)
+    return True
 
 
 def archive_dead_dashboards(
@@ -828,11 +940,15 @@ def archive_dead_dashboards(
     min_age_days,
     min_days_since_update=None,
     dry_run=False,
+    archive_collection_id=None,
 ):
     """Archive dashboards that are empty or hold only archived cards, that
     were created at least `min_age_days` days ago and (optionally) haven't
     been updated for `min_days_since_update` days. Scans recursively under
-    each of `root_collection_ids` (archive root included by the caller)."""
+    each of `root_collection_ids` (archive root included by the caller).
+
+    With `archive_collection_id`, a dashboard outside the archive tree is moved
+    into it before being archived."""
     archived = []
     log_entries = []
 
@@ -845,6 +961,8 @@ def archive_dead_dashboards(
                 min_days_since_update,
                 dry_run,
                 log_entries,
+                archive_collection_id=archive_collection_id,
+                in_archive=root_id == archive_collection_id,
             )
         )
 
@@ -867,6 +985,8 @@ def _scan_dashboards_recursive(
     min_days_since_update=None,
     dry_run=False,
     log_entries=None,
+    archive_collection_id=None,
+    in_archive=True,
 ):
     archived = []
 
@@ -884,6 +1004,8 @@ def _scan_dashboards_recursive(
                     min_days_since_update,
                     dry_run,
                     log_entries,
+                    archive_collection_id=archive_collection_id,
+                    in_archive=in_archive,
                 )
             )
         elif model == "dashboard":
@@ -905,13 +1027,24 @@ def _scan_dashboards_recursive(
                 )
                 # Kept candidates are log-only — see _record_cleanup_archive.
                 continue
-            if dry_run:
-                logger.info("[DRY-RUN] Would archive dead dashboard %s", item["id"])
-            else:
-                logger.info("Archiving dead dashboard %s", item["id"])
-                metabase.put_dashboard(item["id"], {"archived": True})
+            skip_move = archive_collection_id is None or in_archive
+            if not _move_then_archive(
+                metabase.put_dashboard,
+                item["id"],
+                {"collection_id": archive_collection_id},
+                skip_move,
+                dry_run,
+                "dead dashboard",
+            ):
+                continue
+            if not dry_run:
                 _record_cleanup_archive(
-                    log_entries, item["id"], "dashboard", collection_id, meta
+                    log_entries,
+                    item["id"],
+                    "dashboard",
+                    collection_id,
+                    meta,
+                    new_collection_id=None if skip_move else archive_collection_id,
                 )
             archived.append(item["id"])
 
@@ -956,11 +1089,15 @@ def archive_empty_collections(
     min_days_since_update=None,
     exclude_ids=None,
     dry_run=False,
+    archive_collection_id=None,
 ):
     """Recursively archive empty collections under `root_collection_ids` whose
     `created_at` is older than `min_age_days` and (optionally) `updated_at`
     is older than `min_days_since_update`. Roots themselves are never
-    archived (they are added to `exclude_ids` by default)."""
+    archived (they are added to `exclude_ids` by default).
+
+    With `archive_collection_id`, a collection outside the archive tree is
+    moved into it before being archived."""
     if exclude_ids is None:
         exclude_ids = set(root_collection_ids)
 
@@ -977,6 +1114,8 @@ def archive_empty_collections(
                 min_days_since_update,
                 dry_run,
                 log_entries,
+                archive_collection_id=archive_collection_id,
+                in_archive=root_id == archive_collection_id,
             )
         )
 
@@ -1000,6 +1139,8 @@ def _archive_empty_recursive(
     min_days_since_update=None,
     dry_run=False,
     log_entries=None,
+    archive_collection_id=None,
+    in_archive=True,
 ):
     archived = []
 
@@ -1018,6 +1159,8 @@ def _archive_empty_recursive(
             min_days_since_update,
             dry_run,
             log_entries,
+            archive_collection_id=archive_collection_id,
+            in_archive=in_archive,
         )
         archived.extend(sub_archived)
 
@@ -1042,13 +1185,24 @@ def _archive_empty_recursive(
             # Kept candidates are log-only — see _record_cleanup_archive.
             continue
 
-        if dry_run:
-            logger.info("[DRY-RUN] Would archive empty collection %s", child_id)
-        else:
-            logger.info("Archiving empty collection %s", child_id)
-            metabase.put_collection(child_id, {"archived": True})
+        skip_move = archive_collection_id is None or in_archive
+        if not _move_then_archive(
+            metabase.put_collection,
+            child_id,
+            {"parent_id": archive_collection_id},
+            skip_move,
+            dry_run,
+            "empty collection",
+        ):
+            continue
+        if not dry_run:
             _record_cleanup_archive(
-                log_entries, child_id, "collection", collection_id, meta
+                log_entries,
+                child_id,
+                "collection",
+                collection_id,
+                meta,
+                new_collection_id=None if skip_move else archive_collection_id,
             )
         archived.append(child_id)
 

@@ -79,7 +79,7 @@ with
             concat('/question/', cast(rc.id as string)) as url,
             rc.card_collection_id as collection_id,
             rc.query_type,
-            false as is_archived,
+            coalesce(rc.archived, false) as is_archived,
             cast(null as string) as dashboard_description,
             cast(null as string) as dashboard_markdown,
             coalesce(aca.total_views_3_months, 0) as total_views_3_months,

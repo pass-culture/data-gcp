@@ -39,12 +39,12 @@ jobs:
           persist-credentials: false
 
       - name: Connect to Secret Manager
-        uses: 'google-github-actions/auth@v2'
+        uses: 'google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed' # v2
         with:
           workload_identity_provider: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12'
 
@@ -75,14 +75,14 @@ jobs:
         run: uv run mkdocs build
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
 
       - name: "Get secrets for Slack"
         id: 'secrets'
-        uses: 'google-github-actions/get-secretmanager-secrets@v2'
+        uses: 'google-github-actions/get-secretmanager-secrets@2b5f97c5a4b9c105e64646762ad4fc3f5128e6f5' # v2
         with:
           secrets: |-
             PASSDIRECTOR_SLACK_BOT_TOKEN:passculture-metier-ehp/passculture-ci-slack-bot-token

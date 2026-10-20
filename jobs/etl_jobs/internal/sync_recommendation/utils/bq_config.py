@@ -112,6 +112,28 @@ BQ_TABLES_CONFIG: Dict[str, Dict] = {
         "cloud_sql_table_name": "offer_metadata",
         "dataset_type": DatasetType.EXPORT_RECO_CLOUDSQL,
     },
+    "artist": {
+        "columns": {
+            "artist_id": "character varying",
+            "main_search_group_name": "character varying",
+            "main_search_group_name_has_bookable_offer": "boolean",
+        },
+        "bigquery_table_name": "artist",
+        "cloud_sql_table_name": "artist",
+        "dataset_type": DatasetType.EXPORT_RECO_CLOUDSQL,
+    },
+    "artist_top_by_category": {
+        "columns": {
+            "artist_id": "character varying",
+            "search_group_name": "character varying",
+            "score_name": "character varying",
+            "score_value": "real",
+            "category_rank": "integer",
+        },
+        "bigquery_table_name": "artist_top_by_category",
+        "cloud_sql_table_name": "artist_top_by_category",
+        "dataset_type": DatasetType.EXPORT_RECO_CLOUDSQL,
+    },
 }
 
 

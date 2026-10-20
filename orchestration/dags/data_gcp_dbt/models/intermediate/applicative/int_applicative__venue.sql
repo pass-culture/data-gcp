@@ -171,6 +171,15 @@ select
     v_loc.venue_density_level,
     v_loc.venue_academy_name,
     v_loc.venue_in_qpv,
+    v_loc.qpv_code as venue_qpv_code,
+    case
+        when v_loc.venue_in_qpv
+        then v_loc.qpv_name
+        when not v_loc.venue_in_qpv
+        then 'hors QPV'
+        else 'non localisé'
+    end as venue_qpv_name,
+    v_loc.qpv_municipality as venue_qpv_municipality,
     v_loc.venue_in_zrr,
     v_loc.venue_in_frr,
     v_loc.venue_in_frr_plus,

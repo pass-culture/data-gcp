@@ -70,6 +70,8 @@ models:
         description: "{{ doc('column__total_venue_type_booked') }}"
       - name: total_category_booked
         description: "{{ doc('column__total_category_booked') }}"
+      - name: category_booked_users
+        description: "Per offer category: number of users of the cohort with at least one non-cancelled booking in the category (total_users) and its perturbation cell key (cell_key)."
       - name: user_city
         description: "{{ doc('column__user_city') }}"
       - name: user_epci

@@ -38,6 +38,10 @@ For each candidate the job:
 
 Cards that have failed in the last `soft_archive_failure_cooldown_days` days are skipped automatically — Metabase remote-sync rejections etc. don't get retried daily.
 
+Cards already under `archive_collection_id` are never candidates: archive sub-folders such as `Adhoc (>1 Mois) - Archive` match the rule patterns too, and re-selecting them only produced no-op moves.
+
+Cards already in the Metabase Trash are skipped. `int_metabase__activity` drops cards the nightly `report_card` mirror flags as `archived`, and the job excludes them too. Because the mirror can be a day stale, the job also checks each card through the API before moving it; a trashed card is logged `already_archived` and, like every hard-archived card, excluded from later runs.
+
 Personal collections are never touched: the dbt model already filters `personal_owner_id IS NULL`.
 
 ### 1b. Hard archive — `archived = true` for `[Archive]` cards stale > N days
@@ -53,6 +57,8 @@ WHERE REGEXP_CONTAINS(card_name, r'(?i){name_pattern}')
 
 The double personal-collection filter excludes cards whose **immediate** collection is personal AND cards whose **root ancestor** is personal — Metabase only sets the flag on the root, descendants inherit personal-ness via their location path.
 
+Only cards under `archive_collection_id` are candidates (`coll_root.root_id = archive_collection_id`). A card trashed in place stays in the Trash of every group that can read its original collection; under the archive collection it is admin-only.
+
 Each candidate gets `archived: true` set via `PUT /api/card/{id}` after a per-card check that it isn't already archived.
 
 ### 1c. Empty cleanup — dashboards + collections
@@ -66,6 +72,8 @@ A **collection is empty** if `GET /api/collection/{id}/items` returns no items.
 Both are archived only if `created_at < now - min_age_days` AND, when set, `updated_at < now - min_days_since_update`. If the listing endpoint omits `created_at`/`updated_at` (varies by Metabase version), the job falls back to a single full-object fetch.
 
 The configured roots themselves are never archived (they're added to an exclude set).
+
+A dashboard or collection outside the archive tree is **moved under `archive_collection_id` first** (`collection_id` / `parent_id`), then archived, so its Trash entry inherits the archive's admin-only permissions. When the move fails, the object is left as it is (never archived in place) and the error is logged; the next run retries it.
 
 ### Archiving config (`config/archiving/{staging,production}.yaml`)
 
@@ -142,7 +150,7 @@ Every move/hard-archive attempt writes a row (success and failure):
 |---|---|
 | `id` | card id |
 | `object_type` | `card` (soft) or `card_hard_archive` |
-| `status` | `'success'`, `'error'`, or `null` on hard API failure |
+| `status` | `'success'`, `'error'`, `'already_archived'` (card already in the Trash), `'skipped_recent'`. Rows written before 2026-10 used `null` for errors. |
 | `new_collection_id` / `previous_collection_id` | target / source folder |
 | `archived_at` | timestamp of the run |
 | `parent_folder` | rule name (`thematic`, `adhoc`, `archive`) |

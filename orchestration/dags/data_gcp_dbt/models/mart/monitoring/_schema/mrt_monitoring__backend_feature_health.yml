@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: mrt_monitoring__backend_feature_health
+    description: "{{ doc('description__mrt_monitoring__backend_feature_health') }}"
+    columns:
+      - name: partition_date
+        description: "{{ doc('column__partition_date') }}"
+        data_tests:
+          - not_null:
+              config:
+                where: "partition_date > date_sub('{{ var('ds', modules.datetime.date.today().strftime('%Y-%m-%d')) }}', interval 14 day)"
+      - name: origin
+        description: "{{ doc('column__log_origin') }}"
+      - name: feature
+        description: "{{ doc('column__log_feature') }}"
+      - name: action
+        description: "{{ doc('column__log_action') }}"
+      - name: severity
+        description: "{{ doc('column__severity') }}"
+      - name: exception_class
+        description: "{{ doc('column__exception_class') }}"
+      - name: provider_id
+        description: "{{ doc('column__provider_id') }}"
+      - name: total_count
+        description: "{{ doc('column__total_count') }}"
+      - name: success_count
+        description: "{{ doc('column__success_count') }}"
+      - name: error_count
+        description: "{{ doc('column__error_count') }}"

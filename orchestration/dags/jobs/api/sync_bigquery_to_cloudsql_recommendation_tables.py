@@ -49,6 +49,8 @@ TABLE_TO_VIEW = {
     "venue_h3_mapping": "venue_h3_mapping_mv",
     "similar_artist": "similar_artist_mv",
     "offer_metadata": "offer_metadata_mv",
+    "artist": "artist_mv",
+    "artist_top_by_category": "artist_top_by_category_mv",
 }
 
 TABLES_TO_PROCESS = list(TABLE_TO_VIEW.keys())

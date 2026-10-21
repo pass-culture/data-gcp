@@ -9,14 +9,26 @@ models:
       - name: artist_name
         description: '{{ doc("column__artist_name") }}'
         data_type: STRING
+      - name: normalized_artist_name
+        description: '{{ doc("column__normalized_artist_name") }}'
+        data_type: STRING
       - name: artist_description
         description: '{{ doc("column__artist_description") }}'
+        data_type: STRING
+      - name: artist_biography
+        description: '{{ doc("column__artist_biography") }}'
         data_type: STRING
       - name: artist_mediation_uuid
         description: '{{ doc("column__artist_mediation_uuid") }}'
         data_type: STRING
       - name: artist_computed_image
         description: '{{ doc("column__artist_computed_image") }}'
+        data_type: STRING
+      - name: wikidata_id
+        description: '{{ doc("column__artist_wiki_id") }}'
+        data_type: STRING
+      - name: wikipedia_url
+        description: '{{ doc("column__artist_wikipedia_url") }}'
         data_type: STRING
       - name: wikidata_image_file_url
         description: '{{ doc("column__wikidata_image_file_url") }}'
@@ -30,6 +42,12 @@ models:
       - name: wikidata_image_author
         description: '{{ doc("column__wikidata_image_author") }}'
         data_type: STRING
+      - name: artist_app_search_score
+        description: '{{ doc("column__artist_app_search_score") }}'
+        data_type: FLOAT64
+      - name: artist_pro_search_score
+        description: '{{ doc("column__artist_pro_search_score") }}'
+        data_type: FLOAT64
       - name: artist_creation_date
         description: '{{ doc("column__artist_creation_date") }}'
         data_type: DATETIME
@@ -39,9 +57,6 @@ models:
       - name: main_search_group_name
         description: '{{ doc("column__artist_main_search_group_name") }}'
         data_type: STRING
-      - name: main_search_group_name_has_bookable_offer
-        description: '{{ doc("column__artist_main_search_group_name_has_bookable_offer") }}'
-        data_type: BOOLEAN
       - name: associated_search_group_names
         description: '{{ doc("column__artist_associated_search_group_names") }}'
         data_type: ARRAY<STRING>

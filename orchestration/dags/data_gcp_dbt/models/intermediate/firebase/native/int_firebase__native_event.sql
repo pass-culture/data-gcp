@@ -85,7 +85,7 @@ select
     system_theme,
     featurename as feature_name,
     feedbackresponse as feedback_response,
-    origin_detail,
+    coalesce(origin_detail, origindetails) AS origin_detail,
     advicetype as advice_type,
     displayedon as displayed_on,
     geo_located as reco_geo_located,

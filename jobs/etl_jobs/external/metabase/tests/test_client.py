@@ -175,3 +175,35 @@ class TestFindTableId:
         with patch("api.client.DATABASE_TABLES_CACHE_PATH", cache_path):
             with pytest.raises(FileNotFoundError, match="Table catalog not found"):
                 client.find_table_id("any_table", "any_schema")
+
+
+class TestRunCard:
+    def test_returns_none_when_query_completes(self) -> None:
+        # Given
+        client = _make_client()
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"status": "completed", "row_count": 3}
+        mock_response.raise_for_status = MagicMock()
+        client.session.post = MagicMock(return_value=mock_response)  # type: ignore[method-assign]
+
+        # When
+        result = client.run_card(42)
+
+        # Then
+        assert result is None
+        client.session.post.assert_called_once_with("http://fake-metabase:3000/api/card/42/query")
+
+    def test_returns_error_when_query_fails(self) -> None:
+        # Given
+        client = _make_client()
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"status": "failed", "error": "Not found: Table analytics_prod.t"}
+        mock_response.raise_for_status = MagicMock()
+        client.session.post = MagicMock(return_value=mock_response)  # type: ignore[method-assign]
+
+        # When
+        result = client.run_card(42)
+
+        # Then
+        expected = "Not found: Table analytics_prod.t"
+        assert result == expected

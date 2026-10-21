@@ -187,36 +187,40 @@ with
     deduplicated_consult_offers as (
         select *
         from native_unnest
-        where event_name = 'ConsultOffer'
+        where event_name = "ConsultOffer"
         qualify
             lag(event_timestamp) over (
-                partition by user_pseudo_id, ga_session_id, offerId
+                partition by user_pseudo_id, ga_session_id, offerid
                 order by event_timestamp
-            ) is null
+            )
+            is null
             or timestamp_diff(
                 event_timestamp,
                 lag(event_timestamp) over (
-                    partition by user_pseudo_id, ga_session_id, offerId
+                    partition by user_pseudo_id, ga_session_id, offerid
                     order by event_timestamp
                 ),
                 second
-            ) > 3
+            )
+            > 3
     ),
 
     other_events as (
         select *
         from native_unnest
-        where event_name != 'ConsultOffer' or event_name is null
+        where event_name != "ConsultOffer" or event_name is null
     ),
 
     unified_events as (
-        select * from deduplicated_consult_offers
+        select *
+        from deduplicated_consult_offers
         union all
-        select * from other_events
+        select *
+        from other_events
     )
 
 select
-    * except (
+    * except (  -- noqa: AM04
         offers_1_10,
         offers_11_20,
         offers_21_30,

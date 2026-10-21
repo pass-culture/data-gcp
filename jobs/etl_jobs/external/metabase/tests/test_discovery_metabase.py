@@ -93,7 +93,7 @@ class TestBuildCardDependencyCache:
 
         # Then
         expected = {
-            "user_stats": TableDependency(
+            "analytics.user_stats": TableDependency(
                 id=10,
                 schema="analytics",
                 cards_using_table={
@@ -122,7 +122,7 @@ class TestBuildCardDependencyCache:
 
         # Then
         expected = {
-            "bookings": TableDependency(
+            "analytics.bookings": TableDependency(
                 id=20,
                 schema="analytics",
                 cards_using_table={
@@ -152,10 +152,10 @@ class TestBuildCardDependencyCache:
         result = build_card_dependency_cache(client, SAMPLE_TABLE_CATALOG, cache_path=cache_path)
 
         # Then
-        assert "user_stats" in result
-        assert "bookings" in result
-        assert "300" in result["user_stats"].cards_using_table
-        assert "300" in result["bookings"].cards_using_table
+        assert "analytics.user_stats" in result
+        assert "analytics.bookings" in result
+        assert "300" in result["analytics.user_stats"].cards_using_table
+        assert "300" in result["analytics.bookings"].cards_using_table
 
     def test_ignores_unknown_card_types(self, tmp_path: Path) -> None:
         # Given
@@ -236,7 +236,7 @@ class TestBuildCardDependencyCache:
 
         # Then
         expected = {
-            "campaigns": {
+            "marketing.campaigns": {
                 "id": 30,
                 "schema": "marketing",
                 "cards_using_table": {
@@ -278,7 +278,7 @@ class TestBuildCardDependencyCache:
         result = build_card_dependency_cache(client, SAMPLE_TABLE_CATALOG, cache_path=cache_path)
 
         # Then
-        assert result["user_stats"].cards_using_table["800"].card_owner == ""
+        assert result["analytics.user_stats"].cards_using_table["800"].card_owner == ""
 
     def test_multiple_cards_on_same_table(self, tmp_path: Path) -> None:
         # Given
@@ -295,9 +295,31 @@ class TestBuildCardDependencyCache:
         result = build_card_dependency_cache(client, SAMPLE_TABLE_CATALOG, cache_path=cache_path)
 
         # Then
-        assert len(result["user_stats"].cards_using_table) == 2
-        assert "901" in result["user_stats"].cards_using_table
-        assert "902" in result["user_stats"].cards_using_table
+        assert len(result["analytics.user_stats"].cards_using_table) == 2
+        assert "901" in result["analytics.user_stats"].cards_using_table
+        assert "902" in result["analytics.user_stats"].cards_using_table
+
+    def test_same_table_name_in_two_schemas_is_kept_apart(self, tmp_path: Path) -> None:
+        # Given
+        client = _make_client()
+        catalog: dict[str, list[dict[str, Any]]] = {
+            "analytics": [{"id": 40, "name": "native_event", "active": True}],
+            "int_firebase": [{"id": 50, "name": "native_event", "active": True}],
+        }
+        cards = [
+            _make_native_card(1001, "Intermediate Card", "SELECT * FROM int_firebase.native_event"),
+            _make_qb_card(1002, "Mart Card", 40),
+        ]
+        client.fetch_all_cards = MagicMock(return_value=cards)  # type: ignore[method-assign]
+        client.resolve_collection_path = MagicMock(return_value=("Root", "1"))  # type: ignore[method-assign]
+        cache_path = tmp_path / "cache.json"
+
+        # When
+        result = build_card_dependency_cache(client, catalog, cache_path=cache_path)
+
+        # Then
+        assert get_impacted_cards_from_cache("analytics.native_event", result) == [1002]
+        assert get_impacted_cards_from_cache("int_firebase.native_event", result) == [1001]
 
 
 class TestLoadCardDependencyCache:
@@ -333,7 +355,7 @@ class TestGetImpactedCardsFromCache:
     def test_returns_sorted_card_ids(self) -> None:
         # Given
         cache = {
-            "my_table": TableDependency(
+            "analytics.my_table": TableDependency(
                 id=10,
                 schema="analytics",
                 cards_using_table={
@@ -356,7 +378,7 @@ class TestGetImpactedCardsFromCache:
         }
 
         # When
-        result = get_impacted_cards_from_cache("my_table", cache)
+        result = get_impacted_cards_from_cache("analytics.my_table", cache)
 
         # Then
         expected = [123, 456]
@@ -365,7 +387,7 @@ class TestGetImpactedCardsFromCache:
     def test_returns_empty_for_unknown_table(self) -> None:
         # Given
         cache: dict[str, TableDependency] = {
-            "known_table": TableDependency(
+            "analytics.known_table": TableDependency(
                 id=10,
                 schema="analytics",
                 cards_using_table={},
@@ -373,7 +395,7 @@ class TestGetImpactedCardsFromCache:
         }
 
         # When
-        result = get_impacted_cards_from_cache("unknown_table", cache)
+        result = get_impacted_cards_from_cache("analytics.unknown_table", cache)
 
         # Then
         expected: list[int] = []
@@ -384,7 +406,7 @@ class TestGetImpactedCardsFromCache:
         cache: dict[str, TableDependency] = {}
 
         # When
-        result = get_impacted_cards_from_cache("any_table", cache)
+        result = get_impacted_cards_from_cache("analytics.any_table", cache)
 
         # Then
         expected: list[int] = []

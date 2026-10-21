@@ -99,7 +99,10 @@ def build_card_dependency_cache(
         cache_path: Where to write the JSON cache.
 
     Returns:
-        A dict mapping table names to their ``TableDependency``.
+        A dict mapping ``schema.table`` to its ``TableDependency``. Keys are
+        schema-qualified so that same-named tables in different schemas
+        (e.g. ``analytics.native_event`` and ``int_firebase.native_event``)
+        keep separate card lists.
     """
     # Build lookup structures from the table catalog
     table_id_to_info: dict[int, tuple[str, str]] = {}  # table_id → (table_name, schema)
@@ -164,13 +167,14 @@ def build_card_dependency_cache(
         )
 
         for table_name, schema, table_id in matched_tables:
-            if table_name not in cache:
-                cache[table_name] = TableDependency(
+            qualified_name = f"{schema}.{table_name}"
+            if qualified_name not in cache:
+                cache[qualified_name] = TableDependency(
                     id=table_id,
                     schema=schema,
                     cards_using_table={},
                 )
-            cache[table_name].cards_using_table[str(card_id)] = info
+            cache[qualified_name].cards_using_table[str(card_id)] = info
 
     # Write cache to disk
     serialized = {name: dep.model_dump(by_alias=True) for name, dep in cache.items()}
@@ -194,7 +198,7 @@ def load_card_dependency_cache(
         cache_path: Path to the cache file.
 
     Returns:
-        A dict mapping table names to their ``TableDependency``.
+        A dict mapping ``schema.table`` to its ``TableDependency``.
 
     Raises:
         FileNotFoundError: If the cache file does not exist.
@@ -209,19 +213,19 @@ def load_card_dependency_cache(
 
 
 def get_impacted_cards_from_cache(
-    table_name: str,
+    qualified_table_name: str,
     cache: dict[str, TableDependency],
 ) -> list[int]:
     """Return sorted list of card IDs that depend on a table.
 
     Args:
-        table_name: The table name to look up.
+        qualified_table_name: The table to look up, as ``schema.table``.
         cache: The card dependency cache.
 
     Returns:
         A sorted list of card IDs. Empty if the table has no dependents.
     """
-    dep = cache.get(table_name)
+    dep = cache.get(qualified_table_name)
     if dep is None:
         return []
     return sorted(int(cid) for cid in dep.cards_using_table)

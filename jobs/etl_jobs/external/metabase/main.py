@@ -6,6 +6,9 @@ Orchestrates the full migration flow:
 2. Build field/table mappings (via Metabase API)
 3. Migrate each card (native SQL + query builder)
 4. Log results to BigQuery
+
+Provides the `verify` command, run after a migration: no card may still
+reference a legacy table, and every card on the new table must run.
 """
 
 from __future__ import annotations
@@ -23,6 +26,7 @@ from pydantic import ValidationError
 from api.client import DATABASE_TABLES_CACHE_PATH, MetabaseClient
 from api.models import Card, TablesToMigrate
 from config import (
+    ENV_SHORT_NAME,
     INT_METABASE_DATASET,
     METABASE_API_USERNAME,
     PROJECT_NAME,
@@ -38,6 +42,7 @@ from discovery.metabase import (
     get_impacted_cards_from_cache,
 )
 from migration.card import _get_stage_type, migrate_card, migrate_dashboard
+from migration.verify import verify_migration
 
 app = typer.Typer(name="metabase-migration", help="Migrate Metabase cards after BigQuery table/column renames.")
 
@@ -112,42 +117,9 @@ def migrate(
     # Determine if we're using local card IDs (no API discovery)
     use_api_discovery = not card_ids_str
 
-    # --- Load and validate tables-to-migrate JSON ---
-    tables_path = Path(tables_file)
-    if not tables_path.exists():
-        logger.error("Tables-to-migrate file not found at %s", tables_path)
-        raise typer.Exit(code=1)
-
-    with open(tables_path) as f:
-        raw = json.load(f)
-
-    try:
-        tables_to_migrate = TablesToMigrate.model_validate(raw)
-    except ValidationError as e:
-        logger.error("Invalid tables-to-migrate file: %s", e)
-        raise typer.Exit(code=1)
-
-    logger.info("Loaded %d table migration entries", len(tables_to_migrate.root))
-
-    # --- Connect to services ---
-    logger.info("Connecting to Metabase...")
-    metabase_host = get_metabase_host()
-    metabase_password = get_metabase_password()
-    bearer_token = get_iap_bearer_token()
-    client = MetabaseClient.from_credentials(
-        host=metabase_host, username=METABASE_API_USERNAME, password=metabase_password, bearer_token=bearer_token
-    )
-
-    # --- Build table catalog (includes inactive/deleted tables) ---
-    if DATABASE_TABLES_CACHE_PATH.exists():
-        DATABASE_TABLES_CACHE_PATH.unlink()
-
-    database_id = client.find_database_id(database_name)
-    if database_id is None:
-        logger.error("Database '%s' not found in Metabase", database_name)
-        raise typer.Exit(code=1)
-
-    table_catalog = client.build_table_catalog(database_id)
+    tables_to_migrate = _load_tables_to_migrate(tables_file)
+    client = _connect()
+    table_catalog = _build_table_catalog(client, database_name)
 
     global_impacted_card_ids = set()
 
@@ -156,8 +128,7 @@ def migrate(
         logger.info("Building card dependency cache for all tables...")
         _card_dep_cache = build_card_dependency_cache(client, table_catalog)
         for legacy_key in tables_to_migrate.root.keys():
-            legacy_table = legacy_key.split(".")[1]
-            for impacted_card_id in get_impacted_cards_from_cache(legacy_table, _card_dep_cache):
+            for impacted_card_id in get_impacted_cards_from_cache(legacy_key, _card_dep_cache):
                 global_impacted_card_ids.add(str(impacted_card_id))
     else:
         _card_dep_cache = None
@@ -235,7 +206,7 @@ def migrate(
             )
         else:
             logger.info("Looking up impacted cards for table '%s' from cache...", legacy_key)
-            card_ids = get_impacted_cards_from_cache(legacy_table, _card_dep_cache)
+            card_ids = get_impacted_cards_from_cache(legacy_key, _card_dep_cache)
             logger.info("Found %d impacted cards for table '%s'", len(card_ids), legacy_key)
 
         if not card_ids:
@@ -374,6 +345,86 @@ def migrate(
     )
 
     if any_table_failed:
+        raise typer.Exit(code=1)
+
+
+def _load_tables_to_migrate(tables_file: str) -> TablesToMigrate:
+    """Load, validate and resolve ``{env}`` in the tables-to-migrate JSON."""
+    tables_path = Path(tables_file)
+    if not tables_path.exists():
+        logger.error("Tables-to-migrate file not found at %s", tables_path)
+        raise typer.Exit(code=1)
+
+    with open(tables_path) as f:
+        raw = json.load(f)
+
+    try:
+        tables_to_migrate = TablesToMigrate.model_validate(raw).resolve_environment(ENV_SHORT_NAME)
+    except ValidationError as e:
+        logger.error("Invalid tables-to-migrate file: %s", e)
+        raise typer.Exit(code=1)
+
+    logger.info("Loaded %d table migration entries", len(tables_to_migrate.root))
+    return tables_to_migrate
+
+
+def _connect() -> MetabaseClient:
+    """Authenticate to Metabase."""
+    logger.info("Connecting to Metabase...")
+    metabase_host = get_metabase_host()
+    metabase_password = get_metabase_password()
+    bearer_token = get_iap_bearer_token()
+    return MetabaseClient.from_credentials(
+        host=metabase_host, username=METABASE_API_USERNAME, password=metabase_password, bearer_token=bearer_token
+    )
+
+
+def _build_table_catalog(client: MetabaseClient, database_name: str) -> dict[str, list[dict[str, Any]]]:
+    """Build the table catalog (includes inactive/deleted tables)."""
+    if DATABASE_TABLES_CACHE_PATH.exists():
+        DATABASE_TABLES_CACHE_PATH.unlink()
+
+    database_id = client.find_database_id(database_name)
+    if database_id is None:
+        logger.error("Database '%s' not found in Metabase", database_name)
+        raise typer.Exit(code=1)
+
+    return client.build_table_catalog(database_id)
+
+
+@app.command()
+def verify(
+    tables_file: str = typer.Option(
+        str(TABLES_TO_MIGRATE_PATH), "--tables-file", help="Path to tables-to-migrate JSON file"
+    ),
+    card_ids_str: str = typer.Option("", "--card-ids", help="Comma-separated card IDs to run (default: all)"),
+    database_name: str = typer.Option(..., help="Name of the Metabase database to search tables in"),
+) -> None:
+    """Verify a migration: no card left on a legacy table, every card on the new table runs.
+
+    Cards are executed read-only through the Metabase API. Exits 1 on any leftover or failure.
+    """
+    tables_to_migrate = _load_tables_to_migrate(tables_file)
+    client = _connect()
+    table_catalog = _build_table_catalog(client, database_name)
+    cache = build_card_dependency_cache(client, table_catalog)
+    card_ids = {int(cid) for cid in card_ids_str.split(",") if cid.strip()} or None
+
+    def run_card(card_id: int) -> str | None:
+        try:
+            return client.run_card(card_id)
+        except Exception as e:
+            return str(e)
+
+    report = verify_migration(tables_to_migrate, cache, run_card=run_card, card_ids=card_ids)
+
+    logger.info(
+        "VERIFY COMPLETE: %d cards run, %d failed, %d tables with cards left on the legacy table",
+        len(report.cards_checked),
+        len(report.failed_cards),
+        len(report.cards_on_legacy_tables),
+    )
+    if not report.ok:
         raise typer.Exit(code=1)
 
 

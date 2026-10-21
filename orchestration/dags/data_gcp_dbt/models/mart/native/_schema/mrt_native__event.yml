@@ -16,6 +16,8 @@ models:
         description: "{{ doc('column__user_pseudo_id') }}"
       - name: origin
         description: "{{ doc('column__origin') }}"
+      - name: origin_detail
+        description: "{{ doc('column__origin_detail') }}"
       - name: platform
         description: "{{ doc('column__platform') }}"
       - name: app_version

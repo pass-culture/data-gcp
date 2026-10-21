@@ -41,6 +41,9 @@ Migrations are driven by `data/tables-to-migrate.json`. Each key is `schema.tabl
 
 At least one of `target_table` or `columns_to_migrate` must be present per entry.
 
+Schema names may carry an `{env}` placeholder (`analytics_{env}.old_table`), replaced by `ENV_SHORT_NAME` at
+load time: the same file drives the staging run, then the production run.
+
 ## Execution flow
 
 ```
@@ -54,6 +57,15 @@ At least one of `target_table` or `columns_to_migrate` must be present per entry
    d. Migrate each card (dispatch by stage type)
    e. Log results to BigQuery (production only)
 5. Exit 0 on success, 1 if any table failed
+```
+
+After a real (non dry-run) migration, `verify` checks the result:
+
+```
+1. Rebuild the card dependency cache from the Metabase API
+2. For each entry: list the cards that still reference the legacy table (should be none)
+3. Run every card on the new table through POST /api/card/:id/query (read-only)
+4. Exit 0 if nothing is left behind and every card runs, 1 otherwise
 ```
 
 ## CLI usage
@@ -76,6 +88,11 @@ uv run python main.py migrate \
   --database-name "Data Analytics Production" \
   --card-ids "42,101,203" \
   --dry-run
+
+# Verify after a migration (no card left on a legacy table, every card on the new table runs)
+uv run python main.py verify \
+  --tables-file data/tables-to-migrate.json \
+  --database-name "Data Analytics Production"
 ```
 
 ## Authentication

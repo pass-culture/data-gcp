@@ -122,6 +122,25 @@ class MetabaseClient:
         return Card.model_validate(response.json())
 
     @_RETRY
+    def run_card(self, card_id: int) -> str | None:
+        """Execute a card's query (read-only) and report whether it runs.
+
+        Metabase answers 202 for both outcomes; the query result carries the status.
+
+        Args:
+            card_id: The Metabase card ID.
+
+        Returns:
+            None when the query completes, otherwise the error message.
+        """
+        response = self.session.post(f"{self.host}/api/card/{card_id}/query")
+        response.raise_for_status()
+        result = response.json()
+        if result.get("status") == "completed":
+            return None
+        return str(result.get("error") or result.get("status"))
+
+    @_RETRY
     def get_table_metadata(self, table_id: int) -> Table:
         """Fetch table metadata including fields.
 

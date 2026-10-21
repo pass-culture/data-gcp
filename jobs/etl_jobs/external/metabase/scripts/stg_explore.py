@@ -51,14 +51,14 @@ def main() -> None:
     with open(TABLES_TO_MIGRATE_PATH) as f:
         raw = json.load(f)
 
-    tables_to_migrate = TablesToMigrate.model_validate(raw)
+    tables_to_migrate = TablesToMigrate.model_validate(raw).resolve_environment("stg")
 
-    # Build lookup: table_name → (schema, num_column_renames)
+    # Build lookup: schema.table → (schema, num_column_renames)
     mapped_tables: dict[str, tuple[str, int]] = {}
     for key, entry in tables_to_migrate.root.items():
-        schema, table_name = key.split(".")
+        schema, _table_name = key.split(".")
         num_renames = len(entry.columns_to_migrate) if entry.columns_to_migrate else 0
-        mapped_tables[table_name] = (schema, num_renames)
+        mapped_tables[key] = (schema, num_renames)
 
     logger.info("Loaded %d tables from tables-to-migrate.json", len(mapped_tables))
 

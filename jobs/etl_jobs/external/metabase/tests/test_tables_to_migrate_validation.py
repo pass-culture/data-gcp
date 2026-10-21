@@ -389,3 +389,40 @@ class TestTablesToMigrate:
             },
         }
         assert result.model_dump() == expected, "Should accept single table config"
+
+
+class TestResolveEnvironment:
+    """The {env} placeholder lets one file drive the staging and the production runs."""
+
+    def test_replaces_env_in_keys_and_targets(self) -> None:
+        # Given
+        tables = TablesToMigrate.model_validate(
+            {
+                "analytics_{env}.native_daily_user_deposit": {"target_table": "int_global_{env}.daily_deposit"},
+                "analytics_{env}.some_table": {"columns_to_migrate": {"old_col": "new_col"}},
+            }
+        )
+
+        # When
+        result = tables.resolve_environment("prod")
+
+        # Then
+        expected = {
+            "analytics_prod.native_daily_user_deposit": {
+                "target_table": "int_global_prod.daily_deposit",
+                "columns_to_migrate": None,
+            },
+            "analytics_prod.some_table": {"target_table": None, "columns_to_migrate": {"old_col": "new_col"}},
+        }
+        assert result.model_dump() == expected
+
+    def test_leaves_entries_without_placeholder_unchanged(self) -> None:
+        # Given
+        tables = TablesToMigrate.model_validate({"analytics_stg.t": {"target_table": "analytics_stg.u"}})
+
+        # When
+        result = tables.resolve_environment("prod")
+
+        # Then
+        expected = {"analytics_stg.t": {"target_table": "analytics_stg.u", "columns_to_migrate": None}}
+        assert result.model_dump() == expected

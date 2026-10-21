@@ -15,6 +15,7 @@ select
     e.user_id,
     e.user_pseudo_id,
     e.origin,
+    e.origin_detail,
     e.platform,
     e.app_version,
     e.traffic_campaign,

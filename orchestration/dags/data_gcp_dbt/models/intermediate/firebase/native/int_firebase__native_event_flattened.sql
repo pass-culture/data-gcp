@@ -121,6 +121,7 @@ with
                         "featureName",
                         "feedbackResponse",
                         "origin_detail",
+                        "originDetails",
                         "adviceType",
                         "displayedOn",
                         "code",

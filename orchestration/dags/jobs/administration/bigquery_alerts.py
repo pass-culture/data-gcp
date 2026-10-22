@@ -6,6 +6,7 @@ from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from common import macros
 from common.alerts.freshness import bigquery_freshness_alert
+from common.alerts.stale_tables import sandbox_stale_tables
 from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
@@ -51,6 +52,11 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
+        "move_stale_tables": Param(
+            default=False,
+            type="boolean",
+            description="Move orphan tables stale for too long to sandbox (dry run otherwise)",
+        ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
@@ -83,11 +89,21 @@ with DAG(
         """,
     )
 
+    sandbox_stale_tables_task = PythonOperator(
+        task_id="sandbox_stale_tables",
+        python_callable=sandbox_stale_tables,
+        op_kwargs={
+            "warning_table_list": "{{task_instance.xcom_pull(task_ids='get_warning_tables', key='result')}}",
+            "move_tables": "{{ params.move_stale_tables }}",
+        },
+        dag=dag,
+    )
+
     warning_alert_slack = PythonOperator(
         task_id="warning_alert_slack",
         python_callable=bigquery_freshness_alert,
         op_kwargs={
-            "warning_table_list": "{{task_instance.xcom_pull(task_ids='get_warning_tables', key='result')}}",
+            "warning_table_list": "{{task_instance.xcom_pull(task_ids='sandbox_stale_tables')}}",
         },
         dag=dag,
     )
@@ -102,6 +118,7 @@ with DAG(
         >> gce_instance_start
         >> fetch_install_code
         >> get_warning_tables
+        >> sandbox_stale_tables_task
         >> warning_alert_slack
         >> gce_instance_stop
     )

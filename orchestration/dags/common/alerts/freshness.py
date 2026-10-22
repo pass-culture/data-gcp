@@ -35,10 +35,11 @@ def format_warning_table(table, dbt_owners):
 
     owner = dbt_owners.get(table["table"], "not in dbt")
     writer = (table.get("last_writer") or "unknown").split("@")[0]
+    sandbox = f" · {table['sandbox']}" if table.get("sandbox") else ""
     return (
         f"\n- {table['table']} — last update {table['last_modified']} "
         f"({table['days_since_update']}d, expected {table['schedule']}) "
-        f"· dbt: {owner} · last writer: {writer}"
+        f"· dbt: {owner} · last writer: {writer}{sandbox}"
     )
 
 

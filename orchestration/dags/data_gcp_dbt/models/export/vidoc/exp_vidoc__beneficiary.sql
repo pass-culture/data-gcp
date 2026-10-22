@@ -27,35 +27,59 @@ with
             is_in_qpv,
             macro_density_label,
             micro_density_label
+    ),
+
+    perturbed as (
+        select
+            s.partition_month,
+            s.region_name,
+            s.region_code,
+            s.department_name,
+            s.department_code,
+            s.age_at_calculation,
+            s.is_in_qpv,
+            s.macro_density_label,
+            s.micro_density_label,
+            {{
+                apply_perturbation(
+                    "s.total_actual_beneficiaries",
+                    "total_actual_beneficiaries",
+                    "pt_actual",
+                )
+            }},
+            {{
+                apply_perturbation(
+                    "s.total_beneficiaries", "total_beneficiaries", "pt_benef"
+                )
+            }}
+        from
+            source as s
+            {{
+                perturbation_join(
+                    "pt_benef", "s.total_beneficiaries", "s.cell_key_beneficiaries"
+                )
+            }}
+            {{
+                perturbation_join(
+                    "pt_actual",
+                    "s.total_actual_beneficiaries",
+                    "s.cell_key_actual_beneficiaries",
+                )
+            }}
     )
 
+-- Nested cohort (active ⊂ ever credited): perturbations are independent, so cap the
+-- perturbed numerator at the perturbed denominator to keep shares <= 100%
 select
-    s.partition_month,
-    s.region_name,
-    s.region_code,
-    s.department_name,
-    s.department_code,
-    s.age_at_calculation,
-    s.is_in_qpv,
-    s.macro_density_label,
-    s.micro_density_label,
-    {{
-        apply_perturbation(
-            "s.total_actual_beneficiaries", "total_actual_beneficiaries", "pt_actual"
-        )
-    }},
-    {{ apply_perturbation("s.total_beneficiaries", "total_beneficiaries", "pt_benef") }}
-from
-    source as s
-    {{
-        perturbation_join(
-            "pt_benef", "s.total_beneficiaries", "s.cell_key_beneficiaries"
-        )
-    }}
-    {{
-        perturbation_join(
-            "pt_actual",
-            "s.total_actual_beneficiaries",
-            "s.cell_key_actual_beneficiaries",
-        )
-    }}
+    partition_month,
+    region_name,
+    region_code,
+    department_name,
+    department_code,
+    age_at_calculation,
+    is_in_qpv,
+    macro_density_label,
+    micro_density_label,
+    total_beneficiaries,
+    least(total_actual_beneficiaries, total_beneficiaries) as total_actual_beneficiaries
+from perturbed

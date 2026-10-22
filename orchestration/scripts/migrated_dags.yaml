@@ -19,14 +19,3 @@ dags_in_paris:
   import_gsheet:
     source_dataset: raw
     tables_to_copy: [] # full refresh -> no tables to copy
-
-  test_copy_company_contact:
-    source_dataset: raw
-    tables_to_copy:
-      - gsheet_company_contact
-
-  # import_qualtrics:
-  #   source_dataset: raw
-  #   tables_to_copy:
-  #     - qualtrics_answers
-  #     - qualtrics_events

@@ -1,3 +1,6 @@
+{% set min_category_counts = get_min_category_counts() %}
+{% set spent_share_buckets = get_spent_share_buckets() %}
+
 with
     users_expired_monthly as (
         select
@@ -34,6 +37,21 @@ with
             date_diff(
                 last_deposit_expiration_date, first_deposit_creation_date, day
             ) as seniority_days,
+            -- share of all credits received actually spent at expiration
+            case
+                {% for bucket in spent_share_buckets if bucket.max is not none %}
+                    when
+                        coalesce(
+                            safe_divide(
+                                total_actual_amount_spent, total_deposit_amount
+                            ),
+                            0
+                        )
+                        <= {{ bucket.max }}
+                    then "{{ bucket.name }}"
+                {% endfor %}
+                else "{{ spent_share_buckets[-1].name }}"
+            end as spent_share_bucket,
             -- null-safe key of the cohort grouping columns
             farm_fingerprint(
                 to_json_string(
@@ -154,24 +172,49 @@ select
     u.user_is_theme_subscribed,
     date_trunc(u.deposit_expiration_date, month) as user_expiration_month,
     coalesce(count(distinct u.user_id), 0) as total_users,
-    coalesce(
-        count(
-            distinct case when b.total_distinct_category_booked >= 3 then u.user_id end
-        ),
-        0
-    ) as total_3_category_booked_users,
     mod(abs(sum(distinct {{ record_key("u.user_id") }})), 256) as cell_key_users,
-    mod(
-        abs(
-            sum(
+    {% for n in min_category_counts %}
+        coalesce(
+            count(
                 distinct case
-                    when b.total_distinct_category_booked >= 3
-                    then {{ record_key("u.user_id") }}
+                    when b.total_distinct_category_booked >= {{ n }} then u.user_id
                 end
-            )
-        ),
-        256
-    ) as cell_key_3_category,
+            ),
+            0
+        ) as total_{{ n }}_category_booked_users,
+        mod(
+            abs(
+                sum(
+                    distinct case
+                        when b.total_distinct_category_booked >= {{ n }}
+                        then {{ record_key("u.user_id") }}
+                    end
+                )
+            ),
+            256
+        ) as cell_key_{{ n }}_category,
+    {% endfor %}
+    {% for bucket in spent_share_buckets %}
+        coalesce(
+            count(
+                distinct case
+                    when u.spent_share_bucket = "{{ bucket.name }}" then u.user_id
+                end
+            ),
+            0
+        ) as total_spent_share_{{ bucket.name }}_users,
+        mod(
+            abs(
+                sum(
+                    distinct case
+                        when u.spent_share_bucket = "{{ bucket.name }}"
+                        then {{ record_key("u.user_id") }}
+                    end
+                )
+            ),
+            256
+        ) as cell_key_spent_share_{{ bucket.name }},
+    {% endfor %}
     coalesce(sum(u.total_actual_amount_spent), 0) as total_amount_spent,
     coalesce(
         sum(u.total_theoretical_digital_goods_amount_spent), 0

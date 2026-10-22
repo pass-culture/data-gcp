@@ -38,8 +38,28 @@ models:
         description: "{{ doc('column__user_is_theme_subscribed') }}"
       - name: total_users
         description: "{{ doc('column__total_users') }}"
+      - name: total_1_category_booked_users
+        description: "Number of users of the cohort who booked at least 1 distinct offer category (non-cancelled bookings) by expiration."
+      - name: total_2_category_booked_users
+        description: "Number of users of the cohort who booked at least 2 distinct offer categories (non-cancelled bookings) by expiration."
       - name: total_3_category_booked_users
         description: "{{ doc('column__total_3_category_booked_users') }}"
+      - name: total_4_category_booked_users
+        description: "Number of users of the cohort who booked at least 4 distinct offer categories (non-cancelled bookings) by expiration."
+      - name: total_5_category_booked_users
+        description: "Number of users of the cohort who booked at least 5 distinct offer categories (non-cancelled bookings) by expiration."
+      - name: total_spent_share_0_users
+        description: "Number of users of the cohort who spent 0% of all credits received by expiration."
+      - name: total_spent_share_0_25_users
+        description: "Number of users of the cohort who spent ]0-25]% of all credits received by expiration."
+      - name: total_spent_share_25_50_users
+        description: "Number of users of the cohort who spent ]25-50]% of all credits received by expiration."
+      - name: total_spent_share_50_75_users
+        description: "Number of users of the cohort who spent ]50-75]% of all credits received by expiration."
+      - name: total_spent_share_75_90_users
+        description: "Number of users of the cohort who spent ]75-90]% of all credits received by expiration."
+      - name: total_spent_share_90_100_users
+        description: "Number of users of the cohort who spent ]90-100]% of all credits received by expiration."
       - name: total_amount_spent
         description: "{{ doc('column__total_amount_spent') }}"
       - name: total_theoretical_digital_goods_amount_spent

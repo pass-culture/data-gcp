@@ -79,6 +79,7 @@ Practical consequences:
 - **Nested invariants can break on a single cell.** If cohort A ⊂ B, the raw counts satisfy `count(A) ≤ count(B)`, but after independent perturbation `count(A) + noise_A ≤ count(B) + noise_B` is not guaranteed on small cells.
 - **Ratio noise does not cancel.** A rate `count(A)/count(B)` gets independent noise on both sides, so per-cell ratios can be noticeably off on small cells.
 - **Aggregation is the fix.** Sum numerator and denominator each over many cells (national, regional, quarterly) before dividing — the `O(sqrt(N))` error on each sum becomes negligible relative to the sum.
+- **Nested counts are capped on export.** Where a published table pairs a sub-cohort with its parent cohort (`exp_vidoc__diversity`: 3+ categories ⊂ expired; `exp_vidoc__diversity_by_category`: category bookers ⊂ expired), the perturbed sub-cohort count is capped at the perturbed parent count of the same cell, so shares never exceed 100% at any aggregation level. The cap only uses perturbed values, so it does not weaken confidentiality, but it adds a small downward bias on the capped counts (about -0.2% nationally, up to several % on small overseas departments).
 - **Additive consistency is not guaranteed.** `perturb(total) ≠ Σ perturb(sub-totals)`. Don't expect published breakdowns to sum exactly to a published total.
 
 ### Parameters

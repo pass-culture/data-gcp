@@ -16,4 +16,6 @@ Each row represents a key indicator calculated for a specific month, geographic 
 
 **Grain** (natural key, one row per combination): `deposit_expiration_month`, `region_code`, `department_code`, `is_in_qpv`, `macro_density_label`, `micro_density_label`.
 
+> `total_3plus_category_booked_beneficiaries` is capped at `total_expired_deposit_beneficiaries` of the same row, so the 3+ categories share never exceeds 100%.
+
 {% docs table__exp_vidoc__diversity %}{% enddocs %}

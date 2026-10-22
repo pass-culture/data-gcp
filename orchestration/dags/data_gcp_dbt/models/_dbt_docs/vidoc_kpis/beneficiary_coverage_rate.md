@@ -54,3 +54,5 @@ ORDER BY b.partition_month, b.department_code, b.milestone_age
 ### Data protection
 
 Beneficiary counts are protected using the [Cell Key Perturbation method](../references/statistical_confidentiality.md). Population counts are public data and are not perturbed. Coverage rates computed on small departments may be slightly affected by the perturbation on the numerator.
+
+> The rate **can slightly exceed 100%**, even without perturbation: the denominator is an INSEE population estimate, not a superset of the beneficiaries (e.g. department 22, age 19: ~6,800 beneficiaries for ~6,650 estimated residents). It is therefore not capped, unlike the nested counts of the other vidoc exports.

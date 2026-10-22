@@ -18,4 +18,6 @@ Each row represents a key indicator calculated for a specific month, geographic 
 
 > Rows are **only emitted** for `(cell, category)` pairs where at least one booking exists. Cells with zero bookings for a given category are **absent** from the table.
 
+> `total_category_booked_beneficiaries` is capped at the `total_expired_deposit_beneficiaries` published in `exp_vidoc_diversity` for the same cell, so the category booking share never exceeds 100%.
+
 {% docs table__exp_vidoc__diversity_by_category %}{% enddocs %}

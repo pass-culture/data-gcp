@@ -12,45 +12,33 @@
 }}
 
 with
-    raw_artist as (
+    artist as (
         select
-            * except (artist_app_search_score, artist_pro_search_score),
+            artist_id,
+            artist_name,
+            artist_description,
+            artist_biography,
+            artist_mediation_uuid,
+            wikidata_id,
+            wikipedia_url,
+            wikidata_image_file_url,
+            wikidata_image_license,
+            wikidata_image_license_url,
+            wikidata_image_author,
+            artist_creation_date as date_created,
+            artist_modification_date as date_modified,
             artist_app_search_score as previous_artist_app_search_score,
             artist_pro_search_score as previous_artist_pro_search_score,
-            array_to_string(
-                array(
-                    select part
-                    from
-                        unnest(
-                            split(
-                                regexp_replace(
-                                    lower(
-                                        -- 1. Clean accents
-                                        regexp_replace(
-                                            normalize(artist_name, nfd), r'\p{M}', ''
-                                        )
-                                    -- 2. Replace spaces or hyphens by a unique
-                                    -- separator
-                                    ),
-                                    r'[\s-]+',
-                                    ' '
-                                ),
-                                ' '
-                            )
-                        ) as part
-                    -- 3. Filter to avoid empty strings if the name starts/ends with a
-                    -- hyphen
-                    where part != ''
-                    order by part
-                ),
-                '|'
-            ) as normalized_artist_name
-        from {{ source("raw", "applicative_database_artist") }}
+            normalized_artist_name,
+            artist_total_bookable_offers,
+            artist_total_offer_consultations_main_category_last_30d,
+            artist_total_bookings_main_category_last_30d
+        from {{ ref("mrt_global__artist") }}
     ),
 
     raw_product_artist_link as (
-        select distinct offer_product_id, artist_id
-        from {{ source("raw", "applicative_database_product_artist_link") }}
+        select distinct cast(offer_product_id as int64) as offer_product_id, artist_id
+        from {{ ref("int_applicative__product_artist_link") }}
     ),
 
     raw_product_stats as (
@@ -84,15 +72,14 @@ with
 
     artist_with_stats as (
         select
-            raw_artist.*,
+            artist.*,
             coalesce(artist_statistics.artist_product_count, 0) as artist_product_count,
             coalesce(artist_statistics.artist_booking_count, 0) as artist_booking_count,
             coalesce(
                 artist_statistics.artist_bookable_product_count, 0
             ) as artist_bookable_product_count
-        from raw_artist
-        left join
-            artist_statistics on raw_artist.artist_id = artist_statistics.artist_id
+        from artist
+        left join artist_statistics on artist.artist_id = artist_statistics.artist_id
     ),
 
     artist_with_feature_score as (
@@ -153,16 +140,6 @@ with
 
     -- "Trending" ranking score (not a replacement for app/pro search scores),
     -- based on recent consultations/bookings on the artist's main category.
-    bookable_artist_consultation_and_booking_counts_last_30d as (
-        select
-            artist_id,
-            artist_total_bookable_offers,
-            artist_total_offer_consultations_main_category_last_30d,
-            artist_total_bookings_main_category_last_30d
-        from {{ ref("mrt_global__artist") }}
-        where artist_total_bookable_offers >= 1
-    ),
-
     artist_trending_score_from_recent_consultations_and_bookings as (
         select
             r.artist_id,
@@ -174,7 +151,8 @@ with
                 ),
                 4
             ) as artist_score_log_consultations_plus_bookings_main_category_last_30d
-        from bookable_artist_consultation_and_booking_counts_last_30d as r
+        from artist as r
+        where r.artist_total_bookable_offers >= 1
     )
 
 select

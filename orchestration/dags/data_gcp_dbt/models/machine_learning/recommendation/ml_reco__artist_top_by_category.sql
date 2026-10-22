@@ -9,7 +9,7 @@
 with
     artist_eligible_main_search_group_name_for_recommendation as (
         select artist_id, main_search_group_name as search_group_name
-        from {{ ref("mrt_global__artist") }}
+        from {{ ref("ml_reco__artist") }}
         where
             main_search_group_name is not null
             and main_search_group_name_has_bookable_offer

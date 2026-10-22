@@ -12,6 +12,7 @@ Tracking that are not related to specific concepts for now
 {% docs column__event_timestamp %}The exact timestamp when the event was recorded.{% enddocs %}
 {% docs column__user_pseudo_id %}A pseudo identifier for the user, used for tracking purposes.{% enddocs %}
 {% docs column__origin %}The origin of the event, indicating where it was triggered from.{% enddocs %}
+{% docs column__origin_detail %}The details of the origin of the event.{% enddocs %}
 {% docs column__platform %}The platform on which the event was recorded, such as iOS or Android.{% enddocs %}
 {% docs column__app_version %}The version of the application where the event was recorded.{% enddocs %}
 {% docs column__radio_type %}Type of network connection (e.g., WIFI, LTE, 5G).{% enddocs %}

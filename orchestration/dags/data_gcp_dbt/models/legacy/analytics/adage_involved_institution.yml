@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: adage_involved_institution
+    tests:
+      - dbt_utils.recency:
+          arguments:
+            field: date
+            datepart: day
+            interval: 3
+            ignore_time_component: true
+          config:
+            severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+            tags: ['critical']

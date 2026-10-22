@@ -27,45 +27,64 @@ with
             is_in_qpv,
             macro_density_label,
             micro_density_label
+    ),
+
+    perturbed as (
+        select
+            s.deposit_expiration_month,
+            s.region_name,
+            s.region_code,
+            s.department_name,
+            s.department_code,
+            s.is_in_qpv,
+            s.macro_density_label,
+            s.micro_density_label,
+            {{
+                apply_perturbation(
+                    "s.total_3plus_category_booked_beneficiaries",
+                    "total_3plus_category_booked_beneficiaries",
+                    "pt_3plus",
+                )
+            }},
+            {{
+                apply_perturbation(
+                    "s.total_expired_deposit_beneficiaries",
+                    "total_expired_deposit_beneficiaries",
+                    "pt_expired",
+                )
+            }}
+        from
+            source as s
+            {{
+                perturbation_join(
+                    "pt_3plus",
+                    "s.total_3plus_category_booked_beneficiaries",
+                    "s.cell_key_3plus",
+                )
+            }}
+            {{
+                perturbation_join(
+                    "pt_expired",
+                    "s.total_expired_deposit_beneficiaries",
+                    "s.cell_key_expired",
+                )
+            }}
+        where s.deposit_expiration_month > "2021-01-01"
     )
 
+-- Nested cohort (3+ categories ⊂ expired): perturbations are independent, so cap the
+-- perturbed numerator at the perturbed denominator to keep shares <= 100%
 select
-    s.deposit_expiration_month,
-    s.region_name,
-    s.region_code,
-    s.department_name,
-    s.department_code,
-    s.is_in_qpv,
-    s.macro_density_label,
-    s.micro_density_label,
-    {{
-        apply_perturbation(
-            "s.total_3plus_category_booked_beneficiaries",
-            "total_3plus_category_booked_beneficiaries",
-            "pt_3plus",
-        )
-    }},
-    {{
-        apply_perturbation(
-            "s.total_expired_deposit_beneficiaries",
-            "total_expired_deposit_beneficiaries",
-            "pt_expired",
-        )
-    }}
-from
-    source as s
-    {{
-        perturbation_join(
-            "pt_3plus",
-            "s.total_3plus_category_booked_beneficiaries",
-            "s.cell_key_3plus",
-        )
-    }}
-    {{
-        perturbation_join(
-            "pt_expired",
-            "s.total_expired_deposit_beneficiaries",
-            "s.cell_key_expired",
-        )
-    }}
-where s.deposit_expiration_month > "2021-01-01"
+    deposit_expiration_month,
+    region_name,
+    region_code,
+    department_name,
+    department_code,
+    is_in_qpv,
+    macro_density_label,
+    micro_density_label,
+    total_expired_deposit_beneficiaries,
+    least(
+        total_3plus_category_booked_beneficiaries, total_expired_deposit_beneficiaries
+    ) as total_3plus_category_booked_beneficiaries
+from perturbed

@@ -1,23 +1,23 @@
-import ast
 import datetime
 import logging
 
-from common.alerts.freshness import get_dbt_owners
-from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID
 from google.cloud import bigquery
+from utils import ENV_SHORT_NAME, GCP_PROJECT
 
-# Orphan tables (not built by dbt) stale for this long are moved to sandbox.
+# Tables stale for this long are moved to sandbox. A dbt model still in use is
+# rebuilt by its next run, so there is no need to tell dbt tables apart.
 MOVE_AFTER_DAYS = 60
 # The alert announces the move this many days before it happens.
 NOTICE_DAYS = 14
 SANDBOX_EXPIRATION_DAYS = 90
 # A table read in this window is still used, so it is never moved.
 USAGE_LOOKBACK_DAYS = 30
-# Stale ingestion tables mean a broken source feed, not an abandoned table.
-PROTECTED_DATASET_PREFIXES = ("raw_", "backend_")
+# Stale ingestion tables mean a broken source feed, and snapshots hold history
+# that cannot be rebuilt.
+PROTECTED_DATASET_PREFIXES = ("raw_", "backend_", "snapshot_")
 
 SANDBOX_DATASET = f"sandbox_{ENV_SHORT_NAME}"
-MOVE_LOG_TABLE = f"{GCP_PROJECT_ID}.{SANDBOX_DATASET}.stale_tables_moved_log"
+MOVE_LOG_TABLE = f"{GCP_PROJECT}.raw_{ENV_SHORT_NAME}.stale_tables_moved_log"
 MOVE_LOG_SCHEMA = [
     bigquery.SchemaField("moved_at", "TIMESTAMP"),
     bigquery.SchemaField("source_table", "STRING"),
@@ -30,7 +30,7 @@ MOVE_LOG_SCHEMA = [
 def get_used_tables(client, tables):
     query = f"""
         SELECT DISTINCT referenced_table
-        FROM `{GCP_PROJECT_ID}.int_gcp_{ENV_SHORT_NAME}.bigquery_cost`,
+        FROM `{GCP_PROJECT}.int_gcp_{ENV_SHORT_NAME}.bigquery_cost`,
             UNNEST(SPLIT(referenced_tables, ",")) AS referenced_table
         WHERE start_date >= DATE_SUB(CURRENT_DATE(), INTERVAL {USAGE_LOOKBACK_DAYS} DAY)
             AND referenced_table IN UNNEST(@tables)
@@ -45,7 +45,7 @@ def get_tables_read_by_views(client, tables):
         FROM UNNEST(@tables) AS table_name
         WHERE EXISTS (
             SELECT 1
-            FROM `{GCP_PROJECT_ID}.region-europe-west1`.INFORMATION_SCHEMA.VIEWS
+            FROM `{GCP_PROJECT}.region-europe-west1`.INFORMATION_SCHEMA.VIEWS
             WHERE STRPOS(LOWER(view_definition), LOWER(table_name)) > 0
         )
     """
@@ -59,10 +59,32 @@ def _query_column(client, query, tables):
     return [row[0] for row in client.query(query, job_config=job_config).result()]
 
 
+def log_move(client, table, sandbox_table):
+    # Labelled "never" so this alert does not flag its own log between moves.
+    log_table = bigquery.Table(MOVE_LOG_TABLE, schema=MOVE_LOG_SCHEMA)
+    log_table.labels = {"schedule": "never"}
+    client.create_table(log_table, exists_ok=True)
+    client.load_table_from_json(
+        [
+            {
+                "moved_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "source_table": table["table"],
+                "sandbox_table": sandbox_table,
+                "last_modified": table["last_modified"],
+                "last_writer": table.get("last_writer"),
+            }
+        ],
+        MOVE_LOG_TABLE,
+        job_config=bigquery.LoadJobConfig(
+            write_disposition="WRITE_APPEND", schema=MOVE_LOG_SCHEMA
+        ),
+    ).result()
+
+
 def move_to_sandbox(client, table):
-    source = f"{GCP_PROJECT_ID}.{table['table']}"
+    source = f"{GCP_PROJECT}.{table['table']}"
     sandbox_table = f"{SANDBOX_DATASET}.{table['table'].replace('.', '__')}"
-    destination = f"{GCP_PROJECT_ID}.{sandbox_table}"
+    destination = f"{GCP_PROJECT}.{sandbox_table}"
 
     client.copy_table(
         source,
@@ -77,29 +99,14 @@ def move_to_sandbox(client, table):
     copy.labels = {**copy.labels, "moved_from": table["table"].split(".")[0]}
     client.update_table(copy, ["expires", "labels"])
 
-    log_table = bigquery.Table(MOVE_LOG_TABLE, schema=MOVE_LOG_SCHEMA)
-    client.create_table(log_table, exists_ok=True)
-    errors = client.insert_rows_json(
-        MOVE_LOG_TABLE,
-        [
-            {
-                "moved_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-                "source_table": table["table"],
-                "sandbox_table": sandbox_table,
-                "last_modified": table["last_modified"],
-                "last_writer": table.get("last_writer"),
-            }
-        ],
-    )
-    if errors:
-        logging.warning(f"Could not log the move of {table['table']}: {errors}")
-
+    log_move(client, table, sandbox_table)
+    # The source is dropped only once its sandbox copy exists and is logged.
     client.delete_table(source)
     return sandbox_table
 
 
-def get_sandbox_status(table, move_tables, client, used_tables, view_tables):
-    """Decide what happens to a stale orphan table, and move it if it is time."""
+def get_sandbox_status(table, dry_run, client, used_tables, view_tables):
+    """Decide what happens to a stale table, and move it if it is time."""
     move_on = datetime.date.fromisoformat(table["last_modified"]) + datetime.timedelta(
         days=MOVE_AFTER_DAYS
     )
@@ -109,9 +116,9 @@ def get_sandbox_status(table, move_tables, client, used_tables, view_tables):
         return f"kept, read in the last {USAGE_LOOKBACK_DAYS}d"
     if table["table"] in view_tables:
         return "kept, read by a view"
-    if client.get_table(f"{GCP_PROJECT_ID}.{table['table']}").table_type != "TABLE":
+    if client.get_table(f"{GCP_PROJECT}.{table['table']}").table_type != "TABLE":
         return "kept, not a table"
-    if not move_tables:
+    if dry_run:
         return f"would move to {SANDBOX_DATASET} (dry run)"
     try:
         return f"moved to {move_to_sandbox(client, table)}"
@@ -120,36 +127,27 @@ def get_sandbox_status(table, move_tables, client, used_tables, view_tables):
         return f"move failed: {type(e).__name__}"
 
 
-def sandbox_stale_tables(warning_table_list, move_tables, **context):
+def sandbox_stale_tables(warning_tables, dry_run):
     """
-    Adds a "sandbox" status to stale orphan tables close to the move threshold,
-    and moves the ones past it to the sandbox dataset (dry run unless move_tables).
+    Adds a "sandbox" status to stale tables close to the move threshold,
+    and moves the ones past it to the sandbox dataset unless dry_run.
     """
-    warning_tables = ast.literal_eval(warning_table_list)
-    move_tables = str(move_tables).lower() == "true"
-    dbt_tables = get_dbt_owners()
-
     candidates = [
         table
         for table in warning_tables
-        # Older job versions sent table names only.
-        if isinstance(table, dict)
-        and table["table"] not in dbt_tables
-        and not table["table"].startswith(PROTECTED_DATASET_PREFIXES)
+        if not table["table"].startswith(PROTECTED_DATASET_PREFIXES)
         and table["days_since_update"] >= MOVE_AFTER_DAYS - NOTICE_DAYS
     ]
     if not candidates:
-        return warning_tables
+        return
 
-    client = bigquery.Client(project=GCP_PROJECT_ID)
+    client = bigquery.Client(project=GCP_PROJECT)
     due = [t["table"] for t in candidates if t["days_since_update"] >= MOVE_AFTER_DAYS]
     used_tables = get_used_tables(client, due) if due else set()
     view_tables = get_tables_read_by_views(client, due) if due else set()
 
     for table in candidates:
         table["sandbox"] = get_sandbox_status(
-            table, move_tables, client, used_tables, view_tables
+            table, dry_run, client, used_tables, view_tables
         )
         logging.info(f"{table['table']}: {table['sandbox']}")
-
-    return warning_tables

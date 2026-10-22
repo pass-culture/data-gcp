@@ -7,6 +7,7 @@ from typing import Any
 import yaml
 
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent.parent / "migrated_dags.yaml"
+CONFIG_BASE_DIR = DEFAULT_CONFIG_PATH.parent
 COPY_JOB_POLL_INTERVAL_SECONDS = 10
 ESTIMATED_TRANSFER_USD_PER_GIB = 0.02
 DEFAULT_JOB_LOG_DATASET_ID = "copy_job_monitoring"
@@ -22,6 +23,16 @@ class EnvironmentConfig:
     destination_project: str
     destination_suffix: str
 
+    def source_dataset_id(self, base_dataset: str) -> str:
+        """Return the suffixed source dataset id for ``base_dataset``."""
+
+        return f"{base_dataset}_{self.source_suffix}"
+
+    def destination_dataset_id(self, base_dataset: str) -> str:
+        """Return the suffixed destination dataset id for ``base_dataset``."""
+
+        return f"{base_dataset}_{self.destination_suffix}"
+
 
 @dataclass
 class DagCopyConfig:
@@ -35,9 +46,8 @@ class DagCopyConfig:
 class JobLogConfig:
     """BigQuery table used to persist copy-job metadata."""
 
-    dataset_id: str
+    dataset_id: str = DEFAULT_JOB_LOG_DATASET_ID
     table_id: str = DEFAULT_JOB_LOG_TABLE_ID
-    location: str | None = None
 
 
 @dataclass
@@ -71,14 +81,28 @@ class CopyPlan:
         return sum(table.estimated_price_usd for table in self.tables)
 
 
+def resolve_config_path(config_path: Path = DEFAULT_CONFIG_PATH) -> Path:
+    """Resolve ``config_path`` and ensure it stays within ``CONFIG_BASE_DIR``."""
+
+    resolved = Path(config_path).resolve()
+    if not resolved.is_relative_to(CONFIG_BASE_DIR):
+        raise ValueError(
+            f"Configuration path '{config_path}' is outside the allowed "
+            f"directory '{CONFIG_BASE_DIR}'."
+        )
+
+    return resolved
+
+
 def load_yaml_config(config_path: Path = DEFAULT_CONFIG_PATH) -> dict[str, Any]:
     """Load the migration config from ``migrated_dags.yaml``."""
 
+    safe_path = resolve_config_path(config_path)
     try:
-        with config_path.open() as stream:
+        with safe_path.open() as stream:
             config = yaml.safe_load(stream) or {}
     except FileNotFoundError as exc:
-        raise FileNotFoundError(f"Configuration file not found: {config_path}") from exc
+        raise FileNotFoundError(f"Configuration file not found: {safe_path}") from exc
 
     return config
 

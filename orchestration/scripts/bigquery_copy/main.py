@@ -8,8 +8,6 @@ from google.cloud import bigquery
 
 from .config import (
     DEFAULT_CONFIG_PATH,
-    DEFAULT_JOB_LOG_DATASET_ID,
-    DEFAULT_JOB_LOG_TABLE_ID,
     JobLogConfig,
     load_dag_copy_config,
     load_environment_config,
@@ -76,11 +74,7 @@ def main() -> None:
         env_config,
         args.dag_name,
         dag_copy_config,
-        JobLogConfig(
-            dataset_id=DEFAULT_JOB_LOG_DATASET_ID,
-            table_id=DEFAULT_JOB_LOG_TABLE_ID,
-            location=None,
-        ),
+        JobLogConfig(),
         assume_yes=args.yes,
     )
 

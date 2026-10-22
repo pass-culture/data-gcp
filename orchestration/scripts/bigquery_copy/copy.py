@@ -2,15 +2,12 @@ from __future__ import annotations
 
 import logging
 import time
-from dataclasses import replace
 from datetime import datetime, timezone
 
 from google.cloud import bigquery
 
 from .config import (
     COPY_JOB_POLL_INTERVAL_SECONDS,
-    DEFAULT_JOB_LOG_DATASET_ID,
-    DEFAULT_JOB_LOG_TABLE_ID,
     ESTIMATED_TRANSFER_USD_PER_GIB,
     CopyPlan,
     DagCopyConfig,
@@ -42,9 +39,9 @@ def build_copy_plan(
 ) -> CopyPlan:
     """Build the full copy plan for a DAG, with a per-table cost estimate."""
 
-    source_dataset_id = f"{dag_copy_config.source_dataset}_{environment.source_suffix}"
-    destination_dataset_id = (
-        f"{dag_copy_config.source_dataset}_{environment.destination_suffix}"
+    source_dataset_id = environment.source_dataset_id(dag_copy_config.source_dataset)
+    destination_dataset_id = environment.destination_dataset_id(
+        dag_copy_config.source_dataset
     )
     source_dataset_obj = client.get_dataset(
         f"{environment.source_project}.{source_dataset_id}"
@@ -125,12 +122,12 @@ def wait_for_job(job: bigquery.job.CopyJob) -> None:
 
     job.result()
     LOGGER.info(
-        "BigQuery copy job %s finished with state=%s; manual status check: gcloud bigquery jobs describe %s --project=%s --location=%s",
+        "BigQuery copy job %s finished with state=%s; manual status check: bq show --job --project_id=%s --location=%s %s",
         job.job_id,
         job.state,
-        job.job_id,
         job.project,
         getattr(job, "location", "unknown"),
+        job.job_id,
     )
 
 
@@ -254,8 +251,8 @@ def copy_table(
 
     started_at = time.monotonic()
     started_at_utc = datetime.now(timezone.utc)
-    source_dataset_id = f"{source_dataset}_{environment.source_suffix}"
-    destination_dataset_id = f"{source_dataset}_{environment.destination_suffix}"
+    source_dataset_id = environment.source_dataset_id(source_dataset)
+    destination_dataset_id = environment.destination_dataset_id(source_dataset)
 
     source_ref = bigquery.TableReference.from_string(
         f"{environment.source_project}.{source_dataset_id}.{table_name}"
@@ -331,7 +328,7 @@ def copy_table(
                     table_name,
                 )
 
-        wait_for_job(copy_job)  # type: ignore[arg-type]
+        wait_for_job(copy_job)
 
         destination_table = client.get_table(destination_ref)
         destination_row_count = destination_table.num_rows
@@ -420,19 +417,10 @@ def copy_dag_tables(
     source_location = plan.source_location
     destination_location = plan.destination_location
 
-    if job_log_config is None:
-        job_log_config = JobLogConfig(
-            dataset_id=DEFAULT_JOB_LOG_DATASET_ID,
-            table_id=DEFAULT_JOB_LOG_TABLE_ID,
-        )
-
     job_log_table = ensure_job_log_table(
         client,
         environment.destination_project,
-        replace(
-            job_log_config,
-            location=job_log_config.location or destination_location,
-        ),
+        job_log_config or JobLogConfig(),
     )
 
     failed_tables: list[str] = []

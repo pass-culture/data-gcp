@@ -37,6 +37,7 @@
         "side": "institution",
         "kpis": {
             "total_offres_reservables_recues_etablissements": "total_created_bookable_collective_offers",
+            "total_offres_reservables_prereservees_etablissements": "total_prereserved_bookable_collective_offers",
         },
     },
     {

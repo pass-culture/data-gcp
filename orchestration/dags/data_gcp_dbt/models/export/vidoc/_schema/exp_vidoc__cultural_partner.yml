@@ -9,9 +9,6 @@ models:
             - partition_month
             - partner_department_code
             - partner_region_name
-            - partner_epci_code
-            - partner_city_code
-            - partner_municipality_code
             - partner_type
     columns:
       - name: partition_month
@@ -35,22 +32,6 @@ models:
       - name: partner_department_code
         data_type: STRING
         description: "{{ doc('column__partner_department_code') }}"
-
-      - name: partner_epci_code
-        data_type: STRING
-        description: "{{ doc('column__partner_epci_code') }}"
-
-      - name: partner_city_code
-        data_type: STRING
-        description: "{{ doc('column__partner_city_code') }}"
-        data_tests:
-          - not_null
-
-      - name: partner_municipality_code
-        data_type: STRING
-        description: "{{ doc('column__partner_municipality_code') }}"
-        data_tests:
-          - not_null
 
       - name: partner_type
         data_type: STRING

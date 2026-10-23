@@ -1,0 +1,72 @@
+"""{{SOURCE}} API client."""
+
+from typing import Any, Dict, List
+
+import requests
+from loguru import logger
+from requests.adapters import HTTPAdapter
+from urllib3 import Retry
+
+from utils import SecretStr
+
+
+class {{SOURCE}}APIError(Exception):
+    """Custom exception for {{SOURCE}} API errors."""
+
+
+class {{SOURCE}}Client:
+    """API client for {{SOURCE}}. Handles auth, requests and error handling."""
+
+    BASE_API_URL = "{{BASE_URL}}"
+
+    def __init__(self, api_token: SecretStr):
+        self.api_token = api_token
+        self.session = self._create_session()
+
+    def _create_session(self) -> requests.Session:
+        """Create a requests session with a retry strategy."""
+        session = requests.Session()
+        session.headers.update(
+            {
+                "accept": "application/json",
+                "{{AUTH_HEADER}}": self.api_token.get_secret_value(),
+            }
+        )
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        session.mount("https://", adapter)
+        return session
+
+    def _get(self, path: str, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform a GET request and raise on non-200 responses."""
+        response = self.session.get(f"{self.BASE_API_URL}{path}", params=params)
+        if response.status_code != 200:
+            raise {{SOURCE}}APIError(
+                f"{path} fetch failed: {response.status_code} - {response.text}"
+            )
+        return response.json()
+
+    # TODO: one method per endpoint, e.g.:
+    def get_items_page(self, from_date: str, to_date: str, page: int) -> Dict[str, Any]:
+        return self._get(
+            "/items", {"from": from_date, "to": to_date, "page": page}
+        )
+
+    def get_all_items(self, from_date: str, to_date: str) -> List[Dict[str, Any]]:
+        """Paginate through all items for the date range."""
+        all_items: List[Dict[str, Any]] = []
+        page = 1
+        while True:
+            data = self.get_items_page(from_date, to_date, page)
+            items = data.get("items", [])
+            all_items.extend(items)
+            logger.debug(f"Imported page {page} with {len(items)} items")
+            next_page = data.get("page", {}).get("next")
+            if not next_page:
+                break
+            page = next_page
+        return all_items

@@ -2,6 +2,7 @@ select
     partition_month,
     venue_region_name,
     venue_region_code,
+    venue_academy_name,
     venue_department_name,
     venue_department_code,
     venue_epci_name,

@@ -32,6 +32,12 @@ Cumulative total amount spent for collective bookings for the same geography fro
 {% docs column__cumulative_total_confirmation_amount %} `total_confirmation_amount` summed from the start of the scholar year up to and including the month. {% enddocs %}
 {% docs column__cumulative_total_actions %} `total_actions` summed from the start of the scholar year up to and including the month. {% enddocs %}
 {% docs column__cumulative_total_action_amount %} `total_action_amount` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__total_created_bookable_collective_offers %} Number of bookable (non template) collective offers created in the month. An offer belongs to the scholar year of its action (stock beginning date); an offer created before that scholar year starts is counted in its first month. {% enddocs %}
+{% docs column__total_prereserved_bookable_collective_offers %} Number of the bookable collective offers created in the month that have at least one non-cancelled booking. {% enddocs %}
+{% docs column__new_bookable_offer_partners %} Number of cultural partners (venues) whose first bookable collective offer of the scholar year is created in the month. Summed over months, it gives the number of distinct partners. {% enddocs %}
+{% docs column__cumulative_total_created_bookable_collective_offers %} `total_created_bookable_collective_offers` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__cumulative_total_prereserved_bookable_collective_offers %} `total_prereserved_bookable_collective_offers` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__cumulative_new_bookable_offer_partners %} Number of distinct cultural partners (venues) with at least one bookable collective offer created since the start of the scholar year, up to and including the month. {% enddocs %}
 {% docs column__total_collective_offers %}The total number of collective offers.{% enddocs %}
 {% docs column__total_collective_real_revenue %} Total actual revenue from collective bookings. {% enddocs %}
 {% docs column__total_collective_theoretic_revenue %} Total theoretical revenue from collective bookings. {% enddocs %}

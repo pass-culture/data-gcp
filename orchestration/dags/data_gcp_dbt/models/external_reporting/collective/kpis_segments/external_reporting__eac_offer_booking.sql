@@ -9,112 +9,99 @@
     )
 }}
 
-{% set dimensions = get_dimensions(none, "academic_extended") %}
+{#
+    Roll-up of the collective offer and booking metrics to the reporting
+    dimensions. All KPIs are monthly flows. KPIs without suffix follow the
+    venue (cultural partner) geography, KPIs suffixed `_etablissements`
+    follow the school geography.
+#}
+{% set sources = [
+    {
+        "model": "metrics_offer__collective",
+        "side": "venue",
+        "kpis": {
+            "total_offres_collectives_creees": "total_created_collective_offers",
+        },
+    },
+    {
+        "model": "metrics_offer__collective_bookable",
+        "side": "venue",
+        "kpis": {
+            "total_offres_reservables_creees": "total_created_bookable_collective_offers",
+            "total_offres_reservables_prereservees": "total_prereserved_bookable_collective_offers",
+            "total_partenaires_offres_reservables": "new_bookable_offer_partners",
+        },
+    },
+    {
+        "model": "metrics_offer__collective_bookable_institution",
+        "side": "institution",
+        "kpis": {
+            "total_offres_reservables_recues_etablissements": "total_created_bookable_collective_offers",
+        },
+    },
+    {
+        "model": "metrics_booking__collective",
+        "side": "venue",
+        "kpis": {
+            "total_reservations_collectives": "total_collective_bookings",
+            "total_montant_engage": "total_collective_amount_spent",
+            "total_prereservations_collectives": "total_prereservations",
+            "total_confirmations_collectives": "total_confirmations",
+            "total_actions_collectives": "total_actions",
+            "total_montant_actions": "total_action_amount",
+        },
+    },
+    {
+        "model": "metrics_booking__collective_institution",
+        "side": "institution",
+        "kpis": {
+            "total_reservations_collectives_etablissements": "total_collective_bookings",
+            "total_montant_engage_etablissements": "total_collective_amount_spent",
+            "total_prereservations_collectives_etablissements": "total_prereservations",
+            "total_confirmations_collectives_etablissements": "total_confirmations",
+            "total_actions_collectives_etablissements": "total_actions",
+            "total_montant_actions_etablissements": "total_action_amount",
+        },
+    },
+] %}
 
-with
-    created_collective_offers as (
-        select
-            venue_region_name as region_name,
-            venue_academy_name as academy_name,
-            venue_department_name as dep_name,
-            venue_epci_code as epci_code,
-            venue_municipality_code as municipality_code,
-            date_trunc(date(collective_offer_creation_date), month) as partition_month,
-            coalesce(count(distinct collective_offer_id), 0) as total_created_offer
-        from {{ ref("int_global__collective_offer") }}
-        group by
-            venue_region_name,
-            venue_academy_name,
-            venue_department_name,
-            partition_month,
-            epci_code,
-            municipality_code
-    ),
-
-    ac_booked_collective_offers as (
-        select
-            cb.venue_region_name as region_name,
-            cb.venue_academy_name as academy_name,
-            cb.venue_department_name as dep_name,
-            cb.venue_epci_code as epci_code,
-            cb.venue_municipality_code as municipality_code,
-            -- bookings created before their scholar year starts are attributed to
-            -- its first month, so that Sep-Aug sums match the scholar year
-            {{
-                scholar_year_partition_month(
-                    "cb.collective_booking_creation_date", "ey"
-                )
-            }} as partition_month,
-            coalesce(count(distinct cb.collective_booking_id), 0) as total_booking,
-            coalesce(sum(cb.booking_amount), 0) as total_booking_amount
-        from {{ ref("mrt_global__collective_booking") }} as cb
-        left join
-            {{ source("raw", "applicative_database_educational_year") }} as ey
-            on cb.scholar_year = ey.scholar_year
-        where
-            cb.collective_booking_status
-            in ('CONFIRMED', 'USED', 'PENDING_REIMBURSEMENT', 'REIMBURSED')
-        group by
-            venue_region_name,
-            venue_academy_name,
-            venue_department_name,
-            partition_month,
-            epci_code,
-            municipality_code
-    )
-
-{% for dim in dimensions %}
+{% for source in sources %}
     {% if not loop.first %}
         union all
     {% endif %}
     select
         partition_month,
         timestamp('{{ ts() }}') as updated_at,
-        '{{ dim.name }}' as dimension_name,
-        {{ dim.value_expr }} as dimension_value,
-        'total_offres_collectives_creees' as kpi_name,
-        sum(total_created_offer) as numerator,
+        dimension_name,
+        dimension_value,
+        kpi_name,
+        numerator,
         1 as denominator,
-        sum(total_created_offer) as kpi
-    from created_collective_offers
-    {% if is_incremental() %}
-        where
-            partition_month
-            = date_trunc(date_sub(date('{{ ds() }}'), interval 1 month), month)
-    {% endif %}
-    group by partition_month, updated_at, dimension_name, dimension_value
-    union all
-    select
-        partition_month,
-        timestamp('{{ ts() }}') as updated_at,
-        '{{ dim.name }}' as dimension_name,
-        {{ dim.value_expr }} as dimension_value,
-        'total_reservations_collectives' as kpi_name,
-        sum(total_booking) as numerator,
-        1 as denominator,
-        sum(total_booking) as kpi
-    from ac_booked_collective_offers
-    {% if is_incremental() %}
-        where
-            partition_month
-            = date_trunc(date_sub(date('{{ ds() }}'), interval 1 month), month)
-    {% endif %}
-    group by partition_month, updated_at, dimension_name, dimension_value
-    union all
-    select
-        partition_month,
-        timestamp('{{ ts() }}') as updated_at,
-        '{{ dim.name }}' as dimension_name,
-        {{ dim.value_expr }} as dimension_value,
-        'total_montant_engage' as kpi_name,
-        sum(total_booking_amount) as numerator,
-        1 as denominator,
-        sum(total_booking_amount) as kpi
-    from ac_booked_collective_offers
-    {% if is_incremental() %}
-        where
-            partition_month
-            = date_trunc(date_sub(date('{{ ds() }}'), interval 1 month), month)
-    {% endif %}
-    group by partition_month, updated_at, dimension_name, dimension_value
+        numerator as kpi
+    from
+        (
+            {% for dim in get_dimensions(source.side, "academic_extended") %}
+                {% if not loop.first %}
+                    union all
+                {% endif %}
+                select
+                    partition_month,
+                    '{{ dim.name }}' as dimension_name,
+                    {{ dim.value_expr }} as dimension_value,
+                    {% for kpi_name, column in source.kpis.items() %}
+                        cast(sum({{ column }}) as float64) as {{ kpi_name }}
+                        {% if not loop.last %},{% endif %}
+                    {% endfor %}
+                from {{ ref(source.model) }}
+                where
+                    1 = 1
+                    {% if is_incremental() %}
+                        and partition_month = date_trunc(
+                            date_sub(date('{{ ds() }}'), interval 1 month), month
+                        )
+                    {% endif %}
+                group by partition_month, dimension_name, dimension_value
+            {% endfor %}
+        )
+        unpivot (numerator for kpi_name in ({{ source.kpis.keys() | join(", ") }}))
 {% endfor %}

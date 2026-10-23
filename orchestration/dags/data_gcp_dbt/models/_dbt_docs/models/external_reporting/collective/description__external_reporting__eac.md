@@ -8,6 +8,11 @@ description: Key indicators from the `external_reporting__eac` model.
 The `external_reporting__eac` model provides aggregated key indicators related to pass Culture government priority politic for the collective part.
 It is designed for automated export, especially in Excel format.
 
+Collective offer and booking KPIs (`external_reporting__eac_offer_booking`) are a roll-up of the `metrics_offer__collective*`
+and `metrics_booking__collective*` models. KPIs without suffix follow the venue (cultural partner) geography; KPIs
+suffixed `_etablissements` follow the school geography. Use `aggregation` to combine months: sum `flow` KPIs, take
+the last month of `stock` KPIs.
+
 {% enddocs %}
 
 ## Table Description

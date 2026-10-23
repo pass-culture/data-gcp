@@ -1,0 +1,76 @@
+version: 2
+models:
+  - name: int_kpi__offer_collective_bookable_institution
+    description: '{{ doc("description__int_kpi__offer_collective_bookable_institution") }}'
+    columns:
+      - name: partition_month
+        description: '{{ doc("column__partition_month") }}'
+        data_type: DATE
+
+      - name: scholar_year
+        description: '{{ doc("column__scholar_year") }}'
+        data_type: STRING
+
+      - name: institution_region_name
+        description: '{{ doc("column__institution_region_name") }}'
+        data_type: STRING
+
+      - name: institution_region_code
+        description: '{{ doc("column__institution_region_code") }}'
+        data_type: STRING
+
+      - name: institution_academy_name
+        description: '{{ doc("column__institution_academy_name") }}'
+        data_type: STRING
+
+      - name: institution_department_name
+        description: '{{ doc("column__institution_department_name") }}'
+        data_type: STRING
+
+      - name: institution_department_code
+        description: '{{ doc("column__institution_department_code") }}'
+        data_type: STRING
+
+      - name: institution_epci_name
+        description: '{{ doc("column__institution_epci") }}'
+        data_type: STRING
+
+      - name: institution_epci_code
+        description: '{{ doc("column__institution_epci_code") }}'
+        data_type: STRING
+
+      - name: institution_city_name
+        description: '{{ doc("column__institution_city") }}'
+        data_type: STRING
+
+      - name: institution_city_code
+        description: '{{ doc("column__institution_city_code") }}'
+        data_type: STRING
+
+      - name: institution_municipality_label
+        description: '{{ doc("column__institution_municipality_label") }}'
+        data_type: STRING
+
+      - name: institution_municipality_code
+        description: '{{ doc("column__institution_municipality_code") }}'
+        data_type: STRING
+
+      - name: institution_macro_density_label
+        description: '{{ doc("column__institution_macro_density_label") }}'
+        data_type: STRING
+
+      - name: total_created_bookable_collective_offers
+        description: '{{ doc("column__total_created_bookable_collective_offers") }}'
+        data_type: INTEGER
+
+      - name: total_prereserved_bookable_collective_offers
+        description: '{{ doc("column__total_prereserved_bookable_collective_offers") }}'
+        data_type: INTEGER
+
+      - name: cumulative_total_created_bookable_collective_offers
+        description: '{{ doc("column__cumulative_total_created_bookable_collective_offers") }}'
+        data_type: INTEGER
+
+      - name: cumulative_total_prereserved_bookable_collective_offers
+        description: '{{ doc("column__cumulative_total_prereserved_bookable_collective_offers") }}'
+        data_type: INTEGER

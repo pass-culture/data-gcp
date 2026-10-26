@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: int_history__bookable_collective_offer
+    description: >-
+      Daily history of bookable collective offers: one row per day and per collective offer bookable that day (approved active offers with an open, unbooked stock, and approved template offers).
+    columns:
+      - name: collective_offer_id
+        description: '{{ doc("column__bookable_history_collective_offer_id") }}'
+        data_type: STRING
+
+      - name: partition_date
+        description: '{{ doc("column__bookable_history_collective_partition_date") }}'
+        data_type: DATE
+
+      - name: collective_offer_is_template
+        description: '{{ doc("column__bookable_history_collective_offer_is_template") }}'
+        data_type: BOOLEAN

@@ -58,3 +58,9 @@ models:
       - name: offerer_is_epn
         description: "{{ doc('column__offerer_is_epn') }}"
         data_type: BOOLEAN
+      - name: offer_has_mediation
+        description: '{{ doc("column__offer_has_mediation") }}'
+        data_type: BOOLEAN
+      - name: cultural_outreach_status
+        description: '{{ doc("column__cultural_outreach_status") }}'
+        data_type: STRING

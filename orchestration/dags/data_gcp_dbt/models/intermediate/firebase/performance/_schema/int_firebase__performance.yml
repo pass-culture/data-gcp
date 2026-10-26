@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: int_firebase__performance
+    description: >-
+      Firebase Performance traces of the native app (iOS and Android): one row per 'home_time_to_interactive_in_ms' trace metric, with the Home time to interactive in milliseconds and the device, OS, app version and network.
+    columns:
+      - name: event_timestamp
+        description: '{{ doc("column__firebase_performance_event_timestamp") }}'
+        data_type: TIMESTAMP
+
+      - name: event_type
+        description: '{{ doc("column__firebase_performance_event_type") }}'
+        data_type: STRING
+
+      - name: event_name
+        description: '{{ doc("column__firebase_performance_event_name") }}'
+        data_type: STRING
+
+      - name: operating_system
+        description: '{{ doc("column__firebase_performance_operating_system") }}'
+        data_type: STRING
+
+      - name: radio_type
+        description: '{{ doc("column__radio_type") }}'
+        data_type: STRING
+
+      - name: app_display_version
+        description: '{{ doc("column__firebase_performance_app_display_version") }}'
+        data_type: STRING
+
+      - name: os_version
+        description: '{{ doc("column__user_device_operating_system_version") }}'
+        data_type: STRING
+
+      - name: carrier
+        description: '{{ doc("column__user_carrier") }}'
+        data_type: STRING
+
+      - name: device_name
+        description: '{{ doc("column__user_device_name") }}'
+        data_type: STRING
+
+      - name: country
+        description: '{{ doc("column__user_country") }}'
+        data_type: STRING
+
+      - name: home_time_to_interactive_container_in_ms
+        description: '{{ doc("column__firebase_performance_home_time_to_interactive_container_in_ms") }}'
+        data_type: INT64

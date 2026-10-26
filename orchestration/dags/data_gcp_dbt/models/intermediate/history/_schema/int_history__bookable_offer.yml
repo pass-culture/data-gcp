@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: int_history__bookable_offer
+    description: >-
+      Daily history of bookable individual offers: one row per day and per offer bookable that day (from the bookable offer snapshot, validated offerers only), with its item, subcategory and category.
+    columns:
+      - name: partition_date
+        description: '{{ doc("column__bookable_history_offer_partition_date") }}'
+        data_type: DATE
+
+      - name: offer_id
+        description: '{{ doc("column__bookable_history_offer_id") }}'
+        data_type: STRING
+
+      - name: item_id
+        description: '{{ doc("column__item_id") }}'
+        data_type: STRING
+
+      - name: offer_subcategory_id
+        description: '{{ doc("column__bookable_history_offer_subcategory_id") }}'
+        data_type: STRING
+
+      - name: offer_category_id
+        description: '{{ doc("column__bookable_history_offer_category_id") }}'
+        data_type: STRING

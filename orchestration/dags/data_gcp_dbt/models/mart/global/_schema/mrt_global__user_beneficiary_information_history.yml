@@ -123,7 +123,7 @@ models:
         data_type: STRING
 
       - name: user_qpv_code
-        description: '{{ doc("column__user_qpv_code") }}'
+        description: '{{ doc("column__user_history_qpv_code") }}'
         data_type: STRING
 
       - name: user_qpv_name

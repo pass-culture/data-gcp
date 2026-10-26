@@ -375,3 +375,9 @@ models:
       - name: venue_business_activity_code
         description: "{{ doc('column__venue_business_activity_code') }}"
         data_type: STRING
+      - name: total_created_mediation_individual_offers
+        description: '{{ doc("column__total_created_mediation_individual_offers") }}'
+        data_type: INT64
+      - name: has_mediation_offer
+        description: '{{ doc("column__has_mediation_offer") }}'
+        data_type: BOOLEAN

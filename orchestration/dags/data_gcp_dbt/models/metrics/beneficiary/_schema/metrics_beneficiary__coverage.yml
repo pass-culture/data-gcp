@@ -39,3 +39,6 @@ models:
         description: "{{ doc('column__total_users_last_12_months') }}"
         data_tests:
           - not_null
+      - name: cell_key_beneficiaries
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64

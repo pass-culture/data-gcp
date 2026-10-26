@@ -108,3 +108,12 @@ models:
         description: "{{ doc('column__partner_municipality_code') }}"
       - name: partner_municipality_label
         description: "{{ doc('column__partner_municipality_label') }}"
+      - name: partner_region_code
+        description: "{{ doc('column__partner_region_code') }}"
+        data_type: STRING
+      - name: partner_epci_code
+        description: "{{ doc('column__partner_epci_code') }}"
+        data_type: STRING
+      - name: partner_city_code
+        description: "{{ doc('column__partner_city_code') }}"
+        data_type: STRING

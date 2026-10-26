@@ -10,7 +10,7 @@ Tracking that are not related to specific concepts for now
 {% docs column__event_name %}The name of the event. For screen views, it concatenates the event name with the Firebase screen name.{% enddocs %}
 {% docs column__page_name %}The name of the page where the event occurred, providing context for the event.{% enddocs %}
 {% docs column__event_timestamp %}The exact timestamp when the event was recorded.{% enddocs %}
-{% docs column__user_pseudo_id %}A pseudo identifier for the user, used for tracking purposes.{% enddocs %}
+{% docs column__user_pseudo_id %} Firebase pseudonymous identifier of the app instance (the device, or the browser for web tracking), used for tracking purposes. One person can have several, and people sharing a device share one. {% enddocs %}
 {% docs column__origin %}The origin of the event, indicating where it was triggered from.{% enddocs %}
 {% docs column__origin_detail %}The details of the origin of the event.{% enddocs %}
 {% docs column__platform %}The platform on which the event was recorded, such as iOS or Android.{% enddocs %}
@@ -19,7 +19,8 @@ Tracking that are not related to specific concepts for now
 {% docs column__traffic_campaign %}The name of the marketing campaign that generated the session.{% enddocs %}
 {% docs column__traffic_source %}The source of the marketing campaign (Instagram, Snapchat ...) that generated the session.{% enddocs %}
 {% docs column__traffic_medium %}The medium of the marketing campaign (email, push notification ...)that generated the session.{% enddocs %}
-{% docs column__session_id %}Deprecated: use unique_session_id. The session identifier during which the event was recorded.{% enddocs %}
+{% docs column__session_id %} Deprecated: use unique_session_id. Firebase session number, unique only within a device (user_pseudo_id). {% enddocs %}
+{% docs column__adage_log_session_id %} Session identifier computed from the ADAGE logs: consecutive logs of the same user at most 30 minutes apart belong to the same session. MD5 hash of the session start, the user_id and the session number. {% enddocs %}
 {% docs column__unique_session_id %}A unique identifier for the session, ensuring no duplicates.{% enddocs %}
 {% docs column__consultation_module_tag_name %}Name of the Algolia/home module tag associated with the consultation, when the consultation originated from a tagged module. Null otherwise.{% enddocs %}
 {% docs column__consultation_user_role %}Role of the user at the time of the event, derived from their deposit status: 'Bénéficiaire' (has an active deposit), 'Ancien bénéficiaire' (deposit expired), 'Non bénéficiaire' (logged in, no deposit), or 'Non loggué' (not logged in).{% enddocs %}

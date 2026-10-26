@@ -11,7 +11,7 @@ models:
       - name: module_name
         description: "{{ doc('column__module_name') }}"
       - name: module_type
-        description: "{{ doc('column__module_type') }}"
+        description: "{{ doc('column__daily_home_module_conversion__module_type') }}"
       - name: entry_id
         description: "{{ doc('column__entry_id') }}"
       - name: entry_name

@@ -231,7 +231,7 @@ class BrevoTransactional:
             .assign(template=[event.template_id for event in all_events])
             .assign(
                 event_date=pd.to_datetime(
-                    [event._date for event in all_events], format="ISO8601"
+                    [event._date for event in all_events], format="ISO8601", utc=True
                 )
             )
             .assign(tag=[event.tag for event in all_events])

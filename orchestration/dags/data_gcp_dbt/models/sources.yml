@@ -198,6 +198,8 @@ sources:
       - name: run_googleapis_com_stderr
       - name: sendinblue_transactional
       - name: sensitive_item_recommendation
+      - name: siren_data
+      - name: siret_data
       - name: stdout
       - name: subcategories
       - name: tiktok_video_detail
@@ -221,8 +223,6 @@ sources:
       - name: applicative_database_collective_offer_history
       - name: applicative_database_collective_offer_template_history
       - name: adage_involved_student
-      - name: siren_data
-      - name: siret_data
 
   - name: int_metabase
     schema: int_metabase_{{ var('ENV_SHORT_NAME') }}

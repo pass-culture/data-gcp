@@ -7,8 +7,8 @@ import requests
 from google.cloud import bigquery
 
 from scripts.utils import (
-    BIGQUERY_CLEAN_DATASET,
     BIGQUERY_INT_RAW_DATASET,
+    BIGQUERY_RAW_DATASET,
     GCP_PROJECT,
     access_secret_data,
 )
@@ -24,7 +24,7 @@ def get_venue_siret_list():
 
     table_exists_query = f"""
         SELECT COUNT(*) AS cnt
-        FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.INFORMATION_SCHEMA.TABLES`
+        FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.INFORMATION_SCHEMA.TABLES`
         WHERE table_name = 'siret_data'
     """
     table_exists = next(client.query(table_exists_query).result()).cnt > 0
@@ -33,7 +33,7 @@ def get_venue_siret_list():
         query = f"""
             WITH updated_recently AS (
                 SELECT DISTINCT siret
-                FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.siret_data`
+                FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.siret_data`
                 WHERE date(update_date) >= date('{last_seven_days.strftime("%Y-%m-%d")}')
             )
             SELECT DISTINCT v.venue_siret AS siret
@@ -175,7 +175,7 @@ def save_to_bq(siret_list):
     df["update_date"] = datetime.now().strftime("%Y-%m-%d")
     pandas_gbq.to_gbq(
         df,
-        f"{BIGQUERY_CLEAN_DATASET}.siret_data",
+        f"{BIGQUERY_RAW_DATASET}.siret_data",
         project_id=GCP_PROJECT,
         if_exists="append",
     )

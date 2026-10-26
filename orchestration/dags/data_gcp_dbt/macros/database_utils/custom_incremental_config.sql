@@ -4,7 +4,9 @@
     on_schema_change="ignore",
     cluster_by=None,
     unique_key=None,
-    require_partition_filter=false
+    require_partition_filter=false,
+    tags=None,
+    meta=None
 ) %}
     {% if target.profile_name == "CI" %}
         {% set config_params = {"materialized": "view"} %}
@@ -25,5 +27,5 @@
             {% do config_params.update({"unique_key": unique_key}) %}
         {% endif %}
     {% endif %}
-    {{ return(config_params) }}
+    {{ return(apply_config_tags_and_meta(config_params, tags=tags, meta=meta)) }}
 {% endmacro %}

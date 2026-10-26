@@ -517,16 +517,60 @@ def load_and_process_manifest(
     return load_and_process_manifest_with_mtime(manifest_path, mtime)
 
 
+def attach_external_dependency_sensor(
+    dag: DAG, operator: PythonOperator, node_tags: list[str], node_meta: dict
+) -> None:
+    """
+    Attach a sensor upstream of the operator when the dbt node declares an
+    external dependency (via the "external_dependency" tag and the
+    "external_dag_id"/"external_task_id" meta). Applies to any dbt node type
+    (model, snapshot, ...), not just snapshots.
+
+    The dbt model can optionally set meta.external_dependency_on_skip to control
+    what happens when the external task is skipped:
+    - "fail" (default): the sensor FAILS, which turns this operator (and its
+      downstream dbt nodes) upstream_failed.
+    - "skip": the sensor is SKIPPED instead, which cascades as a skip to this
+      operator (and its downstream dbt nodes) via none_failed_min_one_success.
+    """
+    from common.utils import delayed_waiting_operator
+
+    if (
+        "external_dependency" in node_tags
+        and "external_dag_id" in node_meta
+        and "external_task_id" in node_meta
+    ):
+        on_skip = node_meta.get("external_dependency_on_skip", "fail")
+        if on_skip not in ("fail", "skip"):
+            raise ValueError(
+                f"Invalid meta.external_dependency_on_skip value: {on_skip!r}. "
+                "Expected 'fail' or 'skip'."
+            )
+
+        sensor = delayed_waiting_operator(
+            dag,
+            external_dag_id=node_meta["external_dag_id"],
+            external_task_id=node_meta["external_task_id"],
+            soft_fail=on_skip == "skip",
+        )
+        sensor >> operator
+
+
 def create_test_operator(model_data: dict, dag: DAG) -> PythonOperator:
     """Create a Python operator for running dbt tests."""
     node_tags = model_data.get("tags", [])
-    return PythonOperator(
+    node_meta = model_data.get("meta", {})
+
+    test_op = PythonOperator(
         task_id=model_data["alias"] + "_tests",
         python_callable=partial(run_dbt_test, model_data["name"], node_tags),
         dag=dag,
         pool="dbt",
         trigger_rule="none_failed_min_one_success",  # Run if upstream tasks succeed or skip
     )
+    attach_external_dependency_sensor(dag, test_op, node_tags, node_meta)
+
+    return test_op
 
 
 def create_model_operator(
@@ -540,8 +584,9 @@ def create_model_operator(
         else None
     )
     node_tags = model_data.get("tags", [])
+    node_meta = model_data.get("meta", {})
 
-    return PythonOperator(
+    model_op = PythonOperator(
         task_id=model_data["alias"] if is_applicative else model_data["name"],
         python_callable=partial(
             run_dbt_model, model_data["name"], exclude_tags, node_tags
@@ -550,14 +595,15 @@ def create_model_operator(
         pool="dbt",
         trigger_rule="none_failed_min_one_success",  # Run if upstream tasks succeed or skip
     )
+    attach_external_dependency_sensor(dag, model_op, node_tags, node_meta)
+
+    return model_op
 
 
 def create_snapshot_operator(snapshot_data: dict, dag: DAG) -> PythonOperator:
     """Create a Python operator for running a dbt snapshot."""
-    from common.utils import delayed_waiting_operator
-
     node_tags = snapshot_data.get("tags", [])
-    node_meta = snapshot_data["meta"]
+    node_meta = snapshot_data.get("meta", {})
 
     snapshot_op = PythonOperator(
         task_id=snapshot_data["alias"],
@@ -566,17 +612,7 @@ def create_snapshot_operator(snapshot_data: dict, dag: DAG) -> PythonOperator:
         pool="dbt",
         trigger_rule="none_failed_min_one_success",  # Run if upstream tasks succeed or skip
     )
-    if (
-        "external_dependency" in node_tags
-        and "external_dag_id" in node_meta
-        and "external_task_id" in node_meta
-    ):
-        sensor = delayed_waiting_operator(
-            dag,
-            external_dag_id=node_meta["external_dag_id"],
-            external_task_id=node_meta["external_task_id"],
-        )
-        sensor >> snapshot_op
+    attach_external_dependency_sensor(dag, snapshot_op, node_tags, node_meta)
 
     return snapshot_op
 

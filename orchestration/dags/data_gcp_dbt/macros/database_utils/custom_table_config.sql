@@ -1,5 +1,9 @@
 {% macro custom_table_config(
-    materialized="table", partition_by=None, cluster_by=None
+    materialized="table",
+    partition_by=None,
+    cluster_by=None,
+    tags=None,
+    meta=None
 ) %}
     {% if target.profile_name == "CI" %}
         {% set config_params = {"materialized": "view"} %}
@@ -14,5 +18,5 @@
             {% do config_params.update({"partition_by": partition_by}) %}
         {% endif %}
     {% endif %}
-    {{ return(config_params) }}
+    {{ return(apply_config_tags_and_meta(config_params, tags=tags, meta=meta)) }}
 {% endmacro %}

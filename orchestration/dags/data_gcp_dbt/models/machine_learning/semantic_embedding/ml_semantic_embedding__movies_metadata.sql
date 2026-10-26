@@ -18,6 +18,12 @@
             partition_by=None,
             unique_key="item_id",
             on_schema_change="append_new_columns",
+            tags=["external_dependency"],
+            meta={
+                "external_dag_id": "item_embedding",
+                "external_task_id": "movies_metadata.load_movies_metadata",
+                "external_dependency_on_skip": "skip",
+            },
         )
     )
 }}

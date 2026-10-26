@@ -2,6 +2,7 @@ import os
 
 import pandas as pd
 import typer
+from sandbox import sandbox_stale_tables
 from utils import (
     get_datasets_to_scan,
     get_last_update_date,
@@ -17,7 +18,13 @@ TABLES_TO_EXCLUDE = [
 ]
 
 
-def run():
+def run(
+    dry_run: bool = typer.Option(
+        True,
+        "--dry-run/--no-dry-run",
+        help="Only report the stale tables that would be moved to sandbox.",
+    ),
+):
     datasets_to_scan = get_datasets_to_scan()
 
     table_last_update_df = get_last_update_date(datasets_to_scan)
@@ -67,6 +74,8 @@ def run():
         }
         for row in warning_tables.itertuples()
     ]
+
+    sandbox_stale_tables(warning_tables_list, dry_run)
 
     print(f"{warning_tables_list}")
 

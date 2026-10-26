@@ -18,13 +18,11 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
-from common.operators.bigquery import bigquery_job_task
 from common.operators.kubernetes import (
     DEFAULT_CONTAINER_RESOURCES,
     CustomKubernetesPodOperator,
 )
 from common.utils import get_airflow_schedule
-from dependencies.dms_subscriptions.import_dms_subscriptions import CLEAN_TABLES
 
 MICROSERVICE_PATH = "jobs/etl_jobs/external/dms"
 DAG_NAME = "import_dms_subscriptions"
@@ -204,11 +202,6 @@ with DAG(
         write_disposition="WRITE_APPEND",
     )
 
-    cleaning_tasks = []
-    for table, params in CLEAN_TABLES.items():
-        task = bigquery_job_task(table=table, dag=dag, job_params=params)
-        cleaning_tasks.append(task)
-
     end = EmptyOperator(task_id="end")
 
 (start >> [dms_to_gcs_pro, sleep_op])
@@ -217,13 +210,6 @@ with DAG(
     >> dms_to_gcs_jeunes
     >> parse_api_result_jeunes
     >> import_dms_jeunes_to_bq
-    >> cleaning_tasks[0]
     >> end
 )
-(
-    dms_to_gcs_pro
-    >> parse_api_result_pro
-    >> import_dms_pro_to_bq
-    >> cleaning_tasks[1]
-    >> end
-)
+(dms_to_gcs_pro >> parse_api_result_pro >> import_dms_pro_to_bq >> end)

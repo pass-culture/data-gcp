@@ -51,6 +51,11 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
+        "dry_run": Param(
+            default=True,
+            type="boolean",
+            description="Only report the stale tables that would be moved to sandbox",
+        ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
@@ -79,7 +84,7 @@ with DAG(
         environment=dag_config,
         do_xcom_push=True,
         command="""
-        uv run main.py
+        uv run main.py {{ '--dry-run' if params.dry_run else '--no-dry-run' }}
         """,
     )
 

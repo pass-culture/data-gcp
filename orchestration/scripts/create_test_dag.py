@@ -26,6 +26,8 @@ Supported dag_id patterns (anything else causes an explicit error):
   DAG_NAME = "..."       module-level constant (most common)
   DAG_ID   = "..."       alternative constant name
   dag_id   = "..."       literal keyword arg inside DAG() / @dag()
+  dag_id: str = "..."    field on a DagConfig-style pydantic class, referenced as
+                          DAG_CONFIG.dag_id inside DAG() / @dag()
 
 USE CASES:
 ----------
@@ -239,6 +241,35 @@ def _rename_dag_constant(lines: list[str], suffix: str) -> tuple[str, str, str] 
     return None
 
 
+def _rename_dag_config_field(
+    lines: list[str], suffix: str
+) -> tuple[str, str, str] | None:
+    """
+    Rename a `dag_id: <type> = "..."` field on a DagConfig-style pydantic class.
+
+    Several DAGs centralize their configuration in a `DagConfig(DagBaseConfig)` class and
+    reference DAG_CONFIG.dag_id inside DAG(dag_id=DAG_CONFIG.dag_id, ...) instead of a
+    literal string or a DAG_NAME/DAG_ID constant. That kwarg is a variable reference, so
+    _rename_dag_id_kwarg can't touch it — renaming this field is what actually changes the
+    dag_id at runtime.
+    Returns (const_name, old, new) or None.
+    """
+    field_re = re.compile(
+        r'(?<!\w)(dag_id\s*:\s*\w+\s*=\s*f?["\'])(?P<value>[^"\']+)(["\'])'
+    )
+    for i, line in enumerate(lines):
+        # Skip # line comment
+        if re.match(r"\s*#", line):
+            continue
+        match = field_re.search(line)
+        if match:
+            original = match.group("value")
+            new_value = f"{original}{suffix}"
+            lines[i] = _splice(line, match, new_value)
+            return ("dag_id_field", original, new_value)
+    return None
+
+
 def _rename_dag_id_kwarg(
     lines: list[str], dag_start: int, dag_end: int, suffix: str
 ) -> tuple[str, str, str] | None:
@@ -425,6 +456,11 @@ def modify_content(content: str, suffix: str) -> tuple[str, list[tuple[str, str,
     if change:
         changes.append(change)
 
+    # 1b. Rename dag_id field on a DagConfig-style pydantic class (DAG_CONFIG.dag_id pattern)
+    change = _rename_dag_config_field(lines, suffix)
+    if change:
+        changes.append(change)
+
     # 2. Locate the DAG() constructor block
     try:
         dag_start, dag_end = find_dag_constructor_range(lines)
@@ -460,13 +496,16 @@ def modify_content(content: str, suffix: str) -> tuple[str, list[tuple[str, str,
     lines, change = _add_or_replace_tags(lines, dag_start, dag_end, get_username())
     changes.append(change)
 
-    # 6. Guard: ensure the dag_id was actually renamed (unsupported patterns like DagConfig)
-    if not any(t in ("DAG_NAME", "DAG_ID", "dag_id") for t, *_ in changes):
+    # 6. Guard: ensure the dag_id was actually renamed (unsupported patterns)
+    if not any(
+        t in ("DAG_NAME", "DAG_ID", "dag_id", "dag_id_field") for t, *_ in changes
+    ):
         print_error(
             "Could not rename the dag_id — the test copy would conflict with the "
             "production DAG in Airflow. Aborting.\n"
-            "The script renames: DAG_NAME = '...', DAG_ID = '...', or dag_id='...' "
-            "inside the DAG() constructor.\n"
+            "The script renames: DAG_NAME = '...', DAG_ID = '...', dag_id='...' inside "
+            "the DAG() constructor, or a dag_id: str = '...' field on a DagConfig-style "
+            "pydantic class.\n"
             "This DAG uses none of those patterns. Rename the id manually after creation "
             "with --force, or refactor the DAG to use one of the supported patterns."
         )

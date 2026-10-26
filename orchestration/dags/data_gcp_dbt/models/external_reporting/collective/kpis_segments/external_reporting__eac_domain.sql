@@ -21,9 +21,13 @@ with
             cb.institution_municipality_code as municipality_code,
             cb.institution_department_name as dep_name,
             cod.educational_domain_name as domain_name,
-            date_trunc(
-                date(cb.collective_booking_creation_date), month
-            ) as partition_month,
+            -- bookings created before their scholar year starts are attributed to
+            -- its first month, so that Sep-Aug sums match the scholar year
+            {{
+                scholar_year_partition_month(
+                    "cb.collective_booking_creation_date", "ey"
+                )
+            }} as partition_month,
             coalesce(vt.venue_tag_id is not null, false) as is_labelled_mc,
             coalesce(count(distinct cb.collective_booking_id), 0) as total_bookings,
             coalesce(sum(cb.booking_amount), 0) as total_booking_amount,
@@ -40,6 +44,9 @@ with
             on cb.venue_id = vt.venue_id
             and venue_tag_category_label
             = 'Comptage partenaire label et appellation du MC'
+        left join
+            {{ source("raw", "applicative_database_educational_year") }} as ey
+            on cb.scholar_year = ey.scholar_year
         where
             cb.collective_booking_status
             in ('CONFIRMED', 'USED', 'PENDING_REIMBURSEMENT', 'REIMBURSED')

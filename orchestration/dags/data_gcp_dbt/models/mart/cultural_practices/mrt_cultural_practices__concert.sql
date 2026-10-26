@@ -1,4 +1,4 @@
-{{ config(tags=["monthly"]) }}
+{{ config(tags=["monthly"], labels={"schedule": "monthly"}) }}
 
 select
     concerts.respondent_id,

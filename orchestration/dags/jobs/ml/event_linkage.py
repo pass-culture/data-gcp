@@ -241,6 +241,10 @@ with DAG(
         task_id="compute_similarities",
         instance_name=DAG_CONFIG.gce.instance_name,
         base_dir=DAG_CONFIG.base_dir,
+        # Long-running step (> 1h): run in background on the VM and monitor it
+        # with a trigger, instead of holding a synchronous SSH session that times out.
+        deferrable=True,
+        poll_interval=300,
         command=f"""
              uv run python cli/2_compute_similarities.py \
                 --offer-event-with-embeddings-filepath {DAG_CONFIG.gcs.offers_with_embedded_images_gcs_path} \

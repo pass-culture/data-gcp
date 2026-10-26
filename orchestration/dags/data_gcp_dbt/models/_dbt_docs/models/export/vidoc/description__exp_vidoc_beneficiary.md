@@ -16,6 +16,6 @@ Each row represents a key indicator calculated for a specific month, geographic 
 
 **Grain**: `partition_month`, `region_code`, `department_code`, `age_at_calculation`, `is_in_qpv`, `macro_density_label`, `micro_density_label`.
 
-`total_actual_beneficiaries` is a subset of `total_beneficiaries` (active ⊂ ever-credited), but the two are perturbed independently — the invariant `total_actual ≤ total_beneficiaries` is only guaranteed after aggregation across many cells.
+`total_actual_beneficiaries` is a subset of `total_beneficiaries` (active ⊂ ever-credited). The two are perturbed independently, so the perturbed `total_actual_beneficiaries` is capped at the perturbed `total_beneficiaries` of the same row: `total_actual ≤ total_beneficiaries` holds on every row and at any aggregation level.
 
 {% docs table__exp_vidoc__beneficiary %}{% enddocs %}

@@ -233,7 +233,7 @@ select
     coalesce(epn_list.offerer_id is not null, false) as offerer_is_epn
 from {{ ref("int_applicative__offerer") }} as ofr
 left join
-    {{ source("clean", "siren_data") }} as siren_data
+    {{ source("raw", "siren_data") }} as siren_data
     on ofr.offerer_siren = siren_data.siren
 left join
     {{ source("seed", "siren_main_business_labels") }} as main_business

@@ -10,7 +10,8 @@ ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 today = datetime.datetime.now()
 days3 = datetime.timedelta(days=3)
 days7 = datetime.timedelta(days=7)
-month = datetime.timedelta(weeks=4)
+# A monthly model is rebuilt on the 1st, so it can be 31 days old on the next run.
+month = datetime.timedelta(days=32)
 year = datetime.timedelta(days=365)
 
 
@@ -27,9 +28,9 @@ def get_schedule_mapping():
               the threshold date for each schedule:
               - 'daily': 3 days ago
               - 'weekly': 7 days ago
-              - 'monthly': 4 weeks ago
+              - 'monthly': 32 days ago
               - 'yearly': 365 days ago
-              - 'default': 4 weeks ago (fallback for untagged tables)
+              - 'default': 32 days ago (fallback for untagged tables)
               - 'never': Never alert (epoch time)
     """
     return {
@@ -120,3 +121,22 @@ def get_table_schedule():
     table_schedule_df = pd.read_gbq(schedule_query)
 
     return table_schedule_df
+
+
+def get_last_writer(full_table_names):
+    """
+    Get the account of the last job that wrote each table, to know whom to ask.
+    """
+    if not full_table_names:
+        return pd.DataFrame(columns=["full_table_name", "last_writer"])
+
+    table_list = ", ".join(f"'{table}'" for table in full_table_names)
+    last_writer_query = f"""
+        SELECT
+            CONCAT(dataset_id, '.', table_id) as full_table_name,
+            ARRAY_AGG(user_email ORDER BY start_date DESC LIMIT 1)[OFFSET(0)] as last_writer
+        FROM `{GCP_PROJECT}.int_gcp_{ENV_SHORT_NAME}.bigquery_cost`
+        WHERE CONCAT(dataset_id, '.', table_id) IN ({table_list})
+        GROUP BY 1
+    """
+    return pd.read_gbq(last_writer_query)

@@ -5,6 +5,7 @@ import typer
 from utils import (
     get_datasets_to_scan,
     get_last_update_date,
+    get_last_writer,
     get_schedule_mapping,
     get_table_schedule,
     table_name_contains_partition_date,
@@ -40,12 +41,31 @@ def run():
         df["last_modified_time"] < df["schedule_tag"].map(get_schedule_mapping())
     ]
 
-    warning_tables = warning_tables[~warning_tables.is_partition_table]
+    warning_tables = warning_tables[
+        ~warning_tables.is_partition_table
+        & ~warning_tables.full_table_name.isin(TABLES_TO_EXCLUDE)
+    ].sort_values("last_modified_time")
 
-    warning_tables_list = warning_tables["full_table_name"].to_list()
+    warning_tables = warning_tables.merge(
+        get_last_writer(warning_tables["full_table_name"].to_list()),
+        on="full_table_name",
+        how="left",
+    )
 
+    # Native python types only: the Airflow task reads this line with ast.literal_eval.
     warning_tables_list = [
-        table for table in warning_tables_list if table not in TABLES_TO_EXCLUDE
+        {
+            "table": row.full_table_name,
+            "last_modified": row.last_modified_time.strftime("%Y-%m-%d"),
+            "days_since_update": int(
+                (pd.Timestamp.now() - row.last_modified_time).days
+            ),
+            "schedule": row.schedule_tag,
+            "last_writer": row.last_writer
+            if isinstance(row.last_writer, str)
+            else None,
+        }
+        for row in warning_tables.itertuples()
     ]
 
     print(f"{warning_tables_list}")

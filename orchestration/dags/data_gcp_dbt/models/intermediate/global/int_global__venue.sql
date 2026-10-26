@@ -29,7 +29,7 @@ with
                     row_number() over (
                         partition by siret order by update_date desc
                     ) as row_num
-                from {{ source("clean", "siret_data") }}
+                from {{ source("raw", "siret_data") }}
             ) as siret_ranked
         where siret_ranked.row_num = 1
     )

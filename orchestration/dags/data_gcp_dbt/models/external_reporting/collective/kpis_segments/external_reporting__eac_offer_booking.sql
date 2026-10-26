@@ -33,19 +33,26 @@ with
 
     ac_booked_collective_offers as (
         select
-            venue_region_name as region_name,
-            venue_academy_name as academy_name,
-            venue_department_name as dep_name,
-            venue_epci_code as epci_code,
-            venue_municipality_code as municipality_code,
-            date_trunc(
-                date(collective_booking_creation_date), month
-            ) as partition_month,
-            coalesce(count(distinct collective_booking_id), 0) as total_booking,
-            coalesce(sum(booking_amount), 0) as total_booking_amount
-        from {{ ref("mrt_global__collective_booking") }}
+            cb.venue_region_name as region_name,
+            cb.venue_academy_name as academy_name,
+            cb.venue_department_name as dep_name,
+            cb.venue_epci_code as epci_code,
+            cb.venue_municipality_code as municipality_code,
+            -- bookings created before their scholar year starts are attributed to
+            -- its first month, so that Sep-Aug sums match the scholar year
+            {{
+                scholar_year_partition_month(
+                    "cb.collective_booking_creation_date", "ey"
+                )
+            }} as partition_month,
+            coalesce(count(distinct cb.collective_booking_id), 0) as total_booking,
+            coalesce(sum(cb.booking_amount), 0) as total_booking_amount
+        from {{ ref("mrt_global__collective_booking") }} as cb
+        left join
+            {{ source("raw", "applicative_database_educational_year") }} as ey
+            on cb.scholar_year = ey.scholar_year
         where
-            collective_booking_status
+            cb.collective_booking_status
             in ('CONFIRMED', 'USED', 'PENDING_REIMBURSEMENT', 'REIMBURSED')
         group by
             venue_region_name,

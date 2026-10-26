@@ -221,8 +221,6 @@ sources:
       - name: applicative_database_collective_stock_history
       - name: applicative_database_collective_offer_history
       - name: applicative_database_collective_offer_template_history
-      - name: dms_jeunes_cleaned
-      - name: dms_pro_cleaned
       - name: siren_data
       - name: siret_data
 

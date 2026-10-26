@@ -11,15 +11,33 @@ title: Metrics
 {% docs column__total_bookings %} Total number of bookings, both individual and collective. {% enddocs %}
 {% docs column__total_cancelled_bookings %}Total number of cancelled bookings.{% enddocs %}
 {% docs column__total_cancelled_individual_bookings %} Total number of cancelled individual bookings. {% enddocs %}
-{% docs column__total_collective_bookings %} Total number of collective bookings. {% enddocs %}
+{% docs column__total_collective_bookings %} Number of collective bookings created in the month that are confirmed (confirmed, used, pending reimbursement or reimbursed). A booking created before its scholar year starts is counted in the first month of that scholar year. {% enddocs %}
 {% docs column__total_collective_amount_spent %} Total amount spent for collective bookings. {% enddocs %}
 {% docs column__cumulative_total_collective_bookings %}
-Cumulative total number of collective bookings for the same venue geography from the start of the given school year up to and including the specified month.
+Cumulative total number of collective bookings for the same geography from the start of the given school year up to and including the specified month.
 {% enddocs %}
 
 {% docs column__cumulative_total_collective_amount_spent %}
-Cumulative total amount spent for collective bookings for the same venue geography from the start of the given school year up to and including the specified month.
+Cumulative total amount spent for collective bookings for the same geography from the start of the given school year up to and including the specified month.
 {% enddocs %}
+{% docs column__total_prereservations %} Number of non-cancelled collective bookings (pre-reservations, whatever their status) created in the month. A booking created before its scholar year starts is counted in the first month of that scholar year. {% enddocs %}
+{% docs column__total_prereservation_amount %} Amount of the non-cancelled collective bookings created in the month (same attribution as `total_prereservations`). {% enddocs %}
+{% docs column__total_confirmations %} Number of collective bookings confirmed by the school head in the month (by confirmation date, clamped into the booking's scholar year). {% enddocs %}
+{% docs column__total_confirmation_amount %} Amount of the collective bookings confirmed in the month. {% enddocs %}
+{% docs column__total_actions %} Number of confirmed collective bookings whose action (stock beginning date) takes place in the month. Future months give a forecast. {% enddocs %}
+{% docs column__total_action_amount %} Amount of the confirmed collective bookings whose action takes place in the month. {% enddocs %}
+{% docs column__cumulative_total_prereservations %} `total_prereservations` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__cumulative_total_prereservation_amount %} `total_prereservation_amount` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__cumulative_total_confirmations %} `total_confirmations` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__cumulative_total_confirmation_amount %} `total_confirmation_amount` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__cumulative_total_actions %} `total_actions` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__cumulative_total_action_amount %} `total_action_amount` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__total_created_bookable_collective_offers %} Number of bookable (non template) collective offers created in the month. An offer belongs to the scholar year of its action (stock beginning date); an offer created before that scholar year starts is counted in its first month. {% enddocs %}
+{% docs column__total_prereserved_bookable_collective_offers %} Number of the bookable collective offers created in the month that have at least one non-cancelled booking. {% enddocs %}
+{% docs column__new_bookable_offer_partners %} Number of cultural partners (venues) whose first bookable collective offer of the scholar year is created in the month. Summed over months, it gives the number of distinct partners. {% enddocs %}
+{% docs column__cumulative_total_created_bookable_collective_offers %} `total_created_bookable_collective_offers` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__cumulative_total_prereserved_bookable_collective_offers %} `total_prereserved_bookable_collective_offers` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__cumulative_new_bookable_offer_partners %} Number of distinct cultural partners (venues) with at least one bookable collective offer created since the start of the scholar year, up to and including the month. {% enddocs %}
 {% docs column__total_collective_offers %}The total number of collective offers.{% enddocs %}
 {% docs column__total_collective_real_revenue %} Total actual revenue from collective bookings. {% enddocs %}
 {% docs column__total_collective_theoretic_revenue %} Total theoretical revenue from collective bookings. {% enddocs %}
@@ -261,10 +279,10 @@ The total cumulative number of unique partners who have had at least one active 
 {% docs column__total_collective_tickets_by_domain %} Total number of tickets generated for EAC collective bookings for the given institution geography and educational domain in the specified month. {% enddocs %}
 {% docs column__total_collective_institutions_by_domain %} Total number of distinct educational institutions with at least one EAC collective booking for the given geography and educational domain in the specified month. {% enddocs %}
 
-{% docs column__cumulative_total_collective_bookings_by_domain %} Cumulative total number of EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month. {% enddocs %}
-{% docs column__cumulative_total_collective_booking_amount_by_domain %} Cumulative total booking amount for EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month. {% enddocs %}
-{% docs column__cumulative_total_collective_tickets_by_domain %} Cumulative total number of tickets generated for EAC collective bookings for the same institution geography and domain from the beginning of the data history up to and including the specified month. {% enddocs %}
-{% docs column__cumulative_total_collective_institutions_by_domain %} Cumulative total number of distinct educational institutions involved in EAC collective bookings for the same geography and domain from the beginning of the data history up to and including the specified month. {% enddocs %}
+{% docs column__cumulative_total_collective_bookings_by_domain %} Cumulative total number of EAC collective bookings for the same institution geography and domain from the start of the scholar year up to and including the specified month. {% enddocs %}
+{% docs column__cumulative_total_collective_booking_amount_by_domain %} Cumulative total booking amount for EAC collective bookings for the same institution geography and domain from the start of the scholar year up to and including the specified month. {% enddocs %}
+{% docs column__cumulative_total_collective_tickets_by_domain %} Cumulative total number of tickets generated for EAC collective bookings for the same institution geography and domain from the start of the scholar year up to and including the specified month. {% enddocs %}
+{% docs column__cumulative_total_collective_institutions_by_domain %} Number of distinct educational institutions with at least one EAC collective booking in the domain since the start of the scholar year, up to and including the specified month (each institution counted once). {% enddocs %}
 
 {% docs column__metrics__total_institutions %}
 Total number of institutions (schools) registered or eligible within the territory (at the given geographical granularity), for the specified month and school year.

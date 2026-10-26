@@ -1,0 +1,22 @@
+select
+    partition_month,
+    scholar_year,
+    venue_region_name,
+    venue_region_code,
+    venue_academy_name,
+    venue_department_name,
+    venue_department_code,
+    venue_epci_name,
+    venue_epci_code,
+    venue_city_name,
+    venue_city_code,
+    venue_municipality_label,
+    venue_municipality_code,
+    venue_macro_density_label,
+    total_created_bookable_collective_offers,
+    total_prereserved_bookable_collective_offers,
+    new_bookable_offer_partners,
+    cumulative_total_created_bookable_collective_offers,
+    cumulative_total_prereserved_bookable_collective_offers,
+    cumulative_new_bookable_offer_partners
+from {{ ref("int_kpi__offer_collective_bookable") }}

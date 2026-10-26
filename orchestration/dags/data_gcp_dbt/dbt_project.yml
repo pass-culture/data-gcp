@@ -75,6 +75,8 @@ models:
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       raw:
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+      dms:
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       pcreco:
         +meta:
           owner: "@data-science"

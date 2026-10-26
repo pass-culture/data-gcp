@@ -9,6 +9,7 @@ title: Metrics
 {% docs column__total_bookable_individual_offers %} Total number of individual offers that are bookable. {% enddocs %}
 {% docs column__total_bookable_offers %} Total number of offers that are bookable, both individual and collective. {% enddocs %}
 {% docs column__total_bookings %} Total number of bookings, both individual and collective. {% enddocs %}
+{% docs column__finance_individual__total_bookings %} Number of distinct used individual bookings having an invoiced pricing in a payment batch, for the month of use and the row's cell. {% enddocs %}
 {% docs column__total_cancelled_bookings %}Total number of cancelled bookings.{% enddocs %}
 {% docs column__total_cancelled_individual_bookings %} Total number of cancelled individual bookings. {% enddocs %}
 {% docs column__total_collective_bookings %} Number of collective bookings created in the month that are confirmed (confirmed, used, pending reimbursement or reimbursed). A booking created before its scholar year starts is counted in the first month of that scholar year. {% enddocs %}
@@ -97,8 +98,10 @@ Total number of students who participated in at least one EAC activity within th
 {% docs column__total_used_collective_bookings %} Total number of collective bookings that were used. {% enddocs %}
 {% docs column__total_used_individual_bookings %} Total number of used individual bookings. {% enddocs %}
 {% docs column__total_users %} The total number of users. {% enddocs %}
-{% docs column__total_users_last_12_months %} Rolling sum of distinct users over the last 12 months for a given age and department. {% enddocs %}
+{% docs column__monthly_beneficiary_coverage__total_users %} Number of distinct users with an active deposit (any deposit type) during the month, for the row's birth month and department (decimal-age grain). Only the last 48 months are computed. {% enddocs %}
+{% docs column__total_users_last_12_months %} Rolling sum of distinct users over the last 12 months for a given age and department: the sum of monthly distinct-user counts over the current and 11 previous months, so a user active in several months is counted once per month. {% enddocs %}
 {% docs column__total_population %} The total number of french population. {% enddocs %}
+{% docs column__monthly_beneficiary_coverage__total_population %} INSEE estimated population for the row's snapshot month, birth month and department (decimal-age grain). A population count, not a count of registered users. {% enddocs %}
 {% docs column__total_population_last_12_months %} Rolling sum of french population over the last 12 months for a given age and department. {% enddocs %}
 {% docs column__total_3_category_booked_users %} The total number of users who made bookings in three categories or more. {% enddocs %}
 {% docs column__total_amount_spent %} The total amount of credit spent by the user. {% enddocs %}
@@ -117,8 +120,8 @@ Total number of students who participated in at least one EAC activity within th
 {% docs column__total_venue_20_km %} The total distinct number of venues located under a 20 kilometers area around the centroid of the IRIS. {% enddocs %}
 {% docs column__total_venue_5_km %} The total distinct number of venues located under a 5 kilometers area around the centroid of the IRIS. {% enddocs %}
 {% docs column__total_population_15_years_or_more %} The total population over 15 years living in the IRIS. {% enddocs %}
-{% docs column__total_population_11_17_years %} The total population between 11 and 17 years living in the IRIS. {% enddocs %}
-{% docs column__total_population_18_24_years %} The total population between 18 ans 24 years living in the IRIS. {% enddocs %}
+{% docs column__total_population_11_17_years %} Population aged 11 to 17 living in the IRIS, from the 2020 INSEE census. {% enddocs %}
+{% docs column__total_population_18_24_years %} Population aged 18 to 24 living in the IRIS, from the 2020 INSEE census; concentrated in university towns. {% enddocs %}
 {% docs column__pct_csp_1 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 1 - Farmers. {% enddocs %}
 {% docs column__pct_csp_2 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 2 - Craftsmen, Traders, Business Leaders. {% enddocs %}
 {% docs column__pct_csp_3 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 3 - Executives and Higher Intellectual Professions. {% enddocs %}
@@ -144,11 +147,11 @@ Total number of students who participated in at least one EAC activity within th
 {% docs column__total_consult_venue %} The total number of venues consulted from the venue map. {% enddocs %}
 {% docs column__total_distinct_venue_consult_offer %} The total distinct number of venues which led to an offer consultation. {% enddocs %}
 {% docs column__total_session_venue_map_seen_duration_seconds %} Durée totale en seconde pendant laquelle la venue map a été affichée au cours d’une session. {% enddocs %}
-{% docs column__total_diversification %} Total du score de diversité incrémenté par les réservations associées. {% enddocs %}
+{% docs column__total_diversification %} Total diversification score of the bookings attributed to the entry (sum of the bookings' diversity_score). {% enddocs %}
 {% docs column__total_quantities %} Total quantities booked. A booking quantity can be 1 or 2. {% enddocs %}
-{% docs column__total_revenue_amount %} The total revenue amount associated with the bookings. {% enddocs %}
-{% docs column__total_reimbursed_amount %} Total amount reimbursed to the offerers.  {% enddocs %}
-{% docs column__total_contribution_amount %} Total amount contributed by the offerers on their bookings.  {% enddocs %}
+{% docs column__total_revenue_amount %} Revenue: sum of booking_intermediary_amount of used individual bookings that have an invoiced pricing included in a payment batch, at the row's grain. {% enddocs %}
+{% docs column__total_reimbursed_amount %} Amount reimbursed by pass Culture to offerers at the row's grain: pricing amounts on 'offerer revenue' pricing lines of invoiced pricings in a payment batch. {% enddocs %}
+{% docs column__total_contribution_amount %} Total amount contributed by the offerers on their bookings, i.e. the share of revenue borne by the offerers (revenue minus reimbursed amount): 'offerer contribution' pricing lines of invoiced pricings in a payment batch, at the row's grain. {% enddocs %}
 {% docs column__total_booking_amount %} Total amount generated by the bookings.  {% enddocs %}
 {% docs column__total_booking_quantity %} Total quantity of items booked.  {% enddocs %}
 {% docs column__total_booking_amount_ranked %} The rank of the total amount generated by the bookings. As opposed to the other category booked.  {% enddocs %}
@@ -215,7 +218,7 @@ The sum, over beneficiaries whose credit expired during the month, of the number
 {% enddocs %}
 
 {% docs column__metrics__total_expired_deposit_beneficiaries %}
-The total number of beneficiaries whose credit expired during the specific month. This column serves as the denominator (baseline) for calculating percentages related to user behavior at the end of their eligibility period (e.g., the proportion of users who diversified their bookings).
+Number of beneficiaries whose GRANT_18 or GRANT_17_18 deposit expired during the month (closed months only). This column serves as the denominator (baseline) for calculating percentages related to user behavior at the end of their eligibility period (e.g., the proportion of users who diversified their bookings).
 {% enddocs %}
 
 {% docs column__metrics__total_deposit_amount_at_expiration %}
@@ -235,15 +238,15 @@ The average deposit amount effectively spent per beneficiary at the time of expi
 {% enddocs %}
 
 {% docs column__metrics__total_active_partners_individual %}
-The total number of unique partners who had at least one active offer within the individual part during the 365 days prior to the calculation date.
+Number of distinct partners (venues) with at least one bookable individual offer during the 365 days up to the end of the month (today for the current month).
 {% enddocs %}
 
 {% docs column__metrics__total_active_partners_collective %}
-The total number of unique partners who had at least one active offer within the collective part during the 365 days prior to the calculation date.
+Number of distinct partners (venues) with at least one bookable collective offer during the 365 days up to the end of the month (today for the current month).
 {% enddocs %}
 
 {% docs column__metrics__total_active_partners_global %}
-The total number of unique partners who had at least one active offer within either the individual part, the collective part, or both, during the 365 days prior to the calculation date.
+Number of distinct partners (venues) with at least one bookable offer, individual or collective, during the 365 days up to the end of the month (today for the current month).
 {% enddocs %}
 
 {% docs column__metrics__total_active_partners_dual_part %}
@@ -333,7 +336,7 @@ Total number of eligible beneficiaries who successfully logged in or connected t
 {% enddocs %}
 
 {% docs column__pct_connected_users %}
-Percentage of eligible beneficiaries who connected to the platform during the month (`total_connected_users / total_eligible_users`).
+Share of eligible beneficiaries who connected to the platform during the month (`total_connected_users / total_eligible_users`), as a ratio between 0 and 1 (not multiplied by 100).
 {% enddocs %}
 
 {% docs column__total_onboarding_users %}
@@ -429,4 +432,28 @@ Number of distinct cultural partners with at least one used booking in the munic
 
 {% docs column__max_partner_revenue_share_municipality %}
 Share of total municipality revenue held by the top cultural partner over the rolling window (value between 0 and 1).
+{% enddocs %}
+
+{% docs column__perturbation_table__count_min %}
+Lower bound (inclusive) of the range of exact counts this perturbation row applies to.
+{% enddocs %}
+
+{% docs column__perturbation_table__count_max %}
+Upper bound (inclusive) of the range of exact counts this perturbation row applies to.
+{% enddocs %}
+
+{% docs column__perturbation_table__cell_key_min %}
+Lower bound (inclusive) of the range of cell keys (0 to 255) this perturbation row applies to.
+{% enddocs %}
+
+{% docs column__perturbation_table__cell_key_max %}
+Upper bound (inclusive) of the range of cell keys (0 to 255) this perturbation row applies to.
+{% enddocs %}
+
+{% docs column__perturbation_table__perturbation %}
+Noise added to the exact count (cell key method, max noise 5, no published count between 1 and 4). The perturbed count is greatest(count + perturbation, 0), for the row where count is between count_min and count_max and the cell key between cell_key_min and cell_key_max.
+{% enddocs %}
+
+{% docs column__cell_key %}
+Cell key (0-255) of the matching count, used to perturb that count on publication (statistical disclosure control, cell key method): the salted record keys of the counted users summed modulo 256. Neither a measure nor a dimension: do not display it. When rows are aggregated, the key of the aggregate is mod(abs(sum(cell_key)), 256), not the plain sum.
 {% enddocs %}

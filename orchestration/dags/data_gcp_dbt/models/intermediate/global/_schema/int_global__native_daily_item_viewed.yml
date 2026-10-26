@@ -1,0 +1,106 @@
+version: 2
+
+models:
+  - name: int_global__native_daily_item_viewed
+    description: >-
+      Daily item views ('ViewItem') in the native app: number of distinct logged-in users who saw each item (offer, venue, artist) per day, channel, module, home and playlist tags and user role and age, split by display-position bucket.
+    columns:
+      - name: event_date
+        description: '{{ doc("column__native_daily_item_viewed_event_date") }}'
+        data_type: DATE
+
+      - name: origin
+        description: '{{ doc("column__native_daily_item_viewed_origin") }}'
+        data_type: STRING
+
+      - name: traffic_source
+        description: '{{ doc("column__traffic_source") }}'
+        data_type: STRING
+
+      - name: traffic_medium
+        description: '{{ doc("column__traffic_medium") }}'
+        data_type: STRING
+
+      - name: traffic_campaign
+        description: '{{ doc("column__traffic_campaign") }}'
+        data_type: STRING
+
+      - name: module_id
+        description: '{{ doc("column__native_daily_item_viewed_module_id") }}'
+        data_type: STRING
+
+      - name: home_entry_id
+        description: '{{ doc("column__native_daily_item_viewed_home_entry_id") }}'
+        data_type: STRING
+
+      - name: home_name
+        description: '{{ doc("column__home_name") }}'
+        data_type: STRING
+
+      - name: home_type
+        description: '{{ doc("column__home_type") }}'
+        data_type: STRING
+
+      - name: home_audience
+        description: '{{ doc("column__home_audience") }}'
+        data_type: STRING
+
+      - name: user_lifecycle_home
+        description: '{{ doc("column__user_lifecycle_home") }}'
+        data_type: STRING
+
+      - name: playlist_name
+        description: '{{ doc("column__native_daily_item_viewed_playlist_name") }}'
+        data_type: STRING
+
+      - name: playlist_type
+        description: '{{ doc("column__playlist_type") }}'
+        data_type: STRING
+
+      - name: playlist_offer_category
+        description: '{{ doc("column__native_daily_item_viewed_playlist_offer_category") }}'
+        data_type: STRING
+
+      - name: playlist_reach
+        description: '{{ doc("column__playlist_reach") }}'
+        data_type: STRING
+
+      - name: playlist_recurrence
+        description: '{{ doc("column__playlist_recurrence") }}'
+        data_type: STRING
+
+      - name: item_type
+        description: '{{ doc("column__native_daily_item_viewed_item_type") }}'
+        data_type: STRING
+
+      - name: viewed_item_id
+        description: '{{ doc("column__native_daily_item_viewed_viewed_item_id") }}'
+        data_type: STRING
+
+      - name: user_role
+        description: '{{ doc("column__native_daily_item_viewed_user_role") }}'
+        data_type: STRING
+
+      - name: user_age
+        description: '{{ doc("column__user_age") }}'
+        data_type: INT64
+
+      - name: total_user_item_viewed
+        description: '{{ doc("column__native_daily_item_viewed_total_user_item_viewed") }}'
+        data_type: INT64
+
+      - name: total_user_item_viewed_bucket_1_3
+        description: '{{ doc("column__native_daily_item_viewed_total_user_item_viewed_bucket_1_3") }}'
+        data_type: INT64
+
+      - name: total_user_item_viewed_bucket_4_6
+        description: '{{ doc("column__native_daily_item_viewed_total_user_item_viewed_bucket_4_6") }}'
+        data_type: INT64
+
+      - name: total_user_item_viewed_bucket_7_9
+        description: '{{ doc("column__native_daily_item_viewed_total_user_item_viewed_bucket_7_9") }}'
+        data_type: INT64
+
+      - name: total_user_item_viewed_bucket_10_plus
+        description: '{{ doc("column__native_daily_item_viewed_total_user_item_viewed_bucket_10_plus") }}'
+        data_type: INT64

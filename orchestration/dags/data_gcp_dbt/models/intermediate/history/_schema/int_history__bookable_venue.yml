@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: int_history__bookable_venue
+    description: >-
+      Daily history of bookable offers per venue: for each day and each venue with at least one bookable offer, the number of individual and collective offers bookable that day.
+    columns:
+      - name: venue_id
+        description: '{{ doc("column__venue_id") }}'
+        data_type: STRING
+
+      - name: offerer_id
+        description: '{{ doc("column__offerer_id") }}'
+        data_type: STRING
+
+      - name: partition_date
+        description: '{{ doc("column__bookable_history_venue_partition_date") }}'
+        data_type: DATE
+
+      - name: total_individual_bookable_offers
+        description: '{{ doc("column__bookable_history_total_individual_bookable_offers") }}'
+        data_type: INT64
+
+      - name: total_collective_bookable_offers
+        description: '{{ doc("column__bookable_history_total_collective_bookable_offers") }}'
+        data_type: INT64
+
+      - name: total_bookable_offers
+        description: '{{ doc("column__total_bookable_offers") }}'
+        data_type: INT64

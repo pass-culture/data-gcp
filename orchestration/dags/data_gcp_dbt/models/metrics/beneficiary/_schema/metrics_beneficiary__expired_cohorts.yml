@@ -17,19 +17,19 @@ models:
             - micro_density_label
     columns:
       - name: deposit_expiration_month
-        description: "{{ doc('column__deposit_expiration_month') }}"
+        description: "{{ doc('column__expired_cohorts__deposit_expiration_month') }}"
         data_tests:
           - not_null
       - name: region_name
-        description: "{{ doc('column__region_name') }}"
+        description: "{{ doc('column__user_region_name') }}"
       - name: department_name
-        description: "{{ doc('column__department_name') }}"
+        description: "{{ doc('column__user_department_name') }}"
       - name: department_code
-        description: "{{ doc('column__department_code') }}"
+        description: "{{ doc('column__user_department_code') }}"
       - name: epci_name
-        description: "{{ doc('column__epci_label') }}"
+        description: "{{ doc('column__user_epci') }}"
       - name: epci_code
-        description: "{{ doc('column__epci_code') }}"
+        description: "{{ doc('column__user_epci_code') }}"
       - name: city_code
         description: "{{ doc('column__user_city_code') }}"
       - name: city_name

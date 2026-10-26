@@ -36,3 +36,9 @@ models:
         description: "{{ doc('column__user_density_label') }}"
       - name: total_category_booked_beneficiaries
         description: "{{ doc('column__metrics__total_category_booked_beneficiaries') }}"
+      - name: offer_category_id
+        description: "{{ doc('column__offer_category_id') }}"
+        data_type: STRING
+      - name: cell_key_category
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64

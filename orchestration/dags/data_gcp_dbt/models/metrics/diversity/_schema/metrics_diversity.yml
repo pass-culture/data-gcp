@@ -62,3 +62,39 @@ models:
         description: "{{ doc('column__metrics__total_actual_amount_spent_at_expiration') }}"
       - name: total_distinct_venue_booked_at_expiration
         description: "{{ doc('column__metrics__total_distinct_venue_booked_at_expiration') }}"
+      - name: cell_key_expired
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_1plus
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_2plus
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_3plus
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_4plus
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_5plus
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_spent_share_0
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_spent_share_0_25
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_spent_share_25_50
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_spent_share_50_75
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_spent_share_75_90
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_spent_share_90_100
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64

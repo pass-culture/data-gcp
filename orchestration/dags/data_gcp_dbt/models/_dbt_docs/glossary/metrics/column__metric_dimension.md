@@ -9,7 +9,7 @@ A boolean flag indicating whether the data point is subject to statistical confi
 {% enddocs %}
 
 {% docs column__milestone_age %}
-The age reached by the user at a specific key milestone, used to determine users eligibility.
+Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in beneficiary coverage models and in exp_vidoc__population_coverage, STRING in int_kpi__population_coverage and metrics_population__coverage.
 {% enddocs %}
 
 {% docs column__age_at_calculation %}
@@ -18,6 +18,10 @@ The user's age calculated at the specific reference date of the record (usually 
 
 {% docs column__deposit_expiration_month %}
 The month when the beneficiary's deposit expires.
+{% enddocs %}
+
+{% docs column__expired_cohorts__deposit_expiration_month %}
+Month in which the beneficiaries' last deposit expired, as the first day of the month. Only closed months are present: deposits expiring in the current month are excluded.
 {% enddocs %}
 
 {% docs column__activity_month %}

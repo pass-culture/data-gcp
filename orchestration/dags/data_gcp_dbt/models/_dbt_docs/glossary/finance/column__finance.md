@@ -1,5 +1,5 @@
 {% docs column__pricing_id %} Unique identifier for a pricing (valorisation). {% enddocs %}
-{% docs column__pricing_status %} Status of the pricing: VALIDATED (created), PROCESSED (included in cashflow), or INVOICED (invoice generated). {% enddocs %}
+{% docs column__pricing_status %} Status of the pricing in the finance workflow, stored in lowercase: 'validated' (created), 'processed' (included in a cashflow), 'invoiced' (invoice generated). Only 'invoiced' pricings are accounting-certified. {% enddocs %}
 {% docs column__pricing_creation_date %} Date when the pricing was created. {% enddocs %}
 {% docs column__pricing_value_date %} Date used for ordering the valorisation. {% enddocs %}
 {% docs column__pricing_amount %} Reimbursement amount in euro cents (negative = paid by Pass Culture to the offerer). {% enddocs %}

@@ -1,8 +1,9 @@
-
 version: 2
 
 models:
   - name: int_firebase__native_event_flattened
+    description: >-
+      All raw Firebase events of the native app (iOS, Android, web), one row per event, with each event parameter extracted into its own column. Repeated 'ConsultOffer' events on the same offer within 3 seconds in the same session are deduplicated; is_anomaly flags inconsistent events.
     data_tests:
       - elementary.volume_anomalies:
           config:
@@ -14,23 +15,203 @@ models:
               period: day
               count: 1
     columns:
-      - name: event_name
+      - name: event_date
+        description: '{{ doc("column__native_event_flattened_event_date") }}'
+        data_type: DATE
         data_tests:
-          - not_null:
-              config:
-                where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
-      - name: user_pseudo_id
-        data_tests:
-          - not_null:
-              config:
-                where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
+          - generic_has_no_missing_partitions:
+              arguments:
+                where_condition: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)"
+
       - name: user_id
+        description: '{{ doc("column__native_event_flattened_user_id") }}'
+        data_type: STRING
         data_tests:
           - not_null_proportion:
               arguments:
                 where_condition: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) and event_name = 'BookingConfirmation'"
                 anomaly_threshold_alert_percentage: 1
+
+      - name: user_pseudo_id
+        description: '{{ doc("column__native_event_flattened_user_pseudo_id") }}'
+        data_type: STRING
+        data_tests:
+          - not_null:
+              config:
+                where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
+
+      - name: event_name
+        description: '{{ doc("column__native_event_flattened_event_name") }}'
+        data_type: STRING
+        data_tests:
+          - not_null:
+              config:
+                where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
+
+      - name: event_timestamp
+        description: '{{ doc("column__event_timestamp") }}'
+        data_type: TIMESTAMP
+
+      - name: event_previous_timestamp
+        description: '{{ doc("column__native_event_flattened_event_previous_timestamp") }}'
+        data_type: TIMESTAMP
+
+      - name: user_first_touch_timestamp
+        description: '{{ doc("column__native_event_flattened_user_first_touch_timestamp") }}'
+        data_type: TIMESTAMP
+
+      - name: platform
+        description: '{{ doc("column__native_event_flattened_platform") }}'
+        data_type: STRING
+
+      - name: name
+        description: '{{ doc("column__institutional_event_user_traffic_campaign") }}'
+        data_type: STRING
+
+      - name: medium
+        description: '{{ doc("column__institutional_event_user_traffic_medium") }}'
+        data_type: STRING
+
+      - name: source
+        description: '{{ doc("column__institutional_event_user_traffic_source") }}'
+        data_type: STRING
+
+      - name: app_version
+        description: '{{ doc("column__app_version") }}'
+        data_type: STRING
+
+      - name: double_offer_id
+        description: '{{ doc("column__native_event_flattened_double_offer_id") }}'
+        data_type: FLOAT64
+
+      - name: ga_session_id
+        description: '{{ doc("column__native_event_flattened_ga_session_id") }}'
+        data_type: INT64
+
+      - name: ga_session_number
+        description: '{{ doc("column__session_number") }}'
+        data_type: INT64
+
+      - name: shouldUseAlgoliaRecommend
+        description: '{{ doc("column__native_event_flattened_should_use_algolia_recommend") }}'
+        data_type: INT64
+
+      - name: searchIsAutocomplete
+        description: '{{ doc("column__native_event_flattened_search_is_autocomplete") }}'
+        data_type: INT64
+
+      - name: searchIsBasedOnHistory
+        description: '{{ doc("column__native_event_flattened_search_is_based_on_history") }}'
+        data_type: INT64
+
+      - name: searchOfferIsDuo
+        description: '{{ doc("column__native_event_flattened_search_offer_is_duo") }}'
+        data_type: INT64
+
+      - name: geo_located
+        description: '{{ doc("column__native_event_flattened_geo_located") }}'
+        data_type: INT64
+
+      - name: enabled
+        description: '{{ doc("column__native_event_flattened_enabled") }}'
+        data_type: INT64
+
+      - name: searchId
+        description: '{{ doc("column__native_event_flattened_search_id") }}'
+        data_type: STRING
+
+      - name: moduleId
+        description: '{{ doc("column__native_event_flattened_module_id") }}'
+        data_type: STRING
+
+      - name: moduleName
+        description: '{{ doc("column__module_name") }}'
+        data_type: STRING
+
+      - name: playlistType
+        description: '{{ doc("column__native_event_flattened_playlist_type") }}'
+        data_type: STRING
+
+      - name: entryId
+        description: '{{ doc("column__native_event_flattened_entry_id") }}'
+        data_type: STRING
+
+      - name: homeEntryId
+        description: '{{ doc("column__native_event_flattened_home_entry_id") }}'
+        data_type: STRING
+
+      - name: locationType
+        description: '{{ doc("column__user_location_type") }}'
+        data_type: STRING
+
+      - name: step
+        description: '{{ doc("column__native_event_flattened_step") }}'
+        data_type: STRING
+
+      - name: searchGenreTypes
+        description: '{{ doc("column__native_event_flattened_search_genre_types") }}'
+        data_type: STRING
+
+      - name: call_id
+        description: '{{ doc("column__reco_call_id") }}'
+        data_type: STRING
+
+      - name: searchLocationFilter
+        description: '{{ doc("column__native_event_flattened_search_location_filter") }}'
+        data_type: STRING
+
+      - name: age
+        description: '{{ doc("column__native_event_flattened_age") }}'
+        data_type: STRING
+
+      - name: searchCategories
+        description: '{{ doc("column__native_event_flattened_search_categories") }}'
+        data_type: STRING
+
+      - name: firebase_screen
+        description: '{{ doc("column__native_event_flattened_firebase_screen") }}'
+        data_type: STRING
+
+      - name: firebase_previous_screen
+        description: '{{ doc("column__native_event_flattened_firebase_previous_screen") }}'
+        data_type: STRING
+
+      - name: pageName
+        description: '{{ doc("column__native_event_flattened_page_name") }}'
+        data_type: STRING
+
+      - name: offerId
+        description: '{{ doc("column__native_event_flattened_offer_id") }}'
+        data_type: STRING
+        data_tests:
+          - not_null_proportion:
+              arguments:
+                where_condition: "event_name = 'ConsultOffer' AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
+                anomaly_threshold_alert_percentage: 5
+
+      - name: query
+        description: '{{ doc("column__native_event_flattened_query") }}'
+        data_type: STRING
+
+      - name: searchQuery
+        description: '{{ doc("column__native_event_flattened_search_query") }}'
+        data_type: STRING
+
+      - name: categoryName
+        description: '{{ doc("column__native_event_flattened_category_name") }}'
+        data_type: STRING
+
+      - name: type
+        description: '{{ doc("column__native_event_flattened_type") }}'
+        data_type: STRING
+
+      - name: venueId
+        description: '{{ doc("column__native_event_flattened_venue_id") }}'
+        data_type: STRING
+
       - name: bookingId
+        description: '{{ doc("column__native_event_flattened_booking_id") }}'
+        data_type: STRING
         data_tests:
           - relationships:
               arguments:
@@ -42,18 +223,219 @@ models:
               arguments:
                 where_condition: "event_name = 'BookingConfirmation' AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
                 anomaly_threshold_alert_percentage: 5
+
+      - name: fromOfferId
+        description: '{{ doc("column__native_event_flattened_from_offer_id") }}'
+        data_type: STRING
+
+      - name: filterTypes
+        description: '{{ doc("column__native_event_flattened_filter_types") }}'
+        data_type: STRING
+
+      - name: filter
+        description: '{{ doc("column__native_event_flattened_filter") }}'
+        data_type: STRING
+
+      - name: searchDate
+        description: '{{ doc("column__native_event_flattened_search_date") }}'
+        data_type: STRING
+
+      - name: searchMaxPrice
+        description: '{{ doc("column__native_event_flattened_search_max_price") }}'
+        data_type: STRING
+
+      - name: searchNativeCategories
+        description: '{{ doc("column__native_event_flattened_search_native_categories") }}'
+        data_type: STRING
+
+      - name: moduleListID
+        description: '{{ doc("column__native_event_flattened_module_list_id") }}'
+        data_type: STRING
+
+      - name: index
+        description: '{{ doc("column__native_event_flattened_index") }}'
+        data_type: STRING
+
+      - name: traffic_campaign
+        description: '{{ doc("column__traffic_campaign") }}'
+        data_type: STRING
+
+      - name: traffic_source
+        description: '{{ doc("column__traffic_source") }}'
+        data_type: STRING
+
+      - name: traffic_medium
+        description: '{{ doc("column__traffic_medium") }}'
+        data_type: STRING
+
+      - name: traffic_gen
+        description: '{{ doc("column__native_event_flattened_traffic_gen") }}'
+        data_type: STRING
+
+      - name: traffic_content
+        description: '{{ doc("column__native_event_flattened_traffic_content") }}'
+        data_type: STRING
+
+      - name: toEntryId
+        description: '{{ doc("column__native_event_flattened_to_entry_id") }}'
+        data_type: STRING
+
+      - name: reco_origin
+        description: '{{ doc("column__native_event_flattened_reco_origin") }}'
+        data_type: STRING
+
+      - name: ab_test
+        description: '{{ doc("column__native_event_flattened_ab_test") }}'
+        data_type: STRING
+
+      - name: model_version
+        description: '{{ doc("column__native_event_flattened_model_version") }}'
+        data_type: STRING
+
+      - name: model_name
+        description: '{{ doc("column__native_event_flattened_model_name") }}'
+        data_type: STRING
+
+      - name: model_endpoint
+        description: '{{ doc("column__native_event_flattened_model_endpoint") }}'
+        data_type: STRING
+
+      - name: userStatus
+        description: '{{ doc("column__native_event_flattened_user_status") }}'
+        data_type: STRING
+
+      - name: social
+        description: '{{ doc("column__native_event_flattened_social") }}'
+        data_type: STRING
+
+      - name: searchView
+        description: '{{ doc("column__native_event_flattened_search_view") }}'
+        data_type: STRING
+
+      - name: duration
+        description: '{{ doc("column__native_event_flattened_duration") }}'
+        data_type: STRING
+
+      - name: appsFlyerUserId
+        description: '{{ doc("column__native_event_flattened_appsflyer_user_id") }}'
+        data_type: STRING
+
+      - name: accessibilityFilter
+        description: '{{ doc("column__native_event_flattened_accessibility_filter") }}'
+        data_type: STRING
+
+      - name: videoDuration
+        description: '{{ doc("column__native_event_flattened_video_duration") }}'
+        data_type: STRING
+
+      - name: seenDuration
+        description: '{{ doc("column__native_event_flattened_seen_duration") }}'
+        data_type: STRING
+
+      - name: youtubeId
+        description: '{{ doc("column__native_event_flattened_youtube_id") }}'
+        data_type: STRING
+
+      - name: origin
+        description: '{{ doc("column__native_event_flattened_origin") }}'
+        data_type: STRING
+
+      - name: displayed_offers
+        description: '{{ doc("column__native_event_flattened_displayed_offers") }}'
+        data_type: ARRAY<STRING>
+
+      - name: displayed_venues
+        description: '{{ doc("column__native_event_flattened_displayed_venues") }}'
+        data_type: ARRAY<STRING>
+
+      - name: fromMultivenueOfferId
+        description: '{{ doc("column__native_event_flattened_from_multivenue_offer_id") }}'
+        data_type: STRING
+
+      - name: is_anomaly
+        description: '{{ doc("column__native_event_flattened_is_anomaly") }}'
+        data_type: BOOLEAN
+
+      - name: isHeadline
+        description: '{{ doc("column__native_event_flattened_is_headline") }}'
+        data_type: STRING
+
+      - name: items_0
+        description: '{{ doc("column__native_event_flattened_items_0") }}'
+        data_type: STRING
+
+      - name: itemType
+        description: '{{ doc("column__native_event_flattened_item_type") }}'
+        data_type: STRING
+
+      - name: artistId
+        description: '{{ doc("column__artist_id") }}'
+        data_type: STRING
+
+      - name: theme_setting
+        description: '{{ doc("column__native_event_flattened_theme_setting") }}'
+        data_type: STRING
+
+      - name: system_theme
+        description: '{{ doc("column__native_event_flattened_system_theme") }}'
+        data_type: STRING
+
+      - name: geoLocated
+        description: '{{ doc("column__native_event_flattened_legacy_geo_located") }}'
+        data_type: INT64
+
+      - name: callId
+        description: '{{ doc("column__native_event_flattened_legacy_call_id") }}'
+        data_type: STRING
+
+      - name: recoOrigin
+        description: '{{ doc("column__native_event_flattened_legacy_reco_origin") }}'
+        data_type: STRING
+
+      - name: abTest
+        description: '{{ doc("column__native_event_flattened_legacy_ab_test") }}'
+        data_type: STRING
+
+      - name: modelVersion
+        description: '{{ doc("column__native_event_flattened_legacy_model_version") }}'
+        data_type: STRING
+
+      - name: modelName
+        description: '{{ doc("column__native_event_flattened_legacy_model_name") }}'
+        data_type: STRING
+
+      - name: modelEndpoint
+        description: '{{ doc("column__native_event_flattened_legacy_model_endpoint") }}'
+        data_type: STRING
+
+      - name: featureName
+        description: '{{ doc("column__native_event_flattened_feature_name") }}'
+        data_type: STRING
+
+      - name: feedbackResponse
+        description: '{{ doc("column__native_event_flattened_feedback_response") }}'
+        data_type: STRING
+
+      - name: originDetails
+        description: '{{ doc("column__native_event_flattened_origin_details") }}'
+        data_type: STRING
+
+      - name: adviceType
+        description: '{{ doc("column__native_event_flattened_advice_type") }}'
+        data_type: STRING
+
+      - name: origin_detail
+        description: '{{ doc("column__native_event_flattened_origin_detail") }}'
+        data_type: STRING
+
       - name: code
-        description: >-
-          Firebase `code` parameter. On `BookingError`, the API error that blocked the booking
-          (e.g. ALREADY_BOOKED, INSUFFICIENT_CREDIT, STOCK_NOT_BOOKABLE, PROVIDER_*).
-      - name: offerId
-        data_tests:
-          - not_null_proportion:
-              arguments:
-                where_condition: "event_name = 'ConsultOffer' AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
-                anomaly_threshold_alert_percentage: 5
-      - name: event_date
-        data_tests:
-          - generic_has_no_missing_partitions:
-              arguments:
-                where_condition: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)"
+        description: '{{ doc("column__native_event_flattened_code") }}'
+        data_type: STRING
+
+      - name: displayedOn
+        description: '{{ doc("column__native_event_flattened_displayed_on") }}'
+        data_type: STRING
+
+      - name: mapType
+        description: '{{ doc("column__native_event_flattened_map_type") }}'
+        data_type: STRING

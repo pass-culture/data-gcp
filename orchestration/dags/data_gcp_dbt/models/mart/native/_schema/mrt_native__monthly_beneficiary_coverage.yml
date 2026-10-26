@@ -40,11 +40,11 @@ models:
         data_type: STRING
 
       - name: total_users
-        description: '{{ doc("column__total_users") }}'
+        description: '{{ doc("column__monthly_beneficiary_coverage__total_users") }}'
         data_type: INTEGER
 
       - name: total_population
-        description: '{{ doc("column__total_population") }}'
+        description: '{{ doc("column__monthly_beneficiary_coverage__total_population") }}'
         data_type: INTEGER
 
       - name: total_users_last_12_months

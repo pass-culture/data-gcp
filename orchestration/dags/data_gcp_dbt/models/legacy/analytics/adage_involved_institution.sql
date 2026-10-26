@@ -23,7 +23,7 @@ with
             coalesce(
                 sum(safe_cast(total_institutions as float64)), 0
             ) as total_institutions
-        from {{ source("clean", "adage_involved_student") }} as ais
+        from {{ source("raw", "adage_involved_student") }} as ais
         left join
             {{ source("raw", "applicative_database_educational_year") }} as ey
             on safe_cast(ey.adage_id as int)

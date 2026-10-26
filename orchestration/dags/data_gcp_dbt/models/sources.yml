@@ -33,6 +33,7 @@ sources:
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: adage
+      - name: adage_involved_student
       - name: allocine_movie
       - name: applicative_database_accessibility_provider
       - name: applicative_database_action_history
@@ -222,7 +223,6 @@ sources:
       - name: applicative_database_collective_stock_history
       - name: applicative_database_collective_offer_history
       - name: applicative_database_collective_offer_template_history
-      - name: adage_involved_student
 
   - name: int_metabase
     schema: int_metabase_{{ var('ENV_SHORT_NAME') }}

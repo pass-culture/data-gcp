@@ -2,13 +2,14 @@ with
     offers as (
         select
             co.venue_region_name,
+            co.venue_academy_name,
             co.venue_department_name,
             co.venue_department_code,
             co.venue_epci as venue_epci_name,
             co.venue_epci_code,
             co.venue_city as venue_city_name,
             co.venue_city_code,
-            co.venue_municipality_label as venue_municipality_label,
+            co.venue_municipality_label,
             co.venue_municipality_code,
             date_trunc(
                 date(co.collective_offer_creation_date), month
@@ -22,6 +23,7 @@ with
         group by
             date_trunc(date(co.collective_offer_creation_date), month),
             co.venue_region_name,
+            co.venue_academy_name,
             rd.region_code,
             co.venue_department_name,
             co.venue_department_code,
@@ -37,6 +39,7 @@ select
     offers.partition_month,
     offers.venue_region_name,
     offers.venue_region_code,
+    offers.venue_academy_name,
     offers.venue_department_name,
     offers.venue_department_code,
     offers.venue_epci_name,

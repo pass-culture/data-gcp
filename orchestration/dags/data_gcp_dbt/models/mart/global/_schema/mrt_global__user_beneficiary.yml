@@ -288,3 +288,6 @@ models:
       - name: total_diversity_score
         description: '{{ doc("column__total_diversity_score") }}'
         data_type: INT64
+      - name: user_epci_code
+        description: '{{ doc("column__user_epci_code") }}'
+        data_type: STRING

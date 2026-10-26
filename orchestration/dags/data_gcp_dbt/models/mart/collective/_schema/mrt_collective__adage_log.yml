@@ -13,7 +13,7 @@ models:
       - name: user_id
         description: "{{ doc('column__user_id') }}"
       - name: session_id
-        description: "{{ doc('column__session_id') }}"
+        description: "{{ doc('column__adage_log_session_id') }}"
       - name: total_results
         description: "{{ doc('column__total_results') }}"
       - name: origin

@@ -7,7 +7,7 @@ enddocs %}
 {% docs column__offer_description %} Offer description (synopsis, further details on the show) as provided by thecultural partner and displayed in app.{% enddocs %}
 
 {% docs column__offer_name %} Name of the offer as it appears in the application. {% enddocs %}
-{% docs column__offer_category_id %} Identifier for the category of the offer. Determined by the cultural partner via a list of pre-set options in a drop down menu. {% enddocs %}
+{% docs column__offer_category_id %} Identifier of the offer category, which groups offer subcategories (offer_subcategory_id): the cultural partner picks the subcategory from a predefined list when creating the offer, and the category follows from it. Values: 'LIVRE', 'MUSIQUE_ENREGISTREE', 'CINEMA', 'BEAUX_ARTS', 'FILM', 'INSTRUMENT', 'SPECTACLE', 'MUSIQUE_LIVE', 'MUSEE', 'PRATIQUE_ART', 'CONFERENCE', 'JEU', 'MEDIA', 'CARTE_JEUNES'. For example 'LIVRE' covers LIVRE_PAPIER, LIVRE_NUMERIQUE, LIVRE_AUDIO_PHYSIQUE, TELECHARGEMENT_LIVRE_AUDIO, ABO_LIVRE_NUMERIQUE, ABO_BIBLIOTHEQUE and FESTIVAL_LIVRE. {% enddocs %}
 {% docs column__offer_category %} Identifier for the category of the offer. Determined by the cultural partner via a list of pre-set options in a drop down menu. {% enddocs %}
 {% docs column__offer_creation_date %} Date when the offer was created. {% enddocs %}
 {% docs column__offer_created_at %} Timestamp when the offer was created. {% enddocs %}
@@ -59,7 +59,7 @@ An offer is considered bookable if it meets the following criteria:
 %}
 {% docs column__movie_countries %} Countries where the film was produced, if applicable. {% enddocs %}
 {% docs column__casting %} Actors in the film, if applicable. {% enddocs %}
-{% docs column__isbn %} ISBN of the book, if applicable. {% enddocs %}
+{% docs column__isbn %} Cleaned product code of the offer: its EAN when it is a valid 13-digit code, otherwise its valid ISBN (10 or 13 digits). Filled mostly for barcoded products (books, recorded music...), NULL otherwise. {% enddocs %}
 {% docs column__offer_ean %} EAN of the offer, if applicable. {% enddocs %}
 {% docs column__rayon %} Literary genre, if applicable. {% enddocs %}
 {% docs column__offer_macro_rayon %} Semantic clustering of `column__rayon`. {% enddocs %}
@@ -69,8 +69,7 @@ An offer is considered bookable if it meets the following criteria:
 {% docs column__mediation_humanized_id %} Human-readable identifier for mediation. {% enddocs %}
 {% docs column__is_future_scheduled %} Indicates if the offer's publication is scheduled in the future. {% enddocs %}
 {% docs column__is_coming_soon %} Indicates if the offer is published in the app but not bookable yet (coming soon). {% enddocs %}
-{% docs column__item_id %}Identifier for the item associated with the offer used internally by the data science team. {%
-enddocs %}
+{% docs column__item_id %} Identifier of the work (item) the offer belongs to, used internally by the data science team; several offers of the same book or film share an item_id. {% enddocs %}
 {% docs column__search_group_name %} Legacy: Category displayed in the application {% enddocs %}
 {% docs column__image_url %} Image displayed in the passculture.app if present. {% enddocs %}
 {% docs column__titelive_gtl_id %} Unique identifier of the Genre Tite Live (GTL) associated to this offer.{% enddocs %}
@@ -100,7 +99,7 @@ offer show sub type for shows. {% enddocs %}
 {% docs column__offer_video_url %} Indicates URL video of the offer downloaded by the cultural partner during offer creation. {% enddocs %}
 {% docs column__offer_advice_content %} Indicates cultural partner recommendations for specific offers, accessible directly within the app. {% enddocs %}
 {% docs column__offer_has_mediation %} Indicates if the offer has a qualified mediation (cultural outreach). {% enddocs %}
-{% docs column__cultural_outreach_status %} Status of the cultural outreach: qualified, disqualified,pending or not applied if the checkbox was never checked {% enddocs %}
+{% docs column__cultural_outreach_status %} Status of the cultural outreach (mediation) declared on the offer: qualified, disqualified or pending; 'NOT_APPLIED' when the checkbox was never checked. offer_has_mediation is TRUE only when the status is qualified. {% enddocs %}
 
 # Date related
 

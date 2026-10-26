@@ -7,8 +7,8 @@ import requests
 from google.cloud import bigquery
 
 from scripts.utils import (
-    BIGQUERY_CLEAN_DATASET,
     BIGQUERY_INT_RAW_DATASET,
+    BIGQUERY_RAW_DATASET,
     GCP_PROJECT,
     access_secret_data,
 )
@@ -26,7 +26,7 @@ def get_offerer_siren_list():
 
             SELECT
                 DISTINCT siren
-            FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.siren_data`
+            FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.siren_data`
             WHERE date(update_date) >= date('{last_seven_days.strftime("%Y-%m-%d")}')
         )
 
@@ -185,7 +185,7 @@ def save_to_bq(siren_list):
     df["update_date"] = datetime.now().strftime("%Y-%m-%d")
     pandas_gbq.to_gbq(
         df,
-        f"{BIGQUERY_CLEAN_DATASET}.siren_data",
+        f"{BIGQUERY_RAW_DATASET}.siren_data",
         project_id=GCP_PROJECT,
         if_exists="append",
     )

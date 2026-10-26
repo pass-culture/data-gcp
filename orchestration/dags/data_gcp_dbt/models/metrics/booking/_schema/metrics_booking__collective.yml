@@ -5,7 +5,7 @@ models:
     columns:
       - name: partition_month
         description: '{{ doc("column__partition_month") }}'
-        data_type: STRING
+        data_type: DATE
 
       - name: scholar_year
         description: '{{ doc("column__scholar_year") }}'
@@ -17,6 +17,10 @@ models:
 
       - name: venue_region_code
         description: '{{ doc("column__venue_region_code") }}'
+        data_type: STRING
+
+      - name: venue_academy_name
+        description: '{{ doc("column__venue_academy_name") }}'
         data_type: STRING
 
       - name: venue_department_name
@@ -51,6 +55,18 @@ models:
         description: '{{ doc("column__venue_municipality_code") }}'
         data_type: STRING
 
+      - name: venue_macro_density_label
+        description: '{{ doc("column__venue_macro_density_label") }}'
+        data_type: STRING
+
+      - name: total_prereservations
+        description: '{{ doc("column__total_prereservations") }}'
+        data_type: INTEGER
+
+      - name: total_prereservation_amount
+        description: '{{ doc("column__total_prereservation_amount") }}'
+        data_type: FLOAT
+
       - name: total_collective_bookings
         description: '{{ doc("column__total_collective_bookings") }}'
         data_type: INTEGER
@@ -59,10 +75,50 @@ models:
         description: '{{ doc("column__total_collective_amount_spent") }}'
         data_type: FLOAT
 
+      - name: total_confirmations
+        description: '{{ doc("column__total_confirmations") }}'
+        data_type: INTEGER
+
+      - name: total_confirmation_amount
+        description: '{{ doc("column__total_confirmation_amount") }}'
+        data_type: FLOAT
+
+      - name: total_actions
+        description: '{{ doc("column__total_actions") }}'
+        data_type: INTEGER
+
+      - name: total_action_amount
+        description: '{{ doc("column__total_action_amount") }}'
+        data_type: FLOAT
+
+      - name: cumulative_total_prereservations
+        description: '{{ doc("column__cumulative_total_prereservations") }}'
+        data_type: INTEGER
+
+      - name: cumulative_total_prereservation_amount
+        description: '{{ doc("column__cumulative_total_prereservation_amount") }}'
+        data_type: FLOAT
+
       - name: cumulative_total_collective_bookings
         description: '{{ doc("column__cumulative_total_collective_bookings") }}'
         data_type: INTEGER
 
       - name: cumulative_total_collective_amount_spent
         description: '{{ doc("column__cumulative_total_collective_amount_spent") }}'
+        data_type: FLOAT
+
+      - name: cumulative_total_confirmations
+        description: '{{ doc("column__cumulative_total_confirmations") }}'
+        data_type: INTEGER
+
+      - name: cumulative_total_confirmation_amount
+        description: '{{ doc("column__cumulative_total_confirmation_amount") }}'
+        data_type: FLOAT
+
+      - name: cumulative_total_actions
+        description: '{{ doc("column__cumulative_total_actions") }}'
+        data_type: INTEGER
+
+      - name: cumulative_total_action_amount
+        description: '{{ doc("column__cumulative_total_action_amount") }}'
         data_type: FLOAT

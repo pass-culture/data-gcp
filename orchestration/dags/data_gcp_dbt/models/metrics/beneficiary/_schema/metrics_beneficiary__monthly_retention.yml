@@ -35,3 +35,6 @@ models:
         description: "{{ doc('column__total_connected_users') }}"
         data_tests:
           - not_null
+      - name: pct_connected_users
+        description: "{{ doc('column__pct_connected_users') }}"
+        data_type: FLOAT64

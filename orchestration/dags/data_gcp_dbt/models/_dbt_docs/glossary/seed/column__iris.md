@@ -77,11 +77,11 @@ The name of the territorial authority (collectivité territoriale) containing th
 {% enddocs %}
 
 {% docs column__density_level %}
-The numerical level indicating the population density of the IRIS area.
+Level of the INSEE municipal density grid (grille communale de densité) of the IRIS's municipality, from 1 (large urban centres) to 7 (very sparsely populated rural).
 {% enddocs %}
 
 {% docs column__density_label %}
-The descriptive label for the population density level of the IRIS area.
+Label of the INSEE municipal density grid level (grille communale de densité, 7 levels) of the IRIS's municipality.
 {% enddocs %}
 
 {% docs column__density_macro_level %}

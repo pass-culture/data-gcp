@@ -1,8 +1,8 @@
 
 # Population Fields Documentation
 
-{% docs  column__population_snapshot_month %}
-Month of the population snapshot in order to track estimated changes month over month time of the whole French population.
+{% docs column__population_snapshot_month %}
+Month of the population snapshot, as the first day of the month. Population estimates cover whole years up to the last valid INSEE year (INSEE_DATA_LAST_VALID_YEAR), so months after the current one can be present: they carry an estimated population and no observed facts (such as user counts).
 {% enddocs %}
 
 {% docs column__population_decimal_age %}
@@ -34,7 +34,7 @@ The estimated birth month of individuals based on observed birth trends.
 {% enddocs %}
 
 {% docs column__population_age_decimal_set %}
-Boolean indicator specifying whether the age falls on a set decimal value (e.g., 15, 15.5, 16).
+Boolean. TRUE when population_decimal_age is one of the half-year milestones 15, 15.5, 16, 16.5, 17, 17.5, 18, 18.5 or 19; FALSE for all other rows.
 {% enddocs %}
 
 {% docs column__population_age_bracket %}

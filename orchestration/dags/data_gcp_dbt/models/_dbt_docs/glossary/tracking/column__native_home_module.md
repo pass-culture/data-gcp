@@ -16,9 +16,9 @@
 
 {% hide columns %}
 
-{% docs column__home_audience %}The audience type for the home.{% enddocs %}
-{% docs column__user_lifecycle_home %}The lifecycle stage of the user in relation to the home.{% enddocs %}
-{% docs column__home_type %}The type of home associated with the entry.{% enddocs %}
+{% docs column__home_audience %} The audience of the home, from its Contentful tag: '18', '15_17' or 'grand_public' (several values joined by ', ' when a home has more than one). Can be NULL. {% enddocs %}
+{% docs column__user_lifecycle_home %} The user lifecycle stage targeted by the home, from its Contentful tag (e.g. 'pas_de_resa' for the home of users with no booking). NULL for homes without this tag. {% enddocs %}
+{% docs column__home_type %} The type of home carrying the entry, from its Contentful tag: 'principale', 'n_1' (level N-1 home), 'pre_resa' (home of users with no booking) or 'evenement'. A module shared by several homes carries the values joined by ', ' (e.g. 'n_1, principale'). Can be NULL. {% enddocs %}
 {% docs column__parent_home_type %}The type of home associated with the parent entry.{% enddocs %}
 {% docs column__playlist_type %}The type of playlist associated with the entry.{% enddocs %}
 {% docs column__playlist_reach %}The reach of the playlist associated with the entry.{% enddocs %}

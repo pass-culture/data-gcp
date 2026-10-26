@@ -96,3 +96,45 @@ models:
         description: "{{ doc('column__user_city') }}"
       - name: user_epci
         description: "{{ doc('column__user_epci') }}"
+      - name: user_epci_code
+        description: "{{ doc('column__user_epci_code') }}"
+        data_type: STRING
+      - name: user_city_code
+        description: "{{ doc('column__user_city_code') }}"
+        data_type: STRING
+      - name: cell_key_users
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_1_category
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_2_category
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_3_category
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_4_category
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_5_category
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_spent_share_0
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_spent_share_0_25
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_spent_share_25_50
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_spent_share_50_75
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_spent_share_75_90
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
+      - name: cell_key_spent_share_90_100
+        description: "{{ doc('column__cell_key') }}"
+        data_type: INT64

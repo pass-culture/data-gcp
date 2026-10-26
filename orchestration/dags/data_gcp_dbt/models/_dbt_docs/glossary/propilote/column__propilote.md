@@ -29,3 +29,7 @@ The name of the kpi.
 {% docs column__kpi %}
 The value of the kpi. Equals to numerator divided by denominator.
 {% enddocs %}
+
+{% docs column__aggregation %} How to aggregate `numerator` and `denominator` over several months: `flow` = sum the months, `stock` = take the last month (the value is already scholar year to date, or a snapshot). {% enddocs %}
+
+{% docs column__reporting_scholar_year %} Scholar year (September to August) the `partition_month` belongs to. {% enddocs %}

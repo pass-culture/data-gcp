@@ -34,7 +34,8 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from pydantic import BaseModel
+from common.utils import delayed_waiting_operator
+from pydantic import BaseModel, model_validator
 
 from jobs.crons import SCHEDULE_DICT
 
@@ -55,6 +56,18 @@ class VectorPipeline(BaseModel):
     name: str  # embedding vector name
     input_table: str  # dataset.table (dbt input model)
     output_table: str  # dataset.table base; each run appends ``_<ts_nodash>``
+    input_dbt_model: str = ""  # derived from input_table in __post_init
+
+    @model_validator(mode="after")
+    def _set_input_dbt_model(self) -> "VectorPipeline":
+        """Derive the dbt model name from input_table: the env-suffixed dataset
+        (e.g. ``ml_input_{ENV_SHORT_NAME}``) loses its suffix and is joined to
+        the table name with ``__``, matching dbt's model naming convention
+        (e.g. ``ml_input__all_items_metadata_to_embed``).
+        """
+        dataset, table = self.input_table.split(".")
+        self.input_dbt_model = f"{dataset.removesuffix(f'_{ENV_SHORT_NAME}')}__{table}"
+        return self
 
 
 # List of all the vectors this DAG can run. Add a vector by creating its dbt input model + a
@@ -82,6 +95,7 @@ AVAILABLE_VECTORS = [
     ),
 ]
 VECTOR_NAMES = [vector.name for vector in AVAILABLE_VECTORS]
+INPUT_DBT_MODELS = sorted({vector.input_dbt_model for vector in AVAILABLE_VECTORS})
 
 ## DAG CONFIG
 DAG_NAME = "item_embedding"
@@ -317,6 +331,18 @@ with DAG(
 ) as dag:
     start = EmptyOperator(task_id="start")
 
+    # Scheduled runs wait for the dbt input models to have been refreshed by
+    # dbt_run_dag first; manual runs (ad-hoc/test triggers) skip the wait.
+    wait_for_dbt_inputs = [
+        delayed_waiting_operator(
+            dag,
+            external_dag_id="dbt_run_dag",
+            external_task_id=f"data_transformation.{model}",
+            skip_manually_triggered=True,
+        )
+        for model in INPUT_DBT_MODELS
+    ]
+
     # Resolve once which vectors will actually run (selected + non-empty). The
     # returned list is both the plan (read back by each vector's check) and the
     # gate: an empty list is falsy, so this ShortCircuit skips the whole run
@@ -365,7 +391,7 @@ with DAG(
         ),
     )
 
-    start >> plan_vectors >> gce_instance_start
+    start >> wait_for_dbt_inputs >> plan_vectors >> gce_instance_start
     gce_instance_start >> install_dependencies >> start_mlflow_run
 
     # Each vector's steps live in their own TaskGroup and run a fully sequential

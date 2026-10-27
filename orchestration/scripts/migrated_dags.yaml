@@ -19,3 +19,18 @@ dags_in_paris:
   import_gsheet:
     source_dataset: raw
     tables_to_copy: [] # full refresh -> no tables to copy
+  import_adage_v1:
+    source_dataset: raw
+    tables_to_copy: [adage, adage_involved_student] # incremental (append + partitioned load) -> copy history
+  import_allocine_movies:
+    source_dataset: raw
+    tables_to_copy: [allocine_movies] # incremental via MERGE on raw table -> copy history
+  import_api_referentials:
+    source_dataset: raw
+    tables_to_copy: [] # full refresh -> no tables to copy
+  import_appfollow:
+    source_dataset: raw
+    tables_to_copy: [appfollow_reviews, appfollow_ratings] # delete+append by date window over raw tables -> copy history
+  import_batch:
+    source_dataset: raw
+    tables_to_copy: [batch_campaigns_stats, batch_transac] # incremental append/partitioned raw loads -> copy history

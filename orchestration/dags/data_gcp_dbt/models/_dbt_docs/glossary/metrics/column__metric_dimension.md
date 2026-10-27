@@ -37,31 +37,31 @@ The age reached by the beneficiary at the time of signup/onboarding initiation.
 {% enddocs %}
 
 {% docs column__is_department_secret %}
-Indicates whether the department is subject to statistical secrecy over the 6-month rolling window (true if active partners <= 3 or single partner revenue share > 85%).
+True when the department is under statistical secrecy over the rolling window of the row (`rolling_window_months_count`): fewer than 3 active partners, top partner over 85% of the revenue, no revenue, or secondary secret (when only one department of France is under primary secret, the other department with the smallest revenue is masked too). True means its revenue must not be published.
 {% enddocs %}
 
 {% docs column__is_epci_secret %}
-Indicates whether the EPCI is subject to statistical secrecy over the 6-month rolling window (true if active partners <= 3 or single partner revenue share > 85%).
+True when the EPCI is under statistical secrecy over the rolling window of the row (`rolling_window_months_count`): fewer than 3 active partners, top partner over 85% of the revenue, no revenue, or secondary secret (when only one EPCI of its department is under primary secret, the other EPCI with the smallest revenue is masked too). True means its revenue must not be published.
 {% enddocs %}
 
 {% docs column__is_municipality_secret %}
-Indicates whether the municipality is subject to statistical secrecy over the 6-month rolling window (true if active partners <= 3 or single partner revenue share > 85%).
+True when the municipality is under statistical secrecy over the rolling window of the row (`rolling_window_months_count`): fewer than 3 active partners, top partner over 85% of the revenue, no revenue, or secondary secret (when only one municipality of its EPCI is under primary secret, the other municipality with the smallest revenue is masked too). True means its revenue must not be published.
 {% enddocs %}
 
 {% docs column__department_secret_reason %}
-Specific reason for statistical secrecy at the department level ('Nombre de partenaires faible (<= 3)', 'Concentration forte du CA (> 85%)', 'Les deux raisons (<= 3 partenaires ET > 85% CA)', or 'Non soumis au secret').
+French display label of `department_secret_reason_code`. Stored values: `Pas de chiffre d'affaire`, `Nombre de partenaires faible (< 3)`, `Concentration forte du CA (> 85%)`, `Les deux raisons (< 3 partenaires ET > 85% CA)`, `Secret secondaire (masquage par soustraction)`, `Non soumis au secret`. Filter on the code, not on the label.
 {% enddocs %}
 
 {% docs column__epci_secret_reason %}
-Specific reason for statistical secrecy at the EPCI level ('Nombre de partenaires faible (<= 3)', 'Concentration forte du CA (> 85%)', 'Les deux raisons (<= 3 partenaires ET > 85% CA)', or 'Non soumis au secret').
+French display label of `epci_secret_reason_code`. Stored values: `Pas de chiffre d'affaire`, `Nombre de partenaires faible (< 3)`, `Concentration forte du CA (> 85%)`, `Les deux raisons (< 3 partenaires ET > 85% CA)`, `Secret secondaire (masquage par soustraction)`, `Non soumis au secret`. Filter on the code, not on the label.
 {% enddocs %}
 
 {% docs column__municipality_secret_reason %}
-Specific reason for statistical secrecy at the municipality level ('Nombre de partenaires faible (<= 3)', 'Concentration forte du CA (> 85%)', 'Les deux raisons (<= 3 partenaires ET > 85% CA)', or 'Non soumis au secret').
+French display label of `municipality_secret_reason_code`. Stored values: `Pas de chiffre d'affaire`, `Nombre de partenaires faible (< 3)`, `Concentration forte du CA (> 85%)`, `Les deux raisons (< 3 partenaires ET > 85% CA)`, `Secret secondaire (masquage par soustraction)`, `Non soumis au secret`. Filter on the code, not on the label.
 {% enddocs %}
 
 {% docs column__rolling_window_months_count %}
-Duration of the rolling window in months used to calculate the metrics (e.g. 6 or 48 months).
+Length in months of the rolling window ending with `partition_month` over which partners and revenue are counted (6 or 48). Every territory has one row per window: filter one value.
 {% enddocs %}
 
 {% docs column__total_revenue_amount_municipality %}

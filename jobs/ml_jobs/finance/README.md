@@ -79,17 +79,17 @@ matter more here than squeezing out marginal accuracy with a black-box model.
 
 | Choice | `daily_pricing` | `weekly_pricing` | Rationale |
 | --- | --- | --- | --- |
-| `growth` | `logistic` | `linear` | Daily pricing is bounded, so a logistic curve with a `floor = 0` (no negative pricing) and a `cap = 1.2 × max(y)` (headroom above the historical max) keeps forecasts realistic. The smoother weekly series is modelled with a plain linear trend. |
-| `changepoints` | manual list | manual list | Trend breaks are pinned to **known business inflection points** (product/budget changes) rather than letting Prophet place them automatically. Changepoints outside the training window are dropped automatically at run time (`_filter_changepoints`). |
+| `growth` | `logistic` | `logistic` | Both series are bounded, so a logistic curve with a `floor = 0` (no negative pricing) and a `cap = 1.2 × max(y)` (headroom above the historical max) keeps forecasts realistic. |
+| `changepoints` | automatic | automatic | `changepoints: []` + `changepoint_range: 0.9` — Prophet places its own changepoints within the first 90 % of the training window, so a reform/regime shift is caught without a human updating a hardcoded list. (Prophet ignores `changepoint_range` whenever `changepoints` is non-empty; a manually-pinned-`2025-03` variant exists for backtest comparison — see `docs/changepoints_feature_plan.md`.) Changepoints outside the training window are dropped automatically at run time (`_filter_changepoints`). |
 | `changepoint_prior_scale` | `0.05` | `0.05` | Moderately low → a **flexible but not jumpy** trend; limits overfitting to local noise. |
 | `yearly_seasonality` | ✅ | ✅ | Strong yearly cycle in cultural spending. |
 | `weekly_seasonality` | ✅ | ✅ | Intra-week patterns in daily pricing. |
 | `daily_seasonality` | ❌ | ✅ | The daily series has one point per day (no intraday signal to learn), so it is disabled there. |
 | custom **monthly** seasonality | ✅ (`period = 30.5`, `fourier_order = 5`) | ✅ | Captures the monthly billing rhythm that Prophet's defaults do not model. |
-| **`pass_culture` conditional seasonality** | — | ✅ (June & December) | An extra seasonality that is **only active on specific months** (e.g. June/December campaign peaks) via Prophet's `condition_name`, so these recurring spikes don't distort the rest of the year. |
+| **`pass_culture` conditional seasonality** | — | ✅ (June & December, rolling rule) | An extra seasonality active every June/December (`dt.month.isin([6, 12])`, re-evaluated per date so it keeps working on future years) via Prophet's `condition_name`, so these recurring spikes don't distort the rest of the year. |
 | French holidays | ✅ | ✅ | `add_country_holidays("FR")` to absorb public-holiday effects. |
-| `seasonality_mode` | `additive` | `additive` | Seasonal amplitude is roughly constant in level, not proportional to the trend. |
-| `seasonality_prior_scale` | `5` | `1` | Allows a bit more seasonal flexibility on the noisier daily series. |
+| `seasonality_mode` | `multiplicative` | `multiplicative` | Seasonal amplitude scales with the trend level (heteroscedasticity diagnosed in the series), rather than staying constant in absolute terms. **Caveat**: under multiplicative seasonality, `cap`/`floor` only bound the trend, not the final `yhat = trend × (1 + seasonal)` — a loose `seasonality_prior_scale` can let stacked seasonal components blow well past the cap. |
+| `seasonality_prior_scale` | `1` | `1` | Kept tight on both series precisely because of the multiplicative-mode caveat above; still a starting point pending backtest re-tuning, not a verified-optimal value. |
 | `interval_width` | `0.95` | `0.95` | 95 % uncertainty bands shown to Finance. |
 | `scaling` | `absmax` | `absmax` | Robust input scaling. |
 

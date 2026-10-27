@@ -13,7 +13,7 @@ prophet:
   weekly_seasonality: true
   daily_seasonality: false
   seasonality_mode: multiplicative
-  seasonality_prior_scale: 5
+  seasonality_prior_scale: 1  # kept in sync with daily_pricing.yaml - see that file's comment
   interval_width: 0.95
   scaling: absmax
 features:

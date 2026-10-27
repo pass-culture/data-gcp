@@ -166,7 +166,10 @@ class ProphetModel(ForecastModel):
         if len(monthly_df) > 0:
             last_month = monthly_df["ds"].iloc[-1]
             last_month_rows = df[df["month"] == last_month].shape[0]
-            if (self.config.evaluation.freq == "W" and last_month_rows < 4) or (
+            # freq is "W-MON" for the weekly model, not "W" - match by prefix
+            # (the exact "== 'W'" check never matched, so the weekly model's
+            # last month was never trimmed even when incomplete).
+            if (self.config.evaluation.freq.startswith("W") and last_month_rows < 4) or (
                 self.config.evaluation.freq == "D" and last_month_rows < 30
             ):
                 logger.warning(

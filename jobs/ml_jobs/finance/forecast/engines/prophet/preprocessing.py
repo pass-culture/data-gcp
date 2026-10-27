@@ -72,9 +72,13 @@ def add_features(
     Add optional features required for Prophet modelling.
     - Adds a rolling pass_culture_months flag (June & December, every year) when configured.
     - Adds floor/cap columns when using logistic growth.
-        Floor is set to 0, cap to 1.2*max(y).
-        which means that the model will never predict negative values
-        and will have some headroom above the maximum observed value.
+        Floor is set to 0, cap to 1.2x the 99th percentile of y (not the raw max),
+        which means that the model will never predict negative values and will
+        have headroom above typical historical highs, without a single outlier day
+        (e.g. a backdated batch correction landing on one date) setting the cap for
+        the whole forecast. The daily series is far more exposed to this than the
+        weekly one, since weekly sums 7 days into one bucket and dilutes any single
+        anomalous day to 1/7th of its daily weight.
 
     Args:
         df: Input dataframe.
@@ -88,7 +92,7 @@ def add_features(
         df["pass_culture_months"] = pd.to_datetime(df["ds"]).dt.month.isin([6, 12])
     if model_config.prophet.growth == "logistic":
         df["floor"] = 0.0
-        df["cap"] = df["y"].max() * 1.2
+        df["cap"] = df["y"].quantile(0.99) * 1.2
     return df
 
 

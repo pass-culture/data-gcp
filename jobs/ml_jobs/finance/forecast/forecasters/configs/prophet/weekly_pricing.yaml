@@ -5,7 +5,10 @@ prophet:
   changepoint_prior_scale: 0.05
   yearly_seasonality: true
   weekly_seasonality: true
-  daily_seasonality: true
+  daily_seasonality: false  # was true (pre-existing, predates this ticket) - meaningless for
+  # weekly-grain data (one point per 7 days, no intra-day signal to fit) and, under
+  # multiplicative mode, an extra noise-fit component can combine destructively with the
+  # others rather than just adding harmless noise the way it did under additive mode.
   seasonality_mode: multiplicative
   seasonality_prior_scale: 1
   interval_width: 0.95

@@ -1,18 +1,12 @@
 prophet:
   growth: logistic
-  changepoints:
-    - "2022-12-15"
-    - "2023-07-20"
-    - "2023-10-20"
-    - "2024-03-15"
-    - "2024-07-03"
-    - "2024-12-20"
-    - "2025-06-25"
+  changepoints: []  # automatic detection (see changepoint_range) - was a hardcoded list ending 2025-06-25
+  changepoint_range: 0.9
   changepoint_prior_scale: 0.05
   yearly_seasonality: true
   weekly_seasonality: true
   daily_seasonality: false
-  seasonality_mode: additive
+  seasonality_mode: multiplicative
   seasonality_prior_scale: 5
   interval_width: 0.95
   scaling: absmax
@@ -20,8 +14,11 @@ features:
   adding_country_holidays: true
   add_monthly_seasonality: true
   monthly_fourier_order: 5
-  pass_culture_months: null
+  pass_culture_seasonality: false
+  # total_available_credits: enable once ml_finance__daily_available_credits is
+  # deployed, backfilled, and joined into daily_pricing (see docs/changepoints_feature_plan.md)
   regressors: null
+  regressor_future_strategy: hold_last_value
 data_processing:
   train_prop: 0.8
   table_name: daily_pricing

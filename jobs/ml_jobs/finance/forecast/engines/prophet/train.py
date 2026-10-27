@@ -41,11 +41,8 @@ def fit_prophet_model(
             period=30.5,
             fourier_order=features_config.monthly_fourier_order,
         )
-    if features_config.pass_culture_months:
-        logger.info(
-            f"""Adding pass_culture conditional seasonality for
-            {features_config.pass_culture_months} months"""
-        )
+    if features_config.pass_culture_seasonality:
+        logger.info("Adding pass_culture conditional seasonality for June & December (rolling rule)")
         model.add_seasonality(
             name="pass_culture",
             period=30.5,

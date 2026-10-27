@@ -1,0 +1,36 @@
+# Comparison config for the automatic-vs-manual changepoint decision (see
+# docs/changepoints_feature_plan.md, Step 3). NOT wired into the Airflow DAG -
+# run manually with `--model-name daily_pricing_manual_cp` and compare MLflow
+# backtest metrics against daily_pricing.yaml before deciding which to keep.
+# Note: changepoint_range is ignored by Prophet whenever changepoints is non-empty.
+prophet:
+  growth: logistic
+  changepoints:
+    - "2025-03-01"
+  changepoint_range: 0.9
+  changepoint_prior_scale: 0.05
+  yearly_seasonality: true
+  weekly_seasonality: true
+  daily_seasonality: false
+  seasonality_mode: multiplicative
+  seasonality_prior_scale: 5
+  interval_width: 0.95
+  scaling: absmax
+features:
+  adding_country_holidays: true
+  add_monthly_seasonality: true
+  monthly_fourier_order: 5
+  pass_culture_seasonality: false
+  regressors: null
+  regressor_future_strategy: hold_last_value
+data_processing:
+  train_prop: 0.8
+  table_name: daily_pricing
+  date_column_name: pricing_day
+  target_name: total_pricing
+evaluation:
+  cv: true
+  cv_initial: 0.6
+  cv_period: 0.15
+  cv_horizon: 0.3
+  freq: D

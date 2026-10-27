@@ -34,6 +34,10 @@ if TYPE_CHECKING:
 REAL_COL = "Pricing réel (€)"
 DAILY_COL = "Prophet Daily (€)"
 WEEKLY_COL = "Prophet Weekly (€)"
+DAILY_LOW_COL = "Prophet Daily bas (€)"
+DAILY_HIGH_COL = "Prophet Daily haut (€)"
+WEEKLY_LOW_COL = "Prophet Weekly bas (€)"
+WEEKLY_HIGH_COL = "Prophet Weekly haut (€)"
 
 # A backtest MAPE above this ratio is not a real accuracy signal but a degenerate
 # value caused by near-zero actuals (e.g. a stale/partial month). Such points are
@@ -52,7 +56,8 @@ class ModelReportData:
     run_name: str
     params: dict = field(default_factory=dict)
     config: dict = field(default_factory=dict)
-    # Monthly series over [year start, horizon]: columns month (Timestamp), total_pricing
+    # Monthly series over [year start, horizon]: columns month (Timestamp),
+    # total_pricing, low, high (monthly-summed yhat_lower/yhat_upper uncertainty band)
     full_monthly: pd.DataFrame = field(default_factory=pd.DataFrame)
     # Monthly backtest aggregation: columns month (Timestamp), y, yhat
     backtest_monthly: pd.DataFrame = field(default_factory=pd.DataFrame)
@@ -89,35 +94,65 @@ def build_tidy_monthly(
     daily: ModelReportData,
     weekly: ModelReportData,
     real_df: pd.DataFrame,
+    trusted_horizon_months: int = 6,
 ) -> pd.DataFrame:
     """Merge both models' monthly forecasts with observed pricing.
 
     Args:
-        daily: Daily model report data (``full_monthly`` with month, total_pricing).
+        daily: Daily model report data (``full_monthly`` with month, total_pricing,
+            low, high).
         weekly: Weekly model report data.
         real_df: Observed monthly pricing, columns ``month`` (Timestamp), ``real_total``.
+        trusted_horizon_months: Number of months from today considered a reliable
+            point forecast. Months at or beyond this horizon are flagged
+            (``is_trusted=False``) so the report can present them as scenario
+            bands instead of a single point number.
 
     Returns:
-        DataFrame with columns: month (Timestamp), real, daily, weekly.
+        DataFrame with columns: month (Timestamp), real, daily, weekly,
+        daily_low, daily_high, weekly_low, weekly_high, is_trusted.
     """
-    d = daily.full_monthly.rename(columns={"total_pricing": "daily"})[["month", "daily"]]
-    w = weekly.full_monthly.rename(columns={"total_pricing": "weekly"})[["month", "weekly"]]
+    d = daily.full_monthly.rename(columns={"total_pricing": "daily", "low": "daily_low", "high": "daily_high"})[
+        ["month", "daily", "daily_low", "daily_high"]
+    ]
+    w = weekly.full_monthly.rename(columns={"total_pricing": "weekly", "low": "weekly_low", "high": "weekly_high"})[
+        ["month", "weekly", "weekly_low", "weekly_high"]
+    ]
     r = real_df.rename(columns={"real_total": "real"})[["month", "real"]]
 
     tidy = pd.merge(d, w, on="month", how="outer")
     tidy = pd.merge(tidy, r, on="month", how="left")
     tidy = tidy.sort_values("month").reset_index(drop=True)
+
+    today_month = pd.Timestamp.now().to_period("M").to_timestamp()
+    cutoff = today_month + pd.DateOffset(months=trusted_horizon_months)
+    tidy["is_trusted"] = tidy["month"] < cutoff
     return tidy
 
 
 def build_monthly_sheet(tidy: pd.DataFrame) -> pd.DataFrame:
-    """Build the display monthly sheet (French columns, YYYY-MM month labels)."""
+    """Build the display monthly sheet (French columns, YYYY-MM month labels).
+
+    Low/high columns are always included; beyond the trusted horizon
+    (``is_trusted=False``) they widen into a meaningful scenario band instead
+    of tracking the point forecast closely.
+    """
     out = tidy.copy()
     out["Mois"] = out["month"].dt.strftime("%Y-%m")
-    out = out.rename(columns={"real": REAL_COL, "daily": DAILY_COL, "weekly": WEEKLY_COL})
-    cols = ["Mois", REAL_COL, DAILY_COL, WEEKLY_COL]
+    out = out.rename(
+        columns={
+            "real": REAL_COL,
+            "daily": DAILY_COL,
+            "weekly": WEEKLY_COL,
+            "daily_low": DAILY_LOW_COL,
+            "daily_high": DAILY_HIGH_COL,
+            "weekly_low": WEEKLY_LOW_COL,
+            "weekly_high": WEEKLY_HIGH_COL,
+        }
+    )
+    cols = ["Mois", REAL_COL, DAILY_COL, DAILY_LOW_COL, DAILY_HIGH_COL, WEEKLY_COL, WEEKLY_LOW_COL, WEEKLY_HIGH_COL]
     out = out[cols].copy()
-    for col in (REAL_COL, DAILY_COL, WEEKLY_COL):
+    for col in cols[1:]:
         out[col] = out[col].round(0)
     return out
 
@@ -144,6 +179,18 @@ def build_quarterly_annual(tidy: pd.DataFrame, years: list[int]) -> pd.DataFrame
     df["quarter"] = df["month"].dt.quarter
     df = df[df["year"].isin(years)]
 
+    def _period_row(label: str, period_df: pd.DataFrame) -> dict:
+        return {
+            "Période": label,
+            REAL_COL: period_df["real"].sum(min_count=1),
+            DAILY_COL: period_df["daily"].sum(min_count=1),
+            DAILY_LOW_COL: period_df["daily_low"].sum(min_count=1),
+            DAILY_HIGH_COL: period_df["daily_high"].sum(min_count=1),
+            WEEKLY_COL: period_df["weekly"].sum(min_count=1),
+            WEEKLY_LOW_COL: period_df["weekly_low"].sum(min_count=1),
+            WEEKLY_HIGH_COL: period_df["weekly_high"].sum(min_count=1),
+        }
+
     rows: list[dict] = []
     for year in years:
         year_df = df[df["year"] == year]
@@ -151,25 +198,11 @@ def build_quarterly_annual(tidy: pd.DataFrame, years: list[int]) -> pd.DataFrame
             continue
         for quarter in sorted(year_df["quarter"].unique()):
             q_df = year_df[year_df["quarter"] == quarter]
-            rows.append(
-                {
-                    "Période": f"T{quarter} {year}",
-                    REAL_COL: q_df["real"].sum(min_count=1),
-                    DAILY_COL: q_df["daily"].sum(min_count=1),
-                    WEEKLY_COL: q_df["weekly"].sum(min_count=1),
-                }
-            )
-        rows.append(
-            {
-                "Période": f"Total {year}",
-                REAL_COL: year_df["real"].sum(min_count=1),
-                DAILY_COL: year_df["daily"].sum(min_count=1),
-                WEEKLY_COL: year_df["weekly"].sum(min_count=1),
-            }
-        )
+            rows.append(_period_row(f"T{quarter} {year}", q_df))
+        rows.append(_period_row(f"Total {year}", year_df))
 
     out = pd.DataFrame(rows)
-    for col in (REAL_COL, DAILY_COL, WEEKLY_COL):
+    for col in (REAL_COL, DAILY_COL, DAILY_LOW_COL, DAILY_HIGH_COL, WEEKLY_COL, WEEKLY_LOW_COL, WEEKLY_HIGH_COL):
         out[col] = out[col].round(0)
     return out
 
@@ -398,12 +431,25 @@ def _add_threshold_lines(ax, xmin, xmax) -> None:
 
 
 def plot_monthly(tidy: pd.DataFrame, output_dir: Path) -> Path:
-    """Plot observed pricing vs both monthly forecasts."""
+    """Plot observed pricing vs both monthly forecasts.
+
+    Beyond the trusted horizon (``is_trusted=False``), shades the low/high
+    band for each model instead of implying point-forecast precision.
+    """
     fig, ax = plt.subplots(figsize=(13, 6))
     x = tidy["month"]
     ax.plot(x, tidy["real"], marker="o", label="Pricing réel")
     ax.plot(x, tidy["daily"], marker="o", label="Prophet Daily")
     ax.plot(x, tidy["weekly"], marker="o", label="Prophet Weekly")
+
+    scenario = tidy[~tidy["is_trusted"]]
+    if not scenario.empty:
+        ax.axvline(scenario["month"].iloc[0], color="gray", linestyle=":", label="Horizon fiable")
+        ax.fill_between(scenario["month"], scenario["daily_low"], scenario["daily_high"], alpha=0.2, color="tab:orange")
+        ax.fill_between(
+            scenario["month"], scenario["weekly_low"], scenario["weekly_high"], alpha=0.2, color="tab:green"
+        )
+
     _add_threshold_lines(ax, x.min(), x.max())
     ax.set_title("Prévisions mensuelles de pricing vs réel")
     ax.set_xlabel("Mois")

@@ -8,7 +8,15 @@ from reporting import report_builder as rb
 
 def _model(label, name, growth, freq, full_base, backtest_bias):
     months = pd.date_range("2026-01-01", periods=18, freq="MS")
-    full_monthly = pd.DataFrame({"month": months, "total_pricing": [full_base + i * 1e5 for i in range(len(months))]})
+    central = [full_base + i * 1e5 for i in range(len(months))]
+    full_monthly = pd.DataFrame(
+        {
+            "month": months,
+            "total_pricing": central,
+            "low": [v * 0.9 for v in central],
+            "high": [v * 1.1 for v in central],
+        }
+    )
     bt_months = pd.date_range("2026-02-01", periods=4, freq="MS")
     y = [6e6, 6.2e6, 6.4e6, 6.6e6]
     backtest_monthly = pd.DataFrame({"month": bt_months, "y": y, "yhat": [v + backtest_bias for v in y]})
@@ -55,10 +63,30 @@ def real_df():
 
 def test_tidy_monthly_merges_all_sources(daily, weekly, real_df):
     tidy = rb.build_tidy_monthly(daily, weekly, real_df)
-    assert list(tidy.columns) == ["month", "daily", "weekly", "real"]
+    assert list(tidy.columns) == [
+        "month",
+        "daily",
+        "daily_low",
+        "daily_high",
+        "weekly",
+        "weekly_low",
+        "weekly_high",
+        "real",
+        "is_trusted",
+    ]
     # Real is only known for the first 5 months.
     assert tidy["real"].notna().sum() == 5
     assert len(tidy) == 18
+
+
+def test_tidy_monthly_trusted_horizon_flips_at_cutoff(daily, weekly, real_df):
+    tidy = rb.build_tidy_monthly(daily, weekly, real_df, trusted_horizon_months=6)
+    today_month = pd.Timestamp.now().to_period("M").to_timestamp()
+    cutoff = today_month + pd.DateOffset(months=6)
+    assert tidy.loc[tidy["month"] < cutoff, "is_trusted"].all()
+    assert not tidy.loc[tidy["month"] >= cutoff, "is_trusted"].any()
+    assert (tidy["daily_low"] <= tidy["daily"]).all()
+    assert (tidy["daily"] <= tidy["daily_high"]).all()
 
 
 def test_quarterly_annual_has_totals(daily, weekly, real_df):
@@ -72,6 +100,14 @@ def test_quarterly_annual_has_totals(daily, weekly, real_df):
     expected = tidy[tidy["month"].dt.year == 2026]["daily"].sum().round(0)
     got = q.loc[q["Période"] == "Total 2026", rb.DAILY_COL].iloc[0]
     assert got == expected
+
+
+def test_quarterly_annual_band_columns_bracket_the_point_forecast(daily, weekly, real_df):
+    tidy = rb.build_tidy_monthly(daily, weekly, real_df)
+    q = rb.build_quarterly_annual(tidy, years=[2026, 2027])
+    totals = q[q["Période"] == "Total 2026"].iloc[0]
+    assert totals[rb.DAILY_LOW_COL] <= totals[rb.DAILY_COL] <= totals[rb.DAILY_HIGH_COL]
+    assert totals[rb.WEEKLY_LOW_COL] <= totals[rb.WEEKLY_COL] <= totals[rb.WEEKLY_HIGH_COL]
 
 
 def test_backtest_metrics_detect_over_and_under_prediction(daily, weekly):

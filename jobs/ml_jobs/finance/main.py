@@ -27,7 +27,7 @@ def main(
     model_name: str = typer.Option(..., help="Name of the model configuration/instance."),
     train_start_date: str = typer.Option(
         ...,
-        help="In-sample start date (YYYY-MM-DD). Must be before first changepoint.",
+        help="In-sample start date (YYYY-MM-DD).",
     ),
     execution_date: str = typer.Option(
         ...,
@@ -43,6 +43,13 @@ def main(
     ),
     experiment_name: str = typer.Option(..., help="MLflow experiment name."),
     dataset: str = typer.Option(..., help="BigQuery dataset containing training data and forecast results."),
+    output_table_name: str = typer.Option(
+        "monthly_forecasts",
+        help=(
+            "BigQuery table (within `dataset`) the monthly forecast is appended to. "
+            "Override for comparison/test runs so they never land in the production table."
+        ),
+    ),
 ) -> None:
     """
     Train, evaluate, and forecast using a sliding window approach.
@@ -160,10 +167,10 @@ def main(
             run_name=run_name,
             model_name=model_name,
             model_type=model_type,
-            table_name="monthly_forecasts",
+            table_name=output_table_name,
             dataset=dataset,
         )
-        logger.info("Monthly forecast logged to BigQuery successfully")
+        logger.info(f"Monthly forecast logged to BigQuery table '{output_table_name}' successfully")
 
         # 10. Log Backtest Plots to MLflow
         model.log_plots(backtest_forecast, monthly_forecast_df)

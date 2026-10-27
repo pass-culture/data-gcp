@@ -6,6 +6,44 @@ from forecast.forecasters.forecast_model import DataSplit
 from prophet import Prophet
 
 
+def attach_future_regressors(
+    df: pd.DataFrame,
+    model_config: ModelConfig,
+    train_test_backtest_split: DataSplit,
+) -> pd.DataFrame:
+    """Populate regressor columns on the future prediction dataframe.
+
+    Prophet requires a value for every configured regressor on every row being
+    predicted, including future dates. Known-deposit roll-off is deterministic,
+    but new-cohort future grant volume is not, so the value is filled using a
+    configurable strategy (``features.regressor_future_strategy``) rather than
+    a forecast of its own.
+
+    Args:
+        df: Prediction dataframe already containing 'ds'.
+        model_config: Full configuration object holding feature settings.
+        train_test_backtest_split: Object containing train/test/backtest splits,
+            used as the source of historical regressor values.
+
+    Returns:
+        pd.DataFrame: ``df`` with one column added per configured regressor.
+    """
+    history = pd.concat(
+        [train_test_backtest_split.train, train_test_backtest_split.backtest],
+        ignore_index=True,
+    ).sort_values("ds")
+
+    strategy = model_config.features.regressor_future_strategy
+    for reg in model_config.features.regressors or []:
+        if reg not in history.columns:
+            raise ValueError(f"Regressor '{reg}' is configured but missing from historical data")
+
+        value = history[reg].tail(90).mean() if strategy == "flat_mean_90d" else history[reg].iloc[-1]
+        df[reg] = value
+
+    return df
+
+
 def create_full_prediction_dataframe(
     start_date: str,
     end_date: str,
@@ -38,10 +76,11 @@ def create_full_prediction_dataframe(
 
     df = pd.DataFrame({"ds": pd.date_range(start=start_date, end=end_date, freq=model_config.evaluation.freq)})
 
-    if model_config.features.pass_culture_months:
-        months_years = set(model_config.features.pass_culture_months)
-        # Avoid intermediate _month_year column by computing membership directly
-        df["pass_culture_months"] = pd.to_datetime(df["ds"]).dt.strftime("%m-%Y").isin(months_years)
+    if model_config.features.pass_culture_seasonality:
+        df["pass_culture_months"] = pd.to_datetime(df["ds"]).dt.month.isin([6, 12])
+
+    if model_config.features.regressors:
+        df = attach_future_regressors(df, model_config, train_test_backtest_split)
 
     if cap is not None:
         df["cap"] = cap

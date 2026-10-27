@@ -135,7 +135,12 @@ class ProphetModel(ForecastModel):
     def aggregate_to_monthly(self, forecast_df: pd.DataFrame) -> pd.DataFrame:
         """
         Aggregates the daily forecast to monthly sums.
-        Returns a DataFrame with 'ds' (month) and 'total_pricing'.
+        Returns a DataFrame with 'ds' (month), 'total_pricing' and the
+        monthly-summed uncertainty band ('total_pricing_low'/'total_pricing_high').
+
+        Note: summing yhat_lower/yhat_upper across the days/weeks of a month is
+        an independent-error approximation, not a statistically rigorous monthly
+        interval - an acceptable simplification for reporting purposes.
         """
         df = forecast_df.copy()
         if "ds" in df.columns:
@@ -144,9 +149,17 @@ class ProphetModel(ForecastModel):
         # Normalize to start of month
         df["month"] = df["ds"].dt.to_period("M").dt.to_timestamp().dt.date
 
-        # Aggregate yhat (prediction)
-        monthly_df = df.groupby("month")[["yhat"]].sum().reset_index()
-        monthly_df.rename(columns={"month": "ds", "yhat": "total_pricing"}, inplace=True)
+        # Aggregate yhat (prediction) and its uncertainty band
+        monthly_df = df.groupby("month")[["yhat", "yhat_lower", "yhat_upper"]].sum().reset_index()
+        monthly_df.rename(
+            columns={
+                "month": "ds",
+                "yhat": "total_pricing",
+                "yhat_lower": "total_pricing_low",
+                "yhat_upper": "total_pricing_high",
+            },
+            inplace=True,
+        )
 
         # if last month has less than 4 rows for weeky model or 30 for daily model,
         # we drop it

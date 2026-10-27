@@ -112,6 +112,12 @@ def save_forecast_gbq(
         write_disposition="WRITE_APPEND" if if_exists == "append" else "WRITE_TRUNCATE",
     )
 
+    # Keep only the columns the table schema above actually declares - e.g.
+    # aggregate_to_monthly() also produces total_pricing_low/high (for the
+    # Excel report's scenario bands), which this table does not carry.
+    schema_columns = [field.name for field in job_config.schema]
+    bq_df = bq_df[schema_columns]
+
     client = get_client()
     job = client.load_table_from_dataframe(bq_df, destination_table, job_config=job_config)
     job.result()  # Wait for the job to complete

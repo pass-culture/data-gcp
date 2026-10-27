@@ -69,7 +69,13 @@ def _load_run_data(client: MlflowClient, run_id: str, label: str) -> rb.ModelRep
         config = _read_config(local_root, model_name)
 
         full_monthly = _read_single(local_root, "*_full_year_monthly_forecast.xlsx")
-        full_monthly = full_monthly.rename(columns={"ds": "month"})
+        full_monthly = full_monthly.rename(
+            columns={
+                "ds": "month",
+                "total_pricing_low": "low",
+                "total_pricing_high": "high",
+            }
+        )
         full_monthly["month"] = _to_month_start(full_monthly["month"])
 
         backtest = _read_single(local_root, "*_backtest_forecast.xlsx")
@@ -180,6 +186,13 @@ def main(
     n_past_runs: int = typer.Option(6, help="Number of past runs to include in comparisons."),
     gcs_output_path: str = typer.Option("", help="Optional gs:// destination for the report files."),
     output_dir: str = typer.Option("finance_report", help="Local output directory."),
+    trusted_horizon_months: int = typer.Option(
+        6,
+        help=(
+            "Number of months from today considered a reliable point forecast; "
+            "months beyond this are presented as scenario bands instead."
+        ),
+    ),
 ) -> None:
     """Build the finance report from the two model runs and deliver it."""
     next_year = report_year + 1
@@ -197,7 +210,7 @@ def main(
     evolution_records = _load_metrics_evolution(client, experiment_id, [daily, weekly], n_past_runs)
 
     logger.info("Building report tables and charts...")
-    tidy = rb.build_tidy_monthly(daily, weekly, real_df)
+    tidy = rb.build_tidy_monthly(daily, weekly, real_df, trusted_horizon_months=trusted_horizon_months)
     monthly_sheet = rb.build_monthly_sheet(tidy)
     quarterly = rb.build_quarterly_annual(tidy, years=[report_year, next_year])
     backtest_detail = rb.build_backtest_detail(daily, weekly)

@@ -15,3 +15,6 @@ models:
         data_type: FLOAT
         data_tests:
           - not_null
+      - name: total_available_credits
+        description: "{{ doc('column__total_available_credits') }}"
+        data_type: FLOAT

@@ -70,7 +70,7 @@ def add_features(
 ) -> pd.DataFrame:
     """
     Add optional features required for Prophet modelling.
-    - Adds pass_culture_months when configured.
+    - Adds a rolling pass_culture_months flag (June & December, every year) when configured.
     - Adds floor/cap columns when using logistic growth.
         Floor is set to 0, cap to 1.2*max(y).
         which means that the model will never predict negative values
@@ -84,10 +84,8 @@ def add_features(
         pd.DataFrame: Cleaned dataframe.
     """
 
-    if model_config.features.pass_culture_months:
-        months_years = set(model_config.features.pass_culture_months)
-        # Avoid intermediate _month_year column by computing membership directly
-        df["pass_culture_months"] = pd.to_datetime(df["ds"]).dt.strftime("%m-%Y").isin(months_years)
+    if model_config.features.pass_culture_seasonality:
+        df["pass_culture_months"] = pd.to_datetime(df["ds"]).dt.month.isin([6, 12])
     if model_config.prophet.growth == "logistic":
         df["floor"] = 0.0
         df["cap"] = df["y"].max() * 1.2
@@ -111,7 +109,7 @@ def select_feature_columns(
     cols = ["ds", "y"]
     if model_config.features.regressors:
         cols.extend(model_config.features.regressors)
-    if model_config.features.pass_culture_months:
+    if model_config.features.pass_culture_seasonality:
         cols.append("pass_culture_months")
     if model_config.prophet.growth == "logistic":
         cols.extend(["floor", "cap"])

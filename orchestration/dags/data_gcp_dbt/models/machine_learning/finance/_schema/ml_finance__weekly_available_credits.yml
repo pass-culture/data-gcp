@@ -1,0 +1,17 @@
+version: 2
+
+models:
+  - name: ml_finance__weekly_available_credits
+    description: "{{ doc('description__ml_finance__weekly_available_credits') }}"
+    columns:
+      - name: pricing_week
+        description: "{{ doc('column__pricing_week') }}"
+        data_type: DATE
+        data_tests:
+          - unique
+          - not_null
+      - name: total_available_credits
+        description: "{{ doc('column__total_available_credits') }}"
+        data_type: FLOAT
+        data_tests:
+          - not_null

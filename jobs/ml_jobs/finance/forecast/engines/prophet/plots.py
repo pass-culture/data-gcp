@@ -244,12 +244,20 @@ def log_future_forecast_plots(
 
     Args:
         monthly_forecast: DataFrame with future forecast data, must contain:
-            ds, yhat, yhat_lower, yhat_upper
+            ds, total_pricing, total_pricing_low, total_pricing_high
     """
     fig_future = plt.figure(figsize=(12, 6))
     plt.plot(
         monthly_forecast.ds,
         monthly_forecast.total_pricing,
+        label="Forecast",
+    )
+    plt.fill_between(
+        monthly_forecast.ds,
+        monthly_forecast.total_pricing_low,
+        monthly_forecast.total_pricing_high,
+        alpha=0.3,
+        label="Uncertainty interval",
     )
     plt.title("Future Monthly Forecast")
     plt.hlines(

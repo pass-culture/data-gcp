@@ -18,7 +18,7 @@ select
     event_date,
     event_timestamp,
     event_previous_timestamp,
-    event_timestamp as user_first_touch_timestamp,
+    user_first_touch_timestamp,
     user_id,
     user_pseudo_id,
     event_name,

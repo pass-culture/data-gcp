@@ -8,7 +8,7 @@
 
 {% docs column__native_event_flattened_event_previous_timestamp %}Time at which the same event was previously logged by this app instance (Firebase `event_previous_timestamp`, converted from microseconds).{% enddocs %}
 
-{% docs column__native_event_flattened_user_first_touch_timestamp %}Despite its name, always equal to event_timestamp: the model fills it from the event timestamp, not from the Firebase first-touch timestamp of the app instance.{% enddocs %}
+{% docs column__native_event_flattened_user_first_touch_timestamp %}Timestamp of the first time the user opened the app on this app instance (Firebase `user_first_touch_timestamp`). Partitions built before the October 2026 fix hold the event timestamp instead.{% enddocs %}
 
 {% docs column__native_event_flattened_platform %}Platform that emitted the event. Stored values: 'IOS', 'ANDROID', 'WEB'.{% enddocs %}
 

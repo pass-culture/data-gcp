@@ -345,6 +345,9 @@ models:
       - name: venue_department_name
         description: '{{ doc("column__venue_department_name") }}'
         data_type: STRING
+      - name: banner_url
+        description: '{{ doc("column__banner_url") }}'
+        data_type: STRING
       - name: venue_volunteering_url
         description: '{{ doc("column__venue_volunteering_url") }}'
         data_type: STRING

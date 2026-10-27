@@ -36,6 +36,7 @@ select
     venue_in_frr_plus,
     venue_rural_city_type,
     venue_targeted_audience,
+    banner_url,
     venue_volunteering_url,
     venue_description,
     venue_withdrawal_details,

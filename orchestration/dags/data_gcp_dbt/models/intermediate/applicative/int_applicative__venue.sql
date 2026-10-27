@@ -127,6 +127,7 @@ select
     v.venue_is_permanent,
     v.venue_is_open_to_public,
     v.venue_is_soft_deleted,
+    v.banner_url,
     v.venue_volunteering_url,
     v.venue_audiodisabilitycompliant,
     v.venue_mentaldisabilitycompliant,
@@ -305,7 +306,11 @@ select
             + coalesce(co.total_used_collective_bookings, 0) desc
     ) as offerer_bookings_rank,
     case
-        when gp.venue_id is not null then 'google' else 'default_category'
+        when v.banner_url is not null
+        then 'offerer'
+        when gp.venue_id is not null
+        then 'google'
+        else 'default_category'
     end as venue_image_source,
     coalesce(o.total_distinct_headline_offers, 0) as total_distinct_headline_offers,
     coalesce(o.has_headline_offer, false) as has_headline_offer,

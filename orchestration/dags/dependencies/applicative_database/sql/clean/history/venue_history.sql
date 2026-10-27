@@ -6,7 +6,6 @@ select
     venue_type_code,
     venue_activity,
     venue_label_id,
-    banner_url,
     venue_description,
     venue_audiodisabilitycompliant,
     venue_mentaldisabilitycompliant,

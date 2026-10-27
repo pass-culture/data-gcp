@@ -57,7 +57,7 @@ public.favorite: dateCreated, id, offerId, userId
 public.feature: description, id, isActive, name
 public.finance_incident: details, id, kind, status, venueId
 public.fraudulent_booking_tag: authorId, bookingId, dateCreated, id
-public.google_places_info: bannerUrl, id, venueId
+public.google_places_info: id, venueId
 public.headline_offer: id, offerId, timespan, venueId
 public.highlight: availability_datespan, communication_date, description, highlight_datespan, id, mediation_uuid, name
 public.highlight_request: highlightId, id, offerId
@@ -87,7 +87,6 @@ public.price_category: id, label, offerId, price
 public.pricing: amount, bookingId, collectiveBookingId, creationDate, customRuleId, eventId, id, pricingPointId, revenue, standardRule, status, valueDate, venueId
 public.pricing_line: amount, category, id, pricingId
 public.pricing_log: id, pricingId, reason, statusAfter, statusBefore, timestamp
-public.pro_advice: author, content, id, offerId, updatedAt, venueId
 public.product: dateModifiedAtLastProvider, description, ean, gcuCompatibilityType, id, jsonData, lastProviderId, last_30_days_booking, name, subcategoryId, thumbCount
 public.product_chronicle: chronicleId, id, productId
 public.product_mediation: dateModifiedAtLastProvider, id, imageType, lastProviderId, productId, uuid
@@ -104,7 +103,7 @@ public.user_offerer: dateCreated, id, offererId, userId, validationStatus
 public.validation_rule_collective_offer_link: collectiveOfferId, id, ruleId
 public.validation_rule_collective_offer_template_link: collectiveOfferTemplateId, id, ruleId
 public.validation_rule_offer_link: id, offerId, ruleId
-public.venue: activity, adageId, adageInscriptionDate, audioDisabilityCompliant, bannerUrl, bookingEmail, collectiveDescription, collectiveEmail, collectiveInterventionArea, collectiveNetwork, collectivePhone, collectiveStudents, collectiveWebsite, comment, dateCreated, description, dmsToken, id, isOpenToPublic, isPermanent, isSoftDeleted, managingOffererId, mentalDisabilityCompliant, motorDisabilityCompliant, name, publicName, siret, state, thumbCount, venueEducationalStatusId, venueLabelId, venueTypeCode, visualDisabilityCompliant, volunteeringUrl, withdrawalDetails
+public.venue: activity, adageId, adageInscriptionDate, audioDisabilityCompliant, bookingEmail, collectiveDescription, collectiveEmail, collectiveInterventionArea, collectiveNetwork, collectivePhone, collectiveStudents, collectiveWebsite, comment, dateCreated, description, dmsToken, id, isOpenToPublic, isPermanent, isSoftDeleted, managingOffererId, mentalDisabilityCompliant, motorDisabilityCompliant, name, publicName, siret, state, thumbCount, venueEducationalStatusId, venueLabelId, venueTypeCode, visualDisabilityCompliant, volunteeringUrl, withdrawalDetails
 public.venue_bank_account_link: bankAccountId, id, timespan, venueId
 public.venue_contact: email, id, phone_number, social_medias, venueId, website
 public.venue_label: id, label

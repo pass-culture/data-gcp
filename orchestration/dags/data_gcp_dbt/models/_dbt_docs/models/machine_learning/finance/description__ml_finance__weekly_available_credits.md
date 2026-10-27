@@ -7,12 +7,14 @@ description: Description of the `ml_finance__weekly_available_credits` table.
 
 # Table: Training Data Offer
 
-The `ml_finance__weekly_available_credits` table sums, per ISO week, the
-`deposit_amount` of every individual pass Culture deposit active that week
-(from `int_global__daily_deposit`). It tracks the total granted credit mass
-outstanding at any point in time, including the ~March 2025 individual-credit
-reform (see `deposit_reform_category`), and is used as an exogenous regressor
-for the `weekly_pricing` Prophet model.
+The `ml_finance__weekly_available_credits` table **averages**, per ISO week,
+the daily remaining (unspent) credit balance from
+`ml_finance__daily_available_credits`. It is a stock (a balance at a point in
+time), not a flow, so it is averaged over the week rather than summed - unlike
+`total_pricing`. It tracks the credit mass actually available to
+beneficiaries at any point in time, including the ~March 2025
+individual-credit reform (see `deposit_reform_category`), and is used as an
+exogenous regressor for the `weekly_pricing` Prophet model.
 
 {% enddocs %}
 

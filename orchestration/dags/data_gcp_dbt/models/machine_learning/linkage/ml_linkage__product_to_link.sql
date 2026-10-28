@@ -1,14 +1,62 @@
 with
-    product_author as (
+    offer_author as (
         select
             offer_product_id,
-            author as artist_name,
+            author,
             offer_category_id,
-            "author" as artist_type,
             sum(coalesce(total_individual_bookings, 0)) as total_booking_count
         from {{ ref("mrt_global__offer") }}
         where offer_product_id != ""
         group by offer_product_id, author, offer_category_id
+    ),
+
+    titelive_book_authors as (
+        select distinct
+            product.id as offer_product_id,
+            lower(trim(json_value(contributor, "$.name"))) as artist_name
+        from {{ ref("int_applicative__product") }} as product
+        inner join
+            {{ ref("snapshot_raw__titelive_products") }} as titelive
+            on product.ean = titelive.ean
+        cross join
+            unnest(
+                coalesce(
+                    json_query_array(titelive.json_raw, "$.contributor"),
+                    json_query_array(titelive.json_raw, "$.article[0].contributor")
+                )
+            ) as contributor
+        where
+            product.subcategoryid = "LIVRE_PAPIER"
+            and product.ean is not null
+            and titelive.dbt_valid_to is null
+            and titelive.json_raw is not null
+            and (
+                json_value(contributor, "$.role.id") = "30"
+                or exists (
+                    select 1 as found
+                    from unnest(json_query_array(contributor, "$.role")) as role_item
+                    where json_value(role_item, "$.id") = "30"
+                )
+            )
+    ),
+
+    product_author as (
+        select
+            offer_author.offer_product_id,
+            offer_author.offer_category_id,
+            "author" as artist_type,
+            coalesce(
+                titelive_book_authors.artist_name, offer_author.author
+            ) as artist_name,
+            sum(offer_author.total_booking_count) as total_booking_count
+        from offer_author
+        left join
+            titelive_book_authors
+            on offer_author.offer_product_id = titelive_book_authors.offer_product_id
+        group by
+            offer_author.offer_product_id,
+            coalesce(titelive_book_authors.artist_name, offer_author.author),
+            offer_author.offer_category_id
     ),
 
     product_performer as (
@@ -60,6 +108,7 @@ with
             artist_type,
             total_booking_count
         from product_author
+        where artist_name is not null and artist_name != ""
         union all
         select
             offer_product_id,

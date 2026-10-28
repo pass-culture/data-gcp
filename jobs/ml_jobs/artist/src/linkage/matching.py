@@ -162,17 +162,25 @@ def create_artists_tables(
     if artist_df is None:
         artist_df = pd.DataFrame(columns=[ARTIST_ID_KEY])
 
+    # Deduplicate on PRODUCTS_KEYS (offer_product_id, artist_id, artist_type):
+    # - In preproc_linked_products_df: multiple raw artist_name variants for the same product
+    #   can normalize to the same artist_name_to_match and match the same existing artist_id.
+    # - Across preproc_linked_products_df and preproc_unlinked_products_df: a product with
+    #   multiple artist name variants can match an existing artist_id both via alias matching
+    #   (Comment.linked_to_existing_artist) and via Wikidata matching (Comment.linked_to_new_artist).
     delta_product_artist_link_df = pd.concat(
         [
             products_to_remove_df.filter(PRODUCTS_KEYS).assign(
                 **{ACTION_KEY: Action.remove, COMMENT_KEY: Comment.removed_linked}
             ),
-            preproc_linked_products_df.filter(PRODUCTS_KEYS).assign(
+            preproc_linked_products_df.filter(PRODUCTS_KEYS)
+            .assign(
                 **{
                     ACTION_KEY: Action.add,
                     COMMENT_KEY: Comment.linked_to_existing_artist,
                 }
-            ),
+            )
+            .drop_duplicates(),
             preproc_unlinked_products_df.merge(
                 exploded_artist_alias_df,
                 how="left",
@@ -188,7 +196,7 @@ def create_artists_tables(
             )
             .drop_duplicates(),
         ]
-    )
+    ).drop_duplicates(subset=PRODUCTS_KEYS, keep="first")
     delta_artist_df = (
         exploded_artist_alias_df.sort_values(
             by=[

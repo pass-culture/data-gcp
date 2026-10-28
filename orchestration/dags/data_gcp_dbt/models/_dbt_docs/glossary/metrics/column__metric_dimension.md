@@ -48,6 +48,30 @@ True when the EPCI is under statistical secrecy over the rolling window of the r
 True when the municipality is under statistical secrecy over the rolling window of the row (`rolling_window_months_count`): fewer than 3 active partners, top partner over 85% of the revenue, no revenue, or secondary secret (when only one municipality of its EPCI is under primary secret, the other municipality with the smallest revenue is masked too). True means its revenue must not be published.
 {% enddocs %}
 
+{% docs column__has_department_activity %}
+Indicates whether the department has activity over the rolling window (at least one active partner or a positive revenue). Territories without activity are not masked: their revenue is displayed as 0.
+{% enddocs %}
+
+{% docs column__is_department_secret_stat %}
+Flag to use to mask financial data at the department level: true when the department has activity and is subject to primary or secondary statistical secrecy (has_department_activity and is_department_secret).
+{% enddocs %}
+
+{% docs column__has_epci_activity %}
+Indicates whether the EPCI has activity over the rolling window (at least one active partner or a positive revenue). Territories without activity are not masked: their revenue is displayed as 0.
+{% enddocs %}
+
+{% docs column__is_epci_secret_stat %}
+Flag to use to mask financial data at the EPCI level: true when the EPCI has activity and is subject to primary or secondary statistical secrecy (has_epci_activity and is_epci_secret).
+{% enddocs %}
+
+{% docs column__has_municipality_activity %}
+Indicates whether the municipality has activity over the rolling window (at least one active partner or a positive revenue). Territories without activity are not masked: their revenue is displayed as 0.
+{% enddocs %}
+
+{% docs column__is_municipality_secret_stat %}
+Flag to use to mask financial data at the municipality level: true when the municipality has activity and is subject to primary or secondary statistical secrecy (has_municipality_activity and is_municipality_secret).
+{% enddocs %}
+
 {% docs column__department_secret_reason %}
 French display label of `department_secret_reason_code`. Stored values: `Pas de chiffre d'affaire`, `Nombre de partenaires faible (< 3)`, `Concentration forte du CA (> 85%)`, `Les deux raisons (< 3 partenaires ET > 85% CA)`, `Secret secondaire (masquage par soustraction)`, `Non soumis au secret`. Filter on the code, not on the label.
 {% enddocs %}

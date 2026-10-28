@@ -126,6 +126,7 @@ def create_artists_tables(
     products_to_remove_df=None,
     preproc_linked_products_df=None,
     artist_df=None,
+    product_artist_link_df=None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Create delta tables for products artist links and artists with action tracking.
@@ -138,14 +139,14 @@ def create_artists_tables(
             with exploded aliases for new artists to be created.
         products_to_remove_df (pd.DataFrame, optional): DataFrame containing products to be removed
             from the linked products table. Defaults to empty DataFrame.
-        raw_linked_products_df (pd.DataFrame, optional): DataFrame containing raw products that
-            have been linked to existing artists. Defaults to empty DataFrame.
         preproc_linked_products_df (pd.DataFrame, optional): DataFrame containing preprocessed
             products that have been linked to existing artists. Defaults to empty DataFrame.
         artist_df (pd.DataFrame, optional): DataFrame containing existing artists to avoid
             duplicating when creating new artists. Defaults to empty DataFrame with ARTIST_ID_KEY column.
+        product_artist_link_df (pd.DataFrame, optional): DataFrame containing existing product-artist
+            links to avoid re-adding links that already exist in the database.
     Returns:
-        tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: A tuple containing:
+        tuple[pd.DataFrame, pd.DataFrame]: A tuple containing:
             - delta_product_df: DataFrame with product changes including action tracking
               (add/remove) and comments describing the operation type.
             - delta_artist_df: DataFrame with new artists to be added, deduplicated
@@ -161,6 +162,8 @@ def create_artists_tables(
         preproc_linked_products_df = pd.DataFrame(columns=PRODUCTS_KEYS)
     if artist_df is None:
         artist_df = pd.DataFrame(columns=[ARTIST_ID_KEY])
+    if product_artist_link_df is None:
+        product_artist_link_df = pd.DataFrame(columns=PRODUCTS_KEYS)
 
     # Deduplicate on PRODUCTS_KEYS (offer_product_id, artist_id, artist_type):
     # - In preproc_linked_products_df: multiple raw artist_name variants for the same product
@@ -168,11 +171,8 @@ def create_artists_tables(
     # - Across preproc_linked_products_df and preproc_unlinked_products_df: a product with
     #   multiple artist name variants can match an existing artist_id both via alias matching
     #   (Comment.linked_to_existing_artist) and via Wikidata matching (Comment.linked_to_new_artist).
-    delta_product_artist_link_df = pd.concat(
+    added_links_df = pd.concat(
         [
-            products_to_remove_df.filter(PRODUCTS_KEYS).assign(
-                **{ACTION_KEY: Action.remove, COMMENT_KEY: Comment.removed_linked}
-            ),
             preproc_linked_products_df.filter(PRODUCTS_KEYS)
             .assign(
                 **{
@@ -197,6 +197,42 @@ def create_artists_tables(
             .drop_duplicates(),
         ]
     ).drop_duplicates(subset=PRODUCTS_KEYS, keep="first")
+
+    # Exclude links that resolved back to the exact same artist_id as an existing link:
+    # - If a candidate removal in products_to_remove_df is also in added_links_df (e.g. matched
+    #   back to the same artist_id via a Wikidata alias), the link is still valid: neither remove nor re-add it.
+    # - If an added link already exists in product_artist_link_df, do not re-add it.
+    removed_links_df = (
+        products_to_remove_df.filter(PRODUCTS_KEYS)
+        .drop_duplicates()
+        .merge(
+            added_links_df.loc[:, PRODUCTS_KEYS].drop_duplicates(),
+            on=PRODUCTS_KEYS,
+            how="left",
+            indicator=True,
+        )
+        .loc[lambda df: df["_merge"] == "left_only", PRODUCTS_KEYS]
+        .assign(**{ACTION_KEY: Action.remove, COMMENT_KEY: Comment.removed_linked})
+    )
+    existing_links_to_exclude_df = pd.concat(
+        [
+            products_to_remove_df.filter(PRODUCTS_KEYS),
+            product_artist_link_df.filter(PRODUCTS_KEYS),
+        ]
+    ).drop_duplicates()
+    filtered_added_links_df = added_links_df.merge(
+        existing_links_to_exclude_df,
+        on=PRODUCTS_KEYS,
+        how="left",
+        indicator=True,
+    ).loc[
+        lambda df: df["_merge"] == "left_only",
+        [*PRODUCTS_KEYS, ACTION_KEY, COMMENT_KEY],
+    ]
+
+    delta_product_artist_link_df = pd.concat(
+        [removed_links_df, filtered_added_links_df], ignore_index=True
+    )
     delta_artist_df = (
         exploded_artist_alias_df.sort_values(
             by=[

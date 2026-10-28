@@ -7,6 +7,7 @@ from src.common.constants import (
 )
 from src.linkage.constants import (
     ACTION_KEY,
+    ARTIST_NAME_TO_MATCH_KEY,
     ARTIST_TYPE_KEY,
     COMMENT_KEY,
     OFFER_CATEGORY_ID_KEY,
@@ -14,6 +15,7 @@ from src.linkage.constants import (
     PRODUCTS_KEYS,
     ProductToLinkStatus,
 )
+from src.linkage.preprocessing_utils import prepare_artist_names_for_matching
 
 ALIAS_MERGE_COLUMNS = [
     ARTIST_ID_KEY,
@@ -26,30 +28,48 @@ ALIAS_MERGE_COLUMNS = [
 def get_products_to_remove_and_link_df(
     products_df: pd.DataFrame,
     product_artist_link_df: pd.DataFrame,
+    artist_df: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Identify products that need to be removed from artist links and new products that need to be linked.
-    This function performs an outer merge between current products and existing product-artist links
-    to determine which products are no longer valid (should be removed) and which new products
+    Identify products that need to be removed from artist links and products that need to be linked.
+    This function compares current products (and their normalized artist names) against existing
+    product-artist links (enriched with the linked artist's normalized name from artist_df) to
+    determine which links are no longer valid (should be removed) and which product-artist pairs
     need to be linked to artists.
     Args:
-        products_df (pd.DataFrame): DataFrame containing current products with merge columns
+        products_df (pd.DataFrame): DataFrame containing current products with artist names
         product_artist_link_df (pd.DataFrame): DataFrame containing existing product-artist links
-            with merge columns and artist ID
+            with product ID, artist type, and artist ID
+        artist_df (pd.DataFrame): DataFrame containing existing artists with artist ID and artist name
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]: A tuple containing:
-            - products_to_remove_df: DataFrame with products that exist in links but not in
+            - products_to_remove_df: DataFrame with product-artist links that no longer match
               current products (should be removed from artist links)
-            - products_to_link_df: DataFrame with new products that need to be linked to artists
+            - products_to_link_df: DataFrame with new or updated product-artist rows that need
+              to be linked to artists
     Side Effects:
         Logs information about the number of products to remove and link, along with merge statistics
     """
-    MERGE_COLUMNS = [PRODUCT_ID_KEY, ARTIST_TYPE_KEY]
+    MERGE_COLUMNS = [PRODUCT_ID_KEY, ARTIST_TYPE_KEY, ARTIST_NAME_TO_MATCH_KEY]
 
-    actual_product_ids = products_df.loc[:, MERGE_COLUMNS].reset_index(drop=True)
+    preproc_products_df = products_df.pipe(prepare_artist_names_for_matching)
+    preproc_artists_df = (
+        artist_df.loc[:, [ARTIST_ID_KEY, ARTIST_NAME_KEY]]
+        .drop_duplicates()
+        .pipe(prepare_artist_names_for_matching)
+        .loc[:, [ARTIST_ID_KEY, ARTIST_NAME_TO_MATCH_KEY]]
+        .drop_duplicates()
+    )
+
+    actual_product_ids = (
+        preproc_products_df.loc[:, MERGE_COLUMNS]
+        .drop_duplicates()
+        .reset_index(drop=True)
+    )
     linked_product_ids = (
         product_artist_link_df.loc[:, PRODUCTS_KEYS]
         .drop_duplicates()
+        .merge(preproc_artists_df, how="left", on=ARTIST_ID_KEY)
         .reset_index(drop=True)
     )
     merged_df = actual_product_ids.merge(
@@ -58,27 +78,33 @@ def get_products_to_remove_and_link_df(
         left_on=MERGE_COLUMNS,
         right_on=MERGE_COLUMNS,
         indicator=True,
-    ).replace(
-        {
-            "_merge": {
+    ).assign(
+        _merge=lambda df: df["_merge"].cat.rename_categories(
+            {
                 "left_only": ProductToLinkStatus.not_matched_with_artists_key,
                 "right_only": ProductToLinkStatus.removed_products_key,
                 "both": ProductToLinkStatus.matched_with_artists_key,
             }
-        }
+        )
     )
 
-    products_to_remove_df = merged_df.loc[
-        lambda df: df._merge == ProductToLinkStatus.removed_products_key,
-        PRODUCTS_KEYS,
-    ]
+    products_to_remove_df = (
+        merged_df.loc[
+            lambda df: df._merge == ProductToLinkStatus.removed_products_key,
+            PRODUCTS_KEYS,
+        ]
+        .drop_duplicates()
+        .reset_index(drop=True)
+    )
     products_to_link_df = (
         merged_df.loc[
             lambda df: df._merge == ProductToLinkStatus.not_matched_with_artists_key,
             MERGE_COLUMNS,
         ]
-        .merge(products_df, how="left", on=MERGE_COLUMNS)
+        .merge(preproc_products_df, how="left", on=MERGE_COLUMNS)
+        .drop(columns=[ARTIST_NAME_TO_MATCH_KEY])
         .drop_duplicates()
+        .reset_index(drop=True)
     )
 
     merge_stats_df = merged_df._merge.value_counts().reset_index()
@@ -99,8 +125,8 @@ def build_artist_alias(
     product_artist_link_df: pd.DataFrame,
     artist_df: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Combine artist names from artist_df and product_df to create a comprehensive alias dataframe."""
-    artist_alias_from_artist_names_df = (
+    """Build artist alias dataframe from artist_df and existing product links."""
+    return (
         product_artist_link_df.merge(
             artist_df.assign(
                 artist_name=lambda df: df[ARTIST_NAME_KEY].str.lower()
@@ -118,35 +144,6 @@ def build_artist_alias(
             validate="many_to_one",
         )
         .loc[:, ALIAS_MERGE_COLUMNS]
-        .drop_duplicates()
-    )
-
-    # Use artist names from products when we have a clear 1:1 mapping between product and artist
-    safe_product_df = product_df.loc[
-        lambda df: ~df.duplicated(subset=[PRODUCT_ID_KEY, ARTIST_TYPE_KEY], keep=False)
-    ]
-    product_with_names_df = product_artist_link_df.merge(
-        safe_product_df,
-        how="inner",
-        left_on=[PRODUCT_ID_KEY, ARTIST_TYPE_KEY],
-        right_on=[PRODUCT_ID_KEY, ARTIST_TYPE_KEY],
-        validate="many_to_one",
-    )
-    artist_alias_based_on_products_df = (
-        product_with_names_df.loc[:, ALIAS_MERGE_COLUMNS]
-        .drop_duplicates()
-        .sort_values(by=ALIAS_MERGE_COLUMNS)
-    )
-
-    # Combine both sources of artist aliases and remove duplicates
-    return (
-        pd.concat(
-            [
-                artist_alias_from_artist_names_df,
-                artist_alias_based_on_products_df,
-            ],
-            axis=0,
-        )
         .drop_duplicates()
         .reset_index(drop=True)
     )

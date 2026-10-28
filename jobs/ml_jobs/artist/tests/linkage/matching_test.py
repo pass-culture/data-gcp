@@ -182,6 +182,25 @@ class TestCreateArtistsTables:
         assert row[ARTIST_ID_KEY] == "new-artist-id"
         assert row["comment"] == Comment.linked_to_existing_artist
 
+    def test_excludes_links_that_rematch_same_existing_artist_id(self):
+        # Product prod-2 was tentatively in products_to_remove_df for new-artist-id,
+        # but resolved back to new-artist-id via Wikidata matching: net delta must be empty.
+        products_to_remove_df = pd.DataFrame(
+            {
+                PRODUCT_ID_KEY: ["prod-2"],
+                ARTIST_ID_KEY: ["new-artist-id"],
+                ARTIST_TYPE_KEY: ["music"],
+            }
+        )
+
+        delta_product_df, _ = create_artists_tables(
+            preproc_unlinked_products_df=self._preproc_unlinked_products_df(),
+            exploded_artist_alias_df=self._exploded_artist_alias_df(),
+            products_to_remove_df=products_to_remove_df,
+        )
+
+        assert delta_product_df.empty
+
 
 def _wiki_row(
     alias, wiki_artist_name, raw_alias, score, gkg, wikidata_id, **category_flags

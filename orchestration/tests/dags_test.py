@@ -9,6 +9,7 @@ from unittest import mock
 import pandas as pd
 from airflow.models import DagBag
 from common.operators.gce import InstallDependenciesOperator
+from common.operators.kubernetes import CustomKubernetesPodOperator
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import InvalidVersion, Version
 
@@ -28,6 +29,46 @@ TEST_DAG_FILE_PATTERN = "*__test__*.py"
 # chosen by whoever triggers the run (not pinned to one microservice), so
 # there is nothing fixed to check against pyproject.toml.
 INSTALL_DEPENDENCIES_CHECK_SKIP_DAG_IDS = {"gcp_launch_vm"}
+
+# Demo/doc DAGs under jobs/examples/ showcase operator features and aren't
+# tied to a real, deployed microservice, so there's nothing to check them
+# against.
+KUBERNETES_POD_CHECK_SKIP_PATH_SUBSTRINGS = ("/jobs/examples/",)
+
+_RUNTIME_IMAGE_NAME_RE = re.compile(r"^py(\d)(\d+)$")
+
+
+def _check_python_version_against_pyproject(
+    service_dir: Path,
+    python_version: str,
+    location: str,
+    operator_label: str,
+    errors: list[str],
+) -> None:
+    pyproject_path = service_dir / "pyproject.toml"
+    if not pyproject_path.is_file():
+        errors.append(f"{location}: no pyproject.toml found at {pyproject_path}.")
+        return
+
+    with pyproject_path.open("rb") as f:
+        pyproject = tomllib.load(f)
+    requires_python = pyproject.get("project", {}).get("requires-python")
+    if not requires_python:
+        # Not every job declares requires-python yet; nothing to check.
+        return
+
+    try:
+        is_compatible = Version(python_version) in SpecifierSet(requires_python)
+    except (InvalidVersion, InvalidSpecifier) as exc:
+        errors.append(f"{location}: {exc}")
+        return
+
+    if not is_compatible:
+        errors.append(
+            f"{location}: {operator_label} uses python_version={python_version!r} "
+            f"but {pyproject_path.relative_to(REPO_ROOT)} requires "
+            f"{requires_python!r}."
+        )
 
 
 def _strip_matching_quotes(value: str) -> str:
@@ -153,40 +194,83 @@ class TestDags(unittest.TestCase):
                     )
                     continue
 
-                pyproject_path = service_dir / "pyproject.toml"
-                if not pyproject_path.is_file():
-                    errors.append(
-                        f"{location}: no pyproject.toml found at {pyproject_path} "
-                        f"(base_dir={base_dir!r})."
-                    )
-                    continue
-
-                with pyproject_path.open("rb") as f:
-                    pyproject = tomllib.load(f)
-                requires_python = pyproject.get("project", {}).get("requires-python")
-                if not requires_python:
-                    # Not every job declares requires-python yet; nothing to check.
-                    continue
-
-                try:
-                    is_compatible = Version(python_version) in SpecifierSet(
-                        requires_python
-                    )
-                except (InvalidVersion, InvalidSpecifier) as exc:
-                    errors.append(f"{location}: {exc}")
-                    continue
-
-                if not is_compatible:
-                    errors.append(
-                        f"{location}: InstallDependenciesOperator uses "
-                        f"python_version={python_version!r} but "
-                        f"{pyproject_path.relative_to(REPO_ROOT)} requires "
-                        f"{requires_python!r}."
-                    )
+                _check_python_version_against_pyproject(
+                    service_dir,
+                    python_version,
+                    location,
+                    "InstallDependenciesOperator",
+                    errors,
+                )
 
         self.assertFalse(
             errors,
             "InstallDependenciesOperator.python_version must be explicitly set "
             "and compatible with the target microservice's pyproject.toml "
             "requires-python:\n" + "\n".join(errors),
+        )
+
+    def test_kubernetes_pod_operator_runtime_image_matches_pyproject_convention(self):
+        # Unlike InstallDependenciesOperator (which runs `uv sync --python
+        # <version>` and hard-fails on a mismatch), gitsynced KPO tasks run
+        # `uv run` with no --python flag: if the base image's interpreter
+        # doesn't satisfy the microservice's requires-python, uv transparently
+        # downloads a matching one at runtime instead of crashing. So this is
+        # NOT a correctness guard — it's a convention/cold-start-cost check:
+        # picking a base image whose bundled Python already matches the
+        # target microservice avoids that extra per-run interpreter download.
+        errors = []
+
+        for dag in self.dagbag.dags.values():
+            fileloc = Path(dag.fileloc).as_posix()
+            if any(
+                s in fileloc for s in KUBERNETES_POD_CHECK_SKIP_PATH_SUBSTRINGS
+            ) or fnmatch.fnmatch(Path(dag.fileloc).name, TEST_DAG_FILE_PATTERN):
+                continue
+
+            for task in dag.tasks:
+                if not isinstance(task, CustomKubernetesPodOperator):
+                    continue
+                if task.runtime_mode != "gitsynced":
+                    # "containerized" mode runs an arbitrary pre-built image with
+                    # no convention tying it to a microservice's python version.
+                    continue
+
+                location = f"{dag.dag_id}.{task.task_id}"
+
+                # task.image is the fully-resolved "<registry>/<name>:<tag>" ref
+                # CustomKubernetesPodOperator.__init__ builds from runtime_image
+                # (falling back to the "py312" base image when unset) — reading
+                # it avoids re-deriving that default ourselves.
+                image_name = task.image.rsplit(":", 1)[0].rsplit("/", 1)[-1]
+                match = _RUNTIME_IMAGE_NAME_RE.match(image_name)
+                if not match:
+                    errors.append(
+                        f"{location}: could not infer a python version from "
+                        f"image {task.image!r} (expected a 'pyX.Y'-style base "
+                        "image name). If this is intentional, exclude it the "
+                        "same way jobs/examples/ DAGs are excluded above."
+                    )
+                    continue
+                python_version = ".".join(match.groups())
+
+                if not task.microservice_path:
+                    errors.append(
+                        f"{location}: gitsynced task has no microservice_path."
+                    )
+                    continue
+
+                _check_python_version_against_pyproject(
+                    REPO_ROOT / task.microservice_path,
+                    python_version,
+                    location,
+                    "CustomKubernetesPodOperator",
+                    errors,
+                )
+
+        self.assertFalse(
+            errors,
+            "CustomKubernetesPodOperator's gitsynced runtime image should match "
+            "the target microservice's pyproject.toml requires-python (uv will "
+            "still work otherwise, but pays for an extra interpreter download "
+            "on every run):\n" + "\n".join(errors),
         )

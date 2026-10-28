@@ -533,6 +533,14 @@ def attach_external_dependency_sensor(
     - "skip": the sensor is SKIPPED instead, which cascades as a skip to this
       operator (and its downstream dbt nodes) via none_failed_min_one_success.
 
+    It can also set meta.external_dependency_offset_days / _hours to shift the
+    window `delayed_waiting_operator` searches for the external DAG run. This
+    matters when the external DAG is scheduled to start *after* this one: the
+    external run aligned with this DAG's own logical_date hasn't happened yet
+    (it may even depend on this very run finishing first), so the sensor must
+    be pointed at an earlier external run instead. Defaults to 0 (no shift),
+    matching `delayed_waiting_operator`'s own defaults.
+
     The operator's dbt parents (set up later, once the full dependency graph
     is known) are interleaved before the sensor rather than running alongside
     it: see `connect_dbt_dependency`, which routes `parent >> operator` edges
@@ -557,6 +565,8 @@ def attach_external_dependency_sensor(
             external_dag_id=node_meta["external_dag_id"],
             external_task_id=node_meta["external_task_id"],
             soft_fail=on_skip == "skip",
+            offset_days=node_meta.get("external_dependency_offset_days", 0),
+            offset_hours=node_meta.get("external_dependency_offset_hours", 0),
             # Mirrors the operator's own trigger_rule: once dbt parents are
             # interleaved in front of the sensor (see
             # connect_dbt_dependency), the sensor itself must tolerate a

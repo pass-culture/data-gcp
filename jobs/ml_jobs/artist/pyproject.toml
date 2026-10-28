@@ -16,7 +16,7 @@ dependencies = [
     "pandas[parquet,performance]>=2.2.3",
     "pytest>=9.0.3",
     "ruff>=0.4.5",
-    "setuptools >= 83.0.0",
+    "setuptools >= 84.1.0",
     "tenacity>=9.1.2",
     "tornado >= 6.5.9", # GHSA-wwv5-g3v4-889x, GHSA-8423-8fgw-73vq, GHSA-mpf4-983q-p7j4, PYSEC-2026-3928, GHSA-c2m8, GHSA-chx6
     "typer>=0.12.3",
@@ -51,7 +51,7 @@ similarity = [
     "mwparserfromhell>=0.7.2",
     "networkx>=3.4.2",
     "pillow >= 13.0.0", # GHSA-jw5h-h276-9jcc, GHSA-2jxr-v4xp-q87w, GHSA-9m85-6jwx-3479,
-    "pydantic-ai>=1.107.4",
+    "pydantic-ai>=2.53.0",
     "sentence-transformers>=5.6.0",
 ]
 
@@ -123,7 +123,7 @@ constraint-dependencies = [
     "soupsieve >= 2.8.4", # GHSA-wf34-78mc-v73j, GHSA-p7q2-5c5x-qfhw
     "python-socketio >= 5.16.2", # GHSA-q9x8-6j69-g388
     "python-engineio >= 4.13.2", # GHSA-5rqg-hfv6-mmr4, GHSA-j37r-j4qc-9xfm
-    "mcp >= 1.28.1", # GHSA-qq9j-2wq5-9gf3, GHSA-4cc4-g4x5-r7wf, GHSA-3gqf-j8h7-4q7g
+    "mcp >= 1.30.0", # GHSA-qq9j-2wq5-9gf3, GHSA-4cc4-g4x5-r7wf, GHSA-3gqf-j8h7-4q7g, GHSA-5h93-6whr-6q8j, GHSA-84m7-p3x7-pcfv, GHSA-rwrf-2pqf-9j8j, GHSA-w4fh-qvv9-3v23
     "mistune >= 3.3.0", # GHSA-8mp2-v27r-99xp, GHSA-8g87-j6q8-g93x, GHSA-58cw-g322-p94v, GHSA-v87v-83h2-53w7
     "nltk >= 3.10.0", # GHSA-cgvg-3q2f-4gxm, GHSA-p9pp-j76j-8x4v, GHSA-5j2p-q7q8-hcc7
     "pyasn1 >= 0.6.4", # GHSA-5q8p-9xrr-4jqm, GHSA-gqpq-g87q-wr6g, GHSA-f39v-xm4p-9hm7
@@ -132,8 +132,8 @@ constraint-dependencies = [
     # resolved version) but have no fixed release yet — nothing to bump to; revisit
     # when a fix lands.
     "aiohttp >= 3.14.4", # CVE-2026-47265, CVE-2026-34993
-    "authlib >= 1.6.12", # CVE-2026-41425, CVE-2026-44681, CVE-2026-41479
-    # cryptography skipped: mlflow>=3.12.0 hard-requires cryptography<50, incompatible with >=50.0.0 (GHSA-g6cj-pr64-35w5, PYSEC-2026-3552)
+    "authlib >= 1.9.1", # CVE-2026-41425, CVE-2026-44681, CVE-2026-41479, GHSA-6v38-4h7w-rj9h, GHSA-7vr2-2fgp-9w7p, GHSA-8m4g-j4wp-wgcg, GHSA-c5mf-xmp2-59rc, GHSA-fch4-3c6x-j4gc, GHSA-jj7h-c3hg-m23x, GHSA-q686-2qmg-hqc7, GHSA-x4rv-c3wx-4cr8
+    "cryptography >= 50.0.0", # GHSA-g6cj-pr64-35w5, PYSEC-2026-3552
     "gitpython >= 3.2.1", # GHSA-4gmw-gg2m-w46p, GHSA-9rj7-rf2p-w77r, GHSA-hh9p-6wh2-4mfc, GHSA-jm78-9fvv-mhgr, GHSA-wvpp-8hx9-p66j, PYSEC-2026-3982, PYSEC-2026-3983, PYSEC-2026-3984, GHSA-239g-whfq-7xj9, GHSA-83vg-56qc-22m7, GHSA-g5vv-9gxw-82hx
     "sqlparse >= 0.6.0", # GHSA-3496-9g83-7v6x, GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-pwgv-4x5q-6m9f
     "anyio >= 4.14.2", # GHSA-82r6-8w77-94w6, GHSA-5p39-cfhj-2xmp
@@ -143,10 +143,10 @@ constraint-dependencies = [
     "keras >= 3.14.0", # PYSEC-2026-2324
     "click >= 8.3.3", # PYSEC-2026-2132
     "idna >= 3.15", # CVE-2026-45409
-    "mako >= 1.3.12", # CVE-2026-44307, CVE-2026-41205
+    "mako >= 1.4.2", # CVE-2026-44307, CVE-2026-41205, GHSA-5639-2j2p-m4mx, PYSEC-2026-4243
     "pillow >= 13.0.0", # CVE-2026-42309, CVE-2026-42311, CVE-2026-42310, CVE-2026-40192, CVE-2026-42308, GHSA-332p-7hrc-92wf, GHSA-5x8w-8jj5-q52h, GHSA-8g5g-8vmr-9782, GHSA-v9pv-5gc8-w2m6, GHSA-w889-685w-c8fh
     "pyarrow >= 23.0.1", # CVE-2026-25087
-    "pydantic-ai-slim >= 1.107.4", # CVE-2026-46678, GHSA-h4xc-3qfq-jf93
+    "pydantic-ai-slim >= 2.53.0", # CVE-2026-46678, GHSA-h4xc-3qfq-jf93, GHSA-4x9p-g9wm-8q7f, GHSA-6fqq-452j-qhrp, GHSA-fpf4-vwcp-v4hp, GHSA-v36g-jcw9-x7cw, GHSA-vmxc-h2x2-jmf3
     "pyjwt >= 2.14.0", # CVE-2026-48522, CVE-2026-48524, CVE-2026-48525, CVE-2026-48526, GHSA-ffc3-869f-jxw9
     "python-dotenv >= 1.2.2", # CVE-2026-28684
     "python-multipart >= 0.0.27", # CVE-2026-40347, CVE-2026-42561
@@ -156,4 +156,10 @@ constraint-dependencies = [
     "graphql-core >= 3.2.12", # GHSA-r77w-qph3-7vf8, GHSA-vj8h-fx38-h3vc
     "fsspec >= 2026.6.0", # GHSA-27vj-qcqg-25rc
     "certifi >= 2026.10.19", # GHSA-6q48-6c7w-9gw2
+    "dnspython >= 2.9.0", # GHSA-45c3-73f7-pv4m
+    "fastmcp-slim >= 3.4.10", # GHSA-7xgj-8392-5q4r
+    "multidict >= 6.9.1", # GHSA-54p9-h82j-f925
+    "oauthlib >= 4.0.0", # GHSA-3jp2-3mrg-2vxc, GHSA-hj66-6f7g-4r5v, GHSA-xpv3-w29h-x7cv
+    "opentelemetry-api >= 1.45.1", # GHSA-xcq7-p3pf-p88h
+    "werkzeug >= 3.1.9", # GHSA-g6x2-hccm-hh4m
 ]

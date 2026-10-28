@@ -276,7 +276,7 @@ def link_new_products(
 
     # 2. Split products between to remove and to link
     products_to_remove_df, products_to_link_df = get_products_to_remove_and_link_df(
-        product_df, product_artist_link_df
+        product_df, product_artist_link_df, artist_df
     )
 
     # 3. Match products to link with artists on both raw and preprocessed offer names
@@ -321,6 +321,7 @@ def link_new_products(
         products_to_remove_df=products_to_remove_df,
         preproc_linked_products_df=preproc_linked_products_df,
         artist_df=artist_df,
+        product_artist_link_df=product_artist_link_df,
     )
 
     # 7. Sanity check for consistency

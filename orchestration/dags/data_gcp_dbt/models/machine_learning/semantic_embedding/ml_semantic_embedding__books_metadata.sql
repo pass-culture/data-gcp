@@ -29,7 +29,6 @@
     )
 }}
 {# item_embedding starts at 4 am (prod and  7am stg) while dbt dag runs at 2:45 am so we use a negative offset of few hours to point the delayed sensor at the correct dagrun (from 6 hours after the dbt dag run  within the previous 24 hours) #}
-
 select
     bm.item_id,
     bm.content_hash,

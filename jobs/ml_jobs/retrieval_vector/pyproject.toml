@@ -54,7 +54,7 @@ environments = [
 constraint-dependencies = [
     "cryptography >= 50.0.0", # GHSA-g6cj-pr64-35w5, PYSEC-2026-3552
     "urllib3 >= 2.8.0", # GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j
-    "setuptools >= 83.0.0", # GHSA-6j4f-hj78-v4c9
+    "setuptools >= 84.1.0", # GHSA-6j4f-hj78-v4c9, GHSA-xmj3-9gf7-h52w
     "pygments >= 2.20.0", # GHSA-x233-2p5x-gpf5
     "bleach >= 6.4.0", # GHSA-8jxr-4gfq-qg7h, GHSA-q4r7-2j3p-rxmx
     "python-dotenv >= 1.2.2", # GHSA-mf9w-mj56-hr94
@@ -69,7 +69,7 @@ constraint-dependencies = [
     "python-socketio >= 5.16.2", # GHSA-q9x8-6j69-g388
     "python-engineio >= 4.13.2", # GHSA-5rqg-hfv6-mmr4, GHSA-j37r-j4qc-9xfm
     "mcp >= 1.28.1", # GHSA-qq9j-2wq5-9gf3, GHSA-4cc4-g4x5-r7wf, GHSA-3gqf-j8h7-4q7g
-    "mako >= 1.3.12", # GHSA-2h4p-vjrc-8xpq, GHSA-x3qc-7vxr-3493
+    "mako >= 1.4.2", # GHSA-2h4p-vjrc-8xpq, GHSA-x3qc-7vxr-3493, GHSA-5639-2j2p-m4mx, PYSEC-2026-4243
     "mistune >= 3.3.0", # GHSA-8mp2-v27r-99xp, GHSA-8g87-j6q8-g93x, GHSA-58cw-g322-p94v, GHSA-v87v-83h2-53w7
     "nltk >= 3.10.0", # GHSA-cgvg-3q2f-4gxm, GHSA-p9pp-j76j-8x4v, GHSA-5j2p-q7q8-hcc7
     "pillow >= 13.0.0", # GHSA-jw5h-h276-9jcc, GHSA-2jxr-v4xp-q87w, GHSA-9m85-6jwx-3479, GHSA-332p-7hrc-92wf, GHSA-5x8w-8jj5-q52h, GHSA-8g5g-8vmr-9782, GHSA-v9pv-5gc8-w2m6, GHSA-w889-685w-c8fh
@@ -85,6 +85,10 @@ constraint-dependencies = [
     # mlflow: GHSA-h7x2-h6g9-p789 (SSRF via api_base) has no fixed release yet; revisit when a fix lands.
     "graphql-core >= 3.2.12", # GHSA-r77w-qph3-7vf8, GHSA-vj8h-fx38-h3vc
     "fsspec >= 2026.6.0", # GHSA-27vj-qcqg-25rc
+    "multidict >= 6.9.1", # GHSA-54p9-h82j-f925
+    "oauthlib >= 4.0.0", # GHSA-3jp2-3mrg-2vxc, GHSA-hj66-6f7g-4r5v, GHSA-xpv3-w29h-x7cv
+    "opentelemetry-api >= 1.45.1", # GHSA-xcq7-p3pf-p88h
+    "werkzeug >= 3.1.9", # GHSA-g6x2-hccm-hh4m
 ]
 
 [tool.uv.sources]

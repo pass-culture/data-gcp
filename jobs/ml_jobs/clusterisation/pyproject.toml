@@ -24,7 +24,7 @@ dependencies = [
     "pyarrow >= 23.0.1",
     "pynndescent>=0.5.13",
     "scipy>=1.13",
-    "setuptools >= 83.0.0",
+    "setuptools >= 84.1.0",
     "tensorflow>=2.16.2",
     "timeout-decorator>=0.5.0",
     "tqdm>=4.66.1",
@@ -65,6 +65,9 @@ constraint-dependencies = [
     "transformers >= 5.10.0", # GHSA-69w3-r845-3855, GHSA-29pf-2h5f-8g72, GHSA-fgcw-684q-jj6r, PYSEC-2025-217, GHSA-xrqw-3rrv-vx5w
     "click >= 8.3.3", # PYSEC-2026-2132
     "fsspec >= 2026.6.0", # GHSA-27vj-qcqg-25rc
+    "multidict >= 6.9.1", # GHSA-54p9-h82j-f925
+    "oauthlib >= 4.0.0", # GHSA-3jp2-3mrg-2vxc, GHSA-hj66-6f7g-4r5v, GHSA-xpv3-w29h-x7cv
+    "werkzeug >= 3.1.9", # GHSA-g6x2-hccm-hh4m
 ]
 environments = [
     "sys_platform == 'darwin'",

@@ -20,7 +20,7 @@ dependencies = [
     "pytest>=9.0.3",
     "requests >= 2.33.0",
     "sentence-transformers>=5.6.0",
-    "setuptools >= 83.0.0",
+    "setuptools >= 84.1.0",
     "torch >= 2.13.0",
     "tqdm>=4.66.4",
     "typer>=0.7.0",
@@ -94,6 +94,8 @@ constraint-dependencies = [
     "click >= 8.3.3", # PYSEC-2026-2132
     "pyarrow >= 23.0.1", # GHSA-rgxp-2hwp-jwgg, PYSEC-2026-113
     "fsspec >= 2026.6.0", # GHSA-27vj-qcqg-25rc
+    "multidict >= 6.9.1", # GHSA-54p9-h82j-f925
+    "oauthlib >= 4.0.0", # GHSA-3jp2-3mrg-2vxc, GHSA-hj66-6f7g-4r5v, GHSA-xpv3-w29h-x7cv
 ]
 environments = [
     "sys_platform == 'darwin'",

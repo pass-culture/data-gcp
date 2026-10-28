@@ -11,7 +11,7 @@ dependencies = [
     "loguru>=0.7.3",
     "pandas~=3.0",
     "rapidfuzz~=3.14",
-    "torch~=2.11",
+    "torch~=2.11", # GHSA-rrmf-rvhw-rf47 needs torch>=2.13.0, but pytorch-cu128 index has no such build yet; revisit when published
     "torchvision~=0.26",
     "tqdm>=4.67.3",
     "transformers~=5.8, >=5.10.0", # GHSA-xrqw-3rrv-vx5w
@@ -30,7 +30,7 @@ dev = [
 constraint-dependencies = [
     "cryptography >= 50.0.0", # GHSA-537c-gmf6-5ccf, GHSA-m2h6-j472-rp4c, GHSA-jwv3-5hgf-82ww, GHSA-g6cj-pr64-35w5, PYSEC-2026-3552
     "urllib3 >= 2.8.0", # GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j
-    # setuptools skipped: torch>=2.11 (cu128/linux) hard-requires setuptools<82, incompatible with >=83
+    # setuptools skipped: torch==2.11.0+cu128 (linux) hard-requires setuptools<82, incompatible with >=84.1.0 (GHSA-h35f-9h28-mq5c, GHSA-xmj3-9gf7-h52w, PYSEC-2026-3447)
     "pygments >= 2.20.0", # GHSA-x233-2p5x-gpf5
     "bleach >= 6.4.0", # GHSA-8jxr-4gfq-qg7h, GHSA-q4r7-2j3p-rxmx
     "python-dotenv >= 1.2.2", # GHSA-mf9w-mj56-hr94

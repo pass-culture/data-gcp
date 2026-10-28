@@ -35,7 +35,7 @@ constraint-dependencies = [
     "transformers >= 5.10.0", # GHSA-69w3-r845-3855, PYSEC-2025-217, GHSA-29pf-2h5f-8g72, GHSA-fgcw-684q-jj6r, GHSA-xrqw-3rrv-vx5w
     "cryptography >= 50.0.0", # GHSA-537c-gmf6-5ccf, GHSA-m2h6-j472-rp4c, GHSA-jwv3-5hgf-82ww, GHSA-g6cj-pr64-35w5, PYSEC-2026-3552
     "urllib3 >= 2.8.0", # GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j
-    "setuptools >= 83.0.0", # GHSA-6j4f-hj78-v4c9
+    "setuptools >= 84.1.0", # GHSA-6j4f-hj78-v4c9, GHSA-xmj3-9gf7-h52w
     "pygments >= 2.20.0", # GHSA-x233-2p5x-gpf5
     "bleach >= 6.4.0", # GHSA-8jxr-4gfq-qg7h, GHSA-q4r7-2j3p-rxmx
     "python-dotenv >= 1.2.2", # GHSA-mf9w-mj56-hr94
@@ -62,4 +62,8 @@ constraint-dependencies = [
     "sqlparse >= 0.6.0", # GHSA-3496-9g83-7v6x, GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-pwgv-4x5q-6m9f (pulled in by mlflow)
     "fsspec >= 2026.6.0", # GHSA-27vj-qcqg-25rc
     "filelock >= 4.2.1", # GHSA-v4x8-3wr5-3wq8
+    "multidict >= 6.9.1", # GHSA-54p9-h82j-f925
+    "oauthlib >= 4.0.0", # GHSA-3jp2-3mrg-2vxc, GHSA-hj66-6f7g-4r5v, GHSA-xpv3-w29h-x7cv
+    "opentelemetry-api >= 1.45.1", # GHSA-xcq7-p3pf-p88h
+    "werkzeug >= 3.1.9", # GHSA-g6x2-hccm-hh4m
 ]

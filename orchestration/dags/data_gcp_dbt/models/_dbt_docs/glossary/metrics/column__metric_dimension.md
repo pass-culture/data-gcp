@@ -48,6 +48,30 @@ Indicates whether the EPCI is subject to statistical secrecy over the 6-month ro
 Indicates whether the municipality is subject to statistical secrecy over the 6-month rolling window (true if active partners <= 3 or single partner revenue share > 85%).
 {% enddocs %}
 
+{% docs column__has_department_activity %}
+Indicates whether the department has activity over the rolling window (at least one active partner or a positive revenue). Territories without activity are not masked: their revenue is displayed as 0.
+{% enddocs %}
+
+{% docs column__is_department_secret_stat %}
+Flag to use to mask financial data at the department level: true when the department has activity and is subject to primary or secondary statistical secrecy (has_department_activity and is_department_secret).
+{% enddocs %}
+
+{% docs column__has_epci_activity %}
+Indicates whether the EPCI has activity over the rolling window (at least one active partner or a positive revenue). Territories without activity are not masked: their revenue is displayed as 0.
+{% enddocs %}
+
+{% docs column__is_epci_secret_stat %}
+Flag to use to mask financial data at the EPCI level: true when the EPCI has activity and is subject to primary or secondary statistical secrecy (has_epci_activity and is_epci_secret).
+{% enddocs %}
+
+{% docs column__has_municipality_activity %}
+Indicates whether the municipality has activity over the rolling window (at least one active partner or a positive revenue). Territories without activity are not masked: their revenue is displayed as 0.
+{% enddocs %}
+
+{% docs column__is_municipality_secret_stat %}
+Flag to use to mask financial data at the municipality level: true when the municipality has activity and is subject to primary or secondary statistical secrecy (has_municipality_activity and is_municipality_secret).
+{% enddocs %}
+
 {% docs column__department_secret_reason %}
 Specific reason for statistical secrecy at the department level ('Nombre de partenaires faible (<= 3)', 'Concentration forte du CA (> 85%)', 'Les deux raisons (<= 3 partenaires ET > 85% CA)', or 'Non soumis au secret').
 {% enddocs %}

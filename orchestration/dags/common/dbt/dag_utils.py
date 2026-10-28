@@ -95,7 +95,7 @@ def create_nested_folder_groups(
         ]
         chain(*task_chain)
         # Set model execution task's upstream to leaf folder trigger task
-        task_chain[-1] >> model_op_dict[model_node]
+        connect_dbt_dependency(task_chain[-1], model_op_dict[model_node])
 
 
 @lru_cache(maxsize=128)
@@ -532,6 +532,11 @@ def attach_external_dependency_sensor(
       downstream dbt nodes) upstream_failed.
     - "skip": the sensor is SKIPPED instead, which cascades as a skip to this
       operator (and its downstream dbt nodes) via none_failed_min_one_success.
+
+    The operator's dbt parents (set up later, once the full dependency graph
+    is known) are interleaved before the sensor rather than running alongside
+    it: see `connect_dbt_dependency`, which routes `parent >> operator` edges
+    through `operator.external_dependency_sensor` when it is set here.
     """
     from common.utils import delayed_waiting_operator
 
@@ -552,8 +557,52 @@ def attach_external_dependency_sensor(
             external_dag_id=node_meta["external_dag_id"],
             external_task_id=node_meta["external_task_id"],
             soft_fail=on_skip == "skip",
+            # Mirrors the operator's own trigger_rule: once dbt parents are
+            # interleaved in front of the sensor (see
+            # connect_dbt_dependency), the sensor itself must tolerate a
+            # skipped parent rather than skip outright, so a model with
+            # several parents where only one succeeds still gets a chance to
+            # run.
+            trigger_rule="none_failed_min_one_success",
         )
         sensor >> operator
+        operator.external_dependency_sensor = sensor
+
+
+def attach_critical_test(model_op: BaseOperator, test_op: BaseOperator) -> None:
+    """
+    Mark `test_op` as the operator to use whenever something needs to be
+    wired downstream of `model_op`, so the critical test is interleaved
+    between the model and its children (model -> test -> children) instead
+    of running alongside them. See `connect_dbt_dependency`.
+    """
+    model_op.critical_test_operator = test_op
+
+
+def get_effective_operator(operator: BaseOperator) -> BaseOperator:
+    """
+    Return the operator to actually use when wiring further downstream
+    dependencies from `operator`: its attached critical-test operator when
+    it has one (see `attach_critical_test`), otherwise `operator` itself.
+    """
+    return getattr(operator, "critical_test_operator", operator)
+
+
+def connect_dbt_dependency(upstream: BaseOperator, downstream: BaseOperator) -> None:
+    """
+    Connect `upstream` to `downstream`, routing through whichever gate is
+    attached on either side instead of a direct edge:
+    - `upstream`'s critical test, if any (see `attach_critical_test`) --
+      tested before anything moves on to `downstream`.
+    - `downstream`'s external-dependency sensor, if any (see
+      `attach_external_dependency_sensor`) -- so the sensor only starts
+      waiting once its real dbt parent has actually finished, instead of
+      running freely from the start of the DAG. `sensor >> downstream` was
+      already set when the sensor was attached.
+    """
+    upstream = get_effective_operator(upstream)
+    sensor = getattr(downstream, "external_dependency_sensor", None)
+    upstream >> (sensor if sensor is not None else downstream)
 
 
 def create_test_operator(model_data: dict, dag: DAG) -> PythonOperator:
@@ -652,7 +701,12 @@ def create_data_transformation_group(
                         model_data, True, dag
                     )
                     if model_node in models_with_crit_test_dependencies:
-                        model_op_dict[model_node] >> test_op_dict[model_node]
+                        connect_dbt_dependency(
+                            model_op_dict[model_node], test_op_dict[model_node]
+                        )
+                        attach_critical_test(
+                            model_op_dict[model_node], test_op_dict[model_node]
+                        )
 
         for model_node in dbt_models:
             model_data = manifest["nodes"][model_node]
@@ -661,7 +715,12 @@ def create_data_transformation_group(
                     model_data, False, dag
                 )
                 if model_node in models_with_crit_test_dependencies:
-                    model_op_dict[model_node] >> test_op_dict[model_node]
+                    connect_dbt_dependency(
+                        model_op_dict[model_node], test_op_dict[model_node]
+                    )
+                    attach_critical_test(
+                        model_op_dict[model_node], test_op_dict[model_node]
+                    )
     return model_op_dict
 
 
@@ -669,9 +728,7 @@ def setup_dependencies(
     model_node: str,
     manifest: dict,
     model_op_dict: dict[str, BaseOperator],
-    test_op_dict: dict[str, BaseOperator],
     snapshot_op_dict: dict[str, BaseOperator],
-    models_with_crit_test_dependencies: list[Optional[str]],
     final_op: BaseOperator,
 ) -> None:
     children = [
@@ -683,12 +740,14 @@ def setup_dependencies(
         for child in manifest["child_map"][model_node]
         if child in snapshot_op_dict
     ]
-    if model_node in snapshot_op_dict:
-        snapshot_op_dict[model_node] >> (children if children else final_op)
-    elif model_node in models_with_crit_test_dependencies:
-        test_op_dict[model_node] >> (children if children else final_op)
-    else:
-        model_op_dict[model_node] >> (children if children else final_op)
+    parent_op = (
+        snapshot_op_dict[model_node]
+        if model_node in snapshot_op_dict
+        else model_op_dict[model_node]
+    )
+
+    for target in children if children else [final_op]:
+        connect_dbt_dependency(parent_op, target)
 
 
 def set_up_nodes_dependencies(
@@ -697,9 +756,7 @@ def set_up_nodes_dependencies(
     dbt_snapshots: list[str],
     manifest: dict,
     model_op_dict: dict[str, BaseOperator],
-    test_op_dict: dict[str, BaseOperator],
     snapshot_op_dict: dict[str, BaseOperator],
-    models_with_crit_test_dependencies: list[Optional[str]],
     final_op: Union[BaseOperator, PythonOperator],
 ) -> None:
     for model_node in dbt_models:
@@ -707,9 +764,7 @@ def set_up_nodes_dependencies(
             model_node,
             manifest,
             model_op_dict,
-            test_op_dict,
             snapshot_op_dict,
-            models_with_crit_test_dependencies,
             final_op,
         )
     # Set up dependencies between models and snapshots
@@ -718,9 +773,7 @@ def set_up_nodes_dependencies(
             snapshot_node,
             manifest,
             model_op_dict,
-            test_op_dict,
             snapshot_op_dict,
-            models_with_crit_test_dependencies,
             final_op,
         )
 
@@ -778,17 +831,22 @@ def dbt_dag_reconstruction(
         dbt_snapshots,
         manifest,
         model_op_dict,
-        test_op_dict,
         snapshot_op_dict,
-        models_with_crit_test_dependencies,
         final_op,
     )
 
     # Manage test's cross dependencies
     for test, parents in crit_test_parents.items():
         for p in parents:
+            # Skip the test's own attached model: that edge (model -> test,
+            # with the model's effective operator already resolved to this
+            # same test via attach_critical_test) is set up in
+            # create_data_transformation_group. Linking it again here would
+            # resolve `p` to this very test operator and wire a self-loop.
+            if p == test:
+                continue
             try:
-                model_op_dict[p] >> test_op_dict[test]
+                connect_dbt_dependency(model_op_dict[p], test_op_dict[test])
             except KeyError:
                 pass
 

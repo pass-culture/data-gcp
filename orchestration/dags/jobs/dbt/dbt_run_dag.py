@@ -15,6 +15,7 @@ from common.config import (
     PATH_TO_DBT_TARGET,
 )
 from common.dbt.dag_utils import (
+    connect_dbt_dependency,
     dbt_dag_reconstruction,
     load_and_process_manifest,
 )
@@ -160,15 +161,17 @@ model_tasks = list(operator_dict["model_op_dict"].values())
 snapshot_tasks = list(operator_dict["snapshot_op_dict"].values())
 
 # Defining the task dependency flow
-(
-    start
-    >> [wait_for_raw, wait_for_firebase]
-    >> end_wait
-    >> data_transfo_checkpoint
-    >> model_tasks
-)
+start >> [wait_for_raw, wait_for_firebase] >> end_wait >> data_transfo_checkpoint
+# data_transfo_checkpoint/snapshots_checkpoint act as the default parent for
+# models/snapshots that have no dbt parent of their own: routed through
+# connect_dbt_dependency so a model/snapshot's external-dependency sensor
+# (if any) picks it up instead of being left with no upstream at all.
+for model_op in model_tasks:
+    connect_dbt_dependency(data_transfo_checkpoint, model_op)
 start >> operator_dict["trigger_block"]
-end_wait >> snapshots_checkpoint >> snapshot_tasks
+end_wait >> snapshots_checkpoint
+for snapshot_op in snapshot_tasks:
+    connect_dbt_dependency(snapshots_checkpoint, snapshot_op)
 end_wait >> compile
 (
     compile

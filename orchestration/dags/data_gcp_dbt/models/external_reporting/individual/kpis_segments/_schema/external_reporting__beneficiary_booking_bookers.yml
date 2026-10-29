@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: external_reporting__beneficiary_booking_bookers
+    description: "{{ doc('description__external_reporting__beneficiary_booking_bookers') }}"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - dimension_name
+              - dimension_value
+              - kpi_name
+    columns:
+      - name: dimension_name
+        description: "{{ doc('column__dimension_name') }}"
+      - name: dimension_value
+        description: "{{ doc('column__dimension_value') }}"
+      - name: kpi_name
+        description: "{{ doc('column__kpi_name') }}"
+      - name: total_beneficiaries
+        description: "{{ doc('column__external_reporting_total_beneficiaries_behind_kpi') }}"

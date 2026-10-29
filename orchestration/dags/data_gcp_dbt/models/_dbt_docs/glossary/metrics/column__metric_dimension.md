@@ -17,11 +17,35 @@ Display title of the territory: 'Name (code)' for EPCI and COM, 'Rapport Nationa
 {% enddocs %}
 
 {% docs column__external_reporting_is_secret_stat %}
-True when the territory (COM, EPCI or DEP) is subject to statistical secrecy at the last complete month, over the 6 or the 48-month rolling window (is_*_secret_stat of the statistical_secret__cultural_partner_* models). numerator, denominator and kpi are then NULL on every month. REG, ACAD and NAT are never secret.
+True when the KPI is measured on the cultural partner (venue) geography and the territory (COM, EPCI or DEP) is subject to statistical secrecy at the last complete month, over the 6 or the 48-month rolling window (is_*_secret_stat of the statistical_secret__cultural_partner_* models). numerator, denominator and kpi are then NULL on every month. KPIs measured on the beneficiary or school geography are never secret, nor are REG, ACAD and NAT.
+{% enddocs %}
+
+{% docs column__external_reporting_is_low_count %}
+True when the KPI is accounted for by 1 to 4 beneficiaries of the territory over the whole history (see external_reporting__beneficiary_booking_bookers): numerator, denominator and kpi are then NULL on every month. Beneficiary counts are blurred instead (cell key method) and never flagged.
+{% enddocs %}
+
+{% docs column__external_reporting_total_beneficiaries_behind_kpi %}
+Number of distinct beneficiaries of the territory behind the KPI, from January 2022 to the last complete month.
+{% enddocs %}
+
+{% docs column__external_reporting_is_national_only %}
+True on the rows added for a KPI published at NAT but not at this territory level (e.g. coverage rates): numerator, denominator and kpi are NULL, only the national_* columns are filled, so that reports filtered on a territory still show the national value.
+{% enddocs %}
+
+{% docs column__external_reporting_national_numerator %}
+Numerator of the same KPI and month at national level (NAT row), so that a report filtered on a territory can show the national figure from the same rows.
+{% enddocs %}
+
+{% docs column__external_reporting_national_denominator %}
+Denominator of the same KPI and month at national level (NAT row).
+{% enddocs %}
+
+{% docs column__external_reporting_national_kpi %}
+Value of the same KPI and month at national level (NAT row). NULL when the KPI is not published at NAT.
 {% enddocs %}
 
 {% docs column__external_reporting_secret_reason %}
-Message to display instead of the KPI when the territory is subject to statistical secrecy ('Données non disponibles (secret statistique)'), NULL otherwise.
+Message to display instead of the KPI when it is masked: 'Données non disponibles (secret statistique)' for the statistical secret, 'Données non disponibles (moins de 5 bénéficiaires)' when fewer than 5 beneficiaries account for it, NULL otherwise.
 {% enddocs %}
 
 {% docs column__milestone_age %}

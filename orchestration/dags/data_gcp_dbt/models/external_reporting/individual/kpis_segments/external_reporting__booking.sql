@@ -207,7 +207,9 @@ with
 
         union all
 
-        {% for dim in dimensions %}
+        -- free offers and bookings are also published at NAT (the shares above
+        -- compare two territories and have no national value)
+        {% for dim in [{"name": "NAT", "venue_col": "'NAT'"}] + dimensions %}
 
             select
                 partition_month,

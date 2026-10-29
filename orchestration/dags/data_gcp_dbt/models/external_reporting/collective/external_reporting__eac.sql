@@ -31,6 +31,7 @@
         "is_secret_applicable": "true",
     },
     "eac_domain": {"aggregation": "flow", "is_secret_applicable": "false"},
+    "eac_format": {"aggregation": "flow", "is_secret_applicable": "false"},
     "eac_offer_booking": {
         "aggregation": "flow",
         "is_secret_applicable": "segment.kpi_name not like '%_etablissements'",

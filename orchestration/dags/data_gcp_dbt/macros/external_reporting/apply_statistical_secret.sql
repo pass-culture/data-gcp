@@ -41,7 +41,7 @@
               rates) get rows for every territory of that level with NULL
               numerator, denominator and kpi and is_national_only = true, so that
               their national value is available whatever the territory filter;
-            - a KPI that 1 to min_individuals - 1 people of a territory account
+            - a KPI that 1 to min_beneficiaries - 1 people of a territory account
               for (low_count_models) is NULL on every month (is_low_count), as
               amounts and booking counts cannot be blurred;
             - an average or share whose denominator counts 1 to min_individuals - 1
@@ -60,7 +60,8 @@
             kpi_attributes (list): KPI level columns copied on zero rows
             zero_row_columns (dict): other columns of zero rows, name -> expression
             low_count_models (list): models of distinct people behind each KPI
-                (dimension_name, dimension_value, kpi_name, total_beneficiaries)
+                (dimension_name, dimension_value, kpi_name, total_beneficiaries,
+                min_beneficiaries)
             low_count_denominator_kpis (list): KPI name prefixes whose denominator
                 counts people (averages and shares by person)
             min_individuals (int): minimum number of people behind a published KPI
@@ -308,8 +309,7 @@
             {% do low_count_selects.append(
                 "select dimension_name, dimension_value, kpi_name from "
                 ~ ref(low_count_model)
-                ~ " where total_beneficiaries between 1 and "
-                ~ (min_individuals - 1)
+                ~ " where total_beneficiaries between 1 and min_beneficiaries - 1"
             ) %}
         {% endfor %}
         {% for prefix in low_count_denominator_kpis %}

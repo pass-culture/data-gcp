@@ -6,7 +6,14 @@
     month). Used by external_reporting__individual to mask the KPIs that fewer
     than 5 beneficiaries account for: amounts and booking counts cannot be
     blurred, and the monthly flows are summed by the reports.
+
+    The category shares (pct_reservations_beneficiaires_*) are published as a
+    whole breakdown: they count every booker of the territory and need at least
+    min_category_breakdown_bookers of them, so that a small category of a large
+    territory stays visible while small territories show no breakdown.
 #}
+{% set min_bookers = 5 %}
+{% set min_category_breakdown_bookers = 20 %}
 {% set kpis = {
     "total_reservations_beneficiaires": "true",
     "total_montant_beneficiaires": "true",
@@ -24,10 +31,7 @@
             ~ category.value_expr: "b.offer_category_id = '"
             ~ category.name
             ~ "'",
-            "pct_reservations_beneficiaires_"
-            ~ category.value_expr: "b.offer_category_id = '"
-            ~ category.name
-            ~ "'",
+            "pct_reservations_beneficiaires_" ~ category.value_expr: "true",
         }
     ) %}
 {% endfor %}
@@ -51,7 +55,16 @@ with
             <= date_trunc(date_sub(date('{{ ds() }}'), interval 1 month), month)
     )
 
-select dimension_name, dimension_value, kpi_name, total_beneficiaries
+select
+    dimension_name,
+    dimension_value,
+    kpi_name,
+    total_beneficiaries,
+    if(
+        starts_with(kpi_name, 'pct_reservations_beneficiaires_'),
+        {{ min_category_breakdown_bookers }},
+        {{ min_bookers }}
+    ) as min_beneficiaries
 from
     (
         {% for dim in get_dimensions("user", "geo_full") %}

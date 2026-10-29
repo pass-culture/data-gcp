@@ -28,6 +28,10 @@ True when the KPI is accounted for by 1 to 4 beneficiaries of the territory over
 Number of distinct beneficiaries of the territory behind the KPI, from January 2022 to the last complete month.
 {% enddocs %}
 
+{% docs column__external_reporting_min_beneficiaries %}
+Minimum number of distinct beneficiaries behind the KPI for it to be published: 5, or 20 for the category shares (pct_reservations_beneficiaires_*), which are published as a whole breakdown.
+{% enddocs %}
+
 {% docs column__external_reporting_is_national_only %}
 True on the rows added for a KPI published at NAT but not at this territory level (e.g. coverage rates): numerator, denominator and kpi are NULL, only the national_* columns are filled, so that reports filtered on a territory still show the national value.
 {% enddocs %}

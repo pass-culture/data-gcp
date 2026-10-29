@@ -19,3 +19,5 @@ models:
         description: "{{ doc('column__kpi_name') }}"
       - name: total_beneficiaries
         description: "{{ doc('column__external_reporting_total_beneficiaries_behind_kpi') }}"
+      - name: min_beneficiaries
+        description: "{{ doc('column__external_reporting_min_beneficiaries') }}"

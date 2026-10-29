@@ -58,6 +58,41 @@ with recursive
             months_spine as ms on dep.educational_year_id = ms.educational_year_id
     ),
 
+    -- institutions credited at least once since the generalisation, counted from
+    -- the start of their first credited scholar year
+    first_credits as (
+        select
+            dep.institution_id,
+            min(
+                date_trunc(date(y.educational_year_beginning_date), month)
+            ) as first_credit_month
+        from {{ ref("mrt_global__educational_deposit") }} as dep
+        inner join year_mapping as y on dep.educational_year_id = y.educational_year_id
+        group by dep.institution_id
+    ),
+    ever_credited_data as (
+        select
+            months.partition_month,
+            inst.institution_region_name,
+            inst.institution_academy_name,
+            inst.institution_department_name,
+            inst.institution_epci_code,
+            inst.institution_municipality_code,
+            count(distinct fc.institution_id) as total_institutions_ever_credited
+        from (select distinct partition_month from months_spine) as months
+        inner join
+            first_credits as fc on fc.first_credit_month <= months.partition_month
+        left join
+            {{ ref("mrt_global__educational_institution") }} as inst
+            on fc.institution_id = inst.institution_id
+        group by
+            months.partition_month,
+            inst.institution_region_name,
+            inst.institution_academy_name,
+            inst.institution_department_name,
+            inst.institution_epci_code,
+            inst.institution_municipality_code
+    ),
     first_bookings as (
         select
             educational_institution_id as institution_id,
@@ -115,6 +150,23 @@ with recursive
             sum(total_institutions_with_booking), sum(total_institutions)
         ) as kpi
     from base_data
+    {% if is_incremental() %}
+        where
+            partition_month
+            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+    {% endif %}
+    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
+    union all
+    select
+        partition_month,
+        timestamp("{{ ts() }}") as updated_at,
+        '{{ dim.name }}' as dimension_name,
+        {{ dim.value_expr }} as dimension_value,
+        'total_etablissements_credites_depuis_generalisation' as kpi_name,
+        sum(total_institutions_ever_credited) as numerator,
+        1 as denominator,
+        sum(total_institutions_ever_credited) as kpi
+    from ever_credited_data
     {% if is_incremental() %}
         where
             partition_month

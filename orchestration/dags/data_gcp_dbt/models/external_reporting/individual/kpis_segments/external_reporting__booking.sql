@@ -57,16 +57,36 @@ with
         where b.booking_is_used
     ),
 
-    free_bookable_offers as (
+    -- all bookings by creation month, cancelled ones included: free offers are
+    -- often cancelled by default as they need no check, so every free booking
+    -- counts, and the share of free bookings uses all bookings as denominator
+    all_bookings as (
+        select
+            venue_region_name,
+            venue_department_name,
+            venue_epci_code,
+            venue_municipality_code,
+            booking_id,
+            booking_amount = 0 as is_free,
+            date_trunc(date(booking_creation_date), month) as partition_month
+        from {{ ref("mrt_global__booking") }}
+    ),
+
+    -- free offers (last stock price 0) created by month, in any state and
+    -- currently bookable
+    free_offers as (
         select
             venue_municipality_code,
             venue_epci_code,
             venue_region_name,
             venue_department_name,
             date_trunc(date(offer_creation_date), month) as partition_month,
-            count(distinct offer_id) as monthly_free_bookable_offers
+            count(distinct offer_id) as monthly_free_offers,
+            count(
+                distinct if(offer_is_bookable, offer_id, null)
+            ) as monthly_free_bookable_offers
         from {{ ref("mrt_global__offer") }}
-        where last_stock_price = 0 and offer_is_bookable
+        where last_stock_price = 0
         group by
             partition_month,
             venue_municipality_code,
@@ -75,23 +95,72 @@ with
             venue_department_name
     ),
 
-    cumul_free_bookable_offers as (
+    -- every month from the first free offer of the territory, so that the
+    -- cumulative stock exists every month and sums correctly across territories
+    free_offers_grid as (
         select
-            partition_month,
-            venue_municipality_code,
-            venue_epci_code,
-            venue_region_name,
-            venue_department_name,
-            sum(monthly_free_bookable_offers) over (
-                partition by
+            territories.venue_municipality_code,
+            territories.venue_epci_code,
+            territories.venue_region_name,
+            territories.venue_department_name,
+            partition_month
+        from
+            (
+                select
+                    venue_municipality_code,
+                    venue_epci_code,
+                    venue_region_name,
+                    venue_department_name,
+                    min(partition_month) as first_month
+                from free_offers
+                group by
                     venue_municipality_code,
                     venue_epci_code,
                     venue_region_name,
                     venue_department_name
-                order by partition_month
+            ) as territories
+        cross join
+            unnest(
+                generate_date_array(
+                    territories.first_month,
+                    date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month),
+                    interval 1 month
+                )
+            ) as partition_month
+    ),
+
+    cumul_free_bookable_offers as (
+        select
+            grid.partition_month,
+            grid.venue_municipality_code,
+            grid.venue_epci_code,
+            grid.venue_region_name,
+            grid.venue_department_name,
+            sum(coalesce(free_offers.monthly_free_offers, 0)) over w
+            as cumul_total_free_offers,
+            sum(coalesce(free_offers.monthly_free_bookable_offers, 0)) over w
+            as cumul_total_free_bookable_offers
+        from free_offers_grid as grid
+        left join
+            free_offers
+            on grid.partition_month = free_offers.partition_month
+            and grid.venue_municipality_code
+            is not distinct from free_offers.venue_municipality_code
+            and grid.venue_epci_code is not distinct from free_offers.venue_epci_code
+            and grid.venue_region_name
+            is not distinct from free_offers.venue_region_name
+            and grid.venue_department_name
+            is not distinct from free_offers.venue_department_name
+        window
+            w as (
+                partition by
+                    grid.venue_municipality_code,
+                    grid.venue_epci_code,
+                    grid.venue_region_name,
+                    grid.venue_department_name
+                order by grid.partition_month
                 rows unbounded preceding
-            ) as cumul_total_free_offers
-        from free_bookable_offers
+            )
     ),
 
     monthly_flows as (
@@ -207,7 +276,9 @@ with
 
         union all
 
-        {% for dim in dimensions %}
+        -- free offers and bookings are also published at NAT (the shares above
+        -- compare two territories and have no national value)
+        {% for dim in [{"name": "NAT", "venue_col": "'NAT'"}] + dimensions %}
 
             select
                 partition_month,
@@ -215,12 +286,25 @@ with
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.venue_col }} as dimension_value,
                 'total_reservations_gratuites' as kpi_name,
-                count(
-                    case when booking_intermediary_amount = 0 then 1 end
-                ) as numerator,
+                countif(is_free) as numerator,
                 cast(1 as numeric) as denominator,
-                count(case when booking_intermediary_amount = 0 then 1 end) as kpi
-            from base_booking_data
+                countif(is_free) as kpi
+            from all_bookings
+            group by
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
+
+            union all
+
+            select
+                partition_month,
+                timestamp("{{ ts() }}") as updated_at,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.venue_col }} as dimension_value,
+                'total_reservations_toutes' as kpi_name,
+                count(booking_id) as numerator,
+                cast(1 as numeric) as denominator,
+                count(booking_id) as kpi
+            from all_bookings
             group by
                 partition_month, updated_at, dimension_name, dimension_value, kpi_name
 
@@ -232,6 +316,21 @@ with
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.venue_col }} as dimension_value,
                 'total_offres_gratuites_reservables' as kpi_name,
+                sum(cumul_total_free_bookable_offers) as numerator,
+                cast(1 as numeric) as denominator,
+                sum(cumul_total_free_bookable_offers) as kpi
+            from cumul_free_bookable_offers
+            group by
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
+
+            union all
+
+            select
+                partition_month,
+                timestamp("{{ ts() }}") as updated_at,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.venue_col }} as dimension_value,
+                'total_offres_gratuites' as kpi_name,
                 sum(cumul_total_free_offers) as numerator,
                 cast(1 as numeric) as denominator,
                 sum(cumul_total_free_offers) as kpi

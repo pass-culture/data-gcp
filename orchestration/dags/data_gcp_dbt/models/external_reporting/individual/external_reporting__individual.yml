@@ -51,7 +51,7 @@ models:
         data_tests:
           - not_null:
               config:
-                where: "not is_secret_stat"
+                where: "not is_secret_stat and not is_low_count and not is_national_only"
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
                 tags: ['critical']
       - name: denominator
@@ -59,7 +59,7 @@ models:
         data_tests:
           - not_null:
               config:
-                where: "not is_secret_stat"
+                where: "not is_secret_stat and not is_low_count and not is_national_only"
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
                 tags: ['critical']
       - name: kpi
@@ -67,7 +67,7 @@ models:
         data_tests:
           - not_null:
               config:
-                where: "not is_secret_stat"
+                where: "not is_secret_stat and not is_low_count and not is_national_only"
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
                 tags: ['critical']
           - kpi_variation_threshold:
@@ -85,5 +85,23 @@ models:
           - not_null:
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+      - name: is_low_count
+        description: "{{ doc('column__external_reporting_is_low_count') }}"
+        data_tests:
+          - not_null:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+      - name: is_national_only
+        description: "{{ doc('column__external_reporting_is_national_only') }}"
+        data_tests:
+          - not_null:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: secret_reason
         description: "{{ doc('column__external_reporting_secret_reason') }}"
+      - name: national_numerator
+        description: "{{ doc('column__external_reporting_national_numerator') }}"
+      - name: national_denominator
+        description: "{{ doc('column__external_reporting_national_denominator') }}"
+      - name: national_kpi
+        description: "{{ doc('column__external_reporting_national_kpi') }}"

@@ -14,19 +14,37 @@
 
     Rebuilt in full each run: the statistical secret flag is evaluated at the last
     complete month and applied to every month of a secret territory.
+
+    is_secret_applicable selects the KPIs subject to the statistical secret: the
+    ones measured on the cultural partner (venue) geography. KPIs measured on the
+    school geography (suffixed `_etablissements` in eac_offer_booking) are never
+    masked.
 #}
 {% set models = {
-    "eac_coverage": "stock",
-    "eac_credit_usage": "stock",
-    "eac_cultural_partner": "stock",
-    "eac_domain": "flow",
-    "eac_offer_booking": "flow",
-    "eac_institution": "stock",
+    "eac_coverage": {"aggregation": "stock", "is_secret_applicable": "false"},
+    "eac_credit_usage": {
+        "aggregation": "stock",
+        "is_secret_applicable": "false",
+    },
+    "eac_cultural_partner": {
+        "aggregation": "stock",
+        "is_secret_applicable": "true",
+    },
+    "eac_domain": {"aggregation": "flow", "is_secret_applicable": "false"},
+    "eac_format": {"aggregation": "flow", "is_secret_applicable": "false"},
+    "eac_offer_booking": {
+        "aggregation": "flow",
+        "is_secret_applicable": "segment.kpi_name not like '%_etablissements'",
+    },
+    "eac_institution": {
+        "aggregation": "stock",
+        "is_secret_applicable": "false",
+    },
 } %}
 
 with
     kpis as (
-        {% for model, aggregation in models.items() %}
+        {% for model, segment_config in models.items() %}
             {% if not loop.first %}
                 union all
             {% endif %}
@@ -40,7 +58,8 @@ with
                 coalesce(segment.denominator, 0) as denominator,
                 coalesce(segment.kpi, 0) as kpi,
                 ey.scholar_year,
-                '{{ aggregation }}' as aggregation
+                '{{ segment_config.aggregation }}' as aggregation,
+                {{ segment_config.is_secret_applicable }} as is_secret_applicable
             from {{ ref("external_reporting__" ~ model) }} as segment
             left join
                 {{ source("raw", "applicative_database_educational_year") }} as ey

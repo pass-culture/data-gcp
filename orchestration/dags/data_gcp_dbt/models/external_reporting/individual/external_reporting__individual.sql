@@ -11,22 +11,26 @@
     complete month and applied to every month of a secret territory.
     A territory is secret if it is secret on the individual or the collective side
     (cultural partner pages show both).
+
+    Each segment maps to the KPIs subject to the statistical secret: the ones
+    measured on the cultural partner (venue) geography. KPIs measured on the
+    beneficiary geography are never masked.
 #}
-{% set models = [
-    "beneficiary",
-    "coverage",
-    "cultural_partner",
-    "collective_partner_booking",
-    "beneficiary_booking",
-    "deposit_usage",
-    "diversity",
-    "finance",
-    "booking",
-] %}
+{% set models = {
+    "beneficiary": "false",
+    "coverage": "false",
+    "cultural_partner": "true",
+    "collective_partner_booking": "true",
+    "beneficiary_booking": "false",
+    "deposit_usage": "false",
+    "diversity": "false",
+    "finance": "true",
+    "booking": "kpi_name not like 'part_partenaires_dans_conso_beneficiaires%'",
+} %}
 
 with
     kpis as (
-        {% for model in models %}
+        {% for model, is_secret_applicable in models.items() %}
             {% if not loop.first %}
                 union all
             {% endif %}
@@ -38,7 +42,8 @@ with
                 kpi_name,
                 coalesce(numerator, 0) as numerator,
                 coalesce(denominator, 0) as denominator,
-                coalesce(kpi, 0) as kpi
+                coalesce(kpi, 0) as kpi,
+                {{ is_secret_applicable }} as is_secret_applicable
             from {{ ref("external_reporting__" ~ model) }}
             where
                 partition_month

@@ -7,24 +7,36 @@
 ) %}
     {#
         Mask external reporting KPIs of territories under statistical secret, add
-        zero rows so that territories without data report 0 instead of nothing, and
-        add display labels (label, intitule) so that reports read the table as is.
+        zero rows so that territories without data report 0 instead of nothing, add
+        the national value on every row and display labels (label, intitule) so
+        that reports read the table as is, with a single source per table.
 
         Must be called right after a `with <kpis_cte> as (...)` CTE holding the
-        external reporting rows (partition_month, updated_at, dimension_name,
-        dimension_value, kpi_name, numerator, denominator, kpi, ...). It appends the
-        remaining CTEs and the final select.
+        external reporting rows, in this column order: partition_month,
+        updated_at, dimension_name, dimension_value, kpi_name, numerator,
+        denominator, kpi, <zero_row_columns>, <kpi_attributes>,
+        is_secret_applicable. is_secret_applicable is true for KPIs measured on
+        the cultural partner (venue) geography, the only ones subject to the
+        statistical secret. It appends the remaining CTEs and the final select.
 
         Rules:
             - a territory (COM, EPCI, DEP) is secret when it is secret
               (is_*_secret_stat) at the last complete month, for any of the
               rolling windows and any of the secret models;
             - numerator, denominator and kpi are NULL on every month of a secret
-              territory; REG, ACAD and NAT are never secret;
+              territory, for the KPIs subject to the secret only; REG, ACAD and NAT
+              are never secret;
             - for every territory of the geo referential and every KPI, a zero row
               is added at the last complete month when the territory has never had
               a row for this KPI (except NAT). Territories with past rows get no zero
-              row, so that cumulative / stock KPIs are never reset to 0.
+              row, so that cumulative / stock KPIs are never reset to 0;
+            - national_numerator, national_denominator and national_kpi hold the NAT
+              value of the same month and KPI, so that a report filtered on a
+              territory still shows the national figures;
+            - KPIs published at NAT but not at a territory level (e.g. coverage
+              rates) get rows for every territory of that level with NULL
+              numerator, denominator and kpi and is_national_only = true, so that
+              their national value is available whatever the territory filter.
 
         Parameters:
             kpis_cte (string): name of the CTE holding the KPI rows
@@ -39,10 +51,11 @@
     kpi_list as (
         select
             dimension_name,
-            kpi_name
+            kpi_name,
             {% for attribute in kpi_attributes %}
-                , any_value({{ attribute }}) as {{ attribute }}
+                any_value({{ attribute }}) as {{ attribute }},
             {% endfor %}
+            logical_or(is_secret_applicable) as is_secret_applicable
         from {{ kpis_cte }}
         group by dimension_name, kpi_name
     ),
@@ -75,8 +88,22 @@
         select distinct dimension_name, dimension_value, kpi_name from {{ kpis_cte }}
     ),
 
+    national_only_kpis as (
+        select territory_levels.dimension_name, national_kpis.kpi_name
+        from (select distinct dimension_name from territories) as territory_levels
+        cross join
+            (
+                select kpi_name from kpi_list where dimension_name = 'NAT'
+            ) as national_kpis
+        left join
+            kpi_list
+            on territory_levels.dimension_name = kpi_list.dimension_name
+            and national_kpis.kpi_name = kpi_list.kpi_name
+        where territory_levels.dimension_name != 'NAT' and kpi_list.kpi_name is null
+    ),
+
     filled_kpis as (
-        select *
+        select *, false as is_national_only
         from {{ kpis_cte }}
         union all
         select
@@ -91,7 +118,11 @@
             {% for column, expression in zero_row_columns.items() %}
                 , {{ expression }} as {{ column }}
             {% endfor %}
-            {% for attribute in kpi_attributes %}, kpi_list.{{ attribute }} {% endfor %}
+            {% for attribute in kpi_attributes %}
+                , kpi_list.{{ attribute }}
+            {% endfor %},
+            kpi_list.is_secret_applicable,
+            false as is_national_only
         from territories
         inner join kpi_list on territories.dimension_name = kpi_list.dimension_name
         left join
@@ -103,6 +134,41 @@
             existing_kpis.kpi_name is null
             -- national KPIs always exist, and are checked month over month
             and territories.dimension_name != 'NAT'
+        union all
+        select
+            national.partition_month,
+            national.updated_at,
+            territories.dimension_name,
+            territories.dimension_value,
+            national.kpi_name,
+            null as numerator,
+            null as denominator,
+            null as kpi
+            {% for column in zero_row_columns.keys() %}
+                , national.{{ column }}
+            {% endfor %}
+            {% for attribute in kpi_attributes %}
+                , national.{{ attribute }}
+            {% endfor %},
+            false as is_secret_applicable,
+            true as is_national_only
+        from {{ kpis_cte }} as national
+        inner join national_only_kpis on national.kpi_name = national_only_kpis.kpi_name
+        inner join
+            territories
+            on national_only_kpis.dimension_name = territories.dimension_name
+        where national.dimension_name = 'NAT'
+    ),
+
+    national_values as (
+        select
+            partition_month,
+            kpi_name,
+            numerator as national_numerator,
+            denominator as national_denominator,
+            kpi as national_kpi
+        from {{ kpis_cte }}
+        where dimension_name = 'NAT'
     ),
 
     secret_source as (
@@ -179,7 +245,8 @@
     flagged_kpis as (
         select
             filled_kpis.*,
-            coalesce(secret_territories.is_secret_stat, false) as is_secret_stat,
+            filled_kpis.is_secret_applicable
+            and coalesce(secret_territories.is_secret_stat, false) as is_secret_stat,
             case
                 when filled_kpis.dimension_name in ('EPCI', 'COM')
                 then territory_labels.label
@@ -207,15 +274,46 @@
     )
 
     select
-        * except (numerator, denominator, kpi, is_secret_stat, label, intitule),
-        label,
-        intitule,
-        if(is_secret_stat, null, coalesce(numerator, 0)) as numerator,
-        if(is_secret_stat, null, coalesce(denominator, 0)) as denominator,
-        if(is_secret_stat, null, coalesce(kpi, 0)) as kpi,
-        is_secret_stat,
+        flagged_kpis.* except (
+            numerator,
+            denominator,
+            kpi,
+            is_secret_applicable,
+            is_national_only,
+            is_secret_stat,
+            label,
+            intitule
+        ),
+        flagged_kpis.label,
+        flagged_kpis.intitule,
         if(
-            is_secret_stat, 'Données non disponibles (secret statistique)', null
+            flagged_kpis.is_secret_stat or flagged_kpis.is_national_only,
+            null,
+            coalesce(flagged_kpis.numerator, 0)
+        ) as numerator,
+        if(
+            flagged_kpis.is_secret_stat or flagged_kpis.is_national_only,
+            null,
+            coalesce(flagged_kpis.denominator, 0)
+        ) as denominator,
+        if(
+            flagged_kpis.is_secret_stat or flagged_kpis.is_national_only,
+            null,
+            coalesce(flagged_kpis.kpi, 0)
+        ) as kpi,
+        national_values.national_numerator,
+        national_values.national_denominator,
+        national_values.national_kpi,
+        flagged_kpis.is_secret_stat,
+        flagged_kpis.is_national_only,
+        if(
+            flagged_kpis.is_secret_stat,
+            'Données non disponibles (secret statistique)',
+            null
         ) as secret_reason
     from flagged_kpis
+    left join
+        national_values
+        on flagged_kpis.partition_month = national_values.partition_month
+        and flagged_kpis.kpi_name = national_values.kpi_name
 {% endmacro %}

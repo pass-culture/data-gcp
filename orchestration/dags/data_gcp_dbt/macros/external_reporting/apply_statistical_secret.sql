@@ -415,12 +415,13 @@
         flagged_kpis.is_secret_stat,
         flagged_kpis.is_low_count,
         flagged_kpis.is_national_only,
-        case
-            when flagged_kpis.is_secret_stat
-            then 'Données non disponibles (secret statistique)'
-            when flagged_kpis.is_low_count
-            then 'Données non disponibles (moins de 5 bénéficiaires)'
-        end as secret_reason
+        -- a single message whatever the rule, so that reports do not disclose the
+        -- size of the population behind a masked KPI
+        if(
+            flagged_kpis.is_secret_stat or flagged_kpis.is_low_count,
+            'Données non disponibles (secret statistique)',
+            null
+        ) as secret_reason
     from flagged_kpis
     left join
         national_values

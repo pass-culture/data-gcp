@@ -49,7 +49,7 @@ Value of the same KPI and month at national level (NAT row). NULL when the KPI i
 {% enddocs %}
 
 {% docs column__external_reporting_secret_reason %}
-Message to display instead of the KPI when it is masked: 'Données non disponibles (secret statistique)' for the statistical secret, 'Données non disponibles (moins de 5 bénéficiaires)' when fewer than 5 beneficiaries account for it, NULL otherwise.
+Message to display instead of the KPI when it is masked, whatever the rule (statistical secret on cultural partners, or fewer than 5 beneficiaries behind the KPI): 'Données non disponibles (secret statistique)'. NULL otherwise. is_secret_stat and is_low_count tell the rule apart.
 {% enddocs %}
 
 {% docs column__milestone_age %}

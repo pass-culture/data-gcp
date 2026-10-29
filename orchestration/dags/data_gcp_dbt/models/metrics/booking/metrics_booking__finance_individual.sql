@@ -19,4 +19,5 @@ left join
     {{ ref("int_kpi__cultural_partner_activation") }} as cp
     on bf.venue_municipality_code = cp.partner_municipality_code
     and bf.venue_city_code = cp.partner_city_code
+    and bf.venue_department_code = cp.partner_department_code
     and bf.partition_month = cp.partition_month

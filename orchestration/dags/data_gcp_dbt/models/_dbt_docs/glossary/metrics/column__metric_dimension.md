@@ -32,6 +32,10 @@ Number of distinct beneficiaries of the territory behind the KPI, from January 2
 Minimum number of distinct beneficiaries behind the KPI for it to be published: 5, or 20 for the category shares (pct_reservations_beneficiaires_*), which are published as a whole breakdown.
 {% enddocs %}
 
+{% docs column__external_reporting_secret_detail %}
+Internal detail of the rule behind a masked KPI, not to be published: the statistical secret reason of the territory with its side and rolling window (e.g. 'Nombre de partenaires faible (< 3) (individuel, 6 mois)'), or the fewer than 5 beneficiaries rule. NULL when the KPI is not masked.
+{% enddocs %}
+
 {% docs column__external_reporting_is_national_only %}
 True on the rows added for a KPI published at NAT but not at this territory level (e.g. coverage rates): numerator, denominator and kpi are NULL, only the national_* columns are filled, so that reports filtered on a territory still show the national value.
 {% enddocs %}

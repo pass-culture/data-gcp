@@ -243,7 +243,16 @@
                 department_label,
                 is_municipality_secret_stat,
                 is_epci_secret_stat,
-                is_department_secret_stat
+                is_department_secret_stat,
+                municipality_secret_reason_label,
+                epci_secret_reason_label,
+                department_secret_reason_label,
+                -- side and window of the rule, for secret_detail
+                format(
+                    '%s, %d mois',
+                    '{{ "collectif" if "collective" in secret_model else "individuel" }}',
+                    rolling_window_months_count
+                ) as secret_scope
             from {{ ref(secret_model) }}
             where
                 partition_month = {{ last_month }}
@@ -256,19 +265,37 @@
         select
             dimension_name,
             dimension_value,
-            logical_or(is_secret_stat) as is_secret_stat
+            logical_or(is_secret_stat) as is_secret_stat,
+            string_agg(
+                distinct if(
+                    is_secret_stat,
+                    concat(secret_reason_label, ' (', secret_scope, ')'),
+                    null
+                ),
+                ' ; '
+                order by
+                    if(
+                        is_secret_stat,
+                        concat(secret_reason_label, ' (', secret_scope, ')'),
+                        null
+                    )
+            ) as secret_detail
         from
             (
                 select
                     'COM' as dimension_name,
                     municipality_code as dimension_value,
-                    is_municipality_secret_stat as is_secret_stat
+                    is_municipality_secret_stat as is_secret_stat,
+                    municipality_secret_reason_label as secret_reason_label,
+                    secret_scope
                 from secret_source
                 union all
                 select
                     'EPCI' as dimension_name,
                     epci_code as dimension_value,
-                    is_epci_secret_stat as is_secret_stat
+                    is_epci_secret_stat as is_secret_stat,
+                    epci_secret_reason_label as secret_reason_label,
+                    secret_scope
                 from secret_source
                 where epci_code is not null
                 union all
@@ -276,7 +303,9 @@
                 select
                     'DEP' as dimension_name,
                     department_label as dimension_value,
-                    is_department_secret_stat as is_secret_stat
+                    is_department_secret_stat as is_secret_stat,
+                    department_secret_reason_label as secret_reason_label,
+                    secret_scope
                 from secret_source
                 where department_label is not null
             )
@@ -343,6 +372,7 @@
             and low_count_kpis.kpi_name is not null as is_low_count,
             filled_kpis.is_secret_applicable
             and coalesce(secret_territories.is_secret_stat, false) as is_secret_stat,
+            secret_territories.secret_detail as territory_secret_detail,
             case
                 when filled_kpis.dimension_name in ('EPCI', 'COM')
                 then territory_labels.label
@@ -383,6 +413,7 @@
             is_national_only,
             is_secret_stat,
             is_low_count,
+            territory_secret_detail,
             label,
             intitule
         ),
@@ -421,7 +452,15 @@
             flagged_kpis.is_secret_stat or flagged_kpis.is_low_count,
             'Données non disponibles (secret statistique)',
             null
-        ) as secret_reason
+        ) as secret_reason,
+        -- internal: the rule behind the mask, not to be published
+        case
+            when flagged_kpis.is_secret_stat
+            then flagged_kpis.territory_secret_detail
+            when flagged_kpis.is_low_count
+            then
+                'Moins de 5 bénéficiaires derrière ce KPI (20 pour la répartition par catégorie)'
+        end as secret_detail
     from flagged_kpis
     left join
         national_values

@@ -54,19 +54,9 @@ with
                 and date_trunc(date(b.booking_used_date), month)
                 = date_trunc(date_sub(date('{{ ds() }}'), interval 1 month), month)
             {% endif %}
-    )
+    ),
 
-select
-    partition_month,
-    timestamp('{{ ts() }}') as updated_at,
-    dimension_name,
-    dimension_value,
-    kpi_name,
-    numerator,
-    1 as denominator,
-    numerator as kpi
-from
-    (
+    aggregated as (
         {% for dim in get_dimensions("user", "geo_full") %}
             {% if not loop.first %}
                 union all
@@ -83,5 +73,34 @@ from
             group by partition_month, dimension_name, dimension_value
         {% endfor %}
     )
-    unpivot (numerator for kpi_name in ({{ kpis.keys() | join(", ") }}))
+
+select
+    partition_month,
+    timestamp('{{ ts() }}') as updated_at,
+    dimension_name,
+    dimension_value,
+    kpi_name,
+    numerator,
+    1 as denominator,
+    numerator as kpi
+from aggregated unpivot (numerator for kpi_name in ({{ kpis.keys() | join(", ") }}))
 where dimension_value is not null
+-- share of each category in the bookings of the territory: sum numerator and
+-- denominator over the months, then divide
+{% for category in get_categories() %}
+    union all
+    select
+        partition_month,
+        timestamp('{{ ts() }}') as updated_at,
+        dimension_name,
+        dimension_value,
+        'pct_reservations_beneficiaires_{{ category.value_expr }}' as kpi_name,
+        total_reservations_beneficiaires_{{ category.value_expr }} as numerator,
+        total_reservations_beneficiaires as denominator,
+        safe_divide(
+            total_reservations_beneficiaires_{{ category.value_expr }},
+            total_reservations_beneficiaires
+        ) as kpi
+    from aggregated
+    where dimension_value is not null
+{% endfor %}

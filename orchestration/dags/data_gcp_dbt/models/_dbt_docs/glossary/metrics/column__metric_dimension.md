@@ -21,11 +21,15 @@ True when the KPI is measured on the cultural partner (venue) geography and the 
 {% enddocs %}
 
 {% docs column__external_reporting_is_low_count %}
-True when the KPI is accounted for by 1 to 4 beneficiaries of the territory over the whole history (see external_reporting__beneficiary_booking_bookers): numerator, denominator and kpi are then NULL on every month. Beneficiary counts are blurred instead (cell key method) and never flagged.
+True when the KPI is accounted for by 1 to 4 beneficiaries of the territory over the whole history (see external_reporting__beneficiary_booking_bookers): numerator, denominator and kpi are then NULL on every month. Also true on the months where an average or a share by person (montant_moyen_*, pct_beneficiaires_ayant_reserve_*) is computed over 1 to 4 beneficiaries. Beneficiary counts are blurred instead (cell key method) and never flagged.
 {% enddocs %}
 
 {% docs column__external_reporting_total_beneficiaries_behind_kpi %}
 Number of distinct beneficiaries of the territory behind the KPI, from January 2022 to the last complete month.
+{% enddocs %}
+
+{% docs column__external_reporting_min_beneficiaries %}
+Minimum number of distinct beneficiaries behind the KPI for it to be published: 5, or 20 for the category shares (pct_reservations_beneficiaires_*), which are published as a whole breakdown.
 {% enddocs %}
 
 {% docs column__external_reporting_is_national_only %}

@@ -75,6 +75,14 @@ models:
                 threshold: 0.5
               config:
                 where: "dimension_name IN ('NAT')"
+      - name: aggregation
+        description: "{{ doc('column__aggregation') }}"
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["flow", "stock"]
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: label
         description: "{{ doc('column__external_reporting_label') }}"
       - name: intitule

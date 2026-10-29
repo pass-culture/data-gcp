@@ -79,6 +79,7 @@ with
             kpis_cte="kpis",
             secret_models=["statistical_secret__cultural_partner_collective"],
             kpi_attributes=["aggregation"],
+            flow_attribute="aggregation",
             zero_row_columns={
                 "scholar_year": "(select any_value(scholar_year) from kpis where partition_month = date_trunc(date_sub(date('"
                 ~ ds()

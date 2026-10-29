@@ -1,0 +1,67 @@
+version: 2
+
+models:
+  - name: metrics_top__venue_labelled
+    description: '{{ doc("description__metrics_top__venue_labelled") }}'
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - partition_month
+            - geo_level
+            - geo_value
+            - venue_tag_name
+            - venue_rank
+    columns:
+      - name: partition_month
+        description: '{{ doc("column__partition_month") }}'
+        data_type: DATE
+        tests:
+          - not_null
+
+      - name: geo_level
+        description: '{{ doc("column__geo_level") }}'
+        data_type: STRING
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['national', 'region', 'department']
+
+      - name: geo_value
+        description: '{{ doc("column__geo_value") }}'
+        data_type: STRING
+        tests:
+          - not_null
+
+      - name: venue_id
+        description: '{{ doc("column__venue_id") }}'
+        data_type: STRING
+        tests:
+          - not_null
+
+      - name: venue_name
+        description: '{{ doc("column__venue_name") }}'
+        data_type: STRING
+        tests:
+          - not_null
+
+      - name: offerer_name
+        description: '{{ doc("column__offerer_name") }}'
+        data_type: STRING
+
+      - name: venue_tag_name
+        description: '{{ doc("column__venue_tag_name") }}'
+        data_type: STRING
+        tests:
+          - not_null
+
+      - name: total_booking_amount
+        description: '{{ doc("column__total_booking_amount") }}'
+        data_type: FLOAT64
+        tests:
+          - not_null
+
+      - name: venue_rank
+        description: '{{ doc("column__venue_rank") }}'
+        data_type: INT64
+        tests:
+          - not_null

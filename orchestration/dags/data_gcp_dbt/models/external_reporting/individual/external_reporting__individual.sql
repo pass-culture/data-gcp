@@ -12,25 +12,47 @@
     A territory is secret if it is secret on the individual or the collective side
     (cultural partner pages show both).
 
-    Each segment maps to the KPIs subject to the statistical secret: the ones
-    measured on the cultural partner (venue) geography. KPIs measured on the
-    beneficiary geography are never masked.
+    For each segment:
+        - is_secret_applicable selects the KPIs subject to the statistical secret:
+          the ones measured on the cultural partner (venue) geography. KPIs
+          measured on the beneficiary geography are never masked;
+        - aggregation tells consumers how to aggregate over months: "flow" = sum
+          the months (and a row every month, see apply_statistical_secret),
+          "stock" = read a single month (snapshot, cumulative, average or share).
 #}
 {% set models = {
-    "beneficiary": "false",
-    "coverage": "false",
-    "cultural_partner": "true",
-    "collective_partner_booking": "true",
-    "beneficiary_booking": "false",
-    "deposit_usage": "false",
-    "diversity": "false",
-    "finance": "true",
-    "booking": "kpi_name not like 'part_partenaires_dans_conso_beneficiaires%'",
+    "beneficiary": {
+        "is_secret_applicable": "false",
+        "aggregation": "'stock'",
+    },
+    "coverage": {"is_secret_applicable": "false", "aggregation": "'stock'"},
+    "cultural_partner": {
+        "is_secret_applicable": "true",
+        "aggregation": "'stock'",
+    },
+    "collective_partner_booking": {
+        "is_secret_applicable": "true",
+        "aggregation": "'flow'",
+    },
+    "beneficiary_booking": {
+        "is_secret_applicable": "false",
+        "aggregation": "'flow'",
+    },
+    "deposit_usage": {
+        "is_secret_applicable": "false",
+        "aggregation": "'stock'",
+    },
+    "diversity": {"is_secret_applicable": "false", "aggregation": "'stock'"},
+    "finance": {"is_secret_applicable": "true", "aggregation": "'flow'"},
+    "booking": {
+        "is_secret_applicable": "kpi_name not like 'part_partenaires_dans_conso_beneficiaires%'",
+        "aggregation": "if(kpi_name in ('total_reservations_gratuites', 'total_reservations_toutes'), 'flow', 'stock')",
+    },
 } %}
 
 with
     kpis as (
-        {% for model, is_secret_applicable in models.items() %}
+        {% for model, segment_config in models.items() %}
             {% if not loop.first %}
                 union all
             {% endif %}
@@ -43,7 +65,8 @@ with
                 coalesce(numerator, 0) as numerator,
                 coalesce(denominator, 0) as denominator,
                 coalesce(kpi, 0) as kpi,
-                {{ is_secret_applicable }} as is_secret_applicable
+                {{ segment_config.aggregation }} as aggregation,
+                {{ segment_config.is_secret_applicable }} as is_secret_applicable
             from {{ ref("external_reporting__" ~ model) }}
             where
                 partition_month
@@ -64,5 +87,7 @@ with
                 "montant_moyen_",
                 "pct_beneficiaires_ayant_reserve_",
             ],
+            kpi_attributes=["aggregation"],
+            flow_attribute="aggregation",
         )
     }}

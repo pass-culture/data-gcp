@@ -6,7 +6,8 @@
     zero_row_columns={},
     low_count_models=[],
     low_count_denominator_kpis=[],
-    min_individuals=5
+    min_individuals=5,
+    flow_attribute=none
 ) %}
     {#
         Mask external reporting KPIs of territories under statistical secret, add
@@ -44,8 +45,13 @@
               for (low_count_models) is NULL on every month (is_low_count), as
               amounts and booking counts cannot be blurred;
             - an average or share whose denominator counts 1 to min_individuals - 1
-              people (low_count_denominator_kpis) is NULL on that month
-              (is_low_count), as it would disclose individual values.
+              people (low_count_denominator_kpis) on any of the last 12 months is
+              NULL on every month (is_low_count), as it would disclose individual
+              values and the series would not be reliable;
+            - flow KPIs (flow_attribute = 'flow') get a zero row for every month of
+              their national series where the territory has no row, so that the
+              national_* columns summed over the months of any territory give the
+              national total.
 
         Parameters:
             kpis_cte (string): name of the CTE holding the KPI rows
@@ -58,6 +64,8 @@
             low_count_denominator_kpis (list): KPI name prefixes whose denominator
                 counts people (averages and shares by person)
             min_individuals (int): minimum number of people behind a published KPI
+            flow_attribute (string): KPI attribute ('flow' / 'stock') telling which
+                KPIs are summed over months and get a row every month
     #}
     {% set last_month = (
         "date_trunc(date_sub(date('" ~ ds() ~ "'), interval 1 month), month)"
@@ -148,6 +156,44 @@
             existing_kpis.kpi_name is null
             -- national KPIs always exist, and are checked month over month
             and territories.dimension_name != 'NAT'
+            {% if flow_attribute %}
+                and kpi_list.{{ flow_attribute }} != 'flow'
+            {% endif %}
+        {% if flow_attribute %}
+            union all
+            select
+                national.partition_month,
+                national.updated_at,
+                territories.dimension_name,
+                territories.dimension_value,
+                national.kpi_name,
+                0 as numerator,
+                0 as denominator,
+                0 as kpi
+                {% for column in zero_row_columns.keys() %}
+                    , national.{{ column }}
+                {% endfor %}
+                {% for attribute in kpi_attributes %}
+                    , national.{{ attribute }}
+                {% endfor %},
+                kpi_list.is_secret_applicable,
+                false as is_national_only
+            from {{ kpis_cte }} as national
+            inner join
+                kpi_list
+                on national.kpi_name = kpi_list.kpi_name
+                and kpi_list.dimension_name != 'NAT'
+                and kpi_list.{{ flow_attribute }} = 'flow'
+            inner join
+                territories on kpi_list.dimension_name = territories.dimension_name
+            left join
+                {{ kpis_cte }} as existing
+                on national.partition_month = existing.partition_month
+                and national.kpi_name = existing.kpi_name
+                and territories.dimension_name = existing.dimension_name
+                and territories.dimension_value = existing.dimension_value
+            where national.dimension_name = 'NAT' and existing.kpi_name is null
+        {% endif %}
         union all
         select
             national.partition_month,
@@ -257,13 +303,29 @@
     ),
 
     low_count_kpis as (
+        {% set low_count_selects = [] %}
         {% for low_count_model in low_count_models %}
-            {% if not loop.first %}
-                union distinct
-            {% endif %}
-            select dimension_name, dimension_value, kpi_name
-            from {{ ref(low_count_model) }}
-            where total_beneficiaries between 1 and {{ min_individuals - 1 }}
+            {% do low_count_selects.append(
+                "select dimension_name, dimension_value, kpi_name from "
+                ~ ref(low_count_model)
+                ~ " where total_beneficiaries between 1 and "
+                ~ (min_individuals - 1)
+            ) %}
+        {% endfor %}
+        {% for prefix in low_count_denominator_kpis %}
+            {% do low_count_selects.append(
+                "select dimension_name, dimension_value, kpi_name from "
+                ~ kpis_cte
+                ~ " where dimension_name != 'NAT' and starts_with(kpi_name, '"
+                ~ prefix
+                ~ "') and denominator between 1 and "
+                ~ (min_individuals - 1)
+                ~ " and partition_month >= date_sub("
+                ~ last_month
+                ~ ", interval 11 month)"
+            ) %}
+        {% endfor %}
+        {% if low_count_selects %}{{ low_count_selects | join("\n union distinct\n") }}
         {% else %}
             select
                 cast(null as string) as dimension_name,
@@ -271,23 +333,14 @@
                 cast(null as string) as kpi_name
             from unnest([1])
             where false
-        {% endfor %}
+        {% endif %}
     ),
 
     flagged_kpis as (
         select
             filled_kpis.*,
             filled_kpis.dimension_name != 'NAT'
-            and (
-                low_count_kpis.kpi_name is not null
-                {% for prefix in low_count_denominator_kpis %}
-                    or (
-                        starts_with(filled_kpis.kpi_name, '{{ prefix }}')
-                        and filled_kpis.denominator
-                        between 1 and {{ min_individuals - 1 }}
-                    )
-                {% endfor %}
-            ) as is_low_count,
+            and low_count_kpis.kpi_name is not null as is_low_count,
             filled_kpis.is_secret_applicable
             and coalesce(secret_territories.is_secret_stat, false) as is_secret_stat,
             case

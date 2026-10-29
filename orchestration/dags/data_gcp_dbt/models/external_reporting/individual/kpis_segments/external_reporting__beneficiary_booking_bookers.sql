@@ -24,6 +24,10 @@
             ~ category.value_expr: "b.offer_category_id = '"
             ~ category.name
             ~ "'",
+            "pct_reservations_beneficiaires_"
+            ~ category.value_expr: "b.offer_category_id = '"
+            ~ category.name
+            ~ "'",
         }
     ) %}
 {% endfor %}

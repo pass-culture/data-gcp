@@ -60,5 +60,9 @@ with
                 "statistical_secret__cultural_partner_collective",
             ],
             low_count_models=["external_reporting__beneficiary_booking_bookers"],
+            low_count_denominator_kpis=[
+                "montant_moyen_",
+                "pct_beneficiaires_ayant_reserve_",
+            ],
         )
     }}

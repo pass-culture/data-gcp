@@ -5,6 +5,7 @@
     kpi_attributes=[],
     zero_row_columns={},
     low_count_models=[],
+    low_count_denominator_kpis=[],
     min_individuals=5
 ) %}
     {#
@@ -41,7 +42,10 @@
               their national value is available whatever the territory filter;
             - a KPI that 1 to min_individuals - 1 people of a territory account
               for (low_count_models) is NULL on every month (is_low_count), as
-              amounts and booking counts cannot be blurred.
+              amounts and booking counts cannot be blurred;
+            - an average or share whose denominator counts 1 to min_individuals - 1
+              people (low_count_denominator_kpis) is NULL on that month
+              (is_low_count), as it would disclose individual values.
 
         Parameters:
             kpis_cte (string): name of the CTE holding the KPI rows
@@ -51,6 +55,8 @@
             zero_row_columns (dict): other columns of zero rows, name -> expression
             low_count_models (list): models of distinct people behind each KPI
                 (dimension_name, dimension_value, kpi_name, total_beneficiaries)
+            low_count_denominator_kpis (list): KPI name prefixes whose denominator
+                counts people (averages and shares by person)
             min_individuals (int): minimum number of people behind a published KPI
     #}
     {% set last_month = (
@@ -272,7 +278,16 @@
         select
             filled_kpis.*,
             filled_kpis.dimension_name != 'NAT'
-            and low_count_kpis.kpi_name is not null as is_low_count,
+            and (
+                low_count_kpis.kpi_name is not null
+                {% for prefix in low_count_denominator_kpis %}
+                    or (
+                        starts_with(filled_kpis.kpi_name, '{{ prefix }}')
+                        and filled_kpis.denominator
+                        between 1 and {{ min_individuals - 1 }}
+                    )
+                {% endfor %}
+            ) as is_low_count,
             filled_kpis.is_secret_applicable
             and coalesce(secret_territories.is_secret_stat, false) as is_secret_stat,
             case

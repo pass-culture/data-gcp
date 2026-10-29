@@ -57,6 +57,20 @@ with
         where b.booking_is_used
     ),
 
+    -- free bookings, cancelled ones included: free offers are often cancelled
+    -- by default as they need no check, so every free booking counts
+    free_bookings as (
+        select
+            venue_region_name,
+            venue_department_name,
+            venue_epci_code,
+            venue_municipality_code,
+            booking_id,
+            date_trunc(date(booking_creation_date), month) as partition_month
+        from {{ ref("mrt_global__booking") }}
+        where booking_amount = 0
+    ),
+
     -- free offers (last stock price 0) created by month, in any state and
     -- currently bookable
     free_offers as (
@@ -271,12 +285,10 @@ with
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.venue_col }} as dimension_value,
                 'total_reservations_gratuites' as kpi_name,
-                count(
-                    case when booking_intermediary_amount = 0 then 1 end
-                ) as numerator,
+                count(booking_id) as numerator,
                 cast(1 as numeric) as denominator,
-                count(case when booking_intermediary_amount = 0 then 1 end) as kpi
-            from base_booking_data
+                count(booking_id) as kpi
+            from free_bookings
             group by
                 partition_month, updated_at, dimension_name, dimension_value, kpi_name
 

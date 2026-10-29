@@ -101,8 +101,10 @@ jobs:
           PASSDIRECTOR_SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.PASSDIRECTOR_SLACK_BOT_TOKEN }}
           NOTIF_CHANNEL_ID: ${{ inputs.NOTIF_CHANNEL_ID }}
           GITHUB_ACTOR: ${{ github.actor }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           passdirector slack post \
             --channel "$NOTIF_CHANNEL_ID" \
-            --message ":fire: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Deploy Job échoué> :no_entry:" \
+            --message ":fire: <https://github.com/$REPOSITORY/actions/runs/$RUN_ID|Deploy Job échoué> :no_entry:" \
             --github-actor "$GITHUB_ACTOR"

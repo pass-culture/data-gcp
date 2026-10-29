@@ -7,7 +7,7 @@ enddocs %}
 {% docs column__offer_description %} Offer description (synopsis, further details on the show) as provided by thecultural partner and displayed in app.{% enddocs %}
 
 {% docs column__offer_name %} Name of the offer as it appears in the application. {% enddocs %}
-{% docs column__offer_category_id %} Identifier of the offer category, which groups offer subcategories (offer_subcategory_id): the cultural partner picks the subcategory from a predefined list when creating the offer, and the category follows from it. Values: 'LIVRE', 'MUSIQUE_ENREGISTREE', 'CINEMA', 'BEAUX_ARTS', 'FILM', 'INSTRUMENT', 'SPECTACLE', 'MUSIQUE_LIVE', 'MUSEE', 'PRATIQUE_ART', 'CONFERENCE', 'JEU', 'MEDIA', 'CARTE_JEUNES'. For example 'LIVRE' covers LIVRE_PAPIER, LIVRE_NUMERIQUE, LIVRE_AUDIO_PHYSIQUE, TELECHARGEMENT_LIVRE_AUDIO, ABO_LIVRE_NUMERIQUE, ABO_BIBLIOTHEQUE and FESTIVAL_LIVRE. {% enddocs %}
+{% docs column__offer_category_id %} Identifier of the offer category, which groups offer subcategories (offer_subcategory_id): the cultural partner picks the subcategory from a predefined list when creating the offer, and the category follows from it. Rows of retired subcategories can carry a retired category. {% enddocs %}
 {% docs column__offer_category %} Identifier for the category of the offer. Determined by the cultural partner via a list of pre-set options in a drop down menu. {% enddocs %}
 {% docs column__offer_creation_date %} Date when the offer was created. {% enddocs %}
 {% docs column__offer_created_at %} Timestamp when the offer was created. {% enddocs %}
@@ -73,7 +73,7 @@ An offer is considered bookable if it meets the following criteria:
 {% docs column__search_group_name %} Legacy: Category displayed in the application {% enddocs %}
 {% docs column__image_url %} Image displayed in the passculture.app if present. {% enddocs %}
 {% docs column__titelive_gtl_id %} Unique identifier of the Genre Tite Live (GTL) associated to this offer.{% enddocs %}
-{% docs column__gtl_type %} Type of GTL associated to this offer. Can either be "BOOK" or "MUSIC" {% enddocs %}
+{% docs column__gtl_type %} Type of GTL associated to this offer. Can either be "BOOK" or "MUSIC". Can be NULL. {% enddocs %}
 {% docs column__gtl_label_level_1 %} Name of the level 1 GTL associated to this offer (for example, "Littératurefor a
 book or "Pop" for music.) {% enddocs %}
 {% docs column__gtl_label_level_2 %} Name of the level 2 GTL associated to this offer (for example, "Poésie" for a book
@@ -82,8 +82,9 @@ or "Brit Pop" for music.) {% enddocs %}
 Only available for books. {% enddocs %}
 {% docs column__gtl_label_level_4 %} Name of the level 4 GTL associated to this offer. Only available for books. {%
 enddocs %}
-{% docs column__offer_type_domain %} Deprecated: The offer's category type,as many metadata info are specific to certain
-offer types. Can be either "BOOK", "MUSIC", "SHOW" or "MOVIE".{% enddocs %}
+{% docs column__offer_type_domain %}
+Deprecated: The offer's category type, as many metadata info are specific to certain offer types. Can be either "BOOK", "MUSIC", "SHOW" or "MOVIE". Can be NULL.
+{% enddocs %}
 {% docs column__offer_type_id %} Deprecated: Unique identifier of the offer's type. Currently available to describe
 either music genres (pop, rock) or show type (opera, circus).{% enddocs %}
 {% docs column__offer_sub_type_id %} Deprecated: Legacy identifier. Prefer using GTL. {% enddocs %}

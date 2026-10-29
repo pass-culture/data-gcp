@@ -3,7 +3,9 @@
     secret_models,
     rolling_months_list=[6, 48],
     kpi_attributes=[],
-    zero_row_columns={}
+    zero_row_columns={},
+    low_count_models=[],
+    min_individuals=5
 ) %}
     {#
         Mask external reporting KPIs of territories under statistical secret, add
@@ -36,7 +38,10 @@
             - KPIs published at NAT but not at a territory level (e.g. coverage
               rates) get rows for every territory of that level with NULL
               numerator, denominator and kpi and is_national_only = true, so that
-              their national value is available whatever the territory filter.
+              their national value is available whatever the territory filter;
+            - a KPI that 1 to min_individuals - 1 people of a territory account
+              for (low_count_models) is NULL on every month (is_low_count), as
+              amounts and booking counts cannot be blurred.
 
         Parameters:
             kpis_cte (string): name of the CTE holding the KPI rows
@@ -44,6 +49,9 @@
             rolling_months_list (list): rolling windows to apply
             kpi_attributes (list): KPI level columns copied on zero rows
             zero_row_columns (dict): other columns of zero rows, name -> expression
+            low_count_models (list): models of distinct people behind each KPI
+                (dimension_name, dimension_value, kpi_name, total_beneficiaries)
+            min_individuals (int): minimum number of people behind a published KPI
     #}
     {% set last_month = (
         "date_trunc(date_sub(date('" ~ ds() ~ "'), interval 1 month), month)"
@@ -242,9 +250,29 @@
             = 1
     ),
 
+    low_count_kpis as (
+        {% for low_count_model in low_count_models %}
+            {% if not loop.first %}
+                union distinct
+            {% endif %}
+            select dimension_name, dimension_value, kpi_name
+            from {{ ref(low_count_model) }}
+            where total_beneficiaries between 1 and {{ min_individuals - 1 }}
+        {% else %}
+            select
+                cast(null as string) as dimension_name,
+                cast(null as string) as dimension_value,
+                cast(null as string) as kpi_name
+            from unnest([1])
+            where false
+        {% endfor %}
+    ),
+
     flagged_kpis as (
         select
             filled_kpis.*,
+            filled_kpis.dimension_name != 'NAT'
+            and low_count_kpis.kpi_name is not null as is_low_count,
             filled_kpis.is_secret_applicable
             and coalesce(secret_territories.is_secret_stat, false) as is_secret_stat,
             case
@@ -271,6 +299,11 @@
             territory_labels
             on filled_kpis.dimension_name = territory_labels.dimension_name
             and filled_kpis.dimension_value = territory_labels.dimension_value
+        left join
+            low_count_kpis
+            on filled_kpis.dimension_name = low_count_kpis.dimension_name
+            and filled_kpis.dimension_value = low_count_kpis.dimension_value
+            and filled_kpis.kpi_name = low_count_kpis.kpi_name
     )
 
     select
@@ -281,23 +314,30 @@
             is_secret_applicable,
             is_national_only,
             is_secret_stat,
+            is_low_count,
             label,
             intitule
         ),
         flagged_kpis.label,
         flagged_kpis.intitule,
         if(
-            flagged_kpis.is_secret_stat or flagged_kpis.is_national_only,
+            flagged_kpis.is_secret_stat
+            or flagged_kpis.is_low_count
+            or flagged_kpis.is_national_only,
             null,
             coalesce(flagged_kpis.numerator, 0)
         ) as numerator,
         if(
-            flagged_kpis.is_secret_stat or flagged_kpis.is_national_only,
+            flagged_kpis.is_secret_stat
+            or flagged_kpis.is_low_count
+            or flagged_kpis.is_national_only,
             null,
             coalesce(flagged_kpis.denominator, 0)
         ) as denominator,
         if(
-            flagged_kpis.is_secret_stat or flagged_kpis.is_national_only,
+            flagged_kpis.is_secret_stat
+            or flagged_kpis.is_low_count
+            or flagged_kpis.is_national_only,
             null,
             coalesce(flagged_kpis.kpi, 0)
         ) as kpi,
@@ -305,12 +345,14 @@
         national_values.national_denominator,
         national_values.national_kpi,
         flagged_kpis.is_secret_stat,
+        flagged_kpis.is_low_count,
         flagged_kpis.is_national_only,
-        if(
-            flagged_kpis.is_secret_stat,
-            'Données non disponibles (secret statistique)',
-            null
-        ) as secret_reason
+        case
+            when flagged_kpis.is_secret_stat
+            then 'Données non disponibles (secret statistique)'
+            when flagged_kpis.is_low_count
+            then 'Données non disponibles (moins de 5 bénéficiaires)'
+        end as secret_reason
     from flagged_kpis
     left join
         national_values

@@ -59,5 +59,6 @@ with
                 "statistical_secret__cultural_partner_individual",
                 "statistical_secret__cultural_partner_collective",
             ],
+            low_count_models=["external_reporting__beneficiary_booking_bookers"],
         )
     }}

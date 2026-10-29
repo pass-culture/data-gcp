@@ -8,6 +8,22 @@ title: Metric dimensions
 A boolean flag indicating whether the data point is subject to statistical confidentiality (true) or not (false). This is triggered when the KPI falls below a minimum threshold to protect individual privacy and prevent re-identification.
 {% enddocs %}
 
+{% docs column__external_reporting_label %}
+Display name of the territory: EPCI or municipality name for EPCI and COM, dimension_value otherwise.
+{% enddocs %}
+
+{% docs column__external_reporting_intitule %}
+Display title of the territory: 'Name (code)' for EPCI and COM, 'Rapport National' for NAT, dimension_value otherwise.
+{% enddocs %}
+
+{% docs column__external_reporting_is_secret_stat %}
+True when the territory (COM, EPCI or DEP) is subject to statistical secrecy at the last complete month, over the 6 or the 48-month rolling window (is_*_secret_stat of the statistical_secret__cultural_partner_* models). numerator, denominator and kpi are then NULL on every month. REG, ACAD and NAT are never secret.
+{% enddocs %}
+
+{% docs column__external_reporting_secret_reason %}
+Message to display instead of the KPI when the territory is subject to statistical secrecy ('Données non disponibles (secret statistique)'), NULL otherwise.
+{% enddocs %}
+
 {% docs column__milestone_age %}
 Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in beneficiary coverage models and in exp_vidoc__population_coverage, STRING in int_kpi__population_coverage and metrics_population__coverage.
 {% enddocs %}

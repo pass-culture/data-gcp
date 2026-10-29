@@ -183,6 +183,7 @@ sources:
       - name: metabase_collection_taxonomy
       - name: metabase_collection
       - name: metabase_core_user
+      - name: metabase_document
       - name: metabase_query_execution
       - name: metabase_report_card
       - name: metabase_report_dashboard

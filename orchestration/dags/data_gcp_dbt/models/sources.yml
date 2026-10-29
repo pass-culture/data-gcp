@@ -19,6 +19,7 @@ sources:
         pc-data-stg
       {%- endif -%}
     tables:
+      - name: gsheet_backoffice_log_reference
       - name: gsheet_company_contact
       - name: gsheet_eac_webinar
       - name: gsheet_educational_institution_student_headcount
@@ -182,6 +183,7 @@ sources:
       - name: metabase_collection_taxonomy
       - name: metabase_collection
       - name: metabase_core_user
+      - name: metabase_document
       - name: metabase_query_execution
       - name: metabase_report_card
       - name: metabase_report_dashboard
@@ -258,7 +260,6 @@ sources:
       - name: region_department
       - name: siren_main_business_labels
       - name: siren_legal_category_labels
-      - name : backoffice_log_reference
       - name: qpi_answers_v1
         external:
           location: "gs://de-bigquery-data-archive-{{var('ENV_SHORT_NAME')}}/archive/2024/08/raw_{{var('ENV_SHORT_NAME')}}/qpi_answers_v1.jsonl"

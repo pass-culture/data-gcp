@@ -36,7 +36,7 @@ with
             app_info.version as app_version,
             timestamp_micros(event_timestamp) as event_timestamp,
             timestamp_micros(event_previous_timestamp) as event_previous_timestamp,
-            timestamp_micros(event_timestamp) as user_first_touch_timestamp,
+            timestamp_micros(user_first_touch_timestamp) as user_first_touch_timestamp,
             (
                 select event_params.value.double_value
                 from unnest(event_params) as event_params

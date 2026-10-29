@@ -95,7 +95,7 @@ def create_nested_folder_groups(
         ]
         chain(*task_chain)
         # Set model execution task's upstream to leaf folder trigger task
-        task_chain[-1] >> model_op_dict[model_node]
+        connect_dbt_dependency(task_chain[-1], model_op_dict[model_node])
 
 
 @lru_cache(maxsize=128)
@@ -517,16 +517,119 @@ def load_and_process_manifest(
     return load_and_process_manifest_with_mtime(manifest_path, mtime)
 
 
+def attach_external_dependency_sensor(
+    dag: DAG, operator: PythonOperator, node_tags: list[str], node_meta: dict
+) -> None:
+    """
+    Attach a sensor upstream of the operator when the dbt node declares an
+    external dependency (via the "external_dependency" tag and the
+    "external_dag_id"/"external_task_id" meta). Applies to any dbt node type
+    (model, snapshot, ...), not just snapshots.
+
+    The dbt model can optionally set meta.external_dependency_on_skip to control
+    what happens when the external task is skipped:
+    - "fail" (default): the sensor FAILS, which turns this operator (and its
+      downstream dbt nodes) upstream_failed.
+    - "skip": the sensor is SKIPPED instead, which cascades as a skip to this
+      operator (and its downstream dbt nodes) via none_failed_min_one_success.
+
+    It can also set meta.external_dependency_offset_days / _hours to shift the
+    window `delayed_waiting_operator` searches for the external DAG run. This
+    matters when the external DAG is scheduled to start *after* this one: the
+    external run aligned with this DAG's own logical_date hasn't happened yet
+    (it may even depend on this very run finishing first), so the sensor must
+    be pointed at an earlier external run instead. Defaults to 0 (no shift),
+    matching `delayed_waiting_operator`'s own defaults.
+
+    The operator's dbt parents (set up later, once the full dependency graph
+    is known) are interleaved before the sensor rather than running alongside
+    it: see `connect_dbt_dependency`, which routes `parent >> operator` edges
+    through `operator.external_dependency_sensor` when it is set here.
+    """
+    from common.utils import delayed_waiting_operator
+
+    if (
+        "external_dependency" in node_tags
+        and "external_dag_id" in node_meta
+        and "external_task_id" in node_meta
+    ):
+        on_skip = node_meta.get("external_dependency_on_skip", "fail")
+        if on_skip not in ("fail", "skip"):
+            raise ValueError(
+                f"Invalid meta.external_dependency_on_skip value: {on_skip!r}. "
+                "Expected 'fail' or 'skip'."
+            )
+
+        sensor = delayed_waiting_operator(
+            dag,
+            external_dag_id=node_meta["external_dag_id"],
+            external_task_id=node_meta["external_task_id"],
+            soft_fail=on_skip == "skip",
+            offset_days=node_meta.get("external_dependency_offset_days", 0),
+            offset_hours=node_meta.get("external_dependency_offset_hours", 0),
+            # Mirrors the operator's own trigger_rule: once dbt parents are
+            # interleaved in front of the sensor (see
+            # connect_dbt_dependency), the sensor itself must tolerate a
+            # skipped parent rather than skip outright, so a model with
+            # several parents where only one succeeds still gets a chance to
+            # run.
+            trigger_rule="none_failed_min_one_success",
+        )
+        sensor >> operator
+        operator.external_dependency_sensor = sensor
+
+
+def attach_critical_test(model_op: BaseOperator, test_op: BaseOperator) -> None:
+    """
+    Mark `test_op` as the operator to use whenever something needs to be
+    wired downstream of `model_op`, so the critical test is interleaved
+    between the model and its children (model -> test -> children) instead
+    of running alongside them. See `connect_dbt_dependency`.
+    """
+    model_op.critical_test_operator = test_op
+
+
+def get_effective_operator(operator: BaseOperator) -> BaseOperator:
+    """
+    Return the operator to actually use when wiring further downstream
+    dependencies from `operator`: its attached critical-test operator when
+    it has one (see `attach_critical_test`), otherwise `operator` itself.
+    """
+    return getattr(operator, "critical_test_operator", operator)
+
+
+def connect_dbt_dependency(upstream: BaseOperator, downstream: BaseOperator) -> None:
+    """
+    Connect `upstream` to `downstream`, routing through whichever gate is
+    attached on either side instead of a direct edge:
+    - `upstream`'s critical test, if any (see `attach_critical_test`) --
+      tested before anything moves on to `downstream`.
+    - `downstream`'s external-dependency sensor, if any (see
+      `attach_external_dependency_sensor`) -- so the sensor only starts
+      waiting once its real dbt parent has actually finished, instead of
+      running freely from the start of the DAG. `sensor >> downstream` was
+      already set when the sensor was attached.
+    """
+    upstream = get_effective_operator(upstream)
+    sensor = getattr(downstream, "external_dependency_sensor", None)
+    upstream >> (sensor if sensor is not None else downstream)
+
+
 def create_test_operator(model_data: dict, dag: DAG) -> PythonOperator:
     """Create a Python operator for running dbt tests."""
     node_tags = model_data.get("tags", [])
-    return PythonOperator(
+    node_meta = model_data.get("meta", {})
+
+    test_op = PythonOperator(
         task_id=model_data["alias"] + "_tests",
         python_callable=partial(run_dbt_test, model_data["name"], node_tags),
         dag=dag,
         pool="dbt",
         trigger_rule="none_failed_min_one_success",  # Run if upstream tasks succeed or skip
     )
+    attach_external_dependency_sensor(dag, test_op, node_tags, node_meta)
+
+    return test_op
 
 
 def create_model_operator(
@@ -540,8 +643,9 @@ def create_model_operator(
         else None
     )
     node_tags = model_data.get("tags", [])
+    node_meta = model_data.get("meta", {})
 
-    return PythonOperator(
+    model_op = PythonOperator(
         task_id=model_data["alias"] if is_applicative else model_data["name"],
         python_callable=partial(
             run_dbt_model, model_data["name"], exclude_tags, node_tags
@@ -550,14 +654,15 @@ def create_model_operator(
         pool="dbt",
         trigger_rule="none_failed_min_one_success",  # Run if upstream tasks succeed or skip
     )
+    attach_external_dependency_sensor(dag, model_op, node_tags, node_meta)
+
+    return model_op
 
 
 def create_snapshot_operator(snapshot_data: dict, dag: DAG) -> PythonOperator:
     """Create a Python operator for running a dbt snapshot."""
-    from common.utils import delayed_waiting_operator
-
     node_tags = snapshot_data.get("tags", [])
-    node_meta = snapshot_data["meta"]
+    node_meta = snapshot_data.get("meta", {})
 
     snapshot_op = PythonOperator(
         task_id=snapshot_data["alias"],
@@ -566,17 +671,7 @@ def create_snapshot_operator(snapshot_data: dict, dag: DAG) -> PythonOperator:
         pool="dbt",
         trigger_rule="none_failed_min_one_success",  # Run if upstream tasks succeed or skip
     )
-    if (
-        "external_dependency" in node_tags
-        and "external_dag_id" in node_meta
-        and "external_task_id" in node_meta
-    ):
-        sensor = delayed_waiting_operator(
-            dag,
-            external_dag_id=node_meta["external_dag_id"],
-            external_task_id=node_meta["external_task_id"],
-        )
-        sensor >> snapshot_op
+    attach_external_dependency_sensor(dag, snapshot_op, node_tags, node_meta)
 
     return snapshot_op
 
@@ -616,7 +711,12 @@ def create_data_transformation_group(
                         model_data, True, dag
                     )
                     if model_node in models_with_crit_test_dependencies:
-                        model_op_dict[model_node] >> test_op_dict[model_node]
+                        connect_dbt_dependency(
+                            model_op_dict[model_node], test_op_dict[model_node]
+                        )
+                        attach_critical_test(
+                            model_op_dict[model_node], test_op_dict[model_node]
+                        )
 
         for model_node in dbt_models:
             model_data = manifest["nodes"][model_node]
@@ -625,7 +725,12 @@ def create_data_transformation_group(
                     model_data, False, dag
                 )
                 if model_node in models_with_crit_test_dependencies:
-                    model_op_dict[model_node] >> test_op_dict[model_node]
+                    connect_dbt_dependency(
+                        model_op_dict[model_node], test_op_dict[model_node]
+                    )
+                    attach_critical_test(
+                        model_op_dict[model_node], test_op_dict[model_node]
+                    )
     return model_op_dict
 
 
@@ -633,9 +738,7 @@ def setup_dependencies(
     model_node: str,
     manifest: dict,
     model_op_dict: dict[str, BaseOperator],
-    test_op_dict: dict[str, BaseOperator],
     snapshot_op_dict: dict[str, BaseOperator],
-    models_with_crit_test_dependencies: list[Optional[str]],
     final_op: BaseOperator,
 ) -> None:
     children = [
@@ -647,12 +750,14 @@ def setup_dependencies(
         for child in manifest["child_map"][model_node]
         if child in snapshot_op_dict
     ]
-    if model_node in snapshot_op_dict:
-        snapshot_op_dict[model_node] >> (children if children else final_op)
-    elif model_node in models_with_crit_test_dependencies:
-        test_op_dict[model_node] >> (children if children else final_op)
-    else:
-        model_op_dict[model_node] >> (children if children else final_op)
+    parent_op = (
+        snapshot_op_dict[model_node]
+        if model_node in snapshot_op_dict
+        else model_op_dict[model_node]
+    )
+
+    for target in children if children else [final_op]:
+        connect_dbt_dependency(parent_op, target)
 
 
 def set_up_nodes_dependencies(
@@ -661,9 +766,7 @@ def set_up_nodes_dependencies(
     dbt_snapshots: list[str],
     manifest: dict,
     model_op_dict: dict[str, BaseOperator],
-    test_op_dict: dict[str, BaseOperator],
     snapshot_op_dict: dict[str, BaseOperator],
-    models_with_crit_test_dependencies: list[Optional[str]],
     final_op: Union[BaseOperator, PythonOperator],
 ) -> None:
     for model_node in dbt_models:
@@ -671,9 +774,7 @@ def set_up_nodes_dependencies(
             model_node,
             manifest,
             model_op_dict,
-            test_op_dict,
             snapshot_op_dict,
-            models_with_crit_test_dependencies,
             final_op,
         )
     # Set up dependencies between models and snapshots
@@ -682,9 +783,7 @@ def set_up_nodes_dependencies(
             snapshot_node,
             manifest,
             model_op_dict,
-            test_op_dict,
             snapshot_op_dict,
-            models_with_crit_test_dependencies,
             final_op,
         )
 
@@ -742,17 +841,22 @@ def dbt_dag_reconstruction(
         dbt_snapshots,
         manifest,
         model_op_dict,
-        test_op_dict,
         snapshot_op_dict,
-        models_with_crit_test_dependencies,
         final_op,
     )
 
     # Manage test's cross dependencies
     for test, parents in crit_test_parents.items():
         for p in parents:
+            # Skip the test's own attached model: that edge (model -> test,
+            # with the model's effective operator already resolved to this
+            # same test via attach_critical_test) is set up in
+            # create_data_transformation_group. Linking it again here would
+            # resolve `p` to this very test operator and wire a self-loop.
+            if p == test:
+                continue
             try:
-                model_op_dict[p] >> test_op_dict[test]
+                connect_dbt_dependency(model_op_dict[p], test_op_dict[test])
             except KeyError:
                 pass
 

@@ -51,6 +51,7 @@ models:
         data_tests:
           - not_null:
               config:
+                where: "not is_secret_stat"
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
                 tags: ['critical']
       - name: denominator
@@ -58,6 +59,7 @@ models:
         data_tests:
           - not_null:
               config:
+                where: "not is_secret_stat"
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
                 tags: ['critical']
       - name: kpi
@@ -65,6 +67,7 @@ models:
         data_tests:
           - not_null:
               config:
+                where: "not is_secret_stat"
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
                 tags: ['critical']
           - kpi_variation_threshold:
@@ -72,3 +75,15 @@ models:
                 threshold: 0.5
               config:
                 where: "dimension_name IN ('NAT')"
+      - name: label
+        description: "{{ doc('column__external_reporting_label') }}"
+      - name: intitule
+        description: "{{ doc('column__external_reporting_intitule') }}"
+      - name: is_secret_stat
+        description: "{{ doc('column__external_reporting_is_secret_stat') }}"
+        data_tests:
+          - not_null:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+      - name: secret_reason
+        description: "{{ doc('column__external_reporting_secret_reason') }}"

@@ -16,7 +16,7 @@
 
 {% docs column__native_daily_item_viewed_user_role %}Role of the user from the applicative user table when the day was processed (about three days after the view): 'BENEFICIARY', 'UNDERAGE_BENEFICIARY', 'FREE_BENEFICIARY'; NULL for general public, other roles or users not logged in.{% enddocs %}
 
-{% docs column__native_daily_item_viewed_total_user_item_viewed %}Number of distinct users who saw the item that day for the row's channel, module and user attributes, summed over the four display-position buckets (a user seeing the item in two position buckets counts twice). The session count is an implicit grouping column of the pivot, so the buckets of one item can be split over several rows.{% enddocs %}
+{% docs column__native_daily_item_viewed_total_user_item_viewed %}Number of distinct users who saw the item that day for the row's channel, module and user attributes, summed over the four display-position buckets (a user seeing the item in two position buckets counts twice).{% enddocs %}
 
 {% docs column__native_daily_item_viewed_total_user_item_viewed_bucket_1_3 %}Number of distinct logged-in users who saw the item in positions 1 to 3 of its module (item index 0 to 2) that day, for the row's attributes.{% enddocs %}
 

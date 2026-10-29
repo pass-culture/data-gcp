@@ -108,7 +108,12 @@ with
             viewed_item_id,
             user_role,
             user_age
-    )
+    ),
+
+    -- total_sessions_item_viewed is left out: a column that is neither pivoted nor
+    -- aggregated becomes an implicit grouping key of the PIVOT and splits one item
+    -- over several rows
+    pivot_input as (select * except (total_sessions_item_viewed) from aggregated)
 
 -- Pivot des buckets en colonnes
 select
@@ -141,7 +146,7 @@ select
     coalesce(bucket_7_9, 0) as total_user_item_viewed_bucket_7_9,
     coalesce(bucket_10_plus, 0) as total_user_item_viewed_bucket_10_plus
 from
-    aggregated pivot (
+    pivot_input pivot (
         sum(total_user_item_viewed) for index_bucket
         in ("bucket_1_3", "bucket_4_6", "bucket_7_9", "bucket_10_plus")
     )

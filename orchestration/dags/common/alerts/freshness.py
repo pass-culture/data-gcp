@@ -31,15 +31,17 @@ def get_dbt_owners():
 def format_warning_table(table, dbt_owners):
     # Older job versions sent table names only.
     if isinstance(table, str):
-        return f"\n- {table}"
+        return f"• `{table}`"
 
     owner = dbt_owners.get(table["table"], "not in dbt")
     writer = (table.get("last_writer") or "unknown").split("@")[0]
-    sandbox = f" · {table['sandbox']}" if table.get("sandbox") else ""
+    details = [f"dbt: {owner}", f"last writer: {writer}"]
+    if table.get("sandbox"):
+        details.append(f":package: {table['sandbox']}")
     return (
-        f"\n- {table['table']} — last update {table['last_modified']} "
-        f"({table['days_since_update']}d, expected {table['schedule']}) "
-        f"· dbt: {owner} · last writer: {writer}{sandbox}"
+        f"• `{table['table']}` — *{table['days_since_update']}d* stale "
+        f"(expected {table['schedule']}, last update {table['last_modified']})\n"
+        f"      _{' · '.join(details)}_"
     )
 
 
@@ -50,12 +52,21 @@ def bigquery_freshness_alert(warning_table_list, **context):
 
     if len(warning_tables) > 0:
         dbt_owners = get_dbt_owners()
-        slack_msg = f"""{get_env_emoji()}
-        *:open_file_folder: Bigquery expected schedule alerts *
-        \n *Here is the list of tables that don't meet the expected update schedule :*
-        """
-        for table in warning_tables:
-            slack_msg += format_warning_table(table, dbt_owners)
+        # Most stale first; older job versions sent table names only.
+        warning_tables = sorted(
+            warning_tables,
+            key=lambda table: (
+                -table["days_since_update"] if isinstance(table, dict) else 0
+            ),
+        )
+        lines = [
+            get_env_emoji(),
+            f":open_file_folder: *BigQuery freshness alert* — "
+            f"{len(warning_tables)} table(s) behind their expected update schedule",
+            "",
+        ]
+        lines += [format_warning_table(table, dbt_owners) for table in warning_tables]
+        slack_msg = "\n".join(lines)
 
     else:
         slack_msg = "✅ All bigquery tables are updated according to schedule"

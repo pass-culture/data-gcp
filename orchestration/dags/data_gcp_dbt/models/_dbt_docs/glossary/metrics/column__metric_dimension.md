@@ -21,11 +21,19 @@ True when the KPI is measured on the cultural partner (venue) geography and the 
 {% enddocs %}
 
 {% docs column__external_reporting_is_low_count %}
-True when the KPI is accounted for by 1 to 4 beneficiaries of the territory over the whole history (see external_reporting__beneficiary_booking_bookers): numerator, denominator and kpi are then NULL on every month. Beneficiary counts are blurred instead (cell key method) and never flagged.
+True when the KPI is accounted for by 1 to 4 beneficiaries of the territory over the whole history (see external_reporting__beneficiary_booking_bookers): numerator, denominator and kpi are then NULL on every month. Also true on the months where an average or a share by person (montant_moyen_*, pct_beneficiaires_ayant_reserve_*) is computed over 1 to 4 beneficiaries. Beneficiary counts are blurred instead (cell key method) and never flagged.
 {% enddocs %}
 
 {% docs column__external_reporting_total_beneficiaries_behind_kpi %}
 Number of distinct beneficiaries of the territory behind the KPI, from January 2022 to the last complete month.
+{% enddocs %}
+
+{% docs column__external_reporting_min_beneficiaries %}
+Minimum number of distinct beneficiaries behind the KPI for it to be published: 5, or 20 for the category shares (pct_reservations_beneficiaires_*), which are published as a whole breakdown.
+{% enddocs %}
+
+{% docs column__external_reporting_secret_detail %}
+Internal detail of the rule behind a masked KPI, not to be published: the statistical secret reason of the territory with its side and rolling window (e.g. 'Nombre de partenaires faible (< 3) (individuel, 6 mois)'), or the fewer than 5 beneficiaries rule. NULL when the KPI is not masked.
 {% enddocs %}
 
 {% docs column__external_reporting_is_national_only %}
@@ -45,7 +53,7 @@ Value of the same KPI and month at national level (NAT row). NULL when the KPI i
 {% enddocs %}
 
 {% docs column__external_reporting_secret_reason %}
-Message to display instead of the KPI when it is masked: 'Données non disponibles (secret statistique)' for the statistical secret, 'Données non disponibles (moins de 5 bénéficiaires)' when fewer than 5 beneficiaries account for it, NULL otherwise.
+Message to display instead of the KPI when it is masked, whatever the rule (statistical secret on cultural partners, or fewer than 5 beneficiaries behind the KPI): 'Données non disponibles (secret statistique)'. NULL otherwise. is_secret_stat and is_low_count tell the rule apart.
 {% enddocs %}
 
 {% docs column__milestone_age %}

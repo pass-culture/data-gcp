@@ -109,6 +109,8 @@ models:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: secret_reason
         description: "{{ doc('column__external_reporting_secret_reason') }}"
+      - name: secret_detail
+        description: "{{ doc('column__external_reporting_secret_detail') }}"
       - name: national_numerator
         description: "{{ doc('column__external_reporting_national_numerator') }}"
       - name: national_denominator

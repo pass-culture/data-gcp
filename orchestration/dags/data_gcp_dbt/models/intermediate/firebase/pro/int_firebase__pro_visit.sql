@@ -274,10 +274,12 @@ select
     ) as total_download_booking_clicks
 
 from filtered_events
-where
-    true
-    {% if is_incremental() %}
-        and event_date
-        between date_sub(date("{{ ds() }}"), interval 3 day) and date("{{ ds() }}")
-    {% endif %}
 group by session_id, user_pseudo_id, unique_session_id
+-- Events are read one day further back than the partitions rewritten, and a visit is
+-- kept only when it starts inside them: a visit that crosses midnight stays whole in
+-- the partition of its first day instead of leaving a truncated copy in the next one.
+{% if is_incremental() %}
+    having
+        min(event_date)
+        between date_sub(date("{{ ds() }}"), interval 3 day) and date("{{ ds() }}")
+{% endif %}

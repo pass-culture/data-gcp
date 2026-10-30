@@ -11,7 +11,7 @@ models:
       - name: booking_id
         description: "{{ doc('column__booking_id') }}"
       - name: booking_status
-        description: "{{ doc('column__booking_status') }}"
+        description: "{{ doc('column__reimbursement_booking_status') }}"
       - name: booking_creation_date
         description: "{{ doc('column__booking_creation_date') }}"
       - name: booking_cancellation_date

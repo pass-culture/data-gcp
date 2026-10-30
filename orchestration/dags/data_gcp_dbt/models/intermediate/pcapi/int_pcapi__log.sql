@@ -24,7 +24,7 @@ select
     jsonpayload.extra.userid as extra_user_id,
     jsonpayload.extra.uai,
     jsonpayload.extra.user_role,
-    jsonpayload.extra.from as origin,
+    jsonpayload.extra.`from` as origin,
     cast(
         jsonpayload.extra.collective_offer_template_id as string
     ) as collective_offer_template_id,
@@ -95,8 +95,13 @@ select
     jsonpayload.extra.comment as beta_test_new_nav_comment,
     jsonpayload.extra.searchquery as search_query,
     jsonpayload.extra.searchmode as search_mode,
-    cast(jsonpayload.extra.nbresults as int) as nb_results,
+    cast(
+        coalesce(jsonpayload.extra.nbresults, jsonpayload.extra.searchnbresults) as int
+    ) as nb_results,
     cast(jsonpayload.extra.searchrank as int) as card_clicked_rank,
+    jsonpayload.extra.eventname as event_name,
+    jsonpayload.extra.eventorigin as event_origin,
+    jsonpayload.extra.eventtype as event_type,
     trace,
     cast(jsonpayload.extra.newlysubscribedto.email as string) as newly_subscribed_email,
     cast(jsonpayload.extra.newlysubscribedto.push as string) as newly_subscribed_push,

@@ -381,6 +381,22 @@
             case
                 when filled_kpis.dimension_name = 'NAT'
                 then 'Rapport National'
+                -- REG and ACAD are prefixed so that no intitule is shared by two
+                -- levels (Paris is a DEP and an ACAD, overseas a DEP and a REG)
+                when filled_kpis.dimension_name = 'REG'
+                then concat('Région ', filled_kpis.dimension_value)
+                when filled_kpis.dimension_name = 'ACAD'
+                then
+                    concat(
+                        if(
+                            regexp_contains(
+                                filled_kpis.dimension_value, r'^[AEIOUYÉÈÎaeiouyéèî]'
+                            ),
+                            "Académie d'",
+                            'Académie de '
+                        ),
+                        filled_kpis.dimension_value
+                    )
                 when filled_kpis.dimension_name in ('EPCI', 'COM')
                 then
                     concat(

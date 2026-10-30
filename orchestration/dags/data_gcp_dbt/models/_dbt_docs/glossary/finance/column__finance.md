@@ -70,7 +70,7 @@
 {% docs column__reimbursement_pricing_rule %} Identifier of the standard reimbursement rule applied to the pricing (`pricing.standardRule`). Null when a custom reimbursement rule was applied instead. {% enddocs %}
 
 {% docs column__reimbursement_pricing_amount %}
-Reimbursement amount in euros, with sign inverted from the raw pricing amount: positive = paid by pass Culture to the offerer. Broken down by pricing-line category into `offerer_revenue` and `offerer_contribution` (see `column__pricing_line_category`).
+Reimbursement amount in euros (converted from the raw pricing amount in euro cents), with sign inverted: positive = paid by pass Culture to the offerer. Broken down by pricing-line category into `offerer_revenue` and `offerer_contribution` (see `column__pricing_line_category`).
 {% enddocs %}
 
 {% docs column__offerer_revenue %}
@@ -78,7 +78,7 @@ Portion of the pricing amount classified as "offerer revenue" (the main reimburs
 {% enddocs %}
 
 {% docs column__offerer_contribution %}
-Portion of the pricing amount classified as "offerer contribution" (the offerer's own participation), in euros. See `column__pricing_line_category` for the category definition.
+Portion of the pricing amount classified as "offerer contribution" (the offerer's own participation: the share of revenue it bears, i.e. revenue minus the reimbursed amount), in euros. See `column__pricing_line_category` for the category definition.
 {% enddocs %}
 
 {% docs column__reimbursement_cashflow_amount %} Total amount of the cashflow in euros, with sign inverted from the raw cashflow amount: positive = paid to the offerer. {% enddocs %}

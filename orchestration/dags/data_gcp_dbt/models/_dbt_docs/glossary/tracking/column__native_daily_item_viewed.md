@@ -1,6 +1,6 @@
 {% docs column__native_daily_item_viewed_event_date %}Date of the view. Partition column: a partition filter is required. Data starts on 2025-06-02 (trackers partial before 2025-11-01) and each run loads the day three days back, so the most recent days are not yet available.{% enddocs %}
 
-{% docs column__native_daily_item_viewed_origin %}App channel where the item was displayed. Stored values: 'home', 'searchresults' (text search), 'thematicsearch' (thematic search), 'venue' (venue page), 'venue_map' (map), 'artist' (artist page), 'offer' (offer page, similar offers).{% enddocs %}
+{% docs column__native_daily_item_viewed_origin %} App channel (screen) where the item was displayed, from the raw Firebase origin parameter: new values can appear with app versions. Can be NULL. {% enddocs %}
 
 {% docs column__native_daily_item_viewed_module_id %}Contentful identifier of the module (block) that displayed the item; NULL outside a module.{% enddocs %}
 

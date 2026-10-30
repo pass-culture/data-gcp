@@ -12,7 +12,7 @@
 {% docs column__module_id %}The identifier for the module associated with the consultation.{% enddocs %}
 {% docs column__module_name %}The name of the module in which the entry is displayed.{% enddocs %}
 {% docs column__module_type %}The type of the module in which the entry is displayed (algolia, recommendation, video...){% enddocs %}
-{% docs column__daily_home_module_conversion__module_type %} The type of the home module. Only 'algolia', 'recommendation', 'venuesPlaylist', 'video' and 'highlightOffer' modules have consultations and bookings attributed; 'categoryList', 'trends', 'business' and 'thematicHighlight' only record clicks, so their consultation and booking columns are 0 by construction. {% enddocs %}
+{% docs column__daily_home_module_conversion__module_type %} The type of the home module. Only module types that display offers or venues have consultations and bookings attributed; for the other types only clicks are recorded, so their consultation and booking columns are 0 by construction. {% enddocs %}
 {% docs column__parent_module_id %}The identifier for the parent module of the current module.{% enddocs %}
 {% docs column__parent_module_type %}The type of the parent module.{% enddocs %}
 {% docs column__parent_entry_id %}The identifier for the parent entry of the current entry.{% enddocs %}

@@ -95,7 +95,6 @@ AVAILABLE_VECTORS = [
     ),
 ]
 VECTOR_NAMES = [vector.name for vector in AVAILABLE_VECTORS]
-INPUT_DBT_MODELS = sorted({vector.input_dbt_model for vector in AVAILABLE_VECTORS})
 
 ## DAG CONFIG
 DAG_NAME = "item_embedding"
@@ -331,18 +330,6 @@ with DAG(
 ) as dag:
     start = EmptyOperator(task_id="start")
 
-    # Scheduled runs wait for the dbt input models to have been refreshed by
-    # dbt_run_dag first; manual runs (ad-hoc/test triggers) skip the wait.
-    wait_for_dbt_inputs = [
-        delayed_waiting_operator(
-            dag,
-            external_dag_id="dbt_run_dag",
-            external_task_id=f"data_transformation.{model}",
-            skip_manually_triggered=True,
-        )
-        for model in INPUT_DBT_MODELS
-    ]
-
     # Resolve once which vectors will actually run (selected + non-empty). The
     # returned list is both the plan (read back by each vector's check) and the
     # gate: an empty list is falsy, so this ShortCircuit skips the whole run
@@ -391,7 +378,7 @@ with DAG(
         ),
     )
 
-    start >> wait_for_dbt_inputs >> plan_vectors >> gce_instance_start
+    start >> plan_vectors >> gce_instance_start
     gce_instance_start >> install_dependencies >> start_mlflow_run
 
     # Each vector's steps live in their own TaskGroup and run a fully sequential

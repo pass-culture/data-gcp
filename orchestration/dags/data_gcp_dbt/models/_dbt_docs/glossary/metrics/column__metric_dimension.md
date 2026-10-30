@@ -13,7 +13,7 @@ Display name of the territory: EPCI or municipality name for EPCI and COM, dimen
 {% enddocs %}
 
 {% docs column__external_reporting_intitule %}
-Display title of the territory: 'Name (code)' for EPCI and COM, 'Rapport National' for NAT, dimension_value otherwise.
+Display title of the territory, unique across levels so that it can be used alone as the territory filter: 'Name (code)' for EPCI and COM, 'Région Name' for REG, 'Académie de Name' (or "Académie d'Name") for ACAD, 'Rapport National' for NAT, dimension_value for DEP.
 {% enddocs %}
 
 {% docs column__external_reporting_is_secret_stat %}

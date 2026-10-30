@@ -34,3 +34,33 @@ dags_in_paris:
   import_batch:
     source_dataset: raw
     tables_to_copy: [batch_campaigns_stats, batch_transac] # incremental append/partitioned raw loads -> copy history
+  import_brevo_v2:
+    source_dataset: raw
+    tables_to_copy: [brevo_transactional] # incremental partitioned raw load -> copy history
+  import_contentful:
+    source_dataset: raw
+    tables_to_copy: [contentful_entry, contentful_relationship, contentful_tag] # incremental partitioned raw loads -> copy history
+  import_dms_subscriptions:
+    source_dataset: raw
+    tables_to_copy: [raw_dms_jeunes, raw_dms_pro] # incremental append loads -> copy history
+  import_downloads:
+    source_dataset: raw
+    tables_to_copy: [apple_download_stats, google_download_stats] # delete+append by date window on raw tables -> copy history
+  import_gcs_seed:
+    source_dataset: seed
+    tables_to_copy: [] # full refresh from GCS snapshots -> no tables to copy
+  import_geo_referential:
+    source_dataset: raw
+    tables_to_copy: [] # full snapshot rebuilt from external sources -> no tables to copy
+  import_harvestr:
+    source_dataset: raw
+    tables_to_copy: [harvestr_messages] # partitioned raw history loaded by date window -> copy history
+  import_insee_population:
+    source_dataset: raw
+    tables_to_copy: [] # monthly refresh job -> no explicit incremental history copy
+  import_notion:
+    source_dataset: raw
+    tables_to_copy: [notion_dashboard_docs] # partitioned daily raw loads -> copy history
+  import_qualtrics:
+    source_dataset: raw
+    tables_to_copy: [qualtrics_answers] # append/range-partitioned survey answers -> copy history

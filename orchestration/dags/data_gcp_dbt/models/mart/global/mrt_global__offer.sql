@@ -96,7 +96,6 @@ select
     offer_finalization_date,
     scheduled_offer_bookability_date,
     offerer_is_epn,
-    offer_advice_content,
     offer_has_mediation,
     cultural_outreach_status,
     cultural_outreach_claimed_date

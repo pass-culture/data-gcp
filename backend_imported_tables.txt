@@ -87,7 +87,6 @@ public.price_category: id, label, offerId, price
 public.pricing: amount, bookingId, collectiveBookingId, creationDate, customRuleId, eventId, id, pricingPointId, revenue, standardRule, status, valueDate, venueId
 public.pricing_line: amount, category, id, pricingId
 public.pricing_log: id, pricingId, reason, statusAfter, statusBefore, timestamp
-public.pro_advice: author, content, id, offerId, updatedAt, venueId
 public.product: dateModifiedAtLastProvider, description, ean, gcuCompatibilityType, id, jsonData, lastProviderId, last_30_days_booking, name, subcategoryId, thumbCount
 public.product_chronicle: chronicleId, id, productId
 public.product_mediation: dateModifiedAtLastProvider, id, imageType, lastProviderId, productId, uuid

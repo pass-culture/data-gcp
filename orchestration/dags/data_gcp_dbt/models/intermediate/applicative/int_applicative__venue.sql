@@ -306,7 +306,7 @@ select
             + coalesce(co.total_used_collective_bookings, 0) desc
     ) as offerer_bookings_rank,
     case
-        when gp.banner_url is not null
+        when v.banner_url is not null
         then 'offerer'
         when gp.venue_id is not null
         then 'google'

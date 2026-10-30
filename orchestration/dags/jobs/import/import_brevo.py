@@ -56,7 +56,9 @@ with DAG(
     render_template_as_native_obj=True,
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production"
+            if (ENV_SHORT_NAME == "prod" or ENV_SHORT_NAME == "prd")
+            else "master",
             type="string",
         ),
         "start_date": Param(
@@ -80,6 +82,7 @@ with DAG(
         "runtime_image": "py313",
         "runtime_image_tag": "v1",
         "microservice_path": MICROSERVICE_PATH,
+        "service_account_name": f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl",
         "runtime_sparse_paths": SPARSE_PATHS,
         "runtime_workdir": MICROSERVICE_PATH,
         "env_vars": {"PYTHONPATH": "/app/jobs/etl_jobs", "GCP_PROJECT": GCP_PROJECT_ID},

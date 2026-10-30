@@ -1,12 +1,14 @@
 import datetime
 
 from airflow import DAG
+from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
 from common import macros
 from common.alerts.task_fail import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
+    ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
 from common.operators.kubernetes import (
@@ -42,6 +44,14 @@ with DAG(
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
+    params={
+        "branch": Param(
+            default="production"
+            if (ENV_SHORT_NAME == "prod" or ENV_SHORT_NAME == "prd")
+            else "master",
+            type="string",
+        )
+    },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ) as dag:
     start = EmptyOperator(task_id="start")
@@ -53,6 +63,7 @@ with DAG(
         runtime_mode="containerized",
         runtime_image="py313",
         runtime_image_tag="v1",
+        service_account_name=f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl",
         on_finish_action="delete_pod",
         cmds=["sh", "-c"],
         arguments=[

@@ -38,7 +38,9 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production"
+            if (ENV_SHORT_NAME == "prod" or ENV_SHORT_NAME == "prd")
+            else "master",
             type="string",
         ),
     },
@@ -53,6 +55,7 @@ with DAG(
         runtime_image="py313",
         runtime_image_tag="v1",
         microservice_path=MICROSERVICE_PATH,
+        service_account_name=f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl",
         arguments=["main.py", "export"],
         container_resources=DEFAULT_CONTAINER_RESOURCES,
     )

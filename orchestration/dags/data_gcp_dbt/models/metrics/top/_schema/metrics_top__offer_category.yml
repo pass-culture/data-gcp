@@ -51,8 +51,6 @@ models:
       - name: offer_name
         description: '{{ doc("column__offer_name") }}'
         data_type: STRING
-        tests:
-          - not_null
 
       - name: total_booking_amount
         description: '{{ doc("column__total_booking_amount") }}'

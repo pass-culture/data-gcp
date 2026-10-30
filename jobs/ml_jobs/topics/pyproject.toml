@@ -1,0 +1,65 @@
+[project]
+name = "topics"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "bertopic[spacy]>=0.17.4",
+    "google-cloud-bigquery>=3.47.0",
+    "google-cloud-bigquery-storage>=2.43.0",
+    "google-cloud-secret-manager>=2.31.0",
+    "google-cloud-storage>=3.17.1",
+    "hdbscan>=0.8.44",
+    "loguru>=0.7.3",
+    "matplotlib>=3.11.2",
+    "tqdm>=4.70.1",
+    "typer>=0.27.3",
+]
+
+
+## build
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src", "cli"]
+
+## ruff
+# Recommended ruff config for now, to be updated as we go along.
+[tool.ruff]
+target-version = 'py314'
+
+lint.select = [
+    "E",      # pycodestyle
+    "W",      # pycodestyle
+    "F",      # Pyflakes
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "I",      # isort
+    "SIM",    # flake8-simplify
+    "TCH",    # flake8-type-checking
+    "TID",    # flake8-tidy-imports
+    "UP",     # pyupgrade
+    "PT",     # flake8-pytest-style
+    "RUF",    # Ruff-specific rules
+    "FBT001", # flake8-boolean-trap
+]
+
+[tool.ruff.lint.pydocstyle]
+# Automatically disable rules that are incompatible with Google docstring convention
+convention = "google"
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 100
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.flake8-type-checking]
+strict = true
+runtime-evaluated-base-classes = ["pydantic.BaseModel"]
+# Pydantic needs to be able to evaluate types at runtime
+# see https://pypi.org/project/flake8-type-checking/ for flake8-type-checking documentation
+# see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation

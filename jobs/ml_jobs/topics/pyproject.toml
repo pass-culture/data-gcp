@@ -6,6 +6,11 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "bertopic[spacy]>=0.17.4",
+    "db-dtypes>=1.9.0",
+    "de-core-news-sm",
+    "en-core-web-sm",
+    "es-core-news-sm",
+    "fr-core-news-sm",
     "google-cloud-bigquery>=3.47.0",
     "google-cloud-bigquery-storage>=2.43.0",
     "google-cloud-secret-manager>=2.31.0",
@@ -13,8 +18,16 @@ dependencies = [
     "hdbscan>=0.8.44",
     "loguru>=0.7.3",
     "matplotlib>=3.11.2",
+    "polars>=2.1.0",
+    "py3langid>=0.4.0",
+    "pyarrow>=26.0.0",
     "tqdm>=4.70.1",
     "typer>=0.27.3",
+]
+
+[project.optional-dependencies]
+gpu = [
+    "cuml-cu13>=26.10.0",
 ]
 
 
@@ -60,6 +73,22 @@ ban-relative-imports = "all"
 [tool.ruff.lint.flake8-type-checking]
 strict = true
 runtime-evaluated-base-classes = ["pydantic.BaseModel"]
+
+[tool.uv.sources]
+fr-core-news-sm = { url = "https://github.com/explosion/spacy-models/releases/download/fr_core_news_sm-3.8.0/fr_core_news_sm-3.8.0-py3-none-any.whl" }
+en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" }
+de-core-news-sm = { url = "https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.8.0/de_core_news_sm-3.8.0-py3-none-any.whl" }
+es-core-news-sm = { url = "https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl" }
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
 # Pydantic needs to be able to evaluate types at runtime
 # see https://pypi.org/project/flake8-type-checking/ for flake8-type-checking documentation
 # see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation
+
+## pytest
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

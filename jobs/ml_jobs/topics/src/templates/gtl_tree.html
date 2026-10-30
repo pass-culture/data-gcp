@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arbre GTL : livres</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --ink:#1d2433; --muted:#667085; --line:#e3e6eb;
+  --link:#c3cad6; --bar:#3b6ea8; --bar-track:#e8edf4; --pseudo:#a86b1f; --hit:#fff1c2;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#13161c; --surface:#1b1f27; --ink:#e6e9ef; --muted:#9aa3b2; --line:#2a303b;
+    --link:#3a4250; --bar:#6f9ad3; --bar-track:#252b36; --pseudo:#d9a25a; --hit:#4a3d12;
+    color-scheme: dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;
+  font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-variant-numeric:tabular-nums}
+header{padding:20px 24px 0;width:100%}
+h1{font-size:22px;margin:0 0 4px;font-weight:650;letter-spacing:-.01em}
+.summary{color:var(--muted);margin:0 0 12px}
+nav{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+nav a{padding:8px 14px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px}
+nav a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--bar);font-weight:600}
+nav a:focus-visible{outline:2px solid var(--bar)}
+section[hidden]{display:none!important}
+/* ---- layout: side panel + content ---- */
+.view{flex:1;display:flex;gap:16px;min-height:0;padding:12px 24px 24px}
+.panel{flex:none;width:300px;align-self:flex-start;position:sticky;top:12px;
+  max-height:calc(100vh - 24px);overflow:auto;background:var(--surface);
+  border:1px solid var(--line);border-radius:8px}
+.panel-toggle{display:flex;width:100%;align-items:center;gap:8px;background:none;border:none;
+  border-bottom:1px solid var(--line);padding:10px 14px;font-weight:600;cursor:pointer;text-align:left}
+.panel-toggle:hover{background:var(--bar-track)}
+.panel-toggle .chev{margin-left:auto;color:var(--muted)}
+.panel-body{display:flex;flex-direction:column;gap:18px;padding:14px}
+.panel h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--ink);margin:0 0 -6px}
+.panel h2:not(:first-child){border-top:1px solid var(--line);padding-top:16px;margin-top:4px}
+body.panel-closed .panel{width:auto}
+body.panel-closed .panel-body,body.panel-closed .panel-toggle .title{display:none}
+body.panel-closed .panel-toggle{border-bottom:none;padding:10px}
+body.panel-closed .panel-toggle .chev{margin:0}
+.controls{display:flex;flex-direction:column;gap:12px}
+details.layout summary{cursor:pointer;color:var(--muted)}
+details.layout summary:hover{color:var(--ink)}
+details.layout > .controls{margin-top:10px;padding-left:12px;border-left:2px solid var(--line)}
+.seg button.active{background:var(--bar-track);font-weight:600}
+.sub{display:flex;flex-direction:column;gap:8px;padding-left:12px;border-left:2px solid var(--line)}
+.sub[hidden],.controls label[hidden]{display:none}
+.matchnav{display:flex;align-items:center;gap:8px;color:var(--muted);margin-top:-4px}
+.matchnav[hidden]{display:none}
+.matchnav .count{margin-right:auto}
+.matchnav button:disabled{opacity:.4;cursor:default}
+.controls label,.controls .field{color:var(--muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+input,select,button{font:inherit;color:var(--ink)}
+input[type=search],input[type=number],select{background:var(--surface);
+  border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+input[type=search]{flex:1;min-width:0}
+input[type=number]{width:96px}
+input[type=number].pct{width:72px}
+input[type=range]{width:110px;accent-color:var(--bar)}
+.seg button,.btn{background:var(--surface);border:1px solid var(--line);padding:4px 10px;cursor:pointer}
+.btn{border-radius:6px}
+.seg button:first-child{border-radius:6px 0 0 6px}
+.seg button:last-child{border-radius:0 6px 6px 0}
+.seg button+button{border-left:none}
+.seg button:hover,.btn:hover{background:var(--bar-track)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--bar);outline-offset:1px}
+
+/* ---- table view ---- */
+#view-table main{flex:1;min-width:0;max-width:1200px}
+.table{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow-x:auto}
+.row{display:grid;grid-template-columns:minmax(260px,1fr) minmax(140px,28%) 96px 72px 72px 64px;
+  align-items:center;gap:12px;padding:3px 12px;border-bottom:1px solid var(--line);min-width:760px}
+.row:last-child{border-bottom:none}
+.row.head{color:var(--muted);font-size:12px;position:sticky;top:0;background:var(--surface);z-index:1}
+.row:not(.head):hover{background:var(--bar-track)}
+.row.current{background:var(--hit);box-shadow:inset 3px 0 0 var(--bar)}
+.name{display:flex;align-items:center;gap:4px;padding-left:calc(var(--depth) * 18px);min-width:0}
+.name span.label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.caret{width:22px;height:22px;border:none;background:none;cursor:pointer;color:var(--muted);
+  border-radius:4px;flex:none;transition:transform .12s}
+.caret.open{transform:rotate(90deg)}
+.spacer{width:22px;flex:none}
+.pseudo .label{font-style:italic;color:var(--pseudo)}
+.pseudo .fill{background:var(--pseudo)}
+mark{background:var(--hit);color:inherit;border-radius:2px}
+.track{height:10px;background:var(--bar-track);border-radius:3px;overflow:hidden}
+.fill{height:100%;background:var(--bar);min-width:1px}
+.num{text-align:right}
+.muted{color:var(--muted)}
+.l1 .label{font-weight:600}
+.empty{padding:24px;color:var(--muted)}
+
+/* ---- graph view ---- */
+#graph-wrap{flex:1;position:relative;min-height:420px;
+  background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+#svg{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+#svg:active{cursor:grabbing}
+.glink{stroke:var(--link);stroke-width:1.2}
+.gnode{cursor:pointer}
+.gnode circle{stroke:var(--surface);stroke-width:1.5}
+.gnode.pseudo circle{stroke-dasharray:3 2;stroke-width:2}
+.gnode.collapsed circle{stroke:var(--ink);stroke-width:2}
+.gnode.hit circle{stroke:var(--ink);stroke-width:3}
+.gnode.current circle{stroke:var(--bar);stroke-width:5}
+.gnode.current text{font-weight:700}
+.gnode text{font-size:11px;fill:var(--ink);paint-order:stroke;stroke:var(--surface);
+  stroke-width:3px;stroke-linejoin:round;pointer-events:none}
+.gnode.l1 text{font-size:13px;font-weight:600}
+.gnode.pseudo text{font-style:italic;fill:var(--pseudo)}
+#tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);
+  border-radius:6px;padding:6px 9px;font-size:12px;max-width:340px;box-shadow:0 4px 14px rgba(0,0,0,.12);
+  display:none;white-space:pre-line}
+#gnote{position:absolute;left:12px;bottom:10px;color:var(--muted);font-size:12px;pointer-events:none}
+#gerr{padding:24px;color:var(--muted)}
+.legend{color:var(--muted);font-size:12px}
+.stats{display:flex;flex-direction:column;gap:10px;color:var(--muted)}
+.stats label{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.stats > span{color:var(--ink)}
+.stats input[type=checkbox]{accent-color:var(--bar)}
+@media (prefers-reduced-motion: reduce){.caret{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Hiérarchie GTL des livres</h1>
+  <p class="summary" id="summary"></p>
+  <nav aria-label="Vues">
+    <a href="#arbre" id="nav-graph">Arbre</a>
+    <a href="#tableau" id="nav-table">Tableau</a>
+  </nav>
+</header>
+
+<!-- ======================= GRAPH VIEW ======================= -->
+<section id="view-graph" class="view">
+  <aside class="panel" aria-label="Paramètres de l’arbre">
+    <button class="panel-toggle" aria-controls="g-panel"><span class="title">Paramètres</span><span class="chev" aria-hidden="true"></span></button>
+    <div class="panel-body" id="g-panel">
+      <h2>Recherche</h2>
+      <div class="controls">
+        <label>Rechercher <input type="search" id="gq" placeholder="ex. Thriller"></label>
+        <div class="matchnav" id="g-nav" hidden>
+          <span class="count" id="g-count" aria-live="polite"></span>
+          <span class="seg"><button id="g-prev" aria-label="Résultat précédent" title="Précédent (Maj+Entrée)">‹</button><button id="g-next" aria-label="Résultat suivant" title="Suivant (Entrée)">›</button></span>
+        </div>
+      </div>
+      <h2>Affichage</h2>
+      <div class="controls">
+        <div class="field">Niveau GTL <span class="seg" role="group" aria-label="Déplier jusqu’au niveau" id="g-levels">
+          <button data-level="0">1</button><button data-level="1" class="active">2</button><button data-level="2">3</button><button data-level="3">Tout</button>
+        </span></div>
+        <label>Étiquettes <select id="labels">
+          <option value="big">grands nœuds</option>
+          <option value="1" selected>niv. 1</option>
+          <option value="2">niv. 1 à 2</option>
+          <option value="3">niv. 1 à 3</option>
+          <option value="all">toutes</option>
+          <option value="none">aucune</option>
+        </select></label>
+        <details class="layout">
+          <summary>Disposition</summary>
+          <div class="controls">
+            <label id="elastic-one">Élasticité <input type="range" id="elastic" min="0.05" max="1" step="0.05" value="0.6"></label>
+            <label><input type="checkbox" id="elastic-multi"> élasticité par niveau de lien</label>
+            <div class="sub" id="elastic-levels" hidden>
+              <label title="Liens Livres → niveau 1">→ niv. 1 <input type="range" class="elastic-lvl" min="0.05" max="1" step="0.05" value="0.6"></label>
+              <label title="Liens niveau 1 → niveau 2">→ niv. 2 <input type="range" class="elastic-lvl" min="0.05" max="1" step="0.05" value="0.6"></label>
+              <label title="Liens niveau 2 → niveau 3">→ niv. 3 <input type="range" class="elastic-lvl" min="0.05" max="1" step="0.05" value="0.6"></label>
+              <label title="Liens niveau 3 → niveau 4">→ niv. 4 <input type="range" class="elastic-lvl" min="0.05" max="1" step="0.05" value="0.6"></label>
+            </div>
+            <label title="Écart visé entre le bord du nœud Livres et celui de chaque libellé de niveau 1">Lien racine → niv. 1 <input type="number" id="rootlen" min="0" step="100" value="100"> px</label>
+            <label>Répulsion <input type="range" id="repulse" min="20" max="800" step="10" value="220"></label>
+            <label title="Éloigne les uns des autres les libellés de niveau 1 et leurs sous-arbres (0 = désactivé)">Écart entre niv. 1 <input type="range" id="branch-rep" min="0" max="800" step="10" value="200"></label>
+          </div>
+        </details>
+        <div><button class="btn" id="fit">Recentrer</button>
+          <button class="btn" id="layout-toggle" aria-pressed="false" title="Arrête ou relance le calcul de la disposition élastique (les nœuds restent déplaçables à la main)">⏸ Figer la disposition</button></div>
+        <span class="legend">Clic : déplier ou replier. Glisser : déplacer (Maj pour épingler).</span>
+      </div>
+      <h2>Filtres</h2>
+      <div class="controls">
+        <label>Masquer sous <input type="number" id="gmin" min="0" step="100" value="0"> items</label>
+        <label>ou sous <input type="number" class="pct" id="gminpct" min="0" max="100" step="0.1" value="0"> % du total</label>
+        <label>ou sous <input type="number" class="pct" id="gminppct" min="0" max="100" step="1" value="0"> % du parent <select id="gppfrom" aria-label="Appliquer le seuil du parent à partir du niveau">
+          <option value="1">dès le niv. 1</option>
+          <option value="2" selected>dès le niv. 2</option>
+          <option value="3">dès le niv. 3</option>
+          <option value="4">au niv. 4</option>
+        </select></label>
+      </div>
+      <h2>Compteurs</h2>
+      <div class="stats">
+        <span id="g-stats" aria-live="polite"></span>
+        <label>Feuilles <select id="g-leafmode">
+          <option value="terminal">terminales</option>
+          <option value="pruned">de l’arbre filtré</option>
+        </select></label>
+        <label><input type="checkbox" id="g-own" checked> compter les items sans sous-libellé comme feuilles</label>
+      </div>
+    </div>
+  </aside>
+  <div id="graph-wrap">
+    <svg id="svg" role="img" aria-label="Arbre GTL en disposition élastique"></svg>
+    <div id="tip"></div>
+    <div id="gnote"></div>
+  </div>
+</section>
+
+<!-- ======================= TABLE VIEW ======================= -->
+<section id="view-table" class="view" hidden>
+  <aside class="panel" aria-label="Paramètres du tableau">
+    <button class="panel-toggle" aria-controls="t-panel"><span class="title">Paramètres</span><span class="chev" aria-hidden="true"></span></button>
+    <div class="panel-body" id="t-panel">
+      <h2>Recherche</h2>
+      <div class="controls">
+        <label>Rechercher <input type="search" id="q" placeholder="ex. Policier"></label>
+        <div class="matchnav" id="t-nav" hidden>
+          <span class="count" id="t-count" aria-live="polite"></span>
+          <span class="seg"><button id="t-prev" aria-label="Résultat précédent" title="Précédent (Maj+Entrée)">‹</button><button id="t-next" aria-label="Résultat suivant" title="Suivant (Entrée)">›</button></span>
+        </div>
+      </div>
+      <h2>Affichage</h2>
+      <div class="controls">
+        <span class="seg" role="group" aria-label="Déplier jusqu’au niveau" id="t-levels">
+          <button data-level="0">Replier</button><button data-level="1">Niv. 2</button><button data-level="2">Niv. 3</button><button data-level="3">Tout</button>
+        </span>
+        <label>Barres <select id="scale">
+          <option value="total">part de tous les livres</option>
+          <option value="parent">part du nœud parent</option>
+        </select></label>
+        <label>Trier <select id="sort">
+          <option value="size">par nombre d’items</option>
+          <option value="name">par nom</option>
+        </select></label>
+      </div>
+      <h2>Filtres</h2>
+      <div class="controls">
+        <label>Masquer sous <input type="number" id="min" min="0" step="100" value="0"> items</label>
+        <label>ou sous <input type="number" class="pct" id="minpct" min="0" max="100" step="0.1" value="0"> % du total</label>
+        <label>ou sous <input type="number" class="pct" id="minppct" min="0" max="100" step="1" value="0"> % du parent <select id="ppfrom" aria-label="Appliquer le seuil du parent à partir du niveau">
+          <option value="1">dès le niv. 1</option>
+          <option value="2" selected>dès le niv. 2</option>
+          <option value="3">dès le niv. 3</option>
+          <option value="4">au niv. 4</option>
+        </select></label>
+      </div>
+      <h2>Compteurs</h2>
+      <div class="stats">
+        <span id="t-stats" aria-live="polite"></span>
+        <label>Feuilles <select id="t-leafmode">
+          <option value="terminal">terminales</option>
+          <option value="pruned">de l’arbre filtré</option>
+        </select></label>
+        <label><input type="checkbox" id="t-own" checked> compter les items sans sous-libellé comme feuilles</label>
+      </div>
+    </div>
+  </aside>
+  <main>
+    <div class="table" role="tree" aria-label="Hiérarchie GTL">
+      <div class="row head" aria-hidden="true">
+        <div>Libellé</div><div>Volume</div><div class="num">Items</div>
+        <div class="num">% total</div><div class="num">% parent</div><div class="num">Chemins</div>
+      </div>
+      <div id="rows"></div>
+    </div>
+  </main>
+</section>
+
+<script>
+const ROOT = __DATA__;
+const TOTAL = ROOT.total;
+const fmt = new Intl.NumberFormat("fr-FR");
+const pct = v => v >= 10 ? v.toFixed(0) + " %" : v >= 0.1 ? v.toFixed(1) + " %" : "<0,1 %";
+
+/* Search key: lowercased, accents removed, œ/æ spelled out, curly
+   apostrophes straightened ("Littérature" and "litterature" match). `map`
+   gives each folded character's index in the original string, to highlight
+   the matched part of the label. */
+function fold(s){
+  let text = ""; const map = [];
+  for (let i = 0; i < s.length; i++){
+    const f = s[i].normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+      .replace("œ", "oe").replace("æ", "ae").replace(/[’‘ʼ`]/, "'");
+    for (const ch of f){ text += ch; map.push(i); }
+  }
+  map.push(s.length);
+  return { text, map };
+}
+
+/* Match navigation: the counter reads "n résultats" until a match is
+   selected, then "i / n". Matches are counted only if the filters keep them
+   (and all their ancestors), in display order. */
+function navUpdate(pfx, list, curId, active){
+  document.getElementById(pfx + "-nav").hidden = !active;
+  const i = list.findIndex(n => n.id === curId);
+  const count = document.getElementById(pfx + "-count");
+  count.textContent = !list.length ? "Aucun résultat"
+    : i < 0 ? list.length + (list.length > 1 ? " résultats" : " résultat")
+    : (i + 1) + " / " + list.length;
+  count.title = i < 0 ? "" : pathOf(list[i]).join(" › ");
+  document.getElementById(pfx + "-prev").disabled = !list.length;
+  document.getElementById(pfx + "-next").disabled = !list.length;
+}
+function navStep(list, curId, step){
+  const i = list.findIndex(n => n.id === curId);
+  if (i < 0) return list[step > 0 ? 0 : list.length - 1];
+  return list[(i + step + list.length) % list.length];
+}
+function navKeys(input, go){
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter"){ e.preventDefault(); go(e.shiftKey ? -1 : 1); }
+  });
+}
+
+let uid = 0;
+(function prep(n, parent, depth){
+  n.id = uid++; n.parent = parent; n.depth = depth; n.key = fold(n.name).text;
+  n.l1 = depth === 0 ? n : (parent ? parent.l1 : null);
+  n.children.forEach(c => prep(c, n, depth + 1));
+})(ROOT, null, -1);
+
+function pathOf(n){ const p = []; for (let x = n; x && x.depth >= 0; x = x.parent) p.unshift(x.name); return p; }
+
+document.getElementById("summary").textContent =
+  fmt.format(TOTAL) + " items, " + ROOT.children.length + " libellés de niveau 1, " +
+  fmt.format(ROOT.paths) + " chemins de libellés distincts.";
+
+/* ============================ TABLE ============================ */
+const state = { open: new Set(), sort: "size", scale: "total", q: "", min: 0, minPct: 0, minParentPct: 0, parentFrom: 2,
+                matches: null, ancestors: null, curId: null };
+
+function kids(n){
+  const keep = keepFn("t");
+  const ch = n.children.filter(keep);
+  return ch.sort(state.sort === "name"
+    ? (a, b) => (a.pseudo ? 1 : 0) - (b.pseudo ? 1 : 0) || a.name.localeCompare(b.name, "fr")
+    : (a, b) => b.total - a.total);
+}
+function isOpen(n){ return state.open.has(n.id) || (state.ancestors && state.ancestors.has(n.id)); }
+function visible(n){
+  if (!state.matches) return true;
+  if (state.matches.has(n.id) || state.ancestors.has(n.id)) return true;
+  for (let p = n.parent; p; p = p.parent) if (state.matches.has(p.id)) return true;
+  return false;
+}
+function highlight(text){
+  const span = document.createElement("span");
+  const f = fold(text);
+  const i = state.q ? f.text.indexOf(state.q) : -1;
+  if (i < 0){ span.textContent = text; return span; }
+  const a = f.map[i], b = f.map[i + state.q.length - 1] + 1;
+  span.append(text.slice(0, a));
+  const m = document.createElement("mark"); m.textContent = text.slice(a, b);
+  span.append(m, text.slice(b));
+  return span;
+}
+function row(n){
+  const r = document.createElement("div");
+  r.className = "row" + (n.pseudo ? " pseudo" : "") + (n.depth === 0 ? " l1" : "")
+    + (n.id === state.curId ? " current" : "");
+  r.dataset.id = n.id;
+  r.setAttribute("role", "treeitem");
+  r.setAttribute("aria-level", n.depth + 1);
+  const hasKids = n.children.length > 0;
+  if (hasKids) r.setAttribute("aria-expanded", isOpen(n));
+  const name = document.createElement("div");
+  name.className = "name"; name.style.setProperty("--depth", n.depth);
+  if (hasKids){
+    const b = document.createElement("button");
+    b.className = "caret" + (isOpen(n) ? " open" : "");
+    b.setAttribute("aria-label", (isOpen(n) ? "Replier " : "Déplier ") + n.name);
+    b.textContent = "▸";
+    b.onclick = e => { e.stopPropagation(); toggle(n); };
+    name.append(b);
+  } else {
+    const s = document.createElement("span"); s.className = "spacer"; name.append(s);
+  }
+  const label = document.createElement("span"); label.className = "label";
+  label.append(highlight(n.name));
+  name.append(label);
+  let tip = pathOf(n).join(" › ") + "\n" + fmt.format(n.total) + " items";
+  if (hasKids) tip += ", " + n.children.length + " enfants";
+  if (n.gtl && n.gtl.length) tip += "\ntitelive_gtl_id : " + n.gtl.slice(0, 5).join(", ") + (n.gtl.length > 5 ? " …" : "");
+  r.title = tip;
+  const base = state.scale === "parent" && n.parent ? n.parent.total : TOTAL;
+  const track = document.createElement("div"); track.className = "track";
+  const fill = document.createElement("div"); fill.className = "fill";
+  fill.style.width = (100 * n.total / base) + "%";
+  track.append(fill);
+  const cells = [
+    fmt.format(n.total), pct(100 * n.total / TOTAL),
+    n.parent && n.parent.depth >= 0 ? pct(100 * n.total / n.parent.total) : "",
+    fmt.format(n.paths),
+  ].map((t, i) => { const d = document.createElement("div");
+    d.className = "num" + (i > 0 ? " muted" : ""); d.textContent = t; return d; });
+  r.append(name, track, ...cells);
+  if (hasKids) r.onclick = () => toggle(n);
+  return r;
+}
+function render(){
+  const out = document.createDocumentFragment();
+  (function walk(n){
+    for (const c of kids(n)){
+      if (!visible(c)) continue;
+      out.append(row(c));
+      if (c.children.length && isOpen(c)) walk(c);
+    }
+  })(ROOT);
+  const el = document.getElementById("rows");
+  el.replaceChildren(out);
+  refreshStats("t");
+  navUpdate("t", tMatchList(), state.curId, !!state.matches);
+  if (!el.children.length){
+    const d = document.createElement("div"); d.className = "empty";
+    d.textContent = "Aucun libellé ne correspond. Modifiez la recherche ou le seuil.";
+    el.append(d);
+  }
+}
+function toggle(n){
+  if (isOpen(n)) { state.open.delete(n.id); if (state.ancestors) state.ancestors.delete(n.id); }
+  else state.open.add(n.id);
+  render();
+}
+function expandTo(level){
+  state.open.clear();
+  (function walk(n){ for (const c of n.children) if (c.depth < level) { state.open.add(c.id); walk(c); } })(ROOT);
+  render();
+}
+function search(q){
+  state.q = fold(q.trim()).text;
+  state.curId = null;
+  if (!state.q){ state.matches = state.ancestors = null; render(); return; }
+  const m = new Set(), a = new Set();
+  (function walk(n){
+    for (const c of n.children){
+      if (!c.pseudo && c.key.includes(state.q)){
+        m.add(c.id);
+        for (let p = c.parent; p && p.depth >= 0; p = p.parent) a.add(p.id);
+      }
+      walk(c);
+    }
+  })(ROOT);
+  state.matches = m; state.ancestors = a; render();
+}
+document.getElementById("q").addEventListener("input", e => search(e.target.value));
+
+function tMatchList(){
+  const out = [];
+  if (state.matches) (function walk(n){
+    for (const c of kids(n)){ if (state.matches.has(c.id)) out.push(c); walk(c); }
+  })(ROOT);
+  return out;
+}
+function tGo(step){
+  const n = navStep(tMatchList(), state.curId, step);
+  if (!n) return;
+  state.curId = n.id;
+  for (let p = n.parent; p && p.depth >= 0; p = p.parent){  // reopen if collapsed by hand
+    state.open.add(p.id); state.ancestors.add(p.id);
+  }
+  render();
+  const el = document.querySelector('#rows .row[data-id="' + n.id + '"]');
+  if (el) el.scrollIntoView({ block: "center" });
+}
+document.getElementById("t-prev").onclick = () => tGo(-1);
+document.getElementById("t-next").onclick = () => tGo(1);
+navKeys(document.getElementById("q"), tGo);
+document.getElementById("scale").onchange = e => { state.scale = e.target.value; render(); };
+document.getElementById("sort").onchange = e => { state.sort = e.target.value; render(); };
+document.getElementById("min").addEventListener("input", e => { state.min = Math.max(0, +e.target.value || 0); render(); });
+document.getElementById("minpct").addEventListener("input", e => { state.minPct = Math.min(100, Math.max(0, +e.target.value || 0)); render(); });
+document.getElementById("minppct").addEventListener("input", e => { state.minParentPct = Math.min(100, Math.max(0, +e.target.value || 0)); render(); });
+document.getElementById("ppfrom").onchange = e => { state.parentFrom = +e.target.value; render(); };
+document.querySelectorAll("#t-levels button").forEach(b => b.onclick = () => expandTo(+b.dataset.level));
+render();
+
+/* ============================ GRAPH ============================ */
+const G = { ready: false, open: new Set([ROOT.id, ...ROOT.children.map(c => c.id)]),  // level 2 shown by default
+            min: 0, minPct: 0, minParentPct: 0, parentFrom: 2, hits: new Set(), labels: "1",
+            curId: null, q: "", running: true };
+
+function initGraph(){
+  if (G.ready) return;
+  const wrap = document.getElementById("graph-wrap");
+  if (typeof d3 === "undefined"){
+    wrap.innerHTML = '<p id="gerr">La vue Arbre a besoin de la bibliothèque D3, chargée depuis internet. ' +
+      'Vérifiez la connexion puis rechargez la page. La vue Tableau fonctionne hors ligne.</p>';
+    return;
+  }
+  G.ready = true;
+  const svg = d3.select("#svg");
+  const g = svg.append("g");
+  G.linkG = g.append("g");
+  G.nodeG = g.append("g");
+  G.zoom = d3.zoom().scaleExtent([0.03, 8]).on("zoom", e => g.attr("transform", e.transform));
+  svg.call(G.zoom).on("dblclick.zoom", null);
+  const box = wrap.getBoundingClientRect();
+  svg.call(G.zoom.transform, d3.zoomIdentity.translate(box.width / 2, box.height / 2).scale(0.9));
+
+  const n1 = ROOT.children.length;
+  ROOT.children.slice().sort((a, b) => b.total - a.total)
+    .forEach((c, i) => { c.hue = (i * 360 / n1 + 210) % 360; });
+
+  G.r = n => n === ROOT ? 10 : 3 + 44 * Math.sqrt(n.total / TOTAL);
+  G.color = n => {
+    if (n === ROOT) return "var(--ink)";
+    const h = n.l1.hue, l = Math.min(0.72, 0.42 + 0.09 * n.depth);
+    return d3.hsl(h, 0.55, l).formatHex();
+  };
+
+  ROOT.fx = 0; ROOT.fy = 0;
+  G.sim = d3.forceSimulation()
+    .force("link", d3.forceLink().id(d => d.id))
+    .force("charge", d3.forceManyBody().theta(0.9))
+    .force("collide", d3.forceCollide(d => G.r(d) + 2).iterations(2))
+    .force("x", d3.forceX(0).strength(0.015))
+    .force("y", d3.forceY(0).strength(0.015))
+    .force("branch", branchForce())
+    .on("tick", ticked);
+  applyForces();
+
+  G.tip = document.getElementById("tip");
+  updateGraph();
+  setTimeout(fitView, 900);
+}
+
+function applyForces(){
+  // One elasticity for every link, or (when toggled) one per link level:
+  // the link into a level-k node uses levels[k - 1] ("(sans sous-genre)"
+  // counts as one level below its label).
+  const one = +document.getElementById("elastic").value;
+  const levels = [...document.querySelectorAll(".elastic-lvl")].map(i => +i.value);
+  const el = document.getElementById("elastic-multi").checked
+    ? l => levels[Math.min(l.target.depth, levels.length - 1)] : one;
+  const rep = +document.getElementById("repulse").value;
+  const rootLen = Math.max(0, +document.getElementById("rootlen").value || 0);
+  G.sim.force("link")
+    .distance(l => G.r(l.source) + G.r(l.target)
+      + (l.source === ROOT ? rootLen : 60 / (l.target.depth + 1) + 10))
+    .strength(el);
+  G.sim.force("charge").strength(d => -rep * (0.3 + G.r(d) / 12));
+  G.branch = +document.getElementById("branch-rep").value;
+}
+
+/* Level-1 branch repulsion: each level-1 label and its displayed subtree is
+   one group; groups push each other's centroids apart and every member moves
+   with its group. Like d3.forceManyBody (|dv| = strength * alpha / distance)
+   but between the ~16 groups, weighted by sqrt(size of the other group).
+   Groups are resolved once per node set (initialize), so a tick costs
+   O(nodes + groups²).                                                      */
+function branchForce(){
+  let nodes = [], groupOf = [], groups = [];
+  function force(alpha){
+    const s = G.branch;
+    if (!s) return;
+    for (const g of groups){ g.x = 0; g.y = 0; g.vx = 0; g.vy = 0; g.n = 0; }
+    for (let i = 0; i < nodes.length; i++){
+      const g = groupOf[i];
+      if (g){ g.x += nodes[i].x; g.y += nodes[i].y; g.n++; }
+    }
+    for (const g of groups){ g.x /= g.n; g.y /= g.n; }
+    for (let i = 0; i < groups.length; i++) for (let j = i + 1; j < groups.length; j++){
+      const a = groups[i], b = groups[j];
+      let dx = a.x - b.x, dy = a.y - b.y, d2 = dx * dx + dy * dy;
+      if (d2 < 1){ dx = Math.random() - 0.5; dy = Math.random() - 0.5; d2 = dx * dx + dy * dy; }
+      const f = s * alpha / d2, fa = f * Math.sqrt(b.n), fb = f * Math.sqrt(a.n);
+      a.vx += dx * fa; a.vy += dy * fa; b.vx -= dx * fb; b.vy -= dy * fb;
+    }
+    for (let i = 0; i < nodes.length; i++){
+      const g = groupOf[i];
+      if (g){ nodes[i].vx += g.vx; nodes[i].vy += g.vy; }
+    }
+  }
+  force.initialize = ns => {
+    nodes = ns;
+    const byL1 = new Map();
+    groupOf = ns.map(n => {
+      if (!n.l1) return null;  // root
+      if (!byL1.has(n.l1.id)) byL1.set(n.l1.id, {});
+      return byL1.get(n.l1.id);
+    });
+    groups = [...byL1.values()];
+  };
+  return force;
+}
+
+function gkids(n){
+  return n.children.filter(keepFn("g"));
+}
+
+function updateGraph(){
+  const nodes = [], links = [];
+  (function walk(n){
+    nodes.push(n);
+    if (!G.open.has(n.id)) return;
+    for (const c of gkids(n)){
+      if (c.x === undefined){
+        const a = Math.random() * 2 * Math.PI, d = G.r(n) + 8;
+        c.x = (n.x || 0) + Math.cos(a) * d; c.y = (n.y || 0) + Math.sin(a) * d;
+      }
+      links.push({ source: n, target: c });
+      walk(c);
+    }
+  })(ROOT);
+  G.nodes = nodes;
+
+  G.link = G.linkG.selectAll("line").data(links, d => d.target.id)
+    .join("line").attr("class", "glink")
+    .style("stroke-width", d => 0.8 + 3 * Math.sqrt(d.target.total / TOTAL));
+
+  G.node = G.nodeG.selectAll("g.gnode").data(nodes, d => d.id)
+    .join(enter => {
+      const s = enter.append("g");
+      s.append("circle");
+      s.append("text").attr("dy", "0.32em");
+      s.call(d3.drag()
+        .on("start", (e, d) => { if (!e.active && G.running) G.sim.alphaTarget(0.25).restart(); d.fx = d.x; d.fy = d.y; })
+        .on("drag", (e, d) => {
+          d.fx = e.x; d.fy = e.y; hideTip();
+          if (!G.running){ d.x = e.x; d.y = e.y; ticked(); }  // frozen: no tick will move it
+        })
+        .on("end", (e, d) => {
+          if (!e.active) G.sim.alphaTarget(0);
+          if (d !== ROOT && !(e.sourceEvent && e.sourceEvent.shiftKey)) { d.fx = null; d.fy = null; }
+        }));
+      s.on("click", (e, d) => { if (e.defaultPrevented) return; gToggle(d); })
+       .on("mousemove", (e, d) => showTip(e, d))
+       .on("mouseleave", hideTip);
+      return s;
+    });
+
+  G.node
+    .attr("class", d => "gnode" + (d.pseudo ? " pseudo" : "") + (d.depth === 0 ? " l1" : "")
+      + (gkids(d).length && !G.open.has(d.id) ? " collapsed" : "") + (G.hits.has(d.id) ? " hit" : "")
+      + (d.id === G.curId ? " current" : ""));
+  G.node.select("circle")
+    .attr("r", d => G.r(d))
+    .style("fill", d => d.pseudo ? "transparent" : G.color(d))
+    .style("stroke", d => d.pseudo ? G.color(d) : null);
+  G.node.select("text")
+    .attr("x", d => G.r(d) + 4)
+    .text(d => showLabel(d) ? (d === ROOT ? "Livres" : d.name) : "");
+
+  G.sim.nodes(nodes);
+  G.sim.force("link").links(links);
+  kick(0.6);
+
+  const note = document.getElementById("gnote");
+  note.textContent = nodes.length + " nœuds affichés" +
+    (nodes.length > 1200 ? ". Augmentez le seuil pour alléger la vue." : "");
+  refreshStats("g");
+  navUpdate("g", gMatchList(), G.curId, !!G.q);
+}
+
+/* Layout computation on/off. While frozen, changes (forces, unfolding,
+   filters) only redraw at the current positions; new nodes appear next to
+   their parent. They take effect when the computation is resumed.          */
+function kick(alpha){
+  if (G.running) G.sim.alpha(alpha).restart();
+  else ticked();
+}
+function setRunning(on){
+  G.running = on;
+  const b = document.getElementById("layout-toggle");
+  b.textContent = on ? "⏸ Figer la disposition" : "▶ Reprendre le calcul";
+  b.setAttribute("aria-pressed", !on);
+  if (!G.ready) return;
+  if (on) G.sim.alpha(0.5).restart(); else G.sim.stop();
+}
+document.getElementById("layout-toggle").onclick = () => setRunning(!G.running);
+
+function showLabel(d){
+  if (G.labels === "none") return G.hits.has(d.id);
+  if (G.labels === "all") return true;
+  if (+G.labels) return d.depth + 1 <= +G.labels || G.hits.has(d.id);  // up to level N
+  return d.depth <= 0 || G.r(d) >= 8 || G.hits.has(d.id);
+}
+
+function ticked(){
+  G.link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+  G.node.attr("transform", d => `translate(${d.x},${d.y})`);
+}
+
+function gToggle(d){
+  if (!gkids(d).length) return;
+  gLevelButton(null);
+  if (G.open.has(d.id)){
+    if (d === ROOT) return;
+    (function close(n){ G.open.delete(n.id); n.children.forEach(close); })(d);
+  } else G.open.add(d.id);
+  updateGraph();
+}
+
+function gLevelButton(level){  // highlight the active "Niveau GTL" button (none after a manual toggle)
+  document.querySelectorAll("#g-levels button").forEach(b => b.classList.toggle("active", +b.dataset.level === level));
+}
+function gExpandTo(level){
+  gLevelButton(level);
+  G.open = new Set([ROOT.id]);
+  (function walk(n){ for (const c of n.children) if (c.depth < level) { G.open.add(c.id); walk(c); } })(ROOT);
+  updateGraph();
+  setTimeout(fitView, 700);
+}
+
+function gSearch(q){
+  q = fold(q.trim()).text;
+  G.q = q; G.curId = null;
+  G.hits = new Set();
+  if (q){
+    (function walk(n){
+      for (const c of n.children){
+        if (!c.pseudo && c.key.includes(q)){
+          G.hits.add(c.id);
+          for (let p = c.parent; p; p = p.parent) G.open.add(p.id);
+        }
+        walk(c);
+      }
+    })(ROOT);
+  }
+  updateGraph();
+  if (G.hits.size) setTimeout(() => fitView([...G.nodes].filter(n => G.hits.has(n.id))), 700);
+}
+
+function gMatchList(){
+  const out = [];
+  (function walk(n){
+    for (const c of gkids(n).sort((a, b) => b.total - a.total)){
+      if (G.hits.has(c.id)) out.push(c);
+      walk(c);
+    }
+  })(ROOT);
+  return out;
+}
+function gGo(step){
+  if (!G.ready) return;
+  const n = navStep(gMatchList(), G.curId, step);
+  if (!n) return;
+  G.curId = n.id;
+  let opened = false;  // reopen ancestors collapsed by hand
+  for (let p = n.parent; p; p = p.parent) if (!G.open.has(p.id)){ G.open.add(p.id); opened = true; }
+  updateGraph();
+  setTimeout(() => focusNode(n), opened ? 700 : 0);  // let new nodes settle first
+}
+function focusNode(n){
+  const svg = d3.select("#svg");
+  const box = document.getElementById("graph-wrap").getBoundingClientRect();
+  const k = Math.max(d3.zoomTransform(svg.node()).k, 1.5);
+  svg.transition().duration(500).call(G.zoom.transform,
+    d3.zoomIdentity.translate(box.width / 2, box.height / 2).scale(k).translate(-n.x, -n.y));
+}
+document.getElementById("g-prev").onclick = () => gGo(-1);
+document.getElementById("g-next").onclick = () => gGo(1);
+navKeys(document.getElementById("gq"), gGo);
+
+function fitView(subset){
+  const ns = subset && subset.length ? subset : G.nodes;
+  if (!ns || !ns.length) return;
+  const xs = ns.map(n => n.x), ys = ns.map(n => n.y);
+  const pad = 60;
+  const x0 = Math.min(...xs) - pad, x1 = Math.max(...xs) + pad;
+  const y0 = Math.min(...ys) - pad, y1 = Math.max(...ys) + pad;
+  const box = document.getElementById("graph-wrap").getBoundingClientRect();
+  const k = Math.min(4, 0.95 * Math.min(box.width / (x1 - x0), box.height / (y1 - y0)));
+  const t = d3.zoomIdentity.translate(box.width / 2, box.height / 2).scale(k)
+    .translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
+  d3.select("#svg").transition().duration(500).call(G.zoom.transform, t);
+}
+
+function showTip(e, d){
+  const box = document.getElementById("graph-wrap").getBoundingClientRect();
+  let txt = d === ROOT ? "Livres" : pathOf(d).join(" › ");
+  txt += "\n" + fmt.format(d.total) + " items, " + pct(100 * d.total / TOTAL) + " du total";
+  if (d.parent && d.parent.depth >= 0) txt += ", " + pct(100 * d.total / d.parent.total) + " du parent";
+  if (d.children.length) txt += "\n" + d.children.length + " enfants, " + fmt.format(d.paths) + " chemins";
+  G.tip.textContent = txt;
+  G.tip.style.display = "block";
+  const x = e.clientX - box.left + 14, y = e.clientY - box.top + 14;
+  G.tip.style.left = Math.min(x, box.width - G.tip.offsetWidth - 8) + "px";
+  G.tip.style.top = Math.min(y, box.height - G.tip.offsetHeight - 8) + "px";
+}
+function hideTip(){ if (G.tip) G.tip.style.display = "none"; }
+
+document.getElementById("gq").addEventListener("input", e => G.ready && gSearch(e.target.value));
+document.getElementById("gmin").addEventListener("input", e => {
+  G.min = Math.max(0, +e.target.value || 0); if (G.ready) updateGraph(); else refreshStats("g"); });
+document.getElementById("gminpct").addEventListener("input", e => {
+  G.minPct = Math.min(100, Math.max(0, +e.target.value || 0)); if (G.ready) updateGraph(); else refreshStats("g"); });
+document.getElementById("gminppct").addEventListener("input", e => {
+  G.minParentPct = Math.min(100, Math.max(0, +e.target.value || 0)); if (G.ready) updateGraph(); else refreshStats("g"); });
+document.getElementById("gppfrom").onchange = e => {
+  G.parentFrom = +e.target.value; if (G.ready) updateGraph(); else refreshStats("g"); };
+document.querySelectorAll("#g-levels button").forEach(b => b.onclick = () => G.ready && gExpandTo(+b.dataset.level));
+document.getElementById("elastic").addEventListener("input", () => { if (G.ready){ applyForces(); kick(0.5); } });
+document.querySelectorAll(".elastic-lvl").forEach(i => i.addEventListener("input", () => {
+  if (G.ready){ applyForces(); kick(0.5); } }));
+document.getElementById("elastic-multi").onchange = e => {
+  const multi = e.target.checked;
+  if (multi)  // start every level from the current single value
+    document.querySelectorAll(".elastic-lvl").forEach(i => { i.value = document.getElementById("elastic").value; });
+  document.getElementById("elastic-one").hidden = multi;
+  document.getElementById("elastic-levels").hidden = !multi;
+  if (G.ready){ applyForces(); kick(0.5); }
+};
+document.getElementById("repulse").addEventListener("input", () => { if (G.ready){ applyForces(); kick(0.5); } });
+document.getElementById("rootlen").addEventListener("input", () => { if (G.ready){ applyForces(); kick(0.5); } });
+document.getElementById("branch-rep").addEventListener("input", () => { if (G.ready){ applyForces(); kick(0.5); } });
+document.getElementById("labels").onchange = e => { G.labels = e.target.value; if (G.ready) updateGraph(); };
+document.getElementById("fit").onclick = () => G.ready && fitView();
+
+/* ============================ COUNTERS ============================ */
+/* A node is kept when it passes ALL thresholds:
+   total >= N items, total >= X % of all books, and, from level parentFrom on,
+   total >= Y % of its parent's total.
+   A hidden node hides its whole subtree.                                     */
+function keepFn(pfx){
+  const o = pfx === "t" ? state : G;
+  const abs = Math.max(o.min, o.minPct * TOTAL / 100);
+  const rel = o.minParentPct / 100;
+  // level of a node = depth + 1 ("(sans sous-genre)" sits one level below its label)
+  return c => c.total >= abs &&
+    (c.depth + 1 < o.parentFrom || c.total >= rel * c.parent.total);
+}
+
+/* nodes  : real GTL labels kept by the filters (and all their ancestors kept)
+   leaves : terminal -> kept labels without child label
+            pruned   -> kept labels none of whose children is kept
+   withOwn: items without sub-label at a non-terminal node ("(sans sous-genre)")
+            count as one more leaf when that part itself is kept             */
+function treeStats(keep, mode, withOwn){
+  const s = { nodes: 0, leaves: 0, ownLeaves: 0, items: 0 };
+  (function walk(n){
+    for (const c of n.children){
+      if (c.pseudo){
+        if (withOwn && keep(c)){ s.leaves++; s.ownLeaves++; s.items += c.total; }
+        continue;
+      }
+      if (!keep(c)) continue;               // hidden node hides its subtree
+      s.nodes++;
+      if (mode === "pruned"){
+        const big = c.children.some(k => keep(k) && (!k.pseudo || withOwn));
+        if (!big){ s.leaves++; s.items += c.total; continue; }
+      } else if (!c.children.some(k => !k.pseudo)){
+        s.leaves++; s.items += c.total;
+      }
+      walk(c);
+    }
+  })(ROOT);
+  return s;
+}
+
+function refreshStats(pfx){
+
+  const mode = document.getElementById(pfx + "-leafmode").value;
+  const withOwn = document.getElementById(pfx + "-own").checked;
+  const s = treeStats(keepFn(pfx), mode, withOwn);
+  let txt = fmt.format(s.nodes) + " nœuds et " + fmt.format(s.leaves) + " feuilles retenus par les filtres";
+  if (s.ownLeaves) txt += " (dont " + fmt.format(s.ownLeaves) + " « sans sous-genre »)";
+  txt += ". Les feuilles couvrent " + fmt.format(s.items) + " items, soit " +
+         pct(100 * s.items / TOTAL) + " du total.";
+  document.getElementById(pfx + "-stats").textContent = txt;
+}
+for (const pfx of ["t", "g"]){
+  document.getElementById(pfx + "-leafmode").onchange = () => refreshStats(pfx);
+  document.getElementById(pfx + "-own").onchange = () => refreshStats(pfx);
+}
+refreshStats("g");
+
+/* ============================ SIDE PANEL ============================ */
+/* One open/closed state for both pages, remembered across visits.          */
+const PANEL_KEY = "gtl-tree-panel-closed";
+function setPanel(closed){
+  document.body.classList.toggle("panel-closed", closed);
+  document.querySelectorAll(".panel-toggle").forEach(b => {
+    b.setAttribute("aria-expanded", !closed);
+    b.title = closed ? "Afficher les paramètres" : "Masquer les paramètres";
+    b.querySelector(".chev").textContent = closed ? "»" : "«";
+  });
+  try { localStorage.setItem(PANEL_KEY, closed ? "1" : ""); } catch (e) {}
+}
+document.querySelectorAll(".panel-toggle").forEach(b => b.onclick = () => {
+  setPanel(!document.body.classList.contains("panel-closed"));
+  if (G.ready) requestAnimationFrame(() => fitView());  // graph area was resized
+});
+let panelClosed = false;
+try { panelClosed = localStorage.getItem(PANEL_KEY) === "1"; } catch (e) {}
+setPanel(panelClosed);
+
+/* ============================ ROUTING ============================ */
+function route(){
+  const graph = location.hash !== "#tableau";  // tree is the default page
+  document.getElementById("view-table").hidden = graph;
+  document.getElementById("view-graph").hidden = !graph;
+  document.getElementById("nav-table").toggleAttribute("aria-current", !graph);
+  document.getElementById("nav-graph").toggleAttribute("aria-current", graph);
+  if (graph) document.getElementById("nav-graph").setAttribute("aria-current", "page");
+  else document.getElementById("nav-table").setAttribute("aria-current", "page");
+  if (graph) requestAnimationFrame(initGraph);
+}
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>

@@ -333,6 +333,8 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
           JOB_STATUS: ${{ job.status }}
           NOTIF_CHANNEL_ID: ${{ vars.NOTIF_CHANNEL_ID }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           if [ "$JOB_STATUS" = "success" ]; then
             EMOJI="✅"
@@ -341,5 +343,5 @@ jobs:
           fi
           passdirector slack post \
             --channel "$NOTIF_CHANNEL_ID" \
-            --message "${EMOJI} <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Airflow déployé> sur l'environnement $AIRFLOW_NAME" \
+            --message "${EMOJI} <https://github.com/$REPOSITORY/actions/runs/$RUN_ID|Airflow déployé> sur l'environnement $AIRFLOW_NAME" \
             --github-actor "$GITHUB_ACTOR"

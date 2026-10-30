@@ -151,3 +151,19 @@ Stable code identifying the reason for statistical secrecy at the EPCI level ('n
 {% docs column__municipality_secret_reason_code %}
 Stable code identifying the reason for statistical secrecy at the municipality level ('no_revenue', 'low_partners', 'high_concentration', 'both', 'secondary_secret' or 'none').
 {% enddocs %}
+
+{% docs column__geo_level %}
+Geographic scale used to compute the ranking ('national', 'region', or 'department').
+{% enddocs %}
+
+{% docs column__geo_value %}
+Name or identifier of the geographic area corresponding to the aggregation level ('NAT', region name, or department name).
+{% enddocs %}
+
+{% docs column__offer_rank %}
+Rank position of the offer based on total booking revenue generated over the period, in descending order (from 1 to 50).
+{% enddocs %}
+
+{% docs column__venue_rank %}
+Rank position of the venue based on total booking revenue generated over the period, in descending order (from 1 to 50).
+{% enddocs %}

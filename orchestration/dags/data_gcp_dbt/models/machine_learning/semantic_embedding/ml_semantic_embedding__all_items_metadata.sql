@@ -18,10 +18,17 @@
             partition_by=None,
             unique_key="item_id",
             on_schema_change="append_new_columns",
+            tags=["external_dependency"],
+            meta={
+                "external_dag_id": "item_embedding",
+                "external_task_id": "all_items_metadata.load_all_items_metadata",
+                "external_dependency_on_skip": "skip",
+                "external_dependency_offset_hours": -6,
+            },
         )
     )
 }}
-
+{# item_embedding starts at 4 am (prod and  7am stg) while dbt dag runs at 2:45 am so we use a negative offset of few hours to point the delayed sensor at the correct dagrun (from 6 hours after the dbt dag run  within the previous 24 hours) #}
 select
     ie.item_id,
     ie.content_hash,

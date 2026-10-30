@@ -3,7 +3,7 @@ description: Description of the `metric` columns.
 title: Metrics
 ---
 
-{% docs column__total_actual_amount_spent %} Total actual amount spent, reflecting real transactions. {% enddocs %}
+{% docs column__total_actual_amount_spent %} Amount of the used individual bookings (booking_is_used) on the row's deposits, in euros (all of the user's deposits on a user row): spending counted at use time, bookings not yet used excluded. {% enddocs %}
 {% docs column__total_available_stock %} Quantity of remaining stock. (stock_quantity - non cancelled bookings){% enddocs %}
 {% docs column__total_bookable_collective_offers %} Total number of collective offers that are bookable. {% enddocs %}
 {% docs column__total_bookable_individual_offers %} Total number of individual offers that are bookable. {% enddocs %}
@@ -54,7 +54,7 @@ Cumulative total amount spent for collective bookings for the same geography fro
 {% docs column__total_current_year_collective_theoretic_revenue %} Total collective theoretical revenue for the current year. {% enddocs %}
 {% docs column__total_current_year_used_collective_bookings %} Total collective used bookings for the current year. {% enddocs %}
 
-{% docs column__total_deposit_actual_amount_spent %} Total actual amount spent from deposits. {% enddocs %}
+{% docs column__total_deposit_actual_amount_spent %} Amount of the used individual bookings on the user's last deposit only, in euros. {% enddocs %}
 {% docs column__total_deposit_amount %} Total amount deposited by the user. {% enddocs %}
 {% docs column__total_deposits %}The total number of deposits for the educational institution.{% enddocs %}
 {% docs column__total_grant_18_subcategory_booked %} The total number of subcategory booked on grant_18 deposit. {% enddocs %}
@@ -87,12 +87,12 @@ Total number of students eligible for EAC (Education Artistique et Culturelle) w
 Total number of students who participated in at least one EAC activity within the territory for the specified month and school year.
 {% enddocs %}
 {% docs column__total_theoretic_revenue %} Total theoretical revenue from all bookings. {% enddocs %}
-{% docs column__total_theoretical_amount_spent %} Total theoretical amount that would have been spent based on expected transactions. {% enddocs %}
+{% docs column__total_theoretical_amount_spent %} Amount of the non-cancelled individual bookings (booking_intermediary_amount), used or not, on the row's deposits, in euros (all of the user's deposits on a user row): spending counted at booking time. {% enddocs %}
 {% docs column__total_theoretical_amount_spent_in_digital_goods %} Total theoretical amount spent on digital goods based on expected transactions. {% enddocs %}
 {% docs column__total_theoretical_digital_goods_amount_spent %} Total theoretical amount spent on digital goods by the user. {% enddocs %}
 {% docs column__total_theoretical_outings_amount_spent %} Total theoretical amount spent on outings by the user. {% enddocs %}
 {% docs column__total_theoretical_physical_goods_amount_spent %} Total theoretical amount spent on physical goods by the user. {% enddocs %}
-{% docs column__total_theoretical_remaining_credit %} Total theoretical remaining credit for the user. {% enddocs %}
+{% docs column__total_theoretical_remaining_credit %} Credit left on the user's last deposit, in euros: last_deposit_amount minus the non-cancelled bookings on that deposit (total_last_deposit_theoretical_amount_spent). Earlier deposits do not enter it. It is not set to zero when the deposit has expired. {% enddocs %}
 {% docs column__total_tickets %}The total number of tickets for the educational institution.{% enddocs %}
 {% docs column__total_used_bookings %} Total number of bookings that were used. {% enddocs %}
 {% docs column__total_used_collective_bookings %} Total number of collective bookings that were used. {% enddocs %}
@@ -132,7 +132,7 @@ Total number of students who participated in at least one EAC activity within th
 {% docs column__pct_csp_8 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 8 - Others without professional activity. {% enddocs %}
 {% docs column__pct_french_population %} The percentage of the population that have French nationality, all ages included. {% enddocs %}
 {% docs column__pct_foreign_population %} The percentage of the population that have foreign nationality, all ages included. {% enddocs %}
-{% docs column__total_session_display %} The total number of sessions with a display of a specific object like module_id or offer_id. {% enddocs %}
+{% docs column__total_session_display %} Number of sessions with a display of the row's object (module_id, offer_id...) that day. Sessions are counted per object: summing across objects counts a session once per object displayed. {% enddocs %}
 {% docs column__total_session_with_click %} The total number of sessions with a click on a specific object like module_id or offer_id. {% enddocs %}
 {% docs column__total_sesh_consult_offer %} The total number of sessions with a consultation related to a specific object like module_id or offer_id. {% enddocs %}
 {% docs column__total_session_fav %} The total number of sessions which puts an offer to favorite, related to a specific object like module_id or offer_id. {% enddocs %}
@@ -148,7 +148,7 @@ Total number of students who participated in at least one EAC activity within th
 {% docs column__total_distinct_venue_consult_offer %} The total distinct number of venues which led to an offer consultation. {% enddocs %}
 {% docs column__total_session_venue_map_seen_duration_seconds %} Durée totale en seconde pendant laquelle la venue map a été affichée au cours d’une session. {% enddocs %}
 {% docs column__total_diversification %} Total diversification score of the bookings attributed to the entry (sum of the bookings' diversity_score). {% enddocs %}
-{% docs column__total_quantities %} Total quantities booked. A booking quantity can be 1 or 2. {% enddocs %}
+{% docs column__total_quantities %} Number of seats booked: the sum of booking quantities, where a duo booking counts 2. Not a number of bookings. {% enddocs %}
 {% docs column__total_revenue_amount %} Revenue: sum of booking_intermediary_amount of used individual bookings that have an invoiced pricing included in a payment batch, at the row's grain. {% enddocs %}
 {% docs column__total_reimbursed_amount %} Amount reimbursed by pass Culture to offerers at the row's grain: pricing amounts on 'offerer revenue' pricing lines of invoiced pricings in a payment batch. {% enddocs %}
 {% docs column__total_contribution_amount %} Total amount contributed by the offerers on their bookings, i.e. the share of revenue borne by the offerers (revenue minus reimbursed amount): 'offerer contribution' pricing lines of invoiced pricings in a payment batch, at the row's grain. {% enddocs %}
@@ -230,11 +230,11 @@ The total deposit amount effectively spent by beneficiaries before it expired.
 {% enddocs %}
 
 {% docs column__metrics__average_deposit_amount_at_expiration %}
-The average deposit amount allocated per beneficiary at the time of expiration.
+The average deposit amount allocated per beneficiary at the time of expiration. Do not average it across rows: recompute it from the totals.
 {% enddocs %}
 
 {% docs column__metrics__average_actual_amount_spent_at_expiration %}
-The average deposit amount effectively spent per beneficiary at the time of expiration.
+The average deposit amount effectively spent per beneficiary at the time of expiration. Do not average it across rows: recompute it from the totals.
 {% enddocs %}
 
 {% docs column__metrics__total_active_partners_individual %}

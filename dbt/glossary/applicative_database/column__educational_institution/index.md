@@ -4,7 +4,7 @@
 
 **educational_redactor_id**: Id of the educational redactor.
 
-**ministry**: The ministry to which the educational institution belongs. Values can be : AGRICULTURE; AGRICULTURE; EDUCATION_NATIONALE; MER.
+**ministry**: The ministry to which the educational institution belongs.
 
 **current_deposit_amount**: The current amount of deposit for the educational institution.
 

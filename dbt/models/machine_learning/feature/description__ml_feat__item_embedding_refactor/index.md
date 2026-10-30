@@ -7,8 +7,8 @@ The `ml_feat__item_embedding_refactor` table contains item embeddings produced b
 
 ## Table description
 
-| name             | data_type | description                                                                                     |
-| ---------------- | --------- | ----------------------------------------------------------------------------------------------- |
-| item_id          | STRING    | Identifier for the item associated with the offer used internally by the data science team.     |
-| content_hash     | STRING    | Hash of item's metadata.                                                                        |
-| semantic_content | ARRAY     | Embedding of item's metadata with "query" prompt name. Encoded with embedding-gemma-300m model. |
+| name             | data_type | description                                                                                                                                             |
+| ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| item_id          | STRING    | Identifier of the work (item) the offer belongs to, used internally by the data science team; several offers of the same book or film share an item_id. |
+| content_hash     | STRING    | Hash of item's metadata.                                                                                                                                |
+| semantic_content | ARRAY     | Embedding of item's metadata with "document" prompt name. Encoded with embedding-gemma-300m model.                                                      |

@@ -2,17 +2,19 @@
 
 **booking_creation_date**: Date when the booking was created.
 
-**booking_created_at**: Timestamp when the booking was created.
+**booking_created_at**: Date and time when the booking was created, in Paris local time, stored as DATETIME without time zone (not TIMESTAMP): compare it with a DATETIME or DATE.
 
-**booking_quantity**: Quantity of offer booked. Can be 1, or 2 if booking was made using the duo option.
+**booking_quantity**: Quantity of offer booked. Can be 1, or 2 if booking was made using the duo option. Summing it counts seats, not bookings.
 
-**booking_amount**: Total amount for the booking for one quantity.
+**booking_amount**: Unit price of the booked offer: the amount for one quantity. Multiply by the booking quantity for the booking total.
 
-**booking_status**: Current status of the booking.
+**booking_status**: Current status of the booking. For individual bookings, stored values are 'CONFIRMED' (booked, not yet used), 'USED' (used), 'REIMBURSED' (used and reimbursed to the offerer) and 'CANCELLED'.
 
-**booking_is_cancelled**: Boolean. Indicates if the booking is cancelled.
+**reimbursement_booking_status**: Current status of the booking (the collective booking status for collective rows). The table only keeps bookings with an invoiced pricing, so it does not cover every status of the booking lifecycle.
 
-**booking_is_used**: Boolean. Indicates if the booking has been used.
+**booking_is_cancelled**: Boolean. TRUE when the booking is cancelled, i.e. booking_status = 'CANCELLED'.
+
+**booking_is_used**: Boolean. TRUE when the booking has been used, whether or not it has been reimbursed since.
 
 **booking_reimbursed**: Boolean. Indicates if the booking amount was reimbursed or not.
 

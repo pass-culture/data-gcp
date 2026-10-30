@@ -32,11 +32,13 @@
 
 **offerer_dms_submitted_at**: Date when the offerer sumitted his first DMS record.
 
-**offerer_is_reference_adage**: Indicates if the offerer is a reference in adage.
+**offerer_is_reference_adage**: Indicates if the offerer is referenced in ADAGE (referencing, distinct from synchronisation: see is_synchro_adage).
 
 **offerer_is_synchro_adage**: Indicates if the offerer is synchronized with adage.
 
 **offerer_validation_status**: Validation status of the offerer.
+
+**venue_offerer_validation_status**: Validation status of the offerer. The table keeps only venues of validated offerers, so the column is constant.
 
 **offerer_is_active**: Indicates if the offerer is active. Returns 'true' if offerer is active. Returns 'false' if the offerer has been deactivated.
 

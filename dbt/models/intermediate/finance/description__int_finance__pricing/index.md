@@ -21,18 +21,18 @@ All amounts are stored in **euro cents** (e.g., 12.34€ = 1234). By convention:
 
 ## Table description
 
-| name                  | data_type | description                                                                                                    |
-| --------------------- | --------- | -------------------------------------------------------------------------------------------------------------- |
-| id                    |           | Unique identifier for a pricing (valorisation).                                                                |
-| status                |           | Status of the pricing: VALIDATED (created), PROCESSED (included in cashflow), or INVOICED (invoice generated). |
-| bookingId             |           | Unique identifier for a booking.                                                                               |
-| collective_booking_id |           | Unique identifier for a collective booking.                                                                    |
-| creationDate          |           | Date when the pricing was created.                                                                             |
-| valueDate             |           | Date used for ordering the valorisation.                                                                       |
-| amount                |           | Reimbursement amount in euro cents (negative = paid by Pass Culture to the offerer).                           |
-| standardRule          |           | Standard reimbursement rule applied.                                                                           |
-| customRuleId          |           | Identifier of the custom reimbursement rule if applicable.                                                     |
-| revenue               |           | Cumulative revenue of the pricing point at the time of calculation.                                            |
-| pricing_point_id      |           | Identifier of the pricing point (venue with SIRET).                                                            |
-| venue_id              |           | Unique identifier for the venue.                                                                               |
-| event_id              |           | Unique identifier for a finance event.                                                                         |
+| name                  | data_type | description                                                                                                                                                                                                         |
+| --------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id                    |           | Unique identifier for a pricing (valorisation).                                                                                                                                                                     |
+| status                |           | Status of the pricing in the finance workflow, stored in lowercase: 'validated' (created), 'processed' (included in a cashflow), 'invoiced' (invoice generated). Only 'invoiced' pricings are accounting-certified. |
+| bookingId             |           | Unique identifier for a booking.                                                                                                                                                                                    |
+| collective_booking_id |           | Unique identifier for a collective booking.                                                                                                                                                                         |
+| creationDate          |           | Date when the pricing was created.                                                                                                                                                                                  |
+| valueDate             |           | Date used for ordering the valorisation.                                                                                                                                                                            |
+| amount                |           | Reimbursement amount in euro cents (negative = paid by Pass Culture to the offerer).                                                                                                                                |
+| standardRule          |           | Standard reimbursement rule applied.                                                                                                                                                                                |
+| customRuleId          |           | Identifier of the custom reimbursement rule if applicable.                                                                                                                                                          |
+| revenue               |           | Cumulative revenue of the pricing point at the time of calculation.                                                                                                                                                 |
+| pricing_point_id      |           | Identifier of the pricing point (venue with SIRET).                                                                                                                                                                 |
+| venue_id              |           | Unique identifier for the venue.                                                                                                                                                                                    |
+| event_id              |           | Unique identifier for a finance event.                                                                                                                                                                              |

@@ -10,9 +10,13 @@
 
 **user_civility**: Registered civility of the user (male, female). Information collected during registration.
 
-**user_city**: City associated with the user's registered address.
+**user_city**: Name of the city associated with the user's registered address, at the arrondissement level for Paris, Lyon and Marseille (e.g. `Paris 1er Arrondissement`).
 
-**user_city_code**: The INSEE code of the city associated with the user's registered address.
+**user_city_code**: INSEE code of the city associated with the user's registered address, at the arrondissement level for Paris, Lyon and Marseille (e.g. `75101`).
+
+**user_municipality_code**: INSEE code of the municipality (commune) associated with the user's registered address: the parent municipality for the arrondissements of Paris, Lyon and Marseille (`75056`, `69123`, `13055`), the same as `user_city_code` everywhere else.
+
+**user_municipality_label**: Name of the municipality (commune) of `user_municipality_code` (e.g. `Paris` for every Paris arrondissement).
 
 **user_created_at**: Date when the user account was created.
 
@@ -20,11 +24,11 @@
 
 **user_department_name**: Department name associated with the user's registered address.
 
-**user_density_label**: String column.Density label (urban, rural) of the user's registered address.
+**user_density_label**: String column. Label of the INSEE municipal density grid (grille communale de densité, 7 levels) of the municipality of the user's registered address; 'non localisé' when not located. It reflects the user's last known address (geocoded in a full pass in February–March 2025, then re-geocoded as users change address), not necessarily their current residence.
 
-**user_density_level**: Integer column. Density level of the user's registered address. Ranges from 1 (highly urban) to 7 (highly rural).
+**user_density_level**: Integer column. Density level of the user's registered address. Ranges from 1 (highly urban) to 7 (highly rural). It reflects the user's last known address (geocoded in a full pass in February–March 2025, then re-geocoded as users change address), not necessarily their current residence.
 
-**user_epci**: EPCI code associated with the user's registered address. An EPCI is a French public body enabling municipalities to collaborate on shared local services and development.
+**user_epci**: Name of the EPCI (Établissement Public de Coopération Intercommunale) of the user's registered address; 'non localisé' when not located. It reflects the user's last known address (geocoded in a full pass in February–March 2025, then re-geocoded as users change address), not necessarily their current residence.
 
 **user_humanized_id**: Human-readable identifier for the user.
 
@@ -32,19 +36,19 @@
 
 **user_iris_internal_id**: Internal IRIS identifier associated with the user's registered address. IRIS (Ilots Regroupés pour l'Information Statistique) are small, standardized geographic units used for detailed statistical analysis in France.
 
-**user_is_active**: Boolean. Indicates if the user's account is currently active (the user can access it, irrespective of grant status).
+**user_is_active**: Boolean. Indicates if the user's account is currently active (the user can access it, irrespective of grant status). An active account is not necessarily a current beneficiary: its credit can be expired or spent.
 
-**user_is_current_beneficiary**: Boolean. Indicates if the user still has available grant to use.
+**user_is_current_beneficiary**: Boolean. TRUE when the user still has usable credit: their last deposit has not expired, the amount of its used bookings is below the deposit amount, and the account is active.
 
 **user_is_in_education**: Boolean. Indicates if the user is in education, based on their registered activity. According to the INSEE, a user is considered to be in education if they fall under one of the following categories: Middle school student (Collégien), High school student (Lycéen), University student (Étudiant), Apprentice (Apprenti), Work-study student (Alternant).
 
-**user_is_in_qpv**: Boolean. Indicates if the user's registered address is in a priority neighborhood (QPV).
+**user_is_in_qpv**: Boolean. TRUE when the user's geocoded address falls inside a priority neighbourhood (QPV). Membership is computed on the geocoded address, not derived from the IRIS: one IRIS can mix addresses in and out of QPVs.
 
 **user_is_priority_public**: Boolean. Indicates if the user considered as a pass Culture priority public (users that are either residing in a rural area, in a QPV or are not in education).
 
 **user_is_unemployed**: Boolean. Indicates if the user is unemployed as per its registered activity.
 
-**user_macro_density_label**: Macro density label of the user's registered address.
+**user_macro_density_label**: Two-class density of the user's registered address, derived from the INSEE municipal density grid: 'urbain' (levels 1 to 4), 'rural' (levels 5 to 7), or 'non localisé' when the address cannot be attached to a municipality. It reflects the user's last known address (geocoded in a full pass in February–March 2025, then re-geocoded as users change address), not necessarily their current residence.
 
 **user_postal_code**: Postal code of the user's registered address.
 
@@ -54,13 +58,15 @@
 
 **user_seniority**: Days between user account creation date and current date.
 
-**user_suspension_reason**: Reason for the user's suspension. Possible values include: end of eligibility – The user no longer meets the criteria to be eligible for a deposit; fraud suspicion – Suspicious activity detected, requiring investigation; hacking fraud – Confirmed or suspected account compromise; upon user request – The user has explicitly requested the suspension or deletion of their account.
+**user_suspension_reason**: Reason for the user's suspension. Possible values include: end of eligibility – The user no longer meets the criteria to be eligible for a deposit; fraud suspicion – Suspicious activity detected, requiring investigation; hacking fraud – Confirmed or suspected account compromise; upon user request – The user has explicitly requested the suspension or deletion of their account. NULL when no suspension reason is recorded.
 
 **user_has_enabled_marketing_email**: Indicates if the user has accepted to receive marketing emails.
 
 **user_has_enabled_marketing_push**: Indicates if the user has accepted to received marketing push.
 
-**user_role**: Role assigned to the user (GRANT_18, GRANT_15_17, PRO, ADMIN).
+**user_role**: Role assigned to the user account in the source application.
+
+**global_user_role**: Role assigned to the user account. Pro and admin accounts are excluded from this table, so only beneficiary roles remain; NULL for general public users (no role).
 
 **user_address**: User's registered address. Registered at first grant deposit and updated when the user applies for its GRANT_18.
 
@@ -124,7 +130,7 @@
 
 **user_address_raw**: Raw address of the user's registered address.
 
-**user_category**: User category derived from the user's role and age. Possible values include: '15-16' (users aged 15 or 16 with no specific role), 'general_public' (users aged 14 or under, or 17 and above, with no specific role), or 'beneficiary' (for users with a non-null role).
+**user_category**: User category derived from the user's role and age: the user's role when the user has one; otherwise an age bracket, separating users aged 15 or 16 from the other users without a role. NULL when the user has neither a role nor a known age.
 
 **user_action_type**: Type of action that triggered the user information record. Possible values: INFO_MODIFIED (user modified their profile), PROFILE_COMPLETION (initial profile completion during registration).
 
@@ -142,13 +148,21 @@
 
 **user_age_at_info_creation**: User's age in years at the time the information record was created.
 
-**user_qpv_code**: Code of the QPV (Quartier Prioritaire de la Ville) if the user is located in a priority neighborhood.
+**user_qpv_code**: Code of the QPV (Quartier Prioritaire de la Ville) if the user's geocoded address is in a priority neighborhood, null otherwise. QPV membership is computed on the geocoded address, not derived from the IRIS.
 
-**user_qpv_name**: Name of the QPV (Quartier Prioritaire de la Ville) if the user is located in a priority neighborhood.
+**user_history_qpv_code**: Code of the QPV (Quartier Prioritaire de la Ville) containing the location of this history row, null otherwise. Located from the postal-code centroid unless the row's address matches the latest geocoded address, so it is not the QPV of the user's current address.
+
+**user_qpv_name**: Name of the QPV (Quartier Prioritaire de la Ville) containing the location of this history row, null otherwise. Located from the postal-code centroid unless the row's address matches the latest geocoded address, so it is not the QPV of the user's current address.
+
+**user_beneficiary_qpv_name**: Name of the QPV (Quartier Prioritaire de la Ville) if the user's last geocoded address is in a priority neighborhood; `hors QPV` if the address is geocoded outside any QPV; `non localisé` if the address is not geocoded. QPV membership is computed on the geocoded address, not derived from the IRIS.
+
+**user_qpv_municipality**: Municipality (commune) label of the QPV containing the user's geocoded address, null if the user is not in a QPV.
 
 **user_epci_code**: Code of the EPCI (Etablissement Public de Cooperation Intercommunale) where the user is located.
 
-**user_density_macro_level**: Macro-level urban density classification (Urban vs Rural). Aggregation of density_label into broader categories.
+**user_density_macro_level**: Two-class density of the address of this history row: 'urbain' (municipal grid levels 1 to 4) or 'rural' (5 to 7), NULL when not located. Located like user_density_label of this table (geocoded coordinates when the address matches the latest geocoded one, else postal-code centroid).
+
+**user_history_density_label**: String column. Density label of the address as entered at that point of the history. It is located from the user's geocoded coordinates when the row's address matches their latest geocoded address, otherwise from the centroid of the postal code. It often differs from user_density_label on the beneficiary tables even without a move, so do not compare the two.
 
 **info_history_rank**: Sequential rank of information changes for each user (0 = first record, 1 = second, etc.).
 

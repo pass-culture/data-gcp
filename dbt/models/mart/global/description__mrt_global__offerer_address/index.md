@@ -9,7 +9,7 @@ This table maps every addresses where offerers created venues or offers.
 | offerer_address_id      |           | The unique identifier for the mapping between an offerer and an address where he created offers. |
 | offerer_address_label   |           | The label for the address.                                                                       |
 | address_id              |           | The unique identifier for the address.                                                           |
-| offerer_id              |           | Unique identifier of the offerer.                                                                |
+| venue_id                |           | Unique identifier for the venue.                                                                 |
 | address_street          |           | The street name of the address.                                                                  |
 | address_postal_code     |           | The postal code of the address.                                                                  |
 | address_city            |           | The city where the address is located.                                                           |

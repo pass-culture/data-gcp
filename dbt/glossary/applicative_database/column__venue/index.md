@@ -16,9 +16,13 @@
 
 **venue_postal_code**: Postal code of the venue.
 
-**venue_city**: City where the venue is located.
+**venue_city**: Name of the city where the venue is located, at the arrondissement level for Paris, Lyon and Marseille (e.g. `Paris 1er Arrondissement`).
 
-**venue_city_code**: City code where the venue is located.
+**venue_city_code**: INSEE code of the city where the venue is located, at the arrondissement level for Paris, Lyon and Marseille (e.g. `75101`).
+
+**venue_municipality_code**: INSEE code of the municipality (commune) where the venue is located: the parent municipality for the arrondissements of Paris, Lyon and Marseille (`75056`, `69123`, `13055`), the same as `venue_city_code` everywhere else.
+
+**venue_municipality_label**: Name of the municipality (commune) of `venue_municipality_code` (e.g. `Paris` for every Paris arrondissement).
 
 **venue_siret**: SIRET number of the venue. A venue may not have a SIRET (especially when it hosts public but does not belong to the offerer. Exemple : a theater company performs a play in a concert hall they don't own.)
 
@@ -80,7 +84,17 @@
 
 **venue_in_qpv**: Indicates whether the venue is in a City Policy Priority Neighborhood.
 
-**venue_in_zrr**: Indicates whether the venue is in a ZRR.
+**venue_qpv_code**: Code of the QPV (Quartier Prioritaire de la Ville) containing the venue's geocoded address, null otherwise. QPV membership is computed on the geocoded address, not derived from the IRIS.
+
+**venue_qpv_name**: Name of the QPV containing the venue's geocoded address; `hors QPV` if the venue is geocoded outside any QPV; `non localisé` if the venue is not geocoded (same convention as `venue_in_qpv`: true / false / null).
+
+**venue_qpv_municipality**: Municipality (commune) label of the QPV containing the venue, null if the venue is not in a QPV.
+
+**venue_in_zrr**: Indicates whether the venue is in a municipality classified (fully or partially) in the last ZRR zoning (Zone de Revitalisation Rurale, ended on 2024-06-30). Null when the venue is not located.
+
+**venue_in_frr**: Indicates whether the venue is in a municipality classified in the France Ruralités Revitalisation zoning (FRR socle, FRR+, partial or La Réunion special rural zone), the zoning that replaced the ZRR on 2024-07-01. Null when the venue is not located.
+
+**venue_in_frr_plus**: Indicates whether the venue is in a municipality classified FRR+ (reinforced level of the France Ruralités Revitalisation zoning). Null when the venue is not located.
 
 **venue_rural_city_type**: Type of rural city of the venue.
 
@@ -97,6 +111,8 @@
 **first_headline_offer_date**: First date of headline offer on the app venue page.
 
 **last_headline_offer_date**: Last date of headline offer on the app venue page.
+
+**venue_business_activity_code**: Code of the business activity of the venue.
 
 / *To rename into venue\_*\*/
 

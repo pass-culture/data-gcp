@@ -9,3 +9,7 @@
 **collective_stock_booking_limit_date_time**: Limit booking date time for the collective stock offer.
 
 **collective_stock_price**: Stock price of the collective offer.
+
+**collective_stock_number_of_teachers**: Number of teachers required for the service (prestation).
+
+**collective_stock_service_price**: Price of the service (prestation), excluding additional fees, all charges included.

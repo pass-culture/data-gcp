@@ -4,9 +4,11 @@
 
 **iris_label**: The descriptive name or label of the IRIS area.
 
-**city_code**: The official INSEE code of the municipality (commune) containing the IRIS area.
+**iris_type**: INSEE type of the IRIS: `H` (habitat), `A` (activité), `D` (divers) or `Z` (commune non irisée, the IRIS is the whole municipality). Overseas collectivities without IRIS (Wallis-et-Futuna, Polynésie française, Nouvelle-Calédonie) are represented as one `Z` pseudo-IRIS per municipality, coded `<city_code>0000`.
 
-**city_label**: The name of the municipality (commune) containing the IRIS area.
+**city_code**: The official INSEE code of the municipality containing the IRIS area, at the finest level: the *arrondissement municipal* for Paris, Lyon and Marseille (`75101`, `69381`, `13201`…), the municipality itself everywhere else. Those arrondissement codes are absent from municipality-level reference files, so use `municipality_code` to join population, EPCI, density or zoning data.
+
+**city_label**: The name of the city of `city_code`, at the same finest level: the *arrondissement municipal* for Paris, Lyon and Marseille (`Paris 1er Arrondissement` for `75101`), the municipality itself everywhere else. Use `municipality_label` for the name of the parent municipality (`Paris`).
 
 **territorial_authority_code**: The official code of the territorial authority (collectivité territoriale) containing the IRIS area.
 
@@ -36,13 +38,17 @@
 
 **territorial_authority_label**: The name of the territorial authority (collectivité territoriale) containing the IRIS area.
 
-**density_level**: The numerical level indicating the population density of the IRIS area.
+**density_level**: Level of the INSEE municipal density grid (grille communale de densité) of the IRIS's municipality, from 1 (large urban centres) to 7 (very sparsely populated rural).
 
-**density_label**: The descriptive label for the population density level of the IRIS area.
+**density_label**: Label of the INSEE municipal density grid level (grille communale de densité, 7 levels) of the IRIS's municipality.
 
 **density_macro_level**: The broader categorization of population density for the IRIS area.
 
-**geo_code**: The unique geographic code identifying the IRIS area.
+**geo_code**: The INSEE code of the municipality the IRIS belongs to, at the level where municipal attributes (EPCI, density grid, rural typology, zonings) are published: the parent municipality for the arrondissements of Paris, Lyon and Marseille, otherwise the same as `city_code`.
+
+**municipality_code**: The official INSEE code of the municipality (*commune*) the IRIS belongs to: the parent municipality for the arrondissements of Paris, Lyon and Marseille (`75056`, `69123`, `13055`), the municipality itself everywhere else. This is the level at which INSEE publishes municipal data (population, EPCI, density grid, zonings), so it is the code to join a municipality referential on — unlike `city_code`, which goes down to the arrondissement. Not a postal code.
+
+**municipality_label**: The name of the municipality of `municipality_code`.
 
 **rural_city_type**: The classification of the municipality type (rural, urban, etc.) containing the IRIS area.
 

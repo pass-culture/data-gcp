@@ -13,3 +13,7 @@
 **kpi_name**: The name of the kpi.
 
 **kpi**: The value of the kpi. Equals to numerator divided by denominator.
+
+**aggregation**: How to aggregate `numerator` and `denominator` over several months: `flow` = sum the months, `stock` = take the last month (the value is already scholar year to date, or a snapshot).
+
+**reporting_scholar_year**: Scholar year (September to August) the `partition_month` belongs to.

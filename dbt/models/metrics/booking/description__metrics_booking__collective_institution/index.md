@@ -1,0 +1,1 @@
+Same indicators as [`metrics_booking__collective`](#!/model/model.data_gcp_dbt.metrics_booking__collective), by **school** geography. See [`int_kpi__booking_collective_institution`](#!/model/model.data_gcp_dbt.int_kpi__booking_collective_institution).

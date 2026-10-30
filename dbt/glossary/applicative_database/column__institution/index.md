@@ -20,9 +20,13 @@
 
 **institution_postal_code**: Postal code of the educational institution.
 
-**institution_city**: City where the educational institution is located.
+**institution_city**: Name of the city where the educational institution is located, at the arrondissement level for Paris, Lyon and Marseille (e.g. `Paris 1er Arrondissement`).
 
-**institution_city_code**: City code where the educational institution is located.
+**institution_city_code**: INSEE code of the city where the educational institution is located, at the arrondissement level for Paris, Lyon and Marseille (e.g. `75101`).
+
+**institution_municipality_code**: INSEE code of the municipality (commune) where the educational institution is located: the parent municipality for the arrondissements of Paris, Lyon and Marseille (`75056`, `69123`, `13055`), the same as `institution_city_code` everywhere else.
+
+**institution_municipality_label**: Name of the municipality (commune) of `institution_municipality_code` (e.g. `Paris` for every Paris arrondissement).
 
 **institution_epci**: EPCI name of the educational institution.
 
@@ -36,7 +40,7 @@
 
 **institution_type**: Type of institution.
 
-**macro_institution_type**: Type of macro institution. Values can be : COLLEGE; ECOLE; LYCEE.
+**macro_institution_type**: Type of macro institution. Values can be : COLLEGE; ECOLE; LYCEE. Can be NULL.
 
 **institution_in_qpv**: Indicates whether the educational institution is located in a QPV or not(Priority Urban Area).
 

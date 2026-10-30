@@ -14,4 +14,4 @@
 
 **offerer_tag_category_label**: The label (for display purposes) of the tag category.
 
-**offerer_is_epn**: Boolean true when the offerer is flagged as a national public structure.
+**offerer_is_epn**: Boolean true when the offerer carries the backoffice tag 'part-epn' (EPN: Établissement Public National).

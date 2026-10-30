@@ -14,9 +14,11 @@ Work in progress
 
 **event_timestamp**: The exact timestamp when the event was recorded.
 
-**user_pseudo_id**: A pseudo identifier for the user, used for tracking purposes.
+**user_pseudo_id**: Firebase pseudonymous identifier of the app instance (the device, or the browser for web tracking), used for tracking purposes. One person can have several, and people sharing a device share one.
 
 **origin**: The origin of the event, indicating where it was triggered from.
+
+**origin_detail**: The details of the origin of the event.
 
 **platform**: The platform on which the event was recorded, such as iOS or Android.
 
@@ -30,7 +32,9 @@ Work in progress
 
 **traffic_medium**: The medium of the marketing campaign (email, push notification ...)that generated the session.
 
-**session_id**: Deprecated: use unique_session_id. The session identifier during which the event was recorded.
+**session_id**: Deprecated: use unique_session_id. Firebase session number, unique only within a device (user_pseudo_id).
+
+**adage_log_session_id**: Session identifier computed from the ADAGE logs: consecutive logs of the same user at most 30 minutes apart belong to the same session. MD5 hash of the session start, the user_id and the session number.
 
 **unique_session_id**: A unique identifier for the session, ensuring no duplicates.
 

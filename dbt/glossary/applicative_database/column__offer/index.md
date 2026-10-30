@@ -12,7 +12,7 @@
 
 **offer_name**: Name of the offer as it appears in the application.
 
-**offer_category_id**: Identifier for the category of the offer. Determined by the cultural partner via a list of pre-set options in a drop down menu.
+**offer_category_id**: Identifier of the offer category, which groups offer subcategories (offer_subcategory_id): the cultural partner picks the subcategory from a predefined list when creating the offer, and the category follows from it. Rows of retired subcategories can carry a retired category.
 
 **offer_category**: Identifier for the category of the offer. Determined by the cultural partner via a list of pre-set options in a drop down menu.
 
@@ -97,7 +97,7 @@ An offer is considered bookable if it meets the following criteria:
 
 **casting**: Actors in the film, if applicable.
 
-**isbn**: ISBN of the book, if applicable.
+**isbn**: Cleaned product code of the offer: its EAN when it is a valid 13-digit code, otherwise its valid ISBN (10 or 13 digits). Filled mostly for barcoded products (books, recorded music...), NULL otherwise.
 
 **offer_ean**: EAN of the offer, if applicable.
 
@@ -117,7 +117,7 @@ An offer is considered bookable if it meets the following criteria:
 
 **is_coming_soon**: Indicates if the offer is published in the app but not bookable yet (coming soon).
 
-**item_id**: Identifier for the item associated with the offer used internally by the data science team.
+**item_id**: Identifier of the work (item) the offer belongs to, used internally by the data science team; several offers of the same book or film share an item_id.
 
 **search_group_name**: Legacy: Category displayed in the application
 
@@ -125,7 +125,7 @@ An offer is considered bookable if it meets the following criteria:
 
 **titelive_gtl_id**: Unique identifier of the Genre Tite Live (GTL) associated to this offer.
 
-**gtl_type**: Type of GTL associated to this offer. Can either be "BOOK" or "MUSIC"
+**gtl_type**: Type of GTL associated to this offer. Can either be "BOOK" or "MUSIC". Can be NULL.
 
 **gtl_label_level_1**: Name of the level 1 GTL associated to this offer (for example, "Littératurefor a book or "Pop" for music.)
 
@@ -135,7 +135,7 @@ An offer is considered bookable if it meets the following criteria:
 
 **gtl_label_level_4**: Name of the level 4 GTL associated to this offer. Only available for books.
 
-**offer_type_domain**: Deprecated: The offer's category type,as many metadata info are specific to certain offer types. Can be either "BOOK", "MUSIC", "SHOW" or "MOVIE".
+**offer_type_domain**: Deprecated: The offer's category type, as many metadata info are specific to certain offer types. Can be either "BOOK", "MUSIC", "SHOW" or "MOVIE". Can be NULL.
 
 **offer_type_id**: Deprecated: Unique identifier of the offer's type. Currently available to describe either music genres (pop, rock) or show type (opera, circus).
 
@@ -161,7 +161,7 @@ An offer is considered bookable if it meets the following criteria:
 
 **offer_has_mediation**: Indicates if the offer has a qualified mediation (cultural outreach).
 
-**cultural_outreach_status**: Status of the cultural outreach: qualified, disqualified,pending or not applied if the checkbox was never checked
+**cultural_outreach_status**: Status of the cultural outreach (mediation) declared on the offer: qualified, disqualified or pending; 'NOT_APPLIED' when the checkbox was never checked. offer_has_mediation is TRUE only when the status is qualified.
 
 # Date related
 

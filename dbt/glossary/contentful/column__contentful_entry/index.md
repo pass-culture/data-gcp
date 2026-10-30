@@ -16,6 +16,8 @@ Work in progress
 
 **module_type**: The type of the module in which the entry is displayed (algolia, recommendation, video...)
 
+**daily_home_module_conversion\_\_module_type**: The type of the home module. Only module types that display offers or venues have consultations and bookings attributed; for the other types only clicks are recorded, so their consultation and booking columns are 0 by construction.
+
 **parent_module_id**: The identifier for the parent module of the current module.
 
 **parent_module_type**: The type of the parent module.

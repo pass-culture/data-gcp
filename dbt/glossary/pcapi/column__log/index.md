@@ -18,6 +18,6 @@ Work in progress
 
 **device_id**: The identifier for the device used during the log entry event.
 
-**analytics_source**: The source of analytics data, such as "adage" "backoffice", "app-pro", "native" associated with the log entry.
+**analytics_source**: The source of analytics data associated with the log entry. The mart keeps the log entries of the pro application plus a set of log lines selected by their message; the latter can have a NULL source.
 
 **choice_datetime**: The timestamp when the cookie conset was recorded.

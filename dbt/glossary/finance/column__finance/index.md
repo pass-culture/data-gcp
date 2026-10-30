@@ -1,6 +1,6 @@
 **pricing_id**: Unique identifier for a pricing (valorisation).
 
-**pricing_status**: Status of the pricing: VALIDATED (created), PROCESSED (included in cashflow), or INVOICED (invoice generated).
+**pricing_status**: Status of the pricing in the finance workflow, stored in lowercase: 'validated' (created), 'processed' (included in a cashflow), 'invoiced' (invoice generated). Only 'invoiced' pricings are accounting-certified.
 
 **pricing_creation_date**: Date when the pricing was created.
 
@@ -112,11 +112,11 @@
 
 **reimbursement_pricing_rule**: Identifier of the standard reimbursement rule applied to the pricing (`pricing.standardRule`). Null when a custom reimbursement rule was applied instead.
 
-**reimbursement_pricing_amount**: Reimbursement amount in euros, with sign inverted from the raw pricing amount: positive = paid by pass Culture to the offerer. Broken down by pricing-line category into `offerer_revenue` and `offerer_contribution` (see `column__pricing_line_category`).
+**reimbursement_pricing_amount**: Reimbursement amount in euros (converted from the raw pricing amount in euro cents), with sign inverted: positive = paid by pass Culture to the offerer. Broken down by pricing-line category into `offerer_revenue` and `offerer_contribution` (see `column__pricing_line_category`).
 
 **offerer_revenue**: Portion of the pricing amount classified as "offerer revenue" (the main reimbursement paid to the offerer), in euros. See `column__pricing_line_category` for the category definition.
 
-**offerer_contribution**: Portion of the pricing amount classified as "offerer contribution" (the offerer's own participation), in euros. See `column__pricing_line_category` for the category definition.
+**offerer_contribution**: Portion of the pricing amount classified as "offerer contribution" (the offerer's own participation: the share of revenue it bears, i.e. revenue minus the reimbursed amount), in euros. See `column__pricing_line_category` for the category definition.
 
 **reimbursement_cashflow_amount**: Total amount of the cashflow in euros, with sign inverted from the raw cashflow amount: positive = paid to the offerer.
 

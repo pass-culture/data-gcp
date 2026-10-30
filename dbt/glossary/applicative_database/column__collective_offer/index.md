@@ -16,6 +16,8 @@
 
 **collective_offer_format**: List of the different cultural formats of the collective offer.
 
+**collective_booking_offer_format**: One cultural format of the booked collective offer (e.g. REPRESENTATION, ATELIER_DE_PRATIQUE). An offer with several formats counts in each of them, so formats are not summable.
+
 **collective_offer_students**: Number of students that this collective offer can host.
 
 **collective_offer_is_active**: Boolean. Indicates if the collective offer is active (has not been deactivated) .

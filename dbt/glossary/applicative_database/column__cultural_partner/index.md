@@ -1,5 +1,7 @@
 **partner_id**: Unique identifier of the partner.
 
+**cultural_partner_partner_id**: Unique identifier of the cultural partner: the identifier of its venue (equal to venue_id).
+
 **partner_creation_date**: Creation date of the cultural partner (offerer or venue).
 
 **partner_was_registered_last_year**: Boolean for analytical purpose. On year between registration of partner (creation of the venue or the offerer) and current date.
@@ -28,8 +30,20 @@
 
 **partner_epci**: name of the EPCI where the cultural partner is located.
 
-**partner_city**: name of the city where the cultural partner is located.
+**partner_city**: Name of the city where the cultural partner is located, at the arrondissement level for Paris, Lyon and Marseille (e.g. `Paris 1er Arrondissement`).
 
 **partner_epci_code**: Code of the EPCI where the cultural partner is located.
 
-**partner_city_code**: Code of the city where the cultural partner is located.
+**partner_city_code**: INSEE code of the city where the cultural partner is located, at the arrondissement level for Paris, Lyon and Marseille (e.g. `75101`).
+
+**partner_municipality_code**: INSEE code of the municipality (commune) where the cultural partner is located: the parent municipality for the arrondissements of Paris, Lyon and Marseille (`75056`, `69123`, `13055`), the same as `partner_city_code` everywhere else.
+
+**partner_municipality_label**: Name of the municipality (commune) of `partner_municipality_code` (e.g. `Paris` for every Paris arrondissement).
+
+**cultural_partner_is_in_qpv**: Boolean. Indicates whether the cultural partner's geocoded address is in a QPV (Quartier Prioritaire de la Ville); null if the address is not geocoded.
+
+**partner_qpv_code**: Code of the QPV containing the cultural partner's geocoded address, null otherwise.
+
+**partner_qpv_name**: Name of the QPV containing the cultural partner's geocoded address; `hors QPV` if geocoded outside any QPV; `non localisé` if not geocoded.
+
+**partner_qpv_municipality**: Municipality (commune) label of the QPV containing the cultural partner, null if the partner is not in a QPV.

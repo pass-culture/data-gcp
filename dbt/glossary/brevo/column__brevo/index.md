@@ -2,7 +2,9 @@
 
 **brevo_template_id**: Brevo template id
 
-**brevo_email_id**: Brevo email sent id
+**brevo_email_id**: Recipient identifier: SHA-256 hash (hex) of the recipient email address.
+
+**brevo_target**: Audience of the Brevo transactional email: 'native' (beneficiaries) or 'pro' (cultural partners).
 
 **total_delivered**: Count of emails successfully delivered to the recipient.
 
@@ -13,6 +15,12 @@
 **email_is_delivered**: Boolean. True if the email has been delivered, else False.
 
 **email_is_opened**: Boolean. True if the email has been opened, else False.
+
+**total_recipients_delivered**: Number of distinct recipients to whom at least one email was delivered.
+
+**total_recipients_opened**: Number of distinct recipients who opened at least one email.
+
+**total_recipients_unsubscribed**: Number of distinct recipients who unsubscribed after receiving the email.
 
 **user_has_unsubscribed**: Boolean. True if the email encouraged the user to unsubscribe, else False.
 

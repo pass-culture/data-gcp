@@ -5,8 +5,9 @@ with
             min(user_age_at_deposit) as user_age_at_first_deposit,
             max(user_age_at_deposit) as user_age_at_last_deposit,
             min(deposit_creation_date) as first_deposit_creation_date,
-            min(deposit_amount) as first_deposit_amount,
-            max(deposit_amount) as last_deposit_amount,
+            -- by rank, not by amount: the largest deposit is not always the last
+            max(if(deposit_rank_asc = 1, deposit_amount, null)) as first_deposit_amount,
+            max(if(deposit_rank_desc = 1, deposit_amount, null)) as last_deposit_amount,
             max(deposit_expiration_date) as last_deposit_expiration_date,
             sum(deposit_amount) as total_deposit_amount,
             sum(

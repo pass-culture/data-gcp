@@ -39,7 +39,7 @@ with
         select offerid, count(*) as total_favorites
         from {{ source("raw", "applicative_database_favorite") }}
         group by offerid
-    ),
+    )
 
 select
     o.offer_id,
@@ -97,29 +97,27 @@ select
     case
         when
             subcategories.category_id in ("MUSIQUE_LIVE", "MUSIQUE_ENREGISTREE")
-            and o.musictype != ''
+            and o.musictype != ""
         then o.musictype
-        when subcategories.category_id = "SPECTACLE" and o.showtype != ''
+        when subcategories.category_id = "SPECTACLE" and o.showtype != ""
         then o.showtype
     end as offer_type_id,
     case
         when
             subcategories.category_id in ("MUSIQUE_LIVE", "MUSIQUE_ENREGISTREE")
-            and o.musictype != ''
+            and o.musictype != ""
         then o.musicsubtype
-        when subcategories.category_id = "SPECTACLE" and o.showtype != ''
+        when subcategories.category_id = "SPECTACLE" and o.showtype != ""
         then o.showsubtype
     end as offer_sub_type_id,
-    case
-        when
-            (
-                stocks_grouped_by_offers.is_bookable
-                and o.offer_is_active
-                and o.offer_validation = "APPROVED"
-            )
-        then true
-        else false
-    end as offer_is_bookable,
+    coalesce(
+        (
+            stocks_grouped_by_offers.is_bookable
+            and o.offer_is_active
+            and o.offer_validation = "APPROVED"
+        ),
+        false
+    ) as offer_is_bookable,
     stocks_grouped_by_offers.total_available_stock,
     stocks_grouped_by_offers.total_bookings,
     stocks_grouped_by_offers.total_individual_bookings,
@@ -170,55 +168,49 @@ select
         then "BOOK"
     end as offer_type_domain,
     case
-        when subcategories.category_id <> "MUSIQUE_LIVE" and o.showtype is not null
+        when subcategories.category_id != "MUSIQUE_LIVE" and o.showtype is not null
         then o.showtype
         when subcategories.category_id = "MUSIQUE_LIVE"
         then o.musictype
-        when subcategories.category_id <> "SPECTACLE" and o.musictype is not null
+        when subcategories.category_id != "SPECTACLE" and o.musictype is not null
         then o.musictype
-    end as type,
+    end as type,  -- noqa: RF04
     case
-        when subcategories.category_id <> "MUSIQUE_LIVE" and o.showsubtype is not null
+        when subcategories.category_id != "MUSIQUE_LIVE" and o.showsubtype is not null
         then o.showsubtype
         when subcategories.category_id = "MUSIQUE_LIVE"
         then o.musicsubtype
-        when subcategories.category_id <> "SPECTACLE" and o.musicsubtype is not null
+        when subcategories.category_id != "SPECTACLE" and o.musicsubtype is not null
         then o.musicsubtype
     end as subtype,
     o.offer_publication_date,
-    case
-        when o.offer_publication_date > current_date then true else false
-    end as is_future_scheduled,
-    case
-        when
-            o.scheduled_offer_bookability_date > current_date
-            and o.offer_publication_date <= current_date
-        then true
-        else false
-    end as is_coming_soon,
+    coalesce(o.offer_publication_date > current_date, false) as is_future_scheduled,
+    coalesce(
+        o.scheduled_offer_bookability_date > current_date
+        and o.offer_publication_date <= current_date,
+        false
+    ) as is_coming_soon,
     ho.total_headlines,
-    case
-        when
-            is_headlined
-            and (
-                stocks_grouped_by_offers.is_bookable
-                and o.offer_is_active
-                and o.offer_validation = "APPROVED"
-            )
-        then true
-        else false
-    end as is_headlined,
-    first_headline_date,
-    last_headline_date,
+    coalesce(
+        ho.is_headlined
+        and (
+            stocks_grouped_by_offers.is_bookable
+            and o.offer_is_active
+            and o.offer_validation = "APPROVED"
+        ),
+        false
+    ) as is_headlined,
+    ho.first_headline_date,
+    ho.last_headline_date,
     o.offer_finalization_date,
     o.scheduled_offer_bookability_date,
     coalesce(co.offer_has_mediation, false) as offer_has_mediation,
-    coalesce(co.cultural_outreach_status, 'NOT_APPLIED') as cultural_outreach_status,
+    coalesce(co.cultural_outreach_status, "NOT_APPLIED") as cultural_outreach_status,
     co.cultural_outreach_claimed_date
 from {{ ref("int_applicative__extract_offer") }} as o
-left join {{ ref("int_applicative__offer_item_id") }} as ii on ii.offer_id = o.offer_id
-left join stocks_grouped_by_offers on stocks_grouped_by_offers.offer_id = o.offer_id
-left join total_favorites on total_favorites.offerid = o.offer_id
+left join {{ ref("int_applicative__offer_item_id") }} as ii on o.offer_id = ii.offer_id
+left join stocks_grouped_by_offers on o.offer_id = stocks_grouped_by_offers.offer_id
+left join total_favorites on o.offer_id = total_favorites.offerid
 left join
     {{ source("raw", "subcategories") }} as subcategories
     on o.offer_subcategoryid = subcategories.id
@@ -230,9 +222,9 @@ left join
     on o.offer_id = m.offer_id
     and m.is_active
     and m.mediation_rown = 1
-left join {{ ref("int_applicative__headline_offer") }} as ho on ho.offer_id = o.offer_id
+left join {{ ref("int_applicative__headline_offer") }} as ho on o.offer_id = ho.offer_id
 left join
     {{ ref("int_applicative__cultural_outreach") }} as co on o.offer_id = co.offer_id
 where
     o.offer_subcategoryid not in ("ACTIVATION_THING", "ACTIVATION_EVENT")
-    and (o.booking_email <> "jeux-concours@passculture.app" or o.booking_email is null)
+    and (o.booking_email != "jeux-concours@passculture.app" or o.booking_email is null)

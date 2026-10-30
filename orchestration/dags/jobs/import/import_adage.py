@@ -4,6 +4,7 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
 from common import macros
+from common.alerts.task_fail import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -25,6 +26,7 @@ DAG_NAME = "import_adage_v1"
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
     "retries": 1,
+    "on_failure_callback": task_fail_slack_alert,
     "project_id": GCP_PROJECT_ID,
 }
 
@@ -42,7 +44,9 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production"
+            if (ENV_SHORT_NAME == "prod" or ENV_SHORT_NAME == "prd")
+            else "master",
             type="string",
         )
     },
@@ -67,6 +71,7 @@ with DAG(
         runtime_image="py313",
         runtime_image_tag="v1",
         microservice_path=MICROSERVICE_PATH,
+        service_account_name=f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl",
         arguments=["main.py"],
         container_resources=DEFAULT_CONTAINER_RESOURCES,
     )

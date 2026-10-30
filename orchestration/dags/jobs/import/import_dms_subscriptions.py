@@ -44,7 +44,9 @@ with DAG(
     dagrun_timeout=timedelta(minutes=300),
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production"
+            if (ENV_SHORT_NAME == "prod" or ENV_SHORT_NAME == "prd")
+            else "master",
             type="string",
         ),
         "updated_since_jeunes": Param(
@@ -71,6 +73,7 @@ with DAG(
         runtime_image="py313",
         runtime_image_tag="v1",
         microservice_path=MICROSERVICE_PATH,
+        service_account_name=f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl",
         arguments=["main.py", "pro", "{{ params.updated_since_pro }}"],
         container_resources=DEFAULT_CONTAINER_RESOURCES,
     )
@@ -90,6 +93,7 @@ with DAG(
         runtime_image="py313",
         runtime_image_tag="v1",
         microservice_path=MICROSERVICE_PATH,
+        service_account_name=f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl",
         arguments=["main.py", "jeunes", "{{ params.updated_since_jeunes }}"],
         container_resources=DEFAULT_CONTAINER_RESOURCES,
     )
@@ -103,6 +107,7 @@ with DAG(
         runtime_image="py313",
         runtime_image_tag="v1",
         microservice_path=MICROSERVICE_PATH,
+        service_account_name=f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl",
         arguments=[
             "parse_dms_subscriptions_to_tabular.py",
             "--target",
@@ -124,6 +129,7 @@ with DAG(
         runtime_image="py313",
         runtime_image_tag="v1",
         microservice_path=MICROSERVICE_PATH,
+        service_account_name=f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl",
         arguments=[
             "parse_dms_subscriptions_to_tabular.py",
             "--target",

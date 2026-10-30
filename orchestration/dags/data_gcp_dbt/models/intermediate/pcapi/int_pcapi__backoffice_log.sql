@@ -21,6 +21,9 @@ with
             method,
             search_mode,
             nb_results as total_results,
+            event_name,
+            event_origin,
+            event_type,
             case
                 when message like 'HTTP request%'
                 then

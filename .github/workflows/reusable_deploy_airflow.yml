@@ -136,7 +136,7 @@ jobs:
             echo "::notice::CASSIS_API_KEY or CASSIS_PROJECT_ID is not set: dbt artifacts not pushed to Cassis."
             exit 0
           fi
-          uvx --from "cassis-cli==3.3.0" cassis dbt push target
+          uvx --no-build --from "cassis-cli==3.3.0" cassis dbt push target
 
       - name: "Generate dbt colibri documentation"
         working-directory: "./orchestration/dags/data_gcp_dbt/"

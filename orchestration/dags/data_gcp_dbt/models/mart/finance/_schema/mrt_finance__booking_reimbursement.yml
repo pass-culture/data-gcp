@@ -39,7 +39,7 @@ models:
       - name: offerer_contribution
         description: "{{ doc('column__offerer_contribution') }}"
       - name: cashflow_id
-        description: "{{ doc('column__cashflow_id') }}"
+        description: "{{ doc('column__booking_reimbursement_cashflow_id') }}"
       - name: cashflow_creation_date
         description: "{{ doc('column__cashflow_creation_date') }}"
       - name: cashflow_status

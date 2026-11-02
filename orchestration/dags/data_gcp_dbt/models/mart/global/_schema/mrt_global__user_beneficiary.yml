@@ -158,7 +158,7 @@ models:
         description: '{{ doc("column__user_first_deposit_type") }}'
         data_type: STRING
       - name: total_deposit_amount
-        description: '{{ doc("column__total_deposit_amount") }}'
+        description: '{{ doc("column__user_total_deposit_amount") }}'
         data_type: NUMERIC
       - name: current_deposit_type
         description: '{{ doc("column__user_current_deposit_type") }}'

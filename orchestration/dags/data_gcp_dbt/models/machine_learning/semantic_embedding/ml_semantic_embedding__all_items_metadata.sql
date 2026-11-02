@@ -22,8 +22,11 @@
             meta={
                 "external_dag_id": "item_embedding",
                 "external_task_id": "all_items_metadata.load_all_items_metadata",
-                "external_dependency_on_skip": "skip",
-                "external_dependency_offset_hours": -6,
+                "external_dependency_extra_params": {
+                    "soft_fail": True,
+                    "offset_hours": -6,
+                    "poke_interval": 600,
+                },
             },
         )
     )

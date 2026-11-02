@@ -526,20 +526,30 @@ def attach_external_dependency_sensor(
     "external_dag_id"/"external_task_id" meta). Applies to any dbt node type
     (model, snapshot, ...), not just snapshots.
 
-    The dbt model can optionally set meta.external_dependency_on_skip to control
-    what happens when the external task is skipped:
-    - "fail" (default): the sensor FAILS, which turns this operator (and its
-      downstream dbt nodes) upstream_failed.
-    - "skip": the sensor is SKIPPED instead, which cascades as a skip to this
-      operator (and its downstream dbt nodes) via none_failed_min_one_success.
+    external_dag_id/external_task_id are the only required, top-level meta
+    keys -- they gate whether a sensor is attached at all. Everything else
+    lives under meta.external_dependency_extra_params and is forwarded
+    verbatim, by its real `delayed_waiting_operator`/`ExternalTaskSensor`
+    parameter name, straight into the call below. Notably:
 
-    It can also set meta.external_dependency_offset_days / _hours to shift the
-    window `delayed_waiting_operator` searches for the external DAG run. This
-    matters when the external DAG is scheduled to start *after* this one: the
-    external run aligned with this DAG's own logical_date hasn't happened yet
-    (it may even depend on this very run finishing first), so the sensor must
-    be pointed at an earlier external run instead. Defaults to 0 (no shift),
-    matching `delayed_waiting_operator`'s own defaults.
+    - "soft_fail": True makes the sensor SKIP (instead of FAIL) when the
+      external task fails, which cascades as a skip to this operator (and
+      its downstream dbt nodes) via none_failed_min_one_success. Defaults to
+      False (sensor fails, turning this operator upstream_failed).
+    - "offset_days" / "offset_hours" shift the window `delayed_waiting_operator`
+      searches for the external DAG run. This matters when the external DAG
+      is scheduled to start *after* this one: the external run aligned with
+      this DAG's own logical_date hasn't happened yet (it may even depend on
+      this very run finishing first), so the sensor must be pointed at an
+      earlier external run instead. Default to 0 (no shift), matching
+      `delayed_waiting_operator`'s own defaults.
+    - anything else (e.g. "poke_interval", "timeout") is forwarded as-is to
+      the sensor, for a model whose external DAG is known to run particularly
+      late or needs tighter/looser polling than the sensor's own defaults
+      (poke_interval=60s, timeout=7 days).
+
+    Picking a key that collides with "trigger_rule" (set explicitly below)
+    raises a TypeError at DAG-parse time rather than silently overriding it.
 
     The operator's dbt parents (set up later, once the full dependency graph
     is known) are interleaved before the sensor rather than running alongside
@@ -553,20 +563,10 @@ def attach_external_dependency_sensor(
         and "external_dag_id" in node_meta
         and "external_task_id" in node_meta
     ):
-        on_skip = node_meta.get("external_dependency_on_skip", "fail")
-        if on_skip not in ("fail", "skip"):
-            raise ValueError(
-                f"Invalid meta.external_dependency_on_skip value: {on_skip!r}. "
-                "Expected 'fail' or 'skip'."
-            )
-
         sensor = delayed_waiting_operator(
             dag,
             external_dag_id=node_meta["external_dag_id"],
             external_task_id=node_meta["external_task_id"],
-            soft_fail=on_skip == "skip",
-            offset_days=node_meta.get("external_dependency_offset_days", 0),
-            offset_hours=node_meta.get("external_dependency_offset_hours", 0),
             # Mirrors the operator's own trigger_rule: once dbt parents are
             # interleaved in front of the sensor (see
             # connect_dbt_dependency), the sensor itself must tolerate a
@@ -574,6 +574,7 @@ def attach_external_dependency_sensor(
             # several parents where only one succeeds still gets a chance to
             # run.
             trigger_rule="none_failed_min_one_success",
+            **node_meta.get("external_dependency_extra_params", {}),
         )
         sensor >> operator
         operator.external_dependency_sensor = sensor

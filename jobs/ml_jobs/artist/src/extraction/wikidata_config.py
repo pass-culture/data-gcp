@@ -14,9 +14,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from src.extraction.constants import (
     BOOK_ID_PROPERTIES,
-    DISCOVERY_TEMPLATE,
     GKG_ID_PROPERTIES,
-    HYDRATION_BATCH_SIZE,
     MOVIE_ID_PROPERTIES,
     MUSIC_ENTITY_TYPES,
     MUSIC_ID_PROPERTIES,
@@ -40,14 +38,6 @@ class QueryConfig:
         filter in one subquery, and no `?matching_score` column is produced (used by
         `music`, whose matching score is computed separately by `music_ids`).
 
-    `hydration_batch_size`, when set, switches `extract` to the two-pass
-    discovery+hydration pattern instead of a single-shot query: `template` becomes
-    the Pass 1 discovery query (DISCOVERY_TEMPLATE), which cheaply enumerates every
-    matching entity, and Pass 2 hydrates them in VALUES-scoped batches of this size
-    (HYDRATION_TEMPLATE) — for a domain whose candidate population is too large, or
-    contains entities too rich, for a single-shot query to complete. Reusable by
-    any domain, not just `gkg`.
-
     `optional`, when true, means a genuinely empty/missing result for this target
     is expected, not a failure: `extract` skips saving a raw file instead of
     raising, and `merge` skips it instead of hard-failing the whole merge. Used by
@@ -59,7 +49,6 @@ class QueryConfig:
     entity_types: list[str]
     id_properties: list[IdProperty] = field(default_factory=list)
     base_mode: Literal["scored", "grouped"] = "scored"
-    hydration_batch_size: int | None = None
     optional: bool = False
 
     @property
@@ -95,25 +84,12 @@ QUERY_CONFIGS: dict[str, QueryConfig] = {
         entity_types=PERSON_ENTITY_TYPES,
         id_properties=MOVIE_ID_PROPERTIES,
     ),
+    # IDs only: downstream only uses the `gkg` flag merge_data derives from these
+    # wikidata_ids (a notability tie-breaker in src/linkage), not their attributes.
     "gkg": QueryConfig(
-        # Two-pass discovery+hydration: gkg's ~2.9M-candidate population (wdt:P2671
-        # is far broader than movie's IMDb/Allociné) is too large for a single-shot
-        # query, and guessing safe ID-range batch widths doesn't work either —
-        # density varies ~90x across the ID space, and even a single richly-aliased
-        # entity can blow the budget regardless of batch width. Pass 1 cheaply
-        # enumerates every match (2.89M rows in 18s, live-measured); Pass 2
-        # hydrates them in VALUES-scoped batches instead.
-        # 5000, not the 200-500 usually recommended for VALUES batches: that
-        # guidance is about GET URI-length limits, which doesn't apply here since
-        # extract uses POST (query in the body, no URI-length ceiling — see
-        # src/extraction/qlever.py's fetch_wikidata_qlever_csv_batch). Our real
-        # constraint is QLever's ~30s time budget: 2,000 real entities measured at
-        # 3.6s with HYDRATION_TEMPLATE, so 5,000 has a wide safety margin while
-        # cutting the ~2.89M/5000 ≈ 578 batches needed (vs. ~1,450 at 2,000).
-        template=DISCOVERY_TEMPLATE,
+        template="extract_artist_ids.rq.j2",
         entity_types=PERSON_ENTITY_TYPES,
         id_properties=GKG_ID_PROPERTIES,
-        hydration_batch_size=HYDRATION_BATCH_SIZE,
     ),
 }
 
@@ -129,27 +105,11 @@ _jinja_env = Environment(
 )
 
 
-def render_query(
-    query_name: str,
-    wikidata_ids: list[str] | None = None,
-    template: str | None = None,
-) -> str:
-    """Render a query for `query_name`.
-
-    `wikidata_ids`, for the Pass 2 hydration templates, is a list of bare IDs
-    (e.g. "Q123") to inject as a `VALUES ?wikidata_id { wd:Q123 ... }` clause —
-    formatted into CURIEs here so callers only ever deal with bare IDs (matching
-    `extract_wikidata_id`'s output).
-    """
+def render_query(query_name: str) -> str:
     config = QUERY_CONFIGS[query_name]
-    rendered_template = _jinja_env.get_template(template or config.template)
+    rendered_template = _jinja_env.get_template(config.template)
     return rendered_template.render(
         entity_types=config.entity_types,
         id_properties=config.id_properties,
         base_mode=config.base_mode,
-        wikidata_ids=(
-            [f"wd:{wikidata_id}" for wikidata_id in wikidata_ids]
-            if wikidata_ids
-            else None
-        ),
     )

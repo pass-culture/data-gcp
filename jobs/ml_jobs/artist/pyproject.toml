@@ -31,7 +31,7 @@ dependencies = [
 # use both, and encode_artist_biographies.py (embeddings) also needs sentence-transformers.
 [project.optional-dependencies]
 # Intentionally empty: cli/extraction.py and its whole call chain
-# (wikidata_extraction/checkpoint/merge.py, qlever.py, wikidata_config.py) only
+# (wikidata_extraction/merge.py, qlever.py, wikidata_config.py) only
 # import pandas/typer/loguru/requests/tenacity/jinja2, all already in the base
 # `dependencies` above. Declared anyway (and passed as extras=["extraction"] in
 # artist_wikidata_dump.py) so the split is explicit for all three domains rather

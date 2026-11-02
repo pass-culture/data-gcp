@@ -1,9 +1,8 @@
 """Tests for src/extraction/wikidata_extraction.py — no network calls needed.
 
-fetch_discovery/hydrate_batch's own behavior (retry, bisection, cost-rejection
-handling) is exercised through src/extraction/qlever.py, which they call into —
-see tests/utils/qlever_test.py — and through
-tests/extract_from_wikidata_test.py's end-to-end checkpoint-resume test.
+extract_query's fetch/retry behavior is exercised through
+src/extraction/qlever.py, which it calls into — see tests/utils/qlever_test.py —
+and through tests/extract_from_wikidata_test.py's `extract` tests.
 """
 
 import pandas as pd

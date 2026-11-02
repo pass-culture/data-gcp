@@ -14,7 +14,7 @@ from common.config import (
 from common.operators.bigquery import bigquery_federated_query_task, bigquery_job_task
 from common.utils import get_airflow_schedule
 from dependencies.applicative_database.import_applicative_database import (
-    HISTORICAL_CLEAN_APPLICATIVE_TABLES,
+    HISTORICAL_APPLICATIVE_TABLES,
     PARALLEL_TABLES,
     SEQUENTIAL_TABLES,
 )
@@ -72,7 +72,7 @@ with TaskGroup(
     group_id="historical_applicative_group", dag=dag
 ) as historical_applicative_group:
     historical_tasks = []
-    for table, params in HISTORICAL_CLEAN_APPLICATIVE_TABLES.items():
+    for table, params in HISTORICAL_APPLICATIVE_TABLES.items():
         task = bigquery_job_task(dag, table, params)
         historical_tasks.append(task)
 

@@ -146,7 +146,35 @@ def waiting_operator(
     )
 
 
-class _ManualSkipExternalTaskSensor(ExternalTaskSensor):
+class _DelayedWaitExternalTaskSensor(ExternalTaskSensor):
+    """ExternalTaskSensor used by delayed_waiting_operator.
+
+    compute_execution_date_fn (passed as execution_date_fn) returns None
+    when no external DAG run exists yet within the configured window --
+    a legitimate "not ready yet" signal. Airflow's own poke() doesn't
+    expect that though: it blindly calls .isoformat() on whatever
+    execution_date_fn returns, which raises
+    `AttributeError: 'NoneType' object has no attribute 'isoformat'`
+    instead of just rescheduling. Guard against that here by treating a
+    None execution date as "poke again later".
+    """
+
+    def poke(self, context):
+        logical_date = context.get("logical_date")
+        if (
+            logical_date is not None
+            and self.execution_date_fn is not None
+            and self.execution_date_fn(logical_date) is None
+        ):
+            self.log.info(
+                "No %s run found yet within the configured window; will retry.",
+                self.external_dag_id,
+            )
+            return False
+        return super().poke(context)
+
+
+class _ManualSkipExternalTaskSensor(_DelayedWaitExternalTaskSensor):
     """ExternalTaskSensor that skips itself on manually triggered DAG runs
     instead of waiting, while still registering as a real ExternalTaskSensor
     -- so the dependency shows up in Airflow's DAG Dependencies graph, unlike
@@ -263,12 +291,15 @@ def delayed_waiting_operator(
         )
 
     # skip_manually_triggered uses a subclass that short-circuits on manual
-    # runs instead of a plain ExternalTaskSensor -- it still registers as a
-    # real ExternalTaskSensor (unlike a PythonOperator wrapper), so Airflow's
-    # DAG Dependencies graph and the sensor's own reschedule/retry machinery
-    # both work normally.
+    # runs instead of waiting; both branches use _DelayedWaitExternalTaskSensor
+    # (or a subclass of it) so a None from compute_execution_date_fn reschedules
+    # instead of crashing. Still registers as a real ExternalTaskSensor (unlike
+    # a PythonOperator wrapper), so Airflow's DAG Dependencies graph and the
+    # sensor's own reschedule/retry machinery both work normally.
     sensor_cls = (
-        _ManualSkipExternalTaskSensor if skip_manually_triggered else ExternalTaskSensor
+        _ManualSkipExternalTaskSensor
+        if skip_manually_triggered
+        else _DelayedWaitExternalTaskSensor
     )
     return sensor_cls(
         task_id=task_id,

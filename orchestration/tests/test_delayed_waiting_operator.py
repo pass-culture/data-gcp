@@ -251,6 +251,33 @@ class TestDelayedWaitingOperatorExecutionDateLogic:
         assert call_args["lower_date_limit"] == expected_lower
 
     @patch("dags.common.utils.get_last_execution_date")
+    def test_poke_reschedules_instead_of_crashing_when_no_run_found(
+        self, mock_get_last_execution_date, test_dag
+    ):
+        """
+        Regression test: when execution_date_fn finds no external DAG run yet
+        (returns None), the real ExternalTaskSensor.poke() must not be allowed
+        to call .isoformat() on it (AttributeError: 'NoneType' object has no
+        attribute 'isoformat') -- it should just reschedule (return False).
+        """
+        mock_get_last_execution_date.return_value = None
+
+        operator = delayed_waiting_operator(
+            dag=test_dag,
+            external_dag_id="external_dag_id",
+            window_days=1,
+        )
+
+        context = {
+            "dag_run": MagicMock(run_id="scheduled__20250102"),
+            "logical_date": datetime(2025, 1, 2, 2, 0, tzinfo=UTC),
+        }
+
+        result = operator.poke(context)
+
+        assert result is False
+
+    @patch("dags.common.utils.get_last_execution_date")
     def test_monthly_vs_daily_with_proper_window_configuration(
         self, mock_get_last_execution_date, test_dag
     ):

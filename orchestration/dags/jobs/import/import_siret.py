@@ -57,6 +57,7 @@ with DAG(
         runtime_image="py313",
         runtime_image_tag="v1",
         microservice_path=MICROSERVICE_PATH,
+        service_account_name=f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl",
         arguments=["main.py"],
         env_vars=SIRET_ENV_VARS,
         container_resources=DEFAULT_CONTAINER_RESOURCES,

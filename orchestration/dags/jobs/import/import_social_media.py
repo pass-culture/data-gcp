@@ -68,6 +68,7 @@ with DAG(
             runtime_image="py313",
             runtime_image_tag="v1",
             microservice_path=f"jobs/etl_jobs/external/{social_network}",
+            service_account_name=f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl",
             arguments=[
                 "main.py",
                 "--start-date",

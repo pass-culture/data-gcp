@@ -80,7 +80,9 @@ def clear_qlever_cache() -> None:
 
 
 @qlever_retry
-def fetch_wikidata_qlever_csv(sparql_query: str) -> pd.DataFrame:
+def fetch_wikidata_qlever_csv(
+    sparql_query: str, dtype: dict[str, type]
+) -> pd.DataFrame:
     # POST, not GET: a large VALUES-scoped hydration query can run to tens of KB,
     # well past a GET URI's length limit (confirmed live: 414 Request-URI Too
     # Large at ~30KB). POST puts the query in the body instead, with no such
@@ -98,7 +100,7 @@ def fetch_wikidata_qlever_csv(sparql_query: str) -> pd.DataFrame:
             f"({response.status_code}): {response.text[:200]}"
         )
     response.encoding = "utf-8"
-    return pd.read_csv(StringIO(response.text))
+    return pd.read_csv(StringIO(response.text), dtype=dtype)
 
 
 def _is_cost_rejection(response: requests.Response) -> bool:

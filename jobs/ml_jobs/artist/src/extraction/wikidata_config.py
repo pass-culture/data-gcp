@@ -62,6 +62,15 @@ class QueryConfig:
     hydration_batch_size: int | None = None
     optional: bool = False
 
+    @property
+    def id_column_dtypes(self) -> dict[str, type]:
+        """Read external-ID columns as strings, never inferred: Wikidata holds
+        malformed values among otherwise numeric IDs (e.g. Deezer IDs entered as
+        URLs), and read_csv's per-chunk inference would then mix floats and
+        strings in one column — unwritable to parquet, and "123" mangled to 123.0.
+        """
+        return {id_property.var: str for id_property in self.id_properties}
+
 
 QUERY_CONFIGS: dict[str, QueryConfig] = {
     "music": QueryConfig(

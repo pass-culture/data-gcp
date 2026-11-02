@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock, patch
 
+import pandas as pd
 import pytest
 import requests
 
@@ -78,9 +79,20 @@ class TestQleverRetry:
         with patch(
             "src.extraction.qlever.requests.post", side_effect=responses
         ) as mock_post:
-            df = fetch_wikidata_qlever_csv("SELECT ...")
+            df = fetch_wikidata_qlever_csv("SELECT ...", dtype={})
         assert mock_post.call_count == 3
         assert list(df["wikidata_id"]) == ["Q1"]
+
+    def test_fetch_csv_applies_dtype(self):
+        """Pinned dtypes must override read_csv's inference, so numeric-looking
+        IDs stay strings instead of becoming numbers."""
+        with patch(
+            "src.extraction.qlever.requests.post",
+            return_value=_mock_response(200, "wikidata_id,deezer_id\nQ1,123\nQ2,\n"),
+        ):
+            df = fetch_wikidata_qlever_csv("SELECT ...", dtype={"deezer_id": str})
+        assert df["deezer_id"].iloc[0] == "123"
+        assert pd.isna(df["deezer_id"].iloc[1])
 
     def test_fetch_csv_raises_after_exhausting_retries(self):
         with (
@@ -90,7 +102,7 @@ class TestQleverRetry:
             ) as mock_post,
             pytest.raises(requests.RequestException),
         ):
-            fetch_wikidata_qlever_csv("SELECT ...")
+            fetch_wikidata_qlever_csv("SELECT ...", dtype={})
         assert mock_post.call_count == 5
 
     def test_fetch_csv_batch_raises_cost_rejection_without_retrying(self):

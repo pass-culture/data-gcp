@@ -27,7 +27,7 @@ from src.extraction.qlever import (
     fetch_wikidata_qlever_csv,
     fetch_wikidata_qlever_csv_batch,
 )
-from src.extraction.wikidata_config import render_query
+from src.extraction.wikidata_config import QUERY_CONFIGS, render_query
 
 
 def extract_wikidata_id(df: pd.DataFrame) -> pd.DataFrame:
@@ -49,7 +49,9 @@ def fetch_discovery(query_name: str) -> pd.DataFrame:
     """
     query = render_query(query_name)
     logger.debug(f"SPARQL Query (discovery): \n{query}")
-    return fetch_wikidata_qlever_csv(query)
+    return fetch_wikidata_qlever_csv(
+        query, dtype=QUERY_CONFIGS[query_name].id_column_dtypes
+    )
 
 
 def hydrate_batch(
@@ -196,4 +198,6 @@ def extract_single_pass(query_name: str) -> pd.DataFrame:
     """Single-query extraction for a target with no hydration pass."""
     query_string = render_query(query_name)
     logger.debug(f"SPARQL Query: \n{query_string}")
-    return fetch_wikidata_qlever_csv(query_string).pipe(extract_wikidata_id)
+    return fetch_wikidata_qlever_csv(
+        query_string, dtype=QUERY_CONFIGS[query_name].id_column_dtypes
+    ).pipe(extract_wikidata_id)

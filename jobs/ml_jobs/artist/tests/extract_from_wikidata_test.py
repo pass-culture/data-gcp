@@ -170,7 +170,9 @@ class TestExtractOptionalTarget:
         monkeypatch.setattr(
             wikidata_extraction,
             "fetch_wikidata_qlever_csv",
-            lambda _query: pd.DataFrame({"wikidata_id": pd.Series([], dtype="object")}),
+            lambda _query, **_kwargs: pd.DataFrame(
+                {"wikidata_id": pd.Series([], dtype="object")}
+            ),
         )
         output_path = str(tmp_path / "out.parquet")
 
@@ -191,7 +193,9 @@ class TestExtractOptionalTarget:
         monkeypatch.setattr(
             wikidata_extraction,
             "fetch_wikidata_qlever_csv",
-            lambda _query: pd.DataFrame({"wikidata_id": pd.Series([], dtype="object")}),
+            lambda _query, **_kwargs: pd.DataFrame(
+                {"wikidata_id": pd.Series([], dtype="object")}
+            ),
         )
         output_path = str(tmp_path / "out.parquet")
 

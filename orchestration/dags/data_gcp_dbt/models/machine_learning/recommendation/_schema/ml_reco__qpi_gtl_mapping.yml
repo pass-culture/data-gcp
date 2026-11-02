@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: ml_reco__qpi_gtl_mapping
+    description: "{{ doc('description__ml_reco__qpi_gtl_mapping') }}"
+    columns:
+      - name: category
+        description: "{{ doc('column__qpi_category') }}"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ["LIVRE", "MUSIQUE"]
+      - name: ux_name
+        description: "{{ doc('column__qpi_ux_name') }}"
+        data_tests:
+          - not_null
+      - name: gtl_labels
+        description: "{{ doc('column__qpi_gtl_labels') }}"

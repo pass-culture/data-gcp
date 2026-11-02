@@ -116,9 +116,7 @@ class TestAttachExternalDependencySensor:
                     # "trigger_rule" is already set explicitly below -- trying
                     # to override it via the passthrough dict must fail
                     # loudly instead of silently winning or losing.
-                    "external_dependency_extra_params": {
-                        "trigger_rule": "all_success"
-                    },
+                    "external_dependency_extra_params": {"trigger_rule": "all_success"},
                 },
             )
 

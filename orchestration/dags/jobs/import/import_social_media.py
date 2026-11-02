@@ -26,8 +26,10 @@ default_dag_args = {
 
 schedule_dict = {
     "prod": "0 2 * * *",
+    "prd": "0 2 * * *",
     "stg": "0 3 * * *",
     "dev": None,
+    "tst": None,
 }[ENV_SHORT_NAME]
 
 with DAG(
@@ -42,7 +44,7 @@ with DAG(
     dagrun_timeout=datetime.timedelta(minutes=240),
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production" if ENV_SHORT_NAME in ("prod", "prd") else "master",
             type="string",
         ),
         "n_days": Param(

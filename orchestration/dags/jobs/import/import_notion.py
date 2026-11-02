@@ -31,16 +31,16 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Import Notion dashboard-documentation into raw_<env>.notion_dashboard_docs",
-    schedule=get_airflow_schedule("00 08 * * *") if ENV_SHORT_NAME == "prod" else None,
+    schedule=get_airflow_schedule("00 08 * * *")
+    if ENV_SHORT_NAME in ("prod", "prd")
+    else None,
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=60),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     params={
         "branch": Param(
-            default="production"
-            if (ENV_SHORT_NAME == "prod" or ENV_SHORT_NAME == "prd")
-            else "master",
+            default="production" if ENV_SHORT_NAME in ("prod", "prd") else "master",
             type="string",
         ),
     },

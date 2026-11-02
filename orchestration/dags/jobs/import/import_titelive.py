@@ -49,7 +49,7 @@ with DAG(
     tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production" if ENV_SHORT_NAME in ("prod", "prd") else "master",
             type="string",
             description="Git branch to deploy",
         ),

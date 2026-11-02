@@ -55,13 +55,17 @@ SCHEDULE_DICT = {
     },
     "import_harvestr": {
         "prod": "0 3 * * *",  # every day at 3:00 AM
+        "prd": "0 3 * * *",  # every day at 3:00 AM
         "stg": "0 3 * * *",  # every day at 3:00 AM
         "dev": "0 3 * * *",  # every day at 3:00 AM
+        "tst": "0 3 * * *",  # every day at 3:00 AM
     },
     "import_appfollow": {
         "prod": "0 2 * * 1",
+        "prd": "0 2 * * 1",
         "stg": "0 3 * * 1",
         "dev": None,
+        "tst": None,
     },
     "import_applicative_database": "0 1 * * *",
     "import_intraday_firebase_data": "0 1 * * *",

@@ -42,11 +42,11 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production" if ENV_SHORT_NAME in ("prod", "prd") else "master",
             type="string",
         ),
         "ndays": Param(
-            default=7 if ENV_SHORT_NAME == "prod" else 1,
+            default=7 if ENV_SHORT_NAME in ("prod", "prd") else 1,
             type="integer",
         ),
         "job": Param(

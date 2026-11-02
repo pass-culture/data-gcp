@@ -17,7 +17,7 @@ from common.operators.kubernetes import (
 )
 from common.utils import get_airflow_schedule
 
-schedule = "15 */6 * * *" if ENV_SHORT_NAME == "prod" else "45 */6 * * *"
+schedule = "15 */6 * * *" if ENV_SHORT_NAME in ("prod", "prd") else "45 */6 * * *"
 
 DAG_NAME = "import_siret_v1"
 MICROSERVICE_PATH = "jobs/etl_jobs/external/siret"
@@ -42,7 +42,7 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production" if ENV_SHORT_NAME in ("prod", "prd") else "master",
             type="string",
         )
     },

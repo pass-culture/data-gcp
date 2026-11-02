@@ -22,7 +22,7 @@ from common.utils import get_airflow_schedule
 MICROSERVICE_PATH = "jobs/etl_jobs/external/api_gouv"
 DAG_NAME = "import_user_address_bulk"
 
-schedule = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
+schedule = "0 */6 * * *" if ENV_SHORT_NAME in ("prod", "prd") else "30 2 * * *"
 
 default_args = {
     "start_date": datetime(2021, 3, 30),
@@ -43,7 +43,7 @@ with DAG(
     user_defined_macros=macros.default,
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production" if ENV_SHORT_NAME in ("prod", "prd") else "master",
             type="string",
         ),
         "source_dataset_id": Param(

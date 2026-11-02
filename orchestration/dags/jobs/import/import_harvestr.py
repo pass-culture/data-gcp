@@ -36,9 +36,7 @@ with DAG(
     dagrun_timeout=datetime.timedelta(minutes=240),
     params={
         "branch": Param(
-            default="production"
-            if (ENV_SHORT_NAME == "prod" or ENV_SHORT_NAME == "prd")
-            else "master",
+            default="production" if ENV_SHORT_NAME in ("prod", "prd") else "master",
             type="string",
         ),
         "start_date": Param(

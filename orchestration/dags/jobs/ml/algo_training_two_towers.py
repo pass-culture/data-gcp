@@ -165,6 +165,14 @@ with (
                             queue while the VM is PENDING. Accepts e.g. '2h', '90m'.
                             Must be 0 or between 90s and 2h.""",
             ),
+            "reservation_name": Param(
+                default=None,
+                type=["string", "null"],
+                description="""Name of a specific Compute Engine reservation to
+                            consume. When set, requires provisioning_model=STANDARD
+                            and instance_type/gpu_type/gpu_count/gce_zone must match
+                            the reservation exactly. Leave empty to not target one.""",
+            ),
             "run_name": Param(
                 default=train_params["run_name"], type=["string", "null"]
             ),

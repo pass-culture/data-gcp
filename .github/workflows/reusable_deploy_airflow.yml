@@ -39,6 +39,9 @@ on:
         required: true
       PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY:
         required: true
+      CASSIS_API_KEY:
+        required: false
+        description: "Cassis key with edit access to the analytics Cassis project; prod only (cassis dbt push)"
 
 env:
   GCP_REGION: "europe-west1"
@@ -118,6 +121,22 @@ jobs:
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: uv run dbt docs generate --static --target "$ENV_SHORT_NAME" --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+
+      # Cassis compares each prod manifest with the previous one and files an issue for every part of its context the
+      # change puts in doubt. Never blocks the deploy; skipped until the key and the project id are configured.
+      - name: "Push dbt artifacts to Cassis"
+        if: inputs.ENV_SHORT_NAME == 'prod'
+        continue-on-error: true
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          CASSIS_API_KEY: ${{ secrets.CASSIS_API_KEY }}
+          CASSIS_PROJECT_ID: ${{ vars.CASSIS_PROJECT_ID }}
+        run: |
+          if [ -z "$CASSIS_API_KEY" ] || [ -z "$CASSIS_PROJECT_ID" ]; then
+            echo "::notice::CASSIS_API_KEY or CASSIS_PROJECT_ID is not set: dbt artifacts not pushed to Cassis."
+            exit 0
+          fi
+          uvx --from "cassis-cli==3.3.0" cassis dbt push target
 
       - name: "Generate dbt colibri documentation"
         working-directory: "./orchestration/dags/data_gcp_dbt/"

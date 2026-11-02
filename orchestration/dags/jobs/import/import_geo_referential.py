@@ -53,9 +53,7 @@ with DAG(
     user_defined_macros=macros.default,
     params={
         "branch": Param(
-            default="production"
-            if (ENV_SHORT_NAME == "prod" or ENV_SHORT_NAME == "prd")
-            else "master",
+            default="production" if ENV_SHORT_NAME in ("prod", "prd") else "master",
             type="string",
         ),
         "year": Param(

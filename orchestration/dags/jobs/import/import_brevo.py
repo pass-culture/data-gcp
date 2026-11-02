@@ -48,7 +48,9 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Import brevo tables",
-    schedule=get_airflow_schedule("00 03 * * *" if ENV_SHORT_NAME == "prod" else None),
+    schedule=get_airflow_schedule(
+        "00 03 * * *" if ENV_SHORT_NAME in ("prod", "prd") else None
+    ),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -56,9 +58,7 @@ with DAG(
     render_template_as_native_obj=True,
     params={
         "branch": Param(
-            default="production"
-            if (ENV_SHORT_NAME == "prod" or ENV_SHORT_NAME == "prd")
-            else "master",
+            default="production" if ENV_SHORT_NAME in ("prod", "prd") else "master",
             type="string",
         ),
         "start_date": Param(

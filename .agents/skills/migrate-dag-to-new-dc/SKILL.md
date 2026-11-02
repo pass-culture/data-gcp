@@ -73,8 +73,18 @@ Check (and fix if missing) that **every** `CustomKubernetesPodOperator` task has
 | `container_resources` | `DEFAULT_CONTAINER_RESOURCES` (or custom) |
 
 Check the DAG-level config:
-- `params.branch` Param present, defaulting to `"production"` on prod (`ENV_SHORT_NAME in ("prod","prd")`)
-  and `"master"` otherwise.
+- `params.branch` Param present, defaulting to `"production"` on prod and `"master"` otherwise.
+  The prod check **must cover both `"prod"` and `"prd"`** (the new DC uses the `prd` short name),
+  so always use `ENV_SHORT_NAME in ("prod", "prd")` — never `ENV_SHORT_NAME == "prod"` alone:
+
+  ```python
+  "branch": Param(
+      default="production"
+      if ENV_SHORT_NAME in ("prod", "prd")
+      else "master",
+      type="string",
+  )
+  ```
 - `service_account_name` on each `CustomKubernetesPodOperator` task:
   `f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl"`
 - `tags` include `DAG_TAGS.POD.value`.
@@ -240,3 +250,4 @@ Report:
 | Running copy before DAG is live on new DC | Copy history first, then let the DAG resume appends |
 | Running the copy yourself | Never run the copy — only output the 3 commands for the user to run later |
 | Running the copy tool from the wrong dir | Run `python -m scripts.bigquery_copy.main` from `orchestration/` |
+| `branch` default checks only `"prod"` | New DC uses `prd` — use `ENV_SHORT_NAME in ("prod", "prd")` so prod resolves to the `production` branch |

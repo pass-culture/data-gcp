@@ -42,7 +42,7 @@ repos:
     hooks:
       - id: sqlfluff-fix
         additional_dependencies:
-          ["dbt-bigquery==1.8.1", "sqlfluff-templater-dbt"]
+          ["dbt-core==1.11.8", "dbt-bigquery==1.11.1", "sqlfluff-templater-dbt==4.4.0"]
         stages: [pre-commit]
 
   - repo: https://github.com/gitguardian/ggshield

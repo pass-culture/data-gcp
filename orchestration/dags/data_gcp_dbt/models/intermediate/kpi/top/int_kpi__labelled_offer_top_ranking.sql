@@ -1,17 +1,3 @@
-{% set geo_levels = [
-    {"level": "national", "value_expr": "'FRANCE'", "group_expr": "'FRANCE'"},
-    {
-        "level": "region",
-        "value_expr": "venue_region_name",
-        "group_expr": "venue_region_name",
-    },
-    {
-        "level": "department",
-        "value_expr": "venue_department_name",
-        "group_expr": "venue_department_name",
-    },
-] %}
-
 with
     source_venue_tags as (
         select venue_id, venue_tag_name
@@ -65,36 +51,25 @@ with
             vt.venue_tag_name
     )
 
-{% for geo in geo_levels %}
-    {% if not loop.first %}
-        union all
-    {% endif %}
-
-    select
-        partition_month,
-        '{{ geo.level }}' as geo_level,
-        cast({{ geo.value_expr }} as string) as geo_value,
-        item_id,
-        offer_category_id,
-        offer_subcategory_id,
-        offer_name,
-        venue_tag_name,
-        sum(total_booking_amount) as total_booking_amount,
-        sum(total_booking_quantity) as total_booking_quantity,
-        row_number() over (
-            partition by partition_month, {{ geo.group_expr }}
-            order by sum(total_booking_amount) desc
-        ) as offer_rank
-    from joined_and_aggregated_by_offer_tag
-    where {{ geo.value_expr }} is not null
-    group by
-        partition_month,
-        geo_level,
-        geo_value,
-        item_id,
-        offer_category_id,
-        offer_subcategory_id,
-        offer_name,
-        venue_tag_name
-    qualify offer_rank <= 50
-{% endfor %}
+    {{
+        generate_monthly_geo_top_rankings(
+            base_cte="joined_and_aggregated_by_offer_tag",
+            entity_fields=[
+                "item_id",
+                "offer_category_id",
+                "offer_subcategory_id",
+                "offer_name",
+                "venue_tag_name",
+            ],
+            aggregated_metrics=[
+                {"field": "total_booking_amount", "alias": "total_booking_amount"},
+                {
+                    "field": "total_booking_quantity",
+                    "alias": "total_booking_quantity",
+                },
+            ],
+            ranking_metric="total_booking_amount",
+            rank_column_name="offer_rank",
+            top_n=50,
+        )
+    }}

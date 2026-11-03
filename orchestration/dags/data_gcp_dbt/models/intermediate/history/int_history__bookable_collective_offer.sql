@@ -20,7 +20,7 @@ with
                     then collective_booking_id
                 end
             ) as collective_booking_stock_no_cancelled_cnt
-        from {{ source("clean", "applicative_database_collective_booking_history") }}
+        from {{ source("history", "applicative_database_collective_booking_history") }}
         {% if is_incremental() %}
             where partition_date = date_sub('{{ ds() }}', interval 1 day)
         {% else %} where partition_date > date_sub('{{ ds() }}', interval 3 month)
@@ -34,15 +34,15 @@ select distinct
     collective_stock.partition_date,
     false as collective_offer_is_template
 from
-    {{ source("clean", "applicative_database_collective_stock_history") }}
+    {{ source("history", "applicative_database_collective_stock_history") }}
     as collective_stock
 inner join
-    {{ source("clean", "applicative_database_collective_offer_history") }}
+    {{ source("history", "applicative_database_collective_offer_history") }}
     as collective_offer
     on collective_stock.collective_offer_id = collective_offer.collective_offer_id
     and collective_offer.collective_offer_is_active
     and collective_stock.partition_date = collective_offer.partition_date
-    and collective_offer_validation = 'APPROVED'
+    and collective_offer.collective_offer_validation = 'APPROVED'
 left join
     bookings_per_stock
     on collective_stock.collective_stock_id = bookings_per_stock.collective_stock_id
@@ -60,7 +60,7 @@ where
             or collective_stock.collective_stock_beginning_date_time is null
         )
         and collective_offer.collective_offer_is_active
-        and (collective_booking_stock_no_cancelled_cnt is null)
+        and (bookings_per_stock.collective_booking_stock_no_cancelled_cnt is null)
     )
     {% if is_incremental() %}
         and collective_stock.partition_date = date_sub('{{ ds() }}', interval 1 day)
@@ -74,7 +74,7 @@ select
     collective_offer_template.partition_date,
     true as collective_offer_is_template
 from
-    {{ source("clean", "applicative_database_collective_offer_template_history") }}
+    {{ source("history", "applicative_database_collective_offer_template_history") }}
     as collective_offer_template
 where
     collective_offer_validation = 'APPROVED'

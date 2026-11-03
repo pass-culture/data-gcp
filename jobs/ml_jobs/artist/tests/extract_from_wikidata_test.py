@@ -58,7 +58,6 @@ class TestExtractOptionalTarget:
                 optional=True,
             ),
         )
-        monkeypatch.setattr(wikidata_cli, "clear_qlever_cache", lambda: None)
 
     def test_empty_result_is_skipped_not_raised(self, tmp_path, monkeypatch):
         # A real QLever CSV response always has a string-typed wikidata_id column

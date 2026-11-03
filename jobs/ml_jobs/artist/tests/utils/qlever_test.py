@@ -24,15 +24,31 @@ def _mock_response(status_code: int, text: str = "") -> Mock:
 def _no_real_sleep():
     """Tenacity's default sleep strategy is a real time.sleep — patch it out so
     tests exercising the retry decorator (stop_after_attempt(5), exponential
-    backoff up to 60s) don't actually block for tens of seconds."""
+    backoff up to 240s) don't actually block for minutes."""
     with patch("tenacity.nap.time.sleep"):
         yield
 
 
 class TestQleverRetry:
     """src/extraction/qlever.py's qlever_retry (tenacity) decorates every QLever HTTP
-    call: 5 attempts, exponential backoff, retrying only on
-    requests.RequestException — see qlever_retry's docstring/comment."""
+    call: 5 attempts, exponential backoff, retrying on requests.RequestException
+    except 4xx responses other than 429."""
+
+    def test_backoff_schedule(self):
+        wait = fetch_wikidata_qlever_csv.retry.wait
+        waits = [wait(Mock(attempt_number=n)) for n in range(1, 5)]
+        assert waits == [30, 60, 120, 240]
+
+    def test_fetch_csv_fails_fast_on_client_error(self):
+        with (
+            patch(
+                "src.extraction.qlever.requests.post",
+                return_value=_mock_response(400, "bad query"),
+            ) as mock_post,
+            pytest.raises(requests.RequestException),
+        ):
+            fetch_wikidata_qlever_csv("SELECT ...", dtype={})
+        assert mock_post.call_count == 1
 
     def test_clear_cache_once_raises_after_exhausting_retries(self):
         with (

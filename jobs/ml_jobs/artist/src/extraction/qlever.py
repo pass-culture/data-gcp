@@ -12,7 +12,7 @@ import requests
 from loguru import logger
 from tenacity import (
     retry,
-    retry_if_exception_type,
+    retry_if_exception,
     stop_after_attempt,
     wait_exponential,
 )
@@ -26,21 +26,22 @@ def _log_retry_attempt(retry_state) -> None:
     )
 
 
-# Shared retry policy for every QLever request: 5 attempts total, exponential
-# backoff (10s, 20s, 40s, capped at 60s) between them. Exponential, not linear —
-# a retry means something actually went wrong, so give the shared endpoint real
-# room to recover instead of coming back quickly.
-#
-# 5 attempts (not 3): live production traffic shows QLever's own nginx
-# front-end plain-HTTP-429 rate-limiting a fresh burst of requests (e.g. the
-# cache clear immediately followed by the extraction query), recovering within
-# 2-3 retries once several seconds apart. 5 attempts (~130s of cumulative
-# backoff) gives real margin against that rate limit without blocking
-# indefinitely if a query is genuinely stuck.
+def _is_retryable(exc: BaseException) -> bool:
+    # 4xx other than 429 (e.g. a malformed query) won't fix itself on retry.
+    # `is not None`, not truthiness: a 4xx Response is falsy.
+    response = getattr(exc, "response", None)
+    if response is not None and 400 <= response.status_code < 500:
+        return response.status_code == 429
+    return isinstance(exc, requests.RequestException)
+
+
+# 5 attempts with exponential backoff (~450s total): QLever's nginx front-end
+# returns HTTP 429 on bursts (e.g. cache clear right before the extraction
+# query) and typically recovers after a few spaced-out retries.
 qlever_retry = retry(
-    stop=stop_after_attempt(5),
-    wait=wait_exponential(multiplier=10, max=60),
-    retry=retry_if_exception_type(requests.RequestException),
+    stop=stop_after_attempt(4),
+    wait=wait_exponential(multiplier=30, max=240),
+    retry=retry_if_exception(_is_retryable),
     before_sleep=_log_retry_attempt,
     reraise=True,
 )
@@ -56,7 +57,8 @@ def _clear_qlever_cache_once() -> None:
     )
     if response.status_code != 200:
         raise requests.RequestException(
-            f"Cache clear failed ({response.status_code}): {response.text[:150]}"
+            f"Cache clear failed ({response.status_code}): {response.text[:150]}",
+            response=response,
         )
 
 
@@ -86,7 +88,8 @@ def fetch_wikidata_qlever_csv(
     if response.status_code != 200:
         raise requests.RequestException(
             f"Failed to fetch data from {QLEVER_ENDPOINT} "
-            f"({response.status_code}): {response.text[:200]}"
+            f"({response.status_code}): {response.text[:200]}",
+            response=response,
         )
     response.encoding = "utf-8"
     return pd.read_csv(StringIO(response.text), dtype=dtype)

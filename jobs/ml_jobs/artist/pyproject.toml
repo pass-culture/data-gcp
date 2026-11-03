@@ -128,9 +128,6 @@ constraint-dependencies = [
     "nltk >= 3.10.0", # GHSA-cgvg-3q2f-4gxm, GHSA-p9pp-j76j-8x4v, GHSA-5j2p-q7q8-hcc7
     "pyasn1 >= 0.6.4", # GHSA-5q8p-9xrr-4jqm, GHSA-gqpq-g87q-wr6g, GHSA-f39v-xm4p-9hm7
     "mlflow >= 3.17.2", # CVE-2026-0545, CVE-2026-64849 (GHSA-7gwp-5pfp-969j), GHSA-wqmh-qccw-pqwf
-    # mlflow: GHSA-h7x2-h6g9-p789, PYSEC-2026-3865 also affect 3.15.1 (our current
-    # resolved version) but have no fixed release yet — nothing to bump to; revisit
-    # when a fix lands.
     "aiohttp >= 3.14.4", # CVE-2026-47265, CVE-2026-34993
     "authlib >= 1.9.1", # CVE-2026-41425, CVE-2026-44681, CVE-2026-41479, GHSA-6v38-4h7w-rj9h, GHSA-7vr2-2fgp-9w7p, GHSA-8m4g-j4wp-wgcg, GHSA-c5mf-xmp2-59rc, GHSA-fch4-3c6x-j4gc, GHSA-jj7h-c3hg-m23x, GHSA-q686-2qmg-hqc7, GHSA-x4rv-c3wx-4cr8
     "cryptography >= 50.0.0", # GHSA-g6cj-pr64-35w5, PYSEC-2026-3552

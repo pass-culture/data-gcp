@@ -576,7 +576,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
         instance_name: str,
         branch: str = "master",  # Branch for repo
         environment: t.Dict[str, str] = {},
-        python_version: str = "3.10",
+        python_version: str = "3.12",
         base_dir: str = "data-gcp",
         extras: t.Optional[t.List[str]] = None,
         *args,

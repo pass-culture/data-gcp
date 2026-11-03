@@ -5,7 +5,6 @@ import pandas as pd
 import typer
 from loguru import logger
 
-from src.extraction.qlever import clear_qlever_cache
 from src.extraction.wikidata_config import QUERY_CONFIGS
 from src.extraction.wikidata_extraction import extract_query
 from src.extraction.wikidata_merge import merge_data, postprocess_data
@@ -49,10 +48,6 @@ def extract(
         )
 
     start_time = time.time()
-
-    # Clear cache on qlever to prevent any resource issues
-    clear_qlever_cache()
-
     logger.info(f"Fetch the data in CSV format for {query_name}")
 
     config = QUERY_CONFIGS[query_name]

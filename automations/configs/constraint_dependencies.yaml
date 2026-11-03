@@ -23,6 +23,8 @@ constraints:
     reason: "CVE-2026-41425, CVE-2026-44681, CVE-2026-41479"
   - spec: "bleach>=6.4.0"
     reason: "GHSA-8jxr-4gfq-qg7h, GHSA-q4r7-2j3p-rxmx"
+  - spec: "certifi>=2026.10.18"
+    reason: "certifi security advisory"
   - spec: "click>=8.3.3"
     reason: "PYSEC-2026-2132"
   - spec: "cryptography>=49.0.0"

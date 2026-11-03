@@ -59,7 +59,7 @@ class TestQleverRetry:
             pytest.raises(requests.RequestException),
         ):
             _clear_qlever_cache_once()
-        assert mock_get.call_count == 5
+        assert mock_get.call_count == 4
 
     def test_clear_cache_succeeds_without_retry(self):
         with patch(
@@ -77,7 +77,7 @@ class TestQleverRetry:
             return_value=_mock_response(500, "boom"),
         ) as mock_get:
             clear_qlever_cache()  # must not raise
-        assert mock_get.call_count == 5
+        assert mock_get.call_count == 4
 
     def test_fetch_csv_retries_then_succeeds(self):
         responses = [
@@ -112,19 +112,19 @@ class TestQleverRetry:
             pytest.raises(requests.RequestException),
         ):
             fetch_wikidata_qlever_csv("SELECT ...", dtype={})
-        assert mock_post.call_count == 5
+        assert mock_post.call_count == 4
 
     def test_fetch_csv_recovers_from_a_sustained_rate_limit_burst(self):
         """Regression for failure_log.txt: QLever's nginx front-end can 429 a
         burst of requests for several attempts in a row before recovering. The old 3-attempt policy
         exhausted retries on exactly this pattern and crashed the whole extract
-        task; 5 attempts must ride it out."""
+        task; 4 attempts must ride out 3 consecutive 429s."""
         rate_limited = _mock_response(429, text="<html>429 Too Many Requests</html>")
-        responses = [rate_limited, rate_limited, rate_limited, rate_limited]
+        responses = [rate_limited, rate_limited, rate_limited]
         responses.append(_mock_response(200, "wikidata_id\nQ1\n"))
         with patch(
             "src.extraction.qlever.requests.post", side_effect=responses
         ) as mock_post:
             df = fetch_wikidata_qlever_csv("SELECT ...", dtype={})
-        assert mock_post.call_count == 5
+        assert mock_post.call_count == 4
         assert list(df["wikidata_id"]) == ["Q1"]

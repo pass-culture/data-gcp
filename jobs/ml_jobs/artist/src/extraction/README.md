@@ -22,7 +22,9 @@ uv run python main.py extraction merge --input-dir-path raw/ --output-file-path 
 
 Each target is fetched with a single QLever query rendered from a Jinja SPARQL
 template: full artist attributes for `music`/`book`/`movie`, IDs and matching
-score only for `music_ids` and `gkg`. Full detail, including the SPARQL
+score only for `music_ids` and `gkg`. `gkg` only feeds the boolean `gkg`
+notability flag, so people found *only* by `gkg` have no name and are dropped
+from the final table by design. Full detail, including the SPARQL
 template design and why it's shaped the way it is, lives in
 [`queries/README.md`](queries/README.md).
 

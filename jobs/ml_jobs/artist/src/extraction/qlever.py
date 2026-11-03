@@ -35,9 +35,10 @@ def _is_retryable(exc: BaseException) -> bool:
     return isinstance(exc, requests.RequestException)
 
 
-# 5 attempts with exponential backoff (~450s total): QLever's nginx front-end
-# returns HTTP 429 on bursts (e.g. cache clear right before the extraction
-# query) and typically recovers after a few spaced-out retries.
+# 4 attempts with exponential backoff between them (30s, 60s, 120s — ~210s of
+# waiting in total). Retries 429s (QLever's nginx front-end rate-limits bursts
+# and typically recovers after a few spaced-out retries), 5xx and network
+# errors; fails fast on any other 4xx (see _is_retryable).
 qlever_retry = retry(
     stop=stop_after_attempt(4),
     wait=wait_exponential(multiplier=30, max=240),
@@ -45,31 +46,6 @@ qlever_retry = retry(
     before_sleep=_log_retry_attempt,
     reraise=True,
 )
-
-
-@qlever_retry
-def _clear_qlever_cache_once() -> None:
-    response = requests.get(
-        QLEVER_ENDPOINT,
-        params={"cmd": "clear-cache"},
-        headers=QLEVER_HEADERS,
-        timeout=30,
-    )
-    if response.status_code != 200:
-        raise requests.RequestException(
-            f"Cache clear failed ({response.status_code}): {response.text[:150]}",
-            response=response,
-        )
-
-
-def clear_qlever_cache() -> None:
-    try:
-        _clear_qlever_cache_once()
-        logger.info(f"Cache cleared for {QLEVER_ENDPOINT}")
-    except requests.RequestException:
-        logger.warning(
-            "Failed to reset QLever cache after retries. Proceeding with execution..."
-        )
 
 
 @qlever_retry

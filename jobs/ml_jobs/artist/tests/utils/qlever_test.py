@@ -6,11 +6,7 @@ import pandas as pd
 import pytest
 import requests
 
-from src.extraction.qlever import (
-    _clear_qlever_cache_once,
-    clear_qlever_cache,
-    fetch_wikidata_qlever_csv,
-)
+from src.extraction.qlever import fetch_wikidata_qlever_csv
 
 
 def _mock_response(status_code: int, text: str = "") -> Mock:
@@ -23,7 +19,7 @@ def _mock_response(status_code: int, text: str = "") -> Mock:
 @pytest.fixture(autouse=True)
 def _no_real_sleep():
     """Tenacity's default sleep strategy is a real time.sleep — patch it out so
-    tests exercising the retry decorator (stop_after_attempt(5), exponential
+    tests exercising the retry decorator (stop_after_attempt(4), exponential
     backoff up to 240s) don't actually block for minutes."""
     with patch("tenacity.nap.time.sleep"):
         yield
@@ -31,7 +27,7 @@ def _no_real_sleep():
 
 class TestQleverRetry:
     """src/extraction/qlever.py's qlever_retry (tenacity) decorates every QLever HTTP
-    call: 5 attempts, exponential backoff, retrying on requests.RequestException
+    call: 4 attempts, exponential backoff, retrying on requests.RequestException
     except 4xx responses other than 429."""
 
     def test_backoff_schedule(self):
@@ -49,35 +45,6 @@ class TestQleverRetry:
         ):
             fetch_wikidata_qlever_csv("SELECT ...", dtype={})
         assert mock_post.call_count == 1
-
-    def test_clear_cache_once_raises_after_exhausting_retries(self):
-        with (
-            patch(
-                "src.extraction.qlever.requests.get",
-                return_value=_mock_response(500, "boom"),
-            ) as mock_get,
-            pytest.raises(requests.RequestException),
-        ):
-            _clear_qlever_cache_once()
-        assert mock_get.call_count == 4
-
-    def test_clear_cache_succeeds_without_retry(self):
-        with patch(
-            "src.extraction.qlever.requests.get",
-            return_value=_mock_response(200),
-        ) as mock_get:
-            _clear_qlever_cache_once()
-        assert mock_get.call_count == 1
-
-    def test_clear_qlever_cache_swallows_failure_after_retries(self):
-        """The outer clear_qlever_cache must NOT raise even after all retries are
-        exhausted — cache clearing is best-effort, extraction should proceed."""
-        with patch(
-            "src.extraction.qlever.requests.get",
-            return_value=_mock_response(500, "boom"),
-        ) as mock_get:
-            clear_qlever_cache()  # must not raise
-        assert mock_get.call_count == 4
 
     def test_fetch_csv_retries_then_succeeds(self):
         responses = [

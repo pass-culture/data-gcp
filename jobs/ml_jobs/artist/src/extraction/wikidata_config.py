@@ -84,8 +84,13 @@ QUERY_CONFIGS: dict[str, QueryConfig] = {
         entity_types=PERSON_ENTITY_TYPES,
         id_properties=MOVIE_ID_PROPERTIES,
     ),
-    # IDs only: downstream only uses the `gkg` flag merge_data derives from these
-    # wikidata_ids (a notability tie-breaker in src/linkage), not their attributes.
+    # IDs only, on purpose: wdt:P2671 matches ~2.9M people, far too many to fetch
+    # labels/aliases for, and downstream only uses the boolean `gkg` flag
+    # merge_data derives from these wikidata_ids (a notability tie-breaker in
+    # src/linkage/matching.py and src/linkage/metadata_refresh.py), never their
+    # attributes. Consequence (intended): a person found *only* by gkg has no
+    # name/alias, so postprocess_data drops them from the final artist table —
+    # linkage only ever matches music/book/movie people. See queries/README.md.
     "gkg": QueryConfig(
         template="extract_artist_ids.rq.j2",
         entity_types=PERSON_ENTITY_TYPES,

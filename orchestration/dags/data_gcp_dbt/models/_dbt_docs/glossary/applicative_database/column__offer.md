@@ -34,7 +34,7 @@ An offer is considered bookable if it meets the following criteria:
 {% docs column__offer_humanized_id %} Human-readable identifier for the offer used in various platforms. {% enddocs %}
 {% docs column__passculture_pro_url %} URL to the offer on PassCulture Pro. {% enddocs %}
 {% docs column__webapp_url %} URL to the offer on the web application. {% enddocs %}
-{% docs column__offer_subcategory_id %} Identifier for the subcategory of the offer. Determined by the cultural partner via a list of pre-set options. {% enddocs %}
+{% docs column__offer_subcategory_id %} Identifier for the subcategory of the offer. Determined by the cultural partner via a list of pre-set options. Each subcategory belongs to exactly one offer category (offer_category_id). {% enddocs %}
 {% docs column__offer_url %} URL to the offer. {% enddocs %}
 {% docs column__offer_is_national %} Indicates if the offer is available nationally. This Information is originally filled by pass Culture teams but is no longer used. It will be decommissioned soon. {% enddocs %}
 {% docs column__offer_is_numerical %} Indicates if the offer is digital (based on an url). {% enddocs %}

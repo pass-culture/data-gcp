@@ -34,6 +34,12 @@
               is added at the last complete month when the territory has never had
               a row for this KPI (except NAT). Territories with past rows get no zero
               row, so that cumulative / stock KPIs are never reset to 0;
+            - with flow_attribute, every territory gets a row for every month of
+              the national series of a KPI, so that national_* is there whatever
+              the month a report reads: 0 for flow KPIs and for territories that
+              never had the KPI, NULL with is_missing_month = true for a month
+              missing from the series of a stock KPI (an average or share
+              without activity is not 0);
             - national_numerator, national_denominator and national_kpi hold the NAT
               value of the same month and KPI, so that a report filtered on a
               territory still shows the national figures;
@@ -51,7 +57,16 @@
             - flow KPIs (flow_attribute = 'flow') get a zero row for every month of
               their national series where the territory has no row, so that the
               national_* columns summed over the months of any territory give the
-              national total.
+              national total;
+            - months_ago positions each row relative to the last consolidated
+              month (external_reporting_last_month, switches on the 15th), so that
+              reports filter on it instead of dates: with d = months_ago - X,
+              d = 0 reads month X (stock KPIs), d >= 0 sums flow KPIs up to month
+              X, d between 0 and 5 the 6 months up to X. Months not yet
+              consolidated have a negative months_ago;
+            - scholar_year_month is the month rank in the scholar year (0 =
+              September ... 11 = August): d >= 0 and scholar_year_month + d <= 11
+              keeps the months of the scholar year of month X, up to X.
 
         Parameters:
             kpis_cte (string): name of the CTE holding the KPI rows
@@ -126,7 +141,7 @@
     ),
 
     filled_kpis as (
-        select *, false as is_national_only
+        select *, false as is_national_only, false as is_missing_month
         from {{ kpis_cte }}
         union all
         select
@@ -145,7 +160,8 @@
                 , kpi_list.{{ attribute }}
             {% endfor %},
             kpi_list.is_secret_applicable,
-            false as is_national_only
+            false as is_national_only,
+            false as is_missing_month
         from territories
         inner join kpi_list on territories.dimension_name = kpi_list.dimension_name
         left join
@@ -158,7 +174,10 @@
             -- national KPIs always exist, and are checked month over month
             and territories.dimension_name != 'NAT'
             {% if flow_attribute %}
+                -- KPIs with a national series get a row every month below
                 and kpi_list.{{ flow_attribute }} != 'flow'
+                and kpi_list.kpi_name
+                not in (select kpi_name from kpi_list where dimension_name = 'NAT')
             {% endif %}
         {% if flow_attribute %}
             union all
@@ -168,9 +187,15 @@
                 territories.dimension_name,
                 territories.dimension_value,
                 national.kpi_name,
-                0 as numerator,
-                0 as denominator,
-                0 as kpi
+                {% for column in ["numerator", "denominator", "kpi"] %}
+                    if(
+                        kpi_list.{{ flow_attribute }} != 'flow'
+                        and ever.kpi_name is not null,
+                        null,
+                        0
+                    ) as {{ column }}
+                    {% if not loop.last %},{% endif %}
+                {% endfor %}
                 {% for column in zero_row_columns.keys() %}
                     , national.{{ column }}
                 {% endfor %}
@@ -178,13 +203,14 @@
                     , national.{{ attribute }}
                 {% endfor %},
                 kpi_list.is_secret_applicable,
-                false as is_national_only
+                false as is_national_only,
+                kpi_list.{{ flow_attribute }} != 'flow'
+                and ever.kpi_name is not null as is_missing_month
             from {{ kpis_cte }} as national
             inner join
                 kpi_list
                 on national.kpi_name = kpi_list.kpi_name
                 and kpi_list.dimension_name != 'NAT'
-                and kpi_list.{{ flow_attribute }} = 'flow'
             inner join
                 territories on kpi_list.dimension_name = territories.dimension_name
             left join
@@ -193,6 +219,11 @@
                 and national.kpi_name = existing.kpi_name
                 and territories.dimension_name = existing.dimension_name
                 and territories.dimension_value = existing.dimension_value
+            left join
+                existing_kpis as ever
+                on territories.dimension_name = ever.dimension_name
+                and territories.dimension_value = ever.dimension_value
+                and national.kpi_name = ever.kpi_name
             where national.dimension_name = 'NAT' and existing.kpi_name is null
         {% endif %}
         union all
@@ -212,7 +243,8 @@
                 , national.{{ attribute }}
             {% endfor %},
             false as is_secret_applicable,
-            true as is_national_only
+            true as is_national_only,
+            false as is_missing_month
         from {{ kpis_cte }} as national
         inner join national_only_kpis on national.kpi_name = national_only_kpis.kpi_name
         inner join
@@ -427,6 +459,7 @@
             kpi,
             is_secret_applicable,
             is_national_only,
+            is_missing_month,
             is_secret_stat,
             is_low_count,
             territory_secret_detail,
@@ -438,21 +471,24 @@
         if(
             flagged_kpis.is_secret_stat
             or flagged_kpis.is_low_count
-            or flagged_kpis.is_national_only,
+            or flagged_kpis.is_national_only
+            or flagged_kpis.is_missing_month,
             null,
             coalesce(flagged_kpis.numerator, 0)
         ) as numerator,
         if(
             flagged_kpis.is_secret_stat
             or flagged_kpis.is_low_count
-            or flagged_kpis.is_national_only,
+            or flagged_kpis.is_national_only
+            or flagged_kpis.is_missing_month,
             null,
             coalesce(flagged_kpis.denominator, 0)
         ) as denominator,
         if(
             flagged_kpis.is_secret_stat
             or flagged_kpis.is_low_count
-            or flagged_kpis.is_national_only,
+            or flagged_kpis.is_national_only
+            or flagged_kpis.is_missing_month,
             null,
             coalesce(flagged_kpis.kpi, 0)
         ) as kpi,
@@ -462,6 +498,7 @@
         flagged_kpis.is_secret_stat,
         flagged_kpis.is_low_count,
         flagged_kpis.is_national_only,
+        flagged_kpis.is_missing_month,
         -- a single message whatever the rule, so that reports do not disclose the
         -- size of the population behind a masked KPI
         if(
@@ -476,7 +513,13 @@
             when flagged_kpis.is_low_count
             then
                 'Moins de 5 bénéficiaires derrière ce KPI (20 pour la répartition par catégorie)'
-        end as secret_detail
+        end as secret_detail,
+        date_diff(
+            {{ external_reporting_last_month() }}, flagged_kpis.partition_month, month
+        ) as months_ago,
+        mod(
+            extract(month from flagged_kpis.partition_month) + 3, 12
+        ) as scholar_year_month
     from flagged_kpis
     left join
         national_values

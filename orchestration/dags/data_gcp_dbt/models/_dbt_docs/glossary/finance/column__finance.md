@@ -16,6 +16,7 @@
 {% docs column__finance_event_motive %} Motive of the finance event. {% enddocs %}
 
 {% docs column__cashflow_id %} Unique identifier for a cashflow (monetary flow). {% enddocs %}
+{% docs column__booking_reimbursement_cashflow_id %} Unique identifier for the cashflow (monetary flow) that paid the pricing. Never NULL in this table: a row without an invoice, hence without a cashflow, is filtered out. {% enddocs %}
 {% docs column__cashflow_creation_date %} Date when the cashflow was created. {% enddocs %}
 {% docs column__cashflow_status %} Status of the cashflow: PENDING (created), UNDER_REVIEW (files generated), or ACCEPTED (invoice generated). {% enddocs %}
 {% docs column__cashflow_amount %} Total amount of the cashflow in euro cents. {% enddocs %}

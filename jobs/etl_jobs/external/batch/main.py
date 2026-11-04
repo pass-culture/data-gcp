@@ -40,10 +40,12 @@ def main(
         )
 
         # Campaigns
+        # One ref table per OS: the ios and android tasks run in parallel, so a
+        # shared table replaced by each run only keeps the OS that finished last.
         metadata = batch_client.get_campaigns_metadata()
         pandas_gbq.to_gbq(
             metadata,
-            destination_table=f"raw_{env_short_name}.batch_campaigns_ref",
+            destination_table=f"raw_{env_short_name}.batch_campaigns_ref_{operating_system}",
             if_exists="replace",
         )
 

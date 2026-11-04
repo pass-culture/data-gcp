@@ -2,7 +2,7 @@
     config(
         materialized="table",
         partition_by={"field": "partition_month", "data_type": "date"},
-        cluster_by=["dimension_name", "dimension_value", "kpi_name"],
+        cluster_by=["dimension_name", "intitule", "kpi_name"],
     )
 }}
 

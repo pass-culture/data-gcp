@@ -34,8 +34,12 @@ def should_skip_scheduled_node(node_tags: List[str], ds: str) -> Optional[str]:
         node_tags: List of tags for the node
         ds: Airflow execution date string (YYYY-MM-DD)
 
+    Monthly tags add up: "monthly" runs on the 1st, "monthly_<day>" on that day,
+    so tags ["monthly_5", "monthly_15"] run on the 5th and the 15th.
+
     Returns:
-        Schedule type ('weekly' or 'monthly') if should skip, None otherwise
+        Schedule tags ('weekly', 'monthly', 'monthly_15'...) if should skip,
+        None otherwise
     """
     if not node_tags or not ds:
         return None
@@ -47,12 +51,14 @@ def should_skip_scheduled_node(node_tags: List[str], ds: str) -> Optional[str]:
         if "weekly" in node_tags and execution_date.weekday() != 0:  # 0 is Monday
             return "weekly"
 
-        # Check for monthly tag - run only on first day of month
-        if "monthly" in node_tags and execution_date.day != 1:
-            return "monthly"
-
-        if "monthly_15" in node_tags and execution_date.day != 15:
-            return "monthly_15"
+        monthly_tags = {
+            tag: 1 if tag == "monthly" else int(tag.removeprefix("monthly_"))
+            for tag in node_tags
+            if tag == "monthly"
+            or (tag.startswith("monthly_") and tag.removeprefix("monthly_").isdigit())
+        }
+        if monthly_tags and execution_date.day not in monthly_tags.values():
+            return ", ".join(sorted(monthly_tags))
 
     except ValueError:
         logging.warning(f"Invalid date format for ds: {ds}")

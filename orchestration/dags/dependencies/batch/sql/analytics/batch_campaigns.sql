@@ -1,6 +1,6 @@
 select
     date,
-    operating_system,
+    stats.operating_system,
     stats.campaign_token,
     name as campaign_name,
     stats.version,
@@ -13,11 +13,18 @@ select
     update_date
 from `{{ bigquery_raw_dataset }}.batch_campaigns_stats` stats
 left join
-    `{{ bigquery_raw_dataset }}.batch_campaigns_ref` ref
+    (
+        select campaign_token, operating_system, name
+        from `{{ bigquery_raw_dataset }}.batch_campaigns_ref_ios`
+        union all
+        select campaign_token, operating_system, name
+        from `{{ bigquery_raw_dataset }}.batch_campaigns_ref_android`
+    ) ref
     on stats.campaign_token = ref.campaign_token
+    and stats.operating_system = ref.operating_system
 qualify
     row_number() over (
-        partition by date, operating_system, campaign_token, stats.version
+        partition by date, stats.operating_system, stats.campaign_token, stats.version
         order by update_date desc
     )
     = 1

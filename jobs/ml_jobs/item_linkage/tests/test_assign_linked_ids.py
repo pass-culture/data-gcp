@@ -1,9 +1,78 @@
 import pandas as pd
 
 from assign_linked_ids import (
+    assign_cluster_id,
     build_graph_and_assign_ids,
     post_process_graph_matching,
 )
+
+
+def _cluster_ids(edges: list[tuple[str, str]]) -> dict[str, str]:
+    """Run the clustering on edges and return {item_id: cluster_id} for all members."""
+    linked_offers = pd.DataFrame(
+        edges, columns=["item_id_synchro", "item_id_candidate"]
+    )
+    result = build_graph_and_assign_ids(linked_offers)
+    return {
+        **dict(zip(result["item_id_synchro"], result["new_item_id"])),
+        **dict(zip(result["item_id_candidate"], result["new_item_id"])),
+    }
+
+
+class TestAssignClusterId:
+    def test_id_is_prefixed_min_offer_id(self):
+        assert (
+            assign_cluster_id({"offer-30", "offer-12", "offer-50"})
+            == "item_cluster_o12"
+        )
+
+    def test_offer_ids_are_compared_numerically(self):
+        assert assign_cluster_id({"offer-9", "offer-10"}) == "item_cluster_o9"
+
+    def test_numeric_offer_wins_over_unexpected_ids(self):
+        assert assign_cluster_id({"link-abc", "offer-99"}) == "item_cluster_o99"
+
+    def test_unexpected_ids_fall_back_to_string_order(self):
+        assert assign_cluster_id({"s2", "s1"}) == "item_cluster_os1"
+
+
+class TestDeterministicClusterIds:
+    EDGES = [
+        ("offer-10", "offer-20"),
+        ("offer-20", "offer-30"),
+        ("offer-40", "offer-50"),
+        ("offer-50", "offer-60"),
+    ]
+
+    def test_ids_follow_oldest_member(self):
+        ids = _cluster_ids(self.EDGES)
+        assert {ids[o] for o in ("offer-10", "offer-20", "offer-30")} == {
+            "item_cluster_o10"
+        }
+        assert {ids[o] for o in ("offer-40", "offer-50", "offer-60")} == {
+            "item_cluster_o40"
+        }
+
+    def test_ids_do_not_depend_on_row_order_or_edge_direction(self):
+        shuffled_and_reversed = [(b, a) for a, b in reversed(self.EDGES)]
+        assert _cluster_ids(shuffled_and_reversed) == _cluster_ids(self.EDGES)
+
+    def test_new_offer_joining_keeps_cluster_id(self):
+        ids = _cluster_ids(self.EDGES + [("offer-30", "offer-99")])
+        assert ids["offer-99"] == "item_cluster_o10"
+        assert ids["offer-10"] == "item_cluster_o10"
+
+    def test_merge_keeps_oldest_anchor(self):
+        ids = _cluster_ids(self.EDGES + [("offer-30", "offer-40")])
+        assert set(ids.values()) == {"item_cluster_o10"}
+
+    def test_split_keeps_id_on_anchor_side(self):
+        merged = self.EDGES + [("offer-30", "offer-40")]
+        assert set(_cluster_ids(merged).values()) == {"item_cluster_o10"}
+
+        split = _cluster_ids(self.EDGES)
+        assert split["offer-10"] == "item_cluster_o10"
+        assert split["offer-60"] == "item_cluster_o40"
 
 
 class TestBuildGraphAndAssignIds:

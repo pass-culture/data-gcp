@@ -44,18 +44,7 @@ GKG_ID_PROPERTIES = [
     IdProperty("gkg_id", "wdt:P2671"),
 ]
 
-# Two-pass discovery+hydration templates (see QueryConfig.hydration_batch_size in
-# wikidata_config.py and extract_discovery.rq.j2 / extract_hydration.rq.j2 for the
-# rationale). Reusable by any domain, not just gkg.
-DISCOVERY_TEMPLATE = "extract_discovery.rq.j2"
-HYDRATION_TEMPLATE = "extract_hydration.rq.j2"
-
 MUSIC_IDS_KEY = "music_ids"
-
-# Pause between Pass 2 (hydration) batch requests — see QueryConfig.hydration_batch_size.
-HYDRATION_BATCH_DELAY_SECONDS = 0.2
-
-HYDRATION_BATCH_SIZE = 5_000
 
 WIKIDATA_ENTITY_PREFIX = r"https?://www\.wikidata\.org/entity/"
 
@@ -69,8 +58,3 @@ QLEVER_HEADERS = {
     # shared third-party endpoint, and QLever's own docs ask for one explicitly.
     "User-Agent": "PassCulture/1.0 (https://passculture.app; contact@passculture.app) Python/requests",
 }
-
-# Local checkpointing for the two-pass discovery+hydration extraction pattern (see
-# wikidata_checkpoint.py) — a path relative to the repo checkout, since the
-# extraction VM survives exactly the Airflow-level retries it needs to.
-CHECKPOINT_ROOT_DIR = ".wikidata_checkpoint"

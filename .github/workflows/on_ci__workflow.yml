@@ -89,9 +89,13 @@ jobs:
       - name: "Show found files"
         id: "compute"
         run: |
-          output="$(python3 .github/workflows/scripts/find_test_intersections.py "${{ steps.changed-etl-files.outputs.all_changed_files }}" "${{ steps.changed-ml-files.outputs.all_changed_files }}" "${{ steps.find-testable-jobs.outputs.testable_jobs }}")"
+          output="$(python3 .github/workflows/scripts/find_test_intersections.py "$ETL_ALL_CHANGED_FILES" "$ML_ALL_CHANGED_FILES" "$TESTABLE_JOBS")"
           echo "Found tests: $output"
           echo "$output" >> "$GITHUB_OUTPUT"
+        env:
+          ETL_ALL_CHANGED_FILES: ${{ steps.changed-etl-files.outputs.all_changed_files }}
+          ML_ALL_CHANGED_FILES: ${{ steps.changed-ml-files.outputs.all_changed_files }}
+          TESTABLE_JOBS: ${{ steps.find-testable-jobs.outputs.testable_jobs }}
 
   assert-matrix-not-empty:
     needs: find-test-jobs

@@ -59,14 +59,6 @@ models:
         +docs:
           node_color: "#d90000"
           show: false
-      clean:
-        +meta:
-          owner: "@data-engineering"
-        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
-        +schema: clean_{{ target.name }}
-        +docs:
-          node_color: "#b43ddb"
-          show: false
     intermediate:
       +meta:
         owner: "@data-engineering"

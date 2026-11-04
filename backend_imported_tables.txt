@@ -57,7 +57,7 @@ public.favorite: dateCreated, id, offerId, userId
 public.feature: description, id, isActive, name
 public.finance_incident: details, id, kind, status, venueId
 public.fraudulent_booking_tag: authorId, bookingId, dateCreated, id
-public.google_places_info: bannerUrl, id, venueId
+public.google_places_info: bannerId, id, venueId
 public.headline_offer: id, offerId, timespan, venueId
 public.highlight: availability_datespan, communication_date, description, highlight_datespan, id, mediation_uuid, name
 public.highlight_request: highlightId, id, offerId

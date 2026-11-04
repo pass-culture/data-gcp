@@ -52,7 +52,7 @@ An offer is considered bookable if it meets the following criteria:
 
 **webapp_url**: URL to the offer on the web application.
 
-**offer_subcategory_id**: Identifier for the subcategory of the offer. Determined by the cultural partner via a list of pre-set options.
+**offer_subcategory_id**: Identifier for the subcategory of the offer. Determined by the cultural partner via a list of pre-set options. Each subcategory belongs to exactly one offer category (offer_category_id).
 
 **offer_url**: URL to the offer.
 

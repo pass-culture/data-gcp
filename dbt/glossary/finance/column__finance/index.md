@@ -30,6 +30,8 @@
 
 **cashflow_id**: Unique identifier for a cashflow (monetary flow).
 
+**booking_reimbursement_cashflow_id**: Unique identifier for the cashflow (monetary flow) that paid the pricing. Never NULL in this table: a row without an invoice, hence without a cashflow, is filtered out.
+
 **cashflow_creation_date**: Date when the cashflow was created.
 
 **cashflow_status**: Status of the cashflow: PENDING (created), UNDER_REVIEW (files generated), or ACCEPTED (invoice generated).

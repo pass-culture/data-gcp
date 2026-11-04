@@ -16487,6 +16487,7 @@
 <p><strong>finance_event_motive</strong>:  Motive of the finance event. </p>
 
 <p><strong>cashflow_id</strong>:  Unique identifier for a cashflow (monetary flow). </p>
+<p><strong>booking_reimbursement_cashflow_id</strong>:  Unique identifier for the cashflow (monetary flow) that paid the pricing. Never NULL in this table: a row without an invoice, hence without a cashflow, is filtered out. </p>
 <p><strong>cashflow_creation_date</strong>:  Date when the cashflow was created. </p>
 <p><strong>cashflow_status</strong>:  Status of the cashflow: PENDING (created), UNDER_REVIEW (files generated), or ACCEPTED (invoice generated). </p>
 <p><strong>cashflow_amount</strong>:  Total amount of the cashflow in euro cents. </p>

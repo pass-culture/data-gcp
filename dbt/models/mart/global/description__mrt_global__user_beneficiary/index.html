@@ -16746,7 +16746,7 @@ Demographic information (address, activity) are purely declarative. They are reg
 <tr>
 <td style="text-align: left;">total_deposit_amount</td>
 <td style="text-align: left;">NUMERIC</td>
-<td style="text-align: left;">Total amount deposited by the user.</td>
+<td style="text-align: left;">Sum of deposit_amount over all the user's deposits, in euros: the credit granted over the user's whole history, not the credit left.</td>
 </tr>
 <tr>
 <td style="text-align: left;">current_deposit_type</td>
@@ -16766,7 +16766,7 @@ Demographic information (address, activity) are purely declarative. They are reg
 <tr>
 <td style="text-align: left;">first_credit_17_date</td>
 <td style="text-align: left;">DATE</td>
-<td style="text-align: left;">The date the young person received credit_17 (see credit_17 / credit_18): first RECREDIT_17 on any deposit, or creation of a GRANT_15_17 at 17. Comparable across the March 2025 reform. It is an unlock date, not a request date: a request made at 17 and unlocked after 18 falls at 18 (credit_17 and credit_18 the same day) — bound it with <code>user_age_at_first_credit_17 = 17</code> to measure take-up at 17. Former GRANT_15_17 beneficiaries (born up to February 2010) receive it automatically on their 17th birthday: for those generations it reflects the former 15-17 scheme, not a sign-up.</td>
+<td style="text-align: left;">The date the young person received credit_17 (see credit_17 / credit_18): first RECREDIT_17 on any deposit, or creation of a GRANT_15_17 at 17. Comparable across the March 2025 reform. It is an unlock date, not a request date: a request made at 17 and unlocked after 18 falls at 18 (credit_17 and credit_18 the same day). Every non-null date is a young person who received credit_17, whatever the age at unlock; bound it with <code>user_age_at_first_credit_17 = 17</code> only to measure take-up at 17. Former GRANT_15_17 beneficiaries (born up to February 2010) receive it automatically on their 17th birthday: for those generations it reflects the former 15-17 scheme, not a sign-up.</td>
 </tr>
 <tr>
 <td style="text-align: left;">first_credit_18_date</td>

@@ -71,3 +71,9 @@
 **epci_secret_reason_code**: Stable code identifying the reason for statistical secrecy at the EPCI level ('no_revenue', 'low_partners', 'high_concentration', 'both', 'secondary_secret' or 'none').
 
 **municipality_secret_reason_code**: Stable code identifying the reason for statistical secrecy at the municipality level ('no_revenue', 'low_partners', 'high_concentration', 'both', 'secondary_secret' or 'none').
+
+**external_reporting_is_missing_month**: True when the territory has past values for this stock KPI but none this month: numerator, denominator and kpi are NULL (an average or share without activity is not 0), and the row only carries the national\_\* values of the month.
+
+**external_reporting_months_ago**: Number of months between partition_month and the last consolidated month (month M is consolidated on the 15th of M + 1): 0 = last consolidated month, 1 = the month before, negative = not yet consolidated. Reports filter on d = months_ago - X (X = selected month, 0 by default): d = 0 for stock KPIs at month X, d >= 0 to sum flow KPIs up to month X, d between 0 and 5 for the 6 months up to X.
+
+**external_reporting_scholar_year_month**: Rank of partition_month in its scholar year: 0 = September ... 11 = August. With d = months_ago - X, d >= 0 and scholar_year_month + d \<= 11 keeps the months of the scholar year of month X, up to X.

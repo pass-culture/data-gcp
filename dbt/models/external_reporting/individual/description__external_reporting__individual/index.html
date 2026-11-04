@@ -16635,6 +16635,11 @@ A lexique details the meaning of each kpi_name here: https://docs.google.com/spr
 <td style="text-align: left;">True on the rows added for a KPI published at NAT but not at this territory level (e.g. coverage rates): numerator, denominator and kpi are NULL, only the national_* columns are filled, so that reports filtered on a territory still show the national value.</td>
 </tr>
 <tr>
+<td style="text-align: left;">is_missing_month</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">True when the territory has past values for this stock KPI but none this month: numerator, denominator and kpi are NULL (an average or share without activity is not 0), and the row only carries the national_* values of the month.</td>
+</tr>
+<tr>
 <td style="text-align: left;">secret_reason</td>
 <td style="text-align: left;"></td>
 <td style="text-align: left;">Message to display instead of the KPI when it is masked, whatever the rule (statistical secret on cultural partners, or fewer than 5 beneficiaries behind the KPI): 'Données non disponibles (secret statistique)'. NULL otherwise. is_secret_stat and is_low_count tell the rule apart.</td>
@@ -16658,6 +16663,16 @@ A lexique details the meaning of each kpi_name here: https://docs.google.com/spr
 <td style="text-align: left;">national_kpi</td>
 <td style="text-align: left;"></td>
 <td style="text-align: left;">Value of the same KPI and month at national level (NAT row). NULL when the KPI is not published at NAT.</td>
+</tr>
+<tr>
+<td style="text-align: left;">months_ago</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Number of months between partition_month and the last consolidated month (month M is consolidated on the 15th of M + 1): 0 = last consolidated month, 1 = the month before, negative = not yet consolidated. Reports filter on d = months_ago - X (X = selected month, 0 by default): d = 0 for stock KPIs at month X, d &gt;= 0 to sum flow KPIs up to month X, d between 0 and 5 for the 6 months up to X.</td>
+</tr>
+<tr>
+<td style="text-align: left;">scholar_year_month</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Rank of partition_month in its scholar year: 0 = September ... 11 = August. With d = months_ago - X, d &gt;= 0 and scholar_year_month + d &lt;= 11 keeps the months of the scholar year of month X, up to X.</td>
 </tr>
 </tbody>
 </table>

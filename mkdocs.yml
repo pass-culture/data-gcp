@@ -69,6 +69,9 @@ nav:
           - Beneficiary coverage rate: dbt/vidoc_kpis/beneficiary_coverage_rate.md
           - Diversity rate (3+ categories): dbt/vidoc_kpis/diversity_3plus_categories.md
           - Booking share by category: dbt/vidoc_kpis/booking_share_by_category.md
+          - Student EAC participation rate: dbt/vidoc_kpis/student_eac_participation_rate.md
+          - Institution EAC participation rate: dbt/vidoc_kpis/institution_eac_participation_rate.md
+          - EAC credit consumption rate: dbt/vidoc_kpis/eac_credit_consumption_rate.md
         - Ministry exports:
           - dbt/ministry_kpis/index.md
           - User and deposits: dbt/ministry_kpis/user_and_deposit.md

@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: exp_vidoc__student_coverage
+    description: "{{ doc('description__exp_vidoc_student__coverage') }}"
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+      - name: scholar_year
+        description: "{{ doc('column__scholar_year') }}"
+      - name: region_code
+        description: "{{ doc('column__region_code') }}"
+      - name: region_name
+        description: "{{ doc('column__region_name') }}"
+      - name: academy_name
+        description: "{{ doc('column__academy_name') }}"
+      - name: department_code
+        description: "{{ doc('column__department_code') }}"
+      - name: department_name
+        description: "{{ doc('column__department_name') }}"
+      - name: total_eligible_students
+        description: "{{ doc('column__total_eligible_students') }}"
+      - name: total_engaged_students
+        description: "{{ doc('column__total_engaged_students') }}"

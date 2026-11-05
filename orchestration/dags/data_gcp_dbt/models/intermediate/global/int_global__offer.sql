@@ -98,7 +98,6 @@ select
     o.last_headline_date,
     o.offer_finalization_date,
     o.scheduled_offer_bookability_date,
-    o.offer_advice_content,
     o.offer_has_mediation,
     o.cultural_outreach_status,
     o.cultural_outreach_claimed_date,

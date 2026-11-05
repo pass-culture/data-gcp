@@ -65,7 +65,7 @@ models:
       - name: playlist_type
         description: "{{ doc('column__playlist_type') }}"
       - name: offer_category
-        description: "{{ doc('column__offer_category_id') }}"
+        description: "{{ doc('column__playlist_offer_category') }}"
       - name: playlist_reach
         description: "{{ doc('column__playlist_reach') }}"
       - name: playlist_recurrence

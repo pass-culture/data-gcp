@@ -19,7 +19,7 @@
 {% docs column__institution_macro_density_label %} Macro density label of the educational institution : rural or urban. {% enddocs %}
 {% docs column__institution_density_level %} Density level of the educational institution's area. {% enddocs %}
 {% docs column__institution_type %} Type of institution. {% enddocs %}
-{% docs column__macro_institution_type %} Type of macro institution. Values can be : COLLEGE; ECOLE; LYCEE. {% enddocs %}
+{% docs column__macro_institution_type %} Type of macro institution. Values can be : COLLEGE; ECOLE; LYCEE. Can be NULL. {% enddocs %}
 {% docs column__institution_in_qpv %}Indicates whether the educational institution is located in a QPV or not(Priority Urban Area).{% enddocs %}
 {% docs column__institution_latitude %}The latitude coordinate of the educational institution.{% enddocs %}
 {% docs column__institution_longitude %}The longitude coordinate of the educational institution.{% enddocs %}

@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 
 import requests
 from airflow.models import DagRun
-from airflow.operators.python import PythonOperator
 from airflow.sensors.external_task import ExternalTaskSensor
 from airflow.utils.db import provide_session
 from airflow.utils.types import DagRunType
@@ -147,6 +146,49 @@ def waiting_operator(
     )
 
 
+class _DelayedWaitExternalTaskSensor(ExternalTaskSensor):
+    """ExternalTaskSensor used by delayed_waiting_operator.
+
+    compute_execution_date_fn (passed as execution_date_fn) returns None
+    when no external DAG run exists yet within the configured window --
+    a legitimate "not ready yet" signal. Airflow's own poke() doesn't
+    expect that though: it blindly calls .isoformat() on whatever
+    execution_date_fn returns, which raises
+    `AttributeError: 'NoneType' object has no attribute 'isoformat'`
+    instead of just rescheduling. Guard against that here by treating a
+    None execution date as "poke again later".
+    """
+
+    def poke(self, context):
+        logical_date = context.get("logical_date")
+        if (
+            logical_date is not None
+            and self.execution_date_fn is not None
+            and self.execution_date_fn(logical_date) is None
+        ):
+            self.log.info(
+                "No %s run found yet within the configured window; will retry.",
+                self.external_dag_id,
+            )
+            return False
+        return super().poke(context)
+
+
+class _ManualSkipExternalTaskSensor(_DelayedWaitExternalTaskSensor):
+    """ExternalTaskSensor that skips itself on manually triggered DAG runs
+    instead of waiting, while still registering as a real ExternalTaskSensor
+    -- so the dependency shows up in Airflow's DAG Dependencies graph, unlike
+    wrapping the wait in a PythonOperator (which the graph can't detect).
+    """
+
+    def poke(self, context):
+        dag_run = context.get("dag_run")
+        if dag_run and dag_run.run_id.startswith("manual__"):
+            logging.info(f"Skipping wait for manual trigger: {dag_run.run_id}")
+            return True
+        return super().poke(context)
+
+
 def delayed_waiting_operator(
     dag,
     external_dag_id: str,
@@ -201,7 +243,7 @@ def delayed_waiting_operator(
         window_hours (int): Width of the window in hours.
         skip_manually_triggered (bool): Skip waiting for manual DAG runs if True.
         pool (str): Airflow pool to use.
-        **kwargs: Additional arguments passed to the ExternalTaskSensor or PythonOperator.
+        **kwargs: Additional arguments passed to the ExternalTaskSensor.
     """
     if allowed_states is None:
         allowed_states = ["success"]
@@ -248,49 +290,18 @@ def delayed_waiting_operator(
             upper_date_limit=upper_bound,
         )
 
-    # If manual triggers should be skipped, create a PythonOperator instead
-    if skip_manually_triggered:
-
-        def handle_manual_trigger(**context):
-            """
-            Skip waiting for manually triggered DAG runs.
-
-            - Manual DAG runs are typically ad-hoc or test runs.
-            - Scheduled runs still enforce the cross-DAG dependency.
-            - Creates a sensor dynamically at runtime and checks external task status.
-            """
-            dag_run = context.get("dag_run")
-            if dag_run and dag_run.run_id.startswith("manual__"):
-                logging.info(f"Skipping wait for manual trigger: {dag_run.run_id}")
-                return None  # Skip waiting
-
-            logging.info(
-                f"Waiting for external task {external_dag_id}.{external_task_id}"
-            )
-
-            # Create a sensor dynamically at runtime
-            sensor = ExternalTaskSensor(
-                task_id=task_id,
-                external_dag_id=external_dag_id,
-                external_task_id=external_task_id,
-                execution_date_fn=compute_execution_date_fn,
-                allowed_states=allowed_states,
-                failed_states=failed_states,
-                dag=None,  # Important: don't attach to DAG since this is runtime execution
-            )
-            return sensor.poke(
-                context=context
-            )  # Check external task status dynamically
-
-        return PythonOperator(
-            task_id=task_id,
-            python_callable=handle_manual_trigger,
-            dag=dag,
-            pool=pool,
-        )
-
-    # If manual triggers are NOT skipped, return the normal ExternalTaskSensor
-    return ExternalTaskSensor(
+    # skip_manually_triggered uses a subclass that short-circuits on manual
+    # runs instead of waiting; both branches use _DelayedWaitExternalTaskSensor
+    # (or a subclass of it) so a None from compute_execution_date_fn reschedules
+    # instead of crashing. Still registers as a real ExternalTaskSensor (unlike
+    # a PythonOperator wrapper), so Airflow's DAG Dependencies graph and the
+    # sensor's own reschedule/retry machinery both work normally.
+    sensor_cls = (
+        _ManualSkipExternalTaskSensor
+        if skip_manually_triggered
+        else _DelayedWaitExternalTaskSensor
+    )
+    return sensor_cls(
         task_id=task_id,
         external_dag_id=external_dag_id,
         external_task_id=external_task_id,

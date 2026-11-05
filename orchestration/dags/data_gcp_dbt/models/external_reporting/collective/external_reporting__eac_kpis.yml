@@ -1,0 +1,5 @@
+version: 2
+
+models:
+  - name: external_reporting__eac_kpis
+    description: "{{ doc('description__external_reporting__eac_kpis') }}"

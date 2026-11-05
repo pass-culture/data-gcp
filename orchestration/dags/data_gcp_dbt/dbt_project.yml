@@ -59,14 +59,6 @@ models:
         +docs:
           node_color: "#d90000"
           show: false
-      clean:
-        +meta:
-          owner: "@data-engineering"
-        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
-        +schema: clean_{{ target.name }}
-        +docs:
-          node_color: "#b43ddb"
-          show: false
     intermediate:
       +meta:
         owner: "@data-engineering"
@@ -90,7 +82,9 @@ models:
           owner: "@data-engineering"
     external_reporting:
       +schema: external_reporting_{{ target.name }}
-      +tags: "monthly_15"
+      # built on the 1st, 5th and 10th as a preview of the month being
+      # consolidated (months_ago = -1), frozen from the 15th (tests run then)
+      +tags: ["monthly_1", "monthly_5", "monthly_10", "monthly_15"]
       +labels:
         schedule: "monthly"
       +meta:

@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: int_gsheet__backoffice_log_reference
+    description: '{{ doc("description__int_gsheet__backoffice_log_reference") }}'
+    columns:
+      - name: log_extract
+        description: Normalized backoffice log message (URL path without ids, or analytics event name), used as the join key with int_pcapi__backoffice_log.message.
+        data_tests:
+          - unique
+          - not_null
+      - name: log_type
+        description: Type of the backoffice log, as categorized by the internal team.
+      - name: log_name
+        description: Human-readable name of the backoffice action, maintained manually by the internal team.

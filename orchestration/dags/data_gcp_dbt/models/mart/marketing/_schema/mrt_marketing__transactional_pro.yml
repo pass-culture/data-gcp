@@ -3,6 +3,13 @@ version: 2
 models:
   - name: mrt_marketing__transactional_pro
     description: "{{ doc('description__mrt_marketing__transactional_pro') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - brevo_tag
+            - brevo_template_id
+            - offerer_id
+            - event_date
     columns:
       - name: brevo_tag
         description: "{{ doc('column__brevo_tag') }}"
@@ -18,3 +25,9 @@ models:
         description: "{{ doc('column__email_is_opened') }}"
       - name: user_has_unsubscribed
         description: "{{ doc('column__user_has_unsubscribed') }}"
+      - name: total_recipients_delivered
+        description: "{{ doc('column__total_recipients_delivered') }}"
+      - name: total_recipients_opened
+        description: "{{ doc('column__total_recipients_opened') }}"
+      - name: total_recipients_unsubscribed
+        description: "{{ doc('column__total_recipients_unsubscribed') }}"

@@ -2,7 +2,6 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
-from airflow.operators.python import PythonOperator
 from airflow.sensors.external_task import ExternalTaskSensor
 from dags.common.utils import delayed_waiting_operator
 
@@ -58,7 +57,7 @@ class TestDelayedWaitingOperatorExecutionDateLogic:
     @patch("dags.common.utils.get_last_execution_date")
     def test_skips_manual_dag_run(self, mock_get_last_execution_date, test_dag):
         """
-        Test that a manual DAG run triggers skipping behavior (returns None)
+        Test that a manual DAG run makes poke() skip immediately (return True)
         and does not call get_last_execution_date.
         """
         operator = delayed_waiting_operator(
@@ -67,15 +66,16 @@ class TestDelayedWaitingOperatorExecutionDateLogic:
             skip_manually_triggered=True,
         )
 
-        # Should be a PythonOperator
-        assert isinstance(operator, PythonOperator)
+        # Still a real ExternalTaskSensor (so it shows up in Airflow's DAG
+        # Dependencies graph), just the manual-skip subclass.
+        assert isinstance(operator, ExternalTaskSensor)
 
         # Create a mock context representing a manual run
         context = {"dag_run": MagicMock(run_id="manual__123")}
-        result = operator.python_callable(**context)
+        result = operator.poke(context)
 
-        # Manual DAG run returns None
-        assert result is None
+        # Manual DAG run skips by returning True
+        assert result is True
 
         # get_last_execution_date should never be called
         mock_get_last_execution_date.assert_not_called()
@@ -85,8 +85,8 @@ class TestDelayedWaitingOperatorExecutionDateLogic:
         self, mock_get_last_execution_date, test_dag
     ):
         """
-        Test that the PythonOperator actually waits for scheduled DAGs
-        by calling the dynamically created ExternalTaskSensor's poke.
+        Test that a scheduled DAG run falls through to the real
+        ExternalTaskSensor.poke() check instead of being skipped.
         """
         mock_get_last_execution_date.return_value = datetime(
             2025, 1, 1, 0, 0, tzinfo=UTC
@@ -100,9 +100,10 @@ class TestDelayedWaitingOperatorExecutionDateLogic:
 
         # Prepare a mock context representing a scheduled run
         context = {"dag_run": MagicMock(run_id="scheduled__20250102")}
-        # Patch ExternalTaskSensor.poke to return True
+        # Patch ExternalTaskSensor.poke (the base-class method our subclass
+        # delegates to) to return True
         with patch.object(ExternalTaskSensor, "poke", return_value=True) as mock_poke:
-            result = operator.python_callable(**context)
+            result = operator.poke(context)
 
         # Poke should have been called once
         mock_poke.assert_called_once()
@@ -248,6 +249,33 @@ class TestDelayedWaitingOperatorExecutionDateLogic:
         )  # Jan 1st is outside this window
         assert call_args["upper_date_limit"] == expected_upper
         assert call_args["lower_date_limit"] == expected_lower
+
+    @patch("dags.common.utils.get_last_execution_date")
+    def test_poke_reschedules_instead_of_crashing_when_no_run_found(
+        self, mock_get_last_execution_date, test_dag
+    ):
+        """
+        Regression test: when execution_date_fn finds no external DAG run yet
+        (returns None), the real ExternalTaskSensor.poke() must not be allowed
+        to call .isoformat() on it (AttributeError: 'NoneType' object has no
+        attribute 'isoformat') -- it should just reschedule (return False).
+        """
+        mock_get_last_execution_date.return_value = None
+
+        operator = delayed_waiting_operator(
+            dag=test_dag,
+            external_dag_id="external_dag_id",
+            window_days=1,
+        )
+
+        context = {
+            "dag_run": MagicMock(run_id="scheduled__20250102"),
+            "logical_date": datetime(2025, 1, 2, 2, 0, tzinfo=UTC),
+        }
+
+        result = operator.poke(context)
+
+        assert result is False
 
     @patch("dags.common.utils.get_last_execution_date")
     def test_monthly_vs_daily_with_proper_window_configuration(

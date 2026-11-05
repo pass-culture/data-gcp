@@ -1,0 +1,528 @@
+{% macro apply_statistical_secret(
+    kpis_cte,
+    secret_models,
+    rolling_months_list=[6, 48],
+    kpi_attributes=[],
+    zero_row_columns={},
+    low_count_models=[],
+    low_count_denominator_kpis=[],
+    min_individuals=5,
+    flow_attribute=none
+) %}
+    {#
+        Mask external reporting KPIs of territories under statistical secret, add
+        zero rows so that territories without data report 0 instead of nothing, add
+        the national value on every row and display labels (label, intitule) so
+        that reports read the table as is, with a single source per table.
+
+        Must be called right after a `with <kpis_cte> as (...)` CTE holding the
+        external reporting rows, in this column order: partition_month,
+        updated_at, dimension_name, dimension_value, kpi_name, numerator,
+        denominator, kpi, <zero_row_columns>, <kpi_attributes>,
+        is_secret_applicable. is_secret_applicable is true for KPIs measured on
+        the cultural partner (venue) geography, the only ones subject to the
+        statistical secret. It appends the remaining CTEs and the final select.
+
+        Rules:
+            - a territory (COM, EPCI, DEP) is secret when it is secret
+              (is_*_secret_stat) at the last complete month, for any of the
+              rolling windows and any of the secret models;
+            - numerator, denominator and kpi are NULL on every month of a secret
+              territory, for the KPIs subject to the secret only; REG, ACAD and NAT
+              are never secret;
+            - for every territory of the geo referential and every KPI, a zero row
+              is added at the last complete month when the territory has never had
+              a row for this KPI (except NAT). Territories with past rows get no zero
+              row, so that cumulative / stock KPIs are never reset to 0;
+            - with flow_attribute, every territory gets a row for every month of
+              the national series of a KPI, so that national_* is there whatever
+              the month a report reads: 0 for flow KPIs and for territories that
+              never had the KPI, NULL with is_missing_month = true for a month
+              missing from the series of a stock KPI (an average or share
+              without activity is not 0);
+            - national_numerator, national_denominator and national_kpi hold the NAT
+              value of the same month and KPI, so that a report filtered on a
+              territory still shows the national figures;
+            - KPIs published at NAT but not at a territory level (e.g. coverage
+              rates) get rows for every territory of that level with NULL
+              numerator, denominator and kpi and is_national_only = true, so that
+              their national value is available whatever the territory filter;
+            - a KPI that 1 to min_beneficiaries - 1 people of a territory account
+              for (low_count_models) is NULL on every month (is_low_count), as
+              amounts and booking counts cannot be blurred;
+            - an average or share whose denominator counts 1 to min_individuals - 1
+              people (low_count_denominator_kpis) on any of the last 12 months is
+              NULL on every month (is_low_count), as it would disclose individual
+              values and the series would not be reliable;
+            - flow KPIs (flow_attribute = 'flow') get a zero row for every month of
+              their national series where the territory has no row, so that the
+              national_* columns summed over the months of any territory give the
+              national total;
+            - months_ago positions each row relative to the last consolidated
+              month (external_reporting_last_month, switches on the 15th), so that
+              reports filter on it instead of dates: with d = months_ago - X,
+              d = 0 reads month X (stock KPIs), d >= 0 sums flow KPIs up to month
+              X, d between 0 and 5 the 6 months up to X. Months not yet
+              consolidated have a negative months_ago;
+            - scholar_year_month is the month rank in the scholar year (0 =
+              September ... 11 = August): d >= 0 and scholar_year_month + d <= 11
+              keeps the months of the scholar year of month X, up to X.
+
+        Parameters:
+            kpis_cte (string): name of the CTE holding the KPI rows
+            secret_models (list): statistical secret models to apply
+            rolling_months_list (list): rolling windows to apply
+            kpi_attributes (list): KPI level columns copied on zero rows
+            zero_row_columns (dict): other columns of zero rows, name -> expression
+            low_count_models (list): models of distinct people behind each KPI
+                (dimension_name, dimension_value, kpi_name, total_beneficiaries,
+                min_beneficiaries)
+            low_count_denominator_kpis (list): KPI name prefixes whose denominator
+                counts people (averages and shares by person)
+            min_individuals (int): minimum number of people behind a published KPI
+            flow_attribute (string): KPI attribute ('flow' / 'stock') telling which
+                KPIs are summed over months and get a row every month
+    #}
+    {% set last_month = (
+        "date_trunc(date_sub(date('" ~ ds() ~ "'), interval 1 month), month)"
+    ) %},
+    kpi_list as (
+        select
+            dimension_name,
+            kpi_name,
+            {% for attribute in kpi_attributes %}
+                any_value({{ attribute }}) as {{ attribute }},
+            {% endfor %}
+            logical_or(is_secret_applicable) as is_secret_applicable
+        from {{ kpis_cte }}
+        group by dimension_name, kpi_name
+    ),
+
+    territories as (
+        select distinct dimension_name, dimension_value
+        from {{ kpis_cte }}
+        where dimension_value is not null
+        union distinct
+        select geo_level.dimension_name, geo_level.dimension_value
+        from {{ ref("int_seed__geo_iris") }} as geo
+        cross join
+            unnest(
+                [
+                    struct(
+                        'COM' as dimension_name,
+                        geo.municipality_code as dimension_value
+                    ),
+                    struct('EPCI' as dimension_name, geo.epci_code as dimension_value),
+                    struct(
+                        'DEP' as dimension_name, geo.department_name as dimension_value
+                    ),
+                    struct('REG' as dimension_name, geo.region_name as dimension_value)
+                ]
+            ) as geo_level
+        where geo_level.dimension_value is not null
+    ),
+
+    existing_kpis as (
+        select distinct dimension_name, dimension_value, kpi_name from {{ kpis_cte }}
+    ),
+
+    national_only_kpis as (
+        select territory_levels.dimension_name, national_kpis.kpi_name
+        from (select distinct dimension_name from territories) as territory_levels
+        cross join
+            (
+                select kpi_name from kpi_list where dimension_name = 'NAT'
+            ) as national_kpis
+        left join
+            kpi_list
+            on territory_levels.dimension_name = kpi_list.dimension_name
+            and national_kpis.kpi_name = kpi_list.kpi_name
+        where territory_levels.dimension_name != 'NAT' and kpi_list.kpi_name is null
+    ),
+
+    filled_kpis as (
+        select *, false as is_national_only, false as is_missing_month
+        from {{ kpis_cte }}
+        union all
+        select
+            {{ last_month }} as partition_month,
+            timestamp('{{ ts() }}') as updated_at,
+            territories.dimension_name,
+            territories.dimension_value,
+            kpi_list.kpi_name,
+            0 as numerator,
+            0 as denominator,
+            0 as kpi
+            {% for column, expression in zero_row_columns.items() %}
+                , {{ expression }} as {{ column }}
+            {% endfor %}
+            {% for attribute in kpi_attributes %}
+                , kpi_list.{{ attribute }}
+            {% endfor %},
+            kpi_list.is_secret_applicable,
+            false as is_national_only,
+            false as is_missing_month
+        from territories
+        inner join kpi_list on territories.dimension_name = kpi_list.dimension_name
+        left join
+            existing_kpis
+            on territories.dimension_name = existing_kpis.dimension_name
+            and territories.dimension_value = existing_kpis.dimension_value
+            and kpi_list.kpi_name = existing_kpis.kpi_name
+        where
+            existing_kpis.kpi_name is null
+            -- national KPIs always exist, and are checked month over month
+            and territories.dimension_name != 'NAT'
+            {% if flow_attribute %}
+                -- KPIs with a national series get a row every month below
+                and kpi_list.{{ flow_attribute }} != 'flow'
+                and kpi_list.kpi_name
+                not in (select kpi_name from kpi_list where dimension_name = 'NAT')
+            {% endif %}
+        {% if flow_attribute %}
+            union all
+            select
+                national.partition_month,
+                national.updated_at,
+                territories.dimension_name,
+                territories.dimension_value,
+                national.kpi_name,
+                {% for column in ["numerator", "denominator", "kpi"] %}
+                    if(
+                        kpi_list.{{ flow_attribute }} != 'flow'
+                        and ever.kpi_name is not null,
+                        null,
+                        0
+                    ) as {{ column }}
+                    {% if not loop.last %},{% endif %}
+                {% endfor %}
+                {% for column in zero_row_columns.keys() %}
+                    , national.{{ column }}
+                {% endfor %}
+                {% for attribute in kpi_attributes %}
+                    , national.{{ attribute }}
+                {% endfor %},
+                kpi_list.is_secret_applicable,
+                false as is_national_only,
+                kpi_list.{{ flow_attribute }} != 'flow'
+                and ever.kpi_name is not null as is_missing_month
+            from {{ kpis_cte }} as national
+            inner join
+                kpi_list
+                on national.kpi_name = kpi_list.kpi_name
+                and kpi_list.dimension_name != 'NAT'
+            inner join
+                territories on kpi_list.dimension_name = territories.dimension_name
+            left join
+                {{ kpis_cte }} as existing
+                on national.partition_month = existing.partition_month
+                and national.kpi_name = existing.kpi_name
+                and territories.dimension_name = existing.dimension_name
+                and territories.dimension_value = existing.dimension_value
+            left join
+                existing_kpis as ever
+                on territories.dimension_name = ever.dimension_name
+                and territories.dimension_value = ever.dimension_value
+                and national.kpi_name = ever.kpi_name
+            where national.dimension_name = 'NAT' and existing.kpi_name is null
+        {% endif %}
+        union all
+        select
+            national.partition_month,
+            national.updated_at,
+            territories.dimension_name,
+            territories.dimension_value,
+            national.kpi_name,
+            null as numerator,
+            null as denominator,
+            null as kpi
+            {% for column in zero_row_columns.keys() %}
+                , national.{{ column }}
+            {% endfor %}
+            {% for attribute in kpi_attributes %}
+                , national.{{ attribute }}
+            {% endfor %},
+            false as is_secret_applicable,
+            true as is_national_only,
+            false as is_missing_month
+        from {{ kpis_cte }} as national
+        inner join national_only_kpis on national.kpi_name = national_only_kpis.kpi_name
+        inner join
+            territories
+            on national_only_kpis.dimension_name = territories.dimension_name
+        where national.dimension_name = 'NAT'
+    ),
+
+    national_values as (
+        select
+            partition_month,
+            kpi_name,
+            numerator as national_numerator,
+            denominator as national_denominator,
+            kpi as national_kpi
+        from {{ kpis_cte }}
+        where dimension_name = 'NAT'
+    ),
+
+    secret_source as (
+        {% for secret_model in secret_models %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
+            select
+                municipality_code,
+                epci_code,
+                department_label,
+                is_municipality_secret_stat,
+                is_epci_secret_stat,
+                is_department_secret_stat,
+                municipality_secret_reason_label,
+                epci_secret_reason_label,
+                department_secret_reason_label,
+                -- side and window of the rule, for secret_detail
+                format(
+                    '%s, %d mois',
+                    '{{ "collectif" if "collective" in secret_model else "individuel" }}',
+                    rolling_window_months_count
+                ) as secret_scope
+            from {{ ref(secret_model) }}
+            where
+                partition_month = {{ last_month }}
+                and rolling_window_months_count
+                in ({{ rolling_months_list | join(", ") }})
+        {% endfor %}
+    ),
+
+    secret_territories as (
+        select
+            dimension_name,
+            dimension_value,
+            logical_or(is_secret_stat) as is_secret_stat,
+            string_agg(
+                distinct if(
+                    is_secret_stat,
+                    concat(secret_reason_label, ' (', secret_scope, ')'),
+                    null
+                ),
+                ' ; '
+                order by
+                    if(
+                        is_secret_stat,
+                        concat(secret_reason_label, ' (', secret_scope, ')'),
+                        null
+                    )
+            ) as secret_detail
+        from
+            (
+                select
+                    'COM' as dimension_name,
+                    municipality_code as dimension_value,
+                    is_municipality_secret_stat as is_secret_stat,
+                    municipality_secret_reason_label as secret_reason_label,
+                    secret_scope
+                from secret_source
+                union all
+                select
+                    'EPCI' as dimension_name,
+                    epci_code as dimension_value,
+                    is_epci_secret_stat as is_secret_stat,
+                    epci_secret_reason_label as secret_reason_label,
+                    secret_scope
+                from secret_source
+                where epci_code is not null
+                union all
+                -- DEP dimension_value is the department name in external reporting
+                select
+                    'DEP' as dimension_name,
+                    department_label as dimension_value,
+                    is_department_secret_stat as is_secret_stat,
+                    department_secret_reason_label as secret_reason_label,
+                    secret_scope
+                from secret_source
+                where department_label is not null
+            )
+        group by dimension_name, dimension_value
+    ),
+
+    territory_labels as (
+        select
+            'EPCI' as dimension_name, epci_code as dimension_value, epci_label as label
+        from {{ ref("int_seed__geo_iris") }}
+        where epci_code is not null
+        qualify row_number() over (partition by epci_code order by epci_label) = 1
+        union all
+        select
+            'COM' as dimension_name,
+            municipality_code as dimension_value,
+            municipality_label as label
+        from {{ ref("int_seed__geo_iris") }}
+        where municipality_code is not null
+        qualify
+            row_number() over (
+                partition by municipality_code order by municipality_label
+            )
+            = 1
+    ),
+
+    low_count_kpis as (
+        {% set low_count_selects = [] %}
+        {% for low_count_model in low_count_models %}
+            {% do low_count_selects.append(
+                "select dimension_name, dimension_value, kpi_name from "
+                ~ ref(low_count_model)
+                ~ " where total_beneficiaries between 1 and min_beneficiaries - 1"
+            ) %}
+        {% endfor %}
+        {% for prefix in low_count_denominator_kpis %}
+            {% do low_count_selects.append(
+                "select dimension_name, dimension_value, kpi_name from "
+                ~ kpis_cte
+                ~ " where dimension_name != 'NAT' and starts_with(kpi_name, '"
+                ~ prefix
+                ~ "') and denominator between 1 and "
+                ~ (min_individuals - 1)
+                ~ " and partition_month >= date_sub("
+                ~ last_month
+                ~ ", interval 11 month)"
+            ) %}
+        {% endfor %}
+        {% if low_count_selects %}{{ low_count_selects | join("\n union distinct\n") }}
+        {% else %}
+            select
+                cast(null as string) as dimension_name,
+                cast(null as string) as dimension_value,
+                cast(null as string) as kpi_name
+            from unnest([1])
+            where false
+        {% endif %}
+    ),
+
+    flagged_kpis as (
+        select
+            filled_kpis.*,
+            filled_kpis.dimension_name != 'NAT'
+            and low_count_kpis.kpi_name is not null as is_low_count,
+            filled_kpis.is_secret_applicable
+            and coalesce(secret_territories.is_secret_stat, false) as is_secret_stat,
+            secret_territories.secret_detail as territory_secret_detail,
+            case
+                when filled_kpis.dimension_name in ('EPCI', 'COM')
+                then territory_labels.label
+                else filled_kpis.dimension_value
+            end as label,
+            case
+                when filled_kpis.dimension_name = 'NAT'
+                then 'Rapport National'
+                -- REG and ACAD are prefixed so that no intitule is shared by two
+                -- levels (Paris is a DEP and an ACAD, overseas a DEP and a REG)
+                when filled_kpis.dimension_name = 'REG'
+                then concat('Région ', filled_kpis.dimension_value)
+                when filled_kpis.dimension_name = 'ACAD'
+                then
+                    concat(
+                        if(
+                            regexp_contains(
+                                filled_kpis.dimension_value, r'^[AEIOUYÉÈÎaeiouyéèî]'
+                            ),
+                            "Académie d'",
+                            'Académie de '
+                        ),
+                        filled_kpis.dimension_value
+                    )
+                when filled_kpis.dimension_name in ('EPCI', 'COM')
+                then
+                    concat(
+                        territory_labels.label, ' (', filled_kpis.dimension_value, ')'
+                    )
+                else filled_kpis.dimension_value
+            end as intitule
+        from filled_kpis
+        left join
+            secret_territories
+            on filled_kpis.dimension_name = secret_territories.dimension_name
+            and filled_kpis.dimension_value = secret_territories.dimension_value
+        left join
+            territory_labels
+            on filled_kpis.dimension_name = territory_labels.dimension_name
+            and filled_kpis.dimension_value = territory_labels.dimension_value
+        left join
+            low_count_kpis
+            on filled_kpis.dimension_name = low_count_kpis.dimension_name
+            and filled_kpis.dimension_value = low_count_kpis.dimension_value
+            and filled_kpis.kpi_name = low_count_kpis.kpi_name
+    )
+
+    select
+        flagged_kpis.* except (
+            numerator,
+            denominator,
+            kpi,
+            is_secret_applicable,
+            is_national_only,
+            is_missing_month,
+            is_secret_stat,
+            is_low_count,
+            territory_secret_detail,
+            label,
+            intitule
+        ),
+        flagged_kpis.label,
+        flagged_kpis.intitule,
+        if(
+            flagged_kpis.is_secret_stat
+            or flagged_kpis.is_low_count
+            or flagged_kpis.is_national_only
+            or flagged_kpis.is_missing_month,
+            null,
+            coalesce(flagged_kpis.numerator, 0)
+        ) as numerator,
+        if(
+            flagged_kpis.is_secret_stat
+            or flagged_kpis.is_low_count
+            or flagged_kpis.is_national_only
+            or flagged_kpis.is_missing_month,
+            null,
+            coalesce(flagged_kpis.denominator, 0)
+        ) as denominator,
+        if(
+            flagged_kpis.is_secret_stat
+            or flagged_kpis.is_low_count
+            or flagged_kpis.is_national_only
+            or flagged_kpis.is_missing_month,
+            null,
+            coalesce(flagged_kpis.kpi, 0)
+        ) as kpi,
+        national_values.national_numerator,
+        national_values.national_denominator,
+        national_values.national_kpi,
+        flagged_kpis.is_secret_stat,
+        flagged_kpis.is_low_count,
+        flagged_kpis.is_national_only,
+        flagged_kpis.is_missing_month,
+        -- a single message whatever the rule, so that reports do not disclose the
+        -- size of the population behind a masked KPI
+        if(
+            flagged_kpis.is_secret_stat or flagged_kpis.is_low_count,
+            'Données non disponibles (secret statistique)',
+            null
+        ) as secret_reason,
+        -- internal: the rule behind the mask, not to be published
+        case
+            when flagged_kpis.is_secret_stat
+            then flagged_kpis.territory_secret_detail
+            when flagged_kpis.is_low_count
+            then
+                'Moins de 5 bénéficiaires derrière ce KPI (20 pour la répartition par catégorie)'
+        end as secret_detail,
+        date_diff(
+            {{ external_reporting_last_month() }}, flagged_kpis.partition_month, month
+        ) as months_ago,
+        mod(
+            extract(month from flagged_kpis.partition_month) + 3, 12
+        ) as scholar_year_month
+    from flagged_kpis
+    left join
+        national_values
+        on flagged_kpis.partition_month = national_values.partition_month
+        and flagged_kpis.kpi_name = national_values.kpi_name
+{% endmacro %}

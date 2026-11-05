@@ -21,6 +21,9 @@ with
             method,
             search_mode,
             nb_results as total_results,
+            event_name,
+            event_origin,
+            event_type,
             case
                 when message like 'HTTP request%'
                 then
@@ -28,7 +31,7 @@ with
                         regexp_replace(message, r'HTTP request at /', ''), r'/\d+', ''
                     )
                 else message
-            end as message,
+            end as message,  -- noqa: RF04
             coalesce(search_sub_type, lower(search_pro_type)) as search_protype,
             case
                 when search_query like '%@%' then 'xxx@xxx.com' else search_query
@@ -98,9 +101,15 @@ select
     ),
     ref.log_name,
     to_hex(
-        md5(concat(cast(session_start as string), user_id, session_num))
+        md5(
+            concat(
+                cast(generate_session.session_start as string),
+                generate_session.user_id,
+                generate_session.session_num
+            )
+        )
     ) as session_id
 from generate_session
 left join
-    {{ source("seed", "backoffice_log_reference") }} as ref
+    {{ ref("int_gsheet__backoffice_log_reference") }} as ref
     on generate_session.message = ref.log_extract

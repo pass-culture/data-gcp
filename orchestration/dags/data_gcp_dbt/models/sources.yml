@@ -19,6 +19,7 @@ sources:
         pc-data-stg
       {%- endif -%}
     tables:
+      - name: gsheet_backoffice_log_reference
       - name: gsheet_company_contact
       - name: gsheet_eac_webinar
       - name: gsheet_educational_institution_student_headcount
@@ -136,7 +137,6 @@ sources:
       - name: applicative_database_pricing
       - name: applicative_database_pricing_line
       - name: applicative_database_pricing_log
-      - name: applicative_database_pro_advice
       - name: applicative_database_product
       - name: applicative_database_product_artist_link
       - name: applicative_database_product_mediation
@@ -182,6 +182,7 @@ sources:
       - name: metabase_collection_taxonomy
       - name: metabase_collection
       - name: metabase_core_user
+      - name: metabase_document
       - name: metabase_query_execution
       - name: metabase_report_card
       - name: metabase_report_dashboard
@@ -213,8 +214,8 @@ sources:
       - name: zendesk_ticket
       - name: zendesk_survey_response
       - name: raw_titelive_products
-  - name: clean
-    schema: clean_{{ var('ENV_SHORT_NAME') }}
+  - name: history
+    schema: history_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: applicative_database_booking_history
@@ -258,7 +259,6 @@ sources:
       - name: region_department
       - name: siren_main_business_labels
       - name: siren_legal_category_labels
-      - name : backoffice_log_reference
       - name: qpi_answers_v1
         external:
           location: "gs://de-bigquery-data-archive-{{var('ENV_SHORT_NAME')}}/archive/2024/08/raw_{{var('ENV_SHORT_NAME')}}/qpi_answers_v1.jsonl"

@@ -265,38 +265,79 @@ with
         {% endfor %}
     ),
 
+    -- amount engaged by the schools of the territory since the start of the
+    -- scholar year, same source as total_montant_engage_etablissements
+    institution_engaged_amount as (
+        {% for dim in get_dimensions("institution", "academic_extended") %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
+            select
+                partition_month,
+                scholar_year,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.value_expr }} as dimension_value,
+                sum(
+                    cumulative_total_collective_amount_spent
+                ) as cumulative_amount_engaged
+            from {{ ref("metrics_booking__collective_institution") }}
+            group by partition_month, scholar_year, dimension_name, dimension_value
+        {% endfor %}
+    ),
+
+    -- every month of each scholar year up to the last complete month, so that
+    -- the rate exists (at 0) before the first booking of the year
+    scholar_year_months as (
+        select ey.scholar_year, partition_month
+        from {{ source("raw", "applicative_database_educational_year") }} as ey
+        cross join
+            unnest(
+                generate_date_array(
+                    date_trunc(date(ey.educational_year_beginning_date), month),
+                    least(
+                        date_trunc(date(ey.educational_year_expiration_date), month),
+                        date_trunc(
+                            date_sub(date("{{ ds() }}"), interval 1 month), month
+                        )
+                    ),
+                    interval 1 month
+                )
+            ) as partition_month
+    ),
+
+    -- KPI 1 : Taux d'utilisation (montant engagé / crédit de l'année scolaire)
+    credit_usage_rate as (
+        select
+            sym.partition_month,
+            timestamp("{{ ts() }}") as updated_at,
+            bg.dimension_name,
+            bg.dimension_value,
+            'taux_d_utilisation_du_credit' as kpi_name,
+            coalesce(iea.cumulative_amount_engaged, 0) as numerator,
+            bg.total_budget_deposit as denominator,
+            safe_divide(
+                coalesce(iea.cumulative_amount_engaged, 0), bg.total_budget_deposit
+            ) as kpi
+        from budget_by_geo as bg
+        inner join scholar_year_months as sym on bg.scholar_year = sym.scholar_year
+        left join
+            institution_engaged_amount as iea
+            on bg.dimension_name = iea.dimension_name
+            and bg.dimension_value = iea.dimension_value
+            and bg.scholar_year = iea.scholar_year
+            and sym.partition_month = iea.partition_month
+        {% if is_incremental() %}
+            where
+                sym.partition_month
+                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+        {% endif %}
+    ),
+
     aggregation_by_scholar_year as (
         {% for dim in dimensions %}
             {% if not loop.first %}
                 union all
             {% endif %}
-
-            -- KPI 1 : Taux d'utilisation
-            select
-                ca.partition_month,
-                timestamp("{{ ts() }}") as updated_at,
-                '{{ dim.name }}' as dimension_name,
-                bg.dimension_value,
-                'taux_d_utilisation_du_credit' as kpi_name,
-                coalesce(ca.sum_cum_spent, 0) as numerator,
-                bg.total_budget_deposit as denominator,
-                safe_divide(
-                    coalesce(ca.sum_cum_spent, 0), bg.total_budget_deposit
-                ) as kpi
-            from budget_by_geo as bg
-            left join
-                dim_consumption_agg as ca
-                on bg.dimension_name = ca.dimension_name
-                and bg.dimension_value = ca.dimension_value
-                and bg.scholar_year = ca.scholar_year
-            where
-                bg.dimension_name = '{{ dim.name }}'
-                {% if is_incremental() %}
-                    and ca.partition_month
-                    = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-                {% endif %}
-
-            union all
 
             -- KPI 2 & 3 : Basés sur la consommation
             select
@@ -346,5 +387,12 @@ select
     numerator,
     denominator,
     kpi
-from aggregation_by_scholar_year
+from
+    (
+        select *
+        from credit_usage_rate
+        union all
+        select *
+        from aggregation_by_scholar_year
+    )
 where partition_month is not null and dimension_value is not null

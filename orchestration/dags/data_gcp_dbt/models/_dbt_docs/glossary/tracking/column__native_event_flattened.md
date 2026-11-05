@@ -38,7 +38,7 @@
 
 {% docs column__native_event_flattened_home_entry_id %}Contentful entry identifier of the home on which the event happened, sent on home events such as 'ConsultHome', 'ModuleDisplayedOnHomePage' or 'SeeAllClicked'.{% enddocs %}
 
-{% docs column__native_event_flattened_step %}On 'CancelBookingFunnel', the booking modal step the user closed. Stored values, in modal order: 'Date', 'Horaire', 'Prix', 'Nombre de places', 'Confirmation'.{% enddocs %}
+{% docs column__native_event_flattened_step %} Funnel step parameter. On 'CancelBookingFunnel', the booking modal step the user closed; the signup and identity-check funnel events carry their own step names in the same column. {% enddocs %}
 
 {% docs column__native_event_flattened_search_genre_types %}On 'PerformSearch', the genre filters selected (e.g. book or music genres), as a JSON array in a string.{% enddocs %}
 
@@ -104,7 +104,7 @@
 
 {% docs column__native_event_flattened_social %}On 'Share', the social network or share channel chosen by the user ('Other' when not listed).{% enddocs %}
 
-{% docs column__native_event_flattened_search_view %}On 'PerformSearch', the search screen the search was made from, e.g. 'SearchLanding', 'SearchResults', 'SearchMap', 'ThematicSearch'.{% enddocs %}
+{% docs column__native_event_flattened_search_view %} On 'PerformSearch', the search screen the search was made from. {% enddocs %}
 
 {% docs column__native_event_flattened_duration %}On 'VenueMapSeenDuration' and 'VenueMapSessionDuration', the time spent on the venue map, in seconds (as a string).{% enddocs %}
 
@@ -132,7 +132,7 @@
 
 {% docs column__native_event_flattened_items_0 %}On 'ViewItem', the first chunk of the displayed items, as 'position:item_id' pairs separated by commas (100 characters at most; position -1 when unknown). Only this first chunk is extracted: the items sent in the following chunks (`items_1`, ...) are not in this table.{% enddocs %}
 
-{% docs column__native_event_flattened_item_type %}On 'ViewItem', the type of the displayed items: 'offer', 'venue', 'artist' or 'unknown'.{% enddocs %}
+{% docs column__native_event_flattened_item_type %} On 'ViewItem', the type of the displayed items. {% enddocs %}
 
 {% docs column__native_event_flattened_theme_setting %}On 'UpdateAppTheme' and 'AppThemeStatus', the theme chosen in the app settings (e.g. 'light', 'dark').{% enddocs %}
 

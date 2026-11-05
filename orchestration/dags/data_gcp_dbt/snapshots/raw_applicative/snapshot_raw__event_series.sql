@@ -6,8 +6,7 @@
                 strategy="timestamp",
                 unique_key="event_series_id",
                 updated_at="modified_at",
-                hard_deletes="invalidate"
-
+                hard_deletes="invalidate",
             )
         )
     }}

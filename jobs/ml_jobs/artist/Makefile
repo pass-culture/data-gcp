@@ -1,2 +1,2 @@
 test:
-	PYTHONPATH=. uv run pytest tests
+	PYTHONPATH=. uv run --all-extras pytest tests

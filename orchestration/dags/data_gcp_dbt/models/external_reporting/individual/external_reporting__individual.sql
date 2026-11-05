@@ -1,47 +1,29 @@
 {{
     config(
-        **custom_incremental_config(
-            incremental_strategy="insert_overwrite",
-            partition_by={"field": "partition_month", "data_type": "date"},
-            on_schema_change="append_new_columns",
-            cluster_by=["dimension_name", "dimension_value", "kpi_name"],
-        )
+        materialized="table",
+        partition_by={"field": "partition_month", "data_type": "date"},
+        cluster_by=["dimension_name", "intitule", "kpi_name"],
     )
 }}
 
+{# Statistical secret, zero rows, national values and labels applied to the KPI rows
+   of external_reporting__individual_kpis (see that model for the segments). #}
+with
+    kpis as (select * from {{ ref("external_reporting__individual_kpis") }})
 
-{% set models = [
-    "beneficiary",
-    "coverage",
-    "cultural_partner",
-    "deposit_usage",
-    "diversity",
-    "finance",
-    "booking",
-] %}
-
-{% for model in models %}
-    {% if not loop.first %}
-        union all
-    {% endif %}
-    select
-        partition_month,
-        updated_at,
-        dimension_name,
-        dimension_value,
-        kpi_name,
-        coalesce(numerator, 0) as numerator,
-        coalesce(denominator, 0) as denominator,
-        coalesce(kpi, 0) as kpi
-    from {{ ref("external_reporting__" ~ model) }}
-    where
-        1 = 1
-        {% if is_incremental() %}
-            and partition_month
-            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-        {% else %}
-            and partition_month
-            <= date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-            and partition_month >= date("2022-01-01")
-        {% endif %}
-{% endfor %}
+    {{
+        apply_statistical_secret(
+            kpis_cte="kpis",
+            secret_models=[
+                "statistical_secret__cultural_partner_individual",
+                "statistical_secret__cultural_partner_collective",
+            ],
+            low_count_models=["external_reporting__beneficiary_booking_bookers"],
+            low_count_denominator_kpis=[
+                "montant_moyen_",
+                "pct_beneficiaires_ayant_reserve_",
+            ],
+            kpi_attributes=["aggregation"],
+            flow_attribute="aggregation",
+        )
+    }}

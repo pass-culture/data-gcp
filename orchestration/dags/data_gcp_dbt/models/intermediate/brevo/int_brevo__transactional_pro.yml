@@ -3,15 +3,27 @@ version: 2
 models:
   - name: int_brevo__transactional_pro
     description: "{{ doc('description__int_brevo__transactional_pro') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - brevo_tag
+            - brevo_template_id
+            - email_id
+            - offerer_id
+            - event_date
     columns:
-      - name: tag
+      - name: brevo_tag
         description: "{{ doc('column__brevo_tag') }}"
-      - name: template
+      - name: brevo_template_id
         description: "{{ doc('column__brevo_template_id') }}"
+      - name: target
+        description: "{{ doc('column__brevo_target') }}"
       - name: email_id
         description: "{{ doc('column__brevo_email_id') }}"
-      - name: venue_id
-        description: "{{ doc('column__venue_id') }}"
+      - name: offerer_id
+        description: "{{ doc('column__offerer_id') }}"
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
       - name: event_date
         description: "{{ doc('column__event_date') }}"
       - name: total_delivered

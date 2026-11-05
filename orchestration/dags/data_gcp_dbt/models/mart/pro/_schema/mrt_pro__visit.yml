@@ -12,6 +12,11 @@ models:
         description: "{{ doc('column__session_id') }}"
       - name: unique_session_id
         description: "{{ doc('column__unique_session_id') }}"
+        data_tests:
+          - unique:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                where: "first_event_date > date_sub('{{ var('ds', modules.datetime.date.today().strftime('%Y-%m-%d')) }}', interval 14 day)"
       - name: session_number
         description: "{{ doc('column__session_number') }}"
       - name: first_event_date

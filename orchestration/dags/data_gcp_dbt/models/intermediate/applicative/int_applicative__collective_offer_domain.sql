@@ -5,7 +5,9 @@ left join
     on cod.educational_domain_id = ed.educational_domain_id
 union all
 select
-    cotd.collective_offer_template_id as collective_offer_id,
+    -- same "template-" prefix as int_applicative__collective_offer: template ids
+    -- share the id space of offer ids, so a bare id collides with a real offer
+    concat("template-", cotd.collective_offer_template_id) as collective_offer_id,
     cotd.educational_domain_id,
     ed.educational_domain_name
 from

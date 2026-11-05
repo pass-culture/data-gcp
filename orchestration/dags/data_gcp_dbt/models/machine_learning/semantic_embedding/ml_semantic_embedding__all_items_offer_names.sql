@@ -22,12 +22,16 @@
             meta={
                 "external_dag_id": "item_embedding",
                 "external_task_id": "all_items_offer_names.load_all_items_offer_names",
-                "external_dependency_on_skip": "skip",
+                "external_dependency_extra_params": {
+                    "soft_fail": True,
+                    "offset_hours": -6,
+                    "poke_interval": 600,
+                },
             },
         )
     )
 }}
-
+{# item_embedding starts at 4 am (prod and  7am stg) while dbt dag runs at 2:45 am so we use a negative offset of few hours to point the delayed sensor at the correct dagrun (from 6 hours after the dbt dag run  within the previous 24 hours) #}
 select
     aion.item_id,
     aion.content_hash,

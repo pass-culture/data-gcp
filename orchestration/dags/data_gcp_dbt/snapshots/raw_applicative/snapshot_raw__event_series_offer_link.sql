@@ -5,8 +5,7 @@
                 strategy="timestamp",
                 unique_key="event_series_offer_link_id",
                 updated_at="modified_at",
-                hard_deletes="invalidate"
-
+                hard_deletes="invalidate",
             )
         )
     }}

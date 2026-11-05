@@ -144,6 +144,3 @@ models:
       - name: offerer_is_epn
         description: "{{ doc('column__offerer_is_epn') }}"
         data_type: BOOLEAN
-      - name: offerer_validation_status
-        description: '{{ doc("column__offerer_validation_status") }}'
-        data_type: STRING

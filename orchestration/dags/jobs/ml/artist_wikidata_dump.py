@@ -143,7 +143,7 @@ with DAG(
             task_id="fetch_install_code",
             instance_name=GCE_INSTANCE,
             branch="{{ params.branch }}",
-            python_version="3.10",
+            python_version="3.11",
             base_dir=BASE_DIR,
             # Empty group (see pyproject.toml): extract_from_wikidata.py's whole call
             # chain only needs base deps. Passed explicitly for demonstration

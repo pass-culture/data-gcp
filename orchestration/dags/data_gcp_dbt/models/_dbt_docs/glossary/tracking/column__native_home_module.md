@@ -22,6 +22,7 @@
 {% docs column__parent_home_type %}The type of home associated with the parent entry.{% enddocs %}
 {% docs column__playlist_type %}The type of playlist associated with the entry.{% enddocs %}
 {% docs column__playlist_reach %}The reach of the playlist associated with the entry.{% enddocs %}
+{% docs column__playlist_offer_category %} Offer category tags of the playlist module, from its Contentful tags: editorial tags of their own, not offer_category_id codes. A module with several tags carries them joined by ' , '. NULL when the module has no such tag. {% enddocs %}
 {% docs column__playlist_recurrence %}The recurrence pattern of the playlist.{% enddocs %}
 {% docs column__displayed_position %}The position at which the offer was displayed on the home screen.{% enddocs %}
 {% docs column__offer_display_order %}The display order (0-based index) of the offer within its recommendation playlist.{% enddocs %}

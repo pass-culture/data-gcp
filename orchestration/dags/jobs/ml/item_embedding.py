@@ -34,7 +34,7 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from jobs.crons import SCHEDULE_DICT
 
@@ -55,6 +55,18 @@ class VectorPipeline(BaseModel):
     name: str  # embedding vector name
     input_table: str  # dataset.table (dbt input model)
     output_table: str  # dataset.table base; each run appends ``_<ts_nodash>``
+    input_dbt_model: str = ""  # derived from input_table in __post_init
+
+    @model_validator(mode="after")
+    def _set_input_dbt_model(self) -> "VectorPipeline":
+        """Derive the dbt model name from input_table: the env-suffixed dataset
+        (e.g. ``ml_input_{ENV_SHORT_NAME}``) loses its suffix and is joined to
+        the table name with ``__``, matching dbt's model naming convention
+        (e.g. ``ml_input__all_items_metadata_to_embed``).
+        """
+        dataset, table = self.input_table.split(".")
+        self.input_dbt_model = f"{dataset.removesuffix(f'_{ENV_SHORT_NAME}')}__{table}"
+        return self
 
 
 # List of all the vectors this DAG can run. Add a vector by creating its dbt input model + a

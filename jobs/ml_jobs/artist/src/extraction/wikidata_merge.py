@@ -99,6 +99,8 @@ def postprocess_data(df: pd.DataFrame) -> pd.DataFrame:
             raw_alias=lambda df: df.alias,
             alias=lambda df: df.alias.pipe(normalize_string_series),
         )
+        # Also drops people found only by `gkg` (IDs-only target, no labels or
+        # aliases): intended, see the "gkg" entry in wikidata_config.QUERY_CONFIGS.
         .loc[
             lambda df: (df.alias.notna())
             & (df.alias != "")

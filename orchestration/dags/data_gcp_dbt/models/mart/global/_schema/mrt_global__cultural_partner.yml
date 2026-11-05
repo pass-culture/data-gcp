@@ -9,7 +9,7 @@ models:
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
       - name: partner_id
-        description: "{{ doc('column__partner_id') }}"
+        description: "{{ doc('column__cultural_partner_partner_id') }}"
       - name: partner_creation_date
         description: "{{ doc('column__partner_creation_date') }}"
       - name: was_registered_last_year

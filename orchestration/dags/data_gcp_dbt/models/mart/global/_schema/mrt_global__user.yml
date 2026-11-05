@@ -43,7 +43,7 @@ models:
         description: '{{ doc("column__user_is_active") }}'
         data_type: BOOLEAN
       - name: user_role
-        description: '{{ doc("column__user_role") }}'
+        description: '{{ doc("column__global_user_role") }}'
         data_type: STRING
       - name: user_is_email_validated
         description: '{{ doc("column__user_is_email_validated") }}'

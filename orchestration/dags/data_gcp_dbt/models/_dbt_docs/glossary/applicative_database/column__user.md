@@ -17,8 +17,8 @@
 {% docs column__user_humanized_id %} Human-readable identifier for the user. {% enddocs %}
 {% docs column__user_id %} Unique identifier for a user. {% enddocs %}
 {% docs column__user_iris_internal_id %} Internal IRIS identifier associated with the user's registered address. IRIS (Ilots Regroupés pour l'Information Statistique) are small, standardized geographic units used for detailed statistical analysis in France. {% enddocs %}
-{% docs column__user_is_active %} Boolean. Indicates if the user's account is currently active (the user can access it, irrespective of grant status). {% enddocs %}
-{% docs column__user_is_current_beneficiary %} Boolean. TRUE when the user still has usable credit: their last deposit has not expired, it is not fully spent, and the account is active. {% enddocs %}
+{% docs column__user_is_active %} Boolean. Indicates if the user's account is currently active (the user can access it, irrespective of grant status). An active account is not necessarily a current beneficiary: its credit can be expired or spent. {% enddocs %}
+{% docs column__user_is_current_beneficiary %} Boolean. TRUE when the user still has usable credit: their last deposit has not expired, the amount of its used bookings is below the deposit amount, and the account is active. {% enddocs %}
 {% docs column__user_is_in_education %} Boolean. Indicates if the user is in education, based on their registered activity. According to the INSEE, a user is considered to be in education if they fall under one of the following categories: Middle school student (Collégien), High school student (Lycéen), University student (Étudiant), Apprentice (Apprenti), Work-study student (Alternant). {% enddocs %}
 {% docs column__user_is_in_qpv %} Boolean. TRUE when the user's geocoded address falls inside a priority neighbourhood (QPV). Membership is computed on the geocoded address, not derived from the IRIS: one IRIS can mix addresses in and out of QPVs. {% enddocs %}
 {% docs column__user_is_priority_public %} Boolean. Indicates if the user considered as a pass Culture priority public (users that are either residing in a rural area, in a QPV or are not in education). {% enddocs %}
@@ -28,10 +28,11 @@
 {% docs column__user_region_name %} Region name of the user's registered address. {% enddocs %}
 {% docs column__user_school_type %} Type of school the user is enrolled in: Centre de formation apprentis, Collège privé, Collège public, Lycée agricole, Lycée maritime, Lycée militaire, Lycée privé, Lycée public, À domicile (CNED, institut de santé, etc.). {% enddocs %}
 {% docs column__user_seniority %} Days between user account creation date and current date. {% enddocs %}
-{% docs column__user_suspension_reason %} Reason for the user's suspension. Possible values include: end of eligibility – The user no longer meets the criteria to be eligible for a deposit; fraud suspicion – Suspicious activity detected, requiring investigation; hacking fraud – Confirmed or suspected account compromise; upon user request – The user has explicitly requested the suspension or deletion of their account. {% enddocs %}
+{% docs column__user_suspension_reason %} Reason for the user's suspension. Possible values include: end of eligibility – The user no longer meets the criteria to be eligible for a deposit; fraud suspicion – Suspicious activity detected, requiring investigation; hacking fraud – Confirmed or suspected account compromise; upon user request – The user has explicitly requested the suspension or deletion of their account. NULL when no suspension reason is recorded. {% enddocs %}
 {% docs column__user_has_enabled_marketing_email %} Indicates if the user has accepted to receive marketing emails. {% enddocs %}
 {% docs column__user_has_enabled_marketing_push %} Indicates if the user has accepted to received marketing push. {% enddocs %}
-{% docs column__user_role %} Role assigned to the user (GRANT_18, GRANT_15_17, PRO, ADMIN). {% enddocs %}
+{% docs column__user_role %} Role assigned to the user account in the source application. {% enddocs %}
+{% docs column__global_user_role %} Role assigned to the user account. Pro and admin accounts are excluded from this table, so only beneficiary roles remain; NULL for general public users (no role). {% enddocs %}
 {% docs column__user_address %} User's registered address. Registered at first grant deposit and updated when the user applies for its GRANT_18. {% enddocs %}
 {% docs column__user_last_connection_date %} Date of the user's last connection. {% enddocs %}
 {% docs column__user_is_email_validated %} Boolean. Indicates if the user's email is validated. {% enddocs %}
@@ -63,7 +64,7 @@
 {% docs column__user_address_latitude %} Latitude of the user's registered address. {% enddocs %}
 {% docs column__user_address_longitude %} Longitude of the user's registered address. {% enddocs %}
 {% docs column__user_address_raw %} Raw address of the user's registered address. {% enddocs %}
-{% docs column__user_category %} User category derived from the user's role and age. Possible values include: '15-16' (users aged 15 or 16 with no specific role), 'general_public' (users aged 14 or under, or 17 and above, with no specific role), or 'beneficiary' (for users with a non-null role). {% enddocs %}
+{% docs column__user_category %} User category derived from the user's role and age: the user's role when the user has one; otherwise an age bracket, separating users aged 15 or 16 from the other users without a role. NULL when the user has neither a role nor a known age. {% enddocs %}
 {% docs column__user_action_type %} Type of action that triggered the user information record. Possible values: INFO_MODIFIED (user modified their profile), PROFILE_COMPLETION (initial profile completion during registration). {% enddocs %}
 {% docs column__user_previous_activity %} User's activity status before the current change. {% enddocs %}
 {% docs column__user_previous_address %} User's address before the current change. {% enddocs %}

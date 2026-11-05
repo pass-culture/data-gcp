@@ -3,7 +3,25 @@ version: 2
 models:
   - name: int_global__native_daily_item_viewed
     description: >-
-      Daily item views ('ViewItem') in the native app: number of distinct logged-in users who saw each item (offer, venue, artist) per day, channel, module, home and playlist tags and user role and age, split by display-position bucket.
+      Daily item views ('ViewItem') in the native app: number of distinct logged-in users who saw each item (offer, venue, artist) per day, channel, marketing source, medium and campaign, module, home and playlist tags and user role and age, split by display-position bucket. One row per (event_date, origin, traffic_source, traffic_medium, traffic_campaign, module_id, home_entry_id, item_type, viewed_item_id, user_role, user_age); the home and playlist tag columns depend on home_entry_id and module_id.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - event_date
+              - origin
+              - traffic_source
+              - traffic_medium
+              - traffic_campaign
+              - module_id
+              - home_entry_id
+              - item_type
+              - viewed_item_id
+              - user_role
+              - user_age
+          config:
+            severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+            where: "event_date > date_sub('{{ var('ds', modules.datetime.date.today().strftime('%Y-%m-%d')) }}', interval 14 day)"
     columns:
       - name: event_date
         description: '{{ doc("column__native_daily_item_viewed_event_date") }}'

@@ -1,39 +1,41 @@
+from google.genai.types import SafetySettingDict, ThinkingConfigDict
 from pydantic import BaseModel, Field
-from pydantic_ai.models.gemini import GeminiSafetySettings, ThinkingConfig
 from pydantic_ai.models.google import GoogleModel, GoogleModelSettings
-from pydantic_ai.providers.google import GoogleProvider
+from pydantic_ai.providers.google_cloud import GoogleCloudProvider
 
 # Model Config
 GEMINI_MODEL_NAME = "gemini-2.5-flash"
-LLM_MODEL = GoogleModel(GEMINI_MODEL_NAME, provider=GoogleProvider(vertexai=True))
+LLM_MODEL = GoogleModel(GEMINI_MODEL_NAME, provider=GoogleCloudProvider())
 MAX_CONCURRENT_LLM_REQUESTS = 10
 MAX_CHARS = 500
 MAX_RETRIES = 5
 MAX_TIMEOUT_SECONDS = 60
 LLM_SETTINGS = GoogleModelSettings(
-    google_thinking_config=ThinkingConfig(include_thoughts=False, thinking_budget=0),
+    google_thinking_config=ThinkingConfigDict(
+        include_thoughts=False, thinking_budget=0
+    ),
     google_safety_settings=[
-        GeminiSafetySettings(
+        SafetySettingDict(
             category="HARM_CATEGORY_UNSPECIFIED",
             threshold="BLOCK_LOW_AND_ABOVE",
         ),
-        GeminiSafetySettings(
+        SafetySettingDict(
             category="HARM_CATEGORY_HARASSMENT",
             threshold="BLOCK_LOW_AND_ABOVE",
         ),
-        GeminiSafetySettings(
+        SafetySettingDict(
             category="HARM_CATEGORY_HATE_SPEECH",
             threshold="BLOCK_LOW_AND_ABOVE",
         ),
-        GeminiSafetySettings(
+        SafetySettingDict(
             category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
             threshold="BLOCK_LOW_AND_ABOVE",
         ),
-        GeminiSafetySettings(
+        SafetySettingDict(
             category="HARM_CATEGORY_DANGEROUS_CONTENT",
             threshold="BLOCK_LOW_AND_ABOVE",
         ),
-        GeminiSafetySettings(
+        SafetySettingDict(
             category="HARM_CATEGORY_CIVIC_INTEGRITY",
             threshold="BLOCK_LOW_AND_ABOVE",
         ),

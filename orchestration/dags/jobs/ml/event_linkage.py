@@ -217,7 +217,6 @@ with DAG(
             provisioning_model="{{ params.provisioning_model }}",
             max_run_duration="{{ params.max_run_duration }}",
             request_valid_for_duration="{{ params.request_valid_for_duration }}",
-            reservation_name="{{ params.reservation_name }}",
             execution_timeout=timedelta(hours=3),
             retries=3,
         )

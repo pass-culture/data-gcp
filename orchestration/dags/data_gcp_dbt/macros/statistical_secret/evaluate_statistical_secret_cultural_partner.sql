@@ -206,6 +206,10 @@
                     coalesce(
                         dept.primary_secret_reason_code, 'no_revenue'
                     ) as department_secret_reason_code_primary,
+                    (
+                        coalesce(dept.total_active_partners_count, 0) > 0
+                        or coalesce(dept.total_revenue_amount, 0) > 0
+                    ) as has_department_activity,
 
                     -- EPCI
                     epci.total_active_partners_count
@@ -216,6 +220,10 @@
                     coalesce(
                         epci.primary_secret_reason_code, 'no_revenue'
                     ) as epci_secret_reason_code_primary,
+                    (
+                        coalesce(epci.total_active_partners_count, 0) > 0
+                        or coalesce(epci.total_revenue_amount, 0) > 0
+                    ) as has_epci_activity,
 
                     -- Commune
                     muni.total_active_partners_count
@@ -230,7 +238,11 @@
                     ) as is_municipality_secret_primary,
                     coalesce(
                         muni.primary_secret_reason_code, 'no_revenue'
-                    ) as municipality_secret_reason_code_primary
+                    ) as municipality_secret_reason_code_primary,
+                    (
+                        coalesce(muni.total_active_partners_count, 0) > 0
+                        or coalesce(muni.total_revenue_amount, 0) > 0
+                    ) as has_municipality_activity
 
                 from calendar_months as months
                 cross join geo_labels as geo
@@ -264,7 +276,9 @@
                     -- 1. Secret secondaire Commune (au sein de l'EPCI parent)
                     count(
                         distinct case
-                            when pivot.is_municipality_secret_primary is true
+                            when
+                                pivot.is_municipality_secret_primary is true
+                                and pivot.has_municipality_activity is true
                             then pivot.municipality_code
                         end
                     ) over (partition by pivot.partition_month, pivot.epci_code)
@@ -274,6 +288,7 @@
                         partition by
                             pivot.partition_month,
                             pivot.epci_code,
+                            pivot.has_municipality_activity,
                             pivot.is_municipality_secret_primary
                         order by
                             pivot.total_revenue_amount_municipality asc,
@@ -283,7 +298,9 @@
                     -- 2. Secret secondaire EPCI (au sein du Département parent)
                     count(
                         distinct case
-                            when pivot.is_epci_secret_primary is true
+                            when
+                                pivot.is_epci_secret_primary is true
+                                and pivot.has_epci_activity is true
                             then pivot.epci_code
                         end
                     ) over (partition by pivot.partition_month, pivot.department_code)
@@ -293,6 +310,7 @@
                         partition by
                             pivot.partition_month,
                             pivot.department_code,
+                            pivot.has_epci_activity,
                             pivot.is_epci_secret_primary
                         order by
                             pivot.total_revenue_amount_epci asc, pivot.epci_code asc
@@ -301,7 +319,9 @@
                     -- 3. Secret secondaire Département (au niveau National parent)
                     count(
                         distinct case
-                            when pivot.is_department_secret_primary is true
+                            when
+                                pivot.is_department_secret_primary is true
+                                and pivot.has_department_activity is true
                             then pivot.department_code
                         end
                     ) over (partition by pivot.partition_month)
@@ -309,7 +329,9 @@
 
                     dense_rank() over (
                         partition by
-                            pivot.partition_month, pivot.is_department_secret_primary
+                            pivot.partition_month,
+                            pivot.has_department_activity,
+                            pivot.is_department_secret_primary
                         order by
                             pivot.total_revenue_amount_department asc,
                             pivot.department_code asc
@@ -340,6 +362,9 @@
                     total_active_partners_count_municipality,
                     max_partner_revenue_share_municipality,
                     total_revenue_amount_municipality,
+                    has_department_activity,
+                    has_epci_activity,
+                    has_municipality_activity,
 
                     -- Évaluation Département (Secret secondaire au niveau National)
                     (
@@ -347,6 +372,7 @@
                         or (
                             primary_secret_departments_in_national_count = 1
                             and department_revenue_rank_in_national = 1
+                            and has_department_activity is true
                         )
                     ) as is_department_secret,
 
@@ -356,6 +382,7 @@
                         when
                             primary_secret_departments_in_national_count = 1
                             and department_revenue_rank_in_national = 1
+                            and has_department_activity is true
                         then 'secondary_secret'
                         else 'none'
                     end as department_secret_reason_code,
@@ -366,6 +393,7 @@
                         or (
                             primary_secret_epcis_in_department_count = 1
                             and epci_revenue_rank_in_department = 1
+                            and has_epci_activity is true
                         )
                     ) as is_epci_secret,
 
@@ -375,6 +403,7 @@
                         when
                             primary_secret_epcis_in_department_count = 1
                             and epci_revenue_rank_in_department = 1
+                            and has_epci_activity is true
                         then 'secondary_secret'
                         else 'none'
                     end as epci_secret_reason_code,
@@ -385,6 +414,7 @@
                         or (
                             primary_secret_municipalities_in_epci_count = 1
                             and municipality_revenue_rank_in_epci = 1
+                            and has_municipality_activity is true
                         )
                     ) as is_municipality_secret,
 
@@ -394,6 +424,7 @@
                         when
                             primary_secret_municipalities_in_epci_count = 1
                             and municipality_revenue_rank_in_epci = 1
+                            and has_municipality_activity is true
                         then 'secondary_secret'
                         else 'none'
                     end as municipality_secret_reason_code
@@ -430,6 +461,15 @@
         is_department_secret,
         is_epci_secret,
         is_municipality_secret,
+        has_department_activity,
+        has_epci_activity,
+        has_municipality_activity,
+
+        -- Masquage à appliquer : secret uniquement si le territoire a de l'activité
+        has_department_activity and is_department_secret as is_department_secret_stat,
+        has_epci_activity and is_epci_secret as is_epci_secret_stat,
+        has_municipality_activity
+        and is_municipality_secret as is_municipality_secret_stat,
 
         -- Codes stables
         department_secret_reason_code,

@@ -1,2 +1,6 @@
-# Assign the 'jobs/ml_jobs' directory to the data-science team
+.github   @pass-culture/data-gcp-ci-owners
 /jobs/ml_jobs/   @pass-culture/data-science
+/orchestration/dags/jobs/ml/   @pass-culture/data-science
+/jobs/etl_jobs/   @pass-culture/data-engineering
+pyproject.toml   @pass-culture/data-engineering
+uv.lock   @pass-culture/data-engineering

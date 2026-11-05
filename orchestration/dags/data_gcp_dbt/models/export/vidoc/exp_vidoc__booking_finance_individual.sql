@@ -6,6 +6,7 @@ with
             venue_department_code,
             venue_department_name,
             venue_region_name,
+            max(venue_region_code) as venue_region_code,
             sum(total_bookings) as total_bookings,
             sum(total_quantities) as total_quantities,
             sum(total_revenue_amount) as total_revenue_amount,
@@ -37,11 +38,12 @@ select
     facts.venue_department_code,
     facts.venue_department_name,
     facts.venue_region_name,
+    facts.venue_region_code,
+    sec.department_secret_reason_code,
+    sec.department_secret_reason_label,
 
     -- Masquage conditionnel des métriques en cas de secret
     coalesce(sec.is_department_secret, true) as is_statistic_secret,
-    sec.department_secret_reason_code,
-    sec.department_secret_reason_label,
 
     case
         when sec.is_department_secret is not true then facts.total_bookings

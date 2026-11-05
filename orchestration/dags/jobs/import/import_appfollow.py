@@ -46,7 +46,7 @@ with DAG(
     dagrun_timeout=datetime.timedelta(minutes=240),
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production" if ENV_SHORT_NAME in ("prod", "prd") else "master",
             type="string",
         ),
         # AppFollow API is billed in credits (500/month): reviews cost 10 per page of
@@ -97,6 +97,7 @@ with DAG(
             runtime_image="py313",
             runtime_image_tag="v1",
             microservice_path="jobs/etl_jobs/external/appfollow",
+            service_account_name=f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl",
             arguments=[
                 "main.py",
                 "--start-date",

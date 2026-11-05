@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: exp_vidoc__institution_activity
+    description: "{{ doc('description__exp_vidoc_institution__activity') }}"
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+      - name: scholar_year
+        description: "{{ doc('column__scholar_year') }}"
+      - name: region_code
+        description: "{{ doc('column__institution_region_code') }}"
+      - name: region_name
+        description: "{{ doc('column__institution_region_name') }}"
+      - name: academy_name
+        description: "{{ doc('column__institution_academy_name') }}"
+      - name: department_code
+        description: "{{ doc('column__institution_department_code') }}"
+      - name: department_name
+        description: "{{ doc('column__institution_department_name') }}"
+      - name: total_institutions
+        description: "{{ doc('column__metrics__total_institutions') }}"
+      - name: total_engaged_institutions
+        description: "{{ doc('column__metrics__total_engaged_institutions') }}"
+      - name: total_ever_credited_institutions
+        description: "{{ doc('column__metrics__total_ever_credited_institutions') }}"
+      - name: total_deposit
+        description: "{{ doc('column__metrics__total_deposit') }}"
+      - name: cumulative_amount_spent
+        description: "{{ doc('column__cumulative_total_collective_amount_spent') }}"
+      - name: cumulative_reimbursed_amount
+        description: "{{ doc('column__cumulative_total_reimbursed_collective_amount') }}"

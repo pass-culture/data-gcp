@@ -13,6 +13,8 @@ All vidoc export tables are documented individually in the **Table definitions**
 
 All exported counts are protected using the **Cell Key Perturbation method** — the current standard recommended by INSEE and Eurostat. Small counts are always slightly modified so that no individual can be re-identified, while large counts and aggregated totals remain virtually exact. See [Statistical confidentiality](../references/statistical_confidentiality.md) for full details.
 
+The EAC (collective part) tables are the exception: `exp_vidoc_student_coverage` holds ADAGE aggregates of school headcounts and `exp_vidoc_institution_activity` counts institutions (public bodies) and their credit, so neither is perturbed.
+
 ### Indicators
 
 | KPI | Definition | Source table(s) | Tracking |
@@ -22,3 +24,6 @@ All exported counts are protected using the **Cell Key Perturbation method** —
 | [Beneficiary coverage rate](beneficiary_coverage_rate.md) | Share of eligible youth who received a credit | `exp_vidoc_beneficiary_coverage` + `exp_vidoc_population_coverage` | Monthly (rolling 12 months) |
 | [Diversity rate (3+ categories)](diversity_3plus_categories.md) | Share who booked in 3+ categories at credit expiration | `exp_vidoc_diversity` | Monthly |
 | [Booking share by category](booking_share_by_category.md) | Share who booked in category X at credit expiration | `exp_vidoc_diversity_by_category` + `exp_vidoc_diversity` | Monthly |
+| [Student EAC participation rate](student_eac_participation_rate.md) | Share of eligible students engaged in at least one EAC action | `exp_vidoc_student_coverage` | School year (monthly, cumulative) |
+| [Institution EAC participation rate](institution_eac_participation_rate.md) | Share of credited institutions with at least one collective booking | `exp_vidoc_institution_activity` | School year (monthly, cumulative) |
+| [EAC credit consumption rate](eac_credit_consumption_rate.md) | Share of the collective credit allocated to institutions that was engaged | `exp_vidoc_institution_activity` | School year (monthly, cumulative) |

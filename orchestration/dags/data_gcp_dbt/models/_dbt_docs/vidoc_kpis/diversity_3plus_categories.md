@@ -37,7 +37,7 @@ ORDER BY deposit_expiration_month
 
 | Dimension | Column | Description |
 |-----------|--------|-------------|
-| Expiration quarter | `deposit_expiration_month` | Month when the beneficiary's credit expired |
+| Expiration month | `deposit_expiration_month` | Month when the beneficiary's credit expired |
 | Department | `department_code`, `department_name` | Department of residence |
 | Region | `region_code`, `region_name` | Region of residence |
 | QPV | `is_in_qpv` | Priority neighbourhood flag |
@@ -46,12 +46,12 @@ ORDER BY deposit_expiration_month
 
 ### Temporal tracking
 
-**Quarterly.** The `deposit_expiration_month` column indicates when the beneficiary's credit expired.
+**Monthly.** One cohort per `deposit_expiration_month`, the month when the beneficiaries' credit expired. Sum several months (e.g. a quarter or a year) for small territories.
 
 ### Data protection
 
 Both columns are protected using the [Cell Key Perturbation method](../references/statistical_confidentiality.md). They correspond to **nested cohorts** (`3plus ⊂ expired`) but are perturbed **independently** (each column has its own cell key). Consequences:
 
 - On a single small cell, the invariant `total_3plus_category_booked_beneficiaries ≤ total_expired_deposit_beneficiaries` can be **violated** after perturbation.
-- Always aggregate over many cells (national, regional, quarterly) before computing the rate; the law of large numbers brings the ratio back close to the true value.
-- For the national/quarterly rate, the relative error is negligible.
+- Always aggregate over many cells (national, regional, several months) before computing the rate; the law of large numbers brings the ratio back close to the true value.
+- For a national rate over a quarter or more, the relative error is negligible.

@@ -282,7 +282,7 @@ Number of distinct partners (venues) with at least one bookable offer, individua
 {% enddocs %}
 
 {% docs column__metrics__total_active_partners_dual_part %}
-The total number of unique partners who had at least one active offer within both the individual part and the collective part simultaneously during the 365 days prior to the calculation date.
+Number of distinct partners (venues) with at least one bookable individual offer and at least one bookable collective offer during the 365 days up to the end of the month (today for the current month). Both need not be bookable on the same day.
 {% enddocs %}
 
 {% docs column__metrics__total_active_partners_individual_only %}
@@ -306,27 +306,27 @@ Number of distinct partners (venues) that have created at least one collective t
 {% enddocs %}
 
 {% docs column__metrics__total_cumulative_activated_partners_individual %}
-The total cumulative number of unique partners who have had at least one active offer within the individual part for at least 1 day since inception up to the given month.
+Number of distinct partners (venues) that have had at least one bookable individual offer for at least one day, from the start of the bookable offer history (2022-06-10) up to the end of the month (today for the current month). Having created an offer is not enough: it must have been bookable.
 {% enddocs %}
 
 {% docs column__metrics__total_cumulative_activated_partners_collective %}
-The total cumulative number of unique partners who have had at least one active offer within the collective part for at least 1 day since inception up to the given month.
+Number of distinct partners (venues) that have had at least one bookable collective offer for at least one day, from the start of the bookable offer history (2022-06-10) up to the end of the month (today for the current month). Having created an offer is not enough: it must have been bookable.
 {% enddocs %}
 
 {% docs column__metrics__total_cumulative_activated_partners_global %}
-The total cumulative number of unique partners who have had at least one active offer within either the individual part, the collective part, or both, for at least 1 day since inception up to the given month.
+Number of distinct partners (venues) that have had at least one bookable offer, individual or collective, for at least one day, from the start of the bookable offer history (2022-06-10) up to the end of the month (today for the current month). Having created an offer is not enough: it must have been bookable.
 {% enddocs %}
 
 {% docs column__metrics__total_cumulative_activated_partners_individual_only %}
-The total cumulative number of unique partners who have had at least one active offer exclusively within the individual part for at least 1 day, and have never had an active offer within the collective part since inception up to the given month.
+Number of distinct partners (venues) that have had at least one bookable individual offer for at least one day and never a bookable collective offer, from the start of the bookable offer history (2022-06-10) up to the end of the month (today for the current month).
 {% enddocs %}
 
 {% docs column__metrics__total_cumulative_activated_partners_collective_only %}
-The total cumulative number of unique partners who have had at least one active offer exclusively within the collective part for at least 1 day, and have never had an active offer within the individual part since inception up to the given month.
+Number of distinct partners (venues) that have had at least one bookable collective offer for at least one day and never a bookable individual offer, from the start of the bookable offer history (2022-06-10) up to the end of the month (today for the current month).
 {% enddocs %}
 
 {% docs column__metrics__total_cumulative_activated_partners_dual_part %}
-The total cumulative number of unique partners who have had at least one active offer within both the individual part and the collective part (at any point, concurrently or sequentially) for at least 1 day since inception up to the given month.
+Number of distinct partners (venues) that have had at least one bookable individual offer and at least one bookable collective offer (concurrently or not), each for at least one day, from the start of the bookable offer history (2022-06-10) up to the end of the month (today for the current month).
 {% enddocs %}
 {% docs column__total_institutions %} Total number of distinct educational institutions that made at least one collective booking. {% enddocs %}
 {% docs column__total_collective_bookings_by_domain %} Total number of EAC collective bookings for the given institution geography and educational domain in the specified month. {% enddocs %}

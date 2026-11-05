@@ -76,6 +76,9 @@ nav:
           - EAC bookings by educational domain: dbt/vidoc_kpis/eac_bookings_by_domain.md
           - EAC bookings by offer format: dbt/vidoc_kpis/eac_bookings_by_format.md
           - EAC bookable collective offers: dbt/vidoc_kpis/eac_bookable_offers.md
+          - Active cultural partners by channel: dbt/vidoc_kpis/active_cultural_partners.md
+          - Activated cultural partners: dbt/vidoc_kpis/activated_cultural_partners.md
+          - Cultural partners by type: dbt/vidoc_kpis/active_cultural_partners_by_type.md
         - Ministry exports:
           - dbt/ministry_kpis/index.md
           - User and deposits: dbt/ministry_kpis/user_and_deposit.md

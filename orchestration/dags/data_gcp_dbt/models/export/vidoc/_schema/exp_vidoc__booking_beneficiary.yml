@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: exp_vidoc__booking_beneficiary
+    description: "{{ doc('description__exp_vidoc_booking_beneficiary') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - partition_month
+              - department_name
+              - offer_category_id
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+        data_tests:
+          - not_null
+      - name: region_name
+        description: "{{ doc('column__user_region_name') }}"
+      - name: region_code
+        description: "{{ doc('column__user_region_code') }}"
+      - name: department_name
+        description: "{{ doc('column__user_department_name') }}"
+        data_tests:
+          - not_null
+      - name: department_code
+        description: "{{ doc('column__user_department_code') }}"
+      - name: offer_category_id
+        description: "{{ doc('column__offer_category_id') }}"
+      - name: is_low_count
+        description: "{{ doc('column__exp_vidoc__booking_beneficiary__is_low_count') }}"
+      - name: total_used_bookings
+        description: "{{ doc('column__booking_individual__total_used_bookings') }}"
+      - name: total_used_amount
+        description: "{{ doc('column__booking_individual__total_used_amount') }}"

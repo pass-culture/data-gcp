@@ -2,3 +2,5 @@
 /jobs/ml_jobs/   @pass-culture/data-science
 /orchestration/dags/jobs/ml/   @pass-culture/data-science
 /jobs/etl_jobs/   @pass-culture/data-engineering
+pyproject.toml   @pass-culture/data-engineering
+uv.lock   @pass-culture/data-engineering

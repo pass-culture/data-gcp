@@ -1,0 +1,72 @@
+version: 2
+
+models:
+  - name: metrics_top__offer
+    description: '{{ doc("description__metrics_top__offer") }}'
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - partition_month
+            - geo_level
+            - geo_value
+            - offer_rank
+    columns:
+      - name: partition_month
+        description: '{{ doc("column__partition_month") }}'
+        data_type: DATE
+        tests:
+          - not_null
+
+      - name: geo_level
+        description: '{{ doc("column__geo_level") }}'
+        data_type: STRING
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['national', 'region', 'department']
+
+      - name: geo_value
+        description: '{{ doc("column__geo_value") }}'
+        data_type: STRING
+        tests:
+          - not_null
+
+      - name: item_id
+        description: '{{ doc("column__item_id") }}'
+        data_type: STRING
+        tests:
+          - not_null
+
+      - name: offer_category_id
+        description: '{{ doc("column__offer_category_id") }}'
+        data_type: STRING
+        tests:
+          - not_null
+
+      - name: offer_subcategory_id
+        description: '{{ doc("column__offer_subcategory_id") }}'
+        data_type: STRING
+
+      - name: offer_name
+        description: '{{ doc("column__offer_name") }}'
+        data_type: STRING
+        tests:
+          - not_null
+
+      - name: total_booking_amount
+        description: '{{ doc("column__total_booking_amount") }}'
+        data_type: FLOAT64
+        tests:
+          - not_null
+
+      - name: total_booking_quantity
+        description: '{{ doc("column__total_booking_quantity") }}'
+        data_type: INT64
+        tests:
+          - not_null
+
+      - name: offer_rank
+        description: '{{ doc("column__offer_rank") }}'
+        data_type: INT64
+        tests:
+          - not_null

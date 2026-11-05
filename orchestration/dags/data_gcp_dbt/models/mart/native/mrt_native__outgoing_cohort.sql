@@ -104,21 +104,27 @@ with
             users_expired_monthly.deposit_expiration_date, users_expired_monthly.user_id
     ),
 
-    category_bookings as (
-        select
+    -- one row per user and category, so that each user enters the cell key once
+    category_booked_user_ids as (
+        select distinct
             users_expired_monthly.cohort_key,
-            booking.offer_category_id,
-            count(distinct users_expired_monthly.user_id) as total_users,
-            mod(
-                abs(sum(distinct {{ record_key("users_expired_monthly.user_id") }})),
-                256
-            ) as cell_key
+            users_expired_monthly.user_id,
+            booking.offer_category_id
         from users_expired_monthly
         inner join
             {{ ref("mrt_global__booking") }} as booking
             on users_expired_monthly.user_id = booking.user_id
         where not booking.booking_is_cancelled and booking.offer_category_id is not null
-        group by users_expired_monthly.cohort_key, booking.offer_category_id
+    ),
+
+    category_bookings as (
+        select
+            cohort_key,
+            offer_category_id,
+            count(*) as total_users,
+            mod(abs(sum({{ record_key("user_id") }})), 256) as cell_key
+        from category_booked_user_ids
+        group by cohort_key, offer_category_id
     ),
 
     category_booked_users as (
@@ -172,7 +178,7 @@ select
     u.user_is_theme_subscribed,
     date_trunc(u.deposit_expiration_date, month) as user_expiration_month,
     coalesce(count(distinct u.user_id), 0) as total_users,
-    mod(abs(sum(distinct {{ record_key("u.user_id") }})), 256) as cell_key_users,
+    mod(abs(sum({{ record_key("u.user_id") }})), 256) as cell_key_users,
     {% for n in min_category_counts %}
         coalesce(
             count(
@@ -185,7 +191,7 @@ select
         mod(
             abs(
                 sum(
-                    distinct case
+                    case
                         when b.total_distinct_category_booked >= {{ n }}
                         then {{ record_key("u.user_id") }}
                     end
@@ -206,7 +212,7 @@ select
         mod(
             abs(
                 sum(
-                    distinct case
+                    case
                         when u.spent_share_bucket = "{{ bucket.name }}"
                         then {{ record_key("u.user_id") }}
                     end

@@ -24,12 +24,14 @@
         statistical secret. It appends the remaining CTEs and the final select.
 
         Rules:
-            - a territory (COM, EPCI, DEP) is secret when it is secret
+            - a territory (COM, EPCI, DEP, REG) is secret when it is secret
               (is_*_secret_stat) at the last complete month, for any of the
-              rolling windows and any of the secret models;
+              rolling windows and any of the secret models. A region is secret
+              when its total would disclose its masked departments;
             - numerator, denominator and kpi are NULL on every month of a secret
-              territory, for the KPIs subject to the secret only; REG, ACAD and NAT
-              are never secret;
+              territory, for the KPIs subject to the secret only; ACAD and NAT
+              are never secret, except the 'non localisé' academy (venues missing
+              from the geo referential);
             - for every territory of the geo referential and every KPI, a zero row
               is added at the last complete month when the territory has never had
               a row for this KPI (except NAT). Territories with past rows get no zero
@@ -273,9 +275,11 @@
                 municipality_code,
                 epci_code,
                 department_label,
+                region_name,
                 is_municipality_secret_stat,
                 is_epci_secret_stat,
                 is_department_secret_stat,
+                is_region_secret_stat,
                 municipality_secret_reason_label,
                 epci_secret_reason_label,
                 department_secret_reason_label,
@@ -340,6 +344,30 @@
                     secret_scope
                 from secret_source
                 where department_label is not null
+                union all
+                -- a region is secret when its total would disclose its masked
+                -- departments (REG dimension_value is the region name)
+                select
+                    'REG' as dimension_name,
+                    region_name as dimension_value,
+                    is_region_secret_stat as is_secret_stat,
+                    'Secret secondaire (masquage par soustraction)'
+                    as secret_reason_label,
+                    secret_scope
+                from secret_source
+                where region_name is not null
+                union all
+                -- venues missing from the geo referential are published as
+                -- 'non localisé' at ACAD too
+                select
+                    'ACAD' as dimension_name,
+                    region_name as dimension_value,
+                    is_region_secret_stat as is_secret_stat,
+                    'Secret secondaire (masquage par soustraction)'
+                    as secret_reason_label,
+                    secret_scope
+                from secret_source
+                where region_name = 'non localisé'
             )
         group by dimension_name, dimension_value
     ),

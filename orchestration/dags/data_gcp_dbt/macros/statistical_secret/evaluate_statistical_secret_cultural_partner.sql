@@ -314,122 +314,276 @@
                             pivot.is_epci_secret_primary
                         order by
                             pivot.total_revenue_amount_epci asc, pivot.epci_code asc
-                    ) as epci_revenue_rank_in_department,
-
-                    -- 3. Secret secondaire Département (au niveau National parent)
-                    count(
-                        distinct case
-                            when
-                                pivot.is_department_secret_primary is true
-                                and pivot.has_department_activity is true
-                            then pivot.department_code
-                        end
-                    ) over (partition by pivot.partition_month)
-                    as primary_secret_departments_in_national_count,
-
-                    dense_rank() over (
-                        partition by
-                            pivot.partition_month,
-                            pivot.has_department_activity,
-                            pivot.is_department_secret_primary
-                        order by
-                            pivot.total_revenue_amount_department asc,
-                            pivot.department_code asc
-                    ) as department_revenue_rank_in_national
+                    ) as epci_revenue_rank_in_department
                 from final_pivot_{{ months_count }}m as pivot
+            ),
+
+            -- -----------------------------------------------------------------
+            -- SECRET SECONDAIRE DÉPARTEMENT : RÉGION PUIS GROUPE DE TERRITOIRES
+            -- -----------------------------------------------------------------
+            department_base_{{ months_count }}m as (
+                select
+                    dept.partition_month,
+                    dept.geo_code as department_code,
+                    -- departments missing from the referential (e.g. a venue
+                    -- geocoded abroad) form their own region and group, so that
+                    -- they never mask a real department
+                    coalesce(rd.region_name, 'non localisé') as region_name,
+                    if(
+                        rd.num_dep is null,
+                        'NON_LOCALISE',
+                        {{ territory_group("dept.geo_code") }}
+                    ) as territory_group,
+                    coalesce(dept.total_revenue_amount, 0) as revenue,
+                    coalesce(dept.total_active_partners_count, 0) as partners,
+                    coalesce(dept.max_revenue_amount_venue, 0) as max_venue_revenue,
+                    dept.total_active_partners_count,
+                    dept.max_partner_revenue_share,
+                    dept.is_secret_primary,
+                    dept.primary_secret_reason_code,
+                    dept.is_secret_primary
+                    and (
+                        coalesce(dept.total_active_partners_count, 0) > 0
+                        or coalesce(dept.total_revenue_amount, 0) > 0
+                    ) as is_masked_primary
+                from geo_secret_evaluation_{{ months_count }}m as dept
+                left join
+                    {{ source("seed", "region_department") }} as rd
+                    on dept.geo_code = rd.num_dep
+                where dept.geo_level = 'department'
+            ),
+
+            {{
+                secret_residual_pass(
+                    "department_region_" ~ months_count ~ "m",
+                    "department_base_" ~ months_count ~ "m",
+                    "region_name",
+                    "is_masked_primary",
+                    "is_masked_region",
+                    min_partners_threshold,
+                    max_concentration_threshold,
+                )
+            }},
+
+            {{
+                secret_residual_pass(
+                    "department_group_" ~ months_count ~ "m",
+                    "department_region_" ~ months_count ~ "m",
+                    "territory_group",
+                    "is_masked_region",
+                    "is_masked_group",
+                    min_partners_threshold,
+                    max_concentration_threshold,
+                )
+            }},
+
+            -- a region (or territory group) total is secret when what is masked in
+            -- it, subtracted from the total, does not pass the primary rules. A
+            -- region total is also secret when it holds a department masked at the
+            -- territory group step: published, it would give that department by
+            -- subtraction and split the masked set of the group
+            {% for parent in ["region_name", "territory_group"] %}
+                {{ parent }}_secret_{{ months_count }}m as (
+                    select
+                        partition_month,
+                        {{ parent }},
+                        {% if parent == "region_name" %}
+                            logical_or(is_masked_group and not is_masked_region) or
+                        {% endif %}
+                        logical_or(is_masked_group)
+                        and not coalesce(
+                            {{
+                                passes_primary_secret(
+                                    "sum(if(is_masked_group, partners, 0))",
+                                    "sum(if(is_masked_group, revenue, 0))",
+                                    "max(if(is_masked_group, max_venue_revenue, 0))",
+                                    min_partners_threshold,
+                                    max_concentration_threshold,
+                                )
+                            }},
+                            false
+                        ) as is_secret
+                    from department_group_{{ months_count }}m
+                    group by partition_month, {{ parent }}
+                ),
+            {% endfor %}
+
+            department_secret_{{ months_count }}m as (
+                select
+                    dept.partition_month,
+                    dept.department_code,
+                    dept.region_name,
+                    dept.territory_group,
+                    dept.is_masked_group as is_department_masked,
+                    dept.total_active_partners_count,
+                    dept.max_partner_revenue_share,
+                    dept.revenue,
+                    dept.is_secret_primary,
+                    dept.primary_secret_reason_code,
+                    reg.is_secret as is_region_secret,
+                    grp.is_secret as is_territory_group_secret
+                from department_group_{{ months_count }}m as dept
+                left join
+                    region_name_secret_{{ months_count }}m as reg
+                    on dept.partition_month = reg.partition_month
+                    and dept.region_name = reg.region_name
+                left join
+                    territory_group_secret_{{ months_count }}m as grp
+                    on dept.partition_month = grp.partition_month
+                    and dept.territory_group = grp.territory_group
             ),
         {% endfor %}
 
         combined_windows as (
             {% for months_count in rolling_months_list %}
+                -- departments missing from the referential (territory group
+                -- NON_LOCALISE) have no municipality row: the full join keeps one
+                -- row per such department, published as 'non localisé'
                 select
-                    partition_month,
-                    rolling_window_months_count,
-                    department_code,
-                    department_label,
-                    epci_code,
-                    epci_label,
-                    municipality_code,
-                    municipality_label,
+                    coalesce(
+                        eval.partition_month, dept_secret.partition_month
+                    ) as partition_month,
+                    cast({{ months_count }} as int64) as rolling_window_months_count,
+                    coalesce(
+                        eval.department_code, dept_secret.department_code
+                    ) as department_code,
+                    if(
+                        eval.partition_month is null,
+                        'non localisé',
+                        eval.department_label
+                    ) as department_label,
+                    eval.epci_code,
+                    eval.epci_label,
+                    eval.municipality_code,
+                    eval.municipality_label,
 
                     -- Métriques
-                    total_active_partners_count_department,
-                    max_partner_revenue_share_department,
-                    total_revenue_amount_department,
-                    total_active_partners_count_epci,
-                    max_partner_revenue_share_epci,
-                    total_revenue_amount_epci,
-                    total_active_partners_count_municipality,
-                    max_partner_revenue_share_municipality,
-                    total_revenue_amount_municipality,
-                    has_department_activity,
-                    has_epci_activity,
-                    has_municipality_activity,
+                    if(
+                        eval.partition_month is null,
+                        dept_secret.total_active_partners_count,
+                        eval.total_active_partners_count_department
+                    ) as total_active_partners_count_department,
+                    if(
+                        eval.partition_month is null,
+                        dept_secret.max_partner_revenue_share,
+                        eval.max_partner_revenue_share_department
+                    ) as max_partner_revenue_share_department,
+                    if(
+                        eval.partition_month is null,
+                        dept_secret.revenue,
+                        eval.total_revenue_amount_department
+                    ) as total_revenue_amount_department,
+                    eval.total_active_partners_count_epci,
+                    eval.max_partner_revenue_share_epci,
+                    coalesce(
+                        eval.total_revenue_amount_epci, 0
+                    ) as total_revenue_amount_epci,
+                    eval.total_active_partners_count_municipality,
+                    eval.max_partner_revenue_share_municipality,
+                    coalesce(
+                        eval.total_revenue_amount_municipality, 0
+                    ) as total_revenue_amount_municipality,
+                    coalesce(
+                        eval.has_department_activity, true
+                    ) as has_department_activity,
+                    coalesce(eval.has_epci_activity, false) as has_epci_activity,
+                    coalesce(
+                        eval.has_municipality_activity, false
+                    ) as has_municipality_activity,
 
-                    -- Évaluation Département (Secret secondaire au niveau National)
-                    (
-                        is_department_secret_primary is true
-                        or (
-                            primary_secret_departments_in_national_count = 1
-                            and department_revenue_rank_in_national = 1
-                            and has_department_activity is true
-                        )
+                    -- Évaluation Département (Secret secondaire dans la région, puis
+                    -- dans le groupe de territoires)
+                    dept_secret.region_name,
+                    coalesce(
+                        dept_secret.territory_group,
+                        {{ territory_group("eval.department_code") }}
+                    ) as territory_group,
+                    coalesce(
+                        if(
+                            eval.partition_month is null,
+                            dept_secret.is_secret_primary,
+                            eval.is_department_secret_primary
+                        ),
+                        false
+                    )
+                    or coalesce(
+                        dept_secret.is_department_masked, false
                     ) as is_department_secret,
+                    coalesce(dept_secret.is_region_secret, false) as is_region_secret,
+                    coalesce(
+                        dept_secret.is_territory_group_secret, false
+                    ) as is_territory_group_secret,
 
                     case
-                        when is_department_secret_primary is true
-                        then department_secret_reason_code_primary
                         when
-                            primary_secret_departments_in_national_count = 1
-                            and department_revenue_rank_in_national = 1
-                            and has_department_activity is true
+                            eval.partition_month is null
+                            and dept_secret.is_secret_primary
+                        then dept_secret.primary_secret_reason_code
+                        when eval.is_department_secret_primary is true
+                        then eval.department_secret_reason_code_primary
+                        when coalesce(dept_secret.is_department_masked, false)
                         then 'secondary_secret'
                         else 'none'
                     end as department_secret_reason_code,
 
                     -- Évaluation EPCI (Secret secondaire au niveau Départemental)
-                    (
-                        is_epci_secret_primary is true
+                    coalesce(
+                        eval.is_epci_secret_primary is true
                         or (
-                            primary_secret_epcis_in_department_count = 1
-                            and epci_revenue_rank_in_department = 1
-                            and has_epci_activity is true
-                        )
+                            eval.primary_secret_epcis_in_department_count = 1
+                            and eval.epci_revenue_rank_in_department = 1
+                            and eval.has_epci_activity is true
+                        ),
+                        false
                     ) as is_epci_secret,
 
                     case
-                        when is_epci_secret_primary is true
-                        then epci_secret_reason_code_primary
+                        when eval.is_epci_secret_primary is true
+                        then eval.epci_secret_reason_code_primary
                         when
-                            primary_secret_epcis_in_department_count = 1
-                            and epci_revenue_rank_in_department = 1
-                            and has_epci_activity is true
+                            eval.primary_secret_epcis_in_department_count = 1
+                            and eval.epci_revenue_rank_in_department = 1
+                            and eval.has_epci_activity is true
                         then 'secondary_secret'
                         else 'none'
                     end as epci_secret_reason_code,
 
                     -- Évaluation Commune (Secret secondaire au niveau EPCI)
-                    (
-                        is_municipality_secret_primary is true
+                    coalesce(
+                        eval.is_municipality_secret_primary is true
                         or (
-                            primary_secret_municipalities_in_epci_count = 1
-                            and municipality_revenue_rank_in_epci = 1
-                            and has_municipality_activity is true
-                        )
+                            eval.primary_secret_municipalities_in_epci_count = 1
+                            and eval.municipality_revenue_rank_in_epci = 1
+                            and eval.has_municipality_activity is true
+                        ),
+                        false
                     ) as is_municipality_secret,
 
                     case
-                        when is_municipality_secret_primary is true
-                        then municipality_secret_reason_code_primary
+                        when eval.is_municipality_secret_primary is true
+                        then eval.municipality_secret_reason_code_primary
                         when
-                            primary_secret_municipalities_in_epci_count = 1
-                            and municipality_revenue_rank_in_epci = 1
-                            and has_municipality_activity is true
+                            eval.primary_secret_municipalities_in_epci_count = 1
+                            and eval.municipality_revenue_rank_in_epci = 1
+                            and eval.has_municipality_activity is true
                         then 'secondary_secret'
                         else 'none'
                     end as municipality_secret_reason_code
 
-                from secondary_secret_evaluation_{{ months_count }}m
+                from secondary_secret_evaluation_{{ months_count }}m as eval
+                full outer join
+                    department_secret_{{ months_count }}m as dept_secret
+                    on eval.partition_month = dept_secret.partition_month
+                    and eval.department_code = dept_secret.department_code
+                where
+                    eval.partition_month is not null
+                    or (
+                        dept_secret.territory_group = 'NON_LOCALISE'
+                        and (
+                            coalesce(dept_secret.total_active_partners_count, 0) > 0
+                            or coalesce(dept_secret.revenue, 0) > 0
+                        )
+                    )
                 {% if not loop.last %}
                     union all
                 {% endif %}
@@ -445,6 +599,8 @@
         epci_label,
         municipality_code,
         municipality_label,
+        region_name,
+        territory_group,
 
         -- Métriques
         total_active_partners_count_department,
@@ -458,6 +614,8 @@
         total_revenue_amount_municipality,
 
         -- Flags
+        is_region_secret as is_region_secret_stat,
+        is_territory_group_secret as is_territory_group_secret_stat,
         is_department_secret,
         is_epci_secret,
         is_municipality_secret,

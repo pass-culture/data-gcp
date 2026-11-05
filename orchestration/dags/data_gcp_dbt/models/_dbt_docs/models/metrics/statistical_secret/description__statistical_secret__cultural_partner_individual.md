@@ -25,10 +25,17 @@ For each territory and window:
 1. **Primary secret** when the territory has fewer than 3 active partners (distinct venues with at least one used
    booking over the window), or when its top partner holds more than 85% of the revenue. A territory with no
    revenue is secret (`no_revenue`).
-2. **Secondary secret**: when exactly one territory is under primary secret in its parent (a municipality in its
-   EPCI, an EPCI in its department, a department in France), the non-secret territory with the smallest revenue in
-   that parent is masked too (`secondary_secret`), so the secret figure cannot be recovered by subtraction from
-   the parent's total.
+2. **Secondary secret**: when exactly one municipality is under primary secret in its EPCI, or one EPCI in its
+   department, the non-secret territory with the smallest revenue in that parent is masked too
+   (`secondary_secret`). For departments, the masked departments of each region, taken together, must pass the
+   primary rule, so that they cannot be recovered by subtraction from the region total; otherwise the visible
+   departments of the region are masked too, smallest revenue first. The same is then done within each territory
+   group (`territory_group`: METRO, DROM, COM), so that an overseas department never masks a mainland one. A department code missing from the
+   referential (a venue geocoded abroad) forms its own region ('non localisé') and group (`NON_LOCALISE`), with a
+   single row per month and window (no municipality), so that it never masks a real department.
+3. **Region secret** (`is_region_secret_stat`): a region is secret when its masked departments still fail the
+   primary rule, or when one of its departments was masked at the territory group step.
+   `is_territory_group_secret_stat` is true when a group total cannot be published either.
 
 `*_secret_reason_code` gives the reason (`no_revenue`, `low_partners`, `high_concentration`, `both`,
 `secondary_secret`, `none`); `*_secret_reason_label` is its French display label.

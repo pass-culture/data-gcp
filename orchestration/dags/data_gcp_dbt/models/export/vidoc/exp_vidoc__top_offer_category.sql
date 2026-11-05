@@ -9,6 +9,7 @@ with
             offer_category_id,
             offer_rank,
             item_id,
+            offer_name,
             offer_subcategory_id
         from {{ ref("metrics_top__offer_category") }}
     )
@@ -23,5 +24,6 @@ select
     tops.offer_category_id,
     tops.offer_rank,
     tops.item_id,
+    tops.offer_name,
     tops.offer_subcategory_id
 from tops {{ top_ranking_geo_join("tops") }}

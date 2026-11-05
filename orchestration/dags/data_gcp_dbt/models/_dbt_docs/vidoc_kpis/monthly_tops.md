@@ -19,15 +19,13 @@ For each month and territory, the 50 offers or venues with the highest revenue f
 
 Labelled venues hold a Ministry of Culture label or appellation (venue tag category 'Comptage partenaire label et appellation du MC', `venue_tag_name` gives the label).
 
-**What an offer is.** An offer of the top is an **item** (`item_id`): all the offers of the same work (same book, film, etc.) are summed together, across all the venues of the territory. The item is grouped with its name, category and subcategory: when its offers differ on them (e.g. two editions named differently in two departments), the item can appear on several rows of a region or national top, each with part of its revenue. The top by category has no offer name.
-
-The ranking rules are those of the `external_reporting__top_*` models (same source bookings, same `JEU` and label rules).
+**What an offer is.** An offer of the top is an **item** (`item_id`): all the offers of the same work (same book, film, etc.) are summed together, across all the venues of the territory. Its name, category and subcategory are those of its most booked offers of the month. In the top by category, an item is ranked in that main category only.
 
 ### Ranking rule
 
 - **Ranked by revenue**: sum of `booking_intermediary_amount` of the bookings used in the month (`booking_used_date`), by venue location. There is no ranking by number of bookings.
 - **Rank only**: the revenue and the booked quantity behind the rank are **not exported** (business secret: no revenue at offer or venue level).
-- **Ties**: equal revenues get different ranks, with no tie-break rule: their order, and which of them make the top 50 cut, can change from one run to the next.
+- **Ties**: equal revenues are ordered by the entity identifier (`item_id`, `venue_id`, then the other entity columns) in ascending order, so the rank and the top 50 cut are deterministic from one run to the next. A tie is therefore not shown as an equal rank.
 - **Labels**: the labelled tops rank all labels together (one top 50, not one per label). A venue with two labels appears twice, once per label.
 
 ### Calculation

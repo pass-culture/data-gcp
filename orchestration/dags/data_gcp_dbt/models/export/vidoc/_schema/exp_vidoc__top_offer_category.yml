@@ -54,5 +54,7 @@ models:
         description: "{{ doc('column__item_id') }}"
         data_tests:
           - not_null
+      - name: offer_name
+        description: "{{ doc('column__offer_name') }}"
       - name: offer_subcategory_id
         description: "{{ doc('column__offer_subcategory_id') }}"

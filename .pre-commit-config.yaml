@@ -42,7 +42,7 @@ repos:
     hooks:
       - id: sqlfluff-fix
         additional_dependencies:
-          ["dbt-bigquery==1.8.1", "sqlfluff-templater-dbt"]
+          ["dbt-core==1.11.8", "dbt-bigquery==1.11.1", "sqlfluff-templater-dbt==4.4.0"]
         stages: [pre-commit]
 
   - repo: https://github.com/gitguardian/ggshield
@@ -65,14 +65,5 @@ repos:
     rev: 'v1.179.0' # v1.156.0
     hooks:
       - id: semgrep
-        entry: env -u GIT_DIR -u GIT_INDEX_FILE semgrep
-        args: ['--config', 'p/security-audit', '--baseline-commit', 'HEAD~']
-
-  # TODO: uncomment once netskope problem is fixed
-  # - repo: https://github.com/DavidAnson/markdownlint-cli2
-  #   rev: v0.18.0
-  #   hooks:
-  #   - id: markdownlint-cli2
-  #     language_version: 24.0.0
-  #     args:
-  #       - --fix
+        entry: env -u GIT_DIR -u GIT_INDEX_FILE SEMGREP_ENABLE_VERSION_CHECK=0 semgrep
+        args: ['--config', 'p/security-audit', '--baseline-commit', 'HEAD~', '--metrics=off']

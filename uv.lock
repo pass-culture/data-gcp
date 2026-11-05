@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = "==3.12.*"
 
 [manifest]
@@ -579,15 +579,6 @@ wheels = [
 [package.optional-dependencies]
 yaml = [
     { name = "pyyaml" },
-]
-
-[[package]]
-name = "appdirs"
-version = "1.4.4"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d7/d8/05696357e0311f5b5c316d7b95f46c669dd9c15aaeecbb48c7d0aeb88c40/appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41", size = 13470, upload-time = "2020-05-11T07:59:51.037Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3b/00/2344469e2084fb287c2e0b57b72910309874c3245463acd6cf5e3db69324/appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128", size = 9566, upload-time = "2020-05-11T07:59:49.499Z" },
 ]
 
 [[package]]
@@ -1173,6 +1164,7 @@ wheels = [
 name = "data-gcp"
 version = "0.1.1"
 source = { virtual = "." }
+default-groups = ["airflow", "dbt", "dev", "docs"]
 
 [package.dev-dependencies]
 airflow = [
@@ -1257,8 +1249,8 @@ dev = [
     { name = "pytest-cov", specifier = ">=5.0.0" },
     { name = "ruff", specifier = "==0.5.7" },
     { name = "shandy-sqlfmt", extras = ["jinjafmt"], specifier = "==0.29.0" },
-    { name = "sqlfluff", specifier = "==3.1.1" },
-    { name = "sqlfluff-templater-dbt", specifier = "==3.1.1" },
+    { name = "sqlfluff", specifier = "==4.4.0" },
+    { name = "sqlfluff-templater-dbt", specifier = "==4.4.0" },
     { name = "tomlkit", specifier = ">=0.13.2" },
     { name = "typer", specifier = "~=0.13.1" },
 ]
@@ -5398,39 +5390,38 @@ wheels = [
 
 [[package]]
 name = "sqlfluff"
-version = "3.1.1"
+version = "4.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "appdirs" },
     { name = "chardet" },
     { name = "click" },
     { name = "colorama" },
     { name = "diff-cover" },
     { name = "jinja2" },
     { name = "pathspec" },
-    { name = "pytest" },
+    { name = "platformdirs" },
     { name = "pyyaml" },
     { name = "regex" },
     { name = "tblib" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fa/bc/78715cf0193ef90135661b3cf52e1288eadb331aeb55162eadb48de3c5ff/sqlfluff-3.1.1.tar.gz", hash = "sha256:d910bb62ff3352265b8e0053f68748cb74e1468fb07d8af9bf942ea968635e7d", size = 788518, upload-time = "2024-08-20T22:31:27.194Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a7/1d/7dbe97cda07244c1dc748c0a08ab9fddb068ca6b4fdff5b67256237de65c/sqlfluff-4.4.0.tar.gz", hash = "sha256:4d2607466624c8e6275d2bcafd3202c940a4bc6622955909b9a68411b03cd443", size = 1116040, upload-time = "2026-10-02T18:55:53.012Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5f/ed/fe1efb09242687adeb17b79160a45413c8e76ce80ebe4acbd25782ad4465/sqlfluff-3.1.1-py3-none-any.whl", hash = "sha256:c94429bb2af65064ea51920d288b892fc12a9a2442340042fd62676387072c46", size = 795893, upload-time = "2024-08-20T22:31:24.903Z" },
+    { url = "https://files.pythonhosted.org/packages/24/41/436e2d0f2beed494a92f6f9bc1bd87b1a7dbd6bf37038093aa7d353e5153/sqlfluff-4.4.0-py3-none-any.whl", hash = "sha256:65b1f139534ae1f18ca6e9ec1b24b09598d0b95d1336f927bf39d399ecb39109", size = 1092244, upload-time = "2026-10-02T18:55:51.475Z" },
 ]
 
 [[package]]
 name = "sqlfluff-templater-dbt"
-version = "3.1.1"
+version = "4.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dbt-core" },
     { name = "jinja2-simple-tags" },
     { name = "sqlfluff" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7f/de/790440cdd7c35a8432196773e6eb864c723baf0689ee839516580d037bf9/sqlfluff_templater_dbt-3.1.1.tar.gz", hash = "sha256:899330ffca658f154f64edd0e7608d6dbe2fd75959880e7f7f0f0cc19dc28577", size = 13682, upload-time = "2024-08-20T22:31:25.814Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e3/93/ffc493d0d5b0a0f135fa76168d657ea937c8da0f816063e690192fb37e52/sqlfluff_templater_dbt-4.4.0.tar.gz", hash = "sha256:35b814a06f6d3c7901ddccb770784744d5d86f7666312803a0f8b46f682b85e7", size = 15695, upload-time = "2026-10-02T18:55:14.247Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/22/32/eed038d918ee6d56683dce6f89457550350de8553239ef329e1b009c68dc/sqlfluff_templater_dbt-3.1.1-py3-none-any.whl", hash = "sha256:f06ea8c44fd732ab66b225e51db4d0ea828386320c86f51cd0a685b47e2d71f7", size = 13407, upload-time = "2024-08-20T22:31:24.823Z" },
+    { url = "https://files.pythonhosted.org/packages/db/bc/31ac54c4bbfb3399f93bda922b28d6cf2fcaf78bf73bc0d82935a393d723/sqlfluff_templater_dbt-4.4.0-py3-none-any.whl", hash = "sha256:c0e8064f6cefb62469baabd87472ac5004cdf24c211e833e130070abecd30f77", size = 15322, upload-time = "2026-10-02T18:55:13.224Z" },
 ]
 
 [[package]]

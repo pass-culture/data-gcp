@@ -18,10 +18,14 @@ models:
         description: "{{ doc('column__institution_epci_code') }}"
       - name: institution_city_code
         description: "{{ doc('column__institution_city_code') }}"
+      - name: institution_municipality_code
+        description: "{{ doc('column__institution_municipality_code') }}"
       - name: total_institutions
         description: "{{ doc('column__metrics__total_institutions') }}"
       - name: total_engaged_institutions
         description: "{{ doc('column__metrics__total_engaged_institutions') }}"
+      - name: total_ever_credited_institutions
+        description: "{{ doc('column__metrics__total_ever_credited_institutions') }}"
       - name: total_deposit
         description: "{{ doc('column__metrics__total_deposit') }}"
       - name: total_amount_spent

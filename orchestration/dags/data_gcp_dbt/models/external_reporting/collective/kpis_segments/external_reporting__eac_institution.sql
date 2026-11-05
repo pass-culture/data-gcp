@@ -9,168 +9,60 @@
     )
 }}
 
-{% set dimensions = get_dimensions("institution", "academic_extended") %}
-
-with recursive
-    static_months as (
-        -- Génération statique des mois depuis 2021-01-01
-        select date('2021-01-01') as month_date
-        union all
-        select date(date_add(month_date, interval 1 month))
-        from static_months
-        where month_date < current_date()
-    ),
-
-    year_mapping as (
-        select
-            educational_year_id,
-            scholar_year,
-            educational_year_beginning_date,
-            educational_year_expiration_date
-        from {{ source("raw", "applicative_database_educational_year") }}
-    ),
-
-    months_spine as (
-        select m.month_date as partition_month, y.educational_year_id, y.scholar_year
-        from year_mapping as y
-        inner join
-            static_months as m
-            on m.month_date
-            between y.educational_year_beginning_date
-            and y.educational_year_expiration_date
-    ),
-
-    institution_monthly_base as (
-        select
-            ms.partition_month,
-            ms.scholar_year,
-            dep.institution_id,
-            inst.institution_region_name,
-            inst.institution_academy_name,
-            inst.institution_department_name,
-            inst.institution_epci_code,
-            inst.institution_municipality_code
-        from {{ ref("mrt_global__educational_deposit") }} as dep
-        left join
-            {{ ref("mrt_global__educational_institution") }} as inst
-            on dep.institution_id = inst.institution_id
-        inner join
-            months_spine as ms on dep.educational_year_id = ms.educational_year_id
-    ),
-
-    -- institutions credited at least once since the generalisation, counted from
-    -- the start of their first credited scholar year
-    first_credits as (
-        select
-            dep.institution_id,
-            min(
-                date_trunc(date(y.educational_year_beginning_date), month)
-            ) as first_credit_month
-        from {{ ref("mrt_global__educational_deposit") }} as dep
-        inner join year_mapping as y on dep.educational_year_id = y.educational_year_id
-        group by dep.institution_id
-    ),
-    ever_credited_data as (
-        select
-            months.partition_month,
-            inst.institution_region_name,
-            inst.institution_academy_name,
-            inst.institution_department_name,
-            inst.institution_epci_code,
-            inst.institution_municipality_code,
-            count(distinct fc.institution_id) as total_institutions_ever_credited
-        from (select distinct partition_month from months_spine) as months
-        inner join
-            first_credits as fc on fc.first_credit_month <= months.partition_month
-        left join
-            {{ ref("mrt_global__educational_institution") }} as inst
-            on fc.institution_id = inst.institution_id
-        group by
-            months.partition_month,
-            inst.institution_region_name,
-            inst.institution_academy_name,
-            inst.institution_department_name,
-            inst.institution_epci_code,
-            inst.institution_municipality_code
-    ),
-    first_bookings as (
-        select
-            educational_institution_id as institution_id,
-            scholar_year,
-            min(
-                date_trunc(collective_booking_creation_date, month)
-            ) as first_booking_month
-        from {{ ref("mrt_global__collective_booking") }}
-        where collective_booking_status != 'CANCELLED'
-        group by institution_id, scholar_year
-    ),
-
-    base_data as (
-        select
-            base.partition_month,
-            base.institution_region_name,
-            base.institution_academy_name,
-            base.institution_department_name,
-            base.institution_epci_code,
-            base.institution_municipality_code,
-            count(distinct base.institution_id) as total_institutions,
-            count(
-                distinct case
-                    when fb.first_booking_month <= base.partition_month
-                    then base.institution_id
-                end
-            ) as total_institutions_with_booking
-        from institution_monthly_base as base
-        left join
-            first_bookings as fb
-            on base.institution_id = fb.institution_id
-            and base.scholar_year = fb.scholar_year
-        group by
-            base.partition_month,
-            base.institution_region_name,
-            base.institution_academy_name,
-            base.institution_department_name,
-            base.institution_epci_code,
-            base.institution_municipality_code
+{#
+    Schools (EPLE) credited and engaged in EAC, rolled up from
+    metrics_institution__activity. A KPI is only reported where it has a base:
+    credited schools of the scholar year for the participation rate, schools
+    ever credited for the count since the generalisation.
+#}
+select
+    partition_month,
+    timestamp("{{ ts() }}") as updated_at,
+    dimension_name,
+    dimension_value,
+    kpi_name,
+    numerator,
+    denominator,
+    safe_divide(numerator, denominator) as kpi
+from
+    (
+        {% for dim in get_dimensions("institution", "academic_extended") %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
+            select
+                partition_month,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.value_expr }} as dimension_value,
+                if(
+                    sum(total_institutions) > 0, sum(total_engaged_institutions), null
+                ) as taux_participation_eac_eple_numerator,
+                nullif(
+                    sum(total_institutions), 0
+                ) as taux_participation_eac_eple_denominator,
+                nullif(
+                    sum(total_ever_credited_institutions), 0
+                ) as total_etablissements_credites_depuis_generalisation_numerator,
+                if(
+                    sum(total_ever_credited_institutions) > 0, 1, null
+                ) as total_etablissements_credites_depuis_generalisation_denominator
+            from {{ ref("metrics_institution__activity") }}
+            {% if is_incremental() %}
+                where
+                    partition_month
+                    = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+            {% endif %}
+            group by partition_month, dimension_name, dimension_value
+        {% endfor %}
+    ) unpivot (
+        (numerator, denominator) for kpi_name in (
+            (
+                taux_participation_eac_eple_numerator,
+                taux_participation_eac_eple_denominator
+            ) as 'taux_participation_eac_eple',
+            (
+                total_etablissements_credites_depuis_generalisation_numerator,
+                total_etablissements_credites_depuis_generalisation_denominator
+            ) as 'total_etablissements_credites_depuis_generalisation'
+        )
     )
-
-{% for dim in dimensions %}
-    {% if not loop.first %}
-        union all
-    {% endif %}
-    select
-        partition_month,
-        timestamp("{{ ts() }}") as updated_at,
-        '{{ dim.name }}' as dimension_name,
-        {{ dim.value_expr }} as dimension_value,
-        'taux_participation_eac_eple' as kpi_name,
-        sum(total_institutions_with_booking) as numerator,
-        sum(total_institutions) as denominator,
-        safe_divide(
-            sum(total_institutions_with_booking), sum(total_institutions)
-        ) as kpi
-    from base_data
-    {% if is_incremental() %}
-        where
-            partition_month
-            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-    {% endif %}
-    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
-    union all
-    select
-        partition_month,
-        timestamp("{{ ts() }}") as updated_at,
-        '{{ dim.name }}' as dimension_name,
-        {{ dim.value_expr }} as dimension_value,
-        'total_etablissements_credites_depuis_generalisation' as kpi_name,
-        sum(total_institutions_ever_credited) as numerator,
-        1 as denominator,
-        sum(total_institutions_ever_credited) as kpi
-    from ever_credited_data
-    {% if is_incremental() %}
-        where
-            partition_month
-            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-    {% endif %}
-    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
-{% endfor %}

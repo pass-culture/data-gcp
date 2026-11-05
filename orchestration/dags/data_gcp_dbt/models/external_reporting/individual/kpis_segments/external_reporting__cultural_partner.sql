@@ -9,191 +9,81 @@
     )
 }}
 
--- depends_on: {{ ref('mrt_global__cultural_partner') }}
+{#
+    Active (bookable offer in the last 365 days at the end of the month) and
+    cumulative activated cultural partners (venues), by partner geography.
+    Venue counts are additive across geographic cells (a venue has one
+    location), so every level is a sum of the metrics rows.
+    EPN entities are not counted yet, pending alignment on their geography.
+#}
 {% set dimensions_geo = get_dimensions("partner", "geo_full") %}
 {% set partner_types = get_partner_types() %}
-{% set active_indiv = "days_since_last_indiv_bookable_date <= 365" %}
-{% set active_collective = "days_since_last_collective_bookable_date <= 365" %}
 {% set kpis = {
-    "nombre_total_de_partenaire_actif_indiv_sans_collectif": active_indiv
-    ~ " and coalesce(days_since_last_collective_bookable_date > 365, true)",
-    "nombre_total_de_partenaire_actif_collectif_sans_indiv": active_collective
-    ~ " and coalesce(days_since_last_indiv_bookable_date > 365, true)",
-    "nombre_total_de_partenaire_actif_individuel": active_indiv,
-    "nombre_total_de_partenaire_actif_collectif": active_collective,
-    "nombre_total_de_partenaire_actif_deux_volets": active_indiv
-    ~ " and "
-    ~ active_collective,
-    "nombre_total_de_partenaire_actif_individuel_ou_collectif": "("
-    ~ active_indiv
-    ~ " or "
-    ~ active_collective
-    ~ ")",
+    "nombre_total_de_partenaire_actif_indiv_sans_collectif": "total_active_partners_individual_only",
+    "nombre_total_de_partenaire_actif_collectif_sans_indiv": "total_active_partners_collective_only",
+    "nombre_total_de_partenaire_actif_individuel": "total_active_partners_individual",
+    "nombre_total_de_partenaire_actif_collectif": "total_active_partners_collective",
+    "nombre_total_de_partenaire_actif_deux_volets": "total_active_partners_dual_part",
+    "nombre_total_de_partenaire_actif_individuel_ou_collectif": "total_active_partners_global",
+    "nombre_total_cumule_de_partenaires_actives_individuel": "total_cumulative_activated_partners_individual",
+    "nombre_total_cumule_de_partenaires_actives_collectif": "total_cumulative_activated_partners_collective",
+    "nombre_total_cumule_de_partenaires_actives_deux_volets": "total_cumulative_activated_partners_dual_part",
+    "nombre_total_cumule_de_partenaires_actives_indiv_sans_collectif": "total_cumulative_activated_partners_individual_only",
+    "nombre_total_cumule_de_partenaires_actives_collectif_sans_indiv": "total_cumulative_activated_partners_collective_only",
 } %}
+{% set type_kpi_names = [] %}
 {% for partner_type in partner_types %}
-    {% do kpis.update(
-        {
-            "nombre_de_partenaire_actif_individuel_"
-            ~ partner_type.name: active_indiv
-            ~ " and ("
-            ~ partner_type.condition
-            ~ ")"
-        }
+    {% do type_kpi_names.append(
+        "nombre_de_partenaire_actif_individuel_" ~ partner_type.name
     ) %}
 {% endfor %}
-{% do kpis.update(
-    {
-        "nombre_total_cumule_de_partenaires_actives_individuel": "days_since_last_indiv_bookable_date >= 0",
-        "nombre_total_cumule_de_partenaires_actives_collectif": "days_since_last_collective_bookable_date >= 0",
-        "nombre_total_cumule_de_partenaires_actives_deux_volets": "days_since_last_collective_bookable_date >= 0 and days_since_last_indiv_bookable_date >= 0",
-        "nombre_total_cumule_de_partenaires_actives_indiv_sans_collectif": "days_since_last_indiv_bookable_date is not null and days_since_last_collective_bookable_date is null",
-        "nombre_total_cumule_de_partenaires_actives_collectif_sans_indiv": "days_since_last_collective_bookable_date is not null and days_since_last_indiv_bookable_date is null",
-    }
-) %}
+{% set geo_columns = [
+    "partition_month",
+    "partner_region_name",
+    "partner_department_name",
+    "partner_epci_code",
+    "partner_municipality_code",
+] %}
 
 with
-    monthly_partner_activity as (
+    -- one row per metrics row: all partners from metrics_cultural_partner__activation,
+    -- active individual partners by type from
+    -- metrics_cultural_partner__activation_by_type (pivoted, 0 elsewhere)
+    partner_cells as (
         select
-            gcp.venue_id,
-            date_trunc(
-                date_add(date('2022-01-01'), interval offset month), month
-            ) as partition_month
-        from {{ ref("mrt_global__cultural_partner") }} as gcp
-        cross join
-            unnest(generate_array(0, date_diff(current_date(), '2022-01-01', month))) as
-        offset
-        where
-            gcp.first_individual_offer_creation_date is not null
-            or gcp.first_collective_offer_creation_date is not null
+            {{ geo_columns | join(", ") }},
+            {% for kpi_name, column in kpis.items() %}
+                {{ column }} as {{ kpi_name }},
+            {% endfor %}
+            {% for kpi_name in type_kpi_names %}
+                0 as {{ kpi_name }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+        from {{ ref("metrics_cultural_partner__activation") }}
+        {% if is_incremental() %}
+            where
+                partition_month
+                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+        {% endif %}
+        union all
+        select
+            {{ geo_columns | join(", ") }},
+            {% for kpi_name in kpis.keys() %} 0 as {{ kpi_name }}, {% endfor %}
+            {% for partner_type in partner_types %}
+                if(
+                    partner_type = '{{ partner_type.name }}',
+                    total_active_partners_individual,
+                    0
+                ) as {{ type_kpi_names[loop.index0] }}
+                {% if not loop.last %},{% endif %}
+            {% endfor %}
+        from {{ ref("metrics_cultural_partner__activation_by_type") }}
+        {% if is_incremental() %}
+            where
+                partition_month
+                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+        {% endif %}
     ),
 
-    historical_max_dates as (
-        select
-            m.venue_id,
-            m.partition_month,
-            max(
-                case
-                    when h.total_individual_bookable_offers > 0 then h.partition_date
-                end
-            ) as last_indiv_date,
-            max(
-                case
-                    when h.total_collective_bookable_offers > 0 then h.partition_date
-                end
-            ) as last_collective_date
-        from monthly_partner_activity as m
-        left join
-            {{ ref("int_history__bookable_venue") }} as h
-            on m.venue_id = h.venue_id
-            and h.partition_date <= last_day(m.partition_month)
-        group by m.venue_id, m.partition_month
-    ),
-
-    partner_details as (
-        select
-            bd.venue_id,
-            bd.partition_month,
-            gcp.partner_region_name,
-            gcp.partner_department_name,
-            gcp.partner_epci_code,
-            gcp.partner_municipality_code,
-            gcp.partner_type,
-            gcp.offerer_id,
-            gvt.venue_tag_name,
-            date_diff(
-                least(current_date(), last_day(bd.partition_month)),
-                bd.last_indiv_date,
-                day
-            ) as days_since_last_indiv_bookable_date,
-            date_diff(
-                least(current_date(), last_day(bd.partition_month)),
-                bd.last_collective_date,
-                day
-            ) as days_since_last_collective_bookable_date
-        from historical_max_dates as bd
-        inner join
-            {{ ref("mrt_global__cultural_partner") }} as gcp
-            on bd.venue_id = gcp.venue_id
-        left join
-            {{ ref("mrt_global__venue_tag") }} as gvt
-            on gcp.venue_id = gvt.venue_id
-            and gvt.venue_tag_category_label
-            = 'Comptage partenaire label et appellation du MC'
-        inner join
-            {{ ref("mrt_global__offerer") }} as gof on gcp.offerer_id = gof.offerer_id
-    ),
-
-    -- Calcul des entités EPN enlevées, en attente d'alignement sur la manière de les
-    -- comptabiliser géographiquement
-    -- ,epn_details as (
-    -- select
-    -- offerer.offerer_region_name as partner_region_name,
-    -- offerer.offerer_department_name as partner_department_name,
-    -- date_trunc(date(offerer.offerer_creation_date), month) as partition_month,
-    -- count(distinct offerer.offerer_id) as epn_created
-    -- from {{ ref("mrt_global__offerer") }} as offerer
-    -- where offerer_is_epn
-    -- group by partition_month, partner_region_name, partner_department_name
-    -- ),
-    -- Générer la série complète de mois et régions/départements
-    -- date_range as (
-    -- select
-    -- date_trunc(
-    -- date_add(
-    -- (select min(partition_month) from epn_details),
-    -- interval generate_month month
-    -- ),
-    -- month
-    -- ) as partition_month
-    -- from
-    -- unnest(
-    -- generate_array(
-    -- 0,
-    -- date_diff(
-    -- date_trunc(
-    -- date_sub(date("{{ ds() }}"), interval 1 month), month
-    -- ),
-    -- (select min(partition_month) from epn_details),
-    -- month
-    -- )
-    -- )
-    -- ) as generate_month
-    -- ),
-    -- regions_departments as (
-    -- select distinct partner_region_name, partner_department_name from epn_details
-    -- ),
-    -- complete_grid as (
-    -- select dr.partition_month, rd.partner_region_name, rd.partner_department_name
-    -- from date_range as dr
-    -- cross join regions_departments as rd
-    -- ),
-    -- epn_with_zeros as (
-    -- select
-    -- cg.partition_month,
-    -- cg.partner_region_name,
-    -- cg.partner_department_name,
-    -- coalesce(ed.epn_created, 0) as epn_created
-    -- from complete_grid as cg
-    -- left join
-    -- epn_details as ed
-    -- on cg.partition_month = ed.partition_month
-    -- and cg.partner_region_name = ed.partner_region_name
-    -- and cg.partner_department_name = ed.partner_department_name
-    -- ),
-    -- -- Calculer le cumul
-    -- cumul_epn_details as (
-    -- select
-    -- partition_month,
-    -- partner_region_name,
-    -- partner_department_name,
-    -- epn_created,
-    -- sum(epn_created) over (
-    -- partition by partner_region_name, partner_department_name
-    -- order by partition_month asc
-    -- rows unbounded preceding
-    -- ) as cumul_epn_created
-    -- from epn_with_zeros
-    -- )
     -- one aggregation per geographic level with every KPI as a column, unpivoted
     -- below (kpi = numerator, denominator = 1)
     final_output as (
@@ -205,18 +95,11 @@ with
                 partition_month,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
-                {% for kpi_name, condition in kpis.items() %}
-                    count(
-                        distinct case when {{ condition }} then venue_id end
-                    ) as {{ kpi_name }}
+                {% for kpi_name in kpis.keys() | list + type_kpi_names %}
+                    sum({{ kpi_name }}) as {{ kpi_name }}
                     {% if not loop.last %},{% endif %}
                 {% endfor %}
-            from partner_details
-            {% if is_incremental() %}
-                where
-                    partition_month
-                    = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-            {% endif %}
+            from partner_cells
             group by partition_month, dimension_name, dimension_value
         {% endfor %}
     )
@@ -230,5 +113,9 @@ select
     numerator,
     1 as denominator,
     numerator as kpi
-from final_output unpivot (numerator for kpi_name in ({{ kpis.keys() | join(", ") }}))
+from
+    final_output unpivot (
+        numerator for kpi_name
+        in ({{ (kpis.keys() | list + type_kpi_names) | join(", ") }})
+    )
 where dimension_value is not null

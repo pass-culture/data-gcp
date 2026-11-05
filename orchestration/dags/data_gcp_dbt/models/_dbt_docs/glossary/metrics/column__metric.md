@@ -253,6 +253,26 @@ Number of distinct partners (venues) with at least one bookable offer, individua
 The total number of unique partners who had at least one active offer within both the individual part and the collective part simultaneously during the 365 days prior to the calculation date.
 {% enddocs %}
 
+{% docs column__metrics__total_active_partners_individual_only %}
+Number of distinct partners (venues) with at least one bookable individual offer and no bookable collective offer during the 365 days up to the end of the month (today for the current month). Equals `total_active_partners_individual - total_active_partners_dual_part`.
+{% enddocs %}
+
+{% docs column__metrics__total_active_partners_collective_only %}
+Number of distinct partners (venues) with at least one bookable collective offer and no bookable individual offer during the 365 days up to the end of the month (today for the current month). Equals `total_active_partners_collective - total_active_partners_dual_part`.
+{% enddocs %}
+
+{% docs column__metrics__total_partners_with_collective_offer %}
+Number of distinct partners (venues) that have created at least one collective offer. Current state, the same on every `partition_month`: use it to select geographies with collective partners, not as a monthly indicator.
+{% enddocs %}
+
+{% docs column__metrics__total_new_partners_with_template_offer %}
+Number of distinct partners (venues) whose first collective template offer ("offre vitrine") was created during the month. Monthly flow.
+{% enddocs %}
+
+{% docs column__metrics__total_cumulative_partners_with_template_offer %}
+Number of distinct partners (venues) that have created at least one collective template offer ("offre vitrine") up to the end of the month. Stock, do not sum over months.
+{% enddocs %}
+
 {% docs column__metrics__total_cumulative_activated_partners_individual %}
 The total cumulative number of unique partners who have had at least one active offer within the individual part for at least 1 day since inception up to the given month.
 {% enddocs %}

@@ -2,6 +2,7 @@ select
     m.partition_month,
     m.partner_region_name,
     m.partner_region_code,
+    m.partner_academy_name,
     m.partner_department_name,
     m.partner_department_code,
     m.partner_epci_code,
@@ -11,12 +12,15 @@ select
     m.total_active_partners_collective,
     m.total_active_partners_global,
     m.total_active_partners_dual_part,
+    m.total_active_partners_individual_only,
+    m.total_active_partners_collective_only,
     m.total_cumulative_activated_partners_individual,
     m.total_cumulative_activated_partners_collective,
     m.total_cumulative_activated_partners_global,
     m.total_cumulative_activated_partners_individual_only,
     m.total_cumulative_activated_partners_collective_only,
     m.total_cumulative_activated_partners_dual_part,
+    m.total_partners_with_collective_offer,
     coalesce(s.total_offerers_created_by_cohort, 0) as total_offerers_created_by_cohort,
     coalesce(
         s.total_activated_offerer_consultation_or_adage_30d_by_cohort, 0

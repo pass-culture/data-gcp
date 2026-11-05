@@ -41,3 +41,6 @@ dist/
 
 # test airflow files
 *__test__*.py
+
+# Claude Code
+.claude/

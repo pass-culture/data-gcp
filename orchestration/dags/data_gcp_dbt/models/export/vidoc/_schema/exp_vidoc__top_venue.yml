@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: exp_vidoc__top_venue
+    description: "{{ doc('description__exp_vidoc_top_venue') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - partition_month
+              - geo_level
+              - region_name
+              - department_code
+              - venue_rank
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "geo_level != 'department' or department_code is not null"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "geo_level = 'national' or region_name is not null"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "venue_rank between 1 and 50"
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+        data_tests:
+          - not_null
+      - name: geo_level
+        description: "{{ doc('column__geo_level') }}"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["national", "region", "department"]
+      - name: region_code
+        description: "{{ doc('column__venue_region_code') }}"
+      - name: region_name
+        description: "{{ doc('column__venue_region_name') }}"
+      - name: department_code
+        description: "{{ doc('column__venue_department_code') }}"
+      - name: department_name
+        description: "{{ doc('column__venue_department_name') }}"
+      - name: venue_rank
+        description: "{{ doc('column__venue_rank') }}"
+        data_tests:
+          - not_null
+      - name: venue_id
+        description: "{{ doc('column__venue_id') }}"
+        data_tests:
+          - not_null
+      - name: venue_name
+        description: "{{ doc('column__venue_name') }}"
+      - name: offerer_name
+        description: "{{ doc('column__offerer_name') }}"

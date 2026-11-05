@@ -5,6 +5,7 @@ select
     item_id,
     offer_category_id,
     offer_subcategory_id,
+    offer_name,
     total_booking_amount,
     total_booking_quantity,
     offer_rank

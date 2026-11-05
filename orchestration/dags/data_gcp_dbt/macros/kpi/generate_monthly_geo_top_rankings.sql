@@ -41,7 +41,11 @@
                         {{ partition_field }},
                     {% endfor %}
                     {{ geo.group_expr }}
-                order by sum({{ ranking_metric }}) desc
+                -- entity fields break ties so that the rank (and the top_n cut)
+                -- is deterministic from one run to the next
+                order by
+                    sum({{ ranking_metric }}) desc
+                    {% for field in entity_fields %}, {{ field }} {% endfor %}
             ) as {{ rank_column_name }}
         from {{ base_cte }}
         where {{ geo.value_expr }} is not null

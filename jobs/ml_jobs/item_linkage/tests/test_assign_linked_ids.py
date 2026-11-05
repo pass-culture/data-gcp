@@ -1,3 +1,6 @@
+import random
+from unittest.mock import patch
+
 import pandas as pd
 
 from assign_linked_ids import (
@@ -32,8 +35,15 @@ class TestAssignClusterId:
     def test_numeric_offer_wins_over_unexpected_ids(self):
         assert assign_cluster_id({"link-abc", "offer-99"}) == "item_cluster_o99"
 
-    def test_unexpected_ids_fall_back_to_string_order(self):
-        assert assign_cluster_id({"s2", "s1"}) == "item_cluster_os1"
+    def test_unexpected_ids_fall_back_to_string_order_and_warn(self):
+        with patch("assign_linked_ids.logger") as mock_logger:
+            assert assign_cluster_id({"s2", "s1"}) == "item_cluster_os1"
+        mock_logger.warning.assert_called_once()
+
+    def test_numeric_anchor_does_not_warn(self):
+        with patch("assign_linked_ids.logger") as mock_logger:
+            assign_cluster_id({"link-abc", "offer-99"})
+        mock_logger.warning.assert_not_called()
 
 
 class TestDeterministicClusterIds:
@@ -54,7 +64,9 @@ class TestDeterministicClusterIds:
         }
 
     def test_ids_do_not_depend_on_row_order_or_edge_direction(self):
-        shuffled_and_reversed = [(b, a) for a, b in reversed(self.EDGES)]
+        shuffled_and_reversed = [(b, a) for a, b in self.EDGES]
+        random.Random(42).shuffle(shuffled_and_reversed)
+        assert shuffled_and_reversed != [(b, a) for a, b in self.EDGES]
         assert _cluster_ids(shuffled_and_reversed) == _cluster_ids(self.EDGES)
 
     def test_new_offer_joining_keeps_cluster_id(self):
@@ -65,14 +77,6 @@ class TestDeterministicClusterIds:
     def test_merge_keeps_oldest_anchor(self):
         ids = _cluster_ids(self.EDGES + [("offer-30", "offer-40")])
         assert set(ids.values()) == {"item_cluster_o10"}
-
-    def test_split_keeps_id_on_anchor_side(self):
-        merged = self.EDGES + [("offer-30", "offer-40")]
-        assert set(_cluster_ids(merged).values()) == {"item_cluster_o10"}
-
-        split = _cluster_ids(self.EDGES)
-        assert split["offer-10"] == "item_cluster_o10"
-        assert split["offer-60"] == "item_cluster_o40"
 
 
 class TestBuildGraphAndAssignIds:

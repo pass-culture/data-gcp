@@ -10,7 +10,7 @@ from utils.gcs_utils import upload_parquet
 app = typer.Typer()
 
 
-def _anchor_sort_key(item_id: str) -> tuple:
+def _anchor_sort_key(item_id: str) -> tuple[int, int, str]:
     """Order item ids by numeric offer_id (oldest first).
 
     Numeric "offer-<n>" ids always sort before any other id, and are compared as
@@ -31,7 +31,14 @@ def assign_cluster_id(component: set[str]) -> str:
     and the part holding the anchor keeps it when a cluster splits.
     """
     anchor = min(component, key=_anchor_sort_key)
-    return f"{CLUSTER_ID_PREFIX}{str(anchor).removeprefix(OFFER_ID_PREFIX)}"
+    cluster_id = f"{CLUSTER_ID_PREFIX}{str(anchor).removeprefix(OFFER_ID_PREFIX)}"
+    if _anchor_sort_key(anchor)[0] != 0:
+        # Upstream SQL always yields "offer-<n>" ids: reaching this means the input
+        # contract changed, and fallback ids may collide (e.g. "offer-abc" / "abc").
+        logger.warning(
+            f"Cluster without numeric offer id, anchored on {anchor!r} -> {cluster_id}"
+        )
+    return cluster_id
 
 
 def build_graph_and_assign_ids(linked_offers: pd.DataFrame) -> pd.DataFrame:

@@ -24,6 +24,9 @@ models:
       - name: partner_region_code
         description: "{{ doc('column__partner_region_code') }}"
 
+      - name: partner_academy_name
+        description: "{{ doc('column__partner_academy_name') }}"
+
       - name: partner_department_name
         description: "{{ doc('column__partner_department_name') }}"
 
@@ -63,6 +66,16 @@ models:
         data_tests:
           - not_null
 
+      - name: total_active_partners_individual_only
+        description: "{{ doc('column__metrics__total_active_partners_individual_only') }}"
+        data_tests:
+          - not_null
+
+      - name: total_active_partners_collective_only
+        description: "{{ doc('column__metrics__total_active_partners_collective_only') }}"
+        data_tests:
+          - not_null
+
       - name: total_cumulative_activated_partners_individual
         description: "{{ doc('column__metrics__total_cumulative_activated_partners_individual') }}"
         data_tests:
@@ -90,6 +103,11 @@ models:
 
       - name: total_cumulative_activated_partners_dual_part
         description: "{{ doc('column__metrics__total_cumulative_activated_partners_dual_part') }}"
+        data_tests:
+          - not_null
+
+      - name: total_partners_with_collective_offer
+        description: "{{ doc('column__metrics__total_partners_with_collective_offer') }}"
         data_tests:
           - not_null
 

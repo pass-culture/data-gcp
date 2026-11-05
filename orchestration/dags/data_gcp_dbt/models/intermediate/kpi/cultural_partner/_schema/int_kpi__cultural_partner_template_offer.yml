@@ -1,0 +1,65 @@
+version: 2
+models:
+  - name: int_kpi__cultural_partner_template_offer
+    description: '{{ doc("description__int_kpi__cultural_partner_template_offer") }}'
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - partition_month
+            - partner_region_code
+            - partner_department_code
+            - partner_epci_code
+            - partner_city_code
+            - partner_municipality_code
+    columns:
+      - name: partition_month
+        description: '{{ doc("column__partition_month") }}'
+        data_type: DATE
+        data_tests:
+          - not_null
+
+      - name: partner_region_name
+        description: '{{ doc("column__partner_region_name") }}'
+        data_type: STRING
+
+      - name: partner_region_code
+        description: '{{ doc("column__partner_region_code") }}'
+        data_type: STRING
+
+      - name: partner_academy_name
+        description: '{{ doc("column__partner_academy_name") }}'
+        data_type: STRING
+
+      - name: partner_department_name
+        description: '{{ doc("column__partner_department_name") }}'
+        data_type: STRING
+
+      - name: partner_department_code
+        description: '{{ doc("column__partner_department_code") }}'
+        data_type: STRING
+
+      - name: partner_epci_code
+        description: '{{ doc("column__partner_epci_code") }}'
+        data_type: STRING
+
+      - name: partner_city_code
+        description: '{{ doc("column__partner_city_code") }}'
+        data_type: STRING
+
+      - name: partner_municipality_code
+        description: '{{ doc("column__partner_municipality_code") }}'
+        data_type: STRING
+        data_tests:
+          - not_null
+
+      - name: total_new_partners_with_template_offer
+        description: '{{ doc("column__metrics__total_new_partners_with_template_offer") }}'
+        data_type: INT64
+        data_tests:
+          - not_null
+
+      - name: total_cumulative_partners_with_template_offer
+        description: '{{ doc("column__metrics__total_cumulative_partners_with_template_offer") }}'
+        data_type: INT64
+        data_tests:
+          - not_null

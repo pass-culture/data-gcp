@@ -17,16 +17,16 @@ Only beneficiaries who received an age-18 credit are considered.
 
 ### Calculation
 
-The share is the ratio of `total_3plus_category_booked_beneficiaries` to `total_expired_credit_beneficiaries`.
+The share is the ratio of `total_3plus_category_booked_beneficiaries` to `total_expired_deposit_beneficiaries`.
 
 ```sql
 SELECT
     deposit_expiration_month,
     SUM(total_3plus_category_booked_beneficiaries) AS booked_3plus_categories,
-    SUM(total_expired_credit_beneficiaries) AS total_expired,
+    SUM(total_expired_deposit_beneficiaries) AS total_expired,
     SAFE_DIVIDE(
         SUM(total_3plus_category_booked_beneficiaries),
-        SUM(total_expired_credit_beneficiaries)
+        SUM(total_expired_deposit_beneficiaries)
     ) AS diversity_rate
 FROM `diversity`
 GROUP BY deposit_expiration_month
@@ -52,6 +52,6 @@ ORDER BY deposit_expiration_month
 
 Both columns are protected using the [Cell Key Perturbation method](../references/statistical_confidentiality.md). They correspond to **nested cohorts** (`3plus ⊂ expired`) but are perturbed **independently** (each column has its own cell key). Consequences:
 
-- On a single small cell, the invariant `total_3plus_category_booked_beneficiaries ≤ total_expired_credit_beneficiaries` can be **violated** after perturbation.
+- On a single small cell, the invariant `total_3plus_category_booked_beneficiaries ≤ total_expired_deposit_beneficiaries` can be **violated** after perturbation.
 - Always aggregate over many cells (national, regional, quarterly) before computing the rate; the law of large numbers brings the ratio back close to the true value.
 - For the national/quarterly rate, the relative error is negligible.

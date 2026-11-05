@@ -44,6 +44,8 @@ models:
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
       - name: total_spent_share_90_100_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+      - name: total_deposit_amount_at_expiration
+        description: "{{ doc('column__metrics__total_deposit_amount_at_expiration') }}"
       - name: total_actual_amount_spent_at_expiration
         description: "{{ doc('column__metrics__total_actual_amount_spent_at_expiration') }}"
       - name: total_distinct_venue_booked_at_expiration

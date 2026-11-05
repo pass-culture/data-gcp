@@ -18,7 +18,7 @@ Only beneficiaries who received an age-18 credit are considered.
 
 ### Calculation
 
-The share is the ratio of `total_category_booked_beneficiaries` (per category) to `total_expired_credit_beneficiaries` (total, **independent of the category**).
+The share is the ratio of `total_category_booked_beneficiaries` (per category) to `total_expired_deposit_beneficiaries` (total, **independent of the category**).
 
 Because the denominator is not category-specific, **aggregate the numerator and the denominator separately** before dividing:
 
@@ -34,7 +34,7 @@ WITH numerator AS (
 denominator AS (
     SELECT
         deposit_expiration_month,
-        SUM(total_expired_credit_beneficiaries) AS total_expired
+        SUM(total_expired_deposit_beneficiaries) AS total_expired
     FROM `diversity`
     GROUP BY deposit_expiration_month
 )
@@ -56,7 +56,7 @@ To compute the rate on a sub-group (e.g. per department, per QPV), add the group
 ```sql
 WITH denom AS (
     SELECT deposit_expiration_month, department_code,
-           SUM(total_expired_credit_beneficiaries) AS total_expired
+           SUM(total_expired_deposit_beneficiaries) AS total_expired
     FROM `diversity`
     WHERE department_code = 'XX' -- optional filter to a specific sub-group
     GROUP BY deposit_expiration_month, department_code
@@ -92,7 +92,7 @@ LEFT JOIN num AS n USING (deposit_expiration_month, department_code)
 
 ### Data protection
 
-Counts are protected using the [Cell Key Perturbation method](../references/statistical_confidentiality.md). The numerator (`total_category_booked_beneficiaries`) and the denominator (`total_expired_credit_beneficiaries`) come from **different cohorts of users** and are therefore perturbed **independently** (different cell keys → independent noise). Consequences:
+Counts are protected using the [Cell Key Perturbation method](../references/statistical_confidentiality.md). The numerator (`total_category_booked_beneficiaries`) and the denominator (`total_expired_deposit_beneficiaries`) come from **different cohorts of users** and are therefore perturbed **independently** (different cell keys → independent noise). Consequences:
 
 - On a single small cell, the ratio can be unstable (numerator and denominator each shifted by up to ±5).
 - The invariant `booked_in_category ≤ total_expired` can be **violated** at the cell level after perturbation. Always aggregate over many cells (national, regional, quarterly) before computing a rate.

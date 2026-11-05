@@ -254,7 +254,7 @@ Number of beneficiaries whose GRANT_18 or GRANT_17_18 deposit expired during the
 {% enddocs %}
 
 {% docs column__metrics__total_deposit_amount_at_expiration %}
-The total deposit amount allocated to beneficiaries that reached its expiration date during the given month.
+The total amount of all credits received by beneficiaries whose deposit reached its expiration date during the given month. Divide `total_actual_amount_spent_at_expiration` by it to get the share of credits spent.
 {% enddocs %}
 
 {% docs column__metrics__total_actual_amount_spent_at_expiration %}

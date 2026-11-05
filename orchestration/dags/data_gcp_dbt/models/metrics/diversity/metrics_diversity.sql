@@ -25,6 +25,7 @@ select
         total_spent_share_{{ bucket.name }}_beneficiaries,
         cell_key_spent_share_{{ bucket.name }},
     {% endfor %}
+    total_deposit_amount_at_expiration,
     total_actual_amount_spent_at_expiration,
     total_distinct_venue_booked_at_expiration
 from {{ ref("int_kpi__diversity") }}

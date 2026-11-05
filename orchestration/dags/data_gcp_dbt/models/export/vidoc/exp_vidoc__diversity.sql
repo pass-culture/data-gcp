@@ -38,6 +38,9 @@ with
                 mod(abs(sum({{ c.cell_key }})), 256) as {{ c.cell_key }},
             {% endfor %}
             sum(
+                total_deposit_amount_at_expiration
+            ) as total_deposit_amount_at_expiration,
+            sum(
                 total_actual_amount_spent_at_expiration
             ) as total_actual_amount_spent_at_expiration,
             sum(
@@ -65,6 +68,7 @@ with
             s.is_in_qpv,
             s.macro_density_label,
             s.micro_density_label,
+            s.total_deposit_amount_at_expiration,
             s.total_actual_amount_spent_at_expiration,
             s.total_distinct_venue_booked_at_expiration,
             {% for c in nested_counts %}
@@ -113,6 +117,11 @@ select
     {% for c in nested_counts %}
         least({{ c.column }}, total_expired_deposit_beneficiaries) as {{ c.column }},
     {% endfor %}
+    if(
+        total_expired_deposit_beneficiaries >= 5,
+        total_deposit_amount_at_expiration,
+        null
+    ) as total_deposit_amount_at_expiration,
     if(
         total_expired_deposit_beneficiaries >= 5,
         total_actual_amount_spent_at_expiration,

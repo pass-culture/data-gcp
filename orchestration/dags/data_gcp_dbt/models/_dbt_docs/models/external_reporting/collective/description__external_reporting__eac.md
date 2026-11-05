@@ -13,6 +13,11 @@ and `metrics_booking__collective*` models. KPIs without suffix follow the venue 
 suffixed `_etablissements` follow the school geography. Use `aggregation` to combine months: sum `flow` KPIs, take
 the last month of `stock` KPIs.
 
+Domain, format, school (EPLE) participation, student coverage and credit usage KPIs (`external_reporting__eac_domain`,
+`_format`, `_institution`, `_coverage`, `_credit_usage`) are roll-ups of `metrics_booking__collective_by_domain`,
+`metrics_booking__collective_by_format`, `metrics_institution__activity`, `metrics_student__coverage` and
+`metrics_booking__collective_institution`, all on the school geography.
+
 {% enddocs %}
 
 ## Table Description

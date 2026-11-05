@@ -21,6 +21,14 @@ Cumulative total number of collective bookings for the same geography from the s
 {% docs column__cumulative_total_collective_amount_spent %}
 Cumulative total amount spent for collective bookings for the same geography from the start of the given school year up to and including the specified month.
 {% enddocs %}
+{% docs column__total_reimbursed_collective_bookings %} Number of reimbursed collective bookings used in the month (by use date, clamped into the booking's scholar year). {% enddocs %}
+{% docs column__total_reimbursed_collective_amount %} Amount of the reimbursed collective bookings used in the month (same attribution as `total_reimbursed_collective_bookings`). {% enddocs %}
+{% docs column__total_reimbursed_collective_bookings_same_territory %} `total_reimbursed_collective_bookings` restricted to the bookings whose other side (the venue for a school geography, the school for a venue geography) is in the same territory at the level named by the suffix (region, academy, department, EPCI or municipality). {% enddocs %}
+{% docs column__total_reimbursed_collective_amount_same_territory %} `total_reimbursed_collective_amount` restricted to the bookings whose other side (the venue for a school geography, the school for a venue geography) is in the same territory at the level named by the suffix (region, academy, department, EPCI or municipality). {% enddocs %}
+{% docs column__cumulative_total_reimbursed_collective_bookings %} `total_reimbursed_collective_bookings` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__cumulative_total_reimbursed_collective_amount %} `total_reimbursed_collective_amount` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__cumulative_total_reimbursed_collective_bookings_same_territory %} `total_reimbursed_collective_bookings_same_<level>` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__cumulative_total_reimbursed_collective_amount_same_territory %} `total_reimbursed_collective_amount_same_<level>` summed from the start of the scholar year up to and including the month. {% enddocs %}
 {% docs column__total_prereservations %} Number of non-cancelled collective bookings (pre-reservations, whatever their status) created in the month. A booking created before its scholar year starts is counted in the first month of that scholar year. {% enddocs %}
 {% docs column__total_prereservation_amount %} Amount of the non-cancelled collective bookings created in the month (same attribution as `total_prereservations`). {% enddocs %}
 {% docs column__total_confirmations %} Number of collective bookings confirmed by the school head in the month (by confirmation date, clamped into the booking's scholar year). {% enddocs %}
@@ -193,6 +201,30 @@ Total number of students who participated in at least one EAC activity within th
 The total count of active beneficiaries at the time of calculation. To be included, a user must have a non-expired credit and a remaining amount of credit available for booking.
 {% enddocs %}
 
+{% docs column__metrics__total_monthly_beneficiaries %}
+Number of distinct beneficiaries with an active credit during the partition month whose age in months, that month, is exactly the milestone age, by department. Monthly count, not rolled (0 on a month without any such beneficiary): `total_beneficiaries_last_12_months` is its sum over the current and 11 previous calendar months.
+{% enddocs %}
+
+{% docs column__metrics__total_actual_beneficiaries_not_in_education %}
+Active beneficiaries (see `total_actual_beneficiaries`) who are not in education: declared activity neither Collégien, Lycéen, Etudiant, Apprenti nor Alternant, or no declared activity.
+{% enddocs %}
+
+{% docs column__metrics__total_actual_beneficiaries_male %}
+Active beneficiaries (see `total_actual_beneficiaries`) whose civility is M.
+{% enddocs %}
+
+{% docs column__metrics__total_actual_beneficiaries_female %}
+Active beneficiaries (see `total_actual_beneficiaries`) whose civility is Mme.
+{% enddocs %}
+
+{% docs column__metrics__total_actual_beneficiaries_without_civility %}
+Active beneficiaries (see `total_actual_beneficiaries`) who did not declare a civility.
+{% enddocs %}
+
+{% docs column__metrics__total_actual_beneficiaries_activity %}
+Active beneficiaries (see `total_actual_beneficiaries`) whose declared activity is the one named by the column suffix (apprenti, chomeur, volontaire, alternant, employe, etudiant, lyceen, collegien, inactif). Beneficiaries with another or no declared activity are in none of these columns.
+{% enddocs %}
+
 {% docs column__metrics__total_beneficiaries %}
 Number of beneficiaries at the end of the partition month, broken down by `age_at_calculation`. Counts every user with an active account (or suspended upon user request) who has ever received credit, regardless of whether the credit is currently active, exhausted, or expired. A user's `age_at_calculation` is recomputed each month, so the same user can appear in different age buckets across partition_months. Not a true running total — users with deactivated accounts drop from the count.
 {% enddocs %}
@@ -222,7 +254,7 @@ Number of beneficiaries whose GRANT_18 or GRANT_17_18 deposit expired during the
 {% enddocs %}
 
 {% docs column__metrics__total_deposit_amount_at_expiration %}
-The total deposit amount allocated to beneficiaries that reached its expiration date during the given month.
+The total amount of all credits received by beneficiaries whose deposit reached its expiration date during the given month. Divide `total_actual_amount_spent_at_expiration` by it to get the share of credits spent.
 {% enddocs %}
 
 {% docs column__metrics__total_actual_amount_spent_at_expiration %}
@@ -250,31 +282,51 @@ Number of distinct partners (venues) with at least one bookable offer, individua
 {% enddocs %}
 
 {% docs column__metrics__total_active_partners_dual_part %}
-The total number of unique partners who had at least one active offer within both the individual part and the collective part simultaneously during the 365 days prior to the calculation date.
+Number of distinct partners (venues) with at least one bookable individual offer and at least one bookable collective offer during the 365 days up to the end of the month (today for the current month). Both need not be bookable on the same day.
+{% enddocs %}
+
+{% docs column__metrics__total_active_partners_individual_only %}
+Number of distinct partners (venues) with at least one bookable individual offer and no bookable collective offer during the 365 days up to the end of the month (today for the current month). Equals `total_active_partners_individual - total_active_partners_dual_part`.
+{% enddocs %}
+
+{% docs column__metrics__total_active_partners_collective_only %}
+Number of distinct partners (venues) with at least one bookable collective offer and no bookable individual offer during the 365 days up to the end of the month (today for the current month). Equals `total_active_partners_collective - total_active_partners_dual_part`.
+{% enddocs %}
+
+{% docs column__metrics__total_partners_with_collective_offer %}
+Number of distinct partners (venues) that have created at least one collective offer. Current state, the same on every `partition_month`: use it to select geographies with collective partners, not as a monthly indicator.
+{% enddocs %}
+
+{% docs column__metrics__total_new_partners_with_template_offer %}
+Number of distinct partners (venues) whose first collective template offer ("offre vitrine") was created during the month. Monthly flow.
+{% enddocs %}
+
+{% docs column__metrics__total_cumulative_partners_with_template_offer %}
+Number of distinct partners (venues) that have created at least one collective template offer ("offre vitrine") up to the end of the month. Stock, do not sum over months.
 {% enddocs %}
 
 {% docs column__metrics__total_cumulative_activated_partners_individual %}
-The total cumulative number of unique partners who have had at least one active offer within the individual part for at least 1 day since inception up to the given month.
+Number of distinct partners (venues) that have had at least one bookable individual offer for at least one day, from the start of the bookable offer history (2022-06-10) up to the end of the month (today for the current month). Having created an offer is not enough: it must have been bookable.
 {% enddocs %}
 
 {% docs column__metrics__total_cumulative_activated_partners_collective %}
-The total cumulative number of unique partners who have had at least one active offer within the collective part for at least 1 day since inception up to the given month.
+Number of distinct partners (venues) that have had at least one bookable collective offer for at least one day, from the start of the bookable offer history (2022-06-10) up to the end of the month (today for the current month). Having created an offer is not enough: it must have been bookable.
 {% enddocs %}
 
 {% docs column__metrics__total_cumulative_activated_partners_global %}
-The total cumulative number of unique partners who have had at least one active offer within either the individual part, the collective part, or both, for at least 1 day since inception up to the given month.
+Number of distinct partners (venues) that have had at least one bookable offer, individual or collective, for at least one day, from the start of the bookable offer history (2022-06-10) up to the end of the month (today for the current month). Having created an offer is not enough: it must have been bookable.
 {% enddocs %}
 
 {% docs column__metrics__total_cumulative_activated_partners_individual_only %}
-The total cumulative number of unique partners who have had at least one active offer exclusively within the individual part for at least 1 day, and have never had an active offer within the collective part since inception up to the given month.
+Number of distinct partners (venues) that have had at least one bookable individual offer for at least one day and never a bookable collective offer, from the start of the bookable offer history (2022-06-10) up to the end of the month (today for the current month).
 {% enddocs %}
 
 {% docs column__metrics__total_cumulative_activated_partners_collective_only %}
-The total cumulative number of unique partners who have had at least one active offer exclusively within the collective part for at least 1 day, and have never had an active offer within the individual part since inception up to the given month.
+Number of distinct partners (venues) that have had at least one bookable collective offer for at least one day and never a bookable individual offer, from the start of the bookable offer history (2022-06-10) up to the end of the month (today for the current month).
 {% enddocs %}
 
 {% docs column__metrics__total_cumulative_activated_partners_dual_part %}
-The total cumulative number of unique partners who have had at least one active offer within both the individual part and the collective part (at any point, concurrently or sequentially) for at least 1 day since inception up to the given month.
+Number of distinct partners (venues) that have had at least one bookable individual offer and at least one bookable collective offer (concurrently or not), each for at least one day, from the start of the bookable offer history (2022-06-10) up to the end of the month (today for the current month).
 {% enddocs %}
 {% docs column__total_institutions %} Total number of distinct educational institutions that made at least one collective booking. {% enddocs %}
 {% docs column__total_collective_bookings_by_domain %} Total number of EAC collective bookings for the given institution geography and educational domain in the specified month. {% enddocs %}
@@ -290,6 +342,8 @@ The total cumulative number of unique partners who have had at least one active 
 {% docs column__cumulative_total_collective_tickets_by_format %} Cumulative total number of tickets generated for EAC collective bookings for the same institution geography and offer format from the start of the scholar year up to and including the specified month. {% enddocs %}
 {% docs column__cumulative_total_collective_institutions_by_format %} Number of distinct educational institutions with at least one EAC collective booking in the offer format since the start of the scholar year, up to and including the specified month (each institution counted once). {% enddocs %}
 {% docs column__cumulative_total_collective_institutions_by_domain %} Number of distinct educational institutions with at least one EAC collective booking in the domain since the start of the scholar year, up to and including the specified month (each institution counted once). {% enddocs %}
+{% docs column__total_labelled_collective_bookings_by_domain %} Number of the month's EAC collective bookings (same attribution as `total_collective_bookings`) made with a venue labelled by the Ministry of Culture (venue tag category `Comptage partenaire label et appellation du MC`), for the given institution geography and educational domain. {% enddocs %}
+{% docs column__cumulative_total_labelled_collective_bookings_by_domain %} `total_labelled_collective_bookings` summed from the start of the scholar year up to and including the month. {% enddocs %}
 
 {% docs column__metrics__total_institutions %}
 Total number of institutions (schools) registered or eligible within the territory (at the given geographical granularity), for the specified month and school year.
@@ -299,8 +353,12 @@ Total number of institutions (schools) registered or eligible within the territo
 Total cumulative number of "engaged" institutions (having made at least one booking) within the territory for the specified month and school year.
 {% enddocs %}
 
+{% docs column__metrics__total_ever_credited_institutions %}
+Number of institutions of the territory credited at least once since the generalisation of the collective part (first deposits in the 2021-2022 scholar year), counted from the start of their first credited scholar year, whether or not they are credited in the row's scholar year. Rows may exist for territories with no institution credited in the row's scholar year (`total_institutions` = 0).
+{% enddocs %}
+
 {% docs column__metrics__total_deposit %}
-Total credit amount allocated and made available to the institutions of the territory for the specified month and school year.
+Credit granted to the institutions of the territory for the row's scholar year (sum of all their educational deposits of that year), repeated on every month of the scholar year.
 {% enddocs %}
 
 {% docs column__metrics__total_amount_spent %}
@@ -459,5 +517,49 @@ Noise added to the exact count (cell key method, max noise 5, no published count
 {% enddocs %}
 
 {% docs column__cell_key %}
-Cell key (0-255) of the matching count, used to perturb that count on publication (statistical disclosure control, cell key method): the salted record keys of the counted users summed modulo 256. Neither a measure nor a dimension: do not display it. When rows are aggregated, the key of the aggregate is mod(abs(sum(cell_key)), 256), not the plain sum.
+Cell key (0-255) of the matching count, used to perturb that count on publication (statistical disclosure control, cell key method): the salted record keys of the counted users, each user once, summed modulo 256. Neither a measure nor a dimension: do not display it. When rows covering disjoint sets of users are aggregated, the key of the aggregate is mod(abs(sum(cell_key)), 256), not the plain sum: it equals the key computed directly from the users of the aggregate.
+{% enddocs %}
+
+{% docs column__booking_individual__user_is_beneficiary %}
+True when the user who booked is in `mrt_global__user_beneficiary` (active or suspended upon his own request, and not on a GRANT_FREE deposit). False for deleted, suspended and GRANT_FREE users: their bookings are kept, without beneficiary geography.
+{% enddocs %}
+
+{% docs column__booking_individual__total_used_bookings %}
+Number of used individual bookings (booking_is_used), counted on the month of use, for the row's cell.
+{% enddocs %}
+
+{% docs column__booking_individual__total_used_amount %}
+Amount of the used individual bookings (booking_intermediary_amount, in euros), counted on the month of use, for the row's cell.
+{% enddocs %}
+
+{% docs column__booking_individual__total_created_bookings %}
+Number of individual bookings created in the month, in any state (cancelled included), for the row's cell.
+{% enddocs %}
+
+{% docs column__booking_individual__total_created_free_bookings %}
+Number of free individual bookings (booking_amount = 0) created in the month, in any state (cancelled included), for the row's cell. Free bookings are often cancelled by default as they need no check.
+{% enddocs %}
+
+{% docs column__booking_individual__total_new_bookers %}
+Number of beneficiaries whose first used booking since January 2022 is in the month, all categories. Each beneficiary is counted once, on the row of the category of that first booking: sum the categories and the months to get the distinct bookers of a territory since 2022.
+{% enddocs %}
+
+{% docs column__booking_individual__total_new_category_bookers %}
+Number of beneficiaries whose first used booking since January 2022 in the row's offer category is in the month: sum the months to get the distinct bookers of a category in a territory since 2022. Do not sum the categories (a beneficiary is counted in each category he booked).
+{% enddocs %}
+
+{% docs column__total_created_free_offers %}
+Number of free individual offers (last stock price 0) created in the month, in any state.
+{% enddocs %}
+
+{% docs column__total_created_free_bookable_offers %}
+Number of free individual offers (last stock price 0) created in the month that are bookable today.
+{% enddocs %}
+
+{% docs column__cumulative_total_created_free_offers %}
+Number of free individual offers (last stock price 0) of the territory created up to and including the month, in any state.
+{% enddocs %}
+
+{% docs column__cumulative_total_created_free_bookable_offers %}
+Number of free individual offers (last stock price 0) of the territory created up to and including the month that are bookable today.
 {% enddocs %}

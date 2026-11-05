@@ -44,6 +44,7 @@ ban-relative-imports = "all"
 
 [tool.uv]
 constraint-dependencies = [
+    "certifi >= 2026.10.18", # certifi advisory
     "cryptography >= 50.0.0", # GHSA-g6cj-pr64-35w5, GHSA-537c-gmf6-5ccf,
     "pygments >= 2.20.0", # GHSA-5239-wwwm-4pmq,
     "setuptools >= 83.0.0", # GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c,

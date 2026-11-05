@@ -79,3 +79,55 @@ models:
         description: "{{ doc('column__cell_key') }}"
       - name: cell_key_actual_beneficiaries
         description: "{{ doc('column__cell_key') }}"
+      - name: total_actual_beneficiaries_not_in_education
+        description: "{{ doc('column__metrics__total_actual_beneficiaries_not_in_education') }}"
+      - name: cell_key_actual_beneficiaries_not_in_education
+        description: "{{ doc('column__cell_key') }}"
+      - name: total_actual_beneficiaries_male
+        description: "{{ doc('column__metrics__total_actual_beneficiaries_male') }}"
+      - name: cell_key_actual_beneficiaries_male
+        description: "{{ doc('column__cell_key') }}"
+      - name: total_actual_beneficiaries_female
+        description: "{{ doc('column__metrics__total_actual_beneficiaries_female') }}"
+      - name: cell_key_actual_beneficiaries_female
+        description: "{{ doc('column__cell_key') }}"
+      - name: total_actual_beneficiaries_without_civility
+        description: "{{ doc('column__metrics__total_actual_beneficiaries_without_civility') }}"
+      - name: cell_key_actual_beneficiaries_without_civility
+        description: "{{ doc('column__cell_key') }}"
+      - name: total_actual_beneficiaries_activity_apprenti
+        description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+      - name: cell_key_actual_beneficiaries_activity_apprenti
+        description: "{{ doc('column__cell_key') }}"
+      - name: total_actual_beneficiaries_activity_chomeur
+        description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+      - name: cell_key_actual_beneficiaries_activity_chomeur
+        description: "{{ doc('column__cell_key') }}"
+      - name: total_actual_beneficiaries_activity_volontaire
+        description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+      - name: cell_key_actual_beneficiaries_activity_volontaire
+        description: "{{ doc('column__cell_key') }}"
+      - name: total_actual_beneficiaries_activity_alternant
+        description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+      - name: cell_key_actual_beneficiaries_activity_alternant
+        description: "{{ doc('column__cell_key') }}"
+      - name: total_actual_beneficiaries_activity_employe
+        description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+      - name: cell_key_actual_beneficiaries_activity_employe
+        description: "{{ doc('column__cell_key') }}"
+      - name: total_actual_beneficiaries_activity_etudiant
+        description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+      - name: cell_key_actual_beneficiaries_activity_etudiant
+        description: "{{ doc('column__cell_key') }}"
+      - name: total_actual_beneficiaries_activity_lyceen
+        description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+      - name: cell_key_actual_beneficiaries_activity_lyceen
+        description: "{{ doc('column__cell_key') }}"
+      - name: total_actual_beneficiaries_activity_collegien
+        description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+      - name: cell_key_actual_beneficiaries_activity_collegien
+        description: "{{ doc('column__cell_key') }}"
+      - name: total_actual_beneficiaries_activity_inactif
+        description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+      - name: cell_key_actual_beneficiaries_activity_inactif
+        description: "{{ doc('column__cell_key') }}"

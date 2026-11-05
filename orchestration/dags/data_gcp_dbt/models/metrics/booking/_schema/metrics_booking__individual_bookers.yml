@@ -1,0 +1,46 @@
+version: 2
+models:
+  - name: metrics_booking__individual_bookers
+    description: '{{ doc("description__metrics_booking__individual_bookers") }}'
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - partition_month
+              - region_name
+              - department_name
+              - epci_code
+              - municipality_code
+              - offer_category_id
+    columns:
+      - name: partition_month
+        description: '{{ doc("column__partition_month") }}'
+        data_type: DATE
+
+      - name: region_name
+        description: '{{ doc("column__user_region_name") }}'
+        data_type: STRING
+
+      - name: department_name
+        description: '{{ doc("column__user_department_name") }}'
+        data_type: STRING
+
+      - name: epci_code
+        description: '{{ doc("column__user_epci_code") }}'
+        data_type: STRING
+
+      - name: municipality_code
+        description: '{{ doc("column__user_municipality_code") }}'
+        data_type: STRING
+
+      - name: offer_category_id
+        description: '{{ doc("column__offer_category_id") }}'
+        data_type: STRING
+
+      - name: total_new_bookers
+        description: '{{ doc("column__booking_individual__total_new_bookers") }}'
+        data_type: INTEGER
+
+      - name: total_new_category_bookers
+        description: '{{ doc("column__booking_individual__total_new_category_bookers") }}'
+        data_type: INTEGER

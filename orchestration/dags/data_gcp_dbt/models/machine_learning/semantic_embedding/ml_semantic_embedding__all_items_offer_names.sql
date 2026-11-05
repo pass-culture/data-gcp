@@ -32,16 +32,35 @@
     )
 }}
 {# item_embedding starts at 4 am (prod and  7am stg) while dbt dag runs at 2:45 am so we use a negative offset of few hours to point the delayed sensor at the correct dagrun (from 6 hours after the dbt dag run  within the previous 24 hours) #}
-select
-    aion.item_id,
-    aion.content_hash,
-    aion.embedding as all_items_offer_names_embedding,
-    aion.mlflow_run_id,
-    aion.embedding_model,
-    aion.embedding_date
-from {{ source("tmp", "all_items_offer_names_tmp") }} as aion
-where
-    aion._table_suffix = (
-        select max(latest._table_suffix) as max_table_suffix
-        from {{ source("tmp", "all_items_offer_names_tmp") }} as latest
-    )
+{% set tmp_source = source("tmp", "all_items_offer_names_tmp") %}
+{# tmp tables expire after 24h: when none is left, merge nothing instead of failing. #}
+{% if tmp_tables_exist(tmp_source) %}
+    select
+        aion.item_id,
+        aion.content_hash,
+        aion.embedding as all_items_offer_names_embedding,
+        aion.mlflow_run_id,
+        aion.embedding_model,
+        aion.embedding_date
+    from {{ tmp_source }} as aion
+    where
+        aion._table_suffix = (
+            select max(latest._table_suffix) as max_table_suffix
+            from {{ tmp_source }} as latest
+        )
+{% else %}
+    select *
+    from
+        unnest(
+            array<
+                struct<
+                    item_id string,
+                    content_hash string,
+                    all_items_offer_names_embedding array<float64>,
+                    mlflow_run_id string,
+                    embedding_model string,
+                    embedding_date date
+                >
+            >[]
+        )
+{% endif %}

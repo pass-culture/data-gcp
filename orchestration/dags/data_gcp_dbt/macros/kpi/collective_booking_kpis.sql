@@ -7,9 +7,12 @@
 
         Rules:
             - non-cancelled bookings only;
-            - every event month (pre-reservation, confirmation, action) is
-              clamped into the booking's scholar year, so Sep-Aug sums give
-              scholar year totals;
+            - every event month (pre-reservation, confirmation, action,
+              reimbursement) is clamped into the booking's scholar year, so
+              Sep-Aug sums give scholar year totals;
+            - reimbursed bookings are counted in their month of use, in total
+              and when the other side of the booking (venue for "institution",
+              institution for "venue") is in the same territory, per level;
             - one row per scholar year month x geography seen in that scholar
               year, so cumulative_* columns exist for every month.
     #}
@@ -30,6 +33,14 @@
         "municipality_code",
         "macro_density_label",
     ] %}
+    {% set other_side = "venue" if geo_side == "institution" else "institution" %}
+    {% set same_territory_levels = {
+        "region": "region_name",
+        "academy": "academy_name",
+        "department": "department_name",
+        "epci": "epci_code",
+        "municipality": "municipality_code",
+    } %}
     {% set measures = [
         "total_prereservations",
         "total_prereservation_amount",
@@ -39,7 +50,13 @@
         "total_confirmation_amount",
         "total_actions",
         "total_action_amount",
+        "total_reimbursed_collective_bookings",
+        "total_reimbursed_collective_amount",
     ] %}
+    {% for level in same_territory_levels %}
+        {% do measures.append("total_reimbursed_collective_bookings_same_" ~ level) %}
+        {% do measures.append("total_reimbursed_collective_amount_same_" ~ level) %}
+    {% endfor %}
 
     with
         bookings as (
@@ -49,6 +66,13 @@
                 cb.scholar_year,
                 cb.collective_booking_status
                 in ({{ confirmed_statuses }}) as is_confirmed,
+                cb.collective_booking_status = 'REIMBURSED' as is_reimbursed,
+                {% for level, col in same_territory_levels.items() %}
+                    coalesce(
+                        cb.{{ other_side }}_{{ col }} = cb.{{ geo_side }}_{{ col }},
+                        false
+                    ) as is_same_{{ level }},
+                {% endfor %}
                 cb.{{ geo_side }}_region_name,
                 coalesce(
                     cast(rd.region_code as string), '-1'
@@ -81,7 +105,16 @@
                     scholar_year_partition_month(
                         "cb.collective_stock_beginning_date_time", "ey"
                     )
-                }} as action_month
+                }} as action_month,
+                if(
+                    cb.collective_booking_used_date is null,
+                    null,
+                    {{
+                        scholar_year_partition_month(
+                            "cb.collective_booking_used_date", "ey"
+                        )
+                    }}
+                ) as reimbursement_month
             from {{ ref("mrt_global__collective_booking") }} as cb
             inner join
                 {{ source("raw", "applicative_database_educational_year") }} as ey
@@ -129,14 +162,42 @@
                 countif(e.event = 'action' and b.is_confirmed) as total_actions,
                 sum(
                     if(e.event = 'action' and b.is_confirmed, b.booking_amount, 0)
-                ) as total_action_amount
+                ) as total_action_amount,
+                countif(
+                    e.event = 'reimbursement' and b.is_reimbursed
+                ) as total_reimbursed_collective_bookings,
+                sum(
+                    if(
+                        e.event = 'reimbursement' and b.is_reimbursed,
+                        b.booking_amount,
+                        0
+                    )
+                ) as total_reimbursed_collective_amount,
+                {% for level in same_territory_levels %}
+                    countif(
+                        e.event = 'reimbursement'
+                        and b.is_reimbursed
+                        and b.is_same_{{ level }}
+                    ) as total_reimbursed_collective_bookings_same_{{ level }},
+                    sum(
+                        if(
+                            e.event = 'reimbursement'
+                            and b.is_reimbursed
+                            and b.is_same_{{ level }},
+                            b.booking_amount,
+                            0
+                        )
+                    ) as total_reimbursed_collective_amount_same_{{ level }}
+                    {% if not loop.last %},{% endif %}
+                {% endfor %}
             from bookings_with_geo_key as b
             cross join
                 unnest(
                     [
                         struct('creation' as event, b.creation_month as event_month),
                         struct('confirmation', b.confirmation_month),
-                        struct('action', b.action_month)
+                        struct('action', b.action_month),
+                        struct('reimbursement', b.reimbursement_month)
                     ]
                 ) as e
             where e.event_month is not null

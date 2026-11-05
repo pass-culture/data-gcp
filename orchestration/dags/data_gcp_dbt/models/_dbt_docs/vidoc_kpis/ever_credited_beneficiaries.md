@@ -46,7 +46,7 @@ ORDER BY partition_month
 
 ### Temporal tracking
 
-**Quarterly.** The `partition_month` column tracks changes over time.
+**Monthly.** One stock per `partition_month` (end of the month).
 
 ### Data protection
 

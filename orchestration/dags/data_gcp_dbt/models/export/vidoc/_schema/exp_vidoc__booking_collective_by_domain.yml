@@ -1,0 +1,45 @@
+version: 2
+
+models:
+  - name: exp_vidoc__booking_collective_by_domain
+    description: "{{ doc('description__exp_vidoc_booking_collective_by_domain') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - partition_month
+            - scholar_year
+            - educational_domain_name
+            - institution_department_code
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+        data_tests:
+          - not_null
+      - name: scholar_year
+        description: "{{ doc('column__reporting_scholar_year') }}"
+        data_tests:
+          - not_null
+      - name: educational_domain_name
+        description: '{{ doc("column__educational_domain_name") }}'
+      - name: institution_region_name
+        description: '{{ doc("column__institution_region_name") }}'
+      - name: institution_region_code
+        description: '{{ doc("column__institution_region_code") }}'
+      - name: institution_department_name
+        description: '{{ doc("column__institution_department_name") }}'
+      - name: institution_department_code
+        description: '{{ doc("column__institution_department_code") }}'
+      - name: institution_academy_name
+        description: '{{ doc("column__institution_academy_name") }}'
+      - name: total_collective_bookings
+        description: '{{ doc("column__total_collective_bookings_by_domain") }}'
+      - name: total_collective_booking_amount
+        description: '{{ doc("column__total_collective_booking_amount_by_domain") }}'
+      - name: total_collective_tickets
+        description: '{{ doc("column__total_collective_tickets_by_domain") }}'
+      - name: total_labelled_collective_bookings
+        description: '{{ doc("column__total_labelled_collective_bookings_by_domain") }}'
+      - name: total_collective_institutions
+        description: '{{ doc("column__total_collective_institutions_by_domain") }}'
+      - name: cumulative_total_collective_institutions
+        description: '{{ doc("column__cumulative_total_collective_institutions_by_domain") }}'

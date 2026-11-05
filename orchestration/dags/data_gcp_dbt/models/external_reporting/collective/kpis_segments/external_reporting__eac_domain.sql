@@ -9,61 +9,47 @@
     )
 }}
 
-{% set dimensions = get_dimensions(none, "academic_extended") %}
-{% set domains = get_domains() %}
+{#
+    Collective bookings split by educational domain (school geography), rolled
+    up from metrics_booking__collective_by_domain. Monthly flows, only for the
+    months with at least one booking. An offer with several domains counts in
+    each of them, so domains are not summable.
+#}
+{% set kpis = {
+    "total_reservation": [
+        "sum(total_collective_bookings)",
+        "1",
+    ],
+    "total_montant_depense": [
+        "sum(total_collective_booking_amount)",
+        "1",
+    ],
+    "total_tickets_generes": [
+        "sum(total_collective_tickets)",
+        "1",
+    ],
+    "total_eple_impliquees": [
+        "sum(total_collective_institutions)",
+        "1",
+    ],
+    "pct_reservations_labelisees": [
+        "nullif(sum(total_labelled_collective_bookings), 0)",
+        "sum(total_collective_bookings)",
+    ],
+} %}
 
-with
-    bookings_data as (
-        select
-            cb.institution_region_name as region_name,
-            cb.institution_academy_name as academy_name,
-            cb.institution_epci_code as epci_code,
-            cb.institution_municipality_code as municipality_code,
-            cb.institution_department_name as dep_name,
-            cod.educational_domain_name as domain_name,
-            -- bookings created before their scholar year starts are attributed to
-            -- its first month, so that Sep-Aug sums match the scholar year
-            {{
-                scholar_year_partition_month(
-                    "cb.collective_booking_creation_date", "ey"
-                )
-            }} as partition_month,
-            coalesce(vt.venue_tag_id is not null, false) as is_labelled_mc,
-            coalesce(count(distinct cb.collective_booking_id), 0) as total_bookings,
-            coalesce(sum(cb.booking_amount), 0) as total_booking_amount,
-            coalesce(sum(cb.collective_stock_number_of_tickets), 0) as total_tickets,
-            coalesce(
-                count(distinct cb.educational_institution_id), 0
-            ) as total_institutions
-        from {{ ref("mrt_global__collective_booking") }} as cb
-        left join
-            {{ ref("mrt_global__collective_offer_domain") }} as cod
-            on cb.collective_offer_id = cod.collective_offer_id
-        left join
-            {{ ref("mrt_global__venue_tag") }} as vt
-            on cb.venue_id = vt.venue_id
-            and venue_tag_category_label
-            = 'Comptage partenaire label et appellation du MC'
-        left join
-            {{ source("raw", "applicative_database_educational_year") }} as ey
-            on cb.scholar_year = ey.scholar_year
-        where
-            cb.collective_booking_status
-            in ('CONFIRMED', 'USED', 'PENDING_REIMBURSEMENT', 'REIMBURSED')
-        group by
-            partition_month,
-            region_name,
-            academy_name,
-            dep_name,
-            epci_code,
-            municipality_code,
-            domain_name,
-            is_labelled_mc
-    ),
-
-    -- Étendre les données avec toutes les dimensions
-    expanded_data as (
-        {% for dim in dimensions %}
+select
+    partition_month,
+    timestamp('{{ ts() }}') as updated_at,
+    dimension_name,
+    dimension_value,
+    concat(kpi_base_name, '_', domain_name) as kpi_name,
+    numerator,
+    denominator,
+    safe_divide(numerator, denominator) as kpi
+from
+    (
+        {% for dim in get_dimensions("institution", "academic_extended") %}
             {% if not loop.first %}
                 union all
             {% endif %}
@@ -71,104 +57,33 @@ with
                 partition_month,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
-                domain_name,
-                is_labelled_mc,
-                total_bookings,
-                total_booking_amount,
-                total_tickets,
-                total_institutions
-            from bookings_data
+                case
+                    educational_domain_name
+                    {% for domain in get_domains() %}
+                        when '{{ domain.label }}' then '{{ domain.name }}'
+                    {% endfor %}
+                end as domain_name,
+                {% for kpi_name, exprs in kpis.items() %}
+                    cast({{ exprs[0] }} as numeric) as {{ kpi_name }}_numerator,
+                    cast({{ exprs[1] }} as int64) as {{ kpi_name }}_denominator
+                    {% if not loop.last %},{% endif %}
+                {% endfor %}
+            from {{ ref("metrics_booking__collective_by_domain") }}
             {% if is_incremental() %}
                 where
                     partition_month
-                    = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+                    = date_trunc(date_sub(date('{{ ds() }}'), interval 1 month), month)
             {% endif %}
+            group by partition_month, dimension_name, dimension_value, domain_name
+            having domain_name is not null and sum(total_collective_bookings) > 0
         {% endfor %}
+    ) unpivot (
+        (numerator, denominator) for kpi_base_name in (
+            {% for kpi_name in kpis.keys() %}
+                (
+                    {{ kpi_name }}_numerator, {{ kpi_name }}_denominator
+                ) as '{{ kpi_name }}'
+                {% if not loop.last %},{% endif %}
+            {% endfor %}
+        )
     )
-
-{% for domain in domains %}
-    {% if not loop.first %}
-        union all
-    {% endif %}
-
-    -- KPI 1: total_reservation
-    select
-        partition_month,
-        timestamp("{{ ts() }}") as updated_at,
-        dimension_name,
-        dimension_value,
-        'total_reservation_{{ domain.name }}' as kpi_name,
-        sum(total_bookings) as numerator,
-        1 as denominator,
-        sum(total_bookings) as kpi
-    from expanded_data
-    where domain_name = '{{ domain.label }}'
-    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
-
-    union all
-
-    -- KPI 2: total_montant_depense
-    select
-        partition_month,
-        timestamp("{{ ts() }}") as updated_at,
-        dimension_name,
-        dimension_value,
-        'total_montant_depense_{{ domain.name }}' as kpi_name,
-        sum(total_booking_amount) as numerator,
-        1 as denominator,
-        sum(total_booking_amount) as kpi
-    from expanded_data
-    where domain_name = '{{ domain.label }}'
-    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
-
-    union all
-
-    -- KPI 3: total_tickets_generes
-    select
-        partition_month,
-        timestamp("{{ ts() }}") as updated_at,
-        dimension_name,
-        dimension_value,
-        'total_tickets_generes_{{ domain.name }}' as kpi_name,
-        sum(total_tickets) as numerator,
-        1 as denominator,
-        sum(total_tickets) as kpi
-    from expanded_data
-    where domain_name = '{{ domain.label }}'
-    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
-
-    union all
-
-    -- KPI 4: total_eple_impliquees
-    select
-        partition_month,
-        timestamp("{{ ts() }}") as updated_at,
-        dimension_name,
-        dimension_value,
-        'total_eple_impliquees_{{ domain.name }}' as kpi_name,
-        sum(total_institutions) as numerator,
-        1 as denominator,
-        sum(total_institutions) as kpi
-    from expanded_data
-    where domain_name = '{{ domain.label }}'
-    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
-
-    union all
-
-    -- KPI 5: pct_reservations_labelisees
-    select
-        partition_month,
-        timestamp("{{ ts() }}") as updated_at,
-        dimension_name,
-        dimension_value,
-        'pct_reservations_labelisees_{{ domain.name }}' as kpi_name,
-        sum(case when is_labelled_mc then total_bookings end) as numerator,
-        sum(total_bookings) as denominator,
-        safe_divide(
-            sum(case when is_labelled_mc then total_bookings end), sum(total_bookings)
-        ) as kpi
-    from expanded_data
-    where domain_name = '{{ domain.label }}'
-    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
-
-{% endfor %}

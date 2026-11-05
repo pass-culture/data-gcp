@@ -35,6 +35,9 @@ models:
         data_tests:
           - not_null
 
+      - name: total_monthly_beneficiaries
+        description: "{{ doc('column__metrics__total_monthly_beneficiaries') }}"
+
       - name: total_beneficiaries_last_12_months
         description: "{{ doc('column__total_users_last_12_months') }}"
         data_tests:

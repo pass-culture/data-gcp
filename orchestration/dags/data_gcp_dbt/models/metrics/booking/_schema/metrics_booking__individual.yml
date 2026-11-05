@@ -1,0 +1,79 @@
+version: 2
+models:
+  - name: metrics_booking__individual
+    description: '{{ doc("description__metrics_booking__individual") }}'
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - partition_month
+              - user_is_beneficiary
+              - region_name
+              - department_name
+              - epci_code
+              - municipality_code
+              - venue_region_name
+              - venue_department_name
+              - venue_epci_code
+              - venue_municipality_code
+              - offer_category_id
+    columns:
+      - name: partition_month
+        description: '{{ doc("column__partition_month") }}'
+        data_type: DATE
+
+      - name: user_is_beneficiary
+        description: '{{ doc("column__booking_individual__user_is_beneficiary") }}'
+        data_type: BOOLEAN
+
+      - name: region_name
+        description: '{{ doc("column__user_region_name") }}'
+        data_type: STRING
+
+      - name: department_name
+        description: '{{ doc("column__user_department_name") }}'
+        data_type: STRING
+
+      - name: epci_code
+        description: '{{ doc("column__user_epci_code") }}'
+        data_type: STRING
+
+      - name: municipality_code
+        description: '{{ doc("column__user_municipality_code") }}'
+        data_type: STRING
+
+      - name: venue_region_name
+        description: '{{ doc("column__venue_region_name") }}'
+        data_type: STRING
+
+      - name: venue_department_name
+        description: '{{ doc("column__venue_department_name") }}'
+        data_type: STRING
+
+      - name: venue_epci_code
+        description: '{{ doc("column__venue_epci_code") }}'
+        data_type: STRING
+
+      - name: venue_municipality_code
+        description: '{{ doc("column__venue_municipality_code") }}'
+        data_type: STRING
+
+      - name: offer_category_id
+        description: '{{ doc("column__offer_category_id") }}'
+        data_type: STRING
+
+      - name: total_used_bookings
+        description: '{{ doc("column__booking_individual__total_used_bookings") }}'
+        data_type: INTEGER
+
+      - name: total_used_amount
+        description: '{{ doc("column__booking_individual__total_used_amount") }}'
+        data_type: NUMERIC
+
+      - name: total_created_bookings
+        description: '{{ doc("column__booking_individual__total_created_bookings") }}'
+        data_type: INTEGER
+
+      - name: total_created_free_bookings
+        description: '{{ doc("column__booking_individual__total_created_free_bookings") }}'
+        data_type: INTEGER

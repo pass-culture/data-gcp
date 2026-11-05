@@ -49,7 +49,7 @@ ORDER BY b.partition_month, b.department_code, b.milestone_age
 
 ### Temporal tracking
 
-**Annual.** Both tables use a rolling 12-month window (`total_beneficiaries_last_12_months` / `total_population_last_12_months`).
+**Monthly, over a rolling 12-month window.** Each `partition_month` counts the beneficiaries and the population of the 12 months ending with that month (`total_beneficiaries_last_12_months` / `total_population_last_12_months`).
 
 ### Data protection
 

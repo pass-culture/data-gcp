@@ -500,12 +500,15 @@
         flagged_kpis.is_national_only,
         flagged_kpis.is_missing_month,
         -- a single message whatever the rule, so that reports do not disclose the
-        -- size of the population behind a masked KPI
-        if(
-            flagged_kpis.is_secret_stat or flagged_kpis.is_low_count,
-            'Données non disponibles (secret statistique)',
-            null
-        ) as secret_reason,
+        -- size of the population behind a masked KPI. KPIs without a value for
+        -- another reason get a plain message, sorted before the secret one so
+        -- that max(secret_reason) over mixed rows shows the secret
+        case
+            when flagged_kpis.is_secret_stat or flagged_kpis.is_low_count
+            then 'Données non disponibles (secret statistique)'
+            when flagged_kpis.is_national_only or flagged_kpis.is_missing_month
+            then 'Données non disponibles'
+        end as secret_reason,
         -- internal: the rule behind the mask, not to be published
         case
             when flagged_kpis.is_secret_stat
@@ -513,6 +516,10 @@
             when flagged_kpis.is_low_count
             then
                 'Moins de 5 bénéficiaires derrière ce KPI (20 pour la répartition par catégorie)'
+            when flagged_kpis.is_national_only
+            then 'KPI publié au national uniquement'
+            when flagged_kpis.is_missing_month
+            then 'Mois absent de la série du territoire'
         end as secret_detail,
         date_diff(
             {{ external_reporting_last_month() }}, flagged_kpis.partition_month, month

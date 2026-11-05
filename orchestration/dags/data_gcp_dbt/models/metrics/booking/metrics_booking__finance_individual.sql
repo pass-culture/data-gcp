@@ -3,6 +3,7 @@ select
     bf.venue_department_code,
     bf.venue_department_name,
     bf.venue_region_name,
+    bf.venue_region_code,
     bf.venue_epci_code,
     bf.venue_city_code,
     bf.venue_municipality_code,

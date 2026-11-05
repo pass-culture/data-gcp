@@ -3,12 +3,13 @@ with
         select
             gcp.venue_id,
             date_trunc(
-                date_add(date('2022-01-01'), interval offset month), month
+                date_add(date('2022-01-01'), interval month_offset month), month
             ) as partition_month
         from {{ ref("mrt_global__cultural_partner") }} as gcp
         cross join
-            unnest(generate_array(0, date_diff(current_date(), '2022-01-01', month))) as
-        offset
+            unnest(
+                generate_array(0, date_diff(current_date(), '2022-01-01', month))
+            ) as month_offset
         where
             gcp.first_individual_offer_creation_date is not null
             or gcp.first_collective_offer_creation_date is not null
@@ -42,6 +43,7 @@ with
             bd.partition_month,
             gcp.partner_region_name,
             gcp.partner_region_code,
+            gcp.partner_academy_name,
             gcp.partner_department_name,
             gcp.partner_department_code,
             gcp.partner_epci_code,
@@ -50,6 +52,7 @@ with
             gcp.partner_type,
             gcp.offerer_id,
             gvt.venue_tag_name,
+            gcp.first_collective_offer_creation_date,
             date_diff(
                 least(current_date(), last_day(bd.partition_month)),
                 bd.last_indiv_date,
@@ -76,6 +79,7 @@ with
         select
             partner_region_name,
             partner_region_code,
+            partner_academy_name,
             partner_department_name,
             partner_department_code,
             partner_epci_code,
@@ -108,6 +112,24 @@ with
                     then venue_id
                 end
             ) as total_active_partners_dual_part,
+            count(
+                distinct case
+                    when
+                        days_since_last_indiv_bookable_date <= 365
+                        and coalesce(
+                            days_since_last_collective_bookable_date > 365, true
+                        )
+                    then venue_id
+                end
+            ) as total_active_partners_individual_only,
+            count(
+                distinct case
+                    when
+                        days_since_last_collective_bookable_date <= 365
+                        and coalesce(days_since_last_indiv_bookable_date > 365, true)
+                    then venue_id
+                end
+            ) as total_active_partners_collective_only,
             count(
                 distinct case
                     when days_since_last_indiv_bookable_date >= 0 then venue_id
@@ -149,13 +171,20 @@ with
                         and days_since_last_collective_bookable_date >= 0
                     then venue_id
                 end
-            ) as total_cumulative_activated_partners_dual_part
-
+            ) as total_cumulative_activated_partners_dual_part,
+            -- current state, not as of partition_month: venues that have ever
+            -- created a collective offer
+            count(
+                distinct case
+                    when first_collective_offer_creation_date is not null then venue_id
+                end
+            ) as total_partners_with_collective_offer
         from partner_details
         group by
             partition_month,
             partner_region_name,
             partner_region_code,
+            partner_academy_name,
             partner_department_name,
             partner_department_code,
             partner_epci_code,
@@ -167,6 +196,7 @@ select
     partition_month,
     partner_region_name,
     partner_region_code,
+    partner_academy_name,
     partner_department_name,
     partner_department_code,
     partner_epci_code,
@@ -176,11 +206,14 @@ select
     total_active_partners_collective,
     total_active_partners_global,
     total_active_partners_dual_part,
+    total_active_partners_individual_only,
+    total_active_partners_collective_only,
     total_cumulative_activated_partners_individual,
     total_cumulative_activated_partners_collective,
     total_cumulative_activated_partners_global,
     total_cumulative_activated_partners_individual_only,
     total_cumulative_activated_partners_collective_only,
-    total_cumulative_activated_partners_dual_part
+    total_cumulative_activated_partners_dual_part,
+    total_partners_with_collective_offer
 from monthly_aggregated_kpis
 where partner_municipality_code is not null

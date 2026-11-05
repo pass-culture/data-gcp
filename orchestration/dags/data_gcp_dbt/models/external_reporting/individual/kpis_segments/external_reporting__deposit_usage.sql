@@ -9,56 +9,53 @@
     )
 }}
 
-{% set dimensions = get_dimensions("user", "geo_full") %}
+{#
+    Average credit granted and spent by the beneficiaries whose credit expired
+    in the month (user geography), rolled up from metrics_beneficiary__expired_cohorts.
+#}
+{% set kpis = {
+    "montant_moyen_octroye_a_l_expiration_du_credit": "total_deposit_amount_at_expiration",
+    "montant_moyen_depense_a_l_expiration_du_credit": "total_actual_amount_spent_at_expiration",
+} %}
+{% set dimensions = [
+    {"name": "NAT", "value_expr": "'NAT'"},
+    {"name": "REG", "value_expr": "region_name"},
+    {"name": "DEP", "value_expr": "department_name"},
+    {"name": "EPCI", "value_expr": "epci_code"},
+    {"name": "COM", "value_expr": "municipality_code"},
+] %}
 
-{% for dim in dimensions %}
-    {% if not loop.first %}
-        union all
-    {% endif %}
-    select
-        date_trunc(date(last_deposit_expiration_date), month) as partition_month,
-        timestamp("{{ ts() }}") as updated_at,
-        '{{ dim.name }}' as dimension_name,
-        {{ dim.value_expr }} as dimension_value,
-        "montant_moyen_octroye_a_l_expiration_du_credit" as kpi_name,
-        coalesce(sum(total_deposit_amount), 0) as numerator,
-        coalesce(count(distinct user_id), 0) as denominator,
-        coalesce(
-            safe_divide(sum(total_deposit_amount), count(distinct user_id)), 0
-        ) as kpi
-    from {{ ref("mrt_global__user_beneficiary") }}
-    where
-        current_deposit_type in ("GRANT_18", "GRANT_17_18")
-        and {{ dim.value_expr }} is not null
-        {% if is_incremental() %}
-            and date_trunc(last_deposit_expiration_date, month)
-            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-        {% endif %}
-    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
-{% endfor %}
-union all
-{% for dim in dimensions %}
-    {% if not loop.first %}
-        union all
-    {% endif %}
-    select
-        date_trunc(date(last_deposit_expiration_date), month) as partition_month,
-        timestamp("{{ ts() }}") as updated_at,
-        '{{ dim.name }}' as dimension_name,
-        {{ dim.value_expr }} as dimension_value,
-        "montant_moyen_depense_a_l_expiration_du_credit" as kpi_name,
-        coalesce(sum(total_actual_amount_spent), 0) as numerator,
-        coalesce(count(distinct user_id), 0) as denominator,
-        coalesce(
-            safe_divide(sum(total_actual_amount_spent), count(distinct user_id)), 0
-        ) as kpi
-    from {{ ref("mrt_global__user_beneficiary") }}
-    where
-        current_deposit_type in ("GRANT_18", "GRANT_17_18")
-        and {{ dim.value_expr }} is not null
-        {% if is_incremental() %}
-            and date_trunc(last_deposit_expiration_date, month)
-            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-        {% endif %}
-    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
-{% endfor %}
+select
+    partition_month,
+    timestamp("{{ ts() }}") as updated_at,
+    dimension_name,
+    dimension_value,
+    kpi_name,
+    numerator,
+    denominator,
+    coalesce(safe_divide(numerator, denominator), 0) as kpi
+from
+    (
+        {% for dim in dimensions %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
+            select
+                deposit_expiration_month as partition_month,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.value_expr }} as dimension_value,
+                {% for kpi_name, column in kpis.items() %}
+                    sum({{ column }}) as {{ kpi_name }},
+                {% endfor %}
+                sum(total_expired_deposit_beneficiaries) as denominator
+            from {{ ref("metrics_beneficiary__expired_cohorts") }}
+            where
+                {{ dim.value_expr }} is not null
+                {% if is_incremental() %}
+                    and deposit_expiration_month
+                    = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+                {% endif %}
+            group by partition_month, dimension_name, dimension_value
+        {% endfor %}
+    )
+    unpivot (numerator for kpi_name in ({{ kpis.keys() | join(", ") }}))

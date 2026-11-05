@@ -23,6 +23,10 @@ models:
         description: '{{ doc("column__institution_region_code") }}'
         data_type: STRING
 
+      - name: institution_academy_name
+        description: '{{ doc("column__institution_academy_name") }}'
+        data_type: STRING
+
       - name: institution_department_name
         description: '{{ doc("column__institution_department_name") }}'
         data_type: STRING
@@ -41,6 +45,10 @@ models:
 
       - name: institution_city_code
         description: '{{ doc("column__institution_city_code") }}'
+        data_type: STRING
+
+      - name: institution_municipality_code
+        description: '{{ doc("column__institution_municipality_code") }}'
         data_type: STRING
 
       - name: total_collective_bookings
@@ -73,4 +81,12 @@ models:
 
       - name: cumulative_total_collective_institutions
         description: '{{ doc("column__cumulative_total_collective_institutions_by_domain") }}'
+        data_type: INTEGER
+
+      - name: total_labelled_collective_bookings
+        description: '{{ doc("column__total_labelled_collective_bookings_by_domain") }}'
+        data_type: INTEGER
+
+      - name: cumulative_total_labelled_collective_bookings
+        description: '{{ doc("column__cumulative_total_labelled_collective_bookings_by_domain") }}'
         data_type: INTEGER

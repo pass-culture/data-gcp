@@ -39,6 +39,9 @@ with
                 ) as cell_key_spent_share_{{ bucket.name }},
             {% endfor %}
             coalesce(
+                sum(oc.total_deposit_amount * oc.total_users), 0
+            ) as total_deposit_amount_at_expiration,
+            coalesce(
                 sum(oc.total_amount_spent), 0
             ) as total_actual_amount_spent_at_expiration,
             coalesce(
@@ -88,6 +91,7 @@ select
         total_spent_share_{{ bucket.name }}_beneficiaries,
         cell_key_spent_share_{{ bucket.name }},
     {% endfor %}
+    total_deposit_amount_at_expiration,
     total_actual_amount_spent_at_expiration,
     total_distinct_venue_booked_at_expiration
 from final_data

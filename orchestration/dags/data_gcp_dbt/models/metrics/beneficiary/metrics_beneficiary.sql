@@ -17,5 +17,10 @@ select
     total_actual_beneficiaries,
     total_beneficiaries,
     cell_key_beneficiaries,
-    cell_key_actual_beneficiaries
+    cell_key_actual_beneficiaries,
+    {% for breakdown in get_actual_beneficiary_breakdowns() %}
+        total_actual_beneficiaries_{{ breakdown.name }},
+        cell_key_actual_beneficiaries_{{ breakdown.name }}
+        {% if not loop.last %},{% endif %}
+    {% endfor %}
 from {{ ref("int_kpi__beneficiary") }}

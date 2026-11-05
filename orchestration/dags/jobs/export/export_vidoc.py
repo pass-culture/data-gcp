@@ -112,22 +112,28 @@ with DAG(
     for config in TABLES_CONFIGS:
         s3_prefix = config["s3_prefix"]
         gcs_prefix = f"{GCS_EXPORT_ROOT}/{{{{ ds_nodash }}}}/{s3_prefix}"
+        source_table = (
+            f"{GCP_PROJECT_ID}.{config['bigquery_dataset_name']}"
+            f".{config['bigquery_table_name']}"
+        )
+        columns = ", ".join(config["columns"])
 
+        # EXPORT DATA rather than an extract job, to export the lot 1 columns only
         bq_to_gcs = BigQueryInsertJobOperator(
             project_id=GCP_PROJECT_ID,
             task_id=f"bq_extract_{s3_prefix}",
             configuration={
-                "extract": {
-                    "sourceTable": {
-                        "projectId": GCP_PROJECT_ID,
-                        "datasetId": config["bigquery_dataset_name"],
-                        "tableId": config["bigquery_table_name"],
-                    },
-                    "compression": None,
-                    "destinationUris": (
-                        f"gs://{DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME}/{gcs_prefix}/data-*.parquet"
-                    ),
-                    "destinationFormat": "PARQUET",
+                "query": {
+                    "query": f"""
+                        EXPORT DATA OPTIONS(
+                          uri='gs://{DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME}/{gcs_prefix}/data-*.parquet',
+                          format='PARQUET',
+                          overwrite=true
+                        ) AS
+                        SELECT {columns}
+                        FROM `{source_table}`
+                    """,
+                    "useLegacySql": False,
                 }
             },
         )

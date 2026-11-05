@@ -9,7 +9,7 @@ description: How to calculate the share of beneficiaries who booked in at least 
 
 Share of credited beneficiaries who made a validated booking in at least 3 different offer categories by the time their credit expired. Bookings across all granted credits (ages 15-20) are observed. Categories are as declared by the cultural partner when creating the offer on the pass Culture portal.
 
-Only beneficiaries who received an age-18 credit are considered.
+Only beneficiaries whose last credit is a 17-18 credit (`GRANT_18`, `GRANT_17_18`) expired in a closed month are considered.
 
 ### Source table
 
@@ -17,16 +17,16 @@ Only beneficiaries who received an age-18 credit are considered.
 
 ### Calculation
 
-The share is the ratio of `total_3plus_category_booked_beneficiaries` to `total_expired_credit_beneficiaries`.
+The share is the ratio of `total_3plus_category_booked_beneficiaries` to `total_expired_deposit_beneficiaries`.
 
 ```sql
 SELECT
     deposit_expiration_month,
     SUM(total_3plus_category_booked_beneficiaries) AS booked_3plus_categories,
-    SUM(total_expired_credit_beneficiaries) AS total_expired,
+    SUM(total_expired_deposit_beneficiaries) AS total_expired,
     SAFE_DIVIDE(
         SUM(total_3plus_category_booked_beneficiaries),
-        SUM(total_expired_credit_beneficiaries)
+        SUM(total_expired_deposit_beneficiaries)
     ) AS diversity_rate
 FROM `diversity`
 GROUP BY deposit_expiration_month
@@ -37,7 +37,7 @@ ORDER BY deposit_expiration_month
 
 | Dimension | Column | Description |
 |-----------|--------|-------------|
-| Expiration quarter | `deposit_expiration_month` | Month when the beneficiary's credit expired |
+| Expiration month | `deposit_expiration_month` | Month when the beneficiary's credit expired |
 | Department | `department_code`, `department_name` | Department of residence |
 | Region | `region_code`, `region_name` | Region of residence |
 | QPV | `is_in_qpv` | Priority neighbourhood flag |
@@ -46,12 +46,12 @@ ORDER BY deposit_expiration_month
 
 ### Temporal tracking
 
-**Quarterly.** The `deposit_expiration_month` column indicates when the beneficiary's credit expired.
+**Monthly.** One cohort per `deposit_expiration_month`, the month when the beneficiaries' credit expired. Sum several months (e.g. a quarter or a year) for small territories.
 
 ### Data protection
 
-Both columns are protected using the [Cell Key Perturbation method](../references/statistical_confidentiality.md). They correspond to **nested cohorts** (`3plus ⊂ expired`) but are perturbed **independently** (each column has its own cell key). Consequences:
+Both columns are protected using the [Cell Key Perturbation method](../references/statistical_confidentiality.md). They correspond to **nested cohorts** (`3plus ⊂ expired`) and are perturbed **independently** (each column has its own cell key), then `total_3plus_category_booked_beneficiaries` is capped at `total_expired_deposit_beneficiaries` in each row, so the rate never exceeds 100 %.
 
-- On a single small cell, the invariant `total_3plus_category_booked_beneficiaries ≤ total_expired_credit_beneficiaries` can be **violated** after perturbation.
-- Always aggregate over many cells (national, regional, quarterly) before computing the rate; the law of large numbers brings the ratio back close to the true value.
-- For the national/quarterly rate, the relative error is negligible.
+- On a single small cell, the rate can still be noisy.
+- Always aggregate over many cells (national, regional, several months) before computing the rate; the law of large numbers brings the ratio back close to the true value.
+- For a national rate over a quarter or more, the relative error is negligible.

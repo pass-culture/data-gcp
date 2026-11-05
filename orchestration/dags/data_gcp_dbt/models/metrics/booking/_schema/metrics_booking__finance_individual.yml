@@ -24,6 +24,8 @@ models:
         description: '{{ doc("column__venue_department_name") }}'
       - name: venue_region_name
         description: '{{ doc("column__venue_region_name") }}'
+      - name: venue_region_code
+        description: '{{ doc("column__venue_region_code") }}'
       - name: venue_epci_code
         description: '{{ doc("column__venue_epci_code") }}'
       - name: venue_city_code

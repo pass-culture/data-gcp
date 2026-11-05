@@ -78,7 +78,7 @@ LEFT JOIN num AS n USING (deposit_expiration_month, department_code)
 
 | Dimension | Column | Description |
 |-----------|--------|-------------|
-| Expiration quarter | `deposit_expiration_month` | Month when the beneficiary's credit expired |
+| Expiration month | `deposit_expiration_month` | Month when the beneficiary's credit expired |
 | Offer category | `offer_category_id` | Offer category as declared by the cultural partner |
 | Department | `department_code`, `department_name` | Department of residence |
 | Region | `region_code`, `region_name` | Region of residence |
@@ -88,12 +88,12 @@ LEFT JOIN num AS n USING (deposit_expiration_month, department_code)
 
 ### Temporal tracking
 
-**Quarterly.** The `deposit_expiration_month` column indicates when the beneficiary's credit expired.
+**Monthly.** One cohort per `deposit_expiration_month`, the month when the beneficiaries' credit expired. Sum several months (e.g. a quarter or a year) for small territories.
 
 ### Data protection
 
 Counts are protected using the [Cell Key Perturbation method](../references/statistical_confidentiality.md). The numerator (`total_category_booked_beneficiaries`) and the denominator (`total_expired_deposit_beneficiaries`) come from **different cohorts of users** and are therefore perturbed **independently** (different cell keys → independent noise). Consequences:
 
 - On a single small cell, the ratio can be unstable (numerator and denominator each shifted by up to ±5).
-- The invariant `booked_in_category ≤ total_expired` can be **violated** at the cell level after perturbation. Always aggregate over many cells (national, regional, quarterly) before computing a rate.
+- The invariant `booked_in_category ≤ total_expired` can be **violated** at the cell level after perturbation. Always aggregate over many cells (national, regional, several months) before computing a rate.
 - For very rare categories, a rate computed at a fine geographic grain should be treated as indicative only.

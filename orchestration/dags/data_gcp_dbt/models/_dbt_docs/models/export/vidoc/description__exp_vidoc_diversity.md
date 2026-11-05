@@ -18,6 +18,6 @@ Each row represents a key indicator calculated for a specific month, geographic 
 
 > `total_Nplus_category_booked_beneficiaries` (N = 1 to 5) and `total_spent_share_*_beneficiaries` are capped at `total_expired_deposit_beneficiaries` of the same row, so their shares never exceed 100%.
 
-> `total_actual_amount_spent_at_expiration` and `total_distinct_venue_booked_at_expiration` are not perturbed: they are null when `total_expired_deposit_beneficiaries` is below 5. Divide them by `total_expired_deposit_beneficiaries` to get the average amount spent and the average number of distinct partners booked at expiration.
+> `total_deposit_amount_at_expiration`, `total_actual_amount_spent_at_expiration` and `total_distinct_venue_booked_at_expiration` are not perturbed: they are null when `total_expired_deposit_beneficiaries` is below 5. Divide them by `total_expired_deposit_beneficiaries` to get the average amount granted, the average amount spent and the average number of distinct partners booked at expiration. When aggregating, exclude the rows where they are null from the denominator too, or the averages are underestimated.
 
 {% docs table__exp_vidoc__diversity %}{% enddocs %}

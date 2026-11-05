@@ -10,6 +10,7 @@ VIDOC_MODELS = [
     "beneficiary",
     "population_coverage",
     "beneficiary_coverage",
+    "booking_finance_individual",
 ]
 
 

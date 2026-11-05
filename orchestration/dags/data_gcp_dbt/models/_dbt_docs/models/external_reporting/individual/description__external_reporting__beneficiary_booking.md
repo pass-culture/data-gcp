@@ -6,7 +6,7 @@ description: Key indicators from the `external_reporting__beneficiary_booking` m
 {% docs description__external_reporting__beneficiary_booking %}
 
 The `external_reporting__beneficiary_booking` model provides the used bookings and amounts spent by the beneficiaries living in each territory (user geography), wherever they booked.
-Monthly flows by month of use, part of `external_reporting__individual`.
+Monthly flows by month of use, part of `external_reporting__individual`, rolled up from [`metrics_booking__individual`](#!/model/model.data_gcp_dbt.metrics_booking__individual).
 
 {% enddocs %}
 

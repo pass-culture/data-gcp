@@ -461,3 +461,47 @@ Noise added to the exact count (cell key method, max noise 5, no published count
 {% docs column__cell_key %}
 Cell key (0-255) of the matching count, used to perturb that count on publication (statistical disclosure control, cell key method): the salted record keys of the counted users summed modulo 256. Neither a measure nor a dimension: do not display it. When rows are aggregated, the key of the aggregate is mod(abs(sum(cell_key)), 256), not the plain sum.
 {% enddocs %}
+
+{% docs column__booking_individual__user_is_beneficiary %}
+True when the user who booked is in `mrt_global__user_beneficiary` (active or suspended upon his own request, and not on a GRANT_FREE deposit). False for deleted, suspended and GRANT_FREE users: their bookings are kept, without beneficiary geography.
+{% enddocs %}
+
+{% docs column__booking_individual__total_used_bookings %}
+Number of used individual bookings (booking_is_used), counted on the month of use, for the row's cell.
+{% enddocs %}
+
+{% docs column__booking_individual__total_used_amount %}
+Amount of the used individual bookings (booking_intermediary_amount, in euros), counted on the month of use, for the row's cell.
+{% enddocs %}
+
+{% docs column__booking_individual__total_created_bookings %}
+Number of individual bookings created in the month, in any state (cancelled included), for the row's cell.
+{% enddocs %}
+
+{% docs column__booking_individual__total_created_free_bookings %}
+Number of free individual bookings (booking_amount = 0) created in the month, in any state (cancelled included), for the row's cell. Free bookings are often cancelled by default as they need no check.
+{% enddocs %}
+
+{% docs column__booking_individual__total_new_bookers %}
+Number of beneficiaries whose first used booking since January 2022 is in the month, all categories. Each beneficiary is counted once, on the row of the category of that first booking: sum the categories and the months to get the distinct bookers of a territory since 2022.
+{% enddocs %}
+
+{% docs column__booking_individual__total_new_category_bookers %}
+Number of beneficiaries whose first used booking since January 2022 in the row's offer category is in the month: sum the months to get the distinct bookers of a category in a territory since 2022. Do not sum the categories (a beneficiary is counted in each category he booked).
+{% enddocs %}
+
+{% docs column__total_created_free_offers %}
+Number of free individual offers (last stock price 0) created in the month, in any state.
+{% enddocs %}
+
+{% docs column__total_created_free_bookable_offers %}
+Number of free individual offers (last stock price 0) created in the month that are bookable today.
+{% enddocs %}
+
+{% docs column__cumulative_total_created_free_offers %}
+Number of free individual offers (last stock price 0) of the territory created up to and including the month, in any state.
+{% enddocs %}
+
+{% docs column__cumulative_total_created_free_bookable_offers %}
+Number of free individual offers (last stock price 0) of the territory created up to and including the month that are bookable today.
+{% enddocs %}

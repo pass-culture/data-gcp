@@ -1,0 +1,49 @@
+version: 2
+models:
+  - name: metrics_offer__individual_free
+    description: '{{ doc("description__metrics_offer__individual_free") }}'
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - partition_month
+              - venue_region_name
+              - venue_department_name
+              - venue_epci_code
+              - venue_municipality_code
+    columns:
+      - name: partition_month
+        description: '{{ doc("column__partition_month") }}'
+        data_type: DATE
+
+      - name: venue_region_name
+        description: '{{ doc("column__venue_region_name") }}'
+        data_type: STRING
+
+      - name: venue_department_name
+        description: '{{ doc("column__venue_department_name") }}'
+        data_type: STRING
+
+      - name: venue_epci_code
+        description: '{{ doc("column__venue_epci_code") }}'
+        data_type: STRING
+
+      - name: venue_municipality_code
+        description: '{{ doc("column__venue_municipality_code") }}'
+        data_type: STRING
+
+      - name: total_created_free_offers
+        description: '{{ doc("column__total_created_free_offers") }}'
+        data_type: INTEGER
+
+      - name: total_created_free_bookable_offers
+        description: '{{ doc("column__total_created_free_bookable_offers") }}'
+        data_type: INTEGER
+
+      - name: cumulative_total_created_free_offers
+        description: '{{ doc("column__cumulative_total_created_free_offers") }}'
+        data_type: INTEGER
+
+      - name: cumulative_total_created_free_bookable_offers
+        description: '{{ doc("column__cumulative_total_created_free_bookable_offers") }}'
+        data_type: INTEGER

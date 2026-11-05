@@ -9,6 +9,8 @@
                 - 'population': population_region_name, population_department_name
                 - 'institution': institution_region_name, institution_academy_name
                 - 'partner': partner_region_name, partner_department_name, partner_academy_name
+                - 'beneficiary': region_name, department_name, academy_name, epci_code, municipality_code
+                  (bare column names of the beneficiary geography in int_kpi / metrics models)
                 - none/null: region_name, dep_name, academy_name, epci_code, municipality_code (bare column names)
 
             hierarchy_type (string): The geographic hierarchy to use. Options:
@@ -31,7 +33,13 @@
             {{ get_dimensions(none, 'geo_epci') }}
             {{ get_dimensions(none, 'academic_extended') }}
     #}
-    {% if entity_prefix %}
+    {% if entity_prefix == "beneficiary" %}
+        {% set region_col = "region_name" %}
+        {% set dept_col = "department_name" %}
+        {% set acad_col = "academy_name" %}
+        {% set epci_col = "epci_code" %}
+        {% set municipality_col = "municipality_code" %}
+    {% elif entity_prefix %}
         {% set region_col = entity_prefix ~ "_region_name" %}
         {% set dept_col = entity_prefix ~ "_department_name" %}
         {% set acad_col = entity_prefix ~ "_academy_name" %}

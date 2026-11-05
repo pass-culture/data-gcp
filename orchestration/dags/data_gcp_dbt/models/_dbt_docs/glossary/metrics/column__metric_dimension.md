@@ -33,7 +33,7 @@ Minimum number of distinct beneficiaries behind the KPI for it to be published: 
 {% enddocs %}
 
 {% docs column__external_reporting_secret_detail %}
-Internal detail of the rule behind a masked KPI, not to be published: the statistical secret reason of the territory with its side and rolling window (e.g. 'Nombre de partenaires faible (< 3) (individuel, 6 mois)'), or the fewer than 5 beneficiaries rule. NULL when the KPI is not masked.
+Internal detail of the rule behind a masked KPI, not to be published: the statistical secret reason of the territory with its side and rolling window (e.g. 'Nombre de partenaires faible (< 3) (individuel, 6 mois)'), or the fewer than 5 beneficiaries rule; 'KPI publié au national uniquement' or 'Mois absent de la série du territoire' for KPIs without a value outside the secret. NULL when the KPI has a value.
 {% enddocs %}
 
 {% docs column__external_reporting_is_national_only %}
@@ -53,7 +53,7 @@ Value of the same KPI and month at national level (NAT row). NULL when the KPI i
 {% enddocs %}
 
 {% docs column__external_reporting_secret_reason %}
-Message to display instead of the KPI when it is masked, whatever the rule (statistical secret on cultural partners, or fewer than 5 beneficiaries behind the KPI): 'Données non disponibles (secret statistique)'. NULL otherwise. is_secret_stat and is_low_count tell the rule apart.
+Message to display instead of the KPI when it has no value: 'Données non disponibles (secret statistique)' when it is masked, whatever the rule (statistical secret on cultural partners, or fewer than 5 beneficiaries behind the KPI); 'Données non disponibles' when it is NULL for another reason (KPI published at national level only, or month missing from a stock KPI series). NULL when the KPI has a value. The secret message sorts after the plain one, so max(secret_reason) shows the secret when both are mixed. is_secret_stat, is_low_count, is_national_only and is_missing_month tell the rule apart.
 {% enddocs %}
 
 {% docs column__milestone_age %}

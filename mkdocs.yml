@@ -72,6 +72,10 @@ nav:
           - Student EAC participation rate: dbt/vidoc_kpis/student_eac_participation_rate.md
           - Institution EAC participation rate: dbt/vidoc_kpis/institution_eac_participation_rate.md
           - EAC credit consumption rate: dbt/vidoc_kpis/eac_credit_consumption_rate.md
+          - EAC collective bookings: dbt/vidoc_kpis/eac_collective_bookings.md
+          - EAC bookings by educational domain: dbt/vidoc_kpis/eac_bookings_by_domain.md
+          - EAC bookings by offer format: dbt/vidoc_kpis/eac_bookings_by_format.md
+          - EAC bookable collective offers: dbt/vidoc_kpis/eac_bookable_offers.md
         - Ministry exports:
           - dbt/ministry_kpis/index.md
           - User and deposits: dbt/ministry_kpis/user_and_deposit.md

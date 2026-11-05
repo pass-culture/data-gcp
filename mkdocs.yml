@@ -79,6 +79,7 @@ nav:
           - Active cultural partners by channel: dbt/vidoc_kpis/active_cultural_partners.md
           - Activated cultural partners: dbt/vidoc_kpis/activated_cultural_partners.md
           - Cultural partners by type: dbt/vidoc_kpis/active_cultural_partners_by_type.md
+          - Monthly tops: dbt/vidoc_kpis/monthly_tops.md
         - Ministry exports:
           - dbt/ministry_kpis/index.md
           - User and deposits: dbt/ministry_kpis/user_and_deposit.md

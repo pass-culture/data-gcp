@@ -34,3 +34,7 @@ The EAC (collective part) tables are the exception: `exp_vidoc_student_coverage`
 | [Number of active cultural partners by channel](active_cultural_partners.md) | Venues with a bookable offer in the last 365 days: individual only, collective only, both | `exp_vidoc_cultural_partner` | Monthly (rolling 365 days) |
 | [Cumulative number of activated cultural partners](activated_cultural_partners.md) | Venues that have had at least one bookable offer since 2022-06-10 | `exp_vidoc_cultural_partner` | Monthly (cumulative) |
 | [Number of active and activated cultural partners by type](active_cultural_partners_by_type.md) | Active and activated venues for one partner type (never summed over types) | `exp_vidoc_cultural_partner_by_type` | Monthly (rolling 365 days) |
+| [Diversity depth (1+ to 5+ categories)](diversity_category_depth.md) | Share who booked in at least N categories at credit expiration, N = 1 to 5 | `exp_vidoc_diversity` | Monthly |
+| [Amount granted, spent and spending rate](credit_amount_at_expiration.md) | Average amount granted and spent per beneficiary, and share of credit spent, at expiration | `exp_vidoc_diversity` | Monthly |
+| [Distribution by share of credit spent](credit_spent_share_distribution.md) | Beneficiaries by bucket of share of credit spent at expiration | `exp_vidoc_diversity` | Monthly |
+| [Distinct venues booked](distinct_venues_booked.md) | Average number of distinct venues booked per beneficiary at expiration | `exp_vidoc_diversity` | Monthly |

@@ -79,6 +79,10 @@ nav:
           - Active cultural partners by channel: dbt/vidoc_kpis/active_cultural_partners.md
           - Activated cultural partners: dbt/vidoc_kpis/activated_cultural_partners.md
           - Cultural partners by type: dbt/vidoc_kpis/active_cultural_partners_by_type.md
+          - Diversity depth (1+ to 5+): dbt/vidoc_kpis/diversity_category_depth.md
+          - Amount granted, spent and spending rate: dbt/vidoc_kpis/credit_amount_at_expiration.md
+          - Share of credit spent: dbt/vidoc_kpis/credit_spent_share_distribution.md
+          - Distinct venues booked: dbt/vidoc_kpis/distinct_venues_booked.md
         - Ministry exports:
           - dbt/ministry_kpis/index.md
           - User and deposits: dbt/ministry_kpis/user_and_deposit.md

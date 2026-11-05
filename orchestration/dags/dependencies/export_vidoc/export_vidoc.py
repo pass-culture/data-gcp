@@ -64,21 +64,6 @@ VIDOC_MODELS = {
         "milestone_age",
         "total_beneficiaries_last_12_months",
     ],
-    "booking_finance_individual": [
-        "partition_month",
-        "venue_department_code",
-        "venue_department_name",
-        "venue_region_name",
-        "venue_region_code",
-        "is_statistic_secret",
-        "department_secret_reason_code",
-        "department_secret_reason_label",
-        "total_bookings",
-        "total_quantities",
-        "total_revenue_amount",
-        "total_reimbursed_amount",
-        "total_contribution_amount",
-    ],
 }
 
 

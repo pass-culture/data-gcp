@@ -12,7 +12,7 @@
 
 **external_reporting_min_beneficiaries**: Minimum number of distinct beneficiaries behind the KPI for it to be published: 5, or 20 for the category shares (pct_reservations_beneficiaires\_\*), which are published as a whole breakdown.
 
-**external_reporting_secret_detail**: Internal detail of the rule behind a masked KPI, not to be published: the statistical secret reason of the territory with its side and rolling window (e.g. 'Nombre de partenaires faible (< 3) (individuel, 6 mois)'), or the fewer than 5 beneficiaries rule. NULL when the KPI is not masked.
+**external_reporting_secret_detail**: Internal detail of the rule behind a masked KPI, not to be published: the statistical secret reason of the territory with its side and rolling window (e.g. 'Nombre de partenaires faible (< 3) (individuel, 6 mois)'), or the fewer than 5 beneficiaries rule; 'KPI publié au national uniquement' or 'Mois absent de la série du territoire' for KPIs without a value outside the secret. NULL when the KPI has a value.
 
 **external_reporting_is_national_only**: True on the rows added for a KPI published at NAT but not at this territory level (e.g. coverage rates): numerator, denominator and kpi are NULL, only the national\_\* columns are filled, so that reports filtered on a territory still show the national value.
 
@@ -22,7 +22,7 @@
 
 **external_reporting_national_kpi**: Value of the same KPI and month at national level (NAT row). NULL when the KPI is not published at NAT.
 
-**external_reporting_secret_reason**: Message to display instead of the KPI when it is masked, whatever the rule (statistical secret on cultural partners, or fewer than 5 beneficiaries behind the KPI): 'Données non disponibles (secret statistique)'. NULL otherwise. is_secret_stat and is_low_count tell the rule apart.
+**external_reporting_secret_reason**: Message to display instead of the KPI when it has no value: 'Données non disponibles (secret statistique)' when it is masked, whatever the rule (statistical secret on cultural partners, or fewer than 5 beneficiaries behind the KPI); 'Données non disponibles' when it is NULL for another reason (KPI published at national level only, or month missing from a stock KPI series). NULL when the KPI has a value. The secret message sorts after the plain one, so max(secret_reason) shows the secret when both are mixed. is_secret_stat, is_low_count, is_national_only and is_missing_month tell the rule apart.
 
 **milestone_age**: Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in beneficiary coverage models and in exp_vidoc\_\_population_coverage, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage.
 
@@ -71,6 +71,14 @@
 **epci_secret_reason_code**: Stable code identifying the reason for statistical secrecy at the EPCI level ('no_revenue', 'low_partners', 'high_concentration', 'both', 'secondary_secret' or 'none').
 
 **municipality_secret_reason_code**: Stable code identifying the reason for statistical secrecy at the municipality level ('no_revenue', 'low_partners', 'high_concentration', 'both', 'secondary_secret' or 'none').
+
+**geo_level**: Geographic scale used to compute the ranking ('national', 'region', or 'department').
+
+**geo_value**: Name or identifier of the geographic area corresponding to the aggregation level ('NAT', region name, or department name).
+
+**offer_rank**: Rank position of the offer based on total booking revenue generated over the period, in descending order (from 1 to 50).
+
+**venue_rank**: Rank position of the venue based on total booking revenue generated over the period, in descending order (from 1 to 50).
 
 **external_reporting_is_missing_month**: True when the territory has past values for this stock KPI but none this month: numerator, denominator and kpi are NULL (an average or share without activity is not 0), and the row only carries the national\_\* values of the month.
 

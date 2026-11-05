@@ -13,7 +13,7 @@ Only beneficiaries who received an age-18 credit are considered.
 
 ### Calculation
 
-The share is the ratio of `total_category_booked_beneficiaries` (per category) to `total_expired_credit_beneficiaries` (total, **independent of the category**).
+The share is the ratio of `total_category_booked_beneficiaries` (per category) to `total_expired_deposit_beneficiaries` (total, **independent of the category**).
 
 Because the denominator is not category-specific, **aggregate the numerator and the denominator separately** before dividing:
 
@@ -29,7 +29,7 @@ WITH numerator AS (
 denominator AS (
     SELECT
         deposit_expiration_month,
-        SUM(total_expired_credit_beneficiaries) AS total_expired
+        SUM(total_expired_deposit_beneficiaries) AS total_expired
     FROM `diversity`
     GROUP BY deposit_expiration_month
 )
@@ -51,7 +51,7 @@ To compute the rate on a sub-group (e.g. per department, per QPV), add the group
 ```
 WITH denom AS (
     SELECT deposit_expiration_month, department_code,
-           SUM(total_expired_credit_beneficiaries) AS total_expired
+           SUM(total_expired_deposit_beneficiaries) AS total_expired
     FROM `diversity`
     WHERE department_code = 'XX' -- optional filter to a specific sub-group
     GROUP BY deposit_expiration_month, department_code
@@ -71,24 +71,24 @@ LEFT JOIN num AS n USING (deposit_expiration_month, department_code)
 
 ### Available dimensions
 
-| Dimension          | Column                               | Description                                        |
-| ------------------ | ------------------------------------ | -------------------------------------------------- |
-| Expiration quarter | `deposit_expiration_month`           | Month when the beneficiary's credit expired        |
-| Offer category     | `offer_category_id`                  | Offer category as declared by the cultural partner |
-| Department         | `department_code`, `department_name` | Department of residence                            |
-| Region             | `region_code`, `region_name`         | Region of residence                                |
-| QPV                | `is_in_qpv`                          | Priority neighbourhood flag                        |
-| Rurality (macro)   | `macro_density_label`                | Macro density level                                |
-| Rurality (micro)   | `micro_density_label`                | Micro density level                                |
+| Dimension        | Column                               | Description                                        |
+| ---------------- | ------------------------------------ | -------------------------------------------------- |
+| Expiration month | `deposit_expiration_month`           | Month when the beneficiary's credit expired        |
+| Offer category   | `offer_category_id`                  | Offer category as declared by the cultural partner |
+| Department       | `department_code`, `department_name` | Department of residence                            |
+| Region           | `region_code`, `region_name`         | Region of residence                                |
+| QPV              | `is_in_qpv`                          | Priority neighbourhood flag                        |
+| Rurality (macro) | `macro_density_label`                | Macro density level                                |
+| Rurality (micro) | `micro_density_label`                | Micro density level                                |
 
 ### Temporal tracking
 
-**Quarterly.** The `deposit_expiration_month` column indicates when the beneficiary's credit expired.
+**Monthly.** One cohort per `deposit_expiration_month`, the month when the beneficiaries' credit expired. Sum several months (e.g. a quarter or a year) for small territories.
 
 ### Data protection
 
-Counts are protected using the [Cell Key Perturbation method](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md). The numerator (`total_category_booked_beneficiaries`) and the denominator (`total_expired_credit_beneficiaries`) come from **different cohorts of users** and are therefore perturbed **independently** (different cell keys → independent noise). Consequences:
+Counts are protected using the [Cell Key Perturbation method](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md). The numerator (`total_category_booked_beneficiaries`) and the denominator (`total_expired_deposit_beneficiaries`) come from **different cohorts of users** and are therefore perturbed **independently** (different cell keys → independent noise). Consequences:
 
 - On a single small cell, the ratio can be unstable (numerator and denominator each shifted by up to ±5).
-- The invariant `booked_in_category ≤ total_expired` can be **violated** at the cell level after perturbation. Always aggregate over many cells (national, regional, quarterly) before computing a rate.
+- The invariant `booked_in_category ≤ total_expired` can be **violated** at the cell level after perturbation. Always aggregate over many cells (national, regional, several months) before computing a rate.
 - For very rare categories, a rate computed at a fine geographic grain should be treated as indicative only.

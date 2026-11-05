@@ -6,37 +6,37 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="How to calculate the number of active and cumulatively activated cultural partners by type and geography up to the department level.">
+        <meta name="description" content="Description of the `int_kpi__booking_individual_bookers` table.">
       
       
         <meta name="author" content="Pass Culture Team">
       
       
-        <link rel="canonical" href="https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/cultural_partner/">
+        <link rel="canonical" href="https://pass-culture.github.io/data-gcp/dbt/models/intermediate/kpi/booking/description__int_kpi__booking_individual_bookers/">
       
       
-        <link rel="prev" href="../booking_share_by_category/">
+        <link rel="prev" href="../description__int_kpi__booking_individual/">
       
       
-        <link rel="next" href="../diversity_3plus_categories/">
+        <link rel="next" href="../../cultural_partner/description__int_kpi__cultural_partner_activation_cohorts/">
       
       
         
       
       
-      <link rel="icon" href="../../../assets/favicon.png">
+      <link rel="icon" href="../../../../../../assets/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>Number of active and activated cultural partners - Pass Culture Data Documentation</title>
+        <title>Individual bookers KPI - Pass Culture Data Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../../../../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../../../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -55,15 +55,15 @@
       
     
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
     
     
   
-  <link rel="stylesheet" href="../../../styles/custom.css">
-  <script src="../../../scripts/custom.js"></script>
+  <link rel="stylesheet" href="../../../../../../styles/custom.css">
+  <script src="../../../../../../scripts/custom.js"></script>
 
   </head>
   
@@ -83,11 +83,6 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
-        
-        <a href="#number-of-active-and-activated-cultural-partners" class="md-skip">
-          Skip to content
-        </a>
-      
     </div>
     <div data-md-component="announce">
       
@@ -98,7 +93,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../.." title="Pass Culture Data Documentation" class="md-header__button md-logo" aria-label="Pass Culture Data Documentation" data-md-component="logo">
+    <a href="../../../../../.." title="Pass Culture Data Documentation" class="md-header__button md-logo" aria-label="Pass Culture Data Documentation" data-md-component="logo">
       
   <img src="https://upload.wikimedia.org/wikipedia/commons/4/4f/Logo_du_Pass_Culture.png" alt="logo">
 
@@ -117,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Number of active and activated cultural partners
+              Individual bookers KPI
             
           </span>
         </div>
@@ -235,7 +230,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../.." class="md-tabs__link">
+      <a href="../../../../../.." class="md-tabs__link">
         
   
   
@@ -256,7 +251,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../project_structure_and_data_flow/" class="md-tabs__link">
+        <a href="../../../../../../project_structure_and_data_flow/" class="md-tabs__link">
           
   
   
@@ -274,11 +269,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../overview/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../../../../overview/" class="md-tabs__link">
           
   
   
@@ -300,7 +297,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../glossary/" class="md-tabs__link">
+        <a href="../../../../../glossary/" class="md-tabs__link">
           
   
   
@@ -322,7 +319,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../team/ds/overview/" class="md-tabs__link">
+        <a href="../../../../../../team/ds/overview/" class="md-tabs__link">
           
   
   
@@ -344,7 +341,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../team/de/overview/" class="md-tabs__link">
+        <a href="../../../../../../team/de/overview/" class="md-tabs__link">
           
   
   
@@ -364,7 +361,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../about/" class="md-tabs__link">
+      <a href="../../../../../../about/" class="md-tabs__link">
         
   
   
@@ -399,7 +396,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../.." title="Pass Culture Data Documentation" class="md-nav__button md-logo" aria-label="Pass Culture Data Documentation" data-md-component="logo">
+    <a href="../../../../../.." title="Pass Culture Data Documentation" class="md-nav__button md-logo" aria-label="Pass Culture Data Documentation" data-md-component="logo">
       
   <img src="https://upload.wikimedia.org/wikipedia/commons/4/4f/Logo_du_Pass_Culture.png" alt="logo">
 
@@ -428,7 +425,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
+      <a href="../../../../../.." class="md-nav__link">
         
   
   
@@ -517,7 +514,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../project_structure_and_data_flow/" class="md-nav__link">
+      <a href="../../../../../../project_structure_and_data_flow/" class="md-nav__link">
         
   
   
@@ -545,7 +542,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
+      <a href="../../../../../.." class="md-nav__link">
         
   
   
@@ -573,7 +570,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
+      <a href="../../../../../.." class="md-nav__link">
         
   
   
@@ -601,7 +598,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
+      <a href="../../../../../.." class="md-nav__link">
         
   
   
@@ -633,8 +630,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -650,19 +649,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -680,7 +682,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -698,7 +700,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../overview/" class="md-nav__link">
+      <a href="../../../../../overview/" class="md-nav__link">
         
   
   
@@ -738,17 +740,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
         
           
-          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="">
             
   
   
@@ -800,6 +805,40 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -817,7 +856,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../../../../vidoc_kpis/" class="md-nav__link ">
               
   
   
@@ -861,7 +900,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ever_credited_beneficiaries/" class="md-nav__link">
+      <a href="../../../../../vidoc_kpis/ever_credited_beneficiaries/" class="md-nav__link">
         
   
   
@@ -889,7 +928,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../active_beneficiaries/" class="md-nav__link">
+      <a href="../../../../../vidoc_kpis/active_beneficiaries/" class="md-nav__link">
         
   
   
@@ -917,7 +956,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../beneficiary_coverage_rate/" class="md-nav__link">
+      <a href="../../../../../vidoc_kpis/beneficiary_coverage_rate/" class="md-nav__link">
         
   
   
@@ -945,7 +984,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../diversity_3plus_categories/" class="md-nav__link">
+      <a href="../../../../../vidoc_kpis/diversity_3plus_categories/" class="md-nav__link">
         
   
   
@@ -973,7 +1012,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../booking_share_by_category/" class="md-nav__link">
+      <a href="../../../../../vidoc_kpis/booking_share_by_category/" class="md-nav__link">
         
   
   
@@ -981,6 +1020,482 @@
     
   
     Booking share by category
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/student_eac_participation_rate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Student EAC participation rate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/institution_eac_participation_rate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Institution EAC participation rate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/eac_credit_consumption_rate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EAC credit consumption rate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/eac_collective_bookings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EAC collective bookings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/eac_bookings_by_domain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EAC bookings by educational domain
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/eac_bookings_by_format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EAC bookings by offer format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/eac_bookable_offers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EAC bookable collective offers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/active_cultural_partners/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Active cultural partners by channel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/activated_cultural_partners/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Activated cultural partners
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/active_cultural_partners_by_type/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cultural partners by type
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/diversity_category_depth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diversity depth (1+ to 5+)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/credit_amount_at_expiration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Amount granted, spent and spending rate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/credit_spent_share_distribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Share of credit spent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/distinct_venues_booked/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Distinct venues booked
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/individual_bookings_venue_territory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bookings and tickets by venue territory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/individual_revenue_venue_territory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Booking revenue by venue territory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vidoc_kpis/individual_bookings_beneficiary_territory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bookings by category and beneficiary territory
   
 
     
@@ -1042,7 +1557,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../ministry_kpis/" class="md-nav__link ">
+            <a href="../../../../../ministry_kpis/" class="md-nav__link ">
               
   
   
@@ -1086,7 +1601,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ministry_kpis/user_and_deposit/" class="md-nav__link">
+      <a href="../../../../../ministry_kpis/user_and_deposit/" class="md-nav__link">
         
   
   
@@ -1114,7 +1629,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ministry_kpis/booking/" class="md-nav__link">
+      <a href="../../../../../ministry_kpis/booking/" class="md-nav__link">
         
   
   
@@ -1142,7 +1657,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ministry_kpis/offer_and_stock/" class="md-nav__link">
+      <a href="../../../../../ministry_kpis/offer_and_stock/" class="md-nav__link">
         
   
   
@@ -1170,7 +1685,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ministry_kpis/offerer_and_venue/" class="md-nav__link">
+      <a href="../../../../../ministry_kpis/offerer_and_venue/" class="md-nav__link">
         
   
   
@@ -1198,7 +1713,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ministry_kpis/geography/" class="md-nav__link">
+      <a href="../../../../../ministry_kpis/geography/" class="md-nav__link">
         
   
   
@@ -1239,8 +1754,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -1251,18 +1768,21 @@
     
       
       
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
         
           
-          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="">
             
   
   
@@ -1280,7 +1800,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1295,8 +1815,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -1311,11 +1833,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_1" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_1" checked>
         
           
           <label class="md-nav__link" for="__nav_3_3_1" id="__nav_3_3_1_label" tabindex="0">
@@ -1336,7 +1858,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_1_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_1_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1351,8 +1873,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -1377,11 +1901,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_1_1" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_1_1" checked>
         
           
           <label class="md-nav__link" for="__nav_3_3_1_1" id="__nav_3_3_1_1_label" tabindex="0">
@@ -1402,7 +1926,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_3_1_1_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_3_1_1_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3_1_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1548,7 +2072,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/backend/description__exp_backend__artist_delta/" class="md-nav__link">
+      <a href="../../../../export/backend/description__exp_backend__artist_delta/" class="md-nav__link">
         
   
   
@@ -1576,7 +2100,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/backend/description__exp_backend__artist_score/" class="md-nav__link">
+      <a href="../../../../export/backend/description__exp_backend__artist_score/" class="md-nav__link">
         
   
   
@@ -1604,7 +2128,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/backend/description__exp_backend__event_series_delta/" class="md-nav__link">
+      <a href="../../../../export/backend/description__exp_backend__event_series_delta/" class="md-nav__link">
         
   
   
@@ -1632,7 +2156,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/backend/description__exp_backend__event_series_offer_link_delta/" class="md-nav__link">
+      <a href="../../../../export/backend/description__exp_backend__event_series_offer_link_delta/" class="md-nav__link">
         
   
   
@@ -1660,7 +2184,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/backend/description__exp_backend__product_artist_link_delta/" class="md-nav__link">
+      <a href="../../../../export/backend/description__exp_backend__product_artist_link_delta/" class="md-nav__link">
         
   
   
@@ -1688,7 +2212,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/backend/description__exp_product_delta/" class="md-nav__link">
+      <a href="../../../../export/backend/description__exp_product_delta/" class="md-nav__link">
         
   
   
@@ -1812,7 +2336,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__address/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__address/" class="md-nav__link">
         
   
   
@@ -1840,7 +2364,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__booking/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__booking/" class="md-nav__link">
         
   
   
@@ -1868,7 +2392,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__deposit/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__deposit/" class="md-nav__link">
         
   
   
@@ -1896,7 +2420,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__favorite/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__favorite/" class="md-nav__link">
         
   
   
@@ -1924,7 +2448,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__geo_iris/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__geo_iris/" class="md-nav__link">
         
   
   
@@ -1952,7 +2476,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__offer/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__offer/" class="md-nav__link">
         
   
   
@@ -1980,7 +2504,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__offer_metadata/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__offer_metadata/" class="md-nav__link">
         
   
   
@@ -2008,7 +2532,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__offer_removed/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__offer_removed/" class="md-nav__link">
         
   
   
@@ -2036,7 +2560,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__offerer/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__offerer/" class="md-nav__link">
         
   
   
@@ -2064,7 +2588,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__offerer_removed/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__offerer_removed/" class="md-nav__link">
         
   
   
@@ -2092,7 +2616,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__offerer_representation_address/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__offerer_representation_address/" class="md-nav__link">
         
   
   
@@ -2120,7 +2644,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__stock/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__stock/" class="md-nav__link">
         
   
   
@@ -2148,7 +2672,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__user/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__user/" class="md-nav__link">
         
   
   
@@ -2176,7 +2700,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__user_address/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__user_address/" class="md-nav__link">
         
   
   
@@ -2204,7 +2728,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__venue/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__venue/" class="md-nav__link">
         
   
   
@@ -2232,7 +2756,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__venue_address/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__venue_address/" class="md-nav__link">
         
   
   
@@ -2260,7 +2784,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/ministry/description__exp_ministry__venue_removed/" class="md-nav__link">
+      <a href="../../../../export/ministry/description__exp_ministry__venue_removed/" class="md-nav__link">
         
   
   
@@ -2354,7 +2878,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/qualtrics/description__exp_qualtrics__beneficiary_account/" class="md-nav__link">
+      <a href="../../../../export/qualtrics/description__exp_qualtrics__beneficiary_account/" class="md-nav__link">
         
   
   
@@ -2382,7 +2906,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/qualtrics/description__exp_qualtrics__venue_account/" class="md-nav__link">
+      <a href="../../../../export/qualtrics/description__exp_qualtrics__venue_account/" class="md-nav__link">
         
   
   
@@ -2419,6 +2943,26 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
       
         
       
@@ -2484,7 +3028,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/vidoc/description__exp_vidoc_beneficiary/" class="md-nav__link">
+      <a href="../../../../export/vidoc/description__exp_vidoc_beneficiary/" class="md-nav__link">
         
   
   
@@ -2512,7 +3056,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/vidoc/description__exp_vidoc_beneficiary__coverage/" class="md-nav__link">
+      <a href="../../../../export/vidoc/description__exp_vidoc_beneficiary__coverage/" class="md-nav__link">
         
   
   
@@ -2540,7 +3084,147 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/vidoc/description__exp_vidoc_booking_finance__individual/" class="md-nav__link">
+      <a href="../../../../export/vidoc/description__exp_vidoc_booking_beneficiary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual booking metrics by beneficiary territory for vidoc export
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../export/vidoc/description__exp_vidoc_booking_collective/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collective booking metrics (school geography) for vidoc export
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../export/vidoc/description__exp_vidoc_booking_collective_by_domain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collective booking metrics by educational domain for vidoc export
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../export/vidoc/description__exp_vidoc_booking_collective_by_format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collective booking metrics by offer format for vidoc export
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../export/vidoc/description__exp_vidoc_booking_collective_venue/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collective booking metrics (venue geography) for vidoc export
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../export/vidoc/description__exp_vidoc_booking_partner_finance__individual/" class="md-nav__link">
         
   
   
@@ -2568,7 +3252,63 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/vidoc/description__exp_vidoc_diversity/" class="md-nav__link">
+      <a href="../../../../export/vidoc/description__exp_vidoc_cultural_partner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cultural partner metrics for vidoc export
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../export/vidoc/description__exp_vidoc_cultural_partner__by_type/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cultural partner metrics by type for vidoc export
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../export/vidoc/description__exp_vidoc_diversity/" class="md-nav__link">
         
   
   
@@ -2596,7 +3336,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/vidoc/description__exp_vidoc_diversity__by_category/" class="md-nav__link">
+      <a href="../../../../export/vidoc/description__exp_vidoc_diversity__by_category/" class="md-nav__link">
         
   
   
@@ -2624,7 +3364,63 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/export/vidoc/description__exp_vidoc_population__coverage/" class="md-nav__link">
+      <a href="../../../../export/vidoc/description__exp_vidoc_institution__activity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Institution EAC activity metrics for vidoc export
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../export/vidoc/description__exp_vidoc_offer_collective_bookable/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bookable collective offer metrics for vidoc export
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../export/vidoc/description__exp_vidoc_population__coverage/" class="md-nav__link">
         
   
   
@@ -2632,6 +3428,34 @@
     
   
     Population coverage metrics for vidoc export
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../export/vidoc/description__exp_vidoc_student__coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Student EAC coverage metrics for vidoc export
   
 
     
@@ -2802,7 +3626,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/collective/description__external_reporting__eac/" class="md-nav__link">
+      <a href="../../../../external_reporting/collective/description__external_reporting__eac/" class="md-nav__link">
         
   
   
@@ -2830,7 +3654,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/collective/description__external_reporting__eac_coverage/" class="md-nav__link">
+      <a href="../../../../external_reporting/collective/description__external_reporting__eac_coverage/" class="md-nav__link">
         
   
   
@@ -2858,7 +3682,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/collective/description__external_reporting__eac_credit_usage/" class="md-nav__link">
+      <a href="../../../../external_reporting/collective/description__external_reporting__eac_credit_usage/" class="md-nav__link">
         
   
   
@@ -2886,7 +3710,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/collective/description__external_reporting__eac_cultural_partner/" class="md-nav__link">
+      <a href="../../../../external_reporting/collective/description__external_reporting__eac_cultural_partner/" class="md-nav__link">
         
   
   
@@ -2914,7 +3738,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/collective/description__external_reporting__eac_domain/" class="md-nav__link">
+      <a href="../../../../external_reporting/collective/description__external_reporting__eac_domain/" class="md-nav__link">
         
   
   
@@ -2942,7 +3766,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/collective/description__external_reporting__eac_format/" class="md-nav__link">
+      <a href="../../../../external_reporting/collective/description__external_reporting__eac_format/" class="md-nav__link">
         
   
   
@@ -2970,7 +3794,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/collective/description__external_reporting__eac_institution/" class="md-nav__link">
+      <a href="../../../../external_reporting/collective/description__external_reporting__eac_institution/" class="md-nav__link">
         
   
   
@@ -2998,7 +3822,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/collective/description__external_reporting__eac_kpis/" class="md-nav__link">
+      <a href="../../../../external_reporting/collective/description__external_reporting__eac_kpis/" class="md-nav__link">
         
   
   
@@ -3026,7 +3850,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/collective/description__external_reporting__eac_offer_booking/" class="md-nav__link">
+      <a href="../../../../external_reporting/collective/description__external_reporting__eac_offer_booking/" class="md-nav__link">
         
   
   
@@ -3054,7 +3878,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/collective/description__external_reporting__top_ac/" class="md-nav__link">
+      <a href="../../../../external_reporting/collective/description__external_reporting__top_ac/" class="md-nav__link">
         
   
   
@@ -3082,7 +3906,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/collective/description__external_reporting__top_format/" class="md-nav__link">
+      <a href="../../../../external_reporting/collective/description__external_reporting__top_format/" class="md-nav__link">
         
   
   
@@ -3206,7 +4030,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__beneficiary/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__beneficiary/" class="md-nav__link">
         
   
   
@@ -3234,7 +4058,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__beneficiary_booking/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__beneficiary_booking/" class="md-nav__link">
         
   
   
@@ -3262,7 +4086,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__beneficiary_booking_bookers/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__beneficiary_booking_bookers/" class="md-nav__link">
         
   
   
@@ -3290,7 +4114,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__booking/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__booking/" class="md-nav__link">
         
   
   
@@ -3318,7 +4142,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__collective_partner_booking/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__collective_partner_booking/" class="md-nav__link">
         
   
   
@@ -3346,7 +4170,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__coverage/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__coverage/" class="md-nav__link">
         
   
   
@@ -3374,7 +4198,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__cultural_partner/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__cultural_partner/" class="md-nav__link">
         
   
   
@@ -3402,7 +4226,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__deposit_usage/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__deposit_usage/" class="md-nav__link">
         
   
   
@@ -3430,7 +4254,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__diversity/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__diversity/" class="md-nav__link">
         
   
   
@@ -3458,7 +4282,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__finance/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__finance/" class="md-nav__link">
         
   
   
@@ -3486,7 +4310,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__individual/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__individual/" class="md-nav__link">
         
   
   
@@ -3514,7 +4338,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__individual_kpis/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__individual_kpis/" class="md-nav__link">
         
   
   
@@ -3542,7 +4366,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__top_labeled_venue/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__top_labeled_venue/" class="md-nav__link">
         
   
   
@@ -3570,7 +4394,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__top_offer/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__top_offer/" class="md-nav__link">
         
   
   
@@ -3598,7 +4422,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__top_offer_category/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__top_offer_category/" class="md-nav__link">
         
   
   
@@ -3626,7 +4450,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__top_offer_label/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__top_offer_label/" class="md-nav__link">
         
   
   
@@ -3654,7 +4478,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/external_reporting/individual/description__external_reporting__top_venue/" class="md-nav__link">
+      <a href="../../../../external_reporting/individual/description__external_reporting__top_venue/" class="md-nav__link">
         
   
   
@@ -3695,8 +4519,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -3743,11 +4569,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_1_1_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_1_1_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3_3_1_1_3" id="__nav_3_3_1_1_3_label" tabindex="0">
@@ -3768,7 +4594,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_3_3_1_1_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_3_3_1_1_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3_1_1_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -3848,7 +4674,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/applicative/description__int_applicative__achievement/" class="md-nav__link">
+      <a href="../../../applicative/description__int_applicative__achievement/" class="md-nav__link">
         
   
   
@@ -3876,7 +4702,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/applicative/description__int_applicative__offer_item_id/" class="md-nav__link">
+      <a href="../../../applicative/description__int_applicative__offer_item_id/" class="md-nav__link">
         
   
   
@@ -3904,7 +4730,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/applicative/description__int_applicative__user_information_history/" class="md-nav__link">
+      <a href="../../../applicative/description__int_applicative__user_information_history/" class="md-nav__link">
         
   
   
@@ -3932,7 +4758,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/applicative/description__subcategories/" class="md-nav__link">
+      <a href="../../../applicative/description__subcategories/" class="md-nav__link">
         
   
   
@@ -4024,7 +4850,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/appsflyer/description__int_appsflyer__daily_install_attribution/" class="md-nav__link">
+      <a href="../../../appsflyer/description__int_appsflyer__daily_install_attribution/" class="md-nav__link">
         
   
   
@@ -4118,7 +4944,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/brevo/description__int_brevo__transactional_native/" class="md-nav__link">
+      <a href="../../../brevo/description__int_brevo__transactional_native/" class="md-nav__link">
         
   
   
@@ -4146,7 +4972,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/brevo/description__int_brevo__transactional_pro/" class="md-nav__link">
+      <a href="../../../brevo/description__int_brevo__transactional_pro/" class="md-nav__link">
         
   
   
@@ -4248,7 +5074,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/cultural_practices/description__int_cultural_practices__concert_behaviors/" class="md-nav__link">
+      <a href="../../../cultural_practices/description__int_cultural_practices__concert_behaviors/" class="md-nav__link">
         
   
   
@@ -4276,7 +5102,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/cultural_practices/description__int_cultural_practices__concert_genres/" class="md-nav__link">
+      <a href="../../../cultural_practices/description__int_cultural_practices__concert_genres/" class="md-nav__link">
         
   
   
@@ -4304,7 +5130,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/cultural_practices/description__int_cultural_practices__festival/" class="md-nav__link">
+      <a href="../../../cultural_practices/description__int_cultural_practices__festival/" class="md-nav__link">
         
   
   
@@ -4332,7 +5158,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/cultural_practices/description__int_cultural_practices__music_behaviors/" class="md-nav__link">
+      <a href="../../../cultural_practices/description__int_cultural_practices__music_behaviors/" class="md-nav__link">
         
   
   
@@ -4360,7 +5186,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/cultural_practices/description__int_cultural_practices__music_genres/" class="md-nav__link">
+      <a href="../../../cultural_practices/description__int_cultural_practices__music_genres/" class="md-nav__link">
         
   
   
@@ -4388,7 +5214,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/cultural_practices/description__int_cultural_practices__respondent/" class="md-nav__link">
+      <a href="../../../cultural_practices/description__int_cultural_practices__respondent/" class="md-nav__link">
         
   
   
@@ -4504,7 +5330,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/finance/description__int_finance__booking_incident/" class="md-nav__link">
+      <a href="../../../finance/description__int_finance__booking_incident/" class="md-nav__link">
         
   
   
@@ -4532,7 +5358,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/finance/description__int_finance__cashflow/" class="md-nav__link">
+      <a href="../../../finance/description__int_finance__cashflow/" class="md-nav__link">
         
   
   
@@ -4560,7 +5386,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/finance/description__int_finance__cashflow_batch/" class="md-nav__link">
+      <a href="../../../finance/description__int_finance__cashflow_batch/" class="md-nav__link">
         
   
   
@@ -4588,7 +5414,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/finance/description__int_finance__cashflow_pricing/" class="md-nav__link">
+      <a href="../../../finance/description__int_finance__cashflow_pricing/" class="md-nav__link">
         
   
   
@@ -4616,7 +5442,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/finance/description__int_finance__event/" class="md-nav__link">
+      <a href="../../../finance/description__int_finance__event/" class="md-nav__link">
         
   
   
@@ -4644,7 +5470,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/finance/description__int_finance__invoice/" class="md-nav__link">
+      <a href="../../../finance/description__int_finance__invoice/" class="md-nav__link">
         
   
   
@@ -4672,7 +5498,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/finance/description__int_finance__invoice_cashflow/" class="md-nav__link">
+      <a href="../../../finance/description__int_finance__invoice_cashflow/" class="md-nav__link">
         
   
   
@@ -4700,7 +5526,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/finance/description__int_finance__payment/" class="md-nav__link">
+      <a href="../../../finance/description__int_finance__payment/" class="md-nav__link">
         
   
   
@@ -4728,7 +5554,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/finance/description__int_finance__payment_status/" class="md-nav__link">
+      <a href="../../../finance/description__int_finance__payment_status/" class="md-nav__link">
         
   
   
@@ -4756,7 +5582,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/finance/description__int_finance__pricing/" class="md-nav__link">
+      <a href="../../../finance/description__int_finance__pricing/" class="md-nav__link">
         
   
   
@@ -4784,7 +5610,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/finance/description__int_finance__pricing_line/" class="md-nav__link">
+      <a href="../../../finance/description__int_finance__pricing_line/" class="md-nav__link">
         
   
   
@@ -4812,7 +5638,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/finance/description__int_finance__pricing_log/" class="md-nav__link">
+      <a href="../../../finance/description__int_finance__pricing_log/" class="md-nav__link">
         
   
   
@@ -4840,7 +5666,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/finance/description__int_finance__venue_pricing_point_link/" class="md-nav__link">
+      <a href="../../../finance/description__int_finance__venue_pricing_point_link/" class="md-nav__link">
         
   
   
@@ -4934,7 +5760,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/firebase/description__int_firebase__institutional_event_flattened/" class="md-nav__link">
+      <a href="../../../firebase/description__int_firebase__institutional_event_flattened/" class="md-nav__link">
         
   
   
@@ -4962,7 +5788,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/firebase/description__int_firebase__pro_experiment/" class="md-nav__link">
+      <a href="../../../firebase/description__int_firebase__pro_experiment/" class="md-nav__link">
         
   
   
@@ -5054,7 +5880,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/geolocation/description__int_geo__user_location/" class="md-nav__link">
+      <a href="../../../geolocation/description__int_geo__user_location/" class="md-nav__link">
         
   
   
@@ -5146,7 +5972,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/global/description__int_global__daily_deposit/" class="md-nav__link">
+      <a href="../../../global/description__int_global__daily_deposit/" class="md-nav__link">
         
   
   
@@ -5240,7 +6066,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/gsheet/description__int_gsheet__backoffice_log_reference/" class="md-nav__link">
+      <a href="../../../gsheet/description__int_gsheet__backoffice_log_reference/" class="md-nav__link">
         
   
   
@@ -5268,7 +6094,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/gsheet/description__int_gsheet__fraudulent_device/" class="md-nav__link">
+      <a href="../../../gsheet/description__int_gsheet__fraudulent_device/" class="md-nav__link">
         
   
   
@@ -5360,7 +6186,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/instagram/description__int_instagram__publication_detail/" class="md-nav__link">
+      <a href="../../../instagram/description__int_instagram__publication_detail/" class="md-nav__link">
         
   
   
@@ -5393,8 +6219,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -5417,11 +6245,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_1_1_3_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_1_1_3_11" checked>
         
           
           <label class="md-nav__link" for="__nav_3_3_1_1_3_11" id="__nav_3_3_1_1_3_11_label" tabindex="0">
@@ -5442,7 +6270,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="6" aria-labelledby="__nav_3_3_1_1_3_11_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="6" aria-labelledby="__nav_3_3_1_1_3_11_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3_1_1_3_11">
             <span class="md-nav__icon md-icon"></span>
             
@@ -5460,7 +6288,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/kpi/description__int_kpi__population_coverage/" class="md-nav__link">
+      <a href="../../description__int_kpi__population_coverage/" class="md-nav__link">
         
   
   
@@ -5485,8 +6313,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -5498,6 +6328,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -5507,11 +6341,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_1_1_3_11_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_1_1_3_11_2" checked>
         
           
           <label class="md-nav__link" for="__nav_3_3_1_1_3_11_2" id="__nav_3_3_1_1_3_11_2_label" tabindex="0">
@@ -5532,7 +6366,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="7" aria-labelledby="__nav_3_3_1_1_3_11_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="7" aria-labelledby="__nav_3_3_1_1_3_11_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3_1_1_3_11_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -5550,7 +6384,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/kpi/booking/description__int_kpi__booking_collective/" class="md-nav__link">
+      <a href="../description__int_kpi__booking_collective/" class="md-nav__link">
         
   
   
@@ -5578,7 +6412,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/kpi/booking/description__int_kpi__booking_collective_by_domain/" class="md-nav__link">
+      <a href="../description__int_kpi__booking_collective_by_domain/" class="md-nav__link">
         
   
   
@@ -5606,7 +6440,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/kpi/booking/description__int_kpi__booking_collective_by_format/" class="md-nav__link">
+      <a href="../description__int_kpi__booking_collective_by_format/" class="md-nav__link">
         
   
   
@@ -5634,7 +6468,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/kpi/booking/description__int_kpi__booking_collective_institution/" class="md-nav__link">
+      <a href="../description__int_kpi__booking_collective_institution/" class="md-nav__link">
         
   
   
@@ -5650,6 +6484,70 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../description__int_kpi__booking_individual/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual booking KPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual bookers KPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
     </li>
   
 
@@ -5671,6 +6569,8 @@
   
     
     
+      
+        
       
         
       
@@ -5728,7 +6628,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/kpi/cultural_partner/description__int_kpi__cultural_partner_activation_cohorts/" class="md-nav__link">
+      <a href="../../cultural_partner/description__int_kpi__cultural_partner_activation_cohorts/" class="md-nav__link">
         
   
   
@@ -5756,7 +6656,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/kpi/cultural_partner/description__int_kpi__cultural_partner_activation_cohorts_by_type/" class="md-nav__link">
+      <a href="../../cultural_partner/description__int_kpi__cultural_partner_activation_cohorts_by_type/" class="md-nav__link">
         
   
   
@@ -5764,6 +6664,34 @@
     
   
     Cultural Partner Activation Cohorts by Type
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cultural_partner/description__int_kpi__cultural_partner_template_offer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cultural Partner Template Offer
   
 
     
@@ -5793,6 +6721,8 @@
   
     
     
+      
+        
       
         
       
@@ -5852,7 +6782,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/kpi/offer/description__int_kpi__offer_collective/" class="md-nav__link">
+      <a href="../../offer/description__int_kpi__offer_collective/" class="md-nav__link">
         
   
   
@@ -5880,7 +6810,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/kpi/offer/description__int_kpi__offer_collective_bookable/" class="md-nav__link">
+      <a href="../../offer/description__int_kpi__offer_collective_bookable/" class="md-nav__link">
         
   
   
@@ -5908,7 +6838,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/kpi/offer/description__int_kpi__offer_collective_bookable_institution/" class="md-nav__link">
+      <a href="../../offer/description__int_kpi__offer_collective_bookable_institution/" class="md-nav__link">
         
   
   
@@ -5916,6 +6846,34 @@
     
   
     Bookable collective offer KPI by school geography
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../offer/description__int_kpi__offer_individual_free/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Free individual offer KPI
   
 
     
@@ -6000,7 +6958,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/kpi/student/description__int_kpi__student_coverage/" class="md-nav__link">
+      <a href="../../student/description__int_kpi__student_coverage/" class="md-nav__link">
         
   
   
@@ -6108,7 +7066,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/metabase/description__int_metabase__asset_catalog/" class="md-nav__link">
+      <a href="../../../metabase/description__int_metabase__asset_catalog/" class="md-nav__link">
         
   
   
@@ -6136,7 +7094,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/metabase/description__int_metabase__card_canonical/" class="md-nav__link">
+      <a href="../../../metabase/description__int_metabase__card_canonical/" class="md-nav__link">
         
   
   
@@ -6164,7 +7122,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/metabase/description__int_metabase__dashboard_markdown/" class="md-nav__link">
+      <a href="../../../metabase/description__int_metabase__dashboard_markdown/" class="md-nav__link">
         
   
   
@@ -6192,7 +7150,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/metabase/description__int_metabase__dashboard_parameters/" class="md-nav__link">
+      <a href="../../../metabase/description__int_metabase__dashboard_parameters/" class="md-nav__link">
         
   
   
@@ -6220,7 +7178,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/metabase/description__int_metabase__exposure_candidates/" class="md-nav__link">
+      <a href="../../../metabase/description__int_metabase__exposure_candidates/" class="md-nav__link">
         
   
   
@@ -6368,7 +7326,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/metric/diversity/description__int_metric__diversity_daily_booking/" class="md-nav__link">
+      <a href="../../../metric/diversity/description__int_metric__diversity_daily_booking/" class="md-nav__link">
         
   
   
@@ -6470,7 +7428,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/pcapi/description__int_pcapi__bonus_log/" class="md-nav__link">
+      <a href="../../../pcapi/description__int_pcapi__bonus_log/" class="md-nav__link">
         
   
   
@@ -6498,7 +7456,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/pcapi/description__int_pcapi__feature_log/" class="md-nav__link">
+      <a href="../../../pcapi/description__int_pcapi__feature_log/" class="md-nav__link">
         
   
   
@@ -6602,7 +7560,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/seed/description__int_seed__geo_iris/" class="md-nav__link">
+      <a href="../../../seed/description__int_seed__geo_iris/" class="md-nav__link">
         
   
   
@@ -6630,7 +7588,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/seed/description__int_seed__geo_iris_socio_demographics/" class="md-nav__link">
+      <a href="../../../seed/description__int_seed__geo_iris_socio_demographics/" class="md-nav__link">
         
   
   
@@ -6658,7 +7616,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/seed/description__int_seed__geo_postal_code/" class="md-nav__link">
+      <a href="../../../seed/description__int_seed__geo_postal_code/" class="md-nav__link">
         
   
   
@@ -6686,7 +7644,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/seed/description__int_seed__monthly_insee_population_estimation/" class="md-nav__link">
+      <a href="../../../seed/description__int_seed__monthly_insee_population_estimation/" class="md-nav__link">
         
   
   
@@ -6714,7 +7672,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/seed/description__int_seed__monthy_population_france/" class="md-nav__link">
+      <a href="../../../seed/description__int_seed__monthy_population_france/" class="md-nav__link">
         
   
   
@@ -6742,7 +7700,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/seed/description__int_seed__qpv/" class="md-nav__link">
+      <a href="../../../seed/description__int_seed__qpv/" class="md-nav__link">
         
   
   
@@ -6770,7 +7728,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/seed/description__int_seed__qpv_population/" class="md-nav__link">
+      <a href="../../../seed/description__int_seed__qpv_population/" class="md-nav__link">
         
   
   
@@ -6862,7 +7820,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/tiktok/description__int_tiktok__publication_detail/" class="md-nav__link">
+      <a href="../../../tiktok/description__int_tiktok__publication_detail/" class="md-nav__link">
         
   
   
@@ -6962,7 +7920,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/zendesk/description__int_zendesk__daily_macro_usage/" class="md-nav__link">
+      <a href="../../../zendesk/description__int_zendesk__daily_macro_usage/" class="md-nav__link">
         
   
   
@@ -6990,7 +7948,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/zendesk/description__int_zendesk__survey_response/" class="md-nav__link">
+      <a href="../../../zendesk/description__int_zendesk__survey_response/" class="md-nav__link">
         
   
   
@@ -7018,7 +7976,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/zendesk/description__int_zendesk__ticket/" class="md-nav__link">
+      <a href="../../../zendesk/description__int_zendesk__ticket/" class="md-nav__link">
         
   
   
@@ -7046,7 +8004,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/zendesk/description__int_zendesk__typology_native/" class="md-nav__link">
+      <a href="../../../zendesk/description__int_zendesk__typology_native/" class="md-nav__link">
         
   
   
@@ -7074,7 +8032,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/intermediate/zendesk/description__int_zendesk__typology_pro/" class="md-nav__link">
+      <a href="../../../zendesk/description__int_zendesk__typology_pro/" class="md-nav__link">
         
   
   
@@ -7242,7 +8200,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/compliance/description__ml_compliance__training_data_offer/" class="md-nav__link">
+      <a href="../../../../machine_learning/compliance/description__ml_compliance__training_data_offer/" class="md-nav__link">
         
   
   
@@ -7340,7 +8298,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/feature/description__ml_feat__item_embedding_128/" class="md-nav__link">
+      <a href="../../../../machine_learning/feature/description__ml_feat__item_embedding_128/" class="md-nav__link">
         
   
   
@@ -7368,7 +8326,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/feature/description__ml_feat__item_embedding_refactor/" class="md-nav__link">
+      <a href="../../../../machine_learning/feature/description__ml_feat__item_embedding_refactor/" class="md-nav__link">
         
   
   
@@ -7396,7 +8354,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/feature/description__ml_feat__two_tower_last_item_embedding/" class="md-nav__link">
+      <a href="../../../../machine_learning/feature/description__ml_feat__two_tower_last_item_embedding/" class="md-nav__link">
         
   
   
@@ -7424,7 +8382,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/feature/description__ml_feat__two_tower_last_user_embedding/" class="md-nav__link">
+      <a href="../../../../machine_learning/feature/description__ml_feat__two_tower_last_user_embedding/" class="md-nav__link">
         
   
   
@@ -7518,7 +8476,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/finance/description__ml_finance__daily_pricing/" class="md-nav__link">
+      <a href="../../../../machine_learning/finance/description__ml_finance__daily_pricing/" class="md-nav__link">
         
   
   
@@ -7546,7 +8504,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/finance/description__ml_finance__weekly_pricing/" class="md-nav__link">
+      <a href="../../../../machine_learning/finance/description__ml_finance__weekly_pricing/" class="md-nav__link">
         
   
   
@@ -7656,7 +8614,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/linkage/description__ml_linkage__artist/" class="md-nav__link">
+      <a href="../../../../machine_learning/linkage/description__ml_linkage__artist/" class="md-nav__link">
         
   
   
@@ -7684,7 +8642,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/linkage/description__ml_linkage__delta_artist/" class="md-nav__link">
+      <a href="../../../../machine_learning/linkage/description__ml_linkage__delta_artist/" class="md-nav__link">
         
   
   
@@ -7712,7 +8670,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/linkage/description__ml_linkage__delta_event_series/" class="md-nav__link">
+      <a href="../../../../machine_learning/linkage/description__ml_linkage__delta_event_series/" class="md-nav__link">
         
   
   
@@ -7740,7 +8698,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/linkage/description__ml_linkage__delta_event_series_offer_link/" class="md-nav__link">
+      <a href="../../../../machine_learning/linkage/description__ml_linkage__delta_event_series_offer_link/" class="md-nav__link">
         
   
   
@@ -7768,7 +8726,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/linkage/description__ml_linkage__delta_product_artist_link/" class="md-nav__link">
+      <a href="../../../../machine_learning/linkage/description__ml_linkage__delta_product_artist_link/" class="md-nav__link">
         
   
   
@@ -7796,7 +8754,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/linkage/description__ml_linkage__future_artist/" class="md-nav__link">
+      <a href="../../../../machine_learning/linkage/description__ml_linkage__future_artist/" class="md-nav__link">
         
   
   
@@ -7824,7 +8782,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/linkage/description__ml_linkage__future_event_series/" class="md-nav__link">
+      <a href="../../../../machine_learning/linkage/description__ml_linkage__future_event_series/" class="md-nav__link">
         
   
   
@@ -7852,7 +8810,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/linkage/description__ml_linkage__future_event_series_offer_link/" class="md-nav__link">
+      <a href="../../../../machine_learning/linkage/description__ml_linkage__future_event_series_offer_link/" class="md-nav__link">
         
   
   
@@ -7880,7 +8838,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/linkage/description__ml_linkage__future_product_artist_link/" class="md-nav__link">
+      <a href="../../../../machine_learning/linkage/description__ml_linkage__future_product_artist_link/" class="md-nav__link">
         
   
   
@@ -7908,7 +8866,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/linkage/description__ml_linkage__product_artist_link/" class="md-nav__link">
+      <a href="../../../../machine_learning/linkage/description__ml_linkage__product_artist_link/" class="md-nav__link">
         
   
   
@@ -8016,7 +8974,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/recommendation/description__ml_reco__available_offer/" class="md-nav__link">
+      <a href="../../../../machine_learning/recommendation/description__ml_reco__available_offer/" class="md-nav__link">
         
   
   
@@ -8044,7 +9002,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/recommendation/description__ml_reco__recommendable_item/" class="md-nav__link">
+      <a href="../../../../machine_learning/recommendation/description__ml_reco__recommendable_item/" class="md-nav__link">
         
   
   
@@ -8072,7 +9030,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/recommendation/description__ml_reco__training_data_booking/" class="md-nav__link">
+      <a href="../../../../machine_learning/recommendation/description__ml_reco__training_data_booking/" class="md-nav__link">
         
   
   
@@ -8100,7 +9058,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/recommendation/description__ml_reco__training_data_click/" class="md-nav__link">
+      <a href="../../../../machine_learning/recommendation/description__ml_reco__training_data_click/" class="md-nav__link">
         
   
   
@@ -8128,7 +9086,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/recommendation/description__ml_reco__training_data_favorite/" class="md-nav__link">
+      <a href="../../../../machine_learning/recommendation/description__ml_reco__training_data_favorite/" class="md-nav__link">
         
   
   
@@ -8156,7 +9114,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/recommendation/description__ml_reco__training_data_item_feature/" class="md-nav__link">
+      <a href="../../../../machine_learning/recommendation/description__ml_reco__training_data_item_feature/" class="md-nav__link">
         
   
   
@@ -8184,7 +9142,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/recommendation/description__ml_reco__training_data_user_feature/" class="md-nav__link">
+      <a href="../../../../machine_learning/recommendation/description__ml_reco__training_data_user_feature/" class="md-nav__link">
         
   
   
@@ -8212,7 +9170,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/recommendation/description__ml_reco__user_statistics/" class="md-nav__link">
+      <a href="../../../../machine_learning/recommendation/description__ml_reco__user_statistics/" class="md-nav__link">
         
   
   
@@ -8240,7 +9198,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/recommendation/description_ml_reco__recommendable_offer/" class="md-nav__link">
+      <a href="../../../../machine_learning/recommendation/description_ml_reco__recommendable_offer/" class="md-nav__link">
         
   
   
@@ -8332,7 +9290,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/retrieval/description__ml_retrieval__semantic_vector_item_embedding/" class="md-nav__link">
+      <a href="../../../../machine_learning/retrieval/description__ml_retrieval__semantic_vector_item_embedding/" class="md-nav__link">
         
   
   
@@ -8432,7 +9390,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/semantic_embedding/description__ml_semantic_embedding__all_items_metadata/" class="md-nav__link">
+      <a href="../../../../machine_learning/semantic_embedding/description__ml_semantic_embedding__all_items_metadata/" class="md-nav__link">
         
   
   
@@ -8460,7 +9418,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/semantic_embedding/description__ml_semantic_embedding__all_items_offer_names/" class="md-nav__link">
+      <a href="../../../../machine_learning/semantic_embedding/description__ml_semantic_embedding__all_items_offer_names/" class="md-nav__link">
         
   
   
@@ -8488,7 +9446,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/semantic_embedding/description__ml_semantic_embedding__all_items_offer_names_128/" class="md-nav__link">
+      <a href="../../../../machine_learning/semantic_embedding/description__ml_semantic_embedding__all_items_offer_names_128/" class="md-nav__link">
         
   
   
@@ -8516,7 +9474,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/semantic_embedding/description__ml_semantic_embedding__books_metadata/" class="md-nav__link">
+      <a href="../../../../machine_learning/semantic_embedding/description__ml_semantic_embedding__books_metadata/" class="md-nav__link">
         
   
   
@@ -8544,7 +9502,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/machine_learning/semantic_embedding/description__ml_semantic_embedding__movies_metadata/" class="md-nav__link">
+      <a href="../../../../machine_learning/semantic_embedding/description__ml_semantic_embedding__movies_metadata/" class="md-nav__link">
         
   
   
@@ -8718,7 +9676,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/collective/description__mrt_collective__adage_log/" class="md-nav__link">
+      <a href="../../../../mart/collective/description__mrt_collective__adage_log/" class="md-nav__link">
         
   
   
@@ -8746,7 +9704,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/collective/description__mrt_collective__additional_fee/" class="md-nav__link">
+      <a href="../../../../mart/collective/description__mrt_collective__additional_fee/" class="md-nav__link">
         
   
   
@@ -8774,7 +9732,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/collective/description__mrt_collective__eple_aggregated/" class="md-nav__link">
+      <a href="../../../../mart/collective/description__mrt_collective__eple_aggregated/" class="md-nav__link">
         
   
   
@@ -8870,7 +9828,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/cultural_practices/description__mrt_cultural_practices__concert/" class="md-nav__link">
+      <a href="../../../../mart/cultural_practices/description__mrt_cultural_practices__concert/" class="md-nav__link">
         
   
   
@@ -8898,7 +9856,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/cultural_practices/description__mrt_cultural_practices__festival/" class="md-nav__link">
+      <a href="../../../../mart/cultural_practices/description__mrt_cultural_practices__festival/" class="md-nav__link">
         
   
   
@@ -8926,7 +9884,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/cultural_practices/description__mrt_cultural_practices__music_genre_preferences/" class="md-nav__link">
+      <a href="../../../../mart/cultural_practices/description__mrt_cultural_practices__music_genre_preferences/" class="md-nav__link">
         
   
   
@@ -9020,7 +9978,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/finance/description__int_finance__reimbursement/" class="md-nav__link">
+      <a href="../../../../mart/finance/description__int_finance__reimbursement/" class="md-nav__link">
         
   
   
@@ -9048,7 +10006,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/finance/description__mrt_finance__booking_reimbursement/" class="md-nav__link">
+      <a href="../../../../mart/finance/description__mrt_finance__booking_reimbursement/" class="md-nav__link">
         
   
   
@@ -9198,7 +10156,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__address/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__address/" class="md-nav__link">
         
   
   
@@ -9226,7 +10184,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__artist/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__artist/" class="md-nav__link">
         
   
   
@@ -9254,7 +10212,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__booking/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__booking/" class="md-nav__link">
         
   
   
@@ -9282,7 +10240,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__collective_booking/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__collective_booking/" class="md-nav__link">
         
   
   
@@ -9310,7 +10268,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__collective_offer/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__collective_offer/" class="md-nav__link">
         
   
   
@@ -9338,7 +10296,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__collective_offer_domain/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__collective_offer_domain/" class="md-nav__link">
         
   
   
@@ -9366,7 +10324,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__cultural_partner/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__cultural_partner/" class="md-nav__link">
         
   
   
@@ -9394,7 +10352,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__deposit/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__deposit/" class="md-nav__link">
         
   
   
@@ -9422,7 +10380,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__educational_deposit/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__educational_deposit/" class="md-nav__link">
         
   
   
@@ -9450,7 +10408,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__educational_institution/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__educational_institution/" class="md-nav__link">
         
   
   
@@ -9478,7 +10436,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__favorite/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__favorite/" class="md-nav__link">
         
   
   
@@ -9506,7 +10464,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__fraudulent_booking_tag/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__fraudulent_booking_tag/" class="md-nav__link">
         
   
   
@@ -9534,7 +10492,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__iris_socio_demographics/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__iris_socio_demographics/" class="md-nav__link">
         
   
   
@@ -9562,7 +10520,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__offer/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__offer/" class="md-nav__link">
         
   
   
@@ -9590,7 +10548,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__offer_criterion/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__offer_criterion/" class="md-nav__link">
         
   
   
@@ -9618,7 +10576,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__offer_metadata/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__offer_metadata/" class="md-nav__link">
         
   
   
@@ -9646,7 +10604,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__offer_reminder/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__offer_reminder/" class="md-nav__link">
         
   
   
@@ -9674,7 +10632,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__offerer/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__offerer/" class="md-nav__link">
         
   
   
@@ -9702,7 +10660,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__offerer_address/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__offerer_address/" class="md-nav__link">
         
   
   
@@ -9730,7 +10688,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__offerer_tag/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__offerer_tag/" class="md-nav__link">
         
   
   
@@ -9758,7 +10716,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__special_event/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__special_event/" class="md-nav__link">
         
   
   
@@ -9786,7 +10744,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__stock/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__stock/" class="md-nav__link">
         
   
   
@@ -9814,7 +10772,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__user/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__user/" class="md-nav__link">
         
   
   
@@ -9842,7 +10800,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__user_beneficiary/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__user_beneficiary/" class="md-nav__link">
         
   
   
@@ -9870,7 +10828,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__user_beneficiary_information_history/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__user_beneficiary_information_history/" class="md-nav__link">
         
   
   
@@ -9898,7 +10856,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__user_offerer/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__user_offerer/" class="md-nav__link">
         
   
   
@@ -9926,7 +10884,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__venue/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__venue/" class="md-nav__link">
         
   
   
@@ -9954,7 +10912,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__venue_domain/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__venue_domain/" class="md-nav__link">
         
   
   
@@ -9982,7 +10940,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__venue_provider/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__venue_provider/" class="md-nav__link">
         
   
   
@@ -10010,7 +10968,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/global/description__mrt_global__venue_tag/" class="md-nav__link">
+      <a href="../../../../mart/global/description__mrt_global__venue_tag/" class="md-nav__link">
         
   
   
@@ -10106,7 +11064,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/marketing/description__mrt_marketing__retention_pro/" class="md-nav__link">
+      <a href="../../../../mart/marketing/description__mrt_marketing__retention_pro/" class="md-nav__link">
         
   
   
@@ -10134,7 +11092,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/marketing/description__mrt_marketing__social_network_publication/" class="md-nav__link">
+      <a href="../../../../mart/marketing/description__mrt_marketing__social_network_publication/" class="md-nav__link">
         
   
   
@@ -10162,7 +11120,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/marketing/description__mrt_marketing__transactional_pro/" class="md-nav__link">
+      <a href="../../../../mart/marketing/description__mrt_marketing__transactional_pro/" class="md-nav__link">
         
   
   
@@ -10256,7 +11214,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/monitoring/description__mrt_monitoring__backend_feature_health/" class="md-nav__link">
+      <a href="../../../../mart/monitoring/description__mrt_monitoring__backend_feature_health/" class="md-nav__link">
         
   
   
@@ -10284,7 +11242,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/monitoring/description__mrt_monitoring__firebase_performance_tti/" class="md-nav__link">
+      <a href="../../../../mart/monitoring/description__mrt_monitoring__firebase_performance_tti/" class="md-nav__link">
         
   
   
@@ -10400,7 +11358,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/native/description__mrt_native__achievement/" class="md-nav__link">
+      <a href="../../../../mart/native/description__mrt_native__achievement/" class="md-nav__link">
         
   
   
@@ -10428,7 +11386,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/native/description__mrt_native__consultation/" class="md-nav__link">
+      <a href="../../../../mart/native/description__mrt_native__consultation/" class="md-nav__link">
         
   
   
@@ -10456,7 +11414,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/native/description__mrt_native__daily_home_module_conversion/" class="md-nav__link">
+      <a href="../../../../mart/native/description__mrt_native__daily_home_module_conversion/" class="md-nav__link">
         
   
   
@@ -10484,7 +11442,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/native/description__mrt_native__daily_home_offer_displayed/" class="md-nav__link">
+      <a href="../../../../mart/native/description__mrt_native__daily_home_offer_displayed/" class="md-nav__link">
         
   
   
@@ -10512,7 +11470,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/native/description__mrt_native__daily_home_recommendation_offer/" class="md-nav__link">
+      <a href="../../../../mart/native/description__mrt_native__daily_home_recommendation_offer/" class="md-nav__link">
         
   
   
@@ -10540,7 +11498,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/native/description__mrt_native__daily_offer_consultation/" class="md-nav__link">
+      <a href="../../../../mart/native/description__mrt_native__daily_offer_consultation/" class="md-nav__link">
         
   
   
@@ -10568,7 +11526,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/native/description__mrt_native__daily_user_home_module/" class="md-nav__link">
+      <a href="../../../../mart/native/description__mrt_native__daily_user_home_module/" class="md-nav__link">
         
   
   
@@ -10596,7 +11554,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/native/description__mrt_native__daily_venue_map_conversion/" class="md-nav__link">
+      <a href="../../../../mart/native/description__mrt_native__daily_venue_map_conversion/" class="md-nav__link">
         
   
   
@@ -10624,7 +11582,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/native/description__mrt_native__event/" class="md-nav__link">
+      <a href="../../../../mart/native/description__mrt_native__event/" class="md-nav__link">
         
   
   
@@ -10652,7 +11610,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/native/description__mrt_native__monthly_beneficiary_coverage/" class="md-nav__link">
+      <a href="../../../../mart/native/description__mrt_native__monthly_beneficiary_coverage/" class="md-nav__link">
         
   
   
@@ -10680,7 +11638,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/native/description__mrt_native__monthly_item_discoverability/" class="md-nav__link">
+      <a href="../../../../mart/native/description__mrt_native__monthly_item_discoverability/" class="md-nav__link">
         
   
   
@@ -10708,7 +11666,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/native/description__mrt_native__nps_beneficiary/" class="md-nav__link">
+      <a href="../../../../mart/native/description__mrt_native__nps_beneficiary/" class="md-nav__link">
         
   
   
@@ -10736,7 +11694,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/native/description__mrt_native__outgoing_cohort/" class="md-nav__link">
+      <a href="../../../../mart/native/description__mrt_native__outgoing_cohort/" class="md-nav__link">
         
   
   
@@ -10836,7 +11794,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/pro/description__mrt_pro__event/" class="md-nav__link">
+      <a href="../../../../mart/pro/description__mrt_pro__event/" class="md-nav__link">
         
   
   
@@ -10864,7 +11822,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/pro/description__mrt_pro__log/" class="md-nav__link">
+      <a href="../../../../mart/pro/description__mrt_pro__log/" class="md-nav__link">
         
   
   
@@ -10892,7 +11850,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/pro/description__mrt_pro__nps_venue/" class="md-nav__link">
+      <a href="../../../../mart/pro/description__mrt_pro__nps_venue/" class="md-nav__link">
         
   
   
@@ -10920,7 +11878,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/pro/description__mrt_pro__offer_highlight/" class="md-nav__link">
+      <a href="../../../../mart/pro/description__mrt_pro__offer_highlight/" class="md-nav__link">
         
   
   
@@ -10948,7 +11906,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/mart/pro/description__mrt_pro__visit/" class="md-nav__link">
+      <a href="../../../../mart/pro/description__mrt_pro__visit/" class="md-nav__link">
         
   
   
@@ -10993,6 +11951,8 @@
   
     
     
+      
+        
       
         
       
@@ -11128,7 +12088,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/beneficiary/description__metrics_beneficiary/" class="md-nav__link">
+      <a href="../../../../metrics/beneficiary/description__metrics_beneficiary/" class="md-nav__link">
         
   
   
@@ -11156,7 +12116,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/beneficiary/description__metrics_beneficiary__coverage/" class="md-nav__link">
+      <a href="../../../../metrics/beneficiary/description__metrics_beneficiary__coverage/" class="md-nav__link">
         
   
   
@@ -11184,7 +12144,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/beneficiary/description__metrics_beneficiary__expired_cohorts/" class="md-nav__link">
+      <a href="../../../../metrics/beneficiary/description__metrics_beneficiary__expired_cohorts/" class="md-nav__link">
         
   
   
@@ -11212,7 +12172,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/beneficiary/description__metrics_beneficiary__monthly_retention/" class="md-nav__link">
+      <a href="../../../../metrics/beneficiary/description__metrics_beneficiary__monthly_retention/" class="md-nav__link">
         
   
   
@@ -11240,7 +12200,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/beneficiary/description__metrics_beneficiary__weekly_activation/" class="md-nav__link">
+      <a href="../../../../metrics/beneficiary/description__metrics_beneficiary__weekly_activation/" class="md-nav__link">
         
   
   
@@ -11277,6 +12237,10 @@
   
     
     
+      
+        
+      
+        
       
         
       
@@ -11338,7 +12302,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/booking/description__metrics_booking__collective/" class="md-nav__link">
+      <a href="../../../../metrics/booking/description__metrics_booking__collective/" class="md-nav__link">
         
   
   
@@ -11366,7 +12330,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/booking/description__metrics_booking__collective_by_domain/" class="md-nav__link">
+      <a href="../../../../metrics/booking/description__metrics_booking__collective_by_domain/" class="md-nav__link">
         
   
   
@@ -11394,7 +12358,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/booking/description__metrics_booking__collective_by_format/" class="md-nav__link">
+      <a href="../../../../metrics/booking/description__metrics_booking__collective_by_format/" class="md-nav__link">
         
   
   
@@ -11422,7 +12386,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/booking/description__metrics_booking__collective_institution/" class="md-nav__link">
+      <a href="../../../../metrics/booking/description__metrics_booking__collective_institution/" class="md-nav__link">
         
   
   
@@ -11430,6 +12394,62 @@
     
   
     Collective booking metrics by school geography
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../metrics/booking/description__metrics_booking__individual/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual booking metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../metrics/booking/description__metrics_booking__individual_bookers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual bookers metrics
   
 
     
@@ -11459,6 +12479,8 @@
   
     
     
+      
+        
       
         
       
@@ -11516,7 +12538,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/cultural_partner/description__metrics_cultural_partner__activation/" class="md-nav__link">
+      <a href="../../../../metrics/cultural_partner/description__metrics_cultural_partner__activation/" class="md-nav__link">
         
   
   
@@ -11544,7 +12566,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/cultural_partner/description__metrics_cultural_partner__activation_by_type/" class="md-nav__link">
+      <a href="../../../../metrics/cultural_partner/description__metrics_cultural_partner__activation_by_type/" class="md-nav__link">
         
   
   
@@ -11552,6 +12574,34 @@
     
   
     Cultural Partners activation by type metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../metrics/cultural_partner/description__metrics_cultural_partner__template_offer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cultural Partners template offer metrics
   
 
     
@@ -11638,7 +12688,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/diversity/description__metrics_diversity/" class="md-nav__link">
+      <a href="../../../../metrics/diversity/description__metrics_diversity/" class="md-nav__link">
         
   
   
@@ -11666,7 +12716,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/diversity/description__metrics_diversity__by_category/" class="md-nav__link">
+      <a href="../../../../metrics/diversity/description__metrics_diversity__by_category/" class="md-nav__link">
         
   
   
@@ -11758,7 +12808,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/institution/description__metrics_institution__activity/" class="md-nav__link">
+      <a href="../../../../metrics/institution/description__metrics_institution__activity/" class="md-nav__link">
         
   
   
@@ -11795,6 +12845,8 @@
   
     
     
+      
+        
       
         
       
@@ -11854,7 +12906,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/offer/description__metrics_offer__collective/" class="md-nav__link">
+      <a href="../../../../metrics/offer/description__metrics_offer__collective/" class="md-nav__link">
         
   
   
@@ -11882,7 +12934,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/offer/description__metrics_offer__collective_bookable/" class="md-nav__link">
+      <a href="../../../../metrics/offer/description__metrics_offer__collective_bookable/" class="md-nav__link">
         
   
   
@@ -11910,7 +12962,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/offer/description__metrics_offer__collective_bookable_institution/" class="md-nav__link">
+      <a href="../../../../metrics/offer/description__metrics_offer__collective_bookable_institution/" class="md-nav__link">
         
   
   
@@ -11918,6 +12970,34 @@
     
   
     Bookable collective offer metrics by school geography
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../metrics/offer/description__metrics_offer__individual_free/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Free individual offer metrics
   
 
     
@@ -12002,7 +13082,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/population/description__metrics_population_coverage/" class="md-nav__link">
+      <a href="../../../../metrics/population/description__metrics_population_coverage/" class="md-nav__link">
         
   
   
@@ -12096,7 +13176,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/statistical_secret/description__statistical_secret__cultural_partner_collective/" class="md-nav__link">
+      <a href="../../../../metrics/statistical_secret/description__statistical_secret__cultural_partner_collective/" class="md-nav__link">
         
   
   
@@ -12124,7 +13204,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/statistical_secret/description__statistical_secret__cultural_partner_individual/" class="md-nav__link">
+      <a href="../../../../metrics/statistical_secret/description__statistical_secret__cultural_partner_individual/" class="md-nav__link">
         
   
   
@@ -12216,7 +13296,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/metrics/student/description__metrics_student__coverage/" class="md-nav__link">
+      <a href="../../../../metrics/student/description__metrics_student__coverage/" class="md-nav__link">
         
   
   
@@ -12224,6 +13304,218 @@
     
   
     Student EAC coverage metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_1_1_6_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_1_1_6_10" id="__nav_3_3_1_1_6_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Top
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="6" aria-labelledby="__nav_3_3_1_1_6_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_1_1_6_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Top
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../metrics/top/description__metrics_top__offer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Top offers by revenue
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../metrics/top/description__metrics_top__offer_category/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Top offers by category and revenue
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../metrics/top/description__metrics_top__offer_labelled/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Top offers from labelled venues by revenue
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../metrics/top/description__metrics_top__venue/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Top venues by revenue
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../metrics/top/description__metrics_top__venue_labelled/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Top labelled venues by revenue
   
 
     
@@ -12294,17 +13586,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
         
           
-          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="">
             
   
   
@@ -12340,7 +13635,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../references/statistical_confidentiality/" class="md-nav__link">
+      <a href="../../../../../references/statistical_confidentiality/" class="md-nav__link">
         
   
   
@@ -12441,7 +13736,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/" class="md-nav__link">
+      <a href="../../../../../glossary/" class="md-nav__link">
         
   
   
@@ -12733,7 +14028,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__achievement/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__achievement/" class="md-nav__link">
         
   
   
@@ -12761,7 +14056,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__address/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__address/" class="md-nav__link">
         
   
   
@@ -12789,7 +14084,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__bookable_history/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__bookable_history/" class="md-nav__link">
         
   
   
@@ -12817,7 +14112,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__booking/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__booking/" class="md-nav__link">
         
   
   
@@ -12845,7 +14140,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__collective_additional_fee/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__collective_additional_fee/" class="md-nav__link">
         
   
   
@@ -12873,7 +14168,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__collective_booking/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__collective_booking/" class="md-nav__link">
         
   
   
@@ -12901,7 +14196,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__collective_offer/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__collective_offer/" class="md-nav__link">
         
   
   
@@ -12929,7 +14224,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__collective_stock/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__collective_stock/" class="md-nav__link">
         
   
   
@@ -12957,7 +14252,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__cultural_partner/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__cultural_partner/" class="md-nav__link">
         
   
   
@@ -12985,7 +14280,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__deposit/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__deposit/" class="md-nav__link">
         
   
   
@@ -13013,7 +14308,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__domain/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__domain/" class="md-nav__link">
         
   
   
@@ -13041,7 +14336,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__educational_deposit/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__educational_deposit/" class="md-nav__link">
         
   
   
@@ -13069,7 +14364,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__educational_institution/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__educational_institution/" class="md-nav__link">
         
   
   
@@ -13097,7 +14392,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__favorite/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__favorite/" class="md-nav__link">
         
   
   
@@ -13125,7 +14420,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__fraudulent_booking_tag/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__fraudulent_booking_tag/" class="md-nav__link">
         
   
   
@@ -13153,7 +14448,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__highlight/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__highlight/" class="md-nav__link">
         
   
   
@@ -13181,7 +14476,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__institution/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__institution/" class="md-nav__link">
         
   
   
@@ -13209,7 +14504,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__legal_unit/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__legal_unit/" class="md-nav__link">
         
   
   
@@ -13237,7 +14532,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__offer/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__offer/" class="md-nav__link">
         
   
   
@@ -13265,7 +14560,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__offer_criterion/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__offer_criterion/" class="md-nav__link">
         
   
   
@@ -13293,7 +14588,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__offerer/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__offerer/" class="md-nav__link">
         
   
   
@@ -13321,7 +14616,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__offerer_address/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__offerer_address/" class="md-nav__link">
         
   
   
@@ -13349,7 +14644,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__offerer_tag/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__offerer_tag/" class="md-nav__link">
         
   
   
@@ -13377,7 +14672,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__recredit/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__recredit/" class="md-nav__link">
         
   
   
@@ -13405,7 +14700,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__special_event/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__special_event/" class="md-nav__link">
         
   
   
@@ -13433,7 +14728,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__stock/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__stock/" class="md-nav__link">
         
   
   
@@ -13461,7 +14756,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__subcategories/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__subcategories/" class="md-nav__link">
         
   
   
@@ -13489,7 +14784,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__technical_partner/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__technical_partner/" class="md-nav__link">
         
   
   
@@ -13517,7 +14812,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__user/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__user/" class="md-nav__link">
         
   
   
@@ -13545,7 +14840,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__user_offerer/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__user_offerer/" class="md-nav__link">
         
   
   
@@ -13573,7 +14868,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__venue/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__venue/" class="md-nav__link">
         
   
   
@@ -13601,7 +14896,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__venue_provider/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__venue_provider/" class="md-nav__link">
         
   
   
@@ -13629,7 +14924,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/applicative_database/column__venue_tag/" class="md-nav__link">
+      <a href="../../../../../glossary/applicative_database/column__venue_tag/" class="md-nav__link">
         
   
   
@@ -13721,7 +15016,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/appsflyer/column__appsflyer/" class="md-nav__link">
+      <a href="../../../../../glossary/appsflyer/column__appsflyer/" class="md-nav__link">
         
   
   
@@ -13813,7 +15108,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/brevo/column__brevo/" class="md-nav__link">
+      <a href="../../../../../glossary/brevo/column__brevo/" class="md-nav__link">
         
   
   
@@ -13905,7 +15200,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/contentful/column__contentful_entry/" class="md-nav__link">
+      <a href="../../../../../glossary/contentful/column__contentful_entry/" class="md-nav__link">
         
   
   
@@ -14001,7 +15296,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/cultural_practices/column__live_events/" class="md-nav__link">
+      <a href="../../../../../glossary/cultural_practices/column__live_events/" class="md-nav__link">
         
   
   
@@ -14029,7 +15324,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/cultural_practices/column__music/" class="md-nav__link">
+      <a href="../../../../../glossary/cultural_practices/column__music/" class="md-nav__link">
         
   
   
@@ -14057,7 +15352,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/cultural_practices/column__respondent/" class="md-nav__link">
+      <a href="../../../../../glossary/cultural_practices/column__respondent/" class="md-nav__link">
         
   
   
@@ -14149,7 +15444,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/finance/column__finance/" class="md-nav__link">
+      <a href="../../../../../glossary/finance/column__finance/" class="md-nav__link">
         
   
   
@@ -14241,7 +15536,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/metabase/column__metabase/" class="md-nav__link">
+      <a href="../../../../../glossary/metabase/column__metabase/" class="md-nav__link">
         
   
   
@@ -14337,7 +15632,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/metrics/column__metric/" class="md-nav__link">
+      <a href="../../../../../glossary/metrics/column__metric/" class="md-nav__link">
         
   
   
@@ -14365,7 +15660,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/metrics/column__metric_dimension/" class="md-nav__link">
+      <a href="../../../../../glossary/metrics/column__metric_dimension/" class="md-nav__link">
         
   
   
@@ -14393,7 +15688,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/metrics/column_diversity_booking/" class="md-nav__link">
+      <a href="../../../../../glossary/metrics/column_diversity_booking/" class="md-nav__link">
         
   
   
@@ -14499,7 +15794,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/ml/column__artist/" class="md-nav__link">
+      <a href="../../../../../glossary/ml/column__artist/" class="md-nav__link">
         
   
   
@@ -14527,7 +15822,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/ml/column__delta/" class="md-nav__link">
+      <a href="../../../../../glossary/ml/column__delta/" class="md-nav__link">
         
   
   
@@ -14555,7 +15850,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/ml/column__embedding/" class="md-nav__link">
+      <a href="../../../../../glossary/ml/column__embedding/" class="md-nav__link">
         
   
   
@@ -14583,7 +15878,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/ml/column__event_series/" class="md-nav__link">
+      <a href="../../../../../glossary/ml/column__event_series/" class="md-nav__link">
         
   
   
@@ -14611,7 +15906,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/ml/column__finance/" class="md-nav__link">
+      <a href="../../../../../glossary/ml/column__finance/" class="md-nav__link">
         
   
   
@@ -14639,7 +15934,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/ml/column__mlflow/" class="md-nav__link">
+      <a href="../../../../../glossary/ml/column__mlflow/" class="md-nav__link">
         
   
   
@@ -14667,7 +15962,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/ml/column__recommendation/" class="md-nav__link">
+      <a href="../../../../../glossary/ml/column__recommendation/" class="md-nav__link">
         
   
   
@@ -14695,7 +15990,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/ml/column__wikidata/" class="md-nav__link">
+      <a href="../../../../../glossary/ml/column__wikidata/" class="md-nav__link">
         
   
   
@@ -14787,7 +16082,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/pcapi/column__log/" class="md-nav__link">
+      <a href="../../../../../glossary/pcapi/column__log/" class="md-nav__link">
         
   
   
@@ -14879,7 +16174,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/pcreco/column_id/" class="md-nav__link">
+      <a href="../../../../../glossary/pcreco/column_id/" class="md-nav__link">
         
   
   
@@ -14971,7 +16266,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/propilote/column__propilote/" class="md-nav__link">
+      <a href="../../../../../glossary/propilote/column__propilote/" class="md-nav__link">
         
   
   
@@ -15065,7 +16360,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/qualtrics/column__qualtrics_export/" class="md-nav__link">
+      <a href="../../../../../glossary/qualtrics/column__qualtrics_export/" class="md-nav__link">
         
   
   
@@ -15093,7 +16388,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/qualtrics/column_qualtrics_response/" class="md-nav__link">
+      <a href="../../../../../glossary/qualtrics/column_qualtrics_response/" class="md-nav__link">
         
   
   
@@ -15195,7 +16490,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/seed/column__insee/" class="md-nav__link">
+      <a href="../../../../../glossary/seed/column__insee/" class="md-nav__link">
         
   
   
@@ -15223,7 +16518,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/seed/column__iris/" class="md-nav__link">
+      <a href="../../../../../glossary/seed/column__iris/" class="md-nav__link">
         
   
   
@@ -15251,7 +16546,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/seed/column__population/" class="md-nav__link">
+      <a href="../../../../../glossary/seed/column__population/" class="md-nav__link">
         
   
   
@@ -15279,7 +16574,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/seed/column__postal/" class="md-nav__link">
+      <a href="../../../../../glossary/seed/column__postal/" class="md-nav__link">
         
   
   
@@ -15307,7 +16602,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/seed/column__qpv/" class="md-nav__link">
+      <a href="../../../../../glossary/seed/column__qpv/" class="md-nav__link">
         
   
   
@@ -15335,7 +16630,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/seed/column__zrr/" class="md-nav__link">
+      <a href="../../../../../glossary/seed/column__zrr/" class="md-nav__link">
         
   
   
@@ -15431,7 +16726,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/social_network/column__instagram/" class="md-nav__link">
+      <a href="../../../../../glossary/social_network/column__instagram/" class="md-nav__link">
         
   
   
@@ -15459,7 +16754,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/social_network/column__publication/" class="md-nav__link">
+      <a href="../../../../../glossary/social_network/column__publication/" class="md-nav__link">
         
   
   
@@ -15487,7 +16782,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/social_network/column__tiktok/" class="md-nav__link">
+      <a href="../../../../../glossary/social_network/column__tiktok/" class="md-nav__link">
         
   
   
@@ -15599,7 +16894,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/tracking/column__collective_adage_log/" class="md-nav__link">
+      <a href="../../../../../glossary/tracking/column__collective_adage_log/" class="md-nav__link">
         
   
   
@@ -15627,7 +16922,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/tracking/column__event/" class="md-nav__link">
+      <a href="../../../../../glossary/tracking/column__event/" class="md-nav__link">
         
   
   
@@ -15655,7 +16950,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/tracking/column__event_metric/" class="md-nav__link">
+      <a href="../../../../../glossary/tracking/column__event_metric/" class="md-nav__link">
         
   
   
@@ -15683,7 +16978,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/tracking/column__firebase_performance/" class="md-nav__link">
+      <a href="../../../../../glossary/tracking/column__firebase_performance/" class="md-nav__link">
         
   
   
@@ -15711,7 +17006,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/tracking/column__institutional_event/" class="md-nav__link">
+      <a href="../../../../../glossary/tracking/column__institutional_event/" class="md-nav__link">
         
   
   
@@ -15739,7 +17034,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/tracking/column__native_consultation/" class="md-nav__link">
+      <a href="../../../../../glossary/tracking/column__native_consultation/" class="md-nav__link">
         
   
   
@@ -15767,7 +17062,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/tracking/column__native_daily_item_viewed/" class="md-nav__link">
+      <a href="../../../../../glossary/tracking/column__native_daily_item_viewed/" class="md-nav__link">
         
   
   
@@ -15795,7 +17090,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/tracking/column__native_event/" class="md-nav__link">
+      <a href="../../../../../glossary/tracking/column__native_event/" class="md-nav__link">
         
   
   
@@ -15823,7 +17118,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/tracking/column__native_event_flattened/" class="md-nav__link">
+      <a href="../../../../../glossary/tracking/column__native_event_flattened/" class="md-nav__link">
         
   
   
@@ -15851,7 +17146,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/tracking/column__native_home_module/" class="md-nav__link">
+      <a href="../../../../../glossary/tracking/column__native_home_module/" class="md-nav__link">
         
   
   
@@ -15879,7 +17174,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/tracking/column__pro_event/" class="md-nav__link">
+      <a href="../../../../../glossary/tracking/column__pro_event/" class="md-nav__link">
         
   
   
@@ -15977,7 +17272,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/zendesk/column__survey_response/" class="md-nav__link">
+      <a href="../../../../../glossary/zendesk/column__survey_response/" class="md-nav__link">
         
   
   
@@ -16005,7 +17300,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/zendesk/column__ticket/" class="md-nav__link">
+      <a href="../../../../../glossary/zendesk/column__ticket/" class="md-nav__link">
         
   
   
@@ -16033,7 +17328,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/zendesk/column__zendesk_macro/" class="md-nav__link">
+      <a href="../../../../../glossary/zendesk/column__zendesk_macro/" class="md-nav__link">
         
   
   
@@ -16061,7 +17356,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossary/zendesk/column__zendesk_typology/" class="md-nav__link">
+      <a href="../../../../../glossary/zendesk/column__zendesk_typology/" class="md-nav__link">
         
   
   
@@ -16178,7 +17473,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../team/ds/overview/" class="md-nav__link">
+      <a href="../../../../../../team/ds/overview/" class="md-nav__link">
         
   
   
@@ -16206,7 +17501,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../team/ds/recommendation/" class="md-nav__link">
+      <a href="../../../../../../team/ds/recommendation/" class="md-nav__link">
         
   
   
@@ -16301,7 +17596,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../team/de/overview/" class="md-nav__link">
+      <a href="../../../../../../team/de/overview/" class="md-nav__link">
         
   
   
@@ -16329,7 +17624,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../team/de/data_stack/" class="md-nav__link">
+      <a href="../../../../../../team/de/data_stack/" class="md-nav__link">
         
   
   
@@ -16357,7 +17652,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../team/de/apis/" class="md-nav__link">
+      <a href="../../../../../../team/de/apis/" class="md-nav__link">
         
   
   
@@ -16392,7 +17687,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../about/" class="md-nav__link">
+      <a href="../../../../../../about/" class="md-nav__link">
         
   
   
@@ -16430,64 +17725,6 @@
   
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#number-of-active-and-activated-cultural-partners" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Number of active and activated cultural partners
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Number of active and activated cultural partners">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#definition" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Definition
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#source-table" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Source table
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#calculation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Calculation
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -16506,38 +17743,18 @@
   
 
 
-  <h1>Number of active and activated cultural partners</h1>
+  <h1>Individual bookers KPI</h1>
 
-<h2 id="number-of-active-and-activated-cultural-partners">Number of active and activated cultural partners</h2>
-<h3 id="definition">Definition</h3>
-<p>Tracks the monthly volume of cultural partners that are either currently active or have been cumulatively activated, aggregated by partner type, department, and region.</p>
-<ul>
-<li><strong>Activated partner (<code>activated_partners</code>)</strong>: A partner who has created at least one offer (individual, collective, or both, depending on the selected scope) since <strong>January 1st, 2022</strong>.</li>
-<li><strong>Active partner (<code>active_partners</code>)</strong>: A partner who had at least one bookable offer (<code>bookable_offer</code> status in history) within the <strong>365 days preceding the selected observation month</strong>.</li>
-</ul>
-<h3 id="source-table">Source table</h3>
-<p><a href="../models/export/vidoc/description__exp_vidoc__cultural_partner.md">exp_vidoc__cultural_partner</a></p>
-<h3 id="calculation">Calculation</h3>
-<p>Sum the desired metric columns over your target dimensions (<code>partition_month</code>, <code>partner_type</code>, <code>partner_region_code</code>, <code>partner_department_code</code>).</p>
-<p><code>``sql
-SELECT
-    partition_month,
-    partner_region_name,
-    partner_department_code,
-    partner_type,
-    SUM(total_active_partners_global) AS active_partners_global,
-    SUM(total_cumulative_activated_partners_global) AS cumulative_activated_partners_global
-FROM</code>exp_vidoc__cultural_partner`
-WHERE partition_month = '2026-01-01'
-GROUP BY 
-    partition_month,
-    partner_region_name,
-    partner_department_code,
-    partner_type
-ORDER BY 
-    partner_region_name,
-    partner_department_code,
-    partner_type</p>
+<p>New bookers by month, <strong>beneficiary</strong> geography and offer category, since January 2022 (start of the external
+reporting history). A beneficiary is a new booker on the month of his first used booking since 2022
+(<code>total_new_bookers</code>, on the row of the category of that booking), and a new category booker on the month of his
+first used booking in each category (<code>total_new_category_bookers</code>).</p>
+<p>Distinct bookers do not add up across territories or months, new bookers do: a beneficiary has a single
+geography and is new once. The distinct bookers of any territory from January 2022 to a given month are the sum
+of its new bookers over these months, so distinct counts are available at every level without a row per user.</p>
+<p>Built from <a href="#!/model/model.data_gcp_dbt.mrt_global__booking"><code>mrt_global__booking</code></a> (used bookings) joined to
+<a href="#!/model/model.data_gcp_dbt.mrt_global__user_beneficiary"><code>mrt_global__user_beneficiary</code></a>: bookings of users
+missing from it (deleted, suspended, GRANT_FREE) are excluded.</p>
 
 
 
@@ -16576,7 +17793,7 @@ ORDER BY
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../booking_share_by_category/" class="md-footer__link md-footer__link--prev" aria-label="Previous: None">
+          <a href="../description__int_kpi__booking_individual/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Individual booking KPI">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -16586,20 +17803,20 @@ ORDER BY
                 Previous
               </span>
               <div class="md-ellipsis">
-                None
+                Individual booking KPI
               </div>
             </div>
           </a>
         
         
           
-          <a href="../diversity_3plus_categories/" class="md-footer__link md-footer__link--next" aria-label="Next: None">
+          <a href="../../cultural_partner/description__int_kpi__cultural_partner_activation_cohorts/" class="md-footer__link md-footer__link--next" aria-label="Next: Cultural Partner Activation Cohorts">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                None
+                Cultural Partner Activation Cohorts
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -16640,10 +17857,10 @@ ORDER BY
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.tooltips", "navigation.footer", "navigation.indexes", "navigation.sections", "navigation.tabs", "navigation.top", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../../../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.tooltips", "navigation.footer", "navigation.indexes", "navigation.sections", "navigation.tabs", "navigation.top", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../../../../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

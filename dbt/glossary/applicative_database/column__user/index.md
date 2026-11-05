@@ -52,6 +52,8 @@
 
 **user_postal_code**: Postal code of the user's registered address.
 
+**user_region_code**: Region code of the user's registered address.
+
 **user_region_name**: Region name of the user's registered address.
 
 **user_school_type**: Type of school the user is enrolled in: Centre de formation apprentis, Collège privé, Collège public, Lycée agricole, Lycée maritime, Lycée militaire, Lycée privé, Lycée public, À domicile (CNED, institut de santé, etc.).

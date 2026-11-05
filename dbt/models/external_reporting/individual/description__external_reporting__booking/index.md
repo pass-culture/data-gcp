@@ -1,4 +1,4 @@
-The `external_reporting__booking` model provides aggregated key indicators related to pass Culture bookings. It is designed for automated export, especially in Excel format.
+The `external_reporting__booking` model provides aggregated key indicators related to pass Culture bookings. It is designed for automated export, especially in Excel format. It rolls up [`metrics_booking__individual`](#!/model/model.data_gcp_dbt.metrics_booking__individual) and [`metrics_offer__individual_free`](#!/model/model.data_gcp_dbt.metrics_offer__individual_free) to the reporting dimensions.
 
 ## Table Description
 

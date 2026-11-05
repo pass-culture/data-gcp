@@ -1,0 +1,43 @@
+version: 2
+
+models:
+  - name: exp_vidoc__booking_collective_by_format
+    description: "{{ doc('description__exp_vidoc_booking_collective_by_format') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - partition_month
+            - scholar_year
+            - collective_offer_format
+            - institution_department_code
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+        data_tests:
+          - not_null
+      - name: scholar_year
+        description: "{{ doc('column__reporting_scholar_year') }}"
+        data_tests:
+          - not_null
+      - name: collective_offer_format
+        description: '{{ doc("column__collective_booking_offer_format") }}'
+      - name: institution_region_name
+        description: '{{ doc("column__institution_region_name") }}'
+      - name: institution_region_code
+        description: '{{ doc("column__institution_region_code") }}'
+      - name: institution_department_name
+        description: '{{ doc("column__institution_department_name") }}'
+      - name: institution_department_code
+        description: '{{ doc("column__institution_department_code") }}'
+      - name: institution_academy_name
+        description: '{{ doc("column__institution_academy_name") }}'
+      - name: total_collective_bookings
+        description: '{{ doc("column__total_collective_bookings") }}'
+      - name: total_collective_booking_amount
+        description: '{{ doc("column__total_booking_amount") }}'
+      - name: total_collective_tickets
+        description: '{{ doc("column__total_tickets") }}'
+      - name: total_collective_institutions
+        description: '{{ doc("column__total_institutions") }}'
+      - name: cumulative_total_collective_institutions
+        description: '{{ doc("column__cumulative_total_collective_institutions_by_format") }}'

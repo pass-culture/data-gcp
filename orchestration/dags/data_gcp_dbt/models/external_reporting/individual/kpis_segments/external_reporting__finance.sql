@@ -9,184 +9,137 @@
     )
 }}
 
-{% set dimensions = get_dimensions("venue", "geo_full") %}
+{#
+    Individual bookings used in the month (venue geography), rolled up from
+    metrics_booking__finance_individual: all categories, by category (kpi
+    suffixed with the category) and EPN offerers only (suffix _epn).
+#}
 {% set categories = get_categories() %}
-
-{% set kpis = [
-    {"name": "total_reservations", "value_expr": "total_bookings"},
-    {"name": "total_quantites", "value_expr": "total_quantities"},
-    {"name": "total_ca", "value_expr": "total_revenue_amount"},
-    {
-        "name": "total_montant_rembourse",
-        "value_expr": "total_reimbursed_amount",
-    },
-    {
-        "name": "total_montant_contribution",
-        "value_expr": "total_contribution_amount",
-    },
-] %}
+{% set kpis = {
+    "total_reservations": "total_bookings",
+    "total_quantites": "total_quantities",
+    "total_ca": "total_revenue_amount",
+    "total_montant_rembourse": "total_reimbursed_amount",
+    "total_montant_contribution": "total_contribution_amount",
+} %}
 
 with
-    base_data as (
-        select
-            date_trunc(date(booking_used_date), month) as partition_month,
-            timestamp("{{ ts() }}") as updated_at,
-            venue_region_name,
-            venue_department_name,
-            venue_epci_code,
-            venue_municipality_code,
-            offer_category_id,
-            offerer_is_epn,
-            {% for kpi in kpis %}
-                {{ kpi.value_expr }}{% if not loop.last %},{% endif %}
-            {% endfor %}
-        from {{ ref("int_finance__reimbursement") }}
-        where
-            1 = 1
-            {% if is_incremental() %}
-                and date_trunc(booking_used_date, month)
-                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-            {% endif %}
-    ),
-
     dimension_cross as (
-        {% for dim in dimensions %}
+        {% for dim in get_dimensions("venue", "geo_full") %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
             select
+                date(partition_month) as partition_month,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
-                partition_month,
-                updated_at,
                 offer_category_id,
                 offerer_is_epn,
-                {% for kpi in kpis %}
-                    {{ kpi.value_expr }}{% if not loop.last %},{% endif %}
+                {% for column in kpis.values() %}
+                    sum({{ column }}) as {{ column }}{% if not loop.last %},{% endif %}
                 {% endfor %}
-            from base_data
-            {% if not loop.last %}
-                union all
-            {% endif %}
-        {% endfor %}
-    ),
-
-    -- KPIs globaux (toutes catégories)
-    global_metrics as (
-        {% for kpi in kpis %}
-            select
-                partition_month,
-                updated_at,
-                dimension_name,
-                dimension_value,
-                '{{ kpi.name }}' as kpi_name,
-                coalesce(sum({{ kpi.value_expr }}), 0) as numerator,
-                cast(1 as numeric) as denominator,
-                coalesce(safe_divide(sum({{ kpi.value_expr }}), 1), 0) as kpi
-            from dimension_cross
-            group by partition_month, updated_at, dimension_name, dimension_value
-            {% if not loop.last %}
-                union all
-            {% endif %}
-        {% endfor %}
-        union all
-        select
-            partition_month,
-            updated_at,
-            dimension_name,
-            dimension_value,
-            "pct_montant_contribution" as kpi_name,
-            coalesce(sum(total_contribution_amount), 0) as numerator,
-            coalesce(sum(total_revenue_amount), 0) as denominator,
-            coalesce(
-                safe_divide(sum(total_contribution_amount), sum(total_revenue_amount)),
-                0
-            ) as kpi
-        from dimension_cross
-        group by partition_month, updated_at, dimension_name, dimension_value
-    ),
-
-    -- KPIs par catégorie
-    category_metrics as (
-        {% for category in categories %}
-            {% for kpi in kpis %}
-                select
-                    partition_month,
-                    updated_at,
-                    dimension_name,
-                    dimension_value,
-                    '{{ kpi.name }}_{{ category.value_expr }}' as kpi_name,
-                    coalesce(sum({{ kpi.value_expr }}), 0) as numerator,
-                    cast(1 as numeric) as denominator,
-                    safe_divide(coalesce(sum({{ kpi.value_expr }}), 0), 1) as kpi
-                from dimension_cross
-                where offer_category_id = '{{ category.name }}'
-                group by partition_month, updated_at, dimension_name, dimension_value
-                {% if not loop.last %}
-                    union all
+            from {{ ref("metrics_booking__finance_individual") }}
+            where
+                1 = 1
+                {% if is_incremental() %}
+                    and date(partition_month)
+                    = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
                 {% endif %}
-            {% endfor %}
-            union all
-            select
+            group by
                 partition_month,
-                updated_at,
                 dimension_name,
                 dimension_value,
-                'pct_montant_contribution_{{ category.value_expr }}' as kpi_name,
-                coalesce(sum(total_contribution_amount), 0) as numerator,
-                coalesce(sum(total_revenue_amount), 0) as denominator,
-                safe_divide(
-                    coalesce(sum(total_contribution_amount), 0),
-                    coalesce(sum(total_revenue_amount), 0)
-                ) as kpi
-            from dimension_cross
-            where offer_category_id = '{{ category.name }}'
-            group by partition_month, updated_at, dimension_name, dimension_value
-            {% if not loop.last %}
-                union all
-            {% endif %}
+                offer_category_id,
+                offerer_is_epn
         {% endfor %}
     ),
 
-    epn_metrics as (
-        {% for kpi in kpis %}
-            select
-                partition_month,
-                updated_at,
-                dimension_name,
-                dimension_value,
-                '{{ kpi.name }}_epn' as kpi_name,
-                coalesce(sum({{ kpi.value_expr }}), 0) as numerator,
-                cast(1 as numeric) as denominator,
-                safe_divide(coalesce(sum({{ kpi.value_expr }}), 0), 1) as kpi
-            from dimension_cross
-            where offerer_is_epn = true
-            group by partition_month, updated_at, dimension_name, dimension_value
-            {% if not loop.last %}
-                union all
-            {% endif %}
-        {% endfor %}
+    -- kpi_suffix: '' for all categories, '_<category>' or '_epn'
+    scoped_metrics as (
+        select
+            partition_month,
+            dimension_name,
+            dimension_value,
+            '' as kpi_suffix,
+            {% for column in kpis.values() %}
+                sum({{ column }}) as {{ column }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+        from dimension_cross
+        group by partition_month, dimension_name, dimension_value
         union all
         select
             partition_month,
-            updated_at,
             dimension_name,
             dimension_value,
-            "pct_montant_contribution_epn" as kpi_name,
-            coalesce(sum(total_contribution_amount), 0) as numerator,
-            coalesce(sum(total_revenue_amount), 0) as denominator,
-            safe_divide(
-                coalesce(sum(total_contribution_amount), 0),
-                coalesce(sum(total_revenue_amount), 0)
-            ) as kpi
+            case
+                offer_category_id
+                {% for category in categories %}
+                    when '{{ category.name }}' then '_{{ category.value_expr }}'
+                {% endfor %}
+            end as kpi_suffix,
+            {% for column in kpis.values() %}
+                sum({{ column }}) as {{ column }}{% if not loop.last %},{% endif %}
+            {% endfor %}
         from dimension_cross
-        where offerer_is_epn = true
-        group by partition_month, updated_at, dimension_name, dimension_value
+        where
+            offer_category_id in (
+                {% for category in categories %}
+                    '{{ category.name }}'{% if not loop.last %},{% endif %}
+                {% endfor %}
+            )
+        group by partition_month, dimension_name, dimension_value, kpi_suffix
+        union all
+        select
+            partition_month,
+            dimension_name,
+            dimension_value,
+            '_epn' as kpi_suffix,
+            {% for column in kpis.values() %}
+                sum({{ column }}) as {{ column }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+        from dimension_cross
+        where offerer_is_epn and dimension_value is not null
+        group by partition_month, dimension_name, dimension_value
     )
 
-select *
-from global_metrics
+select
+    partition_month,
+    timestamp("{{ ts() }}") as updated_at,
+    dimension_name,
+    dimension_value,
+    concat(kpi_name, kpi_suffix) as kpi_name,
+    numerator,
+    cast(1 as numeric) as denominator,
+    numerator as kpi
+from
+    (
+        select
+            partition_month,
+            dimension_name,
+            dimension_value,
+            kpi_suffix,
+            {% for kpi_name, column in kpis.items() %}
+                cast(coalesce({{ column }}, 0) as float64) as {{ kpi_name }}
+                {% if not loop.last %},{% endif %}
+            {% endfor %}
+        from scoped_metrics
+    )
+    unpivot (numerator for kpi_name in ({{ kpis.keys() | join(", ") }}))
 union all
-select *
-from category_metrics
-union all
-select *
-from epn_metrics
-where dimension_value is not null
+select
+    partition_month,
+    timestamp("{{ ts() }}") as updated_at,
+    dimension_name,
+    dimension_value,
+    concat("pct_montant_contribution", kpi_suffix) as kpi_name,
+    cast(coalesce(total_contribution_amount, 0) as float64) as numerator,
+    coalesce(total_revenue_amount, 0) as denominator,
+    -- only the all categories share falls back to 0 when there is no revenue
+    if(
+        kpi_suffix = '',
+        coalesce(safe_divide(total_contribution_amount, total_revenue_amount), 0),
+        safe_divide(
+            coalesce(total_contribution_amount, 0), coalesce(total_revenue_amount, 0)
+        )
+    ) as kpi
+from scoped_metrics

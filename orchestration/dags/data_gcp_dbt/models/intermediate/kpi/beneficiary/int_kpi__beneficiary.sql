@@ -85,8 +85,15 @@ with
             on eud.user_department_code = rd.num_dep
     ),
 
+    -- distinct: a user with several credits active on the same day is one row, so
+    -- that the cell keys below sum each user's record key once
     active_users_base as (
-        select uua.user_id, ldm.partition_month
+        select distinct
+            uua.user_id,
+            ldm.partition_month,
+            eud.user_is_in_education,
+            eud.user_civility,
+            eud.user_activity
         from user_cumulative_amount_spent as uua
         inner join
             last_day_of_month as ldm on uua.deposit_active_date = ldm.last_active_date
@@ -120,12 +127,31 @@ select
     tub.micro_density_label,
     count(distinct aub.user_id) as total_actual_beneficiaries,
     count(distinct tub.user_id) as total_beneficiaries,
-    mod(
-        abs(sum(distinct {{ record_key("tub.user_id") }})), 256
-    ) as cell_key_beneficiaries,
+    -- cell keys: record keys of the users of the cell (one row per user) summed
+    -- modulo 256, so that the key of a union of cells is the sum of their keys
+    mod(sum({{ record_key("tub.user_id") }}), 256) as cell_key_beneficiaries,
     coalesce(
-        mod(abs(sum(distinct {{ record_key("aub.user_id") }})), 256), 0
-    ) as cell_key_actual_beneficiaries
+        mod(sum({{ record_key("aub.user_id") }}), 256), 0
+    ) as cell_key_actual_beneficiaries,
+    -- profiles of the active beneficiaries (profile columns only exist in aub)
+    {% for breakdown in get_actual_beneficiary_breakdowns() %}
+        count(
+            distinct case when {{ breakdown.condition }} then aub.user_id end
+        ) as total_actual_beneficiaries_{{ breakdown.name }},
+        coalesce(
+            mod(
+                sum(
+                    case
+                        when {{ breakdown.condition }}
+                        then {{ record_key("aub.user_id") }}
+                    end
+                ),
+                256
+            ),
+            0
+        ) as cell_key_actual_beneficiaries_{{ breakdown.name }}
+        {% if not loop.last %},{% endif %}
+    {% endfor %}
 from total_users_base as tub
 left join
     active_users_base as aub

@@ -5,6 +5,7 @@ select
     department_name,
     department_code,
     milestone_age,
+    total_monthly_beneficiaries,
     total_beneficiaries_last_12_months,
     cell_key_beneficiaries
 from {{ ref("int_kpi__beneficiary_coverage") }}

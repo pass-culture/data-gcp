@@ -23,7 +23,7 @@ The salt is stored in Secret Manager (`dbt-record-key-salt-{env}`, e.g. `dbt-rec
 
 #### 2. Cell key computation
 
-When individuals are aggregated into a cell (e.g. "Ile-de-France, age 18, QPV"), their record keys are summed modulo 256 to produce a **cell key** — a number between 0 and 255. The same set of individuals always produces the same cell key, ensuring consistency across all tables.
+When individuals are aggregated into a cell (e.g. "Ile-de-France, age 18, QPV"), their record keys (one per individual, however many rows the individual has in the source) are summed modulo 256 to produce a **cell key** — a number between 0 and 255. The same set of individuals always produces the same cell key, ensuring consistency across all tables.
 
 #### 3. Perturbation lookup
 

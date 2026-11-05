@@ -201,6 +201,30 @@ Total number of students who participated in at least one EAC activity within th
 The total count of active beneficiaries at the time of calculation. To be included, a user must have a non-expired credit and a remaining amount of credit available for booking.
 {% enddocs %}
 
+{% docs column__metrics__total_monthly_beneficiaries %}
+Number of distinct beneficiaries with an active credit during the partition month whose age in months, that month, is exactly the milestone age, by department. Monthly count, not rolled (0 on a month without any such beneficiary): `total_beneficiaries_last_12_months` is its sum over the current and 11 previous calendar months.
+{% enddocs %}
+
+{% docs column__metrics__total_actual_beneficiaries_not_in_education %}
+Active beneficiaries (see `total_actual_beneficiaries`) who are not in education: declared activity neither Collégien, Lycéen, Etudiant, Apprenti nor Alternant, or no declared activity.
+{% enddocs %}
+
+{% docs column__metrics__total_actual_beneficiaries_male %}
+Active beneficiaries (see `total_actual_beneficiaries`) whose civility is M.
+{% enddocs %}
+
+{% docs column__metrics__total_actual_beneficiaries_female %}
+Active beneficiaries (see `total_actual_beneficiaries`) whose civility is Mme.
+{% enddocs %}
+
+{% docs column__metrics__total_actual_beneficiaries_without_civility %}
+Active beneficiaries (see `total_actual_beneficiaries`) who did not declare a civility.
+{% enddocs %}
+
+{% docs column__metrics__total_actual_beneficiaries_activity %}
+Active beneficiaries (see `total_actual_beneficiaries`) whose declared activity is the one named by the column suffix (apprenti, chomeur, volontaire, alternant, employe, etudiant, lyceen, collegien, inactif). Beneficiaries with another or no declared activity are in none of these columns.
+{% enddocs %}
+
 {% docs column__metrics__total_beneficiaries %}
 Number of beneficiaries at the end of the partition month, broken down by `age_at_calculation`. Counts every user with an active account (or suspended upon user request) who has ever received credit, regardless of whether the credit is currently active, exhausted, or expired. A user's `age_at_calculation` is recomputed each month, so the same user can appear in different age buckets across partition_months. Not a true running total — users with deactivated accounts drop from the count.
 {% enddocs %}
@@ -493,7 +517,7 @@ Noise added to the exact count (cell key method, max noise 5, no published count
 {% enddocs %}
 
 {% docs column__cell_key %}
-Cell key (0-255) of the matching count, used to perturb that count on publication (statistical disclosure control, cell key method): the salted record keys of the counted users summed modulo 256. Neither a measure nor a dimension: do not display it. When rows are aggregated, the key of the aggregate is mod(abs(sum(cell_key)), 256), not the plain sum.
+Cell key (0-255) of the matching count, used to perturb that count on publication (statistical disclosure control, cell key method): the salted record keys of the counted users, each user once, summed modulo 256. Neither a measure nor a dimension: do not display it. When rows covering disjoint sets of users are aggregated, the key of the aggregate is mod(abs(sum(cell_key)), 256), not the plain sum: it equals the key computed directly from the users of the aggregate.
 {% enddocs %}
 
 {% docs column__booking_individual__user_is_beneficiary %}

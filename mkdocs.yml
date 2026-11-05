@@ -83,6 +83,9 @@ nav:
           - Amount granted, spent and spending rate: dbt/vidoc_kpis/credit_amount_at_expiration.md
           - Share of credit spent: dbt/vidoc_kpis/credit_spent_share_distribution.md
           - Distinct venues booked: dbt/vidoc_kpis/distinct_venues_booked.md
+          - Bookings and tickets by venue territory: dbt/vidoc_kpis/individual_bookings_venue_territory.md
+          - Booking revenue by venue territory: dbt/vidoc_kpis/individual_revenue_venue_territory.md
+          - Bookings by category and beneficiary territory: dbt/vidoc_kpis/individual_bookings_beneficiary_territory.md
         - Ministry exports:
           - dbt/ministry_kpis/index.md
           - User and deposits: dbt/ministry_kpis/user_and_deposit.md

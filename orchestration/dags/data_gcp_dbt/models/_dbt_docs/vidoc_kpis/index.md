@@ -14,6 +14,7 @@ All vidoc export tables are documented individually in the **Table definitions**
 All exported counts are protected using the **Cell Key Perturbation method** — the current standard recommended by INSEE and Eurostat. Small counts are always slightly modified so that no individual can be re-identified, while large counts and aggregated totals remain virtually exact. See [Statistical confidentiality](../references/statistical_confidentiality.md) for full details.
 
 The EAC (collective part) tables are the exception: `exp_vidoc_student_coverage` holds ADAGE aggregates of school headcounts and `exp_vidoc_institution_activity` counts institutions (public bodies) and their credit, so neither is perturbed.
+The booking exports follow the external reporting rules instead. Cultural partner revenue (`exp_vidoc_booking_partner_finance_individual`) is protected by **statistical secret**: departments secret at the last complete month (fewer than 3 partners with revenue, one partner above 85% of the revenue, or secondary secret) are hidden on every month. Bookings and spending of young people by territory of residence (`exp_vidoc_booking_beneficiary`) are hidden on every month when fewer than 5 beneficiaries account for them (20 for the category breakdown).
 
 ### Indicators
 
@@ -38,3 +39,6 @@ The EAC (collective part) tables are the exception: `exp_vidoc_student_coverage`
 | [Amount granted, spent and spending rate](credit_amount_at_expiration.md) | Average amount granted and spent per beneficiary, and share of credit spent, at expiration | `exp_vidoc_diversity` | Monthly |
 | [Distribution by share of credit spent](credit_spent_share_distribution.md) | Beneficiaries by bucket of share of credit spent at expiration | `exp_vidoc_diversity` | Monthly |
 | [Distinct venues booked](distinct_venues_booked.md) | Average number of distinct venues booked per beneficiary at expiration | `exp_vidoc_diversity` | Monthly |
+| [Individual bookings and tickets by venue territory](individual_bookings_venue_territory.md) | Used individual bookings and tickets in a payment batch, by venue department | `exp_vidoc_booking_partner_finance_individual` | Monthly |
+| [Individual booking revenue by venue territory](individual_revenue_venue_territory.md) | Partner revenue, reimbursed and contributed amounts, by venue department | `exp_vidoc_booking_partner_finance_individual` | Monthly |
+| [Individual bookings by category and beneficiary territory](individual_bookings_beneficiary_territory.md) | Used individual bookings and amount spent by young people, by department of residence and category | `exp_vidoc_booking_beneficiary` | Monthly |

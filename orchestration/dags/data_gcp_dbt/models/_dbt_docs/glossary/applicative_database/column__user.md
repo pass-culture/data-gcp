@@ -25,6 +25,7 @@
 {% docs column__user_is_unemployed %} Boolean. Indicates if the user is unemployed as per its registered activity. {% enddocs %}
 {% docs column__user_macro_density_label %} Two-class density of the user's registered address, derived from the INSEE municipal density grid: 'urbain' (levels 1 to 4), 'rural' (levels 5 to 7), or 'non localisé' when the address cannot be attached to a municipality. It reflects the user's last known address (geocoded in a full pass in February–March 2025, then re-geocoded as users change address), not necessarily their current residence. {% enddocs %}
 {% docs column__user_postal_code %} Postal code of the user's registered address. {% enddocs %}
+{% docs column__user_region_code %} Region code of the user's registered address. {% enddocs %}
 {% docs column__user_region_name %} Region name of the user's registered address. {% enddocs %}
 {% docs column__user_school_type %} Type of school the user is enrolled in: Centre de formation apprentis, Collège privé, Collège public, Lycée agricole, Lycée maritime, Lycée militaire, Lycée privé, Lycée public, À domicile (CNED, institut de santé, etc.). {% enddocs %}
 {% docs column__user_seniority %} Days between user account creation date and current date. {% enddocs %}

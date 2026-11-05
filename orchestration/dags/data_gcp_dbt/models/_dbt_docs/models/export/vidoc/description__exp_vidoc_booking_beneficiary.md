@@ -1,0 +1,33 @@
+---
+title: Individual booking metrics by beneficiary territory for vidoc export
+description: Key indicators from the `exp_vidoc_booking_beneficiary` model.
+---
+
+{% docs description__exp_vidoc_booking_beneficiary %}
+
+The `exp_vidoc_booking_beneficiary` model provides the used individual bookings and the amounts spent by young people, by month of use, territory of residence of the beneficiary and offer category.
+It is designed to be exported to the ministry for vidoc visualisation.
+It is built from [`metrics_booking__individual`](#!/model/model.data_gcp_dbt.metrics_booking__individual) with the same rules as `external_reporting__beneficiary_booking`, and the low count rule of `external_reporting__individual` (`external_reporting__beneficiary_booking_bookers`).
+
+{% enddocs %}
+
+{% docs column__exp_vidoc__booking_beneficiary__is_low_count %}
+True when fewer than 5 beneficiaries account for the row since 2022 (fewer than 5 bookers in the category, or fewer than 20 bookers in the department for a category row): `total_used_bookings` and `total_used_amount` are then NULL on every month.
+{% enddocs %}
+
+## Table Description
+
+Each row represents the used individual bookings of a month of use, a department of residence of the beneficiary and an offer category. Rows with `offer_category_id = 'ALL'` hold the department total, all categories: **do not sum them with the category rows**.
+
+**Grain**: `partition_month`, `department_name`, `offer_category_id`.
+
+- The territory is the **current** address of the beneficiary (`mrt_global__user_beneficiary`), not the address at booking date.
+- Bookings of users missing from `mrt_global__user_beneficiary` (deleted, suspended, GRANT_FREE: about 0.2% of the used bookings) have no residence and are **left out**. Beneficiaries without a located address are in department `-1` (`non localisé`).
+- `region_code` and `department_code` come from `region_department` (joined on the department name). `region_code` is NULL for the overseas collectivities (Nouvelle-Calédonie, Saint-Martin, Polynésie Française, Saint-Pierre-et-Miquelon, Wallis et Futuna); `region_name` is filled.
+- Category rows cover the categories of `get_categories()`, as in external reporting; marginal categories (`MEDIA`, `CARTE_JEUNES`: about 1,000-1,500 bookings a year each) are not grouped.
+- Months from January 2022 to the month before the run date.
+- Rows are **only emitted** for cells with at least one used booking.
+
+**Data protection** (as in external reporting): counts and amounts are not perturbed. They are NULL on every month (`is_low_count`) when the distinct beneficiaries who booked since 2022 (sum of the new bookers of `metrics_booking__individual_bookers`) are 1 to 4 for the row (department for `ALL`, department and category for a category row), or when the department has 1 to 19 bookers for a category row (category breakdown). Region totals summed from departments leave out the masked rows.
+
+{% docs table__exp_vidoc__booking_beneficiary %}{% enddocs %}

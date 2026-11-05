@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: exp_vidoc__booking_finance_individual
-    description: "{{ doc('description__exp_vidoc_booking_finance__individual') }}"
+  - name: exp_vidoc__booking_partner_finance_individual
+    description: "{{ doc('description__exp_vidoc_booking_partner_finance__individual') }}"
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns:
@@ -25,8 +25,6 @@ models:
         description: '{{ doc("column__venue_region_code") }}'
       - name: is_statistic_secret
         description: "{{ doc('column__is_statistic_secret') }}"
-      - name: department_secret_reason_code
-        description: "{{ doc('column__department_secret_reason_code') }}"
       - name: department_secret_reason_label
         description: "{{ doc('column__department_secret_reason') }}"
       - name: total_bookings

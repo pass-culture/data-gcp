@@ -9,266 +9,32 @@
     )
 }}
 
-{% set dimensions = [
-    {
-        "name": "NAT",
-        "value_expr": "dimension_nat",
-        "value_filter": "dimension_nat",
-    },
-    {
-        "name": "REG",
-        "value_expr": "institution_region_name",
-        "value_filter": "venue_region_name",
-    },
-    {
-        "name": "ACAD",
-        "value_expr": "institution_academy_name",
-        "value_filter": "venue_academy_name",
-    },
-    {
-        "name": "COM",
-        "value_expr": "institution_municipality_code",
-        "value_filter": "venue_municipality_code",
-    },
-    {
-        "name": "EPCI",
-        "value_expr": "institution_epci_code",
-        "value_filter": "venue_epci_code",
-    },
-    {
-        "name": "DEP",
-        "value_expr": "institution_department_name",
-        "value_filter": "venue_department_name",
-    },
-] %}
+{#
+    EAC credit usage by school geography, rolled up from
+    metrics_institution__activity (credit of the scholar year) and
+    metrics_booking__collective_institution (amounts since the start of the
+    scholar year).
+    - taux_d_utilisation_du_credit: amount engaged / credit, every month of the
+      scholar year up to the last complete month;
+    - montant_moyen_par_reservation(_meme_territoire): reimbursed amount /
+      reimbursed bookings (by month of use), optionally restricted to bookings
+      whose venue is in the same territory as the school; reported for the
+      territories with a reimbursed booking in the scholar year, on the months
+      with a reimbursed booking nationally.
+#}
+{% set same_territory_level = {
+    "NAT": none,
+    "REG": "region",
+    "ACAD": "academy",
+    "EPCI": "epci",
+    "COM": "municipality",
+    "DEP": "department",
+} %}
+{% set dimensions = get_dimensions("institution", "academic_extended") %}
 
 with
-    budget_by_geo as (
+    budget as (
         {% for dim in dimensions %}
-            select
-                '{{ dim.name }}' as dimension_name,
-                {% if dim.name == "NAT" %} 'NAT'
-                {% else %} {{ dim.value_expr }}
-                {% endif %} as dimension_value,
-                scholar_year,
-                sum(total_scholar_year_deposit) as total_budget_deposit
-            from {{ ref("mrt_collective__eple_aggregated") }}
-            group by dimension_name, dimension_value, scholar_year
-            {% if not loop.last %}
-                union all
-            {% endif %}
-        {% endfor %}
-    ),
-
-    all_dimensions as (
-        select distinct
-            scholar_year,
-            'NAT' as dimension_nat,
-            institution_region_name,
-            institution_academy_name,
-            institution_department_name,
-            institution_municipality_code,
-            institution_epci_code,
-            venue_region_name,
-            venue_academy_name,
-            venue_department_name,
-            venue_municipality_code,
-            venue_epci_code
-        from {{ ref("mrt_global__collective_booking") }}
-        where collective_booking_status = 'REIMBURSED' and scholar_year is not null
-    ),
-
-    all_months as (
-        select distinct
-            gcb.scholar_year,
-            date_trunc(date(gcb.collective_booking_used_date), month) as partition_month
-        from {{ ref("mrt_global__collective_booking") }} as gcb
-        left join
-            {{ source("raw", "applicative_database_educational_year") }} as ey
-            on gcb.scholar_year = ey.scholar_year
-        where
-            gcb.collective_booking_status = 'REIMBURSED'
-            and gcb.collective_booking_used_date
-            between ey.educational_year_beginning_date
-            and ey.educational_year_expiration_date
-    ),
-
-    complete_grid as (
-        select
-            ad.scholar_year,
-            ad.dimension_nat,
-            ad.institution_region_name,
-            ad.institution_academy_name,
-            ad.institution_department_name,
-            ad.institution_municipality_code,
-            ad.institution_epci_code,
-            ad.venue_region_name,
-            ad.venue_academy_name,
-            ad.venue_department_name,
-            ad.venue_municipality_code,
-            ad.venue_epci_code,
-            am.partition_month
-        from all_dimensions as ad
-        inner join all_months as am on ad.scholar_year = am.scholar_year
-    ),
-
-    monthly_data as (
-        select
-            scholar_year,
-            institution_region_name,
-            institution_academy_name,
-            institution_department_name,
-            institution_municipality_code,
-            institution_epci_code,
-            venue_region_name,
-            venue_academy_name,
-            venue_department_name,
-            venue_municipality_code,
-            venue_epci_code,
-            date_trunc(date(collective_booking_used_date), month) as partition_month,
-            sum(booking_amount) as total_amount_spent_reimbursed,
-            count(distinct collective_booking_id) as total_collective_bookings
-        from {{ ref("mrt_global__collective_booking") }}
-        where collective_booking_status = 'REIMBURSED'
-        group by
-            scholar_year,
-            institution_region_name,
-            institution_academy_name,
-            institution_department_name,
-            institution_municipality_code,
-            institution_epci_code,
-            venue_region_name,
-            venue_academy_name,
-            venue_department_name,
-            venue_municipality_code,
-            venue_epci_code,
-            partition_month
-    ),
-
-    complete_data as (
-        select
-            cg.scholar_year,
-            cg.dimension_nat,
-            cg.institution_region_name,
-            cg.institution_academy_name,
-            cg.institution_department_name,
-            cg.institution_municipality_code,
-            cg.institution_epci_code,
-            cg.venue_region_name,
-            cg.venue_academy_name,
-            cg.venue_department_name,
-            cg.venue_municipality_code,
-            cg.venue_epci_code,
-            cg.partition_month,
-            coalesce(
-                md.total_amount_spent_reimbursed, 0
-            ) as total_amount_spent_reimbursed,
-            coalesce(md.total_collective_bookings, 0) as total_collective_bookings
-        from complete_grid as cg
-        left join
-            monthly_data as md using (
-                scholar_year,
-                institution_region_name,
-                institution_academy_name,
-                institution_department_name,
-                institution_municipality_code,
-                institution_epci_code,
-                venue_region_name,
-                venue_academy_name,
-                venue_department_name,
-                venue_municipality_code,
-                venue_epci_code,
-                partition_month
-            )
-    ),
-
-    booking_cumul_amount as (
-        select
-            scholar_year,
-            dimension_nat,
-            institution_region_name,
-            institution_academy_name,
-            institution_department_name,
-            institution_municipality_code,
-            institution_epci_code,
-            venue_region_name,
-            venue_academy_name,
-            venue_department_name,
-            venue_municipality_code,
-            venue_epci_code,
-            partition_month,
-            total_amount_spent_reimbursed,
-            total_collective_bookings,
-            sum(total_amount_spent_reimbursed) over (
-                partition by
-                    scholar_year,
-                    institution_region_name,
-                    institution_academy_name,
-                    institution_department_name,
-                    institution_municipality_code,
-                    institution_epci_code,
-                    venue_region_name,
-                    venue_academy_name,
-                    venue_department_name,
-                    venue_municipality_code,
-                    venue_epci_code
-                order by partition_month
-                rows unbounded preceding
-            ) as cumulative_amount_spent,
-            sum(total_collective_bookings) over (
-                partition by
-                    scholar_year,
-                    institution_region_name,
-                    institution_academy_name,
-                    institution_department_name,
-                    institution_municipality_code,
-                    institution_epci_code,
-                    venue_region_name,
-                    venue_academy_name,
-                    venue_department_name,
-                    venue_municipality_code,
-                    venue_epci_code
-                order by partition_month
-                rows unbounded preceding
-            ) as cumulative_bookings
-        from complete_data
-    ),
-
-    dim_consumption_agg as (
-        {% for dim in dimensions %}
-            select
-                '{{ dim.name }}' as dimension_name,
-                bc.{{ dim.value_expr }} as dimension_value,
-                bc.scholar_year,
-                bc.partition_month,
-                sum(bc.cumulative_amount_spent) as sum_cum_spent,
-                sum(bc.cumulative_bookings) as sum_cum_bookings,
-                sum(
-                    case
-                        when bc.{{ dim.value_filter }} = bc.{{ dim.value_expr }}
-                        then bc.cumulative_amount_spent
-                        else 0
-                    end
-                ) as sum_cum_spent_local,
-                sum(
-                    case
-                        when bc.{{ dim.value_filter }} = bc.{{ dim.value_expr }}
-                        then bc.cumulative_bookings
-                        else 0
-                    end
-                ) as sum_cum_bookings_local
-            from booking_cumul_amount as bc
-            group by dimension_name, dimension_value, scholar_year, partition_month
-            {% if not loop.last %}
-                union all
-            {% endif %}
-        {% endfor %}
-    ),
-
-    -- amount engaged by the schools of the territory since the start of the
-    -- scholar year, same source as total_montant_engage_etablissements
-    institution_engaged_amount as (
-        {% for dim in get_dimensions("institution", "academic_extended") %}
             {% if not loop.first %}
                 union all
             {% endif %}
@@ -277,122 +43,130 @@ with
                 scholar_year,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
+                sum(total_deposit) as total_budget_deposit
+            from {{ ref("metrics_institution__activity") }}
+            where
+                partition_month
+                <= date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+            group by partition_month, scholar_year, dimension_name, dimension_value
+            having sum(total_institutions) > 0
+        {% endfor %}
+    ),
+
+    bookings as (
+        {% for dim in dimensions %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
+            {% set suffix = (
+                "_same_" ~ same_territory_level[dim.name]
+                if same_territory_level[dim.name]
+                else ""
+            ) %}
+            select
+                partition_month,
+                scholar_year,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.value_expr }} as dimension_value,
                 sum(
                     cumulative_total_collective_amount_spent
-                ) as cumulative_amount_engaged
+                ) as cumulative_amount_engaged,
+                sum(
+                    cumulative_total_reimbursed_collective_amount
+                ) as cumulative_reimbursed_amount,
+                sum(
+                    cumulative_total_reimbursed_collective_bookings
+                ) as cumulative_reimbursed_bookings,
+                sum(
+                    cumulative_total_reimbursed_collective_amount{{ suffix }}
+                ) as cumulative_reimbursed_amount_same_territory,
+                sum(
+                    cumulative_total_reimbursed_collective_bookings{{ suffix }}
+                ) as cumulative_reimbursed_bookings_same_territory,
+                sum(sum(total_reimbursed_collective_bookings)) over (
+                    partition by scholar_year, partition_month
+                ) as national_monthly_reimbursed_bookings,
+                sum(sum(total_reimbursed_collective_bookings)) over (
+                    partition by
+                        scholar_year
+                        {% if dim.name != "NAT" %}, {{ dim.value_expr }}{% endif %}
+                ) as scholar_year_reimbursed_bookings
             from {{ ref("metrics_booking__collective_institution") }}
             group by partition_month, scholar_year, dimension_name, dimension_value
         {% endfor %}
     ),
 
-    -- every month of each scholar year up to the last complete month, so that
-    -- the rate exists (at 0) before the first booking of the year
-    scholar_year_months as (
-        select ey.scholar_year, partition_month
-        from {{ source("raw", "applicative_database_educational_year") }} as ey
-        cross join
-            unnest(
-                generate_date_array(
-                    date_trunc(date(ey.educational_year_beginning_date), month),
-                    least(
-                        date_trunc(date(ey.educational_year_expiration_date), month),
-                        date_trunc(
-                            date_sub(date("{{ ds() }}"), interval 1 month), month
-                        )
-                    ),
-                    interval 1 month
-                )
-            ) as partition_month
-    ),
-
-    -- KPI 1 : Taux d'utilisation (montant engagé / crédit de l'année scolaire)
-    credit_usage_rate as (
-        select
-            sym.partition_month,
-            timestamp("{{ ts() }}") as updated_at,
-            bg.dimension_name,
-            bg.dimension_value,
-            'taux_d_utilisation_du_credit' as kpi_name,
-            coalesce(iea.cumulative_amount_engaged, 0) as numerator,
-            bg.total_budget_deposit as denominator,
-            safe_divide(
-                coalesce(iea.cumulative_amount_engaged, 0), bg.total_budget_deposit
-            ) as kpi
-        from budget_by_geo as bg
-        inner join scholar_year_months as sym on bg.scholar_year = sym.scholar_year
-        left join
-            institution_engaged_amount as iea
-            on bg.dimension_name = iea.dimension_name
-            and bg.dimension_value = iea.dimension_value
-            and bg.scholar_year = iea.scholar_year
-            and sym.partition_month = iea.partition_month
-        {% if is_incremental() %}
-            where
-                sym.partition_month
-                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-        {% endif %}
-    ),
-
-    aggregation_by_scholar_year as (
-        {% for dim in dimensions %}
-            {% if not loop.first %}
-                union all
-            {% endif %}
-
-            -- KPI 2 & 3 : Basés sur la consommation
-            select
-                partition_month,
-                timestamp("{{ ts() }}") as updated_at,
-                '{{ dim.name }}' as dimension_name,
-                dimension_value,
-                'montant_moyen_par_reservation' as kpi_name,
-                sum_cum_spent as numerator,
-                sum_cum_bookings as denominator,
-                safe_divide(sum_cum_spent, sum_cum_bookings) as kpi
-            from dim_consumption_agg
-            where
-                dimension_name = '{{ dim.name }}'
-                {% if is_incremental() %}
-                    and partition_month
-                    = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-                {% endif %}
-
-            union all
-
-            select
-                partition_month,
-                timestamp("{{ ts() }}") as updated_at,
-                '{{ dim.name }}' as dimension_name,
-                dimension_value,
-                'montant_moyen_par_reservation_meme_territoire' as kpi_name,
-                sum_cum_spent_local as numerator,
-                sum_cum_bookings_local as denominator,
-                safe_divide(sum_cum_spent_local, sum_cum_bookings_local) as kpi
-            from dim_consumption_agg
-            where
-                dimension_name = '{{ dim.name }}'
-                {% if is_incremental() %}
-                    and partition_month
-                    = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-                {% endif %}
-        {% endfor %}
+    reported_bookings as (
+        select *
+        from bookings
+        where
+            national_monthly_reimbursed_bookings > 0
+            and scholar_year_reimbursed_bookings > 0
     )
 
 select
     partition_month,
-    updated_at,
+    timestamp("{{ ts() }}") as updated_at,
     dimension_name,
     dimension_value,
     kpi_name,
     numerator,
     denominator,
-    kpi
+    safe_divide(numerator, denominator) as kpi
 from
     (
-        select *
-        from credit_usage_rate
-        union all
-        select *
-        from aggregation_by_scholar_year
+        select
+            partition_month,
+            dimension_name,
+            dimension_value,
+            if(
+                budget.total_budget_deposit is null,
+                null,
+                cast(coalesce(bookings.cumulative_amount_engaged, 0) as numeric)
+            ) as taux_d_utilisation_du_credit_numerator,
+            cast(
+                budget.total_budget_deposit as numeric
+            ) as taux_d_utilisation_du_credit_denominator,
+            cast(
+                reported.cumulative_reimbursed_amount as numeric
+            ) as montant_moyen_par_reservation_numerator,
+            cast(
+                reported.cumulative_reimbursed_bookings as numeric
+            ) as montant_moyen_par_reservation_denominator,
+            cast(
+                reported.cumulative_reimbursed_amount_same_territory as numeric
+            ) as montant_moyen_par_reservation_meme_territoire_numerator,
+            cast(
+                reported.cumulative_reimbursed_bookings_same_territory as numeric
+            ) as montant_moyen_par_reservation_meme_territoire_denominator
+        from budget
+        left join
+            bookings using (
+                partition_month, scholar_year, dimension_name, dimension_value
+            )
+        full outer join
+            reported_bookings as reported using (
+                partition_month, scholar_year, dimension_name, dimension_value
+            )
+        where
+            dimension_value is not null
+            {% if is_incremental() %}
+                and partition_month
+                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+            {% endif %}
+    ) unpivot (
+        (numerator, denominator) for kpi_name in (
+            (
+                taux_d_utilisation_du_credit_numerator,
+                taux_d_utilisation_du_credit_denominator
+            ) as 'taux_d_utilisation_du_credit',
+            (
+                montant_moyen_par_reservation_numerator,
+                montant_moyen_par_reservation_denominator
+            ) as 'montant_moyen_par_reservation',
+            (
+                montant_moyen_par_reservation_meme_territoire_numerator,
+                montant_moyen_par_reservation_meme_territoire_denominator
+            ) as 'montant_moyen_par_reservation_meme_territoire'
+        )
     )
-where partition_month is not null and dimension_value is not null

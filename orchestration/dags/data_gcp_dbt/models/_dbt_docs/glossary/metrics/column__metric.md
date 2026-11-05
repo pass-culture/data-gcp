@@ -21,6 +21,14 @@ Cumulative total number of collective bookings for the same geography from the s
 {% docs column__cumulative_total_collective_amount_spent %}
 Cumulative total amount spent for collective bookings for the same geography from the start of the given school year up to and including the specified month.
 {% enddocs %}
+{% docs column__total_reimbursed_collective_bookings %} Number of reimbursed collective bookings used in the month (by use date, clamped into the booking's scholar year). {% enddocs %}
+{% docs column__total_reimbursed_collective_amount %} Amount of the reimbursed collective bookings used in the month (same attribution as `total_reimbursed_collective_bookings`). {% enddocs %}
+{% docs column__total_reimbursed_collective_bookings_same_territory %} `total_reimbursed_collective_bookings` restricted to the bookings whose other side (the venue for a school geography, the school for a venue geography) is in the same territory at the level named by the suffix (region, academy, department, EPCI or municipality). {% enddocs %}
+{% docs column__total_reimbursed_collective_amount_same_territory %} `total_reimbursed_collective_amount` restricted to the bookings whose other side (the venue for a school geography, the school for a venue geography) is in the same territory at the level named by the suffix (region, academy, department, EPCI or municipality). {% enddocs %}
+{% docs column__cumulative_total_reimbursed_collective_bookings %} `total_reimbursed_collective_bookings` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__cumulative_total_reimbursed_collective_amount %} `total_reimbursed_collective_amount` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__cumulative_total_reimbursed_collective_bookings_same_territory %} `total_reimbursed_collective_bookings_same_<level>` summed from the start of the scholar year up to and including the month. {% enddocs %}
+{% docs column__cumulative_total_reimbursed_collective_amount_same_territory %} `total_reimbursed_collective_amount_same_<level>` summed from the start of the scholar year up to and including the month. {% enddocs %}
 {% docs column__total_prereservations %} Number of non-cancelled collective bookings (pre-reservations, whatever their status) created in the month. A booking created before its scholar year starts is counted in the first month of that scholar year. {% enddocs %}
 {% docs column__total_prereservation_amount %} Amount of the non-cancelled collective bookings created in the month (same attribution as `total_prereservations`). {% enddocs %}
 {% docs column__total_confirmations %} Number of collective bookings confirmed by the school head in the month (by confirmation date, clamped into the booking's scholar year). {% enddocs %}
@@ -310,6 +318,8 @@ The total cumulative number of unique partners who have had at least one active 
 {% docs column__cumulative_total_collective_tickets_by_format %} Cumulative total number of tickets generated for EAC collective bookings for the same institution geography and offer format from the start of the scholar year up to and including the specified month. {% enddocs %}
 {% docs column__cumulative_total_collective_institutions_by_format %} Number of distinct educational institutions with at least one EAC collective booking in the offer format since the start of the scholar year, up to and including the specified month (each institution counted once). {% enddocs %}
 {% docs column__cumulative_total_collective_institutions_by_domain %} Number of distinct educational institutions with at least one EAC collective booking in the domain since the start of the scholar year, up to and including the specified month (each institution counted once). {% enddocs %}
+{% docs column__total_labelled_collective_bookings_by_domain %} Number of the month's EAC collective bookings (same attribution as `total_collective_bookings`) made with a venue labelled by the Ministry of Culture (venue tag category `Comptage partenaire label et appellation du MC`), for the given institution geography and educational domain. {% enddocs %}
+{% docs column__cumulative_total_labelled_collective_bookings_by_domain %} `total_labelled_collective_bookings` summed from the start of the scholar year up to and including the month. {% enddocs %}
 
 {% docs column__metrics__total_institutions %}
 Total number of institutions (schools) registered or eligible within the territory (at the given geographical granularity), for the specified month and school year.
@@ -319,8 +329,12 @@ Total number of institutions (schools) registered or eligible within the territo
 Total cumulative number of "engaged" institutions (having made at least one booking) within the territory for the specified month and school year.
 {% enddocs %}
 
+{% docs column__metrics__total_ever_credited_institutions %}
+Number of institutions of the territory credited at least once since the generalisation of the collective part (first deposits in the 2021-2022 scholar year), counted from the start of their first credited scholar year, whether or not they are credited in the row's scholar year. Rows may exist for territories with no institution credited in the row's scholar year (`total_institutions` = 0).
+{% enddocs %}
+
 {% docs column__metrics__total_deposit %}
-Total credit amount allocated and made available to the institutions of the territory for the specified month and school year.
+Credit granted to the institutions of the territory for the row's scholar year (sum of all their educational deposits of that year), repeated on every month of the scholar year.
 {% enddocs %}
 
 {% docs column__metrics__total_amount_spent %}

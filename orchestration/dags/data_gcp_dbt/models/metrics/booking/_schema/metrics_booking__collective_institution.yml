@@ -122,3 +122,99 @@ models:
       - name: cumulative_total_action_amount
         description: '{{ doc("column__cumulative_total_action_amount") }}'
         data_type: FLOAT
+
+      - name: total_reimbursed_collective_bookings
+        description: '{{ doc("column__total_reimbursed_collective_bookings") }}'
+        data_type: INTEGER
+
+      - name: total_reimbursed_collective_amount
+        description: '{{ doc("column__total_reimbursed_collective_amount") }}'
+        data_type: FLOAT
+
+      - name: total_reimbursed_collective_bookings_same_region
+        description: '{{ doc("column__total_reimbursed_collective_bookings_same_territory") }}'
+        data_type: INTEGER
+
+      - name: total_reimbursed_collective_amount_same_region
+        description: '{{ doc("column__total_reimbursed_collective_amount_same_territory") }}'
+        data_type: FLOAT
+
+      - name: total_reimbursed_collective_bookings_same_academy
+        description: '{{ doc("column__total_reimbursed_collective_bookings_same_territory") }}'
+        data_type: INTEGER
+
+      - name: total_reimbursed_collective_amount_same_academy
+        description: '{{ doc("column__total_reimbursed_collective_amount_same_territory") }}'
+        data_type: FLOAT
+
+      - name: total_reimbursed_collective_bookings_same_department
+        description: '{{ doc("column__total_reimbursed_collective_bookings_same_territory") }}'
+        data_type: INTEGER
+
+      - name: total_reimbursed_collective_amount_same_department
+        description: '{{ doc("column__total_reimbursed_collective_amount_same_territory") }}'
+        data_type: FLOAT
+
+      - name: total_reimbursed_collective_bookings_same_epci
+        description: '{{ doc("column__total_reimbursed_collective_bookings_same_territory") }}'
+        data_type: INTEGER
+
+      - name: total_reimbursed_collective_amount_same_epci
+        description: '{{ doc("column__total_reimbursed_collective_amount_same_territory") }}'
+        data_type: FLOAT
+
+      - name: total_reimbursed_collective_bookings_same_municipality
+        description: '{{ doc("column__total_reimbursed_collective_bookings_same_territory") }}'
+        data_type: INTEGER
+
+      - name: total_reimbursed_collective_amount_same_municipality
+        description: '{{ doc("column__total_reimbursed_collective_amount_same_territory") }}'
+        data_type: FLOAT
+
+      - name: cumulative_total_reimbursed_collective_bookings
+        description: '{{ doc("column__cumulative_total_reimbursed_collective_bookings") }}'
+        data_type: INTEGER
+
+      - name: cumulative_total_reimbursed_collective_amount
+        description: '{{ doc("column__cumulative_total_reimbursed_collective_amount") }}'
+        data_type: FLOAT
+
+      - name: cumulative_total_reimbursed_collective_bookings_same_region
+        description: '{{ doc("column__cumulative_total_reimbursed_collective_bookings_same_territory") }}'
+        data_type: INTEGER
+
+      - name: cumulative_total_reimbursed_collective_amount_same_region
+        description: '{{ doc("column__cumulative_total_reimbursed_collective_amount_same_territory") }}'
+        data_type: FLOAT
+
+      - name: cumulative_total_reimbursed_collective_bookings_same_academy
+        description: '{{ doc("column__cumulative_total_reimbursed_collective_bookings_same_territory") }}'
+        data_type: INTEGER
+
+      - name: cumulative_total_reimbursed_collective_amount_same_academy
+        description: '{{ doc("column__cumulative_total_reimbursed_collective_amount_same_territory") }}'
+        data_type: FLOAT
+
+      - name: cumulative_total_reimbursed_collective_bookings_same_department
+        description: '{{ doc("column__cumulative_total_reimbursed_collective_bookings_same_territory") }}'
+        data_type: INTEGER
+
+      - name: cumulative_total_reimbursed_collective_amount_same_department
+        description: '{{ doc("column__cumulative_total_reimbursed_collective_amount_same_territory") }}'
+        data_type: FLOAT
+
+      - name: cumulative_total_reimbursed_collective_bookings_same_epci
+        description: '{{ doc("column__cumulative_total_reimbursed_collective_bookings_same_territory") }}'
+        data_type: INTEGER
+
+      - name: cumulative_total_reimbursed_collective_amount_same_epci
+        description: '{{ doc("column__cumulative_total_reimbursed_collective_amount_same_territory") }}'
+        data_type: FLOAT
+
+      - name: cumulative_total_reimbursed_collective_bookings_same_municipality
+        description: '{{ doc("column__cumulative_total_reimbursed_collective_bookings_same_territory") }}'
+        data_type: INTEGER
+
+      - name: cumulative_total_reimbursed_collective_amount_same_municipality
+        description: '{{ doc("column__cumulative_total_reimbursed_collective_amount_same_territory") }}'
+        data_type: FLOAT

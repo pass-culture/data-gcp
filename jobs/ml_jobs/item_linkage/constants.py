@@ -70,4 +70,9 @@ UNKNOWN_PERFORMER = "unkn"
 UNKNOWN_NAME = "no_name"
 UNKNOWN_DESCRIPTION = "no_des"
 INITIAL_LINK_ID = "NC"
+# Cluster ids are "item_cluster_o<anchor offer_id>", where the anchor is the
+# oldest (smallest numeric offer_id) member of the cluster. The "o" keeps them
+# distinct from the legacy positional ids "item_cluster_<N>".
+CLUSTER_ID_PREFIX = "item_cluster_o"
+OFFER_ID_PREFIX = "offer-"
 MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"

@@ -19,7 +19,7 @@ An offer belongs to the scholar year of its **action** (event date); an offer cr
 
 ### Source table
 
-[exp_vidoc__offer_collective_bookable](../models/export/vidoc/description__exp_vidoc_offer_collective_bookable.md) (cultural partner geography)
+[exp_vidoc__offer_collective_bookable](../../models/export/vidoc/description__exp_vidoc_offer_collective_bookable.md) (cultural partner geography)
 
 ### Calculation
 

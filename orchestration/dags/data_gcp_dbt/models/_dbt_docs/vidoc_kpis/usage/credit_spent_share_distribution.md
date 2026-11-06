@@ -11,7 +11,7 @@ For beneficiaries whose credit expired in the month, split by the share of all t
 
 ### Source table
 
-[exp_vidoc_diversity](../models/export/vidoc/description__exp_vidoc_diversity.md)
+[exp_vidoc_diversity](../../models/export/vidoc/description__exp_vidoc_diversity.md)
 
 ### Calculation
 
@@ -33,7 +33,7 @@ For a lighter display, the buckets can be merged into 4: `0`, `< 50` (`0_25 + 25
 
 ### Available dimensions
 
-Same as the [diversity rate](diversity_3plus_categories.md#available-dimensions).
+Same as the [diversity rate](../diversity/diversity_3plus_categories.md#available-dimensions).
 
 ### Data protection and caveats
 

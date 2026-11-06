@@ -11,7 +11,7 @@ Share of the institutions (schools) credited for a school year that made at leas
 
 ### Source table
 
-[exp_vidoc_institution_activity](../models/export/vidoc/description__exp_vidoc_institution__activity.md)
+[exp_vidoc_institution_activity](../../models/export/vidoc/description__exp_vidoc_institution__activity.md)
 
 ### Calculation
 

@@ -13,7 +13,7 @@ Population: beneficiaries whose last credit is a 17-18 credit (`GRANT_18`, `GRAN
 
 ### Source table
 
-[exp_vidoc_diversity](../models/export/vidoc/description__exp_vidoc_diversity.md)
+[exp_vidoc_diversity](../../models/export/vidoc/description__exp_vidoc_diversity.md)
 
 ### Calculation
 

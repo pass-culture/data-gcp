@@ -16,7 +16,7 @@ Only bookings already included in a payment batch are counted.
 
 ### Source table
 
-[exp_vidoc_booking_partner_finance_individual](../models/export/vidoc/description__exp_vidoc_booking_partner_finance__individual.md)
+[exp_vidoc_booking_partner_finance_individual](../../models/export/vidoc/description__exp_vidoc_booking_partner_finance__individual.md)
 
 ### Calculation
 
@@ -52,4 +52,4 @@ ORDER BY partition_month
 
 - Sums of departments underestimate the region and national revenue by the secret departments (less than 0.03% of the national revenue in 2026). External reporting publishes REG and NAT unmasked; this table has the department grain only.
 - `venue_region_code` is NULL for the overseas collectivities; `venue_region_name` is filled.
-- Not broken down by offer category, by design: by venue location, a category often has fewer than 3 partners in a department (about a third of the department x category cells over 12 months), so the revenue by category would reveal a partner's revenue. Categories are read on the young people's side (practices), as in the observatoire: see [Individual bookings by category and beneficiary territory](individual_bookings_beneficiary_territory.md).
+- Not broken down by offer category, by design: by venue location, a category often has fewer than 3 partners in a department (about a third of the department x category cells over 12 months), so the revenue by category would reveal a partner's revenue. Categories are read on the young people's side (practices), as in the observatoire: see [Individual bookings by category and beneficiary territory](../usage/individual_bookings_beneficiary_territory.md).

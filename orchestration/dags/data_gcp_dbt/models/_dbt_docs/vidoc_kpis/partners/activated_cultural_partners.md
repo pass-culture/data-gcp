@@ -24,7 +24,7 @@ The count is cumulative: once activated, a partner stays counted in every follow
 
 ### Source table
 
-[exp_vidoc_cultural_partner](../models/export/vidoc/description__exp_vidoc_cultural_partner.md). Same definitions as `external_reporting__cultural_partner` (`nombre_total_cumule_de_partenaires_actives_*`), which does not publish the global column.
+[exp_vidoc_cultural_partner](../../models/export/vidoc/description__exp_vidoc_cultural_partner.md). Same definitions as `external_reporting__cultural_partner` (`nombre_total_cumule_de_partenaires_actives_*`), which does not publish the global column.
 
 ### Calculation
 

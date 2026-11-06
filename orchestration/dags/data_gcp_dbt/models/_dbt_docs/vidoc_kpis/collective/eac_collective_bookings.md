@@ -20,8 +20,8 @@ Same values as the external reporting KPIs `total_reservations_collectives_etabl
 
 Two geographies are available; **the school geography is the vidoc default**.
 
-- [exp_vidoc__booking_collective](../models/export/vidoc/description__exp_vidoc_booking_collective.md): by **school** department (where pupils are), consistent with the domain and format splits; no statistical secret.
-- [exp_vidoc__booking_collective_venue](../models/export/vidoc/description__exp_vidoc_booking_collective_venue.md): by **cultural partner (venue)** department, under the statistical secret.
+- [exp_vidoc__booking_collective](../../models/export/vidoc/description__exp_vidoc_booking_collective.md): by **school** department (where pupils are), consistent with the domain and format splits; no statistical secret.
+- [exp_vidoc__booking_collective_venue](../../models/export/vidoc/description__exp_vidoc_booking_collective_venue.md): by **cultural partner (venue)** department, under the statistical secret.
 
 National totals are the same on both sides (except the venue departments masked by the secret).
 

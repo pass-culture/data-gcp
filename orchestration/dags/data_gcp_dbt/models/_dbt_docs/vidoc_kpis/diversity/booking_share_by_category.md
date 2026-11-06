@@ -13,8 +13,8 @@ Only beneficiaries who received an age-18 credit are considered.
 
 ### Source tables
 
-- [exp_vidoc_diversity_by_category](../models/export/vidoc/description__exp_vidoc_diversity__by_category.md) — beneficiary count per category
-- [exp_vidoc_diversity](../models/export/vidoc/description__exp_vidoc_diversity.md) — total expired-credit beneficiaries (denominator)
+- [exp_vidoc_diversity_by_category](../../models/export/vidoc/description__exp_vidoc_diversity__by_category.md) — beneficiary count per category
+- [exp_vidoc_diversity](../../models/export/vidoc/description__exp_vidoc_diversity.md) — total expired-credit beneficiaries (denominator)
 
 ### Calculation
 
@@ -92,7 +92,7 @@ LEFT JOIN num AS n USING (deposit_expiration_month, department_code)
 
 ### Data protection
 
-Counts are protected using the [Cell Key Perturbation method](../references/statistical_confidentiality.md). The numerator (`total_category_booked_beneficiaries`) and the denominator (`total_expired_deposit_beneficiaries`) come from **different cohorts of users** and are therefore perturbed **independently** (different cell keys → independent noise). Consequences:
+Counts are protected using the [Cell Key Perturbation method](../../references/statistical_confidentiality.md). The numerator (`total_category_booked_beneficiaries`) and the denominator (`total_expired_deposit_beneficiaries`) come from **different cohorts of users** and are therefore perturbed **independently** (different cell keys → independent noise). Consequences:
 
 - On a single small cell, the ratio can be unstable (numerator and denominator each shifted by up to ±5).
 - The invariant `booked_in_category ≤ total_expired` can be **violated** at the cell level after perturbation. Always aggregate over many cells (national, regional, several months) before computing a rate.

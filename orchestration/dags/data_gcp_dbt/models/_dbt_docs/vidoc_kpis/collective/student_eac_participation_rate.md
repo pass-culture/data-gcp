@@ -13,7 +13,7 @@ Eligible levels: 4e to Terminale (incl. CAP, SEGPA, MLDS) up to 2022-2023, 6e to
 
 ### Source table
 
-[exp_vidoc_student_coverage](../models/export/vidoc/description__exp_vidoc_student__coverage.md)
+[exp_vidoc_student_coverage](../../models/export/vidoc/description__exp_vidoc_student__coverage.md)
 
 ### Calculation
 

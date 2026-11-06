@@ -15,7 +15,7 @@ Types and labels are defined in the `get_partner_types` macro, from the venue ty
 
 ### Source table
 
-[exp_vidoc_cultural_partner_by_type](../models/export/vidoc/description__exp_vidoc_cultural_partner__by_type.md). `total_active_partners_individual` is the same KPI as `external_reporting__cultural_partner` (`nombre_de_partenaire_actif_individuel_<type>`).
+[exp_vidoc_cultural_partner_by_type](../../models/export/vidoc/description__exp_vidoc_cultural_partner__by_type.md). `total_active_partners_individual` is the same KPI as `external_reporting__cultural_partner` (`nombre_de_partenaire_actif_individuel_<type>`).
 
 ### Calculation
 
@@ -32,7 +32,7 @@ GROUP BY partition_month, partner_type
 ORDER BY partition_month, partner_type
 ```
 
-> **Never sum over `partner_type`.** A partner can belong to several types: `Festival` venues are in both `musique_live` and `festival`, a venue tagged "Cinéma d'art et d'essai" is in `cinemas` and in the type of its venue, and `tag_*` rows are subsets of a type. Partners whose type is not listed are in no type. Take totals from [exp_vidoc_cultural_partner](../models/export/vidoc/description__exp_vidoc_cultural_partner.md).
+> **Never sum over `partner_type`.** A partner can belong to several types: `Festival` venues are in both `musique_live` and `festival`, a venue tagged "Cinéma d'art et d'essai" is in `cinemas` and in the type of its venue, and `tag_*` rows are subsets of a type. Partners whose type is not listed are in no type. Take totals from [exp_vidoc_cultural_partner](../../models/export/vidoc/description__exp_vidoc_cultural_partner.md).
 
 ### Available dimensions
 

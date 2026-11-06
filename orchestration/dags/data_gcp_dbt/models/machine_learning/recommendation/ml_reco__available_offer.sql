@@ -109,6 +109,7 @@ with
         left join
             {{ ref("int_applicative__stock") }} as stock
             on offer.offer_id = stock.offer_id
+            and stock.is_bookable
         left join
             {{ ref("ml_feat__item_feature_28_day") }} as ml_feat
             on offer.item_id = ml_feat.item_id
@@ -123,6 +124,8 @@ with
             offer.is_active = true
             and offer.offer_is_bookable = true
             and offer.offer_validation = 'APPROVED'
+            and offer.offer_publication_date is not null
+            and offer.offer_publication_date <= current_date
             and offer.last_stock_price is not null
             and not (
                 offer.offer_subcategory_id = 'LIVRE_PAPIER'
@@ -162,8 +165,7 @@ with
 select *
 from get_recommendable_offers
 where
-    (stock_beginning_date >= current_date)
-    or (stock_beginning_date is null)
+    (stock_beginning_date >= current_date or stock_beginning_date is null)
     and (not is_blocked)  -- TODO: Move in recommendable offer
     and (not is_sensitive)  -- TODO: Move in recommendable offer
     and (not is_restrained)  -- TODO: Move in recommendable offer

@@ -34,33 +34,6 @@
 {# item_embedding starts at 4 am (prod and  7am stg) while dbt dag runs at 2:45 am so we use a negative offset of few hours to point the delayed sensor at the correct dagrun (from 6 hours after the dbt dag run  within the previous 24 hours) #}
 {% set tmp_source = source("tmp", "movies_metadata_tmp") %}
 {# tmp tables expire after 24h: when none is left, merge nothing instead of failing. #}
-{% if tmp_tables_exist(tmp_source) %}
-    select
-        mm.item_id,
-        mm.content_hash,
-        mm.embedding as movies_metadata_embedding,
-        mm.mlflow_run_id,
-        mm.embedding_model,
-        mm.embedding_date
-    from {{ tmp_source }} as mm
-    where
-        mm._table_suffix = (
-            select max(latest._table_suffix) as max_table_suffix
-            from {{ tmp_source }} as latest
-        )
-{% else %}
-    select *
-    from
-        unnest(
-            array<
-                struct<
-                    item_id string,
-                    content_hash string,
-                    movies_metadata_embedding array<float64>,
-                    mlflow_run_id string,
-                    embedding_model string,
-                    embedding_date date
-                >
-            >[]
-        )
-{% endif %}
+{{
+    merge_embedding_select(tmp_source=tmp_source, embedding_column="movies_metadata_embedding")
+}}

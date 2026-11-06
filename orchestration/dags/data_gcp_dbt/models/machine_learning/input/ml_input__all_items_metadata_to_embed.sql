@@ -16,10 +16,7 @@ with
                 items.{{ col }},
             {% endfor -%}
             items.content_hash,
-            (
-                past.item_id is null
-                or (items.content_hash != coalesce(past.content_hash, ''))
-            ) as to_embed
+            {{ to_embed_condition("items", "past") }} as to_embed
         from {{ ref("ml_input__item_metadata") }} as items
         left join
             {{ ref("ml_semantic_embedding__all_items_metadata") }} as past

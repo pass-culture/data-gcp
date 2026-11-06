@@ -16,6 +16,7 @@ Run from the job root:
 
 from datetime import datetime, timezone
 
+import pandas as pd
 import torch
 import typer
 from loguru import logger
@@ -61,6 +62,7 @@ def main(
     pool = start_pool(encoder, gpu_count)
     tracker = LongPromptTracker()
     total_embedded = 0
+    wrote_any = False
     try:
         for i, chunk in enumerate(
             iter_parquet_chunks(
@@ -82,10 +84,31 @@ def main(
             out[EMBEDDING_DATE_COLUMN] = embedding_date
             output_path = f"{output_parquets_folder_path}/embeddings_{i}.parquet"
             write_embeddings_parquet(out, output_path)
+            wrote_any = True
             total_embedded += len(out)
             logger.info(f"Wrote {len(out)} embeddings to {output_path}")
     finally:
         stop_pool(encoder, pool)
+
+    if not wrote_any:
+        # No prompts to embed this run (upstream export/prepare had zero rows).
+        # Write an empty, schema-correct file so the BigQuery load step finds
+        # a (empty) dataset instead of a missing GCS prefix.
+        empty = pd.DataFrame(
+            columns=[
+                "item_id",
+                "content_hash",
+                "embedding",
+                MLFLOW_RUN_ID_COLUMN,
+                EMBEDDING_MODEL_COLUMN,
+                EMBEDDING_DATE_COLUMN,
+            ]
+        )
+        output_path = f"{output_parquets_folder_path}/embeddings_0.parquet"
+        write_embeddings_parquet(empty, output_path)
+        logger.info(
+            f"No prompts to embed; wrote empty embeddings file to {output_path}"
+        )
 
     tracker.log_summary()
     config_path = str(CONFIGS_PATH / f"{config_file_name}.yaml")

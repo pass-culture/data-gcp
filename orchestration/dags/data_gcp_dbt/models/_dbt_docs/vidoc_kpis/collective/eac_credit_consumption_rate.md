@@ -11,7 +11,7 @@ Share of the credit allocated to the institutions (schools) for a school year th
 
 ### Source table
 
-[exp_vidoc_institution_activity](../models/export/vidoc/description__exp_vidoc_institution__activity.md)
+[exp_vidoc_institution_activity](../../models/export/vidoc/description__exp_vidoc_institution__activity.md)
 
 ### Calculation
 

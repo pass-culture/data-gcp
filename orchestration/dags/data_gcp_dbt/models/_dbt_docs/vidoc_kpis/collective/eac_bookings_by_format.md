@@ -13,7 +13,7 @@ Confirmed collective bookings (same definition as [EAC collective bookings](eac_
 
 ### Source table
 
-[exp_vidoc__booking_collective_by_format](../models/export/vidoc/description__exp_vidoc_booking_collective_by_format.md) (school geography)
+[exp_vidoc__booking_collective_by_format](../../models/export/vidoc/description__exp_vidoc_booking_collective_by_format.md) (school geography)
 
 ### Calculation
 

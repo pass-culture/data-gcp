@@ -18,7 +18,7 @@ Reported as a **stock at the end of each `partition_month`**, broken down by `ag
 
 ### Source table
 
-[exp_vidoc_beneficiary](../models/export/vidoc/description__exp_vidoc_beneficiary.md)
+[exp_vidoc_beneficiary](../../models/export/vidoc/description__exp_vidoc_beneficiary.md)
 
 ### Calculation
 
@@ -50,4 +50,4 @@ ORDER BY partition_month
 
 ### Data protection
 
-Counts are protected using the [Cell Key Perturbation method](../references/statistical_confidentiality.md). Small counts are slightly modified; large counts and aggregated totals are virtually exact.
+Counts are protected using the [Cell Key Perturbation method](../../references/statistical_confidentiality.md). Small counts are slightly modified; large counts and aggregated totals are virtually exact.

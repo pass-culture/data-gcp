@@ -9,11 +9,11 @@ description: How to calculate the number of used individual bookings and the amo
 
 Number of used individual bookings made by beneficiaries (`total_used_bookings`) and amount they spent from their pass Culture credit (`total_used_amount`, in euros), by month of use, territory of **residence of the young person** and offer category. Categories are as declared by the cultural partner when creating the offer.
 
-Unlike the [venue territory KPIs](individual_bookings_venue_territory.md), bookings are counted when used, whether or not they are already in a payment batch.
+Unlike the [venue territory KPIs](../partners/individual_bookings_venue_territory.md), bookings are counted when used, whether or not they are already in a payment batch.
 
 ### Source table
 
-[exp_vidoc_booking_beneficiary](../models/export/vidoc/description__exp_vidoc_booking_beneficiary.md)
+[exp_vidoc_booking_beneficiary](../../models/export/vidoc/description__exp_vidoc_booking_beneficiary.md)
 
 ### Calculation
 

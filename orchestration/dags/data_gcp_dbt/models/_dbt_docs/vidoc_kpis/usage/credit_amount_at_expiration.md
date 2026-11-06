@@ -7,7 +7,7 @@ description: How to calculate the average amount granted, the average amount spe
 
 ### Definition
 
-For beneficiaries whose credit expired in the month (same population as the [diversity rate](diversity_3plus_categories.md)):
+For beneficiaries whose credit expired in the month (same population as the [diversity rate](../diversity/diversity_3plus_categories.md)):
 
 - **Average amount granted**: total of all the credits the beneficiary received (15-17 credits, 17-18 credit, bonus), per beneficiary.
 - **Average amount spent**: amount of non-cancelled bookings made with those credits, per beneficiary.
@@ -17,7 +17,7 @@ The credit amount depends on the generation (500 € before the 2023 reform, the
 
 ### Source table
 
-[exp_vidoc_diversity](../models/export/vidoc/description__exp_vidoc_diversity.md)
+[exp_vidoc_diversity](../../models/export/vidoc/description__exp_vidoc_diversity.md)
 
 ### Calculation
 
@@ -40,7 +40,7 @@ ORDER BY deposit_expiration_month
 
 ### Available dimensions
 
-Same as the [diversity rate](diversity_3plus_categories.md#available-dimensions).
+Same as the [diversity rate](../diversity/diversity_3plus_categories.md#available-dimensions).
 
 ### Temporal tracking
 

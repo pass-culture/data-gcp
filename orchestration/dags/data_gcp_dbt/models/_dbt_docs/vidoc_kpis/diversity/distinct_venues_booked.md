@@ -11,7 +11,7 @@ For beneficiaries whose credit expired in the month, average number of distinct 
 
 ### Source table
 
-[exp_vidoc_diversity](../models/export/vidoc/description__exp_vidoc_diversity.md)
+[exp_vidoc_diversity](../../models/export/vidoc/description__exp_vidoc_diversity.md)
 
 ### Calculation
 

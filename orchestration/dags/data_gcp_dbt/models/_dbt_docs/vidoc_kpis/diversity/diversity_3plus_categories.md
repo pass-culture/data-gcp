@@ -13,7 +13,7 @@ Only beneficiaries whose last credit is a 17-18 credit (`GRANT_18`, `GRANT_17_18
 
 ### Source table
 
-[exp_vidoc_diversity](../models/export/vidoc/description__exp_vidoc_diversity.md)
+[exp_vidoc_diversity](../../models/export/vidoc/description__exp_vidoc_diversity.md)
 
 ### Calculation
 
@@ -50,7 +50,7 @@ ORDER BY deposit_expiration_month
 
 ### Data protection
 
-Both columns are protected using the [Cell Key Perturbation method](../references/statistical_confidentiality.md). They correspond to **nested cohorts** (`3plus ⊂ expired`) and are perturbed **independently** (each column has its own cell key), then `total_3plus_category_booked_beneficiaries` is capped at `total_expired_deposit_beneficiaries` in each row, so the rate never exceeds 100 %.
+Both columns are protected using the [Cell Key Perturbation method](../../references/statistical_confidentiality.md). They correspond to **nested cohorts** (`3plus ⊂ expired`) and are perturbed **independently** (each column has its own cell key), then `total_3plus_category_booked_beneficiaries` is capped at `total_expired_deposit_beneficiaries` in each row, so the rate never exceeds 100 %.
 
 - On a single small cell, the rate can still be noisy.
 - Always aggregate over many cells (national, regional, several months) before computing the rate; the law of large numbers brings the ratio back close to the true value.

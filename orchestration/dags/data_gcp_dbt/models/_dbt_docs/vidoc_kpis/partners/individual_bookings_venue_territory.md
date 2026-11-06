@@ -13,7 +13,7 @@ Only bookings already included in a payment batch are counted: a used booking is
 
 ### Source table
 
-[exp_vidoc_booking_partner_finance_individual](../models/export/vidoc/description__exp_vidoc_booking_partner_finance__individual.md)
+[exp_vidoc_booking_partner_finance_individual](../../models/export/vidoc/description__exp_vidoc_booking_partner_finance__individual.md)
 
 ### Calculation
 
@@ -49,4 +49,4 @@ Partner revenue is under **statistical secret** (not cell key perturbation), wit
 
 - Region and national totals are sums of the visible departments, so they leave out the secret departments (mostly overseas collectivities and Lozère): less than 0.06% of the national volume in 2026. External reporting publishes REG and NAT unmasked; this table has the department grain only.
 - `venue_region_code` is NULL for the overseas collectivities (Saint-Martin, Saint-Pierre-et-Miquelon, Nouvelle-Calédonie, ...); `venue_region_name` is filled.
-- Not broken down by offer category, by design (partner side: a category often has fewer than 3 partners in a department). Categories are read on the young people's side (practices), as in the observatoire. For bookings by category, see [Individual bookings by category and beneficiary territory](individual_bookings_beneficiary_territory.md) (residence of the young person, no payment batch condition).
+- Not broken down by offer category, by design (partner side: a category often has fewer than 3 partners in a department). Categories are read on the young people's side (practices), as in the observatoire. For bookings by category, see [Individual bookings by category and beneficiary territory](../usage/individual_bookings_beneficiary_territory.md) (residence of the young person, no payment batch condition).

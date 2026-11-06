@@ -1,13 +1,13 @@
 ---
 title: "Vidoc KPIs: Cultural partners"
-description: Active and activated cultural partners, and their bookings and revenue from individual bookings by venue territory.
+description: "Active and activated cultural partners, and their bookings and revenue from individual bookings by venue territory."
 ---
 
 ## Cultural partners
 
 Active and activated cultural partners, and their bookings and revenue from individual bookings by venue territory.
 
-See the [Vidoc KPIs overview](../index.md) for the data protection rules that apply to every export.
+**Data protection**: Partner counts are neither perturbed nor secret (lists of partners are public). Bookings and revenue by venue territory are under the **statistical secret** of external reporting: a secret department is hidden on every month. No category breakdown on the partner side: categories are read on the young people's side ([Usage](../usage/index.md)). See [Statistical confidentiality](../../references/statistical_confidentiality.md).
 
 | KPI | Definition | Source table(s) | Tracking |
 |-----|-----------|-----------------|----------|

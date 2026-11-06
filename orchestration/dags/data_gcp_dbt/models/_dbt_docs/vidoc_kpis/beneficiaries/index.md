@@ -1,13 +1,13 @@
 ---
 title: "Vidoc KPIs: Beneficiaries"
-description: Young people who received a pass Culture credit, and the share of the eligible population they represent.
+description: "Young people who received a pass Culture credit, and the share of the eligible population they represent."
 ---
 
 ## Beneficiaries
 
 Young people who received a pass Culture credit, and the share of the eligible population they represent.
 
-See the [Vidoc KPIs overview](../index.md) for the data protection rules that apply to every export.
+**Data protection**: Beneficiary counts are perturbed (cell key method). See [Statistical confidentiality](../../references/statistical_confidentiality.md).
 
 | KPI | Definition | Source table(s) | Tracking |
 |-----|-----------|-----------------|----------|

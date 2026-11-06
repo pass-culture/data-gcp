@@ -1,13 +1,13 @@
 ---
 title: "Vidoc KPIs: Diversity"
-description: Diversity of the cultural practices of young people at credit expiration: number of categories booked, categories and distinct venues.
+description: "Diversity of the cultural practices of young people at credit expiration: number of categories booked, categories and distinct venues."
 ---
 
 ## Diversity
 
 Diversity of the cultural practices of young people at credit expiration: number of categories booked, categories and distinct venues.
 
-See the [Vidoc KPIs overview](../index.md) for the data protection rules that apply to every export.
+**Data protection**: Counts are perturbed (cell key method); the number of distinct venues is hidden when fewer than 5 beneficiaries are in the row. See [Statistical confidentiality](../../references/statistical_confidentiality.md).
 
 | KPI | Definition | Source table(s) | Tracking |
 |-----|-----------|-----------------|----------|

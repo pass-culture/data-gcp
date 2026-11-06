@@ -1,13 +1,13 @@
 ---
 title: "Vidoc KPIs: Usage"
-description: Use of the individual credit by young people: amounts granted and spent at expiration, and bookings by territory of residence and category.
+description: "Use of the individual credit by young people: amounts granted and spent at expiration, and bookings by territory of residence and category."
 ---
 
 ## Usage
 
 Use of the individual credit by young people: amounts granted and spent at expiration, and bookings by territory of residence and category.
 
-See the [Vidoc KPIs overview](../index.md) for the data protection rules that apply to every export.
+**Data protection**: Counts are perturbed (cell key method); amounts at expiration are hidden when fewer than 5 beneficiaries are in the row. Bookings by territory of residence are not perturbed but hidden on every month when fewer than 5 beneficiaries account for them (20 for the category breakdown), as in external reporting. See [Statistical confidentiality](../../references/statistical_confidentiality.md).
 
 | KPI | Definition | Source table(s) | Tracking |
 |-----|-----------|-----------------|----------|

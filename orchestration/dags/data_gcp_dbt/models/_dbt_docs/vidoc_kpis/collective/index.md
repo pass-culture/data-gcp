@@ -1,13 +1,13 @@
 ---
 title: "Vidoc KPIs: Collective (EAC)"
-description: Collective part of the pass Culture (EAC): school and student participation, credit consumption, collective bookings and offers.
+description: "Collective part of the pass Culture (EAC): school and student participation, credit consumption, collective bookings and offers."
 ---
 
 ## Collective (EAC)
 
 Collective part of the pass Culture (EAC): school and student participation, credit consumption, collective bookings and offers.
 
-See the [Vidoc KPIs overview](../index.md) for the data protection rules that apply to every export.
+**Data protection**: Not perturbed: ADAGE aggregates of school headcounts, institutions (public bodies), bookings and offers. Bookings by school geography are not secret (public money); bookings by cultural partner geography are under the **statistical secret** of external reporting. See [Statistical confidentiality](../../references/statistical_confidentiality.md).
 
 | KPI | Definition | Source table(s) | Tracking |
 |-----|-----------|-----------------|----------|

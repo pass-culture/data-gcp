@@ -127,30 +127,6 @@ plugins:
       lang: fr
   - include-markdown
   - awesome-pages
-  - redirects:
-      redirect_maps:
-        dbt/vidoc_kpis/ever_credited_beneficiaries.md: dbt/vidoc_kpis/beneficiaries/ever_credited_beneficiaries.md
-        dbt/vidoc_kpis/active_beneficiaries.md: dbt/vidoc_kpis/beneficiaries/active_beneficiaries.md
-        dbt/vidoc_kpis/beneficiary_coverage_rate.md: dbt/vidoc_kpis/beneficiaries/beneficiary_coverage_rate.md
-        dbt/vidoc_kpis/diversity_3plus_categories.md: dbt/vidoc_kpis/diversity/diversity_3plus_categories.md
-        dbt/vidoc_kpis/diversity_category_depth.md: dbt/vidoc_kpis/diversity/diversity_category_depth.md
-        dbt/vidoc_kpis/booking_share_by_category.md: dbt/vidoc_kpis/diversity/booking_share_by_category.md
-        dbt/vidoc_kpis/distinct_venues_booked.md: dbt/vidoc_kpis/diversity/distinct_venues_booked.md
-        dbt/vidoc_kpis/credit_amount_at_expiration.md: dbt/vidoc_kpis/usage/credit_amount_at_expiration.md
-        dbt/vidoc_kpis/credit_spent_share_distribution.md: dbt/vidoc_kpis/usage/credit_spent_share_distribution.md
-        dbt/vidoc_kpis/individual_bookings_beneficiary_territory.md: dbt/vidoc_kpis/usage/individual_bookings_beneficiary_territory.md
-        dbt/vidoc_kpis/active_cultural_partners.md: dbt/vidoc_kpis/partners/active_cultural_partners.md
-        dbt/vidoc_kpis/activated_cultural_partners.md: dbt/vidoc_kpis/partners/activated_cultural_partners.md
-        dbt/vidoc_kpis/active_cultural_partners_by_type.md: dbt/vidoc_kpis/partners/active_cultural_partners_by_type.md
-        dbt/vidoc_kpis/individual_bookings_venue_territory.md: dbt/vidoc_kpis/partners/individual_bookings_venue_territory.md
-        dbt/vidoc_kpis/individual_revenue_venue_territory.md: dbt/vidoc_kpis/partners/individual_revenue_venue_territory.md
-        dbt/vidoc_kpis/student_eac_participation_rate.md: dbt/vidoc_kpis/collective/student_eac_participation_rate.md
-        dbt/vidoc_kpis/institution_eac_participation_rate.md: dbt/vidoc_kpis/collective/institution_eac_participation_rate.md
-        dbt/vidoc_kpis/eac_credit_consumption_rate.md: dbt/vidoc_kpis/collective/eac_credit_consumption_rate.md
-        dbt/vidoc_kpis/eac_collective_bookings.md: dbt/vidoc_kpis/collective/eac_collective_bookings.md
-        dbt/vidoc_kpis/eac_bookings_by_domain.md: dbt/vidoc_kpis/collective/eac_bookings_by_domain.md
-        dbt/vidoc_kpis/eac_bookings_by_format.md: dbt/vidoc_kpis/collective/eac_bookings_by_format.md
-        dbt/vidoc_kpis/eac_bookable_offers.md: dbt/vidoc_kpis/collective/eac_bookable_offers.md
   - llmstxt:
       full_output: llms-full.txt
       markdown_description: >-

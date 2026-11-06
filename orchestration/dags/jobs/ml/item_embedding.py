@@ -89,7 +89,7 @@ AVAILABLE_VECTORS = [
     ),
     VectorPipeline(
         name="all_items_offer_names",
-        input_table=f"{BIGQUERY_ML_INPUT_DATASET}.all_items_metadata_to_embed",  # uses the same input as all_items_metadata
+        input_table=f"{BIGQUERY_ML_INPUT_DATASET}.all_items_offer_names_to_embed",
         output_table=f"{BIGQUERY_TMP_DATASET}.all_items_offer_names_tmp",
     ),
 ]

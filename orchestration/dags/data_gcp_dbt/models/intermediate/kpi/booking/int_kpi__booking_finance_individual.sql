@@ -23,7 +23,9 @@ select
     gi.municipality_label as venue_municipality_label,
     r.offerer_is_epn,
     r.offer_category_id,
-    date_trunc(r.booking_used_date, month) as partition_month,
+    -- booking_used_date is a DATETIME: partition_month is a DATE, as in the other
+    -- int_kpi models
+    date(date_trunc(r.booking_used_date, month)) as partition_month,
     sum(r.total_bookings) as total_bookings,
     sum(r.total_quantities) as total_quantities,
     sum(r.total_revenue_amount) as total_revenue_amount,
@@ -32,7 +34,7 @@ select
 from {{ ref("int_finance__reimbursement") }} as r
 left join unique_geo_commune as gi on r.venue_city_code = gi.city_code
 group by
-    date_trunc(r.booking_used_date, month),
+    date(date_trunc(r.booking_used_date, month)),
     r.venue_department_code,
     r.venue_department_name,
     r.venue_region_name,

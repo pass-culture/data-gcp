@@ -29,6 +29,7 @@ with
                     "city_code",
                     "rural_city_type",
                     "academy_name",
+                    "department_code",
                     "department_name",
                     "density_label",
                     "density_macro_level",
@@ -43,6 +44,24 @@ with
                 geo_shape="iris_shape",
             )
         }}
+    ),
+
+    -- the department is read from the postal code; when that code is not a known
+    -- department (e.g. 98000 Monaco for a venue in Beausoleil), the department of
+    -- the venue coordinates (IRIS) is used instead
+    venue_department as (
+        select
+            venue.venue_id,
+            if(
+                known_department.num_dep is null,
+                coalesce(venue_geo_iris.department_code, venue.venue_department_code),
+                venue.venue_department_code
+            ) as venue_department_code
+        from {{ ref("int_applicative__venue_address") }} as venue
+        left join venue_geo_iris on venue.venue_id = venue_geo_iris.venue_id
+        left join
+            {{ source("seed", "region_department") }} as known_department
+            on venue.venue_department_code = known_department.num_dep
     )
 
 select
@@ -66,7 +85,7 @@ select
         when venue_geo_iris.iris_internal_id is not null
         then coalesce(venue_geo_iris.frr_code = "5", false)
     end as venue_in_frr_plus,
-    coalesce(venue.venue_department_code, "-1") as venue_department_code,
+    coalesce(venue_department.venue_department_code, "-1") as venue_department_code,
     coalesce(region_department.academy_name, "non localisé") as venue_academy_name,
     coalesce(region_department.dep_name, "non localisé") as venue_department_name,
     coalesce(region_department.region_name, "non localisé") as venue_region_name,
@@ -100,8 +119,9 @@ select
 from {{ ref("int_applicative__venue_address") }} as venue
 left join venue_qpv on venue.venue_id = venue_qpv.venue_id
 left join venue_geo_iris on venue.venue_id = venue_geo_iris.venue_id
+left join venue_department on venue.venue_id = venue_department.venue_id
 -- ensure to have region and department name for non IRIS based regions (Wallis and
 -- Futuna, New Caledonia, etc.)
 left join
     {{ source("seed", "region_department") }} as region_department
-    on venue.venue_department_code = region_department.num_dep
+    on venue_department.venue_department_code = region_department.num_dep

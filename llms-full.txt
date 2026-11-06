@@ -94,92 +94,17 @@ Not all models are (yet) fully described here, as our data warehouse holds an ex
 
 If you want to have a look at the documentation or sql, please refer [at the code](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models).
 
-## Vidoc KPIs
+## Beneficiaries
 
-This section documents the key performance indicators (KPIs) exported for the ministry via the **vidoc** export tables. For each indicator you will find the definition, source table(s), SQL calculation rule, and available dimensions.
+Young people who received a pass Culture credit, and the share of the eligible population they represent.
 
-All vidoc export tables are documented individually in the **Table definitions** section under `export > vidoc`.
+**Data protection**: Beneficiary counts are perturbed (cell key method). See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
 
-### Data protection
-
-All exported counts are protected using the **Cell Key Perturbation method** — the current standard recommended by INSEE and Eurostat. Small counts are always slightly modified so that no individual can be re-identified, while large counts and aggregated totals remain virtually exact. See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md) for full details.
-
-The EAC (collective part) tables are the exception: `exp_vidoc_student_coverage` holds ADAGE aggregates of school headcounts and `exp_vidoc_institution_activity` counts institutions (public bodies) and their credit, so neither is perturbed. The booking exports follow the external reporting rules instead. Cultural partner revenue (`exp_vidoc_booking_partner_finance_individual`) is protected by **statistical secret**: departments secret at the last complete month (fewer than 3 partners with revenue, one partner above 85% of the revenue, or secondary secret) are hidden on every month; it has no category breakdown. Categories are read on the young people's side (practices), as in the observatoire: bookings and spending of young people by territory of residence (`exp_vidoc_booking_beneficiary`) are hidden on every month when fewer than 5 beneficiaries account for them (20 for the category breakdown).
-
-### Indicators
-
-| KPI                                                                                                                                                                    | Definition                                                                                         | Source table(s)                                                       | Tracking                          |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------------------- |
-| [Number of ever-credited beneficiaries](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/ever_credited_beneficiaries/index.md)                                   | Young people who have ever received a pass Culture credit, active or not                           | `exp_vidoc_beneficiary`                                               | Monthly                           |
-| [Number of active beneficiaries](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/active_beneficiaries/index.md)                                                 | Beneficiaries with a non-expired, non-exhausted credit                                             | `exp_vidoc_beneficiary`                                               | Monthly                           |
-| [Beneficiary coverage rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiary_coverage_rate/index.md)                                                 | Share of eligible youth who received a credit                                                      | `exp_vidoc_beneficiary_coverage` + `exp_vidoc_population_coverage`    | Monthly (rolling 12 months)       |
-| [Diversity rate (3+ categories)](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity_3plus_categories/index.md)                                           | Share who booked in 3+ categories at credit expiration                                             | `exp_vidoc_diversity`                                                 | Monthly                           |
-| [Booking share by category](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/booking_share_by_category/index.md)                                                 | Share who booked in category X at credit expiration                                                | `exp_vidoc_diversity_by_category` + `exp_vidoc_diversity`             | Monthly                           |
-| [Student EAC participation rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/student_eac_participation_rate/index.md)                                       | Share of eligible students engaged in at least one EAC action                                      | `exp_vidoc_student_coverage`                                          | School year (monthly, cumulative) |
-| [Institution EAC participation rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/institution_eac_participation_rate/index.md)                               | Share of credited institutions with at least one collective booking                                | `exp_vidoc_institution_activity`                                      | School year (monthly, cumulative) |
-| [EAC credit consumption rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/eac_credit_consumption_rate/index.md)                                             | Share of the collective credit allocated to institutions that was engaged                          | `exp_vidoc_institution_activity`                                      | School year (monthly, cumulative) |
-| [EAC collective bookings](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/eac_collective_bookings/index.md)                                                     | Confirmed collective bookings and amount, by school (default) or cultural partner geography        | `exp_vidoc_booking_collective` + `exp_vidoc_booking_collective_venue` | Monthly (scholar year)            |
-| [EAC bookings by educational domain](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/eac_bookings_by_domain/index.md)                                           | Confirmed collective bookings, amount, tickets and schools by domain (domains not summable)        | `exp_vidoc_booking_collective_by_domain`                              | Monthly (scholar year)            |
-| [EAC bookings by offer format](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/eac_bookings_by_format/index.md)                                                 | Confirmed collective bookings, amount, tickets and schools by format (formats not summable)        | `exp_vidoc_booking_collective_by_format`                              | Monthly (scholar year)            |
-| [EAC bookable collective offers](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/eac_bookable_offers/index.md)                                                  | Bookable (non showcase) collective offers created and pre-reserved, and partners creating them     | `exp_vidoc_offer_collective_bookable`                                 | Monthly (scholar year)            |
-| [Number of active cultural partners by channel](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/active_cultural_partners/index.md)                              | Venues with a bookable offer in the last 365 days: individual only, collective only, both          | `exp_vidoc_cultural_partner`                                          | Monthly (rolling 365 days)        |
-| [Cumulative number of activated cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/activated_cultural_partners/index.md)                        | Venues that have had at least one bookable offer since 2022-06-10                                  | `exp_vidoc_cultural_partner`                                          | Monthly (cumulative)              |
-| [Number of active and activated cultural partners by type](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/active_cultural_partners_by_type/index.md)           | Active and activated venues for one partner type (never summed over types)                         | `exp_vidoc_cultural_partner_by_type`                                  | Monthly (rolling 365 days)        |
-| [Diversity depth (1+ to 5+ categories)](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity_category_depth/index.md)                                      | Share who booked in at least N categories at credit expiration, N = 1 to 5                         | `exp_vidoc_diversity`                                                 | Monthly                           |
-| [Amount granted, spent and spending rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/credit_amount_at_expiration/index.md)                                 | Average amount granted and spent per beneficiary, and share of credit spent, at expiration         | `exp_vidoc_diversity`                                                 | Monthly                           |
-| [Distribution by share of credit spent](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/credit_spent_share_distribution/index.md)                               | Beneficiaries by bucket of share of credit spent at expiration                                     | `exp_vidoc_diversity`                                                 | Monthly                           |
-| [Distinct venues booked](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/distinct_venues_booked/index.md)                                                       | Average number of distinct venues booked per beneficiary at expiration                             | `exp_vidoc_diversity`                                                 | Monthly                           |
-| [Individual bookings and tickets by venue territory](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/individual_bookings_venue_territory/index.md)              | Used individual bookings and tickets in a payment batch, by venue department                       | `exp_vidoc_booking_partner_finance_individual`                        | Monthly                           |
-| [Individual booking revenue by venue territory](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/individual_revenue_venue_territory/index.md)                    | Partner revenue, reimbursed and contributed amounts, by venue department                           | `exp_vidoc_booking_partner_finance_individual`                        | Monthly                           |
-| [Individual bookings by category and beneficiary territory](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/individual_bookings_beneficiary_territory/index.md) | Used individual bookings and amount spent by young people, by department of residence and category | `exp_vidoc_booking_beneficiary`                                       | Monthly                           |
-
-## Cumulative number of activated cultural partners
-
-### Definition
-
-A cultural partner (venue) is **activated** at a given month if it has had at least one **bookable** offer for at least one day between the start of the bookable offer history (**2022-06-10**) and the last day of the month. Creating an offer is not enough: the offer must have been bookable.
-
-The count is cumulative: once activated, a partner stays counted in every following month, even if it is no longer active.
-
-| Column                                                | Partners that have ever had...                                    |
-| ----------------------------------------------------- | ----------------------------------------------------------------- |
-| `total_cumulative_activated_partners_global`          | a bookable individual **or** collective offer                     |
-| `total_cumulative_activated_partners_individual`      | a bookable individual offer                                       |
-| `total_cumulative_activated_partners_collective`      | a bookable collective offer                                       |
-| `total_cumulative_activated_partners_dual_part`       | both, concurrently or not                                         |
-| `total_cumulative_activated_partners_individual_only` | a bookable individual offer and never a bookable collective offer |
-| `total_cumulative_activated_partners_collective_only` | a bookable collective offer and never a bookable individual offer |
-
-`global = individual_only + collective_only + dual_part`.
-
-### Source table
-
-[exp_vidoc_cultural_partner](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_cultural_partner/index.md). Same definitions as `external_reporting__cultural_partner` (`nombre_total_cumule_de_partenaires_actives_*`), which does not publish the global column.
-
-### Calculation
-
-```
-SELECT
-    partition_month,
-    SUM(total_cumulative_activated_partners_global) AS activated_partners
-FROM `cultural_partner`
-GROUP BY partition_month
-ORDER BY partition_month
-```
-
-### Available dimensions
-
-Same as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/active_cultural_partners/index.md): `partition_month`, partner department and region.
-
-### Temporal tracking
-
-**Monthly**, cumulative. All months from January 2022 (zero before June 2022, start of the bookable offer history); the current month changes until it is closed.
-
-### Notes and caveats
-
-- "Since inception" means since **2022-06-10** (start of the bookable offer history), not since the launch of pass Culture: a venue whose offers were only bookable before that date is not counted.
-- Venues are counted in their **current** department; venues that no longer exist in the applicative database are not counted.
-- Same `partner_region_code = '-1'` handling and same data protection status as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/active_cultural_partners/index.md) (not perturbed, no secrecy).
+| KPI                                                                                                                                                | Definition                                                               | Source table(s)                                                    | Tracking                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------ | --------------------------- |
+| [Number of ever-credited beneficiaries](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/ever_credited_beneficiaries/index.md) | Young people who have ever received a pass Culture credit, active or not | `exp_vidoc_beneficiary`                                            | Monthly                     |
+| [Number of active beneficiaries](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/active_beneficiaries/index.md)               | Beneficiaries with a non-expired, non-exhausted credit                   | `exp_vidoc_beneficiary`                                            | Monthly                     |
+| [Beneficiary coverage rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/beneficiary_coverage_rate/index.md)               | Share of eligible youth who received a credit                            | `exp_vidoc_beneficiary_coverage` + `exp_vidoc_population_coverage` | Monthly (rolling 12 months) |
 
 ## Number of active beneficiaries
 
@@ -226,115 +151,6 @@ ORDER BY partition_month
 Counts are protected using the [Cell Key Perturbation method](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md). Small counts are slightly modified; large counts and aggregated totals are virtually exact.
 
 Note: `total_actual_beneficiaries` and `total_beneficiaries` correspond to nested cohorts (active ⊂ ever-credited) but are perturbed **independently**. At the cell level, the invariant `total_actual_beneficiaries ≤ total_beneficiaries` can be violated after perturbation; aggregate over many cells before computing an "active share" ratio.
-
-## Number of active cultural partners by channel
-
-### Definition
-
-A cultural partner is a **venue** (`venue_id`) that has created at least one individual or collective offer.
-
-A partner is **active** in a month if it had at least one **bookable** offer (individual or collective) on at least one day of the **365 days up to the last day of the month**. Bookability comes from the daily bookable offer history (`int_history__bookable_venue`): an offer that was created but never bookable does not count.
-
-Split by channel:
-
-| Column                                  | Partners with, in the 365-day window...                                                           |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `total_active_partners_global`          | a bookable individual **or** collective offer                                                     |
-| `total_active_partners_individual`      | a bookable individual offer                                                                       |
-| `total_active_partners_collective`      | a bookable collective offer                                                                       |
-| `total_active_partners_dual_part`       | a bookable individual offer **and** a bookable collective offer (not necessarily on the same day) |
-| `total_active_partners_individual_only` | a bookable individual offer and no bookable collective offer                                      |
-| `total_active_partners_collective_only` | a bookable collective offer and no bookable individual offer                                      |
-
-`global = individual_only + collective_only + dual_part`, `individual = individual_only + dual_part`, `collective = collective_only + dual_part`.
-
-### Source table
-
-[exp_vidoc_cultural_partner](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_cultural_partner/index.md). Same KPIs as `external_reporting__cultural_partner` (`nombre_total_de_partenaire_actif_*`).
-
-### Calculation
-
-Sum the columns over the desired dimensions. Each partner is counted once per row, so sums over departments and regions are exact.
-
-```
-SELECT
-    partition_month,
-    SUM(total_active_partners_global) AS active_partners,
-    SUM(total_active_partners_individual_only) AS active_individual_only,
-    SUM(total_active_partners_collective_only) AS active_collective_only,
-    SUM(total_active_partners_dual_part) AS active_both
-FROM `cultural_partner`
-GROUP BY partition_month
-ORDER BY partition_month
-```
-
-### Available dimensions
-
-| Dimension  | Column                                               | Description                                     |
-| ---------- | ---------------------------------------------------- | ----------------------------------------------- |
-| Month      | `partition_month`                                    | Observation month (window ends on its last day) |
-| Department | `partner_department_code`, `partner_department_name` | Department of the venue                         |
-| Region     | `partner_region_code`, `partner_region_name`         | Region of the venue                             |
-
-### Temporal tracking
-
-**Monthly**, rolling 365-day window. All months from January 2022 are present, as in external_reporting. The bookable offer history starts on **2022-06-10**: months before June 2022 are zero, and until May 2023 the 365-day window is truncated (active = activated). Use months from **June 2023** for a full window. The current month is computed up to today and changes until it is closed.
-
-### Notes and caveats
-
-- The venue location is its **current** address, applied to all past months: a venue that moved is counted in its current department for the whole history.
-- Overseas collectivities outside any region (Saint-Pierre-et-Miquelon, Saint-Martin, Nouvelle-Calédonie) and non-located venues (department `980`) have `partner_region_code = '-1'`: they are in the national total but in no region (about 70 active partners).
-- Individual bookable offers are only counted for offerers whose current validation status is `VALIDATED`; no such filter applies to collective offers.
-- Past months can be slightly restated when the monthly metrics are recomputed (current address, offerer validation).
-
-### Data protection
-
-Partner counts are **not perturbed** and **not under statistical secrecy**, as in external_reporting: lists of cultural partners are public.
-
-## Number of active and activated cultural partners by type
-
-### Definition
-
-Same definitions as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/active_cultural_partners/index.md) and [activated cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/activated_cultural_partners/index.md), restricted to the partners of one **partner type** (cinemas, bookshops, live shows, museums, festivals, ...).
-
-Available columns: active partners `total_active_partners_{global, individual, collective, dual_part}` and cumulative activated partners `total_cumulative_activated_partners_{global, individual, collective, dual_part, individual_only, collective_only}`. The individual only / collective only split of active partners is not available by type.
-
-Types and labels are defined in the `get_partner_types` macro, from the venue type and venue tags. Label rows (`tag_*`: art et essai cinemas, LIR bookshops, labelled live shows, labelled museums) are subsets of a type.
-
-### Source table
-
-[exp_vidoc_cultural_partner_by_type](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_cultural_partner__by_type/index.md). `total_active_partners_individual` is the same KPI as `external_reporting__cultural_partner` (`nombre_de_partenaire_actif_individuel_<type>`).
-
-### Calculation
-
-Filter on **one** type, then sum over the geography.
-
-```
-SELECT
-    partition_month,
-    partner_type,
-    SUM(total_active_partners_global) AS active_partners,
-    SUM(total_cumulative_activated_partners_global) AS activated_partners
-FROM `cultural_partner_by_type`
-GROUP BY partition_month, partner_type
-ORDER BY partition_month, partner_type
-```
-
-> **Never sum over `partner_type`.** A partner can belong to several types: `Festival` venues are in both `musique_live` and `festival`, a venue tagged "Cinéma d'art et d'essai" is in `cinemas` and in the type of its venue, and `tag_*` rows are subsets of a type. Partners whose type is not listed are in no type. Take totals from [exp_vidoc_cultural_partner](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_cultural_partner/index.md).
-
-### Available dimensions
-
-| Dimension    | Column                                               | Description                                 |
-| ------------ | ---------------------------------------------------- | ------------------------------------------- |
-| Month        | `partition_month`                                    | Observation month                           |
-| Partner type | `partner_type`                                       | Type or label name from `get_partner_types` |
-| Department   | `partner_department_code`, `partner_department_name` | Department of the venue                     |
-| Region       | `partner_region_code`, `partner_region_name`         | Region of the venue                         |
-
-### Notes and caveats
-
-- The partner type and the location are the **current** ones, applied to all past months.
-- Same months, same `-1` region handling and same data protection status (not perturbed, no secrecy) as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/active_cultural_partners/index.md).
 
 ## Beneficiary coverage rate among eligible youth
 
@@ -390,302 +206,70 @@ Beneficiary counts are protected using the [Cell Key Perturbation method](https:
 
 > The rate **can slightly exceed 100%**, even without perturbation: the denominator is an INSEE population estimate, not a superset of the beneficiaries (e.g. department 22, age 19: ~6,800 beneficiaries for ~6,650 estimated residents). It is therefore not capped, unlike the nested counts of the other vidoc exports.
 
-## Share of beneficiaries booking in category X at credit expiration
+## Number of ever-credited beneficiaries
 
 ### Definition
 
-Share of credited beneficiaries who made a validated booking in a given offer category by the time their credit expired. Bookings across all granted credits (ages 15-20) are observed. Categories are as declared by the cultural partner when creating the offer on the pass Culture portal.
+Number of young people who have ever received a pass Culture credit, whether that credit is still active, exhausted, or expired.
 
-Only beneficiaries who received an age-18 credit are considered.
+Reported as a **stock at the end of each `partition_month`**, broken down by `age_at_calculation` (age reached at that month). This is not a true running total:
 
-### Source tables
+- A user only enters the stock from the month in which they first received a credit.
+- A user's `age_at_calculation` is recomputed each month, so the same user appears in different age buckets across months as they age.
+- A user leaves the stock if their account becomes inactive for any reason other than "suspension upon user request" (e.g. account deletion).
+- Users with a `GRANT_FREE` deposit type are excluded.
 
-- [exp_vidoc_diversity_by_category](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity__by_category/index.md) — beneficiary count per category
-- [exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md) — total expired-credit beneficiaries (denominator)
+### Source table
+
+[exp_vidoc_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_beneficiary/index.md)
 
 ### Calculation
 
-The share is the ratio of `total_category_booked_beneficiaries` (per category) to `total_expired_deposit_beneficiaries` (total, **independent of the category**).
-
-Because the denominator is not category-specific, **aggregate the numerator and the denominator separately** before dividing:
+Sum the `total_beneficiaries` column over the desired dimensions.
 
 ```
-WITH numerator AS (
-    SELECT
-        deposit_expiration_month,
-        offer_category_id,
-        SUM(total_category_booked_beneficiaries) AS booked_in_category
-    FROM `diversity_by_category`
-    GROUP BY deposit_expiration_month, offer_category_id
-),
-denominator AS (
-    SELECT
-        deposit_expiration_month,
-        SUM(total_expired_deposit_beneficiaries) AS total_expired
-    FROM `diversity`
-    GROUP BY deposit_expiration_month
-)
 SELECT
-    n.deposit_expiration_month,
-    n.offer_category_id,
-    n.booked_in_category,
-    d.total_expired,
-    SAFE_DIVIDE(n.booked_in_category, d.total_expired) AS category_booking_rate
-FROM numerator AS n
-INNER JOIN denominator AS d USING (deposit_expiration_month)
-ORDER BY n.deposit_expiration_month, n.offer_category_id
-```
-
-> **Do not** join `diversity_by_category` to `diversity` on all geographic dimensions before summing: `diversity_by_category` has one row per `(cell, category present)`, so an `INNER JOIN` at the cell level silently drops from the denominator every cell where the category has zero bookings. The rate is then **overestimated**, especially for rare categories. Always aggregate each side to its natural grain first, then join.
-
-To compute the rate on a sub-group (e.g. per department, per QPV), add the grouping dimensions to both CTEs and join on them. Cross-join with the list of categories if you need to emit explicit zero-booking rows:
-
-```
-WITH denom AS (
-    SELECT deposit_expiration_month, department_code,
-           SUM(total_expired_deposit_beneficiaries) AS total_expired
-    FROM `diversity`
-    WHERE department_code = 'XX' -- optional filter to a specific sub-group
-    GROUP BY deposit_expiration_month, department_code
-),
-num AS (
-    SELECT deposit_expiration_month, department_code, offer_category_id,
-           SUM(total_category_booked_beneficiaries) AS booked
-    FROM `diversity_by_category`
-    WHERE department_code = 'XX' -- optional filter to a specific sub-group
-    GROUP BY deposit_expiration_month, department_code, offer_category_id
-)
-SELECT d.deposit_expiration_month, d.department_code, n.offer_category_id,
-       SAFE_DIVIDE(n.booked, d.total_expired) AS rate
-FROM denom AS d
-LEFT JOIN num AS n USING (deposit_expiration_month, department_code)
+    partition_month,
+    SUM(total_beneficiaries) AS total_ever_credited_beneficiaries
+FROM `beneficiary`
+GROUP BY partition_month
+ORDER BY partition_month
 ```
 
 ### Available dimensions
 
-| Dimension        | Column                               | Description                                        |
-| ---------------- | ------------------------------------ | -------------------------------------------------- |
-| Expiration month | `deposit_expiration_month`           | Month when the beneficiary's credit expired        |
-| Offer category   | `offer_category_id`                  | Offer category as declared by the cultural partner |
-| Department       | `department_code`, `department_name` | Department of residence                            |
-| Region           | `region_code`, `region_name`         | Region of residence                                |
-| QPV              | `is_in_qpv`                          | Priority neighbourhood flag                        |
-| Rurality (macro) | `macro_density_label`                | Macro density level                                |
-| Rurality (micro) | `micro_density_label`                | Micro density level                                |
+| Dimension                   | Column                               | Description                           |
+| --------------------------- | ------------------------------------ | ------------------------------------- |
+| Age (integer, ever reached) | `age_at_calculation`                 | Beneficiary's age at calculation date |
+| Department                  | `department_code`, `department_name` | Department of residence               |
+| Region                      | `region_code`, `region_name`         | Region of residence                   |
+| QPV                         | `is_in_qpv`                          | Priority neighbourhood flag           |
+| Rurality (macro)            | `macro_density_label`                | Macro density level                   |
+| Rurality (micro)            | `micro_density_label`                | Micro density level                   |
 
 ### Temporal tracking
 
-**Monthly.** One cohort per `deposit_expiration_month`, the month when the beneficiaries' credit expired. Sum several months (e.g. a quarter or a year) for small territories.
+**Monthly.** One stock per `partition_month` (end of the month).
 
 ### Data protection
 
-Counts are protected using the [Cell Key Perturbation method](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md). The numerator (`total_category_booked_beneficiaries`) and the denominator (`total_expired_deposit_beneficiaries`) come from **different cohorts of users** and are therefore perturbed **independently** (different cell keys → independent noise). Consequences:
-
-- On a single small cell, the ratio can be unstable (numerator and denominator each shifted by up to ±5).
-- The invariant `booked_in_category ≤ total_expired` can be **violated** at the cell level after perturbation. Always aggregate over many cells (national, regional, several months) before computing a rate.
-- For very rare categories, a rate computed at a fine geographic grain should be treated as indicative only.
-
-## Average amount granted, spent and spending rate at credit expiration
-
-### Definition
-
-For beneficiaries whose credit expired in the month (same population as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity_3plus_categories/index.md)):
-
-- **Average amount granted**: total of all the credits the beneficiary received (15-17 credits, 17-18 credit, bonus), per beneficiary.
-- **Average amount spent**: amount of non-cancelled bookings made with those credits, per beneficiary.
-- **Spending rate**: amount spent ÷ amount granted (a ratio of sums, not an average of individual rates).
-
-The credit amount depends on the generation (500 € before the 2023 reform, then 300 €, then 150 € + 50 € bonus after 2025): compare generations with the spending rate rather than with amounts.
-
-### Source table
-
-[exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md)
-
-### Calculation
-
-Same definition as the external reporting KPIs `montant_moyen_octroye_a_l_expiration_du_credit` and `montant_moyen_depense_a_l_expiration_du_credit` (read from `metrics_beneficiary__expired_cohorts`, same values).
-
-The amounts are not perturbed: they are **null** when `total_expired_deposit_beneficiaries` is below 5. Exclude those rows from the denominator too, otherwise the averages are underestimated.
-
-```
-SELECT
-    deposit_expiration_month,
-    SAFE_DIVIDE(SUM(total_deposit_amount_at_expiration), SUM(total_expired_deposit_beneficiaries)) AS avg_amount_granted,
-    SAFE_DIVIDE(SUM(total_actual_amount_spent_at_expiration), SUM(total_expired_deposit_beneficiaries)) AS avg_amount_spent,
-    SAFE_DIVIDE(SUM(total_actual_amount_spent_at_expiration), SUM(total_deposit_amount_at_expiration)) AS spending_rate
-FROM `diversity`
-WHERE total_actual_amount_spent_at_expiration IS NOT NULL
-GROUP BY deposit_expiration_month
-ORDER BY deposit_expiration_month
-```
-
-### Available dimensions
-
-Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity_3plus_categories/#available-dimensions).
-
-### Temporal tracking
-
-**Monthly** cohorts of expiration, displayed by quarter or year (from April 2025 to March 2026 few credits expired after the 2025 reform: these cohorts are small).
-
-## Distribution of beneficiaries by share of credit spent at expiration
-
-### Definition
-
-For beneficiaries whose credit expired in the month, split by the share of all the credits they received that they spent: `0` (no booking), `]0-25]`, `]25-50]`, `]50-75]`, `]75-90]`, `]90-100]` %. The last bucket includes beneficiaries with a few cents left.
-
-### Source table
-
-[exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md)
-
-### Calculation
-
-```
-SELECT
-    deposit_expiration_month,
-    SAFE_DIVIDE(SUM(total_spent_share_0_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_0,
-    SAFE_DIVIDE(SUM(total_spent_share_0_25_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_0_25,
-    SAFE_DIVIDE(SUM(total_spent_share_25_50_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_25_50,
-    SAFE_DIVIDE(SUM(total_spent_share_50_75_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_50_75,
-    SAFE_DIVIDE(SUM(total_spent_share_75_90_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_75_90,
-    SAFE_DIVIDE(SUM(total_spent_share_90_100_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_90_100
-FROM `diversity`
-GROUP BY deposit_expiration_month
-ORDER BY deposit_expiration_month
-```
-
-For a lighter display, the buckets can be merged into 4: `0`, `< 50` (`0_25 + 25_50`), `50-90` (`50_75 + 75_90`), `> 90`.
-
-### Available dimensions
-
-Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity_3plus_categories/#available-dimensions).
-
-### Data protection and caveats
-
-Each bucket is perturbed independently and capped at `total_expired_deposit_beneficiaries`: the sum of the 6 buckets can differ from the total by a few units in a row. Compute shares on aggregated sums; for exact 100 % stacked charts, divide by the sum of the buckets instead of the total.
-
-## Average number of distinct venues booked at credit expiration
-
-### Definition
-
-For beneficiaries whose credit expired in the month, average number of distinct venues (`venue_id`) where they made a non-cancelled booking before expiration. A partner with several venues counts several times.
-
-### Source table
-
-[exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md)
-
-### Calculation
-
-`total_distinct_venue_booked_at_expiration` is not perturbed: it is **null** when `total_expired_deposit_beneficiaries` is below 5. Exclude those rows from the denominator.
-
-```
-SELECT
-    deposit_expiration_month,
-    SAFE_DIVIDE(
-        SUM(total_distinct_venue_booked_at_expiration),
-        SUM(total_expired_deposit_beneficiaries)
-    ) AS avg_distinct_venues
-FROM `diversity`
-WHERE total_distinct_venue_booked_at_expiration IS NOT NULL
-GROUP BY deposit_expiration_month
-ORDER BY deposit_expiration_month
-```
-
-### Available dimensions
-
-Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity_3plus_categories/#available-dimensions).
-
-## Share of beneficiaries booking in 3+ distinct categories at credit expiration
-
-### Definition
-
-Share of credited beneficiaries who made a validated booking in at least 3 different offer categories by the time their credit expired. Bookings across all granted credits (ages 15-20) are observed. Categories are as declared by the cultural partner when creating the offer on the pass Culture portal.
-
-Only beneficiaries whose last credit is a 17-18 credit (`GRANT_18`, `GRANT_17_18`) expired in a closed month are considered.
-
-### Source table
-
-[exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md)
-
-### Calculation
-
-The share is the ratio of `total_3plus_category_booked_beneficiaries` to `total_expired_deposit_beneficiaries`.
-
-```
-SELECT
-    deposit_expiration_month,
-    SUM(total_3plus_category_booked_beneficiaries) AS booked_3plus_categories,
-    SUM(total_expired_deposit_beneficiaries) AS total_expired,
-    SAFE_DIVIDE(
-        SUM(total_3plus_category_booked_beneficiaries),
-        SUM(total_expired_deposit_beneficiaries)
-    ) AS diversity_rate
-FROM `diversity`
-GROUP BY deposit_expiration_month
-ORDER BY deposit_expiration_month
-```
-
-### Available dimensions
-
-| Dimension        | Column                               | Description                                 |
-| ---------------- | ------------------------------------ | ------------------------------------------- |
-| Expiration month | `deposit_expiration_month`           | Month when the beneficiary's credit expired |
-| Department       | `department_code`, `department_name` | Department of residence                     |
-| Region           | `region_code`, `region_name`         | Region of residence                         |
-| QPV              | `is_in_qpv`                          | Priority neighbourhood flag                 |
-| Rurality (macro) | `macro_density_label`                | Macro density level                         |
-| Rurality (micro) | `micro_density_label`                | Micro density level                         |
-
-### Temporal tracking
-
-**Monthly.** One cohort per `deposit_expiration_month`, the month when the beneficiaries' credit expired. Sum several months (e.g. a quarter or a year) for small territories.
-
-### Data protection
-
-Both columns are protected using the [Cell Key Perturbation method](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md). They correspond to **nested cohorts** (`3plus ⊂ expired`) and are perturbed **independently** (each column has its own cell key), then `total_3plus_category_booked_beneficiaries` is capped at `total_expired_deposit_beneficiaries` in each row, so the rate never exceeds 100 %.
-
-- On a single small cell, the rate can still be noisy.
-- Always aggregate over many cells (national, regional, several months) before computing the rate; the law of large numbers brings the ratio back close to the true value.
-- For a national rate over a quarter or more, the relative error is negligible.
-
-## Share of beneficiaries booking in N+ distinct categories at credit expiration
-
-### Definition
-
-For N = 1 to 5, share of beneficiaries whose credit expired in the month and who made a non-cancelled booking in at least N different offer categories before expiration. `1+` is the share of beneficiaries who booked at least once. The 3+ threshold is the lot 1 [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity_3plus_categories/index.md).
-
-Population: beneficiaries whose last credit is a 17-18 credit (`GRANT_18`, `GRANT_17_18`) and expired in a closed month. Bookings made with all the credits they received (15-17 included) are observed. Categories are declared by the cultural partner.
-
-### Source table
-
-[exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md)
-
-### Calculation
-
-```
-SELECT
-    deposit_expiration_month,
-    SAFE_DIVIDE(SUM(total_1plus_category_booked_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_1plus,
-    SAFE_DIVIDE(SUM(total_2plus_category_booked_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_2plus,
-    SAFE_DIVIDE(SUM(total_3plus_category_booked_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_3plus,
-    SAFE_DIVIDE(SUM(total_4plus_category_booked_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_4plus,
-    SAFE_DIVIDE(SUM(total_5plus_category_booked_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_5plus
-FROM `diversity`
-GROUP BY deposit_expiration_month
-ORDER BY deposit_expiration_month
-```
-
-### Available dimensions
-
-Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity_3plus_categories/#available-dimensions): expiration month, region, department, QPV, density.
-
-### Temporal tracking
-
-**Monthly** cohorts of expiration. Display by quarter or year: from April 2025 to March 2026 few credits expired (2025 reform), so these cohorts are small and not representative.
-
-### Data protection and caveats
-
-- All counts are perturbed with their own cell key, then each one is capped at `total_expired_deposit_beneficiaries` in its row. The thresholds are perturbed independently: on a small cell the order `5+ ≤ 4+ ≤ … ≤ 1+` can break; aggregate before reading.
-- The thresholds are cumulative: do not add them up. The share with exactly N categories is `N+ − (N+1)+`.
+Counts are protected using the [Cell Key Perturbation method](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md). Small counts are slightly modified; large counts and aggregated totals are virtually exact.
+
+## Collective (EAC)
+
+Collective part of the pass Culture (EAC): school and student participation, credit consumption, collective bookings and offers.
+
+**Data protection**: Not perturbed: ADAGE aggregates of school headcounts, institutions (public bodies), bookings and offers. Bookings by school geography are not secret (public money); bookings by cultural partner geography are under the **statistical secret** of external reporting. See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
+
+| KPI                                                                                                                                                 | Definition                                                                                     | Source table(s)                                                       | Tracking                          |
+| --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------------------- |
+| [Student EAC participation rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/student_eac_participation_rate/index.md)         | Share of eligible students engaged in at least one EAC action                                  | `exp_vidoc_student_coverage`                                          | School year (monthly, cumulative) |
+| [Institution EAC participation rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/institution_eac_participation_rate/index.md) | Share of credited institutions with at least one collective booking                            | `exp_vidoc_institution_activity`                                      | School year (monthly, cumulative) |
+| [EAC credit consumption rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/eac_credit_consumption_rate/index.md)               | Share of the collective credit allocated to institutions that was engaged                      | `exp_vidoc_institution_activity`                                      | School year (monthly, cumulative) |
+| [EAC collective bookings](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/eac_collective_bookings/index.md)                       | Confirmed collective bookings and amount, by school (default) or cultural partner geography    | `exp_vidoc_booking_collective` + `exp_vidoc_booking_collective_venue` | Monthly (scholar year)            |
+| [EAC bookings by educational domain](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/eac_bookings_by_domain/index.md)             | Confirmed collective bookings, amount, tickets and schools by domain (domains not summable)    | `exp_vidoc_booking_collective_by_domain`                              | Monthly (scholar year)            |
+| [EAC bookings by offer format](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/eac_bookings_by_format/index.md)                   | Confirmed collective bookings, amount, tickets and schools by format (formats not summable)    | `exp_vidoc_booking_collective_by_format`                              | Monthly (scholar year)            |
+| [EAC bookable collective offers](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/eac_bookable_offers/index.md)                    | Bookable (non showcase) collective offers created and pre-reserved, and partners creating them | `exp_vidoc_offer_collective_bookable`                                 | Monthly (scholar year)            |
 
 ## Bookable collective (EAC) offers created and pre-reserved
 
@@ -751,7 +335,7 @@ Interest of this indicator for the observatoire is still to be decided; it is ex
 
 ### Definition
 
-Confirmed collective bookings (same definition as [EAC collective bookings](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/eac_collective_bookings/index.md)) split by the **educational domain** of the booked offer (e.g. Théâtre, Cinéma, Patrimoine), as declared by the cultural partner. Indicators: bookings, amount, tickets, bookings made with a venue labelled by the Ministry of Culture, and distinct schools involved in the month. Same values as `external_reporting__eac_domain`.
+Confirmed collective bookings (same definition as [EAC collective bookings](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/eac_collective_bookings/index.md)) split by the **educational domain** of the booked offer (e.g. Théâtre, Cinéma, Patrimoine), as declared by the cultural partner. Indicators: bookings, amount, tickets, bookings made with a venue labelled by the Ministry of Culture, and distinct schools involved in the month. Same values as `external_reporting__eac_domain`.
 
 **An offer can have several domains** (about 21% of collective offers have 2 or more): its bookings count in **each** of its domains. Domains are therefore **not summable**: in 2025-2026 the sum over domains is 133,227 bookings for 99,019 actual bookings (+35%), and 51.8 M€ for 37.6 M€. Take totals from `exp_vidoc__booking_collective`.
 
@@ -799,7 +383,7 @@ Bookings and schools are not counts of people: no cell key perturbation. School 
 
 ### Definition
 
-Confirmed collective bookings (same definition as [EAC collective bookings](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/eac_collective_bookings/index.md)) split by the **format** of the booked offer (e.g. REPRESENTATION, ATELIER_DE_PRATIQUE, VISITE_GUIDEE), as declared by the cultural partner. Indicators: bookings, amount and tickets (same values as `external_reporting__eac_format`), and distinct schools involved.
+Confirmed collective bookings (same definition as [EAC collective bookings](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/eac_collective_bookings/index.md)) split by the **format** of the booked offer (e.g. REPRESENTATION, ATELIER_DE_PRATIQUE, VISITE_GUIDEE), as declared by the cultural partner. Indicators: bookings, amount and tickets (same values as `external_reporting__eac_format`), and distinct schools involved.
 
 **An offer can have several formats** (11% of the 2025-2026 bookings): its bookings count in **each** of its formats. Formats are therefore **not summable**: in 2025-2026 the sum over formats is 113,189 bookings for 99,019 actual bookings (+14%). Take totals from `exp_vidoc__booking_collective`.
 
@@ -953,213 +537,6 @@ ORDER BY scholar_year
 - Bookings of institutions without a known department are on a row with a null `department_code` and no credit: they count nationally but not in any territory.
 - Amounts are the spending of all the schools of a territory, not the revenue of a partner: no statistical secret applies.
 
-## Number of ever-credited beneficiaries
-
-### Definition
-
-Number of young people who have ever received a pass Culture credit, whether that credit is still active, exhausted, or expired.
-
-Reported as a **stock at the end of each `partition_month`**, broken down by `age_at_calculation` (age reached at that month). This is not a true running total:
-
-- A user only enters the stock from the month in which they first received a credit.
-- A user's `age_at_calculation` is recomputed each month, so the same user appears in different age buckets across months as they age.
-- A user leaves the stock if their account becomes inactive for any reason other than "suspension upon user request" (e.g. account deletion).
-- Users with a `GRANT_FREE` deposit type are excluded.
-
-### Source table
-
-[exp_vidoc_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_beneficiary/index.md)
-
-### Calculation
-
-Sum the `total_beneficiaries` column over the desired dimensions.
-
-```
-SELECT
-    partition_month,
-    SUM(total_beneficiaries) AS total_ever_credited_beneficiaries
-FROM `beneficiary`
-GROUP BY partition_month
-ORDER BY partition_month
-```
-
-### Available dimensions
-
-| Dimension                   | Column                               | Description                           |
-| --------------------------- | ------------------------------------ | ------------------------------------- |
-| Age (integer, ever reached) | `age_at_calculation`                 | Beneficiary's age at calculation date |
-| Department                  | `department_code`, `department_name` | Department of residence               |
-| Region                      | `region_code`, `region_name`         | Region of residence                   |
-| QPV                         | `is_in_qpv`                          | Priority neighbourhood flag           |
-| Rurality (macro)            | `macro_density_label`                | Macro density level                   |
-| Rurality (micro)            | `micro_density_label`                | Micro density level                   |
-
-### Temporal tracking
-
-**Monthly.** One stock per `partition_month` (end of the month).
-
-### Data protection
-
-Counts are protected using the [Cell Key Perturbation method](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md). Small counts are slightly modified; large counts and aggregated totals are virtually exact.
-
-## Used individual bookings and amount spent by category and beneficiary territory
-
-### Definition
-
-Number of used individual bookings made by beneficiaries (`total_used_bookings`) and amount they spent from their pass Culture credit (`total_used_amount`, in euros), by month of use, territory of **residence of the young person** and offer category. Categories are as declared by the cultural partner when creating the offer.
-
-Unlike the [venue territory KPIs](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/individual_bookings_venue_territory/index.md), bookings are counted when used, whether or not they are already in a payment batch.
-
-### Source table
-
-[exp_vidoc_booking_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_beneficiary/index.md)
-
-### Calculation
-
-Rows with `offer_category_id = 'ALL'` hold the department total; the other rows the categories. Never sum the two together.
-
-```
-SELECT
-    t.partition_month,
-    c.offer_category_id,
-    SUM(c.total_used_bookings) AS used_bookings,
-    SUM(c.total_used_amount) AS amount_spent,
-    SAFE_DIVIDE(SUM(c.total_used_bookings), SUM(t.total_used_bookings)) AS category_share
-FROM `booking_beneficiary` AS c
-JOIN `booking_beneficiary` AS t
-    ON t.partition_month = c.partition_month
-    AND t.department_name = c.department_name
-    AND t.offer_category_id = 'ALL'
-WHERE c.offer_category_id != 'ALL'
-    AND c.total_used_bookings IS NOT NULL
-GROUP BY t.partition_month, c.offer_category_id
-ORDER BY t.partition_month, used_bookings DESC
-```
-
-### Available dimensions
-
-| Dimension    | Column                               | Description                                |
-| ------------ | ------------------------------------ | ------------------------------------------ |
-| Month of use | `partition_month`                    | Month when the booking was used            |
-| Department   | `department_code`, `department_name` | Department of residence of the beneficiary |
-| Region       | `region_code`, `region_name`         | Region of residence of the beneficiary     |
-| Category     | `offer_category_id`                  | Offer category                             |
-
-### Temporal tracking
-
-**Monthly.** Months from January 2022 to the month before the run date, as in external reporting. Monthly flows: sum the months for a period.
-
-### Data protection
-
-Same low count rule as external reporting (`external_reporting__individual`, with `external_reporting__beneficiary_booking_bookers`). Values are not perturbed, but a row is NULL on every month (`is_low_count` TRUE) when fewer than 5 distinct beneficiaries account for it since 2022: the bookers of the department for an `ALL` row, the bookers of the category in the department for a category row. The category rows of a department with fewer than 20 bookers since 2022 are all NULL (no category breakdown for very small territories). Region and national totals summed from departments leave out the masked rows (rare: in August-October 2026 the `ALL` rows add up exactly to the national total).
-
-### Notes and caveats
-
-- The territory is the **current** address of the beneficiary, not his address at booking date: a young person who moved has all his past bookings in his new department.
-- Bookings of users no longer known as beneficiaries (deleted, suspended, GRANT_FREE accounts: about 0.2% of the used bookings) have no residence and are left out, national total included. Beneficiaries without a located address are in department `-1` (`non localisé`).
-- `region_code` is NULL for the overseas collectivities (Nouvelle-Calédonie, Saint-Martin, Polynésie Française, Saint-Pierre-et-Miquelon, Wallis et Futuna); `region_name` is filled.
-- Category rows cover the external reporting categories (`get_categories()`); marginal categories are kept as is (`MEDIA`, `CARTE_JEUNES`: about 1,000-1,500 bookings a year each; `LIVRE` and `CINEMA` make up 85% of the bookings).
-- Amounts are booking amounts paid with the credit: this is the young people's spending, not the partners' revenue.
-
-## Used individual bookings and tickets by venue territory
-
-### Definition
-
-Number of used individual bookings (`total_bookings`) and of tickets or items booked (`total_quantities`, a booking can hold several tickets, e.g. duo offers) on the pass Culture, by month of use and by territory of the **venue** (where the cultural partner is, not where the young person lives).
-
-Only bookings already included in a payment batch are counted: a used booking is counted once its pricing is invoiced to the cultural partner.
-
-### Source table
-
-[exp_vidoc_booking_partner_finance_individual](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_partner_finance__individual/index.md)
-
-### Calculation
-
-```
-SELECT
-    partition_month,
-    venue_region_code,
-    venue_region_name,
-    SUM(total_bookings) AS used_bookings,
-    SUM(total_quantities) AS tickets
-FROM `booking_partner_finance_individual`
-GROUP BY partition_month, venue_region_code, venue_region_name
-ORDER BY partition_month
-```
-
-### Available dimensions
-
-| Dimension    | Column                                           | Description                     |
-| ------------ | ------------------------------------------------ | ------------------------------- |
-| Month of use | `partition_month`                                | Month when the booking was used |
-| Department   | `venue_department_code`, `venue_department_name` | Department of the venue         |
-| Region       | `venue_region_code`, `venue_region_name`         | Region of the venue             |
-
-### Temporal tracking
-
-**Monthly.** One row per month of use and venue department. Months up to the month before the run date are exported, as in external reporting. Bookings enter the table when their payment batch is closed: the last month is about 99% complete when first published and may be slightly revised (+1%) on the next exports.
-
-### Data protection
-
-Partner revenue is under **statistical secret** (not cell key perturbation), with the rule of external reporting: when the department is secret at the last complete month, for the 6 or 48 month window, on the individual or the collective side (fewer than 3 cultural partners with revenue, one partner above 85% of the revenue, or secondary secret), `is_statistic_secret` is TRUE and all KPIs of the department, bookings and tickets included, are NULL on every month. `department_secret_reason_label` gives the reasons.
-
-### Notes and caveats
-
-- Region and national totals are sums of the visible departments, so they leave out the secret departments (mostly overseas collectivities and Lozère): less than 0.06% of the national volume in 2026. External reporting publishes REG and NAT unmasked; this table has the department grain only.
-- `venue_region_code` is NULL for the overseas collectivities (Saint-Martin, Saint-Pierre-et-Miquelon, Nouvelle-Calédonie, ...); `venue_region_name` is filled.
-- Not broken down by offer category, by design (partner side: a category often has fewer than 3 partners in a department). Categories are read on the young people's side (practices), as in the observatoire. For bookings by category, see [Individual bookings by category and beneficiary territory](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/individual_bookings_beneficiary_territory/index.md) (residence of the young person, no payment batch condition).
-
-## Individual booking revenue by venue territory
-
-### Definition
-
-Revenue generated for the cultural partners by used individual bookings (`total_revenue_amount`, booking amount in euros), by month of use and territory of the **venue**. It is split into:
-
-- `total_reimbursed_amount`: amount reimbursed by pass Culture to the partners;
-- `total_contribution_amount`: share borne by the partners (revenue minus reimbursed amount, e.g. when the reimbursement rate is below 100%).
-
-Only bookings already included in a payment batch are counted.
-
-### Source table
-
-[exp_vidoc_booking_partner_finance_individual](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_partner_finance__individual/index.md)
-
-### Calculation
-
-```
-SELECT
-    partition_month,
-    SUM(total_revenue_amount) AS revenue,
-    SUM(total_reimbursed_amount) AS reimbursed,
-    SUM(total_contribution_amount) AS partner_contribution,
-    SAFE_DIVIDE(SUM(total_reimbursed_amount), SUM(total_revenue_amount)) AS reimbursement_rate
-FROM `booking_partner_finance_individual`
-GROUP BY partition_month
-ORDER BY partition_month
-```
-
-### Available dimensions
-
-| Dimension    | Column                                           | Description                     |
-| ------------ | ------------------------------------------------ | ------------------------------- |
-| Month of use | `partition_month`                                | Month when the booking was used |
-| Department   | `venue_department_code`, `venue_department_name` | Department of the venue         |
-| Region       | `venue_region_code`, `venue_region_name`         | Region of the venue             |
-
-### Temporal tracking
-
-**Monthly.** Months up to the month before the run date, as in external reporting. The last month is about 99% complete when first published (bookings not yet in a payment batch) and may be slightly revised afterwards.
-
-### Data protection
-
-**Statistical secret** on the venue department, with the rule of external reporting: the department is secret at the last complete month, for the 6 or 48 month window, on the individual or the collective side (fewer than 3 cultural partners with revenue, one partner above 85% of the revenue, or secondary secret). A secret department has `is_statistic_secret` TRUE and NULL amounts on every month. Revenue is never published at venue or offer level.
-
-### Notes and caveats
-
-- Sums of departments underestimate the region and national revenue by the secret departments (less than 0.03% of the national revenue in 2026). External reporting publishes REG and NAT unmasked; this table has the department grain only.
-- `venue_region_code` is NULL for the overseas collectivities; `venue_region_name` is filled.
-- Not broken down by offer category, by design: by venue location, a category often has fewer than 3 partners in a department (about a third of the department x category cells over 12 months), so the revenue by category would reveal a partner's revenue. Categories are read on the young people's side (practices), as in the observatoire: see [Individual bookings by category and beneficiary territory](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/individual_bookings_beneficiary_territory/index.md).
-
 ## Share of credited institutions engaged in the collective part
 
 ### Definition
@@ -1259,6 +636,657 @@ ORDER BY scholar_year
 - During an ongoing school year the rate is partial.
 - **Known issue, fix pending**: in the first months of a school year the ADAGE headcounts of some académies are missing (e.g. Toulouse in 2026-2027), which distorts territorial rates. A fix is planned in a separate change.
 - Counts are ADAGE aggregates of school headcounts, not individual pass Culture data: they are not perturbed.
+
+## Diversity
+
+Diversity of the cultural practices of young people at credit expiration: number of categories booked, categories and distinct venues.
+
+**Data protection**: Counts are perturbed (cell key method); the number of distinct venues is hidden when fewer than 5 beneficiaries are in the row. See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
+
+| KPI                                                                                                                                         | Definition                                                                 | Source table(s)                                           | Tracking |
+| ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------- | -------- |
+| [Diversity rate (3+ categories)](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/index.md)      | Share who booked in 3+ categories at credit expiration                     | `exp_vidoc_diversity`                                     | Monthly  |
+| [Diversity depth (1+ to 5+ categories)](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_category_depth/index.md) | Share who booked in at least N categories at credit expiration, N = 1 to 5 | `exp_vidoc_diversity`                                     | Monthly  |
+| [Booking share by category](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/booking_share_by_category/index.md)            | Share who booked in category X at credit expiration                        | `exp_vidoc_diversity_by_category` + `exp_vidoc_diversity` | Monthly  |
+| [Distinct venues booked](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/distinct_venues_booked/index.md)                  | Average number of distinct venues booked per beneficiary at expiration     | `exp_vidoc_diversity`                                     | Monthly  |
+
+## Share of beneficiaries booking in category X at credit expiration
+
+### Definition
+
+Share of credited beneficiaries who made a validated booking in a given offer category by the time their credit expired. Bookings across all granted credits (ages 15-20) are observed. Categories are as declared by the cultural partner when creating the offer on the pass Culture portal.
+
+Only beneficiaries who received an age-18 credit are considered.
+
+### Source tables
+
+- [exp_vidoc_diversity_by_category](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity__by_category/index.md) — beneficiary count per category
+- [exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md) — total expired-credit beneficiaries (denominator)
+
+### Calculation
+
+The share is the ratio of `total_category_booked_beneficiaries` (per category) to `total_expired_deposit_beneficiaries` (total, **independent of the category**).
+
+Because the denominator is not category-specific, **aggregate the numerator and the denominator separately** before dividing:
+
+```
+WITH numerator AS (
+    SELECT
+        deposit_expiration_month,
+        offer_category_id,
+        SUM(total_category_booked_beneficiaries) AS booked_in_category
+    FROM `diversity_by_category`
+    GROUP BY deposit_expiration_month, offer_category_id
+),
+denominator AS (
+    SELECT
+        deposit_expiration_month,
+        SUM(total_expired_deposit_beneficiaries) AS total_expired
+    FROM `diversity`
+    GROUP BY deposit_expiration_month
+)
+SELECT
+    n.deposit_expiration_month,
+    n.offer_category_id,
+    n.booked_in_category,
+    d.total_expired,
+    SAFE_DIVIDE(n.booked_in_category, d.total_expired) AS category_booking_rate
+FROM numerator AS n
+INNER JOIN denominator AS d USING (deposit_expiration_month)
+ORDER BY n.deposit_expiration_month, n.offer_category_id
+```
+
+> **Do not** join `diversity_by_category` to `diversity` on all geographic dimensions before summing: `diversity_by_category` has one row per `(cell, category present)`, so an `INNER JOIN` at the cell level silently drops from the denominator every cell where the category has zero bookings. The rate is then **overestimated**, especially for rare categories. Always aggregate each side to its natural grain first, then join.
+
+To compute the rate on a sub-group (e.g. per department, per QPV), add the grouping dimensions to both CTEs and join on them. Cross-join with the list of categories if you need to emit explicit zero-booking rows:
+
+```
+WITH denom AS (
+    SELECT deposit_expiration_month, department_code,
+           SUM(total_expired_deposit_beneficiaries) AS total_expired
+    FROM `diversity`
+    WHERE department_code = 'XX' -- optional filter to a specific sub-group
+    GROUP BY deposit_expiration_month, department_code
+),
+num AS (
+    SELECT deposit_expiration_month, department_code, offer_category_id,
+           SUM(total_category_booked_beneficiaries) AS booked
+    FROM `diversity_by_category`
+    WHERE department_code = 'XX' -- optional filter to a specific sub-group
+    GROUP BY deposit_expiration_month, department_code, offer_category_id
+)
+SELECT d.deposit_expiration_month, d.department_code, n.offer_category_id,
+       SAFE_DIVIDE(n.booked, d.total_expired) AS rate
+FROM denom AS d
+LEFT JOIN num AS n USING (deposit_expiration_month, department_code)
+```
+
+### Available dimensions
+
+| Dimension        | Column                               | Description                                        |
+| ---------------- | ------------------------------------ | -------------------------------------------------- |
+| Expiration month | `deposit_expiration_month`           | Month when the beneficiary's credit expired        |
+| Offer category   | `offer_category_id`                  | Offer category as declared by the cultural partner |
+| Department       | `department_code`, `department_name` | Department of residence                            |
+| Region           | `region_code`, `region_name`         | Region of residence                                |
+| QPV              | `is_in_qpv`                          | Priority neighbourhood flag                        |
+| Rurality (macro) | `macro_density_label`                | Macro density level                                |
+| Rurality (micro) | `micro_density_label`                | Micro density level                                |
+
+### Temporal tracking
+
+**Monthly.** One cohort per `deposit_expiration_month`, the month when the beneficiaries' credit expired. Sum several months (e.g. a quarter or a year) for small territories.
+
+### Data protection
+
+Counts are protected using the [Cell Key Perturbation method](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md). The numerator (`total_category_booked_beneficiaries`) and the denominator (`total_expired_deposit_beneficiaries`) come from **different cohorts of users** and are therefore perturbed **independently** (different cell keys → independent noise). Consequences:
+
+- On a single small cell, the ratio can be unstable (numerator and denominator each shifted by up to ±5).
+- The invariant `booked_in_category ≤ total_expired` can be **violated** at the cell level after perturbation. Always aggregate over many cells (national, regional, several months) before computing a rate.
+- For very rare categories, a rate computed at a fine geographic grain should be treated as indicative only.
+
+## Average number of distinct venues booked at credit expiration
+
+### Definition
+
+For beneficiaries whose credit expired in the month, average number of distinct venues (`venue_id`) where they made a non-cancelled booking before expiration. A partner with several venues counts several times.
+
+### Source table
+
+[exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md)
+
+### Calculation
+
+`total_distinct_venue_booked_at_expiration` is not perturbed: it is **null** when `total_expired_deposit_beneficiaries` is below 5. Exclude those rows from the denominator.
+
+```
+SELECT
+    deposit_expiration_month,
+    SAFE_DIVIDE(
+        SUM(total_distinct_venue_booked_at_expiration),
+        SUM(total_expired_deposit_beneficiaries)
+    ) AS avg_distinct_venues
+FROM `diversity`
+WHERE total_distinct_venue_booked_at_expiration IS NOT NULL
+GROUP BY deposit_expiration_month
+ORDER BY deposit_expiration_month
+```
+
+### Available dimensions
+
+Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/#available-dimensions).
+
+## Share of beneficiaries booking in 3+ distinct categories at credit expiration
+
+### Definition
+
+Share of credited beneficiaries who made a validated booking in at least 3 different offer categories by the time their credit expired. Bookings across all granted credits (ages 15-20) are observed. Categories are as declared by the cultural partner when creating the offer on the pass Culture portal.
+
+Only beneficiaries whose last credit is a 17-18 credit (`GRANT_18`, `GRANT_17_18`) expired in a closed month are considered.
+
+### Source table
+
+[exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md)
+
+### Calculation
+
+The share is the ratio of `total_3plus_category_booked_beneficiaries` to `total_expired_deposit_beneficiaries`.
+
+```
+SELECT
+    deposit_expiration_month,
+    SUM(total_3plus_category_booked_beneficiaries) AS booked_3plus_categories,
+    SUM(total_expired_deposit_beneficiaries) AS total_expired,
+    SAFE_DIVIDE(
+        SUM(total_3plus_category_booked_beneficiaries),
+        SUM(total_expired_deposit_beneficiaries)
+    ) AS diversity_rate
+FROM `diversity`
+GROUP BY deposit_expiration_month
+ORDER BY deposit_expiration_month
+```
+
+### Available dimensions
+
+| Dimension        | Column                               | Description                                 |
+| ---------------- | ------------------------------------ | ------------------------------------------- |
+| Expiration month | `deposit_expiration_month`           | Month when the beneficiary's credit expired |
+| Department       | `department_code`, `department_name` | Department of residence                     |
+| Region           | `region_code`, `region_name`         | Region of residence                         |
+| QPV              | `is_in_qpv`                          | Priority neighbourhood flag                 |
+| Rurality (macro) | `macro_density_label`                | Macro density level                         |
+| Rurality (micro) | `micro_density_label`                | Micro density level                         |
+
+### Temporal tracking
+
+**Monthly.** One cohort per `deposit_expiration_month`, the month when the beneficiaries' credit expired. Sum several months (e.g. a quarter or a year) for small territories.
+
+### Data protection
+
+Both columns are protected using the [Cell Key Perturbation method](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md). They correspond to **nested cohorts** (`3plus ⊂ expired`) and are perturbed **independently** (each column has its own cell key), then `total_3plus_category_booked_beneficiaries` is capped at `total_expired_deposit_beneficiaries` in each row, so the rate never exceeds 100 %.
+
+- On a single small cell, the rate can still be noisy.
+- Always aggregate over many cells (national, regional, several months) before computing the rate; the law of large numbers brings the ratio back close to the true value.
+- For a national rate over a quarter or more, the relative error is negligible.
+
+## Share of beneficiaries booking in N+ distinct categories at credit expiration
+
+### Definition
+
+For N = 1 to 5, share of beneficiaries whose credit expired in the month and who made a non-cancelled booking in at least N different offer categories before expiration. `1+` is the share of beneficiaries who booked at least once. The 3+ threshold is the lot 1 [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/index.md).
+
+Population: beneficiaries whose last credit is a 17-18 credit (`GRANT_18`, `GRANT_17_18`) and expired in a closed month. Bookings made with all the credits they received (15-17 included) are observed. Categories are declared by the cultural partner.
+
+### Source table
+
+[exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md)
+
+### Calculation
+
+```
+SELECT
+    deposit_expiration_month,
+    SAFE_DIVIDE(SUM(total_1plus_category_booked_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_1plus,
+    SAFE_DIVIDE(SUM(total_2plus_category_booked_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_2plus,
+    SAFE_DIVIDE(SUM(total_3plus_category_booked_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_3plus,
+    SAFE_DIVIDE(SUM(total_4plus_category_booked_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_4plus,
+    SAFE_DIVIDE(SUM(total_5plus_category_booked_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_5plus
+FROM `diversity`
+GROUP BY deposit_expiration_month
+ORDER BY deposit_expiration_month
+```
+
+### Available dimensions
+
+Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/#available-dimensions): expiration month, region, department, QPV, density.
+
+### Temporal tracking
+
+**Monthly** cohorts of expiration. Display by quarter or year: from April 2025 to March 2026 few credits expired (2025 reform), so these cohorts are small and not representative.
+
+### Data protection and caveats
+
+- All counts are perturbed with their own cell key, then each one is capped at `total_expired_deposit_beneficiaries` in its row. The thresholds are perturbed independently: on a small cell the order `5+ ≤ 4+ ≤ … ≤ 1+` can break; aggregate before reading.
+- The thresholds are cumulative: do not add them up. The share with exactly N categories is `N+ − (N+1)+`.
+
+## Cultural partners
+
+Active and activated cultural partners, and their bookings and revenue from individual bookings by venue territory.
+
+**Data protection**: Partner counts are neither perturbed nor secret (lists of partners are public). Bookings and revenue by venue territory are under the **statistical secret** of external reporting: a secret department is hidden on every month. No category breakdown on the partner side: categories are read on the young people's side ([Usage](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/usage/index.md)). See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
+
+| KPI                                                                                                                                                                   | Definition                                                                                | Source table(s)                                | Tracking                   |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------- | -------------------------- |
+| [Number of active cultural partners by channel](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/active_cultural_partners/index.md)                    | Venues with a bookable offer in the last 365 days: individual only, collective only, both | `exp_vidoc_cultural_partner`                   | Monthly (rolling 365 days) |
+| [Cumulative number of activated cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/activated_cultural_partners/index.md)              | Venues that have had at least one bookable offer since 2022-06-10                         | `exp_vidoc_cultural_partner`                   | Monthly (cumulative)       |
+| [Number of active and activated cultural partners by type](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/active_cultural_partners_by_type/index.md) | Active and activated venues for one partner type (never summed over types)                | `exp_vidoc_cultural_partner_by_type`           | Monthly (rolling 365 days) |
+| [Individual bookings and tickets by venue territory](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/individual_bookings_venue_territory/index.md)    | Used individual bookings and tickets in a payment batch, by venue department              | `exp_vidoc_booking_partner_finance_individual` | Monthly                    |
+| [Individual booking revenue by venue territory](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/individual_revenue_venue_territory/index.md)          | Partner revenue, reimbursed and contributed amounts, by venue department                  | `exp_vidoc_booking_partner_finance_individual` | Monthly                    |
+
+## Cumulative number of activated cultural partners
+
+### Definition
+
+A cultural partner (venue) is **activated** at a given month if it has had at least one **bookable** offer for at least one day between the start of the bookable offer history (**2022-06-10**) and the last day of the month. Creating an offer is not enough: the offer must have been bookable.
+
+The count is cumulative: once activated, a partner stays counted in every following month, even if it is no longer active.
+
+| Column                                                | Partners that have ever had...                                    |
+| ----------------------------------------------------- | ----------------------------------------------------------------- |
+| `total_cumulative_activated_partners_global`          | a bookable individual **or** collective offer                     |
+| `total_cumulative_activated_partners_individual`      | a bookable individual offer                                       |
+| `total_cumulative_activated_partners_collective`      | a bookable collective offer                                       |
+| `total_cumulative_activated_partners_dual_part`       | both, concurrently or not                                         |
+| `total_cumulative_activated_partners_individual_only` | a bookable individual offer and never a bookable collective offer |
+| `total_cumulative_activated_partners_collective_only` | a bookable collective offer and never a bookable individual offer |
+
+`global = individual_only + collective_only + dual_part`.
+
+### Source table
+
+[exp_vidoc_cultural_partner](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_cultural_partner/index.md). Same definitions as `external_reporting__cultural_partner` (`nombre_total_cumule_de_partenaires_actives_*`), which does not publish the global column.
+
+### Calculation
+
+```
+SELECT
+    partition_month,
+    SUM(total_cumulative_activated_partners_global) AS activated_partners
+FROM `cultural_partner`
+GROUP BY partition_month
+ORDER BY partition_month
+```
+
+### Available dimensions
+
+Same as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/active_cultural_partners/index.md): `partition_month`, partner department and region.
+
+### Temporal tracking
+
+**Monthly**, cumulative. All months from January 2022 (zero before June 2022, start of the bookable offer history); the current month changes until it is closed.
+
+### Notes and caveats
+
+- "Since inception" means since **2022-06-10** (start of the bookable offer history), not since the launch of pass Culture: a venue whose offers were only bookable before that date is not counted.
+- Venues are counted in their **current** department; venues that no longer exist in the applicative database are not counted.
+- Same `partner_region_code = '-1'` handling and same data protection status as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/active_cultural_partners/index.md) (not perturbed, no secrecy).
+
+## Number of active cultural partners by channel
+
+### Definition
+
+A cultural partner is a **venue** (`venue_id`) that has created at least one individual or collective offer.
+
+A partner is **active** in a month if it had at least one **bookable** offer (individual or collective) on at least one day of the **365 days up to the last day of the month**. Bookability comes from the daily bookable offer history (`int_history__bookable_venue`): an offer that was created but never bookable does not count.
+
+Split by channel:
+
+| Column                                  | Partners with, in the 365-day window...                                                           |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `total_active_partners_global`          | a bookable individual **or** collective offer                                                     |
+| `total_active_partners_individual`      | a bookable individual offer                                                                       |
+| `total_active_partners_collective`      | a bookable collective offer                                                                       |
+| `total_active_partners_dual_part`       | a bookable individual offer **and** a bookable collective offer (not necessarily on the same day) |
+| `total_active_partners_individual_only` | a bookable individual offer and no bookable collective offer                                      |
+| `total_active_partners_collective_only` | a bookable collective offer and no bookable individual offer                                      |
+
+`global = individual_only + collective_only + dual_part`, `individual = individual_only + dual_part`, `collective = collective_only + dual_part`.
+
+### Source table
+
+[exp_vidoc_cultural_partner](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_cultural_partner/index.md). Same KPIs as `external_reporting__cultural_partner` (`nombre_total_de_partenaire_actif_*`).
+
+### Calculation
+
+Sum the columns over the desired dimensions. Each partner is counted once per row, so sums over departments and regions are exact.
+
+```
+SELECT
+    partition_month,
+    SUM(total_active_partners_global) AS active_partners,
+    SUM(total_active_partners_individual_only) AS active_individual_only,
+    SUM(total_active_partners_collective_only) AS active_collective_only,
+    SUM(total_active_partners_dual_part) AS active_both
+FROM `cultural_partner`
+GROUP BY partition_month
+ORDER BY partition_month
+```
+
+### Available dimensions
+
+| Dimension  | Column                                               | Description                                     |
+| ---------- | ---------------------------------------------------- | ----------------------------------------------- |
+| Month      | `partition_month`                                    | Observation month (window ends on its last day) |
+| Department | `partner_department_code`, `partner_department_name` | Department of the venue                         |
+| Region     | `partner_region_code`, `partner_region_name`         | Region of the venue                             |
+
+### Temporal tracking
+
+**Monthly**, rolling 365-day window. All months from January 2022 are present, as in external_reporting. The bookable offer history starts on **2022-06-10**: months before June 2022 are zero, and until May 2023 the 365-day window is truncated (active = activated). Use months from **June 2023** for a full window. The current month is computed up to today and changes until it is closed.
+
+### Notes and caveats
+
+- The venue location is its **current** address, applied to all past months: a venue that moved is counted in its current department for the whole history.
+- Overseas collectivities outside any region (Saint-Pierre-et-Miquelon, Saint-Martin, Nouvelle-Calédonie) and non-located venues (department `980`) have `partner_region_code = '-1'`: they are in the national total but in no region (about 70 active partners).
+- Individual bookable offers are only counted for offerers whose current validation status is `VALIDATED`; no such filter applies to collective offers.
+- Past months can be slightly restated when the monthly metrics are recomputed (current address, offerer validation).
+
+### Data protection
+
+Partner counts are **not perturbed** and **not under statistical secrecy**, as in external_reporting: lists of cultural partners are public.
+
+## Number of active and activated cultural partners by type
+
+### Definition
+
+Same definitions as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/active_cultural_partners/index.md) and [activated cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/activated_cultural_partners/index.md), restricted to the partners of one **partner type** (cinemas, bookshops, live shows, museums, festivals, ...).
+
+Available columns: active partners `total_active_partners_{global, individual, collective, dual_part}` and cumulative activated partners `total_cumulative_activated_partners_{global, individual, collective, dual_part, individual_only, collective_only}`. The individual only / collective only split of active partners is not available by type.
+
+Types and labels are defined in the `get_partner_types` macro, from the venue type and venue tags. Label rows (`tag_*`: art et essai cinemas, LIR bookshops, labelled live shows, labelled museums) are subsets of a type.
+
+### Source table
+
+[exp_vidoc_cultural_partner_by_type](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_cultural_partner__by_type/index.md). `total_active_partners_individual` is the same KPI as `external_reporting__cultural_partner` (`nombre_de_partenaire_actif_individuel_<type>`).
+
+### Calculation
+
+Filter on **one** type, then sum over the geography.
+
+```
+SELECT
+    partition_month,
+    partner_type,
+    SUM(total_active_partners_global) AS active_partners,
+    SUM(total_cumulative_activated_partners_global) AS activated_partners
+FROM `cultural_partner_by_type`
+GROUP BY partition_month, partner_type
+ORDER BY partition_month, partner_type
+```
+
+> **Never sum over `partner_type`.** A partner can belong to several types: `Festival` venues are in both `musique_live` and `festival`, a venue tagged "Cinéma d'art et d'essai" is in `cinemas` and in the type of its venue, and `tag_*` rows are subsets of a type. Partners whose type is not listed are in no type. Take totals from [exp_vidoc_cultural_partner](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_cultural_partner/index.md).
+
+### Available dimensions
+
+| Dimension    | Column                                               | Description                                 |
+| ------------ | ---------------------------------------------------- | ------------------------------------------- |
+| Month        | `partition_month`                                    | Observation month                           |
+| Partner type | `partner_type`                                       | Type or label name from `get_partner_types` |
+| Department   | `partner_department_code`, `partner_department_name` | Department of the venue                     |
+| Region       | `partner_region_code`, `partner_region_name`         | Region of the venue                         |
+
+### Notes and caveats
+
+- The partner type and the location are the **current** ones, applied to all past months.
+- Same months, same `-1` region handling and same data protection status (not perturbed, no secrecy) as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/active_cultural_partners/index.md).
+
+## Used individual bookings and tickets by venue territory
+
+### Definition
+
+Number of used individual bookings (`total_bookings`) and of tickets or items booked (`total_quantities`, a booking can hold several tickets, e.g. duo offers) on the pass Culture, by month of use and by territory of the **venue** (where the cultural partner is, not where the young person lives).
+
+Only bookings already included in a payment batch are counted: a used booking is counted once its pricing is invoiced to the cultural partner.
+
+### Source table
+
+[exp_vidoc_booking_partner_finance_individual](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_partner_finance__individual/index.md)
+
+### Calculation
+
+```
+SELECT
+    partition_month,
+    venue_region_code,
+    venue_region_name,
+    SUM(total_bookings) AS used_bookings,
+    SUM(total_quantities) AS tickets
+FROM `booking_partner_finance_individual`
+GROUP BY partition_month, venue_region_code, venue_region_name
+ORDER BY partition_month
+```
+
+### Available dimensions
+
+| Dimension    | Column                                           | Description                     |
+| ------------ | ------------------------------------------------ | ------------------------------- |
+| Month of use | `partition_month`                                | Month when the booking was used |
+| Department   | `venue_department_code`, `venue_department_name` | Department of the venue         |
+| Region       | `venue_region_code`, `venue_region_name`         | Region of the venue             |
+
+### Temporal tracking
+
+**Monthly.** One row per month of use and venue department. Months up to the month before the run date are exported, as in external reporting. Bookings enter the table when their payment batch is closed: the last month is about 99% complete when first published and may be slightly revised (+1%) on the next exports.
+
+### Data protection
+
+Partner revenue is under **statistical secret** (not cell key perturbation), with the rule of external reporting: when the department is secret at the last complete month, for the 6 or 48 month window, on the individual or the collective side (fewer than 3 cultural partners with revenue, one partner above 85% of the revenue, or secondary secret), `is_statistic_secret` is TRUE and all KPIs of the department, bookings and tickets included, are NULL on every month. `department_secret_reason_label` gives the reasons.
+
+### Notes and caveats
+
+- Region and national totals are sums of the visible departments, so they leave out the secret departments (mostly overseas collectivities and Lozère): less than 0.06% of the national volume in 2026. External reporting publishes REG and NAT unmasked; this table has the department grain only.
+- `venue_region_code` is NULL for the overseas collectivities (Saint-Martin, Saint-Pierre-et-Miquelon, Nouvelle-Calédonie, ...); `venue_region_name` is filled.
+- Not broken down by offer category, by design (partner side: a category often has fewer than 3 partners in a department). Categories are read on the young people's side (practices), as in the observatoire. For bookings by category, see [Individual bookings by category and beneficiary territory](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/usage/individual_bookings_beneficiary_territory/index.md) (residence of the young person, no payment batch condition).
+
+## Individual booking revenue by venue territory
+
+### Definition
+
+Revenue generated for the cultural partners by used individual bookings (`total_revenue_amount`, booking amount in euros), by month of use and territory of the **venue**. It is split into:
+
+- `total_reimbursed_amount`: amount reimbursed by pass Culture to the partners;
+- `total_contribution_amount`: share borne by the partners (revenue minus reimbursed amount, e.g. when the reimbursement rate is below 100%).
+
+Only bookings already included in a payment batch are counted.
+
+### Source table
+
+[exp_vidoc_booking_partner_finance_individual](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_partner_finance__individual/index.md)
+
+### Calculation
+
+```
+SELECT
+    partition_month,
+    SUM(total_revenue_amount) AS revenue,
+    SUM(total_reimbursed_amount) AS reimbursed,
+    SUM(total_contribution_amount) AS partner_contribution,
+    SAFE_DIVIDE(SUM(total_reimbursed_amount), SUM(total_revenue_amount)) AS reimbursement_rate
+FROM `booking_partner_finance_individual`
+GROUP BY partition_month
+ORDER BY partition_month
+```
+
+### Available dimensions
+
+| Dimension    | Column                                           | Description                     |
+| ------------ | ------------------------------------------------ | ------------------------------- |
+| Month of use | `partition_month`                                | Month when the booking was used |
+| Department   | `venue_department_code`, `venue_department_name` | Department of the venue         |
+| Region       | `venue_region_code`, `venue_region_name`         | Region of the venue             |
+
+### Temporal tracking
+
+**Monthly.** Months up to the month before the run date, as in external reporting. The last month is about 99% complete when first published (bookings not yet in a payment batch) and may be slightly revised afterwards.
+
+### Data protection
+
+**Statistical secret** on the venue department, with the rule of external reporting: the department is secret at the last complete month, for the 6 or 48 month window, on the individual or the collective side (fewer than 3 cultural partners with revenue, one partner above 85% of the revenue, or secondary secret). A secret department has `is_statistic_secret` TRUE and NULL amounts on every month. Revenue is never published at venue or offer level.
+
+### Notes and caveats
+
+- Sums of departments underestimate the region and national revenue by the secret departments (less than 0.03% of the national revenue in 2026). External reporting publishes REG and NAT unmasked; this table has the department grain only.
+- `venue_region_code` is NULL for the overseas collectivities; `venue_region_name` is filled.
+- Not broken down by offer category, by design: by venue location, a category often has fewer than 3 partners in a department (about a third of the department x category cells over 12 months), so the revenue by category would reveal a partner's revenue. Categories are read on the young people's side (practices), as in the observatoire: see [Individual bookings by category and beneficiary territory](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/usage/individual_bookings_beneficiary_territory/index.md).
+
+## Usage
+
+Use of the individual credit by young people: amounts granted and spent at expiration, and bookings by territory of residence and category.
+
+**Data protection**: Counts are perturbed (cell key method); amounts at expiration are hidden when fewer than 5 beneficiaries are in the row. Bookings by territory of residence are not perturbed but hidden on every month when fewer than 5 beneficiaries account for them (20 for the category breakdown), as in external reporting. See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
+
+| KPI                                                                                                                                                                          | Definition                                                                                         | Source table(s)                 | Tracking |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------- | -------- |
+| [Amount granted, spent and spending rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/usage/credit_amount_at_expiration/index.md)                                 | Average amount granted and spent per beneficiary, and share of credit spent, at expiration         | `exp_vidoc_diversity`           | Monthly  |
+| [Distribution by share of credit spent](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/usage/credit_spent_share_distribution/index.md)                               | Beneficiaries by bucket of share of credit spent at expiration                                     | `exp_vidoc_diversity`           | Monthly  |
+| [Individual bookings by category and beneficiary territory](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/usage/individual_bookings_beneficiary_territory/index.md) | Used individual bookings and amount spent by young people, by department of residence and category | `exp_vidoc_booking_beneficiary` | Monthly  |
+
+## Average amount granted, spent and spending rate at credit expiration
+
+### Definition
+
+For beneficiaries whose credit expired in the month (same population as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/index.md)):
+
+- **Average amount granted**: total of all the credits the beneficiary received (15-17 credits, 17-18 credit, bonus), per beneficiary.
+- **Average amount spent**: amount of non-cancelled bookings made with those credits, per beneficiary.
+- **Spending rate**: amount spent ÷ amount granted (a ratio of sums, not an average of individual rates).
+
+The credit amount depends on the generation (500 € before the 2023 reform, then 300 €, then 150 € + 50 € bonus after 2025): compare generations with the spending rate rather than with amounts.
+
+### Source table
+
+[exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md)
+
+### Calculation
+
+Same definition as the external reporting KPIs `montant_moyen_octroye_a_l_expiration_du_credit` and `montant_moyen_depense_a_l_expiration_du_credit` (read from `metrics_beneficiary__expired_cohorts`, same values).
+
+The amounts are not perturbed: they are **null** when `total_expired_deposit_beneficiaries` is below 5. Exclude those rows from the denominator too, otherwise the averages are underestimated.
+
+```
+SELECT
+    deposit_expiration_month,
+    SAFE_DIVIDE(SUM(total_deposit_amount_at_expiration), SUM(total_expired_deposit_beneficiaries)) AS avg_amount_granted,
+    SAFE_DIVIDE(SUM(total_actual_amount_spent_at_expiration), SUM(total_expired_deposit_beneficiaries)) AS avg_amount_spent,
+    SAFE_DIVIDE(SUM(total_actual_amount_spent_at_expiration), SUM(total_deposit_amount_at_expiration)) AS spending_rate
+FROM `diversity`
+WHERE total_actual_amount_spent_at_expiration IS NOT NULL
+GROUP BY deposit_expiration_month
+ORDER BY deposit_expiration_month
+```
+
+### Available dimensions
+
+Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/#available-dimensions).
+
+### Temporal tracking
+
+**Monthly** cohorts of expiration, displayed by quarter or year (from April 2025 to March 2026 few credits expired after the 2025 reform: these cohorts are small).
+
+## Distribution of beneficiaries by share of credit spent at expiration
+
+### Definition
+
+For beneficiaries whose credit expired in the month, split by the share of all the credits they received that they spent: `0` (no booking), `]0-25]`, `]25-50]`, `]50-75]`, `]75-90]`, `]90-100]` %. The last bucket includes beneficiaries with a few cents left.
+
+### Source table
+
+[exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md)
+
+### Calculation
+
+```
+SELECT
+    deposit_expiration_month,
+    SAFE_DIVIDE(SUM(total_spent_share_0_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_0,
+    SAFE_DIVIDE(SUM(total_spent_share_0_25_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_0_25,
+    SAFE_DIVIDE(SUM(total_spent_share_25_50_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_25_50,
+    SAFE_DIVIDE(SUM(total_spent_share_50_75_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_50_75,
+    SAFE_DIVIDE(SUM(total_spent_share_75_90_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_75_90,
+    SAFE_DIVIDE(SUM(total_spent_share_90_100_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_90_100
+FROM `diversity`
+GROUP BY deposit_expiration_month
+ORDER BY deposit_expiration_month
+```
+
+For a lighter display, the buckets can be merged into 4: `0`, `< 50` (`0_25 + 25_50`), `50-90` (`50_75 + 75_90`), `> 90`.
+
+### Available dimensions
+
+Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/#available-dimensions).
+
+### Data protection and caveats
+
+Each bucket is perturbed independently and capped at `total_expired_deposit_beneficiaries`: the sum of the 6 buckets can differ from the total by a few units in a row. Compute shares on aggregated sums; for exact 100 % stacked charts, divide by the sum of the buckets instead of the total.
+
+## Used individual bookings and amount spent by category and beneficiary territory
+
+### Definition
+
+Number of used individual bookings made by beneficiaries (`total_used_bookings`) and amount they spent from their pass Culture credit (`total_used_amount`, in euros), by month of use, territory of **residence of the young person** and offer category. Categories are as declared by the cultural partner when creating the offer.
+
+Unlike the [venue territory KPIs](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/individual_bookings_venue_territory/index.md), bookings are counted when used, whether or not they are already in a payment batch.
+
+### Source table
+
+[exp_vidoc_booking_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_beneficiary/index.md)
+
+### Calculation
+
+Rows with `offer_category_id = 'ALL'` hold the department total; the other rows the categories. Never sum the two together.
+
+```
+SELECT
+    t.partition_month,
+    c.offer_category_id,
+    SUM(c.total_used_bookings) AS used_bookings,
+    SUM(c.total_used_amount) AS amount_spent,
+    SAFE_DIVIDE(SUM(c.total_used_bookings), SUM(t.total_used_bookings)) AS category_share
+FROM `booking_beneficiary` AS c
+JOIN `booking_beneficiary` AS t
+    ON t.partition_month = c.partition_month
+    AND t.department_name = c.department_name
+    AND t.offer_category_id = 'ALL'
+WHERE c.offer_category_id != 'ALL'
+    AND c.total_used_bookings IS NOT NULL
+GROUP BY t.partition_month, c.offer_category_id
+ORDER BY t.partition_month, used_bookings DESC
+```
+
+### Available dimensions
+
+| Dimension    | Column                               | Description                                |
+| ------------ | ------------------------------------ | ------------------------------------------ |
+| Month of use | `partition_month`                    | Month when the booking was used            |
+| Department   | `department_code`, `department_name` | Department of residence of the beneficiary |
+| Region       | `region_code`, `region_name`         | Region of residence of the beneficiary     |
+| Category     | `offer_category_id`                  | Offer category                             |
+
+### Temporal tracking
+
+**Monthly.** Months from January 2022 to the month before the run date, as in external reporting. Monthly flows: sum the months for a period.
+
+### Data protection
+
+Same low count rule as external reporting (`external_reporting__individual`, with `external_reporting__beneficiary_booking_bookers`). Values are not perturbed, but a row is NULL on every month (`is_low_count` TRUE) when fewer than 5 distinct beneficiaries account for it since 2022: the bookers of the department for an `ALL` row, the bookers of the category in the department for a category row. The category rows of a department with fewer than 20 bookers since 2022 are all NULL (no category breakdown for very small territories). Region and national totals summed from departments leave out the masked rows (rare: in August-October 2026 the `ALL` rows add up exactly to the national total).
+
+### Notes and caveats
+
+- The territory is the **current** address of the beneficiary, not his address at booking date: a young person who moved has all his past bookings in his new department.
+- Bookings of users no longer known as beneficiaries (deleted, suspended, GRANT_FREE accounts: about 0.2% of the used bookings) have no residence and are left out, national total included. Beneficiaries without a located address are in department `-1` (`non localisé`).
+- `region_code` is NULL for the overseas collectivities (Nouvelle-Calédonie, Saint-Martin, Polynésie Française, Saint-Pierre-et-Miquelon, Wallis et Futuna); `region_name` is filled.
+- Category rows cover the external reporting categories (`get_categories()`); marginal categories are kept as is (`MEDIA`, `CARTE_JEUNES`: about 1,000-1,500 bookings a year each; `LIVRE` and `CINEMA` make up 85% of the bookings).
+- Amounts are booking amounts paid with the credit: this is the young people's spending, not the partners' revenue.
 
 ## Ministry exports
 
@@ -2837,7 +2865,7 @@ Each row represents a key indicator calculated for a specific month and geograph
 | aggregation          |           | How to aggregate `numerator` and `denominator` over several months: `flow` = sum the months, `stock` = take the last month (the value is already scholar year to date, or a snapshot).                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | label                |           | Display name of the territory: EPCI or municipality name for EPCI and COM, dimension_value otherwise.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | intitule             |           | Display title of the territory, unique across levels so that it can be used alone as the territory filter: 'Name (code)' for EPCI and COM, 'Région Name' for REG, 'Académie de Name' (or "Académie d'Name") for ACAD, 'Rapport National' for NAT, dimension_value for DEP.                                                                                                                                                                                                                                                                                                                                                |
-| is_secret_stat       |           | True when the KPI is measured on the cultural partner (venue) geography and the territory (COM, EPCI or DEP) is subject to statistical secrecy at the last complete month, over the 6 or the 48-month rolling window (is\_**secret_stat of the statistical_secret\_\_cultural_partner** models). numerator, denominator and kpi are then NULL on every month. KPIs measured on the beneficiary or school geography are never secret, nor are REG, ACAD and NAT.                                                                                                                                                           |
+| is_secret_stat       |           | True when the KPI is measured on the cultural partner (venue) geography and the territory (COM, EPCI, DEP or REG) is subject to statistical secrecy at the last complete month, over the 6 or the 48-month rolling window (is\_**secret_stat of the statistical_secret\_\_cultural_partner** models). numerator, denominator and kpi are then NULL on every month. A region is secret when its total would disclose its masked departments (is_region_secret_stat). KPIs measured on the beneficiary or school geography are never secret, nor are ACAD and NAT.                                                          |
 | is_low_count         |           | True when the KPI is accounted for by 1 to 4 beneficiaries of the territory over the whole history (see external_reporting\_\_beneficiary_booking_bookers): numerator, denominator and kpi are then NULL on every month. Also true on the months where an average or a share by person (montant_moyen\_*, pct_beneficiaires_ayant_reserve\_*) is computed over 1 to 4 beneficiaries. Beneficiary counts are blurred instead (cell key method) and never flagged.                                                                                                                                                          |
 | is_national_only     |           | True on the rows added for a KPI published at NAT but not at this territory level (e.g. coverage rates): numerator, denominator and kpi are NULL, only the national\_\* columns are filled, so that reports filtered on a territory still show the national value.                                                                                                                                                                                                                                                                                                                                                        |
 | is_missing_month     |           | True when the territory has past values for this stock KPI but none this month: numerator, denominator and kpi are NULL (an average or share without activity is not 0), and the row only carries the national\_\* values of the month.                                                                                                                                                                                                                                                                                                                                                                                   |
@@ -3190,7 +3218,7 @@ Each row represents a key indicator calculated for a specific month and geograph
 | aggregation          |           | How to aggregate `numerator` and `denominator` over several months: `flow` = sum the months, `stock` = take the last month (the value is already scholar year to date, or a snapshot).                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | label                |           | Display name of the territory: EPCI or municipality name for EPCI and COM, dimension_value otherwise.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | intitule             |           | Display title of the territory, unique across levels so that it can be used alone as the territory filter: 'Name (code)' for EPCI and COM, 'Région Name' for REG, 'Académie de Name' (or "Académie d'Name") for ACAD, 'Rapport National' for NAT, dimension_value for DEP.                                                                                                                                                                                                                                                                                                                                                |
-| is_secret_stat       |           | True when the KPI is measured on the cultural partner (venue) geography and the territory (COM, EPCI or DEP) is subject to statistical secrecy at the last complete month, over the 6 or the 48-month rolling window (is\_**secret_stat of the statistical_secret\_\_cultural_partner** models). numerator, denominator and kpi are then NULL on every month. KPIs measured on the beneficiary or school geography are never secret, nor are REG, ACAD and NAT.                                                                                                                                                           |
+| is_secret_stat       |           | True when the KPI is measured on the cultural partner (venue) geography and the territory (COM, EPCI, DEP or REG) is subject to statistical secrecy at the last complete month, over the 6 or the 48-month rolling window (is\_**secret_stat of the statistical_secret\_\_cultural_partner** models). numerator, denominator and kpi are then NULL on every month. A region is secret when its total would disclose its masked departments (is_region_secret_stat). KPIs measured on the beneficiary or school geography are never secret, nor are ACAD and NAT.                                                          |
 | is_low_count         |           | True when the KPI is accounted for by 1 to 4 beneficiaries of the territory over the whole history (see external_reporting\_\_beneficiary_booking_bookers): numerator, denominator and kpi are then NULL on every month. Also true on the months where an average or a share by person (montant_moyen\_*, pct_beneficiaires_ayant_reserve\_*) is computed over 1 to 4 beneficiaries. Beneficiary counts are blurred instead (cell key method) and never flagged.                                                                                                                                                          |
 | is_national_only     |           | True on the rows added for a KPI published at NAT but not at this territory level (e.g. coverage rates): numerator, denominator and kpi are NULL, only the national\_\* columns are filled, so that reports filtered on a territory still show the national value.                                                                                                                                                                                                                                                                                                                                                        |
 | is_missing_month     |           | True when the territory has past values for this stock KPI but none this month: numerator, denominator and kpi are NULL (an average or share without activity is not 0), and the row only carries the national\_\* values of the month.                                                                                                                                                                                                                                                                                                                                                                                   |
@@ -8212,7 +8240,8 @@ Built by the `evaluate_statistical_secret` macro on `mrt_global__collective_book
 For each territory and window:
 
 1. **Primary secret** when the territory has fewer than 3 active partners (distinct venues with at least one used booking over the window), or when its top partner holds more than 85% of the revenue. A territory with no revenue is secret (`no_revenue`).
-1. **Secondary secret**: when exactly one territory is under primary secret in its parent (a municipality in its EPCI, an EPCI in its department, a department in France), the non-secret territory with the smallest revenue in that parent is masked too (`secondary_secret`), so the secret figure cannot be recovered by subtraction from the parent's total.
+1. **Secondary secret**: when exactly one municipality is under primary secret in its EPCI, or one EPCI in its department, the non-secret territory with the smallest revenue in that parent is masked too (`secondary_secret`). For departments, the masked departments of each region, taken together, must pass the primary rule, so that they cannot be recovered by subtraction from the region total; otherwise the visible departments of the region are masked too, smallest revenue first. The same is then done within each territory group (`territory_group`: METRO, DROM, COM), so that an overseas department never masks a mainland one. A department code missing from the referential (a venue geocoded abroad) forms its own region ('non localisé') and group (`NON_LOCALISE`), with a single row per month and window (no municipality), so that it never masks a real department.
+1. **Region secret** (`is_region_secret_stat`): a region is secret when its masked departments still fail the primary rule, or when one of its departments was masked at the territory group step. `is_territory_group_secret_stat` is true when a group total cannot be published either.
 
 `*_secret_reason_code` gives the reason (`no_revenue`, `low_partners`, `high_concentration`, `both`, `secondary_secret`, `none`); `*_secret_reason_label` is its French display label.
 
@@ -8229,7 +8258,8 @@ Built by the `evaluate_statistical_secret` macro on `int_global__booking`, from 
 For each territory and window:
 
 1. **Primary secret** when the territory has fewer than 3 active partners (distinct venues with at least one used booking over the window), or when its top partner holds more than 85% of the revenue. A territory with no revenue is secret (`no_revenue`).
-1. **Secondary secret**: when exactly one territory is under primary secret in its parent (a municipality in its EPCI, an EPCI in its department, a department in France), the non-secret territory with the smallest revenue in that parent is masked too (`secondary_secret`), so the secret figure cannot be recovered by subtraction from the parent's total.
+1. **Secondary secret**: when exactly one municipality is under primary secret in its EPCI, or one EPCI in its department, the non-secret territory with the smallest revenue in that parent is masked too (`secondary_secret`). For departments, the masked departments of each region, taken together, must pass the primary rule, so that they cannot be recovered by subtraction from the region total; otherwise the visible departments of the region are masked too, smallest revenue first. The same is then done within each territory group (`territory_group`: METRO, DROM, COM), so that an overseas department never masks a mainland one. A department code missing from the referential (a venue geocoded abroad) forms its own region ('non localisé') and group (`NON_LOCALISE`), with a single row per month and window (no municipality), so that it never masks a real department.
+1. **Region secret** (`is_region_secret_stat`): a region is secret when its masked departments still fail the primary rule, or when one of its departments was masked at the territory group step. `is_territory_group_secret_stat` is true when a group total cannot be published either.
 
 `*_secret_reason_code` gives the reason (`no_revenue`, `low_partners`, `high_concentration`, `both`, `secondary_secret`, `none`); `*_secret_reason_label` is its French display label.
 
@@ -10520,7 +10550,13 @@ Work in progress
 
 **external_reporting_intitule**: Display title of the territory, unique across levels so that it can be used alone as the territory filter: 'Name (code)' for EPCI and COM, 'Région Name' for REG, 'Académie de Name' (or "Académie d'Name") for ACAD, 'Rapport National' for NAT, dimension_value for DEP.
 
-**external_reporting_is_secret_stat**: True when the KPI is measured on the cultural partner (venue) geography and the territory (COM, EPCI or DEP) is subject to statistical secrecy at the last complete month, over the 6 or the 48-month rolling window (is\_**secret_stat of the statistical_secret\_\_cultural_partner** models). numerator, denominator and kpi are then NULL on every month. KPIs measured on the beneficiary or school geography are never secret, nor are REG, ACAD and NAT.
+**external_reporting_is_secret_stat**: True when the KPI is measured on the cultural partner (venue) geography and the territory (COM, EPCI, DEP or REG) is subject to statistical secrecy at the last complete month, over the 6 or the 48-month rolling window (is\_**secret_stat of the statistical_secret\_\_cultural_partner** models). numerator, denominator and kpi are then NULL on every month. A region is secret when its total would disclose its masked departments (is_region_secret_stat). KPIs measured on the beneficiary or school geography are never secret, nor are ACAD and NAT.
+
+**is_region_secret_stat**: True when the region total of the cultural partners' revenue cannot be published: the masked departments of the region would fail the primary secret rule (fewer than 3 active partners or top partner above 85% of the revenue) once subtracted from the region total, or a department of the region was masked to protect its territory group (Métropole, DROM, COM). Repeated on every row of the region.
+
+**is_territory_group_secret_stat**: True when the masked departments of the territory group (METRO, DROM, COM) would fail the primary secret rule once subtracted from the group total, even after the secondary secret. The group total cannot then be published. Repeated on every row of the group.
+
+**territory_group**: Territory group of the department: METRO (mainland France and Corsica), DROM (971 to 974 and 976) or COM (other overseas collectivities, 3-digit codes 975, 977, 978, 986 to 988). NON_LOCALISE for a department code missing from the referential (e.g. a venue geocoded abroad): it forms its own region ('non localisé') and group, so that it never masks a real department.
 
 **external_reporting_is_low_count**: True when the KPI is accounted for by 1 to 4 beneficiaries of the territory over the whole history (see external_reporting\_\_beneficiary_booking_bookers): numerator, denominator and kpi are then NULL on every month. Also true on the months where an average or a share by person (montant_moyen\_*, pct_beneficiaires_ayant_reserve\_*) is computed over 1 to 4 beneficiaries. Beneficiary counts are blurred instead (cell key method) and never flagged.
 

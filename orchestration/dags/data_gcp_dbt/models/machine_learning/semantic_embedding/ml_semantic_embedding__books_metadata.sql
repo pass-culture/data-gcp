@@ -35,5 +35,7 @@
 {% set tmp_source = source("tmp", "books_metadata_tmp") %}
 {# tmp tables expire after 24h: when none is left, merge nothing instead of failing. #}
 {{
-    merge_embedding_select(tmp_source=tmp_source, embedding_column="books_metadata_embedding")
+    merge_embedding_select(
+        tmp_source=tmp_source, embedding_column="books_metadata_embedding"
+    )
 }}

@@ -27,25 +27,67 @@ with
             {% endif %}
     ),
 
+    -- Dénombrement des variantes d'attributs par item_id et par mois
+    item_attribute_quantities as (
+        select
+            partition_month,
+            item_id,
+            offer_name,
+            offer_category_id,
+            offer_subcategory_id,
+            sum(booking_quantity) as total_booking_quantity,
+            sum(booking_intermediary_amount) as total_booking_amount
+        from source_bookings
+        group by
+            partition_month,
+            item_id,
+            offer_name,
+            offer_category_id,
+            offer_subcategory_id
+    ),
+
+    -- Attributs canoniques uniques (version la plus réservée)
+    item_attributes as (
+        select
+            partition_month,
+            item_id,
+            array_agg(
+                struct(offer_name, offer_category_id, offer_subcategory_id)
+                order by
+                    total_booking_quantity desc,
+                    total_booking_amount desc,
+                    offer_name asc
+                limit 1
+            )[offset(0)] as attributes
+        from item_attribute_quantities
+        group by partition_month, item_id
+    ),
+
+    -- Jointure avec les tags de lieux et agrégation avec les métadonnées canoniques
     joined_and_aggregated_by_offer_tag as (
         select
             bo.partition_month,
             bo.item_id,
-            bo.offer_category_id,
-            bo.offer_subcategory_id,
+            ia.attributes.offer_category_id,
+            ia.attributes.offer_subcategory_id,
+            ia.attributes.offer_name,
             bo.venue_region_name,
             bo.venue_department_name,
             vt.venue_tag_name,
-            any_value(bo.offer_name) as offer_name,
             sum(bo.booking_intermediary_amount) as total_booking_amount,
             sum(bo.booking_quantity) as total_booking_quantity
         from source_bookings as bo
         inner join source_venue_tags as vt on bo.venue_id = vt.venue_id
+        inner join
+            item_attributes as ia
+            on bo.partition_month = ia.partition_month
+            and bo.item_id = ia.item_id
         group by
             bo.partition_month,
             bo.item_id,
-            bo.offer_category_id,
-            bo.offer_subcategory_id,
+            ia.attributes.offer_category_id,
+            ia.attributes.offer_subcategory_id,
+            ia.attributes.offer_name,
             bo.venue_region_name,
             bo.venue_department_name,
             vt.venue_tag_name
@@ -70,6 +112,7 @@ with
             ],
             ranking_metric="total_booking_amount",
             rank_column_name="offer_rank",
+            tie_breaker_field="item_id",
             top_n=50,
         )
     }}

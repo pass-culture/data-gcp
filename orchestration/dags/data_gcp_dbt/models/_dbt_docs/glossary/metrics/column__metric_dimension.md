@@ -17,7 +17,19 @@ Display title of the territory, unique across levels so that it can be used alon
 {% enddocs %}
 
 {% docs column__external_reporting_is_secret_stat %}
-True when the KPI is measured on the cultural partner (venue) geography and the territory (COM, EPCI or DEP) is subject to statistical secrecy at the last complete month, over the 6 or the 48-month rolling window (is_*_secret_stat of the statistical_secret__cultural_partner_* models). numerator, denominator and kpi are then NULL on every month. KPIs measured on the beneficiary or school geography are never secret, nor are REG, ACAD and NAT.
+True when the KPI is measured on the cultural partner (venue) geography and the territory (COM, EPCI, DEP or REG) is subject to statistical secrecy at the last complete month, over the 6 or the 48-month rolling window (is_*_secret_stat of the statistical_secret__cultural_partner_* models). numerator, denominator and kpi are then NULL on every month. A region is secret when its total would disclose its masked departments (is_region_secret_stat). KPIs measured on the beneficiary or school geography are never secret, nor are ACAD and NAT.
+{% enddocs %}
+
+{% docs column__is_region_secret_stat %}
+True when the region total of the cultural partners' revenue cannot be published: the masked departments of the region would fail the primary secret rule (fewer than 3 active partners or top partner above 85% of the revenue) once subtracted from the region total, or a department of the region was masked to protect its territory group (Métropole, DROM, COM). Repeated on every row of the region.
+{% enddocs %}
+
+{% docs column__is_territory_group_secret_stat %}
+True when the masked departments of the territory group (METRO, DROM, COM) would fail the primary secret rule once subtracted from the group total, even after the secondary secret. The group total cannot then be published. Repeated on every row of the group.
+{% enddocs %}
+
+{% docs column__territory_group %}
+Territory group of the department: METRO (mainland France and Corsica), DROM (971 to 974 and 976) or COM (other overseas collectivities, 3-digit codes 975, 977, 978, 986 to 988). NON_LOCALISE for a department code missing from the referential (e.g. a venue geocoded abroad): it forms its own region ('non localisé') and group, so that it never masks a real department.
 {% enddocs %}
 
 {% docs column__external_reporting_is_low_count %}

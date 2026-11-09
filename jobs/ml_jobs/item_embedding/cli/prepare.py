@@ -13,7 +13,7 @@ Run from the job root:
         --output-parquets-folder-path gs://.../movies_metadata/prompts
 """
 
-from itertools import chain
+from typing import Iterator
 
 import pandas as pd
 import typer
@@ -25,6 +25,23 @@ from src.preprocessing import apply_preprocessors
 from src.prompt_building import build_prompts
 
 app = typer.Typer(help="Preprocess a vector's metadata and build its prompts.")
+
+
+def _iter_input_chunks(
+    path: str, rows_per_chunk: int, required: list[str]
+) -> Iterator[pd.DataFrame]:
+    """Stream the input chunks, or nothing when EXPORT DATA wrote no file (zero
+    rows to embed). A FileNotFoundError raised mid-stream is not swallowed.
+    """
+    chunks = iter_parquet_chunks(path, rows_per_chunk, required_columns=required)
+    try:
+        first = next(chunks, None)
+    except FileNotFoundError:
+        logger.info(f"No input files found at {path}")
+        return
+    if first is not None:
+        yield first
+        yield from chunks
 
 
 @app.command()
@@ -44,23 +61,10 @@ def main(
     required = ["item_id", "content_hash", *vector.features]
     logger.info(f"Preparing prompts for vector '{vector.name}'")
 
-    chunk_iter = iter_parquet_chunks(
-        input_parquets_folder_path, rows_per_chunk, required_columns=required
-    )
-    # Only "no input files" is tolerated: peek the first chunk inside the try so
-    # a FileNotFoundError raised mid-stream is NOT swallowed (partial output).
-    try:
-        first_chunk = next(chunk_iter, None)
-    except FileNotFoundError:
-        # export_input's own `WHERE to_embed` matched zero rows this run, so
-        # BigQuery's EXPORT DATA wrote no files at all under this vector's
-        # input/ prefix -- nothing to prepare, not a real error.
-        logger.info(f"No input files found at {input_parquets_folder_path}")
-        first_chunk = None
-    chunks = chain([first_chunk], chunk_iter) if first_chunk is not None else iter(())
-
     wrote_any = False
-    for i, chunk in enumerate(chunks):
+    for i, chunk in enumerate(
+        _iter_input_chunks(input_parquets_folder_path, rows_per_chunk, required)
+    ):
         preprocessed = apply_preprocessors(chunk[required], vector.preprocessors)
 
         prompts = preprocessed[["item_id", "content_hash"]].copy()

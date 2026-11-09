@@ -150,7 +150,7 @@ def _export_input_query(vector: VectorPipeline) -> str:
 
 def _plan_vectors_to_embed(**context) -> list[str]:
     """Coarse cost gate: skip booting the VM when no selected vector has
-    anything to embed. NOT the per-vector check -- see ``_export_found_rows``.
+    anything to embed.
     """
     params = context["params"]
     selected = [v for v in AVAILABLE_VECTORS if v.name in params["vectors"]]
@@ -170,17 +170,6 @@ def _plan_vectors_to_embed(**context) -> list[str]:
 def _vector_selected(vector_name: str, **context) -> bool:
     """ShortCircuit gate: run this vector only if it's in the ``vectors`` param."""
     return vector_name in context["params"]["vectors"]
-
-
-def _export_found_rows(input_table: str, **context) -> bool:
-    """ShortCircuit gate: skip prepare/embed/load when there's nothing left to
-    embed, checked live right as this vector's GPU slot frees up (see wiring).
-    """
-    if context["params"]["embed_all"]:
-        return True  # export_input pulled the whole table regardless
-    bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
-    query = f"SELECT 1 FROM `{GCP_PROJECT_ID}.{input_table}` WHERE to_embed LIMIT 1"
-    return bool(bq_hook.get_records(query))
 
 
 def _send_slack_notif_success(**context) -> None:
@@ -238,6 +227,7 @@ with DAG(
     doc_md=DAG_DOC,
     schedule=SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME],
     catchup=False,
+    max_active_runs=1,
     dagrun_timeout=timedelta(hours=30),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
@@ -390,15 +380,6 @@ with DAG(
                 },
             )
 
-            check_found_rows = ShortCircuitOperator(
-                task_id=f"check_export_found_rows_{vector.name}",
-                python_callable=_export_found_rows,
-                op_kwargs={"input_table": vector.input_table},
-                # Default all_success: a genuine export_input failure must
-                # still cascade here, not be masked as "nothing to embed".
-                ignore_downstream_trigger_rules=False,
-            )
-
             prepare = SSHGCEOperator(
                 task_id=f"prepare_{vector.name}",
                 instance_name="{{ params.instance_name }}",
@@ -436,18 +417,18 @@ with DAG(
                 extra_config={"parquetOptions": {"enableListInference": True}},
             )
 
-            check_selected >> export_input >> check_found_rows
+            check_selected >> export_input
 
             if previous_embed is not None:
                 # Barrier turning the previous vector's any-outcome into a
-                # guaranteed success, so it can't fail/skip check_found_rows.
+                # guaranteed success, so it can't fail/skip this prepare.
                 wait_for_gpu_slot = EmptyOperator(
                     task_id=f"wait_for_gpu_slot_{vector.name}",
                     trigger_rule="all_done",
                 )
-                previous_embed >> wait_for_gpu_slot >> check_found_rows
+                previous_embed >> wait_for_gpu_slot >> prepare
 
-            [check_found_rows, start_mlflow_run] >> prepare >> embed >> load
+            [export_input, start_mlflow_run] >> prepare >> embed >> load
 
         # export_input is a pure BigQuery job (no VM/GPU), so it fires for all
         # vectors in parallel; only prepare/embed stay GPU-serialized below.

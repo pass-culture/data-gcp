@@ -18,7 +18,6 @@ MLFLOW_RUN_ID_FILEPATH = (
 MLFLOW_RUN_ID_COLUMN = "mlflow_run_id"
 EMBEDDING_MODEL_COLUMN = "embedding_model"
 EMBEDDING_DATE_COLUMN = "embedding_date"
-EMBEDDING_TS_COLUMN = "embedding_ts"
 
 # Hugging Face token secret name per environment
 _HF_TOKEN_SECRET_NAMES: dict[str, str] = {

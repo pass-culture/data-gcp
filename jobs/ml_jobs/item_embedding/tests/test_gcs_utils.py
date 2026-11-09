@@ -1,13 +1,11 @@
 """Unit tests for gcs_utils module."""
 
-from datetime import date, datetime, timezone
+from datetime import date
 
 import pandas as pd
 import pyarrow.parquet as pq
 import pytest
 from src.gcs_utils import iter_parquet_chunks, write_embeddings_parquet, write_parquet
-
-TS = datetime(2026, 9, 25, 4, 0, 0, tzinfo=timezone.utc)
 
 
 class TestIterParquetChunks:
@@ -90,7 +88,6 @@ class TestWriteEmbeddingsParquet:
                 "mlflow_run_id": ["r1", "r1"],
                 "embedding_model": ["m", "m"],
                 "embedding_date": [date(2026, 9, 25), date(2026, 9, 25)],
-                "embedding_ts": [TS, TS],
             }
         )
         path = tmp_path / "embeddings_0.parquet"
@@ -109,7 +106,6 @@ class TestWriteEmbeddingsParquet:
                 "mlflow_run_id": ["r1"],
                 "embedding_model": ["m"],
                 "embedding_date": [date(2026, 9, 25)],
-                "embedding_ts": [TS],
             }
         )
         empty = pd.DataFrame(
@@ -120,7 +116,6 @@ class TestWriteEmbeddingsParquet:
                 "mlflow_run_id": pd.Series([], dtype=object),
                 "embedding_model": pd.Series([], dtype=object),
                 "embedding_date": pd.Series([], dtype=object),
-                "embedding_ts": pd.Series([], dtype=object),
             }
         )
         p_path = tmp_path / "p.parquet"
@@ -138,7 +133,6 @@ class TestWriteEmbeddingsParquet:
                 "mlflow_run_id": ["r1"],
                 "embedding_model": ["m"],
                 "embedding_date": [date(2026, 9, 25)],
-                "embedding_ts": [TS],
             }
         )
         path = tmp_path / "chunk.parquet"
@@ -148,4 +142,3 @@ class TestWriteEmbeddingsParquet:
         assert result.loc["a", "mlflow_run_id"] == "r1"
         assert result.loc["a", "embedding_model"] == "m"
         assert result.loc["a", "embedding_date"] == date(2026, 9, 25)
-        assert result.loc["a", "embedding_ts"] == TS

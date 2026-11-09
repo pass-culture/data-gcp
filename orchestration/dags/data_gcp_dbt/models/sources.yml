@@ -323,13 +323,9 @@ sources:
       - name: two_tower_item_embedding_history
         description: Partitionned table containing the history of the two tower item emebddings
       - name: item_embedding__all_items_metadata
-        description: Append-only history of the all_items_metadata embeddings written by the item_embedding DAG (one row per item per run, partitioned on embedding_date).
       - name: item_embedding__movies_metadata
-        description: Append-only history of the movies_metadata embeddings written by the item_embedding DAG (one row per item per run, partitioned on embedding_date).
       - name: item_embedding__books_metadata
-        description: Append-only history of the books_metadata embeddings written by the item_embedding DAG (one row per item per run, partitioned on embedding_date).
       - name: item_embedding__all_items_offer_names
-        description: Append-only history of the all_items_offer_names embeddings written by the item_embedding DAG (one row per item per run, partitioned on embedding_date).
   - name: ml_feat
     schema: ml_feat_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"

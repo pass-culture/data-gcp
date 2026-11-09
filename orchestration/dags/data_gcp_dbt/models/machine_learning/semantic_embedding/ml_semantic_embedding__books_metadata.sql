@@ -2,11 +2,11 @@
     {{
         exceptions.raise_compiler_error(
             this
-            ~ " cannot be run with --full-refresh.\n"
-            ~ "It would remove existing embeddings from the table.\n"
-            ~ "To refresh all embeddings, you must first run the embedding DAG "
-            ~ "for all items (embed_all = True), then delete this table and "
-            ~ "rerun it without the --full-refresh flag."
+            ~ " cannot be run with --full-refresh yet.\n"
+            ~ "Embeddings merged before the switch to ml_preproc history are not "
+            ~ "in source('ml_preproc', 'item_embedding__books_metadata'), so a full "
+            ~ "refresh would drop them. Backfill that history first (or run the "
+            ~ "embedding DAG with embed_all = True), then remove this guard."
         )
     }}
 {% endif %}
@@ -18,24 +18,18 @@
             partition_by=None,
             unique_key="item_id",
             on_schema_change="append_new_columns",
-            tags=["external_dependency"],
-            meta={
-                "external_dag_id": "item_embedding",
-                "external_task_id": "books_metadata.load_books_metadata",
-                "external_dependency_extra_params": {
-                    "soft_fail": True,
-                    "offset_hours": -6,
-                    "poke_interval": 600,
-                },
-            },
         )
     )
 }}
-{# item_embedding starts at 4 am (prod and  7am stg) while dbt dag runs at 2:45 am so we use a negative offset of few hours to point the delayed sensor at the correct dagrun (from 6 hours after the dbt dag run  within the previous 24 hours) #}
-{% set tmp_source = source("tmp", "books_metadata_tmp") %}
-{# tmp tables expire after 24h: when none is left, merge nothing instead of failing. #}
+
+{#
+    Fed by the item_embedding DAG, which appends each run to
+    ml_preproc.item_embedding__books_metadata. No sensor on that DAG: like the other ML
+    outputs, new embeddings are merged on the next daily dbt run.
+#}
 {{
     merge_embedding_select(
-        tmp_source=tmp_source, embedding_column="books_metadata_embedding"
+        source_relation=source("ml_preproc", "item_embedding__books_metadata"),
+        embedding_column="books_metadata_embedding",
     )
 }}

@@ -322,26 +322,19 @@ sources:
         description: Partitionned table containing the history of the two tower user emebddings
       - name: two_tower_item_embedding_history
         description: Partitionned table containing the history of the two tower item emebddings
+      - name: item_embedding__all_items_metadata
+        description: Append-only history of the all_items_metadata embeddings written by the item_embedding DAG (one row per item per run, partitioned on embedding_date).
+      - name: item_embedding__movies_metadata
+        description: Append-only history of the movies_metadata embeddings written by the item_embedding DAG (one row per item per run, partitioned on embedding_date).
+      - name: item_embedding__books_metadata
+        description: Append-only history of the books_metadata embeddings written by the item_embedding DAG (one row per item per run, partitioned on embedding_date).
+      - name: item_embedding__all_items_offer_names
+        description: Append-only history of the all_items_offer_names embeddings written by the item_embedding DAG (one row per item per run, partitioned on embedding_date).
   - name: ml_feat
     schema: ml_feat_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: item_embedding_tmp
-  - name: tmp
-    schema: tmp_{{ var('ENV_SHORT_NAME') }}
-    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
-    tables:
-      # item_embedding DAG writes one timestamped table per run
-      # (<name>_tmp_<ts_nodash>); the wildcard identifier unions them so the
-      # consuming model can pick the latest via max(_TABLE_SUFFIX).
-      - name: all_items_metadata_tmp
-        identifier: all_items_metadata_tmp_*
-      - name: books_metadata_tmp
-        identifier: books_metadata_tmp_*
-      - name: movies_metadata_tmp
-        identifier: movies_metadata_tmp_*
-      - name: all_items_offer_names_tmp
-        identifier: all_items_offer_names_tmp_*
   - name: ml_linkage
     schema: ml_linkage_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"

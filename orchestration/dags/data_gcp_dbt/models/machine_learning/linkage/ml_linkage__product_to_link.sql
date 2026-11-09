@@ -52,15 +52,10 @@ with
     ),
 
     titelive_book_contributors as (
-        select
+        select distinct
             product.id as offer_product_id,
             titelive_role_mapping.artist_type,
-            lower(trim(json_value(contributor, "$.name"))) as artist_name,
-            logical_or(
-                coalesce(
-                    safe_cast(json_value(contributor, "$.principal") as bool), false
-                )
-            ) as is_principal
+            lower(trim(json_value(contributor, "$.name"))) as artist_name
         from {{ ref("int_applicative__product") }} as product
         inner join
             {{ ref("snapshot_raw__titelive_products") }} as titelive
@@ -87,10 +82,6 @@ with
             and product.ean is not null
             and titelive.dbt_valid_to is null
             and titelive.json_raw is not null
-        group by
-            product.id,
-            titelive_role_mapping.artist_type,
-            lower(trim(json_value(contributor, "$.name")))
     ),
 
     product_author as (
@@ -99,7 +90,6 @@ with
             offer_author.offer_category_id,
             titelive_book_contributors.artist_type,
             titelive_book_contributors.artist_name,
-            titelive_book_contributors.is_principal,
             sum(offer_author.total_booking_count) as total_booking_count
         from offer_author
         inner join
@@ -111,7 +101,6 @@ with
             offer_author.offer_product_id,
             titelive_book_contributors.artist_name,
             titelive_book_contributors.artist_type,
-            titelive_book_contributors.is_principal,
             offer_author.offer_category_id
         union all
         select
@@ -119,7 +108,6 @@ with
             offer_author.offer_category_id,
             "author" as artist_type,
             offer_author.author as artist_name,
-            cast(null as bool) as is_principal,
             sum(offer_author.total_booking_count) as total_booking_count
         from offer_author
         where offer_author.offer_subcategory_id != "LIVRE_PAPIER"
@@ -135,7 +123,6 @@ with
             performer as artist_name,
             offer_category_id,
             "performer" as artist_type,
-            cast(null as bool) as is_principal,
             sum(coalesce(total_individual_bookings, 0)) as total_booking_count
         from {{ ref("mrt_global__offer") }}
         where offer_product_id != ""
@@ -147,7 +134,6 @@ with
             offer.offer_product_id,
             offer.offer_category_id,
             "film_actor" as artist_type,
-            cast(null as bool) as is_principal,
             trim(casting_names, '""') as artist_name,
             sum(coalesce(offer.total_individual_bookings, 0)) as total_booking_count
         from
@@ -166,7 +152,6 @@ with
             offer_category_id,
             stage_director as artist_name,
             "film_director" as artist_type,
-            cast(null as bool) as is_principal,
             sum(coalesce(total_individual_bookings, 0)) as total_booking_count
         from {{ ref("mrt_global__offer") }}
         where offer_product_id != "" and stage_director is not null
@@ -179,7 +164,6 @@ with
             artist_name,
             offer_category_id,
             artist_type,
-            is_principal,
             total_booking_count
         from product_author
         where artist_name is not null and artist_name != ""
@@ -189,7 +173,6 @@ with
             artist_name,
             offer_category_id,
             artist_type,
-            is_principal,
             total_booking_count
         from product_performer
         where artist_name is not null and artist_name != ""
@@ -199,7 +182,6 @@ with
             artist_name,
             offer_category_id,
             artist_type,
-            is_principal,
             total_booking_count
         from product_actor
         where artist_name is not null and artist_name != ""
@@ -209,7 +191,6 @@ with
             artist_name,
             offer_category_id,
             artist_type,
-            is_principal,
             total_booking_count
         from product_director
         where artist_name is not null and artist_name != ""
@@ -220,6 +201,5 @@ select distinct
     product_artist.artist_name,
     product_artist.offer_category_id,
     product_artist.artist_type,
-    product_artist.is_principal,
     product_artist.total_booking_count
 from product_artist

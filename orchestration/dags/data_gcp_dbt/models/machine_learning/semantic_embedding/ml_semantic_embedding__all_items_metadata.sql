@@ -2,11 +2,11 @@
     {{
         exceptions.raise_compiler_error(
             this
-            ~ " cannot be run with --full-refresh yet.\n"
-            ~ "Embeddings merged before the switch to ml_preproc history are not "
-            ~ "in source('ml_preproc', 'item_embedding__all_items_metadata'), so a full "
-            ~ "refresh would drop them. Backfill that history first (or run the "
-            ~ "embedding DAG with embed_all = True), then remove this guard."
+            ~ " cannot be run with --full-refresh.\n"
+            ~ "It would remove existing embeddings from the table.\n"
+            ~ "To refresh all embeddings, you must first run the embedding DAG "
+            ~ "for all items (embed_all = True), then delete this table and "
+            ~ "rerun it without the --full-refresh flag."
         )
     }}
 {% endif %}
@@ -21,12 +21,6 @@
         )
     )
 }}
-
-{#
-    Fed by the item_embedding DAG, which appends each run to
-    ml_preproc.item_embedding__all_items_metadata. No sensor on that DAG: like the other ML
-    outputs, new embeddings are merged on the next daily dbt run.
-#}
 {{
     merge_embedding_select(
         source_relation=source("ml_preproc", "item_embedding__all_items_metadata"),

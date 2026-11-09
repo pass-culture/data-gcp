@@ -23,5 +23,3 @@ models:
         description: "{{ doc('column__embedding_model') }}"
       - name: embedding_date
         description: "{{ doc('column__embedding_date') }}"
-      - name: embedding_ts
-        description: "{{ doc('column__embedding_ts') }}"

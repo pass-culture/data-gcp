@@ -16,5 +16,3 @@
 {% docs column__all_items_offer_names_embedding_128 %}First 128 dimensions of the item's offer name embedding, truncated with Matryoshka Representation Learning (MRL). NOT NORMALIZED!{% enddocs %}
 {% docs column__embedding_model %}Name of the model used to generate the embedding.{% enddocs %}
 {% docs column__embedding_date %}Date at which the embedding was generated.{% enddocs %}
-
-{% docs column__embedding_ts %}UTC timestamp at which the embedding run started; orders several embeddings of the same item. Null for embeddings merged before the ml_preproc history was introduced.{% enddocs %}

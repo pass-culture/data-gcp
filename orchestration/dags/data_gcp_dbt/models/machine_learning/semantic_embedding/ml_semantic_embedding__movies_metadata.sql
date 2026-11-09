@@ -18,24 +18,15 @@
             partition_by=None,
             unique_key="item_id",
             on_schema_change="append_new_columns",
-            tags=["external_dependency"],
-            meta={
-                "external_dag_id": "item_embedding",
-                "external_task_id": "movies_metadata.load_movies_metadata",
-                "external_dependency_extra_params": {
-                    "soft_fail": True,
-                    "offset_hours": -6,
-                    "poke_interval": 600,
-                },
-            },
         )
     )
 }}
-{# item_embedding starts at 4 am (prod and  7am stg) while dbt dag runs at 2:45 am so we use a negative offset of few hours to point the delayed sensor at the correct dagrun (from 6 hours after the dbt dag run  within the previous 24 hours) #}
-{% set tmp_source = source("tmp", "movies_metadata_tmp") %}
-{# tmp tables expire after 24h: when none is left, merge nothing instead of failing. #}
-{{
-    merge_embedding_select(
-        tmp_source=tmp_source, embedding_column="movies_metadata_embedding"
-    )
-}}
+
+select
+    item_id,
+    content_hash,
+    embedding as movies_metadata_embedding,
+    mlflow_run_id,
+    embedding_model,
+    embedding_date
+from {{ source("ml_preproc", "item_embedding_movies_metadata") }}

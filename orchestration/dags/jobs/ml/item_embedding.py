@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 from itertools import chain
 
@@ -16,7 +17,8 @@ from common.alerts.ml_training import create_item_embedding_slack_block
 from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_INPUT_DATASET,
-    BIGQUERY_TMP_DATASET,
+    BIGQUERY_ML_PREPROCESSING_DATASET,
+    BIGQUERY_ML_SEMANTIC_EMBEDDING_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -34,6 +36,7 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
+from google.api_core.exceptions import NotFound
 from pydantic import BaseModel, model_validator
 
 from jobs.crons import SCHEDULE_DICT
@@ -54,7 +57,8 @@ SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN = SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN_DICT["stg"
 class VectorPipeline(BaseModel):
     name: str  # embedding vector name
     input_table: str  # dataset.table (dbt input model)
-    output_table: str  # dataset.table base; each run appends ``_<ts_nodash>``
+    output_table: str  # dataset.table, truncated by each run (dbt source)
+    merged_table: str  # dataset.table where dbt merges output_table
     input_dbt_model: str = ""  # derived from input_table in __post_init
 
     @model_validator(mode="after")
@@ -75,22 +79,26 @@ AVAILABLE_VECTORS = [
     VectorPipeline(
         name="all_items_metadata",
         input_table=f"{BIGQUERY_ML_INPUT_DATASET}.all_items_metadata_to_embed",
-        output_table=f"{BIGQUERY_TMP_DATASET}.all_items_metadata_tmp",
+        output_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding_all_items_metadata",
+        merged_table=f"{BIGQUERY_ML_SEMANTIC_EMBEDDING_DATASET}.all_items_metadata",
     ),
     VectorPipeline(
         name="movies_metadata",
         input_table=f"{BIGQUERY_ML_INPUT_DATASET}.movies_metadata_to_embed",
-        output_table=f"{BIGQUERY_TMP_DATASET}.movies_metadata_tmp",
+        output_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding_movies_metadata",
+        merged_table=f"{BIGQUERY_ML_SEMANTIC_EMBEDDING_DATASET}.movies_metadata",
     ),
     VectorPipeline(
         name="books_metadata",
         input_table=f"{BIGQUERY_ML_INPUT_DATASET}.books_metadata_to_embed",
-        output_table=f"{BIGQUERY_TMP_DATASET}.books_metadata_tmp",
+        output_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding_books_metadata",
+        merged_table=f"{BIGQUERY_ML_SEMANTIC_EMBEDDING_DATASET}.books_metadata",
     ),
     VectorPipeline(
         name="all_items_offer_names",
-        input_table=f"{BIGQUERY_ML_INPUT_DATASET}.all_items_metadata_to_embed",  # uses the same input as all_items_metadata
-        output_table=f"{BIGQUERY_TMP_DATASET}.all_items_offer_names_tmp",
+        input_table=f"{BIGQUERY_ML_INPUT_DATASET}.all_items_offer_names_to_embed",
+        output_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding_all_items_offer_names",
+        merged_table=f"{BIGQUERY_ML_SEMANTIC_EMBEDDING_DATASET}.all_items_offer_names",
     ),
 ]
 VECTOR_NAMES = [vector.name for vector in AVAILABLE_VECTORS]
@@ -117,13 +125,8 @@ DEFAULT_ARGS = {
 def _step_command(
     module: str, vector_name: str, input_subfolder: str, output_subfolder: str
 ) -> str:
-    """Build an SSH command for one pipeline step (preprocess/build_prompts/
-    embed) of one vector, reading ``input_subfolder`` and writing
-    ``output_subfolder`` under that vector's GCS prefix.
-
-    Only vectors kept by the plan reach this step -- the per-vector
-    ``check_in_plan`` ShortCircuit skips a dropped vector's whole subchain -- so
-    no in-command guard is needed.
+    """Build an SSH command for one pipeline step of one vector, reading
+    ``input_subfolder`` and writing ``output_subfolder`` under its GCS prefix.
     """
     base = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{vector_name}"
     return (
@@ -132,15 +135,6 @@ def _step_command(
         f"--input-parquets-folder-path {base}/{input_subfolder} "
         f"--output-parquets-folder-path {base}/{output_subfolder}"
     )
-
-
-def _run_output_table(output_table: str, ts_nodash: str) -> str:
-    """Suffix the staging table with the run timestamp so each run writes its
-    own table (``<name>_tmp_<ts>``) instead of truncating -- and thus losing --
-    the previous run's output. dbt reads the latest via a ``_TABLE_SUFFIX``
-    wildcard source.
-    """
-    return f"{output_table}_{ts_nodash}"
 
 
 def _export_input_query(vector: VectorPipeline) -> str:
@@ -162,23 +156,53 @@ def _export_input_query(vector: VectorPipeline) -> str:
     """
 
 
-def _plan_vectors_to_embed(**context) -> list[str]:
-    """Resolve, once and upstream of the per-vector fan-out, which vectors this
-    run should actually process: those that are *selected* and have rows to
-    embed in their own input table. embed_all forces every selected vector.
+def _merge_pending(bq_hook: BigQueryHook, vector: VectorPipeline) -> bool:
+    """Whether dbt hasn't merged the vector's last load yet (its mlflow_run_id is
+    absent from the merged table): running it would truncate that load away.
+    A missing output table has no load to protect; a missing merged table
+    (full-refresh procedure) counts as pending until dbt rebuilds it.
+    """
+    dataset, table = vector.output_table.split(".")
+    if not bq_hook.table_exists(
+        dataset_id=dataset, table_id=table, project_id=GCP_PROJECT_ID
+    ):
+        return False
+    output = f"`{GCP_PROJECT_ID}.{vector.output_table}`"
+    query = f"""
+        SELECT
+          EXISTS (SELECT 1 FROM {output})
+          AND NOT EXISTS (
+            SELECT 1 FROM `{GCP_PROJECT_ID}.{vector.merged_table}`
+            WHERE mlflow_run_id = (SELECT ANY_VALUE(mlflow_run_id) FROM {output})
+          )
+    """
+    try:
+        return bool(bq_hook.get_records(query)[0][0])
+    except NotFound:
+        return True
 
-    A single batched query (one ``EXISTS`` probe per selected table, UNION ALL'd)
-    replaces per-vector count queries. Backing a ShortCircuitOperator, the
-    returned list is both the plan (read back by each vector's check via XCom)
-    and the run-level gate -- an empty list is falsy, so the whole run skips.
+
+def _plan_vectors_to_embed(**context) -> list[str]:
+    """Pick the selected vectors to run. Unless embed_all: only those whose last
+    load dbt has merged and that have items to embed. embed_all skips the merge
+    check, since its load covers every item and loses nothing it overwrites.
+    Skips booting the VM when none is left; each vector's gate reads this list
+    from XCom.
     """
     params = context["params"]
-    selected = [v for v in AVAILABLE_VECTORS if v.name in params["vectors"]]
+    bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
+    selected = []
+    for v in AVAILABLE_VECTORS:
+        if v.name not in params["vectors"]:
+            continue
+        if not params["embed_all"] and _merge_pending(bq_hook, v):
+            logging.info(f"Skipping {v.name}: its last load is not merged by dbt yet")
+            continue
+        selected.append(v)
     if params["embed_all"]:
         return [v.name for v in selected]
     if not selected:
         return []
-    bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
     query = "\nUNION ALL\n".join(
         f"(SELECT '{v.name}' AS vector "
         f"FROM `{GCP_PROJECT_ID}.{v.input_table}` WHERE to_embed LIMIT 1)"
@@ -187,28 +211,30 @@ def _plan_vectors_to_embed(**context) -> list[str]:
     return [row[0] for row in bq_hook.get_records(query)]
 
 
-def _vector_in_plan(vector_name: str, **context) -> bool:
-    """ShortCircuit gate: run this vector only if the upstream plan kept it."""
-    plan = context["ti"].xcom_pull(task_ids="plan_vectors_to_embed") or []
-    return vector_name in plan
+def _vector_planned(vector_name: str, ti) -> bool:
+    """ShortCircuit gate: run this vector only if plan_vectors_to_embed kept it."""
+    return vector_name in ti.xcom_pull(task_ids="plan_vectors_to_embed")
 
 
-def _send_slack_notif_success(**context) -> None:
-    plan = context["ti"].xcom_pull(task_ids="plan_vectors_to_embed") or []
-    if not plan:
+def _send_slack_notif_success(ti, **context) -> None:
+    selected = [v for v in AVAILABLE_VECTORS if v.name in context["params"]["vectors"]]
+    if not selected:
         summary = "Aucun vecteur embeddé."
     else:
-        vectors_by_name = {v.name: v for v in AVAILABLE_VECTORS}
-        ts_nodash = context["ts_nodash"]
+        planned = ti.xcom_pull(task_ids="plan_vectors_to_embed")
         bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
-        query = "\nUNION ALL\n".join(
-            f"(SELECT '{name}' AS vector, COUNT(*) AS nb_rows "
-            f"FROM `{GCP_PROJECT_ID}."
-            f"{_run_output_table(vectors_by_name[name].output_table, ts_nodash)}`)"
-            for name in plan
-        )
-        counts = dict(bq_hook.get_records(query))
-        summary = "\n".join(f"• *{name}*: {counts.get(name, 0)} items" for name in plan)
+        lines = []
+        for v in selected:
+            if v.name not in planned:
+                lines.append(
+                    f"• *{v.name}*: ignoré (rien à embedder ou merge dbt en attente)"
+                )
+                continue
+            count = bq_hook.get_records(
+                f"SELECT COUNT(*) FROM `{GCP_PROJECT_ID}.{v.output_table}`"
+            )[0][0]
+            lines.append(f"• *{v.name}*: {count} items")
+        summary = "\n".join(lines)
     block = create_item_embedding_slack_block(summary, ENV_SHORT_NAME)
     SlackHook(SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN).send_message(None, block)
 
@@ -219,9 +245,9 @@ DAG_DOC = """
 
     Per vector (chosen via *vectors*), the DAG runs a GCS-staged pipeline:
     export input from its dbt table → prepare (preprocess + build prompts) →
-    embed → load into its own per-run BigQuery staging table
-    (`<name>_tmp_<ts_nodash>`, kept so runs don't overwrite each other).
-    A later dbt model merges the latest staging table.
+    embed → load into `ml_preproc_<env>.item_embedding_<name>` (truncated by
+    each run). `dbt_run_dag` merges it into `ml_semantic_embedding__<name>` on
+    its next daily run (no sensor: embeddings reach dbt within 24h).
 
     #### Parameters:
     * *embed_all* : whether to embed all items or only the ones that need embedding (to_embed = true in the input tables).
@@ -240,6 +266,11 @@ DAG_DOC = """
     time** (set *vectors* to a single entry) so each full-catalogue vector gets
     its own VM/sizing instead of queuing behind the others.
 
+    Without *embed_all*, a vector whose last load has not been merged by dbt
+    yet is skipped, so its output is never overwritten before the merge.
+    *embed_all* always runs: its load covers every item. To unblock an
+    incremental run, merge first (`dbt run -s ml_semantic_embedding__<name>`).
+
     *Hint:* L4 count per g2 machine: g2-standard-4/8/12/16/32 → 1, -24 → 2,
     -48 → 4, -96 → 8. Frequent L4 stockouts in europe-west1-b; try -c.
 """
@@ -251,6 +282,7 @@ with DAG(
     doc_md=DAG_DOC,
     schedule=SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME],
     catchup=False,
+    max_active_runs=1,
     dagrun_timeout=timedelta(hours=30),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
@@ -329,10 +361,6 @@ with DAG(
 ) as dag:
     start = EmptyOperator(task_id="start")
 
-    # Resolve once which vectors will actually run (selected + non-empty). The
-    # returned list is both the plan (read back by each vector's check) and the
-    # gate: an empty list is falsy, so this ShortCircuit skips the whole run
-    # (including the VM) when there's nothing to embed.
     plan_vectors = ShortCircuitOperator(
         task_id="plan_vectors_to_embed",
         python_callable=_plan_vectors_to_embed,
@@ -387,9 +415,9 @@ with DAG(
 
     for vector in AVAILABLE_VECTORS:
         with TaskGroup(group_id=vector.name):
-            check_in_plan = ShortCircuitOperator(
-                task_id=f"check_in_plan_{vector.name}",
-                python_callable=_vector_in_plan,
+            check_selected = ShortCircuitOperator(
+                task_id=f"check_vector_selected_{vector.name}",
+                python_callable=_vector_planned,
                 op_kwargs={"vector_name": vector.name},
                 # Skip only this vector's own subchain, not the following vectors.
                 ignore_downstream_trigger_rules=False,
@@ -404,9 +432,6 @@ with DAG(
                         "useLegacySql": False,
                     }
                 },
-                # Run even if the previous vector's embed was skipped or failed --
-                # one vector's outcome shouldn't block the next from being attempted.
-                trigger_rule="all_done",
             )
 
             prepare = SSHGCEOperator(
@@ -438,9 +463,7 @@ with DAG(
                 source_objects=[
                     f"{GCS_FOLDER_PATH}/{vector.name}/{EMBEDDINGS_SUBFOLDER}/*.parquet"
                 ],
-                destination_project_dataset_table=_run_output_table(
-                    vector.output_table, "{{ ts_nodash }}"
-                ),
+                destination_project_dataset_table=vector.output_table,
                 source_format="PARQUET",
                 write_disposition="WRITE_TRUNCATE",
                 autodetect=True,
@@ -448,17 +471,22 @@ with DAG(
                 extra_config={"parquetOptions": {"enableListInference": True}},
             )
 
-            check_in_plan >> export_input
+            check_selected >> export_input
+
+            if previous_embed is not None:
+                # Barrier turning the previous vector's any-outcome into a
+                # guaranteed success, so it can't fail/skip this prepare.
+                wait_for_gpu_slot = EmptyOperator(
+                    task_id=f"wait_for_gpu_slot_{vector.name}",
+                    trigger_rule="all_done",
+                )
+                previous_embed >> wait_for_gpu_slot >> prepare
+
             [export_input, start_mlflow_run] >> prepare >> embed >> load
 
-        # Every vector's plan check only needs the VM up, so all of them fan out
-        # in parallel as soon as it starts.
-        gce_instance_start >> check_in_plan
-
-        # The actual GPU work stays sequential on the shared VM: each vector's
-        # export waits for the previous vector's embed to free the GPU.
-        if previous_embed is not None:
-            previous_embed >> export_input
+        # export_input is a pure BigQuery job (no VM/GPU), so it fires for all
+        # vectors in parallel; only prepare/embed stay GPU-serialized below.
+        install_dependencies >> check_selected
 
         previous_embed = embed
         load_tasks.append(load)

@@ -18,49 +18,15 @@
             partition_by=None,
             unique_key="item_id",
             on_schema_change="append_new_columns",
-            tags=["external_dependency"],
-            meta={
-                "external_dag_id": "item_embedding",
-                "external_task_id": "all_items_metadata.load_all_items_metadata",
-                "external_dependency_extra_params": {
-                    "soft_fail": True,
-                    "offset_hours": -6,
-                    "poke_interval": 600,
-                },
-            },
         )
     )
 }}
-{# item_embedding starts at 4 am (prod and  7am stg) while dbt dag runs at 2:45 am so we use a negative offset of few hours to point the delayed sensor at the correct dagrun (from 6 hours after the dbt dag run  within the previous 24 hours) #}
-{% set tmp_source = source("tmp", "all_items_metadata_tmp") %}
-{# tmp tables expire after 24h: when none is left, merge nothing instead of failing. #}
-{% if tmp_tables_exist(tmp_source) %}
-    select
-        ie.item_id,
-        ie.content_hash,
-        ie.embedding as all_items_metadata_embedding,
-        ie.mlflow_run_id,
-        ie.embedding_model,
-        ie.embedding_date
-    from {{ tmp_source }} as ie
-    where
-        ie._table_suffix = (
-            select max(latest._table_suffix) as max_table_suffix
-            from {{ tmp_source }} as latest
-        )
-{% else %}
-    select *
-    from
-        unnest(
-            array<
-                struct<
-                    item_id string,
-                    content_hash string,
-                    all_items_metadata_embedding array<float64>,
-                    mlflow_run_id string,
-                    embedding_model string,
-                    embedding_date date
-                >
-            >[]
-        )
-{% endif %}
+
+select
+    item_id,
+    content_hash,
+    embedding as all_items_metadata_embedding,
+    mlflow_run_id,
+    embedding_model,
+    embedding_date
+from {{ source("ml_preproc", "item_embedding_all_items_metadata") }}

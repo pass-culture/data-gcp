@@ -13,8 +13,6 @@ Run from the job root:
         --output-parquets-folder-path gs://.../movies_metadata/prompts
 """
 
-from typing import Iterator
-
 import pandas as pd
 import typer
 from loguru import logger
@@ -25,23 +23,6 @@ from src.preprocessing import apply_preprocessors
 from src.prompt_building import build_prompts
 
 app = typer.Typer(help="Preprocess a vector's metadata and build its prompts.")
-
-
-def _iter_input_chunks(
-    path: str, rows_per_chunk: int, required: list[str]
-) -> Iterator[pd.DataFrame]:
-    """Stream the input chunks, or nothing when EXPORT DATA wrote no file (zero
-    rows to embed). A FileNotFoundError raised mid-stream is not swallowed.
-    """
-    chunks = iter_parquet_chunks(path, rows_per_chunk, required_columns=required)
-    try:
-        first = next(chunks, None)
-    except FileNotFoundError:
-        logger.info(f"No input files found at {path}")
-        return
-    if first is not None:
-        yield first
-        yield from chunks
 
 
 @app.command()
@@ -62,25 +43,35 @@ def main(
     logger.info(f"Preparing prompts for vector '{vector.name}'")
 
     wrote_any = False
-    for i, chunk in enumerate(
-        _iter_input_chunks(input_parquets_folder_path, rows_per_chunk, required)
-    ):
-        preprocessed = apply_preprocessors(chunk[required], vector.preprocessors)
+    try:
+        for i, chunk in enumerate(
+            iter_parquet_chunks(
+                input_parquets_folder_path, rows_per_chunk, required_columns=required
+            )
+        ):
+            preprocessed = apply_preprocessors(chunk[required], vector.preprocessors)
 
-        prompts = preprocessed[["item_id", "content_hash"]].copy()
-        prompts["prompt"] = build_prompts(preprocessed, vector)
+            prompts = preprocessed[["item_id", "content_hash"]].copy()
+            prompts["prompt"] = build_prompts(preprocessed, vector)
 
-        # Drop items with no metadata to embed (empty prompt) so no empty
-        # prompt ever reaches the encoder.
-        kept = prompts[prompts["prompt"] != ""].reset_index(drop=True)
-        dropped = len(prompts) - len(kept)
-        if dropped:
-            logger.warning(f"Chunk {i}: dropped {dropped} item(s) with empty prompt")
+            # Drop items with no metadata to embed (empty prompt) so no empty
+            # prompt ever reaches the encoder.
+            kept = prompts[prompts["prompt"] != ""].reset_index(drop=True)
+            dropped = len(prompts) - len(kept)
+            if dropped:
+                logger.warning(
+                    f"Chunk {i}: dropped {dropped} item(s) with empty prompt"
+                )
 
-        output_path = f"{output_parquets_folder_path}/prompts_{i}.parquet"
-        write_parquet(kept, output_path)
-        wrote_any = True
-        logger.info(f"Wrote {len(kept)} prompts to {output_path}")
+            output_path = f"{output_parquets_folder_path}/prompts_{i}.parquet"
+            write_parquet(kept, output_path)
+            wrote_any = True
+            logger.info(f"Wrote {len(kept)} prompts to {output_path}")
+    except FileNotFoundError:
+        # export_input's own `WHERE to_embed` matched zero rows this run, so
+        # BigQuery's EXPORT DATA wrote no files at all under this vector's
+        # input/ prefix -- nothing to prepare, not a real error.
+        logger.info(f"No input files found at {input_parquets_folder_path}")
 
     if not wrote_any:
         # Nothing to embed this run (zero input rows, or zero input files as

@@ -149,8 +149,8 @@ def _export_input_query(vector: VectorPipeline) -> str:
 
 
 def _plan_vectors_to_embed(**context) -> list[str]:
-    """Single gate of the DAG: the selected vectors that have something to
-    embed. Pushed to XCom for ``_vector_planned``; an empty list skips the run.
+    """Coarse cost gate: skip booting the VM when no selected vector has
+    anything to embed.
     """
     params = context["params"]
     selected = [v for v in AVAILABLE_VECTORS if v.name in params["vectors"]]
@@ -167,30 +167,22 @@ def _plan_vectors_to_embed(**context) -> list[str]:
     return [row[0] for row in bq_hook.get_records(query)]
 
 
-def _vector_planned(vector_name: str, **context) -> bool:
-    """ShortCircuit gate: run this vector only if the plan kept it."""
-    planned = context["ti"].xcom_pull(task_ids="plan_vectors_to_embed") or []
-    return vector_name in planned
+def _vector_selected(vector_name: str, **context) -> bool:
+    """ShortCircuit gate: run this vector only if it's in the ``vectors`` param."""
+    return vector_name in context["params"]["vectors"]
 
 
 def _send_slack_notif_success(**context) -> None:
-    """Report each vector's loaded rows, read from its load job statistics (a
-    skipped vector has no load job, and its table still holds a previous run).
-    """
     selected = [v for v in AVAILABLE_VECTORS if v.name in context["params"]["vectors"]]
     if not selected:
         summary = "Aucun vecteur embeddé."
     else:
-        ti = context["ti"]
         bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
         lines = []
         for v in selected:
-            job_id = ti.xcom_pull(task_ids=f"{v.name}.load_{v.name}", key="job_id")
-            count = (
-                bq_hook.get_job(job_id=job_id, location=GCP_REGION).output_rows or 0
-                if job_id
-                else 0
-            )
+            count = bq_hook.get_records(
+                f"SELECT COUNT(*) FROM `{GCP_PROJECT_ID}.{v.output_table}`"
+            )[0][0]
             lines.append(f"• *{v.name}*: {count} items")
         summary = "\n".join(lines)
     block = create_item_embedding_slack_block(summary, ENV_SHORT_NAME)
@@ -314,6 +306,7 @@ with DAG(
 ) as dag:
     start = EmptyOperator(task_id="start")
 
+    # Coarse cost gate only (see _plan_vectors_to_embed docstring).
     plan_vectors = ShortCircuitOperator(
         task_id="plan_vectors_to_embed",
         python_callable=_plan_vectors_to_embed,
@@ -368,9 +361,9 @@ with DAG(
 
     for vector in AVAILABLE_VECTORS:
         with TaskGroup(group_id=vector.name):
-            check_planned = ShortCircuitOperator(
-                task_id=f"check_vector_planned_{vector.name}",
-                python_callable=_vector_planned,
+            check_selected = ShortCircuitOperator(
+                task_id=f"check_vector_selected_{vector.name}",
+                python_callable=_vector_selected,
                 op_kwargs={"vector_name": vector.name},
                 # Skip only this vector's own subchain, not the following vectors.
                 ignore_downstream_trigger_rules=False,
@@ -424,7 +417,7 @@ with DAG(
                 extra_config={"parquetOptions": {"enableListInference": True}},
             )
 
-            check_planned >> export_input
+            check_selected >> export_input
 
             if previous_embed is not None:
                 # Barrier turning the previous vector's any-outcome into a
@@ -439,7 +432,7 @@ with DAG(
 
         # export_input is a pure BigQuery job (no VM/GPU), so it fires for all
         # vectors in parallel; only prepare/embed stay GPU-serialized below.
-        install_dependencies >> check_planned
+        install_dependencies >> check_selected
 
         previous_embed = embed
         load_tasks.append(load)

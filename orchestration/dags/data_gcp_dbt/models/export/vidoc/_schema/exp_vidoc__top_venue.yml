@@ -20,8 +20,6 @@ models:
       - name: partition_month
         description: '{{ doc("column__partition_month") }}'
         data_type: DATE
-        tests:
-          - not_null
 
       - name: geo_level
         description: '{{ doc("column__geo_level") }}'

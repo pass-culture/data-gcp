@@ -75,22 +75,22 @@ AVAILABLE_VECTORS = [
     VectorPipeline(
         name="all_items_metadata",
         input_table=f"{BIGQUERY_ML_INPUT_DATASET}.all_items_metadata_to_embed",
-        output_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding__all_items_metadata",
+        output_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding_all_items_metadata",
     ),
     VectorPipeline(
         name="movies_metadata",
         input_table=f"{BIGQUERY_ML_INPUT_DATASET}.movies_metadata_to_embed",
-        output_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding__movies_metadata",
+        output_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding_movies_metadata",
     ),
     VectorPipeline(
         name="books_metadata",
         input_table=f"{BIGQUERY_ML_INPUT_DATASET}.books_metadata_to_embed",
-        output_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding__books_metadata",
+        output_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding_books_metadata",
     ),
     VectorPipeline(
         name="all_items_offer_names",
         input_table=f"{BIGQUERY_ML_INPUT_DATASET}.all_items_offer_names_to_embed",
-        output_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding__all_items_offer_names",
+        output_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding_all_items_offer_names",
     ),
 ]
 VECTOR_NAMES = [vector.name for vector in AVAILABLE_VECTORS]
@@ -195,7 +195,7 @@ DAG_DOC = """
 
     Per vector (chosen via *vectors*), the DAG runs a GCS-staged pipeline:
     export input from its dbt table → prepare (preprocess + build prompts) →
-    embed → load into `ml_preproc_<env>.item_embedding__<name>` (truncated by
+    embed → load into `ml_preproc_<env>.item_embedding_<name>` (truncated by
     each run). `dbt_run_dag` merges it into `ml_semantic_embedding__<name>` on
     its next daily run (no sensor: embeddings reach dbt within 24h).
 

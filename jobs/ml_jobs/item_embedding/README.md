@@ -71,7 +71,7 @@ in the YAML — it's owned by the vector's dbt input model.
 ## Output
 
 Each run replaces a vector's BigQuery table
-(`ml_preproc_<env>.item_embedding__<name>`): one `embedding` column of
+(`ml_preproc_<env>.item_embedding_<name>`): one `embedding` column of
 `REPEATED FLOAT` plus the provenance columns `mlflow_run_id`,
 `embedding_model` and `embedding_date` (the UTC date the row was embedded). The
 dbt model `ml_semantic_embedding__<name>` merges it on its next daily run.

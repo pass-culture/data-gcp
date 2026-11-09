@@ -29,4 +29,4 @@ select
     mlflow_run_id,
     embedding_model,
     embedding_date
-from {{ source("ml_preproc", "item_embedding__all_items_offer_names") }}
+from {{ source("ml_preproc", "item_embedding_all_items_offer_names") }}

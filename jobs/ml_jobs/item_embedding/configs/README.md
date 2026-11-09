@@ -7,7 +7,8 @@ CLIs via `--config-file-name`.
 
 Filtering (which items belong to a vector) and column selection are **not** here
 — they are owned by the vector's dbt input model in
-`orchestration/dags/data_gcp_dbt/models/machine_learning/embeddings/`. A config
+`orchestration/dags/data_gcp_dbt/models/machine_learning/input/`
+(`ml_input__<name>_to_embed`). A config
 only references columns that its dbt model produces.
 
 ## Fields
@@ -38,7 +39,7 @@ Each vector flows through two GCS-staged steps (see `cli/`), one DAG task each:
   `"None"`). A template line whose placeholders are all empty for a row is
   dropped (e.g. `Genres: {allocine_genres_concat}` disappears when there are no genres);
   an item with all features null yields an empty prompt and is dropped in the
-  build_prompts step.
+  prepare step (`cli/prepare.py`).
 
 ## Registered preprocessors
 

@@ -88,7 +88,8 @@ Log level of the backend log entry:
 {% docs column__trace %}Cloud Logging trace identifier, used to link log entries emitted by the same backend request.{% enddocs %}
 {% docs column__extra_json %}Full `extra` payload of the backend log entry as JSON (null and empty fields removed), to access fields not yet extracted as columns, e.g. `json_value(extra_json.stock_id_at_providers)`.{% enddocs %}
 {% docs column__is_success %}True when the action succeeded. Uses the explicit `success` flag when the log has one (e.g. users.login), otherwise the log level ('INFO' = success, 'WARNING' / 'ERROR' = failure).{% enddocs %}
-{% docs column__total_count %}Number of logged actions for the given dimension combination.{% enddocs %}
+{% docs column__total_count %}Number of actions for the given dimension combination: one per request (trace) and booking, not one per log line.{% enddocs %}
+{% docs column__log_line_count %}Number of log lines behind the actions counted in total_count. Higher than total_count when an action logs several lines (e.g. a booking cancellation logs a start marker, the core outcome and the route outcome).{% enddocs %}
 {% docs column__success_count %}Number of successful actions for the given dimension combination.{% enddocs %}
 {% docs column__error_count %}Number of failed actions for the given dimension combination.{% enddocs %}
 

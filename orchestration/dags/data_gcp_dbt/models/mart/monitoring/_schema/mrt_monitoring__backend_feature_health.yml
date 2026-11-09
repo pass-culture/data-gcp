@@ -28,3 +28,5 @@ models:
         description: "{{ doc('column__success_count') }}"
       - name: error_count
         description: "{{ doc('column__error_count') }}"
+      - name: log_line_count
+        description: "{{ doc('column__log_line_count') }}"

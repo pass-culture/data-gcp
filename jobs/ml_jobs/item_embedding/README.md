@@ -70,14 +70,11 @@ in the YAML — it's owned by the vector's dbt input model.
 
 ## Output
 
-Each run **appends** a vector's embeddings to its own BigQuery history table
-(`ml_preproc_<env>.item_embedding__<name>`, day-partitioned on
-`embedding_date`): one `embedding` column of `REPEATED FLOAT` plus the
-provenance columns `mlflow_run_id`, `embedding_model`, `embedding_date` (the
-UTC date the row was embedded) and `embedding_ts` (UTC start of the embed step,
-used to keep the latest embedding of an item). The dbt models
-`ml_semantic_embedding__<name>` merge the new rows on the next daily dbt run
-(no cross-DAG sensor, so embeddings reach dbt within 24h).
+Each run replaces a vector's BigQuery table
+(`ml_preproc_<env>.item_embedding__<name>`): one `embedding` column of
+`REPEATED FLOAT` plus the provenance columns `mlflow_run_id`,
+`embedding_model` and `embedding_date` (the UTC date the row was embedded). The
+dbt model `ml_semantic_embedding__<name>` merges it on its next daily run.
 
 ## Running the whole thing
 

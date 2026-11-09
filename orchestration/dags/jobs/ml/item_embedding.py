@@ -216,6 +216,11 @@ DAG_DOC = """
     time** (set *vectors* to a single entry) so each full-catalogue vector gets
     its own VM/sizing instead of queuing behind the others.
 
+    ⚠️ Each run truncates its output tables, and dbt merges them only once a
+    day. After an *embed_all* run, pause the schedule until `dbt_run_dag` has
+    merged the output: otherwise the next run overwrites the full catalogue
+    with the incremental subset, and the unchanged items keep the old model.
+
     *Hint:* L4 count per g2 machine: g2-standard-4/8/12/16/32 → 1, -24 → 2,
     -48 → 4, -96 → 8. Frequent L4 stockouts in europe-west1-b; try -c.
 """
